@@ -71,7 +71,7 @@ ht=uitoolbar(resultfig);
 % show electrode(s).
 
 for pt=1:length(elstruct)
-    el_render(pt).el_render=ea_showelectrode(resultfig,elstruct(pt),pt,options);
+    [el_render(pt).el_render]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
     try
         if multiplemode
             caption{1}=[elstruct(pt).name,'_Left'];         caption{2}=[elstruct(pt).name,'_Right'];
@@ -81,7 +81,32 @@ for pt=1:length(elstruct)
         uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{1},'OnCallback',{@objvisible,el_render(pt).el_render{2}},'OffCallback',{@objinvisible,el_render(pt).el_render{2}},'State','on');
         uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{2},'OnCallback',{@objvisible,el_render(pt).el_render{1}},'OffCallback',{@objinvisible,el_render(pt).el_render{1}},'State','on');
     end
+    
+    
+%     % export vizstruct
+ vizstruct=struct('faces',[],'vertices',[],'colors',[]);
+ 
+ 
+     extract=[1,4,7,10,13,16,19,22,25]; % surfaces without endplates.
+    labels={'rel_traj','lel_traj','rel_btwc1','lel_btwc1','rel_btwc2','lel_btwc2','rel_btwc3','lel_btwc3'...
+        'rel_cnt1','lel_cnt1','rel_cnt2','lel_cnt2','rel_cnt3','lel_cnt3','rel_cnt4','lel_cnt4','rel_tip','lel_tip',};
+    cnt=1;
+    for ex=extract
+        for side=1:2
+            
+            ps = surf2patch(get(el_render(pt).el_render{side}(ex),'XData'),get(el_render(pt).el_render{side}(ex),'YData'),get(el_render(pt).el_render{side}(ex),'ZData'),'triangles');
+            vizstruct(cnt).faces=ps.faces;
+            vizstruct(cnt).vertices=ps.vertices;
+            scolor=get(el_render(pt).el_render{side}(ex),'CData');
+            vizstruct(cnt).colors=repmat(squeeze(scolor(1,1,:))',length(vizstruct(cnt).faces),1);
+                    vizstruct(cnt).name=labels{cnt};
+                    cnt=cnt+1;
+
+        end
+    end
+    
 end
+
 
 
 
@@ -118,9 +143,23 @@ axis off
 set(gcf,'color','w');
 
 % Show atlas data
-
+cnt=length(vizstruct);
 if options.d3.writeatlases
-        ea_showatlas(resultfig,elstruct,options);
+        atlases=ea_showatlas(resultfig,elstruct,options);
+        % export vizstruct
+        for side=1:2
+            for atl=1:length(atlases.fv)
+                if ~isempty(atlases.fv{atl,side}.faces)
+                    vizstruct(cnt+1).faces=atlases.fv{atl,side}.faces;
+                    vizstruct(cnt+1).vertices=atlases.fv{atl,side}.vertices;
+                    
+                    vizstruct(cnt+1).colors=squeeze(ind2rgb(round(atlases.cdat{atl,side}),atlases.colormap));
+                    cnt=cnt+1;
+                end
+            end
+        end
+        
+        
 end
 
 
@@ -143,8 +182,33 @@ set(gcf,'Name',figtitle);
 
 
 
+% write out json file
+
+bbstruct=viz2brainbrowser(vizstruct);
+ea_savejson('',bbstruct,'NoRowBracket',1,'FileName','Scene_Brainbrowser.json','ArrayToStruct',0);
+
+%ea_savejson('Lead_Scene',vizstruct,[options.earoot,options.patientname,filesep,'Scene.JSON']);
+
+% export for Brainbrowser
 
 
+
+function bbstruct=viz2brainbrowser(vizstruct)
+bbstruct.vertices=[];
+bbstruct.colors=[];
+offset=0;
+for entry=1:length(vizstruct)
+    
+    bbstruct.vertices=[bbstruct.vertices;vizstruct(entry).vertices];
+    bbstruct.colors=[bbstruct.colors;repmat([vizstruct(entry).colors(1,:),0.7],length(vizstruct(entry).vertices),1)];
+    bbstruct.shapes(entry).indices=vizstruct(entry).faces+offset;
+    
+    % bbstruct.shapes(entry).indices=bbstruct.shapes(entry).indices(:)';
+    offset=offset+length(vizstruct(entry).vertices);
+end
+bbstruct.vertices=bbstruct.vertices';
+bbstruct.vertices=bbstruct.vertices(:);
+% bbstruct.colors=bbstruct.colors(:)';
 
 
 

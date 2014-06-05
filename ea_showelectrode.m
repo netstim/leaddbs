@@ -1,4 +1,4 @@
-function elrender=ea_showelectrode(resultfig,elstruct,pt,options)
+function [elrender]=ea_showelectrode(resultfig,elstruct,pt,options)
 % This function renders the electrode as defined by options.elspec and
 % coords_mm.
 % __________________________________________________________________________________
@@ -38,6 +38,7 @@ for side=options.sides
     % draw trajectory
     [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
     
+
     
     if isfield(elstruct,'group')
         usecolor=elstruct.groupcolors(elstruct.group,:);
@@ -71,6 +72,7 @@ for side=options.sides
     
     % draw contacts
     for cntct=1:elspec.numel
+        
                 set(0,'CurrentFigure',resultfig); 
 
         
