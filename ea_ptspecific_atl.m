@@ -9,31 +9,9 @@ aroot=[options.earoot,'atlases',filesep,options.atlasset,filesep];
 proot=[options.root,options.patientname,filesep];
 
 
-% first generate TPMs for each atlas
-%if ~exist([aroot,'tpm'],'file');
 generate_tpm(troot,aroot,proot,options)
-%end
-
-% start segmenting..
-
-%copyfile([proot,'pre_tra.nii'],[proot,ages{age},'_pre_tra.nii'])
 
 
-
-mkdir([proot,'atlases']);
-mkdir([proot,'atlases',filesep,'mixed']);
-matlabbatch{1}.spm.util.defs.comp{1}.def = {[proot,'y_',ages{age},'_pre_tra.nii']};
-matlabbatch{1}.spm.util.defs.ofname = '';
-matlabbatch{1}.spm.util.defs.fnames = {
-    [troot,'tSTN_L_',ages{age},'.nii,1']
-    [troot,'tSTN_R_',ages{age},'.nii,1']
-    };
-matlabbatch{1}.spm.util.defs.savedir.saveusr = {proot};
-matlabbatch{1}.spm.util.defs.interp = 4;
-
-jobs{1}=matlabbatch;
-cfg_util('run',jobs);
-clear matlabbatch jobs
 
 
 

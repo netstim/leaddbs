@@ -156,17 +156,17 @@ stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation',options),'TooltipStrin
 
 
 
-    
+
 % Show atlas data
 if options.d3.writeatlases
     atlases=ea_showatlas(resultfig,elstruct,options);
     if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
         cnt=length(vizstruct);
-
+        
         % export vizstruct
         for side=1:2
             for atl=1:length(atlases.fv)
-
+                
                 if isfield(atlases.fv{atl,side},'faces')
                     vizstruct(cnt+1).faces=atlases.fv{atl,side}.faces;
                     vizstruct(cnt+1).vertices=atlases.fv{atl,side}.vertices;
@@ -207,92 +207,13 @@ if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file 
     setappdata(resultfig,'bbstruct',bbstruct);
     
     if options.prefs.ls.autosave
-       ea_export_server([],[],options); 
+        ea_export_server([],[],options);
     end
 end
 
 
 
-function ea_export_server(hobj,ev,options)
 
-disp('Exporting data to LEAD Server...');
-if ~isfield(options.prefs.ls,'dir')
-    % configure server output directory for the first time.
-    
-    serverdir=uigetdir([],'Please choose output directory for LEAD-server.');
-    
-    if ~serverdir % user pressed cancel.
-        return
-    end
-    % store directory in ea_prefs
-    fid = fopen([fileparts(which('lead')),filesep,'ea_prefs.m'],'a');
-    fwrite(fid,['prefs.ls.dir=','''',serverdir,filesep,'''','];']);
-    fclose(fid);
-end
-
-if ~exist(options.prefs.ls.dir,'file');
-    mkdir(options.prefs.ls.dir);
-end
-if ~exist([options.prefs.ls.dir,'data'],'file');    
-    mkdir([options.prefs.ls.dir,'data']);
-end
-if ~exist([options.prefs.ls.dir,'data',filesep,options.patientname],'file');    
-
-mkdir([options.prefs.ls.dir,'data',filesep,options.patientname]);
-end
-% export model
-bbstruct=getappdata(gcf,'bbstruct');
-if ~isempty(bbstruct)
-    ea_savejson('',bbstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bb_scene.json'],'ArrayToStruct',0);
-    % export html
-    copyfile([options.earoot,'ls',filesep,'index.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'index.html']);
-
-else
-    warning('JSON-file not set ? set electrode rendering to standard electrodes display and re-run LEAD for export in webserver.');
-return
-end
-% export html
- copyfile([options.earoot,'ls',filesep,'index.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'index.html']);
-
-
-% export ftracking and vat results if present
-PL=getappdata(gcf,'PL');
-if ~isempty(PL)
-nowstr=[date,'_',num2str(now)];
-nowstr=nowstr(1:end-5);
-mkdir([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr])
-vatstruct=viz2brainbrowser(PL.vatfv);
-
-ea_savejson('',vatstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_vat.json'],'ArrayToStruct',0);
-% export html
-copyfile([options.earoot,'ls',filesep,'index_vat.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
-
-try
-    fibstruct=viz2brainbrowser(PL.fibfv);
-    %fibstruct=rmfield(fibstruct,'normals');
-
-    ea_savejson('',fibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_fibs.json'],'ArrayToStruct',0);
-    % export html
-    copyfile([options.earoot,'ls',filesep,'index_fibs.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
-    
-end
-try
-    dcfibstruct=viz2brainbrowser(PL.dcfibfv);
-    %dcfibstruct=rmfield(dcfibstruct,'normals');
-    
-    ea_savejson('',dcfibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_dcfibs.json'],'ArrayToStruct',0);
-    % export html
-    copyfile([options.earoot,'ls',filesep,'index_dcfibs.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
-    
-end
-
-
-
-
-end
-
-    % append to index
- ea_export_ls_index(options);
 
 
 
@@ -318,9 +239,9 @@ for entry=1:length(vizstruct)
     end
     bbstruct.normals=[bbstruct.normals;vizstruct(entry).normals];
     if ~isempty(vizstruct(entry).vertices)
-    bbstruct.colors=[bbstruct.colors;repmat([vizstruct(entry).colors(1,:)],length(vizstruct(entry).vertices),1)];
- 
-end
+        bbstruct.colors=[bbstruct.colors;repmat([vizstruct(entry).colors(1,:)],length(vizstruct(entry).vertices),1)];
+        
+    end
     bbstruct.shapes(entry).indices=vizstruct(entry).faces+offset;
     
     bbstruct.shapes(entry).indices=bbstruct.shapes(entry).indices;

@@ -90,6 +90,11 @@ if options.normalize.check
 end
 
 
+if options.atl.genpt % generate patient specific atlas set
+    ea_ptspecific_atl(options);
+    
+end
+
 if options.doreconstruction
     ea_checkfiles(options);
     

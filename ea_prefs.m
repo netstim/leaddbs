@@ -52,4 +52,4 @@ prefs.addfibers={}; % additional fibers to show.
 
 prefs.ls.dir=[fileparts(which('lead')),filesep,'..',filesep,'lead_server',filesep];
 prefs.ls.autosave=0;
-prefs.firstrun='off'; 
+prefs.firstrun='off';

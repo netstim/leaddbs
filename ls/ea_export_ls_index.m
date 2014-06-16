@@ -1,4 +1,4 @@
-function ea_export_ls_index(options)
+function ea_export_ls_index(serverdir,options)
 % very simple static dir2html export function.
 
 
@@ -44,3 +44,10 @@ fwrite(fid,'</html>');
 fclose(fid);
 
 disp('LEAD Server updated.');
+    
+        disp(sprintf('Enter the following lines to terminal in order to start a test-server: \n'));
+        disp(['cd ',serverdir,]);
+        disp(['node server.js']);
+        disp(sprintf('\n LEAD-Server should then be established successfully.'));
+        disp('Navigate to http://localhost:5000/ in your browser to see results.');
+    
