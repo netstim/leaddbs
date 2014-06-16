@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 29-May-2014 15:54:27
+% Last Modified by GUIDE v2.5 07-Jun-2014 13:42:13
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -186,6 +186,8 @@ options.autoimprove=(get(handles.autoimprovecheck,'Value') == get(handles.autoim
 options.axiscontrast=(get(handles.axispopup,'Value')); % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
 
+options.atl.can=get(handles.canatlcheck,'Value'); % display canonical atlases
+options.atl.pt=get(handles.patatlcheck,'Value'); % display (and generate) patient specific atlases
 
 options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
 options.d2.atlasopacity=0.5;
@@ -929,3 +931,21 @@ function autoimprovecheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of autoimprovecheck
+
+
+% --- Executes on button press in canatlcheck.
+function canatlcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to canatlcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of canatlcheck
+
+
+% --- Executes on button press in patatlcheck.
+function patatlcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to patatlcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of patatlcheck

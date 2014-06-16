@@ -17,10 +17,10 @@ end
 switch options.elmodel
     
     case 'Medtronic 3389'
-        elspec.lead_diameter=1.24; % actually it is 1.27! Using a slighlty smaller value so that contacts are shown properly.
+        elspec.lead_diameter=1.27; % actually it is 1.27! Using a slighlty smaller value so that contacts are shown properly.
         elspec.lead_color=0.7;
         elspec.contact_length=1.5;
-        elspec.contact_diameter=1.4; % actually it is 1.27! Using a slightly larger value so that contacts are shown properly.
+        elspec.contact_diameter=1.27; % actually it is 1.27! Using a slightly larger value so that contacts are shown properly.
         elspec.contact_color=0.3;
         elspec.tip_diameter=1.27;
         elspec.tip_color=0.7;

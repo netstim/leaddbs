@@ -68,7 +68,14 @@ axis equal
 
 ht=uitoolbar(resultfig);
 
+% Set some visualization parameters
+
+set(gcf,'Renderer','OpenGL')
+axis off
+set(gcf,'color','w');
+
 % show electrode(s).
+
 
 for pt=1:length(elstruct)
     [el_render(pt).el_render]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
@@ -82,26 +89,34 @@ for pt=1:length(elstruct)
         uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{2},'OnCallback',{@objvisible,el_render(pt).el_render{1}},'OffCallback',{@objinvisible,el_render(pt).el_render{1}},'State','on');
     end
     
-    
-%     % export vizstruct
- vizstruct=struct('faces',[],'vertices',[],'colors',[]);
- 
- 
-     extract=[1,4,7,10,13,16,19,22,25]; % surfaces without endplates.
-    labels={'rel_traj','lel_traj','rel_btwc1','lel_btwc1','rel_btwc2','lel_btwc2','rel_btwc3','lel_btwc3'...
-        'rel_cnt1','lel_cnt1','rel_cnt2','lel_cnt2','rel_cnt3','lel_cnt3','rel_cnt4','lel_cnt4','rel_tip','lel_tip',};
-    cnt=1;
-    for ex=extract
-        for side=1:2
-            
-            ps = surf2patch(get(el_render(pt).el_render{side}(ex),'XData'),get(el_render(pt).el_render{side}(ex),'YData'),get(el_render(pt).el_render{side}(ex),'ZData'),'triangles');
-            vizstruct(cnt).faces=ps.faces;
-            vizstruct(cnt).vertices=ps.vertices;
-            scolor=get(el_render(pt).el_render{side}(ex),'CData');
-            vizstruct(cnt).colors=repmat(squeeze(scolor(1,1,:))',length(vizstruct(cnt).faces),1);
-                    vizstruct(cnt).name=labels{cnt};
-                    cnt=cnt+1;
-
+    if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
+        
+        
+        vizstruct=struct('faces',[],'vertices',[],'colors',[]);
+        
+        
+        extract=[1,4,7,10,13,16,19,22,25]; % surfaces without endplates.
+        labels={'rel_traj','lel_traj','rel_btwc1','lel_btwc1','rel_btwc2','lel_btwc2','rel_btwc3','lel_btwc3'...
+            'rel_cnt1','lel_cnt1','rel_cnt2','lel_cnt2','rel_cnt3','lel_cnt3','rel_cnt4','lel_cnt4','rel_tip','lel_tip',};
+        cnt=1;
+        for ex=extract
+            for side=1:2
+                
+                ps = surf2patch(get(el_render(pt).el_render{side}(ex),'XData'),get(el_render(pt).el_render{side}(ex),'YData'),get(el_render(pt).el_render{side}(ex),'ZData'),'triangles');
+                % temporally plot electrode to get vertex normals..
+                tmp=figure('visible','off');
+                tp=patch(ps);
+                
+                vizstruct(cnt).normals=get(tp,'VertexNormals');
+                delete(tmp);
+                vizstruct(cnt).faces=ps.faces;
+                vizstruct(cnt).vertices=ps.vertices;
+                scolor=get(el_render(pt).el_render{side}(ex),'CData');
+                vizstruct(cnt).colors=repmat([squeeze(scolor(1,1,:))',0.7],length(vizstruct(cnt).faces),1);
+                vizstruct(cnt).name=labels{cnt};
+                cnt=cnt+1;
+                
+            end
         end
     end
     
@@ -126,6 +141,9 @@ rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb',options),'Toolt
 
 hdsavebutton=uipushtool(ht,'CData',ea_get_icn('save',options),'TooltipString','Save Scene','ClickedCallback',@export_hd);
 
+% Initialize Export to Lead-Server button
+
+lsbutton=uipushtool(ht,'CData',ea_get_icn('server',options),'TooltipString','Export to Server','ClickedCallback',{@ea_export_server,options});
 
 % Initialize Sliceview-Button
 
@@ -136,32 +154,31 @@ slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','
 
 stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation',options),'TooltipString','Stimulation Control Figure','ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
 
-% Set some visualization parameters
 
-set(gcf,'Renderer','OpenGL')
-axis off
-set(gcf,'color','w');
 
+    
 % Show atlas data
-cnt=length(vizstruct);
 if options.d3.writeatlases
-        atlases=ea_showatlas(resultfig,elstruct,options);
+    atlases=ea_showatlas(resultfig,elstruct,options);
+    if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
+        cnt=length(vizstruct);
+
         % export vizstruct
         for side=1:2
             for atl=1:length(atlases.fv)
                 if ~isempty(atlases.fv{atl,side}.faces)
                     vizstruct(cnt+1).faces=atlases.fv{atl,side}.faces;
                     vizstruct(cnt+1).vertices=atlases.fv{atl,side}.vertices;
-                    
-                    vizstruct(cnt+1).colors=squeeze(ind2rgb(round(atlases.cdat{atl,side}),atlases.colormap));
+                    vizstruct(cnt+1).normals=atlases.normals{atl,side};
+                    vizstruct(cnt+1).colors=[squeeze(ind2rgb(round(atlases.cdat{atl,side}),atlases.colormap)),repmat(0.7,size(atlases.normals{atl,side},1),1)];
                     cnt=cnt+1;
                 end
             end
         end
         
         
+    end
 end
-
 
 % Show isomatrix data
 
@@ -170,7 +187,7 @@ if options.d3.showisovolume && options.d3.isovscloud>1
     ea_showisovolume(resultfig,elstruct,options);
     
 end
-        set(0,'CurrentFigure',resultfig); 
+set(0,'CurrentFigure',resultfig);
 
 set(gcf,'Renderer','OpenGL')
 axis off
@@ -181,60 +198,146 @@ set(gcf,'Name',figtitle);
 
 
 
+if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
+    
+    % store json in figure file
+    
+    bbstruct=viz2brainbrowser(vizstruct);
+    setappdata(resultfig,'bbstruct',bbstruct);
+    
+    if options.prefs.ls.autosave
+       ea_export_server([],[],options); 
+    end
+end
 
-% write out json file
 
-bbstruct=viz2brainbrowser(vizstruct);
-ea_savejson('',bbstruct,'NoRowBracket',1,'FileName','Scene_Brainbrowser.json','ArrayToStruct',0);
 
-%ea_savejson('Lead_Scene',vizstruct,[options.earoot,options.patientname,filesep,'Scene.JSON']);
+function ea_export_server(hobj,ev,options)
 
-% export for Brainbrowser
+if ~isfield(options.prefs.ls,'dir')
+    % configure server output directory for the first time.
+    
+    serverdir=uigetdir([],'Please choose output directory for LEAD-server.');
+    
+    if ~serverdir % user pressed cancel.
+        return
+    end
+    % store directory in ea_prefs
+    fid = fopen([fileparts(which('lead')),filesep,'ea_prefs.m'],'a');
+    fwrite(fid,['prefs.ls.dir=','''',serverdir,filesep,'''','];']);
+    fclose(fid);
+end
+
+if ~exist(options.prefs.ls.dir,'file');
+    mkdir(options.prefs.ls.dir);
+end
+mkdir([options.prefs.ls.dir,'data']);
+mkdir([options.prefs.ls.dir,'data',filesep,options.patientname]);
+
+% export model
+bbstruct=getappdata(gcf,'bbstruct');
+if ~isempty(bbstruct)
+    ea_savejson('',bbstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bbscene.json'],'ArrayToStruct',0);
+    % export html
+    copyfile([options.earoot,'ls',filesep,'index.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'index.html']);
+    % append to index
+    ea_export_ls_index(options);
+else
+    warning('JSON-file not set ? set electrode rendering to standard electrodes display and re-run LEAD for export in webserver.');
+end
+
+
+% export ftracking and vat results if present
+PL=getappdata(gcf,'PL');
+if ~isempty(PL)
+
+
+vatstruct=viz2brainbrowser(PL.vatfv);
+
+    ea_savejson('',vatstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bb_vat.json'],'ArrayToStruct',0);
+
+    try
+    fibstruct=viz2brainbrowser(PL.fibfv);
+    fibstruct=rmfield(fibstruct,'normals');
+        ea_savejson('',fibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bb_fibs.json'],'ArrayToStruct',0);
+
+end
+try
+    dcfibstruct=viz2brainbrowser(PL.dcfibfv);
+        dcfibstruct=rmfield(dcfibstruct,'normals');
+
+        ea_savejson('',dcfibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bb_dcfibs.json'],'ArrayToStruct',0);
+end
+% export html
+    %copyfile([options.earoot,'ls',filesep,'index.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'index.html']);
+    % append to index
+    %ea_export_ls_index(options);
+    
+
+end
 
 
 
 function bbstruct=viz2brainbrowser(vizstruct)
+
+% Export function to brainbrowser made at OHBM Hackathon 2014 together with Tarek
+% Sherif.
+
 bbstruct.vertices=[];
+bbstruct.normals=[];
+
 bbstruct.colors=[];
-offset=0;
+offset=-1; % since indices should start at 0.
+
+vizstruct=vizstruct(:);
+
 for entry=1:length(vizstruct)
     
     bbstruct.vertices=[bbstruct.vertices;vizstruct(entry).vertices];
-    bbstruct.colors=[bbstruct.colors;repmat([vizstruct(entry).colors(1,:),0.7],length(vizstruct(entry).vertices),1)];
+    
+    for n=1:length(vizstruct(entry).normals);
+        vizstruct(entry).normals(n,:)=(vizstruct(entry).normals(n,:)/norm(vizstruct(entry).normals(n,:)))*-1;
+    end
+    bbstruct.normals=[bbstruct.normals;vizstruct(entry).normals];
+    
+    bbstruct.colors=[bbstruct.colors;repmat([vizstruct(entry).colors(1,:)],length(vizstruct(entry).vertices),1)];
     bbstruct.shapes(entry).indices=vizstruct(entry).faces+offset;
     
-    % bbstruct.shapes(entry).indices=bbstruct.shapes(entry).indices(:)';
+    bbstruct.shapes(entry).indices=bbstruct.shapes(entry).indices;
     offset=offset+length(vizstruct(entry).vertices);
 end
 bbstruct.vertices=bbstruct.vertices';
 bbstruct.vertices=bbstruct.vertices(:);
-% bbstruct.colors=bbstruct.colors(:)';
+bbstruct.colors=bbstruct.colors';
+bbstruct.colors=bbstruct.colors(:);
+bbstruct.normals=bbstruct.normals';
+bbstruct.normals=bbstruct.normals(:);
 
 
 
 
 
 function opensliceviewer(hobj,ev,resultfig,options)
-   awin=ea_anatomycontrol(gcf,options);
-   setappdata(resultfig,'awin',awin);
-    WinOnTop(awin,true);
+awin=ea_anatomycontrol(gcf,options);
+setappdata(resultfig,'awin',awin);
+WinOnTop(awin,true);
 
 
 function openstimviewer(hobj,ev,elstruct,resultfig,options)
-    stimwin=ea_stimparams(elstruct,gcf,options);
-    setappdata(resultfig,'stimwin',stimwin);
-    WinOnTop(stimwin,true);
-    
-    
-    
+stimwin=ea_stimparams(elstruct,gcf,options);
+setappdata(resultfig,'stimwin',stimwin);
+WinOnTop(stimwin,true);
+
+
+
 function closesattelites(src,evnt)
 stimwin=getappdata(gcf,'stimwin');
 try
-  close(stimwin)
+    close(stimwin)
 end
 awin=getappdata(gcf,'awin');
 try
-  close(awin)
+    close(awin)
 end
 delete(gcf)
 
@@ -543,7 +646,7 @@ function WasOnTop = WinOnTop( FigureHandle, IsOnTop )
 % * WinOnTop();                     - equal to WinOnTop( gcf, true);
 % * WasOnTop = WinOnTop(...);       - returns boolean value "if figure WAS on top"
 % * IsOnTop  = WinOnTop(hfigure,[]) - gets "if figure is on top" property
-% 
+%
 % LIMITATIONS:
 % * java enabled
 % * figure must be visible
@@ -561,34 +664,34 @@ function WasOnTop = WinOnTop( FigureHandle, IsOnTop )
 
 if ~exist('FigureHandle','var');FigureHandle = gcf; end
 assert(...
-          isscalar( FigureHandle ) && ishandle( FigureHandle ) &&  strcmp(get(FigureHandle,'Type'),'figure'),...
-          'WinOnTop:Bad_FigureHandle_input',...
-          '%s','Provided FigureHandle input is not a figure handle'...
-       );
+    isscalar( FigureHandle ) && ishandle( FigureHandle ) &&  strcmp(get(FigureHandle,'Type'),'figure'),...
+    'WinOnTop:Bad_FigureHandle_input',...
+    '%s','Provided FigureHandle input is not a figure handle'...
+    );
 
 assert(...
-            strcmp('on',get(FigureHandle,'Visible')),...
-            'WinOnTop:FigInisible',...
-            '%s','Figure Must be Visible'...
-       );
+    strcmp('on',get(FigureHandle,'Visible')),...
+    'WinOnTop:FigInisible',...
+    '%s','Figure Must be Visible'...
+    );
 
 assert(...
-            strcmp('normal',get(FigureHandle,'WindowStyle')),...
-            'WinOnTop:FigWrongWindowStyle',...
-            '%s','WindowStyle Must be Normal'...
-       );
-   
+    strcmp('normal',get(FigureHandle,'WindowStyle')),...
+    'WinOnTop:FigWrongWindowStyle',...
+    '%s','WindowStyle Must be Normal'...
+    );
+
 if ~exist('IsOnTop','var');IsOnTop=true;end
 assert(...
-          islogical( IsOnTop ) &&  isscalar( IsOnTop) || isempty( IsOnTop ), ...
-          'WinOnTop:Bad_IsOnTop_input',...
-          '%s','Provided IsOnTop input is neither boolean, nor empty'...
-      );
+    islogical( IsOnTop ) &&  isscalar( IsOnTop) || isempty( IsOnTop ), ...
+    'WinOnTop:Bad_IsOnTop_input',...
+    '%s','Provided IsOnTop input is neither boolean, nor empty'...
+    );
 %% Pre-checks
 
 error(javachk('swing',mfilename)) % Swing components must be available.
-  
-  
+
+
 %% Action
 
 % Flush the Event Queue of Graphic Objects and Update the Figure Window.

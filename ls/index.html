@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--
+  BrainBrowser: Web-based Neurological Visualization Tools
+  (https://brainbrowser.cbrain.mcgill.ca)
+  
+  Copyright (C) 2011
+  The Royal Institution for the Advancement of Learning
+  McGill University
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as
+  published by the Free Software Foundation, either version 3 of the
+  License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+  Author: Tarek Sherif <tsherif@gmail.com> (http://tareksherif.ca/)
+  Author: Nicolas Kassis
+-->
+
+<html lang="en">  
+  <head>  
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">  
+    <link type="text/css" href="../../css/common.css" rel="Stylesheet" />
+    <link type="text/css" href="../../css/surface-viewer-demo.css" rel="Stylesheet" />
+    <title>BrainBrowser Surface Viewer</title>  
+  </head>  
+  <body>  
+    <div id="brainbrowser"></div>
+
+    <!-- all the scripts -->
+    <script src="../../js/three.r66.min.js"></script>
+    <script src="../../js/brainbrowser/brainbrowser.js"></script>
+    <script src="../../js/brainbrowser/core/tree-store.js"></script>
+    <script src="../../js/brainbrowser/lib/config.js"></script>
+    <script src="../../js/brainbrowser/lib/utils.js"></script>
+    <script src="../../js/brainbrowser/lib/events.js"></script> 
+    <script src="../../js/brainbrowser/lib/loader.js"></script>
+    <script src="../../js/brainbrowser/lib/color-map.js"></script> 
+    <script src="../../js/brainbrowser/surface-viewer.js"></script>
+    <script src="../../js/brainbrowser/surface-viewer/lib/parse-intensity-data.js"></script> 
+    <script src="../../js/brainbrowser/surface-viewer/modules/annotations.js"></script>
+    <script src="../../js/brainbrowser/surface-viewer/modules/color.js"></script>
+    <script src="../../js/brainbrowser/surface-viewer/modules/loading.js"></script>
+    <script src="../../js/brainbrowser/surface-viewer/modules/rendering.js"></script>
+    <script src="../../js/brainbrowser/surface-viewer/modules/views.js"></script>
+    <script>
+      BrainBrowser.config.set("worker_dir", "../../js/brainbrowser/workers/");
+
+      var viewer = BrainBrowser.SurfaceViewer.start("brainbrowser", function(viewer) {
+        viewer.render();
+        viewer.setClearColor(0xFFFFFF);
+
+        viewer.loadModelFromURL("bbscene.json", {
+            format: "json",
+            complete: function() {
+              var i;
+              viewer.setTransparency(0.7);
+
+              for (i = 1; i <= 16; i++) {
+                viewer.setTransparency(1, {
+                  shape_name: "bbscene.json_" + i
+                });
+              }
+              
+            }
+          });
+          viewer.setCameraPosition(-10, 10, 500);
+          viewer.zoom(2.5);
+
+          matrixRotX = new THREE.Matrix4();
+          matrixRotX.makeRotationX(-0.45 * Math.PI);
+          matrixRotY = new THREE.Matrix4();
+          matrixRotY.makeRotationY(-0.5 * Math.PI);
+
+          viewer.model.applyMatrix(matrixRotY.multiply(matrixRotX));
+        
+
+
+       
+      });
+    </script>
+  </body>  
+</html>  

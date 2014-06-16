@@ -34,8 +34,8 @@ prefs.FTR_normalized=['wFTR.mat'];
 
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
-prefs.hullsmooth=0; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
-prefs.hullsimplify=0.2; %'auto'; %'auto'; %'auto'; %'auto'; %'auto'; %'auto'; % 0.1 would reduce hulldata to 10% ? set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
+prefs.hullsmooth=5; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
+prefs.hullsimplify=0.15; %'auto'; %'auto'; %'auto'; %'auto'; %'auto'; %'auto'; % 0.1 would reduce hulldata to 10% ? set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
 
 %% labels:
 prefs.lhullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
@@ -46,3 +46,9 @@ prefs.lhullsimplify='auto'; % 0.1 would reduce hulldata to 10% ? set to simplify
 %% fibers:
 
 prefs.addfibers={}; % additional fibers to show.
+
+
+%% lead server:
+
+prefs.ls.autosave=1; % automatically store results in web-server.
+prefs.ls.dir=[fileparts(which('lead')),filesep,'..',filesep,'lead_server',filesep];

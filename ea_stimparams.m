@@ -656,7 +656,11 @@ for group=flix
     try
     copyfile([options.root,options.patientname,filesep,'ea_pm.nii'],[options.root,options.patientname,filesep,'ea_pm_group_',num2str(group),'.nii']);
     end
+    try
     PL(group)=getappdata(resultfig,'PL');
+    catch
+        keyboard
+    end
 end
 setappdata(resultfig,'PL',PL);
 set(resultfig,'Name',figtitle);

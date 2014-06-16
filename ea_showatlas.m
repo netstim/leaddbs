@@ -225,6 +225,7 @@ for atlas=1:length(atlases.names)
         set(0,'CurrentFigure',resultfig); 
         atlassurfs(atlascnt)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
         
+        
         % make fv compatible for stats
         
         
@@ -233,9 +234,9 @@ for atlas=1:length(atlases.names)
         
         % prepare colorbutton icon
         
-        atlasc=squeeze(jetlist(round(atlases.colors(atlas)),:)); % color for toggle button icon
+        atlasc=squeeze(jetlist(round(atlases.colors(atlas)),:));  % color for toggle button icon 
         colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,atlassurfs(atlascnt)},'OffCallback',{@atlasinvisible,atlassurfs(atlascnt)},'State','on');
-        
+     
         % gather contact statistics
         if options.writeoutstats
             atsearch=KDTreeSearcher(XYZ);
@@ -264,6 +265,8 @@ for atlas=1:length(atlases.names)
             end
         end
         
+        normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
+
         
         ea_spec_atlas(atlassurfs(atlascnt),atlases.names{atlas},atlases.colormap,setinterpol);
         
@@ -291,6 +294,9 @@ atlases.XYZ=iXYZ;
 atlases.pixdim=ipixdim;
 atlases.colorc=icolorc;
 end
+
+atlases.normals=normals;
+
 try
 setappdata(gcf,'iXYZ',atlases.XYZ);
 setappdata(gcf,'ipixdim',atlases.pixdim);

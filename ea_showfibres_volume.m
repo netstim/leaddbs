@@ -64,6 +64,11 @@ for side=1:length(VAT)
         PL.vatsurfs(side,vat)=trisurf(K(side).K{vat},VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3),...
             abs(repmat(60,length(VAT{side}.VAT{vat}),1)...
             +randn(length(VAT{side}.VAT{vat}),1)*2)');
+        PL.vatfv(side,vat).vertices=[VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3)];
+        PL.vatfv(side,vat).faces=K(side).K{vat};
+        PL.vatfv(side,vat).normals=get(PL.vatsurfs(side,vat),'Vertexnormals');
+        PL.vatfv(side,vat).colors=repmat([1,0,0,0.7],size(PL.vatfv(side,vat).vertices,1),1);
+        
         ea_spec_atlas(PL.vatsurfs(side,vat),'vat',jet,1);
         
         if options.writeoutstats
@@ -94,12 +99,10 @@ for side=1:length(VAT)
                         tpd=ipixdim{atlas,1};
                     end
                     tpv=tpd(1)*tpd(2)*tpd(3); % volume of one voxel in mm^3.
-                    try
+                    
                         
                         ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas)=sum(inhull(thisatl,VAT{side}.VAT{vat},K(side).K{vat}))*tpv;
-                    catch
-                        keyboard
-                    end
+                    
                 end
                 
                 
@@ -483,6 +486,23 @@ if stimparams(1).showfibers
                 [thisfib(2,:);thisfib(2,:)],...
                 [thisfib(3,:);thisfib(3,:)],...
                 [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
+            
+            % store for webexport
+            
+              fv=surf2patch(PL.fib_plots.fibs(fib),'triangles');
+              
+            
+                
+                PL.fibfv(fib).vertices=fv.vertices;
+                PL.fibfv(fib).faces=fv.faces;
+                PL.fibfv(fib).normals=zeros(size(fv.vertices,1),3);
+
+                                     jetlist=jet;
+
+           PL.fibfv(fib).colors=[squeeze(ind2rgb(round(fv.facevertexcdata),jetlist)),repmat(0.7,size(PL.fibfv(fib).vertices,1),1)];
+
+
+            
             clear thisfib
             
             %plot3(connectingfibs{fib}(segment:segment+1,1),connectingfibs{fib}(segment:segment+1,2),connectingfibs{fib}(segment:segment+1,3),'Color',segclr);
@@ -501,6 +521,7 @@ if stimparams(1).showfibers
     end
     
     % plot fibers that connect to both a region of the labeling atlas and the electrode VAT:
+    cnt=1;
     for la=1:size(doubleconnectingfibs,1)
         fibmax=length(doubleconnectingfibs(la,:));
         dispercent(0,'Plotting fibers that connect to both the VAT and a region within the labeling atlas');
@@ -510,7 +531,9 @@ if stimparams(1).showfibers
             doubleconnectingfibs{la,fib}=doubleconnectingfibs{la,fib}';
 
             if ~isfield(stimparams,'group')
+                
                 doubleconnectingfibs{la,fib}(4,:)=detcolor(doubleconnectingfibs{la,fib}); % add coloring information to the 4th column.
+
             else % if more than one group is analyzed, coloring info will be off the group color.
                 RGB=zeros(1,1,3);
                 RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
@@ -528,14 +551,49 @@ if stimparams(1).showfibers
                 [thisfib(2,:);thisfib(2,:)],...
                 [thisfib(3,:);thisfib(3,:)],...
                 [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
+            
+            % store for webexport
+            
+            
+            fv=surf2patch(PL.fib_plots.dcfibs(la,fib),'triangles');
+            
+            PL.dcfibfv(cnt).normals=zeros(size(fv.vertices,1),3);
+            
+            PL.dcfibfv(cnt).vertices=fv.vertices;
+            PL.dcfibfv(cnt).faces=fv.faces;
+            jetlist=jet;
+            
+            PL.dcfibfv(cnt).colors=[squeeze(ind2rgb(round(fv.facevertexcdata),jetlist)),repmat(0.7,size(PL.dcfibfv(fib).vertices,1),1)];
+            
+            cnt=cnt+1;
+            
+                        
+                        
+                        
+%                         PL.dcfibfv(cnt)=surf2patch(PL.fib_plots.dcfibs(la,fib));
+%                         PL.dcfibfv(cnt).normals=get(PL.fib_plots.dcfibs(cnt),'Vertexnormals');
+%                         PL.dcfibfv(cnt).normals=squeeze(PL.dcfibfv(cnt).normals(1,:,:));
+%                         cnt=cnt+1;
+%                         
+                        
+%                         PL.dcfibfv(fib).vertices=thisfib(1:3,:)';
+%                         PL.dcfibfv(fib).faces=[1:size(thisfib,2)-2;3:size(thisfib,2);2:size(thisfib,2)-1]';
+%                         PL.dcfibfv(fib).normals=get(PL.fib_plots.dcfibs(fib),'Vertexnormals');
+%                         PL.dcfibfv(fib).normals=squeeze(PL.dcfibfv(fib).normals(1,:,:));
+%                         jetlist=jet;
+%                         PL.dcfibfv(fib).colors=squeeze(ind2rgb(round(thisfib(4,:)),jetlist));
+            
+            
             clear thisfib
+            catch
+                
         end         
         end
         dispercent(100,'end');
+
         
         set(PL.fib_plots.dcfibs(la,:),'EdgeAlpha',0.05);
-        
-        
+
         
         try
             dcfiberbutton(la)=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_both',options),'TooltipString','Fibers (Electrode and Labeling Atlas)','OnCallback',{@objvisible,PL.fib_plots.dcfibs(la,:),resultfig,'dcfibson'},'OffCallback',{@objinvisible,PL.fib_plots.dcfibs(la,:),resultfig,'dcfibson'},'State',getstate(dcfibson(la)));
@@ -611,7 +669,7 @@ end
 
 
 
-setappdata(gcf,'PL',PL);
+setappdata(resultfig,'PL',PL);
 
 
 function indcol=detcolor(mat) % determine color based on traversing direction.

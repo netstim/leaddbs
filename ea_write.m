@@ -19,6 +19,14 @@ if options.elspec.numel>4 % here, electrodes with more than 4 contacts are extra
 end
 
 
+if options.atl.pt % generate patient specific atlases
+    
+   ea_ptspecific_atl(options) 
+    
+    
+end
+
+
 % Slice 2D Visualization
 if options.d2.write
     

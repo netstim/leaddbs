@@ -72,7 +72,7 @@ end
 
 for side=options.sides
     %% write out axial images
-    for tracor=tracorpresent'
+    for tracor=find(tracorpresent)'
         
         for elcnt=1:options.elspec.numel
             el=elcnt+options.elspec.numel*(side-1);
