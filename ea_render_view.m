@@ -166,7 +166,8 @@ if options.d3.writeatlases
         % export vizstruct
         for side=1:2
             for atl=1:length(atlases.fv)
-                if ~isempty(atlases.fv{atl,side}.faces)
+
+                if isfield(atlases.fv{atl,side},'faces')
                     vizstruct(cnt+1).faces=atlases.fv{atl,side}.faces;
                     vizstruct(cnt+1).vertices=atlases.fv{atl,side}.vertices;
                     vizstruct(cnt+1).normals=atlases.normals{atl,side};
@@ -214,6 +215,7 @@ end
 
 function ea_export_server(hobj,ev,options)
 
+disp('Exporting data to LEAD Server...');
 if ~isfield(options.prefs.ls,'dir')
     % configure server output directory for the first time.
     
@@ -231,50 +233,66 @@ end
 if ~exist(options.prefs.ls.dir,'file');
     mkdir(options.prefs.ls.dir);
 end
-mkdir([options.prefs.ls.dir,'data']);
-mkdir([options.prefs.ls.dir,'data',filesep,options.patientname]);
+if ~exist([options.prefs.ls.dir,'data'],'file');    
+    mkdir([options.prefs.ls.dir,'data']);
+end
+if ~exist([options.prefs.ls.dir,'data',filesep,options.patientname],'file');    
 
+mkdir([options.prefs.ls.dir,'data',filesep,options.patientname]);
+end
 % export model
 bbstruct=getappdata(gcf,'bbstruct');
 if ~isempty(bbstruct)
-    ea_savejson('',bbstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bbscene.json'],'ArrayToStruct',0);
+    ea_savejson('',bbstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bb_scene.json'],'ArrayToStruct',0);
     % export html
     copyfile([options.earoot,'ls',filesep,'index.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'index.html']);
-    % append to index
-    ea_export_ls_index(options);
+
 else
     warning('JSON-file not set ? set electrode rendering to standard electrodes display and re-run LEAD for export in webserver.');
+return
 end
+% export html
+ copyfile([options.earoot,'ls',filesep,'index.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'index.html']);
 
 
 % export ftracking and vat results if present
 PL=getappdata(gcf,'PL');
 if ~isempty(PL)
-
-
+nowstr=[date,'_',num2str(now)];
+nowstr=nowstr(1:end-5);
+mkdir([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr])
 vatstruct=viz2brainbrowser(PL.vatfv);
 
-    ea_savejson('',vatstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bb_vat.json'],'ArrayToStruct',0);
+ea_savejson('',vatstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_vat.json'],'ArrayToStruct',0);
+% export html
+copyfile([options.earoot,'ls',filesep,'index_vat.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
 
-    try
+try
     fibstruct=viz2brainbrowser(PL.fibfv);
-    fibstruct=rmfield(fibstruct,'normals');
-        ea_savejson('',fibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bb_fibs.json'],'ArrayToStruct',0);
+    %fibstruct=rmfield(fibstruct,'normals');
 
+    ea_savejson('',fibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_fibs.json'],'ArrayToStruct',0);
+    % export html
+    copyfile([options.earoot,'ls',filesep,'index_fibs.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
+    
 end
 try
     dcfibstruct=viz2brainbrowser(PL.dcfibfv);
-        dcfibstruct=rmfield(dcfibstruct,'normals');
-
-        ea_savejson('',dcfibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bb_dcfibs.json'],'ArrayToStruct',0);
-end
-% export html
-    %copyfile([options.earoot,'ls',filesep,'index.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'index.html']);
-    % append to index
-    %ea_export_ls_index(options);
+    %dcfibstruct=rmfield(dcfibstruct,'normals');
     
+    ea_savejson('',dcfibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_dcfibs.json'],'ArrayToStruct',0);
+    % export html
+    copyfile([options.earoot,'ls',filesep,'index_dcfibs.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
+    
+end
+
+
+
 
 end
+
+    % append to index
+ ea_export_ls_index(options);
 
 
 
@@ -299,8 +317,10 @@ for entry=1:length(vizstruct)
         vizstruct(entry).normals(n,:)=(vizstruct(entry).normals(n,:)/norm(vizstruct(entry).normals(n,:)))*-1;
     end
     bbstruct.normals=[bbstruct.normals;vizstruct(entry).normals];
-    
+    if ~isempty(vizstruct(entry).vertices)
     bbstruct.colors=[bbstruct.colors;repmat([vizstruct(entry).colors(1,:)],length(vizstruct(entry).vertices),1)];
+ 
+end
     bbstruct.shapes(entry).indices=vizstruct(entry).faces+offset;
     
     bbstruct.shapes(entry).indices=bbstruct.shapes(entry).indices;

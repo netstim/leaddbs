@@ -50,5 +50,6 @@ prefs.addfibers={}; % additional fibers to show.
 
 %% lead server:
 
-prefs.ls.autosave=1; % automatically store results in web-server.
 prefs.ls.dir=[fileparts(which('lead')),filesep,'..',filesep,'lead_server',filesep];
+prefs.ls.autosave=0;
+prefs.firstrun='off'; 

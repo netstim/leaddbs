@@ -109,6 +109,9 @@ setappdata(gcf,'normmethod',normmethod);
 set(handles.normmethod,'String',ndc);
 
 
+ea_firstrun;
+
+
 
 
 % UIWAIT makes lead wait for user response (see UIRESUME)

@@ -1,5 +1,10 @@
 function    ea_checkfiles(options)
 % load files
+if strcmp(options.prefs.patientdir,'Choose Patient Directory')
+    error('Please choose patient directory first');
+end
+
+
 tranii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
 try
 cornii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,options.prefs.cornii]);
