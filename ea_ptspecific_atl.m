@@ -115,133 +115,133 @@ for atlas=1:length(atlases.names)
         end
         
         if ~exist([tpmf,atlases.names{atlas}],'file') % check for pre-built TPM
-        
-        
-        nii=load_untouch_nii([atlf,atln]);
-        nii.img=double(nii.img);
-        nii.img=nii.img/max(nii.img(:)); % max 1
-        save_untouch_nii(nii,[atlf,'t',atln]);
-        clear nii
-        
-        matlabbatch{1}.spm.util.imcalc.input = {
-            [troot,'TPM.nii,1']
-            [atlf,'t',atln,',1']
-            };
-        matlabbatch{1}.spm.util.imcalc.output = [atln];
-        matlabbatch{1}.spm.util.imcalc.outdir = {tpmf};
-        matlabbatch{1}.spm.util.imcalc.expression = 'i1+i2';
-        matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-        matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-        matlabbatch{1}.spm.util.imcalc.options.interp = -4;
-        matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
-        
-        
-        jobs{1}=matlabbatch;
-        
-        cfg_util('run',jobs);
-        clear jobs matlabbatch
-        delete([atlf,'t',atln]);
-        
-        
-        
-        
-        tnii=load_untouch_nii([troot,'TPM.nii']);
-        anii=load_untouch_nii([tpmf,atln]);
-        
-        tnii.img(:,:,:,1)=tnii.img(:,:,:,1)+anii.img(:,:,:,1);
-        save_untouch_nii(tnii,[tpmf,atln]);
-        
+            
+            
+            nii=load_untouch_nii([atlf,atln]);
+            nii.img=double(nii.img);
+            nii.img=nii.img/max(nii.img(:)); % max 1
+            save_untouch_nii(nii,[atlf,'t',atln]);
+            clear nii
+            
+            matlabbatch{1}.spm.util.imcalc.input = {
+                [troot,'TPM.nii,1']
+                [atlf,'t',atln,',1']
+                };
+            matlabbatch{1}.spm.util.imcalc.output = [atln];
+            matlabbatch{1}.spm.util.imcalc.outdir = {tpmf};
+            matlabbatch{1}.spm.util.imcalc.expression = 'i1+i2';
+            matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+            matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+            matlabbatch{1}.spm.util.imcalc.options.interp = -4;
+            matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
+            
+            
+            jobs{1}=matlabbatch;
+            
+            cfg_util('run',jobs);
+            clear jobs matlabbatch
+            delete([atlf,'t',atln]);
+            
+            
+            
+            
+            tnii=load_untouch_nii([troot,'TPM.nii']);
+            anii=load_untouch_nii([tpmf,atln]);
+            
+            tnii.img(:,:,:,1)=tnii.img(:,:,:,1)+anii.img(:,:,:,1);
+            save_untouch_nii(tnii,[tpmf,atln]);
+            
         end
         
         if ~exist([patlf,atlases.names{atlas}],'file')
-        
-        % tpm file for atlas is now in folder. Begin segmentation..
-        
-        % gzip support..
-        if ~exist([tpmf,atln],'file') && exist([tpmf,atln,'.gz'],'file')
-           gunzip([tpmf,atln,'.gz']);
-           wasgz=1;
-        end
-        
-        
-        matlabbatch{1}.spm.tools.preproc8.channel.vols = {[proot,options.prefs.prenii_unnormalized,',1']};
-        matlabbatch{1}.spm.tools.preproc8.channel.biasreg = 0.0001;
-        matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm = 60;
-        matlabbatch{1}.spm.tools.preproc8.channel.write = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(1).tpm = {[tpmf,atln,',1']};
-        matlabbatch{1}.spm.tools.preproc8.tissue(1).ngaus = 2;
-        matlabbatch{1}.spm.tools.preproc8.tissue(1).native = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(1).warped = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(2).tpm = {[tpmf,atln,',2']};
-        matlabbatch{1}.spm.tools.preproc8.tissue(2).ngaus = 2;
-        matlabbatch{1}.spm.tools.preproc8.tissue(2).native = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(2).warped = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(3).tpm = {[tpmf,atln,',3']};
-        matlabbatch{1}.spm.tools.preproc8.tissue(3).ngaus = 2;
-        matlabbatch{1}.spm.tools.preproc8.tissue(3).native = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(3).warped = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(4).tpm = {[tpmf,atln,',4']};
-        matlabbatch{1}.spm.tools.preproc8.tissue(4).ngaus = 2;
-        matlabbatch{1}.spm.tools.preproc8.tissue(4).native = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(4).warped = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(5).tpm = {[tpmf,atln,',5']};
-        matlabbatch{1}.spm.tools.preproc8.tissue(5).ngaus = 2;
-        matlabbatch{1}.spm.tools.preproc8.tissue(5).native = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(5).warped = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(6).tpm = {[tpmf,atln,',6']};
-        matlabbatch{1}.spm.tools.preproc8.tissue(6).ngaus = 2;
-        matlabbatch{1}.spm.tools.preproc8.tissue(6).native = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.tissue(6).warped = [0 0];
-        matlabbatch{1}.spm.tools.preproc8.warp.mrf = 0;
-        matlabbatch{1}.spm.tools.preproc8.warp.reg = 4;
-        matlabbatch{1}.spm.tools.preproc8.warp.affreg = 'mni';
-        matlabbatch{1}.spm.tools.preproc8.warp.samp = 3;
-        matlabbatch{1}.spm.tools.preproc8.warp.write = [1 1];
-        
-        
-        jobs{1}=matlabbatch;
-        cfg_util('run',jobs);
-        clear matlabbatch jobs
-        
-        
-        
-        %apply deformation fields to respective atlas.
-        
-        % warp atlas to patient space
-        
-        matlabbatch{1}.spm.util.defs.comp{1}.def = {[proot,'iy_',options.prefs.prenii_unnormalized]};
-        matlabbatch{1}.spm.util.defs.ofname = '';
-        matlabbatch{1}.spm.util.defs.fnames = {[atlf,atln,',1']};
-        matlabbatch{1}.spm.util.defs.savedir.saveusr = {patlf};
-        matlabbatch{1}.spm.util.defs.interp = 1;
-        jobs{1}=matlabbatch;
-        cfg_util('run',jobs);
-        clear matlabbatch jobs
-                movefile([patlf,'w',atln],[patlf,atln]);
-
-                
-        % apply original transformation back to warped atlas.
-        matlabbatch{1}.spm.util.defs.comp{1}.def = {[proot,'y_ea_normparams.nii']};
-        matlabbatch{1}.spm.util.defs.ofname = '';
-        matlabbatch{1}.spm.util.defs.fnames = {[patlf,atln,',1']};
-        matlabbatch{1}.spm.util.defs.savedir.saveusr = {patlf};
-        matlabbatch{1}.spm.util.defs.interp = 1;
-        jobs{1}=matlabbatch;
-        cfg_util('run',jobs);
-        clear matlabbatch jobs
-        
-                movefile([patlf,'w',atln],[patlf,atln]);
-
-        
-        % re-gzip tpm, patl and atlas file.
-        if wasgz
-            try gzip([tpmf,atln]); end
-            try delete([tpmf,atln]); end
-            try gzip([atlf,atln]); end
-            try delete([atlf,atln]); end
-            try gzip([patlf,atln]); end
-            try delete([patlf,atln]); end
-        end
+            
+            % tpm file for atlas is now in folder. Begin segmentation..
+            
+            % gzip support..
+            if ~exist([tpmf,atln],'file') && exist([tpmf,atln,'.gz'],'file')
+                gunzip([tpmf,atln,'.gz']);
+                wasgz=1;
+            end
+            
+            
+            matlabbatch{1}.spm.tools.preproc8.channel.vols = {[proot,options.prefs.prenii_unnormalized,',1']};
+            matlabbatch{1}.spm.tools.preproc8.channel.biasreg = 0.0001;
+            matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm = 60;
+            matlabbatch{1}.spm.tools.preproc8.channel.write = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(1).tpm = {[tpmf,atln,',1']};
+            matlabbatch{1}.spm.tools.preproc8.tissue(1).ngaus = 2;
+            matlabbatch{1}.spm.tools.preproc8.tissue(1).native = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(1).warped = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(2).tpm = {[tpmf,atln,',2']};
+            matlabbatch{1}.spm.tools.preproc8.tissue(2).ngaus = 2;
+            matlabbatch{1}.spm.tools.preproc8.tissue(2).native = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(2).warped = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(3).tpm = {[tpmf,atln,',3']};
+            matlabbatch{1}.spm.tools.preproc8.tissue(3).ngaus = 2;
+            matlabbatch{1}.spm.tools.preproc8.tissue(3).native = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(3).warped = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(4).tpm = {[tpmf,atln,',4']};
+            matlabbatch{1}.spm.tools.preproc8.tissue(4).ngaus = 2;
+            matlabbatch{1}.spm.tools.preproc8.tissue(4).native = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(4).warped = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(5).tpm = {[tpmf,atln,',5']};
+            matlabbatch{1}.spm.tools.preproc8.tissue(5).ngaus = 2;
+            matlabbatch{1}.spm.tools.preproc8.tissue(5).native = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(5).warped = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(6).tpm = {[tpmf,atln,',6']};
+            matlabbatch{1}.spm.tools.preproc8.tissue(6).ngaus = 2;
+            matlabbatch{1}.spm.tools.preproc8.tissue(6).native = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.tissue(6).warped = [0 0];
+            matlabbatch{1}.spm.tools.preproc8.warp.mrf = 0;
+            matlabbatch{1}.spm.tools.preproc8.warp.reg = 4;
+            matlabbatch{1}.spm.tools.preproc8.warp.affreg = 'mni';
+            matlabbatch{1}.spm.tools.preproc8.warp.samp = 3;
+            matlabbatch{1}.spm.tools.preproc8.warp.write = [1 1];
+            
+            
+            jobs{1}=matlabbatch;
+            cfg_util('run',jobs);
+            clear matlabbatch jobs
+            
+            
+            
+            %apply deformation fields to respective atlas.
+            
+            % warp atlas to patient space
+            
+            matlabbatch{1}.spm.util.defs.comp{1}.def = {[proot,'iy_',options.prefs.prenii_unnormalized]};
+            matlabbatch{1}.spm.util.defs.ofname = '';
+            matlabbatch{1}.spm.util.defs.fnames = {[atlf,atln,',1']};
+            matlabbatch{1}.spm.util.defs.savedir.saveusr = {patlf};
+            matlabbatch{1}.spm.util.defs.interp = 1;
+            jobs{1}=matlabbatch;
+            cfg_util('run',jobs);
+            clear matlabbatch jobs
+            movefile([patlf,'w',atln],[patlf,atln]);
+            
+            
+            % apply original transformation back to warped atlas.
+            matlabbatch{1}.spm.util.defs.comp{1}.def = {[proot,'y_ea_normparams.nii']};
+            matlabbatch{1}.spm.util.defs.ofname = '';
+            matlabbatch{1}.spm.util.defs.fnames = {[patlf,atln,',1']};
+            matlabbatch{1}.spm.util.defs.savedir.saveusr = {patlf};
+            matlabbatch{1}.spm.util.defs.interp = 1;
+            jobs{1}=matlabbatch;
+            cfg_util('run',jobs);
+            clear matlabbatch jobs
+            
+            movefile([patlf,'w',atln],[patlf,atln]);
+            
+            
+            % re-gzip tpm, patl and atlas file.
+            if wasgz
+                try gzip([tpmf,atln]); end
+                try delete([tpmf,atln]); end
+                try gzip([atlf,atln]); end
+                try delete([atlf,atln]); end
+                try gzip([patlf,atln]); end
+                try delete([patlf,atln]); end
+            end
         end
         
         
