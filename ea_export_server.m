@@ -61,14 +61,15 @@ if ~isempty(PL)
     nowstr=[date,'_',num2str(now)];
     nowstr=nowstr(1:end-5);
     mkdir([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr])
-    vatstruct=viz2brainbrowser(PL.vatfv);
+    vatstruct=ea_viz2brainbrowser(PL.vatfv);
     
     ea_savejson('',vatstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_vat.json'],'ArrayToStruct',0);
     % export html
     copyfile([options.earoot,'ls',filesep,'index_vat.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
     
     try
-        fibstruct=viz2brainbrowser(PL.fibfv);
+        
+        fibstruct=ea_viz2brainbrowser(PL.bbfibfv);
         %fibstruct=rmfield(fibstruct,'normals');
         
         ea_savejson('',fibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_fibs.json'],'ArrayToStruct',0);
@@ -76,15 +77,7 @@ if ~isempty(PL)
         copyfile([options.earoot,'ls',filesep,'index_fibs.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
         
     end
-    try
-        dcfibstruct=viz2brainbrowser(PL.dcfibfv);
-        %dcfibstruct=rmfield(dcfibstruct,'normals');
-        
-        ea_savejson('',dcfibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_dcfibs.json'],'ArrayToStruct',0);
-        % export html
-        copyfile([options.earoot,'ls',filesep,'index_dcfibs.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
-        
-    end
+
     
     
     
@@ -92,7 +85,7 @@ if ~isempty(PL)
 end
 
 % append to index
-ea_export_ls_index(options);
+ea_export_ls_index(options.prefs.ls.dir,options);
 
 
 function initializeserver(serverdir,options)

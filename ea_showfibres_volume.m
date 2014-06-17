@@ -489,17 +489,25 @@ if stimparams(1).showfibers
             
             % store for webexport
             
-              fv=surf2patch(PL.fib_plots.fibs(fib),'triangles');
-              
-            
+                                jetlist=jet;
+
+            % old code to generate JSON output (not as brainbrowser expects
+            % it, might be useful for other outputs):
+%             fv=surf2patch(PL.fib_plots.fibs(fib),'triangles');
+%               PL.fibfv(fib).vertices=fv.vertices;
+%                 PL.fibfv(fib).faces=fv.faces;
+%                 PL.fibfv(fib).normals=zeros(size(fv.vertices,1),3);
+%                 PL.fibfv(fib).colors=[squeeze(ind2rgb(round(fv.facevertexcdata),jetlist)),repmat(0.7,size(PL.fibfv(fib).vertices,1),1)];
+
+              % new code as brainbrowser expects it:    
+                PL.bbfibfv(fib).vertices=thisfib(1:3,:)';
+                PL.bbfibfv(fib).faces=[1:size(thisfib,2)-1;2:size(thisfib,2)]';
+                PL.bbfibfv(fib).normals=zeros(size(PL.bbfibfv(fib).vertices,1),3);
+                PL.bbfibfv(fib).colors=[squeeze(ind2rgb(round(thisfib(4,:)),jetlist)),repmat(0.7,size(thisfib,2),1)];
                 
-                PL.fibfv(fib).vertices=fv.vertices;
-                PL.fibfv(fib).faces=fv.faces;
-                PL.fibfv(fib).normals=zeros(size(fv.vertices,1),3);
 
-                                     jetlist=jet;
+                                   
 
-           PL.fibfv(fib).colors=[squeeze(ind2rgb(round(fv.facevertexcdata),jetlist)),repmat(0.7,size(PL.fibfv(fib).vertices,1),1)];
 
 
             
@@ -521,7 +529,7 @@ if stimparams(1).showfibers
     end
     
     % plot fibers that connect to both a region of the labeling atlas and the electrode VAT:
-    cnt=1;
+    cnt=length(PL.bbfibfv)+1;
     for la=1:size(doubleconnectingfibs,1)
         fibmax=length(doubleconnectingfibs(la,:));
         dispercent(0,'Plotting fibers that connect to both the VAT and a region within the labeling atlas');
@@ -553,17 +561,27 @@ if stimparams(1).showfibers
                 [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
             
             % store for webexport
-            
-            
-            fv=surf2patch(PL.fib_plots.dcfibs(la,fib),'triangles');
-            
-            PL.dcfibfv(cnt).normals=zeros(size(fv.vertices,1),3);
-            
-            PL.dcfibfv(cnt).vertices=fv.vertices;
-            PL.dcfibfv(cnt).faces=fv.faces;
             jetlist=jet;
+            % old code to generate JSON output (not as brainbrowser expects
             
-            PL.dcfibfv(cnt).colors=[squeeze(ind2rgb(round(fv.facevertexcdata),jetlist)),repmat(0.7,size(PL.dcfibfv(fib).vertices,1),1)];
+            %             fv=surf2patch(PL.fib_plots.dcfibs(la,fib),'triangles');
+            %
+            %             PL.dcfibfv(cnt).normals=zeros(size(fv.vertices,1),3);
+            %
+            %             PL.dcfibfv(cnt).vertices=fv.vertices;
+            %             PL.dcfibfv(cnt).faces=fv.faces;
+            %
+            %
+            %             PL.dcfibfv(cnt).colors=[squeeze(ind2rgb(round(fv.facevertexcdata),jetlist)),repmat(0.7,size(PL.dcfibfv(fib).vertices,1),1)];
+            %
+            
+            % new code as brainbrowser expects it:
+            
+            PL.bbfibfv(cnt).vertices=thisfib(1:3,:)';
+            PL.bbfibfv(cnt).faces=[1:size(thisfib,2)-1;2:size(thisfib,2)]';
+            PL.bbfibfv(cnt).normals=zeros(size(PL.bbfibfv(cnt).vertices,1),3);
+            PL.bbfibfv(cnt).colors=[squeeze(ind2rgb(round(thisfib(4,:)),jetlist)),repmat(0.7,size(thisfib,2),1)];
+            
             
             cnt=cnt+1;
             
