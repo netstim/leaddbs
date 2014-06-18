@@ -169,10 +169,11 @@ if stimparams(1).showfibers
     for side=1:maxvat
         for vat=1:length(VAT{side}.VAT)
             
+            if stimparams(side).U(vat) % check if U ~= 0
             in=inhull(normalized_fibers_mm,VAT{side}.VAT{vat},K(side).K{vat})';
             
             selectedfibs{vat,side}=unique(idxv(in));
-            
+            end
         end
         dispercent(side/maxvat);
         
@@ -639,7 +640,9 @@ catch
     ea_stats.vatanalyses(1).vatsused=upriorvatlength:length(ea_stats.vat);
 end
         if stimparams(1).showfibers
+            try
                     ea_stats.vatanalyses(end).fibersused=length(ea_stats.ft);
+            end
         end
     save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
 

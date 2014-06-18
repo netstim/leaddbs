@@ -69,19 +69,22 @@ setappdata(gcf,'stimparams',stimparams); % store stimulation settings from resul
 
 
 if ~isempty(stimparams) % stimfigure has been used before..
-
-for el=1:8
-    %keyboard
+    for side=1:2
+        for el=1:4
+            %keyboard
+            
+            set(eval(['handles.k',num2str(((side-1)*4)+el-1),'u']),'String', num2str(stimparams(side).U(el)));
+            set(eval(['handles.k',num2str(((side-1)*4)+el-1),'im']),'String',num2str(stimparams(side).Im(el)));
+            
+            
+        end
+    end
     
-    set(eval(['handles.k',num2str(el-1),'u']),'String', num2str(stimparams.U(el)));
-    set(eval(['handles.k',num2str(el-1),'im']),'String',num2str(stimparams.Im(el)));
     
-end
-
-set(handles.fiberthresh,'String',num2str(stimparams.fiberthresh))
-
-set(handles.showfibs,'Value',stimparams.showfibers);
-set(handles.showconns,'Value',stimparams.showconnectivities);
+    set(handles.fiberthresh,'String',num2str(stimparams(1).fiberthresh))
+    
+    set(handles.showfibs,'Value',stimparams(1).showfibers);
+    set(handles.showconns,'Value',stimparams(1).showconnectivities);
 end
 
 
