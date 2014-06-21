@@ -1,4 +1,4 @@
-function varargout=ea_normalize_witt(options)
+function varargout=ea_normalize_spmseg_auto(options)
 % This is a function that normalizes both a copy of transversal and coronar
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
@@ -10,7 +10,7 @@ function varargout=ea_normalize_witt(options)
 % might be best archieved with other tools that have specialized on
 % normalization of such image data.
 %
-% The procedure used here follows the approach of Witt 2013 which was
+% The procedure used here uses the SPM "Segment" routine and
 % is probably the most straight-forward way using SPM.
 %
 % The function uses some code snippets written by Ged Ridgway.
@@ -19,7 +19,7 @@ function varargout=ea_normalize_witt(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='Witt 2013 nonlinear (automatic)';
+    varargout{1}='SPM Segment nonlinear (automatic)';
     return
 end
 

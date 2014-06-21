@@ -9,7 +9,7 @@ aroot=[options.earoot,'atlases',filesep,options.atlasset,filesep];
 proot=[options.root,options.patientname,filesep];
 
 
-generate_tpm(troot,aroot,proot,options)
+generate_tpm(troot,aroot,proot,1,options)
 
 
 
@@ -18,10 +18,7 @@ generate_tpm(troot,aroot,proot,options)
 
 
 
-
-
-
-function generate_tpm(troot,aroot,proot,options)
+function generate_tpm(troot,aroot,proot,force,options)
 
 % make directories in tpm folder
 mkdir([aroot,'tpm']);
@@ -38,7 +35,7 @@ mkdir([proot,'atlases',filesep,options.atlasset,filesep,'rh']);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'mixed']);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'midline']);
 
-atlases=ea_genatlastable(options);
+atlases=ea_genatlastable(options.earoot,options);
 
 for atlas=1:length(atlases.names)
     switch atlases.types(atlas)
@@ -92,7 +89,7 @@ for atlas=1:length(atlases.names)
             wasgz=0;
         end
         
-        if ~exist([tpmf,atlases.names{atlas}],'file') % check for pre-built TPM
+        if ~exist([tpmf,atlases.names{atlas}],'file') || force % check for pre-built TPM
             
             
             nii=load_untouch_nii([atlf,atln]);
@@ -131,7 +128,7 @@ for atlas=1:length(atlases.names)
             
         end
         
-        if ~exist([patlf,atlases.names{atlas}],'file')
+        if ~exist([patlf,atlases.names{atlas}],'file') || force
             
             % tpm file for atlas is now in folder. Begin segmentation..
             

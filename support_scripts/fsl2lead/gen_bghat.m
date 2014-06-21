@@ -35,8 +35,8 @@ for region=[1:5]
         matlabbatch{1}.spm.util.imcalc.expression = ['i1==',num2str(region)];
         matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
         matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-        matlabbatch{1}.spm.util.imcalc.options.interp = 0;
-        matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+        matlabbatch{1}.spm.util.imcalc.options.interp = 3;
+        matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
         jobs{1}=matlabbatch;
         cfg_util('run',jobs);
         clear matlabbatch jobs

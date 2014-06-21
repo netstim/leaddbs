@@ -1,4 +1,4 @@
-function atlases=ea_genatlastable(options)
+function atlases=ea_genatlastable(root,options)
 % This function reads in atlases in the eAuto/atlases directory and
 % generates a table of all available atlas files.
 % Atlastypes:   1 ? LH
@@ -14,24 +14,24 @@ function atlases=ea_genatlastable(options)
 % Andreas Horn
 
 lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0);
-delete([options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep,'*_temp.ni*']);
-lhatlases=dir([options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep,'*.ni*']);
+delete([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,'*_temp.ni*']);
+lhatlases=dir([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,'*.ni*']);
 for i=1:length(lhatlases); 
     lhcell{i}=lhatlases(i).name; 
 end
-delete([options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep,'*_temp.ni*']);
-rhatlases=dir([options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep,'*.ni*']);
+delete([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,'*_temp.ni*']);
+rhatlases=dir([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,'*.ni*']);
 for i=1:length(rhatlases); 
     rhcell{i}=rhatlases(i).name; 
 end
-delete([options.earoot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,'*_temp.ni*']);
-mixedatlases=dir([options.earoot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,'*.ni*']);
+delete([root,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,'*_temp.ni*']);
+mixedatlases=dir([root,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,'*.ni*']);
 for i=1:length(mixedatlases); 
     mixedcell{i}=mixedatlases(i).name;
 end
-delete([options.earoot,'atlases',filesep,options.atlasset,filesep,'midline',filesep,'*_temp.ni*']);
+delete([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,'*_temp.ni*']);
 
-midlineatlases=dir([options.earoot,'atlases',filesep,options.atlasset,filesep,'midline',filesep,'*.ni*']);
+midlineatlases=dir([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,'*.ni*']);
 for i=1:length(midlineatlases); 
     midlinecell{i}=midlineatlases(i).name;
 end

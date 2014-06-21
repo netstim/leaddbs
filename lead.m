@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 16-Jun-2014 16:46:36
+% Last Modified by GUIDE v2.5 20-Jun-2014 18:21:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -156,6 +156,8 @@ uipatdir=get(handles.patdir_choosebox,'String');
 
 options.earoot=[fileparts(which('eAuto')),filesep];
 options.root=[fileparts(uipatdir),filesep]; %'/Volumes/EspionageMounts/andreashorn/1065433271/bg/out/';
+options.dicomimp=get(handles.dicomcheck,'Value');
+
 options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
 options.normalize.method=getappdata(gcf,'normmethod');
 options.normalize.method=options.normalize.method{get(handles.normmethod,'Value')};
@@ -522,7 +524,13 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % hObject    handle to patdir_choosebox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-uipatdir=uigetdir;
+p='';
+try
+load([fileparts(which('lead')),filesep,'ea_prefs']);
+p=lp.dicom.outfolder;
+end
+
+uipatdir=uigetdir(p);
 
 if ~uipatdir
     return
@@ -962,3 +970,58 @@ function genptatlascheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of genptatlascheck
+
+
+% --- Executes on button press in dicomcheck.
+function dicomcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to dicomcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of dicomcheck
+
+
+% --- Executes on button press in setdicomin.
+function setdicomin_Callback(hObject, eventdata, handles)
+% hObject    handle to setdicomin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+p='';
+try
+load([fileparts(which('lead')),filesep,'ea_prefs']);
+p=lp.dicom.infolder;
+end
+
+dicindir=uigetdir(p);
+
+if ~dicindir
+    return
+end
+try
+load([fileparts(which('lead')),filesep,'ea_prefs']);
+end
+lp.dicom.infolder=[dicindir,filesep];
+save([fileparts(which('lead')),filesep,'ea_prefs'],'lp');
+
+
+% --- Executes on button press in setdicomout.
+function setdicomout_Callback(hObject, eventdata, handles)
+% hObject    handle to setdicomout (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+p='';
+try
+load([fileparts(which('lead')),filesep,'ea_prefs']);
+p=lp.dicom.outfolder;
+end
+
+dicoutdir=uigetdir(p);
+
+if ~dicoutdir
+    return
+end
+try
+load([fileparts(which('lead')),filesep,'ea_prefs']);
+end
+lp.dicom.outfolder=[dicoutdir,filesep];
+save([fileparts(which('lead')),filesep,'ea_prefs'],'lp');

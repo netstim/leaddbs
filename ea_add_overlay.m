@@ -15,7 +15,7 @@ end
 if useatlases
     
     if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
-        atlases=ea_genatlastable(options);
+        atlases=ea_genatlastable(options.earoot,options);
     else
         load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
     end

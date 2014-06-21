@@ -69,7 +69,7 @@ if ~isempty(PL)
     
     try
         
-        fibstruct=ea_viz2brainbrowser(PL.bbfibfv);
+        fibstruct=ea_viz2brainbrowser(PL.bbfibfv,'line');
         %fibstruct=rmfield(fibstruct,'normals');
         
         ea_savejson('',fibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_fibs.json'],'ArrayToStruct',0);

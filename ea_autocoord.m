@@ -20,6 +20,19 @@ patientname=options.patientname;
 options.prefs=ea_prefs(patientname);
 
 
+
+
+if options.dicomimp % do DICOM-Import.
+    
+    ea_dicom_import(options);
+    
+    
+end
+
+
+
+
+
 if options.modality==2 % CT support
     options.prefs.tranii=options.prefs.ctnii;
     options.prefs.tranii_unnormalized=options.prefs.ctnii_unnormalized;

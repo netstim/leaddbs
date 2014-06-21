@@ -1,7 +1,13 @@
-function bbstruct=ea_viz2brainbrowser(vizstruct)
+function bbstruct=ea_viz2brainbrowser(varargin)
 
 % Export function to brainbrowser made at OHBM Hackathon 2014 together with Tarek
 % Sherif.
+
+vizstruct=varargin{1};
+if nargin==2
+   jtype=varargin{2};
+   bbstruct.type=jtype;
+end
 
 bbstruct.vertices=[];
 bbstruct.normals=[];

@@ -20,13 +20,29 @@ if nargin>2
     options=varargin{3};
 end
 
+
+nm=[0:1]; % native and mni
+nmind=[options.atl.pt,options.atl.can]; % which shall be performed?
+nm=nm(logical(nmind)); % select which shall be performed.
+
+
+
+for nativemni=nm % switch between native and mni space atlases.
+    
+    switch nativemni
+        case 0
+            root=[options.root,options.patientname,filesep];
+        case 1
+            root=options.earoot;
+    end
+
 atlascnt=1;
 set(0,'CurrentFigure',resultfig)
 
-if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
-    atlases=ea_genatlastable(options);
+if ~exist([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
+    atlases=ea_genatlastable(root,options);
 else
-    load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
+    load([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
 end
 
 
@@ -90,22 +106,22 @@ for atlas=1:length(atlases.names)
     if ~isfield(atlases,'fv') % rebuild from nii files
         switch atlases.types(atlas)
             case 1 % left hemispheric atlas.
-                [nii,V]=load_nii_proxy([options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
+                [nii,V]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
                 nii.img=round(nii.img);
                 
             case 2 % right hemispheric atlas.
-                [nii,V]=load_nii_proxy([options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
+                [nii,V]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
                 nii.img=round(nii.img);
             case 3 % both-sides atlas composed of 2 files.
-                [lnii,lV]=load_nii_proxy([options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
-                [rnii,rV]=load_nii_proxy([options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
+                [lnii,lV]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
+                [rnii,rV]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
                 lnii.img=round(lnii.img);
                 rnii.img=round(rnii.img);
             case 4 % mixed atlas (one file with both sides information.
-                [nii,V]=load_nii_proxy([options.earoot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],options);
+                [nii,V]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],options);
                 nii.img=round(nii.img);
             case 5 % midline atlas (one file with both sides information.
-                [nii,V]=load_nii_proxy([options.earoot,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
+                [nii,V]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
                 nii.img=round(nii.img);
         end
     end
@@ -184,6 +200,7 @@ for atlas=1:length(atlases.names)
                 
             else
                 if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
+                    
                     fv=reducepatch(fv,options.prefs.hullsimplify);
                 elseif options.prefs.hullsimplify>1
                     simplify=options.prefs.hullsimplify/length(fv.faces);
@@ -302,7 +319,7 @@ setappdata(gcf,'iXYZ',atlases.XYZ);
 setappdata(gcf,'ipixdim',atlases.pixdim);
 end
 try
-save([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases');
+save([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases');
 end
 
 if options.writeoutstats
@@ -320,6 +337,8 @@ else
             save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
 
 end
+end
+
 end
 
 
