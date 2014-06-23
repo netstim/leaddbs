@@ -55,11 +55,14 @@ end
 
 
 
-if options.normalize_fibers
-    
+if options.normalize_fibers % normalize fibertracts ? for now these should be denoted in Freiburg format.
     ea_normalize_fibers(options);
 end
 
+if options.atl.normalize % normalize patient-specific atlas-set.
+    ea_normalize_ptspecific_atl(options)
+end
+    
 % Prepare MR-images
 
 if ~exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii],'file')

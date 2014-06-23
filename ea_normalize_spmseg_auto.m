@@ -354,6 +354,28 @@ jobs{1}=matlabbatch;
 cfg_util('run',jobs);
 clear matlabbatch jobs;
 
+% export (generalized) normalization parameters:
+for inverse=0:1
+    if inverse
+        addstr='_inv';
+    else
+        addstr='';
+    end
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg',addstr,'_sn.mat']};
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = [0.5 0.5 0.5];
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = nan(2,3);
+    matlabbatch{1}.spm.util.defs.ofname = ['ea',addstr,'_normparams'];
+    matlabbatch{1}.spm.util.defs.fnames = '';
+    matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
+    matlabbatch{1}.spm.util.defs.interp = 1;
+    jobs{1}=matlabbatch;
+
+    cfg_util('run',jobs);
+    disp('*** Exported normalization parameters to y_ea_normparams.nii');
+    clear matlabbatch jobs;
+end
+
+
 
 movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gtranii]);
 try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gcornii]); end

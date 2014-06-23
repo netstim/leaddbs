@@ -2,37 +2,8 @@ function ea_normalize_fibers(options)
 % uses map_coords function by Ged Ridgway (see below)
 
 [~,preniif]=fileparts(options.prefs.prenii_unnormalized);
-if ~exist([options.root,options.patientname,filesep,preniif,'_seg_inv_sn.mat'],'file');
-    
-    % do pre_nii segment first
-    matlabbatch{1}.spm.spatial.preproc.data = {[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized,',1']};
-    matlabbatch{1}.spm.spatial.preproc.output.GM = [0 0 1];
-    matlabbatch{1}.spm.spatial.preproc.output.WM = [0 0 1];
-    matlabbatch{1}.spm.spatial.preproc.output.CSF = [0 0 0];
-    matlabbatch{1}.spm.spatial.preproc.output.biascor = 1;
-    matlabbatch{1}.spm.spatial.preproc.output.cleanup = 0;
-    matlabbatch{1}.spm.spatial.preproc.opts.tpm = {
-        fullfile(options.earoot,'templates','mni_icbm152_gm_tal_nlin_asym_09c.nii')
-        fullfile(options.earoot,'templates','mni_icbm152_wm_tal_nlin_asym_09c.nii')
-        fullfile(options.earoot,'templates','mni_icbm152_csf_tal_nlin_asym_09c.nii')
-        };
-    matlabbatch{1}.spm.spatial.preproc.opts.ngaus = [2
-        2
-        2
-        4];
-    matlabbatch{1}.spm.spatial.preproc.opts.regtype = 'mni';
-    matlabbatch{1}.spm.spatial.preproc.opts.warpreg = 1;
-    matlabbatch{1}.spm.spatial.preproc.opts.warpco = 25;
-    matlabbatch{1}.spm.spatial.preproc.opts.biasreg = 0.0001;
-    matlabbatch{1}.spm.spatial.preproc.opts.biasfwhm = 60;
-    matlabbatch{1}.spm.spatial.preproc.opts.samp = 3;
-    matlabbatch{1}.spm.spatial.preproc.opts.msk = {''};
-    
-    jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
-    clear jobs matlabbacth
-    
-    
+if ~exist([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],'file');
+    error('Please run a compatible normalization of the preoperative MRI-volume first. Final (inverse) normalization parameters should be stored as y_ea_inv_normparams.nii inside of the subject folder.');
 end
 
 
@@ -76,7 +47,7 @@ for fib=1:numfibs
  
  
     %% map from prenii voxelspace to mni-millimeter space   
-    wfibs{fib} = ea_map_coords(wfibs{fib}, '', [options.root,options.patientname,filesep,preniif,'_seg_inv_sn.mat'])';
+    wfibs{fib} = ea_map_coords(wfibs{fib}, '', [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'])';
     
     %% cleanup
     wfibs{fib}=wfibs{fib}(:,1:3);

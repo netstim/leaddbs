@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 23-Jun-2014 16:24:40
+% Last Modified by GUIDE v2.5 23-Jun-2014 22:46:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -188,9 +188,11 @@ options.autoimprove=(get(handles.autoimprovecheck,'Value') == get(handles.autoim
 options.axiscontrast=(get(handles.axispopup,'Value')); % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
 
-options.atl.genpt=get(handles.normptatlascheck,'Value'); % generate patient specific atlases
+options.atl.genpt=get(handles.genptatlascheck,'Value'); % generate patient specific atlases
+options.atl.normalize=get(handles.normptatlascheck,'Value'); % normalize patient specific atlasset.
 options.atl.can=get(handles.canatlcheck,'Value'); % display canonical atlases
 options.atl.pt=get(handles.patatlcheck,'Value'); % display patient specific atlases
+
 
 options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
 options.d2.atlasopacity=0.5;
@@ -1049,3 +1051,12 @@ elseif status == JFileChooser.CANCEL_OPTION
 else
     error('Error occured while picking file.');
 end
+
+
+% --- Executes on button press in genptatlascheck.
+function genptatlascheck_Callback(hObject, eventdata, handles)
+% hObject    handle to genptatlascheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of genptatlascheck

@@ -257,20 +257,26 @@ jobs{1}=matlabbatch;
 %end
 clear matlabbatch jobs;
 
-
 % export normalization parameters:
-
-matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
-matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1 0];
-matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
-matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
-matlabbatch{1}.spm.util.defs.fnames = '';
-matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
-matlabbatch{1}.spm.util.defs.interp = 1;
+for inverse=0:1
+    if inverse
+        addstr='_inv';
+    else
+        addstr='';
+    end
+    matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
+    matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1-inverse 0+inverse];
+    matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
+    matlabbatch{1}.spm.util.defs.ofname = ['ea',addstr,'_normparams'];
+    matlabbatch{1}.spm.util.defs.fnames = '';
+    matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
+    matlabbatch{1}.spm.util.defs.interp = 1;
+    jobs{1}=matlabbatch;
 
     cfg_util('run',jobs);
     disp('*** Exported normalization parameters to y_ea_normparams.nii');
-clear matlabbatch jobs;
+    clear matlabbatch jobs;
+end
 
 
 % create warped:

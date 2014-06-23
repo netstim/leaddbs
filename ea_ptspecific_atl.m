@@ -29,11 +29,12 @@ mkdir([aroot,'tpm',filesep,'midline']);
 
 % make directories in patient folder
 mkdir([proot,'atlases']);
-mkdir([proot,'atlases',filesep,options.atlasset]);
-mkdir([proot,'atlases',filesep,options.atlasset,filesep,'lh']);
-mkdir([proot,'atlases',filesep,options.atlasset,filesep,'rh']);
-mkdir([proot,'atlases',filesep,options.atlasset,filesep,'mixed']);
-mkdir([proot,'atlases',filesep,options.atlasset,filesep,'midline']);
+mkdir([proot,'atlases',filesep,'native']);
+mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset]);
+mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'lh']);
+mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'rh']);
+mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'mixed']);
+mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'midline']);
 
 atlases=ea_genatlastable(options.earoot,options);
 
@@ -41,27 +42,27 @@ for atlas=1:length(atlases.names)
     switch atlases.types(atlas)
         case 1 % left hemispheric atlas.
             atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
-            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
+            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'lh',filesep];
             tpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'lh',filesep];
         case 2 % right hemispheric atlas.
             atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
-            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
+            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'rh',filesep];
             tpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'rh',filesep];
         case 3 % both-sides atlas composed of 2 files.
             ratlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
-            pratlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
+            pratlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'rh',filesep];
             
             latlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
-            platlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
+            platlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'lh',filesep];
             rtpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'rh',filesep];
             ltpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'lh',filesep];
         case 4 % mixed atlas (one file with both sides information.
             atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep];
-            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep];
+            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'mixed',filesep];
             tpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'mixed',filesep];
         case 5 % midline atlas (one file with both sides information.
             atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
-            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
+            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'midline',filesep];
             tpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'midline',filesep];
     end
     
@@ -195,17 +196,17 @@ for atlas=1:length(atlases.names)
             movefile([patlf,'w',atln],[patlf,atln]);
             
             
-            % apply original transformation back to warped atlas.
-            matlabbatch{1}.spm.util.defs.comp{1}.def = {[proot,'y_ea_normparams.nii']};
-            matlabbatch{1}.spm.util.defs.ofname = '';
-            matlabbatch{1}.spm.util.defs.fnames = {[patlf,atln,',1']};
-            matlabbatch{1}.spm.util.defs.savedir.saveusr = {patlf};
-            matlabbatch{1}.spm.util.defs.interp = 1;
-            jobs{1}=matlabbatch;
-            cfg_util('run',jobs);
-            clear matlabbatch jobs
-            
-            movefile([patlf,'w',atln],[patlf,atln]);
+%             % apply original transformation back to warped atlas.
+%             matlabbatch{1}.spm.util.defs.comp{1}.def = {[proot,'y_ea_normparams.nii']};
+%             matlabbatch{1}.spm.util.defs.ofname = '';
+%             matlabbatch{1}.spm.util.defs.fnames = {[patlf,atln,',1']};
+%             matlabbatch{1}.spm.util.defs.savedir.saveusr = {patlf};
+%             matlabbatch{1}.spm.util.defs.interp = 1;
+%             jobs{1}=matlabbatch;
+%             cfg_util('run',jobs);
+%             clear matlabbatch jobs
+%             
+%             movefile([patlf,'w',atln],[patlf,atln]);
             
             
             % re-gzip tpm, patl and atlas file.
