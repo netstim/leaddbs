@@ -45,11 +45,12 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             slice=double(tra_nii.img(:,:,size(tra_nii.img,3)-10))'; % extract the correct slice.
             %slice=fliplr(slice);
             slice(slice==0)=nan;
-            figure; imagesc(slice); colormap gray;
+            mn=figure; imagesc(slice); colormap gray;
             hold on
             cof=imshow(colormask);
             set(cof, 'AlphaData', mask*0.3)
             [X,Y]=ginput(1);
+            close(mn);
             % reset mask from mouse input
             
                 mask=zeros(size(slice,1),size(slice,2));
@@ -205,7 +206,6 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
             
             ea_showdis(['No new Midpoint found. Distance is ',num2str(pdist([estpoint;[numidpoint,imgsliceno]])),'. Interpolating.'],options.verbose);
             
-            if options.slow;            pause(1); end
         end
         
         ea_showdis(['Diameter of this point is ',num2str(diams(imgsliceno)),'.'],options.verbose);
@@ -228,7 +228,6 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
     
     
     
-    if options.slow; pause(1); end
     
     
     
@@ -313,7 +312,6 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
     if options.verbose>1; set(0,'CurrentFigure',progressfig); drawnow; end
     
     
-    if options.slow; pause(0.1); end
     
     
     

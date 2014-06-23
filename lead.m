@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 20-Jun-2014 18:21:42
+% Last Modified by GUIDE v2.5 23-Jun-2014 16:24:40
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,7 +78,6 @@ asc{end+1}='Use none';
 set(handles.atlassetpopup,'String',asc);
 
 
-set(handles.verbositylevel_popup,'Value',3);
 set(handles.normalize_checkbox,'Value',0);
 %keyboard
 %imshow(handles.bgimage,'bg_gui.png');
@@ -152,10 +151,9 @@ options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower th
 
 %% set options
 
-uipatdir=get(handles.patdir_choosebox,'String');
+%uipatdir=get(handles.patdir_choosebox,'String');
 
 options.earoot=[fileparts(which('eAuto')),filesep];
-options.root=[fileparts(uipatdir),filesep]; %'/Volumes/EspionageMounts/andreashorn/1065433271/bg/out/';
 options.dicomimp=get(handles.dicomcheck,'Value');
 
 options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
@@ -171,7 +169,7 @@ options.modality = get(handles.MRCT,'Value');
 
 
 
-options.verbose=get(handles.verbositylevel_popup,'Value'); % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback. 
+options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback. 
 sidelog=[get(handles.left_checkbox,'Value') == get(handles.left_checkbox,'Max'),get(handles.right_checkbox,'Value') == get(handles.right_checkbox,'Max')];
 sidepos=[1,2];
 
@@ -185,13 +183,12 @@ else
 options.maskwindow=str2num(get(handles.maskwindow_txt,'String')); % size of the window that follows the trajectory
 options.automask=0; % unset automask flag
 end
-options.slow=(get(handles.slowdemo_checkbox,'Value') == get(handles.slowdemo_checkbox,'Max')); % if true, there will be some pauses at critical points so that the process can be better visualized. Mainly for demonstration or debugging problems.
 options.autoimprove=(get(handles.autoimprovecheck,'Value') == get(handles.autoimprovecheck,'Max')); % if true, there will be some pauses at critical points so that the process can be better visualized. Mainly for demonstration or debugging problems.
 
 options.axiscontrast=(get(handles.axispopup,'Value')); % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
 
-options.atl.genpt=get(handles.genptatlascheck,'Value'); % generate patient specific atlases
+options.atl.genpt=get(handles.normptatlascheck,'Value'); % generate patient specific atlases
 options.atl.can=get(handles.canatlcheck,'Value'); % display canonical atlases
 options.atl.pt=get(handles.patatlcheck,'Value'); % display patient specific atlases
 
@@ -242,14 +239,21 @@ end
 
 
 
-options=ea_defaultoptions(options);
+options.fiberthresh=1;
+options.writeoutstats=1;
 
-[root,thispatdir]=fileparts(uipatdir);
-options.patientname=thispatdir;
 options.normalize_fibers=get(handles.normfiberscheckbox,'Value');
 options.colormap=colormap;
 clc
-ea_autocoord(options);
+uipatdirs=getappdata(gcf,'uipatdir');
+for pat=1:length(uipatdirs)
+    % set patient specific options
+    options.root=[fileparts(uipatdirs{pat}),filesep]; %'/Volumes/EspionageMounts/andreashorn/1065433271/bg/out/';
+    [root,thispatdir]=fileparts(uipatdirs{pat});
+    options.patientname=thispatdir;
+    % run main function
+    ea_autocoord(options);
+end
 
 
 
@@ -524,45 +528,50 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % hObject    handle to patdir_choosebox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-p='';
+p='/';
 try
 load([fileparts(which('lead')),filesep,'ea_prefs']);
 p=lp.dicom.outfolder;
 end
 
-uipatdir=uigetdir(p);
+uipatdir=ea_uigetdir(p,'Please choose patient folder(s)...');
 
-if ~uipatdir
+if isempty(uipatdir)
     return
 end
 
-set(handles.patdir_choosebox,'String',uipatdir);
+if length(uipatdir)>1
+    set(handles.patdir_choosebox,'String','Multiple');
+else
+set(handles.patdir_choosebox,'String',uipatdir{1});
+
 % check for MR-files
-try
-[~,patientname]=fileparts(uipatdir);
-catch
-    disp('User pressed cancel.');
-end
+[~,patientname]=fileparts(uipatdir{1});
 prefs=ea_prefs(patientname);
-if exist([uipatdir,filesep,prefs.tranii],'file') && exist([uipatdir,filesep,prefs.cornii],'file')
+if exist([uipatdir{1},filesep,prefs.tranii],'file') && exist([uipatdir{1},filesep,prefs.cornii],'file')
     set(handles.statusone,'String','Normalized MR-volumes found.');
-elseif ~exist([uipatdir,filesep,prefs.tranii],'file') || ~exist([uipatdir,filesep,prefs.cornii],'file')
+elseif ~exist([uipatdir{1},filesep,prefs.tranii],'file') || ~exist([uipatdir{1},filesep,prefs.cornii],'file')
     set(handles.statusone,'String','One or more MR-volumes missing.');
-    if exist([uipatdir,filesep,prefs.tranii_unnormalized],'file') && exist([uipatdir,filesep,prefs.cornii_unnormalized],'file')
+    if exist([uipatdir{1},filesep,prefs.tranii_unnormalized],'file') && exist([uipatdir{1},filesep,prefs.cornii_unnormalized],'file')
         set(handles.statusone,'String','Unnormalized MR-volumes found. Set normalize option.');
     end
 end
 
 % check for reconstructions
-if exist([uipatdir,filesep,'ea_coords.fcsv'],'file') && exist([uipatdir,filesep,'ea_reconstruction.mat'],'file')
+if exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
     set(handles.statustwo,'String','Fiducials and Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif exist([uipatdir,filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir,filesep,'ea_reconstruction.mat'],'file')
+elseif exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
     set(handles.statustwo,'String','Fiducials information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif ~exist([uipatdir,filesep,'ea_coords.fcsv'],'file') && exist([uipatdir,filesep,'ea_reconstruction.mat'],'file')
+elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
     set(handles.statustwo,'String','Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif ~exist([uipatdir,filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir,filesep,'ea_reconstruction.mat'],'file')
+elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
     set(handles.statustwo,'String','No reconstruction available in folder. Set "Reconstruct" to start.');
 end
+end
+
+% store patient directories in figure
+setappdata(gcf,'uipatdir',uipatdir);
+
 
 % --- Executes on button press in left_checkbox.
 function left_checkbox_Callback(hObject, eventdata, handles)
@@ -614,27 +623,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in verbositylevel_popup.
-function verbositylevel_popup_Callback(hObject, eventdata, handles)
-% hObject    handle to verbositylevel_popup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = get(hObject,'String') returns verbositylevel_popup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from verbositylevel_popup
 
 
-% --- Executes during object creation, after setting all properties.
-function verbositylevel_popup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to verbositylevel_popup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 
@@ -673,7 +664,6 @@ if get(hObject,'Value')
     
    set(handles.axispopup,'Enable','on'); 
    set(handles.maskwindow_txt,'Enable','on'); 
-   set(handles.slowdemo_checkbox,'Enable','on'); 
 
    
    
@@ -682,7 +672,6 @@ else
     
    set(handles.axispopup,'Enable','off'); 
    set(handles.maskwindow_txt,'Enable','off'); 
-   set(handles.slowdemo_checkbox,'Enable','off'); 
 end
 
 
@@ -963,13 +952,13 @@ function patatlcheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of patatlcheck
 
 
-% --- Executes on button press in genptatlascheck.
-function genptatlascheck_Callback(hObject, eventdata, handles)
-% hObject    handle to genptatlascheck (see GCBO)
+% --- Executes on button press in normptatlascheck.
+function normptatlascheck_Callback(hObject, eventdata, handles)
+% hObject    handle to normptatlascheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of genptatlascheck
+% Hint: get(hObject,'Value') returns toggle state of normptatlascheck
 
 
 % --- Executes on button press in dicomcheck.
@@ -1025,3 +1014,38 @@ load([fileparts(which('lead')),filesep,'ea_prefs']);
 end
 lp.dicom.outfolder=[dicoutdir,filesep];
 save([fileparts(which('lead')),filesep,'ea_prefs'],'lp');
+
+
+
+function [pathname] = ea_uigetdir(start_path, dialog_title)
+% Pick a directory with the Java widgets instead of uigetdir
+
+import javax.swing.JFileChooser;
+
+if nargin == 0 || strcmp(start_path,'') % Allow a null argument.
+    start_path = pwd;
+end
+
+jchooser = javaObjectEDT('javax.swing.JFileChooser', start_path);
+
+jchooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+if nargin > 1
+    jchooser.setDialogTitle(dialog_title);
+end
+
+jchooser.setMultiSelectionEnabled(true);
+
+status = jchooser.showOpenDialog([]);
+
+if status == JFileChooser.APPROVE_OPTION
+    jFile = jchooser.getSelectedFiles();
+    pathname{size(jFile, 1)}=[];
+    for i=1:size(jFile, 1)
+        pathname{i} = char(jFile(i).getAbsolutePath);
+    end
+    
+elseif status == JFileChooser.CANCEL_OPTION
+    pathname = [];
+else
+    error('Error occured while picking file.');
+end

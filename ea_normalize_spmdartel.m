@@ -1,4 +1,4 @@
-function varargout=ea_normalize_spmdartel_auto(options)
+function varargout=ea_normalize_spmdartel(options)
 % This is a function that normalizes both a copy of transversal and coronar
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
@@ -19,7 +19,7 @@ function varargout=ea_normalize_spmdartel_auto(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='SPM DARTEL nonlinear (automatic)';
+    varargout{1}='SPM DARTEL nonlinear';
     return
 end
 
@@ -76,7 +76,7 @@ normlog=zeros(4,1); % log success of processing steps. 4 steps: 1. coreg tra and
 
 
 for export=1:2
-    for costfun=1:2
+    for costfun=1:4
         switch export
             case 1
                 fina=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,',1'];
@@ -111,7 +111,17 @@ for export=1:2
         try % CT
             cfg_util('run',jobs);
             
-            
+            yninp = input('Please check reg between Post-OP versions. Is result precise? (y/n)..','s');
+            if strcmpi(yninp,'y')
+                disp('Good. Moving on...');
+                break
+            else
+                if costfun==4
+                    error('Problem cannot be solved automatically.')
+                else
+                    disp('Trying with another cost-function');
+                end
+            end
         end
                     clear matlabbatch jobs;
 
@@ -127,7 +137,7 @@ normlog=zeros(4,1); % log success of processing steps. 4 steps: 1. coreg tra and
 
 
 
-for costfun=1:2
+for costfun=1:4
     
     
     matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
@@ -162,7 +172,18 @@ end
     jobs{1}=matlabbatch;
     cfg_util('run',jobs);
     clear matlabbatch jobs;
-
+    
+    yninp = input('Please check reg between Pre- and Post-OP versions. Is result precise? (y/n)..','s');
+    if strcmpi(yninp,'y')
+        disp('Good. Moving on...');
+        break
+    else
+        if costfun==4
+            error('Problem cannot be solved automatically.')
+        else
+            disp('Trying with another cost-function');
+        end
+    end
 end
 
 
@@ -228,11 +249,13 @@ matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.lmreg = 0.01;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.cyc = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.its = 3;
 jobs{1}=matlabbatch;
+%try
     cfg_util('run',jobs);
     disp('*** Dartel coregistration of preoperative version worked.');
-
+%catch
+%    error('*** Dartel coregistration failed.');
+%end
 clear matlabbatch jobs;
-
 
 
 % export normalization parameters:

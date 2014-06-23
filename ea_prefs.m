@@ -34,7 +34,7 @@ prefs.normmatrix=['lmat.txt'];
 
 %% DICOM-Handling:
 
-prefs.dicom.dicomfiles=1; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion.
+prefs.dicom.dicomfiles=2; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
 
 
 

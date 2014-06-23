@@ -69,7 +69,8 @@ for scan=4:length(f)
             if options.prefs.dicom.dicomfiles==1 % delete DICOMs
                 rmdir([indir,f(scan).name],'s');
             elseif options.prefs.dicom.dicomfiles==2 % move DICOMs
-                movefile([indir,f(scan).name],[tmpoutdir,filesep,'DICOM']);
+                mkdir([tmpoutdir,filesep,'DICOM']);
+                movefile([indir,f(scan).name],[tmpoutdir,filesep,'DICOM',filesep,f(scan).name]);
             end
             
             
@@ -77,7 +78,8 @@ for scan=4:length(f)
             nid=dir([tmpoutdir,filesep,'s*.nii']);
             for ni=1:length(nid)
                 if ~strcmp(nid(ni).name,'sag.nii')
-                    dcfilename=[tmpoutdir,filesep,nid(ni).name];
+                    movefile([tmpoutdir,filesep,nid(ni).name],[tmpoutdir,filesep,'t',nid(ni).name]) % remove from search key (s*)..
+                    dcfilename=[tmpoutdir,filesep,'t',nid(ni).name];
                     ea_imageclassifier;
                     
                 end
