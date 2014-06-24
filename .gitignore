@@ -1,0 +1,10 @@
+*.nii
+*.nii.gz
+*.ps
+gibsconnect*.mat
+*.gipl
+*.png
+*.mat
+fibers
+*.json
+*.woff

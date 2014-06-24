@@ -1,0 +1,30 @@
+function icn_color=ea_get_icn(varargin)
+% This simple function reads in the image files for the Icons of the
+% UItoolbar of eAuto-DBS.
+% __________________________________________________________________________________
+% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
+switch varargin{1}
+    case 'captions'
+        icn_color=ones(16);
+        icn_color(round([18,26,27,34,43,50.54,55,56,59,66,70,72,75,76,77,82,83,84,86,87,89,91,92,93,102,103,...
+            114,115,116,119,124,125,126,130,132,135,139,146,147,148,151,154,155,156,...
+            162,167,183,178,179,180,183,184,185,187,188,189]))=0;
+        icn_color=repmat(icn_color,[1,1,3]);
+        
+    case 'regions'
+        icn_color=rand(16,16,3);
+        
+        
+    case 'atlas'
+        
+        icn_color=zeros(16,16,3);
+        icn_color(:,:,1)=varargin{2}(1);
+        icn_color(:,:,2)=varargin{2}(2);
+        icn_color(:,:,3)=varargin{2}(3);
+        
+              
+    otherwise
+        icn_color = imread(fullfile(...
+            varargin{2}.earoot,'icons',[varargin{1},'.png']));
+end

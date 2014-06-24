@@ -1,0 +1,10 @@
+% Dartel template was created by simply using the
+% mni_icbm152_tal_nlin_asym_09c template and smoothing by isotropic kernels
+% of
+% 0 mm -> dartelmni_6
+% 2 mm -> dartelmni_5
+% 3 mm -> dartelmni_4
+% 4 mm -> dartelmni_3
+% 5 mm -> dartelmni_2
+% 6 mm -> dartelmni_1
+% 8 mm -> dartelmni_0
