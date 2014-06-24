@@ -1,15 +1,15 @@
 CACHE MANIFEST
-# Revision 1402840162223
+# Revision 1403615482097
 
 CACHE:
 Reconstruction of Electrode Trajectory.html
-Acquiring and Setting Atlases.html
+Creating the 3D Scene.html
 Formatting the Image File Names.html
 Installation.html
 Lead-DBS Main Window and Loading Images.html
 Normalization of Images.html
 index.html
-Creating the 3D Scene.html
+Acquiring and Setting Atlases.html
 Setting a Path for _Lead-DBS_ in MATLAB.html
 manual_correction_of_electrode_localization/README.html
 writing_2d_images/README.html
