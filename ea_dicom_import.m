@@ -1,4 +1,5 @@
 function ea_dicom_import(options)
+
 global dcfilename
 global tmpoutdir
 indir=options.prefs.lp.dicom.infolder;

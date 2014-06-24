@@ -248,6 +248,10 @@ options.normalize_fibers=get(handles.normfiberscheckbox,'Value');
 options.colormap=colormap;
 clc
 uipatdirs=getappdata(gcf,'uipatdir');
+
+if isempty(uipatdirs)
+    uipatdirs={'No Patient Selected'};
+end
 for pat=1:length(uipatdirs)
     % set patient specific options
     options.root=[fileparts(uipatdirs{pat}),filesep]; %'/Volumes/EspionageMounts/andreashorn/1065433271/bg/out/';

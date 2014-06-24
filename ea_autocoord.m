@@ -29,7 +29,9 @@ if options.dicomimp % do DICOM-Import.
     
 end
 
-
+if strcmp(options.patientname,'No Patient Selected')
+   return 
+end
 
 
 
