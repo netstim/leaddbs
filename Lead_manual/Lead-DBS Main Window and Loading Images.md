@@ -1,26 +1,27 @@
 ## Lead-DBS Main Window and Loading Images
-The main window of Lead-DBS is divided into 5 sections:
+The main window of Lead-DBS is divided into 6 sections:
+- DICOM import
 - Selection of patient directory and imaging technique
 - Normalization
 - Reconstruction
 - Manual correction
 - Visualization
 
-The button `Run` in the bottom right runs **ALL** processes that are checked within the main window.
+The button `Run` in the bottom right runs **all** processes that are checked within the main window.
 
-**Notice**: If the user wants to run a specific process(es), he must tend that only the desired checkboxes are selected!
+**Notice**: If you want to run a specific process, you should check that only the desired checkboxes are selected!
 
-![Lead-DBS Main Window]()
+![Lead-DBS Main Window](http://www.andreas-horn.de/leaddbs/manualimages/mainwindow.png)
 
 #### 1. Selecting the file directory
 
-By clicking on `Choose Patient Directory` on the top, the user can browse and select the location of the image folder.
+By clicking on `Choose Patient Directory` on the top, you can browse and select the location of the image folder.
 
 For _Lead-DBS_ to analyze the images, it needs at least the following views:
-- for MR images, a post-operative transversal view
-- for CT images, a post-operative transversal view
+- for MR images, a post-operative image (at least a transversal view)
+- for CT images, a post-operative acquisition plus a pre-operative MR image.
 
-The user may also have more views available, in which case the process of electrode localization can be made easier.
+You may also have more views available, in which case the process of electrode localization is easier and more robust/precise.
 
 **IMPORTANT:**
 Images must be in the `*.nii` file format and must have a **_specific naming format_**. For details on how to format the file names, please refer to **Section 2.1**.
