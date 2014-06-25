@@ -4,12 +4,14 @@ function vstr=ea_getvsn
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
-vstr='v 1.15';
+vstr='v 1.2';
 
 
 
 % rough version history: (see git repo for details)
 % 
+% vstr='v 1.2';
+% added DICOM import
 % vstr='v 1.15';
 % improved and generalized electrode tip recognition, behaviour and added auto-learning feature.
 % vstr='v 1.05';

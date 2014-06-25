@@ -153,7 +153,7 @@ options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower th
 
 %uipatdir=get(handles.patdir_choosebox,'String');
 
-options.earoot=[fileparts(which('eAuto')),filesep];
+options.earoot=[fileparts(which('lead')),filesep];
 options.dicomimp=get(handles.dicomcheck,'Value');
 
 options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));

@@ -190,7 +190,7 @@ for atlas=1:length(atlases.names)
             if options.prefs.hullsmooth
                 nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
             end
-            fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),0.9);
+            fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/3);
             
             if ischar(options.prefs.hullsimplify)
                 
