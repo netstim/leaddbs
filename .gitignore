@@ -8,3 +8,4 @@ gibsconnect*.mat
 fibers
 *.json
 *.woff
+*DS_Store
