@@ -107,43 +107,61 @@ function trapush_Callback(hObject, eventdata, handles)
 % hObject    handle to trapush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-finishandclose('tra');
+tmpoutdir=getappdata(gcf,'tmpoutdir');
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.tranii_unnormalized);
 
 % --- Executes on button press in pretrapush.
 function pretrapush_Callback(hObject, eventdata, handles)
 % hObject    handle to pretrapush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-finishandclose('pre_tra');
+tmpoutdir=getappdata(gcf,'tmpoutdir');
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.prenii_unnormalized);
 
 % --- Executes on button press in corpush.
 function corpush_Callback(hObject, eventdata, handles)
 % hObject    handle to corpush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-finishandclose('cor');
+tmpoutdir=getappdata(gcf,'tmpoutdir');
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.cornii_unnormalized);
 
 % --- Executes on button press in sagpush.
 function sagpush_Callback(hObject, eventdata, handles)
 % hObject    handle to sagpush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-finishandclose('sag');
+tmpoutdir=getappdata(gcf,'tmpoutdir');
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.sagnii_unnormalized);
 
 % --- Executes on button press in ctpush.
 function ctpush_Callback(hObject, eventdata, handles)
 % hObject    handle to ctpush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-finishandclose('CT');
+tmpoutdir=getappdata(gcf,'tmpoutdir');
+
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.rawctnii_unnormalized);
 
 % --- Executes on button press in fusionpush.
 function fusionpush_Callback(hObject, eventdata, handles)
 % hObject    handle to fusionpush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-finishandclose('fusion');
-
+tmpoutdir=getappdata(gcf,'tmpoutdir');
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.fusionnii_unnormalized);
 
 % --- Executes on button press in unknownpush.
 function unknownpush_Callback(hObject, eventdata, handles)
@@ -158,7 +176,6 @@ function ea_keystr(icfig,event)
 %commnd=get (gcf, 'CurrentKey');
 
         %global current_imclass
-global tmpoutdir
 %% get vars
 eltog=getappdata(gcf,'eltog');
 elplot=getappdata(gcf,'elplot');
@@ -170,22 +187,40 @@ coords_mm=getappdata(gcf,'coords_mm');
 commnd=lower(event.Character);
 switch commnd
     case 't'
-        finishandclose('tra');
+        tmpoutdir=getappdata(gcf,'tmpoutdir');
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.tranii_unnormalized);
     case 'p'
-        finishandclose('pre_tra');
+tmpoutdir=getappdata(gcf,'tmpoutdir');
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.prenii_unnormalized);
         
     case 's'
-        finishandclose('sag');
+        tmpoutdir=getappdata(gcf,'tmpoutdir');
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.sagnii_unnormalized);
         
         
     case 'c'
-        finishandclose('cor');
+        tmpoutdir=getappdata(gcf,'tmpoutdir');
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.cornii_unnormalized);
         
     case 'f'
-        finishandclose('fusion');
+        tmpoutdir=getappdata(gcf,'tmpoutdir');
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.ctnii_unnormalized);
         
     case 'a'
-        finishandclose('CT');
+        tmpoutdir=getappdata(gcf,'tmpoutdir');
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.rawctnii_unnormalized);
         
     case 'u'
         finishandclose('unknown');
@@ -199,10 +234,11 @@ end
 function finishandclose(current_imclass)
 tmpoutdir=getappdata(gcf,'tmpoutdir');
 append='';
-while exist([tmpoutdir,filesep,current_imclass,append,'.nii'],'file')
+while exist([tmpoutdir,filesep,current_imclass,append],'file')
     append=[append,'2'];
 end
-movefile([getappdata(gcf,'dcfilename')],[getappdata(gcf,'tmpoutdir'),filesep,current_imclass,append,'.nii']);
+[~,nametowrite]=fileparts(current_imclass);
+movefile([getappdata(gcf,'dcfilename')],[getappdata(gcf,'tmpoutdir'),filesep,nametowrite,append,'.nii']);
 
 close(gcf)
         

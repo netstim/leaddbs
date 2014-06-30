@@ -1,5 +1,13 @@
-function make_release(outdir)
+function make_release(varargin)
 % make release
+
+if ~nargin % default output.
+    
+    outdir='/PA/Neuro/_projects/lead/release';
+    disp(['Outputting to /PA/Neuro/_projects/lead/release']);
+else
+    outdir=varargin{1};
+end
 
 if ~strcmp(outdir(end),filesep)
     outdir=[outdir,filesep];
@@ -17,14 +25,20 @@ delete([outdir,'lead',filesep,'ea_prefs.mat']);
 
 % delete atlases:
 
-rmdir([outdir,'lead',filesep,'atlases'],'s');
-mkdir([outdir,'lead',filesep,'atlases']);
-mkdir([outdir,'lead',filesep,'atlases',filesep,'Put atlases here']);
-mkdir([outdir,'lead',filesep,'atlases',filesep,'atlasset_1']);
-mkdir([outdir,'lead',filesep,'atlases',filesep,'atlasset_1',filesep,'lh']);
-mkdir([outdir,'lead',filesep,'atlases',filesep,'atlasset_1',filesep,'rh']);
-mkdir([outdir,'lead',filesep,'atlases',filesep,'atlasset_1',filesep,'mixed']);
-mkdir([outdir,'lead',filesep,'atlases',filesep,'atlasset_1',filesep,'midline']);
+leave_atlases={'ATAG_Linear','ATAG_Nonlinear'};
+
+atls=dir([outdir,'lead',filesep,'atlases']);
+
+for atl=1:length(atls);
+    if ~ismember(atls(atl).name,leave_atlases) && ~strcmp(atls(atl).name,'.') && ~strcmp(atls(atl).name,'..') && ~strcmp(atls(atl).name,'.DS_Store')
+try        
+        rmdir([outdir,'lead',filesep,'atlases',filesep,atls(atl).name],'s');
+catch
+    disp(['Couldnt delete atlases',filesep,atls(atl).name,'.']);
+end
+    end
+end
+%mkdir([outdir,'lead',filesep,'atlases']);
 
 
 % delete cfg:
@@ -40,10 +54,10 @@ delete([outdir,'lead',filesep,'trajvectors.mat']);
 delete([outdir,'lead',filesep,'make_release.m']);
 
 
-% delete DARTEL-Part:
+% delete DARTEL-Templates (can be generated the first time they are used):
 
-rmdir([outdir,'lead',filesep,'templates',filesep,'dartel'],'s');
-delete([outdir,'lead',filesep,'ea_normalize_spmda*']);
+delete([outdir,'lead',filesep,'templates',filesep,'dartel',filesep,'dartelmni_*.nii']);
+%delete([outdir,'lead',filesep,'ea_normalize_spmda*']);
 
 % remove Gibbshighest:
 delete([outdir,'lead',filesep,'fibers',filesep,'gibbsconnectome.mat']);

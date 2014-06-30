@@ -1,6 +1,8 @@
 function prefs=ea_prefs(patientname)
 
-% determine preferences here:
+% determine preferences here. For filenames, the variable 'patientname' can
+% be used in string-handling. This variable will be a string with the same name as the patient
+% folder.
 
 % load loaded prefs (-> prefs.lp)
 try
@@ -9,7 +11,7 @@ prefs.lp=lp;
 end
 
 %% general file handling:
-prefs.prenii_unnormalized=['pre_tra.nii']; % not needed if schönecker normalization is used.
+prefs.prenii_unnormalized=['pre_tra.nii']; % not needed if schï¿½necker normalization is used.
 prefs.tranii_unnormalized=['tra.nii'];
 prefs.sagnii_unnormalized=['sag.nii'];
 prefs.cornii_unnormalized=['cor.nii'];
@@ -34,9 +36,10 @@ prefs.normmatrix=['lmat.txt'];
 
 %% DICOM-Handling:
 
-prefs.dicom.dicomfiles=2; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
+prefs.dicom.dicomfiles=1; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
 
-
+%% Normalization:
+prefs.normalize.coreg='auto';
 
 %% DTI-files:
 
@@ -52,7 +55,7 @@ prefs.hullsimplify='auto'; % 0.1 would reduce hulldata to 10%. set to simplify h
 %% labels:
 prefs.lhullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
 prefs.lhullsmooth=3; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
-prefs.lhullsimplify='auto'; %'auto'; % 0.1 would reduce hulldata to 10% ? set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
+prefs.lhullsimplify='auto'; % 0.1 would reduce hulldata to 10% ? set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
 
 
 %% fibers:
@@ -62,6 +65,5 @@ prefs.addfibers={}; % additional fibers to show.
 
 %% lead server:
 
-prefs.ls.dir=[fileparts(which('lead')),filesep,'..',filesep,'lead_server',filesep];
 prefs.ls.autosave=0;
-prefs.firstrun='off';
+prefs.firstrun='off'; 

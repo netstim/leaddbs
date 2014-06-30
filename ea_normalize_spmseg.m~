@@ -1,4 +1,4 @@
-function varargout=ea_normalize_spmseg_auto(options)
+function varargout=ea_normalize_spmseg(options)
 % This is a function that normalizes both a copy of transversal and coronar
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
@@ -19,7 +19,7 @@ function varargout=ea_normalize_spmseg_auto(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='SPM Segment nonlinear (automatic)';
+    varargout{1}='SPM Segment nonlinear';
     return
 end
 
@@ -69,101 +69,10 @@ end
 
 
 
-% first step, coregistration between transversal and coronar/sagittal versions. on full brain
+% First, do the coreg part:
 
+    ea_coreg(options,options.prefs.normalize.coreg);
 
-normlog=zeros(4,1); % log success of processing steps. 4 steps: 1. coreg tra and cor, 2. grand mean normalization 3. subcortical normalization 4. subcortical fine normalization that spares the ventricles.
-
-
-for export=1:2
-    for costfun=1:2
-        switch export
-            case 1
-                fina=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,',1'];
-            case 2
-                fina=[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,',1'];
-        end
-        
-        
-        matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
-        matlabbatch{1}.spm.spatial.coreg.estimate.source = {fina};
-        matlabbatch{1}.spm.spatial.coreg.estimate.other = {''};
-        matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = costfuns{costfun};
-        matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
-        matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
-        matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
-        
-        jobs{1}=matlabbatch;
-        try
-            cfg_util('run',jobs);
-            normlog(1)=1;
-            disp('*** Coregistration between transversal and coronar versions worked.');
-            finas{export}=fina; % assign only if worked.
-        catch
-            disp('*** Coregistration between transversal and coronar versions failed / Using CT Modality.');
-            %error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
-        end
-        clear matlabbatch jobs;
-        
-        matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']
-            fina};
-        jobs{1}=matlabbatch;
-        try % CT
-            cfg_util('run',jobs);
-            
-            
-        end
-                    clear matlabbatch jobs;
-
-    end
-end
-
-
-
-
-% second step, coreg post to pre.
-
-normlog=zeros(4,1); % log success of processing steps. 4 steps: 1. coreg tra and cor, 2. grand mean normalization 3. subcortical normalization 4. subcortical fine normalization that spares the ventricles.
-
-
-
-for costfun=1:2
-    
-    
-    matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estimate.source = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
-    try
-        matlabbatch{1}.spm.spatial.coreg.estimate.other = finas;
-    catch
-        matlabbatch{1}.spm.spatial.coreg.estimate.other={''};
-    end
-    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = costfuns{costfun};
-    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
-    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
-    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
-    
-    jobs{1}=matlabbatch;
-    try
-        cfg_util('run',jobs);
-        normlog(1)=1;
-        disp('*** Coregistration between pre and post versions worked.');
-    catch
-        disp('*** Coregistration between pre and post versions failed.');
-        %error('This normalization cannot be performed automatically with LEAD. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
-    end
-    clear matlabbatch jobs;
-    
-if exist('finas','var')    
-    matlabbatch{1}.spm.util.checkreg.data = [{[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']},finas];
-else
-    matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
-
-end
-    jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
-    clear matlabbatch jobs;
-
-end
 
 
 
@@ -353,6 +262,7 @@ matlabbatch{1}.spm.util.defs.interp = 6;
 jobs{1}=matlabbatch;
 cfg_util('run',jobs);
 clear matlabbatch jobs;
+
 
 % export (generalized) normalization parameters:
 for inverse=0:1
