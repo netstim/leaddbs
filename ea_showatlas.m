@@ -22,7 +22,11 @@ end
 
 
 nm=[0:1]; % native and mni
+try
 nmind=[options.atl.pt,options.atl.can]; % which shall be performed?
+catch
+    nmind=[0 1];
+end
 nm=nm(logical(nmind)); % select which shall be performed.
 
 

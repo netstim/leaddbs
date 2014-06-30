@@ -57,8 +57,8 @@ end
 for side=1:length(VAT)
 
     for vat=1:length(VAT{side}.VAT)
-        K(side).K{vat}=convhulln(VAT{side}.VAT{vat}); % create triangulation.
-        
+      K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
+
         % show vat
         
         PL.vatsurfs(side,vat)=trisurf(K(side).K{vat},VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3),...
