@@ -20,11 +20,13 @@ prefs.rawctnii_unnormalized=['CT.nii'];
 
 
 prefs.patientdir=[patientname];
+prefs.prenii=['lpre.nii'];
 prefs.tranii=['ltra.nii'];
 prefs.cornii=['lcor.nii'];
 prefs.sagnii=['lsag.nii'];
 prefs.ctnii=['lfusion.nii'];
 
+prefs.gprenii=['glpre.nii'];
 prefs.gtranii=['gltra.nii'];
 prefs.gcornii=['glcor.nii'];
 prefs.gsagnii=['glsag.nii'];

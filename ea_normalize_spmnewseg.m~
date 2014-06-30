@@ -23,6 +23,7 @@ if ischar(options) % return name of method.
     return
 end
 
+segmentresolution=0.5; % resolution of the New Segment output.
 
 
 if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz'],'file')
@@ -64,207 +65,67 @@ end
 
 % First, do the coreg part:
 
-    ea_coreg(options,options.prefs.normalize.coreg);
+ea_coreg(options,options.prefs.normalize.coreg);
 
 
 
 
 
 
-    % now segment the preoperative version.
-    
-    disp('Segmenting preoperative version.');
-    load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob']);
-    job.channel.vols{1}=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized];
-    for tpm=1:6
-        job.tissue(tpm).tpm=fullfile(fileparts(which('spm')),'toolbox','Seg',['TPM.nii,',num2str(tpm)]);
-        if tpm<4
-            job.tissue(tpm).native=[0,1];
-        else
-            job.tissue(tpm).native=[0,0];
-        end
+% now segment the preoperative version.
+
+disp('Segmenting preoperative version.');
+load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob']);
+job.channel.vols{1}=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized];
+for tpm=1:6
+    job.tissue(tpm).tpm=fullfile(fileparts(which('spm')),'toolbox','Seg',['TPM.nii,',num2str(tpm)]);
+    if tpm<4
+        job.tissue(tpm).native=[0,0];
+    else
+        job.tissue(tpm).native=[0,0];
     end
-    
-    
-    ea_spm_preproc_run(job); % exactly the same as the SPM version ("New Segment" in SPM8) but with an increase in resolution to 0.5 mm iso.
-    
-    
-    disp('*** Segmentation of preoperative MRI done.');
-    
+end
+    job.resolution=segmentresolution;
+job.warp.write=[1,1]; % export deformation fields.
+ea_spm_preproc_run(job); % exactly the same as the SPM version ("New Segment" in SPM8) but with an increase in resolution to 0.5 mm iso.
+
+
+disp('*** Segmentation of preoperative MRI done.');
+
 keyboard
 
+% Rename deformation fields:
 
-% export normalization parameters:
-for inverse=0:1
-    if inverse
-        addstr='_inv';
-    else
-        addstr='';
+movefile([options.root,options.patientname,filesep,'y_',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'y_ea_normparams.nii']);
+movefile([options.root,options.patientname,filesep,'iy_',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']);
+
+% Apply estimated deformation to (coregistered) post-op data.
+matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_normparams.nii']};
+matlabbatch{1}.spm.util.defs.ofname = '';
+
+postops={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,options.prefs.prenii_unnormalized};
+cnt=1;
+for postop=1:length(postops)
+    if exist([options.root,options.patientname,filesep,postops{postop}],'file')
+    matlabbatch{1}.spm.util.defs.fnames{cnt}=[options.root,options.patientname,filesep,postops{postop},',1'];
+    cnt=cnt+1;
     end
-    matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
-    matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1-inverse 0+inverse];
-    matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
-    matlabbatch{1}.spm.util.defs.ofname = ['ea',addstr,'_normparams'];
-    matlabbatch{1}.spm.util.defs.fnames = '';
-    matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
-    matlabbatch{1}.spm.util.defs.interp = 1;
-    jobs{1}=matlabbatch;
-
-    cfg_util('run',jobs);
-    disp('*** Exported normalization parameters to y_ea_normparams.nii');
-    clear matlabbatch jobs;
 end
 
-
-
-% apply estimated transformations to pre-operative versions.
-
-
-[~,nm]=fileparts(options.prefs.prenii_unnormalized); % cut off file extension
-
-voxi=[0.22 0.22 0.5]; % export highres
-bbi=[-55 45 9.5; 55 -65 -25]; % with small bounding box
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg_sn.mat']};
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
-
-matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
-try
-    matlabbatch{1}.spm.util.defs.fnames = [{[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']},finas];
-catch % CT
-    matlabbatch{1}.spm.util.defs.fnames = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']}; 
-end
-matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
-matlabbatch{1}.spm.util.defs.interp = 6;
-
+matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.patientname,filesep]};
+matlabbatch{1}.spm.util.defs.interp = 1;
 jobs{1}=matlabbatch;
 cfg_util('run',jobs);
 clear matlabbatch jobs;
 
 
+% rename files:
 
 
-% write out transformation matrix
-
-T{1}=load([options.root,options.prefs.patientdir,filesep,nm,'_seg_sn.mat']);
-T{1}.M = T{1}.VG(1).mat*inv(T{1}.Affine)*inv(T{1}.VF(1).mat); % get mmM that transforms from mm to mm space.
-T{1}.VFM=worldmat2flirtmat(T{1}.M,[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]);
-
-FLIRTMAT=T{1}.VFM;
-M=T{1}.M;
-
-
-
-
-
-% Save transformation for later use in FLIRT
-flirtmat_write([options.root,options.prefs.patientdir,filesep,'flirt_transform'],FLIRTMAT);
-
-mmFLIRT=flirtmat2worldmat(FLIRTMAT,[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized]);
-flirtmat_write([options.root,options.prefs.patientdir,filesep,'mmflirt_transform'],mmFLIRT);
-% Save transformation matrix M that maps from mm space in native acquisition to mm space in MNI space.
-save([options.root,options.prefs.patientdir,filesep,'ea_normparams'],'T','M');
-
-
-% make normalization "permanent" and include correct bounding box.
-
-
-
-
-for export=2:4
-    switch export
-        case 2
-            outf=options.prefs.tranii;
-            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1'];
-        case 3
-            outf=options.prefs.cornii;
-            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized,',1'];
-        case 4
-            outf=options.prefs.sagnii;
-            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized,',1'];
-    end
-    
-    % save a backup
-    
-    if exist([options.root,options.prefs.patientdir,filesep,outf],'file')
-        movefile([options.root,options.prefs.patientdir,filesep,outf],[options.root,options.prefs.patientdir,filesep,'ea_backup',date,num2str(now),outf]);
-    end
-    
-    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']
-        fina
-        };
-    matlabbatch{1}.spm.util.imcalc.output = outf;
-    matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
-    matlabbatch{1}.spm.util.imcalc.expression = ['i2'];
-    matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-    matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-    jobs{1}=matlabbatch;
-    try
-        cfg_util('run',jobs);
-    end
-    clear matlabbatch jobs;
-end
-
-% build global versions of files
-
-
-
-[~,nm]=fileparts(options.prefs.prenii_unnormalized); % cut off file extension
-
-voxi=[0.5 0.5 0.5]; % export highres
-bbi=nan(2,3);
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg_sn.mat']};
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
-
-matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
-try
-    matlabbatch{1}.spm.util.defs.fnames = [{[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']},finas];
-catch
-    matlabbatch{1}.spm.util.defs.fnames = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
-end
-matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
-matlabbatch{1}.spm.util.defs.interp = 6;
-
-jobs{1}=matlabbatch;
-cfg_util('run',jobs);
-clear matlabbatch jobs;
-
-
-% export (generalized) normalization parameters:
-for inverse=0:1
-    if inverse
-        addstr='_inv';
-    else
-        addstr='';
-    end
-    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg',addstr,'_sn.mat']};
-    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = [0.5 0.5 0.5];
-    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = nan(2,3);
-    matlabbatch{1}.spm.util.defs.ofname = ['ea',addstr,'_normparams'];
-    matlabbatch{1}.spm.util.defs.fnames = '';
-    matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
-    matlabbatch{1}.spm.util.defs.interp = 1;
-    jobs{1}=matlabbatch;
-
-    cfg_util('run',jobs);
-    disp('*** Exported normalization parameters to y_ea_normparams.nii');
-    clear matlabbatch jobs;
-end
-
-
-
-movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gtranii]);
-try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gcornii]); end
-try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gsagnii]); end
-
-
-% restore original files (from coregistration)
-copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]);
-try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized]); end
-try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized]); end
+copyfile([options.root,options.patientname,filesep,'w',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.gtranii]);
+movefile([options.root,options.patientname,filesep,'w',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii]);
+try copyfile([options.root,options.patientname,filesep,'w',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.gcornii]);
+try movefile([options.root,options.patientname,filesep,'w',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii]);
 
 
 

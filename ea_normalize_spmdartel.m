@@ -26,7 +26,7 @@ if ischar(options) % return name of method.
 end
 
 
-job.resolution=0.5; % resolution of the DARTEL-Warps. Setting this value to larger values will generate the usual DARTEL-Workflow.
+segmentresolution=0.5; % resolution of the DARTEL-Warps. Setting this value to larger values will generate the usual DARTEL-Workflow.
 
 
 
@@ -91,7 +91,7 @@ end
             job.tissue(tpm).native=[0,0];
         end
     end
-    
+    job.resolution=segmentresolution; 
     
     ea_spm_preproc_run(job); % exactly the same as the SPM version ("New Segment" in SPM8) but with an increase in resolution to 0.5 mm iso.
     
