@@ -169,8 +169,8 @@ end
 
 
 for coo=1:4
-   coords(coo,:)=startpt+ntrajvector*maxi       +ntrajvector*(coo*reldist);
-    
+    coords(coo,:)=startpt+ntrajvector*maxi       +ntrajvector*(coo*reldist);
+
 end
 
 

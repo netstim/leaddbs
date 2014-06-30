@@ -52,7 +52,7 @@ prefs.hullsimplify='auto'; % 0.1 would reduce hulldata to 10%. set to simplify h
 %% labels:
 prefs.lhullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
 prefs.lhullsmooth=3; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
-prefs.lhullsimplify='auto'; %'auto'; % 0.1 would reduce hulldata to 10% ? set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
+prefs.lhullsimplify='auto'; % 0.1 would reduce hulldata to 10% ? set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
 
 
 %% fibers:
@@ -62,6 +62,5 @@ prefs.addfibers={}; % additional fibers to show.
 
 %% lead server:
 
-prefs.ls.dir=[fileparts(which('lead')),filesep,'..',filesep,'lead_server',filesep];
 prefs.ls.autosave=0;
-prefs.firstrun='off';
+prefs.firstrun='off'; 
