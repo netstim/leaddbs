@@ -501,12 +501,11 @@ if stimparams(1).showfibers
 %                 PL.fibfv(fib).colors=[squeeze(ind2rgb(round(fv.facevertexcdata),jetlist)),repmat(0.7,size(PL.fibfv(fib).vertices,1),1)];
 
               % new code as brainbrowser expects it:    
-              try
                 PL.bbfibfv(fib).vertices=thisfib(1:3,:)';
                 PL.bbfibfv(fib).faces=[1:size(thisfib,2)-1;2:size(thisfib,2)]';
                 PL.bbfibfv(fib).normals=zeros(size(PL.bbfibfv(fib).vertices,1),3);
                 PL.bbfibfv(fib).colors=[squeeze(ind2rgb(round(thisfib(4,:)),jetlist)),repmat(0.7,size(thisfib,2),1)];
-              end
+                
 
                                    
 
@@ -531,7 +530,7 @@ if stimparams(1).showfibers
     end
     
     % plot fibers that connect to both a region of the labeling atlas and the electrode VAT:
-    try cnt=length(PL.bbfibfv)+1; end
+    trycnt=length(PL.bbfibfv)+1;
     for la=1:size(doubleconnectingfibs,1)
         fibmax=length(doubleconnectingfibs(la,:));
         dispercent(0,'Plotting fibers that connect to both the VAT and a region within the labeling atlas');
@@ -578,7 +577,7 @@ if stimparams(1).showfibers
             %
             
             % new code as brainbrowser expects it:
-            try
+            
             PL.bbfibfv(cnt).vertices=thisfib(1:3,:)';
             PL.bbfibfv(cnt).faces=[1:size(thisfib,2)-1;2:size(thisfib,2)]';
             PL.bbfibfv(cnt).normals=zeros(size(PL.bbfibfv(cnt).vertices,1),3);
@@ -586,7 +585,7 @@ if stimparams(1).showfibers
             
             
             cnt=cnt+1;
-            end
+            
                         
                         
                         
