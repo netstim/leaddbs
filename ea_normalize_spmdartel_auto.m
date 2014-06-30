@@ -23,6 +23,8 @@ if ischar(options) % return name of method.
     return
 end
 
+job.resolution=0.5; % resolution of the DARTEL-Warps. Setting this value to larger values will generate the usual DARTEL-Workflow.
+
 
 usecombined=0; % if set, eauto will try to fuse coronar and transversal images before normalizing them.
 usesegmentnew=0;
@@ -182,15 +184,30 @@ end
         end
     end
     
-    job.resolution=0.5;
     ea_spm_preproc_run(job); % exactly the same as the SPM version ("New Segment" in SPM8) but with an increase in resolution to 0.5 mm iso.
     
     
-    %cfg_util('run',jobs);
     disp('*** Segmentation of preoperative MRI worked.');
-%catch
-%    error('*** Segmentation of preoperative MRI failed.');
-%end
+
+    
+    
+    
+    % check if darteltemplate is available, if not generate one
+    
+    if exist([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'],'file')
+        % There is a DARTEL-Template. Check if it will match:
+        Vt=spm_vol([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii']);
+        Vp=spm_vol([options.root,filesep,options.patientname,filesep,'rc1pre_tra.nii']);
+        if ~isequal(Vp.dim,Vt(1).dim) || ~isequal(Vp.mat,Vt(1).mat) % Dartel template not matching. -> create matching one.
+            ea_create_mni_darteltemplate([options.root,filesep,options.patientname,filesep,'rc1pre_tra.nii']);
+        end
+        
+    else % no dartel template present. -> Create matching dartel templates from highres version.
+        ea_create_mni_darteltemplate([options.root,filesep,options.patientname,filesep,'rc1pre_tra.nii']);
+        
+    end
+    
+    %
 
 
 % Normalize to MNI using DARTEL.
