@@ -1,5 +1,7 @@
 *.nii
 *.nii.gz
+!atlases/ATAG_Linear
+!atlases/ATAG_Nonlinear
 *.ps
 gibsconnect*.mat
 *.gipl
