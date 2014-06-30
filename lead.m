@@ -260,11 +260,15 @@ for pat=1:length(uipatdirs)
     [root,thispatdir]=fileparts(uipatdirs{pat});
     options.patientname=thispatdir;
     % run main function
+   if length(uipatdirs)>1 % multi mode. Dont stop at errors.
     try
     ea_autocoord(options);
     catch
        warning([options.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
     end
+   else
+       ea_autocoord(options);
+   end
 end
 
 

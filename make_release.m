@@ -54,10 +54,10 @@ delete([outdir,'lead',filesep,'trajvectors.mat']);
 delete([outdir,'lead',filesep,'make_release.m']);
 
 
-% delete DARTEL-Part:
+% delete DARTEL-Templates (can be generated the first time they are used):
 
-rmdir([outdir,'lead',filesep,'templates',filesep,'dartel'],'s');
-delete([outdir,'lead',filesep,'ea_normalize_spmda*']);
+delete([outdir,'lead',filesep,'templates',filesep,'dartel',filesep,'dartelmni_*.nii']);
+%delete([outdir,'lead',filesep,'ea_normalize_spmda*']);
 
 % remove Gibbshighest:
 delete([outdir,'lead',filesep,'fibers',filesep,'gibbsconnectome.mat']);

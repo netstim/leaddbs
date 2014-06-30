@@ -1,6 +1,8 @@
 function prefs=ea_prefs(patientname)
 
-% determine preferences here:
+% determine preferences here. For filenames, the variable 'patientname' can
+% be used in string-handling. This variable will be a string with the same name as the patient
+% folder.
 
 % load loaded prefs (-> prefs.lp)
 try
@@ -9,7 +11,7 @@ prefs.lp=lp;
 end
 
 %% general file handling:
-prefs.prenii_unnormalized=['pre_tra.nii']; % not needed if schönecker normalization is used.
+prefs.prenii_unnormalized=['pre_tra.nii']; % not needed if schï¿½necker normalization is used.
 prefs.tranii_unnormalized=['tra.nii'];
 prefs.sagnii_unnormalized=['sag.nii'];
 prefs.cornii_unnormalized=['cor.nii'];
@@ -36,7 +38,8 @@ prefs.normmatrix=['lmat.txt'];
 
 prefs.dicom.dicomfiles=1; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
 
-
+%% Normalization:
+prefs.normalize.coreg='auto';
 
 %% DTI-files:
 

@@ -4,6 +4,7 @@
 gibsconnect*.mat
 *.gipl
 *.png
+!icons/*.png
 *.mat
 fibers
 *.json
