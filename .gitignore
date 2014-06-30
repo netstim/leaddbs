@@ -1,7 +1,10 @@
 *.nii
 *.nii.gz
-!atlases/ATAG_Linear
-!atlases/ATAG_Nonlinear
+!atlases/ATAG_Linear/*.nii
+!atlases/ATAG_Linear/*.nii.gz
+!atlases/ATAG_Nonlinear/*.nii
+!atlases/ATAG_Nonlinear/*.nii.gz
+
 *.ps
 gibsconnect*.mat
 *.gipl
