@@ -1,6 +1,6 @@
 ## Reconstructing the Electrode Trajectory
 
-Once normalized volumes are found within the chosen patient folder, the images are ready to be used for reconstruction of the electrode trajectories and manual correction.
+Once normalized volumes are found within the chosen patient folder, the images are ready to be used for reconstruction of the electrode trajectories and for manual correction.
 
 #### Reconstructing Electrode Lead Trajectories
 For the reconstruction step to take place, check the box `[] Reconstruct`, choose the preferred parameters for obtaining the images, and press `Run`.
@@ -10,12 +10,12 @@ Always pay attention to the checkboxes. Remember that _Lead-DBS_ runs all proces
 
 #### Reconstruction Parameters
 
-To perform a reconstruction as precise as possible, _Lead-DBS_ uses the different planes to pinpoint the artifacts caused by the electrodes and calculates thereafter its trajectories through space. You can also choose to reconstruct one or both hemispheres (`[] LH`and `[] RH` checkboxes).
+To perform a reconstruction as precise as possible, _Lead-DBS_ uses the different planes to pinpoint the artifacts caused by the electrodes and calculates thereafter the trajectories through space. You can choose to reconstruct one or both hemispheres (`[] LH`and `[] RH` checkboxes).
 
 Several options are available to help in this process:
 
 ##### 1. Entry point for electrodes
-The parameter `Entry point for electrodes` presents the user with following options:
+The parameter `Entry point for electrodes` presents following options:
 ```
 - STN, GPi, or ViM
 - Cg25
@@ -24,7 +24,7 @@ The parameter `Entry point for electrodes` presents the user with following opti
 
 An **automatic ** reconstruction will be performed if any of the first two options are chosen. The option `STN, GPi, or ViM` targets electrodes that have been implanted in patients with movement disorders. The option `Cg25`targets those in patients with depression.
 
-The option `Manual` will require you to pinpoint the entry points of the artifacts within the images. **Section 4.2** describes the details for this step.
+The option `Manual` will require you to pinpoint the entry points of the artifacts within the image slices. **Section 4.2** describes the details for this step.
 
 ##### 2. Axis
 

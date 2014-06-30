@@ -6,4 +6,4 @@ To add _Lead-DBS_ to the MATLAB directories, do the following:
 4. Browse to the location of the _Lead-DBS_ folder and select it.
 5. Finally click on `Save`and `Close`.
 
-Now you should be able to start LEAD-DBS by entering `lead` into the command line.
+Now you should be able to start _Lead-DBS_ by entering `lead` into the command line.

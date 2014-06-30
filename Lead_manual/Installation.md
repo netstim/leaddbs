@@ -1,6 +1,6 @@
 ## Installation
 
-_Lead-DBS_ is a toolbox that works in the [MATLAB] programming framework (http://www.mathworks.de/products/matlab/) ([The Mathworks](http://www.mathworks.com/)).
+_Lead-DBS_ is a toolbox that works in the [MATLAB](http://www.mathworks.de/products/matlab/) programming framework ([The Mathworks](http://www.mathworks.com/)).
 
 However, there are some required steps prior to using the toolbox:
 

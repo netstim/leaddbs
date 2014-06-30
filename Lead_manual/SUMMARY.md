@@ -1,7 +1,7 @@
 # Summary
 
 * [Installation](Installation.md)
-    * [Setting a Path for Lead-DBS in MATLAB](Setting a Path for _Lead-DBS_ in MATLAB.md)
+    * [Setting the MATLAB Path to include Lead-DBS](Setting a Path for _Lead-DBS_ in MATLAB.md)
     * [Acquiring and Setting Atlases](Acquiring and Setting Atlases.md)
 * [Lead-DBS Main Window and Loading Images](Lead-DBS Main Window and Loading Images.md)
     * [Renaming the Image Files](Formatting the Image File Names.md)
