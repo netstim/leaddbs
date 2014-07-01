@@ -302,6 +302,11 @@ if ~isempty(fccorr)
 ea_corrplot([corrcl,fccorr],'Fibercounts',fc_labels);
 end
 
+try
+    X=[corrcl,vicorr.both,vicorr.right,vicorr.left,fccorr];
+    assignin('base','X',X);
+end
+    
 
 % --- Executes on selection change in clinicallist.
 function clinicallist_Callback(hObject, eventdata, handles)
@@ -838,14 +843,14 @@ vc_labels={};
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
         for vat=M.stats(pt).ea_stats.vatanalyses(end+M.patient.analysis(pt)).vatsused;
-            if M.stats(pt).ea_stats.vat(vat).Side==0
+            if M.stats(pt).ea_stats.vat(vat).Side==1 % right hemisphere
                 try
                     pval=vicorr_right(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
                 catch
                     pval=0;
                 end
                 vicorr_right(ptcnt,vicnt)=pval+M.stats(pt).ea_stats.vat(vat).AtlasIntersection(vi);
-            else
+            elseif M.stats(pt).ea_stats.vat(vat).Side==2 % left hemisphere
                 try
                     pval=vicorr_left(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
                 catch
@@ -863,6 +868,15 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
             vicorr_both(ptcnt,vicnt)=pval+M.stats(pt).ea_stats.vat(vat).AtlasIntersection(vi);
 
         end
+        
+        
+        % check if all three values have been served. if not, set to zero
+        % (e.g. if there was no stimulation at all on one hemisphere, this
+        % could happen.
+        if size(vicorr_right,1)<ptcnt; vicorr_right(ptcnt,vicnt)=0; end
+        if size(vicorr_left,1)<ptcnt; vicorr_left(ptcnt,vicnt)=0; end
+        if size(vicorr_both,1)<ptcnt; vicorr_both(ptcnt,vicnt)=0; end
+        
         ptcnt=ptcnt+1;
         
     end
