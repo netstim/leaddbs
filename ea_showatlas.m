@@ -109,12 +109,11 @@ for atlas=1:length(atlases.names)
     
     if ~isfield(atlases,'fv') % rebuild from nii files
         switch atlases.types(atlas)
-            case 1 % left hemispheric atlas.
-                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
-                nii.img=round(nii.img);
-                
-            case 2 % right hemispheric atlas.
+            case 1 % right hemispheric atlas.
                 nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
+                nii.img=round(nii.img);
+            case 2 % left hemispheric atlas.
+                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
                 nii.img=round(nii.img);
             case 3 % both-sides atlas composed of 2 files.
                 lnii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);

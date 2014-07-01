@@ -521,9 +521,20 @@ end
 
 
 % refresh selections on VI and FC Lists:
-try set(handles.vilist,'Value',M.ui.volumeintersections); end
-try set(handles.fclist,'Value',M.ui.fibercounts); end
-
+try
+if M.ui.volumeintersections>length(get(handles.vilist,'String'))
+    set(handles.vilist,'Value',1);
+else
+    set(handles.vilist,'Value',M.ui.volumeintersections); 
+end
+end
+try
+if M.ui.fibercounts>length(get(handles.fclist,'String'))
+    set(handles.fclist,'Value',1);
+else
+    set(handles.fclist,'Value',M.ui.fibercounts); 
+end
+end
 
 M.groups.group=unique(M.patient.group); % STN, GPi, Thalamus, cZi
 %groupcolors=squeeze(ind2rgb(round([1:9]*(64/9)),jet));
