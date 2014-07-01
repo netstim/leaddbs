@@ -395,6 +395,7 @@ coords=coords(1:3,:)';
 
 
 function nii=load_nii_proxy(fname,options)
+
 if strcmp(fname(end-2:end),'.gz')
     wasgzip=1;
     gunzip(fname);
@@ -402,9 +403,13 @@ if strcmp(fname(end-2:end),'.gz')
 else
     wasgzip=0;
 end
+try
 nii=spm_vol(fname);
-nii.img=spm_read_vols(nii);
 
+nii.img=spm_read_vols(nii);
+catch
+    
+end
 
 nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
 if ~all(abs(nii.hdr.dime.pixdim(1:3))<=1)

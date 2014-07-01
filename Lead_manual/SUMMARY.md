@@ -14,4 +14,5 @@
 * [Writing 2D Images](writing_2d_images/README.md)
 * [Creating the 3D Scene](Creating the 3D Scene.md)
 * [Reconstruction Statistics](reconstruction_statistics/README.md)
+* [Group analyses with LEAD-DBS](group_analyses_with_lead-dbs/README.md)
 

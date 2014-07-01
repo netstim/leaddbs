@@ -4,7 +4,7 @@
     <head>
         
         <meta charset="UTF-8">
-        <title>Manual Correction of Electrode Localization | Welcome to Lead-DBS</title>
+        <title>Reconstruction Statistics | Welcome to Lead-DBS</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="generator" content="GitBook 0.5.2">
@@ -17,10 +17,10 @@
     
     
     
-    <link rel="next" href="../writing_2d_images/README.html" />
+    <link rel="next" href="../group_analyses_with_lead-dbs/README.html" />
     
     
-    <link rel="prev" href="..//manual_reconstruction.html" />
+    <link rel="prev" href="../Creating the 3D Scene.html" />
     
 
         
@@ -32,7 +32,7 @@
 
 
         
-    <div class="book"  data-level="5" data-basepath=".." data-revision="1404224397685">
+    <div class="book"  data-level="8" data-basepath=".." data-revision="1404224397685">
     <div class="book-header">
     <!-- Actions Left -->
     <a href="#" class="btn pull-left toggle-summary" aria-label="Toggle summary"><i class="fa fa-align-justify"></i></a>
@@ -284,7 +284,7 @@
             <div class="page-wrapper" tabindex="-1">
                 <div class="book-progress">
     <div class="bar">
-        <div class="inner" style="width: 73.33333333333333%;min-width: 66.66666666666667%;"></div>
+        <div class="inner" style="width: 93.33333333333333%;min-width: 86.66666666666667%;"></div>
     </div>
     <div class="chapters">
     
@@ -312,11 +312,11 @@
     
         <a href="../manual_correction_of_electrode_localization/README.html" title="Manual Correction of Electrode Localization" class="chapter done new-chapter" data-progress="5" style="left: 73.33333333333333%;"></a>
     
-        <a href="../writing_2d_images/README.html" title="Writing 2D Images" class="chapter  new-chapter" data-progress="6" style="left: 80%;"></a>
+        <a href="../writing_2d_images/README.html" title="Writing 2D Images" class="chapter done new-chapter" data-progress="6" style="left: 80%;"></a>
     
-        <a href="../Creating the 3D Scene.html" title="Creating the 3D Scene" class="chapter  new-chapter" data-progress="7" style="left: 86.66666666666667%;"></a>
+        <a href="../Creating the 3D Scene.html" title="Creating the 3D Scene" class="chapter done new-chapter" data-progress="7" style="left: 86.66666666666667%;"></a>
     
-        <a href="../reconstruction_statistics/README.html" title="Reconstruction Statistics" class="chapter  new-chapter" data-progress="8" style="left: 93.33333333333333%;"></a>
+        <a href="../reconstruction_statistics/README.html" title="Reconstruction Statistics" class="chapter done new-chapter" data-progress="8" style="left: 93.33333333333333%;"></a>
     
         <a href="../group_analyses_with_lead-dbs/README.html" title="Group analyses with LEAD-DBS" class="chapter  new-chapter" data-progress="9" style="left: 100%;"></a>
     
@@ -325,66 +325,59 @@
 
                 <div class="page-inner">
                 
-                    <section class="normal" id="section-gitbook_5277">
+                    <section class="normal" id="section-gitbook_5278">
                     
-                        <h2 id="manual-correction-of-electrode-localization">Manual Correction of Electrode Localization</h2>
-<p>When <code>[] Manual correction</code> is checked and run, <em>Lead-DBS</em> brings up a window where you can visualize and modify the position of the electrodes.</p>
-<p>This step should <strong>always</strong> be done in order to obtain a meaningful reconstruction.</p>
-<p><img src="http://www.andreas-horn.de/leaddbs/manualimages/manualcorrection.png" alt="Window for the Manual Correction"></p>
-<p><strong>The goal of this step is to adjust the localization of the electrode and contact templates within the artifact, in order to place it as accurately as possible.</strong></p>
-<p>In this window, the user is able to visualize the position of the electrode trajectory in the artifacts of the MR or CT images. <em>Lead-DBS</em> places within these artifacts the built-in templates for the electrodes, represented as <em>straight lines</em> that run along the artifacts. The contacts are represented as a <em>set of circles</em> on the electrode lead lines (4 or 8 circles, depending on the electrode model chosen).</p>
-<p>The <strong>Manual Correction</strong> window is divided into the following sections:</p>
+                        <h2 id="reconstruction-statistics">Reconstruction Statistics</h2>
+<p>LEAD-DBS exports statistics about your electrode reconstructions during</p>
 <ul>
-<li>Main view of the electrodes and contacts (center)</li>
-<li>Transversal views of electrode contacts (right column)</li>
-<li>Command buttons</li>
+<li>3D visualization</li>
+<li>Simulation of stimulations (calculation of Volume of Activated tissue and fiber connectivities).</li>
 </ul>
-<p>In order to adjust the localization of the electrodes, two-dimensional planes are presented orthogonally to the lead trajectory. Changes are tracked within the main view and the transversal views. The main view presents the electrodes and contacts as a whole. The transversal views correspond to the position of the top and bottom contacts of each electrode. They are arranged in ascending order (top: <code>0</code>, second from top <code>3</code>, third from top <code>4</code>, and bottom <code>7</code>).</p>
-<p>A set of commands are available in the manual correction window in order to adjust the settings of the electrode trajectories. Some also have keyboard shortcuts for easier access.</p>
-<h4 id="changing-views">Changing Views</h4>
-<p>The main view displays the <strong>different planes</strong> that are selected by clicking on the command button or by using the following keyboard shortcuts:</p>
+<p>During both processes, a file named <code>ea_stats.mat</code> is written out in MATLAB which can be used within your own analysis pipelines or together with the group analysis GUI <code>lead_group</code>. The structure of the variable file is as following:</p>
 <ul>
-<li><code>A</code>: sets view from Anterior</li>
-<li><code>P</code>: sets view from Posterior</li>
-<li><code>R</code>: sets view from Right</li>
-<li><code>L</code>: sets view from Left</li>
-<li><code>X</code>: sets view from X direction</li>
-<li><code>Y</code>: sets view from Y direction</li>
+<li><code>conmat</code>: An <em>m</em> × <em>n</em> matrix showing the distance between the center of each contact (<em>m</em> electrodes contacts numbered from K0 (right hemisphere) upwards) and the closest voxel within the <em>nth</em> atlas. Corresponding atlas names can be found in the file, as well (see below). Please note that these values are never zero, even if the electrode contact resides within the atlas. This is due to the fact that both voxels and electrode contacts are represented as mathematical point and these are &quot;never&quot; exactly identical. Thus, to answer the question about whether a contact resides within a certain nucleus, you have to either define a distance threshold yourself, or try to work with one of the following two entries.</li>
+<li><code>conmat_inside_vox</code>: A copy of <code>conmat</code>, where all entries are set to zero that show a smaller distance than the voxel resolution of the according atlas. This matrix can be used to see whether a contact resides surely within a certain atlas.</li>
+<li><code>conmat_inside_hull</code>: Another copy of <code>conmat</code>, where all entries are set to zero for the condition that the center of an electrode contact resides within the concave hull of a certain nucleus. Please note that this is only valid for the <em>center</em> of each contact. If the center of an electrode contact is close to the boarder of the nucleus, the contact might still reside &quot;within&quot; the nucleus without the entry of this matrix being zero. Taken together, for binary classifications, our advise is to analyze data with the pure <code>conmat</code> and defining your own reasonable threshold that tells you whether a contact is &quot;within&quot; or &quot;outside&quot; a certain nucleus.</li>
+<li><code>patname</code>: The name/pseudonym of the analyzed patient.</li>
+<li><code>atlases</code>: Information about the atlases used.<ul>
+<li><code>names</code>: The names of the atlases. You can use this list for referencing all stats entries. As an example, entry (5,6) of <code>conmat</code> described above shows the distance between contact</li>
+<li><code>types</code>: The types of atlas. Types can be the following:<ul>
+<li><em>1</em>: Right hemispheric atlas, i.e. one that is <em>only</em> present in the <em>atlases/youratlasset/rh</em> directory.</li>
+<li><em>2</em>: Left hemispheric atlas, i.e. one that is <em>only</em> present in the <em>atlases/youratlasset/lh</em> directory.</li>
+<li><em>3</em>: An atlas that is present for both hemispheres and is composed of two files with the exact same name, one lying in the <em>atlases/youratlasset/lh</em> and one in the <em>atlases/youratlasset/rh</em> directory.</li>
+<li><em>4</em>: An atlas that is present for both hemispheres but is read-in only from one file residing within the <em>atlases/youratlasset/mixed</em> directory. When processed, these atlases are divided along the <em>x = 0 mm</em> (midsaggital) plane into two compartments.</li>
+<li><em>5</em>: An atlas that shows a midline structure, i.e. one that is not being divided along the <em>x = 0 mm</em> plane. These atlases can be used for structures around the midsaggital plane, such as the subcallosal cortex or Broca&#39;s area 25.</li>
+<li><code>colormap</code>: A colormap used for visualization. You can change the colormap from within the <code>lead</code> GUI by pressing on the colormap button, selecting a colormap and re-running the 3D visualization step.</li>
 </ul>
-<p><strong>Brightness offset</strong> and <strong>contrast</strong> are adjusted using their command buttons or the following keyboard shortcurts:</p>
-<ul>
-<li><code>C</code>: decreases contrast</li>
-<li><code>V</code>: increases contrast</li>
-<li><code>B</code>: decreases offset</li>
-<li><code>N</code>: increases offset</li>
+</li>
+<li><code>electrodes</code>: A structure with information about the reconstruction. This is the same information as can be found in the <code>ea_reconstruction.mat</code> file within the patient folder, namely:<ul>
+<li><code>coords_mm</code>: A (usually) 1 × 2 cell filled with n × 3 matrices denoting the coordinates of each electrode contact in millimeters (within MNI space). The first cell accounts for the right electrode, the second one for the left electrode. Within each matrix, the first row accounts for the dorsalmost contact. For example, <em>ea_stats.electrodes.coords_mm{2}(3,:)</em> accounts for the coordinates of the third-dorsalmost contact on the left hemisphere, often referred to as <code>K10</code> (or sometimes as <code>K6</code>).</li>
+<li><code>trajectory</code>: A (usually) 1 × 2 cell filled with n × 3 matrices, each describing a coordinate list of the reconstructed trajectory. Points on these line should be equidistant and on a straight line.</li>
+<li><code>name</code>: The name/pseudonym of the patient.</li>
 </ul>
-<h4 id="adjusting-the-electrode-height">Adjusting the Electrode Height</h4>
-<p>If no contact is selected (scroll down to learn more on how to select a specific contact), the <strong>arrow keys</strong> will move the electrodes up or down (in the saggital plane) as a whole within the artifact template in the following way:</p>
-<ul>
-<li><code>Up</code> and <code>Down</code> arrow keys adjust the <strong>right electrode</strong></li>
-<li><code>Right</code> and <code>Left</code> arrow keys adjust the <strong>left electrode</strong></li>
+</li>
+<li><code>vat</code>: Information about volumes of activated tissue (VAT). Each struct in here has the following fields:<ul>
+<li><code>U</code>: The Voltage applied to build this VAT in V.</li>
+<li><code>Im</code>: The Impedance measured while stimulating, in Ω.</li>
+<li><code>Contact</code>: The electrode contact where this VAT found its origin. An entry [1 2] would refer to right (1) contact number 2, i.e. the second-dorsalmost right contact, usually referred to as <code>K1</code>. [2 2] would be its left counterpart <code>K9</code>/<code>K5</code>.</li>
+<li><code>Side</code>: Whether the contact was left or right (redundant with the first entry in the <code>Contact</code> field).</li>
+<li><code>AtlasIntersection</code>: The 1 × n matrix in this field estimates, how many cubic millimeters of tissue of each nucleus got stimulated by the generated VAT (n := number of atlases in the set). If the second entry in this matrix amounts to a value of 8.7, this means that according to the simulation, 8.7 cubic millimeters of the second atlas (as labeled by _ea_stats.atlases.names{2}) was stimulated by this particular VAT.</li>
 </ul>
-<p>Pressing the <code>Shift</code> key together with the <strong>arrow</strong> keys will move the electrodes in even greater steps.</p>
-<p>Although the electrode templates already provide a specific <strong>spacing</strong> between each contact, these can be brought together or separated by using the following commands:</p>
-<ul>
-<li><code>+</code>: increase spacing between contacts</li>
-<li><code>-</code>: decrease spacing between contacts</li>
+</li>
+<li><code>ft</code>: A structure accounting for fibertracking-related statistics.<ul>
+<li><code>fibercounts</code>: A n × 1 matrix accounting for how many fibers connected the VAT to the n structures within the particular labeling atlas.</li>
+<li><code>labels</code>: A n × 1 cell with the names of the labeling atlas.</li>
+<li><code>vatsused</code>: refers to the VATs used for this fiber-tracking analysis. If you have more than one struct of <code>ft</code>, this can be used to keep track on which analysis was which.</li>
 </ul>
-<h4 id="adjusting-a-specific-contact-s-position">Adjusting a Specific Contact&#39;s Position</h4>
-<p>For easier adjustment, specific contacts can be selected and their changes checked in their respective transversal views. Contacts are selected by clicking the command button or by pressing the keyboard shortcut:</p>
-<ul>
-<li><code>0</code>: selects electrode 0 (right electrode)</li>
-<li><code>3</code>: selects electrode 3 (right electrode)</li>
-<li><code>4</code>: selects electrode 4 (left electrode)</li>
-<li><code>7</code>: selects electrode 7 (left electrode)</li>
+</li>
+<li><code>vatanalyses</code>: A meta-structure keeping track on the analyses performed. For example, if this structure has three entries, three analyses have been performed. In theory, this could also be used to keep track of stimulation settings that may change over time for a certain patient. In <code>lead_group</code>, the <em>Analysis</em> listbox refers to the last entry in <code>vatanalyses</code>, if it is set to 0. It refers to the second-last entry if it is set to -1, and so forth. This way, more than one VAT/Fibertracking analyses can be stored for each patient and analysed seperately with <code>lead_group</code>.<ul>
+<li><code>vatsused</code>: Which entries of the <em>ea_stats.vat</em> structure have been used in this particular analysis.</li>
+<li><code>fibersused</code>: Which entries of the <em>ea_stats.ft</em> structure have been used in this particular analysis.</li>
 </ul>
-<p>When a specific contact is selected, the <strong>arrow</strong> keys will adjust the position within the <em>saggital</em> and <em>coronal</em> planes. Changes can be tracked in the main view and the transversal views.</p>
-<h4 id="saving-the-changes">Saving the Changes</h4>
-<p>Once the manual correction is finished, the work can be saved by clicking the check on the command buttons or by using the keyboard shortcut:</p>
-<ul>
-<li><code>space bar</code>: Finish manual corrections</li>
+</li>
 </ul>
-<p>Information will be saved as a Matlab file within the patient folder.</p>
+</li>
+</ul>
 
                     
                     </section>
@@ -394,10 +387,10 @@
         </div>
 
         
-        <a href="..//manual_reconstruction.html" class="navigation navigation-prev " aria-label="Previous page: Manual Selection of Entry Points"><i class="fa fa-angle-left"></i></a>
+        <a href="../Creating the 3D Scene.html" class="navigation navigation-prev " aria-label="Previous page: Creating the 3D Scene"><i class="fa fa-angle-left"></i></a>
         
         
-        <a href="../writing_2d_images/README.html" class="navigation navigation-next " aria-label="Next page: Writing 2D Images"><i class="fa fa-angle-right"></i></a>
+        <a href="../group_analyses_with_lead-dbs/README.html" class="navigation navigation-next " aria-label="Next page: Group analyses with LEAD-DBS"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>
