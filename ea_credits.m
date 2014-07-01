@@ -8,7 +8,7 @@ function ea_credits
 % volume handling
 
 % Inhull.m - (c) John D'Errico
-% ?Tools for NIfTI and ANALYZE image? - (c) Jimmy Shen
+% Tools for NIfTI and ANALYZE image - (c) Jimmy Shen
 % Draggable.m - (c) Francois Bouffard
 % Myaa.m - (c) Anders Brun
 % rangesearch.m - (c) Yi Cao

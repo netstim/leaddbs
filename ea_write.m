@@ -31,6 +31,8 @@ if options.d2.write
     
 end
 
+
+
 % Render 3D Visualization
 if options.d3.write
     

@@ -86,7 +86,7 @@ for side=1:length(VAT)
                 ea_stats.vat(priorvatlength+1).Im=stimparams(side).Im(vat);
                 ea_stats.vat(priorvatlength+1).Contact=[side,vat];
                 
-                ea_stats.vat(priorvatlength+1).Side=side-1;
+                ea_stats.vat(priorvatlength+1).Side=side;
                 iXYZ=getappdata(gcf,'iXYZ');
                 ipixdim=getappdata(gcf,'ipixdim');
                 
@@ -98,7 +98,7 @@ for side=1:length(VAT)
                         thisatl=iXYZ{atlas,1};
                         tpd=ipixdim{atlas,1};
                     end
-                    tpv=tpd(1)*tpd(2)*tpd(3); % volume of one voxel in mm^3.
+                    tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
                     
                         
                         ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas)=sum(inhull(thisatl,VAT{side}.VAT{vat},K(side).K{vat}))*tpv;

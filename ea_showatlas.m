@@ -110,22 +110,22 @@ for atlas=1:length(atlases.names)
     if ~isfield(atlases,'fv') % rebuild from nii files
         switch atlases.types(atlas)
             case 1 % left hemispheric atlas.
-                [nii,V]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
+                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
                 nii.img=round(nii.img);
                 
             case 2 % right hemispheric atlas.
-                [nii,V]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
+                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
                 nii.img=round(nii.img);
             case 3 % both-sides atlas composed of 2 files.
-                [lnii,lV]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
-                [rnii,rV]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
+                lnii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
+                rnii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
                 lnii.img=round(lnii.img);
                 rnii.img=round(rnii.img);
             case 4 % mixed atlas (one file with both sides information.
-                [nii,V]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],options);
+                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],options);
                 nii.img=round(nii.img);
             case 5 % midline atlas (one file with both sides information.
-                [nii,V]=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
+                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
                 nii.img=round(nii.img);
         end
     end
@@ -135,11 +135,11 @@ for atlas=1:length(atlases.names)
             
             if atlases.types(atlas)==3 % both-sides atlas composed of 2 files.
                 if side==1
-                    nii=lnii;
-                    V=lV;
-                elseif side==2
                     nii=rnii;
-                    V=rV;
+                    
+                elseif side==2
+                    nii=lnii;
+                    
                 end
             end
         
@@ -158,7 +158,7 @@ for atlas=1:length(atlases.names)
                 
                 XYZ=[xx,yy,zz]; % concatenate points to one matrix.
                 
-                XYZ=map_coords_proxy(XYZ,V); % map to mm-space
+                XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
                 
                 
                 if atlases.types(atlas)==4 % mixed atlas, divide
@@ -185,7 +185,7 @@ for atlas=1:length(atlases.names)
             
             bb=[0,0,0;size(nii.img)];
             
-            bb=map_coords_proxy(bb,V);
+            bb=map_coords_proxy(bb,nii);
             gv=cell(3,1);
             for dim=1:3
                 gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));
@@ -230,7 +230,8 @@ for atlas=1:length(atlases.names)
             ifv{atlas,side}=fv; % later stored
             icdat{atlas,side}=cdat; % later stored
             iXYZ{atlas,side}=XYZ; % later stored
-            ipixdim{atlas,side}=nii.hdr.dime.pixdim(2:4); % later stored
+            
+            ipixdim{atlas,side}=nii.hdr.dime.pixdim(1:3); % later stored
             icolorc{atlas,side}=colorc; % later stored
 
             pixdim=ipixdim{atlas,side};
@@ -394,15 +395,28 @@ coords=coords(1:3,:)';
 
 
 
-function [nii,V]=load_nii_proxy(fname,options)
-
-nii=load_untouch_nii(fname);
-if ~all(nii.hdr.dime.pixdim(2:4)<=1)
-    reslice_nii(fname,fname,[0.5,0.5,0.5]);
-    nii=load_untouch_nii(fname);
+function nii=load_nii_proxy(fname,options)
+if strcmp(fname(end-2:end),'.gz')
+    wasgzip=1;
+    gunzip(fname);
+    fname=fname(1:end-3);
+else
+    wasgzip=0;
 end
-V.mat=[nii.hdr.hist.srow_x;nii.hdr.hist.srow_y;nii.hdr.hist.srow_z;0,0,0,1];
+nii=spm_vol(fname);
+nii.img=spm_read_vols(nii);
 
+
+nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
+if ~all(abs(nii.hdr.dime.pixdim(1:3))<=1)
+    reslice_nii(fname,fname,[0.5,0.5,0.5],3);
+    
+nii=spm_vol(fname);
+nii.img=spm_read_vols(nii);
+end
+if wasgzip
+    delete(fname); % since gunzip makes a copy of the zipped file.
+end
 
 
 %

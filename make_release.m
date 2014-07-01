@@ -25,7 +25,7 @@ delete([outdir,'lead',filesep,'ea_prefs.mat']);
 
 % delete atlases:
 
-leave_atlases={'ATAG_Linear','ATAG_Nonlinear'};
+leave_atlases={'ATAG_Linear (Keuken 2014)','ATAG_Nonlinear (Keuken 2014)'};
 
 atls=dir([outdir,'lead',filesep,'atlases']);
 

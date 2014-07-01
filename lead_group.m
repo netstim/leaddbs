@@ -669,7 +669,7 @@ if ~isempty(M.patient.list)
         
         priorvilist=M.vilist;
         try
-        M.vilist=M.stats(pt).atlases.names;
+        M.vilist=M.stats(pt).ea_stats.atlases.names;
         end
         % check and compare with prior atlas intersection list.
         
@@ -1057,8 +1057,19 @@ options=ea_setopts_local(handles);
 for pt=1:length(M.patient.list)
     
     % set pt specific options
-    options.root=[fileparts(M.patient.list{pt}),filesep];
-    [~,options.patientname]=fileparts(M.patient.list{pt});
+    
+    % own fileparts to support windows/mac/linux slashes even if they come
+    % from a different OS.
+    if isempty(strfind(M.patient.list{pt},'/'))
+        lookfor='\';
+    else
+        lookfor='/';
+    end
+    slashes=strfind(M.patient.list{pt},lookfor);
+    options.patientname=M.patient.list{pt}(slashes(end)+1:end);
+    
+    options.root=M.patient.list{pt}(1:slashes(end));
+
     disp(['Processing ',options.patientname,'.']);
     options.numcontacts=size(M.elstruct(pt).coords_mm{1},1);
     options.elmodel=M.elstruct(pt).elmodel;
@@ -1067,9 +1078,7 @@ for pt=1:length(M.patient.list)
     options.d3.verbose='off';
     
     
-    if get(handles.removepriorstatscheck,'Value')
-        delete([options.root,options.patientname,filesep,'ea_stats.mat']);
-    end
+
     
     options.d3.elrendering=M.ui.elrendering;
     options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
@@ -1080,19 +1089,58 @@ for pt=1:length(M.patient.list)
     options.d3.isovscloud=M.ui.isovscloudpopup;
     options.d3.showisovolume=M.ui.showisovolumecheck;
     
+    
+    if ~exist(options.root,'file') % data is not there. Process in tmp-dir.
+        processlocal=1;
+        warning('on');
+        warning('Data has been detached from group-directory. Will process locally. Please be aware that you might loose this newly-processed data once you re-attach the single-patient data to the analysis!');
+        warning('off');
+        mkdir([M.ui.groupdir,'tmp']);
+        options.root=M.ui.groupdir;
+        options.patientname='tmp';
+        ea_stats=M.stats(pt).ea_stats;
+        coords_mm=M.elstruct.coords_mm;
+        trajectory=M.elstruct.trajectory;
+        save([M.ui.groupdir,'tmp',filesep,'ea_stats'],'ea_stats');
+        save([M.ui.groupdir,'tmp',filesep,'ea_reconstruction'],'coords_mm','trajectory');
+        
+    else
+        processlocal=0;
+    end
+    
+    if get(handles.removepriorstatscheck,'Value')
+        delete([options.root,options.patientname,filesep,'ea_stats.mat']);
+    end
+    
+    % Step 1: Re-calculate closeness to subcortical atlases.
     resultfig=ea_render_view(options);
     % save scene as matlab figure
     
     
  
     
-    
+    % Step 2: Re-calculate Fibertracts / VAT
     setappdata(resultfig,'stimparams',M.stimparams(pt,:));
     ea_showfibres_volume(resultfig,options);
     if get(handles.savefigscheck,'Value')
     saveas(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig']);
     end
     close(resultfig);
+    
+     if processlocal % gather stats and recos to M
+         load([M.ui.groupdir,'tmp',filesep,'ea_stats']);
+         load([M.ui.groupdir,'tmp',filesep,'ea_reconstruction']);
+         M.stats(pt).ea_stats=ea_stats;
+        M.elstruct(pt).coords_mm=coords_mm;
+        M.elstruct(pt).trajectory=trajectory;
+        setappdata(gcf,'M',M);
+        
+        save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M');
+        
+        rmdir([M.ui.groupdir,'tmp'],'s');
+        
+     end
+    
     
 end
 refreshvifc(handles);
