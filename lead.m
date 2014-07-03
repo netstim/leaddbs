@@ -86,7 +86,17 @@ set(hObject,'Color',[1 1 1]);
 
 set(handles.versiontxt,'String',ea_getvsn);
 
-imshow('bg_gui.png')
+imshow('bg_gui.png','InitialMagnification','fit')
+axis fill
+warning('off');
+set(handles.dicompanel,'BackgroundColor','none');
+set(handles.gopanel,'BackgroundColor','none');
+set(handles.psapanel,'BackgroundColor','none');
+set(handles.normpanel,'BackgroundColor','none');
+set(handles.reconpanel,'BackgroundColor','none');
+set(handles.reviewpanel,'BackgroundColor','none');
+set(handles.vizpanel,'BackgroundColor','none');
+warning('on');
 
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);

@@ -995,7 +995,7 @@ prompt = {'Enter title for comparison:','Enter clinical vector:'};
 defans{1}=M.clinical.labels{get(handles.clinicallist,'Value')};
 defans{2}=num2str(M.clinical.vars{get(handles.clinicallist,'Value')});
 cvarst = inputdlg(prompt,'Enter Clinical Variable',[1;20],defans);
-
+if ~isempty(cvarst) % cancel.
 cvar = str2num(cvarst{2});
 
 % store in model as variables
@@ -1007,7 +1007,7 @@ M.clinical.labels{get(handles.clinicallist,'Value')}=cvarst{1};
 setappdata(gcf,'M',M);
 
 refreshvifc(handles);
-
+end
 
 % --- Executes on button press in moveptdownbutton.
 function moveptdownbutton_Callback(hObject, eventdata, handles)
