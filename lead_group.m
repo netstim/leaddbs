@@ -147,8 +147,11 @@ set(handles.fclist,'Max',100,'Min',0);
 set(handles.clinicallist,'Max',100,'Min',0);
 
 
+M=getappdata(gcf,'M');
+if isempty(M)
 % initialize Model variable M
 M=initializeM;
+end
 setappdata(gcf,'M',M);
 refreshvifc(handles);
 
