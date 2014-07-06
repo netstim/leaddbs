@@ -23,7 +23,7 @@ end
         
         
         radius(con)=maedler12_eq3(stimparams(1,side).U(con),stimparams(1,side).Im(con));
-        volume(con)=(4/3)*pi*stimparams(1,side).radius(con)^3;
+        volume(con)=(4/3)*pi*radius(con)^3;
         
         VAT{con}=[xx*radius(con)+coords{side}(con,1);...
             yy*radius(con)+coords{side}(con,2);...

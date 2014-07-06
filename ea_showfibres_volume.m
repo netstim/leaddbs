@@ -131,8 +131,7 @@ for side=1:length(VAT)
                     
                         
                         ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas)=sum(inhull(thisatl,VAT{side}.VAT{vat},K(side).K{vat}))*tpv;
-                        keyboard
-                    ea_stats.vat(priorvatlength+1).nAtlasIntersection(atlas)=ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas);
+                    ea_stats.vat(priorvatlength+1).nAtlasIntersection(atlas)=ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
                 end
                 
                 

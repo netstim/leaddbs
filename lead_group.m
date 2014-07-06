@@ -294,12 +294,18 @@ function corrbutton_Callback(hObject, eventdata, handles)
 
 if ~isempty(vicorr.both)
 ea_corrplot([corrcl,vicorr.both],'Volume Intersections, both hemispheres',vc_labels);
+ea_corrplot([corrcl,vicorr.nboth],'Volume Intersections, normalized, both hemispheres',vc_labels);
+
 end
 if ~isempty(vicorr.right)
 ea_corrplot([corrcl,vicorr.right],'Volume Intersections, right hemisphere',vc_labels);
+ea_corrplot([corrcl,vicorr.nright],'Volume Intersections, normalized, right hemisphere',vc_labels);
+
 end
 if ~isempty(vicorr.left)
 ea_corrplot([corrcl,vicorr.left],'Volume Intersections, left hemisphere',vc_labels);
+ea_corrplot([corrcl,vicorr.nleft],'Volume Intersections, normalized, left hemisphere',vc_labels);
+
 end
 if ~isempty(fccorr)
 ea_corrplot([corrcl,fccorr],'Fibercounts',fc_labels);
@@ -844,6 +850,8 @@ M=getappdata(gcf,'M');
 % Get volume intersections:
 vicnt=1; ptcnt=1;
 vicorr_right=[]; vicorr_left=[]; vicorr_both=[];
+nvicorr_right=[]; nvicorr_left=[]; nvicorr_both=[];
+
 vc_labels={};
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
@@ -851,26 +859,39 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
             if M.stats(pt).ea_stats.vat(vat).Side==1 % right hemisphere
                 try
                     pval=vicorr_right(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
+                    npval=nvicorr_right(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
+
                 catch
                     pval=0;
+                    npval=0;
                 end
                 vicorr_right(ptcnt,vicnt)=pval+M.stats(pt).ea_stats.vat(vat).AtlasIntersection(vi);
+                nvicorr_right(ptcnt,vicnt)=npval+M.stats(pt).ea_stats.vat(vat).nAtlasIntersection(vi);
+
             elseif M.stats(pt).ea_stats.vat(vat).Side==2 % left hemisphere
                 try
                     pval=vicorr_left(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
+                    npval=nvicorr_left(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
+
                 catch
                     pval=0;
+                    npval=0;
                 end
                 
                 vicorr_left(ptcnt,vicnt)=pval+M.stats(pt).ea_stats.vat(vat).AtlasIntersection(vi);
+                nvicorr_left(ptcnt,vicnt)=npval+M.stats(pt).ea_stats.vat(vat).nAtlasIntersection(vi);
           
             end
             try
                 pval=vicorr_both(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
+                npval=nvicorr_both(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
+
             catch
                 pval=0;
+                npval=0;
             end
             vicorr_both(ptcnt,vicnt)=pval+M.stats(pt).ea_stats.vat(vat).AtlasIntersection(vi);
+            nvicorr_both(ptcnt,vicnt)=npval+M.stats(pt).ea_stats.vat(vat).nAtlasIntersection(vi);
 
         end
         
@@ -881,6 +902,11 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
         if size(vicorr_right,1)<ptcnt; vicorr_right(ptcnt,vicnt)=0; end
         if size(vicorr_left,1)<ptcnt; vicorr_left(ptcnt,vicnt)=0; end
         if size(vicorr_both,1)<ptcnt; vicorr_both(ptcnt,vicnt)=0; end
+        
+       
+        if size(nvicorr_right,1)<ptcnt; nvicorr_right(ptcnt,vicnt)=0; end
+        if size(nvicorr_left,1)<ptcnt; nvicorr_left(ptcnt,vicnt)=0; end
+        if size(nvicorr_both,1)<ptcnt; nvicorr_both(ptcnt,vicnt)=0; end
         
         ptcnt=ptcnt+1;
         
@@ -924,7 +950,9 @@ end
 vicorr.both=vicorr_both;
 vicorr.left=vicorr_left;
 vicorr.right=vicorr_right;
-
+vicorr.nboth=nvicorr_both;
+vicorr.nleft=nvicorr_left;
+vicorr.nright=nvicorr_right;
 
 % clinical vector:
 corrcl=M.clinical.vars{get(handles.clinicallist,'Value')};
@@ -1191,6 +1219,7 @@ end
 
  % calculate group-results for expstatvat if required:
      if options.expstatvat.do
+         disp('Averaging VAT-Stat files to a group result.');
          for side=1:2
              switch side
                  case 1
@@ -1199,17 +1228,31 @@ end
                      si='lh';
              end
              fis=dir([M.ui.groupdir,'statvat_results',filesep,'*_',si,'.nii']);
+             ea_dispercent(0,['Reading in files, ',si]);
              for fi=1:length(fis);
+                 ea_dispercent(fi/length(fis));
                  vV=spm_vol([M.ui.groupdir,'statvat_results',filesep,fis(fi).name]);
                  if ~exist('thisvat','var')
-                     thisvat=spm_read_vols(vV);
+                     tmp=spm_read_vols(vV);
+                     thisvat=zeros([size(tmp),length(fis)]);
+                     thisvat(:,:,:,1)=tmp;
+                     clear tmp
                  else
-                     thisvat=thisvat+spm_read_vols(vV);
+                     thisvat(:,:,:,fi)=spm_read_vols(vV);
                  end
              end
-             thisvat=thisvat/fi; % simple mean here.
+             ea_dispercent(100,'end');
+             disp('Averaging...');
+             thisvat(thisvat==0)=nan;
+             
+             thisvat=nanmean(thisvat,4);
+             disp('Done.');
+             disp('Saving file...');
+             %thisvat=thisvat/fi; % simple mean here.
              vV.fname=[M.ui.groupdir,'statvat_results',filesep,si,'_mean.nii'];
+             vV.dt=[64,0];
              spm_write_vol(vV,thisvat);
+             disp('Done.');
          end
      end
 
@@ -1572,7 +1615,7 @@ for pt=1:length(M.patient.list)
        M.stimparams(pt,side).fiberthresh=1;
        [M.stimparams(pt,side).VAT.VAT,radius,volume]=ea_genvat(M.elstruct(pt).coords_mm,M.stimparams(pt,:),side,options);
        M.stimparams(pt,side).radius=radius;
-       M.stimparams(pt,side).radius=volume;
+       M.stimparams(pt,side).volume=volume;
        M.stimparams(pt,side).showconnectivities=1;
        M.elstruct(pt).activecontacts{side}=find(M.stimparams(pt,side).U);
    end
