@@ -251,7 +251,7 @@ else
 end
 
 
-
+options.expstatvat.do=0;
 
 options.fiberthresh=1;
 options.writeoutstats=1;

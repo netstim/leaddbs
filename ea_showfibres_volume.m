@@ -23,6 +23,17 @@ end
 fiberthresh=stimparams.fiberthresh;
 
 
+% prepare statvat exports once if needed.
+ if options.expstatvat.do % export statvat nifti images.
+            tV=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
+            tnii=spm_read_vols(tV);
+            tnii(:)=0;
+            % generate mesh of hires MNI
+            [x,y,z]=ind2sub(size(tnii),1:numel(tnii));
+            templatecoords=[x;y;z;ones(1,length(x))]; clear x y z
+            templatecoords=tV.mat*templatecoords;
+            templatecoords=templatecoords(1:3,:)';
+ end
 
 
 % set togglebuttons.
@@ -55,7 +66,7 @@ end
 
 
 for side=1:length(VAT)
-
+    thisvatnii=cell(length(options.expstatvat.vars),1);
     for vat=1:length(VAT{side}.VAT)
       K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
 
@@ -64,6 +75,24 @@ for side=1:length(VAT)
         PL.vatsurfs(side,vat)=trisurf(K(side).K{vat},VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3),...
             abs(repmat(60,length(VAT{side}.VAT{vat}),1)...
             +randn(length(VAT{side}.VAT{vat}),1)*2)');
+        
+        
+        
+        % export vatstat if required:
+        
+        
+        if options.expstatvat.do % export statvat nifti images.
+            in=inhull(templatecoords,VAT{side}.VAT{vat},K(side).K{vat});
+            for vatvar=1:length(options.expstatvat.vars)
+                if isempty(thisvatnii{vatvar})
+                    thisvatnii{vatvar}=tnii; % initialize on blank templatenii.
+                end
+                thisvatnii{vatvar}(in)=options.expstatvat.vars{vatvar}(options.expstatvat.pt); % set to clinical/regress variable score.
+            end
+        end
+        
+        % the following is some code required for
+        % Web/JSON/BrainBrowser-Export.
         PL.vatfv(side,vat).vertices=[VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3)];
         PL.vatfv(side,vat).faces=K(side).K{vat};
         PL.vatfv(side,vat).normals=get(PL.vatsurfs(side,vat),'Vertexnormals');
@@ -102,7 +131,8 @@ for side=1:length(VAT)
                     
                         
                         ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas)=sum(inhull(thisatl,VAT{side}.VAT{vat},K(side).K{vat}))*tpv;
-                    
+                        keyboard
+                    ea_stats.vat(priorvatlength+1).nAtlasIntersection(atlas)=ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas);
                 end
                 
                 
@@ -118,6 +148,25 @@ for side=1:length(VAT)
         
         
     end
+    
+    
+    % export vatvar stats if needed:
+    if options.expstatvat.do
+       for vatvar=1:length(options.expstatvat.vars)
+        mkdir([options.expstatvat.dir,'statvat_results']);
+        switch side
+            case 1
+                si='rh';
+            case 2
+                si='lh';
+        end
+        tV.fname=[options.expstatvat.dir,'statvat_results',filesep,'s',num2str(options.expstatvat.pt),'_',si,'.nii'];
+        spm_write_vol(tV,thisvatnii{vatvar});
+       end
+    end
+    
+    
+    
 end
 
 

@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 24-Jun-2014 15:46:36
+% Last Modified by GUIDE v2.5 04-Jul-2014 12:52:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -530,7 +530,8 @@ end
 
 % refresh selections on VI and FC Lists:
 try
-if M.ui.volumeintersections>length(get(handles.vilist,'String'))
+    
+if max(M.ui.volumeintersections)>length(get(handles.vilist,'String'))
     set(handles.vilist,'Value',1);
 else
     set(handles.vilist,'Value',M.ui.volumeintersections); 
@@ -592,6 +593,7 @@ try set(handles.highlightactivecontcheck,'Value',M.ui.hlactivecontcheck); end
 try set(handles.showisovolumecheck,'Value',M.ui.showisovolumecheck); end
 try set(handles.savefigscheck,'Value',M.ui.savefigscheck); end
 try set(handles.removepriorstatscheck,'Value',M.ui.removepriorstatscheck); end
+try set(handles.statvatcheck,'Value',M.ui.statvat); end
 
 
 % update selectboxes:
@@ -1082,6 +1084,7 @@ M=getappdata(gcf,'M');
 
 % set options
 options=ea_setopts_local(handles);
+
 for pt=1:length(M.patient.list)
     
     % set pt specific options
@@ -1126,6 +1129,12 @@ for pt=1:length(M.patient.list)
         mkdir([M.ui.groupdir,'tmp']);
         options.root=M.ui.groupdir;
         options.patientname='tmp';
+        options.expstatvat.do=M.ui.statvat;
+        options.expstatvat.vars=M.clinical.vars(M.ui.clinicallist);
+        options.expstatvat.labels=M.clinical.labels(M.ui.clinicallist);
+        options.expstatvat.pt=pt;
+
+        options.expstatvat.dir=M.ui.groupdir;
         ea_stats=M.stats(pt).ea_stats;
         coords_mm=M.elstruct.coords_mm;
         trajectory=M.elstruct.trajectory;
@@ -1151,6 +1160,7 @@ for pt=1:length(M.patient.list)
     setappdata(resultfig,'stimparams',M.stimparams(pt,:));
     ea_showfibres_volume(resultfig,options);
     if get(handles.savefigscheck,'Value')
+        set(resultfig,'visible','on');
     saveas(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig']);
     end
     close(resultfig);
@@ -1164,13 +1174,45 @@ for pt=1:length(M.patient.list)
         setappdata(gcf,'M',M);
         
         save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M');
-        
+          try      movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']); end
         rmdir([M.ui.groupdir,'tmp'],'s');
         
+        
      end
+     
+     
+     
+    
+     
     
     
 end
+     %% processing done here.
+
+ % calculate group-results for expstatvat if required:
+     if options.expstatvat.do
+         for side=1:2
+             switch side
+                 case 1
+                     si='rh';
+                 case 2
+                     si='lh';
+             end
+             fis=dir([M.ui.groupdir,'statvat_results',filesep,'*_',si,'.nii']);
+             for fi=1:length(fis);
+                 vV=spm_vol([M.ui.groupdir,'statvat_results',filesep,fis(fi).name]);
+                 if ~exist('thisvat','var')
+                     thisvat=spm_read_vols(vV);
+                 else
+                     thisvat=thisvat+spm_read_vols(vV);
+                 end
+             end
+             thisvat=thisvat/fi; % simple mean here.
+             vV.fname=[M.ui.groupdir,'statvat_results',filesep,si,'_mean.nii'];
+             spm_write_vol(vV,thisvat);
+         end
+     end
+
 refreshvifc(handles);
 
 
@@ -1409,6 +1451,7 @@ M.ui.modelselect=1;
 M.ui.volumeintersections=1;
 M.ui.fibercounts=1;
 M.ui.elrendering=1;
+M.ui.statvat=0;
 
 
 
@@ -1527,8 +1570,9 @@ for pt=1:length(M.patient.list)
        M.stimparams(pt,side).labelatlas={options.labelatlas};
        M.stimparams(pt,side).showfibers=1;
        M.stimparams(pt,side).fiberthresh=1;
-       
-       M.stimparams(pt,side).VAT.VAT=ea_genvat(M.elstruct(pt).coords_mm,M.stimparams(pt,side),side,options);
+       [M.stimparams(pt,side).VAT.VAT,radius,volume]=ea_genvat(M.elstruct(pt).coords_mm,M.stimparams(pt,:),side,options);
+       M.stimparams(pt,side).radius=radius;
+       M.stimparams(pt,side).radius=volume;
        M.stimparams(pt,side).showconnectivities=1;
        M.elstruct(pt).activecontacts{side}=find(M.stimparams(pt,side).U);
    end
@@ -1716,57 +1760,17 @@ catch
 end
 
 
-% --- Executes on button press in stimoldbutn.
-function stimoldbutn_Callback(hObject, eventdata, handles)
-% hObject    handle to stimoldbutn (see GCBO)
+
+
+
+% --- Executes on button press in statvatcheck.
+function statvatcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to statvatcheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of statvatcheck
 M=getappdata(gcf,'M');
 
-try
-    uicell=inputdlg('Enter Variable name for Voltage-Parameters','Enter Stimulation Settings...',1);
-uidata.U=evalin('base',uicell{1});
-catch
-    warning('Stim-Params could not be evaluated. Please Try again.');
-end
-try
-        uicell=inputdlg('Enter Variable name for Impedance-Parameters','Enter Stimulation Settings...',1);
-uidata.Im=evalin('base',uicell{1});
-catch
-    warning('Stim-Params could not be evaluated. Please Try again.');
-end
-
-options=ea_setopts_local(handles);
-for pt=1:length(M.patient.list)
-    
-    % set pt specific options
-    options.root=[fileparts(M.patient.list{pt}),filesep];
-    [~,options.patientname]=fileparts(M.patient.list{pt});
-    options.elmodel=M.elstruct(pt).elmodel;
-    options=ea_resolve_elspec(options);
-    options.prefs=ea_prefs(options.patientname);
-    options.d3.verbose='off';
-   % set stimparams based on values provided by user
-
-   
-   for side=1:2
-       M.stimparams(pt,side).U=uidata.U{side}(pt,1:options.elspec.numel);
-       M.stimparams(pt,side).Im=uidata.Im{side}(pt,1:options.elspec.numel);
-       
-       M.stimparams(pt,side).usefiberset=get(handles.fiberspopup,'String');
-       
-       M.stimparams(pt,side).usefiberset=M.stimparams(pt,side).usefiberset{get(handles.fiberspopup,'Value')};
-       M.stimparams(pt,side).labelatlas={options.labelatlas};
-       M.stimparams(pt,side).showfibers=1;
-       M.stimparams(pt,side).fiberthresh=1;
-       
-       M.stimparams(pt,side).VAT.VAT=ea_genvat(M.elstruct(pt).coords_mm,M.stimparams(pt,side),side,options);
-       M.stimparams(pt,side).showconnectivities=1;
-       M.elstruct(pt).activecontacts{side}=find(M.stimparams(pt,side).U);
-   end
-    
-   
-    
-end
+M.ui.statvat=get(handles.statvatcheck,'Value');
 setappdata(gcf,'M',M);
-refreshvifc(handles);

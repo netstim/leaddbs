@@ -1,4 +1,4 @@
-function VAT=ea_genvat(coords,stimparams,side,options)
+function [VAT,radius,volume]=ea_genvat(coords,stimparams,side,options)
 % This function generates a volume of activated tissue around for each
 % electrode.
 % Usage: VAT=ea_genvat(coords_mm,stimparams,options).
@@ -9,8 +9,6 @@ function VAT=ea_genvat(coords,stimparams,side,options)
 % given side.
 
 
-
-
 [xx,yy,zz]=psphere(100);
 
 try
@@ -19,21 +17,17 @@ try
     end
 end
     
-    stimparams(1,side).radius=repmat(1.5,options.elspec.numel,1); % some default setting.
-    try % if stimparams are set.
-        for con=1:length(stimparams(1,side).U)
-            stimparams(1,side).radius(con)=maedler12_eq3(stimparams(1,side).U(con),stimparams(1,side).Im(con));
-        end
+    radius=repmat(1.5,options.elspec.numel,1); % some default setting.
+    %try % if stimparams are set.
+    for con=1:length(stimparams(1,side).U)
         
-    end
-    
-    
-    
-    for coord=1:size(coords{side},1)
         
-        VAT{coord}=[xx*stimparams(1,side).radius(coord)+coords{side}(coord,1);...
-            yy*stimparams(1,side).radius(coord)+coords{side}(coord,2);...
-            zz*stimparams(1,side).radius(coord)+coords{side}(coord,3)]';
+        radius(con)=maedler12_eq3(stimparams(1,side).U(con),stimparams(1,side).Im(con));
+        volume(con)=(4/3)*pi*stimparams(1,side).radius(con)^3;
+        
+        VAT{con}=[xx*radius(con)+coords{side}(con,1);...
+            yy*radius(con)+coords{side}(con,2);...
+            zz*radius(con)+coords{side}(con,3)]';
     end
 
 
@@ -44,6 +38,8 @@ function r=maedler12_eq3(U,Im)
 % This function radius of Volume of Activated Tissue for stimulation settings U and Ohm. See Maedler 2012 for details.
 % Clinical measurements of DBS electrode impedance typically range from
 % 500?1500 Ohm (Butson 2006).
+r=0; %
+if U %(U>0)
 
 k1=-1.0473;
 k3=0.2786;
@@ -53,6 +49,7 @@ k4=0.0009856;
 r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)...
     /...
     (2*k3);
+end
 
 
 
