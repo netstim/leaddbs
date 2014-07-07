@@ -49,6 +49,9 @@ if options.normalize.do
     
     eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the option struct to it.
     
+    norm_method_applied=options.normalize.method;
+    save([options.root,options.patientname,filesep,'ea_normmethod_applied'],'norm_method_applied');
+    
     try
         movefile([options.root,options.patientname,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
         movefile([options.root,options.patientname,filesep,'backup_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);

@@ -247,9 +247,12 @@ end
 clear tpm
 M0 = res.image(1).mat;
 
+% this part exports the warped files.
+
 if any(tc(:,2)),
 
     bb = nan(2,3);
+    
     vx = resolution;
     % Sort out bounding box etc
     bb(~isfinite(bb)) = bb1(~isfinite(bb));
@@ -324,8 +327,10 @@ end
 if any(tc(:,3)) || any(tc(:,4)) || nargout>=1,
     spm_progress_bar('init',Kb,'Warped Tissue Classes','Classes completed');
     for k1 = 1:Kb,
+        
         if ~isempty(cls{k1}),
             c = single(cls{k1})/255;
+            
             if any(tc(:,3)),
                 [c,w]  = dartel3('push',c,y,d1(1:3));
                 vx          = sqrt(sum(M1(1:3,1:3).^2));

@@ -30,7 +30,7 @@ for export=2:3-(options.modality-1) % if CT, only do 2:2, if MR, do 2:3.
     
     nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,outf]);
  
-    h1=figure('name',['Normalization results for ',options.prefs.patientdir],'NumberTitle','off');
+    h1=figure('name',['Normalization results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
     set(gcf,'color','w')
     imagesc(flipud(squeeze(nii.img(:,:,round(end/2)))'));
     axis('equal')
@@ -39,7 +39,7 @@ for export=2:3-(options.modality-1) % if CT, only do 2:2, if MR, do 2:3.
     
     tightfig;
     
-    h2=figure('name',['Normalization results for ',options.prefs.patientdir],'NumberTitle','off');
+    h2=figure('name',['Normalization results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
 
     
     subplot(2,1,1);

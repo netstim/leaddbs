@@ -76,16 +76,28 @@ ea_coreg(options,options.prefs.normalize.coreg);
 disp('Segmenting preoperative version.');
 load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob']);
 job.channel.vols{1}=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized];
+
+
+tpminf=fullfile(fileparts(which('spm')),'toolbox','Seg',['TPM.nii']);
+tpmoutf=[options.earoot,'templates',filesep,'TPM.nii'];
+if ~exist(tpmoutf,'file')
+
+reslice_nii(tpminf,tpmoutf,[segmentresolution,segmentresolution,segmentresolution],3);
+
+end
+
 for tpm=1:6
-    job.tissue(tpm).tpm=fullfile(fileparts(which('spm')),'toolbox','Seg',['TPM.nii,',num2str(tpm)]);
+    job.tissue(tpm).tpm=[tpmoutf,',',num2str(tpm)];
     if tpm<4
         job.tissue(tpm).native=[0,0];
     else
         job.tissue(tpm).native=[0,0];
+        %job.tissue(tpm).warped=[0,1]; % to export c1, c2, c3 images as well.
     end
 end
     job.resolution=segmentresolution;
 job.warp.write=[1,1]; % export deformation fields.
+
 ea_spm_preproc_run(job); % exactly the same as the SPM version ("New Segment" in SPM8) but with an increase in resolution to 0.5 mm iso.
 
 

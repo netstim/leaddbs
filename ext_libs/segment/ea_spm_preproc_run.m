@@ -110,7 +110,6 @@ for iter=1:nit,
             savefields(fullfile(pth,[nam '_seg8.mat']),res);
         catch
         end
-
         if iter==nit,
             % Final iteration, so write out the required data.
             tmp1 = [cat(1,job.tissue(:).native) cat(1,job.tissue(:).warped)];

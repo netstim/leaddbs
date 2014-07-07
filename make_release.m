@@ -23,6 +23,9 @@ delete([outdir,'lead_dbs',filesep,'ea_prefs.mat']);
 % delete git:
 %rmdir([outdir,'lead_dbs',filesep,'.git'],'s');
 
+% delete TPM file
+delete([outdir,'lead_dbs',filesep,'templates',filesep,'TPM.nii']);
+
 % delete atlases:
 
 leave_atlases={'ATAG_Linear (Keuken 2014)','ATAG_Nonlinear (Keuken 2014)'};
