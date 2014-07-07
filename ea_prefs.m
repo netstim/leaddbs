@@ -17,7 +17,7 @@ prefs.sagnii_unnormalized=['sag.nii'];
 prefs.cornii_unnormalized=['cor.nii'];
 prefs.ctnii_unnormalized=['fusion.nii'];
 prefs.rawctnii_unnormalized=['CT.nii'];
-
+prefs.ctnii_coregistered=['rCT.nii'];
 
 prefs.patientdir=[patientname];
 prefs.prenii=['lpre.nii'];

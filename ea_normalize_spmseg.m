@@ -23,7 +23,7 @@ if ischar(options) % return name of method.
     return
 end
 
-
+warning('off');
 usecombined=0; % if set, eauto will try to fuse coronar and transversal images before normalizing them.
 usesegmentnew=0;
 costfuns={'nmi','mi','ecc','ncc'};
@@ -48,7 +48,7 @@ end
 % check if backup files exist, if not backup
 
 if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],'file')
-    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized]);
+try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized]); end
 else
     copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]);
 end
@@ -70,15 +70,14 @@ end
 
 
 % First, do the coreg part:
-
-    ea_coreg(options,options.prefs.normalize.coreg);
-
+if options.modality==1
+    finas=ea_coreg(options,options.prefs.normalize.coreg);
+end
 
 
 
 % now segment the preoperative version.
 
-if ~usesegmentnew
     matlabbatch{1}.spm.spatial.preproc.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.preproc.output.GM = [0 0 1];
     matlabbatch{1}.spm.spatial.preproc.output.WM = [0 0 1];
@@ -101,41 +100,7 @@ if ~usesegmentnew
     matlabbatch{1}.spm.spatial.preproc.opts.biasfwhm = 60;
     matlabbatch{1}.spm.spatial.preproc.opts.samp = 3;
     matlabbatch{1}.spm.spatial.preproc.opts.msk = {''};
-else
-    matlabbatch{1}.spm.tools.preproc8.channel.vols = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]};
-    matlabbatch{1}.spm.tools.preproc8.channel.biasreg = 0.0001;
-    matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm = 60;
-    matlabbatch{1}.spm.tools.preproc8.channel.write = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(1).tpm = {fullfile(fileparts(which('spm')),'toolbox','Seg','TPM.nii,1')};
-    matlabbatch{1}.spm.tools.preproc8.tissue(1).ngaus = 2;
-    matlabbatch{1}.spm.tools.preproc8.tissue(1).native = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(1).warped = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(2).tpm = {fullfile(fileparts(which('spm')),'toolbox','Seg','TPM.nii,2')};
-    matlabbatch{1}.spm.tools.preproc8.tissue(2).ngaus = 2;
-    matlabbatch{1}.spm.tools.preproc8.tissue(2).native = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(2).warped = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(3).tpm = {fullfile(fileparts(which('spm')),'toolbox','Seg','TPM.nii,3')};
-    matlabbatch{1}.spm.tools.preproc8.tissue(3).ngaus = 2;
-    matlabbatch{1}.spm.tools.preproc8.tissue(3).native = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(3).warped = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(4).tpm = {fullfile(fileparts(which('spm')),'toolbox','Seg','TPM.nii,4')};
-    matlabbatch{1}.spm.tools.preproc8.tissue(4).ngaus = 3;
-    matlabbatch{1}.spm.tools.preproc8.tissue(4).native = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(4).warped = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(5).tpm = {fullfile(fileparts(which('spm')),'toolbox','Seg','TPM.nii,5')};
-    matlabbatch{1}.spm.tools.preproc8.tissue(5).ngaus = 4;
-    matlabbatch{1}.spm.tools.preproc8.tissue(5).native = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(5).warped = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(6).tpm = {fullfile(fileparts(which('spm')),'toolbox','Seg','TPM.nii,6')};
-    matlabbatch{1}.spm.tools.preproc8.tissue(6).ngaus = 2;
-    matlabbatch{1}.spm.tools.preproc8.tissue(6).native = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.tissue(6).warped = [0 0];
-    matlabbatch{1}.spm.tools.preproc8.warp.mrf = 0;
-    matlabbatch{1}.spm.tools.preproc8.warp.reg = 4;
-    matlabbatch{1}.spm.tools.preproc8.warp.affreg = 'mni';
-    matlabbatch{1}.spm.tools.preproc8.warp.samp = 3;
-    matlabbatch{1}.spm.tools.preproc8.warp.write = [0 1];
-end
+
 jobs{1}=matlabbatch;
 try
     cfg_util('run',jobs);
@@ -160,10 +125,10 @@ matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
 
 matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
-try
+if options.modality==1 %MR
     matlabbatch{1}.spm.util.defs.fnames = [{[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']},finas];
-catch % CT
-    matlabbatch{1}.spm.util.defs.fnames = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']}; 
+elseif options.modality==2 % CT
+    matlabbatch{1}.spm.util.defs.fnames = {[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']}; 
 end
 matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
 matlabbatch{1}.spm.util.defs.interp = 6;
@@ -173,36 +138,15 @@ cfg_util('run',jobs);
 clear matlabbatch jobs;
 
 
-
-
-% write out transformation matrix
-
-T{1}=load([options.root,options.prefs.patientdir,filesep,nm,'_seg_sn.mat']);
-T{1}.M = T{1}.VG(1).mat*inv(T{1}.Affine)*inv(T{1}.VF(1).mat); % get mmM that transforms from mm to mm space.
-T{1}.VFM=worldmat2flirtmat(T{1}.M,[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]);
-
-FLIRTMAT=T{1}.VFM;
-M=T{1}.M;
-
-
-
-
-
-% Save transformation for later use in FLIRT
-flirtmat_write([options.root,options.prefs.patientdir,filesep,'flirt_transform'],FLIRTMAT);
-
-mmFLIRT=flirtmat2worldmat(FLIRTMAT,[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized]);
-flirtmat_write([options.root,options.prefs.patientdir,filesep,'mmflirt_transform'],mmFLIRT);
-% Save transformation matrix M that maps from mm space in native acquisition to mm space in MNI space.
-save([options.root,options.prefs.patientdir,filesep,'ea_normparams'],'T','M');
-
-
 % make normalization "permanent" and include correct bounding box.
 
+if options.modality==1 %MR
+expdo=2:5;
+elseif options.modality==2 % CT
+    expdo=5:6;
+end
 
-
-
-for export=2:4
+for export=expdo
     switch export
         case 2
             outf=options.prefs.tranii;
@@ -213,6 +157,12 @@ for export=2:4
         case 4
             outf=options.prefs.sagnii;
             fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized,',1'];
+        case 5
+            outf=options.prefs.prenii;
+            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
+        case 6 % CT
+            outf=options.prefs.ctnii;
+            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered,',1'];
     end
     
     % save a backup
@@ -251,10 +201,14 @@ matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
 
 matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
-try
-    matlabbatch{1}.spm.util.defs.fnames = [{[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']},finas];
-catch
-    matlabbatch{1}.spm.util.defs.fnames = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
+if options.modality==1 % MR
+    try
+        matlabbatch{1}.spm.util.defs.fnames = [{[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']},finas];
+    catch
+        matlabbatch{1}.spm.util.defs.fnames = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
+    end
+elseif options.modality==2 % CT
+    matlabbatch{1}.spm.util.defs.fnames = {[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1']};
 end
 matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
 matlabbatch{1}.spm.util.defs.interp = 6;
@@ -287,15 +241,11 @@ end
 
 
 
-movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gtranii]);
-try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gcornii]); end
+try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gtranii]); end
+try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii]); end
 try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gsagnii]); end
-
-
-% restore original files (from coregistration)
-copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]);
-try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized]); end
-try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized]); end
+try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gcornii]); end
+try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered],[options.root,options.prefs.patientdir,filesep,options.prefs.gctnii]); end
 
 
 

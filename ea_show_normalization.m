@@ -1,8 +1,14 @@
 function ea_show_normalization(options)
 
-for export=2:3-(options.modality-1) % if CT, only do 2:2, if MR, do 2:3.
+for export=1:3-(options.modality-1) % if CT, only do 1:2, if MR, do 1:3.
     try
     switch export
+        case 1
+            checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii,',1'];
+            
+            outf=['check_',options.prefs.prenii];
+            
+            suff='_pre_tra';
         case 2
             checkf=        [options.root,options.prefs.patientdir,filesep,options.prefs.tranii,',1'];
             

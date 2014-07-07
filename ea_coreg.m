@@ -1,4 +1,4 @@
-function ea_coreg(options,automan)
+function [finas]=ea_coreg(options,automan)
 
 costfuns={'nmi','mi','ecc','ncc'};
 
@@ -11,7 +11,7 @@ switch automan
         cfundo=1:4;
         manual=1;
     case 'auto'
-        cfundo=1:2;
+        cfundo=1:4;
         manual=0;
     otherwise
         error('Coregistration prefs must be either set to auto or manual. Please modify ea_prefs.m accordingly.');
@@ -135,3 +135,7 @@ for costfun=cfundo
         end
     end
 end
+
+finas=[finas,{[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']}];
+
+
