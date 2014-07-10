@@ -57,6 +57,11 @@ delete([outdir,'lead_dbs',filesep,'trajvectors.mat']);
 delete([outdir,'lead_dbs',filesep,'make_release.m']);
 
 
+% delete dev folder:
+
+rmdir([outdir,'lead_dbs',filesep,'dev'],'s');
+
+
 % delete DARTEL-Templates (can be generated the first time they are used):
 
 delete([outdir,'lead_dbs',filesep,'templates',filesep,'dartel',filesep,'dartelmni_*.nii']);
@@ -68,5 +73,14 @@ delete([outdir,'lead_dbs',filesep,'fibers',filesep,'gibbsconnectome.mat']);
 
 
 %% zip release:
-zip('lead_dbs.zip',[outdir,'lead_dbs']);
+zip([outdir,'lead_dbs.zip'],[outdir,'lead_dbs']);
 rmdir([outdir,'lead_dbs'],'s');
+
+%% upload to FTP:
+disp('Connecting to FTP-Server...');
+mw = ftp('www.andreas-horn.de');
+disp('Changing Dir.');
+cd(mw,'leaddbs/release');
+disp('Uploading release.');
+mput(mw, [outdir,'lead_dbs.zip']);
+close(mw);

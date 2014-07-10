@@ -19,7 +19,6 @@ inverted=getappdata(resultfig,'inverted');
 if isempty(inverted)
     inverted=0;
 end
-disp(['Inverted: ',num2str(inverted),', toggleinvert: ',num2str(togglestates.tinvert),'.']);
 
 templateused=getappdata(resultfig,'templateused');
 if ~strcmp(templateused,togglestates.template) % reload image(s)
@@ -93,7 +92,6 @@ if togglestates.xyztoggles(1)
     slice=slice+minv; % 0 smallest number.
     slice=slice/maxv*255; % 255 highest number.
     imin=repmat(uint8((((slice)))),[1,1,4]);
-    disp(['min: ',num2str(min(imin(:))),', max: ',num2str(max(imin(:)))]);
     imin(:,:,4)=uint8(togglestates.xyztransparencies(1));
     clear bb
     bb(1,:)=[xyzv(1),V{1+usesag}.dim(2),V{1+usesag}.dim(3),1]; % upper left point of image in voxels

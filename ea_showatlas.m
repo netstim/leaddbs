@@ -160,6 +160,9 @@ for atlas=1:length(atlases.names)
                 XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
                 
                 
+              
+                
+                
                 if atlases.types(atlas)==4 % mixed atlas, divide
                     if side==1
                         XYZ=XYZ(XYZ(:,1)>0,:,:);
@@ -242,7 +245,25 @@ for atlas=1:length(atlases.names)
             XYZ=atlases.XYZ{atlas,side};
             pixdim=atlases.pixdim{atlas,side};
             colorc=nan;
+            
+            
         end
+        
+        
+        % show atlas label
+                [~,centroid]=kmeans(XYZ,1);
+                centroid=centroid(1,:);
+                [~,thislabel]=fileparts(atlases.names{atlas});
+                if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
+                                    [~,thislabel]=fileparts(thislabel);
+                end
+                atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline','HorizontalAlignment','Center');
+                if ~exist('labelbutton','var')
+                labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Labels');
+                labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors',options),'TooltipString','Label Color');
+                end
+        
+        
         set(0,'CurrentFigure',resultfig); 
         atlassurfs(atlascnt)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
         
@@ -304,6 +325,11 @@ for atlas=1:length(atlases.names)
     end
 end
 
+% configure label button to work properly and hide labels as default.
+set(atlaslabels,'Visible','off');
+set(labelbutton,'OnCallback',{@atlasvisible,atlaslabels},'OffCallback',{@atlasinvisible,atlaslabels},'State','off');
+set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
+
 
 
 
@@ -349,7 +375,10 @@ end
 
 
 
+function setlabelcolor(hobj,ev,robject)
 
+co=uisetcolor;
+set(robject,'Color',co);
 
 
 

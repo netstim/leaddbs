@@ -66,7 +66,7 @@ end
 
 
 for side=1:length(VAT)
-    thisvatnii=cell(length(options.expstatvat.vars),1);
+if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
     for vat=1:length(VAT{side}.VAT)
       K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
 
@@ -218,6 +218,7 @@ if stimparams(1).showfibers
         for vat=1:length(VAT{side}.VAT)
             
             if stimparams(side).U(vat) % check if U ~= 0
+                
             in=inhull(normalized_fibers_mm,VAT{side}.VAT{vat},K(side).K{vat})';
             
             selectedfibs{vat,side}=unique(idxv(in));

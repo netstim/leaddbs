@@ -22,7 +22,7 @@ function varargout = ea_anatomycontrol(varargin)
 
 % Edit the above text to modify the response to help ea_anatomycontrol
 
-% Last Modified by GUIDE v2.5 07-Mar-2014 13:17:56
+% Last Modified by GUIDE v2.5 10-Jul-2014 09:42:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -95,6 +95,20 @@ set(handles.templatepopup,'Value',find(ismember(get(handles.templatepopup,'Strin
 % invertcheck
 set(handles.invertcheck,'Value',togglestates.tinvert);
 
+% cut items.
+switch togglestates.cutview
+    case '3d'
+        set(handles.threedradio,'Value',1);
+    case 'xcut'
+        set(handles.xcutradio,'Value',1);
+    case 'ycut'
+        set(handles.ycutradio,'Value',1);
+    case 'zcut'
+        set(handles.zcutradio,'Value',1);
+end
+else
+    togglestates.cutview='3d';
+setappdata(getappdata(gcf,'resultfig'),'togglestates',togglestates);
 end
 
 
@@ -317,6 +331,10 @@ refreshresultfig(handles)
 
 function refreshresultfig(handles)
 % this part makes changes of the figure active:
+resultfig=getappdata(gcf,'resultfig');
+togglestates=getappdata(resultfig,'togglestates');
+
+% reset states based on gui:
 togglestates.xyzmm=[str2double(get(handles.xval,'String')),str2double(get(handles.yval,'String')),str2double(get(handles.zval,'String'))];
 togglestates.xyztoggles=[get(handles.xtoggle,'Value'),get(handles.ytoggle,'Value'),get(handles.ztoggle,'Value')];
 togglestates.xyztransparencies=[str2double(get(handles.xtrans,'String')),str2double(get(handles.ytrans,'String')),str2double(get(handles.ztrans,'String'))];
@@ -329,3 +347,102 @@ setappdata(getappdata(gcf,'resultfig'),'togglestates',togglestates); % also stor
 ea_anatomyslices(getappdata(gcf,'resultfig'),...
     togglestates,...
     getappdata(gcf,'options'));
+
+switch togglestates.cutview
+    case 'xcut'
+        set(0,'CurrentFigure',resultfig);
+                [az,el]=view;
+        if ~(az==90 && el==0)  || togglestates.refreshcuts          
+            axis([str2double(get(handles.xval,'String'))-1 str2double(get(handles.xval,'String'))+1 -130 100 -70 100])
+            view(90,0);
+        end
+    case 'ycut'
+        set(0,'CurrentFigure',resultfig);
+                [az,el]=view;
+        if ~(az==0 && el==0) || togglestates.refreshcuts
+            axis([-100 100 str2double(get(handles.yval,'String'))-1 str2double(get(handles.yval,'String'))+1 -70 100])
+            view(0,0);
+        end
+    case 'zcut'
+        set(0,'CurrentFigure',resultfig);
+        [az,el]=view;
+        if ~(az==0 && el==90) || togglestates.refreshcuts
+            axis([-100 100 -130 100 str2double(get(handles.zval,'String'))-1,str2double(get(handles.zval,'String'))+1])
+            view(0,90);
+        end
+    case '3d'
+        set(0,'CurrentFigure',resultfig);
+        if togglestates.refreshcuts; axis([-100 100 -130 100 -70 100]); end
+        
+end
+
+togglestates.refreshcuts=0;
+setappdata(resultfig,'togglestates',togglestates);
+
+
+% --------------------------------------------------------------------
+function slicebuttongroup_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to slicebuttongroup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function slicebuttongroup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slicebuttongroup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object deletion, before destroying properties.
+function slicebuttongroup_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to slicebuttongroup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes when slicebuttongroup is resized.
+function slicebuttongroup_ResizeFcn(hObject, eventdata, handles)
+% hObject    handle to slicebuttongroup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes when selected object is changed in slicebuttongroup.
+function slicebuttongroup_SelectionChangeFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in slicebuttongroup 
+% eventdata  structure with the following fields (see UIBUTTONGROUP)
+%	EventName: string 'SelectionChanged' (read only)
+%	OldValue: handle of the previously selected object or empty if none was selected
+%	NewValue: handle of the currently selected object
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% always and only store togglestates in the *resultfig*, not in the small
+% control figure (where only the handle to resultfig is stored.
+togglestates=getappdata(getappdata(gcf,'resultfig'),'togglestates');
+
+switch eventdata.NewValue
+    case handles.xcutradio
+        togglestates.cutview='xcut';
+        if eventdata.OldValue==handles.threedradio; togglestates.refreshcuts=1; end
+            
+    case handles.ycutradio
+        togglestates.cutview='ycut';
+        if eventdata.OldValue==handles.threedradio; togglestates.refreshcuts=1; end
+        
+    case handles.zcutradio
+        togglestates.cutview='zcut';
+        if eventdata.OldValue==handles.threedradio; togglestates.refreshcuts=1; end
+        
+    case handles.threedradio
+        
+        togglestates.cutview='3d';
+        togglestates.refreshcuts=1;
+        
+end
+setappdata(getappdata(gcf,'resultfig'),'togglestates',togglestates);
+
+refreshresultfig(handles)

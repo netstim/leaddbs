@@ -14,7 +14,8 @@ function ea_credits
 % rangesearch.m - (c) Yi Cao
 % map_coords.m - (c) Ged Ridgway
 
-
+% Icons in the GUI are generated using the fontawesome typography
+% (http://fontawesome.io/)
 
 % It is possible that this list is incomplete. Please make a note to
 % andreas.horn@charite.de if you find a code-snippet that has not been

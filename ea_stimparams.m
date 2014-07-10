@@ -596,7 +596,14 @@ for el=1:length(elstruct)
         stimparams(elstruct(el).group,side).groups=elstruct(el).groups;
         flix=elstruct(el).groups;
         
-        stimparams(elstruct(el).group,side).VAT(gcnt(elstruct(el).group)).VAT=ea_genvat(elstruct(el).coords_mm,stimparams,options);
+        
+        
+
+        
+        [stimparams(elstruct(el).group,side).VAT(gcnt(elstruct(el).group)).VAT,radius,volume]=ea_genvat(elstruct(el).coords_mm,stimparams,options);
+        stimparams(elstruct(el).group,side).radius=radius;
+        stimparams(elstruct(el).group,side).volume=volume;
+        
         gcnt(elstruct(el).group)=gcnt(elstruct(el).group)+1;
     else % single patient
         
@@ -607,8 +614,9 @@ for el=1:length(elstruct)
             
         end
         
-        stimparams(1,side).VAT(el).VAT=ea_genvat(elstruct(el).coords_mm,stimparams,side,options);
-        
+        [stimparams(1,side).VAT(el).VAT,radius,volume]=ea_genvat(elstruct(el).coords_mm,stimparams,side,options);
+           stimparams(1,side).radius=radius;
+        stimparams(1,side).volume=volume;
         flix=1;
     end
     end

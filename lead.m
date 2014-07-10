@@ -568,7 +568,7 @@ if isempty(uipatdir)
 end
 
 if length(uipatdir)>1
-    set(handles.patdir_choosebox,'String','Multiple');
+    set(handles.patdir_choosebox,'String',['Multiple (',num2str(length(uipatdir)),')']);
 else
 set(handles.patdir_choosebox,'String',uipatdir{1});
 

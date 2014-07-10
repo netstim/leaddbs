@@ -11,7 +11,7 @@ switch automan
         cfundo=1:4;
         manual=1;
     case 'auto'
-        cfundo=1:4;
+        cfundo=[2,1,3,4];
         manual=0;
     otherwise
         error('Coregistration prefs must be either set to auto or manual. Please modify ea_prefs.m accordingly.');
@@ -36,7 +36,7 @@ for export=1:2
         matlabbatch{1}.spm.spatial.coreg.estimate.source = {fina};
         matlabbatch{1}.spm.spatial.coreg.estimate.other = {''};
         matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = costfuns{costfun};
-        matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
+        matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [12 10 8 6 4 2];
         matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
         matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
         
@@ -95,9 +95,9 @@ for costfun=cfundo
         matlabbatch{1}.spm.spatial.coreg.estimate.other={''};
     end
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = costfuns{costfun};
-    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
+    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [15 10 8 6 4 2];
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
-    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
+    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [8 8];
     
     jobs{1}=matlabbatch;
     try

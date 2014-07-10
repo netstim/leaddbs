@@ -1108,8 +1108,6 @@ function calculatebutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 
-
-
 % set options
 options=ea_setopts_local(handles);
 
