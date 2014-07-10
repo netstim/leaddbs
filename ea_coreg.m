@@ -136,6 +136,9 @@ for costfun=cfundo
     end
 end
 
+if ~exist('finas','var')
+    finas={};
+end
 finas=[finas,{[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']}];
 
 
