@@ -21,8 +21,10 @@ for side=options.sides
     end
     
     X{side}=X{side}(:);        Y{side}=Y{side}(:);        Z{side}=Z{side}(:); V{side}=V{side}(:);
-    
-    
+    assignin('base','X',X);
+        assignin('base','Y',Y);
+    assignin('base','Z',Z);
+
     
     bb(1,:)=[min(X{side}),max(X{side})];
     bb(2,:)=[min(Y{side}),max(Y{side})];

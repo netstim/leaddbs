@@ -79,15 +79,7 @@ set(gcf,'color','w');
 
 for pt=1:length(elstruct)
     [el_render(pt).el_render]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
-    try
-        if multiplemode
-            caption{1}=[elstruct(pt).name,'_Left'];         caption{2}=[elstruct(pt).name,'_Right'];
-        else
-            caption{1}='Electrode_Left'; caption{2}='Electrode_Right';
-        end
-        uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2},'OffCallback',{@objinvisible,el_render,pt,2},'State','on');
-        uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1},'OffCallback',{@objinvisible,el_render,pt,1},'State','on');
-    end
+
     
     if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
         
@@ -121,6 +113,25 @@ for pt=1:length(elstruct)
     end
     
 end
+
+% add handles to buttons. Can't be combined with the above loop since all
+% handles need to be set for the buttons to work properly (if alt is
+% pressed, all electrodes are made visible/invisible).
+cnt=1;
+for pt=1:length(elstruct)
+        try
+        if multiplemode
+            caption{1}=[elstruct(pt).name,'_Left'];         caption{2}=[elstruct(pt).name,'_Right'];
+        else
+            caption{1}='Electrode_Left'; caption{2}='Electrode_Right';
+        end
+        eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on'},'OffCallback',{@elvisible,el_render,pt,2,'off'},'State','on');
+        eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on'},'OffCallback',{@elvisible,el_render,pt,1,'off'},'State','on');
+      cnt=cnt+2;
+        end
+end
+setappdata(resultfig,'eltog',eltog);
+clear cnt
 
 
 
@@ -268,33 +279,24 @@ set(atls, 'Visible', 'on');
 function objinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
 
-function elvisible(hobj,ev,atls,pt,side)
+function elvisible(hobj,ev,atls,pt,side,onoff)
 
 if ea_if(getappdata(gcf,'altpressed'))
+    
+    eltog=getappdata(gcf,'eltog');
+    set(eltog,'State',onoff);
     for el=1:length(atls)
         for side=1:2
            try
-               set(atls(el).el_render{side}, 'Visible', 'on');
+               set(atls(el).el_render{side}, 'Visible', onoff);
            end
         end
     end
 else
-set(atls(pt).el_render{side}, 'Visible', 'on');
+set(atls(pt).el_render{side}, 'Visible', onoff);
 end
 
 
-function elinvisible(hobj,ev,atls,pt,side)
-if ea_if(getappdata(gcf,'altpressed'))
-    for el=1:length(atls)
-        for side=1:2
-           try
-               set(atls(el).el_render{side}, 'Visible', 'off');
-           end
-        end
-    end
-else
-set(atls(pt).el_render{side}, 'Visible', 'off');
-end
 
 
 function res=ea_if(condition)
@@ -311,9 +313,7 @@ function ea_keypress(resultfig,event)
 
 if ismember('alt',event.Modifier)
     setappdata(resultfig,'altpressed',1);
-    disp('Altpressed');
-else
-    setappdata(resultfig,'altpressed',0);
+%    disp('Altpressed');
 end
 % commnd=event.Character;
 % switch lower(commnd)
@@ -326,7 +326,7 @@ end
 
 function ea_keyrelease(resultfig,event)
 setappdata(resultfig,'altpressed',0);
-disp('Altunpressed');
+%disp('Altunpressed');
 
 
 
