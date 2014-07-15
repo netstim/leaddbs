@@ -1743,7 +1743,7 @@ end
 
 
 iso=M.isomatrix;
-if ~iscell(iso)
+if ~iscell(iso) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]}), if not convert to one.
     if min(size(iso))==1 && length(size(iso))==2 % single vector
     
         for side=1:2
@@ -1752,8 +1752,9 @@ if ~iscell(iso)
         end
         
     end
+    M.isomatrix=stimmat;
 end
-M.isomatrix=stimmat;
+
 
 
 setappdata(gcf,'M',M);

@@ -254,6 +254,11 @@ for atlas=1:length(atlases.names)
                 [~,centroid]=kmeans(XYZ,1);
                 centroid=centroid(1,:);
                 [~,thislabel]=fileparts(atlases.names{atlas});
+                try
+                    strcmp(thislabel(end-3:end),'.nii')
+                catch
+                    keyboard
+                end
                 if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
                                     [~,thislabel]=fileparts(thislabel);
                 end
@@ -340,9 +345,9 @@ atlases.cdat=icdat;
 atlases.XYZ=iXYZ;
 atlases.pixdim=ipixdim;
 atlases.colorc=icolorc;
+atlases.normals=normals;
 end
 
-atlases.normals=normals;
 
 try
 setappdata(gcf,'iXYZ',atlases.XYZ);

@@ -334,6 +334,10 @@ function refreshresultfig(handles)
 resultfig=getappdata(gcf,'resultfig');
 togglestates=getappdata(resultfig,'togglestates');
 
+if ~isfield(togglestates,'refreshcuts')
+    togglestates.refreshcuts=0;
+end
+
 % reset states based on gui:
 togglestates.xyzmm=[str2double(get(handles.xval,'String')),str2double(get(handles.yval,'String')),str2double(get(handles.zval,'String'))];
 togglestates.xyztoggles=[get(handles.xtoggle,'Value'),get(handles.ytoggle,'Value'),get(handles.ztoggle,'Value')];

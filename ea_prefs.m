@@ -11,7 +11,7 @@ prefs.lp=lp;
 end
 
 %% general file handling:
-prefs.prenii_unnormalized=['pre_tra.nii']; % not needed if sch�necker normalization is used.
+prefs.prenii_unnormalized=['pre_tra.nii']; % not needed if schoenecker normalization is used.
 prefs.tranii_unnormalized=['tra.nii'];
 prefs.sagnii_unnormalized=['sag.nii'];
 prefs.cornii_unnormalized=['cor.nii'];
@@ -69,3 +69,4 @@ prefs.addfibers={}; % additional fibers to show.
 
 prefs.ls.autosave=0;
 prefs.firstrun='off'; 
+prefs.ls.dir='/PA/Neuro/_projects/lead/lead_server/';

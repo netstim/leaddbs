@@ -31,7 +31,8 @@ for side=options.sides
     F = scatteredInterpolant(X{side},Y{side},Z{side},V{side});
     VI{side}=F(XI,YI,ZI);
     
-    if options.d3.isovscloud==2 % show point mesh
+    if options.d3.isovscloud==2 % show interpolated point mesh
+        keyboard
         for xx=1:10:size(VI{side},1)
             for yy=1:10:size(VI{side},2)
                 for zz=1:10:size(VI{side},3)
