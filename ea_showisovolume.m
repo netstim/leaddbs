@@ -21,9 +21,9 @@ for side=options.sides
     end
     
     X{side}=X{side}(:);        Y{side}=Y{side}(:);        Z{side}=Z{side}(:); V{side}=V{side}(:);
-    assignin('base','X',X);
-        assignin('base','Y',Y);
-    assignin('base','Z',Z);
+    %assignin('base','X',X);
+    %assignin('base','Y',Y);
+    %assignin('base','Z',Z);
 
     
     bb(1,:)=[min(X{side}),max(X{side})];
@@ -39,14 +39,11 @@ for side=options.sides
                 for zz=1:10:size(VI{side},3)
                     usefacecolor=VI{side}(xx,yy,zz)*((64+miniso(options.d3.isomatrix(:)))/(maxiso(options.d3.isomatrix(:))+miniso(options.d3.isomatrix(:))));
                     usefacecolor=ind2rgb(round(usefacecolor),jetlist);
-                    
                     isopatch(side,xx,yy,zz)=plot3(XI(xx,yy,zz),YI(xx,yy,zz),ZI(xx,yy,zz),'.','Color',usefacecolor);
                 end
             end
         end
-        
     elseif options.d3.isovscloud==3 % show isovolume
-        
         VI{side}=smooth3(VI{side},'gaussian',3);
 
         fv{side}=isosurface(XI,YI,ZI,VI{side},mean(VI{side}(:)));
@@ -57,6 +54,47 @@ for side=options.sides
         ea_spec_atlas(isopatch(side,1),'isovolume',jet,1);
     
     end
+    
+    if options.d3.exportisovolume % export to nifti volume
+        
+        Vol=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
+        nii{side}=spm_read_vols(Vol);
+        nii{side}(:)=nan;
+        XYZ=[X{side},Y{side},Z{side},ones(length(X{side}),1)]';
+        XYZ=Vol.mat\XYZ; % to voxel space.
+        XYZ=round(XYZ(1:3,:)');
+        % repeat the above but in voxel space..
+        clear bb
+        bb(1,:)=[min(XYZ(:,1)),max(XYZ(:,1))];
+        bb(2,:)=[min(XYZ(:,2)),max(XYZ(:,2))];
+        bb(3,:)=[min(XYZ(:,3)),max(XYZ(:,3))];
+        clear XI YI ZI
+        [XI,YI,ZI]=meshgrid([bb(1,1):bb(1,2)],[bb(2,1):bb(2,2)],[bb(3,1):bb(3,2)]);
+        
+        F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),V{side});
+        
+        clear xix yix zix
+        xix=bb(1,1):bb(1,2); yix=bb(2,1):bb(2,2); zix=bb(3,1):bb(3,2);
+        
+        nii{side}(xix,yix,zix)=F({xix,yix,zix});
+        
+        
+        switch side
+            case 1
+                lr='right';
+            case 2
+                lr='left';
+        end
+        Vol.fname=[options.root,'ido_volume_',lr,'.nii'];
+        Vol.dtype=[32 1];
+        spm_write_vol(Vol,nii{side});
+        if side==2; % write out combined volume.
+           Vol.fname=[options.root,'iso_volume_combined.nii'];
+           nii=nanmean(cat(4,nii{1},nii{2}),4);
+            spm_write_vol(Vol,nii);
+        end
+    end
+    
     patchbutton(side)=uitoggletool(ht,'CData',ea_get_icn('isovolume',options),'TooltipString','Isovolume','OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
 
 end

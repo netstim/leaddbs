@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 04-Jul-2014 12:52:44
+% Last Modified by GUIDE v2.5 15-Jul-2014 13:47:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -276,6 +276,8 @@ try options.d3.isomatrix=M.isomatrix; end
 
 options.d3.isovscloud=M.ui.isovscloudpopup;
 options.d3.showisovolume=M.ui.showisovolumecheck;
+
+options.d3.exportisovolume=M.ui.exportisovolumecheck;
 resultfig=ea_render_view(options,M.elstruct(get(handles.patientlist,'Value')));
 
 
@@ -597,6 +599,7 @@ try set(handles.showactivecontcheck,'Value',M.ui.showactivecontcheck); end
 try set(handles.showpassivecontcheck,'Value',M.ui.showpassivecontcheck); end
 try set(handles.highlightactivecontcheck,'Value',M.ui.hlactivecontcheck); end
 try set(handles.showisovolumecheck,'Value',M.ui.showisovolumecheck); end
+try set(handles.exportisovolumecheck,'Value',M.ui.exportisovolumecheck); end
 try set(handles.savefigscheck,'Value',M.ui.savefigscheck); end
 try set(handles.removepriorstatscheck,'Value',M.ui.removepriorstatscheck); end
 try set(handles.statvatcheck,'Value',M.ui.statvat); end
@@ -1145,6 +1148,8 @@ for pt=1:length(M.patient.list)
     
     options.d3.isovscloud=M.ui.isovscloudpopup;
     options.d3.showisovolume=M.ui.showisovolumecheck;
+        options.d3.exportisovolume=M.ui.exportisovolumecheck;
+
     
     
     if ~exist(options.root,'file') % data is not there. Process in tmp-dir.
@@ -1483,6 +1488,7 @@ M.ui.showpassivecontcheck=1;
 M.ui.showactivecontcheck=1;
 M.ui.savefigscheck=0;
 M.ui.showisovolumecheck=0;
+M.ui.exportisovolumecheck=0;
 M.ui.isovscloudpopup=1;
 M.ui.removepriorstatscheck=0;
 M.ui.atlassetpopup=1;
@@ -1716,7 +1722,6 @@ function showisovolumecheck_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 M.ui.showisovolumecheck=get(handles.showisovolumecheck,'Value');
 
-
 setappdata(gcf,'M',M);
 refreshvifc(handles);
 
@@ -1816,3 +1821,17 @@ M=getappdata(gcf,'M');
 
 M.ui.statvat=get(handles.statvatcheck,'Value');
 setappdata(gcf,'M',M);
+
+
+% --- Executes on button press in exportisovolumecheck.
+function exportisovolumecheck_Callback(hObject, eventdata, handles)
+% hObject    handle to exportisovolumecheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of exportisovolumecheck
+M=getappdata(gcf,'M');
+M.ui.exportisovolumecheck=get(handles.exportisovolumecheck,'Value');
+
+setappdata(gcf,'M',M);
+refreshvifc(handles);

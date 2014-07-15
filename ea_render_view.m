@@ -282,7 +282,6 @@ set(atls, 'Visible', 'off');
 function elvisible(hobj,ev,atls,pt,side,onoff)
 
 if ea_if(getappdata(gcf,'altpressed'))
-    
     eltog=getappdata(gcf,'eltog');
     set(eltog,'State',onoff);
     for el=1:length(atls)
