@@ -53,7 +53,7 @@ end
 
 % Initialize figure
 
-resultfig=figure('name',[options.patientname,': Electrode-Scene'],'numbertitle','off','CloseRequestFcn',@closesattelites,'visible',options.d3.verbose);
+resultfig=figure('name',[options.patientname,': Electrode-Scene'],'numbertitle','off','CloseRequestFcn',@closesattelites,'visible',options.d3.verbose,'KeyPressFcn',@ea_keypress,'KeyReleaseFcn',@ea_keyrelease);
 set(resultfig, 'Position', get(0,'Screensize')); % Maximize figure.
 
 
@@ -85,8 +85,8 @@ for pt=1:length(elstruct)
         else
             caption{1}='Electrode_Left'; caption{2}='Electrode_Right';
         end
-        uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{1},'OnCallback',{@objvisible,el_render(pt).el_render{2}},'OffCallback',{@objinvisible,el_render(pt).el_render{2}},'State','on');
-        uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{2},'OnCallback',{@objvisible,el_render(pt).el_render{1}},'OffCallback',{@objinvisible,el_render(pt).el_render{1}},'State','on');
+        uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2},'OffCallback',{@objinvisible,el_render,pt,2},'State','on');
+        uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1},'OffCallback',{@objinvisible,el_render,pt,1},'State','on');
     end
     
     if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
@@ -247,6 +247,11 @@ try
 end
 delete(gcf)
 
+
+
+
+
+
 function export_hd(hobj,ev)
 
 [FileName,PathName] = uiputfile('LEAD_Scene.png','Save file name');
@@ -259,8 +264,72 @@ imwrite(cdata, [PathName,FileName], 'png');
 function objvisible(hobj,ev,atls)
 set(atls, 'Visible', 'on');
 
+
 function objinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
+
+function elvisible(hobj,ev,atls,pt,side)
+
+if ea_if(getappdata(gcf,'altpressed'))
+    for el=1:length(atls)
+        for side=1:2
+           try
+               set(atls(el).el_render{side}, 'Visible', 'on');
+           end
+        end
+    end
+else
+set(atls(pt).el_render{side}, 'Visible', 'on');
+end
+
+
+function elinvisible(hobj,ev,atls,pt,side)
+if ea_if(getappdata(gcf,'altpressed'))
+    for el=1:length(atls)
+        for side=1:2
+           try
+               set(atls(el).el_render{side}, 'Visible', 'off');
+           end
+        end
+    end
+else
+set(atls(pt).el_render{side}, 'Visible', 'off');
+end
+
+
+function res=ea_if(condition)
+res=0;
+if ~isempty(condition)
+    if condition
+        res=1;
+    end
+end
+
+function ea_keypress(resultfig,event)
+% this is the main keypress function for the resultfigure. Add event
+% listeners here.
+
+if ismember('alt',event.Modifier)
+    setappdata(resultfig,'altpressed',1);
+    disp('Altpressed');
+else
+    setappdata(resultfig,'altpressed',0);
+end
+% commnd=event.Character;
+% switch lower(commnd)
+%     case ' '
+%     case {'x','a','p','y','l','r'} % view angles.
+%     case {'0','3','4','7'}
+%     case {'c','v','b','n'}
+%     otherwise % arrow keys, plus, minus
+% end
+
+function ea_keyrelease(resultfig,event)
+setappdata(resultfig,'altpressed',0);
+disp('Altunpressed');
+
+
+
 
 function [varargout] = ea_myaa(varargin)
 % This function has been slightly modified for export use in eAuto-DBS.

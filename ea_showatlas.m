@@ -254,13 +254,11 @@ for atlas=1:length(atlases.names)
                 [~,centroid]=kmeans(XYZ,1);
                 centroid=centroid(1,:);
                 [~,thislabel]=fileparts(atlases.names{atlas});
-                try
-                    strcmp(thislabel(end-3:end),'.nii')
-                catch
-                    keyboard
-                end
+                try % use try here because filename might be shorter than .nii
+               
                 if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
                                     [~,thislabel]=fileparts(thislabel);
+                end
                 end
                 atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline','HorizontalAlignment','Center');
                 if ~exist('labelbutton','var')
