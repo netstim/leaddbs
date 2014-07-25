@@ -53,9 +53,9 @@ end
 switch command.Character
     case {'-','_'}
         try
-            trajvector=gettraj(trajectory,2);
             feather=[0,0.1,0.2,0.3];
             for side=1:2
+               trajvector=gettraj(trajectory,side);
                 for el=1:4
                     newcoords{side}(el,:)=oldcoords{side}(el,:)+trajvector.*(feather(el)*(ismember('shift',command.Modifier)+1));
                 end
@@ -67,8 +67,8 @@ switch command.Character
         try
             feather=[0,0.1,0.2,0.3];
             
-            trajvector=gettraj(trajectory,2);
             for side=1:2
+              trajvector=gettraj(trajectory,side);
                 for el=1:4
                     newcoords{side}(el,:)=oldcoords{side}(el,:)-trajvector.*(feather(el)*(ismember('shift',command.Modifier)+1));
                 end

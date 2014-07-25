@@ -12,6 +12,7 @@ function resultfig=ea_render_view(varargin)
 % Andreas Horn
 
 
+
 % Initialize inputs
 options=varargin{1};
 if nargin>2
@@ -25,6 +26,42 @@ else
     
     fiberthresh=options.fiberthresh;
 end
+
+
+
+% Initialize figure
+
+resultfig=figure('name',[options.patientname,': Electrode-Scene'],'numbertitle','off','CloseRequestFcn',@closesattelites,'visible',options.d3.verbose,'KeyPressFcn',@ea_keypress,'KeyReleaseFcn',@ea_keyrelease);
+set(resultfig, 'Position', get(0,'Screensize')); % Maximize figure.
+
+% initialize some ui elements
+
+
+ht=uitoolbar(resultfig);
+mh = uimenu(resultfig,'Label','Add Objects');
+fh1 = uimenu(mh,'Label','Open Tract','Callback',{@ea_addobj,resultfig,'tract',options});
+fh2 = uimenu(mh,'Label','Open ROI','Callback',{@ea_addobj,resultfig,'roi',options});
+
+% Set some visualization parameters
+
+set(gcf,'Renderer','OpenGL')
+axis off
+set(gcf,'color','w');
+
+
+
+
+% Get paramters (Coordinates and fitted line).
+
+figtitle=get(gcf,'Name');
+set(gcf,'Name',[figtitle,'...building...']);
+axis equal
+axis fill
+
+%% Patient specific part (skipped if no patient is selected:
+if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
+
+
 if nargin>1
     multiplemode=1;
     elstruct=varargin{2};
@@ -51,28 +88,9 @@ else
     clear coords_mm trajectory
 end
 
-% Initialize figure
-
-resultfig=figure('name',[options.patientname,': Electrode-Scene'],'numbertitle','off','CloseRequestFcn',@closesattelites,'visible',options.d3.verbose,'KeyPressFcn',@ea_keypress,'KeyReleaseFcn',@ea_keyrelease);
-set(resultfig, 'Position', get(0,'Screensize')); % Maximize figure.
-
-
-% Get paramters (Coordinates and fitted line).
-
-figtitle=get(gcf,'Name');
-set(gcf,'Name',[figtitle,'...building...']);
-axis equal
 
 
 
-
-ht=uitoolbar(resultfig);
-
-% Set some visualization parameters
-
-set(gcf,'Renderer','OpenGL')
-axis off
-set(gcf,'color','w');
 
 % show electrode(s).
 
@@ -134,6 +152,18 @@ setappdata(resultfig,'eltog',eltog);
 clear cnt
 
 
+% Initialize Stimulation-Button
+
+stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation',options),'TooltipString','Stimulation Control Figure','ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
+
+
+else
+    options.writeoutstats=0; % if no electrodes are there, stats can't be written.
+    elstruct=struct;
+end
+
+
+%% End of patient-specific part.
 
 
 % Initialize a draggable lightbulb
@@ -161,9 +191,6 @@ lsbutton=uipushtool(ht,'CData',ea_get_icn('server',options),'TooltipString','Exp
 slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
 
 
-% Initialize Stimulation-Button
-
-stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation',options),'TooltipString','Stimulation Control Figure','ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
 
 
 
@@ -172,8 +199,11 @@ stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation',options),'TooltipStrin
 if options.d3.writeatlases
     atlases=ea_showatlas(resultfig,elstruct,options);
     if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
+        try % see if electrode has been defined.
         cnt=length(vizstruct);
-        
+        catch
+            cnt=0;
+        end
         % export vizstruct
         for side=1:2
             for atl=1:length(atlases.fv)

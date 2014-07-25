@@ -14,11 +14,9 @@ function ea_manualcorrection(mcfig,coords_mm,trajectory,patientname,options)
 %
 % Andreas Horn
 
-c_lims=[0 1080]; % Initial guess.
-caxis(c_lims);
 set(gcf,'color','k');
 axis off
-setappdata(gcf,'c_lims',c_lims);
+setappdata(gcf,'c_lims',[1800,2800]);
 setappdata(gcf,'selectrode',0);
 setappdata(gcf,'planecset',0);
 
@@ -57,6 +55,7 @@ setappdata(mcfig,'tranii',tranii);
 
 % initialize scene
 updatescene;
+
 
 
 
@@ -102,7 +101,7 @@ planes=getappdata(mcfig,'planes');
 
 
 %% Manual height correction here:
-set(mcfig,'Position',[10 400 700 500])
+%set(mcfig,'Position',[10 400 700 500])
 
 drawnow;
 
@@ -213,7 +212,7 @@ switch lower(commnd)
         
     otherwise % arrow keys, plus, minus
         selectrode=getappdata(gcf,'selectrode');
-        if ~selectrode % no electrode is highlighted, move electrodes alongside trajectory.
+        if ~selectrode % no electrode is highlighted, move electrodes alongside trajectory or increase/decrease spacing.
             coords_mm=getappdata(mcfig,'coords_mm');
             trajectory=getappdata(mcfig,'trajectory');
             
@@ -386,7 +385,7 @@ planecnt=1;
 for doxx=0:1
     for side=options.sides
         try
-            sample_width=20;
+            sample_width=20-doxx*5; % a bit smaller sample size in x direction to avoid overlap.
             meantrajectory=genhd_inside(trajectory{side});
             clear imat
             %% sample plane left and right from meantrajectory
@@ -424,11 +423,7 @@ for doxx=0:1
                 if options.modality==1
                 c_lims=[nanmean(imat(:))-nanstd(imat(:))-3*nanstd(imat(:)),nanmean(imat(:))-nanstd(imat(:))+3*nanstd(imat(:))];
                 elseif options.modality==2
-                    
-                    [nelements,xcenters]=hist(imat(:),100);
-                    [~,id]=max(nelements);
-                    hmean=xcenters(id);
-                    c_lims=[hmean-1*nanstd(imat(:)),hmean+7*nanstd(imat(:))];
+                        c_lims=[1800,2800]; % Initial guess, CT
                 end
                 caxis(c_lims);
                 setappdata(gcf,'c_lims',c_lims);

@@ -42,7 +42,9 @@ if options.d3.write
     resultfig=ea_render_view(options);
     
     % save scene as matlab figure
+    try % if path is not defined, don't save.
     saveas(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig']);
+    end
     %figure2xhtml([options.root,options.patientname,filesep,'eAuto_scene'],resultfig);
     
     

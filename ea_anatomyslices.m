@@ -2,7 +2,7 @@ function ea_anatomyslices(resultfig,togglestates,options)
 % input xyz in mm coordinates.
 
 
-set(0, 'currentfigure', resultfig);  %# for figures
+set(0, 'currentfigure', resultfig);  % for figures
 
 togglestates.xyztransparencies=double(togglestates.xyztransparencies/100);
 
