@@ -179,11 +179,12 @@ fibmax=length(thisset);
 
 for fib=1:fibmax
     dispercent(fib/fibmax);
-    if size(thisset{fib},1)>size(thisset{fib},2)
+    
+    if size(thisset{fib},1)~=3
         thisset{fib}=thisset{fib}';
     end
     thisset{fib}(4,:)=detcolor(thisset{fib}); % add coloring information to the 4th column.
-    
+
     for dim=1:4
         thisfib(dim,:)=double(interp1q([1:size(thisset{fib},2)]',thisset{fib}(dim,:)',[1:0.1:size(thisset{fib},2)]')');
     end
@@ -200,7 +201,7 @@ dispercent(100,'end');
 set(addobjr(:),'EdgeAlpha',0.05);
 
 
-
+axis fill
 
 addbutn=uitoggletool(addht,'CData',ea_get_icn('fibers',options),'TooltipString',fina,'OnCallback',{@atlasvisible,addobjr},'OffCallback',{@atlasinvisible,addobjr},'State','on');
 storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'tract',fib_copy,ft,options); % store rendering in figure.
@@ -371,6 +372,7 @@ end
 
 function indcol=detcolor(mat) % determine color based on traversing direction.
 
+    
 xyz=abs(diff(mat,1,2));
 rgb=xyz/max(xyz(:));
 
@@ -378,6 +380,7 @@ rgb=[rgb,rgb(:,end)];
 rgbim=zeros(1,size(rgb,2),3);
 rgbim(1,:,:)=rgb';
 indcol=double(rgb2ind(rgbim,jet));
+
 
 function  dispercent(varargin)
 %
