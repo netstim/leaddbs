@@ -69,4 +69,4 @@ prefs.addfibers={}; % additional fibers to show.
 
 prefs.ls.autosave=0;
 prefs.firstrun='off'; 
-prefs.ls.dir='/PA/Neuro/_projects/lead/lead_server/';
+prefs.ls.dir='/media/Projekte/bg_rest/lead_server/';

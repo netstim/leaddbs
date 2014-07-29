@@ -32,6 +32,7 @@ end
 
 if ~exist(options.prefs.ls.dir,'file');
     mkdir(options.prefs.ls.dir);
+
 end
 if ~exist([options.prefs.ls.dir,'data'],'file');
     mkdir([options.prefs.ls.dir,'data']);
