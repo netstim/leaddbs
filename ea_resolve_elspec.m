@@ -51,7 +51,7 @@ switch options.elmodel
         elspec.tip_diameter=1.27;
         elspec.tip_color=0.7;
         elspec.tip_length=1.5;
-        elspec.contact_spacing=1.5;
+        elspec.contact_spacing=0.5;
         elspec.numel=8;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15'};
@@ -64,7 +64,7 @@ switch options.elmodel
         elspec.tip_diameter=1.27;
         elspec.tip_color=0.3;
         elspec.tip_length=1.5;
-        elspec.contact_spacing=1.5;
+        elspec.contact_spacing=0.5;
         elspec.numel=4;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
