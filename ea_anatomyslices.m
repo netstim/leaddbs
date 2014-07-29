@@ -27,7 +27,7 @@ if ~strcmp(templateused,togglestates.template) % reload image(s)
         case 'MNI-Template'
             V{1}=spm_vol([options.earoot,'templates',filesep,'mni_hires.nii']);
             
-        case 'Patient Post-Op'
+        case 'Patient Post-OP'
             
             % load tra
             try
@@ -53,6 +53,16 @@ if ~strcmp(templateused,togglestates.template) % reload image(s)
                     V{3}=spm_vol([options.root,options.patientname,filesep,options.prefs.sagnii]);
                 end
             end
+        case 'Patient Pre-OP'
+            
+            % load tra
+            try
+                V{1}=spm_vol([options.root,options.patientname,filesep,options.prefs.gprenii]);
+            catch
+                V{1}=spm_vol([options.root,options.patientname,filesep,options.prefs.prenii]);
+            end
+            
+            
         case 'Choose...'
             
             V{1}=spm_vol(togglestates.customfile);

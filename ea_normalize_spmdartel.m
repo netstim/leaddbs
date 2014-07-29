@@ -10,9 +10,20 @@ function varargout=ea_normalize_spmdartel(options)
 % might be best archieved with other tools that have specialized on
 % normalization of such image data.
 %
-% The procedure used here uses the SPM "Segment" routine and
-% is probably the most straight-forward way using SPM.
+% The procedure used here uses the SPM DARTEL approach to map a patient's
+% brain to MNI space directly. Unlike the usual DARTEL-approach, which is
+% usually used for group studies, here, DARTEL is used for a pairwise
+% co-registration between patient anatomy and MNI template. It has been
+% shown that DARTEL also performs superior to many other normalization approaches 
+% also  in a pair-wise setting e.g. in 
+%   Klein, A., et al. (2009). Evaluation of 14 nonlinear deformation algorithms 
+%   applied to human brain MRI registration. NeuroImage, 46(3), 786?802. 
+%   doi:10.1016/j.neuroimage.2008.12.037
 %
+% Since a high resolution is needed for accurate DBS localizations, this
+% function applies DARTEL to an output resolution of 0.5 mm isotropic. This
+% makes the procedure quite slow.
+
 % The function uses some code snippets written by Ged Ridgway.
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
@@ -21,7 +32,7 @@ function varargout=ea_normalize_spmdartel(options)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='SPM DARTEL nonlinear';
+    varargout{1}='SPM DARTEL nonlinear [MR/CT]';
     return
 end
 
@@ -54,9 +65,9 @@ end
 % check if backup files exist, if not backup
 
 if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],'file')
-    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized]);
+    try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized]); end
 else
-    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]);
+    try copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]); end
 end
 if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],'file')
     try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized]); end
@@ -192,8 +203,10 @@ matlabbatch{1}.spm.tools.dartel.crt_warped.images = {{[options.root,options.pref
 matlabbatch{1}.spm.tools.dartel.crt_warped.jactransf = 0;
 matlabbatch{1}.spm.tools.dartel.crt_warped.K = 6;
 matlabbatch{1}.spm.tools.dartel.crt_warped.interp = 1;
+try
 jobs{1}=matlabbatch;    cfg_util('run',jobs);
 disp('*** Dartel Warp of preoperative version worked.');
+end
 clear matlabbatch jobs;
 
 % ...tra
@@ -202,22 +215,39 @@ matlabbatch{1}.spm.tools.dartel.crt_warped.images = {{[options.root,options.pref
 matlabbatch{1}.spm.tools.dartel.crt_warped.jactransf = 0;
 matlabbatch{1}.spm.tools.dartel.crt_warped.K = 6;
 matlabbatch{1}.spm.tools.dartel.crt_warped.interp = 1;
+try
 jobs{1}=matlabbatch;    cfg_util('run',jobs);
 disp('*** Dartel Warp of postoperative version worked.');
+end
 clear matlabbatch jobs;
 
 % ... cor/sag
+try
 for fina=1:length(finas)
 matlabbatch{1}.spm.tools.dartel.crt_warped.flowfields = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
 matlabbatch{1}.spm.tools.dartel.crt_warped.images = {{finas{fina}}};
 matlabbatch{1}.spm.tools.dartel.crt_warped.jactransf = 0;
 matlabbatch{1}.spm.tools.dartel.crt_warped.K = 6;
 matlabbatch{1}.spm.tools.dartel.crt_warped.interp = 1;
+try
 jobs{1}=matlabbatch;    cfg_util('run',jobs);
 disp('*** Dartel Warp of postoperative version worked.');
+end
 clear matlabbatch jobs;
 end
+end
 
+% ...CT
+matlabbatch{1}.spm.tools.dartel.crt_warped.flowfields = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
+matlabbatch{1}.spm.tools.dartel.crt_warped.images = {{[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered]}};
+matlabbatch{1}.spm.tools.dartel.crt_warped.jactransf = 0;
+matlabbatch{1}.spm.tools.dartel.crt_warped.K = 6;
+matlabbatch{1}.spm.tools.dartel.crt_warped.interp = 1;
+try
+jobs{1}=matlabbatch;    cfg_util('run',jobs);
+disp('*** Dartel Warp of postoperative CT worked.');
+end
+clear matlabbatch jobs;
 
 
 
@@ -226,8 +256,12 @@ end
 
 
 
-for export=2:4
+for export=1:5
     switch export
+        case 2
+            outf=options.prefs.prenii;
+            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
+            gfina=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii];
         case 2
             outf=options.prefs.tranii;
             fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1'];
@@ -240,12 +274,16 @@ for export=2:4
             outf=options.prefs.sagnii;
             fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized,',1'];
             gfina=[options.root,options.prefs.patientdir,filesep,options.prefs.gsagnii];
+        case 5
+            outf=options.prefs.ctnii;
+            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered,',1'];
+            gfina=[options.root,options.prefs.patientdir,filesep,options.prefs.gctnii];
     end
     
     % save a backup
     
     if exist([options.root,options.prefs.patientdir,filesep,outf],'file')
-        movefile([options.root,options.prefs.patientdir,filesep,outf],[options.root,options.prefs.patientdir,filesep,'ea_backup',date,num2str(now),outf]);
+       try movefile([options.root,options.prefs.patientdir,filesep,outf],[options.root,options.prefs.patientdir,filesep,'ea_backup',date,num2str(now),outf]); end
     end
     
     matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']
@@ -267,7 +305,7 @@ for export=2:4
     
     % build global versions of files
 
-    movefile(fina(1:end-2),gfina);
+    try movefile(fina(1:end-2),gfina); end
 end
 
 

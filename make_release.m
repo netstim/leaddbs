@@ -13,6 +13,7 @@ if ~strcmp(outdir(end),filesep)
     outdir=[outdir,filesep];
 end
 
+rmdir([outdir,'lead_dbs'],'s');
 mkdir([outdir,'lead_dbs']);
 copyfile([fileparts(which('lead'))],[outdir,'lead_dbs']);
 
@@ -78,9 +79,10 @@ rmdir([outdir,'lead_dbs'],'s');
 
 %% upload to FTP:
 disp('Connecting to FTP-Server...');
-mw = ftp('www.andreas-horn.de');
+mw = ftp('www.andreas-horn.de','www.andreas-horn.de','andiANDI$1');
 disp('Changing Dir.');
 cd(mw,'leaddbs/release');
 disp('Uploading release.');
 mput(mw, [outdir,'lead_dbs.zip']);
+disp('Done.');
 close(mw);

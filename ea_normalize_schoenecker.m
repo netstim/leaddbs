@@ -22,7 +22,7 @@ function varargout=ea_normalize(options)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Schönecker 2009  linear threestep (Post-OP only)';
+    varargout{1}='Schönecker 2009  linear threestep (Post-OP only) [MR]';
     return
 end
 

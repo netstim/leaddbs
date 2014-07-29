@@ -26,7 +26,7 @@ usecombined=0; % if set, eauto will try to fuse coronar and transversal images b
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Schönecker 2009  linear threestep (Include Pre-OP)';
+    varargout{1}='Schönecker 2009  linear threestep (Include Pre-OP) [MR/CT]';
     return
 end
 
@@ -51,7 +51,9 @@ end
 % check if backup files exist, if not backup
 
 if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],'file')
+try
     copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized]);
+end
 end
 if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],'file')
 try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized]); end
@@ -59,7 +61,7 @@ end
 
 
 
-% now segment the transversal version to get some normalization weights.
+% now segment the pre-op version to get some normalization weights.
 matlabbatch{1}.spm.spatial.preproc.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.preproc.output.GM = [0 0 1];
 matlabbatch{1}.spm.spatial.preproc.output.WM = [0 0 1];
@@ -89,7 +91,6 @@ normlog(1)=1;
 disp('*** Segmentation worked.');
 catch
 disp('*** Segmentation failed.');
-%error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 
@@ -108,8 +109,11 @@ matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+
 jobs{1}=matlabbatch;
+try
 cfg_util('run',jobs);
+end
 clear matlabbatch jobs;
 
 
@@ -140,7 +144,6 @@ normlog(1)=1;
 disp('*** Coregistration between transversal and coronar versions worked.');
 catch
 disp('*** Coregistration between transversal and coronar versions failed.');
-%error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 
@@ -308,6 +311,7 @@ matlabbatch{1}.spm.util.defs.ofname = '';
 matlabbatch{1}.spm.util.defs.fnames = {
                                        [options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']
                                        [options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,',1']
+                                       [options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']
                                        };
 matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
 matlabbatch{1}.spm.util.defs.interp = 6;
@@ -318,7 +322,8 @@ try
 catch % CT
     
     matlabbatch{1}.spm.util.defs.fnames = {
-        [options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']
+        [options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1']
+        [options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']
         };
     jobs{1}=matlabbatch;
     
@@ -388,19 +393,27 @@ try delete([options.root,options.prefs.patientdir,filesep,'w1',nm,'_sn.mat']); e
 try delete([options.root,options.prefs.patientdir,filesep,'w2w1',nm,'_sn.mat']); end
 
 % make normalization "permanent" and include correct bounding box.
-for export=2:3
+for export=2:5
     switch export
         case 2
             outf=options.prefs.tranii;
+            infile=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1'];
         case 3
             outf=options.prefs.cornii;
+            infile=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized,',1'];
+        case 4 % ct
+            outf=options.prefs.ctnii;
+            infile=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered,',1'];
+        case 5 % pre
+            outf=options.prefs.prenii;
+            infile=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
     end
 matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']
-                                        [options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1']
-                                        [options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized,',1']};
+                                        infile
+                                        };
 matlabbatch{1}.spm.util.imcalc.output = outf;
 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
-matlabbatch{1}.spm.util.imcalc.expression = ['i',num2str(export)];
+matlabbatch{1}.spm.util.imcalc.expression = ['i2'];
 matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
@@ -419,11 +432,22 @@ end
 % cleanup wfilename files if prefs are set differently
 % transversal images
 if ~strcmp(options.prefs.tranii,['w',options.prefs.tranii_unnormalized])
+    try
     delete([options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized]);
+    end
 end
 % coronar images
 if ~strcmp(options.prefs.cornii,['w',options.prefs.cornii_unnormalized])
+    try
     delete([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized]);
+    end
+end
+
+% ct images
+if ~strcmp(options.prefs.ctnii,['w',options.prefs.rawctnii_unnormalized])
+    try
+    delete([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized]);
+    end
 end
 
 % now the files have been normalized, cleanup.

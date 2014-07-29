@@ -1,4 +1,4 @@
-function ea_normalize_ct(options)
+function ea_normalize_ct_coreg(options)
 
 
 alsouseregutil=0;
