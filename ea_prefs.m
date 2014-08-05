@@ -73,4 +73,4 @@ prefs.addfibers={}; % additional fibers to show.
 
 prefs.ls.autosave=0;
 prefs.firstrun='off'; 
-prefs.ls.dir='/media/Projekte/bg_rest/lead_server/';
+prefs.ls.dir='/Volumes/Projekte/bg_rest/lead_server/';
