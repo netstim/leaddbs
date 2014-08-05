@@ -132,7 +132,7 @@ if useatlases
         
         if options.d2.lab_overlay
             
-            centr=regionprops(logical(slice),'Centroid');
+            centr=ea_regionprops(logical(slice),'Centroid');
             
             an=atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1);
            

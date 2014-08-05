@@ -4,7 +4,7 @@ function slicebw=ea_centralcomponent(slicebw,mask,options)
 [yy,xx]=find(mask);
 maskcenter=[mean(xx),mean(yy)];
 
-stats=bwconncomp(slicebw);
+stats=ea_bwconncomp(slicebw);
 
 if stats.NumObjects>1
     maxdist=10000;
@@ -14,7 +14,7 @@ if stats.NumObjects>1
         sliceobj=slicebw;    
         sliceobj(:)=0;
         sliceobj(stats.PixelIdxList{i})=1;
-        cen=regionprops(sliceobj,'Centroid');
+        cen=ea_regionprops(sliceobj,'Centroid');
         dist=pdist([cen.Centroid;maskcenter]);
         ea_showdis(['Obj number ',num2str(i),', distance: ',num2str(dist),'.'],options.verbose);
         if dist<maxdist

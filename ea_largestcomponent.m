@@ -1,7 +1,13 @@
 function slicebw=ea_largestcomponent(slicebw)
 
-
+try
 stats=bwconncomp(slicebw);
+catch
+    disp('No image processing toolbox available. Using ls_bwconncomp by Stanis?aw Adaszewski.');
+    try
+stats=ls_bwconncomp(slicebw);
+    
+
 
 if stats.NumObjects>1
     maxlen=0;
@@ -16,4 +22,5 @@ if stats.NumObjects>1
     slicebw(stats.PixelIdxList{biggestobj})=1;
 end
     
+
 

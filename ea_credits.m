@@ -13,6 +13,10 @@ function ea_credits
 % Myaa.m - (c) Anders Brun
 % rangesearch.m - (c) Yi Cao
 % map_coords.m - (c) Ged Ridgway
+% regionprops.m - (c) Image-Package of Octave; Soeren Hauberg and Jordi Gutierrez Hermoso
+% ls_bwconncomp.m - (c) Stanis?aw Adaszewski (only used if image processing
+%                               toolbox is not available. Also uses
+%                               SPM-functions
 
 % Icons in the GUI are generated using the fontawesome typography
 % (http://fontawesome.io/)

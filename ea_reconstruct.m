@@ -56,7 +56,7 @@ tra_nii.img=ea_gencontrastimage(imat,options.axiscontrast);
 
 trajectory=[]; % empty initialization.
 for refine=0:options.refinesteps
-[trajectory,trajvector,diams]=ea_reconstruct_trajectory(trajectory,tra_nii,side,refine,options);
+[trajectory,trajvector]=ea_reconstruct_trajectory(trajectory,tra_nii,side,refine,options);
 end
 
 
@@ -70,7 +70,6 @@ end
 
 
 if options.verbose>1; di=figure('name','Finding local maxima in diameters...','numbertitle','off'); end
-if options.verbose>1; plot(diams); end
 if options.verbose>2; close(di); end
 
 
@@ -111,7 +110,6 @@ zdist=dist/norm(trajvector);
 
 
 
-diams(diams==0)=nan;
 
 % 
 % % transform trajectory to mm space:
