@@ -56,30 +56,8 @@ function cc = ea_conncomp(A)
 mfile = 'conncomp';
 [I,J] = size(A); IJ = I*J;
 
-if (exist('conncomp_mex','file') == 3)  % the mex file exist
+
     
-    [nObj, pixList, idxNewObj, inBord, outBord] = conncomp_mex(A, [I,J]);
-    % these are with c-indexing (starting with 0), 
-    % so this is adjusted and returned
-    cc = struct('Connectivity', 4, ...
-                'ImageSize', [I,J], ...
-                'NumObjects', double(nObj), ... 
-                'PixelIdxList', {cell(nObj,1)}, ...     
-                'NumPixels', zeros(nObj,1), ...  
-                'LenBorder', double(inBord(1:nObj)), ...
-                'OutBorder', double(outBord(1:nObj)), ...
-                'Labels', zeros(I,J) );
-    
-    i1 = 1;            
-    for i = 1:nObj
-        i2 = idxNewObj(i)+1;
-        cc.PixelIdxList{i} = double(pixList(i1:i2)+1);
-        cc.NumPixels(i) = i2-i1+1;
-        i1 = i2 + 1;
-        cc.Labels(cc.PixelIdxList{i}) = i;
-    end
-    
-else
 
 cc = struct('Connectivity', 4, ...
             'ImageSize', [I,J], ...
@@ -187,13 +165,10 @@ for k=1:cc.NumObjects
     n = idxPlist(k)+1;
 end
 
-disp([mfile,': (m-file) found ',int2str(cc.NumObjects),' components in A (',...
-    int2str(I),'-by-',int2str(J),'), count = ',int2str(count), ...
-    ', maxStack = ',int2str(maxStack)]);
 
-end
 
-return
+
+
 
 function n4 = n4list(n,I,J)
 n4 = [n-I, n-1, n+1, n+I];
