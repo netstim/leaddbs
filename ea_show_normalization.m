@@ -1,4 +1,7 @@
 function ea_show_normalization(options)
+% __________________________________________________________________________________
+% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
 
 for export=1:3-(options.modality-1) % if CT, only do 1:2, if MR, do 1:3.
     try

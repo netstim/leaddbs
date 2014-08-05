@@ -1,4 +1,7 @@
 function [trajectory,trajvector]=ea_reconstruct_trajectory(priortrajectory,tra_nii,side,refine,options)
+% __________________________________________________________________________________
+% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
 
 if options.modality==2 % CT support
    tra_nii.img=tra_nii.img*-1; 

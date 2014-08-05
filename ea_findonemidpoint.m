@@ -1,4 +1,7 @@
 function [numidpoint,greyobj,options]=ea_findonemidpoint(slicebw,estpoint,mask,options)
+% __________________________________________________________________________________
+% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
 
 try
 stats=ea_centroid(slicebw);
