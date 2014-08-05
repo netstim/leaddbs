@@ -79,7 +79,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
     
     
     
-        stats=ea_regionprops(slicebw,'Centroid');
+        stats=ea_centroid(slicebw);
 
     try
         isempty(stats.Centroid); % this is only to check if stats.Centroid is empty.

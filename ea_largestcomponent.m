@@ -1,12 +1,7 @@
 function slicebw=ea_largestcomponent(slicebw)
 
-try
-stats=bwconncomp(slicebw);
-catch
-    disp('No image processing toolbox available. Using ls_bwconncomp by Stanis?aw Adaszewski.');
-    try
-stats=ls_bwconncomp(slicebw);
-    
+stats=conncomp(slicebw);
+
 
 
 if stats.NumObjects>1

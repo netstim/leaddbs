@@ -216,14 +216,14 @@ set(hfig, 'Units', origfigunits);
 
 function scaled = scale_image(imat,scale_zoom)
 
-  oldSize = size(imat);                               %# Old image size
-  newSize = max(floor(scale_zoom(1:2).*oldSize(1:2)),1);  %# New image size
-  newX = ((1:newSize(2))-0.5)./scale_zoom(2)+0.5;  %# New image pixel X coordinates
-  newY = ((1:newSize(1))-0.5)./scale_zoom(1)+0.5;  %# New image pixel Y coordinates
-  oldClass = class(imat);  %# Original image type
-  imat = double(imat);      %# Convert image to double precision for interpolation
+  oldSize = size(imat);                               % Old image size
+  newSize = max(floor(scale_zoom(1:2).*oldSize(1:2)),1);  % New image size
+  newX = ((1:newSize(2))-0.5)./scale_zoom(2)+0.5;  % New image pixel X coordinates
+  newY = ((1:newSize(1))-0.5)./scale_zoom(1)+0.5;  % New image pixel Y coordinates
+  oldClass = class(imat);  % Original image type
+  imat = double(imat);      % Convert image to double precision for interpolation
   scaled = interp2(imat,newX,newY(:),'cubic');
-  scaled = cast(scaled,oldClass);  %# Convert back to original image type
+  scaled = cast(scaled,oldClass);  % Convert back to original image type
 
 
 

@@ -1,11 +1,12 @@
 function [numidpoint,greyobj,options]=ea_findonemidpoint(slicebw,estpoint,mask,options)
 
 try
-stats=ea_regionprops(slicebw,'Centroid');
+stats=ea_centroid(slicebw);
 catch
     keyboard
 end
-CC=ea_bwconncomp(slicebw);
+
+CC=ea_conncomp(slicebw);
 
 
 if CC.NumObjects==0
@@ -25,7 +26,7 @@ if CC.NumObjects>1
         slicebwobj(:)=0;
         slicebwobj(CC.PixelIdxList{obj})=1; % isolate object
         
-        stats=ea_regionprops(slicebwobj,'Centroid');
+        stats=ea_centroid(slicebwobj);
         objdistance=pdist([estpoint;stats.Centroid]);
         
         ea_showdis(['Distance to object ',num2str(obj),': ',num2str(objdistance),'.'],options.verbose);
