@@ -55,6 +55,7 @@ function lead_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for lead
 handles.output = hObject;
 
+
 % Update handles structure
 guidata(hObject, handles);
 ea_dispbn;
@@ -79,14 +80,14 @@ set(handles.atlassetpopup,'String',asc);
 
 
 set(handles.normalize_checkbox,'Value',0);
-%keyboard
-%imshow(handles.bgimage,'bg_gui.png');
 
 set(hObject,'Color',[1 1 1]);
 
 set(handles.versiontxt,'String',ea_getvsn);
 
-imshow('bg_gui.png','InitialMagnification','fit')
+im = imread('bg_gui.png');
+image(im);
+axis off;
 axis fill
 warning('off');
 set(handles.dicompanel,'BackgroundColor','none');
@@ -119,6 +120,7 @@ set(handles.normmethod,'String',ndc);
 
 
 ea_firstrun;
+getui(handles);
 
 
 
@@ -146,118 +148,8 @@ function run_button_Callback(hObject, eventdata, handles)
 
 %% run trajectory reconstruction.
 
+options=handles2options(handles);
 
-%% some manual options that can be set:
-
-
-options.endtolerance=10; % how many slices to use with zero signal until end of electrode estimate.
-options.sprungwert=4; % how far electrode centroid may be (in xy axis) from last to current slice.
-options.refinesteps=0; % how often to re-iterate to reconstruct trajectory. More than 2 should usually not be beneficial. Use 0 to use the direct measurement.
-options.tra_stdfactor=0.9; % Default: 0.9 - the lower this factor, the lower the threshold (more included pixels in tra process).
-options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower the threshold (more included pixels in cor process).
-
-
-
-
-%% set options
-
-%uipatdir=get(handles.patdir_choosebox,'String');
-
-options.earoot=[fileparts(which('lead')),filesep];
-options.dicomimp=get(handles.dicomcheck,'Value');
-
-options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
-options.normalize.method=getappdata(gcf,'normmethod');
-options.normalize.method=options.normalize.method{get(handles.normmethod,'Value')};
-options.normalize.check=(get(handles.normcheck,'Value') == get(handles.normcheck,'Max'));
-
-
-
-% set modality (MR/CT) in options
-options.modality = get(handles.MRCT,'Value');
-
-
-
-
-options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback. 
-sidelog=[get(handles.left_checkbox,'Value') == get(handles.left_checkbox,'Max'),get(handles.right_checkbox,'Value') == get(handles.right_checkbox,'Max')];
-sidepos=[1,2];
-
-options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
-
-options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
-if strcmp(get(handles.maskwindow_txt,'String'),'auto')
-options.maskwindow=10; % initialize at 10
-options.automask=1; % set automask flag
-else
-options.maskwindow=str2num(get(handles.maskwindow_txt,'String')); % size of the window that follows the trajectory
-options.automask=0; % unset automask flag
-end
-options.autoimprove=(get(handles.autoimprovecheck,'Value') == get(handles.autoimprovecheck,'Max')); % if true, there will be some pauses at critical points so that the process can be better visualized. Mainly for demonstration or debugging problems.
-
-options.axiscontrast=(get(handles.axispopup,'Value')); % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
-options.zresolution=10; % voxels are being parcellated into this amount of portions.
-
-options.atl.genpt=get(handles.genptatlascheck,'Value'); % generate patient specific atlases
-options.atl.normalize=get(handles.normptatlascheck,'Value'); % normalize patient specific atlasset.
-options.atl.can=get(handles.canatlcheck,'Value'); % display canonical atlases
-options.atl.pt=get(handles.patatlcheck,'Value'); % display patient specific atlases
-
-
-options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
-options.d2.atlasopacity=0.5;
-options.d2.col_overlay=get(handles.tdcolorscheck,'Value');
-options.d2.con_overlay=get(handles.tdcontourcheck,'Value');
-options.d2.con_color=getappdata(handles.tdcontourcolor,'color');
-if isempty(options.d2.con_color)
-    options.d2.con_color=[0,0,0]; % black
-end
-
-options.d2.lab_overlay=get(handles.tdlabelcheck,'Value');
-
-
-options.d2.bbsize=str2double(get(handles.bbsize,'String'));
-
-
-
-options.manualheightcorrection=(get(handles.manualheight_checkbox,'Value') == get(handles.manualheight_checkbox,'Max'));
-options.d3.write=(get(handles.render_checkbox,'Value') == get(handles.render_checkbox,'Max'));
-options.d3.prolong_electrode=2;
-options.d3.verbose='on';
-options.d3.elrendering=1;
-options.d3.hlactivecontacts=0;
-options.d3.showactivecontacts=1;
-options.d3.showpassivecontacts=1;
-options.d3.showisovolume=0;
-options.d3.isovscloud=0;
-
-options.numcontacts=4;
-options.entrypoint=get(handles.targetpopup,'String');
-options.entrypoint=options.entrypoint{get(handles.targetpopup,'Value')};
-
-options.writeoutpm=1;
-
-elval = get(handles.electrode_model_popup,'Value');
-string_list = get(handles.electrode_model_popup,'String');
-options.elmodel=string_list{elval};
-options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
-options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
-if strcmp(options.atlasset,'Use none');
-    options.d3.writeatlases=0;
-    options.d2.writeatlases=1;
-else
-    options.d3.writeatlases=1;
-    options.d2.writeatlases=1;
-end
-
-
-options.expstatvat.do=0;
-
-options.fiberthresh=1;
-options.writeoutstats=1;
-
-options.normalize_fibers=get(handles.normfiberscheckbox,'Value');
-options.colormap=colormap;
 clc
 uipatdirs=getappdata(gcf,'uipatdir');
 
@@ -266,7 +158,7 @@ if isempty(uipatdirs)
 end
 for pat=1:length(uipatdirs)
     % set patient specific options
-    options.root=[fileparts(uipatdirs{pat}),filesep]; %'/Volumes/EspionageMounts/andreashorn/1065433271/bg/out/';
+    options.root=[fileparts(uipatdirs{pat}),filesep];
     [root,thispatdir]=fileparts(uipatdirs{pat});
     options.patientname=thispatdir;
     % run main function
@@ -291,6 +183,7 @@ function edit1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit1 as text
 %        str2double(get(hObject,'String')) returns contents of edit1 as a double
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -314,6 +207,7 @@ function electrode_model_popup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = get(hObject,'String') returns electrode_model_popup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from electrode_model_popup
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -339,6 +233,7 @@ function endtol_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of endtol_txt as text
 %        str2double(get(hObject,'String')) returns contents of endtol_txt as a double
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -355,6 +250,7 @@ end
 
 
 
+
 function distance_txt_Callback(hObject, eventdata, handles)
 % hObject    handle to distance_txt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -362,6 +258,7 @@ function distance_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of distance_txt as text
 %        str2double(get(hObject,'String')) returns contents of distance_txt as a double
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -385,6 +282,7 @@ function axis_std_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of axis_std_txt as text
 %        str2double(get(hObject,'String')) returns contents of axis_std_txt as a double
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -408,6 +306,7 @@ function cor_std_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of cor_std_txt as text
 %        str2double(get(hObject,'String')) returns contents of cor_std_txt as a double
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -431,6 +330,7 @@ function axiscontrast_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of axiscontrast_txt as text
 %        str2double(get(hObject,'String')) returns contents of axiscontrast_txt as a double
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -453,6 +353,7 @@ function slowdemo_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of slowdemo_checkbox
+storeui(handles);
 
 
 
@@ -463,6 +364,7 @@ function z_contrast_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of z_contrast_txt as text
 %        str2double(get(hObject,'String')) returns contents of z_contrast_txt as a double
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -485,6 +387,7 @@ function prolong_electrode_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of prolong_electrode_checkbox
+storeui(handles);
 
 
 % --- Executes on button press in render_checkbox.
@@ -494,6 +397,7 @@ function render_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of render_checkbox
+storeui(handles);
 
 
 % --- Executes on button press in showatlases_checkbox.
@@ -503,6 +407,7 @@ function showatlases_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of showatlases_checkbox
+storeui(handles);
 
 
 % --- Executes on button press in showfibers_checkbox.
@@ -512,6 +417,7 @@ function showfibers_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of showfibers_checkbox
+storeui(handles);
 
 
 % --- Executes on button press in showconnectivities_checkbox.
@@ -521,6 +427,7 @@ function showconnectivities_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of showconnectivities_checkbox
+storeui(handles);
 
 
 % --- Executes on button press in writeout2d_checkbox.
@@ -530,6 +437,7 @@ function writeout2d_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of writeout2d_checkbox
+storeui(handles);
 
 
 % --- Executes on button press in showatlases2d_checkbox.
@@ -539,6 +447,7 @@ function showatlases2d_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of showatlases2d_checkbox
+storeui(handles);
 
 
 % --- Executes on button press in manualheight_checkbox.
@@ -548,6 +457,7 @@ function manualheight_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of manualheight_checkbox
+storeui(handles);
 
 
 % --- Executes on button press in patdir_choosebox.
@@ -598,7 +508,8 @@ end
 
 % store patient directories in figure
 setappdata(gcf,'uipatdir',uipatdir);
-
+getui(handles); % update ui from patient
+storeui(handles); % save in pt folder
 
 % --- Executes on button press in left_checkbox.
 function left_checkbox_Callback(hObject, eventdata, handles)
@@ -607,6 +518,7 @@ function left_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of left_checkbox
+storeui(handles);
 
 
 % --- Executes on button press in right_checkbox.
@@ -616,6 +528,7 @@ function right_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of right_checkbox
+storeui(handles);
 
 
 % --- Executes on button press in normalize_checkbox.
@@ -625,6 +538,7 @@ function normalize_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of normalize_checkbox
+storeui(handles);
 
 
 
@@ -635,6 +549,7 @@ function refinesteps_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of refinesteps_txt as text
 %        str2double(get(hObject,'String')) returns contents of refinesteps_txt as a double
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -663,6 +578,7 @@ function maskwindow_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of maskwindow_txt as text
 %        str2double(get(hObject,'String')) returns contents of maskwindow_txt as a double
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -700,6 +616,8 @@ else
    set(handles.axispopup,'Enable','off'); 
    set(handles.maskwindow_txt,'Enable','off'); 
 end
+storeui(handles);
+
 
 
 % --- Executes on selection change in MRCT.
@@ -710,6 +628,7 @@ function MRCT_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns MRCT contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from MRCT
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -732,6 +651,7 @@ function stimcheckbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of stimcheckbox
+storeui(handles);
 
 
 % --- Executes on button press in cg25check.
@@ -741,6 +661,7 @@ function cg25check_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of cg25check
+storeui(handles);
 
 
 % --- Executes on selection change in normmethod.
@@ -751,6 +672,7 @@ function normmethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns normmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from normmethod
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -774,6 +696,7 @@ function axispopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns axispopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from axispopup
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -789,6 +712,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
+
 % --- Executes on selection change in zpopup.
 function zpopup_Callback(hObject, eventdata, handles)
 % hObject    handle to zpopup (see GCBO)
@@ -797,6 +721,7 @@ function zpopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns zpopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from zpopup
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -812,6 +737,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
+
 % --- Executes on selection change in targetpopup.
 function targetpopup_Callback(hObject, eventdata, handles)
 % hObject    handle to targetpopup (see GCBO)
@@ -820,6 +746,7 @@ function targetpopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns targetpopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from targetpopup
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -843,6 +770,7 @@ function eepush_Callback(hObject, eventdata, handles)
 ea_dispbn('ee');
 
 
+
 % --- Executes on selection change in atlassetpopup.
 function atlassetpopup_Callback(hObject, eventdata, handles)
 % hObject    handle to atlassetpopup (see GCBO)
@@ -851,6 +779,7 @@ function atlassetpopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns atlassetpopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from atlassetpopup
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -873,6 +802,7 @@ function normcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of normcheck
+storeui(handles);
 
 
 % --- Executes on button press in normfiberscheckbox.
@@ -882,6 +812,7 @@ function normfiberscheckbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of normfiberscheckbox
+storeui(handles);
 
 
 % --- Executes on button press in tdcolorscheck.
@@ -891,6 +822,7 @@ function tdcolorscheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of tdcolorscheck
+storeui(handles);
 
 
 % --- Executes on button press in tdcontourcheck.
@@ -900,6 +832,7 @@ function tdcontourcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of tdcontourcheck
+storeui(handles);
 
 
 
@@ -910,6 +843,7 @@ function bbsize_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of bbsize as text
 %        str2double(get(hObject,'String')) returns contents of bbsize as a double
+storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -932,6 +866,7 @@ function tdlabelcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of tdlabelcheck
+storeui(handles);
 
 
 % --- Executes on button press in tdcontourcolor.
@@ -942,6 +877,7 @@ function tdcontourcolor_Callback(hObject, eventdata, handles)
 
 tdcol=uisetcolor;
 setappdata(hObject,'color',tdcol);
+storeui(handles);
 
 
 % --- Executes on button press in cmappushbutton.
@@ -950,6 +886,7 @@ function cmappushbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 colormapeditor;
+storeui(handles);
 
 
 % --- Executes on button press in autoimprovecheck.
@@ -959,6 +896,7 @@ function autoimprovecheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of autoimprovecheck
+storeui(handles);
 
 
 % --- Executes on button press in canatlcheck.
@@ -968,6 +906,7 @@ function canatlcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of canatlcheck
+storeui(handles);
 
 
 % --- Executes on button press in patatlcheck.
@@ -977,6 +916,7 @@ function patatlcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of patatlcheck
+storeui(handles);
 
 
 % --- Executes on button press in normptatlascheck.
@@ -986,6 +926,7 @@ function normptatlascheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of normptatlascheck
+storeui(handles);
 
 
 % --- Executes on button press in dicomcheck.
@@ -995,6 +936,7 @@ function dicomcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of dicomcheck
+storeui(handles);
 
 
 % --- Executes on button press in setdicomin.
@@ -1002,6 +944,8 @@ function setdicomin_Callback(hObject, eventdata, handles)
 % hObject    handle to setdicomin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+storeui(handles);
+
 p='';
 try
 load([fileparts(which('lead')),filesep,'ea_prefs']);
@@ -1025,6 +969,8 @@ function setdicomout_Callback(hObject, eventdata, handles)
 % hObject    handle to setdicomout (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+storeui(handles);
+
 p='';
 try
 load([fileparts(which('lead')),filesep,'ea_prefs']);
@@ -1085,3 +1031,220 @@ function genptatlascheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of genptatlascheck
+storeui(handles);
+
+
+function storeui(handles)
+
+chooseboxname=get(handles.patdir_choosebox,'String');
+
+% determine if patientfolder is set
+switch chooseboxname
+    case 'Choose Patient Directory'
+        outdir=[fileparts(which('lead')),filesep];
+    otherwise
+        if strcmp(chooseboxname(1:8),'Multiple')
+                    outdir=[fileparts(which('lead')),filesep];
+
+        else
+        outdir=[get(handles.patdir_choosebox,'String'),filesep];
+        end
+end
+
+options=handles2options(handles);
+try save([outdir,'ea_ui'],'-struct','options'); end
+
+
+function getui(handles)
+
+
+
+% determine if patientfolder is set
+switch get(handles.patdir_choosebox,'String')
+    case {'Choose Patient Directory','Multiple'}
+        outdir=[fileparts(which('lead')),filesep];
+    otherwise
+        outdir=get(handles.patdir_choosebox,'String');
+end
+try
+    
+options=load([outdir,'ea_ui']);
+options2handles(options,handles); % update UI
+end
+
+
+
+function options=handles2options(handles)
+
+%% some manual options that can be set:
+
+
+options.endtolerance=10; % how many slices to use with zero signal until end of electrode estimate.
+options.sprungwert=4; % how far electrode centroid may be (in xy axis) from last to current slice.
+options.refinesteps=0; % how often to re-iterate to reconstruct trajectory. More than 2 should usually not be beneficial. Use 0 to use the direct measurement.
+options.tra_stdfactor=0.9; % Default: 0.9 - the lower this factor, the lower the threshold (more included pixels in tra process).
+options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower the threshold (more included pixels in cor process).
+
+
+
+
+%% set options
+
+%uipatdir=get(handles.patdir_choosebox,'String');
+
+options.earoot=[fileparts(which('lead')),filesep];
+options.dicomimp=get(handles.dicomcheck,'Value');
+
+options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
+options.normalize.method=getappdata(gcf,'normmethod');
+options.normalize.method=options.normalize.method{get(handles.normmethod,'Value')};
+options.normalize.methodn=get(handles.normmethod,'Value');
+
+options.normalize.check=(get(handles.normcheck,'Value') == get(handles.normcheck,'Max'));
+
+
+
+% set modality (MR/CT) in options
+options.modality = get(handles.MRCT,'Value');
+
+
+
+
+options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback. 
+sidelog=[get(handles.right_checkbox,'Value') == get(handles.right_checkbox,'Max'),get(handles.left_checkbox,'Value') == get(handles.left_checkbox,'Max')];
+sidepos=[1,2];
+
+options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
+
+options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
+if strcmp(get(handles.maskwindow_txt,'String'),'auto')
+options.maskwindow=10; % initialize at 10
+options.automask=1; % set automask flag
+else
+options.maskwindow=str2num(get(handles.maskwindow_txt,'String')); % size of the window that follows the trajectory
+options.automask=0; % unset automask flag
+end
+options.autoimprove=(get(handles.autoimprovecheck,'Value') == get(handles.autoimprovecheck,'Max')); % if true, there will be some pauses at critical points so that the process can be better visualized. Mainly for demonstration or debugging problems.
+
+options.axiscontrast=(get(handles.axispopup,'Value')); % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
+options.zresolution=10; % voxels are being parcellated into this amount of portions.
+
+options.atl.genpt=get(handles.genptatlascheck,'Value'); % generate patient specific atlases
+options.atl.normalize=get(handles.normptatlascheck,'Value'); % normalize patient specific atlasset.
+options.atl.can=get(handles.canatlcheck,'Value'); % display canonical atlases
+options.atl.pt=get(handles.patatlcheck,'Value'); % display patient specific atlases
+
+
+options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
+options.d2.atlasopacity=0.5;
+options.d2.col_overlay=get(handles.tdcolorscheck,'Value');
+options.d2.con_overlay=get(handles.tdcontourcheck,'Value');
+options.d2.con_color=getappdata(handles.tdcontourcolor,'color');
+if isempty(options.d2.con_color)
+    options.d2.con_color=[0,0,0]; % black
+end
+
+options.d2.lab_overlay=get(handles.tdlabelcheck,'Value');
+
+
+options.d2.bbsize=str2double(get(handles.bbsize,'String'));
+
+
+
+options.manualheightcorrection=(get(handles.manualheight_checkbox,'Value') == get(handles.manualheight_checkbox,'Max'));
+options.d3.write=(get(handles.render_checkbox,'Value') == get(handles.render_checkbox,'Max'));
+options.d3.prolong_electrode=2;
+options.d3.verbose='on';
+options.d3.elrendering=1;
+options.d3.hlactivecontacts=0;
+options.d3.showactivecontacts=1;
+options.d3.showpassivecontacts=1;
+options.d3.showisovolume=0;
+options.d3.isovscloud=0;
+
+options.numcontacts=4;
+options.entrypoint=get(handles.targetpopup,'String');
+options.entrypoint=options.entrypoint{get(handles.targetpopup,'Value')};
+options.entrypointn=get(handles.targetpopup,'Value');
+
+options.writeoutpm=1;
+
+options.elmodeln = get(handles.electrode_model_popup,'Value');
+string_list = get(handles.electrode_model_popup,'String');
+options.elmodel=string_list{options.elmodeln};
+options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
+options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
+options.atlassetn=get(handles.atlassetpopup,'Value');
+
+if strcmp(options.atlasset,'Use none');
+    options.d3.writeatlases=0;
+    options.d2.writeatlases=1;
+else
+    options.d3.writeatlases=1;
+    options.d2.writeatlases=1;
+end
+
+
+options.expstatvat.do=0;
+
+options.fiberthresh=1;
+options.writeoutstats=1;
+
+options.normalize_fibers=get(handles.normfiberscheckbox,'Value');
+options.colormap=colormap;
+
+
+
+
+function options2handles(options,handles)
+
+
+%% set handles
+set(handles.dicomcheck,'Value',options.dicomimp);
+set(handles.normalize_checkbox,'Value',options.normalize.do);
+set(handles.normmethod,'Value',options.normalize.methodn);
+set(handles.normcheck,'Value',options.normalize.check);
+set(handles.MRCT,'Value',options.modality);
+
+if ismember(1,options.sides)
+    set(handles.right_checkbox,'Value',1);
+else
+        set(handles.right_checkbox,'Value',0);
+end
+if ismember(2,options.sides)
+    set(handles.left_checkbox,'Value',1);
+else
+    set(handles.left_checkbox,'Value',0);
+end
+
+
+set(handles.doreconstruction_checkbox,'Value',options.doreconstruction);
+
+
+if options.automask
+    set(handles.maskwindow_txt,'String','auto')
+else
+    set(handles.maskwindow_txt,'String',num2str(options.maskwindow));
+end
+set(handles.autoimprovecheck,'Value',options.autoimprove);
+set(handles.axispopup,'Value',options.axiscontrast); % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
+set(handles.genptatlascheck,'Value',options.atl.genpt); % generate patient specific atlases
+set(handles.normptatlascheck,'Value',options.atl.normalize); % normalize patient specific atlasset.
+set(handles.canatlcheck,'Value',options.atl.can); % display canonical atlases
+set(handles.patatlcheck,'Value',options.atl.pt); % display patient specific atlases
+set(handles.writeout2d_checkbox,'Value',options.d2.write);
+set(handles.tdcolorscheck,'Value',options.d2.col_overlay);
+set(handles.tdcontourcheck,'Value',options.d2.con_overlay);
+setappdata(handles.tdcontourcolor,'color',options.d2.con_color);
+set(handles.tdlabelcheck,'Value',options.d2.lab_overlay);
+set(handles.bbsize,'String',num2str(options.d2.bbsize));
+set(handles.manualheight_checkbox,'Value',options.manualheightcorrection);
+set(handles.render_checkbox,'Value',options.d3.write);
+set(handles.targetpopup,'Value',options.entrypointn);
+set(handles.electrode_model_popup,'Value',options.elmodeln);
+set(handles.atlassetpopup,'Value',options.atlassetn);
+set(handles.normfiberscheckbox,'Value',options.normalize_fibers);
+
+
+
+

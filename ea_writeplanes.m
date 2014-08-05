@@ -20,6 +20,14 @@ end
 
 interpfactor=2;
 
+if strcmp(options.prefs.d2.useprepost,'pre') % use preoperative images, overwrite filenames to preoperative version
+    options.prefs.gtranii=options.prefs.gprenii;
+    options.prefs.tranii=options.prefs.prenii;
+    options.prefs.gcornii=options.prefs.gprenii;
+    options.prefs.cornii=options.prefs.prenii;
+    options.prefs.gsagnii=options.prefs.gprenii;
+    options.prefs.sagnii=options.prefs.prenii;
+end
 
 cuts=figure('name',[options.patientname,': 2D cut views'],'numbertitle','off');
 axis off
@@ -60,6 +68,8 @@ switch options.modality
     case 2 % CT
         Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
         Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
+        Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
+        tracorpresent(1:3)=1;
 end
 
 for side=1:length(coords_mm)

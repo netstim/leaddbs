@@ -18,25 +18,26 @@ hold on
 stimparams=getappdata(resultfig,'stimparams');
 
 for side=1:length(stimparams)
-VAT{side}=stimparams(side).VAT;
+    VAT{side}=stimparams(side).VAT;
 end
 fiberthresh=stimparams.fiberthresh;
 
 
 % prepare statvat exports once if needed.
- if options.expstatvat.do % export statvat nifti images.
-            tV=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
-            tnii=spm_read_vols(tV);
-            tnii(:)=0;
-            % generate mesh of hires MNI
-            [x,y,z]=ind2sub(size(tnii),1:numel(tnii));
-            templatecoords=[x;y;z;ones(1,length(x))]; clear x y z
-            templatecoords=tV.mat*templatecoords;
-            templatecoords=templatecoords(1:3,:)';
- end
+if options.expstatvat.do % export statvat nifti images.
+    tV=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
+    tnii=spm_read_vols(tV);
+    tnii(:)=0;
+    % generate mesh of hires MNI
+    [x,y,z]=ind2sub(size(tnii),1:numel(tnii));
+    templatecoords=[x;y;z;ones(1,length(x))]; clear x y z
+    templatecoords=tV.mat*templatecoords;
+    templatecoords=templatecoords(1:3,:)';
+end
 
 
-% set togglebuttons.
+% set togglebuttons. small flag-variables are being defined in
+% length(sides)xlength(labelatlases) dimensionality for the togglebuttons.
 
 togglenames={'vaton','fibson','dcfibson','addfibson','labelson','captionson'};
 for but=1:length(togglenames)
@@ -50,10 +51,14 @@ for but=1:length(togglenames)
             expand=1;
     end
     if isempty(eval(togglenames{but}))
-        eval([togglenames{but},'=repmat(1,1,expand);']);
+        eval([togglenames{but},'=repmat(1,expand,length(options.sides));']);
     end
+    
+    setappdata(resultfig,togglenames{but},eval(togglenames{but}));
+    
 end
 clear expand
+
 
 
 load([options.root,options.patientname,filesep,'ea_stats']);
@@ -66,10 +71,10 @@ end
 
 
 for side=1:length(VAT)
-if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
+    if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
     for vat=1:length(VAT{side}.VAT)
-      K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
-
+        K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
+        
         % show vat
         
         PL.vatsurfs(side,vat)=trisurf(K(side).K{vat},VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3),...
@@ -103,7 +108,7 @@ if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1);
         if options.writeoutstats
             
             
-
+            
             if stimparams(side).U(vat)>0 % stimulation on in this VAT,
                 load([options.root,options.patientname,filesep,'ea_stats']);
                 try
@@ -129,8 +134,8 @@ if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1);
                     end
                     tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
                     
-                        
-                        ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas)=sum(inhull(thisatl,VAT{side}.VAT{vat},K(side).K{vat}))*tpv;
+                    
+                    ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas)=sum(inhull(thisatl,VAT{side}.VAT{vat},K(side).K{vat}))*tpv;
                     ea_stats.vat(priorvatlength+1).nAtlasIntersection(atlas)=ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
                 end
                 
@@ -151,25 +156,25 @@ if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1);
     
     % export vatvar stats if needed:
     if options.expstatvat.do
-       for vatvar=1:length(options.expstatvat.vars)
-        mkdir([options.expstatvat.dir,'statvat_results']);
-        switch side
-            case 1
-                si='rh';
-            case 2
-                si='lh';
+        for vatvar=1:length(options.expstatvat.vars)
+            mkdir([options.expstatvat.dir,'statvat_results']);
+            switch side
+                case 1
+                    si='rh';
+                case 2
+                    si='lh';
+            end
+            tV.fname=[options.expstatvat.dir,'statvat_results',filesep,'s',num2str(options.expstatvat.pt),'_',si,'.nii'];
+            spm_write_vol(tV,thisvatnii{vatvar});
         end
-        tV.fname=[options.expstatvat.dir,'statvat_results',filesep,'s',num2str(options.expstatvat.pt),'_',si,'.nii'];
-        spm_write_vol(tV,thisvatnii{vatvar});
-       end
     end
     
-    
+    vatbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('vat',options),'TooltipString','Volume of activated tissue','OnCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,1},'OffCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,0},'State',getstate(vaton(side)));
+
     
 end
 
 
-vatbutton=uitoggletool(PL.ht,'CData',ea_get_icn('vat',options),'TooltipString','Volume of activated tissue','OnCallback',{@objvisible,PL.vatsurfs,resultfig,'vaton'},'OffCallback',{@objinvisible,PL.vatsurfs,resultfig,'vaton'},'State',getstate(vaton));
 
 if stimparams(1).showfibers
     
@@ -219,175 +224,149 @@ if stimparams(1).showfibers
             
             if stimparams(side).U(vat) % check if U ~= 0
                 
-            in=inhull(normalized_fibers_mm,VAT{side}.VAT{vat},K(side).K{vat})';
-            
-            selectedfibs{vat,side}=unique(idxv(in));
+                in=inhull(normalized_fibers_mm,VAT{side}.VAT{vat},K(side).K{vat})';
+                
+                selectedfibs{vat,side}=unique(idxv(in));
             end
         end
         dispercent(side/maxvat);
         
     end
-    dispercent(1,'end');
     
-    selectedfibs=unique(cell2mat(selectedfibs(:)));
+    dispercent(1,'end');
     
     normalized_fibers_mm=mat2cell(normalized_fibers_mm,idx,3)';
-    connectingfibs=normalized_fibers_mm(selectedfibs);
+    for side=options.sides
+        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side)));
+        
+        connectingfibs{side}=normalized_fibers_mm(sideselectedfibs{side});
+    end
+    selectedfibs=sideselectedfibs; clear sideselectedfibs
     
     dispercent(1,'end');
     
     
     
+    % check which areas are connected to VAT by fibers:
+    doubleconnectingfibs=cell(0);
+    % check how many fibertrack stat-entries are there already (appending
+    % to the analysis)
+    load([options.root,options.patientname,filesep,'ea_stats']);
     
-    % add other fibertracts as set in prefs.
-    
-    if ~isempty(options.prefs.addfibers)
-        for fset=1:length(options.prefs.addfibers)
-            fs=load([options.earoot,'fibers',filesep,options.prefs.addfibers{fset}]);
-            fn = fieldnames(fs);
-            
-            eval(sprintf('thisset = fs.%s;',fn{1}));
-            if size(thisset,2)~=3;
-                thisset=thisset';
-            end
-            fibmax=length(thisset);
-            dispercent(0,'Plotting additional fibers');
-            for fib=1:fibmax
-                dispercent(fib/fibmax);
-                %for segment=1:length(connectingfibs{fib})-1;
-                if size(thisset{fib},1)>size(thisset{fib},2)
-                    thisset{fib}=thisset{fib}';
-                end
-                thisset{fib}(4,:)=detcolor(thisset{fib}); % add coloring information to the 4th column.
-                
-                for dim=1:4
-                    thisfib(dim,:)=double(interp1q([1:size(thisset{fib},2)]',thisset{fib}(dim,:)',[1:0.1:size(thisset{fib},2)]')');
-                end
-                PL.fib_plots.addfibs{fset}(fib)=surface([thisfib(1,:);thisfib(1,:)],...
-                    [thisfib(2,:);thisfib(2,:)],...
-                    [thisfib(3,:);thisfib(3,:)],...
-                    [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
-                clear thisfib
-                
-            end
-            dispercent(100,'end');
-            
-            set(PL.fib_plots.addfibs{fset}(:),'EdgeAlpha',0.05);
-            
-            
-            
-            
-            addfiberbutton(fset)=uitoggletool(PL.ht,'CData',ea_get_icn('fibers',options),'TooltipString',options.prefs.addfibers{fset},'OnCallback',{@objvisible,PL.fib_plots.addfibs{fset},resultfig,'addfibson'},'OffCallback',{@objinvisible,PL.fib_plots.addfibs{fset},resultfig,'addfibson'},'State',getstate(addfibson));
-        end
+    try
+        vll=length(ea_stats.ft);
+    catch % if none, set to zeros.
+        vll=0;
     end
     
     
-    
-    
-    
-    
-    doubleconnectingfibs=cell(0);
-    
     if stimparams(1).showconnectivities
-        
         for la=1:length(stimparams(1).labelatlas)
-                todelete{la}=[];
-
-                    cnt=1; % reset cnt.
-
-            %% extract areas connected by fibres.
-
-            atlas=load_nii(fullfile(options.earoot,'templates','labeling',[stimparams(1).labelatlas{la},'.nii']));
-            if options.writeoutpm && ~exist('pm','var')
-                pm=atlas;
-                pm.img(:)=0;
-            end
             
-            V=spm_vol(fullfile(options.earoot,'templates','labeling',[stimparams(1).labelatlas{la},'.nii']));
-            aID = fopen(fullfile(options.earoot,'templates','labeling',[stimparams(1).labelatlas{la},'.txt']));
-            atlas_lgnd=textscan(aID,'%d %s');
-            allcareas=[];
-            
-            fibmax=length(connectingfibs);
-            dispercent(0,'Gathering region information');
-            for fib=1:fibmax
-                dispercent(fib/fibmax);
+            for side=options.sides
                 
-                thisfibendpoints=[connectingfibs{fib}(1,1:3);connectingfibs{fib}(end,1:3)];
-                thisfibendpoints=V.mat\[thisfibendpoints,ones(2,1)]'; % mm 2 vox
-                thisfibendpoints=double(thisfibendpoints(1:3,:));
+                todelete{la,side}=[];
                 
-                conareas=spm_sample_vol(V,thisfibendpoints(1,:),thisfibendpoints(2,:),thisfibendpoints(3,:),0);
-                if any(conareas)
-                    doubleconnectingfibs{la,cnt}=connectingfibs{fib};
-                    todelete{la}=[todelete{la},fib];
-                    cnt=cnt+1;
+                cnt=1; % reset cnt.
+                
+                %% extract areas connected by fibres.
+                
+                atlas=load_nii(fullfile(options.earoot,'templates','labeling',[stimparams(1).labelatlas{la},'.nii']));
+                if options.writeoutpm && ~exist('pm','var')
+                    pm=atlas;
+                    pm.img(:)=0;
                 end
-                if options.writeoutpm
-                    try
-                        pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))=...
-                            pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))+1;
-                        pm.img(round(thisfibendpoints(1,2)),round(thisfibendpoints(2,2)),round(thisfibendpoints(3,2)))=...
-                            pm.img(round(thisfibendpoints(1,2)),round(thisfibendpoints(2,2)),round(thisfibendpoints(3,2)))+1;
+                
+                V=spm_vol(fullfile(options.earoot,'templates','labeling',[stimparams(1).labelatlas{la},'.nii']));
+                aID = fopen(fullfile(options.earoot,'templates','labeling',[stimparams(1).labelatlas{la},'.txt']));
+                atlas_lgnd=textscan(aID,'%d %s');
+                allcareas=[];
+                
+                fibmax=length(connectingfibs{side});
+                dispercent(0,'Gathering region information');
+                for fib=1:fibmax
+                    dispercent(fib/fibmax);
+                    
+                    thisfibendpoints=[connectingfibs{side}{fib}(1,1:3);connectingfibs{side}{fib}(end,1:3)];
+                    thisfibendpoints=V.mat\[thisfibendpoints,ones(2,1)]'; % mm 2 vox
+                    thisfibendpoints=double(thisfibendpoints(1:3,:));
+                    
+                    conareas=spm_sample_vol(V,thisfibendpoints(1,:),thisfibendpoints(2,:),thisfibendpoints(3,:),0);
+                    if any(conareas)
+                        doubleconnectingfibs{side}{la,cnt}=connectingfibs{side}{fib};
+                        todelete{la,side}=[todelete{la,side},fib];
+                        cnt=cnt+1;
+                    end
+                    if options.writeoutpm
+                        try
+                            pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))=...
+                                pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))+1;
+                            pm.img(round(thisfibendpoints(1,2)),round(thisfibendpoints(2,2)),round(thisfibendpoints(3,2)))=...
+                                pm.img(round(thisfibendpoints(1,2)),round(thisfibendpoints(2,2)),round(thisfibendpoints(3,2)))+1;
+                        end
+                    end
+                    allcareas=[allcareas,conareas];
+                end
+                allcareas=round(allcareas);
+                dispercent(100,'end');
+                
+                atlength=length(atlas_lgnd{1});
+                howmanyfibs{side}=zeros(atlength,1);
+                tareas{side}=[];
+                tcnt=1;
+                for reg=1:atlength
+                    howmanyfibs{side}(reg)=sum(allcareas==reg); % how many fibers connect VAT and anat. region.
+                    if howmanyfibs{side}(reg)>=(fiberthresh(1))
+                        tareas{side}(tcnt)=reg;
+                        tcnt=tcnt+1;
                     end
                 end
-                allcareas=[allcareas,conareas];
-            end
-            allcareas=round(allcareas);
-            dispercent(100,'end');
-            tareas=[];
-            tcnt=1;
-            atlength=length(atlas_lgnd{1});
-            howmanyfibs=zeros(atlength,1);
-            for reg=1:atlength
-                howmanyfibs(reg)=sum(allcareas==reg); % how many fibers connect VAT and anat. region.
-                if howmanyfibs(reg)>=(fiberthresh(1))
-                    tareas(tcnt)=reg;
-                    tcnt=tcnt+1;
+                tareas{side}=unique(tareas{side});
+                
+                
+                % Write out connectivity stats
+                if options.writeoutstats
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    ea_stats.ft(vll+side).fibercounts{la}=howmanyfibs{side};
+                    
+                    ea_stats.ft(vll+side).nfibercounts{la}=howmanyfibs{side}/sum(stimparams(1,side).volume);
+                    ea_stats.ft(vll+side).labels{la}=atlas_lgnd{2};
+                    % log which vats are used for this side of ft results.
+                    cnt=1;
+                    for vatsused=upriorvatlength:length(ea_stats.vat)
+                        if ea_stats.vat(vatsused).Side==side
+                            ea_stats.ft(vll+side).vatsused{la}(cnt)=vatsused;
+                            cnt=cnt+1;
+                        end
+                    end
+                    
+                    
                 end
-            end
-            tareas=unique(tareas);
             
             
-            % Write out connectivity stats
-            if options.writeoutstats
-                
-                
-                
-                    load([options.root,options.patientname,filesep,'ea_stats']);
-
-% check how many entries are there already
-
-                try
-                    vll=length(ea_stats.ft);
-                catch % if none, set to zeros.
-                    vll=0;
-                end
-
-
-
-
-                ea_stats.ft(vll+1).fibercounts{la}=howmanyfibs;
-                ea_stats.ft(vll+1).labels{la}=atlas_lgnd{2};
-                ea_stats.ft(vll+1).vatsused{la}=upriorvatlength:length(ea_stats.vat);
-                
-                    save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
-
-            end
+            save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
             
             
             
-            clear allcareas
+            clear allcareas conareas
             %% now show areas
             atlas.img=round(atlas.img);
             %tareas=1:4;
-            if ~isempty(tareas)
-                for anatarea=1:length(tareas)
+            if ~isempty(tareas{side})
+                V=spm_vol(fullfile(options.earoot,'templates','labeling',[stimparams(1).labelatlas{la},'.nii']));
+                for anatarea=1:length(tareas{side})
                     
-                    [xx,yy,zz]=ind2sub(size(atlas.img),find(atlas.img==tareas(anatarea)));
+                    [xx,yy,zz]=ind2sub(size(atlas.img),find(atlas.img==tareas{side}(anatarea)));
                     XYZ=[xx,yy,zz];
-                    V=spm_vol(fullfile(options.earoot,'templates','labeling',[stimparams(1).labelatlas{la},'.nii']));
-
+                    
                     XYZ=map_coords_proxy(XYZ,V);
                     %XYZ=XYZ';
                     if options.prefs.lhullmethod==0
@@ -414,8 +393,8 @@ if stimparams(1).showfibers
                         [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
                         
                         thisatlas=round(atlas.img);
-                        thisatlas(thisatlas~=anatarea)=0;
-                        thisatlas(thisatlas==anatarea)=1;
+                        thisatlas(thisatlas~=tareas{side}(anatarea))=0;
+                        thisatlas(thisatlas==tareas{side}(anatarea))=1;
                         if options.prefs.lhullsmooth
                             thisatlas = smooth3(thisatlas,'gaussian',options.prefs.lhullsmooth);
                         end
@@ -434,10 +413,10 @@ if stimparams(1).showfibers
                         % set cdata
                         
                         
-                           
-                            
+                        
+                        
                         if ~isfield(stimparams,'group')
-                            cdat=abs(repmat(anatarea*(64/length(tareas)),length(fv.vertices),1)... % C-Data for surface
+                            cdat=abs(repmat(anatarea*(64/length(tareas{side})),length(fv.vertices),1)... % C-Data for surface
                                 +randn(length(fv.vertices),1)*2)';
                         else % if more than one group is analyzed, coloring info will be off the group color.
                             RGB=zeros(1,1,3);
@@ -451,14 +430,14 @@ if stimparams(1).showfibers
                                 +randn(length(fv.vertices),1)*2)';
                         end
                         
-                        PL.regionsurfs(la,anatarea)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
+                        PL.regionsurfs(la,side,anatarea)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
                         
                     else
                         
                         
-                        PL.regionsurfs(la,anatarea)=trisurf(k,XYZ(:,1),XYZ(:,2),XYZ(:,3),...
-                        abs(repmat(anatarea*(64/length(tareas)),length(XYZ),1)...
-                        +randn(length(XYZ),1)*0.1*length(tareas))');
+                        PL.regionsurfs(la,side,anatarea)=trisurf(k,XYZ(:,1),XYZ(:,2),XYZ(:,3),...
+                            abs(repmat(anatarea*(64/length(tareas{side})),length(XYZ),1)...
+                            +randn(length(XYZ),1)*0.1*length(tareas{side}))');
                     end
                     
                     
@@ -473,209 +452,177 @@ if stimparams(1).showfibers
                     %% shading etc.
                     colorc=colornames(anatarea);
                     colorc=rgb(colorc);
-                    ea_spec_atlas(PL.regionsurfs(la,anatarea),'labeling',jet,1);
+                    ea_spec_atlas(PL.regionsurfs(la,side,anatarea),'labeling',jet,1);
                     
                     
                     %% put a label to it
-                    thislabel=sub2space(atlas_lgnd{2}{atlas_lgnd{1}==tareas(anatarea)});
-                    PL.conlabels(la,anatarea)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline');
+                    thislabel=sub2space(atlas_lgnd{2}{atlas_lgnd{1}==tareas{side}(anatarea)});
+                    PL.conlabels(la,side,anatarea)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline');
                 end
                 
             end
-            clear tareas
+            end
+                        clear tareas
+
         end
         
         
+        
         % Write out probability map of fiber terminals
-            if options.writeoutpm
-                save_nii(pm,[options.root,options.patientname,filesep,'ea_pm','.nii']);
-                
-            end
+        if options.writeoutpm
+            save_nii(pm,[options.root,options.patientname,filesep,'ea_pm','.nii']);
+            
+        end
         
     end
     
     
     
     % plot fibers that do connect to electrode VAT:
-    try % since this is only defined if using show_connectivities, too.
-    alltodelete=[];
-    for la=1:length(stimparams(1).labelatlas)
-    alltodelete=[alltodelete,todelete{la}];
-    end
-    connectingfibs(alltodelete)=[]; % clear doubleconnected fibers (will be plotted lateron) from vatconnected fibers.
-    end
-    
-    if ~isempty(connectingfibs)
-        fibmax=length(connectingfibs);
-        dispercent(0,'Plotting fibers that connect to VAT of electrode');
-        for fib=1:fibmax
-            dispercent(fib/fibmax);
-            %for segment=1:length(connectingfibs{fib})-1;
-            connectingfibs{fib}=connectingfibs{fib}';
-            
-        
-            if ~isfield(stimparams,'group')
-                connectingfibs{la,fib}(4,:)=detcolor(connectingfibs{la,fib}); % add coloring information to the 4th column.
-            else % if more than one group is analyzed, coloring info will be off the group color.
-                RGB=zeros(1,1,3);
-                RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
-                RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
-                RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
-                
-                connectingfibs{la,fib}(4,:)=rgb2ind(RGB,jet);
+    for side=options.sides
+        try % since this is only defined if using show_connectivities, too.
+            alltodelete{side}=[];
+            for la=1:length(stimparams(1).labelatlas)
+                alltodelete{side}=[alltodelete{side},todelete{la,side}];
             end
-            
-            
-            
-            
-            for dim=1:4
-                thisfib(dim,:)=double(interp1q([1:size(connectingfibs{fib},2)]',connectingfibs{fib}(dim,:)',[1:0.1:size(connectingfibs{fib},2)]')');
-            end
-            
-            PL.fib_plots.fibs(fib)=surface([thisfib(1,:);thisfib(1,:)],...
-                [thisfib(2,:);thisfib(2,:)],...
-                [thisfib(3,:);thisfib(3,:)],...
-                [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
-            
-            % store for webexport
-            
-                                jetlist=jet;
-
-            % old code to generate JSON output (not as brainbrowser expects
-            % it, might be useful for other outputs):
-%             fv=surf2patch(PL.fib_plots.fibs(fib),'triangles');
-%               PL.fibfv(fib).vertices=fv.vertices;
-%                 PL.fibfv(fib).faces=fv.faces;
-%                 PL.fibfv(fib).normals=zeros(size(fv.vertices,1),3);
-%                 PL.fibfv(fib).colors=[squeeze(ind2rgb(round(fv.facevertexcdata),jetlist)),repmat(0.7,size(PL.fibfv(fib).vertices,1),1)];
-
-              % new code as brainbrowser expects it:    
-              try
-                PL.bbfibfv(fib).vertices=thisfib(1:3,:)';
-                PL.bbfibfv(fib).faces=[1:size(thisfib,2)-1;2:size(thisfib,2)]';
-                PL.bbfibfv(fib).normals=zeros(size(PL.bbfibfv(fib).vertices,1),3);
-                PL.bbfibfv(fib).colors=[squeeze(ind2rgb(round(thisfib(4,:)),jetlist)),repmat(0.7,size(thisfib,2),1)];
-              end
-
-                                   
-
-
-
-            
-            clear thisfib
-            
-            %plot3(connectingfibs{fib}(segment:segment+1,1),connectingfibs{fib}(segment:segment+1,2),connectingfibs{fib}(segment:segment+1,3),'Color',segclr);
-            
-            %end
+            connectingfibs{side}(alltodelete{side})=[]; % clear doubleconnected fibers (will be plotted lateron) from vatconnected fibers.
         end
-        dispercent(100,'end');
         
-        set(PL.fib_plots.fibs(:),'EdgeAlpha',0.05);
-        
-        
-        
-        try
-            fiberbutton=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_vat',options),'TooltipString','Fibers (Electrode only)','OnCallback',{@objvisible,PL.fib_plots.fibs,resultfig,'fibson'},'OffCallback',{@objinvisible,PL.fib_plots.fibs,resultfig,'fibson'},'State',getstate(fibson));
+        if ~isempty(connectingfibs{side})
+            fibmax=length(connectingfibs{side});
+            dispercent(0,'Plotting fibers that connect to VAT of electrode');
+            for fib=1:fibmax
+                dispercent(fib/fibmax);
+                %for segment=1:length(connectingfibs{fib})-1;
+                connectingfibs{side}{la,fib}=connectingfibs{side}{la,fib}';
+                
+                
+                if ~isfield(stimparams,'group')
+                    connectingfibs{side}{la,fib}(4,:)=detcolor(connectingfibs{side}{la,fib}); % add coloring information to the 4th column.
+                else % if more than one group is analyzed, coloring info will be off the group color.
+                    RGB=zeros(1,1,3);
+                    RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
+                    RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
+                    RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
+                    
+                    connectingfibs{side}{la,fib}(4,:)=rgb2ind(RGB,jet);
+                end
+                
+                
+                
+                
+                for dim=1:4
+                    thisfib(dim,:)=double(interp1q([1:size(connectingfibs{side}{fib},2)]',connectingfibs{side}{fib}(dim,:)',[1:0.1:size(connectingfibs{side}{fib},2)]')');
+                end
+                
+                PL.fib_plots.fibs(side,fib)=surface([thisfib(1,:);thisfib(1,:)],...
+                    [thisfib(2,:);thisfib(2,:)],...
+                    [thisfib(3,:);thisfib(3,:)],...
+                    [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
+                
+                % store for webexport
+                
+                jetlist=jet;
+                
+                try
+                    PL.bbfibfv(fib).vertices=thisfib(1:3,:)';
+                    PL.bbfibfv(fib).faces=[1:size(thisfib,2)-1;2:size(thisfib,2)]';
+                    PL.bbfibfv(fib).normals=zeros(size(PL.bbfibfv(fib).vertices,1),3);
+                    PL.bbfibfv(fib).colors=[squeeze(ind2rgb(round(thisfib(4,:)),jetlist)),repmat(0.7,size(thisfib,2),1)];
+                end
+                
+                
+                
+                
+                
+                
+                clear thisfib
+                
+            end
+            dispercent(100,'end');
+            
+            set(PL.fib_plots.fibs(side,:),'EdgeAlpha',0.05);
+            
+            
+            
+            try
+                fiberbutton=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_vat',options),'TooltipString','Fibers (Electrode only)','OnCallback',{@objvisible,PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,1},'OffCallback',{@objvisible,PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,0},'State',getstate(fibson(side)));
+            end
         end
     end
     
     % plot fibers that connect to both a region of the labeling atlas and the electrode VAT:
     try cnt=length(PL.bbfibfv)+1; end
-    for la=1:size(doubleconnectingfibs,1)
-        fibmax=length(doubleconnectingfibs(la,:));
-        dispercent(0,'Plotting fibers that connect to both the VAT and a region within the labeling atlas');
-        for fib=1:fibmax
+    for la=1:size(doubleconnectingfibs{side},1)
+        for side=options.sides
+            fibmax=length(doubleconnectingfibs{side}(la,:));
+            dispercent(0,'Plotting fibers that connect to both the VAT and a region within the labeling atlas');
+            for fib=1:fibmax
+                try
+                    dispercent(fib/fibmax);
+                    doubleconnectingfibs{side}{la,fib}=doubleconnectingfibs{side}{la,fib}';
+                    
+                    if ~isfield(stimparams,'group')
+                        
+                        doubleconnectingfibs{side}{la,fib}(4,:)=detcolor(doubleconnectingfibs{side}{la,fib}); % add coloring information to the 4th column.
+                        
+                    else % if more than one group is analyzed, coloring info will be off the group color.
+                        RGB=zeros(1,1,3);
+                        RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
+                        RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
+                        RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
+                        
+                        doubleconnectingfibs{side}{la,fib}(4,:)=rgb2ind(RGB,jet);
+                    end
+                    
+                    for dim=1:4
+                        thisfib(dim,:)=double(interp1q([1:size(doubleconnectingfibs{side}{la,fib},2)]',doubleconnectingfibs{side}{la,fib}(dim,:)',[1:0.1:size(doubleconnectingfibs{side}{la,fib},2)]')');
+                    end
+                    
+                    PL.fib_plots.dcfibs(la,side,fib)=surface([thisfib(1,:);thisfib(1,:)],...
+                        [thisfib(2,:);thisfib(2,:)],...
+                        [thisfib(3,:);thisfib(3,:)],...
+                        [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
+                    
+                    % store for webexport
+                    jetlist=jet;
+                    
+                    try
+                        PL.bbfibfv(cnt).vertices=thisfib(1:3,:)';
+                        PL.bbfibfv(cnt).faces=[1:size(thisfib,2)-1;2:size(thisfib,2)]';
+                        PL.bbfibfv(cnt).normals=zeros(size(PL.bbfibfv(cnt).vertices,1),3);
+                        PL.bbfibfv(cnt).colors=[squeeze(ind2rgb(round(thisfib(4,:)),jetlist)),repmat(0.7,size(thisfib,2),1)];
+                        
+                        
+                        cnt=cnt+1;
+                    end
+                    
+                    
+                    clear thisfib
+                catch
+                    
+                end
+            end
+            dispercent(100,'end');
+            
+            
+            set(PL.fib_plots.dcfibs(la,side,logical(PL.fib_plots.dcfibs(la,side,:))),'EdgeAlpha',0.05);
+            
+            
             try
-            dispercent(fib/fibmax);
-            doubleconnectingfibs{la,fib}=doubleconnectingfibs{la,fib}';
-
-            if ~isfield(stimparams,'group')
-                
-                doubleconnectingfibs{la,fib}(4,:)=detcolor(doubleconnectingfibs{la,fib}); % add coloring information to the 4th column.
-
-            else % if more than one group is analyzed, coloring info will be off the group color.
-                RGB=zeros(1,1,3);
-                RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
-                RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
-                RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
-                
-                doubleconnectingfibs{la,fib}(4,:)=rgb2ind(RGB,jet);
-            end
-
-            for dim=1:4
-                thisfib(dim,:)=double(interp1q([1:size(doubleconnectingfibs{la,fib},2)]',doubleconnectingfibs{la,fib}(dim,:)',[1:0.1:size(doubleconnectingfibs{la,fib},2)]')');
+                dcfiberbutton(la,side)=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_both',options),'TooltipString','Fibers (Electrode and Labeling Atlas)','OnCallback',{@objvisible,PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,1},'OffCallback',{@objvisible,PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,0},'State',getstate(dcfibson(la,side)));
+            
             end
             
-            PL.fib_plots.dcfibs(la,fib)=surface([thisfib(1,:);thisfib(1,:)],...
-                [thisfib(2,:);thisfib(2,:)],...
-                [thisfib(3,:);thisfib(3,:)],...
-                [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
-            
-            % store for webexport
-            jetlist=jet;
-            % old code to generate JSON output (not as brainbrowser expects
-            
-            %             fv=surf2patch(PL.fib_plots.dcfibs(la,fib),'triangles');
-            %
-            %             PL.dcfibfv(cnt).normals=zeros(size(fv.vertices,1),3);
-            %
-            %             PL.dcfibfv(cnt).vertices=fv.vertices;
-            %             PL.dcfibfv(cnt).faces=fv.faces;
-            %
-            %
-            %             PL.dcfibfv(cnt).colors=[squeeze(ind2rgb(round(fv.facevertexcdata),jetlist)),repmat(0.7,size(PL.dcfibfv(fib).vertices,1),1)];
-            %
-            
-            % new code as brainbrowser expects it:
             try
-            PL.bbfibfv(cnt).vertices=thisfib(1:3,:)';
-            PL.bbfibfv(cnt).faces=[1:size(thisfib,2)-1;2:size(thisfib,2)]';
-            PL.bbfibfv(cnt).normals=zeros(size(PL.bbfibfv(cnt).vertices,1),3);
-            PL.bbfibfv(cnt).colors=[squeeze(ind2rgb(round(thisfib(4,:)),jetlist)),repmat(0.7,size(thisfib,2),1)];
-            
-            
-            cnt=cnt+1;
-            end
-                        
-                        
-                        
-%                         PL.dcfibfv(cnt)=surf2patch(PL.fib_plots.dcfibs(la,fib));
-%                         PL.dcfibfv(cnt).normals=get(PL.fib_plots.dcfibs(cnt),'Vertexnormals');
-%                         PL.dcfibfv(cnt).normals=squeeze(PL.dcfibfv(cnt).normals(1,:,:));
-%                         cnt=cnt+1;
-%                         
-                        
-%                         PL.dcfibfv(fib).vertices=thisfib(1:3,:)';
-%                         PL.dcfibfv(fib).faces=[1:size(thisfib,2)-2;3:size(thisfib,2);2:size(thisfib,2)-1]';
-%                         PL.dcfibfv(fib).normals=get(PL.fib_plots.dcfibs(fib),'Vertexnormals');
-%                         PL.dcfibfv(fib).normals=squeeze(PL.dcfibfv(fib).normals(1,:,:));
-%                         jetlist=jet;
-%                         PL.dcfibfv(fib).colors=squeeze(ind2rgb(round(thisfib(4,:)),jetlist));
-            
-            
-            clear thisfib
-            catch
+                regionbutton(la,side)=uitoggletool(PL.ht,'CData',ea_get_icn('connectivities',options),'TooltipString','Connected Regions','OnCallback',{@objvisible,PL.regionsurfs(la,side,:),resultfig,'labelson',la,side,1},'OffCallback',{@objvisible,PL.regionsurfs(la,side,:),resultfig,'labelson',la,side,0},'State',getstate(labelson(la,side)));
+                captionbutton(la,side)=uitoggletool(PL.ht,'CData',ea_get_icn('labels',options),'TooltipString','Captions of Connected Regions','OnCallback',{@objvisible,PL.conlabels(la,side,:),resultfig,'captionson',la,side,1},'OffCallback',{@objvisible,PL.conlabels(la,side,:),resultfig,'captionson',la,side,0},'State',getstate(captionson(la,side)));
                 
-        end         
-        end
-        dispercent(100,'end');
-
-        
-        set(PL.fib_plots.dcfibs(la,:),'EdgeAlpha',0.05);
-
-        
-        try
-            dcfiberbutton(la)=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_both',options),'TooltipString','Fibers (Electrode and Labeling Atlas)','OnCallback',{@objvisible,PL.fib_plots.dcfibs(la,:),resultfig,'dcfibson'},'OffCallback',{@objinvisible,PL.fib_plots.dcfibs(la,:),resultfig,'dcfibson'},'State',getstate(dcfibson(la)));
+            end
         end
     end
     
-    try
-        for la=1:length(stimparams(1).labelatlas)
-            
-            regionbutton(la)=uitoggletool(PL.ht,'CData',ea_get_icn('connectivities',options),'TooltipString','Connected Regions','OnCallback',{@objvisible,PL.regionsurfs(la,:),resultfig,'labelson'},'OffCallback',{@objinvisible,PL.regionsurfs(la,:),resultfig,'labelson'},'State',getstate(labelson(la)));
-            captionbutton(la)=uitoggletool(PL.ht,'CData',ea_get_icn('labels',options),'TooltipString','Captions of Connected Regions','OnCallback',{@objvisible,PL.conlabels(la,:),resultfig,'captionson'},'OffCallback',{@objinvisible,PL.conlabels(la,:),resultfig,'captionson'},'State',getstate(captionson(la)));
-        end
-    end
+  
     
 end
 % correct togglestates
@@ -683,61 +630,60 @@ end
 
 if options.writeoutstats
     load([options.root,options.patientname,filesep,'ea_stats']);
-
-try
-    ea_stats.vatanalyses(end+1).vatsused=upriorvatlength:length(ea_stats.vat);
-catch
-    ea_stats.vatanalyses(1).vatsused=upriorvatlength:length(ea_stats.vat);
+    
+    try
+        ea_stats.vatanalyses(end+1).vatsused=upriorvatlength:length(ea_stats.vat);
+    catch
+        ea_stats.vatanalyses(1).vatsused=upriorvatlength:length(ea_stats.vat);
+    end
+    if stimparams(1).showfibers
+        try
+            ea_stats.vatanalyses(end).fibersused=length(ea_stats.ft);
+        end
+    end
+    save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
+    
+    
 end
-        if stimparams(1).showfibers
+
+for side=options.sides
+    if ~vaton(side)
+        try
+            objvisible([],[],PL.vatsurs(side,:),resultfig,'vaton',[],side,0)
+        end
+    end
+    
+    if ~fibson(side)
+        try
+            objvisible([],[],PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,0)
+        end
+    end
+    
+    
+    
+    for la=1:length(stimparams(1).labelatlas)
+        
+        if ~dcfibson(la,side)
             try
-                    ea_stats.vatanalyses(end).fibersused=length(ea_stats.ft);
+                objvisible([],[],PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,0)
             end
         end
-    save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
-
-    
-end
-
-if ~vaton
-    try
-        objinvisible([],[],PL.vatsurs,resultfig,'vaton')
-    end
-end
-
-if ~fibson
-    try
-        objinvisible([],[],PL.fib_plots.fibs,resultfig,'fibson')
-    end
-end
-
-if ~dcfibson
-    try
-        objinvisible([],[],PL.fib_plots.dcfibs,resultfig,'dcfibson')
-    end
-end
-
-if ~addfibson
-    try
-        objinvisible([],[],PL.fib_plots.addfibs,resultfig,'addfibson')
-    end
-end
-for la=1:length(stimparams(1).labelatlas)
-    
-    if ~labelson(la)
-        try
-            objinvisible([],[],PL.regionsurfs(la,:),resultfig,'labelson')
-        end
-    end
-    
-    if ~captionson(la)
-        try
-            objinvisible([],[],PL.conlabels(la,:),resultfig,'captionson')
+        
+        if ~labelson(la,side)
+            try
+                objvisible([],[],PL.regionsurfs(la,side,:),resultfig,'labelson',la,side,0)
+            end
         end
         
+        if ~captionson(la,side)
+            try
+                objvisible([],[],PL.conlabels(la,side,:),resultfig,'captionson',la,side,0)
+            end
+            
+        end
     end
+    
 end
-
 
 
 setappdata(resultfig,'PL',PL);
@@ -753,14 +699,23 @@ rgbim=zeros(1,size(rgb,2),3);
 rgbim(1,:,:)=rgb';
 indcol=double(rgb2ind(rgbim,jet));
 
-function objvisible(hobj,ev,atls,resultfig,what)
-set(atls, 'Visible', 'on');
-setappdata(resultfig,what,1);
+function objvisible(hobj,ev,atls,resultfig,what,la,side,onoff)
+% set visibility
+set(atls, 'Visible', getstate(onoff));
+
+% log visibility
+tvalue=getappdata(resultfig,what);
+
+
+if isempty(la)
+    tvalue(side)=onoff;
+else
+    tvalue(la,side)=onoff;
+end
+
+setappdata(resultfig,what,tvalue);
 %disp([atls,'visible clicked']);
 
-function objinvisible(hobj,ev,atls,resultfig,what)
-set(atls, 'Visible', 'off');
-setappdata(resultfig,what,0);
 
 
 

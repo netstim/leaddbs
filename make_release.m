@@ -13,13 +13,14 @@ if ~strcmp(outdir(end),filesep)
     outdir=[outdir,filesep];
 end
 
-rmdir([outdir,'lead_dbs'],'s');
+try rmdir([outdir,'lead_dbs'],'s'); end
 mkdir([outdir,'lead_dbs']);
 copyfile([fileparts(which('lead'))],[outdir,'lead_dbs']);
 
 % reset prefs:
 movefile([outdir,'lead_dbs',filesep,'ea_prefs_public.m'],[outdir,'lead_dbs',filesep,'ea_prefs.m']);
 delete([outdir,'lead_dbs',filesep,'ea_prefs.mat']);
+delete([outdir,'lead_dbs',filesep,'ea_ui.mat']);
 
 % delete git:
 %rmdir([outdir,'lead_dbs',filesep,'.git'],'s');

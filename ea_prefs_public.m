@@ -37,6 +37,10 @@ prefs.gctnii=['glfusion.nii'];
 
 prefs.normmatrix=['lmat.txt'];
 
+%% 2D-Export
+prefs.d2.useprepost='pre'; % can be 'post' or 'pre' to set the backdrop.
+
+
 %% DICOM-Handling:
 
 prefs.dicom.dicomfiles=2; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).

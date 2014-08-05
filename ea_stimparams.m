@@ -679,31 +679,29 @@ set(resultfig,'Name',figtitle);
 
 function deletePL(PL)
 for p=1:length(PL)
-if isfield(PL(p),'vatsurfs')
-    delete(PL(p).vatsurfs);
-end
-if isfield(PL(p),'fib_plots')
-    if isfield(PL(p).fib_plots,'fibs')
-        delete(PL(p).fib_plots.fibs);
+    
+    if isfield(PL(p),'vatsurfs')
+        delete(PL(p).vatsurfs(logical(PL(p).vatsurfs)));
     end
-    if isfield(PL(p).fib_plots,'addfibs')
-        delete(PL(p).fib_plots.addfibs);
+    if isfield(PL(p),'fib_plots')
+        if isfield(PL(p).fib_plots,'fibs')
+            delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs)));
+        end
         
+        if isfield(PL(p).fib_plots,'dcfibs')
+            delete(PL(p).fib_plots.dcfibs(logical(PL(p).fib_plots.dcfibs)));
+            
+        end
     end
-    if isfield(PL(p).fib_plots,'dcfibs')
-        delete(PL(p).fib_plots.dcfibs);
-        
+    if isfield(PL(p),'regionsurfs')
+        delete(PL(p).regionsurfs(logical(PL(p).regionsurfs)));
     end
-end
-if isfield(PL(p),'regionsurfs')
-    delete(PL(p).regionsurfs(:));
-end
-if isfield(PL(p),'conlabels')
-    delete(PL(p).conlabels(:));
-end
-if isfield(PL(p),'ht')
-    delete(PL(p).ht);
-end
+    if isfield(PL(p),'conlabels')
+        delete(PL(p).conlabels(logical(PL(p).conlabels)));
+    end
+    if isfield(PL(p),'ht')
+        delete(PL(p).ht);
+    end
 end
 
 
