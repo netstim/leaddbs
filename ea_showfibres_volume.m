@@ -541,7 +541,7 @@ if stimparams(1).showfibers
             end
             dispercent(100,'end');
             
-            set(PL.fib_plots.fibs(side,:),'EdgeAlpha',0.05);
+            set(PL.fib_plots.fibs(side,logical(PL.fib_plots.fibs(side,:))),'EdgeAlpha',0.05);
             
             
             
