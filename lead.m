@@ -481,29 +481,6 @@ if length(uipatdir)>1
     set(handles.patdir_choosebox,'String',['Multiple (',num2str(length(uipatdir)),')']);
 else
 set(handles.patdir_choosebox,'String',uipatdir{1});
-
-% check for MR-files
-[~,patientname]=fileparts(uipatdir{1});
-prefs=ea_prefs(patientname);
-if exist([uipatdir{1},filesep,prefs.tranii],'file') && exist([uipatdir{1},filesep,prefs.cornii],'file')
-    set(handles.statusone,'String','Normalized MR-volumes found.');
-elseif ~exist([uipatdir{1},filesep,prefs.tranii],'file') || ~exist([uipatdir{1},filesep,prefs.cornii],'file')
-    set(handles.statusone,'String','One or more MR-volumes missing.');
-    if exist([uipatdir{1},filesep,prefs.tranii_unnormalized],'file') && exist([uipatdir{1},filesep,prefs.cornii_unnormalized],'file')
-        set(handles.statusone,'String','Unnormalized MR-volumes found. Set normalize option.');
-    end
-end
-
-% check for reconstructions
-if exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','Fiducials and Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','Fiducials information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','No reconstruction available in folder. Set "Reconstruct" to start.');
-end
 end
 
 % store patient directories in figure
@@ -1051,8 +1028,86 @@ switch chooseboxname
         end
 end
 
+updatestatus(handles);
+
 options=handles2options(handles);
 try save([outdir,'ea_ui'],'-struct','options'); end
+
+
+
+function updatestatus(handles)
+
+uipatdir=getappdata(gcf,'uipatdir');
+
+% check for MR-files
+[~,patientname]=fileparts(uipatdir{1});
+prefs=ea_prefs(patientname);
+
+set(handles.statusone,'String','One or more MR-/CT-volumes missing.');
+modality=zeros(2,1);
+% check for unnormalized images first:
+% CT
+if exist([uipatdir{1},filesep,prefs.rawctnii_unnormalized],'file')
+    set(handles.statusone,'String','Raw CT file found. Please coregister CT to preoperative MR first.');
+    modality(2)=1;
+end
+if exist([uipatdir{1},filesep,prefs.ctnii_coregistered],'file')
+    set(handles.statusone,'String','Coregistered CT file found. Set normalize option.');
+    modality(2)=1;
+end
+% MR
+if exist([uipatdir{1},filesep,prefs.tranii_unnormalized],'file') && exist([uipatdir{1},filesep,prefs.cornii_unnormalized],'file')
+    set(handles.statusone,'String','Unnormalized MR-volumes found. Set normalize option.');
+    modality(1)=1;
+end
+% MR & CT
+if exist([uipatdir{1},filesep,prefs.tranii_unnormalized],'file') && exist([uipatdir{1},filesep,prefs.cornii_unnormalized],'file') && exist([uipatdir{1},filesep,prefs.rawctnii_unnormalized],'file')
+    set(handles.statusone,'String','Unnormalized MR-volumes and raw CT volume found. Set normalize option or coregister CT.');
+    modality(1:2)=1;
+end
+if exist([uipatdir{1},filesep,prefs.tranii_unnormalized],'file') && exist([uipatdir{1},filesep,prefs.cornii_unnormalized],'file') && exist([uipatdir{1},filesep,prefs.ctnii_coregistered],'file')
+    set(handles.statusone,'String','Unnormalized MR-volumes and coregistered CT file found. Set normalize option.');
+    modality(1:2)=1;
+end
+
+
+% Now check for normalized images:
+if exist([uipatdir{1},filesep,prefs.ctnii],'file')
+    set(handles.statusone,'String','Normalized CT-volumes found.');
+    modality(2)=1;
+end
+if exist([uipatdir{1},filesep,prefs.tranii],'file') && exist([uipatdir{1},filesep,prefs.cornii],'file')
+    set(handles.statusone,'String','Normalized MR-volumes found.');
+    modality(1)=1;
+end
+if exist([uipatdir{1},filesep,prefs.tranii],'file') && exist([uipatdir{1},filesep,prefs.cornii],'file') && exist([uipatdir{1},filesep,prefs.ctnii],'file')
+    set(handles.statusone,'String','Normalized MR- and CT-volumes found.');
+    modality(1:2)=1;
+end
+
+
+% check if MRCT popup is set correctly
+if any(modality)
+   
+   if ~modality(get(handles.MRCT,'Value'))
+       set(handles.MRCT,'ForegroundColor',[0.8,0.5,0.5]);
+   else
+       set(handles.MRCT,'ForegroundColor',[0.5,0.8,0.5]);
+   end
+    
+end
+
+
+% check for reconstructions
+if exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
+    set(handles.statustwo,'String','Fiducials and Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
+elseif exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
+    set(handles.statustwo,'String','Fiducials information present in folder. Will be overwritten if "Reconstruct" is set.');
+elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
+    set(handles.statustwo,'String','Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
+elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
+    set(handles.statustwo,'String','No reconstruction available in folder. Set "Reconstruct" to start.');
+end
 
 
 function getui(handles)

@@ -64,9 +64,11 @@ clear expand
 load([options.root,options.patientname,filesep,'ea_stats']);
 try
     upriorvatlength=length(ea_stats.vat)+1;
-    
+    upriorftlength=length(ea_stats.ft)+1;
+
 catch
     upriorvatlength=1;
+    upriorftlength=1;
 end
 
 
@@ -555,10 +557,12 @@ if stimparams(1).showfibers
     try cnt=length(PL.bbfibfv)+1; end
     for la=1:size(doubleconnectingfibs{side},1)
         for side=options.sides
+            try
             fibmax=length(doubleconnectingfibs{side}(la,:));
+            
             dispercent(0,'Plotting fibers that connect to both the VAT and a region within the labeling atlas');
             for fib=1:fibmax
-                try
+                
                     dispercent(fib/fibmax);
                     doubleconnectingfibs{side}{la,fib}=doubleconnectingfibs{side}{la,fib}';
                     
@@ -599,15 +603,15 @@ if stimparams(1).showfibers
                     
                     
                     clear thisfib
-                catch
+                
                     
                 end
             end
             dispercent(100,'end');
             
-            
+            try
             set(PL.fib_plots.dcfibs(la,side,logical(PL.fib_plots.dcfibs(la,side,:))),'EdgeAlpha',0.05);
-            
+            end
             
             try
                 dcfiberbutton(la,side)=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_both',options),'TooltipString','Fibers (Electrode and Labeling Atlas)','OnCallback',{@objvisible,PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,1},'OffCallback',{@objvisible,PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,0},'State',getstate(dcfibson(la,side)));
@@ -638,7 +642,10 @@ if options.writeoutstats
     end
     if stimparams(1).showfibers
         try
-            ea_stats.vatanalyses(end).fibersused=length(ea_stats.ft);
+            ea_stats.vatanalyses(end).fibersused=upriorftlength:length(ea_stats.ft);
+        catch
+            ea_stats.vatanalyses(1).vatsused=upriorvatlength:length(ea_stats.vat);
+
         end
     end
     save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
