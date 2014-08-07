@@ -39,7 +39,7 @@ The main view displays the **different planes** that are selected by clicking on
 
 #### Adjusting the Electrode Height
 
-If no contact is selected (scroll down to learn more on how to select a specific contact), the **arrow keys** will move the electrodes up or down (in the saggital plane) as a whole within the artifact template in the following way:
+If no contact is selected (scroll down to learn more on how to select a specific contact), the **arrow keys** will move the electrodes up or down (in the axial plane) as a whole within the artifact template in the following way:
 - `Up` and `Down` arrow keys adjust the **right electrode**
 - `Right` and `Left` arrow keys adjust the **left electrode**
 
@@ -59,7 +59,7 @@ For easier adjustment, specific contacts can be selected and their changes check
 - `4`: selects electrode 4 (left electrode)
 - `7`: selects electrode 7 (left electrode)
 
-When a specific contact is selected, the **arrow** keys will adjust the position within the _saggital_ and _coronal_ planes. Changes can be tracked in the main view and the transversal views.
+When a specific contact is selected, the **arrow** keys will adjust the position within the _axial_ and _coronal_ planes. Changes can be tracked in the main view and the transversal views.
 
 #### Saving the Changes
 

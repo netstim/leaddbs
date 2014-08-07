@@ -1150,7 +1150,12 @@ for pt=1:length(M.patient.list)
     options.d3.showisovolume=M.ui.showisovolumecheck;
         options.d3.exportisovolume=M.ui.exportisovolumecheck;
 
-    
+        options.expstatvat.do=M.ui.statvat;
+        options.expstatvat.vars=M.clinical.vars(M.ui.clinicallist);
+        options.expstatvat.labels=M.clinical.labels(M.ui.clinicallist);
+        options.expstatvat.pt=pt;
+
+        options.expstatvat.dir=M.ui.groupdir;
     
     if ~exist(options.root,'file') % data is not there. Process in tmp-dir.
         processlocal=1;
@@ -1160,12 +1165,7 @@ for pt=1:length(M.patient.list)
         mkdir([M.ui.groupdir,'tmp']);
         options.root=M.ui.groupdir;
         options.patientname='tmp';
-        options.expstatvat.do=M.ui.statvat;
-        options.expstatvat.vars=M.clinical.vars(M.ui.clinicallist);
-        options.expstatvat.labels=M.clinical.labels(M.ui.clinicallist);
-        options.expstatvat.pt=pt;
 
-        options.expstatvat.dir=M.ui.groupdir;
         ea_stats=M.stats(pt).ea_stats;
         coords_mm=M.elstruct.coords_mm;
         trajectory=M.elstruct.trajectory;
