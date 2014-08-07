@@ -24,7 +24,7 @@ if ischar(options) % return name of method.
 end
 
 warning('off');
-usecombined=0; % if set, eauto will try to fuse coronar and transversal images before normalizing them.
+usecombined=0; % if set, LEAD will try to fuse coronar and transversal images before normalizing them.
 usesegmentnew=0;
 costfuns={'nmi','mi','ecc','ncc'};
 
@@ -107,7 +107,7 @@ try
     disp('*** Segmentation of preoperative version worked.');
 catch
     disp('*** Segmentation of transversal version failed.');
-    error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+    error('This normalization cannot be performed automatically with LEAD. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 

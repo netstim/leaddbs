@@ -1,4 +1,7 @@
-function [trajectory,trajvector,diams]=ea_reconstruct_trajectory(priortrajectory,tra_nii,side,refine,options)
+function [trajectory,trajvector]=ea_reconstruct_trajectory(priortrajectory,tra_nii,side,refine,options)
+% __________________________________________________________________________________
+% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
 
 if options.modality==2 % CT support
    tra_nii.img=tra_nii.img*-1; 
@@ -79,18 +82,14 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
     
     
     
-    try
-        stats=regionprops(slicebw,'Centroid');
-    catch
-        keyboard
-    end
+        stats=ea_centroid(slicebw);
+
     try
         isempty(stats.Centroid); % this is only to check if stats.Centroid is empty.
         centerline(1,:)=[stats.Centroid,size(tra_nii.img,3)];
     catch
         
         disp('Threshold too high?');
-        %pause;
     end
     
     
@@ -183,7 +182,7 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
         % this function will return one midpoint from the slice. If there are
         % more objects, it will return the midpoint of the one closest to the
         % estimated one.
-        [numidpoint,diams(imgsliceno),greymaskslicebw,options]=ea_findonemidpoint(slicebw,estpoint(1:2),mask,options);
+        [numidpoint,greymaskslicebw,options]=ea_findonemidpoint(slicebw,estpoint(1:2),mask,options);
         if isnan(numidpoint)
             ea_showdis(['Midpoint is nan. Stopping.'],options.verbose);
             
@@ -208,7 +207,6 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
             
         end
         
-        ea_showdis(['Diameter of this point is ',num2str(diams(imgsliceno)),'.'],options.verbose);
     else
         ea_showdis('Estimated point not yet defined. Using second empirical point.',options.verbose);
         numidpoint=ea_findonemidpoint(slicebw,centerline(1,1:2),mask,options);

@@ -8,6 +8,7 @@ function [elrender]=ea_showelectrode(resultfig,elstruct,pt,options)
 coords_mm=elstruct.coords_mm;
 trajectory=elstruct.trajectory;
 
+
 if ~isfield(elstruct,'elmodel') % usually, elspec is defined by the GUI. In case of group analyses, for each patient, a different electrode model can be selected for rendering.
     elspec=options.elspec;
 else % if elspec is defined for each electrode, overwrite options-struct settings here.
@@ -27,6 +28,7 @@ for side=options.sides
     
     if options.d3.elrendering<3
     if options.d3.prolong_electrode
+        
         startpoint=trajectory{side}(1,:)-(options.d3.prolong_electrode*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
 
         else

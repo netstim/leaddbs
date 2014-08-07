@@ -1,4 +1,14 @@
 function ea_dicom_import(options)
+% This function converts DICOM files in your in directory and outputs them
+% to the out directory as specified by lead. This function is pretty much
+% specialized to the DICOM format as used @ Charite University Medicine and
+% might not work as expected in your clinical setting. You can
+% alternatively import DICOM files using software like SPM or DCM2NII.
+% __________________________________________________________________________________
+% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
+
+
 
 global dcfilename
 global tmpoutdir
@@ -6,10 +16,20 @@ indir=options.prefs.lp.dicom.infolder;
 outdir=options.prefs.lp.dicom.outfolder;
 
 f=dir(indir);
+% zipfile support..
+for scan=1:length(f)
+   [p,fi,e]=fileparts(f(scan).name);
+   if strcmp(e,'.zip')
+       unzip([indir,f(scan).name],indir);
+       delete([indir,f(scan).name]);
+   end
+end
 
-for scan=4:length(f)
-    
-    if f(scan).isdir
+f=dir(indir);
+
+
+for scan=1:length(f)
+    if f(scan).isdir && ~strcmp(f(scan).name,'.') && ~strcmp(f(scan).name,'..')
         
         namecell=textscan(f(scan).name,'%s','Delimiter',',');
         

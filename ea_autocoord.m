@@ -1,5 +1,5 @@
 function ea_autocoord(options)
-% This function is the main function of eAuto-DBS. It will generate a 8x3
+% This function is the main function of LEAD-DBS. It will generate a 8x3
 % vector of coordinates. Rows 1-4 will be the right electrodes, rows 5-8
 % the left ones. trajectory{1} will be the right trajectory, trajectory{2} the
 % left one.
@@ -195,7 +195,7 @@ if options.doreconstruction
     
     
     % save reconstruction results
-    ea_write_fiducials(coords_mm,fullfile(options.root,patientname,'ea_coords.fcsv'),options);
+try    ea_write_fiducials(coords_mm,fullfile(options.root,patientname,'ea_coords.fcsv'),options); end
     save([options.root,patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm');
     
 end

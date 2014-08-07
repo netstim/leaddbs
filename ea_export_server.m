@@ -31,6 +31,7 @@ if ~isfield(options.prefs.ls,'dir')
 end
 
 if ~exist(options.prefs.ls.dir,'file');
+keyboard
     mkdir(options.prefs.ls.dir);
 
 end

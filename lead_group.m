@@ -309,9 +309,17 @@ ea_corrplot([corrcl,vicorr.left],'Volume Intersections, left hemisphere',vc_labe
 ea_corrplot([corrcl,vicorr.nleft],'Volume Intersections, normalized, left hemisphere',vc_labels);
 
 end
-if ~isempty(fccorr)
-ea_corrplot([corrcl,fccorr],'Fibercounts',fc_labels);
+
+
+
+
+
+if ~isempty(fccorr.fccorr)
+ea_corrplot([corrcl,fccorr.fccorr],'Fibercounts',fc_labels);
+
+ea_corrplot([corrcl,fccorr.nfccorr],'Normalized Fibercounts',fc_labels);
 end
+
 
 try
     X=[corrcl,vicorr.both,vicorr.right,vicorr.left,fccorr];
@@ -824,7 +832,7 @@ function ttestbutton_Callback(hObject, eventdata, handles)
 
 
 % perform t-tests:
-keyboard
+
 if ~isempty(vicorr.both)
 ea_ttest(vicorr.both(repmat(logical(corrcl),1,size(vicorr.both,2))),vicorr.both(~repmat(logical(corrcl),1,size(vicorr.both,2))),'Volume Intersections, both hemispheres',vc_labels);
 end
@@ -835,15 +843,30 @@ if ~isempty(vicorr.left)
 ea_ttest(vicorr.left(repmat(logical(corrcl),1,size(vicorr.left,2))),vicorr.left(~repmat(logical(corrcl),1,size(vicorr.left,2))),'Volume Intersections, left hemisphere',vc_labels);
 end
 
-if ~isempty(fccorr)
-ea_ttest(fccorr(repmat(logical(corrcl),1,size(fccorr,2))),fccorr(~repmat(logical(corrcl),1,size(fccorr,2))),'Fibercounts',vc_labels);
+
+if ~isempty(vicorr.nboth)
+ea_ttest(vicorr.nboth(repmat(logical(corrcl),1,size(vicorr.both,2))),vicorr.both(~repmat(logical(corrcl),1,size(vicorr.both,2))),'Normalized Volume Intersections, both hemispheres',vc_labels);
+end
+if ~isempty(vicorr.nright)
+ea_ttest(vicorr.nright(repmat(logical(corrcl),1,size(vicorr.right,2))),vicorr.right(~repmat(logical(corrcl),1,size(vicorr.right,2))),'Normalized Volume Intersections, right hemisphere',vc_labels);
+end
+if ~isempty(vicorr.nleft)
+ea_ttest(vicorr.nleft(repmat(logical(corrcl),1,size(vicorr.left,2))),vicorr.left(~repmat(logical(corrcl),1,size(vicorr.left,2))),'Normalized Volume Intersections, left hemisphere',vc_labels);
+end
+
+if ~isempty(fccorr.fccorr)
+ea_ttest(fccorr.fccorr(repmat(logical(corrcl),1,size(fccorr,2))),fccorr(~repmat(logical(corrcl),1,size(fccorr,2))),'Fibercounts',vc_labels);
+end
+
+if ~isempty(fccorr.nfccorr)
+ea_ttest(fccorr.nfccorr(repmat(logical(corrcl),1,size(fccorr,2))),fccorr(~repmat(logical(corrcl),1,size(fccorr,2))),'Normalized Fibercounts',vc_labels);
 end
 
 
 
 
 
-function [corrcl,vicorr,fccorr,vc_labels,fc_labels]=preparedataanalysis(handles)
+function [corrcl,vicorr,fc,vc_labels,fc_labels]=preparedataanalysis(handles)
 
 M=getappdata(gcf,'M');
 
@@ -932,11 +955,15 @@ for fc=get(handles.fclist,'Value') % get volume interactions for each patient fr
             
                 try
                     pval=fccorr(ptcnt,fccnt); % prior val ? since there might be more than one VAT on one side
+                    npval=nfccorr(ptcnt,fccnt); % prior val ? since there might be more than one VAT on one side
+
                 catch
                     pval=0;
+                    npval=0;
                 end
+                
                 fccorr(ptcnt,fccnt)=pval+M.stats(pt).ea_stats.ft(fibersused).fibercounts{1}(fc);
-            
+                nfccorr(ptcnt,fccnt)=npval+M.stats(pt).ea_stats.ft(fibersused).nfibercounts{1}(fc);
         
         ptcnt=ptcnt+1;
         
@@ -956,6 +983,9 @@ vicorr.right=vicorr_right;
 vicorr.nboth=nvicorr_both;
 vicorr.nleft=nvicorr_left;
 vicorr.nright=nvicorr_right;
+
+fc.fccorr=fccorr;
+fc.nfccorr=nfccorr;
 
 % clinical vector:
 corrcl=M.clinical.vars{get(handles.clinicallist,'Value')};

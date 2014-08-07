@@ -1,17 +1,22 @@
-function [numidpoint,diam,greyobj,options]=ea_findonemidpoint(slicebw,estpoint,mask,options)
+function [numidpoint,greyobj,options]=ea_findonemidpoint(slicebw,estpoint,mask,options)
+% __________________________________________________________________________________
+% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
 
-stats=regionprops(slicebw,'Centroid','EquivDiameter');
+try
+stats=ea_centroid(slicebw);
+catch
+    keyboard
+end
 
-CC=bwconncomp(slicebw);
+CC=ea_conncomp(slicebw);
 
 
 if CC.NumObjects==0
     numidpoint=[nan,nan];
-    diam=nan;
 else
 numidpoint=stats.Centroid;
 distance=pdist([estpoint;numidpoint]);
-diam=stats.EquivDiameter;
 end
 
 
@@ -24,7 +29,7 @@ if CC.NumObjects>1
         slicebwobj(:)=0;
         slicebwobj(CC.PixelIdxList{obj})=1; % isolate object
         
-        stats=regionprops(slicebwobj,'Centroid','EquivDiameter');
+        stats=ea_centroid(slicebwobj);
         objdistance=pdist([estpoint;stats.Centroid]);
         
         ea_showdis(['Distance to object ',num2str(obj),': ',num2str(objdistance),'.'],options.verbose);
@@ -37,7 +42,6 @@ if CC.NumObjects>1
 
             numidpoint=stats.Centroid;
             distance=objdistance;
-            diam=stats.EquivDiameter;
         end
         
         

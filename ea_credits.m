@@ -13,6 +13,7 @@ function ea_credits
 % Myaa.m - (c) Anders Brun
 % rangesearch.m - (c) Yi Cao
 % map_coords.m - (c) Ged Ridgway
+% conncomp.m - (c) Karl Skretting
 
 % Icons in the GUI are generated using the fontawesome typography
 % (http://fontawesome.io/)
