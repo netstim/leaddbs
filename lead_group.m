@@ -288,49 +288,40 @@ function corrbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-[corrcl,vicorr,fccorr,vc_labels,fc_labels]=preparedataanalysis(handles);
+stats=preparedataanalysis(handles);
 
-stats.corrcl=corrcl;
-stats.vicorr=vicorr;
-stats.
-assignin('base','corrcl',corrcl,'vicorr',vicorr,'fccorr',fccorr,'vc_labels',vc_labels,'fc_labels',fc_labels);
+
+assignin('base','stats',stats);
 
 
 % perform correlations:
 
 
-if ~isempty(vicorr.both)
-ea_corrplot([corrcl,vicorr.both],'Volume Intersections, both hemispheres',vc_labels);
-ea_corrplot([corrcl,vicorr.nboth],'Volume Intersections, normalized, both hemispheres',vc_labels);
-
+if ~isempty(stats.vicorr.both)
+    ea_corrplot([stats.corrcl,stats.vicorr.both],'Volume Intersections, both hemispheres',stats.vc_labels);
+    ea_corrplot([stats.corrcl,stats.vicorr.nboth],'Volume Intersections, normalized, both hemispheres',stats.vc_labels);
 end
-if ~isempty(vicorr.right)
-ea_corrplot([corrcl,vicorr.right],'Volume Intersections, right hemisphere',vc_labels);
-ea_corrplot([corrcl,vicorr.nright],'Volume Intersections, normalized, right hemisphere',vc_labels);
-
+if ~isempty(stats.vicorr.right)
+    ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
+    ea_corrplot([stats.corrcl,stats.vicorr.nright],'Volume Intersections, normalized, right hemisphere',stats.vc_labels);
 end
-if ~isempty(vicorr.left)
-ea_corrplot([corrcl,vicorr.left],'Volume Intersections, left hemisphere',vc_labels);
-ea_corrplot([corrcl,vicorr.nleft],'Volume Intersections, normalized, left hemisphere',vc_labels);
-
+if ~isempty(stats.vicorr.left)
+    ea_corrplot([stats.corrcl,stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
+    ea_corrplot([stats.corrcl,stats.vicorr.nleft],'Volume Intersections, normalized, left hemisphere',stats.vc_labels);
 end
 
 
 
 
 
-if ~isempty(fccorr.fccorr)
-ea_corrplot([corrcl,fccorr.fccorr],'Fibercounts',fc_labels);
+if ~isempty(stats.fc.fccorr)
+ea_corrplot([stats.corrcl,stats.fc.fccorr],'Fibercounts',stats.fc_labels);
 
-ea_corrplot([corrcl,fccorr.nfccorr],'Normalized Fibercounts',fc_labels);
+ea_corrplot([stats.corrcl,stats.fc.nfccorr],'Normalized Fibercounts',stats.fc_labels);
 end
 
 
-try
-    X=[corrcl,vicorr.both,vicorr.right,vicorr.left,fccorr];
-    assignin('base','X',X);
-end
-    
+
 
 % --- Executes on selection change in clinicallist.
 function clinicallist_Callback(hObject, eventdata, handles)
@@ -860,12 +851,12 @@ if ~isempty(stats.vicorr.nleft)
 ea_ttest(stats.vicorr.nleft(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),stats.vicorr.left(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),'Normalized Volume Intersections, left hemisphere',stats.vc_labels);
 end
 
-if ~isempty(stats.fccorr.fccorr)
-ea_ttest(stats.fccorr.fccorr(repmat(logical(stats.corrcl),1,size(stats.fccorr,2))),stats.fccorr(~repmat(logical(stats.corrcl),1,size(stats.fccorr,2))),'Fibercounts',stats.vc_labels);
+if ~isempty(stats.fc.fccorr)
+ea_ttest(stats.fc.fccorr(repmat(logical(stats.corrcl),1,size(stats.fc.fccorr,2))),stats.fc.fccorr(~repmat(logical(stats.corrcl),1,size(stats.fc.fccorr,2))),'Fibercounts',stats.vc_labels);
 end
 
-if ~isempty(stats.fccorr.nfccorr)
-ea_ttest(stats.fccorr.nfccorr(repmat(logical(stats.corrcl),1,size(stats.fccorr,2))),stats.fccorr(~repmat(logical(stats.corrcl),1,size(stats.fccorr,2))),'Normalized Fibercounts',stats.vc_labels);
+if ~isempty(stats.fc.nfccorr)
+ea_ttest(stats.fc.nfccorr(repmat(logical(stats.corrcl),1,size(stats.fc.nfccorr,2))),stats.fc.nfccorr(~repmat(logical(stats.corrcl),1,size(stats.fc.nfccorr,2))),'Normalized Fibercounts',stats.vc_labels);
 end
 
 
