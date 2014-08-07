@@ -8,7 +8,7 @@ function ea_dicom_import(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-
+disp('Importing DICOM files...');
 
 global dcfilename
 global tmpoutdir
