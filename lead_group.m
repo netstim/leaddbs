@@ -290,6 +290,11 @@ function corrbutton_Callback(hObject, eventdata, handles)
 
 [corrcl,vicorr,fccorr,vc_labels,fc_labels]=preparedataanalysis(handles);
 
+stats.corrcl=corrcl;
+stats.vicorr=vicorr;
+stats.
+assignin('base','corrcl',corrcl,'vicorr',vicorr,'fccorr',fccorr,'vc_labels',vc_labels,'fc_labels',fc_labels);
+
 
 % perform correlations:
 
@@ -828,45 +833,46 @@ function ttestbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-[corrcl,vicorr,fccorr,vc_labels,fc_labels]=preparedataanalysis(handles);
+stats=preparedataanalysis(handles);
 
+assignin('base','stats',stats);
 
 % perform t-tests:
 
-if ~isempty(vicorr.both)
-ea_ttest(vicorr.both(repmat(logical(corrcl),1,size(vicorr.both,2))),vicorr.both(~repmat(logical(corrcl),1,size(vicorr.both,2))),'Volume Intersections, both hemispheres',vc_labels);
+if ~isempty(stats.vicorr.both)
+ea_ttest(stats.vicorr.both(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),stats.vicorr.both(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),'Volume Intersections, both hemispheres',stats.vc_labels);
 end
-if ~isempty(vicorr.right)
-ea_ttest(vicorr.right(repmat(logical(corrcl),1,size(vicorr.right,2))),vicorr.right(~repmat(logical(corrcl),1,size(vicorr.right,2))),'Volume Intersections, right hemisphere',vc_labels);
+if ~isempty(stats.vicorr.right)
+ea_ttest(stats.vicorr.right(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),stats.vicorr.right(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),'Volume Intersections, right hemisphere',stats.vc_labels);
 end
-if ~isempty(vicorr.left)
-ea_ttest(vicorr.left(repmat(logical(corrcl),1,size(vicorr.left,2))),vicorr.left(~repmat(logical(corrcl),1,size(vicorr.left,2))),'Volume Intersections, left hemisphere',vc_labels);
-end
-
-
-if ~isempty(vicorr.nboth)
-ea_ttest(vicorr.nboth(repmat(logical(corrcl),1,size(vicorr.both,2))),vicorr.both(~repmat(logical(corrcl),1,size(vicorr.both,2))),'Normalized Volume Intersections, both hemispheres',vc_labels);
-end
-if ~isempty(vicorr.nright)
-ea_ttest(vicorr.nright(repmat(logical(corrcl),1,size(vicorr.right,2))),vicorr.right(~repmat(logical(corrcl),1,size(vicorr.right,2))),'Normalized Volume Intersections, right hemisphere',vc_labels);
-end
-if ~isempty(vicorr.nleft)
-ea_ttest(vicorr.nleft(repmat(logical(corrcl),1,size(vicorr.left,2))),vicorr.left(~repmat(logical(corrcl),1,size(vicorr.left,2))),'Normalized Volume Intersections, left hemisphere',vc_labels);
-end
-
-if ~isempty(fccorr.fccorr)
-ea_ttest(fccorr.fccorr(repmat(logical(corrcl),1,size(fccorr,2))),fccorr(~repmat(logical(corrcl),1,size(fccorr,2))),'Fibercounts',vc_labels);
-end
-
-if ~isempty(fccorr.nfccorr)
-ea_ttest(fccorr.nfccorr(repmat(logical(corrcl),1,size(fccorr,2))),fccorr(~repmat(logical(corrcl),1,size(fccorr,2))),'Normalized Fibercounts',vc_labels);
+if ~isempty(stats.vicorr.left)
+ea_ttest(stats.vicorr.left(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),stats.vicorr.left(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),'Volume Intersections, left hemisphere',stats.vc_labels);
 end
 
 
+if ~isempty(stats.vicorr.nboth)
+ea_ttest(stats.vicorr.nboth(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),stats.vicorr.both(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),'Normalized Volume Intersections, both hemispheres',stats.vc_labels);
+end
+if ~isempty(stats.vicorr.nright)
+ea_ttest(stats.vicorr.nright(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),stats.vicorr.right(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),'Normalized Volume Intersections, right hemisphere',stats.vc_labels);
+end
+if ~isempty(stats.vicorr.nleft)
+ea_ttest(stats.vicorr.nleft(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),stats.vicorr.left(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),'Normalized Volume Intersections, left hemisphere',stats.vc_labels);
+end
+
+if ~isempty(stats.fccorr.fccorr)
+ea_ttest(stats.fccorr.fccorr(repmat(logical(stats.corrcl),1,size(stats.fccorr,2))),stats.fccorr(~repmat(logical(stats.corrcl),1,size(stats.fccorr,2))),'Fibercounts',stats.vc_labels);
+end
+
+if ~isempty(stats.fccorr.nfccorr)
+ea_ttest(stats.fccorr.nfccorr(repmat(logical(stats.corrcl),1,size(stats.fccorr,2))),stats.fccorr(~repmat(logical(stats.corrcl),1,size(stats.fccorr,2))),'Normalized Fibercounts',stats.vc_labels);
+end
 
 
 
-function [corrcl,vicorr,fc,vc_labels,fc_labels]=preparedataanalysis(handles)
+
+
+function [stats]=preparedataanalysis(handles)
 
 M=getappdata(gcf,'M');
 
@@ -948,6 +954,7 @@ end
 
 fccnt=1; ptcnt=1;
 fccorr=[];
+nfccorr=[];
 fc_labels={};
 for fc=get(handles.fclist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
@@ -993,6 +1000,14 @@ corrcl=M.clinical.vars{get(handles.clinicallist,'Value')};
 clinstrs=get(handles.clinicallist,'String');
 vc_labels=[clinstrs(get(handles.clinicallist,'Value')),vc_labels]; % add name of clinical vector to labels
 fc_labels=[clinstrs(get(handles.clinicallist,'Value')),fc_labels]; % add name of clinical vector to labels
+
+
+stats.corrcl=corrcl;
+stats.vicorr=vicorr;
+stats.fc=fc;
+stats.vc_labels=vc_labels;
+stats.fc_labels=fc_labels;
+
 
 
 % --- Executes on selection change in analysislist.
