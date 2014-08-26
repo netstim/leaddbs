@@ -18,8 +18,10 @@ switch com
         end
     case 'local'
         try
-            load('.version.txt');
+            load([fileparts(which('lead')),filesep,'.version.txt']);
+            
             version=X_version;
+            
         catch % initialize versioning (if .version.txt has gotten lost).
             version=[1.0;1.0];
             fileID = fopen([fileparts(which('lead')),filesep,'.version.txt'],'w');

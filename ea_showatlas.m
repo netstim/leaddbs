@@ -400,13 +400,13 @@ if isfield(atlases,'threshold')
             thresh=atlases.threshold.value(atlas);
         otherwise
             warning(['Threshold type not recognized: ',atlases.threshold.type,'. Overwriting with default.']);
-            thresh=max(nii.img(:))<2;
+            thresh=max(nii.img(:))*0.5;
    
     end
     
 else
     
-    thresh=max(nii.img(:))<2;
+    thresh=max(nii.img(:))*0.5;
 end
             
 

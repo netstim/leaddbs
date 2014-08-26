@@ -1,10 +1,14 @@
 function ea_firstrun(handles)
 
 % check if a newer version is available..
-vcheck=(ea_getvsn('local')==ea_getvsn('web'));
-if any(~vcheck)
+local=ea_getvsn('local');
+web=ea_getvsn('web');
+vcheck=(local<web);
+
+if any(vcheck) && ~any(isnan(web))
+    
     set(handles.updatebutn,'BackgroundColor',[0.2,0.8,0.2]);
-    if ~vcheck(2) % initial install
+    if local(2)==0 % initial install
         set(handles.updatebutn,'String','Download Content');
         set(handles.updatebutn,'BackgroundColor',[0.8,0.2,0.2]);
         

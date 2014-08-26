@@ -1832,15 +1832,17 @@ end
 
 function [pU,pIm]=getstimparams(M)
 try
-for pt=1:length(M.patient.list)
-    for side=1:size(M.stimparams,2)
-   pU{side}(pt,:)=M.stimparams(pt,side).U;
-   pIm{side}(pt,:)=M.stimparams(pt,side).Im;
+    for pt=1:length(M.patient.list)
+        for side=1:2
+            pU{side}(pt,:)=M.stimparams(pt,side).U;
+            pIm{side}(pt,:)=M.stimparams(pt,side).Im;
+        end
     end
-end
 catch
     pU{1}=zeros(length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
     pIm{1}=repmat(1000,length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
+    pU{2}=zeros(length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
+    pIm{2}=repmat(1000,length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
 end
 
 
@@ -1870,5 +1872,61 @@ function exportisovolumecheck_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 M.ui.exportisovolumecheck=get(handles.exportisovolumecheck,'Value');
 
+setappdata(gcf,'M',M);
+refreshvifc(handles);
+
+
+% --- Executes on button press in stimoldbutn.
+function stimoldbutn_Callback(hObject, eventdata, handles)
+% hObject    handle to stimoldbutn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+M=getappdata(gcf,'M');
+
+try
+    uicell=inputdlg('Enter Variable name for Voltage-Parameters','Enter Stimulation Settings...',1);
+uidata.U=evalin('base',uicell{1});
+catch
+    warning('Stim-Params could not be evaluated. Please Try again.');
+end
+try
+        uicell=inputdlg('Enter Variable name for Impedance-Parameters','Enter Stimulation Settings...',1);
+uidata.Im=evalin('base',uicell{1});
+catch
+    warning('Stim-Params could not be evaluated. Please Try again.');
+end
+
+options=ea_setopts_local(handles);
+for pt=1:length(M.patient.list)
+    
+    % set pt specific options
+    options.root=[fileparts(M.patient.list{pt}),filesep];
+    [~,options.patientname]=fileparts(M.patient.list{pt});
+    options.elmodel=M.elstruct(pt).elmodel;
+    options=ea_resolve_elspec(options);
+    options.prefs=ea_prefs(options.patientname);
+    options.d3.verbose='off';
+   % set stimparams based on values provided by user
+
+   
+   for side=1:2
+       M.stimparams(pt,side).U=uidata.U{side}(pt,1:options.elspec.numel);
+       M.stimparams(pt,side).Im=uidata.Im{side}(pt,1:options.elspec.numel);
+       
+       M.stimparams(pt,side).usefiberset=get(handles.fiberspopup,'String');
+       
+       M.stimparams(pt,side).usefiberset=M.stimparams(pt,side).usefiberset{get(handles.fiberspopup,'Value')};
+       M.stimparams(pt,side).labelatlas={options.labelatlas};
+       M.stimparams(pt,side).showfibers=1;
+       M.stimparams(pt,side).fiberthresh=1;
+       
+       M.stimparams(pt,side).VAT.VAT=ea_genvat(M.elstruct(pt).coords_mm,M.stimparams(pt,side),side,options);
+       M.stimparams(pt,side).showconnectivities=1;
+       M.elstruct(pt).activecontacts{side}=find(M.stimparams(pt,side).U);
+   end
+    
+   
+    
+end
 setappdata(gcf,'M',M);
 refreshvifc(handles);
