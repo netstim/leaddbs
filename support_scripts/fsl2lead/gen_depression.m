@@ -31,7 +31,7 @@ for region=[27,29,28,33]
     end
         mkdir([leaddir,'atlases',filesep,'Depression',filesep,str]);
         
-        matlabbatch{1}.spm.util.imcalc.input = {['HarvardOxford-cort-maxprob-thr0-1mm.nii,1']};
+        matlabbatch{1}.spm.util.imcalc.input = {['HarvardOxford-cort-maxprob-thr50-1mm.nii,1']};
         matlabbatch{1}.spm.util.imcalc.output = [reg,'.nii'];
         matlabbatch{1}.spm.util.imcalc.outdir = {[leaddir,'atlases',filesep,'Depression',filesep,str,filesep]};
         matlabbatch{1}.spm.util.imcalc.expression = ['i1==',num2str(region)];
@@ -60,7 +60,7 @@ for lr=[26,58] % accumbens
     end
 
         mkdir([leaddir,'atlases',filesep,'Depression',filesep,str]);
-        matlabbatch{1}.spm.util.imcalc.input = {['HarvardOxford-sub-maxprob-thr0-1mm.nii,1']};
+        matlabbatch{1}.spm.util.imcalc.input = {['HarvardOxford-sub-maxprob-thr50-1mm.nii,1']};
         matlabbatch{1}.spm.util.imcalc.output = ['N_Acc','.nii'];
         matlabbatch{1}.spm.util.imcalc.outdir = {[leaddir,'atlases',filesep,'Depression',filesep,str,filesep]};
         matlabbatch{1}.spm.util.imcalc.expression = ['i1==',num2str(lr)];
