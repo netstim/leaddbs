@@ -58,3 +58,6 @@ allcell=[rhcell,lhcell,bothcell,mixedcell,midlinecell];
 typecell=[repmat(1,1,length(rhcell)),repmat(2,1,length(lhcell)),repmat(3,1,length(bothcell)),repmat(4,1,length(mixedcell)),repmat(5,1,length(midlinecell))];
 atlases.names=allcell;
 atlases.types=typecell;
+atlases.rebuild=0;
+atlases.threshold.type='relative_intensity';
+atlases.threshold.value=0.5;

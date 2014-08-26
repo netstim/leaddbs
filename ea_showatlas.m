@@ -107,30 +107,25 @@ end
 % iterate through atlases, visualize them and write out stats.
 for atlas=1:length(atlases.names)
     
-    if ~isfield(atlases,'fv') % rebuild from nii files
+    if checkrebuild(atlases) % rebuild from nii files
         switch atlases.types(atlas)
             case 1 % right hemispheric atlas.
                 nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
-                nii.img=round(nii.img);
             case 2 % left hemispheric atlas.
                 nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
-                nii.img=round(nii.img);
             case 3 % both-sides atlas composed of 2 files.
                 lnii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
                 rnii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
-                lnii.img=round(lnii.img);
-                rnii.img=round(rnii.img);
             case 4 % mixed atlas (one file with both sides information.
                 nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],options);
-                nii.img=round(nii.img);
             case 5 % midline atlas (one file with both sides information.
                 nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
-                nii.img=round(nii.img);
         end
+        
     end
     
     for side=detsides(atlases.types(atlas));
-        if ~isfield(atlases,'fv') % rebuild from nii files
+        if checkrebuild(atlases) % rebuild from nii files
             
             if atlases.types(atlas)==3 % both-sides atlas composed of 2 files.
                 if side==1
@@ -196,7 +191,9 @@ for atlas=1:length(atlases.names)
             if options.prefs.hullsmooth
                 nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
             end
-            fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
+            
+            thresh=detthresh(atlases,atlas,nii);
+            fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
             
             if ischar(options.prefs.hullsimplify)
                 
@@ -352,6 +349,7 @@ setappdata(gcf,'iXYZ',atlases.XYZ);
 setappdata(gcf,'ipixdim',atlases.pixdim);
 end
 try
+    atlases.rebuild=0; % always reset rebuild flag.
 save([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases');
 end
 
@@ -375,8 +373,53 @@ end
 end
 
 
+function thresh=detthresh(atlases,atlas,nii)
+if isfield(atlases,'threshold')
+    switch atlases.threshold.type
+        case 'percentage'
+            try
+                sso=sort(nii.img(nii.img>0));
+                thresh=sso(round(length(sso)*(1-atlases.threshold.value))); % preserve % of voxels.
+            catch
+                thresh=sso(1);
+            end
+        case 'percentage_vector'
+            sso=sort(nii.img(nii.img>0));
+            try
+                thresh=sso(round(length(sso)*(1-atlases.threshold.value(atlas)))); % preserve % of voxels.
+            catch
+                thresh=sso(1);
+            end
+        case 'relative_intensity'
+            thresh=max(nii.img(:))*(1-atlases.threshold.value);
+        case 'relative_intensity_vector'
+            thresh=max(nii.img(:))*(1-atlases.threshold.value(atlas));
+        case 'absolute_intensity'
+            thresh=atlases.threshold.value;
+        case 'absolute_intensity_vector'
+            thresh=atlases.threshold.value(atlas);
+        otherwise
+            warning(['Threshold type not recognized: ',atlases.threshold.type,'. Overwriting with default.']);
+            thresh=max(nii.img(:))<2;
+   
+    end
+    
+else
+    
+    thresh=max(nii.img(:))<2;
+end
+            
 
-
+function reb=checkrebuild(atlases)
+reb=1;
+if isfield(atlases,'fv')
+    reb=0;
+end
+try
+    if atlases.rebuild
+        reb=1;
+    end
+end
 
 function setlabelcolor(hobj,ev,robject)
 

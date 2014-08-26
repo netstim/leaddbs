@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 23-Jun-2014 22:46:16
+% Last Modified by GUIDE v2.5 25-Aug-2014 16:30:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -82,8 +82,13 @@ set(handles.atlassetpopup,'String',asc);
 set(handles.normalize_checkbox,'Value',0);
 
 set(hObject,'Color',[1 1 1]);
+vnum=ea_getvsn('local');
+set(handles.versiontxt,'String',['v ',num2str(vnum(1))]);
 
-set(handles.versiontxt,'String',ea_getvsn);
+
+
+
+
 
 im = imread('bg_gui.png');
 image(im);
@@ -119,7 +124,7 @@ setappdata(gcf,'normmethod',normmethod);
 set(handles.normmethod,'String',ndc);
 
 
-ea_firstrun;
+ea_firstrun(handles);
 getui(handles);
 
 
@@ -208,6 +213,7 @@ function electrode_model_popup_Callback(hObject, eventdata, handles)
 % Hints: contents = get(hObject,'String') returns electrode_model_popup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from electrode_model_popup
 storeui(handles);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1036,7 +1042,7 @@ try save([outdir,'ea_ui'],'-struct','options'); end
 
 
 function updatestatus(handles)
-
+try
 uipatdir=getappdata(gcf,'uipatdir');
 
 % check for MR-files
@@ -1108,7 +1114,7 @@ elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{
 elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
     set(handles.statustwo,'String','No reconstruction available in folder. Set "Reconstruct" to start.');
 end
-
+end
 
 function getui(handles)
 
@@ -1303,3 +1309,9 @@ set(handles.normfiberscheckbox,'Value',options.normalize_fibers);
 
 
 
+% --- Executes on button press in updatebutn.
+function updatebutn_Callback(hObject, eventdata, handles)
+% hObject    handle to updatebutn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_update;

@@ -1,11 +1,32 @@
-function vstr=ea_getvsn
+function version=ea_getvsn(com)
 % This function simply exports the version of the current Lead
-% distribution. For updates please see kfo247.de
+% distribution. For updates please see lead-dbs.org
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
-vstr='v 1.2';
 
+switch com
+    
+    case 'web'
+        try
+        urlwrite('http://www.lead-dbs.org/release/.version.txt','webversion.txt');
+        load('webversion.txt');
+        delete('webversion.txt');
+        version=webversion;
+        catch
+            version=[nan;nan];
+        end
+    case 'local'
+        try
+            load('.version.txt');
+            version=X_version;
+        catch % initialize versioning (if .version.txt has gotten lost).
+            version=[1.0;1.0];
+            fileID = fopen([fileparts(which('lead')),filesep,'.version.txt'],'w');
+            fprintf(fileID,'%6.3f\n',version);
+            fclose(fileID);
+        end
+end
 
 
 % rough version history: (see git repo for details)

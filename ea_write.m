@@ -2,6 +2,7 @@ function ea_write(options)
 
 if options.elspec.numel>4 % here, electrodes with more than 4 contacts are extrapolated from 4fold data.
     try
+    try
         load([options.root,options.patientname,filesep,'ea_reconstruction']);
     catch
         error('No reconstruction information found. Please run reconstruction first.');
@@ -15,7 +16,7 @@ if options.elspec.numel>4 % here, electrodes with more than 4 contacts are extra
         save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm');
     end
     end
-    
+    end 
 end
 
 

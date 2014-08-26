@@ -1,4 +1,7 @@
 function ea_dispbn(varargin)
+
+vnum=ea_getvsn('local');
+vnum=['v ',num2str(vnum(1))];
 if nargin>0
     if strcmp(varargin{1},'ee');
         
@@ -19,7 +22,7 @@ if nargin>0
             disp(' \_______________________________________/                  ');
             disp('                                                            ');
             disp('                   Toolbox.                            ');
-            disp(['                     ',ea_getvsn,'                    ']);
+            disp(['                     ',vnum,'                    ']);
             pause(0.001)
         end
         
@@ -38,7 +41,7 @@ if nargin>0
         disp(' \_______________________________________/ ');
         disp('                                           ');
         disp('                   Toolbox.                ');
-        disp(['                     ',ea_getvsn,'        ']);
+        disp(['                     ',vnum,'        ']);
     end
 else
     space=5;
@@ -58,7 +61,7 @@ else
     disp(' \_______________________________________/                  ');
     disp('                                                            ');
     disp('                   Toolbox.                            ');
-    disp(['                     ',ea_getvsn,'                    ']);
+    disp(['                     ',vnum,'                    ']);
     pause(0.001)
     
     

@@ -134,7 +134,8 @@ end
 
 
 % set version text:
-set(handles.versiontxt,'String',ea_getvsn);
+vnum=ea_getvsn('local');
+set(handles.versiontxt,'String',['v ',num2str(vnum(1))]);
 
 
 % make listboxes multiselectable:

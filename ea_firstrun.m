@@ -1,4 +1,28 @@
-function ea_firstrun
+function ea_firstrun(handles)
+
+% check if a newer version is available..
+vcheck=(ea_getvsn('local')==ea_getvsn('web'));
+if any(~vcheck)
+    set(handles.updatebutn,'BackgroundColor',[0.2,0.8,0.2]);
+    if ~vcheck(2) % initial install
+        set(handles.updatebutn,'String','Download Content');
+        set(handles.updatebutn,'BackgroundColor',[0.8,0.2,0.2]);
+        
+        choice = questdlg('Welcome to LEAD-DBS! The toolbox needs to download some additional ressources to be fully functional. This requires an internet connection and will take some time (~3 GB of data). Please choose whether to perform this now or later.', ...
+            'Please Download Additional Content', ...
+            'Download later','Download now','Download now');
+        
+        switch choice
+            
+            case 'Download now'
+                ea_update;
+                
+        end
+        
+    end
+else
+    set(handles.updatebutn,'Visible','off');
+end
 
 options=struct;
 options.prefs=ea_prefs(options);
@@ -66,10 +90,9 @@ if ~isfield(options.prefs,'firstrun') % first run.
         'We hope that you enjoy using the LEAD toolbox. \n \n',...
         'Any suggestions are more than welcome (andreas.horn@charite.de). \n'
         ]);
-
+    
     fid = fopen([fileparts(which('lead')),filesep,'ea_prefs.m'],'a');
     fwrite(fid,sprintf(['prefs.firstrun=','''','off','''','; \n']));
     fclose(fid);
-
+    
 end
-         
