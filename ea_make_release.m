@@ -64,6 +64,7 @@ delete([outdir,'lead_dbs',filesep,'ea_ui.mat']);
 % delete make_release:
 
 delete([outdir,'lead_dbs',filesep,'make_release.m']);
+delete([outdir,'lead_dbs',filesep,'ea_make_release.m']);
 
 
 % delete dev folder:
@@ -78,23 +79,23 @@ delete([outdir,'lead_dbs',filesep,'templates',filesep,'dartel',filesep,'dartelmn
 
 
 
-%% zip all_content:
-addfolders={[outdir,'lead_dbs']};
-zip([outdir,'lead_full_release.zip'],addfolders);
-
-
-
-
-
-%% upload to FTP:
-disp('Connecting to FTP-Server...');
-mw = ftp('www.andreas-horn.de','www.andreas-horn.de','andiANDI$1');
-disp('Changing Dir.');
-cd(mw,'leaddbs/release');
-disp('Uploading full release.');
-mput(mw, [outdir,'lead_full_release.zip']);
-disp('Done.');
-close(mw);
+% %% zip all_content:
+% addfolders={[outdir,'lead_dbs']};
+% zip([outdir,'lead_full_release.zip'],addfolders);
+% 
+% 
+% 
+% 
+% 
+% %% upload to FTP:
+% disp('Connecting to FTP-Server...');
+% mw = ftp('www.andreas-horn.de','www.andreas-horn.de','andiANDI$1');
+% disp('Changing Dir.');
+% cd(mw,'leaddbs/release');
+% disp('Uploading full release.');
+% mput(mw, [outdir,'lead_full_release.zip']);
+% disp('Done.');
+% close(mw);
 
 
 %% zip addcontent:

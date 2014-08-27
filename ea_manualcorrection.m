@@ -356,8 +356,9 @@ if isempty(elplot) % first time plot electrode contacts
     
 end
 
-emp_eldist=mean([pdist([coords_mm{1}(1,:);coords_mm{1}(4,:)]),pdist([coords_mm{1}(1,:);coords_mm{1}(4,:)])])/3;
+emp_eldist(1)=mean([pdist([coords_mm{1}(1,:);coords_mm{1}(4,:)]),pdist([coords_mm{2}(1,:);coords_mm{2}(4,:)])])/3;
 spacetext=text(0,0,-17,['Electrode Spacing: ',num2str(emp_eldist),' mm.'],'Color','w','BackgroundColor','k','HorizontalAlignment','center'); 
+set(gcf,'name',[options.patientname,', Electrode Spacing: ',num2str(emp_eldist),' mm.']);
 setappdata(gcf,'spacetext',spacetext);
 
 % %% plot lines
