@@ -1080,11 +1080,23 @@ end
 
 % Now check for normalized images:
 if exist([uipatdir{1},filesep,prefs.ctnii],'file')
+    try
+    load([uipatdir{1},filesep,'ea_normmethod_applied.mat'])
+    nmused=eval([norm_method_applied,'(''check'')']);
+    set(handles.statusone,'String',['CT-volumes have been normalized with: ',nmused]);
+    catch
     set(handles.statusone,'String','Normalized CT-volumes found.');
+    end
     modality(2)=1;
 end
 if exist([uipatdir{1},filesep,prefs.tranii],'file') && exist([uipatdir{1},filesep,prefs.cornii],'file')
+    try
+    load([uipatdir{1},filesep,'ea_normmethod_applied.mat'])
+    nmused=eval([norm_method_applied,'(''check'')']);
+    set(handles.statusone,'String',['MR-volumes have been normalized with: ',nmused]);
+    catch
     set(handles.statusone,'String','Normalized MR-volumes found.');
+    end
     modality(1)=1;
 end
 if exist([uipatdir{1},filesep,prefs.tranii],'file') && exist([uipatdir{1},filesep,prefs.cornii],'file') && exist([uipatdir{1},filesep,prefs.ctnii],'file')
