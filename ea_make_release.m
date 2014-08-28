@@ -5,7 +5,7 @@ outdir='/PA/Neuro/_projects/lead/release';
 disp(['Outputting to /PA/Neuro/_projects/lead/release']);
     
 if ~nargin % default output.
-    inc_code=0.01;
+    inc_code=0.001;
     inc_cont=0;
 elseif nargin==1
     inc_code=varargin{1};
