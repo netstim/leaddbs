@@ -360,23 +360,114 @@ function addvarbutton_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 
 % get user input
-prompt = {'Enter title for comparison:','Enter clinical vector:'};
-cvarst = inputdlg(prompt,'Enter Clinical Variable',[1;20]);
+prompt = {'Enter title for comparison:','Enter variable name:'};
+cvarst = inputdlg(prompt,'Enter Regression variable name',[1]);
 
 if isempty(cvarst)
     return
 end
-cvar = str2num(cvarst{2});
+
+
+% initialize regression variable rVar.
+%rVar{1}=zeros(length(M.patient.list),1);
+
+
+
+
+
+%cvar=get_matrix([length(M.patient.list),8]);
 
 % store in model as variables
-M.clinical.vars{end+1}=cvar;
-
+%M.clinical.vars{end+1}=get_matrix(M,rVar);
+try
+M.clinical.vars{end+1}=evalin('base',cvarst{2});
+catch
+   error([cvarst{2},' could not be evaluated. Please assign variable in Matlab first.']);
+end
 M.clinical.labels{end+1}=cvarst{1};
 
 % store model and refresh UI
 setappdata(gcf,'M',M);
 
 refreshvifc(handles);
+
+
+function mat=get_matrix(M,rVar)
+
+
+for pt=1:length(M.patient.list)
+    [~,ptname]=fileparts(M.patient.list{pt});
+    
+    properties(pt) =    PropertyGridField(['double',num2str(pt)], rVar(pt,:), ...
+        'Type', PropertyType('denserealdouble', 'matrix'), ...
+        'Category', 'Values', ...
+        'DisplayName', ptname, ...
+        'Description', 'Double Matrix.');
+
+end
+
+
+% arrange flat list into a hierarchy based on qualified names
+properties = properties.GetHierarchy();
+
+% create figure
+f = figure( ...
+    'MenuBar', 'none', ...
+    'Name', 'Please enter stimulation parameters for the group.', ...
+    'NumberTitle', 'off', ...
+    'Toolbar', 'none');
+
+% procedural usage
+rVar = PropertyGrid(f, ...            % add property pane to figure
+    'Properties', properties,'Position', [0 0 1 1]);     % set properties explicitly;
+% gI{1} = PropertyGrid(f, ...            % add property pane to figure
+%     'Properties', Irproperties,'Position', [0.5 0 0.25 1]);     % set properties explicitly;
+% gI{2} = PropertyGrid(f, ...            % add property pane to figure
+%     'Properties', Ilproperties,'Position', [0.75 0 0.25 1]);     % set properties explicitly;
+% 
+
+% declarative usage, bind object to grid
+obj = SampleObject;  % a value object
+
+% update the type of a property assigned with type autodiscovery
+%userproperties = PropertyGridField.GenerateFrom(obj);
+%userproperties.FindByName('IntegerMatrix').Type = PropertyType('denserealdouble', 'matrix');
+%disp(userproperties.FindByName('IntegerMatrix').Type);
+
+% wait for figure to close
+uiwait(f);
+
+%disp(gUr.GetPropertyValues());
+
+% initialize variable
+        switch length(rVar.Properties(1).Value)
+            case 1 % "clinical" vector
+                mat=nan(length(M.patient.list),1);
+                mtype='mat';
+            case size(M.elstruct(1).coords_mm{1},1)*2 % one for each electrode
+                mat=cell(1,2);
+                mtype='concell';
+            case (size(M.elstruct(1).coords_mm{1},1)-1)*2 % one for each electrode pair
+                mat=cell(1,2);
+                mtype='paircell';
+            otherwise
+                error('Cannot resolve vector. Please specify an Nx1, Nx(Numel*2) or Nx(Numel-1)*2 matrix, where N is the number of patients and Numel is the Number of electrode contacts.');
+        end
+        for row=1:length(M.patient.list)
+            switch mtype
+                case 'mat'
+                    
+                    mat(row)=rVar.Properties(row).Value;
+                    
+                case 'concell'
+                    mat{1}(row,:)=rVar.Properties(row).Value(1:size(M.elstruct(1).coords_mm{1},1));
+                    mat{2}(row,:)=rVar.Properties(row).Value(size(M.elstruct(1).coords_mm{1},1)+1:size(M.elstruct(1).coords_mm{1},1)*2);
+                case 'paircell'
+                    mat{1}(row,:)=rVar.Properties(row).Value(1:size(M.elstruct(1).coords_mm{1},1)-1);
+                    mat{2}(row,:)=rVar.Properties(row).Value(size(M.elstruct(1).coords_mm{1},1):(size(M.elstruct(1).coords_mm{1},1)-1)*2);
+                    
+            end
+        end
 
 
 
@@ -542,6 +633,11 @@ if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
 end
 
 
+% set isomatrix from variable in clinical list
+try
+    M.isomatrix=M.clinical.vars{get(handles.clinicallist,'Value')};
+end
+
 % refresh selections on VI and FC Lists:
 try
     
@@ -585,12 +681,6 @@ else
     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 end
 
-% make isomatrix button green if set.
-if isfield(M,'isomatrix')
-    set(handles.setisomatrixbutton,'BackgroundColor',[0.1;0.8;0.1]);
-else
-    set(handles.setisomatrixbutton,'BackgroundColor',[0.93,0.93,0.93]);
-end
     
 % make chooscolors button green if chosen.
 if isfield(M.groups,'colorschosen')
@@ -1064,24 +1154,18 @@ function reviewvarbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 
-% get user input
-prompt = {'Enter title for comparison:','Enter clinical vector:'};
-defans{1}=M.clinical.labels{get(handles.clinicallist,'Value')};
-defans{2}=num2str(M.clinical.vars{get(handles.clinicallist,'Value')});
-cvarst = inputdlg(prompt,'Enter Clinical Variable',[1;20],defans);
-if ~isempty(cvarst) % cancel.
-cvar = str2num(cvarst{2});
 
 % store in model as variables
-M.clinical.vars{get(handles.clinicallist,'Value')}=cvar;
 
-M.clinical.labels{get(handles.clinicallist,'Value')}=cvarst{1};
+M.clinical.vars{get(handles.clinicallist,'Value')}(isnan(M.clinical.vars{get(handles.clinicallist,'Value')}))=0;
+M.clinical.vars{get(handles.clinicallist,'Value')}=get_matrix(M,M.clinical.vars{get(handles.clinicallist,'Value')});
+
 
 % store model and refresh UI
 setappdata(gcf,'M',M);
 
 refreshvifc(handles);
-end
+
 
 % --- Executes on button press in moveptdownbutton.
 function moveptdownbutton_Callback(hObject, eventdata, handles)
@@ -1568,19 +1652,19 @@ M=getappdata(gcf,'M');
 
 for pt=1:length(M.patient.list)
     [~,ptname]=fileparts(M.patient.list{pt});
-    Urproperties(pt) =    PropertyGridField('double', pU{1}(pt,:), ...
+    Urproperties(pt) =    PropertyGridField(['double',num2str(pt)], pU{1}(pt,:), ...
         'Category', 'Voltage Right', ...
         'DisplayName', ptname, ...
         'Description', 'Double Matrix.');
-    Ulproperties(pt) =    PropertyGridField('double', pU{2}(pt,:), ...
+    Ulproperties(pt) =    PropertyGridField(['double',num2str(pt)], pU{2}(pt,:), ...
         'Category', 'Voltage Left', ...
         'DisplayName', ptname, ...
         'Description', 'Double Matrix.');
-    Irproperties(pt) =    PropertyGridField('double', pIm{1}(pt,:), ...
+    Irproperties(pt) =    PropertyGridField(['double',num2str(pt)], pIm{1}(pt,:), ...
         'Category', 'Impedance Right', ...
         'DisplayName', ptname, ...
         'Description', 'Double Matrix.');
-    Ilproperties(pt) =    PropertyGridField('double', pIm{2}(pt,:), ...
+    Ilproperties(pt) =    PropertyGridField(['double',num2str(pt)], pIm{2}(pt,:), ...
         'Category', 'Impedance Left', ...
         'DisplayName', ptname, ...
         'Description', 'Double Matrix.');
@@ -1770,33 +1854,7 @@ function setisomatrixbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 
-try
-    uicell=inputdlg('Enter Variable name for Isomatrix','Enter Isomatrix...',1);
-    if isempty(uicell); return; end
-    M.isomatrix=evalin('base',uicell{1});
-catch
-    try
-    M=rmfield(M,'isomatrix');
-    end
-    warning('Isomatrix could not be evaluated. Please Try again.');
-end
 
-% check if isomatrix needs to be expanded:
-
-
-
-iso=M.isomatrix;
-if ~iscell(iso) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]}), if not convert to one.
-    if min(size(iso))==1 && length(size(iso))==2 % single vector
-    
-        for side=1:2
-           stimmat{side}=cat(1,M.stimparams(:,1).U); 
-            stimmat{side}=bsxfun(@times,stimmat{side}>0,iso);
-        end
-        
-    end
-    M.isomatrix=stimmat;
-end
 
 
 

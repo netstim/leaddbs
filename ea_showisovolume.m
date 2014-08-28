@@ -3,19 +3,56 @@ ht=uitoolbar(gcf);
         set(0,'CurrentFigure',resultfig); 
 
 isom=options.d3.isomatrix;
-jetlist=jet;
-for side=options.sides
-    
+load([options.root,options.patientname,filesep,'LEAD_groupanalysis.mat']);
 
+% check if isomatrix needs to be expanded from single vector by using stimparams:
+
+if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]}), if not convert to one.
+    if min(size(isom))==1 && length(size(isom))==2 % single vector
+        
+        for side=1:2
+            try
+                stimmat{side}=cat(1,M.stimparams(:,1).U);
+            catch
+                warning('Stimulation parameters not set, using each electrode contact from lead.');
+                stimmat{side}=ones(length(M.patient.list),4);
+            end
+            stimmat{side}=bsxfun(@times,stimmat{side}>0,isom);
+        end
+        
+    end
+    isom=stimmat;
+end
+
+
+%
+
+
+jetlist=jet;
+if size(isom{1},2)==size(M.elstruct(1).coords_mm{1},1)-1
+    shifthalfup=1;
+elseif size(isom{1},2)==size(M.elstruct(1).coords_mm{1},1)
+    shifthalfup=0;
+else
+   error('Isomatrix has wrong size. Please specify a correct matrix.')
+end
+for side=options.sides
     cnt=1;
     for sub=1:length(elstruct)
-        for cont=1:options.numcontacts
+        for cont=1:size(isom{1},2)
             if ~isnan(isom{side}(sub,cont));
-            X{side}(cnt)=elstruct(sub).coords_mm{side}(cont,1);
-            Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);
-            Z{side}(cnt)=elstruct(sub).coords_mm{side}(cont,3);
-            V{side}(cnt)=isom{side}(sub,cont);
-            cnt=cnt+1;
+                if ~shifthalfup
+                    X{side}(cnt)=elstruct(sub).coords_mm{side}(cont,1);
+                    Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);
+                    Z{side}(cnt)=elstruct(sub).coords_mm{side}(cont,3);
+                else % using pairs of electrode contacts (i.e. 3 pairs if there are 4 contacts)
+                    X{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,1),elstruct(sub).coords_mm{side}(cont+1,1)]);
+                    Y{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,2),elstruct(sub).coords_mm{side}(cont+1,2)]);
+                    Z{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,3),elstruct(sub).coords_mm{side}(cont+1,3)]);
+                end
+                V{side}(cnt)=isom{side}(sub,cont);
+                
+                cnt=cnt+1;
             end
         end
     end

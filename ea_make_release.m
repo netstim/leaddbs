@@ -71,6 +71,9 @@ delete([outdir,'lead_dbs',filesep,'ea_make_release.m']);
 
 rmdir([outdir,'lead_dbs',filesep,'dev'],'s');
 
+% delete tmp folder:
+
+rmdir([outdir,'lead_dbs',filesep,'tmp'],'s');
 
 % delete DARTEL-Templates (can be generated the first time they are used):
 

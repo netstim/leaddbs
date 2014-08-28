@@ -14,6 +14,8 @@ function ea_credits
 % rangesearch.m - (c) Yi Cao
 % map_coords.m - (c) Ged Ridgway
 % conncomp.m - (c) Karl Skretting
+% PropertyGrid - (c) Levente Hunyadi
+% propertiesGUI - (c) Yair M. Altman
 
 % Icons in the GUI are generated using the fontawesome typography
 % (http://fontawesome.io/)

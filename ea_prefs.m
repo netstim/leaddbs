@@ -45,7 +45,7 @@ prefs.d2.useprepost='post'; % can be 'post' or 'pre' to set the backdrop.
 prefs.dicom.dicomfiles=1; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
 
 %% Normalization:
-prefs.normalize.coreg='auto';
+prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
 
 %% DTI-files:
 
