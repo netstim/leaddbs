@@ -130,7 +130,7 @@ end
 v=ea_getvsn('local');
 v=v+[inc_code;inc_cont];
 v(2)=0;
-delete([outdir,'lead_dbs',filesep,'.version.txt']);
+%delete([outdir,'lead_dbs',filesep,'.version.txt']);
 fileID = fopen([outdir,'lead_dbs',filesep,'.version.txt'],'w');
 fprintf(fileID,'%6.3f\n',v);
 fclose(fileID);

@@ -211,6 +211,8 @@ switch lower(commnd)
         
         
     otherwise % arrow keys, plus, minus
+        
+        if ismember(event.Key,{'rightarrow','leftarrow','uparrow','downarrow'}) || ismember(event.Character,{'+','-','*','_'})
         selectrode=getappdata(gcf,'selectrode');
         if ~selectrode % no electrode is highlighted, move electrodes alongside trajectory or increase/decrease spacing.
             coords_mm=getappdata(mcfig,'coords_mm');
@@ -240,6 +242,7 @@ switch lower(commnd)
             %setappdata(gcf,'coords_mm',coords_mm);
             %setappdata(gcf,'trajectory',trajectory);
             
+        end
         end
 end
 %end
