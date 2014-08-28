@@ -58,7 +58,7 @@ set(gcf,'Name',[figtitle,'...building...']);
 axis equal
 axis fill
 
-%% Patient specific part (skipped if no patient is selected:
+%% Patient specific part (skipped if no patient is selected):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
 
 
@@ -96,12 +96,13 @@ end
 
 
 for pt=1:length(elstruct)
-    [el_render(pt).el_render]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
+    [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
 
     
     if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
         
-        
+                % this part for brainbrowser support.
+
         vizstruct=struct('faces',[],'vertices',[],'colors',[]);
         
         
@@ -135,6 +136,9 @@ end
 % add handles to buttons. Can't be combined with the above loop since all
 % handles need to be set for the buttons to work properly (if alt is
 % pressed, all electrodes are made visible/invisible).
+set(el_label,'Visible','off');
+ellabeltog=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Electrode labels','OnCallback',{@objvisible,el_label},'OffCallback',{@objinvisible,el_label},'State','off');
+
 cnt=1;
 for pt=1:length(elstruct)
         try
@@ -148,6 +152,8 @@ for pt=1:length(elstruct)
       cnt=cnt+2;
         end
 end
+
+
 setappdata(resultfig,'eltog',eltog);
 clear cnt
 

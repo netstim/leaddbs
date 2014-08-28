@@ -1,4 +1,4 @@
-function [elrender]=ea_showelectrode(resultfig,elstruct,pt,options)
+function [elrender,ellabel]=ea_showelectrode(resultfig,elstruct,pt,options)
 % This function renders the electrode as defined by options.elspec and
 % coords_mm.
 % __________________________________________________________________________________
@@ -36,6 +36,10 @@ for side=options.sides
     end
             set(0,'CurrentFigure',resultfig); 
 
+    % draw patientname
+    lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
+    ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
+            
     
     % draw trajectory
     [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
@@ -80,7 +84,7 @@ for side=options.sides
         
         [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2),elspec.contact_diameter/2,100,repmat(elspec.contact_color,1,3),1,0);
         if options.d3.hlactivecontacts && ismember(cntct,elstruct.activecontacts{side}) % make active red contact without transparency
-        specsurf(elrender{side}(cnt),usecolor,1); specsurf(elrender{side}(cnt+1),usecolor,1); specsurf(elrender{side}(cnt+2),usecolor,1);
+        specsurf(elrender{side}(cnt),[0.8,0.2,0.2],1); specsurf(elrender{side}(cnt+1),[0.8,0.2,0.2],1); specsurf(elrender{side}(cnt+2),[0.8,0.2,0.2],1);
         else
         specsurf(elrender{side}(cnt),elspec.contact_color,aData); specsurf(elrender{side}(cnt+1),elspec.contact_color,aData); specsurf(elrender{side}(cnt+2),elspec.contact_color,aData);
         end

@@ -64,6 +64,7 @@ ea_dispbn;
 % load atlassets
 earoot=[fileparts(which('lead')),filesep];
 as=dir([earoot,'atlases',filesep]);
+asc=cell(0);
 cnt=1;
 for i=1:length(as)
     if as(i).isdir

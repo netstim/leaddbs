@@ -67,6 +67,7 @@ guidata(hObject, handles);
 % atlassets:
 options.earoot=[fileparts(which('lead')),filesep];
 as=dir([options.earoot,'atlases',filesep]);
+asc=cell(0);
 cnt=1;
 for i=1:length(as)
     if as(i).isdir

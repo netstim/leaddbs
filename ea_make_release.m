@@ -122,6 +122,15 @@ for fi=1:length(addfolders)
     rmdir(addfolders{fi},'s');
 end
 
+%% update version of release:
+
+v=ea_getvsn('local');
+v=v+[inc_code;inc_cont];
+v(2)=0;
+delete([outdir,'lead_dbs',filesep,'.version.txt']);
+fileID = fopen([outdir,'lead_dbs',filesep,'.version.txt'],'w');
+fprintf(fileID,'%6.3f\n',v);
+fclose(fileID);
 
 %% zip release:
 zip([outdir,'lead_dbs.zip'],[outdir,'lead_dbs']);
@@ -138,6 +147,7 @@ disp('Done.');
 close(mw);
 
 
+
 %% update version:
 
 v=ea_getvsn('local');
@@ -146,7 +156,6 @@ delete([fileparts(which('lead')),filesep,'.version.txt']);
 fileID = fopen([fileparts(which('lead')),filesep,'.version.txt'],'w');
 fprintf(fileID,'%6.3f\n',v);
 fclose(fileID);
-
 
 %% upload version to FTP:
 disp('Connecting to FTP-Server...');
