@@ -44,6 +44,7 @@ atlascnt=1;
 set(0,'CurrentFigure',resultfig)
 
 if ~exist([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
+    
     atlases=ea_genatlastable(root,options);
 else
     load([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
@@ -277,7 +278,7 @@ for atlas=1:length(atlases.names)
         % prepare colorbutton icon
         
         atlasc=squeeze(jetlist(round(atlases.colors(atlas)),:));  % color for toggle button icon 
-        colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,atlassurfs(atlascnt)},'OffCallback',{@atlasinvisible,atlassurfs(atlascnt)},'State','on');
+        colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,atlascnt,'on'},'OffCallback',{@atlasvisible,atlascnt,'off'},'State','on');
      
         % gather contact statistics
         if options.writeoutstats
@@ -324,6 +325,9 @@ for atlas=1:length(atlases.names)
         
     end
 end
+
+setappdata(resultfig,'atlassurfs',atlassurfs);
+setappdata(resultfig,'colorbuttons',colorbuttons);
 
 % configure label button to work properly and hide labels as default.
 set(atlaslabels,'Visible','off');
@@ -434,10 +438,28 @@ function C=rgb(C) % returns rgb values for the colors.
 C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);
 
 
-function atlasvisible(hobj,ev,atls)
+
+function atlasvisible(hobj,ev,atlscnt,onoff)
+atls=getappdata(gcf,'atlassurfs');
+if(getappdata(gcf,'altpressed'))
+    
+    cbutn=getappdata(gcf,'colorbuttons');
+    set(cbutn,'State',onoff);
+    for el=1:length(atls)
+        for side=1:2
+           try
+               set(atls(el), 'Visible', onoff);
+           end
+        end
+    end
+else
+set(atls(atlscnt), 'Visible', onoff);
+end
+
+
+function oldatlasvisible(hobj,ev,atls)
 set(atls, 'Visible', 'on');
 %disp([atls,'visible clicked']);
-
 function atlasinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
 %disp([atls,'invisible clicked']);

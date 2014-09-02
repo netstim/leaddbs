@@ -7,7 +7,10 @@ function ea_ptspecific_atl(options)
 troot=[options.earoot,'templates',filesep,'segment',filesep];
 aroot=[options.earoot,'atlases',filesep,options.atlasset,filesep];
 proot=[options.root,options.patientname,filesep];
-
+if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
+   ea_generate_tpm; 
+    
+end
 
 generate_tpm(troot,aroot,proot,1,options)
 

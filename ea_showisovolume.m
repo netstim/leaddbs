@@ -122,11 +122,11 @@ for side=options.sides
             case 2
                 lr='left';
         end
-        Vol.fname=[options.root,'ido_volume_',lr,'.nii'];
+        Vol.fname=[options.root,options.patientname,filesep,'iso_volume_',lr,'.nii'];
         Vol.dtype=[32 1];
         spm_write_vol(Vol,nii{side});
         if side==2; % write out combined volume.
-           Vol.fname=[options.root,'iso_volume_combined.nii'];
+           Vol.fname=[options.root,options.patientname,filesep,'iso_volume_combined.nii'];
            nii=nanmean(cat(4,nii{1},nii{2}),4);
             spm_write_vol(Vol,nii);
         end

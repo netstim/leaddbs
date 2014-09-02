@@ -196,7 +196,8 @@ if options.doreconstruction
     
     % save reconstruction results
 try    ea_write_fiducials(coords_mm,fullfile(options.root,patientname,'ea_coords.fcsv'),options); end
-    save([options.root,patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm');
+    elmodel=options.elmodel;
+    save([options.root,patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','elmodel');
     
 end
 

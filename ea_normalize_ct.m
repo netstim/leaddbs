@@ -2,10 +2,15 @@ function varargout=ea_normalize_ct(options)
 
 
 
-
 if ischar(options) % return name of method.
     varargout{1}='Fuse CT and MRI [Not robust]';
     return
+end
+
+
+if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
+   ea_generate_tpm; 
+    
 end
 
 alsouseregutil=0;

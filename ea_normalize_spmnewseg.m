@@ -22,6 +22,12 @@ if ischar(options) % return name of method.
     return
 end
 
+if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
+   ea_generate_tpm; 
+    
+end
+
+
 segmentresolution=0.5; % resolution of the New Segment output.
 
 

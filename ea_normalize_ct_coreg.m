@@ -1,5 +1,8 @@
 function ea_normalize_ct_coreg(options)
-
+if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
+   ea_generate_tpm; 
+    
+end
 
 alsouseregutil=0;
 

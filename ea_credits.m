@@ -16,6 +16,7 @@ function ea_credits
 % conncomp.m - (c) Karl Skretting
 % PropertyGrid - (c) Levente Hunyadi
 % propertiesGUI - (c) Yair M. Altman
+% othercolor - (c) Joshua Atkins
 
 % Icons in the GUI are generated using the fontawesome typography
 % (http://fontawesome.io/)

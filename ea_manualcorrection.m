@@ -137,7 +137,9 @@ close(gcf)
 
 
 ea_write_fiducials(coords_mm,fullfile(options.root,options.patientname,'ea_coords.fcsv'),options);
-save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm');
+
+elmodel=options.elmodel;
+save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','elmodel');
 disp('Done.');
 
 if options.autoimprove

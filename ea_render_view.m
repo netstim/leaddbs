@@ -97,7 +97,6 @@ end
 
 for pt=1:length(elstruct)
     [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
-
     
     if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
         
@@ -136,9 +135,12 @@ end
 % add handles to buttons. Can't be combined with the above loop since all
 % handles need to be set for the buttons to work properly (if alt is
 % pressed, all electrodes are made visible/invisible).
+drawnow
+try
+    
 set(el_label,'Visible','off');
 ellabeltog=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Electrode labels','OnCallback',{@objvisible,el_label},'OffCallback',{@objinvisible,el_label},'State','off');
-
+end
 cnt=1;
 for pt=1:length(elstruct)
         try
@@ -317,7 +319,8 @@ set(atls, 'Visible', 'off');
 
 function elvisible(hobj,ev,atls,pt,side,onoff)
 
-if ea_if(getappdata(gcf,'altpressed'))
+if(getappdata(gcf,'altpressed'))
+    
     eltog=getappdata(gcf,'eltog');
     set(eltog,'State',onoff);
     for el=1:length(atls)

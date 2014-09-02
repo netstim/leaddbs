@@ -35,7 +35,10 @@ if ischar(options) % return name of method.
     varargout{1}='SPM DARTEL nonlinear [MR/CT]';
     return
 end
-
+if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
+   ea_generate_tpm; 
+    
+end
 
 segmentresolution=0.5; % resolution of the DARTEL-Warps. Setting this value to larger values will generate the usual DARTEL-Workflow.
 

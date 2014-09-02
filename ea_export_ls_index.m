@@ -8,11 +8,18 @@ fwrite(fid,'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http
 fwrite(fid,'<html xmlns="http://www.w3.org/1999/xhtml">');
 fwrite(fid,'<head>');
 fwrite(fid,'<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />');
-fwrite(fid,'<title>Untitled Document</title>');
+fwrite(fid,'<title>LEAD-Server</title>');
+fwrite(fid,'<style type="text/css">');
+fwrite(fid,'<!--');
+fwrite(fid,' body {');
+fwrite(fid,'  font-family: Arial;');
+fwrite(fid,' }');
+fwrite(fid,'//-->');
+fwrite(fid,'</style>');
 fwrite(fid,'</head>');
 fwrite(fid,'');
 fwrite(fid,'<body>');
-fwrite(fid,'<p>Welcome to Lead Server</p>');
+fwrite(fid,'<p><h2>Welcome to Lead Server</h2></p>');
 
 pts=dir([options.prefs.ls.dir,'data']);
 

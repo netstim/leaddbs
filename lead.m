@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 25-Aug-2014 16:30:57
+% Last Modified by GUIDE v2.5 02-Sep-2014 14:36:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1235,6 +1235,7 @@ options.d3.showactivecontacts=1;
 options.d3.showpassivecontacts=1;
 options.d3.showisovolume=0;
 options.d3.isovscloud=0;
+options.d3.autoserver=get(handles.exportservercheck,'Value');
 
 options.numcontacts=4;
 options.entrypoint=get(handles.targetpopup,'String');
@@ -1266,6 +1267,7 @@ options.writeoutstats=1;
 
 options.normalize_fibers=get(handles.normfiberscheckbox,'Value');
 options.colormap=colormap;
+
 
 
 
@@ -1318,6 +1320,7 @@ set(handles.targetpopup,'Value',options.entrypointn);
 set(handles.electrode_model_popup,'Value',options.elmodeln);
 set(handles.atlassetpopup,'Value',options.atlassetn);
 set(handles.normfiberscheckbox,'Value',options.normalize_fibers);
+set(handles.exportservercheck,'Value',options.d3.autoserver);
 
 
 
@@ -1328,3 +1331,12 @@ function updatebutn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_update;
+
+
+% --- Executes on button press in exportservercheck.
+function exportservercheck_Callback(hObject, eventdata, handles)
+% hObject    handle to exportservercheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of exportservercheck

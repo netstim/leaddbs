@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 07-Aug-2014 17:23:46
+% Last Modified by GUIDE v2.5 02-Sep-2014 11:08:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -82,6 +82,8 @@ asc{end+1}='Use none';
 
 set(handles.atlassetpopup,'String',asc);
 
+% get electrode model specs and place in popup
+set(handles.elmodelselect,'String',[{'Patient specified'},ea_resolve_elspec]);
 
 % Fibers:
 
@@ -237,7 +239,7 @@ M.patient.group(deleteentry)=[];
 M.patient.analysis(deleteentry)=[];
 
 M.elstruct(deleteentry)=[];
-
+M.stimparams(deleteentry)=[];
 
 try
 M.stats(deleteentry)=[];
@@ -280,6 +282,8 @@ options.d3.isovscloud=M.ui.isovscloudpopup;
 options.d3.showisovolume=M.ui.showisovolumecheck;
 
 options.d3.exportisovolume=M.ui.exportisovolumecheck;
+
+
 resultfig=ea_render_view(options,M.elstruct(get(handles.patientlist,'Value')));
 
 
@@ -707,9 +711,15 @@ try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
 try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
 try set(handles.labelpopup,'Value',M.ui.labelpopup); end
 try set(handles.modelselect,'Value',M.ui.modelselect); end
+try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 
 
-
+% hide detachbutton if already detached:
+try
+if M.ui.detached
+   set(handles.detachbutton,'Visible','off'); 
+end
+end
 
 
 if ~isempty(M.patient.list)
@@ -760,8 +770,17 @@ if ~isempty(M.patient.list)
         
         try
             load([M.patient.list{pt},filesep,'ea_reconstruction']);
-            M.elstruct(pt).elmodel='Medtronic 3389';
-            
+            if M.ui.elmodelselect==1 % use patient specific elmodel
+            if exist('elmodel','var')
+                M.elstruct(pt).elmodel=elmodel;
+            else
+            M.elstruct(pt).elmodel='Medtronic 3389'; % use default for older reconstructions that did not store elmodel.
+            end
+            else
+                elmodels=get(handles.elmodelselect,'String');
+                M.elstruct(pt).elmodel=elmodels{get(handles.elmodelselect,'Value')};
+                
+            end
             M.elstruct(pt).coords_mm=coords_mm;
             M.elstruct(pt).trajectory=trajectory;
             M.elstruct(pt).name=[pats{pt}];
@@ -1247,11 +1266,17 @@ for pt=1:length(M.patient.list)
     else
         lookfor='/';
     end
-    slashes=strfind(M.patient.list{pt},lookfor);
-    options.patientname=M.patient.list{pt}(slashes(end)+1:end);
     
-    options.root=M.patient.list{pt}(1:slashes(end));
+    slashes=strfind(M.patient.list{pt},lookfor);
+    if ~isempty(slashes)
+        options.patientname=M.patient.list{pt}(slashes(end)+1:end);
+                options.root=M.patient.list{pt}(1:slashes(end));
 
+    else
+        options.patientname=M.patient.list{pt};
+                options.root='';
+    end
+    
     disp(['Processing ',options.patientname,'.']);
     options.numcontacts=size(M.elstruct(pt).coords_mm{1},1);
     options.elmodel=M.elstruct(pt).elmodel;
@@ -1278,29 +1303,41 @@ for pt=1:length(M.patient.list)
         options.expstatvat.pt=pt;
 
         options.expstatvat.dir=M.ui.groupdir;
-    
-    if ~exist(options.root,'file') % data is not there. Process in tmp-dir.
-        processlocal=1;
-        warning('on');
-        warning('Data has been detached from group-directory. Will process locally. Please be aware that you might loose this newly-processed data once you re-attach the single-patient data to the analysis!');
-        warning('off');
-        mkdir([M.ui.groupdir,'tmp']);
-        options.root=M.ui.groupdir;
-        options.patientname='tmp';
-
-        ea_stats=M.stats(pt).ea_stats;
-        coords_mm=M.elstruct.coords_mm;
-        trajectory=M.elstruct.trajectory;
-        save([M.ui.groupdir,'tmp',filesep,'ea_stats'],'ea_stats');
-        save([M.ui.groupdir,'tmp',filesep,'ea_reconstruction'],'coords_mm','trajectory');
-        
-    else
-        processlocal=0;
-    end
-    
-    if get(handles.removepriorstatscheck,'Value')
-        delete([options.root,options.patientname,filesep,'ea_stats.mat']);
-    end
+                processlocal=0;
+                try
+                    if M.ui.detached
+                        processlocal=1;
+                        mkdir([M.ui.groupdir,'tmp']);
+                        options.root=M.ui.groupdir;
+                        options.patientname='tmp';
+                        
+                        ea_stats=M.stats(pt).ea_stats;
+                        coords_mm=M.elstruct(pt).coords_mm;
+                        trajectory=M.elstruct(pt).trajectory;
+                        save([M.ui.groupdir,'tmp',filesep,'ea_stats'],'ea_stats');
+                        save([M.ui.groupdir,'tmp',filesep,'ea_reconstruction'],'coords_mm','trajectory');
+                    end
+                catch
+                    if ~exist(options.root,'file') % data is not there. Act as if detached. Process in tmp-dir.
+                        processlocal=1;
+                        warning('on');
+                        warning('Data has been detached from group-directory. Will process locally. Please be aware that you might loose this newly-processed data once you re-attach the single-patient data to the analysis!');
+                        warning('off');
+                        mkdir([M.ui.groupdir,'tmp']);
+                        options.root=M.ui.groupdir;
+                        options.patientname='tmp';
+                        
+                        ea_stats=M.stats(pt).ea_stats;
+                        coords_mm=M.elstruct.coords_mm;
+                        trajectory=M.elstruct.trajectory;
+                        save([M.ui.groupdir,'tmp',filesep,'ea_stats'],'ea_stats');
+                        save([M.ui.groupdir,'tmp',filesep,'ea_reconstruction'],'coords_mm','trajectory');
+                    end
+                end
+                
+                if get(handles.removepriorstatscheck,'Value')
+                    delete([options.root,options.patientname,filesep,'ea_stats.mat']);
+                end
     
     % Step 1: Re-calculate closeness to subcortical atlases.
     resultfig=ea_render_view(options);
@@ -1621,7 +1658,8 @@ M.ui.volumeintersections=1;
 M.ui.fibercounts=1;
 M.ui.elrendering=1;
 M.ui.statvat=0;
-
+M.ui.elmodelselect=1;
+M.ui.detached=0;
 
 
 
@@ -1987,5 +2025,68 @@ for pt=1:length(M.patient.list)
    
     
 end
+setappdata(gcf,'M',M);
+refreshvifc(handles);
+
+
+% --- Executes on selection change in elmodelselect.
+function elmodelselect_Callback(hObject, eventdata, handles)
+% hObject    handle to elmodelselect (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns elmodelselect contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from elmodelselect
+M=getappdata(gcf,'M');
+M.ui.elmodelselect=get(handles.elmodelselect,'Value');
+setappdata(gcf,'M',M);
+refreshvifc(handles);
+
+% --- Executes during object creation, after setting all properties.
+function elmodelselect_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to elmodelselect (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in detachbutton.
+function detachbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to detachbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+choice = questdlg('Would you really like to detach the group data from the single-patient data? This means that changes to single-patient reconstructions will not be updated into the group analysis anymore. This should only be done once all patients have been finally localized and an analysis needs to be fixed (e.g. after publication or when working in collaborations). Please be aware that this step cannot be undone!', ...
+	'Detach Group data from single patient data...', ...
+	'No, abort.','Yes, sure!','No, abort.');
+% Handle response
+switch choice
+    case 'No, abort.'
+    return
+    case 'Yes, sure!'
+    
+    
+    M=getappdata(gcf,'M');
+    
+    for pt=1:length(M.patient.list)
+        
+        slashes=findstr('/',M.patient.list{pt});
+        if isempty(slashes)
+           slashes=findstr('\',M.patient.list{pt});         
+        end
+        ptname=M.patient.list{pt}(max(slashes)+1:end);
+        
+        
+       M.patient.list{pt}=ptname;
+        
+    end
+    M.ui.detached=1;
+
+end
+
 setappdata(gcf,'M',M);
 refreshvifc(handles);

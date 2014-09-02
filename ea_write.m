@@ -47,7 +47,9 @@ if options.d3.write
     saveas(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig']);
     end
     %figure2xhtml([options.root,options.patientname,filesep,'eAuto_scene'],resultfig);
-    
+    if options.d3.autoserver
+       ea_export_server([],[],options); 
+    end
     
 end
 

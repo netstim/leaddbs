@@ -17,9 +17,10 @@ else % if elspec is defined for each electrode, overwrite options-struct setting
 end
 
 if ~isfield(elstruct,'activecontacts')
-   elstruct.activecontacts{1}=zeros(elspec.numel,1);
-   elstruct.activecontacts{2}=zeros(elspec.numel,1);
+    elstruct.activecontacts{1}=zeros(elspec.numel,1);
+    elstruct.activecontacts{2}=zeros(elspec.numel,1);
 end
+        jetlist=othercolor('RdYlGn9');
 
 
 for side=options.sides
@@ -27,128 +28,182 @@ for side=options.sides
     trajvector=trajvector/norm(trajvector);
     
     if options.d3.elrendering<3
-    if options.d3.prolong_electrode
-        
-        startpoint=trajectory{side}(1,:)-(options.d3.prolong_electrode*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
-
-        else
-        startpoint=trajectory{side}(1,:);
-    end
-            set(0,'CurrentFigure',resultfig); 
-
-    % draw patientname
-    lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
-    ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
+        if options.d3.prolong_electrode
             
-    
-    % draw trajectory
-    [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-    
-
-    
-    if isfield(elstruct,'group')
-        usecolor=elstruct.groupcolors(elstruct.group,:);
-    else
-        usecolor=elspec.lead_color;
-    end
-    
-    
-    if options.d3.elrendering==2 % show a transparent electrode.
-        aData=0.1;
-    elseif options.d3.elrendering==1 % show a solid electrode.
-        aData=1;
-    end
-    
-    
-       specsurf(elrender{side}(1),usecolor,aData); specsurf(elrender{side}(2),usecolor,aData); specsurf(elrender{side}(3),usecolor,aData);
-
-    cnt=4;
-    
-    
-    % draw trajectory between contacts
-    for cntct=1:elspec.numel-1
-                set(0,'CurrentFigure',resultfig); 
-
-        [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct+1,:)+trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-        
-        specsurf(elrender{side}(cnt),usecolor,aData); specsurf(elrender{side}(cnt+1),usecolor,aData); specsurf(elrender{side}(cnt+2),usecolor,aData);
-        cnt=cnt+3;
-    end
-    
-    
-    % draw contacts
-    for cntct=1:elspec.numel
-        
-                set(0,'CurrentFigure',resultfig); 
-
-        
-        [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2),elspec.contact_diameter/2,100,repmat(elspec.contact_color,1,3),1,0);
-        if options.d3.hlactivecontacts && ismember(cntct,elstruct.activecontacts{side}) % make active red contact without transparency
-        specsurf(elrender{side}(cnt),[0.8,0.2,0.2],1); specsurf(elrender{side}(cnt+1),[0.8,0.2,0.2],1); specsurf(elrender{side}(cnt+2),[0.8,0.2,0.2],1);
+            startpoint=trajectory{side}(1,:)-(options.d3.prolong_electrode*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
+            
         else
-        specsurf(elrender{side}(cnt),elspec.contact_color,aData); specsurf(elrender{side}(cnt+1),elspec.contact_color,aData); specsurf(elrender{side}(cnt+2),elspec.contact_color,aData);
+            startpoint=trajectory{side}(1,:);
         end
-        cnt=cnt+3;
-    end
-    
-    
-
-    
-    
-    % draw tip
-    
-    if isfield(elstruct,'group')
-        usecolor=elstruct.groupcolors(elstruct.group,:);
-    else
-        usecolor=elspec.tip_color;
-    end
-            set(0,'CurrentFigure',resultfig); 
-
-    [cX,cY,cZ] = cylinder((repmat(elspec.tip_diameter/2,1,10)-([10:-1:1].^10/10^10)*(elspec.tip_diameter/2)));
-    
-    cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
-    
-    % define two points to define cylinder.
-    X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
-    X2=X1+trajvector*elspec.tip_length;
-    
-    
-    cX=cX+X1(1);
-    cY=cY+X1(2);
-    cZ=cZ-(2*elspec.tip_length)/2+X1(3);
-    
-    
-    
-    elrender{side}(cnt)=surf(cX,cY,cZ);
-    
-    % Calulating the angle between the x direction and the required direction
-    % of cylinder through dot product
-    angle_X1X2=acos( dot( [0 0 -1],(X2-X1) )/( norm([0 0 -1])*norm(X2-X1)) )*180/pi;
-    
-    % Finding the axis of rotation (single rotation) to roate the cylinder in
-    % X-direction to the required arbitrary direction through cross product
-    axis_rot=cross([0 0 -1],(X2-X1) );
-    
-    
-    rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
-    
-    specsurf(elrender{side}(cnt),usecolor,aData);
-    
-    else % simply draw pointcloud
-        pcnt=1;
-                    jetlist=jet;
+        set(0,'CurrentFigure',resultfig);
+        
+        % draw patientname
+        lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
+        ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
+        
+        
+        % draw trajectory
+        [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
+        
+        
+        
+        if isfield(elstruct,'group')
+            usecolor=elstruct.groupcolors(elstruct.group,:);
+        else
+            usecolor=elspec.lead_color;
+        end
+        
+        
+        if options.d3.elrendering==2 % show a transparent electrode.
+            aData=0.1;
+        elseif options.d3.elrendering==1 % show a solid electrode.
+            aData=1;
+        end
+        
+        
+        specsurf(elrender{side}(1),usecolor,aData); specsurf(elrender{side}(2),usecolor,aData); specsurf(elrender{side}(3),usecolor,aData);
+        
+        cnt=4;
+        
+        
+        % draw trajectory between contacts
+        for cntct=1:elspec.numel-1
+            set(0,'CurrentFigure',resultfig);
+            
+            [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct+1,:)+trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
+            
+            specsurf(elrender{side}(cnt),usecolor,aData); specsurf(elrender{side}(cnt+1),usecolor,aData); specsurf(elrender{side}(cnt+2),usecolor,aData);
+            cnt=cnt+3;
+        end
+        
+        
         % draw contacts
         for cntct=1:elspec.numel
+            
+            set(0,'CurrentFigure',resultfig);
+            
+            
+            [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2),elspec.contact_diameter/2,100,repmat(elspec.contact_color,1,3),1,0);
+            if options.d3.hlactivecontacts && ismember(cntct,elstruct.activecontacts{side}) % make active red contact without transparency
+                specsurf(elrender{side}(cnt),[0.8,0.2,0.2],1); specsurf(elrender{side}(cnt+1),[0.8,0.2,0.2],1); specsurf(elrender{side}(cnt+2),[0.8,0.2,0.2],1);
+            else
+                specsurf(elrender{side}(cnt),elspec.contact_color,aData); specsurf(elrender{side}(cnt+1),elspec.contact_color,aData); specsurf(elrender{side}(cnt+2),elspec.contact_color,aData);
+            end
+            cnt=cnt+3;
+        end
+        
+        
+        
+        
+        
+        % draw tip
+        
+        if isfield(elstruct,'group')
+            usecolor=elstruct.groupcolors(elstruct.group,:);
+        else
+            usecolor=elspec.tip_color;
+        end
+        set(0,'CurrentFigure',resultfig);
+        
+        [cX,cY,cZ] = cylinder((repmat(elspec.tip_diameter/2,1,10)-([10:-1:1].^10/10^10)*(elspec.tip_diameter/2)));
+        
+        cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
+        
+        % define two points to define cylinder.
+        X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
+        X2=X1+trajvector*elspec.tip_length;
+        
+        
+        cX=cX+X1(1);
+        cY=cY+X1(2);
+        cZ=cZ-(2*elspec.tip_length)/2+X1(3);
+        
+        
+        
+        elrender{side}(cnt)=surf(cX,cY,cZ);
+        
+        % Calulating the angle between the x direction and the required direction
+        % of cylinder through dot product
+        angle_X1X2=acos( dot( [0 0 -1],(X2-X1) )/( norm([0 0 -1])*norm(X2-X1)) )*180/pi;
+        
+        % Finding the axis of rotation (single rotation) to roate the cylinder in
+        % X-direction to the required arbitrary direction through cross product
+        axis_rot=cross([0 0 -1],(X2-X1) );
+        
+        
+        rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
+        
+        specsurf(elrender{side}(cnt),usecolor,aData);
+        
+    else % simply draw pointcloud
+        
+        shifthalfup=0;
+        % check if isomatrix needs to be expanded from single vector by using stimparams:
+        try
+        isom=options.d3.isomatrix;
+        load([options.root,options.patientname,filesep,'LEAD_groupanalysis.mat']);
+        
+        if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]}), if not convert to one.
+            if min(size(isom))==1 && length(size(isom))==2 % single vector
+                
+                for side=1:2
+                    try
+                        stimmat{side}=cat(1,M.stimparams(:,1).U);
+                    catch
+                        warning('Stimulation parameters not set, using each electrode contact from lead.');
+                        stimmat{side}=ones(length(M.patient.list),4);
+                    end
+                    stimmat{side}=bsxfun(@times,stimmat{side}>0,isom);
+                end
+                
+            end
+            isom=stimmat;
+        end
+        
+        
+        %
+        
+        
+        if size(isom{1},2)==size(M.elstruct(1).coords_mm{1},1)-1
+            shifthalfup=1;
+        elseif size(isom{1},2)==size(M.elstruct(1).coords_mm{1},1)
+            shifthalfup=0;
+        else
+            error('Isomatrix has wrong size. Please specify a correct matrix.')
+        end
+        end
+        
+        
+        
+        if options.d3.prolong_electrode
+            
+            startpoint=trajectory{side}(1,:)-(options.d3.prolong_electrode*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
+            
+        else
+            startpoint=trajectory{side}(1,:);
+        end
+        set(0,'CurrentFigure',resultfig);
+        
+        % draw patientname
+        lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
+        
+        
+        
+        %ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
+        ellabel=nan;
+        pcnt=1;
+        % draw contacts
+        for cntct=1:elspec.numel-shifthalfup
             
             if (options.d3.showactivecontacts && ismember(cntct,elstruct.activecontacts{side})) || (options.d3.showpassivecontacts && ~ismember(cntct,elstruct.activecontacts{side}))
                 if options.d3.hlactivecontacts && ismember(cntct,elstruct.activecontacts{side}) % make active red contact without transparency
                     useedgecolor=[0.8,0.5,0.5];
                     ms=10;
                 elseif options.d3.hlactivecontacts && ~ismember(cntct,elstruct.activecontacts{side}) % make inactive grey and smaller contact without transparency
-                    useedgecolor=[0.5,0.5,0.5];
+                    useedgecolor='none';
                     ms=5;
                 else
-                    useedgecolor=[0.5,0.5,0.5];
+                    useedgecolor='none';
                     ms=10;
                 end
                 % define color
@@ -168,16 +223,23 @@ for side=options.sides
                         usefacecolor=elspec.contact_color;
                     end
                 end
-                    
+                
                 if ~isnan(usefacecolor)
-                            set(0,'CurrentFigure',resultfig); 
-
-                    elrender{side}(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'d','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
-                pcnt=pcnt+1;
+                    set(0,'CurrentFigure',resultfig);
+                    if ~shifthalfup
+                    elrender{side}(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                    pcnt=pcnt+1;
+                    else
+                      elrender{side}(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
+                          mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
+                      mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
+                      'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                    pcnt=pcnt+1;  
+                    end
                 else
                     
                 end
-            hold on
+                hold on
             end
         end
         
@@ -226,7 +288,7 @@ catch % if color is denoted as gray value (1x1) only
     cd(:,:,2)=color(1);cd(:,:,3)=color(1);
 end
 
-    
+
 cd=cd+0.01*randn(size(cd));
 
 set(surfc,'FaceColor','interp');

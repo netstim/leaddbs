@@ -60,6 +60,10 @@ delete([outdir,'lead_dbs',filesep,'trajvectors.mat']);
 
 delete([outdir,'lead_dbs',filesep,'ea_ui.mat']);
 
+% delete TPM.nii:
+
+delete([outdir,'lead_dbs',filesep,'templates',filesep,'TPM.nii']);
+
 
 % delete make_release:
 
@@ -81,24 +85,33 @@ delete([outdir,'lead_dbs',filesep,'templates',filesep,'dartel',filesep,'dartelmn
 %delete([outdir,'lead_dbs',filesep,'ea_normalize_spmda*']);
 
 
+%% update version of release:
 
-% %% zip all_content:
-% addfolders={[outdir,'lead_dbs']};
-% zip([outdir,'lead_full_release.zip'],addfolders);
-% 
-% 
-% 
-% 
-% 
-% %% upload to FTP:
-% disp('Connecting to FTP-Server...');
-% mw = ftp('www.andreas-horn.de','www.andreas-horn.de','andiANDI$1');
-% disp('Changing Dir.');
-% cd(mw,'leaddbs/release');
-% disp('Uploading full release.');
-% mput(mw, [outdir,'lead_full_release.zip']);
-% disp('Done.');
-% close(mw);
+v=ea_getvsn('local');
+v=v+[inc_code;inc_cont];
+%delete([outdir,'lead_dbs',filesep,'.version.txt']);
+fileID = fopen([outdir,'lead_dbs',filesep,'.version.txt'],'w');
+fprintf(fileID,'%6.3f\n',v);
+fclose(fileID);
+
+
+%% zip all_content:
+addfolders={[outdir,'lead_dbs']};
+zip([outdir,'lead_full_release.zip'],addfolders);
+
+
+
+
+
+%% upload to FTP:
+disp('Connecting to FTP-Server...');
+mw = ftp('www.andreas-horn.de','www.andreas-horn.de','andiANDI$1');
+disp('Changing Dir.');
+cd(mw,'leaddbs/release');
+disp('Uploading full release.');
+mput(mw, [outdir,'lead_full_release.zip']);
+disp('Done.');
+close(mw);
 
 
 %% zip addcontent:
