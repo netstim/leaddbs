@@ -317,13 +317,25 @@ if ~isempty(stats.vicorr.left)
 end
 
 
+if ~isempty(stats.fccorr.both)
+ea_corrplot([stats.corrcl,stats.fccorr.both],'Fibercounts, both hemispheres',stats.fc_labels);
+
+ea_corrplot([stats.corrcl,stats.fccorr.nboth],'Fibercounts, normalized, both hemispheres',stats.fc_labels);
+end
+
+
+if ~isempty(stats.fccorr.left)
+ea_corrplot([stats.corrcl,stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
+
+ea_corrplot([stats.corrcl,stats.fccorr.nright],'Fibercounts, normalized, right hemisphere',stats.fc_labels);
+end
 
 
 
-if ~isempty(stats.fc.fccorr)
-ea_corrplot([stats.corrcl,stats.fc.fccorr],'Fibercounts',stats.fc_labels);
+if ~isempty(stats.fccorr.left)
+ea_corrplot([stats.corrcl,stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
 
-ea_corrplot([stats.corrcl,stats.fc.nfccorr],'Normalized Fibercounts',stats.fc_labels);
+ea_corrplot([stats.corrcl,stats.fccorr.nleft],'Fibercounts, normalized, left hemisphere',stats.fc_labels);
 end
 
 
@@ -983,65 +995,37 @@ M=getappdata(gcf,'M');
 
 % Get volume intersections:
 vicnt=1; ptcnt=1;
-vicorr_right=[]; vicorr_left=[]; vicorr_both=[];
-nvicorr_right=[]; nvicorr_left=[]; nvicorr_both=[];
+
+howmanyvis=length(get(handles.vilist,'Value'));
+howmanypts=length(get(handles.patientlist,'Value'));
+
+vicorr_right=zeros(howmanypts,howmanyvis); vicorr_left=zeros(howmanypts,howmanyvis); vicorr_both=zeros(howmanypts,howmanyvis);
+nvicorr_right=zeros(howmanypts,howmanyvis); nvicorr_left=zeros(howmanypts,howmanyvis); nvicorr_both=zeros(howmanypts,howmanyvis);
 
 vc_labels={};
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
-        for vat=M.stats(pt).ea_stats.vatanalyses(end+M.patient.analysis(pt)).vatsused;
-            if M.stats(pt).ea_stats.vat(vat).Side==1 % right hemisphere
-                try
-                    pval=vicorr_right(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
-                    npval=nvicorr_right(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
-
-                catch
-                    pval=0;
-                    npval=0;
-                end
-                vicorr_right(ptcnt,vicnt)=pval+M.stats(pt).ea_stats.vat(vat).AtlasIntersection(vi);
-                nvicorr_right(ptcnt,vicnt)=npval+M.stats(pt).ea_stats.vat(vat).nAtlasIntersection(vi);
-
-            elseif M.stats(pt).ea_stats.vat(vat).Side==2 % left hemisphere
-                try
-                    pval=vicorr_left(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
-                    npval=nvicorr_left(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
-
-                catch
-                    pval=0;
-                    npval=0;
-                end
-                
-                vicorr_left(ptcnt,vicnt)=pval+M.stats(pt).ea_stats.vat(vat).AtlasIntersection(vi);
-                nvicorr_left(ptcnt,vicnt)=npval+M.stats(pt).ea_stats.vat(vat).nAtlasIntersection(vi);
-          
+        usewhichstim=length(M.stats(pt).ea_stats.stimulation)+M.patient.analysis(pt);
+        for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,1)
+        for vat=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,2);
+            if side==1 % right hemisphere                
+                vicorr_right(ptcnt,vicnt)=vicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(vat).AtlasIntersection(vi);
+                nvicorr_right(ptcnt,vicnt)=nvicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(vat).nAtlasIntersection(vi);
+            elseif side==2 % left hemisphere
+                vicorr_left(ptcnt,vicnt)=vicorr_left(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(vat).AtlasIntersection(vi);
+                nvicorr_left(ptcnt,vicnt)=nvicorr_left(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(vat).nAtlasIntersection(vi);
             end
-            try
-                pval=vicorr_both(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
-                npval=nvicorr_both(ptcnt,vicnt); % prior val ? since there might be more than one VAT on one side
+            vicorr_both(ptcnt,vicnt)=vicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(vat).AtlasIntersection(vi);
+            nvicorr_both(ptcnt,vicnt)=nvicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(vat).nAtlasIntersection(vi);
 
-            catch
-                pval=0;
-                npval=0;
-            end
-            vicorr_both(ptcnt,vicnt)=pval+M.stats(pt).ea_stats.vat(vat).AtlasIntersection(vi);
-            nvicorr_both(ptcnt,vicnt)=npval+M.stats(pt).ea_stats.vat(vat).nAtlasIntersection(vi);
-
+        end
         end
         
         
         % check if all three values have been served. if not, set to zero
         % (e.g. if there was no stimulation at all on one hemisphere, this
         % could happen.
-        if size(vicorr_right,1)<ptcnt; vicorr_right(ptcnt,vicnt)=0; end
-        if size(vicorr_left,1)<ptcnt; vicorr_left(ptcnt,vicnt)=0; end
-        if size(vicorr_both,1)<ptcnt; vicorr_both(ptcnt,vicnt)=0; end
-        
-       
-        if size(nvicorr_right,1)<ptcnt; nvicorr_right(ptcnt,vicnt)=0; end
-        if size(nvicorr_left,1)<ptcnt; nvicorr_left(ptcnt,vicnt)=0; end
-        if size(nvicorr_both,1)<ptcnt; nvicorr_both(ptcnt,vicnt)=0; end
-        
+
         ptcnt=ptcnt+1;
         
     end
@@ -1052,34 +1036,32 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
 end
 
 
-% Get fibercounts (here no difference between sides. fts are always calculated for the whole brain):
+% Get fibercounts (here first ft is always right hemispheric, second always left hemispheric). There will always be two fts used.:
+howmanyfcs=length(get(handles.fclist,'Value'));
 
 fccnt=1; ptcnt=1;
-fccorr=[];
-nfccorr=[];
+fccorr_right=zeros(howmanypts,howmanyfcs);
+nfccorr_right=zeros(howmanypts,howmanyfcs);
+fccorr_left=zeros(howmanypts,howmanyfcs);
+nfccorr_left=zeros(howmanypts,howmanyfcs);
+fccorr_both=zeros(howmanypts,howmanyfcs);
+nfccorr_both=zeros(howmanypts,howmanyfcs);
 fc_labels={};
 for fc=get(handles.fclist,'Value') % get volume interactions for each patient from stats
-    for pt=get(handles.patientlist,'Value')
-        fibersused=M.stats(pt).ea_stats.vatanalyses(end+M.patient.analysis(pt)).fibersused;
-            
-                try
-                    pval=fccorr(ptcnt,fccnt); % prior val ? since there might be more than one VAT on one side
-                    npval=nfccorr(ptcnt,fccnt); % prior val ? since there might be more than one VAT on one side
-
-                catch
-                    pval=0;
-                    npval=0;
-                end
-                
-                fccorr(ptcnt,fccnt)=pval+M.stats(pt).ea_stats.ft(fibersused).fibercounts{1}(fc);
-                nfccorr(ptcnt,fccnt)=npval+M.stats(pt).ea_stats.ft(fibersused).nfibercounts{1}(fc);
-        
+    for pt=get(handles.patientlist,'Value') 
+        usewhichstim=length(M.stats(pt).ea_stats.stimulation)+M.patient.analysis(pt);
+        fccorr_right(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).fibercounts{1}(fc);
+        nfccorr_right(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).nfibercounts{1}(fc);
+        fccorr_left(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).fibercounts{1}(fc);
+        nfccorr_left(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).nfibercounts{1}(fc);
+        fccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).fibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).fibercounts{1}(fc);
+        nfccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).nfibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).nfibercounts{1}(fc);
         ptcnt=ptcnt+1;
         
     end
     ptcnt=1;
     fccnt=fccnt+1;
-    fc_labels{end+1}=M.stats(pt).ea_stats.ft(fibersused).labels{1}{fc};
+    fc_labels{end+1}=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).labels{1}{fc};
 
 end
 
@@ -1092,9 +1074,12 @@ vicorr.right=vicorr_right;
 vicorr.nboth=nvicorr_both;
 vicorr.nleft=nvicorr_left;
 vicorr.nright=nvicorr_right;
-
-fc.fccorr=fccorr;
-fc.nfccorr=nfccorr;
+fccorr.both=fccorr_both;
+fccorr.nboth=nfccorr_both;
+fccorr.right=fccorr_right;
+fccorr.nright=nfccorr_right;
+fccorr.left=fccorr_left;
+fccorr.nleft=nfccorr_left;
 
 % clinical vector:
 corrcl=M.clinical.vars{get(handles.clinicallist,'Value')};
@@ -1106,7 +1091,7 @@ fc_labels=[clinstrs(get(handles.clinicallist,'Value')),fc_labels]; % add name of
 
 stats.corrcl=corrcl;
 stats.vicorr=vicorr;
-stats.fc=fc;
+stats.fccorr=fccorr;
 stats.vc_labels=vc_labels;
 stats.fc_labels=fc_labels;
 
@@ -1358,6 +1343,7 @@ for pt=1:length(M.patient.list)
      if processlocal % gather stats and recos to M
          load([M.ui.groupdir,'tmp',filesep,'ea_stats']);
          load([M.ui.groupdir,'tmp',filesep,'ea_reconstruction']);
+         
          M.stats(pt).ea_stats=ea_stats;
         M.elstruct(pt).coords_mm=coords_mm;
         M.elstruct(pt).trajectory=trajectory;

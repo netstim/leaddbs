@@ -71,9 +71,19 @@ catch
     upriorftlength=1;
 end
 
+% check how many stimulation fields are already in the struct
+load([options.root,options.patientname,filesep,'ea_stats']);
+try
+    priorstimlength=length(ea_stats.stimulation); % check if there are already stimulations inside.
+catch
+    priorstimlength=0;
+end
+
+
 
 for side=1:length(VAT)
     if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
+    
     for vat=1:length(VAT{side}.VAT)
         K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
         
@@ -111,44 +121,39 @@ for side=1:length(VAT)
             
             
             
-            if stimparams(side).U(vat)>0 % stimulation on in this VAT,
                 load([options.root,options.patientname,filesep,'ea_stats']);
-                try
-                    priorvatlength=length(ea_stats.vat);
-                catch
-                    priorvatlength=0;
-                end
-                ea_stats.vat(priorvatlength+1).U=stimparams(side).U(vat);
-                ea_stats.vat(priorvatlength+1).Im=stimparams(side).Im(vat);
-                ea_stats.vat(priorvatlength+1).Contact=[side,vat];
+
+                ea_stats.stimulation(priorstimlength+1).vat(side,vat).U=stimparams(side).U(vat);
+                ea_stats.stimulation(priorstimlength+1).vat(side,vat).Im=stimparams(side).Im(vat);
+                ea_stats.stimulation(priorstimlength+1).vat(side,vat).Contact=vat;
+                ea_stats.stimulation(priorstimlength+1).vat(side,vat).Side=side;
                 
-                ea_stats.vat(priorvatlength+1).Side=side;
+             
                 iXYZ=getappdata(gcf,'iXYZ');
                 ipixdim=getappdata(gcf,'ipixdim');
                 
                 for atlas=1:size(iXYZ,1)
-                    
-                    thisatl=iXYZ{atlas,side};
-                    tpd=ipixdim{atlas,side};
-                    if isempty(thisatl) % for midline or combined atlases, only the right side atlas is used.
-                        thisatl=iXYZ{atlas,1};
-                        tpd=ipixdim{atlas,1};
+                    if stimparams(side).U(vat)>0 % stimulation on in this VAT,
+                        thisatl=iXYZ{atlas,side};
+                        tpd=ipixdim{atlas,side};
+                        if isempty(thisatl) % for midline or combined atlases, only the right side atlas is used.
+                            thisatl=iXYZ{atlas,1};
+                            tpd=ipixdim{atlas,1};
+                        end
+                        tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
+                        
+                        ea_stats.stimulation(priorstimlength+1).vat(side,vat).AtlasIntersection(atlas)=sum(inhull(thisatl,VAT{side}.VAT{vat},K(side).K{vat}))*tpv;
+                        ea_stats.stimulation(priorstimlength+1).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(priorstimlength+1).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
+                    else % simply set vi to zero.
+                        ea_stats.stimulation(priorstimlength+1).vat(side,vat).AtlasIntersection(atlas)=0;
+                        ea_stats.stimulation(priorstimlength+1).vat(side,vat).nAtlasIntersection(atlas)=0;
+                        
                     end
-                    tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
-                    
-                    
-                    ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas)=sum(inhull(thisatl,VAT{side}.VAT{vat},K(side).K{vat}))*tpv;
-                    ea_stats.vat(priorvatlength+1).nAtlasIntersection(atlas)=ea_stats.vat(priorvatlength+1).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
                 end
-                
-                
-                
-                
-                
-                save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
-                
-                
-            end
+          
+           
+           save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
+
             
         end
         
@@ -251,15 +256,7 @@ if stimparams(1).showfibers
     
     % check which areas are connected to VAT by fibers:
     doubleconnectingfibs=cell(0);
-    % check how many fibertrack stat-entries are there already (appending
-    % to the analysis)
-    load([options.root,options.patientname,filesep,'ea_stats']);
-    
-    try
-        vll=length(ea_stats.ft);
-    catch % if none, set to zeros.
-        vll=0;
-    end
+
     
     
     if stimparams(1).showconnectivities
@@ -330,27 +327,10 @@ if stimparams(1).showfibers
                 if options.writeoutstats
                     
                     
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    ea_stats.ft(vll+side).fibercounts{la}=howmanyfibs{side};
-                    
-                    ea_stats.ft(vll+side).nfibercounts{la}=howmanyfibs{side}/sum(stimparams(1,side).volume);
-                    ea_stats.ft(vll+side).labels{la}=atlas_lgnd{2};
-                    % log which vats are used for this side of ft results.
-                    cnt=1;
-                    for vatsused=upriorvatlength:length(ea_stats.vat)
-                        if ea_stats.vat(vatsused).Side==side
-                            ea_stats.ft(vll+side).vatsused{la}(cnt)=vatsused;
-                            cnt=cnt+1;
-                        end
-                    end
-                    
-                    
+                    ea_stats.stimulation(priorstimlength+1).ft(side).fibercounts{la}=howmanyfibs{side};
+                    ea_stats.stimulation(priorstimlength+1).ft(side).nfibercounts{la}=ea_stats.stimulation(priorstimlength+1).ft(side).fibercounts{la}/sum(stimparams(1,side).volume); % stimparams is always 1x2 of size. thus 1,side is correct here.
+                    ea_stats.stimulation(priorstimlength+1).ft(side).labels{la}=atlas_lgnd{2};
+
                 end
             
             
@@ -631,27 +611,6 @@ if stimparams(1).showfibers
 end
 % correct togglestates
 
-
-if options.writeoutstats
-    load([options.root,options.patientname,filesep,'ea_stats']);
-    
-    try
-        ea_stats.vatanalyses(end+1).vatsused=upriorvatlength:length(ea_stats.vat);
-    catch
-        ea_stats.vatanalyses(1).vatsused=upriorvatlength:length(ea_stats.vat);
-    end
-    if stimparams(1).showfibers
-        try
-            ea_stats.vatanalyses(end).fibersused=upriorftlength:length(ea_stats.ft);
-        catch
-            ea_stats.vatanalyses(1).vatsused=upriorvatlength:length(ea_stats.vat);
-
-        end
-    end
-    save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
-    
-    
-end
 
 for side=options.sides
     if ~vaton(side)
