@@ -201,6 +201,7 @@ if stimparams(1).showfibers
     if size(normalized_fibers_mm,1)>size(normalized_fibers_mm,2)
         normalized_fibers_mm=normalized_fibers_mm';
     end
+    numtotalfibs=length(normalized_fibers_mm);
     
     
     
@@ -327,7 +328,7 @@ if stimparams(1).showfibers
                 if options.writeoutstats
                     
                     
-                    ea_stats.stimulation(priorstimlength+1).ft(side).fibercounts{la}=howmanyfibs{side};
+                    ea_stats.stimulation(priorstimlength+1).ft(side).fibercounts{la}=howmanyfibs{side}/numtotalfibs;
                     ea_stats.stimulation(priorstimlength+1).ft(side).nfibercounts{la}=ea_stats.stimulation(priorstimlength+1).ft(side).fibercounts{la}/sum(stimparams(1,side).volume); % stimparams is always 1x2 of size. thus 1,side is correct here.
                     ea_stats.stimulation(priorstimlength+1).ft(side).labels{la}=atlas_lgnd{2};
 

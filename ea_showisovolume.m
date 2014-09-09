@@ -3,6 +3,7 @@ ht=uitoolbar(gcf);
         set(0,'CurrentFigure',resultfig); 
 
 isom=options.d3.isomatrix;
+
 load([options.root,options.patientname,filesep,'LEAD_groupanalysis.mat']);
 
 % check if isomatrix needs to be expanded from single vector by using stimparams:
@@ -20,15 +21,26 @@ if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]
             stimmat{side}=bsxfun(@times,stimmat{side}>0,isom);
         end
         
+    elseif (min(size(isom))==6 || min(size(isom))==8) && max(size(isom))==length(M.patient.list) % 6 * patientlist
+        if size(isom,2)==length(M.patient.list)
+            isom=isom';
+        end
+            
+        stimmat{1}=isom(:,1:size(isom,2)/2);
+        stimmat{2}=isom(:,(size(isom,2)/2)+1:end);
+  
+    else
+        error('Wrong Isomatrix provided.');
     end
     isom=stimmat;
 end
 
 
+
 %
 
 
-jetlist=jet;
+jetlist=othercolor('RdYlGn9');
 if size(isom{1},2)==size(M.elstruct(1).coords_mm{1},1)-1
     shifthalfup=1;
 elseif size(isom{1},2)==size(M.elstruct(1).coords_mm{1},1)
@@ -67,23 +79,29 @@ for side=options.sides
     bb(2,:)=[min(Y{side}),max(Y{side})];
     bb(3,:)=[min(Z{side}),max(Z{side})];
     [XI,YI,ZI]=meshgrid(linspace(bb(1,1),bb(1,2),100),linspace(bb(2,1),bb(2,2),100),linspace(bb(3,1),bb(3,2),100));
+    
     F = scatteredInterpolant(X{side},Y{side},Z{side},V{side});
+    F.ExtrapolationMethod='none';
     VI{side}=F(XI,YI,ZI);
     
     if options.d3.isovscloud==2 % show interpolated point mesh
+        ipcnt=1;
         for xx=1:10:size(VI{side},1)
             for yy=1:10:size(VI{side},2)
                 for zz=1:10:size(VI{side},3)
-                    usefacecolor=VI{side}(xx,yy,zz)*((64+miniso(options.d3.isomatrix(:)))/(maxiso(options.d3.isomatrix(:))+miniso(options.d3.isomatrix(:))));
+                    if ~isnan(VI{side}(xx,yy,zz))
+                    usefacecolor=VI{side}(xx,yy,zz)*((64+miniso(isom))/(maxiso(isom)+miniso(isom)));
                     usefacecolor=ind2rgb(round(usefacecolor),jetlist);
-                    isopatch(side,xx,yy,zz)=plot3(XI(xx,yy,zz),YI(xx,yy,zz),ZI(xx,yy,zz),'.','Color',usefacecolor);
+                    isopatch(side,ipcnt)=plot3(XI(xx,yy,zz),YI(xx,yy,zz),ZI(xx,yy,zz),'.','Color',usefacecolor);
+                    ipcnt=ipcnt+1;
+                    end
                 end
             end
         end
     elseif options.d3.isovscloud==3 % show isovolume
         VI{side}=smooth3(VI{side},'gaussian',3);
 
-        fv{side}=isosurface(XI,YI,ZI,VI{side},mean(VI{side}(:)));
+        fv{side}=isosurface(XI,YI,ZI,VI{side},max(VI{side}(:))/3);
         fv{side}=reducepatch(fv{side},0.5);
         cdat=repmat(60,(length(fv{side}.vertices)),1);
         isopatch(side,1)=patch(fv{side},'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
@@ -109,6 +127,7 @@ for side=options.sides
         [XI,YI,ZI]=meshgrid([bb(1,1):bb(1,2)],[bb(2,1):bb(2,2)],[bb(3,1):bb(3,2)]);
         
         F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),V{side});
+        F.ExtrapolationMethod='none';
         
         clear xix yix zix
         xix=bb(1,1):bb(1,2); yix=bb(2,1):bb(2,2); zix=bb(3,1):bb(3,2);
@@ -122,11 +141,11 @@ for side=options.sides
             case 2
                 lr='left';
         end
-        Vol.fname=[options.root,options.patientname,filesep,'iso_volume_',lr,'.nii'];
+        Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',lr,'.nii'];
         Vol.dtype=[32 1];
         spm_write_vol(Vol,nii{side});
         if side==2; % write out combined volume.
-           Vol.fname=[options.root,options.patientname,filesep,'iso_volume_combined.nii'];
+           Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'];
            nii=nanmean(cat(4,nii{1},nii{2}),4);
             spm_write_vol(Vol,nii);
         end

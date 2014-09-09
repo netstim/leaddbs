@@ -241,6 +241,10 @@ M.patient.analysis(deleteentry)=[];
 M.elstruct(deleteentry)=[];
 M.stimparams(deleteentry)=[];
 
+for cvar=1:length(M.clinical.vars)
+M.clinical.vars{cvar}(deleteentry)=[];
+end
+
 try
 M.stats(deleteentry)=[];
 end
@@ -277,6 +281,7 @@ options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
 options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
 options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
 try options.d3.isomatrix=M.isomatrix; end
+try options.d3.isomatrix_name=M.isomatrix_name; end
 
 options.d3.isovscloud=M.ui.isovscloudpopup;
 options.d3.showisovolume=M.ui.showisovolumecheck;
@@ -652,6 +657,7 @@ end
 % set isomatrix from variable in clinical list
 try
     M.isomatrix=M.clinical.vars{get(handles.clinicallist,'Value')};
+    M.isomatrix_name=M.clinical.labels{get(handles.clinicallist,'Value')};
 end
 
 % refresh selections on VI and FC Lists:

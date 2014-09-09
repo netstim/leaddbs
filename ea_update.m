@@ -74,6 +74,15 @@ if any(~res)
         rmdir([earoot,'tmp'],'s')
         disp('Done.');
     end
+    disp('Writing version file.');
+    version=ea_getvsn('web');
+    if ~isnan(version)
+    fileID = fopen([fileparts(which('lead')),filesep,'.version.txt'],'w');
+    fprintf(fileID,'%6.3f\n',version);
+    fclose(fileID);
+    end
+    disp('Restarting LEAD-DBS.');
+    lead;
 else
     disp('LEAD-DBS is already up-to-date.');
 end

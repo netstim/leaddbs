@@ -51,6 +51,12 @@ end
 
 rmdir([outdir,'lead_dbs',filesep,'cfg'],'s');
 
+
+% delete Manual:
+
+rmdir([outdir,'lead_dbs',filesep,'Lead_manual'],'s');
+
+
 % delete trajvectors:
 
 delete([outdir,'lead_dbs',filesep,'trajvectors.mat']);
@@ -113,6 +119,7 @@ mput(mw, [outdir,'lead_full_release.zip']);
 disp('Done.');
 close(mw);
 
+delete([outdir,'lead_full_release.zip']);
 
 %% zip addcontent:
 addfolders={[outdir,'lead_dbs',filesep,'templates'],[outdir,'lead_dbs',filesep,'fibers'],[outdir,'lead_dbs',filesep,'atlases']};
@@ -138,6 +145,8 @@ for fi=1:length(addfolders)
     rmdir(addfolders{fi},'s');
 end
 
+delete([outdir,'lead_content.zip']);
+
 %% update version of release:
 
 v=ea_getvsn('local');
@@ -162,7 +171,7 @@ mput(mw, [outdir,'lead_dbs.zip']);
 disp('Done.');
 close(mw);
 
-
+delete([outdir,'lead_dbs.zip']);
 
 %% update version:
 
@@ -182,6 +191,8 @@ disp('Uploading Version file.');
 mput(mw, [fileparts(which('lead')),filesep,'.version.txt']);
 disp('Done.');
 close(mw);
+
+
 
 
 %% cleanup:

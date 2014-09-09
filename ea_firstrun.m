@@ -5,8 +5,9 @@ local=ea_getvsn('local');
 web=ea_getvsn('web');
 vcheck=(local<web);
 
+
 if any(vcheck) && ~any(isnan(web))
-    
+    set(handles.updatebutn,'Visible','on');
     set(handles.updatebutn,'BackgroundColor',[0.2,0.8,0.2]);
     if local(2)==0 % initial install
         set(handles.updatebutn,'String','Download Content');

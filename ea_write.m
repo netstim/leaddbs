@@ -48,7 +48,8 @@ if options.d3.write
     end
     %figure2xhtml([options.root,options.patientname,filesep,'eAuto_scene'],resultfig);
     if options.d3.autoserver
-       ea_export_server([],[],options); 
+       ea_export_server([],[],options);
+       close(resultfig);
     end
     
 end

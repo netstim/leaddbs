@@ -156,12 +156,24 @@ function run_button_Callback(hObject, eventdata, handles)
 
 options=handles2options(handles);
 
+if options.d3.autoserver && options.d3.write
+    choice = questdlg('Are you sure you want to export results to the server automatically?', ...
+        'Auto Server-Export', ...
+        'Cancel','Yes','Cancel');
+    % Handle response
+    switch choice
+        case 'Cancel'
+            return
+    end
+end
+
 clc
 uipatdirs=getappdata(gcf,'uipatdir');
 
 if isempty(uipatdirs)
     uipatdirs={'No Patient Selected'};
 end
+
 for pat=1:length(uipatdirs)
     % set patient specific options
     options.root=[fileparts(uipatdirs{pat}),filesep];
