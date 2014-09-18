@@ -83,6 +83,7 @@ switch options.elmodel
         elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
 end
 
+
 if ~isfield(elspec,'eldist')
     
     elspec.eldist=elspec.contact_spacing+elspec.contact_length;

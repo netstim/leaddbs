@@ -249,7 +249,11 @@ for atlas=1:length(atlases.names)
         
         
         % show atlas label
+        if size(XYZ,1)>1 % exception for single-coordinate atlases...
                 [~,centroid]=kmeans(XYZ,1);
+        else
+            centroid=XYZ;
+        end
                 centroid=centroid(1,:);
                 [~,thislabel]=fileparts(atlases.names{atlas});
                 try % use try here because filename might be shorter than .nii
@@ -259,6 +263,7 @@ for atlas=1:length(atlases.names)
                 end
                 end
                 atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline','HorizontalAlignment','Center');
+
                 if ~exist('labelbutton','var')
                 labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Labels');
                 labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors',options),'TooltipString','Label Color');

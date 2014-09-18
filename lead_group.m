@@ -1289,10 +1289,11 @@ for pt=1:length(M.patient.list)
         options.d3.exportisovolume=M.ui.exportisovolumecheck;
 
         options.expstatvat.do=M.ui.statvat;
+try
         options.expstatvat.vars=M.clinical.vars(M.ui.clinicallist);
         options.expstatvat.labels=M.clinical.labels(M.ui.clinicallist);
         options.expstatvat.pt=pt;
-
+end
         options.expstatvat.dir=M.ui.groupdir;
                 processlocal=0;
                 try
@@ -1340,6 +1341,7 @@ for pt=1:length(M.patient.list)
     % Step 2: Re-calculate Fibertracts / VAT
     setappdata(resultfig,'stimparams',M.stimparams(pt,:));
     ea_showfibres_volume(resultfig,options);
+
     if get(handles.savefigscheck,'Value')
         set(resultfig,'visible','on');
     saveas(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig']);
@@ -1751,7 +1753,11 @@ for pt=1:length(M.patient.list)
     % set pt specific options
     options.root=[fileparts(M.patient.list{pt}),filesep];
     [~,options.patientname]=fileparts(M.patient.list{pt});
+    if ~isempty(M.elstruct(pt).elmodel)
     options.elmodel=M.elstruct(pt).elmodel;
+    else
+        options.elmodel='Medtronic 3389';
+    end
     options=ea_resolve_elspec(options);
     options.prefs=ea_prefs(options.patientname);
     options.d3.verbose='off';
@@ -1770,6 +1776,7 @@ for pt=1:length(M.patient.list)
        M.stimparams(pt,side).showfibers=1;
        M.stimparams(pt,side).fiberthresh=1;
        [M.stimparams(pt,side).VAT.VAT,radius,volume]=ea_genvat(M.elstruct(pt).coords_mm,M.stimparams(pt,:),side,options);
+
        M.stimparams(pt,side).radius=radius;
        M.stimparams(pt,side).volume=volume;
        M.stimparams(pt,side).showconnectivities=1;
