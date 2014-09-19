@@ -11,6 +11,7 @@ fibers
 *.woff
 *DS_Store
 !bg_gui.png
+!bg_gui_lg.png
 
 # OS generated files #
 ######################
