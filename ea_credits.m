@@ -16,7 +16,11 @@ function ea_credits
 % conncomp.m - (c) Karl Skretting
 % PropertyGrid - (c) Levente Hunyadi
 % propertiesGUI - (c) Yair M. Altman
-% othercolor - (c) Joshua Atkins
+% othercolor.m - (c) Joshua Atkins
+% normal.m - (c) Sacha van Albada, please cite if used:
+%       Van Albada, S.J., Robinson P.A. (2006) Transformation of arbitrary 
+%       distributions to the normal distribution with application to EEG 
+%       test-retest reliability. J Neurosci Meth (in press)
 
 % Icons in the GUI are generated using the fontawesome typography
 % (http://fontawesome.io/)

@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 02-Sep-2014 11:08:50
+% Last Modified by GUIDE v2.5 19-Sep-2014 13:27:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,7 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes lead_group wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.lg_figure);
 
 
 % Build popup tables:
@@ -84,6 +84,19 @@ set(handles.atlassetpopup,'String',asc);
 
 % get electrode model specs and place in popup
 set(handles.elmodelselect,'String',[{'Patient specified'},ea_resolve_elspec]);
+
+% set background image
+im = imread('bg_gui_lg.png');
+image(im);
+axis off;
+axis fill
+warning('off');
+set(handles.recalcpanel,'BackgroundColor','none');
+set(handles.vizpanel,'BackgroundColor','none');
+set(handles.setuppanel,'BackgroundColor','none');
+set(handles.statspanel,'BackgroundColor','none');
+warning('on');
+
 
 % Fibers:
 
@@ -261,7 +274,7 @@ function vizbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to vizbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+clc;
 M=getappdata(gcf,'M');
 
 % set options
@@ -269,6 +282,7 @@ options=ea_setopts_local(handles);
 % set pt specific options
 options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),filesep];
 [~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
+
 
 options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 options.elmodel=M.elstruct(1).elmodel;
@@ -283,10 +297,28 @@ options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
 try options.d3.isomatrix=M.isomatrix; end
 try options.d3.isomatrix_name=M.isomatrix_name; end
 
+
+
+
+
 options.d3.isovscloud=M.ui.isovscloudpopup;
 options.d3.showisovolume=M.ui.showisovolumecheck;
 
 options.d3.exportisovolume=M.ui.exportisovolumecheck;
+options.d3.colorpointcloud=M.ui.colorpointcloudcheck;
+options.normregressor=M.ui.normregpopup;
+
+% Prepare isomatrix (includes a normalization step if M.ui.normregpopup
+% says so:
+
+try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); end
+
+if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen                
+    disp('Saving data...');
+    % save M
+    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
+    disp('Done.');
+end
 
 
 resultfig=ea_render_view(options,M.elstruct(get(handles.patientlist,'Value')));
@@ -616,6 +648,7 @@ end
 function refreshvifc(handles)
 set(gcf,'name','LEAD-DBS Groupanalysis (updating...)');
 drawnow
+
 % get model data
 
 M=getappdata(gcf,'M');
@@ -624,7 +657,6 @@ if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % n
     set(gcf,'name','LEAD-DBS Groupanalysis');
     return
 end
-
 
 
 % refresh group list
@@ -703,6 +735,8 @@ else
     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 end
 
+
+
     
 % make chooscolors button green if chosen.
 if isfield(M.groups,'colorschosen')
@@ -721,6 +755,8 @@ try set(handles.exportisovolumecheck,'Value',M.ui.exportisovolumecheck); end
 try set(handles.savefigscheck,'Value',M.ui.savefigscheck); end
 try set(handles.removepriorstatscheck,'Value',M.ui.removepriorstatscheck); end
 try set(handles.statvatcheck,'Value',M.ui.statvat); end
+try set(handles.colorpointcloudcheck,'Vakue',M.ui.colorpointcloudcheck); end
+
 
 
 % update selectboxes:
@@ -730,8 +766,14 @@ try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
 try set(handles.labelpopup,'Value',M.ui.labelpopup); end
 try set(handles.modelselect,'Value',M.ui.modelselect); end
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
+try set(handles.normregpopup,'Value',M.ui.normregpopup); end
 
-
+% update enable-disable-dependencies:
+if M.ui.elrendering==3
+   try set(handles.colorpointcloudcheck,'Enable','on'); end
+else
+   try set(handles.colorpointcloudcheck,'Enable','off'); end
+end
 % hide detachbutton if already detached:
 try
 if M.ui.detached
@@ -741,20 +783,8 @@ end
 
 
 if ~isempty(M.patient.list)
-    
-    
-    
-    
-    
     for pt=1:length(M.patient.list)
-    
-    
    % set stimparams based on values provided by user
-
-
-    
-    
-   
    for side=1:2
 
        M.stimparams(pt,side).usefiberset=get(handles.fiberspopup,'String');
@@ -768,19 +798,7 @@ if ~isempty(M.patient.list)
        
        M.stimparams(pt,side).showconnectivities=1;
    end
-        
-        
-        
-        
-        
-        
-        
         % load localization
-        
-        
-        
-        
-        
         [~,pats{pt}]=fileparts(M.patient.list{pt});
         M.elstruct(pt).group=M.patient.group(pt);
         M.elstruct(pt).groupcolors=M.groups.color;
@@ -824,8 +842,6 @@ if ~isempty(M.patient.list)
         if ~isfield(M,'stats')
         % if no stats  present yet, return.
             setappdata(gcf,'M',M);
-            % save M
-            save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
                 set(gcf,'name','LEAD-DBS Groupanalysis');
             return
         end
@@ -871,6 +887,7 @@ else
     M.fclist={};
 end
 
+
 % store everything in Model
 setappdata(gcf,'M',M);
 
@@ -879,10 +896,8 @@ setappdata(gcf,'M',M);
 set(handles.vilist,'String',M.vilist);
 set(handles.fclist,'String',M.fclist);
 
-% save M
-if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen                
-            save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
-end
+
+
 
 set(gcf,'name','LEAD-DBS Groupanalysis');
 
@@ -1654,6 +1669,8 @@ M.ui.elrendering=1;
 M.ui.statvat=0;
 M.ui.elmodelselect=1;
 M.ui.detached=0;
+M.ui.normregpopup=1;
+M.ui.colorpointcloudcheck=0;
 
 
 
@@ -1884,19 +1901,7 @@ M.ui.showisovolumecheck=get(handles.showisovolumecheck,'Value');
 setappdata(gcf,'M',M);
 refreshvifc(handles);
 
-% --- Executes on button press in setisomatrixbutton.
-function setisomatrixbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to setisomatrixbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-M=getappdata(gcf,'M');
 
-
-
-
-
-setappdata(gcf,'M',M);
-refreshvifc(handles);
 
 
 % --- Executes on selection change in isovscloudpopup.
@@ -2089,3 +2094,65 @@ end
 
 setappdata(gcf,'M',M);
 refreshvifc(handles);
+
+
+% --- Executes on button press in colorpointcloudcheck.
+function colorpointcloudcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to colorpointcloudcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of colorpointcloudcheck
+M=getappdata(gcf,'M');
+M.ui.colorpointcloudcheck=get(handles.colorpointcloudcheck,'Value');
+setappdata(gcf,'M',M);
+refreshvifc(handles);
+
+% --- Executes on selection change in normregpopup.
+function normregpopup_Callback(hObject, eventdata, handles)
+% hObject    handle to normregpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns normregpopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from normregpopup
+M=getappdata(gcf,'M');
+M.ui.normregpopup=get(handles.normregpopup,'Value');
+setappdata(gcf,'M',M);
+refreshvifc(handles);
+
+% --- Executes during object creation, after setting all properties.
+function normregpopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to normregpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes when user attempts to close lg_figure.
+function lg_figure_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to lg_figure (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+
+
+if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen                
+disp('Saving data...');
+% save M
+M=getappdata(hObject,'M');
+try
+save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
+catch
+    warning('Data could not be saved.');
+end
+    disp('Bye for now.');
+end
+
+delete(hObject);

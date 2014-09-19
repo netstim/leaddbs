@@ -140,33 +140,11 @@ for side=options.sides
         shifthalfup=0;
         % check if isomatrix needs to be expanded from single vector by using stimparams:
         try
-        isom=options.d3.isomatrix;
-        load([options.root,options.patientname,filesep,'LEAD_groupanalysis.mat']);
+              
         
-        if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]}), if not convert to one.
-            if min(size(isom))==1 && length(size(isom))==2 % single vector
-                
-                for side=1:2
-                    try
-                        stimmat{side}=cat(1,M.stimparams(:,1).U);
-                    catch
-                        warning('Stimulation parameters not set, using each electrode contact from lead.');
-                        stimmat{side}=ones(length(M.patient.list),4);
-                    end
-                    stimmat{side}=bsxfun(@times,stimmat{side}>0,isom);
-                end
-                
-            end
-            isom=stimmat;
-        end
-        
-        
-        %
-        
-        
-        if size(isom{1},2)==size(M.elstruct(1).coords_mm{1},1)-1
+        if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
             shifthalfup=1;
-        elseif size(isom{1},2)==size(M.elstruct(1).coords_mm{1},1)
+        elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts
             shifthalfup=0;
         else
             error('Isomatrix has wrong size. Please specify a correct matrix.')
@@ -193,6 +171,10 @@ for side=options.sides
         ellabel=nan;
         pcnt=1;
         % draw contacts
+        
+        minval=abs(min(options.d3.isomatrix{side}(:)));
+        maxval=max(options.d3.isomatrix{side}(:));
+        
         for cntct=1:elspec.numel-shifthalfup
             
             if (options.d3.showactivecontacts && ismember(cntct,elstruct.activecontacts{side})) || (options.d3.showpassivecontacts && ~ismember(cntct,elstruct.activecontacts{side}))
@@ -207,11 +189,13 @@ for side=options.sides
                     ms=10;
                 end
                 % define color
-                if options.d3.showisovolume && options.d3.isovscloud==1
+                if options.d3.colorpointcloud
                     % draw contacts as colored cloud defined by isomatrix.
+
                     if ~isnan(options.d3.isomatrix{side}(pt,cntct))
                         
-                        usefacecolor=options.d3.isomatrix{side}(pt,cntct)*((64+miniso(options.d3.isomatrix(:)))/(maxiso(options.d3.isomatrix(:))+miniso(options.d3.isomatrix(:))));
+                        usefacecolor=((options.d3.isomatrix{side}(pt,cntct)+minval)/(maxval+minval))*64;
+                        disp(num2str(usefacecolor));
                         usefacecolor=ind2rgb(round(usefacecolor),jetlist);
                     else
                         usefacecolor=nan; % won't draw the point then.
@@ -234,6 +218,7 @@ for side=options.sides
                           mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
                       mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
                       'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                    drawnow
                     pcnt=pcnt+1;  
                     end
                 else

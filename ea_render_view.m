@@ -92,8 +92,7 @@ end
 
 
 
-% show electrode(s).
-
+% show electrodes..
 
 for pt=1:length(elstruct)
     [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
@@ -136,10 +135,12 @@ end
 % handles need to be set for the buttons to work properly (if alt is
 % pressed, all electrodes are made visible/invisible).
 drawnow
+
 try
     
 set(el_label,'Visible','off');
 ellabeltog=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Electrode labels','OnCallback',{@objvisible,el_label},'OffCallback',{@objinvisible,el_label},'State','off');
+
 end
 cnt=1;
 for pt=1:length(elstruct)
@@ -154,9 +155,9 @@ for pt=1:length(elstruct)
       cnt=cnt+2;
         end
 end
-
-
 setappdata(resultfig,'eltog',eltog);
+
+
 clear cnt
 
 
@@ -232,7 +233,7 @@ end
 
 % Show isomatrix data
 
-if options.d3.showisovolume && options.d3.isovscloud>1
+if options.d3.showisovolume
     
     ea_showisovolume(resultfig,elstruct,options);
     

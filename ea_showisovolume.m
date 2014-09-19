@@ -2,48 +2,15 @@ function ea_showisovolume(resultfig,elstruct,options)
 ht=uitoolbar(gcf);
         set(0,'CurrentFigure',resultfig); 
 
-isom=options.d3.isomatrix;
-
-load([options.root,options.patientname,filesep,'LEAD_groupanalysis.mat']);
-
-% check if isomatrix needs to be expanded from single vector by using stimparams:
-
-if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]}), if not convert to one.
-    if min(size(isom))==1 && length(size(isom))==2 % single vector
-        
-        for side=1:2
-            try
-                stimmat{side}=cat(1,M.stimparams(:,1).U);
-            catch
-                warning('Stimulation parameters not set, using each electrode contact from lead.');
-                stimmat{side}=ones(length(M.patient.list),4);
-            end
-            stimmat{side}=bsxfun(@times,stimmat{side}>0,isom);
-        end
-        
-    elseif (min(size(isom))==6 || min(size(isom))==8) && max(size(isom))==length(M.patient.list) % 6 * patientlist
-        if size(isom,2)==length(M.patient.list)
-            isom=isom';
-        end
-            
-        stimmat{1}=isom(:,1:size(isom,2)/2);
-        stimmat{2}=isom(:,(size(isom,2)/2)+1:end);
-  
-    else
-        error('Wrong Isomatrix provided.');
-    end
-    isom=stimmat;
-end
-
 
 
 %
 
 
 jetlist=othercolor('RdYlGn9');
-if size(isom{1},2)==size(M.elstruct(1).coords_mm{1},1)-1
+if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
     shifthalfup=1;
-elseif size(isom{1},2)==size(M.elstruct(1).coords_mm{1},1)
+elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts
     shifthalfup=0;
 else
    error('Isomatrix has wrong size. Please specify a correct matrix.')
@@ -51,8 +18,8 @@ end
 for side=options.sides
     cnt=1;
     for sub=1:length(elstruct)
-        for cont=1:size(isom{1},2)
-            if ~isnan(isom{side}(sub,cont));
+        for cont=1:size(options.d3.isomatrix{1},2)
+            if ~isnan(options.d3.isomatrix{side}(sub,cont));
                 if ~shifthalfup
                     X{side}(cnt)=elstruct(sub).coords_mm{side}(cont,1);
                     Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);
@@ -62,7 +29,7 @@ for side=options.sides
                     Y{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,2),elstruct(sub).coords_mm{side}(cont+1,2)]);
                     Z{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,3),elstruct(sub).coords_mm{side}(cont+1,3)]);
                 end
-                V{side}(cnt)=isom{side}(sub,cont);
+                V{side}(cnt)=options.d3.isomatrix{side}(sub,cont);
                 
                 cnt=cnt+1;
             end
@@ -84,13 +51,13 @@ for side=options.sides
     F.ExtrapolationMethod='none';
     VI{side}=F(XI,YI,ZI);
     
-    if options.d3.isovscloud==2 % show interpolated point mesh
+    if options.d3.isovscloud==1 % show interpolated point mesh
         ipcnt=1;
         for xx=1:10:size(VI{side},1)
             for yy=1:10:size(VI{side},2)
                 for zz=1:10:size(VI{side},3)
                     if ~isnan(VI{side}(xx,yy,zz))
-                    usefacecolor=VI{side}(xx,yy,zz)*((64+miniso(isom))/(maxiso(isom)+miniso(isom)));
+                    usefacecolor=VI{side}(xx,yy,zz)*((64+miniso(options.d3.isomatrix))/(maxiso(options.d3.isomatrix)+miniso(options.d3.isomatrix)));
                     usefacecolor=ind2rgb(round(usefacecolor),jetlist);
                     isopatch(side,ipcnt)=plot3(XI(xx,yy,zz),YI(xx,yy,zz),ZI(xx,yy,zz),'.','Color',usefacecolor);
                     ipcnt=ipcnt+1;
@@ -98,7 +65,7 @@ for side=options.sides
                 end
             end
         end
-    elseif options.d3.isovscloud==3 % show isovolume
+    elseif options.d3.isovscloud==2 % show isovolume
         VI{side}=smooth3(VI{side},'gaussian',3);
 
         fv{side}=isosurface(XI,YI,ZI,VI{side},max(VI{side}(:))/3);
