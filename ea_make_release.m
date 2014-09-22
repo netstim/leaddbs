@@ -83,7 +83,7 @@ rmdir([outdir,'lead_dbs',filesep,'dev'],'s');
 
 % delete tmp folder:
 
-rmdir([outdir,'lead_dbs',filesep,'tmp'],'s');
+try rmdir([outdir,'lead_dbs',filesep,'tmp'],'s'); end
 
 % delete DARTEL-Templates (can be generated the first time they are used):
 
