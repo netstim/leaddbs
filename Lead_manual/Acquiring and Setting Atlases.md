@@ -1,4 +1,4 @@
-## Acquiring and Setting Atlases
+## Acquiring and Installing Atlases
 
 Below you find information about how and where to obtain subcortical atlases suitable for 2D/3D-visualization using _Lead-DBS_. If an atlas you know of is missing, please contact us. If possible, we are also interested in distributing subcortical atlases alongside the toolbox.
 
