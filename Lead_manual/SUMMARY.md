@@ -9,8 +9,6 @@
 * [Normalizing the Images](Normalization of Images.md)
    * [Checking the Coregistrations and Normalizations](checking_the_coregistration.md)
 * [Reconstructing the Electrode Trajectory](Reconstruction of Electrode Trajectory.md)
-   * [Automatic Selection of Entry Points](automatic_reconstruction.md)
-   * [Manual Selection of Entry Points](manual_reconstruction.md)
 * [Manual Correction of Electrode Localization](manual_correction_of_electrode_localization/README.md)
 * [Writing 2D Images](writing_2d_images/README.md)
 * [Creating the 3D Scene](Creating the 3D Scene.md)

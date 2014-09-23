@@ -9,9 +9,11 @@ The main window of Lead-DBS is divided into 6 sections:
 
 The button `Run` in the bottom right runs **all** processes that are checked within the main window.
 
-**Notice**: If you want to run a specific process, you should make sure that only the desired checkboxes are selected!
+To run only one specific process, please make sure that only the desired checkbox is selected. Checkboxes marked with a **bold** text-face address steps that actually perform an analysis themselves, other checkboxes (standard text-face) are used as options within certain processes.
 
-![Lead-DBS Main Window](http://www.andreas-horn.de/leaddbs/manualimages/mainwindow.png)
+Hovering over the checkboxes with the mouse will show an explanation of each element of the Main Window.
+
+![Lead-DBS Main Window](images/mainwindow.png)
 
 #### 1. Selecting the file directory
 

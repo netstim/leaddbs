@@ -2,7 +2,8 @@
 
 After a successful reconstruction, you can obtain 2D images of each contact in its location within the brain tissue. To select this option, the box `[] Write out 2D` must be checked within the _Lead-DBS_ main window.
 
-![Example of a 2D image]()
+![Example of a 2D image](../images/2d_slices.png)
+*Example of a 2D-slice export*
 
 The 2D images are created using the localization settings obtained in the reconstruction and the manual correction. They help to better understand how the electrode contacts relate to the surrounding brain structures.
 

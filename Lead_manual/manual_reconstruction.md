@@ -2,7 +2,7 @@
 
 When the option `Manual` is chosen from the `Entry point for electrodes` dropdown menu, you will be required to select a point in an image where the electrode lead might be located. The artifact is easily recognizable because of its contrast to the surrounding tissue. This selection has to be done for each hemisphere.
 
-![Image for Selecting the entry point](http://www.andreas-horn.de/leaddbs/manualimages/entrypoint.png)
+![Image for Selecting the entry point](images/entrypoint.png)
 
 **IMPORTANT:**
 Always select the artifact presented within the superposed **red square** on the image. By not doing so, the left and right electrodes get mixed up in further steps.

@@ -11,3 +11,5 @@ into the MATLAB command line.
 Within the group-GUI, select the patients using the `Add Patients` button.
 
 From here, several options for visualization and analysis of clinical/multimodal data are available.
+
+`lead group` is still in development and available documentation is scarce. Please contact us for help with a group analysis.

@@ -1,10 +1,10 @@
-## Manual Correction of Electrode Localization
+## Manual Review of Electrode Localization
 
-When `[] Manual correction` is checked and run, _Lead-DBS_ brings up a window where you can visualize and modify the position of the electrodes.
+When `[] Review` is checked and run, _Lead-DBS_ brings up a window where you can visualize and modify the position of the electrodes.
 
 This step should **always** be done in order to obtain a meaningful reconstruction.
 
-![Window for the Manual Correction](http://www.andreas-horn.de/leaddbs/manualimages/manualcorrection.png)
+![Window for the Manual Correction](../images/manualcorrection.png)
 
 **The goal of this step is to adjust the localization of the electrode and contact templates within the artifact, in order to place it as accurately as possible.**
 

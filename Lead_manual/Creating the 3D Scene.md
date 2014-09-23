@@ -2,7 +2,12 @@
 
 If you set the `Render 3D` button in the LEAD main window and press the run button, the LEAD 3D viewer will pop up and will render the reconstructed electrodes and the atlas components the toolbox finds in the atlas directory selected in the main window. This figure can be rotated in 3D using the built-in MATLAB 3D-rotation tool and atlas components can be hidden (and shown back again) by pressing the according colored toggle-buttons in the secondary toolbar of the viewer (press the `alt`-key to hide/show all atlases of the set – this only works if no other tool, such as the MATLAB 3D-rotation tool is selected).
 
-![Example of a 2D image]()
+
+![Example of a 2D image](images/3dview_run.png)
+*Options set to run 3D-visualization*
+
+![Example of a 2D image](images/3d_viewer_example.png)
+*Example view, 3D-viewer*
 
 The following fields of the LEAD mainwindow influence the results of the 3D visualization:
 
