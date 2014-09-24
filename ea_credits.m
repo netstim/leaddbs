@@ -21,6 +21,7 @@ function ea_credits
 %       Van Albada, S.J., Robinson P.A. (2006) Transformation of arbitrary 
 %       distributions to the normal distribution with application to EEG 
 %       test-retest reliability. J Neurosci Meth (in press)
+% CaptureFigVid - (c) Alan Jennings
 
 % Icons in the GUI are generated using the fontawesome typography
 % (http://fontawesome.io/)

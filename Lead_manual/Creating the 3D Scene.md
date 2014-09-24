@@ -28,4 +28,4 @@ The 3D-viewer will open once you press the `Run`-button. The following actions a
 * `Slice control figure`-button: Opens the anatomy control figure which can be used to add x-, y- and z-slices of an MR image to the scene. You can choose to visualize the MNI template, the pre-/post-op MR images of the current patient or a different image. This control figure can also be used to only show a 2D-like slice of the current scene in x-, y- or z-axis
 * `Labels`-button: This button toggles the visibility of labels of the atlas components.
 * `Label-color`-button: Use this button to set the color in which the labels should be visualized.
-
+* `Save video`-button: Use this button to export a video of the current scene. This is done based on preferences set in `ea_prefs.m`

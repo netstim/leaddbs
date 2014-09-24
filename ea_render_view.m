@@ -171,6 +171,11 @@ else
     elstruct=struct;
 end
 
+% Initialize Sliceview-Button
+
+slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
+
+
 
 %% End of patient-specific part.
 
@@ -191,13 +196,15 @@ rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb',options),'Toolt
 
 hdsavebutton=uipushtool(ht,'CData',ea_get_icn('save',options),'TooltipString','Save Scene','ClickedCallback',@export_hd);
 
+% Initialize Video-Export button
+
+videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video',options),'TooltipString','Save video','ClickedCallback',{@export_video,options});
+
+
+
 % Initialize Export to Lead-Server button
 
 lsbutton=uipushtool(ht,'CData',ea_get_icn('server',options),'TooltipString','Export to Server','ClickedCallback',{@ea_export_server,options});
-
-% Initialize Sliceview-Button
-
-slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
 
 
 
@@ -298,7 +305,11 @@ end
 delete(gcf)
 
 
+function export_video(hobj,ev,options)
 
+%% Set up recording parameters (optional), and record
+[FileName,PathName] = uiputfile('LEAD_Scene.mp4','Save file name for video');
+ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName],options.prefs.video.opts);
 
 
 
