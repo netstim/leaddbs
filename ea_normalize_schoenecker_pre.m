@@ -27,6 +27,7 @@ usecombined=0; % if set, eauto will try to fuse coronar and transversal images b
 
 if ischar(options) % return name of method.
     varargout{1}='Schönecker 2009  linear threestep (Include Pre-OP) [MR/CT]';
+    varargout{2}={'SPM8'};
     return
 end
 

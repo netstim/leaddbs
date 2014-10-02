@@ -102,7 +102,6 @@ for iter=1:nit,
                 obj.vr     = res.vr;
             end
         end
-
         res = spm_preproc8(obj);
 
         try

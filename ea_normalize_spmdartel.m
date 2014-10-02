@@ -32,7 +32,8 @@ function varargout=ea_normalize_spmdartel(options)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='SPM DARTEL nonlinear [MR/CT]';
+    varargout{1}='SPM8 DARTEL nonlinear [MR/CT]';
+    varargout{2}={'SPM8'};
     return
 end
 if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')

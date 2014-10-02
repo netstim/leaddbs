@@ -116,9 +116,12 @@ ndir=dir([earoot,'ea_normalize_*.m']);
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);
     try
-        ndc{cnt}=eval([methodf,'(','''prompt''',')']);
+        [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
+        if ismember(spm('ver'),spmvers)
+        ndc{cnt}=thisndc;
         normmethod{cnt}=methodf;
         cnt=cnt+1;
+        end
     end
 end
 setappdata(gcf,'normmethod',normmethod);
@@ -1290,7 +1293,11 @@ function options2handles(options,handles)
 %% set handles
 set(handles.dicomcheck,'Value',options.dicomimp);
 set(handles.normalize_checkbox,'Value',options.normalize.do);
+if options.normalize.methodn>length(handles.normmethod,'String')
+set(handles.normmethod,'Value',1);
+else
 set(handles.normmethod,'Value',options.normalize.methodn);
+end
 set(handles.normcheck,'Value',options.normalize.check);
 set(handles.MRCT,'Value',options.modality);
 

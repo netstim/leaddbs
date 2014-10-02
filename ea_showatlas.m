@@ -250,7 +250,8 @@ for atlas=1:length(atlases.names)
         
         % show atlas label
         if size(XYZ,1)>1 % exception for single-coordinate atlases...
-                [~,centroid]=kmeans(XYZ,1);
+
+            [~,centroid]=kmeans(XYZ,1);
         else
             centroid=XYZ;
         end

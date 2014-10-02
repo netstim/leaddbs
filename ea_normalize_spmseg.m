@@ -19,7 +19,8 @@ function varargout=ea_normalize_spmseg(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='SPM Segment nonlinear [MR/CT]';
+    varargout{1}='SPM8 Segment nonlinear [MR/CT]';
+    varargout{2}={'SPM8'};
     return
 end
 

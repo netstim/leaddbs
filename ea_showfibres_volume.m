@@ -245,8 +245,11 @@ if stimparams(1).showfibers
     
     normalized_fibers_mm=mat2cell(normalized_fibers_mm,idx,3)';
     for side=options.sides
+try
         sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side)));
-        
+catch
+    keyboard
+end
         connectingfibs{side}=normalized_fibers_mm(sideselectedfibs{side});
     end
     selectedfibs=sideselectedfibs; clear sideselectedfibs

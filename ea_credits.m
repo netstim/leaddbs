@@ -12,7 +12,7 @@ function ea_credits
 % Draggable.m - (c) Francois Bouffard
 % Myaa.m - (c) Anders Brun
 % rangesearch.m - (c) Yi Cao
-% map_coords.m - (c) Ged Ridgway
+% map_coords.m and resize_img.m - (c) Ged Ridgway
 % conncomp.m - (c) Karl Skretting
 % PropertyGrid - (c) Levente Hunyadi
 % propertiesGUI - (c) Yair M. Altman
