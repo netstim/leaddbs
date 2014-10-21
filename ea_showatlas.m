@@ -23,7 +23,7 @@ end
 
 nm=[0:1]; % native and mni
 try
-nmind=[options.atl.pt,options.atl.can]; % which shall be performed?
+    nmind=[options.atl.pt,options.atl.can]; % which shall be performed?
 catch
     nmind=[0 1];
 end
@@ -39,347 +39,367 @@ for nativemni=nm % switch between native and mni space atlases.
         case 1
             root=options.earoot;
     end
-
-atlascnt=1;
-set(0,'CurrentFigure',resultfig)
-
-if ~exist([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
     
-    atlases=ea_genatlastable(root,options);
-else
-    load([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-end
-
-
-if options.writeoutstats
-    try
-    load([options.root,options.patientname,filesep,'ea_stats']);
-    prioratlasnames=ea_stats.atlases.names;
-    end
-end
-
-
-try
-    jetlist=options.colormap;
-    atlases.colormap=jetlist;
-    colormap(jetlist)
-catch
+    atlascnt=1;
+    set(0,'CurrentFigure',resultfig)
     
-    if isfield(atlases,'colormap');
+    if ~exist([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
         
-        try
-            jetlist=eval(atlases.colormap);
-            
-        catch
-            jetlist=atlases.colormap;
-            
-        end
-        colormap(atlases.colormap);
-        
-        
-        
+        atlases=ea_genatlastable(root,options);
     else
-        atlases.colormap='jet';
-        jetlist=jet;
+        load([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
     end
-end
-
-
-
-setinterpol=1;
-
-ht=uitoolbar(resultfig);
-
-% prepare stats fields
-if options.writeoutstats
     
-    for el=1:length(elstruct)
-        for side=1:length(elstruct(el).coords_mm)
-            ea_stats.conmat{el,side}=nan(size(elstruct(el).coords_mm{side},1),length(atlases.names));
-            ea_stats.conmat_inside_vox{el,side}=nan(size(elstruct(el).coords_mm{side},1),length(atlases.names));
-            ea_stats.conmat_inside_hull{el,side}=nan(size(elstruct(el).coords_mm{side},1),length(atlases.names));
-            ea_stats.patname{el,side}=elstruct(el).name;
+    
+    if options.writeoutstats
+        try
+            load([options.root,options.patientname,filesep,'ea_stats']);
+            prioratlasnames=ea_stats.atlases.names;
         end
     end
-    ea_stats.atlases=atlases;
-    ea_stats.electrodes=elstruct;
-end
-
-% iterate through atlases, visualize them and write out stats.
-for atlas=1:length(atlases.names)
     
-    if checkrebuild(atlases) % rebuild from nii files
-        switch atlases.types(atlas)
-            case 1 % right hemispheric atlas.
-                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
-            case 2 % left hemispheric atlas.
-                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
-            case 3 % both-sides atlas composed of 2 files.
-                lnii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
-                rnii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
-            case 4 % mixed atlas (one file with both sides information.
-                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],options);
-            case 5 % midline atlas (one file with both sides information.
-                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
+    
+    try
+        jetlist=options.colormap;
+        atlases.colormap=jetlist;
+        colormap(jetlist)
+    catch
+        
+        if isfield(atlases,'colormap');
+            
+            try
+                jetlist=eval(atlases.colormap);
+                
+            catch
+                jetlist=atlases.colormap;
+                
+            end
+            colormap(atlases.colormap);
+            
+            
+            
+        else
+            atlases.colormap='jet';
+            jetlist=jet;
+        end
+    end
+    
+    
+    
+    setinterpol=1;
+    
+    ht=uitoolbar(resultfig);
+    
+    % prepare stats fields
+    if options.writeoutstats
+        
+        for el=1:length(elstruct)
+            for side=1:length(elstruct(el).coords_mm)
+                ea_stats.conmat{el,side}=nan(size(elstruct(el).coords_mm{side},1),length(atlases.names));
+                ea_stats.conmat_inside_vox{el,side}=nan(size(elstruct(el).coords_mm{side},1),length(atlases.names));
+                ea_stats.conmat_inside_hull{el,side}=nan(size(elstruct(el).coords_mm{side},1),length(atlases.names));
+                ea_stats.patname{el,side}=elstruct(el).name;
+            end
+        end
+        ea_stats.atlases=atlases;
+        ea_stats.electrodes=elstruct;
+    end
+    
+    % iterate through atlases, visualize them and write out stats.
+    for atlas=1:length(atlases.names)
+        
+        if checkrebuild(atlases) % rebuild from nii files
+            switch atlases.types(atlas)
+                case 1 % right hemispheric atlas.
+                    nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
+                case 2 % left hemispheric atlas.
+                    nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
+                case 3 % both-sides atlas composed of 2 files.
+                    lnii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
+                    rnii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
+                case 4 % mixed atlas (one file with both sides information).
+                    nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],options);
+                case 5 % midline atlas (one file with both sides information.
+                    nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
+            end
+            
         end
         
-    end
-    
-    for side=detsides(atlases.types(atlas));
-        if checkrebuild(atlases) % rebuild from nii files
-            
-            if atlases.types(atlas)==3 % both-sides atlas composed of 2 files.
-                if side==1
-                    nii=rnii;
+        for side=detsides(atlases.types(atlas));
+            if checkrebuild(atlases) % rebuild from nii files
+                
+                if atlases.types(atlas)==3 % both-sides atlas composed of 2 files.
+                    if side==1
+                        nii=rnii;
+                    elseif side==2
+                        nii=lnii;
+                    end
+                end
+                
+                
+                
+                
+                colornames='bgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywk'; % red is reserved for the VAT.
+                
+                colorc=colornames(1);
+                colorc=rgb(colorc);
+                
+                [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); % find 3D-points that have correct value.
+                
+                
+                if ~isempty(xx)
                     
-                elseif side==2
-                    nii=lnii;
+                    XYZ=[xx,yy,zz]; % concatenate points to one matrix.
+                    
+                    XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
+                    
+                    
+                    
+                    
+                    
                     
                 end
-            end
-        
-        
-        
-        
-        colornames='bgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywk'; % red is reserved for the VAT.
-        
-        colorc=colornames(1);
-        colorc=rgb(colorc);
-            
-            [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); % find 3D-points that have correct value.
-            
-            
-            if ~isempty(xx)
                 
-                XYZ=[xx,yy,zz]; % concatenate points to one matrix.
-                
-                XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
+                %surface(xx(1:10)',yy(1:10)',zz(1:10)',ones(10,1)');
+                hold on
                 
                 
-              
+                
+                
+                
+                
+                
+                
+                if atlases.types(atlas)==4 && side==2 % restore from backup
+                        nii=bnii;
+                        XYZ=bXYZ;
+                end
+                
+                bb=[0,0,0;size(nii.img)];
+                
+                bb=map_coords_proxy(bb,nii);
+                gv=cell(3,1);
+                for dim=1:3
+                    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));
+                end
+                
                 
                 
                 if atlases.types(atlas)==4 % mixed atlas, divide
                     if side==1
+                        bnii=nii;
+                        bXYZ=XYZ;
+                        nii.img=nii.img(gv{1}>0,:,:);
+                        gv{1}=gv{1}(gv{1}>0);
                         XYZ=XYZ(XYZ(:,1)>0,:,:);
-                    elseif side==2
+                        nii.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
+                    elseif side==2                        
+                        nii.img=nii.img(gv{1}<0,:,:);
+                        gv{1}=gv{1}(gv{1}<0);
                         XYZ=XYZ(XYZ(:,1)<0,:,:);
+                        nii.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
                     end
                 end
                 
-            end
-            
-            %surface(xx(1:10)',yy(1:10)',zz(1:10)',ones(10,1)');
-            hold on
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            bb=[0,0,0;size(nii.img)];
-            
-            bb=map_coords_proxy(bb,nii);
-            gv=cell(3,1);
-            for dim=1:3
-                gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));
-            end
-            [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-            if options.prefs.hullsmooth
-                nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
-            end
-            
-            thresh=detthresh(atlases,atlas,nii);
-            fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
-            
-            if ischar(options.prefs.hullsimplify)
                 
-                % get to 700 faces
-                simplify=700/length(fv.faces);
-                fv=reducepatch(fv,simplify);
-                
-            else
-                if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-                    
-                    fv=reducepatch(fv,options.prefs.hullsimplify);
-                elseif options.prefs.hullsimplify>1
-                    simplify=options.prefs.hullsimplify/length(fv.faces);
-                    fv=reducepatch(fv,simplify);
+                [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
+                if options.prefs.hullsmooth
+                    nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
                 end
-            end
-            
-            
-            
-            
-            % set cdata
-            
-            try % check if explicit color info for this atlas is available.
                 
+                thresh=detthresh(atlases,atlas,nii);
+                fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
+                
+                if ischar(options.prefs.hullsimplify)
+                    
+                    % get to 700 faces
+                    simplify=700/length(fv.faces);
+                    fv=reducepatch(fv,simplify);
+                    
+                else
+                    if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
+                        
+                        fv=reducepatch(fv,options.prefs.hullsimplify);
+                    elseif options.prefs.hullsimplify>1
+                        simplify=options.prefs.hullsimplify/length(fv.faces);
+                        fv=reducepatch(fv,simplify);
+                    end
+                end
+                
+                
+                
+                
+                % set cdata
+                
+                try % check if explicit color info for this atlas is available.
+                    
+                    cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1) ... % C-Data for surface
+                        +randn(length(fv.vertices),1)*2)';
+                catch
+                    cdat=abs(repmat(atlas*(maxcolor/length(atlases.names)),length(fv.vertices),1)... % C-Data for surface
+                        +randn(length(fv.vertices),1)*2)';
+                    atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
+                end
+                
+                ifv{atlas,side}=fv; % later stored
+                icdat{atlas,side}=cdat; % later stored
+                iXYZ{atlas,side}=XYZ; % later stored
+                ipixdim{atlas,side}=nii.hdr.dime.pixdim(1:3); % later stored
+                
+                icolorc{atlas,side}=colorc; % later stored
+                
+                pixdim=ipixdim{atlas,side};
+            else
+                
+                fv=atlases.fv{atlas,side};
                 cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1) ... % C-Data for surface
                     +randn(length(fv.vertices),1)*2)';
-            catch
-                cdat=abs(repmat(atlas*(maxcolor/length(atlases.names)),length(fv.vertices),1)... % C-Data for surface
-                    +randn(length(fv.vertices),1)*2)';
-                atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
+                XYZ=atlases.XYZ{atlas,side};
+                pixdim=atlases.pixdim{atlas,side};
+                colorc=nan;
+                
+                
             end
             
-            ifv{atlas,side}=fv; % later stored
-            icdat{atlas,side}=cdat; % later stored
-            iXYZ{atlas,side}=XYZ; % later stored
             
-            ipixdim{atlas,side}=nii.hdr.dime.pixdim(1:3); % later stored
-            icolorc{atlas,side}=colorc; % later stored
-
-            pixdim=ipixdim{atlas,side};
-        else
-
-            fv=atlases.fv{atlas,side};
-            cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1) ... % C-Data for surface
-                +randn(length(fv.vertices),1)*2)';
-            XYZ=atlases.XYZ{atlas,side};
-            pixdim=atlases.pixdim{atlas,side};
-            colorc=nan;
-            
-            
-        end
-        
-        
-        % show atlas label
-        if size(XYZ,1)>1 % exception for single-coordinate atlases...
-
-            [~,centroid]=kmeans(XYZ,1);
-        else
-            centroid=XYZ;
-        end
+            % show atlas label
+            if size(XYZ,1)>1 % exception for single-coordinate atlases...
+                
+                [~,centroid]=kmeans(XYZ,1);
+            else
+                
+                centroid=XYZ;
+                
+            end
+            try
                 centroid=centroid(1,:);
-                [~,thislabel]=fileparts(atlases.names{atlas});
-                try % use try here because filename might be shorter than .nii
-               
+            catch % empty file..
+                break
+            end
+            [~,thislabel]=fileparts(atlases.names{atlas});
+            try % use try here because filename might be shorter than .nii
+                
                 if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
-                                    [~,thislabel]=fileparts(thislabel);
+                    [~,thislabel]=fileparts(thislabel);
                 end
-                end
-                atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline','HorizontalAlignment','Center');
-
-                if ~exist('labelbutton','var')
+            end
+            atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline','HorizontalAlignment','Center');
+            
+            if ~exist('labelbutton','var')
                 labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Labels');
                 labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors',options),'TooltipString','Label Color');
-                end
-        
-        
-        set(0,'CurrentFigure',resultfig); 
-        atlassurfs(atlascnt)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-        
-        
-        % make fv compatible for stats
-        
-        
-        
-        caxis([1 64]);
-        
-        % prepare colorbutton icon
-        
-        atlasc=squeeze(jetlist(round(atlases.colors(atlas)),:));  % color for toggle button icon 
-        colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,atlascnt,'on'},'OffCallback',{@atlasvisible,atlascnt,'off'},'State','on');
-     
-        % gather contact statistics
-        if options.writeoutstats
-            atsearch=KDTreeSearcher(XYZ);
-            for el=1:length(elstruct)
-                
-                [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
-                %s_ix=sideix(side,size(elstruct(el).coords_mm{side},1));
-                
-                ea_stats.conmat{el,side}(:,atlas)=D;
-                Dh=D;
-                
-                try
-                    in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
-                    Dh(in)=0;
-                    
-                catch
-                    disp('No tesselation info found for this atlas. Maybe atlas is too small. Use different hullmethod if needed.');
-                end
-                ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
-                
-                D(D<mean(pixdim))=0; % using mean here but assuming isotropic atlases in general..
-                ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
-                
-                
-                
             end
+            
+            
+            set(0,'CurrentFigure',resultfig);
+            atlassurfs(atlascnt)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
+            
+            
+            % make fv compatible for stats
+            
+            
+            
+            caxis([1 64]);
+            
+            % prepare colorbutton icon
+            
+            atlasc=squeeze(jetlist(round(atlases.colors(atlas)),:));  % color for toggle button icon
+            colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,atlascnt,'on'},'OffCallback',{@atlasvisible,atlascnt,'off'},'State','on');
+            
+            % gather contact statistics
+            if options.writeoutstats
+                atsearch=KDTreeSearcher(XYZ);
+                for el=1:length(elstruct)
+                    
+                    [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
+                    %s_ix=sideix(side,size(elstruct(el).coords_mm{side},1));
+                    
+                    ea_stats.conmat{el,side}(:,atlas)=D;
+                    Dh=D;
+                    
+                    try
+                        in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
+                        Dh(in)=0;
+                        
+                    catch
+                        disp('No tesselation info found for this atlas. Maybe atlas is too small. Use different hullmethod if needed.');
+                    end
+                    ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
+                    
+                    D(D<mean(pixdim))=0; % using mean here but assuming isotropic atlases in general..
+                    ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
+                    
+                    
+                    
+                end
+            end
+            
+            normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
+            
+            
+            ea_spec_atlas(atlassurfs(atlascnt),atlases.names{atlas},atlases.colormap,setinterpol);
+            
+            atlascnt=atlascnt+1;
+            
+            set(gcf,'Renderer','OpenGL')
+            axis off
+            set(gcf,'color','w');
+            axis equal
+            
+            drawnow
+            
+            
         end
-        
-        normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
-
-        
-        ea_spec_atlas(atlassurfs(atlascnt),atlases.names{atlas},atlases.colormap,setinterpol);
-        
-        atlascnt=atlascnt+1;
-        
-        set(gcf,'Renderer','OpenGL')
-        axis off
-        set(gcf,'color','w');
-        axis equal
-
-        drawnow
-        
-        
     end
-end
-
-setappdata(resultfig,'atlassurfs',atlassurfs);
-setappdata(resultfig,'colorbuttons',colorbuttons);
-
-% configure label button to work properly and hide labels as default.
-set(atlaslabels,'Visible','off');
-set(labelbutton,'OnCallback',{@atlasvisible,atlaslabels},'OffCallback',{@atlasinvisible,atlaslabels},'State','off');
-set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
-
-
-
-
-% save table information that has been generated from nii files (on first run with this atlas set).
-try
-atlases.fv=ifv;
-atlases.cdat=icdat;
-atlases.XYZ=iXYZ;
-atlases.pixdim=ipixdim;
-atlases.colorc=icolorc;
-atlases.normals=normals;
-end
-
-
-try
-setappdata(gcf,'iXYZ',atlases.XYZ);
-setappdata(gcf,'ipixdim',atlases.pixdim);
-end
-try
-    atlases.rebuild=0; % always reset rebuild flag.
-save([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases');
-end
-
-if options.writeoutstats
-if exist('prioratlasnames','var')
-    if ~isequal(ea_stats.atlases.names,prioratlasnames)
-        warning('Other atlasset used as before. Deleting VAT and Fiberinfo. Saving backup copy.');
-        save([options.root,options.patientname,filesep,'ea_stats_new'],'ea_stats');
-        load([options.root,options.patientname,filesep,'ea_stats']);
-        save([options.root,options.patientname,filesep,'ea_stats_backup'],'ea_stats');
-        movefile([options.root,options.patientname,filesep,'ea_stats_new.mat'],[options.root,options.patientname,filesep,'ea_stats.mat']);
-    else
-        save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
+    
+    setappdata(resultfig,'atlassurfs',atlassurfs);
+    setappdata(resultfig,'colorbuttons',colorbuttons);
+    
+    % configure label button to work properly and hide labels as default.
+    set(atlaslabels,'Visible','off');
+    set(labelbutton,'OnCallback',{@atlasvisible,atlaslabels},'OffCallback',{@atlasinvisible,atlaslabels},'State','off');
+    set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
+    
+    
+    
+    
+    % save table information that has been generated from nii files (on first run with this atlas set).
+    try
+        atlases.fv=ifv;
+        atlases.cdat=icdat;
+        atlases.XYZ=iXYZ;
+        atlases.pixdim=ipixdim;
+        atlases.colorc=icolorc;
+        atlases.normals=normals;
     end
-else
+    
+    
+    try
+        setappdata(gcf,'iXYZ',atlases.XYZ);
+        setappdata(gcf,'ipixdim',atlases.pixdim);
+    end
+    try
+        atlases.rebuild=0; % always reset rebuild flag.
+        save([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases');
+    end
+    
+    if options.writeoutstats
+        if exist('prioratlasnames','var')
+            if ~isequal(ea_stats.atlases.names,prioratlasnames)
+                warning('Other atlasset used as before. Deleting VAT and Fiberinfo. Saving backup copy.');
+                save([options.root,options.patientname,filesep,'ea_stats_new'],'ea_stats');
+                load([options.root,options.patientname,filesep,'ea_stats']);
+                save([options.root,options.patientname,filesep,'ea_stats_backup'],'ea_stats');
+                movefile([options.root,options.patientname,filesep,'ea_stats_new.mat'],[options.root,options.patientname,filesep,'ea_stats.mat']);
+            else
+                save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
+            end
+        else
             save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
-
-end
-end
-
+            
+        end
+    end
+    
 end
 
 
@@ -411,14 +431,14 @@ if isfield(atlases,'threshold')
         otherwise
             warning(['Threshold type not recognized: ',atlases.threshold.type,'. Overwriting with default.']);
             thresh=max(nii.img(:))*0.5;
-   
+            
     end
     
 else
     
     thresh=max(nii.img(:))*0.5;
 end
-            
+
 
 function reb=checkrebuild(atlases)
 reb=1;
@@ -453,13 +473,13 @@ if(getappdata(gcf,'altpressed'))
     set(cbutn,'State',onoff);
     for el=1:length(atls)
         for side=1:2
-           try
-               set(atls(el), 'Visible', onoff);
-           end
+            try
+                set(atls(el), 'Visible', onoff);
+            end
         end
     end
 else
-set(atls(atlscnt), 'Visible', onoff);
+    set(atls(atlscnt), 'Visible', onoff);
 end
 
 
@@ -507,19 +527,22 @@ else
     wasgzip=0;
 end
 try
-nii=spm_vol(fname);
-
-nii.img=spm_read_vols(nii);
+    nii=spm_vol(fname);
+    
+    nii.img=spm_read_vols(nii);
 catch
     
 end
+
 
 nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
 if ~all(abs(nii.hdr.dime.pixdim(1:3))<=1)
     reslice_nii(fname,fname,[0.5,0.5,0.5],3);
     
-nii=spm_vol(fname);
-nii.img=spm_read_vols(nii);
+    nii=spm_vol(fname);
+    nii.img=spm_read_vols(nii);
+    nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
+    
 end
 if wasgzip
     delete(fname); % since gunzip makes a copy of the zipped file.

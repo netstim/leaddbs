@@ -82,6 +82,28 @@ asc{end+1}='Use none';
 
 set(handles.atlassetpopup,'String',asc);
 
+
+
+% setup modelselect popup
+
+cnt=1;
+earoot=[fileparts(which('lead')),filesep];
+ndir=dir([earoot,'ea_genvat_*.m']);
+for nd=length(ndir):-1:1
+    [~,methodf]=fileparts(ndir(nd).name);
+    try
+        [thisndc]=eval([methodf,'(','''prompt''',')']);
+        ndc{cnt}=thisndc;
+        genvatfunctions{cnt}=methodf;
+        cnt=cnt+1;
+    end
+end
+setappdata(gcf,'genvatfunctions',genvatfunctions);
+
+set(handles.modelselect,'String',ndc);
+
+
+
 % get electrode model specs and place in popup
 set(handles.elmodelselect,'String',[{'Patient specified'},ea_resolve_elspec]);
 
@@ -232,6 +254,9 @@ M.patient.analysis=[M.patient.analysis;zeros(length(folders),1)];
 
 setappdata(gcf,'M',M);
 refreshvifc(handles);
+% save M
+M=getappdata(gcf,'M');
+save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
 
 
 
@@ -800,6 +825,7 @@ if ~isempty(M.patient.list)
    end
         % load localization
         [~,pats{pt}]=fileparts(M.patient.list{pt});
+        
         M.elstruct(pt).group=M.patient.group(pt);
         M.elstruct(pt).groupcolors=M.groups.color;
         M.elstruct(pt).groups=M.groups.group;
@@ -1778,9 +1804,14 @@ for pt=1:length(M.patient.list)
     options=ea_resolve_elspec(options);
     options.prefs=ea_prefs(options.patientname);
     options.d3.verbose='off';
+    
+      % assign correct .m-file to function.
+genvatfunctions=getappdata(gcf,'genvatfunctions');
+ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
+   
    % set stimparams based on values provided by user
 
-   
+ 
    for side=1:2
        M.stimparams(pt,side).U=gU{side}.Properties(pt).Value;
        M.stimparams(pt,side).Im=gI{side}.Properties(pt).Value;
@@ -1792,7 +1823,7 @@ for pt=1:length(M.patient.list)
        M.stimparams(pt,side).labelatlas={options.labelatlas};
        M.stimparams(pt,side).showfibers=1;
        M.stimparams(pt,side).fiberthresh=1;
-       [M.stimparams(pt,side).VAT.VAT,radius,volume]=ea_genvat(M.elstruct(pt).coords_mm,M.stimparams(pt,:),side,options);
+       [M.stimparams(pt,side).VAT.VAT,radius,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.stimparams(pt,:),side,options);
 
        M.stimparams(pt,side).radius=radius;
        M.stimparams(pt,side).volume=volume;
@@ -2009,6 +2040,10 @@ for pt=1:length(M.patient.list)
     options.d3.verbose='off';
    % set stimparams based on values provided by user
 
+      % assign correct .m-file to function.
+genvatfunctions=getappdata(gcf,'genvatfunctions');
+ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
+   
    
    for side=1:2
        M.stimparams(pt,side).U=uidata.U{side}(pt,1:options.elspec.numel);
@@ -2021,7 +2056,7 @@ for pt=1:length(M.patient.list)
        M.stimparams(pt,side).showfibers=1;
        M.stimparams(pt,side).fiberthresh=1;
        
-       M.stimparams(pt,side).VAT.VAT=ea_genvat(M.elstruct(pt).coords_mm,M.stimparams(pt,side),side,options);
+       M.stimparams(pt,side).VAT.VAT=feval(ea_genvat,M.elstruct(pt).coords_mm,M.stimparams(pt,side),side,options);
        M.stimparams(pt,side).showconnectivities=1;
        M.elstruct(pt).activecontacts{side}=find(M.stimparams(pt,side).U);
    end

@@ -68,6 +68,28 @@ setappdata(gcf,'stimparams',stimparams); % store stimulation settings from resul
 
 
 
+% setup modelselect popup
+
+cnt=1;
+earoot=[fileparts(which('lead')),filesep];
+ndir=dir([earoot,'ea_genvat_*.m']);
+for nd=length(ndir):-1:1
+    [~,methodf]=fileparts(ndir(nd).name);
+    try
+        [thisndc]=eval([methodf,'(','''prompt''',')']);
+        ndc{cnt}=thisndc;
+        genvatfunctions{cnt}=methodf;
+        cnt=cnt+1;
+    end
+end
+setappdata(gcf,'genvatfunctions',genvatfunctions);
+
+set(handles.modelselect,'String',ndc);
+
+%
+
+
+
 if ~isempty(stimparams) % stimfigure has been used before..
     for side=1:2
         for el=1:4
@@ -582,6 +604,10 @@ if isfield(elstruct,'group')
     
 end
 
+% assign correct .m-file to function.
+genvatfunctions=getappdata(gcf,'genvatfunctions');
+ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
+
 for el=1:length(elstruct)
     for side=1:length(elstruct.coords_mm)
     if isfield(elstruct,'group') % group analysis, more than one electrode set
@@ -600,7 +626,7 @@ for el=1:length(elstruct)
         
 
         
-        [stimparams(elstruct(el).group,side).VAT(gcnt(elstruct(el).group)).VAT,radius,volume]=ea_genvat(elstruct(el).coords_mm,stimparams,options);
+        [stimparams(elstruct(el).group,side).VAT(gcnt(elstruct(el).group)).VAT,radius,volume]=feval(ea_genvat,elstruct(el).coords_mm,stimparams,options);
         stimparams(elstruct(el).group,side).radius=radius;
         stimparams(elstruct(el).group,side).volume=volume;
         
@@ -614,7 +640,7 @@ for el=1:length(elstruct)
             
         end
         
-        [stimparams(1,side).VAT(el).VAT,radius,volume]=ea_genvat(elstruct(el).coords_mm,stimparams,side,options);
+        [stimparams(1,side).VAT(el).VAT,radius,volume]=feval(ea_genvat,elstruct(el).coords_mm,stimparams,side,options);
            stimparams(1,side).radius=radius;
         stimparams(1,side).volume=volume;
         flix=1;

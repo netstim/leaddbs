@@ -52,6 +52,11 @@ prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration
 prefs.b0=['b0image.nii'];
 prefs.FTR_unnormalized=['FTR.mat'];
 prefs.FTR_normalized=['wFTR.mat'];
+prefs.DTD=['DTD.mat'];
+prefs.HARDI='HARDI.mat';
+prefs.dti='dti.nii';
+prefs.bval='dti.bval';
+prefs.bvec='dti.bvec';
 
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.

@@ -1,4 +1,4 @@
-function [VAT,radius,volume]=ea_genvat(coords,stimparams,side,options)
+function varargout=ea_genvat_maedler(varargin)
 % This function generates a volume of activated tissue around for each
 % electrode.
 % Usage: VAT=ea_genvat(coords_mm,stimparams,options).
@@ -7,6 +7,21 @@ function [VAT,radius,volume]=ea_genvat(coords,stimparams,side,options)
 % 
 % This function only touches the .VAT entry of stimparams struct of the
 % given side.
+
+if nargin==4
+coords=varargin{1};
+stimparams=varargin{2};
+side=varargin{3};
+options=varargin{4};
+elseif nargin==1
+
+if ischar(varargin{1}) % return name of method.
+    varargout{1}='Mädler 2012';
+    return
+end
+end
+
+
 
 
 [xx,yy,zz]=psphere(100);
@@ -31,7 +46,10 @@ end
     end
 
 
-
+varargout{1}=VAT;
+varargout{2}=radius;
+varargout{3}=volume;
+    
 
 
 function r=maedler12_eq3(U,Im)

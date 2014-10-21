@@ -44,6 +44,9 @@ switch command
     case 'labeling'
 set(atls,'FaceVertexAlphaData',repmat(0.5,length(len),1));
 set(atls,'FaceAlpha',0.1);
+ case 'thalamus.nii'
+     set(atls,'FaceVertexAlphaData',repmat(0.5,length(len),1));
+set(atls,'FaceAlpha',0.1);
     otherwise   
 set(atls,'FaceVertexAlphaData',repmat(0.3,length(len),1));
 set(atls,'FaceAlpha',0.7);

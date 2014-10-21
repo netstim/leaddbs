@@ -177,36 +177,6 @@ slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','
 
 
 
-%% End of patient-specific part.
-
-
-% Initialize a draggable lightbulb
-
-[resultfig,lightbulb]=ea_show_light(resultfig);
-set(lightbulb, 'Visible', 'off');
-lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,lightbulb},'OffCallback',{@objinvisible,lightbulb});
-
-
-clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'ceiling_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'ceiling_lamp')},'State','on');
-llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'right_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'right_lamp')},'State','on');
-rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'left_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'left_lamp')},'State','on');
-
-
-% Initialize HD-Export button
-
-hdsavebutton=uipushtool(ht,'CData',ea_get_icn('save',options),'TooltipString','Save Scene','ClickedCallback',@export_hd);
-
-% Initialize Video-Export button
-
-videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video',options),'TooltipString','Save video','ClickedCallback',{@export_video,options});
-
-
-
-% Initialize Export to Lead-Server button
-
-lsbutton=uipushtool(ht,'CData',ea_get_icn('server',options),'TooltipString','Export to Server','ClickedCallback',{@ea_export_server,options});
-
-
 
 
 
@@ -245,6 +215,42 @@ if options.d3.showisovolume
     ea_showisovolume(resultfig,elstruct,options);
     
 end
+
+
+
+
+
+%% End of patient-specific part.
+
+
+% Initialize a draggable lightbulb
+hold on
+[resultfig,lightbulb]=ea_show_light(resultfig);
+set(lightbulb, 'Visible', 'off');
+lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,lightbulb},'OffCallback',{@objinvisible,lightbulb});
+
+
+clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'ceiling_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'ceiling_lamp')},'State','on');
+llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'right_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'right_lamp')},'State','on');
+rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'left_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'left_lamp')},'State','on');
+
+
+% Initialize HD-Export button
+
+hdsavebutton=uipushtool(ht,'CData',ea_get_icn('save',options),'TooltipString','Save Scene','ClickedCallback',@export_hd);
+
+% Initialize Video-Export button
+
+videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video',options),'TooltipString','Save video','ClickedCallback',{@export_video,options});
+
+
+
+% Initialize Export to Lead-Server button
+
+lsbutton=uipushtool(ht,'CData',ea_get_icn('server',options),'TooltipString','Export to Server','ClickedCallback',{@ea_export_server,options});
+
+hold off
+
 set(0,'CurrentFigure',resultfig);
 
 set(gcf,'Renderer','OpenGL')

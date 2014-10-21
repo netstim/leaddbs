@@ -31,7 +31,7 @@ delete([outdir,'lead_dbs',filesep,'ea_ui.mat']);
 
 % delete atlases:
 
-leave_atlases={'ATAG_Linear (Keuken 2014)','ATAG_Nonlinear (Keuken 2014)','ATAG_STN (Forstmann 2012 & Keuken 2013)'};
+leave_atlases={'ATAG_Linear (Keuken 2014)','ATAG_Nonlinear (Keuken 2014)','ATAG_STN (Forstmann 2012 & Keuken 2013)','STN-Subdivisions (Accolla 2014)'};
 
 atls=dir([outdir,'lead_dbs',filesep,'atlases']);
 
