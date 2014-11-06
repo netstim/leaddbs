@@ -116,7 +116,6 @@ end
 fiberscell{1}='Gibbsconnectome';
 fiberscell{2}='Gibbsconnectome5';
 fiberscell{3}='Gibbsconnectome10';
-fiberscell{4}='Gibbsconnectome20';
 fiberscell{5}='Gibbsconnectome50';
 fiberscell{6}='Gibbsconnectome100';
 fiberscell{7}='Gibbsconnectome500';

@@ -191,6 +191,7 @@ if options.d3.writeatlases
             cnt=0;
         end
         % export vizstruct
+        try
         for side=1:2
             for atl=1:length(atlases.fv)
                 
@@ -202,6 +203,7 @@ if options.d3.writeatlases
                     cnt=cnt+1;
                 end
             end
+        end
         end
         
         

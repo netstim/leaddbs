@@ -78,7 +78,7 @@ prefs.addfibers={}; % additional fibers to show.
 
 prefs.ls.autosave=0;
 prefs.firstrun='off'; 
-prefs.ls.dir='/Volumes/Projekte/bg_rest/lead_server/';
+prefs.ls.dir='/Volumes/DBS_Lokas/bg_rest/lead_server/';
 
 %% video export:
 % for help see documentation of CaptureFigVid

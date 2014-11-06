@@ -139,7 +139,7 @@ for side=options.sides
             
             % Show coordinates
             
-            %plot((options.d2.bbsize+1)*interpfactor,(options.d2.bbsize+1)*interpfactor,'*','MarkerSize',15,'MarkerEdgeColor',[0.9 0.9 0.9],'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',2,'LineSmoothing','on');
+            plot((options.d2.bbsize+1)*interpfactor,(options.d2.bbsize+1)*interpfactor,'*','MarkerSize',15,'MarkerEdgeColor',[0.9 0.9 0.9],'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',2,'LineSmoothing','on');
             hold off
             set(gca,'LooseInset',get(gca,'TightInset'))
             % Save results

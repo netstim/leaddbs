@@ -121,7 +121,10 @@ end
 % save to a file if FileName is set, suggested by Patrick Rapin
 if(~isempty(jsonopt('FileName','',opt)))
     fid = fopen(opt.FileName, 'wt');
-    fwrite(fid,json,'char');
+    if ~fid
+        error('No valid destination for lead-server. Read-only filesystem? Please modify prefs.ls.dir in ea_prefs.m to a correct output destination.');
+    end
+        fwrite(fid,json,'char');
     fclose(fid);
 end
 

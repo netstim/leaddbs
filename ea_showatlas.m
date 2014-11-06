@@ -232,7 +232,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 % set cdata
                 
                 try % check if explicit color info for this atlas is available.
-                    
                     cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1) ... % C-Data for surface
                         +randn(length(fv.vertices),1)*2)';
                 catch
@@ -380,7 +379,7 @@ for nativemni=nm % switch between native and mni space atlases.
     end
     try
         atlases.rebuild=0; % always reset rebuild flag.
-        save([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases');
+        save([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
     end
     
     if options.writeoutstats
