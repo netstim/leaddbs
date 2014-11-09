@@ -113,13 +113,14 @@ end
 % Build popup tables:
 % Fibers:
 
-fiberscell{1}='Gibbsconnectome';
-fiberscell{2}='Gibbsconnectome5';
-fiberscell{3}='Gibbsconnectome10';
-fiberscell{5}='Gibbsconnectome50';
-fiberscell{6}='Gibbsconnectome100';
-fiberscell{7}='Gibbsconnectome500';
-fiberscell{8}='Patient-specific DTI-Data';
+
+fibd=dir([options.earoot,'fibers',filesep,'*.mat']);
+fiberscell{1}='Patient-specific DTI-Data';
+
+for fd=2:length(fibd)+1
+[~,fn]=fileparts(fibd(fd-1).name);
+fiberscell{fd}=fn;
+end
 
 set(handles.fiberspopup,'String',fiberscell);
 
@@ -128,7 +129,7 @@ try
     set(handles.fiberspopup,'Value',priorselection);
 
 catch    % reinitialize using third entry.
-    set(handles.fiberspopup,'Value',3);
+    set(handles.fiberspopup,'Value',4);
     
     
 end
@@ -675,9 +676,8 @@ end
 
 PL=getappdata(resultfig,'PL');
 for group=1:length(PL)
-    try
         deletePL(PL(group));
-    end
+    
 end
 clear PL
 
@@ -705,27 +705,31 @@ set(resultfig,'Name',figtitle);
 function deletePL(PL)
 for p=1:length(PL)
     
+    
     if isfield(PL(p),'vatsurfs')
-        delete(PL(p).vatsurfs(logical(PL(p).vatsurfs)));
+                delete(PL(p).vatsurfs(logical(PL(p).vatsurfs))); 
     end
     if isfield(PL(p),'fib_plots')
         if isfield(PL(p).fib_plots,'fibs')
-            delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs)));
+            delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs))); 
         end
         
         if isfield(PL(p).fib_plots,'dcfibs')
-            delete(PL(p).fib_plots.dcfibs(logical(PL(p).fib_plots.dcfibs)));
+            todelete=PL(p).fib_plots.dcfibs((PL(p).fib_plots.dcfibs(:)>0));
+            delete(todelete(:)); 
             
         end
     end
     if isfield(PL(p),'regionsurfs')
-        delete(PL(p).regionsurfs(logical(PL(p).regionsurfs)));
+        todelete=PL(p).regionsurfs(logical(PL(p).regionsurfs));
+         delete(todelete(:)); 
     end
     if isfield(PL(p),'conlabels')
-        delete(PL(p).conlabels(logical(PL(p).conlabels)));
+        todelete=PL(p).conlabels(logical(PL(p).conlabels));
+         delete(todelete(:)); 
     end
     if isfield(PL(p),'ht')
-        delete(PL(p).ht);
+         delete(PL(p).ht);
     end
 end
 

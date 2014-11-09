@@ -79,7 +79,7 @@ catch
     priorstimlength=0;
 end
 
-
+connectingfibs=cell(2,1);
 
 for side=1:length(VAT)
     if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
@@ -256,7 +256,7 @@ try        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
     
     
     % check which areas are connected to VAT by fibers:
-    doubleconnectingfibs=cell(0);
+    doubleconnectingfibs=cell(2,1);
 
     
     
@@ -282,7 +282,7 @@ try        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
                 atlas_lgnd=textscan(aID,'%d %s');
                 allcareas=[];
                 
-                fibmax=length(connectingfibs{side});
+                    fibmax=length(connectingfibs{side});
                 dispercent(0,'Gathering region information');
                 for fib=1:fibmax
                     dispercent(fib/fibmax);
@@ -535,9 +535,11 @@ try        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
     end
     
     % plot fibers that connect to both a region of the labeling atlas and the electrode VAT:
+    
     try cnt=length(PL.bbfibfv)+1; end
-    for la=1:size(doubleconnectingfibs{side},1)
-        for side=options.sides
+    for side=options.sides
+      for la=1:size(doubleconnectingfibs{side},1)
+
             try
             fibmax=length(doubleconnectingfibs{side}(la,:));
             
@@ -592,17 +594,21 @@ try        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
             
             try
             set(PL.fib_plots.dcfibs(la,side,logical(PL.fib_plots.dcfibs(la,side,:))),'EdgeAlpha',0.05);
+            catch
+                keyboard
             end
             
             try
                 dcfiberbutton(la,side)=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_both',options),'TooltipString','Fibers (Electrode and Labeling Atlas)','OnCallback',{@objvisible,PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,1},'OffCallback',{@objvisible,PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,0},'State',getstate(dcfibson(la,side)));
-            
+            catch
+                keyboard
             end
             
             try
                 regionbutton(la,side)=uitoggletool(PL.ht,'CData',ea_get_icn('connectivities',options),'TooltipString','Connected Regions','OnCallback',{@objvisible,PL.regionsurfs(la,side,:),resultfig,'labelson',la,side,1},'OffCallback',{@objvisible,PL.regionsurfs(la,side,:),resultfig,'labelson',la,side,0},'State',getstate(labelson(la,side)));
                 captionbutton(la,side)=uitoggletool(PL.ht,'CData',ea_get_icn('labels',options),'TooltipString','Captions of Connected Regions','OnCallback',{@objvisible,PL.conlabels(la,side,:),resultfig,'captionson',la,side,1},'OffCallback',{@objvisible,PL.conlabels(la,side,:),resultfig,'captionson',la,side,0},'State',getstate(captionson(la,side)));
-                
+            catch
+                keyboard
             end
         end
     end

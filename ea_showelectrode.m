@@ -14,6 +14,7 @@ if ~isfield(elstruct,'elmodel') % usually, elspec is defined by the GUI. In case
 else % if elspec is defined for each electrode, overwrite options-struct settings here.
     o=ea_resolve_elspec(elstruct);
     elspec=o.elspec; clear o
+
 end
 
 if ~isfield(elstruct,'activecontacts')
@@ -171,7 +172,8 @@ for side=options.sides
         ellabel=nan;
         pcnt=1;
         % draw contacts
-        
+
+     
         minval=abs(min(options.d3.isomatrix{side}(:)));
         maxval=max(options.d3.isomatrix{side}(:));
         
@@ -195,7 +197,6 @@ for side=options.sides
                     if ~isnan(options.d3.isomatrix{side}(pt,cntct))
                         
                         usefacecolor=((options.d3.isomatrix{side}(pt,cntct)+minval)/(maxval+minval))*64;
-                        disp(num2str(usefacecolor));
                         usefacecolor=ind2rgb(round(usefacecolor),jetlist);
                     else
                         usefacecolor=nan; % won't draw the point then.

@@ -13,7 +13,7 @@ if ~nargin
 else
    options=varargin{1}; 
 end
-
+try
 switch options.elmodel
     
     case 'Medtronic 3389'
@@ -81,6 +81,10 @@ switch options.elmodel
         elspec.numel=4;
         elspec.tipiscontact=1;
         elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
+end
+catch
+    disp('No electrode model specified.');
+    return
 end
 
 

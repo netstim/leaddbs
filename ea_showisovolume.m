@@ -47,7 +47,7 @@ for side=options.sides
     bb(3,:)=[min(Z{side}),max(Z{side})];
     [XI,YI,ZI]=meshgrid(linspace(bb(1,1),bb(1,2),100),linspace(bb(2,1),bb(2,2),100),linspace(bb(3,1),bb(3,2),100));
     
-    F = scatteredInterpolant(X{side},Y{side},Z{side},V{side});
+    F = scatteredInterpolant(X{side},Y{side},Z{side},double(V{side}));
     F.ExtrapolationMethod='none';
     VI{side}=F(XI,YI,ZI);
     
@@ -93,7 +93,7 @@ for side=options.sides
         clear XI YI ZI
         [XI,YI,ZI]=meshgrid([bb(1,1):bb(1,2)],[bb(2,1):bb(2,2)],[bb(3,1):bb(3,2)]);
         
-        F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),V{side});
+        F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double(V{side}));
         F.ExtrapolationMethod='none';
         
         clear xix yix zix
