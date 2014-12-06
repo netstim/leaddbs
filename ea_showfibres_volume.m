@@ -245,9 +245,9 @@ if stimparams(1).showfibers
     
     normalized_fibers_mm=mat2cell(normalized_fibers_mm,idx,3)';
     for side=options.sides
-try        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
-
-  try      connectingfibs{side}=normalized_fibers_mm(sideselectedfibs{side}); end
+        try        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
+        
+        try      connectingfibs{side}=normalized_fibers_mm(sideselectedfibs{side}); end
     end
     selectedfibs=sideselectedfibs; clear sideselectedfibs
     
@@ -592,24 +592,18 @@ try        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
             end
             dispercent(100,'end');
             
-            try
+            
             set(PL.fib_plots.dcfibs(la,side,logical(PL.fib_plots.dcfibs(la,side,:))),'EdgeAlpha',0.05);
-            catch
-                keyboard
-            end
+
             
-            try
+            
                 dcfiberbutton(la,side)=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_both',options),'TooltipString','Fibers (Electrode and Labeling Atlas)','OnCallback',{@objvisible,PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,1},'OffCallback',{@objvisible,PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,0},'State',getstate(dcfibson(la,side)));
-            catch
-                keyboard
-            end
+       
             
-            try
+            
                 regionbutton(la,side)=uitoggletool(PL.ht,'CData',ea_get_icn('connectivities',options),'TooltipString','Connected Regions','OnCallback',{@objvisible,PL.regionsurfs(la,side,:),resultfig,'labelson',la,side,1},'OffCallback',{@objvisible,PL.regionsurfs(la,side,:),resultfig,'labelson',la,side,0},'State',getstate(labelson(la,side)));
                 captionbutton(la,side)=uitoggletool(PL.ht,'CData',ea_get_icn('labels',options),'TooltipString','Captions of Connected Regions','OnCallback',{@objvisible,PL.conlabels(la,side,:),resultfig,'captionson',la,side,1},'OffCallback',{@objvisible,PL.conlabels(la,side,:),resultfig,'captionson',la,side,0},'State',getstate(captionson(la,side)));
-            catch
-                keyboard
-            end
+
         end
     end
     

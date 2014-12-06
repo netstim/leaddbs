@@ -115,6 +115,16 @@ for side=options.sides
            Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'];
            nii=nanmean(cat(4,nii{1},nii{2}),4);
             spm_write_vol(Vol,nii);
+            
+            % smooth image.
+            matlabbatch{1}.spm.spatial.smooth.data = {[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii,1']};
+            matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
+            matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+            matlabbatch{1}.spm.spatial.smooth.im = 1;
+            matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+            jobs{1}=matlabbatch;
+            cfg_util('run',jobs);
+            clear jobs matlabbatch
         end
     end
     

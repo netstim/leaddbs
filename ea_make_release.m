@@ -1,6 +1,7 @@
 function ea_make_release(varargin)
 % make release - give increase of code and content version number.
- 
+% ea_make_release(outdir,inc_code,inc_cont);
+
 outdir='/PA/Neuro/_projects/lead/release';
     
 if ~nargin % default output.
@@ -9,14 +10,20 @@ if ~nargin % default output.
 elseif nargin==1
         inc_code=0.001;
     inc_cont=0;
+    if ~isempty(varargin{1})
     outdir=varargin{1};
+    end
 elseif nargin==2
-        outdir=varargin{1};
-    inc_code=varargin{2};
+if ~isempty(varargin{1})
+    outdir=varargin{1};
+end
+inc_code=varargin{2};
     inc_cont=0;
 elseif nargin==3
-        outdir=varargin{1};
-    inc_code=varargin{2};
+if ~isempty(varargin{1})
+    outdir=varargin{1};
+end
+inc_code=varargin{2};
     inc_cont=varargin{3};
 end
 
@@ -39,7 +46,7 @@ delete([outdir,'lead_dbs',filesep,'ea_ui.mat']);
 
 % delete atlases:
 
-leave_atlases={'ATAG_Linear (Keuken 2014)','ATAG_Nonlinear (Keuken 2014)','ATAG_STN (Forstmann 2012 & Keuken 2013)','STN-Subdivisions (Accolla 2014)','BGHAT (Prodoehl 2008)'};
+leave_atlases={'CFA Subcortical Shape Atlas (Qiu 2010)','ATAG_Linear (Keuken 2014)','ATAG_Nonlinear (Keuken 2014)','ATAG_STN (Forstmann 2012 & Keuken 2013)','STN-Subdivisions (Accolla 2014)','BGHAT (Prodoehl 2008)'};
 
 atls=dir([outdir,'lead_dbs',filesep,'atlases']);
 

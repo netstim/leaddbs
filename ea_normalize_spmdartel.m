@@ -30,7 +30,6 @@ function varargout=ea_normalize_spmdartel(options)
 % Andreas Horn
 
 
-
 if ischar(options) % return name of method.
     varargout{1}='SPM8 DARTEL nonlinear [MR/CT]';
     varargout{2}={'SPM8'};
@@ -262,7 +261,7 @@ clear matlabbatch jobs;
 
 for export=1:5
     switch export
-        case 2
+        case 1
             outf=options.prefs.prenii;
             fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
             gfina=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii];
@@ -285,9 +284,10 @@ for export=1:5
     end
     
     % save a backup
-    
-    if exist([options.root,options.prefs.patientdir,filesep,outf],'file')
-       try movefile([options.root,options.prefs.patientdir,filesep,outf],[options.root,options.prefs.patientdir,filesep,'ea_backup',date,num2str(now),outf]); end
+    try
+        if exist([options.root,options.prefs.patientdir,filesep,outf],'file')
+            try movefile([options.root,options.prefs.patientdir,filesep,outf],[options.root,options.prefs.patientdir,filesep,'ea_backup',date,num2str(now),outf]); end
+        end
     end
     
     matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']

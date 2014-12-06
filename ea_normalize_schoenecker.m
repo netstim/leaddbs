@@ -1,4 +1,4 @@
-function varargout=ea_normalize(options)
+function varargout=ea_normalize_schoenecker(options)
 % This is a function that normalizes both a copy of transversal and coronar
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
@@ -206,7 +206,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,option
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w1',options.prefs.tranii_unnormalized,',1']
     [options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[options.earoot,filesep,'templates',filesep,'firststepmask.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[options.earoot,filesep,'templates',filesep,'schoenecker',filesep,'secondstepmask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smosrc = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smoref = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.regtype = 'mni';
@@ -244,7 +244,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,optio
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'w2w1c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.tranii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[options.earoot,filesep,'templates',filesep,'secondstepmask.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[options.earoot,filesep,'templates',filesep,'schoenecker',filesep,'thirdstepmask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smosrc = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smoref = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.regtype = 'mni';

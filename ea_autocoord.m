@@ -46,15 +46,40 @@ if options.normalize.do
         movefile([options.root,options.patientname,filesep,'backup_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
     end
     
-    eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the option struct to it.
-    
-    norm_method_applied=options.normalize.method;
+    eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
+    try load([options.root,options.patientname,filesep,'ea_normmethod_applied']); end
+    if exist('norm_method_applied','var')
+        try
+            norm_method_applied{end+1}=options.normalize.method;
+        catch
+            clear norm_method_applied
+            norm_method_applied{1}=options.normalize.method;
+        end
+    else
+        norm_method_applied{1}=options.normalize.method;
+    end
     save([options.root,options.patientname,filesep,'ea_normmethod_applied'],'norm_method_applied');
     
     try
         movefile([options.root,options.patientname,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
         movefile([options.root,options.patientname,filesep,'backup_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
     end
+end
+
+if options.coregct.do
+    eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
+    try load([options.root,options.patientname,filesep,'ea_coregctmethod_applied']); end
+    if exist('coregct_method_applied','var')
+        try
+            coregct_method_applied{end+1}=options.normalize.method;
+        catch
+            coregct_method_applied{1}=options.normalize.method;
+        end
+    else
+        coregct_method_applied{1}=options.normalize.method;
+    end
+    coregct_method_applied=options.coregct.method;
+    save([options.root,options.patientname,filesep,'ea_coregctmethod_applied'],'coregct_method_applied');
 end
 
 

@@ -121,15 +121,16 @@ warning('on');
 
 
 % Fibers:
+% Fibers:
 
-fiberscell{1}='Gibbsconnectome';
-fiberscell{2}='Gibbsconnectome5';
-fiberscell{3}='Gibbsconnectome10';
-fiberscell{4}='Gibbsconnectome20';
-fiberscell{5}='Gibbsconnectome50';
-fiberscell{6}='Gibbsconnectome100';
-fiberscell{7}='Gibbsconnectome500';
-fiberscell{8}='Patient-specific DTI-Data';
+
+fibd=dir([options.earoot,'fibers',filesep,'*.mat']);
+fiberscell{1}='Patient-specific DTI-Data';
+
+for fd=2:length(fibd)+1
+[~,fn]=fileparts(fibd(fd-1).name);
+fiberscell{fd}=fn;
+end
 
 set(handles.fiberspopup,'String',fiberscell);
 
@@ -138,7 +139,7 @@ try
     set(handles.fiberspopup,'Value',priorselection);
 
 catch    % reinitialize using third entry.
-    set(handles.fiberspopup,'Value',3);
+    set(handles.fiberspopup,'Value',4);
     
     
 end
@@ -726,6 +727,7 @@ else
     set(handles.vilist,'Value',M.ui.volumeintersections); 
 end
 end
+
 try
 if M.ui.fibercounts>length(get(handles.fclist,'String'))
     set(handles.fclist,'Value',1);
@@ -888,7 +890,7 @@ if ~isempty(M.patient.list)
         
         try
             priorfclist=M.fclist;
-            M.fclist=ea_stats.ft(1).labels{1};
+            M.fclist=ea_stats.stimulation(1).ft(1).labels{1};
             fcdone=1;
         catch
             fcdone=0;

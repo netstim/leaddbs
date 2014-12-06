@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 02-Sep-2014 14:36:55
+% Last Modified by GUIDE v2.5 23-Nov-2014 12:30:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -103,6 +103,7 @@ set(handles.normpanel,'BackgroundColor','none');
 set(handles.reconpanel,'BackgroundColor','none');
 set(handles.reviewpanel,'BackgroundColor','none');
 set(handles.vizpanel,'BackgroundColor','none');
+set(handles.coregctpanel,'BackgroundColor','none');
 warning('on');
 
 % get electrode model specs and place in popup
@@ -126,6 +127,26 @@ for nd=length(ndir):-1:1
 end
 setappdata(gcf,'normmethod',normmethod);
 set(handles.normmethod,'String',ndc);
+
+
+% add coreg methods to menu
+cnt=1;
+ndir=dir([earoot,'ea_coregctmri_*.m']);
+for nd=length(ndir):-1:1
+    [~,methodf]=fileparts(ndir(nd).name);
+    try
+        [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
+        if ismember(spm('ver'),spmvers)
+        cdc{cnt}=thisndc;
+        coregctmethod{cnt}=methodf;
+        cnt=cnt+1;
+        end
+    end
+end
+setappdata(gcf,'coregctmethod',coregctmethod);
+set(handles.coregctmethod,'String',cdc);
+
+
 
 
 ea_firstrun(handles);
@@ -1192,6 +1213,13 @@ options.normalize.methodn=get(handles.normmethod,'Value');
 options.normalize.check=(get(handles.normcheck,'Value') == get(handles.normcheck,'Max'));
 
 
+options.coregct.do=(get(handles.coregct_checkbox,'Value') == get(handles.coregct_checkbox,'Max'));
+options.coregct.method=getappdata(gcf,'coregctmethod');
+options.coregct.method=options.coregct.method{get(handles.coregctmethod,'Value')};
+options.coregct.methodn=get(handles.coregctmethod,'Value');
+options.coregct.coregthreshs=str2double(get(handles.coregthreshs,'String'));
+
+
 
 % set modality (MR/CT) in options
 options.modality = get(handles.MRCT,'Value');
@@ -1299,6 +1327,17 @@ else
 set(handles.normmethod,'Value',options.normalize.methodn);
 end
 set(handles.normcheck,'Value',options.normalize.check);
+
+
+set(handles.coregct_checkbox,'Value',options.coregct.do);
+if options.coregct.methodn>length(handles.coregctmethod,'String')
+set(handles.coregctmethod,'Value',1);
+else
+set(handles.coregctmethod,'Value',options.coregct.methodn);
+end
+set(handles.coregthreshs,'String',options.coregct.coregthreshs);
+
+
 set(handles.MRCT,'Value',options.modality);
 
 if ismember(1,options.sides)
@@ -1359,3 +1398,62 @@ function exportservercheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of exportservercheck
+storeui(handles);
+
+
+% --- Executes on button press in coregct_checkbox.
+function coregct_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to coregct_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of coregct_checkbox
+storeui(handles);
+
+
+% --- Executes on selection change in coregctmethod.
+function coregctmethod_Callback(hObject, eventdata, handles)
+% hObject    handle to coregctmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns coregctmethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from coregctmethod
+storeui(handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function coregctmethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to coregctmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function coregthreshs_Callback(hObject, eventdata, handles)
+% hObject    handle to coregthreshs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of coregthreshs as text
+%        str2double(get(hObject,'String')) returns contents of coregthreshs as a double
+storeui(handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function coregthreshs_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to coregthreshs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

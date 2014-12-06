@@ -82,3 +82,12 @@ delete([wd,'dartelmni_6_hires_',sprintf('%05d',3),'.nii']);
 gzip([wd,'dartelmni_6_hires.nii']);
 delete([wd,'dartelmni_6_hires.nii']);
 disp('Done.');
+
+movefile([wd,'dartelmni_1.nii'],[fileparts(fileparts(wd)),filesep,'dartelmni_1.nii'])
+movefile([wd,'dartelmni_2.nii'],[fileparts(fileparts(wd)),filesep,'dartelmni_2.nii'])
+movefile([wd,'dartelmni_3.nii'],[fileparts(fileparts(wd)),filesep,'dartelmni_3.nii'])
+movefile([wd,'dartelmni_4.nii'],[fileparts(fileparts(wd)),filesep,'dartelmni_4.nii'])
+movefile([wd,'dartelmni_5.nii'],[fileparts(fileparts(wd)),filesep,'dartelmni_5.nii'])
+movefile([wd,'dartelmni_6.nii'],[fileparts(fileparts(wd)),filesep,'dartelmni_6.nii'])
+
+
