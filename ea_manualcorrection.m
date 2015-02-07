@@ -427,7 +427,7 @@ for doxx=0:1
             if ~getappdata(gcf,'planecset') % initially and once set contrast based on image data.
                 
                 if options.modality==1
-                c_lims=[nanmean(imat(:))-nanstd(imat(:))-3*nanstd(imat(:)),nanmean(imat(:))-nanstd(imat(:))+3*nanstd(imat(:))];
+                c_lims=[ea_nanmean(imat(:))-nanstd(imat(:))-3*nanstd(imat(:)),ea_nanmean(imat(:))-nanstd(imat(:))+3*nanstd(imat(:))];
                 elseif options.modality==2
                         c_lims=[1800,2800]; % Initial guess, CT
                 end
@@ -495,7 +495,7 @@ for subpl=1:4
     
     slice=ea_sample_slice(Vtra,'tra',wsize,coords,cmap(subpl));
     try
-        imagesc(slice,[nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
+        imagesc(slice,[ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
     catch
         imagesc(slice);
     end
@@ -773,4 +773,14 @@ SimKey=Robot;
 SimKey.keyPress(KeyEvent.VK_SPACE)
 SimKey.keyRelease(KeyEvent.VK_SPACE)
 
-
+function y = ea_nanmean(varargin)
+if nargin==2
+    x=varargin{1};
+    dim=varargin{2};
+elseif nargin==1
+x=varargin{1};
+    dim=1;
+end
+    
+N = sum(~isnan(x), dim);
+y = nansum(x, dim) ./ N;

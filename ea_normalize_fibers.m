@@ -23,7 +23,7 @@ b0=load_untouch_nii([options.root,options.patientname,filesep,options.prefs.b0])
 ysize=size(b0.img,2)+1;
 
 ftr = load([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized]);
-dispercent(0,'Normalizing fibers');
+ea_dispercent(0,'Normalizing fibers');
 numfibs=length(ftr.curveSegCell);
 
 
@@ -31,7 +31,7 @@ numfibs=length(ftr.curveSegCell);
 
 for fib=1:numfibs
     
-    dispercent(fib/numfibs);
+    ea_dispercent(fib/numfibs);
     
     %% transpose from freiburg to spm notation.
     
@@ -53,7 +53,7 @@ for fib=1:numfibs
     wfibs{fib}=wfibs{fib}(:,1:3);
     
 end
-dispercent(100,'end');
+ea_dispercent(100,'end');
 
 
 wfibs=wfibs';
@@ -62,26 +62,23 @@ save([options.root,options.patientname,filesep,options.prefs.FTR_normalized],'no
 
 
  
- 
- function  dispercent(varargin)
-%
-percent=round(varargin{1}*100);
 
-if nargin==2
-    if strcmp(varargin{2},'end')
-        fprintf('\n')
-        fprintf('\n')
-        
-        fprintf('\n')
-        
-    else
-        fprintf(1,[varargin{2},':     ']);
-        
-        
-    end
-else
-    fprintf(1,[repmat('\b',1,(length(num2str(percent))+1)),'%d','%%'],percent);
+% create trackvis version
+reftemplate=[spm('dir'),filesep,'canonical',filesep,'single_subj_T1.nii'];
+dnii=load_nii(reftemplate);
+niisize=size(dnii.img); % get dimensions of reference template.
+clear dnii
+specs.origin=[0,0,0];
+specs.dim=niisize;
+try
+    H=spm_dicom_headers([root_directory,options.prefs.sampledtidicom]);
+    specs.orientation=H{1,1}.ImageOrientationPatient;
+catch
+    specs.orientation=[1,0,0,0,1,0];
 end
+[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
+ea_ftr2trk(ftrfname,directory,specs); % export normalized ftr to .trk
 
-
+ftr2trk(['w',ftrfilename,usedartel],directory,['w',ftrfilename,usedartel],specs); % export normalized ftr to .trk
+disp('Done.');
 

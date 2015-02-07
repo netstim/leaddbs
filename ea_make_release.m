@@ -1,15 +1,13 @@
 function ea_make_release(varargin)
 % make release - give increase of code and content version number.
-% ea_make_release(outdir,inc_code,inc_cont);
+% ea_make_release(outdir,inc_code);
 
 outdir='/PA/Neuro/_projects/lead/release';
     
 if ~nargin % default output.
     inc_code=0.001;
-    inc_cont=0;
 elseif nargin==1
         inc_code=0.001;
-    inc_cont=0;
     if ~isempty(varargin{1})
     outdir=varargin{1};
     end
@@ -18,13 +16,11 @@ if ~isempty(varargin{1})
     outdir=varargin{1};
 end
 inc_code=varargin{2};
-    inc_cont=0;
 elseif nargin==3
 if ~isempty(varargin{1})
     outdir=varargin{1};
 end
 inc_code=varargin{2};
-    inc_cont=varargin{3};
 end
 
 disp(['Outputting to ',outdir,'.']);
@@ -59,6 +55,24 @@ catch
 end
     end
 end
+
+% delete labelings:
+
+leave_atlases={'aal.nii','aal.txt'};
+
+atls=dir([outdir,'lead_dbs',filesep,'templates',filesep,'labeling']);
+
+for atl=1:length(atls);
+    if ~ismember(atls(atl).name,leave_atlases) && ~strcmp(atls(atl).name,'.') && ~strcmp(atls(atl).name,'..') && ~strcmp(atls(atl).name,'.DS_Store')
+try        
+        rm([outdir,'lead_dbs',filesep,'atlases',filesep,atls(atl).name]);
+catch
+    disp(['Couldnt delete atlases',filesep,atls(atl).name,'.']);
+end
+    end
+end
+
+
 %mkdir([outdir,'lead_dbs',filesep,'atlases']);
 
 
@@ -116,11 +130,13 @@ delete([outdir,'lead_dbs',filesep,'templates',filesep,'dartel',filesep,'dartelmn
 %% update version of release:
 
 v=ea_getvsn('local');
-v=v+[inc_code;inc_cont];
+v=v+inc_code;
 %delete([outdir,'lead_dbs',filesep,'.version.txt']);
 fileID = fopen([outdir,'lead_dbs',filesep,'.version.txt'],'w');
 fprintf(fileID,'%6.3f\n',v);
 fclose(fileID);
+
+
 
 
 %% zip all_content:
@@ -143,68 +159,18 @@ close(mw);
 
 delete([outdir,'lead_dbs.zip']);
 
-% %% zip addcontent:
-% addfolders={[outdir,'lead_dbs',filesep,'templates'],[outdir,'lead_dbs',filesep,'fibers'],[outdir,'lead_dbs',filesep,'atlases']};
-% zip([outdir,'lead_content.zip'],addfolders);
-% 
-% 
-% 
-% 
-% 
-% %% upload to FTP:
-% disp('Connecting to FTP-Server...');
-% mw = ftp('www.andreas-horn.de','www.andreas-horn.de','andiANDI$1');
-% disp('Changing Dir.');
-% cd(mw,'leaddbs/release');
-% disp('Uploading content.');
-% mput(mw, [outdir,'lead_content.zip']);
-% disp('Done.');
-% close(mw);
-% 
-% 
-% %% remove addcontent:
-% for fi=1:length(addfolders)
-%     rmdir(addfolders{fi},'s');
-% end
-% 
-% delete([outdir,'lead_content.zip']);
-% 
-% %% update version of release:
-% 
-% v=ea_getvsn('local');
-% v=v+[inc_code;inc_cont];
-% v(2)=0;
-% %delete([outdir,'lead_dbs',filesep,'.version.txt']);
-% fileID = fopen([outdir,'lead_dbs',filesep,'.version.txt'],'w');
-% fprintf(fileID,'%6.3f\n',v);
-% fclose(fileID);
-% 
-% %% zip release:
-% zip([outdir,'lead_dbs.zip'],[outdir,'lead_dbs']);
-% rmdir([outdir,'lead_dbs'],'s');
-% 
-% %% upload to FTP:
-% disp('Connecting to FTP-Server...');
-% mw = ftp('www.andreas-horn.de','www.andreas-horn.de','andiANDI$1');
-% disp('Changing Dir.');
-% cd(mw,'leaddbs/release');
-% disp('Uploading release.');
-% mput(mw, [outdir,'lead_dbs.zip']);
-% disp('Done.');
-% close(mw);
-% 
-% delete([outdir,'lead_dbs.zip']);
 
-%% update version:
+
+%% update version (locally):
 
 v=ea_getvsn('local');
-v=v+[inc_code;inc_cont];
+v=v+[inc_code];
 delete([fileparts(which('lead')),filesep,'.version.txt']);
 fileID = fopen([fileparts(which('lead')),filesep,'.version.txt'],'w');
 fprintf(fileID,'%6.3f\n',v);
 fclose(fileID);
 
-%% upload version to FTP:
+%% upload version textfile to FTP:
 disp('Connecting to FTP-Server...');
 mw = ftp('www.andreas-horn.de','www.andreas-horn.de','andiANDI$1');
 disp('Changing Dir.');

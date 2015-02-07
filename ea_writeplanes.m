@@ -101,7 +101,7 @@ for side=options.sides
                     
                     [slice,boundbox]=ea_sample_slice(Vtra,'tra',options.d2.bbsize,coords,el);
                     try
-                    imagesc(slice,[nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
+                    imagesc(slice,[ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
                     catch
                         imagesc(slice);
                     end
@@ -111,7 +111,7 @@ for side=options.sides
                    
                   [slice,boundbox]=ea_sample_slice(Vcor,'cor',options.d2.bbsize,coords,el);
                     try
-                    imagesc(slice,[nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
+                    imagesc(slice,[ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
                     catch
                         imagesc(slice);
                     end
@@ -121,7 +121,7 @@ for side=options.sides
                    
                    [slice,boundbox]=ea_sample_slice(Vsag,'sag',options.d2.bbsize,coords,el);
                     try
-                    imagesc(slice,[nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
+                    imagesc(slice,[ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
                     catch
                         imagesc(slice);
                     end
@@ -161,6 +161,17 @@ end
 
 close(cuts)
 
+function y = ea_nanmean(varargin)
+if nargin==2
+    x=varargin{1};
+    dim=varargin{2};
+elseif nargin==1
+x=varargin{1};
+    dim=1;
+end
+    
+N = sum(~isnan(x), dim);
+y = nansum(x, dim) ./ N;
 
 function screenshot(outn)
 

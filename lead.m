@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 23-Nov-2014 12:30:10
+% Last Modified by GUIDE v2.5 05-Feb-2015 15:51:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -95,6 +95,7 @@ im = imread('bg_gui.png');
 image(im);
 axis off;
 axis fill
+try
 warning('off');
 set(handles.dicompanel,'BackgroundColor','none');
 set(handles.gopanel,'BackgroundColor','none');
@@ -105,6 +106,7 @@ set(handles.reviewpanel,'BackgroundColor','none');
 set(handles.vizpanel,'BackgroundColor','none');
 set(handles.coregctpanel,'BackgroundColor','none');
 warning('on');
+end
 
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
@@ -146,6 +148,24 @@ end
 setappdata(gcf,'coregctmethod',coregctmethod);
 set(handles.coregctmethod,'String',cdc);
 
+
+
+% add ft methods to menu
+cnt=1;
+ndir=dir([earoot,'ea_ft_*.m']);
+for nd=length(ndir):-1:1
+    [~,methodf]=fileparts(ndir(nd).name);
+    try
+        [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
+        if ismember(spm('ver'),spmvers)
+        fdc{cnt}=thisndc;
+        ftmethod{cnt}=methodf;
+        cnt=cnt+1;
+        end
+    end
+end
+setappdata(gcf,'ftmethod',ftmethod);
+set(handles.ftmethod,'String',fdc);
 
 
 
@@ -909,15 +929,6 @@ colormapeditor;
 storeui(handles);
 
 
-% --- Executes on button press in autoimprovecheck.
-function autoimprovecheck_Callback(hObject, eventdata, handles)
-% hObject    handle to autoimprovecheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of autoimprovecheck
-storeui(handles);
-
 
 % --- Executes on button press in canatlcheck.
 function canatlcheck_Callback(hObject, eventdata, handles)
@@ -1056,8 +1067,11 @@ storeui(handles);
 
 function storeui(handles)
 
+try
 chooseboxname=get(handles.patdir_choosebox,'String');
-
+catch
+    return
+end
 % determine if patientfolder is set
 switch chooseboxname
     case 'Choose Patient Directory'
@@ -1212,14 +1226,20 @@ options.normalize.methodn=get(handles.normmethod,'Value');
 
 options.normalize.check=(get(handles.normcheck,'Value') == get(handles.normcheck,'Max'));
 
-
+% coreg CT
 options.coregct.do=(get(handles.coregct_checkbox,'Value') == get(handles.coregct_checkbox,'Max'));
 options.coregct.method=getappdata(gcf,'coregctmethod');
 options.coregct.method=options.coregct.method{get(handles.coregctmethod,'Value')};
 options.coregct.methodn=get(handles.coregctmethod,'Value');
-options.coregct.coregthreshs=str2double(get(handles.coregthreshs,'String'));
+options.coregct.coregthreshs= eval( [ '[', get(handles.coregthreshs,'String'), ']' ] );
 
+options.coregctcheck=get(handles.coregctcheck,'Value');
 
+% fibertracking
+options.ft.do=(get(handles.ft_checkbox,'Value') == get(handles.ft_checkbox,'Max'));
+options.ft.method=getappdata(gcf,'ftmethod');
+options.ft.method=options.ft.method{get(handles.ftmethod,'Value')};
+options.ft.methodn=get(handles.ftmethod,'Value');
 
 % set modality (MR/CT) in options
 options.modality = get(handles.MRCT,'Value');
@@ -1241,7 +1261,7 @@ else
 options.maskwindow=str2num(get(handles.maskwindow_txt,'String')); % size of the window that follows the trajectory
 options.automask=0; % unset automask flag
 end
-options.autoimprove=(get(handles.autoimprovecheck,'Value') == get(handles.autoimprovecheck,'Max')); % if true, there will be some pauses at critical points so that the process can be better visualized. Mainly for demonstration or debugging problems.
+options.autoimprove=1; % if true, there will be some pauses at critical points so that the process can be better visualized. Mainly for demonstration or debugging problems.
 
 options.axiscontrast=(get(handles.axispopup,'Value')); % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
@@ -1315,6 +1335,7 @@ options.colormap=colormap;
 
 
 
+
 function options2handles(options,handles)
 
 
@@ -1328,7 +1349,7 @@ set(handles.normmethod,'Value',options.normalize.methodn);
 end
 set(handles.normcheck,'Value',options.normalize.check);
 
-
+% CT coregistration
 set(handles.coregct_checkbox,'Value',options.coregct.do);
 if options.coregct.methodn>length(handles.coregctmethod,'String')
 set(handles.coregctmethod,'Value',1);
@@ -1336,6 +1357,16 @@ else
 set(handles.coregctmethod,'Value',options.coregct.methodn);
 end
 set(handles.coregthreshs,'String',options.coregct.coregthreshs);
+
+set(handles.coregctcheck,'Value',options.coregctcheck);
+
+% FT options
+set(handles.ft_checkbox,'Value',options.ft.do);
+if options.ft.methodn>length(handles.ftmethod,'String')
+set(handles.ftmethod,'Value',1);
+else
+set(handles.ftmethod,'Value',options.ft.methodn);
+end
 
 
 set(handles.MRCT,'Value',options.modality);
@@ -1360,7 +1391,6 @@ if options.automask
 else
     set(handles.maskwindow_txt,'String',num2str(options.maskwindow));
 end
-set(handles.autoimprovecheck,'Value',options.autoimprove);
 set(handles.axispopup,'Value',options.axiscontrast); % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 set(handles.genptatlascheck,'Value',options.atl.genpt); % generate patient specific atlases
 set(handles.normptatlascheck,'Value',options.atl.normalize); % normalize patient specific atlasset.
@@ -1419,6 +1449,11 @@ function coregctmethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns coregctmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from coregctmethod
+methods=getappdata(gcf,'coregctmethod');
+wm=get(handles.coregctmethod,'Value');
+
+[~,~,alphasug]=eval([methods{wm},'(''probe'')']);
+set(handles.coregthreshs,'String',alphasug);
 storeui(handles);
 
 
@@ -1433,6 +1468,7 @@ function coregctmethod_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+storeui(handles);
 
 
 
@@ -1453,6 +1489,49 @@ function coregthreshs_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+storeui(handles);
+
+
+% --- Executes on button press in coregctcheck.
+function coregctcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to coregctcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of coregctcheck
+storeui(handles);
+
+
+% --- Executes on button press in ft_checkbox.
+function ft_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to ft_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ft_checkbox
+storeui(handles);
+
+% --- Executes on selection change in ftmethod.
+function ftmethod_Callback(hObject, eventdata, handles)
+% hObject    handle to ftmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns ftmethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from ftmethod
+storeui(handles);
+
+% --- Executes during object creation, after setting all properties.
+function ftmethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ftmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');

@@ -58,7 +58,7 @@ maskslice=slice(logical(mask));
 maskslice=reshape(maskslice,sqrt(length(maskslice)),sqrt(length(maskslice)));
 
 
-threshold=nanmean(maskslice(:))-(options.tra_stdfactor+addfactor)*nanstd(maskslice(:)); % =80.
+threshold=ea_nanmean(maskslice(:))-(options.tra_stdfactor+addfactor)*nanstd(maskslice(:)); % =80.
 
 
 %% make binary thresholded copies of slice.
@@ -81,3 +81,14 @@ end
 
 end
 
+function y = ea_nanmean(varargin)
+if nargin==2
+    x=varargin{1};
+    dim=varargin{2};
+elseif nargin==1
+x=varargin{1};
+    dim=1;
+end
+    
+N = sum(~isnan(x), dim);
+y = nansum(x, dim) ./ N;

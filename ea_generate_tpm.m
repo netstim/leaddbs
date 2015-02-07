@@ -3,7 +3,7 @@ function ea_generate_tpm
 spmdir=[fileparts(which('spm')),filesep];
 earoot=[fileparts(which('lead')),filesep];
 
-copyfile([spmdir,'toolbox',filesep,'seg',filesep,'TPM.nii'],[earoot,'templates',filesep,'TPM.nii']);
+copyfile([spmdir,'toolbox',filesep,'Seg',filesep,'TPM.nii'],[earoot,'templates',filesep,'TPM.nii']);
 
 % spm_file_split([earoot,'templates',filesep,'TPM.nii']);
 % 

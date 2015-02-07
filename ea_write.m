@@ -82,7 +82,19 @@ try
         results.distances(electrode)=pdist([coords_mm(electrode,:);realcoords(electrode,:)]);
         
     end
-    results.fit=nanmean(results.distances);
+    results.fit=ea_nanmean(results.distances);
     
 end
 
+
+function y = ea_nanmean(varargin)
+if nargin==2
+    x=varargin{1};
+    dim=varargin{2};
+elseif nargin==1
+x=varargin{1};
+    dim=1;
+end
+    
+N = sum(~isnan(x), dim);
+y = nansum(x, dim) ./ N;

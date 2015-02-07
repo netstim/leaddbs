@@ -1,10 +1,6 @@
 function [mr,b0idx,finames] = ea_build_DTD(bvalue,dirname,dtif,DTDf,HARDIf,bvalf,bvecf)
-
-
-
-
-
-%% filenamen sammeln -> finames
+% converts the dti.nii and dti.bval/.bvec files to Freiburg DTD and raw
+% HARDI-formats.
 
 
 
@@ -22,19 +18,19 @@ end
 
 
 
-%% hier wird in mrstruct umwandelt
+%% change into mrstruct format
 
 mr =  nifti_to_mrstruct('series3D',finames);
 
 
 sz = size(mr.dataAy);
 
-%% dtd bauen
+%% build dtd
 
-mr.user.bfactor = bvalue; % bwert angeben
+mr.user.bfactor = bvalue; % enter bvalue
 
 
-[mr.user.bDir b0idx] = grads(dirname,bvecf,bvalf); % gradientenrichtungen und b0idxe (siehe unten)
+[mr.user.bDir b0idx] = grads(dirname,bvecf,bvalf); % gradient directions
 
 
 
@@ -45,7 +41,7 @@ end;
 b0_image = mean(mr.dataAy(:,:,:,b0idx),4);
 mean_DTI = mean(mr.dataAy(:,:,:,setdiff(1:sz(4),b0idx)),4);
 
-display('calculating diffusion tensor ...');
+display('Calculating diffusion tensor ...');
 
 Eval = zeros([sz(1:3) 3]);
 Evec = zeros([sz(1:3) 3 3]);
@@ -60,7 +56,7 @@ end;
 
 
 
-display('saving ...');
+display('Done. Saving ...');
 
 
 %% save as dtd_struct
@@ -92,7 +88,7 @@ dtd = dtdstruct_modify(dtd,'sortEigvec');
 if isempty(errStr)
     msgStr= sprintf('DTI calculations done, write file dtdStruct as %s',dtdname);
 else
-    msgStr= sprintf('error: DTI calculations done, BUT could not write DTD');
+    msgStr= sprintf('Error: DTI calculations done, BUT could not write DTD');
 end
 
 % write HARDI

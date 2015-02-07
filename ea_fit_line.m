@@ -38,7 +38,19 @@ function [trajectory,trajvector,estpoint]=ea_fit_line(centerline)
     % estimated next point.
     estpoint=trajectory(end,:)+trajvector;
     
+function y = ea_nanmean(varargin)
+if nargin==2
+    x=varargin{1};
+    dim=varargin{2};
+elseif nargin==1
+x=varargin{1};
+    dim=1;
+end
     
+N = sum(~isnan(x), dim);
+y = nansum(x, dim) ./ N;
+
+   
     
    
 
@@ -98,7 +110,7 @@ if fit == 1
     end
 end
 if sum(isfinite(data(:))) < 4
-    finalMean = nanmean(data,dim);
+    finalMean = ea_nanmean(data,dim);
     stdSample = NaN(size(finalMean));
     inlierIdx = find(isfinite(data));
     outlierIdx = [];
@@ -188,5 +200,5 @@ else
     %======
     
     data(outlierIdx) = NaN;
-    finalMean = nanmean(data,dim);
+    finalMean = ea_nanmean(data,dim);
 end

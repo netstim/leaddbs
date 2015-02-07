@@ -12,7 +12,7 @@ switch com
         urlwrite('http://www.lead-dbs.org/release/.version.txt','.webversion.txt','Timeout',5);
         load('.webversion.txt');
         delete('.webversion.txt');
-        version=webversion;
+        version=X_webversion;
         catch
             version=[nan;nan];
         end
@@ -29,6 +29,7 @@ switch com
             fclose(fileID);
         end
 end
+version=version(1);
 
 
 % rough version history: (see git repo for details)

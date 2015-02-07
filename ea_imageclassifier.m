@@ -68,13 +68,14 @@ setappdata(gcf,'tmpoutdir',tmpoutdir);
 
 nii=load_untouch_nii(getappdata(gcf,'dcfilename'));
 nii.img=double(nii.img)/double(max(nii.img(:)));
-
+try
 h=slice(double(nii.img),round(size(nii.img,1)/2),...
     round(size(nii.img,2)/2),...
     round(size(nii.img,3)/2));
 set(h,'FaceColor','interp',...
 	'EdgeColor','none',...
 	'DiffuseStrength',.8)
+end
 colormap gray
 set(gcf, 'menubar', 'figure' )
 set(gcf, 'toolbar', 'figure' )

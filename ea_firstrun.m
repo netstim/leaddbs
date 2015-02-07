@@ -9,22 +9,6 @@ vcheck=(local<web);
 if any(vcheck) && ~any(isnan(web))
     set(handles.updatebutn,'Visible','on');
     set(handles.updatebutn,'BackgroundColor',[0.2,0.8,0.2]);
-    if local(2)==0 % initial install
-        set(handles.updatebutn,'String','Download Content');
-        set(handles.updatebutn,'BackgroundColor',[0.8,0.2,0.2]);
-        
-        choice = questdlg('Welcome to LEAD-DBS! The toolbox needs to download some additional ressources to be fully functional. This requires an internet connection and will take some time (~3 GB of data). Please choose whether to perform this now or later.', ...
-            'Please Download Additional Content', ...
-            'Download later','Download now','Download now');
-        
-        switch choice
-            
-            case 'Download now'
-                ea_update;
-                
-        end
-        
-    end
 else
     set(handles.updatebutn,'Visible','off');
 end

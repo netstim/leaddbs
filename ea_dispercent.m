@@ -1,5 +1,8 @@
-function  dispercent(varargin)
-%
+function  ea_dispercent(varargin)
+% __________________________________________________________________________________
+% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
+
 percent=round(varargin{1}*100);
 
 if nargin==2

@@ -71,18 +71,46 @@ if options.coregct.do
     try load([options.root,options.patientname,filesep,'ea_coregctmethod_applied']); end
     if exist('coregct_method_applied','var')
         try
-            coregct_method_applied{end+1}=options.normalize.method;
+            coregct_method_applied{end+1}=options.coregct.method;
         catch
-            coregct_method_applied{1}=options.normalize.method;
+            clear coregct_method_applied
+            coregct_method_applied{1}=options.coregct.method;
         end
     else
-        coregct_method_applied{1}=options.normalize.method;
+        coregct_method_applied{1}=options.coregct.method;
     end
     coregct_method_applied=options.coregct.method;
     save([options.root,options.patientname,filesep,'ea_coregctmethod_applied'],'coregct_method_applied');
 end
 
+if options.coregctcheck
+    
+    
+    % export "control" niftis with wireframe of normal anatomy..
+    
+    ea_show_ctcoregistration(options);
+    
+end
 
+
+% perform fibertracking
+if options.ft.do
+    
+    eval([options.ft.method,'(options)']); % triggers the fibertracking function and passes the options struct to it.
+    try load([options.root,options.patientname,filesep,'ea_ftmethod_applied']); end
+    if exist('ft_method_applied','var')
+        try
+            ft_method_applied{end+1}=options.ft.method;
+        catch
+            clear ft_method_applied
+            ft_method_applied{1}=options.ft.method;
+        end
+    else
+        ft_method_applied{1}=options.ft.method;
+    end
+    ft_method_applied=options.ft.method;
+    save([options.root,options.patientname,filesep,'ea_ftmethod_applied'],'ft_method_applied');
+end
 
 if options.normalize_fibers % normalize fibertracts ? for now these should be denoted in Freiburg format.
     ea_normalize_fibers(options);

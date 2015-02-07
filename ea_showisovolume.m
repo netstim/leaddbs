@@ -113,7 +113,7 @@ for side=options.sides
         spm_write_vol(Vol,nii{side});
         if side==2; % write out combined volume.
            Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'];
-           nii=nanmean(cat(4,nii{1},nii{2}),4);
+           nii=ea_nanmean(cat(4,nii{1},nii{2}),4);
             spm_write_vol(Vol,nii);
             
             % smooth image.
@@ -132,7 +132,17 @@ for side=options.sides
 
 end
 
-
+function y = ea_nanmean(varargin)
+if nargin==2
+    x=varargin{1};
+    dim=varargin{2};
+elseif nargin==1
+x=varargin{1};
+    dim=1;
+end
+    
+N = sum(~isnan(x), dim);
+y = nansum(x, dim) ./ N;
 
 function isovisible(hobj,ev,atls)
 set(atls, 'Visible', 'on');

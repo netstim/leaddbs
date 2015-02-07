@@ -25,7 +25,11 @@ for scan=1:length(f)
    end
 end
 
+
+
 f=dir(indir);
+
+
 
 
 for scan=1:length(f)
@@ -48,38 +52,51 @@ for scan=1:length(f)
         
         name=[nachname,vorname];
         
+        lpath=genpath([indir,f(scan).name]);
+        delims=strfind(lpath,':');
+        from=1;
+        for d=1:length(delims)
+            pfolds{d}=lpath(from:delims(d)-1);
+            from=delims(d)+1;
+        end
+        
         
         %% dicom import
         
+        % create output folder in working directory..
         if exist([outdir,name],'file')==false
             mkdir([outdir,name]);
         end
         tmpoutdir=[outdir,name];
         
-        
-        files=dir([indir,f(scan).name]);
-        filecell=cell(length(files)-4,1);
-        for i = 4:(length(files)-1)
-            filecell{i-3}=files(i).name;
-            
+        fcnt=1;
+        for pfold=1:length(pfolds)
+            files=dir(pfolds{pfold});
+            for i = 1:(length(files))
+                if ~strcmp(files(i).name(1),'.') && ~files(i).isdir
+                    filecell{fcnt}=[pfolds{pfold},filesep,files(i).name];
+                    fcnt=fcnt+1;
+                end
+            end
         end
+      
         
-        single_s_files=cellfun(@(x) [indir,f(scan).name,filesep,x],filecell(:),'Uniformoutput',false);
-        
-        
-        matlabbatch{1}.spm.util.dicom.data = single_s_files;
+        matlabbatch{1}.spm.util.dicom.data = filecell;
         %%
+        clear filecell
+        
         matlabbatch{1}.spm.util.dicom.root = 'flat';
         matlabbatch{1}.spm.util.dicom.outdir = {tmpoutdir};
         matlabbatch{1}.spm.util.dicom.convopts.format = 'nii';
         matlabbatch{1}.spm.util.dicom.convopts.icedims = 0;
         
         jobs(1)=matlabbatch;
+          
         try
             cfg_util('run',jobs);
             worked=1;
         catch
-            warning('Invalid DICOM folder.');
+            warning('Invalid DICOM structure.');
             worked=0;
         end
         clear matlabbatch jobs

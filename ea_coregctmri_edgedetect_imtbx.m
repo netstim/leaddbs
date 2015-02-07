@@ -1,12 +1,16 @@
-function varargout=ea_coregctmri_edgedetect(options)
+function varargout=ea_coregctmri_edgedetect_imtbx(options)
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='Coregister postop-CT with preop-MRI (Edgedetection)';
+    varargout{1}='Coregister postop-CT with preop-MRI (Edgedetection, use ML imagetoolbox)';
+    if exist('edge.m','file') % check for imtbx.
     varargout{2}={'SPM8','SPM12'};
-    varargout{3}=['0.6,0.4']; % suggestion for alpha-parameter.
+    else
+        varargout{2}={};
+    end
+    varargout{3}=['0.9']; % suggestion for alpha-parameter.
     return
 end
 
@@ -17,6 +21,18 @@ maxiter=200;
     disp('Loading images...');
 
 %reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[0.5 0.5 0.5]);
+% MR
+if isfield(options,'usediffmr_coregct')
+    reslice_nii([options.root,options.patientname,filesep,options.usediffmr_coregct],[options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],[2 2 2],0);
+    MR=load_nii_proxi([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
+    delete([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
+    
+else
+    reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
+    MR=load_nii_proxi([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
+    delete([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
+    
+end
 
 % MR
 if isfield(options,'usediffmr_coregct')
@@ -32,16 +48,19 @@ else
 end
 
 % CT
+
 reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],[2 2 2],0);
 CT=load_nii_proxi([options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized]);
 
 delete([options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized]);
 
-    disp('Done. Smoothing...');
-    MR.img(MR.img<100)=0; % remove noise around brain.
-    MR.img=smooth3(MR.img,'gaussian',[11 11 11]);
-    CT.img(CT.img<0)=0; % remove negative hounsfield parts.
-    CT.img=smooth3(CT.img,'gaussian',[11 11 11]);
+
+
+%disp('Done. Smoothing...');
+MR.img(MR.img<100)=0; % remove noise around brain.
+%MR.img=smooth3(MR.img,'gaussian',[11 11 11]);
+CT.img(CT.img<0)=0; % remove negative hounsfield parts.
+%CT.img=smooth3(CT.img,'gaussian',[11 11 11]);
     
 
 vizz=1; % visualization on
@@ -62,11 +81,12 @@ disp('Done.');
 for alpha=1:length(alphas)
     
     disp(['*** Pass ',num2str(alpha),'/',num2str(length(alphas)),', alpha: ',num2str(alphas(alpha)),'.']);
-    eMR=ea_detect_edges_3d(MR.img,alphas(alpha));
-    eCT=ea_detect_edges_3d(CT.img,alphas(alpha));
+    eMR=ea_detect_edges_3d(MR.img,alphas(alpha),1);
+    eCT=ea_detect_edges_3d(CT.img,alphas(alpha),1);
     
-    eMR(eMR<8)=0;
-    eCT(eCT<2)=0;
+    
+    %eMR(eMR<8)=0;
+    %eCT(eCT<2)=0;
     
     [xx,yy,zz]=ind2sub(size(eMR),find(eMR(:)));
     ptMR=[xx,yy,zz,ones(length(xx),1)]';
@@ -75,6 +95,7 @@ for alpha=1:length(alphas)
     ptCT=[xx,yy,zz,ones(length(xx),1)]';
     ptCT=CT.hdr.mat*ptCT; % mm notation
     disp('Done.');
+    
     
     % define initialization parameters
     
@@ -196,16 +217,17 @@ for costfun=1:3
     clear matlabbatch jobs;
 end
 
-matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]
-    [options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized,',1']};
-jobs{1}=matlabbatch;
-cfg_util('run',jobs);
-clear matlabbatch jobs;
-
 % keep users naming scheme:
 try
 movefile([options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
 end
+% matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]
+%     [options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized,',1']};
+% jobs{1}=matlabbatch;
+% cfg_util('run',jobs);
+% clear matlabbatch jobs;
+
+
 
 
 function ea_mouseMove(object, eventdata)

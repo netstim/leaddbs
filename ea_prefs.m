@@ -38,11 +38,11 @@ prefs.normmatrix=['lmat.txt'];
 
 
 %% 2D-Export
-prefs.d2.useprepost='post'; % can be 'post' or 'pre' to set the backdrop.
+prefs.d2.useprepost='pre'; % can be 'post' or 'pre' to set the backdrop.
 
 %% DICOM-Handling:
 
-prefs.dicom.dicomfiles=1; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
+prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
 
 %% Normalization:
 prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
@@ -57,6 +57,7 @@ prefs.HARDI='HARDI.mat';
 prefs.dti='dti.nii';
 prefs.bval='dti.bval';
 prefs.bvec='dti.bvec';
+prefs.sampledtidicom='sample_dti_dicom.dcm'; % sample DICOM file of DTI image (used for trackvis export).
 
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.

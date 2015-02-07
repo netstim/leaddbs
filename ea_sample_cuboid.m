@@ -126,7 +126,7 @@ switch options.modality
 end
 
 htemp=headtemp.img;
-temp=nanmean(htemp(:,:,:,:),4);
+temp=ea_nanmean(htemp(:,:,:,:),4);
 cimat=squeeze(imat(:,:,:));
 
 
@@ -154,7 +154,7 @@ for xx=1:size(cimat,1)
     end
 end
 
-corrs=nanmean(corrs);
+corrs=ea_nanmean(corrs);
 [maxv,maxi]=max(corrs);
 
 
@@ -179,6 +179,16 @@ end
 
 
 
-
+function y = ea_nanmean(varargin)
+if nargin==2
+    x=varargin{1};
+    dim=varargin{2};
+elseif nargin==1
+x=varargin{1};
+    dim=1;
+end
+    
+N = sum(~isnan(x), dim);
+y = nansum(x, dim) ./ N;
 
 

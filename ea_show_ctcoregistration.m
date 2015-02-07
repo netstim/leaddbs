@@ -1,73 +1,95 @@
-function ea_show_normalization(options)
+function ea_show_ctcoregistration(options)
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-for export=1:3-(options.modality-1) % if CT, only do 1:2, if MR, do 1:3.
-    try
-    switch export
-        case 1
-            checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii,',1'];
-            
-            outf=['check_',options.prefs.prenii];
-            
-            suff='_pre_tra';
-        case 2
-            checkf=        [options.root,options.prefs.patientdir,filesep,options.prefs.tranii,',1'];
-            
-            outf=['check_',options.prefs.tranii];
-            
-            suff='_tra';
-        case 3
-            checkf=        [options.root,options.prefs.patientdir,filesep,options.prefs.cornii,',1'];
-            outf=['check_',options.prefs.cornii];
-            suff='_cor';
-    end
-    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'mni_wires.nii,1']
-        checkf};
-    matlabbatch{1}.spm.util.imcalc.output = outf;
-    matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
-    matlabbatch{1}.spm.util.imcalc.expression = ['5*i1+i2'];
-    matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-    matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-    jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
-    clear matlabbatch jobs;
-   
-    
-    nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,outf]);
- 
-    h1=figure('name',['Normalization results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
-    set(gcf,'color','w')
-    imagesc(flipud(squeeze(nii.img(:,:,round(end/2)))'));
-    axis('equal')
-    axis('off')
-    colormap gray
-    
-    tightfig;
-    
-    h2=figure('name',['Normalization results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
 
-    
-    subplot(2,1,1);
-    imat=scale_image(flipud(squeeze(nii.img(:,round(end/2),:))'),[2,1]);
-    imagesc(imat);
-    axis('equal')
-    axis('off')
-    subplot(2,1,2);
-    imat=scale_image(flipud(squeeze(nii.img(round(end/2),:,:))'),[2,1]);
-    imagesc(imat);
-    axis('equal')
-    axis('off')
-    colormap gray
-
-    tightfig;
-    saveas(h1,[options.root,options.prefs.patientdir,filesep,'normalization_check',suff,'_axial.png']);
-    saveas(h2,[options.root,options.prefs.patientdir,filesep,'normalization_check',suff,'_corsag.png']);
-    end
+% export wireframe of CT:
+disp('Generating wireframe from CT image...');
+if ~exist('edge.m','file')
+    disp('Image toolbox not found, using a slower replacement function...');
+    reslice_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],[options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered],[2 2 2],0);
+    CT=load_nii_proxi([options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered]);
+    useimtbx=0;
+    alpha=0.01;
+else % use image toolbox
+    CT=load_nii_proxi([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
+    useimtbx=1;
+    alpha=0.1;
 end
+
+%delete([options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered]);
+
+%disp('Done. Smoothing...');
+CT.img(CT.img<0)=0; % remove negative hounsfield parts.
+%CT.img=smooth3(CT.img,'gaussian',[11 11 11]);
+
+
+eCT=ea_detect_edges_3d(CT.img,alpha,useimtbx);
+
+CT.hdr.fname=[options.root,options.patientname,filesep,'wires_',options.prefs.ctnii_coregistered];
+spm_write_vol(CT.hdr,eCT);
+
+disp('Done. Fusing images...');
+
+checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
+
+nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
+dims=nii.hdr.dime.pixdim(2:4);
+outf=['check_coregct_',options.prefs.prenii_unnormalized];
+
+suff='_pre_tra';
+
+
+matlabbatch{1}.spm.util.imcalc.input = {checkf
+    [options.root,options.patientname,filesep,'wires_',options.prefs.ctnii_coregistered,',1']
+    };
+matlabbatch{1}.spm.util.imcalc.output = outf;
+matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
+matlabbatch{1}.spm.util.imcalc.expression = ['i1+500*i2'];
+matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+jobs{1}=matlabbatch;
+cfg_util('run',jobs);
+clear matlabbatch jobs;
+
+disp('Done. Showing results.');
+nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,outf]);
+
+h1=figure('name',['Coregistration (CT+MR) results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
+set(gcf,'color','w')
+imagesc(scale_image(squeeze(nii.img(:,:,round(end/2)))',[dims(1)/dims(2),1]));
+axis('equal')
+axis('off')
+colormap gray
+tightfig;
+
+
+h2=figure('name',['Coregistration (CT+MR) results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
+imat=scale_image(squeeze(nii.img(:,round(end/2),:))',[dims(3)/dims(1),1]);
+imagesc(imat);
+axis('equal')
+axis('off')
+colormap gray
+tightfig;
+
+
+h3=figure('name',['Coregistration (CT+MR) results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
+imat=scale_image(squeeze(nii.img(round(end/2),:,:))',[dims(3)/dims(2),1]);
+imagesc(imat);
+axis('equal')
+axis('off')
+colormap gray
+tightfig;
+
+saveas(h1,[options.root,options.prefs.patientdir,filesep,'ctmrcoreg_check',suff,'_d1.png']);
+saveas(h2,[options.root,options.prefs.patientdir,filesep,'ctmrcoreg_check',suff,'_d2.png']);
+saveas(h3,[options.root,options.prefs.patientdir,filesep,'ctmrcoreg_check',suff,'_d3.png']);
+
+
+
 
 
 
@@ -219,14 +241,19 @@ set(hfig, 'Units', origfigunits);
 
 function scaled = scale_image(imat,scale_zoom)
 
-  oldSize = size(imat);                               % Old image size
-  newSize = max(floor(scale_zoom(1:2).*oldSize(1:2)),1);  % New image size
-  newX = ((1:newSize(2))-0.5)./scale_zoom(2)+0.5;  % New image pixel X coordinates
-  newY = ((1:newSize(1))-0.5)./scale_zoom(1)+0.5;  % New image pixel Y coordinates
-  oldClass = class(imat);  % Original image type
-  imat = double(imat);      % Convert image to double precision for interpolation
-  scaled = interp2(imat,newX,newY(:),'cubic');
-  scaled = cast(scaled,oldClass);  % Convert back to original image type
+oldSize = size(imat);                               % Old image size
+newSize = max(floor(scale_zoom(1:2).*oldSize(1:2)),1);  % New image size
+newX = ((1:newSize(2))-0.5)./scale_zoom(2)+0.5;  % New image pixel X coordinates
+newY = ((1:newSize(1))-0.5)./scale_zoom(1)+0.5;  % New image pixel Y coordinates
+oldClass = class(imat);  % Original image type
+imat = double(imat);      % Convert image to double precision for interpolation
+scaled = interp2(imat,newX,newY(:),'cubic');
+scaled = cast(scaled,oldClass);  % Convert back to original image type
 
 
+function nii=load_nii_proxi(fname)
 
+V=spm_vol(fname);
+X=spm_read_vols(V);
+nii.img=X;
+nii.hdr=V;
