@@ -112,6 +112,14 @@ if options.ft.do
     save([options.root,options.patientname,filesep,'ea_ftmethod_applied'],'ft_method_applied');
 end
 
+
+% create structural CM
+if options.ftCM.do
+    
+    ea_createCM_dti(options);
+end
+
+
 if options.normalize_fibers % normalize fibertracts ? for now these should be denoted in Freiburg format.
     ea_normalize_fibers(options);
 end

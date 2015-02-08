@@ -1,4 +1,4 @@
-function ea_ftr2trk(ftrfilename,directory,specs)
+function ea_ftr2trk(ftrfilename,directory,specs,options)
 
 load([directory,ftrfilename]);
 [header, tracks]=ea_trk_read([options.earoot,'ext_libs',filesep,'example.trk']);

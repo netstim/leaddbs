@@ -6,6 +6,7 @@ function varargout=ea_ft_globaltracking_reisert(options)
 if ischar(options) % return name of method.
     varargout{1}='Global Fibertracking (Reisert et al. 2011).';
     varargout{2}={'SPM8','SPM12'};
+    return
 end
 
 gdti_trackingparams='standard'; % select param-preset here (see below, also to create your own)
@@ -75,11 +76,6 @@ switch gdti_trackingparams
             1.5];
         
 end
-
-
-
-
-
 
 
 
@@ -241,7 +237,7 @@ clear matlabbatch jobs;
 
 %% export .trk copy for trackvis visualization
 
-dnii=load_nii([directory,options.prefs.bo]);
+dnii=load_nii([directory,options.prefs.b0]);
 niisize=size(dnii.img); % get dimensions of reference template.
 specs.origin=[0,0,0];
 specs.dim=niisize;
@@ -252,7 +248,7 @@ catch
     specs.orientation=[1,0,0,0,1,0];
 end
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
-ea_ftr2trk(ftrfname,directory,specs); % export normalized ftr to .trk
+ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
 disp('Done.');
 
 

@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 05-Feb-2015 15:51:38
+% Last Modified by GUIDE v2.5 08-Feb-2015 08:26:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -153,6 +153,8 @@ set(handles.coregctmethod,'String',cdc);
 % add ft methods to menu
 cnt=1;
 ndir=dir([earoot,'ea_ft_*.m']);
+ftmethod=cell(0);
+fdc=cell(0);
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);
     try
@@ -166,6 +168,19 @@ for nd=length(ndir):-1:1
 end
 setappdata(gcf,'ftmethod',ftmethod);
 set(handles.ftmethod,'String',fdc);
+
+
+% add parcellation atlases to menu:
+
+
+ll=dir([fileparts(which('lead')),filesep,'templates',filesep,'labeling',filesep,'*.nii']);
+for lab=1:length(ll)
+    [~,n]=fileparts(ll(lab).name);
+    ftCMatlas{lab}=n;
+end
+setappdata(gcf,'ftCMatlas',ftCMatlas);
+set(handles.parcellation_atlas,'String',ftCMatlas);
+
 
 
 
@@ -1241,6 +1256,12 @@ options.ft.method=getappdata(gcf,'ftmethod');
 options.ft.method=options.ft.method{get(handles.ftmethod,'Value')};
 options.ft.methodn=get(handles.ftmethod,'Value');
 
+% ftCM
+options.ftCM.do=(get(handles.ftCM_checkbox,'Value') == get(handles.ftCM_checkbox,'Max'));
+options.ftCM.atlas=getappdata(gcf,'ftCMatlas');
+options.ftCM.atlas=options.ftCM.atlas{get(handles.parcellation_atlas,'Value')};
+options.ftCM.atlasn=get(handles.parcellation_atlas,'Value');
+
 % set modality (MR/CT) in options
 options.modality = get(handles.MRCT,'Value');
 
@@ -1366,6 +1387,14 @@ if options.ft.methodn>length(handles.ftmethod,'String')
 set(handles.ftmethod,'Value',1);
 else
 set(handles.ftmethod,'Value',options.ft.methodn);
+end
+
+% CM options
+set(handles.ftCM_checkbox,'Value',options.ftcm.do);
+if options.ftCM.atlasn>length(handles.parcellation_atlas,'String')
+set(handles.parcellation_atlas,'Value',1);
+else
+set(handles.parcellation_atlas,'Value',options.ftCM.atlasn);
 end
 
 
@@ -1528,6 +1557,40 @@ storeui(handles);
 % --- Executes during object creation, after setting all properties.
 function ftmethod_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to ftmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in ftCM_checkbox.
+function ftCM_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to ftCM_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ftCM_checkbox
+storeui(handles);
+
+
+% --- Executes on selection change in parcellation_atlas.
+function parcellation_atlas_Callback(hObject, eventdata, handles)
+% hObject    handle to parcellation_atlas (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns parcellation_atlas contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from parcellation_atlas
+storeui(handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function parcellation_atlas_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to parcellation_atlas (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
