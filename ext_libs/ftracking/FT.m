@@ -31,10 +31,10 @@ if(parameters.textdisplay), disp('Perform fiber tracking through the whole tissu
 if(parameters.Sampling>1)
     Roi2=zeros(size(Roi));Roi2(1:parameters.Sampling:end,1:parameters.Sampling:end,:)=1;
     Roibig=Roi.*Roi2;
-    rbig=find(Roibig==1);
+    rbig=find(Roibig);
     [x,y,z]=ind2sub(size(Roibig),rbig);
 else
-    rbig=find(Roi==1);
+    rbig=find(Roi);
     [x,y,z]=ind2sub(size(Roi),rbig);
 end
 
@@ -42,6 +42,7 @@ end
 % fiber is used to store the coordinates of one fiber
 fiber=zeros(parameters.FiberLengthMax,3);
 sz=size(FA);
+
 for ix=1:length(x)%2:parameters.Sampling:(sz(1)-1),
     %     if(parameters.textdisplay),  disp(['fiber tracking process : ' num2str(round(100*x/(size(Roi,1)-1))) '%']); pause(0.1); end
     % First fiber coordinate is the current position
@@ -67,9 +68,13 @@ for ix=1:length(x)%2:parameters.Sampling:(sz(1)-1),
         % neighborhood of 8.
         gradient=[0 0 0]; f_FA=0;
         for i=1:8,
+            try
             gradient(1)=gradient(1)+VectorF(xBas(i),yBas(i),zBas(i),1)*perc(i);
             gradient(2)=gradient(2)+VectorF(xBas(i),yBas(i),zBas(i),2)*perc(i);
             gradient(3)=gradient(3)+VectorF(xBas(i),yBas(i),zBas(i),3)*perc(i);
+            catch
+                
+            end
             %gradient=gradient+(squeeze(VectorF(xBas(i),yBas(i),zBas(i),:))*perc(i))'; 
             % This line is canceled and 3 lines above are added for performance purposes. 
         end
@@ -106,10 +111,10 @@ for ix=1:length(x)%2:parameters.Sampling:(sz(1)-1),
         old_gradient=gradient;
     end
     % Keep the fiber if it is long enough and crossed the Roi
-    if((f_length>parameters.FiberLengthMin)&&f_Roi)
+    %if((f_length>parameters.FiberLengthMin)&&f_Roi)
         fibern=fibern+1;
         fibers{fibern}=fiber(1:f_length,:);
-    end
+    %end
 end
 if(parameters.textdisplay), disp('FT function finished'); pause(0.1); end
 

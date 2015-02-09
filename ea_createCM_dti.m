@@ -107,7 +107,7 @@ end
 
 
 
-keyboard
+
 
 if convertfromfreiburg
    Vb0=spm_vol([options.root,options.patientname,filesep,options.prefs.b0]);
@@ -197,3 +197,8 @@ fprintf('\n');
 
 
 save([options.root,options.patientname,filesep,'DTI_CM.mat'],'DTI_CM','-v7.3');
+
+cm=figure('color','w','NumberTitle','off','Name','DTI Connectivity Matrix');
+imagesc(DTI_CM);
+colorbar
+saveas(cm,[options.root,options.patientname,filesep,'DTI_CM.png']);

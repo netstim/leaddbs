@@ -15,7 +15,7 @@ H=[0 0 0;1 0 1;-1 0 1;0 1 1;0 1 -1; 1 1 0;-1 1 0];
 for i=1:7,
     info = gipl_read_header(['B' num2str(i-1) '-fil.gipl']);
     DTIdata(i).VoxelData = single(gipl_read_volume(info)); 
-    keyboard
+    
     DTIdata(i).Gradient = H(i,:);
     DTIdata(i).Bvalue=1000;
 end

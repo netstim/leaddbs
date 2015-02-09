@@ -1,14 +1,34 @@
 function ea_ftr2trk(ftrfilename,directory,specs,options)
 
-load([directory,ftrfilename]);
+disp('Loading FTR-File.');
+fs=load([options.root,options.patientname,filesep,ftrfilename]);
+
+if ~isfield(fs,'curveSegCell') % Freiburg Format
+fn = fieldnames(fs);
+    
+    eval(sprintf('fibs = fs.%s;',fn{1}));
+    if size(fibs,1)>size(fibs,2)
+        fibs=fibs';
+    end
+   convertfromfreiburg=0; 
+   fibs=fibs;
+else
+    convertfromfreiburg=1;
+    fibs=fs.curveSegCell;
+
+end
+
 [header, tracks]=ea_trk_read([options.earoot,'ext_libs',filesep,'example.trk']);
 
-%for i=1:length(curveSegCell)
-%curveSegCell{i}=double(curveSegCell{i});
+%for i=1:length(fibs)
+%fibs{i}=double(fibs{i});
 %end
   
+
+
+
 header.dim=specs.dim;
-header.voxel_size=vox;
+header.voxel_size=specs.vox;
 header.origin=specs.origin; % as doc says, trackvis will always use 0 0 0 as origin.
 header.n_scalars=0;
 header.scalar_name=char(repmat(' ',10,20));
@@ -24,14 +44,14 @@ header.invert_z=0;
 header.swap_xy=0;
 header.swap_yz=0;
 header.swap_zx=0;
-header.n_count=length(curveSegCell);% header.invert_x=1;
+header.n_count=length(fibs);% header.invert_x=1;
 header.version=2;
 header.hdr_size=1000;
 
 
-for track_number=1:length(curveSegCell)
-   tracks(1,track_number).nPoints=size(curveSegCell{track_number},1);
-   tracks(1,track_number).matrix=curveSegCell{track_number}; 
+for track_number=1:length(fibs)
+   tracks(1,track_number).nPoints=size(fibs{track_number},1);
+   tracks(1,track_number).matrix=fibs{track_number}; 
 end
 
 for i = 1:length(tracks)
