@@ -71,7 +71,7 @@ alphas=options.coregct.coregthreshs;
 
 
 if vizz
-    ctmr=figure('color','w','name','Coregistering CT to MR...','NumberTitle','off','Toolbar','none','MenuBar','none','DockControls','off','WindowButtonMotionFcn',@ea_mouseMove);
+    ctmr=figure('color','w','name',[options.patientname,': Coregistering CT to MR...'],'NumberTitle','off','Toolbar','none','MenuBar','none','DockControls','off','WindowButtonMotionFcn',@ea_mouseMove);
     axis equal
     axis off
 end
