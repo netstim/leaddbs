@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 19-Sep-2014 13:27:33
+% Last Modified by GUIDE v2.5 23-Feb-2015 20:24:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2193,3 +2193,12 @@ end
 end
 
 delete(hObject);
+
+
+% --- Executes on button press in targetreport.
+function targetreport_Callback(hObject, eventdata, handles)
+% hObject    handle to targetreport (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+M=getappdata(gcf,'M');
+ea_gentargetreport(M);

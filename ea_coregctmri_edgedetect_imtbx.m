@@ -99,7 +99,6 @@ for alpha=1:length(alphas)
     
     % define initialization parameters
     
-    MRTree=KDTreeSearcher(ptMR');
     if ~exist('M','var') % first grain run..
         % define M based on centroids
         M=eye(4);
@@ -108,8 +107,10 @@ for alpha=1:length(alphas)
         end
     end
     ptrCT=M*ptCT;
-    [~,DCT]=knnsearch(MRTree,ptrCT');
-    [~,DMR]=knnsearch(ptrCT',ptMR');
+        
+        [~,DMR]=knnsearch(ptrCT(1:3,:)',ptMR(1:3,:)');
+        
+        [~,DCT]=knnsearch(ptMR(1:3,:)',ptrCT(1:3,:)');
     D=mean([DCT(:);DMR(:)]);
     priorD=D;
     reuselastmodM=0;
@@ -128,8 +129,10 @@ for alpha=1:length(alphas)
         ptrCT=M*ptCT;
         
         
-        [~,DCT]=knnsearch(MRTree,ptrCT');
-        [~,DMR]=knnsearch(ptrCT',ptMR');
+        
+        [~,DMR]=knnsearch(ptrCT(1:3,:)',ptMR(1:3,:)');
+        
+        [~,DCT]=knnsearch(ptMR(1:3,:)',ptrCT(1:3,:)');
         D=mean([DCT(:);DMR(:)]);
         
         

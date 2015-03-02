@@ -67,6 +67,8 @@ for alpha=1:length(alphas)
     
     eMR(eMR<8)=0;
     eCT(eCT<2)=0;
+    eMR(isnan(eMR))=0;
+    eCT(isnan(eCT))=0;
     
     [xx,yy,zz]=ind2sub(size(eMR),find(eMR(:)));
     ptMR=[xx,yy,zz,ones(length(xx),1)]';
@@ -77,8 +79,6 @@ for alpha=1:length(alphas)
     disp('Done.');
     
     % define initialization parameters
-    
-    MRTree=KDTreeSearcher(ptMR');
     if ~exist('M','var') % first grain run..
         % define M based on centroids
         M=eye(4);
@@ -87,7 +87,7 @@ for alpha=1:length(alphas)
         end
     end
     ptrCT=M*ptCT;
-    [~,DCT]=knnsearch(MRTree,ptrCT');
+    [~,DCT]=knnsearch(ptMR',ptrCT');
     [~,DMR]=knnsearch(ptrCT',ptMR');
     D=mean([DCT(:);DMR(:)]);
     priorD=D;
@@ -107,9 +107,11 @@ for alpha=1:length(alphas)
         ptrCT=M*ptCT;
         
         
-        [~,DCT]=knnsearch(MRTree,ptrCT');
-        [~,DMR]=knnsearch(ptrCT',ptMR');
-        D=mean([DCT(:);DMR(:)]);
+        [~,DMR]=knnsearch(ptrCT(1:3,:)',ptMR(1:3,:)');
+        
+        [~,DCT]=knnsearch(ptMR(1:3,:)',ptrCT(1:3,:)');
+        
+        D=mean([DCT;DMR]);
         
         
         
@@ -158,6 +160,7 @@ for alpha=1:length(alphas)
     
 end
 
+close(ctmr);
 
 % M has been estimated and maps from voxels in CT to voxels in MR.
 %% export coregistered CT.

@@ -134,10 +134,10 @@ for side=1:length(VAT)
                 
                 for atlas=1:size(iXYZ,1)
                     if stimparams(side).U(vat)>0 % stimulation on in this VAT,
-                        thisatl=iXYZ{atlas,side};
+                        thisatl=iXYZ{atlas,side}.mm;
                         tpd=ipixdim{atlas,side};
                         if isempty(thisatl) % for midline or combined atlases, only the right side atlas is used.
-                            thisatl=iXYZ{atlas,1};
+                            thisatl=iXYZ{atlas,1}.mm;
                             tpd=ipixdim{atlas,1};
                         end
                         tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
@@ -249,8 +249,10 @@ if stimparams(1).showfibers
         
         try      connectingfibs{side}=normalized_fibers_mm(sideselectedfibs{side}); end
     end
-    selectedfibs=sideselectedfibs; clear sideselectedfibs
     
+    try
+    selectedfibs=sideselectedfibs; clear sideselectedfibs
+    end
     dispercent(1,'end');
     
     

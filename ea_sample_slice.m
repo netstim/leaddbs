@@ -1,4 +1,4 @@
-function [slice,boundbox]=ea_sample_slice(vol,tracor,wsize,coords,el)
+function [slice,boundbox,boundboxmm]=ea_sample_slice(vol,tracor,wsize,coords,el)
 interpfactor=2;
 
 allc=[];
@@ -16,7 +16,7 @@ switch tracor
         cmesh.Z=repmat(boundbox{3}(1),numel(cmesh.X),1);
         ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
-        slice=flipud(slice);
+        %slice=fliplr(slice);
     case 'cor'
         boundbox{1}=coords(el,1)-wsize:1/interpfactor:coords(el,1)+wsize;
         boundbox{2}=repmat(coords(el,2),1,length(boundbox{1}));
@@ -26,7 +26,7 @@ switch tracor
         ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
-        slice=flipud(slice);  
+        %slice=fliplr(slice);  
     case 'sag'
         boundbox{2}=coords(el,2)-wsize:1/interpfactor:coords(el,2)+wsize;
         boundbox{3}=coords(el,3)-wsize:1/interpfactor:coords(el,3)+wsize;
@@ -37,5 +37,17 @@ switch tracor
         ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
-        slice=flipud(slice); 
+        %slice=fliplr(slice); 
 end
+
+
+
+
+   boundboxmm{1}=vol.mat*[boundbox{1};ones(3,length(boundbox{1}))]; 
+   boundboxmm{1}=boundboxmm{1}(1,:);
+   boundboxmm{2}=vol.mat*[ones(1,length(boundbox{1}));boundbox{2};ones(2,length(boundbox{2}))]; 
+   boundboxmm{2}=boundboxmm{2}(2,:);   
+   boundboxmm{3}=vol.mat*[ones(2,length(boundbox{1}));boundbox{3};ones(1,length(boundbox{3}))]; 
+   boundboxmm{3}=boundboxmm{3}(3,:);
+   
+   

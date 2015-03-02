@@ -4,13 +4,14 @@ function cuts=ea_writeplanes(options)
 % priorly. Images are written as .png image files. Bot transversal and
 % coronar views are being exported. Additionally, overlays from atlas-data
 % can be visualized via the function ea_add_overlay which uses all atlas
-% files that are found in the eAuto_root/atlases directory.
+% files that are found in the lead_dbs/atlases directory.
 
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
 
+disp('Exporting 2D slice output...');
 % load prior results
 try
     load([options.root,options.patientname,filesep,'ea_reconstruction']);
@@ -96,62 +97,69 @@ for side=options.sides
             switch tracor
                 
                 case 1 % transversal images
-                   
-                    %title(['Electrode ',num2str(el-1),', transversal view.']);
                     
-                    [slice,boundbox]=ea_sample_slice(Vtra,'tra',options.d2.bbsize,coords,el);
-                    try
-                    imagesc(slice,[ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
-                    catch
-                        imagesc(slice);
-                    end
-                        axis square
-                    hold on
+                    onedim=1;
+                    secdim=2;
+                    dstring='tra';
+                    V=Vtra;
+                    
                 case 2 % coronar images
-                   
-                  [slice,boundbox]=ea_sample_slice(Vcor,'cor',options.d2.bbsize,coords,el);
-                    try
-                    imagesc(slice,[ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
-                    catch
-                        imagesc(slice);
-                    end
-                        axis square
-                    hold on
-                 case 3 % coronar images
-                   
-                   [slice,boundbox]=ea_sample_slice(Vsag,'sag',options.d2.bbsize,coords,el);
-                    try
-                    imagesc(slice,[ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
-                    catch
-                        imagesc(slice);
-                    end
-                        axis square
-                    hold on
+                    
+                    onedim=1;
+                    secdim=3;
+                    dstring='cor';
+                    V=Vcor;
+                    
+                case 3 % saggital images
+                    
+                    onedim=2;
+                    secdim=3;
+                    dstring='sag';
+                    V=Vsag;
+                    
             end
+            
+            %title(['Electrode ',num2str(el-1),', transversal view.']);
+            
+            [slice,boundbox,boundboxmm]=ea_sample_slice(V,dstring,options.d2.bbsize,coords,el);
+            try
+                hi=imagesc(slice,...
+                    [ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
+            catch
+                hi=imagesc(slice);
+                
+            end
+            set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
+            axis([min(boundboxmm{onedim}),max(boundboxmm{onedim}),min(boundboxmm{secdim}),max(boundboxmm{secdim})])
+            axis square
+            hold on
+            
+        
             
             % Show overlays
             
             if options.d2.writeatlases
-                cuts=ea_add_overlay(boundbox,cuts,side,tracor,options.patientname,options);
+                cuts=ea_add_overlay(boundboxmm,cuts,side,tracor,options.patientname,options);
             end
             
             
             
             % Show coordinates
             
-            plot((options.d2.bbsize+1)*interpfactor,(options.d2.bbsize+1)*interpfactor,'*','MarkerSize',15,'MarkerEdgeColor',[0.9 0.9 0.9],'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',2,'LineSmoothing','on');
+            plot(coords_mm{side}(elcnt,onedim),coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',[0.9 0.9 0.9],'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',2,'LineSmoothing','on');
             hold off
+            
             set(gca,'LooseInset',get(gca,'TightInset'))
             % Save results
             
             switch tracor
                 case 1
                     %saveas(cuts,[options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial.png']);
-                    screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial.png']);
+                    ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial.png']);
                 case 2
-                    screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_coronar.png']);
+                    ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_coronar.png']);
                 case 3
-                    screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_saggital.png']);
+                    ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_saggital.png']);
             end
         end
     end
@@ -173,7 +181,7 @@ end
 N = sum(~isnan(x), dim);
 y = nansum(x, dim) ./ N;
 
-function screenshot(outn)
+function ea_screenshot(outn)
 
 set(gcf, 'Color', [1,1,1]); 
 [~, cdata] = myaa_hd([4, 2]);
@@ -186,7 +194,7 @@ res=A-B;
 if res<0; res=0; end
 
 function [varargout] = myaa_hd(varargin)
-% This function has been slightly modified for export use in eAuto-DBS.
+% This function has been slightly modified for export use in LEAD-DBS.
 % Copyright (c) 2009, Anders Brun
 % All rights reserved.
 % 
@@ -299,7 +307,7 @@ end
 
 %% Capture current figure in high resolution
 if ~strcmp(self.figmode,'lazyupdate');
-    tempfile = 'eAuto_temp_screendump.png';
+    tempfile = 'ea_temp_screendump.png';
     self.source_fig = gcf;
     current_paperpositionmode = get(self.source_fig,'PaperPositionMode');
     current_inverthardcopy = get(self.source_fig,'InvertHardcopy');

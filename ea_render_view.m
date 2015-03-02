@@ -178,9 +178,6 @@ slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','
 
 
 
-
-
-
 % Show atlas data
 if options.d3.writeatlases
     atlases=ea_showatlas(resultfig,elstruct,options);
@@ -209,6 +206,9 @@ if options.d3.writeatlases
         
     end
 end
+
+
+
 
 % Show isomatrix data
 

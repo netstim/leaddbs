@@ -1,6 +1,8 @@
 LEAD-DBS
 ========
 
+LEAD-DBS is *NOT* intended for clinical use!
+
 LEAD-DBS is a MATLAB-toolbox facilitating the: 
 
 - reconstruction of deep-brain-stimulation (DBS) electrodes in the human brain on basis of postoperative MRI and/or CT imaging

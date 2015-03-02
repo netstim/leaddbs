@@ -38,7 +38,7 @@ prefs.normmatrix=['lmat.txt'];
 
 
 %% 2D-Export
-prefs.d2.useprepost='pre'; % can be 'post' or 'pre' to set the backdrop.
+prefs.d2.useprepost='post'; % can be 'post' or 'pre' to set the backdrop.
 
 %% DICOM-Handling:
 
