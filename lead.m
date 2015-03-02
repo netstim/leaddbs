@@ -1299,7 +1299,7 @@ options.d2.col_overlay=get(handles.tdcolorscheck,'Value');
 options.d2.con_overlay=get(handles.tdcontourcheck,'Value');
 options.d2.con_color=getappdata(handles.tdcontourcolor,'color');
 if isempty(options.d2.con_color)
-    options.d2.con_color=[0,0,0]; % black
+    options.d2.con_color=[1,1,1]; % white
 end
 
 options.d2.lab_overlay=get(handles.tdlabelcheck,'Value');

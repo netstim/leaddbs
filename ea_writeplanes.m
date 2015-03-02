@@ -33,7 +33,7 @@ end
 scrsz = get(0,'ScreenSize');
 
 
-cuts=figure('name',[options.patientname,': 2D cut views'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2]);
+cuts=figure('name',[options.patientname,': 2D cut views'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible','off');
 axis off
 set(gcf,'color','w');
 tracorpresent=zeros(3,1); % check if files are present.
@@ -60,12 +60,12 @@ switch options.modality
             end
         end
         try
-            Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gcornii));
+            Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gsagnii));
             tracorpresent(3)=1;
             
         catch
             try
-                Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.cornii));
+                Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.sagnii));
                 tracorpresent(3)=1;
             end
         end
@@ -93,6 +93,7 @@ for side=options.sides
             %subplot(2,2,el);
             
             % Show MR-volume
+                            set(0,'CurrentFigure',cuts)
             colormap gray
             switch tracor
                 
@@ -122,6 +123,7 @@ for side=options.sides
             %title(['Electrode ',num2str(el-1),', transversal view.']);
             
             [slice,boundbox,boundboxmm]=ea_sample_slice(V,dstring,options.d2.bbsize,coords,el);
+                set(0,'CurrentFigure',cuts)
             try
                 hi=imagesc(slice,...
                     [ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
@@ -149,9 +151,11 @@ for side=options.sides
             plot(coords_mm{side}(elcnt,onedim),coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',[0.9 0.9 0.9],'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',2,'LineSmoothing','on');
             hold off
             
+                        axis xy
+                        axis off
             set(gca,'LooseInset',get(gca,'TightInset'))
             % Save results
-            
+            set(cuts,'visible','on');
             switch tracor
                 case 1
                     %saveas(cuts,[options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial.png']);
@@ -168,6 +172,8 @@ for side=options.sides
 end
 
 close(cuts)
+disp('Done.');
+
 
 function y = ea_nanmean(varargin)
 if nargin==2
