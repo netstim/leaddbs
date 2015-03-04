@@ -1,18 +1,17 @@
-function cuts=ea_add_overlay(boundboxmm,cuts,side,tracor,patientname,options)
+function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
 % This function overlays atlas data over 2d-slice views to be exported by
 % LEAD-DBS. The function is called from ea_writeplanes.m
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-
 useatlases=~strcmp(options.atlasset,'Use none');
     set(0,'CurrentFigure',cuts)
 needtodelete=0; % small flag to cleanup files involved in .nii.gz support.
 try
-    IV=spm_vol([options.root,patientname,filesep,options.prefs.gtranii]);
+    IV=spm_vol([options.root,options.patientname,filesep,options.prefs.gtranii]);
 catch
-    IV=spm_vol([options.root,patientname,filesep,options.prefs.tranii]);
+    IV=spm_vol([options.root,options.patientname,filesep,options.prefs.tranii]);
 end
 
 
@@ -29,34 +28,12 @@ if useatlases
     
     
     for atlas=1:length(atlases.names)
-        for side=options.sides
-            switch atlases.types(atlas)
-                case 1 % left hemispheric atlas.
-                    Vn=[options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
-                    
-                case 2 % right hemispheric atlas.
-                    Vn=[options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
-                case 3 % both-sides atlas composed of 2 files.
-                    switch side
-                        case 1
-                            Vn=[options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
-                            
-                        case 2
-                            Vn=[options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
-                    end
-                case 4 % mixed atlas (one file with both sides information but two clusters).
-                    Vn=[options.earoot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}];
-                case 5 % midline atlas (one file with both sides information but only one cluster).
-                    Vn=[options.earoot,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
-            end
-            [p,f,ext]=fileparts(Vn);
-
-            
-            
+        for side=detsides(atlases.types(atlas))
             planemm=[boundboxmm{1}(:),boundboxmm{2}(:),boundboxmm{3}(:)];
             %planemm=round(planemm);
             
-            thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val)*1.5;
+            thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
+
             atlmm=atlases.XYZ{atlas,side}.mm;
             %ratlmm=round(atlmm);
             
@@ -76,7 +53,7 @@ if useatlases
                planehts=planemm(:,ea_intersecdim(tracor));
                dists=abs(atlhts-planehts(1));
                
-               dists=dists<mean(atlases.XYZ{atlas,side}.dims);
+               dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))/2;
             if any(dists) % only if intersection exists plot the atlas.
                 
                 xyatl=atlvx(dists,ea_planesdim(tracor));
@@ -90,7 +67,6 @@ if useatlases
                 slice=zeros(max(xyatl(:,1)),max(xyatl(:,2)));
                 slice(sub2ind(size(slice),xyatl(:,1),xyatl(:,2)))=valatl;
                 if ~any(size(slice)==1) % exception for problems with onedimensional slices
-                    
                     slice=interp2(slice,3);
                     slice(slice<thresh)=0;
                     slice=slice';
@@ -134,7 +110,7 @@ if useatlases
                         set(cof,'XData',linspace(atlbb(1,1),atlbb(1,2)),'YData',linspace(atlbb(2,1),atlbb(2,2)));
                         slice=slice*options.d2.atlasopacity;
                         
-                        set(cof, 'AlphaData', slice*0.3)
+                        set(cof, 'AlphaData', slice)
                         
                         
                     end
@@ -193,7 +169,21 @@ if useatlases
     save([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases');
 end
 
+function sides=detsides(opt)
 
+switch opt
+    case 1 % left hemispheric atlas
+        sides=1;
+    case 2 % right hemispheric atlas
+        sides=2;
+    case 3
+        sides=1:2;
+    case 4
+        sides=1:2;
+    case 5
+        sides=1; % midline
+        
+end
 
 function in=ea_intersecdim(tracor)
 

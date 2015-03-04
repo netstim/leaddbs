@@ -141,7 +141,8 @@ for side=options.sides
             % Show overlays
             
             if options.d2.writeatlases
-                cuts=ea_add_overlay(boundboxmm,cuts,side,tracor,options.patientname,options);
+                
+                cuts=ea_add_overlay(boundboxmm,cuts,tracor,options);
             end
             
             

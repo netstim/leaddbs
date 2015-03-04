@@ -1294,7 +1294,7 @@ options.atl.pt=get(handles.patatlcheck,'Value'); % display patient specific atla
 
 
 options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
-options.d2.atlasopacity=0.5;
+options.d2.atlasopacity=0.15;
 options.d2.col_overlay=get(handles.tdcolorscheck,'Value');
 options.d2.con_overlay=get(handles.tdcontourcheck,'Value');
 options.d2.con_color=getappdata(handles.tdcontourcolor,'color');
