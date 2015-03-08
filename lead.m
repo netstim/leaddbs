@@ -91,10 +91,17 @@ set(handles.versiontxt,'String',['v ',num2str(vnum(1))]);
 
 
 
-im = imread('bg_gui.png');
+%im = imread('bg_gui.png');
+%image(im);
+%axis off;
+%axis fill
+
+%set(0,'gca',handles.logoaxes);
+im=imread('ea_logo.png');
 image(im);
 axis off;
-axis fill
+axis equal;
+
 try
 warning('off');
 set(handles.dicompanel,'BackgroundColor','none');
