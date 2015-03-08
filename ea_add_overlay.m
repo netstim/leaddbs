@@ -43,7 +43,11 @@ if useatlases
             for d=ea_planesdim(tracor)
                 [~,minix]=min(atlvx(:,d));
                 [~,maxix]=max(atlvx(:,d));
+                try
                 atlbb(pdcnt,:)=[atlmm(minix,d);atlmm(maxix,d)];
+                catch
+                    keyboard
+                end
                 pdcnt=pdcnt+1;                
             end
             
@@ -53,7 +57,7 @@ if useatlases
                planehts=planemm(:,ea_intersecdim(tracor));
                dists=abs(atlhts-planehts(1));
                
-               dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))/2;
+               dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*2;
             if any(dists) % only if intersection exists plot the atlas.
                 
                 xyatl=atlvx(dists,ea_planesdim(tracor));
@@ -68,6 +72,7 @@ if useatlases
                 slice(sub2ind(size(slice),xyatl(:,1),xyatl(:,2)))=valatl;
                 if ~any(size(slice)==1) % exception for problems with onedimensional slices
                     slice=interp2(slice,3);
+                    
                     slice(slice<thresh)=0;
                     slice=slice';
                     
@@ -121,7 +126,7 @@ if useatlases
                             for cp=1:length(bw.PixelIdxList)
                                 slice(:)=0;
                                 slice(bw.PixelIdxList{cp})=1;
-                                [c] = contourc(slice,1);
+                                [c] = contourc(ea_zeroframe(slice),1);
                                 c=c(:,2:end);
                                 [~,yy]=find(c<1);
                                 c(:,yy)=[];
@@ -206,3 +211,9 @@ switch tracor
     case 3
         pl=[2,3];
 end
+
+
+function fslice=ea_zeroframe(slice)
+
+fslice=zeros(size(slice)+[2,2]);
+fslice(2:end-1,2:end-1)=slice;

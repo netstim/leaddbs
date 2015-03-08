@@ -170,7 +170,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 nii=bnii;
                 XYZ.mm=bXYZ.mm;
                 XYZ.val=bXYZ.val;
-                XYZ.vx=bXYZ.mm;
+                XYZ.vx=bXYZ.vx;
             end
             
             bb=[0,0,0;size(nii.img)];
@@ -190,12 +190,20 @@ for nativemni=nm % switch between native and mni space atlases.
                     
                     nii.img=nii.img(gv{1}>0,:,:);
                     gv{1}=gv{1}(gv{1}>0);
+                    
+                    XYZ.vx=XYZ.vx(XYZ.mm(:,1)>0,:,:);
+                    XYZ.val=XYZ.val(XYZ.mm(:,1)>0,:,:);
                     XYZ.mm=XYZ.mm(XYZ.mm(:,1)>0,:,:);
+
+                    
                     nii.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
                 elseif side==2
                     nii.img=nii.img(gv{1}<0,:,:);
                     gv{1}=gv{1}(gv{1}<0);
+                    XYZ.vx=XYZ.vx(XYZ.mm(:,1)<0,:,:);
+                    XYZ.val=XYZ.val(XYZ.mm(:,1)<0,:,:);
                     XYZ.mm=XYZ.mm(XYZ.mm(:,1)<0,:,:);
+
                     nii.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
                 end
             end
