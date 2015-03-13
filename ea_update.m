@@ -2,7 +2,6 @@ function res=ea_update(varargin)
 res=(ea_getvsn('local')==ea_getvsn('web'));
 
 
-
 if nargin
     
     if strcmp(varargin{1},'force')
@@ -16,6 +15,7 @@ earoot=[fileparts(which('lead')),filesep];
 
 if any(~res)
     if ~res(1) % update code
+        disp('*** Updating LEAD-DBS. Please do not quit MATLAB.');
         mkdir([earoot,'tmp'])
         disp('Downloading code...');
         urlwrite('http://www.lead-dbs.org/release/lead_dbs.zip',[earoot,'tmp',filesep,'lead_dbs.zip']);
@@ -47,9 +47,13 @@ if any(~res)
     end
     disp('Restarting LEAD-DBS.');
     lead;
+    disp('*** Update finished.');
+
 else
     disp('LEAD-DBS is already up-to-date.');
 end
+
+
 
 
 
