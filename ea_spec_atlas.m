@@ -44,12 +44,15 @@ switch command
     case 'labeling'
 set(atls,'FaceVertexAlphaData',repmat(0.5,length(len),1));
 set(atls,'FaceAlpha',0.1);
+case 'mask.nii'
+set(atls,'FaceVertexAlphaData',repmat(0.5,length(len),1));
+set(atls,'FaceAlpha',0.2);
     case 'cortex.nii'
 set(atls,'FaceVertexAlphaData',repmat(0.5,length(len),1));
 set(atls,'FaceAlpha',0.1);
     otherwise   
 set(atls,'FaceVertexAlphaData',repmat(0.3,length(len),1));
-set(atls,'FaceAlpha',0.7);
+set(atls,'FaceAlpha',0.3);
 %alpha(0.7);
 end
 

@@ -26,8 +26,12 @@ for entry=1:length(vizstruct)
     end
     bbstruct.normals=[bbstruct.normals;vizstruct(entry).normals];
     if ~isempty(vizstruct(entry).vertices)
+try
         bbstruct.colors=[bbstruct.colors;repmat([vizstruct(entry).colors(1,:)],length(vizstruct(entry).vertices),1)];
-        
+catch
+            bbstruct.colors=[bbstruct.colors;repmat([vizstruct(entry).colors(1,:),0.7],length(vizstruct(entry).vertices),1)];
+
+end
     end
     bbstruct.shapes(entry).indices=vizstruct(entry).faces+offset;
     

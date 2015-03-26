@@ -19,8 +19,9 @@ switch com
     case 'local'
         try
             load([fileparts(which('lead')),filesep,'.version.txt']);
-            
+            if ~exist('version','var');
             version=X_version;
+            end
             
         catch % initialize versioning (if .version.txt has gotten lost).
             version=[1.0;1.0];

@@ -39,6 +39,9 @@ movefile([outdir,'lead_dbs',filesep,'ea_prefs_public.m'],[outdir,'lead_dbs',file
 delete([outdir,'lead_dbs',filesep,'ea_prefs.mat']);
 delete([outdir,'lead_dbs',filesep,'ea_ui.mat']);
 
+% public firstrun -> firstrun
+movefile([outdir,'lead_dbs',filesep,'ea_firstrun_public.m'],[outdir,'lead_dbs',filesep,'ea_firstrun.m']);
+
 
 % delete atlases:
 
@@ -176,7 +179,9 @@ mw = ftp('www.andreas-horn.de','www.andreas-horn.de','andiANDI$1');
 disp('Changing Dir.');
 cd(mw,'leaddbs/release');
 disp('Uploading Version file.');
-mput(mw, [fileparts(which('lead')),filesep,'.version.txt']);
+copyfile([fileparts(which('lead')),filesep,'.version.txt'],[fileparts(which('lead')),filesep,'sw_version.txt']);
+mput(mw, [fileparts(which('lead')),filesep,'sw_version.txt']);
+delete([fileparts(which('lead')),filesep,'sw_version.txt']);
 disp('Done.');
 close(mw);
 

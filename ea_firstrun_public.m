@@ -1,17 +1,17 @@
 function ea_firstrun(handles)
 
 % check if a newer version is available..
-% local=ea_getvsn('local');
-% web=ea_getvsn('web');
-% vcheck=(local<web);
-% 
-% 
-% if any(vcheck) && ~any(isnan(web))
-%     set(handles.updatebutn,'Visible','on');
-%     set(handles.updatebutn,'BackgroundColor',[0.2,0.8,0.2]);
-% else
-%     set(handles.updatebutn,'Visible','off');
-% end
+local=ea_getvsn('local');
+web=ea_getvsn('web');
+vcheck=(local<web);
+
+
+if any(vcheck) && ~any(isnan(web))
+    set(handles.updatebutn,'Visible','on');
+    set(handles.updatebutn,'BackgroundColor',[0.2,0.8,0.2]);
+else
+    set(handles.updatebutn,'Visible','off');
+end
 
 options=struct;
 options.prefs=ea_prefs(options);
