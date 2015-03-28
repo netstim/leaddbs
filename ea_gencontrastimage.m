@@ -49,7 +49,7 @@ switch howto
 
         
     otherwise
-        error('Please set Contrast accurately.');
+        ea_error('Please set Contrast accurately.');
         
 end
 

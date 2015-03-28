@@ -35,7 +35,7 @@ switch lower(arg)
     case 'vout'
         varargout{1} = vout_job(job);
     otherwise
-        error('Unknown argument ("%s").', arg);
+        ea_error('Unknown argument ("%s").', arg);
 end
 return
 %_______________________________________________________________________
@@ -167,7 +167,7 @@ return
 
 %_______________________________________________________________________
 function savefields(fnam,p)
-if length(p)>1, error('Can''t save fields.'); end
+if length(p)>1, ea_error('Can''t save fields.'); end
 fn = fieldnames(p);
 if numel(fn)==0, return; end
 for i=1:length(fn)

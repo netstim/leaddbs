@@ -167,6 +167,11 @@ catch
 end
 
 
+% error on maxi empty:
+if isempty(maxi)
+    ea_error('Reconstruction failed. Please adjust mask-size and entry-point parameters and re-run reconstruction.');
+end
+
 
 for coo=1:4
     coords(coo,:)=startpt+ntrajvector*maxi       +ntrajvector*(coo*reldist);

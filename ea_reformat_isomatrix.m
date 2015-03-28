@@ -30,7 +30,7 @@ if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]
         stimmat{2}=isom(:,(size(isom,2)/2)+1:end);
         
     else
-        error('Wrong Isomatrix provided.');
+        ea_error('Wrong Isomatrix provided.');
     end
 end
 

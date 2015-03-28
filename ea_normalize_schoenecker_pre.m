@@ -169,7 +169,7 @@ normlog(1)=1;
 disp('*** Coregistration between preop and postop versions worked.');
 catch
 disp('*** Coregistration between preop and postop versions failed.');
-%error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+%ea_error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 
@@ -202,7 +202,7 @@ normlog(2)=1;
 disp('*** Grand mean normalization (1/3) worked.');
 catch
 disp('*** Grand mean normalization (1/3) failed.');
-error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+ea_error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 

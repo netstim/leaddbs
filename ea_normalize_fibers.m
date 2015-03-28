@@ -3,7 +3,7 @@ function ea_normalize_fibers(options)
 
 [~,preniif]=fileparts(options.prefs.prenii_unnormalized);
 if ~exist([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],'file');
-    error('Please run a compatible normalization of the preoperative MRI-volume first. Final (inverse) normalization parameters should be stored as y_ea_inv_normparams.nii inside of the subject folder.');
+    ea_error('Please run a compatible normalization of the preoperative MRI-volume first. Final (inverse) normalization parameters should be stored as y_ea_inv_normparams.nii inside of the subject folder.');
 end
 
 

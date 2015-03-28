@@ -72,7 +72,7 @@ if isempty(find(slicebw(:), 1))
    addfactor=addfactor-cnt*0.1;
    ea_showdis(['Lowering initial factor to ',num2str(addfactor),'.'],options.verbose);
     if cnt>500
-        error('Trajectory could not be found. Please choose manual entry-point to select trajectory manually and make sure that images are properly normalized in MNI space.');
+        ea_error('Trajectory could not be found. Please choose manual entry-point to select trajectory manually and make sure that images are properly normalized in MNI space.');
     end
 else
     found=1;

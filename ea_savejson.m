@@ -122,7 +122,7 @@ end
 if(~isempty(jsonopt('FileName','',opt)))
     fid = fopen(opt.FileName, 'wt');
     if ~fid
-        error('No valid destination for lead-server. Read-only filesystem? Please modify prefs.ls.dir in ea_prefs.m to a correct output destination.');
+        ea_error('No valid destination for Lead-server. Read-only filesystem? Please modify prefs.ls.dir in ea_prefs.m to a correct output destination.');
     end
         fwrite(fid,json,'char');
     fclose(fid);
@@ -145,7 +145,7 @@ end
 function txt=cell2json(name,item,level,varargin)
 txt='';
 if(~iscell(item))
-        error('input is not a cell');
+        ea_error('input is not a cell');
 end
 
 dim=size(item);
@@ -175,7 +175,7 @@ if(len>1) txt=sprintf('%s\n%s]',txt,padding0); end
 function txt=struct2json(name,item,level,varargin)
 txt='';
 if(~isstruct(item))
-	error('input is not a struct');
+	ea_error('input is not a struct');
 end
 len=numel(item);
 padding1=repmat(sprintf('\t'),1,level-1);
@@ -212,7 +212,7 @@ if(len>1) txt=sprintf('%s\n%s]',txt,padding0); end
 function txt=str2json(name,item,level,varargin)
 txt='';
 if(~ischar(item))
-        error('input is not a string');
+        ea_error('input is not a string');
 end
 item=reshape(item, max(size(item),[1 0]));
 len=size(item,1);
@@ -252,7 +252,7 @@ if(len>1) txt=sprintf('%s\n%s%s',txt,padding1,']'); end
 %%-------------------------------------------------------------------------
 function txt=mat2json(name,item,level,varargin)
 if(~isnumeric(item) && ~islogical(item))
-        error('input is not an array');
+        ea_error('input is not an array');
 end
 
 padding1=repmat(sprintf('\t'),1,level);
@@ -422,7 +422,7 @@ while(i<=len)
         opt=setfield(opt,varargin{i},varargin{i+1});
         i=i+1;
     else
-        error('input must be in the form of ...,''name'',value,... pairs or structs');
+        ea_error('input must be in the form of ...,''name'',value,... pairs or structs');
     end
     i=i+1;
 end

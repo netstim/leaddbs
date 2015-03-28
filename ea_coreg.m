@@ -14,7 +14,7 @@ switch automan
         cfundo=[2,1,3,4];
         manual=0;
     otherwise
-        error('Coregistration prefs must be either set to auto or manual. Please modify ea_prefs.m accordingly.');
+        ea_error('Coregistration prefs must be either set to auto or manual. Please modify ea_prefs.m accordingly.');
 end
 
 
@@ -48,7 +48,7 @@ for export=1:2
             finas{export}=fina; % assign only if worked.
         catch
             disp('*** Coregistration between transversal and coronar versions failed / Using CT Modality.');
-            %error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+            %ea_error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
         end
         clear matlabbatch jobs;
         if manual
@@ -64,7 +64,7 @@ for export=1:2
                     break
                 else
                     if costfun==4
-                        error('Problem cannot be solved automatically.')
+                        ea_error('Problem cannot be solved automatically.')
                     else
                         disp('Trying with another cost-function');
                     end
@@ -106,7 +106,7 @@ for costfun=cfundo
         disp('*** Coregistration between pre and post versions worked.');
     catch
         disp('*** Coregistration between pre and post versions failed.');
-        %error('This normalization cannot be performed automatically with LEAD. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+        %ea_error('This normalization cannot be performed automatically with LEAD. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
     end
     clear matlabbatch jobs;
     
@@ -128,7 +128,7 @@ for costfun=cfundo
             break
         else
             if costfun==4
-                error('Problem cannot be solved automatically.')
+                ea_error('Problem cannot be solved automatically.')
             else
                 disp('Trying with another cost-function');
             end

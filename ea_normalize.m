@@ -20,7 +20,7 @@ function ea_normalize(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-usecombined=0; % if set, eauto will try to fuse coronar and transversal images before normalizing them.
+usecombined=0; % if set, LEAD-DBS will try to fuse coronar and transversal images before normalizing them.
 
 
 if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz'],'file')
@@ -70,7 +70,7 @@ cfg_util('run',jobs);
 disp('*** Segmentation of transversal version worked.');
 catch
 disp('*** Segmentation of transversal version failed.');
-error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+ea_error('This normalization cannot be performed automatically with LEAD-DBS. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 
@@ -139,7 +139,7 @@ normlog(1)=1;
 disp('*** Coregistration between transversal and coronar versions worked.');
 catch
 disp('*** Coregistration between transversal and coronar versions failed.');
-%error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+%ea_error('This normalization cannot be performed automatically with LEAD-DBS. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 
@@ -172,7 +172,7 @@ normlog(2)=1;
 disp('*** Grand mean normalization (1/3) worked.');
 catch
 disp('*** Grand mean normalization (1/3) failed.');
-error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+ea_error('This normalization cannot be performed automatically with LEAD-DBS. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 

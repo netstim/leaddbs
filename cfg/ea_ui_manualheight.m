@@ -8,7 +8,7 @@ options.prefs=ea_prefs(patientname);
 try
     load([P.foldername{1},'ea_reconstruction']);
 catch
-    error('No reconstruction information found. Please run reconstruction first.');
+    ea_error('No reconstruction information found. Please run reconstruction first.');
 end
 mcfig=figure('name',[patientname,': Manual Height Correction'],'numbertitle','off');
 

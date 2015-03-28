@@ -88,6 +88,7 @@ dtd = dtdstruct_modify(dtd,'sortEigvec');
 if isempty(errStr)
     msgStr= sprintf('DTI calculations done, write file dtdStruct as %s',dtdname);
 else
+    ea_error('Error: DTI calculations done, BUT could not write DTD');
     msgStr= sprintf('Error: DTI calculations done, BUT could not write DTD');
 end
 

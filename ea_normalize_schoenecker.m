@@ -90,7 +90,7 @@ try
     disp('*** Segmentation of transversal version worked.');
 catch
     disp('*** Segmentation of transversal version failed.');
-    error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+    ea_error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 
@@ -159,7 +159,7 @@ try
     disp('*** Coregistration between transversal and coronar versions worked.');
 catch
     disp('*** Coregistration between transversal and coronar versions failed.');
-    %error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+    %ea_error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 
@@ -192,7 +192,7 @@ try
     disp('*** Grand mean normalization (1/3) worked.');
 catch
     disp('*** Grand mean normalization (1/3) failed.');
-    error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+    ea_error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 

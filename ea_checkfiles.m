@@ -1,7 +1,7 @@
 function    ea_checkfiles(options)
 % load files
 if strcmp(options.prefs.patientdir,'Choose Patient Directory')
-    error('Please choose patient directory first');
+    ea_error('Please choose patient directory first');
 end
 
 

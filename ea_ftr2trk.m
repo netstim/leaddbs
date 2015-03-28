@@ -108,7 +108,7 @@ if header.hdr_size~=1000
     header = get_header(fid);
 end
 
-if header.hdr_size~=1000, error('Header length is wrong'), end
+if header.hdr_size~=1000, ea_error('FTR-Header length is wrong'), end
 
 % Check orientation
 [tmp ix] = max(abs(header.image_orientation_patient(1:3)));

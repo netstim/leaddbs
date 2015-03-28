@@ -247,7 +247,8 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
     
     
     if round(estpoint(2)-options.maskwindow)<0 || round(estpoint(2)+options.maskwindow)>500 || round(estpoint(1)-options.maskwindow)<0 || round(estpoint(1)+options.maskwindow)>500
-        display('Mask out of bounds. Must have lost trajectory. Try iterating with a different maskwindow again.');
+        close(progressfig)
+        ea_error('Mask out of bounds. Must have lost trajectory. Try iterating with a different maskwindow again.');
         
         return
         %pause

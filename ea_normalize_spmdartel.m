@@ -173,7 +173,7 @@ jobs{1}=matlabbatch;
     cfg_util('run',jobs);
     disp('*** Dartel coregistration of preoperative version worked.');
 %catch
-%    error('*** Dartel coregistration failed.');
+%    ea_error('*** Dartel coregistration failed.');
 %end
 clear matlabbatch jobs;
 

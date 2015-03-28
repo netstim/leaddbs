@@ -5,7 +5,7 @@ if options.elspec.numel>4 % here, electrodes with more than 4 contacts are extra
     try
         load([options.root,options.patientname,filesep,'ea_reconstruction']);
     catch
-        error('No reconstruction information found. Please run reconstruction first.');
+        ea_error('No reconstruction information found. Please run reconstruction first.');
     end
     for side=1:length(coords_mm)
     if size(coords_mm{side},1)~=options.elspec.numel

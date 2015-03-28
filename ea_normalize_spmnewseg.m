@@ -270,7 +270,7 @@ if exist('spm_select','file') % should be true for spm5
 elseif exist('spm_get','file') % should be true for spm2
     spm5 = 0;
 else
-    error('Can''t find spm_get or spm_select; please add SPM to path')
+    ea_error('Can''t find spm_get or spm_select; please add SPM to path')
 end
 
 spm_defaults;

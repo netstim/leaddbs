@@ -108,7 +108,7 @@ try
     disp('*** Segmentation of preoperative version worked.');
 catch
     disp('*** Segmentation of transversal version failed.');
-    error('This normalization cannot be performed automatically with LEAD. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+    ea_error('This normalization cannot be performed automatically with LEAD. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
 end
 clear matlabbatch jobs;
 

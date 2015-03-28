@@ -476,7 +476,7 @@ elseif length(varargin) == 1
         self.K = [self.K self.K];
     end
     if self.K(1) > 16
-        error('To avoid excessive use of memory, K has been limited to max 16. Change the code to fix this on your own risk.');
+        ea_error('To avoid excessive use of memory, K has been limited to max 16. Change the code to fix this on your own risk.');
     end
     try
         imfilter(zeros(2,2),zeros(2,2));
@@ -498,7 +498,7 @@ elseif length(varargin) == 3
         self.aamethod = 'noshrink';
     end
 else
-    error('Wrong syntax, run: help myaa');
+    ea_error('Wrong syntax, run: help myaa');
 end
 
 if length(self.K) == 1
