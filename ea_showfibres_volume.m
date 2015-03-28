@@ -11,6 +11,7 @@ PL.ht=uitoolbar(resultfig);
 set(0,'CurrentFigure',resultfig)
 colornames='rbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywk';
 
+disp('Calculating VAT/Fibers/Connectivity...');
 
 hold on
 % get app data
@@ -187,7 +188,7 @@ if stimparams(1).showfibers
     
     
     % load fiberset
-    
+    disp('Loading fiberset...');
     
     switch stimparams(1).usefiberset
         case 'Patient-specific DTI-Data'
@@ -202,7 +203,7 @@ if stimparams(1).showfibers
         normalized_fibers_mm=normalized_fibers_mm';
     end
     numtotalfibs=length(normalized_fibers_mm);
-    
+    disp('Done.');
     
     
     
@@ -263,7 +264,7 @@ if stimparams(1).showfibers
     
     
     if stimparams(1).showconnectivities
-        for la=1:length(stimparams(1).labelatlas)
+        for la=1:length(stimparams(1).labelatlas) % this is for now not supported anymore (more than one labelatlas).
             
             for side=options.sides
                 
@@ -499,6 +500,7 @@ if stimparams(1).showfibers
                 for dim=1:4
                     thisfib(dim,:)=double(interp1q([1:size(connectingfibs{side}{fib},2)]',connectingfibs{side}{fib}(dim,:)',[1:0.1:size(connectingfibs{side}{fib},2)]')');
                 end
+                % plot fibers
                 
                 PL.fib_plots.fibs(side,fib)=surface([thisfib(1,:);thisfib(1,:)],...
                     [thisfib(2,:);thisfib(2,:)],...
@@ -526,10 +528,18 @@ if stimparams(1).showfibers
             end
             dispercent(100,'end');
             
+            if verLessThan('matlab','8.4') % ML <2014b support
             set(PL.fib_plots.fibs(side,logical(PL.fib_plots.fibs(side,:))),'EdgeAlpha',0.05);
-            
-            
-            
+            else
+                        set(PL.fib_plots.fibs(side,:),'EdgeAlpha',0.2);
+                        set(PL.fib_plots.fibs(side,:),'FaceLighting','phong');
+                        set(PL.fib_plots.fibs(side,:),'MarkerSize',0.01);
+                        set(PL.fib_plots.fibs(side,:),'LineWidth',0.2);
+                        set(PL.fib_plots.fibs(side,:), 'SpecularColorReflectance', 0);
+                        set(PL.fib_plots.fibs(side,:), 'SpecularExponent', 5);
+                        set(PL.fib_plots.fibs(side,:), 'SpecularStrength', 0.5)
+                        set(PL.fib_plots.fibs(side,:),'FaceAlpha',0);
+            end
             try
                 fiberbutton=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_vat',options),'TooltipString','Fibers (Electrode only)','OnCallback',{@objvisible,PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,1},'OffCallback',{@objvisible,PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,0},'State',getstate(fibson(side)));
             end
@@ -595,8 +605,18 @@ if stimparams(1).showfibers
             dispercent(100,'end');
             
             
-            set(PL.fib_plots.dcfibs(la,side,logical(PL.fib_plots.dcfibs(la,side,:))),'EdgeAlpha',0.05);
-
+            if verLessThan('matlab','8.4') % ML <2014b support
+                set(PL.fib_plots.dcfibs(la,side,logical(PL.fib_plots.dcfibs(la,side,:))),'EdgeAlpha',0.05);
+            else
+                set(PL.fib_plots.dcfibs(la,side,:),'EdgeAlpha',0.2);
+                set(PL.fib_plots.dcfibs(la,side,:),'FaceLighting','phong');
+                set(PL.fib_plots.dcfibs(la,side,:),'MarkerSize',0.01);
+                set(PL.fib_plots.dcfibs(la,side,:),'LineWidth',0.2);
+                set(PL.fib_plots.dcfibs(la,side,:), 'SpecularColorReflectance', 0);
+                set(PL.fib_plots.dcfibs(la,side,:), 'SpecularExponent', 5);
+                set(PL.fib_plots.dcfibs(la,side,:), 'SpecularStrength', 0.5)
+                set(PL.fib_plots.dcfibs(la,side,:),'FaceAlpha',0);
+            end
             
             
                 dcfiberbutton(la,side)=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_both',options),'TooltipString','Fibers (Electrode and Labeling Atlas)','OnCallback',{@objvisible,PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,1},'OffCallback',{@objvisible,PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,0},'State',getstate(dcfibson(la,side)));
@@ -670,8 +690,11 @@ indcol=double(rgb2ind(rgbim,jet));
 
 function objvisible(hobj,ev,atls,resultfig,what,la,side,onoff)
 % set visibility
+try
 set(atls, 'Visible', getstate(onoff));
-
+catch
+    keyboard
+end
 % log visibility
 tvalue=getappdata(resultfig,what);
 

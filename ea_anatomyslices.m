@@ -21,7 +21,7 @@ if isempty(inverted)
 end
 
 templateused=getappdata(resultfig,'templateused');
-if ~strcmp(templateused,togglestates.template) % reload image(s)
+if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)
     clear V
     switch togglestates.template
         case 'MNI-Template'
@@ -79,7 +79,11 @@ else
 end
     
 togglestates.xyzmm=[togglestates.xyzmm';1];
+try
 xyzv= V{1}.mat \ togglestates.xyzmm;
+catch
+    keyboard
+end
 xyzv=round(xyzv(1:3)); % now in voxel coordinates.
 
 %colormap gray
@@ -120,11 +124,12 @@ if togglestates.xyztoggles(1)
    'ZData',[min(bb(:,3)) max(bb(:,3)); min(bb(:,3)) max(bb(:,3))],...
    'CData',imin(:,:,1:3),...
    'FaceColor','texturemap','AlphaDataMapping','none','FaceAlpha',togglestates.xyztransparencies(1),'EdgeColor','none');
-    
+%set(xsliceplot,'SpecularColorReflectance',0)    
+set(xsliceplot,'SpecularStrength',0.1)    
 bbmm{1}=linspace(bb(1,1),bb(4,1),20);
 bbmm{2}=linspace(bb(1,2),bb(2,2),20);
 bbmm{3}=linspace(bb(1,3),bb(3,3),20);
-ea_add_overlay_3d(bbmm,resultfig,3,options);
+%ea_add_overlay_3d(bbmm,resultfig,3,options);
 
     %surface('XData',[max(ulp(:,1)),min(ulp(:,1))],'YData',[min(ulp(:,2)),max(ulp(:,2))],'ZData',[min(ulp(:,3)),max(ulp(:,3))],'CData',imin(:,:,1:3));
     %catch
@@ -172,12 +177,14 @@ if togglestates.xyztoggles(2)
    'ZData',[min(bb(:,3)) max(bb(:,3)); min(bb(:,3)) max(bb(:,3))],...
    'CData',imin(:,:,1:3),...
    'FaceColor','texturemap','AlphaDataMapping','none','FaceAlpha',togglestates.xyztransparencies(2),'EdgeColor','none');
-
+set(ysliceplot,'SpecularStrength',0.1)   
+set(ysliceplot,'DiffuseStrength',0.5)    
+set(ysliceplot,'AmbientStrength',1) 
 
 bbmm{1}=linspace(bb(1,1),bb(4,1),20);
 bbmm{2}=linspace(bb(1,2),bb(2,2),20);
 bbmm{3}=linspace(bb(1,3),bb(3,3),20);
-ea_add_overlay_3d(bbmm,resultfig,2,options);
+%ea_add_overlay_3d(bbmm,resultfig,2,options);
     %ysliceplot=imsurf(imin,ulp,[0,1,0],[-1,0,0],scale);
     %catch
     %    disp('Y-Volume cut out of bounds.');
@@ -218,11 +225,17 @@ if togglestates.xyztoggles(3)
    'ZData',[min(bb(:,3)) max(bb(:,3));min(bb(:,3)) max(bb(:,3))],...
    'CData',imin(:,:,1:3),...
     'FaceColor','texturemap','AlphaDataMapping','none','FaceAlpha',togglestates.xyztransparencies(3),'EdgeColor','none');    
-    %xsliceplot=imsurf(imin,bb,[0,0,1],[-1,0,0],scale);
+set(zsliceplot,'SpecularStrength',0)    
+   set(ysliceplot,'DiffuseStrength',0.5)    
+set(ysliceplot,'AmbientStrength',0.3) 
+
+    
+
+%xsliceplot=imsurf(imin,bb,[0,0,1],[-1,0,0],scale);
     bbmm{1}=linspace(bb(1,1),bb(4,1),20);
     bbmm{2}=linspace(bb(1,2),bb(2,2),20);
     bbmm{3}=linspace(bb(1,3),bb(3,3),20);
-    ea_add_overlay_3d(bbmm,resultfig,1,options);
+    %ea_add_overlay_3d(bbmm,resultfig,1,options);
     %catch
     %    disp('X-Volume cut out of bounds.');
     %end

@@ -32,7 +32,11 @@ end
 % Initialize figure
 
 resultfig=figure('name',[options.patientname,': Electrode-Scene'],'numbertitle','off','CloseRequestFcn',@closesattelites,'visible',options.d3.verbose,'KeyPressFcn',@ea_keypress,'KeyReleaseFcn',@ea_keyrelease);
-set(resultfig, 'Position', get(0,'Screensize')); % Maximize figure.
+
+ssz=get(0,'Screensize');
+ssz(1:2)=ssz(1:2)+50;
+ssz(3:4)=ssz(3:4)-200;
+set(resultfig, 'Position', ssz); % Maximize figure.
 
 % initialize some ui elements
 
@@ -44,7 +48,7 @@ fh2 = uimenu(mh,'Label','Open ROI','Callback',{@ea_addobj,resultfig,'roi',option
 
 % Set some visualization parameters
 
-set(gcf,'Renderer','OpenGL')
+%set(gcf,'Renderer','opengl')
 axis off
 set(gcf,'color','w');
 
@@ -227,11 +231,10 @@ end
 
 % Initialize a draggable lightbulb
 hold on
-[resultfig,lightbulb]=ea_show_light(resultfig);
-set(lightbulb, 'Visible', 'off');
-lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,lightbulb},'OffCallback',{@objinvisible,lightbulb});
+[resultfig]=ea_show_light(resultfig);
+%set(lightbulb, 'Visible', 'off');
 
-
+lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'cam_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'cam_lamp')},'State','on');
 clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'ceiling_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'ceiling_lamp')},'State','on');
 llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'right_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'right_lamp')},'State','on');
 rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'left_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'left_lamp')},'State','on');
@@ -291,13 +294,13 @@ end
 function opensliceviewer(hobj,ev,resultfig,options)
 awin=ea_anatomycontrol(gcf,options);
 setappdata(resultfig,'awin',awin);
-WinOnTop(awin,true);
+try WinOnTop(awin,true); end
 
 
 function openstimviewer(hobj,ev,elstruct,resultfig,options)
 stimwin=ea_stimparams(elstruct,gcf,options);
 setappdata(resultfig,'stimwin',stimwin);
-WinOnTop(stimwin,true);
+try WinOnTop(stimwin,true); end
 
 
 
@@ -324,11 +327,12 @@ ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName],options.prefs.vid
 function export_hd(hobj,ev)
 
 [FileName,PathName] = uiputfile('LEAD_Scene.png','Save file name');
-
+if FileName
 set(gcf, 'Color', [1,1,1]);
 [~, cdata] = ea_myaa([4, 2]);
 
 imwrite(cdata, [PathName,FileName], 'png');
+end
 
 function objvisible(hobj,ev,atls)
 set(atls, 'Visible', 'on');

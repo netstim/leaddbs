@@ -142,7 +142,8 @@ for lab=1:length(ll)
     [~,n]=fileparts(ll(lab).name);
     labelcell{lab}=n;
 end
-labelcell{lab+1}='Use all';
+% historical part that supported more than one labelatlas:
+%labelcell{lab+1}='Use all';
 
 set(handles.labelpopup,'String',labelcell);
 
@@ -657,13 +658,14 @@ for group=1:length(stimparams)
     stimparams(group).showconnectivities=(get(handles.showconns,'Value') == get(handles.showconns,'Max'));
     stimparams(group).fiberthresh=str2double(get(handles.fiberthresh,'String'));
 
-    if strcmp(stimparams(group).labelatlas{1},'Use all')
-        ll=dir([options.earoot,'templates',filesep,'labeling',filesep,'*.nii']);
-        for lab=1:length(ll)
-            [~,n]=fileparts(ll(lab).name);
-            stimparams(group).labelatlas{lab}=n;
-        end
-    end
+    % historical part that supported more than one labelatlas
+%     if strcmp(stimparams(group).labelatlas{1},'Use all')
+%         ll=dir([options.earoot,'templates',filesep,'labeling',filesep,'*.nii']);
+%         for lab=1:length(ll)
+%             [~,n]=fileparts(ll(lab).name);
+%             stimparams(group).labelatlas{lab}=n;
+%         end
+%     end
 end
 
 
@@ -703,34 +705,65 @@ set(resultfig,'Name',figtitle);
 
 
 function deletePL(PL)
-for p=1:length(PL)
+if verLessThan('matlab','8.5') % ML <2014a support
     
     
-    if isfield(PL(p),'vatsurfs')
-                delete(PL(p).vatsurfs(logical(PL(p).vatsurfs))); 
-    end
-    if isfield(PL(p),'fib_plots')
-        if isfield(PL(p).fib_plots,'fibs')
-            delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs))); 
-        end
+    for p=1:length(PL)
         
-        if isfield(PL(p).fib_plots,'dcfibs')
-            todelete=PL(p).fib_plots.dcfibs((PL(p).fib_plots.dcfibs(:)>0));
-            delete(todelete(:)); 
+        
+        if isfield(PL(p),'vatsurfs')
+            delete(PL(p).vatsurfs(logical(PL(p).vatsurfs)));
+        end
+        if isfield(PL(p),'fib_plots')
+            if isfield(PL(p).fib_plots,'fibs')
+                delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs)));
+            end
             
+            if isfield(PL(p).fib_plots,'dcfibs')
+                todelete=PL(p).fib_plots.dcfibs((PL(p).fib_plots.dcfibs(:)>0));
+                delete(todelete(:));
+                
+            end
+        end
+        if isfield(PL(p),'regionsurfs')
+            todelete=PL(p).regionsurfs(logical(PL(p).regionsurfs));
+            delete(todelete(:));
+        end
+        if isfield(PL(p),'conlabels')
+            todelete=PL(p).conlabels(logical(PL(p).conlabels));
+            delete(todelete(:));
+        end
+        if isfield(PL(p),'ht')
+            delete(PL(p).ht);
         end
     end
-    if isfield(PL(p),'regionsurfs')
-        todelete=PL(p).regionsurfs(logical(PL(p).regionsurfs));
-         delete(todelete(:)); 
+    
+    
+else
+    for p=1:length(PL) 
+        if isfield(PL(p),'vatsurfs')
+            delete(PL(p).vatsurfs);
+        end
+        if isfield(PL(p),'fib_plots')
+            if isfield(PL(p).fib_plots,'fibs')
+                delete(PL(p).fib_plots.fibs);
+            end
+            
+            if isfield(PL(p).fib_plots,'dcfibs')
+                delete(PL(p).fib_plots.dcfibs);
+            end
+        end
+        if isfield(PL(p),'regionsurfs')
+            delete(PL(p).regionsurfs);
+        end
+        if isfield(PL(p),'conlabels')
+            delete(PL(p).conlabels);
+        end
+        if isfield(PL(p),'ht')
+            delete(PL(p).ht);
+        end
     end
-    if isfield(PL(p),'conlabels')
-        todelete=PL(p).conlabels(logical(PL(p).conlabels));
-         delete(todelete(:)); 
-    end
-    if isfield(PL(p),'ht')
-         delete(PL(p).ht);
-    end
+    
 end
 
 
