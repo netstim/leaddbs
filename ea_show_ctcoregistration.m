@@ -61,6 +61,7 @@ nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,outf]);
 h1=figure('name',['Coregistration (CT+MR) results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
 set(gcf,'color','w')
 imagesc(scale_image(squeeze(nii.img(:,:,round(end/2)))',[dims(1)/dims(2),1]));
+axis ij
 axis('equal')
 axis('off')
 colormap gray

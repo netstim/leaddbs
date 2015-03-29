@@ -564,8 +564,10 @@ end
 
 if length(uipatdir)>1
     set(handles.patdir_choosebox,'String',['Multiple (',num2str(length(uipatdir)),')']);
+    set(handles.patdir_choosebox,'TooltipString',strjoin(uipatdir,', '));
 else
 set(handles.patdir_choosebox,'String',uipatdir{1});
+set(handles.patdir_choosebox,'TooltipString',uipatdir{1});
 end
 
 % store patient directories in figure

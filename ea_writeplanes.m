@@ -122,7 +122,7 @@ for side=options.sides
             
             %title(['Electrode ',num2str(el-1),', transversal view.']);
             
-            [slice,boundbox,boundboxmm]=ea_sample_slice(V,dstring,options.d2.bbsize,coords,el);
+            [slice,~,boundboxmm]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
                 set(0,'CurrentFigure',cuts)
             try
                 hi=imagesc(slice,...

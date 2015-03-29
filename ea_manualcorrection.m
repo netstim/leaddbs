@@ -493,7 +493,7 @@ cmap=[1,4,5,8];
 for subpl=1:4
     subplot(4,4,subpl*4)
     
-    slice=ea_sample_slice(Vtra,'tra',wsize,coords,cmap(subpl));
+    slice=ea_sample_slice(Vtra,'tra',wsize,'vox',coords,cmap(subpl));
     try
         imagesc(slice,[ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
     catch
