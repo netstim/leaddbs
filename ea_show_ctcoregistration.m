@@ -25,9 +25,10 @@ CT.img(CT.img<0)=0; % remove negative hounsfield parts.
 %CT.img=smooth3(CT.img,'gaussian',[11 11 11]);
 
 
-eCT=ea_detect_edges_3d(CT.img,alpha,useimtbx);
+eCT=logical(ea_detect_edges_3d(CT.img,alpha,useimtbx));
 
 CT.hdr.fname=[options.root,options.patientname,filesep,'wires_',options.prefs.ctnii_coregistered];
+CT.hdr.dt=[4,0];
 spm_write_vol(CT.hdr,eCT);
 
 disp('Done. Fusing images...');
