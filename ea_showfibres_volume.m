@@ -531,7 +531,8 @@ if stimparams(1).showfibers
             if verLessThan('matlab','8.4') % ML <2014b support
             set(PL.fib_plots.fibs(side,logical(PL.fib_plots.fibs(side,:))),'EdgeAlpha',0.05);
             else
-                        set(PL.fib_plots.fibs(side,:),'EdgeAlpha',0.2);
+                try
+                set(PL.fib_plots.fibs(side,:),'EdgeAlpha',0.2);
                         set(PL.fib_plots.fibs(side,:),'FaceLighting','phong');
                         set(PL.fib_plots.fibs(side,:),'MarkerSize',0.01);
                         set(PL.fib_plots.fibs(side,:),'LineWidth',0.2);
@@ -539,6 +540,7 @@ if stimparams(1).showfibers
                         set(PL.fib_plots.fibs(side,:), 'SpecularExponent', 5);
                         set(PL.fib_plots.fibs(side,:), 'SpecularStrength', 0.5)
                         set(PL.fib_plots.fibs(side,:),'FaceAlpha',0);
+                end
             end
             try
                 fiberbutton=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_vat',options),'TooltipString','Fibers (Electrode only)','OnCallback',{@objvisible,PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,1},'OffCallback',{@objvisible,PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,0},'State',getstate(fibson(side)));
@@ -608,6 +610,7 @@ if stimparams(1).showfibers
             if verLessThan('matlab','8.4') % ML <2014b support
                 set(PL.fib_plots.dcfibs(la,side,logical(PL.fib_plots.dcfibs(la,side,:))),'EdgeAlpha',0.05);
             else
+                try
                 set(PL.fib_plots.dcfibs(la,side,:),'EdgeAlpha',0.2);
                 set(PL.fib_plots.dcfibs(la,side,:),'FaceLighting','phong');
                 set(PL.fib_plots.dcfibs(la,side,:),'MarkerSize',0.01);
@@ -616,6 +619,7 @@ if stimparams(1).showfibers
                 set(PL.fib_plots.dcfibs(la,side,:), 'SpecularExponent', 5);
                 set(PL.fib_plots.dcfibs(la,side,:), 'SpecularStrength', 0.5)
                 set(PL.fib_plots.dcfibs(la,side,:),'FaceAlpha',0);
+                end
             end
             
             

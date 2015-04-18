@@ -164,6 +164,12 @@ ea_showdis(['Maximal value was: ',num2str(maxv),'.'],options.verbose);
 catch
    ea_showdis(['Probably algorithm stopped to early. No guess of electrode heights possible.'],options.verbose);
    goodz=min(trajectory(:,3));
+   maxi=1;
+end
+if isempty(goodz) 
+      ea_showdis(['Probably algorithm stopped to early. No guess of electrode heights possible.'],options.verbose);
+   goodz=min(trajectory(:,3));
+   maxi=1;
 end
 
 

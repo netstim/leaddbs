@@ -1,10 +1,12 @@
-function cuts=ea_writeplanes(options)
+function cuts=ea_writeplanes(varargin)
 
 % This function exports slice views of all electrode contacts reconstructed
 % priorly. Images are written as .png image files. Bot transversal and
 % coronar views are being exported. Additionally, overlays from atlas-data
 % can be visualized via the function ea_add_overlay which uses all atlas
 % files that are found in the lead_dbs/atlases directory.
+% inputs: options (struct using standard lead-dbs fields), optional:
+% elstruct (for group visualization).
 
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
@@ -12,14 +14,24 @@ function cuts=ea_writeplanes(options)
 
 
 disp('Exporting 2D slice output...');
+
+options=varargin{1};
+if nargin==1
 % load prior results
 try
     load([options.root,options.patientname,filesep,'ea_reconstruction']);
+    ave_coords_mm=coords_mm;
+    clear coords_mm
+    elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
 catch
-    coords_mm=ea_read_fiducials([options.root,options.patientname,filesep,'ea_coords.fcsv'],options);
+    ave_coords_mm=ea_read_fiducials([options.root,options.patientname,filesep,'ea_coords.fcsv'],options);
+    elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
 end
-
-interpfactor=2;
+elseif nargin==2 % elstruct has been supplied, this is a group visualization
+    elstruct=varargin{2};
+    % average coords_mm for image slicing
+    ave_coords_mm=ea_ave_elstruct(elstruct); 
+end
 
 if strcmp(options.prefs.d2.useprepost,'pre') % use preoperative images, overwrite filenames to preoperative version
     options.prefs.gtranii=options.prefs.gprenii;
@@ -33,7 +45,7 @@ end
 scrsz = get(0,'ScreenSize');
 
 
-cuts=figure('name',[options.patientname,': 2D cut views'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible','off');
+cuts=figure('name',[options.patientname,': 2D cut views'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2]);
 axis off
 set(gcf,'color','w');
 tracorpresent=zeros(3,1); % check if files are present.
@@ -74,11 +86,18 @@ switch options.modality
         Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
         Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
         tracorpresent(1:3)=1;
+    case 3 % use template
+        Vtra=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
+        Vcor=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
+        Vsag=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
+        tracorpresent(1:3)=1;
+        
 end
 
-for side=1:length(coords_mm)
 
-coords{side}=Vtra.mat\[coords_mm{side},ones(size(coords_mm{side},1),1)]';
+for side=1:length(ave_coords_mm)
+
+coords{side}=Vtra.mat\[ave_coords_mm{side},ones(size(ave_coords_mm{side},1),1)]';
 coords{side}=coords{side}(1:3,:)';
 end
 %XYZ_src_vx = src.mat \ XYZ_mm;
@@ -101,6 +120,7 @@ for side=options.sides
                     
                     onedim=1;
                     secdim=2;
+                    planedim=3;
                     dstring='tra';
                     V=Vtra;
                     
@@ -108,6 +128,7 @@ for side=options.sides
                     
                     onedim=1;
                     secdim=3;
+                    planedim=2;
                     dstring='cor';
                     V=Vcor;
                     
@@ -115,6 +136,7 @@ for side=options.sides
                     
                     onedim=2;
                     secdim=3;
+                    planedim=1;
                     dstring='sag';
                     V=Vsag;
                     
@@ -148,12 +170,61 @@ for side=options.sides
             
             
             % Show coordinates
+
+                if length(elstruct)>1
+                    cmap=ea_nice_colors(length(elstruct),[0,0,0]);
+                    ptnames=struct2cell(elstruct);
+                    ptnames=squeeze(ptnames(end,1,:))';
+                else
+                    cmap=[0.9,0.9,0.9];
+                end
+                    
+                % 1. Plot stars
+                for c=1:length(elstruct)
+                    elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',cmap(c,:),'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
+                end
+                
+                
+                
+                % Plot L, R and sizelegend
+                text(addsubsigned(min(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'L','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
+                text(addsubsigned(max(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'R','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
+                
+                plot([addsubsigned(mean(boundboxmm{onedim}),2.5,'minus'),addsubsigned(mean(boundboxmm{onedim}),2.5,'plus')],[addsubsigned(min(boundboxmm{secdim}),1,'minus'),addsubsigned(min(boundboxmm{secdim}),1,'minus')],'-w');
+                text(mean(boundboxmm{onedim}),addsubsigned(min(boundboxmm{secdim}),2,'minus'),'5 mm','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
+
+                % 2. Plot legend
+                if exist('ptnames','var')
+                    if numel(elplt)>5
+                        cols=round(sqrt(numel(elplt(:))));
+                        if cols>6; cols=6; end
+                        ea_columnlegend(cols,elplt,ptnames,'Location','Middle');
+                    else
+                        legend(elplt,ptnames,'Location','southoutside','Orientation','Horizontal','FontSize',9,'FontWeight','bold');
+                    end
+                    legend('boxoff');
+                end
+                axis xy
+                axis off
+                drawnow % this is needed here to set alpha below.
+                % 3. Dampen alpha by distance (this *has* to be performed
+                % last, if not, info is erased by legend again).
+                try % not sure if this is supported by earlier ML versions.
+                    for c=1:length(elstruct)
+                        
+                        dist=abs(diff([elstruct(c).coords_mm{side}(elcnt,planedim),ave_coords_mm{side}(elcnt,planedim)]));
+                        % dampen alpha by distance
+                        alp=2*1/exp(dist);
+                        hMarker = elplt(c).MarkerHandle;
+                        hMarker.EdgeColorData=uint8(255*[cmap(c,:)';alp]);
+                    end
+                end
+                
+                
             
-            plot(coords_mm{side}(elcnt,onedim),coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',[0.9 0.9 0.9],'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',2,'LineSmoothing','on');
             hold off
             
-                        axis xy
-                        axis off
+
             set(gca,'LooseInset',get(gca,'TightInset'))
             % Save results
             set(cuts,'visible','on');
@@ -472,3 +543,40 @@ elseif find('123456789' == evnt.Character)
     set(gcf,'userdata',self);
     myaa('update');
 end
+
+
+
+function coords_mm=ea_ave_elstruct(elstruct)
+% simply averages coordinates of a group to one coords_mm 1x2 cell
+coords_mm=elstruct(1).coords_mm; % initialize mean variable
+for side=1:length(coords_mm)
+    for xx=1:size(coords_mm{side},1)
+        for yy=1:size(coords_mm{side},2)
+            vals=zeros(length(elstruct),1);
+            for vv=1:length(elstruct)
+                vals(vv)=elstruct(vv).coords_mm{side}(xx,yy);
+            end
+            coords_mm{side}(xx,yy)=mean(vals);
+            
+        end
+    end
+end
+
+
+function val=addsubsigned(val,add,command)
+
+switch command
+    case 'plus'
+        if val>0
+            val=val+add;
+        elseif val<0
+            val=val-add;
+        end
+    case 'minus'
+        if val>0
+            val=val-add;
+        elseif val<0
+            val=val+add;
+        end
+end
+        

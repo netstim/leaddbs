@@ -20,7 +20,7 @@ end
 
 %% change into mrstruct format
 
-mr =  nifti_to_mrstruct('series3D',finames);
+mr =  ea_nifti_to_mrstruct('series3D',finames);
 
 
 sz = size(mr.dataAy);

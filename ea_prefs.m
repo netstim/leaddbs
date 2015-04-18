@@ -11,7 +11,7 @@ prefs.lp=lp;
 end
 
 %% general file handling:
-prefs.prenii_unnormalized=['pre_tra.nii']; % not needed if schoenecker normalization is used.
+prefs.prenii_unnormalized=['pre.nii']; % not needed if schoenecker normalization is used.
 prefs.tranii_unnormalized=['tra.nii'];
 prefs.sagnii_unnormalized=['sag.nii'];
 prefs.cornii_unnormalized=['cor.nii'];
@@ -38,7 +38,8 @@ prefs.normmatrix=['lmat.txt'];
 
 
 %% 2D-Export
-prefs.d2.useprepost='post'; % can be 'post' or 'pre' to set the backdrop.
+prefs.d2.useprepost='pre'; % can be 'post' or 'pre' to set the backdrop.
+prefs.d2.groupcolors='lead'; % can be 'maxdist' to use ea_distinguishable_colors by Timothy E. Holy, 'lead' to use a handpicked color set inspired by colorblender.com or 'lines' to use the matlab lines colormap (supports only seven colors).
 
 %% DICOM-Handling:
 

@@ -22,7 +22,7 @@ end
 
 if CC.NumObjects>1
     
-    ea_showdis(['Number of objects: ',num2str(CC.NumObjects),'.'],options.verbose);
+    %ea_showdis(['Number of objects: ',num2str(CC.NumObjects),'.'],options.verbose);
     for obj=1:CC.NumObjects
 
         slicebwobj=slicebw;
@@ -32,10 +32,10 @@ if CC.NumObjects>1
         stats=ea_centroid(slicebwobj);
         objdistance=pdist([estpoint;stats.Centroid]);
         
-        ea_showdis(['Distance to object ',num2str(obj),': ',num2str(objdistance),'.'],options.verbose);
+        %ea_showdis(['Distance to object ',num2str(obj),': ',num2str(objdistance),'.'],options.verbose);
         
         if objdistance<distance % if isolated object performs better
-            ea_showdis(['This is better. Using this object.'],options.verbose);
+            %ea_showdis(['This is better. Using this object.'],options.verbose);
             greyobj=slicebwobj;
             greyobj=greyobj(logical(mask));
             greyobj=reshape(greyobj,sqrt(length(greyobj)),sqrt(length(greyobj)));

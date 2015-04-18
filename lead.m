@@ -87,6 +87,10 @@ vnum=ea_getvsn('local');
 set(handles.versiontxt,'String',['v ',num2str(vnum(1))]);
 
 
+% set DICOM input and output name strings:
+load([fileparts(which('lead')),filesep,'ea_prefs']);
+set(handles.setdicomout,'String',lp.dicom.outfolder);
+set(handles.setdicomin,'String',lp.dicom.infolder);
 
 
 
@@ -176,17 +180,6 @@ end
 setappdata(gcf,'ftmethod',ftmethod);
 set(handles.ftmethod,'String',fdc);
 
-
-% add parcellation atlases to menu:
-
-
-ll=dir([fileparts(which('lead')),filesep,'templates',filesep,'labeling',filesep,'*.nii']);
-for lab=1:length(ll)
-    [~,n]=fileparts(ll(lab).name);
-    ftCMatlas{lab}=n;
-end
-setappdata(gcf,'ftCMatlas',ftCMatlas);
-set(handles.parcellation_atlas,'String',ftCMatlas);
 
 
 
@@ -1012,6 +1005,9 @@ dicindir=uigetdir(p);
 if ~dicindir
     return
 end
+
+set(handles.setdicomin,'String',dicindir);
+
 try
 load([fileparts(which('lead')),filesep,'ea_prefs']);
 end
@@ -1037,6 +1033,7 @@ dicoutdir=uigetdir(p);
 if ~dicoutdir
     return
 end
+set(handles.setdicomin,'String',dicindir);
 try
 load([fileparts(which('lead')),filesep,'ea_prefs']);
 end
@@ -1278,10 +1275,12 @@ options.modality = get(handles.MRCT,'Value');
 
 
 options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback. 
-sidelog=[get(handles.right_checkbox,'Value') == get(handles.right_checkbox,'Max'),get(handles.left_checkbox,'Value') == get(handles.left_checkbox,'Max')];
-sidepos=[1,2];
 
-options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
+%sidelog=[get(handles.right_checkbox,'Value') == get(handles.right_checkbox,'Max'),get(handles.left_checkbox,'Value') == get(handles.left_checkbox,'Max')];
+%sidepos=[1,2];
+
+%options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
+options.sides=1:2;
 
 options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
 if strcmp(get(handles.maskwindow_txt,'String'),'auto')

@@ -5,17 +5,8 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-useatlases=~strcmp(options.atlasset,'Use none');
     set(0,'CurrentFigure',cuts)
-needtodelete=0; % small flag to cleanup files involved in .nii.gz support.
-try
-    IV=spm_vol([options.root,options.patientname,filesep,options.prefs.gtranii]);
-catch
-    IV=spm_vol([options.root,options.patientname,filesep,options.prefs.tranii]);
-end
 
-
-if useatlases
     % load/generate atlas_index.mat
     
     if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
@@ -39,17 +30,7 @@ if useatlases
             
             atlvx=atlases.XYZ{atlas,side}.vx;
             atlval=atlases.XYZ{atlas,side}.val;
-            pdcnt=1;
-            for d=ea_planesdim(tracor)
-                [~,minix]=min(atlvx(:,d));
-                [~,maxix]=max(atlvx(:,d));
-                try
-                atlbb(pdcnt,:)=[atlmm(minix,d);atlmm(maxix,d)];
-                catch
-                    keyboard
-                end
-                pdcnt=pdcnt+1;                
-            end
+            
             
                   
                
@@ -57,12 +38,22 @@ if useatlases
                planehts=planemm(:,ea_intersecdim(tracor));
                dists=abs(atlhts-planehts(1));
                
-               dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*2;
+               dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*1.5;
             if any(dists) % only if intersection exists plot the atlas.
                 
                 xyatl=atlvx(dists,ea_planesdim(tracor));
+                xyatlmm=atlmm(dists,ea_planesdim(tracor));
                 valatl=atlval(dists);
                 
+                for d=1:2
+                    [~,minix]=min(xyatl(:,d));
+                    [~,maxix]=max(xyatl(:,d));
+                    try
+                        atlbb(d,:)=[xyatlmm(minix,d);xyatlmm(maxix,d)];
+                    catch
+                        keyboard
+                    end
+                end
                 
                 
                 
@@ -119,7 +110,7 @@ if useatlases
                         
                         
                     end
-                    %% isoval overlay:
+                    %% contour overlay:
                     if  options.d2.con_overlay
                         if any(slice(:));
                             bw=bwconncomp(slice);
@@ -127,10 +118,18 @@ if useatlases
                                 slice(:)=0;
                                 slice(bw.PixelIdxList{cp})=1;
                                 [c] = contourc(ea_zeroframe(slice),1);
+                                
+                             
                                 c=c(:,2:end);
                                 [~,yy]=find(c<1);
                                 c(:,yy)=[];
                                 
+                                   dd=sum(abs(diff(c'))');
+                                   ix=[];
+                                if any(dd>3) % detect jumps in contour (=inner holes)
+                                    ix=find(dd>3);
+                                    ix=[ix,size(c,2)];
+                                end
                                 
                                 cscale=c;
                                 for dim=1:2
@@ -138,7 +137,16 @@ if useatlases
                                     
                                 end
                                 set(0,'CurrentFigure',cuts)
-                                plot(cscale(1,:),cscale(2,:),'color',options.d2.con_color,'LineSmoothing','on');
+                                if isempty(ix)
+                                    plot(cscale(1,:),cscale(2,:),'color',options.d2.con_color,'LineSmoothing','on');
+                                else
+                                    startPoint=1;
+
+                                    for plots=1:length(ix) % this happens if contour has an "inner hole"
+                                    plot(cscale(1,startPoint:ix(plots)),cscale(2,startPoint:ix(plots)),'color',options.d2.con_color,'LineSmoothing','on');  
+                                    startPoint=ix(plots)+1;
+                                    end
+                                end
                             end
                         end
                     end
@@ -146,18 +154,17 @@ if useatlases
                     
                     if options.d2.lab_overlay
                         
-                        
-                        
-                        centr=mean(atlmm(:,ea_planesdim(tracor)));%ea_centroid(logical(slice));
-                        an=atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1);
-                        
-                        try
-                            set(0,'CurrentFigure',cuts)
-                            text(centr(1),centr(2),an,'color',options.d2.con_color);
-                        catch
+                        if any(slice(:));
+                            centr=mean(xyatlmm(valatl>thresh,:));%ea_centroid(logical(slice));
+                            an=atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1);
                             
+                            try
+                                set(0,'CurrentFigure',cuts)
+                                text(centr(1),centr(2),an,'color',options.d2.con_color,'VerticalAlignment','middle','HorizontalAlignment','center');
+                            catch
+                                
+                            end
                         end
-                        
                     end
                 end
             end
@@ -172,7 +179,7 @@ if useatlases
     
     % save table information
     save([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases');
-end
+
 
 function sides=detsides(opt)
 
@@ -217,3 +224,5 @@ function fslice=ea_zeroframe(slice)
 
 fslice=zeros(size(slice)+[2,2]);
 fslice(2:end-1,2:end-1)=slice;
+
+

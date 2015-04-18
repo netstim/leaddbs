@@ -4,7 +4,7 @@ function [trajectory,trajvector]=ea_reconstruct_trajectory(priortrajectory,tra_n
 % Andreas Horn
 
 if options.modality==2 % CT support
-   tra_nii.img=tra_nii.img*-1; 
+    tra_nii.img=tra_nii.img*-1;
 end
 
 
@@ -12,10 +12,12 @@ end
 slice=zeros(size(tra_nii.img,1),size(tra_nii.img,2));
 masknii=tra_nii;
 if side==1
-    if options.verbose>1; progressfig=figure('name','Finding left electrode','NumberTitle','off'); set(gcf,'color','w'); axis off; end
+    if options.verbose>1; progressfig=figure('name','Finding left electrode','NumberTitle','off','Menubar','none','ToolBar','none'); set(gcf,'color','w'); axis off; end
 else
-    if options.verbose>1; progressfig=figure('name','Finding right electrode','NumberTitle','off'); set(gcf,'color','w'); axis off; end
+    if options.verbose>1; progressfig=figure('name','Finding right electrode','NumberTitle','off','Menubar','none','ToolBar','none'); set(gcf,'color','w'); axis off; end
 end
+
+set(progressfig,'KeyPressFcn',@ea_keystr);
 
 %maximize(progressfig)
 if options.verbose>1; colormap(gray); end
@@ -48,7 +50,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             slice=double(tra_nii.img(:,:,size(tra_nii.img,3)-10))'; % extract the correct slice.
             %slice=fliplr(slice);
             slice(slice==0)=nan;
-            mn=figure; imagesc(slice); colormap gray;
+            mn=figure('color','w','ToolBar','none','NumberTitle','off','Menubar','none','name','Please specify manual starting point.'); imagesc(slice); colormap gray;
             hold on
             cof=imshow(colormask);
             set(cof, 'AlphaData', mask*0.3)
@@ -56,8 +58,8 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             close(mn);
             % reset mask from mouse input
             
-                mask=zeros(size(slice,1),size(slice,2));
-
+            mask=zeros(size(slice,1),size(slice,2));
+            
             mask(Y-10:Y+10,X-10:X+10)=1;
             
             
@@ -82,8 +84,8 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
     
     
     
-        stats=ea_centroid(slicebw);
-
+    stats=ea_centroid(slicebw);
+    
     try
         isempty(stats.Centroid); % this is only to check if stats.Centroid is empty.
         centerline(1,:)=[stats.Centroid,size(tra_nii.img,3)];
@@ -97,10 +99,10 @@ end
 
 
 Vmat=nii2Vmat(tra_nii);
-    zfifteen=Vmat\[0;0;-15.5;1];
+zfifteen=Vmat\[0;0;-15.5;1];
 
-    
-    %% starting slice 2:end
+
+%% starting slice 2:end
 
 for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have been processed).
     % uncomment the following two lines to write out slice views.
@@ -139,7 +141,7 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
     
     
     
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); subplot(3,3,1); axis off; end
+    if options.verbose>1; ea_setfocus(progressfig); subplot(3,3,1); axis off; end
     
     
     % the following function will return the slice and a bw copy of the
@@ -153,10 +155,10 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
     
     % slice is always the raw current slice.
     
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); colormap(gray); end
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); imagesc(slice); end
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); colormap(gray); end
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); axis square; end
+    if options.verbose>1; ea_setfocus(progressfig); colormap(gray); end
+    if options.verbose>1; ea_setfocus(progressfig); imagesc(slice); end
+    if options.verbose>1; ea_setfocus(progressfig); colormap(gray); end
+    if options.verbose>1; ea_setfocus(progressfig); axis square; end
     
     
     
@@ -191,8 +193,8 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
         
         if pdist([estpoint;[numidpoint,imgsliceno]])<15-maxthree(refine)
             centerline(sliceno,:)=[numidpoint,imgsliceno];
-            ea_showdis(['Empirical Midpoint seems to be ',num2str([numidpoint,imgsliceno]),'.'],options.verbose);
-            ea_showdis(['New Midpoint found. Distance is ',num2str(pdist([estpoint;[numidpoint,imgsliceno]])),'.'],options.verbose);
+            %ea_showdis(['Empirical Midpoint seems to be ',num2str([numidpoint,imgsliceno]),'.'],options.verbose);
+            %ea_showdis(['New Midpoint found. Distance is ',num2str(pdist([estpoint;[numidpoint,imgsliceno]])),'.'],options.verbose);
         else
             
             endcount=endcount+1;
@@ -203,14 +205,14 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
             end
             centerline(sliceno,:)=estpoint;
             
-            ea_showdis(['No new Midpoint found. Distance is ',num2str(pdist([estpoint;[numidpoint,imgsliceno]])),'. Interpolating.'],options.verbose);
+            %ea_showdis(['No new Midpoint found. Distance is ',num2str(pdist([estpoint;[numidpoint,imgsliceno]])),'. Interpolating.'],options.verbose);
             
         end
         
     else
         ea_showdis('Estimated point not yet defined. Using second empirical point.',options.verbose);
         numidpoint=ea_findonemidpoint(slicebw,centerline(1,1:2),mask,options);
-
+        
         centerline(sliceno,:)=[numidpoint,imgsliceno];
     end
     
@@ -220,7 +222,13 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
     
     
     
-    
+    endnow=getappdata(progressfig,'endnow');
+    if ~isempty(endnow)
+        if endnow
+            ea_showdis('User pressed space, stopping.',options.verbose);
+            break
+        end
+    end
     
     
     
@@ -241,7 +249,7 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
     % this function estimates a fitted line and the following point based on the last points.
     
     [trajectory,trajvector,estpoint]=ea_fit_line(centerline);
-    ea_showdis(['Next point was estimated to be ',num2str(estpoint),'.'],options.verbose);
+    %ea_showdis(['Next point was estimated to be ',num2str(estpoint),'.'],options.verbose);
     % update mask
     mask=zeros(size(slice,1),size(slice,2));
     
@@ -262,35 +270,35 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
     %% part 4: visualization...
     %-------------------------------------------------------------------%
     
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); subplot(3,3,2); axis off; end
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); imagesc(mask); end
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); axis square; end
+    if options.verbose>1; ea_setfocus(progressfig); subplot(3,3,2); axis off; end
+    if options.verbose>1; ea_setfocus(progressfig); imagesc(mask); end
+    if options.verbose>1; ea_setfocus(progressfig); axis square; end
     
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); subplot(3,3,3); axis off; end
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); imagesc(slicebw); end
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); axis square; end
+    if options.verbose>1; ea_setfocus(progressfig); subplot(3,3,3); axis off; end
+    if options.verbose>1; ea_setfocus(progressfig); imagesc(slicebw); end
+    if options.verbose>1; ea_setfocus(progressfig); axis square; end
     
     
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); subplot(3,3,4); axis off; end
+    if options.verbose>1; ea_setfocus(progressfig); subplot(3,3,4); axis off; end
     
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); imagesc(maskslice); end
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); axis square; end
+    if options.verbose>1; ea_setfocus(progressfig); imagesc(maskslice); end
+    if options.verbose>1; ea_setfocus(progressfig); axis square; end
     
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); subplot(3,3,5); axis off; end
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); imagesc(maskslicebw); end
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); axis square; end
+    if options.verbose>1; ea_setfocus(progressfig); subplot(3,3,5); axis off; end
+    if options.verbose>1; ea_setfocus(progressfig); imagesc(maskslicebw); end
+    if options.verbose>1; ea_setfocus(progressfig); axis square; end
     
     
     if exist('greymaskslicebw','var')
         if ~isnan(greymaskslicebw)
-            if options.verbose>1; set(0,'CurrentFigure',progressfig); subplot(3,3,6); axis off; end
-            if options.verbose>1; set(0,'CurrentFigure',progressfig); imagesc(greymaskslicebw); end
-            if options.verbose>1; set(0,'CurrentFigure',progressfig); axis square; end
+            if options.verbose>1; ea_setfocus(progressfig); subplot(3,3,6); axis off; end
+            if options.verbose>1; ea_setfocus(progressfig); imagesc(greymaskslicebw); end
+            if options.verbose>1; ea_setfocus(progressfig); axis square; end
         end
     else
-        if options.verbose>1; set(0,'CurrentFigure',progressfig); subplot(3,3,6); axis off; end
-        if options.verbose>1; set(0,'CurrentFigure',progressfig); imagesc(zeros(10)); end
-        if options.verbose>1; set(0,'CurrentFigure',progressfig); axis square; end
+        if options.verbose>1; ea_setfocus(progressfig); subplot(3,3,6); axis off; end
+        if options.verbose>1; ea_setfocus(progressfig); imagesc(zeros(10)); end
+        if options.verbose>1; ea_setfocus(progressfig); axis square; end
     end
     
     
@@ -300,15 +308,15 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
     
     
     
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); subplot(3,3,7:9); end
+    if options.verbose>1; ea_setfocus(progressfig); subplot(3,3,7:9); end
     
     
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); plot3(centerline(:,1),centerline(:,2),centerline(:,3)); hold on; plot3(centerline(1,1),centerline(1,2),centerline(1,3),'*g'); hold off; end
+    if options.verbose>1; ea_setfocus(progressfig); plot3(centerline(:,1),centerline(:,2),centerline(:,3)); hold on; plot3(centerline(1,1),centerline(1,2),centerline(1,3),'*g'); hold off; end
     
     
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); hold on; plot3(trajectory(:,1),trajectory(:,2),trajectory(:,3),'r'); hold off; end
+    if options.verbose>1; ea_setfocus(progressfig); hold on; plot3(trajectory(:,1),trajectory(:,2),trajectory(:,3),'r'); hold off; end
     
-    if options.verbose>1; set(0,'CurrentFigure',progressfig); drawnow; end
+    if options.verbose>1; ea_setfocus(progressfig); drawnow; end
     
     
     
@@ -318,6 +326,21 @@ end
 
 if options.verbose>2; close(progressfig); end
 
+
+
+function ea_setfocus(progressfig)
+try
+    set(0,'CurrentFigure',progressfig)
+catch
+    ea_error('Please do not close the progress figure during reconstruction.')
+end
+
+function ea_keystr(progressfig,event)
+commnd=event.Character;
+switch lower(commnd)
+    case ' '
+        setappdata(progressfig,'endnow',1);        
+end
 
 
 function Vmat=nii2Vmat(nii)

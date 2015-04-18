@@ -31,12 +31,16 @@ function varargout=ea_normalize_spmdartel(options)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='SPM8 DARTEL nonlinear [MR/CT]';
-    varargout{2}={'SPM8'};
+    if strcmp(SPM('ver'),'SPM12')
+        varargout{1}='SPM12 DARTEL nonlinear [MR/CT]';
+    elseif strcmp(SPM('ver'),'SPM8')
+        varargout{1}='SPM8 DARTEL nonlinear [MR/CT]';
+    end
+    varargout{2}={'SPM8','SPM12'};
     return
 end
 if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
-   ea_generate_tpm; 
+   ea_generate_tpm; % will generate a hd_template out of SPM's TPM.nii
     
 end
 
@@ -94,11 +98,21 @@ end
 % now dartel-import the preoperative version.
 
 %try
+
+
+
     disp('Segmenting preoperative version (Import to DARTEL-space)');
+    
+switch(spm('ver'))
+    case 'SPM8'
+        spmsegroot=[fileparts(which('spm')),filesep,'toolbox',filesep,'Seg',filesep];
+    case 'SPM12'
+        spmsegroot=[fileparts(which('spm')),filesep,'tpm',filesep];
+end
     load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob']);
     job.channel.vols{1}=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized];
     for tpm=1:6
-        job.tissue(tpm).tpm=fullfile(fileparts(which('spm')),'toolbox','Seg',['TPM.nii,',num2str(tpm)]);
+        job.tissue(tpm).tpm=fullfile([spmsegroot,'TPM.nii,',num2str(tpm)]);
         if tpm<4
         job.tissue(tpm).native=[0,1];
         else
@@ -106,8 +120,16 @@ end
         end
     end
     job.resolution=segmentresolution; 
+    if strcmp(spm('ver'),'SPM12');
+        job.warp.fwhm=0;
+        job.warp.cleanup=1;
+        job.warp.reg=[0 0.001 0.5 0.05 0.2];
+        spm_preproc_run(job);
+    else
+        
+            ea_spm_preproc_run(job); % exactly the same as the SPM version ("New Segment" in SPM8 / "Segment" in SPM12) but with an increase in resolution to 0.5 mm iso.
+    end
     
-    ea_spm_preproc_run(job); % exactly the same as the SPM version ("New Segment" in SPM8) but with an increase in resolution to 0.5 mm iso.
     
     
     disp('*** Segmentation of preoperative MRI worked.');
@@ -199,238 +221,4 @@ for inverse=0:1
 end
 
 
-% create warped:
-% ...pre_tra
-matlabbatch{1}.spm.tools.dartel.crt_warped.flowfields = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
-matlabbatch{1}.spm.tools.dartel.crt_warped.images = {{[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]}};
-matlabbatch{1}.spm.tools.dartel.crt_warped.jactransf = 0;
-matlabbatch{1}.spm.tools.dartel.crt_warped.K = 6;
-matlabbatch{1}.spm.tools.dartel.crt_warped.interp = 1;
-try
-jobs{1}=matlabbatch;    cfg_util('run',jobs);
-disp('*** Dartel Warp of preoperative version worked.');
-end
-clear matlabbatch jobs;
-
-% ...tra
-matlabbatch{1}.spm.tools.dartel.crt_warped.flowfields = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
-matlabbatch{1}.spm.tools.dartel.crt_warped.images = {{[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]}};
-matlabbatch{1}.spm.tools.dartel.crt_warped.jactransf = 0;
-matlabbatch{1}.spm.tools.dartel.crt_warped.K = 6;
-matlabbatch{1}.spm.tools.dartel.crt_warped.interp = 1;
-try
-jobs{1}=matlabbatch;    cfg_util('run',jobs);
-disp('*** Dartel Warp of postoperative version worked.');
-end
-clear matlabbatch jobs;
-
-% ... cor/sag
-try
-for fina=1:length(finas)
-matlabbatch{1}.spm.tools.dartel.crt_warped.flowfields = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
-matlabbatch{1}.spm.tools.dartel.crt_warped.images = {{finas{fina}}};
-matlabbatch{1}.spm.tools.dartel.crt_warped.jactransf = 0;
-matlabbatch{1}.spm.tools.dartel.crt_warped.K = 6;
-matlabbatch{1}.spm.tools.dartel.crt_warped.interp = 1;
-try
-jobs{1}=matlabbatch;    cfg_util('run',jobs);
-disp('*** Dartel Warp of postoperative version worked.');
-end
-clear matlabbatch jobs;
-end
-end
-
-% ...CT
-matlabbatch{1}.spm.tools.dartel.crt_warped.flowfields = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
-matlabbatch{1}.spm.tools.dartel.crt_warped.images = {{[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered]}};
-matlabbatch{1}.spm.tools.dartel.crt_warped.jactransf = 0;
-matlabbatch{1}.spm.tools.dartel.crt_warped.K = 6;
-matlabbatch{1}.spm.tools.dartel.crt_warped.interp = 1;
-try
-jobs{1}=matlabbatch;    cfg_util('run',jobs);
-disp('*** Dartel Warp of postoperative CT worked.');
-end
-clear matlabbatch jobs;
-
-
-
-% make normalization "permanent" and include correct bounding box.
-
-
-
-
-for export=1:5
-    switch export
-        case 1
-            outf=options.prefs.prenii;
-            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
-            gfina=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii];
-        case 2
-            outf=options.prefs.tranii;
-            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1'];
-            gfina=[options.root,options.prefs.patientdir,filesep,options.prefs.gtranii];
-        case 3
-            outf=options.prefs.cornii;
-            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized,',1'];
-            gfina=[options.root,options.prefs.patientdir,filesep,options.prefs.gcornii];
-        case 4
-            outf=options.prefs.sagnii;
-            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized,',1'];
-            gfina=[options.root,options.prefs.patientdir,filesep,options.prefs.gsagnii];
-        case 5
-            outf=options.prefs.ctnii;
-            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered,',1'];
-            gfina=[options.root,options.prefs.patientdir,filesep,options.prefs.gctnii];
-    end
-    
-    % save a backup
-    try
-        if exist([options.root,options.prefs.patientdir,filesep,outf],'file')
-            try movefile([options.root,options.prefs.patientdir,filesep,outf],[options.root,options.prefs.patientdir,filesep,'ea_backup',date,num2str(now),outf]); end
-        end
-    end
-    
-    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']
-        fina
-        };
-    matlabbatch{1}.spm.util.imcalc.output = outf;
-    matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
-    matlabbatch{1}.spm.util.imcalc.expression = ['i2'];
-    matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-    matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-    jobs{1}=matlabbatch;
-    try
-        cfg_util('run',jobs);
-    end
-    clear matlabbatch jobs;
-    
-    
-    % build global versions of files
-
-    try movefile(fina(1:end-2),gfina); end
-end
-
-
-
-
-
-
-
-try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gtranii]); end
-try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gcornii]); end
-try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gsagnii]); end
-
-
-% restore original files (from coregistration)
-try copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]); end
-try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized]); end
-try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized]); end
-
-
-
-
-function [flirtmat spmvoxmat fslvoxmat] = worldmat2flirtmat(worldmat, src, trg)
-%worldmat2flirtmat: convert NIfTI world (mm) coordinates matrix to flirt
-%
-% Example:
-%  [flirtmat spmvoxmat fslvoxmat] = worldmat2flirtdmat(worldmat, src, trg);
-%
-% See also: flirtmat2worldmat, flirtmat_write
-
-% Copyright 2009 Ged Ridgway <ged.ridgway gmail.com>
-
-if ischar(src)
-    src = nifti(src);
-end
-if ischar(trg)
-    trg = nifti(trg);
-end
-
-spmvoxmat = inv(src.mat) * worldmat * trg.mat;
-addone = eye(4); addone(:, 4) = 1;
-fslvoxmat = inv(addone) * spmvoxmat * addone;
-trgscl = nifti2scl(trg);
-srcscl = nifti2scl(src);
-flirtmat = inv( srcscl * fslvoxmat * inv(trgscl) );
-
-
-
-function flirtmat_write(fname, mat)
-%flirtmat_write: save a 4-by-4 matrix to a file as handled by flirt -init
-% Example:
-%  flirtmat_write(fname, affinemat)
-% See also: flirtmat_read, flirtmat2worldmat, worldmat2flirtmat
-
-% Copyright 2009 Ged Ridgway <ged.ridgway gmail.com>
-
-fid = fopen(fname, 'w');
-% Note that transpose is needed to go from MATLAB's column-major matrix to
-% writing the file in a row-major way (see also flirtmat_read)
-str = sprintf('%f  %f  %f  %f\n', mat');
-fprintf(fid, str(1:end-1)); % drop final newline
-fclose(fid);
-
-
-
-
-function [worldmat spmvoxmat fslvoxmat] = flirtmat2worldmat(flirtmat, src, trg)
-%flirtmat2worldmat: convert saved flirt matrix to NIfTI world coords matrix
-% flirt matrix is from text file specified in "flirt -omat mat.txt" command
-% world matrix maps from NIfTI world coordinates in target to source. Note:
-% mat.txt contains a mapping from source to target in FSL's *scaled* coords
-% which are not NIfTI world coordinates, and note src-trg directionality!
-% worldmat from this script reproduces "img2imgcoord -mm ...".
-%
-% The script can also return a matrix to map from target to source voxels
-% in MATLAB/SPM's one-based convention, or in FSL's zero-based convention
-%
-% Example:
-%  [worldmat spmvoxmat fslvoxmat] = flirtmat2worldmat(flirtmat, src, trg);
-%
-% See also: worldmat2flirtmat, flirtmat_read, flirtmat_write
-
-% Copyright 2009 Ged Ridgway <ged.ridgway gmail.com>
-
-if ischar(src)
-    src = nifti(src);
-end
-if ischar(trg)
-    trg = nifti(trg);
-end
-
-if ischar(flirtmat)
-    flirtmat = flirtmat_read(flirtmat);
-end
-
-% src = inv(flirtmat) * trg
-% srcvox = src.mat \ inv(flirtmat) * trg.mat * trgvox
-% BUT, flirt doesn't use src.mat, only absolute values of the
-% scaling elements from it,
-% AND, if images are not radiological, the x-axis is flipped, see:
-%  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0810&L=FSL&P=185638
-%  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0903&L=FSL&P=R93775
-trgscl = nifti2scl(trg);
-srcscl = nifti2scl(src);
-fslvoxmat = inv(srcscl) * inv(flirtmat) * trgscl;
-
-% AND, Flirt's voxels are zero-based, while SPM's are one-based...
-addone = eye(4); addone(:, 4) = 1;
-spmvoxmat = addone * fslvoxmat * inv(addone);
-
-worldmat = src.mat * spmvoxmat * inv(trg.mat);
-
-
-%%
-function scl = nifti2scl(N)
-% not sure if this is always correct with rotations in mat, but seems okay!
-scl = diag([sqrt(sum(N.mat(1:3,1:3).^2)) 1]);
-if det(N.mat) > 0
-    % neurological, x-axis is flipped, such that [3 2 1 0] and [0 1 2 3]
-    % have the same *scaled* coordinates:
-    xflip = diag([-1 1 1 1]);
-    xflip(1, 4) = N.dat.dim(1)-1; % reflect about centre
-    scl = scl * xflip;
-end
-
+ea_apply_normalization(options)

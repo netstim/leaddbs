@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 23-Feb-2015 20:24:25
+% Last Modified by GUIDE v2.5 06-Apr-2015 09:44:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -108,16 +108,11 @@ set(handles.modelselect,'String',ndc);
 set(handles.elmodelselect,'String',[{'Patient specified'},ea_resolve_elspec]);
 
 % set background image
-im = imread('bg_gui_lg.png');
+set(gcf,'color','w');
+im=imread('ea_logo.png');
 image(im);
 axis off;
-axis fill
-warning('off');
-set(handles.recalcpanel,'BackgroundColor','none');
-set(handles.vizpanel,'BackgroundColor','none');
-set(handles.setuppanel,'BackgroundColor','none');
-set(handles.statspanel,'BackgroundColor','none');
-warning('on');
+axis equal;
 
 
 % Fibers:
@@ -750,6 +745,16 @@ end
 
 
 % update UI
+
+% 2D-Viz options:
+
+if isfield(M.ui,'bbsize');    set(handles.bbsize,'String',M.ui.bbsize); end
+if isfield(M.ui,'tdcolorscheck');    set(handles.tdcolorscheck,'Value',M.ui.tdcolorscheck); end
+if isfield(M.ui,'tdcontourcheck');    set(handles.tdcontourcheck,'Value',M.ui.tdcontourcheck); end
+if isfield(M.ui,'tdlabelcheck');    set(handles.tdlabelcheck,'Value',M.ui.tdlabelcheck); end
+if isfield(M.ui,'tdcontourcolor');    setappdata(handles.tdcontourcolor,'color',M.ui.tdcontourcolor); end
+
+
 
 % make setstimparams button green if set.
 if isfield(M,'stimparams')
@@ -2202,3 +2207,158 @@ function targetreport_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 ea_gentargetreport(M);
+
+
+% --- Executes on button press in viz2dbutton.
+function viz2dbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to viz2dbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+clc;
+M=getappdata(gcf,'M');
+% set options
+options=ea_setopts_local(handles);
+% set pt specific options
+options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),filesep];
+[~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
+
+
+options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
+options.elmodel=M.elstruct(1).elmodel;
+options=ea_resolve_elspec(options);
+options.prefs=ea_prefs(options.patientname);
+options.d3.verbose='on';
+
+options.d3.elrendering=M.ui.elrendering;
+options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
+options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
+options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
+try options.d3.isomatrix=M.isomatrix; end
+try options.d3.isomatrix_name=M.isomatrix_name; end
+
+
+
+
+
+options.d3.isovscloud=M.ui.isovscloudpopup;
+options.d3.showisovolume=M.ui.showisovolumecheck;
+
+options.d3.exportisovolume=M.ui.exportisovolumecheck;
+options.d3.colorpointcloud=M.ui.colorpointcloudcheck;
+options.normregressor=M.ui.normregpopup;
+
+options.d2.write=1;
+
+options.d2.atlasopacity=0.15;
+options.d2.col_overlay=get(handles.tdcolorscheck,'Value');
+options.d2.con_overlay=get(handles.tdcontourcheck,'Value');
+options.d2.con_color=getappdata(handles.tdcontourcolor,'color');
+if isempty(options.d2.con_color)
+    options.d2.con_color=[1,1,1]; % white
+end
+
+options.d2.lab_overlay=get(handles.tdlabelcheck,'Value');
+
+
+options.d2.bbsize=str2double(get(handles.bbsize,'String'));
+
+    options.modality=3; % use template image
+    
+    
+if strcmp(options.atlasset,'Use none');
+    options.d2.writeatlases=1;
+else
+    options.d2.writeatlases=1;
+end
+    
+    % Prior Results are loaded here inside the function (this way, function
+    % can be called just by giving the patient directory.
+   
+% Prepare isomatrix (includes a normalization step if M.ui.normregpopup
+% says so:
+
+try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); end
+
+if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen                
+    disp('Saving data...');
+    % save M
+    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
+    disp('Done.');
+end
+
+    cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));
+
+
+
+function bbsize_Callback(hObject, eventdata, handles)
+% hObject    handle to bbsize (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of bbsize as text
+%        str2double(get(hObject,'String')) returns contents of bbsize as a double
+M=getappdata(gcf,'M');
+M.ui.bbsize=get(handles.bbsize,'String');
+setappdata(gcf,'M',M);
+refreshvifc(handles);
+
+% --- Executes during object creation, after setting all properties.
+function bbsize_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to bbsize (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in tdcolorscheck.
+function tdcolorscheck_Callback(hObject, eventdata, handles)
+% hObject    handle to tdcolorscheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of tdcolorscheck
+M=getappdata(gcf,'M');
+M.ui.tdcolorscheck=get(handles.tdcolorscheck,'Value');
+setappdata(gcf,'M',M);
+refreshvifc(handles);
+
+% --- Executes on button press in tdcontourcheck.
+function tdcontourcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to tdcontourcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of tdcontourcheck
+M=getappdata(gcf,'M');
+M.ui.tdcontourcheck=get(handles.tdcontourcheck,'Value');
+setappdata(gcf,'M',M);
+refreshvifc(handles);
+
+% --- Executes on button press in tdlabelcheck.
+function tdlabelcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to tdlabelcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of tdlabelcheck
+M=getappdata(gcf,'M');
+M.ui.tdlabelcheck=get(handles.tdlabelcheck,'Value');
+setappdata(gcf,'M',M);
+refreshvifc(handles);
+
+% --- Executes on button press in tdcontourcolor.
+function tdcontourcolor_Callback(hObject, eventdata, handles)
+% hObject    handle to tdcontourcolor (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+tdcol=uisetcolor;
+setappdata(hObject,'color',tdcol);
+M=getappdata(gcf,'M');
+M.ui.tdcontourcolor=tdcol;
+setappdata(gcf,'M',M);
+refreshvifc(handles);

@@ -59,7 +59,7 @@ for side=options.sides
                     if ~isnan(VI{side}(xx,yy,zz))
                     usefacecolor=VI{side}(xx,yy,zz)*((64+miniso(options.d3.isomatrix))/(maxiso(options.d3.isomatrix)+miniso(options.d3.isomatrix)));
                     usefacecolor=ind2rgb(round(usefacecolor),jetlist);
-                    isopatch(side,ipcnt)=plot3(XI(xx,yy,zz),YI(xx,yy,zz),ZI(xx,yy,zz),'.','Color',usefacecolor);
+                    isopatch(side,ipcnt)=plot3(XI(xx,yy,zz),YI(xx,yy,zz),ZI(xx,yy,zz),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',usefacecolor,'Color',usefacecolor);
                     ipcnt=ipcnt+1;
                     end
                 end
@@ -111,6 +111,16 @@ for side=options.sides
         Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',lr,'.nii'];
         Vol.dtype=[32 1];
         spm_write_vol(Vol,nii{side});
+        
+        matlabbatch{1}.spm.spatial.smooth.data = {[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',lr,'.nii,1']};
+            matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
+            matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+            matlabbatch{1}.spm.spatial.smooth.im = 1;
+            matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+            jobs{1}=matlabbatch;
+            cfg_util('run',jobs);
+            clear jobs matlabbatch
+        
         if side==2; % write out combined volume.
            Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'];
            nii=ea_nanmean(cat(4,nii{1},nii{2}),4);

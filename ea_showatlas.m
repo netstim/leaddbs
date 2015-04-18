@@ -313,7 +313,9 @@ for nativemni=nm % switch between native and mni space atlases.
             
             % gather contact statistics
             if options.writeoutstats
-                atsearch=KDTreeSearcher(XYZ.mm);
+                thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
+                atsearch=KDTreeSearcher(XYZ.mm(XYZ.val>thresh,:));
+                
                 for el=1:length(elstruct)
                     
                     [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});

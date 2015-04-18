@@ -53,7 +53,13 @@ for scan=1:length(f)
         name=[nachname,vorname];
         
         lpath=genpath([indir,f(scan).name]);
-        delims=strfind(lpath,':');
+        if isunix
+            delims=strfind(lpath,':');
+        elseif ispc
+            delims=strfind(lpath,';');
+        else
+            delims=strfind(lpath,':');
+        end
         from=1;
         for d=1:length(delims)
             pfolds{d}=lpath(from:delims(d)-1);

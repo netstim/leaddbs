@@ -69,7 +69,7 @@ switch options.elmodel
         elspec.tipiscontact=0;
         elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15'};
     case 'St. Jude ActiveTip'
-        elspec.lead_diameter=1.24;
+        elspec.lead_diameter=1.27;
         elspec.lead_color=0.7;
         elspec.contact_length=1.5;
         elspec.contact_diameter=1.4;

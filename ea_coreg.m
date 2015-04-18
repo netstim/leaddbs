@@ -42,6 +42,7 @@ for export=1:2
         
         jobs{1}=matlabbatch;
         try
+            
             cfg_util('run',jobs);
             normlog(1)=1;
             disp('*** Coregistration between transversal and coronar versions worked.');
