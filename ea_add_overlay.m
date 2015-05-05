@@ -100,7 +100,7 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                     %% color_overlay:
                     if options.d2.col_overlay
                         set(0,'CurrentFigure',cuts)
-                        cof = imshow(colorf);
+                        cof = image(colorf);
                         
                         
                         set(cof,'XData',linspace(atlbb(1,1),atlbb(1,2)),'YData',linspace(atlbb(2,1),atlbb(2,2)));
@@ -113,7 +113,13 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                     %% contour overlay:
                     if  options.d2.con_overlay
                         if any(slice(:));
-                            bw=bwconncomp(slice);
+                            
+                            try
+                                bw=bwconncomp(slice);
+                            catch % no image toolbox available.
+                            
+                                bw=ea_conncomp(logical(slice));
+                            end
                             for cp=1:length(bw.PixelIdxList)
                                 slice(:)=0;
                                 slice(bw.PixelIdxList{cp})=1;

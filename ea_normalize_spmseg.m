@@ -46,23 +46,6 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
     end
 end
 
-% check if backup files exist, if not backup
-
-if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],'file')
-try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized]); end
-else
-    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]);
-end
-if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],'file')
-    try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized]); end
-else
-    try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized]); end
-end
-if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized],'file')
-    try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized]); end
-else
-    try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized]); end
-end
 
 
 
@@ -112,40 +95,60 @@ catch
 end
 clear matlabbatch jobs;
 
-
+if options.modality==1 %MR
+expdo=2:5;
+elseif options.modality==2 % CT
+    expdo=5:6;
+end
 
 % apply estimated transformations to cor and tra.
+for export=expdo
+    switch export
+        case 2
+            outf=options.prefs.tranii;
+            fina=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1'];
+            wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1'];
 
+        case 3
+            outf=options.prefs.cornii;
+                        fina=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,',1'];
+            wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized,',1'];
+        case 4
+            outf=options.prefs.sagnii;
+                        fina=[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,',1'];
+            wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized,',1'];
+        case 5
+            outf=options.prefs.prenii;
+                        wfina=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
+            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
+        case 6 % CT
+            outf=options.prefs.ctnii;
+                        fina=[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1'];
+            wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered,',1'];
+    end
 
 [~,nm]=fileparts(options.prefs.prenii_unnormalized); % cut off file extension
 
-voxi=[0.22 0.22 0.5]; % export highres
+voxi=[0.22 0.22 0.22]; % export highres
 bbi=[-55 45 9.5; 55 -65 -25]; % with small bounding box
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg_sn.mat']};
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
 
 matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
-if options.modality==1 %MR
-    matlabbatch{1}.spm.util.defs.fnames = [{[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']},finas];
-elseif options.modality==2 % CT
-    matlabbatch{1}.spm.util.defs.fnames = {[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']}; 
-end
+matlabbatch{1}.spm.util.defs.fnames = {fina};
 matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
 matlabbatch{1}.spm.util.defs.interp = 6;
 
 jobs{1}=matlabbatch;
+try
 cfg_util('run',jobs);
+end
 clear matlabbatch jobs;
-
+end
 
 % make normalization "permanent" and include correct bounding box.
 
-if options.modality==1 %MR
-expdo=2:5;
-elseif options.modality==2 % CT
-    expdo=5:6;
-end
 
 for export=expdo
     switch export
@@ -166,11 +169,6 @@ for export=expdo
             fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered,',1'];
     end
     
-    % save a backup
-    
-    if exist([options.root,options.prefs.patientdir,filesep,outf],'file')
-        movefile([options.root,options.prefs.patientdir,filesep,outf],[options.root,options.prefs.patientdir,filesep,'ea_backup',date,num2str(now),outf]);
-    end
     
     matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']
         fina
@@ -189,35 +187,57 @@ for export=expdo
     clear matlabbatch jobs;
 end
 
+
+
 % build global versions of files
 
+for export=expdo
+    switch export
+        case 2
+            outf=options.prefs.gtranii;
+            fina=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1'];
+            wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1'];
 
-
-[~,nm]=fileparts(options.prefs.prenii_unnormalized); % cut off file extension
-
-voxi=[0.5 0.5 0.5]; % export highres
-bbi=nan(2,3);
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg_sn.mat']};
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
-
-matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
-if options.modality==1 % MR
-    try
-        matlabbatch{1}.spm.util.defs.fnames = [{[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']},finas];
-    catch
-        matlabbatch{1}.spm.util.defs.fnames = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
+        case 3
+            outf=options.prefs.gcornii;
+                        fina=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,',1'];
+            wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized,',1'];
+        case 4
+            outf=options.prefs.gsagnii;
+                        fina=[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,',1'];
+            wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized,',1'];
+        case 5
+            outf=options.prefs.gprenii;
+                        wfina=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
+            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
+        case 6 % CT
+            outf=options.prefs.gctnii;
+                        fina=[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1'];
+            wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered,',1'];
     end
-elseif options.modality==2 % CT
-    matlabbatch{1}.spm.util.defs.fnames = {[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1']};
+    
+    [~,nm]=fileparts(options.prefs.prenii_unnormalized); % cut off file extension
+    
+    voxi=[0.5 0.5 0.5]; % export highres
+    bbi=nan(2,3);
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg_sn.mat']};
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
+    
+    matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
+
+            matlabbatch{1}.spm.util.defs.fnames = {fina};
+    matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
+    matlabbatch{1}.spm.util.defs.interp = 6;
+    
+    jobs{1}=matlabbatch;
+    try
+        cfg_util('run',jobs);
+        movefile(wfina,outf);
+    end
+    clear matlabbatch jobs;
+    
 end
-matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
-matlabbatch{1}.spm.util.defs.interp = 6;
-
-jobs{1}=matlabbatch;
-cfg_util('run',jobs);
-clear matlabbatch jobs;
-
 
 % export (generalized) normalization parameters:
 for inverse=0:1
@@ -227,7 +247,7 @@ for inverse=0:1
         addstr='';
     end
     matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg',addstr,'_sn.mat']};
-    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = [0.5 0.5 0.5];
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = nan(2,3);
     matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = nan(2,3);
     matlabbatch{1}.spm.util.defs.ofname = ['ea',addstr,'_normparams'];
     matlabbatch{1}.spm.util.defs.fnames = '';

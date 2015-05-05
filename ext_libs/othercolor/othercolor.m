@@ -148,7 +148,7 @@ else
     if isempty(fieldnames(data))
         c = [];
     else
-        c = interp1(linspace(0,1,size(data.(n),1)),data.(n),linspace(0,1,m),'cubic');
+        c = interp1(linspace(0,1,size(data.(n),1)),data.(n),linspace(0,1,m),'pchip');
         c(c<0) = 0;
         c(c>1) = 1;
     end

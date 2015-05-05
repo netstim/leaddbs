@@ -363,7 +363,7 @@ for nativemni=nm % switch between native and mni space atlases.
     setappdata(resultfig,'colorbuttons',colorbuttons);
     
     % configure label button to work properly and hide labels as default.
-    set(atlaslabels,'Visible','off');
+try    set(atlaslabels,'Visible','off'); end
     set(labelbutton,'OnCallback',{@atlasvisible,atlaslabels},'OffCallback',{@atlasinvisible,atlaslabels},'State','off');
     set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
     

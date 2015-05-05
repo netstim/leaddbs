@@ -47,7 +47,7 @@ matlabbatch{1}.spm.util.imcalc.input = {checkf
     };
 matlabbatch{1}.spm.util.imcalc.output = outf;
 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
-matlabbatch{1}.spm.util.imcalc.expression = ['i1+500*i2'];
+matlabbatch{1}.spm.util.imcalc.expression = ['i1+1000*i2'];
 matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
@@ -62,9 +62,9 @@ nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,outf]);
 h1=figure('name',['Coregistration (CT+MR) results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
 set(gcf,'color','w')
 imagesc(scale_image(squeeze(nii.img(:,:,round(end/2)))',[dims(1)/dims(2),1]));
-axis ij
 axis('equal')
 axis('off')
+axis xy
 colormap gray
 tightfig;
 
@@ -74,6 +74,7 @@ imat=scale_image(squeeze(nii.img(:,round(end/2),:))',[dims(3)/dims(1),1]);
 imagesc(imat);
 axis('equal')
 axis('off')
+axis xy
 colormap gray
 tightfig;
 
@@ -83,6 +84,7 @@ imat=scale_image(squeeze(nii.img(round(end/2),:,:))',[dims(3)/dims(2),1]);
 imagesc(imat);
 axis('equal')
 axis('off')
+axis xy
 colormap gray
 tightfig;
 

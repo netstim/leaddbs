@@ -31,9 +31,9 @@ function varargout=ea_normalize_spmdartel(options)
 
 
 if ischar(options) % return name of method.
-    if strcmp(SPM('ver'),'SPM12')
+    if strcmp(spm('ver'),'SPM12')
         varargout{1}='SPM12 DARTEL nonlinear [MR/CT]';
-    elseif strcmp(SPM('ver'),'SPM8')
+    elseif strcmp(spm('ver'),'SPM8')
         varargout{1}='SPM8 DARTEL nonlinear [MR/CT]';
     end
     varargout{2}={'SPM8','SPM12'};
@@ -69,24 +69,6 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
     end
 end
 
-% check if backup files exist, if not backup
-
-if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],'file')
-    try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized]); end
-else
-    try copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]); end
-end
-if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],'file')
-    try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized]); end
-else
-    try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized]); end
-end
-if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized],'file')
-    try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized]); end
-else
-    try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized]); end
-end
-
 
 % First, do the coreg part:
 
@@ -102,37 +84,9 @@ end
 
 
     disp('Segmenting preoperative version (Import to DARTEL-space)');
-    
-switch(spm('ver'))
-    case 'SPM8'
-        spmsegroot=[fileparts(which('spm')),filesep,'toolbox',filesep,'Seg',filesep];
-    case 'SPM12'
-        spmsegroot=[fileparts(which('spm')),filesep,'tpm',filesep];
-end
-    load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob']);
-    job.channel.vols{1}=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized];
-    for tpm=1:6
-        job.tissue(tpm).tpm=fullfile([spmsegroot,'TPM.nii,',num2str(tpm)]);
-        if tpm<4
-        job.tissue(tpm).native=[0,1];
-        else
-            job.tissue(tpm).native=[0,0];
-        end
-    end
-    job.resolution=segmentresolution; 
-    if strcmp(spm('ver'),'SPM12');
-        job.warp.fwhm=0;
-        job.warp.cleanup=1;
-        job.warp.reg=[0 0.001 0.5 0.05 0.2];
-        spm_preproc_run(job);
-    else
-        
-            ea_spm_preproc_run(job); % exactly the same as the SPM version ("New Segment" in SPM8 / "Segment" in SPM12) but with an increase in resolution to 0.5 mm iso.
-    end
-    
-    
-    
-    disp('*** Segmentation of preoperative MRI worked.');
+    ea_newseg([options.root,options.prefs.patientdir,filesep],options.prefs.prenii_unnormalized,1,options);
+
+    disp('*** Segmentation of preoperative MRI done.');
 
     
     
@@ -141,13 +95,13 @@ end
     if exist([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'],'file')
         % There is a DARTEL-Template. Check if it will match:
         Vt=spm_vol([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii']);
-        Vp=spm_vol([options.root,filesep,options.patientname,filesep,'rc1pre_tra.nii']);
+        Vp=spm_vol([options.root,filesep,options.patientname,filesep,'rc1',options.prefs.prenii_unnormalized]);
         if ~isequal(Vp.dim,Vt(1).dim) || ~isequal(Vp.mat,Vt(1).mat) % Dartel template not matching. -> create matching one.
-            ea_create_mni_darteltemplate([options.root,filesep,options.patientname,filesep,'rc1pre_tra.nii']);
+            ea_create_mni_darteltemplate([options.root,filesep,options.patientname,filesep,'rc1',options.prefs.prenii_unnormalized]);
         end
         
     else % no dartel template present. -> Create matching dartel templates from highres version.
-        ea_create_mni_darteltemplate([options.root,filesep,options.patientname,filesep,'rc1pre_tra.nii']);
+        ea_create_mni_darteltemplate([options.root,filesep,options.patientname,filesep,'rc1',options.prefs.prenii_unnormalized]);
         
     end
     

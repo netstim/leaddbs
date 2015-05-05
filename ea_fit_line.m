@@ -48,7 +48,7 @@ x=varargin{1};
 end
     
 N = sum(~isnan(x), dim);
-y = nansum(x, dim) ./ N;
+y = sum(x(~isnan(x)), dim) ./ N;
 
    
     

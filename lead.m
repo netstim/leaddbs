@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 08-Feb-2015 08:26:02
+% Last Modified by GUIDE v2.5 18-Apr-2015 21:10:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -138,6 +138,7 @@ for nd=length(ndir):-1:1
         end
     end
 end
+
 setappdata(gcf,'normmethod',normmethod);
 set(handles.normmethod,'String',ndc);
 
@@ -158,27 +159,6 @@ for nd=length(ndir):-1:1
 end
 setappdata(gcf,'coregctmethod',coregctmethod);
 set(handles.coregctmethod,'String',cdc);
-
-
-
-% add ft methods to menu
-cnt=1;
-ndir=dir([earoot,'ea_ft_*.m']);
-ftmethod=cell(0);
-fdc=cell(0);
-for nd=length(ndir):-1:1
-    [~,methodf]=fileparts(ndir(nd).name);
-    try
-        [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
-        if ismember(spm('ver'),spmvers)
-        fdc{cnt}=thisndc;
-        ftmethod{cnt}=methodf;
-        cnt=cnt+1;
-        end
-    end
-end
-setappdata(gcf,'ftmethod',ftmethod);
-set(handles.ftmethod,'String',fdc);
 
 
 
@@ -214,6 +194,12 @@ function run_button_Callback(hObject, eventdata, handles)
 %% run trajectory reconstruction.
 
 options=handles2options(handles);
+
+try 
+    options.lc=load([fileparts(which('lead')),filesep,'connectomics',filesep,'lc_options.mat']);
+catch
+    options.lc=[];
+end
 
 if options.d3.autoserver && options.d3.write
     choice = questdlg('Are you sure you want to export results to the server automatically?', ...
@@ -557,7 +543,7 @@ end
 
 if length(uipatdir)>1
     set(handles.patdir_choosebox,'String',['Multiple (',num2str(length(uipatdir)),')']);
-    set(handles.patdir_choosebox,'TooltipString',strjoin(uipatdir,', '));
+    set(handles.patdir_choosebox,'TooltipString',ea_strjoin(uipatdir,', '));
 else
 set(handles.patdir_choosebox,'String',uipatdir{1});
 set(handles.patdir_choosebox,'TooltipString',uipatdir{1});
@@ -862,16 +848,6 @@ function normcheck_Callback(hObject, eventdata, handles)
 storeui(handles);
 
 
-% --- Executes on button press in normfiberscheckbox.
-function normfiberscheckbox_Callback(hObject, eventdata, handles)
-% hObject    handle to normfiberscheckbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of normfiberscheckbox
-storeui(handles);
-
-
 % --- Executes on button press in tdcolorscheck.
 function tdcolorscheck_Callback(hObject, eventdata, handles)
 % hObject    handle to tdcolorscheck (see GCBO)
@@ -1033,7 +1009,7 @@ dicoutdir=uigetdir(p);
 if ~dicoutdir
     return
 end
-set(handles.setdicomin,'String',dicindir);
+set(handles.setdicomout,'String',dicoutdir);
 try
 load([fileparts(which('lead')),filesep,'ea_prefs']);
 end
@@ -1256,17 +1232,8 @@ options.coregct.coregthreshs= eval( [ '[', get(handles.coregthreshs,'String'), '
 
 options.coregctcheck=get(handles.coregctcheck,'Value');
 
-% fibertracking
-options.ft.do=(get(handles.ft_checkbox,'Value') == get(handles.ft_checkbox,'Max'));
-options.ft.method=getappdata(gcf,'ftmethod');
-options.ft.method=options.ft.method{get(handles.ftmethod,'Value')};
-options.ft.methodn=get(handles.ftmethod,'Value');
 
-% ftCM
-options.ftCM.do=(get(handles.ftCM_checkbox,'Value') == get(handles.ftCM_checkbox,'Max'));
-options.ftCM.atlas=getappdata(gcf,'ftCMatlas');
-options.ftCM.atlas=options.ftCM.atlas{get(handles.parcellation_atlas,'Value')};
-options.ftCM.atlasn=get(handles.parcellation_atlas,'Value');
+
 
 % set modality (MR/CT) in options
 options.modality = get(handles.MRCT,'Value');
@@ -1354,12 +1321,13 @@ end
 
 options.expstatvat.do=0;
 
-options.fiberthresh=1;
+options.fiberthresh=10;
 options.writeoutstats=1;
 
-options.normalize_fibers=get(handles.normfiberscheckbox,'Value');
+
 options.colormap=colormap;
 
+options.dolc=get(handles.include_lead_connectome_subroutine,'Value');
 
 
 
@@ -1389,21 +1357,6 @@ set(handles.coregthreshs,'String',options.coregct.coregthreshs);
 
 set(handles.coregctcheck,'Value',options.coregctcheck);
 
-% FT options
-set(handles.ft_checkbox,'Value',options.ft.do);
-if options.ft.methodn>length(handles.ftmethod,'String')
-set(handles.ftmethod,'Value',1);
-else
-set(handles.ftmethod,'Value',options.ft.methodn);
-end
-
-% CM options
-set(handles.ftCM_checkbox,'Value',options.ftcm.do);
-if options.ftCM.atlasn>length(handles.parcellation_atlas,'String')
-set(handles.parcellation_atlas,'Value',1);
-else
-set(handles.parcellation_atlas,'Value',options.ftCM.atlasn);
-end
 
 
 set(handles.MRCT,'Value',options.modality);
@@ -1444,7 +1397,6 @@ set(handles.render_checkbox,'Value',options.d3.write);
 set(handles.targetpopup,'Value',options.entrypointn);
 set(handles.electrode_model_popup,'Value',options.elmodeln);
 set(handles.atlassetpopup,'Value',options.atlassetn);
-set(handles.normfiberscheckbox,'Value',options.normalize_fibers);
 set(handles.exportservercheck,'Value',options.d3.autoserver);
 
 
@@ -1575,14 +1527,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in ftCM_checkbox.
-function ftCM_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to ftCM_checkbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of ftCM_checkbox
-storeui(handles);
 
 
 % --- Executes on selection change in parcellation_atlas.
@@ -1607,3 +1552,20 @@ function parcellation_atlas_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in include_lead_connectome_subroutine.
+function include_lead_connectome_subroutine_Callback(hObject, eventdata, handles)
+% hObject    handle to include_lead_connectome_subroutine (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of include_lead_connectome_subroutine
+
+
+% --- Executes on button press in openleadconnectome.
+function openleadconnectome_Callback(hObject, eventdata, handles)
+% hObject    handle to openleadconnectome (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+lead_connectome;

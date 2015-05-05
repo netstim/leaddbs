@@ -1,5 +1,6 @@
-## Setting the MATLAB Path to include _Lead-DBS_
-To add _Lead-DBS_ to the MATLAB directories, do the following:
+## Adding LEAD-DBS to the MATLAB Search Path
+
+To add _Lead-DBS_ to the MATLAB search path, do the following:
 1. Go to the `File` tab.
 2. Click on `Set Path...`.
 3. In the new window click on `Add with subfolders...`.

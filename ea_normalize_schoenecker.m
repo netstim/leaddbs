@@ -49,14 +49,6 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
     end
 end
 
-% check if backup files exist, if not backup
-
-if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],'file')
-    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized]);
-end
-if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],'file')
-    try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized]); end
-end
 
 
 
@@ -405,11 +397,28 @@ for export=2:3
     try
         cfg_util('run',jobs);
         
+    catch % only tra present..
+        try
+            matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']
+                [options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1']};
+            matlabbatch{1}.spm.util.imcalc.output = outf;
+            matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
+            matlabbatch{1}.spm.util.imcalc.expression = ['i',num2str(export)];
+            matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+            matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+            matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+            matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+            jobs{1}=matlabbatch;
+            
+            cfg_util('run',jobs);
+            
+            
+        end
+        
         
     end
     clear matlabbatch jobs;
 end
-
 
 
 % cleanup wfilename files if prefs are set differently

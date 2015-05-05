@@ -1,4 +1,4 @@
-## Lead-DBS Main Window and Loading Images
+## Main Window and Loading Images
 The main window of Lead-DBS is divided into 6 sections:
 - DICOM import
 - Selection of patient directory and imaging technique

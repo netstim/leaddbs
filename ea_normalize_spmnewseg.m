@@ -55,23 +55,6 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
     end
 end
 
-% check if backup files exist, if not backup
-
-if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],'file')
-    try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized]); end
-else
-    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]);
-end
-if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],'file')
-    try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized]); end
-else
-    try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized]); end
-end
-if ~exist([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized],'file')
-    try    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized]); end
-else
-    try    copyfile([options.root,options.prefs.patientdir,filesep,'backup_',options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized]); end
-end
 
 
 
@@ -87,41 +70,7 @@ ea_coreg(options,options.prefs.normalize.coreg);
 % now segment the preoperative version.
 
 disp('Segmenting preoperative version.');
-load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob']);
-switch spm('ver')
-    
-    case 'SPM8'
-        % make some reslicing to obtain higher resolution in SPM 8.
-        job.channel.vols{1}=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized];
-        tpminf=fullfile(fileparts(which('spm')),'toolbox','Seg',['TPM.nii']);
-        tpmoutf=[options.earoot,'templates',filesep,'TPM.nii'];
-        if ~exist(tpmoutf,'file')
-            reslice_nii(tpminf,tpmoutf,[segmentresolution,segmentresolution,segmentresolution],3);
-        end
-        for tpm=1:6
-            job.tissue(tpm).tpm=[tpmoutf,',',num2str(tpm)];
-            job.tissue(tpm).native=[0,0];
-        end
-        job.resolution=segmentresolution;
-        job.warp.write=[1,1]; % export deformation fields.
-        ea_spm_preproc_run(job); % exactly the same as the SPM version ("New Segment" in SPM8) but with an increase in resolution to 0.5 mm iso.
-    case 'SPM12'
-        tpminf=fullfile(fileparts(which('spm')),'tpm',['TPM.nii']);
-        job.channel.vols{1}=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized];
-        for tpm=1:6
-            job.tissue(tpm).tpm=[tpminf,',',num2str(tpm)];
-            job.tissue(tpm).native=[0,0];
-            
-        end
-        job.warp.mrf=1;
-        job.warp.cleanup=1;
-        job.warp.reg=[0 1.0000e-03 0.5000 0.0500 0.2000];
-        job.warp.affreg='mni';
-        job.warp.fwhm=0;
-        job.warp.samp=3;
-        job.warp.write=[1,1];
-        spm_preproc_run(job) % run "Segment" in SPM 12 (Old "Segment" is now referred to as "Old Segment".
-end
+    ea_newseg([options.root,options.prefs.patientdir,filesep],options.prefs.prenii_unnormalized,0,options);
 
 disp('*** Segmentation of preoperative MRI done.');
 

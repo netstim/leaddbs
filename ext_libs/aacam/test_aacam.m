@@ -1,0 +1,13 @@
+X = randn(1000,3)*1.5;
+scatter3(X(:,1),X(:,2),X(:,3),4,[1 1 1],'filled'); hold on;
+t = [0:0.0001:2]; 
+h = plot3(1.4*cos(t*164),1.4*sin(2+t*131), 1.4*sin(154*t)); 
+set(h,'Color',[0 1 1]);
+camproj('perspective'); daspect([1 1 1]);
+camtarget([0,0,0]); campos([9,9,9]); camva(10);
+set(gcf,'renderer','opengl');
+set(gca,'Color',0*[0.9 0.9 0.9]);
+sphere(20);
+lighting phong; light; drawnow;
+[blurim] = aacam('P1R',[1 1 1]/sqrt(3),0.5,[100 0.2 1],[2 2]);
+figure; image(blurim); set(gca,'Position',[0 0 1 1]); axis equal;

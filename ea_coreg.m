@@ -1,5 +1,8 @@
 function [finas]=ea_coreg(options,automan)
 
+if options.modality==2 % in CT imaging, coregistration is done elsewhere.
+    return
+end
 costfuns={'nmi','mi','ecc','ncc'};
 
 

@@ -36,35 +36,9 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
 if options.modality==2 % CT support
     options.prefs.tranii=options.prefs.ctnii;
-    options.prefs.tranii_unnormalized=options.prefs.ctnii_unnormalized;
+    options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
 end
 results=nan;
-if options.normalize.do
-    
-    try
-        movefile([options.root,options.patientname,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
-        movefile([options.root,options.patientname,filesep,'backup_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
-    end
-    
-    eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
-    try load([options.root,options.patientname,filesep,'ea_normmethod_applied']); end
-    if exist('norm_method_applied','var')
-        try
-            norm_method_applied{end+1}=options.normalize.method;
-        catch
-            clear norm_method_applied
-            norm_method_applied{1}=options.normalize.method;
-        end
-    else
-        norm_method_applied{1}=options.normalize.method;
-    end
-    save([options.root,options.patientname,filesep,'ea_normmethod_applied'],'norm_method_applied');
-    
-    try
-        movefile([options.root,options.patientname,filesep,'backup_',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
-        movefile([options.root,options.patientname,filesep,'backup_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
-    end
-end
 
 if options.coregct.do
     eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
@@ -93,36 +67,33 @@ if options.coregctcheck
 end
 
 
-% perform fibertracking
-if options.ft.do
+if options.normalize.do
     
-    eval([options.ft.method,'(options)']); % triggers the fibertracking function and passes the options struct to it.
-    try load([options.root,options.patientname,filesep,'ea_ftmethod_applied']); end
-    if exist('ft_method_applied','var')
+    eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
+    try load([options.root,options.patientname,filesep,'ea_normmethod_applied']); end
+    if exist('norm_method_applied','var')
         try
-            ft_method_applied{end+1}=options.ft.method;
+            norm_method_applied{end+1}=options.normalize.method;
         catch
-            clear ft_method_applied
-            ft_method_applied{1}=options.ft.method;
+            clear norm_method_applied
+            norm_method_applied{1}=options.normalize.method;
         end
     else
-        ft_method_applied{1}=options.ft.method;
+        norm_method_applied{1}=options.normalize.method;
     end
-    ft_method_applied=options.ft.method;
-    save([options.root,options.patientname,filesep,'ea_ftmethod_applied'],'ft_method_applied');
+    save([options.root,options.patientname,filesep,'ea_normmethod_applied'],'norm_method_applied');
+
 end
 
 
-% create structural CM
-if options.ftCM.do
+
+
+if options.dolc
+
+    ea_perform_lc(options);
     
-    ea_createCM_dti(options);
 end
 
-
-if options.normalize_fibers % normalize fibertracts ? for now these should be denoted in Freiburg format.
-    ea_normalize_fibers(options);
-end
 
 if options.atl.normalize % normalize patient-specific atlas-set.
     ea_normalize_ptspecific_atl(options)
