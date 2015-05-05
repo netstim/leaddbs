@@ -19,7 +19,10 @@ function varargout=ea_normalize_spmseg(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='SPM8 Segment nonlinear [MR/CT]';
+    switch spm('ver')
+        case 'SPM8'
+            varargout{1}='SPM8 Segment nonlinear [MR/CT]';
+    end
     varargout{2}={'SPM8'};
     return
 end
@@ -96,7 +99,7 @@ end
 clear matlabbatch jobs;
 
 if options.modality==1 %MR
-expdo=2:5;
+    expdo=2:5;
 elseif options.modality==2 % CT
     expdo=5:6;
 end
@@ -108,22 +111,21 @@ for export=expdo
             outf=options.prefs.tranii;
             fina=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1'];
             wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1'];
-
         case 3
             outf=options.prefs.cornii;
-                        fina=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,',1'];
+            fina=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,',1'];
             wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized,',1'];
         case 4
             outf=options.prefs.sagnii;
-                        fina=[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,',1'];
+            fina=[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,',1'];
             wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized,',1'];
         case 5
             outf=options.prefs.prenii;
-                        wfina=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
-            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
+            fina=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
+            wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
         case 6 % CT
             outf=options.prefs.ctnii;
-                        fina=[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1'];
+            fina=[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1'];
             wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered,',1'];
     end
 
@@ -197,7 +199,6 @@ for export=expdo
             outf=options.prefs.gtranii;
             fina=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1'];
             wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1'];
-
         case 3
             outf=options.prefs.gcornii;
                         fina=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,',1'];
@@ -208,8 +209,8 @@ for export=expdo
             wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized,',1'];
         case 5
             outf=options.prefs.gprenii;
-                        wfina=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
-            fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
+            fina=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
+            wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
         case 6 % CT
             outf=options.prefs.gctnii;
                         fina=[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1'];
@@ -226,7 +227,7 @@ for export=expdo
     
     matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
 
-            matlabbatch{1}.spm.util.defs.fnames = {fina};
+    matlabbatch{1}.spm.util.defs.fnames = {fina};
     matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
     matlabbatch{1}.spm.util.defs.interp = 6;
     
@@ -247,7 +248,7 @@ for inverse=0:1
         addstr='';
     end
     matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg',addstr,'_sn.mat']};
-    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = nan(2,3);
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = nan(1,3);
     matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = nan(2,3);
     matlabbatch{1}.spm.util.defs.ofname = ['ea',addstr,'_normparams'];
     matlabbatch{1}.spm.util.defs.fnames = '';

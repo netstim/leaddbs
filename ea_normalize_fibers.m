@@ -156,6 +156,8 @@ if dartelused
     if ~exist([directory,'c2',options.prefs.b0],'file');
         disp('Segmenting B0 file for DARTEL import space coregistration...');
         ea_newseg(directory,options.prefs.b0,0,options);
+        delete([directory,'c4',options.prefs.b0]);
+        delete([directory,'c5',options.prefs.b0]);
         disp('Done.');
     end
     

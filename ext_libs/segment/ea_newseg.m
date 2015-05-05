@@ -36,7 +36,5 @@ disp('Segmentation...');
                         job.warp.write=[1,1];
             spm_preproc_run(job); % run "Segment" in SPM 12 (Old "Segment" is now referred to as "Old Segment").
     end
-    
-    delete([directory,'c4',file]);
-    delete([directory,'c5',file]);
+
     disp('Done.');

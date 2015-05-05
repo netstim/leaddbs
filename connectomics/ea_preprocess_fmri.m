@@ -12,7 +12,6 @@ ea_realign_fmri(signallength,options); % realign fMRI
 fis={['r',options.prefs.rest,',1'],options.prefs.prenii_unnormalized};
 for fi=1:length(fis)
     ea_newsegment_proxy(fis{fi},options); % new Segment fMRI
-    delete([directory,fis{fi},'_seg8.mat']);
 end
 
 ea_coreg_pre2fmri(options); % register pre 2 fmri (for timecourse-extraction).
@@ -58,6 +57,10 @@ directory=[options.root,options.patientname,filesep];
 %% new segment.
 if ~exist([directory,'c1',file],'file');
     ea_newseg(directory,file,0,options);
+    delete([directory,'c4',file]);
+    delete([directory,'c5',file]);
+    delete([directory,file,'_seg8.mat']);
+
 end
 
 function ea_coreg_pre2fmri(options)
@@ -100,7 +103,7 @@ if ~exist([directory,'rr',options.prefs.rest,options.prefs.prenii_unnormalized],
     movefile([directory,'rr',rf,'kc1',options.prefs.prenii_unnormalized],[directory,'rr',rf,'c1',options.prefs.prenii_unnormalized],'f') %% restore original files..
     movefile([directory,'rr',rf,'kc2',options.prefs.prenii_unnormalized],[directory,'rr',rf,'c2',options.prefs.prenii_unnormalized],'f') %% restore original files..
     movefile([directory,'rr',rf,'kc3',options.prefs.prenii_unnormalized],[directory,'rr',rf,'c3',options.prefs.prenii_unnormalized],'f') %% restore original files..
-
+    
     movefile([directory,'k',options.prefs.prenii_unnormalized])
     movefile([directory,'kc1',options.prefs.prenii_unnormalized]) %% restore original files..
     movefile([directory,'kc2',options.prefs.prenii_unnormalized]) %% restore original files..

@@ -85,7 +85,8 @@ end
 
     disp('Segmenting preoperative version (Import to DARTEL-space)');
     ea_newseg([options.root,options.prefs.patientdir,filesep],options.prefs.prenii_unnormalized,1,options);
-
+    delete([options.root,options.prefs.patientdir,filesep,'c4',options.prefs.prenii_unnormalized]);
+    delete([options.root,options.prefs.patientdir,filesep,'c5',options.prefs.prenii_unnormalized]);
     disp('*** Segmentation of preoperative MRI done.');
 
     
@@ -160,15 +161,29 @@ for inverse=0:1
     else
         addstr='';
     end
-    matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
-    matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1-inverse 0+inverse];
-    matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
-    matlabbatch{1}.spm.util.defs.ofname = ['ea',addstr,'_normparams'];
-    matlabbatch{1}.spm.util.defs.fnames = '';
-    matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
-    matlabbatch{1}.spm.util.defs.interp = 1;
+    
+    switch spm('ver')
+        case 'SPM8'
+            matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
+            matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1-inverse 0+inverse];
+            matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
+            matlabbatch{1}.spm.util.defs.ofname = ['ea',addstr,'_normparams'];
+            matlabbatch{1}.spm.util.defs.fnames = '';
+            matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
+            matlabbatch{1}.spm.util.defs.interp = 1;
+        case 'SPM12'
+            
+            
+            
+            matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
+            matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1-inverse 0+inverse];
+            matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
+            matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
+            matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = ['ea',addstr,'_normparams'];
+            matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
+    end
     jobs{1}=matlabbatch;
-
+    
     cfg_util('run',jobs);
     disp('*** Exported normalization parameters to y_ea_normparams.nii');
     clear matlabbatch jobs;

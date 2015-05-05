@@ -4,9 +4,7 @@ function ea_perform_lc(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-mkdir([options.root,options.patientname,filesep,'connectomics']);
-expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
-mkdir(expfolder);
+
 
 %% structural parts
 
@@ -16,9 +14,17 @@ if options.lc.struc.ft.do
     ea_perform_ft_proxy(options);
 end
 
+% normalize fibers
+if options.lc.struc.ft.normalize % normalize fibertracts ? for now these should be denoted in Freiburg format.
+    ea_normalize_fibers(options);
+end
+
 
 % create structural CM
 if options.lc.struc.compute_CM
+    mkdir([options.root,options.patientname,filesep,'connectomics']);
+expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
+mkdir(expfolder);
     if ~exist([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized],'file') % fibertracking has not been performed.
     warning('Fibertracking has not been done yet. Will do so before estimating structural connectivity matrix.');
         ea_perform_ft_proxy(options);
@@ -29,16 +35,15 @@ if options.lc.struc.compute_CM
     saveas(cm,[expfolder,'DTI_CM.png']);
 end
 
-% normalize fibers
-if options.lc.struc.ft.normalize % normalize fibertracts ? for now these should be denoted in Freiburg format.
-    ea_normalize_fibers(options);
-end
 
 
 
 %% functional parts
 
 if options.lc.func.compute_CM % create functional connectivity matrix
+    mkdir([options.root,options.patientname,filesep,'connectomics']);
+expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
+mkdir(expfolder);
     [fMRI_CM,gmtc]=ea_createCM_fmri(options);
     cm=ea_export_CM_png(fMRI_CM,'fMRI Connectivity matrix',options);
     save([expfolder,options.prefs.gmtc],'gmtc');
@@ -48,6 +53,9 @@ end
 
 
 if options.lc.func.compute_GM || options.lc.struc.compute_GM % perform graph metrics
+    mkdir([options.root,options.patientname,filesep,'connectomics']);
+expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
+mkdir(expfolder);
     ea_computeGM(options);
 end
 

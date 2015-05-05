@@ -71,7 +71,8 @@ ea_coreg(options,options.prefs.normalize.coreg);
 
 disp('Segmenting preoperative version.');
     ea_newseg([options.root,options.prefs.patientdir,filesep],options.prefs.prenii_unnormalized,0,options);
-
+    delete([options.root,options.prefs.patientdir,filesep,'c4',options.prefs.prenii_unnormalized]);
+    delete([options.root,options.prefs.patientdir,filesep,'c5',options.prefs.prenii_unnormalized]);
 disp('*** Segmentation of preoperative MRI done.');
 
 

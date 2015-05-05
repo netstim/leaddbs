@@ -12,6 +12,7 @@ disp('Importing DICOM files...');
 
 global dcfilename
 global tmpoutdir
+
 indir=options.prefs.lp.dicom.infolder;
 outdir=options.prefs.lp.dicom.outfolder;
 
