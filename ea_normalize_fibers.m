@@ -119,6 +119,7 @@ save([options.root,options.patientname,filesep,options.prefs.FTR_normalized],'no
  
 
 % create trackvis version
+try
 reftemplate=[spm('dir'),filesep,'canonical',filesep,'single_subj_T1.nii'];
 dnii=load_nii(reftemplate);
 niisize=size(dnii.img); % get dimensions of reference template.
@@ -131,9 +132,10 @@ try
 catch
     specs.orientation=[1,0,0,0,1,0];
 end
+specs.vox=ftr.vox;
 [~,ftrfname]=fileparts(options.prefs.FTR_normalized);
 ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
-
+end
 disp('Done.');
 
 
