@@ -17,8 +17,6 @@ function atlases=ea_genatlastable(atlases,root,options)
 
 if isempty(atlases) % create from scratch - if not empty, rebuild flag has been set.
        disp('Generating Atlas table (first run with new atlas only). This may take a while...');
- 
-    
     lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0);
     delete([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,'*_temp.ni*']);
     lhatlases=dir([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,'*.ni*']);
@@ -48,8 +46,7 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     for i=1:length(lhcell)
         
         [ism, loc]=ismember(lhcell{i},rhcell);
-        if ism
-            
+        if ism 
             todeletelh=[todeletelh,i];
             todeleterh=[todeleterh,loc];
         end
@@ -104,27 +101,26 @@ for nativemni=nm % switch between native and mni space atlases.
     
     
     % iterate through atlases, visualize them and write out stats.
-    ea_dispercent(0,'Building atlas table');
+    disp('Building atlas table...');
     for atlas=1:length(atlases.names)
-        ea_dispercent(atlas/length(atlases.names));
+        %ea_dispercent(atlas/length(atlases.names));
         switch atlases.types(atlas)
             case 1 % right hemispheric atlas.
-                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
+                nii=load_nii_crop([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
             case 2 % left hemispheric atlas.
-                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
+                nii=load_nii_crop([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
             case 3 % both-sides atlas composed of 2 files.
-                lnii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
-                rnii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
+                lnii=load_nii_crop([root,'atlases',filesep,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
+                rnii=load_nii_crop([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
             case 4 % mixed atlas (one file with both sides information).
-                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],options);
+                nii=load_nii_crop([root,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],options);
             case 5 % midline atlas (one file with both sides information.
-                nii=load_nii_proxy([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
+                nii=load_nii_crop([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
         end
         
         
         
         for side=detsides(atlases.types(atlas));
-            
             if atlases.types(atlas)==3 % both-sides atlas composed of 2 files.
                 if side==1
                     nii=rnii;
@@ -132,6 +128,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     nii=lnii;
                 end
             end
+            
             
             
             
@@ -152,7 +149,11 @@ for nativemni=nm % switch between native and mni space atlases.
                 XYZ.dims=nii.hdr.dime.pixdim;
                 
                 
-                
+            else
+                XYZ.vx=[];
+                XYZ.val=[];
+                XYZ.mm=[];
+                XYZ.dims=nii.hdr.dime.pixdim;
                 
             end
             
@@ -254,7 +255,11 @@ for nativemni=nm % switch between native and mni space atlases.
             
             ifv{atlas,side}=fv; % later stored
             icdat{atlas,side}=cdat; % later stored
+try
             iXYZ{atlas,side}=XYZ; % later stored
+catch
+    keyboard
+end
             ipixdim{atlas,side}=nii.hdr.dime.pixdim(1:3); % later stored
             
             icolorc{atlas,side}=colorc; % later stored
@@ -269,7 +274,7 @@ for nativemni=nm % switch between native and mni space atlases.
             
         end
     end
-    ea_dispercent(1,'end');
+    %ea_dispercent(1,'end');
     
     
     
@@ -294,22 +299,26 @@ end
 
 
 
-function nii=load_nii_proxy(fname,options)
+function nii=load_nii_crop(fname,options)
 
 if strcmp(fname(end-2:end),'.gz')
     wasgzip=1;
     gunzip(fname);
+    delete(fname);
     fname=fname(1:end-3);
 else
     wasgzip=0;
 end
-try
+%try
+
+    ea_crop_nii(fname);
+    
     nii=spm_vol(fname);
     
     nii.img=spm_read_vols(nii);
-catch
+%catch
     
-end
+%end
 
 
 nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
@@ -322,7 +331,8 @@ if ~all(abs(nii.hdr.dime.pixdim(1:3))<=1)
     
 end
 if wasgzip
-    delete(fname); % since gunzip makes a copy of the zipped file.
+    gzip(fname); % since gunzip makes a copy of the zipped file.
+    delete(fname);
 end
 
 

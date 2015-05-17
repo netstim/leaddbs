@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help lead_connectome
 
-% Last Modified by GUIDE v2.5 20-Apr-2015 17:26:50
+% Last Modified by GUIDE v2.5 14-May-2015 19:47:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -324,6 +324,7 @@ try set(handles.TR,'String',num2str(lc.func.prefs.TR)); end
 
 % structural options:
 try set(handles.compute_CM_struc,'Value',lc.struc.compute_CM); end
+
 try set(handles.compute_GM_struc,'Value',lc.struc.compute_GM); end
 try set(handles.ftmethod,'Value',lc.struc.ft.methodn); end
 
@@ -430,3 +431,6 @@ function fthresh_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+

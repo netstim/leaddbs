@@ -501,6 +501,22 @@ function writeout2d_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of writeout2d_checkbox
+switch get(hObject,'value')
+    case 0
+        set(handles.bbsize,'Enable','off');
+        set(handles.tdcolorscheck,'Enable','off');
+        set(handles.tdcontourcheck,'Enable','off');
+        set(handles.tdlabelcheck,'Enable','off');
+        set(handles.tdcontourcolor,'Enable','off');
+
+    case 1
+        set(handles.bbsize,'Enable','on');
+        set(handles.tdcolorscheck,'Enable','on');
+        set(handles.tdcontourcheck,'Enable','on');
+        set(handles.tdlabelcheck,'Enable','on');
+        set(handles.tdcontourcolor,'Enable','on');
+end
+
 storeui(handles);
 
 
@@ -545,12 +561,14 @@ if length(uipatdir)>1
     set(handles.patdir_choosebox,'String',['Multiple (',num2str(length(uipatdir)),')']);
     set(handles.patdir_choosebox,'TooltipString',ea_strjoin(uipatdir,', '));
 else
-set(handles.patdir_choosebox,'String',uipatdir{1});
-set(handles.patdir_choosebox,'TooltipString',uipatdir{1});
+    set(handles.patdir_choosebox,'String',uipatdir{1});
+    set(handles.patdir_choosebox,'TooltipString',uipatdir{1});
 end
 
 % store patient directories in figure
 setappdata(gcf,'uipatdir',uipatdir);
+ea_switchctmr(handles);
+
 getui(handles); % update ui from patient
 storeui(handles); % save in pt folder
 
@@ -648,15 +666,14 @@ function doreconstruction_checkbox_Callback(hObject, eventdata, handles)
 if get(hObject,'Value') 
     
     
-   set(handles.axispopup,'Enable','on'); 
    set(handles.maskwindow_txt,'Enable','on'); 
-
+set(handles.targetpopup,'Enable','on'); 
    
    
    
 else
     
-   set(handles.axispopup,'Enable','off'); 
+   set(handles.targetpopup,'Enable','off'); 
    set(handles.maskwindow_txt,'Enable','off'); 
 end
 storeui(handles);
@@ -671,6 +688,10 @@ function MRCT_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns MRCT contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from MRCT
+
+ea_switchctmr(handles,get(hObject,'Value'));
+
+
 storeui(handles);
 
 
@@ -1093,11 +1114,43 @@ function updatestatus(handles)
 try
 uipatdir=getappdata(gcf,'uipatdir');
 
+set(handles.statusone,'String','One or more MR-/CT-volumes missing.');
+modality=ea_checkctmrpresent(handles);
+
+% check if MRCT popup is set correctly
+
+if any(modality)
+   
+   if ~modality(get(handles.MRCT,'Value'))
+       set(handles.MRCT,'ForegroundColor',[0.8,0.5,0.5]);
+   else
+       set(handles.MRCT,'ForegroundColor',[0.5,0.8,0.5]);
+   end
+    
+end
+
+
+% check for reconstructions
+if exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
+    set(handles.statustwo,'String','Fiducials and Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
+elseif exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
+    set(handles.statustwo,'String','Fiducials information present in folder. Will be overwritten if "Reconstruct" is set.');
+elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
+    set(handles.statustwo,'String','Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
+elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
+    set(handles.statustwo,'String','No reconstruction available in folder. Set "Reconstruct" to start.');
+end
+end
+
+
+function modality=ea_checkctmrpresent(handles)
+uipatdir=getappdata(gcf,'uipatdir');
+
 % check for MR-files
 [~,patientname]=fileparts(uipatdir{1});
+
 prefs=ea_prefs(patientname);
 
-set(handles.statusone,'String','One or more MR-/CT-volumes missing.');
 modality=zeros(2,1);
 % check for unnormalized images first:
 % CT
@@ -1151,30 +1204,43 @@ if exist([uipatdir{1},filesep,prefs.tranii],'file') && exist([uipatdir{1},filese
     modality(1:2)=1;
 end
 
+function ea_switchctmr(varargin)
+% varargin: handles, switchto (1=MR, 2=CT; optional).
+% being called when new patient is loaded.
+handles=varargin{1};
+switchto=0;
 
-% check if MRCT popup is set correctly
+if nargin==1 % autodetect
+    % check if MRCT popup is set correctly
+modality=ea_checkctmrpresent(handles);
+switchto=find(modality);
 if any(modality)
-   
    if ~modality(get(handles.MRCT,'Value'))
-       set(handles.MRCT,'ForegroundColor',[0.8,0.5,0.5]);
+       set(handles.MRCT,'Value',switchto);
    else
-       set(handles.MRCT,'ForegroundColor',[0.5,0.8,0.5]);
-   end
-    
+   end   
+end
+else
+    % switch MRCT popup to specified handle.
+    switchto=varargin{2};
 end
 
+if ~(sum(switchto>0)>1) && ~isempty(switchto) % e.g. MR and CT present
+    switch switchto
+    case 1 % MR
+        set(handles.coregct_checkbox,'Enable','off');
+        set(handles.coregctmethod,'Enable','off');
+        set(handles.coregctcheck,'Enable','off');
+        set(handles.coregthreshs,'Enable','off');
 
-% check for reconstructions
-if exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','Fiducials and Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','Fiducials information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','No reconstruction available in folder. Set "Reconstruct" to start.');
+    case 2 % CT
+        set(handles.coregct_checkbox,'Enable','on');
+        set(handles.coregctmethod,'Enable','on');
+        set(handles.coregctcheck,'Enable','on');
+        set(handles.coregthreshs,'Enable','on');
 end
 end
+updatestatus(handles);
 
 function getui(handles)
 
@@ -1259,7 +1325,7 @@ options.automask=0; % unset automask flag
 end
 options.autoimprove=1; % if true, there will be some pauses at critical points so that the process can be better visualized. Mainly for demonstration or debugging problems.
 
-options.axiscontrast=(get(handles.axispopup,'Value')); % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
+options.axiscontrast=9; % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
 
 options.atl.genpt=get(handles.genptatlascheck,'Value'); % generate patient specific atlases
@@ -1381,7 +1447,6 @@ if options.automask
 else
     set(handles.maskwindow_txt,'String',num2str(options.maskwindow));
 end
-set(handles.axispopup,'Value',options.axiscontrast); % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 set(handles.genptatlascheck,'Value',options.atl.genpt); % generate patient specific atlases
 set(handles.normptatlascheck,'Value',options.atl.normalize); % normalize patient specific atlasset.
 set(handles.canatlcheck,'Value',options.atl.can); % display canonical atlases

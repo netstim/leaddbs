@@ -45,7 +45,6 @@ prefs.postopgmtc=['postop_rest_tc.mat']; % extracted timecourses of postop resti
 
 
 %% connectome settings:
-prefs.lc.struc.maxdist=2; % maximal distance to form a connection (between fiber terminals and voxel centers, in mm).
 prefs.lc.struc.minlen=3; % minimum fiber length to consider to form connections (in segments).
 
 %% DTI-files:
