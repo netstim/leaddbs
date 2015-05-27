@@ -7,7 +7,7 @@ function varargout=ea_genvat_simbio(varargin)
 % 
 % This function only touches the .VAT entry of stimparams struct of the
 % given side.
-
+keyboard
 if nargin==4
 coords=varargin{1};
 stimparams=varargin{2};

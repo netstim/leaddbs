@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 27-May-2015 09:45:01
+% Last Modified by GUIDE v2.5 27-May-2015 12:37:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -794,7 +794,8 @@ try set(handles.exportisovolumecheck,'Value',M.ui.exportisovolumecheck); end
 try set(handles.savefigscheck,'Value',M.ui.savefigscheck); end
 try set(handles.removepriorstatscheck,'Value',M.ui.removepriorstatscheck); end
 try set(handles.statvatcheck,'Value',M.ui.statvat); end
-try set(handles.colorpointcloudcheck,'Vakue',M.ui.colorpointcloudcheck); end
+try set(handles.colorpointcloudcheck,'Value',M.ui.colorpointcloudcheck); end
+try set(handles.lc_smooth,'Value',M.ui.lc.smooth); end
 
 
 
@@ -1706,6 +1707,7 @@ M.ui.colorpointcloudcheck=0;
 M.ui.lc.parcellation=1;
 M.ui.lc.graphmetric=1;
 M.ui.lc.normalization=1;
+M.ui.lc.smooth=1;
 
 
 % --- Executes on button press in setstimparamsbutton.
@@ -2381,27 +2383,29 @@ gcs=get(handles.lc_graphmetrics,'String');
 mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gcs]);
 mkdir(spmdir);
 
-if M.ui.lc.smooth
-    sss='s';
-else
-    sss='';
-end
-
-if M.ui.lc.normalize==1;
-    zzz='';
-elseif M.ui.lc.normalize==2;
-    zzz='z';
-    elseif M.ui.lc.normalize==3;
-    zzz='k';
-end
 
 for sub=1:length(M.patient.list)
-   fis{sub}=[M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,sss,zzz,gcs,'.nii,1'];
+    if M.ui.lc.normalize==1;
+        zzz='';
+    elseif M.ui.lc.normalize==2;
+        zzz='z';
+        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gcs,'.nii,1'],2);
+    elseif M.ui.lc.normalize==3;
+        zzz='k';
+        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gcs,'.nii,1'],3);
+    end
+    if M.ui.lc.smooth
+        sss='s';
+        ea_smooth([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,zzz,gcs,'.nii,1']);
+    else
+        sss='';
+    end
+    fis{sub}=[M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,sss,zzz,gcs,'.nii,1'];
 end
 
-
+%% model specification:
 matlabbatch{1}.spm.stats.factorial_design.dir = {spmdir};
-matlabbatch{1}.spm.stats.factorial_design.des.t1.scans = '<UNDEFINED>';
+matlabbatch{1}.spm.stats.factorial_design.des.t1.scans = fis;
 matlabbatch{1}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
 matlabbatch{1}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
 matlabbatch{1}.spm.stats.factorial_design.masking.tm.tm_none = 1;
@@ -2412,6 +2416,23 @@ matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
 matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
 cfg_util('run',{matlabbatch});
 clear matlabbatch
+
+%% model estimation:
+matlabbatch{1}.spm.stats.fmri_est.spmmat = {spmdir};
+matlabbatch{1}.spm.stats.fmri_est.write_residuals = 0;
+matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1;
+cfg_util('run',{matlabbatch});
+clear matlabbatch
+
+%% contrast manager:
+matlabbatch{1}.spm.stats.con.spmmat = {spmdir};
+matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'main effect';
+matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = 1;
+matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+matlabbatch{1}.spm.stats.con.delete = 1;
+cfg_util('run',{matlabbatch});
+clear matlabbatch
+
 
 % --- Executes on selection change in lc_normalization.
 function lc_normalization_Callback(hObject, eventdata, handles)
@@ -2487,3 +2508,37 @@ function lc_parcellation_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in lc_smooth.
+function lc_smooth_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_smooth (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of lc_smooth
+M=getappdata(gcf,'M');
+M.ui.lc.smooth=get(handles.lc_smooth,'Value');
+setappdata(gcf,'M',M);
+
+
+
+function ea_histnormalize(fname,zzz)
+nii=ea_load_nii(fname);
+[pth,fn,ext]=fileparts(fname);
+vals=nii.img(~isnan(nii.img));
+switch zzz
+    case 2 % zscore
+nii.fname=[pth,'z',fn,ext];
+vals=zscore(vals(:));
+    case 3 % albada
+nii.fname=[pth,'k',fn,ext];
+vals=ea_normal(vals(:));
+end
+nii.img(~isnan(nii.img))=vals;
+spm_write_vol(nii,nii.img);
+
+function ea_smooth(fname)
+[pth,fn,ext]=fileparts(fname);
+
+spm_smooth(fname,[pth,fn,'s',ext],[8 8 8]);
