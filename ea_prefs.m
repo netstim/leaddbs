@@ -11,6 +11,11 @@ load([fileparts(which('lead')),filesep,'ea_prefs']);
 prefs.lp=lp;
 end
 
+%% general settings:
+prefs.pp.do=1; % use parallel processing if available.
+prefs.pp.csize=4; % specify how many clusters to recruit.
+prefs.pp.profile='local'; % specify parallel processing profile.
+
 %% general file handling:
 prefs.prenii_unnormalized=['anat.nii']; % (preoperative) anatomical MR image
 prefs.tranii_unnormalized=['postop_tra.nii']; % postoperative primary anatomical MR image

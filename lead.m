@@ -220,24 +220,50 @@ if isempty(uipatdirs)
     uipatdirs={'No Patient Selected'};
 end
 
-for pat=1:length(uipatdirs)
-    % set patient specific options
-    options.root=[fileparts(uipatdirs{pat}),filesep];
-    [root,thispatdir]=fileparts(uipatdirs{pat});
-    options.patientname=thispatdir;
-    % run main function
+prefs=ea_prefs('');
+if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do % do parallel processing if available and set in ea_prefs.
+    pp=parpool(prefs.pp.profile,prefs.pp.csize);
     
-   if length(uipatdirs)>1 % multi mode. Dont stop at errors.
-    try
-    ea_autocoord(options);
-    catch
-       warning([options.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
+    for pat=1:length(uipatdirs)
+        % set patient specific options
+        opts(pat)=options;
+        opts(pat).root=[fileparts(uipatdirs{pat}),filesep];
+        [~,thispatdir]=fileparts(uipatdirs{pat});
+        opts(pat).patientname=thispatdir;
     end
-   else
-       ea_autocoord(options);
-   end
+    
+    parfor pat=1:length(uipatdirs)
+        
+        % run main function
+        try
+            ea_autocoord(opts(pat));
+        catch
+            warning([options.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
+        end
+        
+    end
+    delete(pp);
+    
+else
+    
+    for pat=1:length(uipatdirs)
+        % set patient specific options
+        options.root=[fileparts(uipatdirs{pat}),filesep];
+        [root,thispatdir]=fileparts(uipatdirs{pat});
+        options.patientname=thispatdir;
+        % run main function
+        
+        if length(uipatdirs)>1 % multi mode. Dont stop at errors.
+            try
+                ea_autocoord(options);
+            catch
+                warning([options.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
+            end
+        else
+            ea_autocoord(options);
+        end
+    end
 end
-
 
 
 function edit1_Callback(hObject, eventdata, handles)
