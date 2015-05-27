@@ -14,6 +14,7 @@ fibers
 !bg_gui_lg.png
 !ea_logo.png
 !*egjob*.mat
+!*emplates/labeling/*.nii
 
 
 ea_make_release.m
