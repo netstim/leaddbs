@@ -226,17 +226,17 @@ if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do % do paralle
     
     for pat=1:length(uipatdirs)
         % set patient specific options
-        opts(pat)=options;
-        opts(pat).root=[fileparts(uipatdirs{pat}),filesep];
+        opts{pat}=options;
+        opts{pat}.root=[fileparts(uipatdirs{pat}),filesep];
         [~,thispatdir]=fileparts(uipatdirs{pat});
-        opts(pat).patientname=thispatdir;
+        opts{pat}.patientname=thispatdir;
     end
     
     parfor pat=1:length(uipatdirs)
         
         % run main function
         try
-            ea_autocoord(opts(pat));
+            ea_autocoord(opts{pat});
         catch
             warning([options.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
         end
