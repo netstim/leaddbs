@@ -65,6 +65,10 @@ prefs.sampledtidicom='sample_dti_dicom.dcm'; % sample DICOM file of DTI image (u
 
 prefs.normmatrix=['lmat.txt'];
 
+%% Normalization:
+prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
+
+
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
 prefs.hullsmooth=5; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.

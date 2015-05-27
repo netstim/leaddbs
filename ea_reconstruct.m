@@ -118,7 +118,7 @@ zdist=dist/norm(trajvector);
 %                 trajectory=ea_map_coords(trajectory', [options.root,patientname,filesep,options.prefs.tranii])';
 %             end
 
-[coords,goodz]=ea_sample_cuboid(trajectory,trajvector,options);
+[coords,goodz]=ea_reconstruct_coords(trajectory,trajvector,options);
 
 
 

@@ -1,20 +1,41 @@
-function [coords,goodz]=ea_sample_cuboid(trajectory,trajvector,options)
+function [cimat,reldist,mat]=ea_sample_cuboid(varargin)
+% This function samples image points alongside a trajectory specified.
+trajectory=varargin{1};
+[~,trajvector]=ea_fit_line(trajectory);
+options=varargin{2};
 
 switch options.modality
     case 1 % MR
         if exist([options.root,options.prefs.patientdir,filesep,options.prefs.cornii],'file')
-        niifn=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii];
+            niifn=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii];
         else
-        niifn=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
+            niifn=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
         end
     case 2 % CT
         niifn=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
 end
 
+if nargin>=3 % custom sampling image specified.
+    
+    niifn=varargin{3};
+    
+    
+end
 
+if nargin>=4
+    interp=varargin{4};
+else
+    interp=3;
+end
 
+if nargin>=5
+width=varargin{5};
+else
+width=15;
+end
 
 V=spm_vol(niifn);
+
 
 top_vx=[trajectory(1:2,:),ones(2,1)]';
 top_mm=V.mat*top_vx;
@@ -72,8 +93,8 @@ orthy=orth(:,2)'*((reldist/10)/norm(orth(:,2))); % vector going perpendicular to
 
 
 
-xdim=15;
-ydim=15;
+xdim=width; % default is 15
+ydim=width; % default is 15
 zdim=150; % will be sum up to 5 times reldist (three between contacts and two at borders).
 
 
@@ -105,84 +126,25 @@ imat=nan(2*ydim+1,2*xdim+1,zdim);
     end
     
 %                     imat(xx+xdim+1,yy+ydim+1,zz,(tracor))=spm_sample_vol(V,coord2extract(1),coord2extract(2),coord2extract(3),3);
-    imat(sub2ind(size(imat),coord2write(:,1),coord2write(:,2),coord2write(:,3)))=spm_sample_vol(V,coord2extract(:,1),coord2extract(:,2),coord2extract(:,3),3);
-
-    
-
+    imat(sub2ind(size(imat),coord2write(:,1),coord2write(:,2),coord2write(:,3)))=spm_sample_vol(V,coord2extract(:,1),coord2extract(:,2),coord2extract(:,3),interp);
+ cimat=squeeze(imat(:,:,:));
 
 
+if nargout>2 % also export V.mat
+% put coord2extract to mm coordinates
 
-
-%imat=ea_gencontrastimage(imat,options.zheights);
-
-%cnii=make_nii(imat);
-%save_nii(cnii,'trajectory_run.nii');
-
-switch options.modality
-    case 1
-        headtemp=load_nii(fullfile(options.earoot,'templates','electrode_contacts','mr','template.nii'));
-    case 2
-        headtemp=load_nii(fullfile(options.earoot,'templates','electrode_contacts','ct','template.nii'));
+coord2extract=V.mat*[coord2extract';ones(1,size(coord2extract,1))];
+%coord2extract=coord2extract(1:3,:)';
+coord2write=[coord2write,ones(size(coord2write,1),1)];
+mat=linsolve(coord2write,coord2extract');
 end
-
-htemp=headtemp.img;
-temp=ea_nanmean(htemp(:,:,:,:),4);
-cimat=squeeze(imat(:,:,:));
+   
 
 
 
 
-%% calculate cross-correlation series for all x and y values within the
-%% cuboid volume.
-
-disp('Calculating cross-correlation series for all x and y values within the cuboid volume.');
-
-    
-    
- %   cnii=make_nii(temp);
- %   save_nii(cnii,['template_run',num2str(1),'.nii']);
-    
-cnt=1;
-corrs=zeros(size(cimat,1)*size(cimat,2),length(min(trajectory(:,3)):size(cimat,3)-size(temp,3)));
-for xx=1:size(cimat,1)
-    for yy=1:size(cimat,2)
-        for lag=min(trajectory(:,3)):size(cimat,3)-size(temp,3)
-            corrs(cnt,lag+1-min(trajectory(:,3)))=corr(squeeze(cimat(xx,yy,lag:lag+size(temp,3)-1)),squeeze(temp(xx,yy,:)),'rows','pairwise');
-
-        end
-                    cnt=cnt+1;
-    end
-end
-
-corrs=ea_nanmean(corrs);
-[maxv,maxi]=max(corrs);
 
 
-try
-goodz=maxi+min(trajectory(:,3))+reldist; % -1 because lag-series starts with 0 and not one. +reldist because templates start ~reldist voxels before electrode point.
-ea_showdis(['Maximal value was: ',num2str(maxv),'.'],options.verbose);
-catch
-   ea_showdis(['Probably algorithm stopped to early. No guess of electrode heights possible.'],options.verbose);
-   goodz=min(trajectory(:,3));
-   maxi=1;
-end
-if isempty(goodz) 
-      ea_showdis(['Probably algorithm stopped to early. No guess of electrode heights possible.'],options.verbose);
-   goodz=min(trajectory(:,3));
-   maxi=1;
-end
-
-
-% error on maxi empty:
-if isempty(maxi)
-    ea_error('Reconstruction failed. Please adjust mask-size and entry-point parameters and re-run reconstruction.');
-end
-
-
-for coo=1:4
-    coords(coo,:)=startpt+ntrajvector*maxi       +ntrajvector*(coo*reldist);
-
-end
 
 
 

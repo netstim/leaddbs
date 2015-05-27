@@ -88,10 +88,11 @@ set(handles.versiontxt,'String',['v ',num2str(vnum(1))]);
 
 
 % set DICOM input and output name strings:
+try
 load([fileparts(which('lead')),filesep,'ea_prefs']);
 set(handles.setdicomout,'String',lp.dicom.outfolder);
 set(handles.setdicomin,'String',lp.dicom.infolder);
-
+end
 
 
 

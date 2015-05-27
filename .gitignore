@@ -13,6 +13,8 @@ fibers
 !bg_gui.png
 !bg_gui_lg.png
 
+ea_make_release.m
+
 # OS generated files #
 ######################
 .DS_Store

@@ -7,7 +7,7 @@ function ea_perform_lc(options)
 
 
 %% structural parts
-
+keyboard
 
 % perform fibertracking
 if options.lc.struc.ft.do

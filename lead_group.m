@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 06-Apr-2015 09:44:22
+% Last Modified by GUIDE v2.5 27-May-2015 09:45:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -147,10 +147,9 @@ for lab=1:length(ll)
     [~,n]=fileparts(ll(lab).name);
     labelcell{lab}=n;
 end
-labelcell{lab+1}='Use all';
 
 set(handles.labelpopup,'String',labelcell);
-
+set(handles.lc_parcellation,'String',labelcell);
 
 try
     priorselection=find(ismember(labelcell,stimparams.labelatlas)); % retrieve prior selection of fiberset.
@@ -744,6 +743,14 @@ if ~isequal(size(M.groups.color),[length(M.groups.group),3])
 end
 
 
+% add graph metrics to connectome graph-metrics popup:
+
+gmdir=dir([M.patient.list{1},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,'*.nii']);
+for gm=1:length(gmdir)
+   gms{gm}=gmdir(gm).name; 
+end
+set(handles.lc_graphmetrics,'String',gms);
+
 % update UI
 
 % 2D-Viz options:
@@ -799,6 +806,9 @@ try set(handles.labelpopup,'Value',M.ui.labelpopup); end
 try set(handles.modelselect,'Value',M.ui.modelselect); end
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
+try set(handles.lc_parcellation,'Value',M.ui.lc.parcellation); end
+try set(handles.lc_normalization,'Value',M.ui.lc.normalization); end
+try set(handles.lc_graphmetric,'Value',M.ui.lc.graphmetric); end
 
 % update enable-disable-dependencies:
 if M.ui.elrendering==3
@@ -1411,13 +1421,6 @@ end
         
         
      end
-     
-     
-     
-    
-     
-    
-    
 end
      %% processing done here.
 
@@ -1577,8 +1580,6 @@ function savefigscheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of savefigscheck
 M=getappdata(gcf,'M');
 M.ui.savefigscheck=get(handles.savefigscheck,'Value');
-
-
 setappdata(gcf,'M',M);
 refreshvifc(handles);
 
@@ -1591,8 +1592,6 @@ function removepriorstatscheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of removepriorstatscheck
 M=getappdata(gcf,'M');
 M.ui.removepriorstatscheck=get(handles.removepriorstatscheck,'Value');
-
-
 setappdata(gcf,'M',M);
 refreshvifc(handles);
 
@@ -1704,7 +1703,9 @@ M.ui.elmodelselect=1;
 M.ui.detached=0;
 M.ui.normregpopup=1;
 M.ui.colorpointcloudcheck=0;
-
+M.ui.lc.parcellation=1;
+M.ui.lc.graphmetric=1;
+M.ui.lc.normalization=1;
 
 
 % --- Executes on button press in setstimparamsbutton.
@@ -2362,3 +2363,127 @@ M=getappdata(gcf,'M');
 M.ui.tdcontourcolor=tdcol;
 setappdata(gcf,'M',M);
 refreshvifc(handles);
+
+
+% --- Executes on button press in lc_SPM.
+function lc_SPM_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_SPM (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+spmdir=[M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gcs,filesep,'SPM'];
+rmdir(spmdir,'s');
+mkdir([M.ui.groupdir,'connectomics']);
+mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String')]);
+mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph']);
+gcs=get(handles.lc_graphmetrics,'String');
+[~,gcs]=gcs{M.ui.lc.graphmetrics};
+mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gcs]);
+mkdir(spmdir);
+
+if M.ui.lc.smooth
+    sss='s';
+else
+    sss='';
+end
+
+if M.ui.lc.normalize==1;
+    zzz='';
+elseif M.ui.lc.normalize==2;
+    zzz='z';
+    elseif M.ui.lc.normalize==3;
+    zzz='k';
+end
+
+for sub=1:length(M.patient.list)
+   fis{sub}=[M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,sss,zzz,gcs,'.nii,1'];
+end
+
+
+matlabbatch{1}.spm.stats.factorial_design.dir = {spmdir};
+matlabbatch{1}.spm.stats.factorial_design.des.t1.scans = '<UNDEFINED>';
+matlabbatch{1}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{1}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{1}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+matlabbatch{1}.spm.stats.factorial_design.masking.im = 1;
+matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
+matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
+matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
+cfg_util('run',{matlabbatch});
+clear matlabbatch
+
+% --- Executes on selection change in lc_normalization.
+function lc_normalization_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_normalization (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns lc_normalization contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from lc_normalization
+M=getappdata(gcf,'M');
+M.ui.lc.normalization=get(handles.lc_normalization,'Value');
+setappdata(gcf,'M',M);
+
+% --- Executes during object creation, after setting all properties.
+function lc_normalization_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_normalization (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in lc_graphmetric.
+function lc_graphmetric_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_graphmetric (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns lc_graphmetric contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from lc_graphmetric
+M=getappdata(gcf,'M');
+M.ui.lc.graphmetric=get(handles.lc_graphmetric,'Value');
+setappdata(gcf,'M',M);
+
+% --- Executes during object creation, after setting all properties.
+function lc_graphmetric_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_graphmetric (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in lc_parcellation.
+function lc_parcellation_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_parcellation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns lc_parcellation contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from lc_parcellation
+M=getappdata(gcf,'M');
+
+M.ui.lc.parcellation=get(handles.lc_parcellation,'Value');
+setappdata(gcf,'M',M);
+
+% --- Executes during object creation, after setting all properties.
+function lc_parcellation_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_parcellation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
