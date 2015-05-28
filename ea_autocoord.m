@@ -98,38 +98,7 @@ end
 if options.atl.normalize % normalize patient-specific atlas-set.
     ea_normalize_ptspecific_atl(options)
 end
-    
-% Prepare MR-images
-
-if ~exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii],'file')
-    try
-        copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.tranii,'.gz'],[options.root,options.prefs.patientdir,filesep,'c',options.prefs.tranii,'.gz']);
-    end
-    try
-        gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.tranii,'.gz']);
-    catch
-        system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.tranii,'.gz']);
-        
-    end
-    try
-        movefile([options.root,options.prefs.patientdir,filesep,'c',options.prefs.tranii,'.gz'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii,'.gz']);
-    end
-end
-
-if ~exist([options.root,options.prefs.patientdir,filesep,options.prefs.cornii],'file')
-    try
-        copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.cornii,'.gz'],[options.root,options.prefs.patientdir,filesep,'c',options.prefs.cornii,'.gz']);
-    end
-    try
-        gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.cornii,'.gz']);
-    catch
-        system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.cornii,'.gz']);
-    end
-    try
-        movefile([options.root,options.prefs.patientdir,filesep,'c',options.prefs.cornii,'.gz'],[options.root,options.prefs.patientdir,filesep,options.prefs.cornii,'.gz']);
-    end
-    
-end
+   
 
 
 if options.normalize.check
@@ -160,10 +129,7 @@ if options.doreconstruction
         
         %% refit electrodes starting from first electrode (this is redundant at
         %% this point).
-        
-        
-        
-        
+   
         coords_mm{side} = ea_map_coords(coords', [options.root,options.prefs.patientdir,filesep,options.prefs.tranii])';
         
         

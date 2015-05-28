@@ -129,7 +129,7 @@ for voxx=1:size(interpol_tc,1)
     if ~isnan(beta_hat)
     interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
     else
-        warning('Regression of WM-/GM-Signals could not be performed.');
+        warning('Regression of WM-/CSF-Signals could not be performed.');
     end
 end
 
