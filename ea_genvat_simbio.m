@@ -7,7 +7,7 @@ function varargout=ea_genvat_simbio(varargin)
 % 
 % This function only touches the .VAT entry of stimparams struct of the
 % given side.
-keyboard
+
 if nargin==4
 coords=varargin{1};
 stimparams=varargin{2};
@@ -21,7 +21,7 @@ if ischar(varargin{1}) % return name of method.
 end
 end
 
-
+keyboard
 
 coords=coords{side};
 traj=[coords(1,:)+(coords(1,:)-coords(3,:));coords(4,:)+(coords(4,:)-coords(2,:))];

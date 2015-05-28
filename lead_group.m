@@ -271,8 +271,8 @@ M.patient.list(deleteentry)=[];
 M.patient.group(deleteentry)=[];
 M.patient.analysis(deleteentry)=[];
 
-M.elstruct(deleteentry)=[];
-M.stimparams(deleteentry)=[];
+try M.elstruct(deleteentry)=[];
+M.stimparams(deleteentry)=[]; endlead_g
 
 for cvar=1:length(M.clinical.vars)
 M.clinical.vars{cvar}(deleteentry)=[];
@@ -744,8 +744,9 @@ end
 
 
 % add graph metrics to connectome graph-metrics popup:
-
+keyboard
 gmdir=dir([M.patient.list{1},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,'*.nii']);
+
 for gm=1:length(gmdir)
    gms{gm}=gmdir(gm).name; 
 end

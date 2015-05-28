@@ -7,7 +7,7 @@ function ea_perform_lc(options)
 
 
 %% structural parts
-keyboard
+
 
 % perform fibertracking
 if options.lc.struc.ft.do
@@ -22,9 +22,11 @@ end
 
 % create structural CM
 if options.lc.struc.compute_CM
+    
     mkdir([options.root,options.patientname,filesep,'connectomics']);
 expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
 mkdir(expfolder);
+if ~exist([expfolder,'DTI_CM.mat'],'file')
     if ~exist([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized],'file') % fibertracking has not been performed.
     warning('Fibertracking has not been done yet. Will do so before estimating structural connectivity matrix.');
         ea_perform_ft_proxy(options);
@@ -33,6 +35,7 @@ mkdir(expfolder);
     cm=ea_export_CM_png(DTI_CM,'DTI Connectivity matrix',options,[0 10]);
     save([expfolder,'DTI_CM.mat'],'DTI_CM','-v7.3');
     saveas(cm,[expfolder,'DTI_CM.png']);
+end
 end
 
 
@@ -44,11 +47,13 @@ if options.lc.func.compute_CM % create functional connectivity matrix
     mkdir([options.root,options.patientname,filesep,'connectomics']);
 expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
 mkdir(expfolder);
+if ~exist([expfolder,'fMRI_CM.mat'],'file')
     [fMRI_CM,gmtc]=ea_createCM_fmri(options);
     cm=ea_export_CM_png(fMRI_CM,'fMRI Connectivity matrix',options);
     save([expfolder,options.prefs.gmtc],'gmtc');
     save([expfolder,'fMRI_CM.mat'],'fMRI_CM','-v7.3');
     saveas(cm,[expfolder,'fMRI_CM.png']);
+end
 end
 
 
