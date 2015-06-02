@@ -1,3 +1,7 @@
+*.asv
+*.m~
+*.mex*
+tmp/
 *.nii
 *.nii.gz
 *.ps
