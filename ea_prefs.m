@@ -73,7 +73,7 @@ prefs.d2.groupcolors='lead'; % can be 'maxdist' to use ea_distinguishable_colors
 
 %% DICOM-Handling:
 
-prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
+prefs.dicom.dicomfiles=1; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
 
 %% Normalization:
 prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
