@@ -140,8 +140,14 @@ for nd=length(ndir):-1:1
     end
 end
 
+try
 setappdata(gcf,'normmethod',normmethod);
 set(handles.normmethod,'String',ndc);
+catch
+    if isempty(which('spm'))
+    warning('It seems that SPM is not installed.');
+    end
+end
 
 
 % add coreg methods to menu
@@ -158,9 +164,14 @@ for nd=length(ndir):-1:1
         end
     end
 end
+try
 setappdata(gcf,'coregctmethod',coregctmethod);
 set(handles.coregctmethod,'String',cdc);
-
+catch
+    if isempty(which('spm'))
+    warning('It seems that SPM is not installed.');
+    end
+end
 
 
 

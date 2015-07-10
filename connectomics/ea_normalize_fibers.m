@@ -2,13 +2,14 @@ function ea_normalize_fibers(options)
 % uses map_coords function by Ged Ridgway (see below)
 directory=[options.root,options.patientname,filesep];
 [~,preniif]=fileparts(options.prefs.prenii_unnormalized);
+
 if ~exist([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],'file');
     ea_error('Please run a compatible normalization of the preoperative MRI-volume first. Final (inverse) normalization parameters should be stored as y_ea_inv_normparams.nii inside of the subject folder.');
 end
 
 vizz=0; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
 
-
+keyboard
 
 %% check which normalization routine has been used..
 % if dartel was used, we need to coregister c2 of b0 and rc2 of anat (since
@@ -65,15 +66,18 @@ ea_dispercent(0,'Normalizing fibers');
 numfibs=length(ftr.curveSegCell);
 
 
+%ynii=nifti([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']);
 ynii=nifti([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']);
+        P = [repmat([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],3,1),[',1,1';',1,2';',1,3']];
+        Vnii = spm_vol(P);
 wfibs=cell(length(ftr.curveSegCell),1);
 for fib=1:numfibs
     
     ea_dispercent(fib/numfibs);
     
     %% transpose from freiburg to spm notation.
-    
-    wfibs{fib}=[ftr.curveSegCell{fib}(:,2),ysize-ftr.curveSegCell{fib}(:,1),ftr.curveSegCell{fib}(:,3),ones(length(ftr.curveSegCell{fib}),1)];
+    wfibs{fib}=[ftr.curveSegCell{fib}(:,1),ftr.curveSegCell{fib}(:,2),ftr.curveSegCell{fib}(:,3),ones(length(ftr.curveSegCell{fib}),1)];
+    %wfibs{fib}=[ftr.curveSegCell{fib}(:,2),ysize-ftr.curveSegCell{fib}(:,1),ftr.curveSegCell{fib}(:,3),ones(length(ftr.curveSegCell{fib}),1)];
     if vizz
        thisfib=wfibs{fib}';
         subplot(1,3,1)
@@ -94,7 +98,7 @@ for fib=1:numfibs
  
     %% map from prenii voxelspace to mni millimeter space   
     
-    wfibs{fib} = vox2mm_mni(wfibs{fib}, ynii)';
+    wfibs{fib} = vox2mm_mni(wfibs{fib},Vnii,ynii)';
     
     
     
@@ -130,10 +134,12 @@ try
     H=spm_dicom_headers([root_directory,options.prefs.sampledtidicom]);
     specs.orientation=H{1,1}.ImageOrientationPatient;
 catch
-    specs.orientation=[1,0,0,0,1,0];
+    %specs.orientation=[0,1,0,0,0,0];%[0,1,0,-1,0,0];%[1,0,0,0,1,0];
+    specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example trk_write. Try this one.. %[1,0,0,0,1,0];
 end
 specs.vox=ftr.vox;
-[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
+[~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
+%[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
 ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
 end
 disp('Done.');
@@ -174,9 +180,29 @@ else
 end
 
 
-function coord = vox2mm_mni(coord, ynii)
-ixs = round(coord(1:3, :));
-coord=zeros(3,size(coord,2));
+function coord = vdox2mm_mni(coord,Vnii,ynii)
+
+
+
+ixs = double(coord(1:3, :));
+
+% old method
 for i = 1:3
 coord(i,:)=ynii.dat(sub2ind(size(ynii.dat),ixs(1,:)',ixs(2,:)',ixs(3,:)',ones(size(ixs,2),1),repmat(i,size(ixs,2),1)));
 end
+
+function coord = vox2mm_mni(coord, Vnii,ynii)
+% new method
+ixs_new = double(coord(1:3, :));
+coord=[spm_sample_vol(Vnii(1),ixs_new(1,:),ixs_new(2,:),ixs_new(3,:),1);
+    spm_sample_vol(Vnii(2),ixs_new(1,:),ixs_new(2,:),ixs_new(3,:),1);
+    spm_sample_vol(Vnii(3),ixs_new(1,:),ixs_new(2,:),ixs_new(3,:),1)];
+
+
+% %old method
+% ixs_old = round(coord(1:3, :));
+% coord=zeros(3,size(coord,2));
+% for i = 1:3
+% coord(i,:)=ynii.dat(sub2ind(size(ynii.dat),ixs_old(1,:)',ixs_old(2,:)',ixs_old(3,:)',ones(size(ixs_old,2),1),repmat(i,size(ixs_old,2),1)));
+% end
+  

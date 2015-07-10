@@ -4,15 +4,19 @@ function version=ea_getvsn(com)
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
-
+ldir=[fileparts(which('lead')),filesep];
 switch com
     
     case 'web'
         try
-        urlwrite('http://www.lead-dbs.org/release/.version.txt','.webversion.txt','Timeout',5);
-        load('.webversion.txt');
-        delete('.webversion.txt');
-        version=X_webversion;
+        urlwrite('http://www.lead-dbs.org/release/.version.txt',[ldir,'.webversion.txt'],'Timeout',5);
+        load([ldir,'.webversion.txt']);
+        delete([ldir,'.webversion.txt']);
+        try
+            version=X_webversion;
+        catch
+            version=webversion;
+        end
         catch
             version=[nan;nan];
         end
