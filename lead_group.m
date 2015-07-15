@@ -431,118 +431,36 @@ function addvarbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
-
-% get user input
-prompt = {'Enter title for comparison:','Enter variable name:'};
-cvarst = inputdlg(prompt,'Enter Regression variable name',[1]);
-
-if isempty(cvarst)
-    return
+M.ui.clinicallist=length(M.clinical.labels)+1;
+[numat,nuvar]=ea_get_clinical(M);
+if ~isempty(numat) % user did not press cancel
+    M.clinical.vars{end+1}=numat;
+    M.clinical.labels{end+1}=nuvar;
 end
-
-
-% initialize regression variable rVar.
-%rVar{1}=zeros(length(M.patient.list),1);
-
-
-
-
-
-%cvar=get_matrix([length(M.patient.list),8]);
-
-% store in model as variables
-%M.clinical.vars{end+1}=get_matrix(M,rVar);
-try
-    M.clinical.vars{end+1}=evalin('base',cvarst{2});
-catch
-    error([cvarst{2},' could not be evaluated. Please assign variable in Matlab first.']);
-end
-M.clinical.labels{end+1}=cvarst{1};
-
+set(handles.clinicallist,'Value',M.ui.clinicallist);
 % store model and refresh UI
 setappdata(gcf,'M',M);
 
 refreshvifc(handles);
 
 
-function mat=get_matrix(M,rVar)
-
-
-for pt=1:length(M.patient.list)
-    [~,ptname]=fileparts(M.patient.list{pt});
-    
-    properties(pt) =    PropertyGridField(['double',num2str(pt)], rVar(pt,:), ...
-        'Type', PropertyType('denserealdouble', 'matrix'), ...
-        'Category', 'Values', ...
-        'DisplayName', ptname, ...
-        'Description', 'Double Matrix.');
-    
+function [mat,matname]=ea_get_clinical(M)
+try
+mat=M.clinical.vars{M.ui.clinicallist};
+catch % new variable
+    mat=[];
 end
-
-
-% arrange flat list into a hierarchy based on qualified names
-properties = properties.GetHierarchy();
-
-% create figure
-f = figure( ...
-    'MenuBar', 'none', ...
-    'Name', 'Please enter stimulation parameters for the group.', ...
-    'NumberTitle', 'off', ...
-    'Toolbar', 'none');
-
-% procedural usage
-rVar = PropertyGrid(f, ...            % add property pane to figure
-    'Properties', properties,'Position', [0 0 1 1]);     % set properties explicitly;
-% gI{1} = PropertyGrid(f, ...            % add property pane to figure
-%     'Properties', Irproperties,'Position', [0.5 0 0.25 1]);     % set properties explicitly;
-% gI{2} = PropertyGrid(f, ...            % add property pane to figure
-%     'Properties', Ilproperties,'Position', [0.75 0 0.25 1]);     % set properties explicitly;
-%
-
-% declarative usage, bind object to grid
-obj = SampleObject;  % a value object
-
-% update the type of a property assigned with type autodiscovery
-%userproperties = PropertyGridField.GenerateFrom(obj);
-%userproperties.FindByName('IntegerMatrix').Type = PropertyType('denserealdouble', 'matrix');
-%disp(userproperties.FindByName('IntegerMatrix').Type);
-
-% wait for figure to close
-uiwait(f);
-
-%disp(gUr.GetPropertyValues());
-
-% initialize variable
-switch length(rVar.Properties(1).Value)
-    case 1 % "clinical" vector
-        mat=nan(length(M.patient.list),1);
-        mtype='mat';
-    case size(M.elstruct(1).coords_mm{1},1)*2 % one for each electrode
-        mat=cell(1,2);
-        mtype='concell';
-    case (size(M.elstruct(1).coords_mm{1},1)-1)*2 % one for each electrode pair
-        mat=cell(1,2);
-        mtype='paircell';
-    otherwise
-        error('Cannot resolve vector. Please specify an Nx1, Nx(Numel*2) or Nx(Numel-1)*2 matrix, where N is the number of patients and Numel is the Number of electrode contacts.');
+try
+    matname=M.clinical.labels{M.ui.clinicallist};
+catch
+    matname='New variable';
 end
-for row=1:length(M.patient.list)
-    switch mtype
-        case 'mat'
-            
-            mat(row)=rVar.Properties(row).Value;
-            
-        case 'concell'
-            mat{1}(row,:)=rVar.Properties(row).Value(1:size(M.elstruct(1).coords_mm{1},1));
-            mat{2}(row,:)=rVar.Properties(row).Value(size(M.elstruct(1).coords_mm{1},1)+1:size(M.elstruct(1).coords_mm{1},1)*2);
-        case 'paircell'
-            mat{1}(row,:)=rVar.Properties(row).Value(1:size(M.elstruct(1).coords_mm{1},1)-1);
-            mat{2}(row,:)=rVar.Properties(row).Value(size(M.elstruct(1).coords_mm{1},1):(size(M.elstruct(1).coords_mm{1},1)-1)*2);
-            
-    end
+[numat,nuname]=ea_edit_regressor(M);
+
+if ~isempty(numat); % user did not press cancel
+    mat=numat;
+    matname=nuname;
 end
-
-
 
 % --- Executes on button press in removevarbutton.
 function removevarbutton_Callback(hObject, eventdata, handles)
@@ -550,8 +468,6 @@ function removevarbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
-
-
 
 % delete data
 M.clinical.vars(get(handles.clinicallist,'Value'))=[];
@@ -1228,11 +1144,10 @@ function reviewvarbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 
-
 % store in model as variables
 
-M.clinical.vars{get(handles.clinicallist,'Value')}(isnan(M.clinical.vars{get(handles.clinicallist,'Value')}))=0;
-M.clinical.vars{get(handles.clinicallist,'Value')}=get_matrix(M,M.clinical.vars{get(handles.clinicallist,'Value')});
+%M.clinical.vars{get(handles.clinicallist,'Value')}(isnan(M.clinical.vars{get(handles.clinicallist,'Value')}))=0;
+[M.clinical.vars{get(handles.clinicallist,'Value')},M.clinical.labels{get(handles.clinicallist,'Value')}]=ea_get_clinical(M);
 
 
 % store model and refresh UI
@@ -2293,6 +2208,14 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
     save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
     disp('Done.');
 end
+
+
+% export isovolume
+if options.d3.exportisovolume || options.d3.showisovolume % export to nifti volume
+    ea_exportisovolume(M.elstruct(get(handles.patientlist,'Value')),options);
+end
+
+
 
 cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));
 

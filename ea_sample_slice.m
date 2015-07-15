@@ -1,4 +1,16 @@
 function [slice,boundbox,boundboxmm]=ea_sample_slice(vol,tracor,wsize,voxmm,coords,el)
+
+% function samples a slice from nifti image based on coordinates and the
+% wsize parameter (will use coordinate and sample a square that is 2xwsize
+% long in distances). wsize can be given as mm or voxel distande (defined
+% by voxmm parameter being either 'mm' or 'vox').
+% Define parameter vol as spm volume (see spm_vol), define tracor as either
+% 'tra', 'cor' or 'sag' for sampling direction. define coords as a set of
+% points and el defining the point that is being sampled.
+% __________________________________________________________________________________
+% Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
+
 interpfactor=2;
 
 if strcmp(voxmm,'mm');
@@ -33,18 +45,15 @@ switch tracor
         [cmesh.X,cmesh.Z]=meshgrid(boundbox{1},boundbox{3});
         cmesh.Y=repmat(boundbox{2}(1),numel(cmesh.X),1);
         ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
-        
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
         %slice=fliplr(slice);  
     case 'sag'
         boundbox{2}=coords(el,2)-wsize:1/interpfactor:coords(el,2)+wsize;
         boundbox{3}=coords(el,3)-wsize:1/interpfactor:coords(el,3)+wsize;
                 boundbox{1}=repmat(coords(el,1),1,length(boundbox{2}));
-
         [cmesh.Y,cmesh.Z]=meshgrid(boundbox{2},boundbox{3});
         cmesh.X=repmat(boundbox{1}(1),numel(cmesh.Y),1);
         ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
-        
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
         %slice=fliplr(slice); 
 end

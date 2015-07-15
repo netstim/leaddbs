@@ -17,20 +17,20 @@ disp('Exporting 2D slice output...');
 
 options=varargin{1};
 if nargin==1
-% load prior results
-try
-    load([options.root,options.patientname,filesep,'ea_reconstruction']);
-    ave_coords_mm=coords_mm;
-    clear coords_mm
-    elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
-catch
-    ave_coords_mm=ea_read_fiducials([options.root,options.patientname,filesep,'ea_coords.fcsv'],options);
-    elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
-end
+    % load prior results
+    try
+        load([options.root,options.patientname,filesep,'ea_reconstruction']);
+        ave_coords_mm=coords_mm;
+        clear coords_mm
+        elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
+    catch
+        ave_coords_mm=ea_read_fiducials([options.root,options.patientname,filesep,'ea_coords.fcsv'],options);
+        elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
+    end
 elseif nargin==2 % elstruct has been supplied, this is a group visualization
     elstruct=varargin{2};
     % average coords_mm for image slicing
-    ave_coords_mm=ea_ave_elstruct(elstruct); 
+    ave_coords_mm=ea_ave_elstruct(elstruct);
 end
 
 if strcmp(options.prefs.d2.useprepost,'pre') % use preoperative images, overwrite filenames to preoperative version
@@ -45,7 +45,7 @@ end
 scrsz = get(0,'ScreenSize');
 
 
-cuts=figure('name',[options.patientname,': 2D cut views'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2]);
+cuts=figure('name',[options.patientname,': 2D cut views (figure is being saved)...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2]);
 axis off
 set(gcf,'color','w');
 tracorpresent=zeros(3,1); % check if files are present.
@@ -96,9 +96,9 @@ end
 
 
 for side=1:length(ave_coords_mm)
-
-coords{side}=Vtra.mat\[ave_coords_mm{side},ones(size(ave_coords_mm{side},1),1)]';
-coords{side}=coords{side}(1:3,:)';
+    
+    coords{side}=Vtra.mat\[ave_coords_mm{side},ones(size(ave_coords_mm{side},1),1)]';
+    coords{side}=coords{side}(1:3,:)';
 end
 %XYZ_src_vx = src.mat \ XYZ_mm;
 
@@ -108,11 +108,12 @@ for side=options.sides
     for tracor=find(tracorpresent)'
         
         for elcnt=1:options.elspec.numel
+            
             el=elcnt+options.elspec.numel*(side-1);
             %subplot(2,2,el);
             
             % Show MR-volume
-                            set(0,'CurrentFigure',cuts)
+            set(0,'CurrentFigure',cuts)
             colormap gray
             switch tracor
                 
@@ -122,6 +123,7 @@ for side=options.sides
                     secdim=2;
                     planedim=3;
                     dstring='tra';
+                    lstring='z = ';
                     V=Vtra;
                     
                 case 2 % coronar images
@@ -130,6 +132,7 @@ for side=options.sides
                     secdim=3;
                     planedim=2;
                     dstring='cor';
+                    lstring='y = ';
                     V=Vcor;
                     
                 case 3 % saggital images
@@ -138,6 +141,7 @@ for side=options.sides
                     secdim=3;
                     planedim=1;
                     dstring='sag';
+                    lstring='x = ';
                     V=Vsag;
                     
             end
@@ -145,7 +149,7 @@ for side=options.sides
             %title(['Electrode ',num2str(el-1),', transversal view.']);
             
             [slice,~,boundboxmm]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
-                set(0,'CurrentFigure',cuts)
+            set(0,'CurrentFigure',cuts)
             try
                 hi=imagesc(slice,...
                     [ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
@@ -158,7 +162,7 @@ for side=options.sides
             axis square
             hold on
             
-        
+            
             
             % Show overlays
             
@@ -168,32 +172,85 @@ for side=options.sides
             end
             
             
+            % Show isovolume
+            
+            if options.d3.showisovolume
+                
+                Viso=spm_vol([options.root,options.patientname,filesep,options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_combined.nii']);
+                for siso=1:length(ave_coords_mm)
+                    coordsi{siso}=Viso.mat\[ave_coords_mm{siso},ones(size(ave_coords_mm{siso},1),1)]';
+                    coordsi{siso}=coordsi{siso}(1:3,:)';
+                end
+                [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
+                slice(slice==0)=nan;
+                
+                % define an alpha mask
+                alpha=slice;
+                alpha(~isnan(alpha))=0.5;
+                alpha(isnan(alpha))=0;
+                % convert slice to rgb format
+                %slicergb=nan([size(slice),3]);
+                jetlist=eval(options.prefs.d2.isovolcolormap);
+                slice=(slice+abs(nanmin(slice(:))))/(nanmax(slice(:))+abs(nanmin(slice(:)))); % set min max to boundaries 0-1.
+                slice=round(slice.*63)+1; % set min max to boundaries 1-64.
+                slicer=slice; sliceg=slice; sliceb=slice;
+                slicer(~isnan(slicer))=jetlist(slicer(~isnan(slicer)),1);
+                sliceg(~isnan(sliceg))=jetlist(sliceg(~isnan(sliceg)),2);
+                sliceb(~isnan(sliceb))=jetlist(sliceb(~isnan(sliceb)),3);
+                slicergb=cat(3,slicer,sliceg,sliceb);
+                isv=imagesc(slicergb);
+                set(isv,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
+                set(isv,'AlphaData',alpha);
+            end
+            
+            
             
             % Show coordinates
-
-                if length(elstruct)>1
-                    cmap=ea_nice_colors(length(elstruct),[0,0,0]);
-                    ptnames=struct2cell(elstruct);
-                    ptnames=squeeze(ptnames(end,1,:))';
-                else
-                    cmap=[0.9,0.9,0.9];
+            
+            if length(elstruct)>1
+                cmap=ea_nice_colors(length(elstruct),[0,0,0]);
+                ptnames=struct2cell(elstruct);
+                ptnames=squeeze(ptnames(end,1,:))';
+            else
+                cmap=[0.9,0.9,0.9];
+            end
+            
+            % 1. Plot stars
+            
+            for c=1:length(elstruct)
+                
+                
+                % prepare active/passive contacts
+                if ~isfield(elstruct(c),'elmodel') % usually, elspec is defined by the GUI. In case of group analyses, for each patient, a different electrode model can be selected for rendering.
+                    elspec=options.elspec;
+                else % if elspec is defined for each electrode, overwrite options-struct settings here.
+                    o=ea_resolve_elspec(elstruct(c));
+                    elspec=o.elspec; clear o
                 end
-                    
-                % 1. Plot stars
-                for c=1:length(elstruct)
+                
+                elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
+                
+                if (elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts)
                     elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',cmap(c,:),'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
                 end
-                
-                
-                
-                % Plot L, R and sizelegend
-                text(addsubsigned(min(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'L','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
-                text(addsubsigned(max(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'R','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
-                
-                plot([addsubsigned(mean(boundboxmm{onedim}),2.5,'minus'),addsubsigned(mean(boundboxmm{onedim}),2.5,'plus')],[addsubsigned(min(boundboxmm{secdim}),1,'minus'),addsubsigned(min(boundboxmm{secdim}),1,'minus')],'-w');
-                text(mean(boundboxmm{onedim}),addsubsigned(min(boundboxmm{secdim}),2,'minus'),'5 mm','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
-
-                % 2. Plot legend
+            end
+            
+            
+            
+            % Plot L, R and sizelegend
+            text(addsubsigned(min(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'L','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
+            text(addsubsigned(max(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'R','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
+            
+            plot([addsubsigned(mean(boundboxmm{onedim}),2.5,'minus'),addsubsigned(mean(boundboxmm{onedim}),2.5,'plus')],[addsubsigned(min(boundboxmm{secdim}),1,'minus'),addsubsigned(min(boundboxmm{secdim}),1,'minus')],'-w');
+            text(mean(boundboxmm{onedim}),addsubsigned(min(boundboxmm{secdim}),2,'minus'),'5 mm','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
+            
+            % Plot slice depth legend
+            
+            text(mean(boundboxmm{onedim}),addsubsigned(max(boundboxmm{secdim}),2,'minus'),[lstring,sprintf('%.2f',mean(boundboxmm{onedim})),' mm'],'color','w','HorizontalAlignment','center','VerticalAlignment','middle');
+            
+            
+            % 2. Plot legend
+            if exist('elplt','var') %&& options.d2.drawlegend % if not stars have been plottet, no legend is needed.
                 if exist('ptnames','var')
                     if numel(elplt)>5
                         cols=round(sqrt(numel(elplt(:))));
@@ -201,30 +258,32 @@ for side=options.sides
                         ea_columnlegend(cols,elplt,ptnames,'Location','Middle');
                     else
                         legend(elplt,ptnames,'Location','southoutside','Orientation','Horizontal','FontSize',9,'FontWeight','bold');
-                    end
-                    legend('boxoff');
-                end
-                axis xy
-                axis off
-                drawnow % this is needed here to set alpha below.
-                % 3. Dampen alpha by distance (this *has* to be performed
-                % last, if not, info is erased by legend again).
-                try % not sure if this is supported by earlier ML versions.
-                    for c=1:length(elstruct)
-                        
-                        dist=abs(diff([elstruct(c).coords_mm{side}(elcnt,planedim),ave_coords_mm{side}(elcnt,planedim)]));
-                        % dampen alpha by distance
-                        alp=2*1/exp(dist);
-                        hMarker = elplt(c).MarkerHandle;
-                        hMarker.EdgeColorData=uint8(255*[cmap(c,:)';alp]);
+                        en
+                        legend('boxoff');
                     end
                 end
-                
-                
+            axis xy
+            axis off
+            drawnow % this is needed here to set alpha below.
+            
+            % 3. Dampen alpha by distance (this *has* to be performed
+            % last, if not, info is erased by legend again).
+            try % not sure if this is supported by earlier ML versions.
+                for c=1:length(elstruct)
+                    
+                    dist=abs(diff([elstruct(c).coords_mm{side}(elcnt,planedim),ave_coords_mm{side}(elcnt,planedim)]));
+                    % dampen alpha by distance
+                    alp=2*1/exp(dist);
+                    hMarker = elplt(c).MarkerHandle;
+                    hMarker.EdgeColorData=uint8(255*[cmap(c,:)';alp]);
+                end
+            end
+            
+            
             
             hold off
             
-
+            
             set(gca,'LooseInset',get(gca,'TightInset'))
             % Save results
             set(cuts,'visible','on');
@@ -252,16 +311,16 @@ if nargin==2
     x=varargin{1};
     dim=varargin{2};
 elseif nargin==1
-x=varargin{1};
+    x=varargin{1};
     dim=1;
 end
-    
+
 N = sum(~isnan(x), dim);
 y = nansum(x, dim) ./ N;
 
 function ea_screenshot(outn)
 
-set(gcf, 'Color', [1,1,1]); 
+set(gcf, 'Color', [1,1,1]);
 [~, cdata] = myaa_hd([4, 2]);
 
 imwrite(cdata, outn, 'png');
@@ -275,17 +334,17 @@ function [varargout] = myaa_hd(varargin)
 % This function has been slightly modified for export use in LEAD-DBS.
 % Copyright (c) 2009, Anders Brun
 % All rights reserved.
-% 
+%
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are
 % met:
-% 
+%
 %     * Redistributions of source code must retain the above copyright
 %       notice, this list of conditions and the following disclaimer.
 %     * Redistributions in binary form must reproduce the above copyright
 %       notice, this list of conditions and the following disclaimer in
 %       the documentation and/or other materials provided with the distribution
-% 
+%
 % THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 % AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 % IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -307,14 +366,14 @@ function [varargout] = myaa_hd(varargin)
 %           anders@cb.uu.se
 %
 
-%% Force drawing of graphics 
+%% Force drawing of graphics
 drawnow;
 
 %% Find out about the current DPI...
 screen_DPI = get(0,'ScreenPixelsPerInch');
 
 %% Determine the best choice of convolver.
-% If IPPL is available, imfilter is much faster. Otherwise it does not 
+% If IPPL is available, imfilter is much faster. Otherwise it does not
 % matter too much.
 try
     if ippl()
@@ -402,7 +461,7 @@ w = warning;
 warning off;
 if strcmp(self.aamethod,'standard') || strcmp(self.aamethod,'noshrink')
     % Subsample hires figure image with standard anti-aliasing using a
-    % butterworth filter    
+    % butterworth filter
     kk = lpfilter(self.K(2)*3,self.K(2)*0.9,2);
     mm = myconv(ones(size(self.raw_hires(:,:,1))),kk,'same');
     a1 = max(min(myconv(single(self.raw_hires(:,:,1))/(256),kk,'same'),1),0)./mm;
@@ -437,7 +496,7 @@ if strcmp(self.figmode,'figure');
     pos = [oldpos(1:2) sz(2:-1:1)];
     set(fig,'Position',pos);
     ax = axes;
-    hi = image(raw_lowres); 
+    hi = image(raw_lowres);
     set(ax,'Units','pixels');
     set(ax,'Position',[1 1 sz(2) sz(1)]);
     axis off;
@@ -460,7 +519,7 @@ elseif strcmp(self.figmode,'publish');
 elseif strcmp(self.figmode,'update');
     fig = self.myaa_figure;
     figure(fig);
-    clf;    
+    clf;
     set(fig,'Menubar','none');
     set(fig,'Resize','off');
     sz = size(raw_lowres);
@@ -484,7 +543,7 @@ elseif strcmp(self.figmode,'lazyupdate');
     hi=image(raw_lowres);
     set(ax,'Units','pixels');
     set(ax,'Position',[1 1 sz(2) sz(1)]);
-    axis off;    
+    axis off;
 end
 
 %% Store current state
@@ -496,10 +555,10 @@ set(gcf,'Interruptible','off');
 %% Avoid unnecessary console output
 if nargout == 1
     varargout(1) = {fig};
-elseif nargout == 2 
-varargout(1) = {fig}; 
-varargout(2) = {get(hi, 'CData')};
-close(self.myaa_figure);
+elseif nargout == 2
+    varargout(1) = {fig};
+    varargout(2) = {get(hi, 'CData')};
+    close(self.myaa_figure);
 end
 
 %% A simple lowpass filter kernel (Butterworth).
@@ -524,7 +583,7 @@ recognized = 0;
 self = get(gcf,'userdata');
 
 if evnt.Character == '+'
-    self.K(2) = max(self.K(2).*0.5^(1/2),1);    
+    self.K(2) = max(self.K(2).*0.5^(1/2),1);
     recognized = 1;
     set(gcf,'userdata',self);
     myaa('lazyupdate');
@@ -536,8 +595,8 @@ elseif evnt.Character == '-'
 elseif evnt.Character == ' ' || evnt.Character == 'r' || evnt.Character == 'R'
     set(gcf,'userdata',self);
     myaa('update');
-elseif evnt.Character == 'q' 
-    close(gcf); 
+elseif evnt.Character == 'q'
+    close(gcf);
 elseif find('123456789' == evnt.Character)
     self.K = [str2double(evnt.Character) str2double(evnt.Character)];
     set(gcf,'userdata',self);
@@ -579,4 +638,16 @@ switch command
             val=val+add;
         end
 end
-        
+
+
+function elstruct=testifactivecontacts(elstruct,elspec,c)
+
+if ~isfield(elstruct(c),'activecontacts')
+    elstruct(c).activecontacts{1}=zeros(elspec.numel,1);
+    elstruct(c).activecontacts{2}=zeros(elspec.numel,1);
+else
+    if isempty(elstruct(c).activecontacts)
+        elstruct(c).activecontacts{1}=zeros(elspec.numel,1);
+        elstruct(c).activecontacts{2}=zeros(elspec.numel,1);
+    end
+end

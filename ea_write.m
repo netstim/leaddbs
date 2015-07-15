@@ -21,7 +21,6 @@ end
 
 
 
-
 % Slice 2D Visualization
 if options.d2.write
     
