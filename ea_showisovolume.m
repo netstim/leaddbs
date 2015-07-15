@@ -84,10 +84,7 @@ for side=options.sides
         
     end
     
-    if options.d3.exportisovolume % export to nifti volume
-        ea_exportisovolume(elstruct,options);
-    end
-    
+        ea_exportisovolume(elstruct,options);    
     patchbutton(side)=uitoggletool(ht,'CData',ea_get_icn('isovolume',options),'TooltipString','Isovolume','OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
     
 end

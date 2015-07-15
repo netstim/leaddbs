@@ -176,7 +176,7 @@ for side=options.sides
             
             if options.d3.showisovolume
                 
-                Viso=spm_vol([options.root,options.patientname,filesep,options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_combined.nii']);
+                Viso=spm_vol([options.root,options.patientname,filesep,options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
                 for siso=1:length(ave_coords_mm)
                     coordsi{siso}=Viso.mat\[ave_coords_mm{siso},ones(size(ave_coords_mm{siso},1),1)]';
                     coordsi{siso}=coordsi{siso}(1:3,:)';
@@ -238,19 +238,19 @@ for side=options.sides
             
             
             % Plot L, R and sizelegend
-            text(addsubsigned(min(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'L','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
-            text(addsubsigned(max(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'R','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
+            text(addsubsigned(min(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'L','color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
+            text(addsubsigned(max(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'R','color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
             
             plot([addsubsigned(mean(boundboxmm{onedim}),2.5,'minus'),addsubsigned(mean(boundboxmm{onedim}),2.5,'plus')],[addsubsigned(min(boundboxmm{secdim}),1,'minus'),addsubsigned(min(boundboxmm{secdim}),1,'minus')],'-w');
-            text(mean(boundboxmm{onedim}),addsubsigned(min(boundboxmm{secdim}),2,'minus'),'5 mm','color','w','HorizontalAlignment','center','VerticalAlignment','middle');
+            text(mean(boundboxmm{onedim}),addsubsigned(min(boundboxmm{secdim}),2,'minus'),'5 mm','color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
             
             % Plot slice depth legend
             
-            text(mean(boundboxmm{onedim}),addsubsigned(max(boundboxmm{secdim}),2,'minus'),[lstring,sprintf('%.2f',mean(boundboxmm{onedim})),' mm'],'color','w','HorizontalAlignment','center','VerticalAlignment','middle');
+            text(mean(boundboxmm{onedim}),addsubsigned(max(boundboxmm{secdim}),2,'minus'),[lstring,sprintf('%.2f',mean(boundboxmm{onedim})),' mm'],'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
             
             
             % 2. Plot legend
-            if exist('elplt','var') %&& options.d2.drawlegend % if not stars have been plottet, no legend is needed.
+            if exist('elplt','var') && options.d2.showlegend % if no stars have been plottet, no legend is needed.
                 if exist('ptnames','var')
                     if numel(elplt)>5
                         cols=round(sqrt(numel(elplt(:))));
@@ -262,6 +262,7 @@ for side=options.sides
                         legend('boxoff');
                     end
                 end
+            end
             axis xy
             axis off
             drawnow % this is needed here to set alpha below.
@@ -287,14 +288,19 @@ for side=options.sides
             set(gca,'LooseInset',get(gca,'TightInset'))
             % Save results
             set(cuts,'visible','on');
+            if options.d3.showisovolume
+            isofnadd=[options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb];
+            else
+                isofnadd='';
+            end
             switch tracor
                 case 1
                     %saveas(cuts,[options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial.png']);
-                    ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial.png']);
+                    ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial',isofnadd,'.png']);
                 case 2
-                    ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_coronar.png']);
+                    ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_coronar',isofnadd,'.png']);
                 case 3
-                    ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_saggital.png']);
+                    ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_saggital',isofnadd,'.png']);
             end
         end
     end

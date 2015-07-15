@@ -176,6 +176,17 @@ end
 
 
 
+if nargin
+switch vargarin{1}
+    case 'loadsubs'
+   keyboard     
+        
+end
+   
+   
+end
+
+
 ea_firstrun(handles);
 getui(handles);
 

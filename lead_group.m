@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 27-May-2015 12:37:46
+% Last Modified by GUIDE v2.5 15-Jul-2015 14:23:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -175,7 +175,6 @@ set(handles.versiontxt,'String',['v ',num2str(vnum(1))]);
 
 set(handles.patientlist,'Max',100,'Min',0);
 set(handles.grouplist,'Max',100,'Min',0);
-set(handles.analysislist,'Max',100,'Min',0);
 set(handles.vilist,'Max',100,'Min',0);
 set(handles.fclist,'Max',100,'Min',0);
 set(handles.clinicallist,'Max',100,'Min',0);
@@ -215,7 +214,6 @@ M=getappdata(gcf,'M');
 
 M.ui.listselect=get(handles.patientlist,'Value');
 set(handles.grouplist,'Value',M.ui.listselect);
-set(handles.analysislist,'Value',M.ui.listselect);
 
 setappdata(gcf,'M',M);
 refreshvifc(handles);
@@ -245,7 +243,6 @@ M=getappdata(gcf,'M');
 folders=ea_uigetdir('/','Select Patient folders..');
 M.patient.list=[M.patient.list;folders'];
 M.patient.group=[M.patient.group;ones(length(folders),1)];
-M.patient.analysis=[M.patient.analysis;zeros(length(folders),1)];
 
 setappdata(gcf,'M',M);
 refreshvifc(handles);
@@ -269,7 +266,6 @@ deleteentry=get(handles.patientlist,'Value');
 M.patient.list(deleteentry)=[];
 
 M.patient.group(deleteentry)=[];
-M.patient.analysis(deleteentry)=[];
 
 try M.elstruct(deleteentry)=[];
     M.stimparams(deleteentry)=[]; end
@@ -324,7 +320,6 @@ try options.d3.isomatrix_name=M.isomatrix_name; end
 options.d3.isovscloud=M.ui.isovscloudpopup;
 options.d3.showisovolume=M.ui.showisovolumecheck;
 
-options.d3.exportisovolume=M.ui.exportisovolumecheck;
 options.d3.colorpointcloud=M.ui.colorpointcloudcheck;
 options.normregressor=M.ui.normregpopup;
 
@@ -603,9 +598,7 @@ if length(get(handles.patientlist,'String'))<max(M.ui.listselect)
 end
 try set(handles.grouplist,'Value',M.ui.listselect);  end
 
-% refresh analysis list
-set(handles.analysislist,'String',M.patient.analysis);
-try set(handles.analysislist,'Value',M.ui.listselect); end
+
 
 % refresh patient list
 set(handles.patientlist,'String',M.patient.list);
@@ -680,6 +673,7 @@ if isfield(M.ui,'bbsize');    set(handles.bbsize,'String',M.ui.bbsize); end
 if isfield(M.ui,'tdcolorscheck');    set(handles.tdcolorscheck,'Value',M.ui.tdcolorscheck); end
 if isfield(M.ui,'tdcontourcheck');    set(handles.tdcontourcheck,'Value',M.ui.tdcontourcheck); end
 if isfield(M.ui,'tdlabelcheck');    set(handles.tdlabelcheck,'Value',M.ui.tdlabelcheck); end
+if isfield(M.ui,'tdlegendcheck');    set(handles.tdlegendcheck,'Value',M.ui.tdlegendcheck); end
 if isfield(M.ui,'tdcontourcolor');    setappdata(handles.tdcontourcolor,'color',M.ui.tdcontourcolor); end
 
 
@@ -711,9 +705,6 @@ try set(handles.showactivecontcheck,'Value',M.ui.showactivecontcheck); end
 try set(handles.showpassivecontcheck,'Value',M.ui.showpassivecontcheck); end
 try set(handles.highlightactivecontcheck,'Value',M.ui.hlactivecontcheck); end
 try set(handles.showisovolumecheck,'Value',M.ui.showisovolumecheck); end
-try set(handles.exportisovolumecheck,'Value',M.ui.exportisovolumecheck); end
-try set(handles.savefigscheck,'Value',M.ui.savefigscheck); end
-try set(handles.removepriorstatscheck,'Value',M.ui.removepriorstatscheck); end
 try set(handles.statvatcheck,'Value',M.ui.statvat); end
 try set(handles.colorpointcloudcheck,'Value',M.ui.colorpointcloudcheck); end
 try set(handles.lc_smooth,'Value',M.ui.lc.smooth); end
@@ -819,7 +810,7 @@ if ~isempty(M.patient.list)
         
         if ~isempty(priorvilist) && ~isequal(priorvilist,M.vilist)
             
-            warning('Trying to analyse inhomogeneous patient group. Please re-run single subject lead analysis with patients using always the same atlas set.');
+            warning('Patient stats are inhomogeneous. Please re-run group analysis (Section Prepare DBS stats).');
         end
         
         
@@ -880,7 +871,6 @@ M=getappdata(gcf,'M');
 M.ui.listselect=get(handles.grouplist,'Value');
 
 set(handles.patientlist,'Value',M.ui.listselect);
-set(handles.analysislist,'Value',M.ui.listselect);
 
 setappdata(gcf,'M',M);
 refreshvifc(handles);
@@ -990,7 +980,7 @@ nvicorr_right=zeros(howmanypts,howmanyvis); nvicorr_left=zeros(howmanypts,howman
 vc_labels={};
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
-        usewhichstim=length(M.stats(pt).ea_stats.stimulation)+M.patient.analysis(pt);
+        usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis!
         for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,1)
             for vat=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,2);
                 if side==1 % right hemisphere
@@ -1035,7 +1025,7 @@ nfccorr_both=zeros(howmanypts,howmanyfcs);
 fc_labels={};
 for fc=get(handles.fclist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
-        usewhichstim=length(M.stats(pt).ea_stats.stimulation)+M.patient.analysis(pt);
+        usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis!
         fccorr_right(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).fibercounts{1}(fc);
         nfccorr_right(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).nfibercounts{1}(fc);
         fccorr_left(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).fibercounts{1}(fc);
@@ -1083,58 +1073,10 @@ stats.fc_labels=fc_labels;
 
 
 
-% --- Executes on selection change in analysislist.
-function analysislist_Callback(hObject, eventdata, handles)
-% hObject    handle to analysislist (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns analysislist contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from analysislist
-M=getappdata(gcf,'M');
-
-M.ui.listselect=get(handles.analysislist,'Value');
-
-set(handles.patientlist,'Value',M.ui.listselect);
-set(handles.grouplist,'Value',M.ui.listselect);
-
-setappdata(gcf,'M',M);
-refreshvifc(handles);
-
-% --- Executes during object creation, after setting all properties.
-function analysislist_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to analysislist (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
-% --- Executes on button press in plusanalysisbutton.
-function plusanalysisbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to plusanalysisbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-M=getappdata(gcf,'M');
-if M.patient.analysis(get(handles.patientlist,'Value'))<0
-    M.patient.analysis(get(handles.patientlist,'Value'))=M.patient.analysis(get(handles.patientlist,'Value'))+1;
-end
-setappdata(gcf,'M',M);
-refreshvifc(handles);
 
-% --- Executes on button press in minusanalysisbutton.
-function minusanalysisbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to minusanalysisbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-M=getappdata(gcf,'M');
-M.patient.analysis(get(handles.patientlist,'Value'))=M.patient.analysis(get(handles.patientlist,'Value'))-1;
-setappdata(gcf,'M',M);
-refreshvifc(handles);
+
 
 
 % --- Executes on button press in reviewvarbutton.
@@ -1173,7 +1115,6 @@ ix(whichmoved-1)=ix(whichmoved-1)+1;
 
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
-M.patient.analysis=M.patient.analysis(ix);
 try
     M=rmfield(M,'stats');
 end
@@ -1203,7 +1144,6 @@ ix(whichmoved+1)=ix(whichmoved+1)-1;
 
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
-M.patient.analysis=M.patient.analysis(ix);
 try
     M=rmfield(M,'stats');
 end
@@ -1265,7 +1205,6 @@ for pt=1:length(M.patient.list)
     
     options.d3.isovscloud=M.ui.isovscloudpopup;
     options.d3.showisovolume=M.ui.showisovolumecheck;
-    options.d3.exportisovolume=M.ui.exportisovolumecheck;
     
     options.expstatvat.do=M.ui.statvat;
     try
@@ -1306,9 +1245,7 @@ for pt=1:length(M.patient.list)
         end
     end
     
-    if get(handles.removepriorstatscheck,'Value')
         delete([options.root,options.patientname,filesep,'ea_stats.mat']);
-    end
     
     % Step 1: Re-calculate closeness to subcortical atlases.
     resultfig=ea_render_view(options);
@@ -1321,10 +1258,6 @@ for pt=1:length(M.patient.list)
     setappdata(resultfig,'stimparams',M.stimparams(pt,:));
     ea_showfibres_volume(resultfig,options);
     
-    if get(handles.savefigscheck,'Value')
-        set(resultfig,'visible','on');
-        saveas(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig']);
-    end
     close(resultfig);
     
     if processlocal % gather stats and recos to M
@@ -1492,29 +1425,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in savefigscheck.
-function savefigscheck_Callback(hObject, eventdata, handles)
-% hObject    handle to savefigscheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of savefigscheck
-M=getappdata(gcf,'M');
-M.ui.savefigscheck=get(handles.savefigscheck,'Value');
-setappdata(gcf,'M',M);
-refreshvifc(handles);
-
-% --- Executes on button press in removepriorstatscheck.
-function removepriorstatscheck_Callback(hObject, eventdata, handles)
-% hObject    handle to removepriorstatscheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of removepriorstatscheck
-M=getappdata(gcf,'M');
-M.ui.removepriorstatscheck=get(handles.removepriorstatscheck,'Value');
-setappdata(gcf,'M',M);
-refreshvifc(handles);
 
 function options=ea_setopts_local(handles)
 
@@ -1569,7 +1480,8 @@ function opensubgui_Callback(hObject, eventdata, handles)
 % hObject    handle to opensubgui (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-lead;
+M=getappdata(gcf,'M');
+lead('loadsubs',M.patient.list);
 
 
 % --- Executes on button press in choosegroupcolors.
@@ -1594,7 +1506,6 @@ function M=initializeM
 M=struct;
 M.patient.list={};
 M.patient.group=[];
-M.patient.analysis=[];
 
 M.clinical.vars={};
 M.clinical.labels={};
@@ -1607,11 +1518,8 @@ M.ui.clinicallist=1;
 M.ui.hlactivecontcheck=0;
 M.ui.showpassivecontcheck=1;
 M.ui.showactivecontcheck=1;
-M.ui.savefigscheck=0;
 M.ui.showisovolumecheck=0;
-M.ui.exportisovolumecheck=0;
 M.ui.isovscloudpopup=1;
-M.ui.removepriorstatscheck=0;
 M.ui.atlassetpopup=1;
 M.ui.fiberspopup=3;
 M.ui.labelpopup=1;
@@ -1924,18 +1832,7 @@ M.ui.statvat=get(handles.statvatcheck,'Value');
 setappdata(gcf,'M',M);
 
 
-% --- Executes on button press in exportisovolumecheck.
-function exportisovolumecheck_Callback(hObject, eventdata, handles)
-% hObject    handle to exportisovolumecheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of exportisovolumecheck
-M=getappdata(gcf,'M');
-M.ui.exportisovolumecheck=get(handles.exportisovolumecheck,'Value');
-
-setappdata(gcf,'M',M);
-refreshvifc(handles);
 
 
 % --- Executes on button press in stimoldbutn.
@@ -2160,13 +2057,11 @@ try options.d3.isomatrix=M.isomatrix; end
 try options.d3.isomatrix_name=M.isomatrix_name; end
 
 
-
+options.d2.showlegend=M.ui.tdlegendcheck;
 
 
 options.d3.isovscloud=M.ui.isovscloudpopup;
 options.d3.showisovolume=M.ui.showisovolumecheck;
-
-options.d3.exportisovolume=M.ui.exportisovolumecheck;
 options.d3.colorpointcloud=M.ui.colorpointcloudcheck;
 options.normregressor=M.ui.normregpopup;
 
@@ -2211,7 +2106,7 @@ end
 
 
 % export isovolume
-if options.d3.exportisovolume || options.d3.showisovolume % export to nifti volume
+if options.d3.showisovolume % export to nifti volume
     ea_exportisovolume(M.elstruct(get(handles.patientlist,'Value')),options);
 end
 
@@ -2470,3 +2365,16 @@ function ea_smooth(fname)
 [pth,fn,ext]=fileparts(fname);
 
 spm_smooth(fname,[pth,fn,'s',ext],[8 8 8]);
+
+
+% --- Executes on button press in tdlegendcheck.
+function tdlegendcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to tdlegendcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of tdlegendcheck
+M=getappdata(gcf,'M');
+M.ui.tdlegendcheck=get(handles.tdlegendcheck,'Value');
+setappdata(gcf,'M',M);
+refreshvifc(handles);
