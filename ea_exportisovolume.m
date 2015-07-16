@@ -124,10 +124,11 @@ for side=options.sides
         bb(3,:)=[min(XYZ(:,3)),max(XYZ(:,3))];
         clear XI YI ZI
         [XI,YI,ZI]=meshgrid([bb(1,1):bb(1,2)],[bb(2,1):bb(2,2)],[bb(3,1):bb(3,2)]);
-        
+
+        warning('off');
         F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double([V{1};V{2}]));
         F.ExtrapolationMethod='none';
-
+warning('on');
         xixc=bb(1,1):bb(1,2); yixc=bb(2,1):bb(2,2); zixc=bb(3,1):bb(3,2);
         
         niic(xixc,yixc,zixc)=F({xixc,yixc,zixc});

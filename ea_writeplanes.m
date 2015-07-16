@@ -125,7 +125,8 @@ for side=options.sides
                     dstring='tra';
                     lstring='z = ';
                     V=Vtra;
-                    
+                    Ltxt='L';
+                    Rtxt='R';
                 case 2 % coronar images
                     
                     onedim=1;
@@ -134,7 +135,8 @@ for side=options.sides
                     dstring='cor';
                     lstring='y = ';
                     V=Vcor;
-                    
+                    Ltxt='L';
+                    Rtxt='R';
                 case 3 % saggital images
                     
                     onedim=2;
@@ -143,7 +145,8 @@ for side=options.sides
                     dstring='sag';
                     lstring='x = ';
                     V=Vsag;
-                    
+                    Ltxt='A';
+                    Rtxt='P';
             end
             
             %title(['Electrode ',num2str(el-1),', transversal view.']);
@@ -238,10 +241,10 @@ for side=options.sides
             
             
             % Plot L, R and sizelegend
-            text(addsubsigned(min(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'L','color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
-            text(addsubsigned(max(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),'R','color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
+            text(addsubsigned(min(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),Ltxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
+            text(addsubsigned(max(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),Rtxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
             
-            plot([addsubsigned(mean(boundboxmm{onedim}),2.5,'minus'),addsubsigned(mean(boundboxmm{onedim}),2.5,'plus')],[addsubsigned(min(boundboxmm{secdim}),1,'minus'),addsubsigned(min(boundboxmm{secdim}),1,'minus')],'-w');
+            plot([addsubsigned(mean(boundboxmm{onedim}),2.5,'minus'),addsubsigned(mean(boundboxmm{onedim}),2.5,'plus')],[addsubsigned(min(boundboxmm{secdim}),1,'minus'),addsubsigned(min(boundboxmm{secdim}),1,'minus')],'-w','LineWidth',1);
             text(mean(boundboxmm{onedim}),addsubsigned(min(boundboxmm{secdim}),2,'minus'),'5 mm','color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
             
             % Plot slice depth legend
@@ -289,7 +292,7 @@ for side=options.sides
             % Save results
             set(cuts,'visible','on');
             if options.d3.showisovolume
-            isofnadd=[options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb];
+            isofnadd=['_',options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb];
             else
                 isofnadd='';
             end
@@ -657,3 +660,6 @@ else
         elstruct(c).activecontacts{2}=zeros(elspec.numel,1);
     end
 end
+
+function str=sub2space(str) % replaces subscores with spaces
+str(str=='_')=' ';

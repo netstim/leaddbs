@@ -162,7 +162,7 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                         
                         if any(slice(:));
                             centr=mean(xyatlmm(valatl>thresh,:));%ea_centroid(logical(slice));
-                            an=atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1);
+                            an=sub2space(atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1));
                             
                             try
                                 set(0,'CurrentFigure',cuts)
@@ -232,3 +232,5 @@ fslice=zeros(size(slice)+[2,2]);
 fslice(2:end-1,2:end-1)=slice;
 
 
+function str=sub2space(str) % replaces subscores with spaces
+str(str=='_')=' ';
