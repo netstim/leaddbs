@@ -176,7 +176,7 @@ end
 
 
 
-if nargin
+if nargin > 4
 switch vargarin{1}
     case 'loadsubs'
    keyboard     
