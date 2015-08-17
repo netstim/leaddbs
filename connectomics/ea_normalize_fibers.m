@@ -9,8 +9,6 @@ end
 
 vizz=0; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
 
-keyboard
-
 %% check which normalization routine has been used..
 % if dartel was used, we need to coregister c2 of b0 and rc2 of anat (since
 % deformation fields were estimated for the rc* files and not the native
@@ -31,6 +29,35 @@ b0=ea_load_nii([options.root,options.patientname,filesep,options.prefs.b0]);
 ysize=size(b0.img,2)+1;
 
 ftr = load([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized]);
+
+reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii'];
+Vmni=spm_vol(reftemplate);
+    ysize_mni=Vmni(1).dim(2);
+
+% create (unnormalized) trackvis version
+disp('Exporting to TrackVis');
+try
+reftemplate=[options.root,options.patientname,filesep,options.prefs.b0];
+dnii=ea_load_nii(reftemplate);
+niisize=size(dnii.img); % get dimensions of reference template.
+clear dnii
+specs.origin=[0,0,0];
+specs.dim=niisize;
+try
+    H=spm_dicom_headers([root_directory,options.prefs.sampledtidicom]);
+    specs.orientation=H{1,1}.ImageOrientationPatient;
+catch
+    %specs.orientation=[0,1,0,0,0,0];%[0,1,0,-1,0,0];%[1,0,0,0,1,0];
+    specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example trk_write. Try this one.. %[1,0,0,0,1,0];
+end
+specs.vox=ftr.vox;
+[~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
+%[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
+ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
+end
+disp('Done.');
+
+
 
 if vizz
     figure('color','w');
@@ -108,6 +135,14 @@ for fib=1:numfibs
         plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'-','color',[0.1707    0.2919    0.7792]);
     end
     
+    
+    %% map from mni millimeter space to mni voxel space (only needed for trackvis convertion).
+    wfibsvox{fib}=[wfibs{fib},ones(size(wfibs{fib},1),1)]';
+    wfibsvox{fib}=Vmni(1).mat\wfibsvox{fib};
+    wfibsvox{fib}=wfibsvox{fib}(1:3,:)';
+    wfibsvox{fib}=[wfibsvox{fib}(:,1),ysize_mni-wfibsvox{fib}(:,2),wfibsvox{fib}(:,3)];
+    
+    
     %% cleanup
     wfibs{fib}=wfibs{fib}(:,1:3);
    if vizz; drawnow; end
@@ -116,17 +151,21 @@ ea_dispercent(100,'end');
 
 
 wfibs=wfibs';
+wfibsvox=wfibsvox';
 normalized_fibers_mm=wfibs; clear wfibs
+normalized_fibers_vox=wfibsvox; clear wfibsvox
+
 save([options.root,options.patientname,filesep,options.prefs.FTR_normalized],'normalized_fibers_mm');
+save([options.root,options.patientname,filesep,'vox_',options.prefs.FTR_normalized],'normalized_fibers_vox');
 
 
  
 
 % create trackvis version
 try
-reftemplate=[spm('dir'),filesep,'canonical',filesep,'single_subj_T1.nii'];
-dnii=load_nii(reftemplate);
-niisize=size(dnii.img); % get dimensions of reference template.
+reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii'];
+dnii=ea_load_nii(reftemplate);
+niisize=size(dnii(1).img); % get dimensions of reference template.
 clear dnii
 specs.origin=[0,0,0];
 specs.dim=niisize;
@@ -134,14 +173,22 @@ try
     H=spm_dicom_headers([root_directory,options.prefs.sampledtidicom]);
     specs.orientation=H{1,1}.ImageOrientationPatient;
 catch
-    %specs.orientation=[0,1,0,0,0,0];%[0,1,0,-1,0,0];%[1,0,0,0,1,0];
-    specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example trk_write. Try this one.. %[1,0,0,0,1,0];
+    specs.orientation=[0,1,0,0,0,0]; %[0,1,0,-1,0,0];%;[0,1,0,-1,0,0] [0,1,0,0,0,0];
+    specs.orientation=[1,0,0,0,1,0];
+    specs.orientation=[1,0,0,1,0,0];
+    specs.orientation=[1,0,0,0,1,0];
+    %specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example trk_write. Try this one.. %[1,0,0,0,1,0];
 end
 specs.vox=ftr.vox;
-[~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
-%[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
-ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
+
+[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
+ea_ftr2trk(['vox_',ftrfname],directory,specs,options); % export normalized ftr to .trk
+
+movefile([directory,'vox_',ftrfname,'.trk'],[directory,ftrfname,'.trk']);
+
 end
+delete([options.root,options.patientname,filesep,'vox_',options.prefs.FTR_normalized]);
+
 disp('Done.');
 
 

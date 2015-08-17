@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 18-Apr-2015 21:10:58
+% Last Modified by GUIDE v2.5 02-Aug-2015 23:27:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -177,12 +177,15 @@ end
 
 
 if nargin
-switch vargarin{1}
-    case 'loadsubs'
-   keyboard     
+    
+    if ~isempty(varargin)
+switch varargin{1}
+    case 'loadsubs'     
+   
+  ea_load_pts(handles,varargin{2});
         
 end
-   
+    end
    
 end
 
@@ -551,22 +554,6 @@ function writeout2d_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of writeout2d_checkbox
-switch get(hObject,'value')
-    case 0
-        set(handles.bbsize,'Enable','off');
-        set(handles.tdcolorscheck,'Enable','off');
-        set(handles.tdcontourcheck,'Enable','off');
-        set(handles.tdlabelcheck,'Enable','off');
-        set(handles.tdcontourcolor,'Enable','off');
-
-    case 1
-        set(handles.bbsize,'Enable','on');
-        set(handles.tdcolorscheck,'Enable','on');
-        set(handles.tdcontourcheck,'Enable','on');
-        set(handles.tdlabelcheck,'Enable','on');
-        set(handles.tdcontourcolor,'Enable','on');
-end
-
 storeui(handles);
 
 
@@ -606,6 +593,13 @@ uipatdir=ea_uigetdir(p,'Please choose patient folder(s)...');
 if isempty(uipatdir)
     return
 end
+
+ea_load_pts(handles,uipatdir);
+
+
+
+function ea_load_pts(handles,uipatdir)
+
 
 if length(uipatdir)>1
     set(handles.patdir_choosebox,'String',['Multiple (',num2str(length(uipatdir)),')']);
@@ -919,69 +913,12 @@ function normcheck_Callback(hObject, eventdata, handles)
 storeui(handles);
 
 
-% --- Executes on button press in tdcolorscheck.
-function tdcolorscheck_Callback(hObject, eventdata, handles)
-% hObject    handle to tdcolorscheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of tdcolorscheck
-storeui(handles);
-
-
-% --- Executes on button press in tdcontourcheck.
-function tdcontourcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to tdcontourcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of tdcontourcheck
-storeui(handles);
 
 
 
-function bbsize_Callback(hObject, eventdata, handles)
-% hObject    handle to bbsize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of bbsize as text
-%        str2double(get(hObject,'String')) returns contents of bbsize as a double
-storeui(handles);
 
 
-% --- Executes during object creation, after setting all properties.
-function bbsize_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to bbsize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in tdlabelcheck.
-function tdlabelcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to tdlabelcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of tdlabelcheck
-storeui(handles);
-
-
-% --- Executes on button press in tdcontourcolor.
-function tdcontourcolor_Callback(hObject, eventdata, handles)
-% hObject    handle to tdcontourcolor (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-tdcol=uisetcolor;
-setappdata(hObject,'color',tdcol);
-storeui(handles);
 
 
 % --- Executes on button press in cmappushbutton.
@@ -1386,18 +1323,6 @@ options.atl.pt=get(handles.patatlcheck,'Value'); % display patient specific atla
 
 options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
 options.d2.atlasopacity=0.15;
-options.d2.col_overlay=get(handles.tdcolorscheck,'Value');
-options.d2.con_overlay=get(handles.tdcontourcheck,'Value');
-options.d2.con_color=getappdata(handles.tdcontourcolor,'color');
-if isempty(options.d2.con_color)
-    options.d2.con_color=[1,1,1]; % white
-end
-
-options.d2.lab_overlay=get(handles.tdlabelcheck,'Value');
-
-
-options.d2.bbsize=str2double(get(handles.bbsize,'String'));
-
 
 
 options.manualheightcorrection=(get(handles.manualheight_checkbox,'Value') == get(handles.manualheight_checkbox,'Max'));
@@ -1684,3 +1609,11 @@ function openleadconnectome_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 lead_connectome;
+
+
+% --- Executes on button press in specify2dwrite.
+function specify2dwrite_Callback(hObject, eventdata, handles)
+% hObject    handle to specify2dwrite (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_spec2dwrite;

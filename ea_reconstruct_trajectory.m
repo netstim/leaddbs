@@ -214,6 +214,9 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
         numidpoint=ea_findonemidpoint(slicebw,centerline(1,1:2),mask,options);
         
         centerline(sliceno,:)=[numidpoint,imgsliceno];
+        if isnan(centerline)
+            ea_error('Reconstruction failed. Please choose "manual" entrypoint.');
+        end
     end
     
     
@@ -262,9 +265,8 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
         %pause
     end
     
-    
     mask(round(estpoint(2)-options.maskwindow):round(estpoint(2)+options.maskwindow),round(estpoint(1)-options.maskwindow):round(estpoint(1)+options.maskwindow))=1;
-    
+
     
     
     %% part 4: visualization...

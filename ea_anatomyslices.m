@@ -1,9 +1,13 @@
 function ea_anatomyslices(resultfig,togglestates,options)
 % input xyz in mm coordinates.
+% this function plots an anatomical slice to the 3D viewer of lead-dbs.
+% __________________________________________________________________________________
+% Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
 
 
 set(0, 'currentfigure', resultfig);  % for figures
-
+atlases=getappdata(resultfig,'atlases');
 togglestates.xyztransparencies=double(togglestates.xyztransparencies/100);
 
 xsliceplot=getappdata(resultfig,'xsliceplot');
@@ -19,7 +23,7 @@ inverted=getappdata(resultfig,'inverted');
 if isempty(inverted)
     inverted=0;
 end
-
+options.d2.writeatlases=1;
 templateused=getappdata(resultfig,'templateused');
 if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)
     clear V
@@ -50,7 +54,7 @@ if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)
                 V{3}=spm_vol([options.root,options.patientname,filesep,options.prefs.gsagnii]);
             catch
                 try
-                    V{3}=spm_vol([options.root,options.patientname,filesep,options.prefs.sagnii]);
+                 V{3}=spm_vol([options.root,options.patientname,filesep,options.prefs.sagnii]);
                 end
             end
         case 'Patient Pre-OP'
@@ -91,22 +95,20 @@ xyzv=round(xyzv(1:3)); % now in voxel coordinates.
 
 
 if togglestates.xyztoggles(1)
-    %try
-    %slice=(double(squeeze(nii{1}.img(xyzv(1),:,:))));
+
     
     usesag=(length(V)>2)*2; % check if explicit saggital volume is available
+    if inverted
+        [~,slice]=ea_writeplanes(options, togglestates.xyzmm(1),3,V{1+usesag},'off', 0,atlases);
+        slice=flipdim(permute(double(slice),[2,1,3]),2);
+        %slice=flipdim(slice,1);
+    else
+        [xx,yy,zz]=meshgrid(xyzv(1),1:0.5:V{1+usesag}.dim(2),1:0.5:V{1+usesag}.dim(3));
+        slice=spm_sample_vol(V{1+usesag},xx,yy,zz,4);
+    end
     
-    
-    [xx,yy,zz]=meshgrid(xyzv(1),1:0.5:V{1+usesag}.dim(2),1:0.5:V{1+usesag}.dim(3));
-    slice=spm_sample_vol(V{1+usesag},xx,yy,zz,4);
-    slice=ea_invert(slice,inverted);
-    maxv=max(slice(:));
-    minv=abs(min(slice(:)));
-    
-    slice=slice+minv; % 0 smallest number.
-    slice=slice/maxv*255; % 255 highest number.
-    imin=repmat(uint8((((slice)))),[1,1,4]);
-    imin(:,:,4)=uint8(togglestates.xyztransparencies(1));
+    %slice=ea_invert(slice,inverted);
+imin=proxy_slice(slice,togglestates,1);
     clear bb
     bb(1,:)=[xyzv(1),V{1+usesag}.dim(2),V{1+usesag}.dim(3),1]; % upper left point of image in voxels
     bb(2,:)=[xyzv(1),0,V{1+usesag}.dim(3),1];
@@ -142,44 +144,37 @@ if togglestates.xyztoggles(2)
     
     % check whether second nii is being used:
     usecor=length(V)>1; % check if explicit coronar volume is available
-    
-    [xx,yy,zz]=meshgrid(1:0.5:V{1+usecor}.dim(1),xyzv(2),1:0.5:V{1+usecor}.dim(3));
-    slice=flipud(squeeze((spm_sample_vol(V{1+usecor},squeeze(xx),squeeze(yy),squeeze(zz),2))));
-    slice=ea_invert(slice,inverted);
+    if inverted
+        [~,slice]=ea_writeplanes(options, togglestates.xyzmm(2),2,V{1+usecor},'off', 0,atlases);
+        slice=flipdim(permute(double(slice),[2,1,3]),2);
+    else
+        [xx,yy,zz]=meshgrid(1:0.5:V{1+usecor}.dim(1),xyzv(2),1:0.5:V{1+usecor}.dim(3));
+        slice=flipud(squeeze((spm_sample_vol(V{1+usecor},squeeze(xx),squeeze(yy),squeeze(zz),2))));
+    end
+    %slice=ea_invert(slice,inverted);
     
     %slice=flipud(squeeze(double(nii{1+usecor}.img(:,xyzv(2),:))));
-    maxv=max(slice(:));
-    minv=abs(min(slice(:)));
-    
-    slice=slice+minv; % 0 smallest number.
-    slice=slice/maxv*255; % 255 highest number.
-    imin=repmat(uint8((((slice)))),[1,1,4]);
-    
-    
-    
-    %try
-    %imin=repmat(uint8((squeeze((nii{1+usecor}.img(:,xyzv(2),:)+minv)*255)/(minv+maxv))),[1,1,4]);
-    imin(:,:,4)=uint8(togglestates.xyztransparencies(2));
+    imin=proxy_slice(slice,togglestates,2);
     clear bb
     bb(1,:)=[V{1+usecor}.dim(1),xyzv(2),V{1+usecor}.dim(3),1]; % upper left point of image in voxels
     bb(2,:)=[0,xyzv(2),V{1+usecor}.dim(3),1]; % upper left point of image in voxels
     bb(3,:)=[V{1+usecor}.dim(1),xyzv(2),0,1]; % upper left point of image in voxels
     bb(4,:)=[0,xyzv(2),0,1]; % upper left point of image in voxels
-
+    
     bb(:,1:3)=bb(:,1:3);
     
     bb=V{1+usecor}.mat*bb'; % in mm
     bb=bb(1:3,:)';
     
     
-        ysliceplot=surface('XData',[min(bb(:,1)) min(bb(:,1));max(bb(:,1)) max(bb(:,1))],...
-   'YData',[min(bb(:,2)) max(bb(:,2));min(bb(:,2)), max(bb(:,2))],...
-   'ZData',[min(bb(:,3)) max(bb(:,3)); min(bb(:,3)) max(bb(:,3))],...
-   'CData',imin(:,:,1:3),...
-   'FaceColor','texturemap','AlphaDataMapping','none','FaceAlpha',togglestates.xyztransparencies(2),'EdgeColor','none');
-set(ysliceplot,'SpecularStrength',0.1)   
-set(ysliceplot,'DiffuseStrength',0.5)    
-set(ysliceplot,'AmbientStrength',1) 
+    ysliceplot=surface('XData',[min(bb(:,1)) min(bb(:,1));max(bb(:,1)) max(bb(:,1))],...
+        'YData',[min(bb(:,2)) max(bb(:,2));min(bb(:,2)), max(bb(:,2))],...
+        'ZData',[min(bb(:,3)) max(bb(:,3)); min(bb(:,3)) max(bb(:,3))],...
+        'CData',imin(:,:,1:3),...
+        'FaceColor','texturemap','AlphaDataMapping','none','FaceAlpha',togglestates.xyztransparencies(2),'EdgeColor','none');
+    set(ysliceplot,'SpecularStrength',0.1)
+    set(ysliceplot,'DiffuseStrength',0.5)
+    set(ysliceplot,'AmbientStrength',1)
 
 bbmm{1}=linspace(bb(1,1),bb(4,1),20);
 bbmm{2}=linspace(bb(1,2),bb(2,2),20);
@@ -195,20 +190,17 @@ if togglestates.xyztoggles(3)
     %try
     %imsurf(repmat(uint8((squeeze(fliplr(nii.img(:,:,graphopts.volxyz(3)))'*255)/max(nii.img(:)))),[1,1,2]),[size(nii.img,1)+0.5,size(nii.img,2)+0.5,graphopts.volxyz(3)],[0,0,1],[-1,0,0],1)
     %original: imin=repmat(uint8((squeeze(fliplr(nii.img(:,:,xyzv(1)))'*255)/max(nii.img(:)))),[1,1,4]);
-      [xx,yy,zz]=meshgrid(1:0.2:V{1}.dim(1),1:0.2:V{1}.dim(2),xyzv(3));
-    slice=fliplr(spm_sample_vol(V{1},xx,yy,zz,4))';
-    slice=ea_invert(slice,inverted);
+    
+    if inverted
+        [~,slice]=ea_writeplanes(options, togglestates.xyzmm(3),1,V{1},'off', 0,atlases);
+        slice=flipdim(permute(double(slice),[2,1,3]),2);
+    else
+        [xx,yy,zz]=meshgrid(1:0.2:V{1}.dim(1),1:0.2:V{1}.dim(2),xyzv(3));
+        slice=spm_sample_vol(V{1},xx,yy,zz,4)';
+    end
+    %slice=ea_invert(slice,inverted);
     %slice=flipud(squeeze(double((nii{1}.img(:,:,xyzv(3))))));
-    maxv=max(slice(:));
-    minv=abs(min(slice(:)));
-    
-    slice=slice+minv; % 0 smallest number.
-    slice=slice/maxv*255; % 255 highest number.
-    imin=repmat(uint8(((slice))),[1,1,4]);
-    
-
-    %imin=repmat(uint8((squeeze((flipud(nii{1}.img(:,:,xyzv(3)))+minv)*255)/(minv+maxv))),[1,1,4]);
-    imin(:,:,4)=uint8(togglestates.xyztransparencies(3)); % transparency
+    imin=proxy_slice(slice,togglestates,3);
         clear bb
     bb(1,:)=[V{1}.dim(1),V{1}.dim(2),xyzv(3),1]'; % upper left point of image in voxels
     bb(2,:)=[0,V{1}.dim(2),xyzv(3),1]'; % upper left point of image in voxels
@@ -225,9 +217,9 @@ if togglestates.xyztoggles(3)
    'ZData',[min(bb(:,3)) max(bb(:,3));min(bb(:,3)) max(bb(:,3))],...
    'CData',imin(:,:,1:3),...
     'FaceColor','texturemap','AlphaDataMapping','none','FaceAlpha',togglestates.xyztransparencies(3),'EdgeColor','none');    
-set(zsliceplot,'SpecularStrength',0)    
-   set(ysliceplot,'DiffuseStrength',0.5)    
-set(ysliceplot,'AmbientStrength',0.3) 
+set(zsliceplot,'SpecularStrength',0)
+set(zsliceplot,'DiffuseStrength',0.5)
+set(zsliceplot,'AmbientStrength',0.3)
 
     
 
@@ -259,4 +251,12 @@ end
 
 
 
+function imin=proxy_slice(slice,togglestates,dim)
+maxv=max(slice(:));
+minv=min(slice(:));
+
+slice=slice-minv; % 0 smallest number.
+slice=(slice/(maxv-minv))*255; % 255 highest number.
+imin=repmat(uint8((((slice)))),[1,1,4]);
+imin(:,:,4)=uint8(togglestates.xyztransparencies(dim));
 

@@ -21,7 +21,7 @@ if ischar(varargin{1}) % return name of method.
 end
 end
 
-keyboard
+
 
 coords=coords{side};
 traj=[coords(1,:)+(coords(1,:)-coords(3,:));coords(4,:)+(coords(4,:)-coords(2,:))];
@@ -60,7 +60,7 @@ cfg.method = 'hexahedral';
 mesh       = ft_prepare_mesh(cfg,smri);
 
 
-
+keyboard
 % plot gray matter:
 % pmesh=mesh;
 % pmesh.hex=pmesh.hex(pmesh.tissue==1,:);
@@ -68,7 +68,15 @@ mesh       = ft_prepare_mesh(cfg,smri);
 
 %% volume conductor
 
-vol=ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14]);
+while 1
+
+mesh.hex=mesh.hex(:,randperm(6));
+try
+    vol=ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14]);
+    break
+end
+end
+
 %% 
 
 

@@ -3,12 +3,6 @@ function [mr,b0idx,finames] = ea_build_DTD(bvalue,dirname,dtif,DTDf,HARDIf,bvalf
 % HARDI-formats.
 
 
-
-
-
-
-
-
 V=spm_vol([dirname,dtif]);
 
 for fi=1:length(V)
@@ -30,7 +24,7 @@ sz = size(mr.dataAy);
 mr.user.bfactor = bvalue; % enter bvalue
 
 
-[mr.user.bDir b0idx] = grads(dirname,bvecf,bvalf); % gradient directions
+[mr.user.bDir, b0idx] = grads(dirname,bvecf,bvalf); % gradient directions
 
 
 
@@ -182,12 +176,17 @@ EigenVal= sum(difComp, 3);
 %end of function  do_calculation
 
 
-function [gradlist b0idx] = grads(indir,bvecf,bvalf)
+function [gradlist, b0idx] = grads(indir,bvecf,bvalf)
 
 gradlist=load([indir,bvecf]);
+if ~size(gradlist,2)==3
 gradlist=gradlist';
+end
 
 bvals=load([indir,bvalf]);
+if size(bvals,2)==1 
+   bvals=bvals'; 
+end
 
 b0idx = find(bvals<=5);
 

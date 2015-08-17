@@ -22,7 +22,7 @@ function varargout = ea_anatomycontrol(varargin)
 
 % Edit the above text to modify the response to help ea_anatomycontrol
 
-% Last Modified by GUIDE v2.5 10-Jul-2014 09:42:39
+% Last Modified by GUIDE v2.5 03-Aug-2015 16:47:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -450,3 +450,11 @@ end
 setappdata(getappdata(gcf,'resultfig'),'togglestates',togglestates);
 
 refreshresultfig(handles)
+
+
+% --- Executes on button press in specify2dwrite.
+function specify2dwrite_Callback(hObject, eventdata, handles)
+% hObject    handle to specify2dwrite (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_spec2dwrite;

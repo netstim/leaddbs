@@ -25,9 +25,13 @@ for side=options.sides
                     Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);
                     Z{side}(cnt)=elstruct(sub).coords_mm{side}(cont,3);
                 else % using pairs of electrode contacts (i.e. 3 pairs if there are 4 contacts)
-                    X{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,1),elstruct(sub).coords_mm{side}(cont+1,1)]);
-                    Y{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,2),elstruct(sub).coords_mm{side}(cont+1,2)]);
-                    Z{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,3),elstruct(sub).coords_mm{side}(cont+1,3)]);
+                    try
+                        X{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,1),elstruct(sub).coords_mm{side}(cont+1,1)]);
+                        Y{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,2),elstruct(sub).coords_mm{side}(cont+1,2)]);
+                        Z{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,3),elstruct(sub).coords_mm{side}(cont+1,3)]);
+                    catch
+                        ea_error(['Please check localization for subject no. ',num2str(sub),'.']);
+                    end
                 end
                 V{side}(cnt)=options.d3.isomatrix{side}(sub,cont);
                 
@@ -93,9 +97,11 @@ for side=options.sides
             niic=ea_nanmean(cat(4,nii{1},nii{2}),4);
             spm_write_vol(Vol,niic);
             
+            %ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'],'','nn');
+            
             % smooth image.
             matlabbatch{1}.spm.spatial.smooth.data = {[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii,1']};
-            matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
+            matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
             matlabbatch{1}.spm.spatial.smooth.dtype = 0;
             matlabbatch{1}.spm.spatial.smooth.im = 1;
             matlabbatch{1}.spm.spatial.smooth.prefix = 's';
@@ -127,8 +133,9 @@ for side=options.sides
 
         warning('off');
         F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double([V{1};V{2}]));
+        keyboard
         F.ExtrapolationMethod='none';
-warning('on');
+        warning('on');
         xixc=bb(1,1):bb(1,2); yixc=bb(2,1):bb(2,2); zixc=bb(3,1):bb(3,2);
         
         niic(xixc,yixc,zixc)=F({xixc,yixc,zixc});
@@ -136,10 +143,10 @@ warning('on');
             
             Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'];
             spm_write_vol(Vol,niic);
-            
+            %ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'],'','nn');
             % smooth image.
             matlabbatch{1}.spm.spatial.smooth.data = {[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii,1']};
-            matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
+            matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
             matlabbatch{1}.spm.spatial.smooth.dtype = 0;
             matlabbatch{1}.spm.spatial.smooth.im = 1;
             matlabbatch{1}.spm.spatial.smooth.prefix = 's';

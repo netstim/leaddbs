@@ -11,7 +11,7 @@ disp('Segmentation...');
             if ~exist(tpmoutf,'file')
                 reslice_nii(tpminf,tpmoutf,[0.5,0.5,0.5],3);
             end
-            keyboard
+            
             matlabbatch{1}.spm.tools.preproc8.channel.vols = {[directory,file,',1']};
             matlabbatch{1}.spm.tools.preproc8.channel.biasreg = 0.0001;
             matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm = 60;

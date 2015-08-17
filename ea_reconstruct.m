@@ -48,6 +48,8 @@ imat=zeros([size(tra_nii.img,1),size(tra_nii.img,2),size(tra_nii.img,3),2]);
 imat(:,:,:,1)=tra_nii.img;
 try
 imat(:,:,:,2)=cor_nii.img;
+catch
+    options.axiscontrast=3; % use tra only.
 end
 
 ea_showdis('Preparing contrasted volume...',options.verbose);
