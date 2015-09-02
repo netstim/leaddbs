@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 03-Aug-2015 16:48:13
+% Last Modified by GUIDE v2.5 31-Aug-2015 21:08:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -660,14 +660,15 @@ end
 
 thisparc=get(handles.lc_parcellation,'String');
 thisparc=thisparc{get(handles.lc_parcellation,'Value')};
-gmdir=dir([M.patient.list{1},'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
+try
+gmdir=dir([M.patient.list{1},'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']); 
 
 gms{1}='';
 for gm=1:length(gmdir)
     gms{gm}=gmdir(gm).name;
 end
 set(handles.lc_graphmetric,'String',gms);
-
+end
 % update UI
 
 
@@ -2298,3 +2299,59 @@ function specify2doptions_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_spec2dwrite;
+
+
+% --- Executes on button press in calcgroupconnectome.
+function calcgroupconnectome_Callback(hObject, eventdata, handles)
+% hObject    handle to calcgroupconnectome (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+keyboard
+options.prefs=ea_prefs('tmp');
+M=getappdata(gcf,'M');
+normalized_fibers_mm={}; % combined connectome
+for sub=1:length(M.patient.list)
+fs=load([M.patient.list{sub},options.prefs.FTR_normalized]);
+if isfield(fs,'normalized_fibers_mm')
+nfibs=fs.normalized_fibers_mm;
+else    
+    fn = fieldnames(fs);
+eval(sprintf('nfibs = fs.%s;',fn{1}));
+end
+if size(nfib,1)>size(nfib,2)
+    nfib=nfib';
+end
+normalized_fibers_mm=[normalized_fibers_mm,nfibs];
+end
+save([M.ui.groupdir,options.prefs.FTR_normalized],'normalized_fibers_mm','-v7.3');
+
+% export to trackvis
+options.root=[fileparts(fileparts(M.ui.groupdir)),filesep];
+[~,options.patientname]=fileparts(fileparts(M.ui.groupdir));
+options.earoot=[fileparts(which('lead')),filesep];
+
+specs.origin=[0,0,0];
+specs.dim=niisize;
+try
+    H=spm_dicom_headers([M.patient.list{1},options.prefs.sampledtidicom]);
+    specs.orientation=H{1,1}.ImageOrientationPatient;
+catch
+    specs.orientation=[0,1,0,0,0,0]; %[0,1,0,-1,0,0];%;[0,1,0,-1,0,0] [0,1,0,0,0,0];
+    specs.orientation=[1,0,0,0,1,0];
+    specs.orientation=[1,0,0,1,0,0];
+    specs.orientation=[1,0,0,0,1,0]; 
+   specs.orientation=[1 0 0 0 -1 0]; % dieses gut bei DSI studio
+    %specs.orientation=[0,1,0,0,0,0]; 
+    %specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example, dieses gut bei mesoFT
+    %trk_write. Try this one.. %[1,0,0,0,1,0]; 
+end
+ftr=load([M.patient.list{1},options.prefs.FTR_unnormalized]);
+specs.vox=ftr.vox;
+clear ftr
+
+ea_ftr2trk(options.prefs.FTR_normalized,M.ui.groupdir,specs,options); % export normalized ftr to .trk
+
+
+
+options.prefs=ea_prefs(M.ui.groupdir);
+

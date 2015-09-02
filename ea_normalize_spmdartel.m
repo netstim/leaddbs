@@ -71,9 +71,9 @@ end
 
 
 % First, do the coreg part:
-
+try
     ea_coreg(options,options.prefs.normalize.coreg);
-
+end
 
 
 

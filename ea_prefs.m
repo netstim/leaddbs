@@ -54,8 +54,8 @@ prefs.lc.struc.minlen=3; % minimum fiber length to consider to form connections 
 
 %% DTI-files:
 prefs.b0=['b0.nii'];
-prefs.FTR_unnormalized=['FTR.mat'];
-prefs.FTR_normalized=['wFTR.mat'];
+prefs.FTR_unnormalized=['FTR_gqi.mat'];
+prefs.FTR_normalized=['wFTR_gqi.mat'];
 prefs.DTD=['DTD.mat'];
 prefs.HARDI='HARDI.mat';
 prefs.dti='dti.nii';
@@ -68,7 +68,7 @@ prefs.normmatrix=['lmat.txt'];
 
 
 %% 2D-Export
-prefs.d2.useprepost='post'; % can be 'post' or 'pre' to set the backdrop.
+prefs.d2.useprepost='pre'; % can be 'post' or 'pre' to set the backdrop.
 prefs.d2.groupcolors='lead'; % can be 'maxdist' to use ea_distinguishable_colors by Timothy E. Holy, 'lead' to use a handpicked color set inspired by colorblender.com or 'lines' to use the matlab lines colormap (supports only seven colors).
 prefs.d2.isovolsmoothed='s'; % set to 's' if you want to use the smoothed image and '' if you want to display the raw, unsmoothed version of the isovolume.
 prefs.d2.isovolcolormap='parula'; % color map to use for plotting of isovolume heatmap.
@@ -79,7 +79,7 @@ prefs.d2.isovolsepcomb='combined'; % set to 'combined' to use the lr-combined is
 prefs.dicom.dicomfiles=1; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
 
 %% Normalization:
-prefs.normalize.coreg='manual'; % set to 'manual' to include manual coregistration check steps.
+prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
 
 
 %% volumes:
