@@ -39,7 +39,7 @@ if options.d3.write
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.
     
-    resultfig=ea_render_view(options);
+    resultfig=ea_elvis(options);
     
     % save scene as matlab figure
     try % if path is not defined, don't save.

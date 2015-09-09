@@ -1,4 +1,4 @@
-function resultfig=ea_render_view(varargin)
+function resultfig=ea_elvis(varargin)
 % This function is the main 3D-visualization function of lead DBS. It
 % reads all atlases found in the lead_root/atlases folder, calculates a
 % convex hull around the nonzero area and renders it as 3D surfaces.

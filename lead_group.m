@@ -336,7 +336,7 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
 end
 
 
-resultfig=ea_render_view(options,M.elstruct(get(handles.patientlist,'Value')));
+resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 
 
 
@@ -1245,7 +1245,7 @@ for pt=1:length(M.patient.list)
         delete([options.root,options.patientname,filesep,'ea_stats.mat']);
     
     % Step 1: Re-calculate closeness to subcortical atlases.
-    resultfig=ea_render_view(options);
+    resultfig=ea_elvis(options);
     % save scene as matlab figure
     
     
