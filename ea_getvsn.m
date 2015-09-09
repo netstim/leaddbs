@@ -9,7 +9,7 @@ switch com
     
     case 'web'
         try
-        urlwrite('http://www.lead-dbs.org/release/.version.txt',[ldir,'.webversion.txt'],'Timeout',5);
+        urlwrite('http://www.lead-dbs.org/release/sw_version.txt',[ldir,'.webversion.txt'],'Timeout',5);
         load([ldir,'.webversion.txt']);
         delete([ldir,'.webversion.txt']);
         try

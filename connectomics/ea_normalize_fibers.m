@@ -8,7 +8,7 @@ if ~exist([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],'
 end
 
 vizz=0; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
-cleanse_fibers=1; % deletes everything outside the white matter of the template.
+cleanse_fibers=0; % deletes everything outside the white matter of the template.
 
 %% check which normalization routine has been used..
 % if dartel was used, we need to coregister c2 of b0 and rc2 of anat (since

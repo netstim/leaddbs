@@ -54,8 +54,8 @@ prefs.lc.struc.minlen=3; % minimum fiber length to consider to form connections 
 
 %% DTI-files:
 prefs.b0=['b0.nii'];
-prefs.FTR_unnormalized=['FTR_gqi.mat'];
-prefs.FTR_normalized=['wFTR_gqi.mat'];
+prefs.FTR_unnormalized=['FTR.mat'];
+prefs.FTR_normalized=['wFTR.mat'];
 prefs.DTD=['DTD.mat'];
 prefs.HARDI='HARDI.mat';
 prefs.dti='dti.nii';
