@@ -22,7 +22,7 @@ function varargout = ea_convis(varargin)
 
 % Edit the above text to modify the response to help ea_convis
 
-% Last Modified by GUIDE v2.5 09-Sep-2015 13:59:07
+% Last Modified by GUIDE v2.5 09-Sep-2015 14:32:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,15 +52,227 @@ function ea_convis_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_convis (see VARARGIN)
 
-% Choose default command line output for ea_convis
+set(gcf,'Name','Connectome Results');
+
+
+% Choose default command line output for ea_anatomycontrol
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes ea_convis wait for user response (see UIRESUME)
+% UIWAIT makes ea_anatomycontrol wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
+resultfig=varargin{1};
+options=varargin{2};
+setappdata(gcf,'resultfig',resultfig);
+setappdata(gcf,'options',options);
 
+
+
+refreshcv(handles);
+
+
+function refreshcv(handles)
+
+options=getappdata(gcf,'options');
+
+%% init/modify UI controls:
+
+% parcellation popup:
+directory=[options.root,options.patientname,filesep];
+pdirs=dir([directory,'connectomics',filesep]);
+cnt=1;
+
+for pdir=1:length(pdirs)
+   if pdirs(pdir).isdir && ~strcmp(pdirs(pdir).name,'.') && ~strcmp(pdirs(pdir).name,'..')
+       parcs{cnt}=pdirs(pdir).name;
+       cnt=cnt+1;
+   end
+end
+if ~exist('parcs','var')
+    cv_disableall(handles);
+    return
+end
+set(handles.labelpopup,'String',parcs);
+if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'));
+   set(handles.labelpopup,'Value',length(get(handles.labelpopup,'String')));
+end
+
+selectedparc=parcs{get(handles.labelpopup,'Value')};
+
+pdirectory=[options.root,options.patientname,filesep,'connectomics',filesep,selectedparc,filesep];
+
+%% init matrix level controls:
+
+pmdirs=dir([pdirectory,'*_CM.mat']);
+
+for pmdir=1:length(pmdirs)
+   [~,pmc{pmdir}]=fileparts(pmdirs(pmdir).name);
+end
+
+if ~exist('pmc','var')
+    cv_disablemats(handles);
+else
+    cv_enablemats(handles);
+end
+set(handles.matmodality,'String',pmc);
+if get(handles.matmodality,'Value')>length(get(handles.matmodality,'String'));
+   set(handles.matmodality,'Value',length(get(handles.matmodality,'String')));
+end
+
+% parcellation scheme
+aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.txt']);
+atlas_lgnd=textscan(aID,'%d %s');
+
+% store selected parcellation in figure:
+% store pV and pX in figure
+pV=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+pX=spm_read_vols(pV);
+setappdata(gcf,'pV',pV);
+setappdata(gcf,'pX',pX);
+
+%d=length(atlas_lgnd{1}); % how many ROI.
+set(handles.matseed,'String',atlas_lgnd{2});
+if get(handles.matseed,'Value')>length(get(handles.matseed,'String'));
+   set(handles.matseed,'Value',length(get(handles.matseed,'String')));
+end
+
+%% init voxel level controls:
+% Metric:
+if exist([pdirectory,'graph'],'file')
+    testits={'deg_','eig_','sfs_'};
+    labelits={'degree centrality','eigenvector centrality','structure function similarity'};
+    cnt=1;
+    for ti=1:length(testits)
+        tdir=dir([pdirectory,'graph',filesep,testits{ti},'*.nii']);
+        if ~isempty(tdir)
+            filesare{cnt}=testits{ti}; % present filetypes
+            labelsare{cnt}=labelits{ti}; % present labelnames
+            cnt=cnt+1;
+        end
+    end
+    if ~isempty(labelsare)
+    set(handles.voxmetric,'String',labelsare);
+    if get(handles.voxmetric,'Value')>length(get(handles.voxmetric,'String'));
+        set(handles.voxmetric,'Value',length(get(handles.voxmetric,'String')));
+    end
+    cv_enablevoxs(handles);
+    else
+        cv_disablevoxs(handles);
+    end
+else
+   cv_disablevoxs(handles); 
+end
+
+% Modality:
+if exist('filesare','var')
+selectedmetric=get(handles.voxmetric,'Value');
+selectedprefix=filesare{selectedmetric}; % deg_, eig_ or sfs_
+
+fis=dir([pdirectory,'graph',filesep,selectedprefix,'*.nii']);
+cnt=1;
+for fi=1:length(fis)
+    mods{cnt}=fis(fi).name(5:end);
+    [~,mods{cnt}]=fileparts(mods{cnt}); % remove .nii extension
+end
+set(handles.voxmodality,'String',mods);
+ if get(handles.voxmodality,'Value')>length(get(handles.voxmodality,'String'));
+        set(handles.voxmodality,'Value',length(get(handles.voxmodality,'String')));
+    end
+end
+
+%% recruit handles from prior results from figure
+resultfig=getappdata(gcf,'resultfig');
+voxsurf=getappdata(resultfig,'voxsurf');
+matsurf=getappdata(resultfig,'matsurf');
+
+%% delete any prior results
+try delete(voxsurf); end
+try delete(matsurf); end
+
+%% now show results
+if get(handles.vizgraph,'Value'); % show voxel-level results
+    gV=pV; % duplicate labeling handle
+    gX=pX; % duplicate labeling data
+    
+    
+end
+
+if get(handles.vizmat,'Value'); % show matrix-level results
+    mV=pV; % duplicate labeling handle
+    mX=pX; % duplicate labeling data
+    
+end
+
+%% save result handles to figure
+
+
+%% helperfunctions to enable/disable GUI parts.
+
+function cv_disableall(handles)
+set(handles.labelpopup,'Enable','off');
+set(handles.vizgraph,'Enable','off');
+set(handles.voxmodality,'Enable','off');
+
+set(handles.voxmetric,'Enable','off');
+set(handles.voxthresh,'Enable','off');
+set(handles.vizmat,'Enable','off');
+set(handles.matmodality,'Enable','off');
+set(handles.matseed,'Enable','off');
+set(handles.xmm,'Enable','off');
+set(handles.ymm,'Enable','off');
+set(handles.zmm,'Enable','off');
+set(handles.matthresh,'Enable','off');
+set(handles.timewindow,'Enable','off');
+set(handles.timeframe,'Enable','off');
+set(handles.timecircle,'Enable','off');
+
+function cv_disablevoxs(handles)
+set(handles.vizgraph,'Enable','off');
+set(handles.voxmodality,'Enable','off');
+set(handles.voxmetric,'Enable','off');
+set(handles.voxthresh,'Enable','off');
+
+function cv_enablevoxs(handles)
+set(handles.vizgraph,'Enable','on');
+set(handles.voxmodality,'Enable','on');
+set(handles.voxmetric,'Enable','on');
+set(handles.voxthresh,'Enable','on');
+
+function cv_disablemats(handles)
+set(handles.matmodality,'Enable','off');
+set(handles.matseed,'Enable','off');
+set(handles.xmm,'Enable','off');
+set(handles.ymm,'Enable','off');
+set(handles.zmm,'Enable','off');
+set(handles.matthresh,'Enable','off');
+set(handles.timewindow,'Enable','off');
+set(handles.timeframe,'Enable','off');
+set(handles.timecircle,'Enable','off');
+
+function cv_enablemats(handles)
+set(handles.matmodality,'Enable','on');
+set(handles.matseed,'Enable','on');
+set(handles.xmm,'Enable','on');
+set(handles.ymm,'Enable','on');
+set(handles.zmm,'Enable','on');
+set(handles.matthresh,'Enable','on');
+set(handles.timewindow,'Enable','on');
+set(handles.timeframe,'Enable','on');
+set(handles.timecircle,'Enable','on');
+
+function cv_disabletime(handles)
+set(handles.matthresh,'Enable','off');
+set(handles.timewindow,'Enable','off');
+set(handles.timeframe,'Enable','off');
+set(handles.timecircle,'Enable','off');
+
+function cv_enabletime(handles)
+set(handles.matthresh,'Enable','on');
+set(handles.timewindow,'Enable','on');
+set(handles.timeframe,'Enable','on');
+set(handles.timecircle,'Enable','on');
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_convis_OutputFcn(hObject, eventdata, handles) 
@@ -73,19 +285,19 @@ function varargout = ea_convis_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on selection change in gmpopup.
-function gmpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to gmpopup (see GCBO)
+% --- Executes on selection change in voxmetric.
+function voxmetric_Callback(hObject, eventdata, handles)
+% hObject    handle to voxmetric (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns gmpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from gmpopup
+% Hints: contents = cellstr(get(hObject,'String')) returns voxmetric contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from voxmetric
 
 
 % --- Executes during object creation, after setting all properties.
-function gmpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to gmpopup (see GCBO)
+function voxmetric_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to voxmetric (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -96,28 +308,28 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in checkbox1.
-function checkbox1_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox1 (see GCBO)
+% --- Executes on button press in vizgraph.
+function vizgraph_Callback(hObject, eventdata, handles)
+% hObject    handle to vizgraph (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox1
+% Hint: get(hObject,'Value') returns toggle state of vizgraph
 
 
 
-function edit1_Callback(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
+function voxthresh_Callback(hObject, eventdata, handles)
+% hObject    handle to voxthresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit1 as text
-%        str2double(get(hObject,'String')) returns contents of edit1 as a double
+% Hints: get(hObject,'String') returns contents of voxthresh as text
+%        str2double(get(hObject,'String')) returns contents of voxthresh as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
+function voxthresh_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to voxthresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -128,19 +340,31 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupmenu2.
-function popupmenu2_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu2 (see GCBO)
+% --- Executes on selection change in matseed.
+function matseed_Callback(hObject, eventdata, handles)
+% hObject    handle to matseed (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu2 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu2
+% Hints: contents = cellstr(get(hObject,'String')) returns matseed contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from matseed
 
+pV=getappdata(gcf,'pV');
+pX=getappdata(gcf,'pX');
+[xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
+set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
+set(handles.matseed,'ForegroundColor',[0,0,0]);
+
+function [xmm,ymm,zmm]=getcoordinates(pV,pX,ix)
+[xx,yy,zz]=ind2sub(size(pX),find(pX==ix));
+XYZ=[xx,yy,zz];
+centrvx=[mean(XYZ),1];
+centrmm=pV.mat*centrvx';
+xmm=centrmm(1); ymm=centrmm(2); zmm=centrmm(3);
 
 % --- Executes during object creation, after setting all properties.
-function popupmenu2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu2 (see GCBO)
+function matseed_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to matseed (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -151,19 +375,19 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupmenu3.
-function popupmenu3_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu3 (see GCBO)
+% --- Executes on selection change in matmodality.
+function matmodality_Callback(hObject, eventdata, handles)
+% hObject    handle to matmodality (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu3 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu3
+% Hints: contents = cellstr(get(hObject,'String')) returns matmodality contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from matmodality
 
 
 % --- Executes during object creation, after setting all properties.
-function popupmenu3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu3 (see GCBO)
+function matmodality_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to matmodality (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -175,18 +399,18 @@ end
 
 
 
-function edit2_Callback(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
+function matthresh_Callback(hObject, eventdata, handles)
+% hObject    handle to matthresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit2 as text
-%        str2double(get(hObject,'String')) returns contents of edit2 as a double
+% Hints: get(hObject,'String') returns contents of matthresh as text
+%        str2double(get(hObject,'String')) returns contents of matthresh as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
+function matthresh_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to matthresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -220,28 +444,28 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in checkbox3.
-function checkbox3_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox3 (see GCBO)
+% --- Executes on button press in vizmat.
+function vizmat_Callback(hObject, eventdata, handles)
+% hObject    handle to vizmat (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox3
+% Hint: get(hObject,'Value') returns toggle state of vizmat
 
 
 
-function edit4_Callback(hObject, eventdata, handles)
-% hObject    handle to edit4 (see GCBO)
+function timewindow_Callback(hObject, eventdata, handles)
+% hObject    handle to timewindow (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit4 as text
-%        str2double(get(hObject,'String')) returns contents of edit4 as a double
+% Hints: get(hObject,'String') returns contents of timewindow as text
+%        str2double(get(hObject,'String')) returns contents of timewindow as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit4 (see GCBO)
+function timewindow_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to timewindow (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -252,32 +476,172 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in checkbox4.
-function checkbox4_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox4 (see GCBO)
+% --- Executes on button press in timecircle.
+function timecircle_Callback(hObject, eventdata, handles)
+% hObject    handle to timecircle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox4
+% Hint: get(hObject,'Value') returns toggle state of timecircle
 
 
 
-function edit5_Callback(hObject, eventdata, handles)
-% hObject    handle to edit5 (see GCBO)
+function timeframe_Callback(hObject, eventdata, handles)
+% hObject    handle to timeframe (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit5 as text
-%        str2double(get(hObject,'String')) returns contents of edit5 as a double
+% Hints: get(hObject,'String') returns contents of timeframe as text
+%        str2double(get(hObject,'String')) returns contents of timeframe as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit5_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit5 (see GCBO)
+function timeframe_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to timeframe (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in voxmodality.
+function voxmodality_Callback(hObject, eventdata, handles)
+% hObject    handle to voxmodality (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns voxmodality contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from voxmodality
+
+% --- Executes during object creation, after setting all properties.
+function voxmodality_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to voxmodality (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function xmm_Callback(hObject, eventdata, handles)
+% hObject    handle to xmm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of xmm as text
+%        str2double(get(hObject,'String')) returns contents of xmm as a double
+setcoordinates(handles);
+
+function [ix,err]=setcoordinates(handles)
+% set seed selection based on manual coordinate entry.
+pV=getappdata(gcf,'pV');
+pX=getappdata(gcf,'pX');
+xmm=str2double(get(handles.xmm,'String'));
+ymm=str2double(get(handles.ymm,'String'));
+zmm=str2double(get(handles.zmm,'String'));
+
+
+err=0;
+XYZmm=[xmm,ymm,zmm,1]';
+XYZvox=pV.mat\XYZmm;
+ix=0;
+try
+ix=pX(round(XYZvox(1)),round(XYZvox(2)),round(XYZvox(3)));
+end
+if ~ix
+    ix=nan;
+    err=1;
+end
+    
+if ~err
+set(handles.matseed,'Value',ix);
+set(handles.matseed,'ForegroundColor',[0,0,0]);    
+else
+set(handles.matseed,'ForegroundColor',[1,0,0]);    
+end
+
+% --- Executes during object creation, after setting all properties.
+function xmm_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to xmm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function ymm_Callback(hObject, eventdata, handles)
+% hObject    handle to ymm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ymm as text
+%        str2double(get(hObject,'String')) returns contents of ymm as a double
+setcoordinates(handles);
+
+% --- Executes during object creation, after setting all properties.
+function ymm_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ymm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function zmm_Callback(hObject, eventdata, handles)
+% hObject    handle to zmm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of zmm as text
+%        str2double(get(hObject,'String')) returns contents of zmm as a double
+setcoordinates(handles);
+
+% --- Executes during object creation, after setting all properties.
+function zmm_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to zmm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in labelpopup.
+function labelpopup_Callback(hObject, eventdata, handles)
+% hObject    handle to labelpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns labelpopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from labelpopup
+refreshcv(handles);
+
+% --- Executes during object creation, after setting all properties.
+function labelpopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to labelpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');

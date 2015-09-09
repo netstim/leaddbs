@@ -179,6 +179,10 @@ end
 
 slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
 
+% Initialize Convis-Button
+convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome',options),'TooltipString','Slice Control Figure','ClickedCallback',{@openconnectomeviewer,resultfig,options});
+
+
 
 
 
@@ -293,6 +297,11 @@ end
 
 function opensliceviewer(hobj,ev,resultfig,options)
 awin=ea_anatomycontrol(gcf,options);
+setappdata(resultfig,'awin',awin);
+try WinOnTop(awin,true); end
+
+function openconnectomeviewer(hobj,ev,resultfig,options)
+awin=ea_convis(gcf,options);
 setappdata(resultfig,'awin',awin);
 try WinOnTop(awin,true); end
 
