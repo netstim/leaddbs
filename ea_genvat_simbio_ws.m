@@ -112,6 +112,17 @@ smri.insulation=logical(Xins); % include insulation to the model
 smri.gray(smri.contacts)=0; smri.gray(smri.insulation)=0; % remove contact and insulation portions from the gm..
 smri.white(smri.contacts)=0; smri.white(smri.insulation)=0; % .. and white matter portions.
 
+% export a nifti version of the headmodel just for control reasons and as
+% an export for other use-cases:
+X=single(smri.gray);
+X=X+2*smri.white;
+X=X+3*smri.contacts;
+X=X+4*smri.insulation;
+Vex=Vexp; Vex.fname=[options.root,options.patientname,filesep,'headmodel.nii'];
+spm_write_vol(Vex,X);
+delete([options.root,options.patientname,filesep,'tmp.nii']);
+clear Vex X
+
 %% create the mesh using fieldtrip:
 cfg        = [];
 cfg.tissue      = {'gray','white','contacts','insulation'};
@@ -146,25 +157,13 @@ for xx=-dist:swidth:dist
         end
     end
 end
-
-
-
 sens.elecpos=XYZvx(:,1:3);
-% sensors need labels, so i label them from 1 to numel.
+% sensors need labels, so we label them from 1 to numel.
 sens.label=arrayfun(@num2str,1:size(sens.elecpos,1),'UniformOutput',0);
-% the following needs to be added to prevent an error.
 sens.unit='vox';
 vol.unit='vox';
 
 vol=ea_ft_prepare_vol_sens(vol,sens);
-
-
-
-%dpmm=[coords(2,:),1];
-%dpvx=Vexp.mat\dpmm';
-%dpvx=dpvx(1:3,:)';
-
-
 lf=ea_leadfield_simbio(dpvx,vol);
 
 keyboard
