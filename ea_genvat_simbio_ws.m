@@ -136,10 +136,11 @@ vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]); % need 
 clear XYZvx
 % create a grid of sensors around the dipole..
 cnt=1;
-dist=2;
-for xx=-dist:dist
-    for yy=-dist:dist
-        for zz=-dist:dist
+dist=2; % how far to leave the dipole in each direction (in voxels)
+swidth=0.5; % step width (in voxels)
+for xx=-dist:swidth:dist
+    for yy=-dist:swidth:dist
+        for zz=-dist:swidth:dist
          XYZvx(cnt,:)=dpvx+[xx,yy,zz];
         cnt=cnt+1;
         end
