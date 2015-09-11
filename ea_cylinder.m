@@ -1,4 +1,4 @@
- function [Cylinder EndPlate1 EndPlate2] = ea_cylinder(X1,X2,r,n,cyl_color,closed,lines)
+ function [Cylinder, EndPlate1, EndPlate2] = ea_cylinder(X1,X2,r,n,cyl_color,closed,lines)
 %
 % This function constructs a cylinder connecting two center points 
 % 
@@ -45,8 +45,27 @@ xx3=repmat(x3,1,2);
 % Drawing two filled cirlces to close the cylinder
 if closed==1
     hold on
-    EndPlate1=fill3(xx1(:,1),xx2(:,1),xx3(:,1),'r');
-    EndPlate2=fill3(xx1(:,2),xx2(:,2),xx3(:,2),'r');
+    %EndPlate1=fill3(xx1(:,1),xx2(:,1),xx3(:,1),'r');
+    
+    f.vertices=[xx1(:,1),xx2(:,1),xx3(:,1)];
+    f.vertices=[[0,0,0];f.vertices];
+    f.faces=zeros(length(xx1)-1,3);
+    for face=1:length(f.faces)
+        f.faces(face,:)=[1,face+1,face+2];
+    end
+    EndPlate1=patch('Vertices',f.vertices,'Faces',f.faces);
+    
+    f.vertices=[xx1(:,2),xx2(:,2),xx3(:,2)];
+    f.vertices=[mean(f.vertices);f.vertices];
+    f.faces=zeros(length(xx1)-1,3);
+    for face=1:length(f.faces)
+        f.faces(face,:)=[1,face+1,face+2];
+    end
+    EndPlate2=patch('Vertices',f.vertices,'Faces',f.faces);
+    
+    
+  
+    
 end
 
 % Plotting the cylinder along the X-Direction with required length starting
@@ -66,9 +85,13 @@ axis_rot=cross([1 0 0],(X2-X1) );
 
 % Rotating the plotted cylinder and the end plate circles to the required
 % angles
+
+%keyboard
+
 if angle_X1X2~=0 % Rotation is not needed if required direction is along X
     rotate(Cylinder,axis_rot,angle_X1X2,[0 0 0])
     if closed==1
+        
         rotate(EndPlate1,axis_rot,angle_X1X2,[0 0 0])
         rotate(EndPlate2,axis_rot,angle_X1X2,[0 0 0])
     end
@@ -78,13 +101,12 @@ end
 % position starts from the origin. so it will now be shifted to the right
 % position
 if closed==1
-    set(EndPlate1,'XData',get(EndPlate1,'XData')+X1(1))
-    set(EndPlate1,'YData',get(EndPlate1,'YData')+X1(2))
-    set(EndPlate1,'ZData',get(EndPlate1,'ZData')+X1(3))
-    
-    set(EndPlate2,'XData',get(EndPlate2,'XData')+X1(1))
-    set(EndPlate2,'YData',get(EndPlate2,'YData')+X1(2))
-    set(EndPlate2,'ZData',get(EndPlate2,'ZData')+X1(3))
+    vx=get(EndPlate1,'Vertices');
+    vx(:,1)=vx(:,1)+X1(1); vx(:,2)=vx(:,2)+X1(2); vx(:,3)=vx(:,3)+X1(3);
+    set(EndPlate1,'Vertices',vx);
+    vx=get(EndPlate2,'Vertices');
+    vx(:,1)=vx(:,1)+X1(1); vx(:,2)=vx(:,2)+X1(2); vx(:,3)=vx(:,3)+X1(3);
+    set(EndPlate2,'Vertices',vx);
 end
 set(Cylinder,'XData',get(Cylinder,'XData')+X1(1))
 set(Cylinder,'YData',get(Cylinder,'YData')+X1(2))
@@ -98,6 +120,7 @@ else
     EndPlate1=[];
     EndPlate2=[];
 end
+
 
 % If lines are not needed making it disapear
 if lines==0

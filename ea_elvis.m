@@ -135,6 +135,7 @@ for pt=1:length(elstruct)
     
 end
 
+setappdata(resultfig,'el_render',el_render);
 % add handles to buttons. Can't be combined with the above loop since all
 % handles need to be set for the buttons to work properly (if alt is
 % pressed, all electrodes are made visible/invisible).

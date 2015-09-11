@@ -200,13 +200,45 @@ if get(handles.vizgraph,'Value'); % show voxel-level results
 end
 
 if get(handles.vizmat,'Value'); % show matrix-level results
-    mV=pV; % duplicate labeling handle
-    mX=pX; % duplicate labeling data
+    %mV=pV; % duplicate labeling handle
+    %mX=pX; % duplicate labeling data
+    mms=get(handles.matmodality,'String');
+    parcs=get(handles.labelpopup,'String');
+    CM=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,mms{get(handles.matmodality,'Value')}]);
+    fn=fieldnames(CM);
+    CM=eval(['CM.',fn{1},';']);
+    seedcon=CM(get(handles.matseed,'Value'),:);
+    thresh=get(handles.matthresh,'String');
+    if strcmp(thresh,'auto');
+       thresh=nanmean(seedcon)+1*nanstd(seedcon);
+    else
+        thresh=str2double(thresh);
+    end
+    tseedcon=seedcon>thresh;
+    mX=ismember(pX,find(tseedcon));
+    bb=[0,0,0;size(mX)];
     
+    bb=map_coords_proxy(bb,pV);
+    gv=cell(3,1);
+    for dim=1:3
+        gv{dim}=linspace(bb(1,dim),bb(2,dim),size(mX,dim));
+    end
+    [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
+    fv=isosurface(X,Y,Z,permute(mX,[2,1,3]),0.5);
+        set(0,'CurrentFigure',resultfig)
+    matsurf=patch(fv,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
+    setappdata(resultfig,'matsurf',matsurf);
 end
 
 %% save result handles to figure
 
+
+function coords=map_coords_proxy(XYZ,V)
+
+XYZ=[XYZ';ones(1,size(XYZ,1))];
+
+coords=V.mat*XYZ;
+coords=coords(1:3,:)';
 
 %% helperfunctions to enable/disable GUI parts.
 
@@ -451,7 +483,7 @@ function vizmat_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of vizmat
-
+refreshcv(handles);
 
 
 function timewindow_Callback(hObject, eventdata, handles)

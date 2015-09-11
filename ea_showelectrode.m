@@ -66,18 +66,6 @@ for side=options.sides
         
         cnt=4;
         
-        
-        % draw trajectory between contacts
-        for cntct=1:elspec.numel-1
-            set(0,'CurrentFigure',resultfig);
-            
-            [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct+1,:)+trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-            
-            specsurf(elrender{side}(cnt),usecolor,aData); specsurf(elrender{side}(cnt+1),usecolor,aData); specsurf(elrender{side}(cnt+2),usecolor,aData);
-            cnt=cnt+3;
-        end
-        
-        
         % draw contacts
         for cntct=1:elspec.numel
             
@@ -92,6 +80,19 @@ for side=options.sides
             end
             cnt=cnt+3;
         end
+        
+        % draw trajectory between contacts
+        for cntct=1:elspec.numel-1
+            set(0,'CurrentFigure',resultfig);
+            
+            [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct+1,:)+trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
+            
+            specsurf(elrender{side}(cnt),usecolor,aData); specsurf(elrender{side}(cnt+1),usecolor,aData); specsurf(elrender{side}(cnt+2),usecolor,aData);
+            cnt=cnt+3;
+        end
+        
+        
+        
         
         
         
