@@ -80,7 +80,7 @@ for comp=1:options.elspec.numel*2+1
         cyl=thiselhandle(cnt);
         cyl = surf2patch(cyl,'triangles'); 
     end
-in=intriangulation(cyl.vertices,cyl.faces,XYZmm(1:3,:)');
+in=ea_intriangulation(cyl.vertices,cyl.faces,XYZmm(1:3,:)');
 Xt=nii.img;
 Xt(:)=0; Xt(in)=1;
 if comp>1 && comp<options.elspec.numel+2 % these are the CONTACTS
