@@ -55,7 +55,7 @@ thiselhandle=el_render(1).el_render{side};
 % next three: contact one, etc.
 % next three: contact spacing one, etc.
 % last: tip
-keyboard
+
 
 % establish coordinate grid:
 nii=ea_load_nii([options.root,options.patientname,filesep,'tmp.nii']);
@@ -93,10 +93,7 @@ end
 
 ea_dispercent(1,'end');
 
-% gather all electrode components into a joint image with two components..
-
-
-
+% for now, dipole is always placed at contact no. 2..
 dpvx=Vexp.mat\[coords(2,:),1]';
 dpvx=dpvx(1:3)';
 
@@ -118,7 +115,7 @@ cfg.method = 'hexahedral';
 mesh       = ft_prepare_mesh(cfg,smri);
 mesh = ft_transform_geometry(inv(smri.transform), mesh);
 
-keyboard
+
 
 % plot gray matter:
 % pmesh=mesh;
@@ -164,6 +161,8 @@ vol=ft_prepare_vol_sens(vol,sens);
 
 
 lf=leadfield_simbio(dpvx,vol);
+
+keyboard
 
 % plot lead-field:
 figure
