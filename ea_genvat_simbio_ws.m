@@ -177,6 +177,9 @@ hold on
 quiver3(sens.elecpos(:,1),sens.elecpos(:,2),sens.elecpos(:,3),lf(:,1),lf(:,2),lf(:,3));
 end
 
+
+%% begin fieldtrip/simbio functions:
+
 function [warped] = ea_ft_warp_apply(M, input, method, tol)
 
 % FT_WARP_APPLY performs a 3D linear or nonlinear transformation on the input
