@@ -56,7 +56,6 @@ thiselhandle=el_render(1).el_render{side};
 % next three: contact spacing one, etc.
 % last: tip
 
-
 % establish coordinate grid:
 nii=ea_load_nii([options.root,options.patientname,filesep,'tmp.nii']);
 [xx,yy,zz]=ind2sub(size(nii.img),1:numel(nii.img));
