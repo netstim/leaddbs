@@ -27,11 +27,11 @@ function varargout = leadMD(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @leadMD_OpeningFcn, ...
-                   'gui_OutputFcn',  @leadMD_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @leadMD_OpeningFcn, ...
+    'gui_OutputFcn',  @leadMD_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -77,7 +77,7 @@ axis equal;
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = leadMD_OutputFcn(hObject, eventdata, handles) 
+function varargout = leadMD_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -206,21 +206,21 @@ keyboard
 
 outfolder=uigetdir('','Specify output directory...');
 if outfolder
-
-%% run trajectory reconstruction.
-options=ea_step1options(handles);
-options.root=[fileparts(fileparts(outfolder)),filesep];
-[~,options.patientname]=fileparts(fileparts(outfolder));
-keyboard
-
-% copy files from temp to new folder
-fis={options.prefs.tranii}???
-        
-ea_autocoord(options);
-        
+    
+    %% run trajectory reconstruction.
+    options=ea_step1options(handles);
+    options.root=[fileparts(fileparts(outfolder)),filesep];
+    [~,options.patientname]=fileparts(fileparts(outfolder));
+    keyboard
+    
+    % copy files from temp to new folder
+    fis={options.prefs.tranii};
+    
+    ea_autocoord(options);
+    
 end
 
-end
+
 
 
 
@@ -234,31 +234,31 @@ fspec{1,2}='Nifti-1'; fspec{2,2}='DICOM';
 
 directory=[tempdir,'leadMD'];
 try
-rmdir(directory,'s');
+    rmdir(directory,'s');
 end
 mkdir(directory);
 
 options.prefs=ea_prefs('temp');
 if fselect==1 % nifti
-if iscell(fis)
-   fis=fis{1};
-end
+    if iscell(fis)
+        fis=fis{1};
+    end
     copyfile([path,fis],[directory,'import.nii']);
 else % DICOM
     
     fips=cellfun(@strcat,path,fis);
     
     matlabbatch{1}.spm.util.import.dicom.data = fips;
-matlabbatch{1}.spm.util.import.dicom.root = 'flat';
-matlabbatch{1}.spm.util.import.dicom.outdir = firectory;
-matlabbatch{1}.spm.util.import.dicom.protfilter = '.*';
-matlabbatch{1}.spm.util.import.dicom.convopts.format = 'nii';
-matlabbatch{1}.spm.util.import.dicom.convopts.icedims = 0;
+    matlabbatch{1}.spm.util.import.dicom.root = 'flat';
+    matlabbatch{1}.spm.util.import.dicom.outdir = firectory;
+    matlabbatch{1}.spm.util.import.dicom.protfilter = '.*';
+    matlabbatch{1}.spm.util.import.dicom.convopts.format = 'nii';
+    matlabbatch{1}.spm.util.import.dicom.convopts.icedims = 0;
     cfg_util('run',{matlabbatch});
     clear matlabbatch
     
     di=dir([directory,'*.nii']);
-    movefile([directory,di(1).name],[directory,'import.nii']);  
+    movefile([directory,di(1).name],[directory,'import.nii']);
 end
 
 opath=[directory,options.prefs.dti];
@@ -304,14 +304,14 @@ options.normalize.check=0;
 options.modality = get(handles.MRCT,'Value');
 
 if options.modality==2; % CT
-
-% coreg CT
-options.coregct.do=~get(handles.isalreadycoregisted,'Value');
-options.coregct.method='Coregister postop-CT with preop-MRI (Matlab Imreg)';
-options.coregct.methodn=1;
-options.coregct.coregthreshs=[0.6,0.4];
-
-options.coregctcheck=0;
+    
+    % coreg CT
+    options.coregct.do=~get(handles.isalreadycoregisted,'Value');
+    options.coregct.method='Coregister postop-CT with preop-MRI (Matlab Imreg)';
+    options.coregct.methodn=1;
+    options.coregct.coregthreshs=[0.6,0.4];
+    
+    options.coregctcheck=0;
 else
     options.coregct.do=0;
 end
@@ -322,7 +322,7 @@ end
 
 
 
-options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback. 
+options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback.
 options.sides=1:2;
 
 options.doreconstruction=1;
