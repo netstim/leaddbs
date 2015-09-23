@@ -2,7 +2,7 @@ function [coords,goodz]=ea_reconstruct_coords(trajectory,trajvector,options)
 
 [cimat,reldist]=ea_sample_cuboid(trajectory,options);
 
-
+vizz=0;
 %imat=ea_gencontrastimage(imat,options.zheights);
 
 %cnii=make_nii(imat);
@@ -32,20 +32,34 @@ disp('Calculating cross-correlation series for all x and y values within the cub
  %   save_nii(cnii,['template_run',num2str(1),'.nii']);
     
 cnt=1;
-corrs=zeros(size(cimat,1)*size(cimat,2),length(min(trajectory(:,3)):size(cimat,3)-size(temp,3)));
+corrs=zeros(size(cimat,1)*size(cimat,2),299);
 for xx=1:size(cimat,1)
     for yy=1:size(cimat,2)
-        for lag=min(trajectory(:,3)):size(cimat,3)-size(temp,3)
-            corrs(cnt,lag+1-min(trajectory(:,3)))=corr(squeeze(cimat(xx,yy,lag:lag+size(temp,3)-1)),squeeze(temp(xx,yy,:)),'rows','pairwise');
-
-        end
-                    cnt=cnt+1;
+%         for lag=min(trajectory(:,3)):size(cimat,3)-size(temp,3)
+%             corrs(cnt,lag+1-min(trajectory(:,3)))=corr(squeeze(cimat(xx,yy,lag:lag+size(temp,3)-1)),squeeze(temp(xx,yy,:)),'rows','pairwise');
+%         end
+        [corrs(cnt,:),lags]=xcorr(squeeze(cimat(xx,yy,:)),squeeze(temp(xx,yy,:)));
+        cnt=cnt+1;
     end
 end
 
 corrs=ea_nanmean(corrs);
 [maxv,maxi]=max(corrs);
+maxi=lags(maxi);
 
+if vizz
+   figure
+   subplot(2,1,1);
+   icimat=cat(3,cimat,zeros(31,31,maxi));
+   imagesc(squeeze(icimat(15,:,:)));
+   colormap gray
+    
+   subplot(2,1,2);
+   itemp=cat(3,zeros(31,31,maxi),temp);
+   imagesc(squeeze(itemp(15,:,:)));
+   colormap gray
+    
+end
 
 try
 goodz=maxi+min(trajectory(:,3))+reldist; % -1 because lag-series starts with 0 and not one. +reldist because templates start ~reldist voxels before electrode point.
@@ -71,7 +85,7 @@ startpt=trajectory(end,:);
 ntrajvector=trajvector/norm(trajvector);
 
 for coo=1:4
-    coords(coo,:)=startpt+ntrajvector*maxi       +ntrajvector*(coo*reldist);
+    coords(coo,:)=startpt-ntrajvector*maxi       -ntrajvector*((coo-1)*reldist);
 
 end
 

@@ -10,6 +10,7 @@ trajectory=elstruct.trajectory;
 
 
 if ~isfield(elstruct,'elmodel') % usually, elspec is defined by the GUI. In case of group analyses, for each patient, a different electrode model can be selected for rendering.
+
     elspec=options.elspec;
 else % if elspec is defined for each electrode, overwrite options-struct settings here.
     o=ea_resolve_elspec(elstruct);

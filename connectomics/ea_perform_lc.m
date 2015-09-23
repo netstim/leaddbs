@@ -7,7 +7,7 @@ function ea_perform_lc(options)
 
 
 %% structural parts
-
+disp('*** Performing structural parts of LEAD-Connectome...');
 
 % perform fibertracking
 if options.lc.struc.ft.do
@@ -39,10 +39,10 @@ if options.lc.struc.compute_CM
 end
 
 
-
+disp('*** Done.');
 
 %% functional parts
-
+disp('*** Performing functional parts of LEAD-Connectome...');
 if options.lc.func.compute_CM % create functional connectivity matrix
     mkdir([options.root,options.patientname,filesep,'connectomics']);
 expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
@@ -64,6 +64,7 @@ mkdir(expfolder);
     ea_computeGM(options);
 end
 
+disp('*** Done.');
 
 
 

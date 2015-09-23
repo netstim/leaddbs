@@ -10,7 +10,7 @@ function ea_manualcorrection(mcfig,coords_mm,trajectory,patientname,options)
 % Output parameters are the figure handle and the corrected coordinates and
 % will be returned once the user presses the spacebar.
 % __________________________________________________________________________________
-% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 %
 % Andreas Horn
 
@@ -36,7 +36,7 @@ try
 catch % if not present
     Vcor=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
     cornii=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
-    Vsag=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.cornii]);
+    Vsag=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
 end
 else %CT
     Vcor=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
@@ -49,6 +49,9 @@ tranii=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
 
 setappdata(mcfig,'patientname',patientname);
 setappdata(mcfig,'coords_mm',coords_mm);
+if ~isfield(options,'mancor') % this trajectory has not yet been manually corrected.
+try trajectory=ea_prolong_traj(trajectory); end
+end
 setappdata(mcfig,'trajectory',trajectory);
 setappdata(mcfig,'origtrajectory',trajectory);
 
@@ -146,7 +149,9 @@ try
 ea_write_fiducials(coords_mm,fullfile(options.root,options.patientname,'ea_coords.fcsv'),options);
 end
 elmodel=options.elmodel;
-save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','elmodel');
+manually_corrected=1;
+save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','elmodel','manually_corrected');
+
 disp('Done.');
 
 if options.autoimprove
@@ -797,3 +802,12 @@ end
     
 N = sum(~isnan(x), dim);
 y = nansum(x, dim) ./ N;
+
+
+function trajectory=ea_prolong_traj(trajectory)
+maxv=max([length(trajectory{1}),length(trajectory{2})]);
+for side=1:length(trajectory)
+    for long=1:maxv-length(trajectory{side})+20
+        trajectory{side}(end+1,:)=trajectory{side}(end,:)+(trajectory{side}(end,:)-trajectory{side}(end-1,:));
+    end
+end

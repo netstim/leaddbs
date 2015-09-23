@@ -1310,9 +1310,8 @@ else
 options.maskwindow=str2num(get(handles.maskwindow_txt,'String')); % size of the window that follows the trajectory
 options.automask=0; % unset automask flag
 end
-options.autoimprove=1; % if true, there will be some pauses at critical points so that the process can be better visualized. Mainly for demonstration or debugging problems.
-
-options.axiscontrast=9; % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
+options.autoimprove=0; % if true, templates will be modified.
+options.axiscontrast=8; % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
 
 options.atl.genpt=get(handles.genptatlascheck,'Value'); % generate patient specific atlases
