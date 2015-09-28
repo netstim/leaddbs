@@ -229,8 +229,6 @@ end
 
 
 
-
-
 %% End of patient-specific part.
 
 
@@ -269,8 +267,20 @@ set(gcf,'color','w');
 axis vis3d
 axis equal
 set(gcf,'Name',figtitle);
-
-
+set(0,'CurrentFigure',resultfig);
+ax=gca;
+set(ax,'XLim',[-140 140]);
+set(ax,'YLim',[-140 140]);
+set(ax,'ZLim',[-140 140]);
+zoom(3)
+ax=gca;
+set(ax,'XLim',[-140 140]);
+set(ax,'YLim',[-140 140]);
+set(ax,'ZLim',[-140 140]);
+set(ax,'XLimMode','manual'); set(ax,'YLimMode','manual'); set(ax,'ZLimMode','manual');
+view(133,56);
+zoom(6)
+opensliceviewer([],[],resultfig,options);
 
 if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
     

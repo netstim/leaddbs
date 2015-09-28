@@ -18,10 +18,10 @@ function [cuts,expslice]=ea_writeplanes(varargin)
 
 options=varargin{1};
 % defaults:
-    %elstruct=0;
-    manualtracor=0;
-    svfig=1;
-    figvisible='on';
+%elstruct=0;
+manualtracor=0;
+svfig=1;
+figvisible='on';
 if nargin==1
     % load prior results
     try
@@ -33,16 +33,16 @@ if nargin==1
         ave_coords_mm=ea_read_fiducials([options.root,options.patientname,filesep,'ea_coords.fcsv'],options);
         elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
     end
-
+    
 elseif nargin>1 % elstruct has been supplied, this is a group visualization
     if isstruct(varargin{2})
-    elstruct=varargin{2};
-    % average coords_mm for image slicing
-    ave_coords_mm=ea_ave_elstruct(elstruct);
+        elstruct=varargin{2};
+        % average coords_mm for image slicing
+        ave_coords_mm=ea_ave_elstruct(elstruct);
     else % concrete height is being supplied (without electrode star plotting).
         
-       elstruct=varargin{2}; 
-       options.elspec.numel=1; % only iterate once below.
+        elstruct=varargin{2};
+        options.elspec.numel=1; % only iterate once below.
     end
 end
 
@@ -77,49 +77,49 @@ set(cuts,'position',[100, 100, 800 ,800]);
 set(cuts,'color','w');
 tracorpresent=zeros(3,1); % check if files are present.
 if ~manualtracor
-switch options.modality
-    case 1 % MR
-        try
-            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
-            tracorpresent(1)=1;
-        catch
+    switch options.modality
+        case 1 % MR
             try
-                Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
+                Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
                 tracorpresent(1)=1;
+            catch
+                try
+                    Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
+                    tracorpresent(1)=1;
+                end
+                
             end
-            
-        end
-        try
-            Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gcornii));
-            tracorpresent(2)=1;
-            
-        catch
             try
-                Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.cornii));
-                tracorpresent(1)=1;
+                Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gcornii));
+                tracorpresent(2)=1;
+                
+            catch
+                try
+                    Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.cornii));
+                    tracorpresent(1)=1;
+                end
             end
-        end
-        try
-            Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gsagnii));
-            tracorpresent(3)=1;
-            
-        catch
             try
-                Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.sagnii));
+                Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gsagnii));
                 tracorpresent(3)=1;
+                
+            catch
+                try
+                    Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.sagnii));
+                    tracorpresent(3)=1;
+                end
             end
-        end
-    case 2 % CT
-        Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
-        Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
-        Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
-        tracorpresent(1:3)=1;
-    case 3 % use template
-        Vtra=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
-        Vcor=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
-        Vsag=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
-        tracorpresent(1:3)=1;
-end
+        case 2 % CT
+            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
+            Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
+            Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
+            tracorpresent(1:3)=1;
+        case 3 % use template
+            Vtra=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
+            Vcor=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
+            Vsag=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
+            tracorpresent(1:3)=1;
+    end
 else
     tracorpresent(manualtracor)=1; % only export specified orientation.
 end
@@ -149,7 +149,7 @@ for side=options.sides
             
             
             if ~isstruct(elstruct)
-               coords={elstruct}; 
+                coords={elstruct};
             end
             el=elcnt+options.elspec.numel*(side-1);
             %subplot(2,2,el);
@@ -165,24 +165,24 @@ for side=options.sides
                     if manualtracor
                         V=manualV;
                     else
-                    V=Vtra;
+                        V=Vtra;
                     end
                 case 2 % coronar images
                     if manualtracor
                         V=manualV;
                     else
-                    V=Vcor;
+                        V=Vcor;
                     end
                 case 3 % saggital images
                     if manualtracor
                         V=manualV;
                     else
-                    V=Vsag;
+                        V=Vsag;
                     end
             end
-
-            [planedim,onedim, secdim , dstring, lstring, Ltxt, Rtxt]=getdims(tracor);
-
+            
+            [planedim,onedim, secdim , dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=getdims(tracor,side);
+            
             
             
             %title(['Electrode ',num2str(el-1),', transversal view.']);
@@ -219,11 +219,11 @@ for side=options.sides
                 Viso=spm_vol([options.root,options.patientname,filesep,options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
                 
                 if exist('ave_coords_mm','var')
-                for siso=1:length(ave_coords_mm)
-                    coordsi{siso}=Viso.mat\[ave_coords_mm{siso},ones(size(ave_coords_mm{siso},1),1)]';
-                    coordsi{siso}=coordsi{siso}(1:3,:)';
-                end
-                [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
+                    for siso=1:length(ave_coords_mm)
+                        coordsi{siso}=Viso.mat\[ave_coords_mm{siso},ones(size(ave_coords_mm{siso},1),1)]';
+                        coordsi{siso}=coordsi{siso}(1:3,:)';
+                    end
+                    [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
                 else
                     coordsi{side}=Viso.mat\[coordsmm(1);coordsmm(1);coordsmm(1);1];
                     coordsi{side}=coordsi{side}(1:3,:)';
@@ -253,18 +253,18 @@ for side=options.sides
             
             
             
-        
+            
             % Plot L, R and sizelegend
-            text(addsubsigned(min(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),Ltxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
-            text(addsubsigned(max(boundboxmm{onedim}),2,'minus'),mean(boundboxmm{secdim}),Rtxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
+            text(addsubsigned(min(boundboxmm{onedim}),2,plusminusl),mean(boundboxmm{secdim}),Ltxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
+            text(addsubsigned(max(boundboxmm{onedim}),2,plusminusr),mean(boundboxmm{secdim}),Rtxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
             
             plot([addsubsigned(mean(boundboxmm{onedim}),2.5,'minus'),addsubsigned(mean(boundboxmm{onedim}),2.5,'plus')],[addsubsigned(min(boundboxmm{secdim}),1,'minus'),addsubsigned(min(boundboxmm{secdim}),1,'minus')],'-w','LineWidth',2.5);
             
-            text(mean(boundboxmm{onedim}),addsubsigned(min(boundboxmm{secdim}),2,'minus'),'5 mm','color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
+            text(mean(boundboxmm{onedim}),addsubsigned(min(boundboxmm{secdim}),2,'minus'),'5 mm','color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
             
             % Plot slice depth legend
             
-            text(mean(boundboxmm{onedim}),addsubsigned(max(boundboxmm{secdim}),2,'minus'),[lstring,sprintf('%.2f',mean(boundboxmm{planedim})),' mm'],'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',20,'FontWeight','bold');
+            text(mean(boundboxmm{onedim}),addsubsigned(max(boundboxmm{secdim}),2,plusminusc),[lstring,sprintf('%.2f',mean(boundboxmm{planedim})),' mm'],'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
             % Show coordinates
             if isstruct(elstruct)
                 if length(elstruct)>1
@@ -346,11 +346,11 @@ for side=options.sides
             end
             axis off
             if svfig
-            set(cuts,'position',[100, 100, 800 ,800]);
+                set(cuts,'position',[100, 100, 600 ,600]);
             else
-            set(cuts,'position',[100, 100, 3200 ,3200]);
+                set(cuts,'position',[100, 100, 3200 ,3200]);
             end
-                        set(0,'CurrentFigure',cuts)
+            set(0,'CurrentFigure',cuts)
             set(gca,'position',[0,0,1,1],'units','normalized'); % fullscreen plot.
             expslice=double(frame2im(getframe(cuts))); % export plot.
             if svfig % only export if figure needs to be saved.
@@ -369,7 +369,7 @@ for side=options.sides
                         ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_saggital',isofnadd,'.png']);
                 end
             end
-       
+            
             axis xy
             
         end
@@ -381,7 +381,7 @@ end
 
 close(cuts)
 if svfig
-disp('Done.');
+    disp('Done.');
 end
 
 
@@ -736,51 +736,79 @@ str(str=='_')=' ';
 
 
 
-function [planedim,onedim, secdim, dstring, lstring, Ltxt, Rtxt]=getdims(tracor)
+function [planedim,onedim, secdim, dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=getdims(tracor,side)
 
 switch tracor
-                
-                case 1 % transversal images
-                    onedim=1;
-                    secdim=2;
-                    planedim=3;
-                    dstring='tra';
-                    lstring='z = ';
-                    Ltxt='L';
-                    Rtxt='R';
-                case 2 % coronar images
-                    onedim=1;
-                    secdim=3;
-                    planedim=2;
-                    dstring='cor';
-                    lstring='y = ';
-                    Ltxt='L';
-                    Rtxt='R';
-                case 3 % saggital images
-                    onedim=2;
-                    secdim=3;
-                    planedim=1;
-                    dstring='sag';
-                    lstring='x = ';
-                    Ltxt='A';
-                    Rtxt='P';
+    
+    case 1 % transversal images
+        onedim=1;
+        secdim=2;
+        planedim=3;
+        dstring='tra';
+        lstring='z = ';
+        Ltxt='M';
+        Rtxt='L';
+        plusminusc='plus';
+        switch side
+            case 1
+                plusminusr='minus';
+                plusminusl='plus';
+            case 2
+                plusminusr='plus';
+                plusminusl='minus';
+        end
+    case 2 % coronar images
+        onedim=1;
+        secdim=3;
+        planedim=2;
+        dstring='cor';
+        lstring='y = ';
+        Ltxt='M';
+        Rtxt='L';
+        plusminusc='minus';
+        
+        switch side
+            case 1
+                plusminusr='minus';
+                plusminusl='plus';
+            case 2
+                plusminusr='plus';
+                plusminusl='minus';
+        end
+    case 3 % saggital images
+        onedim=2;
+        secdim=3;
+        planedim=1;
+        dstring='sag';
+        lstring='x = ';
+        Ltxt='P';
+        Rtxt='A';
+        plusminusc='minus';
+        switch side
+            case 1
+                plusminusr='plus';
+                plusminusl='minus';
+            case 2
+                plusminusr='plus';
+                plusminusl='minus';
+        end
 end
 
 
 function options=resolve2doptions(options)
 
 try
-tdhandles=load([options.earoot,'td_options.mat']);
-set(tdhandles.ea_spec2dwrite,'visible','off');
-options.d2.col_overlay=get(tdhandles.tdcolorscheck,'Value');
-options.d2.con_overlay=get(tdhandles.tdcontourcheck,'Value');
-options.d2.con_color=getappdata(tdhandles.tdcontourcolor,'color');
-if isempty(options.d2.con_color)
-    options.d2.con_color=[1,1,1]; % white
-end
-options.d2.lab_overlay=get(tdhandles.tdlabelcheck,'Value');
-options.d2.bbsize=str2double(get(tdhandles.bbsize,'String'));
-delete(tdhandles.ea_spec2dwrite);
+    tdhandles=load([options.earoot,'td_options.mat']);
+    set(tdhandles.ea_spec2dwrite,'visible','off');
+    options.d2.col_overlay=get(tdhandles.tdcolorscheck,'Value');
+    options.d2.con_overlay=get(tdhandles.tdcontourcheck,'Value');
+    options.d2.con_color=getappdata(tdhandles.tdcontourcolor,'color');
+    if isempty(options.d2.con_color)
+        options.d2.con_color=[1,1,1]; % white
+    end
+    options.d2.lab_overlay=get(tdhandles.tdlabelcheck,'Value');
+    options.d2.bbsize=str2double(get(tdhandles.bbsize,'String'));
+    delete(tdhandles.ea_spec2dwrite);
 catch % defaults
     options.d2.col_overlay=1;
     options.d2.con_overlay=1;
@@ -788,4 +816,4 @@ catch % defaults
     options.d2.lab_overlay=1;
     options.d2.bbsize=50;
 end
-            
+

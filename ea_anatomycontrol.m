@@ -111,6 +111,11 @@ else
 setappdata(getappdata(gcf,'resultfig'),'togglestates',togglestates);
 end
 
+pos=get(gcf,'position');
+set(gcf,'position',[0,0,pos(3),pos(4)]);
+refreshresultfig(handles)
+
+
 
 
 

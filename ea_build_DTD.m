@@ -157,7 +157,11 @@ for x_coor =1: matrix(2)
             tempY(tempY <= 0) = 20.0222; % warum 20.0222?
             y=squeeze(log(tempY )); 
             Y = [Y y'];
+try
             aniso_a= iAnisoX*y;
+catch
+    keyboard
+end
             YY = anisoX * aniso_a;
             M_error(y_coor,x_coor) = max(abs(YY - Y')); % MaxErr
             d_tens = [aniso_a(2),aniso_a(5),aniso_a(6);...
@@ -188,7 +192,7 @@ if size(bvals,2)==1
    bvals=bvals'; 
 end
 
-b0idx = find(bvals<=5);
+b0idx = find(bvals<=10);
 
 
 

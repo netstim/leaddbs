@@ -3,19 +3,23 @@ function ea_ftr2trk(ftrfilename,directory,specs,options)
 disp('Loading FTR-File.');
 fs=load([options.root,options.patientname,filesep,ftrfilename]);
 
-if ~isfield(fs,'curveSegCell') % Freiburg Format
-fn = fieldnames(fs);
+
+if isfield(fs,'curveSegCell') % Freiburg Format
+    convertfromfreiburg=1;
+    fibs=fs.curveSegCell;
+    
+elseif isfield(fs,'normalized_fibers_vox') % lead format
+    fibs=fs.normalized_fibers_vox;
+    convertfromfreiburg=0;
+else % unknown format, use first field for fibers.
+    fn = fieldnames(fs);
     
     eval(sprintf('fibs = fs.%s;',fn{1}));
     if size(fibs,1)>size(fibs,2)
         fibs=fibs';
     end
-   convertfromfreiburg=0; 
-   fibs=fibs;
-else
-    convertfromfreiburg=1;
-    fibs=fs.curveSegCell;
-
+    convertfromfreiburg=0;
+    fibs=fibs;
 end
 
 [header, tracks]=ea_trk_read([options.earoot,'ext_libs',filesep,'example.trk']);

@@ -172,19 +172,25 @@ for fib=1:numfibs
    if vizz; drawnow; end
 end
 
+
+
+
 wfibs(deletefibers)=[]; % delete fibers that were in total outside WM
 wfibsvox(deletefibers)=[]; % delete fibers that were in total outside WM
 
 ea_dispercent(100,'end');
 
 
-wfibs=wfibs';
 wfibsvox=wfibsvox';
-normalized_fibers_mm=wfibs; clear wfibs
-normalized_fibers_vox=wfibsvox; clear wfibsvox
+nftr.normalized_fibers_mm=wfibs; clear wfibs
+nftr.normalized_fibers_vox=wfibsvox; clear wfibsvox
+nftr.curveD=ftr.curveD;
+nftr.trackParam=ftr.trackParam;
+nftr.user=ftr.user;
+nftr.vox=Vmni.mat(logical(eye(4))); nftr.vox=nftr.vox(1:3)';
 disp('Saving files...');
-save([options.root,options.patientname,filesep,options.prefs.FTR_normalized],'normalized_fibers_mm');
-save([options.root,options.patientname,filesep,'vox_',options.prefs.FTR_normalized],'normalized_fibers_vox');
+save([options.root,options.patientname,filesep,options.prefs.FTR_normalized],'-struct','nftr','-v7.3');
+%save([options.root,options.patientname,filesep,'vox_',options.prefs.FTR_normalized],'normalized_fibers_vox');
 disp('Done.');
 
  
@@ -214,9 +220,8 @@ end
 specs.vox=ftr.vox;
 
 [~,ftrfname]=fileparts(options.prefs.FTR_normalized);
-ea_ftr2trk(['vox_',ftrfname],directory,specs,options); % export normalized ftr to .trk
+ea_ftr2trk([ftrfname],directory,specs,options); % export normalized ftr to .trk
 
-movefile([directory,'vox_',ftrfname,'.trk'],[directory,ftrfname,'.trk']);
 
 end
 delete([options.root,options.patientname,filesep,'vox_',options.prefs.FTR_normalized]);

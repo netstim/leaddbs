@@ -9,17 +9,20 @@ function varargout=ea_genvat_simbio_ws(varargin)
 % given side.
 
 if nargin==4
-acoords=varargin{1};
-stimparams=varargin{2};
-side=varargin{3};
-options=varargin{4};
+    acoords=varargin{1};
+    stimparams=varargin{2};
+    side=varargin{3};
+    options=varargin{4};
 elseif nargin==1
+    
+    if ischar(varargin{1}) % return name of method.
+        varargout{1}='Simbio_ws';
+        return
+    end
+end
 
-if ischar(varargin{1}) % return name of method.
-    varargout{1}='Simbio_ws';
-    return
-end
-end
+
+usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 
 %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
 
@@ -95,9 +98,20 @@ end
 
 ea_dispercent(1,'end');
 
-% for now, dipole is always placed at contact no. 2..
-dpvx=Vexp.mat\[coords(2,:),1]';
-dpvx=dpvx(1:3)';
+% set up dipole
+
+
+% if length(find(stimparams.U))>1 % bipolar
+% elseif length(find(stimparams.U)==1 % monopolar
+% else % no active contact!
+%     ea_error('No active stimulation contact selected.');
+% end
+
+% define dipole coordinates:
+    dpvx=coords(find(stimparams.U),:);
+
+dpvx=Vexp.mat\[dpvx,ones(size(dpvx,1),1)]';
+dpvx=dpvx(1:3,:)';
 
 %% read in gm data and convert to segmented mri
 % construct ft-like anatomy structure based on SPM nifti info.
@@ -118,10 +132,29 @@ X=single(smri.gray);
 X=X+2*smri.white;
 X=X+3*smri.contacts;
 X=X+4*smri.insulation;
-Vex=Vexp; Vex.fname=[options.root,options.patientname,filesep,'headmodel.nii'];
+mkdir([options.root,options.patientname,filesep,'headmodel']);
+Vex=Vexp; Vex.fname=[options.root,options.patientname,filesep,'headmodel',filesep,'structural.nii'];
 spm_write_vol(Vex,X);
 delete([options.root,options.patientname,filesep,'tmp.nii']);
 clear Vex X
+
+%% generate diffusion signal:
+if usediffusion
+    disp('Loading FTR...');
+    load([options.earoot,'dev',filesep,'bTensor']) % b-Tensor of a simple 6fold diffusion series
+    ftr=load([options.root,options.patientname,filesep,options.prefs.FTR_normalized]);
+    disp('Done. Estimating diffusion signal based on fibertracts...');
+    signal=ea_ftr2Sigmaps(ftr,ten);
+    disp('Done. Calculating Tensors...');
+    reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii,2'];
+    Vsig=spm_vol(reftemplate);
+    for i=1:size(signal,4);
+        Vsig.fname=[options.root,options.patientname,filesep,'headmodel',filesep,'dti_',num2str(i),'.nii'];
+        spm_write_vol(Vsig,squeeze(signal(:,:,:,i)));
+    end
+    
+end
+
 
 %% create the mesh using fieldtrip:
 cfg        = [];
@@ -147,12 +180,12 @@ vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]); % need 
 clear XYZvx
 % create a grid of sensors around the dipole..
 cnt=1;
-dist=2; % how far to leave the dipole in each direction (in voxels)
-swidth=0.5; % step width (in voxels)
+dist=7; % how far to leave the dipole in each direction (in voxels)
+swidth=2; % step width (in voxels)
 for xx=-dist:swidth:dist
     for yy=-dist:swidth:dist
         for zz=-dist:swidth:dist
-         XYZvx(cnt,:)=dpvx+[xx,yy,zz];
+         XYZvx(cnt,:)=mean(dpvx,1)+[xx,yy,zz];
         cnt=cnt+1;
         end
     end
@@ -166,11 +199,11 @@ vol.unit='vox';
 vol=ea_ft_prepare_vol_sens(vol,sens);
 lf=ea_leadfield_simbio(dpvx,vol);
 
-keyboard
+
 
 % plot lead-field:
 figure
-plot3(dpvx(1),dpvx(2),dpvx(3),'r*');
+plot3(dpvx(:,1),dpvx(:,2),dpvx(:,3),'r*');
 hold on
 
 
@@ -2565,7 +2598,7 @@ catch
   rethrow(lasterror)
 end
 
-function rhs = ea_sb_rhs_venant(pos,dir,vol);
+function rhs = ea_sb_rhs_venant(pos,dir,vol)
 
 % SB_RHS_VENANT
 %

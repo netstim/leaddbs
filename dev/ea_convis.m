@@ -265,7 +265,7 @@ end
 if get(handles.vizmat,'Value'); % show matrix-level results
     %mV=pV; % duplicate labeling handle
     %mX=pX; % duplicate labeling data
-    
+    pX=round(pX);
     mms=get(handles.matmodality,'String');
     parcs=get(handles.labelpopup,'String');
     CM=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,mms{get(handles.matmodality,'Value')}]);
@@ -323,10 +323,25 @@ if get(handles.vizmat,'Value'); % show matrix-level results
         gv{dim}=linspace(bb(1,dim),bb(2,dim),size(mX,dim));
     end
     [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
+    
+    
     fv=isosurface(X,Y,Z,permute(mX,[2,1,3]),0.5); % connected regions
     fvs=isosurface(X,Y,Z,permute(sX,[2,1,3]),0.5); % seed
     set(0,'CurrentFigure',resultfig)
     matsurf=patch(fv,'FaceColor',options.prefs.lc.matsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
+    
+    
+    %threshold seedcon
+    seedcon=((seedcon-thresh)/(max(seedcon)-thresh))*255;
+    
+    cX=pX;
+    for i=1:length(seedcon)
+       cX(pX==i)=seedcon(i);
+    end
+    %nc=isonormals(X,Y,Z,permute(mX,[2,1,3]),matsurf);
+    %nc=isocolors(X,Y,Z,permute(cX,[2,1,3]),matsurf);
+    %matsurf.FaceColor='interp';
+
     seedsurf=patch(fvs,'FaceColor',options.prefs.lc.seedsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
     
     setappdata(resultfig,'matsurf',matsurf);

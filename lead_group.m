@@ -267,11 +267,11 @@ M.patient.list(deleteentry)=[];
 
 M.patient.group(deleteentry)=[];
 
-try M.elstruct(deleteentry)=[];
-    M.stimparams(deleteentry)=[]; end
+try M.elstruct(deleteentry)=[]; end
+try    M.stimparams(deleteentry)=[]; end
 
 for cvar=1:length(M.clinical.vars)
-    M.clinical.vars{cvar}(deleteentry)=[];
+    M.clinical.vars{cvar}(deleteentry,:)=[];
 end
 
 try
