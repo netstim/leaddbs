@@ -50,7 +50,12 @@ prefs.postopgmtc=['postop_rest_tc.mat']; % extracted timecourses of postop resti
 
 
 %% connectome settings:
+prefs.lc.struc.maxdist=2; % maximal distance to form a connection (between fiber terminals and voxel centers, in mm).
 prefs.lc.struc.minlen=3; % minimum fiber length to consider to form connections (in segments).
+prefs.lc.graphsurfc=[0.2081    0.1663    0.5292]; % default color for graph metric 3D-visualizations.
+prefs.lc.matsurfc=[0.8 0.7 0.4]; % default color for matrix-level correlations 3D-visualizations.
+prefs.lc.seedsurfc=[0.8 0.1 0.1]; % default color for seed of matrix-level correlations 3D-visualizations.
+
 
 %% DTI-files:
 prefs.b0=['b0.nii'];

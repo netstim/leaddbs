@@ -8,8 +8,7 @@ if ~exist([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],'
 end
 
 vizz=0; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
-
-keyboard
+cleanse_fibers=0; % deletes everything outside the white matter of the template.
 
 %% check which normalization routine has been used..
 % if dartel was used, we need to coregister c2 of b0 and rc2 of anat (since
@@ -31,6 +30,38 @@ b0=ea_load_nii([options.root,options.patientname,filesep,options.prefs.b0]);
 ysize=size(b0.img,2)+1;
 
 ftr = load([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized]);
+
+reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii,2'];
+Vmni=spm_vol(reftemplate);
+    ysize_mni=Vmni(1).dim(2);
+    mnimask=spm_read_vols(Vmni);
+    mnimask=mnimask>0.01;
+
+% create (unnormalized) trackvis version
+disp('Exporting to TrackVis');
+try
+reftemplate=[options.root,options.patientname,filesep,options.prefs.b0];
+dnii=ea_load_nii(reftemplate);
+niisize=size(dnii.img); % get dimensions of reference template.
+clear dnii
+specs.origin=[0,0,0];
+specs.dim=niisize;
+try
+    H=spm_dicom_headers([root_directory,options.prefs.sampledtidicom]);
+    specs.orientation=H{1,1}.ImageOrientationPatient;
+catch
+    %specs.orientation=[0,1,0,0,0,0];%[0,1,0,-1,0,0];%[1,0,0,0,1,0];
+    specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example trk_write. Try this one.. %[1,0,0,0,1,0];
+specs.orientation=[0,1,0,0,0,0];
+end
+specs.vox=ftr.vox;
+[~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
+%[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
+ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
+end
+disp('Done.');
+
+
 
 if vizz
     figure('color','w');
@@ -71,6 +102,7 @@ ynii=nifti([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'])
         P = [repmat([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],3,1),[',1,1';',1,2';',1,3']];
         Vnii = spm_vol(P);
 wfibs=cell(length(ftr.curveSegCell),1);
+deletefibers=[];
 for fib=1:numfibs
     
     ea_dispercent(fib/numfibs);
@@ -108,25 +140,67 @@ for fib=1:numfibs
         plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'-','color',[0.1707    0.2919    0.7792]);
     end
     
+    
+    %% map from mni millimeter space to mni voxel space (only needed for trackvis convertion and cleansing fibers).
+    wfibsvox{fib}=[wfibs{fib},ones(size(wfibs{fib},1),1)]';
+    wfibsvox{fib}=Vmni(1).mat\wfibsvox{fib};
+    wfibsvox{fib}=wfibsvox{fib}(1:3,:)';
+    wfibsvox{fib}=[wfibsvox{fib}(:,1),wfibsvox{fib}(:,2),wfibsvox{fib}(:,3)];
+    
+    
+    %% cleansing fibers..
+    
+    
+    
+    if cleanse_fibers % delete anything too far from wm.
+       
+        todelete=~mnimask(sub2ind(size(mnimask),round(wfibsvox{fib}(:,1)),round(wfibsvox{fib}(:,2)),round(wfibsvox{fib}(:,3))));
+        
+        if all(todelete) % all fibers outside WM
+            deletefibers=[deletefibers,fib];
+        else
+            wfibs{fib}(todelete,:)=[];
+            wfibsvox{fib}(todelete,:)=[];
+        end
+        
+    end
+    
+    
+    
     %% cleanup
-    wfibs{fib}=wfibs{fib}(:,1:3);
+    %wfibs{fib}=wfibs{fib}(:,1:3);
    if vizz; drawnow; end
 end
+
+
+
+
+wfibs(deletefibers)=[]; % delete fibers that were in total outside WM
+wfibsvox(deletefibers)=[]; % delete fibers that were in total outside WM
+
 ea_dispercent(100,'end');
 
 
-wfibs=wfibs';
-normalized_fibers_mm=wfibs; clear wfibs
-save([options.root,options.patientname,filesep,options.prefs.FTR_normalized],'normalized_fibers_mm');
-
+wfibsvox=wfibsvox';
+nftr.normalized_fibers_mm=wfibs; clear wfibs
+nftr.normalized_fibers_vox=wfibsvox; clear wfibsvox
+nftr.curveD=ftr.curveD;
+nftr.trackParam=ftr.trackParam;
+nftr.user=ftr.user;
+nftr.vox=Vmni.mat(logical(eye(4))); nftr.vox=nftr.vox(1:3)';
+disp('Saving files...');
+save([options.root,options.patientname,filesep,options.prefs.FTR_normalized],'-struct','nftr','-v7.3');
+%save([options.root,options.patientname,filesep,'vox_',options.prefs.FTR_normalized],'normalized_fibers_vox');
+disp('Done.');
 
  
 
 % create trackvis version
+disp('Creating TrackVis version...');
 try
-reftemplate=[spm('dir'),filesep,'canonical',filesep,'single_subj_T1.nii'];
-dnii=load_nii(reftemplate);
-niisize=size(dnii.img); % get dimensions of reference template.
+reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii'];
+dnii=ea_load_nii(reftemplate);
+niisize=size(dnii(1).img); % get dimensions of reference template.
 clear dnii
 specs.origin=[0,0,0];
 specs.dim=niisize;
@@ -134,14 +208,24 @@ try
     H=spm_dicom_headers([root_directory,options.prefs.sampledtidicom]);
     specs.orientation=H{1,1}.ImageOrientationPatient;
 catch
-    %specs.orientation=[0,1,0,0,0,0];%[0,1,0,-1,0,0];%[1,0,0,0,1,0];
-    specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example trk_write. Try this one.. %[1,0,0,0,1,0];
+    specs.orientation=[0,1,0,0,0,0]; %[0,1,0,-1,0,0];%;[0,1,0,-1,0,0] [0,1,0,0,0,0];
+    specs.orientation=[1,0,0,0,1,0];
+    specs.orientation=[1,0,0,1,0,0];
+    specs.orientation=[1,0,0,0,1,0]; 
+   specs.orientation=[1 0 0 0 -1 0]; % dieses gut bei DSI studio
+    %specs.orientation=[0,1,0,0,0,0]; 
+    %specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example, dieses gut bei mesoFT
+    %trk_write. Try this one.. %[1,0,0,0,1,0]; 
 end
 specs.vox=ftr.vox;
-[~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
-%[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
-ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
+
+[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
+ea_ftr2trk([ftrfname],directory,specs,options); % export normalized ftr to .trk
+
+
 end
+delete([options.root,options.patientname,filesep,'vox_',options.prefs.FTR_normalized]);
+
 disp('Done.');
 
 
@@ -169,6 +253,26 @@ if dartelused
         disp('Done.');
     end
     
+    if ~exist([directory,'rc2',options.prefs.prenii_unnormalized],'file');
+        ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+        copyfile([directory,options.prefs.prenii_unnormalized],[directory,'k',options.prefs.prenii_unnormalized]);
+        matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0]};
+        matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'k',options.prefs.prenii_unnormalized]};
+        matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c1',options.prefs.prenii_unnormalized]
+            [directory,'c2',options.prefs.prenii_unnormalized]
+            [directory,'c3',options.prefs.prenii_unnormalized]
+            };
+        matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
+        matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
+        matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
+        matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [7 7];
+        matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 4;
+        matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
+        matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
+        matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
+        cfg_util('run',{matlabbatch});
+        clear matlabbatch
+    end
 end
 
 if ~dartelused

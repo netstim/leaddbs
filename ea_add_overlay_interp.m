@@ -4,7 +4,7 @@ function cuts=ea_add_overlay_interp(filename,boundboxmm,cuts,tracor,options)
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
-keyboard
+
     set(0,'CurrentFigure',cuts)
 
     % load/generate atlas_index.mat

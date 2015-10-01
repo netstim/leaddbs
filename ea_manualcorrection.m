@@ -10,7 +10,7 @@ function ea_manualcorrection(mcfig,coords_mm,trajectory,patientname,options)
 % Output parameters are the figure handle and the corrected coordinates and
 % will be returned once the user presses the spacebar.
 % __________________________________________________________________________________
-% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 %
 % Andreas Horn
 
@@ -28,15 +28,20 @@ if options.modality==1 % MR
 try
     Vcor=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.cornii]);
     cornii=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii];
-    
+    try
+       Vsag=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii]); 
+    catch
+        Vsag=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.cornii]);
+    end
 catch % if not present
-    
     Vcor=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
     cornii=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
+    Vsag=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
 end
 else %CT
     Vcor=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
     cornii=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
+    Vsag=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
 end
 Vtra=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
 tranii=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
@@ -44,11 +49,16 @@ tranii=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
 
 setappdata(mcfig,'patientname',patientname);
 setappdata(mcfig,'coords_mm',coords_mm);
+if ~isfield(options,'mancor') % this trajectory has not yet been manually corrected.
+try trajectory=ea_prolong_traj(trajectory); end
+end
 setappdata(mcfig,'trajectory',trajectory);
 setappdata(mcfig,'origtrajectory',trajectory);
 
 setappdata(mcfig,'options',options);
 setappdata(mcfig,'Vcor',Vcor);
+setappdata(mcfig,'Vsag',Vsag);
+
 setappdata(mcfig,'cornii',cornii);
 setappdata(mcfig,'Vtra',Vtra);
 setappdata(mcfig,'tranii',tranii);
@@ -139,7 +149,9 @@ try
 ea_write_fiducials(coords_mm,fullfile(options.root,options.patientname,'ea_coords.fcsv'),options);
 end
 elmodel=options.elmodel;
-save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','elmodel');
+manually_corrected=1;
+save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','elmodel','manually_corrected');
+
 disp('Done.');
 
 if options.autoimprove
@@ -361,6 +373,7 @@ if isempty(elplot) % first time plot electrode contacts
     
 end
 
+% Plot spacing distance info text.
 emp_eldist(1)=mean([pdist([coords_mm{1}(1,:);coords_mm{1}(4,:)]),pdist([coords_mm{2}(1,:);coords_mm{2}(4,:)])])/3;
 spacetext=text(0,0,-17,['Electrode Spacing: ',num2str(emp_eldist),' mm.'],'Color','w','BackgroundColor','k','HorizontalAlignment','center'); 
 set(gcf,'name',[options.patientname,', Electrode Spacing: ',num2str(emp_eldist),' mm.']);
@@ -390,16 +403,21 @@ planecnt=1;
 
 for doxx=0:1
     for side=options.sides
-        try
+        %try
             sample_width=20-doxx*5; % a bit smaller sample size in x direction to avoid overlap.
             meantrajectory=genhd_inside(trajectory{side});
             clear imat
             %% sample plane left and right from meantrajectory
             
-            
+            if doxx
             Vcor=getappdata(gcf,'Vcor');
-            
             imat=ea_resample_planes(Vcor,meantrajectory',sample_width,doxx,0.1);
+
+            else
+            Vsag=getappdata(gcf,'Vsag');
+            imat=ea_resample_planes(Vsag,meantrajectory',sample_width,doxx,0.1);
+
+            end
             
             colormap gray
             
@@ -427,7 +445,7 @@ for doxx=0:1
             if ~getappdata(gcf,'planecset') % initially and once set contrast based on image data.
                 
                 if options.modality==1
-                c_lims=[ea_nanmean(imat(:))-nanstd(imat(:))-3*nanstd(imat(:)),ea_nanmean(imat(:))-nanstd(imat(:))+3*nanstd(imat(:))];
+                c_lims=[ea_nanmean(imat(:))-ea_nanstd(imat(:))-3*ea_nanstd(imat(:)),ea_nanmean(imat(:))-ea_nanstd(imat(:))+3*ea_nanstd(imat(:))];
                 elseif options.modality==2
                         c_lims=[1800,2800]; % Initial guess, CT
                 end
@@ -471,7 +489,7 @@ for doxx=0:1
             else
                 
             end
-        end
+        %end
     end
 end
 caxis([c_lims(1) c_lims(2)]);
@@ -784,3 +802,12 @@ end
     
 N = sum(~isnan(x), dim);
 y = nansum(x, dim) ./ N;
+
+
+function trajectory=ea_prolong_traj(trajectory)
+maxv=max([length(trajectory{1}),length(trajectory{2})]);
+for side=1:length(trajectory)
+    for long=1:maxv-length(trajectory{side})+20
+        trajectory{side}(end+1,:)=trajectory{side}(end,:)+(trajectory{side}(end,:)-trajectory{side}(end-1,:));
+    end
+end

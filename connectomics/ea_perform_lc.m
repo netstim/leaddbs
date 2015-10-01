@@ -7,7 +7,7 @@ function ea_perform_lc(options)
 
 
 %% structural parts
-
+disp('*** Performing structural parts of LEAD-Connectome...');
 
 % perform fibertracking
 if options.lc.struc.ft.do
@@ -24,25 +24,25 @@ end
 if options.lc.struc.compute_CM
     
     mkdir([options.root,options.patientname,filesep,'connectomics']);
-expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
-mkdir(expfolder);
-if ~exist([expfolder,'DTI_CM.mat'],'file')
-    if ~exist([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized],'file') % fibertracking has not been performed.
-    warning('Fibertracking has not been done yet. Will do so before estimating structural connectivity matrix.');
-        ea_perform_ft_proxy(options);
-    end  
-    DTI_CM=ea_createCM_dti(options);
-    cm=ea_export_CM_png(DTI_CM,'DTI Connectivity matrix',options,[0 10]);
-    save([expfolder,'DTI_CM.mat'],'DTI_CM','-v7.3');
-    saveas(cm,[expfolder,'DTI_CM.png']);
+    expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
+    mkdir(expfolder);
+    if ~exist([expfolder,'DTI_CM.mat'],'file')
+        if ~exist([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized],'file') % fibertracking has not been performed.
+            warning('Fibertracking has not been done yet. Will do so before estimating structural connectivity matrix.');
+            ea_perform_ft_proxy(options);
+        end
+        DTI_CM=ea_createCM_dti(options);
+        cm=ea_export_CM_png(DTI_CM,'DTI Connectivity matrix',options,[0 10]);
+        save([expfolder,'DTI_CM.mat'],'DTI_CM','-v7.3');
+        saveas(cm,[expfolder,'DTI_CM.png']);
+    end
 end
-end
 
 
-
+disp('*** Done.');
 
 %% functional parts
-
+disp('*** Performing functional parts of LEAD-Connectome...');
 if options.lc.func.compute_CM % create functional connectivity matrix
     mkdir([options.root,options.patientname,filesep,'connectomics']);
 expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
@@ -64,6 +64,7 @@ mkdir(expfolder);
     ea_computeGM(options);
 end
 
+disp('*** Done.');
 
 
 

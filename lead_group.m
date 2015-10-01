@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 15-Jul-2015 14:23:43
+% Last Modified by GUIDE v2.5 31-Aug-2015 21:08:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -267,11 +267,11 @@ M.patient.list(deleteentry)=[];
 
 M.patient.group(deleteentry)=[];
 
-try M.elstruct(deleteentry)=[];
-    M.stimparams(deleteentry)=[]; end
+try M.elstruct(deleteentry)=[]; end
+try    M.stimparams(deleteentry)=[]; end
 
 for cvar=1:length(M.clinical.vars)
-    M.clinical.vars{cvar}(deleteentry)=[];
+    M.clinical.vars{cvar}(deleteentry,:)=[];
 end
 
 try
@@ -315,7 +315,7 @@ try options.d3.isomatrix_name=M.isomatrix_name; end
 
 
 
-
+options.d2.atlasopacity=0.15;
 
 options.d3.isovscloud=M.ui.isovscloudpopup;
 options.d3.showisovolume=M.ui.showisovolumecheck;
@@ -336,7 +336,7 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
 end
 
 
-resultfig=ea_render_view(options,M.elstruct(get(handles.patientlist,'Value')));
+resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 
 
 
@@ -577,8 +577,11 @@ end
 
 
 function refreshvifc(handles)
+
 set(gcf,'name','LEAD-DBS Groupanalysis (updating...)');
 drawnow
+
+%keyboard
 
 % get model data
 
@@ -657,24 +660,16 @@ end
 
 thisparc=get(handles.lc_parcellation,'String');
 thisparc=thisparc{get(handles.lc_parcellation,'Value')};
-gmdir=dir([M.patient.list{1},'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
+try
+gmdir=dir([M.patient.list{1},'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']); 
 
 gms{1}='';
 for gm=1:length(gmdir)
     gms{gm}=gmdir(gm).name;
 end
 set(handles.lc_graphmetric,'String',gms);
-
+end
 % update UI
-
-% 2D-Viz options:
-
-if isfield(M.ui,'bbsize');    set(handles.bbsize,'String',M.ui.bbsize); end
-if isfield(M.ui,'tdcolorscheck');    set(handles.tdcolorscheck,'Value',M.ui.tdcolorscheck); end
-if isfield(M.ui,'tdcontourcheck');    set(handles.tdcontourcheck,'Value',M.ui.tdcontourcheck); end
-if isfield(M.ui,'tdlabelcheck');    set(handles.tdlabelcheck,'Value',M.ui.tdlabelcheck); end
-if isfield(M.ui,'tdlegendcheck');    set(handles.tdlegendcheck,'Value',M.ui.tdlegendcheck); end
-if isfield(M.ui,'tdcontourcolor');    setappdata(handles.tdcontourcolor,'color',M.ui.tdcontourcolor); end
 
 
 
@@ -754,6 +749,7 @@ if ~isempty(M.patient.list)
             M.stimparams(pt,side).showconnectivities=1;
         end
         % load localization
+        
         [~,pats{pt}]=fileparts(M.patient.list{pt});
         
         M.elstruct(pt).group=M.patient.group(pt);
@@ -761,7 +757,8 @@ if ~isempty(M.patient.list)
         M.elstruct(pt).groups=M.groups.group;
         
         try
-            load([M.patient.list{pt},filesep,'ea_reconstruction']);
+            
+            load([M.patient.list{pt},filesep,'ea_reconstruction.mat']);
             if M.ui.elmodelselect==1 % use patient specific elmodel
                 if exist('elmodel','var')
                     M.elstruct(pt).elmodel=elmodel;
@@ -1248,7 +1245,7 @@ for pt=1:length(M.patient.list)
         delete([options.root,options.patientname,filesep,'ea_stats.mat']);
     
     % Step 1: Re-calculate closeness to subcortical atlases.
-    resultfig=ea_render_view(options);
+    resultfig=ea_elvis(options);
     % save scene as matlab figure
     
     
@@ -1481,7 +1478,7 @@ function opensubgui_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
-lead('loadsubs',M.patient.list);
+lead('loadsubs',M.patient.list(M.ui.listselect));
 
 
 % --- Executes on button press in choosegroupcolors.
@@ -2068,17 +2065,6 @@ options.normregressor=M.ui.normregpopup;
 options.d2.write=1;
 
 options.d2.atlasopacity=0.15;
-options.d2.col_overlay=get(handles.tdcolorscheck,'Value');
-options.d2.con_overlay=get(handles.tdcontourcheck,'Value');
-options.d2.con_color=getappdata(handles.tdcontourcolor,'color');
-if isempty(options.d2.con_color)
-    options.d2.con_color=[1,1,1]; % white
-end
-
-options.d2.lab_overlay=get(handles.tdlabelcheck,'Value');
-
-
-options.d2.bbsize=str2double(get(handles.bbsize,'String'));
 
 options.modality=3; % use template image
 
@@ -2115,79 +2101,6 @@ end
 cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));
 
 
-
-function bbsize_Callback(hObject, eventdata, handles)
-% hObject    handle to bbsize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of bbsize as text
-%        str2double(get(hObject,'String')) returns contents of bbsize as a double
-M=getappdata(gcf,'M');
-M.ui.bbsize=get(handles.bbsize,'String');
-setappdata(gcf,'M',M);
-refreshvifc(handles);
-
-% --- Executes during object creation, after setting all properties.
-function bbsize_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to bbsize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in tdcolorscheck.
-function tdcolorscheck_Callback(hObject, eventdata, handles)
-% hObject    handle to tdcolorscheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of tdcolorscheck
-M=getappdata(gcf,'M');
-M.ui.tdcolorscheck=get(handles.tdcolorscheck,'Value');
-setappdata(gcf,'M',M);
-refreshvifc(handles);
-
-% --- Executes on button press in tdcontourcheck.
-function tdcontourcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to tdcontourcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of tdcontourcheck
-M=getappdata(gcf,'M');
-M.ui.tdcontourcheck=get(handles.tdcontourcheck,'Value');
-setappdata(gcf,'M',M);
-refreshvifc(handles);
-
-% --- Executes on button press in tdlabelcheck.
-function tdlabelcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to tdlabelcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of tdlabelcheck
-M=getappdata(gcf,'M');
-M.ui.tdlabelcheck=get(handles.tdlabelcheck,'Value');
-setappdata(gcf,'M',M);
-refreshvifc(handles);
-
-% --- Executes on button press in tdcontourcolor.
-function tdcontourcolor_Callback(hObject, eventdata, handles)
-% hObject    handle to tdcontourcolor (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-tdcol=uisetcolor;
-setappdata(hObject,'color',tdcol);
-M=getappdata(gcf,'M');
-M.ui.tdcontourcolor=tdcol;
-setappdata(gcf,'M',M);
-refreshvifc(handles);
 
 
 % --- Executes on button press in lc_SPM.
@@ -2378,3 +2291,67 @@ M=getappdata(gcf,'M');
 M.ui.tdlegendcheck=get(handles.tdlegendcheck,'Value');
 setappdata(gcf,'M',M);
 refreshvifc(handles);
+
+
+% --- Executes on button press in specify2doptions.
+function specify2doptions_Callback(hObject, eventdata, handles)
+% hObject    handle to specify2doptions (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_spec2dwrite;
+
+
+% --- Executes on button press in calcgroupconnectome.
+function calcgroupconnectome_Callback(hObject, eventdata, handles)
+% hObject    handle to calcgroupconnectome (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+keyboard
+options.prefs=ea_prefs('tmp');
+M=getappdata(gcf,'M');
+normalized_fibers_mm={}; % combined connectome
+for sub=1:length(M.patient.list)
+fs=load([M.patient.list{sub},options.prefs.FTR_normalized]);
+if isfield(fs,'normalized_fibers_mm')
+nfibs=fs.normalized_fibers_mm;
+else    
+    fn = fieldnames(fs);
+eval(sprintf('nfibs = fs.%s;',fn{1}));
+end
+if size(nfib,1)>size(nfib,2)
+    nfib=nfib';
+end
+normalized_fibers_mm=[normalized_fibers_mm,nfibs];
+end
+save([M.ui.groupdir,options.prefs.FTR_normalized],'normalized_fibers_mm','-v7.3');
+
+% export to trackvis
+options.root=[fileparts(fileparts(M.ui.groupdir)),filesep];
+[~,options.patientname]=fileparts(fileparts(M.ui.groupdir));
+options.earoot=[fileparts(which('lead')),filesep];
+
+specs.origin=[0,0,0];
+specs.dim=niisize;
+try
+    H=spm_dicom_headers([M.patient.list{1},options.prefs.sampledtidicom]);
+    specs.orientation=H{1,1}.ImageOrientationPatient;
+catch
+    specs.orientation=[0,1,0,0,0,0]; %[0,1,0,-1,0,0];%;[0,1,0,-1,0,0] [0,1,0,0,0,0];
+    specs.orientation=[1,0,0,0,1,0];
+    specs.orientation=[1,0,0,1,0,0];
+    specs.orientation=[1,0,0,0,1,0]; 
+   specs.orientation=[1 0 0 0 -1 0]; % dieses gut bei DSI studio
+    %specs.orientation=[0,1,0,0,0,0]; 
+    %specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example, dieses gut bei mesoFT
+    %trk_write. Try this one.. %[1,0,0,0,1,0]; 
+end
+ftr=load([M.patient.list{1},options.prefs.FTR_unnormalized]);
+specs.vox=ftr.vox;
+clear ftr
+
+ea_ftr2trk(options.prefs.FTR_normalized,M.ui.groupdir,specs,options); % export normalized ftr to .trk
+
+
+
+options.prefs=ea_prefs(M.ui.groupdir);
+

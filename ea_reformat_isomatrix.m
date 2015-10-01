@@ -41,10 +41,12 @@ if options.normregressor>1 % apply normalization to regressor data
             stimmat{side}=reshape(nanzscore(stimmat{side}(:)),size(stimmat{side},1),size(stimmat{side},2));
         elseif options.normregressor==3 % apply normal method from van albada 2008
             nanidx=isnan(stimmat{side});
+            
             stimmat{side}=reshape(ea_normal(stimmat{side}(:)),size(stimmat{side},1),size(stimmat{side},2));
             stimmat{side}(nanidx)=nan;
         end
     end
+    
 end
 
 isom=stimmat;

@@ -3,12 +3,6 @@ function [mr,b0idx,finames] = ea_build_DTD(bvalue,dirname,dtif,DTDf,HARDIf,bvalf
 % HARDI-formats.
 
 
-
-
-
-
-
-
 V=spm_vol([dirname,dtif]);
 
 for fi=1:length(V)
@@ -30,7 +24,7 @@ sz = size(mr.dataAy);
 mr.user.bfactor = bvalue; % enter bvalue
 
 
-[mr.user.bDir b0idx] = grads(dirname,bvecf,bvalf); % gradient directions
+[mr.user.bDir, b0idx] = grads(dirname,bvecf,bvalf); % gradient directions
 
 
 
@@ -163,7 +157,11 @@ for x_coor =1: matrix(2)
             tempY(tempY <= 0) = 20.0222; % warum 20.0222?
             y=squeeze(log(tempY )); 
             Y = [Y y'];
+try
             aniso_a= iAnisoX*y;
+catch
+    keyboard
+end
             YY = anisoX * aniso_a;
             M_error(y_coor,x_coor) = max(abs(YY - Y')); % MaxErr
             d_tens = [aniso_a(2),aniso_a(5),aniso_a(6);...
@@ -182,14 +180,19 @@ EigenVal= sum(difComp, 3);
 %end of function  do_calculation
 
 
-function [gradlist b0idx] = grads(indir,bvecf,bvalf)
+function [gradlist, b0idx] = grads(indir,bvecf,bvalf)
 
 gradlist=load([indir,bvecf]);
+if ~size(gradlist,2)==3
 gradlist=gradlist';
+end
 
 bvals=load([indir,bvalf]);
+if size(bvals,2)==1 
+   bvals=bvals'; 
+end
 
-b0idx = find(bvals<=5);
+b0idx = find(bvals<=10);
 
 
 

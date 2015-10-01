@@ -1,4 +1,4 @@
-function resultfig=ea_render_view(varargin)
+function resultfig=ea_elvis(varargin)
 % This function is the main 3D-visualization function of lead DBS. It
 % reads all atlases found in the lead_root/atlases folder, calculates a
 % convex hull around the nonzero area and renders it as 3D surfaces.
@@ -135,6 +135,7 @@ for pt=1:length(elstruct)
     
 end
 
+setappdata(resultfig,'el_render',el_render);
 % add handles to buttons. Can't be combined with the above loop since all
 % handles need to be set for the buttons to work properly (if alt is
 % pressed, all electrodes are made visible/invisible).
@@ -178,6 +179,10 @@ end
 % Initialize Sliceview-Button
 
 slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
+
+% Initialize Convis-Button
+convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome',options),'TooltipString','Slice Control Figure','ClickedCallback',{@openconnectomeviewer,resultfig,options});
+
 
 
 
@@ -224,8 +229,6 @@ end
 
 
 
-
-
 %% End of patient-specific part.
 
 
@@ -264,8 +267,20 @@ set(gcf,'color','w');
 axis vis3d
 axis equal
 set(gcf,'Name',figtitle);
-
-
+set(0,'CurrentFigure',resultfig);
+ax=gca;
+set(ax,'XLim',[-140 140]);
+set(ax,'YLim',[-140 140]);
+set(ax,'ZLim',[-140 140]);
+zoom(3)
+ax=gca;
+set(ax,'XLim',[-140 140]);
+set(ax,'YLim',[-140 140]);
+set(ax,'ZLim',[-140 140]);
+set(ax,'XLimMode','manual'); set(ax,'YLimMode','manual'); set(ax,'ZLimMode','manual');
+view(133,56);
+zoom(6)
+opensliceviewer([],[],resultfig,options);
 
 if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
     
@@ -293,6 +308,11 @@ end
 
 function opensliceviewer(hobj,ev,resultfig,options)
 awin=ea_anatomycontrol(gcf,options);
+setappdata(resultfig,'awin',awin);
+try WinOnTop(awin,true); end
+
+function openconnectomeviewer(hobj,ev,resultfig,options)
+awin=ea_convis(gcf,options);
 setappdata(resultfig,'awin',awin);
 try WinOnTop(awin,true); end
 

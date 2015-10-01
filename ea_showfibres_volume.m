@@ -9,7 +9,7 @@ function [PL]=ea_showfibres_volume(resultfig,options)
 
 PL.ht=uitoolbar(resultfig);
 set(0,'CurrentFigure',resultfig)
-colornames='rbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywk';
+colornames='rbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywk';
 
 disp('Calculating VAT/Fibers/Connectivity...');
 
@@ -361,8 +361,13 @@ if stimparams(1).showfibers
                         k=ea_concavehull(XYZ,1.5);
                         
                     end
-                    [~,centroid]=kmeans(XYZ,1);
-                    centroid=centroid(1,:);
+                    
+                    if size(XYZ,1)>1
+                        [~,centroid]=kmeans(XYZ,1);
+                        centroid=centroid(1,:);
+                    else
+                        centroid=XYZ; % only one entry coordinate.
+                    end
                     
                     
                     %%

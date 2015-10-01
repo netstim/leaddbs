@@ -2,7 +2,7 @@ function [slice,boundbox,boundboxmm]=ea_sample_slice(vol,tracor,wsize,voxmm,coor
 
 % function samples a slice from nifti image based on coordinates and the
 % wsize parameter (will use coordinate and sample a square that is 2xwsize
-% long in distances). wsize can be given as mm or voxel distande (defined
+% long in distances). wsize can be given as mm or voxel distance (defined
 % by voxmm parameter being either 'mm' or 'vox').
 % Define parameter vol as spm volume (see spm_vol), define tracor as either
 % 'tra', 'cor' or 'sag' for sampling direction. define coords as a set of
@@ -28,34 +28,58 @@ for side=1:length(coords)
 end
 coords=allc;
 
+if length(coords)==1 % scalar input, only a height is defined. convert to mm space.
+   getfullframe=1; 
+else
+    getfullframe=0;
+end
 switch tracor
     case 'tra'
-        boundbox{1}=coords(el,1)-wsize:1/interpfactor:coords(el,1)+wsize;
-        boundbox{2}=coords(el,2)-wsize:1/interpfactor:coords(el,2)+wsize;
-        boundbox{3}=repmat(coords(el,3),1,length(boundbox{1}));
+        if getfullframe
+            boundbox{1}=linspace(1,vol.dim(1),500);
+            boundbox{2}=linspace(2,vol.dim(2),500);
+            boundbox{3}=linspace(coords,coords,500);
+        else
+            boundbox{1}=coords(el,1)-wsize:1/interpfactor:coords(el,1)+wsize;
+            boundbox{2}=coords(el,2)-wsize:1/interpfactor:coords(el,2)+wsize;
+            boundbox{3}=repmat(coords(el,3),1,length(boundbox{1}));
+        end
         [cmesh.X,cmesh.Y]=meshgrid(boundbox{1},boundbox{2});
         cmesh.Z=repmat(boundbox{3}(1),numel(cmesh.X),1);
         ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
+        
         %slice=fliplr(slice);
     case 'cor'
-        boundbox{1}=coords(el,1)-wsize:1/interpfactor:coords(el,1)+wsize;
-        boundbox{2}=repmat(coords(el,2),1,length(boundbox{1}));
-        boundbox{3}=coords(el,3)-wsize:1/interpfactor:coords(el,3)+wsize;
+        if getfullframe
+            boundbox{1}=linspace(1,vol.dim(1),500);
+            boundbox{2}=linspace(coords,coords,500);
+            boundbox{3}=linspace(1,vol.dim(3),500);
+        else
+            boundbox{1}=coords(el,1)-wsize:1/interpfactor:coords(el,1)+wsize;
+            boundbox{2}=repmat(coords(el,2),1,length(boundbox{1}));
+            boundbox{3}=coords(el,3)-wsize:1/interpfactor:coords(el,3)+wsize;
+        end
         [cmesh.X,cmesh.Z]=meshgrid(boundbox{1},boundbox{3});
         cmesh.Y=repmat(boundbox{2}(1),numel(cmesh.X),1);
-        ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
+            ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
-        %slice=fliplr(slice);  
+        %slice=fliplr(slice);
     case 'sag'
-        boundbox{2}=coords(el,2)-wsize:1/interpfactor:coords(el,2)+wsize;
-        boundbox{3}=coords(el,3)-wsize:1/interpfactor:coords(el,3)+wsize;
-                boundbox{1}=repmat(coords(el,1),1,length(boundbox{2}));
+        if getfullframe
+            boundbox{1}=linspace(coords,coords,500);
+            boundbox{2}=linspace(1,vol.dim(2),500);
+            boundbox{3}=linspace(1,vol.dim(3),500);
+        else
+            boundbox{2}=coords(el,2)-wsize:1/interpfactor:coords(el,2)+wsize; % needs to be that order.
+            boundbox{1}=repmat(coords(el,1),1,length(boundbox{2}));
+            boundbox{3}=coords(el,3)-wsize:1/interpfactor:coords(el,3)+wsize;
+        end
         [cmesh.Y,cmesh.Z]=meshgrid(boundbox{2},boundbox{3});
         cmesh.X=repmat(boundbox{1}(1),numel(cmesh.Y),1);
-        ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
+            ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
-        %slice=fliplr(slice); 
+        %slice=fliplr(slice);
 end
 
 

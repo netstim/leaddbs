@@ -241,8 +241,9 @@ try    set(atlaslabels,'Visible','off'); end
     
     
     try
-        setappdata(gcf,'iXYZ',atlases.XYZ);
-        setappdata(gcf,'ipixdim',atlases.pixdim);
+        setappdata(gcf,'atlases',atlases);
+%        setappdata(gcf,'iXYZ',atlases.XYZ);
+%        setappdata(gcf,'ipixdim',atlases.pixdim);
     end
     try
         atlases.rebuild=0; % always reset rebuild flag.

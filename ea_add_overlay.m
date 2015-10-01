@@ -8,12 +8,15 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
     set(0,'CurrentFigure',cuts)
 
     % load/generate atlas_index.mat
-    
+    if ~isfield(options,'atlases') % atlases structure can be handed down directly within options struct.
     if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
         atlases=ea_genatlastable([],options.earoot,options);
     else
         load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
         atlases=ea_genatlastable(atlases,options.earoot,options);
+    end
+    else
+        atlases=options.atlases;
     end
     
     
@@ -29,11 +32,7 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
             %ratlmm=round(atlmm);
             
             atlvx=atlases.XYZ{atlas,side}.vx;
-            atlval=atlases.XYZ{atlas,side}.val;
-            
-            
-                  
-               
+            atlval=atlases.XYZ{atlas,side}.val;  
                atlhts=atlmm(:,ea_intersecdim(tracor));
                planehts=planemm(:,ea_intersecdim(tracor));
                dists=abs(atlhts-planehts(1));
@@ -54,9 +53,7 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                         keyboard
                     end
                 end
-                
-                
-                
+
                 xyatl(:,1)=xyatl(:,1)-min(xyatl(:,1))+1;
                 xyatl(:,2)=xyatl(:,2)-min(xyatl(:,2))+1;
                 slice=zeros(max(xyatl(:,1)),max(xyatl(:,2)));
@@ -95,20 +92,16 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                     colorf(:,:,1)=atlasc(1);
                     colorf(:,:,2)=atlasc(2);
                     colorf(:,:,3)=atlasc(3);
-                    
-                    
+ 
                     %% color_overlay:
                     if options.d2.col_overlay
                         set(0,'CurrentFigure',cuts)
                         cof = image(colorf);
-                        
-                        
+   
                         set(cof,'XData',linspace(atlbb(1,1),atlbb(1,2)),'YData',linspace(atlbb(2,1),atlbb(2,2)));
                         slice=slice*options.d2.atlasopacity;
                         
-                        set(cof, 'AlphaData', slice)
-                        
-                        
+                        set(cof, 'AlphaData', slice)  
                     end
                     %% contour overlay:
                     if  options.d2.con_overlay
@@ -117,7 +110,6 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                             try
                                 bw=bwconncomp(slice);
                             catch % no image toolbox available.
-                            
                                 bw=ea_conncomp(logical(slice));
                             end
                             for cp=1:length(bw.PixelIdxList)
@@ -147,7 +139,6 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                                     plot(cscale(1,:),cscale(2,:),'color',options.d2.con_color,'LineSmoothing','on');
                                 else
                                     startPoint=1;
-
                                     for plots=1:length(ix) % this happens if contour has an "inner hole"
                                     plot(cscale(1,startPoint:ix(plots)),cscale(2,startPoint:ix(plots)),'color',options.d2.con_color,'LineSmoothing','on');  
                                     startPoint=ix(plots)+1;
@@ -156,8 +147,7 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                             end
                         end
                     end
-                    
-                    
+
                     if options.d2.lab_overlay
                         
                         if any(slice(:));
@@ -184,7 +174,7 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
     %axis off
     
     % save table information
-    save([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases');
+    %save([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases');
 
 
 function sides=detsides(opt)

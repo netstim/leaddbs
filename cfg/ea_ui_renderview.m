@@ -19,7 +19,7 @@ options.dostimulation=0;
 % Prior Results are loaded here inside the function (this way, function
 % can be called just by giving the patient directory.
 
-[coords_mm,resultfig]=ea_render_view(patientname,options);
+[coords_mm,resultfig]=ea_elvis(patientname,options);
 
 % save scene as matlab figure
 saveas(resultfig,[options.root,patientname,filesep,'eAuto_scene.fig']);

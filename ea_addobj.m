@@ -183,8 +183,11 @@ for fib=1:fibmax
     if size(thisset{fib},1)~=3
         thisset{fib}=thisset{fib}';
     end
+    try
     thisset{fib}(4,:)=detcolor(thisset{fib}); % add coloring information to the 4th column.
-
+    catch
+        thisset{fib}(4,:)=0; % fiber has only one entry.
+    end
     for dim=1:4
         thisfib(dim,:)=double(interp1q([1:size(thisset{fib},2)]',thisset{fib}(dim,:)',[1:0.1:size(thisset{fib},2)]')');
     end

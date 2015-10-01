@@ -1,5 +1,11 @@
 function ea_crop_nii(varargin)
-% ea_crop_nii(filename, prefix)
+% This function crops bounding-box of niftis to non-zeros or non-nan values.
+% usage: ea_crop_nii(filename, [prefix (default: overwrite, threshstring -
+% can be 'nn' for non-Nan or 'nz' for non-zero (default)]). Note that
+% outputs will not contain nan values anymore.
+% __________________________________________________________________________________
+% Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
 
 filename=varargin{1};
 if nargin>1
@@ -8,8 +14,17 @@ else
     prefix='w';
 end
 
+if nargin>2 % exclude nans/zeros
+    nstring=varargin{3};
+else
+    nstring='nz';
+end
+
+
 V=spm_vol(filename);
-[bb,vox] = ea_spm_get_bbox(V, 0);
+
+
+[bb,vox] = ea_spm_get_bbox(V, nstring);
 
 if any(vox<0)
    reslice_nii(filename,filename,abs(vox),0); 

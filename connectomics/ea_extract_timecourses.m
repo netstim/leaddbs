@@ -55,7 +55,6 @@ end
 dimensionality=length(atlas_lgnd{1}); % how many ROI.
 
 
-interpol_tc=detrend(interpol_tc);
 
 
 %% Extract timecourses of complete volume for signal regression..
@@ -219,7 +218,6 @@ interpol_tc=interpol_tc+repmat(theMean,[1, sampleLength]);
 
 %% end  bandpass
 disp('Done.');
-
 
 
 %% average gmtc over ROI

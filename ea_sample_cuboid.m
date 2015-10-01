@@ -34,6 +34,10 @@ else
 width=15;
 end
 
+if nargin>=6
+    distance=varargin{6};
+end
+
 V=spm_vol(niifn);
 
 
@@ -95,8 +99,11 @@ orthy=orth(:,2)'*((reldist/10)/norm(orth(:,2))); % vector going perpendicular to
 
 xdim=width; % default is 15
 ydim=width; % default is 15
+if exist('distance','var')
+zdim=distance;
+else
 zdim=150; % will be sum up to 5 times reldist (three between contacts and two at borders).
-
+end
 
 imat=nan(2*ydim+1,2*xdim+1,zdim);
 

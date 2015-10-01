@@ -209,6 +209,9 @@ if options.manualheightcorrection
         ea_error('No reconstruction information found. Please run reconstruction first.');
     end
     mcfig=figure('name',[patientname,': Manual Height Correction'],'numbertitle','off');
+    if exist('manually_corrected','var');
+        options.mancor=1;
+    end
     ea_manualcorrection(mcfig,coords_mm,trajectory,patientname,options);
     
     
