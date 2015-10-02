@@ -59,7 +59,11 @@ for track_number=1:length(fibs)
 end
 
 for i = 1:length(tracks)
-tracks(i).matrix=bsxfun(@times, tracks(i).matrix,header.voxel_size);
+    try
+        tracks(i).matrix=bsxfun(@times, tracks(i).matrix,header.voxel_size);
+    catch
+        tracks(i).matrix=bsxfun(@times, tracks(i).matrix',header.voxel_size);
+    end
 end
 
 ea_trk_write(header,tracks,[directory,ftrfilename,'.trk']);

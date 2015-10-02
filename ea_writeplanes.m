@@ -217,20 +217,24 @@ for side=options.sides
             if options.d3.showisovolume
                 
                 Viso=spm_vol([options.root,options.patientname,filesep,options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
-                
+                Visostat=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'_p05.nii']);
                 if exist('ave_coords_mm','var')
                     for siso=1:length(ave_coords_mm)
                         coordsi{siso}=Viso.mat\[ave_coords_mm{siso},ones(size(ave_coords_mm{siso},1),1)]';
                         coordsi{siso}=coordsi{siso}(1:3,:)';
                     end
                     [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
+                    [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el);
+
                 else
                     coordsi{side}=Viso.mat\[coordsmm(1);coordsmm(1);coordsmm(1);1];
                     coordsi{side}=coordsi{side}(1:3,:)';
                     [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
+                    [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el);
+
                 end
                 slice(slice==0)=nan;
-                
+                wholemap=spm_read_vols(Viso);
                 % define an alpha mask
                 alpha=slice;
                 alpha(~isnan(alpha))=0.5;
@@ -238,7 +242,7 @@ for side=options.sides
                 % convert slice to rgb format
                 %slicergb=nan([size(slice),3]);
                 jetlist=eval(options.prefs.d2.isovolcolormap);
-                slice=(slice-(nanmin(slice(:))))/(nanmax(slice(:))-(nanmin(slice(:)))); % set min max to boundaries 0-1.
+                slice=(slice-(nanmin(wholemap(:))))/(nanmax(wholemap(:))-(nanmin(wholemap(:)))); % set min max to boundaries 0-1.
                 slice=round(slice.*63)+1; % set min max to boundaries 1-64.
                 
                 slicer=slice; sliceg=slice; sliceb=slice;
@@ -249,6 +253,13 @@ for side=options.sides
                 isv=imagesc(slicergb);
                 set(isv,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
                 set(isv,'AlphaData',alpha);
+                
+                % draw significance countour:
+                slicestat(isnan(slicestat))=0;
+                [cmat,statcontour]=contour(slicestat,1);
+                set(statcontour,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
+                
+                
             end
             
             
