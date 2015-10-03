@@ -27,7 +27,7 @@ V=spm_vol(filename);
 [bb,vox] = ea_spm_get_bbox(V, nstring);
 
 if any(vox<0)
-   reslice_nii(filename,filename,abs(vox),0); 
+   ea_reslice_nii(filename,filename,abs(vox),0); 
    V=spm_vol(filename);
    [bb,vox] = ea_spm_get_bbox(V, 0);
 end

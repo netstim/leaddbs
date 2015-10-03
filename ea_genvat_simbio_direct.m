@@ -1,4 +1,4 @@
-function varargout=ea_genvat_simbio_ws(varargin)
+function varargout=ea_genvat_simbio_direct(varargin)
 % This function generates a volume of activated tissue around for each
 % electrode.
 % Usage: VAT=ea_genvat(coords_mm,stimparams,options).
@@ -22,11 +22,15 @@ elseif nargin==1
 end
 
 
+if isempty(find(stimparams(side).U))
+    varargout{1}=[]; varargout{2}=[];
+    return
+end
+
 usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 
 %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
 
-for side=options.sides
 coords=acoords{side};
 options.earoot=[fileparts(which('lead')),filesep];
 
@@ -44,9 +48,11 @@ trajvox=trajvox(1:3,:)';
 
 
 %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
-[cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,25,51); % this will result in ~10x10x10 mm.
+
+[cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,25,51,1); % this will result in ~10x10x10 mm.
 mat=mat';
-Vexp=ea_synth_nii([options.root,options.patientname,filesep,'tmp.nii'],mat,[2,0],cimat);
+mkdir([options.root,options.patientname,filesep,'headmodel']);
+Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural.nii'],mat,[2,0],cimat);
 spm_write_vol(Vexp,cimat);
 
 
@@ -60,7 +66,9 @@ thiselhandle=el_render(1).el_render{side};
 % last: tip
 
 % establish coordinate grid:
-nii=ea_load_nii([options.root,options.patientname,filesep,'tmp.nii']);
+
+
+nii=ea_load_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural.nii']);
 [xx,yy,zz]=ind2sub(size(nii.img),1:numel(nii.img));
 XYZvx=[xx;yy;zz;ones(1,length(xx))];
 XYZmm=Vexp.mat*XYZvx;
@@ -100,7 +108,7 @@ ea_dispercent(1,'end');
 
 % set up dipole
 
-
+disp('Finishing headmodel...');
 % if length(find(stimparams.U))>1 % bipolar
 % elseif length(find(stimparams.U)==1 % monopolar
 % else % no active contact!
@@ -108,8 +116,10 @@ ea_dispercent(1,'end');
 % end
 
 % define dipole coordinates:
-    dpvx=coords(find(stimparams.U),:);
-    volts=stimparams.U(find(stimparams.U));
+
+    dpvx=coords(find(stimparams(side).U),:);
+    
+    volts=stimparams(side).U(find(stimparams(side).U));
 
 dpvx=Vexp.mat\[dpvx,ones(size(dpvx,1),1)]';
 dpvx=dpvx(1:3,:)';
@@ -133,11 +143,8 @@ X=single(smri.gray);
 X=X+2*smri.white;
 X=X+3*smri.contacts;
 X=X+4*smri.insulation;
-mkdir([options.root,options.patientname,filesep,'headmodel']);
-Vex=Vexp; Vex.fname=[options.root,options.patientname,filesep,'headmodel',filesep,'structural.nii'];
-spm_write_vol(Vex,X);
-delete([options.root,options.patientname,filesep,'tmp.nii']);
-clear Vex X
+spm_write_vol(Vexp,X);
+clear X
 
 %% generate diffusion signal:
 if usediffusion
@@ -153,28 +160,27 @@ if usediffusion
         Vsig.fname=[options.root,options.patientname,filesep,'headmodel',filesep,'dti_',num2str(i),'.nii'];
         spm_write_vol(Vsig,squeeze(signal(:,:,:,i)));
     end
-    
 end
-
 
 %% create the mesh using fieldtrip:
 cfg        = [];
 cfg.tissue      = {'gray','white','contacts','insulation'};
 cfg.method = 'hexahedral';
-mesh       = ea_ft_prepare_mesh(cfg,smri); % need to incorporate this function and all dependencies into lead-dbs
+cfg.numvertices=[100000,100000,100000,100000];
+
+
+cfg.resolution=1;
+%mesh=ea_ft_prepare_mesh(cfg,smri);
+[~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);'); % need to incorporate this function and all dependencies into lead-dbs
 mesh = ea_ft_transform_geometry(inv(smri.transform), mesh);
 
 
-
-% plot gray matter:
-% pmesh=mesh;
-% pmesh.hex=pmesh.hex(pmesh.tissue==1,:);
-% figure, ft_plot_mesh(pmesh,'vertexcolor','none','facecolor',[0.5 0.5 0.5],'facealpha',0.2,'edgealpha',0.1);
-
-%% volume conductor
+%% calculate volume conductor
+disp('Done. Creating volume conductor...');
 vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]); % need to incorporate this function and all dependencies into lead-dbs
-%% 
 
+%% calculate voltage distribution based on dipole
+disp('Done. Calculating voltage distribution...');
 stimvec=zeros(length(vol.stiff),1);
 
 ix=knnsearch(vol.pos,dpvx);
@@ -182,19 +188,22 @@ for src=1:length(ix)
    stimvec(ix(src))=volts(src); 
 end
 
-vecx=ea_sb_calc_vecx(vol.stiff,stimvec,1);
-vecx(1)=mean(vecx);
-% calculate electric field ET
+vecx=ea_sb_calc_vecx(vol.stiff,stimvec,1000);
+vecx(1)=vecx(2);
+
+disp('Done. Calculating ET...');
+% calculate electric field ET by calculating midpoints of each
+% mesh-connection and setting difference of voltage to these points.
 vat=vol;
-for hexaed=1:size(vol.hex,1)
-    for edge=1:8
-    vat.pos(vat.hex(hexaed,edge),:)=mean([vol.pos(vat.hex(hexaed,edge),:);vol.pos(vat.hex(hexaed,ea_pluseight(edge)),:)]);
-    vat.ET(vat.hex(hexaed,edge))=abs(vecx(vat.hex(hexaed,edge))-vecx(vat.hex(hexaed,ea_pluseight(edge))));
-    end
-end
+
+hexaed=1:size(vol.hex,1);
+vat.pos(vat.hex(hexaed,1:8),:)=(vol.pos(vat.hex(hexaed,1:8),:)+vol.pos(vat.hex(hexaed,[2:8,1]),:))/2;
+vat.ET(vat.hex(hexaed,1:8))=abs(vecx(vat.hex(hexaed,1:8))-vecx(vat.hex(hexaed,[2:8,1])));
 
 
-thresh=0.064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons.
+
+disp('Done. Calculating VAT...');
+thresh=0.064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons
 
 vat.ET=vat.ET>thresh;
 vat.pos=vat.pos(vat.ET,:);
@@ -205,32 +214,39 @@ vat.pos=Vexp.mat*vat.pos;
 vat.pos=vat.pos(1:3,:)';
 
 F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),ones(size(vat.pos(:,1))));
-    F.ExtrapolationMethod='none';
-[xg,yg,zg] = meshgrid(linspace(min(vat.pos(:,1)),max(vat.pos(:,1)),100),...
-    linspace(min(vat.pos(:,2)),max(vat.pos(:,2)),100),...
-linspace(min(vat.pos(:,3)),max(vat.pos(:,3)),100));
+F.ExtrapolationMethod='none';
+    
+
+    % the following will be used for volume 2 isosurf creation as well as
+    % volumetrics of the vat in mm^3.
+    gv=cell(3,1); spacing=zeros(3,1);
+    for dim=1:3
+         gv{dim}=linspace(min(vat.pos(:,dim)),max(vat.pos(:,dim)),100);
+         spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
+    end
+
+    
+[xg,yg,zg] = meshgrid(gv{1},gv{2},gv{3});
 eg = F(xg,yg,zg);
 eg(isnan(eg))=0;
-vath=patch(isosurface(xg,yg,zg,eg,0.75));
-set(vath,'FaceColor',[1,0,0]);
-set(vath,'EdgeColor',[1,0,0]);
-set(vath,'EdgeColor','none');
-keyboard
-set(vath,'FaceVertexCData',abs(repmat(60,length(get(vath,'XData')),1)));
-set(vath,'EdgeAlpha',0);
-ea_spec_atlas(vath,'vat',jet,1);
-end
+vatfv=isosurface(xg,yg,zg,eg,0.75);
+
+vatvolume=nnz(eg)*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
+
+
+
+% define function outputs
+
+varargout{1}=vatfv;
+varargout{2}=vatvolume;
+disp('Done...');
+
+
 
 
 %% begin fieldtrip/simbio functions:
 
 
-function A=ea_pluseight(A)
-if A<8
-    A=A+1;
-else
-    A=1;
-end
 
 function [warped] = ea_ft_warp_apply(M, input, method, tol)
 
@@ -437,239 +453,6 @@ if ~isempty(tol)
   end
 end
 
-function [vol, sens] = ea_ft_prepare_vol_sens(vol, sens, varargin)
-
-% FT_PREPARE_VOL_SENS does some bookkeeping to ensure that the volume
-% conductor model and the sensor array are ready for subsequent forward
-% leadfield computations. It takes care of some pre-computations that can
-% be done efficiently prior to the leadfield calculations.
-%
-% Use as
-%   [vol, sens] = ft_prepare_vol_sens(vol, sens, ...)
-% with input arguments
-%   sens   structure with gradiometer or electrode definition
-%   vol    structure with volume conductor definition
-%
-% The vol structure represents a volume conductor model, its contents
-% depend on the type of model. The sens structure represents a sensor
-% array, i.e. EEG electrodes or MEG gradiometers.
-%
-% Additional options should be specified in key-value pairs and can be
-%   'channel'    cell-array with strings (default = 'all')
-%   'order'      number, for single shell "Nolte" model (default = 10)
-%
-% The detailed behaviour of this function depends on whether the input
-% consists of EEG or MEG and furthermoree depends on the type of volume
-% conductor model:
-% - in case of EEG single and concentric sphere models, the electrodes are
-%   projected onto the skin surface.
-% - in case of EEG boundary element models, the electrodes are projected on
-%   the surface and a blilinear interpoaltion matrix from vertices to
-%   electrodes is computed.
-% - in case of MEG and a localspheres model, a local sphere is determined
-%   for each coil in the gradiometer definition.
-%  - in case of MEG with a singleshell Nolte model, the volume conduction
-%    model is initialized
-% In any case channel selection and reordering will be done. The channel
-% order returned by this function corresponds to the order in the 'channel'
-% option, or if not specified, to the order in the input sensor array.
-%
-% See also FT_COMPUTE_LEADFIELD, FT_READ_VOL, FT_READ_SENS, FT_TRANSFORM_VOL,
-% FT_TRANSFORM_SENS
-
-% Copyright (C) 2004-2013, Robert Oostenveld
-%
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id: ft_prepare_vol_sens.m 8997 2013-12-09 13:23:21Z roboos $
-
-% get the optional input arguments
-% fileformat = ft_getopt(varargin, 'fileformat');
-
-
-channel = ea_ft_getopt(varargin, 'channel', sens.label);   % cell-array with channel labels, default is all
-order   = ea_ft_getopt(varargin, 'order', 10);             % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
-
-% ensure that the sensor description is up-to-date (Aug 2011)
-%sens = ft_datatype_sens(sens);
-
-
-
-% ensure that the volume conduction description is up-to-date (Jul 2012)
-%vol = ft_datatype_headmodel(vol);
-
-% % determine the skin compartment
-% if ~isfield(vol, 'skin_surface')
-%   if isfield(vol, 'bnd')
-%     vol.skin_surface   = find_outermost_boundary(vol.bnd);
-%   elseif isfield(vol, 'r') && length(vol.r)<=4
-%     [dum, vol.skin_surface] = max(vol.r);
-%   end
-% end
-% 
-% % determine the inner_skull_surface compartment
-% if ~isfield(vol, 'inner_skull_surface')
-%   if isfield(vol, 'bnd')
-%     vol.inner_skull_surface  = find_innermost_boundary(vol.bnd);
-%   elseif isfield(vol, 'r') && length(vol.r)<=4
-%     [dum, vol.inner_skull_surface] = min(vol.r);
-%   end
-% end
-
-% % otherwise the voltype assignment to an empty struct below won't work
-% if isempty(vol)
-%   vol = [];
-% end
-
-% this makes them easier to recognise
-sens.type = ea_ft_senstype(sens);
-vol.type  = ea_ft_voltype(vol);
-
-if isfield(vol, 'unit') && isfield(sens, 'unit') && ~strcmp(vol.unit, sens.unit)
-    error('inconsistency in the units of the volume conductor and the sensor array');
-end
-
-% whole meg part removed from original ft_ file.
-
-  % the electrodes are used, the channel positions are not relevant any more
-  % channel positinos need to be recomputed after projecting the electrodes on the skin
-  if isfield(sens, 'chanpos'); sens = rmfield(sens, 'chanpos'); end
-  
-  % select the desired channels from the electrode array
-  % order them according to the users specification
-  [selchan, selsens] = match_str(channel, sens.label);
-  Nchans = length(sens.label);
-  
-  sens.label     = sens.label(selsens);
-  try, sens.chantype  = sens.chantype(selsens); end;
-  try, sens.chanunit  = sens.chanunit(selsens); end;
-  
-  if isfield(sens, 'tra')
-    % first only modify the linear combination of electrodes into channels
-    sens.tra     = sens.tra(selsens,:);
-    % subsequently remove the electrodes that do not contribute to any channel output
-    selelec      = any(sens.tra~=0,1);
-    sens.elecpos = sens.elecpos(selelec,:);
-    sens.tra     = sens.tra(:,selelec);
-  else
-    % the electrodes and channels are identical
-    sens.elecpos = sens.elecpos(selsens,:);
-  end
-  
-%   switch ea_ft_voltype(vol)
-%     
-%     case 'simbio' - always simbio in our case..
-      
-      % extract the outer surface
-      bnd = ea_mesh2edge(vol);
-      for j=1:length(sens.label)
-        d = bsxfun(@minus, bnd.pnt, sens.elecpos(j,:));
-        [d, i] = min(sum(d.^2, 2));
-        % replace the position of each electrode by the closest vertex
-        sens.elecpos(j,:) = bnd.pnt(i,:);
-      end
-      
-      vol.transfer = ea_sb_transfer(vol,sens);
-  % end
-  
-  % FIXME this needs careful thought to ensure that the average referencing which is now done here and there, and that the linear interpolation in case of BEM are all dealt with consistently
-  % % always ensure that there is a linear transfer matrix for
-  % % rereferencing the EEG potential
-  % if ~isfield(sens, 'tra');
-  %   sens.tra = eye(length(sens.label));
-  % end
-  
-  % update the channel positions as the electrodes were projected to the skin surface
-  [pos, ~, lab] = ea_channelposition(sens);
-  [selsens, selpos] = match_str(sens.label, lab);
-  sens.chanpos = nan(length(sens.label),3);
-  sens.chanpos(selsens,:) = pos(selpos,:);
-
-
-if isfield(sens, 'tra')
-  if issparse(sens.tra) && size(sens.tra, 1)==1
-    % this multiplication would result in a sparse leadfield, which is not what we want
-    % the effect can be demonstrated as sparse(1)*rand(1,10), see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1169#c7
-    sens.tra = full(sens.tra);
-  elseif ~issparse(sens.tra) && size(sens.tra, 1)>1
-    % the multiplication of the "sensor" leadfield (electrode or coil) with the tra matrix to get the "channel" leadfield
-    % is faster for most cases if the pre-multiplying weighting matrix is made sparse
-    sens.tra = sparse(sens.tra);
-  end
-end
-
-function [transfer] = ea_sb_transfer(vol,sens)
-
-% SB_TRANSFER
-% 
-% INPUT:
-% vol.wf.nd,vol.wf.el: nodes and elements of head grid (nodes in mm)
-% vol.wf.field: vector assigning a conductivity to teach element (in S/mm)
-% elc: vector containing the electrode positions (in mm)
-% 
-% OUTPUT:
-% vol.transfer: transfer matrix
-%
-% $Id: sb_transfer.m 8776 2013-11-14 09:04:48Z roboos $
-
-%--------------------------------------------------------------------------
-%TODO: tissuecond: vector with the conductivities of the respective labels,
-%right now not used
-%--------------------------------------------------------------------------
-%TODO: automated setting of conductivities?
-%disp('Setting conductivities...')
-%vol.wf.field = sb_set_cond(vol.wf.labels,tissuecond); %gucken, wo tissuecond herkommt...
-%--------------------------------------------------------------------------
-%TODO: this probably needs to be expanded so that the node is a surface
-%node if no ECoG-flag is set - solution: find a surface first...
-%--------------------------------------------------------------------------
-
-disp('Find electrode positions...')
-vol.elecnodes = ea_sb_find_elec(vol,sens);
-%calculate transfermatrix
-disp('Calculate transfer matrix...')
-transfer = zeros(length(vol.elecnodes),size(vol.pos,1));
-%--------------------------------------------------------------------------
-%TODO: add possibility for parallel computation
-%matlabpool local 2;
-
-ea_dispercent(0,'Solving forward model');
-for i=2:length(vol.elecnodes)
-    ea_dispercent(i/length(vol.elecnodes));
-    %str = ['Electrode ',num2str(i),' of ',num2str(size(vol.elecnodes,1))];
-    %disp(str)
-    vecb = zeros(size(vol.stiff,1),1);
-    vecb(vol.elecnodes(i)) = 1;
-    transfer(i,:) = ea_sb_calc_vecx(vol.stiff,vecb,vol.elecnodes(1));
-    clear vecb;
-end
-ea_dispercent(1,'end');
-
-function diri = ea_sb_find_elec(vol,sens)
-
-% SB_FIND_ELEC
-%
-% $Id: sb_find_elec.m 8776 2013-11-14 09:04:48Z roboos $
-
-diri = zeros(size(sens.elecpos,1),1);
-for i=1:size(sens.elecpos,1)
-    [dist, diri(i)] = min(sum(bsxfun(@minus,vol.pos,sens.elecpos(i,:)).^2,2));
-end
-
 function vecx = ea_sb_calc_vecx(stiff,vecb,ref)
 
 % SB_CALC_VECX
@@ -759,105 +542,6 @@ clear indexi indexj s;
 %it
 %rescal
 x = x.*dkond;
-
-function [newbnd] = ea_mesh2edge(bnd)
-
-% MESH2EDGE finds the edge lines from a triangulated mesh or the edge surfaces
-% from a tetrahedral or hexahedral mesh.
-%
-% Use as
-%   [bnd] = mesh2edge(bnd)
-
-% Copyright (C) 2013, Robert Oostenveld
-%
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id: mesh2edge.m 8776 2013-11-14 09:04:48Z roboos $
-
-if isfield(bnd, 'tri')
-  % make a list of all edges
-  edge1 = bnd.tri(:, [1 2]);
-  edge2 = bnd.tri(:, [2 3]);
-  edge3 = bnd.tri(:, [3 1]);
-  edge = cat(1, edge1, edge2, edge3);
-  
-elseif isfield(bnd, 'tet')
-  % make a list of all triangles that form the tetraheder
-  tri1 = bnd.tet(:, [1 2 3]);
-  tri2 = bnd.tet(:, [2 3 4]);
-  tri3 = bnd.tet(:, [3 4 1]);
-  tri4 = bnd.tet(:, [4 1 2]);
-  edge = cat(1, tri1, tri2, tri3, tri4);
-  
-elseif isfield(bnd, 'hex')
-  % make a list of all "squares" that form the cube/hexaheder
-  % FIXME should be checked, this is impossible without a drawing
-  square1 = bnd.hex(:, [1 2 3 4]);
-  square2 = bnd.hex(:, [5 6 7 8]);
-  square3 = bnd.hex(:, [1 2 6 5]);
-  square4 = bnd.hex(:, [2 3 7 6]);
-  square5 = bnd.hex(:, [3 4 8 7]);
-  square6 = bnd.hex(:, [4 1 5 8]);
-  edge = cat(1, square1, square2, square3, square4, square5, square6);
-  
-end % isfield(bnd)
-
-% soort all polygons in the same direction
-% keep the original as "edge" and the sorted one as "sedge"
-sedge = sort(edge, 2);
-
-% % find the edges that are not shared -> count the number of occurences
-% n = size(sedge,1);
-% occurences = ones(n,1);
-% for i=1:n
-%   for j=(i+1):n
-%     if all(sedge(i,:)==sedge(j,:))
-%       occurences(i) = occurences(i)+1;
-%       occurences(j) = occurences(j)+1;
-%     end
-%   end
-% end
-%
-% % make the selection in the original, not the sorted version of the edges
-% % otherwise the orientation of the edges might get flipped
-% edge = edge(occurences==1,:);
-
-% find the edges that are not shared
-indx = ea_findsingleoccurringrows(sedge);
-edge = edge(indx, :);
-
-if ~isfield(bnd, 'pnt') && isfield(bnd, 'pos')
-  bnd.pnt = bnd.pos;
-end
-
-% the naming of the output edges depends on what they represent
-newbnd.pnt  = bnd.pnt;
-if isfield(bnd, 'tri')
-  newbnd.line = edge;
-elseif isfield(bnd, 'tet')
-  newbnd.tri = edge;
-elseif isfield(bnd, 'hex')
-  newbnd.poly = edge;
-end
-
-function indx = ea_findsingleoccurringrows(X)
-[X, indx] = sortrows(X);
-sel  = any(diff([X(1,:)-1; X],1),2) & any(diff([X; X(end,:)+1],1),2);
-indx = indx(sel);
 
 function [type] = ea_ft_voltype(vol, desired)
 
@@ -1098,6 +782,8 @@ hasdata = exist('mri', 'var');
 cfg.downsample  = ea_ft_getopt(cfg, 'downsample', 1); % default is no downsampling
 cfg.numvertices = ea_ft_getopt(cfg, 'numvertices');   % no default
 
+
+
 % This was changed on 3 December 2013, this backward compatibility can be removed in 6 months from now.
 if isfield(cfg, 'interactive')
   if strcmp(cfg.interactive, 'yes')
@@ -1156,341 +842,6 @@ ea_ft_postamble trackconfig
 ea_ft_postamble provenance
 ea_ft_postamble previous mri
 ea_ft_postamble history bnd
-
-function [pnt, ori, lab] = ea_channelposition(sens)
-
-% CHANNELPOSITION computes the channel positions and orientations from the
-% coils or electrodes
-%
-% Use as
-%   [pos, ori, lab] = channelposition(sens)
-% where sens is an electrode or gradiometer array.
-%
-% See also FT_DATATYPE_SENS
-
-% Copyright (C) 2009-2012, Robert Oostenveld & Vladimir Litvak
-%
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id: channelposition.m 8920 2013-11-29 13:20:51Z roboos $
-
-% remove the balancing from the sensor definition, e.g. planar gradients, 3rd-order gradients, PCA-cleaned data or ICA projections
-if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
-  sens = ea_undobalancing(sens);
-end
-
-% keep it backward compatible with sensor definitions prior to 2011v1 (see ft_datatype_sens), which have pnt/ori instead of coilpos/coilori.
-if isfield(sens, 'ori')
-  sens.coilori = sens.ori;
-  sens = rmfield(sens, 'ori');
-end
-if isfield(sens, 'pnt')
-  sens.coilpos = sens.pnt;
-  sens = rmfield(sens, 'pnt');
-end
-
-% treat all sensor arrays similar, i.e. as gradiometer systems
-if     ~isfield(sens, 'coilori') && isfield(sens, 'coilpos')
-  sens.coilori = nan(size(sens.coilpos));
-elseif ~isfield(sens, 'coilori') && isfield(sens, 'elecpos')
-  sens.coilori = nan(size(sens.elecpos));
-end
-
-switch ft_senstype(sens)
-  case {'ctf64', 'ctf151', 'ctf275' 'bti148', 'bti248', 'bti248grad', 'itab28', 'itab153', 'yokogawa64', 'yokogawa160', 'babysquid74'}
-    % the following code applies to systems with only axial gradiometers or magnetometers
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%
-    % do the MEG sensors first
-    %%%%%%%%%%%%%%%%%%%%%%%%%%
-    sensorig   = sens;
-    sel        = ft_chantype(sens, 'meg');
-    sens.label = sens.label(sel);
-    sens.tra   = sens.tra(sel,:);
-    
-    % subsequently remove the unused coils
-    used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
-    sens.coilpos = sens.coilpos(used,:);
-    sens.coilori = sens.coilori(used,:);
-    sens.tra     = sens.tra(:,used);
-    
-    % compute distances from the center of the helmet
-    center = mean(sens.coilpos);
-    dist   = sqrt(sum((sens.coilpos - repmat(center, size(sens.coilpos, 1), 1)).^2, 2));
-    
-    % put the corresponding distances instead of non-zero tra entries
-    maxval = repmat(max(abs(sens.tra),[],2), [1 size(sens.tra,2)]);
-    maxval = min(maxval, ones(size(maxval))); %a value > 1 sometimes leads to problems; this is an empirical fix
-    dist = (abs(sens.tra)>0.7.*maxval).*repmat(dist', size(sens.tra, 1), 1);
-    
-    % for the occasional case where there are nans: -> 0's will be
-    % converted to inf anyhow
-    dist(isnan(dist)) = 0;
-    
-    % put infs instead of the zero entries
-    dist(~dist) = inf;
-    
-    % use the matrix to find coils with minimal distance to the center,
-    % i.e. the bottom coil in the case of axial gradiometers
-    % this only works for a full-rank unbalanced tra-matrix
-    
-    numcoils = sum(isfinite(dist),2);
-    
-    if all(numcoils==numcoils(1))
-      % add the additional constraint that coils cannot be used twice,
-      % i.e. for the position of 2 channels. A row of the dist matrix can end
-      % up with more than 1 (magnetometer array) or 2 (axial gradiometer array)
-      % non-zero entries when the input grad structure is rank-reduced
-      % FIXME: I don't know whether this works for a vector-gradiometer
-      % system. It also does not work when the system has mixed gradiometers
-      % and magnetometers
-      
-      % use the magic that Jan-Mathijs implemented
-      tmp      = mode(numcoils);
-      niter    = 0;
-      while ~all(numcoils==tmp)
-        niter    = niter + 1;
-        selmode  = find(numcoils==tmp);
-        selrest  = setdiff((1:size(dist,1))', selmode);
-        dist(selrest,sum(~isinf(dist(selmode,:)))>0) = inf;
-        numcoils = sum(isfinite(dist),2);
-        if niter>500
-          error('Failed to extract the positions of the channels. This is most likely due to the balancing matrix being rank deficient. Please replace data.grad with the original grad-structure obtained after reading the header.');
-        end
-      end
-    else
-      % assume that the solution is not so hard and just determine the bottom coil
-    end
-    
-    [junk, ind] = min(dist, [], 2);
-    
-    lab(sel)   = sens.label;
-    pnt(sel,:) = sens.coilpos(ind, :);
-    ori(sel,:) = sens.coilori(ind, :);
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % then do the references
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    sens = sensorig;
-    sel  = ft_chantype(sens, 'ref');
-    
-    sens.label = sens.label(sel);
-    sens.tra   = sens.tra(sel,:);
-    
-    % subsequently remove the unused coils
-    used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
-    sens.coilpos = sens.coilpos(used,:);
-    sens.coilori = sens.coilori(used,:);
-    sens.tra = sens.tra(:,used);
-    
-    [nchan, ncoil] = size(sens.tra);
-    refpnt = zeros(nchan,3);
-    refori = zeros(nchan,3); % FIXME not sure whether this will work
-    for i=1:nchan
-      weight = abs(sens.tra(i,:));
-      weight = weight ./ sum(weight);
-      refpnt(i,:) = weight * sens.coilpos;
-      refori(i,:) = weight * sens.coilori;
-    end
-    reflab = sens.label;
-    
-    lab(sel)   = reflab;
-    pnt(sel,:) = refpnt;
-    ori(sel,:) = refori;
-    
-    sens = sensorig;
-    
-  case {'ctf64_planar', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'bti248grad_planar', 'itab28_planar', 'itab153_planar', 'yokogawa64_planar', 'yokogawa160_planar'}
-    % create a list with planar channel names
-    chan = {};
-    for i=1:length(sens.label)
-      if ~isempty(findstr(sens.label{i}, '_dH')) || ~isempty(findstr(sens.label{i}, '_dV'))
-        chan{i} = sens.label{i}(1:(end-3));
-      end
-    end
-    chan = unique(chan);
-    % find the matching channel-duplets
-    ind = [];
-    lab = {};
-    for i=1:length(chan)
-      ch1 =  [chan{i} '_dH'];
-      ch2 =  [chan{i} '_dV'];
-      sel = match_str(sens.label, {ch1, ch2});
-      if length(sel)==2
-        ind = [ind; i];
-        lab(i,:) = {ch1, ch2};
-        meanpnt1 = mean(sens.coilpos(abs(sens.tra(sel(1),:))>0.5, :), 1);
-        meanpnt2 = mean(sens.coilpos(abs(sens.tra(sel(2),:))>0.5, :), 1);
-        pnt(i,:) = mean([meanpnt1; meanpnt2], 1);
-        meanori1 = mean(sens.coilori(abs(sens.tra(sel(1),:))>0.5, :), 1);
-        meanori2 = mean(sens.coilori(abs(sens.tra(sel(2),:))>0.5, :), 1);
-        ori(i,:) = mean([meanori1; meanori2], 1);
-      end
-    end
-    lab = lab(ind,:);
-    pnt = pnt(ind,:);
-    ori = ori(ind,:);
-    
-  case 'neuromag122'
-    % find the matching channel-duplets
-    ind = [];
-    lab = {};
-    for i=1:2:140
-      % first try MEG channel labels with a space
-      ch1 = sprintf('MEG %03d', i);
-      ch2 = sprintf('MEG %03d', i+1);
-      sel = match_str(sens.label, {ch1, ch2});
-      % then try MEG channel labels without a space
-      if (length(sel)~=2)
-        ch1 = sprintf('MEG%03d', i);
-        ch2 = sprintf('MEG%03d', i+1);
-        sel = match_str(sens.label, {ch1, ch2});
-      end
-      % then try to determine the channel locations
-      if (length(sel)==2)
-        ind = [ind; i];
-        lab(i,:) = {ch1, ch2};
-        meanpnt1 = mean(sens.coilpos(abs(sens.tra(sel(1),:))>0.5,:), 1);
-        meanpnt2 = mean(sens.coilpos(abs(sens.tra(sel(2),:))>0.5,:), 1);
-        pnt(i,:) = mean([meanpnt1; meanpnt2], 1);
-        meanori1 = mean(sens.coilori(abs(sens.tra(sel(1),:))>0.5,:), 1);
-        meanori2 = mean(sens.coilori(abs(sens.tra(sel(2),:))>0.5,:), 1);
-        ori(i,:) = mean([meanori1; meanori2], 1);
-      end
-    end
-    lab = lab(ind,:);
-    pnt = pnt(ind,:);
-    ori = ori(ind,:);
-    
-  case 'neuromag306'
-    % find the matching channel-triplets
-    ind = [];
-    lab = {};
-    for i=1:300
-      % first try MEG channel labels with a space
-      ch1 = sprintf('MEG %03d1', i);
-      ch2 = sprintf('MEG %03d2', i);
-      ch3 = sprintf('MEG %03d3', i);
-      [sel1, sel2] = match_str(sens.label, {ch1, ch2, ch3});
-      % the try MEG channels without a space
-      if isempty(sel1)
-        ch1 = sprintf('MEG%03d1', i);
-        ch2 = sprintf('MEG%03d2', i);
-        ch3 = sprintf('MEG%03d3', i);
-        [sel1, sel2] = match_str(sens.label, {ch1, ch2, ch3});
-      end
-      % then try to determine the channel locations
-      if (~isempty(sel1) && length(sel1)<=3)
-        ind = [ind; i];
-        lab(i,sel2) = sens.label(sel1)';
-        meanpnt  = [];
-        meanori  = [];
-        for j = 1:length(sel1)
-          meanpnt  = [meanpnt; mean(sens.coilpos(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
-          meanori  = [meanori; mean(sens.coilori(abs(sens.tra(sel1(j),:))>0.5,:), 1)];
-        end
-        pnt(i,:) = mean(meanpnt, 1);
-        ori(i,:) = mean(meanori, 1);
-      end
-    end
-    lab = lab(ind,:);
-    pnt = pnt(ind,:);
-    ori = ori(ind,:);
-    
-  otherwise
-    % compute the position for each gradiometer or electrode
-    nchan = length(sens.label);
-    if isfield(sens, 'elecpos')
-      nelec = size(sens.elecpos,1); % these are the electrodes
-    elseif isfield(sens, 'coilpos')
-      ncoil = size(sens.coilpos,1); % these are the coils
-    end
-    
-    if ~isfield(sens, 'tra') && isfield(sens, 'elecpos') && nchan==nelec
-      % there is one electrode per channel, which means that the channel position is identical to the electrode position
-      pnt = sens.elecpos;
-      ori = nan(size(pnt));
-      lab = sens.label;
-      
-    elseif isfield(sens, 'tra') && isfield(sens, 'elecpos') && isequal(sens.tra, eye(nelec))
-      % there is one electrode per channel, which means that the channel position is identical to the electrode position
-      pnt = sens.elecpos;
-      ori = nan(size(pnt));
-      lab = sens.label;
-      
-    elseif isfield(sens, 'tra') && isfield(sens, 'elecpos') && isequal(sens.tra, eye(nelec)-1/nelec)
-      % there is one electrode per channel, channels are average referenced
-      pnt = sens.elecpos;
-      ori = nan(size(pnt));
-      lab = sens.label;
-      
-    elseif ~isfield(sens, 'tra') && isfield(sens, 'coilpos') && nchan==ncoil
-      % there is one coil per channel, which means that the channel position is identical to the coil position
-      pnt = sens.coilpos;
-      ori = sens.coilori;
-      lab = sens.label;
-      
-    elseif isfield(sens, 'tra')
-      % each channel depends on multiple sensors (electrodes or coils), compute a weighted position for the channel
-      % for MEG gradiometer channels this means that the position is in between the two coils
-      % for bipolar EEG channels this means that the position is in between the two electrodes
-      pnt = nan(nchan,3);
-      ori = nan(nchan,3);
-      if isfield(sens, 'coilpos')
-        for i=1:nchan
-          weight = abs(sens.tra(i,:));
-          weight = weight ./ sum(weight);
-          pnt(i,:) = weight * sens.coilpos;
-          ori(i,:) = weight * sens.coilori;
-        end
-      elseif isfield(sens, 'elecpos')
-        for i=1:nchan
-          weight = abs(sens.tra(i,:));
-          weight = weight ./ sum(weight);
-          pnt(i,:) = weight * sens.elecpos;
-        end
-      end
-      lab = sens.label;
-      
-    end
-    
-end % switch senstype
-
-n   = size(lab,2);
-% this is to fix the planar layouts, which cannot be plotted anyway
-if n>1 && size(lab, 1)>1 % this is to prevent confusion when lab happens to be a row array
-  pnt = repmat(pnt, n, 1);
-  ori = repmat(ori, n, 1);
-end
-
-% ensure that the channel order is the same as in sens
-[sel1, sel2] = match_str(sens.label, lab);
-lab = lab(sel2);
-pnt = pnt(sel2, :);
-ori = ori(sel2, :);
-
-% ensure that it is a row vector
-lab = lab(:);
-
-% do a sanity check on the number of positions
-nchan = numel(sens.label);
-if length(lab)~=nchan || size(pnt,1)~=nchan || size(ori,1)~=nchan
-  warning('the positions were not determined for all channels');
-end
 
 function sens = ea_undobalancing(sens)
 
@@ -1561,41 +912,17 @@ function mesh=ea_prepare_mesh_hexahedral(cfg,mri)
 % Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 % get the default options
+
+
 cfg.tissue      = ft_getopt(cfg, 'tissue');
 cfg.resolution  = ft_getopt(cfg, 'resolution');
 
-if isempty(cfg.tissue)
-  mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
-  fn = fieldnames(mri);
-  for i=1:numel(fn),if numel(mri.(fn{i}))==prod(mri.dim), segfield=fn{i};end;end
-  cfg.tissue=setdiff(unique(mri.(segfield)(:)),0);
-end
 
-if ischar(cfg.tissue)
-  % it should either be something like {'brain', 'skull', 'scalp'}, or something like [1 2 3]
-  cfg.tissue = {cfg.tissue};
-end
-
-if iscell(cfg.tissue)
-  % the code below assumes that it is a probabilistic representation
-  if any(strcmp(cfg.tissue, 'brain'))
-    mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic', 'hasbrain', 'yes');
-  else
     mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
-  end
-else
-  % the code below assumes that it is an indexed representation
-  mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
-end
 
-if isempty(cfg.resolution)
-  warning('Using standard resolution 1 mm')
-  cfg.resolution = 1;
-end
 
 % do the mesh extraction
 % this has to be adjusted for FEM!!!
-if iscell(cfg.tissue)
   % this assumes that it is a probabilistic representation
   % for example {'brain', 'skull', scalp'}
   try
@@ -1610,24 +937,6 @@ if iscell(cfg.tissue)
     error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
   end
   tissue = cfg.tissue;
-else
-  % this assumes that it is an indexed representation
-  % for example [3 2 1]
-  seg = zeros(mri.dim);
-  tissue = {};
-  for i=1:numel(cfg.tissue)
-    seg = seg + i*(mri.seg==cfg.tissue(i));
-    if isfield(mri, 'seglabel')
-      try
-        tissue{i} = mri.seglabel{cfg.tissue(i)};
-      catch
-        error('Please specify cfg.tissue to correspond to (the name or number of) tissue types in the segmented MRI')
-      end
-    else
-      tissue{i} = sprintf('tissue %d', i);
-    end
-  end
-end
 
 % ensure that the segmentation is binary and that there is a single contiguous region
 % FIXME is this still needed when it is already binary?
@@ -1663,14 +972,12 @@ stopwatch = tic;
 system(shfile);
 fprintf('elapsed time: %d seconds\n', toc(stopwatch));
 
-
 % read the mesh points
 [mesh.pnt,mesh.hex,labels] = ea_read_vista_mesh(meshfile);
 
 % converting position of meshpoints to the head coordinate system
 
 mesh.pnt = warp_apply(mri.transform,mesh.pnt,'homogeneous');
-
 
 mesh.tissue = zeros(size(labels));
 numlabels = size(unique(labels),1);
@@ -2269,28 +1576,6 @@ if isempty(val) && ~isempty(default) && ~emptymeaningful
   val = default;
 end
 
-function [pnt, tri] = ea_makesphere(numvertices)
-
-if isempty(numvertices)
-  [pnt,tri] = icosahedron162;
-  fprintf('using the mesh specified by icosaedron162\n');
-elseif numvertices==42
-  [pnt,tri] = icosahedron42;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
-elseif numvertices==162
-  [pnt,tri] = icosahedron162;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
-elseif numvertices==642
-  [pnt,tri] = icosahedron642;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
-elseif numvertices==2562
-  [pnt,tri] = icosahedron2562;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
-else
-  [pnt, tri] = msphere(numvertices);
-  fprintf('using the mesh specified by msphere with %d vertices\n',size(pnt,1));
-end
-
 function ea_ft_preamble(cmd, varargin)
 
 % FT_PREAMBLE is a helper function that is included in many of the FieldTrip
@@ -2587,117 +1872,6 @@ Vexp.private.mat_intent='Aligned';
 Vexp.private.mat0_intent='Aligned';
 Vexp.private.descrip='lead dbs - leadfield';
 %Vexp.private.dat=Y;
-
-function [lf] = ea_leadfield_simbio(pos, vol)
-
-% leadfield_simbio leadfields for a set of dipoles
-%
-% [lf] = leadfield_simbio(pos, vol);
-%
-% with input arguments
-%   pos     a matrix of dipole positions
-%           there can be 'deep electrodes' too!
-%   vol     contains a FE volume conductor (output of ft_prepare_vol_sens)
-%
-% the output lf is the leadfield matrix of dimensions m (rows) x n*3 (cols)
-
-% copyright (c) 2012, Johannes Vorwerk
-
-try 
-    lf = zeros(size(3*pos,1),size(vol.transfer,1));
-    dir = diag([1,1,1]);
-    for i=1:size(pos,1)
-        locpos = repmat(pos(i,:),3,1);
-        rhs = ea_sb_rhs_venant(locpos,dir,vol);
-        lf((3*(i-1)+1):(3*(i-1)+3),:) = (vol.transfer * rhs)';
-    end    
-    lf = lf';
-catch
-  warning('an error occurred while running simbio');
-  rethrow(lasterror)
-end
-
-function rhs = ea_sb_rhs_venant(pos,dir,vol)
-
-% SB_RHS_VENANT
-%
-% $Id: sb_rhs_venant.m 8776 2013-11-14 09:04:48Z roboos $
-
-%find node closest to source position
-next_nd = ea_sb_get_next_nd(pos,vol.pos);
-%find nodes neighbouring closest node
-if isfield(vol,'tet')
-    ven_nd = ea_sb_get_ven_nd(next_nd,vol.tet);
-elseif isfield(vol,'hex')
-    ven_nd = ea_sb_get_ven_nd(next_nd,vol.hex);
-else
-    error('No connectivity information given!');
-end
-%calculate rhs matrix
-loads = ea_sb_calc_ven_loads(pos,dir,ven_nd,vol.pos);
-%assign values in sparse matrix
-i = reshape(ven_nd',[],1);
-j = reshape(repmat([1:size(ven_nd,1)],size(ven_nd,2),1),[],1);
-loads = reshape(loads',[],1);
-j = j(i~=0);
-loads = loads(i~=0);
-i = i(i~=0);
-rhs = sparse(i,j,loads,size(vol.pos,1),size(pos,1));
-
-
-function next_nd = ea_sb_get_next_nd(pos,node);
-next_nd = zeros(size(pos,1),1);
-for i=1:size(pos,1)
-    [dist, next_nd(i)] = min(sum(bsxfun(@minus,node,pos(i,:)).^2,2));
-end
-
-function loads = ea_sb_calc_ven_loads(pos,dir,ven_nd,node);
-
-% SB_CALC_VEN_LOADS
-%
-% $Id: sb_calc_ven_loads.m 8776 2013-11-14 09:04:48Z roboos $
-
-%aref setzen
-aref = 20;
-%lambda setzen
-lambda = 10e-6;
-%r setzen
-r = 1;
-
-loads = zeros(size(pos,1),size(ven_nd,2));
-for i=1:size(pos,1);
-    x = bsxfun(@minus,node(ven_nd(i,ven_nd(i,:)~=0),:),pos(i,:))./aref;
-    X = zeros(9,size(x,1));
-    X(1:3:7,:) = ones(3,size(x,1));
-    X(2:3:8,:) = x';
-    X(3:3:9,:) = (x.^2)';
-    T = zeros(9,1);
-    T(1:3:7) = 0;
-    T(2:3:8) = dir(i,:)./aref;
-    T(3:3:9) = 0;
-    W = zeros(size(x,1)*3,size(x,1));
-    W(1:size(x,1),:) = diag(x(:,1).^r);
-    W(size(x,1)+1:2*size(x,1),:) = diag(x(:,2).^r);
-    W(size(x,1)*2+1:3*size(x,1),:) = diag(x(:,3).^r);
-    tmp = ((X')*X + lambda*(W')*W) \ X'*T;
-    loads(i,ven_nd(i,:)~=0) = tmp;
-end
-
-
-function ven_nd = ea_sb_get_ven_nd(next_nd,elem);
-ven_nd = zeros(size(next_nd,1),1);
-for i=1:size(next_nd,1)
-    [tmp1,tmp2] = find(elem == next_nd(i));
-    tmp = unique(elem(tmp1,:));
-    %tmp = tmp(tmp~=next_nd(i)); seems like this is not done in the
-    %original.
-    if(length(tmp) > size(ven_nd,2))
-        ven_nd = [ven_nd, zeros(size(ven_nd,1),length(tmp)-size(ven_nd,2))];
-    end
-    ven_nd(i,1:length(tmp)) = tmp;
-end
-
-
 
 function [output] = ea_ft_transform_geometry(transform, input)
 

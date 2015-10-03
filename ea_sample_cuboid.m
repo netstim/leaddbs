@@ -1,5 +1,7 @@
 function [cimat,reldist,mat]=ea_sample_cuboid(varargin)
 % This function samples image points alongside a trajectory specified.
+% usage: [cimat,~,mat]=ea_sample_cuboid(trajvox (trajectory in voxel space),options (regular lead options struct),volume_to_be_sampled_from,interpolation_mode (see spm_sample_vol),width_of_sampling,distance,spacing_of_sampling);
+
 trajectory=varargin{1};
 [~,trajvector]=ea_fit_line(trajectory);
 options=varargin{2};
@@ -38,6 +40,12 @@ if nargin>=6
     distance=varargin{6};
 end
 
+if nargin>=7
+    spacing=varargin{7};
+else
+    spacing=1;
+end
+
 V=spm_vol(niifn);
 
 
@@ -52,8 +60,6 @@ top_mm=top_mm(1:3,:)';
 %     trajectory_vx=trajectory_vx(1:3,:)';
 %     trajectory_mm=trajectory_mm(:,1:3);
 
-   
-    
 dvox=pdist(top_vx);
 dmm=pdist(top_mm);
 mm2vx=dmm/dvox; % -> 1 mm equals mm2vx voxels.
@@ -105,7 +111,7 @@ else
 zdim=150; % will be sum up to 5 times reldist (three between contacts and two at borders).
 end
 
-imat=nan(2*ydim+1,2*xdim+1,zdim);
+imat=nan((2*ydim+1)*(1/spacing),(2*xdim+1)*(1/spacing),zdim*(1/spacing));
 
 
 
@@ -117,15 +123,15 @@ imat=nan(2*ydim+1,2*xdim+1,zdim);
     coord2write=zeros(length(1:zdim)* length(-xdim:xdim)*length(-ydim:ydim),3);
     coord2extract=zeros(length(1:zdim)* length(-xdim:xdim)*length(-ydim:ydim),3);
     
-    for zz=1:zdim
-        for xx=-xdim:xdim
-            for yy=-ydim:ydim
+    for zz=1:spacing:zdim
+        for xx=-xdim:spacing:xdim
+            for yy=-ydim:spacing:ydim
                 
                 pt=startpt+zz*trajvector;
                 coord2extract(cnt,:)=[pt(1)+orthx(1)*xx+orthy(1)*yy; ...
                     pt(2)+orthx(2)*xx+orthy(2)*yy; ...
                     pt(3)+orthx(3)*xx+orthy(3)*yy]';
-                coord2write(cnt,:)=[xx+xdim+1;yy+ydim+1;zz]';
+                coord2write(cnt,:)=[xx*(1/spacing)+xdim+1;yy*(1/spacing)+ydim+1;zz*(1/spacing)]';
                 cnt=cnt+1;
                 % plot3(coord2extract(1),coord2extract(2),coord2extract(3),'.');
             end

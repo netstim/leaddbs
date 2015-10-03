@@ -10,4 +10,4 @@ copyfile([spmdir,'toolbox',filesep,'Seg',filesep,'TPM.nii'],[earoot,'templates',
 copyfile([spmdir,'tpm',filesep,'TPM.nii'],[earoot,'templates',filesep,'TPM.nii']);
 end
 
-reslice_nii([earoot,'templates',filesep,'TPM.nii'],[earoot,'templates',filesep,'TPM.nii'],[0.5 0.5 0.5],0,0,3);
+ea_reslice_nii([earoot,'templates',filesep,'TPM.nii'],[earoot,'templates',filesep,'TPM.nii'],[0.5 0.5 0.5],0,0,3);

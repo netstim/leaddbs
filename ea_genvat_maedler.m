@@ -47,8 +47,7 @@ end
 
 
 varargout{1}=VAT;
-varargout{2}=radius;
-varargout{3}=volume;
+varargout{2}=volume;
     
 
 

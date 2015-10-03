@@ -590,12 +590,6 @@ function stimulate_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-
-
-
-
-
 elstruct=getappdata(gcf,'elstruct');
 resultfig=getappdata(gcf,'resultfig');
 options=getappdata(gcf,'options');
@@ -613,7 +607,6 @@ for el=1:length(elstruct)
     for side=1:length(elstruct.coords_mm)
     if isfield(elstruct,'group') % group analysis, more than one electrode set
         for elin=1:4
-            %keyboard
             stimparams(elstruct(el).group,side).U(elin)=str2double(get(eval(['handles.k',num2str(elin-1+((side-1)*options.elspec.numel)),'u']),'String'));
             stimparams(elstruct(el).group,side).Im(elin)=str2double(get(eval(['handles.k',num2str(elin-1+((side-1)*options.elspec.numel)),'im']),'String'));
             
@@ -623,12 +616,7 @@ for el=1:length(elstruct)
         stimparams(elstruct(el).group,side).groups=elstruct(el).groups;
         flix=elstruct(el).groups;
         
-        
-        
-
-        
-        [stimparams(elstruct(el).group,side).VAT(gcnt(elstruct(el).group)).VAT,radius,volume]=feval(ea_genvat,elstruct(el).coords_mm,stimparams,options);
-        stimparams(elstruct(el).group,side).radius=radius;
+        [stimparams(elstruct(el).group,side).VAT(gcnt(elstruct(el).group)).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,stimparams,options);
         stimparams(elstruct(el).group,side).volume=volume;
         
         gcnt(elstruct(el).group)=gcnt(elstruct(el).group)+1;
@@ -641,8 +629,8 @@ for el=1:length(elstruct)
             
         end
         
-        [stimparams(1,side).VAT(el).VAT,radius,volume]=feval(ea_genvat,elstruct(el).coords_mm,stimparams,side,options);
-           stimparams(1,side).radius=radius;
+        [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,stimparams,side,options);
+        
         stimparams(1,side).volume=volume;
         flix=1;
     end

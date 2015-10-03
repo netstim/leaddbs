@@ -1658,9 +1658,8 @@ for pt=1:length(M.patient.list)
         M.stimparams(pt,side).labelatlas={options.labelatlas};
         M.stimparams(pt,side).showfibers=1;
         M.stimparams(pt,side).fiberthresh=1;
-        [M.stimparams(pt,side).VAT.VAT,radius,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.stimparams(pt,:),side,options);
+        [M.stimparams(pt,side).VAT.VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.stimparams(pt,:),side,options);
         
-        M.stimparams(pt,side).radius=radius;
         M.stimparams(pt,side).volume=volume;
         M.stimparams(pt,side).showconnectivities=1;
         M.elstruct(pt).activecontacts{side}=find(M.stimparams(pt,side).U);

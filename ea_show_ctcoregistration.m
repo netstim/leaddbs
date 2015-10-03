@@ -8,7 +8,7 @@ function ea_show_ctcoregistration(options)
 disp('Generating wireframe from CT image...');
 if ~exist('edge.m','file')
     disp('Image toolbox not found, using a slower replacement function...');
-    reslice_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],[options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered],[2 2 2],0);
+    ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],[options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered],[2 2 2],0);
     CT=load_nii_proxi([options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered]);
     useimtbx=0;
     alpha=0.01;

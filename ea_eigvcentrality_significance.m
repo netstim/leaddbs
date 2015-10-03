@@ -11,15 +11,18 @@ XYZV(isnan(XYZV(:,4)),:)=[];
 ea_dispercent(0,'Permutation based statistics on eigenvector centrality');
 maxiter=10000;
 for iter=1:maxiter
-    dat=XYZV;
+    dat=[XYZV,XYZV(:,4),XYZV(:,4)];
     if iter>1
-        dat(:,4)=dat(randperm(length(dat)),4);
+        dat(:,4:end)=dat(randperm(length(dat)),4:end);
     end
     dat=zscore(dat);
     % calculate proximity matrix P:
-    P=squareform(pdist(dat)); 
+    P=squareform(pdist(dat)); % distance matrix
+    
+    P=1./P; % convert to proximity matrix
     % calculate centrality on matrix P (for values that lie close to each
     % other both in spatial and value domains).
+    P(logical(eye(size(P,1))))=1;
     v = eigenvector_centrality_und(P);    
     csize(iter,:)=v;
     ea_dispercent(iter/maxiter);
@@ -32,7 +35,7 @@ nullmodel=nullmodel(:);
 % determine cutoff for p-value.
 nullmodel=sort(nullmodel);
 
-mincsizeval=nullmodel(ceil((1-0.05)*numel(nullmodel)));
+mincsizeval=nullmodel(ceil((1-0.1)*numel(nullmodel)));
 
 ixes=csize(1,:)>mincsizeval;
 

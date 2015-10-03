@@ -256,6 +256,7 @@ for side=options.sides
                 
                 % draw significance countour:
                 slicestat(isnan(slicestat))=0;
+
                 [cmat,statcontour]=contour(slicestat,1);
                 set(statcontour,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
                 

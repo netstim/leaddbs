@@ -19,11 +19,11 @@ end
 disp('Loading images...');
 
 % MR
-reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'hd_',options.prefs.prenii_unnormalized],[0.5 0.5 0.5],0);
+ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'hd_',options.prefs.prenii_unnormalized],[0.5 0.5 0.5],0);
 MR=load_nii_proxi([options.root,options.patientname,filesep,'hd_',options.prefs.prenii_unnormalized]);
 
 % CT
-reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'hd_',options.prefs.rawctnii_unnormalized],[0.5 0.5 0.5],0);
+ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'hd_',options.prefs.rawctnii_unnormalized],[0.5 0.5 0.5],0);
 CT=load_nii_proxi([options.root,options.patientname,filesep,'hd_',options.prefs.rawctnii_unnormalized]);
 
 disp('Done. Smoothing...');
