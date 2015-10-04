@@ -78,8 +78,8 @@ matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
 
 
 % use skull volume here:
-reslice_nii([options.root,options.patientname,filesep,'skullcon',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[4 4 4]);
-reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],[4 4 4]);
+ea_reslice_nii([options.root,options.patientname,filesep,'skullcon',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[4 4 4]);
+ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],[4 4 4]);
 
 
 vizz=1; % visualization on

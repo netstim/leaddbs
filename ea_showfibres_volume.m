@@ -82,20 +82,43 @@ end
 
 connectingfibs=cell(2,1);
 
+
+if isstruct(VAT{1}.VAT) % e.g. simbio model used
+    vat=1;
+    for side=1:2
+        try
+        nVAT{side}.VAT{vat}=VAT{side}.VAT.vertices;
+        K(side).K{vat}=VAT{side}.VAT.faces;
+        catch
+        nVAT{side}.VAT{vat}=[];
+        K(side).K{vat}=[];
+        end
+    end
+    VAT=nVAT;
+end
+
+
 for side=1:length(VAT)
     if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
     
     for vat=1:length(VAT{side}.VAT)
+        
+        
+        if ~exist('K','var') % e.g. maedler model used
+        
         K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
         
+
+
+        end
+
         % show vat
+        if ~isempty(K(side).K{vat})
+            PL.vatsurfs(side,vat)=trisurf(K(side).K{vat},VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3),...
+                abs(repmat(60,length(VAT{side}.VAT{vat}),1)...
+                +randn(length(VAT{side}.VAT{vat}),1)*2)');
         
-        PL.vatsurfs(side,vat)=trisurf(K(side).K{vat},VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3),...
-            abs(repmat(60,length(VAT{side}.VAT{vat}),1)...
-            +randn(length(VAT{side}.VAT{vat}),1)*2)');
-        
-        
-        
+
         % export vatstat if required:
         
         
@@ -157,6 +180,7 @@ for side=1:length(VAT)
 
             
         end
+        end
         
         
     end
@@ -176,9 +200,9 @@ for side=1:length(VAT)
             spm_write_vol(tV,thisvatnii{vatvar});
         end
     end
-    
+try    
     vatbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('vat',options),'TooltipString','Volume of activated tissue','OnCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,1},'OffCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,0},'State',getstate(vaton(side)));
-
+end
     
 end
 

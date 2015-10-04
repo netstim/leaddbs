@@ -57,7 +57,7 @@
 %  
 %  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
-function reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, method, img_idx, preferredForm)
+function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, method, img_idx, preferredForm)
 
    if ~exist('old_fn','var') | ~exist('new_fn','var')
       error('Usage: reslice_nii(old_fn, new_fn, [voxel_size], [verbose], [bg], [method], [img_idx])');

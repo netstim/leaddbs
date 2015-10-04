@@ -20,15 +20,15 @@ maxiter=200;
 
     disp('Loading images...');
 
-%reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[0.5 0.5 0.5]);
+%ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[0.5 0.5 0.5]);
 % MR
 if isfield(options,'usediffmr_coregct')
-    reslice_nii([options.root,options.patientname,filesep,options.usediffmr_coregct],[options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],[2 2 2],0);
+    ea_reslice_nii([options.root,options.patientname,filesep,options.usediffmr_coregct],[options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],[2 2 2],0);
     MR=load_nii_proxi([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
     delete([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
     
 else
-    reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
+    ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
     MR=load_nii_proxi([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
     delete([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
     
@@ -36,12 +36,12 @@ end
 
 % MR
 if isfield(options,'usediffmr_coregct')
-    reslice_nii([options.root,options.patientname,filesep,options.usediffmr_coregct],[options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],[2 2 2],0);
+    ea_reslice_nii([options.root,options.patientname,filesep,options.usediffmr_coregct],[options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],[2 2 2],0);
     MR=load_nii_proxi([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
     delete([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
     
 else
-    reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
+    ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
     MR=load_nii_proxi([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
     delete([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
     
@@ -49,7 +49,7 @@ end
 
 % CT
 
-reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],[2 2 2],0);
+ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],[2 2 2],0);
 CT=load_nii_proxi([options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized]);
 
 delete([options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized]);

@@ -41,7 +41,7 @@ for region=[1:5]
         cfg_util('run',jobs);
         clear matlabbatch jobs
         
-        reslice_nii([leaddir,'atlases',filesep,'BGHAT',filesep,str,filesep,reg,'.nii'],[leaddir,'atlases',filesep,'BGHAT',filesep,str,filesep,reg,'.nii'],[0.5,0.5,0.5],0,0,3)
+        ea_reslice_nii([leaddir,'atlases',filesep,'BGHAT',filesep,str,filesep,reg,'.nii'],[leaddir,'atlases',filesep,'BGHAT',filesep,str,filesep,reg,'.nii'],[0.5,0.5,0.5],0,0,3)
         
         
                 mkdir([leaddir,'atlases',filesep,'BGHAT',filesep,'lh']);
