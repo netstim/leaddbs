@@ -68,12 +68,16 @@ keyboard
 for node=1:size(nullmodel,2)
     thisnodesnullmodel=nullmodel(:,node); % all 1st, 2nd, 3rd, etc. values..
     mincsizeval=thisnodesnullmodel(floor((0.05)*numel(thisnodesnullmodel)));
+    ps=realvals(node)>thisnodesnullmodel;
+    p(node)=sum(~ps)/length(ps);
     if realvals(node)>mincsizeval
        signodecnt=signodecnt+1;
     else
         break
     end
 end
+
+FDR=mafdr(
 
 
 ids=ids(1:signodecnt);
