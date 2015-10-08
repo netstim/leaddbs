@@ -64,7 +64,7 @@ nullmodel=sort(nullmodel,1,'descend'); % to be able to set up a threshold..
 
 [realvals,ids]=sort(csize(1,:),'descend');
 signodecnt=0;
-keyboard
+
 for node=1:size(nullmodel,2)
     thisnodesnullmodel=nullmodel(:,node); % all 1st, 2nd, 3rd, etc. values..
     mincsizeval=thisnodesnullmodel(floor((0.05)*numel(thisnodesnullmodel)));
@@ -77,14 +77,12 @@ for node=1:size(nullmodel,2)
     end
 end
 
-FDR=mafdr(
-
-
-ids=ids(1:signodecnt);
+FDR=mafdr(p,'BHFDR',1);
+ids=FDR<0.05;
 ixes=zeros(1,size(XYZV,1));
 ixes(ids)=1;
 ixes=logical(ixes);
-disp([num2str(signodecnt),' values identified above threshold at p>0.05.']);
+disp([num2str(sum(ixes)),' values identified above threshold at p>0.05.']);
 %keyboard
 %end
 
