@@ -314,6 +314,7 @@ try options.d3.isomatrix=M.isomatrix; end
 try options.d3.isomatrix_name=M.isomatrix_name; end
 
 
+options.d2.write=0;
 
 options.d2.atlasopacity=0.15;
 
@@ -334,7 +335,6 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
     save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
     disp('Done.');
 end
-
 
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 

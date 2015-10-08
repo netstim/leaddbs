@@ -12,7 +12,8 @@ set(0,'CurrentFigure',resultfig);
 %
 
 
-jetlist=othercolor('RdYlGn9');
+jetlist=othercolor('BuOr_12');
+       % jetlist=jet;
 if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
     shifthalfup=1;
 elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts
@@ -59,6 +60,8 @@ for side=options.sides
     
     
     if options.d3.isovscloud==1 % show interpolated point mesh
+        
+        
         ipcnt=1;
         for xx=1:10:size(VI{side},1)
             for yy=1:10:size(VI{side},2)
@@ -84,7 +87,7 @@ for side=options.sides
         
     end
     
-        ea_exportisovolume(elstruct,options);    
+       %ea_exportisovolume(elstruct,options);    
     patchbutton(side)=uitoggletool(ht,'CData',ea_get_icn('isovolume',options),'TooltipString','Isovolume','OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
     
 end

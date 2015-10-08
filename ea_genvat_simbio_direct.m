@@ -174,7 +174,7 @@ cfg.resolution=1;
 [~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);'); % need to incorporate this function and all dependencies into lead-dbs
 mesh = ea_ft_transform_geometry(inv(smri.transform), mesh);
 
-
+keyboard
 %% calculate volume conductor
 disp('Done. Creating volume conductor...');
 vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]); % need to incorporate this function and all dependencies into lead-dbs
@@ -188,7 +188,9 @@ for src=1:length(ix)
    stimvec(ix(src))=volts(src); 
 end
 
-vecx=ea_sb_calc_vecx(vol.stiff,stimvec,1000);
+keyboard
+
+vecx=ea_sb_calc_vecx(vol.stiff,stimvec,1);
 vecx(1)=vecx(2);
 
 disp('Done. Calculating ET...');
@@ -208,10 +210,7 @@ thresh=0.064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons
 vat.ET=vat.ET>thresh;
 vat.pos=vat.pos(vat.ET,:);
 
-% convert back to mm coordinates:
-vat.pos=[vat.pos,ones(size(vat.pos,1),1)]';
-vat.pos=Vexp.mat*vat.pos;
-vat.pos=vat.pos(1:3,:)';
+
 
 F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),ones(size(vat.pos(:,1))));
 F.ExtrapolationMethod='none';
