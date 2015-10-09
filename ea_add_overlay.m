@@ -37,7 +37,7 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                planehts=planemm(:,ea_intersecdim(tracor));
                dists=abs(atlhts-planehts(1));
                
-               dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*1.5;
+               dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*2.5;
             if any(dists) % only if intersection exists plot the atlas.
                 
                 xyatl=atlvx(dists,ea_planesdim(tracor));
@@ -136,7 +136,9 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                                 end
                                 set(0,'CurrentFigure',cuts)
                                 if isempty(ix)
+                                    warning('off')
                                     plot(cscale(1,:),cscale(2,:),'color',options.d2.con_color,'LineSmoothing','on');
+                                warning('on')
                                 else
                                     startPoint=1;
                                     for plots=1:length(ix) % this happens if contour has an "inner hole"

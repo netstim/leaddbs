@@ -314,6 +314,7 @@ try options.d3.isomatrix=M.isomatrix; end
 try options.d3.isomatrix_name=M.isomatrix_name; end
 
 
+options.d2.write=0;
 
 options.d2.atlasopacity=0.15;
 
@@ -334,7 +335,6 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
     save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
     disp('Done.');
 end
-
 
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 
@@ -2108,14 +2108,14 @@ function lc_SPM_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-spmdir=[M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gcs,filesep,'SPM'];
+spmdir=[M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs,filesep,'SPM'];
 rmdir(spmdir,'s');
 mkdir([M.ui.groupdir,'connectomics']);
 mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String')]);
 mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph']);
-gcs=get(handles.lc_graphmetrics,'String');
-[~,gcs]=gcs{M.ui.lc.graphmetrics};
-mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gcs]);
+gecs=get(handles.lc_graphmetrics,'String');
+[~,gecs]=gecs{M.ui.lc.graphmetrics};
+mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs]);
 mkdir(spmdir);
 
 
@@ -2124,18 +2124,18 @@ for sub=1:length(M.patient.list)
         zzz='';
     elseif M.ui.lc.normalize==2;
         zzz='z';
-        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gcs,'.nii,1'],2);
+        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs,'.nii,1'],2);
     elseif M.ui.lc.normalize==3;
         zzz='k';
-        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gcs,'.nii,1'],3);
+        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs,'.nii,1'],3);
     end
     if M.ui.lc.smooth
         sss='s';
-        ea_smooth([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,zzz,gcs,'.nii,1']);
+        ea_smooth([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,zzz,gecs,'.nii,1']);
     else
         sss='';
     end
-    fis{sub}=[M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,sss,zzz,gcs,'.nii,1'];
+    fis{sub}=[M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,sss,zzz,gecs,'.nii,1'];
 end
 
 %% model specification:

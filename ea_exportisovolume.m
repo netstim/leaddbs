@@ -102,8 +102,10 @@ for side=options.sides
         %ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'],'','nn');
         
         % smooth image.
+        
+        
         matlabbatch{1}.spm.spatial.smooth.data = {[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii,1']};
-        matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
+        matlabbatch{1}.spm.spatial.smooth.fwhm = [0.7 0.7 0.7];
         matlabbatch{1}.spm.spatial.smooth.dtype = 0;
         matlabbatch{1}.spm.spatial.smooth.im = 1;
         matlabbatch{1}.spm.spatial.smooth.prefix = 's';
@@ -151,7 +153,7 @@ for side=options.sides
             
             
             %% write out significant volume:
-            
+            if options.d2.write % only needs to be done once..
             XYZV=[XYZ,[V{1};V{2}]];
             if inside==1
             [ixes]=ea_eigvcentrality_significance(XYZV);
@@ -169,7 +171,7 @@ for side=options.sides
             
             niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
             end
-            
+            end
         end
         
         Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'];

@@ -22,7 +22,8 @@ if ~isfield(elstruct,'activecontacts')
     elstruct.activecontacts{1}=zeros(elspec.numel,1);
     elstruct.activecontacts{2}=zeros(elspec.numel,1);
 end
-        jetlist=othercolor('RdYlGn9');
+        jetlist=othercolor('BuOr_12');
+     %   jetlist=jet;
 
 
 for side=options.sides
@@ -199,6 +200,18 @@ for side=options.sides
                     if ~isnan(options.d3.isomatrix{side}(pt,cntct))
                         
                         usefacecolor=((options.d3.isomatrix{side}(pt,cntct)+minval)/(maxval+minval))*64;
+                        
+%                         % ## add some contrast (remove these lines for linear
+%                         % mapping)
+%                         
+%                                         
+%                         usefacecolor=usefacecolor-20;
+%                         usefacecolor(usefacecolor<1)=1;
+%                         usefacecolor=usefacecolor*2;
+%                         usefacecolor(usefacecolor>64)=64;
+%                         
+%                         % ##
+                        
                         usefacecolor=ind2rgb(round(usefacecolor),jetlist);
                     else
                         usefacecolor=nan; % won't draw the point then.

@@ -270,44 +270,6 @@ try    set(atlaslabels,'Visible','off'); end
 end
 
 
-function thresh=detthresh(atlases,atlas,nii)
-if isfield(atlases,'threshold')
-    switch atlases.threshold.type
-        case 'percentage'
-            try
-                sso=sort(nii.img(nii.img>0));
-                thresh=sso(round(length(sso)*(1-atlases.threshold.value))); % preserve % of voxels.
-            catch
-                thresh=sso(1);
-            end
-        case 'percentage_vector'
-            sso=sort(nii.img(nii.img>0));
-            try
-                thresh=sso(round(length(sso)*(1-atlases.threshold.value(atlas)))); % preserve % of voxels.
-            catch
-                thresh=sso(1);
-            end
-        case 'relative_intensity'
-            thresh=max(nii.img(:))*(1-atlases.threshold.value);
-        case 'relative_intensity_vector'
-            thresh=max(nii.img(:))*(1-atlases.threshold.value(atlas));
-        case 'absolute_intensity'
-            thresh=atlases.threshold.value;
-        case 'absolute_intensity_vector'
-            thresh=atlases.threshold.value(atlas);
-        otherwise
-            warning(['Threshold type not recognized: ',atlases.threshold.type,'. Overwriting with default.']);
-            thresh=max(nii.img(:))*0.5;
-            
-    end
-    
-else
-    
-    thresh=max(nii.img(:))*0.5;
-end
-
-
-
 
 function setlabelcolor(hobj,ev,robject)
 

@@ -215,7 +215,7 @@ for side=options.sides
             % Show isovolume
             
             if options.d3.showisovolume
-                
+                Visoraw=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
                 Viso=spm_vol([options.root,options.patientname,filesep,options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
                 Visostat=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'_p05.nii']);
                 if exist('ave_coords_mm','var')
@@ -234,7 +234,11 @@ for side=options.sides
 
                 end
                 slice(slice==0)=nan;
-                wholemap=spm_read_vols(Viso);
+                wholemap=spm_read_vols(Visoraw);
+                %wholemap(~logical(wholemap))=nan;
+                maxval=nanmax(wholemap(:));
+                minval=nanmin(wholemap(:));
+                
                 % define an alpha mask
                 alpha=slice;
                 alpha(~isnan(alpha))=0.5;
@@ -242,8 +246,21 @@ for side=options.sides
                 % convert slice to rgb format
                 %slicergb=nan([size(slice),3]);
                 jetlist=eval(options.prefs.d2.isovolcolormap);
-                slice=(slice-(nanmin(wholemap(:))))/(nanmax(wholemap(:))-(nanmin(wholemap(:)))); % set min max to boundaries 0-1.
+                slice=(slice-minval)/(maxval-minval); % set min max to boundaries 0-1.
+                
+                % ##
+                % add some "contrast" ? remove this part for linear
+                % colormapping
+                
+                slice=slice-0.3;
+                slice(slice<0)=0;
+                slice=slice*3.5;
+                slice(slice>1)=1;
+                
+                % ##
+                
                 slice=round(slice.*63)+1; % set min max to boundaries 1-64.
+                slice(slice<1)=1; slice(slice>64)=64;
                 
                 slicer=slice; sliceg=slice; sliceb=slice;
                 slicer(~isnan(slicer))=jetlist(slicer(~isnan(slicer)),1);
@@ -256,10 +273,11 @@ for side=options.sides
                 
                 % draw significance countour:
                 slicestat(isnan(slicestat))=0;
-
+warning('off')
                 [cmat,statcontour]=contour(slicestat,1);
                 set(statcontour,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
-                
+                set(statcontour,'Color','w');
+                warning('on')
                 
             end
             
