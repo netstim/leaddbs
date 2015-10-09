@@ -183,7 +183,7 @@ EigenVal= sum(difComp, 3);
 function [gradlist, b0idx] = grads(indir,bvecf,bvalf)
 
 gradlist=load([indir,bvecf]);
-if ~size(gradlist,2)==3
+if ~(size(gradlist,2)==3)
 gradlist=gradlist';
 end
 

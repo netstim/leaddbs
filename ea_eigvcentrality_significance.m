@@ -32,8 +32,8 @@ P=Peuc.^Pval;
 P(logical(eye(size(P,1))))=0;
 P=sum(P);
 
-    csize(iter,:)=P;
-    m(iter)=max(P);
+    csize(iter,:)=P;%.*dat(:,4)';
+    %m(iter)=max(P);
     
     ea_dispercent(iter/maxiter);
 end
@@ -49,13 +49,11 @@ nullmodel=sort(nullmodel,'descend');
 mincsizeval=nullmodel(floor((0.05)*numel(nullmodel)));
 realvals=csize(1,:);
 ixes=realvals>mincsizeval;
-disp([num2str(sum(ixes)),' values identified above threshold at p>0.05 in conservative testing.']);
+disp([num2str(sum(ixes)),' values identified above threshold at p>0.05 in conservative maximum testing.']);
 
 
 
 %% pairwise testing:
-
-
 
 nullmodel=csize(2:end,:);
 nullmodel=sort(nullmodel,2,'descend'); % to be able to compare every 1st, 2nd, 3rd, etc. value with each other
@@ -77,12 +75,12 @@ for node=1:size(nullmodel,2)
     end
 end
 
-FDR=mafdr(p,'BHFDR',1);
-ids=FDR<0.05;
+ids=ea_fdr_bh(p,0.05); % calculate fdr after Benjamini & Hochberg
+
 ixes=zeros(1,size(XYZV,1));
 ixes(ids)=1;
 ixes=logical(ixes);
-disp([num2str(sum(ixes)),' values identified above threshold at p>0.05.']);
+disp([num2str(sum(ixes)),' values identified above threshold at p>0.05 in pairwise testing.']);
 %keyboard
 %end
 

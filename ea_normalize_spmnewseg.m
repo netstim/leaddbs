@@ -123,6 +123,7 @@ switch spm('ver')
             if exist([options.root,options.patientname,filesep,postops{postop}],'file')
                 nii=ea_load_untouch_nii([options.root,options.patientname,filesep,postops{postop}]);
                 gaussdim=abs(nii.hdr.dime.pixdim(2:4));
+                keyboard
                 resize_img([options.root,options.patientname,filesep,postops{postop}],gaussdim./2,nan(2,3),0);
                 %gaussdim=abs(gaussdim(1:3)).*2;
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};

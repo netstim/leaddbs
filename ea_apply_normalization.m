@@ -44,7 +44,7 @@ switch spm('ver')
         
         % export lfiles (fine resolution, small bounding box.
         postops={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,options.prefs.prenii_unnormalized,options.prefs.ctnii_coregistered};
-        
+        keyboard
         for postop=1:length(postops)
             if exist([options.root,options.patientname,filesep,postops{postop}],'file')
                 nii=ea_load_untouch_nii([options.root,options.patientname,filesep,postops{postop}]);

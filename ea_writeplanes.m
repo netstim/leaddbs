@@ -241,7 +241,7 @@ for side=options.sides
                 
                 % define an alpha mask
                 alpha=slice;
-                alpha(~isnan(alpha))=0.5;
+                alpha(~isnan(alpha))=0.9;
                 alpha(isnan(alpha))=0;
                 % convert slice to rgb format
                 %slicergb=nan([size(slice),3]);
