@@ -76,7 +76,11 @@ else
     try
         load([options.root,options.patientname,filesep,'ea_reconstruction']);
     catch
-        coords_mm=ea_read_fiducials([options.root,options.patientname,filesep,'ea_coords.fcsv'],options);
+        try
+            coords_mm=ea_read_fiducials([options.root,options.patientname,filesep,'ea_coords.fcsv'],options);
+        catch
+            ea_error(['Please localize electrodes of ',options.patientname,' first.']); 
+        end
     end
     
     try

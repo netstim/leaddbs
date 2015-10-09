@@ -50,6 +50,7 @@ end
     
 
 %create the legend
+
 [legend_h,object_h,plot_h,text_strings] = legend(data,str,'FontSize',9,'FontWeight','bold','Color','w');
 
 %some variables

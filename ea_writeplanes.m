@@ -299,8 +299,11 @@ warning('off')
             if isstruct(elstruct)
                 if length(elstruct)>1
                     cmap=ea_nice_colors(length(elstruct),[0,0,0]);
-                    ptnames=struct2cell(elstruct);
-                    ptnames=squeeze(ptnames(end,1,:))';
+                    for pt=1:length(elstruct)
+                        ptnames{pt}=elstruct(pt).name;
+                    end
+                    %ptnames=struct2cell(elstruct.name);
+                    %ptnames=squeeze(ptnames(end,1,:))';
                 else
                     cmap=[0.9,0.9,0.9];
                 end
@@ -319,10 +322,11 @@ warning('off')
                     end
                     
                     elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
-                    
+
                     if (elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts)
                         elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',cmap(c,:),'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
                     end
+
                 end
                 
                 
@@ -334,7 +338,7 @@ warning('off')
                     if numel(elplt)>1
                         if options.d2.showlegend
                             if exist('ptnames','var')
-                                if numel(elplt)>5
+                                if numel(elplt)>50
                                     cols=round(sqrt(numel(elplt(:))));
                                     if cols>6; cols=6; end
                                     ea_columnlegend(cols,elplt,ptnames,'Location','Middle');
