@@ -4,7 +4,7 @@ function varargout=ea_coregctmri_edgedetect_and_segment(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='Coregister postop-CT with preop-MRI (Edgedetection+Segment)';
+    varargout{1}='Edgedetection+Segment';
     varargout{2}={'SPM8','SPM12'};
     varargout{3}=['0.6,0.4']; % suggestion for alpha-parameter.
     return
