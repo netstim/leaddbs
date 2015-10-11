@@ -52,7 +52,7 @@ function ea_anatomycontrol_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_anatomycontrol (see VARARGIN)
 
-set(gcf,'Name','Anatomy slices');
+set(gcf,'Name','Anatomy Slices');
 
 
 % Choose default command line output for ea_anatomycontrol
