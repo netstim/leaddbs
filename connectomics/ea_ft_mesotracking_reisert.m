@@ -4,7 +4,7 @@ function varargout=ea_ft_mesotracking_reisert(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='Mesoscopic Fibertracking (Reisert et al. 2014).';
+    varargout{1}='Mesoscopic Fibertracking (Reisert et al. 2014)';
     varargout{2}={'SPM8','SPM12'};
     return
 end

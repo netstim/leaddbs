@@ -4,7 +4,7 @@ function varargout=ea_ft_globaltracking_reisert(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='Global Fibertracking (Reisert et al. 2011).';
+    varargout{1}='Global Fibertracking (Reisert et al. 2011)';
     varargout{2}={'SPM8','SPM12'};
     return
 end
