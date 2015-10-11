@@ -46,10 +46,15 @@ switch spm('ver')
         postops={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,options.prefs.prenii_unnormalized,options.prefs.ctnii_coregistered};
         
         for postop=1:length(postops)
-            if exist([options.root,options.patientname,filesep,postops{postop}],'file')
+            if exist([options.root,options.patientname,filesep,postops{postop}],'file') && ~strcmp(postops{postop},options.prefs.rawctnii_unnormalized)
                 nii=ea_load_untouch_nii([options.root,options.patientname,filesep,postops{postop}]);
                 gaussdim=abs(nii.hdr.dime.pixdim(2:4));
+                if mean(gaussdim>1)
                 resize_img([options.root,options.patientname,filesep,postops{postop}],gaussdim./2,nan(2,3),0);
+                else
+                    copyfile([options.root,options.patientname,filesep,postops{postop}],[options.root,options.patientname,filesep,'r',postops{postop}]);
+                end
+                keyboard
                 %gaussdim=abs(gaussdim(1:3)).*2;
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
                 matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[options.root,options.patientname,filesep,'r',postops{postop},''];

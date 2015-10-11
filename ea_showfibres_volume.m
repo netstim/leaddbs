@@ -105,32 +105,35 @@ for side=1:length(VAT)
         
         
         if ~exist('K','var') % e.g. maedler model used
-        
         K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
-        
-
-
+        else % still maedler model used
+            try  
+                K(side).K{vat}; % not defined
+            catch
+                        K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
+            end
         end
 
         % show vat
+        
         if ~isempty(K(side).K{vat})
             PL.vatsurfs(side,vat)=trisurf(K(side).K{vat},VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3),...
                 abs(repmat(60,length(VAT{side}.VAT{vat}),1)...
                 +randn(length(VAT{side}.VAT{vat}),1)*2)');
-        
-
-        % export vatstat if required:
-        
-        
-        if options.expstatvat.do % export statvat nifti images.
-            in=inhull(templatecoords,VAT{side}.VAT{vat},K(side).K{vat});
-            for vatvar=1:length(options.expstatvat.vars)
-                if isempty(thisvatnii{vatvar})
-                    thisvatnii{vatvar}=tnii; % initialize on blank templatenii.
+            
+            
+            % export vatstat if required:
+            
+            
+            if options.expstatvat.do % export statvat nifti images.
+                in=inhull(templatecoords,VAT{side}.VAT{vat},K(side).K{vat});
+                for vatvar=1:length(options.expstatvat.vars)
+                    if isempty(thisvatnii{vatvar})
+                        thisvatnii{vatvar}=tnii; % initialize on blank templatenii.
+                    end
+                    thisvatnii{vatvar}(in)=options.expstatvat.vars{vatvar}(options.expstatvat.pt); % set to clinical/regress variable score.
                 end
-                thisvatnii{vatvar}(in)=options.expstatvat.vars{vatvar}(options.expstatvat.pt); % set to clinical/regress variable score.
             end
-        end
         
         % the following is some code required for
         % Web/JSON/BrainBrowser-Export.

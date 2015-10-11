@@ -1662,7 +1662,7 @@ for pt=1:length(M.patient.list)
         
         M.stimparams(pt,side).volume=volume;
         M.stimparams(pt,side).showconnectivities=1;
-        M.elstruct(pt).activecontacts{side}=find(M.stimparams(pt,side).U);
+        M.elstruct(pt).activecontacts{side}=M.stimparams(pt,side).U;
     end
     
     
