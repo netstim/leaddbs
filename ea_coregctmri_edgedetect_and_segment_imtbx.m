@@ -4,7 +4,7 @@ function varargout=ea_coregctmri_edgedetect_and_segment_imtbx(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='Coregister postop-CT with preop-MRI (Edgedetection+Segment, use ML imagetoolbox)';
+    varargout{1}='Edgedetection+Segment, use ML imagetoolbox';
     if exist('edge.m','file') % check for imtbx.
     varargout{2}={'SPM8','SPM12'};
     else

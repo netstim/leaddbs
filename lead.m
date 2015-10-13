@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 02-Aug-2015 23:27:26
+% Last Modified by GUIDE v2.5 13-Oct-2015 18:01:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1616,3 +1616,33 @@ function specify2dwrite_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_spec2dwrite;
+
+
+% --- Executes on button press in openresultdir.
+function openresultdir_Callback(hObject, eventdata, handles)
+% hObject    handle to openresultdir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+try
+    load([fileparts(which('lead')),filesep,'ea_prefs']);
+    outfolder = lp.dicom.outfolder;
+catch
+    msgbox('Please set the working directory first!', 'Error','error');
+    return;
+end
+if ispc
+    c = system(['explorer ', outfolder]);
+elseif isunix
+    if ismac
+        c = system(['open ', outfolder]);
+    else
+        c = system(['xdg-open ', outfolder]);
+    end
+end
+
+% --- Executes on button press in viewmannual.
+function viewmannual_Callback(hObject, eventdata, handles)
+% hObject    handle to viewmannual (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+web('http://www.lead-dbs.org/?page_id=71', '-browser')

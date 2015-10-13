@@ -22,7 +22,7 @@ function varargout = ea_edit_regressor(varargin)
 
 % Edit the above text to modify the response to help ea_edit_regressor
 
-% Last Modified by GUIDE v2.5 12-Jul-2015 10:16:26
+% Last Modified by GUIDE v2.5 11-Oct-2015 15:47:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,6 +51,8 @@ function ea_edit_regressor_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_edit_regressor (see VARARGIN)
+
+set(gcf,'Name','Edit Regressor');
 
 % Choose default command line output for ea_edit_regressor
 handles.output = hObject;
@@ -99,14 +101,10 @@ if ~isempty(reg)
        answ=questdlg('Warning: switching variable type will delete/modify variable! Are you sure you want this?','Warning','Yes','No','No');
    switch answ
        case 'No'
-           set(handles.perpatient,'Value',0);
            return
    end
    end
 end
-set(handles.perpatient,'Value',1);
-set(handles.percontact,'Value',0);
-set(handles.percontactpair,'Value',0);
 set(handles.datatable,'ColumnName',{'Value'});
 
 reg=reg(1:size(reg,1),1);
@@ -121,14 +119,10 @@ if ~isempty(reg)
        answ=questdlg('Warning: switching variable type will delete/modify variable! Are you sure you want this?','Warning','Yes','No','No');
    switch answ
        case 'No'
-           set(handles.percontact,'Value',0);
            return
    end
    end
 end
-set(handles.perpatient,'Value',0);
-set(handles.percontact,'Value',1);
-set(handles.percontactpair,'Value',0);
 set(handles.datatable,'ColumnName',{'K0','K1','K2','K3','K8','K9','K10','K11'});
 
 nreg=nan(size(reg,1),8);
@@ -146,14 +140,10 @@ if ~isempty(reg)
        answ=questdlg('Warning: switching variable type will delete/modify variable! Are you sure you want this?','Warning','Yes','No','No');
    switch answ
        case 'No'
-           set(handles.percontactpair,'Value',0);
            return
    end
    end
 end
-set(handles.perpatient,'Value',0);
-set(handles.percontact,'Value',0);
-set(handles.percontactpair,'Value',1);
 set(handles.datatable,'ColumnName',{'K1-2','K2-3','K3-4','K8-9','K9-10','K10-11'});
 
 nreg=nan(size(reg,1),6);
@@ -192,33 +182,6 @@ else
 end
 
 delete(hObject);
-
-% --- Executes on button press in perpatient.
-function perpatient_Callback(hObject, eventdata, handles)
-% hObject    handle to perpatient (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of perpatient
-switchperpatient(handles);
-
-% --- Executes on button press in percontact.
-function percontact_Callback(hObject, eventdata, handles)
-% hObject    handle to percontact (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-switchpercontact(handles);
-% Hint: get(hObject,'Value') returns toggle state of percontact
-
-
-% --- Executes on button press in percontactpair.
-function percontactpair_Callback(hObject, eventdata, handles)
-% hObject    handle to percontactpair (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of percontactpair
-switchpercontactpair(handles);
 
 % --- Executes on button press in save.
 function save_Callback(hObject, eventdata, handles)
@@ -265,6 +228,41 @@ function varname_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in variabletype.
+function variabletype_Callback(hObject, eventdata, handles)
+% hObject    handle to variabletype (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns variabletype contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from variabletype
+popvals=get(hObject,'String');
+variabletype=popvals{get(hObject,'Value')};
+switch variabletype
+    case '1 variable per patient'
+        switchperpatient(handles);
+    case '1 variable per contact'
+        switchpercontact(handles);
+    case '1 variable per contact pair'
+        switchpercontactpair(handles);
+end
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function variabletype_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to variabletype (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
