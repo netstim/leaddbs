@@ -54,7 +54,7 @@ switch spm('ver')
                 else
                     copyfile([options.root,options.patientname,filesep,postops{postop}],[options.root,options.patientname,filesep,'r',postops{postop}]);
                 end
-                keyboard
+                
                 %gaussdim=abs(gaussdim(1:3)).*2;
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
                 matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[options.root,options.patientname,filesep,'r',postops{postop},''];
@@ -67,6 +67,7 @@ switch spm('ver')
                 jobs{1}=matlabbatch;
                 cfg_util('run',jobs);
                 clear matlabbatch jobs;
+                
             end
         end
         
@@ -80,7 +81,7 @@ switch spm('ver')
         % export glfiles (a bit more coarse resolution, full brain bounding box.
         
         for postop=1:length(postops)
-            if exist([options.root,options.patientname,filesep,postops{postop}],'file')
+            if exist([options.root,options.patientname,filesep,postops{postop}],'file') && ~strcmp(postops{postop},options.prefs.rawctnii_unnormalized)
                 nii=ea_load_untouch_nii([options.root,options.patientname,filesep,postops{postop}]);
                 gaussdim=abs(nii.hdr.dime.pixdim(2:4));
                %gaussdim=abs(gaussdim(1:3)).*2;
@@ -107,9 +108,7 @@ switch spm('ver')
         try delete([options.root,options.patientname,filesep,'r',options.prefs.prenii_unnormalized]); end
         try delete([options.root,options.patientname,filesep,'r',options.prefs.tranii_unnormalized]); end
         try delete([options.root,options.patientname,filesep,'r',options.prefs.cornii_unnormalized]); end
-        try delete([options.root,options.patientname,filesep,'r',options.prefs.sagnii_unnormalized]); end
-        try delete([options.root,options.patientname,filesep,'r',options.prefs.ctnii_coregistered]); end
-        
+        try delete([options.root,options.patientname,filesep,'r',options.prefs.sagnii_unnormalized]); end        
 end
 
 

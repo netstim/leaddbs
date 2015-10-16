@@ -56,14 +56,14 @@ switch options.elmodel
         elspec.tipiscontact=0;
         elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
     case 'Boston Scientific Vercise'
-        elspec.lead_diameter=1.24;
+        elspec.lead_diameter=1.3;
         elspec.lead_color=0.7;
         elspec.contact_length=1.5;
-        elspec.contact_diameter=1.4;
+        elspec.contact_diameter=1.3;
         elspec.contact_color=0.3;
-        elspec.tip_diameter=1.27;
+        elspec.tip_diameter=1.3;
         elspec.tip_color=0.7;
-        elspec.tip_length=1.5;
+        elspec.tip_length=1.3;
         elspec.contact_spacing=0.5;
         elspec.numel=8;
         elspec.tipiscontact=0;
@@ -72,7 +72,7 @@ switch options.elmodel
         elspec.lead_diameter=1.27;
         elspec.lead_color=0.7;
         elspec.contact_length=1.5;
-        elspec.contact_diameter=1.4;
+        elspec.contact_diameter=1.27;
         elspec.contact_color=0.3;
         elspec.tip_diameter=1.27;
         elspec.tip_color=0.3;
@@ -95,3 +95,5 @@ end
 
 options.elspec=elspec;
 varargout{1}=options;
+
+

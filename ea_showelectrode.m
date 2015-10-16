@@ -27,6 +27,7 @@ end
 
 
 for side=options.sides
+
     trajvector=mean(diff(trajectory{side}));
     trajvector=trajvector/norm(trajvector);
     
@@ -134,11 +135,8 @@ for side=options.sides
         % X-direction to the required arbitrary direction through cross product
         axis_rot=cross([0 0 -1],(X2-X1) );
         
-        
         rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
-        
         specsurf(elrender{side}(cnt),usecolor,aData);
-        
     else % simply draw pointcloud
         
         shifthalfup=0;

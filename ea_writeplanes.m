@@ -293,7 +293,7 @@ warning('off')
             text(mean(boundboxmm{onedim}),addsubsigned(min(boundboxmm{secdim}),2,'minus'),'5 mm','color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
             
             % Plot slice depth legend
-            
+            text(mean(boundboxmm{onedim}),addsubsigned(max(boundboxmm{secdim}),2,'minus'),[lstring,sprintf('%.2f',mean(boundboxmm{planedim})),' mm'],'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
             text(mean(boundboxmm{onedim}),addsubsigned(max(boundboxmm{secdim}),2,plusminusc),[lstring,sprintf('%.2f',mean(boundboxmm{planedim})),' mm'],'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
             % Show coordinates
             if isstruct(elstruct)
