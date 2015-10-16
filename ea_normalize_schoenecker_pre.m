@@ -10,7 +10,7 @@ function varargout=ea_normalize_schoenecker_pre(options)
 % might be best archieved with other tools that have specialized on
 % normalization of such image data.
 %
-% The procedure used here follows the approach of Schönecker 2008 which was
+% The procedure used here follows the approach of Schï¿½necker 2008 which was
 % originally programmed for use with FSL. To be able to combine both
 % normalization and reconstruction steps, the principle approach was
 % programmed once more using SPM.
@@ -26,7 +26,7 @@ usecombined=0; % if set, eauto will try to fuse coronar and transversal images b
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Schönecker 2009  linear threestep (Include Pre-OP) [MR/CT]';
+    varargout{1}='SchÃ¶necker 2009 linear threestep (Include Pre-OP) [MR/CT]';
     varargout{2}={'SPM8'};
     return
 end

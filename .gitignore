@@ -1,22 +1,19 @@
+*~
+*.asv
+*.mex*
+*.mat
 *.nii
 *.nii.gz
 *.ps
-gibsconnect*.mat
 *.gipl
 *.png
-!icons/*.png
-*.mat
-fibers
 *.json
 *.woff
-*DS_Store
-!bg_gui.png
-!bg_gui_lg.png
-!ea_logo.png
-!*egjob*.mat
-!*emplates/labeling/*.nii
-*~
+gibsconnect*.mat
+fibers
+tmp/
 
+# dev only
 ea_make_release.m
 
 # OS generated files #
@@ -28,3 +25,11 @@ ea_make_release.m
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Excluded 
+!icons/*.png
+!bg_gui.png
+!bg_gui_lg.png
+!ea_logo.png
+!*egjob*.mat
+!*emplates/labeling/*.nii

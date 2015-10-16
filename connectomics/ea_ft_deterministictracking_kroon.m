@@ -4,7 +4,7 @@ function varargout=ea_ft_deterministictracking_kroon(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='Deterministic Fibertracking (Kroon).';
+    varargout{1}='Deterministic Fibertracking (Kroon)';
     varargout{2}={'SPM8','SPM12'};
     return
 end
