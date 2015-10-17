@@ -27,17 +27,13 @@ end
 
 
 for side=options.sides
+
     trajvector=mean(diff(trajectory{side}));
     trajvector=trajvector/norm(trajvector);
-    
+        startpoint=trajectory{side}(1,:)-(2*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
+
     if options.d3.elrendering<3
-        if options.d3.prolong_electrode
-            
-            startpoint=trajectory{side}(1,:)-(options.d3.prolong_electrode*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
-            
-        else
-            startpoint=trajectory{side}(1,:);
-        end
+       
         set(0,'CurrentFigure',resultfig);
         
         % draw patientname
@@ -46,16 +42,21 @@ for side=options.sides
         
         
         % draw trajectory
-        [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
         
         
+        cnt=1;
+        load([options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
+        A=[electrode.head_position,1;
+            electrode.tail_position,1
+            electrode.x_position,1
+            electrode.y_position,1]; % points in model
+        orth=null(trajvector)*electrode.x_position(1);
         
-        if isfield(elstruct,'group')
-            usecolor=elstruct.groupcolors(elstruct.group,:);
-        else
-            usecolor=elspec.lead_color;
-        end
-        
+        B=[coords_mm{side}(1,:),1;
+            coords_mm{side}(4,:),1;
+            coords_mm{side}(1,:)+orth(:,1)',1
+            coords_mm{side}(1,:)+orth(:,2)',1]; % corresponding points in reality
+        X = linsolve(A,B); X=X';
         
         if options.d3.elrendering==2 % show a transparent electrode.
             aData=0.1;
@@ -63,82 +64,34 @@ for side=options.sides
             aData=1;
         end
         
+
         
-        specsurf(elrender{side}(1),usecolor,aData); specsurf(elrender{side}(2),usecolor,aData); specsurf(elrender{side}(3),usecolor,aData);
-        
-        cnt=4;
-        
-        % draw contacts
-        for cntct=1:elspec.numel
-            
-            set(0,'CurrentFigure',resultfig);
-            
-            
-            [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2),elspec.contact_diameter/2,100,repmat(elspec.contact_color,1,3),1,0);
-            if options.d3.hlactivecontacts && ismember(cntct,elstruct.activecontacts{side}) % make active red contact without transparency
-                specsurf(elrender{side}(cnt),[0.8,0.2,0.2],1); specsurf(elrender{side}(cnt+1),[0.8,0.2,0.2],1); specsurf(elrender{side}(cnt+2),[0.8,0.2,0.2],1);
-            else
-                specsurf(elrender{side}(cnt),elspec.contact_color,aData); specsurf(elrender{side}(cnt+1),elspec.contact_color,aData); specsurf(elrender{side}(cnt+2),elspec.contact_color,aData);
-            end
-            cnt=cnt+3;
-        end
-        
-        % draw trajectory between contacts
-        for cntct=1:elspec.numel-1
-            set(0,'CurrentFigure',resultfig);
-            
-            [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct+1,:)+trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-            
-            specsurf(elrender{side}(cnt),usecolor,aData); specsurf(elrender{side}(cnt+1),usecolor,aData); specsurf(elrender{side}(cnt+2),usecolor,aData);
-            cnt=cnt+3;
-        end
-        
-        
-        
-        
-        
-        
-        
-        
-        % draw tip
-        
+        for ins=1:length(electrode.insulation)
+            electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+            electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
+            elrender{side}(cnt)=patch(electrode.insulation(ins));
         if isfield(elstruct,'group')
             usecolor=elstruct.groupcolors(elstruct.group,:);
         else
-            usecolor=elspec.tip_color;
+            usecolor=elspec.lead_color;
         end
-        set(0,'CurrentFigure',resultfig);
-        
-        [cX,cY,cZ] = cylinder((repmat(elspec.tip_diameter/2,1,10)-([10:-1:1].^10/10^10)*(elspec.tip_diameter/2)));
-        
-        cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
-        
-        % define two points to define cylinder.
-        X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
-        X2=X1+trajvector*elspec.tip_length;
-        
-        
-        cX=cX+X1(1);
-        cY=cY+X1(2);
-        cZ=cZ-(2*elspec.tip_length)/2+X1(3);
-        
-        
-        
-        elrender{side}(cnt)=surf(cX,cY,cZ);
-        
-        % Calulating the angle between the x direction and the required direction
-        % of cylinder through dot product
-        angle_X1X2=acos( dot( [0 0 -1],(X2-X1) )/( norm([0 0 -1])*norm(X2-X1)) )*180/pi;
-        
-        % Finding the axis of rotation (single rotation) to roate the cylinder in
-        % X-direction to the required arbitrary direction through cross product
-        axis_rot=cross([0 0 -1],(X2-X1) );
-        
-        
-        rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
-        
         specsurf(elrender{side}(cnt),usecolor,aData);
-        
+            cnt=cnt+1;
+        end
+        for con=1:length(electrode.contacts)
+            electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+            electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
+            elrender{side}(cnt)=patch(electrode.contacts(con));
+            
+            if options.d3.hlactivecontacts && ismember(con,elstruct.activecontacts{side}) % make active red contact without transparency
+                specsurf(elrender{side}(cnt),[0.8,0.2,0.2],1); 
+            else
+                specsurf(elrender{side}(cnt),elspec.contact_color,aData); 
+            end
+            
+            cnt=cnt+1;
+        end
+       
     else % simply draw pointcloud
         
         shifthalfup=0;
@@ -294,6 +247,13 @@ cd=cd+0.01*randn(size(cd));
 
 set(surfc,'FaceColor','interp');
 set(surfc,'CData',cd);
+
+try % for patches
+    vertices=get(surfc,'Vertices');
+    cd=zeros(size(vertices));
+    cd(:)=color(1);
+    set(surfc,'FaceVertexCData',cd);
+end
 set(surfc,'AlphaDataMapping','none');
 
 set(surfc,'FaceLighting','phong');

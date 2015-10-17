@@ -49,7 +49,7 @@ trajvox=trajvox(1:3,:)';
 
 %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
 
-[cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,25,51,1); % this will result in ~10x10x10 mm.
+[cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,50,51,1); % this will result in ~10x10x10 mm.
 mat=mat';
 mkdir([options.root,options.patientname,filesep,'headmodel']);
 Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural.nii'],mat,[2,0],cimat);
@@ -121,8 +121,8 @@ disp('Finishing headmodel...');
     
     volts=stimparams(side).U(find(stimparams(side).U));
 
-dpvx=Vexp.mat\[dpvx,ones(size(dpvx,1),1)]';
-dpvx=dpvx(1:3,:)';
+%dpvx=Vexp.mat\[dpvx,ones(size(dpvx,1),1)]';
+%dpvx=dpvx(1:3,:)';
 
 %% read in gm data and convert to segmented mri
 % construct ft-like anatomy structure based on SPM nifti info.
@@ -174,33 +174,58 @@ cfg.resolution=1;
 [~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);'); % need to incorporate this function and all dependencies into lead-dbs
 mesh = ea_ft_transform_geometry(inv(smri.transform), mesh);
 
-keyboard
+% rewrite vol.pos in mm dimensions:
+
+mesh.pnt=[mesh.pnt,ones(size(mesh.pnt,1),1)]';
+mesh.pnt=Vexp.mat*mesh.pnt;
+mesh.pnt=mesh.pnt(1:3,:)';
+
+% rewrite vol.pos in m dimensions (in order to get Voltage as output):
+mesh.pnt=mesh.pnt/1000;
+
+
 %% calculate volume conductor
 disp('Done. Creating volume conductor...');
 vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]); % need to incorporate this function and all dependencies into lead-dbs
 
+
+
+
+
+
+
 %% calculate voltage distribution based on dipole
 disp('Done. Calculating voltage distribution...');
-stimvec=zeros(length(vol.stiff),1);
+ix=knnsearch(vol.pos,dpvx/1000);
 
-ix=knnsearch(vol.pos,dpvx);
-for src=1:length(ix)
-   stimvec(ix(src))=volts(src); 
+
+
+
+
+if length(volts)>1
+    unipolar=0;
+else
+    unipolar=1;
 end
 
-keyboard
+constvol=1; % constant voltage stimulation.
 
-vecx=ea_sb_calc_vecx(vol.stiff,stimvec,1);
-vecx(1)=vecx(2);
+potential = ea_apply_dbs(vol,ix,volts,unipolar,constvol); % output in V.
+
 
 disp('Done. Calculating ET...');
+
+
+gradient = ea_calc_gradient(vol,potential);
+
 % calculate electric field ET by calculating midpoints of each
 % mesh-connection and setting difference of voltage to these points.
+
 vat=vol;
 
-hexaed=1:size(vol.hex,1);
-vat.pos(vat.hex(hexaed,1:8),:)=(vol.pos(vat.hex(hexaed,1:8),:)+vol.pos(vat.hex(hexaed,[2:8,1]),:))/2;
-vat.ET(vat.hex(hexaed,1:8))=abs(vecx(vat.hex(hexaed,1:8))-vecx(vat.hex(hexaed,[2:8,1])));
+ngrad=sqrt(sum(gradient'.^2,1));
+vat.ET=vol.cond(vol.tissue).*ngrad;
+
 
 
 
@@ -210,6 +235,7 @@ thresh=0.064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons
 vat.ET=vat.ET>thresh;
 vat.pos=vat.pos(vat.ET,:);
 
+vat.pos=vat.pos*1000; % back to mm.
 
 
 F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),ones(size(vat.pos(:,1))));
@@ -220,7 +246,7 @@ F.ExtrapolationMethod='none';
     % volumetrics of the vat in mm^3.
     gv=cell(3,1); spacing=zeros(3,1);
     for dim=1:3
-         gv{dim}=linspace(min(vat.pos(:,dim)),max(vat.pos(:,dim)),100);
+         gv{dim}=linspace(min(round(vat.pos(:,dim))),max(round(vat.pos(:,dim))),100);
          spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
     end
 
@@ -244,7 +270,76 @@ disp('Done...');
 
 
 %% begin fieldtrip/simbio functions:
+function gradient = ea_calc_gradient(vol,potential)
+gradient = zeros(size(vol.hex,1),3);
+gradient = gradient + 0.25*repmat(potential(vol.hex(:,1)),1,3).*((vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:))./abs(vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:)));
+gradient = gradient + 0.25*repmat(potential(vol.hex(:,2)),1,3).*((vol.pos(vol.hex(:,2),:)-vol.pos(vol.hex(:,8),:))./abs(vol.pos(vol.hex(:,2),:)-vol.pos(vol.hex(:,8),:)));
+gradient = gradient + 0.25*repmat(potential(vol.hex(:,3)),1,3).*((vol.pos(vol.hex(:,3),:)-vol.pos(vol.hex(:,5),:))./abs(vol.pos(vol.hex(:,3),:)-vol.pos(vol.hex(:,5),:)));
+gradient = gradient + 0.25*repmat(potential(vol.hex(:,4)),1,3).*((vol.pos(vol.hex(:,4),:)-vol.pos(vol.hex(:,6),:))./abs(vol.pos(vol.hex(:,4),:)-vol.pos(vol.hex(:,6),:)));
+gradient = gradient + 0.25*repmat(potential(vol.hex(:,5)),1,3).*((vol.pos(vol.hex(:,5),:)-vol.pos(vol.hex(:,3),:))./abs(vol.pos(vol.hex(:,5),:)-vol.pos(vol.hex(:,3),:)));
+gradient = gradient + 0.25*repmat(potential(vol.hex(:,6)),1,3).*((vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:))./abs(vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:)));
+gradient = gradient + 0.25*repmat(potential(vol.hex(:,7)),1,3).*((vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:))./abs(vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:)));
+gradient = gradient + 0.25*repmat(potential(vol.hex(:,8)),1,3).*((vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:))./abs(vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:)));
 
+
+function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol)
+if constvol
+    if unipolar
+        dirinodes = ea_get_surf_nodes(vol.hex);
+        dirinodes = [dirinodes, elec];
+    else
+        dirinodes = elec;
+    end
+    
+    rhs = zeros(length(vol.pos),1);
+    dirival = zeros(size(vol.pos,1),1);
+    dirival(elec) = val;
+else
+    dirinodes = 1;
+    dirival = zeros(size(vol.pos,1),1);
+    
+    rhs = zeros(size(vol.pos,1),1);
+    
+    if unipolar
+        catnodes = ea_get_surf_nodes(vol.hex);
+        rhs(elec) = val;
+        rhs(catnodes) = -sum(val)/length(catnodes);
+    else
+        rhs(elec) = val;
+        if abs(sum(val > 1e-10))
+            warning('Sum of current is not zero! This leads to an inaccurate simulation!');
+        end
+    end
+end
+
+[stiff rhs] = ea_dbs(vol.stiff,rhs,dirinodes,dirival);
+
+potential = ea_sb_solve(stiff,rhs);    
+
+function [stiff,rhs] = ea_dbs(stiff,rhs,dirinodes,dirival)
+
+dia = diag(stiff);
+stiff = stiff - diag(dia);
+[indexi indexj s] = find(stiff);
+clear stiff;
+dind = dirinodes;
+indi = find(ismember(indexi,dind));
+indj = find(~ismember(indexj,dind));
+indij = intersect(indi,indj);
+rhs(indexj(indij)) = rhs(indexj(indij)) - dirival(indexi(indij)).*s(indij);
+s(indi) = 0;
+dia(indexi(indi)) = 1;
+rhs(indexi(indi)) = dirival(indexi(indi));
+indij = find(ismember(indexj,dind)&~ismember(indexi,dind));
+rhs(indexi(indij)) = rhs(indexi(indij)) - dirival(indexj(indij)).*s(indij);
+s(indij) = 0;
+stiff = sparse(indexi,indexj,s,length(dia),length(dia));
+stiff = stiff + diag(dia);
+
+
+function surf_nodes = ea_get_surf_nodes(cell)
+connectivity = hist(cell(:),unique(cell));
+surf_nodes = find(connectivity ~= 8);
 
 
 function [warped] = ea_ft_warp_apply(M, input, method, tol)

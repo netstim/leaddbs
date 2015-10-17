@@ -1,5 +1,5 @@
-function newcoords=ea_correctcoords(oldcoords,trajectory,command)
-newcoords=oldcoords;
+function newmarkers=ea_correctcoords(oldmarkers,trajectory,command)
+newmarkers=oldmarkers;
 
 grone=[0.5,3]; % step-sizes
 
@@ -12,9 +12,8 @@ switch command.Key
             
             trajvector=gettraj(trajectory,1);
             side=1;
-            for el=1:4
-                newcoords{side}(el,:)=oldcoords{side}(el,:)+grone(1+ismember('shift',command.Modifier))*trajvector;
-            end
+            newmarkers(side).head=oldmarkers(side).head+grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).tail=oldmarkers(side).tail+grone(1+ismember('shift',command.Modifier))*trajvector;
         end
 
     case 'uparrow'
@@ -22,9 +21,8 @@ switch command.Key
         try
             trajvector=gettraj(trajectory,1);
             side=1;
-            for el=1:4
-                newcoords{side}(el,:)=oldcoords{side}(el,:)-grone(1+ismember('shift',command.Modifier))*trajvector;
-            end
+            newmarkers(side).head=oldmarkers(side).head-grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).tail=oldmarkers(side).tail-grone(1+ismember('shift',command.Modifier))*trajvector;
         end
 
     case 'rightarrow'
@@ -33,9 +31,9 @@ switch command.Key
             
             trajvector=gettraj(trajectory,2);
             side=2;
-            for el=1:4
-                newcoords{side}(el,:)=oldcoords{side}(el,:)+grone(1+ismember('shift',command.Modifier))*trajvector;
-            end
+            newmarkers(side).head=oldmarkers(side).head+grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).tail=oldmarkers(side).tail+grone(1+ismember('shift',command.Modifier))*trajvector;
+
         end
 
     case 'leftarrow'
@@ -43,9 +41,8 @@ switch command.Key
         try
             trajvector=gettraj(trajectory,2);
             side=2;
-            for el=1:4
-                newcoords{side}(el,:)=oldcoords{side}(el,:)-grone(1+ismember('shift',command.Modifier))*trajvector;
-            end
+            newmarkers(side).head=oldmarkers(side).head-grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).tail=oldmarkers(side).tail-grone(1+ismember('shift',command.Modifier))*trajvector;
         end
 
         
@@ -53,12 +50,9 @@ end
 switch command.Character
     case {'-','_'}
         try
-            feather=[0,0.1,0.2,0.3];
             for side=1:2
                trajvector=gettraj(trajectory,side);
-                for el=1:4
-                    newcoords{side}(el,:)=oldcoords{side}(el,:)+trajvector.*(feather(el)*(ismember('shift',command.Modifier)+1));
-                end
+                newmarkers(side).tail=oldmarkers(side).tail+trajvector.*(0.3*(ismember('shift',command.Modifier)+1));
             end
             
         end
@@ -69,9 +63,7 @@ switch command.Character
             
             for side=1:2
               trajvector=gettraj(trajectory,side);
-                for el=1:4
-                    newcoords{side}(el,:)=oldcoords{side}(el,:)-trajvector.*(feather(el)*(ismember('shift',command.Modifier)+1));
-                end
+              newmarkers(side).tail=oldmarkers(side).tail-trajvector.*(0.3*(ismember('shift',command.Modifier)+1));
             end
         end
         
