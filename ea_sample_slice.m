@@ -21,12 +21,13 @@ wsize=abs(round(probe(1,1)-probe(1,2)));
 clear probe
 %
 end
-
+if iscell(coords)
 allc=[];
 for side=1:length(coords)
     allc=[allc;coords{side}];
 end
 coords=allc;
+end
 
 if length(coords)==1 % scalar input, only a height is defined. convert to mm space.
    getfullframe=1; 

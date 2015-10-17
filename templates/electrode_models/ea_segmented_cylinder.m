@@ -1,4 +1,9 @@
 function varargout=ea_segmented_cylinder(varargin)
+% This function creates a segmented cylinder as e.g. used by the boston
+% vercise directed leads.
+% __________________________________________________________________________________
+% Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
 
 h=figure;
 hold on

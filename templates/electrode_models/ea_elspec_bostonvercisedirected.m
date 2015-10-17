@@ -1,8 +1,11 @@
 function electrode=ea_elspec_bostonvercisedirected(varargin)
-% This function renders the electrode as defined by options.elspec and
-% coords_mm.
+% This function creates the electrode specification for a certain
+% lead. Since this code is usually only executed once (to
+% establish the model), it is not optimized in any way. You can however use
+% this code to modify the electrode model and/or duplicate the function to
+% build a different model.
 % __________________________________________________________________________________
-% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
 if nargin
@@ -309,6 +312,16 @@ electrode.y_position=[0,options.elspec.lead_diameter/2,options.elspec.tip_length
 electrode.numel=8;
 electrode.contact_color=options.elspec.contact_color;
 electrode.lead_color=options.elspec.lead_color;
+
+% add contact coordinates:
+electrode.coords_mm(1,:)=coords_mm{side}(1,:);
+electrode.coords_mm(2,:)=coords_mm{side}(2,:)+[-0.66,0,0];
+electrode.coords_mm(3,:)=coords_mm{side}(2,:)+[0.33,0.66,0];
+electrode.coords_mm(4,:)=coords_mm{side}(2,:)+[0.33,-0.66,0];
+electrode.coords_mm(5,:)=coords_mm{side}(3,:)+[-0.66,0,0];
+electrode.coords_mm(6,:)=coords_mm{side}(3,:)+[0.33,0.66,0];
+electrode.coords_mm(7,:)=coords_mm{side}(3,:)+[0.33,-0.66,0];
+electrode.coords_mm(8,:)=coords_mm{side}(4,:);
 
 save([fileparts(which('lead')),filesep,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 % visualize

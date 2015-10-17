@@ -181,6 +181,7 @@ electrode.y_position=[0,options.elspec.lead_diameter/2,options.elspec.tip_length
 electrode.numel=options.elspec.numel;
 electrode.contact_color=options.elspec.contact_color;
 electrode.lead_color=options.elspec.lead_color;
+electrode.coords_mm=coords_mm{side};
 
 
 % visualize

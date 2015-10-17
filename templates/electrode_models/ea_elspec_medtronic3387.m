@@ -1,8 +1,11 @@
 function electrode=ea_elspec_medtronic3387(varargin)
-% This function renders the electrode as defined by options.elspec and
-% coords_mm.
+% This function creates the electrode specification for a certain
+% lead. Since this code is usually only executed once (to
+% establish the model), it is not optimized in any way. You can however use
+% this code to modify the electrode model and/or duplicate the function to
+% build a different model.
 % __________________________________________________________________________________
-% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
 if nargin
@@ -25,7 +28,7 @@ jetlist=othercolor('BuOr_12');
 
 for side=options.sides
     %% nullmodel:
-    coords_mm{side}=[0,0,1.5+0.75;0,0,1.5+0.75+1*2;0,0,1.5+0.75+2*2;0,0,1.5+0.75+3*2];
+    coords_mm{side}=[0,0,1.5+0.75;0,0,1.5+0.75+1*3;0,0,1.5+0.75+2*3;0,0,1.5+0.75+3*3];
     trajectory{side}=[zeros(30,2),linspace(30,0,30)'];
     %%
     trajvector=mean(diff(trajectory{side}));
@@ -180,6 +183,7 @@ electrode.y_position=[0,options.elspec.lead_diameter/2,options.elspec.tip_length
 electrode.numel=options.elspec.numel;
 electrode.contact_color=options.elspec.contact_color;
 electrode.lead_color=options.elspec.lead_color;
+electrode.coords_mm=coords_mm{side};
 
 save([fileparts(which('lead')),filesep,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 % visualize

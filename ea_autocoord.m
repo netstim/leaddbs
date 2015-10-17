@@ -1,7 +1,7 @@
 function ea_autocoord(options)
-% This function is the main function of LEAD-DBS. It will generate a 8x3
-% vector of coordinates. Rows 1-4 will be the right electrodes, rows 5-8
-% the left ones. trajectory{1} will be the right trajectory, trajectory{2} the
+% This function is the main function of LEAD-DBS. It will generate a 
+% vector of coordinates. 
+% Trajectory{1} will be the right trajectory, trajectory{2} the
 % left one.
 % For each hemisphere of the brain, this function will call the
 % reconstruction routine ea_autocoord_side and lateron call functions for
@@ -88,7 +88,7 @@ end
 
 
 
-if options.dolc
+if options.dolc % perform lead connectome subroutine..
 
     ea_perform_lc(options);
     
@@ -148,11 +148,18 @@ if options.doreconstruction
             coords_mm{side}(electrode,:)=coords_mm{side}(1,:)-normtrajvector{side}.*((electrode-1)*distmm);
             
         end
+        markers(side).head=coords_mm{side}(1,:);
+        markers(side).tail=coords_mm{side}(4,:);
+        
+
+        orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
+        
+        markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
+        markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
         
         
         
-        
-        
+        coords_mm=ea_resolvecoords(markers,options);
 
     end
     
@@ -193,9 +200,8 @@ if options.doreconstruction
     
     
     % save reconstruction results
-try    ea_write_fiducials(coords_mm,fullfile(options.root,patientname,'ea_coords.fcsv'),options); end
     elmodel=options.elmodel;
-    save([options.root,patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','elmodel');
+    save([options.root,patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','markers','elmodel');
     
 end
 
@@ -208,11 +214,23 @@ if options.manualheightcorrection
     catch
         ea_error([patientname,': No reconstruction information found. Please run reconstruction first.']);
     end
+    
+    if ~exist('markers','var') % backward compatibility to old recon format
+        for side=options.sides
+            markers(side).head=coords_mm{side}(1,:);
+            markers(side).tail=coords_mm{side}(4,:);            
+            normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
+            orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
+            markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
+            markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+        end
+    end
+    
     mcfig=figure('name',[patientname,': Manual Height Correction'],'numbertitle','off');
     if exist('manually_corrected','var');
         options.mancor=1;
     end
-    ea_manualcorrection(mcfig,coords_mm,trajectory,patientname,options);
+    ea_manualreconstruction(mcfig,markers,trajectory,patientname,options);
     
     
    
