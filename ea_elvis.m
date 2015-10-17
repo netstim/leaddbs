@@ -112,25 +112,19 @@ for pt=1:length(elstruct)
         vizstruct=struct('faces',[],'vertices',[],'colors',[]);
         
         
-        extract=[1,4,7,10,13,16,19,22,25]; % surfaces without endplates.
-        labels={'rel_traj','lel_traj','rel_btwc1','lel_btwc1','rel_btwc2','lel_btwc2','rel_btwc3','lel_btwc3'...
-            'rel_cnt1','lel_cnt1','rel_cnt2','lel_cnt2','rel_cnt3','lel_cnt3','rel_cnt4','lel_cnt4','rel_tip','lel_tip',};
-        cnt=1;
-        for ex=extract
-            for side=1:2
+       cnt=1;
+        for side=1:2
+            extract=1:length(el_render(pt).el_render{side});
+            for ex=extract
                 
-                ps = surf2patch(get(el_render(pt).el_render{side}(ex),'XData'),get(el_render(pt).el_render{side}(ex),'YData'),get(el_render(pt).el_render{side}(ex),'ZData'),'triangles');
-                % temporally plot electrode to get vertex normals..
-                tmp=figure('visible','off');
-                tp=patch(ps);
-                
+                tp=el_render(pt).el_render{side}(ex);
                 vizstruct(cnt).normals=get(tp,'VertexNormals');
-                delete(tmp);
-                vizstruct(cnt).faces=ps.faces;
-                vizstruct(cnt).vertices=ps.vertices;
-                scolor=get(el_render(pt).el_render{side}(ex),'CData');
-                vizstruct(cnt).colors=repmat([squeeze(scolor(1,1,:))',0.7],length(vizstruct(cnt).faces),1);
-                vizstruct(cnt).name=labels{cnt};
+                vizstruct(cnt).faces=tp.Faces;
+                vizstruct(cnt).vertices=tp.Vertices;
+                scolor=get(el_render(pt).el_render{side}(ex),'FaceVertexCData');
+                vizstruct(cnt).colors=scolor;
+                %vizstruct(cnt).colors=repmat([squeeze(scolor(1,1,:))',0.7],length(vizstruct(cnt).faces),1);
+                vizstruct(cnt).name='';
                 cnt=cnt+1;
                 
             end

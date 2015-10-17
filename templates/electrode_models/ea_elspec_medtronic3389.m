@@ -17,7 +17,7 @@ options.sides=1;
 elstruct.name=options.elmodel;
 options=ea_resolve_elspec(options);
 elspec=options.elspec;
-resultfig=figure;
+resultfig=figure('visible','off');
 
 jetlist=othercolor('BuOr_12');
 %   jetlist=jet;
@@ -32,7 +32,7 @@ for side=options.sides
     trajvector=trajvector/norm(trajvector);
     
 
-    startpoint=trajectory{side}(1,:);
+    startpoint=trajectory{side}(1,:)-(1.5*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
     set(0,'CurrentFigure',resultfig);
     
     % draw patientname
@@ -173,11 +173,47 @@ end
 electrode.electrode_model=elstruct.name;
 electrode.head_position=[0,0,options.elspec.tip_length+0.5*options.elspec.contact_length];
 electrode.tail_position=[0,0,options.elspec.tip_length+options.elspec.numel*options.elspec.contact_length+(options.elspec.numel-1)*options.elspec.contact_spacing-0.5*options.elspec.contact_length];
+
+electrode.x_position=[options.elspec.lead_diameter/2,0,options.elspec.tip_length+0.5*options.elspec.contact_length];
+electrode.y_position=[0,options.elspec.lead_diameter/2,options.elspec.tip_length+0.5*options.elspec.contact_length];
+
 electrode.numel=options.elspec.numel;
 electrode.contact_color=options.elspec.contact_color;
 electrode.lead_color=options.elspec.lead_color;
 
-save([fileparts(which('lead')),filesep,'templates',filesep,'electrode_models',filesep,'medtronic_3389'],'electrode');
+save([fileparts(which('lead')),filesep,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
+
+
+% visualize
+cnt=1;
+g=figure;
+X=eye(4);
+
+        for ins=1:length(electrode.insulation)
+            electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+            electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
+            elrender{side}(cnt)=patch(electrode.insulation(ins));
+        if isfield(elstruct,'group')
+            usecolor=elstruct.groupcolors(elstruct.group,:);
+        else
+            usecolor=elspec.lead_color;
+        end
+        specsurf(elrender{side}(cnt),usecolor,aData);
+            cnt=cnt+1;
+        end
+        for con=1:length(electrode.contacts)
+            electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+            electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
+            elrender{side}(cnt)=patch(electrode.contacts(con));
+            
+                specsurf(elrender{side}(cnt),elspec.contact_color,aData); 
+            
+            cnt=cnt+1;
+        end
+
+axis equal
+view(0,0);
+
 
 
 function m=maxiso(cellinp) % simply returns the highest entry of matrices in a cell.
@@ -219,6 +255,13 @@ cd=cd+0.01*randn(size(cd));
 
 set(surfc,'FaceColor','interp');
 set(surfc,'CData',cd);
+
+try % for patches
+    vertices=get(surfc,'Vertices');
+    cd=zeros(size(vertices));
+    cd(:)=color(1);
+    set(surfc,'FaceVertexCData',cd);
+end
 set(surfc,'AlphaDataMapping','none');
 
 set(surfc,'FaceLighting','phong');
