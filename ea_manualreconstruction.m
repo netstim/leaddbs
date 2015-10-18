@@ -367,7 +367,7 @@ delete(spacetext);
 
 
 
-mainax=subplot(4,4,[1:3,5:7,9:11,13:15]); % main plot
+mainax=subplot(4,5,[2:4,7:9,12:14,17:19]); % main plot
 set(gca, 'LooseInset', [0,0,0,0]);
 init=getappdata(gcf,'init');
 if isempty(init)
@@ -531,7 +531,7 @@ mks=[markers(1).head;markers(1).tail;markers(2).head;markers(2).tail];
 wsize=10;
 cmap=[1,4,5,8];
 for subpl=1:4
-    subplot(4,4,subpl*4)
+    subplot(4,5,subpl*5)
     
     slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
     try
@@ -564,6 +564,51 @@ for subpl=1:4
 end
 
 
+
+%% plot electrode model to the left side (static)
+legplot=getappdata(gcf,'legplot');
+if isempty(legplot)
+elax=subplot(4,5,[1,6,11,16]); % left electrode plot
+axis off
+load([options.earoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname])
+
+% visualize
+cnt=1;
+X=eye(4);
+hold on
+for ins=1:length(electrode.insulation)
+    electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+    electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
+    elrender{side}(cnt)=patch(electrode.insulation(ins));
+    ea_specsurf(elrender{side}(cnt),options.elspec.lead_color,0.5);
+    cnt=cnt+1;
+end
+for con=1:length(electrode.contacts)
+    electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+    electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
+    elrender{side}(cnt)=patch(electrode.contacts(con));
+    
+    ea_specsurf(elrender{side}(cnt),options.elspec.contact_color,0.5);
+    
+    cnt=cnt+1;
+end
+
+plot3(electrode.head_position(1),electrode.head_position(2),electrode.head_position(3),'*r','MarkerSize',15)
+plot3(electrode.tail_position(1),electrode.tail_position(2),electrode.tail_position(3),'*g','MarkerSize',15)
+axis([-2,2,-2,2,0,16])
+set(elax,'XLimMode','manual'),set(elax,'YLimMode','manual'),set(elax,'ZLimMode','manual')
+axis manual
+axis equal
+view(0,0);
+
+%light('Position',[0 -5 10]);
+
+text(0,0,14,options.elmodel,'color','w');
+
+
+setappdata(gcf,'legplot',1);
+
+end
 
 
 %% outputs

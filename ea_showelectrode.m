@@ -50,12 +50,14 @@ for side=options.sides
             electrode.tail_position,1
             electrode.x_position,1
             electrode.y_position,1]; % points in model
-        orth=null(trajvector)*electrode.x_position(1);
-        
-        B=[coords_mm{side}(1,:),1;
-            coords_mm{side}(4,:),1;
-            coords_mm{side}(1,:)+orth(:,1)',1
-            coords_mm{side}(1,:)+orth(:,2)',1]; % corresponding points in reality
+         
+        B=[elstruct.markers(side).head,1;
+           elstruct.markers(side).tail,1;
+           elstruct.markers(side).x,1;
+           elstruct.markers(side).y,1];
+        setappdata(resultfig,'elstruct',elstruct);
+        setappdata(resultfig,'elspec',elspec);
+
         X = linsolve(A,B); X=X';
         
         if options.d3.elrendering==2 % show a transparent electrode.

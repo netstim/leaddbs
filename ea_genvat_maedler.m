@@ -16,7 +16,7 @@ options=varargin{4};
 elseif nargin==1
 
 if ischar(varargin{1}) % return name of method.
-    varargout{1}='Mädler 2012';
+    varargout{1}='Maedler 2012';
     return
 end
 end

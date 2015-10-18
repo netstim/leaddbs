@@ -227,6 +227,10 @@ if options.manualheightcorrection
     end
     
     mcfig=figure('name',[patientname,': Manual Height Correction'],'numbertitle','off');
+    warning('off');
+    try
+    ea_maximize(mcfig);
+    end
     if exist('manually_corrected','var');
         options.mancor=1;
     end

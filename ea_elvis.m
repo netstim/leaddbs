@@ -93,6 +93,7 @@ else
     elstruct(1).coords_mm=coords_mm;
     elstruct(1).trajectory=trajectory;
     elstruct(1).name=options.patientname;
+    elstruct(1).markers=markers;
     clear coords_mm trajectory
 end
 

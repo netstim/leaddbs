@@ -8,11 +8,8 @@ function electrode=ea_elspec_bostonvercisedirected(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-if nargin
-    options.elmodel=varargin{1};
-else
+
     options.elmodel='Boston Scientific Vercise Directed';
-end
 
 pt=1;
 
@@ -326,7 +323,11 @@ electrode.coords_mm(8,:)=coords_mm{side}(4,:);
 save([fileparts(which('lead')),filesep,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 % visualize
 cnt=1;
+if ~nargin
 g=figure;
+else
+    axes(varargin{1});
+end
 X=eye(4);
 
 for ins=1:length(electrode.insulation)
