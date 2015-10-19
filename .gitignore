@@ -10,7 +10,8 @@
 *.json
 *.woff
 gibsconnect*.mat
-fibers
+fibers/
+release/
 tmp/
 
 # dev only
@@ -26,7 +27,7 @@ ea_make_release.m
 ehthumbs.db
 Thumbs.db
 
-# Excluded 
+# Excluded
 !icons/*.png
 !bg_gui.png
 !bg_gui_lg.png
