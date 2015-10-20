@@ -225,6 +225,8 @@ if options.manualheightcorrection
             markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
         end
     end
+        elmodel=options.elmodel;
+    save([options.root,patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','markers','elmodel');
     
     mcfig=figure('name',[patientname,': Manual Height Correction'],'numbertitle','off');
     warning('off');

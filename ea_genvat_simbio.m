@@ -51,6 +51,7 @@ trajvox=V.mat\trajmm';
 trajvox=trajvox(1:3,:)';
 
 
+
 %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
 
 [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,50,51,1); % this will result in ~10x10x10 mm.
@@ -87,10 +88,7 @@ nii=ea_load_nii([options.root,options.patientname,filesep,'headmodel',filesep,'s
 XYZvx=[xx;yy;zz;ones(1,length(xx))];
 XYZmm=Vexp.mat*XYZvx;
 
-if vizz
-   plot3(XYZmm(1,:),XYZmm(2,:),XYZmm(3,:),'r.'); 
-    
-end
+
 clear XYZvx
 
 cnt=1;
@@ -119,7 +117,7 @@ for ins=1:length(electrode.insulation)
     
     if vizz
         h=patch(electrode.insulation(ins));
-        ea_specsurf(h,1,1);
+        ea_specsurf(h,electrode.lead_color,0.5);
     end
     
     % this following method takes quite some time... even more importantly,
@@ -143,7 +141,7 @@ for con=1:length(electrode.contacts)
     in=ea_intriangulation(electrode.contacts(con).vertices,electrode.contacts(con).faces,XYZmm(1:3,:)');
     if vizz
         h=patch(electrode.contacts(con));
-        ea_specsurf(h,0.3,1);
+        ea_specsurf(h,electrode.contact_color,0.5);
     end
     Xt=nii.img;
     Xt(:)=0; Xt(in)=1;
@@ -151,6 +149,10 @@ for con=1:length(electrode.contacts)
     ea_dispercent(con/length(electrode.contacts));
 end
 
+if vizz
+   plot3(XYZmm(1,:),XYZmm(2,:),XYZmm(3,:),'r.'); 
+   plot3(trajmm(:,1),trajmm(:,2),trajmm(:,3),'g'); 
+end
 
 ea_dispercent(1,'end');
 keyboard
@@ -182,6 +184,7 @@ smri.gray=logical(cimat); % gm portion of the file
 smri.white=~smri.gray; % first, set everything that is not gm to wm
 smri.contacts=logical(Xcon); % include electrode contacts to the model
 smri.insulation=logical(Xins); % include insulation to the model
+smri.insulation(smri.contacts)=0; % make sure no overlaps.
 smri.gray(smri.contacts)=0; smri.gray(smri.insulation)=0; % remove contact and insulation portions from the gm..
 smri.white(smri.contacts)=0; smri.white(smri.insulation)=0; % .. and white matter portions.
 
