@@ -5,7 +5,13 @@ function [cimat,reldist,mat]=ea_sample_cuboid(varargin)
 trajectory=varargin{1};
 [~,trajvector]=ea_fit_line(trajectory);
 options=varargin{2};
+    vizz=1;
 
+    if vizz
+        figure
+        hold on
+    end
+    
 switch options.modality
     case 1 % MR
         if exist([options.root,options.prefs.patientdir,filesep,options.prefs.cornii],'file')
@@ -46,6 +52,9 @@ else
     spacing=1;
 end
 
+
+
+keyboard
 V=spm_vol(niifn);
 
 
@@ -89,7 +98,9 @@ end
 % now set trajvector to a size that 10 of it will be the size of eldist.
 
 
-
+if vizz
+    plot3(trajectory(:,1),trajectory(:,2),trajectory(:,3),'b')
+end
 
 
 startpt=trajectory(end,:);            % 3d point of starting line (5 vox below coord 1).
@@ -112,16 +123,13 @@ zdim=150; % will be sum up to 5 times reldist (three between contacts and two at
 end
 
 imat=nan((2*ydim+1)*(1/spacing),(2*xdim+1)*(1/spacing),zdim*(1/spacing));
-
-
-
-        V=spm_vol(niifn);
     
     
     
     cnt=1;
     coord2write=zeros(length(1:zdim)* length(-xdim:xdim)*length(-ydim:ydim),3);
     coord2extract=zeros(length(1:zdim)* length(-xdim:xdim)*length(-ydim:ydim),3);
+    
     
     for zz=1:spacing:zdim
         for xx=-xdim:spacing:xdim
@@ -132,7 +140,15 @@ imat=nan((2*ydim+1)*(1/spacing),(2*xdim+1)*(1/spacing),zdim*(1/spacing));
                     pt(2)+orthx(2)*xx+orthy(2)*yy; ...
                     pt(3)+orthx(3)*xx+orthy(3)*yy]';
                 coord2write(cnt,:)=[xx*(1/spacing)+xdim+1;yy*(1/spacing)+ydim+1;zz*(1/spacing)]';
-                cnt=cnt+1;
+                if vizz && ~mod(cnt,100)
+                   plot3(coord2extract(cnt,1),coord2extract(cnt,2),coord2extract(cnt,3),'r.'); 
+                   plot3(coord2write(cnt,1),coord2write(cnt,2),coord2write(cnt,3),'g.'); 
+                   %drawnow
+                   %pause(0.001)
+                end
+                                cnt=cnt+1;
+
+                
                 % plot3(coord2extract(1),coord2extract(2),coord2extract(3),'.');
             end
         end

@@ -1,23 +1,5 @@
 function ea_write(options)
 
-if options.elspec.numel>4 % here, electrodes with more than 4 contacts are extrapolated from 4fold data.
-    try
-    try
-        load([options.root,options.patientname,filesep,'ea_reconstruction']);
-    catch
-        ea_error('No reconstruction information found. Please run reconstruction first.');
-    end
-    for side=1:length(coords_mm)
-    if size(coords_mm{side},1)~=options.elspec.numel
-        
-        coords_mm{side}=ea_extrapol_coords(coords_mm{side},options);
-        
-        ea_write_fiducials(coords_mm,fullfile(options.root,options.patientname,'ea_coords.fcsv'),options);
-        save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm');
-    end
-    end
-    end 
-end
 
 
 

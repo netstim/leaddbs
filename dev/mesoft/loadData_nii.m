@@ -23,11 +23,18 @@ function data = loadData_nii(dwifile,gradfile,maskfile,threshold)
             gradfile{1} = fullfile(pathgradf,gradf{1});
             gradfile{2} = fullfile(pathgradf,gradf{2});
             
-            [fnmask pathmask] = uigetfile({'*.nii;*.nii.gz;*.hdr','All accepted filetypes'},'Select nii containing WM mask');
-            if fnmask == 0,
+            
+            [fnmask pathmask] = uigetfile({'*.mat;*.nii','Accepted Files (*.mat,*.nii,*.hdr)'},'Load mrStruct/maskStruct','MultiSelect','on');
+            if isempty(fnmask),
                  return;
             end;
-            maskfile = fullfile(pathmask,fnmask);
+            if iscell(fnmask),
+                maskfile{1} = fullfile(pathmask,fnmask{1});
+                maskfile{2} = fullfile(pathmask,fnmask{2});
+            else
+                maskfile = fullfile(pathmask,fnmask);
+            end;
+            
        end;
                 
        if iscell(dwifile),            
@@ -40,16 +47,24 @@ function data = loadData_nii(dwifile,gradfile,maskfile,threshold)
        else
             dwinii = load_untouch_nii(dwifile);
        end;
-       masknii = load_untouch_nii(maskfile);
        
        gradf1 = importdata(gradfile{1});
        gradf2 = importdata(gradfile{2});
        if size(gradf1,1) == 3,
            bvec = gradf1;
            bval = gradf2;
-       else
-           bvec = gradf2;
+       elseif size(gradf1,2) == 3
+           bvec=gradf1';
+           bval=gradf2';
+       elseif size(gradf2,1)==3
+            bvec = gradf2;
            bval = gradf1;
+           
+       elseif size(gradf2,2)==3
+           bvec = gradf2';
+           bval = gradf1';
+       else
+           error('No suitable grad files found');
        end;
                
        T = diag([-1 -1 1])*[dwinii.hdr.hist.srow_x(1:3) ; dwinii.hdr.hist.srow_y(1:3) ; dwinii.hdr.hist.srow_z(1:3)];
@@ -57,19 +72,12 @@ function data = loadData_nii(dwifile,gradfile,maskfile,threshold)
        T = U*V';
               
        for k = 1:size(bval,2),
+
            gdir = T*bvec(:,k);
            gdir = gdir / (eps+norm(gdir));
            tensor(:,:,k) = gdir*gdir' *bval(k);
        end;
        
-       res = reslice_nifti(masknii.img,masknii.hdr,dwinii.hdr,2);
-       
-       if not(exist('threshold'))           
-           threshold = chooseThreshold_stackview(dwinii.img(:,:,:,1),res);
-       end;
-       if isempty(threshold)
-           threshold = chooseThreshold_stackview(dwinii.img(:,:,:,1),res);
-       end;
        
        data.dwifile = dwifile;
        data.dwi = dwinii.img;
@@ -80,8 +88,50 @@ function data = loadData_nii(dwifile,gradfile,maskfile,threshold)
        data.name = dwinii.fileprefix;
        
               
-       data.WM.mask = res;
-       data.WM.threshold = threshold;
+   
+       if not(exist('threshold')),
+           threshold = [];
+       end;
+              
+       
+       data.WM = loadmask(maskfile,threshold,data.dwi(:,:,:,1),data.edges.hdr);
        data.WM.file = maskfile;
        
-
+       
+       
+      
+function data = loadmask(fn,threshold,ref,edges)
+        data = [];
+        
+        if iscell(fn),
+            [fp fndum fext] = fileparts(fn{1});
+        else
+            [fp fndum fext] = fileparts(fn);
+        end;
+        if strcmp(fext(1:4),'.nii') || strcmp(fext(1:4),'.hdr'),                     
+                     
+           if iscell(fn)
+               masknii = load_untouch_nii(fn{2});
+               maskdata = reslice_nifti(masknii.img,masknii.hdr,edges,2);
+               masknii = load_untouch_nii(fn{1});
+               maskdata(:,:,:,2) = reslice_nifti(masknii.img,masknii.hdr,edges,2);
+           else
+               masknii = load_untouch_nii(fn);
+               maskdata = reslice_nifti(masknii.img,masknii.hdr,edges,2);
+           end;
+           for k = 1:size(maskdata,4),
+               if length(threshold) < k,
+                    threshold_tmp = chooseThreshold_stackview(ref,maskdata(:,:,:,k));
+                    if isempty(threshold_tmp)
+                       return;
+                    end;                    
+                    threshold(k) = threshold_tmp;
+               end;
+               maskdata(:,:,:,k) = maskdata(:,:,:,k) > threshold(k);
+           end;                
+            
+        end;
+        
+        data.mask = maskdata;
+        data.threshold = threshold;
+        
