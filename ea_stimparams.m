@@ -163,7 +163,8 @@ catch    % reinitialize using third entry.
 end
 
 
-
+pos=get(gcf,'position');
+set(gcf,'position',[51,51,pos(3),pos(4)]);
 
 % Choose default command line output for ea_stimparams
 handles.output = hObject;

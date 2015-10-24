@@ -1,4 +1,4 @@
-function varargout=ea_genvat_simbio_direct(varargin)
+function varargout=ea_genvat_simbio(varargin)
 % This function generates a volume of activated tissue around for each
 % electrode.
 % Usage: VAT=ea_genvat(coords_mm,stimparams,options).
@@ -16,13 +16,13 @@ if nargin==4
 elseif nargin==1
     
     if ischar(varargin{1}) % return name of method.
-        varargout{1}='Simbio/Fieldtrip';
+        varargout{1}='SimBio/FieldTrip';
         return
     end
 end
 
 
-vizz=1;
+vizz=0;
 
 
 
@@ -31,11 +31,21 @@ if isempty(find(stimparams(side).U))
     return
 end
 
-usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
+
+
+%% get electrodes handles // initial parameters:
+resultfig=getappdata(gcf,'resultfig');
+el_render=getappdata(resultfig,'el_render');
+elstruct=getappdata(resultfig,'elstruct');
+elspec=getappdata(resultfig,'elspec');
+options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
+coords=acoords{side};
+
+if ea_headmodel_changed(options,elstruct)
+disp('No suitable headmodel found, rebuilding. This may take a while...');
 
 %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
 
-coords=acoords{side};
 options.earoot=[fileparts(which('lead')),filesep];
 
 %% some preprocessing to establish the lead trajectory
@@ -54,18 +64,13 @@ trajvox=trajvox(1:3,:)';
 
 %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
 
-[cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,50,51,1); % this will result in ~10x10x10 mm.
+[cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,50,70,1); % this will result in ~10x10x10 mm.
 mat=mat';
 mkdir([options.root,options.patientname,filesep,'headmodel']);
 Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural.nii'],mat,[2,0],cimat);
 spm_write_vol(Vexp,cimat);
 
 
-%% get electrodes handles:
-resultfig=getappdata(gcf,'resultfig');
-el_render=getappdata(resultfig,'el_render');
-elstruct=getappdata(resultfig,'elstruct');
-elspec=getappdata(resultfig,'elspec');
 
 thiselhandle=el_render(1).el_render{side};
 % fields: 1: trajectory body; 2: trajectory bottom; 3: trajectory top
@@ -155,30 +160,17 @@ if vizz
 end
 
 ea_dispercent(1,'end');
-keyboard
+
 % set up dipole
 
 disp('Finishing headmodel...');
-% if length(find(stimparams.U))>1 % bipolar
-% elseif length(find(stimparams.U)==1 % monopolar
-% else % no active contact!
-%     ea_error('No active stimulation contact selected.');
-% end
-
-% define dipole coordinates:
-
-dpvx=coords(find(stimparams(side).U),:);
-
-volts=stimparams(side).U(find(stimparams(side).U));
-
-%dpvx=Vexp.mat\[dpvx,ones(size(dpvx,1),1)]';
-%dpvx=dpvx(1:3,:)';
 
 %% read in gm data and convert to segmented mri
 % construct ft-like anatomy structure based on SPM nifti info.
 smri.dim=Vexp.dim;
 smri.hdr=Vexp;
 smri.transform=Vexp.mat;
+smri.transform(4,:)=[0,0,0,1]; % will prevent error below for floating point accuracy.
 smri.unit='mm';
 smri.gray=logical(cimat); % gm portion of the file
 smri.white=~smri.gray; % first, set everything that is not gm to wm
@@ -198,7 +190,7 @@ spm_write_vol(Vexp,X);
 clear X
 
 %% generate diffusion signal:
-if usediffusion
+if options.usediffusion
     disp('Loading FTR...');
     load([options.earoot,'dev',filesep,'bTensor']) % b-Tensor of a simple 6fold diffusion series
     ftr=load([options.root,options.patientname,filesep,options.prefs.FTR_normalized]);
@@ -217,12 +209,13 @@ end
 cfg        = [];
 cfg.tissue      = {'gray','white','contacts','insulation'};
 cfg.method = 'hexahedral';
-cfg.numvertices=[100000,100000,100000,100000];
+%cfg.numvertices=[100000,100000,100000,100000];
 
 
 cfg.resolution=1;
 %mesh=ea_ft_prepare_mesh(cfg,smri);
 [~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);'); % need to incorporate this function and all dependencies into lead-dbs
+
 mesh = ea_ft_transform_geometry(inv(smri.transform), mesh);
 
 % rewrite vol.pos in mm dimensions:
@@ -230,29 +223,33 @@ mesh = ea_ft_transform_geometry(inv(smri.transform), mesh);
 mesh.pnt=[mesh.pnt,ones(size(mesh.pnt,1),1)]';
 mesh.pnt=Vexp.mat*mesh.pnt;
 mesh.pnt=mesh.pnt(1:3,:)';
-
+keyboard
 % rewrite vol.pos in m dimensions (in order to get Voltage as output):
-mesh.pnt=mesh.pnt/1000;
+%mesh.pnt=mesh.pnt/1000;
 
 
 %% calculate volume conductor
 disp('Done. Creating volume conductor...');
 vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]); % need to incorporate this function and all dependencies into lead-dbs
 
+save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel.mat'],'vol','-v7.3');
+ea_save_hmprotocol(options,elstruct,1);
 
+else
+    % simply load vol.
+    disp('Loading headmodel...');
+    load([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel.mat']);
+end
 
+dpvx=coords(find(stimparams(side).U),:);
 
-
+volts=stimparams(side).U(find(stimparams(side).U));
 
 
 %% calculate voltage distribution based on dipole
 disp('Done. Calculating voltage distribution...');
-ix=knnsearch(vol.pos,dpvx/1000);
-
-
-
-
-
+ix=knnsearch(vol.pos,dpvx); % add dpvx/1000 for m
+keyboard
 if length(volts)>1
     unipolar=0;
 else
@@ -264,10 +261,16 @@ constvol=1; % constant voltage stimulation.
 potential = ea_apply_dbs(vol,ix,volts,unipolar,constvol); % output in V.
 
 
-disp('Done. Calculating ET...');
+disp('Done. Calculating E-Field...');
 
 
 gradient = ea_calc_gradient(vol,potential);
+midpts=mean(cat(3,vol.pos(vol.hex(:,1),:),vol.pos(vol.hex(:,2),:),vol.pos(vol.hex(:,3),:),vol.pos(vol.hex(:,4),:),vol.pos(vol.hex(:,5),:),vol.pos(vol.hex(:,6),:),vol.pos(vol.hex(:,7),:),vol.pos(vol.hex(:,8),:)),3);
+vatgrad.x=midpts(:,1); vatgrad.y=midpts(:,2); vatgrad.z=midpts(:,3);
+vatgrad.qx=gradient(:,1); vatgrad.qy=gradient(:,2); vatgrad.qz=gradient(:,3);
+setappdata(resultfig,'vatgrad',vatgrad);
+%figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))
+
 
 % calculate electric field ET by calculating midpoints of each
 % mesh-connection and setting difference of voltage to these points.
@@ -286,21 +289,21 @@ thresh=0.064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons
 vat.ET=vat.ET>thresh;
 vat.pos=vat.pos(vat.ET,:);
 
-vat.pos=vat.pos*1000; % back to mm.
+%vat.pos=vat.pos*1000; % back to mm.
 
 
-F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),ones(size(vat.pos(:,1))));
-F.ExtrapolationMethod='none';
 
 
 % the following will be used for volume 2 isosurf creation as well as
 % volumetrics of the vat in mm^3.
+
+F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),ones(size(vat.pos(:,1))));
+F.ExtrapolationMethod='none';
 gv=cell(3,1); spacing=zeros(3,1);
 for dim=1:3
     gv{dim}=linspace(min(round(vat.pos(:,dim))),max(round(vat.pos(:,dim))),100);
     spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
 end
-
 
 [xg,yg,zg] = meshgrid(gv{1},gv{2},gv{3});
 eg = F(xg,yg,zg);
@@ -309,8 +312,6 @@ vatfv=isosurface(xg,yg,zg,eg,0.75);
 
 vatvolume=nnz(eg)*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
 
-
-
 % define function outputs
 
 varargout{1}=vatfv;
@@ -318,9 +319,33 @@ varargout{2}=vatvolume;
 disp('Done...');
 
 
+function changed=ea_headmodel_changed(options,elstruct)
+% function that checked if anything (user settings) has changed and
+% headmodel needs to be recalculated..
+changed=1; % in doubt always reconstruct headmodel
 
+if isequal(ea_load_hmprotocol(options),ea_save_hmprotocol(options,elstruct,0))
+    changed=0;
+end
 
-%% begin fieldtrip/simbio functions:
+function protocol=ea_save_hmprotocol(options,elstruct,sv)
+% function to construct and/or save protocol.
+protocol=struct; % default for errors
+protocol.elmodel=options.elmodel;
+protocol.elstruct=elstruct;
+protocol.usediffusion=options.usediffusion;
+if sv % save protocol to disk
+save([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol.mat'],'protocol');
+end
+
+function protocol=ea_load_hmprotocol(options)
+% function that loads protocol
+protocol=struct; % default for errors or if not present
+try
+    load([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol.mat']);
+end
+
+%% begin FieldTrip/SimBio functions:
 function gradient = ea_calc_gradient(vol,potential)
 gradient = zeros(size(vol.hex,1),3);
 gradient = gradient + 0.25*repmat(potential(vol.hex(:,1)),1,3).*((vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:))./abs(vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:)));
@@ -331,7 +356,6 @@ gradient = gradient + 0.25*repmat(potential(vol.hex(:,5)),1,3).*((vol.pos(vol.he
 gradient = gradient + 0.25*repmat(potential(vol.hex(:,6)),1,3).*((vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:))./abs(vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:)));
 gradient = gradient + 0.25*repmat(potential(vol.hex(:,7)),1,3).*((vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:))./abs(vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:)));
 gradient = gradient + 0.25*repmat(potential(vol.hex(:,8)),1,3).*((vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:))./abs(vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:)));
-
 
 function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol)
 if constvol
@@ -363,7 +387,7 @@ else
     end
 end
 
-[stiff rhs] = ea_dbs(vol.stiff,rhs,dirinodes,dirival);
+[stiff, rhs] = ea_dbs(vol.stiff,rhs,dirinodes,dirival);
 
 potential = ea_sb_solve(stiff,rhs);
 
@@ -371,7 +395,7 @@ function [stiff,rhs] = ea_dbs(stiff,rhs,dirinodes,dirival)
 
 dia = diag(stiff);
 stiff = stiff - diag(dia);
-[indexi indexj s] = find(stiff);
+[indexi, indexj, s] = find(stiff);
 clear stiff;
 dind = dirinodes;
 indi = find(ismember(indexi,dind));
@@ -387,11 +411,9 @@ s(indij) = 0;
 stiff = sparse(indexi,indexj,s,length(dia),length(dia));
 stiff = stiff + diag(dia);
 
-
 function surf_nodes = ea_get_surf_nodes(cell)
 connectivity = hist(cell(:),unique(cell));
 surf_nodes = find(connectivity ~= 8);
-
 
 function [warped] = ea_ft_warp_apply(M, input, method, tol)
 
@@ -771,7 +793,7 @@ if isequal(current_argin, previous_argin)
     return
 end
 
-if isfield(vol, 'type') && ~(ft_datatype(vol, 'grad') || ft_datatype(vol, 'sens')) % grad and sens also contain .type fields
+if isfield(vol, 'type') && ~(ea_ft_datatype(vol, 'grad') || ea_ft_datatype(vol, 'sens')) % grad and sens also contain .type fields
     % preferably the structure specifies its own type
     type = vol.type;
     
@@ -1059,8 +1081,8 @@ function mesh=ea_prepare_mesh_hexahedral(cfg,mri)
 % get the default options
 
 
-cfg.tissue      = ft_getopt(cfg, 'tissue');
-cfg.resolution  = ft_getopt(cfg, 'resolution');
+cfg.tissue      = ea_ft_getopt(cfg, 'tissue');
+cfg.resolution  = ea_ft_getopt(cfg, 'resolution');
 
 
 mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
@@ -1122,7 +1144,7 @@ fprintf('elapsed time: %d seconds\n', toc(stopwatch));
 
 % converting position of meshpoints to the head coordinate system
 
-mesh.pnt = warp_apply(mri.transform,mesh.pnt,'homogeneous');
+mesh.pnt = ea_ft_warp_apply(mri.transform,mesh.pnt,'homogeneous');
 
 mesh.tissue = zeros(size(labels));
 numlabels = size(unique(labels),1);
@@ -1274,12 +1296,12 @@ function segmentation = ea_ft_datatype_segmentation(segmentation, varargin)
 % $Id: ft_datatype_segmentation.m 10212 2015-02-11 16:47:05Z roboos $
 
 % get the optional input arguments, which should be specified as key-value pairs
-version           = ft_getopt(varargin, 'version', 'latest');
-segmentationstyle = ft_getopt(varargin, 'segmentationstyle');  % can be indexed or probabilistic
-hasbrain          = ft_getopt(varargin, 'hasbrain', 'no');     % no means that it is not required, if present it won't be removed
+version           = ea_ft_getopt(varargin, 'version', 'latest');
+segmentationstyle = ea_ft_getopt(varargin, 'segmentationstyle');  % can be indexed or probabilistic
+hasbrain          = ea_ft_getopt(varargin, 'hasbrain', 'no');     % no means that it is not required, if present it won't be removed
 
 % convert from string into boolean
-hasbrain = istrue(hasbrain);
+hasbrain = 0;
 
 if strcmp(version, 'latest')
     segversion = '2012';
@@ -1426,7 +1448,273 @@ switch segversion
 end
 
 % the segmentation is a speciat type of volume structure, so ensure that it also fulfills the requirements for that
-segmentation = ft_datatype_volume(segmentation, 'version', volversion);
+segmentation = ea_ft_datatype_volume(segmentation, 'version', volversion);
+
+function volume = ea_ft_datatype_volume(volume, varargin)
+
+% FT_DATATYPE_VOLUME describes the FieldTrip MATLAB structure for volumetric data.
+%
+% The volume data structure represents data on a regular volumetric
+% 3-D grid, like an anatomical MRI, a functional MRI, etc. It can
+% also represent a source reconstructed estimate of the activity
+% measured with MEG. In this case the source reconstruction is estimated
+% or interpolated on the regular 3-D dipole grid (like a box).
+%
+% An example volume structure is
+%       anatomy: [181x217x181 double]  the numeric data, in this case anatomical information
+%           dim: [181 217 181]         the dimensionality of the 3D volume
+%     transform: [4x4 double]          affine transformation matrix for mapping the voxel coordinates to the head coordinate system
+%          unit: 'mm'                  geometrical units of the coordinate system
+%      coordsys: 'ctf'                 description of the coordinate system
+%
+% Required fields:
+%   - transform, dim
+%
+% Optional fields:
+%   - anatomy, prob, stat, grey, white, csf, or any other field with dimensions that are consistent with dim
+%   - size, coordsys
+%
+% Deprecated fields:
+%   - dimord
+%
+% Obsoleted fields:
+%   - none
+%
+% Revision history:
+%
+% (2014) The subfields in the avg and trial fields are now present in the
+% main structure, e.g. source.avg.pow is now source.pow. Furthermore, the
+% inside is always represented as logical array.
+%
+% (2012b) Ensure that the anatomy-field (if present) does not contain
+% infinite values.
+%
+% (2012) A placeholder 2012 version was created that ensured the axes
+% of the coordinate system to be right-handed. This actually never 
+% has made it to the default version. An executive decision regarding
+% this has not been made as far as I (JM) am aware, and probably it's
+% a more principled approach to keep the handedness free, so don't mess
+% with it here. However, keep this snippet of code for reference.
+%
+% (2011) The dimord field was deprecated and we agreed that volume
+% data should be 3-dimensional and not N-dimensional with arbitary
+% dimensions. In case time-frequency recolved data has to be represented
+% on a 3-d grid, the source representation should be used.
+%
+% (2010) The dimord field was added by some functions, but not by all
+%
+% (2003) The initial version was defined
+%
+% See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
+% FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
+% FT_DATATYPE_TIMELOCK, FT_DATATYPE_VOLUME
+
+% Copyright (C) 2011-2015, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id: ft_datatype_volume.m 10174 2015-02-06 14:41:21Z roboos $
+
+% get the optional input arguments, which should be specified as key-value pairs
+version = ea_ft_getopt(varargin, 'version', 'latest');
+
+if strcmp(version, 'latest')
+  version = '2014';
+end
+
+if isempty(volume)
+  return;
+end
+
+% it should  never have contained these, but they might be present due to an unclear
+% distinction between the volume and the source representation
+if isfield(volume, 'xgrid'),     volume = rmfield(volume, 'xgrid');     end
+if isfield(volume, 'ygrid'),     volume = rmfield(volume, 'ygrid');     end
+if isfield(volume, 'zgrid'),     volume = rmfield(volume, 'zgrid');     end
+if isfield(volume, 'frequency'), volume = rmfield(volume, 'frequency'); end
+if isfield(volume, 'latency'),   volume = rmfield(volume, 'latency');   end
+
+if isfield(volume, 'pos')
+  if ~isfield(volume, 'dim')
+    volume.dim = pos2dim(volume.pos);
+  end
+  assert(prod(volume.dim)==size(volume.pos,1), 'dimensions are inconsistent with number of grid positions');
+  if  ~isfield(volume, 'transform')
+    volume.transform = pos2transform(volume.pos, volume.dim);
+  end
+  volume = rmfield(volume, 'pos');
+end
+
+switch version
+  case '2014'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord');
+    end
+
+    if isfield(volume, 'anatomy')
+      volume.anatomy(~isfinite(volume.anatomy)) = 0;
+    end
+    
+    if isfield(volume, 'avg') && isstruct(volume.avg)
+      % move the average fields to the main structure
+      fn = fieldnames(volume.avg);
+      for i=1:length(fn)
+        dat = volume.avg.(fn{i});
+        try
+          volume.(fn{i}) = reshape(dat, volume.dim);
+        catch
+          warning('could not reshape %s to expected dimensions');
+          volume.(fn{i}) = dat;
+        end
+        clear dat
+      end
+      volume = rmfield(volume, 'avg');
+    end
+    
+    % ensure that it is always logical
+    volume = ea_fixinside(volume, 'logical');
+    
+  case '2012b'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord');
+    end
+
+    if isfield(volume, 'anatomy')
+      volume.anatomy(~isfinite(volume.anatomy)) = 0;
+    end
+    
+  case '2012'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % THIS ONE DOES NOT SEEM TO HAVE EVER BEEN USED 
+    % HOWEVER, KEEP IT FOR DOCUMENTATION PURPOSES
+   
+    if isfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord');
+    end
+    
+    % ensure the axes system in the transformation matrix to be
+    % right-handed
+    volume = volumeflip(volume, 'right');
+    
+  case '2011'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord');
+    end
+
+  case '2010'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % this might have been N-dimensional and contained a dimord, but in general cannot
+    % be reconstructed on the fly
+
+  case '2003'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield(volume, 'dimord')
+      volume = rmfield(volume, 'dimord');
+    end
+
+  otherwise
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    error('unsupported version "%s" for volume datatype', version);
+end
+
+function [source] = ea_fixinside(source, opt)
+
+% FIXINSIDE ensures that the region of interest (which is indicated by the
+% field "inside") is consistently defined for source structures and volume
+% structures. Furthermore, it solves backward compatibility problems.
+%
+% Use as
+%   [source] = fixinside(source, 'logical');
+% or
+%   [source] = fixinside(source, 'index');
+
+% Copyright (C) 2006, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id: fixinside.m 9663 2014-06-22 07:06:19Z roboos $
+
+
+if nargin<2
+  opt = 'logical';
+end
+
+if ~isfield(source, 'inside')
+  if isfield(source, 'pos')
+    % assume that all positions are inside the region of interest
+    source.inside  = [1:size(source.pos,1)]';
+    source.outside = [];
+  elseif isfield(source, 'dim')
+    source.inside  = [1:prod(source.dim)]';
+    source.outside = [];
+  end
+end
+
+if ~isfield(source, 'inside')
+  % nothing to do
+  return;
+end
+
+% determine the format
+if isa(source.inside, 'logical')
+  logicalfmt = 1;
+elseif all(source.inside(:)==0 | source.inside(:)==1)
+  source.inside = logical(source.inside);
+  logicalfmt = 1;
+else
+  logicalfmt = 0;
+end
+
+if ~logicalfmt && strcmp(opt, 'logical')
+  % convert to a logical array
+  if ~isfield(source, 'outside')
+    source.outside = [];
+  end
+  inside(source.inside)  = (1==1);  % true
+  inside(source.outside) = (1==0);  % false
+  source.inside = inside(:);
+  if isfield(source, 'outside')
+    source = rmfield(source, 'outside');
+  end
+elseif logicalfmt && strcmp(opt, 'index')
+  % convert to a vectors with indices
+  tmp = source.inside;
+  source.inside  = find( tmp(:));
+  source.outside = find(~tmp(:));
+else
+  % nothing to do
+end
 
 function segmentation = ea_fixsegmentation(segmentation, fn, style)
 
@@ -2061,7 +2349,7 @@ function [output] = ea_ft_transform_geometry(transform, input)
 % $Id: ft_transform_geometry.m$
 
 % flg rescaling check
-allowscaling = ~ft_senstype(input, 'meg');
+allowscaling = ~ea_ft_senstype(input, 'meg');
 
 % determine the rotation matrix
 rotation = eye(4);
@@ -2102,7 +2390,7 @@ for k = 1:numel(fnames)
             input.(fnames{k}) = transform*input.(fnames{k});
         elseif any(strcmp(fnames{k}, recfields))
             for j = 1:numel(input.(fnames{k}))
-                input.(fnames{k})(j) = ft_transform_geometry(transform, input.(fnames{k})(j));
+                input.(fnames{k})(j) = ea_ft_transform_geometry(transform, input.(fnames{k})(j));
             end
         else
             % do nothing
@@ -2269,16 +2557,16 @@ if isdata
     elseif isfield(input, 'elec')
         sens   = input.elec;
         iselec = true;
-    elseif issubfield(input, 'hdr.grad')
+    elseif ea_issubfield(input, 'hdr.grad')
         sens   = input.hdr.grad;
         isgrad = true;
-    elseif issubfield(input, 'hdr.elec')
+    elseif ea_issubfield(input, 'hdr.elec')
         sens   = input.hdr.elec;
         iselec = true;
-    elseif issubfield(input, 'hdr.opto')
+    elseif ea_issubfield(input, 'hdr.opto')
         sens   = input.hdr.opto;
         isnirs = true;
-    elseif issubfield(input, 'hdr.label')
+    elseif ea_issubfield(input, 'hdr.label')
         sens.label = input.hdr.label;
         islabel    = true;
     elseif isfield(input, 'label')
@@ -2339,15 +2627,15 @@ elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') &&
     % this is a single channel header that was read from a Neuralynx file, might be fcdc_matbin or neuralynx_nsc
     type = 'neuralynx';
     
-elseif issubfield(input, 'orig.FileHeader') &&  issubfield(input, 'orig.VarHeader')
+elseif ea_issubfield(input, 'orig.FileHeader') &&  ea_issubfield(input, 'orig.VarHeader')
     % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
     type = 'plexon';
     
-elseif issubfield(input, 'orig.stname')
+elseif ea_issubfield(input, 'orig.stname')
     % this is a complete header that was read from an ITAB dataset
     type = 'itab';
     
-elseif issubfield(input, 'orig.sys_name')
+elseif ea_issubfield(input, 'orig.sys_name')
     % this is a complete header that was read from a Yokogawa dataset
     if strcmp(input.orig.sys_name, '9ch Biomagnetometer System') || input.orig.channel_count<20
         % this is the small animal system that is installed at the UCL Ear Institute
@@ -2362,7 +2650,7 @@ elseif issubfield(input, 'orig.sys_name')
         type = 'yokogawa440';
     end
     
-elseif issubfield(input, 'orig.FILE.Ext') && strcmp(input.orig.FILE.Ext, 'edf')
+elseif ea_issubfield(input, 'orig.FILE.Ext') && strcmp(input.orig.FILE.Ext, 'edf')
     % this is a complete header that was read from an EDF or EDF+ dataset
     type = 'eeg';
     
@@ -2570,6 +2858,62 @@ previous_argin  = current_argin;
 previous_argout = current_argout;
 
 return % ft_senstype main()
+
+
+function [r] = ea_issubfield(s, f)
+
+% ISSUBFIELD tests for the presence of a field in a structure just like the standard
+% Matlab ISFIELD function, except that you can also specify nested fields
+% using a '.' in the fieldname. The nesting can be arbitrary deep.
+%
+% Use as
+%   f = issubfield(s, 'fieldname')
+% or as
+%   f = issubfield(s, 'fieldname.subfieldname')
+%
+% This function returns true if the field is present and false if the field
+% is not present.
+%
+% See also ISFIELD, GETSUBFIELD, SETSUBFIELD
+
+% Copyright (C) 2005-2013, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id: issubfield.m 10237 2015-02-16 19:53:27Z roboos $
+
+%try
+%  getsubfield(s, f);    % if this works, then the subfield must be present
+%  r = true;
+%catch
+%  r = false;                % apparently the subfield is not present
+%end
+
+t = textscan(f,'%s','delimiter','.');
+t = t{1};
+r = true;
+for k = 1:numel(t)
+  if isfield(s, t{k})
+    s = s.(t{k});
+  else
+    r = false;
+    return;
+  end
+end
 
 function label = ea_ft_senslabel(type, varargin)
 
@@ -6849,88 +7193,6 @@ switch version
         error('unsupported version "%s" for source datatype', version);
 end
 
-function [source] = ea_fixinside(source, opt)
-
-% FIXINSIDE ensures that the region of interest (which is indicated by the
-% field "inside") is consistently defined for source structures and volume
-% structures. Furthermore, it solves backward compatibility problems.
-%
-% Use as
-%   [source] = fixinside(source, 'logical');
-% or
-%   [source] = fixinside(source, 'index');
-
-% Copyright (C) 2006, Robert Oostenveld
-%
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id: fixinside.m 9664 2014-06-22 07:06:29Z roboos $
-
-
-if nargin<2
-    opt = 'logical';
-end
-
-if ~isfield(source, 'inside')
-    if isfield(source, 'pos')
-        % assume that all positions are inside the region of interest
-        source.inside  = [1:size(source.pos,1)]';
-        source.outside = [];
-    elseif isfield(source, 'dim')
-        source.inside  = [1:prod(source.dim)]';
-        source.outside = [];
-    end
-end
-
-if ~isfield(source, 'inside')
-    % nothing to do
-    return;
-end
-
-% determine the format
-if isa(source.inside, 'logical')
-    logicalfmt = 1;
-elseif all(source.inside(:)==0 | source.inside(:)==1)
-    source.inside = logical(source.inside);
-    logicalfmt = 1;
-else
-    logicalfmt = 0;
-end
-
-if ~logicalfmt && strcmp(opt, 'logical')
-    % convert to a logical array
-    if ~isfield(source, 'outside')
-        source.outside = [];
-    end
-    inside(source.inside)  = (1==1);  % true
-    inside(source.outside) = (1==0);  % false
-    source.inside = inside(:);
-    if isfield(source, 'outside')
-        source = rmfield(source, 'outside');
-    end
-elseif logicalfmt && strcmp(opt, 'index')
-    % convert to a vectors with indices
-    tmp = source.inside;
-    source.inside  = find( tmp(:));
-    source.outside = find(~tmp(:));
-else
-    % nothing to do
-end
-
 function dimsiz = ea_getdimsiz(data, field)
 
 % GETDIMSIZ
@@ -7038,13 +7300,13 @@ function [data] = ea_fixdimord(data)
 % end
 
 if ~isfield(data, 'dimord')
-    if ft_datatype(data, 'raw')
+    if ea_ft_datatype(data, 'raw')
         % it is raw data, which does not have a dimord -> this is ok
         return
-    elseif ft_datatype(data, 'comp')
+    elseif ea_ft_datatype(data, 'comp')
         % it is component data, which resembles raw data -> this is ok
         return
-    elseif ft_datatype(data, 'volume')
+    elseif ea_ft_datatype(data, 'volume')
         % it is volume data, which does not have a dimord -> this is ok
         return
     else
@@ -7056,7 +7318,7 @@ if ~isfield(data, 'dimord')
         df = fn(sel);
         
         if isempty(df)
-            if ft_datatype(data, 'source') || ft_datatype(data, 'parcellation')
+            if ea_ft_datatype(data, 'source') || ea_ft_datatype(data, 'parcellation')
                 % it is old-style source data -> this is ok
                 % ft_checkdata will convert it to new-style
                 return
@@ -7196,6 +7458,275 @@ data.dimord = dimtok{1};
 for i=2:length(dimtok)
     data.dimord = [data.dimord '_' dimtok{i}];
 end
+
+function [type, dimord] = ea_ft_datatype(data, desired)
+
+% FT_DATATYPE determines the type of data represented in a FieldTrip data
+% structure and returns a string with raw, freq, timelock source, comp,
+% spike, source, volume, dip.
+%
+% Use as
+%   [type, dimord] = ft_datatype(data)
+%   [status]       = ft_datatype(data, desired)
+%
+% See also FT_DATATYPE_COMP FT_DATATYPE_FREQ FT_DATATYPE_MVAR
+% FT_DATATYPE_SEGMENTATION FT_DATATYPE_PARCELLATION FT_DATATYPE_SOURCE
+% FT_DATATYPE_TIMELOCK FT_DATATYPE_DIP FT_DATATYPE_HEADMODEL
+% FT_DATATYPE_RAW FT_DATATYPE_SENS FT_DATATYPE_SPIKE FT_DATATYPE_VOLUME
+
+% Copyright (C) 2008-2012, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id: ft_datatype.m 10064 2014-12-22 14:30:50Z roboos $
+
+if nargin<2
+  desired = [];
+end
+
+% determine the type of input data, this can be raw, freq, timelock, comp, spike, source, volume, dip, segmentation, parcellation
+israw          =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
+isfreq         = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime') && ~isfield(data,'origtrial'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
+istimelock     =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'timestamp') && ~isfield(data,'trialtime') && ~(isfield(data, 'trial') && iscell(data.trial)); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
+iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
+isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
+issource       =  isfield(data, 'pos');
+isdip          =  isfield(data, 'dip');
+ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
+isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
+ischan         = ea_check_chan(data);
+issegmentation = ea_check_segmentation(data);
+isparcellation = ea_check_parcellation(data);
+
+if ~isfreq
+  % this applies to a freq structure from 2003 up to early 2006
+  isfreq = all(isfield(data, {'foi', 'label', 'dimord'})) && ~isempty(strfind(data.dimord, 'frq'));
+end
+
+% check if it is a spike structure
+spk_hastimestamp  = isfield(data,'label') && isfield(data, 'timestamp') && isa(data.timestamp, 'cell');
+spk_hastrials     = isfield(data,'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && isfield(data, 'trialtime') && isa(data.trialtime, 'numeric');
+spk_hasorig       = isfield(data,'origtrial') && isfield(data,'origtime'); % for compatibility
+isspike           = isfield(data, 'label') && (spk_hastimestamp || spk_hastrials || spk_hasorig);
+
+% check if it is a sensor array
+isgrad = isfield(data, 'label') && isfield(data, 'coilpos') && isfield(data, 'coilori');
+iselec = isfield(data, 'label') && isfield(data, 'elecpos');
+
+if isspike
+  type = 'spike';
+elseif israw && iscomp
+  type = 'raw+comp';
+elseif istimelock && iscomp
+  type = 'timelock+comp';
+elseif isfreq && iscomp
+    type = 'freq+comp';
+elseif israw
+  type = 'raw';
+elseif iscomp
+  type = 'comp';
+elseif isfreqmvar
+  % freqmvar should conditionally go before freq, otherwise the returned ft_datatype will be freq in the case of frequency mvar data
+  type = 'freqmvar';
+elseif isfreq
+  type = 'freq';
+elseif ismvar
+  type = 'mvar';
+elseif isdip
+  % dip should conditionally go before timelock, otherwise the ft_datatype will be timelock
+  type = 'dip';
+elseif istimelock
+  type = 'timelock';
+elseif issegmentation
+  % a segmentation data structure is a volume data structure, but in general not vice versa
+  % segmentation should conditionally go before volume, otherwise the returned ft_datatype will be volume
+  type = 'segmentation';
+elseif isvolume
+  type = 'volume';
+elseif isparcellation
+  % a parcellation data structure is a source data structure, but in general not vice versa
+  % parcellation should conditionally go before source, otherwise the returned ft_datatype will be source
+  type = 'parcellation';
+elseif issource
+  type = 'source';
+elseif ischan
+  % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
+  type = 'chan';
+elseif iselec
+  type = 'elec';
+elseif isgrad
+  type = 'grad';
+else
+  type = 'unknown';
+end
+
+if nargin>1
+  % return a boolean value
+  switch desired
+    case 'raw'
+      type = any(strcmp(type, {'raw', 'raw+comp'}));
+    case 'timelock'
+      type = any(strcmp(type, {'timelock', 'timelock+comp'}));
+    case 'freq'
+      type = any(strcmp(type, {'freq', 'freq+comp'}));
+    case 'comp'
+      type = any(strcmp(type, {'comp', 'raw+comp', 'timelock+comp', 'freq+comp'}));
+    case 'volume'
+      type = any(strcmp(type, {'volume', 'segmentation'}));
+    case 'source'
+      type = any(strcmp(type, {'source', 'parcellation'}));
+    case 'sens'
+      type = any(strcmp(type, {'elec', 'grad'}));
+    otherwise
+      type = strcmp(type, desired);
+  end % switch
+end
+
+if nargout>1
+  % FIXME this should be replaced with getdimord in the calling code
+  % also return the dimord of the input data
+  if isfield(data, 'dimord')
+    dimord = data.dimord;
+  else
+    dimord = 'unknown';
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [res] = ea_check_chan(data)
+
+if ~isstruct(data) || any(isfield(data, {'time', 'freq', 'pos', 'dim', 'transform'}))
+  res = false;
+elseif isfield(data, 'dimord') && any(strcmp(data.dimord, {'chan', 'chan_chan'}))
+  res = true;
+else
+  res = false;
+  fn = fieldnames(data);
+  for i=1:numel(fn)
+    if isfield(data, [fn{i} 'dimord']) && any(strcmp(data.([fn{i} 'dimord']), {'chan', 'chan_chan'}))
+      res = true;
+      break;
+    end
+  end
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [res] = ea_check_segmentation(volume)
+res = false;
+
+if ~isfield(volume, 'dim')
+  return
+end
+
+if isfield(volume, 'pos')
+  return
+end
+
+if any(isfield(volume, {'seg', 'csf', 'white', 'gray', 'skull', 'scalp', 'brain'}))
+  res = true;
+  return
+end
+
+fn = fieldnames(volume);
+isboolean = [];
+cnt = 0;
+for i=1:length(fn)
+  if isfield(volume, [fn{i} 'label'])
+    res = true;
+    return
+  else
+    if (islogical(volume.(fn{i})) || isnumeric(volume.(fn{i}))) && isequal(size(volume.(fn{i})),volume.dim)
+      cnt = cnt+1;
+      if islogical(volume.(fn{i}))
+        isboolean(cnt) = true;
+      else
+        isboolean(cnt) = false;
+      end
+    end
+  end
+end
+if ~isempty(isboolean)
+  res = all(isboolean);
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [res] = ea_check_parcellation(source)
+res = false;
+
+if ~isfield(source, 'pos')
+  return
+end
+
+fn = fieldnames(source);
+fb = false(size(fn));
+npos = size(source.pos,1);
+for i=1:numel(fn)
+  % for each of the fields check whether it might be a logical array with the size of the number of sources
+  tmp = source.(fn{i});
+  fb(i) = numel(tmp)==npos && islogical(tmp);
+end
+if sum(fb)>1
+  % the presence of multiple logical arrays suggests it is a parcellation
+  res = true;
+end
+
+if res == false      % check if source has more D elements
+  check = 0;
+  for i = 1: length(fn)
+    fname = fn{i};
+    switch fname
+      case 'tri'
+        npos = size(source.tri,1);
+        check = 1;
+      case 'hex'
+        npos = size(source.hex,1);
+        check = 1;
+      case 'tet'
+        npos = size(source.tet,1);
+        check = 1;
+    end
+  end
+  if check == 1   % check if elements are labelled
+    for i=1:numel(fn)
+      tmp = source.(fn{i});
+      fb(i) = numel(tmp)==npos && islogical(tmp);
+    end
+    if sum(fb)>1
+      res = true;
+    end
+  end
+end
+
+fn = fieldnames(source);
+for i=1:length(fn)
+  if isfield(source, [fn{i} 'label']) && isnumeric(source.(fn{i}))
+    res = true;
+    return
+  end
+end
+
 
 function source = ea_fixpos(source)
 if ~isfield(source, 'pos')

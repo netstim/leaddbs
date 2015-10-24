@@ -3,14 +3,14 @@ function [cimat,reldist,mat]=ea_sample_cuboid(varargin)
 % usage: [cimat,~,mat]=ea_sample_cuboid(trajvox (trajectory in voxel space),options (regular lead options struct),volume_to_be_sampled_from,interpolation_mode (see spm_sample_vol),width_of_sampling,distance,spacing_of_sampling);
 
 trajectory=varargin{1};
-[~,trajvector]=ea_fit_line(trajectory);
+trajvector=-mean(diff(trajectory));
 options=varargin{2};
-    vizz=1;
-
-    if vizz
-        figure
-        hold on
-    end
+%     vizz=1;
+% 
+%     if vizz
+%         figure
+%         hold on
+%     end
     
 switch options.modality
     case 1 % MR
@@ -54,7 +54,7 @@ end
 
 
 
-keyboard
+
 V=spm_vol(niifn);
 
 
@@ -98,9 +98,9 @@ end
 % now set trajvector to a size that 10 of it will be the size of eldist.
 
 
-if vizz
-    plot3(trajectory(:,1),trajectory(:,2),trajectory(:,3),'b')
-end
+% if vizz
+%     plot3(trajectory(:,1),trajectory(:,2),trajectory(:,3),'b')
+% end
 
 
 startpt=trajectory(end,:);            % 3d point of starting line (5 vox below coord 1).
@@ -122,38 +122,46 @@ else
 zdim=150; % will be sum up to 5 times reldist (three between contacts and two at borders).
 end
 
-imat=nan((2*ydim+1)*(1/spacing),(2*xdim+1)*(1/spacing),zdim*(1/spacing));
-    
-    
-    
-    cnt=1;
-    coord2write=zeros(length(1:zdim)* length(-xdim:xdim)*length(-ydim:ydim),3);
-    coord2extract=zeros(length(1:zdim)* length(-xdim:xdim)*length(-ydim:ydim),3);
-    
-    
-    for zz=1:spacing:zdim
-        for xx=-xdim:spacing:xdim
-            for yy=-ydim:spacing:ydim
-                
-                pt=startpt+zz*trajvector;
-                coord2extract(cnt,:)=[pt(1)+orthx(1)*xx+orthy(1)*yy; ...
-                    pt(2)+orthx(2)*xx+orthy(2)*yy; ...
-                    pt(3)+orthx(3)*xx+orthy(3)*yy]';
-                coord2write(cnt,:)=[xx*(1/spacing)+xdim+1;yy*(1/spacing)+ydim+1;zz*(1/spacing)]';
-                if vizz && ~mod(cnt,100)
-                   plot3(coord2extract(cnt,1),coord2extract(cnt,2),coord2extract(cnt,3),'r.'); 
-                   plot3(coord2write(cnt,1),coord2write(cnt,2),coord2write(cnt,3),'g.'); 
-                   %drawnow
-                   %pause(0.001)
-                end
-                                cnt=cnt+1;
 
-                
-                % plot3(coord2extract(1),coord2extract(2),coord2extract(3),'.');
-            end
-        end
-    end
+
+
+xv=-xdim:spacing:xdim;
+yv=-ydim:spacing:ydim;
+zv=1:spacing:zdim;
+imat=nan(length(yv),length(xv),length(zv));
     
+    
+    
+cnt=1;
+coord2write=zeros(numel(imat),3);
+coord2extract=zeros(numel(imat),3);
+%     if vizz
+%         pcoord2extract=zeros(1,3);
+%     end
+zcnt=1;
+for zz=zv
+    xcnt=1;
+    for xx=xv
+        ycnt=1;
+        for yy=yv
+            
+            pt=startpt+zz*trajvector;
+            coord2extract(cnt,:)=[pt(1)+orthx(1)*xx+orthy(1)*yy; ...
+                pt(2)+orthx(2)*xx+orthy(2)*yy; ...
+                pt(3)+orthx(3)*xx+orthy(3)*yy]';
+            coord2write(cnt,:)=[xcnt,ycnt,zcnt];
+            ycnt=ycnt+1;
+            % coord2write(cnt,:)=[xx*(1/spacing)+xdim+1;yy*(1/spacing)+ydim+1;zz*(1/spacing)]';
+
+            cnt=cnt+1;
+        end
+        xcnt=xcnt+1;
+    end
+    zcnt=zcnt+1;
+end
+%     if vizz
+%                    plot3(pcoord2extract(:,1),pcoord2extract(:,2),pcoord2extract(:,3),'r.'); 
+%     end        
 %                     imat(xx+xdim+1,yy+ydim+1,zz,(tracor))=spm_sample_vol(V,coord2extract(1),coord2extract(2),coord2extract(3),3);
     imat(sub2ind(size(imat),coord2write(:,1),coord2write(:,2),coord2write(:,3)))=spm_sample_vol(V,coord2extract(:,1),coord2extract(:,2),coord2extract(:,3),interp);
  cimat=squeeze(imat(:,:,:));
