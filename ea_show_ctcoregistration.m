@@ -35,7 +35,7 @@ disp('Done. Fusing images...');
 
 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
 
-nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
+nii=ea_load_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
 dims=nii.hdr.dime.pixdim(2:4);
 outf=['check_coregct_',options.prefs.prenii_unnormalized];
 
@@ -70,7 +70,11 @@ tightfig;
 
 
 h2=figure('name',['Coregistration (CT+MR) results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
+try
 imat=scale_image(squeeze(nii.img(:,round(end/2),:))',[dims(3)/dims(1),1]);
+catch
+    ea_error('Image seems to have wrong orientation');
+end
 imagesc(imat);
 axis('equal')
 axis('off')
