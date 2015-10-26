@@ -32,7 +32,11 @@ end
 
 
 header.dim=specs.dim;
+try
 header.voxel_size=specs.vox;
+catch
+    header.voxel_size=fs.vox;
+end
 header.origin=specs.origin; % as doc says, trackvis will always use 0 0 0 as origin.
 header.n_scalars=0;
 header.scalar_name=char(repmat(' ',10,20));
