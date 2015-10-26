@@ -1,5 +1,5 @@
-function varargout=ea_coregctmri_matlab_imreg(options)
-% This function uses the Matlab image toolbox to register postop-CT to preop-MR.
+function varargout=ea_coregctmri_brainsfit(options)
+% This function uses the BRAINSfit to register postop-CT to preop-MR.
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
