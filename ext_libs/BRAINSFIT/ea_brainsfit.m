@@ -1,4 +1,4 @@
-function brainsfit(fixedfilename, movingfilename, coregisteredoutputvolume)
+function ea_brainsfit(fixedfilename, movingfilename, coregisteredoutputvolume)
 
 % Wrapper for BRAINSFit
 
