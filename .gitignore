@@ -1,6 +1,5 @@
 *~
 *.asv
-*.mex*
 *.mat
 *.nii
 *.nii.gz
