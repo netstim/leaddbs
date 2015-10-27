@@ -11,7 +11,10 @@ if ischar(options) % return name of method.
     return
 end
 
+
 brainsfit([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...
           [options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],...
           [options.root,options.patientname,filesep,options.prefs.ctnii_coregistered])
+    ' --useRigid --useAffine --samplingPercentage 0.005 --removeIntensityOutliers 0.005 --initializeTransformMode useGeometryAlign --interpolationMode Linear']);
+
 

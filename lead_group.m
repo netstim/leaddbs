@@ -773,6 +773,19 @@ if ~isempty(M.patient.list)
             M.elstruct(pt).coords_mm=coords_mm;
             M.elstruct(pt).trajectory=trajectory;
             M.elstruct(pt).name=[pats{pt}];
+            if ~exist('markers','var') % backward compatibility to old recon format
+                
+                for side=1:2
+                    markers(side).head=coords_mm{side}(1,:);
+                    markers(side).tail=coords_mm{side}(4,:);
+                    normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
+                    orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
+                    markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
+                    markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+                end
+            end
+            M.elstruct(pt).markers=markers;
+            
         catch
             %warning('No reconstruction present in folder. Using information stored in group-file.');
         end
