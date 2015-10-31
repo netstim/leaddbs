@@ -99,7 +99,7 @@ switch options.elmodel
         elspec.tip_color=0.3;
         elspec.tip_length=1.5;
         elspec.contact_spacing=0.5;
-        elspec.numel=4; % correct here since the directional leads will be inflated lateron.
+        elspec.numel=8; % correct here since the directional leads will be inflated lateron.
         elspec.tipiscontact=1;
         elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
 end

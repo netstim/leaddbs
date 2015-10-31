@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 11-Mar-2014 17:55:53
+% Last Modified by GUIDE v2.5 28-Oct-2015 21:14:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -285,16 +285,178 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
-function k0im_Callback(hObject, eventdata, handles)
-% hObject    handle to k0im (see GCBO)
+function k4u_Callback(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of k0im as text
-%        str2double(get(hObject,'String')) returns contents of k0im as a double
+% Hints: get(hObject,'String') returns contents of k3u as text
+%        str2double(get(hObject,'String')) returns contents of k3u as a double
 
+
+% --- Executes during object creation, after setting all properties.
+function k4u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function k5u_Callback(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k3u as text
+%        str2double(get(hObject,'String')) returns contents of k3u as a double
+
+
+% --- Executes during object creation, after setting all properties.
+
+function k5u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function k6u_Callback(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k3u as text
+%        str2double(get(hObject,'String')) returns contents of k3u as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k6u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function k7u_Callback(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k3u as text
+%        str2double(get(hObject,'String')) returns contents of k3u as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k7u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function k4im_Callback(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k3u as text
+%        str2double(get(hObject,'String')) returns contents of k3u as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k4im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function k5im_Callback(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k3u as text
+%        str2double(get(hObject,'String')) returns contents of k3u as a double
+
+
+% --- Executes during object creation, after setting all properties.
+
+function k5im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function k6im_Callback(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k3u as text
+%        str2double(get(hObject,'String')) returns contents of k3u as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k6im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function k7im_Callback(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k3u as text
+%        str2double(get(hObject,'String')) returns contents of k3u as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k7im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k3u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 % --- Executes during object creation, after setting all properties.
 function k0im_CreateFcn(hObject, eventdata, handles)
@@ -307,6 +469,15 @@ function k0im_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+% --- Executes during object creation, after setting all properties.
+function k0im_Callback(hObject, eventdata, handles)
+% hObject    handle to k1im (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k1im as text
+%        str2double(get(hObject,'String')) returns contents of k1im as a double
 
 
 
@@ -379,18 +550,18 @@ end
 
 
 
-function k4u_Callback(hObject, eventdata, handles)
-% hObject    handle to k4u (see GCBO)
+function k8u_Callback(hObject, eventdata, handles)
+% hObject    handle to k8u (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of k4u as text
-%        str2double(get(hObject,'String')) returns contents of k4u as a double
+% Hints: get(hObject,'String') returns contents of k8u as text
+%        str2double(get(hObject,'String')) returns contents of k8u as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function k4u_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to k4u (see GCBO)
+function k8u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k8u (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -402,18 +573,18 @@ end
 
 
 
-function k5u_Callback(hObject, eventdata, handles)
-% hObject    handle to k5u (see GCBO)
+function k9u_Callback(hObject, eventdata, handles)
+% hObject    handle to k9u (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of k5u as text
-%        str2double(get(hObject,'String')) returns contents of k5u as a double
+% Hints: get(hObject,'String') returns contents of k9u as text
+%        str2double(get(hObject,'String')) returns contents of k9u as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function k5u_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to k5u (see GCBO)
+function k9u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k9u (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -425,18 +596,18 @@ end
 
 
 
-function k6u_Callback(hObject, eventdata, handles)
-% hObject    handle to k6u (see GCBO)
+function k10u_Callback(hObject, eventdata, handles)
+% hObject    handle to k10u (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of k6u as text
-%        str2double(get(hObject,'String')) returns contents of k6u as a double
+% Hints: get(hObject,'String') returns contents of k10u as text
+%        str2double(get(hObject,'String')) returns contents of k10u as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function k6u_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to k6u (see GCBO)
+function k10u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k10u (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -448,18 +619,18 @@ end
 
 
 
-function k7u_Callback(hObject, eventdata, handles)
-% hObject    handle to k7u (see GCBO)
+function k11u_Callback(hObject, eventdata, handles)
+% hObject    handle to k11u (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of k7u as text
-%        str2double(get(hObject,'String')) returns contents of k7u as a double
+% Hints: get(hObject,'String') returns contents of k11u as text
+%        str2double(get(hObject,'String')) returns contents of k11u as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function k7u_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to k7u (see GCBO)
+function k11u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k11u (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -471,18 +642,18 @@ end
 
 
 
-function k4im_Callback(hObject, eventdata, handles)
-% hObject    handle to k4im (see GCBO)
+function k8im_Callback(hObject, eventdata, handles)
+% hObject    handle to k8im (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of k4im as text
-%        str2double(get(hObject,'String')) returns contents of k4im as a double
+% Hints: get(hObject,'String') returns contents of k8im as text
+%        str2double(get(hObject,'String')) returns contents of k8im as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function k4im_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to k4im (see GCBO)
+function k8im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k8im (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -494,18 +665,18 @@ end
 
 
 
-function k5im_Callback(hObject, eventdata, handles)
-% hObject    handle to k5im (see GCBO)
+function k9im_Callback(hObject, eventdata, handles)
+% hObject    handle to k9im (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of k5im as text
-%        str2double(get(hObject,'String')) returns contents of k5im as a double
+% Hints: get(hObject,'String') returns contents of k9im as text
+%        str2double(get(hObject,'String')) returns contents of k9im as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function k5im_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to k5im (see GCBO)
+function k9im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k9im (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -517,18 +688,18 @@ end
 
 
 
-function k6im_Callback(hObject, eventdata, handles)
-% hObject    handle to k6im (see GCBO)
+function k10im_Callback(hObject, eventdata, handles)
+% hObject    handle to k10im (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of k6im as text
-%        str2double(get(hObject,'String')) returns contents of k6im as a double
+% Hints: get(hObject,'String') returns contents of k10im as text
+%        str2double(get(hObject,'String')) returns contents of k10im as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function k6im_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to k6im (see GCBO)
+function k10im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k10im (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -540,18 +711,18 @@ end
 
 
 
-function k7im_Callback(hObject, eventdata, handles)
-% hObject    handle to k7im (see GCBO)
+function k11im_Callback(hObject, eventdata, handles)
+% hObject    handle to k11im (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of k7im as text
-%        str2double(get(hObject,'String')) returns contents of k7im as a double
+% Hints: get(hObject,'String') returns contents of k11im as text
+%        str2double(get(hObject,'String')) returns contents of k11im as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function k7im_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to k7im (see GCBO)
+function k11im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k11im (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -607,10 +778,9 @@ ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
 for el=1:length(elstruct)
     for side=1:length(elstruct.coords_mm)
     if isfield(elstruct,'group') % group analysis, more than one electrode set
-        for elin=1:4
+        for elin=1:options.elspec.numel
             stimparams(elstruct(el).group,side).U(elin)=str2double(get(eval(['handles.k',num2str(elin-1+((side-1)*options.elspec.numel)),'u']),'String'));
             stimparams(elstruct(el).group,side).Im(elin)=str2double(get(eval(['handles.k',num2str(elin-1+((side-1)*options.elspec.numel)),'im']),'String'));
-            
         end
         stimparams(elstruct(el).group,side).group=elstruct(el).group;
         stimparams(elstruct(el).group,side).groupcolors=elstruct(el).groupcolors;
@@ -623,7 +793,7 @@ for el=1:length(elstruct)
         gcnt(elstruct(el).group)=gcnt(elstruct(el).group)+1;
     else % single patient
         
-        for elin=1:4
+        for elin=1:options.elspec.numel
             %keyboard
             stimparams(1,side).U(elin)=str2double(get(eval(['handles.k',num2str(elin-1+((side-1)*options.elspec.numel)),'u']),'String'));
             stimparams(1,side).Im(elin)=str2double(get(eval(['handles.k',num2str(elin-1+((side-1)*options.elspec.numel)),'im']),'String'));
@@ -837,6 +1007,190 @@ function labelpopup_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function k12u_Callback(hObject, eventdata, handles)
+% hObject    handle to k12u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k12u as text
+%        str2double(get(hObject,'String')) returns contents of k12u as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k12u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k12u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function k13u_Callback(hObject, eventdata, handles)
+% hObject    handle to k13u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k13u as text
+%        str2double(get(hObject,'String')) returns contents of k13u as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k13u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k13u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function k14u_Callback(hObject, eventdata, handles)
+% hObject    handle to k14u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k14u as text
+%        str2double(get(hObject,'String')) returns contents of k14u as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k14u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k14u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function k15u_Callback(hObject, eventdata, handles)
+% hObject    handle to k15u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k15u as text
+%        str2double(get(hObject,'String')) returns contents of k15u as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k15u_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k15u (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function k12im_Callback(hObject, eventdata, handles)
+% hObject    handle to k12im (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k12im as text
+%        str2double(get(hObject,'String')) returns contents of k12im as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k12im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k12im (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function k13im_Callback(hObject, eventdata, handles)
+% hObject    handle to k13im (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k13im as text
+%        str2double(get(hObject,'String')) returns contents of k13im as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k13im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k13im (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function k14im_Callback(hObject, eventdata, handles)
+% hObject    handle to k14im (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k14im as text
+%        str2double(get(hObject,'String')) returns contents of k14im as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k14im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k14im (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function k15im_Callback(hObject, eventdata, handles)
+% hObject    handle to k15im (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k15im as text
+%        str2double(get(hObject,'String')) returns contents of k15im as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k15im_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k15im (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
