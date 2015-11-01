@@ -282,8 +282,18 @@ midpts=mean(cat(3,vol.pos(vol.hex(:,1),:),vol.pos(vol.hex(:,2),:),vol.pos(vol.he
 
 vatgrad=getappdata(resultfig,'vatgrad');
 if isempty(vatgrad); clear('vatgrad'); end
-vatgrad(side).x=midpts(:,1); vatgrad(side).y=midpts(:,2); vatgrad(side).z=midpts(:,3);
-vatgrad(side).qx=gradient(:,1); vatgrad(side).qy=gradient(:,2); vatgrad(side).qz=gradient(:,3);
+reduc=10;
+vatgrad(side).x=midpts(1:reduc:end,1); vatgrad(side).y=midpts(1:reduc:end,2); vatgrad(side).z=midpts(1:reduc:end,3);
+norm_gradient=gradient(1:reduc:end,:);
+anormgrad=mean(abs(norm_gradient),2);
+% add compression of really large gradient values for visualization..
+maxval=(mean(anormgrad)+10*std(anormgrad));
+ixx=anormgrad>maxval;
+pols=norm_gradient(ixx,:)./abs(norm_gradient(ixx,:));
+pols=pols.*repmat(maxval,size(pols,1),size(pols,2));
+norm_gradient(ixx,:)=pols;
+%
+vatgrad(side).qx=norm_gradient(:,1); vatgrad(side).qy=norm_gradient(:,2); vatgrad(side).qz=norm_gradient(:,3);
 
 setappdata(resultfig,'vatgrad',vatgrad);
 %figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))
