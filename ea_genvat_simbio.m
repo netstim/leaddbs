@@ -14,7 +14,6 @@ if nargin==4
     side=varargin{3};
     options=varargin{4};
 elseif nargin==1
-    
     if ischar(varargin{1}) % return name of method.
         varargout{1}='SimBio/FieldTrip';
         return
@@ -42,199 +41,213 @@ options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only
 coords=acoords{side};
 
 if ea_headmodel_changed(options,side,elstruct)
-disp('No suitable headmodel found, rebuilding. This may take a while...');
-
-%load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
-
-options.earoot=[fileparts(which('lead')),filesep];
-
-%% some preprocessing to establish the lead trajectory
-traj=[coords(4,:)+(coords(4,:)-coords(2,:));coords(1,:)+(coords(1,:)-coords(3,:))];
-for d=1:3
-    itraj(:,d)=linspace(traj(1,d),traj(2,d));
-end
-
-%% convert trajectory mm2vox
-V=spm_vol([options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
-trajmm=[itraj,ones(length(itraj),1)];
-trajvox=V.mat\trajmm';
-trajvox=trajvox(1:3,:)';
-
-
-
-%% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
-
-[cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,50,70,1); % this will result in ~10x10x10 mm.
-mat=mat';
-mkdir([options.root,options.patientname,filesep,'headmodel']);
-Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);
-spm_write_vol(Vexp,cimat);
-
-
-
-thiselhandle=el_render(1).el_render{side};
-% fields: 1: trajectory body; 2: trajectory bottom; 3: trajectory top
-% next three: contact one, etc.
-% next three: contact spacing one, etc.
-% last: tip
-
-
-if vizz 
-    simbio=figure;
-    hold on
-end
-
-
-% establish coordinate grid:
-
-
-nii=ea_load_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii']);
-[xx,yy,zz]=ind2sub(size(nii.img),1:numel(nii.img));
-XYZvx=[xx;yy;zz;ones(1,length(xx))];
-XYZmm=Vexp.mat*XYZvx;
-
-
-clear XYZvx
-
-cnt=1;
-Xcon=nii.img; Xcon(:)=0; % initialize image for all contacts
-Xins=nii.img; Xins(:)=0; % initialize image for all insulated electrode parts
-
-
-
-load([options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
-A=[electrode.head_position,1;
-    electrode.tail_position,1
-    electrode.x_position,1
-    electrode.y_position,1]; % points in model
-
-B=[elstruct.markers(side).head,1;
-    elstruct.markers(side).tail,1;
-    elstruct.markers(side).x,1;
-    elstruct.markers(side).y,1];
-setappdata(resultfig,'elstruct',elstruct);
-X = linsolve(A,B); X=X';
-ea_dispercent(0,'Exporting insulating components');
-
-for ins=1:length(electrode.insulation)
-    electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
-    electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
+    disp('No suitable headmodel found, rebuilding. This may take a while...');
     
-    if vizz
-        h=patch(electrode.insulation(ins));
-        ea_specsurf(h,electrode.lead_color,0.5);
+    %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
+    
+    options.earoot=[fileparts(which('lead')),filesep];
+    
+    %% some preprocessing to establish the lead trajectory
+    traj=[coords(4,:)+(coords(4,:)-coords(2,:));coords(1,:)+(coords(1,:)-coords(3,:))];
+    for d=1:3
+        itraj(:,d)=linspace(traj(1,d),traj(2,d));
     end
     
-    % this following method takes quite some time... even more importantly,
-    % the info will be transfered from mesh to volume and lateron back to
-    % mesh again. For now, this is still the most convenient method.
-    in=ea_intriangulation(electrode.insulation(ins).vertices,electrode.insulation(ins).faces,XYZmm(1:3,:)');
-    Xt=nii.img;
-    Xt(:)=0; Xt(in)=1;
-    Xins=Xins+Xt;
-    ea_dispercent(ins/length(electrode.insulation));
-end
-ea_dispercent(1,'end');
-ea_dispercent(0,'Exporting contact components');
-
-for con=1:length(electrode.contacts)
-    electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
-    electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
-    % this following method takes quite some time... even more importantly,
-    % the info will be transfered from mesh to volume and lateron back to
-    % mesh again. For now, this is still the most convenient method.
-    in=ea_intriangulation(electrode.contacts(con).vertices,electrode.contacts(con).faces,XYZmm(1:3,:)');
+    %% convert trajectory mm2vox
+    V=spm_vol([options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
+    trajmm=[itraj,ones(length(itraj),1)];
+    trajvox=V.mat\trajmm';
+    trajvox=trajvox(1:3,:)';
+    
+    
+    
+    %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
+    
+    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,50,70,1); % this will result in ~10x10x10 mm.
+    mat=mat';
+    mkdir([options.root,options.patientname,filesep,'headmodel']);
+    Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);
+    spm_write_vol(Vexp,cimat);
+    
+    
+    
+    thiselhandle=el_render(1).el_render{side};
+    % fields: 1: trajectory body; 2: trajectory bottom; 3: trajectory top
+    % next three: contact one, etc.
+    % next three: contact spacing one, etc.
+    % last: tip
+    
+    
     if vizz
-        h=patch(electrode.contacts(con));
-        ea_specsurf(h,electrode.contact_color,0.5);
+        simbio=figure;
+        hold on
     end
-    Xt=nii.img;
-    Xt(:)=0; Xt(in)=1;
-    Xcon=Xcon+Xt;
-    ea_dispercent(con/length(electrode.contacts));
-end
-
-if vizz
-   plot3(XYZmm(1,:),XYZmm(2,:),XYZmm(3,:),'r.'); 
-   plot3(trajmm(:,1),trajmm(:,2),trajmm(:,3),'g'); 
-end
-
-ea_dispercent(1,'end');
-
-% set up dipole
-
-disp('Finishing headmodel...');
-
-%% read in gm data and convert to segmented mri
-% construct ft-like anatomy structure based on SPM nifti info.
-smri.dim=Vexp.dim;
-smri.hdr=Vexp;
-smri.transform=Vexp.mat;
-smri.transform(4,:)=[0,0,0,1]; % will prevent error below for floating point accuracy.
-smri.unit='mm';
-smri.gray=logical(cimat); % gm portion of the file
-smri.white=~smri.gray; % first, set everything that is not gm to wm
-smri.contacts=logical(Xcon); % include electrode contacts to the model
-smri.insulation=logical(Xins); % include insulation to the model
-smri.insulation(smri.contacts)=0; % make sure no overlaps.
-smri.gray(smri.contacts)=0; smri.gray(smri.insulation)=0; % remove contact and insulation portions from the gm..
-smri.white(smri.contacts)=0; smri.white(smri.insulation)=0; % .. and white matter portions.
-
-% export a nifti version of the headmodel just for control reasons and as
-% an export for other use-cases:
-X=single(smri.gray);
-X=X+2*smri.white;
-X=X+3*smri.contacts;
-X=X+4*smri.insulation;
-spm_write_vol(Vexp,X);
-clear X
-
-%% generate diffusion signal:
-if options.usediffusion
-    disp('Loading FTR...');
-    load([options.earoot,'dev',filesep,'bTensor']) % b-Tensor of a simple 6fold diffusion series
-    ftr=load([options.root,options.patientname,filesep,options.prefs.FTR_normalized]);
-    disp('Done. Estimating diffusion signal based on fibertracts...');
-    signal=ea_ftr2Sigmaps(ftr,ten);
-    disp('Done. Calculating Tensors...');
-    reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii,2'];
-    Vsig=spm_vol(reftemplate);
-    for i=1:size(signal,4);
-        Vsig.fname=[options.root,options.patientname,filesep,'headmodel',filesep,'dti_',num2str(i),'.nii'];
-        spm_write_vol(Vsig,squeeze(signal(:,:,:,i)));
+    
+    
+    % establish coordinate grid:
+    
+    
+    nii=ea_load_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii']);
+    [xx,yy,zz]=ind2sub(size(nii.img),1:numel(nii.img));
+    XYZvx=[xx;yy;zz;ones(1,length(xx))];
+    XYZmm=Vexp.mat*XYZvx;
+    
+    
+    clear XYZvx
+    
+    cnt=1;
+    Xcon=nii.img; Xcon(:)=0; % initialize image for all contacts
+    Xins=nii.img; Xins(:)=0; % initialize image for all insulated electrode parts
+    
+    
+    
+    load([options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
+    A=[electrode.head_position,1;
+        electrode.tail_position,1
+        electrode.x_position,1
+        electrode.y_position,1]; % points in model
+    
+    B=[elstruct.markers(side).head,1;
+        elstruct.markers(side).tail,1;
+        elstruct.markers(side).x,1;
+        elstruct.markers(side).y,1];
+    setappdata(resultfig,'elstruct',elstruct);
+    X = linsolve(A,B); X=X';
+    ea_dispercent(0,'Exporting insulating components');
+    
+    for ins=1:length(electrode.insulation)
+        electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+        electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
+        
+        if vizz
+            h=patch(electrode.insulation(ins));
+            ea_specsurf(h,electrode.lead_color,0.5);
+        end
+        
+        % this following method takes quite some time... even more importantly,
+        % the info will be transfered from mesh to volume and lateron back to
+        % mesh again. For now, this is still the most convenient method.
+        in=ea_intriangulation(electrode.insulation(ins).vertices,electrode.insulation(ins).faces,XYZmm(1:3,:)');
+        Xt=nii.img;
+        Xt(:)=0; Xt(in)=1;
+        Xins=Xins+Xt;
+        ea_dispercent(ins/length(electrode.insulation));
     end
-end
-
-%% create the mesh using fieldtrip:
-cfg        = [];
-cfg.tissue      = {'gray','white','contacts','insulation'};
-cfg.method = 'hexahedral';
-%cfg.numvertices=[100000,100000,100000,100000];
-
-
-cfg.resolution=1;
-%mesh=ea_ft_prepare_mesh(cfg,smri);
-[~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);'); % need to incorporate this function and all dependencies into lead-dbs
-
-mesh = ea_ft_transform_geometry(inv(smri.transform), mesh);
-
-% rewrite vol.pos in mm dimensions:
-
-mesh.pnt=[mesh.pnt,ones(size(mesh.pnt,1),1)]';
-mesh.pnt=Vexp.mat*mesh.pnt;
-mesh.pnt=mesh.pnt(1:3,:)';
-
-% rewrite vol.pos in m dimensions (in order to get Voltage as output):
-%mesh.pnt=mesh.pnt/1000;
-
-
-%% calculate volume conductor
-disp('Done. Creating volume conductor...');
-vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]); % need to incorporate this function and all dependencies into lead-dbs
-
-save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','-v7.3');
-ea_save_hmprotocol(options,side,elstruct,1);
-
+    ea_dispercent(1,'end');
+    ea_dispercent(0,'Exporting contact components');
+    
+    for con=1:length(electrode.contacts)
+        electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+        electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
+        % this following method takes quite some time... even more importantly,
+        % the info will be transfered from mesh to volume and lateron back to
+        % mesh again. For now, this is still the most convenient method.
+        in=ea_intriangulation(electrode.contacts(con).vertices,electrode.contacts(con).faces,XYZmm(1:3,:)');
+        if vizz
+            h=patch(electrode.contacts(con));
+            ea_specsurf(h,electrode.contact_color,0.5);
+        end
+        Xt=nii.img;
+        Xt(:)=0; Xt(in)=1;
+        Xcon=Xcon+Xt;
+        ea_dispercent(con/length(electrode.contacts));
+    end
+    
+    if vizz
+        plot3(XYZmm(1,:),XYZmm(2,:),XYZmm(3,:),'r.');
+        plot3(trajmm(:,1),trajmm(:,2),trajmm(:,3),'g');
+    end
+    
+    ea_dispercent(1,'end');
+    
+    % set up dipole
+    
+    disp('Finishing headmodel...');
+    
+    %% read in gm data and convert to segmented mri
+    % construct ft-like anatomy structure based on SPM nifti info.
+    smri.dim=Vexp.dim;
+    smri.hdr=Vexp;
+    smri.transform=Vexp.mat;
+    smri.transform(4,:)=[0,0,0,1]; % will prevent error below for floating point accuracy.
+    smri.unit='mm';
+    smri.gray=logical(cimat); % gm portion of the file
+    smri.white=~smri.gray; % first, set everything that is not gm to wm
+    smri.contacts=logical(Xcon); % include electrode contacts to the model
+    smri.insulation=logical(Xins); % include insulation to the model
+    smri.insulation(smri.contacts)=0; % make sure no overlaps.
+    smri.gray(smri.contacts)=0; smri.gray(smri.insulation)=0; % remove contact and insulation portions from the gm..
+    smri.white(smri.contacts)=0; smri.white(smri.insulation)=0; % .. and white matter portions.
+    
+    % export a nifti version of the headmodel just for control reasons and as
+    % an export for other use-cases:
+    X=single(smri.gray);
+    X=X+2*smri.white;
+    X=X+3*smri.contacts;
+    X=X+4*smri.insulation;
+    spm_write_vol(Vexp,X);
+    clear X
+    
+    %% generate diffusion signal:
+    if options.usediffusion
+        disp('Loading FTR...');
+        load([options.earoot,'dev',filesep,'bTensor']) % b-Tensor of a simple 6fold diffusion series
+        ftr=load([options.root,options.patientname,filesep,options.prefs.FTR_normalized]);
+        disp('Done. Estimating diffusion signal based on fibertracts...');
+        signal=ea_ftr2Sigmaps(ftr,ten);
+        disp('Done. Calculating Tensors...');
+        reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii,2'];
+        Vsig=spm_vol(reftemplate);
+        for i=1:size(signal,4);
+            Vsig.fname=[options.root,options.patientname,filesep,'headmodel',filesep,'dti_',num2str(i),'.nii'];
+            spm_write_vol(Vsig,squeeze(signal(:,:,:,i)));
+        end
+    end
+    
+    %% create the mesh using fieldtrip:
+    cfg        = [];
+    cfg.tissue      = {'gray','white','contacts','insulation'};
+    cfg.method = 'hexahedral';
+    cfg.shift  = 0.3;
+    %cfg.numvertices=[100000,100000,100000,100000];
+    
+    
+    cfg.resolution=1;
+    %mesh=ea_ft_prepare_mesh(cfg,smri);
+    [~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);'); % need to incorporate this function and all dependencies into lead-dbs
+    
+%     mesh = ea_ft_transform_geometry(inv(smri.transform), mesh);
+% %    mesh = ea_ft_transform_geometry(smri.transform, mesh);
+%     % rewrite vol.pos in mm dimensions:
+%     
+%     mesh.pnt=[mesh.pnt,ones(size(mesh.pnt,1),1)]';
+%     mesh.pnt=Vexp.mat*mesh.pnt;
+%     mesh.pnt=mesh.pnt(1:3,:)';
+    
+    % rewrite vol.pos in m dimensions (in order to get Voltage as output):
+    %mesh.pnt=mesh.pnt/1000;
+    
+    
+    %% calculate volume conductor
+    disp('Done. Creating volume conductor...');
+    try
+    vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]);
+    catch
+        
+        while 1
+            ix=randperm(8);
+            mesh.hex=mesh.hex(:,ix);
+            try
+                vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]);
+                break
+            end
+        end
+        keyboard
+    end
+    
+    save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','-v7.3');
+    ea_save_hmprotocol(options,side,elstruct,1);
+    
 else
     % simply load vol.
     disp('Loading headmodel...');
@@ -266,8 +279,12 @@ disp('Done. Calculating E-Field...');
 
 gradient = ea_calc_gradient(vol,potential);
 midpts=mean(cat(3,vol.pos(vol.hex(:,1),:),vol.pos(vol.hex(:,2),:),vol.pos(vol.hex(:,3),:),vol.pos(vol.hex(:,4),:),vol.pos(vol.hex(:,5),:),vol.pos(vol.hex(:,6),:),vol.pos(vol.hex(:,7),:),vol.pos(vol.hex(:,8),:)),3);
-vatgrad.x=midpts(:,1); vatgrad.y=midpts(:,2); vatgrad.z=midpts(:,3);
-vatgrad.qx=gradient(:,1); vatgrad.qy=gradient(:,2); vatgrad.qz=gradient(:,3);
+
+vatgrad=getappdata(resultfig,'vatgrad');
+if isempty(vatgrad); clear('vatgrad'); end
+vatgrad(side).x=midpts(:,1); vatgrad(side).y=midpts(:,2); vatgrad(side).z=midpts(:,3);
+vatgrad(side).qx=gradient(:,1); vatgrad(side).qy=gradient(:,2); vatgrad(side).qz=gradient(:,3);
+
 setappdata(resultfig,'vatgrad',vatgrad);
 %figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))
 
@@ -302,10 +319,10 @@ F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),ones(size(vat.pos(
 F.ExtrapolationMethod='none';
 gv=cell(3,1); spacing=zeros(3,1);
 try
-for dim=1:3
-    gv{dim}=linspace(min(round(vat.pos(:,dim)))-1,max(round(vat.pos(:,dim)))+1,100);
-    spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
-end
+    for dim=1:3
+        gv{dim}=linspace(min(round(vat.pos(:,dim)))-1,max(round(vat.pos(:,dim)))+1,100);
+        spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
+    end
 catch
     keyboard % vat empty..!
 end
@@ -339,7 +356,7 @@ protocol.elmodel=options.elmodel;
 protocol.elstruct=elstruct;
 protocol.usediffusion=options.usediffusion;
 if sv % save protocol to disk
-save([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat'],'protocol');
+    save([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat'],'protocol');
 end
 
 function protocol=ea_load_hmprotocol(options,side)
@@ -1092,27 +1109,27 @@ cfg.shift       = ea_ft_getopt(cfg, 'shift');
 cfg.background  = ea_ft_getopt(cfg, 'background');
 
 if isempty(cfg.tissue)
-  mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
-  fn = fieldnames(mri);
+    mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
+    fn = fieldnames(mri);
     for i=1:numel(fn),if (numel(mri.(fn{i}))==prod(mri.dim))&(~strcmp(fn{i},'inside')), segfield=fn{i};end;end
-  cfg.tissue=setdiff(unique(mri.(segfield)(:)),0);
+    cfg.tissue=setdiff(unique(mri.(segfield)(:)),0);
 end
 
 if ischar(cfg.tissue)
-  % it should either be something like {'brain', 'skull', 'scalp'}, or something like [1 2 3]
-  cfg.tissue = {cfg.tissue};
+    % it should either be something like {'brain', 'skull', 'scalp'}, or something like [1 2 3]
+    cfg.tissue = {cfg.tissue};
 end
 
 if iscell(cfg.tissue)
-  % the code below assumes that it is a probabilistic representation
-  if any(strcmp(cfg.tissue, 'brain'))
-    mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic', 'hasbrain', 'yes');
-  else
-    mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
-  end
+    % the code below assumes that it is a probabilistic representation
+    if any(strcmp(cfg.tissue, 'brain'))
+        mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic', 'hasbrain', 'yes');
+    else
+        mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
+    end
 else
-  % the code below assumes that it is an indexed representation
-  mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
+    % the code below assumes that it is an indexed representation
+    mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
 end
 
 if isempty(cfg.resolution)
@@ -1135,37 +1152,37 @@ end
 % do the mesh extraction
 % this has to be adjusted for FEM!!!
 if iscell(cfg.tissue)
-  % this assumes that it is a probabilistic representation
-  % for example {'brain', 'skull', scalp'}
-  try
-    temp = zeros(size(mri.(cfg.tissue{1})(:)));
-    for i=1:numel(cfg.tissue)
-      temp = [temp,mri.(cfg.tissue{i})(:)];
+    % this assumes that it is a probabilistic representation
+    % for example {'brain', 'skull', scalp'}
+    try
+        temp = zeros(size(mri.(cfg.tissue{1})(:)));
+        for i=1:numel(cfg.tissue)
+            temp = [temp,mri.(cfg.tissue{i})(:)];
+        end
+        [val,seg] = max(temp,[],2);
+        seg = seg - 1;
+        seg = reshape(seg,mri.dim);
+    catch
+        error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
     end
-    [val,seg] = max(temp,[],2);
-    seg = seg - 1;
-    seg = reshape(seg,mri.dim);
-  catch
-    error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
-  end
-  tissue = cfg.tissue;
+    tissue = cfg.tissue;
 else
-  % this assumes that it is an indexed representation
-  % for example [3 2 1]
-  seg = zeros(mri.dim);
-  tissue = {};
-  for i=1:numel(cfg.tissue)
-    seg = seg + i*(mri.seg==cfg.tissue(i));
-    if isfield(mri, 'seglabel')
-      try
-        tissue{i} = mri.seglabel{cfg.tissue(i)};
-      catch
-        error('Please specify cfg.tissue to correspond to (the name or number of) tissue types in the segmented MRI')
-      end
-    else
-      tissue{i} = sprintf('tissue %d', i);
+    % this assumes that it is an indexed representation
+    % for example [3 2 1]
+    seg = zeros(mri.dim);
+    tissue = {};
+    for i=1:numel(cfg.tissue)
+        seg = seg + i*(mri.seg==cfg.tissue(i));
+        if isfield(mri, 'seglabel')
+            try
+                tissue{i} = mri.seglabel{cfg.tissue(i)};
+            catch
+                error('Please specify cfg.tissue to correspond to (the name or number of) tissue types in the segmented MRI')
+            end
+        else
+            tissue{i} = sprintf('tissue %d', i);
+        end
     end
-  end
 end
 
 % reslice to desired resolution
@@ -1174,39 +1191,39 @@ if (cfg.resolution ~= 1)
     % this should be done like this: split seg into probabilistic, reslice
     % single compartments, take maximum values
     seg_array = [];
-
+    
     seg_indices = unique(seg);
-
+    
     for i=1:(length(unique(seg)))
         seg_reslice.anatomy = double(seg == (i-1));
         seg_reslice.dim = mri.dim;
         seg_reslice.transform = eye(4);
         seg_reslice.transform(1:3,4) = -ceil(mri.dim/2);
-
+        
         cfg_reslice = [];
         cfg_reslice.resolution = cfg.resolution;
         cfg_reslice.dim = ceil(mri.dim/cfg.resolution);
-
+        
         seg_build = ft_volumereslice(cfg_reslice,seg_reslice);
-
+        
         seg_array = [seg_array,seg_build.anatomy(:)];
-
+        
         clear seg_reslice;
     end
-
+    
     [max_seg seg_build.seg] = max(seg_array,[],2);
-
+    
     clear max_seg seg_array;
-
+    
     seg_build.seg = reshape(seg_build.seg,seg_build.dim);
     seg_build.seg = seg_indices(seg_build.seg);
     seg_build.transform = mri.transform;
-
+    
     clear seg_build.anatomy;
 else
     seg_build.seg = seg;
     seg_build.dim = mri.dim;
-
+    
     clear seg;
 end
 
@@ -1236,8 +1253,8 @@ numlabels = size(unique(labels),1);
 mesh.tissuelabel = {};
 ulabel = sort(unique(labels));
 for i = 1:numlabels
-  mesh.tissue(labels == ulabel(i)) = i;
-  mesh.tissuelabel{i} = tissue{i};
+    mesh.tissue(labels == ulabel(i)) = i;
+    mesh.tissuelabel{i} = tissue{i};
 end
 
 function mesh = ea_build_mesh_hexahedral(cfg,mri)
@@ -1279,18 +1296,18 @@ fprintf('Created nodes...\n' )
 if(shift < 0 | shift > 0.3)
     error('Please choose a shift parameter between 0 and 0.3!');
 elseif(shift > 0)
-
+    
     mesh.pnt = shift_nodes(mesh.pnt,mesh.hex,labels, shift,x_dim,y_dim,z_dim);
-
+    
 end
 
 %background = 1;
 % delete background voxels(if desired)
 if(background == 0)
-mesh.hex = mesh.hex(labels ~= 0,:);
-mesh.labels = labels(labels ~= 0);
+    mesh.hex = mesh.hex(labels ~= 0,:);
+    mesh.labels = labels(labels ~= 0);
 else
-mesh.labels = labels(:);
+    mesh.labels = labels(:);
 end
 
 
@@ -1314,50 +1331,50 @@ mesh.hex(:) = ic;
 % in the same manner as described above for the element numbering(note the
 % different dimensionalities: x_dim+1 instead of x_dim etc.).
 function elements = ea_create_elements(x_dim,y_dim,z_dim)
-    elements = zeros(x_dim*y_dim*z_dim,8);
-    % create an offset vector for the bottom-left nodes in each element
-    b = 1:((x_dim+1)*(y_dim));
-    % delete the entries where the node does not correspond to an element's
-    % bottom-left node(i.e. where the x-component of the node is equal to
-    % x_dim+1)
-    b = b(mod(b,(x_dim+1)) ~= 0);
-    % repeat offset to make it fit the number of elements
-    b = repmat(b,1,(z_dim));
+elements = zeros(x_dim*y_dim*z_dim,8);
+% create an offset vector for the bottom-left nodes in each element
+b = 1:((x_dim+1)*(y_dim));
+% delete the entries where the node does not correspond to an element's
+% bottom-left node(i.e. where the x-component of the node is equal to
+% x_dim+1)
+b = b(mod(b,(x_dim+1)) ~= 0);
+% repeat offset to make it fit the number of elements
+b = repmat(b,1,(z_dim));
 
-    % create vector accounting for the offset of the nodes in z-direction
-    c = fix([0:((x_dim)*(y_dim)*(z_dim)-1)]/((x_dim)*(y_dim))) * (x_dim+1)*(y_dim+1);
+% create vector accounting for the offset of the nodes in z-direction
+c = fix([0:((x_dim)*(y_dim)*(z_dim)-1)]/((x_dim)*(y_dim))) * (x_dim+1)*(y_dim+1);
 
-    % create the elements by assigning the nodes to them. entries 1 through 4
-    % describe the bottom square of the hexahedron, entries 5 through 8 the top
-    % square.
-    elements(:,1) = b + c;
-    elements(:,2) = b + c + 1;
-    elements(:,3) = b + c + (x_dim+1) + 1;
-    elements(:,4) = b + c + (x_dim+1);
-    elements(:,5) = b + c + (x_dim + 1)*(y_dim+1);
-    elements(:,6) = b + c + (x_dim + 1)*(y_dim+1) + 1;
-    elements(:,7) = b + c + (x_dim + 1)*(y_dim+1) + (x_dim+1) + 1;
-    elements(:,8) = b + c + (x_dim + 1)*(y_dim+1) + (x_dim+1);
-    clear b;
-    clear c;
+% create the elements by assigning the nodes to them. entries 1 through 4
+% describe the bottom square of the hexahedron, entries 5 through 8 the top
+% square.
+elements(:,1) = b + c;
+elements(:,2) = b + c + 1;
+elements(:,3) = b + c + (x_dim+1) + 1;
+elements(:,4) = b + c + (x_dim+1);
+elements(:,5) = b + c + (x_dim + 1)*(y_dim+1);
+elements(:,6) = b + c + (x_dim + 1)*(y_dim+1) + 1;
+elements(:,7) = b + c + (x_dim + 1)*(y_dim+1) + (x_dim+1) + 1;
+elements(:,8) = b + c + (x_dim + 1)*(y_dim+1) + (x_dim+1);
+clear b;
+clear c;
 
 % function creating the nodes and assigning coordinates in the
 % [0,x_dim]x[0,y_dim]x[0,z_dim] box. for details on the node-numbering see
 % comments for create_elements.
 function nodes = ea_create_nodes(x_dim, y_dim, z_dim)
-    nodes = zeros(((x_dim+1)*(y_dim+1)*(z_dim + 1)),3);
-    % offset vector for node coordinates
-    b=[0:((x_dim+1)*(y_dim+1)*(z_dim+1)-1)];
+nodes = zeros(((x_dim+1)*(y_dim+1)*(z_dim + 1)),3);
+% offset vector for node coordinates
+b=[0:((x_dim+1)*(y_dim+1)*(z_dim+1)-1)];
 
-    % assign coordinates within the box
-    nodes(:,1) = mod(b,(x_dim+1));
-    nodes(:,2) = mod(fix(b/(x_dim+1)),(y_dim+1));
-    nodes(:,3) = fix(b/((x_dim + 1)*(y_dim+1)));
+% assign coordinates within the box
+nodes(:,1) = mod(b,(x_dim+1));
+nodes(:,2) = mod(fix(b/(x_dim+1)),(y_dim+1));
+nodes(:,3) = fix(b/((x_dim + 1)*(y_dim+1)));
 
-    clear b;
+clear b;
 
-    
-    function [data] = ea_ft_checkdata(data, varargin)
+
+function [data] = ea_ft_checkdata(data, varargin)
 
 % FT_CHECKDATA checks the input data of the main FieldTrip functions, e.g. whether
 % the type of data strucure corresponds with the required data. If neccessary
@@ -1473,11 +1490,11 @@ hasbrain             = ea_ft_getopt(varargin, 'hasbrain');
 % check whether people are using deprecated stuff
 depHastrialdef = ea_ft_getopt(varargin, 'hastrialdef');
 if (~isempty(depHastrialdef))
-  warning_once('ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
-  hassampleinfo = depHastrialdef;
+    warning_once('ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
+    hassampleinfo = depHastrialdef;
 end
 if (~isempty(ea_ft_getopt(varargin, 'hasoffset')))
-  warning_once('ft_checkdata option ''hasoffset'' has been removed and will be ignored');
+    warning_once('ft_checkdata option ''hasoffset'' has been removed and will be ignored');
 end
 
 % determine the type of input data
@@ -1498,409 +1515,409 @@ ischan          = ea_ft_datatype(data, 'chan');
 % FIXME use the istrue function on ismeg and hasxxx options
 
 if ~isequal(feedback, 'no')
-  if iscomp
-    % it can be comp and raw/timelock/freq at the same time, therefore this has to go first
-    nchan = size(data.topo,1);
-    ncomp = size(data.topo,2);
-    fprintf('the input is component data with %d components and %d original channels\n', ncomp, nchan);
-  end
-  
-  if israw
-    nchan = length(data.label);
-    ntrial = length(data.trial);
-    fprintf('the input is raw data with %d channels and %d trials\n', nchan, ntrial);
-  elseif istimelock
-    nchan = length(data.label);
-    ntime = length(data.time);
-    fprintf('the input is timelock data with %d channels and %d timebins\n', nchan, ntime);
-  elseif isfreq
-    if isfield(data, 'label')
-      nchan = length(data.label);
-      nfreq = length(data.freq);
-      if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
-      fprintf('the input is freq data with %d channels, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
-    elseif isfield(data, 'labelcmb')
-      nchan = length(data.labelcmb);
-      nfreq = length(data.freq);
-      if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
-      fprintf('the input is freq data with %d channel combinations, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
-    else
-      error('cannot infer freq dimensions');
+    if iscomp
+        % it can be comp and raw/timelock/freq at the same time, therefore this has to go first
+        nchan = size(data.topo,1);
+        ncomp = size(data.topo,2);
+        fprintf('the input is component data with %d components and %d original channels\n', ncomp, nchan);
     end
-  elseif isspike
-    nchan  = length(data.label);
-    fprintf('the input is spike data with %d channels\n', nchan);
-  elseif isvolume
-    if issegmentation
-      subtype = 'segmented volume';
-    else
-      subtype = 'volume';
+    
+    if israw
+        nchan = length(data.label);
+        ntrial = length(data.trial);
+        fprintf('the input is raw data with %d channels and %d trials\n', nchan, ntrial);
+    elseif istimelock
+        nchan = length(data.label);
+        ntime = length(data.time);
+        fprintf('the input is timelock data with %d channels and %d timebins\n', nchan, ntime);
+    elseif isfreq
+        if isfield(data, 'label')
+            nchan = length(data.label);
+            nfreq = length(data.freq);
+            if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
+            fprintf('the input is freq data with %d channels, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
+        elseif isfield(data, 'labelcmb')
+            nchan = length(data.labelcmb);
+            nfreq = length(data.freq);
+            if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
+            fprintf('the input is freq data with %d channel combinations, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
+        else
+            error('cannot infer freq dimensions');
+        end
+    elseif isspike
+        nchan  = length(data.label);
+        fprintf('the input is spike data with %d channels\n', nchan);
+    elseif isvolume
+        if issegmentation
+            subtype = 'segmented volume';
+        else
+            subtype = 'volume';
+        end
+        fprintf('the input is %s data with dimensions [%d %d %d]\n', subtype, data.dim(1), data.dim(2), data.dim(3));
+        clear subtype
+    elseif issource
+        nsource = size(data.pos, 1);
+        if isparcellation
+            subtype = 'parcellated source';
+        else
+            subtype = 'source';
+        end
+        if isfield(data, 'dim')
+            fprintf('the input is %s data with %d brainordinates on a [%d %d %d] grid\n', subtype, nsource, data.dim(1), data.dim(2), data.dim(3));
+        elseif isfield(data, 'tri')
+            fprintf('the input is %s data with %d vertex positions and %d triangles\n', subtype, nsource, size(data.tri, 1));
+        else
+            fprintf('the input is %s data with %d brainordinates\n', subtype, nsource);
+        end
+        clear subtype
+    elseif isdip
+        fprintf('the input is dipole data\n');
+    elseif ismvar
+        fprintf('the input is mvar data\n');
+    elseif isfreqmvar
+        fprintf('the input is freqmvar data\n');
+    elseif ischan
+        nchan = length(data.label);
+        if isfield(data, 'brainordinate')
+            fprintf('the input is parcellated data with %d parcels\n', nchan);
+        else
+            fprintf('the input is chan data with %d channels\n', nchan);
+        end
     end
-    fprintf('the input is %s data with dimensions [%d %d %d]\n', subtype, data.dim(1), data.dim(2), data.dim(3));
-    clear subtype
-  elseif issource
-    nsource = size(data.pos, 1);
-    if isparcellation
-      subtype = 'parcellated source';
-    else
-      subtype = 'source';
-    end
-    if isfield(data, 'dim')
-      fprintf('the input is %s data with %d brainordinates on a [%d %d %d] grid\n', subtype, nsource, data.dim(1), data.dim(2), data.dim(3));
-    elseif isfield(data, 'tri')
-      fprintf('the input is %s data with %d vertex positions and %d triangles\n', subtype, nsource, size(data.tri, 1));
-    else
-      fprintf('the input is %s data with %d brainordinates\n', subtype, nsource);
-    end
-    clear subtype
-  elseif isdip
-    fprintf('the input is dipole data\n');
-  elseif ismvar
-    fprintf('the input is mvar data\n');
-  elseif isfreqmvar
-    fprintf('the input is freqmvar data\n');
-  elseif ischan
-    nchan = length(data.label);
-    if isfield(data, 'brainordinate')
-      fprintf('the input is parcellated data with %d parcels\n', nchan);
-    else
-      fprintf('the input is chan data with %d channels\n', nchan);
-    end
-  end
 end % give feedback
 
 if issource && isvolume
-  % it should be either one or the other: the choice here is to represent it as volume description since that is simpler to handle
-  % the conversion is done by removing the grid positions
-  data = rmfield(data, 'pos');
-  issource = false;
+    % it should be either one or the other: the choice here is to represent it as volume description since that is simpler to handle
+    % the conversion is done by removing the grid positions
+    data = rmfield(data, 'pos');
+    issource = false;
 end
 
 % the ft_datatype_XXX functions ensures the consistency of the XXX datatype
 % and provides a detailed description of the dataformat and its history
 if iscomp % this should go before israw/istimelock/isfreq
-  data = ft_datatype_comp(data, 'hassampleinfo', hassampleinfo);
+    data = ft_datatype_comp(data, 'hassampleinfo', hassampleinfo);
 elseif israw
-  data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+    data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
 elseif istimelock
-  data = ft_datatype_timelock(data);
+    data = ft_datatype_timelock(data);
 elseif isfreq
-  data = ft_datatype_freq(data);
+    data = ft_datatype_freq(data);
 elseif isspike
-  data = ft_datatype_spike(data);
+    data = ft_datatype_spike(data);
 elseif issegmentation % this should go before isvolume
-  data = ea_ft_datatype_segmentation(data, 'segmentationstyle', segmentationstyle, 'hasbrain', hasbrain);
+    data = ea_ft_datatype_segmentation(data, 'segmentationstyle', segmentationstyle, 'hasbrain', hasbrain);
 elseif isvolume
-  data = ft_datatype_volume(data);
+    data = ft_datatype_volume(data);
 elseif isparcellation % this should go before issource
-  data = ft_datatype_parcellation(data, 'parcellationstyle', parcellationstyle);
+    data = ft_datatype_parcellation(data, 'parcellationstyle', parcellationstyle);
 elseif issource
-  data = ft_datatype_source(data);
+    data = ft_datatype_source(data);
 elseif isdip
-  data = ft_datatype_dip(data);
+    data = ft_datatype_dip(data);
 elseif ismvar || isfreqmvar
-  data = ft_datatype_mvar(data);
+    data = ft_datatype_mvar(data);
 end
 
 if ~isempty(dtype)
-  if ~isa(dtype, 'cell')
-    dtype = {dtype};
-  end
-  
-  okflag = 0;
-  for i=1:length(dtype)
-    % check that the data matches with one or more of the required ft_datatypes
-    switch dtype{i}
-      case 'raw+comp'
-        okflag = okflag + (israw & iscomp);
-      case 'freq+comp'
-        okflag = okflag + (isfreq & iscomp);
-      case 'timelock+comp'
-        okflag = okflag + (istimelock & iscomp);
-      case 'raw'
-        okflag = okflag + (israw & ~iscomp);
-      case 'freq'
-        okflag = okflag + (isfreq & ~iscomp);
-      case 'timelock'
-        okflag = okflag + (istimelock & ~iscomp);
-      case 'comp'
-        okflag = okflag + (iscomp & ~(israw | istimelock | isfreq));
-      case 'spike'
-        okflag = okflag + isspike;
-      case 'volume'
-        okflag = okflag + isvolume;
-      case 'source'
-        okflag = okflag + issource;
-      case 'dip'
-        okflag = okflag + isdip;
-      case 'mvar'
-        okflag = okflag + ismvar;
-      case 'freqmvar'
-        okflag = okflag + isfreqmvar;
-      case 'chan'
-        okflag = okflag + ischan;
-      case 'segmentation'
-        okflag = okflag + issegmentation;
-      case 'parcellation'
-        okflag = okflag + isparcellation;
-    end % switch dtype
-  end % for dtype
-  
-  % try to convert the data if needed
-  for iCell = 1:length(dtype)
-    if okflag
-      % the requested datatype is specified in descending order of
-      % preference (if there is a preference at all), so don't bother
-      % checking the rest of the requested data types if we already
-      % succeeded in converting
-      break;
+    if ~isa(dtype, 'cell')
+        dtype = {dtype};
     end
-    if isequal(dtype(iCell), {'parcellation'}) && issegmentation
-      data = eavolume2source(data); % segmentation=volume, parcellation=source
-      data = ft_datatype_parcellation(data);
-      issegmentation = 0;
-      isvolume = 0;
-      isparcellation = 1;
-      issource = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'segmentation'}) && isparcellation
-      data = ea_source2volume(data); % segmentation=volume, parcellation=source
-      data = ea_ft_datatype_segmentation(data);
-      isparcellation = 0;
-      issource = 0;
-      issegmentation = 1;
-      isvolume = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'source'}) && isvolume
-      data = eavolume2source(data);
-      data = ft_datatype_source(data);
-      isvolume = 0;
-      issource = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'volume'}) && (ischan || istimelock || isfreq)
-      data = ea_parcellated2source(data);
-      data = ft_datatype_volume(data);
-      ischan = 0;
-      isvolume = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'source'}) && (ischan || istimelock || isfreq)
-      data = ea_parcellated2source(data);
-      data = ft_datatype_source(data);
-      ischan = 0;
-      issource = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'volume'}) && issource
-      data = ea_source2volume(data);
-      data = ft_datatype_volume(data);
-      isvolume = 1;
-      issource = 0;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'raw+comp'}) && istimelock && iscomp
-      data = eatimelock2raw(data);
-      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-      istimelock = 0;
-      iscomp = 1;
-      israw = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'raw'}) && issource
-      data = ea_source2raw(data);
-      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-      issource = 0;
-      israw = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'raw'}) && istimelock
-      if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-        iscomp = 0;
-      end
-      data = eatimelock2raw(data);
-      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-      istimelock = 0;
-      israw = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && israw
-      data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
-      data = ft_datatype_comp(data);
-      israw = 0;
-      iscomp = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && istimelock
-      data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
-      data = ft_datatype_comp(data);
-      istimelock = 0;
-      iscomp = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && isfreq
-      data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
-      data = ft_datatype_comp(data);
-      isfreq = 0;
-      iscomp = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'raw'}) && israw
-      if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-        iscomp = 0;
-      end
-      data = ft_datatype_raw(data);
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'timelock'}) && istimelock
-      if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-        iscomp = 0;
-      end
-      data = ft_datatype_timelock(data);
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'freq'}) && isfreq
-      if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-        iscomp = 0;
-      end
-      data = ft_datatype_freq(data);
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'timelock'}) && israw
-      if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-        iscomp = 0;
-      end
-      data = earaw2timelock(data);
-      data = ft_datatype_timelock(data);
-      israw = 0;
-      istimelock = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'raw'}) && isfreq
-      if iscomp
-        data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
-        iscomp = 0;
-      end
-      data = ea_freq2raw(data);
-      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-      isfreq = 0;
-      israw = 1;
-      okflag = 1;
-      
-    elseif isequal(dtype(iCell), {'raw'}) && ischan
-      data = ea_chan2timelock(data);
-      data = eatimelock2raw(data);
-      data = ft_datatype_raw(data);
-      ischan = 0;
-      israw = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'timelock'}) && ischan
-      data = ea_chan2timelock(data);
-      data = ft_datatype_timelock(data);
-      ischan = 0;
-      istimelock = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'freq'}) && ischan
-      data = ea_chan2freq(data);
-      data = ft_datatype_freq(data);
-      ischan = 0;
-      isfreq = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'spike'}) && israw
-      data = ea_raw2spike(data);
-      data = ft_datatype_spike(data);
-      israw = 0;
-      isspike = 1;
-      okflag = 1;
-    elseif isequal(dtype(iCell), {'raw'}) && isspike
-      data = ea_spike2raw(data,fsample);
-      data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
-      isspike = 0;
-      israw   = 1;
-      okflag  = 1;
-    end
-  end % for iCell
-  
-  if ~okflag
-    % construct an error message
-    if length(dtype)>1
-      str = sprintf('%s, ', dtype{1:(end-2)});
-      str = sprintf('%s%s or %s', str, dtype{end-1}, dtype{end});
-    else
-      str = dtype{1};
-    end
-    error('This function requires %s data as input.', str);
-  end % if okflag
+    
+    okflag = 0;
+    for i=1:length(dtype)
+        % check that the data matches with one or more of the required ft_datatypes
+        switch dtype{i}
+            case 'raw+comp'
+                okflag = okflag + (israw & iscomp);
+            case 'freq+comp'
+                okflag = okflag + (isfreq & iscomp);
+            case 'timelock+comp'
+                okflag = okflag + (istimelock & iscomp);
+            case 'raw'
+                okflag = okflag + (israw & ~iscomp);
+            case 'freq'
+                okflag = okflag + (isfreq & ~iscomp);
+            case 'timelock'
+                okflag = okflag + (istimelock & ~iscomp);
+            case 'comp'
+                okflag = okflag + (iscomp & ~(israw | istimelock | isfreq));
+            case 'spike'
+                okflag = okflag + isspike;
+            case 'volume'
+                okflag = okflag + isvolume;
+            case 'source'
+                okflag = okflag + issource;
+            case 'dip'
+                okflag = okflag + isdip;
+            case 'mvar'
+                okflag = okflag + ismvar;
+            case 'freqmvar'
+                okflag = okflag + isfreqmvar;
+            case 'chan'
+                okflag = okflag + ischan;
+            case 'segmentation'
+                okflag = okflag + issegmentation;
+            case 'parcellation'
+                okflag = okflag + isparcellation;
+        end % switch dtype
+    end % for dtype
+    
+    % try to convert the data if needed
+    for iCell = 1:length(dtype)
+        if okflag
+            % the requested datatype is specified in descending order of
+            % preference (if there is a preference at all), so don't bother
+            % checking the rest of the requested data types if we already
+            % succeeded in converting
+            break;
+        end
+        if isequal(dtype(iCell), {'parcellation'}) && issegmentation
+            data = eavolume2source(data); % segmentation=volume, parcellation=source
+            data = ft_datatype_parcellation(data);
+            issegmentation = 0;
+            isvolume = 0;
+            isparcellation = 1;
+            issource = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'segmentation'}) && isparcellation
+            data = ea_source2volume(data); % segmentation=volume, parcellation=source
+            data = ea_ft_datatype_segmentation(data);
+            isparcellation = 0;
+            issource = 0;
+            issegmentation = 1;
+            isvolume = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'source'}) && isvolume
+            data = eavolume2source(data);
+            data = ft_datatype_source(data);
+            isvolume = 0;
+            issource = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'volume'}) && (ischan || istimelock || isfreq)
+            data = ea_parcellated2source(data);
+            data = ft_datatype_volume(data);
+            ischan = 0;
+            isvolume = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'source'}) && (ischan || istimelock || isfreq)
+            data = ea_parcellated2source(data);
+            data = ft_datatype_source(data);
+            ischan = 0;
+            issource = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'volume'}) && issource
+            data = ea_source2volume(data);
+            data = ft_datatype_volume(data);
+            isvolume = 1;
+            issource = 0;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'raw+comp'}) && istimelock && iscomp
+            data = eatimelock2raw(data);
+            data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+            istimelock = 0;
+            iscomp = 1;
+            israw = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'raw'}) && issource
+            data = ea_source2raw(data);
+            data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+            issource = 0;
+            israw = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'raw'}) && istimelock
+            if iscomp
+                data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+                iscomp = 0;
+            end
+            data = eatimelock2raw(data);
+            data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+            istimelock = 0;
+            israw = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'comp'}) && israw
+            data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
+            data = ft_datatype_comp(data);
+            israw = 0;
+            iscomp = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'comp'}) && istimelock
+            data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
+            data = ft_datatype_comp(data);
+            istimelock = 0;
+            iscomp = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'comp'}) && isfreq
+            data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
+            data = ft_datatype_comp(data);
+            isfreq = 0;
+            iscomp = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'raw'}) && israw
+            if iscomp
+                data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+                iscomp = 0;
+            end
+            data = ft_datatype_raw(data);
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'timelock'}) && istimelock
+            if iscomp
+                data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+                iscomp = 0;
+            end
+            data = ft_datatype_timelock(data);
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'freq'}) && isfreq
+            if iscomp
+                data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+                iscomp = 0;
+            end
+            data = ft_datatype_freq(data);
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'timelock'}) && israw
+            if iscomp
+                data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+                iscomp = 0;
+            end
+            data = earaw2timelock(data);
+            data = ft_datatype_timelock(data);
+            israw = 0;
+            istimelock = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'raw'}) && isfreq
+            if iscomp
+                data = removefields(data, {'topo', 'topolabel', 'unmixing'}); % these fields are not desired
+                iscomp = 0;
+            end
+            data = ea_freq2raw(data);
+            data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+            isfreq = 0;
+            israw = 1;
+            okflag = 1;
+            
+        elseif isequal(dtype(iCell), {'raw'}) && ischan
+            data = ea_chan2timelock(data);
+            data = eatimelock2raw(data);
+            data = ft_datatype_raw(data);
+            ischan = 0;
+            israw = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'timelock'}) && ischan
+            data = ea_chan2timelock(data);
+            data = ft_datatype_timelock(data);
+            ischan = 0;
+            istimelock = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'freq'}) && ischan
+            data = ea_chan2freq(data);
+            data = ft_datatype_freq(data);
+            ischan = 0;
+            isfreq = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'spike'}) && israw
+            data = ea_raw2spike(data);
+            data = ft_datatype_spike(data);
+            israw = 0;
+            isspike = 1;
+            okflag = 1;
+        elseif isequal(dtype(iCell), {'raw'}) && isspike
+            data = ea_spike2raw(data,fsample);
+            data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+            isspike = 0;
+            israw   = 1;
+            okflag  = 1;
+        end
+    end % for iCell
+    
+    if ~okflag
+        % construct an error message
+        if length(dtype)>1
+            str = sprintf('%s, ', dtype{1:(end-2)});
+            str = sprintf('%s%s or %s', str, dtype{end-1}, dtype{end});
+        else
+            str = dtype{1};
+        end
+        error('This function requires %s data as input.', str);
+    end % if okflag
 end
 
 if ~isempty(dimord)
-  if ~isa(dimord, 'cell')
-    dimord = {dimord};
-  end
-  
-  if isfield(data, 'dimord')
-    okflag = any(strcmp(data.dimord, dimord));
-  else
-    okflag = 0;
-  end
-  
-  if ~okflag
-    % construct an error message
-    if length(dimord)>1
-      str = sprintf('%s, ', dimord{1:(end-2)});
-      str = sprintf('%s%s or %s', str, dimord{end-1}, dimord{end});
-    else
-      str = dimord{1};
+    if ~isa(dimord, 'cell')
+        dimord = {dimord};
     end
-    error('This function requires data with a dimord of %s.', str);
-  end % if okflag
+    
+    if isfield(data, 'dimord')
+        okflag = any(strcmp(data.dimord, dimord));
+    else
+        okflag = 0;
+    end
+    
+    if ~okflag
+        % construct an error message
+        if length(dimord)>1
+            str = sprintf('%s, ', dimord{1:(end-2)});
+            str = sprintf('%s%s or %s', str, dimord{end-1}, dimord{end});
+        else
+            str = dimord{1};
+        end
+        error('This function requires data with a dimord of %s.', str);
+    end % if okflag
 end
 
 if ~isempty(stype)
-  if ~isa(stype, 'cell')
-    stype = {stype};
-  end
-  
-  if isfield(data, 'grad') || isfield(data, 'elec')
-    if any(strcmp(ft_senstype(data), stype))
-      okflag = 1;
-    elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
-      % this is required to detect more general types, such as "meg" or "ctf" rather than "ctf275"
-      okflag = 1;
-    else
-      okflag = 0;
+    if ~isa(stype, 'cell')
+        stype = {stype};
     end
-  end
-  
-  if ~okflag
-    % construct an error message
-    if length(stype)>1
-      str = sprintf('%s, ', stype{1:(end-2)});
-      str = sprintf('%s%s or %s', str, stype{end-1}, stype{end});
-    else
-      str = stype{1};
+    
+    if isfield(data, 'grad') || isfield(data, 'elec')
+        if any(strcmp(ft_senstype(data), stype))
+            okflag = 1;
+        elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
+            % this is required to detect more general types, such as "meg" or "ctf" rather than "ctf275"
+            okflag = 1;
+        else
+            okflag = 0;
+        end
     end
-    error('This function requires %s data as input, but you are giving %s data.', str, ft_senstype(data));
-  end % if okflag
+    
+    if ~okflag
+        % construct an error message
+        if length(stype)>1
+            str = sprintf('%s, ', stype{1:(end-2)});
+            str = sprintf('%s%s or %s', str, stype{end-1}, stype{end});
+        else
+            str = stype{1};
+        end
+        error('This function requires %s data as input, but you are giving %s data.', str, ft_senstype(data));
+    end % if okflag
 end
 
 if ~isempty(ismeg)
-  if isequal(ismeg, 'yes')
-    okflag = isfield(data, 'grad');
-  elseif isequal(ismeg, 'no')
-    okflag = ~isfield(data, 'grad');
-  end
-  
-  if ~okflag && isequal(ismeg, 'yes')
-    error('This function requires MEG data with a ''grad'' field');
-  elseif ~okflag && isequal(ismeg, 'no')
-    error('This function should not be given MEG data with a ''grad'' field');
-  end % if okflag
+    if isequal(ismeg, 'yes')
+        okflag = isfield(data, 'grad');
+    elseif isequal(ismeg, 'no')
+        okflag = ~isfield(data, 'grad');
+    end
+    
+    if ~okflag && isequal(ismeg, 'yes')
+        error('This function requires MEG data with a ''grad'' field');
+    elseif ~okflag && isequal(ismeg, 'no')
+        error('This function should not be given MEG data with a ''grad'' field');
+    end % if okflag
 end
 
 if ~isempty(inside)
-  if strcmp(inside, 'index')
-    warning('the indexed representation of inside/outside source locations is deprecated');
-  end
-  % TODO absorb the fixinside function into this code
-  data   = fixinside(data, inside);
-  okflag = isfield(data, 'inside');
-  
-  if ~okflag
-    % construct an error message
-    error('This function requires data with an ''inside'' field.');
-  end % if okflag
+    if strcmp(inside, 'index')
+        warning('the indexed representation of inside/outside source locations is deprecated');
+    end
+    % TODO absorb the fixinside function into this code
+    data   = fixinside(data, inside);
+    okflag = isfield(data, 'inside');
+    
+    if ~okflag
+        % construct an error message
+        error('This function requires data with an ''inside'' field.');
+    end % if okflag
 end
 
 %if isvolume
@@ -1916,259 +1933,259 @@ end
 %end
 
 if ea_istrue(hasunit) && ~isfield(data, 'unit')
-  % calling convert_units with only the input data adds the units without converting
-  data = ft_convert_units(data);
+    % calling convert_units with only the input data adds the units without converting
+    data = ft_convert_units(data);
 end
 
 if ea_istrue(hascoordsys) && ~isfield(data, 'coordsys')
-  data = ft_determine_coordsys(data);
+    data = ft_determine_coordsys(data);
 end
 
 if issource || isvolume,
-  % the following section is to make a dimord-consistent representation of
-  % volume and source data, taking trials, time and frequency into account
-  if isequal(hasdimord, 'yes') && (~isfield(data, 'dimord') || ~strcmp(data.dimord,sourcedimord))
-    
-    % determine the size of the data
-    if isfield(data, 'dimord'),
-      dimtok = tokenize(data.dimord, '_');
-      if ~isempty(strmatch('time', dimtok)), Ntime = length(data.time); else Ntime = 1; end
-      if ~isempty(strmatch('freq', dimtok)), Nfreq = length(data.freq); else Nfreq = 1; end
-    else
-      Nfreq = 1;
-      Ntime = 1;
-    end
-    
-    %convert old style source representation into new style
-    if isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpt_pos'),
-      %frequency domain source representation convert to single trial power
-      Npos   = size(data.pos,1);
-      Nrpt   = size(data.cumtapcnt,1);
-      tmpmom = zeros(Npos, size(data.avg.mom{data.inside(1)},2));
-      tmpmom(data.inside,:) = cat(1,data.avg.mom{data.inside});
-      tmppow = zeros(Npos, Nrpt);
-      tapcnt = [0;cumsum(data.cumtapcnt)];
-      for k = 1:Nrpt
-        Ntap = tapcnt(k+1)-tapcnt(k);
-        tmppow(data.inside,k) = sum(abs(tmpmom(data.inside,(tapcnt(k)+1):tapcnt(k+1))).^2,2)./Ntap;
-      end
-      data.pow = tmppow';
-      data     = rmfield(data, 'avg');
-      if strcmp(inside, 'logical'),
-        data     = fixinside(data, 'logical');
-        data.inside = repmat(data.inside(:)',[Nrpt 1]);
-      end
-    elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpttap_pos'),
-      %frequency domain source representation convert to single taper fourier coefficients
-      Npos   = size(data.pos,1);
-      Nrpt   = sum(data.cumtapcnt);
-      data.fourierspctrm = complex(zeros(Nrpt, Npos), zeros(Nrpt, Npos));
-      data.fourierspctrm(:, data.inside) = transpose(cat(1, data.avg.mom{data.inside}));
-      data   = rmfield(data, 'avg');
-    elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && isfield(data, 'time') && strcmp(sourcedimord, 'pos_time'),
-      Npos   = size(data.pos,1);
-      Nrpt   = 1;
-      tmpmom = zeros(Npos, size(data.avg.mom{data.inside(1)},2));
-      tmpmom(data.inside,:) = cat(1,data.avg.mom{data.inside});
-      data.mom = tmpmom;
-      if isfield(data.avg, 'noise'),
-        tmpnoise = data.avg.noise(:);
-        data.noise = tmpnoise(:,ones(1,size(tmpmom,2)));
-      end
-      data = rmfield(data, 'avg');
-      Ntime = length(data.time);
-    elseif isfield(data, 'trial') && isfield(data.trial(1), 'mom') && isfield(data, 'time') && strcmp(sourcedimord, 'rpt_pos_time'),
-      Npos   = size(data.pos,1);
-      Nrpt   = length(data.trial);
-      Ntime  = length(data.time);
-      tmpmom = zeros(Nrpt, Npos, Ntime);
-      for k = 1:Nrpt
-        tmpmom(k,data.inside,:) = cat(1,data.trial(k).mom{data.inside});
-      end
-      data     = rmfield(data, 'trial');
-      data.mom = tmpmom;
-    elseif isfield(data, 'trial') && isstruct(data.trial)
-      Nrpt = length(data.trial);
-    else
-      Nrpt = 1;
-    end
-    
-    % start with an initial specification of the dimord and dim
-    if (~isfield(data, 'dim') || ~isfield(data, 'dimord'))
-      if issource
-        % at least it should have a Nx3 pos
-        data.dim    = size(data.pos, 1);
-        data.dimord = 'pos';
-      elseif isvolume
-        % at least it should have a 1x3 dim
-        data.dim    = data.dim;
-        data.dimord = 'dim1_dim2_dim3';
-      end
-    end
-    
-    % add the additional dimensions
-    if Nfreq>1
-      data.dimord = [data.dimord '_freq'];
-      data.dim    = [data.dim     Nfreq];
-    end
-    if Ntime>1
-      data.dimord = [data.dimord '_time'];
-      data.dim    = [data.dim     Ntime];
-    end
-    if Nrpt>1 && strcmp(sourcedimord, 'rpt_pos'),
-      data.dimord = ['rpt_' data.dimord];
-      data.dim    = [Nrpt   data.dim ];
-    elseif Nrpt>1 && strcmp(sourcedimord, 'rpttap_pos'),
-      data.dimord = ['rpttap_' data.dimord];
-      data.dim    = [Nrpt   data.dim ];
-    end
-    
-    % the nested trial structure is not compatible with dimord
-    if isfield(data, 'trial') && isstruct(data.trial)
-      param = fieldnames(data.trial);
-      for i=1:length(param)
-        if isa(data.trial(1).(param{i}), 'cell')
-          concat = cell(data.dim(1), prod(data.dim(2:end)));
+    % the following section is to make a dimord-consistent representation of
+    % volume and source data, taking trials, time and frequency into account
+    if isequal(hasdimord, 'yes') && (~isfield(data, 'dimord') || ~strcmp(data.dimord,sourcedimord))
+        
+        % determine the size of the data
+        if isfield(data, 'dimord'),
+            dimtok = tokenize(data.dimord, '_');
+            if ~isempty(strmatch('time', dimtok)), Ntime = length(data.time); else Ntime = 1; end
+            if ~isempty(strmatch('freq', dimtok)), Nfreq = length(data.freq); else Nfreq = 1; end
         else
-          concat = zeros(data.dim(1), prod(data.dim(2:end)));
+            Nfreq = 1;
+            Ntime = 1;
         end
-        for j=1:length(data.trial)
-          tmp = data.trial(j).(param{i});
-          concat(j,:) = tmp(:);
-        end % for each trial
-        data.trial = rmfield(data.trial, param{i});
-        data.(param{i}) = reshape(concat, data.dim);
-      end % for each param
-      data = rmfield(data, 'trial');
-    end
-  end
-  
-  % ensure consistent dimensions of the source reconstructed data
-  % reshape each of the source reconstructed parameters
-  if issource && isfield(data, 'dim') && prod(data.dim)==size(data.pos,1)
-    dim = [prod(data.dim) 1];
-    %elseif issource && any(~cellfun('isempty',strfind(fieldnames(data), 'dimord')))
-    %  dim = [size(data.pos,1) 1]; %sparsely represented source structure new style
-  elseif isfield(data, 'dim'),
-    dim = [data.dim 1];
-  elseif issource && ~isfield(data, 'dimord')
-    dim = [size(data.pos,1) 1];
-  elseif isfield(data, 'dimord'),
-    %HACK
-    dimtok = tokenize(data.dimord, '_');
-    for i=1:length(dimtok)
-      if strcmp(dimtok(i), 'pos')
-        dim(1,i) = size(data.pos,1);
-      elseif strcmp(dimtok(i), '{pos}')
-        dim(1,i) = size(data.pos,1);
-      elseif ea_issubfield(data,dimtok{i})
-        dim(1,i) = length(ea_getsubfield(data,dimtok{i}));
-      else
-        dim(1,i) = nan; % this applies to rpt, ori
-      end
-    end
-    try
-      % the following only works for rpt, not for ori
-      i = find(isnan(dim));
-      if ~isempty(i)
-        n = fieldnames(data);
-        for ii=1:length(n)
-          numels(1,ii) = numel(getfield(data,n{ii}));
+        
+        %convert old style source representation into new style
+        if isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpt_pos'),
+            %frequency domain source representation convert to single trial power
+            Npos   = size(data.pos,1);
+            Nrpt   = size(data.cumtapcnt,1);
+            tmpmom = zeros(Npos, size(data.avg.mom{data.inside(1)},2));
+            tmpmom(data.inside,:) = cat(1,data.avg.mom{data.inside});
+            tmppow = zeros(Npos, Nrpt);
+            tapcnt = [0;cumsum(data.cumtapcnt)];
+            for k = 1:Nrpt
+                Ntap = tapcnt(k+1)-tapcnt(k);
+                tmppow(data.inside,k) = sum(abs(tmpmom(data.inside,(tapcnt(k)+1):tapcnt(k+1))).^2,2)./Ntap;
+            end
+            data.pow = tmppow';
+            data     = rmfield(data, 'avg');
+            if strcmp(inside, 'logical'),
+                data     = fixinside(data, 'logical');
+                data.inside = repmat(data.inside(:)',[Nrpt 1]);
+            end
+        elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpttap_pos'),
+            %frequency domain source representation convert to single taper fourier coefficients
+            Npos   = size(data.pos,1);
+            Nrpt   = sum(data.cumtapcnt);
+            data.fourierspctrm = complex(zeros(Nrpt, Npos), zeros(Nrpt, Npos));
+            data.fourierspctrm(:, data.inside) = transpose(cat(1, data.avg.mom{data.inside}));
+            data   = rmfield(data, 'avg');
+        elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && isfield(data, 'time') && strcmp(sourcedimord, 'pos_time'),
+            Npos   = size(data.pos,1);
+            Nrpt   = 1;
+            tmpmom = zeros(Npos, size(data.avg.mom{data.inside(1)},2));
+            tmpmom(data.inside,:) = cat(1,data.avg.mom{data.inside});
+            data.mom = tmpmom;
+            if isfield(data.avg, 'noise'),
+                tmpnoise = data.avg.noise(:);
+                data.noise = tmpnoise(:,ones(1,size(tmpmom,2)));
+            end
+            data = rmfield(data, 'avg');
+            Ntime = length(data.time);
+        elseif isfield(data, 'trial') && isfield(data.trial(1), 'mom') && isfield(data, 'time') && strcmp(sourcedimord, 'rpt_pos_time'),
+            Npos   = size(data.pos,1);
+            Nrpt   = length(data.trial);
+            Ntime  = length(data.time);
+            tmpmom = zeros(Nrpt, Npos, Ntime);
+            for k = 1:Nrpt
+                tmpmom(k,data.inside,:) = cat(1,data.trial(k).mom{data.inside});
+            end
+            data     = rmfield(data, 'trial');
+            data.mom = tmpmom;
+        elseif isfield(data, 'trial') && isstruct(data.trial)
+            Nrpt = length(data.trial);
+        else
+            Nrpt = 1;
         end
-        nrpt = numels./prod(dim(setdiff(1:length(dim),i)));
-        nrpt = nrpt(nrpt==round(nrpt));
-        dim(i) = max(nrpt);
-      end
-    end % try
-    if numel(dim)==1, dim(1,2) = 1; end;
-  end
-  
-  % these fields should not be reshaped
-  exclude = {'cfg' 'fwhm' 'leadfield' 'q' 'rough' 'pos'};
-  if ~isempty(inside) && ~strcmp(inside, 'logical')
-    % also exclude the inside/outside from being reshaped
-    exclude = cat(2, exclude, {'inside' 'outside'});
-  end
-  
-  param = setdiff(ea_parameterselection('all', data), exclude);
-  for i=1:length(param)
-    if any(param{i}=='.')
-      % the parameter is nested in a substructure, which can have multiple elements (e.g. source.trial(1).pow, source.trial(2).pow, ...)
-      % loop over the substructure array and reshape for every element
-      tok  = tokenize(param{i}, '.');
-      sub1 = tok{1};  % i.e. this would be 'trial'
-      sub2 = tok{2};  % i.e. this would be 'pow'
-      tmp1 = getfield(data, sub1);
-      for j=1:numel(tmp1)
-        tmp2 = getfield(tmp1(j), sub2);
-        if prod(dim)==numel(tmp2)
-          tmp2 = reshape(tmp2, dim);
+        
+        % start with an initial specification of the dimord and dim
+        if (~isfield(data, 'dim') || ~isfield(data, 'dimord'))
+            if issource
+                % at least it should have a Nx3 pos
+                data.dim    = size(data.pos, 1);
+                data.dimord = 'pos';
+            elseif isvolume
+                % at least it should have a 1x3 dim
+                data.dim    = data.dim;
+                data.dimord = 'dim1_dim2_dim3';
+            end
         end
-        tmp1(j) = setfield(tmp1(j), sub2, tmp2);
-      end
-      data = setfield(data, sub1, tmp1);
-    else
-      tmp  = getfield(data, param{i});
-      if prod(dim)==numel(tmp)
-        tmp  = reshape(tmp, dim);
-      end
-      data = setfield(data, param{i}, tmp);
+        
+        % add the additional dimensions
+        if Nfreq>1
+            data.dimord = [data.dimord '_freq'];
+            data.dim    = [data.dim     Nfreq];
+        end
+        if Ntime>1
+            data.dimord = [data.dimord '_time'];
+            data.dim    = [data.dim     Ntime];
+        end
+        if Nrpt>1 && strcmp(sourcedimord, 'rpt_pos'),
+            data.dimord = ['rpt_' data.dimord];
+            data.dim    = [Nrpt   data.dim ];
+        elseif Nrpt>1 && strcmp(sourcedimord, 'rpttap_pos'),
+            data.dimord = ['rpttap_' data.dimord];
+            data.dim    = [Nrpt   data.dim ];
+        end
+        
+        % the nested trial structure is not compatible with dimord
+        if isfield(data, 'trial') && isstruct(data.trial)
+            param = fieldnames(data.trial);
+            for i=1:length(param)
+                if isa(data.trial(1).(param{i}), 'cell')
+                    concat = cell(data.dim(1), prod(data.dim(2:end)));
+                else
+                    concat = zeros(data.dim(1), prod(data.dim(2:end)));
+                end
+                for j=1:length(data.trial)
+                    tmp = data.trial(j).(param{i});
+                    concat(j,:) = tmp(:);
+                end % for each trial
+                data.trial = rmfield(data.trial, param{i});
+                data.(param{i}) = reshape(concat, data.dim);
+            end % for each param
+            data = rmfield(data, 'trial');
+        end
     end
-  end
-  
+    
+    % ensure consistent dimensions of the source reconstructed data
+    % reshape each of the source reconstructed parameters
+    if issource && isfield(data, 'dim') && prod(data.dim)==size(data.pos,1)
+        dim = [prod(data.dim) 1];
+        %elseif issource && any(~cellfun('isempty',strfind(fieldnames(data), 'dimord')))
+        %  dim = [size(data.pos,1) 1]; %sparsely represented source structure new style
+    elseif isfield(data, 'dim'),
+        dim = [data.dim 1];
+    elseif issource && ~isfield(data, 'dimord')
+        dim = [size(data.pos,1) 1];
+    elseif isfield(data, 'dimord'),
+        %HACK
+        dimtok = tokenize(data.dimord, '_');
+        for i=1:length(dimtok)
+            if strcmp(dimtok(i), 'pos')
+                dim(1,i) = size(data.pos,1);
+            elseif strcmp(dimtok(i), '{pos}')
+                dim(1,i) = size(data.pos,1);
+            elseif ea_issubfield(data,dimtok{i})
+                dim(1,i) = length(ea_getsubfield(data,dimtok{i}));
+            else
+                dim(1,i) = nan; % this applies to rpt, ori
+            end
+        end
+        try
+            % the following only works for rpt, not for ori
+            i = find(isnan(dim));
+            if ~isempty(i)
+                n = fieldnames(data);
+                for ii=1:length(n)
+                    numels(1,ii) = numel(getfield(data,n{ii}));
+                end
+                nrpt = numels./prod(dim(setdiff(1:length(dim),i)));
+                nrpt = nrpt(nrpt==round(nrpt));
+                dim(i) = max(nrpt);
+            end
+        end % try
+        if numel(dim)==1, dim(1,2) = 1; end;
+    end
+    
+    % these fields should not be reshaped
+    exclude = {'cfg' 'fwhm' 'leadfield' 'q' 'rough' 'pos'};
+    if ~isempty(inside) && ~strcmp(inside, 'logical')
+        % also exclude the inside/outside from being reshaped
+        exclude = cat(2, exclude, {'inside' 'outside'});
+    end
+    
+    param = setdiff(ea_parameterselection('all', data), exclude);
+    for i=1:length(param)
+        if any(param{i}=='.')
+            % the parameter is nested in a substructure, which can have multiple elements (e.g. source.trial(1).pow, source.trial(2).pow, ...)
+            % loop over the substructure array and reshape for every element
+            tok  = tokenize(param{i}, '.');
+            sub1 = tok{1};  % i.e. this would be 'trial'
+            sub2 = tok{2};  % i.e. this would be 'pow'
+            tmp1 = getfield(data, sub1);
+            for j=1:numel(tmp1)
+                tmp2 = getfield(tmp1(j), sub2);
+                if prod(dim)==numel(tmp2)
+                    tmp2 = reshape(tmp2, dim);
+                end
+                tmp1(j) = setfield(tmp1(j), sub2, tmp2);
+            end
+            data = setfield(data, sub1, tmp1);
+        else
+            tmp  = getfield(data, param{i});
+            if prod(dim)==numel(tmp)
+                tmp  = reshape(tmp, dim);
+            end
+            data = setfield(data, param{i}, tmp);
+        end
+    end
+    
 end
 
 if isequal(hastrials, 'yes')
-  okflag = isfield(data, 'trial');
-  if ~okflag && isfield(data, 'dimord')
-    % instead look in the dimord for rpt or subj
-    okflag = ~isempty(strfind(data.dimord, 'rpt')) || ...
-      ~isempty(strfind(data.dimord, 'rpttap')) || ...
-      ~isempty(strfind(data.dimord, 'subj'));
-  end
-  if ~okflag
-    error('This function requires data with a ''trial'' field');
-  end % if okflag
+    okflag = isfield(data, 'trial');
+    if ~okflag && isfield(data, 'dimord')
+        % instead look in the dimord for rpt or subj
+        okflag = ~isempty(strfind(data.dimord, 'rpt')) || ...
+            ~isempty(strfind(data.dimord, 'rpttap')) || ...
+            ~isempty(strfind(data.dimord, 'subj'));
+    end
+    if ~okflag
+        error('This function requires data with a ''trial'' field');
+    end % if okflag
 end
 
 if isequal(hasdim, 'yes') && ~isfield(data, 'dim')
-  data.dim = pos2dim(data.pos);
+    data.dim = pos2dim(data.pos);
 elseif isequal(hasdim, 'no') && isfield(data, 'dim')
-  data = rmfield(data, 'dim');
+    data = rmfield(data, 'dim');
 end % if hasdim
 
 if isequal(hascumtapcnt, 'yes') && ~isfield(data, 'cumtapcnt')
-  error('This function requires data with a ''cumtapcnt'' field');
+    error('This function requires data with a ''cumtapcnt'' field');
 elseif isequal(hascumtapcnt, 'no') && isfield(data, 'cumtapcnt')
-  data = rmfield(data, 'cumtapcnt');
+    data = rmfield(data, 'cumtapcnt');
 end % if hascumtapcnt
 
 if isequal(hasdof, 'yes') && ~isfield(data, 'hasdof')
-  error('This function requires data with a ''dof'' field');
+    error('This function requires data with a ''dof'' field');
 elseif isequal(hasdof, 'no') && isfield(data, 'hasdof')
-  data = rmfield(data, 'cumtapcnt');
+    data = rmfield(data, 'cumtapcnt');
 end % if hasdof
 
 if ~isempty(cmbrepresentation)
-  if istimelock
-    data = ea_fixcov(data, cmbrepresentation);
-  elseif isfreq
-    data = ea_fixcsd(data, cmbrepresentation, channelcmb);
-  elseif isfreqmvar
-    data = ea_fixcsd(data, cmbrepresentation, channelcmb);
-  else
-    error('This function requires data with a covariance, coherence or cross-spectrum');
-  end
+    if istimelock
+        data = ea_fixcov(data, cmbrepresentation);
+    elseif isfreq
+        data = ea_fixcsd(data, cmbrepresentation, channelcmb);
+    elseif isfreqmvar
+        data = ea_fixcsd(data, cmbrepresentation, channelcmb);
+    else
+        error('This function requires data with a covariance, coherence or cross-spectrum');
+    end
 end % cmbrepresentation
 
 if isfield(data, 'grad')
-  % ensure that the gradiometer structure is up to date
-  data.grad = ft_datatype_sens(data.grad);
+    % ensure that the gradiometer structure is up to date
+    data.grad = ft_datatype_sens(data.grad);
 end
 
 if isfield(data, 'elec')
-  % ensure that the electrode structure is up to date
-  data.elec = ft_datatype_sens(data.elec);
+    % ensure that the electrode structure is up to date
+    data.elec = ft_datatype_sens(data.elec);
 end
 
 
@@ -2206,43 +2223,43 @@ function [select] = ea_parameterselection(param, data)
 % $Id: parameterselection.m 9766 2014-08-06 09:51:26Z eelspa $
 
 if ischar(param)
-  param = {param};   % it should be a cell-array
+    param = {param};   % it should be a cell-array
 elseif isempty(param)
-  param = {};        % even being empty, it should be a cell-array
+    param = {};        % even being empty, it should be a cell-array
 end
 
 sel = find(strcmp(param, 'all'));
 if ~isempty(sel)
-  % the old default was a list of all known volume parameters
-  % the new default is to try all fields present in the data
-  allparam = fieldnames(data);
-  % fields can be nested in source.avg
-  if isfield(data, 'avg') && isstruct(data.avg)
-    tmp = fieldnames(data.avg);
-    for i=1:length(tmp)
-      tmp{i} = ['avg.' tmp{i}];
+    % the old default was a list of all known volume parameters
+    % the new default is to try all fields present in the data
+    allparam = fieldnames(data);
+    % fields can be nested in source.avg
+    if isfield(data, 'avg') && isstruct(data.avg)
+        tmp = fieldnames(data.avg);
+        for i=1:length(tmp)
+            tmp{i} = ['avg.' tmp{i}];
+        end
+        allparam = cat(1, allparam, tmp);
     end
-    allparam = cat(1, allparam, tmp);
-  end
-  % fields can be nested in source.trial
-  if isfield(data, 'trial') && isstruct(data.trial)
-    tmp = fieldnames(data.trial);
-    for i=1:length(tmp)
-      tmp{i} = ['trial.' tmp{i}];
+    % fields can be nested in source.trial
+    if isfield(data, 'trial') && isstruct(data.trial)
+        tmp = fieldnames(data.trial);
+        for i=1:length(tmp)
+            tmp{i} = ['trial.' tmp{i}];
+        end
+        allparam = cat(1, allparam, tmp);
     end
-    allparam = cat(1, allparam, tmp);
-  end
-  param(sel) = [];                          % remove the 'all'
-  param      = [param(:)' allparam(:)'];    % add the list of all possible parameters, these will be tested later
+    param(sel) = [];                          % remove the 'all'
+    param      = [param(:)' allparam(:)'];    % add the list of all possible parameters, these will be tested later
 else
-  % check all specified parameters and give support for some parameters like 'pow' and 'coh'
-  % which most often will indicate 'avg.pow' and 'avg.coh'
-  for i=1:length(param)
-    if ~ea_issubfield(data, param{i}) && ea_issubfield(data, ['avg.' param{i}])
-      % replace the parameter xxx by avg.xxx
-      param{i} = ['avg.' param{i}];
+    % check all specified parameters and give support for some parameters like 'pow' and 'coh'
+    % which most often will indicate 'avg.pow' and 'avg.coh'
+    for i=1:length(param)
+        if ~ea_issubfield(data, param{i}) && ea_issubfield(data, ['avg.' param{i}])
+            % replace the parameter xxx by avg.xxx
+            param{i} = ['avg.' param{i}];
+        end
     end
-  end
 end
 
 % remove empty fields
@@ -2253,36 +2270,36 @@ param = unique(param);
 
 select = {};
 for i=1:length(param)
-  if ea_issubfield(data, param{i})
-    % the field is present, check whether the dimension is correct
-    dim = size(ea_getsubfield(data, param{i}));
-    if isfield(data, 'dim') && isequal(dim(:), data.dim(:))
-      select{end+1} = param{i};
-    elseif isfield(data, 'dim') && prod(dim)==prod(data.dim)
-      select{end+1} = param{i};
-    elseif isfield(data, 'dim') && numel(dim)==3 && isequal(dim(1:3)', data.dim(:))
-      select{end+1} = param{i};
-    elseif isfield(data, 'pos') && (prod(dim)==size(data.pos, 1) || dim(1)==size(data.pos,1))
-      select{end+1} = param{i};
-    elseif isfield(data, 'dimord') && (isfield(data, 'pos') || isfield(data, 'transform')),
-      dimtok = tokenize(data.dimord, '_');
-      nels   = 1;
-      for k=1:numel(dimtok)
-        if strcmp(dimtok{k}, 'rpt') || strcmp(dimtok{k}, 'rpttap')
-          nels = nels*dim(k);
-        elseif strcmp(dimtok{k}, 'pos') && isfield(data, 'pos')
-          nels = nels*size(data.pos,1);
-        elseif strcmp(dimtok{k}, '{pos}') && isfield(data, 'pos')
-          nels = nels*size(data.pos,1);
-        elseif isfield(data, dimtok{k})
-          nels = nels*numel(getfield(data, dimtok{k}));
+    if ea_issubfield(data, param{i})
+        % the field is present, check whether the dimension is correct
+        dim = size(ea_getsubfield(data, param{i}));
+        if isfield(data, 'dim') && isequal(dim(:), data.dim(:))
+            select{end+1} = param{i};
+        elseif isfield(data, 'dim') && prod(dim)==prod(data.dim)
+            select{end+1} = param{i};
+        elseif isfield(data, 'dim') && numel(dim)==3 && isequal(dim(1:3)', data.dim(:))
+            select{end+1} = param{i};
+        elseif isfield(data, 'pos') && (prod(dim)==size(data.pos, 1) || dim(1)==size(data.pos,1))
+            select{end+1} = param{i};
+        elseif isfield(data, 'dimord') && (isfield(data, 'pos') || isfield(data, 'transform')),
+            dimtok = tokenize(data.dimord, '_');
+            nels   = 1;
+            for k=1:numel(dimtok)
+                if strcmp(dimtok{k}, 'rpt') || strcmp(dimtok{k}, 'rpttap')
+                    nels = nels*dim(k);
+                elseif strcmp(dimtok{k}, 'pos') && isfield(data, 'pos')
+                    nels = nels*size(data.pos,1);
+                elseif strcmp(dimtok{k}, '{pos}') && isfield(data, 'pos')
+                    nels = nels*size(data.pos,1);
+                elseif isfield(data, dimtok{k})
+                    nels = nels*numel(getfield(data, dimtok{k}));
+                end
+            end
+            if nels==prod(dim),
+                select{end+1} = param{i};
+            end
         end
-      end
-      if nels==prod(dim),
-        select{end+1} = param{i};
-      end
     end
-  end
 end
 
 function [s] = ea_getsubfield(s, f)
@@ -2319,17 +2336,17 @@ function [s] = ea_getsubfield(s, f)
 % $Id: getsubfield.m 10198 2015-02-11 09:36:13Z roboos $
 
 if iscell(f)
-  f = f{1};
+    f = f{1};
 end
 
 if ~ischar(f)
-  error('incorrect input argument for fieldname');
+    error('incorrect input argument for fieldname');
 end
 
 t = textscan(f,'%s','delimiter','.');
 t = t{1};
 for k = 1:numel(t)
-  s = s.(t{k});
+    s = s.(t{k});
 end
 
 
@@ -2338,22 +2355,22 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = ea_fixcov(data, desired)
 if any(isfield(data, {'cov', 'corr'}))
-  if ~isfield(data, 'labelcmb')
-    current = 'full';
-  else
-    current = 'sparse';
-  end
+    if ~isfield(data, 'labelcmb')
+        current = 'full';
+    else
+        current = 'sparse';
+    end
 else
-  error('Could not determine the current representation of the covariance matrix');
+    error('Could not determine the current representation of the covariance matrix');
 end
 if isequal(current, desired)
-  % nothing to do
+    % nothing to do
 elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
-  % FIXME should be implemented
-  error('not yet implemented');
+    % FIXME should be implemented
+    error('not yet implemented');
 elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
-  % FIXME should be implemented
-  error('not yet implemented');
+    % FIXME should be implemented
+    error('not yet implemented');
 end
 
 function y = ea_istrue(x)
@@ -2385,17 +2402,17 @@ true_list  = {'yes' 'true' 'on' 'y' };
 false_list = {'no' 'false' 'off' 'n' 'none'};
 
 if ischar(x)
-  % convert string to boolean value
-  if any(strcmpi(x, true_list))
-    y = true;
-  elseif any(strcmpi(x, false_list))
-    y = false;
-  else
-    error('cannot determine whether "%s" should be interpreted as true or false', x);
-  end
+    % convert string to boolean value
+    if any(strcmpi(x, true_list))
+        y = true;
+    elseif any(strcmpi(x, false_list))
+        y = false;
+    else
+        error('cannot determine whether "%s" should be interpreted as true or false', x);
+    end
 else
-  % convert numerical value to boolean
-  y = logical(x);
+    % convert numerical value to boolean
+    y = logical(x);
 end
 
 
@@ -2413,508 +2430,508 @@ function [data] = ea_fixcsd(data, desired, channelcmb)
 % Copyright (C) 2010, Jan-Mathijs Schoffelen, Robert Oostenveld
 
 if isfield(data, 'crsspctrm') && isfield(data, 'powspctrm')
-  current = 'sparsewithpow';
+    current = 'sparsewithpow';
 elseif isfield(data, 'powspctrm')
-  current = 'sparsewithpow';
+    current = 'sparsewithpow';
 elseif isfield(data, 'fourierspctrm') && ~isfield(data, 'labelcmb')
-  current = 'fourier';
+    current = 'fourier';
 elseif ~isfield(data, 'labelcmb')
-  current = 'full';
+    current = 'full';
 elseif isfield(data, 'labelcmb')
-  current = 'sparse';
+    current = 'sparse';
 else
-  error('Could not determine the current representation of the %s matrix', param);
+    error('Could not determine the current representation of the %s matrix', param);
 end
 
 % first go from univariate fourier to the required bivariate representation
 if isequal(current, desired)
-  % nothing to do
-  
+    % nothing to do
+    
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
-  dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpttap',   dimtok)),
-    nrpt = size(data.cumtapcnt,1);
-    flag = 0;
-  else
-    nrpt = 1;
-  end
-  if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);      else nfrq = 1; end
-  if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);      else ntim = 1; end
-  
-  fastflag = all(data.cumtapcnt(:)==data.cumtapcnt(1));
-  flag     = nrpt==1; % needed to truncate the singleton dimension upfront
-  
-  %create auto-spectra
-  nchan     = length(data.label);
-  if fastflag
-    % all trials have the same amount of tapers
-    powspctrm = zeros(nrpt,nchan,nfrq,ntim);
-    ntap      = data.cumtapcnt(1);
-    for p = 1:ntap
-      powspctrm = powspctrm + abs(data.fourierspctrm(p:ntap:end,:,:,:,:)).^2;
+    dimtok = tokenize(data.dimord, '_');
+    if ~isempty(strmatch('rpttap',   dimtok)),
+        nrpt = size(data.cumtapcnt,1);
+        flag = 0;
+    else
+        nrpt = 1;
     end
-    powspctrm = powspctrm./ntap;
-  else
-    % different amount of tapers
-    powspctrm = zeros(nrpt,nchan,nfrq,ntim)+i.*zeros(nrpt,nchan,nfrq,ntim);
-    sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
-    for p = 1:nrpt
-      indx   = (sumtapcnt(p)+1):sumtapcnt(p+1);
-      tmpdat = data.fourierspctrm(indx,:,:,:);
-      powspctrm(p,:,:,:) = (sum(tmpdat.*conj(tmpdat),1))./data.cumtapcnt(p);
+    if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);      else nfrq = 1; end
+    if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);      else ntim = 1; end
+    
+    fastflag = all(data.cumtapcnt(:)==data.cumtapcnt(1));
+    flag     = nrpt==1; % needed to truncate the singleton dimension upfront
+    
+    %create auto-spectra
+    nchan     = length(data.label);
+    if fastflag
+        % all trials have the same amount of tapers
+        powspctrm = zeros(nrpt,nchan,nfrq,ntim);
+        ntap      = data.cumtapcnt(1);
+        for p = 1:ntap
+            powspctrm = powspctrm + abs(data.fourierspctrm(p:ntap:end,:,:,:,:)).^2;
+        end
+        powspctrm = powspctrm./ntap;
+    else
+        % different amount of tapers
+        powspctrm = zeros(nrpt,nchan,nfrq,ntim)+i.*zeros(nrpt,nchan,nfrq,ntim);
+        sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
+        for p = 1:nrpt
+            indx   = (sumtapcnt(p)+1):sumtapcnt(p+1);
+            tmpdat = data.fourierspctrm(indx,:,:,:);
+            powspctrm(p,:,:,:) = (sum(tmpdat.*conj(tmpdat),1))./data.cumtapcnt(p);
+        end
     end
-  end
-  
-  %create cross-spectra
-  if ~isempty(channelcmb),
+    
+    %create cross-spectra
+    if ~isempty(channelcmb),
+        ncmb      = size(channelcmb,1);
+        cmbindx   = zeros(ncmb,2);
+        labelcmb  = cell(ncmb,2);
+        for k = 1:ncmb
+            ch1 = find(strcmp(data.label, channelcmb(k,1)));
+            ch2 = find(strcmp(data.label, channelcmb(k,2)));
+            if ~isempty(ch1) && ~isempty(ch2),
+                cmbindx(k,:)  = [ch1 ch2];
+                labelcmb(k,:) = data.label([ch1 ch2])';
+            end
+        end
+        
+        crsspctrm = zeros(nrpt,ncmb,nfrq,ntim)+i.*zeros(nrpt,ncmb,nfrq,ntim);
+        if fastflag
+            for p = 1:ntap
+                tmpdat1   = data.fourierspctrm(p:ntap:end,cmbindx(:,1),:,:,:);
+                tmpdat2   = data.fourierspctrm(p:ntap:end,cmbindx(:,2),:,:,:);
+                crsspctrm = crsspctrm + tmpdat1.*conj(tmpdat2);
+            end
+            crsspctrm = crsspctrm./ntap;
+        else
+            for p = 1:nrpt
+                indx    = (sumtapcnt(p)+1):sumtapcnt(p+1);
+                tmpdat1 = data.fourierspctrm(indx,cmbindx(:,1),:,:);
+                tmpdat2 = data.fourierspctrm(indx,cmbindx(:,2),:,:);
+                crsspctrm(p,:,:,:) = (sum(tmpdat1.*conj(tmpdat2),1))./data.cumtapcnt(p);
+            end
+        end
+        data.crsspctrm = crsspctrm;
+        data.labelcmb  = labelcmb;
+    end
+    data.powspctrm = powspctrm;
+    data           = rmfield(data, 'fourierspctrm');
+    if ntim>1,
+        data.dimord = 'chan_freq_time';
+    else
+        data.dimord = 'chan_freq';
+    end
+    
+    if nrpt>1,
+        data.dimord = ['rpt_',data.dimord];
+    end
+    
+    if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]); end
+elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
+    
+    if isempty(channelcmb), error('no channel combinations are specified'); end
+    dimtok = tokenize(data.dimord, '_');
+    if ~isempty(strmatch('rpttap',   dimtok)),
+        nrpt = size(data.cumtapcnt,1);
+        flag = 0;
+    else
+        nrpt = 1;
+    end
+    if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq); else nfrq = 1; end
+    if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time); else ntim = 1; end
+    
+    flag      = nrpt==1; % flag needed to squeeze first dimension if singleton
     ncmb      = size(channelcmb,1);
     cmbindx   = zeros(ncmb,2);
     labelcmb  = cell(ncmb,2);
     for k = 1:ncmb
-      ch1 = find(strcmp(data.label, channelcmb(k,1)));
-      ch2 = find(strcmp(data.label, channelcmb(k,2)));
-      if ~isempty(ch1) && ~isempty(ch2),
-        cmbindx(k,:)  = [ch1 ch2];
-        labelcmb(k,:) = data.label([ch1 ch2])';
-      end
+        ch1 = find(strcmp(data.label, channelcmb(k,1)));
+        ch2 = find(strcmp(data.label, channelcmb(k,2)));
+        if ~isempty(ch1) && ~isempty(ch2),
+            cmbindx(k,:)  = [ch1 ch2];
+            labelcmb(k,:) = data.label([ch1 ch2])';
+        end
     end
     
-    crsspctrm = zeros(nrpt,ncmb,nfrq,ntim)+i.*zeros(nrpt,ncmb,nfrq,ntim);
-    if fastflag
-      for p = 1:ntap
-        tmpdat1   = data.fourierspctrm(p:ntap:end,cmbindx(:,1),:,:,:);
-        tmpdat2   = data.fourierspctrm(p:ntap:end,cmbindx(:,2),:,:,:);
-        crsspctrm = crsspctrm + tmpdat1.*conj(tmpdat2);
-      end
-      crsspctrm = crsspctrm./ntap;
+    sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
+    fastflag  = all(data.cumtapcnt(:)==data.cumtapcnt(1));
+    
+    if fastflag && nrpt>1
+        ntap = data.cumtapcnt(1);
+        
+        % compute running sum across tapers
+        siz = [size(data.fourierspctrm) 1];
+        
+        for p = 1:ntap
+            indx      = p:ntap:nrpt*ntap;
+            
+            if p==1.
+                
+                tmpc = zeros(numel(indx), size(cmbindx,1), siz(3), siz(4)) + ...
+                    1i.*zeros(numel(indx), size(cmbindx,1), siz(3), siz(4));
+            end
+            
+            for k = 1:size(cmbindx,1)
+                tmpc(:,k,:,:) = data.fourierspctrm(indx,cmbindx(k,1),:,:).*  ...
+                    conj(data.fourierspctrm(indx,cmbindx(k,2),:,:));
+            end
+            
+            if p==1
+                crsspctrm = tmpc;
+            else
+                crsspctrm = tmpc + crsspctrm;
+            end
+        end
+        crsspctrm = crsspctrm./ntap;
     else
-      for p = 1:nrpt
-        indx    = (sumtapcnt(p)+1):sumtapcnt(p+1);
-        tmpdat1 = data.fourierspctrm(indx,cmbindx(:,1),:,:);
-        tmpdat2 = data.fourierspctrm(indx,cmbindx(:,2),:,:);
-        crsspctrm(p,:,:,:) = (sum(tmpdat1.*conj(tmpdat2),1))./data.cumtapcnt(p);
-      end
+        crsspctrm = zeros(nrpt, ncmb, nfrq, ntim);
+        for p = 1:nrpt
+            indx    = (sumtapcnt(p)+1):sumtapcnt(p+1);
+            tmpdat1 = data.fourierspctrm(indx,cmbindx(:,1),:,:);
+            tmpdat2 = data.fourierspctrm(indx,cmbindx(:,2),:,:);
+            crsspctrm(p,:,:,:) = (sum(tmpdat1.*conj(tmpdat2),1))./data.cumtapcnt(p);
+        end
     end
     data.crsspctrm = crsspctrm;
     data.labelcmb  = labelcmb;
-  end
-  data.powspctrm = powspctrm;
-  data           = rmfield(data, 'fourierspctrm');
-  if ntim>1,
-    data.dimord = 'chan_freq_time';
-  else
-    data.dimord = 'chan_freq';
-  end
-  
-  if nrpt>1,
-    data.dimord = ['rpt_',data.dimord];
-  end
-  
-  if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]); end
-elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
-  
-  if isempty(channelcmb), error('no channel combinations are specified'); end
-  dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpttap',   dimtok)),
-    nrpt = size(data.cumtapcnt,1);
-    flag = 0;
-  else
-    nrpt = 1;
-  end
-  if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq); else nfrq = 1; end
-  if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time); else ntim = 1; end
-  
-  flag      = nrpt==1; % flag needed to squeeze first dimension if singleton
-  ncmb      = size(channelcmb,1);
-  cmbindx   = zeros(ncmb,2);
-  labelcmb  = cell(ncmb,2);
-  for k = 1:ncmb
-    ch1 = find(strcmp(data.label, channelcmb(k,1)));
-    ch2 = find(strcmp(data.label, channelcmb(k,2)));
-    if ~isempty(ch1) && ~isempty(ch2),
-      cmbindx(k,:)  = [ch1 ch2];
-      labelcmb(k,:) = data.label([ch1 ch2])';
+    data           = rmfield(data, 'fourierspctrm');
+    data           = rmfield(data, 'label');
+    if ntim>1,
+        data.dimord = 'chancmb_freq_time';
+    else
+        data.dimord = 'chancmb_freq';
     end
-  end
-  
-  sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
-  fastflag  = all(data.cumtapcnt(:)==data.cumtapcnt(1));
-  
-  if fastflag && nrpt>1
-    ntap = data.cumtapcnt(1);
     
-    % compute running sum across tapers
-    siz = [size(data.fourierspctrm) 1];
+    if nrpt>1,
+        data.dimord = ['rpt_',data.dimord];
+    end
     
-    for p = 1:ntap
-      indx      = p:ntap:nrpt*ntap;
-      
-      if p==1.
-        
-        tmpc = zeros(numel(indx), size(cmbindx,1), siz(3), siz(4)) + ...
-          1i.*zeros(numel(indx), size(cmbindx,1), siz(3), siz(4));
-      end
-      
-      for k = 1:size(cmbindx,1)
-        tmpc(:,k,:,:) = data.fourierspctrm(indx,cmbindx(k,1),:,:).*  ...
-          conj(data.fourierspctrm(indx,cmbindx(k,2),:,:));
-      end
-      
-      if p==1
-        crsspctrm = tmpc;
-      else
-        crsspctrm = tmpc + crsspctrm;
-      end
-    end
-    crsspctrm = crsspctrm./ntap;
-  else
-    crsspctrm = zeros(nrpt, ncmb, nfrq, ntim);
-    for p = 1:nrpt
-      indx    = (sumtapcnt(p)+1):sumtapcnt(p+1);
-      tmpdat1 = data.fourierspctrm(indx,cmbindx(:,1),:,:);
-      tmpdat2 = data.fourierspctrm(indx,cmbindx(:,2),:,:);
-      crsspctrm(p,:,:,:) = (sum(tmpdat1.*conj(tmpdat2),1))./data.cumtapcnt(p);
-    end
-  end
-  data.crsspctrm = crsspctrm;
-  data.labelcmb  = labelcmb;
-  data           = rmfield(data, 'fourierspctrm');
-  data           = rmfield(data, 'label');
-  if ntim>1,
-    data.dimord = 'chancmb_freq_time';
-  else
-    data.dimord = 'chancmb_freq';
-  end
-  
-  if nrpt>1,
-    data.dimord = ['rpt_',data.dimord];
-  end
-  
-  if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]); end
+    if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]); end
 elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
-  
-  % this is how it is currently and the desired functionality of prepare_freq_matrices
-  dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpttap',   dimtok)),
-    nrpt = size(data.cumtapcnt, 1);
-    flag = 0;
-  else
-    nrpt = 1;
-    flag = 1;
-  end
-  if ~isempty(strmatch('rpttap',dimtok)), nrpt=size(data.cumtapcnt, 1); else nrpt = 1; end
-  if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);       else nfrq = 1; end
-  if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);       else ntim = 1; end
-  if any(data.cumtapcnt(1,:) ~= data.cumtapcnt(1,1)), error('this only works when all frequencies have the same number of tapers'); end
-  nchan     = length(data.label);
-  crsspctrm = zeros(nrpt,nchan,nchan,nfrq,ntim);
-  sumtapcnt = [0;cumsum(data.cumtapcnt(:,1))];
-  for k = 1:ntim
-    for m = 1:nfrq
-      for p = 1:nrpt
-        %FIXME speed this up in the case that all trials have equal number of tapers
-        indx   = (sumtapcnt(p)+1):sumtapcnt(p+1);
-        tmpdat = transpose(data.fourierspctrm(indx,:,m,k));
-        crsspctrm(p,:,:,m,k) = (tmpdat*tmpdat')./data.cumtapcnt(p);
-        clear tmpdat;
-      end
+    
+    % this is how it is currently and the desired functionality of prepare_freq_matrices
+    dimtok = tokenize(data.dimord, '_');
+    if ~isempty(strmatch('rpttap',   dimtok)),
+        nrpt = size(data.cumtapcnt, 1);
+        flag = 0;
+    else
+        nrpt = 1;
+        flag = 1;
     end
-  end
-  data.crsspctrm = crsspctrm;
-  data           = rmfield(data, 'fourierspctrm');
-  
-  if ntim>1,
-    data.dimord = 'chan_chan_freq_time';
-  else
-    data.dimord = 'chan_chan_freq';
-  end
-  
-  if nrpt>1,
-    data.dimord = ['rpt_',data.dimord];
-  end
-  
-  % remove first singleton dimension
-  if flag || nrpt==1, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, siz(2:end)); end
-  
+    if ~isempty(strmatch('rpttap',dimtok)), nrpt=size(data.cumtapcnt, 1); else nrpt = 1; end
+    if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);       else nfrq = 1; end
+    if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);       else ntim = 1; end
+    if any(data.cumtapcnt(1,:) ~= data.cumtapcnt(1,1)), error('this only works when all frequencies have the same number of tapers'); end
+    nchan     = length(data.label);
+    crsspctrm = zeros(nrpt,nchan,nchan,nfrq,ntim);
+    sumtapcnt = [0;cumsum(data.cumtapcnt(:,1))];
+    for k = 1:ntim
+        for m = 1:nfrq
+            for p = 1:nrpt
+                %FIXME speed this up in the case that all trials have equal number of tapers
+                indx   = (sumtapcnt(p)+1):sumtapcnt(p+1);
+                tmpdat = transpose(data.fourierspctrm(indx,:,m,k));
+                crsspctrm(p,:,:,m,k) = (tmpdat*tmpdat')./data.cumtapcnt(p);
+                clear tmpdat;
+            end
+        end
+    end
+    data.crsspctrm = crsspctrm;
+    data           = rmfield(data, 'fourierspctrm');
+    
+    if ntim>1,
+        data.dimord = 'chan_chan_freq_time';
+    else
+        data.dimord = 'chan_chan_freq';
+    end
+    
+    if nrpt>1,
+        data.dimord = ['rpt_',data.dimord];
+    end
+    
+    % remove first singleton dimension
+    if flag || nrpt==1, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, siz(2:end)); end
+    
 elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
-  
-  dimtok = tokenize(data.dimord, '_');
-  nrpt = size(data.fourierspctrm, 1);
-  nchn = numel(data.label);
-  nfrq = numel(data.freq);
-  if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time); else ntim = 1; end
-  
-  data.fourierspctrm = reshape(data.fourierspctrm, [nrpt nchn nfrq*ntim]);
-  data.fourierspctrm(~isfinite(data.fourierspctrm)) = 0;
-  crsspctrm = complex(zeros(nchn,nchn,nfrq*ntim));
-  for k = 1:nfrq*ntim
-    tmp = transpose(data.fourierspctrm(:,:,k));
-    n   = sum(tmp~=0,2);
-    crsspctrm(:,:,k) = tmp*tmp'./n(1);
-  end
-  data           = rmfield(data, 'fourierspctrm');
-  data.crsspctrm = reshape(crsspctrm, [nchn nchn nfrq ntim]);
-  if isfield(data, 'time'),
-    data.dimord = 'chan_chan_freq_time';
-  else
-    data.dimord = 'chan_chan_freq';
-  end
-  
-  if isfield(data, 'trialinfo'),  data = rmfield(data, 'trialinfo'); end;
-  if isfield(data, 'sampleinfo'), data = rmfield(data, 'sampleinfo'); end;
-  if isfield(data, 'cumsumcnt'),  data = rmfield(data, 'cumsumcnt');  end;
-  if isfield(data, 'cumtapcnt'),  data = rmfield(data, 'cumtapcnt');  end;
-  
+    
+    dimtok = tokenize(data.dimord, '_');
+    nrpt = size(data.fourierspctrm, 1);
+    nchn = numel(data.label);
+    nfrq = numel(data.freq);
+    if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time); else ntim = 1; end
+    
+    data.fourierspctrm = reshape(data.fourierspctrm, [nrpt nchn nfrq*ntim]);
+    data.fourierspctrm(~isfinite(data.fourierspctrm)) = 0;
+    crsspctrm = complex(zeros(nchn,nchn,nfrq*ntim));
+    for k = 1:nfrq*ntim
+        tmp = transpose(data.fourierspctrm(:,:,k));
+        n   = sum(tmp~=0,2);
+        crsspctrm(:,:,k) = tmp*tmp'./n(1);
+    end
+    data           = rmfield(data, 'fourierspctrm');
+    data.crsspctrm = reshape(crsspctrm, [nchn nchn nfrq ntim]);
+    if isfield(data, 'time'),
+        data.dimord = 'chan_chan_freq_time';
+    else
+        data.dimord = 'chan_chan_freq';
+    end
+    
+    if isfield(data, 'trialinfo'),  data = rmfield(data, 'trialinfo'); end;
+    if isfield(data, 'sampleinfo'), data = rmfield(data, 'sampleinfo'); end;
+    if isfield(data, 'cumsumcnt'),  data = rmfield(data, 'cumsumcnt');  end;
+    if isfield(data, 'cumtapcnt'),  data = rmfield(data, 'cumtapcnt');  end;
+    
 end % convert to the requested bivariate representation
 
 % from one bivariate representation to another
 if isequal(current, desired)
-  % nothing to do
-  
+    % nothing to do
+    
 elseif (strcmp(current, 'full')       && strcmp(desired, 'fourier')) || ...
-    (strcmp(current, 'sparse')        && strcmp(desired, 'fourier')) || ...
-    (strcmp(current, 'sparsewithpow') && strcmp(desired, 'fourier'))
-  % this is not possible
-  error('converting the cross-spectrum into a Fourier representation is not possible');
-  
+        (strcmp(current, 'sparse')        && strcmp(desired, 'fourier')) || ...
+        (strcmp(current, 'sparsewithpow') && strcmp(desired, 'fourier'))
+    % this is not possible
+    error('converting the cross-spectrum into a Fourier representation is not possible');
+    
 elseif strcmp(current, 'full') && strcmp(desired, 'sparsewithpow')
-  error('not yet implemented');
-  
+    error('not yet implemented');
+    
 elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
-  % convert back to crsspctrm/powspctrm representation: useful for plotting functions etc
-  indx     = labelcmb2indx(data.labelcmb);
-  autoindx = indx(indx(:,1)==indx(:,2), 1);
-  cmbindx  = setdiff([1:size(indx,1)]', autoindx);
-  
-  if strcmp(data.dimord(1:3), 'rpt')
-    data.powspctrm = data.crsspctrm(:, autoindx, :, :);
-    data.crsspctrm = data.crsspctrm(:, cmbindx,  :, :);
-  else
-    data.powspctrm = data.crsspctrm(autoindx, :, :);
-    data.crsspctrm = data.crsspctrm(cmbindx,  :, :);
-  end
-  data.label    = data.labelcmb(autoindx,1);
-  data.labelcmb = data.labelcmb(cmbindx, :);
-  
-  if isempty(cmbindx)
-    data = rmfield(data, 'crsspctrm');
-    data = rmfield(data, 'labelcmb');
-  end
-  
+    % convert back to crsspctrm/powspctrm representation: useful for plotting functions etc
+    indx     = labelcmb2indx(data.labelcmb);
+    autoindx = indx(indx(:,1)==indx(:,2), 1);
+    cmbindx  = setdiff([1:size(indx,1)]', autoindx);
+    
+    if strcmp(data.dimord(1:3), 'rpt')
+        data.powspctrm = data.crsspctrm(:, autoindx, :, :);
+        data.crsspctrm = data.crsspctrm(:, cmbindx,  :, :);
+    else
+        data.powspctrm = data.crsspctrm(autoindx, :, :);
+        data.crsspctrm = data.crsspctrm(cmbindx,  :, :);
+    end
+    data.label    = data.labelcmb(autoindx,1);
+    data.labelcmb = data.labelcmb(cmbindx, :);
+    
+    if isempty(cmbindx)
+        data = rmfield(data, 'crsspctrm');
+        data = rmfield(data, 'labelcmb');
+    end
+    
 elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
-  dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
-  if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
-  if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
-  nchan    = length(data.label);
-  ncmb     = nchan*nchan;
-  labelcmb = cell(ncmb, 2);
-  cmbindx  = zeros(nchan, nchan);
-  k = 1;
-  for j=1:nchan
-    for m=1:nchan
-      labelcmb{k, 1} = data.label{m};
-      labelcmb{k, 2} = data.label{j};
-      cmbindx(m,j)   = k;
-      k = k+1;
+    dimtok = tokenize(data.dimord, '_');
+    if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
+    if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
+    if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
+    nchan    = length(data.label);
+    ncmb     = nchan*nchan;
+    labelcmb = cell(ncmb, 2);
+    cmbindx  = zeros(nchan, nchan);
+    k = 1;
+    for j=1:nchan
+        for m=1:nchan
+            labelcmb{k, 1} = data.label{m};
+            labelcmb{k, 2} = data.label{j};
+            cmbindx(m,j)   = k;
+            k = k+1;
+        end
     end
-  end
-  
-  % reshape all possible fields
-  fn = fieldnames(data);
-  for ii=1:numel(fn)
-    if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
-      if nrpt>1,
-        data.(fn{ii}) = reshape(data.(fn{ii}), nrpt, ncmb, nfrq, ntim);
-      else
-        data.(fn{ii}) = reshape(data.(fn{ii}), ncmb, nfrq, ntim);
-      end
-    end
-  end
-  % remove obsolete fields
-  data           = rmfield(data, 'label');
-  try data      = rmfield(data, 'dof'); end
-  % replace updated fields
-  data.labelcmb  = labelcmb;
-  if ntim>1,
-    data.dimord = 'chancmb_freq_time';
-  else
-    data.dimord = 'chancmb_freq';
-  end
-  
-  if nrpt>1,
-    data.dimord = ['rpt_',data.dimord];
-  end
-  
-elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
-  % this representation for sparse data contains autospectra as e.g. {'A' 'A'} in labelcmb
-  if isfield(data, 'crsspctrm'),
-    dimtok         = tokenize(data.dimord, '_');
-    catdim         = match_str(dimtok, {'chan' 'chancmb'});
-    data.crsspctrm = cat(catdim, data.powspctrm, data.crsspctrm);
-    data.labelcmb  = [data.label(:) data.label(:); data.labelcmb];
-    data           = rmfield(data, 'powspctrm');
-  else
-    data.crsspctrm = data.powspctrm;
-    data.labelcmb  = [data.label(:) data.label(:)];
-    data           = rmfield(data, 'powspctrm');
-  end
-  data = rmfield(data, 'label');
-  
-elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
-  dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
-  if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
-  if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
-  
-  if ~isfield(data, 'label')
-    % ensure that the bivariate spectral factorization results can be
-    % processed. FIXME this is experimental and will not work if the user
-    % did something weird before
-    for k = 1:numel(data.labelcmb)
-      tmp = tokenize(data.labelcmb{k}, '[');
-      data.labelcmb{k} = tmp{1};
-    end
-    data.label = unique(data.labelcmb(:));
-  end
-  
-  nchan     = length(data.label);
-  ncmb      = size(data.labelcmb,1);
-  cmbindx   = zeros(nchan,nchan);
-  
-  for k = 1:size(data.labelcmb,1)
-    ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
-    ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
-    if ~isempty(ch1) && ~isempty(ch2),
-      cmbindx(ch1,ch2) = k;
-    end
-  end
-  
-  complete = all(cmbindx(:)~=0);
-  
-  fn = fieldnames(data);
-  for ii=1:numel(fn)
-    if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
-      if nrpt==1,
-        data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
-      end
-      
-      tmpall = nan(nrpt,nchan,nchan,nfrq,ntim);
-      
-      for j = 1:nrpt
-        for k = 1:ntim
-          for m = 1:nfrq
-            tmpdat = nan(nchan,nchan);
-            indx   = find(cmbindx);
-            if ~complete
-              % this realizes the missing combinations to be represented as the
-              % conjugate of the corresponding combination across the diagonal
-              tmpdat(indx) = reshape(data.(fn{ii})(j,cmbindx(indx),m,k),[numel(indx) 1]);
-              tmpdat       = ctranspose(tmpdat);
+    
+    % reshape all possible fields
+    fn = fieldnames(data);
+    for ii=1:numel(fn)
+        if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
+            if nrpt>1,
+                data.(fn{ii}) = reshape(data.(fn{ii}), nrpt, ncmb, nfrq, ntim);
+            else
+                data.(fn{ii}) = reshape(data.(fn{ii}), ncmb, nfrq, ntim);
             end
-            tmpdat(indx)    = reshape(data.(fn{ii})(j,cmbindx(indx),m,k),[numel(indx) 1]);
-            tmpall(j,:,:,m,k) = tmpdat;
-          end % for m
-        end % for k
-      end % for j
-      
-      % replace the data in the old representation with the new representation
-      if nrpt>1,
-        data.(fn{ii}) = tmpall;
-      else
-        data.(fn{ii}) = reshape(tmpall, [nchan nchan nfrq ntim]);
-      end
-    end % if numel
-  end % for ii
-  
-  % remove obsolete fields
-  try data      = rmfield(data, 'powspctrm');  end
-  try data      = rmfield(data, 'labelcmb');   end
-  try data      = rmfield(data, 'dof');        end
-  
-  if ntim>1,
-    data.dimord = 'chan_chan_freq_time';
-  else
-    data.dimord = 'chan_chan_freq';
-  end
-  
-  if nrpt>1,
-    data.dimord = ['rpt_',data.dimord];
-  end
-  
-elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
-  dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
-  if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
-  if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
-  
-  if ~isfield(data, 'label')
-    data.label = unique(data.labelcmb(:));
-  end
-  
-  nchan     = length(data.label);
-  ncmb      = size(data.labelcmb,1);
-  cmbindx   = zeros(nchan,nchan);
-  
-  for k = 1:size(data.labelcmb,1)
-    ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
-    ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
-    if ~isempty(ch1) && ~isempty(ch2),
-      cmbindx(ch1,ch2) = k;
+        end
     end
-  end
-  
-  complete = all(cmbindx(:)~=0);
-  
-  fn = fieldnames(data);
-  for ii=1:numel(fn)
-    if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
-      if nrpt==1,
-        data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
-      end
-      
-      tmpall = nan(nchan,nchan,nfrq,ntim);
-      
-      for k = 1:ntim
-        for m = 1:nfrq
-          tmpdat = nan(nchan,nchan);
-          indx   = find(cmbindx);
-          if ~complete
-            % this realizes the missing combinations to be represented as the
-            % conjugate of the corresponding combination across the diagonal
-            tmpdat(indx) = reshape(nanmean(data.(fn{ii})(:,cmbindx(indx),m,k)),[numel(indx) 1]);
-            tmpdat       = ctranspose(tmpdat);
-          end
-          tmpdat(indx)    = reshape(nanmean(data.(fn{ii})(:,cmbindx(indx),m,k)),[numel(indx) 1]);
-          tmpall(:,:,m,k) = tmpdat;
-        end % for m
-      end % for k
-      
-      % replace the data in the old representation with the new representation
-      if nrpt>1,
-        data.(fn{ii}) = tmpall;
-      else
-        data.(fn{ii}) = reshape(tmpall, [nchan nchan nfrq ntim]);
-      end
-    end % if numel
-  end % for ii
-  
-  % remove obsolete fields
-  try data      = rmfield(data, 'powspctrm');  end
-  try data      = rmfield(data, 'labelcmb');   end
-  try data      = rmfield(data, 'dof');        end
-  
-  if ntim>1,
-    data.dimord = 'chan_chan_freq_time';
-  else
-    data.dimord = 'chan_chan_freq';
-  end
-  
+    % remove obsolete fields
+    data           = rmfield(data, 'label');
+    try data      = rmfield(data, 'dof'); end
+    % replace updated fields
+    data.labelcmb  = labelcmb;
+    if ntim>1,
+        data.dimord = 'chancmb_freq_time';
+    else
+        data.dimord = 'chancmb_freq';
+    end
+    
+    if nrpt>1,
+        data.dimord = ['rpt_',data.dimord];
+    end
+    
+elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
+    % this representation for sparse data contains autospectra as e.g. {'A' 'A'} in labelcmb
+    if isfield(data, 'crsspctrm'),
+        dimtok         = tokenize(data.dimord, '_');
+        catdim         = match_str(dimtok, {'chan' 'chancmb'});
+        data.crsspctrm = cat(catdim, data.powspctrm, data.crsspctrm);
+        data.labelcmb  = [data.label(:) data.label(:); data.labelcmb];
+        data           = rmfield(data, 'powspctrm');
+    else
+        data.crsspctrm = data.powspctrm;
+        data.labelcmb  = [data.label(:) data.label(:)];
+        data           = rmfield(data, 'powspctrm');
+    end
+    data = rmfield(data, 'label');
+    
+elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
+    dimtok = tokenize(data.dimord, '_');
+    if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
+    if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
+    if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
+    
+    if ~isfield(data, 'label')
+        % ensure that the bivariate spectral factorization results can be
+        % processed. FIXME this is experimental and will not work if the user
+        % did something weird before
+        for k = 1:numel(data.labelcmb)
+            tmp = tokenize(data.labelcmb{k}, '[');
+            data.labelcmb{k} = tmp{1};
+        end
+        data.label = unique(data.labelcmb(:));
+    end
+    
+    nchan     = length(data.label);
+    ncmb      = size(data.labelcmb,1);
+    cmbindx   = zeros(nchan,nchan);
+    
+    for k = 1:size(data.labelcmb,1)
+        ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
+        ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
+        if ~isempty(ch1) && ~isempty(ch2),
+            cmbindx(ch1,ch2) = k;
+        end
+    end
+    
+    complete = all(cmbindx(:)~=0);
+    
+    fn = fieldnames(data);
+    for ii=1:numel(fn)
+        if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
+            if nrpt==1,
+                data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
+            end
+            
+            tmpall = nan(nrpt,nchan,nchan,nfrq,ntim);
+            
+            for j = 1:nrpt
+                for k = 1:ntim
+                    for m = 1:nfrq
+                        tmpdat = nan(nchan,nchan);
+                        indx   = find(cmbindx);
+                        if ~complete
+                            % this realizes the missing combinations to be represented as the
+                            % conjugate of the corresponding combination across the diagonal
+                            tmpdat(indx) = reshape(data.(fn{ii})(j,cmbindx(indx),m,k),[numel(indx) 1]);
+                            tmpdat       = ctranspose(tmpdat);
+                        end
+                        tmpdat(indx)    = reshape(data.(fn{ii})(j,cmbindx(indx),m,k),[numel(indx) 1]);
+                        tmpall(j,:,:,m,k) = tmpdat;
+                    end % for m
+                end % for k
+            end % for j
+            
+            % replace the data in the old representation with the new representation
+            if nrpt>1,
+                data.(fn{ii}) = tmpall;
+            else
+                data.(fn{ii}) = reshape(tmpall, [nchan nchan nfrq ntim]);
+            end
+        end % if numel
+    end % for ii
+    
+    % remove obsolete fields
+    try data      = rmfield(data, 'powspctrm');  end
+    try data      = rmfield(data, 'labelcmb');   end
+    try data      = rmfield(data, 'dof');        end
+    
+    if ntim>1,
+        data.dimord = 'chan_chan_freq_time';
+    else
+        data.dimord = 'chan_chan_freq';
+    end
+    
+    if nrpt>1,
+        data.dimord = ['rpt_',data.dimord];
+    end
+    
+elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
+    dimtok = tokenize(data.dimord, '_');
+    if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
+    if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
+    if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
+    
+    if ~isfield(data, 'label')
+        data.label = unique(data.labelcmb(:));
+    end
+    
+    nchan     = length(data.label);
+    ncmb      = size(data.labelcmb,1);
+    cmbindx   = zeros(nchan,nchan);
+    
+    for k = 1:size(data.labelcmb,1)
+        ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
+        ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
+        if ~isempty(ch1) && ~isempty(ch2),
+            cmbindx(ch1,ch2) = k;
+        end
+    end
+    
+    complete = all(cmbindx(:)~=0);
+    
+    fn = fieldnames(data);
+    for ii=1:numel(fn)
+        if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
+            if nrpt==1,
+                data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
+            end
+            
+            tmpall = nan(nchan,nchan,nfrq,ntim);
+            
+            for k = 1:ntim
+                for m = 1:nfrq
+                    tmpdat = nan(nchan,nchan);
+                    indx   = find(cmbindx);
+                    if ~complete
+                        % this realizes the missing combinations to be represented as the
+                        % conjugate of the corresponding combination across the diagonal
+                        tmpdat(indx) = reshape(nanmean(data.(fn{ii})(:,cmbindx(indx),m,k)),[numel(indx) 1]);
+                        tmpdat       = ctranspose(tmpdat);
+                    end
+                    tmpdat(indx)    = reshape(nanmean(data.(fn{ii})(:,cmbindx(indx),m,k)),[numel(indx) 1]);
+                    tmpall(:,:,m,k) = tmpdat;
+                end % for m
+            end % for k
+            
+            % replace the data in the old representation with the new representation
+            if nrpt>1,
+                data.(fn{ii}) = tmpall;
+            else
+                data.(fn{ii}) = reshape(tmpall, [nchan nchan nfrq ntim]);
+            end
+        end % if numel
+    end % for ii
+    
+    % remove obsolete fields
+    try data      = rmfield(data, 'powspctrm');  end
+    try data      = rmfield(data, 'labelcmb');   end
+    try data      = rmfield(data, 'dof');        end
+    
+    if ntim>1,
+        data.dimord = 'chan_chan_freq_time';
+    else
+        data.dimord = 'chan_chan_freq';
+    end
+    
 elseif strcmp(current, 'sparsewithpow') && any(strcmp(desired, {'full', 'fullfast'}))
-  % this is how is currently done in prepare_freq_matrices
-  data = ea_ft_checkdata(data, 'cmbrepresentation', 'sparse');
-  data = ea_ft_checkdata(data, 'cmbrepresentation', 'full');
-  
+    % this is how is currently done in prepare_freq_matrices
+    data = ea_ft_checkdata(data, 'cmbrepresentation', 'sparse');
+    data = ea_ft_checkdata(data, 'cmbrepresentation', 'full');
+    
 end % convert from one to another bivariate representation
 
 
@@ -2930,80 +2947,80 @@ dimnum = 1;
 hasori = isfield(output, 'ori'); %if not, this is probably singleton and not relevant at the end
 
 if iscell(tmp) && (size(output.pos,1)==size(tmp,dimnum) || size(output.pos,1)==size(tmp,2))
-  dimord = [dimord,'{pos}'];
-  dimnum = dimnum + 1;
+    dimord = [dimord,'{pos}'];
+    dimnum = dimnum + 1;
 elseif ~iscell(tmp) && size(output.pos,1)==size(tmp,dimnum)
-  dimord = [dimord,'pos'];
-  dimnum = dimnum + 1;
+    dimord = [dimord,'pos'];
+    dimnum = dimnum + 1;
 end
 
 if isfield(output, 'inside')
-  if islogical(output.inside)
-    firstinside = find(output.inside, 1);
-  else
-    firstinside = output.inside(1);
-  end
+    if islogical(output.inside)
+        firstinside = find(output.inside, 1);
+    else
+        firstinside = output.inside(1);
+    end
 end
 
 switch fname
-  case 'cov'
-    if hasori, dimord = [dimord,'_ori_ori']; end;
-  case 'csd'
-    if hasori, dimord = [dimord,'_ori_ori']; end;
-  case 'csdlabel'
-    dimord = dimord;
-  case 'filter'
-    dimord = [dimord,'_ori_chan'];
-  case 'leadfield'
-    dimord = [dimord,'_chan_ori'];
-  case 'mom'
-    if isfield(output, 'cumtapcnt') && sum(output.cumtapcnt)==size(tmp{firstinside},1)
-      if hasori,
-        dimord = [dimord,'_rpttap_ori'];
-      else
-        dimord = [dimord,'_rpttap'];
-      end
-    elseif isfield(output, 'time') && numel(output.time)>1
-      if rptflag,
-        dimord = [dimord,'_rpt'];
-        dimnum = dimnum + 1;
-      end
-      if numel(output.time)==size(tmp{firstinside},dimnum)
-        dimord = [dimord,'_ori_time'];
-      end
-    end
-    if isfield(output, 'freq') && numel(output.freq)>1
-      dimord = [dimord,'_freq'];
-    end
-  case 'nai'
-    if isfield(output, 'freq') && numel(output.freq)==size(tmp,dimnum)
-      dimord = [dimord,'_freq'];
-    end
-  case 'noise'
-    if isfield(output, 'freq') && numel(output.freq)==size(tmp,dimnum)
-      dimord = [dimord,'_freq'];
-    end
-  case 'noisecsd'
-    dimord = [dimord,'_ori_ori'];
-  case 'noisecov'
-    dimord = [dimord,'_ori_ori'];
-  case 'ori'
-    dimord = '';
-  case {'pow' 'dspm'}
-    if isfield(output, 'cumtapcnt') && size(output.cumtapcnt,1)==size(tmp,dimnum)
-      dimord = [dimord,'_rpt'];
-      dimnum = dimnum + 1;
-    end
-    if isfield(output, 'freq') && numel(output.freq)>1 && numel(output.freq)==size(tmp,dimnum)
-      dimord = [dimord,'_freq'];
-      dimnum = dimnum+1;
-    end
-    if isfield(output, 'time') && numel(output.time)>1 && numel(output.time)==size(tmp,dimnum)
-      dimord = [dimord,'_time'];
-      dimnum = dimnum+1;
-    end
-  otherwise
-    warning('skipping unknown fieldname %s', fname);
+    case 'cov'
+        if hasori, dimord = [dimord,'_ori_ori']; end;
+    case 'csd'
+        if hasori, dimord = [dimord,'_ori_ori']; end;
+    case 'csdlabel'
+        dimord = dimord;
+    case 'filter'
+        dimord = [dimord,'_ori_chan'];
+    case 'leadfield'
+        dimord = [dimord,'_chan_ori'];
+    case 'mom'
+        if isfield(output, 'cumtapcnt') && sum(output.cumtapcnt)==size(tmp{firstinside},1)
+            if hasori,
+                dimord = [dimord,'_rpttap_ori'];
+            else
+                dimord = [dimord,'_rpttap'];
+            end
+        elseif isfield(output, 'time') && numel(output.time)>1
+            if rptflag,
+                dimord = [dimord,'_rpt'];
+                dimnum = dimnum + 1;
+            end
+            if numel(output.time)==size(tmp{firstinside},dimnum)
+                dimord = [dimord,'_ori_time'];
+            end
+        end
+        if isfield(output, 'freq') && numel(output.freq)>1
+            dimord = [dimord,'_freq'];
+        end
+    case 'nai'
+        if isfield(output, 'freq') && numel(output.freq)==size(tmp,dimnum)
+            dimord = [dimord,'_freq'];
+        end
+    case 'noise'
+        if isfield(output, 'freq') && numel(output.freq)==size(tmp,dimnum)
+            dimord = [dimord,'_freq'];
+        end
+    case 'noisecsd'
+        dimord = [dimord,'_ori_ori'];
+    case 'noisecov'
+        dimord = [dimord,'_ori_ori'];
+    case 'ori'
+        dimord = '';
+    case {'pow' 'dspm'}
+        if isfield(output, 'cumtapcnt') && size(output.cumtapcnt,1)==size(tmp,dimnum)
+            dimord = [dimord,'_rpt'];
+            dimnum = dimnum + 1;
+        end
+        if isfield(output, 'freq') && numel(output.freq)>1 && numel(output.freq)==size(tmp,dimnum)
+            dimord = [dimord,'_freq'];
+            dimnum = dimnum+1;
+        end
+        if isfield(output, 'time') && numel(output.time)>1 && numel(output.time)==size(tmp,dimnum)
+            dimord = [dimord,'_time'];
+            dimnum = dimnum+1;
+        end
+    otherwise
+        warning('skipping unknown fieldname %s', fname);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3011,14 +3028,14 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function source = ea_parcellated2source(data)
 if ~isfield(data, 'brainordinate')
-  error('projecting parcellated data onto the full brain model geometry requires the specification of brainordinates');
+    error('projecting parcellated data onto the full brain model geometry requires the specification of brainordinates');
 end
 % the main structure contains the functional data on the parcels
 % the brainordinate sub-structure contains the original geometrical model
 source = data.brainordinate;
 data   = rmfield(data, 'brainordinate');
 if isfield(data, 'cfg')
-  source.cfg = data.cfg;
+    source.cfg = data.cfg;
 end
 
 fn = fieldnames(data);
@@ -3026,27 +3043,27 @@ fn = setdiff(fn, {'label', 'time', 'freq', 'hdr', 'cfg', 'grad', 'elec', 'dimord
 fn(~cellfun(@isempty, regexp(fn, 'dimord$'))) = []; % remove irrelevant (dimord) fields
 sel = false(size(fn));
 for i=1:numel(fn)
-  try
-    sel(i) = ismember(getdimord(data, fn{i}), {'chan', 'chan_time', 'chan_freq', 'chan_freq_time', 'chan_chan'});
-  end
+    try
+        sel(i) = ismember(getdimord(data, fn{i}), {'chan', 'chan_time', 'chan_freq', 'chan_freq_time', 'chan_chan'});
+    end
 end
 parameter = fn(sel);
 
 fn = fieldnames(source);
 sel = false(size(fn));
 for i=1:numel(fn)
-  tmp = source.(fn{i});
-  sel(i) = iscell(tmp) && isequal(tmp(:), data.label(:));
+    tmp = source.(fn{i});
+    sel(i) = iscell(tmp) && isequal(tmp(:), data.label(:));
 end
 parcelparam = fn(sel);
 if numel(parcelparam)~=1
-  error('cannot determine which parcellation to use');
+    error('cannot determine which parcellation to use');
 else
-  parcelparam = parcelparam{1}(1:(end-5)); % minus the 'label'
+    parcelparam = parcelparam{1}(1:(end-5)); % minus the 'label'
 end
 
 for i=1:numel(parameter)
-  source.(parameter{i}) = unparcellate(data, source, parameter{i}, parcelparam);
+    source.(parameter{i}) = unparcellate(data, source, parameter{i}, parcelparam);
 end
 
 % copy over fields (these are necessary for visualising the data in ft_sourceplot)
@@ -3058,14 +3075,14 @@ source = copyfields(data, source, {'time', 'freq'});
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = ea_volume2source(data)
 if isfield(data, 'dimord')
-  % it is a modern source description
+    % it is a modern source description
 else
-  % it is an old-fashioned source description
-  xgrid = 1:data.dim(1);
-  ygrid = 1:data.dim(2);
-  zgrid = 1:data.dim(3);
-  [x y z] = ndgrid(xgrid, ygrid, zgrid);
-  data.pos = ea_ft_warp_apply(data.transform, [x(:) y(:) z(:)]);
+    % it is an old-fashioned source description
+    xgrid = 1:data.dim(1);
+    ygrid = 1:data.dim(2);
+    zgrid = 1:data.dim(3);
+    [x y z] = ndgrid(xgrid, ygrid, zgrid);
+    data.pos = ea_ft_warp_apply(data.transform, [x(:) y(:) z(:)]);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3074,23 +3091,23 @@ end
 function data = ea_source2volume(data)
 
 if isfield(data, 'dimord')
-  % it is a modern source description
-  
-  %this part depends on the assumption that the list of positions is describing a full 3D volume in
-  %an ordered way which allows for the extraction of a transformation matrix
-  %i.e. slice by slice
-  try
-    if isfield(data, 'dim'),
-      data.dim = pos2dim(data.pos, data.dim);
-    else
-      data.dim = pos2dim(data);
+    % it is a modern source description
+    
+    %this part depends on the assumption that the list of positions is describing a full 3D volume in
+    %an ordered way which allows for the extraction of a transformation matrix
+    %i.e. slice by slice
+    try
+        if isfield(data, 'dim'),
+            data.dim = pos2dim(data.pos, data.dim);
+        else
+            data.dim = pos2dim(data);
+        end
+    catch
     end
-  catch
-  end
 end
 
 if isfield(data, 'dim') && length(data.dim)>=3,
-  data.transform = pos2transform(data.pos, data.dim);
+    data.transform = pos2transform(data.pos, data.dim);
 end
 
 % remove the unwanted fields
@@ -3105,20 +3122,20 @@ data = fixinside(data, 'logical');
 function data = ea_freq2raw(freq)
 
 if isfield(freq, 'powspctrm')
-  param = 'powspctrm';
+    param = 'powspctrm';
 elseif isfield(freq, 'fourierspctrm')
-  param = 'fourierspctrm';
+    param = 'fourierspctrm';
 else
-  error('not supported for this data representation');
+    error('not supported for this data representation');
 end
 
 if strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chan_freq_time')
-  dat = freq.(param);
+    dat = freq.(param);
 elseif strcmp(freq.dimord, 'chan_freq_time')
-  dat = freq.(param);
-  dat = reshape(dat, [1 size(dat)]); % add a singleton dimension
+    dat = freq.(param);
+    dat = reshape(dat, [1 size(dat)]); % add a singleton dimension
 else
-  error('not supported for dimord %s', freq.dimord);
+    error('not supported for dimord %s', freq.dimord);
 end
 
 nrpt  = size(dat,1);
@@ -3129,22 +3146,22 @@ data = [];
 % create the channel labels like "MLP11@12Hz""
 k = 0;
 for i=1:nfreq
-  for j=1:nchan
-    k = k+1;
-    data.label{k} = sprintf('%s@%dHz', freq.label{j}, freq.freq(i));
-  end
+    for j=1:nchan
+        k = k+1;
+        data.label{k} = sprintf('%s@%dHz', freq.label{j}, freq.freq(i));
+    end
 end
 % reshape and copy the data as if it were timecourses only
 for i=1:nrpt
-  data.time{i}  = freq.time;
-  data.trial{i} = reshape(dat(i,:,:,:), nchan*nfreq, ntime);
-  if any(isnan(data.trial{i}(1,:))),
-    tmp = data.trial{i}(1,:);
-    begsmp = find(isfinite(tmp),1, 'first');
-    endsmp = find(isfinite(tmp),1, 'last' );
-    data.trial{i} = data.trial{i}(:, begsmp:endsmp);
-    data.time{i}  = data.time{i}(begsmp:endsmp);
-  end
+    data.time{i}  = freq.time;
+    data.trial{i} = reshape(dat(i,:,:,:), nchan*nfreq, ntime);
+    if any(isnan(data.trial{i}(1,:))),
+        tmp = data.trial{i}(1,:);
+        begsmp = find(isfinite(tmp),1, 'first');
+        endsmp = find(isfinite(tmp),1, 'last' );
+        data.trial{i} = data.trial{i}(:, begsmp:endsmp);
+        data.time{i}  = data.time{i}(begsmp:endsmp);
+    end
 end
 
 if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
@@ -3160,46 +3177,46 @@ data   = ea_ft_checkdata(data, 'hassampleinfo', 'yes');
 ntrial = numel(data.trial);
 nchan  = numel(data.label);
 if ntrial==1
-  data.time   = data.time{1};
-  data.avg    = data.trial{1};
-  data        = rmfield(data, 'trial');
-  data.dimord = 'chan_time';
+    data.time   = data.time{1};
+    data.avg    = data.trial{1};
+    data        = rmfield(data, 'trial');
+    data.dimord = 'chan_time';
 else
-  
-  % code below tries to construct a general time-axis where samples of all trials can fall on
-  % find earliest beginning and latest ending
-  begtime = min(cellfun(@min,data.time));
-  endtime = max(cellfun(@max,data.time));
-  % find 'common' sampling rate
-  fsample = 1./mean(cellfun(@mean,cellfun(@diff,data.time,'uniformoutput',false)));
-  % estimate number of samples
-  nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
-  % construct general time-axis
-  time = linspace(begtime,endtime,nsmp);
-  
-  % concatenate all trials
-  tmptrial = nan(ntrial, nchan, length(time));
-  
-  for i=1:ntrial
-    begsmp(i) = nearest(time, data.time{i}(1));
-    endsmp(i) = nearest(time, data.time{i}(end));
-    tmptrial(i,:,begsmp(i):endsmp(i)) = data.trial{i};
-  end
-  
-  % update the sampleinfo
-  begpad = begsmp - min(begsmp);
-  endpad = max(endsmp) - endsmp;
-  if isfield(data, 'sampleinfo')
-    data.sampleinfo = data.sampleinfo + [-begpad(:) endpad(:)];
-  end
-  
-  % construct the output timelocked data
-  % data.avg     = reshape(nanmean(tmptrial,     1), nchan, length(tmptime));
-  % data.var     = reshape(nanvar (tmptrial, [], 1), nchan, length(tmptime))
-  % data.dof     = reshape(sum(~isnan(tmptrial), 1), nchan, length(tmptime));
-  data.trial   = tmptrial;
-  data.time    = time;
-  data.dimord = 'rpt_chan_time';
+    
+    % code below tries to construct a general time-axis where samples of all trials can fall on
+    % find earliest beginning and latest ending
+    begtime = min(cellfun(@min,data.time));
+    endtime = max(cellfun(@max,data.time));
+    % find 'common' sampling rate
+    fsample = 1./mean(cellfun(@mean,cellfun(@diff,data.time,'uniformoutput',false)));
+    % estimate number of samples
+    nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
+    % construct general time-axis
+    time = linspace(begtime,endtime,nsmp);
+    
+    % concatenate all trials
+    tmptrial = nan(ntrial, nchan, length(time));
+    
+    for i=1:ntrial
+        begsmp(i) = nearest(time, data.time{i}(1));
+        endsmp(i) = nearest(time, data.time{i}(end));
+        tmptrial(i,:,begsmp(i):endsmp(i)) = data.trial{i};
+    end
+    
+    % update the sampleinfo
+    begpad = begsmp - min(begsmp);
+    endpad = max(endsmp) - endsmp;
+    if isfield(data, 'sampleinfo')
+        data.sampleinfo = data.sampleinfo + [-begpad(:) endpad(:)];
+    end
+    
+    % construct the output timelocked data
+    % data.avg     = reshape(nanmean(tmptrial,     1), nchan, length(tmptime));
+    % data.var     = reshape(nanvar (tmptrial, [], 1), nchan, length(tmptime))
+    % data.dof     = reshape(sum(~isnan(tmptrial), 1), nchan, length(tmptime));
+    data.trial   = tmptrial;
+    data.time    = time;
+    data.dimord = 'rpt_chan_time';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3207,38 +3224,38 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = ea_timelock2raw(data)
 switch data.dimord
-  case 'chan_time'
-    data.trial{1} = data.avg;
-    data.time     = {data.time};
-    data          = rmfield(data, 'avg');
-  case 'rpt_chan_time'
-    tmptrial = {};
-    tmptime  = {};
-    ntrial = size(data.trial,1);
-    nchan  = size(data.trial,2);
-    ntime  = size(data.trial,3);
-    for i=1:ntrial
-      tmptrial{i} = reshape(data.trial(i,:,:), [nchan, ntime]);
-      tmptime{i}  = data.time;
-    end
-    data       = rmfield(data, 'trial');
-    data.trial = tmptrial;
-    data.time  = tmptime;
-  case 'subj_chan_time'
-    tmptrial = {};
-    tmptime  = {};
-    ntrial = size(data.individual,1);
-    nchan  = size(data.individual,2);
-    ntime  = size(data.individual,3);
-    for i=1:ntrial
-      tmptrial{i} = reshape(data.individual(i,:,:), [nchan, ntime]);
-      tmptime{i}  = data.time;
-    end
-    data       = rmfield(data, 'individual');
-    data.trial = tmptrial;
-    data.time  = tmptime;
-  otherwise
-    error('unsupported dimord');
+    case 'chan_time'
+        data.trial{1} = data.avg;
+        data.time     = {data.time};
+        data          = rmfield(data, 'avg');
+    case 'rpt_chan_time'
+        tmptrial = {};
+        tmptime  = {};
+        ntrial = size(data.trial,1);
+        nchan  = size(data.trial,2);
+        ntime  = size(data.trial,3);
+        for i=1:ntrial
+            tmptrial{i} = reshape(data.trial(i,:,:), [nchan, ntime]);
+            tmptime{i}  = data.time;
+        end
+        data       = rmfield(data, 'trial');
+        data.trial = tmptrial;
+        data.time  = tmptime;
+    case 'subj_chan_time'
+        tmptrial = {};
+        tmptime  = {};
+        ntrial = size(data.individual,1);
+        nchan  = size(data.individual,2);
+        ntime  = size(data.individual,3);
+        for i=1:ntrial
+            tmptrial{i} = reshape(data.individual(i,:,:), [nchan, ntime]);
+            tmptime{i}  = data.time;
+        end
+        data       = rmfield(data, 'individual');
+        data.trial = tmptrial;
+        data.time  = tmptime;
+    otherwise
+        error('unsupported dimord');
 end
 % remove the unwanted fields
 if isfield(data, 'avg'),        data = rmfield(data, 'avg'); end
@@ -3272,33 +3289,33 @@ nTrials 	 = length(data.trial);
 spikesel     = match_str(data.label, spikelabel);
 nUnits       = length(spikesel);
 if nUnits==0
-  error('cannot convert raw data to spike format since the raw data structure does not contain spike channels');
+    error('cannot convert raw data to spike format since the raw data structure does not contain spike channels');
 end
 
 trialTimes  = zeros(nTrials,2);
 for iUnit = 1:nUnits
-  unitIndx = spikesel(iUnit);
-  spikeTimes  = []; % we dont know how large it will be, so use concatenation inside loop
-  trialInds   = [];
-  for iTrial = 1:nTrials
+    unitIndx = spikesel(iUnit);
+    spikeTimes  = []; % we dont know how large it will be, so use concatenation inside loop
+    trialInds   = [];
+    for iTrial = 1:nTrials
+        
+        % read in the spike times
+        [spikeTimesTrial]    = ea_getspiketimes(data, iTrial, unitIndx);
+        nSpikes              = length(spikeTimesTrial);
+        spikeTimes           = [spikeTimes; spikeTimesTrial(:)];
+        trialInds            = [trialInds; ones(nSpikes,1)*iTrial];
+        
+        % get the begs and ends of trials
+        hasNum = find(~isnan(data.time{iTrial}));
+        if iUnit==1, trialTimes(iTrial,:) = data.time{iTrial}([hasNum(1) hasNum(end)]); end
+    end
     
-    % read in the spike times
-    [spikeTimesTrial]    = ea_getspiketimes(data, iTrial, unitIndx);
-    nSpikes              = length(spikeTimesTrial);
-    spikeTimes           = [spikeTimes; spikeTimesTrial(:)];
-    trialInds            = [trialInds; ones(nSpikes,1)*iTrial];
+    spike.label{iUnit}     = data.label{unitIndx};
+    spike.waveform{iUnit}  = [];
+    spike.time{iUnit}      = spikeTimes(:)';
+    spike.trial{iUnit}     = trialInds(:)';
     
-    % get the begs and ends of trials
-    hasNum = find(~isnan(data.time{iTrial}));
-    if iUnit==1, trialTimes(iTrial,:) = data.time{iTrial}([hasNum(1) hasNum(end)]); end
-  end
-  
-  spike.label{iUnit}     = data.label{unitIndx};
-  spike.waveform{iUnit}  = [];
-  spike.time{iUnit}      = spikeTimes(:)';
-  spike.trial{iUnit}     = trialInds(:)';
-  
-  if iUnit==1, spike.trialtime             = trialTimes; end
+    if iUnit==1, spike.trialtime             = trialTimes; end
 end
 
 
@@ -3315,13 +3332,13 @@ ntrial = length(data.trial);
 nchans  = length(data.label);
 spikechan = zeros(nchans,1);
 for i=1:ntrial
-  for j=1:nchans
-    hasAllInts    = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:) == round(data.trial{i}(j,:)));
-    hasAllPosInts = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:)>=0);
-    T = nansum(diff(data.time{i}),2); % total time
-    fr            = nansum(data.trial{i}(j,:),2) ./ T;
-    spikechan(j)  = spikechan(j) + double(hasAllInts & hasAllPosInts & fr<=maxRate);
-  end
+    for j=1:nchans
+        hasAllInts    = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:) == round(data.trial{i}(j,:)));
+        hasAllPosInts = all(isnan(data.trial{i}(j,:)) | data.trial{i}(j,:)>=0);
+        T = nansum(diff(data.time{i}),2); % total time
+        fr            = nansum(data.trial{i}(j,:),2) ./ T;
+        spikechan(j)  = spikechan(j) + double(hasAllInts & hasAllPosInts & fr<=maxRate);
+    end
 end
 spikechan = (spikechan==ntrial);
 
@@ -3340,8 +3357,8 @@ multiSpikes     = find(spikeCount>1);
 % get the additional samples and spike times, we need only loop through the bins
 [addSamples, addTimes]   = deal([]);
 for iBin = multiSpikes(:)' % looping over row vector
-  addTimes     = [addTimes ones(1,spikeCount(iBin))*spikeTimes(iBin)];
-  addSamples   = [addSamples ones(1,spikeCount(iBin))*spikeIndx(iBin)];
+    addTimes     = [addTimes ones(1,spikeCount(iBin))*spikeTimes(iBin)];
+    addSamples   = [addSamples ones(1,spikeCount(iBin))*spikeIndx(iBin)];
 end
 % before adding these times, first remove the old ones
 spikeTimes(multiSpikes) = [];
@@ -3353,9 +3370,9 @@ spikeTimes              = sort([spikeTimes(:); addTimes(:)]);
 function [data] = ea_spike2raw(spike, fsample)
 
 if nargin<2 || isempty(fsample)
-  timeDiff = abs(diff(sort([spike.time{:}])));
-  fsample  = 1/min(timeDiff(timeDiff>0));
-  warning('Desired sampling rate for spike data not specified, automatically resampled to %f', fsample);
+    timeDiff = abs(diff(sort([spike.time{:}])));
+    fsample  = 1/min(timeDiff(timeDiff>0));
+    warning('Desired sampling rate for spike data not specified, automatically resampled to %f', fsample);
 end
 
 % get some sizes
@@ -3366,35 +3383,35 @@ nTrials = size(spike.trialtime,1);
 data.trial(1:nTrials) = {[]};
 data.time(1:nTrials)  = {[]};
 for iTrial = 1:nTrials
-  
-  % make bins: note that the spike.time is already within spike.trialtime
-  x = [spike.trialtime(iTrial,1):(1/fsample):spike.trialtime(iTrial,2)];
-  timeBins   = [x x(end)+1/fsample] - (0.5/fsample);
-  time       = (spike.trialtime(iTrial,1):(1/fsample):spike.trialtime(iTrial,2));
-  
-  % convert to continuous
-  trialData = zeros(nUnits,length(time));
-  for iUnit = 1:nUnits
     
-    % get the timestamps and only select those timestamps that are in the trial
-    ts       = spike.time{iUnit};
-    hasTrial = spike.trial{iUnit}==iTrial;
-    ts       = ts(hasTrial);
+    % make bins: note that the spike.time is already within spike.trialtime
+    x = [spike.trialtime(iTrial,1):(1/fsample):spike.trialtime(iTrial,2)];
+    timeBins   = [x x(end)+1/fsample] - (0.5/fsample);
+    time       = (spike.trialtime(iTrial,1):(1/fsample):spike.trialtime(iTrial,2));
     
-    N = histc(ts,timeBins);
-    if isempty(N)
-      N = zeros(1,length(timeBins)-1);
-    else
-      N(end) = [];
+    % convert to continuous
+    trialData = zeros(nUnits,length(time));
+    for iUnit = 1:nUnits
+        
+        % get the timestamps and only select those timestamps that are in the trial
+        ts       = spike.time{iUnit};
+        hasTrial = spike.trial{iUnit}==iTrial;
+        ts       = ts(hasTrial);
+        
+        N = histc(ts,timeBins);
+        if isempty(N)
+            N = zeros(1,length(timeBins)-1);
+        else
+            N(end) = [];
+        end
+        
+        % store it in a matrix
+        trialData(iUnit,:) = N;
     end
     
-    % store it in a matrix
-    trialData(iUnit,:) = N;
-  end
-  
-  data.trial{iTrial} = trialData;
-  data.time{iTrial}  = time;
-  
+    data.trial{iTrial} = trialData;
+    data.time{iTrial}  = time;
+    
 end % for all trials
 
 % create the associated labels and other aspects of data such as the header
@@ -3411,7 +3428,7 @@ function [data] = ea_source2raw(source)
 fn = fieldnames(source);
 fn = setdiff(fn, {'pos', 'dim', 'transform', 'time', 'freq', 'cfg'});
 for i=1:length(fn)
-  dimord{i} = getdimord(source, fn{i});
+    dimord{i} = getdimord(source, fn{i});
 end
 sel = strcmp(dimord, 'pos_time');
 assert(sum(sel)>0, 'the source structure does not contain a suitable field to represent as raw channel-level data');
@@ -3420,137 +3437,137 @@ fn     = fn{sel};
 dimord = dimord{sel};
 
 switch dimord
-  case 'pos_time'
-    % add fake raw channel data to the original data structure
-    data.trial{1} = source.(fn);
-    data.time{1}  = source.time;
-    % add fake channel labels
-    data.label = {};
-    for i=1:size(source.pos,1)
-      data.label{i} = sprintf('source%d', i);
-    end
-    data.label = data.label(:);
-    data.cfg = source.cfg;
-  otherwise
-    % FIXME other formats could be implemented as well
+    case 'pos_time'
+        % add fake raw channel data to the original data structure
+        data.trial{1} = source.(fn);
+        data.time{1}  = source.time;
+        % add fake channel labels
+        data.label = {};
+        for i=1:size(source.pos,1)
+            data.label{i} = sprintf('source%d', i);
+        end
+        data.label = data.label(:);
+        data.cfg = source.cfg;
+    otherwise
+        % FIXME other formats could be implemented as well
 end
 
-    
+
 % function shifting the nodes
 function nodes = shift_nodes(points,hex,labels, sh,x_dim,y_dim,z_dim)
-    cfg = [];
-    fprintf('Applying shift %f\n', sh);
-    nodes = points;
+cfg = [];
+fprintf('Applying shift %f\n', sh);
+nodes = points;
 
-    % helper vector for indexing the nodes
-    b = 1:(x_dim+1)*(y_dim+1)*(z_dim+1);
+% helper vector for indexing the nodes
+b = 1:(x_dim+1)*(y_dim+1)*(z_dim+1);
 
-    % vector which gives the corresponding element to a node(in the sense
-    % of how the node-numbering was done, see comment for create_elements).
-    % note that this vector still contains values for nodes which do not have a
-    % corresponding element. this will be manually omitted in the finding
-    % of the surrounding elements(see below).
-    offset = (b - nodes(b,2)' - (nodes(b,3))'*(y_dim+1+x_dim))';
-    offset(offset <= 0) = size(labels,1)+1;
-    offset(offset > size(hex,1)) = size(labels,1)+1;
+% vector which gives the corresponding element to a node(in the sense
+% of how the node-numbering was done, see comment for create_elements).
+% note that this vector still contains values for nodes which do not have a
+% corresponding element. this will be manually omitted in the finding
+% of the surrounding elements(see below).
+offset = (b - nodes(b,2)' - (nodes(b,3))'*(y_dim+1+x_dim))';
+offset(offset <= 0) = size(labels,1)+1;
+offset(offset > size(hex,1)) = size(labels,1)+1;
 
-    % create array containing the surrounding elements for each node
-    %surrounding = zeros((x_dim+1)*(y_dim+1)*(z_dim+1),8);
+% create array containing the surrounding elements for each node
+%surrounding = zeros((x_dim+1)*(y_dim+1)*(z_dim+1),8);
 
-    % find out the surrounding of each node(if there is any)
-    % find element to which the node is bottom left front
-    %surrounding((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1) = offset((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim));
-    % bottom right front
-    %surrounding(nodes(b,1) > 0,2) = offset(nodes(b,1) > 0,1) -1;
-    % bottom left back
-    %surrounding(nodes(b,2) > 0,3) = offset(nodes(b,2) > 0,1) - x_dim;
-    % bottom right back
-    %surrounding((nodes(b,2) > 0) & (nodes(b,1) > 0),4) = offset((nodes(b,2) > 0) & (nodes(b,1) > 0),1) - (x_dim) - 1;
-    % top left front
-    %surrounding(nodes(b,3) > 0,5) = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim);
-    % top right front
-    %surrounding(nodes(b,3) > 0,6) = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - 1;
-    % top left back
-    %surrounding(nodes(b,3) > 0,7) = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - x_dim;
-    % top right back
-    %surrounding((nodes(b,3) > 0) & (nodes(b,2) > 0),8) = offset((nodes(b,3) > 0) & (nodes(b,2) > 0),1) - (x_dim)*(y_dim) - (x_dim) -1;
-    %clear offset;
-    %clear b;
+% find out the surrounding of each node(if there is any)
+% find element to which the node is bottom left front
+%surrounding((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1) = offset((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim));
+% bottom right front
+%surrounding(nodes(b,1) > 0,2) = offset(nodes(b,1) > 0,1) -1;
+% bottom left back
+%surrounding(nodes(b,2) > 0,3) = offset(nodes(b,2) > 0,1) - x_dim;
+% bottom right back
+%surrounding((nodes(b,2) > 0) & (nodes(b,1) > 0),4) = offset((nodes(b,2) > 0) & (nodes(b,1) > 0),1) - (x_dim) - 1;
+% top left front
+%surrounding(nodes(b,3) > 0,5) = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim);
+% top right front
+%surrounding(nodes(b,3) > 0,6) = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - 1;
+% top left back
+%surrounding(nodes(b,3) > 0,7) = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - x_dim;
+% top right back
+%surrounding((nodes(b,3) > 0) & (nodes(b,2) > 0),8) = offset((nodes(b,3) > 0) & (nodes(b,2) > 0),1) - (x_dim)*(y_dim) - (x_dim) -1;
+%clear offset;
+%clear b;
 
-    % those entries in the surrounding matrix which point to non-existing
-    % elements(> size(hex,1) or <= 0) we overwrite with a
-    % dummy element
-    %surrounding(surrounding <= 0) = size(labels,1) + 1;
-    %surrounding(surrounding > size(hex,1)) = size(labels,1)+1;
+% those entries in the surrounding matrix which point to non-existing
+% elements(> size(hex,1) or <= 0) we overwrite with a
+% dummy element
+%surrounding(surrounding <= 0) = size(labels,1) + 1;
+%surrounding(surrounding > size(hex,1)) = size(labels,1)+1;
 
-    % set the label of the dummy element to be zero(background)
-    labels(size(labels,1)+1) = 0;
+% set the label of the dummy element to be zero(background)
+labels(size(labels,1)+1) = 0;
 
-    % matrixs holding the label of each surrounding element
-    %surroundinglabels = labels(surrounding);
-    surroundinglabels = zeros((x_dim+1)*(y_dim+1)*(z_dim+1),8);
-    surroundinglabels((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1) = labels(offset((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim)));
-    surroundinglabels(nodes(b,1) > 0,2) = labels(offset(nodes(b,1) > 0,1) -1);
-    surroundinglabels(nodes(b,2) > 0,3) = labels(offset(nodes(b,2) > 0,1) - x_dim);
-    offsetnow = offset((nodes(b,2) > 0) & (nodes(b,1) > 0),1) - (x_dim) - 1;
-    offsetnow(offsetnow <= 0) = size(labels,1)+1;
-    surroundinglabels((nodes(b,2) > 0) & (nodes(b,1) > 0),4) = labels(offsetnow);
-    offsetnow = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim);
-    offsetnow(offsetnow <= 0) = size(labels,1)+1;
-    surroundinglabels(nodes(b,3) > 0,5) = labels(offsetnow);
-    offsetnow = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - 1;
-    offsetnow(offsetnow <= 0) = size(labels,1)+1;
-    surroundinglabels(nodes(b,3) > 0,6) = labels(offsetnow);
-    offsetnow = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - x_dim;
-    offsetnow(offsetnow <= 0) = size(labels,1)+1;
-    surroundinglabels(nodes(b,3) > 0,7) = labels(offsetnow);
-    offsetnow = offset((nodes(b,3) > 0) & (nodes(b,2) > 0),1) - (x_dim)*(y_dim) - (x_dim) -1;
-    offsetnow(offsetnow <= 0) = size(labels,1)+1;
-    surroundinglabels((nodes(b,3) > 0) & (nodes(b,2) > 0),8) = labels(offsetnow);
+% matrixs holding the label of each surrounding element
+%surroundinglabels = labels(surrounding);
+surroundinglabels = zeros((x_dim+1)*(y_dim+1)*(z_dim+1),8);
+surroundinglabels((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1) = labels(offset((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim)));
+surroundinglabels(nodes(b,1) > 0,2) = labels(offset(nodes(b,1) > 0,1) -1);
+surroundinglabels(nodes(b,2) > 0,3) = labels(offset(nodes(b,2) > 0,1) - x_dim);
+offsetnow = offset((nodes(b,2) > 0) & (nodes(b,1) > 0),1) - (x_dim) - 1;
+offsetnow(offsetnow <= 0) = size(labels,1)+1;
+surroundinglabels((nodes(b,2) > 0) & (nodes(b,1) > 0),4) = labels(offsetnow);
+offsetnow = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim);
+offsetnow(offsetnow <= 0) = size(labels,1)+1;
+surroundinglabels(nodes(b,3) > 0,5) = labels(offsetnow);
+offsetnow = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - 1;
+offsetnow(offsetnow <= 0) = size(labels,1)+1;
+surroundinglabels(nodes(b,3) > 0,6) = labels(offsetnow);
+offsetnow = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - x_dim;
+offsetnow(offsetnow <= 0) = size(labels,1)+1;
+surroundinglabels(nodes(b,3) > 0,7) = labels(offsetnow);
+offsetnow = offset((nodes(b,3) > 0) & (nodes(b,2) > 0),1) - (x_dim)*(y_dim) - (x_dim) -1;
+offsetnow(offsetnow <= 0) = size(labels,1)+1;
+surroundinglabels((nodes(b,3) > 0) & (nodes(b,2) > 0),8) = labels(offsetnow);
 
-    % matrix showing how many types of each label are around a given node
-    distribution = zeros(size(nodes,1), size(unique(labels),1));
-    % the following assumes that the labels are 1,2,...
-    for l=1:size(unique(labels),1)
-        for k=1:8
-            distribution(:,l) = distribution(:,l) + (surroundinglabels(:,k) == l);
-        end
+% matrix showing how many types of each label are around a given node
+distribution = zeros(size(nodes,1), size(unique(labels),1));
+% the following assumes that the labels are 1,2,...
+for l=1:size(unique(labels),1)
+    for k=1:8
+        distribution(:,l) = distribution(:,l) + (surroundinglabels(:,k) == l);
     end
+end
 
-    % fill up the last column with the amount of background labels
-    distribution(:,(size(unique(labels),1))) = 8 - sum(distribution(:,1:size(unique(labels),1))');
+% fill up the last column with the amount of background labels
+distribution(:,(size(unique(labels),1))) = 8 - sum(distribution(:,1:size(unique(labels),1))');
 
-    % how many different labels are there around each node
-    distsum = sum(distribution>0,2);
+% how many different labels are there around each node
+distsum = sum(distribution>0,2);
 
-    % set zeros to Inf in order to make the finding of a minimum
-    % meaningful
-    distribution(distribution == 0) = Inf;
+% set zeros to Inf in order to make the finding of a minimum
+% meaningful
+distribution(distribution == 0) = Inf;
 
-    % find out which is the minority label
-    [mins,minpos] = min(distribution, [],2);
-    clear distribution;
+% find out which is the minority label
+[mins,minpos] = min(distribution, [],2);
+clear distribution;
 
-    % calculate the centroid for each element
-    centroids = zeros(size(hex,1),3);
-    for l=1:3
-        centroids(:,l) = sum(reshape(nodes(hex(:,:),l),size(hex,1),8)')'/8;
+% calculate the centroid for each element
+centroids = zeros(size(hex,1),3);
+for l=1:3
+    centroids(:,l) = sum(reshape(nodes(hex(:,:),l),size(hex,1),8)')'/8;
+end
+
+% set a dummy centroid
+centroids(size(centroids,1) +1,:) = 0;
+
+tbc = zeros(size(surroundinglabels));
+% helper matrix, c(i,j,k) is one when surroundinglabels(i,j) == k
+for i=1:size(unique(labels),1)+1
+    c = zeros(size(surroundinglabels,2), size(unique(labels),1)+1);
+    if (i == size(unique(labels),1)+1)
+        c = surroundinglabels == 0;
+    else
+        c = surroundinglabels == i;
     end
-
-    % set a dummy centroid
-    centroids(size(centroids,1) +1,:) = 0;
-
-    tbc = zeros(size(surroundinglabels));
-    % helper matrix, c(i,j,k) is one when surroundinglabels(i,j) == k
-    for i=1:size(unique(labels),1)+1
-        c = zeros(size(surroundinglabels,2), size(unique(labels),1)+1);
-        if (i == size(unique(labels),1)+1)
-           c = surroundinglabels == 0;
-        else
-           c = surroundinglabels == i;
-        end
-        tbc(ismember(minpos,i) == 1,:) = c(ismember(minpos,i) == 1,:);
-    end
+    tbc(ismember(minpos,i) == 1,:) = c(ismember(minpos,i) == 1,:);
+end
 
 %     % matrix that shows which elements are to be considered as minority
 %     % around a given node
@@ -3570,55 +3587,55 @@ function nodes = shift_nodes(points,hex,labels, sh,x_dim,y_dim,z_dim)
 %     for i=1:size(unique(labels),1)+1
 %     tbc(ismember(minpos,i) == 1,:) = c(ismember(minpos,i) == 1,:,i);
 %     end
-    clear c;
+clear c;
 
-    % delete cases in which we don't have a real minimum
-    tbcsum = sum(tbc,2);
-    tbc(tbcsum == 8,:) = 0;
-    tbc(tbcsum == 4,:) = 0;
-    tbcsum((distsum>2) & (mins > 1),:) = 0;
-    tbcsum(tbcsum == 8) = 0;
-    tbcsum(tbcsum == 4) = 0;
-    tbcsum((distsum>2) & (mins > 1)) = 0;
+% delete cases in which we don't have a real minimum
+tbcsum = sum(tbc,2);
+tbc(tbcsum == 8,:) = 0;
+tbc(tbcsum == 4,:) = 0;
+tbcsum((distsum>2) & (mins > 1),:) = 0;
+tbcsum(tbcsum == 8) = 0;
+tbcsum(tbcsum == 4) = 0;
+tbcsum((distsum>2) & (mins > 1)) = 0;
 
-    %surroundingconsidered = surrounding.*tbc;
-    surroundingconsidered = zeros(size(tbc));
-    surroundingconsidered((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1) = offset((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim)).*tbc((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1);
-    surroundingconsidered(nodes(b,1) > 0,2) = (offset(nodes(b,1) > 0,1) -1).*(tbc(nodes(b,1) > 0,2));
-    surroundingconsidered(nodes(b,2) > 0,3) = (offset(nodes(b,2) > 0,1) - x_dim).*tbc(nodes(b,2) > 0,3);
-    surroundingconsidered((nodes(b,2) > 0) & (nodes(b,1) > 0),4) = (offset((nodes(b,2) > 0) & (nodes(b,1) > 0),1) - (x_dim) - 1).*tbc((nodes(b,2) > 0) & (nodes(b,1) > 0),4).*tbc((nodes(b,2) > 0) & (nodes(b,1) > 0),4);
-    surroundingconsidered(nodes(b,3) > 0,5) = (offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim)).*tbc(nodes(b,3) > 0,5);
-    surroundingconsidered(nodes(b,3) > 0,6) = (offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - 1).*tbc(nodes(b,3) > 0,6);
-    surroundingconsidered(nodes(b,3) > 0,7) = (offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - x_dim).*tbc(nodes(b,3) > 0,7);
-    surroundingconsidered((nodes(b,3) > 0) & (nodes(b,2) > 0),8) = (offset((nodes(b,3) > 0) & (nodes(b,2) > 0),1) - (x_dim)*(y_dim) - (x_dim) -1).*tbc((nodes(b,3) > 0) & (nodes(b,2) > 0),8);
-    %clear surrounding;
-    clear tbc;
+%surroundingconsidered = surrounding.*tbc;
+surroundingconsidered = zeros(size(tbc));
+surroundingconsidered((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1) = offset((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim)).*tbc((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1);
+surroundingconsidered(nodes(b,1) > 0,2) = (offset(nodes(b,1) > 0,1) -1).*(tbc(nodes(b,1) > 0,2));
+surroundingconsidered(nodes(b,2) > 0,3) = (offset(nodes(b,2) > 0,1) - x_dim).*tbc(nodes(b,2) > 0,3);
+surroundingconsidered((nodes(b,2) > 0) & (nodes(b,1) > 0),4) = (offset((nodes(b,2) > 0) & (nodes(b,1) > 0),1) - (x_dim) - 1).*tbc((nodes(b,2) > 0) & (nodes(b,1) > 0),4).*tbc((nodes(b,2) > 0) & (nodes(b,1) > 0),4);
+surroundingconsidered(nodes(b,3) > 0,5) = (offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim)).*tbc(nodes(b,3) > 0,5);
+surroundingconsidered(nodes(b,3) > 0,6) = (offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - 1).*tbc(nodes(b,3) > 0,6);
+surroundingconsidered(nodes(b,3) > 0,7) = (offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - x_dim).*tbc(nodes(b,3) > 0,7);
+surroundingconsidered((nodes(b,3) > 0) & (nodes(b,2) > 0),8) = (offset((nodes(b,3) > 0) & (nodes(b,2) > 0),1) - (x_dim)*(y_dim) - (x_dim) -1).*tbc((nodes(b,3) > 0) & (nodes(b,2) > 0),8);
+%clear surrounding;
+clear tbc;
 
-    tbcsum(tbcsum == 8) = 0;
-    tbcsum(tbcsum == 4) = 0;
-    tbcsum((distsum>2) & (mins > 1)) = 0;
+tbcsum(tbcsum == 8) = 0;
+tbcsum(tbcsum == 4) = 0;
+tbcsum((distsum>2) & (mins > 1)) = 0;
 
-        clear distsum;
-    % get the surrounding elements which are to be considered for the shift
+clear distsum;
+% get the surrounding elements which are to be considered for the shift
 
 
-    % use the dummy centroid to make computations easier
-    surroundingconsidered(surroundingconsidered == 0) = size(centroids,1);
+% use the dummy centroid to make computations easier
+surroundingconsidered(surroundingconsidered == 0) = size(centroids,1);
 
-    % calculate the combination of the centroids which are to be considered
-    % for the shift
-    centroidcomb = zeros(size(nodes));
-    centroidcomb(:,1) = sum(reshape(centroids(surroundingconsidered,1), [], 8),2);
-    centroidcomb(:,2) = sum(reshape(centroids(surroundingconsidered,2), [], 8),2);
-    centroidcomb(:,3) = sum(reshape(centroids(surroundingconsidered,3), [], 8),2);
-    clear surroundingconsidered;
-    centroidcomb(tbcsum ~= 0,1) = centroidcomb(tbcsum ~=0,1)./tbcsum(tbcsum ~=0);
-    centroidcomb(tbcsum ~= 0,2) = centroidcomb(tbcsum ~=0,2)./tbcsum(tbcsum ~=0);
-    centroidcomb(tbcsum ~= 0,3) = centroidcomb(tbcsum ~=0,3)./tbcsum(tbcsum ~=0);
+% calculate the combination of the centroids which are to be considered
+% for the shift
+centroidcomb = zeros(size(nodes));
+centroidcomb(:,1) = sum(reshape(centroids(surroundingconsidered,1), [], 8),2);
+centroidcomb(:,2) = sum(reshape(centroids(surroundingconsidered,2), [], 8),2);
+centroidcomb(:,3) = sum(reshape(centroids(surroundingconsidered,3), [], 8),2);
+clear surroundingconsidered;
+centroidcomb(tbcsum ~= 0,1) = centroidcomb(tbcsum ~=0,1)./tbcsum(tbcsum ~=0);
+centroidcomb(tbcsum ~= 0,2) = centroidcomb(tbcsum ~=0,2)./tbcsum(tbcsum ~=0);
+centroidcomb(tbcsum ~= 0,3) = centroidcomb(tbcsum ~=0,3)./tbcsum(tbcsum ~=0);
 
-    % finally apply the shift
-    nodes(tbcsum == 0,:) = points(tbcsum == 0,:);
-    nodes(tbcsum ~= 0,:) = (1-sh)*nodes(tbcsum ~= 0,:) + sh*centroidcomb(tbcsum ~= 0,:);
+% finally apply the shift
+nodes(tbcsum == 0,:) = points(tbcsum == 0,:);
+nodes(tbcsum ~= 0,:) = (1-sh)*nodes(tbcsum ~= 0,:) + sh*centroidcomb(tbcsum ~= 0,:);
 
 function segmentation = ea_ft_datatype_segmentation(segmentation, varargin)
 
@@ -3913,7 +3930,7 @@ function volume = ea_ft_datatype_volume(volume, varargin)
 % infinite values.
 %
 % (2012) A placeholder 2012 version was created that ensured the axes
-% of the coordinate system to be right-handed. This actually never 
+% of the coordinate system to be right-handed. This actually never
 % has made it to the default version. An executive decision regarding
 % this has not been made as far as I (JM) am aware, and probably it's
 % a more principled approach to keep the handedness free, so don't mess
@@ -3956,11 +3973,11 @@ function volume = ea_ft_datatype_volume(volume, varargin)
 version = ea_ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
-  version = '2014';
+    version = '2014';
 end
 
 if isempty(volume)
-  return;
+    return;
 end
 
 % it should  never have contained these, but they might be present due to an unclear
@@ -3972,89 +3989,89 @@ if isfield(volume, 'frequency'), volume = rmfield(volume, 'frequency'); end
 if isfield(volume, 'latency'),   volume = rmfield(volume, 'latency');   end
 
 if isfield(volume, 'pos')
-  if ~isfield(volume, 'dim')
-    volume.dim = pos2dim(volume.pos);
-  end
-  assert(prod(volume.dim)==size(volume.pos,1), 'dimensions are inconsistent with number of grid positions');
-  if  ~isfield(volume, 'transform')
-    volume.transform = pos2transform(volume.pos, volume.dim);
-  end
-  volume = rmfield(volume, 'pos');
+    if ~isfield(volume, 'dim')
+        volume.dim = pos2dim(volume.pos);
+    end
+    assert(prod(volume.dim)==size(volume.pos,1), 'dimensions are inconsistent with number of grid positions');
+    if  ~isfield(volume, 'transform')
+        volume.transform = pos2transform(volume.pos, volume.dim);
+    end
+    volume = rmfield(volume, 'pos');
 end
 
 switch version
-  case '2014'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if isfield(volume, 'dimord')
-      volume = rmfield(volume, 'dimord');
-    end
-
-    if isfield(volume, 'anatomy')
-      volume.anatomy(~isfinite(volume.anatomy)) = 0;
-    end
-    
-    if isfield(volume, 'avg') && isstruct(volume.avg)
-      % move the average fields to the main structure
-      fn = fieldnames(volume.avg);
-      for i=1:length(fn)
-        dat = volume.avg.(fn{i});
-        try
-          volume.(fn{i}) = reshape(dat, volume.dim);
-        catch
-          warning('could not reshape %s to expected dimensions');
-          volume.(fn{i}) = dat;
+    case '2014'
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        if isfield(volume, 'dimord')
+            volume = rmfield(volume, 'dimord');
         end
-        clear dat
-      end
-      volume = rmfield(volume, 'avg');
-    end
-    
-    % ensure that it is always logical
-    volume = ea_fixinside(volume, 'logical');
-    
-  case '2012b'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if isfield(volume, 'dimord')
-      volume = rmfield(volume, 'dimord');
-    end
-
-    if isfield(volume, 'anatomy')
-      volume.anatomy(~isfinite(volume.anatomy)) = 0;
-    end
-    
-  case '2012'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % THIS ONE DOES NOT SEEM TO HAVE EVER BEEN USED 
-    % HOWEVER, KEEP IT FOR DOCUMENTATION PURPOSES
-   
-    if isfield(volume, 'dimord')
-      volume = rmfield(volume, 'dimord');
-    end
-    
-    % ensure the axes system in the transformation matrix to be
-    % right-handed
-    volume = volumeflip(volume, 'right');
-    
-  case '2011'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if isfield(volume, 'dimord')
-      volume = rmfield(volume, 'dimord');
-    end
-
-  case '2010'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % this might have been N-dimensional and contained a dimord, but in general cannot
-    % be reconstructed on the fly
-
-  case '2003'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if isfield(volume, 'dimord')
-      volume = rmfield(volume, 'dimord');
-    end
-
-  otherwise
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for volume datatype', version);
+        
+        if isfield(volume, 'anatomy')
+            volume.anatomy(~isfinite(volume.anatomy)) = 0;
+        end
+        
+        if isfield(volume, 'avg') && isstruct(volume.avg)
+            % move the average fields to the main structure
+            fn = fieldnames(volume.avg);
+            for i=1:length(fn)
+                dat = volume.avg.(fn{i});
+                try
+                    volume.(fn{i}) = reshape(dat, volume.dim);
+                catch
+                    warning('could not reshape %s to expected dimensions');
+                    volume.(fn{i}) = dat;
+                end
+                clear dat
+            end
+            volume = rmfield(volume, 'avg');
+        end
+        
+        % ensure that it is always logical
+        volume = ea_fixinside(volume, 'logical');
+        
+    case '2012b'
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        if isfield(volume, 'dimord')
+            volume = rmfield(volume, 'dimord');
+        end
+        
+        if isfield(volume, 'anatomy')
+            volume.anatomy(~isfinite(volume.anatomy)) = 0;
+        end
+        
+    case '2012'
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % THIS ONE DOES NOT SEEM TO HAVE EVER BEEN USED
+        % HOWEVER, KEEP IT FOR DOCUMENTATION PURPOSES
+        
+        if isfield(volume, 'dimord')
+            volume = rmfield(volume, 'dimord');
+        end
+        
+        % ensure the axes system in the transformation matrix to be
+        % right-handed
+        volume = volumeflip(volume, 'right');
+        
+    case '2011'
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        if isfield(volume, 'dimord')
+            volume = rmfield(volume, 'dimord');
+        end
+        
+    case '2010'
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % this might have been N-dimensional and contained a dimord, but in general cannot
+        % be reconstructed on the fly
+        
+    case '2003'
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        if isfield(volume, 'dimord')
+            volume = rmfield(volume, 'dimord');
+        end
+        
+    otherwise
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        error('unsupported version "%s" for volume datatype', version);
 end
 
 function [source] = ea_fixinside(source, opt)
@@ -4090,53 +4107,53 @@ function [source] = ea_fixinside(source, opt)
 
 
 if nargin<2
-  opt = 'logical';
+    opt = 'logical';
 end
 
 if ~isfield(source, 'inside')
-  if isfield(source, 'pos')
-    % assume that all positions are inside the region of interest
-    source.inside  = [1:size(source.pos,1)]';
-    source.outside = [];
-  elseif isfield(source, 'dim')
-    source.inside  = [1:prod(source.dim)]';
-    source.outside = [];
-  end
+    if isfield(source, 'pos')
+        % assume that all positions are inside the region of interest
+        source.inside  = [1:size(source.pos,1)]';
+        source.outside = [];
+    elseif isfield(source, 'dim')
+        source.inside  = [1:prod(source.dim)]';
+        source.outside = [];
+    end
 end
 
 if ~isfield(source, 'inside')
-  % nothing to do
-  return;
+    % nothing to do
+    return;
 end
 
 % determine the format
 if isa(source.inside, 'logical')
-  logicalfmt = 1;
+    logicalfmt = 1;
 elseif all(source.inside(:)==0 | source.inside(:)==1)
-  source.inside = logical(source.inside);
-  logicalfmt = 1;
+    source.inside = logical(source.inside);
+    logicalfmt = 1;
 else
-  logicalfmt = 0;
+    logicalfmt = 0;
 end
 
 if ~logicalfmt && strcmp(opt, 'logical')
-  % convert to a logical array
-  if ~isfield(source, 'outside')
-    source.outside = [];
-  end
-  inside(source.inside)  = (1==1);  % true
-  inside(source.outside) = (1==0);  % false
-  source.inside = inside(:);
-  if isfield(source, 'outside')
-    source = rmfield(source, 'outside');
-  end
+    % convert to a logical array
+    if ~isfield(source, 'outside')
+        source.outside = [];
+    end
+    inside(source.inside)  = (1==1);  % true
+    inside(source.outside) = (1==0);  % false
+    source.inside = inside(:);
+    if isfield(source, 'outside')
+        source = rmfield(source, 'outside');
+    end
 elseif logicalfmt && strcmp(opt, 'index')
-  % convert to a vectors with indices
-  tmp = source.inside;
-  source.inside  = find( tmp(:));
-  source.outside = find(~tmp(:));
+    % convert to a vectors with indices
+    tmp = source.inside;
+    source.inside  = find( tmp(:));
+    source.outside = find(~tmp(:));
 else
-  % nothing to do
+    % nothing to do
 end
 
 function segmentation = ea_fixsegmentation(segmentation, fn, style)
@@ -5288,12 +5305,12 @@ t = textscan(f,'%s','delimiter','.');
 t = t{1};
 r = true;
 for k = 1:numel(t)
-  if isfield(s, t{k})
-    s = s.(t{k});
-  else
-    r = false;
-    return;
-  end
+    if isfield(s, t{k})
+        s = s.(t{k});
+    else
+        r = false;
+        return;
+    end
 end
 
 function label = ea_ft_senslabel(type, varargin)
@@ -9876,7 +9893,7 @@ function [type, dimord] = ea_ft_datatype(data, desired)
 % $Id: ea_ft_datatype.m 10064 2014-12-22 14:30:50Z roboos $
 
 if nargin<2
-  desired = [];
+    desired = [];
 end
 
 % determine the type of input data, this can be raw, freq, timelock, comp, spike, source, volume, dip, segmentation, parcellation
@@ -9894,8 +9911,8 @@ issegmentation = ea_check_segmentation(data);
 isparcellation = ea_check_parcellation(data);
 
 if ~isfreq
-  % this applies to a freq structure from 2003 up to early 2006
-  isfreq = all(isfield(data, {'foi', 'label', 'dimord'})) && ~isempty(strfind(data.dimord, 'frq'));
+    % this applies to a freq structure from 2003 up to early 2006
+    isfreq = all(isfield(data, {'foi', 'label', 'dimord'})) && ~isempty(strfind(data.dimord, 'frq'));
 end
 
 % check if it is a spike structure
@@ -9909,82 +9926,82 @@ isgrad = isfield(data, 'label') && isfield(data, 'coilpos') && isfield(data, 'co
 iselec = isfield(data, 'label') && isfield(data, 'elecpos');
 
 if isspike
-  type = 'spike';
+    type = 'spike';
 elseif israw && iscomp
-  type = 'raw+comp';
+    type = 'raw+comp';
 elseif istimelock && iscomp
-  type = 'timelock+comp';
+    type = 'timelock+comp';
 elseif isfreq && iscomp
     type = 'freq+comp';
 elseif israw
-  type = 'raw';
+    type = 'raw';
 elseif iscomp
-  type = 'comp';
+    type = 'comp';
 elseif isfreqmvar
-  % freqmvar should conditionally go before freq, otherwise the returned ea_ft_datatype will be freq in the case of frequency mvar data
-  type = 'freqmvar';
+    % freqmvar should conditionally go before freq, otherwise the returned ea_ft_datatype will be freq in the case of frequency mvar data
+    type = 'freqmvar';
 elseif isfreq
-  type = 'freq';
+    type = 'freq';
 elseif ismvar
-  type = 'mvar';
+    type = 'mvar';
 elseif isdip
-  % dip should conditionally go before timelock, otherwise the ea_ft_datatype will be timelock
-  type = 'dip';
+    % dip should conditionally go before timelock, otherwise the ea_ft_datatype will be timelock
+    type = 'dip';
 elseif istimelock
-  type = 'timelock';
+    type = 'timelock';
 elseif issegmentation
-  % a segmentation data structure is a volume data structure, but in general not vice versa
-  % segmentation should conditionally go before volume, otherwise the returned ea_ft_datatype will be volume
-  type = 'segmentation';
+    % a segmentation data structure is a volume data structure, but in general not vice versa
+    % segmentation should conditionally go before volume, otherwise the returned ea_ft_datatype will be volume
+    type = 'segmentation';
 elseif isvolume
-  type = 'volume';
+    type = 'volume';
 elseif isparcellation
-  % a parcellation data structure is a source data structure, but in general not vice versa
-  % parcellation should conditionally go before source, otherwise the returned ea_ft_datatype will be source
-  type = 'parcellation';
+    % a parcellation data structure is a source data structure, but in general not vice versa
+    % parcellation should conditionally go before source, otherwise the returned ea_ft_datatype will be source
+    type = 'parcellation';
 elseif issource
-  type = 'source';
+    type = 'source';
 elseif ischan
-  % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
-  type = 'chan';
+    % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
+    type = 'chan';
 elseif iselec
-  type = 'elec';
+    type = 'elec';
 elseif isgrad
-  type = 'grad';
+    type = 'grad';
 else
-  type = 'unknown';
+    type = 'unknown';
 end
 
 if nargin>1
-  % return a boolean value
-  switch desired
-    case 'raw'
-      type = any(strcmp(type, {'raw', 'raw+comp'}));
-    case 'timelock'
-      type = any(strcmp(type, {'timelock', 'timelock+comp'}));
-    case 'freq'
-      type = any(strcmp(type, {'freq', 'freq+comp'}));
-    case 'comp'
-      type = any(strcmp(type, {'comp', 'raw+comp', 'timelock+comp', 'freq+comp'}));
-    case 'volume'
-      type = any(strcmp(type, {'volume', 'segmentation'}));
-    case 'source'
-      type = any(strcmp(type, {'source', 'parcellation'}));
-    case 'sens'
-      type = any(strcmp(type, {'elec', 'grad'}));
-    otherwise
-      type = strcmp(type, desired);
-  end % switch
+    % return a boolean value
+    switch desired
+        case 'raw'
+            type = any(strcmp(type, {'raw', 'raw+comp'}));
+        case 'timelock'
+            type = any(strcmp(type, {'timelock', 'timelock+comp'}));
+        case 'freq'
+            type = any(strcmp(type, {'freq', 'freq+comp'}));
+        case 'comp'
+            type = any(strcmp(type, {'comp', 'raw+comp', 'timelock+comp', 'freq+comp'}));
+        case 'volume'
+            type = any(strcmp(type, {'volume', 'segmentation'}));
+        case 'source'
+            type = any(strcmp(type, {'source', 'parcellation'}));
+        case 'sens'
+            type = any(strcmp(type, {'elec', 'grad'}));
+        otherwise
+            type = strcmp(type, desired);
+    end % switch
 end
 
 if nargout>1
-  % FIXME this should be replaced with getdimord in the calling code
-  % also return the dimord of the input data
-  if isfield(data, 'dimord')
-    dimord = data.dimord;
-  else
-    dimord = 'unknown';
-  end
+    % FIXME this should be replaced with getdimord in the calling code
+    % also return the dimord of the input data
+    if isfield(data, 'dimord')
+        dimord = data.dimord;
+    else
+        dimord = 'unknown';
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -9993,18 +10010,18 @@ end
 function [res] = ea_check_chan(data)
 
 if ~isstruct(data) || any(isfield(data, {'time', 'freq', 'pos', 'dim', 'transform'}))
-  res = false;
+    res = false;
 elseif isfield(data, 'dimord') && any(strcmp(data.dimord, {'chan', 'chan_chan'}))
-  res = true;
+    res = true;
 else
-  res = false;
-  fn = fieldnames(data);
-  for i=1:numel(fn)
-    if isfield(data, [fn{i} 'dimord']) && any(strcmp(data.([fn{i} 'dimord']), {'chan', 'chan_chan'}))
-      res = true;
-      break;
+    res = false;
+    fn = fieldnames(data);
+    for i=1:numel(fn)
+        if isfield(data, [fn{i} 'dimord']) && any(strcmp(data.([fn{i} 'dimord']), {'chan', 'chan_chan'}))
+            res = true;
+            break;
+        end
     end
-  end
 end
 
 
@@ -10015,38 +10032,38 @@ function [res] = ea_check_segmentation(volume)
 res = false;
 
 if ~isfield(volume, 'dim')
-  return
+    return
 end
 
 if isfield(volume, 'pos')
-  return
+    return
 end
 
 if any(isfield(volume, {'seg', 'csf', 'white', 'gray', 'skull', 'scalp', 'brain'}))
-  res = true;
-  return
+    res = true;
+    return
 end
 
 fn = fieldnames(volume);
 isboolean = [];
 cnt = 0;
 for i=1:length(fn)
-  if isfield(volume, [fn{i} 'label'])
-    res = true;
-    return
-  else
-    if (islogical(volume.(fn{i})) || isnumeric(volume.(fn{i}))) && isequal(size(volume.(fn{i})),volume.dim)
-      cnt = cnt+1;
-      if islogical(volume.(fn{i}))
-        isboolean(cnt) = true;
-      else
-        isboolean(cnt) = false;
-      end
+    if isfield(volume, [fn{i} 'label'])
+        res = true;
+        return
+    else
+        if (islogical(volume.(fn{i})) || isnumeric(volume.(fn{i}))) && isequal(size(volume.(fn{i})),volume.dim)
+            cnt = cnt+1;
+            if islogical(volume.(fn{i}))
+                isboolean(cnt) = true;
+            else
+                isboolean(cnt) = false;
+            end
+        end
     end
-  end
 end
 if ~isempty(isboolean)
-  res = all(isboolean);
+    res = all(isboolean);
 end
 
 
@@ -10057,55 +10074,55 @@ function [res] = ea_check_parcellation(source)
 res = false;
 
 if ~isfield(source, 'pos')
-  return
+    return
 end
 
 fn = fieldnames(source);
 fb = false(size(fn));
 npos = size(source.pos,1);
 for i=1:numel(fn)
-  % for each of the fields check whether it might be a logical array with the size of the number of sources
-  tmp = source.(fn{i});
-  fb(i) = numel(tmp)==npos && islogical(tmp);
+    % for each of the fields check whether it might be a logical array with the size of the number of sources
+    tmp = source.(fn{i});
+    fb(i) = numel(tmp)==npos && islogical(tmp);
 end
 if sum(fb)>1
-  % the presence of multiple logical arrays suggests it is a parcellation
-  res = true;
+    % the presence of multiple logical arrays suggests it is a parcellation
+    res = true;
 end
 
 if res == false      % check if source has more D elements
-  check = 0;
-  for i = 1: length(fn)
-    fname = fn{i};
-    switch fname
-      case 'tri'
-        npos = size(source.tri,1);
-        check = 1;
-      case 'hex'
-        npos = size(source.hex,1);
-        check = 1;
-      case 'tet'
-        npos = size(source.tet,1);
-        check = 1;
+    check = 0;
+    for i = 1: length(fn)
+        fname = fn{i};
+        switch fname
+            case 'tri'
+                npos = size(source.tri,1);
+                check = 1;
+            case 'hex'
+                npos = size(source.hex,1);
+                check = 1;
+            case 'tet'
+                npos = size(source.tet,1);
+                check = 1;
+        end
     end
-  end
-  if check == 1   % check if elements are labelled
-    for i=1:numel(fn)
-      tmp = source.(fn{i});
-      fb(i) = numel(tmp)==npos && islogical(tmp);
+    if check == 1   % check if elements are labelled
+        for i=1:numel(fn)
+            tmp = source.(fn{i});
+            fb(i) = numel(tmp)==npos && islogical(tmp);
+        end
+        if sum(fb)>1
+            res = true;
+        end
     end
-    if sum(fb)>1
-      res = true;
-    end
-  end
 end
 
 fn = fieldnames(source);
 for i=1:length(fn)
-  if isfield(source, [fn{i} 'label']) && isnumeric(source.(fn{i}))
-    res = true;
-    return
-  end
+    if isfield(source, [fn{i} 'label']) && isnumeric(source.(fn{i}))
+        res = true;
+        return
+    end
 end
 
 

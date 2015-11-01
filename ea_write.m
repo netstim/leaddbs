@@ -1,6 +1,6 @@
 function ea_write(options)
 
-
+ea_updatemodel(options);
 
 
 % Slice 2D Visualization
