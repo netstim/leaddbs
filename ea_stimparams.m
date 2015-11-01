@@ -873,6 +873,9 @@ if verLessThan('matlab','8.5') % ML <2014a support
         if isfield(PL(p),'vatsurfs')
             delete(PL(p).vatsurfs(logical(PL(p).vatsurfs)));
         end
+        if isfield(PL(p),'quiv')
+            delete(PL(p).quiv(logical(PL(p).quiv)));
+        end        
         if isfield(PL(p),'fib_plots')
             if isfield(PL(p).fib_plots,'fibs')
                 delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs)));
@@ -902,6 +905,9 @@ else
     for p=1:length(PL) 
         if isfield(PL(p),'vatsurfs')
             delete(PL(p).vatsurfs);
+        end
+        if isfield(PL(p),'quiv')
+            delete(PL(p).quiv);
         end
         if isfield(PL(p),'fib_plots')
             if isfield(PL(p).fib_plots,'fibs')
