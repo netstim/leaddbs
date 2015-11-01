@@ -207,6 +207,7 @@ end
 
 
 if options.manualheightcorrection
+    ea_updatemodel(options);
     
     % load reconstruction results
     try
@@ -215,16 +216,7 @@ if options.manualheightcorrection
         ea_error([patientname,': No reconstruction information found. Please run reconstruction first.']);
     end
     
-    if ~exist('markers','var') % backward compatibility to old recon format
-        for side=options.sides
-            markers(side).head=coords_mm{side}(1,:);
-            markers(side).tail=coords_mm{side}(4,:);            
-            normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-            orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-            markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
-            markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
-        end
-    end
+
         elmodel=options.elmodel;
     save([options.root,patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','markers','elmodel');
     

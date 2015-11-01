@@ -5,12 +5,12 @@ function [cimat,reldist,mat]=ea_sample_cuboid(varargin)
 trajectory=varargin{1};
 trajvector=-mean(diff(trajectory));
 options=varargin{2};
-%     vizz=1;
-% 
-%     if vizz
-%         figure
-%         hold on
-%     end
+    vizz=0;
+
+    if vizz
+        figure
+        hold on
+    end
     
 switch options.modality
     case 1 % MR
@@ -98,9 +98,9 @@ end
 % now set trajvector to a size that 10 of it will be the size of eldist.
 
 
-% if vizz
-%     plot3(trajectory(:,1),trajectory(:,2),trajectory(:,3),'b')
-% end
+if vizz
+    plot3(trajectory(:,1),trajectory(:,2),trajectory(:,3),'b')
+end
 
 
 startpt=trajectory(end,:);            % 3d point of starting line (5 vox below coord 1).
@@ -110,6 +110,8 @@ startpt=trajectory(end,:);            % 3d point of starting line (5 vox below c
 orth=null(trajvector);
 orthx=orth(:,1)'*((reldist/10)/norm(orth(:,1))); % vector going perpendicular to trajvector by 0.5 mm in x dir.
 orthy=orth(:,2)'*((reldist/10)/norm(orth(:,2))); % vector going perpendicular to trajvector by 0.5 mm in y dir.
+
+
 
 
 
@@ -124,9 +126,16 @@ end
 
 
 
+if orthx(1)>0;
+    orthx=-orthx;
+end
+if orthy(1)>0;
+    orthy=-orthy;
+end
 
-xv=-xdim:spacing:xdim;
-yv=-ydim:spacing:ydim;
+    xv=-xdim:spacing:xdim;
+    yv=-ydim:spacing:ydim;
+
 zv=1:spacing:zdim;
 imat=nan(length(yv),length(xv),length(zv));
     
@@ -135,10 +144,11 @@ imat=nan(length(yv),length(xv),length(zv));
 cnt=1;
 coord2write=zeros(numel(imat),3);
 coord2extract=zeros(numel(imat),3);
-%     if vizz
-%         pcoord2extract=zeros(1,3);
-%     end
+    if vizz
+        pcoord2extract=zeros(1,3);
+    end
 zcnt=1;
+
 for zz=zv
     xcnt=1;
     for xx=xv
@@ -159,12 +169,14 @@ for zz=zv
     end
     zcnt=zcnt+1;
 end
-%     if vizz
-%                    plot3(pcoord2extract(:,1),pcoord2extract(:,2),pcoord2extract(:,3),'r.'); 
-%     end        
+    if vizz
+                   plot3(coord2extract(:,1),coord2extract(:,2),coord2extract(:,3),'r.'); 
+                   plot3(coord2write(:,1),coord2write(:,2),coord2write(:,3),'b.');    
+    end        
 %                     imat(xx+xdim+1,yy+ydim+1,zz,(tracor))=spm_sample_vol(V,coord2extract(1),coord2extract(2),coord2extract(3),3);
     imat(sub2ind(size(imat),coord2write(:,1),coord2write(:,2),coord2write(:,3)))=spm_sample_vol(V,coord2extract(:,1),coord2extract(:,2),coord2extract(:,3),interp);
  cimat=squeeze(imat(:,:,:));
+
 
 
 if nargout>2 % also export V.mat
