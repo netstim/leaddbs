@@ -296,12 +296,11 @@ zoom(6)
 opensliceviewer([],[],resultfig,options);
 
 if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
-    
+try    
     % store json in figure file
-    
     bbstruct=ea_viz2brainbrowser(vizstruct);
     setappdata(resultfig,'bbstruct',bbstruct);
-    
+end
     if options.prefs.ls.autosave
         ea_export_server([],[],options);
     end
