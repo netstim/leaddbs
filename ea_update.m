@@ -66,10 +66,10 @@ if update
     disp('*** Update finished.');
 
 else
-    disp('LEAD-DBS is already up-to-date!');
-    msgbox({'LEAD-DBS aleady up-to-date!';...
-            'To get the latest full version, please delete .version.txt and try again later.'},...
-            'update','Help')
+    info=sprintf(['LEAD-DBS aleady up-to-date!\n',...
+                  'To get the latest full version, please delete .version.txt and try again later.']);
+    display(info);
+    msgbox(info,'update','Help')
 end
 
 
