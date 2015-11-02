@@ -83,8 +83,7 @@ set(handles.atlassetpopup,'String',asc);
 set(handles.normalize_checkbox,'Value',0);
 
 set(hObject,'Color',[1 1 1]);
-vnum=ea_getvsn('local');
-set(handles.versiontxt,'String',['v ',num2str(vnum(1))]);
+set(handles.versiontxt,'String',['v ',ea_getvsn('local')]);
 
 
 % set DICOM input and output name strings:
@@ -177,16 +176,16 @@ end
 
 
 if nargin
-    
+
     if ~isempty(varargin)
 switch varargin{1}
-    case 'loadsubs'     
-   
+    case 'loadsubs'
+
   ea_load_pts(handles,varargin{2});
-        
+
 end
     end
-   
+
 end
 
 
@@ -201,7 +200,7 @@ getui(handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = lead_OutputFcn(hObject, eventdata, handles) 
+function varargout = lead_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -221,7 +220,7 @@ function run_button_Callback(hObject, eventdata, handles)
 
 options=handles2options(handles);
 
-try 
+try
     options.lc=load([fileparts(which('lead')),filesep,'connectomics',filesep,'lc_options.mat']);
 catch
     options.lc=[];
@@ -249,7 +248,7 @@ prefs=ea_prefs('');
 if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do % do parallel processing if available and set in ea_prefs.
 try delete(gcp); end
     pp=parpool(prefs.pp.profile,prefs.pp.csize);
-    
+
     for pat=1:length(uipatdirs)
         % set patient specific options
         opts{pat}=options;
@@ -257,28 +256,28 @@ try delete(gcp); end
         [~,thispatdir]=fileparts(uipatdirs{pat});
         opts{pat}.patientname=thispatdir;
     end
-   
+
     parfor pat=1:length(uipatdirs)
-        
+
         % run main function
         try
             ea_autocoord(opts{pat});
         catch
             warning([opts{pat}.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
         end
-        
+
     end
     delete(pp);
-    
+
 else
-    
+
     for pat=1:length(uipatdirs)
         % set patient specific options
         options.root=[fileparts(uipatdirs{pat}),filesep];
         [root,thispatdir]=fileparts(uipatdirs{pat});
         options.patientname=thispatdir;
         % run main function
-        
+
         if length(uipatdirs)>1 % multi mode. Dont stop at errors.
             try
                 ea_autocoord(options);
@@ -707,18 +706,18 @@ function doreconstruction_checkbox_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of doreconstruction_checkbox
 
-if get(hObject,'Value') 
-    
-    
-   set(handles.maskwindow_txt,'Enable','on'); 
-set(handles.targetpopup,'Enable','on'); 
-   
-   
-   
+if get(hObject,'Value')
+
+
+   set(handles.maskwindow_txt,'Enable','on');
+set(handles.targetpopup,'Enable','on');
+
+
+
 else
-    
-   set(handles.targetpopup,'Enable','off'); 
-   set(handles.maskwindow_txt,'Enable','off'); 
+
+   set(handles.targetpopup,'Enable','off');
+   set(handles.maskwindow_txt,'Enable','off');
 end
 storeui(handles);
 
@@ -1052,7 +1051,7 @@ if status == JFileChooser.APPROVE_OPTION
     for i=1:size(jFile, 1)
         pathname{i} = char(jFile(i).getAbsolutePath);
     end
-    
+
 elseif status == JFileChooser.CANCEL_OPTION
     pathname = [];
 else
@@ -1107,13 +1106,13 @@ modality=ea_checkctmrpresent(handles);
 % check if MRCT popup is set correctly
 
 if any(modality)
-   
+
    if ~modality(get(handles.MRCT,'Value'))
        set(handles.MRCT,'ForegroundColor',[0.8,0.5,0.5]);
    else
        set(handles.MRCT,'ForegroundColor',[0.5,0.8,0.5]);
    end
-    
+
 end
 
 
@@ -1205,7 +1204,7 @@ if any(modality)
    if ~modality(get(handles.MRCT,'Value'))
        set(handles.MRCT,'Value',switchto);
    else
-   end   
+   end
 end
 else
     % switch MRCT popup to specified handle.
@@ -1241,7 +1240,7 @@ switch get(handles.patdir_choosebox,'String')
         outdir=get(handles.patdir_choosebox,'String');
 end
 try
-    
+
 options=load([outdir,'ea_ui']);
 options2handles(options,handles); % update UI
 end
@@ -1294,7 +1293,7 @@ options.modality = get(handles.MRCT,'Value');
 
 
 
-options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback. 
+options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback.
 
 %sidelog=[get(handles.right_checkbox,'Value') == get(handles.right_checkbox,'Max'),get(handles.left_checkbox,'Value') == get(handles.left_checkbox,'Max')];
 %sidepos=[1,2];

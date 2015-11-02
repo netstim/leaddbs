@@ -59,8 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 
-vnum=ea_getvsn('local');
-set(handles.versiontxt,'String',['v ',num2str(vnum(1))]);
+set(handles.versiontxt,'String',['v ',ea_getvsn('local')]);
 
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
@@ -206,18 +205,18 @@ keyboard
 
 outfolder=uigetdir('','Specify output directory...');
 if outfolder
-    
+
     %% run trajectory reconstruction.
     options=ea_step1options(handles);
     options.root=[fileparts(fileparts(outfolder)),filesep];
     [~,options.patientname]=fileparts(fileparts(outfolder));
     keyboard
-    
+
     % copy files from temp to new folder
     fis={options.prefs.tranii};
-    
+
     ea_autocoord(options);
-    
+
 end
 
 
@@ -245,9 +244,9 @@ if fselect==1 % nifti
     end
     copyfile([path,fis],[directory,'import.nii']);
 else % DICOM
-    
+
     fips=cellfun(@strcat,path,fis);
-    
+
     matlabbatch{1}.spm.util.import.dicom.data = fips;
     matlabbatch{1}.spm.util.import.dicom.root = 'flat';
     matlabbatch{1}.spm.util.import.dicom.outdir = firectory;
@@ -256,7 +255,7 @@ else % DICOM
     matlabbatch{1}.spm.util.import.dicom.convopts.icedims = 0;
     cfg_util('run',{matlabbatch});
     clear matlabbatch
-    
+
     di=dir([directory,'*.nii']);
     movefile([directory,di(1).name],[directory,'import.nii']);
 end
@@ -304,13 +303,13 @@ options.normalize.check=0;
 options.modality = get(handles.MRCT,'Value');
 
 if options.modality==2; % CT
-    
+
     % coreg CT
     options.coregct.do=~get(handles.isalreadycoregisted,'Value');
     options.coregct.method='Coregister postop-CT with preop-MRI (Matlab Imreg)';
     options.coregct.methodn=1;
     options.coregct.coregthreshs=[0.6,0.4];
-    
+
     options.coregctcheck=0;
 else
     options.coregct.do=0;

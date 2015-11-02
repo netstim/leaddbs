@@ -1,15 +1,14 @@
 function ea_dispbn(varargin)
 
-vnum=ea_getvsn('local');
-vnum=['v ',num2str(vnum(1))];
+vnum=['v ',ea_getvsn('local')];
 if nargin>0
     if strcmp(varargin{1},'ee');
-        
+
         for space=1:100
             clc
             spstr=repmat(' ',1,space);
             %% display banner..
-            
+
             disp('                 Welcome to                            ');
             disp('                                                            ');
             disp('  _______________________________________                   ');
@@ -25,10 +24,10 @@ if nargin>0
             disp(['                     ',vnum,'                    ']);
             pause(0.001)
         end
-        
-        
+
+
         clc
-        
+
         disp('                 Welcome to                ');
         disp('                                           ');
         disp('  _______________________________________  ');
@@ -48,7 +47,7 @@ else
     clc
     spstr=repmat(' ',1,space);
     %% display banner..
-    
+
     disp('                 Welcome to                            ');
     disp('                                                            ');
     disp('  _______________________________________                   ');
@@ -63,6 +62,6 @@ else
     disp('                   Toolbox.                            ');
     disp(['                     ',vnum,'                    ']);
     pause(0.001)
-    
-    
+
+
 end
