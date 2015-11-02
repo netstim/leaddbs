@@ -1,12 +1,12 @@
 function ea_firstrun(handles)
 
 % check if a newer version is available..
-% local=ea_getvsn('local');
-% web=ea_getvsn('web');
+% local=ea_getvsn('local',1);
+% web=ea_getvsn('web',1);
 % vcheck=(local<web);
-% 
-% 
-% if any(vcheck) && ~any(isnan(web))
+%
+%
+% if vcheck
 %     set(handles.updatebutn,'Visible','on');
 %     set(handles.updatebutn,'BackgroundColor',[0.2,0.8,0.2]);
 % else
@@ -79,9 +79,9 @@ if ~isfield(options.prefs,'firstrun') % first run.
         'We hope that you enjoy using the LEAD toolbox. \n \n',...
         'Any suggestions are more than welcome (andreas.horn@charite.de). \n'
         ]);
-    
+
     fid = fopen([fileparts(which('lead')),filesep,'ea_prefs.m'],'a');
     fwrite(fid,sprintf(['prefs.firstrun=','''','off','''','; \n']));
     fclose(fid);
-    
+
 end

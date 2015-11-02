@@ -1,40 +1,39 @@
-function version=ea_getvsn(com)
+function version=ea_getvsn(com, num)
 % This function simply exports the version of the current Lead
 % distribution. For updates please see lead-dbs.org
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
+
+% return version number or string(default)
+if nargin < 2
+    num = false;
+end
+
 ldir=[fileparts(which('lead')),filesep];
 switch com
     
     case 'web'
-        try
         urlwrite('http://www.lead-dbs.org/release/sw_version.txt',[ldir,'.webversion.txt'],'Timeout',5);
-        load([ldir,'.webversion.txt']);
+        if num
+            v = textscan(fopen([ldir,'.webversion.txt']), '%2d', 'Delimiter', '.');
+            version = v{1}(1)*10000+v{1}(2)*100+v{1}(3);
+        else
+            version = strtrim(fileread([ldir,'.webversion.txt']));
+        end
         delete([ldir,'.webversion.txt']);
-        try
-            version=X_webversion;
-        catch
-            version=webversion;
-        end
-        catch
-            version=[nan;nan];
-        end
     case 'local'
         try
-            load([fileparts(which('lead')),filesep,'.version.txt']);
-            if ~exist('version','var');
-            version=X_version;
+            if num
+                v = textscan(fopen([ldir,'.version.txt']), '%2d', 'Delimiter', '.');
+                version = v{1}(1)*10000+v{1}(2)*100+v{1}(3);
+            else
+                version = strtrim(fileread([ldir,'.version.txt']));
             end
-            
-        catch % initialize versioning (if .version.txt has gotten lost).
-            version=[1.0;1.0];
-            fileID = fopen([fileparts(which('lead')),filesep,'.version.txt'],'w');
-            fprintf(fileID,'%6.3f\n',version);
-            fclose(fileID);
+        catch 
+            version='Unknown';
         end
 end
-version=version(1);
 
 
 % rough version history: (see git repo for details)

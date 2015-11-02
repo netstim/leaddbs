@@ -167,8 +167,7 @@ end
 
 
 % set version text:
-vnum=ea_getvsn('local');
-set(handles.versiontxt,'String',['v ',num2str(vnum(1))]);
+set(handles.versiontxt,'String',['v ',ea_getvsn('local')]);
 
 
 % make listboxes multiselectable:
@@ -774,7 +773,7 @@ if ~isempty(M.patient.list)
             M.elstruct(pt).trajectory=trajectory;
             M.elstruct(pt).name=[pats{pt}];
             if ~exist('markers','var') % backward compatibility to old recon format
-                
+
                 for side=1:2
                     markers(side).head=coords_mm{side}(1,:);
                     markers(side).tail=coords_mm{side}(4,:);
@@ -785,7 +784,7 @@ if ~isempty(M.patient.list)
                 end
             end
             M.elstruct(pt).markers=markers;
-            
+
         catch
             %warning('No reconstruction present in folder. Using information stored in group-file.');
         end
