@@ -83,7 +83,7 @@ set(handles.atlassetpopup,'String',asc);
 set(handles.normalize_checkbox,'Value',0);
 
 set(hObject,'Color',[1 1 1]);
-set(handles.versiontxt,'String',['v ',ea_getvsn('local')]);
+set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 
 % set DICOM input and output name strings:

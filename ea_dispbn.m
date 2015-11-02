@@ -1,6 +1,6 @@
 function ea_dispbn(varargin)
 
-vnum=['v ',ea_getvsn('local')];
+vnum=['v',ea_getvsn('local')];
 if nargin>0
     if strcmp(varargin{1},'ee');
 

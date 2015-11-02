@@ -59,7 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 
-set(handles.versiontxt,'String',['v ',ea_getvsn('local')]);
+set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
