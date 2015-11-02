@@ -9,7 +9,6 @@ function ea_firstrun(handles)
 %     vcheck=(local<web);
 % end
 %
-%
 % if vcheck
 %     set(handles.updatebutn,'Visible','on');
 %     set(handles.updatebutn,'BackgroundColor',[0.2,0.8,0.2]);
