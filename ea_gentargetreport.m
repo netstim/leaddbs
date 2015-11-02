@@ -22,9 +22,12 @@ for thr=0:1
         
         for pt=1:length(M.ui.listselect)
             
-            distances(:,pt)=[M.stats(M.ui.listselect(pt)).ea_stats.conmat{1}(:,M.ui.volumeintersections(target));... % right side
-                M.stats(M.ui.listselect(pt)).ea_stats.conmat{2}(:,M.ui.volumeintersections(target))];
-            
+            try
+                distances(:,pt)=[M.stats(M.ui.listselect(pt)).ea_stats.conmat{1}(:,M.ui.volumeintersections(target));... % right side
+                    M.stats(M.ui.listselect(pt)).ea_stats.conmat{2}(:,M.ui.volumeintersections(target))];
+            catch
+                ea_error('Please run DBS stats for all patients first.');
+            end
             
             
         end

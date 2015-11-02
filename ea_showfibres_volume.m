@@ -98,7 +98,7 @@ if isstruct(VAT{1}.VAT) % e.g. simbio model used
 end
 
 
-for side=1:length(VAT)
+for side=1:2
     if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
     
     for vat=1:length(VAT{side}.VAT)
@@ -270,7 +270,7 @@ if stimparams(1).showfibers
     
     
     maxvat=length(VAT);
-    for side=1:maxvat
+    for side=1:2
         for vat=1:length(VAT{side}.VAT)
             
             if stimparams(side).U(vat) % check if U ~= 0
