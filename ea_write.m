@@ -1,7 +1,7 @@
 function ea_write(options)
-
+try
 ea_updatemodel(options);
-
+end
 
 % Slice 2D Visualization
 if options.d2.write
