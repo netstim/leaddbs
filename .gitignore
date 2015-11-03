@@ -31,5 +31,4 @@ Thumbs.db
 !bg_gui.png
 !bg_gui_lg.png
 !ea_logo.png
-!*egjob*.mat
-!*emplates/labeling/*.nii
+!segjob*.mat
