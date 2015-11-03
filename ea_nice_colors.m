@@ -1,6 +1,9 @@
 function colors=ea_nice_colors(nc,options)
-
+try
 options.prefs=ea_prefs(options);
+catch
+    keyboard
+end
 
 switch options.prefs.d2.groupcolors
     

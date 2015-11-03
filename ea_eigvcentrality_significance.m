@@ -78,8 +78,11 @@ end
 ids=ea_fdr_bh(p,0.05); % calculate fdr after Benjamini & Hochberg
 
 ixes=zeros(1,size(XYZV,1));
+try
 ixes(ids)=1;
+end
 ixes=logical(ixes);
+
 disp([num2str(sum(ixes)),' values identified above threshold at p>0.05 in pairwise testing.']);
 %keyboard
 %end

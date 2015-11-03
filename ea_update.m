@@ -26,7 +26,7 @@ if update
         patch='lead_dbs';
         updurl=['http://www.lead-dbs.org/release/',patch,'.zip'];
     elseif update==2 % incremental update
-        patch=['updates_',strrep(local,'.',''),'-',strrep(web,'.','')];
+            patch=['updates_',strrep(local,'.',''),'-',strrep(web,'.','')];
         updurl=['http://www.lead-dbs.org/release/',patch,'.zip'];
     end
 

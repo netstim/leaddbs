@@ -8,6 +8,7 @@ function isom=ea_reformat_isomatrix(isom,M,options)
 % Andreas Horn
 
 
+
 if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]}), if not convert to one.
     if min(size(isom))==1 && length(size(isom))==2 % single vector
         

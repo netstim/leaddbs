@@ -245,8 +245,11 @@ for side=options.sides
                 alpha(isnan(alpha))=0;
                 % convert slice to rgb format
                 %slicergb=nan([size(slice),3]);
+                
                 jetlist=eval(options.prefs.d2.isovolcolormap);
-                slice=(slice-minval)/(maxval-minval); % set min max to boundaries 0-1.
+jetlist=othercolor('YlGnBu6');
+jetlist=othercolor('YlOrBr6');
+slice=(slice-minval)/(maxval-minval); % set min max to boundaries 0-1.
                 
                 % ##
                 % add some "contrast" ? remove this part for linear
@@ -298,7 +301,7 @@ warning('off')
             % Show coordinates
             if isstruct(elstruct)
                 if length(elstruct)>1
-                    cmap=ea_nice_colors(length(elstruct),[0,0,0]);
+                    cmap=ea_nice_colors(length(elstruct),options);
                     for pt=1:length(elstruct)
                         ptnames{pt}=elstruct(pt).name;
                     end

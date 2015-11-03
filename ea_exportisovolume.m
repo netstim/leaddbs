@@ -7,6 +7,7 @@ function ea_exportisovolume(elstruct,options)
 
 
 disp('*** Exporting isovolume to nifti files.');
+
 if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
     shifthalfup=1;
 elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts

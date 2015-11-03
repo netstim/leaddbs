@@ -247,7 +247,7 @@ setappdata(gcf,'M',M);
 refreshvifc(handles);
 % save M
 M=getappdata(gcf,'M');
-save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
+save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
 
 
 
@@ -331,7 +331,7 @@ try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); 
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
-    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
+    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
     disp('Done.');
 end
 
@@ -1278,7 +1278,7 @@ for pt=1:length(M.patient.list)
         M.elstruct(pt).trajectory=trajectory;
         setappdata(gcf,'M',M);
 
-        save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M');
+        save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M','-v7.3');
         try      movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']); end
         rmdir([M.ui.groupdir,'tmp'],'s');
 
@@ -1474,7 +1474,7 @@ set(handles.groupdir_choosebox,'String',nudir);
 try % if file already exists, load it (and overwrite M).
     load([nudir,'LEAD_groupanalysis.mat']);
 catch % if not, store it saving M.
-    save([nudir,'LEAD_groupanalysis.mat'],'M');
+    save([nudir,'LEAD_groupanalysis.mat'],'M','-v7.3');
 end
 
 M.ui.groupdir=nudir;
@@ -2016,11 +2016,13 @@ function lg_figure_CloseRequestFcn(hObject, eventdata, handles)
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
+    
     M=getappdata(hObject,'M');
     try
-        save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
+        save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
     catch
         warning('Data could not be saved.');
+        keyboard
     end
     disp('Bye for now.');
 end
@@ -2097,7 +2099,7 @@ try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); 
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
-    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M');
+    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
     disp('Done.');
 end
 
