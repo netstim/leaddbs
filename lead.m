@@ -1629,14 +1629,13 @@ catch
     msgbox('Please set the working directory first!', 'Error','error');
     return;
 end
-if ispc
-    c = system(['explorer ', outfolder]);
+
+if ismac
+    system(['open ', outfolder]);
 elseif isunix
-    if ismac
-        c = system(['open ', outfolder]);
-    else
-        c = system(['xdg-open ', outfolder]);
-    end
+    system(['xdg-open ', outfolder]);
+elseif ispc
+    system(['explorer ', outfolder]);
 end
 
 % --- Executes on button press in viewmanual.
