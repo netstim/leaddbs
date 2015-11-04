@@ -105,6 +105,7 @@ if ~isempty(reg)
    end
    end
 end
+set(handles.variabletype, 'Value', 1);
 set(handles.datatable,'ColumnName',{'Value'});
 
 reg=reg(1:size(reg,1),1);
@@ -123,6 +124,7 @@ if ~isempty(reg)
    end
    end
 end
+set(handles.variabletype, 'Value', 2);
 set(handles.datatable,'ColumnName',{'K0','K1','K2','K3','K8','K9','K10','K11'});
 
 nreg=nan(size(reg,1),8);
@@ -144,6 +146,7 @@ if ~isempty(reg)
    end
    end
 end
+set(handles.variabletype, 'Value', 3);
 set(handles.datatable,'ColumnName',{'K1-2','K2-3','K3-4','K8-9','K9-10','K10-11'});
 
 nreg=nan(size(reg,1),6);
