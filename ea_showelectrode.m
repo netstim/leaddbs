@@ -50,7 +50,6 @@ for side=options.sides
             electrode.tail_position,1
             electrode.x_position,1
             electrode.y_position,1]; % points in model
-         
         B=[elstruct.markers(side).head,1;
            elstruct.markers(side).tail,1;
            elstruct.markers(side).x,1;
