@@ -106,7 +106,9 @@ switch spm('ver')
         try movefile([options.root,options.patientname,filesep,'swr',options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,options.prefs.gsagnii]); end
         try movefile([options.root,options.patientname,filesep,'swr',options.prefs.ctnii_coregistered],[options.root,options.patientname,filesep,options.prefs.gctnii]); end
         try delete([options.root,options.patientname,filesep,'r',options.prefs.prenii_unnormalized]); end
+        if ~strcmp(options.prefs.tranii_unnormalized,options.prefs.rawctnii_unnormalized)
         try delete([options.root,options.patientname,filesep,'r',options.prefs.tranii_unnormalized]); end
+        end
         try delete([options.root,options.patientname,filesep,'r',options.prefs.cornii_unnormalized]); end
         try delete([options.root,options.patientname,filesep,'r',options.prefs.sagnii_unnormalized]); end        
 end

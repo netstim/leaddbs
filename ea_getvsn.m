@@ -14,7 +14,17 @@ ldir=[fileparts(which('lead')),filesep];
 switch com
     
     case 'web'
-        urlwrite('http://www.lead-dbs.org/release/sw_version.txt',[ldir,'.webversion.txt'],'Timeout',5);
+        try
+            webopts=weboptions('Timeout',5);
+            websave('http://www.lead-dbs.org/release/sw_version.txt',[ldir,'.webversion.txt'],webopts);
+        catch
+            try
+                urlwrite('http://www.lead-dbs.org/release/sw_version.txt',[ldir,'.webversion.txt'],'Timeout',5);
+            catch
+                version='Unknown';
+                return
+            end
+        end
         if num
             v = textscan(fopen([ldir,'.webversion.txt']), '%2d', 'Delimiter', '.');
             version = v{1}(1)*10000+v{1}(2)*100+v{1}(3);
@@ -30,14 +40,14 @@ switch com
             else
                 version = strtrim(fileread([ldir,'.version.txt']));
             end
-        catch 
+        catch
             version='Unknown';
         end
 end
 
 
 % rough version history: (see git repo for details)
-% 
+%
 % vstr='v 1.2';
 % added DICOM import
 % vstr='v 1.15';

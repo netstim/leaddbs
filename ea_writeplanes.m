@@ -247,8 +247,6 @@ for side=options.sides
                 %slicergb=nan([size(slice),3]);
                 
                 jetlist=eval(options.prefs.d2.isovolcolormap);
-jetlist=othercolor('YlGnBu6');
-jetlist=othercolor('YlOrBr6');
 slice=(slice-minval)/(maxval-minval); % set min max to boundaries 0-1.
                 
                 % ##

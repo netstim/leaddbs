@@ -11,6 +11,7 @@ if ischar(options) % return name of method.
     return
 end
 
+ea_normalize_reslicepretra(options);
 
 ea_brainsfit([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...
           [options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],...
