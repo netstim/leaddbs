@@ -1,7 +1,7 @@
-function [ixes]=ea_eigvcentrality_significance(XYZV)
+function [ixes]=ea_centrality_significance(XYZV)
 
 
-
+keyboard
 
 % clear NAN vars:
 XYZV(isnan(XYZV(:,4)),:)=[];
@@ -21,16 +21,30 @@ Peuc=squareform(pdist(dat(:,1:3))); % distance matrix
 Pval=squareform(pdist(dat(:,4))); % distance matrix
 
 % exp
-Peuc(logical(eye(size(Peuc,1))))=1./exp(Peuc(logical(eye(size(Peuc,1)))));
-Pval(logical(eye(size(Peuc,1))))=1./exp(Pval(logical(eye(size(Peuc,1)))));
-[X,Y]=meshgrid(dat(:,4),dat(:,4));
-vals=mean(cat(3,X,Y),3);
-Pval=vals.^Pval;
+zexp=2; % 1=zscore, 2=exp
+switch zexp
+    case 1
+        Peuc(~logical(eye(size(Peuc,1))))=zscore(Peuc(~logical(eye(size(Peuc,1)))));
+        Peuc(logical(eye(size(Peuc,1))))=1;
+        Pval(~logical(eye(size(Pval,1))))=zscore(Pval(~logical(eye(size(Pval,1)))));
+        Pval(logical(eye(size(Pval,1))))=1;
+        [X,Y]=meshgrid(dat(:,4),dat(:,4));
+        vals=mean(cat(3,X,Y),3);
+        vals(:)=zscore(vals(:));
+    case 2
+        Peuc(~logical(eye(size(Peuc,1))))=1./exp(Peuc(~logical(eye(size(Peuc,1)))));
+        Peuc(logical(eye(size(Peuc,1))))=1;
+        Pval(~logical(eye(size(Pval,1))))=1./exp(Pval(~logical(eye(size(Pval,1)))));
+        Pval(logical(eye(size(Pval,1))))=1;
+        [X,Y]=meshgrid(dat(:,4),dat(:,4));
+        vals=mean(cat(3,X,Y),3);
+end
+Pval=vals.*Pval;
 
-P=Peuc.^Pval;
+P=Peuc.*Pval;
 
 P(logical(eye(size(P,1))))=0;
-P=sum(P);
+P=sum(P); % degree centrality
 
     csize(iter,:)=P;%.*dat(:,4)';
     %m(iter)=max(P);

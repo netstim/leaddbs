@@ -157,7 +157,7 @@ for side=options.sides
             if options.d2.write % only needs to be done once..
             XYZV=[XYZ,[V{1};V{2}]];
             if inside==1
-            [ixes]=ea_eigvcentrality_significance(XYZV);
+            [ixes]=ea_centrality_significance(XYZV);
             end
             
             if sum(ixes)>3
