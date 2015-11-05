@@ -154,10 +154,14 @@ for side=options.sides
             
             
             %% write out significant volume:
+            
             if options.d2.write % only needs to be done once..
             XYZV=[XYZ,[V{1};V{2}]];
             if inside==1
-            [ixes]=ea_centrality_significance(XYZV);
+            %[ixes]=ea_centrality_significance(XYZV);
+            
+            niicspmsig=ea_smooth_significance(XYZV,Vol,niic,options);
+            
             end
             
             if sum(ixes)>3

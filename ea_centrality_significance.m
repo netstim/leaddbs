@@ -1,7 +1,7 @@
 function [ixes]=ea_centrality_significance(XYZV)
 
 
-keyboard
+
 
 % clear NAN vars:
 XYZV(isnan(XYZV(:,4)),:)=[];
