@@ -350,7 +350,6 @@ warning('off')
                                     ea_columnlegend(cols,elplt,ptnames,'Location','Middle');
                                 else
                                     legend(elplt,ptnames,'Location','southoutside','Orientation','Horizontal','FontSize',9,'FontWeight','bold');
-                                    en
                                     legend('boxoff');
                                 end
                             end
@@ -728,11 +727,14 @@ function coords_mm=ea_ave_elstruct(elstruct)
 % simply averages coordinates of a group to one coords_mm 1x2 cell
 coords_mm=elstruct(1).coords_mm; % initialize mean variable
 for side=1:length(coords_mm)
+    
     for xx=1:size(coords_mm{side},1)
         for yy=1:size(coords_mm{side},2)
             vals=zeros(length(elstruct),1);
             for vv=1:length(elstruct)
+                if ~isempty(elstruct(vv).coords_mm{side})
                 vals(vv)=elstruct(vv).coords_mm{side}(xx,yy);
+                end
             end
             coords_mm{side}(xx,yy)=mean(vals);
             

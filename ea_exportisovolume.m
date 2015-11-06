@@ -21,27 +21,30 @@ for side=options.sides
     for sub=1:length(elstruct)
         for cont=1:size(options.d3.isomatrix{1},2)
             if ~isnan(options.d3.isomatrix{side}(sub,cont));
+                try
                 if ~shifthalfup
                     X{side}(cnt)=elstruct(sub).coords_mm{side}(cont,1);
                     Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);
                     Z{side}(cnt)=elstruct(sub).coords_mm{side}(cont,3);
                 else % using pairs of electrode contacts (i.e. 3 pairs if there are 4 contacts)
-                    try
+                    
                         X{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,1),elstruct(sub).coords_mm{side}(cont+1,1)]);
                         Y{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,2),elstruct(sub).coords_mm{side}(cont+1,2)]);
                         Z{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,3),elstruct(sub).coords_mm{side}(cont+1,3)]);
-                    catch
-                        ea_error(['Please check localization for subject no. ',num2str(sub),'.']);
-                    end
+
                 end
                 V{side}(cnt)=options.d3.isomatrix{side}(sub,cont);
                 
+                PT{side}(cnt)=sub;
                 cnt=cnt+1;
+                catch
+                    warning(['Please check localization for subject no. ',num2str(sub),'.']);
+                end
             end
         end
     end
     
-    X{side}=X{side}(:);        Y{side}=Y{side}(:);        Z{side}=Z{side}(:); V{side}=V{side}(:);
+    X{side}=X{side}(:);        Y{side}=Y{side}(:);        Z{side}=Z{side}(:); V{side}=V{side}(:); PT{side}=PT{side}(:);
     
     Vol=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
     nii{side}=spm_read_vols(Vol);
@@ -156,26 +159,31 @@ for side=options.sides
             %% write out significant volume:
             
             if options.d2.write % only needs to be done once..
-            XYZV=[XYZ,[V{1};V{2}]];
-            if inside==1
-            %[ixes]=ea_centrality_significance(XYZV);
-            
-            niicspmsig=ea_smooth_significance(XYZV,Vol,niic,options);
-            
-            end
-            
-            if sum(ixes)>3
-            XYZV=XYZV(ixes,:); % only significant entries..
-            XYZV(:,4)=1;
-            warning('off');
-            Fsig = scatteredInterpolant(XYZV(:,1),XYZV(:,2),XYZV(:,3),XYZV(:,4));
-            
-            Fsig.ExtrapolationMethod='none';
-            warning('on');
-            
-            
-            niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
-            end
+                XYZV=[XYZ,[V{1};V{2}]];
+                PTb=[PT{1};PT{2}];
+                if inside==1
+                    centralsmooth=3;
+                    switch centralsmooth
+                        case 1
+                            [ixes]=ea_centrality_significance(XYZV);
+                            if sum(ixes)>3
+                                XYZV=XYZV(ixes,:); % only significant entries..
+                                XYZV(:,4)=1;
+                                warning('off');
+                                Fsig = scatteredInterpolant(XYZV(:,1),XYZV(:,2),XYZV(:,3),XYZV(:,4));
+                                
+                                Fsig.ExtrapolationMethod='none';
+                                warning('on');
+                                
+                                
+                                niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
+                            end
+                        case 2
+                            niicsig=ea_smooth_significance(XYZV,PTb,Vol,niic,options);
+                    end
+                end
+                
+
             end
         end
         
@@ -194,10 +202,10 @@ for side=options.sides
         
         %% write out significant volume:
         
-        
+        try
         Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined_p05.nii'];
         spm_write_vol(Vol,niicsig);
-
+        end
         
         
         
