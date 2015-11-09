@@ -134,8 +134,8 @@ for pt=1:length(elstruct)
                 
                 tp=el_render(pt).el_render{side}(ex);
                 vizstruct(cnt).normals=get(tp,'VertexNormals');
-                vizstruct(cnt).faces=tp.Faces;
-                vizstruct(cnt).vertices=tp.Vertices;
+                vizstruct(cnt).faces=get(tp,'Faces');
+                vizstruct(cnt).vertices=get(tp,'Vertices');
                 scolor=get(el_render(pt).el_render{side}(ex),'FaceVertexCData');
                 vizstruct(cnt).colors=scolor;
                 %vizstruct(cnt).colors=repmat([squeeze(scolor(1,1,:))',0.7],length(vizstruct(cnt).faces),1);
