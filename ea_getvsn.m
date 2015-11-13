@@ -16,7 +16,7 @@ switch com
     case 'web'
         try
             webopts=weboptions('Timeout',5);
-            websave('http://www.lead-dbs.org/release/sw_version.txt',[ldir,'.webversion.txt'],webopts);
+            websave([ldir,'.webversion.txt'],'http://www.lead-dbs.org/release/sw_version.txt',webopts);
         catch
             try
                 urlwrite('http://www.lead-dbs.org/release/sw_version.txt',[ldir,'.webversion.txt'],'Timeout',5);
