@@ -21,13 +21,12 @@ end
 
 earoot=[fileparts(which('lead')),filesep];
 
+updurl = 'http://www.lead-dbs.org/release/download.php';
 if update
     if update==1 % full update
-        patch='lead_dbs';
-        updurl=['http://www.lead-dbs.org/release/',patch,'.zip'];
+        id='lead_dbs';
     elseif update==2 % incremental update
-        patch=['updates_',strrep(local,'.',''),'-',strrep(web,'.','')];
-        updurl=['http://www.lead-dbs.org/release/updates/',patch,'.zip'];
+        id=['updates_',strrep(local,'.',''),'-',strrep(web,'.','')];
     end
 
     disp('*** Updating LEAD-DBS. Please do not quit MATLAB.');
@@ -35,11 +34,9 @@ if update
     disp('Downloading code...');
     try
         webopts=weboptions('Timeout',5);
-        webread('http://www.lead-dbs.org/release/download.php','name',patch,webopts);
-        websave([earoot,'tmp',filesep,'updates.zip'],updurl,webopts);
+        websave([earoot,'tmp',filesep,'updates.zip'],updurl,'id',id,webopts);
     catch
-        urlread(['http://www.lead-dbs.org/release/download.php?name=',patch],'Timeout',5);
-        urlwrite(updurl,[earoot,'tmp',filesep,'updates.zip'],'Timeout',5);
+        urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',5);
     end
     disp('Extracting code...');
     try
