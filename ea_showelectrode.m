@@ -71,6 +71,7 @@ for side=options.sides
             electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
             electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
             elrender{side}(cnt)=patch(electrode.insulation(ins));
+            
         if isfield(elstruct,'group')
             usecolor=elstruct.groupcolors(elstruct.group,:);
         else
@@ -253,6 +254,7 @@ try % for patches
     vertices=get(surfc,'Vertices');
     cd=zeros(size(vertices));
     cd(:)=color(1);
+    cd=repmat(color,size(cd,1),size(cd,2)/size(color,2));
     set(surfc,'FaceVertexCData',cd);
 end
 set(surfc,'AlphaDataMapping','none');
