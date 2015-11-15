@@ -105,6 +105,7 @@ ChBxSz = 10;
     [Rmin Rmax] = WL2R(Win, LevV);
 
 hdl_im = axes('position',[0,0,1,1]);
+set(0,'CurrentFigure',isp);
 try % image toolbox
 imshow(squeeze(Img(:,:,S,:)), [Rmin Rmax])
 catch
