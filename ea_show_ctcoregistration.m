@@ -3,7 +3,36 @@ function ea_show_ctcoregistration(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
+legacy=0;
 
+if ~legacy % use new imshowpair tool
+    
+    ct=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
+    mr=ea_load_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
+
+    if ~isequal(size(mr.img),size(ct.img))
+        matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]
+            [options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]};
+        matlabbatch{1}.spm.util.imcalc.output = [options.prefs.ctnii_coregistered];
+        matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
+        matlabbatch{1}.spm.util.imcalc.expression = ['i2'];
+        matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+        matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+        matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+        matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+        jobs{1}=matlabbatch;
+        cfg_util('run',jobs);
+        clear matlabbatch jobs;
+        ct=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
+    end
+    
+    ct.img(:)=zscore(ct.img(:));
+    mr.img(:)=zscore(mr.img(:));
+    
+    jim=cat(4,mr.img,ct.img,mean(cat(4,mr.img,ct.img),4));
+    ea_imshowpair(jim,options,'Preoperative MRI (pink) & Postoperative CT (green)');
+    
+elseif legacy
 % export wireframe of CT:
 disp('Generating wireframe from CT image...');
 if ~exist('edge.m','file')
@@ -98,7 +127,7 @@ saveas(h3,[options.root,options.prefs.patientdir,filesep,'ctmrcoreg_check',suff,
 
 
 
-
+end
 
 
 
