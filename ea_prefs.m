@@ -85,7 +85,10 @@ prefs.dicom.dicomfiles=1; % 1: delete DICOMs after conversion, 2: move DICOMs to
 
 %% Normalization:
 prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
+prefs.normalize.default='ea_normalize_spmdartel';
 
+%% Coregistration (CT/MR):
+prefs.ctcoreg.default='ea_coregctmri_brainsfit';
 
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.

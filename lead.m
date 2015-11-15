@@ -127,6 +127,7 @@ set(gcf,'name','Welcome to LEAD-DBS');
 % add normalization methods to menu
 cnt=1;
 ndir=dir([earoot,'ea_normalize_*.m']);
+options.prefs=ea_prefs('');
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);
     try
@@ -134,10 +135,15 @@ for nd=length(ndir):-1:1
         if ismember(spm('ver'),spmvers)
         ndc{cnt}=thisndc;
         normmethod{cnt}=methodf;
+        if strcmp(ndc{cnt},eval([options.prefs.normalize.default,'(','''prompt''',')']))
+         defentry=cnt;   
+        end
         cnt=cnt+1;
         end
     end
 end
+
+
 
 try
 setappdata(gcf,'normmethod',normmethod);
@@ -147,7 +153,12 @@ catch
     warning('It seems that SPM is not installed.');
     end
 end
-
+try % set selection of normmethod to default entry (specified in ea_prefs).
+    if defentry<=length(get(handles.normmethod,'String'))
+        set(handles.normmethod,'Value',defentry);
+    end
+end
+clear defentry
 
 % add coreg methods to menu
 cnt=1;
@@ -159,6 +170,9 @@ for nd=length(ndir):-1:1
         if ismember(spm('ver'),spmvers)
         cdc{cnt}=thisndc;
         coregctmethod{cnt}=methodf;
+        if strcmp(cdc{cnt},eval([options.prefs.ctcoreg.default,'(','''prompt''',')']))
+         defentry=cnt;   
+        end
         cnt=cnt+1;
         end
     end
@@ -171,21 +185,25 @@ catch
     warning('It seems that SPM is not installed.');
     end
 end
-
+try % set selection of ctcoregmethod to default entry (specified in ea_prefs).
+    if defentry<=length(get(handles.coregctmethod,'String'))
+        set(handles.coregctmethod,'Value',defentry);
+    end
+end
 
 
 
 if nargin
-
+    
     if ~isempty(varargin)
-switch varargin{1}
-    case 'loadsubs'
-
-  ea_load_pts(handles,varargin{2});
-
-end
+        switch varargin{1}
+            case 'loadsubs'
+                
+                ea_load_pts(handles,varargin{2});
+                
+        end
     end
-
+    
 end
 
 
