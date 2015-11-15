@@ -17,6 +17,16 @@ function ea_firstrun(handles)
 %     set(handles.updatebutn,'Visible','off');
 % end
 
+% try
+%     webopts=weboptions('Timeout',5);
+%     webread('http://www.lead-dbs.org/release/stats.php',webopts);
+% catch
+%     try
+%         urlread('http://www.lead-dbs.org/release/stats.php','Timeout',5);
+%     catch    
+%     end
+% end
+
 options=struct;
 options.prefs=ea_prefs(options);
 if ~isfield(options.prefs,'firstrun') % first run.
