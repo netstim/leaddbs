@@ -36,7 +36,14 @@ if update
         webopts=weboptions('Timeout',5);
         websave([earoot,'tmp',filesep,'updates.zip'],updurl,'id',id,webopts);
     catch
-        urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',5);
+        try
+            urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',5);
+        catch
+            info='Unknow error occurred, please retry later!';
+            display(info);
+            msgbox(info,'Update','Error')
+            return
+        end
     end
     disp('Extracting code...');
     try
@@ -71,9 +78,9 @@ if update
 
 else
     info=sprintf(['LEAD-DBS aleady up-to-date!\n',...
-                  'To get the latest full version, please delete .version.txt and try again later.']);
+                  'Alternatively, you can re-download the latest verion from: http://www.lead-dbs.org/release/download.php']);
     display(info);
-    msgbox(info,'update','Help')
+    msgbox(info,'Update','Help')
 end
 
 
