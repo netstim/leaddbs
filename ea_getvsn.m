@@ -26,8 +26,10 @@ switch com
             end
         end
         if num
-            v = textscan(fopen([ldir,'.webversion.txt']), '%2d', 'Delimiter', '.');
+            fID = fopen([ldir,'.webversion.txt']);
+            v = textscan(fID, '%2d', 'Delimiter', '.');
             version = v{1}(1)*10000+v{1}(2)*100+v{1}(3);
+            fclose(fID);
         else
             version = strtrim(fileread([ldir,'.webversion.txt']));
         end

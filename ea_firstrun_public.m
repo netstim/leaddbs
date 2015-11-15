@@ -3,9 +3,10 @@ function ea_firstrun(handles)
 % check if a newer version is available..
 local=ea_getvsn('local',1);
 web=ea_getvsn('web',1);
+vcheck=0;
 if strcmp(local,'Unknown')
     vcheck=1;
-else
+elseif ~strcmp(web,'Unknown')
     vcheck=(local<web);
 end
 
