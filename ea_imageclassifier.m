@@ -22,10 +22,10 @@ function varargout = ea_imageclassifier(varargin)
 
 % Edit the above text to modify the response to help ea_imageclassifier
 
-% Last Modified by GUIDE v2.5 23-Apr-2015 10:58:16
+% Last Modified by GUIDE v2.5 15-Nov-2015 15:11:22
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
+gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @ea_imageclassifier_OpeningFcn, ...
@@ -218,9 +218,10 @@ end
 
 
 function finishandclose(current_imclass)
+[~,current_imclass]=fileparts(current_imclass); % remove potential file extension
 tmpoutdir=getappdata(gcf,'tmpoutdir');
 append='';
-while exist([tmpoutdir,filesep,current_imclass,append],'file')
+while exist([tmpoutdir,filesep,current_imclass,append,'.nii'],'file')
     append=[append,'2'];
 end
 [~,nametowrite]=fileparts(current_imclass);
