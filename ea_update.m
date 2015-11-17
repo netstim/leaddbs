@@ -79,7 +79,7 @@ if update
 else
     info=sprintf(['LEAD-DBS aleady up-to-date!\n',...
                   'Alternatively, you can re-download the latest verion from: http://www.lead-dbs.org/release/download.php']);
-    display(info);
+    disp(info);
     msgbox(info,'Update','Help')
 end
 
