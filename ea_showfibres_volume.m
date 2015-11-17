@@ -234,7 +234,11 @@ if stimparams(1).showfibers
     
     switch stimparams(1).usefiberset
         case 'Patient-specific DTI-Data'
-            fs=load(fullfile(options.root,options.patientname,[options.prefs.FTR_normalized]));
+            try
+                fs=load(fullfile(options.root,options.patientname,[options.prefs.FTR_normalized]));
+            catch
+                ea_error('Patient specific fiber-data not found.');
+            end
         otherwise
             fs=load(fullfile(options.earoot,'fibers',[lower(stimparams(1).usefiberset),'.mat']));
     end

@@ -134,9 +134,11 @@ try
     set(handles.fiberspopup,'Value',priorselection);
     
 catch    % reinitialize using third entry.
-    set(handles.fiberspopup,'Value',4);
-    
-    
+    set(handles.fiberspopup,'Value',4); 
+end
+
+if get(handles.fiberspopup,'Value')>length(get(handles.fiberspopup,'String'))
+    set(handles.fiberspopup,'Value',length(get(handles.fiberspopup,'String')));
 end
 
 % Labels:

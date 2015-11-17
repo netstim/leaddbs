@@ -9,7 +9,7 @@ slice=double(nii.img(:,:,imgsliceno))'; % extract the correct slice.
 
 for lower=1:20
     if ~any(slice(:))
-  slice=double(nii.img(:,:,imgsliceno-lower))';  
+        slice=double(nii.img(:,:,imgsliceno-lower))';
     else
         break
     end
@@ -19,17 +19,17 @@ slice(slice==0)=nan;
 
 
 if sliceno<3 % first slices: lower tra_factor since great mask is used.
-add_to_tra_stdfactor=ea_determine_addfactor(1,slice,mask,options);
-
+    add_to_tra_stdfactor=ea_determine_addfactor(1,slice,mask,options);
+    
 else
-add_to_tra_stdfactor=0;
+    add_to_tra_stdfactor=0;
 end
 
 
 
 
-    maskslice=slice(logical(mask));
-    maskslice=reshape(maskslice,sqrt(length(maskslice)),sqrt(length(maskslice)));
+maskslice=slice(logical(mask));
+maskslice=reshape(maskslice,sqrt(length(maskslice)),sqrt(length(maskslice)));
 
 
 threshold=mean(maskslice(:))-(options.tra_stdfactor+add_to_tra_stdfactor)*std(maskslice(:)); % =80.
@@ -53,32 +53,32 @@ cnt=1;
 found=0;
 
 while ~found
-
-maskslice=slice(logical(mask));
-maskslice=reshape(maskslice,sqrt(length(maskslice)),sqrt(length(maskslice)));
-
-
-threshold=ea_nanmean(maskslice(:))-(options.tra_stdfactor+addfactor)*nanstd(maskslice(:)); % =80.
-
-
-%% make binary thresholded copies of slice.
-slicebw=zeros(length(slice));
-slicebw(slice<threshold)=1;
-slicebw(~mask)=0;
-
-
-
-if isempty(find(slicebw(:), 1))
-   addfactor=addfactor-cnt*0.1;
-   ea_showdis(['Lowering initial factor to ',num2str(addfactor),'.'],options.verbose);
-    if cnt>500
-        ea_error('Trajectory could not be found. Please choose manual entry-point to select trajectory manually and make sure that images are properly normalized in MNI space.');
-    end
-else
-    found=1;
-end
     
-
+    maskslice=slice(logical(mask));
+    maskslice=reshape(maskslice,sqrt(length(maskslice)),sqrt(length(maskslice)));
+    
+    
+    threshold=ea_nanmean(maskslice(:))-(options.tra_stdfactor+addfactor)*ea_nanstd(maskslice(:)); % =80.
+    
+    
+    %% make binary thresholded copies of slice.
+    slicebw=zeros(length(slice));
+    slicebw(slice<threshold)=1;
+    slicebw(~mask)=0;
+    
+    
+    
+    if isempty(find(slicebw(:), 1))
+        addfactor=addfactor-cnt*0.1;
+        ea_showdis(['Lowering initial factor to ',num2str(addfactor),'.'],options.verbose);
+        if cnt>500
+            ea_error('Trajectory could not be found. Please choose manual entry-point to select trajectory manually and make sure that images are properly normalized in MNI space.');
+        end
+    else
+        found=1;
+    end
+    
+    
 end
 
 function y = ea_nanmean(varargin)
@@ -86,9 +86,9 @@ if nargin==2
     x=varargin{1};
     dim=varargin{2};
 elseif nargin==1
-x=varargin{1};
+    x=varargin{1};
     dim=1;
 end
-    
+
 N = sum(~isnan(x), dim);
-y = nansum(x, dim) ./ N;
+y = ea_nansum(x, dim) ./ N;
