@@ -14,6 +14,9 @@ switch command.Key
             side=1;
             newmarkers(side).head=oldmarkers(side).head+grone(1+ismember('shift',command.Modifier))*trajvector;
             newmarkers(side).tail=oldmarkers(side).tail+grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).x=oldmarkers(side).x+grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).y=oldmarkers(side).y+grone(1+ismember('shift',command.Modifier))*trajvector;
+            
         end
 
     case 'uparrow'
@@ -23,6 +26,9 @@ switch command.Key
             side=1;
             newmarkers(side).head=oldmarkers(side).head-grone(1+ismember('shift',command.Modifier))*trajvector;
             newmarkers(side).tail=oldmarkers(side).tail-grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).x=oldmarkers(side).x-grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).y=oldmarkers(side).y-grone(1+ismember('shift',command.Modifier))*trajvector;
+
         end
 
     case 'rightarrow'
@@ -33,6 +39,8 @@ switch command.Key
             side=2;
             newmarkers(side).head=oldmarkers(side).head+grone(1+ismember('shift',command.Modifier))*trajvector;
             newmarkers(side).tail=oldmarkers(side).tail+grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).x=oldmarkers(side).x+grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).y=oldmarkers(side).y+grone(1+ismember('shift',command.Modifier))*trajvector;
 
         end
 
@@ -43,6 +51,9 @@ switch command.Key
             side=2;
             newmarkers(side).head=oldmarkers(side).head-grone(1+ismember('shift',command.Modifier))*trajvector;
             newmarkers(side).tail=oldmarkers(side).tail-grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).x=oldmarkers(side).x-grone(1+ismember('shift',command.Modifier))*trajvector;
+            newmarkers(side).y=oldmarkers(side).y-grone(1+ismember('shift',command.Modifier))*trajvector;
+
         end
 
         
@@ -59,13 +70,17 @@ switch command.Character
         
     case {'+','*'}
         try
-            feather=[0,0.1,0.2,0.3];
             
             for side=1:2
               trajvector=gettraj(trajectory,side);
               newmarkers(side).tail=oldmarkers(side).tail-trajvector.*(0.3*(ismember('shift',command.Modifier)+1));
             end
         end
+        
+    case 's'
+        %newmarkers(side).x=rotate(
+        
+        
         
 end
 %disp(command);

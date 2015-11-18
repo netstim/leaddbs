@@ -23,7 +23,7 @@ for side=1:length(stimparams)
 end
 fiberthresh=stimparams.fiberthresh;
 
-
+load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
 % prepare statvat exports once if needed.
 if options.expstatvat.do % export statvat nifti images.
     tV=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
@@ -169,17 +169,16 @@ for side=1:2
                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).Contact=vat;
                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).Side=side;
                 
-             
-                iXYZ=getappdata(gcf,'iXYZ');
-                ipixdim=getappdata(gcf,'ipixdim');
+
                 
-                for atlas=1:size(iXYZ,1)
+                for atlas=1:size(atlases.XYZ,1)
                     if stimparams(side).U(vat)>0 % stimulation on in this VAT,
-                        thisatl=iXYZ{atlas,side}.mm;
-                        tpd=ipixdim{atlas,side};
+                        
+                        thisatl=atlases.XYZ{atlas,side}.mm;
+                        tpd=atlases.pixdim{atlas,side};
                         if isempty(thisatl) % for midline or combined atlases, only the right side atlas is used.
-                            thisatl=iXYZ{atlas,1}.mm;
-                            tpd=ipixdim{atlas,1};
+                            thisatl=atlases.XYZ{atlas,1}.mm;
+                            tpd=atlases.pixdim{atlas,1};
                         end
                         tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
                         

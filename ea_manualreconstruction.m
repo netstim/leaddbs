@@ -88,8 +88,12 @@ leftview=uipushtool(ht,'CData',ea_get_icn('elL',options),'TooltipString','Set vi
 antview=uipushtool(ht,'CData',ea_get_icn('elA',options),'TooltipString','Set view from Anterior [A]','ClickedCallback',{@ea_view,'a'});
 postview=uipushtool(ht,'CData',ea_get_icn('elP',options),'TooltipString','Set view from Posterior [P]','ClickedCallback',{@ea_view,'p'});
 
-xview=uipushtool(ht,'CData',ea_get_icn('elX',options),'TooltipString','Set view from X-Direction [X]','ClickedCallback',{@ea_view,'x'});
-yview=uipushtool(ht,'CData',ea_get_icn('elY',options),'TooltipString','Set view from Y-Direction [Y]','ClickedCallback',{@ea_view,'y'});
+%xview=uipushtool(ht,'CData',ea_get_icn('elX',options),'TooltipString','Set view from X-Direction [X]','ClickedCallback',{@ea_view,'x'});
+%yview=uipushtool(ht,'CData',ea_get_icn('elY',options),'TooltipString','Set view from Y-Direction [Y]','ClickedCallback',{@ea_view,'y'});
+
+rotleft=uipushtool(ht,'CData',ea_get_icn('rotleft',options),'TooltipString','Rotate Electrode counter-clockwise','ClickedCallback',{@ea_rotate,'cc'});
+rotright=uipushtool(ht,'CData',ea_get_icn('rotright',options),'TooltipString','Rotate Electrode clockwise','ClickedCallback',{@ea_rotate,'c'});
+
 
 finish_mc=uipushtool(ht,'CData',ea_get_icn('done',options),'TooltipString','Finish manual corrections [space]','ClickedCallback',{@robotSpace});
 
@@ -224,6 +228,8 @@ switch lower(commnd)
 %         increaseoffset(nan,nan,event);
 %     case 'n'
 %         decreaseoffset(nan,nan,event);
+        
+    case {'s','d'}
         
         
     otherwise % arrow keys, plus, minus
@@ -382,8 +388,8 @@ hold on
 
 
 if isempty(elplot) % first time plot electrode contacts
-    clear elplot
-    cnt=1;
+clear elplot
+cnt=1;
     
     for side=1:length(markers)
         mplot(1,side)=plot3(markers(side).head(1),markers(side).head(2),markers(side).head(3),'*','MarkerEdgeColor',[0.9 0.2 0.2],'MarkerFaceColor','none','MarkerSize',25);
@@ -804,6 +810,16 @@ function objinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
 %disp([atls,'invisible clicked']);
 
+function ea_rotate(hobj,ev,ccw)
+rotation=getappdata(gcf,'rotation'); % rotation angle in degrees
+switch ccw
+    case 'c'
+        rotation=rotation+1;
+    case 'cc'
+        rotation=rotation-1;
+end
+setappdata(gcf,'rotation',rotation);
+updatescene;
 
 function setcontrast(hobj,ev,key,modifier)
 c_lims=getappdata(gcf,'c_lims');
