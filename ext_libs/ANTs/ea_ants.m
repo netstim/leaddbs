@@ -36,7 +36,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     ANTS = [basedir, 'ANTS.exe'];
     Warp = [basedir, 'WarpImageMultiTransform.exe'];
-    
+
 elseif isunix
     ANTS = [basedir, 'ANTS.', computer];
     Warp = [basedir, 'WarpImageMultiTransform.', computer];
@@ -56,4 +56,4 @@ system([Warp ...
 
 delete([outputbase, 'Warp.nii']);
 delete([outputbase, 'InverseWarp.nii']);
-movefile([outputbase, 'Affine.txt'], [volumedir, 'ct2anat.txt']);
+movefile([outputbase, 'Affine.txt'], [volumedir, 'ct2anat', num2str(ttries+1), '.txt']);
