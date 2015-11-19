@@ -1,20 +1,35 @@
 function ea_ants(fixedimage, movingimage, outputname)
 % Wrapper for ANTs
 
-fixparams = [' 3' ...
-             ' --transformation-model SyN[0.3]' ...
-             ' --regularization Gauss[3,0]' ...
-             ' --number-of-iterations 10x10x5'];
-     
 if fileparts(movingimage)
-    imagedir = [fileparts(movingimage), filesep];
+    volumedir = [fileparts(movingimage), filesep];
 else
-    imagedir =['.', filesep];
+    volumedir =['.', filesep];
 end
 
-if exist([imagedir, 'ct2anat.txt'],'file')
-   fixparams = [fixparams, ' --initial-affine ', imagedir, 'ct2anat.txt']; 
+ttries=ea_detct2anatattempts(volumedir); % how many coregistration attempts have been made in the past..
+
+% first attempt..
+fixparams{1} =[' 3' ...
+             ' -t affine[ 0.1 ]' ...
+             ' --regularization Gauss[3,0]' ...
+             ' --number-of-iterations 10x10x5' ...
+             ' --rigid-affine true'...
+             ' --do-rigid true'];
+
+% second attempt..
+fixparams{2} = [' 3' ...
+             ' -t affine[ 0.1 ]' ...
+             ' --regularization Gauss[3,0]' ...
+             ' --number-of-iterations 10x10x5' ...
+             ' --initial-affine ', volumedir, 'ct2anat',num2str(ttries),'.txt'...
+             ' --rigid-affine true'...
+             ' --do-rigid true'];
+
+if ttries>2
+    ttries=2;
 end
+
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
@@ -28,7 +43,7 @@ elseif isunix
 end
 
 ea_libs_helper
-system([ANTS, fixparams, ...
+system([ANTS, fixparams{ttries}, ...
         ' -m PR[', fixedimage,',', movingimage,',1,2]' ...
         ' --output-naming ', outputname]);
 
@@ -41,4 +56,4 @@ system([Warp ...
 
 delete([outputbase, 'Warp.nii']);
 delete([outputbase, 'InverseWarp.nii']);
-movefile([outputbase, 'Affine.txt'], [imagedir, 'ct2anat.txt']);
+movefile([outputbase, 'Affine.txt'], [volumedir, 'ct2anat.txt']);
