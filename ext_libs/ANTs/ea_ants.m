@@ -1,4 +1,4 @@
-function ea_ants(fixedimage, movingimage, outputname)
+function ea_ants(fixedimage, movingimage, outputimage)
 % Wrapper for ANTs nonlinear registration
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
@@ -52,12 +52,18 @@ affinestage = [' --transform Affine[0.1]'...
                ' --smoothing-sigmas ', affinesoomthingssigmas];
 
 ea_libs_helper
+[outputdir, outputname, ~] = fileparts(outputimage);
+if outputdir 
+    outputbase = [outputdir, filesep, outputname];
+else
+    outputbase = ['.', filesep, outputname];
+end
 system([ANTS, ' --verbose 1' ...
               ' --dimensionality 3 --float 1' ...
-              ' --output [',outputname(1:end-4), ',', outputname, ']' ...
+              ' --output [',outputbase, ',', outputimage, ']' ...
               ' --interpolation Linear' ...
               ' --use-histogram-matching 1' ...
               ' --winsorize-image-intensities [0.005,0.995]', ...
               rigidstage, affinestage]);
 
-movefile([volumedir, outputname(1:end-4), '0GenericAffine.mat'], [volumedir, 'ct2anat.mat']);
+movefile([outputbase, '0GenericAffine.mat'], [volumedir, 'ct2anat.mat']);
