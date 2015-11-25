@@ -18,7 +18,7 @@ function varargout=ea_normalize_ants(options)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='ANTs SyN';
+    varargout{1}='Advanced Normalization Tools (ANTs) SyN';
     varargout{2}={'SPM8','SPM12'};
     return
 end
@@ -31,3 +31,6 @@ end
 
 directory=[options.root,options.patientname,filesep];
 ea_ants_nonlinear([options.earoot,'templates',filesep,'mni_hires.nii'],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii]);
+
+
+ea_apply_normalization(options)

@@ -5,7 +5,7 @@ function varargout=ea_coregctmri_brainsfit(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='ANTS';
+    varargout{1}='Advanced Normalization Tools (ANTs)';
     varargout{2}={'SPM8','SPM12'};
     varargout{3}=['nan']; % suggestion for alpha-parameter.
     return
