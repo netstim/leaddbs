@@ -59,15 +59,16 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 
-set(gcf,'name','Please specify image type');
+set(hObject,'name','Please specify image type');
 
 global dcfilename tmpoutdir
-setappdata(gcf,'dcfilename',dcfilename);
-setappdata(gcf,'tmpoutdir',tmpoutdir);
+setappdata(hObject,'dcfilename',dcfilename);
+setappdata(hObject,'tmpoutdir',tmpoutdir);
 
 
 nii=load_untouch_nii(getappdata(gcf,'dcfilename'));
 nii.img=double(nii.img)/double(max(nii.img(:)));
+set(0,'CurrentFigure',hObject);
 try
 h=slice(double(nii.img),round(size(nii.img,1)/2),...
     round(size(nii.img,2)/2),...
@@ -77,9 +78,9 @@ set(h,'FaceColor','interp',...
 	'DiffuseStrength',.8)
 end
 colormap gray
-set(gcf, 'menubar', 'figure' )
-set(gcf, 'toolbar', 'figure' )
-set(gcf,'KeyPressFcn',@ea_keystr);
+set(hObject, 'menubar', 'figure' )
+set(hObject, 'toolbar', 'figure' )
+set(hObject,'KeyPressFcn',@ea_keystr);
 
 view(270,90)
 axis equal
