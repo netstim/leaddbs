@@ -20,18 +20,25 @@ switch options.modality
         fis{2}=[subdir,options.prefs.tranii_unnormalized];
         fis{3}=[subdir,options.prefs.cornii_unnormalized];
         fis{4}=[subdir,options.prefs.sagnii_unnormalized];
-        ofis{1}=[subdir,options.prefs.prenii];
-        ofis{2}=[subdir,options.prefs.tranii];
-        ofis{3}=[subdir,options.prefs.cornii];
-        ofis{4}=[subdir,options.prefs.sagnii];
+        ofis{1}=[subdir,options.prefs.gprenii];
+        ofis{2}=[subdir,options.prefs.gtranii];
+        ofis{3}=[subdir,options.prefs.gcornii];
+        ofis{4}=[subdir,options.prefs.gsagnii];
+        lfis{1}=[options.prefs.prenii];
+        lfis{2}=[options.prefs.tranii];
+        lfis{3}=[options.prefs.cornii];
+        lfis{4}=[options.prefs.sagnii];
     case 2 % CT
         fis{1}=[subdir,options.prefs.prenii_unnormalized];
         fis{2}=[subdir,options.prefs.ctnii_coregistered];
-        ofis{1}=[subdir,options.prefs.prenii];
-        ofis{2}=[subdir,options.prefs.ctnii];
+        ofis{1}=[subdir,options.prefs.gprenii];
+        ofis{2}=[subdir,options.prefs.gctnii];
+        lfis{1}=[options.prefs.prenii];
+        lfis{2}=[options.prefs.ctnii];
 end
 
 for fi=1:length(fis)
+    % generate gl*.nii files
     [~,lprebase]=fileparts(options.prefs.prenii);
     system([applyTransforms,' --verbose 1' ...
         ' --dimensionality 3 --float 1' ...
@@ -41,4 +48,22 @@ for fi=1:length(fis)
         ' -t ',[subdir,lprebase],'1Warp.nii.gz'...
         ' -t ',[subdir,lprebase],'0GenericAffine.mat']);
     
+    % generate l*.nii files
+    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']
+        [ofis{fi},',1']
+        };
+    matlabbatch{1}.spm.util.imcalc.output = lfis{fi};
+    matlabbatch{1}.spm.util.imcalc.outdir = {subdir};
+    matlabbatch{1}.spm.util.imcalc.expression = 'i2';
+    matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+    matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+    matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+    cfg_util('run',{matlabbatch});
+    clear matlabbatch
 end
+
+
+
+
