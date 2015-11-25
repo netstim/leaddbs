@@ -9,8 +9,6 @@ function ea_apply_normalization(options)
 
 % Apply estimated deformation to (coregistered) post-op data.
 
-keyboard
-
 directory=[options.root,options.patientname,filesep];
 load([directory,'ea_normmethod_applied']);
 
@@ -18,7 +16,7 @@ switch norm_method_applied{end}
     
     case 'ea_normalize_ants'
         
-        
+        ea_ants_applytransforms(options);
         
     otherwise
         
