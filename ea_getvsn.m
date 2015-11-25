@@ -11,36 +11,35 @@ if nargin < 2
 end
 
 ldir=[fileparts(which('lead')),filesep];
-switch com
-    
+switch com  
     case 'web'
         try
-            webopts=weboptions('Timeout',5);
-            websave([ldir,'.webversion.txt'],'http://www.lead-dbs.org/release/sw_version.txt',webopts);
+            webopts = weboptions('Timeout',5);
+            version = webread('http://www.lead-dbs.org/release/sw_version.txt',webopts);
         catch
             try
-                urlwrite('http://www.lead-dbs.org/release/sw_version.txt',[ldir,'.webversion.txt'],'Timeout',5);
+                version = urlread('http://www.lead-dbs.org/release/sw_version.txt','Timeout',5);
             catch
-                version='Unknown';
+                version = 'Unknown';
                 return
             end
         end
-        if num
-            fID = fopen([ldir,'.webversion.txt']);
-            v = textscan(fID, '%2d', 'Delimiter', '.');
-            version = v{1}(1)*10000+v{1}(2)*100+v{1}(3);
-            fclose(fID);
-        else
-            version = strtrim(fileread([ldir,'.webversion.txt']));
+        if num && ~strcmp(version,'Unknown')
+            version = strjoin(cellfun(@(x) num2str(str2double(x),'%02d'), strsplit(version,'.'),'UniformOutput',0),'');
+            if numel(version) == 6
+                version = [version, '00'];
+            end
+            version = str2double(version);
         end
-        delete([ldir,'.webversion.txt']);
     case 'local'
         try
+            version = fgetl(fopen([ldir,'.version.txt']));
             if num
-                v = textscan(fopen([ldir,'.version.txt']), '%2d', 'Delimiter', '.');
-                version = v{1}(1)*10000+v{1}(2)*100+v{1}(3);
-            else
-                version = strtrim(fileread([ldir,'.version.txt']));
+                version = strjoin(cellfun(@(x) num2str(str2double(x),'%02d'), strsplit(version,'.'),'UniformOutput',0),'');
+                if numel(version) == 6
+                    version = [version, '00'];
+                end
+                version = str2double(version);
             end
         catch
             version='Unknown';
