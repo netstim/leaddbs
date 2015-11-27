@@ -11,8 +11,18 @@ function ea_apply_normalization(options)
 
 directory=[options.root,options.patientname,filesep];
 load([directory,'ea_normmethod_applied']);
-
-switch norm_method_applied{end}
+cnt=0;
+while 1
+    whichnormmethod=norm_method_applied{end-cnt};
+    switch whichnormmethod
+        case 'ea_normalize_apply_normalization'
+            cnt=cnt+1;
+        otherwise
+            break
+    end
+    
+end
+switch whichnormmethod
     
     case 'ea_normalize_ants'
         
@@ -126,6 +136,7 @@ switch norm_method_applied{end}
         end
         
 end
+
 
 
 function resize_img(imnames, Voxdim, BB, ismask)

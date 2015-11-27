@@ -68,8 +68,6 @@ end
 
 
 if options.normalize.do
-    
-    eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
     try load([options.root,options.patientname,filesep,'ea_normmethod_applied']); end
     if exist('norm_method_applied','var')
         try
@@ -82,6 +80,9 @@ if options.normalize.do
         norm_method_applied{1}=options.normalize.method;
     end
     save([options.root,options.patientname,filesep,'ea_normmethod_applied'],'norm_method_applied');
+    
+    eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
+
 
 end
 

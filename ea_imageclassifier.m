@@ -66,7 +66,7 @@ setappdata(hObject,'dcfilename',dcfilename);
 setappdata(hObject,'tmpoutdir',tmpoutdir);
 
 
-nii=load_untouch_nii(getappdata(gcf,'dcfilename'));
+nii=ea_load_nii(getappdata(gcf,'dcfilename'));
 nii.img=double(nii.img)/double(max(nii.img(:)));
 set(0,'CurrentFigure',hObject);
 try
