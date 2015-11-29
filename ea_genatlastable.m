@@ -235,13 +235,22 @@ if checkrebuild(atlases,options)
                         fv=reducepatch(fv,simplify);
                     end
                 end
-                
-                % temporally plot atlas to get vertex normals..
-                tmp=figure('visible','off');
-                tp=patch(fv);
-                
-                normals{atlas,side}=get(tp,'VertexNormals');
-                delete(tmp);
+
+                    
+                try % works only in ML 2015:
+                    tr=triangulation(fv.faces,fv.vertices);
+                    normals{atlas,side} = vertexNormal(tr);
+                catch % workaround for older versions:
+                    
+                    % temporally plot atlas to get vertex normals..
+                    tmp=figure('visible','off');
+                    tp=patch(fv,'VertexNormalsMode','manual');
+                    set(tp,'VertexNormalsMode','manual')
+                    normals{atlas,side}=get(tp,'VertexNormals')*-1;
+                    delete(tmp);
+                    
+                end
+
                 
                 
                 % set cdata
@@ -299,6 +308,7 @@ if checkrebuild(atlases,options)
         atlases.XYZ=iXYZ;
         atlases.pixdim=ipixdim;
         atlases.colorc=icolorc;
+        
         atlases.normals=normals;
         
         

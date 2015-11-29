@@ -110,7 +110,7 @@ prefs.addfibers={}; % additional fibers to show.
 
 prefs.ls.autosave=0;
 prefs.firstrun='off'; 
-prefs.ls.dir='/Volumes/DBS_Lokas/bg_rest/lead_server/';
+%prefs.ls.dir='/Volumes/DBS_Lokas/bg_rest/lead_server/';
 
 %% video export:
 % for help see documentation of CaptureFigVid
@@ -119,3 +119,4 @@ prefs.video.path=[-20,10;-110,10;-190,80;-290,10;-380,10];
 prefs.video.opts.FrameRate=24;
 prefs.video.opts.Duration=20;
 prefs.video.opts.Periodic=true;
+prefs.ls.dir='/PA/Neuro/_projects/lead/lead_server/';

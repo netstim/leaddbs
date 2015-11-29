@@ -132,8 +132,18 @@ for pt=1:length(elstruct)
             extract=1:length(el_render(pt).el_render{side});
             for ex=extract
                 
-                tp=el_render(pt).el_render{side}(ex);
-                vizstruct(cnt).normals=get(tp,'VertexNormals');
+                    tp=el_render(pt).el_render{side}(ex);
+
+                
+                try % works only in ML 2015
+                    tr=triangulation(get(el_render(pt).el_render{side}(ex),'Faces'),get(el_render(pt).el_render{side}(ex),'Vertices'));
+                    vizstruct(cnt).normals = vertexNormal(tr);
+                    
+                catch % workaround for older versions..
+                    vizstruct(cnt).normals=get(tp,'VertexNormals')*-1;
+                end
+                        
+                
                 vizstruct(cnt).faces=get(tp,'Faces');
                 vizstruct(cnt).vertices=get(tp,'Vertices');
                 scolor=get(el_render(pt).el_render{side}(ex),'FaceVertexCData');

@@ -1,6 +1,7 @@
 function ea_export_server(hobj,ev,options)
 
 disp('Exporting data to LEAD Server...');
+%keyboard
 if ~isfield(options.prefs.ls,'dir')
     % configure server output directory for the first time.
     
@@ -31,7 +32,6 @@ if ~isfield(options.prefs.ls,'dir')
 end
 
 if ~exist(options.prefs.ls.dir,'file');
-    
     
     mkdir(options.prefs.ls.dir);
     
