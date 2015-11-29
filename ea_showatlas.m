@@ -222,8 +222,9 @@ for nativemni=nm % switch between native and mni space atlases.
     setappdata(resultfig,'colorbuttons',colorbuttons);
     
     % configure label button to work properly and hide labels as default.
-try    set(atlaslabels,'Visible','off'); end
-    set(labelbutton,'OnCallback',{@atlasvisible,atlaslabels},'OffCallback',{@atlasinvisible,atlaslabels},'State','off');
+    
+    try    set(atlaslabels,'Visible','off'); end
+    set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels,'on'},'OffCallback',{@atlabelsvisible,atlaslabels,'off'},'State','off');
     set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
     
     
@@ -301,6 +302,9 @@ if(getappdata(gcf,'altpressed'))
 else
     set(atls(atlscnt), 'Visible', onoff);
 end
+
+function atlabelsvisible(hobj,ev,obj,onoff)
+set(obj,'Visible',onoff);
 
 
 function oldatlasvisible(hobj,ev,atls)
