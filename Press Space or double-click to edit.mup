@@ -1,5 +1,404 @@
 {
-  "title": "Press Space or double-click to edit",
+  "title": "Lead-DBS",
   "id": 1,
-  "formatVersion": 2
+  "formatVersion": 2,
+  "ideas": {
+    "1": {
+      "title": "Deployment",
+      "id": 7,
+      "ideas": {
+        "1": {
+          "title": "Compatibility",
+          "id": 15,
+          "ideas": {
+            "1": {
+              "title": "Test-driven development?",
+              "id": 16
+            }
+          }
+        },
+        "2": {
+          "title": "Release-Scripts",
+          "id": 82
+        }
+      }
+    },
+    "2": {
+      "title": "\"Marketing\"",
+      "id": 8,
+      "ideas": {
+        "1": {
+          "title": "Website",
+          "id": 10
+        },
+        "2": {
+          "title": "Newsletter",
+          "id": 11
+        },
+        "3": {
+          "title": "Access-/Downloadlog",
+          "id": 12
+        },
+        "4": {
+          "title": "Workshop",
+          "id": 14
+        },
+        "5": {
+          "title": "Manual",
+          "id": 23
+        },
+        "6": {
+          "title": "Screenshots",
+          "id": 24
+        },
+        "7": {
+          "title": "Walkthrough-Videos",
+          "id": 25
+        }
+      }
+    },
+    "-2": {
+      "title": "Software",
+      "id": 6,
+      "ideas": {
+        "1": {
+          "title": "Lead CONNECTOME",
+          "id": 3,
+          "attr": {
+            "style": {}
+          },
+          "ideas": {
+            "1": {
+              "title": "rs-fMRI",
+              "id": 27,
+              "ideas": {
+                "1": {
+                  "title": "Preprocessing",
+                  "id": 64,
+                  "ideas": {}
+                },
+                "2": {
+                  "title": "fCM estimation",
+                  "id": 66
+                }
+              }
+            },
+            "2": {
+              "title": "dMRI",
+              "id": 28,
+              "ideas": {
+                "1": {
+                  "title": "Preprocessing",
+                  "id": 60
+                },
+                "2": {
+                  "title": "Estimation of Fibers",
+                  "id": 61
+                },
+                "3": {
+                  "title": "Normalization of Fibers",
+                  "id": 62
+                },
+                "4": {
+                  "title": "sCM estimation",
+                  "id": 67
+                }
+              }
+            },
+            "3": {
+              "title": "Visualization",
+              "id": 54,
+              "ideas": {
+                "1": {
+                  "title": "Connectome-Results Viewer (part of \"Elvis\")",
+                  "id": 56
+                }
+              }
+            },
+            "1.5": {
+              "title": "task-fMRI",
+              "id": 29,
+              "attr": {
+                "style": {}
+              }
+            },
+            "2.5": {
+              "title": "Graph theory",
+              "id": 68
+            }
+          }
+        },
+        "2": {
+          "title": "Lead CORE",
+          "id": 2,
+          "attr": {
+            "style": {}
+          },
+          "ideas": {
+            "1": {
+              "title": "Normalization",
+              "id": 30,
+              "ideas": {
+                "1": {
+                  "title": "Normalization Methods",
+                  "id": 45
+                },
+                "2": {
+                  "title": "Normalization-Check",
+                  "id": 46
+                }
+              }
+            },
+            "2": {
+              "title": "Reconstruction",
+              "id": 38,
+              "ideas": {
+                "1": {
+                  "title": "Reconstruction Methods",
+                  "id": 48
+                },
+                "2": {
+                  "title": "Reconstruction-Check",
+                  "id": 43,
+                  "attr": {
+                    "style": {}
+                  }
+                }
+              }
+            },
+            "3": {
+              "title": "Visualization",
+              "id": 50,
+              "ideas": {
+                "1": {
+                  "title": "2D",
+                  "id": 51
+                },
+                "2": {
+                  "title": "3D",
+                  "id": 52,
+                  "ideas": {
+                    "1": {
+                      "title": "3D-Viewer \"Elvis\"",
+                      "id": 53
+                    }
+                  }
+                }
+              }
+            },
+            "4": {
+              "title": "Extensions/Assets",
+              "id": 76,
+              "ideas": {
+                "1": {
+                  "title": "Atlases",
+                  "id": 77,
+                  "ideas": {
+                    "1": {
+                      "title": "Atlas-Editor",
+                      "id": 80
+                    }
+                  }
+                }
+              }
+            },
+            "0.5": {
+              "title": "Data-Import",
+              "id": 31,
+              "attr": {
+                "style": {}
+              }
+            },
+            "0.75": {
+              "title": "Co-registration (CT/MR-fusion)",
+              "id": 37,
+              "attr": {
+                "style": {}
+              },
+              "ideas": {
+                "1": {
+                  "title": "Coregistration-Check",
+                  "id": 42,
+                  "attr": {
+                    "style": {}
+                  }
+                },
+                "0.5": {
+                  "title": "Coreg Methods",
+                  "id": 44,
+                  "attr": {
+                    "style": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "3": {
+          "title": "External Libs",
+          "id": 4,
+          "attr": {
+            "style": {}
+          },
+          "ideas": {
+            "1": {
+              "title": "ANTs",
+              "id": 33
+            },
+            "2": {
+              "title": "BRAINSfit",
+              "id": 34
+            },
+            "3": {
+              "title": "SPM",
+              "id": 35
+            },
+            "4": {
+              "title": "Simbio/Fieldtrip",
+              "id": 36
+            }
+          }
+        },
+        "4": {
+          "title": "Lead MD",
+          "id": 32
+        },
+        "1.5": {
+          "title": "Lead GROUP",
+          "id": 71,
+          "attr": {
+            "style": {}
+          },
+          "ideas": {
+            "1": {
+              "title": "Connectome Stats",
+              "id": 55,
+              "ideas": {
+                "1": {
+                  "title": "Groupmatrix",
+                  "id": 57
+                },
+                "2": {
+                  "title": "Graph theory group results",
+                  "id": 70
+                }
+              },
+              "attr": {
+                "style": {}
+              }
+            },
+            "2": {
+              "title": "Statvat-Mapping",
+              "id": 74
+            },
+            "3": {
+              "title": "Isomatrix Mapping",
+              "id": 75
+            },
+            "4": {
+              "title": "Fiber-Stats",
+              "id": 81
+            }
+          }
+        }
+      },
+      "attr": {
+        "style": {
+          "background": "#008000"
+        }
+      }
+    },
+    "-3": {
+      "title": "Organizational Overhead",
+      "id": 17,
+      "ideas": {
+        "1": {
+          "title": "Basecamp",
+          "id": 18
+        },
+        "2": {
+          "title": "Github",
+          "id": 19,
+          "ideas": {
+            "1": {
+              "title": "Issues/Boards",
+              "id": 26
+            }
+          }
+        }
+      }
+    }
+  },
+  "links": [
+    {
+      "ideaIdFrom": 44,
+      "ideaIdTo": 33,
+      "attr": {
+        "style": {
+          "color": "#FF0000",
+          "lineStyle": "dashed"
+        }
+      }
+    },
+    {
+      "ideaIdFrom": 44,
+      "ideaIdTo": 34,
+      "attr": {
+        "style": {
+          "color": "#FF0000",
+          "lineStyle": "dashed"
+        }
+      }
+    },
+    {
+      "ideaIdFrom": 45,
+      "ideaIdTo": 35,
+      "attr": {
+        "style": {
+          "color": "#FF0000",
+          "lineStyle": "dashed"
+        }
+      }
+    },
+    {
+      "ideaIdFrom": 45,
+      "ideaIdTo": 33,
+      "attr": {
+        "style": {
+          "color": "#FF0000",
+          "lineStyle": "dashed"
+        }
+      }
+    },
+    {
+      "ideaIdFrom": 46,
+      "ideaIdTo": 42,
+      "attr": {
+        "style": {
+          "color": "#FF0000",
+          "lineStyle": "dashed"
+        }
+      }
+    },
+    {
+      "ideaIdFrom": 56,
+      "ideaIdTo": 53,
+      "attr": {
+        "style": {
+          "color": "#FF0000",
+          "lineStyle": "dashed"
+        }
+      }
+    },
+    {
+      "ideaIdFrom": 62,
+      "ideaIdTo": 30,
+      "attr": {
+        "style": {
+          "color": "#FF0000",
+          "lineStyle": "dashed"
+        }
+      }
+    }
+  ]
 }
