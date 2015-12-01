@@ -184,7 +184,9 @@ ea_dispercent(100,'end');
 wfibsvox=wfibsvox';
 nftr.normalized_fibers_mm=wfibs; clear wfibs
 nftr.normalized_fibers_vox=wfibsvox; clear wfibsvox
-nftr.curveD=ftr.curveD;
+if isfield(ftr,'curveD')
+    nftr.curveD=ftr.curveD;
+end
 nftr.trackParam=ftr.trackParam;
 nftr.user=ftr.user;
 nftr.vox=Vmni.mat(logical(eye(4))); nftr.vox=nftr.vox(1:3)';
