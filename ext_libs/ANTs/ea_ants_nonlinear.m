@@ -1,6 +1,17 @@
 function ea_ants_nonlinear(fixedimage, movingimage, outputimage)
 % Wrapper for ANTs nonlinear registration
 
+[outputdir, outputname, ~] = fileparts(outputimage);
+if outputdir 
+    outputbase = [outputdir, filesep, outputname];
+else
+    outputbase = ['.', filesep, outputname];
+end
+
+fixedimage = ea_path_helper(fixedimage);
+movingimage = ea_path_helper(movingimage);
+outputimage = ea_path_helper(outputimage);
+
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
@@ -11,13 +22,11 @@ elseif isunix
     ANTS = [basedir, 'antsRegistration.', computer];
 end
 
-if fileparts(movingimage)
-    volumedir = [fileparts(movingimage), filesep];
+if ~ispc
+    [~, imgsize] = system(['bash -c "', HEADER, ' ',fixedimage, ' 2"']);
 else
-    volumedir =['.', filesep];
+    [~, imgsize] = system([HEADER, ' ', fixedimage, ' 2']);
 end
-
-[~, imgsize] = system([HEADER, fixedimage, '']);
 imgsize = cellfun(@(x) str2double(x),strsplit(imgsize,'x'));
 
 if any(imgsize>256)
@@ -57,21 +66,16 @@ synstage = [' --transform SyN[0.3]'...
     ' --shrink-factors ', affineshrinkfactors ...
     ' --smoothing-sigmas ', affinesoomthingssigmas];
 
-%           ANTS 3 -m PR[/images/subject/b0diffusionimage.nii.gz,/images/subject/T1image.nii.gz,1,2] -i 50x20x10 -o T1_to_diffusion_synants.nii.gz -t SyN[0.3] -r Gauss[3,0]
-
 ea_libs_helper
-[outputdir, outputname, ~] = fileparts(outputimage);
-if outputdir
-    outputbase = [outputdir, filesep, outputname];
+cmd = [ANTS, ' --verbose 1' ...
+             ' --dimensionality 3 --float 1' ...
+             ' --output [',ea_path_helper(outputbase), ',', outputimage, ']' ...
+             ' --interpolation Linear' ...
+             ' --use-histogram-matching 1' ...
+             ' --winsorize-image-intensities [0.005,0.995]', ...
+             rigidstage, affinestage, synstage];
+if ~ispc
+    system(['bash -c "', cmd, '"']);
 else
-    outputbase = ['.', filesep, outputname];
+    system(cmd);
 end
-system([ANTS, ' --verbose 1' ...
-    ' --dimensionality 3 --float 1' ...
-    ' --output [',outputbase, ',', outputimage, ']' ...
-    ' --interpolation Linear' ...
-    ' --use-histogram-matching 1' ...
-    ' --winsorize-image-intensities [0.005,0.995]', ...
-    rigidstage, affinestage, synstage]);
-
-%movefile([outputbase, '0GenericAffine.mat'], [volumedir, 'ct2anat.mat']);
