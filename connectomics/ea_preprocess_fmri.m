@@ -65,8 +65,8 @@ end
 
 function ea_coreg_pre2fmri(options)
 directory=[options.root,options.patientname,filesep];
-
-if ~exist([directory,'rr',options.prefs.rest,options.prefs.prenii_unnormalized],'file')
+[~,rf]=fileparts(options.prefs.rest);
+if ~exist([directory,'rr',rf,options.prefs.prenii_unnormalized],'file')
     %% coreg mprage to fMRI (for GM-map)
     
     copyfile([directory,options.prefs.prenii_unnormalized],[directory,'k',options.prefs.prenii_unnormalized])
@@ -87,7 +87,6 @@ if ~exist([directory,'rr',options.prefs.rest,options.prefs.prenii_unnormalized],
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 1;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
-    [~,rf]=fileparts(options.prefs.rest);
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = ['rr',rf];
     
     
