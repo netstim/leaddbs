@@ -3,26 +3,6 @@
   "id": 1,
   "formatVersion": 2,
   "ideas": {
-    "1": {
-      "title": "Deployment",
-      "id": 7,
-      "ideas": {
-        "1": {
-          "title": "Compatibility",
-          "id": 15,
-          "ideas": {
-            "1": {
-              "title": "Test-driven development?",
-              "id": 16
-            }
-          }
-        },
-        "2": {
-          "title": "Release-Scripts",
-          "id": 82
-        }
-      }
-    },
     "2": {
       "title": "\"Marketing\"",
       "id": 8,
@@ -39,10 +19,6 @@
           "title": "Access-/Downloadlog",
           "id": 12
         },
-        "4": {
-          "title": "Workshops",
-          "id": 14
-        },
         "5": {
           "title": "Manual",
           "id": 23
@@ -54,10 +30,256 @@
         "7": {
           "title": "Walkthrough-Videos",
           "id": 25
+        },
+        "17": {
+          "title": "Workshops",
+          "id": 14,
+          "attr": {
+            "style": {
+              "background": "#ffffff"
+            }
+          },
+          "ideas": {
+            "1": {
+              "title": "Establish workshop culture",
+              "id": 156,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            }
+          }
+        }
+      },
+      "attr": {
+        "style": {
+          "background": "#99cc00"
         }
       }
     },
-    "3": {
+    "4": {
+      "title": "Publications",
+      "id": 114,
+      "ideas": {
+        "1": {
+          "title": "Development Papers",
+          "id": 133,
+          "ideas": {
+            "1": {
+              "title": "Horn NeuroImage 2014",
+              "id": 124,
+              "ideas": {
+                "1": {
+                  "title": "Lead CORE methods paper",
+                  "id": 116,
+                  "attr": {
+                    "style": {}
+                  }
+                }
+              },
+              "attr": {
+                "style": {}
+              }
+            },
+            "2": {
+              "title": "Lead CONNECTOME (Li?)",
+              "id": 134,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            },
+            "3": {
+              "title": "Substructure-Normalization (Plettig)",
+              "id": 137,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            },
+            "4": {
+              "title": "Brainstem Connectome (Ewert)",
+              "id": 138,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            },
+            "5": {
+              "title": "Connectivity-based clustering (Li)",
+              "id": 143,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            },
+            "6": {
+              "title": "Connectivity averaging (Li)",
+              "id": 144,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            }
+          },
+          "attr": {
+            "style": {},
+            "collapsed": true
+          }
+        },
+        "2": {
+          "title": "Applications of Lead Core / Group",
+          "id": 117,
+          "ideas": {
+            "1": {
+              "title": "Barow Brain 2014",
+              "id": 120
+            },
+            "2": {
+              "title": "Neumann Brain 2015",
+              "id": 121
+            },
+            "3": {
+              "title": "Merkl Cereb Cortex 2015",
+              "id": 122
+            },
+            "4": {
+              "title": "Schroll NeuroImage 2015",
+              "id": 123
+            },
+            "5": {
+              "title": "Ruiz Frontiers i P 2014",
+              "id": 126
+            },
+            "6": {
+              "title": "Hohlefeld Neuroscience 2015",
+              "id": 127
+            },
+            "7": {
+              "title": "Brücke MD Clin. Pract. 2014",
+              "id": 128
+            },
+            "8": {
+              "title": "Dystonia (Ewert)",
+              "id": 140,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            },
+            "9": {
+              "title": "Correlations (Horn)",
+              "id": 141,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            },
+            "10": {
+              "title": "Betaatlas (Horn)",
+              "id": 142,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            }
+          },
+          "attr": {
+            "style": {},
+            "collapsed": true
+          }
+        },
+        "3": {
+          "title": "Applications of Lead Connectome",
+          "id": 129,
+          "ideas": {
+            "1": {
+              "title": "Horn NeuroImage 2015",
+              "id": 130
+            },
+            "2": {
+              "title": "Horn NeuroImage 2013",
+              "id": 131
+            },
+            "3": {
+              "title": "Fox PNAS 2015",
+              "id": 132
+            },
+            "4": {
+              "title": "Connectomic DBS (Bachmann)",
+              "id": 153,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            },
+            "5": {
+              "title": "PPICON (Horn)",
+              "id": 145,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            }
+          },
+          "attr": {
+            "style": {}
+          }
+        }
+      },
+      "attr": {
+        "attachment": {
+          "contentType": "text/html",
+          "content": "http://www.lead-dbs.org/?page_id=475"
+        },
+        "style": {
+          "background": "#ffff00"
+        }
+      }
+    },
+    "9": {
+      "title": "Organizational Overhead",
+      "id": 17,
+      "ideas": {
+        "1": {
+          "title": "Basecamp",
+          "id": 18,
+          "ideas": {
+            "1": {
+              "title": "Communication strategy",
+              "id": 104
+            }
+          }
+        },
+        "2": {
+          "title": "Github",
+          "id": 19,
+          "ideas": {
+            "1": {
+              "title": "Issues/Boards",
+              "id": 26
+            }
+          }
+        }
+      },
+      "attr": {
+        "style": {
+          "background": "#993300"
+        }
+      }
+    },
+    "14": {
       "title": "Legend of this Mindmap",
       "id": 93,
       "ideas": {
@@ -92,7 +314,12 @@
       "attr": {
         "style": {
           "background": "#008000"
-        }
+        },
+        "position": [
+          135,
+          547.5,
+          1
+        ]
       }
     },
     "-2": {
@@ -458,6 +685,30 @@
             "4": {
               "title": "SimBio/FieldTrip",
               "id": 36
+            },
+            "5": {
+              "title": "\"Works with\" (not included in repo)",
+              "id": 97,
+              "ideas": {
+                "1": {
+                  "title": "SPM",
+                  "id": 35,
+                  "attr": {
+                    "style": {}
+                  }
+                },
+                "2": {
+                  "title": "DTI&Fibertools for SPM",
+                  "id": 98
+                },
+                "3": {
+                  "title": "MesoFT",
+                  "id": 99
+                }
+              },
+              "attr": {
+                "style": {}
+              }
             }
           }
         },
@@ -558,27 +809,6 @@
               }
             }
           }
-        },
-        "3.5": {
-          "title": "\"Works with\" (not included in repo)",
-          "id": 97,
-          "ideas": {
-            "1": {
-              "title": "SPM",
-              "id": 35,
-              "attr": {
-                "style": {}
-              }
-            },
-            "2": {
-              "title": "DTI&Fibertools for SPM",
-              "id": 98
-            },
-            "3": {
-              "title": "MesoFT",
-              "id": 99
-            }
-          }
         }
       },
       "attr": {
@@ -587,29 +817,67 @@
         }
       }
     },
-    "-3": {
-      "title": "Organizational Overhead",
-      "id": 17,
+    "6.5": {
+      "title": "Funding",
+      "id": 112,
       "ideas": {
         "1": {
-          "title": "Basecamp",
-          "id": 18,
+          "title": "Grants",
+          "id": 113,
           "ideas": {
             "1": {
-              "title": "Communication strategy",
-              "id": 104
+              "title": "Cooperation with MPS GmbH",
+              "id": 147,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            },
+            "2": {
+              "title": "MRP 2015",
+              "id": 148,
+              "ideas": {}
+            },
+            "3": {
+              "title": "TH.Fell. 2015",
+              "id": 150
+            },
+            "4": {
+              "title": "JCliSci 2015",
+              "id": 151
+            }
+          }
+        }
+      },
+      "attr": {
+        "style": {
+          "background": "#33cccc"
+        }
+      }
+    },
+    "-12": {
+      "title": "Deployment",
+      "id": 7,
+      "ideas": {
+        "1": {
+          "title": "Compatibility",
+          "id": 15,
+          "ideas": {
+            "1": {
+              "title": "Test-driven development?",
+              "id": 16
             }
           }
         },
         "2": {
-          "title": "Github",
-          "id": 19,
-          "ideas": {
-            "1": {
-              "title": "Issues/Boards",
-              "id": 26
-            }
-          }
+          "title": "Release-Scripts",
+          "id": 82
+        }
+      },
+      "attr": {
+        "style": {
+          "background": "#ff0000"
         }
       }
     }
@@ -808,6 +1076,16 @@
     {
       "ideaIdFrom": 108,
       "ideaIdTo": 53,
+      "attr": {
+        "style": {
+          "color": "#FF0000",
+          "lineStyle": "dashed"
+        }
+      }
+    },
+    {
+      "ideaIdFrom": 147,
+      "ideaIdTo": 32,
       "attr": {
         "style": {
           "color": "#FF0000",
