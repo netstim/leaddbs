@@ -54,7 +54,7 @@ if update
     delete([earoot,'tmp',filesep,'updates.zip']);
     
     if update==2 % delete files during incremental updating
-        dels=textscan(fopen([earoot,'tmp',filesep,patch,filesep,'DELETE']),'%s');
+        dels=textscan(fopen([earoot,'tmp',filesep,id,filesep,'DELETE']),'%s');
         for f=1:length(dels{1})
             if isdir([earoot,dels{1}{f}])
                 rmdir([earoot,dels{1}{f}],'s')
@@ -62,12 +62,12 @@ if update
                 delete([earoot,dels{1}{f}])
             end
         end
-        delete([earoot,'tmp',filesep,patch,filesep,'DELETE'])
+        delete([earoot,'tmp',filesep,id,filesep,'DELETE'])
     end
     
     disp('copying code to the right place...');
-    copyfile([earoot,'tmp',filesep,patch,filesep,'*'],earoot,'f');
-    copyfile([earoot,'tmp',filesep,patch,filesep,'.version.txt'],earoot,'f');
+    copyfile([earoot,'tmp',filesep,id,filesep,'*'],earoot,'f');
+    copyfile([earoot,'tmp',filesep,id,filesep,'.version.txt'],earoot,'f');
     disp('Cleaning up...');
     rmdir([earoot,'tmp'],'s')
     disp('Done.');
