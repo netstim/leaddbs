@@ -6,12 +6,12 @@ function ea_show_ctcoregistration(options)
 legacy=0;
 
 if ~legacy % use new imshowpair tool
-    
+
     ct=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
     mr=ea_load_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
 
     if ~isequal(size(mr.img),size(ct.img))
-        matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]
+        matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized];
             [options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]};
         matlabbatch{1}.spm.util.imcalc.output = [options.prefs.ctnii_coregistered];
         matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
@@ -25,13 +25,13 @@ if ~legacy % use new imshowpair tool
         clear matlabbatch jobs;
         ct=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
     end
-    
+
     ct.img(:)=zscore(ct.img(:));
     mr.img(:)=zscore(mr.img(:));
-    
+
     jim=cat(4,mr.img,ct.img,mean(cat(4,mr.img,ct.img),4));
     ea_imshowpair(jim,options,'Preoperative MRI (pink) & Postoperative CT (green)');
-    
+
 elseif legacy
 % export wireframe of CT:
 disp('Generating wireframe from CT image...');
@@ -71,7 +71,7 @@ outf=['check_coregct_',options.prefs.prenii_unnormalized];
 suff='_pre_tra';
 
 
-matlabbatch{1}.spm.util.imcalc.input = {checkf
+matlabbatch{1}.spm.util.imcalc.input = {checkf;
     [options.root,options.patientname,filesep,'wires_',options.prefs.ctnii_coregistered,',1']
     };
 matlabbatch{1}.spm.util.imcalc.output = outf;
@@ -210,23 +210,23 @@ ti(ti < 0.1) = 0.15;
 views2d = [0,90; 0,0; 90,0];
 
 for i = 1:numel(hax)
-    
+
     set(hax(i), 'LooseInset', ti(i,:));
     %         set(hax(i), 'LooseInset', [0,0,0,0]);
-    
+
     % get the current viewing angle of the axes
     [az,el] = view(hax(i));
-    
+
     % determine if the axes are zoomed
     iszoomed = strcmp(get(hax(i), 'CameraViewAngleMode'), 'manual');
-    
+
     % test if we are viewing in 2d mode or a 3d view
     is2d = all(bsxfun(@eq, [az,el], views2d), 2);
-    
+
     if iszoomed && ~any(is2d)
         error('TIGHTFIG:haszoomed3d', 'Cannot make figures containing zoomed 3D axes tight.')
     end
-    
+
 end
 
 % we will move all the axes down and to the left by the amount
@@ -243,9 +243,9 @@ figheight = max(pos(:,2) + pos(:,4) + ti(:,4) - movedown);
 
 % move all the axes
 for i = 1:numel(hax)
-    
+
     set(hax(i), 'Position', [pos(i,1:2) - [moveleft,movedown], pos(i,3:4)]);
-    
+
 end
 
 origfigunits = get(hfig, 'Units');

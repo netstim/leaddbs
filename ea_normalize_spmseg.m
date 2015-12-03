@@ -42,8 +42,8 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
     try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,'.gz']);
     end
-    
-    
+
+
     try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
     end
@@ -72,14 +72,11 @@ end
     matlabbatch{1}.spm.spatial.preproc.output.biascor = 0;
     matlabbatch{1}.spm.spatial.preproc.output.cleanup = 0;
     matlabbatch{1}.spm.spatial.preproc.opts.tpm = {
-        fullfile(options.earoot,'templates','mni_icbm152_gm_tal_nlin_asym_09c.nii')
-        fullfile(options.earoot,'templates','mni_icbm152_wm_tal_nlin_asym_09c.nii')
+        fullfile(options.earoot,'templates','mni_icbm152_gm_tal_nlin_asym_09c.nii');
+        fullfile(options.earoot,'templates','mni_icbm152_wm_tal_nlin_asym_09c.nii');
         fullfile(options.earoot,'templates','mni_icbm152_csf_tal_nlin_asym_09c.nii')
         };
-    matlabbatch{1}.spm.spatial.preproc.opts.ngaus = [2
-        2
-        2
-        4];
+    matlabbatch{1}.spm.spatial.preproc.opts.ngaus = [2; 2; 2; 4];
     matlabbatch{1}.spm.spatial.preproc.opts.regtype = 'mni'; %'mni';
     matlabbatch{1}.spm.spatial.preproc.opts.warpreg = 1;
     matlabbatch{1}.spm.spatial.preproc.opts.warpco = 25;
@@ -170,9 +167,9 @@ for export=expdo
             outf=options.prefs.ctnii;
             fina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered,',1'];
     end
-    
-    
-    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']
+
+
+    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
         fina
         };
     matlabbatch{1}.spm.util.imcalc.output = outf;
@@ -216,28 +213,28 @@ for export=expdo
                         fina=[options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1'];
             wfina=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered,',1'];
     end
-    
+
     [~,nm]=fileparts(options.prefs.prenii_unnormalized); % cut off file extension
-    
+
     voxi=[0.5 0.5 0.5]; % export highres
     bbi=nan(2,3);
     matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg_sn.mat']};
     matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
     matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
-    
+
     matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
 
     matlabbatch{1}.spm.util.defs.fnames = {fina};
     matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
     matlabbatch{1}.spm.util.defs.interp = 6;
-    
+
     jobs{1}=matlabbatch;
     try
         cfg_util('run',jobs);
         movefile(wfina,outf);
     end
     clear matlabbatch jobs;
-    
+
 end
 
 % export (generalized) normalization parameters:

@@ -104,9 +104,9 @@ ynii=nifti([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'])
 wfibs=cell(length(ftr.curveSegCell),1);
 deletefibers=[];
 for fib=1:numfibs
-    
+
     ea_dispercent(fib/numfibs);
-    
+
     %% transpose from freiburg to spm notation.
     wfibs{fib}=[ftr.curveSegCell{fib}(:,1),ftr.curveSegCell{fib}(:,2),ftr.curveSegCell{fib}(:,3),ones(length(ftr.curveSegCell{fib}),1)];
     %wfibs{fib}=[ftr.curveSegCell{fib}(:,2),ysize-ftr.curveSegCell{fib}(:,1),ftr.curveSegCell{fib}(:,3),ones(length(ftr.curveSegCell{fib}),1)];
@@ -115,7 +115,7 @@ for fib=1:numfibs
         subplot(1,3,1)
         plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'-','color',[0.1707    0.2919    0.7792]);
     end
-    
+
     %% first apply affine transform from b0 to prenii
     wfibs{fib}=affinematrix1*wfibs{fib}';
     if vizz
@@ -124,49 +124,49 @@ for fib=1:numfibs
         plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'-','color',[0.1707    0.2919    0.7792]);
     end
     %% -> coordinates are now in voxel-space of single subject anat file.
-    
-    
- 
- 
-    %% map from prenii voxelspace to mni millimeter space   
-    
+
+
+
+
+    %% map from prenii voxelspace to mni millimeter space
+
     wfibs{fib} = vox2mm_mni(wfibs{fib},Vnii,ynii)';
-    
-    
-    
+
+
+
     if vizz
         thisfib=wfibs{fib}';
         subplot(1,3,3)
         plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'-','color',[0.1707    0.2919    0.7792]);
     end
-    
-    
+
+
     %% map from mni millimeter space to mni voxel space (only needed for trackvis convertion and cleansing fibers).
     wfibsvox{fib}=[wfibs{fib},ones(size(wfibs{fib},1),1)]';
     wfibsvox{fib}=Vmni(1).mat\wfibsvox{fib};
     wfibsvox{fib}=wfibsvox{fib}(1:3,:)';
     wfibsvox{fib}=[wfibsvox{fib}(:,1),wfibsvox{fib}(:,2),wfibsvox{fib}(:,3)];
-    
-    
+
+
     %% cleansing fibers..
-    
-    
-    
+
+
+
     if cleanse_fibers % delete anything too far from wm.
-       
+
         todelete=~mnimask(sub2ind(size(mnimask),round(wfibsvox{fib}(:,1)),round(wfibsvox{fib}(:,2)),round(wfibsvox{fib}(:,3))));
-        
+
         if all(todelete) % all fibers outside WM
             deletefibers=[deletefibers,fib];
         else
             wfibs{fib}(todelete,:)=[];
             wfibsvox{fib}(todelete,:)=[];
         end
-        
+
     end
-    
-    
-    
+
+
+
     %% cleanup
     %wfibs{fib}=wfibs{fib}(:,1:3);
    if vizz; drawnow; end
@@ -195,7 +195,7 @@ save([options.root,options.patientname,filesep,options.prefs.FTR_normalized],'-s
 %save([options.root,options.patientname,filesep,'vox_',options.prefs.FTR_normalized],'normalized_fibers_vox');
 disp('Done.');
 
- 
+
 
 % create trackvis version
 disp('Creating TrackVis version...');
@@ -213,11 +213,11 @@ catch
     specs.orientation=[0,1,0,0,0,0]; %[0,1,0,-1,0,0];%;[0,1,0,-1,0,0] [0,1,0,0,0,0];
     specs.orientation=[1,0,0,0,1,0];
     specs.orientation=[1,0,0,1,0,0];
-    specs.orientation=[1,0,0,0,1,0]; 
+    specs.orientation=[1,0,0,0,1,0];
    specs.orientation=[1 0 0 0 -1 0]; % dieses gut bei DSI studio
-    %specs.orientation=[0,1,0,0,0,0]; 
+    %specs.orientation=[0,1,0,0,0,0];
     %specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example, dieses gut bei mesoFT
-    %trk_write. Try this one.. %[1,0,0,0,1,0]; 
+    %trk_write. Try this one.. %[1,0,0,0,1,0];
 end
 specs.vox=ftr.vox;
 
@@ -240,7 +240,7 @@ directory=[options.root,options.patientname,filesep];
 dartelused=0;
 try
     load([directory,'ea_normmethod_applied']);
-    
+
     if strcmp(norm_method_applied{end},'ea_normalize_spmdartel')
         dartelused=1;
     end
@@ -254,14 +254,14 @@ if dartelused
         delete([directory,'c5',options.prefs.b0]);
         disp('Done.');
     end
-    
+
     if ~exist([directory,'rc2',options.prefs.prenii_unnormalized],'file');
         ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
         copyfile([directory,options.prefs.prenii_unnormalized],[directory,'k',options.prefs.prenii_unnormalized]);
         matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0]};
         matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'k',options.prefs.prenii_unnormalized]};
-        matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c1',options.prefs.prenii_unnormalized]
-            [directory,'c2',options.prefs.prenii_unnormalized]
+        matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c1',options.prefs.prenii_unnormalized];
+            [directory,'c2',options.prefs.prenii_unnormalized];
             [directory,'c3',options.prefs.prenii_unnormalized]
             };
         matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
@@ -311,4 +311,4 @@ coord=[spm_sample_vol(Vnii(1),ixs_new(1,:),ixs_new(2,:),ixs_new(3,:),1);
 % for i = 1:3
 % coord(i,:)=ynii.dat(sub2ind(size(ynii.dat),ixs_old(1,:)',ixs_old(2,:)',ixs_old(3,:)',ones(size(ixs_old,2),1),repmat(i,size(ixs_old,2),1)));
 % end
-  
+

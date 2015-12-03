@@ -35,14 +35,14 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
 try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']);
     catch
-       
+
     try system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']); end
     end
-    
+
     try
     gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
     gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
- 
+
     catch
     system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
     system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
@@ -60,14 +60,11 @@ matlabbatch{1}.spm.spatial.preproc.output.CSF = [0 0 0];
 matlabbatch{1}.spm.spatial.preproc.output.biascor = 0;
 matlabbatch{1}.spm.spatial.preproc.output.cleanup = 0;
 matlabbatch{1}.spm.spatial.preproc.opts.tpm = {
-                                               fullfile(fileparts(which('spm')),'tpm','grey.nii')
-                                               fullfile(fileparts(which('spm')),'tpm','white.nii')
+                                               fullfile(fileparts(which('spm')),'tpm','grey.nii');
+                                               fullfile(fileparts(which('spm')),'tpm','white.nii');
                                                fullfile(fileparts(which('spm')),'tpm','csf.nii')
                                                };
-matlabbatch{1}.spm.spatial.preproc.opts.ngaus = [2
-                                                 2
-                                                 2
-                                                 4];
+matlabbatch{1}.spm.spatial.preproc.opts.ngaus = [2; 2; 2; 4];
 matlabbatch{1}.spm.spatial.preproc.opts.regtype = 'mni'; %'mni';
 matlabbatch{1}.spm.spatial.preproc.opts.warpreg = 1;
 matlabbatch{1}.spm.spatial.preproc.opts.warpco = 25;
@@ -90,7 +87,7 @@ clear matlabbatch jobs;
 
 % Now fuse c1 and c2 to get a weight.
 
-matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.prefs.patientdir,filesep,'c1',options.prefs.prenii_unnormalized,',1']
+matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.prefs.patientdir,filesep,'c1',options.prefs.prenii_unnormalized,',1'];
                                         [options.root,options.prefs.patientdir,filesep,'c2',options.prefs.prenii_unnormalized,',1']
                                         };
 matlabbatch{1}.spm.util.imcalc.output = 'c1c2mask.nii';
@@ -168,7 +165,7 @@ clear matlabbatch jobs;
 %% 1/3: grand mean normalize
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'c1c2mask.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']
+matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
                                                                [options.root,options.prefs.patientdir,filesep,'c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = '';
@@ -179,8 +176,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.cutoff = 25;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.nits = 0;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.reg = 1;
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.preserve = 0;
-matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.bb = [-78 -112  -50
- 78   76   85];
+matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.bb = [-78 -112 -50; 78 76 85];
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.vox = [0.4 0.4 0.4];
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.interp = 1;
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.wrap = [0 0 0];
@@ -203,7 +199,7 @@ clear matlabbatch jobs;
 
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,options.prefs.patientdir,filesep,'w1',options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w1',options.prefs.prenii_unnormalized,',1']
+matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w1',options.prefs.prenii_unnormalized,',1'];
                                                                 [options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[options.earoot,filesep,'templates',filesep,'schoenecker',filesep,'secondstepmask.nii,1']};
@@ -214,8 +210,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.cutoff = 25;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.nits = 0;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.reg = 1;
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.preserve = 0;
-matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.bb = [-78 -112  -50
- 78   76   85];
+matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.bb = [-78 -112 -50; 78 76 85];
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.vox = [0.4 0.4 0.4];
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.interp = 1;
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.wrap = [0 0 0];
@@ -252,8 +247,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.cutoff = 25;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.nits = 0;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.reg = 1;
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.preserve = 0;
-matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.bb = [-55,45,9.5
-    55,-65,-25.0];
+matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.bb = [-55 45 9.5; 55 -65 -25.0];
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.vox = [0.4 0.4 0.4];
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.interp = 1;
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.wrap = [0 0 0];
@@ -288,7 +282,7 @@ for def=includedefs(logical(normlog(2:4)))
             wstr='w2w1';
 
     end
-    
+
     if def==max(find(normlog)-1) % last normalization
         voxi=[0.22 0.22 0.5]; % export highres
         bbi=[-55 45 9.5; 55 -65 -25]; % ?with small bounding box
@@ -300,8 +294,8 @@ end
 
 matlabbatch{1}.spm.util.defs.ofname = '';
 matlabbatch{1}.spm.util.defs.fnames = {
-                                       [options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']
-                                       [options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,',1']
+                                       [options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1'];
+                                       [options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,',1'];
                                        [options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']
                                        };
 matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
@@ -311,16 +305,16 @@ jobs{1}=matlabbatch;
 try
     cfg_util('run',jobs);
 catch % CT
-    
+
     matlabbatch{1}.spm.util.defs.fnames = {
-        [options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1']
+        [options.root,options.prefs.patientdir,filesep,options.prefs.ctnii_coregistered,',1'];
         [options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']
         };
     jobs{1}=matlabbatch;
-    
-    
+
+
     cfg_util('run',jobs);
-    
+
 end
 clear matlabbatch jobs;
 
@@ -359,7 +353,7 @@ end
 
 % % Save transformation for later use in FLIRT
 % flirtmat_write([options.root,options.prefs.patientdir,filesep,'flirt_transform'],FLIRTMAT);
-% 
+%
 % mmFLIRT=flirtmat2worldmat(FLIRTMAT,[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized],[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized]);
 % flirtmat_write([options.root,options.prefs.patientdir,filesep,'mmflirt_transform'],mmFLIRT);
 % % Save transformation matrix M that maps from mm space in native acquisition to mm space in MNI space.
@@ -399,9 +393,8 @@ for export=2:5
             outf=options.prefs.prenii;
             infile=[options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized,',1'];
     end
-matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']
-                                        infile
-                                        };
+matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
+                                        infile};
 matlabbatch{1}.spm.util.imcalc.output = outf;
 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
 matlabbatch{1}.spm.util.imcalc.expression = ['i2'];
@@ -518,7 +511,7 @@ function [worldmat spmvoxmat fslvoxmat] = flirtmat2worldmat(flirtmat, src, trg)
 % which are not NIfTI world coordinates, and note src-trg directionality!
 % worldmat from this script reproduces "img2imgcoord -mm ...".
 %
-% The script can also return a matrix to map from target to source voxels 
+% The script can also return a matrix to map from target to source voxels
 % in MATLAB/SPM's one-based convention, or in FSL's zero-based convention
 %
 % Example:
@@ -541,7 +534,7 @@ end
 
 % src = inv(flirtmat) * trg
 % srcvox = src.mat \ inv(flirtmat) * trg.mat * trgvox
-% BUT, flirt doesn't use src.mat, only absolute values of the 
+% BUT, flirt doesn't use src.mat, only absolute values of the
 % scaling elements from it,
 % AND, if images are not radiological, the x-axis is flipped, see:
 %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0810&L=FSL&P=185638
@@ -568,4 +561,3 @@ if det(N.mat) > 0
     xflip(1, 4) = N.dat.dim(1)-1; % reflect about centre
     scl = scl * xflip;
 end
-

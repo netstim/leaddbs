@@ -14,10 +14,10 @@ function varargout=ea_normalize_spmdartel(options)
 % brain to MNI space directly. Unlike the usual DARTEL-approach, which is
 % usually used for group studies, here, DARTEL is used for a pairwise
 % co-registration between patient anatomy and MNI template. It has been
-% shown that DARTEL also performs superior to many other normalization approaches 
-% also  in a pair-wise setting e.g. in 
-%   Klein, A., et al. (2009). Evaluation of 14 nonlinear deformation algorithms 
-%   applied to human brain MRI registration. NeuroImage, 46(3), 786?802. 
+% shown that DARTEL also performs superior to many other normalization approaches
+% also  in a pair-wise setting e.g. in
+%   Klein, A., et al. (2009). Evaluation of 14 nonlinear deformation algorithms
+%   applied to human brain MRI registration. NeuroImage, 46(3), 786?802.
 %   doi:10.1016/j.neuroimage.2008.12.037
 %
 % Since a high resolution is needed for accurate DBS localizations, this
@@ -41,7 +41,7 @@ if ischar(options) % return name of method.
 end
 if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
    ea_generate_tpm; % will generate a hd_template out of SPM's TPM.nii
-    
+
 end
 
 segmentresolution=0.5; % resolution of the DARTEL-Warps. Setting this value to larger values will generate the usual DARTEL-Workflow.
@@ -62,8 +62,8 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
     try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,'.gz']);
     end
-    
-    
+
+
     try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
     end
@@ -89,10 +89,10 @@ end
     delete([options.root,options.prefs.patientdir,filesep,'c5',options.prefs.prenii_unnormalized]);
     disp('*** Segmentation of preoperative MRI done.');
 
-    
-    
+
+
     % check if darteltemplate is available, if not generate one
-    
+
     if exist([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'],'file')
         % There is a DARTEL-Template. Check if it will match:
         Vt=spm_vol([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii']);
@@ -100,21 +100,21 @@ end
         if ~isequal(Vp.dim,Vt(1).dim) || ~isequal(Vp.mat,Vt(1).mat) % Dartel template not matching. -> create matching one.
             ea_create_mni_darteltemplate([options.root,filesep,options.patientname,filesep,'rc1',options.prefs.prenii_unnormalized]);
         end
-        
+
     else % no dartel template present. -> Create matching dartel templates from highres version.
         ea_create_mni_darteltemplate([options.root,filesep,options.patientname,filesep,'rc1',options.prefs.prenii_unnormalized]);
-        
+
     end
-    
+
     %
-    
-    
+
+
 
 
 % Normalize to MNI using DARTEL.
 matlabbatch{1}.spm.tools.dartel.warp1.images = {
-                                                {[options.root,options.prefs.patientdir,filesep,'rc1',options.prefs.prenii_unnormalized,',1']}
-                                                {[options.root,options.prefs.patientdir,filesep,'rc2',options.prefs.prenii_unnormalized,',1']}
+                                                {[options.root,options.prefs.patientdir,filesep,'rc1',options.prefs.prenii_unnormalized,',1']};
+                                                {[options.root,options.prefs.patientdir,filesep,'rc2',options.prefs.prenii_unnormalized,',1']};
                                                 {[options.root,options.prefs.patientdir,filesep,'rc3',options.prefs.prenii_unnormalized,',1']}
                                                 }';
 matlabbatch{1}.spm.tools.dartel.warp1.settings.rform = 0;
@@ -161,7 +161,7 @@ for inverse=0:1
     else
         addstr='';
     end
-    
+
     switch spm('ver')
         case 'SPM8'
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
@@ -172,9 +172,9 @@ for inverse=0:1
             matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
             matlabbatch{1}.spm.util.defs.interp = 1;
         case 'SPM12'
-            
-            
-            
+
+
+
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1-inverse 0+inverse];
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
@@ -183,7 +183,7 @@ for inverse=0:1
             matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
     end
     jobs{1}=matlabbatch;
-    
+
     cfg_util('run',jobs);
     disp('*** Exported normalization parameters to y_ea_normparams.nii');
     clear matlabbatch jobs;

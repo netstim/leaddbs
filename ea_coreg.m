@@ -33,8 +33,8 @@ for export=1:2
             case 2
                 fina=[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,',1'];
         end
-        
-        
+
+
         matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
         matlabbatch{1}.spm.spatial.coreg.estimate.source = {fina};
         matlabbatch{1}.spm.spatial.coreg.estimate.other = {''};
@@ -42,10 +42,10 @@ for export=1:2
         matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [12 10 8 6 4 2];
         matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
         matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
-        
+
         jobs{1}=matlabbatch;
         try
-            
+
             cfg_util('run',jobs);
             normlog(1)=1;
             disp('*** Coregistration between transversal and coronar versions worked.');
@@ -56,12 +56,12 @@ for export=1:2
         end
         clear matlabbatch jobs;
         if manual
-            matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']
+            matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1'];
                 fina};
             jobs{1}=matlabbatch;
             try % CT
                 cfg_util('run',jobs);
-                
+
                 yninp = input('Please check reg between Post-OP versions. Is result precise? (y/n)..','s');
                 if strcmpi(yninp,'y')
                     disp('Good. Moving on...');
@@ -89,8 +89,8 @@ normlog=zeros(4,1); % log success of processing steps. 4 steps: 1. coreg tra and
 
 
 for costfun=cfundo
-    
-    
+
+
     matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.coreg.estimate.source = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
     try
@@ -102,7 +102,7 @@ for costfun=cfundo
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [15 10 8 6 4 2];
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [8 8];
-    
+
     jobs{1}=matlabbatch;
     try
         cfg_util('run',jobs);
@@ -113,19 +113,19 @@ for costfun=cfundo
         %ea_error('This normalization cannot be performed automatically with LEAD. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
     end
     clear matlabbatch jobs;
-    
+
     if manual
         if exist('finas','var')
             matlabbatch{1}.spm.util.checkreg.data = [{[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']},finas];
         else
             matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
-            
+
         end
         jobs{1}=matlabbatch;
         cfg_util('run',jobs);
         clear matlabbatch jobs;
-        
-        
+
+
         yninp = input('Please check reg between Pre- and Post-OP versions. Is result precise? (y/n)..','s');
         if strcmpi(yninp,'y')
             disp('Good. Moving on...');

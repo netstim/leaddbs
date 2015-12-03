@@ -51,9 +51,9 @@ for fi=1:length(fis)
         system(['bash -c "', cmd, '"']);
     else
         system(cmd);
-    end   
+    end
     % generate l*.nii files
-    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']
+    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
         [ofis{fi},',1']
         };
     matlabbatch{1}.spm.util.imcalc.output = lfis{fi};

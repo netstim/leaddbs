@@ -59,11 +59,11 @@ clear jobs matlabbatch
 
 
 % generate "skull-contrast" image
-matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.patientname,filesep,'c1',options.prefs.prenii_unnormalized]
-    [options.root,options.patientname,filesep,'c2',options.prefs.prenii_unnormalized]
-    [options.root,options.patientname,filesep,'c3',options.prefs.prenii_unnormalized]
-[options.root,options.patientname,filesep,'c4',options.prefs.prenii_unnormalized]
-[options.root,options.patientname,filesep,'c5',options.prefs.prenii_unnormalized]
+matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.patientname,filesep,'c1',options.prefs.prenii_unnormalized];
+    [options.root,options.patientname,filesep,'c2',options.prefs.prenii_unnormalized];
+    [options.root,options.patientname,filesep,'c3',options.prefs.prenii_unnormalized];
+[options.root,options.patientname,filesep,'c4',options.prefs.prenii_unnormalized];
+[options.root,options.patientname,filesep,'c5',options.prefs.prenii_unnormalized];
 [options.root,options.patientname,filesep,'c6',options.prefs.prenii_unnormalized]};
 matlabbatch{1}.spm.util.imcalc.output = ['skullcon',options.prefs.prenii_unnormalized];
 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname,filesep]};
@@ -106,14 +106,14 @@ end
 disp('Done.');
 
 for alpha=1:length(alphas)
-    
+
     disp(['*** Pass ',num2str(alpha),'/',num2str(length(alphas)),', alpha: ',num2str(alphas(alpha)),'.']);
     eMR=ea_detect_edges_3d(MR.img,alphas(alpha));
     eCT=ea_detect_edges_3d(CT.img,alphas(alpha));
-    
+
     eMR(eMR<2)=0;
     eCT(eCT<2)=0;
-    
+
     [xx,yy,zz]=ind2sub(size(eMR),find(eMR(:)));
     ptMR=[xx,yy,zz,ones(length(xx),1)]';
     ptMR=MR.hdr.mat*ptMR; % mm notation
@@ -121,10 +121,10 @@ for alpha=1:length(alphas)
     ptCT=[xx,yy,zz,ones(length(xx),1)]';
     ptCT=CT.hdr.mat*ptCT; % mm notation
     disp('Done.');
-    
-    
+
+
     % define initialization parameters
-    
+
     MRTree=KDTreeSearcher(ptMR');
     if ~exist('M','var') % first grain run..
         % define M based on centroids
@@ -141,26 +141,26 @@ for alpha=1:length(alphas)
     reuselastmodM=0;
     cnt=0;
     priorM=M; % reset params
-    
+
      if Dopt>D
         Dopt=D/2;
     end
     while cnt<maxiter && D>Dopt % exit conditions (hard coded for now).
-        
+
         % modify M
         if ~reuselastmodM
             modM=randn(3,4)*(randn(1)*(0.5/alpha));% *0.01;
         end
         M=M+[modM;zeros(1,4)]; % fuzzy improvement
         ptrCT=M*ptCT;
-        
-        
+
+
         [~,DCT]=knnsearch(MRTree,ptrCT');
         [~,DMR]=knnsearch(ptrCT',ptMR');
         D=mean([DCT(:);DMR(:)]);
-        
-        
-        
+
+
+
         % check improvement.
         if D<priorD % improvement
             fprintf('\n %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f \n\n',[D;M(:)]');
@@ -171,9 +171,9 @@ for alpha=1:length(alphas)
                 hold off
                 drawnow
             end
-            
+
             priorD=D; % update priors
-            
+
             priorM=M;
             reuselastmodM=1;
             cnt=0;
@@ -192,15 +192,15 @@ for alpha=1:length(alphas)
             M=priorM; % reset M to last value.
             reuselastmodM=0;
         end
-        
-        
+
+
     end
-    
+
     if D<Dopt % since this is a hard exit criterion, it wouldn't help to re-iterate.
         break
     end
-    
-    
+
+
 end
 
 
@@ -230,7 +230,7 @@ clear jobs matlabbatch
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
-    
+
     jobs{1}=matlabbatch;
     cfg_util('run',jobs);
     clear matlabbatch jobs;
@@ -238,9 +238,9 @@ clear jobs matlabbatch
     % 2.
 % multiply both CT and MRI with c1-3 volume of images:
 % skullstrip MR:
-matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.patientname,filesep,'c1',options.prefs.prenii_unnormalized]
-    [options.root,options.patientname,filesep,'c2',options.prefs.prenii_unnormalized]
-    [options.root,options.patientname,filesep,'c3',options.prefs.prenii_unnormalized]
+matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.patientname,filesep,'c1',options.prefs.prenii_unnormalized];
+    [options.root,options.patientname,filesep,'c2',options.prefs.prenii_unnormalized];
+    [options.root,options.patientname,filesep,'c3',options.prefs.prenii_unnormalized];
     [options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]};
 matlabbatch{1}.spm.util.imcalc.output = ['b',options.prefs.prenii_unnormalized];
 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname,filesep]};
@@ -252,11 +252,11 @@ matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
     jobs{1}=matlabbatch;
     cfg_util('run',jobs);
     clear matlabbatch jobs;
-    
+
     % skullstrip CT:
-matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.patientname,filesep,'c1',options.prefs.prenii_unnormalized]
-    [options.root,options.patientname,filesep,'c2',options.prefs.prenii_unnormalized]
-    [options.root,options.patientname,filesep,'c3',options.prefs.prenii_unnormalized]
+matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.patientname,filesep,'c1',options.prefs.prenii_unnormalized];
+    [options.root,options.patientname,filesep,'c2',options.prefs.prenii_unnormalized];
+    [options.root,options.patientname,filesep,'c3',options.prefs.prenii_unnormalized];
     [options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized]};
 matlabbatch{1}.spm.util.imcalc.output = ['br',options.prefs.rawctnii_unnormalized];
 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname,filesep]};
@@ -268,8 +268,8 @@ matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
     jobs{1}=matlabbatch;
     cfg_util('run',jobs);
     clear matlabbatch jobs;
-    
-    
+
+
     % 3. Final coreg.
 costfuns={'nmi','mi','ecc'};
 for costfun=1:3
@@ -280,7 +280,7 @@ for costfun=1:3
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
-    
+
     jobs{1}=matlabbatch;
     cfg_util('run',jobs);
     clear matlabbatch jobs;
@@ -293,7 +293,7 @@ delete([options.root,options.patientname,filesep,'skullcon',options.prefs.prenii
 
 disp('Done.');
 
-matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]
+matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
     [options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized,',1']};
 jobs{1}=matlabbatch;
 cfg_util('run',jobs);
@@ -542,11 +542,11 @@ mask_Z(3,3) = 0;
 %  First, we traverse along Z axis of transformed volume voxel by voxel
 %
 for z = 1:new_dim(3)
-    
+
     if verbose & ~mod(z,10)
         fprintf('%.2f percent is done.\n', 100*z/new_dim(3));
     end
-    
+
     %  We need to find out the mapping from voxel in the transformed
     %  volume (new_XYZvox) to voxel in the original volume (old_XYZvox)
     %
@@ -572,16 +572,16 @@ for z = 1:new_dim(3)
     %
     old_M1 = old_M;   old_M1(:,4) = old_M(:,4) - sum(old_M(:,1:3),2);
     new_M1 = new_M;   new_M1(:,4) = new_M(:,4) - sum(new_M(:,1:3),2);
-    
+
     %  Then, apply unit increment of mask_Z(3,4) to simulate the
     %  cursor movement
     %
     mask_Z(3,4) = z;
-    
+
     %  Here is the mapping from new_XYZvox to old_XYZvox
     %
     M = old_M1 \ new_M1 * mask_Z;
-    
+
     switch method
         case 1
             new_img(:,:,z) = trilinear(old_img, new_dim, old_dim, M, bg);
@@ -590,7 +590,7 @@ for z = 1:new_dim(3)
         case 3
             new_img(:,:,z) = bresenham(old_img, new_dim, old_dim, M, bg);
     end
-    
+
 end;			% for z
 
 if ndims(old_img) == 2
@@ -625,44 +625,44 @@ Y2Y = 0;
 Y2Z = 0;
 
 for y = 1:ydim1
-    
+
     %  increment of new_Y accumulation
     %
     Y2X = Y2X + M(1,2);		% new_Y to old_X
     Y2Y = Y2Y + M(2,2);		% new_Y to old_Y
     Y2Z = Y2Z + M(3,2);		% new_Y to old_Z
-    
+
     %  backproject new_Y accumulation and translation to old_XYZ
     %
     old_X = Y2X + M(1,4);
     old_Y = Y2Y + M(2,4);
     old_Z = Y2Z + M(3,4);
-    
+
     for x = 1:xdim1
-        
+
         %  accumulate the increment of new_X, and apply it
         %  to the backprojected old_XYZ
         %
         old_X = M(1,1) + old_X  ;
         old_Y = M(2,1) + old_Y  ;
         old_Z = M(3,1) + old_Z  ;
-        
+
         %  within boundary of original image
         %
         if (	old_X > 1-TINY & old_X < xdim2+TINY & ...
                 old_Y > 1-TINY & old_Y < ydim2+TINY & ...
                 old_Z > 1-TINY & old_Z < zdim2+TINY	)
-            
+
             %  Calculate distance of old_XYZ to its neighbors for
             %  weighted intensity average
             %
             dx = old_X - floor(old_X);
             dy = old_Y - floor(old_Y);
             dz = old_Z - floor(old_Z);
-            
+
             x000 = floor(old_X);
             x100 = x000 + 1;
-            
+
             if floor(old_X) < 1
                 x000 = 1;
                 x100 = x000;
@@ -670,18 +670,18 @@ for y = 1:ydim1
                 x000 = xdim2;
                 x100 = x000;
             end
-            
+
             x010 = x000;
             x001 = x000;
             x011 = x000;
-            
+
             x110 = x100;
             x101 = x100;
             x111 = x100;
-            
+
             y000 = floor(old_Y);
             y010 = y000 + 1;
-            
+
             if floor(old_Y) < 1
                 y000 = 1;
                 y100 = y000;
@@ -689,18 +689,18 @@ for y = 1:ydim1
                 y000 = ydim2;
                 y010 = y000;
             end
-            
+
             y100 = y000;
             y001 = y000;
             y101 = y000;
-            
+
             y110 = y010;
             y011 = y010;
             y111 = y010;
-            
+
             z000 = floor(old_Z);
             z001 = z000 + 1;
-            
+
             if floor(old_Z) < 1
                 z000 = 1;
                 z001 = z000;
@@ -708,33 +708,33 @@ for y = 1:ydim1
                 z000 = zdim2;
                 z001 = z000;
             end
-            
+
             z100 = z000;
             z010 = z000;
             z110 = z000;
-            
+
             z101 = z001;
             z011 = z001;
             z111 = z001;
-            
+
             x010 = x000;
             x001 = x000;
             x011 = x000;
-            
+
             x110 = x100;
             x101 = x100;
             x111 = x100;
-            
+
             v000 = double(img(x000, y000, z000));
             v010 = double(img(x010, y010, z010));
             v001 = double(img(x001, y001, z001));
             v011 = double(img(x011, y011, z011));
-            
+
             v100 = double(img(x100, y100, z100));
             v110 = double(img(x110, y110, z110));
             v101 = double(img(x101, y101, z101));
             v111 = double(img(x111, y111, z111));
-            
+
             img_slice(x,y) = v000*(1-dx)*(1-dy)*(1-dz) + ...
                 v010*(1-dx)*dy*(1-dz) + ...
                 v001*(1-dx)*(1-dy)*dz + ...
@@ -743,12 +743,12 @@ for y = 1:ydim1
                 v110*dx*dy*(1-dz) + ...
                 v101*dx*(1-dy)*dz + ...
                 v111*dx*dy*dz;
-            
+
         else
             img_slice(x,y) = bg;
-            
+
         end	% if boundary
-        
+
     end	% for x
 end		% for y
 
@@ -778,45 +778,45 @@ Y2Y = 0;
 Y2Z = 0;
 
 for y = 1:ydim1
-    
+
     %  increment of new_Y accumulation
     %
     Y2X = Y2X + M(1,2);		% new_Y to old_X
     Y2Y = Y2Y + M(2,2);		% new_Y to old_Y
     Y2Z = Y2Z + M(3,2);		% new_Y to old_Z
-    
+
     %  backproject new_Y accumulation and translation to old_XYZ
     %
     old_X = Y2X + M(1,4);
     old_Y = Y2Y + M(2,4);
     old_Z = Y2Z + M(3,4);
-    
+
     for x = 1:xdim1
-        
+
         %  accumulate the increment of new_X and apply it
         %  to the backprojected old_XYZ
         %
         old_X = M(1,1) + old_X  ;
         old_Y = M(2,1) + old_Y  ;
         old_Z = M(3,1) + old_Z  ;
-        
+
         xi = round(old_X);
         yi = round(old_Y);
         zi = round(old_Z);
-        
+
         %  within boundary of original image
         %
         if (	xi >= 1 & xi <= xdim2 & ...
                 yi >= 1 & yi <= ydim2 & ...
                 zi >= 1 & zi <= zdim2	)
-            
+
             img_slice(x,y) = img(xi,yi,zi);
-            
+
         else
             img_slice(x,y) = bg;
-            
+
         end	% if boundary
-        
+
     end	% for x
 end		% for y
 
@@ -840,12 +840,12 @@ ydim2 = dim2(2);
 zdim2 = dim2(3);
 
 for y = 1:ydim1
-    
+
     start_old_XYZ = round(M*[0     y 0 1]');
     end_old_XYZ   = round(M*[xdim1 y 0 1]');
-    
+
     [X Y Z] = bresenham_line3d(start_old_XYZ, end_old_XYZ);
-    
+
     %  line error correction
     %
     %      del = end_old_XYZ - start_old_XYZ;
@@ -859,46 +859,46 @@ for y = 1:ydim1
     %     line_slope = sqrt((del_x1/del_dom)^2 + (del_x2/del_dom)^2 + 1);
     %    line_error = line_slope - 1;
     % line error correction removed because it is too slow
-    
+
     for x = 1:xdim1
-        
+
         %  rescale ratio
         %
         i = round(x * length(X) / xdim1);
-        
+
         if i < 1
             i = 1;
         elseif i > length(X)
             i = length(X);
         end
-        
+
         xi = X(i);
         yi = Y(i);
         zi = Z(i);
-        
+
         %  within boundary of the old XYZ space
         %
         if (	xi >= 1 & xi <= xdim2 & ...
                 yi >= 1 & yi <= ydim2 & ...
                 zi >= 1 & zi <= zdim2	)
-            
+
             img_slice(x,y) = img(xi,yi,zi);
-            
+
             %            if line_error > 1
             %              x = x + 1;
-            
+
             %               if x <= xdim1
             %                 img_slice(x,y) = img(xi,yi,zi);
             %                line_error = line_slope - 1;
             %            end
             %        end		% if line_error
             % line error correction removed because it is too slow
-            
+
         else
             img_slice(x,y) = bg;
-            
+
         end	% if boundary
-        
+
     end	% for x
 end		% for y
 

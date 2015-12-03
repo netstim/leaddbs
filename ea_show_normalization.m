@@ -32,16 +32,16 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 addstr='MNI space (wireframes) & Postoperative coronar MRI';
                 suff='_cor';
         end
-        
-        
+
+
         if ~legacy % use new imshowpair viewer
-            
-            
-            
+
+
+
             mni=ea_load_nii([options.earoot,'templates',filesep,'mni_wires.nii']);
             pt=ea_load_nii(checkf);
             if ~isequal(size(mni.img),size(pt.img))
-                matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'mni_wires.nii']
+                matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'mni_wires.nii'];
                     checkf};
                 matlabbatch{1}.spm.util.imcalc.output = checkfn;
                 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
@@ -63,7 +63,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                         ea_imshowpair(jim,options,addstr);
 
         else legacy % use old wireframe images
-            matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'mni_wires.nii,1']
+            matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'mni_wires.nii,1'];
                 checkf};
             matlabbatch{1}.spm.util.imcalc.output = outf;
             matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
@@ -75,22 +75,22 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             jobs{1}=matlabbatch;
             cfg_util('run',jobs);
             clear matlabbatch jobs;
-            
-            
+
+
             nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,outf]);
-            
+
             h1=figure('name',['Normalization results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
             set(gcf,'color','w')
             imagesc(flipud(squeeze(nii.img(:,:,round(end/2)))'));
             axis('equal')
             axis('off')
             colormap gray
-            
+
             tightfig;
-            
+
             h2=figure('name',['Normalization results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
-            
-            
+
+
             subplot(2,1,1);
             imat=scale_image(flipud(squeeze(nii.img(:,round(end/2),:))'),[2,1]);
             imagesc(imat);
@@ -102,13 +102,13 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             axis('equal')
             axis('off')
             colormap gray
-            
+
             tightfig;
             saveas(h1,[options.root,options.prefs.patientdir,filesep,'normalization_check',suff,'_axial.png']);
             saveas(h2,[options.root,options.prefs.patientdir,filesep,'normalization_check',suff,'_corsag.png']);
         end
     end
-    
+
 end
 
 
@@ -192,23 +192,23 @@ ti(ti < 0.1) = 0.15;
 views2d = [0,90; 0,0; 90,0];
 
 for i = 1:numel(hax)
-    
+
     set(hax(i), 'LooseInset', ti(i,:));
     %         set(hax(i), 'LooseInset', [0,0,0,0]);
-    
+
     % get the current viewing angle of the axes
     [az,el] = view(hax(i));
-    
+
     % determine if the axes are zoomed
     iszoomed = strcmp(get(hax(i), 'CameraViewAngleMode'), 'manual');
-    
+
     % test if we are viewing in 2d mode or a 3d view
     is2d = all(bsxfun(@eq, [az,el], views2d), 2);
-    
+
     if iszoomed && ~any(is2d)
         error('TIGHTFIG:haszoomed3d', 'Cannot make figures containing zoomed 3D axes tight.')
     end
-    
+
 end
 
 % we will move all the axes down and to the left by the amount
@@ -225,9 +225,9 @@ figheight = max(pos(:,2) + pos(:,4) + ti(:,4) - movedown);
 
 % move all the axes
 for i = 1:numel(hax)
-    
+
     set(hax(i), 'Position', [pos(i,1:2) - [moveleft,movedown], pos(i,3:4)]);
-    
+
 end
 
 origfigunits = get(hfig, 'Units');

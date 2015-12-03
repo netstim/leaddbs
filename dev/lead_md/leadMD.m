@@ -245,11 +245,11 @@ if fselect==1 % nifti
     copyfile([path,fis],[directory,'import.nii']);
 else % DICOM
 
-    fips=cellfun(@strcat,path,fis);
+    fips=cellfun(@(x) strcat(path,x), fis, 'UniformOutput', 0);
 
-    matlabbatch{1}.spm.util.import.dicom.data = fips;
+    matlabbatch{1}.spm.util.import.dicom.data = fips';
     matlabbatch{1}.spm.util.import.dicom.root = 'flat';
-    matlabbatch{1}.spm.util.import.dicom.outdir = firectory;
+    matlabbatch{1}.spm.util.import.dicom.outdir = directory;
     matlabbatch{1}.spm.util.import.dicom.protfilter = '.*';
     matlabbatch{1}.spm.util.import.dicom.convopts.format = 'nii';
     matlabbatch{1}.spm.util.import.dicom.convopts.icedims = 0;

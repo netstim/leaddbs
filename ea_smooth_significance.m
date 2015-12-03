@@ -24,7 +24,7 @@ ea_crop_nii_bb([odir,'rempty','.nii'],'w',bb);
 
 V=spm_vol([odir,'wrempty','.nii']);
 niic=spm_read_vols(V);
-XYZvx=V.mat\XYZmm'; 
+XYZvx=V.mat\XYZmm';
 
 XYZV(:,1:3)=round(XYZvx(1:3,:)');
 
@@ -80,7 +80,7 @@ matlabbatch{1}.spm.stats.results.write.tspm.basename = 'result';
 cfg_util('run',{matlabbatch});
 clear matlabbatch
 
-matlabbatch{1}.spm.util.imcalc.input = {Vol.fname
+matlabbatch{1}.spm.util.imcalc.input = {Vol.fname;
     [sdir,filesep,'spmT_0001_result.nii,1']};
 matlabbatch{1}.spm.util.imcalc.output = 'result.nii';
 matlabbatch{1}.spm.util.imcalc.outdir = {''};

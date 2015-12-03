@@ -23,15 +23,15 @@ function ea_realign_fmri(signallength,options)
 %% realign fmri.
 directory=[options.root,options.patientname,filesep];
 if ~exist([directory,'r',options.prefs.rest],'file');
-    
+
     disp('Realignment of rs-fMRI data...');
     filetimepts=cell(signallength,1);
     for i = 1:signallength
         filetimepts{i}=[directory,options.prefs.rest,',',num2str(i)];
     end
-    
-    
-    matlabbatch{1}.spm.spatial.realign.estwrite.data = {filetimepts'};
+
+
+    matlabbatch{1}.spm.spatial.realign.estwrite.data = {filetimepts};
     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.quality = 1;
     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.sep = 4;
     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.fwhm = 5;
@@ -68,16 +68,16 @@ directory=[options.root,options.patientname,filesep];
 [~,rf]=fileparts(options.prefs.rest);
 if ~exist([directory,'rr',rf,options.prefs.prenii_unnormalized],'file')
     %% coreg mprage to fMRI (for GM-map)
-    
+
     copyfile([directory,options.prefs.prenii_unnormalized],[directory,'k',options.prefs.prenii_unnormalized])
     copyfile([directory,'c1',options.prefs.prenii_unnormalized],[directory,'kc1',options.prefs.prenii_unnormalized]) %% use copies for coregistration to leave original files untouched.
     copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'kc2',options.prefs.prenii_unnormalized]) %% use copies for coregistration to leave original files untouched.
     copyfile([directory,'c3',options.prefs.prenii_unnormalized],[directory,'kc3',options.prefs.prenii_unnormalized]) %% use copies for coregistration to leave original files untouched.
-    
+
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,'r',options.prefs.rest,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'k',options.prefs.prenii_unnormalized,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'kc1',options.prefs.prenii_unnormalized,',1']
-        [directory,'kc2',options.prefs.prenii_unnormalized,',1']
+    matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'kc1',options.prefs.prenii_unnormalized,',1'];
+        [directory,'kc2',options.prefs.prenii_unnormalized,',1'];
         [directory,'kc3',options.prefs.prenii_unnormalized,',1']
         };
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
@@ -88,21 +88,21 @@ if ~exist([directory,'rr',rf,options.prefs.prenii_unnormalized],'file')
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = ['rr',rf];
-    
-    
+
+
     try
         jobs{1}=matlabbatch;
         cfg_util('run',jobs);
     end
-    
+
     clear matlabbatch jobs;
     % cleanup:
-    
+
     movefile([directory,'rr',rf,'k',options.prefs.prenii_unnormalized],[directory,'rr',rf,options.prefs.prenii_unnormalized],'f')
     movefile([directory,'rr',rf,'kc1',options.prefs.prenii_unnormalized],[directory,'rr',rf,'c1',options.prefs.prenii_unnormalized],'f') %% restore original files..
     movefile([directory,'rr',rf,'kc2',options.prefs.prenii_unnormalized],[directory,'rr',rf,'c2',options.prefs.prenii_unnormalized],'f') %% restore original files..
     movefile([directory,'rr',rf,'kc3',options.prefs.prenii_unnormalized],[directory,'rr',rf,'c3',options.prefs.prenii_unnormalized],'f') %% restore original files..
-    
+
     movefile([directory,'k',options.prefs.prenii_unnormalized])
     movefile([directory,'kc1',options.prefs.prenii_unnormalized]) %% restore original files..
     movefile([directory,'kc2',options.prefs.prenii_unnormalized]) %% restore original files..
@@ -117,8 +117,8 @@ if ~exist([directory,'sr',options.prefs.rest],'file')
     for i = 1:signallength
         filetimepts{i}=[directory,'r',options.prefs.rest,',',num2str(i)];
     end
-    
-    
+
+
     matlabbatch{1}.spm.spatial.smooth.data = filetimepts;
     matlabbatch{1}.spm.spatial.smooth.fwhm = [6 6 6];
     matlabbatch{1}.spm.spatial.smooth.dtype = 0;

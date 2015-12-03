@@ -35,24 +35,24 @@ f=dir(indir);
 
 for scan=1:length(f)
     if f(scan).isdir && ~strcmp(f(scan).name,'.') && ~strcmp(f(scan).name,'..')
-        
+
         namecell=textscan(f(scan).name,'%s','Delimiter',',');
-        
+
         nachname=char(namecell{1}(1));
         try
             vorname=char(namecell{1}(2));
-            
-            
+
+
             vornamecell=textscan(vorname,'%s','Delimiter','_');
-            
+
             vorname=char(vornamecell{1}(1));
         catch
             vorname='';
         end
-        
-        
+
+
         name=[nachname,vorname];
-        
+
         lpath=genpath([indir,f(scan).name]);
         if isunix
             delims=strfind(lpath,':');
@@ -66,16 +66,16 @@ for scan=1:length(f)
             pfolds{d}=lpath(from:delims(d)-1);
             from=delims(d)+1;
         end
-        
-        
+
+
         %% dicom import
-        
+
         % create output folder in working directory..
         if exist([outdir,name],'file')==false
             mkdir([outdir,name]);
         end
         tmpoutdir=[outdir,name];
-        
+
         fcnt=1;
         for pfold=1:length(pfolds)
             files=dir(pfolds{pfold});
@@ -86,19 +86,19 @@ for scan=1:length(f)
                 end
             end
         end
-      
-        
-        matlabbatch{1}.spm.util.dicom.data = filecell;
+
+
+        matlabbatch{1}.spm.util.dicom.data = filecell';
         %%
         clear filecell
-        
+
         matlabbatch{1}.spm.util.dicom.root = 'flat';
         matlabbatch{1}.spm.util.dicom.outdir = {tmpoutdir};
         matlabbatch{1}.spm.util.dicom.convopts.format = 'nii';
         matlabbatch{1}.spm.util.dicom.convopts.icedims = 0;
-        
+
         jobs(1)=matlabbatch;
-          
+
         try
             cfg_util('run',jobs);
             worked=1;
@@ -107,8 +107,8 @@ for scan=1:length(f)
             worked=0;
         end
         clear matlabbatch jobs
-        
-        
+
+
         if worked
             % cleanup DICOMs first
             if options.prefs.dicom.dicomfiles==1 % delete DICOMs
@@ -117,8 +117,8 @@ for scan=1:length(f)
                 mkdir([tmpoutdir,filesep,'DICOM']);
                 movefile([indir,f(scan).name],[tmpoutdir,filesep,'DICOM',filesep,f(scan).name]);
             end
-            
-            
+
+
             % display file:
             nid=dir([tmpoutdir,filesep,'s*.nii']);
             for ni=1:length(nid)
@@ -126,14 +126,14 @@ for scan=1:length(f)
                     movefile([tmpoutdir,filesep,nid(ni).name],[tmpoutdir,filesep,'t',nid(ni).name]) % remove from search key (s*)..
                     dcfilename=[tmpoutdir,filesep,'t',nid(ni).name];
                     ea_imageclassifier;
-                    
+
                 end
             end
-            
-            
-            
-            
+
+
+
+
         end
     end
-    
+
 end

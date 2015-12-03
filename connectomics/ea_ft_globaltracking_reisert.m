@@ -13,7 +13,7 @@ gdti_trackingparams='standard'; % select param-preset here (see below, also to c
 
 
 switch gdti_trackingparams
-    
+
     case 'hd_book'
         para_weight = 0.0006;
         para_other = [1
@@ -74,7 +74,7 @@ switch gdti_trackingparams
             3
             0.2
             1.5];
-        
+
 end
 
 
@@ -96,10 +96,10 @@ ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
 %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
 matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
 matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,options.prefs.prenii_unnormalized,',1']};
-matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c1',options.prefs.prenii_unnormalized,',1']
-    [directory,'c2',options.prefs.prenii_unnormalized,',1']
-    [directory,'c3',options.prefs.prenii_unnormalized,',1']
-    [directory,'c4',options.prefs.prenii_unnormalized,',1']
+matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c1',options.prefs.prenii_unnormalized,',1'];
+    [directory,'c2',options.prefs.prenii_unnormalized,',1'];
+    [directory,'c3',options.prefs.prenii_unnormalized,',1'];
+    [directory,'c4',options.prefs.prenii_unnormalized,',1'];
     [directory,'c5',options.prefs.prenii_unnormalized,',1']
     };
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
@@ -118,10 +118,10 @@ clear matlabbatch jobs;
 %% build tracking mask
 
 matlabbatch{1}.impexp_NiftiMrStruct.nifti2roistruct.srcimgs = {
-    [directory,'rb0c1',options.prefs.prenii_unnormalized,',1']
-    [directory,'rb0c2',options.prefs.prenii_unnormalized,',1']
-    [directory,'rb0c3',options.prefs.prenii_unnormalized,',1']
-    [directory,'rb0c4',options.prefs.prenii_unnormalized,',1']
+    [directory,'rb0c1',options.prefs.prenii_unnormalized,',1'];
+    [directory,'rb0c2',options.prefs.prenii_unnormalized,',1'];
+    [directory,'rb0c3',options.prefs.prenii_unnormalized,',1'];
+    [directory,'rb0c4',options.prefs.prenii_unnormalized,',1'];
     [directory,'rb0c5',options.prefs.prenii_unnormalized,',1']
     };
 matlabbatch{1}.impexp_NiftiMrStruct.nifti2roistruct.thresh = [0.5 Inf];

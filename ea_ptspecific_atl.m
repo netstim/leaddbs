@@ -8,8 +8,8 @@ troot=[options.earoot,'templates',filesep,'segment',filesep];
 aroot=[options.earoot,'atlases',filesep,options.atlasset,filesep];
 proot=[options.root,options.patientname,filesep];
 if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
-   ea_generate_tpm; 
-    
+   ea_generate_tpm;
+
 end
 
 generate_tpm(troot,aroot,proot,1,options)
@@ -54,7 +54,7 @@ for atlas=1:length(atlases.names)
         case 3 % both-sides atlas composed of 2 files.
             ratlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
             pratlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'rh',filesep];
-            
+
             latlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
             platlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'lh',filesep];
             rtpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'rh',filesep];
@@ -68,7 +68,7 @@ for atlas=1:length(atlases.names)
             patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'midline',filesep];
             tpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'midline',filesep];
     end
-    
+
     for side=detsides(atlases.types(atlas))
         if atlases.types(atlas)==3
             switch side
@@ -83,7 +83,7 @@ for atlas=1:length(atlases.names)
             end
         end
         % gzip support
-        
+
         if strcmp(atlases.names{atlas}(end-2:end),'.gz')
             gunzip([atlf,atlases.names{atlas}]);
             atln=atlases.names{atlas}(1:end-3);
@@ -92,18 +92,18 @@ for atlas=1:length(atlases.names)
             atln=atlases.names{atlas};
             wasgz=0;
         end
-        
+
         if ~exist([tpmf,atlases.names{atlas}],'file') || force % check for pre-built TPM
-            
-            
+
+
             nii=load_untouch_nii([atlf,atln]);
             nii.img=double(nii.img);
             nii.img=nii.img/max(nii.img(:)); % max 1
             save_untouch_nii(nii,[atlf,'t',atln]);
             clear nii
-            
+
             matlabbatch{1}.spm.util.imcalc.input = {
-                [troot,'TPM.nii,1']
+                [troot,'TPM.nii,1'];
                 [atlf,'t',atln,',1']
                 };
             matlabbatch{1}.spm.util.imcalc.output = [atln];
@@ -113,36 +113,36 @@ for atlas=1:length(atlases.names)
             matlabbatch{1}.spm.util.imcalc.options.mask = 0;
             matlabbatch{1}.spm.util.imcalc.options.interp = -4;
             matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
-            
-            
+
+
             jobs{1}=matlabbatch;
-            
+
             cfg_util('run',jobs);
             clear jobs matlabbatch
             delete([atlf,'t',atln]);
-            
-            
-            
-            
+
+
+
+
             tnii=load_untouch_nii([troot,'TPM.nii']);
             anii=load_untouch_nii([tpmf,atln]);
-            
+
             tnii.img(:,:,:,1)=tnii.img(:,:,:,1)+anii.img(:,:,:,1);
             save_untouch_nii(tnii,[tpmf,atln]);
-            
+
         end
-        
+
         if ~exist([patlf,atlases.names{atlas}],'file') || force
-            
+
             % tpm file for atlas is now in folder. Begin segmentation..
-            
+
             % gzip support..
             if ~exist([tpmf,atln],'file') && exist([tpmf,atln,'.gz'],'file')
                 gunzip([tpmf,atln,'.gz']);
                 wasgz=1;
             end
-            
-            
+
+
             matlabbatch{1}.spm.tools.preproc8.channel.vols = {[proot,options.prefs.prenii_unnormalized,',1']};
             matlabbatch{1}.spm.tools.preproc8.channel.biasreg = 0.0001;
             matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm = 60;
@@ -176,18 +176,18 @@ for atlas=1:length(atlases.names)
             matlabbatch{1}.spm.tools.preproc8.warp.affreg = 'mni';
             matlabbatch{1}.spm.tools.preproc8.warp.samp = 3;
             matlabbatch{1}.spm.tools.preproc8.warp.write = [1 1];
-            
-            
+
+
             jobs{1}=matlabbatch;
             cfg_util('run',jobs);
             clear matlabbatch jobs
-            
-            
-            
+
+
+
             %apply deformation fields to respective atlas.
-            
+
             % warp atlas to patient space
-            
+
             matlabbatch{1}.spm.util.defs.comp{1}.def = {[proot,'iy_',options.prefs.prenii_unnormalized]};
             matlabbatch{1}.spm.util.defs.ofname = '';
             matlabbatch{1}.spm.util.defs.fnames = {[atlf,atln,',1']};
@@ -197,8 +197,8 @@ for atlas=1:length(atlases.names)
             cfg_util('run',jobs);
             clear matlabbatch jobs
             movefile([patlf,'w',atln],[patlf,atln]);
-            
-            
+
+
 %             % apply original transformation back to warped atlas.
 %             matlabbatch{1}.spm.util.defs.comp{1}.def = {[proot,'y_ea_normparams.nii']};
 %             matlabbatch{1}.spm.util.defs.ofname = '';
@@ -208,10 +208,10 @@ for atlas=1:length(atlases.names)
 %             jobs{1}=matlabbatch;
 %             cfg_util('run',jobs);
 %             clear matlabbatch jobs
-%             
+%
 %             movefile([patlf,'w',atln],[patlf,atln]);
-            
-            
+
+
             % re-gzip tpm, patl and atlas file.
             if wasgz
                 try gzip([tpmf,atln]); end
@@ -222,14 +222,14 @@ for atlas=1:length(atlases.names)
                 try delete([patlf,atln]); end
             end
         end
-        
-        
-        
+
+
+
     end
-    
-    
-    
-    
+
+
+
+
 end
 
 
@@ -248,5 +248,5 @@ switch opt
         sides=1:2;
     case 5
         sides=1; % midline
-        
+
 end

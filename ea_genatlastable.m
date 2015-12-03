@@ -34,29 +34,29 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
         mixedcell{i}=mixedatlases(i).name;
     end
     delete([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,'*_temp.ni*']);
-    
+
     midlineatlases=dir([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,'*.ni*']);
     for i=1:length(midlineatlases);
         midlinecell{i}=midlineatlases(i).name;
     end
-    
+
     % concatenate lh and rh
     todeletelh=[];
     todeleterh=[];
     for i=1:length(lhcell)
-        
+
         [ism, loc]=ismember(lhcell{i},rhcell);
         if ism
             todeletelh=[todeletelh,i];
             todeleterh=[todeleterh,loc];
         end
-        
+
     end
-    
+
     bothcell=lhcell(todeletelh);
     lhcell(todeletelh)=[];
     rhcell(todeleterh)=[];
-    
+
     allcell=[rhcell,lhcell,bothcell,mixedcell,midlinecell];
     typecell=[repmat(1,1,length(rhcell)),repmat(2,1,length(lhcell)),repmat(3,1,length(bothcell)),repmat(4,1,length(mixedcell)),repmat(5,1,length(midlinecell))];
     atlases.names=allcell;
@@ -64,20 +64,20 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     atlases.rebuild=0;
     atlases.threshold.type='relative_intensity';
     atlases.threshold.value=0.5;
-    
+
 end
 
 
 
 
 if checkrebuild(atlases,options)
-    
-    
+
+
     %% build iXYZ tables:
-    
+
     maxcolor=64; % change to 45 to avoid red / 64 to use all colors
-    
-    
+
+
     nm=[0:1]; % native and mni
     try
         nmind=[options.atl.pt,options.atl.can]; % which shall be performed?
@@ -85,21 +85,21 @@ if checkrebuild(atlases,options)
         nmind=[0 1];
     end
     nm=nm(logical(nmind)); % select which shall be performed.
-    
-    
-    
+
+
+
     for nativemni=nm % switch between native and mni space atlases.
-        
+
         switch nativemni
             case 0
                 root=[options.root,options.patientname,filesep];
             case 1
                 root=options.earoot;
         end
-        
+
         atlascnt=1;
-        
-        
+
+
         % iterate through atlases, visualize them and write out stats.
         disp('Building atlas table...');
         for atlas=1:length(atlases.names)
@@ -117,9 +117,9 @@ if checkrebuild(atlases,options)
                 case 5 % midline atlas (one file with both sides information.
                     nii=load_nii_crop([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
             end
-            
-            
-            
+
+
+
             for side=detsides(atlases.types(atlas));
                 if atlases.types(atlas)==3 % both-sides atlas composed of 2 files.
                     if side==1
@@ -128,76 +128,76 @@ if checkrebuild(atlases,options)
                         nii=lnii;
                     end
                 end
-                
-                
-                
-                
-                
-                
+
+
+
+
+
+
                 colornames='bgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywk'; % red is reserved for the VAT.
-                
+
                 colorc=colornames(1);
                 colorc=rgb(colorc);
-                
+
                 [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); % find 3D-points that have correct value.
                 vv=nii.img(nii.img(:)>0);
-                
+
                 if ~isempty(xx)
-                    
+
                     XYZ.vx=[xx,yy,zz]; % concatenate points to one matrix.
                     XYZ.val=vv;
                     XYZ.mm=map_coords_proxy(XYZ.vx,nii); % map to mm-space
                     XYZ.dims=nii.hdr.dime.pixdim;
-                    
-                    
+
+
                 else
                     XYZ.vx=[];
                     XYZ.val=[];
                     XYZ.mm=[];
                     XYZ.dims=nii.hdr.dime.pixdim;
-                    
+
                 end
-                
+
                 %surface(xx(1:10)',yy(1:10)',zz(1:10)',ones(10,1)');
                 %             hold on
-                
-                
-                
-                
-                
-                
-                
-                
+
+
+
+
+
+
+
+
                 if atlases.types(atlas)==4 && side==2 % restore from backup
                     nii=bnii;
                     XYZ.mm=bXYZ.mm;
                     XYZ.val=bXYZ.val;
                     XYZ.vx=bXYZ.vx;
                 end
-                
+
                 bb=[0,0,0;size(nii.img)];
-                
+
                 bb=map_coords_proxy(bb,nii);
                 gv=cell(3,1);
                 for dim=1:3
                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));
                 end
-                
-                
-                
+
+
+
                 if atlases.types(atlas)==4 % mixed atlas, divide
                     if side==1
                         bnii=nii;
                         bXYZ=XYZ;
-                        
+
                         nii.img=nii.img(gv{1}>0,:,:);
                         gv{1}=gv{1}(gv{1}>0);
-                        
+
                         XYZ.vx=XYZ.vx(XYZ.mm(:,1)>0,:,:);
                         XYZ.val=XYZ.val(XYZ.mm(:,1)>0,:,:);
                         XYZ.mm=XYZ.mm(XYZ.mm(:,1)>0,:,:);
-                        
-                        
+
+
                         nii.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
                     elseif side==2
                         nii.img=nii.img(gv{1}<0,:,:);
@@ -205,30 +205,30 @@ if checkrebuild(atlases,options)
                         XYZ.vx=XYZ.vx(XYZ.mm(:,1)<0,:,:);
                         XYZ.val=XYZ.val(XYZ.mm(:,1)<0,:,:);
                         XYZ.mm=XYZ.mm(XYZ.mm(:,1)<0,:,:);
-                        
+
                         nii.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
                     end
                 end
-                
-                
+
+
                 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
                 if options.prefs.hullsmooth
                     nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
                 end
-                
+
                 thresh=ea_detthresh(atlases,atlas,nii.img);
                 ea_addnii2lf(atlases,atlas,thresh,options);
                 fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
-                
+
                 if ischar(options.prefs.hullsimplify)
-                    
+
                     % get to 700 faces
                     simplify=700/length(fv.faces);
                     fv=reducepatch(fv,simplify);
-                    
+
                 else
                     if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-                        
+
                         fv=reducepatch(fv,options.prefs.hullsimplify);
                     elseif options.prefs.hullsimplify>1
                         simplify=options.prefs.hullsimplify/length(fv.faces);
@@ -236,25 +236,25 @@ if checkrebuild(atlases,options)
                     end
                 end
 
-                    
+
                 try % works only in ML 2015:
                     tr=triangulation(fv.faces,fv.vertices);
                     normals{atlas,side} = vertexNormal(tr);
                 catch % workaround for older versions:
-                    
+
                     % temporally plot atlas to get vertex normals..
                     tmp=figure('visible','off');
                     tp=patch(fv,'VertexNormalsMode','manual');
                     set(tp,'VertexNormalsMode','manual')
                     normals{atlas,side}=get(tp,'VertexNormals')*-1;
                     delete(tmp);
-                    
+
                 end
 
-                
-                
+
+
                 % set cdata
-                
+
                 try % check if explicit color info for this atlas is available.
                     cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1) ... % C-Data for surface
                         +randn(length(fv.vertices),1)*2)';
@@ -263,7 +263,7 @@ if checkrebuild(atlases,options)
                         +randn(length(fv.vertices),1)*2)';
                     atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
                 end
-                
+
                 ifv{atlas,side}=fv; % later stored
                 icdat{atlas,side}=cdat; % later stored
                 try
@@ -272,52 +272,52 @@ if checkrebuild(atlases,options)
                     keyboard
                 end
                 ipixdim{atlas,side}=nii.hdr.dime.pixdim(1:3); % later stored
-                
+
                 icolorc{atlas,side}=colorc; % later stored
-                
+
                 pixdim=ipixdim{atlas,side};
-                
-                
-                
-                
+
+
+
+
                 atlascnt=atlascnt+1;
-                
-                
+
+
             end
         end
         %ea_dispercent(1,'end');
-        
+
         % finish gm_mask file for leadfield computation.
         V=spm_vol([options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
         X=spm_read_vols(V);
-        
+
         X(X<1.5)=0;
         X(X>1.5)=1;
-        
+
         V.dt=[4,0];
-        
+
         spm_write_vol(V,X);
-        
+
         clear X V
-        
-        
+
+
         % save table information that has been generated from nii files (on first run with this atlas set).
-        
+
         atlases.fv=ifv;
         atlases.cdat=icdat;
         atlases.XYZ=iXYZ;
         atlases.pixdim=ipixdim;
         atlases.colorc=icolorc;
-        
+
         atlases.normals=normals;
-        
-        
+
+
         atlases.rebuild=0; % always reset rebuild flag.
         save([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
-        
-        
+
+
     end
-    
+
 end
 
 
@@ -347,11 +347,11 @@ nii.img=spm_read_vols(nii);
 nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
 if ~all(abs(nii.hdr.dime.pixdim(1:3))<=1)
     ea_reslice_nii(fname,fname,[0.5,0.5,0.5],3);
-    
+
     nii=spm_vol(fname);
     nii.img=spm_read_vols(nii);
     nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
-    
+
 end
 if wasgzip
     gzip(fname); % since gunzip makes a copy of the zipped file.
@@ -372,7 +372,7 @@ switch opt
         sides=1:2;
     case 5
         sides=1; % midline
-        
+
 end
 
 
@@ -431,7 +431,7 @@ end
 
 for atl=1:length(atlnames)
     atlname=atlnames{atl};
-    
+
     if strcmp(atlname(end-2:end),'.gz')
         wasgzip=1;
         gunzip(atlname);
@@ -440,7 +440,7 @@ for atl=1:length(atlnames)
     else
         wasgzip=0;
     end
-    
+
     if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],'file') % first atlas, generate empty hdtemplate in atlas dir...
         copyfile([options.earoot,'templates',filesep,'mni_hires.nii'],[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
         V=spm_vol([options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
@@ -449,11 +449,11 @@ for atl=1:length(atlnames)
         spm_write_vol(V,X);
         clear V X
     end
-    
-    
+
+
     % add atlas file to hdtemplate in atlas dir
     matlabbatch{1}.spm.util.imcalc.input = {
-        [options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii,1']
+        [options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii,1'];
         [atlname,',1']
         };
     matlabbatch{1}.spm.util.imcalc.output = 'gm_mask.nii';
@@ -466,7 +466,7 @@ for atl=1:length(atlnames)
     matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
     cfg_util('run',{matlabbatch});
     clear matlabbatch
-    
+
     if wasgzip
         gzip(atlname); % since gunzip makes a copy of the zipped file.
         delete(atlname);

@@ -31,7 +31,7 @@ for export=doexp
             cf=        [options.root,options.prefs.patientdir,filesep,options.prefs.cornii,',1'];
             outf=options.prefs.cornii;
     end
-    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1']
+    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
         cf};
     matlabbatch{1}.spm.util.imcalc.output = outf;
     matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
@@ -44,5 +44,3 @@ for export=doexp
     cfg_util('run',jobs);
     clear matlabbatch jobs;
 end
-
-    
