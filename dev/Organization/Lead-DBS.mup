@@ -234,7 +234,8 @@
             }
           },
           "attr": {
-            "style": {}
+            "style": {},
+            "collapsed": true
           }
         }
       },
@@ -491,6 +492,17 @@
                     "style": {
                       "background": "#ff9900"
                     }
+                  },
+                  "ideas": {
+                    "1": {
+                      "title": "Reconstruction check in native space?",
+                      "id": 163,
+                      "attr": {
+                        "style": {
+                          "background": "#ffffff"
+                        }
+                      }
+                    }
                   }
                 }
               },
@@ -514,6 +526,27 @@
                       "attr": {
                         "style": {
                           "background": "#ff9900"
+                        }
+                      },
+                      "ideas": {
+                        "2": {
+                          "title": "Modes",
+                          "id": 168,
+                          "ideas": {
+                            "1": {
+                              "title": "Native View?",
+                              "id": 165,
+                              "attr": {
+                                "style": {
+                                  "background": "#ffffff"
+                                }
+                              }
+                            },
+                            "2": {
+                              "title": "MNI View",
+                              "id": 169
+                            }
+                          }
                         }
                       }
                     }
@@ -589,6 +622,25 @@
                             "1": {
                               "title": "2D-Cuts",
                               "id": 92
+                            }
+                          }
+                        },
+                        "4": {
+                          "title": "Modes",
+                          "id": 166,
+                          "ideas": {
+                            "1": {
+                              "title": "Native View?",
+                              "id": 164,
+                              "attr": {
+                                "style": {
+                                  "background": "#ffffff"
+                                }
+                              }
+                            },
+                            "2": {
+                              "title": "MNI View",
+                              "id": 167
                             }
                           }
                         }
@@ -718,6 +770,94 @@
           "attr": {
             "style": {
               "background": "#008080"
+            }
+          }
+        },
+        "5": {
+          "title": "Lead SURGERY",
+          "id": 160,
+          "attr": {
+            "style": {
+              "background": "#ffffff"
+            }
+          },
+          "ideas": {
+            "1": {
+              "title": "Establish surgical planning within LEAD",
+              "id": 161,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
+            },
+            "2": {
+              "title": "Elements",
+              "id": 170,
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                },
+                "collapsed": true
+              },
+              "ideas": {
+                "1": {
+                  "title": "Bones",
+                  "id": 171,
+                  "attr": {
+                    "style": {
+                      "background": "#ffffff"
+                    }
+                  }
+                },
+                "2": {
+                  "title": "Vessels",
+                  "id": 172,
+                  "attr": {
+                    "style": {
+                      "background": "#ffffff"
+                    }
+                  }
+                },
+                "3": {
+                  "title": "Nuclei",
+                  "id": 173,
+                  "attr": {
+                    "style": {
+                      "background": "#ffffff"
+                    }
+                  }
+                },
+                "4": {
+                  "title": "Sweetspot Data from LEAD DBS",
+                  "id": 174,
+                  "attr": {
+                    "style": {
+                      "background": "#ffffff"
+                    }
+                  }
+                }
+              }
+            },
+            "3": {
+              "title": "MVP",
+              "id": 175,
+              "ideas": {
+                "1": {
+                  "title": "Sweet-Spot coordinates in native view",
+                  "id": 176,
+                  "attr": {
+                    "style": {
+                      "background": "#ffffff"
+                    }
+                  }
+                }
+              },
+              "attr": {
+                "style": {
+                  "background": "#ffffff"
+                }
+              }
             }
           }
         },
@@ -873,6 +1013,26 @@
         "2": {
           "title": "Release-Scripts",
           "id": 82
+        },
+        "3": {
+          "title": "Standalone Versions",
+          "id": 157,
+          "ideas": {
+            "1": {
+              "title": "Lead DBS",
+              "id": 158
+            },
+            "0.5": {
+              "title": "Lead MD",
+              "id": 159,
+              "attr": {
+                "style": {}
+              }
+            }
+          },
+          "attr": {
+            "style": {}
+          }
         }
       },
       "attr": {
@@ -1086,6 +1246,26 @@
     {
       "ideaIdFrom": 147,
       "ideaIdTo": 32,
+      "attr": {
+        "style": {
+          "color": "#FF0000",
+          "lineStyle": "dashed"
+        }
+      }
+    },
+    {
+      "ideaIdFrom": 159,
+      "ideaIdTo": 32,
+      "attr": {
+        "style": {
+          "color": "#FF0000",
+          "lineStyle": "dashed"
+        }
+      }
+    },
+    {
+      "ideaIdFrom": 158,
+      "ideaIdTo": 2,
       "attr": {
         "style": {
           "color": "#FF0000",
