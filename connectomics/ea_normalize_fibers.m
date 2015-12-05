@@ -226,7 +226,7 @@ ea_ftr2trk([ftrfname],directory,specs,options); % export normalized ftr to .trk
 
 
 end
-delete([options.root,options.patientname,filesep,'vox_',options.prefs.FTR_normalized]);
+% delete([options.root,options.patientname,filesep,'vox_',options.prefs.FTR_normalized]);
 
 disp('Done.');
 

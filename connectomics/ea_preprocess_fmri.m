@@ -59,7 +59,8 @@ if ~exist([directory,'c1',file],'file');
     ea_newseg(directory,file,0,options);
     delete([directory,'c4',file]);
     delete([directory,'c5',file]);
-    delete([directory,file,'_seg8.mat']);
+    [~,rf]=fileparts(file);
+    delete([directory,rf,'_seg8.mat']);
 
 end
 

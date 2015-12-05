@@ -23,9 +23,13 @@ end
 % create structural CM
 if options.lc.struc.compute_CM
     
-    mkdir([options.root,options.patientname,filesep,'connectomics']);
+    if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
+        mkdir([options.root,options.patientname,filesep,'connectomics']);
+    end
     expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
-    mkdir(expfolder);
+    if ~exist(expfolder,'dir')
+        mkdir(expfolder);
+    end
     if ~exist([expfolder,'DTI_CM.mat'],'file')
         if ~exist([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized],'file') % fibertracking has not been performed.
             warning('Fibertracking has not been done yet. Will do so before estimating structural connectivity matrix.');
@@ -44,23 +48,31 @@ disp('*** Done.');
 %% functional parts
 disp('*** Performing functional parts of LEAD-Connectome...');
 if options.lc.func.compute_CM % create functional connectivity matrix
-    mkdir([options.root,options.patientname,filesep,'connectomics']);
-expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
-mkdir(expfolder);
-if ~exist([expfolder,'fMRI_CM.mat'],'file')
-    [fMRI_CM,gmtc]=ea_createCM_fmri(options);
-    cm=ea_export_CM_png(fMRI_CM,'fMRI Connectivity matrix',options);
-    save([expfolder,options.prefs.gmtc],'gmtc');
-    save([expfolder,'fMRI_CM.mat'],'fMRI_CM','-v7.3');
-    saveas(cm,[expfolder,'fMRI_CM.png']);
-end
+    if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
+        mkdir([options.root,options.patientname,filesep,'connectomics']);
+    end
+    expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
+    if ~exist(expfolder,'dir')
+        mkdir(expfolder);
+    end
+    if ~exist([expfolder,'fMRI_CM.mat'],'file')
+        [fMRI_CM,gmtc]=ea_createCM_fmri(options);
+        cm=ea_export_CM_png(fMRI_CM,'fMRI Connectivity matrix',options);
+        save([expfolder,options.prefs.gmtc],'gmtc');
+        save([expfolder,'fMRI_CM.mat'],'fMRI_CM','-v7.3');
+        saveas(cm,[expfolder,'fMRI_CM.png']);
+    end
 end
 
 
 if options.lc.func.compute_GM || options.lc.struc.compute_GM % perform graph metrics
-    mkdir([options.root,options.patientname,filesep,'connectomics']);
-expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
-mkdir(expfolder);
+    if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
+        mkdir([options.root,options.patientname,filesep,'connectomics']);
+    end
+    expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
+    if ~exist(expfolder,'dir')
+        mkdir(expfolder);
+    end
     ea_computeGM(options);
 end
 

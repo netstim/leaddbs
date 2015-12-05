@@ -158,7 +158,9 @@ for node=1:d
     Y(X==node)=C(node);
 end
 expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep,'graph',filesep];
-mkdir(expfolder)
+if ~exist(expfolder,'dir')
+    mkdir(expfolder);
+end
 V.fname=[expfolder,exstr,'_',mode,'.nii'];
 V.dt=[64,1];
 spm_write_vol(V,Y);

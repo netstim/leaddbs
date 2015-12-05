@@ -4,8 +4,12 @@ directory=[options.root,options.patientname,filesep];
 
 if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],'file')
     %% warp atlas into pre_tra-space:
-    mkdir([directory,'templates']);
-    mkdir([directory,'templates',filesep,'labeling']);
+    if ~exist([directory,'templates'],'dir')
+        mkdir([directory,'templates']);
+    end
+    if ~exist([directory,'templates',filesep,'labeling'],'dir')
+        mkdir([directory,'templates',filesep,'labeling']);
+    end
     
     switch spm('ver')
         case 'SPM8'
@@ -50,5 +54,5 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'r',b0rest,'w',optio
     clear matlabbatch
     
     delete([options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
-    delete([options.root,options.patientname,filesep,'rc',options.prefs.prenii_unnormalized]);
+    delete([options.root,options.patientname,filesep,'r',b0rest,'c',options.prefs.prenii_unnormalized]);
 end
