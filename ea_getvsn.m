@@ -33,7 +33,9 @@ switch com
         end
     case 'local'
         try
-            version = fgetl(fopen([ldir,'.version.txt']));
+            vfid = fopen([ldir,'.version.txt']);
+            version = fgetl(vfid);
+            fclose(vfid);
             if num
                 version = strjoin(cellfun(@(x) num2str(str2double(x),'%02d'), strsplit(version,'.'),'UniformOutput',0),'');
                 if numel(version) == 6

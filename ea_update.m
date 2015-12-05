@@ -58,7 +58,9 @@ if update
         disp('Deleting outdated code...');
         try
             if update==2 % delete files during incremental updating
-                dels=textscan(fopen([earoot,'tmp',filesep,id,filesep,'DELETE']),'%s');
+                dfid = fopen([earoot,'tmp',filesep,id,filesep,'DELETE']);
+                dels=textscan(dfid,'%s');
+                fclose(dfid);
                 for f=1:length(dels{1})
                     if isdir([earoot,dels{1}{f}])
                         rmdir([earoot,dels{1}{f}],'s')
