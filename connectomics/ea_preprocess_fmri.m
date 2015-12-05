@@ -103,10 +103,10 @@ if ~exist([directory,'rr',rf,options.prefs.prenii_unnormalized],'file')
     movefile([directory,'rr',rf,'kc2',options.prefs.prenii_unnormalized],[directory,'rr',rf,'c2',options.prefs.prenii_unnormalized],'f') %% restore original files..
     movefile([directory,'rr',rf,'kc3',options.prefs.prenii_unnormalized],[directory,'rr',rf,'c3',options.prefs.prenii_unnormalized],'f') %% restore original files..
 
-    movefile([directory,'k',options.prefs.prenii_unnormalized])
-    movefile([directory,'kc1',options.prefs.prenii_unnormalized]) %% restore original files..
-    movefile([directory,'kc2',options.prefs.prenii_unnormalized]) %% restore original files..
-    movefile([directory,'kc3',options.prefs.prenii_unnormalized]) %% restore original files..
+    movefile([directory,'k',options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized])
+    movefile([directory,'kc1',options.prefs.prenii_unnormalized],[directory,'c1',options.prefs.prenii_unnormalized]) %% restore original files..
+    movefile([directory,'kc2',options.prefs.prenii_unnormalized],[directory,'c2',options.prefs.prenii_unnormalized]) %% restore original files..
+    movefile([directory,'kc3',options.prefs.prenii_unnormalized],[directory,'c3',options.prefs.prenii_unnormalized]) %% restore original files..
 end
 
 
