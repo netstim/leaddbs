@@ -98,8 +98,8 @@ disp('Calculating C2 and CSF-signals for signal regression...');
 
 % regression steps
 [~,rf]=fileparts(options.prefs.rest);
-c2=ea_load_nii([directory,'rr',rf,'c1',options.prefs.prenii_unnormalized]);
-c3=ea_load_nii([directory,'rr',rf,'c1',options.prefs.prenii_unnormalized]);
+c2=ea_load_nii([directory,'rr',rf,'c2',options.prefs.prenii_unnormalized]);
+c3=ea_load_nii([directory,'rr',rf,'c3',options.prefs.prenii_unnormalized]);
 
 ec2map=c2.img; ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
 ec3map=c3.img; ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
