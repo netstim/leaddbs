@@ -1445,11 +1445,21 @@ options.earoot=[fileparts(which('lead')),filesep];
 options.verbose=3;
 options.sides=1:2; % re-check this later..
 options.atlasset=get(handles.atlassetpopup,'String');
-options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
+try
+    options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
+catch % too many entries..
+    set(handles.atlassetpopup,'Value',1);
+    options.atlasset=1;
+end
 options.fiberthresh=1;
 options.writeoutstats=1;
 options.labelatlas=get(handles.labelpopup,'String');
-options.labelatlas=options.labelatlas{get(handles.labelpopup,'Value')};
+try
+    options.labelatlas=options.labelatlas{get(handles.labelpopup,'Value')};
+catch % too many entries..
+    set(handles.labelpopup,'Value',1);
+    options.labelatlas=1;
+end
 options.writeoutpm=1;
 options.colormap=jet;
 options.d3.write=1;
@@ -1658,6 +1668,9 @@ for pt=1:length(M.patient.list)
 
     % assign correct .m-file to function.
     genvatfunctions=getappdata(gcf,'genvatfunctions');
+    if get(handles.modelselect,'Value')>length(get(handles.modelselect,'String'));
+        set(handles.modelselect('Value'),length(get(handles.modelselect,'String')));
+    end
     ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
 
     % set stimparams based on values provided by user
@@ -1890,6 +1903,10 @@ for pt=1:length(M.patient.list)
 
         M.stimparams(pt,side).usefiberset=get(handles.fiberspopup,'String');
 
+        if get(handles.fiberspopup,'Value')>length(get(handles.fiberspopup,'String'))
+            set(handles.fiberspopup,'Value',length(get(handles.fiberspopup,'String')));
+        end
+        
         M.stimparams(pt,side).usefiberset=M.stimparams(pt,side).usefiberset{get(handles.fiberspopup,'Value')};
         M.stimparams(pt,side).labelatlas={options.labelatlas};
         M.stimparams(pt,side).showfibers=1;
