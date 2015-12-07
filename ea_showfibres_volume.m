@@ -214,6 +214,7 @@ for side=1:2
             end
             tV.fname=[options.expstatvat.dir,'statvat_results',filesep,'s',num2str(options.expstatvat.pt),'_',si,'.nii'];
             spm_write_vol(tV,thisvatnii{vatvar});
+            ea_crop_nii(tV.fname);
         end
     end
     try

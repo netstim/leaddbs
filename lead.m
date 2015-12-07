@@ -58,6 +58,7 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+addpath(genpath(fileparts(which(mfilename))));
 ea_dispbn;
 
 

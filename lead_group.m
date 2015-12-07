@@ -301,6 +301,7 @@ options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),fil
 [~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
 
 
+
 options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 options.elmodel=M.elstruct(1).elmodel;
 options=ea_resolve_elspec(options);
