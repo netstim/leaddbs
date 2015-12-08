@@ -1,8 +1,14 @@
-function [finas]=ea_coreg(options,automan)
+function [finas]=ea_coregmr(options,automan)
 
 if options.modality==2 % in CT imaging, coregistration is done elsewhere.
     return
 end
+
+if strcmp(options.prefs.mrcoreg.default,'ants')
+   ea_coregmr_ants(options);
+   return 
+end
+
 costfuns={'nmi','mi','ecc','ncc'};
 
 

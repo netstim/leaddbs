@@ -78,7 +78,10 @@ prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration
 prefs.normalize.default='ea_normalize_spmdartel';
 
 %% Coregistration (CT/MR):
-prefs.ctcoreg.default='ea_coregctmri_brainsfit';
+prefs.ctcoreg.default='ea_coregctmri_ants';
+
+%% Coregistration (MR/MR):
+prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
 
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.

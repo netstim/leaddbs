@@ -60,7 +60,7 @@ prefs.lc.seedsurfc=[0.8 0.1 0.1]; % default color for seed of matrix-level corre
 %% DTI-files:
 prefs.b0=['b0.nii'];
 prefs.FTR_unnormalized=['FTR.mat'];
-prefs.FTR_normalized=['wFTR.mat'];
+prefs.FTR_normalized=['wFTR_gqi.mat'];
 prefs.DTD=['DTD.mat'];
 prefs.HARDI='HARDI.mat';
 prefs.dti='dti.nii';
@@ -88,7 +88,10 @@ prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration
 prefs.normalize.default='ea_normalize_spmdartel';
 
 %% Coregistration (CT/MR):
-prefs.ctcoreg.default='ea_coregctmri_brainsfit';
+prefs.ctcoreg.default='ea_coregctmri_ants';
+
+%% Coregistration (MR/MR):
+prefs.mrcoreg.default='ants'; % set to 'spm' or 'ants'
 
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.

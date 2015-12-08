@@ -2341,23 +2341,28 @@ function calcgroupconnectome_Callback(hObject, eventdata, handles)
 % hObject    handle to calcgroupconnectome (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-keyboard
+
 options.prefs=ea_prefs('tmp');
 M=getappdata(gcf,'M');
+keyboard
 normalized_fibers_mm={}; % combined connectome
-for sub=1:length(M.patient.list)
-    fs=load([M.patient.list{sub},options.prefs.FTR_normalized]);
+ea_dispercent(0,'Concatenating connectome');
+for sub=1:length(M.patient.list)    
+    ea_dispercent(sub/length(M.patient.list));
+    fs=load([M.patient.list{sub},filesep,options.prefs.FTR_normalized]);
     if isfield(fs,'normalized_fibers_mm')
         nfibs=fs.normalized_fibers_mm;
     else
         fn = fieldnames(fs);
         eval(sprintf('nfibs = fs.%s;',fn{1}));
     end
-    if size(nfib,1)>size(nfib,2)
-        nfib=nfib';
+    if size(nfibs,1)>size(nfibs,2)
+        nfibs=nfibs';
     end
+    nfibs=nfibs(1:200000);
     normalized_fibers_mm=[normalized_fibers_mm,nfibs];
 end
+ea_dispercent(1,'end');
 save([M.ui.groupdir,options.prefs.FTR_normalized],'normalized_fibers_mm','-v7.3');
 
 % export to trackvis
@@ -2366,7 +2371,10 @@ options.root=[fileparts(fileparts(M.ui.groupdir)),filesep];
 options.earoot=[fileparts(which('lead')),filesep];
 
 specs.origin=[0,0,0];
-specs.dim=niisize;
+
+nii=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
+specs.dim=nii.dim;
+clear nii
 try
     H=spm_dicom_headers([M.patient.list{1},options.prefs.sampledtidicom]);
     specs.orientation=H{1,1}.ImageOrientationPatient;
@@ -2380,7 +2388,7 @@ catch
     %specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example, dieses gut bei mesoFT
     %trk_write. Try this one.. %[1,0,0,0,1,0];
 end
-ftr=load([M.patient.list{1},options.prefs.FTR_unnormalized]);
+ftr=load([M.patient.list{1},filesep,options.prefs.FTR_unnormalized]);
 specs.vox=ftr.vox;
 clear ftr
 

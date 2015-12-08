@@ -58,7 +58,7 @@ end
 
 % First, do the coreg part:
 if options.modality==1
-    finas=ea_coreg(options,options.prefs.normalize.coreg);
+    finas=ea_coregmr(options,options.prefs.normalize.coreg);
 end
 
 

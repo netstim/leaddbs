@@ -25,7 +25,7 @@ end
 
 
 % First, do the coreg part:
-    ea_coreg(options,options.prefs.normalize.coreg);
+    ea_coregmr(options,options.prefs.normalize.coreg);
 
 
 

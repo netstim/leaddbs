@@ -108,13 +108,13 @@ if togglestates.xyztoggles(1)
     end
     
     %slice=ea_invert(slice,inverted);
-imin=proxy_slice(slice,togglestates,1);
+    imin=proxy_slice(slice,togglestates,1);
     clear bb
     bb(1,:)=[xyzv(1),V{1+usesag}.dim(2),V{1+usesag}.dim(3),1]; % upper left point of image in voxels
     bb(2,:)=[xyzv(1),0,V{1+usesag}.dim(3),1];
-    bb(3,:)=[xyzv(1),V{1+usesag}.dim(2),0,1]; 
-    bb(4,:)=[xyzv(1),0,0,1]; 
-
+    bb(3,:)=[xyzv(1),V{1+usesag}.dim(2),0,1];
+    bb(4,:)=[xyzv(1),0,0,1];
+    
     bb(:,1:3)=bb(:,1:3);
     
     bb=V{1+usesag}.mat*bb'; % in mm
@@ -122,17 +122,17 @@ imin=proxy_slice(slice,togglestates,1);
     %zsliceplot=imsurf(imin,ulp,[1,0,0],[0,0,-1],scale);
     
     xsliceplot=surface('XData',[min(bb(:,1)) max(bb(:,1));min(bb(:,1)) max(bb(:,1))],...
-   'YData',[min(bb(:,2)) min(bb(:,2));max(bb(:,2)), max(bb(:,2))],...
-   'ZData',[min(bb(:,3)) max(bb(:,3)); min(bb(:,3)) max(bb(:,3))],...
-   'CData',imin(:,:,1:3),...
-   'FaceColor','texturemap','AlphaDataMapping','none','FaceAlpha',togglestates.xyztransparencies(1),'EdgeColor','none');
-%set(xsliceplot,'SpecularColorReflectance',0)    
-set(xsliceplot,'SpecularStrength',0.1)    
-bbmm{1}=linspace(bb(1,1),bb(4,1),20);
-bbmm{2}=linspace(bb(1,2),bb(2,2),20);
-bbmm{3}=linspace(bb(1,3),bb(3,3),20);
-%ea_add_overlay_3d(bbmm,resultfig,3,options);
-
+        'YData',[min(bb(:,2)) min(bb(:,2));max(bb(:,2)), max(bb(:,2))],...
+        'ZData',[min(bb(:,3)) max(bb(:,3)); min(bb(:,3)) max(bb(:,3))],...
+        'CData',imin(:,:,1:3),...
+        'FaceColor','texturemap','AlphaDataMapping','none','FaceAlpha',togglestates.xyztransparencies(1),'EdgeColor','none');
+    %set(xsliceplot,'SpecularColorReflectance',0)
+    set(xsliceplot,'SpecularStrength',0.1)
+    bbmm{1}=linspace(bb(1,1),bb(4,1),20);
+    bbmm{2}=linspace(bb(1,2),bb(2,2),20);
+    bbmm{3}=linspace(bb(1,3),bb(3,3),20);
+    %ea_add_overlay_3d(bbmm,resultfig,3,options);
+    
     %surface('XData',[max(ulp(:,1)),min(ulp(:,1))],'YData',[min(ulp(:,2)),max(ulp(:,2))],'ZData',[min(ulp(:,3)),max(ulp(:,3))],'CData',imin(:,:,1:3));
     %catch
     %    disp('Z-Volume cut out of bounds.');
@@ -196,7 +196,7 @@ if togglestates.xyztoggles(3)
         slice=flipdim(permute(double(slice),[2,1,3]),2);
     else
         [xx,yy,zz]=meshgrid(1:0.2:V{1}.dim(1),1:0.2:V{1}.dim(2),xyzv(3));
-        slice=spm_sample_vol(V{1},xx,yy,zz,4)';
+        slice=flipdim(spm_sample_vol(V{1},xx,yy,zz,4)',1);
     end
     %slice=ea_invert(slice,inverted);
     %slice=flipud(squeeze(double((nii{1}.img(:,:,xyzv(3))))));
