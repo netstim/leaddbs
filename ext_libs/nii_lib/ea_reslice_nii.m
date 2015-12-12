@@ -98,16 +98,18 @@ function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, method, img_idx
    old_M = nii.hdr.hist.old_affine;
 
    if nii.hdr.dime.dim(5) > 1
+       ea_dispercent(0,'Reslicing volumes');
       for i = 1:nii.hdr.dime.dim(5)
          if verbose
-            fprintf('Reslicing %d of %d volumes.\n', i, nii.hdr.dime.dim(5));
+             ea_dispercent(i/nii.hdr.dim(5));
          end
 
          [img(:,:,:,i) M] = ...
 		affine(nii.img(:,:,:,i), old_M, voxel_size, verbose, bg, method);
       end
+      ea_dispercent(1,'end');
    else
-      [img M] = affine(nii.img, old_M, voxel_size, verbose, bg, method);
+      [img M] = ea_affine(nii.img, old_M, voxel_size, verbose, bg, method);
    end
 
    new_dim = size(img);

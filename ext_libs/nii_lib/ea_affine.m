@@ -188,11 +188,12 @@ function [new_img, new_M] = affine(old_img, old_M, new_elem_size, verbose, bg, m
    %  voxel can be used by the cursor location in the transformed volume.
    %
    %  First, we traverse along Z axis of transformed volume voxel by voxel
-   %
+   ea_dispercent(0,'Reslicing volumes');
+
    for z = 1:new_dim(3)
 
-      if verbose & ~mod(z,10)
-         fprintf('%.2f percent is done.\n', 100*z/new_dim(3));
+      if verbose && ~mod(z,10)
+                       ea_dispercent(z/new_dim(3));
       end
 
       %  We need to find out the mapping from voxel in the transformed
@@ -240,6 +241,9 @@ function [new_img, new_M] = affine(old_img, old_M, new_elem_size, verbose, bg, m
       end
 
    end;			% for z
+                   
+   ea_dispercent(1,'end');
+
 
    if ndims(old_img) == 2
       new_M(3,:) = [];
