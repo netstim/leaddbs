@@ -245,20 +245,26 @@ if get(handles.vizgraph,'Value'); % show voxel-level results
     else
         thresh=str2double(thresh);
     end
-    gX=gX>thresh;
+    tgX=gX>thresh;
     
-    bb=[0,0,0;size(gX)];
+    bb=[0,0,0;size(tgX)];
     
     bb=map_coords_proxy(bb,pV);
     gv=cell(3,1);
     for dim=1:3
-        gv{dim}=linspace(bb(1,dim),bb(2,dim),size(gX,dim));
+        gv{dim}=linspace(bb(1,dim),bb(2,dim),size(tgX,dim));
     end
     [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-    fv=isosurface(X,Y,Z,permute(gX,[2,1,3]),0.5); % graph_metric
+    fv=isosurface(X,Y,Z,permute(tgX,[2,1,3]),0.5); % graph_metric
     set(0,'CurrentFigure',resultfig)
-    graphsurf=patch(fv,'FaceColor',options.prefs.lc.graphsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-    
+    graphsurf=patch(fv,'facealpha',0.7,'EdgeColor','none','facelighting','phong','FaceColor','interp');
+        
+    cgX=gX;
+    cgX(isnan(cgX))=0;
+    cgX=cgX+min(cgX(:));
+    cgX=(cgX/max(cgX(:)))*64;
+    isocolors(X,Y,Z,permute(cgX,[2,1,3]),graphsurf)
+
     setappdata(resultfig,'graphsurf',graphsurf);
 end
 
@@ -311,9 +317,16 @@ if get(handles.vizmat,'Value'); % show matrix-level results
     else
         thresh=str2double(thresh);
     end
-    tseedcon=seedcon>thresh;
+    tseedcon=seedcon;
+    tseedcon(tseedcon<thresh)=0;
     tseedcon(currentseed)=0;
-    mX=ismember(round(pX),find(tseedcon));
+
+    mX=pX;
+    for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with the entries in tseedcon. Fixme, this must be doable wo forloop..
+       mX(ismember(round(pX),cs))=tseedcon(cs);
+    end
+    
+%    mX=ismember(round(pX),find(tseedcon));
     sX=ismember(round(pX),currentseed);
     bb=[0,0,0;size(mX)];
     
@@ -325,11 +338,21 @@ if get(handles.vizmat,'Value'); % show matrix-level results
     [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
     
     
-    fv=isosurface(X,Y,Z,permute(mX,[2,1,3]),0.5); % connected regions
+    fv=isosurface(X,Y,Z,permute(mX,[2,1,3]),thresh); % connected regions
     fvs=isosurface(X,Y,Z,permute(sX,[2,1,3]),0.5); % seed
     set(0,'CurrentFigure',resultfig)
-    matsurf=patch(fv,'FaceColor',options.prefs.lc.matsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
+    matsurf=patch(fv,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
     
+    cmX=mX;
+    zidx=cmX==0;
+    zidx=logical(zidx+isnan(cmX));
+    cmX(isnan(cmX))=0;
+    
+    cmX=cmX-min(cmX(cmX~=0));
+    cmX=(cmX/max(cmX(cmX~=0)))*64;
+    cmX(zidx)=0; % reset prior zero/nan values to zero
+    isocolors(X,Y,Z,permute(cmX,[2,1,3]),matsurf)
+
     
     %threshold seedcon
     seedcon=((seedcon-thresh)/(max(seedcon)-thresh))*255;
@@ -419,13 +442,13 @@ set(handles.timeframe,'Enable','on');
 set(handles.timecircle,'Enable','on');
 
 function cv_disabletime(handles)
-set(handles.matthresh,'Enable','off');
+%set(handles.matthresh,'Enable','off');
 set(handles.timewindow,'Enable','off');
 set(handles.timeframe,'Enable','off');
 set(handles.timecircle,'Enable','off');
 
 function cv_enabletime(handles)
-set(handles.matthresh,'Enable','on');
+%set(handles.matthresh,'Enable','on');
 set(handles.timewindow,'Enable','on');
 set(handles.timeframe,'Enable','on');
 set(handles.timecircle,'Enable','on');
