@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 17-Oct-2015 18:21:14
+% Last Modified by GUIDE v2.5 13-Dec-2015 14:53:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -94,6 +94,22 @@ set(handles.setdicomout,'String',lp.dicom.outfolder);
 set(handles.setdicomin,'String',lp.dicom.infolder);
 end
 
+
+% check if group connectome files are present
+if ~exist([earoot,'fibers'],'file') || ...
+        ~exist([earoot,'fibers',filesep,'Groupconnectome (Horn 2013) full.mat'],'file') || ...
+        ~exist([earoot,'fibers',filesep,'Groupconnectome (Horn 2013) thinned out x 2.mat'],'file') || ...
+        ~exist([earoot,'fibers',filesep,'Groupconnectome (Horn 2013) thinned out x 5.mat'],'file') || ...
+        ~exist([earoot,'fibers',filesep,'Groupconnectome (Horn 2013) thinned out x 5.mat'],'file') || ...
+        ~exist([earoot,'fibers',filesep,'Groupconnectome (Horn 2013) thinned out x 10.mat'],'file') || ...
+        ~exist([earoot,'fibers',filesep,'Groupconnectome (Horn 2013) thinned out x 50.mat'],'file') || ...
+        ~exist([earoot,'fibers',filesep,'Groupconnectome (Horn 2013) thinned out x 100.mat'],'file') || ...
+        ~exist([earoot,'fibers',filesep,'Groupconnectome (Horn 2013) thinned out x 500.mat'],'file')
+    set(handles.dlgroupc,'Visible','on');
+    set(handles.dlgroupc,'BackgroundColor',[0.2,0.8,0.2]);
+else
+    set(handles.dlgroupc,'Visible','off');
+end
 
 
 %im = imread('bg_gui.png');
@@ -1663,3 +1679,23 @@ function viewmanual_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 web('http://www.lead-dbs.org/?page_id=71', '-browser')
+
+
+% --- Executes on button press in dlgroupc.
+function dlgroupc_Callback(hObject, eventdata, handles)
+% hObject    handle to dlgroupc (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+choice = questdlg('Lead will download and install the Horn 2013 Group connectome files. This may take a while...', ...
+    'Start GC Download', ...
+    'OK','Cancel','OK');
+earoot=[fileparts(which('lead')),filesep];
+if strcmp(choice,'OK')
+    disp('Downloading Horn 2013 Group Connectome');
+    websave([earoot,'fibers',filesep,'gc.zip'],'http://www.lead-dbs.org/release/download.php?id=group')
+    disp('Done. Installing.');
+    unzip([earoot,'fibers',filesep,'gc.zip'],[earoot,'fibers',filesep]);
+    disp('Done. Cleaning up.');
+    delete([earoot,'fibers',filesep,'gc.zip']);
+    msgbox('Download and install of the group connectome is complete.');
+end
