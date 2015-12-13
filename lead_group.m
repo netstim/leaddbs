@@ -714,6 +714,10 @@ try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
 try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
 try set(handles.labelpopup,'Value',M.ui.labelpopup); end
 try set(handles.modelselect,'Value',M.ui.modelselect); end
+if M.ui.modelselect>length(get(handles.modelselect,'String'))
+    M.ui.modelselect=length(get(handles.modelselect,'String'));
+    set(handles.modelselect,'Value',M.ui.modelselect); 
+end
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
 try set(handles.lc_parcellation,'Value',M.ui.lc.parcellation); end
@@ -740,9 +744,12 @@ if ~isempty(M.patient.list)
         for side=1:2
 
             M.stimparams(pt,side).usefiberset=get(handles.fiberspopup,'String');
-
+try
             M.stimparams(pt,side).usefiberset=M.stimparams(pt,side).usefiberset{M.ui.fiberspopup};
-
+catch
+                M.stimparams(pt,side).usefiberset=length(get(handles.fiberspopup,'String'));
+                M.ui.fiberspopup=length(get(handles.fiberspopup,'String'));
+end
             M.stimparams(pt,side).labelatlas=get(handles.labelpopup,'String');
             M.stimparams(pt,side).labelatlas=M.stimparams(pt,side).labelatlas(M.ui.labelpopup);
             M.stimparams(pt,side).showfibers=1;

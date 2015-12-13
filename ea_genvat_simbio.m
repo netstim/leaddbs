@@ -20,7 +20,7 @@ elseif nargin==1
     end
 end
 
-
+keyboard
 vizz=0;
 
 
@@ -222,7 +222,7 @@ if ea_headmodel_changed(options,side,elstruct)
     %% calculate volume conductor
     disp('Done. Creating volume conductor...');
     try
-        keyboard
+
     vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]);
     catch
         
