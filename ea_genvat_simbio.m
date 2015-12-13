@@ -216,21 +216,13 @@ if ea_headmodel_changed(options,side,elstruct)
     %mesh=ea_ft_prepare_mesh(cfg,smri);
     [~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);'); % need to incorporate this function and all dependencies into lead-dbs
     
-%     mesh = ea_ft_transform_geometry(inv(smri.transform), mesh);
-% %    mesh = ea_ft_transform_geometry(smri.transform, mesh);
-%     % rewrite vol.pos in mm dimensions:
-%     
-%     mesh.pnt=[mesh.pnt,ones(size(mesh.pnt,1),1)]';
-%     mesh.pnt=Vexp.mat*mesh.pnt;
-%     mesh.pnt=mesh.pnt(1:3,:)';
-    
-    % rewrite vol.pos in m dimensions (in order to get Voltage as output):
-    %mesh.pnt=mesh.pnt/1000;
+
     
     
     %% calculate volume conductor
     disp('Done. Creating volume conductor...');
     try
+        keyboard
     vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]);
     catch
         
@@ -342,6 +334,23 @@ eg(isnan(eg))=0;
 vatfv=isosurface(xg,yg,zg,eg,0.75);
 
 vatvolume=nnz(eg)*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
+
+chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);
+Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
+Vvat.dim=[100,100,100];
+Vvat.dt=[4,0];
+Vvat.n=[1 1];
+Vvat.descrip='lead dbs - vat';
+if ~exist([options.root,options.patientname,filesep,'vat'],'file')
+    mkdir([options.root,options.patientname,filesep,'vat']);
+end
+switch side
+    case 1
+        Vvat.fname=[options.root,options.patientname,filesep,'vat',filesep,'vat_right.nii'];
+    case 2
+        Vvat.fname=[options.root,options.patientname,filesep,'vat',filesep,'vat_left.nii'];
+end
+spm_write_vol(Vvat,permute(eg,[2,1,3]));
 
 % define function outputs
 

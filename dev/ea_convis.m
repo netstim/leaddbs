@@ -52,7 +52,7 @@ function ea_convis_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_convis (see VARARGIN)
 
-set(gcf,'Name','Connectome Results');
+set(hObject,'Name','Connectome Results');
 
 
 % Choose default command line output for ea_anatomycontrol
@@ -163,7 +163,17 @@ setappdata(gcf,'pV',pV);
 setappdata(gcf,'pX',pX);
 
 %d=length(atlas_lgnd{1}); % how many ROI.
-set(handles.matseed,'String',atlas_lgnd{2});
+
+mm=get(handles.matmodality,'String');
+if strcmp(mm{get(handles.matmodality,'Value')},'rest_tc')
+    set(handles.matseed,'String',[{'Combined VAT';'Right VAT';'Left VAT'};atlas_lgnd{2}]);
+    plusvat=3;
+else
+    set(handles.matseed,'String',[atlas_lgnd{2}]);
+    plusvat=0;
+end
+    setappdata(gcf,'plusvat',plusvat);
+    
 if get(handles.matseed,'Value')>length(get(handles.matseed,'String'));
     set(handles.matseed,'Value',length(get(handles.matseed,'String')));
 end
@@ -228,7 +238,7 @@ try delete(graphsurf); end
 if ~hold
     pV=getappdata(gcf,'pV');
     pX=getappdata(gcf,'pX');
-    [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
+    [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value')-plusvat);
     set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
     set(handles.matseed,'ForegroundColor',[0,0,0]);
 end
@@ -259,10 +269,18 @@ if get(handles.vizgraph,'Value'); % show voxel-level results
     set(0,'CurrentFigure',resultfig)
     graphsurf=patch(fv,'facealpha',0.7,'EdgeColor','none','facelighting','phong','FaceColor','interp');
         
+    
+    
+
+    
     cgX=gX;
+    zidx=cgX==0;
+    zidx=logical(zidx+isnan(cgX));
+    
     cgX(isnan(cgX))=0;
-    cgX=cgX+min(cgX(:));
-    cgX=(cgX/max(cgX(:)))*64;
+    cgX=cgX+min(cgX(cgX~=0));
+    cgX=(cgX/max(cgX(cgX~=0)))*64;
+    cgX(zidx)=0; % reset prior zero/nan values to zero
     isocolors(X,Y,Z,permute(cgX,[2,1,3]),graphsurf)
 
     setappdata(resultfig,'graphsurf',graphsurf);
@@ -281,6 +299,10 @@ if get(handles.vizmat,'Value'); % show matrix-level results
     if ~isempty(strfind(mms{get(handles.matmodality,'Value')},'_tc'))
         % timecourses selected: need to create a CM first. In this case, the variable CM is
         % not a connectivity matrix but time-courses!
+        
+        
+        %% add vat_tcs to this CM!
+        
         timedim=size(CM,1);
         tiwindow=get(handles.timewindow,'String');
         tiframe=get(handles.timeframe,'String');
@@ -322,11 +344,10 @@ if get(handles.vizmat,'Value'); % show matrix-level results
     tseedcon(currentseed)=0;
 
     mX=pX;
-    for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with the entries in tseedcon. Fixme, this must be doable wo forloop..
+    for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with the entries in tseedcon. Fixme, this should be doable wo forloop..
        mX(ismember(round(pX),cs))=tseedcon(cs);
     end
     
-%    mX=ismember(round(pX),find(tseedcon));
     sX=ismember(round(pX),currentseed);
     bb=[0,0,0;size(mX)];
     
@@ -533,18 +554,54 @@ function matseed_Callback(hObject, eventdata, handles)
 
 pV=getappdata(gcf,'pV');
 pX=getappdata(gcf,'pX');
-[xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
+plusvat=getappdata(gcf,'plusvat');
+[xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value')-plusvat);
 set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
 set(handles.matseed,'ForegroundColor',[0,0,0]);
 refreshcv(handles);
 
 function [xmm,ymm,zmm]=getcoordinates(pV,pX,ix)
-
+if ix<1
+    xmm=nan; ymm=nan; zmm=nan;
+    return
+end
 [xx,yy,zz]=ind2sub(size(pX),find(round(pX)==ix));
 XYZ=[xx,yy,zz];
 centrvx=[mean(XYZ,1),1];
 centrmm=pV.mat*centrvx';
 xmm=centrmm(1); ymm=centrmm(2); zmm=centrmm(3);
+
+function [ix,err]=setcoordinates(handles)
+% set seed selection based on manual coordinate entry.
+pV=getappdata(gcf,'pV');
+pX=getappdata(gcf,'pX');
+xmm=str2double(get(handles.xmm,'String'));
+ymm=str2double(get(handles.ymm,'String'));
+zmm=str2double(get(handles.zmm,'String'));
+
+
+err=0;
+XYZmm=[xmm,ymm,zmm,1]';
+XYZvox=pV.mat\XYZmm;
+ix=0;
+try
+    ix=pX(round(XYZvox(1)),round(XYZvox(2)),round(XYZvox(3)));
+end
+if ~ix
+    ix=nan;
+    err=1;
+else
+    plusvat=getappdata(gcf,'plusvat');
+    ix=ix+plusvat;
+end
+
+if ~err
+    set(handles.matseed,'Value',ix);
+    set(handles.matseed,'ForegroundColor',[0,0,0]);
+else
+    set(handles.matseed,'ForegroundColor',[1,0,0]);
+end
+
 
 % --- Executes during object creation, after setting all properties.
 function matseed_CreateFcn(hObject, eventdata, handles)
@@ -705,34 +762,6 @@ function xmm_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of xmm as a double
 setcoordinates(handles);
 refreshcv(handles,1);
-
-function [ix,err]=setcoordinates(handles)
-% set seed selection based on manual coordinate entry.
-pV=getappdata(gcf,'pV');
-pX=getappdata(gcf,'pX');
-xmm=str2double(get(handles.xmm,'String'));
-ymm=str2double(get(handles.ymm,'String'));
-zmm=str2double(get(handles.zmm,'String'));
-
-
-err=0;
-XYZmm=[xmm,ymm,zmm,1]';
-XYZvox=pV.mat\XYZmm;
-ix=0;
-try
-    ix=pX(round(XYZvox(1)),round(XYZvox(2)),round(XYZvox(3)));
-end
-if ~ix
-    ix=nan;
-    err=1;
-end
-
-if ~err
-    set(handles.matseed,'Value',ix);
-    set(handles.matseed,'ForegroundColor',[0,0,0]);
-else
-    set(handles.matseed,'ForegroundColor',[1,0,0]);
-end
 
 % --- Executes during object creation, after setting all properties.
 function xmm_CreateFcn(hObject, eventdata, handles)

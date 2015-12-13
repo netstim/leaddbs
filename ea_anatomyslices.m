@@ -193,10 +193,18 @@ if togglestates.xyztoggles(3)
     
     if inverted
         [~,slice]=ea_writeplanes(options, togglestates.xyzmm(3),1,V{1},'off', 0,atlases);
-        slice=flipdim(permute(double(slice),[2,1,3]),2);
+        if V{1}.mat(1)<0
+        slice=flip(permute(double(slice),[2,1,3]),2);
+        else
+        slice=permute(double(slice),[2,1,3]);
+        end
     else
         [xx,yy,zz]=meshgrid(1:0.2:V{1}.dim(1),1:0.2:V{1}.dim(2),xyzv(3));
-        slice=flipdim(spm_sample_vol(V{1},xx,yy,zz,4)',1);
+        if V{1}.mat(1)<0
+        slice=flip(spm_sample_vol(V{1},xx,yy,zz,4)',1);
+        else
+        slice=spm_sample_vol(V{1},xx,yy,zz,4)';            
+        end
     end
     %slice=ea_invert(slice,inverted);
     %slice=flipud(squeeze(double((nii{1}.img(:,:,xyzv(3))))));
