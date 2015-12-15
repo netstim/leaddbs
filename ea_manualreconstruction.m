@@ -473,10 +473,34 @@ for doxx=0:1
             
             if ~getappdata(mcfig,'planecset') % initially and once set contrast based on image data.
                 
-                if options.modality==1
-                c_lims=[ea_nanmean(imat(:))-ea_nanstd(imat(:))-3*ea_nanstd(imat(:)),ea_nanmean(imat(:))-ea_nanstd(imat(:))+3*ea_nanstd(imat(:))];
-                elseif options.modality==2
-                        c_lims=[1800,2800]; % Initial guess, CT
+                if options.modality==1 % MR
+                    c_lims=[ea_nanmean(imat(:))-ea_nanstd(imat(:))-3*ea_nanstd(imat(:)),ea_nanmean(imat(:))-ea_nanstd(imat(:))+3*ea_nanstd(imat(:))];
+                elseif options.modality==2 % CT
+                    
+                    lthresh=800; % initial guesses for CT
+                    uthresh=2800;
+                    try % try estimating a better guess..
+                        for tries=1:200
+                            timat=imat;
+                            timat(timat<lthresh)=0;
+                            timat(timat>uthresh)=0;
+                            
+                            nomi=ea_nmi(round(imat),round(timat));
+                            if nomi>0.9
+                                break
+                            else
+                                lthresh=lthresh+randn(1)*200;
+                                uthresh=uthresh+randn(1)*200;
+                                if lthresh>=uthresh
+                                    lthresh=uthresh-500;
+                                end
+                            end
+                        end
+                    end
+                    disp(['Lthresh: ',num2str(lthresh),'; Uthresh: ',num2str(uthresh),'.']);
+                    c_lims=[lthresh,uthresh]; % Initial guess, CT
+                    
+                    
                 end
                 caxis(c_lims);
                 setappdata(mcfig,'c_lims',c_lims);
@@ -917,3 +941,42 @@ for side=1:length(trajectory)
         trajectory{side}(end+1,:)=trajectory{side}(end,:)+(trajectory{side}(end,:)-trajectory{side}(end-1,:));
     end
 end
+
+
+function M = ea_nmi(X,Y)
+% function M = MI_GG(X,Y)
+% Compute the mutual information of two images: X and Y, having
+% integer values.
+% 
+% INPUT:
+% X --> first image 
+% Y --> second image (same size of X)
+%
+% OUTPUT:
+% M --> mutual information of X and Y
+%
+% Written by GIANGREGORIO Generoso. 
+% DATE: 04/05/2012
+% E-MAIL: ggiangre@unisannio.it
+%__________________________________________________________________________
+
+X = double(X);
+Y = double(Y);
+
+X_norm = X - min(X(:)) +1; 
+Y_norm = Y - min(Y(:)) +1;
+
+matAB(:,1) = X_norm(:);
+matAB(:,2) = Y_norm(:);
+h = accumarray(matAB+1, 1); % joint histogram
+
+hn = h./sum(h(:)); % normalized joint histogram
+y_marg=sum(hn,1); 
+x_marg=sum(hn,2);
+
+Hy = - sum(y_marg.*log2(y_marg + (y_marg == 0))); % Entropy of Y
+Hx = - sum(x_marg.*log2(x_marg + (x_marg == 0))); % Entropy of X
+
+arg_xy2 = hn.*(log2(hn+(hn==0)));
+h_xy = sum(-arg_xy2(:)); % joint entropy
+M = Hx + Hy - h_xy; % mutual information

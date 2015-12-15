@@ -725,10 +725,12 @@ try set(handles.lc_normalization,'Value',M.ui.lc.normalization); end
 try set(handles.lc_graphmetric,'Value',M.ui.lc.graphmetric); end
 
 % update enable-disable-dependencies:
+try
 if M.ui.elrendering==3
     try set(handles.colorpointcloudcheck,'Enable','on'); end
 else
     try set(handles.colorpointcloudcheck,'Enable','off'); end
+end
 end
 % hide detachbutton if already detached:
 try
