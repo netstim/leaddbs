@@ -26,10 +26,19 @@ if ~legacy % use new imshowpair tool
         ct=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
     end
 
+    ct.img=ea_tonemap_ct(ct.img);
+    
     ct.img(:)=zscore(ct.img(:));
+    ct.img=(ct.img-min(ct.img(:)))/(max(ct.img(:))-min(ct.img(:)));
     mr.img(:)=zscore(mr.img(:));
+    mr.img=(mr.img-min(mr.img(:)))/(max(mr.img(:))-min(mr.img(:)));
 
-    jim=cat(4,mr.img,ct.img,mean(cat(4,mr.img,ct.img),4));
+    
+    %jim=cat(4,mr.img,mean(cat(4,mr.img,ct.img),4),ct.img);
+    %jim=cat(4,mr.img,(mr.img-ct.img)/2,ct.img);
+
+    jim=cat(4,0.1*mr.img+0.9*ct.img,0.4*mr.img+0.6*ct.img,0.9*mr.img+0.1*ct.img);
+
     ea_imshowpair(jim,options,'Preoperative MRI (pink) & Postoperative CT (green)');
 
 elseif legacy
@@ -294,3 +303,19 @@ V=spm_vol(fname);
 X=spm_read_vols(V);
 nii.img=X;
 nii.hdr=V;
+
+
+function tmct=ea_tonemap_ct(ct)
+
+
+tmct=ct;
+% brain window: center = 40, width = 80
+tmct(ct>0 & ct<80)=tmct(ct>0 & ct<80)/80;
+
+% bone window: center = 300, width = 2000
+tmct(ct>80 & ct<1300)=(tmct(ct>80 & ct<1300)-80)/1220;
+
+% saturate above and below levels:
+tmct(ct>1300)=1;
+tmct(ct<0)=0;
+
