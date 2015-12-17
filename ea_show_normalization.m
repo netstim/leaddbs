@@ -20,13 +20,13 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 addstr='MNI space (wireframes) & Preoperative MRI';
                 suff='_pre_tra';
             case 2
-                checkf=        [options.root,options.prefs.patientdir,filesep,options.prefs.tranii,',1'];
+                checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii,',1'];
                 checkfn=options.prefs.tranii;
                 outf=['check_',options.prefs.tranii];
                 addstr='MNI space (wireframes) & Postoperative axial MRI';
                 suff='_tra';
             case 3
-                checkf=        [options.root,options.prefs.patientdir,filesep,options.prefs.cornii,',1'];
+                checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii,',1'];
                 checkfn=options.prefs.cornii;
                 outf=['check_',options.prefs.cornii];
                 addstr='MNI space (wireframes) & Postoperative coronar MRI';
@@ -35,8 +35,6 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
 
 
         if ~legacy % use new imshowpair viewer
-
-
 
             mni=ea_load_nii([options.earoot,'templates',filesep,'mni_wires.nii']);
             pt=ea_load_nii(checkf);
@@ -55,8 +53,11 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 clear matlabbatch jobs;
                             pt=ea_load_nii(checkf);
             end
-            mni.img(:)=zscore(mni.img(:));
+            %mni.img(:)=zscore(mni.img(:));
+            mni.img=mni.img/max(mni.img(:));
+            
             pt.img(:)=zscore(pt.img(:));
+            pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:))-min(pt.img(:)));
             jim=mni.img+pt.img;
             jim=repmat(jim,1,1,1,3);
 %            jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
