@@ -28,18 +28,19 @@ if ~legacy % use new imshowpair tool
 
     ct.img=ea_tonemap_ct(ct.img);
     
-    ct.img(:)=zscore(ct.img(:));
-    ct.img=(ct.img-min(ct.img(:)))/(max(ct.img(:))-min(ct.img(:)));
-    mr.img(:)=zscore(mr.img(:));
-    mr.img=(mr.img-min(mr.img(:)))/(max(mr.img(:))-min(mr.img(:)));
-
+    ct.img(:)=ea_nanzscore(ct.img(:)); %     ct.img(:)=ea_nanzscore(ct.img(:),'robust');
+    ct.img=(ct.img+2.5)/5; % set max/min to -/+ 2.5 standard deviations
+    ct.img(ct.img<0)=0; ct.img(ct.img>1)=1;
+    mr.img(:)=ea_nanzscore(mr.img(:)); %     ct.img(:)=ea_nanzscore(ct.img(:),'robust');
+    mr.img=(mr.img+2.5)/5; % set max/min to -/+ 2.5 standard deviations
+    mr.img(mr.img<0)=0; mr.img(mr.img>1)=1;
     
     %jim=cat(4,mr.img,mean(cat(4,mr.img,ct.img),4),ct.img);
     %jim=cat(4,mr.img,(mr.img-ct.img)/2,ct.img);
 
     jim=cat(4,0.1*mr.img+0.9*ct.img,0.4*mr.img+0.6*ct.img,0.9*mr.img+0.1*ct.img);
 
-    ea_imshowpair(jim,options,'Preoperative MRI (pink) & Postoperative CT (green)');
+    ea_imshowpair(jim,options,'Preoperative MRI (cyan) & Postoperative CT (orange)');
 
 elseif legacy
 % export wireframe of CT:

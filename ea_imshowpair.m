@@ -24,7 +24,7 @@ sno = sno_a;
 global InitialCoord;
 
 MinV = 0;
-MaxV = max(Img(:));
+MaxV = ea_nanmax(Img(:));
 LevV = (double( MaxV) + double(MinV)) / 2;
 Win = double(MaxV) - double(MinV);
 WLAdjCoe = (Win + 1)/1024;
@@ -108,8 +108,8 @@ hdl_im = axes('position',[0,0,1,1]);
 set(0,'CurrentFigure',isp);
 try % image toolbox
 imshow(squeeze(Img(:,:,S,:)), [Rmin Rmax])
-catch
-imagesc(squeeze(Img(:,:,S,:)), [Rmin Rmax])
+catch    
+    imagesc(squeeze(Img(:,:,S,:)), [Rmin Rmax])
 end
 
 FigPos = get(gcf,'Position');
