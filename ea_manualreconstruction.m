@@ -497,7 +497,7 @@ for doxx=0:1
                             end
                         end
                     end
-                    disp(['Lthresh: ',num2str(lthresh),'; Uthresh: ',num2str(uthresh),'.']);
+                   % disp(['Lthresh: ',num2str(lthresh),'; Uthresh: ',num2str(uthresh),'.']);
                     c_lims=[lthresh,uthresh]; % Initial guess, CT
                     
                     

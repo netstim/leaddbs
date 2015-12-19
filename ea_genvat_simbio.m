@@ -20,7 +20,7 @@ elseif nargin==1
     end
 end
 
-keyboard
+
 vizz=0;
 
 
@@ -341,15 +341,21 @@ Vvat.dim=[100,100,100];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
-if ~exist([options.root,options.patientname,filesep,'vat'],'file')
-    mkdir([options.root,options.patientname,filesep,'vat']);
+if ~exist([options.root,options.patientname,filesep,'stimulations'],'file')
+    mkdir([options.root,options.patientname,filesep,'stimulations']);
 end
+
+% determine stimulation name:
+stimname=ea_detstimname(stimparams);
+mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
+
 switch side
     case 1
-        Vvat.fname=[options.root,options.patientname,filesep,'vat',filesep,'vat_right.nii'];
+        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];
     case 2
-        Vvat.fname=[options.root,options.patientname,filesep,'vat',filesep,'vat_left.nii'];
+        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
 end
+save([options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters'],'stimparams');
 spm_write_vol(Vvat,permute(eg,[2,1,3]));
 
 % define function outputs

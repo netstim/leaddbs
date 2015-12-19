@@ -48,9 +48,13 @@ for fi=1:length(fis)
            ' -t ',ea_path_helper([subdir,lprebase]),'1Warp.nii.gz'...
            ' -t ',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat'];
     if ~ispc
+        try
         system(['bash -c "', cmd, '"']);
+        end
     else
+        try
         system(cmd);
+        end
     end
     % generate l*.nii files
     matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];

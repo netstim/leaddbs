@@ -22,7 +22,7 @@ function varargout = ea_convis(varargin)
 
 % Edit the above text to modify the response to help ea_convis
 
-% Last Modified by GUIDE v2.5 09-Sep-2015 14:32:54
+% Last Modified by GUIDE v2.5 16-Dec-2015 20:14:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -84,210 +84,244 @@ end
 options=getappdata(gcf,'options');
 
 if isempty(options)
-   convis=getappdata(gcf,'convis'); 
+    convis=getappdata(gcf,'convis');
     options=getappdata(convis,'options');
     set(0,'CurrentFigure',convis);
 end
 
-%% init/modify UI controls:
+%% init figure
+[directory,pdirectory,selectedparc]=ea_cvinitgui(handles,options);
 
-% parcellation popup:
+%% initialize controls
+ea_initvatlevel(handles,directory,selectedparc,options);
+ea_initmatrixlevel(handles,pdirectory,selectedparc,options);
+filesare=ea_initvoxellevel(handles,pdirectory);
 
-directory=[options.root,options.patientname,filesep];
-
-pdirs=dir([directory,'connectomics',filesep]);
-cnt=1;
-
-for pdir=1:length(pdirs)
-    if pdirs(pdir).isdir && ~strcmp(pdirs(pdir).name,'.') && ~strcmp(pdirs(pdir).name,'..')
-        parcs{cnt}=pdirs(pdir).name;
-        cnt=cnt+1;
-    end
-end
-if ~exist('parcs','var')
-    cv_disableall(handles);
-    return
-end
-set(handles.labelpopup,'String',parcs);
-if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'));
-    set(handles.labelpopup,'Value',length(get(handles.labelpopup,'String')));
-end
-
-selectedparc=parcs{get(handles.labelpopup,'Value')};
-
-pdirectory=[options.root,options.patientname,filesep,'connectomics',filesep,selectedparc,filesep];
-
-%% init matrix level controls:
-
-pmdirs=dir([pdirectory,'*_CM.mat']);
-
-for pmdir=1:length(pmdirs)
-    [~,pmc{pmdir}]=fileparts(pmdirs(pmdir).name);
-end
-
-tcdirs=dir([pdirectory,'*_tc.mat']);
-
-for tcdir=1:length(tcdirs)
-    [~,pmc{end+1}]=fileparts(tcdirs(tcdir).name);
-end
-
-if ~exist('pmc','var')
-    cv_disablemats(handles);
-else
-    cv_enablemats(handles);
-end
-
-
-
-set(handles.matmodality,'String',pmc);
-
-if get(handles.matmodality,'Value')>length(get(handles.matmodality,'String'));
-    set(handles.matmodality,'Value',length(get(handles.matmodality,'String')));
-end
-
-if ~isempty(strfind(pmc{get(handles.matmodality,'Value')},'_tc')) % no timeseries selected.
-    cv_enabletime(handles);
-else
-    cv_disabletime(handles);
-end
-
-% parcellation scheme
-aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.txt']);
-atlas_lgnd=textscan(aID,'%d %s');
-
-% store selected parcellation in figure:
-% store pV and pX in figure
-pV=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
-pX=spm_read_vols(pV);
-setappdata(gcf,'pV',pV);
-setappdata(gcf,'pX',pX);
-
-%d=length(atlas_lgnd{1}); % how many ROI.
-
-mm=get(handles.matmodality,'String');
-if strcmp(mm{get(handles.matmodality,'Value')},'rest_tc')
-    set(handles.matseed,'String',[{'Combined VAT';'Right VAT';'Left VAT'};atlas_lgnd{2}]);
-    plusvat=3;
-else
-    set(handles.matseed,'String',[atlas_lgnd{2}]);
-    plusvat=0;
-end
-    setappdata(gcf,'plusvat',plusvat);
-    
-if get(handles.matseed,'Value')>length(get(handles.matseed,'String'));
-    set(handles.matseed,'Value',length(get(handles.matseed,'String')));
-end
-
-%% init voxel level controls:
-% Metric:
-if exist([pdirectory,'graph'],'file')
-    testits={'deg_','eig_','eff_','sfs_'};
-    labelits={'degree centrality','eigenvector centrality','nodal efficiency','structure function similarity'};
-    cnt=1;
-    for ti=1:length(testits)
-        tdir=dir([pdirectory,'graph',filesep,testits{ti},'*.nii']);
-        if ~isempty(tdir)
-            filesare{cnt}=testits{ti}; % present filetypes
-            labelsare{cnt}=labelits{ti}; % present labelnames
-            cnt=cnt+1;
-        end
-    end
-    
-    if ~isempty(labelsare)
-        set(handles.voxmetric,'String',labelsare);
-        if get(handles.voxmetric,'Value')>length(get(handles.voxmetric,'String'));
-            set(handles.voxmetric,'Value',length(get(handles.voxmetric,'String')));
-        end
-        cv_enablevoxs(handles);
-    else
-        cv_disablevoxs(handles);
-    end
-else
-    cv_disablevoxs(handles);
-end
-
-% Modality:
-if exist('filesare','var')
-    selectedmetric=get(handles.voxmetric,'Value');
-    selectedprefix=filesare{selectedmetric}; % deg_, eig_, eff_ or sfs_
-    
-    fis=dir([pdirectory,'graph',filesep,selectedprefix,'*.nii']);
-    cnt=1;
-    for fi=1:length(fis)
-        mods{cnt}=fis(fi).name(5:end);
-        [~,mods{cnt}]=fileparts(mods{cnt}); % remove .nii extension
-        cnt=cnt+1;
-    end
-    set(handles.voxmodality,'String',mods);
-    if get(handles.voxmodality,'Value')>length(get(handles.voxmodality,'String'));
-        set(handles.voxmodality,'Value',length(get(handles.voxmodality,'String')));
-    end
-end
-
-%% recruit handles from prior results from figure
-resultfig=getappdata(gcf,'resultfig');
-matsurf=getappdata(resultfig,'matsurf');
-seedsurf=getappdata(resultfig,'seedsurf');
-graphsurf=getappdata(resultfig,'graphsurf');
-
-%% delete any prior results
-try delete(matsurf); end
-try delete(seedsurf); end
-try delete(graphsurf); end
+%% retrieve and delete prior results
+resultfig=ea_cvcleanup;
 
 if ~hold
     pV=getappdata(gcf,'pV');
     pX=getappdata(gcf,'pX');
-    [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value')-plusvat);
+    [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
     set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
     set(handles.matseed,'ForegroundColor',[0,0,0]);
 end
 
 %% now show results
+if get(handles.vizvat,'Value'); % show voxel-level results
+    ea_cvshowvatresults(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
+end
+
 if get(handles.vizgraph,'Value'); % show voxel-level results
-    mo_ds=get(handles.voxmodality,'String');
-    mo_d=mo_ds{get(handles.voxmodality,'Value')};
-    gV=spm_vol([directory,'connectomics',filesep,selectedparc,filesep,'graph',filesep,filesare{get(handles.voxmetric,'Value')},mo_d,'.nii']);
-    gX=spm_read_vols(gV);
-    thresh=get(handles.voxthresh,'String');
+    ea_cvshowvoxresults(resultfig,directory,filesare,handles,pV,selectedparc,options);
+end
+
+if get(handles.vizmat,'Value'); % show matrix-level results
+    ea_cvshowmatresults(resultfig,directory,pV,pX,handles,options);
+end
+
+if get(handles.vizmat,'Value') && get(handles.timecircle,'Value') && strcmp(get(handles.timecircle,'Enable'),'on') % cycle over time..
+    pause(0.1);
+    refreshcv(handles);
+end
+
+%% save result handles to figure
+
+
+function ea_cvshowvatresults(resultfig,pX,directory,filesare,handles,pV,selectedparc,options)
+
+% determine if fMRI or dMRI
+mods=get(handles.vatmodality,'String');
+mod=mods{get(handles.vatmodality,'Value')};
+switch mod
+    case 'rest_tc'
+        ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
+    otherwise
+        ea_cvshowvatdmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options); 
+end
+
+function ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options)
+%mV=pV; % duplicate labeling handle
+    %mX=pX; % duplicate labeling data
+    stims=get(handles.vatseed,'String');
+    stim=stims{get(handles.vatseed,'Value')};
+    
+    % check out which vats to use
+    
+    if (get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
+            (get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
+        %preparecombinedvat(directory,stim);
+        usevat={'right','left'};
+        dimensionality=2; % how many ROI.
+        currentseed='';
+        keyboard
+    elseif (get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
+            ~(get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
+        usevat={'right'};
+        dimensionality=1; % how many ROI.
+        
+    elseif ~(get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
+            (get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
+        usevat={'left'};
+        dimensionality=1; % how many ROI.
+        
+    end
+    
+    pX=round(pX);
+    if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_timeseries'],'file');
+        ea_warp_vat(options.prefs.rest,'rest',options,handles);
+        vat_tc=ea_extract_timecourses_vat(options,handles,usevat,dimensionality);
+        save([directory,'stimulations',filesep,stim,filesep,'vat_timeseries'],'vat_tc');
+    else
+        load([directory,'stimulations',filesep,stim,filesep,'vat_timeseries']);
+    end
+    
+    mms=get(handles.matmodality,'String');
+    parcs=get(handles.labelpopup,'String');
+    tc=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,'rest_tc']);
+    fn=fieldnames(tc);
+    tc=eval(['tc.',fn{1},';']);
+    tc=[vat_tc,tc];
+    
+
+    % timecourses selected: need to create a CM first. In this case, the variable CM is
+    % not a connectivity matrix but time-courses!
+    
+    timedim=size(tc,1);
+    tiwindow=get(handles.timewindow,'String');
+    tiframe=get(handles.timeframe,'String');
+    
+    if strcmp(tiwindow,'all') || strcmp(tiframe,'all')
+        % use whole CM
+        tc=corrcoef(tc);
+    else
+        tiframe=str2double(tiframe);         tiwindow=str2double(tiwindow);
+        % check if selected time window is possible:
+        if (tiframe+tiwindow)>timedim || tiframe<1 % end is reached
+            set(handles.timeframe,'String','1'); tiframe=1; % reset timeframe to 1
+            if tiwindow>size(tc,1)
+                set(handles.timewindow,'String','1'); tiwindow=1;
+            end
+        end
+        cm=corrcoef(tc(tiframe:tiframe+tiwindow,:)); % actual correlation
+        
+        if get(handles.timecircle,'Value')
+            % make a step to next timeframe (prepare next iteration).
+            if (tiframe+tiwindow+1)>timedim
+                set(handles.timeframe,'String','1')
+            else
+                set(handles.timeframe,'String',num2str(tiframe+1))
+            end
+        end
+    end
+    
+    currentseed=get(handles.matseed,'Value');
+    seedcon=cm(currentseed,:);
+    thresh=get(handles.matthresh,'String');
     if strcmp(thresh,'auto');
-        thresh=nanmean(gX(:))+1*nanstd(gX(:));
+        thresh=nanmean(seedcon)+1*nanstd(seedcon);
     else
         thresh=str2double(thresh);
     end
-    tgX=gX>thresh;
+    tseedcon=seedcon;
+    tseedcon(tseedcon<thresh)=0;
+    tseedcon(currentseed)=0;
+
+    mX=pX;
+    for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with the entries in tseedcon. Fixme, this should be doable wo forloop..
+       mX(ismember(round(pX),cs))=tseedcon(cs);
+    end
     
-    bb=[0,0,0;size(tgX)];
+    sX=ismember(round(pX),currentseed);
+    bb=[0,0,0;size(mX)];
     
     bb=map_coords_proxy(bb,pV);
     gv=cell(3,1);
     for dim=1:3
-        gv{dim}=linspace(bb(1,dim),bb(2,dim),size(tgX,dim));
+        gv{dim}=linspace(bb(1,dim),bb(2,dim),size(mX,dim));
     end
     [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-    fv=isosurface(X,Y,Z,permute(tgX,[2,1,3]),0.5); % graph_metric
+    
+    
+    fv=isosurface(X,Y,Z,permute(mX,[2,1,3]),thresh); % connected regions
+    fvs=isosurface(X,Y,Z,permute(sX,[2,1,3]),0.5); % seed
     set(0,'CurrentFigure',resultfig)
-    graphsurf=patch(fv,'facealpha',0.7,'EdgeColor','none','facelighting','phong','FaceColor','interp');
-        
+    matsurf=patch(fv,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
     
+    cmX=mX;
+    zidx=cmX==0;
+    zidx=logical(zidx+isnan(cmX));
+    cmX(isnan(cmX))=0;
     
+    cmX=cmX-min(cmX(cmX~=0));
+    cmX=(cmX/max(cmX(cmX~=0)))*64;
+    cmX(zidx)=0; % reset prior zero/nan values to zero
+    isocolors(X,Y,Z,permute(cmX,[2,1,3]),matsurf)
 
+    set(matsurf,'DiffuseStrength',0.9)
+    set(matsurf,'SpecularStrength',0.1)
+    set(matsurf,'FaceAlpha',0.3);
+    %threshold seedcon
+    seedcon=((seedcon-thresh)/(max(seedcon)-thresh))*255;
     
-    cgX=gX;
-    zidx=cgX==0;
-    zidx=logical(zidx+isnan(cgX));
-    
-    cgX(isnan(cgX))=0;
-    cgX=cgX+min(cgX(cgX~=0));
-    cgX=(cgX/max(cgX(cgX~=0)))*64;
-    cgX(zidx)=0; % reset prior zero/nan values to zero
-    isocolors(X,Y,Z,permute(cgX,[2,1,3]),graphsurf)
+    cX=pX;
+    for i=1:length(seedcon)
+       cX(pX==i)=seedcon(i);
+    end
+    %nc=isonormals(X,Y,Z,permute(mX,[2,1,3]),matsurf);
+    %nc=isocolors(X,Y,Z,permute(cX,[2,1,3]),matsurf);
+    %matsurf.FaceColor='interp';
 
-    setappdata(resultfig,'graphsurf',graphsurf);
+    seedsurf=patch(fvs,'FaceColor',options.prefs.lc.seedsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
+    set(seedsurf,'DiffuseStrength',0.9)
+    set(seedsurf,'SpecularStrength',0.1)
+    set(seedsurf,'FaceAlpha',0.3);
+    setappdata(resultfig,'matsurf',matsurf);
+    setappdata(resultfig,'seedsurf',seedsurf);
+
+function ea_cvshowvoxresults(resultfig,directory,filesare,handles,pV,selectedparc,options)
+mo_ds=get(handles.voxmodality,'String');
+mo_d=mo_ds{get(handles.voxmodality,'Value')};
+gV=spm_vol([directory,'connectomics',filesep,selectedparc,filesep,'graph',filesep,filesare{get(handles.voxmetric,'Value')},mo_d,'.nii']);
+gX=spm_read_vols(gV);
+thresh=get(handles.voxthresh,'String');
+if strcmp(thresh,'auto');
+    thresh=nanmean(gX(:))+1*nanstd(gX(:));
+else
+    thresh=str2double(thresh);
 end
+tgX=gX>thresh;
 
-if get(handles.vizmat,'Value'); % show matrix-level results
-    %mV=pV; % duplicate labeling handle
+bb=[0,0,0;size(tgX)];
+
+bb=map_coords_proxy(bb,pV);
+gv=cell(3,1);
+for dim=1:3
+    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(tgX,dim));
+end
+[X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
+fv=isosurface(X,Y,Z,permute(tgX,[2,1,3]),0.5); % graph_metric
+set(0,'CurrentFigure',resultfig)
+graphsurf=patch(fv,'facealpha',0.7,'EdgeColor','none','facelighting','phong','FaceColor','interp');
+
+
+cgX=gX;
+zidx=cgX==0;
+zidx=logical(zidx+isnan(cgX));
+
+cgX(isnan(cgX))=0;
+cgX=cgX+min(cgX(cgX~=0));
+cgX=(cgX/max(cgX(cgX~=0)))*64;
+cgX(zidx)=0; % reset prior zero/nan values to zero
+isocolors(X,Y,Z,permute(cgX,[2,1,3]),graphsurf)
+set(graphsurf,'DiffuseStrength',0.9)
+set(graphsurf,'SpecularStrength',0.1)
+set(graphsurf,'FaceAlpha',0.3);
+setappdata(resultfig,'graphsurf',graphsurf);
+
+function ea_cvshowmatresults(resultfig,directory,pV,pX,handles,options)
+%mV=pV; % duplicate labeling handle
     %mX=pX; % duplicate labeling data
     pX=round(pX);
     mms=get(handles.matmodality,'String');
@@ -299,9 +333,6 @@ if get(handles.vizmat,'Value'); % show matrix-level results
     if ~isempty(strfind(mms{get(handles.matmodality,'Value')},'_tc'))
         % timecourses selected: need to create a CM first. In this case, the variable CM is
         % not a connectivity matrix but time-courses!
-        
-        
-        %% add vat_tcs to this CM!
         
         timedim=size(CM,1);
         tiwindow=get(handles.timewindow,'String');
@@ -374,7 +405,9 @@ if get(handles.vizmat,'Value'); % show matrix-level results
     cmX(zidx)=0; % reset prior zero/nan values to zero
     isocolors(X,Y,Z,permute(cmX,[2,1,3]),matsurf)
 
-    
+    set(matsurf,'DiffuseStrength',0.9)
+    set(matsurf,'SpecularStrength',0.1)
+    set(matsurf,'FaceAlpha',0.3);
     %threshold seedcon
     seedcon=((seedcon-thresh)/(max(seedcon)-thresh))*255;
     
@@ -387,19 +420,11 @@ if get(handles.vizmat,'Value'); % show matrix-level results
     %matsurf.FaceColor='interp';
 
     seedsurf=patch(fvs,'FaceColor',options.prefs.lc.seedsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-    
+    set(seedsurf,'DiffuseStrength',0.9)
+    set(seedsurf,'SpecularStrength',0.1)
+    set(seedsurf,'FaceAlpha',0.3);
     setappdata(resultfig,'matsurf',matsurf);
     setappdata(resultfig,'seedsurf',seedsurf);
-    
-end
-
-if get(handles.vizmat,'Value') && get(handles.timecircle,'Value') && strcmp(get(handles.timecircle,'Enable'),'on') % cycle over time..
-    pause(0.1);
-    refreshcv(handles);
-end
-
-%% save result handles to figure
-
 
 function coords=map_coords_proxy(XYZ,V)
 
@@ -408,9 +433,235 @@ XYZ=[XYZ';ones(1,size(XYZ,1))];
 coords=V.mat*XYZ;
 coords=coords(1:3,:)';
 
+function [directory,pdirectory,selectedparc]=ea_cvinitgui(handles,options)
+%% init/modify UI controls:
+
+% parcellation popup:
+
+directory=[options.root,options.patientname,filesep];
+
+pdirs=dir([directory,'connectomics',filesep]);
+cnt=1;
+
+for pdir=1:length(pdirs)
+    if pdirs(pdir).isdir && ~strcmp(pdirs(pdir).name,'.') && ~strcmp(pdirs(pdir).name,'..')
+        parcs{cnt}=pdirs(pdir).name;
+        cnt=cnt+1;
+    end
+end
+if ~exist('parcs','var')
+    cv_disableallbutvats(handles);
+    return
+end
+set(handles.labelpopup,'String',parcs);
+if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'));
+    set(handles.labelpopup,'Value',length(get(handles.labelpopup,'String')));
+end
+
+selectedparc=parcs{get(handles.labelpopup,'Value')};
+
+pdirectory=[options.root,options.patientname,filesep,'connectomics',filesep,selectedparc,filesep];
+
+function ea_initmatrixlevel(handles,pdirectory,selectedparc,options)
+
+%% init matrix level controls:
+
+pmdirs=dir([pdirectory,'*_CM.mat']);
+
+for pmdir=1:length(pmdirs)
+    [~,pmc{pmdir}]=fileparts(pmdirs(pmdir).name);
+end
+
+tcdirs=dir([pdirectory,'*_tc.mat']);
+
+for tcdir=1:length(tcdirs)
+    [~,pmc{end+1}]=fileparts(tcdirs(tcdir).name);
+end
+
+if ~exist('pmc','var')
+    cv_disablemats(handles);
+else
+    cv_enablemats(handles);
+end
+
+
+
+set(handles.matmodality,'String',pmc);
+
+if get(handles.matmodality,'Value')>length(get(handles.matmodality,'String'));
+    set(handles.matmodality,'Value',length(get(handles.matmodality,'String')));
+end
+
+if ~isempty(strfind(pmc{get(handles.matmodality,'Value')},'_tc')) % no timeseries selected.
+    cv_enabletime(handles);
+else
+    cv_disabletime(handles);
+end
+
+% parcellation scheme
+aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.txt']);
+atlas_lgnd=textscan(aID,'%d %s');
+
+% store selected parcellation in figure:
+% store pV and pX in figure
+pV=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+pX=spm_read_vols(pV);
+setappdata(gcf,'pV',pV);
+setappdata(gcf,'pX',pX);
+
+%d=length(atlas_lgnd{1}); % how many ROI.
+
+mm=get(handles.matmodality,'String');
+
+    set(handles.matseed,'String',[atlas_lgnd{2}]);
+    
+if get(handles.matseed,'Value')>length(get(handles.matseed,'String'));
+    set(handles.matseed,'Value',length(get(handles.matseed,'String')));
+end
+
+function [filesare,labelsare,mods]=ea_initvoxellevel(handles,pdirectory)
+
+%% init voxel level controls:
+% Metric:
+if exist([pdirectory,'graph'],'file')
+    testits={'deg_','eig_','eff_','sfs_'};
+    labelits={'degree centrality','eigenvector centrality','nodal efficiency','structure function similarity'};
+    cnt=1;
+    for ti=1:length(testits)
+        tdir=dir([pdirectory,'graph',filesep,testits{ti},'*.nii']);
+        if ~isempty(tdir)
+            filesare{cnt}=testits{ti}; % present filetypes
+            labelsare{cnt}=labelits{ti}; % present labelnames
+            cnt=cnt+1;
+        end
+    end
+    
+    if ~isempty(labelsare)
+        set(handles.voxmetric,'String',labelsare);
+        if get(handles.voxmetric,'Value')>length(get(handles.voxmetric,'String'));
+            set(handles.voxmetric,'Value',length(get(handles.voxmetric,'String')));
+        end
+        cv_enablevoxs(handles);
+    else
+        cv_disablevoxs(handles);
+    end
+else
+    cv_disablevoxs(handles);
+end
+
+% Modality:
+if exist('filesare','var')
+    selectedmetric=get(handles.voxmetric,'Value');
+    selectedprefix=filesare{selectedmetric}; % deg_, eig_, eff_ or sfs_
+    
+    fis=dir([pdirectory,'graph',filesep,selectedprefix,'*.nii']);
+    cnt=1;
+    for fi=1:length(fis)
+        mods{cnt}=fis(fi).name(5:end);
+        [~,mods{cnt}]=fileparts(mods{cnt}); % remove .nii extension
+        cnt=cnt+1;
+    end
+    set(handles.voxmodality,'String',mods);
+    if get(handles.voxmodality,'Value')>length(get(handles.voxmodality,'String'));
+        set(handles.voxmodality,'Value',length(get(handles.voxmodality,'String')));
+    end
+end
+
+function ea_initvatlevel(handles,directory,selectedparc,options)
+%% modalities:
+
+% dMRI:
+cnt=1;
+% check if pat-specific fibertracts are present:
+if exist([directory,options.prefs.FTR_normalized],'file');
+    modlist{cnt}='Patient-specific fiber tracts';
+    cnt=cnt+1;
+end
+% check for canonical fiber sets
+fdfibs=dir([options.earoot,'fibers',filesep,'*.mat']);
+for fdf=1:length(fdfibs)
+    [~,fn]=fileparts(fdfibs(fdf).name);
+    modlist{cnt}=fn;
+    cnt=cnt+1;
+end
+
+% fMRI:
+% check if _tc are present:
+if exist([directory,'connectomics',filesep,selectedparc,filesep,'rest_tc.mat'],'file');
+    modlist{cnt}='rest_tc';
+end
+
+
+%% VATs:
+vdirs=dir([directory,'stimulations']);
+cnt=1;
+vdicell=cell(0);
+for vdir=1:length(vdirs)
+    if vdirs(vdir).isdir && ~strcmp(vdirs(vdir).name(1),'.')
+        vdicell{cnt}=vdirs(vdir).name;
+        cnt=cnt+1;
+    end
+end
+
+%% set popup strings 
+if isempty(modlist)
+    set(handles.vatmodality,'String','No connectivity data found...');
+else
+    set(handles.vatmodality,'String',modlist);
+end
+
+%% correct for wrong selections in popup menus.
+if get(handles.vatmodality,'Value')<length(modlist) % probably user has changed parcellation..
+    set(handles.vatmodality,'Value',1);
+end
+if length(get(handles.vatseed,'String'))<get(handles.vatseed,'Value');
+    set(handles.vatseed,'Value',1);
+end
+
+%% handle empty popup cases:
+if isempty(vdicell)
+    set(handles.vatseed,'String','No stimulation found...');
+else
+    set(handles.vatseed,'String',vdicell);
+end
+
+if isempty(vdicell) || isempty(modlist)
+    cv_disablevats(handles)
+else
+    cv_enablevats(handles)
+    
+    %% check if left/right VATs are present
+    stimfolder=vdicell{get(handles.vatseed,'Value')};
+    vatdir=dir([directory,'stimulations',filesep,stimfolder,filesep,'*.nii']);
+    for vt=1:length(vatdir)
+        vatcell{vt}=vatdir(vt).name;
+    end
+    
+    set(handles.rvatcheck,'Enable', ea_getonofftruefalse(ismember('vat_right.nii',vatcell)));
+    set(handles.lvatcheck,'Enable', ea_getonofftruefalse(ismember('vat_left.nii',vatcell)));
+end
+
+function oo=ea_getonofftruefalse(tf)
+oo='off';
+if tf
+    oo='on';
+end
+
+function resultfig=ea_cvcleanup
+%% recruit handles from prior results from figure
+resultfig=getappdata(gcf,'resultfig');
+matsurf=getappdata(resultfig,'matsurf');
+seedsurf=getappdata(resultfig,'seedsurf');
+graphsurf=getappdata(resultfig,'graphsurf');
+
+%% delete any prior results
+try delete(matsurf); end
+try delete(seedsurf); end
+try delete(graphsurf); end
+
 %% helperfunctions to enable/disable GUI parts.
 
-function cv_disableall(handles)
+function cv_disableallbutvats(handles)
 set(handles.labelpopup,'Enable','off');
 set(handles.vizgraph,'Enable','off');
 set(handles.voxmodality,'Enable','off');
@@ -473,6 +724,22 @@ function cv_enabletime(handles)
 set(handles.timewindow,'Enable','on');
 set(handles.timeframe,'Enable','on');
 set(handles.timecircle,'Enable','on');
+
+function cv_disablevats(handles)
+set(handles.vizvat,'Enable','off');
+set(handles.vatmodality,'Enable','off');
+set(handles.vatseed,'Enable','off');
+set(handles.lvatcheck,'Enable','off');
+set(handles.rvatcheck,'Enable','off');
+set(handles.vatthresh,'Enable','off');
+
+function cv_enablevats(handles)
+set(handles.vizvat,'Enable','on');
+set(handles.vatmodality,'Enable','on');
+set(handles.vatseed,'Enable','on');
+set(handles.lvatcheck,'Enable','on');
+set(handles.rvatcheck,'Enable','on');
+set(handles.vatthresh,'Enable','on');
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_convis_OutputFcn(hObject, eventdata, handles)
@@ -554,8 +821,7 @@ function matseed_Callback(hObject, eventdata, handles)
 
 pV=getappdata(gcf,'pV');
 pX=getappdata(gcf,'pX');
-plusvat=getappdata(gcf,'plusvat');
-[xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value')-plusvat);
+[xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
 set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
 set(handles.matseed,'ForegroundColor',[0,0,0]);
 refreshcv(handles);
@@ -590,9 +856,6 @@ end
 if ~ix
     ix=nan;
     err=1;
-else
-    plusvat=getappdata(gcf,'plusvat');
-    ix=ix+plusvat;
 end
 
 if ~err
@@ -845,3 +1108,106 @@ function labelpopup_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+% --- Executes on selection change in vatseed.
+function vatseed_Callback(hObject, eventdata, handles)
+% hObject    handle to vatseed (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns vatseed contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from vatseed
+
+refreshcv(handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function vatseed_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to vatseed (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function vatthresh_Callback(hObject, eventdata, handles)
+% hObject    handle to vatthresh (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of vatthresh as text
+%        str2double(get(hObject,'String')) returns contents of vatthresh as a double
+
+refreshcv(handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function vatthresh_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to vatthresh (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in vizvat.
+function vizvat_Callback(hObject, eventdata, handles)
+% hObject    handle to vizvat (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of vizvat
+refreshcv(handles);
+
+
+% --- Executes on selection change in vatmodality.
+function vatmodality_Callback(hObject, eventdata, handles)
+% hObject    handle to vatmodality (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns vatmodality contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from vatmodality
+refreshcv(handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function vatmodality_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to vatmodality (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+% --- Executes on button press in lvatcheck.
+function lvatcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to lvatcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of lvatcheck
+refreshcv(handles);
+
+% --- Executes on button press in rvatcheck.
+function rvatcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to rvatcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of rvatcheck
+refreshcv(handles);
