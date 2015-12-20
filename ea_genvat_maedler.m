@@ -8,17 +8,18 @@ function varargout=ea_genvat_maedler(varargin)
 % This function only touches the .VAT entry of stimparams struct of the
 % given side.
 
-if nargin==4
-coords=varargin{1};
-stimparams=varargin{2};
-side=varargin{3};
-options=varargin{4};
+if nargin==5
+    coords=varargin{1};
+    stimparams=varargin{2};
+    side=varargin{3};
+    options=varargin{4};
+    stimname=varargin{5};
 elseif nargin==1
-
-if ischar(varargin{1}) % return name of method.
-    varargout{1}='Maedler 2012';
-    return
-end
+    
+    if ischar(varargin{1}) % return name of method.
+        varargout{1}='Maedler 2012';
+        return
+    end
 end
 
 
@@ -32,18 +33,64 @@ try
     end
 end
 
-    radius=repmat(1.5,options.elspec.numel,1); % some default setting.
-    %try % if stimparams are set.
-    for con=1:length(stimparams(1,side).U)
-
-
-        radius(con)=maedler12_eq3(stimparams(1,side).U(con),stimparams(1,side).Im(con));
-        volume(con)=(4/3)*pi*radius(con)^3;
-
-        VAT{con}=[xx*radius(con)+coords{side}(con,1);...
-            yy*radius(con)+coords{side}(con,2);...
-            zz*radius(con)+coords{side}(con,3)]';
+radius=repmat(1.5,options.elspec.numel,1); % some default setting.
+%try % if stimparams are set.
+for con=1:length(stimparams(1,side).U)
+    radius(con)=maedler12_eq3(stimparams(1,side).U(con),stimparams(1,side).Im(con));
+    volume(con)=(4/3)*pi*radius(con)^3;
+    
+    VAT{con}=[xx*radius(con)+coords{side}(con,1);...
+        yy*radius(con)+coords{side}(con,2);...
+        zz*radius(con)+coords{side}(con,3)]';
+    K{con}=convhulln(VAT{con}+randn(size(VAT{con}))*0.000001); % create triangulation.
+    
+    for dim=1:3
+        ivx(con,dim,:)=[min(VAT{con}(:,dim)),max(VAT{con}(:,dim))];
     end
+end
+aivx=zeros(3,2);
+aivx(:,1)=min(ivx(:,:,1));
+aivx(:,2)=max(ivx(:,:,2));
+
+voxspace=zeros(abs(floor(aivx(:,1))-ceil(aivx(:,2)))'*5);
+
+[xxv,yyv,zzv]=ind2sub(size(voxspace),1:numel(voxspace));
+XYZv=[xxv;yyv;zzv;ones(1,length(xxv))];
+gvmm{1}=linspace(floor(aivx(1,1)),ceil(aivx(1,2)),size(voxspace,1));
+gvmm{2}=linspace(floor(aivx(2,1)),ceil(aivx(2,2)),size(voxspace,2));
+gvmm{3}=linspace(floor(aivx(3,1)),ceil(aivx(3,2)),size(voxspace,3));
+XYZmm=[gvmm{1}(XYZv(1,:));...
+    gvmm{2}(XYZv(2,:));...
+    gvmm{3}(XYZv(3,:));...
+    ones(1,length(XYZv))];
+mat=linsolve(XYZv',XYZmm')';
+for con=1:length(stimparams(1,side).U)
+    in=ea_intriangulation(VAT{con},K{con},XYZmm(1:3,:)');
+    voxspace(sub2ind(size(voxspace),XYZv(1,in),XYZv(2,in),XYZv(3,in)))=1;
+end
+
+
+% write nifti of VAT
+Vvat.mat=mat;
+Vvat.dim=size(voxspace);
+Vvat.dt=[4,0];
+Vvat.n=[1 1];
+Vvat.descrip='lead dbs - vat';
+if ~exist([options.root,options.patientname,filesep,'stimulations'],'file')
+    mkdir([options.root,options.patientname,filesep,'stimulations']);
+end
+
+% determine stimulation name:
+mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
+
+switch side
+    case 1
+        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];
+    case 2
+        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
+end
+
+spm_write_vol(Vvat,voxspace);
 
 
 varargout{1}=VAT;
@@ -57,15 +104,15 @@ function r=maedler12_eq3(U,Im)
 % 500?1500 Ohm (Butson 2006).
 r=0; %
 if U %(U>0)
-
-k1=-1.0473;
-k3=0.2786;
-k4=0.0009856;
-
-
-r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)...
-    /...
-    (2*k3);
+    
+    k1=-1.0473;
+    k3=0.2786;
+    k4=0.0009856;
+    
+    
+    r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)...
+        /...
+        (2*k3);
 end
 
 
@@ -149,65 +196,65 @@ s = 1;
 warning off
 
 while not_done
-
+    
     for i = 1:n
-
+        
         %Calculate the i,j,k vectors for the direction of the repulsive forces.
         ii = x(i) - x;
         jj = y(i) - y;
         kk = z(i) - z;
-
+        
         rm_new(i,:) = sqrt(ii.^2 + jj.^2 + kk.^2);
-
+        
         ii = ii./rm_new(i,:);
         jj = jj./rm_new(i,:);
         kk = kk./rm_new(i,:);
-
+        
         %Take care of the self terms.
         ii(i) = 0;
         jj(i) = 0;
         kk(i) = 0;
-
+        
         %Use a 1/r^2 repulsive force, but add 0.01 to the denominator to
         %avoid a 0 * Inf below. The self term automatically disappears since
         %the ii,jj,kk vectors were set to zero for self terms.
         f = 1./(0.01 + rm_new(i,:).^2);
-
+        
         %Sum the forces.
         fi = sum(f.*ii);
         fj = sum(f.*jj);
         fk = sum(f.*kk);
-
+        
         %Find magnitude
         fn = sqrt(fi.^2 + fj.^2 + fk.^2);
-
+        
         %Find the unit direction of repulsion.
         fi = fi/fn;
         fj = fj/fn;
         fk = fk/fn;
-
+        
         %Step a distance s in the direciton of repulsion
         x(i) = x(i) + s.*fi;
         y(i) = y(i) + s.*fj;
         z(i) = z(i) + s.*fk;
-
+        
         %Scale the coordinates back down to the unit sphere.
         r = sqrt(x(i).^2 + y(i).^2 + z(i).^2);
-
+        
         x(i) = x(i)/r;
         y(i) = y(i)/r;
         z(i) = z(i)/r;
-
+        
     end
-
-
+    
+    
     %Check convergence
     diff = abs(rm_new - rm_old);
-
+    
     not_done = any(diff(:) > 0.01);
-
+    
     rm_old = rm_new;
-
+    
 end %while
 
 %Find the smallest distance between neighboring points. To do this

@@ -777,6 +777,8 @@ end
 genvatfunctions=getappdata(gcf,'genvatfunctions');
 ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
 
+        stimname=ea_detstimname();
+
 for el=1:length(elstruct)
     for side=1:length(elstruct.coords_mm)
     if isfield(elstruct,'group') % group analysis, more than one electrode set
@@ -802,7 +804,7 @@ for el=1:length(elstruct)
             
         end
         
-        [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,stimparams,side,options);
+        [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,stimparams,side,options,stimname);
         
         stimparams(1,side).volume=volume;
         flix=1;

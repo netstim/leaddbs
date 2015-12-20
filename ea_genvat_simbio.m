@@ -8,11 +8,12 @@ function varargout=ea_genvat_simbio(varargin)
 % This function only touches the .VAT entry of stimparams struct of the
 % given side.
 
-if nargin==4
+if nargin==5
     acoords=varargin{1};
     stimparams=varargin{2};
     side=varargin{3};
     options=varargin{4};
+    stimname=varargin{5};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='SimBio/FieldTrip';
@@ -346,7 +347,6 @@ if ~exist([options.root,options.patientname,filesep,'stimulations'],'file')
 end
 
 % determine stimulation name:
-stimname=ea_detstimname(stimparams);
 mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
 
 switch side

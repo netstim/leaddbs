@@ -1,4 +1,4 @@
-function stimname=ea_detstimname(stimparams)
+function stimname=ea_detstimname()
 
 
 
