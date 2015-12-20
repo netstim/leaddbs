@@ -81,6 +81,8 @@ set(handles.datatable,'Data',regressor);
 set(handles.datatable,'ColumnEditable',true(1,size(regressor,2)));
 if isperpatient(regressor)
     switchperpatient(handles);
+elseif isperhemisphere(regressor)
+    switchperhemisphere(handles);
 elseif ispercontactpair(regressor)
     switchpercontactpair(handles);
 elseif ispercontact(regressor)
@@ -112,6 +114,27 @@ reg=reg(1:size(reg,1),1);
 set(handles.datatable,'Data',reg);
 set(handles.datatable,'ColumnEditable',true(1,1));
 
+function switchperhemisphere(handles)
+reg=get(handles.datatable,'Data');
+if ~isempty(reg)
+   if ~isperhemisphere(reg)
+       answ=questdlg('Warning: switching variable type will delete/modify variable! Are you sure you want this?','Warning','Yes','No','No');
+   switch answ
+       case 'No'
+           return
+   end
+   end
+end
+set(handles.variabletype, 'Value', 2);
+set(handles.datatable,'ColumnName',{'Right','Left'});
+try
+reg=reg(1:size(reg,1),1:2);
+catch
+   reg=[reg(1:size(reg,1),1),nan(size(reg,1),1)];
+end
+set(handles.datatable,'Data',reg);
+set(handles.datatable,'ColumnEditable',true(1,1));
+
 
 function switchpercontact(handles)
 reg=get(handles.datatable,'Data');
@@ -124,7 +147,7 @@ if ~isempty(reg)
    end
    end
 end
-set(handles.variabletype, 'Value', 2);
+set(handles.variabletype, 'Value', 3);
 set(handles.datatable,'ColumnName',{'K0','K1','K2','K3','K8','K9','K10','K11'});
 
 nreg=nan(size(reg,1),8);
@@ -146,7 +169,7 @@ if ~isempty(reg)
    end
    end
 end
-set(handles.variabletype, 'Value', 3);
+set(handles.variabletype, 'Value', 4);
 set(handles.datatable,'ColumnName',{'K1-2','K2-3','K3-4','K8-9','K9-10','K10-11'});
 
 nreg=nan(size(reg,1),6);
@@ -166,6 +189,8 @@ function yn=ispercontact(regressor)
 yn=(iscell(regressor) && size(regressor{1},2)==4) || (~iscell(regressor) && size(regressor,2)==8);
 function yn=isperpatient(regressor)
 yn=~iscell(regressor) && size(regressor,2)==1;
+function yn=isperhemisphere(regressor)
+yn=~iscell(regressor) && size(regressor,2)==2;
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_edit_regressor_OutputFcn(hObject, eventdata, handles)
@@ -250,6 +275,8 @@ variabletype=popvals{get(hObject,'Value')};
 switch variabletype
     case '1 variable per patient'
         switchperpatient(handles);
+    case '1 variable per hemisphere'
+        switchperhemisphere(handles);
     case '1 variable per contact'
         switchpercontact(handles);
     case '1 variable per contact pair'

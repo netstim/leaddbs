@@ -10,7 +10,7 @@ function isom=ea_reformat_isomatrix(isom,M,options)
 
 
 if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]}), if not convert to one.
-    if min(size(isom))==1 && length(size(isom))==2 % single vector
+    if min(size(isom))==1 && length(size(isom))==2 % single vector (1 value for each patient)
         
         for side=1:2
             try
@@ -21,8 +21,17 @@ if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]
             end
             stimmat{side}=bsxfun(@times,stimmat{side}>0,isom);
         end
-        
-    elseif (min(size(isom))==6 || min(size(isom))==8) && max(size(isom))==length(M.patient.list) % 6 * patientlist
+    elseif min(size(isom))==2 && length(size(isom))==2 % 2xn matrix (1 value for each hemisphere)
+        for side=1:2
+            try
+                stimmat{side}=cat(1,M.stimparams(:,1).U);
+            catch
+                warning('Stimulation parameters not set, using each electrode contact from lead.');
+                stimmat{side}=ones(length(M.patient.list),4);
+            end
+            stimmat{side}=bsxfun(@times,stimmat{side}>0,isom(:,side));
+        end   
+    elseif (min(size(isom))==6 || min(size(isom))==8) && max(size(isom))==length(M.patient.list) % 6 (1 value for each contact pair) or 8 (1 value for each contact) * patientlist
         if size(isom,2)==length(M.patient.list)
             isom=isom';
         end
