@@ -4,7 +4,7 @@ expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,optio
 % check if rest_preprocessing has been performed:
     if ~exist([options.root,options.patientname,filesep,'sr',options.prefs.rest],'file') % preproecessing needs to be performed
       disp('No preprocessed fMRI-images found, processing...');
-        ea_preprocess_fmri(options); 
+        ea_preprocess_fmri(options);
         disp('Done preprocessing fMRI data.');
     end
 
@@ -15,7 +15,7 @@ else
     load([expfolder,options.prefs.gmtc]);
 end
 
-fMRI_CM=corrcoef(gmtc,'rows','pairwise');
+fMRI_CM=corrcoef(gmtc);
 
 
 
