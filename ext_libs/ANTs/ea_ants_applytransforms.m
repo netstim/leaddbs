@@ -68,6 +68,8 @@ for fi=1:length(fis)
     matlabbatch{1}.spm.util.imcalc.options.mask = 0;
     matlabbatch{1}.spm.util.imcalc.options.interp = 1;
     matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+    try
     cfg_util('run',{matlabbatch});
+    end
     clear matlabbatch
 end
