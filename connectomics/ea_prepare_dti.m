@@ -1,11 +1,6 @@
 function ea_prepare_dti(options)
-% calculates diffusion tensor etc. using the Freiburg DTI&Fibertools for
-% SPM8. If DTI&Fibertools are not installed on your computer, please obtain
-% them from here:
+% calculates diffusion tensor etc. using the Freiburg DTI&Fibertools
 % http://www.uniklinik-freiburg.de/mr-en/research-groups/diffperf/fibertools.html
-% and add them to your Matlab-path to install them.
-
-ea_checkdti_ft % checks if dti_tool is available (DTI&Fibertools).
 
 disp('Building DTI files...');
 load([options.root,options.patientname,filesep,options.prefs.bval]);
@@ -21,10 +16,3 @@ jobs{1}=matlabbatch;
 cfg_util('run',jobs);
 clear jobs matlabbatch
 disp('Done.');
-
-
-
-function ea_checkdti_ft
-if ~exist('dti_tool','file')==2
-    ea_error('Please install the DTI&Fibertools for SPM to run DTI-Fibertracking (http://www.uniklinik-freiburg.de/mr-en/research-groups/diffperf/fibertools.html).')
-end

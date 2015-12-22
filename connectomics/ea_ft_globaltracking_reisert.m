@@ -16,64 +16,22 @@ switch gdti_trackingparams
 
     case 'hd_book'
         para_weight = 0.0006;
-        para_other = [1
-            0.001
-            50
-            5000000000
-            0.5
-            3.75
-            0.2
-            1];
+        para_other = [1, 0.001, 50, 5000000000, 0.5, 3.75, 0.2, 1];
     case 'hd_a'
         para_weight = 0.006;
-        para_other = [1
-            0.001
-            50
-            5000000000
-            0.5
-            3.75
-            0.2
-            1];
+        para_other = [1, 0.001, 50, 5000000000, 0.5, 3.75, 0.2, 1];
     case 'hd_a_light'
         para_weight = 0.02;
-        para_other = [1
-            0.001
-            50
-            300000000
-            0.5
-            3
-            0.2
-            1];
+        para_other = [1, 0.001, 50, 300000000, 0.5, 3, 0.2, 1];
     case 'hd_a_verylight'
         para_weight = 0.03;
-        para_other = [0.1
-            0.001
-            50
-            300000000
-            0.5
-            3
-            0.2
-            1];
+        para_other = [0.1, 0.001, 50, 300000000, 0.5, 3, 0.2, 1];
     case 'standard'
         para_weight = 0.058;
-        para_other = [0.1
-            0.001
-            50
-            300000000
-            1
-            3
-            0.2
-            1];
+        para_other = [0.1, 0.001, 50, 300000000, 1, 3, 0.2, 1];
     case 'standard_enhanced'
         para_weight = 0.058;
-        para_other = [0.1
-            0.001
-            50
-            300000000
-            1
-            3
-            0.2
-            1.5];
+        para_other = [0.1, 0.001, 50, 300000000, 1, 3, 0.2, 1.5];
 
 end
 
