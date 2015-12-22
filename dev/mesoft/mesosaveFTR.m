@@ -1,4 +1,4 @@
-function [ftr lens] = saveFTR(finame,datastruct,I,vox,info,saveit)
+function [ftr lens] = mesosaveFTR(finame,datastruct,I,vox,info,saveit)
 
 if nargin == 5,
     saveit = true;
@@ -8,7 +8,7 @@ cc = {};
 csc = {};
 cD = {};
 lens = [];
- 
+
 if isempty(vox),
     warning('Empty field vox: guessing');
     vox = [2 2 2];
@@ -45,16 +45,16 @@ if ~isempty(P)
             [fibpoints leng] =  reparametrize_arclen(single(cat(1,fibpoints,cD{cnt})),double(reparam_step));
             cD{cnt} = fibpoints(4:end,:);
             fibpoints = fibpoints(1:3,:);
-            
+
             leng = size(fibpoints,2);
-            
+
             fibpoints = single(trof * fibpoints);
             fibpoints = fibpoints + 1; %% convert to 1-based coordinates used in fibertools
-                                    
+
             csc{cnt} = fibpoints';
-            
+
             lens(k) = leng;
-            
+
             cc{cnt} = cnt;
             cnt = cnt + 1;
         end;
@@ -84,10 +84,10 @@ ftr.labels = label;
 if isstruct(info.edges),
     E = [info.edges.hdr.hist.srow_x ; info.edges.hdr.hist.srow_y ; info.edges.hdr.hist.srow_z]; E = [E ; zeros(1,4)]; E(4,4) = 1;
     ftr.hMatrixNifti = E;
-    Q = diag([-1 -1 1 1]);    
+    Q = diag([-1 -1 1 1]);
     ftr.hMatrix =    Q*E; % differnet scanner coordinates in mrstructs....
 
-    
+
 else
     ftr.hMatrix = info.edges;
 end;
