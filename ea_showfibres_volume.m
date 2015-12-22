@@ -24,17 +24,17 @@ end
 fiberthresh=stimparams.fiberthresh;
 
 load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-% prepare statvat exports once if needed.
-if options.expstatvat.do % export statvat nifti images.
-    tV=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
-    tnii=spm_read_vols(tV);
-    tnii(:)=0;
-    % generate mesh of hires MNI
-    [x,y,z]=ind2sub(size(tnii),1:numel(tnii));
-    templatecoords=[x;y;z;ones(1,length(x))]; clear x y z
-    templatecoords=tV.mat*templatecoords;
-    templatecoords=templatecoords(1:3,:)';
-end
+% % prepare statvat exports once if needed.
+% if options.expstatvat.do % export statvat nifti images.
+%     tV=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
+%     tnii=spm_read_vols(tV);
+%     tnii(:)=0;
+%     % generate mesh of hires MNI
+%     [x,y,z]=ind2sub(size(tnii),1:numel(tnii));
+%     templatecoords=[x;y;z;ones(1,length(x))]; clear x y z
+%     templatecoords=tV.mat*templatecoords;
+%     templatecoords=templatecoords(1:3,:)';
+% end
 
 
 % set togglebuttons. small flag-variables are being defined in
@@ -99,7 +99,7 @@ end
 
 
 for side=1:2
-    if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
+   % if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
     
     for vat=1:length(VAT{side}.VAT)
         
@@ -122,18 +122,18 @@ for side=1:2
                 +randn(length(VAT{side}.VAT{vat}),1)*2)');
             
             
-            % export vatstat if required:
-            
-            
-            if options.expstatvat.do % export statvat nifti images.
-                in=inhull(templatecoords,VAT{side}.VAT{vat},K(side).K{vat});
-                for vatvar=1:length(options.expstatvat.vars)
-                    if isempty(thisvatnii{vatvar})
-                        thisvatnii{vatvar}=tnii; % initialize on blank templatenii.
-                    end
-                    thisvatnii{vatvar}(in)=options.expstatvat.vars{vatvar}(options.expstatvat.pt); % set to clinical/regress variable score.
-                end
-            end
+%             % export vatstat if required:
+%             
+%             
+%             if options.expstatvat.do % export statvat nifti images.
+%                 in=inhull(templatecoords,VAT{side}.VAT{vat},K(side).K{vat});
+%                 for vatvar=1:length(options.expstatvat.vars)
+%                     if isempty(thisvatnii{vatvar})
+%                         thisvatnii{vatvar}=tnii; % initialize on blank templatenii.
+%                     end
+%                     thisvatnii{vatvar}(in)=options.expstatvat.vars{vatvar}(options.expstatvat.pt); % set to clinical/regress variable score.
+%                 end
+%             end
         
         % the following is some code required for
         % Web/JSON/BrainBrowser-Export.
@@ -203,20 +203,22 @@ for side=1:2
     
     
     % export vatvar stats if needed:
-    if options.expstatvat.do
-        for vatvar=1:length(options.expstatvat.vars)
-            mkdir([options.expstatvat.dir,'statvat_results']);
-            switch side
-                case 1
-                    si='rh';
-                case 2
-                    si='lh';
-            end
-            tV.fname=[options.expstatvat.dir,'statvat_results',filesep,'s',num2str(options.expstatvat.pt),'_',si,'.nii'];
-            spm_write_vol(tV,thisvatnii{vatvar});
-            ea_crop_nii(tV.fname);
-        end
-    end
+%     if options.expstatvat.do
+%         for vatvar=1:length(options.expstatvat.vars)
+%             mkdir([options.expstatvat.dir,'statvat_results']);
+%             switch side
+%                 case 1
+%                     si='rh';
+%                 case 2
+%                     si='lh';
+%             end
+%             keyboard
+%             
+%             tV.fname=[options.expstatvat.dir,'statvat_results',filesep,'s',num2str(options.expstatvat.pt),'_',si,'.nii'];
+%             spm_write_vol(tV,thisvatnii{vatvar});
+%             ea_crop_nii(tV.fname);
+%         end
+%     end
     try
         vatbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('vat',options),'TooltipString','Volume of activated tissue','OnCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,1},'OffCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,0},'State',getstate(vaton(side)));
         quivbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('quiver',options),'TooltipString','E-field','OnCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,1},'OffCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,0},'State',getstate(quivon(side)));

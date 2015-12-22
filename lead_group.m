@@ -301,6 +301,7 @@ options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),fil
 [~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
 
 
+    options.expstatvat.do=M.ui.statvat;
 
 options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 options.elmodel=M.elstruct(1).elmodel;
@@ -338,6 +339,11 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
     disp('Done.');
 end
 
+% export VAT-mapping
+if options.expstatvat.do % export to nifti volume
+    ea_exportvatmapping(M,options);
+end
+
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 
 
@@ -357,39 +363,67 @@ assignin('base','stats',stats);
 % perform correlations:
 
 
-if ~isempty(stats.vicorr.both)
-    ea_corrplot([stats.corrcl,stats.vicorr.both],'Volume Intersections, both hemispheres',stats.vc_labels);
-    ea_corrplot([stats.corrcl,stats.vicorr.nboth],'Volume Intersections, normalized, both hemispheres',stats.vc_labels);
-end
-if ~isempty(stats.vicorr.right)
-    ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
-    ea_corrplot([stats.corrcl,stats.vicorr.nright],'Volume Intersections, normalized, right hemisphere',stats.vc_labels);
-end
-if ~isempty(stats.vicorr.left)
-    ea_corrplot([stats.corrcl,stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
-    ea_corrplot([stats.corrcl,stats.vicorr.nleft],'Volume Intersections, normalized, left hemisphere',stats.vc_labels);
-end
+if size(stats.corrcl,2)==1 % one value per patient
+    try stats.vicorr.nboth=(stats.vicorr.nboth/2)*100; end
+    try stats.vicorr.nright=(stats.vicorr.nright/2)*100; end
+    try stats.vicorr.nleft=(stats.vicorr.nleft/2)*100; end
 
-
-if ~isempty(stats.fccorr.both)
-    ea_corrplot([stats.corrcl,stats.fccorr.both],'Fibercounts, both hemispheres',stats.fc_labels);
-
-    ea_corrplot([stats.corrcl,stats.fccorr.nboth],'Fibercounts, normalized, both hemispheres',stats.fc_labels);
-end
-
-
-if ~isempty(stats.fccorr.left)
-    ea_corrplot([stats.corrcl,stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
-
-    ea_corrplot([stats.corrcl,stats.fccorr.nright],'Fibercounts, normalized, right hemisphere',stats.fc_labels);
-end
-
-
-
-if ~isempty(stats.fccorr.left)
-    ea_corrplot([stats.corrcl,stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
-
-    ea_corrplot([stats.corrcl,stats.fccorr.nleft],'Fibercounts, normalized, left hemisphere',stats.fc_labels);
+    if ~isempty(stats.vicorr.both)
+        %ea_corrplot([stats.corrcl,stats.vicorr.both],'Volume Intersections, both hemispheres',stats.vc_labels);
+        ea_corrplot([stats.corrcl,stats.vicorr.nboth],'VI_BH',stats.vc_labels,handles);
+    end
+    if ~isempty(stats.vicorr.right)
+        %ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
+        ea_corrplot([stats.corrcl,stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
+    end
+    if ~isempty(stats.vicorr.left)
+        %ea_corrplot([stats.corrcl,stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
+        ea_corrplot([stats.corrcl,stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
+    end
+    if ~isempty(stats.fccorr.both)
+        %ea_corrplot([stats.corrcl,stats.fccorr.both],'Fibercounts, both hemispheres',stats.fc_labels);
+        ea_corrplot([stats.corrcl,stats.fccorr.nboth],'FC_BH',stats.fc_labels,handles);
+    end
+    if ~isempty(stats.fccorr.right)
+        %ea_corrplot([stats.corrcl,stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
+        ea_corrplot([stats.corrcl,stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
+    end
+    if ~isempty(stats.fccorr.left)
+        %ea_corrplot([stats.corrcl,stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
+        ea_corrplot([stats.corrcl,stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
+    end
+    
+elseif size(stats.corrcl,2)==2 % one value per hemisphere
+    try stats.vicorr.nboth=(stats.vicorr.nboth)*100; end
+    try stats.vicorr.nright=(stats.vicorr.nright)*100; end
+    try stats.vicorr.nleft=(stats.vicorr.nleft)*100; end
+    if ~isempty(stats.vicorr.both)
+        %ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],'Volume Intersections, both hemispheres',stats.vc_labels);
+        ea_corrplot([stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft]],'VI_BH',stats.vc_labels,handles);
+    end
+    if ~isempty(stats.vicorr.right)
+        %ea_corrplot([stats.corrcl(:,1),stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
+        ea_corrplot([stats.corrcl(:,1),stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
+    end
+    if ~isempty(stats.vicorr.left)
+        %ea_corrplot([stats.corrcl(:,2),stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
+        ea_corrplot([stats.corrcl(:,2),stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
+    end
+    if ~isempty(stats.fccorr.both)
+        %ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'Fibercounts, both hemispheres',stats.fc_labels);
+        ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'FC_BH',stats.fc_labels,handles);
+    end
+    if ~isempty(stats.fccorr.right)
+        %ea_corrplot([stats.corrcl(:,1),stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
+        ea_corrplot([stats.corrcl(:,1),stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
+    end
+    if ~isempty(stats.fccorr.left)
+        %ea_corrplot([stats.corrcl(:,2),stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
+        ea_corrplot([stats.corrcl(:,2),stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
+    end
+    
+else
+    ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
 
 
@@ -1661,7 +1695,7 @@ uiwait(f);
 
 
 options=ea_setopts_local(handles);
-
+stimname=ea_detstimname;
 for pt=1:length(M.patient.list)
 
     % set pt specific options
@@ -1697,7 +1731,7 @@ for pt=1:length(M.patient.list)
         M.stimparams(pt,side).labelatlas={options.labelatlas};
         M.stimparams(pt,side).showfibers=1;
         M.stimparams(pt,side).fiberthresh=1;
-        [M.stimparams(pt,side).VAT.VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.stimparams(pt,:),side,options);
+        [M.stimparams(pt,side).VAT.VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.stimparams(pt,:),side,options,stimname);
 
         M.stimparams(pt,side).volume=volume;
         M.stimparams(pt,side).showconnectivities=1;
@@ -2097,6 +2131,7 @@ options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
 try options.d3.isomatrix=M.isomatrix; end
 try options.d3.isomatrix_name=M.isomatrix_name; end
 
+    options.expstatvat.do=M.ui.statvat;
 
 options.d2.showlegend=M.ui.tdlegendcheck;
 
@@ -2135,11 +2170,14 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
 end
 
 
-% export isovolume
+% export coordinate-mapping
 if options.d3.showisovolume % export to nifti volume
     ea_exportisovolume(M.elstruct(get(handles.patientlist,'Value')),options);
 end
-
+% export VAT-mapping
+if options.expstatvat.do % export to nifti volume
+    ea_exportvatmapping(M,options,handles);
+end
 
 
 cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));

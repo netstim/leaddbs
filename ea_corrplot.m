@@ -1,32 +1,44 @@
-function fig=ea_corrplot(X,description,labels)
+function fig=ea_corrplot(X,description,labels,handles)
 % this simple function is a small wrapper for a corrplot figure.
 
 dim=size(X,2);
 
 disp(description);
-try
-[R,P]=corrplot(X,'testR','on','varNames',labels)
 
-set(gcf,'name',description);
-set(gcf,'NumberTitle','off');
+
+
+
+[R,p]=corrcoef(X,'rows','pairwise');
+R_upd=R(2:end,1);
+p_upd=p(2:end,1);
+
+%labels=M.stats(1).ea_stats.atlases.names(lidx);
+
+
+
+
+for area=1:length(R_upd)
+    %% plot areas:
+    f=figure('color','w','name',description);
+    
+    scatter(X(:,1),X(:,area+1),'k','filled');
+
+    h=lsline;
+    set(h,'color','k');
+    axis square
+    [~,fn]=fileparts(labels{area+1});
+    if strcmp(fn(end-3:end),'.nii')
+        [~,fn]=fileparts(fn);
+    end
+    title([sub2space(fn),' (R=',sprintf('%.3f',R_upd(area)),', p=',sprintf('%.3f',p_upd(area)),').'],'FontSize',16,'FontName','Helvetica');
+    xlabel(labels{1},'FontSize',16,'FontName','Helvetica');
+    ylabel(['Portion of VAT within ',fn,' [%]'],'FontSize',16,'FontName','Helvetica');
+odir=get(handles.groupdir_choosebox,'String');
+ofname=[odir,description,'_',fn,'_',labels{1},'.png'];
+ea_screenshot(ofname);
 end
-% fig=figure;
-% 
-% for xx=1:dim
-%     for yy=1:dim
-%         
-%     if xx<yy % below diagonal - show correlations
-% subplot(dim,dim,sub2ind([dim,dim],xx,yy));
-% scatter(X(:,xx),X(:,yy),'bo');
-%         lsline();
-%     elseif xx>yy % higher than diagonal - show significancies
-%         
-%     elseif xx==yy % diagonal - show histograms.
-%         
-%         
-%     end
-%     end
-% end
-% 
-% 
-% 
+
+
+
+function str=sub2space(str) % replaces subscores with spaces
+str(str=='_')=' ';

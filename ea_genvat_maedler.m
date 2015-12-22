@@ -72,11 +72,13 @@ end
 
 % write nifti of VAT
 Vvat.mat=mat;
+voxspace=permute(voxspace,[2,1,3]);
 Vvat.dim=size(voxspace);
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
 if ~exist([options.root,options.patientname,filesep,'stimulations'],'file')
+
     mkdir([options.root,options.patientname,filesep,'stimulations']);
 end
 
