@@ -31,8 +31,8 @@ for area=1:length(R_upd)
         [~,fn]=fileparts(fn);
     end
     title([sub2space(fn),' (R=',sprintf('%.3f',R_upd(area)),', p=',sprintf('%.3f',p_upd(area)),').'],'FontSize',16,'FontName','Helvetica');
-    xlabel(labels{1},'FontSize',16,'FontName','Helvetica');
-    ylabel(['Portion of VAT within ',fn,' [%]'],'FontSize',16,'FontName','Helvetica');
+    xlabel(sub2space(labels{1}),'FontSize',16,'FontName','Helvetica');
+    ylabel(['Portion of VAT within ',sub2space(fn),' [%]'],'FontSize',16,'FontName','Helvetica');
 odir=get(handles.groupdir_choosebox,'String');
 ofname=[odir,description,'_',fn,'_',labels{1},'.png'];
 ea_screenshot(ofname);

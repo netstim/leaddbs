@@ -84,14 +84,16 @@ end
 
 % determine stimulation name:
 mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
-
+stimparams.volume=volume;
 switch side
     case 1
         Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];
+    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_right.mat'];
     case 2
         Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
+    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_left.mat'];
 end
-
+save(stimfile,'stimparams');
 spm_write_vol(Vvat,voxspace);
 
 

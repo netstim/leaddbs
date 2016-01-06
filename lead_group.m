@@ -341,7 +341,7 @@ end
 
 % export VAT-mapping
 if options.expstatvat.do % export to nifti volume
-    ea_exportvatmapping(M,options);
+    ea_exportvatmapping(M,options,handles);
 end
 
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
@@ -399,6 +399,7 @@ elseif size(stats.corrcl,2)==2 % one value per hemisphere
     try stats.vicorr.nleft=(stats.vicorr.nleft)*100; end
     if ~isempty(stats.vicorr.both)
         %ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],'Volume Intersections, both hemispheres',stats.vc_labels);
+
         ea_corrplot([stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft]],'VI_BH',stats.vc_labels,handles);
     end
     if ~isempty(stats.vicorr.right)
@@ -1335,43 +1336,47 @@ end
 %% processing done here.
 
 % calculate group-results for expstatvat if required:
-if options.expstatvat.do
-    disp('Averaging VAT-Stat files to a group result.');
-    for side=1:2
-        switch side
-            case 1
-                si='rh';
-            case 2
-                si='lh';
-        end
-        fis=dir([M.ui.groupdir,'statvat_results',filesep,'*_',si,'.nii']);
-        ea_dispercent(0,['Reading in files, ',si]);
-        for fi=1:length(fis);
-            ea_dispercent(fi/length(fis));
-            vV=spm_vol([M.ui.groupdir,'statvat_results',filesep,fis(fi).name]);
-            if ~exist('thisvat','var')
-                tmp=spm_read_vols(vV);
-                thisvat=zeros([size(tmp),length(fis)]);
-                thisvat(:,:,:,1)=tmp;
-                clear tmp
-            else
-                thisvat(:,:,:,fi)=spm_read_vols(vV);
-            end
-        end
-        ea_dispercent(100,'end');
-        disp('Averaging...');
-        thisvat(thisvat==0)=nan;
-
-        thisvat=nanmean(thisvat,4);
-        disp('Done.');
-        disp('Saving file...');
-        %thisvat=thisvat/fi; % simple mean here.
-        vV.fname=[M.ui.groupdir,'statvat_results',filesep,si,'_mean.nii'];
-        vV.dt=[64,0];
-        spm_write_vol(vV,thisvat);
-        disp('Done.');
-    end
-end
+% if options.expstatvat.do
+%     disp('Averaging VAT-Stat files to a group result.');
+%     for side=1:2
+%         switch side
+%             case 1
+%                 si='rh';
+%             case 2
+%                 si='lh';
+%         end
+%         fis=dir([M.ui.groupdir,'statvat_results',filesep,'*_',si,'.nii']);
+%         ea_dispercent(0,['Reading in files, ',si]);
+%         for fi=1:length(fis);
+%             ea_dispercent(fi/length(fis));
+%             vV=spm_vol([M.ui.groupdir,'statvat_results',filesep,fis(fi).name]);
+%             if ~exist('thisvat','var')
+%                 tmp=spm_read_vols(vV);
+%                 thisvat=zeros([size(tmp),length(fis)]);
+%                 thisvat(:,:,:,1)=tmp;
+%                 clear tmp
+%             else
+%                 try
+%                 thisvat(:,:,:,fi)=spm_read_vols(vV);
+%                 catch
+%                     keyboard
+%                 end
+%             end
+%         end
+%         ea_dispercent(100,'end');
+%         disp('Averaging...');
+%         thisvat(thisvat==0)=nan;
+% 
+%         thisvat=nanmean(thisvat,4);
+%         disp('Done.');
+%         disp('Saving file...');
+%         %thisvat=thisvat/fi; % simple mean here.
+%         vV.fname=[M.ui.groupdir,'statvat_results',filesep,si,'_mean.nii'];
+%         vV.dt=[64,0];
+%         spm_write_vol(vV,thisvat);
+%         disp('Done.');
+%     end
+% end
 
 refreshvifc(handles);
 

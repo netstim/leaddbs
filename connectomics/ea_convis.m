@@ -87,8 +87,11 @@ if isempty(options)
     convis=getappdata(gcf,'convis');
     options=getappdata(convis,'options');
     set(0,'CurrentFigure',convis);
+else
+    convis=gcf;
 end
-
+set(convis,'name','Processing...');
+drawnow
 %% init figure
 [directory,pdirectory,selectedparc]=ea_cvinitgui(handles,options);
 
@@ -96,6 +99,20 @@ end
 ea_initvatlevel(handles,directory,selectedparc,options);
 ea_initmatrixlevel(handles,pdirectory,selectedparc,options);
 filesare=ea_initvoxellevel(handles,pdirectory);
+
+%% check if sliding window view is possible (timecourses are set as a modality somewhere)
+mmc=get(handles.matmodality,'String');
+vmc=get(handles.vatmodality,'String');
+vomc=get(handles.voxmodality,'String');
+
+if isempty(strfind(mmc{get(handles.matmodality,'Value')},'_tc')) && ...
+        isempty(strfind(vmc{get(handles.vatmodality,'Value')},'_tc')) && ...
+        isempty(strfind(vomc{get(handles.voxmodality,'Value')},'_tc')) % no timeseries selected.
+    cv_disabletime(handles);
+else
+    cv_enabletime(handles);
+end
+
 
 %% retrieve and delete prior results
 resultfig=ea_cvcleanup;
@@ -111,6 +128,8 @@ end
 %% now show results
 if get(handles.vizvat,'Value'); % show voxel-level results
     ea_cvshowvatresults(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
+else
+    deletePL(resultfig,'PL','vat');
 end
 
 if get(handles.vizgraph,'Value'); % show voxel-level results
@@ -126,7 +145,7 @@ if get(handles.vizmat,'Value') && get(handles.timecircle,'Value') && strcmp(get(
     refreshcv(handles);
 end
 
-%% save result handles to figure
+set(convis,'name','Connectome Results');
 
 
 function ea_cvshowvatresults(resultfig,pX,directory,filesare,handles,pV,selectedparc,options)
@@ -138,147 +157,200 @@ switch mod
     case 'rest_tc'
         ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
     otherwise
-        ea_cvshowvatdmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options); 
+        
+        % fibers filename
+        vatmodality=get(handles.vatmodality,'String'); vatmodality=vatmodality{get(handles.vatmodality,'Value')};
+        switch vatmodality
+            case 'Patient-specific fiber tracts'
+                fibersfile=[directory,options.prefs.FTR_normalized];
+            otherwise
+                fibersfile=[options.earoot,'fibers',filesep,vatmodality,'.mat'];
+        end
+        
+        % seed filename
+        [usevat,dimensionality,~,sides]=ea_checkvatselection(handles);
+seedfile={};
+        for v=1:dimensionality
+            vs=get(handles.vatseed,'String');
+            seedfile{v}=[directory,'stimulations',filesep,vs{get(handles.vatseed,'Value')},filesep,'vat_',usevat{v},'.nii'];
+        end
+        for side=sides
+            load([directory,'stimulations',filesep,vs{get(handles.vatseed,'Value')},filesep,'stimparameters_',usevat{side},'.mat']);
+            astimparams(side).U=stimparams.U; astimparams(side).Im=stimparams.Im; astimparams(side).volume=stimparams.volume;
+        end
+        
+        targetsfile=[options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii'];
+        thresh=get(handles.vatthresh,'String');
+        options.writeoutstats=1;
+        options.writeoutpm=0;
+        
+        
+        [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seedfile,targetsfile,thresh,'vat');
+        
+        if ~ret % something has changed since last time.
+            deletePL(resultfig,'PL','vat');
+            if dimensionality % one of the vat checkboxes is active
+                ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,astimparams,changedstates); % 'vat' only used for storage of changes.
+            end
+            
+        end
 end
+
+function [usevat,dimensionality,currentseed,sides]=ea_checkvatselection(handles)
+% small helper function that will check whether left, right or both vat
+% checkboxes are true.
+
+if (get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
+        (get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
+    %preparecombinedvat(directory,stim);
+    usevat={'right','left'};
+    dimensionality=2; % how many ROI.
+    currentseed=[1,2];
+    sides=[1,2];
+    
+elseif (get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
+        ~(get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
+    usevat={'right'};
+    dimensionality=1; % how many ROI.
+    currentseed=1;
+    sides=[1];
+elseif ~(get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
+        (get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
+    usevat={'left'};
+    dimensionality=1; % how many ROI.
+    currentseed=[1];
+    sides=2;
+else
+    usevat={};
+    dimensionality=0;
+    currentseed=0;
+    sides=[];
+end
+
 
 function ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options)
 %mV=pV; % duplicate labeling handle
-    %mX=pX; % duplicate labeling data
-    stims=get(handles.vatseed,'String');
-    stim=stims{get(handles.vatseed,'Value')};
-    
-    % check out which vats to use
-    
-    if (get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
-            (get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
-        %preparecombinedvat(directory,stim);
-        usevat={'right','left'};
-        dimensionality=2; % how many ROI.
-        currentseed='';
-        keyboard
-    elseif (get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
-            ~(get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
-        usevat={'right'};
-        dimensionality=1; % how many ROI.
-        
-    elseif ~(get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
-            (get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
-        usevat={'left'};
-        dimensionality=1; % how many ROI.
-        
-    end
-    
-    pX=round(pX);
-    if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_timeseries'],'file');
-        ea_warp_vat(options.prefs.rest,'rest',options,handles);
-        vat_tc=ea_extract_timecourses_vat(options,handles,usevat,dimensionality);
-        save([directory,'stimulations',filesep,stim,filesep,'vat_timeseries'],'vat_tc');
-    else
-        load([directory,'stimulations',filesep,stim,filesep,'vat_timeseries']);
-    end
-    
-    mms=get(handles.matmodality,'String');
-    parcs=get(handles.labelpopup,'String');
-    tc=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,'rest_tc']);
-    fn=fieldnames(tc);
-    tc=eval(['tc.',fn{1},';']);
-    tc=[vat_tc,tc];
-    
+%mX=pX; % duplicate labeling data
+stims=get(handles.vatseed,'String');
+stim=stims{get(handles.vatseed,'Value')};
 
-    % timecourses selected: need to create a CM first. In this case, the variable CM is
-    % not a connectivity matrix but time-courses!
-    
-    timedim=size(tc,1);
-    tiwindow=get(handles.timewindow,'String');
-    tiframe=get(handles.timeframe,'String');
-    
-    if strcmp(tiwindow,'all') || strcmp(tiframe,'all')
-        % use whole CM
-        tc=corrcoef(tc);
-    else
-        tiframe=str2double(tiframe);         tiwindow=str2double(tiwindow);
-        % check if selected time window is possible:
-        if (tiframe+tiwindow)>timedim || tiframe<1 % end is reached
-            set(handles.timeframe,'String','1'); tiframe=1; % reset timeframe to 1
-            if tiwindow>size(tc,1)
-                set(handles.timewindow,'String','1'); tiwindow=1;
-            end
-        end
-        cm=corrcoef(tc(tiframe:tiframe+tiwindow,:)); % actual correlation
-        
-        if get(handles.timecircle,'Value')
-            % make a step to next timeframe (prepare next iteration).
-            if (tiframe+tiwindow+1)>timedim
-                set(handles.timeframe,'String','1')
-            else
-                set(handles.timeframe,'String',num2str(tiframe+1))
-            end
+% check out which vats to use
+[usevat,dimensionality,currentseed]=ea_checkvatselection(handles);
+if ~dimensionality
+    return
+end
+
+pX=round(pX);
+if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_timeseries'],'file');
+    ea_warp_vat(options.prefs.rest,'rest',options,handles);
+    vat_tc=ea_extract_timecourses_vat(options,handles,usevat,dimensionality);
+    save([directory,'stimulations',filesep,stim,filesep,'vat_timeseries'],'vat_tc');
+else
+    load([directory,'stimulations',filesep,stim,filesep,'vat_timeseries']);
+end
+
+mms=get(handles.matmodality,'String');
+parcs=get(handles.labelpopup,'String');
+tc=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,'rest_tc']);
+fn=fieldnames(tc);
+tc=eval(['tc.',fn{1},';']);
+tc=[vat_tc,tc];
+
+
+% timecourses selected: need to create a CM first. In this case, the variable CM is
+% not a connectivity matrix but time-courses!
+
+timedim=size(tc,1);
+tiwindow=get(handles.timewindow,'String');
+tiframe=get(handles.timeframe,'String');
+
+if strcmp(tiwindow,'all') || strcmp(tiframe,'all')
+    % use whole CM
+    cm=corrcoef(tc);
+else
+    tiframe=str2double(tiframe);         tiwindow=str2double(tiwindow);
+    % check if selected time window is possible:
+    if (tiframe+tiwindow)>timedim || tiframe<1 % end is reached
+        set(handles.timeframe,'String','1'); tiframe=1; % reset timeframe to 1
+        if tiwindow>size(tc,1)
+            set(handles.timewindow,'String','1'); tiwindow=1;
         end
     end
+    cm=corrcoef(tc(tiframe:tiframe+tiwindow,:)); % actual correlation
     
-    currentseed=get(handles.matseed,'Value');
-    seedcon=cm(currentseed,:);
-    thresh=get(handles.matthresh,'String');
-    if strcmp(thresh,'auto');
-        thresh=nanmean(seedcon)+1*nanstd(seedcon);
-    else
-        thresh=str2double(thresh);
+    if get(handles.timecircle,'Value')
+        % make a step to next timeframe (prepare next iteration).
+        if (tiframe+tiwindow+1)>timedim
+            set(handles.timeframe,'String','1')
+        else
+            set(handles.timeframe,'String',num2str(tiframe+1))
+        end
     end
-    tseedcon=seedcon;
-    tseedcon(tseedcon<thresh)=0;
-    tseedcon(currentseed)=0;
+end
 
-    mX=pX;
-    for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with the entries in tseedcon. Fixme, this should be doable wo forloop..
-       mX(ismember(round(pX),cs))=tseedcon(cs);
-    end
-    
-    sX=ismember(round(pX),currentseed);
-    bb=[0,0,0;size(mX)];
-    
-    bb=map_coords_proxy(bb,pV);
-    gv=cell(3,1);
-    for dim=1:3
-        gv{dim}=linspace(bb(1,dim),bb(2,dim),size(mX,dim));
-    end
-    [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-    
-    
-    fv=isosurface(X,Y,Z,permute(mX,[2,1,3]),thresh); % connected regions
-    fvs=isosurface(X,Y,Z,permute(sX,[2,1,3]),0.5); % seed
-    set(0,'CurrentFigure',resultfig)
-    matsurf=patch(fv,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
-    
-    cmX=mX;
-    zidx=cmX==0;
-    zidx=logical(zidx+isnan(cmX));
-    cmX(isnan(cmX))=0;
-    
-    cmX=cmX-min(cmX(cmX~=0));
-    cmX=(cmX/max(cmX(cmX~=0)))*64;
-    cmX(zidx)=0; % reset prior zero/nan values to zero
-    isocolors(X,Y,Z,permute(cmX,[2,1,3]),matsurf)
+seedcon=ea_nanmean(cm(currentseed,:),1);
+thresh=get(handles.matthresh,'String');
+if strcmp(thresh,'auto');
+    thresh=nanmean(seedcon)+1*nanstd(seedcon);
+else
+    thresh=str2double(thresh);
+end
+tseedcon=seedcon;
+tseedcon(tseedcon<thresh)=0;
+tseedcon(currentseed)=0;
 
-    set(matsurf,'DiffuseStrength',0.9)
-    set(matsurf,'SpecularStrength',0.1)
-    set(matsurf,'FaceAlpha',0.3);
-    %threshold seedcon
-    seedcon=((seedcon-thresh)/(max(seedcon)-thresh))*255;
-    
-    cX=pX;
-    for i=1:length(seedcon)
-       cX(pX==i)=seedcon(i);
-    end
-    %nc=isonormals(X,Y,Z,permute(mX,[2,1,3]),matsurf);
-    %nc=isocolors(X,Y,Z,permute(cX,[2,1,3]),matsurf);
-    %matsurf.FaceColor='interp';
+mX=pX;
+for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with the entries in tseedcon. Fixme, this should be doable wo forloop..
+    mX(ismember(round(pX),cs))=tseedcon(cs);
+end
 
-    seedsurf=patch(fvs,'FaceColor',options.prefs.lc.seedsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-    set(seedsurf,'DiffuseStrength',0.9)
-    set(seedsurf,'SpecularStrength',0.1)
-    set(seedsurf,'FaceAlpha',0.3);
-    setappdata(resultfig,'matsurf',matsurf);
-    setappdata(resultfig,'seedsurf',seedsurf);
+sX=ismember(round(pX),currentseed);
+bb=[0,0,0;size(mX)];
+
+bb=map_coords_proxy(bb,pV);
+gv=cell(3,1);
+for dim=1:3
+    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(mX,dim));
+end
+[X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
+
+
+fv=isosurface(X,Y,Z,permute(mX,[2,1,3]),thresh); % connected regions
+fvs=isosurface(X,Y,Z,permute(sX,[2,1,3]),0.5); % seed
+set(0,'CurrentFigure',resultfig)
+vatsurf=patch(fv,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
+
+cmX=mX;
+zidx=cmX==0;
+zidx=logical(zidx+isnan(cmX));
+cmX(isnan(cmX))=0;
+
+cmX=cmX-min(cmX(cmX~=0));
+cmX=(cmX/max(cmX(cmX~=0)))*64;
+cmX(zidx)=0; % reset prior zero/nan values to zero
+isocolors(X,Y,Z,permute(cmX,[2,1,3]),vatsurf)
+
+set(vatsurf,'DiffuseStrength',0.9)
+set(vatsurf,'SpecularStrength',0.1)
+set(vatsurf,'FaceAlpha',0.3);
+%     %threshold seedcon
+%     seedcon=((seedcon-thresh)/(max(seedcon)-thresh))*255;
+%
+%     cX=pX;
+%     for i=1:length(seedcon)
+%        cX(pX==i)=seedcon(i);
+%     end
+%     %nc=isonormals(X,Y,Z,permute(mX,[2,1,3]),matsurf);
+%     %nc=isocolors(X,Y,Z,permute(cX,[2,1,3]),matsurf);
+%     %matsurf.FaceColor='interp';
+%
+%     seedsurf=patch(fvs,'FaceColor',options.prefs.lc.seedsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
+%     set(seedsurf,'DiffuseStrength',0.9)
+%     set(seedsurf,'SpecularStrength',0.1)
+%     set(seedsurf,'FaceAlpha',0.3);
+setappdata(resultfig,'vatsurf',vatsurf);
+
+
 
 function ea_cvshowvoxresults(resultfig,directory,filesare,handles,pV,selectedparc,options)
 mo_ds=get(handles.voxmodality,'String');
@@ -322,109 +394,109 @@ setappdata(resultfig,'graphsurf',graphsurf);
 
 function ea_cvshowmatresults(resultfig,directory,pV,pX,handles,options)
 %mV=pV; % duplicate labeling handle
-    %mX=pX; % duplicate labeling data
-    pX=round(pX);
-    mms=get(handles.matmodality,'String');
-    parcs=get(handles.labelpopup,'String');
-    CM=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,mms{get(handles.matmodality,'Value')}]);
-    fn=fieldnames(CM);
-    CM=eval(['CM.',fn{1},';']);
+%mX=pX; % duplicate labeling data
+pX=round(pX);
+mms=get(handles.matmodality,'String');
+parcs=get(handles.labelpopup,'String');
+CM=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,mms{get(handles.matmodality,'Value')}]);
+fn=fieldnames(CM);
+CM=eval(['CM.',fn{1},';']);
+
+if ~isempty(strfind(mms{get(handles.matmodality,'Value')},'_tc'))
+    % timecourses selected: need to create a CM first. In this case, the variable CM is
+    % not a connectivity matrix but time-courses!
     
-    if ~isempty(strfind(mms{get(handles.matmodality,'Value')},'_tc'))
-        % timecourses selected: need to create a CM first. In this case, the variable CM is
-        % not a connectivity matrix but time-courses!
-        
-        timedim=size(CM,1);
-        tiwindow=get(handles.timewindow,'String');
-        tiframe=get(handles.timeframe,'String');
-        
-        if strcmp(tiwindow,'all') || strcmp(tiframe,'all')
-            % use whole CM
-            CM=corrcoef(CM);
-        else
-            tiframe=str2double(tiframe);         tiwindow=str2double(tiwindow);
-            % check if selected time window is possible:
-            if (tiframe+tiwindow)>timedim || tiframe<1 % end is reached
-                set(handles.timeframe,'String','1'); tiframe=1; % reset timeframe to 1
-                if tiwindow>size(CM,1)
-                    set(handles.timewindow,'String','1'); tiwindow=1;
-                end
+    timedim=size(CM,1);
+    tiwindow=get(handles.timewindow,'String');
+    tiframe=get(handles.timeframe,'String');
+    
+    if strcmp(tiwindow,'all') || strcmp(tiframe,'all')
+        % use whole CM
+        CM=corrcoef(CM);
+    else
+        tiframe=str2double(tiframe);         tiwindow=str2double(tiwindow);
+        % check if selected time window is possible:
+        if (tiframe+tiwindow)>timedim || tiframe<1 % end is reached
+            set(handles.timeframe,'String','1'); tiframe=1; % reset timeframe to 1
+            if tiwindow>size(CM,1)
+                set(handles.timewindow,'String','1'); tiwindow=1;
             end
-            CM=corrcoef(CM(tiframe:tiframe+tiwindow,:)); % actual correlation
-            
-            if get(handles.timecircle,'Value')
-                % make a step to next timeframe (prepare next iteration).
-                if (tiframe+tiwindow+1)>timedim
-                    set(handles.timeframe,'String','1')
-                else
-                    set(handles.timeframe,'String',num2str(tiframe+1))
-                end
+        end
+        CM=corrcoef(CM(tiframe:tiframe+tiwindow,:)); % actual correlation
+        
+        if get(handles.timecircle,'Value')
+            % make a step to next timeframe (prepare next iteration).
+            if (tiframe+tiwindow+1)>timedim
+                set(handles.timeframe,'String','1')
+            else
+                set(handles.timeframe,'String',num2str(tiframe+1))
             end
         end
     end
-    currentseed=get(handles.matseed,'Value');
-    seedcon=CM(currentseed,:);
-    thresh=get(handles.matthresh,'String');
-    if strcmp(thresh,'auto');
-        thresh=nanmean(seedcon)+1*nanstd(seedcon);
-    else
-        thresh=str2double(thresh);
-    end
-    tseedcon=seedcon;
-    tseedcon(tseedcon<thresh)=0;
-    tseedcon(currentseed)=0;
+end
+currentseed=get(handles.matseed,'Value');
+seedcon=CM(currentseed,:);
+thresh=get(handles.matthresh,'String');
+if strcmp(thresh,'auto');
+    thresh=nanmean(seedcon)+1*nanstd(seedcon);
+else
+    thresh=str2double(thresh);
+end
+tseedcon=seedcon;
+tseedcon(tseedcon<thresh)=0;
+tseedcon(currentseed)=0;
 
-    mX=pX;
-    for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with the entries in tseedcon. Fixme, this should be doable wo forloop..
-       mX(ismember(round(pX),cs))=tseedcon(cs);
-    end
-    
-    sX=ismember(round(pX),currentseed);
-    bb=[0,0,0;size(mX)];
-    
-    bb=map_coords_proxy(bb,pV);
-    gv=cell(3,1);
-    for dim=1:3
-        gv{dim}=linspace(bb(1,dim),bb(2,dim),size(mX,dim));
-    end
-    [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-    
-    
-    fv=isosurface(X,Y,Z,permute(mX,[2,1,3]),thresh); % connected regions
-    fvs=isosurface(X,Y,Z,permute(sX,[2,1,3]),0.5); % seed
-    set(0,'CurrentFigure',resultfig)
-    matsurf=patch(fv,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
-    
-    cmX=mX;
-    zidx=cmX==0;
-    zidx=logical(zidx+isnan(cmX));
-    cmX(isnan(cmX))=0;
-    
-    cmX=cmX-min(cmX(cmX~=0));
-    cmX=(cmX/max(cmX(cmX~=0)))*64;
-    cmX(zidx)=0; % reset prior zero/nan values to zero
-    isocolors(X,Y,Z,permute(cmX,[2,1,3]),matsurf)
+mX=pX;
+for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with the entries in tseedcon. Fixme, this should be doable wo forloop..
+    mX(ismember(round(pX),cs))=tseedcon(cs);
+end
 
-    set(matsurf,'DiffuseStrength',0.9)
-    set(matsurf,'SpecularStrength',0.1)
-    set(matsurf,'FaceAlpha',0.3);
-    %threshold seedcon
-    seedcon=((seedcon-thresh)/(max(seedcon)-thresh))*255;
-    
-    cX=pX;
-    for i=1:length(seedcon)
-       cX(pX==i)=seedcon(i);
-    end
-    %nc=isonormals(X,Y,Z,permute(mX,[2,1,3]),matsurf);
-    %nc=isocolors(X,Y,Z,permute(cX,[2,1,3]),matsurf);
-    %matsurf.FaceColor='interp';
+sX=ismember(round(pX),currentseed);
+bb=[0,0,0;size(mX)];
 
-    seedsurf=patch(fvs,'FaceColor',options.prefs.lc.seedsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-    set(seedsurf,'DiffuseStrength',0.9)
-    set(seedsurf,'SpecularStrength',0.1)
-    set(seedsurf,'FaceAlpha',0.3);
-    setappdata(resultfig,'matsurf',matsurf);
-    setappdata(resultfig,'seedsurf',seedsurf);
+bb=map_coords_proxy(bb,pV);
+gv=cell(3,1);
+for dim=1:3
+    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(mX,dim));
+end
+[X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
+
+
+fv=isosurface(X,Y,Z,permute(mX,[2,1,3]),thresh); % connected regions
+fvs=isosurface(X,Y,Z,permute(sX,[2,1,3]),0.5); % seed
+set(0,'CurrentFigure',resultfig)
+matsurf=patch(fv,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
+
+cmX=mX;
+zidx=cmX==0;
+zidx=logical(zidx+isnan(cmX));
+cmX(isnan(cmX))=0;
+
+cmX=cmX-min(cmX(cmX~=0));
+cmX=(cmX/max(cmX(cmX~=0)))*64;
+cmX(zidx)=0; % reset prior zero/nan values to zero
+isocolors(X,Y,Z,permute(cmX,[2,1,3]),matsurf)
+
+set(matsurf,'DiffuseStrength',0.9)
+set(matsurf,'SpecularStrength',0.1)
+set(matsurf,'FaceAlpha',0.3);
+%threshold seedcon
+seedcon=((seedcon-thresh)/(max(seedcon)-thresh))*255;
+
+cX=pX;
+for i=1:length(seedcon)
+    cX(pX==i)=seedcon(i);
+end
+%nc=isonormals(X,Y,Z,permute(mX,[2,1,3]),matsurf);
+%nc=isocolors(X,Y,Z,permute(cX,[2,1,3]),matsurf);
+%matsurf.FaceColor='interp';
+
+seedsurf=patch(fvs,'FaceColor',options.prefs.lc.seedsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
+set(seedsurf,'DiffuseStrength',0.9)
+set(seedsurf,'SpecularStrength',0.1)
+set(seedsurf,'FaceAlpha',0.3);
+setappdata(resultfig,'matsurf',matsurf);
+setappdata(resultfig,'seedsurf',seedsurf);
 
 function coords=map_coords_proxy(XYZ,V)
 
@@ -492,12 +564,6 @@ if get(handles.matmodality,'Value')>length(get(handles.matmodality,'String'));
     set(handles.matmodality,'Value',length(get(handles.matmodality,'String')));
 end
 
-if ~isempty(strfind(pmc{get(handles.matmodality,'Value')},'_tc')) % no timeseries selected.
-    cv_enabletime(handles);
-else
-    cv_disabletime(handles);
-end
-
 % parcellation scheme
 aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
@@ -513,8 +579,8 @@ setappdata(gcf,'pX',pX);
 
 mm=get(handles.matmodality,'String');
 
-    set(handles.matseed,'String',[atlas_lgnd{2}]);
-    
+set(handles.matseed,'String',[atlas_lgnd{2}]);
+
 if get(handles.matseed,'Value')>length(get(handles.matseed,'String'));
     set(handles.matseed,'Value',length(get(handles.matseed,'String')));
 end
@@ -603,7 +669,7 @@ for vdir=1:length(vdirs)
     end
 end
 
-%% set popup strings 
+%% set popup strings
 if isempty(modlist)
     set(handles.vatmodality,'String','No connectivity data found...');
 else
@@ -611,10 +677,10 @@ else
 end
 
 %% correct for wrong selections in popup menus.
-if get(handles.vatmodality,'Value')<length(modlist) % probably user has changed parcellation..
+if get(handles.vatmodality,'Value')>length(modlist) % probably user has changed parcellation..
     set(handles.vatmodality,'Value',1);
 end
-if length(get(handles.vatseed,'String'))<get(handles.vatseed,'Value');
+if get(handles.vatseed,'Value')>length(get(handles.vatseed,'String'));
     set(handles.vatseed,'Value',1);
 end
 
@@ -639,6 +705,12 @@ else
     
     set(handles.rvatcheck,'Enable', ea_getonofftruefalse(ismember('vat_right.nii',vatcell)));
     set(handles.lvatcheck,'Enable', ea_getonofftruefalse(ismember('vat_left.nii',vatcell)));
+    if strcmp(get(handles.rvatcheck,'Enable'),'off')
+    set(handles.rvatcheck,'Value', 0);
+    end
+    if strcmp(get(handles.lvatcheck,'Enable'),'off')
+    set(handles.lvatcheck,'Value', 0);
+    end
 end
 
 function oo=ea_getonofftruefalse(tf)
@@ -651,13 +723,17 @@ function resultfig=ea_cvcleanup
 %% recruit handles from prior results from figure
 resultfig=getappdata(gcf,'resultfig');
 matsurf=getappdata(resultfig,'matsurf');
+vatsurf=getappdata(resultfig,'vatsurf');
 seedsurf=getappdata(resultfig,'seedsurf');
 graphsurf=getappdata(resultfig,'graphsurf');
-
 %% delete any prior results
+
 try delete(matsurf); end
+try delete(vatsurf); end
 try delete(seedsurf); end
 try delete(graphsurf); end
+
+%% fiber results are only cleaned if really triggered (since they take quite long).
 
 %% helperfunctions to enable/disable GUI parts.
 
@@ -740,6 +816,106 @@ set(handles.vatseed,'Enable','on');
 set(handles.lvatcheck,'Enable','on');
 set(handles.rvatcheck,'Enable','on');
 set(handles.vatthresh,'Enable','on');
+
+
+function [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seedfile,targetsfile,thresh,mode)
+% small helper function that determines changes in fibertracking results.
+ret=1;
+ofibersfile=getappdata(resultfig,[mode,'fibersfile']); % mode independent
+oseedfile=getappdata(resultfig,'seedfile');
+otargetsfile=getappdata(resultfig,[mode,'targetsfile']);
+othresh=getappdata(resultfig,[mode,'thresh']);
+
+changedstates=[~isequal(fibersfile,ofibersfile)
+    ~isequal(seedfile,oseedfile)
+    ~isequal(targetsfile,otargetsfile)
+    ~isequal(thresh,othresh)];
+if any(changedstates)
+    ret=0;
+end
+
+setappdata(resultfig,'fibersfile',fibersfile); % mode independent
+setappdata(resultfig,[mode,'seedfile'],seedfile);
+setappdata(resultfig,[mode,'targetsfile'],targetsfile);
+setappdata(resultfig,[mode,'thresh'],thresh);
+
+function deletePL(resultfig,varname,mode)
+
+
+PL=getappdata(resultfig,[mode,varname]);
+setappdata(resultfig,[mode,'fibersfile'],'nan');
+setappdata(resultfig,[mode,'seedfile'],'nan');
+setappdata(resultfig,[mode,'targetsfile'],'nan');
+setappdata(resultfig,[mode,'thresh'],'nan');
+
+try
+if verLessThan('matlab','8.5') % ML <2014a support
+    
+    
+    for p=1:length(PL)
+        
+        
+        if isfield(PL(p),'vatsurfs')
+            delete(PL(p).vatsurfs(logical(PL(p).vatsurfs)));
+        end
+        if isfield(PL(p),'quiv')
+            delete(PL(p).quiv(logical(PL(p).quiv)));
+        end        
+        if isfield(PL(p),'fib_plots')
+            if isfield(PL(p).fib_plots,'fibs')
+                delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs)));
+            end
+            
+            if isfield(PL(p).fib_plots,'dcfibs')
+                todelete=PL(p).fib_plots.dcfibs((PL(p).fib_plots.dcfibs(:)>0));
+                delete(todelete(:));
+                
+            end
+        end
+        if isfield(PL(p),'regionsurfs')
+            todelete=PL(p).regionsurfs(logical(PL(p).regionsurfs));
+            delete(todelete(:));
+        end
+        if isfield(PL(p),'conlabels')
+            todelete=PL(p).conlabels(logical(PL(p).conlabels));
+            delete(todelete(:));
+        end
+        if isfield(PL(p),'ht')
+            delete(PL(p).ht);
+        end
+    end
+    
+    
+else
+    for p=1:length(PL) 
+        if isfield(PL(p),'vatsurfs')
+            delete(PL(p).vatsurfs);
+        end
+        if isfield(PL(p),'quiv')
+            delete(PL(p).quiv);
+        end
+        if isfield(PL(p),'fib_plots')
+            if isfield(PL(p).fib_plots,'fibs')
+                delete(PL(p).fib_plots.fibs);
+            end
+            
+            if isfield(PL(p).fib_plots,'dcfibs')
+                delete(PL(p).fib_plots.dcfibs);
+            end
+        end
+        if isfield(PL(p),'regionsurfs')
+            delete(PL(p).regionsurfs);
+        end
+        if isfield(PL(p),'conlabels')
+            delete(PL(p).conlabels);
+        end
+        if isfield(PL(p),'ht')
+            delete(PL(p).ht);
+        end
+    end
+    
+end
+end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_convis_OutputFcn(hObject, eventdata, handles)

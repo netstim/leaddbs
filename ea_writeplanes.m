@@ -77,6 +77,7 @@ set(cuts,'position',[100, 100, 800 ,800]);
 set(cuts,'color','w');
 tracorpresent=zeros(3,1); % check if files are present.
 if ~manualtracor
+    
     switch options.modality
         case 1 % MR
             try

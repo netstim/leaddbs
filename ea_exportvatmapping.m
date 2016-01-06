@@ -3,9 +3,9 @@ function ea_exportvatmapping(M,options,handles)
 selectedregressor=M.clinical.vars{get(handles.clinicallist,'Value')};
 zselectedregressor=zscore(selectedregressor);
     mkdir([options.root,options.patientname,filesep,'statvat_results']);
-allV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'];
-zallV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'];
-tempzallV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'];
+allV{1}=[options.earoot,'templates',filesep,'bb.nii'];
+zallV{1}=[options.earoot,'templates',filesep,'bb.nii'];
+tempzallV{1}=[options.earoot,'templates',filesep,'bb.nii'];
 
 if size(selectedregressor,2)==1;
     bihemispheric=0;
@@ -21,7 +21,10 @@ for pt=1:length(M.patient.list)
     for stim=1:length(stims)
         if ~strcmp(stims(stim).name(1),'.')
             if stims(stim).datenum>pdate
-                pdate=stims(4).datenum;
+                
+                
+                pdate=stims(stim).datenum;
+                
                 mostrecentstim=stim;
             end
         end
@@ -44,13 +47,13 @@ for pt=1:length(M.patient.list)
     end
     
     % writeout
-
+    
     Vvatr.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','rh','.nii'];
     Vvatl.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','lh','.nii'];
     zVvatr.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'zs',num2str(pt),'_','rh','.nii'];
     zVvatl.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'zs',num2str(pt),'_','lh','.nii'];
-   
-    Vvatr.dt=[16,2]; Vvatl.dt=[16,2];      zVvatr.dt=[16,2]; zVvatl.dt=[16,2];     
+    
+    Vvatr.dt=[16,2]; Vvatl.dt=[16,2];      zVvatr.dt=[16,2]; zVvatl.dt=[16,2];
     spm_write_vol(Vvatr,Vvatr.img);     spm_write_vol(Vvatl,Vvatl.img);
     spm_write_vol(zVvatr,zVvatr.img);     spm_write_vol(zVvatl,zVvatl.img);
     Vright{pt}=Vvatr.fname;
@@ -87,12 +90,19 @@ for z=0:1
     matlabbatch{1}.spm.util.imcalc.options.interp = 1;
     matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
         
-    ea_crop_nii([options.root,options.patientname,filesep,'statvat_results',filesep,matlabbatch{1}.spm.util.imcalc.output]);
-        
     cfg_util('run',{matlabbatch});
+            ea_crop_nii([options.root,options.patientname,filesep,'statvat_results',filesep,matlabbatch{1}.spm.util.imcalc.output]);
+
     clear matlabbatch
+    
+
 
 end
+
+
+allV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'];
+zallV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'];
+tempzallV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'];
 
 
 for pt=1:length(tempzallV)-1

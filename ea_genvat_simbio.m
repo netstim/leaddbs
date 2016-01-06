@@ -335,7 +335,7 @@ eg(isnan(eg))=0;
 vatfv=isosurface(xg,yg,zg,eg,0.75);
 
 vatvolume=nnz(eg)*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
-
+stimparams.volume=vatvolume;
 chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);
 Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
 Vvat.dim=[100,100,100];
@@ -352,10 +352,12 @@ mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]
 switch side
     case 1
         Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];
+    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_right.mat'];
     case 2
         Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
+    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_left.mat'];
 end
-save([options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters'],'stimparams');
+save(stimfile,'stimparams');
 spm_write_vol(Vvat,permute(eg,[2,1,3]));
 
 % define function outputs
