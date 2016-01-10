@@ -139,6 +139,7 @@ correctionLIST = [];   %Prepare to record all rays that fail the voxelisation.  
 % each x,y coordinate of the testpoints, and finding the locations where the rays cross the mesh.
 facetCROSSLIST = zeros(1,1e3);  % uses countindex: nf
 nm = size(meshXYZmin,1);
+
 for loop = 1:length(OUTPUT),
     
     nf = 0;

@@ -157,7 +157,7 @@ clear matlabbatch jobs;
 
 %% export .trk copy for trackvis visualization
 
-dnii=load_nii([directory,options.prefs.b0]);
+dnii=ea_load_nii([directory,options.prefs.b0]);
 niisize=size(dnii.img); % get dimensions of reference template.
 specs.origin=[0,0,0];
 specs.dim=niisize;

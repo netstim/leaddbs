@@ -84,7 +84,8 @@ end
 
 % determine stimulation name:
 mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
-stimparams.volume=volume;
+stimparams(side).volume=sum(volume);
+
 switch side
     case 1
         Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];

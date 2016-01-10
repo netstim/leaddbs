@@ -97,7 +97,7 @@ drawnow
 
 %% initialize controls
 ea_initvatlevel(handles,directory,selectedparc,options);
-ea_initmatrixlevel(handles,pdirectory,selectedparc,options);
+ea_initmatrixlevel(handles,directory,pdirectory,selectedparc,options);
 filesare=ea_initvoxellevel(handles,pdirectory);
 
 %% check if sliding window view is possible (timecourses are set as a modality somewhere)
@@ -137,11 +137,14 @@ if get(handles.vizgraph,'Value'); % show voxel-level results
 end
 
 if get(handles.vizmat,'Value'); % show matrix-level results
-    ea_cvshowmatresults(resultfig,directory,pV,pX,handles,options);
+    ea_cvshowmatresults(resultfig,directory,pV,pX,selectedparc,handles,options);
+else
+    deletePL(resultfig,'PL','mat');
 end
 
-if get(handles.vizmat,'Value') && get(handles.timecircle,'Value') && strcmp(get(handles.timecircle,'Enable'),'on') % cycle over time..
+if (get(handles.vizmat,'Value') || get(handles.vizvat,'Value')) && get(handles.timecircle,'Value') && strcmp(get(handles.timecircle,'Enable'),'on') % cycle over time..
     pause(0.1);
+    
     refreshcv(handles);
 end
 
@@ -169,7 +172,7 @@ switch mod
         
         % seed filename
         [usevat,dimensionality,~,sides]=ea_checkvatselection(handles);
-seedfile={};
+        seedfile={};
         for v=1:dimensionality
             vs=get(handles.vatseed,'String');
             seedfile{v}=[directory,'stimulations',filesep,vs{get(handles.vatseed,'Value')},filesep,'vat_',usevat{v},'.nii'];
@@ -190,7 +193,7 @@ seedfile={};
         if ~ret % something has changed since last time.
             deletePL(resultfig,'PL','vat');
             if dimensionality % one of the vat checkboxes is active
-                ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,astimparams,changedstates); % 'vat' only used for storage of changes.
+                ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,astimparams,changedstates,'vat'); % 'vat' only used for storage of changes.
             end
             
         end
@@ -235,18 +238,19 @@ stims=get(handles.vatseed,'String');
 stim=stims{get(handles.vatseed,'Value')};
 
 % check out which vats to use
-[usevat,dimensionality,currentseed]=ea_checkvatselection(handles);
+[usevat,dimensionality,currentseed,sides]=ea_checkvatselection(handles);
 if ~dimensionality
     return
 end
 
 pX=round(pX);
-if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_timeseries'],'file');
+
+if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat'],'file');
     ea_warp_vat(options.prefs.rest,'rest',options,handles);
     vat_tc=ea_extract_timecourses_vat(options,handles,usevat,dimensionality);
-    save([directory,'stimulations',filesep,stim,filesep,'vat_timeseries'],'vat_tc');
+    save([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat'],'vat_tc');
 else
-    load([directory,'stimulations',filesep,stim,filesep,'vat_timeseries']);
+    load([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat']);
 end
 
 mms=get(handles.matmodality,'String');
@@ -255,10 +259,6 @@ tc=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')}
 fn=fieldnames(tc);
 tc=eval(['tc.',fn{1},';']);
 tc=[vat_tc,tc];
-
-
-% timecourses selected: need to create a CM first. In this case, the variable CM is
-% not a connectivity matrix but time-courses!
 
 timedim=size(tc,1);
 tiwindow=get(handles.timewindow,'String');
@@ -287,68 +287,39 @@ else
         end
     end
 end
-
-seedcon=ea_nanmean(cm(currentseed,:),1);
-thresh=get(handles.matthresh,'String');
+for side = sides
+seedcon=cm(side,:);
+seedcon=seedcon(3:end);
+thresh=get(handles.vatthresh,'String');
 if strcmp(thresh,'auto');
-    thresh=nanmean(seedcon)+1*nanstd(seedcon);
+    thresh=nanmean(seedcon)+1*0.5*nanstd(seedcon);
 else
     thresh=str2double(thresh);
 end
+
+
 tseedcon=seedcon;
 tseedcon(tseedcon<thresh)=0;
 tseedcon(currentseed)=0;
-
+pX(pX==0)=nan;
 mX=pX;
 for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with the entries in tseedcon. Fixme, this should be doable wo forloop..
     mX(ismember(round(pX),cs))=tseedcon(cs);
 end
 
-sX=ismember(round(pX),currentseed);
-bb=[0,0,0;size(mX)];
-
-bb=map_coords_proxy(bb,pV);
-gv=cell(3,1);
-for dim=1:3
-    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(mX,dim));
-end
-[X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
+    Vvat=spm_vol([directory,'stimulations',filesep,stim,filesep,'vat_',usevat{side},'.nii,1']);
+    Xvat=spm_read_vols(Vvat);
+    vatseedsurf{side}=ea_showseedpatch(resultfig,Vvat,Xvat,options);
 
 
-fv=isosurface(X,Y,Z,permute(mX,[2,1,3]),thresh); % connected regions
-fvs=isosurface(X,Y,Z,permute(sX,[2,1,3]),0.5); % seed
+    
+%sX=ismember(round(pX),currentseed);
 set(0,'CurrentFigure',resultfig)
-vatsurf=patch(fv,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
 
-cmX=mX;
-zidx=cmX==0;
-zidx=logical(zidx+isnan(cmX));
-cmX(isnan(cmX))=0;
-
-cmX=cmX-min(cmX(cmX~=0));
-cmX=(cmX/max(cmX(cmX~=0)))*64;
-cmX(zidx)=0; % reset prior zero/nan values to zero
-isocolors(X,Y,Z,permute(cmX,[2,1,3]),vatsurf)
-
-set(vatsurf,'DiffuseStrength',0.9)
-set(vatsurf,'SpecularStrength',0.1)
-set(vatsurf,'FaceAlpha',0.3);
-%     %threshold seedcon
-%     seedcon=((seedcon-thresh)/(max(seedcon)-thresh))*255;
-%
-%     cX=pX;
-%     for i=1:length(seedcon)
-%        cX(pX==i)=seedcon(i);
-%     end
-%     %nc=isonormals(X,Y,Z,permute(mX,[2,1,3]),matsurf);
-%     %nc=isocolors(X,Y,Z,permute(cX,[2,1,3]),matsurf);
-%     %matsurf.FaceColor='interp';
-%
-%     seedsurf=patch(fvs,'FaceColor',options.prefs.lc.seedsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-%     set(seedsurf,'DiffuseStrength',0.9)
-%     set(seedsurf,'SpecularStrength',0.1)
-%     set(seedsurf,'FaceAlpha',0.3);
+    vatsurf{side}=ea_showconnectivitypatch(resultfig,pV,mX,thresh);
+end
 setappdata(resultfig,'vatsurf',vatsurf);
+setappdata(resultfig,'vatseedsurf',vatseedsurf);
 
 
 
@@ -363,38 +334,60 @@ if strcmp(thresh,'auto');
 else
     thresh=str2double(thresh);
 end
-tgX=gX>thresh;
 
-bb=[0,0,0;size(tgX)];
+graphsurf=ea_showconnectivitypatch(resultfig,gV,gX,thresh);
 
-bb=map_coords_proxy(bb,pV);
-gv=cell(3,1);
-for dim=1:3
-    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(tgX,dim));
-end
-[X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-fv=isosurface(X,Y,Z,permute(tgX,[2,1,3]),0.5); % graph_metric
-set(0,'CurrentFigure',resultfig)
-graphsurf=patch(fv,'facealpha',0.7,'EdgeColor','none','facelighting','phong','FaceColor','interp');
-
-
-cgX=gX;
-zidx=cgX==0;
-zidx=logical(zidx+isnan(cgX));
-
-cgX(isnan(cgX))=0;
-cgX=cgX+min(cgX(cgX~=0));
-cgX=(cgX/max(cgX(cgX~=0)))*64;
-cgX(zidx)=0; % reset prior zero/nan values to zero
-isocolors(X,Y,Z,permute(cgX,[2,1,3]),graphsurf)
-set(graphsurf,'DiffuseStrength',0.9)
-set(graphsurf,'SpecularStrength',0.1)
-set(graphsurf,'FaceAlpha',0.3);
 setappdata(resultfig,'graphsurf',graphsurf);
 
-function ea_cvshowmatresults(resultfig,directory,pV,pX,handles,options)
+function ea_cvshowmatresults(resultfig,directory,pV,pX,selectedparc,handles,options)
 %mV=pV; % duplicate labeling handle
 %mX=pX; % duplicate labeling data
+
+
+% determine if CM/TC or fiberset is selected
+matmodality=get(handles.matmodality,'String');
+matmodality=matmodality{get(handles.matmodality,'Value')};
+if ~isempty(strfind(matmodality,'_CM')) || ~isempty(strfind(matmodality,'_tc'))
+    deletePL(resultfig,'PL','mat');
+    ea_cvshowmatresultsCMTC(resultfig,directory,pV,pX,handles,options);
+else % use fiberset
+    
+     % fibers filename
+        switch matmodality
+            case 'Patient-specific fiber tracts'
+                fibersfile=[directory,options.prefs.FTR_normalized];
+            otherwise
+                fibersfile=[options.earoot,'fibers',filesep,matmodality,'.mat'];
+        end
+        
+        % seed filename
+        seed=ea_load_nii([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+        % delete everything but set selected parcellation to 1.
+        oseed=seed.img;
+        seed.img(:)=0;
+        seed.img(round(oseed)==get(handles.matseed,'Value'))=1;
+        
+        targetsfile=ea_load_nii([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+        targetsfile.img(round(targetsfile.img)==get(handles.matseed,'Value'))=0;
+        thresh=get(handles.matthresh,'String');
+        options.writeoutstats=0;
+        options.writeoutpm=0;
+        
+        
+        [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seed,targetsfile,thresh,'mat');
+        
+        if ~ret % something has changed since last time.
+            deletePL(resultfig,'PL','mat');
+                ea_cvshowfiberconnectivities(resultfig,fibersfile,seed,targetsfile,thresh,1,options,'',changedstates,'mat');
+            
+        end
+    
+    
+end
+
+
+function ea_cvshowmatresultsCMTC(resultfig,directory,pV,pX,handles,options)
+
 pX=round(pX);
 mms=get(handles.matmodality,'String');
 parcs=get(handles.labelpopup,'String');
@@ -450,60 +443,14 @@ mX=pX;
 for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with the entries in tseedcon. Fixme, this should be doable wo forloop..
     mX(ismember(round(pX),cs))=tseedcon(cs);
 end
-
 sX=ismember(round(pX),currentseed);
-bb=[0,0,0;size(mX)];
+matsurf=ea_showconnectivitypatch(resultfig,pV,mX,thresh);
+seedsurf=ea_showseedpatch(resultfig,pV,sX,options);
 
-bb=map_coords_proxy(bb,pV);
-gv=cell(3,1);
-for dim=1:3
-    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(mX,dim));
-end
-[X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-
-
-fv=isosurface(X,Y,Z,permute(mX,[2,1,3]),thresh); % connected regions
-fvs=isosurface(X,Y,Z,permute(sX,[2,1,3]),0.5); % seed
-set(0,'CurrentFigure',resultfig)
-matsurf=patch(fv,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
-
-cmX=mX;
-zidx=cmX==0;
-zidx=logical(zidx+isnan(cmX));
-cmX(isnan(cmX))=0;
-
-cmX=cmX-min(cmX(cmX~=0));
-cmX=(cmX/max(cmX(cmX~=0)))*64;
-cmX(zidx)=0; % reset prior zero/nan values to zero
-isocolors(X,Y,Z,permute(cmX,[2,1,3]),matsurf)
-
-set(matsurf,'DiffuseStrength',0.9)
-set(matsurf,'SpecularStrength',0.1)
-set(matsurf,'FaceAlpha',0.3);
-%threshold seedcon
-seedcon=((seedcon-thresh)/(max(seedcon)-thresh))*255;
-
-cX=pX;
-for i=1:length(seedcon)
-    cX(pX==i)=seedcon(i);
-end
-%nc=isonormals(X,Y,Z,permute(mX,[2,1,3]),matsurf);
-%nc=isocolors(X,Y,Z,permute(cX,[2,1,3]),matsurf);
-%matsurf.FaceColor='interp';
-
-seedsurf=patch(fvs,'FaceColor',options.prefs.lc.seedsurfc,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-set(seedsurf,'DiffuseStrength',0.9)
-set(seedsurf,'SpecularStrength',0.1)
-set(seedsurf,'FaceAlpha',0.3);
 setappdata(resultfig,'matsurf',matsurf);
 setappdata(resultfig,'seedsurf',seedsurf);
 
-function coords=map_coords_proxy(XYZ,V)
 
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';
 
 function [directory,pdirectory,selectedparc]=ea_cvinitgui(handles,options)
 %% init/modify UI controls:
@@ -534,23 +481,39 @@ selectedparc=parcs{get(handles.labelpopup,'Value')};
 
 pdirectory=[options.root,options.patientname,filesep,'connectomics',filesep,selectedparc,filesep];
 
-function ea_initmatrixlevel(handles,pdirectory,selectedparc,options)
+function ea_initmatrixlevel(handles,directory,pdirectory,selectedparc,options)
 
 %% init matrix level controls:
+
+% dMRI:
+cnt=1;
+% check if pat-specific fibertracts are present:
+if exist([directory,options.prefs.FTR_normalized],'file');
+    modlist{cnt}='Patient-specific fiber tracts';
+    cnt=cnt+1;
+end
+% check for canonical fiber sets
+fdfibs=dir([options.earoot,'fibers',filesep,'*.mat']);
+for fdf=1:length(fdfibs)
+    [~,fn]=fileparts(fdfibs(fdf).name);
+    modlist{cnt}=fn;
+    cnt=cnt+1;
+end
+
 
 pmdirs=dir([pdirectory,'*_CM.mat']);
 
 for pmdir=1:length(pmdirs)
-    [~,pmc{pmdir}]=fileparts(pmdirs(pmdir).name);
+    [~,modlist{end+1}]=fileparts(pmdirs(pmdir).name);
 end
 
 tcdirs=dir([pdirectory,'*_tc.mat']);
 
 for tcdir=1:length(tcdirs)
-    [~,pmc{end+1}]=fileparts(tcdirs(tcdir).name);
+    [~,modlist{end+1}]=fileparts(tcdirs(tcdir).name);
 end
 
-if ~exist('pmc','var')
+if ~exist('modlist','var')
     cv_disablemats(handles);
 else
     cv_enablemats(handles);
@@ -558,7 +521,7 @@ end
 
 
 
-set(handles.matmodality,'String',pmc);
+set(handles.matmodality,'String',modlist);
 
 if get(handles.matmodality,'Value')>length(get(handles.matmodality,'String'));
     set(handles.matmodality,'Value',length(get(handles.matmodality,'String')));
@@ -725,11 +688,25 @@ resultfig=getappdata(gcf,'resultfig');
 matsurf=getappdata(resultfig,'matsurf');
 vatsurf=getappdata(resultfig,'vatsurf');
 seedsurf=getappdata(resultfig,'seedsurf');
+vatseedsurf=getappdata(resultfig,'vatseedsurf');
 graphsurf=getappdata(resultfig,'graphsurf');
 %% delete any prior results
 
-try delete(matsurf); end
-try delete(vatsurf); end
+try delete(matsurf); catch
+    for l=1:length(matsurf)
+        try delete(matsurf{l}); end
+    end
+end
+try delete(vatseedsurf); catch
+    for l=1:length(vatseedsurf)
+        try delete(vatseedsurf{l}); end
+    end
+end
+try delete(vatsurf); catch
+   for l=1:length(vatsurf)
+      try delete(vatsurf{l}); end 
+   end
+end
 try delete(seedsurf); end
 try delete(graphsurf); end
 
@@ -860,7 +837,18 @@ if verLessThan('matlab','8.5') % ML <2014a support
         end
         if isfield(PL(p),'quiv')
             delete(PL(p).quiv(logical(PL(p).quiv)));
-        end        
+        end   
+        if isfield(PL(p),'matseedsurf')
+            for t=1:length(PL(p).matseedsurf)
+                try delete(PL(p).matseedsurf{t});
+                end
+            end
+        end
+        if isfield(PL(p),'matsurf')
+            for t=1:length(PL(p).matsurf)
+                try delete(PL(p).matsurf{t}); end
+            end
+        end
         if isfield(PL(p),'fib_plots')
             if isfield(PL(p).fib_plots,'fibs')
                 delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs)));
@@ -888,6 +876,18 @@ if verLessThan('matlab','8.5') % ML <2014a support
     
 else
     for p=1:length(PL) 
+        
+        if isfield(PL(p),'matseedsurf')
+            for t=1:length(PL(p).matseedsurf)
+                try delete(PL(p).matseedsurf{t});
+                end
+            end
+        end
+        if isfield(PL(p),'matsurf')
+            for t=1:length(PL(p).matsurf)
+                try delete(PL(p).matsurf{t}); end
+            end
+        end
         if isfield(PL(p),'vatsurfs')
             delete(PL(p).vatsurfs);
         end
@@ -1387,3 +1387,11 @@ function rvatcheck_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of rvatcheck
 refreshcv(handles);
+
+
+function coords=map_coords_proxy(XYZ,V)
+
+XYZ=[XYZ';ones(1,size(XYZ,1))];
+
+coords=V.mat*XYZ;
+coords=coords(1:3,:)';

@@ -47,6 +47,7 @@ disp('*** Done.');
 
 %% functional parts
 disp('*** Performing functional parts of LEAD-Connectome...');
+
 if options.lc.func.compute_CM % create functional connectivity matrix
     if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
         mkdir([options.root,options.patientname,filesep,'connectomics']);
