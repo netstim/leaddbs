@@ -193,7 +193,9 @@ switch mod
         if ~ret % something has changed since last time.
             deletePL(resultfig,'PL','vat');
             if dimensionality % one of the vat checkboxes is active
-                ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,astimparams,changedstates,'vat'); % 'vat' only used for storage of changes.
+                [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,astimparams,changedstates,'vat'); % 'vat' only used for storage of changes.
+            set(handles.vatthreshis,'String',num2str(thresh));
+
             end
             
         end
@@ -315,7 +317,7 @@ end
     
 %sX=ismember(round(pX),currentseed);
 set(0,'CurrentFigure',resultfig)
-
+set(handles.vatthreshis,'String',num2str(thresh));
     vatsurf{side}=ea_showconnectivitypatch(resultfig,pV,mX,thresh);
 end
 setappdata(resultfig,'vatsurf',vatsurf);
@@ -334,7 +336,7 @@ if strcmp(thresh,'auto');
 else
     thresh=str2double(thresh);
 end
-
+set(handles.voxthreshis,'String',num2str(thresh));
 graphsurf=ea_showconnectivitypatch(resultfig,gV,gX,thresh);
 
 setappdata(resultfig,'graphsurf',graphsurf);
@@ -378,8 +380,10 @@ else % use fiberset
         
         if ~ret % something has changed since last time.
             deletePL(resultfig,'PL','mat');
-                ea_cvshowfiberconnectivities(resultfig,fibersfile,seed,targetsfile,thresh,1,options,'',changedstates,'mat');
             
+                [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seed,targetsfile,thresh,1,options,'',changedstates,'mat');
+            set(handles.matthreshis,'String',num2str(thresh));
+
         end
     
     
@@ -444,6 +448,7 @@ for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with 
     mX(ismember(round(pX),cs))=tseedcon(cs);
 end
 sX=ismember(round(pX),currentseed);
+set(handles.matthreshis,'String',num2str(thresh));
 matsurf=ea_showconnectivitypatch(resultfig,pV,mX,thresh);
 seedsurf=ea_showseedpatch(resultfig,pV,sX,options);
 
