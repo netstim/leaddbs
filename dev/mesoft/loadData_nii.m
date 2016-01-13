@@ -48,8 +48,8 @@ function data = loadData_nii(dwifile,gradfile,maskfile,threshold)
             dwinii = load_untouch_nii(dwifile);
        end;
        
-       gradf1 = importdata(gradfile{1});
-       gradf2 = importdata(gradfile{2});
+       gradf1 = load(gradfile{1});
+       gradf2 = load(gradfile{2});
        if size(gradf1,1) == 3,
            bvec = gradf1;
            bval = gradf2;

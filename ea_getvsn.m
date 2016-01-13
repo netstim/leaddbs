@@ -25,7 +25,8 @@ switch com
             end
         end
         if num && ~strcmp(version,'Unknown')
-            version = strjoin(cellfun(@(x) num2str(str2double(x),'%02d'), strsplit(version,'.'),'UniformOutput',0),'');
+            
+            version = ea_strjoin(cellfun(@(x) num2str(str2double(x),'%02d'), ea_strsplit(version,'.'),'UniformOutput',0),'');
             if numel(version) == 6
                 version = [version, '00'];
             end
@@ -37,7 +38,7 @@ switch com
             version = fgetl(vfid);
             fclose(vfid);
             if num
-                version = strjoin(cellfun(@(x) num2str(str2double(x),'%02d'), strsplit(version,'.'),'UniformOutput',0),'');
+                version = ea_strjoin(cellfun(@(x) num2str(str2double(x),'%02d'), ea_strsplit(version,'.'),'UniformOutput',0),'');
                 if numel(version) == 6
                     version = [version, '00'];
                 end
@@ -106,3 +107,6 @@ end
 % rewrote whole program based on first experiences
 % vstr='v 0.1';
 % very raw version of automatic reconstruction of electrodes trajectories
+
+
+

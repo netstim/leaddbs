@@ -33,7 +33,7 @@ if ~ispc
 else
     [~, imgsize] = system([HEADER, ' ', fixedimage, ' 2']);
 end
-imgsize = cellfun(@(x) str2double(x),strsplit(imgsize,'x'));
+imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
 if any(imgsize>256)
     rigidconvergence='[1000x500x250x0,1e-6,10]';

@@ -105,7 +105,7 @@ function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, method, img_idx
          end
 
          [img(:,:,:,i) M] = ...
-		affine(nii.img(:,:,:,i), old_M, voxel_size, verbose, bg, method);
+		ea_affine(nii.img(:,:,:,i), old_M, voxel_size, verbose, bg, method);
       end
       ea_dispercent(1,'end');
    else
@@ -320,4 +320,3 @@ function [nii] = load_nii_no_xform(filename, img_idx, old_RGB, preferredForm)
    end
 
    return					% load_nii_no_xform
-
