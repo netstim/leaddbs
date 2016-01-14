@@ -160,7 +160,7 @@ for x_coor =1: matrix(2)
 try
             aniso_a= iAnisoX*y;
 catch
-    keyboard
+    ea_error('Wrong data / dti.bval/.bvec files specified.');
 end
             YY = anisoX * aniso_a;
             M_error(y_coor,x_coor) = max(abs(YY - Y')); % MaxErr

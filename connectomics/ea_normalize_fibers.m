@@ -43,21 +43,14 @@ try
 reftemplate=[options.root,options.patientname,filesep,options.prefs.b0];
 dnii=ea_load_nii(reftemplate);
 niisize=size(dnii.img); % get dimensions of reference template.
-clear dnii
+
 specs.origin=[0,0,0];
 specs.dim=niisize;
-try
-    H=spm_dicom_headers([root_directory,options.prefs.sampledtidicom]);
-    specs.orientation=H{1,1}.ImageOrientationPatient;
-catch
-    %specs.orientation=[0,1,0,0,0,0];%[0,1,0,-1,0,0];%[1,0,0,0,1,0];
-    specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example trk_write. Try this one.. %[1,0,0,0,1,0];
-specs.orientation=[0,1,0,0,0,0];
-end
+
 specs.vox=ftr.vox;
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
 %[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
-ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
+ea_ftr2trk(ftrfname,directory,specs,dnii,options); % export normalized ftr to .trk
 end
 disp('Done.');
 

@@ -109,14 +109,9 @@ niisize=size(dnii.img); % get dimensions of reference template.
 specs.origin=[0,0,0];
 specs.dim=niisize;
 specs.vox=dnii.hdr.dime.pixdim(2:4);
-try
-    H=spm_dicom_headers([directory,prefs.sampledtidicom]);
-    specs.orientation=H{1,1}.ImageOrientationPatient;
-catch
-    specs.orientation=[1,0,0,0,1,0];
-end
+
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
-ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
+ea_ftr2trk(ftrfname,directory,specs,dnii,options); % export normalized ftr to .trk
 disp('Done.');
 
 

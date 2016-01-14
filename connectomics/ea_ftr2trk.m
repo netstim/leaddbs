@@ -1,8 +1,9 @@
-function ea_ftr2trk(ftrfilename,directory,specs,options)
+function ea_ftr2trk(ftrfilename,directory,specs,V,options)
 
-disp('Loading FTR-File.');
+if ischar(ftrfilename)
+    disp('Loading FTR-File.');
+
 fs=load([options.root,options.patientname,filesep,ftrfilename]);
-
 
 if isfield(fs,'curveSegCell') % Freiburg Format
     convertfromfreiburg=1;
@@ -21,6 +22,17 @@ else % unknown format, use first field for fibers.
     convertfromfreiburg=0;
     fibs=fibs;
 end
+else % direct ftr import
+    fibs=ftrfilename{1};
+    ftrfilename{1}=[];
+end
+
+specs = ea_aff2hdr(V.mat, specs);
+
+%ori=aff2orient(V);
+
+% specs.orientation=ori.image_orientation_patient;
+% specs.vox=ori.voxel_size;
 
 [header, tracks]=ea_trk_read([options.earoot,'ext_libs',filesep,'example.trk']);
 
@@ -33,7 +45,7 @@ end
 
 header.dim=specs.dim;
 try
-header.voxel_size=specs.vox;
+header.voxel_size=specs.voxel_size;
 catch
     header.voxel_size=fs.vox;
 end
@@ -45,7 +57,7 @@ header.property_name=char(repmat(' ',10,20));
 header.vox_to_ras=zeros(4,4);
 header.reserved=char(repmat(' ',444,1));
 
-header.image_orientation_patient=specs.orientation;
+header.image_orientation_patient=specs.image_orientation_patient;
 header.invert_x=0;
 header.invert_y=1;
 header.invert_z=0;
@@ -70,9 +82,11 @@ for i = 1:length(tracks)
     end
 end
 
+if ischar(ftrfilename)
 ea_trk_write(header,tracks,[directory,ftrfilename,'.trk']);
-
-
+else    
+ea_trk_write(header,tracks,[directory,ftrfilename{2},'.trk']);
+end
 
 function [header,tracks] = ea_trk_read(filePath)
 %TRK_READ - Load TrackVis .trk files
@@ -264,3 +278,96 @@ for iTrk = 1:header.n_count
 end
 
 fclose(fid);
+
+
+
+function trk_hdr = ea_aff2hdr(affine, trk_hdr, pos_vox, set_order)
+% Set affine matrix into trackvis header 'trk_hdr'
+% 
+% pos_vos : None or bool
+%     If None, currently defaults to False. If False, allow negative voxel 
+%     sizes in header to record axis flips. Negative voxels cause problems 
+%     for TrackVis.  If True, enforce positive voxel sizes.
+% set_order : None or bool
+%     If None, currently defaults to False. If False, do not set 'voxel_order' 
+%     field in 'trk_hdr'. If True, calculcate 'voxel_order' from 'affine' and
+%     set into 'trk_hdr'.
+% 
+% Notes
+% -----
+% version 2 of the trackvis header has a dedicated field for the nifti RAS
+% affine. In theory trackvis 1 has enough information to store an affine, with
+% the fields 'origin', 'voxel_size' and 'image_orientation_patient'.
+% Unfortunately, to be able to store any affine, we'd need to be able to set
+% negative voxel sizes, to encode axis flips. This is because
+% 'image_orientation_patient' is only two columns of the 3x3 rotation matrix,
+% and we need to know the number of flips to reconstruct the third column
+% reliably. It turns out that negative flips upset trackvis (the
+% application). The application also ignores the origin field, and may not
+% use the 'image_orientation_patient' field.
+% 
+
+if nargin < 3
+    pos_vox = false;
+end
+
+if nargin < 4
+    set_order = false;
+end
+
+try
+    version = trk_hdr.version;
+catch
+    version = 2;
+end
+
+if version == 2
+    trk_hdr.vox_to_ras = affine;
+end
+
+if set_order
+    trk_hdr.voxel_order = aff2axcodes(affine);
+end
+
+% affine to go from DICOM LPS to MNI RAS space
+DPCS_TO_TAL = diag([-1,-1,1,1]);
+% Now on dodgy ground with DICOM fields in header
+% RAS to DPCS output
+affine = DPCS_TO_TAL*affine;
+trans = affine(1:3,4);
+% Get zooms
+RZS = affine(1:3, 1:3);
+zooms = sqrt(sum(RZS.*RZS));
+RS = RZS./repmat(zooms,3,1);
+% If you said we could, adjust zooms to make RS correspond (below) to a true
+% rotation matrix.  We need to set the sign of one of the zooms to deal with
+% this. TrackVis doesn't like negative zooms at all, so you might want to 
+% disallow this with the pos_vox option.
+if ~pos_vox && det(RS)<0
+    zooms(1) = zooms(1)*-1;
+    RS(:,1) = RS(:,1)*-1;
+end
+% retrieve rotation matrix from RS with polar decomposition.
+% Discard shears because we cannot store them.
+[P, ~, Qs] = svd(RS);
+R = P*Qs';
+% check if R is an orthogonal matrix
+assert(ea_allclose(R*R',eye(3)), 'non-orthogonal R matrix')
+
+trk_hdr.origin = trans;
+trk_hdr.voxel_size = zooms;
+trk_hdr.image_orientation_patient = reshape(R(:,1:2)*-1,1,[]);
+
+
+function close = ea_allclose(a, b, rtol, atol)
+% Determine if two arrays are element-wise equal within a tolerance.
+
+if nargin < 3
+    rtol = 1e-05;
+end
+if nargin < 4
+    atol = 1e-08;
+end
+
+close = all( abs(a(:)-b(:)) <= atol+rtol*abs(b(:)) );
+

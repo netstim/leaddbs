@@ -2416,35 +2416,51 @@ for sub=1:length(M.patient.list)
 end
 ea_dispercent(1,'end');
 save([M.ui.groupdir,options.prefs.FTR_normalized],'normalized_fibers_mm','-v7.3');
-
+%load([M.ui.groupdir,options.prefs.FTR_normalized]);
 % export to trackvis
+
+
+% convert to vox format
 options.root=[fileparts(fileparts(M.ui.groupdir)),filesep];
 [~,options.patientname]=fileparts(fileparts(M.ui.groupdir));
 options.earoot=[fileparts(which('lead')),filesep];
-
 specs.origin=[0,0,0];
 
 nii=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
 specs.dim=nii.dim;
-clear nii
-try
-    H=spm_dicom_headers([M.patient.list{1},options.prefs.sampledtidicom]);
-    specs.orientation=H{1,1}.ImageOrientationPatient;
-catch
-    specs.orientation=[0,1,0,0,0,0]; %[0,1,0,-1,0,0];%;[0,1,0,-1,0,0] [0,1,0,0,0,0];
-    specs.orientation=[1,0,0,0,1,0];
-    specs.orientation=[1,0,0,1,0,0];
-    specs.orientation=[1,0,0,0,1,0];
-    specs.orientation=[1 0 0 0 -1 0]; % dieses gut bei DSI studio
-    %specs.orientation=[0,1,0,0,0,0];
-    %specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example, dieses gut bei mesoFT
-    %trk_write. Try this one.. %[1,0,0,0,1,0];
+ea_dispercent(0,'Converting fibers to voxel format');
+for fib=1:length(normalized_fibers_mm);
+    ea_dispercent(fib/length(normalized_fibers_mm));
+normalized_fibers_mm{fib}=[normalized_fibers_mm{fib},ones(size(normalized_fibers_mm{fib},1),1)]';
+normalized_fibers_mm{fib}=nii.mat\normalized_fibers_mm{fib};
+normalized_fibers_mm{fib}=normalized_fibers_mm{fib}(1:3,:)';
 end
-ftr=load([M.patient.list{1},filesep,options.prefs.FTR_unnormalized]);
-specs.vox=ftr.vox;
-clear ftr
+ea_dispercent(1,'end');
+normalized_fibers_vox=normalized_fibers_mm;
+clear normalized_fibers_mm
 
-ea_ftr2trk(options.prefs.FTR_normalized,M.ui.groupdir,specs,options); % export normalized ftr to .trk
+
+
+% try
+%     H=spm_dicom_headers([M.patient.list{1},options.prefs.sampledtidicom]);
+%     specs.orientation=H{1,1}.ImageOrientationPatient;
+% catch
+% %    specs.orientation=[0,1,0,0,0,0]; % checked %%;[0,1,0,-1,0,0] [0,1,0,0,0,0];
+%      specs.orientation=[1,0,0,0,1,0]; % checked
+%   %       specs.orientation=[1,0,0,1,0,0]; checked
+%  %    specs.orientation=[1,0,0,0,1,0]; % checked
+% %     specs.orientation=[1 0 0 0 -1 0]; checked % dieses gut bei DSI studio
+% %     specs.orientation=[0,1,0,0,0,0]; % checked
+%    %  specs.orientation=[1 0 0 0 -1 0];   %  checked   <----- Original aus example, dieses gut bei mesoFT
+% %     %trk_write. Try this one.. %
+% %     specs.orientation=[1,0,0,0,1,0]; % checked
+% %specs.orientation=[0,1,0,-1,0,0]; % checked
+% %specs.orientation=[0,1,0,0,0,0];
+% end
+% ftr=load([M.patient.list{1},filesep,options.prefs.FTR_unnormalized]);
+
+
+ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,nii,options); % export normalized ftr to .trk
 
 
 
