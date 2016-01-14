@@ -27,6 +27,7 @@ else % direct ftr import
     ftrfilename{1}=[];
 end
 
+
 specs = ea_aff2hdr(V.mat, specs);
 
 %ori=aff2orient(V);
@@ -49,12 +50,12 @@ header.voxel_size=specs.voxel_size;
 catch
     header.voxel_size=fs.vox;
 end
-header.origin=specs.origin; % as doc says, trackvis will always use 0 0 0 as origin.
+header.origin=[0 0 0]; %specs.origin; % as doc says, trackvis will always use 0 0 0 as origin.
 header.n_scalars=0;
 header.scalar_name=char(repmat(' ',10,20));
 header.n_properties=0;
 header.property_name=char(repmat(' ',10,20));
-header.vox_to_ras=zeros(4,4);
+%header.vox_to_ras=zeros(4,4);
 header.reserved=char(repmat(' ',444,1));
 
 header.image_orientation_patient=specs.image_orientation_patient;
@@ -356,7 +357,7 @@ assert(ea_allclose(R*R',eye(3)), 'non-orthogonal R matrix')
 
 trk_hdr.origin = trans;
 trk_hdr.voxel_size = zooms;
-trk_hdr.image_orientation_patient = reshape(R(:,1:2)*-1,1,[]);
+trk_hdr.image_orientation_patient = reshape(R(:,1:2),1,[]);
 
 
 function close = ea_allclose(a, b, rtol, atol)

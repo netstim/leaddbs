@@ -2396,7 +2396,7 @@ function calcgroupconnectome_Callback(hObject, eventdata, handles)
 
 options.prefs=ea_prefs('tmp');
 M=getappdata(gcf,'M');
-keyboard
+
 normalized_fibers_mm={}; % combined connectome
 ea_dispercent(0,'Concatenating connectome');
 for sub=1:length(M.patient.list)    
@@ -2411,7 +2411,7 @@ for sub=1:length(M.patient.list)
     if size(nfibs,1)>size(nfibs,2)
         nfibs=nfibs';
     end
-    nfibs=nfibs(1:200000);
+    %nfibs=nfibs(1:200000);
     normalized_fibers_mm=[normalized_fibers_mm,nfibs];
 end
 ea_dispercent(1,'end');
@@ -2440,24 +2440,6 @@ normalized_fibers_vox=normalized_fibers_mm;
 clear normalized_fibers_mm
 
 
-
-% try
-%     H=spm_dicom_headers([M.patient.list{1},options.prefs.sampledtidicom]);
-%     specs.orientation=H{1,1}.ImageOrientationPatient;
-% catch
-% %    specs.orientation=[0,1,0,0,0,0]; % checked %%;[0,1,0,-1,0,0] [0,1,0,0,0,0];
-%      specs.orientation=[1,0,0,0,1,0]; % checked
-%   %       specs.orientation=[1,0,0,1,0,0]; checked
-%  %    specs.orientation=[1,0,0,0,1,0]; % checked
-% %     specs.orientation=[1 0 0 0 -1 0]; checked % dieses gut bei DSI studio
-% %     specs.orientation=[0,1,0,0,0,0]; % checked
-%    %  specs.orientation=[1 0 0 0 -1 0];   %  checked   <----- Original aus example, dieses gut bei mesoFT
-% %     %trk_write. Try this one.. %
-% %     specs.orientation=[1,0,0,0,1,0]; % checked
-% %specs.orientation=[0,1,0,-1,0,0]; % checked
-% %specs.orientation=[0,1,0,0,0,0];
-% end
-% ftr=load([M.patient.list{1},filesep,options.prefs.FTR_unnormalized]);
 
 
 ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,nii,options); % export normalized ftr to .trk
