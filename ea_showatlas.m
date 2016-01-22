@@ -166,8 +166,11 @@ for nativemni=nm % switch between native and mni space atlases.
             caxis([1 64]);
             
             % prepare colorbutton icon
-            
-            atlasc=squeeze(jetlist(round(atlases.colors(atlas)),:));  % color for toggle button icon
+try            
+            atlasc=squeeze(jetlist(ceil(atlases.colors(atlas)),:));  % color for toggle button icon
+catch
+    keyboard
+end
             colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,atlascnt,'on'},'OffCallback',{@atlasvisible,atlascnt,'off'},'State','on');
             
             % gather contact statistics

@@ -293,7 +293,7 @@ function vizbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 clc;
 M=getappdata(gcf,'M');
-
+ea_busyaction('on',gcf,'group');
 % set options
 options=ea_setopts_local(handles);
 % set pt specific options
@@ -346,6 +346,7 @@ end
 
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 
+ea_busyaction('off',gcf,'group');
 
 
 % --- Executes on button press in corrbutton.
@@ -353,7 +354,7 @@ function corrbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to corrbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+ea_busyaction('on',gcf,'group');
 stats=preparedataanalysis(handles);
 
 
@@ -372,61 +373,61 @@ if size(stats.corrcl,2)==1 % one value per patient
         %ea_corrplot([stats.corrcl,stats.vicorr.both],'Volume Intersections, both hemispheres',stats.vc_labels);
         ea_corrplot([stats.corrcl,stats.vicorr.nboth],'VI_BH',stats.vc_labels,handles);
     end
-    if ~isempty(stats.vicorr.right)
-        %ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
-        ea_corrplot([stats.corrcl,stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
-    end
-    if ~isempty(stats.vicorr.left)
-        %ea_corrplot([stats.corrcl,stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
-        ea_corrplot([stats.corrcl,stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
-    end
-    if ~isempty(stats.fccorr.both)
-        %ea_corrplot([stats.corrcl,stats.fccorr.both],'Fibercounts, both hemispheres',stats.fc_labels);
-        ea_corrplot([stats.corrcl,stats.fccorr.nboth],'FC_BH',stats.fc_labels,handles);
-    end
-    if ~isempty(stats.fccorr.right)
-        %ea_corrplot([stats.corrcl,stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
-        ea_corrplot([stats.corrcl,stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
-    end
-    if ~isempty(stats.fccorr.left)
-        %ea_corrplot([stats.corrcl,stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
-        ea_corrplot([stats.corrcl,stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
-    end
+%     if ~isempty(stats.vicorr.right)
+%         %ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
+%         ea_corrplot([stats.corrcl,stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
+%     end
+%     if ~isempty(stats.vicorr.left)
+%         %ea_corrplot([stats.corrcl,stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
+%         ea_corrplot([stats.corrcl,stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
+%     end
+%     if ~isempty(stats.fccorr.both)
+%         %ea_corrplot([stats.corrcl,stats.fccorr.both],'Fibercounts, both hemispheres',stats.fc_labels);
+%         ea_corrplot([stats.corrcl,stats.fccorr.nboth],'FC_BH',stats.fc_labels,handles);
+%     end
+%     if ~isempty(stats.fccorr.right)
+%         %ea_corrplot([stats.corrcl,stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
+%         ea_corrplot([stats.corrcl,stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
+%     end
+%     if ~isempty(stats.fccorr.left)
+%         %ea_corrplot([stats.corrcl,stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
+%         ea_corrplot([stats.corrcl,stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
+%     end
     
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
     try stats.vicorr.nboth=(stats.vicorr.nboth)*100; end
     try stats.vicorr.nright=(stats.vicorr.nright)*100; end
     try stats.vicorr.nleft=(stats.vicorr.nleft)*100; end
     if ~isempty(stats.vicorr.both)
+        
         %ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],'Volume Intersections, both hemispheres',stats.vc_labels);
-
         ea_corrplot([stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft]],'VI_BH',stats.vc_labels,handles);
     end
-    if ~isempty(stats.vicorr.right)
-        %ea_corrplot([stats.corrcl(:,1),stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
-        ea_corrplot([stats.corrcl(:,1),stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
-    end
-    if ~isempty(stats.vicorr.left)
-        %ea_corrplot([stats.corrcl(:,2),stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
-        ea_corrplot([stats.corrcl(:,2),stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
-    end
-    if ~isempty(stats.fccorr.both)
-        %ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'Fibercounts, both hemispheres',stats.fc_labels);
-        ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'FC_BH',stats.fc_labels,handles);
-    end
-    if ~isempty(stats.fccorr.right)
-        %ea_corrplot([stats.corrcl(:,1),stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
-        ea_corrplot([stats.corrcl(:,1),stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
-    end
-    if ~isempty(stats.fccorr.left)
-        %ea_corrplot([stats.corrcl(:,2),stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
-        ea_corrplot([stats.corrcl(:,2),stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
-    end
-    
+%     if ~isempty(stats.vicorr.right)
+%         %ea_corrplot([stats.corrcl(:,1),stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
+%         ea_corrplot([stats.corrcl(:,1),stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
+%     end
+%     if ~isempty(stats.vicorr.left)
+%         %ea_corrplot([stats.corrcl(:,2),stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
+%         ea_corrplot([stats.corrcl(:,2),stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
+%     end
+%     if ~isempty(stats.fccorr.both)
+%         %ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'Fibercounts, both hemispheres',stats.fc_labels);
+%         ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'FC_BH',stats.fc_labels,handles);
+%     end
+%     if ~isempty(stats.fccorr.right)
+%         %ea_corrplot([stats.corrcl(:,1),stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
+%         ea_corrplot([stats.corrcl(:,1),stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
+%     end
+%     if ~isempty(stats.fccorr.left)
+%         %ea_corrplot([stats.corrcl(:,2),stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
+%         ea_corrplot([stats.corrcl(:,2),stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
+%     end
+%     
 else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
-
+ea_busyaction('off',gcf,'group');
 
 
 
@@ -614,9 +615,7 @@ end
 
 
 function refreshvifc(handles)
-
-set(gcf,'name','LEAD-DBS Group Analysis (updating...)');
-drawnow
+ea_busyaction('on',gcf,'group');
 
 %keyboard
 
@@ -625,7 +624,7 @@ drawnow
 M=getappdata(gcf,'M');
 
 if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % not set yet.
-    set(gcf,'name','LEAD-DBS Group Analysis');
+ea_busyaction('off',gcf,'group');
     return
 end
 
@@ -911,8 +910,7 @@ set(handles.fclist,'String',M.fclist);
 
 
 
-
-set(gcf,'name','LEAD-DBS Groupanalysis');
+ea_busyaction('off',gcf,'group');
 
 
 % --- Executes on selection change in grouplist.
@@ -1035,9 +1033,11 @@ howmanypts=length(get(handles.patientlist,'Value'));
 vicorr_right=zeros(howmanypts,howmanyvis); vicorr_left=zeros(howmanypts,howmanyvis); vicorr_both=zeros(howmanypts,howmanyvis);
 nvicorr_right=zeros(howmanypts,howmanyvis); nvicorr_left=zeros(howmanypts,howmanyvis); nvicorr_both=zeros(howmanypts,howmanyvis);
 vc_labels={};
+
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
         usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis!
+
         for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,1)
             for vat=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,2);
                 if side==1 % right hemisphere
@@ -1116,6 +1116,8 @@ fccorr.nleft=nfccorr_left;
 
 % clinical vector:
 corrcl=M.clinical.vars{get(handles.clinicallist,'Value')};
+
+corrcl=corrcl(get(handles.patientlist,'Value'),:);
 
 clinstrs=get(handles.clinicallist,'String');
 vc_labels=[clinstrs(get(handles.clinicallist,'Value')),vc_labels]; % add name of clinical vector to labels
@@ -1527,6 +1529,8 @@ nudir=[uigetdir];
 if ~nudir % user pressed cancel
     return
 end
+ea_busyaction('on',gcf,'group');
+
 nudir=[nudir,filesep];
 M=initializeM;
 
@@ -1541,6 +1545,7 @@ end
 
 M.ui.groupdir=nudir;
 setappdata(gcf,'M',M);
+ea_busyaction('off',gcf,'group');
 
 refreshvifc(handles);
 
@@ -2082,7 +2087,7 @@ function lg_figure_CloseRequestFcn(hObject, eventdata, handles)
 
 % Hint: delete(hObject) closes the figure
 
-
+ea_busyaction('on',gcf,'group');
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
@@ -2096,7 +2101,7 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
     end
     disp('Bye for now.');
 end
-
+ea_busyaction('off',gcf,'group');
 delete(hObject);
 
 
@@ -2116,6 +2121,9 @@ function viz2dbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 clc;
 M=getappdata(gcf,'M');
+
+
+ea_busyaction('on',gcf,'group');
 % set options
 options=ea_setopts_local(handles);
 % set pt specific options
@@ -2187,6 +2195,7 @@ end
 
 cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));
 
+ea_busyaction('off',gcf,'group');
 
 
 

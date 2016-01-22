@@ -121,6 +121,10 @@ for pt=1:length(tempzallV)-1
     
 end
 
+dostats=0;
+if dostats
+
+
 % spm factorial:
 try
     rmdir([options.root,options.patientname,filesep,'statvat_results',filesep,'SPM'],'s');
@@ -170,3 +174,5 @@ matlabbatch{1}.spm.stats.results.write.tspm.basename = 'spm_result.nii';
     
     % cleanup
     delete([options.root,options.patientname,filesep,'statvat_results',filesep,'*_temp.nii']);
+end
+    

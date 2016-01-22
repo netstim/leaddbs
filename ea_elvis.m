@@ -103,12 +103,21 @@ else
         trajectory{1}=ea_fit_line(coords_mm(1:4,:));
         trajectory{2}=ea_fit_line(coords_mm(options.elspec.numel+1:options.elspec.numel+4,:));
     end
-    
+
+    try
     elstruct(1).coords_mm=coords_mm;
+    catch
+        try
+       elstruct(1).coords_mm=ea_resolvecoords(markers,options);
+        catch
+            keyboard
+        end
+    end
     elstruct(1).trajectory=trajectory;
     elstruct(1).name=options.patientname;
     elstruct(1).markers=markers;
     clear coords_mm trajectory
+
 end
 
 

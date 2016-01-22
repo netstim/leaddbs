@@ -114,7 +114,7 @@ if checkrebuild(atlases,options)
                     rnii=load_nii_crop([root,'atlases',filesep,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
                 case 4 % mixed atlas (one file with both sides information).
                     nii=load_nii_crop([root,'atlases',filesep,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],options);
-                case 5 % midline atlas (one file with both sides information.
+                    case 5 % midline atlas (one file with both sides information.
                     nii=load_nii_crop([root,'atlases',filesep,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
             end
 
@@ -174,9 +174,11 @@ if checkrebuild(atlases,options)
                     XYZ.val=bXYZ.val;
                     XYZ.vx=bXYZ.vx;
                 end
-
+try
                 bb=[0,0,0;size(nii.img)];
-
+catch
+    keyboard
+end
                 bb=map_coords_proxy(bb,nii);
                 gv=cell(3,1);
                 for dim=1:3
@@ -219,6 +221,9 @@ if checkrebuild(atlases,options)
                 thresh=ea_detthresh(atlases,atlas,nii.img);
                 ea_addnii2lf(atlases,atlas,thresh,options);
                 fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
+                fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
+                fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
+                fv.vertices=[fv.vertices;fvc.vertices];
 
                 if ischar(options.prefs.hullsimplify)
 
@@ -335,6 +340,7 @@ end
 %try
 
 ea_crop_nii(fname);
+
 
 nii=spm_vol(fname);
 

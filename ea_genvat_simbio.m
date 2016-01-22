@@ -222,21 +222,11 @@ if ea_headmodel_changed(options,side,elstruct)
     
     %% calculate volume conductor
     disp('Done. Creating volume conductor...');
-    try
-
-    vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]);
-    catch
-        
-        while 1
-            ix=randperm(8);
-            mesh.hex=mesh.hex(:,ix);
-            try
-                vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 0.999 0.001]);
-                break
-            end
-        end
-        keyboard
+    if side==2 % reorder mesh hexes so not be degenerated.
+        mesh.hex=mesh.hex(:,[4 3 2 1 8 7 6 5]);
     end
+    vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
+    
     
     save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','-v7.3');
     ea_save_hmprotocol(options,side,elstruct,1);
@@ -304,7 +294,7 @@ vat.ET=vol.cond(vol.tissue).*ngrad;
 
 
 disp('Done. Calculating VAT...');
-thresh=0.0064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons
+thresh=0.110; %0.0064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons
 
 vat.ET=vat.ET>thresh;
 vat.pos=vat.pos(vat.ET,:);
@@ -335,7 +325,8 @@ eg(isnan(eg))=0;
 vatfv=isosurface(xg,yg,zg,eg,0.75);
 
 vatvolume=nnz(eg)*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
-stimparams.volume=vatvolume;
+stimparams(side).volume=vatvolume;
+
 chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);
 Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
 Vvat.dim=[100,100,100];

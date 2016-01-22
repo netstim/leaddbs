@@ -50,9 +50,18 @@ for side=options.sides
             electrode.tail_position,1
             electrode.x_position,1
             electrode.y_position,1]; % points in model
-        
+        redomarkers=0;
         if ~isfield(elstruct,'markers') % backward compatibility to old electrode format
-            for iside=options.sides
+            redomarkers=1;
+            
+        else
+            if isempty(elstruct.markers)
+                
+           redomarkers=1; 
+            end
+        end
+        if redomarkers
+        for iside=options.sides
                 elstruct.markers(iside).head=elstruct.coords_mm{iside}(1,:);
                 elstruct.markers(iside).tail=elstruct.coords_mm{iside}(4,:);
                 
@@ -60,8 +69,7 @@ for side=options.sides
                 orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
                 elstruct.markers(iside).x=elstruct.coords_mm{iside}(1,:)+orth(:,1)';
                 elstruct.markers(iside).y=elstruct.coords_mm{iside}(1,:)+orth(:,2)'; % corresponding points in reality
-            end
-            
+        end
         end
         
         B=[elstruct.markers(side).head,1;

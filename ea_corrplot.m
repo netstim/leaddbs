@@ -1,5 +1,13 @@
-function fig=ea_corrplot(X,description,labels,handles)
+function fig=ea_corrplot(varargin)
 % this simple function is a small wrapper for a corrplot figure.
+
+
+X=varargin{1};
+description=varargin{2};
+labels=varargin{3};
+if nargin==4
+    handles=varargin{4};
+end
 
 dim=size(X,2);
 
@@ -32,10 +40,12 @@ for area=1:length(R_upd)
     end
     title([sub2space(fn),' (R=',sprintf('%.3f',R_upd(area)),', p=',sprintf('%.3f',p_upd(area)),').'],'FontSize',16,'FontName','Helvetica');
     xlabel(sub2space(labels{1}),'FontSize',16,'FontName','Helvetica');
-    ylabel(['Portion of VAT within ',sub2space(fn),' [%]'],'FontSize',16,'FontName','Helvetica');
-odir=get(handles.groupdir_choosebox,'String');
-ofname=[odir,description,'_',fn,'_',labels{1},'.png'];
-ea_screenshot(ofname);
+    ylabel(['Portion of VAT in'],'FontSize',16,'FontName','Helvetica');
+    if nargin==4
+        odir=get(handles.groupdir_choosebox,'String');
+        ofname=[odir,description,'_',fn,'_',labels{1},'.png'];
+        ea_screenshot(ofname);
+    end
 end
 
 

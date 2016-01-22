@@ -224,6 +224,11 @@ if nargin
 end
 
 
+%% add tools menu
+f = uimenu('Label','Tools');
+    uimenu(f,'Label','Convert ACPC to MNI','Callback',{@ea_acpc2mni,hObject});
+
+
 ea_firstrun(handles);
 getui(handles);
 
@@ -252,6 +257,8 @@ function run_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 %% run trajectory reconstruction.
+leadfig=gcf;
+ea_busyaction('on',leadfig,'lead');
 
 options=handles2options(handles);
 
@@ -324,6 +331,9 @@ else
         end
     end
 end
+ea_busyaction('off',leadfig,'lead');
+
+
 
 
 function edit1_Callback(hObject, eventdata, handles)
@@ -644,6 +654,8 @@ else
 end
 
 % store patient directories in figure
+
+
 setappdata(gcf,'uipatdir',uipatdir);
 ea_switchctmr(handles);
 

@@ -84,6 +84,9 @@ if options.prefs.hullsmooth
     nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
 end
 fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
+fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
+fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
+fv.vertices=[fv.vertices;fvc.vertices];
 
 if ischar(options.prefs.hullsimplify)
     
