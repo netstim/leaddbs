@@ -28,6 +28,15 @@ else % direct ftr import
 end
 
 
+ysize=specs.dim(2)+1;
+
+if convertfromfreiburg
+   for fib=1:length(fibs)
+       fibs{fib}=[fibs{fib}(:,2),ysize-fibs{fib}(:,1),fibs{fib}(:,3)];
+   end
+end
+
+
 specs = ea_aff2hdr(V.mat, specs);
 
 %ori=aff2orient(V);
