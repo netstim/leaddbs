@@ -7,7 +7,7 @@ if ~exist([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],'
     ea_error('Please run a compatible normalization of the preoperative MRI-volume first. Final (inverse) normalization parameters should be stored as y_ea_inv_normparams.nii inside of the subject folder.');
 end
 
-vizz=1; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
+vizz=0; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
 cleanse_fibers=0; % deletes everything outside the white matter of the template.
 
 %% check which normalization routine has been used..
