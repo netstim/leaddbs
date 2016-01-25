@@ -246,25 +246,25 @@ for side=options.sides
                 
                 % define an alpha mask
                 alpha=slice;
-                alpha(~isnan(alpha))=0.7;
+                alpha(~isnan(alpha))=1;
                 alpha(isnan(alpha))=0;
                 % convert slice to rgb format
                 %slicergb=nan([size(slice),3]);
                 
                 jetlist=eval(options.prefs.d2.isovolcolormap);
-                %jetlist=parula;
-slice=(slice-minval)/(maxval-minval); % set min max to boundaries 0-1.
+                %jetlist=summer;
+                slice=(slice-minval)/(maxval-minval); % set min max to boundaries 0-1.
                 
-%                 % ##
-%                 % add some "contrast" ? remove this part for linear
-%                 % colormapping
-%                 
-%                 slice=slice-0.5;
-%                 slice(slice<0)=0;
-%                 slice=slice*2;
-%                 slice(slice>1)=1;
-%                 
-%                 % ##
+                % ##
+                % add some "contrast" ? remove this part for linear
+                % colormapping
+                
+                slice=slice-0.5;
+                slice(slice<0)=0;
+                slice=slice*2;
+                slice(slice>1)=1;
+                
+                % ##
                 
                 slice=round(slice.*63)+1; % set min max to boundaries 1-64.
                 slice(slice<1)=1; slice(slice>64)=64;

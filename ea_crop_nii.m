@@ -53,7 +53,11 @@ spm_write_sn([filename,',1'], sn,ropts);
 
 if nargin<2
     [pth,fname,ext]=fileparts(filename);
+    if ~isempty(pth)
     movefile([pth,filesep,'w',fname,ext],[pth,filesep,fname,ext]);
+    else
+            movefile(['w',fname,ext],[fname,ext]);
+    end
 end
 
 
