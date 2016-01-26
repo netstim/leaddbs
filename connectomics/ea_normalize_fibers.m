@@ -46,11 +46,11 @@ niisize=size(dnii.img); % get dimensions of reference template.
 
 specs.origin=[0,0,0];
 specs.dim=niisize;
-
 specs.vox=ftr.vox;
+specs.affine=dnii.mat;
+
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
-%[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
-ea_ftr2trk(ftrfname,directory,specs,dnii,options); % export normalized ftr to .trk
+ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
 end
 disp('Done.');
 
@@ -193,29 +193,17 @@ disp('Done.');
 % create trackvis version
 disp('Creating TrackVis version...');
 try
-reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii'];
+reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii,1'];
 dnii=ea_load_nii(reftemplate);
-niisize=size(dnii(1).img); % get dimensions of reference template.
-clear dnii
+niisize=size(dnii.img); % get dimensions of reference template.
+
 specs.origin=[0,0,0];
 specs.dim=niisize;
-try
-    H=spm_dicom_headers([root_directory,options.prefs.sampledtidicom]);
-    specs.orientation=H{1,1}.ImageOrientationPatient;
-catch
-    specs.orientation=[0,1,0,0,0,0]; %[0,1,0,-1,0,0];%;[0,1,0,-1,0,0] [0,1,0,0,0,0];
-    specs.orientation=[1,0,0,0,1,0];
-    specs.orientation=[1,0,0,1,0,0];
-    specs.orientation=[1,0,0,0,1,0];
-   specs.orientation=[1 0 0 0 -1 0]; % dieses gut bei DSI studio
-    %specs.orientation=[0,1,0,0,0,0];
-    %specs.orientation=[1 0 0 0 -1 0];   %     <----- Original aus example, dieses gut bei mesoFT
-    %trk_write. Try this one.. %[1,0,0,0,1,0];
-end
 specs.vox=ftr.vox;
+specs.affine=dnii.mat;
 
 [~,ftrfname]=fileparts(options.prefs.FTR_normalized);
-ea_ftr2trk([ftrfname],directory,specs,options); % export normalized ftr to .trk
+ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
 
 
 end
@@ -232,7 +220,7 @@ directory=[options.root,options.patientname,filesep];
 
 [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
 switch whichnormmethod
-    case 'ea_normalize_ants')
+    case 'ea_normalize_ants'
         ea_error('ANTs normalization is not supported for Fibers normalization right now.');
     case 'ea_normalize_spmdartel'
         dartelused=1;

@@ -2437,6 +2437,7 @@ specs.origin=[0,0,0];
 
 nii=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
 specs.dim=nii.dim;
+specs.affine=nii.mat;
 ea_dispercent(0,'Converting fibers to voxel format');
 for fib=1:length(normalized_fibers_mm);
     ea_dispercent(fib/length(normalized_fibers_mm));
@@ -2451,7 +2452,7 @@ clear normalized_fibers_mm
 
 
 
-ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,nii,options); % export normalized ftr to .trk
+ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,options); % export normalized ftr to .trk
 
 
 

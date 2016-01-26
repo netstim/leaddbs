@@ -1,4 +1,4 @@
-function ea_ftr2trk(ftrfilename,directory,specs,V,options)
+function ea_ftr2trk(ftrfilename,directory,specs,options)
 
 if ischar(ftrfilename)
     disp('Loading FTR-File.');
@@ -37,9 +37,9 @@ if convertfromfreiburg
 end
 
 
-specs = ea_aff2hdr(V.mat, specs);
+specs = ea_aff2hdr(specs.affine, specs);
 
-%ori=aff2orient(V);
+%ori=aff2orient(specs.affine);
 
 % specs.orientation=ori.image_orientation_patient;
 % specs.vox=ori.voxel_size;
