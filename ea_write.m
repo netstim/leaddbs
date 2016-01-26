@@ -3,6 +3,7 @@ try
 ea_updatemodel(options);
 end
 
+
 % Slice 2D Visualization
 if options.d2.write
     
@@ -17,6 +18,9 @@ end
 
 % Render 3D Visualization
 if options.d3.write
+
+    %% compat: store nativespace reconstructions, too
+    ea_reconstruction2native(options);
     
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.

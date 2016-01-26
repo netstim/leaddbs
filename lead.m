@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 19-Dec-2015 20:03:38
+% Last Modified by GUIDE v2.5 25-Jan-2016 17:40:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1362,11 +1362,16 @@ options.autoimprove=0; % if true, templates will be modified.
 options.axiscontrast=8; % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
 
-options.atl.genpt=get(handles.genptatlascheck,'Value'); % generate patient specific atlases
-options.atl.normalize=get(handles.normptatlascheck,'Value'); % normalize patient specific atlasset.
-options.atl.can=get(handles.canatlcheck,'Value'); % display canonical atlases
-options.atl.pt=get(handles.patatlcheck,'Value'); % display patient specific atlases
-
+options.atl.genpt=get(handles.vizspacepopup,'Value')>1; % generate patient specific atlases
+options.atl.normalize=get(handles.vizspacepopup,'Value')==2; % normalize patient specific atlasset.
+options.atl.can=get(handles.vizspacepopup,'Value')==1; % display canonical atlases
+options.atl.pt=get(handles.vizspacepopup,'Value')==2; % display patient specific atlases
+options.atl.ptnative=get(handles.vizspacepopup,'Value')==3; % show results in native space.
+if options.atl.ptnative
+    options.native=1;
+else
+    options.native=0;
+end
 
 options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
 options.d2.atlasopacity=0.15;
@@ -1470,9 +1475,6 @@ else
     set(handles.maskwindow_txt,'String',num2str(options.maskwindow));
 end
 set(handles.genptatlascheck,'Value',options.atl.genpt); % generate patient specific atlases
-set(handles.normptatlascheck,'Value',options.atl.normalize); % normalize patient specific atlasset.
-set(handles.canatlcheck,'Value',options.atl.can); % display canonical atlases
-set(handles.patatlcheck,'Value',options.atl.pt); % display patient specific atlases
 set(handles.writeout2d_checkbox,'Value',options.d2.write);
 set(handles.tdcolorscheck,'Value',options.d2.col_overlay);
 set(handles.tdcontourcheck,'Value',options.d2.con_overlay);
@@ -1712,4 +1714,35 @@ if strcmp(choice,'OK')
     disp('Done. Cleaning up.');
     delete([earoot,'fibers',filesep,'gc.zip']);
     msgbox('Download and install of the group connectome is complete.');
+end
+
+
+% --- Executes on selection change in vizspacepopup.
+function vizspacepopup_Callback(hObject, eventdata, handles)
+% hObject    handle to vizspacepopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns vizspacepopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from vizspacepopup
+
+if get(hObject,'Value')==3
+   set(handles.writeout2d_checkbox,'Enable','off');
+   set(handles.writeout2d_checkbox,'Value',0);
+else
+   set(handles.writeout2d_checkbox,'Enable','on');    
+   set(handles.writeout2d_checkbox,'Value',1);
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function vizspacepopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to vizspacepopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end

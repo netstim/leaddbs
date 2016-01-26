@@ -28,14 +28,9 @@ ea_dispercent('Iterating through patients');
 for pt=1:length(uidir)
     ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
-    whichnormmethod=ea_whichnormmethod(directory);
-    switch whichnormmethod
-        case 'ea_normalize_spmdartel' % use dartel MNI template
-            tempfile=[leaddir,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'];
-        case 'ea_normalize_ants'
+    [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
+    if strcmp(whichnormmethod,'ea_normalize_ants')
             ea_error('ANTs normalization is not supported for ACPC2MNI conversion as of now.');
-        otherwise % use mni_hires
-            tempfile=[leaddir,'templates',filesep,'mni_hires.nii'];
     end
     
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile);
@@ -171,19 +166,7 @@ V=spm_vol(tempfile);
 fidpoints_vox=V(1).mat\[fidpoints_mm,ones(size(fidpoints_mm,1),1)]';
 fidpoints_vox=fidpoints_vox(1:3,:)';
 
-function whichnormmethod=ea_whichnormmethod(directory)
-load([directory,'ea_normmethod_applied']);
-cnt=0;
-while 1
-    whichnormmethod=norm_method_applied{end-cnt};
-    switch whichnormmethod
-        case 'ea_normalize_apply_normalization'
-            cnt=cnt+1;
-        otherwise
-            break
-    end
 
-end
 
 
 

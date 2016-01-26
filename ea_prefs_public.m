@@ -76,6 +76,7 @@ prefs.normmatrix=['lmat.txt'];
 %% Normalization:
 prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
 prefs.normalize.default='ea_normalize_spmdartel';
+prefs.normalize.inverse.customtpm=1; % set to 1 if custom TPM shall be built for inverse warpings.
 
 %% Coregistration (CT/MR):
 prefs.ctcoreg.default='ea_coregctmri_ants';

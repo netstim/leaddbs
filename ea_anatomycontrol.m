@@ -70,8 +70,17 @@ setappdata(gcf,'options',options);
 togglestates=getappdata(resultfig,'togglestates'); % get info from resultfig.
 setappdata(gcf,'togglestates',togglestates); % store anatomy toggle data from resultfig to anatomyslice (this) fig for subroutines.
 
-
-
+if options.native
+        set(handles.templatepopup,'String',{'Patient Post-OP'
+'Patient Pre-OP'
+'Choose...'});
+    
+else
+    set(handles.templatepopup,'String',{'MNI-Template'
+'Patient Post-OP'
+'Patient Pre-OP'
+'Choose...'});
+end
 
 if ~isempty(togglestates) % anatomy toggles have been used before..
 % reset figure handle.
@@ -337,8 +346,12 @@ refreshresultfig(handles)
 function refreshresultfig(handles)
 % this part makes changes of the figure active:
 resultfig=getappdata(gcf,'resultfig');
+try
 togglestates=getappdata(resultfig,'togglestates');
-
+catch
+    resultfig=gcf;
+togglestates=getappdata(gcf,'togglestates');
+end
 if ~isfield(togglestates,'refreshcuts')
     togglestates.refreshcuts=0;
 end

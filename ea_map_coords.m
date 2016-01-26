@@ -166,13 +166,27 @@ coord = sn.VF.mat * sn.Affine * coord;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function coord = hdw_trgvx2srcmm(coord, hdwim)
 % src_mm = hdw_trgvx2srcmm(trg_vx, y_hdw)
-inds = round(coord(1:3, :));
-if abs(coord(1:3, :) - inds) > 0.01
-    warning('map_coords:hdw_rounding',...
-        'target voxel coords rounded for HDW')
-end
+inds = coord(1:3, :);
+% if abs(coord(1:3, :) - inds) > 0.01
+%     warning('map_coords:hdw_rounding',...
+%         'target voxel coords rounded for HDW')
+% end
 W = nifti(hdwim);
+
 for i = 1:size(coord, 2)
     ind = inds(:, i);
-    coord(1:3, i) = squeeze(W.dat(ind(1), ind(2), ind(3), 1, 1:3));
+%                % linearly interpolate: 
+%     samp(1,1,1,:)=squeeze(W.dat(floor(ind(1)), floor(ind(2)), floor(ind(3)), 1, 1:3));
+%     samp(1,1,2,:)=squeeze(W.dat(floor(ind(1)), floor(ind(2)), ceil(ind(3)), 1, 1:3));
+%     samp(1,2,1,:)=squeeze(W.dat(floor(ind(1)), floor(ind(2)), ceil(ind(3)), 1, 1:3));
+%     samp(2,1,1,:)=squeeze(W.dat(ceil(ind(1)), floor(ind(2)), floor(ind(3)), 1, 1:3));
+%     samp(1,2,2,:)=squeeze(W.dat(floor(ind(1)), ceil(ind(2)), ceil(ind(3)), 1, 1:3));
+%     samp(2,1,2,:)=squeeze(W.dat(ceil(ind(1)), floor(ind(2)), ceil(ind(3)), 1, 1:3));
+%     samp(2,2,1,:)=squeeze(W.dat(ceil(ind(1)), ceil(ind(2)), floor(ind(3)), 1, 1:3));
+%     samp(2,2,2,:)=squeeze(W.dat(ceil(ind(1)), ceil(ind(2)), ceil(ind(3)), 1, 1:3));
+%     
+%     rests=ind-floor(ind);
+% 
+%    
+                coord(1:3, i) = squeeze(W.dat(ind(1), ind(2), ind(3), 1, 1:3));
 end

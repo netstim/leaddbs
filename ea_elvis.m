@@ -73,46 +73,10 @@ if nargin>1
 else
     multiplemode=0;
     
-    try
-        load([options.root,options.patientname,filesep,'ea_reconstruction']);
-    catch
-        try
-            coords_mm=ea_read_fiducials([options.root,options.patientname,filesep,'ea_coords.fcsv'],options);
-        catch
-            ea_error(['Please localize electrodes of ',options.patientname,' first.']); 
-        end
-    end
-    
-    if ~exist('markers','var') % backward compatibility to old recon format
-        for side=options.sides
-            markers(side).head=coords_mm{side}(1,:);
-            markers(side).tail=coords_mm{side}(4,:);
-            normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-            orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-            markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
-            markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
-        end
-    elmodel=options.elmodel;
-    save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','markers','elmodel');
-    
-    end
-    
-    try
-        load([options.root,options.patientname,filesep,'ea_reconstruction.mat']);
-    catch % generate trajectory from coordinates.
-        trajectory{1}=ea_fit_line(coords_mm(1:4,:));
-        trajectory{2}=ea_fit_line(coords_mm(options.elspec.numel+1:options.elspec.numel+4,:));
-    end
+    [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 
-    try
     elstruct(1).coords_mm=coords_mm;
-    catch
-        try
-       elstruct(1).coords_mm=ea_resolvecoords(markers,options);
-        catch
-            keyboard
-        end
-    end
+    elstruct(1).coords_mm=ea_resolvecoords(markers,options);
     elstruct(1).trajectory=trajectory;
     elstruct(1).name=options.patientname;
     elstruct(1).markers=markers;
@@ -137,7 +101,7 @@ for pt=1:length(elstruct)
         
         
        cnt=1;
-        for side=1:2
+        for side=options.sides
             extract=1:length(el_render(pt).el_render{side});
             for ex=extract
                 
@@ -166,6 +130,7 @@ for pt=1:length(elstruct)
     end
     
 end
+
 
 setappdata(resultfig,'el_render',el_render);
 % add handles to buttons. Can't be combined with the above loop since all

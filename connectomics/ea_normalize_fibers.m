@@ -230,14 +230,16 @@ disp('Done.');
 function [useb0,useanat]=ea_checkdartelused(options)
 directory=[options.root,options.patientname,filesep];
 
-dartelused=0;
-try
-    load([directory,'ea_normmethod_applied']);
-
-    if strcmp(norm_method_applied{end},'ea_normalize_spmdartel')
+[whichnormmethod,tempfile]=ea_whichnormmethod(directory);
+switch whichnormmethod
+    case 'ea_normalize_ants')
+        ea_error('ANTs normalization is not supported for Fibers normalization right now.');
+    case 'ea_normalize_spmdartel'
         dartelused=1;
-    end
+    otherwise
+        dartelused=0;
 end
+
 if dartelused
     % segment b0.
     if ~exist([directory,'c2',options.prefs.b0],'file');

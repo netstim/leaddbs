@@ -145,8 +145,8 @@ close(gcf)
 
 coords_mm=ea_resolvecoords(markers,options);
 elmodel=options.elmodel;
-manually_corrected=1;
-save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','markers','elmodel','manually_corrected');
+
+    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
 disp('Done.');
 

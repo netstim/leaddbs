@@ -32,7 +32,25 @@ if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)
             V{1}=spm_vol([options.earoot,'templates',filesep,'mni_hires.nii']);
             
         case 'Patient Post-OP'
+            if options.native
+                V{1}=spm_vol([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
+                try
+                    V{2}=spm_vol([options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
+                catch
+                    try
+                        V{2}=spm_vol([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
+                    end
+                end
+                
+                try
+                    V{3}=spm_vol([options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized]);
+                catch
+                    try
+                        V{3}=spm_vol([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
+                    end
+                end
             
+            else
             % load tra
             try
                 V{1}=spm_vol([options.root,options.patientname,filesep,options.prefs.gtranii]);
@@ -57,15 +75,19 @@ if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)
                  V{3}=spm_vol([options.root,options.patientname,filesep,options.prefs.sagnii]);
                 end
             end
-        case 'Patient Pre-OP'
-            
-            % load tra
-            try
-                V{1}=spm_vol([options.root,options.patientname,filesep,options.prefs.gprenii]);
-            catch
-                V{1}=spm_vol([options.root,options.patientname,filesep,options.prefs.prenii]);
             end
-            
+        case 'Patient Pre-OP'
+            if options.native
+                V{1}=spm_vol([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
+            else
+                
+                % load tra
+                try
+                    V{1}=spm_vol([options.root,options.patientname,filesep,options.prefs.gprenii]);
+                catch
+                    V{1}=spm_vol([options.root,options.patientname,filesep,options.prefs.prenii]);
+                end
+            end
             
         case 'Choose...'
             
@@ -74,6 +96,7 @@ if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)
     end
     setappdata(resultfig,'templateused',togglestates.template); % refresh used template.
 end
+
 
 
 if ~inverted==togglestates.tinvert
@@ -104,7 +127,7 @@ if togglestates.xyztoggles(1)
         %slice=flipdim(slice,1);
     else
         [xx,yy,zz]=meshgrid(xyzv(1),1:0.5:V{1+usesag}.dim(2),1:0.5:V{1+usesag}.dim(3));
-        slice=spm_sample_vol(V{1+usesag},xx,yy,zz,4);
+        slice=spm_sample_vol(V{1+usesag},xx,yy,zz,1);
     end
     
     %slice=ea_invert(slice,inverted);

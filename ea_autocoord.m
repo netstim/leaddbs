@@ -96,6 +96,12 @@ if options.dolc % perform lead connectome subroutine..
 end
 
 
+
+if options.atl.genpt % generate patient specific atlas set
+    ea_ptspecific_atl(options);
+    
+end
+
 if options.atl.normalize % normalize patient-specific atlas-set.
     ea_normalize_ptspecific_atl(options)
 end
@@ -112,10 +118,6 @@ if options.normalize.check
 end
 
 
-if options.atl.genpt % generate patient specific atlas set
-    ea_ptspecific_atl(options);
-    
-end
 
 if options.doreconstruction
     ea_checkfiles(options);
@@ -202,8 +204,8 @@ if options.doreconstruction
     
     % save reconstruction results
     elmodel=options.elmodel;
-    save([options.root,patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','markers','elmodel');
-    
+    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+
 end
 
 
@@ -230,8 +232,6 @@ if options.manualheightcorrection
         options.mancor=1;
     end
     ea_manualreconstruction(mcfig,markers,trajectory,patientname,options);
-    
-    
    
 else
     ea_write(options)

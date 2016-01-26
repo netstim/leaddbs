@@ -21,11 +21,11 @@ if nargin>2
 end
 
 
-nm=[0:1]; % native and mni
+nm=[0:2]; % native and mni
 try
-    nmind=[options.atl.pt,options.atl.can]; % which shall be performed?
+    nmind=[options.atl.pt,options.atl.can,options.atl.ptnative]; % which shall be performed?
 catch
-    nmind=[0 1];
+    nmind=[0 1 0];
 end
 nm=nm(logical(nmind)); % select which shall be performed.
 
@@ -36,19 +36,28 @@ for nativemni=nm % switch between native and mni space atlases.
     switch nativemni
         case 0
             root=[options.root,options.patientname,filesep];
+            adir=[root,'atlases',filesep,'mni',filesep,options.atlasset,filesep];
+            mifix=['mni',filesep];
         case 1
             root=options.earoot;
+            adir=[root,'atlases',filesep,options.atlasset,filesep];
+            mifix='';
+        case 2
+            root=[options.root,options.patientname,filesep];
+            adir=[root,'atlases',filesep,'native',filesep,options.atlasset,filesep];
+            mifix=['native',filesep];
     end
+    
     
     atlascnt=1;
     set(0,'CurrentFigure',resultfig)
     
-    if ~exist([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
+    if ~exist([adir,'atlas_index.mat'],'file')
         
-        atlases=ea_genatlastable([],root,options);
+        atlases=ea_genatlastable([],root,options,mifix);
     else
-        load([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-       atlases=ea_genatlastable(atlases,root,options);     
+        load([adir,'atlas_index.mat']);
+       atlases=ea_genatlastable(atlases,root,options,mifix);     
     end
     
     
