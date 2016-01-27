@@ -193,14 +193,14 @@ disp('Done.');
 % create trackvis version
 disp('Creating TrackVis version...');
 try
-reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii,1'];
+reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii'];
 dnii=ea_load_nii(reftemplate);
-niisize=size(dnii.img); % get dimensions of reference template.
+niisize=size(dnii(1).img); % get dimensions of reference template.
 
 specs.origin=[0,0,0];
 specs.dim=niisize;
 specs.vox=ftr.vox;
-specs.affine=dnii.mat;
+specs.affine=dnii(1).mat;
 
 [~,ftrfname]=fileparts(options.prefs.FTR_normalized);
 ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
