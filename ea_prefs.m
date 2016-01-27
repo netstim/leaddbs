@@ -92,7 +92,7 @@ prefs.normalize.inverse.customtpm=1; % set to 1 if custom TPM shall be built for
 prefs.ctcoreg.default='ea_coregctmri_ants';
 
 %% Coregistration (MR/MR):
-prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
+prefs.mrcoreg.default='ants'; % set to 'spm' or 'ants'
 
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.

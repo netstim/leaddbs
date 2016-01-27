@@ -1,10 +1,14 @@
+<<<<<<< Updated upstream
 function ea_ftr2trk(ftrfilename,directory,specs,options)
+=======
+function ea_ftr2trk(ftrfilename,directory,specs,V,options)
+convertfromfreiburg=0;
+>>>>>>> Stashed changes
 
 if ischar(ftrfilename)
     disp('Loading FTR-File.');
 
 fs=load([options.root,options.patientname,filesep,ftrfilename]);
-
 if isfield(fs,'curveSegCell') % Freiburg Format
     convertfromfreiburg=1;
     fibs=fs.curveSegCell;

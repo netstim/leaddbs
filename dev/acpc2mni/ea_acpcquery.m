@@ -22,7 +22,7 @@ function varargout = ea_acpcquery(varargin)
 
 % Edit the above text to modify the response to help ea_acpcquery
 
-% Last Modified by GUIDE v2.5 21-Jan-2016 14:22:17
+% Last Modified by GUIDE v2.5 26-Jan-2016 17:28:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,6 +52,7 @@ function ea_acpcquery_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_acpcquery (see VARARGIN)
 
+
 % Choose default command line output for ea_acpcquery
 handles.output = hObject;
 
@@ -61,7 +62,8 @@ guidata(hObject, handles);
 % UIWAIT makes ea_acpcquery wait for user response (see UIRESUME)
 % uiwait(handles.acpcfig);
 % UIWAIT makes tmp wait for user response (see UIRESUME)
-uiwait(handles.acpcfig);
+
+setappdata(hObject,'leadfigure',varargin{3});
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_acpcquery_OutputFcn(hObject, eventdata, handles) 
@@ -71,14 +73,7 @@ function varargout = ea_acpcquery_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-try
-varargout{1} = handles.output;
-catch
-    varargout{1}='canceled';
-end
 
-% The figure can be deleted now
-delete(handles.acpcfig);
 
 
 function xmm_Callback(hObject, eventdata, handles)
@@ -262,13 +257,13 @@ guidata(hObject, handles);
 % to get the updated handles structure.
 uiresume(handles.acpcfig);
 
-% --- Executes on button press in submitbutn.
-function submitbutn_Callback(hObject, eventdata, handles)
-% hObject    handle to submitbutn (see GCBO)
+% --- Executes on button press in acpc2mnibutn.
+function acpc2mnibutn_Callback(hObject, eventdata, handles)
+% hObject    handle to acpc2mnibutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
+ea_busyaction('on',handles.acpcfig,'acpc');
 
 cfg.xmm=str2double(get(handles.xmm,'String'));
 cfg.ymm=str2double(get(handles.ymm,'String'));
@@ -300,7 +295,21 @@ guidata(hObject, handles);
 
 % Use UIRESUME instead of delete because the OutputFcn needs
 % to get the updated handles structure.
-uiresume(handles.acpcfig);
+leadfigure=getappdata(handles.acpcfig,'leadfigure');
+fid=ea_acpc2mni(cfg,leadfigure);
+
+
+
+for pt=1:length(fid)
+    mnipoints(pt,:)=fid(pt).WarpedPointMNI;
+end
+
+meanmni=mean(mnipoints,1);
+set(handles.xmni,'String',num2str(meanmni(1))); set(handles.ymni,'String',num2str(meanmni(2))); set(handles.zmni,'String',num2str(meanmni(3)));
+stdmni=std(mnipoints,1);
+set(handles.xstdmni,'String',['± ',sprintf('%.2f', stdmni(1)),' mm']); set(handles.ystdmni,'String',['± ',sprintf('%.2f', stdmni(2)),' mm']); set(handles.zstdmni,'String',['± ',sprintf('%.2f', stdmni(3)),' mm']);
+
+ea_busyaction('off',handles.acpcfig,'acpc');
 
 
 % --- Executes on selection change in methodm.
@@ -324,3 +333,129 @@ function methodm_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+function xmni_Callback(hObject, eventdata, handles)
+% hObject    handle to xmni (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of xmni as text
+%        str2double(get(hObject,'String')) returns contents of xmni as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function xmni_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to xmni (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function ymni_Callback(hObject, eventdata, handles)
+% hObject    handle to ymni (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ymni as text
+%        str2double(get(hObject,'String')) returns contents of ymni as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function ymni_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ymni (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function zmni_Callback(hObject, eventdata, handles)
+% hObject    handle to zmni (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of zmni as text
+%        str2double(get(hObject,'String')) returns contents of zmni as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function zmni_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to zmni (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in mni2acpcbutn.
+function mni2acpcbutn_Callback(hObject, eventdata, handles)
+% hObject    handle to mni2acpcbutn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+ea_busyaction('on',handles.acpcfig,'acpc');
+
+cfg.xmm=str2double(get(handles.xmni,'String'));
+cfg.ymm=str2double(get(handles.ymni,'String'));
+cfg.zmm=str2double(get(handles.zmni,'String'));
+
+if get(handles.ac,'Value')
+    cfg.acmcpc=1;
+elseif get(handles.mc,'Value')
+    cfg.acmcpc=2;
+elseif get(handles.pc,'Value')
+    cfg.acmcpc=3;
+end
+
+
+
+% Use UIRESUME instead of delete because the OutputFcn needs
+% to get the updated handles structure.
+leadfigure=getappdata(handles.acpcfig,'leadfigure');
+fid=ea_mni2acpc(cfg,leadfigure);
+
+
+
+
+
+
+for pt=1:length(fid)
+    acpcpoints(pt,:)=fid(pt).WarpedPointNative;
+end
+
+meanacpc=mean(acpcpoints,1);
+stdacpc=std(acpcpoints,1);
+
+if get(handles.xflip,'Value')==2
+    meanacpc(1)=meanacpc(1)*-1;
+end
+if get(handles.yflip,'Value')==1
+    meanacpc(2)=meanacpc(2)*-1;
+end
+if get(handles.zflip,'Value')==1
+    meanacpc(3)=meanacpc(3)*-1;
+end
+
+set(handles.xmm,'String',num2str(meanacpc(1))); set(handles.ymm,'String',num2str(meanacpc(2))); set(handles.zmm,'String',num2str(meanacpc(3)));
+set(handles.xstdacpc,'String',['± ',sprintf('%.2f', stdacpc(1)),' mm']); set(handles.ystdacpc,'String',['± ',sprintf('%.2f', stdacpc(2)),' mm']); set(handles.zstdacpc,'String',['± ',sprintf('%.2f', stdacpc(3)),' mm']);
+
+ea_busyaction('off',handles.acpcfig,'acpc');
+

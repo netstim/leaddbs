@@ -180,16 +180,7 @@ if options.doreconstruction
     
     
     
-    try
-        %realcoords=load([options.root,patientname,filesep,'L.csv']);
-        %realcoords=realcoords(:,1:3);
-        
-        realcoords=ea_read_fiducials([options.root,patientname,filesep],'L');
-    catch
-        ea_showdis('No manual survey available.',options.verbose);
-        realcoords=[];
-    end
-    
+
     % transform trajectory to mm space:
     for side=options.sides
         
@@ -210,18 +201,14 @@ end
 
 
 if options.manualheightcorrection
-    ea_updatemodel(options);
-    
     % load reconstruction results
     try
-        load([options.root,patientname,filesep,'ea_reconstruction']);
+        [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
     catch
         ea_error([patientname,': No reconstruction information found. Please run reconstruction first.']);
     end
-    
+    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
 
-        elmodel=options.elmodel;
-    save([options.root,patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','markers','elmodel');
     
     mcfig=figure('name',[patientname,': Manual Height Correction'],'numbertitle','off');
     warning('off');

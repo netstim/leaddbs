@@ -2420,12 +2420,13 @@ for sub=1:length(M.patient.list)
     if size(nfibs,1)>size(nfibs,2)
         nfibs=nfibs';
     end
-    %nfibs=nfibs(1:200000);
+    nfibs=nfibs(1:20000);
     normalized_fibers_mm=[normalized_fibers_mm,nfibs];
 end
 ea_dispercent(1,'end');
 save([M.ui.groupdir,options.prefs.FTR_normalized],'normalized_fibers_mm','-v7.3');
-%load([M.ui.groupdir,options.prefs.FTR_normalized]);
+load([M.ui.groupdir,options.prefs.FTR_normalized]);
+
 % export to trackvis
 
 
@@ -2450,9 +2451,13 @@ normalized_fibers_vox=normalized_fibers_mm;
 clear normalized_fibers_mm
 
 
+<<<<<<< Updated upstream
 
 
 ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,options); % export normalized ftr to .trk
+=======
+ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,nii,options); % export normalized ftr to .trk
+>>>>>>> Stashed changes
 
 
 

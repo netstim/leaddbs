@@ -1,4 +1,9 @@
-function ea_acpc2mni(hobf,hevent,leadfig)
+function fid=ea_acpc2mni(cfg,leadfig)
+% leadfig can be either a handle to the lead figure with selected patient
+% directories or a cell of patient directories.
+% __________________________________________________________________________________
+% Copyright (C) 2016 Charite University Medicine Berlin, Movement Disorders Unit
+% Andreas Horn
 
 % fidpoints_mm=[-0.4,1.53,-2.553       % AC
 %     -0.24,-26.314,-4.393            % PC
@@ -7,14 +12,17 @@ fidpoints_mm=[0.25,1.298,-5.003       % AC
     -0.188,-24.756,-2.376            % PC
     0.25,1.298,55];              % Midsag
 
+
+if iscell(leadfig)
+uidir=leadfig;
+else
 uidir=getappdata(leadfig,'uipatdir');
+end
 
 % prompt for ACPC-coordinates:
-res = ea_acpcquery;
-if ischar(res)
-    return
-end
-acpc=[res.xmm,res.ymm,res.zmm];
+
+
+acpc=[cfg.xmm,cfg.ymm,cfg.zmm];
 [FileName,PathName] = uiputfile('ACPC2MNI_Mapping.nii','Save Mapping...');
 
 leaddir=[fileparts(which('lead')),filesep];
@@ -24,9 +32,9 @@ ea_error('Please choose and normalize patients first.');
 end
 
 disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
-ea_dispercent('Iterating through patients');
+%ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
-    ea_dispercent(pt/length(uidir));
+ %   ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
     [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
     if strcmp(whichnormmethod,'ea_normalize_ants')
@@ -60,7 +68,7 @@ for pt=1:length(uidir)
     % z-dimension (just move from ac to msag plane by z dimension):
     zvec=(fpinsub_mm(3,:)-fpinsub_mm(1,:));
     zvec=zvec/norm(zvec);    
-    switch res.acmcpc
+    switch cfg.acmcpc
         case 1 % relative to AC:
             warpcoord_mm=fpinsub_mm(1,:)+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
         case 2 % relative to midcommissural point:
@@ -84,7 +92,7 @@ for pt=1:length(uidir)
     warppts(pt,:)=warpinmni_mm';
     fid(pt).WarpedPointMNI=warppts(pt,:);
     
-    if res.mapmethod==2
+    if cfg.mapmethod==2
         anat.img(:)=0;
         anat.img(round(warpcoord_vox(1)),round(warpcoord_vox(2)),round(warpcoord_vox(3)))=1;
         anat.fname=[directory,'ACPCquerypoint.nii'];
@@ -102,10 +110,10 @@ for pt=1:length(uidir)
         wfis{pt}=[directory,'wACPCquerypoint.nii'];
     end
 end
-ea_dispercent(1,'end');
+%ea_dispercent(1,'end');
 
 % create clear cut version:
-if res.mapmethod==1
+if cfg.mapmethod==1
     bb=ea_load_nii([leaddir,'templates',filesep,'bb.nii']);
     bb.img(:)=0;
     warppts_vox=[warppts';ones(1,size(warppts,1))];

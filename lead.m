@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 25-Jan-2016 17:40:19
+% Last Modified by GUIDE v2.5 26-Jan-2016 17:44:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -226,7 +226,7 @@ end
 
 %% add tools menu
 f = uimenu('Label','Tools');
-    uimenu(f,'Label','Convert ACPC to MNI','Callback',{@ea_acpc2mni,hObject});
+    uimenu(f,'Label','Convert ACPC to MNI','Callback',{@ea_acpcquery,handles.leadfigure});
 
 
 ea_firstrun(handles);
@@ -236,7 +236,7 @@ getui(handles);
 
 
 % UIWAIT makes lead wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.leadfigure);
 
 
 % --- Outputs from this function are returned to the command line.

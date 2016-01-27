@@ -7,5 +7,5 @@ reco.props.elmodel=elmodel;
 reco.props.manually_corrected=manually_corrected;
 
 
-save([options.root,patientname,filesep,'ea_reconstruction'],'reco');
+save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
 ea_reconstruction2native(options);
