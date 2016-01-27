@@ -39,7 +39,7 @@ restfilename=options.prefs.pprest;
 signallength=ea_detsiglength([directory,restfilename]);
 stringnum=cell(signallength,1);
 
- 
+
 
 for i=1:signallength
     stringnum{i}=num2str(i);
@@ -74,7 +74,7 @@ rfile=[directory,restfilename];
 
 %V(1:signallength)=TMP(2:signallength+1);
 
-nii=load_nii_proxi(rfile);
+nii=ea_load_nii(rfile);
 alltc=nii.img;
 %    AllTimecourses(:,:,:,:) = rest_spm_read_vols(V); % full volume of raw data.
 
@@ -127,10 +127,10 @@ disp('Done. Regressing out nuisance variables...');
     X(:,1)=ones(signallength,1);
     X(:,2)=WMTimecourse;
     X(:,3)=CSFTimecourse;
-    
+
 %% actual regression:
 for voxx=1:size(interpol_tc,1)
-    
+
     beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
     if ~isnan(beta_hat)
     interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
@@ -153,14 +153,14 @@ X(:,6)=rp_rest(1:signallength,5);
 X(:,7)=rp_rest(1:signallength,6);
 
 for voxx=1:size(interpol_tc,1)
-    
+
     beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
     if ~isnan(beta_hat)
     interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
     else
         warning('Regression of Motion parameters could not be performed.');
     end
-    
+
 end
 
 
@@ -328,14 +328,6 @@ Result =NaN;    % Should not reach, except when n=1
 % 768
 % 960
 % 1024
-
-function nii=load_nii_proxi(fname)
-
-V=spm_vol(fname);
-X=spm_read_vols(V);
-nii.img=X;
-nii.hdr=V;
-
 
 function preparecombinedvat(directory,stim)
 % merge niftifiles i.e. with imcalc here.

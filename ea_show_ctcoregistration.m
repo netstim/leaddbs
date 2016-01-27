@@ -27,14 +27,14 @@ if ~legacy % use new imshowpair tool
     end
 
     ct.img=ea_tonemap_ct(ct.img);
-    
+
     ct.img(:)=ea_nanzscore(ct.img(:)); %     ct.img(:)=ea_nanzscore(ct.img(:),'robust');
     ct.img=(ct.img+2.5)/5; % set max/min to -/+ 2.5 standard deviations
     ct.img(ct.img<0)=0; ct.img(ct.img>1)=1;
     mr.img(:)=ea_nanzscore(mr.img(:)); %     ct.img(:)=ea_nanzscore(ct.img(:),'robust');
     mr.img=(mr.img+2.5)/5; % set max/min to -/+ 2.5 standard deviations
     mr.img(mr.img<0)=0; mr.img(mr.img>1)=1;
-    
+
     %jim=cat(4,mr.img,mean(cat(4,mr.img,ct.img),4),ct.img);
     %jim=cat(4,mr.img,(mr.img-ct.img)/2,ct.img);
 
@@ -48,11 +48,11 @@ disp('Generating wireframe from CT image...');
 if ~exist('edge.m','file')
     disp('Image toolbox not found, using a slower replacement function...');
     ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],[options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered],[2 2 2],0);
-    CT=load_nii_proxi([options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered]);
+    CT=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered]);
     useimtbx=0;
     alpha=0.01;
 else % use image toolbox
-    CT=load_nii_proxi([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
+    CT=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
     useimtbx=1;
     alpha=0.1;
 end
@@ -66,8 +66,8 @@ CT.img(CT.img<0)=0; % remove negative hounsfield parts.
 
 eCT=logical(ea_detect_edges_3d(CT.img,alpha,useimtbx));
 
-CT.hdr.fname=[options.root,options.patientname,filesep,'wires_',options.prefs.ctnii_coregistered];
-CT.hdr.dt=[4,0];
+CT.fname=[options.root,options.patientname,filesep,'wires_',options.prefs.ctnii_coregistered];
+CT.dt=[4,0];
 spm_write_vol(CT.hdr,eCT);
 
 disp('Done. Fusing images...');
@@ -285,7 +285,6 @@ end
 set(hfig, 'Units', origfigunits);
 
 
-
 function scaled = scale_image(imat,scale_zoom)
 
 oldSize = size(imat);                               % Old image size
@@ -298,17 +297,7 @@ scaled = interp2(imat,newX,newY(:),'cubic');
 scaled = cast(scaled,oldClass);  % Convert back to original image type
 
 
-function nii=load_nii_proxi(fname)
-
-V=spm_vol(fname);
-X=spm_read_vols(V);
-nii.img=X;
-nii.hdr=V;
-
-
 function tmct=ea_tonemap_ct(ct)
-
-
 tmct=ct;
 % brain window: center = 40, width = 80
 tmct(ct>0 & ct<80)=tmct(ct>0 & ct<80)/80;

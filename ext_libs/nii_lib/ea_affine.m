@@ -1,6 +1,6 @@
 %  Using 2D or 3D affine matrix to rotate, translate, scale, reflect and
 %  shear a 2D image or 3D volume. 2D image is represented by a 2D matrix,
-%  3D volume is represented by a 3D matrix, and data type can be real 
+%  3D volume is represented by a 3D matrix, and data type can be real
 %  integer or floating-point.
 %
 %  You may notice that MATLAB has a function called 'imtransform.m' for
@@ -23,7 +23,7 @@
 %		matrix for 3D volume. We assume x for the 1st dimension,
 %		y for the 2nd dimension, and z for the 3rd dimension.
 %
-%  new_elem_size (optional)  -  size of voxel along x y z direction for 
+%  new_elem_size (optional)  -  size of voxel along x y z direction for
 %		a transformed 3D volume, or size of pixel along x y for
 %		a transformed 2D image. We assume x for the 1st dimension
 %		y for the 2nd dimension, and z for the 3rd dimension.
@@ -78,13 +78,13 @@
 %  Fischer, J., A. del Rio (2004). A Fast Method for Applying Rigid
 %	Transformations to Volume Data, WSCG2004 Conference.
 %	http://wscg.zcu.cz/wscg2004/Papers_2004_Short/M19.pdf
-%  
+%
 %  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
-function [new_img, new_M] = affine(old_img, old_M, new_elem_size, verbose, bg, method)
+function [new_img, new_M] = ea_affine(old_img, old_M, new_elem_size, verbose, bg, method)
 
    if ~exist('old_img','var') | ~exist('old_M','var')
-      error('Usage: [new_img new_M] = affine(old_img, old_M, [new_elem_size], [verbose], [bg], [method]);');
+      error('Usage: [new_img new_M] = ea_affine(old_img, old_M, [new_elem_size], [verbose], [bg], [method]);');
    end
 
    if ndims(old_img) == 3
@@ -182,7 +182,7 @@ function [new_img, new_M] = affine(old_img, old_M, new_elem_size, verbose, bg, m
 
    %  It will be easier to do the interpolation if we invert the process
    %  by not traversing the original volume. Instead, we traverse the
-   %  transformed volume, and backproject each voxel in the transformed 
+   %  transformed volume, and backproject each voxel in the transformed
    %  volume back into the original volume. If the backprojected voxel
    %  in original volume is within its boundary, the intensity of that
    %  voxel can be used by the cursor location in the transformed volume.
@@ -241,7 +241,7 @@ function [new_img, new_M] = affine(old_img, old_M, new_elem_size, verbose, bg, m
       end
 
    end;			% for z
-                   
+
    ea_dispercent(1,'end');
 
 
