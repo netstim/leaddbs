@@ -2451,13 +2451,7 @@ normalized_fibers_vox=normalized_fibers_mm;
 clear normalized_fibers_mm
 
 
-<<<<<<< Updated upstream
-
-
-ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,options); % export normalized ftr to .trk
-=======
 ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,nii,options); % export normalized ftr to .trk
->>>>>>> Stashed changes
 
 
 
