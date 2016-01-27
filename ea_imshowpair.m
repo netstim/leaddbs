@@ -208,7 +208,16 @@ set(gcf,'ResizeFcn', @figureResized)
         else
  %           set(stxthand, 'String', '2D image');
         end
-        set(get(gca,'children'),'cdata',squeeze(Img(:,:,S,:)))
+        % -------------------------------------------------------------
+        % LINES SWAPPED BY TMH 1-2-2015 SO THAT CODE WORKS ON OLDER
+        % VERSIONS OF MATLAB
+        %         set(get(gca,'children'),'cdata',squeeze(Img(:,:,S,:)))
+        try % image toolbox
+            imshow(squeeze(Img(:,:,S,:)), [Rmin Rmax])
+        catch
+            imagesc(squeeze(Img(:,:,S,:)), [Rmin Rmax])
+        end
+        % -------------------------------------------------------------
     end
 
 % -=< Mouse button released callback function >=-
