@@ -175,18 +175,74 @@ W = nifti(hdwim);
 
 for i = 1:size(coord, 2)
     ind = inds(:, i);
-%                % linearly interpolate: 
-%     samp(1,1,1,:)=squeeze(W.dat(floor(ind(1)), floor(ind(2)), floor(ind(3)), 1, 1:3));
-%     samp(1,1,2,:)=squeeze(W.dat(floor(ind(1)), floor(ind(2)), ceil(ind(3)), 1, 1:3));
-%     samp(1,2,1,:)=squeeze(W.dat(floor(ind(1)), floor(ind(2)), ceil(ind(3)), 1, 1:3));
-%     samp(2,1,1,:)=squeeze(W.dat(ceil(ind(1)), floor(ind(2)), floor(ind(3)), 1, 1:3));
-%     samp(1,2,2,:)=squeeze(W.dat(floor(ind(1)), ceil(ind(2)), ceil(ind(3)), 1, 1:3));
-%     samp(2,1,2,:)=squeeze(W.dat(ceil(ind(1)), floor(ind(2)), ceil(ind(3)), 1, 1:3));
-%     samp(2,2,1,:)=squeeze(W.dat(ceil(ind(1)), ceil(ind(2)), floor(ind(3)), 1, 1:3));
-%     samp(2,2,2,:)=squeeze(W.dat(ceil(ind(1)), ceil(ind(2)), ceil(ind(3)), 1, 1:3));
-%     
+    
+               % linearly interpolate: 
+    targ(1,1,1,:)=squeeze(W.dat(floor(ind(1)), floor(ind(2)), floor(ind(3)), 1, 1:3));
+    seed(1,1,1,:)=[floor(ind(1)), floor(ind(2)), floor(ind(3))];
+    vec(1,1,1,:)=squeeze(targ(1,1,1,:))-squeeze(seed(1,1,1,:));
+    weight(1,1,1,:)=1-(pdist([squeeze(seed(1,1,1,:))';ind'])/sqrt(3));
+    
+    targ(1,1,2,:)=squeeze(W.dat(floor(ind(1)), floor(ind(2)), ceil(ind(3)), 1, 1:3));
+    seed(1,1,2,:)=[floor(ind(1)), floor(ind(2)), ceil(ind(3))];
+    vec(1,1,2,:)=squeeze(targ(1,1,2,:))-squeeze(seed(1,1,2,:));
+    weight(1,1,2,:)=1-(pdist([squeeze(seed(1,1,2,:))';ind'])/sqrt(3));
+    
+    targ(1,2,1,:)=squeeze(W.dat(floor(ind(1)), ceil(ind(2)), floor(ind(3)), 1, 1:3));
+    seed(1,2,1,:)=[floor(ind(1)), ceil(ind(2)), floor(ind(3))];
+    vec(1,2,1,:)=squeeze(targ(1,2,1,:))-squeeze(seed(1,2,1,:));
+        weight(1,2,1,:)=1-(pdist([squeeze(seed(1,2,1,:))';ind'])/sqrt(3));
+
+    targ(2,1,1,:)=squeeze(W.dat(ceil(ind(1)), floor(ind(2)), floor(ind(3)), 1, 1:3));
+    seed(2,1,1,:)=[ceil(ind(1)), floor(ind(2)), floor(ind(3))];
+    vec(2,1,1,:)=squeeze(targ(2,1,1,:))-squeeze(seed(2,1,1,:));
+        weight(2,1,1,:)=1-(pdist([squeeze(seed(2,1,1,:))';ind'])/sqrt(3));
+
+    targ(1,2,2,:)=squeeze(W.dat(floor(ind(1)), ceil(ind(2)), ceil(ind(3)), 1, 1:3));
+    seed(1,2,2,:)=[floor(ind(1)), ceil(ind(2)), ceil(ind(3))];
+    vec(1,2,2,:)=squeeze(targ(1,2,2,:))-squeeze(seed(1,2,2,:));
+        weight(1,2,2,:)=1-(pdist([squeeze(seed(1,2,2,:))';ind'])/sqrt(3));
+
+    targ(2,1,2,:)=squeeze(W.dat(ceil(ind(1)), floor(ind(2)), ceil(ind(3)), 1, 1:3));
+    seed(2,1,2,:)=[ceil(ind(1)), floor(ind(2)), ceil(ind(3))];
+    vec(2,1,2,:)=squeeze(targ(2,1,2,:))-squeeze(seed(2,1,2,:));
+        weight(2,1,2,:)=1-(pdist([squeeze(seed(2,1,2,:))';ind'])/sqrt(3));
+
+    targ(2,2,1,:)=squeeze(W.dat(ceil(ind(1)), ceil(ind(2)), floor(ind(3)), 1, 1:3));
+    seed(2,2,1,:)=[ceil(ind(1)), ceil(ind(2)), floor(ind(3))];
+    vec(2,2,1,:)=squeeze(targ(2,2,1,:))-squeeze(seed(2,2,1,:));
+        weight(2,2,1,:)=1-(pdist([squeeze(seed(2,2,1,:))';ind'])/sqrt(3));
+
+    targ(2,2,2,:)=squeeze(W.dat(ceil(ind(1)), ceil(ind(2)), ceil(ind(3)), 1, 1:3));
+    seed(2,2,2,:)=[ceil(ind(1)), ceil(ind(2)), ceil(ind(3))];
+    vec(2,2,2,:)=squeeze(targ(2,2,2,:))-squeeze(seed(2,2,2,:));
+        weight(2,2,2,:)=1-(pdist([squeeze(seed(2,2,2,:))';ind'])/sqrt(3));
+
 %     rests=ind-floor(ind);
+%     rrests=1-rests;
+    
+    weightsum=sum([weight(1,1,1,:)
+        weight(1,1,2,:)
+        weight(1,2,1,:)
+        weight(2,1,1,:)
+        weight(1,2,2,:)
+        weight(2,1,2,:)
+        weight(2,2,1,:)
+        weight(2,2,2,:)]);
+    
+    coord(1:3,i)=ind+...
+        sum([squeeze(vec(1,1,1,:))*weight(1,1,1,:),...
+        squeeze(vec(1,1,2,:))*weight(1,1,2,:),...
+        squeeze(vec(1,2,1,:))*weight(1,2,1,:),...
+        squeeze(vec(2,1,1,:))*weight(2,1,1,:),...
+        squeeze(vec(1,2,2,:))*weight(1,2,2,:),...
+        squeeze(vec(2,1,2,:))*weight(2,1,2,:),...
+        squeeze(vec(2,2,1,:))*weight(2,2,1,:),...
+        squeeze(vec(2,2,2,:))*weight(2,2,2,:)],2)/weightsum;
+    
 % 
 %    
-                coord(1:3, i) = squeeze(W.dat(ind(1), ind(2), ind(3), 1, 1:3));
+
+
+%% original code:
+%                coord(1:3, i) = squeeze(W.dat(ind(1), ind(2), ind(3), 1, 1:3));
 end

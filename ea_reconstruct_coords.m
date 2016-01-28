@@ -10,9 +10,9 @@ vizz=0;
 
 switch options.modality
     case 1
-        headtemp=load_nii(fullfile(options.earoot,'templates','electrode_contacts','mr','template.nii'));
+        headtemp=ea_load_nii(fullfile(options.earoot,'templates','electrode_contacts','mr','template.nii'));
     case 2
-        headtemp=load_nii(fullfile(options.earoot,'templates','electrode_contacts','ct','template.nii'));
+        headtemp=ea_load_nii(fullfile(options.earoot,'templates','electrode_contacts','ct','template.nii'));
 end
 
 htemp=headtemp.img;

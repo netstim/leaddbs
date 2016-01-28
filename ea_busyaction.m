@@ -23,8 +23,8 @@ if ischar(pos)
         case 'acpc'
             sz=get(fighandle,'Position');
             pos=[sz(3)-50-2 sz(4)-50-2 50 50]; 
-            onfigtit='Welcome to LEAD-DBS (busy...)';
-            offfigtit='Welcome to LEAD-DBS';
+            onfigtit='ACPC/MNI-space conversions (busy...)';
+            offfigtit='ACPC/MNI-space conversions';
         case 'group'
             sz=get(fighandle,'Position');
             pos=[sz(3)-50-10 sz(4)-10-50 50 50];

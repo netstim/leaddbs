@@ -22,7 +22,7 @@ function varargout = ea_acpcquery(varargin)
 
 % Edit the above text to modify the response to help ea_acpcquery
 
-% Last Modified by GUIDE v2.5 26-Jan-2016 17:28:37
+% Last Modified by GUIDE v2.5 28-Jan-2016 11:55:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,6 +52,13 @@ function ea_acpcquery_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_acpcquery (see VARARGIN)
 
+try
+leaddir=[fileparts(which('lead')),filesep];
+im=imread([leaddir,'ea_logo.png']);
+image(im);
+axis off;
+axis equal;
+end
 
 % Choose default command line output for ea_acpcquery
 handles.output = hObject;
@@ -64,6 +71,7 @@ guidata(hObject, handles);
 % UIWAIT makes tmp wait for user response (see UIRESUME)
 
 setappdata(hObject,'leadfigure',varargin{3});
+set(hObject,'name','ACPC/MNI-space conversions');
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_acpcquery_OutputFcn(hObject, eventdata, handles) 
@@ -285,7 +293,7 @@ elseif get(handles.pc,'Value')
     cfg.acmcpc=3;
 end
 
-cfg.mapmethod=get(handles.methodm,'Value');
+cfg.mapmethod=get(handles.methodm,'Value')-1;
 
 handles.output = cfg;
 
@@ -306,7 +314,7 @@ end
 
 meanmni=mean(mnipoints,1);
 set(handles.xmni,'String',num2str(meanmni(1))); set(handles.ymni,'String',num2str(meanmni(2))); set(handles.zmni,'String',num2str(meanmni(3)));
-stdmni=std(mnipoints,1);
+stdmni=std(mnipoints,0,1);
 set(handles.xstdmni,'String',['± ',sprintf('%.2f', stdmni(1)),' mm']); set(handles.ystdmni,'String',['± ',sprintf('%.2f', stdmni(2)),' mm']); set(handles.zstdmni,'String',['± ',sprintf('%.2f', stdmni(3)),' mm']);
 
 ea_busyaction('off',handles.acpcfig,'acpc');
@@ -442,7 +450,8 @@ for pt=1:length(fid)
 end
 
 meanacpc=mean(acpcpoints,1);
-stdacpc=std(acpcpoints,1);
+
+stdacpc=std(acpcpoints,0,1);
 
 if get(handles.xflip,'Value')==2
     meanacpc(1)=meanacpc(1)*-1;
@@ -458,4 +467,3 @@ set(handles.xmm,'String',num2str(meanacpc(1))); set(handles.ymm,'String',num2str
 set(handles.xstdacpc,'String',['± ',sprintf('%.2f', stdacpc(1)),' mm']); set(handles.ystdacpc,'String',['± ',sprintf('%.2f', stdacpc(2)),' mm']); set(handles.zstdacpc,'String',['± ',sprintf('%.2f', stdacpc(3)),' mm']);
 
 ea_busyaction('off',handles.acpcfig,'acpc');
-
