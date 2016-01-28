@@ -803,7 +803,7 @@ end
 
         try
 
-            load([M.patient.list{pt},filesep,'ea_reconstruction.mat']);
+        [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
             if M.ui.elmodelselect==1 % use patient specific elmodel
                 if exist('elmodel','var')
                     M.elstruct(pt).elmodel=elmodel;

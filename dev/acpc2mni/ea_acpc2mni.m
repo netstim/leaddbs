@@ -23,7 +23,9 @@ end
 
 
 acpc=[cfg.xmm,cfg.ymm,cfg.zmm];
-[FileName,PathName] = uiputfile('ACPC2MNI_Mapping.nii','Save Mapping...');
+if cfg.mapmethod
+    [FileName,PathName] = uiputfile('ACPC2MNI_Mapping.nii','Save Mapping...');
+end
 
 leaddir=[fileparts(which('lead')),filesep];
 
@@ -127,7 +129,7 @@ if cfg.mapmethod==1
     
     bb.fname=[PathName,FileName];
     spm_write_vol(bb,bb.img);
-else
+elseif cfg.mapmethod==2
     % create innativespacemapped files:
     
     matlabbatch{1}.spm.util.imcalc.input = wfis;
@@ -143,7 +145,9 @@ else
     clear matlabbatch
 end
 
+if cfg.mapmethod
 % smooth clear version:
+
 matlabbatch{1}.spm.spatial.smooth.data = {[PathName,FileName,',1']};
 matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
 matlabbatch{1}.spm.spatial.smooth.dtype = 0;
@@ -155,7 +159,7 @@ clear matlabbatch
 [pth,fn,ext]=fileparts(bb.fname);
 ea_crop_nii([pth,filesep,fn,ext]);
 ea_crop_nii([pth,filesep,'s',fn,ext]);
-
+end
 assignin('base','fid',fid);
 
 

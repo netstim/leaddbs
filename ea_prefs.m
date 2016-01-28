@@ -12,8 +12,8 @@ prefs.lp=lp;
 end
 
 %% general settings:
-prefs.pp.do=0; % use parallel processing if available.
-prefs.pp.csize=4; % specify how many clusters to recruit.
+prefs.pp.do=1; % use parallel processing if available.
+prefs.pp.csize=2; % specify how many clusters to recruit.
 prefs.pp.profile='local'; % specify parallel processing profile.
 
 %% general file handling:
@@ -92,7 +92,7 @@ prefs.normalize.inverse.customtpm=1; % set to 1 if custom TPM shall be built for
 prefs.ctcoreg.default='ea_coregctmri_ants';
 
 %% Coregistration (MR/MR):
-prefs.mrcoreg.default='ants'; % set to 'spm' or 'ants'
+prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
 
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.

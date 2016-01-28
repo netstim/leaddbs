@@ -13,25 +13,26 @@ end
     [~,tempfile]=ea_whichnormmethod(directory);
     nii=ea_load_nii(tempfile);
 
-for side=options.sides
-    reco.native.coords_mm{side}=ea_warpcoord(reco.mni.coords_mm{side},nii,options);
-    reco.native.markers(side).head=ea_warpcoord(reco.mni.markers(side).head,nii,options);
-    reco.native.markers(side).tail=ea_warpcoord(reco.mni.markers(side).tail,nii,options);
-        reco.native.trajectory{side}=ea_warpcoord(reco.mni.trajectory{side},nii,options);
-
-    normtrajvector{side}=mean(diff(reco.native.trajectory{side}))/norm(mean(diff(reco.native.trajectory{side})));
-            orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
-
+    try
+        for side=options.sides
+            reco.native.coords_mm{side}=ea_warpcoord(reco.mni.coords_mm{side},nii,options);
+            reco.native.markers(side).head=ea_warpcoord(reco.mni.markers(side).head,nii,options);
+            reco.native.markers(side).tail=ea_warpcoord(reco.mni.markers(side).tail,nii,options);
+            reco.native.trajectory{side}=ea_warpcoord(reco.mni.trajectory{side},nii,options);
             
-        reco.native.markers(side).x=reco.native.markers(side).head+orth(:,1)';
-        reco.native.markers(side).y=reco.native.markers(side).head+orth(:,2)'; % corresponding points in reality
+            normtrajvector{side}=mean(diff(reco.native.trajectory{side}))/norm(mean(diff(reco.native.trajectory{side})));
+            orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
+            
+            
+            reco.native.markers(side).x=reco.native.markers(side).head+orth(:,1)';
+            reco.native.markers(side).y=reco.native.markers(side).head+orth(:,2)'; % corresponding points in reality
+            
+        end
         
-end
-
-
-save([directory,filesep,'ea_reconstruction.mat'],'reco');
-
-
+        
+        save([directory,filesep,'ea_reconstruction.mat'],'reco');
+        
+    end
 
 function c=ea_warpcoord(c,nii,options)
 c=[c,ones(size(c,1),1)]';

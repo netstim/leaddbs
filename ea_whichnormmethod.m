@@ -1,4 +1,5 @@
 function [whichnormmethod,tempfile]=ea_whichnormmethod(directory)
+try
 load([directory,'ea_normmethod_applied']);
 cnt=0;
 while 1
@@ -10,6 +11,9 @@ while 1
             break
     end
 
+end
+catch 
+    whichnormmethod='';
 end
 
 leaddir=[fileparts(which('lead')),filesep];
