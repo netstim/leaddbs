@@ -393,13 +393,13 @@ if size(stats.corrcl,2)==1 % one value per patient
 %         %ea_corrplot([stats.corrcl,stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
 %         ea_corrplot([stats.corrcl,stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
 %     end
-    
+
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
     try stats.vicorr.nboth=(stats.vicorr.nboth)*100; end
     try stats.vicorr.nright=(stats.vicorr.nright)*100; end
     try stats.vicorr.nleft=(stats.vicorr.nleft)*100; end
     if ~isempty(stats.vicorr.both)
-        
+
         %ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],'Volume Intersections, both hemispheres',stats.vc_labels);
         ea_corrplot([stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft]],'VI_BH',stats.vc_labels,handles);
     end
@@ -423,7 +423,7 @@ elseif size(stats.corrcl,2)==2 % one value per hemisphere
 %         %ea_corrplot([stats.corrcl(:,2),stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
 %         ea_corrplot([stats.corrcl(:,2),stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
 %     end
-%     
+%
 else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
@@ -750,7 +750,7 @@ try set(handles.labelpopup,'Value',M.ui.labelpopup); end
 try set(handles.modelselect,'Value',M.ui.modelselect); end
 if M.ui.modelselect>length(get(handles.modelselect,'String'))
     M.ui.modelselect=length(get(handles.modelselect,'String'));
-    set(handles.modelselect,'Value',M.ui.modelselect); 
+    set(handles.modelselect,'Value',M.ui.modelselect);
 end
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
@@ -1368,7 +1368,7 @@ end
 %         ea_dispercent(100,'end');
 %         disp('Averaging...');
 %         thisvat(thisvat==0)=nan;
-% 
+%
 %         thisvat=nanmean(thisvat,4);
 %         disp('Done.');
 %         disp('Saving file...');
@@ -1960,7 +1960,7 @@ for pt=1:length(M.patient.list)
         if get(handles.fiberspopup,'Value')>length(get(handles.fiberspopup,'String'))
             set(handles.fiberspopup,'Value',length(get(handles.fiberspopup,'String')));
         end
-        
+
         M.stimparams(pt,side).usefiberset=M.stimparams(pt,side).usefiberset{get(handles.fiberspopup,'Value')};
         M.stimparams(pt,side).labelatlas={options.labelatlas};
         M.stimparams(pt,side).showfibers=1;
@@ -2408,7 +2408,7 @@ M=getappdata(gcf,'M');
 
 normalized_fibers_mm={}; % combined connectome
 ea_dispercent(0,'Concatenating connectome');
-for sub=1:length(M.patient.list)    
+for sub=1:length(M.patient.list)
     ea_dispercent(sub/length(M.patient.list));
     fs=load([M.patient.list{sub},filesep,options.prefs.FTR_normalized]);
     if isfield(fs,'normalized_fibers_mm')
@@ -2428,7 +2428,6 @@ save([M.ui.groupdir,options.prefs.FTR_normalized],'normalized_fibers_mm','-v7.3'
 load([M.ui.groupdir,options.prefs.FTR_normalized]);
 
 % export to trackvis
-
 
 % convert to vox format
 options.root=[fileparts(fileparts(M.ui.groupdir)),filesep];
@@ -2451,8 +2450,6 @@ normalized_fibers_vox=normalized_fibers_mm;
 clear normalized_fibers_mm
 
 
-ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,nii,options); % export normalized ftr to .trk
-
-
+ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,options); % export normalized ftr to .trk
 
 options.prefs=ea_prefs(M.ui.groupdir);

@@ -1,36 +1,31 @@
-<<<<<<< Updated upstream
 function ea_ftr2trk(ftrfilename,directory,specs,options)
-=======
-function ea_ftr2trk(ftrfilename,directory,specs,V,options)
+
 convertfromfreiburg=0;
->>>>>>> Stashed changes
 
 if ischar(ftrfilename)
     disp('Loading FTR-File.');
+    fs=load([options.root,options.patientname,filesep,ftrfilename]);
+    if isfield(fs,'curveSegCell') % Freiburg Format
+        convertfromfreiburg=1;
+        fibs=fs.curveSegCell;
 
-fs=load([options.root,options.patientname,filesep,ftrfilename]);
-if isfield(fs,'curveSegCell') % Freiburg Format
-    convertfromfreiburg=1;
-    fibs=fs.curveSegCell;
-    
-elseif isfield(fs,'normalized_fibers_vox') % lead format
-    fibs=fs.normalized_fibers_vox;
-    convertfromfreiburg=0;
-else % unknown format, use first field for fibers.
-    fn = fieldnames(fs);
-    
-    eval(sprintf('fibs = fs.%s;',fn{1}));
-    if size(fibs,1)>size(fibs,2)
-        fibs=fibs';
+    elseif isfield(fs,'normalized_fibers_vox') % lead format
+        fibs=fs.normalized_fibers_vox;
+        convertfromfreiburg=0;
+    else % unknown format, use first field for fibers.
+        fn = fieldnames(fs);
+
+        eval(sprintf('fibs = fs.%s;',fn{1}));
+        if size(fibs,1)>size(fibs,2)
+            fibs=fibs';
+        end
+        convertfromfreiburg=0;
+        fibs=fibs;
     end
-    convertfromfreiburg=0;
-    fibs=fibs;
-end
 else % direct ftr import
     fibs=ftrfilename{1};
     ftrfilename{1}=[];
 end
-
 
 ysize=specs.dim(2)+1;
 
@@ -39,7 +34,6 @@ if convertfromfreiburg
        fibs{fib}=[fibs{fib}(:,2),ysize-fibs{fib}(:,1),fibs{fib}(:,3)];
    end
 end
-
 
 specs = ea_aff2hdr(specs.affine, specs);
 
@@ -53,9 +47,6 @@ specs = ea_aff2hdr(specs.affine, specs);
 %for i=1:length(fibs)
 %fibs{i}=double(fibs{i});
 %end
-  
-
-
 
 header.dim=specs.dim;
 try
@@ -85,7 +76,7 @@ header.hdr_size=1000;
 
 for track_number=1:length(fibs)
    tracks(1,track_number).nPoints=size(fibs{track_number},1);
-   tracks(1,track_number).matrix=fibs{track_number}; 
+   tracks(1,track_number).matrix=fibs{track_number};
 end
 
 for i = 1:length(tracks)
@@ -97,9 +88,9 @@ for i = 1:length(tracks)
 end
 
 if ischar(ftrfilename)
-ea_trk_write(header,tracks,[directory,ftrfilename,'.trk']);
-else    
-ea_trk_write(header,tracks,[directory,ftrfilename{2},'.trk']);
+    ea_trk_write(header,tracks,[directory,ftrfilename,'.trk']);
+else
+    ea_trk_write(header,tracks,[directory,ftrfilename{2},'.trk']);
 end
 
 function [header,tracks] = ea_trk_read(filePath)
@@ -165,7 +156,7 @@ for iTrk = 1:header.n_count
     if header.n_properties
         tracks(iTrk).props = fread(fid, header.n_properties, 'float');
     end
-    
+
     % Modify orientation of tracks (always LPS) to match orientation of volume
     header.dim        = header.dim([ix iy iz]);
     header.voxel_size = header.voxel_size([ix iy iz]);
@@ -283,7 +274,7 @@ for iTrk = 1:header.n_count
         coords(:,iy) = header.dim(iy)*header.voxel_size(iy) - coords(:,iy);
     end
     tracks(iTrk).matrix(:,1:3) = coords;
-    
+
     fwrite(fid, tracks(iTrk).nPoints, 'int');
     fwrite(fid, tracks(iTrk).matrix', 'float');
     if header.n_properties
@@ -297,16 +288,16 @@ fclose(fid);
 
 function trk_hdr = ea_aff2hdr(affine, trk_hdr, pos_vox, set_order)
 % Set affine matrix into trackvis header 'trk_hdr'
-% 
+%
 % pos_vos : None or bool
-%     If None, currently defaults to False. If False, allow negative voxel 
-%     sizes in header to record axis flips. Negative voxels cause problems 
+%     If None, currently defaults to False. If False, allow negative voxel
+%     sizes in header to record axis flips. Negative voxels cause problems
 %     for TrackVis.  If True, enforce positive voxel sizes.
 % set_order : None or bool
-%     If None, currently defaults to False. If False, do not set 'voxel_order' 
+%     If None, currently defaults to False. If False, do not set 'voxel_order'
 %     field in 'trk_hdr'. If True, calculcate 'voxel_order' from 'affine' and
 %     set into 'trk_hdr'.
-% 
+%
 % Notes
 % -----
 % version 2 of the trackvis header has a dedicated field for the nifti RAS
@@ -319,7 +310,7 @@ function trk_hdr = ea_aff2hdr(affine, trk_hdr, pos_vox, set_order)
 % reliably. It turns out that negative flips upset trackvis (the
 % application). The application also ignores the origin field, and may not
 % use the 'image_orientation_patient' field.
-% 
+%
 
 if nargin < 3
     pos_vox = false;
@@ -355,7 +346,7 @@ zooms = sqrt(sum(RZS.*RZS));
 RS = RZS./repmat(zooms,3,1);
 % If you said we could, adjust zooms to make RS correspond (below) to a true
 % rotation matrix.  We need to set the sign of one of the zooms to deal with
-% this. TrackVis doesn't like negative zooms at all, so you might want to 
+% this. TrackVis doesn't like negative zooms at all, so you might want to
 % disallow this with the pos_vox option.
 if ~pos_vox && det(RS)<0
     zooms(1) = zooms(1)*-1;
