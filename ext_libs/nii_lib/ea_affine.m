@@ -193,7 +193,7 @@ function [new_img, new_M] = ea_affine(old_img, old_M, new_elem_size, verbose, bg
    for z = 1:new_dim(3)
 
       if verbose && ~mod(z,10)
-                       ea_dispercent(z/new_dim(3));
+      	 ea_dispercent(z/new_dim(3));
       end
 
       %  We need to find out the mapping from voxel in the transformed
