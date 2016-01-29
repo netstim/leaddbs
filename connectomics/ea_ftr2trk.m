@@ -27,41 +27,21 @@ else % direct ftr import
     ftrfilename{1}=[];
 end
 
-ysize=specs.dim(2)+1;
-
-if convertfromfreiburg
-   for fib=1:length(fibs)
-       fibs{fib}=[fibs{fib}(:,2),ysize-fibs{fib}(:,1),fibs{fib}(:,3)];
-   end
-end
-
-specs = ea_aff2hdr(specs.affine, specs);
-
-%ori=aff2orient(specs.affine);
-
-% specs.orientation=ori.image_orientation_patient;
-% specs.vox=ori.voxel_size;
-
+%% set header
 [header, tracks]=ea_trk_read([options.earoot,'ext_libs',filesep,'example.trk']);
-
-%for i=1:length(fibs)
-%fibs{i}=double(fibs{i});
-%end
-
-header.dim=specs.dim;
+specs = ea_aff2hdr(specs.affine, specs);
 try
-header.voxel_size=specs.voxel_size;
+    header.voxel_size=specs.voxel_size;
 catch
     header.voxel_size=fs.vox;
 end
-header.origin=[0 0 0]; %specs.origin; % as doc says, trackvis will always use 0 0 0 as origin.
+header.dim=specs.dim;
+header.origin=[0 0 0]; % as doc says, trackvis will always use 0 0 0 as origin.
 header.n_scalars=0;
 header.scalar_name=char(repmat(' ',10,20));
 header.n_properties=0;
 header.property_name=char(repmat(' ',10,20));
-%header.vox_to_ras=zeros(4,4);
 header.reserved=char(repmat(' ',444,1));
-
 header.image_orientation_patient=specs.image_orientation_patient;
 header.invert_x=0;
 header.invert_y=1;
@@ -73,6 +53,16 @@ header.n_count=length(fibs);% header.invert_x=1;
 header.version=2;
 header.hdr_size=1000;
 
+%% convert data
+ysize=specs.dim(2)+1;
+if convertfromfreiburg
+   for fib=1:length(fibs)
+       fibs{fib}=[fibs{fib}(:,2),ysize-fibs{fib}(:,1),fibs{fib}(:,3)];
+   end
+end
+%for i=1:length(fibs)
+%fibs{i}=double(fibs{i});
+%end
 
 for track_number=1:length(fibs)
    tracks(1,track_number).nPoints=size(fibs{track_number},1);
@@ -87,11 +77,13 @@ for i = 1:length(tracks)
     end
 end
 
+%% write .trk file
 if ischar(ftrfilename)
     ea_trk_write(header,tracks,[directory,ftrfilename,'.trk']);
 else
     ea_trk_write(header,tracks,[directory,ftrfilename{2},'.trk']);
 end
+
 
 function [header,tracks] = ea_trk_read(filePath)
 %TRK_READ - Load TrackVis .trk files
@@ -173,7 +165,7 @@ end
 
 fclose(fid);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function header = get_header(fid)
 
 header.id_string                 = fread(fid, 6, '*char')';
@@ -283,7 +275,6 @@ for iTrk = 1:header.n_count
 end
 
 fclose(fid);
-
 
 
 function trk_hdr = ea_aff2hdr(affine, trk_hdr, pos_vox, set_order)
