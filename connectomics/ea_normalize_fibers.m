@@ -48,7 +48,7 @@ ysize=size(b0.img,2)+1;
 
 ftr = load([directory,options.prefs.FTR_unnormalized]);
 
-reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'rdartelmni_1.nii,2'];
+reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii,2'];
 Vmni=spm_vol(reftemplate);
 mnimask=spm_read_vols(Vmni);
 mnimask=mnimask>0.01;
@@ -169,7 +169,7 @@ disp('Done.');
 %% create trackvis version
 disp('Creating TrackVis version...');
 try
-    reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'rdartelmni_1.nii'];
+    reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii'];
     dnii=ea_load_nii(reftemplate);
     niisize=size(dnii(1).img); % get dimensions of reference template.
 
