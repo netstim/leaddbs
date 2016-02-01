@@ -31,15 +31,11 @@ restfilename=options.prefs.pprest;
 signallength=ea_detsiglength([directory,restfilename]);
 stringnum=cell(signallength,1);
 
-
-
 for i=1:signallength
     stringnum{i}=num2str(i);
 end
 single_s_files=cellfun(@(x) [directory,restfilename,',',x],stringnum,'Uniformoutput',false);
 single_s_files=single_s_files';
-
-
 
 
 %% Extract timecourses of specified ROI
@@ -49,31 +45,14 @@ for i=1:signallength
     interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1);
 end
 
-
-                aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.txt']);
-                atlas_lgnd=textscan(aID,'%d %s');
+aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.txt']);
+atlas_lgnd=textscan(aID,'%d %s');
 dimensionality=length(atlas_lgnd{1}); % how many ROI.
-
-
 
 
 %% Extract timecourses of complete volume for signal regression..
 rfile=[directory,restfilename];
-
-
-
-
-%TMP = rest_spm_vol(ADataFile);
-
-%V(1:signallength)=TMP(2:signallength+1);
-
-nii=ea_load_nii(rfile);
-alltc=nii.img;
-%    AllTimecourses(:,:,:,:) = rest_spm_read_vols(V); % full volume of raw data.
-
-
-
-
+alltc=spm_read_vols(spm_vol(rfile));
 
 interpol_tc=interpol_tc';
 
@@ -87,8 +66,6 @@ for x=1:nDim1
     oneslice =reshape(oneslice', 1,nDim2,nDim3, nDim4);
     alltc(x, :, :, :) =(oneslice);
 end;
-
-
 
 
 %% Data corrections steps

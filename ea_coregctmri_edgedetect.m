@@ -21,19 +21,19 @@ maxiter=200;
 % MR
 if isfield(options,'usediffmr_coregct')
     ea_reslice_nii([options.root,options.patientname,filesep,options.usediffmr_coregct],[options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],[2 2 2],0);
-    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
+    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],'simple');
     delete([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
 
 else
     ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
-    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
+    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],'simple');
     delete([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
 
 end
 
 % CT
 ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],[2 2 2],0);
-CT=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized]);
+CT=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],'simple');
 
 delete([options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized]);
 
@@ -72,10 +72,10 @@ for alpha=1:length(alphas)
 
     [xx,yy,zz]=ind2sub(size(eMR),find(eMR(:)));
     ptMR=[xx,yy,zz,ones(length(xx),1)]';
-    ptMR=MR.mat*ptMR; % mm notation
+    ptMR=MR.hdr.mat*ptMR; % mm notation
     [xx,yy,zz]=ind2sub(size(eCT),find(eCT(:)));
     ptCT=[xx,yy,zz,ones(length(xx),1)]';
-    ptCT=CT.mat*ptCT; % mm notation
+    ptCT=CT.hdr.mat*ptCT; % mm notation
     disp('Done.');
 
     % define initialization parameters
@@ -181,7 +181,7 @@ clear jobs matlabbatch
 
 % we might want to try normalizing the rCT using Albada 2009?
 % disp('Done. Normalizing CT intensities...');
-% rCT=ea_load_nii(
+% rCT=ea_load_nii(,'simple')
 % CT.img=reshape(ea_normal(CT.img(:)),size(CT.img,1),size(CT.img,2),size(CT.img,3));
 
 costfuns={'nmi','mi','ecc'};

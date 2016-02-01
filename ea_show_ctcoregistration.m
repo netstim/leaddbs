@@ -48,11 +48,11 @@ disp('Generating wireframe from CT image...');
 if ~exist('edge.m','file')
     disp('Image toolbox not found, using a slower replacement function...');
     ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],[options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered],[2 2 2],0);
-    CT=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered]);
+    CT=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered],'simple');
     useimtbx=0;
     alpha=0.01;
 else % use image toolbox
-    CT=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
+    CT=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],'simple');
     useimtbx=1;
     alpha=0.1;
 end
@@ -66,8 +66,8 @@ CT.img(CT.img<0)=0; % remove negative hounsfield parts.
 
 eCT=logical(ea_detect_edges_3d(CT.img,alpha,useimtbx));
 
-CT.fname=[options.root,options.patientname,filesep,'wires_',options.prefs.ctnii_coregistered];
-CT.dt=[4,0];
+CT.hdr.fname=[options.root,options.patientname,filesep,'wires_',options.prefs.ctnii_coregistered];
+CT.hdr.dt=[4,0];
 spm_write_vol(CT.hdr,eCT);
 
 disp('Done. Fusing images...');
@@ -138,8 +138,6 @@ saveas(h3,[options.root,options.prefs.patientdir,filesep,'ctmrcoreg_check',suff,
 
 
 end
-
-
 
 
 function hfig = tightfig(hfig)
