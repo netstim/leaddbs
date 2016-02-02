@@ -1362,11 +1362,11 @@ options.autoimprove=0; % if true, templates will be modified.
 options.axiscontrast=8; % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
 
-options.atl.genpt=get(handles.vizspacepopup,'Value')>1; % generate patient specific atlases
-options.atl.normalize=get(handles.vizspacepopup,'Value')==2; % normalize patient specific atlasset.
+options.atl.genpt=get(handles.vizspacepopup,'Value')==2; % generate patient specific atlases
+options.atl.normalize=0; % normalize patient specific atlasset. This is not done anymore for now.
 options.atl.can=get(handles.vizspacepopup,'Value')==1; % display canonical atlases
-options.atl.pt=get(handles.vizspacepopup,'Value')==2; % display patient specific atlases
-options.atl.ptnative=get(handles.vizspacepopup,'Value')==3; % show results in native space.
+options.atl.pt=0; % display patient specific atlases. This is not done anymore for now.
+options.atl.ptnative=get(handles.vizspacepopup,'Value')==2; % show results in native space.
 if options.atl.ptnative
     options.native=1;
 else
@@ -1726,12 +1726,12 @@ function vizspacepopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns vizspacepopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from vizspacepopup
 
-if get(hObject,'Value')==3
+if get(hObject,'Value')==2
    set(handles.writeout2d_checkbox,'Enable','off');
    set(handles.writeout2d_checkbox,'Value',0);
 else
    set(handles.writeout2d_checkbox,'Enable','on');    
-   set(handles.writeout2d_checkbox,'Value',1);
+   %set(handles.writeout2d_checkbox,'Value',1);
 end
 
 

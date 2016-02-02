@@ -33,7 +33,7 @@ pa = cat(1,pa{:});
  pa = pa';
 
 
-keyboard
+
 vfi = interp3(ftr.user.vf(:,:,:,1),floor(pts(:,2))+1,floor(pts(:,1))+1,floor(pts(:,3))+1);
 szvf = size( ftr.user.vf);
 recompSig = zeros([szvf(1:3)*M,size(bTensor,3)]);

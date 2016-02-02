@@ -78,7 +78,8 @@ for pt=1:length(uidir)
         case 3 % relative to PC:
             warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(2,:)');
     end
-    fid(pt).WarpedPointNative=warpcoord_mm(1:3)';
+    
+    fid(pt).WarpedPointNative=[warpcoord_mm(1),-warpcoord_mm(2),warpcoord_mm(3)];
 end
 %ea_dispercent(1,'end');
 
@@ -88,12 +89,6 @@ assignin('base','fid',fid);
 
 
 
-function ea_redo_inv(directory,options)
-matlabbatch{1}.spm.util.defs.comp{1}.inv.comp{1}.def = {[directory,'y_ea_normparams.nii']};
-matlabbatch{1}.spm.util.defs.comp{1}.inv.space = {[directory,options.prefs.prenii_unnormalized]};
-matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = 'ea_inv_normparams.nii';
-matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
-spm_jobman('run',{matlabbatch});
 
 
 function fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile)

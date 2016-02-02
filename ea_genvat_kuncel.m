@@ -50,17 +50,14 @@ for source=1:4
     
     for cnt=1:length(cnts)
         U(cnt)=stimsource.(cnts{cnt}).perc; 
-        Im(cnt)=stimsource.(cnts{cnt}).imp; 
     end
     Acnt=find(U>0);
     if length(Acnt)>1
         ea_error('In the Maedler and Kuncel models, only one active contact can be selected in each source');
     end
-    Im=Im(U>0);
-    Im=Im*1000; % kohm -> ohm
     U=stimsource.amp;
   
-    radius(source)=maedler12_eq3(U,Im);
+    radius(source)=ea_kuncel(U);
     volume(source)=(4/3)*pi*radius(source)^3;
     
     VAT{source}=[xx*radius(source)+coords{side}(Acnt,1);...
@@ -124,23 +121,17 @@ spm_write_vol(Vvat,voxspace);
 varargout{1}=VAT;
 varargout{2}=volume;
 
-
-
-function r=maedler12_eq3(U,Im)
-% This function radius of Volume of Activated Tissue for stimulation settings U and Ohm. See Maedler 2012 for details.
+function r=ea_kuncel(U)
+% This function radius of Volume of Activated Tissue for stimulation settings U. See Kuncel 2008 for details.
 % Clinical measurements of DBS electrode impedance typically range from
 % 500?1500 Ohm (Butson 2006).
 r=0; %
 if U %(U>0)
     
-    k1=-1.0473;
-    k3=0.2786;
-    k4=0.0009856;
+    k=0.22;
+    Uo=0.1;
     
-    
-    r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)...
-        /...
-        (2*k3);
+    r=sqrt((U-Uo)/k);
 end
 
 

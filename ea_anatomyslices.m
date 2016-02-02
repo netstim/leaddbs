@@ -126,6 +126,7 @@ if togglestates.xyztoggles(1)
         slice=flipdim(permute(double(slice),[2,1,3]),2);
         %slice=flipdim(slice,1);
     else
+        
         [xx,yy,zz]=meshgrid(xyzv(1),1:0.5:V{1+usesag}.dim(2),1:0.5:V{1+usesag}.dim(3));
         slice=spm_sample_vol(V{1+usesag},xx,yy,zz,1);
     end

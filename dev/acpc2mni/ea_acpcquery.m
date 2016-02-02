@@ -279,7 +279,7 @@ cfg.zmm=str2double(get(handles.zmm,'String'));
 if get(handles.xflip,'Value')==2
     cfg.xmm=cfg.xmm*-1;
 end
-if get(handles.yflip,'Value')==1
+if get(handles.yflip,'Value')==2
     cfg.ymm=cfg.ymm*-1;
 end
 if get(handles.zflip,'Value')==1
@@ -453,10 +453,12 @@ meanacpc=mean(acpcpoints,1);
 
 stdacpc=std(acpcpoints,0,1);
 
+% default: 112
+
 if get(handles.xflip,'Value')==2
     meanacpc(1)=meanacpc(1)*-1;
 end
-if get(handles.yflip,'Value')==1
+if get(handles.yflip,'Value')==2
     meanacpc(2)=meanacpc(2)*-1;
 end
 if get(handles.zflip,'Value')==1

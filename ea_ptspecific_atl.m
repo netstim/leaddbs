@@ -36,7 +36,7 @@ if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_inde
     atlases=ea_genatlastable([],root,options);
 else
     load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-    atlases=ea_genatlastable(atlases,options.earoot,options);
+%    atlases=ea_genatlastable(atlases,options.earoot,options);
 end
 
 cnt=1;
@@ -167,9 +167,7 @@ if options.prefs.normalize.inverse.customtpm
     end
     
     tpmroot=aroot;
-else
-    tpmroot=troot;
-end
+
 
 matlabbatch{1}.spm.tools.preproc8.channel.vols = {[proot,options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.tools.preproc8.channel.biasreg = 0.0001;
@@ -207,7 +205,6 @@ matlabbatch{1}.spm.tools.preproc8.warp.write = [1 1];
 jobs{1}=matlabbatch;
 cfg_util('run',jobs);
 clear matlabbatch jobs
-if options.prefs.normalize.inverse.customtpm
     gzip([aroot,'TPM.nii']);
     delete([aroot,'TPM.nii']);
     movefile([proot,'iy_',options.prefs.prenii_unnormalized],[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'iy_warp.nii'])
@@ -216,6 +213,16 @@ if options.prefs.normalize.inverse.customtpm
 else
     warpfile=[proot,'y_ea_inv_normparams.nii'];
 end
+
+
+% check if inv has correct size:
+Vinv=spm_vol(warpfile);
+Vanat=spm_vol([proot,options.prefs.prenii_unnormalized]);
+
+    if ~isequal(Vinv.dim,Vanat.dim)
+                ea_redo_inv(proot,options);
+    end
+
 %apply deformation fields to respective atlas.
 
 % warp atlas to patient space

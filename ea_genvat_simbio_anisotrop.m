@@ -16,7 +16,7 @@ if nargin==5
     stimname=varargin{5};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
-        varargout{1}='SimBio/FieldTrip';
+        varargout{1}='SimBio/FieldTrip Anisotropy';
         return
     end
 end
@@ -32,13 +32,12 @@ vizz=0;
 % end
 
 
-
 %% get electrodes handles // initial parameters:
 resultfig=getappdata(gcf,'resultfig');
 el_render=getappdata(resultfig,'el_render');
 elstruct=getappdata(resultfig,'elstruct');
 elspec=getappdata(resultfig,'elspec');
-options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
+options.usediffusion=1; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 
 if ea_headmodel_changed(options,side,elstruct)
@@ -203,17 +202,14 @@ if ea_headmodel_changed(options,side,elstruct)
     %% generate diffusion signal:
     if options.usediffusion
         disp('Loading FTR...');
+        
         load([options.earoot,'dev',filesep,'bTensor']) % b-Tensor of a simple 6fold diffusion series
-        ftr=load([options.root,options.patientname,filesep,options.prefs.FTR_normalized]);
-        disp('Done. Estimating diffusion signal based on fibertracts...');
-        signal=ea_ftr2Sigmaps(ftr,ten);
-        disp('Done. Calculating Tensors...');
-        reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii,2'];
-        Vsig=spm_vol(reftemplate);
-        for i=1:size(signal,4);
-            Vsig.fname=[options.root,options.patientname,filesep,'headmodel',filesep,'dti_',num2str(i),'.nii'];
-            spm_write_vol(Vsig,squeeze(signal(:,:,:,i)));
-        end
+        %ftr=load([options.root,options.patientname,filesep,options.prefs.FTR_normalized]);
+        ftr=load([options.earoot,'fibers',filesep,'Groupconnectome (Horn 2013) thinned out x 50']);
+        
+        %aniso=ea_ftr2aniso(ftr.normalized_fibers_mm,smri,ten);
+        aniso=ea_ftr2aniso(ftr.gibbsconnectome,smri,ten);
+        aniso=aniso*0.844; % Tuch 2001;
     end
     
     %% create the mesh using fieldtrip:
@@ -238,7 +234,7 @@ if ea_headmodel_changed(options,side,elstruct)
     end
     %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
      
-    vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.0915 0.059 1/(10^(-8)) 1/(10^16)]);
+    vol=ea_ft_headmodel_simbio(mesh,[0.0915 0.059 1/(10^(-8)) 1/(10^16)],aniso);
 
     
     save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','-v7.3');
@@ -9125,7 +9121,8 @@ function vol = ea_ft_headmodel_simbio(geom, varargin)
 
 
 % get the optional arguments
-conductivity    = ea_ft_getopt(varargin, 'conductivity');
+conductivity=varargin{1};
+aniso=varargin{2};
 
 % start with an empty volume conductor
 geom = ea_ft_datatype_parcellation(geom);
@@ -9171,7 +9168,7 @@ else
     vol.tissuelabel = geom.tissuelabel;
 end
 
-vol.stiff = ea_sb_calc_stiff(vol);
+vol.stiff = ea_sb_calc_stiff(vol,aniso);
 vol.type = 'simbio';
 
 function parcellation = ea_ft_datatype_parcellation(parcellation, varargin)
@@ -10280,7 +10277,7 @@ rows = [1;rows];
 rows = cumsum(rows);
 rows = rows(1:end-1);
 
-function [stiff, diinsy, cols, sysmat] = ea_sb_calc_stiff(vol)
+function [stiff, diinsy, cols, sysmat] = ea_sb_calc_stiff(vol,aniso)
 
 % SB_CALC_STIFF
 %
@@ -10364,7 +10361,9 @@ elseif isfield(vol,'hex')
     end
 end
 
-try
+try    
+    cond=repmat(cond,1,6);
+    cond(cond(:,1)==0.0590,:)=aniso(1:end-1,:);
     [diinsy,cols,sysmat] = ea_calc_stiff_matrix_val(node,elem,cond,mele);
 catch err
     if ispc && strcmp(err.identifier,'MATLAB:invalidMEXFile')

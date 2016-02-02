@@ -22,7 +22,7 @@ end
 % prompt for ACPC-coordinates:
 
 
-acpc=[cfg.xmm,cfg.ymm,cfg.zmm];
+acpc=[cfg.xmm,-cfg.ymm,cfg.zmm];
 if cfg.mapmethod
     [FileName,PathName] = uiputfile('ACPC2MNI_Mapping.nii','Save Mapping...');
 end
@@ -59,37 +59,39 @@ for pt=1:length(uidir)
     fid(pt).MSP=fpinsub_mm(3,:);
 
     % x-dimension
-    A=fpinsub_mm(3,:)-fpinsub_mm(1,:);
-    B=fpinsub_mm(2,:)-fpinsub_mm(1,:);
+    A=fid(pt).MSP-fid(pt).AC;
+    B=fid(pt).PC-fid(pt).AC;
     xvec=cross(A,B); %normal to given plane
     xvec=xvec/norm(xvec);
     % y-dimension (just move from ac to pc and scale by y dimension):
-    yvec=(fpinsub_mm(2,:)-fpinsub_mm(1,:));
+    yvec=(fid(pt).PC-fid(pt).AC);
     yvec=yvec/norm(yvec);
     
     % z-dimension (just move from ac to msag plane by z dimension):
-    zvec=(fpinsub_mm(3,:)-fpinsub_mm(1,:));
+    zvec=(fid(pt).MSP-fid(pt).AC);
     zvec=zvec/norm(zvec);    
     switch cfg.acmcpc
         case 1 % relative to AC:
-            warpcoord_mm=fpinsub_mm(1,:)+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
+            warpcoord_mm=fid(pt).AC+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
         case 2 % relative to midcommissural point:
-            warpcoord_mm=mean([fpinsub_mm(1,:);fpinsub_mm(2,:)],1)+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
+            warpcoord_mm=mean([fid(pt).AC;fid(pt).PC],1)+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
         case 3 % relative to PC:
-            warpcoord_mm=fpinsub_mm(2,:)+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
+            warpcoord_mm=fid(pt).PC+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
     end
     anat=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
     warpcoord_mm=[warpcoord_mm';1];
     warpcoord_vox=anat.mat\warpcoord_mm;
     warpcoord_vox=warpcoord_vox(1:3);
     fid(pt).WarpedPointNative=warpcoord_mm(1:3)';
-    % re-warp into MNI:
-    try
-        [warpinmni_mm] = ea_map_coords(warpcoord_vox, '', [directory,'y_ea_inv_normparams.nii'], tempfile);
-    catch
-        ea_redo_inv(directory,options);
-        [warpinmni_mm] = ea_map_coords(warpcoord_vox, '', [directory,'y_ea_inv_normparams.nii'], tempfile);
+    
+    % check it inverse normparams file has correct voxel size.
+    Vinv=spm_vol([directory,'y_ea_inv_normparams.nii']);
+    if ~isequal(Vinv.dim,anat.dim)
+                ea_redo_inv(directory,options);
     end
+        % re-warp into MNI:
+
+        [warpinmni_mm] = ea_map_coords(warpcoord_vox, '', [directory,'y_ea_inv_normparams.nii'], tempfile);
     
     warppts(pt,:)=warpinmni_mm';
     fid(pt).WarpedPointMNI=warppts(pt,:);
@@ -163,13 +165,6 @@ end
 assignin('base','fid',fid);
 
 
-
-function ea_redo_inv(directory,options)
-matlabbatch{1}.spm.util.defs.comp{1}.inv.comp{1}.def = {[directory,'y_ea_normparams.nii']};
-matlabbatch{1}.spm.util.defs.comp{1}.inv.space = {[directory,options.prefs.prenii_unnormalized]};
-matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = 'ea_inv_normparams.nii';
-matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
-spm_jobman('run',{matlabbatch});
 
 
 function fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile)

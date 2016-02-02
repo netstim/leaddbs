@@ -86,7 +86,7 @@ prefs.dicom.dicomfiles=1; % 1: delete DICOMs after conversion, 2: move DICOMs to
 %% Normalization:
 prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
 prefs.normalize.default='ea_normalize_ants';
-prefs.normalize.inverse.customtpm=1; % set to 1 if custom TPM shall be built for inverse warpings.
+prefs.normalize.inverse.customtpm=0; % set to 1 if custom TPM shall be built for inverse warpings.
 
 %% Coregistration (CT/MR):
 prefs.ctcoreg.default='ea_coregctmri_ants';

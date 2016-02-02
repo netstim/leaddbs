@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 28-Oct-2015 21:14:27
+% Last Modified by GUIDE v2.5 31-Jan-2016 13:19:40
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,12 +59,12 @@ set(gcf,'Name','Stimulation Parameters');
 elstruct=varargin{1};
 resultfig=varargin{2};
 options=varargin{3};
-setappdata(gcf,'elstruct',elstruct);
-setappdata(gcf,'resultfig',resultfig);
-setappdata(gcf,'options',options);
+setappdata(handles.stimfig,'elstruct',elstruct);
+setappdata(handles.stimfig,'resultfig',resultfig);
+setappdata(handles.stimfig,'options',options);
 
 stimparams=getappdata(resultfig,'stimparams'); % get info from resultfig.
-setappdata(gcf,'stimparams',stimparams); % store stimulation settings from resultfig to stim (this) fig for subroutines.
+setappdata(handles.stimfig,'stimparams',stimparams); % store stimulation settings from resultfig to stim (this) fig for subroutines.
 
 
 
@@ -90,83 +90,30 @@ set(handles.modelselect,'String',ndc);
 
 
 
-if ~isempty(stimparams) % stimfigure has been used before..
-    for side=1:2
-        for el=1:4
-            %keyboard
-            
-            set(eval(['handles.k',num2str(((side-1)*4)+el-1),'u']),'String', num2str(stimparams(side).U(el)));
-            set(eval(['handles.k',num2str(((side-1)*4)+el-1),'im']),'String',num2str(stimparams(side).Im(el)));
-            
-            
-        end
-    end
-    
-    
-    set(handles.fiberthresh,'String',num2str(stimparams(1).fiberthresh))
-    
-    set(handles.showfibs,'Value',stimparams(1).showfibers);
-    set(handles.showconns,'Value',stimparams(1).showconnectivities);
-end
-
-
-% Build popup tables:
-% Fibers:
-
-
-fibd=dir([options.earoot,'fibers',filesep,'*.mat']);
-fiberscell{1}='Patient-specific DTI-Data';
-
-for fd=2:length(fibd)+1
-[~,fn]=fileparts(fibd(fd-1).name);
-fiberscell{fd}=fn;
-end
-
-set(handles.fiberspopup,'String',fiberscell);
-
-try
-    priorselection=find(ismember(fiberscell,stimparams.usefiberset)); % retrieve prior selection of fiberset.
-    set(handles.fiberspopup,'Value',priorselection);
-
-catch    % reinitialize using third entry.
-    set(handles.fiberspopup,'Value',4);
- 
-end
-if get(handles.fiberspopup,'Value')>length(get(handles.fiberspopup,'String'))
-    set(handles.fiberspopup,'Value',length(get(handles.fiberspopup,'String')));
-end
-
-% Labels:
-
-
-ll=dir([options.earoot,'templates',filesep,'labeling',filesep,'*.nii']);
-for lab=1:length(ll)
-    [~,n]=fileparts(ll(lab).name);
-    labelcell{lab}=n;
-end
-% historical part that supported more than one labelatlas:
-%labelcell{lab+1}='Use all';
-
-set(handles.labelpopup,'String',labelcell);
-
-
-try
-    priorselection=find(ismember(labelcell,stimparams.labelatlas)); % retrieve prior selection of fiberset.
-    if length(priorselection)==1
-    set(handles.labelpopup,'Value',priorselection); % set to prior selection
-    else % if priorselection was a cell array with more than one entry, set to use all
-            set(handles.labelpopup,'Value',lab+1); % set to use all
-
-    end
-catch    % reinitialize using third entry.
-    set(handles.labelpopup,'Value',1);
-    
-    
-end
+% if ~isempty(stimparams) % stimfigure has been used before..
+%     for side=1:2
+%         for el=1:4
+%             %keyboard
+%             
+%             set(eval(['handles.k',num2str(((side-1)*4)+el-1),'u']),'String', num2str(stimparams(side).U(el)));
+%             set(eval(['handles.k',num2str(((side-1)*4)+el-1),'im']),'String',num2str(stimparams(side).Im(el)));
+%             
+%             
+%         end
+%     end
+%     
+%     
+%     set(handles.fiberthresh,'String',num2str(stimparams(1).fiberthresh))
+%     
+%     set(handles.showfibs,'Value',stimparams(1).showfibers);
+%     set(handles.showconns,'Value',stimparams(1).showconnectivities);
+% end
 
 
 pos=get(gcf,'position');
 set(gcf,'position',[51,51,pos(3),pos(4)]);
+
+ea_refreshguisp(handles,options);
 
 % Choose default command line output for ea_stimparams
 handles.output = hObject;
@@ -182,7 +129,7 @@ guidata(hObject, handles);
 
 
 % UIWAIT makes ea_stimparams wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.stimfig);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -204,6 +151,12 @@ function k0u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k0u as text
 %        str2double(get(hObject,'String')) returns contents of k0u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Rs',num2str(S.active(1)),'.k0.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -227,6 +180,12 @@ function k1u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k1u as text
 %        str2double(get(hObject,'String')) returns contents of k1u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Rs',num2str(S.active(1)),'.k1.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -250,6 +209,12 @@ function k2u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k2u as text
 %        str2double(get(hObject,'String')) returns contents of k2u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Rs',num2str(S.active(1)),'.k2.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -273,6 +238,12 @@ function k3u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Rs',num2str(S.active(1)),'.k3.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -294,6 +265,12 @@ function k4u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Rs',num2str(S.active(1)),'.k4.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -315,6 +292,12 @@ function k5u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Rs',num2str(S.active(1)),'.k5.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -337,6 +320,12 @@ function k6u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Rs',num2str(S.active(1)),'.k6.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -359,6 +348,12 @@ function k7u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Rs',num2str(S.active(1)),'.k7.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -381,7 +376,12 @@ function k4im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Rs',num2str(S.active(1)),'.k4.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k4im_CreateFcn(hObject, eventdata, handles)
@@ -402,7 +402,12 @@ function k5im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Rs',num2str(S.active(1)),'.k5.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 
@@ -424,7 +429,12 @@ function k6im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Rs',num2str(S.active(1)),'.k6.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k6im_CreateFcn(hObject, eventdata, handles)
@@ -446,7 +456,12 @@ function k7im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Rs',num2str(S.active(1)),'.k7.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k7im_CreateFcn(hObject, eventdata, handles)
@@ -480,7 +495,12 @@ function k0im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k1im as text
 %        str2double(get(hObject,'String')) returns contents of k1im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Rs',num2str(S.active(1)),'.k0.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 
 function k1im_Callback(hObject, eventdata, handles)
@@ -490,7 +510,12 @@ function k1im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k1im as text
 %        str2double(get(hObject,'String')) returns contents of k1im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Rs',num2str(S.active(1)),'.k1.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k1im_CreateFcn(hObject, eventdata, handles)
@@ -513,7 +538,12 @@ function k2im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k2im as text
 %        str2double(get(hObject,'String')) returns contents of k2im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Rs',num2str(S.active(1)),'.k2.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k2im_CreateFcn(hObject, eventdata, handles)
@@ -536,7 +566,12 @@ function k3im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3im as text
 %        str2double(get(hObject,'String')) returns contents of k3im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Rs',num2str(S.active(1)),'.k3.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k3im_CreateFcn(hObject, eventdata, handles)
@@ -559,6 +594,12 @@ function k8u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k8u as text
 %        str2double(get(hObject,'String')) returns contents of k8u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Ls',num2str(S.active(2)),'.k8.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -582,7 +623,12 @@ function k9u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k9u as text
 %        str2double(get(hObject,'String')) returns contents of k9u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k9.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 % --- Executes during object creation, after setting all properties.
 function k9u_CreateFcn(hObject, eventdata, handles)
@@ -605,7 +651,12 @@ function k10u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k10u as text
 %        str2double(get(hObject,'String')) returns contents of k10u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k10.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 % --- Executes during object creation, after setting all properties.
 function k10u_CreateFcn(hObject, eventdata, handles)
@@ -628,7 +679,12 @@ function k11u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k11u as text
 %        str2double(get(hObject,'String')) returns contents of k11u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k11.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 % --- Executes during object creation, after setting all properties.
 function k11u_CreateFcn(hObject, eventdata, handles)
@@ -651,7 +707,12 @@ function k8im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k8im as text
 %        str2double(get(hObject,'String')) returns contents of k8im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k8.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k8im_CreateFcn(hObject, eventdata, handles)
@@ -674,7 +735,12 @@ function k9im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k9im as text
 %        str2double(get(hObject,'String')) returns contents of k9im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k9.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k9im_CreateFcn(hObject, eventdata, handles)
@@ -697,7 +763,12 @@ function k10im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k10im as text
 %        str2double(get(hObject,'String')) returns contents of k10im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k10.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k10im_CreateFcn(hObject, eventdata, handles)
@@ -720,6 +791,12 @@ function k11im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k11im as text
 %        str2double(get(hObject,'String')) returns contents of k11im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Ls',num2str(S.active(2)),'.k9.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -743,7 +820,17 @@ function modelselect_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns modelselect contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from modelselect
-
+options=getappdata(handles.stimfig,'options');
+ea_refreshguisp(handles,options);
+S=getappdata(handles.stimfig,'S');
+for a=1:4
+    S.active=repmat(a,1,2);
+    S=ea_redistribute_voltage(S,'k1');
+    S=ea_redistribute_voltage(S,'k9');
+end
+S.active=[1,1];
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function modelselect_CreateFcn(hObject, eventdata, handles)
@@ -764,9 +851,10 @@ function stimulate_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-elstruct=getappdata(gcf,'elstruct');
-resultfig=getappdata(gcf,'resultfig');
-options=getappdata(gcf,'options');
+elstruct=getappdata(handles.stimfig,'elstruct');
+resultfig=getappdata(handles.stimfig,'resultfig');
+options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 if isfield(elstruct,'group')
     
     gcnt=ones(length(elstruct(1).groups),1);
@@ -776,8 +864,8 @@ end
 % assign correct .m-file to function.
 genvatfunctions=getappdata(gcf,'genvatfunctions');
 ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
-
-        stimname=ea_detstimname();
+ 
+        stimname=S.label;
 
 for el=1:length(elstruct)
     for side=1:length(elstruct.coords_mm)
@@ -796,46 +884,14 @@ for el=1:length(elstruct)
         
         gcnt(elstruct(el).group)=gcnt(elstruct(el).group)+1;
     else % single patient
-        
-        for elin=1:options.elspec.numel
-            %keyboard
-            stimparams(1,side).U(elin)=str2double(get(eval(['handles.k',num2str(elin-1+((side-1)*options.elspec.numel)),'u']),'String'));
-            stimparams(1,side).Im(elin)=str2double(get(eval(['handles.k',num2str(elin-1+((side-1)*options.elspec.numel)),'im']),'String'));
-            
-        end
-        
-        [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,stimparams,side,options,stimname);
+ 
+        [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,S,side,options,stimname);
         
         stimparams(1,side).volume=volume;
         flix=1;
     end
     end
 end
-
-for group=1:length(stimparams)
-    fiberscell=get(handles.fiberspopup,'String');
-    stimparams(group).usefiberset=fiberscell{get(handles.fiberspopup,'Value')};
-    labelcell=get(handles.labelpopup,'String');
-    stimparams(group).labelatlas=labelcell(get(handles.labelpopup,'Value'));
-    stimparams(group).showfibers=(get(handles.showfibs,'Value') == get(handles.showfibs,'Max'));
-    stimparams(group).showconnectivities=(get(handles.showconns,'Value') == get(handles.showconns,'Max'));
-    stimparams(group).fiberthresh=str2double(get(handles.fiberthresh,'String'));
-
-    % historical part that supported more than one labelatlas
-%     if strcmp(stimparams(group).labelatlas{1},'Use all')
-%         ll=dir([options.earoot,'templates',filesep,'labeling',filesep,'*.nii']);
-%         for lab=1:length(ll)
-%             [~,n]=fileparts(ll(lab).name);
-%             stimparams(group).labelatlas{lab}=n;
-%         end
-%     end
-end
-
-
-
-
-
-
 
 
 
@@ -937,93 +993,6 @@ end
 
 
 
-function fiberthresh_Callback(hObject, eventdata, handles)
-% hObject    handle to fiberthresh (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of fiberthresh as text
-%        str2double(get(hObject,'String')) returns contents of fiberthresh as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function fiberthresh_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to fiberthresh (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in showfibs.
-function showfibs_Callback(hObject, eventdata, handles)
-% hObject    handle to showfibs (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showfibs
-
-
-% --- Executes on button press in showconns.
-function showconns_Callback(hObject, eventdata, handles)
-% hObject    handle to showconns (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showconns
-
-
-% --- Executes on selection change in fiberspopup.
-function fiberspopup_Callback(hObject, eventdata, handles)
-% hObject    handle to fiberspopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns fiberspopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from fiberspopup
-
-
-% --- Executes during object creation, after setting all properties.
-function fiberspopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to fiberspopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on selection change in labelpopup.
-function labelpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to labelpopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns labelpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from labelpopup
-
-
-% --- Executes during object creation, after setting all properties.
-function labelpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to labelpopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 function k12u_Callback(hObject, eventdata, handles)
 % hObject    handle to k12u (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1031,7 +1000,12 @@ function k12u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k12u as text
 %        str2double(get(hObject,'String')) returns contents of k12u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k12.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 % --- Executes during object creation, after setting all properties.
 function k12u_CreateFcn(hObject, eventdata, handles)
@@ -1054,7 +1028,12 @@ function k13u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k13u as text
 %        str2double(get(hObject,'String')) returns contents of k13u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k13.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 % --- Executes during object creation, after setting all properties.
 function k13u_CreateFcn(hObject, eventdata, handles)
@@ -1077,7 +1056,12 @@ function k14u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k14u as text
 %        str2double(get(hObject,'String')) returns contents of k14u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k14.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 % --- Executes during object creation, after setting all properties.
 function k14u_CreateFcn(hObject, eventdata, handles)
@@ -1100,7 +1084,12 @@ function k15u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k15u as text
 %        str2double(get(hObject,'String')) returns contents of k15u as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k15.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
 
 % --- Executes during object creation, after setting all properties.
 function k15u_CreateFcn(hObject, eventdata, handles)
@@ -1123,7 +1112,12 @@ function k12im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k12im as text
 %        str2double(get(hObject,'String')) returns contents of k12im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k12.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k12im_CreateFcn(hObject, eventdata, handles)
@@ -1146,7 +1140,12 @@ function k13im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k13im as text
 %        str2double(get(hObject,'String')) returns contents of k13im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k13.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k13im_CreateFcn(hObject, eventdata, handles)
@@ -1169,7 +1168,12 @@ function k14im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k14im as text
 %        str2double(get(hObject,'String')) returns contents of k14im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k14.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k14im_CreateFcn(hObject, eventdata, handles)
@@ -1192,7 +1196,12 @@ function k15im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k15im as text
 %        str2double(get(hObject,'String')) returns contents of k15im as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
+eval(['S.Ls',num2str(S.active(2)),'.k15.imp=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
 
 % --- Executes during object creation, after setting all properties.
 function k15im_CreateFcn(hObject, eventdata, handles)
@@ -1201,6 +1210,1226 @@ function k15im_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function RCu_Callback(hObject, eventdata, handles)
+% hObject    handle to RCu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of RCu as text
+%        str2double(get(hObject,'String')) returns contents of RCu as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Rs',num2str(S.active(1)),'.case.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
+
+% --- Executes during object creation, after setting all properties.
+function RCu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to RCu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Rs1am_Callback(hObject, eventdata, handles)
+% hObject    handle to Rs1am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Rs1am as text
+%        str2double(get(hObject,'String')) returns contents of Rs1am as a double
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.Rs1.amp=str2double(get(hObject,'String'));
+
+
+
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Rs1am_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Rs1am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in Rs1va.
+function Rs1va_Callback(hObject, eventdata, handles)
+% hObject    handle to Rs1va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns Rs1va contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from Rs1va
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.Rs1.va=get(hObject,'Value');
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Rs1va_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Rs1va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Rs2am_Callback(hObject, eventdata, handles)
+% hObject    handle to Rs2am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Rs2am as text
+%        str2double(get(hObject,'String')) returns contents of Rs2am as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=2;
+S.Rs2.amp=str2double(get(hObject,'String'));
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Rs2am_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Rs2am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in Rs2va.
+function Rs2va_Callback(hObject, eventdata, handles)
+% hObject    handle to Rs2va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns Rs2va contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from Rs2va
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=2;
+S.Rs2.va=get(hObject,'Value');
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Rs2va_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Rs2va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+
+
+function LCu_Callback(hObject, eventdata, handles)
+% hObject    handle to LCu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of LCu as text
+%        str2double(get(hObject,'String')) returns contents of LCu as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+eval(['S.Ls',num2str(S.active(2)),'.case.perc=',num2str(get(hObject,'String')),';']);
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options,hObject);
+
+% --- Executes during object creation, after setting all properties.
+function LCu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to LCu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Ls1am_Callback(hObject, eventdata, handles)
+% hObject    handle to Ls1am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Ls1am as text
+%        str2double(get(hObject,'String')) returns contents of Ls1am as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=1;
+S.Ls1.amp=str2double(get(hObject,'String'));
+
+
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Ls1am_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Ls1am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in Ls1va.
+function Ls1va_Callback(hObject, eventdata, handles)
+% hObject    handle to Ls1va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns Ls1va contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from Ls1va
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=1;
+S.Ls1.va=get(hObject,'Value');
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Ls1va_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Ls1va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Ls2am_Callback(hObject, eventdata, handles)
+% hObject    handle to Ls2am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Ls2am as text
+%        str2double(get(hObject,'String')) returns contents of Ls2am as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=2;
+S.Ls2.amp=str2double(get(hObject,'String'));
+
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Ls2am_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Ls2am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in Ls2va.
+function Ls2va_Callback(hObject, eventdata, handles)
+% hObject    handle to Ls2va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns Ls2va contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from Ls2va
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=2;
+S.Ls2.va=get(hObject,'Value');
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Ls2va_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Ls2va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in Linterleaved.
+function Linterleaved_Callback(hObject, eventdata, handles)
+% hObject    handle to Linterleaved (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of Linterleaved
+
+
+
+function stimlabel_Callback(hObject, eventdata, handles)
+% hObject    handle to stimlabel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of stimlabel as text
+%        str2double(get(hObject,'String')) returns contents of stimlabel as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+
+
+label=get(handles.stimlabel,'String');
+label(strfind(label,' '))='';
+S.label=label;
+set(handles.stimlabel,'String',label);
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- Executes during object creation, after setting all properties.
+function stimlabel_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to stimlabel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function ea_refreshguisp(varargin)
+handles=varargin{1};
+options=varargin{2};
+
+
+S=getappdata(handles.stimfig,'S');
+
+
+if isempty(S)
+    S=initializeS;
+end
+Ractive=S.active(1);
+Lactive=S.active(2);
+if nargin==3
+    if ischar(varargin{3})
+        switch varargin{3}
+            case {'Rcase'}
+                ks={'k0','k1','k2','k3','k4','k5','k6','k7'};
+                sidec='R'; side=1;
+                S=ea_redistribute_voltage(S,varargin{3});
+                if S.(['Rs',num2str(Ractive)]).case.pol==1
+                    
+                    S.(['Rs',num2str(Ractive)]).case.pol=2;
+                    S=ea_redistribute_voltage(S,varargin{3});
+                    for k=0:7
+                        
+                        if  S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
+                            S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
+                            S=ea_redistribute_voltage(S,['k',num2str(k)]);
+                        end
+                    end
+                end
+            case {'Lcase'}
+                ks={'k8','k9','k10','k11','k12','k13','k14','k15'};
+                sidec='L'; side=2;
+                S=ea_redistribute_voltage(S,varargin{3});
+                if S.(['Ls',num2str(Lactive)]).case.pol==1
+                    S.(['Ls',num2str(Lactive)]).case.pol=2;
+                    S=ea_redistribute_voltage(S,varargin{3});
+                    for k=8:15
+                        if  S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
+                            S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
+                            S=ea_redistribute_voltage(S,['k',num2str(k)]);
+                        end
+                    end
+                end
+            otherwise
+                S=ea_redistribute_voltage(S,varargin{3});
+                
+                switch varargin{3}
+                    case {'k0','k1','k2','k3','k4','k5','k6','k7'}
+                        sidec='R'; side=1;
+                    case {'k8','k9','k10','k11','k12','k13','k14','k15'}
+                        sidec='L'; side=2;
+                end
+                if S.([sidec,'s',num2str(S.active(side))]).(varargin{3}).pol==2 && S.([sidec,'s',num2str(S.active(side))]).case.pol==2
+                    S.([sidec,'s',num2str(S.active(side))]).case.pol=0;
+                    S=ea_redistribute_voltage(S,[sidec,'case']);
+                end
+                
+        end
+    else
+       S=ea_redistribute_voltage(S,varargin{3}); 
+    end
+end
+
+setappdata(handles.stimfig,'S',S);
+
+
+
+% set stim amplitudes
+for source=1:4
+    
+    S.amplitude{1}(source)=num2str(eval(['S.Rs',num2str(source),'.amp']));
+    set(eval(['handles.Rs',num2str(source),'am']),'String',S.amplitude{1}(source));
+    set(eval(['handles.Rs',num2str(source),'va']),'Value',eval(['S.Rs',num2str(source),'.va']));
+
+
+%if eval(['S.Rs',num2str(source),'.amp']); % check if a valid +/- combination is active, if not set defaults.
+    anycontactpositive=0; anycontactnegative=0;
+    for k=0:7
+        if eval(['S.Rs',num2str(source),'.k',num2str(k),'.pol==1'])
+            anycontactnegative=1;
+        elseif eval(['S.Rs',num2str(source),'.k',num2str(k),'.pol==2'])
+            anycontactpositive=2;
+        end
+    end
+    
+    if ~anycontactnegative
+        eval(['S.Rs',num2str(source),'.k1.pol=1;']);
+        eval(['S.Rs',num2str(source),'.k1.perc=100;']);
+    end
+    
+    if ~anycontactpositive
+        eval(['S.Rs',num2str(source),'.case.pol=2;']);
+        eval(['S.Rs',num2str(source),'.case.perc=100;']);
+    end
+%end
+
+
+end
+for source=1:4
+    S.amplitude{2}(source)=num2str(eval(['S.Ls',num2str(source),'.amp']));
+    set(eval(['handles.Ls',num2str(source),'am']),'String',S.amplitude{2}(source));
+    set(eval(['handles.Ls',num2str(source),'va']),'Value',eval(['S.Ls',num2str(source),'.va']));
+    
+ %   if eval(['S.Ls',num2str(source),'.amp']); % check if a valid +/- combination is active, if not set defaults.
+        anycontactpositive=0; anycontactnegative=0;
+        for k=8:15
+            if eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol==1'])
+                anycontactnegative=1;
+            elseif eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol==2'])
+                anycontactpositive=1;
+            end
+        end
+        
+        if ~anycontactnegative
+            eval(['S.Ls',num2str(source),'.k9.pol=1;']);
+            eval(['S.Ls',num2str(source),'.k9.perc=100;']);
+        end
+        if ~anycontactpositive
+            eval(['S.Ls',num2str(source),'.case.pol=2;']);
+            eval(['S.Ls',num2str(source),'.case.perc=100;']);
+        end
+ %   end
+
+end
+
+
+%% model to handles: all GUI elements.
+
+source=Ractive;
+for k=0:7
+    val=eval(['S.Rs',num2str(source),'.k',num2str(k),'.perc']);
+    set(eval(['handles.k',num2str(k),'u']),'String',num2str(val));
+    
+    val=eval(['S.Rs',num2str(source),'.k',num2str(k),'.imp']);
+    set(eval(['handles.k',num2str(k),'im']),'String',num2str(val));
+end
+% set case
+
+set(handles.RCu,'String',num2str(eval(['S.Rs',num2str(source),'.case.perc'])));
+
+source=Lactive;
+for k=8:15
+    val=eval(['S.Ls',num2str(source),'.k',num2str(k),'.perc']);
+    set(eval(['handles.k',num2str(k),'u']),'String',num2str(val));
+    
+    val=eval(['S.Ls',num2str(source),'.k',num2str(k),'.imp']);
+    set(eval(['handles.k',num2str(k),'im']),'String',num2str(val));
+end
+
+% set case
+
+set(handles.LCu,'String',num2str(eval(['S.Ls',num2str(source),'.case.perc'])));
+
+
+%% model to handles: Axes objects:
+for k=0:7
+    if eval(['S.Rs',num2str(Ractive),'.k',num2str(k),'.pol==0']); % off
+        im=ea_get_icn(['empty',num2str(Ractive)],options);
+    elseif eval(['S.Rs',num2str(Ractive),'.k',num2str(k),'.pol==1']); % negative S1
+        im=ea_get_icn(['minus',num2str(Ractive)],options);
+    elseif eval(['S.Rs',num2str(Ractive),'.k',num2str(k),'.pol==2']); % positive S1
+        im=ea_get_icn(['plus',num2str(Ractive)],options);
+    end
+    set(0,'CurrentFigure',handles.stimfig);
+    set(handles.stimfig,'CurrentAxes',eval(['handles.k',num2str(k),'ax']));
+    h=image(im);
+    set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,['k',num2str(k)]});
+    axis off;
+    axis equal;
+end
+for k=8:15
+    if eval(['S.Ls',num2str(Lactive),'.k',num2str(k),'.pol==0']); % off
+        im=ea_get_icn(['empty',num2str(Lactive)],options);
+    elseif eval(['S.Ls',num2str(Lactive),'.k',num2str(k),'.pol==1']); % negative S1
+        im=ea_get_icn(['minus',num2str(Lactive)],options);
+    elseif eval(['S.Ls',num2str(Lactive),'.k',num2str(k),'.pol==2']); % positive S1
+        im=ea_get_icn(['plus',num2str(Lactive)],options);
+    end
+    set(0,'CurrentFigure',handles.stimfig);
+    set(handles.stimfig,'CurrentAxes',eval(['handles.k',num2str(k),'ax']));
+    h=image(im);
+    set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,['k',num2str(k)]});
+    axis off;
+    axis equal;
+end
+
+
+% right case:
+if eval(['S.Rs',num2str(Ractive),'.case.pol==0']); % off
+    im=ea_get_icn(['empty',num2str(Ractive)],options);
+elseif eval(['S.Rs',num2str(Ractive),'.case.pol==1']); % negative
+    im=ea_get_icn(['minus',num2str(Ractive)],options);
+elseif eval(['S.Rs',num2str(Ractive),'.case.pol==2']); % positive
+    im=ea_get_icn(['plus',num2str(Ractive)],options);
+end
+set(0,'CurrentFigure',handles.stimfig);
+set(handles.stimfig,'CurrentAxes',handles.RCax);
+
+h=image(im);
+ set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,'Rcase'});
+axis off;
+axis equal;
+
+% left case:
+if eval(['S.Ls',num2str(Lactive),'.case.pol==0']); % off
+    im=ea_get_icn(['empty',num2str(Lactive)],options);
+elseif eval(['S.Ls',num2str(Lactive),'.case.pol==1']); % negative
+    im=ea_get_icn(['minus',num2str(Lactive)],options);
+elseif eval(['S.Ls',num2str(Lactive),'.case.pol==2']); % positive
+    im=ea_get_icn(['plus',num2str(Lactive)],options);
+end
+set(0,'CurrentFigure',handles.stimfig);
+set(handles.stimfig,'CurrentAxes',handles.LCax);
+
+h=image(im);
+ set(h,'ButtonDownFcn',{@ea_inc_polarity,handles,options,'Lcase'});
+axis off;
+axis equal;
+
+
+%% add label
+
+set(handles.stimlabel,'String',S.label);
+
+
+
+%% check consistency with chosen VAT model.
+
+
+models=get(handles.modelselect,'String');
+model=models{get(handles.modelselect,'Value')};
+
+
+switch model
+    case 'SimBio/FieldTrip'
+        ea_hide_impedance(handles);
+        S.monopolarmodel=0;
+        ea_enable_vas(handles);
+    case 'Maedler 2012'
+        ea_show_impedance(handles);
+        S.monopolarmodel=1;
+        ea_disable_vas(handles);
+    case 'Kuncel 2008'
+        ea_hide_impedance(handles);
+        S.monopolarmodel=1;
+        ea_disable_vas(handles);
+end
+
+S.model=model;
+
+
+%% check consistency with chosen electrode model.
+
+
+
+switch options.elspec.numel
+    case 4
+        ea_viz_eight(handles,'off');        
+    case 8
+        ea_viz_eight(handles,'on');
+    otherwise
+        warning('Only electrode models with 4 or 8 contacts are fully supported.');   
+end
+
+setappdata(handles.stimfig,'S',S);
+
+
+function ea_viz_eight(handles,cmd)
+
+for k=[4:7,12:15]
+   set(handles.(['k',num2str(k),'u']),'visible',cmd);
+   set(handles.(['k',num2str(k),'im']),'visible',cmd);
+   set(handles.(['k',num2str(k),'txt']),'visible',cmd);   
+   handles2hide = [get(handles.(['k',num2str(k),'ax']),'Children')];
+   set(handles2hide,'visible',cmd)
+end
+set(handles.perctext2,'visible',cmd);
+set(handles.kohmtext2,'visible',cmd);
+set(handles.perctext4,'visible',cmd);
+set(handles.kohmtext4,'visible',cmd);
+
+
+function ea_disable_vas(handles)
+
+RL={'R','L'};
+for side=1:2
+for Rva=1:4
+set(handles.([RL{side},'s',num2str(Rva),'va']),'enable','off');
+set(handles.([RL{side},'s',num2str(Rva),'va']),'value',1);
+end
+end
+
+function ea_enable_vas(handles)
+
+RL={'R','L'};
+for side=1:2
+for Rva=1:4
+set(handles.([RL{side},'s',num2str(Rva),'va']),'enable','on');
+end
+end
+
+function ea_hide_impedance(handles)
+
+for k=0:15;
+   eval(['set(handles.k',num2str(k),'im,''visible'',''off'');']); 
+end
+
+for ohm=1:4
+   eval(['set(handles.kohmtext',num2str(ohm),',''visible'',''off'');']); 
+end
+
+function ea_show_impedance(handles)
+
+for k=0:15;
+   eval(['set(handles.k',num2str(k),'im,''visible'',''on'');']); 
+end
+
+for ohm=1:4
+   eval(['set(handles.kohmtext',num2str(ohm),',''visible'',''on'');']); 
+end
+
+function S=ea_redistribute_voltage(S,changedobj)
+Rconts={'k0','k1','k2','k3','k4','k5','k6','k7'};
+Lconts={'k8','k9','k10','k11','k12','k13','k14','k15'};
+if ischar(changedobj) % different polarity on the block
+    switch changedobj
+        case Rconts;
+            conts=Rconts;
+            sidec='R';
+            side=1;
+        case Lconts;
+            conts=Lconts;
+            sidec='L';
+            side=2;
+        case 'Rcase'
+            conts=Rconts;
+            changedobj='case';
+            side=1;
+            sidec='R';
+        case 'Lcase'
+            conts=Lconts;
+            changedobj='case';
+            side=2;
+            sidec='L';
+    end
+       
+    
+    
+    % check for monopolar models:
+    if S.monopolarmodel % these allow only 1 active anode contact per model.
+        for c=1:length(conts);
+            eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.pol=0;']);
+            eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.perc=0;']);
+        end
+        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol=1;']);
+        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
+        
+        return
+    end
+    
+    % check polarity of changed object:
+    polchanged=eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol']);
+
+    if polchanged==0
+        % set changed contacts percentage to zero:
+        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=0;']);
+    else
+        % determine how many other nodes with this polarity exist:
+        divby=1;
+        contacts={};
+        for con=1:length(conts)
+            if eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.pol==polchanged'])
+                if ~strcmp(conts{con},changedobj)
+                    %voltages{divby}=eval(['S.Rs',num2str(S.active(side)),'.',Rconts{con},'.perc']);
+                    contacts{divby}=conts{con};
+                    divby=divby+1;
+                end
+            end
+        end
+        
+        if eval(['S.',sidec,'s',num2str(S.active(side)),'.case.pol==polchanged'])
+            if ~strcmp(changedobj,'case')
+                contacts{divby}='case';
+                divby=divby+1;
+            end
+        end
+        % add case to calculation.
+        
+        % set changed contacts percentage:
+        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100/divby;']);
+        
+        % reduce all other contacts percentages:
+        
+        try divby=divby/length(contacts); end
+        for c=1:length(contacts)
+            eval(['S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc=',...
+                'S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc/divby;']);
+        end
+    end
+    
+    
+    % now clean up mess from polarity that the contact used to
+    % have..
+    
+    polchanged=ea_polminus(polchanged);
+    sumpercs=0;
+    
+    if polchanged % polarization has changed from negative to positive. clean up negatives. or changed from positive to off. clean up positives.
+        contacts={};
+        cnt=0;
+        for con=1:length(conts)
+            if eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.pol==polchanged'])
+                if ~strcmp(conts{con},changedobj)
+                    %voltages{divby}=eval(['S.Rs',num2str(S.active(side)),'.',Rconts{con},'.perc']);
+                    
+                    cnt=cnt+1;
+                    contacts{cnt}=conts{con};
+                    sumpercs=sumpercs+eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.perc']);
+                end
+            end
+        end
+        % add case to calculation:
+        if eval(['S.',sidec,'s',num2str(S.active(side)),'.case.pol==polchanged'])
+            if ~strcmp(changedobj,'case')
+                cnt=cnt+1;
+                contacts{cnt}='case';
+                sumpercs=sumpercs+eval(['S.',sidec,'s',num2str(S.active(side)),'.case.perc']);
+            end
+        end
+        
+        multby=(100/sumpercs);
+        if cnt
+            for c=1:length(contacts)
+                eval(['S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc=',...
+                    'S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc*multby;']);
+            end
+        end
+        
+    end
+    
+    
+    
+else % voltage percentage changed
+    
+    
+    changedobj=get(changedobj,'Tag');
+    changedobj=changedobj(1:end-1);
+    
+    
+    
+    
+     switch changedobj
+        case Rconts;
+            conts=Rconts;
+            sidec='R';
+            side=1;
+        case Lconts;
+            conts=Lconts;
+            sidec='L';
+            side=2;
+        case 'RC'
+            conts=Rconts;
+            changedobj='case';
+            side=1;
+            sidec='R';
+        case 'LC'
+            conts=Lconts;
+            changedobj='case';
+            side=2;
+            sidec='L';
+     end
+            
+    
+     % check for monopolar models:
+     if S.monopolarmodel % these allow only 1 active anode contact per model.
+         for c=1:length(conts);
+             eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.pol=0;']);
+             eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.perc=0;']);
+         end
+         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol=1;']);
+         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
+         
+         return
+     end
+     
+     
+    % check polarity of changed object:
+    try
+    polchanged=eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol']);
+    catch
+        keyboard
+    end
+    if polchanged==0 % set changed contacts polarity to negative
+        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol=1;']);
+    polchanged=1;
+
+    end
+    
+    % determine how many other nodes with this polarity exist:
+    divby=1;
+    contacts={};
+    sumpercent=0;
+    for con=1:length(conts)
+        if eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.pol==polchanged'])
+            if ~strcmp(conts{con},changedobj)
+                sumpercent=sumpercent+eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.perc']);
+                contacts{divby}=conts{con};
+                divby=divby+1;
+            end
+        end
+    end
+   
+        % add case to calculation.
+
+    if eval(['S.',sidec,'s',num2str(S.active(side)),'.case.pol==polchanged'])
+        if ~strcmp(changedobj,'case')
+            contacts{divby}='case';
+            divby=divby+1;
+        end
+    end
+    
+    if divby==1 % only one contact -> set to 100 percent.
+        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
+    end
+    
+    
+    
+    % reduce all other contacts percentages:
+    divby=sumpercent/(100-eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc']));
+    
+    for c=1:length(contacts)
+        eval(['S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc=',...
+            'S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc/divby;']);
+    end
+    
+end
+
+
+
+function opol=ea_polminus(pol)
+if pol==1
+    opol=0;
+elseif pol==2
+    opol=1;
+elseif pol==0
+    opol=2;
+end
+
+
+function ea_inc_polarity(h,h2,handles,options,ID)
+
+
+S=getappdata(handles.stimfig,'S');
+
+switch ID
+    case {'k0','k1','k2','k3','k4','k5','k6','k7'}
+        side=1;
+        sidec='R';
+        gID=ID;
+        ks=0:7;
+    case {'k8','k9','k10','k11','k12','k13','k14','k15'}
+        side=2;
+        sidec='L';
+        gID=ID;
+        ks=8:15;
+    case 'Rcase'
+        gID='case';
+        side=1;
+        sidec='R';
+        ks=0:7;
+    case 'Lcase'
+        gID='case';
+        side=2;
+        sidec='L';
+        ks=8:15;
+end
+
+cycles=[0,1,2];
+
+try
+    oldval=eval(['S.',sidec,'s',num2str(S.active(side)),'.',gID,'.pol']);
+catch
+    keyboard
+end
+[~,newval]=ismember(oldval,cycles);
+newval=newval+1;
+if newval>length(cycles)
+    newval=1;
+end
+
+newval=cycles(newval);
+
+
+eval(['S.',sidec,'s',num2str(S.active(side)),'.',gID,'.pol=',num2str(newval),';']);
+
+% now check if any other contact is left with the old polarity
+
+anycontactpositive=0; anycontactnegative=0;
+for k=ks
+    if eval(['S.',sidec,'s',num2str(num2str(S.active(side))),'.k',num2str(k),'.pol==1'])
+        anycontactnegative=1;
+    elseif eval(['S.',sidec,'s',num2str(num2str(S.active(side))),'.k',num2str(k),'.pol==2'])
+        anycontactpositive=1;
+    end
+end
+
+% also check case
+if eval(['S.',sidec,'s',num2str(num2str(S.active(side))),'.case.pol==1'])
+    anycontactnegative=1;
+elseif eval(['S.',sidec,'s',num2str(num2str(S.active(side))),'.case.pol==2'])
+    anycontactpositive=1;
+end
+
+
+
+if anycontactnegative && anycontactpositive % only then save results..
+    setappdata(handles.stimfig,'S',S);
+end
+ea_refreshguisp(handles,options,ID);
+
+function S=initializeS
+
+% right sources
+for source=1:4
+    for k=0:7
+        eval(['S.Rs',num2str(source),'.k',num2str(k),'.perc=0;']);
+        eval(['S.Rs',num2str(source),'.k',num2str(k),'.pol=0;']);
+        eval(['S.Rs',num2str(source),'.k',num2str(k),'.imp=1;']);
+    end
+    eval(['S.Rs',num2str(source),'.amp=0;']);
+    eval(['S.Rs',num2str(source),'.va=1;']);
+    eval(['S.Rs',num2str(source),'.case.perc=100;']);
+    eval(['S.Rs',num2str(source),'.case.pol=2;']);
+end
+
+% left sources
+for source=1:4
+    for k=8:15
+        eval(['S.Ls',num2str(source),'.k',num2str(k),'.perc=0;']);
+        eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol=0;']);
+        eval(['S.Ls',num2str(source),'.k',num2str(k),'.imp=1;']);
+    end
+    eval(['S.Ls',num2str(source),'.amp=0;']);
+    eval(['S.Ls',num2str(source),'.va=1;']);
+    eval(['S.Ls',num2str(source),'.case.perc=100;']);
+    eval(['S.Ls',num2str(source),'.case.pol=2;']);
+end
+
+S.active=[1,1];
+S.label=ea_detstimname;
+
+
+
+function Ls3am_Callback(hObject, eventdata, handles)
+% hObject    handle to Ls3am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Ls3am as text
+%        str2double(get(hObject,'String')) returns contents of Ls3am as a double
+
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=3;
+S.Ls3.amp=str2double(get(hObject,'String'));
+
+
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- Executes during object creation, after setting all properties.
+function Ls3am_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Ls3am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in Ls3va.
+function Ls3va_Callback(hObject, eventdata, handles)
+% hObject    handle to Ls3va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns Ls3va contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from Ls3va
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=3;
+S.Ls3.va=get(hObject,'Value');
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Ls3va_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Ls3va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Ls4am_Callback(hObject, eventdata, handles)
+% hObject    handle to Ls4am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Ls4am as text
+%        str2double(get(hObject,'String')) returns contents of Ls4am as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=4;
+S.Ls4.amp=str2double(get(hObject,'String'));
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Ls4am_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Ls4am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in Ls4va.
+function Ls4va_Callback(hObject, eventdata, handles)
+% hObject    handle to Ls4va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns Ls4va contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from Ls4va
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=4;
+S.Ls4.va=get(hObject,'Value');
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Ls4va_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Ls4va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Rs3am_Callback(hObject, eventdata, handles)
+% hObject    handle to Rs3am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Rs3am as text
+%        str2double(get(hObject,'String')) returns contents of Rs3am as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=3;
+S.Rs3.amp=str2double(get(hObject,'String'));
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Rs3am_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Rs3am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in Rs3va.
+function Rs3va_Callback(hObject, eventdata, handles)
+% hObject    handle to Rs3va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns Rs3va contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from Rs3va
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=3;
+S.Rs3.va=get(hObject,'Value');
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Rs3va_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Rs3va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Rs4am_Callback(hObject, eventdata, handles)
+% hObject    handle to Rs4am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Rs4am as text
+%        str2double(get(hObject,'String')) returns contents of Rs4am as a double
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=4;
+S.Rs4.amp=str2double(get(hObject,'String'));
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Rs4am_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Rs4am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in Rs4va.
+function Rs4va_Callback(hObject, eventdata, handles)
+% hObject    handle to Rs4va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns Rs4va contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from Rs4va
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=4;
+S.Rs4.va=get(hObject,'Value');
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+% --- Executes during object creation, after setting all properties.
+function Rs4va_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Rs4va (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
