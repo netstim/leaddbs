@@ -79,7 +79,7 @@ for pt=1:length(uidir)
             warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(2,:)');
     end
     
-    fid(pt).WarpedPointNative=[warpcoord_mm(1),-warpcoord_mm(2),warpcoord_mm(3)];
+    fid(pt).WarpedPointNative=[-warpcoord_mm(1),-warpcoord_mm(2),warpcoord_mm(3)];
 end
 %ea_dispercent(1,'end');
 

@@ -227,8 +227,8 @@ if ea_headmodel_changed(options,side,elstruct)
     cfg.resolution=1;
     %mesh=ea_ft_prepare_mesh(cfg,smri);
     [~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);'); % need to incorporate this function and all dependencies into lead-dbs
-    
-
+%     mesh.pnt=mesh.pnt/1000; % in meter
+%     mesh.unit='m';
     
     
     %% calculate volume conductor
@@ -240,6 +240,7 @@ if ea_headmodel_changed(options,side,elstruct)
      
     vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.0915 0.059 1/(10^(-8)) 1/(10^16)]);
 
+ 
     
     save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','-v7.3');
     ea_save_hmprotocol(options,side,elstruct,1);
@@ -350,7 +351,7 @@ gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient fr
     
     
     disp('Done. Calculating VAT...');
-    thresh=0.015; %0.0064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons
+    thresh=0.002; %0.0064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons
     
     vat.ET=vat.ET>thresh;
     vat.pos=vat.pos(vat.ET,:);

@@ -1,4 +1,4 @@
-function varargout=ea_genvat_maedler(varargin)
+function varargout=ea_genvat_kuncel(varargin)
 % This function generates a volume of activated tissue around for each
 % electrode.
 % Usage: VAT=ea_genvat(coords_mm,stimparams,options).
@@ -17,7 +17,7 @@ if nargin==5
 elseif nargin==1
     
     if ischar(varargin{1}) % return name of method.
-        varargout{1}='Maedler 2012';
+        varargout{1}='Kuncel 2008';
         return
     end
 end
