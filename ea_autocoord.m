@@ -202,12 +202,12 @@ end
 
 if options.manualheightcorrection
     % load reconstruction results
-    try
-        [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-    catch
-        ea_error([patientname,': No reconstruction information found. Please run reconstruction first.']);
-    end
-    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+%     try
+%         [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+%     catch
+%         ea_error([patientname,': No reconstruction information found. Please run reconstruction first.']);
+%     end
+%     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
 
     
     mcfig=figure('name',[patientname,': Manual Height Correction'],'numbertitle','off');
@@ -215,10 +215,8 @@ if options.manualheightcorrection
     try
     ea_maximize(mcfig);
     end
-    if exist('manually_corrected','var');
-        options.mancor=1;
-    end
-    ea_manualreconstruction(mcfig,markers,trajectory,patientname,options);
+
+    ea_manualreconstruction(mcfig,patientname,options);
    
 else
     ea_write(options)

@@ -1,4 +1,4 @@
-function ea_manualreconstruction(mcfig,markers,trajectory,patientname,options)
+function ea_manualreconstruction(mcfig,patientname,options)
 % This is the function that enables the user to manually correct the
 % electrode positions that have been reconstructed by the algorithm. A
 % handle for the figure, the coordinates of the contacts in millimeter
@@ -27,14 +27,14 @@ set(mcfig, 'BusyAction','cancel', 'Interruptible','off');
 
 
 setappdata(mcfig,'patientname',patientname);
-setappdata(mcfig,'markers',markers);
 
 %setappdata(mcfig,'trajectory',trajectory);
-setappdata(mcfig,'origtrajectory',trajectory);
 
 setappdata(mcfig,'options',options);
 
-
+options.native=1;
+[coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+setappdata(mcfig,'origtrajectory',trajectory);
 
 % initialize scene
 updatescene([],[],mcfig);
@@ -99,9 +99,6 @@ disp('Manual correction: Press arrows to adjust, space to end adjustment. For mo
 %% export variables to figure
 setappdata(mcfig,'eltog',eltog);
 setappdata(mcfig,'markers',markers);
-
-
-
 
 
 
@@ -292,7 +289,7 @@ hdtrajectory(:,3)=interp1q([1:length(trajectory)]',trajectory(:,3),[1:1/resoluti
 
 
 function updatescene(varargin)
-
+ 
 hobj=varargin{1};
 ev=varargin{2};
 mcfig=varargin{3};
@@ -327,8 +324,10 @@ end
 setappdata(mcfig,'options',options);
 
 
-
+tic
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+toc
+
 
 if isempty(firstrun) && ~manually_corrected % resize electrode to default spacing.
     [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options,1);
@@ -345,6 +344,7 @@ for side=options.sides
     markers(side).x=markers(side).head+orth(:,1)';
     markers(side).y=markers(side).head+orth(:,2)'; % corresponding points in reality
 end
+
 
 
 
@@ -383,17 +383,6 @@ end
 
 
 [coords_mm,trajectory]=ea_resolvecoords(markers,options);
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -482,6 +471,7 @@ end
 
 
 
+
 delete(planes);
 clear planes
 planecnt=1;
@@ -496,13 +486,13 @@ for doxx=0:1
             %% sample plane left and right from meantrajectory
             
             if doxx
-            Vcor=getV(mcfig,'Vcor',options);
-            imat=ea_resample_planes(Vcor,meantrajectory',sample_width,doxx,0.2);
-
+                Vcor=getV(mcfig,'Vcor',options);
+                imat=ea_resample_planes(Vcor,meantrajectory',sample_width,doxx,0.2);
+                
             else
-            Vsag=getV(mcfig,'Vsag',options);
-            imat=ea_resample_planes(Vsag,meantrajectory',sample_width,doxx,0.2);
-
+                Vsag=getV(mcfig,'Vsag',options);
+                imat=ea_resample_planes(Vsag,meantrajectory',sample_width,doxx,0.2);
+                
             end
             
             colormap gray
@@ -731,6 +721,7 @@ setappdata(mcfig,'planes',planes);
 %setappdata(mcfig,'trajectory',trajectory);
 
 
+
 function V=getV(mcfig,ID,options)
 if options.native
     addon='_unnormalized';
@@ -738,23 +729,28 @@ else
     addon='';    
 end
 V=getappdata(mcfig,[ID,addon]);
-if isempty(V)
-    
-    switch ID
+C=getappdata(mcfig,['C',ID,addon]);
+
+if isempty(V) || isempty(C)
+%     flags.interp=4;
+%     flags.wrap=[0,0,0];
+%         d       = [flags.interp*[1 1 1]' flags.wrap(:)];
+     switch ID
         case 'Vcor'
             try
                 V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['cornii',addon])]);
             catch
                 V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
-                
             end
         case 'Vtra'
             
             V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
-            
+
         case 'Vsag'
             try
                 V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['sagnii',addon])]);
+                
+            
             catch
                 try
                     V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['cornii',addon])]);
@@ -763,8 +759,11 @@ if isempty(V)
                 end
             end
     end
+
+ %   C=spm_bsplinc(V,d);
 end
 setappdata(mcfig,[ID,addon],V);
+%setappdata(mcfig,['C',ID,addon],C);
 
 
 

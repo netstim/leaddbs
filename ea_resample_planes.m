@@ -1,4 +1,4 @@
-function imat=ea_resample_planes(Vcor,meanfitline,sample_width,doxx,resolution)
+function imat=ea_resample_planes(V,meanfitline,sample_width,doxx,resolution)
 % this function samples the 2D-planes orthogonally to the fitted trajectory
 % line. The code has gotten a bit cryptic for speed improvement
 % reasons.
@@ -18,15 +18,13 @@ else
 fitvolume(1,:,:)=squeeze(fitvolume(1,:,:))+addvolume;
 end
 
-fitvolume=Vcor.mat \ reshape(fitvolume,4,xxlength*nn);
+fitvolume=V.mat \ reshape(fitvolume,4,xxlength*nn);
+flags.interp=4;
+flags.wrap=[0,0,0];
+d       = [flags.interp*[1 1 1]' flags.wrap(:)];
 
-try % has been loaded using nifti command
-    fitvolume=submax(fitvolume,size(Vcor.dat));
-    imat(:)=Vcor.dat(sub2ind(size(Vcor.dat),fitvolume(1,:),fitvolume(2,:),fitvolume(3,:)));
-catch % has been loaded using spm_vol command
-    imat(:)=spm_sample_vol(Vcor,double(fitvolume(1,:)),double(fitvolume(2,:)),double(fitvolume(3,:)),1);
-end
 
+imat(:)=spm_sample_vol(V,double(fitvolume(1,:)),double(fitvolume(2,:)),double(fitvolume(3,:)),1);
 
 
 
