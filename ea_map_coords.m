@@ -54,6 +54,11 @@ function [XYZ_mm, XYZ_src_vx] = ea_map_coords(XYZ_vx, trg, xfrm, src)
 %
 % Ged Ridgway (drc.spm at gmail.com)
 
+
+
+
+
+
 if nargin < 2
     error('map_coords:usage',...
         'Must specify at least coords and trg; empty [] for GUI prompt')
@@ -96,7 +101,26 @@ if ~isempty(xfrm)
         XYZ_mm = sn_trgvx2srcmm(XYZ_vx, xfrm);
     elseif ~isempty(regexp(xfrm, 'y_.*(nii|img)$', 'once'))
         % HDW transformation field
-        XYZ_mm = hdw_trgvx2srcmm(XYZ_vx, xfrm);
+        
+        
+        % check if ANTs has been used here:
+        directory=fileparts(xfrm);
+        whichnormmethod=ea_whichnormmethod([directory,filesep]);
+        
+        if strcmp(whichnormmethod,'ea_normalize_ants')
+            [~,fn]=fileparts(xfrm);
+            if ~isempty(strfind(fn,'inv'))
+                useinverse=1;
+            else
+                useinverse=0;
+            end
+            
+            XYZ_mm=ea_ants_applytransforms_to_points([directory,filesep],XYZ_vx,useinverse);
+            V=spm_vol(src);
+            XYZ_mm=V.mat*XYZ_mm;
+        else
+            XYZ_mm = hdw_trgvx2srcmm(XYZ_vx, xfrm);
+        end
     else
         error('map_coords:xfrm', 'unrecognised transformation file')
     end

@@ -6,7 +6,7 @@ load([directory,filesep,'ea_reconstruction.mat']);
     %[~,tempfile]=ea_whichnormmethod(directory);
     nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
 
-    try
+    
         for side=options.sides
             reco.mni.coords_mm{side}=ea_warpcoord(reco.native.coords_mm{side},nii,options);
             reco.mni.markers(side).head=ea_warpcoord(reco.native.markers(side).head,nii,options);
@@ -25,16 +25,17 @@ load([directory,filesep,'ea_reconstruction.mat']);
         
         save([directory,filesep,'ea_reconstruction.mat'],'reco');
         
-    end
+    
 
 function c=ea_warpcoord(c,nii,options)
 c=[c,ones(size(c,1),1)]';
 % to template voxel space:
 c=nii(1).mat\c;
-
+try
 V=spm_vol([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']);
 if ~isequal(V.dim,nii.dim)
    ea_redo_inv([options.root,options.patientname,filesep],options); 
+end
 end
 
 c=ea_map_coords(c(1:3,:), '', [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],...
