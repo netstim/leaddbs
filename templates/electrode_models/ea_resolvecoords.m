@@ -7,10 +7,13 @@ function [coords,trajectory,markers]=ea_resolvecoords(varargin)
 
 markers=varargin{1};
 options=varargin{2};
-if nargin==3
+if nargin>2
     resize=varargin{3};
 else
     resize=0;
+end
+if nargin==4
+    rszfactor=varargin{4};
 end
 
 load([options.earoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname]);
@@ -21,8 +24,17 @@ for side=1:length(markers)
        can_dist=pdist([electrode.head_position;electrode.tail_position]);
        %emp_dist=pdist([markers(side).head;markers(side).tail]);
         
+           A=squareform(pdist(electrode.coords_mm));
+           can_eldist=sum(sum(tril(triu(A,1),1)))/(options.elspec.numel-1);
+       
        vec=(markers(side).tail-markers(side).head)/norm(markers(side).tail-markers(side).head);
-       markers(side).tail=markers(side).head+vec*can_dist;
+       if nargin>3
+          stretch=can_dist*(rszfactor/can_eldist);
+       else
+          stretch=can_dist; 
+       end
+       
+       markers(side).tail=markers(side).head+vec*stretch;
     end
     
 M=[markers(side).head,1;markers(side).tail,1;markers(side).x,1;markers(side).y,1];

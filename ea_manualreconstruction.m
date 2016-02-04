@@ -304,7 +304,7 @@ patientname=getappdata(mcfig,'patientname');
 
 if nargin==4
     options.hybridsave=1;
-    [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+    [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
     options=rmfield(options,'hybridsave');
     space=varargin{4};
@@ -324,16 +324,15 @@ end
 setappdata(mcfig,'options',options);
 
 
-tic
-[coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-toc
+[~,~,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+
 
 
 if isempty(firstrun) && ~manually_corrected % resize electrode to default spacing.
-    [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options,1);
+    [~,trajectory,markers]=ea_resolvecoords(markers,options,1);
     setappdata(mcfig,'firstrun',0);
 else
-    [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options,0);
+    [~,trajectory,markers]=ea_resolvecoords(markers,options,0);
 end
 
 % for now, rotation will always be constant. This will be the place to
@@ -403,6 +402,24 @@ if isempty(init)
     setappdata(mcfig,'init',1)
 end
 
+
+% delete prior captions
+spacetext=getappdata(mcfig,'spacetext');
+delete(spacetext);
+captions=getappdata(mcfig,'captions');
+delete(captions);
+
+% Plot spacing distance info text and correct inhomogeneous spacings.
+%emp_eldist(1)=mean([pdist([markers(1).head;markers(1).tail]),pdist([markers(2).head;markers(2).tail])])/3;
+clear emp_eldist
+for side=1:2
+    A{side}=squareform(pdist(coords_mm{side}));
+    emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
+end
+memp_eldist=mean([emp_eldist{1},emp_eldist{2}]);
+if abs(emp_eldist{1}-emp_eldist{2})>0.005 && options.native % check if spacings on both sides are the same.
+[~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
+end
 %% plot coords
 hold on
 
@@ -448,13 +465,18 @@ else % update coordinates in elplot & mplot:
     setappdata(mcfig,'mplot',mplot);
 end
 
-% Plot spacing distance info text.
-emp_eldist(1)=mean([pdist([markers(1).head;markers(1).tail]),pdist([markers(2).head;markers(2).tail])])/3;
-spacetext=text(0,0,-17,['Electrode Spacing: ',num2str(emp_eldist),' mm.'],'Color','w','BackgroundColor','k','HorizontalAlignment','center'); 
-set(mcfig,'name',[options.patientname,', Electrode Spacing: ',num2str(emp_eldist),' mm.']);
+
+
+
+midpt=mean([markers(1).head;markers(2).head]);
+
+
+
+spacetext=text(midpt(1),midpt(2),midpt(3)-1,['Electrode Spacing: ',num2str(memp_eldist),' mm.'],'Color','w','BackgroundColor','k','HorizontalAlignment','center'); 
+set(mcfig,'name',[options.patientname,', Electrode Spacing: ',num2str(memp_eldist),' mm.']);
 setappdata(mcfig,'spacetext',spacetext);
 
-% %% plot lines
+% %% plot trajectory lines
 
 for side=options.sides
     
@@ -467,9 +489,6 @@ for side=options.sides
         end
     end
 end
-
-
-
 
 
 delete(planes);
@@ -561,26 +580,47 @@ for doxx=0:1
             if ~doxx
                 
                 if side==1
-                    captions(1)=text(0,... % x
-                        ((min(boundingbox(:,2))+max(boundingbox(:,2)))/2)+20,... % y
-                        0,... % z
-                        'A','Color','w','BackgroundColor','k');
-                    captions(2)=text(0,... % x
-                        ((min(boundingbox(:,2))+max(boundingbox(:,2)))/2)-20,... % y
-                        0,... % z
-                        'P','Color','w','BackgroundColor','k');
-                    % captions(1)=text(0,0,0,... % z
-                    %  'C','Color','w');
                     
-                    captions(3)=text(40,... % x
-                        0,... % y
-                        0,... % z
-                        'R','Color','w','BackgroundColor','k');
-                    
-                    captions(4)=text(-40,... % x
-                        0,... % y
-                        0,... % z
-                        'L','Color','w','BackgroundColor','k');
+%                     captions(1)=text(0,... % x
+%                         ((min(boundingbox(:,2))+max(boundingbox(:,2)))/2)+20,... % y
+%                         0,... % z
+%                         'A','Color','w','BackgroundColor','k');
+%                     captions(2)=text(0,... % x
+%                         ((min(boundingbox(:,2))+max(boundingbox(:,2)))/2)-20,... % y
+%                         0,... % z
+%                         'P','Color','w','BackgroundColor','k');
+%                     % captions(1)=text(0,0,0,... % z
+%                     %  'C','Color','w');
+%                     
+%                     captions(3)=text(40,... % x
+%                         0,... % y
+%                         0,... % z
+%                         'R','Color','w','BackgroundColor','k');
+%                     
+%                     captions(4)=text(-40,... % x
+%                         0,... % y
+%                         0,... % z
+%                         'L','Color','w','BackgroundColor','k');
+%                     
+
+
+captions(1)=text(midpt(1),... % x
+    midpt(2)+10,... % y
+    midpt(3)+10,... % z
+    'A','Color','w','BackgroundColor','k');
+captions(2)=text(midpt(1),... % x
+    midpt(2)-10,... % y
+    midpt(3)+10,... % z
+    'P','Color','w','BackgroundColor','k');
+captions(3)=text(midpt(1)-10,... % x
+    midpt(2),... % y
+    midpt(3)+10,... % z
+    'L','Color','w','BackgroundColor','k');
+captions(4)=text(midpt(1)+10,... % x
+    midpt(2),... % y
+    midpt(3)+10,... % z
+    'R','Color','w','BackgroundColor','k');
+
                     
                     
                     setappdata(mcfig,'captions',captions);
@@ -728,10 +768,12 @@ if options.native
 else
     addon='';    
 end
-V=getappdata(mcfig,[ID,addon]);
-C=getappdata(mcfig,['C',ID,addon]);
 
-if isempty(V) || isempty(C)
+switch options.modality
+    case 1 % MR
+V=getappdata(mcfig,[ID,addon]);
+
+if isempty(V)
 %     flags.interp=4;
 %     flags.wrap=[0,0,0];
 %         d       = [flags.interp*[1 1 1]' flags.wrap(:)];
@@ -763,6 +805,22 @@ if isempty(V) || isempty(C)
  %   C=spm_bsplinc(V,d);
 end
 setappdata(mcfig,[ID,addon],V);
+
+    case 2 % CT - ignore wishes, always feed out V as CT.
+        if options.native
+            V=getappdata(mcfig,'VCTnative');
+            if isempty(V)
+                V=spm_vol([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
+                setappdata(mcfig,'VCTnative',V);
+            end
+        else
+            V=getappdata(mcfig,'VCTmni');
+            if isempty(V)
+                V=spm_vol([options.root,options.patientname,filesep,options.prefs.ctnii]);
+                setappdata(mcfig,'VCTmni',V);
+            end
+        end
+end
 %setappdata(mcfig,['C',ID,addon],C);
 
 

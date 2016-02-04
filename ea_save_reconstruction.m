@@ -11,6 +11,7 @@ if options.native
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
     if isfield(options,'hybridsave');
         ea_reconstruction2mni(options);
+        ea_reconstruction2acpc(options);
     end
 else
     reco.mni.coords_mm=coords_mm;
@@ -19,6 +20,7 @@ else
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
     if isfield(options,'hybridsave');
     ea_reconstruction2native(options);
+    ea_reconstruction2acpc(options);
     end
 end
 

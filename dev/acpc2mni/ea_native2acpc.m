@@ -1,4 +1,4 @@
-function fid=ea_mni2acpc(cfg,leadfig)
+function fid=ea_native2acpc(cfg,leadfig)
 % leadfig can be either a handle to the lead figure with selected patient
 % directories or a cell of patient directories.
 % __________________________________________________________________________________
@@ -21,8 +21,8 @@ end
 % prompt for MNI-coordinates:
 
 
-mni=[cfg.xmm,cfg.ymm,cfg.zmm];
-fidpoints_mm=[fidpoints_mm;mni];
+native=[cfg.xmm,cfg.ymm,cfg.zmm];
+fidpoints_mm=[fidpoints_mm];
 leaddir=[fileparts(which('lead')),filesep];
 
 if ~length(uidir)
@@ -72,15 +72,15 @@ for pt=1:length(uidir)
     
     switch cfg.acmcpc
         case 1 % relative to AC:
-            warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(1,:)');
+            warpcoord_mm=linsolve([xvec',yvec',zvec'],native'-fpinsub_mm(1,:)');
         case 2 % relative to midcommissural point:
-            warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-mean([fpinsub_mm(1,:);fpinsub_mm(2,:)],1)');
+            warpcoord_mm=linsolve([xvec',yvec',zvec'],native'-mean([fpinsub_mm(1,:);fpinsub_mm(2,:)],1)');
         case 3 % relative to PC:
-            warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(2,:)');
+            warpcoord_mm=linsolve([xvec',yvec',zvec'],native'-fpinsub_mm(2,:)');
     end
     
     fid(pt).WarpedPointACPC=[warpcoord_mm(1),-warpcoord_mm(2),warpcoord_mm(3)];
-    fid(pt).WarpedPointNative=fpinsub_mm(4,:);
+    fid(pt).WarpedPointNative=native;
 end
 %ea_dispercent(1,'end');
 
