@@ -1,7 +1,7 @@
   function  [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(varargin)
 
   options=varargin{1};
-
+keyboard
   
   try
       load([options.root,options.patientname,filesep,'ea_reconstruction']);
@@ -14,6 +14,17 @@
   end
     
   if exist('reco','var')
+      
+      if ~isfield(reco,'native') && isfield(reco,'mni')
+                  ea_reconstruction2native(options);
+                        load([options.root,options.patientname,filesep,'ea_reconstruction']);
+
+      elseif isfield(reco,'native') && ~isfield(reco,'mni');
+          ea_reconstruction2mni(options);
+                load([options.root,options.patientname,filesep,'ea_reconstruction']);
+
+      end
+      
       
       if options.native
           coords_mm=reco.native.coords_mm;

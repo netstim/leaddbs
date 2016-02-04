@@ -747,7 +747,7 @@ function V=getV(mcfig,ID,options)
 if options.native
     addon='_unnormalized';
 else
-    addon='';
+    addon='';    
 end
 V=getappdata(mcfig,[ID,addon]);
 if isempty(V)

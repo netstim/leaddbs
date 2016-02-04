@@ -13,7 +13,7 @@ end
     [~,tempfile]=ea_whichnormmethod(directory);
     nii=ea_load_nii(tempfile);
 
-    try
+    
         for side=options.sides
             reco.native.coords_mm{side}=ea_warpcoord(reco.mni.coords_mm{side},nii,options);
             reco.native.markers(side).head=ea_warpcoord(reco.mni.markers(side).head,nii,options);
@@ -32,7 +32,7 @@ end
         
         save([directory,filesep,'ea_reconstruction.mat'],'reco');
         
-    end
+    
 
 function c=ea_warpcoord(c,nii,options)
 c=[c,ones(size(c,1),1)]';
