@@ -3,12 +3,13 @@ function ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_co
 reco.props.elmodel=elmodel;
 reco.props.manually_corrected=manually_corrected;
 
+
 if options.native
     reco.native.coords_mm=coords_mm;
     reco.native.trajectory=trajectory;
     reco.native.markers=markers;
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
-    if ~isfield(reco,'mni')
+    if isfield(options,'hybridsave');
         ea_reconstruction2mni(options);
     end
 else
@@ -16,7 +17,7 @@ else
     reco.mni.trajectory=trajectory;
     reco.mni.markers=markers;
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
-    if ~isfield(reco,'native')
+    if isfield(options,'hybridsave');
     ea_reconstruction2native(options);
     end
 end

@@ -24,44 +24,17 @@ set(mcfig,'KeyPressFcn',@ea_keystr);
 set(mcfig, 'BusyAction','cancel', 'Interruptible','off');
 
 
-% if options.modality==1 % MR
-% try
-%     Vcor=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.cornii]);
-%     cornii=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii];
-%     try
-%        Vsag=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii]); 
-%     catch
-%         Vsag=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.cornii]);
-%     end
-% catch % if not present
-%     Vcor=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
-%     cornii=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
-%     Vsag=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
-% end
-% else %CT
-%     Vcor=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
-%     cornii=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
-%     Vsag=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
-% end
-Vtra=spm_vol([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
-tranii=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
 
 
 setappdata(mcfig,'patientname',patientname);
 setappdata(mcfig,'markers',markers);
-if ~isfield(options,'mancor') % this trajectory has not yet been manually corrected.
-try trajectory=ea_prolong_traj(trajectory); end
-end
+
 %setappdata(mcfig,'trajectory',trajectory);
 setappdata(mcfig,'origtrajectory',trajectory);
 
 setappdata(mcfig,'options',options);
-% setappdata(mcfig,'Vcor',Vcor);
-% setappdata(mcfig,'Vsag',Vsag);
-% 
-% setappdata(mcfig,'cornii',cornii);
-% setappdata(mcfig,'Vtra',Vtra);
-% setappdata(mcfig,'tranii',tranii);
+
+
 
 % initialize scene
 updatescene([],[],mcfig);
@@ -94,7 +67,7 @@ postview=uipushtool(ht,'CData',ea_get_icn('elP',options),'TooltipString','Set vi
 rotleft=uipushtool(ht,'CData',ea_get_icn('rotleft',options),'TooltipString','Rotate Electrode counter-clockwise','ClickedCallback',{@ea_rotate,'cc',mcfig});
 rotright=uipushtool(ht,'CData',ea_get_icn('rotright',options),'TooltipString','Rotate Electrode clockwise','ClickedCallback',{@ea_rotate,'c',mcfig});
 
-mni=uitoggletool(ht,'CData',ea_get_icn('mninative',options),'TooltipString','Toggle MNI vs. Native space','State','on','OnCallback',{@updatescene,mcfig,'mni'},'OffCallback',{@updatescene,mcfig,'native'});
+mni=uitoggletool(ht,'CData',ea_get_icn('mninative',options),'TooltipString','Toggle MNI vs. Native space','State','off','OnCallback',{@updatescene,mcfig,'mni'},'OffCallback',{@updatescene,mcfig,'native'});
 
 finish_mc=uipushtool(ht,'CData',ea_get_icn('done',options),'TooltipString','Finish manual corrections [space]','ClickedCallback',{@robotSpace});
 
@@ -139,6 +112,11 @@ function ea_endfcn
 %markers=getappdata(gcf,'markers');
 %trajectory=getappdata(gcf,'trajectory');
 options=getappdata(gcf,'options');
+
+    options.hybridsave=1;
+    [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
+    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
+    options=rmfield(options,'hybridsave');
 
 close(gcf)
 
@@ -245,7 +223,7 @@ switch lower(commnd)
             
             
             markers=ea_correctcoords(markers,trajectory,event);
-            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
             
             %            setappdata(mcfig,'markers',markers);
             updatescene([],[],mcfig);
@@ -264,7 +242,7 @@ switch lower(commnd)
                     set(mplot(2,side),'XData',movedcoords(side).tail(1),'YData',movedcoords(side).tail(2),'ZData',movedcoords(side).tail(3))
             end
 %            setappdata(mcfig,'markers',markers);
-            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
             updatescene([],[],mcfig);
             %markers=getappdata(mcfig,'markers');
@@ -318,6 +296,7 @@ function updatescene(varargin)
 hobj=varargin{1};
 ev=varargin{2};
 mcfig=varargin{3};
+firstrun=getappdata(mcfig,'firstrun');
 
 
 %% inputs:
@@ -327,11 +306,15 @@ patientname=getappdata(mcfig,'patientname');
 %markers=getappdata(mcfig,'markers');
 
 if nargin==4
+    options.hybridsave=1;
+    [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
+    options=rmfield(options,'hybridsave');
     space=varargin{4};
 else
     space=getappdata(mcfig,'space');
     if isempty(space)
-        space='mni';
+        space='native';
     end
 end
 setappdata(mcfig,'space',space);
@@ -347,6 +330,12 @@ setappdata(mcfig,'options',options);
 
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
+if isempty(firstrun) && ~manually_corrected % resize electrode to default spacing.
+    [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options,1);
+    setappdata(mcfig,'firstrun',0);
+else
+    [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options,0);
+end
 
 % for now, rotation will always be constant. This will be the place to
 % insert rotation functions..
@@ -357,7 +346,6 @@ for side=options.sides
     markers(side).y=markers(side).head+orth(:,2)'; % corresponding points in reality
 end
 
-[coords_mm,trajectory]=ea_resolvecoords(markers,options);
 
 
 %            [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
@@ -509,11 +497,11 @@ for doxx=0:1
             
             if doxx
             Vcor=getV(mcfig,'Vcor',options);
-            imat=ea_resample_planes(Vcor,meantrajectory',sample_width,doxx,0.1);
+            imat=ea_resample_planes(Vcor,meantrajectory',sample_width,doxx,0.2);
 
             else
             Vsag=getV(mcfig,'Vsag',options);
-            imat=ea_resample_planes(Vsag,meantrajectory',sample_width,doxx,0.1);
+            imat=ea_resample_planes(Vsag,meantrajectory',sample_width,doxx,0.2);
 
             end
             

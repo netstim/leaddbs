@@ -4,7 +4,7 @@ newmarkers=oldmarkers;
 grone=[0.5,3]; % step-sizes
 
 switch command.Key
-    case 'downarrow'
+    case 'uparrow'
         % side=1
         
         
@@ -19,7 +19,7 @@ switch command.Key
             
         end
 
-    case 'uparrow'
+    case 'downarrow'
         % side=1
         try
             trajvector=gettraj(trajectory,1);
@@ -31,7 +31,7 @@ switch command.Key
 
         end
 
-    case 'rightarrow'
+    case 'leftarrow'
         % side=2
         try
             
@@ -44,7 +44,7 @@ switch command.Key
 
         end
 
-    case 'leftarrow'
+    case 'rightarrow'
         % side=2
         try
             trajvector=gettraj(trajectory,2);
@@ -59,7 +59,7 @@ switch command.Key
         
 end
 switch command.Character
-    case {'-','_'}
+    case {'+','*'}
         try
             for side=1:2
                trajvector=gettraj(trajectory,side);
@@ -68,7 +68,7 @@ switch command.Character
             
         end
         
-    case {'+','*'}
+    case {'-','_'}
         try
             
             for side=1:2
