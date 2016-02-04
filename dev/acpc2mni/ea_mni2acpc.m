@@ -18,7 +18,7 @@ else
 uidir=getappdata(leadfig,'uipatdir');
 end
 
-% prompt for ACPC-coordinates:
+% prompt for MNI-coordinates:
 
 
 mni=[cfg.xmm,cfg.ymm,cfg.zmm];
@@ -79,7 +79,8 @@ for pt=1:length(uidir)
             warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(2,:)');
     end
     
-    fid(pt).WarpedPointNative=[-warpcoord_mm(1),-warpcoord_mm(2),warpcoord_mm(3)];
+    fid(pt).WarpedPointACPC=[-warpcoord_mm(1),-warpcoord_mm(2),warpcoord_mm(3)];
+    fid(pt).WarpedPointNative=fpinsub_mm(4,:);
 end
 %ea_dispercent(1,'end');
 

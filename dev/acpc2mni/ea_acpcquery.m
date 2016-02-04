@@ -446,7 +446,7 @@ fid=ea_mni2acpc(cfg,leadfigure);
 
 
 for pt=1:length(fid)
-    acpcpoints(pt,:)=fid(pt).WarpedPointNative;
+    acpcpoints(pt,:)=fid(pt).WarpedPointACPC;
 end
 
 meanacpc=mean(acpcpoints,1);

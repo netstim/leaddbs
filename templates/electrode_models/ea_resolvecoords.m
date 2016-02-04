@@ -1,4 +1,4 @@
-function coords=ea_resolvecoords(markers,options)
+function [coords,trajectory]=ea_resolvecoords(markers,options)
 % This function inflates the 2 markers reconstructed in
 % ea_reconstruct_trajectory to the contacts as specified by the lead model.
 % __________________________________________________________________________________
@@ -13,4 +13,19 @@ X=linsolve(E,M);
 coords_mm=[electrode.coords_mm,ones(size(electrode.coords_mm,1),1)];
 coords{side}=X'*coords_mm';
 coords{side}=coords{side}(1:3,:)';
+
+
+
+
+
+
+trajvector{side}=(markers(side).tail-markers(side).head)/norm(markers(side).tail-markers(side).head);
+trajectory{side}=[markers(side).head-trajvector{side}*5;markers(side).head+trajvector{side}*25];
+trajectory{side}=[linspace(trajectory{side}(1,1),trajectory{side}(2,1),50)',...
+    linspace(trajectory{side}(1,2),trajectory{side}(2,2),50)',...
+    linspace(trajectory{side}(1,3),trajectory{side}(2,3),50)'];
+
 end
+
+
+

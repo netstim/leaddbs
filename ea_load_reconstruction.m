@@ -1,5 +1,8 @@
-  function  [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options)
+  function  [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(varargin)
 
+  options=varargin{1};
+
+  
   try
       load([options.root,options.patientname,filesep,'ea_reconstruction']);
   catch
