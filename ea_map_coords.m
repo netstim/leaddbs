@@ -1,62 +1,13 @@
 function [XYZ_mm, XYZ_src_vx] = ea_map_coords(XYZ_vx, trg, xfrm, src)
-% map_coords -- map between coordinate systems/spaces
-% from (target) image voxel space to world/mm space, optionally to
-% registered (source) world coords, and optionally to source voxel space.
-% (special case: can also map from world space to voxel space for target,
-% see first example below)
-%
-% Registered coordinates (in world/mm space) can be due to:
-%  - affine registration (e.g. reorient, realign, coreg)
-%  - spatial normalisation using DCT
-%    (e.g. SPM2 "Normalise" sn.mat or SPM5 "Segment" seg_sn.mat)
-%  - high dimensional warping (using HDW toolbox)
-%
-% Coords can be passed in for n points as a 3-by-n matrix with rows for
-% x, y and z components; or as a 4-by-n matrix of homogeneous coordinates
-% (i.e. with a fourth row of all ones). The same will be returned.
-%
-% Pass empty arguments ('') to get GUI selection prompts.
-% If an sn.mat is passed, trg will be ignored, and the target from the sn
-% will be used; if src is unspecified, the source from the sn will be used.
-% If an HDW deformation field is selected trg is ignored.
-%
-% Examples:
-%
-%  % map from world to voxel coords (special case)
-%    [XYZ_mm XYZ_vx] = map_coords(XYZ_mm, img); % (XYZ_mm unaltered)
-%
-%  % affine:
-%   % map from voxel to world coords:
-%    [XYZ_mm] = map_coords(XYZ_vx, img);
-%   % map to world coordinates, and then to voxel coords in source image:
-%   % (note, use zero (0) to specify no transformation; empty ('') prompts)
-%    [XYZ_mm XYZ_src_vx] = map_coords(XYZ_vx, trg, 0, src);
-%
-%  % normalisation:
-%   % map from template voxel coords to DCT normalised source world coords
-%    [XYZ_mm] = map_coords(XYZ_vx, '', 'blah_sn.mat');
-%   % same, and then to source voxel coords as well
-%    [XYZ_mm XYZ_src_vx] = map_coords(XYZ_vx, '', 'sn.mat', src);
-%   % same, using source from sn.mat
-%    [XYZ_mm XYZ_src_vx] = map_coords(XYZ_vx, '', 'sn.mat');
-%   % to map from source to template, invert the sn.mat (e.g. using the
-%   % deformations utility and then use the resulting y_ deformation field)
-%
-%  % unified segmentation:
-%   % from template voxel space to native subject world and voxel space:
-%    [XYZ_mm XYZ_src_vx] = map_coords(XYZ_vx, '', 'seg_sn.mat');
-%   % from native subject voxel space to template world and voxel space:
-%    [XYZ_mm XYZ_src_vx] = map_coords(XYZ_vx, '', 'seg_inv_sn.mat');
-%
+% This version of map_coords is based on Ged Ridgway's version but is
+% optimized for usage in Lead-DBS. Especially, it supports ANTs and
+% interpolations in high dimensional warping with SPM.
+
 %  % high-dimensional warping / y_ deformation field:
 %   % from target voxel space to source world and voxel space
 %    [XYZ_mm XYZ_src_vx] = map_coords(XYZ_vx, '', 'y_img.nii', src);
 %
 % Ged Ridgway (drc.spm at gmail.com)
-
-
-
-
 
 
 if nargin < 2
@@ -105,8 +56,7 @@ if ~isempty(xfrm)
         
         % check if ANTs has been used here:
         directory=fileparts(xfrm);
-        whichnormmethod=ea_whichnormmethod([directory,filesep]);
-        
+        [whichnormmethod,reft]=ea_whichnormmethod([directory,filesep]);
         if strcmp(whichnormmethod,'ea_normalize_ants')
             [~,fn]=fileparts(xfrm);
             if ~isempty(strfind(fn,'inv'))
@@ -114,10 +64,17 @@ if ~isempty(xfrm)
             else
                 useinverse=0;
             end
-            
-            XYZ_mm=ea_ants_applytransforms_to_points([directory,filesep],XYZ_vx,useinverse);
             V=spm_vol(src);
-            XYZ_mm=V.mat*XYZ_mm;
+            
+            %XYZ_vxLPS=[V.dim(1)-XYZ_vx(1,:);V.dim(2)-XYZ_vx(2,:);XYZ_vx(3,:);ones(1,size(XYZ_vx,2))];
+            
+             XYZ_mm_beforetransform=V(1).mat*XYZ_vx;
+             XYZ_mm_beforetransform(1,:)=-XYZ_mm_beforetransform(1,:);
+             XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
+             
+            XYZ_mm=ea_ants_applytransforms_to_points([directory,filesep],XYZ_mm_beforetransform,useinverse);
+            XYZ_mm(1,:)=-XYZ_mm(1,:);
+            XYZ_mm(2,:)=-XYZ_mm(2,:);
         else
             XYZ_mm = hdw_trgvx2srcmm(XYZ_vx, xfrm);
         end

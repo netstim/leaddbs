@@ -39,6 +39,6 @@ c=[c,ones(size(c,1),1)]';
 % to template voxel space:
 c=nii(1).mat\c;
 c=ea_map_coords(c(1:3,:), '', [options.root,options.patientname,filesep,'y_ea_normparams.nii'],...
-     [options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
+     nii(1).fname);
  c=c';
  

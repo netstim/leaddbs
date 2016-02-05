@@ -16,7 +16,14 @@ end
 
 disp('(Re)-applying priorly estimated normalizations...');
 if options.modality==1 % MR
-ea_coregmr(options,'auto');
+    [whichnormmethod]=ea_whichnormmethod([options.root,options.patientname,filesep]);
+    switch whichnormmethod
+        
+        case 'ea_normalize_ants'
+            ea_coregmr_ants(options);
+        otherwise
+            ea_coregmr(options,'auto');
+    end
 end
 ea_apply_normalization(options);
 

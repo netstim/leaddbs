@@ -4,6 +4,11 @@ function output=ea_ants_applytransforms_to_points(varargin)
 subdir=varargin{1};
 input=varargin{2};
 useinverse=varargin{3};
+if useinverse
+    istr='Inverse';
+else
+    istr='';
+end
 
 [~,ptname]=fileparts(subdir);
 options.prefs=ea_prefs(ptname);
@@ -12,8 +17,16 @@ if nargin>3
     transform=varargin{4};
     tstring=[' --transform [',transform, ',',num2str(useinverse),']']; % [transformFileName,useInverse]
 else
-    tstring=    [' -t [',ea_path_helper([subdir,lprebase]),'1Warp.nii.gz,',num2str(useinverse),']'...
-        ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'];
+    if useinverse
+        
+     tstring=    [  ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']',...
+         ' -t [',ea_path_helper([subdir,lprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
+       ];
+    else
+     tstring=    [' -t [',ea_path_helper([subdir,lprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
+         ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'...
+         ];
+    end
 end
 
 ea_libs_helper;
@@ -62,7 +75,7 @@ function c=ea_writecsv(pth,input)
 
 fid=fopen(pth,'w');
 fprintf(fid,'x,y,z,t \n');
-for c=1:size(input,1)
-   fprintf(fid,[num2str(input(1,c)),',',num2str(input(2,c)),',',num2str(input(3,c)),',1 \n']); 
+for c=1:size(input,2)
+   fprintf(fid,[num2str(input(1,c)),',',num2str(input(2,c)),',',num2str(input(3,c)),',0 \n']); 
 end
 fclose(fid);
