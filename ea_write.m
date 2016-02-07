@@ -19,8 +19,6 @@ end
 % Render 3D Visualization
 if options.d3.write
 
-    %% compat: store nativespace reconstructions, too
-    ea_reconstruction2native(options);
     
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.

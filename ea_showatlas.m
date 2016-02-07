@@ -235,8 +235,8 @@ end
     
     % configure label button to work properly and hide labels as default.
     
-    try    set(atlaslabels,'Visible','off'); end
-    set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels,'on'},'OffCallback',{@atlabelsvisible,atlaslabels,'off'},'State','off');
+   atlabelsvisible([],[],atlaslabels(:),'off');
+    set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(:),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(:),'off'},'State','off');
     set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
     
     
@@ -316,7 +316,11 @@ else
 end
 
 function atlabelsvisible(hobj,ev,obj,onoff)
-set(obj,'Visible',onoff);
+for el=1:numel(obj)
+try
+    set(obj(el),'Visible',onoff);
+end
+end
 
 
 function oldatlasvisible(hobj,ev,atls)

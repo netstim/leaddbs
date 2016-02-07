@@ -49,8 +49,13 @@ for pt=1:length(uidir)
     options.prefs=ea_prefs(ptname);
     
     % warp into patient space:
-    
+
+    try
     [fpinsub_mm] = ea_map_coords(fidpoints_vox', '', [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized]);
+    catch
+        ea_error(['Please check deformation field in ',directory,'.']);
+    end
+    
     fpinsub_mm=fpinsub_mm';
     
     

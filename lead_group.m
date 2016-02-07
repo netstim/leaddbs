@@ -293,7 +293,7 @@ function vizbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 clc;
 M=getappdata(gcf,'M');
-ea_busyaction('on',gcf,'group');
+ea_busyaction('on',handles.lg_figure,'group');
 % set options
 options=ea_setopts_local(handles);
 % set pt specific options
@@ -346,7 +346,7 @@ end
 
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 
-ea_busyaction('off',gcf,'group');
+ea_busyaction('off',handles.lg_figure,'group');
 
 
 % --- Executes on button press in corrbutton.

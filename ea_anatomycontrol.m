@@ -69,7 +69,7 @@ setappdata(gcf,'resultfig',resultfig);
 setappdata(gcf,'options',options);
 togglestates=getappdata(resultfig,'togglestates'); % get info from resultfig.
 setappdata(gcf,'togglestates',togglestates); % store anatomy toggle data from resultfig to anatomyslice (this) fig for subroutines.
-
+try
 if options.native
         set(handles.templatepopup,'String',{'Patient Post-OP'
 'Patient Pre-OP'
@@ -81,7 +81,13 @@ else
 'Patient Pre-OP'
 'Choose...'});
 end
-
+catch
+      set(handles.templatepopup,'String',{'MNI-Template'
+'Patient Post-OP'
+'Patient Pre-OP'
+'Choose...'});  
+    
+end
 if ~isempty(togglestates) % anatomy toggles have been used before..
 % reset figure handle.
 

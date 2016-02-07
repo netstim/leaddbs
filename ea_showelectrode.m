@@ -30,8 +30,11 @@ for side=options.sides
 
     trajvector=mean(diff(trajectory{side}));
     trajvector=trajvector/norm(trajvector);
-        startpoint=trajectory{side}(1,:)-(2*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
-
+try
+    startpoint=trajectory{side}(1,:)-(2*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
+catch
+    keyboard
+end
     if options.d3.elrendering<3
        
         set(0,'CurrentFigure',resultfig);
