@@ -217,7 +217,6 @@ if options.manualheightcorrection
     end
 
     ea_manualreconstruction(mcfig,patientname,options);
-   
 else
     ea_write(options)
 end

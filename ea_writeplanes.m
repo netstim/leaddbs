@@ -24,15 +24,11 @@ svfig=1;
 figvisible='on';
 if nargin==1
     % load prior results
-    try
-        load([options.root,options.patientname,filesep,'ea_reconstruction']);
+        coords_mm=ea_load_reconstruction(options);
         ave_coords_mm=coords_mm;
         clear coords_mm
         elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
-    catch
-        ave_coords_mm=ea_read_fiducials([options.root,options.patientname,filesep,'ea_coords.fcsv'],options);
-        elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
-    end
+   
     
 elseif nargin>1 % elstruct has been supplied, this is a group visualization
     if isstruct(varargin{2})
