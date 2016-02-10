@@ -1,7 +1,25 @@
-function [matsurf]=ea_showconnectivitypatch(resultfig,pV,mX,thresh)
+function [matsurf,labels]=ea_showconnectivitypatch(varargin)
+
+
+resultfig=varargin{1};
+pV=varargin{2};
+mX=varargin{3};
+thresh=varargin{4};
+
+if nargin==6
+    atlaslegend=varargin{5};
+    atlasindices=varargin{6};
+    showlabels=1;
+else
+    showlabels=0;
+end
 
 tmX=mX>thresh;
 
+options.prefs=ea_prefs('');
+if options.prefs.hullsmooth
+   tmX=smooth3(tmX,'gaussian',options.prefs.hullsmooth); 
+end
 
 bb=[0,0,0;size(mX)];
 
@@ -12,6 +30,23 @@ for dim=1:3
 end
 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
 fv=isosurface(X,Y,Z,permute(tmX,[2,1,3]),0.5); % graph_metric
+
+
+if ischar(options.prefs.hullsimplify)
+    % get to 1500 faces
+    simplify=1500/length(fv.faces);
+    fv=reducepatch(fv,simplify);
+else
+    if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
+        
+        fv=reducepatch(fv,options.prefs.hullsimplify);
+    elseif options.prefs.hullsimplify>1
+        simplify=options.prefs.hullsimplify/length(fv.faces);
+        fv=reducepatch(fv,simplify);
+    end
+end
+
+
 set(0,'CurrentFigure',resultfig)
 matsurf=patch(fv,'facealpha',0.7,'EdgeColor','none','facelighting','phong','FaceColor','interp');
 
@@ -49,7 +84,17 @@ set(matsurf,'FaceAlpha',0.2);
 
 
 
-
+if showlabels
+    for lab=1:length(atlasindices)
+        
+        [xx,yy,zz]=ind2sub(size(pV.img),find(pV.img==atlasindices(lab)));
+        XYZ=[xx,yy,zz];
+        centr_vx=[mean(XYZ,1),1]';        
+        centr_mm=pV.mat*centr_vx;
+        
+        labels(lab)=text(centr_mm(1),centr_mm(2),centr_mm(3),sub2space(atlaslegend{atlasindices(lab)}));
+    end
+end
 
 
 
@@ -117,6 +162,9 @@ set(matsurf,'FaceAlpha',0.2);
 % %nc=isocolors(X,Y,Z,permute(cX,[2,1,3]),matsurf);
 % %matsurf.FaceColor='interp';
 
+
+function str=sub2space(str) % replaces subscores with spaces
+str(str=='_')=' ';
 
 function coords=map_coords_proxy(XYZ,V)
 

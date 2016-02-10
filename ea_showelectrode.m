@@ -60,11 +60,11 @@ end
         else
             if isempty(elstruct.markers)
                 
-           redomarkers=1; 
+                redomarkers=1;
             end
         end
         if redomarkers
-        for iside=options.sides
+            for iside=options.sides
                 elstruct.markers(iside).head=elstruct.coords_mm{iside}(1,:);
                 elstruct.markers(iside).tail=elstruct.coords_mm{iside}(4,:);
                 
@@ -72,7 +72,7 @@ end
                 orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
                 elstruct.markers(iside).x=elstruct.coords_mm{iside}(1,:)+orth(:,1)';
                 elstruct.markers(iside).y=elstruct.coords_mm{iside}(1,:)+orth(:,2)'; % corresponding points in reality
-        end
+            end
         end
         
         B=[elstruct.markers(side).head,1;

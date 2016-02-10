@@ -35,7 +35,6 @@ vizz=0;
 
 %% get electrodes handles // initial parameters:
 resultfig=getappdata(gcf,'resultfig');
-el_render=getappdata(resultfig,'el_render');
 elstruct=getappdata(resultfig,'elstruct');
 elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
@@ -72,7 +71,6 @@ if ea_headmodel_changed(options,side,elstruct)
     
     
     
-    thiselhandle=el_render(1).el_render{side};
     % fields: 1: trajectory body; 2: trajectory bottom; 3: trajectory top
     % next three: contact one, etc.
     % next three: contact spacing one, etc.
@@ -156,6 +154,7 @@ if ea_headmodel_changed(options,side,elstruct)
     
     if vizz
         plot3(XYZmm(1,:),XYZmm(2,:),XYZmm(3,:),'r.');
+        hold on
         plot3(trajmm(:,1),trajmm(:,2),trajmm(:,3),'g');
     end
     
