@@ -43,8 +43,8 @@ end
 cmd = [applyTransformsToPoints, ...
     ' --dimensionality 3' ...   % dimensionality
     ' --precision 1' ...    % double precision
-    ' --input ', [subdir,'tmpin.csv'] ...  % input csv file with x,y,z,t (at least) as the column header
-    ' --output ', [subdir,'tmpout.csv'] ...    % warped output csv file
+    ' --input ', ea_path_helper([subdir,'tmpin.csv']) ...  % input csv file with x,y,z,t (at least) as the column header
+    ' --output ', ea_path_helper([subdir,'tmpout.csv']) ...    % warped output csv file
 tstring];
     
 ea_writecsv([subdir,'tmpin.csv'],input);
