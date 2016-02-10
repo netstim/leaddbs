@@ -22,7 +22,7 @@ function varargout = ea_anatomycontrol(varargin)
 
 % Edit the above text to modify the response to help ea_anatomycontrol
 
-% Last Modified by GUIDE v2.5 03-Aug-2015 16:47:58
+% Last Modified by GUIDE v2.5 08-Feb-2016 18:56:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,8 +52,7 @@ function ea_anatomycontrol_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_anatomycontrol (see VARARGIN)
 
-set(gcf,'Name','Anatomy Slices');
-
+set(hObject,'Name','Anatomy Slices');
 
 % Choose default command line output for ea_anatomycontrol
 handles.output = hObject;
@@ -62,13 +61,15 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes ea_anatomycontrol wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.acontrolfig);
 resultfig=varargin{1};
 options=varargin{2};
-setappdata(gcf,'resultfig',resultfig);
-setappdata(gcf,'options',options);
+setappdata(hObject,'resultfig',resultfig);
+setappdata(hObject,'options',options);
 togglestates=getappdata(resultfig,'togglestates'); % get info from resultfig.
-setappdata(gcf,'togglestates',togglestates); % store anatomy toggle data from resultfig to anatomyslice (this) fig for subroutines.
+setappdata(hObject,'togglestates',togglestates); % store anatomy toggle data from resultfig to anatomyslice (this) fig for subroutines.
+set(hObject,'Visible',options.d3.verbose);
+
 try
 if options.native
         set(handles.templatepopup,'String',{'Patient Post-OP'
@@ -126,8 +127,8 @@ else
 setappdata(getappdata(gcf,'resultfig'),'togglestates',togglestates);
 end
 
-pos=get(gcf,'position');
-set(gcf,'position',[0,0,pos(3),pos(4)]);
+pos=get(hObject,'position');
+set(hObject,'position',[0,0,pos(3),pos(4)]);
 refreshresultfig(handles)
 
 
