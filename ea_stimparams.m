@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 31-Jan-2016 13:19:40
+% Last Modified by GUIDE v2.5 08-Feb-2016 12:30:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,7 +57,42 @@ set(gcf,'Name','Stimulation Parameters');
 
 % store input arguments in figure to make it available to subroutines.
 elstruct=varargin{1};
+setappdata(handles.stimfig,'elstruct',elstruct);
 resultfig=varargin{2};
+
+if length(elstruct)>1
+   groupmode=1; 
+   M=getappdata(resultfig,'M');
+   try % priorly loaded stim params.
+   gS=M.S;
+   setappdata(handles.stimfig,'gS',gS);
+   gSv.vatmodel=M.vatmodel;
+   setappdata(handles.stimfig,'gSv',gSv);
+   end
+   set(handles.prevpt,'visible','on');
+   set(handles.nextpt,'visible','on');   
+   set(handles.saveparams,'visible','on');
+   
+   set(handles.stimlabel,'visible','off');
+   set(handles.stimlab,'visible','off');
+   set(handles.stimulate,'visible','off');
+   
+else
+    
+    groupmode=0;
+   
+    set(handles.prevpt,'visible','off');
+    set(handles.nextpt,'visible','off');
+    set(handles.saveparams,'visible','off');
+    
+    set(handles.stimlabel,'visible','on');
+    set(handles.stimlab,'visible','on');
+    set(handles.stimulate,'visible','on');
+    
+end
+setappdata(handles.stimfig,'groupmode',groupmode);
+setappdata(handles.stimfig,'actpt',1);
+
 options=varargin{3};
 setappdata(handles.stimfig,'elstruct',elstruct);
 setappdata(handles.stimfig,'resultfig',resultfig);
@@ -113,6 +148,9 @@ set(handles.modelselect,'String',ndc);
 pos=get(gcf,'position');
 set(gcf,'position',[51,51,pos(3),pos(4)]);
 
+
+
+
 ea_refreshguisp(handles,options);
 
 % Choose default command line output for ea_stimparams
@@ -120,6 +158,9 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+
+
+
 
 
 
@@ -820,6 +861,34 @@ function modelselect_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns modelselect contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from modelselect
+
+
+
+groupmode=getappdata(handles.stimfig,'groupmode');
+if groupmode
+    
+    choice = questdlg('Changing VAT model will delete stimulation parameters of all patients! Continue?', ...
+        'Warning', ...
+        'Yes, sure','No','No');
+    
+    switch choice
+        case 'No'
+            gSv=getappdata(handles.stimfig,'gSv');
+            ochoice=ismember(get(hObject,'String'),gSv.vatmodel);
+            setappdata(hObject,'Value',ochoice);
+            return
+        case 'Yes, sure'
+            setappdata(handles.stimfig,'gS',[]);
+            
+            nms=get(hObject,'String');
+            nms=nms{get(hObject,'Value')};
+            gSv.vatmodel=nms;
+            
+            setappdata(handles.stimfig,'gSv',gSv);
+    end
+end
+
+
 options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 S=getappdata(handles.stimfig,'S');
@@ -870,19 +939,9 @@ ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
 for el=1:length(elstruct)
     for side=1:length(elstruct.coords_mm)
     if isfield(elstruct,'group') % group analysis, more than one electrode set
-        for elin=1:options.elspec.numel
-            stimparams(elstruct(el).group,side).U(elin)=str2double(get(eval(['handles.k',num2str(elin-1+((side-1)*options.elspec.numel)),'u']),'String'));
-            stimparams(elstruct(el).group,side).Im(elin)=str2double(get(eval(['handles.k',num2str(elin-1+((side-1)*options.elspec.numel)),'im']),'String'));
-        end
-        stimparams(elstruct(el).group,side).group=elstruct(el).group;
-        stimparams(elstruct(el).group,side).groupcolors=elstruct(el).groupcolors;
-        stimparams(elstruct(el).group,side).groups=elstruct(el).groups;
-        flix=elstruct(el).groups;
         
-        [stimparams(elstruct(el).group,side).VAT(gcnt(elstruct(el).group)).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,stimparams,options);
-        stimparams(elstruct(el).group,side).volume=volume;
+        keyboard
         
-        gcnt(elstruct(el).group)=gcnt(elstruct(el).group)+1;
     else % single patient
  
         [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,S,side,options,stimname);
@@ -1555,14 +1614,63 @@ function ea_refreshguisp(varargin)
 handles=varargin{1};
 options=varargin{2};
 
-
+elstruct=getappdata(handles.stimfig,'elstruct');
 S=getappdata(handles.stimfig,'S');
+groupmode=getappdata(handles.stimfig,'groupmode');
+actpt=getappdata(handles.stimfig,'actpt');
+if isempty(actpt)
+    actpt=1;
+end
+if groupmode
+        grouploaded=getappdata(handles.stimfig,'grouploaded');
+
+    if isempty(grouploaded)
+        lgfig=getappdata(handles.stimfig,'resultfig');
+        M=getappdata(lgfig,'M');
+        actpt=M.ui.listselect;
+    end
+    
+    elstruct=getappdata(handles.stimfig,'elstruct');
+    set(handles.headertxt,'String',['Stimulation parameters: ',elstruct(actpt).name]);
+    gSv=getappdata(handles.stimfig,'gSv');
+    if isfield(gSv,'vatmodel');
+        [~,ind]=ismember(gSv.vatmodel,get(handles.modelselect,'String'));
+        set(handles.modelselect,'Value',ind);
+    else
+        nms=get(handles.modelselect,'String');
+        try
+        gSv.vatmodel=nms{get(handles.modelselect,'Value')};
+        catch
+            keyboard
+        end
+        setappdata(handles.stimfig,'gSv',gSv);
+    end
+    % initially load gS once:
+    gS=getappdata(handles.stimfig,'gS');
+    if ~isempty(gS) && isempty(grouploaded);
+        try
+            if ~isempty(gS(actpt).Rs1)
+                S=gS(actpt);
+            end
+        end
+        setappdata(handles.stimfig,'grouploaded',1);
+    end
+    
+
+    
+end
+
 
 
 if isempty(S)
     S=initializeS;
+else
+   if isempty(S.Rs1)
+       S=initializeS;
+   end
 end
 Ractive=S.active(1);
+
 Lactive=S.active(2);
 if nargin==3
     if ischar(varargin{3})
@@ -1807,7 +1915,10 @@ S.model=model;
 
 %% check consistency with chosen electrode model.
 
-
+if ~isfield(options,'elspec');
+toptions=ea_resolve_elspec(elstruct(actpt));
+options.elspec=toptions.elspec;
+end
 
 switch options.elspec.numel
     case 4
@@ -2434,3 +2545,93 @@ function Rs4va_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in nextpt.
+function nextpt_Callback(hObject, eventdata, handles)
+% hObject    handle to nextpt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+S=getappdata(handles.stimfig,'S');
+gS=getappdata(handles.stimfig,'gS');
+actpt=getappdata(handles.stimfig,'actpt');
+elstruct=getappdata(handles.stimfig,'elstruct');
+options=getappdata(handles.stimfig,'options');
+if isempty(gS)
+    clear gS
+end
+gS(actpt)=S;
+setappdata(handles.stimfig,'gS',gS);
+
+if (actpt+1)>length(elstruct)
+   setto=1;
+else
+    setto=actpt+1;
+end
+try
+    setappdata(handles.stimfig,'S',gS(setto));
+catch
+    setappdata(handles.stimfig,'S',[]);
+end
+setappdata(handles.stimfig,'actpt',setto);
+
+ea_refreshguisp(handles,options);
+
+
+% --- Executes on button press in prevpt.
+function prevpt_Callback(hObject, eventdata, handles)
+% hObject    handle to prevpt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+S=getappdata(handles.stimfig,'S');
+gS=getappdata(handles.stimfig,'gS');
+actpt=getappdata(handles.stimfig,'actpt');
+elstruct=getappdata(handles.stimfig,'elstruct');
+options=getappdata(handles.stimfig,'options');
+if isempty(gS)
+    clear gS
+end
+gS(actpt)=S;
+setappdata(handles.stimfig,'gS',gS);
+
+if (actpt-1)<1
+   setto=length(elstruct);
+else
+    setto=actpt-1;
+end
+try
+    setappdata(handles.stimfig,'S',gS(setto));
+catch
+    setappdata(handles.stimfig,'S',[]);
+end
+setappdata(handles.stimfig,'actpt',setto);
+
+ea_refreshguisp(handles,options);
+
+
+% --- Executes on button press in saveparams.
+function saveparams_Callback(hObject, eventdata, handles)
+% hObject    handle to saveparams (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+S=getappdata(handles.stimfig,'S');
+gS=getappdata(handles.stimfig,'gS');
+actpt=getappdata(handles.stimfig,'actpt');
+elstruct=getappdata(handles.stimfig,'elstruct');
+options=getappdata(handles.stimfig,'options');
+if isempty(gS)
+    clear gS
+end
+gS(actpt)=S;
+setappdata(handles.stimfig,'gS',gS);
+
+
+gSv=getappdata(handles.stimfig,'gSv');
+lgfig=getappdata(handles.stimfig,'resultfig');
+setappdata(lgfig,'S',gS);
+setappdata(lgfig,'vatmodel',gSv.vatmodel);
+
+close(handles.stimfig);
