@@ -50,8 +50,8 @@ fh2 = uimenu(mh,'Label','Open ROI','Callback',{@ea_addobj,resultfig,'roi',option
 
 %set(gcf,'Renderer','opengl')
 axis off
-set(gcf,'color','w');
-
+set(resultfig,'color','w');
+set(resultfig, 'InvertHardCopy', 'off');
 
 
 
@@ -303,7 +303,7 @@ end
 
 
 function opensliceviewer(hobj,ev,resultfig,options)
-awin=ea_anatomycontrol(gcf,options);
+awin=ea_anatomycontrol(resultfig,options);
 setappdata(resultfig,'awin',awin);
 try WinOnTop(awin,true); end
 

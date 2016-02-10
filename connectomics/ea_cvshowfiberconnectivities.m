@@ -71,6 +71,8 @@ else % load data
 end
 
 %% load targets definition
+
+keyboard
 if ~changedstates(3)
     targets=getappdata(resultfig,'targets');
 else % load data
@@ -82,7 +84,7 @@ else % load data
     end
     setappdata(resultfig,'targets',targets);
 end
-
+origtargets=targets; % original targets map.
 
 
 %% prepare fibers
@@ -102,7 +104,8 @@ dispercent(1,'end');
 
 
 %% select fibers that traverse through seed voxels
-seed_fv=ea_fvseeds(seed);
+[seed_fv,volume]=ea_fvseeds(seed);
+
 dispercent(0,'Selecting connecting fibers...');
 cnt=1;
 for side=sides
@@ -193,7 +196,7 @@ for side=sides
     tcnt=1;
     for reg=1:atlength
         howmanyfibs{side}(reg)=sum(allcareas==reg); % how many fibers connect VAT and anat. region.
-        if howmanyfibs{side}(reg)>=(thresh(1))
+        if howmanyfibs{side}(reg)>(thresh(1))
             tareas{side}(tcnt)=reg;
             tcnt=tcnt+1;
         end
@@ -205,7 +208,7 @@ for side=sides
     if options.writeoutstats
         ea_stats.stimulation(priorstimlength+1).ft(side).fibercounts{la}=howmanyfibs{side}/numtotalfibs;
         
-        ea_stats.stimulation(priorstimlength+1).ft(side).nfibercounts{la}=ea_stats.stimulation(priorstimlength+1).ft(side).fibercounts{la}/sum(stimparams(side).volume);
+        ea_stats.stimulation(priorstimlength+1).ft(side).nfibercounts{la}=ea_stats.stimulation(priorstimlength+1).ft(side).fibercounts{la}/volume{side};
         ea_stats.stimulation(priorstimlength+1).ft(side).labels{la}=atlas_lgnd{2};
         
     end
@@ -215,14 +218,18 @@ for side=sides
     
     
     
-    targets.img=round(targets.img);
-    otargets=targets.img;
-    targets.img(:)=0;
+    contargets=round(targets.img);
+    otargets=contargets;
+    contargets(:)=0;
     for target=1:atlength
-       targets.img(otargets==target)=howmanyfibs{side}(target);         
+       contargets(otargets==target)=howmanyfibs{side}(target);         
     end
     %targets.img(targets.img<thresh)=0;
-    PL.matsurf{side}=ea_showconnectivitypatch(resultfig,targets,targets.img,thresh);
+    
+    
+    
+    
+    [PL.matsurf{side},PL.conlabels{side}]=ea_showconnectivitypatch(resultfig,targets,contargets,thresh,atlas_lgnd{2},tareas{side});
     PL.matseedsurf{side}=ea_showseedpatch(resultfig,seed{side},seed{side}.img,options);
     
     clear allcareas conareas
@@ -351,15 +358,7 @@ end
 
 
 % plot fibers that do connect to seed:
-for side=sides
-    try % since this is only defined if using show_connectivities, too.
-        alltodelete{side}=[];
-        for la=1:length(stimparams(1).labelatlas)
-            alltodelete{side}=[alltodelete{side},todelete{la,side}];
-        end
-        connectingfibs{side}(alltodelete{side})=[]; % clear doubleconnected fibers (will be plotted lateron) from vatconnected fibers.
-    end
-    
+for side=sides    
     if ~isempty(connectingfibs{side})
         fibmax=length(connectingfibs{side});
         dispercent(0,'Plotting fibers that connect to seed');
@@ -471,9 +470,10 @@ setappdata(resultfig,[mode,'PL'],PL);
 
 
 
-function fv=ea_fvseeds(seed)
+function [fv,volume]=ea_fvseeds(seed)
 
 for s=1:length(seed)
+    volume{s}=sum(seed{s}.img(:))*seed{s}.mat(1)*seed{s}.mat(6)*seed{s}.mat(11);   
     fv{s}=isosurface(permute(seed{s}.img,[2,1,3]),0.3);
     fv{s}.vertices=[fv{s}.vertices,ones(size(fv{s}.vertices,1),1)]';
     fv{s}.vertices=seed{s}.mat*fv{s}.vertices;

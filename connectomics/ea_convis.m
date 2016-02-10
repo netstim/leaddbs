@@ -22,7 +22,7 @@ function varargout = ea_convis(varargin)
 
 % Edit the above text to modify the response to help ea_convis
 
-% Last Modified by GUIDE v2.5 16-Dec-2015 20:14:18
+% Last Modified by GUIDE v2.5 08-Feb-2016 20:11:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,12 +62,12 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes ea_anatomycontrol wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.convis);
 resultfig=varargin{1};
 options=varargin{2};
-setappdata(gcf,'resultfig',resultfig);
-setappdata(gcf,'options',options);
-setappdata(resultfig,'convis',gcf);
+setappdata(handles.convis,'resultfig',resultfig);
+setappdata(handles.convis,'options',options);
+setappdata(resultfig,'convis',handles.convis);
 
 
 refreshcv(handles);
@@ -81,14 +81,14 @@ if nargin>1
 end
 
 
-options=getappdata(gcf,'options');
+options=getappdata(handles.convis,'options');
 
 if isempty(options)
-    convis=getappdata(gcf,'convis');
+    convis=getappdata(handles.convis,'convis');
     options=getappdata(convis,'options');
     set(0,'CurrentFigure',convis);
 else
-    convis=gcf;
+    convis=handles.convis;
 end
 set(convis,'name','Processing...');
 drawnow
@@ -118,8 +118,8 @@ end
 resultfig=ea_cvcleanup;
 
 if ~hold
-    pV=getappdata(gcf,'pV');
-    pX=getappdata(gcf,'pX');
+    pV=getappdata(handles.convis,'pV');
+    pX=getappdata(handles.convis,'pX');
     [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
     set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
     set(handles.matseed,'ForegroundColor',[0,0,0]);
@@ -129,7 +129,7 @@ end
 if get(handles.vizvat,'Value'); % show voxel-level results
     ea_cvshowvatresults(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
 else
-    deletePL(resultfig,'PL','vat');
+    ea_deletePL(resultfig,'PL','vat');
 end
 
 if get(handles.vizgraph,'Value'); % show voxel-level results
@@ -139,7 +139,7 @@ end
 if get(handles.vizmat,'Value'); % show matrix-level results
     ea_cvshowmatresults(resultfig,directory,pV,pX,selectedparc,handles,options);
 else
-    deletePL(resultfig,'PL','mat');
+    ea_deletePL(resultfig,'PL','mat');
 end
 
 if (get(handles.vizmat,'Value') || get(handles.vizvat,'Value')) && get(handles.timecircle,'Value') && strcmp(get(handles.timecircle,'Enable'),'on') % cycle over time..
@@ -151,177 +151,12 @@ end
 set(convis,'name','Connectome Results');
 
 
-function ea_cvshowvatresults(resultfig,pX,directory,filesare,handles,pV,selectedparc,options)
-
-% determine if fMRI or dMRI
-mods=get(handles.vatmodality,'String');
-mod=mods{get(handles.vatmodality,'Value')};
-switch mod
-    case 'rest_tc'
-        ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
-    otherwise
-        
-        % fibers filename
-        vatmodality=get(handles.vatmodality,'String'); vatmodality=vatmodality{get(handles.vatmodality,'Value')};
-        switch vatmodality
-            case 'Patient-specific fiber tracts'
-                fibersfile=[directory,options.prefs.FTR_normalized];
-            otherwise
-                fibersfile=[options.earoot,'fibers',filesep,vatmodality,'.mat'];
-        end
-        
-        % seed filename
-        [usevat,dimensionality,~,sides]=ea_checkvatselection(handles);
-        seedfile={};
-        for v=1:dimensionality
-            vs=get(handles.vatseed,'String');
-            seedfile{v}=[directory,'stimulations',filesep,vs{get(handles.vatseed,'Value')},filesep,'vat_',usevat{v},'.nii'];
-        end
-        for side=sides
-            load([directory,'stimulations',filesep,vs{get(handles.vatseed,'Value')},filesep,'stimparameters_',usevat{side},'.mat']);
-            astimparams(side).U=stimparams.U; astimparams(side).Im=stimparams.Im; astimparams(side).volume=stimparams.volume;
-        end
-        
-        targetsfile=[options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii'];
-        thresh=get(handles.vatthresh,'String');
-        options.writeoutstats=1;
-        options.writeoutpm=0;
-        
-        
-        [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seedfile,targetsfile,thresh,'vat');
-        
-        if ~ret % something has changed since last time.
-            deletePL(resultfig,'PL','vat');
-            if dimensionality % one of the vat checkboxes is active
-                [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,astimparams,changedstates,'vat'); % 'vat' only used for storage of changes.
-            set(handles.vatthreshis,'String',num2str(thresh));
-
-            end
-            
-        end
-end
-
-function [usevat,dimensionality,currentseed,sides]=ea_checkvatselection(handles)
-% small helper function that will check whether left, right or both vat
-% checkboxes are true.
-
-if (get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
-        (get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
-    %preparecombinedvat(directory,stim);
-    usevat={'right','left'};
-    dimensionality=2; % how many ROI.
-    currentseed=[1,2];
-    sides=[1,2];
-    
-elseif (get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
-        ~(get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
-    usevat={'right'};
-    dimensionality=1; % how many ROI.
-    currentseed=1;
-    sides=[1];
-elseif ~(get(handles.rvatcheck,'Value') && strcmp(get(handles.rvatcheck,'Enable'),'on')) && ...
-        (get(handles.lvatcheck,'Value') && strcmp(get(handles.lvatcheck,'Enable'),'on'))
-    usevat={'left'};
-    dimensionality=1; % how many ROI.
-    currentseed=[1];
-    sides=2;
-else
-    usevat={};
-    dimensionality=0;
-    currentseed=0;
-    sides=[];
-end
 
 
-function ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options)
-%mV=pV; % duplicate labeling handle
-%mX=pX; % duplicate labeling data
-stims=get(handles.vatseed,'String');
-stim=stims{get(handles.vatseed,'Value')};
-
-% check out which vats to use
-[usevat,dimensionality,currentseed,sides]=ea_checkvatselection(handles);
-if ~dimensionality
-    return
-end
-
-pX=round(pX);
-
-if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat'],'file');
-    ea_warp_vat(options.prefs.rest,'rest',options,handles);
-    vat_tc=ea_extract_timecourses_vat(options,handles,usevat,dimensionality);
-    save([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat'],'vat_tc');
-else
-    load([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat']);
-end
-
-mms=get(handles.matmodality,'String');
-parcs=get(handles.labelpopup,'String');
-tc=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,'rest_tc']);
-fn=fieldnames(tc);
-tc=eval(['tc.',fn{1},';']);
-tc=[vat_tc,tc];
-
-timedim=size(tc,1);
-tiwindow=get(handles.timewindow,'String');
-tiframe=get(handles.timeframe,'String');
-
-if strcmp(tiwindow,'all') || strcmp(tiframe,'all')
-    % use whole CM
-    cm=corrcoef(tc);
-else
-    tiframe=str2double(tiframe);         tiwindow=str2double(tiwindow);
-    % check if selected time window is possible:
-    if (tiframe+tiwindow)>timedim || tiframe<1 % end is reached
-        set(handles.timeframe,'String','1'); tiframe=1; % reset timeframe to 1
-        if tiwindow>size(tc,1)
-            set(handles.timewindow,'String','1'); tiwindow=1;
-        end
-    end
-    cm=corrcoef(tc(tiframe:tiframe+tiwindow,:)); % actual correlation
-    
-    if get(handles.timecircle,'Value')
-        % make a step to next timeframe (prepare next iteration).
-        if (tiframe+tiwindow+1)>timedim
-            set(handles.timeframe,'String','1')
-        else
-            set(handles.timeframe,'String',num2str(tiframe+1))
-        end
-    end
-end
-for side = sides
-seedcon=cm(side,:);
-seedcon=seedcon(3:end);
-thresh=get(handles.vatthresh,'String');
-if strcmp(thresh,'auto');
-    thresh=nanmean(seedcon)+1*0.5*nanstd(seedcon);
-else
-    thresh=str2double(thresh);
-end
 
 
-tseedcon=seedcon;
-tseedcon(tseedcon<thresh)=0;
-tseedcon(currentseed)=0;
-pX(pX==0)=nan;
-mX=pX;
-for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with the entries in tseedcon. Fixme, this should be doable wo forloop..
-    mX(ismember(round(pX),cs))=tseedcon(cs);
-end
-
-    Vvat=spm_vol([directory,'stimulations',filesep,stim,filesep,'vat_',usevat{side},'.nii,1']);
-    Xvat=spm_read_vols(Vvat);
-    vatseedsurf{side}=ea_showseedpatch(resultfig,Vvat,Xvat,options);
 
 
-    
-%sX=ismember(round(pX),currentseed);
-set(0,'CurrentFigure',resultfig)
-set(handles.vatthreshis,'String',num2str(thresh));
-    vatsurf{side}=ea_showconnectivitypatch(resultfig,pV,mX,thresh);
-end
-setappdata(resultfig,'vatsurf',vatsurf);
-setappdata(resultfig,'vatseedsurf',vatseedsurf);
 
 
 
@@ -350,7 +185,7 @@ function ea_cvshowmatresults(resultfig,directory,pV,pX,selectedparc,handles,opti
 matmodality=get(handles.matmodality,'String');
 matmodality=matmodality{get(handles.matmodality,'Value')};
 if ~isempty(strfind(matmodality,'_CM')) || ~isempty(strfind(matmodality,'_tc'))
-    deletePL(resultfig,'PL','mat');
+    ea_deletePL(resultfig,'PL','mat');
     ea_cvshowmatresultsCMTC(resultfig,directory,pV,pX,handles,options);
 else % use fiberset
     
@@ -379,7 +214,7 @@ else % use fiberset
         [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seed,targetsfile,thresh,'mat');
         
         if ~ret % something has changed since last time.
-            deletePL(resultfig,'PL','mat');
+            ea_deletePL(resultfig,'PL','mat');
             
                 [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seed,targetsfile,thresh,1,options,'',changedstates,'mat');
             set(handles.matthreshis,'String',num2str(thresh));
@@ -540,8 +375,8 @@ atlas_lgnd=textscan(aID,'%d %s');
 % store pV and pX in figure
 pV=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
 pX=spm_read_vols(pV);
-setappdata(gcf,'pV',pV);
-setappdata(gcf,'pX',pX);
+setappdata(handles.convis,'pV',pV);
+setappdata(handles.convis,'pX',pX);
 
 %d=length(atlas_lgnd{1}); % how many ROI.
 
@@ -602,28 +437,8 @@ if exist('filesare','var')
 end
 
 function ea_initvatlevel(handles,directory,selectedparc,options)
-%% modalities:
 
-% dMRI:
-cnt=1;
-% check if pat-specific fibertracts are present:
-if exist([directory,options.prefs.FTR_normalized],'file');
-    modlist{cnt}='Patient-specific fiber tracts';
-    cnt=cnt+1;
-end
-% check for canonical fiber sets
-fdfibs=dir([options.earoot,'fibers',filesep,'*.mat']);
-for fdf=1:length(fdfibs)
-    [~,fn]=fileparts(fdfibs(fdf).name);
-    modlist{cnt}=fn;
-    cnt=cnt+1;
-end
-
-% fMRI:
-% check if _tc are present:
-if exist([directory,'connectomics',filesep,selectedparc,filesep,'rest_tc.mat'],'file');
-    modlist{cnt}='rest_tc';
-end
+modlist=ea_genmodlist(directory,selectedparc,options);
 
 
 %% VATs:
@@ -689,7 +504,7 @@ end
 
 function resultfig=ea_cvcleanup
 %% recruit handles from prior results from figure
-resultfig=getappdata(gcf,'resultfig');
+resultfig=getappdata(handles.convis,'resultfig');
 matsurf=getappdata(resultfig,'matsurf');
 vatsurf=getappdata(resultfig,'vatsurf');
 seedsurf=getappdata(resultfig,'seedsurf');
@@ -800,127 +615,8 @@ set(handles.rvatcheck,'Enable','on');
 set(handles.vatthresh,'Enable','on');
 
 
-function [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seedfile,targetsfile,thresh,mode)
-% small helper function that determines changes in fibertracking results.
-ret=1;
-ofibersfile=getappdata(resultfig,[mode,'fibersfile']); % mode independent
-oseedfile=getappdata(resultfig,'seedfile');
-otargetsfile=getappdata(resultfig,[mode,'targetsfile']);
-othresh=getappdata(resultfig,[mode,'thresh']);
-
-changedstates=[~isequal(fibersfile,ofibersfile)
-    ~isequal(seedfile,oseedfile)
-    ~isequal(targetsfile,otargetsfile)
-    ~isequal(thresh,othresh)];
-if any(changedstates)
-    ret=0;
-end
-
-setappdata(resultfig,'fibersfile',fibersfile); % mode independent
-setappdata(resultfig,[mode,'seedfile'],seedfile);
-setappdata(resultfig,[mode,'targetsfile'],targetsfile);
-setappdata(resultfig,[mode,'thresh'],thresh);
-
-function deletePL(resultfig,varname,mode)
 
 
-PL=getappdata(resultfig,[mode,varname]);
-setappdata(resultfig,[mode,'fibersfile'],'nan');
-setappdata(resultfig,[mode,'seedfile'],'nan');
-setappdata(resultfig,[mode,'targetsfile'],'nan');
-setappdata(resultfig,[mode,'thresh'],'nan');
-
-try
-if verLessThan('matlab','8.5') % ML <2014a support
-    
-    
-    for p=1:length(PL)
-        
-        
-        if isfield(PL(p),'vatsurfs')
-            delete(PL(p).vatsurfs(logical(PL(p).vatsurfs)));
-        end
-        if isfield(PL(p),'quiv')
-            delete(PL(p).quiv(logical(PL(p).quiv)));
-        end   
-        if isfield(PL(p),'matseedsurf')
-            for t=1:length(PL(p).matseedsurf)
-                try delete(PL(p).matseedsurf{t});
-                end
-            end
-        end
-        if isfield(PL(p),'matsurf')
-            for t=1:length(PL(p).matsurf)
-                try delete(PL(p).matsurf{t}); end
-            end
-        end
-        if isfield(PL(p),'fib_plots')
-            if isfield(PL(p).fib_plots,'fibs')
-                delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs)));
-            end
-            
-            if isfield(PL(p).fib_plots,'dcfibs')
-                todelete=PL(p).fib_plots.dcfibs((PL(p).fib_plots.dcfibs(:)>0));
-                delete(todelete(:));
-                
-            end
-        end
-        if isfield(PL(p),'regionsurfs')
-            todelete=PL(p).regionsurfs(logical(PL(p).regionsurfs));
-            delete(todelete(:));
-        end
-        if isfield(PL(p),'conlabels')
-            todelete=PL(p).conlabels(logical(PL(p).conlabels));
-            delete(todelete(:));
-        end
-        if isfield(PL(p),'ht')
-            delete(PL(p).ht);
-        end
-    end
-    
-    
-else
-    for p=1:length(PL) 
-        
-        if isfield(PL(p),'matseedsurf')
-            for t=1:length(PL(p).matseedsurf)
-                try delete(PL(p).matseedsurf{t});
-                end
-            end
-        end
-        if isfield(PL(p),'matsurf')
-            for t=1:length(PL(p).matsurf)
-                try delete(PL(p).matsurf{t}); end
-            end
-        end
-        if isfield(PL(p),'vatsurfs')
-            delete(PL(p).vatsurfs);
-        end
-        if isfield(PL(p),'quiv')
-            delete(PL(p).quiv);
-        end
-        if isfield(PL(p),'fib_plots')
-            if isfield(PL(p).fib_plots,'fibs')
-                delete(PL(p).fib_plots.fibs);
-            end
-            
-            if isfield(PL(p).fib_plots,'dcfibs')
-                delete(PL(p).fib_plots.dcfibs);
-            end
-        end
-        if isfield(PL(p),'regionsurfs')
-            delete(PL(p).regionsurfs);
-        end
-        if isfield(PL(p),'conlabels')
-            delete(PL(p).conlabels);
-        end
-        if isfield(PL(p),'ht')
-            delete(PL(p).ht);
-        end
-    end
-    
-end
-end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_convis_OutputFcn(hObject, eventdata, handles)
@@ -1000,8 +696,8 @@ function matseed_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns matseed contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from matseed
 
-pV=getappdata(gcf,'pV');
-pX=getappdata(gcf,'pX');
+pV=getappdata(handles.convis,'pV');
+pX=getappdata(handles.convis,'pX');
 [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
 set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
 set(handles.matseed,'ForegroundColor',[0,0,0]);
@@ -1020,8 +716,8 @@ xmm=centrmm(1); ymm=centrmm(2); zmm=centrmm(3);
 
 function [ix,err]=setcoordinates(handles)
 % set seed selection based on manual coordinate entry.
-pV=getappdata(gcf,'pV');
-pX=getappdata(gcf,'pX');
+pV=getappdata(handles.convis,'pV');
+pX=getappdata(handles.convis,'pX');
 xmm=str2double(get(handles.xmm,'String'));
 ymm=str2double(get(handles.ymm,'String'));
 zmm=str2double(get(handles.zmm,'String'));

@@ -84,7 +84,7 @@ set(handles.atlassetpopup,'String',asc);
 
 
 
-% setup modelselect popup
+% setup vat functions
 
 cnt=1;
 earoot=[fileparts(which('lead')),filesep];
@@ -99,8 +99,8 @@ for nd=length(ndir):-1:1
     end
 end
 setappdata(gcf,'genvatfunctions',genvatfunctions);
+setappdata(gcf,'vatfunctionnames',ndc);
 
-set(handles.modelselect,'String',ndc);
 
 
 
@@ -115,19 +115,7 @@ axis off;
 axis equal;
 
 
-% Fibers:
-% Fibers:
 
-
-fibd=dir([options.earoot,'fibers',filesep,'*.mat']);
-fiberscell{1}='Patient-specific DTI-Data';
-
-for fd=2:length(fibd)+1
-    [~,fn]=fileparts(fibd(fd-1).name);
-    fiberscell{fd}=fn;
-end
-
-set(handles.fiberspopup,'String',fiberscell);
 
 try
     priorselection=find(ismember(fiberscell,stimparams.usefiberset)); % retrieve prior selection of fiberset.
@@ -615,16 +603,16 @@ end
 
 
 function refreshvifc(handles)
-ea_busyaction('on',gcf,'group');
+ea_busyaction('on',handles.lg_figure,'group');
 
 %keyboard
 
 % get model data
 
-M=getappdata(gcf,'M');
+M=getappdata(handles.lg_figure,'M');
 
 if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % not set yet.
-ea_busyaction('off',gcf,'group');
+ea_busyaction('off',handles.lg_figure,'group');
     return
 end
 
@@ -697,7 +685,7 @@ end
 thisparc=get(handles.lc_parcellation,'String');
 thisparc=thisparc{get(handles.lc_parcellation,'Value')};
 try
-    gmdir=dir([M.patient.list{1},'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
+    gmdir=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
 
     gms{1}='';
     for gm=1:length(gmdir)
@@ -705,22 +693,52 @@ try
     end
     set(handles.lc_graphmetric,'String',gms);
 end
+
+
+
+
+
+
+%% modalities for VAT metrics:
+
+% dMRI:
+cnt=1;
+options.prefs=ea_prefs('');
+options.earoot=[fileparts(which('lead')),filesep];
+try
+    directory=[M.patient.list{1},filesep];
+    modlist=ea_genmodlist(directory,thisparc,options);
+    set(handles.fiberspopup,'String',modlist);
+    if get(handles.fiberspopup,'Value')>length(modlist);
+        set(handles.fiberspopup,'Value',1);
+    end
+end
+
+
 % update UI
 
 
 
-% make setstimparams button green if set.
-if isfield(M,'stimparams')
-    if isfield(M.stimparams,'U')
-        set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
-    else
-        set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
-    end
+% % make setstimparams button green if set.
+% if isfield(M,'stimparams')
+%     if isfield(M.stimparams,'U')
+%         set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
+%     else
+%         set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
+%     end
+% else
+%     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
+% end
+
+S=getappdata(handles.lg_figure,'S');
+
+if ~isempty(S)
+    set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
+    M.S=S;
+    M.vatmodel=getappdata(handles.lg_figure,'vatmodel');
 else
     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 end
-
-
 
 
 % make chooscolors button green if chosen.
@@ -747,11 +765,6 @@ try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
 try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
 try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
 try set(handles.labelpopup,'Value',M.ui.labelpopup); end
-try set(handles.modelselect,'Value',M.ui.modelselect); end
-if M.ui.modelselect>length(get(handles.modelselect,'String'))
-    M.ui.modelselect=length(get(handles.modelselect,'String'));
-    set(handles.modelselect,'Value',M.ui.modelselect);
-end
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
 try set(handles.lc_parcellation,'Value',M.ui.lc.parcellation); end
@@ -852,8 +865,8 @@ end
 
         if ~isfield(M,'stats')
             % if no stats  present yet, return.
-            setappdata(gcf,'M',M);
-            set(gcf,'name','LEAD-DBS Group Analysis');
+            setappdata(handles.lg_figure,'M',M);
+            set(handles.lg_figure,'name','LEAD-DBS Group Analysis');
             break
         end
 
@@ -892,7 +905,7 @@ end
     end
 
     try
-        setappdata(gcf,'elstruct',elstruct);
+        setappdata(handles.lg_figure,'elstruct',elstruct);
     end
 else
     M.vilist={};
@@ -901,7 +914,7 @@ end
 
 
 % store everything in Model
-setappdata(gcf,'M',M);
+setappdata(handles.lg_figure,'M',M);
 
 % refresh UI
 
@@ -910,7 +923,7 @@ set(handles.fclist,'String',M.fclist);
 
 
 
-ea_busyaction('off',gcf,'group');
+ea_busyaction('off',handles.lg_figure,'group');
 
 
 % --- Executes on selection change in grouplist.
@@ -1223,7 +1236,7 @@ M=getappdata(gcf,'M');
 
 % set options
 options=ea_setopts_local(handles);
-
+stimname=ea_detstimname();
 for pt=1:length(M.patient.list)
 
     % set pt specific options
@@ -1253,7 +1266,7 @@ for pt=1:length(M.patient.list)
     options.prefs=ea_prefs(options.patientname);
     options.d3.verbose='off';
 
-
+options.native=0;
 
 
     options.d3.elrendering=M.ui.elrendering;
@@ -1265,7 +1278,7 @@ for pt=1:length(M.patient.list)
     options.d3.isovscloud=M.ui.isovscloudpopup;
     options.d3.showisovolume=M.ui.showisovolumecheck;
 
-    options.expstatvat.do=M.ui.statvat;
+    options.expstatvat.do=0;
     try
         options.expstatvat.vars=M.clinical.vars(M.ui.clinicallist);
         options.expstatvat.labels=M.clinical.labels(M.ui.clinicallist);
@@ -1307,15 +1320,70 @@ for pt=1:length(M.patient.list)
     delete([options.root,options.patientname,filesep,'ea_stats.mat']);
 
     % Step 1: Re-calculate closeness to subcortical atlases.
+    
     resultfig=ea_elvis(options);
     % save scene as matlab figure
 
 
-
+options.modality=ea_checkctmrpresent(M.patient.list{pt});
+if options.modality(1) % prefer MR
+    options.modality=1;
+else
+    if options.modality(2)
+        options.modality=2;
+    else
+        options.modality=1;
+        warning(['No MR or CT volumes found in ',M.patient.list{pt},'.']);
+    end
+end
 
     % Step 2: Re-calculate Fibertracts / VAT
-    setappdata(resultfig,'stimparams',M.stimparams(pt,:));
-    ea_showfibres_volume(resultfig,options);
+    try
+        setappdata(resultfig,'S',M.S(pt));
+    catch
+        ea_error('Please enter stimulation parameters for all patients first.');
+    end
+    vfnames=getappdata(handles.lg_figure,'vatfunctionnames');
+    
+    [~,ix]=ismember(M.vatmodel,vfnames);
+    vfs=getappdata(handles.lg_figure,'genvatfunctions');
+    
+    ea_genvat=eval(['@',vfs{ix}]);
+
+    for side=1:2
+        setappdata(resultfig,'elstruct',M.elstruct(pt));
+        setappdata(resultfig,'elspec',options.elspec);
+        
+        [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,stimname);
+        stimparams(1,side).volume=volume;
+    end
+    
+    setappdata(resultfig,'stimparams',stimparams(1,:));
+
+    
+    % Convis part:
+    
+    
+    % determine if fMRI or dMRI
+    mods=get(handles.fiberspopup,'String');
+    mod=mods{get(handles.fiberspopup,'Value')};
+    parcs=get(handles.labelpopup,'String');
+    selectedparc=parcs{get(handles.labelpopup,'Value')};
+    directory=[M.patient.list{pt},filesep];
+    switch mod
+        case 'rest_tc'
+            ea_error('Group statistics for fMRI are not yet supported. Sorry, check back later!');
+            pV=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+            pX=spm_read_vols(pV);
+            ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
+        otherwise
+            ea_cvshowvatdmri(resultfig,directory,{mod,stimname},selectedparc,options);
+    end
+    
+    
+    
+    
+    
 
     close(resultfig);
 
@@ -1383,31 +1451,7 @@ end
 refreshvifc(handles);
 
 
-% --- Executes on selection change in modelselect.
-function modelselect_Callback(hObject, eventdata, handles)
-% hObject    handle to modelselect (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns modelselect contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from modelselect
-M=getappdata(gcf,'M');
-M.ui.modelselect=get(handles.modelselect,'Value');
-setappdata(gcf,'M',M);
-refreshvifc(handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function modelselect_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to modelselect (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in fiberspopup.
@@ -1599,7 +1643,6 @@ M.ui.isovscloudpopup=1;
 M.ui.atlassetpopup=1;
 M.ui.fiberspopup=3;
 M.ui.labelpopup=1;
-M.ui.modelselect=1;
 M.ui.volumeintersections=1;
 M.ui.fibercounts=1;
 M.ui.elrendering=1;
@@ -1637,124 +1680,10 @@ M=getappdata(gcf,'M');
 %     return
 % end
 
-[pU,pIm]=getstimparams(M); % local function, gets out U and Im in cell format and returns zeros/thousands if not set.
-
-
-for pt=1:length(M.patient.list)
-    [~,ptname]=fileparts(M.patient.list{pt});
-    Urproperties(pt) =    PropertyGridField(['double',num2str(pt)], pU{1}(pt,:), ...
-        'Category', 'Voltage Right', ...
-        'DisplayName', ptname, ...
-        'Description', 'Double Matrix.');
-    Ulproperties(pt) =    PropertyGridField(['double',num2str(pt)], pU{2}(pt,:), ...
-        'Category', 'Voltage Left', ...
-        'DisplayName', ptname, ...
-        'Description', 'Double Matrix.');
-    Irproperties(pt) =    PropertyGridField(['double',num2str(pt)], pIm{1}(pt,:), ...
-        'Category', 'Impedance Right', ...
-        'DisplayName', ptname, ...
-        'Description', 'Double Matrix.');
-    Ilproperties(pt) =    PropertyGridField(['double',num2str(pt)], pIm{2}(pt,:), ...
-        'Category', 'Impedance Left', ...
-        'DisplayName', ptname, ...
-        'Description', 'Double Matrix.');
-end
-
-
-
-
-% arrange flat list into a hierarchy based on qualified names
-Urproperties = Urproperties.GetHierarchy();
-Irproperties = Irproperties.GetHierarchy();
-Ulproperties = Ulproperties.GetHierarchy();
-Ilproperties = Ilproperties.GetHierarchy();
-
-% create figure
-f = figure( ...
-    'MenuBar', 'none', ...
-    'Name', 'Please enter stimulation parameters for the group.', ...
-    'NumberTitle', 'off', ...
-    'Toolbar', 'none');
-
-% procedural usage
-gU{1} = PropertyGrid(f, ...            % add property pane to figure
-    'Properties', Urproperties,'Position', [0 0 0.25 1]);     % set properties explicitly;
-gU{2} = PropertyGrid(f, ...            % add property pane to figure
-    'Properties', Ulproperties,'Position', [0.25 0 0.25 1]);     % set properties explicitly;
-gI{1} = PropertyGrid(f, ...            % add property pane to figure
-    'Properties', Irproperties,'Position', [0.5 0 0.25 1]);     % set properties explicitly;
-gI{2} = PropertyGrid(f, ...            % add property pane to figure
-    'Properties', Ilproperties,'Position', [0.75 0 0.25 1]);     % set properties explicitly;
-
-
-% declarative usage, bind object to grid
-obj = SampleObject;  % a value object
-
-% update the type of a property assigned with type autodiscovery
-%userproperties = PropertyGridField.GenerateFrom(obj);
-%userproperties.FindByName('IntegerMatrix').Type = PropertyType('denserealdouble', 'matrix');
-%disp(userproperties.FindByName('IntegerMatrix').Type);
-
-% wait for figure to close
-uiwait(f);
-
-%disp(gUr.GetPropertyValues());
-
-
-
-
-
 options=ea_setopts_local(handles);
-stimname=ea_detstimname;
-for pt=1:length(M.patient.list)
-
-    % set pt specific options
-    options.root=[fileparts(M.patient.list{pt}),filesep];
-    [~,options.patientname]=fileparts(M.patient.list{pt});
-    if ~isempty(M.elstruct(pt).elmodel)
-        options.elmodel=M.elstruct(pt).elmodel;
-    else
-        options.elmodel='Medtronic 3389';
-    end
-    options=ea_resolve_elspec(options);
-    options.prefs=ea_prefs(options.patientname);
-    options.d3.verbose='off';
-
-    % assign correct .m-file to function.
-    genvatfunctions=getappdata(gcf,'genvatfunctions');
-    if get(handles.modelselect,'Value')>length(get(handles.modelselect,'String'));
-        set(handles.modelselect('Value'),length(get(handles.modelselect,'String')));
-    end
-    ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
-
-    % set stimparams based on values provided by user
-
-
-    for side=1:2
-        M.stimparams(pt,side).U=gU{side}.Properties(pt).Value;
-        M.stimparams(pt,side).Im=gI{side}.Properties(pt).Value;
-
-        M.stimparams(pt,side).usefiberset=get(handles.fiberspopup,'String');
-
-        M.stimparams(pt,side).usefiberset=M.stimparams(pt,side).usefiberset{M.ui.fiberspopup};
-
-        M.stimparams(pt,side).labelatlas={options.labelatlas};
-        M.stimparams(pt,side).showfibers=1;
-        M.stimparams(pt,side).fiberthresh=1;
-        [M.stimparams(pt,side).VAT.VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.stimparams(pt,:),side,options,stimname);
-
-        M.stimparams(pt,side).volume=volume;
-        M.stimparams(pt,side).showconnectivities=1;
-        M.elstruct(pt).activecontacts{side}=M.stimparams(pt,side).U;
-    end
-
-
-
-end
-try M.stimparams(pt+1:end,:)=[]; end % remove any additional entries if present.
-setappdata(gcf,'M',M);
 refreshvifc(handles);
 
+ea_stimparams(M.elstruct,handles.lg_figure,options);
 
 
 
@@ -1914,68 +1843,7 @@ setappdata(gcf,'M',M);
 
 
 
-% --- Executes on button press in stimoldbutn.
-function stimoldbutn_Callback(hObject, eventdata, handles)
-% hObject    handle to stimoldbutn (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-M=getappdata(gcf,'M');
 
-try
-    uicell=inputdlg('Enter Variable name for Voltage-Parameters','Enter Stimulation Settings...',1);
-    uidata.U=evalin('base',uicell{1});
-catch
-    warning('Stim-Params could not be evaluated. Please Try again.');
-end
-try
-    uicell=inputdlg('Enter Variable name for Impedance-Parameters','Enter Stimulation Settings...',1);
-    uidata.Im=evalin('base',uicell{1});
-catch
-    warning('Stim-Params could not be evaluated. Please Try again.');
-end
-
-options=ea_setopts_local(handles);
-for pt=1:length(M.patient.list)
-
-    % set pt specific options
-    options.root=[fileparts(M.patient.list{pt}),filesep];
-    [~,options.patientname]=fileparts(M.patient.list{pt});
-    options.elmodel=M.elstruct(pt).elmodel;
-    options=ea_resolve_elspec(options);
-    options.prefs=ea_prefs(options.patientname);
-    options.d3.verbose='off';
-    % set stimparams based on values provided by user
-
-    % assign correct .m-file to function.
-    genvatfunctions=getappdata(gcf,'genvatfunctions');
-    ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
-
-
-    for side=1:2
-        M.stimparams(pt,side).U=uidata.U{side}(pt,1:options.elspec.numel);
-        M.stimparams(pt,side).Im=uidata.Im{side}(pt,1:options.elspec.numel);
-
-        M.stimparams(pt,side).usefiberset=get(handles.fiberspopup,'String');
-
-        if get(handles.fiberspopup,'Value')>length(get(handles.fiberspopup,'String'))
-            set(handles.fiberspopup,'Value',length(get(handles.fiberspopup,'String')));
-        end
-
-        M.stimparams(pt,side).usefiberset=M.stimparams(pt,side).usefiberset{get(handles.fiberspopup,'Value')};
-        M.stimparams(pt,side).labelatlas={options.labelatlas};
-        M.stimparams(pt,side).showfibers=1;
-        M.stimparams(pt,side).fiberthresh=1;
-
-        M.stimparams(pt,side).VAT.VAT=feval(ea_genvat,M.elstruct(pt).coords_mm,M.stimparams(pt,side),side,options);
-        M.stimparams(pt,side).showconnectivities=1;
-        M.elstruct(pt).activecontacts{side}=find(M.stimparams(pt,side).U);
-    end
-
-
-
-end
-setappdata(gcf,'M',M);
-refreshvifc(handles);
 
 
 % --- Executes on selection change in elmodelselect.
