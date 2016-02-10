@@ -6,7 +6,9 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
 % Andreas Horn
 
     set(0,'CurrentFigure',cuts)
-
+    try
+    set(cuts,'GraphicsSmoothing','on')
+    end
     % load/generate atlas_index.mat
     if ~isfield(options,'atlases') % atlases structure can be handed down directly within options struct.
     if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
@@ -137,12 +139,12 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                                 set(0,'CurrentFigure',cuts)
                                 if isempty(ix)
                                     warning('off')
-                                    plot(cscale(1,:),cscale(2,:),'color',options.d2.con_color,'LineSmoothing','on');
+                                    plot(cscale(1,:),cscale(2,:),'color',options.d2.con_color);
                                 warning('on')
                                 else
                                     startPoint=1;
                                     for plots=1:length(ix) % this happens if contour has an "inner hole"
-                                    plot(cscale(1,startPoint:ix(plots)),cscale(2,startPoint:ix(plots)),'color',options.d2.con_color,'LineSmoothing','on');  
+                                    plot(cscale(1,startPoint:ix(plots)),cscale(2,startPoint:ix(plots)),'color',options.d2.con_color);  
                                     startPoint=ix(plots)+1;
                                     end
                                 end

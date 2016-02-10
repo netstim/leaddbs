@@ -123,7 +123,18 @@ if togglestates.xyztoggles(1)
     usesag=(length(V)>2)*2; % check if explicit saggital volume is available
     if inverted
         [~,slice]=ea_writeplanes(options, togglestates.xyzmm(1),3,V{1+usesag},'off', 0,atlases);
-        slice=flipdim(permute(double(slice),[2,1,3]),2);
+        
+        if V{1}.mat(11)>0
+            slice=flip(permute(double(slice),[2,1,3]),2);
+        else
+            slice=permute(double(slice),[2,1,3]);
+        end
+        
+        if V{1}.mat(6)<0
+            slice=flip(slice,1);
+        end
+
+        
         %slice=flipdim(slice,1);
     else
         
@@ -170,7 +181,17 @@ if togglestates.xyztoggles(2)
     usecor=length(V)>1; % check if explicit coronar volume is available
     if inverted
         [~,slice]=ea_writeplanes(options, togglestates.xyzmm(2),2,V{1+usecor},'off', 0,atlases);
-        slice=flipdim(permute(double(slice),[2,1,3]),2);
+        
+        if V{1}.mat(6)>0
+            slice=flip(permute(double(slice),[2,1,3]),2);
+        else
+            slice=permute(double(slice),[2,1,3]);
+        end
+        
+        if V{1}.mat(11)<0
+            slice=flip(slice,1);
+        end
+        
     else
         [xx,yy,zz]=meshgrid(1:0.5:V{1+usecor}.dim(1),xyzv(2),1:0.5:V{1+usecor}.dim(3));
         slice=flipud(squeeze((spm_sample_vol(V{1+usecor},squeeze(xx),squeeze(yy),squeeze(zz),2))));
@@ -217,11 +238,16 @@ if togglestates.xyztoggles(3)
     
     if inverted
         [~,slice]=ea_writeplanes(options, togglestates.xyzmm(3),1,V{1},'off', 0,atlases);
-        if V{1}.mat(1)<0
+        if V{1}.mat(1)>0
         slice=flip(permute(double(slice),[2,1,3]),2);
         else
         slice=permute(double(slice),[2,1,3]);
         end
+        
+        if V{1}.mat(6)<0
+            slice=flip(slice,1);
+        end
+        
     else
         [xx,yy,zz]=meshgrid(1:0.2:V{1}.dim(1),1:0.2:V{1}.dim(2),xyzv(3));
         if V{1}.mat(1)<0

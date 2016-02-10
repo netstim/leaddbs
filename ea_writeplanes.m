@@ -132,7 +132,7 @@ else
     elstruct=[repmat(elstruct,3,1);1];
     coordsmm=elstruct;
     elstruct=manualV.mat\elstruct;
-    planedim=getdims(manualtracor);
+    planedim=getdims(manualtracor,1);
     elstruct=elstruct(planedim);
 end
 %XYZ_src_vx = src.mat \ XYZ_mm;
@@ -548,6 +548,7 @@ switch tracor
                 plusminusr='plus';
                 plusminusl='minus';
         end
+
 end
 
 
