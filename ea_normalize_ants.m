@@ -26,8 +26,9 @@ end
 
 % First, do the coreg part:
 options.prefs.mrcoreg.default='ants'; % hard code coreg using ants which will reslice images (SPM will not work since the SPM-version does not reslice here).
+try
 ea_coregmr(options,options.prefs.normalize.coreg);
-
+end
 
 
 directory=[options.root,options.patientname,filesep];
