@@ -1232,6 +1232,9 @@ function calculatebutton_Callback(hObject, eventdata, handles)
 % hObject    handle to calculatebutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+refreshvifc(handles);
+
 M=getappdata(gcf,'M');
 
 % set options
@@ -1341,7 +1344,8 @@ end
     try
         setappdata(resultfig,'S',M.S(pt));
     catch
-        ea_error('Please enter stimulation parameters for all patients first.');
+        keyboard
+        ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
     end
     vfnames=getappdata(handles.lg_figure,'vatfunctionnames');
     
@@ -1369,7 +1373,7 @@ end
     mod=mods{get(handles.fiberspopup,'Value')};
     parcs=get(handles.labelpopup,'String');
     selectedparc=parcs{get(handles.labelpopup,'Value')};
-    directory=[M.patient.list{pt},filesep];
+    directory=[options.root,options.patientname,filesep];
     switch mod
         case 'rest_tc'
             ea_error('Group statistics for fMRI are not yet supported. Sorry, check back later!');
