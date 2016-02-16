@@ -225,9 +225,12 @@ end
 
 
 %% add tools menu
+menuprobe=getappdata(handles.leadfigure,'menuprobe');
+if isempty(menuprobe)
 f = uimenu('Label','Tools');
     uimenu(f,'Label','Convert ACPC/MNI coordinates','Callback',{@ea_acpcquery,handles.leadfigure});
-
+setappdata(handles.leadfigure,'menuprobe',1);
+end
 
 ea_firstrun(handles);
 getui(handles);
