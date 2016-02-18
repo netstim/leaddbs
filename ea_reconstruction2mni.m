@@ -38,7 +38,7 @@ if ~isequal(V.dim,nii.dim)
 end
 end
 
-c=ea_map_coords(c(1:3,:), '', [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],...
-     [options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
+c=ea_map_coords(c(1:3,:), [options.root,options.patientname,filesep,options.prefs.prenii_unnormalized], [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],...
+     '');
 c=c';
  

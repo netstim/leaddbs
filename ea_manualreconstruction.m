@@ -106,6 +106,8 @@ function ea_endfcn
 % This subfunction terminates the process of manual correction and saves
 % results.
     disp('Saving results.');
+    
+    ea_busyaction('on',gcf,'reco');
 %markers=getappdata(gcf,'markers');
 %trajectory=getappdata(gcf,'trajectory');
 options=getappdata(gcf,'options');
@@ -114,6 +116,7 @@ options=getappdata(gcf,'options');
     [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
     options=rmfield(options,'hybridsave');
+ea_busyaction('off',gcf,'reco');
 
 close(gcf)
 
@@ -303,11 +306,15 @@ patientname=getappdata(mcfig,'patientname');
 %markers=getappdata(mcfig,'markers');
 
 if nargin==4
+        ea_busyaction('on',gcf,'reco');
+
     options.hybridsave=1;
     [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
     options=rmfield(options,'hybridsave');
     space=varargin{4};
+        ea_busyaction('del',gcf,'reco');
+
 else
     space=getappdata(mcfig,'space');
     if isempty(space)

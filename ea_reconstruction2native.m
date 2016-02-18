@@ -38,7 +38,7 @@ function c=ea_warpcoord(c,nii,options)
 c=[c,ones(size(c,1),1)]';
 % to template voxel space:
 c=nii(1).mat\c;
-c=ea_map_coords(c(1:3,:), '', [options.root,options.patientname,filesep,'y_ea_normparams.nii'],...
-     nii(1).fname);
+c=ea_map_coords(c(1:3,:), nii(1).fname, [options.root,options.patientname,filesep,'y_ea_normparams.nii'],...
+     '');
  c=c';
  

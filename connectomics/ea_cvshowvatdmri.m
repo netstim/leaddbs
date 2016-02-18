@@ -35,8 +35,11 @@ end
             seedfile{v}=[directory,'stimulations',filesep,vsname,filesep,'vat_',usevat{v},'.nii'];
         end
         for side=sides
+try
             load([directory,'stimulations',filesep,vsname,filesep,'stimparameters_',usevat{side},'.mat']);
-            
+catch
+    keyboard
+end
         end
         
         targetsfile=[options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii'];

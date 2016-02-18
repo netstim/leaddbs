@@ -110,7 +110,7 @@ end
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
             elrender{side}(cnt)=patch(electrode.contacts(con));
             
-            if options.d3.hlactivecontacts && ismember(con,elstruct.activecontacts{side}) % make active red contact without transparency
+            if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{side})) % make active red contact without transparency
                 specsurf(elrender{side}(cnt),[0.8,0.2,0.2],1); 
             else
                 specsurf(elrender{side}(cnt),elspec.contact_color,aData); 
@@ -162,11 +162,11 @@ end
         
         for cntct=1:elspec.numel-shifthalfup
             
-            if (options.d3.showactivecontacts && ismember(cntct,elstruct.activecontacts{side})) || (options.d3.showpassivecontacts && ~ismember(cntct,elstruct.activecontacts{side}))
-                if options.d3.hlactivecontacts && ismember(cntct,elstruct.activecontacts{side}) % make active red contact without transparency
+            if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,elstruct.activecontacts{side}))
+                if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
                     useedgecolor=[0.8,0.5,0.5];
                     ms=10;
-                elseif options.d3.hlactivecontacts && ~ismember(cntct,elstruct.activecontacts{side}) % make inactive grey and smaller contact without transparency
+                elseif options.d3.hlactivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})) % make inactive grey and smaller contact without transparency
                     useedgecolor='none';
                     ms=5;
                 else

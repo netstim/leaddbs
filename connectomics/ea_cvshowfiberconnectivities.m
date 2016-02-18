@@ -72,7 +72,7 @@ end
 
 %% load targets definition
 
-keyboard
+
 if ~changedstates(3)
     targets=getappdata(resultfig,'targets');
 else % load data

@@ -1618,7 +1618,8 @@ elstruct=getappdata(handles.stimfig,'elstruct');
 S=getappdata(handles.stimfig,'S');
 groupmode=getappdata(handles.stimfig,'groupmode');
 actpt=getappdata(handles.stimfig,'actpt');
-if isempty(actpt)
+
+if isempty(actpt) || length(actpt)>1
     actpt=1;
 end
 if groupmode
@@ -1628,6 +1629,9 @@ if groupmode
         lgfig=getappdata(handles.stimfig,'resultfig');
         M=getappdata(lgfig,'M');
         actpt=M.ui.listselect;
+        if length(actpt)>1
+            actpt=1;
+        end
     end
     
     elstruct=getappdata(handles.stimfig,'elstruct');
@@ -1917,7 +1921,11 @@ S.model=model;
 
 if ~isfield(options,'elspec');
 toptions=ea_resolve_elspec(elstruct(actpt));
+try
 options.elspec=toptions.elspec;
+catch
+    keyboard
+end
 end
 
 switch options.elspec.numel

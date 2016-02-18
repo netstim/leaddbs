@@ -30,6 +30,11 @@ if ischar(pos)
             pos=[sz(3)-50-10 sz(4)-10-50 50 50];
             onfigtit='LEAD-DBS Group Analysis (busy...)';
             offfigtit='LEAD-DBS Group Analysis';
+        case 'reco'
+            sz=get(fighandle,'Position');
+            pos=[sz(3)-50-2 sz(4)-50-2 50 50];
+            onfigtit='Manual reconstruction (busy...)';
+            offfigtit='Manual reconstruction';
     end
 end
 
@@ -83,6 +88,25 @@ switch onoff
         spinner.setBusyText('Idle');
         %spinner.getComponent.setVisible(false);
         
-        % change mouswheel, too:
+        % change mousewheel, too:
+        set(fighandle, 'pointer', 'arrow');
+    case 'del'
+        
+        if ~exist('offfigtit','var')
+            figtit=get(fighandle,'Name');
+            set(fighandle,'name',figtit(1:end-10));
+        else
+            set(fighandle,'name',offfigtit);
+        end
+        
+        spinner=getappdata(fighandle,'spinner');
+        spinner.stop;
+        spinner.setBusyText('Idle');
+        spinner.getComponent.setBackground(java.awt.Color(0,0,0));
+        [hjObj, hContainer] = javacomponent(spinner.getComponent, pos, fighandle);
+        delete(hContainer);
+        spinner.getComponent.setVisible(false)
+        
+        % change mousewheel, too:
         set(fighandle, 'pointer', 'arrow');
 end

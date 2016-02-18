@@ -68,7 +68,7 @@ setappdata(hObject,'resultfig',resultfig);
 setappdata(hObject,'options',options);
 togglestates=getappdata(resultfig,'togglestates'); % get info from resultfig.
 setappdata(hObject,'togglestates',togglestates); % store anatomy toggle data from resultfig to anatomyslice (this) fig for subroutines.
-set(hObject,'Visible',options.d3.verbose);
+set(handles.acontrolfig,'Visible',options.d3.verbose);
 
 try
 if options.native
@@ -130,6 +130,7 @@ end
 pos=get(hObject,'position');
 set(hObject,'position',[0,0,pos(3),pos(4)]);
 refreshresultfig(handles)
+
 
 
 
@@ -352,12 +353,14 @@ refreshresultfig(handles)
 
 function refreshresultfig(handles)
 % this part makes changes of the figure active:
-resultfig=getappdata(gcf,'resultfig');
+
+
+resultfig=getappdata(handles.acontrolfig,'resultfig');
 try
 togglestates=getappdata(resultfig,'togglestates');
 catch
     resultfig=gcf;
-togglestates=getappdata(gcf,'togglestates');
+togglestates=getappdata(handles.acontrolfig,'togglestates');
 end
 if ~isfield(togglestates,'refreshcuts')
     togglestates.refreshcuts=0;
@@ -371,11 +374,11 @@ togglestates.template=get(handles.templatepopup,'String');
 togglestates.template=togglestates.template{get(handles.templatepopup,'Value')};
 togglestates.tinvert=get(handles.invertcheck,'Value');
 togglestates.customfile=getappdata(gcf,'customfile');
-setappdata(getappdata(gcf,'resultfig'),'togglestates',togglestates); % also store toggle data in resultfig.
+setappdata(getappdata(handles.acontrolfig,'resultfig'),'togglestates',togglestates); % also store toggle data in resultfig.
 
-ea_anatomyslices(getappdata(gcf,'resultfig'),...
+ea_anatomyslices(getappdata(handles.acontrolfig,'resultfig'),...
     togglestates,...
-    getappdata(gcf,'options'));
+    getappdata(handles.acontrolfig,'options'));
 
 switch togglestates.cutview
     case 'xcut'

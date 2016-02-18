@@ -64,7 +64,7 @@ if ~isempty(xfrm)
             else
                 useinverse=0;
             end
-            V=spm_vol(src);
+            V=spm_vol(trg);
             
             %XYZ_vxLPS=[V.dim(1)-XYZ_vx(1,:);V.dim(2)-XYZ_vx(2,:);XYZ_vx(3,:);ones(1,size(XYZ_vx,2))];
             

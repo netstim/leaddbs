@@ -9,6 +9,19 @@ if strcmp(options.prefs.mrcoreg.default,'ants')
    return 
 end
 
+
+
+if exist([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],'file')
+    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
+end
+if exist([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],'file')
+    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
+end
+if exist([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],'file')
+    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized]);
+end
+
+
 costfuns={'nmi','mi','ecc','ncc'};
 
 

@@ -73,6 +73,7 @@ if nargin>1
 else
     multiplemode=0;
     
+
     [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 
     elstruct(1).coords_mm=coords_mm;

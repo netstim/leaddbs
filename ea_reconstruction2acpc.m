@@ -11,6 +11,7 @@ try
             cfg.zmm=reco.native.coords_mm{side}(c,3);
             cfg.acmcpc=1; % map to AC
             fid=ea_native2acpc(cfg,{directory});
+            
             reco.acpc.coords_mm{side}(c,:)=fid.WarpedPointACPC;
         end
     end

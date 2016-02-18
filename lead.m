@@ -260,7 +260,7 @@ function run_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 %% run trajectory reconstruction.
-leadfig=gcf;
+leadfig=handles.leadfigure;
 ea_busyaction('on',leadfig,'lead');
 
 options=handles2options(handles);

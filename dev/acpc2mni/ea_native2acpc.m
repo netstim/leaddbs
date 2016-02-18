@@ -49,7 +49,8 @@ for pt=1:length(uidir)
     
     % warp into patient space:
     
-    [fpinsub_mm] = ea_map_coords(fidpoints_vox', '', [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized]);
+    [fpinsub_mm] = ea_map_coords(fidpoints_vox', tempfile, [directory,'y_ea_normparams.nii'], '');
+    V=spm_vol([directory,options.prefs.prenii_unnormalized]);
     fpinsub_mm=fpinsub_mm';
     
     
@@ -61,6 +62,7 @@ for pt=1:length(uidir)
     A=fpinsub_mm(3,:)-fpinsub_mm(1,:);
     B=fpinsub_mm(2,:)-fpinsub_mm(1,:);
     xvec=cross(A,B); %normal to given plane
+    
     xvec=xvec/norm(xvec);
     % y-dimension (just move from ac to pc and scale by y dimension):
     yvec=(fpinsub_mm(2,:)-fpinsub_mm(1,:));
