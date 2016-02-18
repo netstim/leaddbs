@@ -7,9 +7,13 @@ if nargin < 1
 end
 
 if ismac
-    setenv('DYLD_LIBRARY_PATH',[libpath,':',getenv('DYLD_LIBRARY_PATH')]);
+    envname = 'DYLD_LIBRARY_PATH';
 elseif isunix
-    setenv('LD_LIBRARY_PATH',[libpath,':',getenv('LD_LIBRARY_PATH')]);
+    envname = 'LD_LIBRARY_PATH';
 elseif ispc
-    setenv('PATH', [libpath, ';', getenv('PATH')]);
+    envname = 'PATH';
+end
+
+if isempty(strfind(getenv(envname),libpath))
+    setenv(envname, [libpath, ';', getenv(envname)]);
 end
