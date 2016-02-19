@@ -1,5 +1,6 @@
 function modlist=ea_genmodlist(directory,selectedparc,options)
 cnt=1;
+
 % check if pat-specific fibertracts are present:
 if exist([directory,options.prefs.FTR_normalized],'file');
     modlist{cnt}='Patient-specific fiber tracts';

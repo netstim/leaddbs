@@ -708,6 +708,7 @@ options.earoot=[fileparts(which('lead')),filesep];
 try
     directory=[M.patient.list{1},filesep];
     modlist=ea_genmodlist(directory,thisparc,options);
+    modlist{end+1}='Do not calculate connectivity stats';
     set(handles.fiberspopup,'String',modlist);
     if get(handles.fiberspopup,'Value')>length(modlist);
         set(handles.fiberspopup,'Value',1);
@@ -1241,9 +1242,9 @@ M=getappdata(gcf,'M');
 options=ea_setopts_local(handles);
 stimname=ea_detstimname();
 for pt=1:length(M.patient.list)
-
+    
     % set pt specific options
-
+    
     % own fileparts to support windows/mac/linux slashes even if they come
     % from a different OS.
     if isempty(strfind(M.patient.list{pt},'/'))
@@ -1251,36 +1252,36 @@ for pt=1:length(M.patient.list)
     else
         lookfor='/';
     end
-
+    
     slashes=strfind(M.patient.list{pt},lookfor);
     if ~isempty(slashes)
         options.patientname=M.patient.list{pt}(slashes(end)+1:end);
         options.root=M.patient.list{pt}(1:slashes(end));
-
+        
     else
         options.patientname=M.patient.list{pt};
         options.root='';
     end
-
+    
     disp(['Processing ',options.patientname,'.']);
     options.numcontacts=size(M.elstruct(pt).coords_mm{1},1);
     options.elmodel=M.elstruct(pt).elmodel;
     options=ea_resolve_elspec(options);
     options.prefs=ea_prefs(options.patientname);
     options.d3.verbose='off';
-
-options.native=0;
-
-
+    
+    options.native=0;
+    
+    
     options.d3.elrendering=M.ui.elrendering;
     options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
     options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
     options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
     try options.d3.isomatrix=M.isomatrix; end
-
+    
     options.d3.isovscloud=M.ui.isovscloudpopup;
     options.d3.showisovolume=M.ui.showisovolumecheck;
-
+    
     options.expstatvat.do=0;
     try
         options.expstatvat.vars=M.clinical.vars(M.ui.clinicallist);
@@ -1295,7 +1296,7 @@ options.native=0;
             mkdir([M.ui.groupdir,'tmp']);
             options.root=M.ui.groupdir;
             options.patientname='tmp';
-
+            
             ea_stats=M.stats(pt).ea_stats;
             coords_mm=M.elstruct(pt).coords_mm;
             trajectory=M.elstruct(pt).trajectory;
@@ -1311,7 +1312,7 @@ options.native=0;
             mkdir([M.ui.groupdir,'tmp']);
             options.root=M.ui.groupdir;
             options.patientname='tmp';
-
+            
             ea_stats=M.stats(pt).ea_stats;
             coords_mm=M.elstruct.coords_mm;
             trajectory=M.elstruct.trajectory;
@@ -1319,92 +1320,93 @@ options.native=0;
             save([M.ui.groupdir,'tmp',filesep,'ea_reconstruction'],'coords_mm','trajectory');
         end
     end
-
+    
     delete([options.root,options.patientname,filesep,'ea_stats.mat']);
-
+    
     % Step 1: Re-calculate closeness to subcortical atlases.
     
     resultfig=ea_elvis(options);
     % save scene as matlab figure
-
-
-options.modality=ea_checkctmrpresent(M.patient.list{pt});
-if options.modality(1) % prefer MR
-    options.modality=1;
-else
-    if options.modality(2)
-        options.modality=2;
-    else
+    
+    
+    options.modality=ea_checkctmrpresent(M.patient.list{pt});
+    if options.modality(1) % prefer MR
         options.modality=1;
-        warning(['No MR or CT volumes found in ',M.patient.list{pt},'.']);
+    else
+        if options.modality(2)
+            options.modality=2;
+        else
+            options.modality=1;
+            warning(['No MR or CT volumes found in ',M.patient.list{pt},'.']);
+        end
     end
-end
-
-    % Step 2: Re-calculate Fibertracts / VAT
-    try
-        setappdata(resultfig,'S',M.S(pt));
-    catch
-        keyboard
-        ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
-    end
-    vfnames=getappdata(handles.lg_figure,'vatfunctionnames');
-    
-    [~,ix]=ismember(M.vatmodel,vfnames);
-    vfs=getappdata(handles.lg_figure,'genvatfunctions');
-    
-    ea_genvat=eval(['@',vfs{ix}]);
-
-    for side=1:2
-        setappdata(resultfig,'elstruct',M.elstruct(pt));
-        setappdata(resultfig,'elspec',options.elspec);
-        
-        [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,stimname);
-        stimparams(1,side).volume=volume;
-    end
-    
-    setappdata(resultfig,'stimparams',stimparams(1,:));
-
-    
-    % Convis part:
     
     
     % determine if fMRI or dMRI
     mods=get(handles.fiberspopup,'String');
     mod=mods{get(handles.fiberspopup,'Value')};
-    parcs=get(handles.labelpopup,'String');
-    selectedparc=parcs{get(handles.labelpopup,'Value')};
-    directory=[options.root,options.patientname,filesep];
-    switch mod
-        case 'rest_tc'
-            ea_error('Group statistics for fMRI are not yet supported. Sorry, check back later!');
-            pV=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
-            pX=spm_read_vols(pV);
-            ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
-        otherwise
-            ea_cvshowvatdmri(resultfig,directory,{mod,stimname},selectedparc,options);
+    
+    if ~strcmp(mod,'Do not calculate connectivity stats')
+        
+        % Step 2: Re-calculate Fibertracts / VAT
+        try
+            setappdata(resultfig,'S',M.S(pt));
+        catch
+            keyboard
+            ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
+        end
+        vfnames=getappdata(handles.lg_figure,'vatfunctionnames');
+        
+        [~,ix]=ismember(M.vatmodel,vfnames);
+        vfs=getappdata(handles.lg_figure,'genvatfunctions');
+        
+        ea_genvat=eval(['@',vfs{ix}]);
+        
+        for side=1:2
+            setappdata(resultfig,'elstruct',M.elstruct(pt));
+            setappdata(resultfig,'elspec',options.elspec);
+            
+            [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,stimname);
+            stimparams(1,side).volume=volume;
+        end
+        
+        setappdata(resultfig,'stimparams',stimparams(1,:));
+        
+        
+        % Convis part:
+        
+        
+        
+        
+        parcs=get(handles.labelpopup,'String');
+        selectedparc=parcs{get(handles.labelpopup,'Value')};
+        directory=[options.root,options.patientname,filesep];
+        switch mod
+            case 'rest_tc'
+                ea_error('Group statistics for fMRI are not yet supported. Sorry, check back later!');
+                pV=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+                pX=spm_read_vols(pV);
+                ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
+            otherwise
+                ea_cvshowvatdmri(resultfig,directory,{mod,stimname},selectedparc,options);
+        end
     end
-    
-    
-    
-    
-    
-
     close(resultfig);
-
+    
     if processlocal % gather stats and recos to M
         load([M.ui.groupdir,'tmp',filesep,'ea_stats']);
         load([M.ui.groupdir,'tmp',filesep,'ea_reconstruction']);
-
+        
         M.stats(pt).ea_stats=ea_stats;
         M.elstruct(pt).coords_mm=coords_mm;
         M.elstruct(pt).trajectory=trajectory;
         setappdata(gcf,'M',M);
-
+        
         save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M','-v7.3');
         try      movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']); end
         rmdir([M.ui.groupdir,'tmp'],'s');
-
-
+        
+        
     end
 end
 %% processing done here.
