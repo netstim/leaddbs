@@ -117,7 +117,6 @@ options=getappdata(gcf,'options');
     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
     options=rmfield(options,'hybridsave');
 ea_busyaction('off',gcf,'reco');
-
 close(gcf)
 
 % save results

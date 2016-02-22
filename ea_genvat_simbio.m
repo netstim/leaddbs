@@ -237,7 +237,7 @@ if ea_headmodel_changed(options,side,elstruct)
     end
     %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
      
-    vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.0915 0.059 1/(10^(-8)) 1/(10^16)]);
+    vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
 
  
     
@@ -344,13 +344,13 @@ gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient fr
     vat.pos=midpts;
     
     ngrad=sqrt(sum(gradient'.^2,1));
-    vat.ET=vol.cond(vol.tissue).*ngrad;
+    vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.
     
     
     
     
     disp('Done. Calculating VAT...');
-    thresh=0.002; %0.0064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons
+    thresh=0.2; %0.0064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons
     
     vat.ET=vat.ET>thresh;
     vat.pos=vat.pos(vat.ET,:);
@@ -458,7 +458,7 @@ function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol)
 if constvol
     if unipolar
         dirinodes = ea_get_surf_nodes(vol.hex);
-        dirinodes = [dirinodes, elec];
+        dirinodes = [dirinodes, elec'];
     else
         dirinodes = elec;
     end

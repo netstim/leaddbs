@@ -57,9 +57,9 @@ function addroi(addobj,resultfig,addht,fina,options)
 
 
 nii=load_nii_proxy(addobj,options);
-nii.img=round(nii.img);
+%nii.img=round(nii.img);
 
-[xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); % find 3D-points that have correct value.
+[xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); %(mean(nii.img(nii.img~=0))/3))); % find 3D-points that have correct value.
 
 
 if ~isempty(xx)
@@ -109,7 +109,7 @@ end
 
 % set cdata
 
-atlasc=rand*64;
+atlasc=59; %rand*64;
 jetlist=jet;
 
 cdat=abs(repmat(atlasc,length(fv.vertices),1) ... % C-Data for surface

@@ -332,6 +332,10 @@ if options.expstatvat.do % export to nifti volume
     ea_exportvatmapping(M,options,handles);
 end
 
+% overwrite active contacts information with new one from S.
+for pt=1:length(M.elstruct)
+M.elstruct(pt).activecontacts=M.S(pt).activecontacts;
+end
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 
 ea_busyaction('off',handles.lg_figure,'group');
@@ -736,13 +740,15 @@ S=getappdata(handles.lg_figure,'S');
 if ~isempty(S)
     set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
     M.S=S;
+    M.S=ea_activecontacts(M.S);
+    
     M.vatmodel=getappdata(handles.lg_figure,'vatmodel');
 else
     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 end
 
 
-% make chooscolors button green if chosen.
+% make choosecolors button green if chosen.
 if isfield(M.groups,'colorschosen')
     set(handles.choosegroupcolors,'BackgroundColor',[0.1;0.8;0.1]);
 else
@@ -792,32 +798,32 @@ if ~isempty(M.patient.list)
     for pt=1:length(M.patient.list)
         % set stimparams based on values provided by user
         for side=1:2
-
+            
             M.stimparams(pt,side).usefiberset=get(handles.fiberspopup,'String');
-try
-            M.stimparams(pt,side).usefiberset=M.stimparams(pt,side).usefiberset{M.ui.fiberspopup};
-catch
+            try
+                M.stimparams(pt,side).usefiberset=M.stimparams(pt,side).usefiberset{M.ui.fiberspopup};
+            catch
                 M.stimparams(pt,side).usefiberset=length(get(handles.fiberspopup,'String'));
                 M.ui.fiberspopup=length(get(handles.fiberspopup,'String'));
-end
+            end
             M.stimparams(pt,side).labelatlas=get(handles.labelpopup,'String');
             M.stimparams(pt,side).labelatlas=M.stimparams(pt,side).labelatlas(M.ui.labelpopup);
             M.stimparams(pt,side).showfibers=1;
             M.stimparams(pt,side).fiberthresh=1;
-
+            
             M.stimparams(pt,side).showconnectivities=1;
         end
         % load localization
-
+        
         [~,pats{pt}]=fileparts(M.patient.list{pt});
-
+        
         M.elstruct(pt).group=M.patient.group(pt);
         M.elstruct(pt).groupcolors=M.groups.color;
         M.elstruct(pt).groups=M.groups.group;
-
+        
         try
-
-        [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+            
+            [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
             if M.ui.elmodelselect==1 % use patient specific elmodel
                 if exist('elmodel','var')
                     M.elstruct(pt).elmodel=elmodel;
@@ -827,13 +833,13 @@ end
             else
                 elmodels=get(handles.elmodelselect,'String');
                 M.elstruct(pt).elmodel=elmodels{get(handles.elmodelselect,'Value')};
-
+                
             end
             M.elstruct(pt).coords_mm=coords_mm;
             M.elstruct(pt).trajectory=trajectory;
             M.elstruct(pt).name=[pats{pt}];
             if ~exist('markers','var') % backward compatibility to old recon format
-
+                
                 for side=1:2
                     markers(side).head=coords_mm{side}(1,:);
                     markers(side).tail=coords_mm{side}(4,:);
@@ -844,67 +850,77 @@ end
                 end
             end
             M.elstruct(pt).markers=markers;
-
+            
         catch
             %warning('No reconstruction present in folder. Using information stored in group-file.');
         end
-
+        
     end
-
-
-
+    
+    
+    
     % load stats for group
-
+    
     for pt=1:length(M.patient.list)
-
-
+        
+        
         % (re-)load stats
         try
             load([M.patient.list{pt},filesep,'ea_stats']);
             M.stats(pt).ea_stats=ea_stats;
         end
-
+        
         if ~isfield(M,'stats')
             % if no stats  present yet, return.
             setappdata(handles.lg_figure,'M',M);
             set(handles.lg_figure,'name','LEAD-DBS Group Analysis');
             break
         end
-
+        
         priorvilist=M.vilist;
-        try
-            M.vilist=M.stats(pt).ea_stats.atlases.names;
+        try % try using stats from patient folder.
+            M.vilist=ea_stats.atlases.names;
+        catch
+            try % try using stats from M-file.
+                M.vilist=M.stats(pt).ea_stats.atlases.names;
+            catch
+                M.vilist={};
+            end
         end
         % check and compare with prior atlas intersection list.
-
+        
         if ~isempty(priorvilist) && ~isequal(priorvilist,M.vilist)
-
+            
             warning('Patient stats are inhomogeneous. Please re-run group analysis (Section Prepare DBS stats).');
         end
-
-
-
-
-        try
-            priorfclist=M.fclist;
+        
+        
+        
+        priorfclist=M.fclist;
+        try % try using stats from patient folder.
             M.fclist=ea_stats.stimulation(1).ft(1).labels{1};
             fcdone=1;
         catch
-            fcdone=0;
-
+            try % try using stats from M-file.
+                M.fclist=M.stats(pt).ea_stats.stimulation(1).ft(1).labels{1};
+                fcdone=1;
+            catch
+                M.fclist={};
+                fcdone=0;
+            end
         end
-
+        
         % check and compare with prior fibertracking list.
-
+        
         if fcdone
-
+            
             if ~isempty(priorfclist) && ~isequal(priorfclist,M.fclist)
                 warning('Trying to analyse inhomogeneous patient group. Please re-run single subject lead analysis with patients using always the same labeling atlas.');
             end
-
+            
         end
     end
-
+    
     try
         setappdata(handles.lg_figure,'elstruct',elstruct);
     end
@@ -1984,6 +2000,7 @@ function targetreport_Callback(hObject, eventdata, handles)
 % hObject    handle to targetreport (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+refreshvifc(handles);
 M=getappdata(gcf,'M');
 ea_gentargetreport(M);
 

@@ -5,7 +5,7 @@ cnt=0;
 while 1
     whichnormmethod=norm_method_applied{end-cnt};
     switch whichnormmethod
-        case 'ea_normalize_apply_normalization'
+        case {'ea_normalize_apply_normalization','ea_normalize_reslicepretra'}
             cnt=cnt+1;
         otherwise
             break
