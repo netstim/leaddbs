@@ -12,13 +12,13 @@ end
 
 
 if exist([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],'file')
-    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
+    movefile([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
 end
 if exist([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],'file')
-    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
+    movefile([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
 end
 if exist([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],'file')
-    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized]);
+    movefile([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized]);
 end
 
 
@@ -164,4 +164,9 @@ if ~exist('finas','var')
 end
 finas=[finas,{[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']}];
 
+% Check it ants has been used. If so, need to run ants coreg as well.
+whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
+if strcmp(whichnormmethod,'ea_normalize_ants')
+   ea_coregmr_ants(options); % additionally perform ANTs based coregistration. 
+end
 
