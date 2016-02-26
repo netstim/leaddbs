@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 26-Jan-2016 17:44:44
+% Last Modified by GUIDE v2.5 26-Feb-2016 10:54:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1633,6 +1633,8 @@ elseif ispc
     system(['explorer ', outfolder]);
 end
 
+cd(outfolder);
+
 % --- Executes on button press in viewmanual.
 function viewmanual_Callback(hObject, eventdata, handles)
 % hObject    handle to viewmanual (see GCBO)
@@ -1690,3 +1692,27 @@ function vizspacepopup_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in openpatientdir.
+function openpatientdir_Callback(hObject, eventdata, handles)
+% hObject    handle to openpatientdir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+outfolder=get(handles.patdir_choosebox,'String');
+
+if strcmp(outfolder,'No Patient Selected')
+    msgbox('Please set the working directory first!', 'Error','error');
+    return;
+end
+
+if ismac
+    system(['open ', outfolder]);
+elseif isunix
+    system(['xdg-open ', outfolder]);
+elseif ispc
+    system(['explorer ', outfolder]);
+end
+
+cd(outfolder);
