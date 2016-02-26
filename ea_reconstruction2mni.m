@@ -32,10 +32,13 @@ c=[c,ones(size(c,1),1)]';
 % to template voxel space:
 c=nii(1).mat\c;
 try
-V=spm_vol([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']);
-if ~isequal(V.dim,nii.dim)
-   ea_redo_inv([options.root,options.patientname,filesep],options); 
-end
+    [whichnormmethod]=ea_whichnormmethod([options.root,options.patientname,filesep]);
+    if ~strcmp(whichnormmethod,'ea_normalize_ants');
+    V=spm_vol([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']);
+    if ~isequal(V.dim,nii.dim)
+        ea_redo_inv([options.root,options.patientname,filesep],options);
+    end
+    end
 end
 
 c=ea_map_coords(c(1:3,:), [options.root,options.patientname,filesep,options.prefs.prenii_unnormalized], [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'],...
