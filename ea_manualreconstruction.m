@@ -30,9 +30,11 @@ setappdata(mcfig,'patientname',patientname);
 
 %setappdata(mcfig,'trajectory',trajectory);
 
-setappdata(mcfig,'options',options);
+setappdata(mcfig,'origoptions',options); % store original options for further processing.
 
 options.native=1;
+setappdata(mcfig,'options',options);
+
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 setappdata(mcfig,'origtrajectory',trajectory);
 
@@ -102,22 +104,22 @@ setappdata(mcfig,'markers',markers);
 
 
 
-function ea_endfcn
+function ea_endfcn(mcfig)
 % This subfunction terminates the process of manual correction and saves
 % results.
     disp('Saving results.');
     
-    ea_busyaction('on',gcf,'reco');
+    ea_busyaction('on',mcfig,'reco');
 %markers=getappdata(gcf,'markers');
 %trajectory=getappdata(gcf,'trajectory');
-options=getappdata(gcf,'options');
+options=getappdata(mcfig,'origoptions');
 
     options.hybridsave=1;
     [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
     options=rmfield(options,'hybridsave');
-ea_busyaction('off',gcf,'reco');
-close(gcf)
+ea_busyaction('off',mcfig,'reco');
+close(mcfig)
 
 % save results
 
@@ -141,6 +143,7 @@ ea_write(options);
 
 
 
+
 function ea_keystr(mcfig,event)
 %    pause
 %commnd=get (gcf, 'CurrentKey');
@@ -160,7 +163,7 @@ commnd=event.Character;
 switch lower(commnd)
     case ' '
         %markers=getappdata(mcfig,'markers');
-        ea_endfcn;
+        ea_endfcn(mcfig);
         return
     case {'x','a','p','y','l','r'} % view angles.
         %markers=getappdata(mcfig,'markers');
