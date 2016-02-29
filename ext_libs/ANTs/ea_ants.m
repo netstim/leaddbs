@@ -1,5 +1,14 @@
-function ea_ants(fixedimage, movingimage, outputimage)
+function ea_ants(varargin)
 % Wrapper for ANTs linear registration
+
+fixedimage=varargin{1};
+movingimage=varargin{2};
+outputimage=varargin{3};
+if nargin>3
+    writematout=varargin{4};
+else
+    writematout=1;
+end
 
 if fileparts(movingimage)
     volumedir = [fileparts(movingimage), filesep];
@@ -131,5 +140,11 @@ if ~ispc
 else
     system(cmd);
 end
-
 movefile([outputbase, '0GenericAffine.mat'], [volumedir, 'ct2anat',num2str(runs+1),'.mat']);
+
+
+if ~writematout
+    delete([outputbase, '0GenericAffine.mat']);
+else
+    movefile([outputbase, '0GenericAffine.mat'], [volumedir, 'ct2anat',num2str(runs+1),'.mat']);
+end

@@ -29,7 +29,6 @@ if ~length(uidir)
 ea_error('Please choose and normalize patients first.');
 end
 
-disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
 %ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
     
@@ -38,9 +37,7 @@ for pt=1:length(uidir)
  %   ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
     [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
-%     if strcmp(whichnormmethod,'ea_normalize_ants')
-%             ea_error('ANTs normalization is not supported for ACPC2MNI conversion as of now.');
-%     end
+
     
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile);
     

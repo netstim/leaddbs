@@ -57,7 +57,7 @@ if ~isempty(xfrm)
         % check if ANTs has been used here:
         directory=fileparts(xfrm);
         [whichnormmethod,reft]=ea_whichnormmethod([directory,filesep]);
-        if strcmp(whichnormmethod,'ea_normalize_ants')
+        if strcmp(whichnormmethod,'ea_normalize_ants') || strcmp(whichnormmethod,'ea_normalize_ants_brainsfit')
             [~,fn]=fileparts(xfrm);
             if ~isempty(strfind(fn,'inv'))
                 useinverse=1;

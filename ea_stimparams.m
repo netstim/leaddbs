@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 08-Feb-2016 12:30:55
+% Last Modified by GUIDE v2.5 27-Feb-2016 08:13:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1735,9 +1735,10 @@ setappdata(handles.stimfig,'S',S);
 
 % set stim amplitudes
 for source=1:4
-    
-    S.amplitude{1}(source)=num2str(eval(['S.Rs',num2str(source),'.amp']));
-    set(eval(['handles.Rs',num2str(source),'am']),'String',S.amplitude{1}(source));
+
+    S.amplitude{1}(source)=S.(['Rs',num2str(source)]).amp;
+
+    set(eval(['handles.Rs',num2str(source),'am']),'String',num2str(S.amplitude{1}(source)));
     set(eval(['handles.Rs',num2str(source),'va']),'Value',eval(['S.Rs',num2str(source),'.va']));
 
 
@@ -1765,8 +1766,9 @@ for source=1:4
 
 end
 for source=1:4
-    S.amplitude{2}(source)=num2str(eval(['S.Ls',num2str(source),'.amp']));
-    set(eval(['handles.Ls',num2str(source),'am']),'String',S.amplitude{2}(source));
+        S.amplitude{2}(source)=S.(['Ls',num2str(source)]).amp;
+
+    set(eval(['handles.Ls',num2str(source),'am']),'String',num2str(S.amplitude{2}(source)));
     set(eval(['handles.Ls',num2str(source),'va']),'Value',eval(['S.Ls',num2str(source),'.va']));
     
  %   if eval(['S.Ls',num2str(source),'.amp']); % check if a valid +/- combination is active, if not set defaults.
@@ -2643,3 +2645,243 @@ setappdata(lgfig,'S',gS);
 setappdata(lgfig,'vatmodel',gSv.vatmodel);
 
 close(handles.stimfig);
+
+
+% --- Executes on key press with focus on Rs2am and none of its controls.
+function Rs2am_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to Rs2am (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=2;
+S.Rs2.amp=str2double(get(hObject,'String'));
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- Executes on key press with focus on Rs1am and none of its controls.
+function Rs1am_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to Rs1am (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.Rs1.amp=str2double(get(hObject,'String'));
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- Executes on key press with focus on Rs3am and none of its controls.
+function Rs3am_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to Rs3am (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=3;
+S.Rs3.amp=str2double(get(hObject,'String'));
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- Executes on key press with focus on Rs4am and none of its controls.
+function Rs4am_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to Rs4am (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=4;
+S.Rs4.amp=str2double(get(hObject,'String'));
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- Executes on key press with focus on Ls1am and none of its controls.
+function Ls1am_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to Ls1am (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=1;
+S.Ls1.amp=str2double(get(hObject,'String'));
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- Executes on key press with focus on Ls2am and none of its controls.
+function Ls2am_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to Ls2am (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=2;
+S.Ls2.amp=str2double(get(hObject,'String'));
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- Executes on key press with focus on Ls3am and none of its controls.
+function Ls3am_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to Ls3am (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=3;
+S.Ls3.amp=str2double(get(hObject,'String'));
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- Executes on key press with focus on Ls4am and none of its controls.
+function Ls4am_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to Ls4am (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=4;
+S.Ls4.amp=str2double(get(hObject,'String'));
+
+
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over Rs1am.
+function Rs1am_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to Rs1am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.Rs1.amp=str2double(get(hObject,'String'));
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over Rs2am.
+function Rs2am_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to Rs2am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=2;
+S.Rs1.amp=str2double(get(hObject,'String'));
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over Rs3am.
+function Rs3am_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to Rs3am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=3;
+S.Rs3.amp=str2double(get(hObject,'String'));
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over Rs4am.
+function Rs4am_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to Rs4am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(1)=4;
+S.Rs4.amp=str2double(get(hObject,'String'));
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over Ls1am.
+function Ls1am_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to Ls1am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=1;
+S.Ls1.amp=str2double(get(hObject,'String'));
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over Ls2am.
+function Ls2am_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to Ls2am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=2;
+S.Ls2.amp=str2double(get(hObject,'String'));
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over Ls3am.
+function Ls3am_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to Ls3am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=3;
+S.Ls3.amp=str2double(get(hObject,'String'));
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over Ls4am.
+function Ls4am_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to Ls4am (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S.active(2)=4;
+S.Ls4.amp=str2double(get(hObject,'String'));
+setappdata(handles.stimfig,'S',S);
+ea_refreshguisp(handles,options);

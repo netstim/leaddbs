@@ -1,6 +1,14 @@
-function ea_brainsfit(fixedVolume, movingVolume, outputVolume)
+function ea_brainsfit(varargin)
 % Wrapper for BRAINSFit
 
+fixedVolume=varargin{1};
+movingVolume=varargin{2};
+outputVolume=varargin{3};
+if nargin>3
+    writematout=varargin{4};
+else
+    writematout=1;
+end
 if fileparts(movingVolume)
     volumedir = [fileparts(movingVolume), filesep];
 else
@@ -69,4 +77,8 @@ for trial = 1:4
         fprintf(['\nBRAINSFit with parameter set ', num2str(trial), '\n']);
         break
     end
+end
+
+if ~writematout
+    delete([volumedir, 'ct2anat.txt']);
 end

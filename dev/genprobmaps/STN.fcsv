@@ -1,0 +1,23 @@
+# Markups fiducial file version = 4.5
+# CoordinateSystem = 0
+# columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID
+vtkMRMLMarkupsFiducialNode_0,12.65,-12.5509,-5.64,0,0,0,1,1,1,0,STN-1,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_1,-12.6977,-13.0104,-5.64,0,0,0,1,1,1,0,STN-2,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_2,-11.6256,-12.0149,-6.3,0,0,0,1,1,1,0,STN-3,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_3,11.6545,-11.7086,-6.3,0,0,0,1,1,1,0,STN-4,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_4,13.0329,-13.6996,-6.3,0,0,0,1,1,1,0,STN-5,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_5,-13.1571,-14.2357,-6.3,0,0,0,1,1,1,0,STN-6,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_6,-10.7066,-11.632,-7.18,0,0,0,1,1,1,0,STN-7,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_7,-12.6211,-14.6186,-7.18,0,0,0,1,1,1,0,STN-8,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_8,10.5824,-11.0959,-7.18,0,0,0,1,1,1,0,STN-9,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_9,12.65,-14.1591,-7.18,0,0,0,1,1,1,0,STN-10,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_10,9.81662,-10.7896,-8.06,0,0,0,1,1,1,0,STN-11,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_11,12.2672,-14.7717,-8.06,0,0,0,1,1,1,0,STN-12,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_12,-9.94082,-11.4022,-8.06,0,0,0,1,1,1,0,STN-13,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_13,-12.7743,-15.3844,-8.06,0,0,0,1,1,1,0,STN-14,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_14,9.20398,-10.4067,-8.94,0,0,0,1,1,1,0,STN-15,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_15,11.0419,-13.3167,-8.94,0,0,0,1,1,1,0,STN-16,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_16,-9.25161,-10.8662,-8.94,0,0,0,1,1,1,0,STN-17,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_17,-11.1661,-13.8528,-8.94,0,0,0,1,1,1,0,STN-18,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_18,8.89767,-10.4833,-9.82,0,0,0,1,1,1,0,STN-19,,vtkMRMLScalarVolumeNode1
+vtkMRMLMarkupsFiducialNode_19,-9.32819,-11.2491,-9.82,0,0,0,1,1,1,0,STN-20,,vtkMRMLScalarVolumeNode1

@@ -21,8 +21,6 @@ leaddir=[fileparts(which('lead')),filesep];
 switch whichnormmethod
     case 'ea_normalize_spmdartel' % use dartel MNI template
         tempfile=[leaddir,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'];
-%     case 'ea_normalize_ants'
-%         ea_error('ANTs normalization is not supported as of now.');
     otherwise % use mni_hires
         tempfile=[leaddir,'templates',filesep,'mni_hires.nii'];
 end

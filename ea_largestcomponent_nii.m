@@ -3,6 +3,7 @@ function ea_largestcomponent_nii(fname,cnum)
 % component.
 
 nii=ea_load_nii(fname);
+nii.img(isnan(nii.img))=0;
 nii.img=logical(nii.img);
 C=bwconncomp(nii.img);
 

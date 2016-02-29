@@ -18,15 +18,16 @@ function varargout=ea_normalize_ants(options)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Advanced Normalization Tools (ANTs) SyN';
+    varargout{1}='Brainsfit Coregister, ANTs SyN normalization';
     varargout{2}={'SPM8','SPM12'};
     return
 end
 
 
 % First, do the coreg part:
-
+try
     ea_coregmr(options,options.prefs.normalize.coreg);
+end
 
 
 directory=[options.root,options.patientname,filesep];

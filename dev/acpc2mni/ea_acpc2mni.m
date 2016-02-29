@@ -29,7 +29,7 @@ end
 
 leaddir=[fileparts(which('lead')),filesep];
 
-if ~length(uidir)
+if isempty(uidir)
 ea_error('Please choose and normalize patients first.');
 end
 
@@ -38,10 +38,8 @@ disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected
 for pt=1:length(uidir)
  %   ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
-    [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
-%     if strcmp(whichnormmethod,'ea_normalize_ants')
-%             ea_error('ANTs normalization is not supported for ACPC2MNI conversion as of now.');
-%     end
+    [~,tempfile]=ea_whichnormmethod(directory);
+
     
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile);
     
@@ -90,11 +88,14 @@ for pt=1:length(uidir)
     fid(pt).WarpedPointNative=warpcoord_mm(1:3)';
     
     % check it inverse normparams file has correct voxel size.
-    Vinv=spm_vol([directory,'y_ea_inv_normparams.nii']);
-    if ~isequal(Vinv.dim,anat.dim)
-                ea_redo_inv(directory,options);
+    if (~strcmp(whichnormmethod,'ea_normalize_ants')) && (~strcmp(whichnormmethod,'ea_normalize_ants_brainsfit'));
+        
+        Vinv=spm_vol([directory,'y_ea_inv_normparams.nii']);
+        if ~isequal(Vinv.dim,anat.dim)
+            ea_redo_inv(directory,options);
+        end
     end
-        % re-warp into MNI:
+    % re-warp into MNI:
 
         [warpinmni_mm] = ea_map_coords(warpcoord_vox, tempfile, [directory,'y_ea_inv_normparams.nii'], tempfile);
     

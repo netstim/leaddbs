@@ -196,7 +196,7 @@ directory=[options.root,options.patientname,filesep];
 
 [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
 switch whichnormmethod
-    case 'ea_normalize_ants'
+    case {'ea_normalize_ants','ea_normalize_ants_brainsfit'}
         ea_error('ANTs normalization is not supported for Fibers normalization right now.');
     case 'ea_normalize_spmdartel'
         dartelused=1;

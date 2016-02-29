@@ -178,6 +178,7 @@ for side=options.sides
                     end
             end
             
+            
             [planedim,onedim, secdim , dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=getdims(tracor,side);
             
             
@@ -185,6 +186,7 @@ for side=options.sides
             %title(['Electrode ',num2str(el-1),', transversal view.']);
             
             [slice,~,boundboxmm]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
+            
             set(0,'CurrentFigure',cuts)
             try
                 hi=imagesc(slice,...
@@ -276,7 +278,7 @@ for side=options.sides
                 
                 % draw significance countour:
                 slicestat(isnan(slicestat))=0;
-warning('off')
+                warning('off')
                 [cmat,statcontour]=contour(slicestat,1);
                 set(statcontour,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
                 set(statcontour,'Color','w');

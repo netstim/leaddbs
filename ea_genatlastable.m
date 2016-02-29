@@ -225,7 +225,9 @@ end
 
                 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
                 if options.prefs.hullsmooth
-                    nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
+                    try
+                        nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
+                    end
                 end
 
                 thresh=ea_detthresh(atlases,atlas,nii.img);
@@ -361,8 +363,8 @@ nii.img=spm_read_vols(nii);
 
 
 nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
-if ~all(abs(nii.hdr.dime.pixdim(1:3))<=1)
-    ea_reslice_nii(fname,fname,[0.5,0.5,0.5],3);
+if ~all(abs(nii.hdr.dime.pixdim(1:3))<=0.7)
+    ea_reslice_nii(fname,fname,[0.4,0.4,0.4],3);
 
     nii=spm_vol(fname);
     nii.img=spm_read_vols(nii);
