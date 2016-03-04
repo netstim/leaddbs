@@ -140,8 +140,6 @@ if ~ispc
 else
     system(cmd);
 end
-movefile([outputbase, '0GenericAffine.mat'], [volumedir, 'ct2anat',num2str(runs+1),'.mat']);
-
 
 if ~writematout
     delete([outputbase, '0GenericAffine.mat']);
