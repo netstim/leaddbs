@@ -209,30 +209,30 @@ end
 %% part two: iterate the whole brain by samples from this first estimate.
 voxcnt=length(pts);
 disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
-    Xprob=nan([size(S{1}.img)]);
 
     
     
     %% determine covariance structure of given pointset
     ixes=sub2ind(size(S{src}.img),pts(:,1),pts(:,2),pts(:,3));
     for src=1:length(srcs)
+            Xprob{src}=nan([size(S{1}.img)]);
         profile(:,src)=S{src}.img(ixes);
     end
     up=mean(profile,1);
     stp=std(profile,1);
     
-%     % detemine V2. Delete if ~needed.
-%     mask=S{1}.img;
-%     mask(:)=0;
-%     mask(ixes)=1;
-%     mask=logical(mask);
-%     unprofile=zeros(sum(~mask(:)),length(srcs));
-%     for src=1:length(srcs)
-%         unprofile(:,src)=S{src}.img(~mask);
-%         vtwo(src)=mahal(up(src),unprofile(:,src));
-%     end
-%     %end delete.
-%     vtwo=vtwo/mean(vtwo);    
+    % detemine V2. Delete if ~needed.
+    mask=S{1}.img;
+    mask(:)=0;
+    mask(ixes)=1;
+    mask=logical(mask);
+    unprofile=zeros(sum(~mask(:)),length(srcs));
+    for src=1:length(srcs)
+        unprofile(:,src)=S{src}.img(~mask);
+        vtwo(src)=mahal(up(src),unprofile(:,src));
+    end
+    %end delete.
+    vtwo=vtwo/mean(vtwo);    
     
     
     
@@ -243,20 +243,21 @@ disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
     
     
     
-%     vone=(stp./up).^-1; % how constant are values in different acquisitions in the same tissue?
-%     vone=vone./mean(vone);
-%     
-%     v=vone.*vtwo;
+    vone=(stp./up).^-1; % how constant are values in different acquisitions in the same tissue?
+    vone=vone./mean(vone);
     
-    metrics=[voxcnt,up,stp];
-    save(['Metrics_',label,num2str(length(srcs))],'metrics');
+    v=vone.*vtwo;
+    v=v./(length(v)*mean(v));
+    
+    metrics=[voxcnt,up,stp,vone,vtwo,v];
+    save(['Metrics_',label],'metrics');
     
     for src=1:length(srcs);
         profile(:,src)=(profile(:,src)-up(src))/stp(src);
     end
     
     ea_dispercent(0,'Iterating voxels');
-    dimens=numel(Xprob(:,:,:));
+    dimens=numel(Xprob{src}(:));
     chunk=5000000;
     for ind=1:chunk:dimens
         
@@ -272,17 +273,24 @@ disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
        
         %Xprob(ind:ind+slab-1)=1/exp(mahal(thisindprofile,profile));
         for src=1:length(srcs);
-            thisindprofile(:,src)=(thisindprofile(:,src)-up(src))/stp(src);
+            thisindprofile(:,src)=((thisindprofile(:,src)-up(src)))/stp(src);
+            Xprob{src}(ind:ind+chunk-1)=mahal(thisindprofile(:,src),profile(:,src));
+
         end
         
-        Xprob(ind:ind+chunk-1)=mahal(thisindprofile,profile);
+        
+        
     end
     
-    
+    Aprob=zeros(size(Xprob{1}));
+    for src=1:length(srcs);
+        
+    Aprob=Aprob+Xprob{src}*v(src);
+    end
   
         
     labout=S{1};
-    labout.img=1/exp(0.01*Xprob);
+    labout.img=1/exp(0.1*Aprob);
     labout.dt=[16,1];
     labout.fname=[directory,label,'_secondlevel.nii'];
     spm_write_vol(labout,labout.img);

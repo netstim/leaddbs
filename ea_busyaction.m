@@ -2,7 +2,7 @@ function ea_busyaction(varargin)
 % function displays or hides a spinning wheel on top right corner (default)
 % of figure.
 
-
+try
 onoff=varargin{1};
 fighandle=varargin{2};
 
@@ -109,4 +109,6 @@ switch onoff
         
         % change mousewheel, too:
         set(fighandle, 'pointer', 'arrow');
+end
+
 end

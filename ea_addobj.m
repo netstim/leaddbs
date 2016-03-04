@@ -130,32 +130,20 @@ drawnow
 
 function addfibertract(addobj,resultfig,addht,fina,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
-    fs=load(addobj);
-    fn = fieldnames(fs);
-    eval(sprintf('thisset = fs.%s;',fn{1}));
+    [thisset,fibidx]=ea_load_fibertracts(addobj);
 else % fibers are already loaded and stored in figure.
-    thisset=addobj;
+    thisset=addobj.fibs;
+    fibidx=addobj.idx;
 end
 
 
-    fib_copy=thisset; % backup of whole original fiberset will be stored in figure.
-
+fib_copy.fibs=thisset; % backup of whole original fiberset will be stored in figure.
+fib_copy.idx=fibidx;
     
 
 
 if ~isempty(connect) % select fibers based on connecting roi info (i.e. delete all other fibers).
     
-    [idx,~]=cellfun(@size,thisset);
-    thisset=cell2mat(thisset);
-
-    idxv=zeros(size(thisset,1),1);
-    lid=1; cnt=1;
-    for id=idx'
-        idxv(lid:lid+id-1)=cnt;
-        lid=lid+id;
-        cnt=cnt+1;
-        
-    end
     
     for roi=1:length(connect.rois) % check connectivities..
         
@@ -168,7 +156,7 @@ if ~isempty(connect) % select fibers based on connecting roi info (i.e. delete a
     
     selectedfibs=unique(cell2mat(selectedfibs(:)));
     
-    thisset=mat2cell(thisset,idx,3)';
+    thisset=mat2cell(thisset,fibidx,3)';
     thisset=thisset(selectedfibs); % choose selected fibers.
     
     

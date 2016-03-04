@@ -21,9 +21,9 @@ try
 end
 disp('Done.');
 
-if ~exist([directory,'y_ea_inv_normparams.nii'],'file');
-    ea_error('Please run a compatible normalization of the preoperative MRI-volume first. Final (inverse) normalization parameters should be stored as y_ea_inv_normparams.nii inside of the subject folder.');
-end
+% if ~exist([directory,'y_ea_inv_normparams.nii'],'file');
+%     ea_error('Please run a compatible normalization of the preoperative MRI-volume first. Final (inverse) normalization parameters should be stored as y_ea_inv_normparams.nii inside of the subject folder.');
+% end
 
 vizz=0; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
 cleanse_fibers=0; % deletes everything outside the white matter of the template.
@@ -54,6 +54,15 @@ if ~exist([options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hire
 end
 
 reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires.nii,2'];
+
+[whichnormmethod,reft]=ea_whichnormmethod(directory);
+if isempty(whichnormmethod)
+    ea_error('Please run normalization for this subject first.');
+end
+if strcmp(whichnormmethod,'ea_normalize_ants')
+    reftemplate=reft;
+end
+
 Vmni=spm_vol(reftemplate);
 mnimask=spm_read_vols(Vmni);
 mnimask=mnimask>0.01;
@@ -91,9 +100,12 @@ end
 ea_dispercent(0,'Normalizing fibers');
 numfibs=length(ftr.curveSegCell);
 
-ynii=nifti([directory,'y_ea_inv_normparams.nii']);
-P = [repmat([directory,'y_ea_inv_normparams.nii'],3,1),[',1,1';',1,2';',1,3']];
-Vnii = spm_vol(P);
+if ~strcmp(whichnormmethod,'ea_normalize_ants')
+    keyboard
+    ynii=nifti([directory,'y_ea_inv_normparams.nii']);
+    P = [repmat([directory,'y_ea_inv_normparams.nii'],3,1),[',1,1';',1,2';',1,3']];
+    Vnii = spm_vol(P);
+end
 wfibs=cell(length(ftr.curveSegCell),1);
 deletefibers=[];
 for fib=1:numfibs
@@ -116,11 +128,15 @@ for fib=1:numfibs
         subplot(1,3,2)
         plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'-','color',[0.1707    0.2919    0.7792]);
     end
+    
     %% -> coordinates are now in voxel-space of single subject anat file.
 
     %% map from prenii voxelspace to mni millimeter space
-
+if ~strcmp(whichnormmethod,'ea_normalize_ants')
     wfibs{fib} = vox2mm_mni(wfibs{fib},Vnii,ynii)';
+else
+    keyboard
+end
     if vizz
         thisfib=wfibs{fib}';
         subplot(1,3,3)
@@ -158,14 +174,13 @@ wfibsvox(deletefibers)=[]; % delete fibers that were in total outside WM
 ea_dispercent(100,'end');
 
 wfibsvox=wfibsvox';
-nftr.normalized_fibers_mm=wfibs; clear wfibs
-nftr.normalized_fibers_vox=wfibsvox; clear wfibsvox
+nftr.fibers=wfibs; clear wfibs
+nftr.fibers_vox=wfibsvox; clear wfibsvox
 if isfield(ftr,'curveD')
     nftr.curveD=ftr.curveD;
 end
 nftr.trackParam=ftr.trackParam;
-nftr.user=ftr.user;
-nftr.vox=Vmni.mat(logical(eye(4))); nftr.vox=nftr.vox(1:3)';
+%nftr.user=ftr.user;
 disp('Saving files...');
 save([directory,options.prefs.FTR_normalized],'-struct','nftr','-v7.3');
 %save([directory,'vox_',options.prefs.FTR_normalized],'normalized_fibers_vox');
@@ -189,6 +204,8 @@ end
 % delete([directory,'vox_',options.prefs.FTR_normalized]);
 
 disp('Done.');
+
+
 
 
 function [useb0,useanat]=ea_checkdartelused(options)

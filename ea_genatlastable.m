@@ -305,6 +305,7 @@ end
         %ea_dispercent(1,'end');
 
         % finish gm_mask file for leadfield computation.
+
         V=spm_vol([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         X=spm_read_vols(V);
 

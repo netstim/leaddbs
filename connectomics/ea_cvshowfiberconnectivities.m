@@ -30,17 +30,14 @@ end
 disp('Loading fiberset...');
 if ~changedstates(1) % fibers file already loaded
     fibers=getappdata(resultfig,'fibers');
+    fibersidx=getappdata(resultfig,'fibersidx');
 else % load data
-    fs=load(fibersfile);
-    fn = fieldnames(fs);
-    eval(sprintf('fibers = fs.%s;',fn{1}));
-    if size(fibers,1)>size(fibers,2)
-        fibers=fibers';
-    end
+    [fibers,fibersidx]=ea_load_fibers(fibersfile);
     setappdata(resultfig,'fibers',fibers);
+    setappdata(resultfig,'fibersidx',fibersidx);
     setappdata(resultfig,'fibersfile',fibersfile);
 end
-numtotalfibs=length(fibers);
+numtotalfibs=length(fibersidx);
 
 if strcmp(thresh,'auto')
     switch mode
@@ -88,19 +85,19 @@ origtargets=targets; % original targets map.
 
 
 %% prepare fibers
-dispercent(0,'Preparing fibers');
-[idx,~]=cellfun(@size,fibers);
-
-fibers=cell2mat(fibers');
-idxv=zeros(size(fibers,1),1);
-lid=1; cnt=1;
-for id=idx
-    dispercent(cnt/length(idx));
-    idxv(lid:lid+id-1)=cnt;
-    lid=lid+id;
-    cnt=cnt+1;
-end
-dispercent(1,'end');
+% dispercent(0,'Preparing fibers');
+% [idx,~]=cellfun(@size,fibers);
+% 
+% fibers=cell2mat(fibers');
+% idxv=zeros(size(fibers,1),1);
+% lid=1; cnt=1;
+% for id=idx
+%     dispercent(cnt/length(idx));
+%     idxv(lid:lid+id-1)=cnt;
+%     lid=lid+id;
+%     cnt=cnt+1;
+% end
+% dispercent(1,'end');
 
 
 %% select fibers that traverse through seed voxels
@@ -124,7 +121,7 @@ connectingfibs=cell(2,1);
 
 %% reformat fibers
 disp('Reformating fibers...');
-fibers=mat2cell(fibers,idx,3)';
+fibers=mat2cell(fibers,fibersidx,3)';
 disp('Done.');
 for side=sides
     try        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end

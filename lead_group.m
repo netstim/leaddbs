@@ -332,9 +332,11 @@ if options.expstatvat.do % export to nifti volume
     ea_exportvatmapping(M,options,handles);
 end
 
-% overwrite active contacts information with new one from S.
-for pt=1:length(M.elstruct)
-M.elstruct(pt).activecontacts=M.S(pt).activecontacts;
+% overwrite active contacts information with new one from S (if present).
+try
+    for pt=1:length(M.elstruct)
+        M.elstruct(pt).activecontacts=M.S(pt).activecontacts;
+    end
 end
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 

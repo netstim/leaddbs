@@ -17,7 +17,7 @@ ls=cell2mat(ls);
 for cc=0:cnum-1
    nii.img(:)=0;
    nii.img(C.PixelIdxList{ix(end-cc)})=1;
-   nii.fname=[pth,fn,'_c',num2str(cc),ext];
+   nii.fname=fullfile(pth,[fn,'_c',num2str(cc),ext]);
    spm_write_vol(nii,nii.img);
    
 end
