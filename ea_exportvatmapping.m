@@ -29,9 +29,15 @@ for pt=1:length(M.patient.list)
             end
         end
     end
+    
+    try
     Vvatr=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,stims(mostrecentstim).name,filesep,'vat_right.nii']);
     Vvatl=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,stims(mostrecentstim).name,filesep,'vat_left.nii']);
-    
+    catch
+        
+        
+        
+    end
     Vvatr.img(Vvatr.img==0)=nan;     Vvatl.img(Vvatl.img==0)=nan;
     zVvatr=Vvatr; zVvatl=Vvatl;
     if bihemispheric

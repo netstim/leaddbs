@@ -30,10 +30,14 @@ end
 disp('Loading fiberset...');
 if ~changedstates(1) % fibers file already loaded
     fibers=getappdata(resultfig,'fibers');
+        idxv=fibers(:,4);
+    fibers=fibers(:,1:3);
     fibersidx=getappdata(resultfig,'fibersidx');
 else % load data
-    [fibers,fibersidx]=ea_load_fibers(fibersfile);
-    setappdata(resultfig,'fibers',fibers);
+    [fibers,fibersidx]=ea_loadfibertracts(fibersfile);
+        setappdata(resultfig,'fibers',fibers);
+    idxv=fibers(:,4);
+    fibers=fibers(:,1:3);
     setappdata(resultfig,'fibersidx',fibersidx);
     setappdata(resultfig,'fibersfile',fibersfile);
 end
@@ -225,8 +229,11 @@ for side=sides
     
     
     
-    
+    try
     [PL.matsurf{side},PL.conlabels{side}]=ea_showconnectivitypatch(resultfig,targets,contargets,thresh,atlas_lgnd{2},tareas{side});
+    catch
+        keyboard
+    end
     PL.matseedsurf{side}=ea_showseedpatch(resultfig,seed{side},seed{side}.img,options);
     
     clear allcareas conareas

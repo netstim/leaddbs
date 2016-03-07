@@ -120,7 +120,7 @@ axis equal;
 try
     priorselection=find(ismember(fiberscell,stimparams.usefiberset)); % retrieve prior selection of fiberset.
     set(handles.fiberspopup,'Value',priorselection);
-
+    
 catch    % reinitialize using third entry.
     set(handles.fiberspopup,'Value',4);
 end
@@ -147,12 +147,12 @@ try
         set(handles.labelpopup,'Value',priorselection); % set to prior selection
     else % if priorselection was a cell array with more than one entry, set to use all
         set(handles.labelpopup,'Value',lab+1); % set to use all
-
+        
     end
 catch    % reinitialize using third entry.
     set(handles.labelpopup,'Value',1);
-
-
+    
+    
 end
 
 
@@ -289,7 +289,7 @@ options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),fil
 [~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
 
 
-    options.expstatvat.do=M.ui.statvat;
+options.expstatvat.do=M.ui.statvat;
 
 options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 options.elmodel=M.elstruct(1).elmodel;
@@ -362,62 +362,62 @@ if size(stats.corrcl,2)==1 % one value per patient
     try stats.vicorr.nboth=(stats.vicorr.nboth/2)*100; end
     try stats.vicorr.nright=(stats.vicorr.nright/2)*100; end
     try stats.vicorr.nleft=(stats.vicorr.nleft/2)*100; end
-
+    
     if ~isempty(stats.vicorr.both)
         %ea_corrplot([stats.corrcl,stats.vicorr.both],'Volume Intersections, both hemispheres',stats.vc_labels);
         ea_corrplot([stats.corrcl,stats.vicorr.nboth],'VI_BH',stats.vc_labels,handles);
     end
-%     if ~isempty(stats.vicorr.right)
-%         %ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
-%         ea_corrplot([stats.corrcl,stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
-%     end
-%     if ~isempty(stats.vicorr.left)
-%         %ea_corrplot([stats.corrcl,stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
-%         ea_corrplot([stats.corrcl,stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
-%     end
-%     if ~isempty(stats.fccorr.both)
-%         %ea_corrplot([stats.corrcl,stats.fccorr.both],'Fibercounts, both hemispheres',stats.fc_labels);
-%         ea_corrplot([stats.corrcl,stats.fccorr.nboth],'FC_BH',stats.fc_labels,handles);
-%     end
-%     if ~isempty(stats.fccorr.right)
-%         %ea_corrplot([stats.corrcl,stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
-%         ea_corrplot([stats.corrcl,stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
-%     end
-%     if ~isempty(stats.fccorr.left)
-%         %ea_corrplot([stats.corrcl,stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
-%         ea_corrplot([stats.corrcl,stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
-%     end
-
+    %     if ~isempty(stats.vicorr.right)
+    %         %ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
+    %         ea_corrplot([stats.corrcl,stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
+    %     end
+    %     if ~isempty(stats.vicorr.left)
+    %         %ea_corrplot([stats.corrcl,stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
+    %         ea_corrplot([stats.corrcl,stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
+    %     end
+    %     if ~isempty(stats.fccorr.both)
+    %         %ea_corrplot([stats.corrcl,stats.fccorr.both],'Fibercounts, both hemispheres',stats.fc_labels);
+    %         ea_corrplot([stats.corrcl,stats.fccorr.nboth],'FC_BH',stats.fc_labels,handles);
+    %     end
+    %     if ~isempty(stats.fccorr.right)
+    %         %ea_corrplot([stats.corrcl,stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
+    %         ea_corrplot([stats.corrcl,stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
+    %     end
+    %     if ~isempty(stats.fccorr.left)
+    %         %ea_corrplot([stats.corrcl,stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
+    %         ea_corrplot([stats.corrcl,stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
+    %     end
+    
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
     try stats.vicorr.nboth=(stats.vicorr.nboth)*100; end
     try stats.vicorr.nright=(stats.vicorr.nright)*100; end
     try stats.vicorr.nleft=(stats.vicorr.nleft)*100; end
     if ~isempty(stats.vicorr.both)
-
+        
         %ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],'Volume Intersections, both hemispheres',stats.vc_labels);
         ea_corrplot([stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft]],'VI_BH',stats.vc_labels,handles);
     end
-%     if ~isempty(stats.vicorr.right)
-%         %ea_corrplot([stats.corrcl(:,1),stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
-%         ea_corrplot([stats.corrcl(:,1),stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
-%     end
-%     if ~isempty(stats.vicorr.left)
-%         %ea_corrplot([stats.corrcl(:,2),stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
-%         ea_corrplot([stats.corrcl(:,2),stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
-%     end
-%     if ~isempty(stats.fccorr.both)
-%         %ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'Fibercounts, both hemispheres',stats.fc_labels);
-%         ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'FC_BH',stats.fc_labels,handles);
-%     end
-%     if ~isempty(stats.fccorr.right)
-%         %ea_corrplot([stats.corrcl(:,1),stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
-%         ea_corrplot([stats.corrcl(:,1),stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
-%     end
-%     if ~isempty(stats.fccorr.left)
-%         %ea_corrplot([stats.corrcl(:,2),stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
-%         ea_corrplot([stats.corrcl(:,2),stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
-%     end
-%
+    %     if ~isempty(stats.vicorr.right)
+    %         %ea_corrplot([stats.corrcl(:,1),stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
+    %         ea_corrplot([stats.corrcl(:,1),stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
+    %     end
+    %     if ~isempty(stats.vicorr.left)
+    %         %ea_corrplot([stats.corrcl(:,2),stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
+    %         ea_corrplot([stats.corrcl(:,2),stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
+    %     end
+    %     if ~isempty(stats.fccorr.both)
+    %         %ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'Fibercounts, both hemispheres',stats.fc_labels);
+    %         ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'FC_BH',stats.fc_labels,handles);
+    %     end
+    %     if ~isempty(stats.fccorr.right)
+    %         %ea_corrplot([stats.corrcl(:,1),stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
+    %         ea_corrplot([stats.corrcl(:,1),stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
+    %     end
+    %     if ~isempty(stats.fccorr.left)
+    %         %ea_corrplot([stats.corrcl(:,2),stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
+    %         ea_corrplot([stats.corrcl(:,2),stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
+    %     end
+    %
 else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
@@ -599,7 +599,7 @@ if status == JFileChooser.APPROVE_OPTION
     for i=1:size(jFile, 1)
         pathname{i} = char(jFile(i).getAbsolutePath);
     end
-
+    
 elseif status == JFileChooser.CANCEL_OPTION
     pathname = [];
 else
@@ -618,7 +618,7 @@ ea_busyaction('on',handles.lg_figure,'group');
 M=getappdata(handles.lg_figure,'M');
 
 if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % not set yet.
-ea_busyaction('off',handles.lg_figure,'group');
+    ea_busyaction('off',handles.lg_figure,'group');
     return
 end
 
@@ -626,7 +626,7 @@ end
 % refresh group list
 set(handles.grouplist,'String',M.patient.group);
 if length(get(handles.patientlist,'String'))<max(M.ui.listselect)
-
+    
     M.ui.listselect=1;
 end
 try set(handles.grouplist,'Value',M.ui.listselect);  end
@@ -656,7 +656,7 @@ end
 
 % refresh selections on VI and FC Lists:
 try
-
+    
     if max(M.ui.volumeintersections)>length(get(handles.vilist,'String'))
         set(handles.vilist,'Value',1);
     else
@@ -692,7 +692,7 @@ thisparc=get(handles.lc_parcellation,'String');
 thisparc=thisparc{get(handles.lc_parcellation,'Value')};
 try
     gmdir=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
-
+    
     gms{1}='';
     for gm=1:length(gmdir)
         gms{gm}=gmdir(gm).name;
@@ -782,11 +782,11 @@ try set(handles.lc_graphmetric,'Value',M.ui.lc.graphmetric); end
 
 % update enable-disable-dependencies:
 try
-if M.ui.elrendering==3
-    try set(handles.colorpointcloudcheck,'Enable','on'); end
-else
-    try set(handles.colorpointcloudcheck,'Enable','off'); end
-end
+    if M.ui.elrendering==3
+        try set(handles.colorpointcloudcheck,'Enable','on'); end
+    else
+        try set(handles.colorpointcloudcheck,'Enable','off'); end
+    end
 end
 % hide detachbutton if already detached:
 try
@@ -823,8 +823,11 @@ if ~isempty(M.patient.list)
         M.elstruct(pt).groupcolors=M.groups.color;
         M.elstruct(pt).groups=M.groups.group;
         
+        options.sides=1:2;
+        options.native=0;
         try
-            
+            [options.root,options.patientname]=fileparts(M.patient.list{pt});
+            options.root=[options.root,filesep];
             [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
             if M.ui.elmodelselect==1 % use patient specific elmodel
                 if exist('elmodel','var')
@@ -1069,11 +1072,11 @@ vc_labels={};
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
         usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis!
-
+        
         for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,1)
             for vat=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,2);
                 if side==1 % right hemisphere
-
+                    
                     vicorr_right(ptcnt,vicnt)=vicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
                     nvicorr_right(ptcnt,vicnt)=nvicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
                 elseif side==2 % left hemisphere
@@ -1082,20 +1085,20 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
                 end
                 vicorr_both(ptcnt,vicnt)=vicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
                 nvicorr_both(ptcnt,vicnt)=nvicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
-
+                
             end
         end
-
-
+        
+        
         % check if all three values have been served. if not, set to zero
         % (e.g. if there was no stimulation at all on one hemisphere, this
         % could happen.
-
+        
         ptcnt=ptcnt+1;
-
+        
     end
     vc_labels{end+1}=M.stats(pt).ea_stats.atlases.names{vi};
-
+    
     ptcnt=1;
     vicnt=vicnt+1;
 end
@@ -1122,12 +1125,12 @@ for fc=get(handles.fclist,'Value') % get volume interactions for each patient fr
         fccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).fibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).fibercounts{1}(fc);
         nfccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).nfibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).nfibercounts{1}(fc);
         ptcnt=ptcnt+1;
-
+        
     end
     ptcnt=1;
     fccnt=fccnt+1;
     fc_labels{end+1}=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).labels{1}{fc};
-
+    
 end
 
 
@@ -1311,15 +1314,15 @@ for pt=1:length(M.patient.list)
     try
         if M.ui.detached
             processlocal=1;
-            mkdir([M.ui.groupdir,'tmp']);
+            mkdir([M.ui.groupdir,options.patientname]);
             options.root=M.ui.groupdir;
-            options.patientname='tmp';
+            %    options.patientname='tmp';
             
             ea_stats=M.stats(pt).ea_stats;
             coords_mm=M.elstruct(pt).coords_mm;
             trajectory=M.elstruct(pt).trajectory;
-            save([M.ui.groupdir,'tmp',filesep,'ea_stats'],'ea_stats');
-            save([M.ui.groupdir,'tmp',filesep,'ea_reconstruction'],'coords_mm','trajectory');
+            save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
+            save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
         end
     catch
         if ~exist(options.root,'file') % data is not there. Act as if detached. Process in tmp-dir.
@@ -1327,19 +1330,19 @@ for pt=1:length(M.patient.list)
             warning('on');
             warning('Data has been detached from group-directory. Will process locally. Please be aware that you might loose this newly-processed data once you re-attach the single-patient data to the analysis!');
             warning('off');
-            mkdir([M.ui.groupdir,'tmp']);
+            mkdir([M.ui.groupdir,options.patientname]);
             options.root=M.ui.groupdir;
-            options.patientname='tmp';
+            % options.patientname='tmp';
             
             ea_stats=M.stats(pt).ea_stats;
             coords_mm=M.elstruct.coords_mm;
             trajectory=M.elstruct.trajectory;
-            save([M.ui.groupdir,'tmp',filesep,'ea_stats'],'ea_stats');
-            save([M.ui.groupdir,'tmp',filesep,'ea_reconstruction'],'coords_mm','trajectory');
+            save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
+            save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
         end
     end
     
-    delete([options.root,options.patientname,filesep,'ea_stats.mat']);
+    %delete([options.root,options.patientname,filesep,'ea_stats.mat']);
     
     % Step 1: Re-calculate closeness to subcortical atlases.
     
@@ -1364,32 +1367,32 @@ for pt=1:length(M.patient.list)
     mods=get(handles.fiberspopup,'String');
     mod=mods{get(handles.fiberspopup,'Value')};
     
+    
+    % Step 2: Re-calculate Fibertracts / VAT
+    try
+        setappdata(resultfig,'S',M.S(pt));
+    catch
+        keyboard
+        ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
+    end
+    vfnames=getappdata(handles.lg_figure,'vatfunctionnames');
+    
+    [~,ix]=ismember(M.vatmodel,vfnames);
+    vfs=getappdata(handles.lg_figure,'genvatfunctions');
+    
+    ea_genvat=eval(['@',vfs{ix}]);
+    
+    for side=1:2
+        setappdata(resultfig,'elstruct',M.elstruct(pt));
+        setappdata(resultfig,'elspec',options.elspec);
+        
+        [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,stimname);
+        stimparams(1,side).volume=volume;
+    end
+    
+    setappdata(resultfig,'stimparams',stimparams(1,:));
+    
     if ~strcmp(mod,'Do not calculate connectivity stats')
-        
-        % Step 2: Re-calculate Fibertracts / VAT
-        try
-            setappdata(resultfig,'S',M.S(pt));
-        catch
-            keyboard
-            ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
-        end
-        vfnames=getappdata(handles.lg_figure,'vatfunctionnames');
-        
-        [~,ix]=ismember(M.vatmodel,vfnames);
-        vfs=getappdata(handles.lg_figure,'genvatfunctions');
-        
-        ea_genvat=eval(['@',vfs{ix}]);
-        
-        for side=1:2
-            setappdata(resultfig,'elstruct',M.elstruct(pt));
-            setappdata(resultfig,'elspec',options.elspec);
-            
-            [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,stimname);
-            stimparams(1,side).volume=volume;
-        end
-        
-        setappdata(resultfig,'stimparams',stimparams(1,:));
-        
         
         % Convis part:
         
@@ -1412,8 +1415,8 @@ for pt=1:length(M.patient.list)
     close(resultfig);
     
     if processlocal % gather stats and recos to M
-        load([M.ui.groupdir,'tmp',filesep,'ea_stats']);
-        load([M.ui.groupdir,'tmp',filesep,'ea_reconstruction']);
+        load([M.ui.groupdir,options.patientname,filesep,'ea_stats']);
+        load([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction']);
         
         M.stats(pt).ea_stats=ea_stats;
         M.elstruct(pt).coords_mm=coords_mm;
@@ -1422,7 +1425,7 @@ for pt=1:length(M.patient.list)
         
         save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M','-v7.3');
         try      movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']); end
-        rmdir([M.ui.groupdir,'tmp'],'s');
+        %rmdir([M.ui.groupdir,'tmp'],'s');
         
         
     end
@@ -1909,24 +1912,24 @@ switch choice
     case 'No, abort.'
         return
     case 'Yes, sure!'
-
-
+        
+        
         M=getappdata(gcf,'M');
-
+        
         for pt=1:length(M.patient.list)
-
+            
             slashes=findstr('/',M.patient.list{pt});
             if isempty(slashes)
                 slashes=findstr('\',M.patient.list{pt});
             end
             ptname=M.patient.list{pt}(max(slashes)+1:end);
-
-
+            
+            
             M.patient.list{pt}=ptname;
-
+            
         end
         M.ui.detached=1;
-
+        
 end
 
 setappdata(gcf,'M',M);
@@ -1983,7 +1986,7 @@ ea_busyaction('on',gcf,'group');
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
-
+    
     M=getappdata(hObject,'M');
     try
         save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
@@ -2037,7 +2040,7 @@ options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
 try options.d3.isomatrix=M.isomatrix; end
 try options.d3.isomatrix_name=M.isomatrix_name; end
 
-    options.expstatvat.do=M.ui.statvat;
+options.expstatvat.do=M.ui.statvat;
 
 options.d2.showlegend=M.ui.tdlegendcheck;
 
@@ -2334,9 +2337,9 @@ specs.affine=nii.mat;
 ea_dispercent(0,'Converting fibers to voxel format');
 for fib=1:length(normalized_fibers_mm);
     ea_dispercent(fib/length(normalized_fibers_mm));
-normalized_fibers_mm{fib}=[normalized_fibers_mm{fib},ones(size(normalized_fibers_mm{fib},1),1)]';
-normalized_fibers_mm{fib}=nii.mat\normalized_fibers_mm{fib};
-normalized_fibers_mm{fib}=normalized_fibers_mm{fib}(1:3,:)';
+    normalized_fibers_mm{fib}=[normalized_fibers_mm{fib},ones(size(normalized_fibers_mm{fib},1),1)]';
+    normalized_fibers_mm{fib}=nii.mat\normalized_fibers_mm{fib};
+    normalized_fibers_mm{fib}=normalized_fibers_mm{fib}(1:3,:)';
 end
 ea_dispercent(1,'end');
 normalized_fibers_vox=normalized_fibers_mm;

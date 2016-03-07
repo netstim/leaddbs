@@ -1635,6 +1635,7 @@ if groupmode
     end
     
     elstruct=getappdata(handles.stimfig,'elstruct');
+    
     set(handles.headertxt,'String',['Stimulation parameters: ',elstruct(actpt).name]);
     gSv=getappdata(handles.stimfig,'gSv');
     if isfield(gSv,'vatmodel');
@@ -2571,6 +2572,8 @@ options=getappdata(handles.stimfig,'options');
 if isempty(gS)
     clear gS
 end
+
+S=ea_activecontacts(S);
 gS(actpt)=S;
 setappdata(handles.stimfig,'gS',gS);
 
@@ -2603,6 +2606,8 @@ options=getappdata(handles.stimfig,'options');
 if isempty(gS)
     clear gS
 end
+
+    S=ea_activecontacts(S);
 gS(actpt)=S;
 setappdata(handles.stimfig,'gS',gS);
 

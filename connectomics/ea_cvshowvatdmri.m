@@ -53,6 +53,7 @@ end
         if ~ret % something has changed since last time.
             ea_deletePL(resultfig,'PL','vat');
             if dimensionality % one of the vat checkboxes is active
+                keyboard
                 [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,S,changedstates,'vat'); % 'vat' only used for storage of changes.
                 if isstruct(handles)
                     set(handles.vatthreshis,'String',num2str(thresh));

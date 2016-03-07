@@ -10,7 +10,7 @@
       try
           coords_mm=ea_read_fiducials([options.root,options.patientname,filesep,'ea_coords.fcsv'],options);
       catch
-          ea_error(['Please localize electrodes of ',options.patientname,' first.']);
+          warning(['Please localize electrodes of ',options.patientname,' first.']);
       end
   end
     
