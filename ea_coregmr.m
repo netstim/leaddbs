@@ -11,6 +11,21 @@ else
     doreslice=0;
 end
 
+% restore raw files -> postop files from prior attempts. & make backups
+% from original files in any case.
+if exist([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],'file')
+    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
+end
+try copyfile([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized]); end
+if exist([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],'file')
+    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
+end
+try copyfile([options.root,options.patientname,filesep,options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized]); end
+if exist([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],'file')
+    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized]);
+end
+try copyfile([options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized]); end
+
 
 
 switch options.coregmr.method

@@ -35,7 +35,7 @@ for pt=1:length(M.patient.list)
     Vvatl=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,stims(mostrecentstim).name,filesep,'vat_left.nii']);
     catch
         
-        
+       keyboard 
         
     end
     Vvatr.img(Vvatr.img==0)=nan;     Vvatl.img(Vvatl.img==0)=nan;

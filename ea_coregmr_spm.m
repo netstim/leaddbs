@@ -1,20 +1,5 @@
 function ea_coregmr_spm(options,automan,doreslice)
 
-if exist([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],'file')
-    movefile([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
-end
-if exist([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],'file')
-    movefile([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
-end
-if exist([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],'file')
-    movefile([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized]);
-end
-
-if doreslice
-    try   copyfile([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized]); end
-    try   copyfile([options.root,options.patientname,filesep,options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized]); end
-    try   copyfile([options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized]); end
-end
 
 costfuns={'nmi','mi','ecc','ncc'};
 

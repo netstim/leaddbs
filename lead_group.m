@@ -826,8 +826,10 @@ if ~isempty(M.patient.list)
         options.sides=1:2;
         options.native=0;
         try
+            
             [options.root,options.patientname]=fileparts(M.patient.list{pt});
             options.root=[options.root,filesep];
+            
             [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
             if M.ui.elmodelselect==1 % use patient specific elmodel
                 if exist('elmodel','var')
@@ -1285,7 +1287,11 @@ for pt=1:length(M.patient.list)
     end
     
     disp(['Processing ',options.patientname,'.']);
+try
     options.numcontacts=size(M.elstruct(pt).coords_mm{1},1);
+catch % no localization present or in wrong format.
+    ea_error(['Please localize ',options.patientname,' first.']);
+end
     options.elmodel=M.elstruct(pt).elmodel;
     options=ea_resolve_elspec(options);
     options.prefs=ea_prefs(options.patientname);
@@ -1311,7 +1317,7 @@ for pt=1:length(M.patient.list)
     end
     options.expstatvat.dir=M.ui.groupdir;
     processlocal=0;
-    try
+    
         if M.ui.detached
             processlocal=1;
             mkdir([M.ui.groupdir,options.patientname]);
@@ -1324,7 +1330,7 @@ for pt=1:length(M.patient.list)
             save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
             save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
         end
-    catch
+    
         if ~exist(options.root,'file') % data is not there. Act as if detached. Process in tmp-dir.
             processlocal=1;
             warning('on');
@@ -1340,7 +1346,7 @@ for pt=1:length(M.patient.list)
             save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
             save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
         end
-    end
+    
     
     %delete([options.root,options.patientname,filesep,'ea_stats.mat']);
     
@@ -1368,11 +1374,11 @@ for pt=1:length(M.patient.list)
     mod=mods{get(handles.fiberspopup,'Value')};
     
     
-    % Step 2: Re-calculate Fibertracts / VAT
+    % Step 2: Re-calculate VAT
+    if isfield(M,'S')
     try
         setappdata(resultfig,'S',M.S(pt));
     catch
-        keyboard
         ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
     end
     vfnames=getappdata(handles.lg_figure,'vatfunctionnames');
@@ -1391,7 +1397,8 @@ for pt=1:length(M.patient.list)
     end
     
     setappdata(resultfig,'stimparams',stimparams(1,:));
-    
+    end
+    % Step 3: Re-calculate connectivity from VAT to rest of the brain.
     if ~strcmp(mod,'Do not calculate connectivity stats')
         
         % Convis part:

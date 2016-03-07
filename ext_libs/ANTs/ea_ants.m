@@ -4,6 +4,8 @@ function ea_ants(varargin)
 fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
+
+
 if nargin>3
     writematout=varargin{4};
 else
