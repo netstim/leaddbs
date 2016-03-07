@@ -18,11 +18,11 @@ for pt=1:length(S)
         
         for source=1:4
             for cnt=ks
-                
-                if S(pt).([sidec,'s',num2str(source)]).(['k',num2str(cnt)]).perc>0 && S(pt).([sidec,'s',num2str(source)]).amp>0
-                   S(pt).activecontacts{side}(cs(cnt+1))=1; 
+                try    % struct may not even be specified yet. In this case just keep marked as inactive.
+                    if S(pt).([sidec,'s',num2str(source)]).(['k',num2str(cnt)]).perc>0 && S(pt).([sidec,'s',num2str(source)]).amp>0
+                        S(pt).activecontacts{side}(cs(cnt+1))=1;
+                    end
                 end
-                
             end
         end
         

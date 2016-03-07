@@ -27,7 +27,7 @@ if ischar(pos)
             offfigtit='ACPC/MNI-space conversions';
         case 'group'
             sz=get(fighandle,'Position');
-            pos=[sz(3)-50-10 sz(4)-10-50 50 50];
+            pos=[sz(3)-50-5 sz(4)-50 50 50];
             onfigtit='LEAD-DBS Group Analysis (busy...)';
             offfigtit='LEAD-DBS Group Analysis';
         case 'reco'

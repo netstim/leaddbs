@@ -111,6 +111,7 @@ for side=1:2
         % show vat
         
         if ~isempty(K(side).K{vat})
+            
             PL.vatsurfs(side,vat)=trisurf(K(side).K{vat},VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3),...
                 abs(repmat(60,length(VAT{side}.VAT{vat}),1)...
                 +randn(length(VAT{side}.VAT{vat}),1)*2)');

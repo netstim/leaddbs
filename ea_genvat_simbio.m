@@ -14,12 +14,32 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
+    thresh=0.2;
+elseif nargin==6
+    acoords=varargin{1};
+    S=varargin{2};
+    side=varargin{3};
+    options=varargin{4};
+    stimname=varargin{5};
+    thresh=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='SimBio/FieldTrip';
         return
     end
 end
+
+S=ea_activecontacts(S);
+if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
+    fv.vertices=[0,0,0
+        0,0,0
+        0,0,0];
+    fv.faces=[1,2,3];
+    varargout{1}=fv;
+    varargout{2}=0;
+    return
+end
+
 
 
 vizz=0;
@@ -232,13 +252,14 @@ if ea_headmodel_changed(options,side,elstruct)
     
     %% calculate volume conductor
     disp('Done. Creating volume conductor...');
-    if side==2 % reorder mesh hexes so not be degenerated.
-        mesh.hex=mesh.hex(:,[4 3 2 1 8 7 6 5]);
-    end
-    %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
-     
-    vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
 
+    %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
+try     
+    vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+catch % reorder elements so not to be degenerated.
+            mesh.hex=mesh.hex(:,[4 3 2 1 8 7 6 5]);
+    vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+end
  
     
     save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','-v7.3');
@@ -350,7 +371,6 @@ gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient fr
     
     
     disp('Done. Calculating VAT...');
-    thresh=0.2; %0.0064; % for now take median of Astrom 2014 for 7.5 um Diameter-Axons
     
     vat.ET=vat.ET>thresh;
     vat.pos=vat.pos(vat.ET,:);

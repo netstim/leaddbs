@@ -115,7 +115,7 @@ end
 
 
 %% retrieve and delete prior results
-resultfig=ea_cvcleanup;
+resultfig=ea_cvcleanup(handles);
 
 if ~hold
     pV=getappdata(handles.convis,'pV');
@@ -502,7 +502,7 @@ if tf
     oo='on';
 end
 
-function resultfig=ea_cvcleanup
+function resultfig=ea_cvcleanup(handles)
 %% recruit handles from prior results from figure
 resultfig=getappdata(handles.convis,'resultfig');
 matsurf=getappdata(resultfig,'matsurf');

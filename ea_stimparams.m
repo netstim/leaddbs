@@ -145,8 +145,8 @@ set(handles.modelselect,'String',ndc);
 % end
 
 
-pos=get(gcf,'position');
-set(gcf,'position',[51,51,pos(3),pos(4)]);
+pos=get(handles.stimfig,'position');
+set(handles.stimfig,'position',[51,51,pos(3),pos(4)]);
 
 
 
@@ -931,9 +931,9 @@ if isfield(elstruct,'group')
 end
 
 % assign correct .m-file to function.
-genvatfunctions=getappdata(gcf,'genvatfunctions');
+genvatfunctions=getappdata(handles.stimfig,'genvatfunctions');
 ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
- 
+
         stimname=S.label;
 
 for el=1:length(elstruct)
@@ -945,7 +945,6 @@ for el=1:length(elstruct)
     else % single patient
  
         [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,S,side,options,stimname);
-        
         stimparams(1,side).volume=volume;
         flix=1;
     end
@@ -1629,9 +1628,12 @@ if groupmode
         lgfig=getappdata(handles.stimfig,'resultfig');
         M=getappdata(lgfig,'M');
         actpt=M.ui.listselect;
-        if length(actpt)>1
+        
+        if length(actpt)>1 % more than one entry selected
             actpt=1;
         end
+        setappdata(handles.stimfig,'actpt',actpt);
+
     end
     
     elstruct=getappdata(handles.stimfig,'elstruct');
@@ -2640,6 +2642,7 @@ options=getappdata(handles.stimfig,'options');
 if isempty(gS)
     clear gS
 end
+S=ea_activecontacts(S);
 gS(actpt)=S;
 setappdata(handles.stimfig,'gS',gS);
 

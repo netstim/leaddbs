@@ -844,6 +844,7 @@ if ~isempty(M.patient.list)
             end
             M.elstruct(pt).coords_mm=coords_mm;
             M.elstruct(pt).trajectory=trajectory;
+            
             M.elstruct(pt).name=[pats{pt}];
             if ~exist('markers','var') % backward compatibility to old recon format
                 
@@ -859,7 +860,12 @@ if ~isempty(M.patient.list)
             M.elstruct(pt).markers=markers;
             
         catch
-            %warning('No reconstruction present in folder. Using information stored in group-file.');
+            if pt>1 % first patient has worked but some other patient seems not to have worked.
+                try
+                    M.elstruct(1).coords_mm; % probe if error happens in pt. 1 ? if not show warning
+                    warning(['No reconstruction present for ',pats{pt},'. Please check.']);
+                end
+            end
         end
         
     end
