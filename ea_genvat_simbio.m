@@ -295,12 +295,9 @@ for source=1:4
     
     if ~isempty(Acnt)
         
-        
-        
         dpvx=coords(Acnt,:);
         
         volts=U(U~=0);
-        
         
         %% calculate voltage distribution based on dipole
         disp('Done. Calculating voltage distribution...');
@@ -308,6 +305,8 @@ for source=1:4
         
         if any(volts>0)
             unipolar=0;
+            U=U/2;
+            volts=volts/2;
         else
             unipolar=1;
         end
