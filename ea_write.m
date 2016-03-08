@@ -4,6 +4,12 @@ ea_updatemodel(options);
 end
 
 
+if options.d2.write || options.d3.write
+   if strcmp(options.atlasset,'Segment patient anatomy')
+      ea_subcorticalsegmentation(options); 
+   end
+end
+
 % Slice 2D Visualization
 if options.d2.write
     

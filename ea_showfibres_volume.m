@@ -143,12 +143,13 @@ for side=1:2
         if ~isempty(vatgrad)
             reduc=1;
             
-%             PL.quiv(side)=ea_arrow3([vatgrad.x(1:reduc:end),vatgrad.y(1:reduc:end),vatgrad.z(1:reduc:end)]-...
-%                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)],...
-%                 [vatgrad.x(1:reduc:end),vatgrad.y(1:reduc:end),vatgrad.z(1:reduc:end)]+...
-%                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)]);
-
-            PL.quiv(side)=quiver3(vatgrad(side).x(1:reduc:end),vatgrad(side).y(1:reduc:end),vatgrad(side).z(1:reduc:end),vatgrad(side).qx(1:reduc:end),vatgrad(side).qy(1:reduc:end),vatgrad(side).qz(1:reduc:end),3,'w-','LineWidth',1);
+            %             PL.quiv(side)=ea_arrow3([vatgrad.x(1:reduc:end),vatgrad.y(1:reduc:end),vatgrad.z(1:reduc:end)]-...
+            %                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)],...
+            %                 [vatgrad.x(1:reduc:end),vatgrad.y(1:reduc:end),vatgrad.z(1:reduc:end)]+...
+            %                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)]);
+            try % only one hemisphere could be defined.
+                PL.quiv(side)=quiver3(vatgrad(side).x(1:reduc:end),vatgrad(side).y(1:reduc:end),vatgrad(side).z(1:reduc:end),vatgrad(side).qx(1:reduc:end),vatgrad(side).qy(1:reduc:end),vatgrad(side).qz(1:reduc:end),3,'w-','LineWidth',1);
+            end
         end
 
         

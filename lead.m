@@ -66,7 +66,8 @@ ea_dispbn;
 earoot=[fileparts(which('lead')),filesep];
 as=dir([earoot,'atlases',filesep]);
 asc=cell(0);
-cnt=1;
+asc{1}='Segment patient anatomy';
+cnt=2;
 for i=1:length(as)
     if as(i).isdir
     asc{cnt}=as(i).name;
