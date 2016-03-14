@@ -62,9 +62,9 @@ set(gcf,'Name',[figtitle,'...building...']);
 axis equal
 axis fill
 
-%% Patient specific part (skipped if no patient is selected):
+%% Patient specific part (skipped if no patient is selected or no reco available):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
-
+if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file');
 
 if nargin>1
     multiplemode=1;
@@ -169,6 +169,10 @@ clear cnt
 stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation',options),'TooltipString','Stimulation Control Figure','ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
 
 
+else
+    options.writeoutstats=0; % if no electrodes are there, stats can't be written.
+    elstruct=struct;
+end
 else
     options.writeoutstats=0; % if no electrodes are there, stats can't be written.
     elstruct=struct;

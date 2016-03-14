@@ -20,11 +20,16 @@ end
 
 
         % fibers filename
+        if isstruct(vatmodality)
+            fibersfile=vatmodality;
+            
+        else
         switch vatmodality
             case 'Patient-specific fiber tracts'
                 fibersfile=[directory,options.prefs.FTR_normalized];
             otherwise
                 fibersfile=[options.earoot,'fibers',filesep,vatmodality,'.mat'];
+        end
         end
         
         % seed filename

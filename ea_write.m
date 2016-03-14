@@ -7,6 +7,13 @@ end
 if options.d2.write || options.d3.write
    if strcmp(options.atlasset,'Segment patient anatomy')
       ea_subcorticalsegmentation(options); 
+      
+      if ~options.native % normalize 2 MNI space
+          ea_normsubcorticalsegm(options);
+      end
+      options.atlasset=options.patientname;
+              options.atl.pt=1;
+              options.atl.can=0;
    end
 end
 

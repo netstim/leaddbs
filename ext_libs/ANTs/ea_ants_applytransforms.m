@@ -11,6 +11,11 @@ if nargin>1 % manual application
     ofis=varargin{3};
     useinverse=varargin{4};
 end
+if nargin>4
+    refim=varargin{5};
+else
+    refim=''; % use defaults
+end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
@@ -55,11 +60,18 @@ for fi=1:length(fis)
            ' -o ',ea_path_helper(ofis{fi})];
            
        if useinverse
-           tr=[' -r ',[subdir,options.prefs.prenii_unnormalized],...
+           if isempty(refim)
+               refim=[subdir,options.prefs.prenii_unnormalized];
+           end
+           
+           tr=[' -r ',refim,...
                ' -t ',ea_path_helper([subdir,lprebase]),'1InverseWarp.nii.gz',...
                ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'];           
        else
-           tr=[' -r ',[options.earoot,'templates',filesep,'mni_hires.nii'],...
+           if isempty(refim)
+               refim=[options.earoot,'templates',filesep,'mni_hires.nii'];
+           end
+           tr=[' -r ',refim,...
                ' -t ',ea_path_helper([subdir,lprebase]),'1Warp.nii.gz'...
                ' -t ',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat'];
        end

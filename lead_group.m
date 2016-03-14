@@ -291,7 +291,11 @@ options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),fil
 
 options.expstatvat.do=M.ui.statvat;
 
+try
 options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
+catch
+    ea_error('Localizations seem not properly defined.');
+end
 options.elmodel=M.elstruct(1).elmodel;
 options=ea_resolve_elspec(options);
 options.prefs=ea_prefs(options.patientname);
@@ -1270,6 +1274,17 @@ M=getappdata(gcf,'M');
 % set options
 options=ea_setopts_local(handles);
 stimname=ea_detstimname();
+
+    % determine if fMRI or dMRI
+    mods=get(handles.fiberspopup,'String');
+    mod=mods{get(handles.fiberspopup,'Value')};
+    switch mod
+        case {'Patient-specific fiber tracts','rest_tc'}
+            fibersfile=mod;
+        otherwise % load fibertracts once and for all subs here.
+                [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([fileparts(which('lead')),filesep,'fibers',filesep,mod,'.mat']);
+    end
+
 for pt=1:length(M.patient.list)
     
     % set pt specific options
@@ -1375,10 +1390,7 @@ end
     end
     
     
-    % determine if fMRI or dMRI
-    mods=get(handles.fiberspopup,'String');
-    mod=mods{get(handles.fiberspopup,'Value')};
-    
+
     
     % Step 2: Re-calculate VAT
     if isfield(M,'S')
@@ -1415,14 +1427,18 @@ end
         parcs=get(handles.labelpopup,'String');
         selectedparc=parcs{get(handles.labelpopup,'Value')};
         directory=[options.root,options.patientname,filesep];
-        switch mod
-            case 'rest_tc'
-                ea_error('Group statistics for fMRI are not yet supported. Sorry, check back later!');
-                pV=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
-                pX=spm_read_vols(pV);
-                ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
-            otherwise
-                ea_cvshowvatdmri(resultfig,directory,{mod,stimname},selectedparc,options);
+        if ischar(fibersfile)
+            switch mod
+                case 'rest_tc'
+                    ea_error('Group statistics for fMRI are not yet supported. Sorry, check back later!');
+                    pV=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+                    pX=spm_read_vols(pV);
+                    ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
+                otherwise
+                    ea_cvshowvatdmri(resultfig,directory,{mod,stimname},selectedparc,options);
+            end
+        else
+            ea_cvshowvatdmri(resultfig,directory,{fibersfile,stimname},selectedparc,options);
         end
     end
     close(resultfig);

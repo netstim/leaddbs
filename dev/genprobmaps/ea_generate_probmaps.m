@@ -1,4 +1,4 @@
-function generate_maps_refined(varargin)
+function ea_generate_probmaps(varargin)
 % function that will generate atlas maps from an image based on single
 % points.
 %
@@ -12,6 +12,7 @@ othresh=0.9;
 numpasses=1;
 mrun=50;
 mildnessfactor=2000; % increase to get less noisy but less specific images.
+useweights=0;
 
 if nargin>=3
     pts=varargin{1};
@@ -28,13 +29,13 @@ else
 end
 
 for src=1:length(srcs)
-       % ea_reslice_nii(srcs{src},['hd',srcs{src}],[0.22 0.22 0.22]);
-       try
-   S{src}=ea_load_nii(srcs{src});
-       catch
-           keyboard
-       end
-   
+    % ea_reslice_nii(srcs{src},['hd',srcs{src}],[0.22 0.22 0.22]);
+    try
+        S{src}=ea_load_nii(srcs{src});
+    catch
+        keyboard
+    end
+    
 end
 
 
@@ -209,32 +210,48 @@ end
 %% part two: iterate the whole brain by samples from this first estimate.
 voxcnt=length(pts);
 disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
-    Xprob=nan([size(S{1}.img)]);
+    Xprob=zeros([size(S{1}.img)]);
+
+    
 
     
     
     %% determine covariance structure of given pointset
     ixes=sub2ind(size(S{src}.img),pts(:,1),pts(:,2),pts(:,3));
     for src=1:length(srcs)
+        if useweights
+            Aprob{src}=nan([size(S{1}.img)]);
+        end
         profile(:,src)=S{src}.img(ixes);
     end
     up=mean(profile,1);
     stp=std(profile,1);
     
-%     % detemine V2. Delete if ~needed.
-%     mask=S{1}.img;
-%     mask(:)=0;
-%     mask(ixes)=1;
-%     mask=logical(mask);
-%     unprofile=zeros(sum(~mask(:)),length(srcs));
-%     for src=1:length(srcs)
-%         unprofile(:,src)=S{src}.img(~mask);
-%         vtwo(src)=mahal(up(src),unprofile(:,src));
-%     end
-%     %end delete.
-%     vtwo=vtwo/mean(vtwo);    
+    % detemine V2. Delete if ~needed.
+    mask=S{1}.img;
+    mask(:)=0;
+    mask(ixes)=1;
+    mask=logical(mask);
+    unprofile=zeros(sum(~mask(:)),length(srcs));
     
     
+    
+    for src=1:length(srcs)
+        allup=mean(S{src}.img(:));
+        allstd=std(S{src}.img(:));
+        unprofile(:,src)=S{src}.img(~mask);
+        vtwo(src)=mahal((up(src)-allup)/allstd,(unprofile(:,src)-allup)/allstd);
+        vone(src)=(stp(src)/up(src)); % how constant are values in different acquisitions in the same tissue?
+    end
+    %end delete.
+    vtwo=vtwo./sum(vtwo);
+    vone=vone./sum(vone);
+    v=vone.*vtwo;
+    v=v./sum(v);
+    
+    % equalize v
+    v=v.^(1/6);
+    v=v./sum(v); % sum of v is 1.
     
     disp(['Mean values of profile for ',label,':']);
     disp(num2str(up));
@@ -243,20 +260,17 @@ disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
     
     
     
-%     vone=(stp./up).^-1; % how constant are values in different acquisitions in the same tissue?
-%     vone=vone./mean(vone);
-%     
-%     v=vone.*vtwo;
     
-    metrics=[voxcnt,up,stp];
-    save(['Metrics_',label,num2str(length(srcs))],'metrics');
+    
+    metrics=[voxcnt,up,stp,vone,vtwo];
+    save([directory,'Metrics_',label,num2str(length(srcs))],'metrics');
     
     for src=1:length(srcs);
         profile(:,src)=(profile(:,src)-up(src))/stp(src);
     end
     
     ea_dispercent(0,'Iterating voxels');
-    dimens=numel(Xprob(:,:,:));
+    dimens=numel(Xprob(:));
     chunk=5000000;
     for ind=1:chunk:dimens
         
@@ -265,6 +279,7 @@ disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
         end
         thisindprofile=zeros(chunk,length(srcs));
         for src=1:length(srcs)
+
             thisindprofile(:,src)=S{src}.img(ind:ind+chunk-1);
         end
         
@@ -273,16 +288,33 @@ disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
         %Xprob(ind:ind+slab-1)=1/exp(mahal(thisindprofile,profile));
         for src=1:length(srcs);
             thisindprofile(:,src)=(thisindprofile(:,src)-up(src))/stp(src);
+            if useweights
+                Aprob{src}(ind:ind+chunk-1)=mahal(thisindprofile(:,src),profile(:,src));
+            end
+
         end
-        
-        Xprob(ind:ind+chunk-1)=mahal(thisindprofile,profile);
+        if ~useweights
+
+            Xprob(ind:ind+chunk-1)=mahal(thisindprofile,profile);
+            
+        end
     end
     
     
+
+
   
         
     labout=S{1};
-    labout.img=1/exp(0.01*Xprob);
+    if ~useweights
+        labout.img=1/exp(0.02*Xprob);
+    else
+        labout.img(:)=0;
+        for src=1:length(srcs);
+            labout.img=labout.img+((1/exp(0.15*Aprob{src}))*v(src));
+        end
+        
+    end
     labout.dt=[16,1];
     labout.fname=[directory,label,'_secondlevel.nii'];
     spm_write_vol(labout,labout.img);
@@ -297,23 +329,6 @@ disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
 
 
 
-%% part three: export hard parcellation.
-
-% im=labout.img;
-% im=im>0.05;
-% CC=bwconncomp(im,26);
-% 
-% 
-% sizes=cell2mat(cellfun(@length,CC.PixelIdxList,'Uniformoutput',0));
-% [~,ix]=sort(sizes);
-% cnt=1;
-% for c=ix(end-1:end)
-%    iout=nan(size(im));
-%    iout(CC.PixelIdxList{c})=labout.img(CC.PixelIdxList{c});
-%    labout.fname=[label,'_component',num2str(cnt),'.nii'];
-%    cnt=cnt+1;
-%    spm_write_vol(labout,iout);
-% end
 
 
 

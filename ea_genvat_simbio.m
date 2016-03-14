@@ -14,7 +14,7 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=0.2;
+    thresh=0.045;
 elseif nargin==6
     acoords=varargin{1};
     S=varargin{2};
@@ -254,12 +254,17 @@ if ea_headmodel_changed(options,side,elstruct)
     disp('Done. Creating volume conductor...');
 
     %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
-try     
-    vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-catch % reorder elements so not to be degenerated.
-            mesh.hex=mesh.hex(:,[4 3 2 1 8 7 6 5]);
-    vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-end
+    try
+        %    vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+        vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.14 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+        %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+
+    catch % reorder elements so not to be degenerated.
+        mesh.hex=mesh.hex(:,[4 3 2 1 8 7 6 5]);
+        % vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+        vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.14 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+        %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+    end
  
     
     save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','-v7.3');
@@ -342,7 +347,11 @@ gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient fr
         cnt=cnt+1;
     end
     indices=unique(indices(2:end-1));
+    try
     vatgrad(side).x=midpts(indices,1); vatgrad(side).y=midpts(indices,2); vatgrad(side).z=midpts(indices,3);
+    catch
+        keyboard
+    end
     norm_gradient=gradient(indices,:);
     anormgrad=mean(abs(norm_gradient),2);
     % add compression of really large gradient values for visualization..
@@ -397,9 +406,11 @@ end
 [xg,yg,zg] = meshgrid(gv{1},gv{2},gv{3});
 eg = F(xg,yg,zg);
 eg(isnan(eg))=0;
+eg(eg>0)=1;
+
 vatfv=isosurface(xg,yg,zg,eg,0.75);
 
-vatvolume=nnz(eg)*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
+vatvolume=sum(eg(:))*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
 S(side).volume=vatvolume;
 
 chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);

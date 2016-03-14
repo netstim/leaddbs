@@ -352,12 +352,11 @@ else
 end
 %try
 
-ea_crop_nii(fname);
-
 
 nii=spm_vol(fname);
 
 nii.img=spm_read_vols(nii);
+
 %catch
 
 %end

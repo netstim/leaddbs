@@ -34,8 +34,14 @@ if ~changedstates(1) % fibers file already loaded
     fibers=fibers(:,1:3);
     fibersidx=getappdata(resultfig,'fibersidx');
 else % load data
+    if ischar(fibersfile)
     [fibers,fibersidx]=ea_loadfibertracts(fibersfile);
         setappdata(resultfig,'fibers',fibers);
+    else
+        fibers=fibersfile.fibers;
+        fibersidx=fibersfile.fibersidx;
+        clear fibersfile
+    end
     idxv=fibers(:,4);
     fibers=fibers(:,1:3);
     setappdata(resultfig,'fibersidx',fibersidx);
