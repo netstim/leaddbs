@@ -66,13 +66,16 @@ ea_dispbn;
 earoot=[fileparts(which('lead')),filesep];
 as=dir([earoot,'atlases',filesep]);
 asc=cell(0);
-asc{1}='Segment patient anatomy';
-cnt=2;
+cnt=1;
 for i=1:length(as)
     if as(i).isdir
     asc{cnt}=as(i).name;
     cnt=cnt+1;
     end
+end
+options.prefs=ea_prefs('');
+if options.prefs.env.dev
+asc{end+1}='Segment patient anatomy';
 end
 excludes={'.','..'};
 asc(ismember(asc,excludes))=[];
@@ -145,7 +148,7 @@ set(gcf,'name','Welcome to LEAD-DBS');
 % add normalization methods to menu
 cnt=1;
 ndir=dir([earoot,'ea_normalize_*.m']);
-options.prefs=ea_prefs('');
+
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);
     try

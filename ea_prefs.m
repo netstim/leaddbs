@@ -124,3 +124,6 @@ prefs.video.opts.FrameRate=24;
 prefs.video.opts.Duration=20;
 prefs.video.opts.Periodic=true;
 prefs.ls.dir='/PA/Neuro/_projects/lead/lead_server/';
+
+%% environment
+prefs.env.dev=1;

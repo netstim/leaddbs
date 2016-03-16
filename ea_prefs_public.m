@@ -113,3 +113,6 @@ prefs.addfibers={}; % additional fibers to show.
 %% lead server:
 
 prefs.ls.autosave=0;
+
+%% environment
+prefs.env.dev=0;
