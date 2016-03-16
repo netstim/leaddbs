@@ -63,6 +63,27 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
 %            jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
                         ea_imshowpair(jim,options,addstr);
 
+            % ----------------------------------------------------------
+            % edited by TH 2016-02-17 to add windowed normalization check
+            % ----------------------------------------------------------
+            mni_img=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
+            mni_img.img(:)=zscore(mni_img.img(:));
+            mni_img.img=(mni_img.img-min(mni_img.img(:)))/(max(mni_img.img(:))-min(mni_img.img(:)));
+            
+            checkfgl=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
+            pt_gl = ea_load_nii(checkfgl);
+            pt_gl.img=(pt_gl.img-min(pt_gl.img(:)))/(max(pt_gl.img(:)));
+            pt_gl.img(pt_gl.img>0.5) = 0.5;
+            pt_gl.img=(pt_gl.img-min(pt_gl.img(:)))/(max(pt_gl.img(:)));
+            
+            if ~isequal(size(mni_img.img),size(pt_gl.img))
+                disp('ERROR: glanat not resliced to align with mni_hires template. Skipping windowed check normalization');
+            else
+                wim = cat(4,pt_gl.img,mni_img.img);
+                ea_imshowpair_windowed(wim,options,addstr);
+            end
+            % ----------------------------------------------------------
+
         else legacy % use old wireframe images
             matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'mni_wires.nii,1'];
                 checkf};
