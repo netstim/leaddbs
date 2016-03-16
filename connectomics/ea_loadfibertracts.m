@@ -2,7 +2,7 @@ function [fibers,idx]=ea_loadfibertracts(cfile)
 
 fibinfo=load(cfile);
 if ~isfield(fibinfo,'ea_fibformat')
-fibinfo=ea_convertfibs2newformat(fibinfo);
+fibinfo=ea_convertfibs2newformat(fibinfo,cfile);
 end
 
 fibers=fibinfo.fibers;
@@ -12,7 +12,7 @@ idx=fibinfo.idx;
 
 
 
-function ftr=ea_convertfibs2newformat(fibinfo)
+function ftr=ea_convertfibs2newformat(fibinfo,cfile)
     fn=fieldnames(fibinfo);
 
 if isfield(fn,'normalized_fibers_mm')
@@ -42,10 +42,11 @@ ea_dispercent(1,'end');
 
 fibers=[fibers,idxv];
 
-[pth,fn,ext]=fileparts(fibers);
+[pth,fn,ext]=fileparts(cfile);
 ftr.fourindex=1;
 ftr.ea_fibformat='1.0';
 ftr.fibers=fibers;
+ftr.idx=idx;
 disp('Saving fibers in new format');
 save(fullfile(pth,[fn,'.mat']),'-struct','ftr','-v7.3');
 disp('Done.');

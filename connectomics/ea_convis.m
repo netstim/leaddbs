@@ -297,29 +297,46 @@ function [directory,pdirectory,selectedparc]=ea_cvinitgui(handles,options)
 
 % parcellation popup:
 
-directory=[options.root,options.patientname,filesep];
 
-pdirs=dir([directory,'connectomics',filesep]);
+pdirs=dir([options.earoot,filesep,'templates',filesep,'labeling',filesep,'*.nii']);
 cnt=1;
 
 for pdir=1:length(pdirs)
-    if pdirs(pdir).isdir && ~strcmp(pdirs(pdir).name,'.') && ~strcmp(pdirs(pdir).name,'..')
-        parcs{cnt}=pdirs(pdir).name;
+        [~,parcs{cnt}]=fileparts(pdirs(pdir).name);
         cnt=cnt+1;
-    end
 end
-if ~exist('parcs','var')
-    cv_disableallbutvats(handles);
-    return
-end
+
 set(handles.labelpopup,'String',parcs);
 if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'));
     set(handles.labelpopup,'Value',length(get(handles.labelpopup,'String')));
 end
 
 selectedparc=parcs{get(handles.labelpopup,'Value')};
-
 pdirectory=[options.root,options.patientname,filesep,'connectomics',filesep,selectedparc,filesep];
+
+
+% check if selected parcellation exists for patient data as well:
+directory=[options.root,options.patientname,filesep];
+
+pdirs=dir([directory,'connectomics',filesep]);
+
+cnt=1;
+parcs=cell(1);
+parcs{1}='';
+for pdir=1:length(pdirs)
+    if pdirs(pdir).isdir && ~strcmp(pdirs(pdir).name,'.') && ~strcmp(pdirs(pdir).name,'..')
+        parcs{cnt}=pdirs(pdir).name;
+        cnt=cnt+1;
+    end
+end
+
+if ~ismember({selectedparc},parcs)
+  
+    cv_enablevats(handles);
+%
+end
+
+
 
 function ea_initmatrixlevel(handles,directory,pdirectory,selectedparc,options)
 
@@ -354,8 +371,10 @@ for tcdir=1:length(tcdirs)
 end
 
 if ~exist('modlist','var')
+    cv_disablevats(handles);
     cv_disablemats(handles);
 else
+    cv_enablevats(handles);
     cv_enablemats(handles);
 end
 
@@ -392,6 +411,7 @@ function [filesare,labelsare,mods]=ea_initvoxellevel(handles,pdirectory)
 
 %% init voxel level controls:
 % Metric:
+filesare{1}='';
 if exist([pdirectory,'graph'],'file')
     testits={'deg_','eig_','eff_','sfs_'};
     labelits={'degree centrality','eigenvector centrality','nodal efficiency','structure function similarity'};
@@ -425,6 +445,7 @@ if exist('filesare','var')
     
     fis=dir([pdirectory,'graph',filesep,selectedprefix,'*.nii']);
     cnt=1;
+    mods{1}='';
     for fi=1:length(fis)
         mods{cnt}=fis(fi).name(5:end);
         [~,mods{cnt}]=fileparts(mods{cnt}); % remove .nii extension
@@ -534,23 +555,33 @@ try delete(graphsurf); end
 
 %% helperfunctions to enable/disable GUI parts.
 
-function cv_disableallbutvats(handles)
-set(handles.labelpopup,'Enable','off');
-set(handles.vizgraph,'Enable','off');
-set(handles.voxmodality,'Enable','off');
+function cv_enablevats(handles)
+% set(handles.labelpopup,'Enable','on');
+% set(handles.vizgraph,'Enable','off');
+% set(handles.voxmodality,'Enable','off');
+% 
+% set(handles.voxmetric,'Enable','off');
+% set(handles.voxthresh,'Enable','off');
+% set(handles.vizmat,'Enable','off');
+% set(handles.matmodality,'Enable','off');
+% set(handles.matseed,'Enable','off');
+% set(handles.xmm,'Enable','off');
+% set(handles.ymm,'Enable','off');
+% set(handles.zmm,'Enable','off');
+% set(handles.matthresh,'Enable','off');
+% set(handles.timewindow,'Enable','off');
+% set(handles.timeframe,'Enable','off');
+% set(handles.timecircle,'Enable','off');
 
-set(handles.voxmetric,'Enable','off');
-set(handles.voxthresh,'Enable','off');
-set(handles.vizmat,'Enable','off');
-set(handles.matmodality,'Enable','off');
-set(handles.matseed,'Enable','off');
-set(handles.xmm,'Enable','off');
-set(handles.ymm,'Enable','off');
-set(handles.zmm,'Enable','off');
-set(handles.matthresh,'Enable','off');
-set(handles.timewindow,'Enable','off');
-set(handles.timeframe,'Enable','off');
-set(handles.timecircle,'Enable','off');
+
+set(handles.vatmodality,'Enable','on');
+set(handles.vatseed,'Enable','on');
+set(handles.vatthresh,'Enable','on');
+set(handles.vatthreshis,'Enable','on');
+set(handles.lvatcheck,'Enable','on');
+set(handles.rvatcheck,'Enable','on');
+set(handles.vizvat,'Enable','on');
+
 
 function cv_disablevoxs(handles)
 set(handles.vizgraph,'Enable','off');
@@ -576,6 +607,8 @@ set(handles.timeframe,'Enable','off');
 set(handles.timecircle,'Enable','off');
 
 function cv_enablemats(handles)
+
+set(handles.labelpopup,'Enable','on');
 set(handles.matmodality,'Enable','on');
 set(handles.matseed,'Enable','on');
 set(handles.xmm,'Enable','on');
@@ -606,13 +639,7 @@ set(handles.lvatcheck,'Enable','off');
 set(handles.rvatcheck,'Enable','off');
 set(handles.vatthresh,'Enable','off');
 
-function cv_enablevats(handles)
-set(handles.vizvat,'Enable','on');
-set(handles.vatmodality,'Enable','on');
-set(handles.vatseed,'Enable','on');
-set(handles.lvatcheck,'Enable','on');
-set(handles.rvatcheck,'Enable','on');
-set(handles.vatthresh,'Enable','on');
+
 
 
 

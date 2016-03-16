@@ -18,11 +18,13 @@ disp('Calculating Fibers/Connectivity...');
 hold on
 
 % check how many stimulation fields are already in the struct
-load([options.root,options.patientname,filesep,'ea_stats']);
-try
-    priorstimlength=length(ea_stats.stimulation); % check if there are already stimulations inside.
-catch
-    priorstimlength=0;
+if options.writeoutstats
+    try
+    load([options.root,options.patientname,filesep,'ea_stats']);
+        priorstimlength=length(ea_stats.stimulation); % check if there are already stimulations inside.
+    catch
+        priorstimlength=0;
+    end
 end
 
 %% load fibers (either from file or from figure and store in figure for next time).
@@ -36,7 +38,6 @@ if ~changedstates(1) % fibers file already loaded
 else % load data
     if ischar(fibersfile)
     [fibers,fibersidx]=ea_loadfibertracts(fibersfile);
-        setappdata(resultfig,'fibers',fibers);
     else
         fibers=fibersfile.fibers;
         fibersidx=fibersfile.fibersidx;
@@ -45,7 +46,8 @@ else % load data
     idxv=fibers(:,4);
     fibers=fibers(:,1:3);
     setappdata(resultfig,'fibersidx',fibersidx);
-    setappdata(resultfig,'fibersfile',fibersfile);
+    setappdata(resultfig,'fibers',fibers);
+    %setappdata(resultfig,'fibersfile',fibersfile);
 end
 numtotalfibs=length(fibersidx);
 
@@ -217,11 +219,10 @@ for side=sides
         
         ea_stats.stimulation(priorstimlength+1).ft(side).nfibercounts{la}=ea_stats.stimulation(priorstimlength+1).ft(side).fibercounts{la}/volume{side};
         ea_stats.stimulation(priorstimlength+1).ft(side).labels{la}=atlas_lgnd{2};
-        
+            save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
     end
     
     
-    save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
     
     
     
