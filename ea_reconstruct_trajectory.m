@@ -24,6 +24,15 @@ if options.verbose>1; colormap(gray); end
 endcount=0;
 nanflag=0;
 
+
+% determine startslice at ~ z=8.7mm
+mmpt=[0;0;8.7;1];
+mmvx=tra_nii.mat\mmpt;
+startslice=round(mmvx(3)); 
+clear mmpt mmvx
+
+
+
 if ~refine % if this is not a refine-run but an initial run, mask of first slice has to be defined heuristically.
     % define initial mask
     mask=zeros(size(slice,1),size(slice,2));
@@ -47,7 +56,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             if side==1
                 mask=fliplr(mask);
             end
-            slice=double(tra_nii.img(:,:,size(tra_nii.img,3)-10))'; % extract the correct slice.
+            slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
             %slice=fliplr(slice);
             slice(slice==0)=nan;
             mn=figure('color','w','ToolBar','none','NumberTitle','off','Menubar','none','name','Please specify manual starting point.'); imagesc(slice); colormap gray;
@@ -61,9 +70,6 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             mask=zeros(size(slice,1),size(slice,2));
             
             mask(Y-10:Y+10,X-10:X+10)=1;
-            
-            
-            
     end
     
     
@@ -71,7 +77,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
     slice=zeros(size(mask,1),size(mask,2),4);
     slicebw=zeros(size(mask,1),size(mask,2),4);
     for i=10:14
-        [slice(:,:,i),slicebw(:,:,i)]=ea_prepare_slice(tra_nii,mask,1,size(tra_nii.img,3)-(i-1),options);
+        [slice(:,:,i),slicebw(:,:,i)]=ea_prepare_slice(tra_nii,mask,1,startslice-(i-1),options);
     end
     slice=mean(slice,3);
     slicebw=logical(mean(slicebw,3));
@@ -88,7 +94,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
     
     try
         isempty(stats.Centroid); % this is only to check if stats.Centroid is empty.
-        centerline(1,:)=[stats.Centroid,size(tra_nii.img,3)];
+        centerline(1,:)=[stats.Centroid,startslice];
     catch
         
         disp('Threshold too high?');
@@ -104,7 +110,9 @@ zfifteen=Vmat\[0;0;-15.5;1];
 
 %% starting slice 2:end
 
-for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have been processed).
+
+
+for sliceno=2:startslice % sliceno is the counter (how many slices have been processed).
     % uncomment the following two lines to write out slice views.
     %imwrite(((reshape(slice(logical(mask)),sqrt(numel(find(mask))),sqrt(numel(find(mask)))))-min(slice(:)))/(max(slice(:)-min(slice(:)))),['slice_',num2str(sliceno),'.png']);
     %imwrite(reshape(slicebw(logical(mask)),sqrt(numel(find(mask))),sqrt(numel(find(mask)))),['slicebw_',num2str(sliceno),'.png']);
@@ -122,7 +130,7 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
     end
     
     
-    imgsliceno=size(tra_nii.img,3)-(sliceno-1); % imgsliceno is the slice number in the image.
+    imgsliceno=startslice-(sliceno-1); % imgsliceno is the slice number in the image.
     
     
     if imgsliceno<zfifteen(3) && ~strcmp(options.entrypoint,'Cg25')
@@ -164,7 +172,7 @@ for sliceno=2:size(tra_nii.img,3) % sliceno is the counter (how many slices have
     
     
     
-    %% part 2: check wheter the new point is plausible.
+    %% part 2: check whether the new point is plausible.
     %-------------------------------------------------------------------------------------------------%
     
     

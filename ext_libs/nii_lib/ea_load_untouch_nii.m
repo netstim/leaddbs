@@ -187,5 +187,11 @@ function nii = load_untouch_nii(filename, img_idx, dim5_idx, dim6_idx, dim7_idx,
    end
 
 
+   
+   nii.mat=[nii.hdr.hist.srow_x
+       nii.hdr.hist.srow_y
+       nii.hdr.hist.srow_z
+       [0,0,0,1]];
+   
    return					% load_untouch_nii
 

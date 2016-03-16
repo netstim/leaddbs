@@ -39,9 +39,9 @@ function [coords,trajvector,trajectory,tramat]=ea_reconstruct(patientname,option
 % Andreas Horn
 
 
-tra_nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
+tra_nii=ea_load_untouch_nii([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
 try
-cor_nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,options.prefs.cornii]);
+cor_nii=ea_load_untouch_nii([options.root,options.prefs.patientdir,filesep,options.prefs.cornii]);
 end
 
 imat=zeros([size(tra_nii.img,1),size(tra_nii.img,2),size(tra_nii.img,3),2]);
@@ -58,7 +58,7 @@ tra_nii.img=ea_gencontrastimage(imat,options.axiscontrast);
 
 trajectory=[]; % empty initialization.
 for refine=0:options.refinesteps
-[trajectory,trajvector]=ea_reconstruct_trajectory(trajectory,tra_nii,side,refine,options);
+    [trajectory,trajvector]=ea_reconstruct_trajectory(trajectory,tra_nii,side,refine,options);
 end
 
 

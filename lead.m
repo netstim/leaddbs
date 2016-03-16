@@ -74,12 +74,12 @@ for i=1:length(as)
     end
 end
 options.prefs=ea_prefs('');
-if options.prefs.env.dev
-asc{end+1}='Segment patient anatomy';
-end
+
 excludes={'.','..'};
 asc(ismember(asc,excludes))=[];
-
+if options.prefs.env.dev
+    asc{end+1}='Segment patient anatomy';
+end
 asc{end+1}='Use none';
 
 set(handles.atlassetpopup,'String',asc);
