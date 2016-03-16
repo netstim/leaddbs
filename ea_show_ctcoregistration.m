@@ -42,6 +42,14 @@ if ~legacy % use new imshowpair tool
 
     ea_imshowpair(jim,options,'Preoperative MRI (cyan) & Postoperative CT (orange)');
 
+    % ----------------------------------------------------------
+    % edited by TH 2016-02-17 to add windowed coregistration view
+    % ----------------------------------------------------------
+    wim = cat(4,mr.img,ct.img);
+    ea_imshowpair_windowed(wim,options,'Preoperative MRI & Postoperative CT');
+    % ----------------------------------------------------------
+
+    
 elseif legacy
 % export wireframe of CT:
 disp('Generating wireframe from CT image...');
