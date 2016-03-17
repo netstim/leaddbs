@@ -307,11 +307,11 @@ disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
         
     labout=S{1};
     if ~useweights
-        labout.img=1/exp(0.02*Xprob);
+        labout.img=1/exp(0.01*Xprob);
     else
         labout.img(:)=0;
         for src=1:length(srcs);
-            labout.img=labout.img+((1/exp(0.15*Aprob{src}))*v(src));
+            labout.img=labout.img+((1/exp(0.1*Aprob{src}))*v(src));
         end
         
     end
