@@ -920,6 +920,7 @@ function stimulate_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+ea_busyaction('on',handles.stimfig,'stim');
 elstruct=getappdata(handles.stimfig,'elstruct');
 resultfig=getappdata(handles.stimfig,'resultfig');
 options=getappdata(handles.stimfig,'options');
@@ -960,8 +961,6 @@ for group=1:length(PL)
 end
 clear PL
 
-figtitle=get(resultfig,'Name');
-set(resultfig,'Name',[figtitle,'...building...']);
 
 for group=flix
     setappdata(resultfig,'stimparams',stimparams(group,:));
@@ -978,7 +977,7 @@ for group=flix
     end
 end
 setappdata(resultfig,'PL',PL);
-set(resultfig,'Name',figtitle);
+ea_busyaction('off',handles.stimfig,'stim');
 
 
 function deletePL(PL)
