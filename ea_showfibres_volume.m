@@ -148,7 +148,9 @@ for side=1:2
             %                 [vatgrad.x(1:reduc:end),vatgrad.y(1:reduc:end),vatgrad.z(1:reduc:end)]+...
             %                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)]);
             try % only one hemisphere could be defined.
-                PL.quiv(side)=quiver3(vatgrad(side).x(1:reduc:end),vatgrad(side).y(1:reduc:end),vatgrad(side).z(1:reduc:end),vatgrad(side).qx(1:reduc:end),vatgrad(side).qy(1:reduc:end),vatgrad(side).qz(1:reduc:end),3,'w-','LineWidth',1);
+                if stimparams(side).volume
+                    PL.quiv(side)=quiver3(vatgrad(side).x(1:reduc:end),vatgrad(side).y(1:reduc:end),vatgrad(side).z(1:reduc:end),vatgrad(side).qx(1:reduc:end),vatgrad(side).qy(1:reduc:end),vatgrad(side).qz(1:reduc:end),3,'w-','LineWidth',1);
+                end
             end
         end
 
@@ -229,51 +231,21 @@ end
 % correct togglestates
 
 
-% for side=options.sides
-%     
-%     if ~vaton(side)
-%         try
-%             objvisible([],[],PL.vatsurfs(side,:),resultfig,'vaton',[],side,0)
-%         end
-%     end
-%     
-%     if ~quivon(side)
-%         try
-%             objvisible([],[],PL.quiv(side),resultfig,'quivon',[],side,0)
-%         end
-%     end
-%     
-%     if ~fibson(side)
-%         try
-%             objvisible([],[],PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,0)
-%         end
-%     end
-%     
-%     
-%     
-%     for la=1:length(stimparams(1).labelatlas)
-%         
-%         if ~dcfibson(la,side)
-%             try
-%                 objvisible([],[],PL.fib_plots.dcfibs(la,side,:),resultfig,'dcfibson',la,side,0)
-%             end
-%         end
-%         
-%         if ~labelson(la,side)
-%             try
-%                 objvisible([],[],PL.regionsurfs(la,side,:),resultfig,'labelson',la,side,0)
-%             end
-%         end
-%         
-%         if ~captionson(la,side)
-%             try
-%                 objvisible([],[],PL.conlabels(la,side,:),resultfig,'captionson',la,side,0)
-%             end
-%             
-%         end
-%     end
-%     
-% end
+for side=options.sides
+    
+    if ~vaton(side)
+        try
+            objvisible([],[],PL.vatsurfs(side,:),resultfig,'vaton',[],side,0)
+        end
+    end
+    
+    if ~quivon(side)
+        try
+            objvisible([],[],PL.quiv(side),resultfig,'quivon',[],side,0)
+        end
+    end
+    
+end
 
 
 setappdata(resultfig,'PL',PL);
