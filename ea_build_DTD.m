@@ -35,7 +35,7 @@ end;
 b0_image = mean(mr.dataAy(:,:,:,b0idx),4);
 mean_DTI = mean(mr.dataAy(:,:,:,setdiff(1:sz(4),b0idx)),4);
 
-display('Calculating diffusion tensor ...');
+display('Concatenating HARDI-Data ...');
 
 Eval = zeros([sz(1:3) 3]);
 Evec = zeros([sz(1:3) 3 3]);
