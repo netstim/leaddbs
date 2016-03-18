@@ -34,8 +34,8 @@ fv=isosurface(X,Y,Z,permute(tmX,[2,1,3]),0.5); % graph_metric
 
 if ischar(options.prefs.hullsimplify)
     % get to 1500 faces
-    simplify=1500/length(fv.faces);
-    fv=reducepatch(fv,simplify);
+    simplify=1500;
+    fv=reducepatch(fv,1500);
 else
     if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
         
