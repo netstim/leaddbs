@@ -304,8 +304,12 @@ guidata(hObject, handles);
 % Use UIRESUME instead of delete because the OutputFcn needs
 % to get the updated handles structure.
 leadfigure=getappdata(handles.acpcfig,'leadfigure');
+
 fid=ea_acpc2mni(cfg,leadfigure);
 
+
+leaddir=[fileparts(which('lead')),filesep];
+        tempfile=[leaddir,'templates',filesep,'mni_hires.nii'];
 
 
 for pt=1:length(fid)

@@ -1,4 +1,4 @@
-function fid=ea_acpc2mni(cfg,leadfig)
+function fid=ea_acpc2mni(varargin)
 % leadfig can be either a handle to the lead figure with selected patient
 % directories or a cell of patient directories.
 % __________________________________________________________________________________
@@ -12,6 +12,12 @@ fidpoints_mm=[0.25,1.298,-5.003       % AC
     -0.188,-24.756,-2.376            % PC
     0.25,1.298,55];              % Midsag
 
+cfg=varargin{1};
+leadfig=varargin{2};
+
+
+
+
 
 if iscell(leadfig)
 uidir=leadfig;
@@ -24,12 +30,17 @@ end
 
 acpc=[cfg.xmm,-cfg.ymm,cfg.zmm];
 if cfg.mapmethod
-    [FileName,PathName] = uiputfile('ACPC2MNI_Mapping.nii','Save Mapping...');
+    if nargin<5
+        [FileName,PathName] = uiputfile('ACPC2MNI_Mapping.nii','Save Mapping...');
+    else
+        [PathName,FileName,Ext] = fileparts(varargin{5});
+        FileName=[FileName,Ext];
+    end
 end
 
 leaddir=[fileparts(which('lead')),filesep];
 
-if isempty(uidir)
+if ~length(uidir)
 ea_error('Please choose and normalize patients first.');
 end
 
@@ -38,21 +49,29 @@ disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected
 for pt=1:length(uidir)
  %   ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
-    [~,tempfile]=ea_whichnormmethod(directory);
-
+%     if strcmp(whichnormmethod,'ea_normalize_ants')
+%             ea_error('ANTs normalization is not supported for ACPC2MNI conversion as of now.');
+%     end
     
+if nargin>2
+    varargin{3}=whichnormmethod;
+    varargin{4}=tempfile;
+else
+    [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
+end
+
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile);
     
     [~,ptname]=fileparts(uidir{pt});
     options.prefs=ea_prefs(ptname);
-    
-    % warp into patient space:
 
-    try
-    [fpinsub_mm] = ea_map_coords(fidpoints_vox', tempfile, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized]);
-    catch
-        ea_error(['Please check deformation field in ',directory,'.']);
-    end
+    % warp into patient space:
+    
+%     try
+    [fpinsub_mm] = ea_map_coords(fidpoints_vox', tempfile, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
+%     catch
+%         ea_error(['Please check deformation field in ',directory,'.']);
+%     end
     
     fpinsub_mm=fpinsub_mm';
     
@@ -88,16 +107,13 @@ for pt=1:length(uidir)
     fid(pt).WarpedPointNative=warpcoord_mm(1:3)';
     
     % check it inverse normparams file has correct voxel size.
-    if (~strcmp(whichnormmethod,'ea_normalize_ants')) && (~strcmp(whichnormmethod,'ea_normalize_ants_brainsfit'));
-        
-        Vinv=spm_vol([directory,'y_ea_inv_normparams.nii']);
-        if ~isequal(Vinv.dim,anat.dim)
-            ea_redo_inv(directory,options);
-        end
+    Vinv=spm_vol([directory,'y_ea_inv_normparams.nii']);
+    if ~isequal(Vinv.dim,anat.dim)
+                ea_redo_inv(directory,options);
     end
-    % re-warp into MNI:
+        % re-warp into MNI:
 
-        [warpinmni_mm] = ea_map_coords(warpcoord_vox, tempfile, [directory,'y_ea_inv_normparams.nii'], tempfile);
+        [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], tempfile,whichnormmethod);
     
     warppts(pt,:)=warpinmni_mm';
     fid(pt).WarpedPointMNI=warppts(pt,:);
@@ -165,8 +181,8 @@ cfg_util('run',{matlabbatch});
 clear matlabbatch
 
 [pth,fn,ext]=fileparts(bb.fname);
-ea_crop_nii([pth,filesep,fn,ext]);
-ea_crop_nii([pth,filesep,'s',fn,ext]);
+ea_crop_nii([pth,fn,ext]);
+ea_crop_nii([pth,'s',fn,ext]);
 end
 assignin('base','fid',fid);
 

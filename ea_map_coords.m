@@ -1,4 +1,4 @@
-function [XYZ_mm, XYZ_src_vx] = ea_map_coords(XYZ_vx, trg, xfrm, src)
+function [XYZ_mm, XYZ_src_vx] = ea_map_coords_exp(varargin)
 % This version of map_coords is based on Ged Ridgway's version but is
 % optimized for usage in Lead-DBS. Especially, it supports ANTs and
 % interpolations in high dimensional warping with SPM.
@@ -8,6 +8,12 @@ function [XYZ_mm, XYZ_src_vx] = ea_map_coords(XYZ_vx, trg, xfrm, src)
 %    [XYZ_mm XYZ_src_vx] = map_coords(XYZ_vx, '', 'y_img.nii', src);
 %
 % Ged Ridgway (drc.spm at gmail.com)
+
+
+XYZ_vx=varargin{1};
+trg=varargin{2};
+xfrm=varargin{3}; 
+src=varargin{4};
 
 
 if nargin < 2
@@ -56,8 +62,13 @@ if ~isempty(xfrm)
         
         % check if ANTs has been used here:
         directory=fileparts(xfrm);
-        [whichnormmethod,reft]=ea_whichnormmethod([directory,filesep]);
-        if strcmp(whichnormmethod,'ea_normalize_ants') || strcmp(whichnormmethod,'ea_normalize_ants_brainsfit')
+        if nargin<5
+                [whichnormmethod]=ea_whichnormmethod(directory);
+        else
+            whichnormmethod=varargin{5};
+        end
+        if strcmp(whichnormmethod,'ea_normalize_ants')
+            
             [~,fn]=fileparts(xfrm);
             if ~isempty(strfind(fn,'inv'))
                 useinverse=1;
@@ -73,6 +84,7 @@ if ~isempty(xfrm)
              XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
              
             XYZ_mm=ea_ants_applytransforms_to_points([directory,filesep],XYZ_mm_beforetransform,useinverse);
+            %XYZ_mm=ea_ants_applytransforms_to_points([directory,filesep],XYZ_mm_beforetransform,1);
             XYZ_mm(1,:)=-XYZ_mm(1,:);
             XYZ_mm(2,:)=-XYZ_mm(2,:);
         else
