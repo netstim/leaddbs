@@ -424,18 +424,20 @@ for side=sides
         end
         dispercent(100,'end');
         
+        fibInd = ishandle(PL.fib_plots.fibs(side,:));
         if verLessThan('matlab','8.4') % ML <2014b support
-            set(PL.fib_plots.fibs(side,logical(PL.fib_plots.fibs(side,:))),'EdgeAlpha',0.05);
+            set(PL.fib_plots.fibs(side,logical(PL.fib_plots.fibs(side,fibInd))),'EdgeAlpha',0.05);
         else
             try
-                set(PL.fib_plots.fibs(side,:),'EdgeAlpha',0.2);
-                set(PL.fib_plots.fibs(side,:),'FaceLighting','phong');
-                set(PL.fib_plots.fibs(side,:),'MarkerSize',0.01);
-                set(PL.fib_plots.fibs(side,:),'LineWidth',0.2);
-                set(PL.fib_plots.fibs(side,:), 'SpecularColorReflectance', 0);
-                set(PL.fib_plots.fibs(side,:), 'SpecularExponent', 5);
-                set(PL.fib_plots.fibs(side,:), 'SpecularStrength', 0.5)
-                set(PL.fib_plots.fibs(side,:),'FaceAlpha',0);
+                set(PL.fib_plots.fibs(side,fibInd),'EdgeAlpha',0.2);
+                set(PL.fib_plots.fibs(side,fibInd),'FaceLighting','phong');
+                set(PL.fib_plots.fibs(side,fibInd),'MarkerSize',0.01);
+                set(PL.fib_plots.fibs(side,fibInd),'LineWidth',0.2);
+                set(PL.fib_plots.fibs(side,fibInd), 'SpecularColorReflectance', 0);
+                set(PL.fib_plots.fibs(side,fibInd), 'SpecularExponent', 5);
+                set(PL.fib_plots.fibs(side,fibInd), 'SpecularStrength', 0.5)
+                set(PL.fib_plots.fibs(side,fibInd),'FaceAlpha',0);
+                set(PL.fib_plots.fibs(side,fibInd),'Tag',sprintf('Fiber%d',side));
             end
         end
         try
