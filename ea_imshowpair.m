@@ -1,15 +1,17 @@
 function  ea_imshowpair( Img, options ,addstring)
 % this function is based on IMSHOW3DFULL by Maysam Shahedi and supports
-% truecolor images.
+% truecolor images. Windowed view is adapted from MAGNIFY by Rick Hindman.
 % 
+% Todd Herrington, 2016-03-16
+
 if nargin==2
-    figtit=['Co-registration Check: ',options.patientname];
+    figtit=[options.patientname];
 elseif nargin==3
-    figtit=['Co-registration Check: ',options.patientname,', ',addstring];
+    figtit=[options.patientname,', ',addstring];
 else
-    figtit='Co-registration Check';
+    figtit='';
 end
-isp=figure('color','w','Name',figtit,'NumberTitle','off','MenuBar','none','DockControls','off','ToolBar','none');
+isp=figure('color','k','Name',figtit,'NumberTitle','off','MenuBar','none','DockControls','off','ToolBar','none');
 ea_maximize(isp);
 sno = size(Img);  % image size
 sno_a = sno(3);  % number of axial slices
@@ -87,9 +89,23 @@ elseif isa(Img,'logical')
 end 
 
 ImgAx = Img;
+ImgCr = flip(permute(Img, [3 1 2 4]),1);   % Coronal view image
+ImgSg = flip(permute(Img, [3 2 1 4]),1);   % Sagittal view image
 
-ImgSg = flip(permute(Img, [3 1 2 4]),1);   % Sagittal view image
-ImgCr = flip(permute(Img, [3 2 1 4]),1);   % Coronal view image
+ImgZ=0; % zoomed or unzoomed state
+ImgZax{1}=1:size(ImgAx,1); % axial zoomed out boundingboxes
+ImgZax{2}=1:size(ImgAx,2); % axial zoomed out boundingboxes
+ImgZax{3}=round(size(ImgAx,1)/4):round((size(ImgAx,1)/4)*3); % axial zoomed boundingboxes
+ImgZax{4}=round(size(ImgAx,2)/4):round((size(ImgAx,2)/4)*3); % axial zoomed boundingboxes
+ImgZcr{1}=1:size(ImgCr,1); % coronar zoomed out boundingboxes
+ImgZcr{2}=1:size(ImgCr,1); % coronar zoomed out boundingboxes
+ImgZcr{3}=round(size(ImgCr,1)/4):round((size(ImgCr,1)/4)*3); % coronar zoomed boundingboxes
+ImgZcr{4}=round(size(ImgCr,2)/4):round((size(ImgCr,2)/4)*3); % coronar zoomed boundingboxes
+ImgZsg{1}=1:size(ImgSg,1); % saggital zoomed out boundingboxes
+ImgZsg{2}=1:size(ImgSg,2); % saggital zoomed out boundingboxes
+ImgZsg{3}=round(size(ImgSg,1)/4):round((size(ImgSg,1)/4)*3); % saggital zoomed boundingboxes
+ImgZsg{4}=round(size(ImgSg,2)/4):round((size(ImgSg,2)/4)*3); % saggital zoomed boundingboxes
+
 
 View = 'A';
 
@@ -102,14 +118,17 @@ WVFntSz = 9;
 BtnSz = 10;
 ChBxSz = 10;
 
-    [Rmin Rmax] = WL2R(Win, LevV);
+[Rmin Rmax] = WL2R(Win, LevV);
 
 hdl_im = axes('position',[0,0,1,1]);
 set(0,'CurrentFigure',isp);
+MainImage = 1;
+XImage=1:size(Img,1);
+YImage=1:size(Img,2);
 try % image toolbox
-imshow(squeeze(Img(:,:,S,:)), [Rmin Rmax])
+    imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax])
 catch    
-    imagesc(squeeze(Img(:,:,S,:)), [Rmin Rmax])
+    imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax])
 end
 
 FigPos = get(gcf,'Position');
@@ -152,7 +171,8 @@ set (gcf, 'ButtonDownFcn', @mouseClick);
 set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
 set(gcf,'WindowButtonUpFcn', @mouseRelease)
 set(gcf,'ResizeFcn', @figureResized)
-
+set(gcf,'WindowButtonMotionFcn', @ButtonMotionCallback)
+set(gcf,'KeyPressFcn', @KeyPressCallback);
 
 % -=< Figure resize callback function >=-
     function figureResized(object, eventdata)
@@ -208,30 +228,82 @@ set(gcf,'ResizeFcn', @figureResized)
         else
  %           set(stxthand, 'String', '2D image');
         end
-        % -------------------------------------------------------------
-        % LINES SWAPPED BY TMH 1-2-2015 SO THAT CODE WORKS ON OLDER
-        % VERSIONS OF MATLAB
-        %         set(get(gca,'children'),'cdata',squeeze(Img(:,:,S,:)))
-        try % image toolbox
-            imshow(squeeze(Img(:,:,S,:)), [Rmin Rmax])
-        catch
-            imagesc(squeeze(Img(:,:,S,:)), [Rmin Rmax])
-        end
-        % -------------------------------------------------------------
+        set(get(gca,'children'),'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
     end
 
 % -=< Mouse button released callback function >=-
     function mouseRelease (object,eventdata)
-        set(gcf, 'WindowButtonMotionFcn', '')
+        if MainImage==1 % use novel windowed view by TH
+            set(gcbf, 'WindowButtonMotionFcn', '')
+            H = get(object,'UserData');
+            if (isempty(H)) % presumed RIGHT CLICK
+                % do nothing
+            else % presumed LEFT CLICK
+                f1 = H(1); a1 = H(2); a2 = H(3);
+                set(a1, 'Color',get(a2,'Color'));
+                set(f1, ...
+                    'UserData',[], ...
+                    'Pointer','arrow', ...
+                    'CurrentAxes',a1);
+                if ~strcmp(get(f1,'SelectionType'),'alt'),
+                    delete(a2);
+                end;
+            end
+        end
     end
 
 % -=< Mouse click callback function >=-
     function mouseClick (object, eventdata)
-        MouseStat = get(gcbf, 'SelectionType');
-        if (MouseStat(1) == 'a')        %   RIGHT CLICK
-            InitialCoord = get(0,'PointerLocation');
-            %set(gcf, 'WindowButtonMotionFcn', @WinLevAdj);
+        if MainImage==1 % use novel windowed view by TH
+            MouseStat = get(gcbf, 'SelectionType');
+            if (MouseStat(1) == 'a')        %   RIGHT CLICK
+                InitialCoord = get(0,'PointerLocation');
+                %             set(gcf, 'WindowButtonMotionFcn', @WinLevAdj);
+            else    % assumed LEFT CLICK
+                i1 = object;
+                a1 = get(i1,'Parent');
+                f1 = get(a1,'Parent');
+                
+                a2 = copyobj(a1,f1, 'legacy');
+                i2 = get(a2,'Children');
+                
+                set(f1, ...
+                    'UserData',[f1,a1,a2], ...
+                    'Pointer','crosshair', ...
+                    'CurrentAxes',a2);
+                set(a2, ...
+                    'UserData',[1,0.1], ...  %magnification, frame size
+                    'Color',get(a1,'Color'), ...
+                    'Box','on');
+                set(i2,'CData',Img(XImage,YImage,S,1+mod(MainImage,2)));
+                xlabel(''); ylabel(''); zlabel(''); title('');
+                set(a1, ...
+                    'Color',get(a1,'Color')*0.95);
+                set(f1, ...
+                    'CurrentAxes',a1);
+                set(f1,'WindowButtonMotionFcn', @ButtonMotionCallback)
+                ButtonMotionCallback(f1);
+                
+            end
         end
+    end
+
+    function ButtonMotionCallback(object,eventdata)
+        H = get(object,'UserData');
+       if ~isempty(H)
+          f1 = H(1); a1 = H(2); a2 = H(3);
+          a2_param = get(a2,'UserData');
+          f_pos = get(f1,'Position');
+          a1_pos = get(a1,'Position');
+
+          [f_cp, a1_cp] = pointer2d(f1,a1);
+
+          set(a2,'Position',[(f_cp./f_pos(3:4)) 0 0]+a2_param(2)*a1_pos(3)*[-1 -1 2 2]);
+          a2_pos = get(a2,'Position');
+
+        set(a2,'XLim',a1_cp(1)+(1/a2_param(1))*(a2_pos(3)/a1_pos(3))*diff(get(a1,'XLim'))*[-0.5 0.5]);
+        set(a2,'YLim',a1_cp(2)+(1/a2_param(1))*(a2_pos(4)/a1_pos(4))*diff(get(a1,'YLim'))*[-0.5 0.5]);
+       end;
     end
 
 % -=< Window and level mouse adjustment >=-
@@ -285,6 +357,53 @@ set(gcf,'ResizeFcn', @figureResized)
         set(wvalhand, 'String', sprintf('%6.0f',Win));
     end
 
+    function KeyPressCallback(object,eventdata)
+        H = get(gcf,'UserData');
+        
+        if ~isempty(H)
+            f1 = H(1); a1 = H(2); a2 = H(3);
+            a2_param = get(a2,'UserData');
+            if (strcmp(get(f1,'CurrentCharacter'),'<') | strcmp(get(f1,'CurrentCharacter'),','))
+                a2_param(2) = a2_param(2)/1.2;
+            elseif (strcmp(get(f1,'CurrentCharacter'),'>') | strcmp(get(f1,'CurrentCharacter'),'.'))
+                a2_param(2) = a2_param(2)*1.2;
+            end
+            set(a2,'UserData',a2_param);
+        end
+        if (strcmp(eventdata.Key,'leftarrow') | strcmp(eventdata.Key,'downarrow'))
+            ev = []; ev.VerticalScrollCount = -1;
+            mouseScroll (gcf, ev);
+        elseif (strcmp(eventdata.Key,'rightarrow') | strcmp(eventdata.Key,'uparrow'))
+            ev = []; ev.VerticalScrollCount = 1;
+            mouseScroll (gcf, ev);
+        elseif (strcmpi(eventdata.Key,'c'))
+            CoronalView([]);
+        elseif (strcmpi(eventdata.Key,'a'))
+            AxialView([]);
+        elseif (strcmpi(eventdata.Key,'s'))
+            SagittalView([]);       
+        elseif (strcmpi(eventdata.Key,'x'));
+            if MainImage(1)==1
+                MainImage=3:5;
+            elseif MainImage(1)==3
+                MainImage=1;
+            end
+            set(get(gca,'children'),'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
+        elseif (strcmpi(eventdata.Key,'z')) % toggles zoom in/out
+            ImgZ=~ImgZ;
+            switch View
+                case 'A'
+                    AxialView([]);
+                case 'C'
+                    CoronalView([]);
+                case 'S'
+                    SagittalView([]);
+            end
+        end;
+        ButtonMotionCallback(gcf);
+    end
+
+
 % -=< Axial view callback function >=-
     function AxialView(object,eventdata)
         if View == 'S'
@@ -299,7 +418,17 @@ set(gcf,'ResizeFcn', @figureResized)
         sno = sno_a;
         cla(hdl_im);
         hdl_im = axes('position',[0,0,1,1]);
-        imshow(Img(:,:,S), [Rmin Rmax])
+        
+        if ~ImgZ
+            XImage=ImgZax{1};
+            YImage=ImgZax{2};
+        else
+            XImage=ImgZax{3};
+            YImage=ImgZax{4};
+        end
+        
+        
+        imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax])
 
         if sno > 1
         %    shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
@@ -315,7 +444,7 @@ set(gcf,'ResizeFcn', @figureResized)
             %set(stxthand, 'String', '2D image');
         end
         
-        set(get(gca,'children'),'cdata',squeeze(Img(:,:,S,:)))
+        set(get(gca,'children'),'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         set (gcf, 'ButtonDownFcn', @mouseClick);
         set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
     end
@@ -329,12 +458,20 @@ set(gcf,'ResizeFcn', @figureResized)
         end            
         View = 'S';
 
+        if ~ImgZ
+            XImage=ImgZsg{1};
+            YImage=ImgZsg{2};
+        else
+            XImage=ImgZsg{3};
+            YImage=ImgZsg{4};
+        end
+        
         Img = ImgSg;
         S = S_s;
         sno = sno_s;
         cla(hdl_im);
         hdl_im = axes('position',[0,0,1,1]);
-        imshow(Img(:,:,S), [Rmin Rmax])
+        imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax])
 
         if sno > 1
           %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
@@ -350,7 +487,7 @@ set(gcf,'ResizeFcn', @figureResized)
 %            set(stxthand, 'String', '2D image');
         end
 
-        set(get(gca,'children'),'cdata',squeeze(Img(:,:,S,:)))
+        set(get(gca,'children'),'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
         set (gcf, 'ButtonDownFcn', @mouseClick);
         set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
 
@@ -365,12 +502,20 @@ set(gcf,'ResizeFcn', @figureResized)
         end            
         View = 'C';
         
+        if ~ImgZ
+            XImage=ImgZcr{1};
+            YImage=ImgZcr{2};
+        else
+            XImage=ImgZcr{3};
+            YImage=ImgZcr{4};
+        end
+        
         Img = ImgCr;
         S = S_c;
         sno = sno_c;
         cla(hdl_im);
         hdl_im = axes('position',[0,0,1,1]);
-        imshow(Img(:,:,S), [Rmin Rmax])
+        imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax])
 
         if sno > 1
           %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
@@ -381,12 +526,50 @@ set(gcf,'ResizeFcn', @figureResized)
         
         caxis([Rmin Rmax])
 
-        
-
-        set(get(gca,'children'),'cdata',squeeze(Img(:,:,S,:)))
+        set(get(gca,'children'),'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         set (gcf, 'ButtonDownFcn', @mouseClick);
         set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
     end
 
+end
+
+% Included for completeness (usually in own file)
+function [fig_pointer_pos, axes_pointer_val] = pointer2d(fig_hndl,axes_hndl)
+    %
+    %pointer2d(fig_hndl,axes_hndl)
+    %
+    %	Returns the coordinates of the pointer (in pixels)
+    %	in the desired figure (fig_hndl) and the coordinates
+    %       in the desired axis (axes coordinates)
+    %
+    % Example:
+    %  figure(1),
+    %  hold on,
+    %  for i = 1:1000,
+    %     [figp,axp]=pointer2d;
+    %     plot(axp(1),axp(2),'.','EraseMode','none');
+    %     drawnow;
+    %  end;
+    %  hold off
+
+    % Rick Hindman - 4/18/01
+
+    if (nargin == 0), fig_hndl = gcf; axes_hndl = gca; end;
+    if (nargin == 1), axes_hndl = get(fig_hndl,'CurrentAxes'); end;
+
+    set(fig_hndl,'Units','pixels');
+
+    pointer_pos = get(0,'PointerLocation');	%pixels {0,0} lower left
+    fig_pos = get(fig_hndl,'Position');	%pixels {l,b,w,h}
+
+    fig_pointer_pos = pointer_pos - fig_pos([1,2]);
+    set(fig_hndl,'CurrentPoint',fig_pointer_pos);
+
+    if (isempty(axes_hndl)),
+        axes_pointer_val = [];
+    elseif (nargout == 2),
+        axes_pointer_line = get(axes_hndl,'CurrentPoint');
+        axes_pointer_val = sum(axes_pointer_line)/2;
+    end;
 end
 % -=< Maysam Shahedi (mshahedi@gmail.com), April 19, 2013>=-

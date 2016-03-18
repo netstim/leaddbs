@@ -14,19 +14,19 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
     try
         switch export
             case 1
-                checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii,',1'];
+                checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
                 checkfn=options.prefs.prenii;
                 outf=['check_',options.prefs.prenii];
                 addstr='MNI space (wireframes) & Preoperative MRI';
                 suff='_pre_tra';
             case 2
-                checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii,',1'];
+                checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gtranii,',1'];
                 checkfn=options.prefs.tranii;
                 outf=['check_',options.prefs.tranii];
                 addstr='MNI space (wireframes) & Postoperative axial MRI';
                 suff='_tra';
             case 3
-                checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii,',1'];
+                checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gcornii,',1'];
                 checkfn=options.prefs.cornii;
                 outf=['check_',options.prefs.cornii];
                 addstr='MNI space (wireframes) & Postoperative coronar MRI';
@@ -36,9 +36,9 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
 
         if ~legacy % use new imshowpair viewer
 
-            mni=ea_load_nii([options.earoot,'templates',filesep,'mni_wires.nii']);
+            wires=ea_load_nii([options.earoot,'templates',filesep,'mni_wires.nii']);
             pt=ea_load_nii(checkf);
-            if ~isequal(size(mni.img),size(pt.img))
+            if ~isequal(size(wires.img),size(pt.img))
                 matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'mni_wires.nii'];
                     checkf};
                 matlabbatch{1}.spm.util.imcalc.output = checkfn;
@@ -54,14 +54,18 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                             pt=ea_load_nii(checkf);
             end
             %mni.img(:)=zscore(mni.img(:));
-            mni.img=mni.img/max(mni.img(:));
+            wires.img=wires.img/max(wires.img(:));
             
-            pt.img(:)=zscore(pt.img(:));
-            pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:))-min(pt.img(:)));
-            jim=mni.img+pt.img;
-            jim=repmat(jim,1,1,1,3);
+            pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
+            pt.img(pt.img>0.5) = 0.5;
+            pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
+            
+            %joint_im=0.5*wires.img+pt.img;
+            joint_im=pt.img;
+            joint_im(wires.img==1)=1;
+            joint_im=repmat(joint_im,1,1,1,3);
 %            jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
-                        ea_imshowpair(jim,options,addstr);
+                   %     ea_imshowpair(jim,options,addstr);
 
             % ----------------------------------------------------------
             % edited by TH 2016-02-17 to add windowed normalization check
@@ -70,18 +74,13 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             mni_img.img(:)=zscore(mni_img.img(:));
             mni_img.img=(mni_img.img-min(mni_img.img(:)))/(max(mni_img.img(:))-min(mni_img.img(:)));
             
-            checkfgl=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
-            pt_gl = ea_load_nii(checkfgl);
-            pt_gl.img=(pt_gl.img-min(pt_gl.img(:)))/(max(pt_gl.img(:)));
-            pt_gl.img(pt_gl.img>0.5) = 0.5;
-            pt_gl.img=(pt_gl.img-min(pt_gl.img(:)))/(max(pt_gl.img(:)));
             
-            if ~isequal(size(mni_img.img),size(pt_gl.img))
-                disp('ERROR: glanat not resliced to align with mni_hires template. Skipping windowed check normalization');
-            else
-                wim = cat(4,pt_gl.img,mni_img.img);
-                ea_imshowpair_windowed(wim,options,addstr);
-            end
+            
+            
+            wim = cat(4,pt.img,mni_img.img,joint_im);
+            
+            ea_imshowpair_windowed(wim,options,addstr);
+            
             % ----------------------------------------------------------
 
         else legacy % use old wireframe images

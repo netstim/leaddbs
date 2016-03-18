@@ -101,7 +101,7 @@ ea_dispercent(0,'Normalizing fibers');
 numfibs=length(ftr.curveSegCell);
 
 if ~strcmp(whichnormmethod,'ea_normalize_ants')
-    keyboard
+    keyboard 
     ynii=nifti([directory,'y_ea_inv_normparams.nii']);
     P = [repmat([directory,'y_ea_inv_normparams.nii'],3,1),[',1,1';',1,2';',1,3']];
     Vnii = spm_vol(P);
