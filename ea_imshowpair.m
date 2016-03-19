@@ -233,7 +233,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
 % -=< Mouse button released callback function >=-
     function mouseRelease (object,eventdata)
-        if MainImage==1 % use novel windowed view by TH
             set(gcbf, 'WindowButtonMotionFcn', '')
             H = get(object,'UserData');
             if (isempty(H)) % presumed RIGHT CLICK
@@ -249,12 +248,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                     delete(a2);
                 end;
             end
-        end
     end
 
 % -=< Mouse click callback function >=-
     function mouseClick (object, eventdata)
-        if MainImage==1 % use novel windowed view by TH
             MouseStat = get(gcbf, 'SelectionType');
             if (MouseStat(1) == 'a')        %   RIGHT CLICK
                 InitialCoord = get(0,'PointerLocation');
@@ -285,7 +282,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 ButtonMotionCallback(f1);
                 
             end
-        end
     end
 
     function ButtonMotionCallback(object,eventdata)
@@ -384,7 +380,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             SagittalView([]);       
         elseif (strcmpi(eventdata.Key,'x'));
             if MainImage(1)==1
-                MainImage=3:5;
+                MainImage=3:size(Img,4);
             elseif MainImage(1)==3
                 MainImage=1;
             end

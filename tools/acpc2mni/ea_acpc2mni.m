@@ -54,8 +54,8 @@ for pt=1:length(uidir)
 %     end
     
 if nargin>2
-    varargin{3}=whichnormmethod;
-    varargin{4}=tempfile;
+    whichnormmethod=varargin{3};
+    tempfile=varargin{4};
 else
     [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
 end

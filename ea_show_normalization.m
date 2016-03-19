@@ -64,7 +64,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             joint_im=pt.img;
             
             joint_im(wires.img>0.5)=mean(cat(4,joint_im(wires.img>0.5),wires.img(wires.img>0.5)),4);
-            joint_im=repmat(joint_im,1,1,1,3);
+            %joint_im=repmat(joint_im,1,1,1,3);
 %            jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
                    %     ea_imshowpair(jim,options,addstr);
 
