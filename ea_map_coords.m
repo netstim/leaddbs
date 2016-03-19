@@ -10,25 +10,18 @@ function [XYZ_mm, XYZ_src_vx] = ea_map_coords(varargin)
 % Ged Ridgway (drc.spm at gmail.com)
 
 
+
 try
 XYZ_vx=varargin{1};
-catch
-    XYZ_vx=[];
 end
 try
 trg=varargin{2};
-catch
-    trg=[];
 end
 try
 xfrm=varargin{3};
-catch
-    xfrm=[];
 end
 try
 src=varargin{4};
-catch
-    src=[];
 end
 
 if nargin < 2
@@ -76,7 +69,7 @@ if ~isempty(xfrm)
         
         
         % check if ANTs has been used here:
-        directory=fileparts(xfrm);
+        directory=[fileparts(xfrm),filesep];
         if nargin<5
                 [whichnormmethod]=ea_whichnormmethod(directory);
         else
