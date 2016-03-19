@@ -46,7 +46,7 @@ if ~legacy % use new imshowpair tool
     % edited by TH 2016-02-17 to add windowed coregistration view
     % ----------------------------------------------------------
     wim = cat(4,mr.img,ct.img,jim);
-    ea_imshowpair_windowed(wim,options,'Preoperative MRI & Postoperative CT');
+    ea_imshowpair(wim,options,'Preoperative MRI & Postoperative CT');
     % ----------------------------------------------------------
 
     
