@@ -1,4 +1,4 @@
-function [XYZ_mm, XYZ_src_vx] = ea_map_coords_exp(varargin)
+function [XYZ_mm, XYZ_src_vx] = ea_map_coords(varargin)
 % This version of map_coords is based on Ged Ridgway's version but is
 % optimized for usage in Lead-DBS. Especially, it supports ANTs and
 % interpolations in high dimensional warping with SPM.
@@ -10,11 +10,26 @@ function [XYZ_mm, XYZ_src_vx] = ea_map_coords_exp(varargin)
 % Ged Ridgway (drc.spm at gmail.com)
 
 
+try
 XYZ_vx=varargin{1};
+catch
+    XYZ_vx=[];
+end
+try
 trg=varargin{2};
-xfrm=varargin{3}; 
+catch
+    trg=[];
+end
+try
+xfrm=varargin{3};
+catch
+    xfrm=[];
+end
+try
 src=varargin{4};
-
+catch
+    src=[];
+end
 
 if nargin < 2
     error('map_coords:usage',...
