@@ -15,19 +15,19 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
         switch export
             case 1
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
-                checkfn=options.prefs.prenii;
+                checkfn=options.prefs.gprenii;
                 outf=['check_',options.prefs.prenii];
                 addstr='MNI space (wireframes) & Preoperative MRI';
                 suff='_pre_tra';
             case 2
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gtranii,',1'];
-                checkfn=options.prefs.tranii;
+                checkfn=options.prefs.gtranii;
                 outf=['check_',options.prefs.tranii];
                 addstr='MNI space (wireframes) & Postoperative axial MRI';
                 suff='_tra';
             case 3
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gcornii,',1'];
-                checkfn=options.prefs.cornii;
+                checkfn=options.prefs.gcornii;
                 outf=['check_',options.prefs.cornii];
                 addstr='MNI space (wireframes) & Postoperative coronar MRI';
                 suff='_cor';
@@ -38,6 +38,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
 
             wires=ea_load_nii([options.earoot,'templates',filesep,'mni_wires.nii']);
             pt=ea_load_nii(checkf);
+            
             if ~isequal(size(wires.img),size(pt.img))
                 matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'mni_wires.nii'];
                     checkf};
