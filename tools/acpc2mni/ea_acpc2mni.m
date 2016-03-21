@@ -107,9 +107,11 @@ end
     fid(pt).WarpedPointNative=warpcoord_mm(1:3)';
     
     % check it inverse normparams file has correct voxel size.
+    if ~strcmp(whichnormmethod,'ea_normalize_ants')
     Vinv=spm_vol([directory,'y_ea_inv_normparams.nii']);
     if ~isequal(Vinv.dim,anat.dim)
                 ea_redo_inv(directory,options);
+    end
     end
         % re-warp into MNI:
 

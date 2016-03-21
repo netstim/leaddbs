@@ -89,25 +89,23 @@ elseif isa(Img,'logical')
     WLAdjCoe = 0.1;
 end 
 
-ImgAx = Img;
-tic
-ImgCr = flip(permute(Img, [3 1 2 4]),1);   % Coronal view image
-toc
-ImgSg = flip(permute(Img, [3 2 1 4]),1);   % Sagittal view image
+ImgO = Img; % ImgO will never be permuted. ImgCr and ImgSg won't be used anymore but generated on the fly via ImgO.
+%ImgCr = flip(permute(Img, [3 1 2 4]),1);   % Coronal view image
+%ImgSg = flip(permute(Img, [3 2 1 4]),1);   % Sagittal view image
 
 ImgZ=0; % zoomed or unzoomed state
-ImgZax{1}=1:size(ImgAx,1); % axial zoomed out boundingboxes
-ImgZax{2}=1:size(ImgAx,2); % axial zoomed out boundingboxes
-ImgZax{3}=round(size(ImgAx,1)/4):round((size(ImgAx,1)/4)*3); % axial zoomed boundingboxes
-ImgZax{4}=round(size(ImgAx,2)/4):round((size(ImgAx,2)/4)*3); % axial zoomed boundingboxes
-ImgZcr{1}=1:size(ImgCr,1); % coronar zoomed out boundingboxes
-ImgZcr{2}=1:size(ImgCr,1); % coronar zoomed out boundingboxes
-ImgZcr{3}=round(size(ImgCr,1)/4):round((size(ImgCr,1)/4)*3); % coronar zoomed boundingboxes
-ImgZcr{4}=round(size(ImgCr,2)/4):round((size(ImgCr,2)/4)*3); % coronar zoomed boundingboxes
-ImgZsg{1}=1:size(ImgSg,1); % saggital zoomed out boundingboxes
-ImgZsg{2}=1:size(ImgSg,2); % saggital zoomed out boundingboxes
-ImgZsg{3}=round(size(ImgSg,1)/4):round((size(ImgSg,1)/4)*3); % saggital zoomed boundingboxes
-ImgZsg{4}=round(size(ImgSg,2)/4):round((size(ImgSg,2)/4)*3); % saggital zoomed boundingboxes
+ImgZax{1}=1:size(ImgO,1); % axial zoomed out boundingboxes
+ImgZax{2}=1:size(ImgO,2); % axial zoomed out boundingboxes
+ImgZax{3}=round(size(ImgO,1)/4):round((size(ImgO,1)/4)*3); % axial zoomed boundingboxes
+ImgZax{4}=round(size(ImgO,2)/4):round((size(ImgO,2)/4)*3); % axial zoomed boundingboxes
+ImgZcr{1}=1:size(ImgO,3); % coronar zoomed out boundingboxes
+ImgZcr{2}=1:size(ImgO,1); % coronar zoomed out boundingboxes
+ImgZcr{3}=round(size(ImgO,3)/4):round((size(ImgO,3)/4)*3); % coronar zoomed boundingboxes
+ImgZcr{4}=round(size(ImgO,1)/4):round((size(ImgO,1)/4)*3); % coronar zoomed boundingboxes
+ImgZsg{1}=1:size(ImgO,3); % saggital zoomed out boundingboxes
+ImgZsg{2}=1:size(ImgO,2); % saggital zoomed out boundingboxes
+ImgZsg{3}=round(size(ImgO,3)/4):round((size(ImgO,3)/4)*3); % saggital zoomed boundingboxes
+ImgZsg{4}=round(size(ImgO,2)/4):round((size(ImgO,2)/4)*3); % saggital zoomed boundingboxes
 
 
 View = 'A';
@@ -412,7 +410,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end            
         View = 'A';
         
-        Img = ImgAx;
+        Img = ImgO;
         S = S_a;
         sno = sno_a;
         cla(hdl_im);
@@ -465,7 +463,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             YImage=ImgZsg{4};
         end
         
-        Img = ImgSg;
+        Img = flip(permute(ImgO, [3 2 1 4]),1);   % Sagittal view image;
         S = S_s;
         sno = sno_s;
         cla(hdl_im);
@@ -509,7 +507,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             YImage=ImgZcr{4};
         end
         
-        Img = ImgCr;
+        Img = flip(permute(ImgO, [3 1 2 4]),1);   % Coronal view image;
         S = S_c;
         sno = sno_c;
         cla(hdl_im);
