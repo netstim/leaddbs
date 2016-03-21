@@ -64,26 +64,26 @@ axis fill
 
 %% Patient specific part (skipped if no patient is selected or no reco available):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
-if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file');
-
-if nargin>1
-    multiplemode=1;
-    elstruct=varargin{2};
-    
-else
-    multiplemode=0;
-    
-
-    [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
-
-    elstruct(1).coords_mm=coords_mm;
-    elstruct(1).coords_mm=ea_resolvecoords(markers,options);
-    elstruct(1).trajectory=trajectory;
-    elstruct(1).name=options.patientname;
-    elstruct(1).markers=markers;
-    clear coords_mm trajectory
-
-end
+    if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') || nargin>1;
+        
+        if nargin>1
+            multiplemode=1;
+            elstruct=varargin{2};
+            
+        else
+            multiplemode=0;
+            
+            
+            [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
+            
+            elstruct(1).coords_mm=coords_mm;
+            elstruct(1).coords_mm=ea_resolvecoords(markers,options);
+            elstruct(1).trajectory=trajectory;
+            elstruct(1).name=options.patientname;
+            elstruct(1).markers=markers;
+            clear coords_mm trajectory
+            
+        end
 
 
 
@@ -92,6 +92,7 @@ end
 % show electrodes..
 
 for pt=1:length(elstruct)
+    
     [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
     
     if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.

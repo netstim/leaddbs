@@ -13,6 +13,7 @@ else
 end
 isp=figure('color','k','Name',figtit,'NumberTitle','off','MenuBar','none','DockControls','off','ToolBar','none');
 ea_maximize(isp);
+Img=single(Img);
 sno = size(Img);  % image size
 sno_a = sno(3);  % number of axial slices
 S_a = round(sno_a/2);
@@ -89,7 +90,9 @@ elseif isa(Img,'logical')
 end 
 
 ImgAx = Img;
+tic
 ImgCr = flip(permute(Img, [3 1 2 4]),1);   % Coronal view image
+toc
 ImgSg = flip(permute(Img, [3 2 1 4]),1);   % Sagittal view image
 
 ImgZ=0; % zoomed or unzoomed state
