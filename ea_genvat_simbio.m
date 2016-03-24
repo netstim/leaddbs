@@ -160,7 +160,7 @@ if ea_headmodel_changed(options,side,elstruct)
         electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
         % this following method takes quite some time... even more importantly,
         % the info will be transfered from mesh to volume and lateron back to
-        % mesh again. For now, this is still the most convenient method.
+        % a (different) mesh again. For now, this is still the best method.
         in=ea_intriangulation(electrode.contacts(con).vertices,electrode.contacts(con).faces,XYZmm(1:3,:)');
         if vizz
             h=patch(electrode.contacts(con));
@@ -295,6 +295,7 @@ for source=1:4
             U(cnt)=U(cnt)*-1;
         end
     end
+    
     Acnt=find(U);
     
     
@@ -347,6 +348,8 @@ gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient fr
         cnt=cnt+1;
     end
     indices=unique(indices(2:end-1));
+    indices(indices==0)=[];
+    indices(indices>length(midpts))=[];
     try
     vatgrad(side).x=midpts(indices,1); vatgrad(side).y=midpts(indices,2); vatgrad(side).z=midpts(indices,3);
     catch
@@ -408,10 +411,17 @@ eg = F(xg,yg,zg);
 eg(isnan(eg))=0;
 eg(eg>0)=1;
 
+XYZmax=[max(xg(eg>0)),max(yg(eg>0)),max(zg(eg>0))];
+try
+radius=pdist([XYZmax;dpvx]);
+catch
+    keyboard
+end
 vatfv=isosurface(xg,yg,zg,eg,0.75);
 
 vatvolume=sum(eg(:))*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
 S(side).volume=vatvolume;
+
 
 chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);
 Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
@@ -441,6 +451,7 @@ spm_write_vol(Vvat,permute(eg,[2,1,3]));
 
 varargout{1}=vatfv;
 varargout{2}=vatvolume;
+varargout{3}=radius;
 disp('Done...');
 
 

@@ -120,6 +120,7 @@ spm_write_vol(Vvat,voxspace);
 
 varargout{1}=VAT;
 varargout{2}=volume;
+varargout{3}=radius;
 
 function r=ea_kuncel(U)
 % This function radius of Volume of Activated Tissue for stimulation settings U. See Kuncel 2008 for details.

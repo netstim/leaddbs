@@ -123,6 +123,7 @@ spm_write_vol(Vvat,voxspace);
 
 varargout{1}=VAT;
 varargout{2}=volume;
+varargout{3}=radius;
 
 
 
