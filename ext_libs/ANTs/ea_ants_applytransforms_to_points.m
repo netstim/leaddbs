@@ -18,16 +18,22 @@ if nargin>3
     tstring=[' --transform [',transform, ',',num2str(useinverse),']']; % [transformFileName,useInverse]
 else
     if useinverse
+        if exist([subdir,lprebase,'Composite.h5'],'file')
+            tstring=[' -t ',ea_path_helper([subdir,lprebase]),istr,'Composite.h5,0'];
+        else
+            tstring=    [  ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']',...
+                ' -t [',ea_path_helper([subdir,lprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
+                ];
+        end
         
-     tstring=    [  ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']',...
-         ' -t [',ea_path_helper([subdir,lprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
-       ];
-
-   
     else
-     tstring=    [' -t [',ea_path_helper([subdir,lprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
-         ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'...
-         ];
+        if exist([subdir,lprebase,'Composite.h5'],'file')
+            tstring=[' -t ',ea_path_helper([subdir,lprebase]),istr,'Composite.h5,0'];
+        else
+            tstring=[' -t [',ea_path_helper([subdir,lprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
+                ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'...
+                ];
+        end
     end
 end
 
