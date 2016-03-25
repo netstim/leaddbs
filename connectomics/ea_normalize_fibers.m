@@ -59,7 +59,7 @@ reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hi
 if isempty(whichnormmethod)
     ea_error('Please run normalization for this subject first.');
 end
-if strcmp(whichnormmethod,'ea_normalize_ants')
+if ismember(whichnormmethod,ea_getantsnormfuns)
     reftemplate=reft;
 end
 
@@ -100,7 +100,7 @@ end
 ea_dispercent(0,'Normalizing fibers');
 numfibs=length(ftr.curveSegCell);
 
-if ~strcmp(whichnormmethod,'ea_normalize_ants') 
+if ~ismember(whichnormmethod,ea_getantsnormfuns) 
     ynii=nifti([directory,'y_ea_inv_normparams.nii']);
     P = [repmat([directory,'y_ea_inv_normparams.nii'],3,1),[',1,1';',1,2';',1,3']];
     Vnii = spm_vol(P);
@@ -131,7 +131,7 @@ for fib=1:numfibs
     %% -> coordinates are now in voxel-space of single subject anat file.
 
     %% map from prenii voxelspace to mni millimeter space
-if ~strcmp(whichnormmethod,'ea_normalize_ants')
+if ~ismember(whichnormmethod,ea_getantsnormfuns)
     wfibs{fib} = vox2mm_mni(wfibs{fib},Vnii,ynii)';
 else
     keyboard
@@ -212,7 +212,7 @@ directory=[options.root,options.patientname,filesep];
 
 [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
 switch whichnormmethod
-    case {'ea_normalize_ants','ea_normalize_ants_brainsfit'}
+    case ea_getantsnormfuns
         ea_error('ANTs normalization is not supported for Fibers normalization right now.');
     case 'ea_normalize_spmdartel'
         dartelused=1;

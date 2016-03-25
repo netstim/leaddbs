@@ -49,9 +49,7 @@ disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected
 for pt=1:length(uidir)
  %   ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
-%     if strcmp(whichnormmethod,'ea_normalize_ants')
-%             ea_error('ANTs normalization is not supported for ACPC2MNI conversion as of now.');
-%     end
+
     
 if nargin>2
     whichnormmethod=varargin{3};
@@ -107,7 +105,7 @@ end
     fid(pt).WarpedPointNative=warpcoord_mm(1:3)';
     
     % check it inverse normparams file has correct voxel size.
-    if ~strcmp(whichnormmethod,'ea_normalize_ants')
+    if ~ismember(whichnormmethod,ea_getantsnormfuns)
     Vinv=spm_vol([directory,'y_ea_inv_normparams.nii']);
     if ~isequal(Vinv.dim,anat.dim)
                 ea_redo_inv(directory,options);

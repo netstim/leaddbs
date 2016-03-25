@@ -25,8 +25,7 @@ for side=1:2
     for src=1:length(srcs)
         
         switch whichnormmethod
-            case 'ea_normalize_ants'
-                
+            case ea_getantsnormfuns
                 ea_ants_applytransforms(options,{[natatldir,sidec,filesep,srcs{src},'.nii']},{[mniatldir,sidec,filesep,srcs{src},'.nii']},0,[options.earoot,'templates',filesep,'bb.nii']);
             otherwise
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};

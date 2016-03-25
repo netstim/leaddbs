@@ -5,7 +5,7 @@ if options.modality==2 % in CT imaging, coregistration is done elsewhere.
 end
 
 whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
-if strcmp(whichnormmethod,'ea_normalize_ants')
+if ismember(whichnormmethod,ea_getantsnormfuns)
     doreslice=1;
 else
     doreslice=0;

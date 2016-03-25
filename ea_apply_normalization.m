@@ -14,7 +14,7 @@ directory=[options.root,options.patientname,filesep];
 
 switch whichnormmethod
 
-    case {'ea_normalize_ants','ea_normalize_ants_brainsfit'}
+    case ea_getantsnormfuns
 
         ea_ants_applytransforms(options);
 

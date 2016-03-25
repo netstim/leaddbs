@@ -75,7 +75,7 @@ if ~isempty(xfrm)
         else
             whichnormmethod=varargin{5};
         end
-        if strcmp(whichnormmethod,'ea_normalize_ants')
+        if ismember(whichnormmethod,ea_getantsnormfuns)
             
             [~,fn]=fileparts(xfrm);
             if ~isempty(strfind(fn,'inv'))

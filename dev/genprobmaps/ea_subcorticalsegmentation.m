@@ -118,7 +118,7 @@ ea_normalize_reslicepretra(options);
 % warp bb into folder.
 
 switch whichnormmethod
-    case 'ea_normalize_ants'
+    case ea_getantsnormfuns
         ea_ants_applytransforms(options,{[options.earoot,'templates',filesep,'bb.nii']},{[directory,'wbb.nii']},1);
     otherwise
         matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};

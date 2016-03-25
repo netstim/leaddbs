@@ -33,7 +33,7 @@ c=[c,ones(size(c,1),1)]';
 c=nii(1).mat\c;
 try
     [whichnormmethod]=ea_whichnormmethod([options.root,options.patientname,filesep]);
-    if (~strcmp(whichnormmethod,'ea_normalize_ants')) && (~strcmp(whichnormmethod,'ea_normalize_ants_brainsfit'));
+    if ~ismember(whichnormmethod,ea_getantsnormfuns);
         V=spm_vol([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']);
         if ~isequal(V.dim,nii.dim)
             ea_redo_inv([options.root,options.patientname,filesep],options);
