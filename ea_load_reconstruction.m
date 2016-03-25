@@ -67,6 +67,7 @@
       % we have all variables now but need to put them into reco format and
       % they are in MNI.
       options.native=0;
+      options.hybridsave=1;
       ea_save_reconstruction(coords_mm,trajectory,markers,'Medtronic 3389',0,options);
       options.native=1;
       [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);

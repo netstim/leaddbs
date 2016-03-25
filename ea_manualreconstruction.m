@@ -36,6 +36,7 @@ options.native=1;
 setappdata(mcfig,'options',options);
 
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+
 setappdata(mcfig,'origtrajectory',trajectory);
 
 % initialize scene
