@@ -91,7 +91,7 @@ if ~isempty(xfrm)
              XYZ_mm_beforetransform(1,:)=-XYZ_mm_beforetransform(1,:);
              XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
              
-            XYZ_mm=ea_ants_applytransforms_to_points([directory,filesep],XYZ_mm_beforetransform,useinverse);
+            XYZ_mm=ea_ants_applytransforms_to_points([directory],XYZ_mm_beforetransform,useinverse);
             %XYZ_mm=ea_ants_applytransforms_to_points([directory,filesep],XYZ_mm_beforetransform,1);
             XYZ_mm(1,:)=-XYZ_mm(1,:);
             XYZ_mm(2,:)=-XYZ_mm(2,:);

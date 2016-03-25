@@ -66,11 +66,11 @@ for fi=1:length(fis)
            
            if exist([subdir,lprebase,'Composite.h5'],'file')
                tr=[' -r ',refim,...
-                   ' -t ',ea_path_helper([subdir,lprebase]),'InverseComposite.h5'];
+                   ' -t [',ea_path_helper([subdir,lprebase]),'InverseComposite.h5,0]'];
            else
                
                tr=[' -r ',refim,...
-                   ' -t ',ea_path_helper([subdir,lprebase]),'1InverseWarp.nii.gz',...
+                   ' -t [',ea_path_helper([subdir,lprebase]),'1InverseWarp.nii.gz,0]',...
                    ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'];
            end
        else
@@ -79,11 +79,11 @@ for fi=1:length(fis)
            end
            if exist([subdir,lprebase,'Composite.h5'],'file')
                tr=[' -r ',refim,...
-                   ' -t ',ea_path_helper([subdir,lprebase]),'Composite.h5'];
+                   ' -t [',ea_path_helper([subdir,lprebase]),'Composite.h5,0]'];
            else
                tr=[' -r ',refim,...
-                   ' -t ',ea_path_helper([subdir,lprebase]),'1Warp.nii.gz'...
-                   ' -t ',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat'];
+                   ' -t [',ea_path_helper([subdir,lprebase]),'1Warp.nii.gz,0]'...
+                   ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,0]'];
            end
        end
        

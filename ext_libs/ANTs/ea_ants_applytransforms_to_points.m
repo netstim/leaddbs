@@ -19,7 +19,7 @@ if nargin>3
 else
     if useinverse
         if exist([subdir,lprebase,'Composite.h5'],'file')
-            tstring=[' -t ',ea_path_helper([subdir,lprebase]),istr,'Composite.h5,0'];
+            tstring=[' -t [',ea_path_helper([subdir,lprebase]),istr,'Composite.h5,0]'];
         else
             tstring=    [  ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']',...
                 ' -t [',ea_path_helper([subdir,lprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
@@ -28,7 +28,7 @@ else
         
     else
         if exist([subdir,lprebase,'Composite.h5'],'file')
-            tstring=[' -t ',ea_path_helper([subdir,lprebase]),istr,'Composite.h5,0'];
+            tstring=[' -t [',ea_path_helper([subdir,lprebase]),istr,'Composite.h5,0]'];
         else
             tstring=[' -t [',ea_path_helper([subdir,lprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
                 ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'...

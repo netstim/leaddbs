@@ -52,6 +52,7 @@
               markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
           end
           elmodel=options.elmodel;
+          % this is still legacy format but has markers variable in it now.
           save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','markers','elmodel');
           
       end
@@ -62,6 +63,13 @@
           trajectory{1}=ea_fit_line(coords_mm(1:4,:));
           trajectory{2}=ea_fit_line(coords_mm(options.elspec.numel+1:options.elspec.numel+4,:));
       end
+      
+      % we have all variables now but need to put them into reco format and
+      % they are in MNI.
+      options.native=0;
+      ea_save_reconstruction(coords_mm,trajectory,markers,'Medtronic 3389',0,options);
+      options.native=1;
+      [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
   end
   
   if ~exist('manually_corrected','var')
