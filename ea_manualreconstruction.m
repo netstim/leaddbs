@@ -646,6 +646,7 @@ caxis([c_lims(1) c_lims(2)]);
 
 
 
+
 %% plot axial planes on the right hand side of the figure
 
 
@@ -1013,7 +1014,7 @@ perfs=[1 -1 % actions to perform on key commands
       -1 1
        1 1
       -1 -1];
-kern=100; % gain to correct contrast
+kern=(c_lims(2)-c_lims(1))/20; % gain to correct contrast
 
 doshift=any(ismember('shift',modifier));
 
