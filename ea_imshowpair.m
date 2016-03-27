@@ -126,11 +126,13 @@ set(0,'CurrentFigure',isp);
 MainImage = 1;
 XImage=1:size(Img,1);
 YImage=1:size(Img,2);
-try % image toolbox
-    imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax])
-catch    
-    imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax])
-end
+
+        try % image toolbox     
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+        catch
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+        end;
+        showhelptext;
 
 FigPos = get(gcf,'Position');
 S_Pos = [50 20 uint16(FigPos(3)-150)+1 20];
@@ -169,7 +171,7 @@ VCrBtnhand = uicontrol('Style', 'pushbutton','Position', VCrBtn_Pos,'String','C'
 
 set (gcf, 'WindowScrollWheelFcn', @mouseScroll);
 set (gcf, 'ButtonDownFcn', @mouseClick);
-set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
+set(ImHndl,'ButtonDownFcn', @mouseClick);
 set(gcf,'WindowButtonUpFcn', @mouseRelease)
 set(gcf,'ResizeFcn', @figureResized)
 set(gcf,'WindowButtonMotionFcn', @ButtonMotionCallback)
@@ -205,7 +207,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 % -=< Slice slider callback function >=-
     function SliceSlider (hObj,event, Img)
         S = round(get(hObj,'Value'));
-        set(get(gca,'children'),'cdata',squeeze(Img(:,:,S,:)))
+        set(ImHndl,'cdata',squeeze(Img(:,:,S,:)))
         caxis([Rmin Rmax])
         if sno > 1
             %set(stxthand, 'String', sprintf('Slice# %d / %d',S, sno));
@@ -229,7 +231,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         else
  %           set(stxthand, 'String', '2D image');
         end
-        set(get(gca,'children'),'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+        set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
     end
 
 % -=< Mouse button released callback function >=-
@@ -263,7 +265,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 f1 = get(a1,'Parent');
                 
                 a2 = copyobj(a1,f1, 'legacy');
+                
                 i2 = get(a2,'Children');
+                i2=i2(2);
                 
                 set(f1, ...
                     'UserData',[f1,a1,a2], ...
@@ -385,7 +389,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             elseif MainImage(1)==3
                 MainImage=1;
             end
-            set(get(gca,'children'),'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
+            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
         elseif (strcmpi(eventdata.Key,'z')) % toggles zoom in/out
             ImgZ=~ImgZ;
             switch View
@@ -425,8 +429,16 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
         
         
-        imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax])
 
+        
+        try % image toolbox     
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+        catch
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+        end;
+        showhelptext;
+        
+        
         if sno > 1
         %    shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
             %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
@@ -441,9 +453,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             %set(stxthand, 'String', '2D image');
         end
         
-        set(get(gca,'children'),'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+        set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         set (gcf, 'ButtonDownFcn', @mouseClick);
-        set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
+        set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
 
 % -=< Sagittal view callback function >=-
@@ -468,8 +480,16 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         sno = sno_s;
         cla(hdl_im);
         hdl_im = axes('position',[0,0,1,1]);
-        imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax])
+        
+        try % image toolbox     
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+        catch
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+        end;
+        showhelptext;
 
+        
+        
         if sno > 1
           %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
             %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
@@ -484,9 +504,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 %            set(stxthand, 'String', '2D image');
         end
 
-        set(get(gca,'children'),'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
+        set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
         set (gcf, 'ButtonDownFcn', @mouseClick);
-        set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
+        set(ImHndl,'ButtonDownFcn', @mouseClick);
 
     end
 
@@ -512,8 +532,14 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         sno = sno_c;
         cla(hdl_im);
         hdl_im = axes('position',[0,0,1,1]);
-        imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax])
-
+        
+        try % image toolbox     
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+        catch
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+        end;        
+        showhelptext;
+        
         if sno > 1
           %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
             %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
@@ -523,11 +549,19 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         
         caxis([Rmin Rmax])
 
-        set(get(gca,'children'),'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+        set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         set (gcf, 'ButtonDownFcn', @mouseClick);
-        set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
+        set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
 
+end
+
+function showhelptext
+
+hold on
+helptext=text(5,5,{'Controls:','Click to show reference image','Use </> to increase box size while clicking',...
+    'Z: Zoom in/out','X: Hybrid view on/off','Arrow keys / Mouse wheel: Scroll through image','A: Axial view',...
+    'C: Coronar view','S: Saggital view'},'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
 end
 
 % Included for completeness (usually in own file)
