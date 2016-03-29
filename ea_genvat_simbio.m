@@ -60,7 +60,7 @@ elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 
-if ea_headmodel_changed(options,side,elstruct)
+if 1 % ea_headmodel_changed(options,side,elstruct)
     disp('No suitable headmodel found, rebuilding. This may take a while...');
     
     %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
@@ -342,6 +342,7 @@ end
 
 gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient from all sources.
 vol.pos=vol.pos*1000; % convert back to mm.
+keyboard
     midpts=mean(cat(3,vol.pos(vol.hex(:,1),:),vol.pos(vol.hex(:,2),:),vol.pos(vol.hex(:,3),:),vol.pos(vol.hex(:,4),:),vol.pos(vol.hex(:,5),:),vol.pos(vol.hex(:,6),:),vol.pos(vol.hex(:,7),:),vol.pos(vol.hex(:,8),:)),3);
     
     vatgrad=getappdata(resultfig,'vatgrad');
@@ -391,7 +392,7 @@ vol.pos=vol.pos*1000; % convert back to mm.
     
     
     disp('Done. Calculating VAT...');
-    keyboard
+    
     vat.ET=vat.ET>thresh;
     vat.pos=vat.pos(vat.ET,:);
     
