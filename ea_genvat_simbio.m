@@ -255,8 +255,8 @@ if ea_headmodel_changed(options,side,elstruct)
     cfg.resolution=1;
     %mesh=ea_ft_prepare_mesh(cfg,smri);
     [~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);'); % need to incorporate this function and all dependencies into lead-dbs
-%     mesh.pnt=mesh.pnt/1000; % in meter
-%     mesh.unit='m';
+     mesh.pnt=mesh.pnt/1000; % in meter
+     mesh.unit='m';
     
     
     %% calculate volume conductor
@@ -391,7 +391,7 @@ vol.pos=vol.pos*1000; % convert back to mm.
     
     
     disp('Done. Calculating VAT...');
-    
+    keyboard
     vat.ET=vat.ET>thresh;
     vat.pos=vat.pos(vat.ET,:);
     
