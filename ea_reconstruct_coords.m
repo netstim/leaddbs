@@ -38,7 +38,7 @@ for xx=1:size(cimat,1)
 %         for lag=min(trajectory(:,3)):size(cimat,3)-size(temp,3)
 %             corrs(cnt,lag+1-min(trajectory(:,3)))=corr(squeeze(cimat(xx,yy,lag:lag+size(temp,3)-1)),squeeze(temp(xx,yy,:)),'rows','pairwise');
 %         end
-        [corrs(cnt,:),lags]=xcorr(squeeze(cimat(xx,yy,:)),squeeze(temp(xx,yy,:)));
+        [corrs(cnt,:),lags]=ea_xcorr(squeeze(cimat(xx,yy,:)),squeeze(temp(xx,yy,:)));
         cnt=cnt+1;
     end
 end

@@ -59,6 +59,14 @@ set(atls,'FaceAlpha',0.2);
     case 'cortex.nii'
 set(atls,'FaceVertexAlphaData',repmat(0.5,length(len),1));
 set(atls,'FaceAlpha',0.1);
+
+set(atls, 'EdgeColor','none');
+
+set(atls, 'FaceLighting', 'gouraud');
+set(atls, 'LineStyle', '--');
+set(atls, 'SpecularColorReflectance', 0);
+set(atls, 'SpecularExponent', 10);
+set(atls, 'SpecularStrength', 0.5)
     otherwise   
 set(atls,'FaceVertexAlphaData',repmat(0.3,length(len),1));
 set(atls,'FaceAlpha',0.5);

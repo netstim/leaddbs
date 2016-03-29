@@ -14,7 +14,7 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=0.045;
+    thresh=0.103*(10^-3);
 elseif nargin==6
     acoords=varargin{1};
     S=varargin{2};
@@ -43,7 +43,7 @@ end
 
 
 vizz=0;
-
+options.considerpassivecontacts=0;
 
 
 % if isempty(find(S(side).U))
@@ -68,7 +68,10 @@ if ea_headmodel_changed(options,side,elstruct)
     options.earoot=[fileparts(which('lead')),filesep];
     
     %% some preprocessing to establish the lead trajectory
-    traj=[coords(4,:)+(coords(4,:)-coords(2,:));coords(1,:)+(coords(1,:)-coords(3,:))];
+    traj=[elstruct.markers(side).tail+(elstruct.markers(side).tail-elstruct.markers(side).head);
+        elstruct.markers(side).head+(elstruct.markers(side).head-elstruct.markers(side).tail);];
+    
+    
     for d=1:3
         itraj(:,d)=linspace(traj(1,d),traj(2,d));
     end
@@ -156,6 +159,7 @@ if ea_headmodel_changed(options,side,elstruct)
     ea_dispercent(0,'Exporting contact components');
     
     for con=1:length(electrode.contacts)
+        
         electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
         electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
         % this following method takes quite some time... even more importantly,
@@ -168,7 +172,12 @@ if ea_headmodel_changed(options,side,elstruct)
         end
         Xt=nii.img;
         Xt(:)=0; Xt(in)=1;
+        
+        if options.considerpassivecontacts || S.activecontacts{side}(con)
         Xcon=Xcon+Xt;
+        else % if not add passive contacts to insulating material
+            Xins=Xins+Xt;
+        end
         ea_dispercent(con/length(electrode.contacts));
     end
     
@@ -255,14 +264,14 @@ if ea_headmodel_changed(options,side,elstruct)
 
     %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
     try
-        %    vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-        vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.14 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+            vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+        %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
 
     catch % reorder elements so not to be degenerated.
         mesh.hex=mesh.hex(:,[4 3 2 1 8 7 6 5]);
-        % vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-        vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.14 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+         vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+        %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
     end
  
@@ -307,7 +316,7 @@ for source=1:4
         
         %% calculate voltage distribution based on dipole
         disp('Done. Calculating voltage distribution...');
-        ix=knnsearch(vol.pos,dpvx); % add dpvx/1000 for m
+        ix=knnsearch(vol.pos,dpvx/1000); % add dpvx/1000 for m
         
         if any(volts>0)
             unipolar=0;
@@ -323,7 +332,7 @@ for source=1:4
         potential = ea_apply_dbs(vol,ix,volts,unipolar,constvol); % output in V.
         disp('Done. Calculating E-Field...');
         
-        gradient{source} = ea_calc_gradient(vol,potential);
+        gradient{source} = ea_calc_gradient(vol,potential); % output in V/m.
         
     else % empty source..
         gradient{source}=zeros(size(vol.hex,1),3);
@@ -332,7 +341,7 @@ for source=1:4
 end
 
 gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient from all sources.
-
+vol.pos=vol.pos*1000; % convert back to mm.
     midpts=mean(cat(3,vol.pos(vol.hex(:,1),:),vol.pos(vol.hex(:,2),:),vol.pos(vol.hex(:,3),:),vol.pos(vol.hex(:,4),:),vol.pos(vol.hex(:,5),:),vol.pos(vol.hex(:,6),:),vol.pos(vol.hex(:,7),:),vol.pos(vol.hex(:,8),:)),3);
     
     vatgrad=getappdata(resultfig,'vatgrad');
@@ -471,6 +480,7 @@ protocol=struct; % default for errors
 protocol.elmodel=options.elmodel;
 protocol.elstruct=elstruct;
 protocol.usediffusion=options.usediffusion;
+protocol.considerpassivecontacts=options.considerpassivecontacts;
 protocol.atlas=options.atlasset;
 if sv % save protocol to disk
     save([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat'],'protocol');

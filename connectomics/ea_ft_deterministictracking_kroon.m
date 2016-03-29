@@ -52,6 +52,12 @@ Xdti=spm_read_vols(Vdti);
 
 bval=load([options.root,options.patientname,filesep,options.prefs.bval]);
 bvec=load([options.root,options.patientname,filesep,options.prefs.bvec]);
+if size(bval,1)>size(bval,2)
+    bval=bval';
+end
+if size(bvec,1)>size(bvec,2)
+    bvec=bvec';
+end
 
 for i=1:size(Xdti,4)
    DTIdata(i).VoxelData=single(squeeze(Xdti(:,:,:,i)));

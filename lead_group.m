@@ -1281,6 +1281,7 @@ stimname=ea_detstimname();
     switch mod
         case {'Patient-specific fiber tracts','rest_tc'}
             fibersfile=mod;
+        case 'Do not calculate connectivity stats'
         otherwise % load fibertracts once and for all subs here.
                 [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([fileparts(which('lead')),filesep,'fibers',filesep,mod,'.mat']);
     end
