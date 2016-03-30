@@ -7,6 +7,7 @@ function varargout=ea_genvat_simbio(varargin)
 %
 % This function only touches the .VAT entry of stimparams struct of the
 % given side.
+useSI=1;
 
 if nargin==5
     acoords=varargin{1};
@@ -14,7 +15,10 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=0.103*(10^-3);
+    thresh=0.103;
+    if useSI
+        %thresh=thresh.*(10^-3);
+    end
 elseif nargin==6
     acoords=varargin{1};
     S=varargin{2};
@@ -28,6 +32,8 @@ elseif nargin==1
         return
     end
 end
+
+
 
 S=ea_activecontacts(S);
 if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
@@ -255,22 +261,31 @@ if 1 % ea_headmodel_changed(options,side,elstruct)
     cfg.resolution=1;
     %mesh=ea_ft_prepare_mesh(cfg,smri);
     [~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);'); % need to incorporate this function and all dependencies into lead-dbs
-     mesh.pnt=mesh.pnt/1000; % in meter
-     mesh.unit='m';
-    
+    if useSI
+        mesh.pnt=mesh.pnt/1000; % in meter
+        mesh.unit='m';
+    end
     
     %% calculate volume conductor
     disp('Done. Creating volume conductor...');
 
     %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
+    
+    if useSI
+        SIfx=1;
+    else
+        SIfx=1000;
+    end
+    
     try
-            vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+        
+            vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
 
     catch % reorder elements so not to be degenerated.
         mesh.hex=mesh.hex(:,[4 3 2 1 8 7 6 5]);
-         vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+         vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
     end
@@ -316,7 +331,12 @@ for source=1:4
         
         %% calculate voltage distribution based on dipole
         disp('Done. Calculating voltage distribution...');
-        ix=knnsearch(vol.pos,dpvx/1000); % add dpvx/1000 for m
+        if useSI
+            SIfx=1000;
+        else
+            SIfx=1;
+        end
+        ix=knnsearch(vol.pos,dpvx/SIfx); % add dpvx/1000 for m
         
         if any(volts>0)
             unipolar=0;
@@ -341,12 +361,12 @@ for source=1:4
 end
 
 gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient from all sources.
-vol.pos=vol.pos*1000; % convert back to mm.
-keyboard
+vol.pos=vol.pos*SIfx; % convert back to mm.
+
     midpts=mean(cat(3,vol.pos(vol.hex(:,1),:),vol.pos(vol.hex(:,2),:),vol.pos(vol.hex(:,3),:),vol.pos(vol.hex(:,4),:),vol.pos(vol.hex(:,5),:),vol.pos(vol.hex(:,6),:),vol.pos(vol.hex(:,7),:),vol.pos(vol.hex(:,8),:)),3);
     
-    vatgrad=getappdata(resultfig,'vatgrad');
-    if isempty(vatgrad); clear('vatgrad'); end
+    %vatgrad=getappdata(resultfig,'vatgrad');
+    %if isempty(vatgrad); clear('vatgrad'); end
     reduc=10;
     
     % generate a jittered indices vector to be used to reduce flowfield
