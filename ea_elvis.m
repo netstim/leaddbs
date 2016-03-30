@@ -32,7 +32,7 @@ end
 % Initialize figure
 
 resultfig=figure('name',[options.patientname,': Electrode-Scene'],'numbertitle','off','CloseRequestFcn',@closesattelites,'visible',options.d3.verbose,'KeyPressFcn',@ea_keypress,'KeyReleaseFcn',@ea_keyrelease);
-
+set(resultfig,'toolbar','none');
 ssz=get(0,'Screensize');
 ssz(1:2)=ssz(1:2)+50;
 ssz(3:4)=ssz(3:4)-200;
@@ -42,18 +42,30 @@ set(resultfig, 'Position', ssz); % Maximize figure.
 
 
 ht=uitoolbar(resultfig);
+
+% add custom rotator:
+uibjs.rotate3dtog=uitoggletool(ht,'CData',ea_get_icn('rotate',options),'TooltipString','Rotate 3D','OnCallback',{@ea_rotate,'on'},'OffCallback',{@ea_rotate,'off'},'State','off');
+uibjs.magnifyplus=uitoggletool(ht,'CData',ea_get_icn('magnplus',options),'TooltipString','Zoom In','OnCallback',{@ea_zoomin,'on'},'OffCallback',{@ea_zoomin,'off'},'State','off');
+uibjs.magnifyminus=uitoggletool(ht,'CData',ea_get_icn('magnminus',options),'TooltipString','Zoom Out','OnCallback',{@ea_zoomout,'on'},'OffCallback',{@ea_zoomout,'off'},'State','off');
+uibjs.handtog=uitoggletool(ht,'CData',ea_get_icn('hand',options),'TooltipString','Pan Scene','OnCallback',{@ea_pan,'on'},'OffCallback',{@ea_pan,'off'},'State','off');
+setappdata(resultfig,'uibjs',uibjs);
+
+
 mh = uimenu(resultfig,'Label','Add Objects');
 fh1 = uimenu(mh,'Label','Open Tract','Callback',{@ea_addobj,resultfig,'tract',options});
 fh2 = uimenu(mh,'Label','Open ROI','Callback',{@ea_addobj,resultfig,'roi',options});
 
 % Set some visualization parameters
 
-%set(gcf,'Renderer','opengl')
+set(resultfig,'Renderer','opengl')
 axis off
+%set(gca,'DrawMode','fast')
 set(resultfig,'color','w');
 set(resultfig, 'InvertHardCopy', 'off');
-
-
+set(resultfig,'visible','off');
+set(resultfig,'Clipping','off');
+set(gca,'NextPlot','replacechildren');
+set(gca,'Erasemode','none');
 
 % Get paramters (Coordinates and fitted line).
 
@@ -269,7 +281,7 @@ axis off
 set(gcf,'color','w');
 axis vis3d
 axis equal
-set(gcf,'Name',figtitle);
+set(resultfig,'Name',figtitle);
 set(0,'CurrentFigure',resultfig);
 ax=gca;
 set(ax,'XLim',[-140 140]);
@@ -283,6 +295,7 @@ set(ax,'ZLim',[-140 140]);
 set(ax,'XLimMode','manual'); set(ax,'YLimMode','manual'); set(ax,'ZLimMode','manual');
 view(133,56);
 zoom(6)
+set(resultfig,'visible','on');
 opensliceviewer([],[],resultfig,options);
 
 if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
@@ -766,6 +779,67 @@ if ~isempty(IsOnTop)
     jFrame.fHG1Client.getWindow.setAlwaysOnTop(IsOnTop);
 end
 
+function ea_distogrotate
+uibjs=getappdata(gcf,'uibjs');
+set(uibjs.rotate3dtog,'State','off');
+
+function ea_distogzoomin
+uibjs=getappdata(gcf,'uibjs');
+set(uibjs.magnifyplus,'State','off');
+
+function ea_distogzoomout
+uibjs=getappdata(gcf,'uibjs');
+set(uibjs.magnifyminus,'State','off');
+
+function ea_distogpan
+uibjs=getappdata(gcf,'uibjs');
+set(uibjs.handtog,'State','off');
 
 
 
+
+function ea_rotate(hbj,~,cmd)
+
+    h = rotate3d;
+h.RotateStyle = 'box';
+h.Enable = cmd;
+if strcmp(cmd,'on');
+ea_distogzoomin;
+ea_distogzoomout;
+ea_distogpan;
+end
+
+function ea_pan(hbj,~,cmd)
+
+    pan(cmd);
+    if strcmp(cmd,'on');
+        
+        ea_distogzoomin;
+        ea_distogzoomout;
+        ea_distogrotate;
+    end
+
+function ea_zoomin(hbj,~,cmd)
+if strcmp(cmd,'on');
+    
+    ea_distogpan;
+    ea_distogrotate;
+    
+            ea_distogzoomout;
+end
+    h=zoom;
+h.Enable=cmd;
+h.Motion='both';
+h.Direction='in';
+
+
+function ea_zoomout(hbj,~,cmd)
+if strcmp(cmd,'on');
+    ea_distogpan;
+    ea_distogrotate;
+    ea_distogzoomin;
+end
+h=zoom;
+h.Enable=cmd;
+h.Motion='both';
+h.Direction='out';
