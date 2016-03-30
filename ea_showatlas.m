@@ -57,7 +57,7 @@ for nativemni=nm % switch between native and mni space atlases.
         atlases=ea_genatlastable([],root,options,mifix);
     else
         load([adir,'atlas_index.mat']);
-       atlases=ea_genatlastable(atlases,root,options,mifix);     
+        atlases=ea_genatlastable(atlases,root,options,mifix);
     end
     
     
@@ -69,31 +69,31 @@ for nativemni=nm % switch between native and mni space atlases.
     end
     
     
-
+    
+    
+    if isfield(atlases,'colormap');
         
-        if isfield(atlases,'colormap');
+        try
+            jetlist=eval(atlases.colormap);
             
-            try
-                jetlist=eval(atlases.colormap);
-                
-            catch
-                jetlist=atlases.colormap;
-                
-            end
-            colormap(atlases.colormap);
+        catch
+            jetlist=atlases.colormap;
             
-            
-            
-        else
-            try
-                jetlist=options.colormap;
-                atlases.colormap=jetlist;
-                colormap(jetlist)
-            catch
-                atlases.colormap='jet';
-                jetlist=jet;
-            end
         end
+        colormap(atlases.colormap);
+        
+        
+        
+    else
+        try
+            jetlist=options.colormap;
+            atlases.colormap=jetlist;
+            colormap(jetlist)
+        catch
+            atlases.colormap='jet';
+            jetlist=jet;
+        end
+    end
     
     
     
@@ -120,10 +120,45 @@ for nativemni=nm % switch between native and mni space atlases.
     % iterate through atlases, visualize them and write out stats.
     for atlas=1:length(atlases.names)
         
-
+        
         
         for side=detsides(atlases.types(atlas));
-
+            
+            if ischar(atlases.pixdim{atlas,side}) % we are dealing with fibers
+                centroid=mean(atlases.XYZ{atlas,side}(:,1:3),1);
+                fcnt=1;
+                [~,alnm]=fileparts(atlases.names{atlas});
+                ea_dispercent(0,['Plotting ',alnm]);
+                fibmax=length(atlases.fv{atlas,side});
+                for fib=1:fibmax
+                    ea_dispercent(fib/fibmax);
+                    thisfib=atlases.XYZ{atlas,side}(atlases.XYZ{atlas,side}(:,4)==fib,:);
+                    
+                    
+                    
+                    if size(thisfib,1)>5 % neglect very small fibertracts
+                        % set 4th dim color
+                        
+                        thisfib(:,4)=atlases.colors(atlas);
+                        len=size(thisfib,1);
+                        %                     atlassurfs(atlascnt,fib)=surface([thisfib(:,1);thisfib(:,1)+randn(len,1)*0.1],...
+                        %                         [thisfib(:,2);thisfib(:,2)+randn(len,1)*0.1],...
+                        %                         [thisfib(:,3);thisfib(:,3)+randn(len,1)*0.1],...
+                        %                         [thisfib(:,4);thisfib(:,4)+randn(len,1)*0.1],'facecol','no','edgecol','interp','linew',5);
+                        hold on
+                        [rr,gg,bb]=ind2rgb(thisfib(1,4),jetlist);
+                        %atlassurfs(atlascnt,fib)=ea_plot3(thisfib(:,1),thisfib(:,2),thisfib(:,3),'-','color',[rr,gg,bb]);
+                        
+                        atlassurfs(atlascnt,fcnt)=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,[rr,gg,bb],6);
+                        
+                        fcnt=fcnt+1;
+                    end
+                end
+                ea_dispercent(1,'end');
+                
+            else
+                
+                
                 fv=atlases.fv{atlas,side};
                 cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1) ... % C-Data for surface
                     +randn(length(fv.vertices),1)*2)';
@@ -131,24 +166,33 @@ for nativemni=nm % switch between native and mni space atlases.
                 pixdim=atlases.pixdim{atlas,side};
                 colorc=nan;
                 
-%                 
-%             end
-            
-            
-            % show atlas label
-            if size(XYZ.mm,1)>1 % exception for single-coordinate atlases...
+                %
+                %             end
                 
-                [~,centroid]=kmeans(XYZ.mm,1);
-            else
                 
-                centroid=XYZ.mm;
+                % show atlas label
+                if size(XYZ.mm,1)>1 % exception for single-coordinate atlases...
+                    
+                    [~,centroid]=kmeans(XYZ.mm,1);
+                else
+                    
+                    centroid=XYZ.mm;
+                    
+                end
+                try
+                    centroid=centroid(1,:);
+                catch % empty file..
+                    break
+                end
+                
+                
+                set(0,'CurrentFigure',resultfig);
+                atlassurfs(atlascnt,1)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
                 
             end
-            try
-                centroid=centroid(1,:);
-            catch % empty file..
-                break
-            end
+            
+            % export label and labelbutton
+            
             [~,thislabel]=fileparts(atlases.names{atlas});
             try % use try here because filename might be shorter than .nii
                 
@@ -163,11 +207,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors',options),'TooltipString','Label Color');
             end
             
-            
-            set(0,'CurrentFigure',resultfig);
-            atlassurfs(atlascnt)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-            
-            
             % make fv compatible for stats
             
             
@@ -175,48 +214,52 @@ for nativemni=nm % switch between native and mni space atlases.
             caxis([1 64]);
             
             % prepare colorbutton icon
-try            
-            atlasc=squeeze(jetlist(ceil(atlases.colors(atlas)),:));  % color for toggle button icon
-catch
-    keyboard
-end
+            try
+                atlasc=squeeze(jetlist(ceil(atlases.colors(atlas)),:));  % color for toggle button icon
+            catch
+                keyboard
+            end
             colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,atlascnt,'on'},'OffCallback',{@atlasvisible,atlascnt,'off'},'State','on');
             
             % gather contact statistics
             if options.writeoutstats
-                thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
-                atsearch=KDTreeSearcher(XYZ.mm(XYZ.val>thresh,:));
-                
-                for el=1:length(elstruct)
+                try
+                    thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
+                    atsearch=KDTreeSearcher(XYZ.mm(XYZ.val>thresh,:));
                     
-                    [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
-                    %s_ix=sideix(side,size(elstruct(el).coords_mm{side},1));
-                    
-                    ea_stats.conmat{el,side}(:,atlas)=D;
-                    Dh=D;
-                    
-                    try
-                        in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
-                        Dh(in)=0;
+                    for el=1:length(elstruct)
                         
-                    catch
-                        disp('No tesselation info found for this atlas. Maybe atlas is too small. Use different hullmethod if needed.');
+                        [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
+                        %s_ix=sideix(side,size(elstruct(el).coords_mm{side},1));
+                        
+                        ea_stats.conmat{el,side}(:,atlas)=D;
+                        Dh=D;
+                        
+                        try
+                            in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
+                            Dh(in)=0;
+                            
+                        catch
+                            disp('No tesselation info found for this atlas. Maybe atlas is too small. Use different hullmethod if needed.');
+                        end
+                        ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
+                        
+                        D(D<mean(pixdim))=0; % using mean here but assuming isotropic atlases in general..
+                        ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
+                        
+                        
+                        
                     end
-                    ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
-                    
-                    D(D<mean(pixdim))=0; % using mean here but assuming isotropic atlases in general..
-                    ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
-                    
-                    
-                    
+                catch
+                    warning('Statistics for tract atlas parts are not implemented yet.');
                 end
             end
             
             %normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
             
-            
-            ea_spec_atlas(atlassurfs(atlascnt),atlases.names{atlas},atlases.colormap,setinterpol);
-            
+try % spec atlas not yet optimized for fibertracts            
+            ea_spec_atlas(atlassurfs(atlascnt,1),atlases.names{atlas},atlases.colormap,setinterpol);
+end         
             atlascnt=atlascnt+1;
             
             set(gcf,'Renderer','OpenGL')
@@ -235,28 +278,28 @@ end
     
     % configure label button to work properly and hide labels as default.
     
-   atlabelsvisible([],[],atlaslabels(:),'off');
+    atlabelsvisible([],[],atlaslabels(:),'off');
     set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(:),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(:),'off'},'State','off');
     set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
     
     
     
     
-%     % save table information that has been generated from nii files (on first run with this atlas set).
-%     try
-%         atlases.fv=ifv;
-%         atlases.cdat=icdat;
-%         atlases.XYZ=iXYZ;        
-%         atlases.pixdim=ipixdim;
-%         atlases.colorc=icolorc;
-%         atlases.normals=normals;
-%     end
+    %     % save table information that has been generated from nii files (on first run with this atlas set).
+    %     try
+    %         atlases.fv=ifv;
+    %         atlases.cdat=icdat;
+    %         atlases.XYZ=iXYZ;
+    %         atlases.pixdim=ipixdim;
+    %         atlases.colorc=icolorc;
+    %         atlases.normals=normals;
+    %     end
     
     
     try
         setappdata(gcf,'atlases',atlases);
-%        setappdata(gcf,'iXYZ',atlases.XYZ);
-%        setappdata(gcf,'ipixdim',atlases.pixdim);
+        %        setappdata(gcf,'iXYZ',atlases.XYZ);
+        %        setappdata(gcf,'ipixdim',atlases.pixdim);
     end
     try
         atlases.rebuild=0; % always reset rebuild flag.
@@ -317,9 +360,9 @@ end
 
 function atlabelsvisible(hobj,ev,obj,onoff)
 for el=1:numel(obj)
-try
-    set(obj(el),'Visible',onoff);
-end
+    try
+        set(obj(el),'Visible',onoff);
+    end
 end
 
 

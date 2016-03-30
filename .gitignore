@@ -10,6 +10,7 @@
 *.woff
 *.trk.gz
 *.trk
+
 gibsconnect*.mat
 fibers/
 release/

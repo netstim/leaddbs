@@ -68,7 +68,10 @@ set(atls, 'SpecularColorReflectance', 0);
 set(atls, 'SpecularExponent', 10);
 set(atls, 'SpecularStrength', 0.5)
     otherwise   
-set(atls,'FaceVertexAlphaData',repmat(0.3,length(len),1));
+        
+try % only works for volumetrics/patches
+        set(atls,'FaceVertexAlphaData',repmat(0.3,length(len),1));
+end
 set(atls,'FaceAlpha',0.5);
 
 
