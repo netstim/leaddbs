@@ -95,6 +95,9 @@ switch onoff
         
         % change mousewheel, too:
         set(fighandle, 'pointer', 'arrow');
+        
+        
+        disp('** Process done.');
     case 'del'
         
         if ~exist('offfigtit','var')
@@ -114,6 +117,7 @@ switch onoff
         
         % change mousewheel, too:
         set(fighandle, 'pointer', 'arrow');
+              disp('** Process done.');
 end
 
 end

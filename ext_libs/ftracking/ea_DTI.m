@@ -36,6 +36,7 @@ Bvalue=zeros(6,1);
 % and other gradients into different matrices.
 if(parameters.textdisplay), disp('Separate gradient and none gradient datasets'); pause(0.1); end
 voxel0=0; voxelg=0;
+
 for i=1:length(DTIdata)
     if(nnz(DTIdata(i).Gradient(:)==[0;0;0])==3)
         voxel0=voxel0+1;
@@ -91,7 +92,7 @@ for x=1:size(S0,1),
         for z=1:size(S0,3),
             
             % Only process a pixel if it isn't background
-            if(S0(x,y,z)>parameters.BackgroundTreshold)
+            %if(S0(x,y,z)>parameters.BackgroundTreshold)
                 
                 % Calculate the Diffusion tensor [Dxx,Dxy,Dxz,Dyy,Dyz,Dzz],
                 % with a simple matrix inverse.
@@ -129,11 +130,11 @@ for x=1:size(S0,1),
                 Y(x,y,z,:)=EigenValues;
                 DifT(x,y,z,:)=[DiffusionTensor(1:3) DiffusionTensor(5:6) DiffusionTensor(9)];
                 % Only store the FA and fiber vector of a voxel, if it exceed an anistropy treshold
+               FA(x,y,z)=FAv;
                 if(FAv>parameters.WhiteMatterExtractionThreshold)
-                    FA(x,y,z)=FAv;
                     VectorF(x,y,z,:)=EigenVectors(:,end)*EigenValues_old(end);
                 end
-            end
+            %end
         end
     end
 end

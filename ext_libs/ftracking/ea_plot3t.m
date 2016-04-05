@@ -1,4 +1,4 @@
-function hiso=ea_plot3t(varargin)
+function [hiso,fv]=ea_plot3t(varargin)
 % PLOT3T Plots a (cylindrical) 3D line with a certain thickness.
 %
 %   h = plot3t(x,y,z,r,'color',n);
@@ -118,7 +118,7 @@ end
 normal=normal./(sqrt(normal(:,1).^2+normal(:,2).^2+normal(:,3).^2)*ones(1,3));
 
 % Create a list to store vertex points
-FV.vertices=zeros((9+(length(linex)-1)*3)*vertex_num,3);
+fv.vertices=zeros((9+(length(linex)-1)*3)*vertex_num,3);
 
 % In plane rotation of 2d circle coordinates
 jm=0;
@@ -138,7 +138,7 @@ if(~lclosed)
         circmp=r*radius(1)*circm+ones(vertex_num,1)*(line(1,:)-(j/5)*bufdist*normal(1,:));
         % Create vertex list
         n_cylinders=n_cylinders+1;
-        FV.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
+        fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
     end
 end
 
@@ -163,7 +163,7 @@ for i=1:length(linex)-1,
 
     % Create vertex list
     n_cylinders=n_cylinders+1;
-    FV.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
+    fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
   
     pnormal2=normal(i+1,:); pline2=line(i+1,:);
        
@@ -172,7 +172,7 @@ for i=1:length(linex)-1,
 
     % Create vertex list
     n_cylinders=n_cylinders+1;
-    FV.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
+    fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
 
 % Create in between circle to smoothly connect line pieces.
 
@@ -196,7 +196,7 @@ for i=1:length(linex)-1,
 
     % Create vertex list
     n_cylinders=n_cylinders+1;
-    FV.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
+    fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
 
     % Rotate circle coordinates in plane to align with the previous circle
     % by minimizing distance between the coordinates of two circles with 3 coordinates.
@@ -217,7 +217,7 @@ if(~lclosed)
         circmp=r*radius(i+1)*circm+ones(vertex_num,1)*(line(i+1,:)+(j/5)*bufdist*normal(i+1,:));
         % Create vertex list
         n_cylinders=n_cylinders+1;
-        FV.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
+        fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
     end
 else
     i=i+1;
@@ -232,7 +232,7 @@ else
 
     % Create vertex list
     n_cylinders=n_cylinders+1;
-    FV.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];   
+    fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];   
 end
 
 
@@ -241,14 +241,17 @@ Fb=[[1:vertex_num (1:vertex_num)+1];[(1:vertex_num)+vertex_num (1:vertex_num)];[
 Fb(vertex_num,3)=1+vertex_num; Fb(vertex_num*2,1)=1; Fb(vertex_num*2,3)=1+vertex_num;
 
 % Create TRI face list
-FV.faces=zeros(vertex_num*2*(n_cylinders-1),3);
+fv.faces=zeros(vertex_num*2*(n_cylinders-1),3);
 for i=1:n_cylinders-1,
-    FV.faces(((i-1)*vertex_num*2+1):((i)*vertex_num*2),1:3)=(Fb+(i-1)*vertex_num);
+    fv.faces(((i-1)*vertex_num*2+1):((i)*vertex_num*2),1:3)=(Fb+(i-1)*vertex_num);
 end
 
 % Display the polygon patch
-hiso=patch(FV,'Facecolor', icolor, 'EdgeColor', 'none');
-
+if varargin{7}
+hiso=patch(fv,'Facecolor', icolor, 'EdgeColor', 'none');
+else
+    hiso=nan;
+end
 
 
 function [err,circm]=minimize_rot(angles,circmo,angleoffset,a,b)

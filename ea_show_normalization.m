@@ -130,6 +130,8 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             saveas(h1,[options.root,options.prefs.patientdir,filesep,'normalization_check',suff,'_axial.png']);
             saveas(h2,[options.root,options.prefs.patientdir,filesep,'normalization_check',suff,'_corsag.png']);
         end
+    catch
+        warning(['Error showing normalization of ',checkf,'.']);
     end
 
 end

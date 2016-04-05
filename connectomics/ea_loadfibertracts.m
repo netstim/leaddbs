@@ -25,13 +25,22 @@ function ea_trk2ftr(cfile)
 [hdr,trks]=ea_trk_read([cfile]);
 ftr.vox=hdr.voxel_size;
 
+
 %V=spm_vol([spm('dir'),filesep,'canonical',filesep,'avg152T2.nii']); % assume MNI152 official to be voxel space of tracts
-V=spm_vol([fileparts(which('lead')),filesep,'templates',filesep,'mni_icbm152_wm_tal_nlin_asym_09c.nii']);
+V=spm_vol([fileparts(which('lead')),filesep,'templates',filesep,'mni_hires.nii']);
 for i=1:length(trks)
     ftr.curveSegCell{i}=[trks(i).matrix(:,1)/ftr.vox(1),trks(i).matrix(:,2)/ftr.vox(2),trks(i).matrix(:,3)/ftr.vox(3)];
-    ftr.curveSegCell{i}=[ftr.curveSegCell{i},ones(size(ftr.curveSegCell{i},1),1)]';
-    ftr.curveSegCell{i}=V.mat*ftr.curveSegCell{i};
-    ftr.curveSegCell{i}=ftr.curveSegCell{i}(1:3,:)';
+    
+    %% use conversion from DSI_studio:
+    
+ftr.curveSegCell{i}(:,1)=78.0-ftr.curveSegCell{i}(:,1);
+ftr.curveSegCell{i}(:,2)=76.0-ftr.curveSegCell{i}(:,2);
+ftr.curveSegCell{i}(:,3)=-50.0+ftr.curveSegCell{i}(:,3);
+    
+    %% use conversion from a file:
+%     ftr.curveSegCell{i}=[ftr.curveSegCell{i},ones(size(ftr.curveSegCell{i},1),1)]';
+%     ftr.curveSegCell{i}=V.mat*ftr.curveSegCell{i};
+%     ftr.curveSegCell{i}=ftr.curveSegCell{i}(1:3,:)';
 end
 
 save(fullfile(pth,[fn,'.mat']),'-struct','ftr','-v7.3');

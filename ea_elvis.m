@@ -62,7 +62,7 @@ axis off
 %set(gca,'DrawMode','fast')
 set(resultfig,'color','w');
 set(resultfig, 'InvertHardCopy', 'off');
-set(resultfig,'visible','off');
+%set(resultfig,'visible','off');
 set(resultfig,'Clipping','off');
 set(gca,'NextPlot','replacechildren');
 set(gca,'Erasemode','none');
@@ -801,7 +801,7 @@ set(uibjs.handtog,'State','off');
 function ea_rotate(hbj,~,cmd)
 
     h = rotate3d;
-h.RotateStyle = 'box';
+h.RotateStyle = 'orbit';
 h.Enable = cmd;
 if strcmp(cmd,'on');
 ea_distogzoomin;

@@ -15,7 +15,7 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=0.103;
+    thresh=0.05;
     if useSI
         %thresh=thresh.*(10^-3);
     end
@@ -71,7 +71,7 @@ if 1 % ea_headmodel_changed(options,side,elstruct)
     
     %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
     
-    options.earoot=[fileparts(which('lead')),filesep];
+    %options.earoot=[fileparts(which('lead')),filesep];
     
     %% some preprocessing to establish the lead trajectory
     traj=[elstruct.markers(side).tail+(elstruct.markers(side).tail-elstruct.markers(side).head);
@@ -278,7 +278,6 @@ if 1 % ea_headmodel_changed(options,side,elstruct)
     end
     
     try
-        
             vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm

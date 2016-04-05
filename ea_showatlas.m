@@ -124,44 +124,30 @@ for nativemni=nm % switch between native and mni space atlases.
         
         for side=detsides(atlases.types(atlas));
             
-            if ischar(atlases.pixdim{atlas,side}) % we are dealing with fibers
-                centroid=mean(atlases.XYZ{atlas,side}(:,1:3),1);
-                fcnt=1;
-                [~,alnm]=fileparts(atlases.names{atlas});
-                ea_dispercent(0,['Plotting ',alnm]);
-                fibmax=length(atlases.fv{atlas,side});
-                for fib=1:fibmax
-                    ea_dispercent(fib/fibmax);
-                    thisfib=atlases.XYZ{atlas,side}(atlases.XYZ{atlas,side}(:,4)==fib,:);
-                    
-                    
-                    
-                    if size(thisfib,1)>5 % neglect very small fibertracts
-                        % set 4th dim color
-                        
-                        thisfib(:,4)=atlases.colors(atlas);
-                        len=size(thisfib,1);
-                        %                     atlassurfs(atlascnt,fib)=surface([thisfib(:,1);thisfib(:,1)+randn(len,1)*0.1],...
-                        %                         [thisfib(:,2);thisfib(:,2)+randn(len,1)*0.1],...
-                        %                         [thisfib(:,3);thisfib(:,3)+randn(len,1)*0.1],...
-                        %                         [thisfib(:,4);thisfib(:,4)+randn(len,1)*0.1],'facecol','no','edgecol','interp','linew',5);
-                        hold on
-                        [rr,gg,bb]=ind2rgb(thisfib(1,4),jetlist);
-                        %atlassurfs(atlascnt,fib)=ea_plot3(thisfib(:,1),thisfib(:,2),thisfib(:,3),'-','color',[rr,gg,bb]);
-                        
-                        atlassurfs(atlascnt,fcnt)=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,[rr,gg,bb],6);
-                        
-                        fcnt=fcnt+1;
-                    end
-                end
-                ea_dispercent(1,'end');
-                
-            else
+%             if ischar(atlases.pixdim{atlas,side}) % we are dealing with fibers
+%                 
+%                 %[~,alnm]=fileparts(atlases.names{atlas});
+%                 %                     atlassurfs(atlascnt,fib)=surface([thisfib(:,1);thisfib(:,1)+randn(len,1)*0.1],...
+%                 %                         [thisfib(:,2);thisfib(:,2)+randn(len,1)*0.1],...
+%                 %                         [thisfib(:,3);thisfib(:,3)+randn(len,1)*0.1],...
+%                 %                         [thisfib(:,4);thisfib(:,4)+randn(len,1)*0.1],'facecol','no','edgecol','interp','linew',5);
+%                 
+%                 
+%             else
                 
                 
                 fv=atlases.fv{atlas,side};
+                rndfactor=2;
+                try
+                switch atlases.names{atlas,side}(end-2:end)
+                    case 'nii'
+                        rndfactor=2;
+                    case {'trk','mat'}
+                        rndfactor=0.2;
+                end
+                end
                 cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1) ... % C-Data for surface
-                    +randn(length(fv.vertices),1)*2)';
+                    +randn(length(fv.vertices),1)*rndfactor)';
                 XYZ=atlases.XYZ{atlas,side};
                 pixdim=atlases.pixdim{atlas,side};
                 colorc=nan;
@@ -171,13 +157,21 @@ for nativemni=nm % switch between native and mni space atlases.
                 
                 
                 % show atlas label
+                
                 if size(XYZ.mm,1)>1 % exception for single-coordinate atlases...
-                    
-                    [~,centroid]=kmeans(XYZ.mm,1);
+                    try
+                    [~,centroid]=kmeans(XYZ.mm(:,1:3),1);
+                    catch
+                        centroid=mean(XYZ(:,1:3),1);
+                    end
                 else
                     
-                    centroid=XYZ.mm;
-                    
+                    try
+                    centroid=XYZ.mm(:,1:3);
+                    catch
+                        centroid=[0,0,0];
+                        warning('No centroid found.')
+                    end
                 end
                 try
                     centroid=centroid(1,:);
@@ -189,7 +183,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 set(0,'CurrentFigure',resultfig);
                 atlassurfs(atlascnt,1)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
                 
-            end
+           % end
             
             % export label and labelbutton
             
@@ -201,7 +195,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 end
             end
             atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline','HorizontalAlignment','Center');
-            
+
             if ~exist('labelbutton','var')
                 labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Labels');
                 labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors',options),'TooltipString','Label Color');
@@ -224,9 +218,14 @@ for nativemni=nm % switch between native and mni space atlases.
             % gather contact statistics
             if options.writeoutstats
                 try
-                    thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
-                    atsearch=KDTreeSearcher(XYZ.mm(XYZ.val>thresh,:));
                     
+                    if isfield(atlases.XYZ{atlas,side},'val') % volumetric atlas
+                    thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
+                    
+                    atsearch=KDTreeSearcher(XYZ.mm(XYZ.val>thresh,:));
+                    else % fibertract
+                        atsearch=KDTreeSearcher(XYZ.mm(:,1:3));
+                    end
                     for el=1:length(elstruct)
                         
                         [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
@@ -239,8 +238,6 @@ for nativemni=nm % switch between native and mni space atlases.
                             in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
                             Dh(in)=0;
                             
-                        catch
-                            disp('No tesselation info found for this atlas. Maybe atlas is too small. Use different hullmethod if needed.');
                         end
                         ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
                         
@@ -257,9 +254,7 @@ for nativemni=nm % switch between native and mni space atlases.
             
             %normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
             
-try % spec atlas not yet optimized for fibertracts            
-            ea_spec_atlas(atlassurfs(atlascnt,1),atlases.names{atlas},atlases.colormap,setinterpol);
-end         
+                ea_spec_atlas(atlassurfs(atlascnt,1),atlases.names{atlas},atlases.colormap,setinterpol);
             atlascnt=atlascnt+1;
             
             set(gcf,'Renderer','OpenGL')
@@ -343,19 +338,28 @@ C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);
 
 function atlasvisible(hobj,ev,atlscnt,onoff)
 atls=getappdata(gcf,'atlassurfs');
+
 if(getappdata(gcf,'altpressed'))
     
     cbutn=getappdata(gcf,'colorbuttons');
     set(cbutn,'State',onoff);
     for el=1:length(atls)
         for side=1:2
-            try
-                set(atls(el), 'Visible', onoff);
+            
+            for atlshorz=1:size(atls,2)
+                try
+                    set(atls(atlscnt,atlshorz), 'Visible', onoff);
+                end
             end
         end
+        
     end
 else
-    set(atls(atlscnt), 'Visible', onoff);
+    for atlshorz=1:size(atls,2)
+        try
+            set(atls(atlscnt,atlshorz), 'Visible', onoff);
+        end
+    end
 end
 
 function atlabelsvisible(hobj,ev,obj,onoff)
@@ -640,3 +644,6 @@ for i = 1:blocks
     end
     in(j) = all((nrmls*testpts(j,:)' - aNr) >= -tol,1)';
 end
+
+
+

@@ -316,9 +316,38 @@ if checkrebuild(atlases,options,root,mifix)
                     
                 elseif isfield(nii,'fibers') % fibertract
                     
-                    iXYZ{atlas,side}=nii.fibers;
+                  %% concat fibers to one patch object  
+                 [~,alnm]=fileparts(atlases.names{atlas});
+
+                    ea_dispercent(0,['Concatenating ',alnm]);
+                fibmax=length(nii.idx);
+                fcnt=1;
+                
+                for fib=1:fibmax
+                    ea_dispercent(fib/fibmax);
+                    thisfib=nii.fibers(nii.fibers(:,4)==fib,:);
+                    if size(thisfib,1)>5 % neglect very small fibertracts
+                        % set 4th dim color
+                        
+                        
+                        
+                        %atlassurfs(atlascnt,fib)=ea_plot3(thisfib(:,1),thisfib(:,2),thisfib(:,3),'-','color',[rr,gg,bb]);
+                        %atlassurfs(atlascnt,fcnt)=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,[rr,gg,bb],6,0);
+                        
+                        [~,fv(fcnt)]=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,'r',6,0);
+                        
+                        fcnt=fcnt+1;
+                    end
+                end
+                                    ea_dispercent(1,'end');
+
+                
+                fv=ea_concatfv(fv);
+                    nii.mm=nii.fibers;
+                    nii=rmfield(nii,'fibers');
+                    iXYZ{atlas,side}=nii;
                     icolorc{atlas,side}=colorc;
-                    ifv{atlas,side}=nii.idx;
+                    ifv{atlas,side}=fv;
                     ipixdim{atlas,side}='fibers';
                     try
                         atlases.colors(atlas); % check if predefined color exists
@@ -382,7 +411,7 @@ end
 %try
 
 if strcmp(fname(end-3:end),'.nii') % volumetric
-    %ea_crop_nii(fname);
+    ea_crop_nii(fname);
     nii=spm_vol(fname);
     
     nii.img=spm_read_vols(nii);
@@ -528,3 +557,14 @@ for atl=1:length(atlnames)
         delete(atlname);
     end
 end
+
+
+function afv=ea_concatfv(fv)
+
+afv.faces=[];
+afv.vertices=[];
+for f=1:length(fv)
+   afv.faces=[afv.faces;fv(f).faces+length(afv.vertices)];
+   afv.vertices=[afv.vertices;fv(f).vertices];
+end
+%figure, patch(afv)

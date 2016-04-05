@@ -59,6 +59,8 @@ if strcmp(options.prefs.d2.useprepost,'pre') % use preoperative images, overwrit
     options.prefs.cornii=options.prefs.prenii;
     options.prefs.gsagnii=options.prefs.gprenii;
     options.prefs.sagnii=options.prefs.prenii;
+elseif strcmp(options.prefs.d2.useprepost,'template')
+  options.modality=3;
 end
 
 % resolve 2d-options from td_options.mat
@@ -112,9 +114,9 @@ if ~manualtracor
             Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
             tracorpresent(1:3)=1;
         case 3 % use template
-            Vtra=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
-            Vcor=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
-            Vsag=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
+            Vtra=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
+            Vcor=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
+            Vsag=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
             tracorpresent(1:3)=1;
     end
 else
@@ -329,7 +331,7 @@ for side=options.sides
                     elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
 
                     if (elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts)
-                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',cmap(c,:),'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
+                       % elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',cmap(c,:),'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
                     end
 
                 end

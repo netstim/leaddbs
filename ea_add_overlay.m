@@ -101,6 +101,7 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                         cof = image(colorf);
    
                         set(cof,'XData',linspace(atlbb(1,1),atlbb(1,2)),'YData',linspace(atlbb(2,1),atlbb(2,2)));
+                        slice=slice./max(slice(:));
                         slice=slice*options.d2.atlasopacity;
                         
                         set(cof, 'AlphaData', slice)  
