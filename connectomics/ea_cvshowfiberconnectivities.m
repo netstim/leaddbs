@@ -166,7 +166,7 @@ for side=sides
     end
     
     [~,labelname]=fileparts(targets.fname);
-    aID = fopen(fullfile(fileparts(which('lead')),'templates','labeling',[labelname,'.txt']));
+    aID = fopen(fullfile(options.earoot,'templates','labeling',[labelname,'.txt']));
     atlas_lgnd=textscan(aID,'%d %s');
     allcareas=[];
     

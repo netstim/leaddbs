@@ -22,7 +22,7 @@ if ~isfield(elstruct,'activecontacts')
     elstruct.activecontacts{1}=zeros(elspec.numel,1);
     elstruct.activecontacts{2}=zeros(elspec.numel,1);
 end
-        jetlist=othercolor('BuOr_12');
+        jetlist=jet;
      %   jetlist=jet;
 
 
