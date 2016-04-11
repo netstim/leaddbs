@@ -176,6 +176,7 @@ inds = coord(1:3, :);
 Vx=spm_vol([hdwim,',1,1']);
 Vy=spm_vol([hdwim,',1,2']);
 Vz=spm_vol([hdwim,',1,3']);
+
 for i = 1:size(coord, 2)
     ind = inds(:, i);
     coord(1,i)=spm_sample_vol(Vx,ind(1),ind(2),ind(3),1);

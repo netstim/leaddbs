@@ -1,5 +1,8 @@
 function ea_newseg(directory,file,dartel,options)
 
+if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
+    ea_generate_tpm(options);
+end
 
 disp('Segmentation...');
     switch spm('ver')
@@ -38,7 +41,7 @@ disp('Segmentation...');
             clear matlabbatch
         case 'SPM12'
                 load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob12']);
-            tpminf=fullfile(fileparts(which('spm')),'tpm',['TPM.nii']);
+            tpminf=[options.earoot,'templates',filesep,'TPM.nii'];
             job.channel.vols{1}=[directory,file,',1'];
             for tpm=1:6
                 job.tissue(tpm).tpm=[tpminf,',',num2str(tpm)]; 
