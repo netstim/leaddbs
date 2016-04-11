@@ -97,7 +97,7 @@ prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
 prefs.hullsmooth=5; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
-prefs.hullsimplify='auto'; % 0.1 would reduce hulldata to 10%. set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
+prefs.hullsimplify=0.5; % 0.1 would reduce hulldata to 10%. set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
 
 %% labels:
 prefs.lhullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.

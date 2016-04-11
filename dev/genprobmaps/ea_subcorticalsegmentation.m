@@ -15,7 +15,7 @@ end
 
 mults=dir([directory,'sbbmult*.nii']);
 if isempty(mults)
-    ea_error('Please place additional MR modality acquisitions into patient folder (called multi1.nii, multi2.nii and so on.');
+    ea_error('Please place additional MR modality acquisitions into patient folder (called mult1.nii, mult2.nii and so on.');
 end
 srcs{1}=[directory,'sbb',options.prefs.prenii_unnormalized];
 for m=1:length(mults)
@@ -30,7 +30,7 @@ structures={'STN','Pallidum','Ruber'};
 
 genmaps=1;
 wtamaps=1;
-cleanup=1;
+cleanup=0;
 
 if genmaps
     for s=1:length(structures)
@@ -48,7 +48,7 @@ end
 
 if wtamaps
     
-    dfactor=1;
+    dfactor=1.2;
     
     for s=1:length(structures)
         S{s}=ea_load_nii([directory,'s',structures{s},'_secondlevel.nii']);
@@ -61,7 +61,7 @@ if wtamaps
         for yy=1:size(S{s}.img,2)
             for zz=1:size(S{s}.img,3)
                 vals=squeeze(A(xx,yy,zz,:));
-                if any(vals>0.3)
+                if any(vals>0.1)
                     [v,ix]=sort(vals);
                     if v(end)>dfactor*v(end-1)
                         S{ix(end)}.img(xx,yy,zz)=1;
@@ -132,6 +132,8 @@ switch whichnormmethod
         clear matlabbatch
 end
 
+ea_reslice_nii([directory,'wbb.nii'],[directory,'wbb.nii'],[1,1,1]);
+
 ea_crop_nii([directory,'wbb.nii']);
 ea_reslice_nii([directory,'wbb.nii'],[directory,'wbb.nii'],[0.22,0.22,0.22]);
 
@@ -153,7 +155,7 @@ cfg_util('run',{matlabbatch});
 clear matlabbatch
 
 matlabbatch{1}.spm.spatial.smooth.data = {[directory,'bb',options.prefs.prenii_unnormalized]};
-matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
+matlabbatch{1}.spm.spatial.smooth.fwhm = [3 3 3];
 matlabbatch{1}.spm.spatial.smooth.dtype = 0;
 matlabbatch{1}.spm.spatial.smooth.im = 0;
 matlabbatch{1}.spm.spatial.smooth.prefix = 's';
@@ -206,7 +208,7 @@ for m=1:length(mults)
     clear matlabbatch
     
     matlabbatch{1}.spm.spatial.smooth.data = {[directory,'bb',mults(m).name]};
-    matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
+    matlabbatch{1}.spm.spatial.smooth.fwhm = [3 3 3];
     matlabbatch{1}.spm.spatial.smooth.dtype = 0;
     matlabbatch{1}.spm.spatial.smooth.im = 0;
     matlabbatch{1}.spm.spatial.smooth.prefix = 's';

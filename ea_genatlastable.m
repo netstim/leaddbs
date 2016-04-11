@@ -254,21 +254,7 @@ if checkrebuild(atlases,options,root,mifix)
                     fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
                     fv.vertices=[fv.vertices;fvc.vertices];
                     
-                    if ischar(options.prefs.hullsimplify)
-                        
-                        % get to 700 faces
-                        simplify=700/length(fv.faces);
-                        fv=reducepatch(fv,simplify);
-                        
-                    else
-                        if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-                            
-                            fv=reducepatch(fv,options.prefs.hullsimplify);
-                        elseif options.prefs.hullsimplify>1
-                            simplify=options.prefs.hullsimplify/length(fv.faces);
-                            fv=reducepatch(fv,simplify);
-                        end
-                    end
+
                     
                     
                     try % works only in ML 2015:
@@ -315,7 +301,6 @@ if checkrebuild(atlases,options,root,mifix)
                 atlascnt=atlascnt+1;
                     
                 elseif isfield(nii,'fibers') % fibertract
-                    
                   %% concat fibers to one patch object  
                  [~,alnm]=fileparts(atlases.names{atlas});
 
@@ -349,6 +334,8 @@ if checkrebuild(atlases,options,root,mifix)
                     icolorc{atlas,side}=colorc;
                     ifv{atlas,side}=fv;
                     ipixdim{atlas,side}='fibers';
+                                        icdat{atlas,side}=[];
+                                        normals{atlas,side}=[];
                     try
                         atlases.colors(atlas); % check if predefined color exists
                     catch
@@ -363,7 +350,7 @@ if checkrebuild(atlases,options,root,mifix)
         %ea_dispercent(1,'end');
         
         % finish gm_mask file for leadfield computation.
-        
+        try % fibertract only atlases dont have a gm_mask
         V=spm_vol([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         X=spm_read_vols(V);
         
@@ -375,7 +362,7 @@ if checkrebuild(atlases,options,root,mifix)
         spm_write_vol(V,X);
         
         clear X V
-        
+        end
         
         % save table information that has been generated from nii files (on first run with this atlas set).
         
@@ -482,15 +469,16 @@ C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);
 
 function reb=checkrebuild(atlases,options,root,mifix)
 reb=1;
+
 if isfield(atlases,'fv')
     reb=0;
     if ~isfield(atlases.XYZ{1,1},'mm')
         reb=1;
     end
 end
-if ~exist([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file');
-    reb=1;
-end
+% if ~exist([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file');
+%     reb=1;
+% end
 try
     if atlases.rebuild
         reb=1;

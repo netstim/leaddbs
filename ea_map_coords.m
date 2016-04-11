@@ -172,6 +172,7 @@ inds = coord(1:3, :);
 %     warning('map_coords:hdw_rounding',...
 %         'target voxel coords rounded for HDW')
 % end
+
 Vx=spm_vol([hdwim,',1,1']);
 Vy=spm_vol([hdwim,',1,2']);
 Vz=spm_vol([hdwim,',1,3']);

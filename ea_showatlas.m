@@ -137,6 +137,24 @@ for nativemni=nm % switch between native and mni space atlases.
                 
                 
                 fv=atlases.fv{atlas,side};
+                
+                
+                if ischar(options.prefs.hullsimplify)
+                    
+                    % get to 700 faces
+                    simplify=700/length(fv.faces);
+                    fv=reducepatch(fv,simplify);
+                    
+                else
+                    if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
+                        
+                        fv=reducepatch(fv,options.prefs.hullsimplify);
+                    elseif options.prefs.hullsimplify>1
+                        simplify=options.prefs.hullsimplify/length(fv.faces);
+                        fv=reducepatch(fv,simplify);
+                    end
+                end
+                
                 rndfactor=2;
                 try
                 switch atlases.names{atlas,side}(end-2:end)

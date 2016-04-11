@@ -21,8 +21,11 @@ end
             reco.native.trajectory{side}=ea_warpcoord(reco.mni.trajectory{side},nii,options);
             
             normtrajvector{side}=mean(diff(reco.native.trajectory{side}))/norm(mean(diff(reco.native.trajectory{side})));
+try
             orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
-
+catch
+    keyboard
+end
             
             reco.native.markers(side).x=reco.native.markers(side).head+orth(:,1)';
             reco.native.markers(side).y=reco.native.markers(side).head+orth(:,2)'; % corresponding points in reality

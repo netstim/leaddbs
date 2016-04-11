@@ -148,14 +148,12 @@ try delete([directory,dfn,'_FTR.mat']); end
 
 %ea_prepare_dti(options);
 
-rmpath(genpath('/media/Data/MATLAB/release'));
-rmpath(genpath('/media/Data/MATLAB/marco_reisert'));
-rmpath(genpath('/media/Data/MATLAB/dti_tools'));
+
 
 
 % mesoGT_tool('loadData','nii',[directory,options.prefs.dti],{[directory,options.prefs.bvec],[directory,options.prefs.bval],...
 %    },[directory,'trackingmask.nii'],0.5);
- mesoGT_tool('loadData','nii',[directory,options.prefs.dti],{[directory,options.prefs.bvec],[directory,options.prefs.bval],...
+mesoGT_tool('loadData','nii',[directory,options.prefs.dti],{[directory,options.prefs.bvec],[directory,options.prefs.bval],...
      },{[directory,'gmmask.nii'],[directory,'trackingmask.nii']},[128,128]);
 
 mesoGT_tool('reset');

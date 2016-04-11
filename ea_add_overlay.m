@@ -28,18 +28,33 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
             planemm=[boundboxmm{1}(:),boundboxmm{2}(:),boundboxmm{3}(:)];
             %planemm=round(planemm);
             
-            thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
-
-            atlmm=atlases.XYZ{atlas,side}.mm;
+                
+            try
+                thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
+            catch % fibertracts
+                thresh=0.5;
+            end
+            atlmm=atlases.XYZ{atlas,side}.mm(:,1:3);
             %ratlmm=round(atlmm);
+            try
+                atlvx=atlases.XYZ{atlas,side}.vx;
+                atlval=atlases.XYZ{atlas,side}.val;
+            catch % fibertracts
+                atlvx=round(atlmm);
+                for dim=1:3
+                atlvx(:,dim)=atlvx(:,dim)-min(atlvx(:,dim));
+                end
+                atlval=ones(size(atlmm,1),1);
+            end
             
-            atlvx=atlases.XYZ{atlas,side}.vx;
-            atlval=atlases.XYZ{atlas,side}.val;  
                atlhts=atlmm(:,ea_intersecdim(tracor));
                planehts=planemm(:,ea_intersecdim(tracor));
                dists=abs(atlhts-planehts(1));
-               
-               dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*2.5;
+               try
+               dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*3;
+               catch % fibertracts
+                   dists=dists<1*2.5;      
+               end
             if any(dists) % only if intersection exists plot the atlas.
                 
                 xyatl=atlvx(dists,ea_planesdim(tracor));
@@ -59,6 +74,7 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
                 xyatl(:,1)=xyatl(:,1)-min(xyatl(:,1))+1;
                 xyatl(:,2)=xyatl(:,2)-min(xyatl(:,2))+1;
                 slice=zeros(max(xyatl(:,1)),max(xyatl(:,2)));
+
                 slice(sub2ind(size(slice),xyatl(:,1),xyatl(:,2)))=valatl;
                 if ~any(size(slice)==1) % exception for problems with onedimensional slices
                     slice=interp2(slice,3);
