@@ -468,6 +468,7 @@ C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);
 
 
 function reb=checkrebuild(atlases,options,root,mifix)
+
 reb=1;
 
 if isfield(atlases,'fv')
