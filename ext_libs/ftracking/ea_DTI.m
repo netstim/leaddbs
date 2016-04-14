@@ -1,4 +1,4 @@
-function [ADC,FA,VectorF,DifT]=DTI(DTIdata,parameters)
+function [ADC,FA,VectorF,DifT,S0]=DTI(DTIdata,parameters)
 % This function will perform DTI calculations on a certain
 % DTI dataset.
 %
@@ -66,7 +66,11 @@ if(parameters.textdisplay), disp('Voxel intensity to absorption conversion'); pa
 % Convert measurement intentensity into absorption (log)
 Slog=zeros(size(S),'single');
 for i=1:size(H,1),
-    Slog(:,:,:,i)=log((S(:,:,:,i)./S0)+eps);
+    
+    Slog(:,:,:,i)=log((S(:,:,:,i)./(S0+eps))+eps);
+    if any(isnan(Slog(:,:,:,i)))
+        keyboard
+    end
 end
 
 if(parameters.textdisplay), disp('Create B matrix vector [Bxx,2*Bxy,2*Bxz,Byy,2*Byz,Bzz]'); pause(0.1); end
@@ -105,7 +109,11 @@ for x=1:size(S0,1),
 
                 % Calculate the eigenvalues and vectors, and sort the 
                 % eigenvalues from small to large
+                try
                 [EigenVectors,D]=eig(DiffusionTensor); EigenValues=diag(D);
+                catch
+                    keyboard
+                end
                 [t,index]=sort(EigenValues); 
                 EigenValues=EigenValues(index); EigenVectors=EigenVectors(:,index);
                 EigenValues_old=EigenValues;

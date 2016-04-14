@@ -61,7 +61,7 @@ if wtamaps
         for yy=1:size(S{s}.img,2)
             for zz=1:size(S{s}.img,3)
                 vals=squeeze(A(xx,yy,zz,:));
-                if any(vals>0.1)
+                if any(vals>0.3)
                     [v,ix]=sort(vals);
                     if v(end)>dfactor*v(end-1)
                         S{ix(end)}.img(xx,yy,zz)=1;
@@ -155,7 +155,7 @@ cfg_util('run',{matlabbatch});
 clear matlabbatch
 
 matlabbatch{1}.spm.spatial.smooth.data = {[directory,'bb',options.prefs.prenii_unnormalized]};
-matlabbatch{1}.spm.spatial.smooth.fwhm = [3 3 3];
+matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
 matlabbatch{1}.spm.spatial.smooth.dtype = 0;
 matlabbatch{1}.spm.spatial.smooth.im = 0;
 matlabbatch{1}.spm.spatial.smooth.prefix = 's';
@@ -172,7 +172,7 @@ for m=1:length(mults)
     copyfile([directory,mults(m).name],[directory,'raw_',mults(m).name]);
     switch options.coregmr.method
         case 1 % SPM
-            ea_docoreg_spm([directory,mults(m).name],[directory,options.prefs.prenii_unnormalized],'nmi',0)
+            ea_docoreg_spm([directory,mults(m).name],[directory,options.prefs.prenii_unnormalized],'nmi',1)
         case 2 % ANTs
             ea_ants([directory,options.prefs.prenii_unnormalized],...
                 [directory,mults(m).name],...
@@ -208,7 +208,7 @@ for m=1:length(mults)
     clear matlabbatch
     
     matlabbatch{1}.spm.spatial.smooth.data = {[directory,'bb',mults(m).name]};
-    matlabbatch{1}.spm.spatial.smooth.fwhm = [3 3 3];
+    matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
     matlabbatch{1}.spm.spatial.smooth.dtype = 0;
     matlabbatch{1}.spm.spatial.smooth.im = 0;
     matlabbatch{1}.spm.spatial.smooth.prefix = 's';

@@ -61,6 +61,8 @@ prefs.lc.seedsurfc=[0.8 0.1 0.1]; % default color for seed of matrix-level corre
 
 %% DTI-files:
 prefs.b0=['b0.nii'];
+prefs.fa=['fa.nii'];
+prefs.fa2anat=['fa2anat.nii'];
 prefs.FTR_unnormalized=['FTR.mat'];
 prefs.FTR_normalized=['wFTR.mat'];
 prefs.DTD=['DTD.mat'];

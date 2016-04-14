@@ -66,7 +66,7 @@ elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 
-if 1 % ea_headmodel_changed(options,side,elstruct)
+if ea_headmodel_changed(options,side,elstruct)
     disp('No suitable headmodel found, rebuilding. This may take a while...');
     
     %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
@@ -347,6 +347,10 @@ for source=1:4
         
         constvol=stimsource.va==1; % constvol is 1 for constant voltage and 0 for constant current.
         
+        
+        if ~constvol
+            volts=volts/1000; % from Ampere to mA
+        end
         
         potential = ea_apply_dbs(vol,ix,volts,unipolar,constvol); % output in V.
         disp('Done. Calculating E-Field...');

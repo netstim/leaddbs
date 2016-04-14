@@ -90,9 +90,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     
     
     if options.dolc % perform lead connectome subroutine..
-        
         ea_perform_lc(options);
-        
     end
     
     
