@@ -295,7 +295,7 @@ set(ax,'ZLim',[-140 140]);
 set(ax,'XLimMode','manual'); set(ax,'YLimMode','manual'); set(ax,'ZLimMode','manual');
 view(133,56);
 zoom(6)
-set(resultfig,'visible','on');
+%set(resultfig,'visible','on');
 opensliceviewer([],[],resultfig,options);
 
 if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.

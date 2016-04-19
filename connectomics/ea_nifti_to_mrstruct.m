@@ -40,16 +40,6 @@ rev = '$Revision';
 
 mrStruct = []; errStr= '';
 
-if exist('spm', 'file') 
-    spmVer= spm('ver');
-else
-    spmVer= '';
-end;
-
-if ~any(strcmp(spmVer, {'SPM5', 'SPM8', 'SPM8b','SPM12'}))
-    errStr= 'nifti_to_mrstruct: no compatible SPM version was found';
-    return;
-end;
 
 % check input parameter
 if nargin < 3

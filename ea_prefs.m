@@ -75,7 +75,7 @@ prefs.normmatrix=['lmat.txt'];
 
 
 %% 2D-Export
-prefs.d2.useprepost='post'; % can be 'post' or 'pre' to set the backdrop.
+prefs.d2.useprepost='template'; % can be 'post' or 'pre' to set the backdrop.
 prefs.d2.groupcolors='lead'; % can be 'maxdist' to use ea_distinguishable_colors by Timothy E. Holy, 'lead' to use a handpicked color set inspired by colorblender.com or 'lines' to use the matlab lines colormap (supports only seven colors).
 prefs.d2.isovolsmoothed='s'; % set to 's' if you want to use the smoothed image and '' if you want to display the raw, unsmoothed version of the isovolume.
 prefs.d2.isovolcolormap='jet'; % color map to use for plotting of isovolume heatmap.
@@ -99,7 +99,7 @@ prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
 prefs.hullsmooth=5; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
-prefs.hullsimplify=0.5; % 0.1 would reduce hulldata to 10%. set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
+prefs.hullsimplify=1; % 0.1 would reduce hulldata to 10%. set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
 
 %% labels:
 prefs.lhullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.

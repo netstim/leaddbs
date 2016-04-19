@@ -124,7 +124,8 @@ switch togglestates.cutview
 end
 else
     togglestates.cutview='3d';
-setappdata(getappdata(gcf,'resultfig'),'togglestates',togglestates);
+    
+setappdata(getappdata(handles.acontrolfig,'resultfig'),'togglestates',togglestates);
 end
 
 pos=get(hObject,'position');

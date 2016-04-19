@@ -260,7 +260,7 @@ if ea_headmodel_changed(options,side,elstruct)
     
     cfg.resolution=1;
     %mesh=ea_ft_prepare_mesh(cfg,smri);
-    [~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);'); % need to incorporate this function and all dependencies into lead-dbs
+    [~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);');
     if useSI
         mesh.pnt=mesh.pnt/1000; % in meter
         mesh.unit='m';
@@ -352,7 +352,7 @@ for source=1:4
             volts=volts/1000; % from Ampere to mA
         end
         
-        potential = ea_apply_dbs(vol,ix,volts,unipolar,constvol); % output in V.
+        potential = ea_apply_dbs(vol,ix,volts,unipolar,constvol,4); % output in V. 4 indexes insulating material.
         disp('Done. Calculating E-Field...');
         
         gradient{source} = ea_calc_gradient(vol,potential); % output in V/m.
@@ -529,10 +529,10 @@ gradient = gradient + 0.25*repmat(potential(vol.hex(:,6)),1,3).*((vol.pos(vol.he
 gradient = gradient + 0.25*repmat(potential(vol.hex(:,7)),1,3).*((vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:))./abs(vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:)));
 gradient = gradient + 0.25*repmat(potential(vol.hex(:,8)),1,3).*((vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:))./abs(vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:)));
 
-function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol)
+function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol,lowconducting)
 if constvol
     if unipolar
-        dirinodes = ea_get_surf_nodes(vol.hex);
+        dirinodes = ea_get_surf_nodes(vol.hex,vol.tissue,lowconducting);
         dirinodes = [dirinodes, elec'];
     else
         dirinodes = elec;
@@ -548,7 +548,7 @@ else
     rhs = zeros(size(vol.pos,1),1);
     
     if unipolar
-        catnodes = ea_get_surf_nodes(vol.hex);
+        catnodes = ea_get_surf_nodes(vol.hex,vol.tissue,lowconducting);
         rhs(elec) = val;
         rhs(catnodes) = -sum(val)/length(catnodes);
     else
@@ -583,9 +583,13 @@ s(indij) = 0;
 stiff = sparse(indexi,indexj,s,length(dia),length(dia));
 stiff = stiff + diag(dia);
 
-function surf_nodes = ea_get_surf_nodes(cell)
+
+
+function surf_nodes_clear = ea_get_surf_nodes(cell,field,lowconducting)
+con_cell = cell(find(field == lowconducting),:);
 connectivity = hist(cell(:),unique(cell));
 surf_nodes = find(connectivity ~= 8);
+surf_nodes_clear = setdiff(surf_nodes,con_cell(:));
 
 function [warped] = ea_ft_warp_apply(M, input, method, tol)
 

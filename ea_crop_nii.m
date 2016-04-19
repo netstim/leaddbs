@@ -25,6 +25,7 @@ V=spm_vol(filename);
 
 
 [bb,vox] = ea_spm_get_bbox(V, nstring);
+bb=increasebb(bb);
 
 if any(vox<0)
    ea_reslice_nii(filename,filename,abs(vox),0); 
@@ -181,4 +182,19 @@ if ~exist('BB', 'var') % exists already if 'old' case chosen above
         min(XYZ, [], 2)'
         max(XYZ, [], 2)'
         ];
+end
+
+
+function bb=increasebb(bb)
+
+
+for dim=1:3
+    dbb=bb(:,dim);
+    
+    [~,minpos]=min(dbb);
+    [~,maxpos]=max(dbb);
+    dbb(minpos)=dbb(minpos)-1;
+    dbb(maxpos)=dbb(maxpos)+1;
+    
+    bb(:,dim)=dbb;
 end

@@ -1,13 +1,13 @@
-function ea_seed2map_weighted(cfile,seedfiles,space)
+function ea_seed2map_weighted(cfile,seedfiles,space,maxdist)
 
 map=ea_load_nii(space);
-mdim=numel(map.img);
 
 load(cfile,'fibers');
 
 mapsz=size(map.img);
 map.img(:)=0;
 
+    tree=KDTreeSearcher(fibers(:,1:3));
 for s=1:length(seedfiles)
     Vseed=ea_load_nii(seedfiles{s});
     
@@ -23,21 +23,19 @@ for s=1:length(seedfiles)
     XYZmm=XYZmm(1:3,:)';
     clear Vseed
     
-    % select fibers for each ix
-    tree=KDTreeSearcher(fibers(:,1:3));
-    for ix=1:length(ixvals)
-        [ids]=rangesearch(tree,XYZmm(ix,:),2);
-        
-        % assign fibers on map with this weighted value.
-        fibnos=unique(fibers(ids{1},4));
-        for fib=1:length(fibnos)
-            thisfib=fibers(fibers(:,4)==fibnos(fib),1:3);
-            thisfib=round(map.mat\[thisfib,ones(size(thisfib,1),1)]');
-            thisfib(:,logical(sum(thisfib<1,1)))=[];
-            topaint=sub2ind(mapsz,thisfib(1,:),thisfib(2,:),thisfib(3,:));
     
-            map.img(topaint)=map.img(topaint)+ixvals(ix);
-        end
+    ids=rangesearch(tree,XYZmm,maxdist);
+    
+    % select fibers for each ix
+    for ix=1:length(ixvals)
+        % assign fibers on map with this weighted value.
+        fibnos=unique(fibers(ids{ix},4));
+        
+        allfibcs=fibers(ismember(fibers(:,4),fibnos),1:3);
+        allfibcs=round(map.mat\[allfibcs,ones(size(allfibcs,1),1)]');
+        allfibcs(:,logical(sum(allfibcs<1,1)))=[];
+        topaint=sub2ind(mapsz,allfibcs(1,:),allfibcs(2,:),allfibcs(3,:));
+        map.img(topaint)=map.img(topaint)+ixvals(ix);
     end
     
     [pth,fn]=fileparts(seedfiles{s});
@@ -45,7 +43,6 @@ for s=1:length(seedfiles)
     map.fname=fullfile(pth,[fn,'_conn.nii']);
     map.dt=[4,0];
     spm_write_vol(map,map.img);
-    
 end
 
 
