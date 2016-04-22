@@ -96,23 +96,36 @@ function masks=segmentall(from,options)
 directory=[fileparts(from{1}),filesep];
 for fr=1:length(from)
     [~,fn,ext]=fileparts(from{fr});
-   ea_newseg(directory,[fn,ext],0,options);
-   switch [fn,ext]
-       case options.prefs.fa
-           masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c2mask.nii'];
-           masks{fr,2}=[directory,'c2',fn,ext];
-           try delete([directory,'c1',fn,ext]); end
-           try  delete([directory,'c3',fn,ext]); end
-           try  delete([directory,'c4',fn,ext]); end
-           try  delete([directory,'c5',fn,ext]); end
-           try  delete([directory,'c6',fn,ext]); end
-       otherwise
-           masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c1mask.nii'];
-           masks{fr,2}=[directory,'c1',fn,ext];
-           try delete([directory,'c2',fn,ext]); end
-           try  delete([directory,'c3',fn,ext]); end
-           try  delete([directory,'c4',fn,ext]); end
-           try  delete([directory,'c5',fn,ext]); end
-           try  delete([directory,'c6',fn,ext]); end
-   end
+    switch [fn,ext]
+        case options.prefs.fa
+            if ~exist([directory,'tc2',fn,ext],'file')
+                if ~exist([directory,'c2',fn,ext],'file')
+                    ea_newseg(directory,[fn,ext],0,options);
+                end
+                nii=ea_load_nii([directory,'c2',fn,ext]);
+                nii.img=nii.img>0.7;
+                nii.fn=[directory,'tc2',fn,ext];
+                spm_write_vol(nii,nii.img);
+            end
+            masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c2mask.nii'];
+            masks{fr,2}=[directory,'tc2',fn,ext];
+        otherwise
+            if ~exist([directory,'tc1',fn,ext],'file')
+                if ~exist([directory,'c1',fn,ext],'file')
+                ea_newseg(directory,[fn,ext],0,options);
+                end
+                nii=ea_load_nii([directory,'c1',fn,ext]);
+                nii.img=nii.img>0.3;
+                nii.fn=[directory,'tc1',fn,ext];
+                spm_write_vol(nii,nii.img);
+            end
+            masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c1mask.nii'];
+            masks{fr,2}=[directory,'c1',fn,ext];
+    end
+    try delete([directory,'c1',fn,ext]); end
+    try delete([directory,'c2',fn,ext]); end
+    try delete([directory,'c3',fn,ext]); end
+    try delete([directory,'c4',fn,ext]); end
+    try delete([directory,'c5',fn,ext]); end
+    try delete([directory,'c6',fn,ext]); end
 end
