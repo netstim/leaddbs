@@ -128,4 +128,6 @@ for fr=1:length(from)
     try delete([directory,'c4',fn,ext]); end
     try delete([directory,'c5',fn,ext]); end
     try delete([directory,'c6',fn,ext]); end
+    try delete([directory,'y_',fn,ext]); end
+    try delete([directory,'iy_',fn,ext]); end
 end
