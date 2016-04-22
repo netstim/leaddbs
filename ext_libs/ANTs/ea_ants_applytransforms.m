@@ -41,6 +41,11 @@ switch options.modality
         lfis{2}=[options.prefs.tranii];
         lfis{3}=[options.prefs.cornii];
         lfis{4}=[options.prefs.sagnii];
+        if exist([subdir,options.prefs.fa2anat],'file');
+            fis{5}=[subdir,options.prefs.fa2anat];
+            ofis{5}=[subdir,'gl',options.prefs.fa2anat];
+            lfis{5}=[subdir,'l',options.prefs.fa2anat];
+        end   
     case 2 % CT
         fis{1}=[subdir,options.prefs.prenii_unnormalized];
         fis{2}=[subdir,options.prefs.ctnii_coregistered];
@@ -48,6 +53,11 @@ switch options.modality
         ofis{2}=[subdir,options.prefs.gctnii];
         lfis{1}=[options.prefs.prenii];
         lfis{2}=[options.prefs.ctnii];
+        if exist([subdir,options.prefs.fa2anat],'file');
+            fis{3}=[subdir,options.prefs.fa2anat];
+            ofis{3}=[subdir,'gl',options.prefs.fa2anat];
+            lfis{3}=[subdir,'l',options.prefs.fa2anat];
+        end
 end
 end
 
