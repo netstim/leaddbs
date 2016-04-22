@@ -65,7 +65,7 @@ set(resultfig, 'InvertHardCopy', 'off');
 %set(resultfig,'visible','off');
 set(resultfig,'Clipping','off');
 set(gca,'NextPlot','replacechildren');
-set(gca,'Erasemode','none');
+%set(gca,'Erasemode','none');
 
 % Get paramters (Coordinates and fitted line).
 

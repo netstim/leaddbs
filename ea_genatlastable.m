@@ -2,7 +2,7 @@ function atlases=ea_genatlastable(varargin)
 % This function reads in atlases in the Lead-dbs/atlases directory and
 % generates a table of all available atlas files.
 % Atlastypes:   1 ? LH
-%               2 ? RH
+%               2 ??RH
 %               3 ? both hemispheres (2 files present both in lhs and rhs
 %               folder
 %               4 ? mixed (one file with one cluster on each hemisphere)
@@ -328,6 +328,12 @@ if checkrebuild(atlases,options,root,mifix)
 
                 
                 fv=ea_concatfv(fv);
+                if length(fv.vertices)>200000
+                   simpl=200000/length(fv.vertices);
+                   fv=reducepatch(fv,simpl);
+                end
+                
+                
                     nii.mm=nii.fibers;
                     nii=rmfield(nii,'fibers');
                     iXYZ{atlas,side}=nii;

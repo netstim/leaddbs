@@ -1,5 +1,13 @@
-function ea_ants_nonlinear(fixedimage, movingimage, outputimage)
+function ea_ants_nonlinear(varargin)
 % Wrapper for ANTs nonlinear registration
+
+fixedimage=varargin{1};
+movingimage=varargin{2};
+outputimage=varargin{3};
+
+if nargin>3
+    masks=varargin{4};
+end
 
 [outputdir, outputname, ~] = fileparts(outputimage);
 if outputdir 
@@ -80,8 +88,13 @@ rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1
     ' --smoothing-sigmas ', rigidsoomthingssigmas];
 
 for fi=1:length(fixedimage)
-    rigidstage=[rigidstage,...
-        ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
+    if nargin<3
+        rigidstage=[rigidstage,...
+            ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
+    else
+        rigidstage=[rigidstage,...
+            ' --metric IGDM[', fixedimage{fi}, ',', movingimage{fi},',',masks{fi,1},',',masks{fi,2}, ',1,32,Regular,0.25]'];
+    end
 end
 
 
@@ -92,8 +105,13 @@ affinestage = [' --transform Affine[0.1]'...
 
 
 for fi=1:length(fixedimage)
-    affinestage=[affinestage,...
-        ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
+    if nargin<3
+        affinestage=[affinestage,...
+            ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
+    else
+        affinestage=[affinestage,...
+            ' --metric IGDM[', fixedimage{fi}, ',', movingimage{fi},',',masks{fi,1},',',masks{fi,2}, ',1,32,Regular,0.25]'];
+    end
 end
 
 
@@ -103,8 +121,13 @@ synstage = [' --transform SyN[0.3]'...
     ' --smoothing-sigmas ', affinesoomthingssigmas];
 
 for fi=1:length(fixedimage)
-    synstage=[synstage,...
-        ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
+    if nargin<3
+        synstage=[synstage,...
+            ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
+    else
+        synstage=[synstage,...
+            ' --metric MI[', fixedimage{fi}, ',', movingimage{fi},',',masks{fi,1},',',masks{fi,2},  ',1,32,Regular,0.25]'];
+    end
 end
 
 ea_libs_helper

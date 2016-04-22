@@ -23,59 +23,96 @@ if ischar(options) % return name of method.
     return
 end
 
+uset1=1; % set to zero if you do not wish to use T1 data for normalization even if present.
+usepd=1; % set to zero if you do not wish to use PD data for normalization even if present.
+usefa=1; % set to zero if you do not wish to use FA data for normalization even if present.
 
 directory=[options.root,options.patientname,filesep];
 
 
+cnt=1;
+to{cnt}=[options.earoot,'templates',filesep,'mni_hires.nii'];
+from{cnt}=[directory,options.prefs.prenii_unnormalized];
+cnt=cnt+1;
 
-% check for presence of FA map
-if ~exist([directory,options.prefs.fa2anat],'file')
-    if ~exist([directory,options.prefs.fa],'file')
-        if ~exist([directory,options.prefs.dti],'file')
-           ea_error('Please provide a DTI image (e.g. dti.nii) in subject folder.'); 
-        end
-        ea_isolate_fa(directory,options);
-    end
-    switch options.coregmr.method
-        case 1 % SPM
-            ea_docoreg_spm([directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],'nmi',1)
-            movefile([directory,'r',options.prefs.fa],[directory,options.prefs.fa2anat]);
-        case 2 % ANTs
-            ea_ants([directory,options.prefs.prenii_unnormalized],...
-                [directory,options.prefs.fa],...
-                [directory,options.prefs.fa2anat],0);
-        case 3 % BRAINSFit
-            ea_brainsfit([directory,options.prefs.prenii_unnormalized],...
-                [directory,options.prefs.fa],...
-                [directory,options.prefs.fa2anat],0);
-        case 4 % Hybrid SPM -> ANTs
-            ea_docoreg_spm([directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],'nmi',0)
-            ea_ants([directory,options.prefs.prenii_unnormalized],...
-                [directory,options.prefs.fa],...
-                [directory,options.prefs.fa2anat],0);
-        case 5 % Hybrid SPM -> Brainsfit
-            ea_docoreg_spm([directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],'nmi',0)
-            ea_brainsfit([directory,options.prefs.prenii_unnormalized],...
-                [directory,options.prefs.fa],...
-                [directory,options.prefs.fa2anat],0);
+% T1
+if uset1
+    if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
+        ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_t1],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_t1]);
+        to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
+        from{cnt}=[directory,options.prefs.prenii_unnormalized_t1];
+        cnt=cnt+1;
+        disp('Including T1 data for (grey-matter) normalization');
     end
 end
 
-% First, do the coreg part:
+% PD
+if usepd
+    if exist([directory,options.prefs.prenii_unnormalized_pd],'file')
+        ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_pd],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_pd]);
+        to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
+        from{cnt}=[directory,options.prefs.prenii_unnormalized_pd];
+        cnt=cnt+1;
+        disp('Including PD data for (grey-matter) normalization');
+    end
+end
+
+if usefa
+    % check for presence of FA map
+    if ~exist([directory,options.prefs.fa2anat],'file')
+        if ~exist([directory,options.prefs.fa],'file')
+            if ~exist([directory,options.prefs.dti],'file')
+                disp('No dMRI data has been found. Proceeding without FA');
+            else
+                ea_isolate_fa(directory,options);
+            end
+        end
+    
+        if exist([directory,options.prefs.fa],'file') % recheck if has been built.
+            ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
+        end
+    end
+    if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
+         disp('Including FA information for white-matter normalization');
+        to{cnt}=[options.earoot,'templates',filesep,'mni_hires_fa.nii'];
+            from{cnt}=[directory,options.prefs.fa2anat];
+            masks=segmentall(from,options);
+    end
+end
+
+% Do the coreg part for postoperative images:
 
 ea_coregmr(options,options.prefs.normalize.coreg);
 
 
-
-ea_ants_nonlinear({[options.earoot,'templates',filesep,'mni_hires.nii'],...
-    [options.earoot,'templates',filesep,'mni_hires_t1.nii'],...
-    [options.earoot,'templates',filesep,'mni_hires_pd.nii'],...
-    [options.earoot,'templates',filesep,'mni_hires_fa.nii']},...
-    {[directory,options.prefs.prenii_unnormalized],...
-    [directory,options.prefs.prenii_unnormalized],...
-    [directory,options.prefs.prenii_unnormalized],...
-    [directory,options.prefs.fa2anat]},...
-    [directory,options.prefs.prenii]);
+ea_ants_nonlinear(to,...
+    from,...
+    [directory,options.prefs.prenii],masks);
 
 
 ea_apply_normalization(options)
+
+function masks=segmentall(from,options)
+directory=[fileparts(from{1}),filesep];
+for fr=1:length(from)
+    [~,fn,ext]=fileparts(from{fr});
+   ea_newseg(directory,[fn,ext],0,options);
+   switch [fn,ext]
+       case options.prefs.fa
+           masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c2mask.nii'];
+           masks{fr,2}=[directory,'c2',fn,ext];
+           try delete([directory,'c1',fn,ext]); end
+           try  delete([directory,'c3',fn,ext]); end
+           try  delete([directory,'c4',fn,ext]); end
+           try  delete([directory,'c5',fn,ext]); end
+           try  delete([directory,'c6',fn,ext]); end
+       otherwise
+           masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c1mask.nii'];
+           masks{fr,2}=[directory,'c1',fn,ext];
+           try delete([directory,'c2',fn,ext]); end
+           try  delete([directory,'c3',fn,ext]); end
+           try  delete([directory,'c4',fn,ext]); end
+           try  delete([directory,'c5',fn,ext]); end
+           try  delete([directory,'c6',fn,ext]); end
+   end
+end

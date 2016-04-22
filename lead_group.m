@@ -353,6 +353,7 @@ function corrbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',gcf,'group');
+
 stats=preparedataanalysis(handles);
 
 
@@ -1067,7 +1068,7 @@ end
 function [stats]=preparedataanalysis(handles)
 
 M=getappdata(gcf,'M');
-
+keyboard
 
 %M.stats(get(handles.vilist,'Value'))
 
@@ -1286,7 +1287,8 @@ stimname=ea_detstimname();
                 [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([fileparts(which('lead')),filesep,'fibers',filesep,mod,'.mat']);
     end
 
-for pt=1:length(M.patient.list)
+
+for pt=M.ui.listselect
     
     % set pt specific options
     

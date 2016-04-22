@@ -17,6 +17,8 @@ prefs.pp.profile='local'; % specify parallel processing profile.
 
 %% general file handling:
 prefs.prenii_unnormalized=['anat.nii']; % not needed if schoenecker normalization is used.
+prefs.prenii_unnormalized_t1=['anat_t1.nii']; % (preoperative) anatomical MR image
+prefs.prenii_unnormalized_pd=['anat_pd.nii']; % (preoperative) anatomical MR image
 prefs.tranii_unnormalized=['postop_tra.nii'];
 prefs.sagnii_unnormalized=['postop_sag.nii'];
 prefs.cornii_unnormalized=['postop_cor.nii'];
@@ -25,12 +27,16 @@ prefs.ctnii_coregistered=['rpostop_ct.nii'];
 
 prefs.patientdir=[patientname];
 prefs.prenii=['lanat.nii'];
+prefs.prenii_t1=['lanat_t1.nii'];
+prefs.prenii_pd=['lanat_pd.nii'];
 prefs.tranii=['lpostop_tra.nii'];
 prefs.cornii=['lpostop_cor.nii'];
 prefs.sagnii=['lpostop_sag.nii'];
 prefs.ctnii=['lpostop_ct.nii'];
 
 prefs.gprenii=['glanat.nii'];
+prefs.gprenii_t1=['glanat_t1.nii'];
+prefs.gprenii_pd=['glanat_pd.nii'];
 prefs.gtranii=['glpostop_tra.nii'];
 prefs.gcornii=['glpostop_cor.nii'];
 prefs.gsagnii=['glpostop_sag.nii'];
@@ -77,7 +83,7 @@ prefs.normmatrix=['lmat.txt'];
 
 %% Normalization:
 prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
-prefs.normalize.default='ea_normalize_ants_multimodal';
+prefs.normalize.default='ea_normalize_ants';
 prefs.normalize.inverse.customtpm=1; % set to 1 if custom TPM shall be built for inverse warpings.
 
 %% Coregistration (CT/MR):

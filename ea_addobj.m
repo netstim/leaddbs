@@ -108,9 +108,14 @@ end
 
 
 % set cdata
+c=uisetcolor;
 
-atlasc=59; %rand*64;
+%?atlasc=59; %rand*64;
 jetlist=jet;
+
+co=ones(1,1,3);
+co(1,1,:)=c;
+atlasc=double(rgb2ind(co,jetlist));
 
 cdat=abs(repmat(atlasc,length(fv.vertices),1) ... % C-Data for surface
     +randn(length(fv.vertices),1)*2)';
@@ -119,7 +124,7 @@ cdat=abs(repmat(atlasc,length(fv.vertices),1) ... % C-Data for surface
 
 % show atlas.
 set(0,'CurrentFigure',resultfig);
-addobjr=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
+addobjr=patch(fv,'CData',cdat,'FaceColor',c,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
 ea_spec_atlas(addobjr,'',jetlist,1);
 
 % add toggle button:

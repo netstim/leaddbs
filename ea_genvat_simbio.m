@@ -83,6 +83,7 @@ if ea_headmodel_changed(options,side,elstruct)
     end
     
     %% convert trajectory mm2vox
+
     V=spm_vol([options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
     trajmm=[itraj,ones(length(itraj),1)];
     trajvox=V.mat\trajmm';
