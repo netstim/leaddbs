@@ -6,8 +6,15 @@ legacy=0;
 
 if options.modality==1
     expdo=1:3;
+    subdir=[options.root,options.patientname,filesep];
+    if exist([subdir,'gl',options.prefs.fa2anat],'file');
+        expdo=1:4;
+    end
 else
     expdo=1;
+    if exist([subdir,'gl',options.prefs.fa2anat],'file');
+        expdo=[1,4];
+    end
 end
 
 for export=expdo % if CT, only do 1, if MR, do 1:3.
@@ -31,6 +38,12 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 outf=['check_',options.prefs.cornii];
                 addstr='MNI space (wireframes) & Postoperative coronar MRI';
                 suff='_cor';
+            case 4
+                checkf=[options.root,options.prefs.patientdir,filesep,'gl',options.prefs.fa2anat,',1'];
+                checkfn=['gl',options.prefs.fa2anat];
+                outf=['check_',options.prefs.fa2anat];
+                addstr='MNI space (wireframes) & FA';
+                suff='_fa';
         end
 
 
@@ -56,11 +69,20 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             end
             %mni.img(:)=zscore(mni.img(:));
             wires.img=wires.img/max(wires.img(:));
-            
-            pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
-            pt.img(pt.img>0.5) = 0.5;
-            pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
-            
+            switch suff
+                case '_fa' % do no windowing for now.
+                    mni_img=ea_load_nii([options.earoot,'templates',filesep,'mni_hires_fa.nii']);
+                    mni_img.img=(mni_img.img-min(mni_img.img(:)))/(max(mni_img.img(:))-min(mni_img.img(:)));
+                otherwise
+                    pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
+                    pt.img(pt.img>0.5) = 0.5;
+                    pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
+                    if ~exist('mni_img','var')
+                        mni_img=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
+                        mni_img.img(:)=zscore(mni_img.img(:));
+                        mni_img.img=(mni_img.img-min(mni_img.img(:)))/(max(mni_img.img(:))-min(mni_img.img(:)));
+                    end
+            end
             %joint_im=0.5*wires.img+pt.img;
             joint_im=pt.img;
             
@@ -72,15 +94,9 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             % ----------------------------------------------------------
             % edited by TH 2016-02-17 to add windowed normalization check
             % ----------------------------------------------------------
-            mni_img=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
-            mni_img.img(:)=zscore(mni_img.img(:));
-            mni_img.img=(mni_img.img-min(mni_img.img(:)))/(max(mni_img.img(:))-min(mni_img.img(:)));
-            
-            
-            
-            
+
             wim = cat(4,pt.img,mni_img.img,joint_im);
-            
+            clear joint_im pt
             ea_imshowpair(wim,options,addstr);
             
             % ----------------------------------------------------------
