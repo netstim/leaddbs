@@ -97,30 +97,30 @@ directory=[fileparts(from{1}),filesep];
 for fr=1:length(from)
     [~,fn,ext]=fileparts(from{fr});
     switch [fn,ext]
-        case options.prefs.fa
-            if ~exist([directory,'tc2',fn,ext],'file')
-                if ~exist([directory,'c2',fn,ext],'file')
-                    ea_newseg(directory,[fn,ext],0,options);
+        case options.prefs.fa2anat
+            if ~exist([directory,'tc2',options.prefs.prenii_unnormalized],'file')
+                if ~exist([directory,'c2',options.prefs.prenii_unnormalized],'file')
+                    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
                 end
-                nii=ea_load_nii([directory,'c2',fn,ext]);
+                nii=ea_load_nii([directory,'c2',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.7;
-                nii.fn=[directory,'tc2',fn,ext];
+                nii.fn=[directory,'tc2',options.prefs.prenii_unnormalized];
                 spm_write_vol(nii,nii.img);
             end
             masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c2mask.nii'];
-            masks{fr,2}=[directory,'tc2',fn,ext];
+            masks{fr,2}=[directory,'tc2',options.prefs.prenii_unnormalized];
         otherwise
-            if ~exist([directory,'tc1',fn,ext],'file')
-                if ~exist([directory,'c1',fn,ext],'file')
+            if ~exist([directory,'tc1',options.prefs.prenii_unnormalized],'file')
+                if ~exist([directory,'c1',options.prefs.prenii_unnormalized],'file')
                 ea_newseg(directory,[fn,ext],0,options);
                 end
-                nii=ea_load_nii([directory,'c1',fn,ext]);
+                nii=ea_load_nii([directory,'c1',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.3;
-                nii.fn=[directory,'tc1',fn,ext];
+                nii.fn=[directory,'tc1',options.prefs.prenii_unnormalized];
                 spm_write_vol(nii,nii.img);
             end
             masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c1mask.nii'];
-            masks{fr,2}=[directory,'c1',fn,ext];
+            masks{fr,2}=[directory,'c1',options.prefs.prenii_unnormalized];
     end
     try delete([directory,'c1',fn,ext]); end
     try delete([directory,'c2',fn,ext]); end
