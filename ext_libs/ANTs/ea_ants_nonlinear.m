@@ -5,7 +5,7 @@ fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
-if nargin>3
+if nargin==4
     masks=varargin{4};
 end
 
@@ -88,7 +88,7 @@ rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1
     ' --smoothing-sigmas ', rigidsoomthingssigmas];
 
 for fi=1:length(fixedimage)
-    if nargin<3
+    if nargin==3
         rigidstage=[rigidstage,...
             ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
     else
@@ -105,7 +105,7 @@ affinestage = [' --transform Affine[0.1]'...
 
 
 for fi=1:length(fixedimage)
-    if nargin<3
+    if nargin==3
         affinestage=[affinestage,...
             ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
     else
@@ -121,7 +121,7 @@ synstage = [' --transform SyN[0.3]'...
     ' --smoothing-sigmas ', affinesoomthingssigmas];
 
 for fi=1:length(fixedimage)
-    if nargin<3
+    if nargin==3
         synstage=[synstage,...
             ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
     else
