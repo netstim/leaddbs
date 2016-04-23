@@ -106,7 +106,7 @@ if ~ismember(whichnormmethod,ea_getantsnormfuns)
 end
 wfibs=cell(length(ftr.curveSegCell),1);
 deletefibers=[];
-for fib=1:20000
+for fib=1:numfibs
 
     ea_dispercent(fib/numfibs);
 
