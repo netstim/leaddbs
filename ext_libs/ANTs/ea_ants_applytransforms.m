@@ -123,7 +123,7 @@ for fi=1:length(fis)
         matlabbatch{1}.spm.util.imcalc.options.interp = 1;
         matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
         
-            cfg_util('run',{matlabbatch});
+         try   cfg_util('run',{matlabbatch}); end
         clear matlabbatch
     end
 end

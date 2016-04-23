@@ -5,6 +5,8 @@ directory=[options.root,options.patientname,filesep];
 % create (unnormalized) trackvis version
 disp('Exporting to TrackVis');
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
+ftr = load([directory,options.prefs.FTR_unnormalized]);
+
 try
 %     if ~exist([directory,ftrfname,'.trk'],'file')
         reftemplate=[directory,options.prefs.b0];
@@ -21,6 +23,7 @@ try
 end
 disp('Done.');
 
+
 % if ~exist([directory,'y_ea_inv_normparams.nii'],'file');
 %     ea_error('Please run a compatible normalization of the preoperative MRI-volume first. Final (inverse) normalization parameters should be stored as y_ea_inv_normparams.nii inside of the subject folder.');
 % end
@@ -32,35 +35,31 @@ cleanse_fibers=0; % deletes everything outside the white matter of the template.
 % if dartel was used, we need to coregister c2 of b0 and rc2 of anat (since
 % deformation fields were estimated for the rc* files and not the native
 % anat file.
-[options.prefs.b0,options.prefs.prenii_unnormalized]=ea_checkdartelused(options);
+[options.prefs.b0,options.prefs.prenii_unnormalized,reftemplate]=ea_checkdartelused(options);
 
 %% normalize fibers
 
 % get affinematrix from b0 to preop mri
-Vfirst=spm_vol([directory,options.prefs.b0,',1']);
-Vsecond=spm_vol([directory,options.prefs.prenii_unnormalized,',1']);
-x=spm_coreg(Vfirst,Vsecond);
-affinematrix1=Vsecond.mat\spm_matrix(x(:)')*Vfirst.mat;
+Vb0=spm_vol([directory,options.prefs.b0,',1']);
+Vmprage=spm_vol([directory,options.prefs.prenii_unnormalized,',1']);
+x=spm_coreg(Vb0,Vmprage);
+affinematrix1=Vmprage.mat\spm_matrix(x(:)')*Vb0.mat;
 
 b0=ea_load_nii([directory,options.prefs.b0]);
 
 ysize=size(b0.img,2)+1;
 
-ftr = load([directory,options.prefs.FTR_unnormalized]);
 
 if ~exist([options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires.nii'],'file')
     gunzip([options.earoot,'templates',filesep,'dartel',filesep,'create_mni_darteltemplate',filesep,'dartelmni_6_hires.nii.gz'],...
         [options.earoot,'templates',filesep,'dartel']);
 end
 
-reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires.nii,2'];
+
 
 [whichnormmethod,reft]=ea_whichnormmethod(directory);
 if isempty(whichnormmethod)
     ea_error('Please run normalization for this subject first.');
-end
-if ismember(whichnormmethod,ea_getantsnormfuns)
-    reftemplate=reft;
 end
 
 Vmni=spm_vol(reftemplate);
@@ -107,7 +106,7 @@ if ~ismember(whichnormmethod,ea_getantsnormfuns)
 end
 wfibs=cell(length(ftr.curveSegCell),1);
 deletefibers=[];
-for fib=1:numfibs
+for fib=1:20000
 
     ea_dispercent(fib/numfibs);
 
@@ -133,8 +132,23 @@ for fib=1:numfibs
     %% map from prenii voxelspace to mni millimeter space
 if ~ismember(whichnormmethod,ea_getantsnormfuns)
     wfibs{fib} = vox2mm_mni(wfibs{fib},Vnii,ynii)';
+        wfibsvox{fib}=[wfibs{fib},ones(size(wfibs{fib},1),1)]';
 else
-    keyboard
+    
+            
+            %XYZ_vxLPS=[V.dim(1)-XYZ_vx(1,:);V.dim(2)-XYZ_vx(2,:);XYZ_vx(3,:);ones(1,size(XYZ_vx,2))];
+            
+             XYZ_mm_beforetransform=Vmprage(1).mat*wfibs{fib};
+             XYZ_mm_beforetransform(1,:)=-XYZ_mm_beforetransform(1,:);
+             XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
+             
+            wfibs{fib}=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform,1);
+            wfibs{fib}(1,:)=-wfibs{fib}(1,:);
+            wfibs{fib}(2,:)=-wfibs{fib}(2,:);
+             wfibsvox{fib}=wfibs{fib};
+            wfibs{fib}=wfibs{fib}';
+            
+            
 end
     if vizz
         thisfib=wfibs{fib}';
@@ -143,10 +157,8 @@ end
     end
 
     %% map from mni millimeter space to mni voxel space (only needed for trackvis convertion and cleansing fibers).
-    wfibsvox{fib}=[wfibs{fib},ones(size(wfibs{fib},1),1)]';
     wfibsvox{fib}=Vmni(1).mat\wfibsvox{fib};
     wfibsvox{fib}=wfibsvox{fib}(1:3,:)';
-    wfibsvox{fib}=[wfibsvox{fib}(:,1),wfibsvox{fib}(:,2),wfibsvox{fib}(:,3)];
 
     %% cleansing fibers..
     if cleanse_fibers % delete anything too far from wm.
@@ -207,13 +219,11 @@ disp('Done.');
 
 
 
-function [useb0,useanat]=ea_checkdartelused(options)
+function [useb0,useanat,reftemplate]=ea_checkdartelused(options)
 directory=[options.root,options.patientname,filesep];
 
 [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
 switch whichnormmethod
-    case ea_getantsnormfuns
-        ea_error('ANTs normalization is not supported for Fibers normalization right now.');
     case 'ea_normalize_spmdartel'
         dartelused=1;
     otherwise
@@ -255,9 +265,11 @@ end
 if ~dartelused
     useb0=options.prefs.b0;
     useanat=options.prefs.prenii_unnormalized;
+    reftemplate=[options.earoot,'templates',filesep,'mni_hires.nii'];
 else
     useb0=['c2',options.prefs.b0];
     useanat=['rc2',options.prefs.prenii_unnormalized];
+        reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires.nii,2'];
 end
 
 
