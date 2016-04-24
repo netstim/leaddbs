@@ -5,8 +5,15 @@ fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
-if nargin==4
-    masks=varargin{4};
+if nargin>3
+    
+    weigths=varargin{4};
+    metrics=varargin{5};
+    options=varargin{6};
+    
+else
+    weigths=ones(length(fixedimage),1);
+    metrics=repmat('MI',length(fixedimage),1);
 end
 
 [outputdir, outputname, ~] = fileparts(outputimage);
@@ -87,15 +94,26 @@ rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1
     ' --shrink-factors ', rigidshrinkfactors, ...
     ' --smoothing-sigmas ', rigidsoomthingssigmas];
 
+
+
 for fi=1:length(fixedimage)
-    if nargin==3
-        rigidstage=[rigidstage,...
-            ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
-    else
-        rigidstage=[rigidstage,...
-            ' --metric IGDM[', fixedimage{fi}, ',', movingimage{fi},',',masks{fi,1},',',masks{fi,2}, ',1,32,Regular,0.25]'];
+    switch metrics{fi}
+        case 'MI'
+            suffx=',32,Regular,0.25';
+        case 'CC'
+            suffx=',15,Random,0.05';
+        case 'GC'
+            suffx=',15,Random,0.05';
     end
+    rigidstage=[rigidstage,...
+        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weigths(fi)),suffx,']'];
+    
 end
+
+% if nargin>3
+%    rigidstage=[rigidstage,...
+%        ' --masks [',options.earoot,'templates',filesep,'mni_hires_c1c2mask.nii,',options.root,options.patientname,filesep,'tc1c2',options.prefs.prenii_unnormalized,']'];
+% end
 
 
 affinestage = [' --transform Affine[0.1]'...
@@ -105,15 +123,22 @@ affinestage = [' --transform Affine[0.1]'...
 
 
 for fi=1:length(fixedimage)
-    if nargin==3
-        affinestage=[affinestage,...
-            ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
-    else
-        affinestage=[affinestage,...
-            ' --metric IGDM[', fixedimage{fi}, ',', movingimage{fi},',',masks{fi,1},',',masks{fi,2}, ',1,32,Regular,0.25]'];
+  switch metrics{fi}
+        case 'MI'
+            suffx=',32,Regular,0.25';
+        case 'CC'
+            suffx=',15,Random,0.05';
+        case 'GC'
+            suffx=',15,Random,0.05';
     end
+       affinestage=[affinestage,...
+            ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weigths(fi)),suffx,']'];
 end
 
+% if nargin>3
+%    affinestage=[affinestage,...
+%        ' --masks [',options.earoot,'templates',filesep,'mni_hires_c1c2mask.nii,',options.root,options.patientname,filesep,'tc1c2',options.prefs.prenii_unnormalized,']'];
+% end
 
 synstage = [' --transform SyN[0.3]'...
     ' --convergence ', affineconvergence, ...
@@ -121,24 +146,36 @@ synstage = [' --transform SyN[0.3]'...
     ' --smoothing-sigmas ', affinesoomthingssigmas];
 
 for fi=1:length(fixedimage)
-    if nargin==3
-        synstage=[synstage,...
-            ' --metric MI[', fixedimage{fi}, ',', movingimage{fi}, ',1,32,Regular,0.25]'];
-    else
-        synstage=[synstage,...
-            ' --metric MI[', fixedimage{fi}, ',', movingimage{fi},',',masks{fi,1},',',masks{fi,2},  ',1,32,Regular,0.25]'];
+    switch metrics{fi}
+        case 'MI'
+            suffx=',32,Regular,0.25';
+        case 'CC'
+            suffx=',15,Random,0.05';
+        case 'GC'
+            suffx=',15,Random,0.05';
     end
+    synstage=[synstage,...
+        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weigths(fi)),suffx,']'];
 end
 
+% if nargin>3
+%    synstage=[synstage,...
+%        ' --masks [',options.earoot,'templates',filesep,'mni_hires_c1c2mask.nii,',options.root,options.patientname,filesep,'tc1c2',options.prefs.prenii_unnormalized,']'];
+% end
+
 ea_libs_helper
+
 cmd = [ANTS, ' --verbose 1' ...
              ' --dimensionality 3 --float 1' ...
              ' --output [',ea_path_helper(outputbase), ',', outputimage, ']' ...
              ' --interpolation Linear' ...
              ' --use-histogram-matching 1' ...
-             ' --winsorize-image-intensities [0.005,0.995]', ...
+             ' --winsorize-image-intensities [0.15,0.85]', ...
              ' --write-composite-transform 1', ...
              rigidstage, affinestage, synstage];
+         
+
+         
 if ~ispc
     system(['bash -c "', cmd, '"']);
 else
