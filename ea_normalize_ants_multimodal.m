@@ -38,7 +38,7 @@ if uset1
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_t1],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_t1]);
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
         from{cnt}=[directory,options.prefs.prenii_unnormalized_t1];
-        weigths(cnt)=1.25;
+        weights(cnt)=1.25;
         metrics{cnt}='MI';
         cnt=cnt+1;
     end
@@ -51,7 +51,7 @@ if usepd
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_pd],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_pd]);
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
         from{cnt}=[directory,options.prefs.prenii_unnormalized_pd];
-        weigths(cnt)=1.25;
+        weights(cnt)=1.25;
         metrics{cnt}='MI';
         cnt=cnt+1;
     end
@@ -113,14 +113,10 @@ for fr=1:length(from)
                 if ~exist([directory,'c2',options.prefs.prenii_unnormalized],'file')
                     ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
                 end
+                % assume that tc2 doesn't exist
                 nii=ea_load_nii([directory,'c2',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.7;
                 nii.fname=[directory,'tc2',options.prefs.prenii_unnormalized];
-                spm_write_vol(nii,nii.img);
-                % assume that tc1 also doesnt exist
-                nii=ea_load_nii([directory,'c1',options.prefs.prenii_unnormalized]);
-                nii.img=nii.img>0.3;
-                nii.fname=[directory,'tc1',options.prefs.prenii_unnormalized];
                 spm_write_vol(nii,nii.img);
             end
             masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c2mask.nii'];
@@ -130,11 +126,7 @@ for fr=1:length(from)
                 if ~exist([directory,'c1',options.prefs.prenii_unnormalized],'file')
                     ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
                 end
-                % assume that tc2 also doesnt exist
-                nii=ea_load_nii([directory,'c2',options.prefs.prenii_unnormalized]);
-                nii.img=nii.img>0.7;
-                nii.fname=[directory,'tc2',options.prefs.prenii_unnormalized];
-                spm_write_vol(nii,nii.img);
+                % assume that tc1 doesn't exist
                 nii=ea_load_nii([directory,'c1',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.3;
                 nii.fname=[directory,'tc1',options.prefs.prenii_unnormalized];
