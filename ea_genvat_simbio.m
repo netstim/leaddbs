@@ -66,7 +66,7 @@ elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 
-if ea_headmodel_changed(options,side,elstruct)
+if ea_headmodel_changed(options,side,S,elstruct)
     disp('No suitable headmodel found, rebuilding. This may take a while...');
     
     %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
@@ -93,7 +93,7 @@ if ea_headmodel_changed(options,side,elstruct)
     
     %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
     
-    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,50,90,1); % this will result in ~10x10x10 mm.
+    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,80,250,1); % this will result in ~10x10x10 mm.
     mat=mat';
     mkdir([options.root,options.patientname,filesep,'headmodel']);
     Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);
@@ -292,7 +292,7 @@ if ea_headmodel_changed(options,side,elstruct)
  
     
     save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','-v7.3');
-    ea_save_hmprotocol(options,side,elstruct,1);
+    ea_save_hmprotocol(options,side,S,elstruct,1);
     
 else
     % simply load vol.
@@ -489,17 +489,17 @@ varargout{3}=radius;
 disp('Done...');
 
 
-function changed=ea_headmodel_changed(options,side,elstruct)
+function changed=ea_headmodel_changed(options,side,S,elstruct)
 % function that checked if anything (user settings) has changed and
 % headmodel needs to be recalculated..
 changed=1; % in doubt always reconstruct headmodel
 
 
-if isequal(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,elstruct,0))
+if isequal(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,S,elstruct,0))
     changed=0;
 end
 
-function protocol=ea_save_hmprotocol(options,side,elstruct,sv)
+function protocol=ea_save_hmprotocol(options,side,S,elstruct,sv)
 % function to construct and/or save protocol.
 protocol=struct; % default for errors
 protocol.elmodel=options.elmodel;
@@ -507,6 +507,12 @@ protocol.elstruct=elstruct;
 protocol.usediffusion=options.usediffusion;
 protocol.considerpassivecontacts=options.considerpassivecontacts;
 protocol.atlas=options.atlasset;
+protocol.relevantcontacts=S.activecontacts;
+if protocol.considerpassivecontacts % if passives are considered, all are relevant.
+    protocol.relevantcontacts{1}(:)=1;
+    protocol.relevantcontacts{2}(:)=1;
+end
+
 if sv % save protocol to disk
     save([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat'],'protocol');
 end

@@ -1,0 +1,2 @@
+test/test.nii.gz
+test/test.nii

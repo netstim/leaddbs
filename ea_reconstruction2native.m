@@ -12,9 +12,9 @@ if ~exist('reco','var') % old format
 end
     [~,tempfile]=ea_whichnormmethod(directory);
     nii=ea_load_nii(tempfile);
-
+try
                 ea_checkforwardinv(options,'forward')
-
+end
         for side=options.sides
             
             

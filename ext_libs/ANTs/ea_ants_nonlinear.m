@@ -13,7 +13,7 @@ if nargin>3
     
 else
     weigths=ones(length(fixedimage),1);
-    metrics=repmat('MI',length(fixedimage),1);
+    metrics=repmat({'MI'},length(fixedimage),1);
 end
 
 [outputdir, outputname, ~] = fileparts(outputimage);

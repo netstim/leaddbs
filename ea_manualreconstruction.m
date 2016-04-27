@@ -524,6 +524,7 @@ for doxx=0:1
                 
             end
             
+            
             colormap gray
             
             

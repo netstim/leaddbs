@@ -1068,7 +1068,7 @@ end
 function [stats]=preparedataanalysis(handles)
 
 M=getappdata(gcf,'M');
-keyboard
+
 
 %M.stats(get(handles.vilist,'Value'))
 
@@ -1084,12 +1084,10 @@ vc_labels={};
 
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
-        usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis!
-        
-        for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,1)
-            for vat=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,2);
+        usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis! 
+        for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).ft,2)
+            for vat=1;
                 if side==1 % right hemisphere
-                    
                     vicorr_right(ptcnt,vicnt)=vicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
                     nvicorr_right(ptcnt,vicnt)=nvicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
                 elseif side==2 % left hemisphere
@@ -1412,7 +1410,6 @@ end
     for side=1:2
         setappdata(resultfig,'elstruct',M.elstruct(pt));
         setappdata(resultfig,'elspec',options.elspec);
-        
         [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,stimname);
         stimparams(1,side).volume=volume;
     end
