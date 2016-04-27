@@ -7,12 +7,12 @@ outputimage=varargin{3};
 
 if nargin>3
     
-    weigths=varargin{4};
+    weights=varargin{4};
     metrics=varargin{5};
     options=varargin{6};
     
 else
-    weigths=ones(length(fixedimage),1);
+    weights=ones(length(fixedimage),1);
     metrics=repmat({'MI'},length(fixedimage),1);
 end
 
@@ -106,7 +106,7 @@ for fi=1:length(fixedimage)
             suffx=',15,Random,0.05';
     end
     rigidstage=[rigidstage,...
-        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weigths(fi)),suffx,']'];
+        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
     
 end
 
@@ -132,7 +132,7 @@ for fi=1:length(fixedimage)
             suffx=',15,Random,0.05';
     end
        affinestage=[affinestage,...
-            ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weigths(fi)),suffx,']'];
+            ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
 % if nargin>3
@@ -155,7 +155,7 @@ for fi=1:length(fixedimage)
             suffx=',15,Random,0.05';
     end
     synstage=[synstage,...
-        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weigths(fi)),suffx,']'];
+        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
 % if nargin>3
