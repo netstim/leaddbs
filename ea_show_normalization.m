@@ -12,7 +12,7 @@ if options.modality==1
     end
 else
     expdo=1;
-    subdir=[options.root,options.patientname,filesep];
+        subdir=[options.root,options.patientname,filesep];
     if exist([subdir,'gl',options.prefs.fa2anat],'file');
         expdo=[1,4];
     end

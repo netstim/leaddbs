@@ -114,12 +114,6 @@ prefs.lhullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexh
 prefs.lhullsmooth=3; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
 prefs.lhullsimplify='auto'; % 0.1 would reduce hulldata to 10% ? set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
 
-%% 2D-Export
-prefs.d2.useprepost='pre'; % can be 'post' or 'pre' to set the backdrop.
-prefs.d2.groupcolors='lead'; % can be 'maxdist' to use ea_distinguishable_colors by Timothy E. Holy, 'lead' to use a handpicked color set inspired by colorblender.com or 'lines' to use the matlab lines colormap (supports only seven colors).
-prefs.d2.isovolsmoothed='s'; % set to '' if you want to display the raw, unsmoothed version of the isovolume.
-prefs.d2.isovolcolormap='jet'; % color map to use for plotting of isovolume heatmap.
-prefs.d2.isovolsepcomb='combined'; % set to 'combined' to use the lr-combined isovolume and 'lr' to use the separate isovolumes.
 
 %% DICOM files:
 prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).

@@ -52,6 +52,7 @@ end
 if svfig
     disp('Exporting 2D slice output...');
 end
+
 if strcmp(options.prefs.d2.useprepost,'pre') % use preoperative images, overwrite filenames to preoperative version
     options.prefs.gtranii=options.prefs.gprenii;
     options.prefs.tranii=options.prefs.prenii;
@@ -60,6 +61,7 @@ if strcmp(options.prefs.d2.useprepost,'pre') % use preoperative images, overwrit
     options.prefs.gsagnii=options.prefs.gprenii;
     options.prefs.sagnii=options.prefs.prenii;
 elseif strcmp(options.prefs.d2.useprepost,'template')
+    
   options.modality=3;
 end
 
