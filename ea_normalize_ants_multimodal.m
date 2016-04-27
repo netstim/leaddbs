@@ -29,7 +29,6 @@ usefa=1; % set to zero if you do not wish to use FA data for normalization even 
 
 directory=[options.root,options.patientname,filesep];
 
-
 cnt=1;
 
 % T1
@@ -80,9 +79,10 @@ if usefa
         weights(cnt)=1;
         metrics{cnt}='MI';
         cnt=cnt+1;
-        masks=segmentall(from,options); % masks not yet implemented.
     end
 end
+
+masks=segmentall(from,options); % masks not yet implemented.
 
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 to{cnt}=[options.earoot,'templates',filesep,'mni_hires.nii'];
@@ -97,11 +97,9 @@ ea_coregmr(options,options.prefs.normalize.coreg);
 
 weights=weights/sum(weights); % normalize to sum of 1
 
-
 ea_ants_nonlinear(to,...
     from,...
     [directory,options.prefs.prenii],weights,metrics,options);
-
 
 ea_apply_normalization(options);
 
@@ -130,7 +128,7 @@ for fr=1:length(from)
         otherwise
             if ~exist([directory,'tc1',options.prefs.prenii_unnormalized],'file')
                 if ~exist([directory,'c1',options.prefs.prenii_unnormalized],'file')
-                    ea_newseg(directory,[fn,ext],0,options);
+                    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
                 end
                 % assume that tc2 also doesnt exist
                 nii=ea_load_nii([directory,'c2',options.prefs.prenii_unnormalized]);
@@ -145,22 +143,23 @@ for fr=1:length(from)
             masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c1mask.nii'];
             masks{fr,2}=[directory,'tc1',options.prefs.prenii_unnormalized];
     end
-    if ~exist([directory,'tc1c2',options.prefs.prenii_unnormalized],'file')
+end
+
+if ~exist([directory,'tc1c2',options.prefs.prenii_unnormalized],'file')
     Vc1=ea_load_nii([directory,'tc1',options.prefs.prenii_unnormalized]);
     Vc2=ea_load_nii([directory,'tc2',options.prefs.prenii_unnormalized]);
     Vc1.img=Vc1.img+Vc2.img;
     Vc1.fname=[directory,'tc1c2',options.prefs.prenii_unnormalized];
     spm_write_vol(Vc1,Vc1.img);
-    end
-    
-    try delete([directory,'c1',options.prefs.prenii_unnormalized]); end
-    try delete([directory,'c2',options.prefs.prenii_unnormalized]); end
-    try delete([directory,'c3',options.prefs.prenii_unnormalized]); end
-    try delete([directory,'c4',options.prefs.prenii_unnormalized]); end
-    try delete([directory,'c5',options.prefs.prenii_unnormalized]); end
-    try delete([directory,'c6',options.prefs.prenii_unnormalized]); end
-    try delete([directory,'y_',options.prefs.prenii_unnormalized]); end
-    try delete([directory,'iy_',options.prefs.prenii_unnormalized]); end
-    [~,fna]=fileparts(options.prefs.prenii_unnormalized);
-    try delete([directory,fna,'_seg8.mat']); end
 end
+
+try delete([directory,'c1',options.prefs.prenii_unnormalized]); end
+try delete([directory,'c2',options.prefs.prenii_unnormalized]); end
+try delete([directory,'c3',options.prefs.prenii_unnormalized]); end
+try delete([directory,'c4',options.prefs.prenii_unnormalized]); end
+try delete([directory,'c5',options.prefs.prenii_unnormalized]); end
+try delete([directory,'c6',options.prefs.prenii_unnormalized]); end
+try delete([directory,'y_',options.prefs.prenii_unnormalized]); end
+try delete([directory,'iy_',options.prefs.prenii_unnormalized]); end
+[~,fna]=fileparts(options.prefs.prenii_unnormalized);
+try delete([directory,fna,'_seg8.mat']); end
