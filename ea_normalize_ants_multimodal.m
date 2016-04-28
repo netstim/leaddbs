@@ -92,10 +92,7 @@ metrics{cnt}='MI';
 cnt=cnt+1;
 
 % Do the coreg part for postoperative images:
-
 ea_coregmr(options,options.prefs.normalize.coreg);
-
-weights=weights/sum(weights); % normalize to sum of 1
 
 ea_ants_nonlinear(to,...
     from,...
