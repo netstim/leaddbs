@@ -1,5 +1,6 @@
 function ea_preprocess_fmri(options)
 
+
 directory=[options.root,options.patientname,filesep];
 
 V=spm_vol([directory,options.prefs.rest]);

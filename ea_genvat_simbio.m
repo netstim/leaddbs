@@ -93,7 +93,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
     
     %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
     
-    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,80,250,1); % this will result in ~10x10x10 mm.
+    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,250,400,1); % this will result in ~10x10x10 mm.
     mat=mat';
     mkdir([options.root,options.patientname,filesep,'headmodel']);
     Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);
@@ -440,6 +440,7 @@ try
 catch
     keyboard % vat empty..!
 end
+
 [xg,yg,zg] = meshgrid(gv{1},gv{2},gv{3});
 eg = F(xg,yg,zg);
 eg(isnan(eg))=0;
@@ -479,6 +480,7 @@ switch side
         stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_left.mat'];
 end
 save(stimfile,'S');
+%spm_write_vol(Vvat,flipdim(eg,3));
 spm_write_vol(Vvat,permute(eg,[2,1,3]));
 
 % define function outputs

@@ -11,29 +11,39 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
         mkdir([directory,'templates',filesep,'labeling']);
     end
     
-    switch spm('ver')
-        case 'SPM8'
-            
     
-            matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
-            matlabbatch{1}.spm.util.defs.ofname = '';
-            matlabbatch{1}.spm.util.defs.fnames = {[options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.nii,1']};
-            matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep]};
-            matlabbatch{1}.spm.util.defs.interp = 0;
-            cfg_util('run',{matlabbatch});
-            clear matlabbatch
+    
+    whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
+    switch whichnormmethod
+        case ea_getantsnormfuns
             
-        case 'SPM12'
+            ea_ants_applytransforms(options,{[options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.nii']},{[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},1);
             
-            matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
-            matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.nii']};
-            matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep]};
-            matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 0;
-            matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
-            matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
-            cfg_util('run',{matlabbatch});
-            clear matlabbatch
-            
+        otherwise
+            switch spm('ver')
+                case 'SPM8'
+                    
+                    
+                    matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
+                    matlabbatch{1}.spm.util.defs.ofname = '';
+                    matlabbatch{1}.spm.util.defs.fnames = {[options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.nii,1']};
+                    matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep]};
+                    matlabbatch{1}.spm.util.defs.interp = 0;
+                    cfg_util('run',{matlabbatch});
+                    clear matlabbatch
+                    
+                case 'SPM12'
+                    
+                    matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.nii']};
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep]};
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 0;
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
+                    cfg_util('run',{matlabbatch});
+                    clear matlabbatch
+                    
+            end
     end
 end
 if ~exist([directory,'templates',filesep,'labeling',filesep,'r',b0rest,'w',options.lc.general.parcellation,'.nii'],'file')

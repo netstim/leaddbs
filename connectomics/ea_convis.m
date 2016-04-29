@@ -116,10 +116,9 @@ end
 
 %% retrieve and delete prior results
 resultfig=ea_cvcleanup(handles);
-
-if ~hold
     pV=getappdata(handles.convis,'pV');
     pX=getappdata(handles.convis,'pX');
+if ~hold
     [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
     set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
     set(handles.matseed,'ForegroundColor',[0,0,0]);
@@ -137,6 +136,7 @@ if get(handles.vizgraph,'Value'); % show voxel-level results
 end
 
 if get(handles.vizmat,'Value'); % show matrix-level results
+    
     ea_cvshowmatresults(resultfig,directory,pV,pX,selectedparc,handles,options);
 else
     ea_deletePL(resultfig,'PL','mat');
