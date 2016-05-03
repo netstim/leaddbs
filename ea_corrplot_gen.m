@@ -5,8 +5,13 @@ function fig=ea_corrplot(varargin)
 X=varargin{1};
 description=varargin{2};
 labels=varargin{3};
-if nargin==4
+if nargin>3
     handles=varargin{4};
+end
+if nargin>4
+    groups=varargin{5};
+else
+    groups=ones(length(X),1);
 end
 
 dim=size(X,2);
@@ -23,14 +28,13 @@ p_upd=p(2:end,1);
 %labels=M.stats(1).ea_stats.atlases.names(lidx);
 
 
-
-
+jetlist=lines;
+jetlist(groups,:);
 for area=1:length(R_upd)
     %% plot areas:
     f=figure('color','w','name',description);
     
-    scatter(X(:,1),X(:,area+1),'k','filled');
-
+    scatter(X(:,1),X(:,area+1),[],jetlist(groups,:),'filled');
     h=lsline;
     set(h,'color','k');
     axis square
@@ -42,9 +46,11 @@ for area=1:length(R_upd)
     xlabel(sub2space(labels{1}),'FontSize',16,'FontName','Helvetica');
     ylabel(labels{2},'FontSize',16,'FontName','Helvetica');
     if nargin==4
+        if ~isempty(varargin{4})
         odir=get(handles.groupdir_choosebox,'String');
         ofname=[odir,description,'_',fn,'_',labels{1},'.png'];
         ea_screenshot(ofname);
+        end
     end
 end
 
