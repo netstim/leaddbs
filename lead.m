@@ -1215,13 +1215,11 @@ if ~(sum(switchto>0)>1) && ~isempty(switchto) % e.g. MR and CT present
             set(handles.coregctcheck,'Enable','off');
             set(handles.coregctcheck,'Value',0);
             set(handles.coregthreshs,'Enable','off');
-            set(handles.coregmrpopup,'Enable','on');
         case 2 % CT
             set(handles.coregct_checkbox,'Enable','on');
             set(handles.coregctmethod,'Enable','on');
             set(handles.coregctcheck,'Enable','on');
             set(handles.coregthreshs,'Enable','on');
-            set(handles.coregmrpopup,'Enable','off');
     end
 end
 updatestatus(handles);

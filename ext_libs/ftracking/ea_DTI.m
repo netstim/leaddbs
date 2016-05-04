@@ -6,7 +6,7 @@ function [ADC,FA,VectorF,DifT,S0]=DTI(DTIdata,parameters)
 %
 % DTIdata:  A struct containing DTIdata(i).VoxelData, DTIdata(i).Gradient
 %           and DTIdata(i).Bvalue of all the DTI datasets
-% parameters: A struct containing, parameters.BackgroundTreshold and
+% parameters: A struct containing, parameters.BackgroundThreshold and
 %           parameters.WhiteMatterExtractionThreshold, parameters.textdisplay
 %
 % ADC: A 3D matrix with the Apparent Diffuse Coefficient (ADC)
@@ -96,7 +96,7 @@ for x=1:size(S0,1),
         for z=1:size(S0,3),
             
             % Only process a pixel if it isn't background
-            %if(S0(x,y,z)>parameters.BackgroundTreshold)
+            if(S0(x,y,z)>parameters.BackgroundThreshold)
                 
                 % Calculate the Diffusion tensor [Dxx,Dxy,Dxz,Dyy,Dyz,Dzz],
                 % with a simple matrix inverse.
@@ -142,7 +142,7 @@ for x=1:size(S0,1),
                 if(FAv>parameters.WhiteMatterExtractionThreshold)
                     VectorF(x,y,z,:)=EigenVectors(:,end)*EigenValues_old(end);
                 end
-            %end
+            end
         end
     end
 end
