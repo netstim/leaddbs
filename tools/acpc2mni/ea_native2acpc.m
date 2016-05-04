@@ -41,9 +41,10 @@ for pt=1:length(uidir)
     
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile);
     
-    [~,ptname]=fileparts(uidir{pt});
-    options.prefs=ea_prefs(ptname);
-    
+    [options.root,options.patientname]=fileparts(uidir{pt});
+    options.root=[options.root,filesep];
+    options.prefs=ea_prefs(options.patientname);
+    options=ea_assignpretra(options);
     % warp into patient space:
     
     [fpinsub_mm] = ea_map_coords(fidpoints_vox', tempfile, [directory,'y_ea_normparams.nii'], '');
