@@ -19,6 +19,8 @@ prefs.pp.profile='local'; % specify parallel processing profile.
 prefs.prenii_unnormalized=['anat.nii']; % (preoperative) anatomical MR image
 prefs.prenii_unnormalized_t1=['anat_t1.nii']; % (preoperative) anatomical MR image
 prefs.prenii_unnormalized_pd=['anat_pd.nii']; % (preoperative) anatomical MR image
+prefs.rawpreniis={prefs.prenii_unnormalized,prefs.prenii_unnormalized_t1,prefs.prenii_unnormalized_pd};
+
 prefs.tranii_unnormalized=['postop_tra.nii']; % postoperative primary anatomical MR image
 prefs.sagnii_unnormalized=['postop_sag.nii']; % postoperative optional anatomical MR image (saggital planes), for visualization only.
 prefs.cornii_unnormalized=['postop_cor.nii']; % postoperative optional anatomical MR image (coronar planes), for visualization only.

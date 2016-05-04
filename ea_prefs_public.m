@@ -19,6 +19,7 @@ prefs.pp.profile='local'; % specify parallel processing profile.
 prefs.prenii_unnormalized=['anat.nii']; % not needed if schoenecker normalization is used.
 prefs.prenii_unnormalized_t1=['anat_t1.nii']; % (preoperative) anatomical MR image
 prefs.prenii_unnormalized_pd=['anat_pd.nii']; % (preoperative) anatomical MR image
+prefs.rawpreniis={prefs.prenii_unnormalized,prefs.prenii_unnormalized_t1,prefs.prenii_unnormalized_pd};
 prefs.tranii_unnormalized=['postop_tra.nii'];
 prefs.sagnii_unnormalized=['postop_sag.nii'];
 prefs.cornii_unnormalized=['postop_cor.nii'];

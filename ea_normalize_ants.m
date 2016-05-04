@@ -30,7 +30,7 @@ end
 
 
 directory=[options.root,options.patientname,filesep];
-ea_ants_nonlinear([options.earoot,'templates',filesep,'mni_hires.nii'],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii]);
+ea_ants_nonlinear([options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii]);
 
 
 ea_apply_normalization(options)

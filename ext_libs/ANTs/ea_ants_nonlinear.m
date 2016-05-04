@@ -49,6 +49,7 @@ for fi=1:length(movingimage)
 end
 
 if length(fixedimage)~=length(movingimage)
+
     ea_error('Please supply pairs of moving and fixed images (can be repetitive).');
 end
 outputimage = ea_path_helper(outputimage);

@@ -24,7 +24,7 @@ if ischar(options) % return name of method.
 end
 
 uset1=1; % set to zero if you do not wish to use T1 data for normalization even if present.
-usepd=0; % set to zero if you do not wish to use PD data for normalization even if present.
+usepd=1; % set to zero if you do not wish to use PD data for normalization even if present.
 usefa=1; % set to zero if you do not wish to use FA data for normalization even if present.
 
 directory=[options.root,options.patientname,filesep];
@@ -32,7 +32,7 @@ directory=[options.root,options.patientname,filesep];
 cnt=1;
 
 % T1
-if uset1
+if uset1 && ~strcmp(options.primarytemplate,'_t1')
     if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
                 disp('Including T1 data for (grey-matter) normalization');
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_t1],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_t1]);
@@ -45,7 +45,7 @@ if uset1
 end
 
 % PD
-if usepd
+if usepd && ~strcmp(options.primarytemplate,'_pd')
     if exist([directory,options.prefs.prenii_unnormalized_pd],'file')
         disp('Including PD data for (grey-matter) normalization');
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_pd],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_pd]);
@@ -82,12 +82,12 @@ if usefa
     end
 end
 
-masks=segmentall(from,options); % masks not yet implemented.
+%masks=segmentall(from,options); % masks not yet implemented.
 
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
-to{cnt}=[options.earoot,'templates',filesep,'mni_hires.nii'];
+to{cnt}=[options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'];
 from{cnt}=[directory,options.prefs.prenii_unnormalized];
-weights(cnt)=15;
+weights(cnt)=1.5;
 metrics{cnt}='MI';
 cnt=cnt+1;
 
