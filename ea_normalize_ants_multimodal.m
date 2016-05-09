@@ -69,7 +69,11 @@ if usefa
         end
         
         if exist([directory,options.prefs.fa],'file') % recheck if has been built.
+            if options.coregmr.method==6 % would be no coregistration but here we must assume that images are not coregistered yet (just generated FA).
+                options.coregmr.method=1; % i.e. use SPM as default if not differently stated.
+            end
             ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
+            ea_maskfa2anat(options);
         end
     end
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
@@ -152,3 +156,11 @@ try delete([directory,'y_',options.prefs.prenii_unnormalized]); end
 try delete([directory,'iy_',options.prefs.prenii_unnormalized]); end
 [~,fna]=fileparts(options.prefs.prenii_unnormalized);
 try delete([directory,fna,'_seg8.mat']); end
+
+
+function ea_maskfa2anat(options)
+directory=[options.root,options.patientname,filesep];
+if ~exist([directory,'brainmask.nii'],'file')
+ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+keyboard
+end

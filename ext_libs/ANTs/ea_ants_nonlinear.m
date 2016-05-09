@@ -5,16 +5,7 @@ fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
-if nargin>3
-    
-    weights=varargin{4};
-    metrics=varargin{5};
-    options=varargin{6};
-    
-else
-    weights=ones(length(fixedimage),1);
-    metrics=repmat({'MI'},length(fixedimage),1);
-end
+
 
 [outputdir, outputname, ~] = fileparts(outputimage);
 if outputdir 
@@ -30,6 +21,17 @@ if ~iscell(fixedimage) && ischar(fixedimage)
 elseif iscell(fixedimage)
 else
         ea_error('Please supply variable fixedimage as either char or cellstring');
+end
+
+if nargin>3
+    
+    weights=varargin{4};
+    metrics=varargin{5};
+    options=varargin{6};
+    
+else
+    weights=ones(length(fixedimage),1);
+    metrics=repmat({'MI'},length(fixedimage),1);
 end
 
 if ~iscell(movingimage) && ischar(movingimage)
@@ -111,12 +113,6 @@ for fi=1:length(fixedimage)
     
 end
 
-% if nargin>3
-%    rigidstage=[rigidstage,...
-%        ' --masks [',options.earoot,'templates',filesep,'mni_hires_c1c2mask.nii,',options.root,options.patientname,filesep,'tc1c2',options.prefs.prenii_unnormalized,']'];
-% end
-
-
 affinestage = [' --transform Affine[0.1]'...
     ' --convergence ', affineconvergence, ...
     ' --shrink-factors ', affineshrinkfactors ...
@@ -136,11 +132,6 @@ for fi=1:length(fixedimage)
             ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
-% if nargin>3
-%    affinestage=[affinestage,...
-%        ' --masks [',options.earoot,'templates',filesep,'mni_hires_c1c2mask.nii,',options.root,options.patientname,filesep,'tc1c2',options.prefs.prenii_unnormalized,']'];
-% end
-
 synstage = [' --transform SyN[0.3]'...
     ' --convergence ', affineconvergence, ...
     ' --shrink-factors ', affineshrinkfactors ...
@@ -159,10 +150,7 @@ for fi=1:length(fixedimage)
         ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
-% if nargin>3
-%    synstage=[synstage,...
-%        ' --masks [',options.earoot,'templates',filesep,'mni_hires_c1c2mask.nii,',options.root,options.patientname,filesep,'tc1c2',options.prefs.prenii_unnormalized,']'];
-% end
+
 
 ea_libs_helper
 

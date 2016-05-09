@@ -41,3 +41,5 @@ spm_write_vol(V,FA);
 V.fname=[directory,options.prefs.b0];
 V.dt=[16,1];
 spm_write_vol(V,Bo);
+
+

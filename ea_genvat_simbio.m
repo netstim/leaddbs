@@ -93,7 +93,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
     
     %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
     
-    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,250,400,1); % this will result in ~10x10x10 mm.
+    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,150,150,1); % set to 250 / 400 this will result in ~10x10x10 mm.
     mat=mat';
     mkdir([options.root,options.patientname,filesep,'headmodel']);
     Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);
@@ -572,11 +572,12 @@ end
 
 potential = ea_sb_solve(stiff,rhs);
 
+
 function [stiff,rhs] = ea_dbs(stiff,rhs,dirinodes,dirival)
 
 dia = diag(stiff);
 stiff = stiff - diag(dia);
-[indexi, indexj, s] = find(stiff);
+[indexi indexj s] = find(stiff);
 clear stiff;
 dind = dirinodes;
 indi = find(ismember(indexi,dind));
@@ -584,8 +585,8 @@ indj = find(~ismember(indexj,dind));
 indij = intersect(indi,indj);
 rhs(indexj(indij)) = rhs(indexj(indij)) - dirival(indexi(indij)).*s(indij);
 s(indi) = 0;
-dia(indexi(indi)) = 1;
-rhs(indexi(indi)) = dirival(indexi(indi));
+dia(dirinodes) = 1; %hier auch, s.u.
+rhs(dirinodes) = dirival(dirinodes); %hier den zugriff geändert
 indij = find(ismember(indexj,dind)&~ismember(indexi,dind));
 rhs(indexi(indij)) = rhs(indexi(indij)) - dirival(indexj(indij)).*s(indij);
 s(indij) = 0;
