@@ -27,9 +27,17 @@ uset1=1; % set to zero if you do not wish to use T1 data for normalization even 
 usepd=1; % set to zero if you do not wish to use PD data for normalization even if present.
 usefa=1; % set to zero if you do not wish to use FA data for normalization even if present.
 
+usebrainmask=1;
+
 directory=[options.root,options.patientname,filesep];
 
 cnt=1;
+
+if usebrainmask
+    bprfx='b';
+else
+    bprfx='';
+end
 
 % T1
 if uset1 && ~strcmp(options.primarytemplate,'_t1')
@@ -37,7 +45,10 @@ if uset1 && ~strcmp(options.primarytemplate,'_t1')
                 disp('Including T1 data for (grey-matter) normalization');
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_t1],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_t1]);
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
-        from{cnt}=[directory,options.prefs.prenii_unnormalized_t1];
+        if usebrainmask
+            ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_t1]);
+        end
+        from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized_t1];
         weights(cnt)=1.25;
         metrics{cnt}='MI';
         cnt=cnt+1;
@@ -50,7 +61,10 @@ if usepd && ~strcmp(options.primarytemplate,'_pd')
         disp('Including PD data for (grey-matter) normalization');
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_pd],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_pd]);
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
-        from{cnt}=[directory,options.prefs.prenii_unnormalized_pd];
+       if usebrainmask
+            ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_pd]);
+        end
+        from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized_pd];
         weights(cnt)=1.25;
         metrics{cnt}='MI';
         cnt=cnt+1;
@@ -73,13 +87,15 @@ if usefa
                 options.coregmr.method=1; % i.e. use SPM as default if not differently stated.
             end
             ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
-            ea_maskfa2anat(options);
+               if usebrainmask
+            ea_maskimg(options,[directory,options.prefs.fa2anat]);
+        end
         end
     end
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
         disp('Including FA information for white-matter normalization.');
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_fa.nii'];
-        from{cnt}=[directory,options.prefs.fa2anat];
+        from{cnt}=[directory,bprfx,options.prefs.fa2anat];
         weights(cnt)=1;
         metrics{cnt}='MI';
         cnt=cnt+1;
@@ -90,7 +106,10 @@ end
 
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 to{cnt}=[options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'];
-from{cnt}=[directory,options.prefs.prenii_unnormalized];
+if usebrainmask
+    ea_maskimg(options,[directory,options.prefs.prenii_unnormalized]);
+end
+from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized];
 weights(cnt)=1.5;
 metrics{cnt}='MI';
 cnt=cnt+1;
@@ -158,9 +177,31 @@ try delete([directory,'iy_',options.prefs.prenii_unnormalized]); end
 try delete([directory,fna,'_seg8.mat']); end
 
 
-function ea_maskfa2anat(options)
+function ea_genbrainmask(options)
+directory=[options.root,options.patientname,filesep];
+ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+
+c1=ea_load_nii([directory,'c1',options.prefs.prenii_unnormalized]);
+c2=ea_load_nii([directory,'c2',options.prefs.prenii_unnormalized]);
+c3=ea_load_nii([directory,'c3',options.prefs.prenii_unnormalized]);
+bm=c1;
+bm.img=c1.img+c2.img+c3.img;
+bm.fname=[directory,'brainmask.nii'];
+bm.img=bm.img>0.5;
+spm_write_vol(bm,bm.img);
+for c=1:5
+try delete([directory,'c',num2str(c),options.prefs.prenii_unnormalized]); end
+end
+
+
+function ea_maskimg(options,file)
 directory=[options.root,options.patientname,filesep];
 if ~exist([directory,'brainmask.nii'],'file')
-ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-keyboard
+            ea_genbrainmask(options);
 end
+nii=ea_load_nii(file);
+bm=ea_load_nii([directory,'brainmask.nii']);
+nii.img=nii.img.*double(bm.img);
+[pth,fn,ext]=fileparts(file);
+nii.fname=[pth,filesep,'b',fn,ext];
+spm_write_vol(nii,nii.img);
