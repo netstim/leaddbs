@@ -269,75 +269,9 @@ ea_busyaction('on',leadfig,'lead');
 
 options=handles2options(handles);
 
-try
-    options.lc=load([fileparts(which('lead')),filesep,'connectomics',filesep,'lc_options.mat']);
-catch
-    options.lc=[];
-end
 
-if options.d3.autoserver && options.d3.write
-    choice = questdlg('Are you sure you want to export results to the server automatically?', ...
-        'Auto Server-Export', ...
-        'Cancel','Yes','Cancel');
-    % Handle response
-    switch choice
-        case 'Cancel'
-            return
-    end
-end
+ea_run('run',options);
 
-clc
-uipatdirs=getappdata(gcf,'uipatdir');
-
-if isempty(uipatdirs)
-    uipatdirs={'No Patient Selected'};
-end
-
-prefs=ea_prefs('');
-if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do % do parallel processing if available and set in ea_prefs.
-try delete(gcp); end
-    pp=parpool(prefs.pp.profile,prefs.pp.csize);
-
-    for pat=1:length(uipatdirs)
-        % set patient specific options
-        opts{pat}=options;
-        opts{pat}.root=[fileparts(uipatdirs{pat}),filesep];
-        [~,thispatdir]=fileparts(uipatdirs{pat});
-        opts{pat}.patientname=thispatdir;
-    end
-
-    parfor pat=1:length(uipatdirs)
-
-        % run main function
-        try
-            ea_autocoord(opts{pat});
-        catch
-            warning([opts{pat}.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
-        end
-
-    end
-    delete(pp);
-
-else
-
-    for pat=1:length(uipatdirs)
-        % set patient specific options
-        options.root=[fileparts(uipatdirs{pat}),filesep];
-        [root,thispatdir]=fileparts(uipatdirs{pat});
-        options.patientname=thispatdir;
-        % run main function
-
-        if length(uipatdirs)>1 % multi mode. Dont stop at errors.
-            try
-                ea_autocoord(options);
-            catch
-                warning([options.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
-            end
-        else
-            ea_autocoord(options);
-        end
-    end
-end
 ea_busyaction('off',leadfig,'lead');
 
 
@@ -1749,3 +1683,12 @@ function exportcode_Callback(hObject, eventdata, handles)
 % hObject    handle to exportcode (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+leadfig=handles.leadfigure;
+ea_busyaction('on',leadfig,'lead');
+
+options=handles2options(handles);
+
+
+ea_run('export',options);
+
+ea_busyaction('off',leadfig,'lead');

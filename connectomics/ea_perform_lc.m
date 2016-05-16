@@ -46,6 +46,8 @@ end
 disp('*** Done.');
 
 %% functional parts
+
+
 disp('*** Performing functional parts of LEAD-Connectome...');
 
 if options.lc.func.compute_CM % create functional connectivity matrix

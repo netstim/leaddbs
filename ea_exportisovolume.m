@@ -51,16 +51,17 @@ for side=options.sides
     nii{side}(:)=nan;
     XYZ=[X{side},Y{side},Z{side},ones(length(X{side}),1)]';
     XYZ=Vol.mat\XYZ; % to voxel space.
-    XYZ=round(XYZ(1:3,:)');
+    XYZ=(XYZ(1:3,:)');
     % repeat the above but in voxel space..
     clear bb
-    bb(1,:)=[min(XYZ(:,1)),max(XYZ(:,1))];
-    bb(2,:)=[min(XYZ(:,2)),max(XYZ(:,2))];
-    bb(3,:)=[min(XYZ(:,3)),max(XYZ(:,3))];
+            bb(1,:)=[round(min(XYZ(:,1))),round(max(XYZ(:,1)))];
+            bb(2,:)=[round(min(XYZ(:,2))),round(max(XYZ(:,2)))];
+            bb(3,:)=[round(min(XYZ(:,3))),round(max(XYZ(:,3)))];
     clear XI YI ZI
     [XI,YI,ZI]=meshgrid([bb(1,1):bb(1,2)],[bb(2,1):bb(2,2)],[bb(3,1):bb(3,2)]);
     warning('off')
-    F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double(V{side}));
+
+    F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double(V{side}),'natural');
     warning('on')
     F.ExtrapolationMethod='none';
     
@@ -131,19 +132,21 @@ for side=options.sides
                     XYZ=[[X{1};-X{2}],[Y{1};Y{2}],[Z{1};Z{2}],ones(length([X{1};X{2}]),1)]';
             end
             XYZ=Vol.mat\XYZ; % to voxel space.
-            XYZ=round(XYZ(1:3,:)');
+            XYZ=(XYZ(1:3,:)');
             % repeat the above but in voxel space..
             clear bb
-            bb(1,:)=[min(XYZ(:,1)),max(XYZ(:,1))];
-            bb(2,:)=[min(XYZ(:,2)),max(XYZ(:,2))];
-            bb(3,:)=[min(XYZ(:,3)),max(XYZ(:,3))];
+            bb(1,:)=[round(min(XYZ(:,1))),round(max(XYZ(:,1)))];
+            bb(2,:)=[round(min(XYZ(:,2))),round(max(XYZ(:,2)))];
+            bb(3,:)=[round(min(XYZ(:,3))),round(max(XYZ(:,3)))];
             clear XI YI ZI
             [XI,YI,ZI]=meshgrid([bb(1,1):bb(1,2)],[bb(2,1):bb(2,2)],[bb(3,1):bb(3,2)]);
             
             
             
             warning('off');
-            F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double([V{1};V{2}]));
+            
+            F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double([V{1};V{2}]),'natural');
+            
             
             F.ExtrapolationMethod='none';
             warning('on');
