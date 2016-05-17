@@ -52,6 +52,7 @@ ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
 
 
 %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
+
 matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
 matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c1',options.prefs.prenii_unnormalized,',1'];
