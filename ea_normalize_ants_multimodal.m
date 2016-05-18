@@ -84,16 +84,16 @@ if usefa
         
         if exist([directory,options.prefs.fa],'file') % recheck if has been built.
             if options.coregmr.method==6 % would be no coregistration but here we must assume that images are not coregistered yet (just generated FA).
-                options.coregmr.method=1; % i.e. use SPM as default if not differently stated.
+                options.coregmr.method=2; % i.e. use SPM as default if not differently stated.
             end
             ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
-               if usebrainmask
-            ea_maskimg(options,[directory,options.prefs.fa2anat]);
-        end
         end
     end
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
         disp('Including FA information for white-matter normalization.');
+        if usebrainmask
+            ea_maskimg(options,[directory,options.prefs.fa2anat]);
+        end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_fa.nii'];
         from{cnt}=[directory,bprfx,options.prefs.fa2anat];
         weights(cnt)=1;
