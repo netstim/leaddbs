@@ -53,8 +53,10 @@ ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
 
 %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
 
+copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
+
 matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
-matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,options.prefs.prenii_unnormalized,',1']};
+matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c',options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c1',options.prefs.prenii_unnormalized,',1'];
     [directory,'c2',options.prefs.prenii_unnormalized,',1'];
     [directory,'c3',options.prefs.prenii_unnormalized,',1'];
@@ -64,7 +66,7 @@ matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c1',options.prefs
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
-matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [7 7];
+matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [2 2];
 matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 1;
 matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
 matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;

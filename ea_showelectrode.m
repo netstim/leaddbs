@@ -156,10 +156,10 @@ end
         pcnt=1;
         % draw contacts
 
-     
+     try
         minval=abs(min(options.d3.isomatrix{side}(:)));
         maxval=max(options.d3.isomatrix{side}(:));
-        
+     end
         for cntct=1:elspec.numel-shifthalfup
             
             if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,elstruct.activecontacts{side}))
@@ -210,6 +210,7 @@ end
                     elrender{side}(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
                     pcnt=pcnt+1;
                     else
+                        
                       elrender{side}(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
                           mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
                       mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
