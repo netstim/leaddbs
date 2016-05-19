@@ -84,7 +84,7 @@ if usefa
         
         if exist([directory,options.prefs.fa],'file') % recheck if has been built.
             if options.coregmr.method==6 % would be no coregistration but here we must assume that images are not coregistered yet (just generated FA).
-                options.coregmr.method=2; % i.e. use SPM as default if not differently stated.
+                options.coregmr.method=2; % i.e. use ANTs as default if not differently stated.
             end
             ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
         end
@@ -180,7 +180,6 @@ try delete([directory,fna,'_seg8.mat']); end
 function ea_genbrainmask(options)
 directory=[options.root,options.patientname,filesep];
 ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-
 c1=ea_load_nii([directory,'c1',options.prefs.prenii_unnormalized]);
 c2=ea_load_nii([directory,'c2',options.prefs.prenii_unnormalized]);
 c3=ea_load_nii([directory,'c3',options.prefs.prenii_unnormalized]);
@@ -190,8 +189,12 @@ bm.fname=[directory,'brainmask.nii'];
 bm.img=bm.img>0.5;
 spm_write_vol(bm,bm.img);
 for c=1:5
-try delete([directory,'c',num2str(c),options.prefs.prenii_unnormalized]); end
+    try delete([directory,'c',num2str(c),options.prefs.prenii_unnormalized]); end
 end
+try delete([directory,'y_',options.prefs.prenii_unnormalized]); end
+try delete([directory,'iy_',options.prefs.prenii_unnormalized]); end
+[~,fna]=fileparts(options.prefs.prenii_unnormalized);
+try delete([directory,fna,'_seg8.mat']); end
 
 
 function ea_maskimg(options,file,prefix)
