@@ -42,11 +42,11 @@ end
 % T1
 if uset1 && ~strcmp(options.primarytemplate,'_t1')
     if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
-                disp('Including T1 data for (grey-matter) normalization');
+        disp('Including T1 data for (grey-matter) normalization');
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_t1],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_t1]);
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
         if usebrainmask
-            ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_t1]);
+            ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_t1],bprfx);
         end
         from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized_t1];
         weights(cnt)=1.25;
@@ -61,8 +61,8 @@ if usepd && ~strcmp(options.primarytemplate,'_pd')
         disp('Including PD data for (grey-matter) normalization');
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_pd],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_pd]);
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
-       if usebrainmask
-            ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_pd]);
+        if usebrainmask
+            ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_pd],bprfx);
         end
         from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized_pd];
         weights(cnt)=1.25;
@@ -92,7 +92,7 @@ if usefa
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
         disp('Including FA information for white-matter normalization.');
         if usebrainmask
-            ea_maskimg(options,[directory,options.prefs.fa2anat]);
+            ea_maskimg(options,[directory,options.prefs.fa2anat],bprfx);
         end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_fa.nii'];
         from{cnt}=[directory,bprfx,options.prefs.fa2anat];
@@ -107,7 +107,7 @@ end
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 to{cnt}=[options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'];
 if usebrainmask
-    ea_maskimg(options,[directory,options.prefs.prenii_unnormalized]);
+    ea_maskimg(options,[directory,options.prefs.prenii_unnormalized],bprfx);
 end
 from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized];
 weights(cnt)=1.5;
@@ -194,14 +194,16 @@ try delete([directory,'c',num2str(c),options.prefs.prenii_unnormalized]); end
 end
 
 
-function ea_maskimg(options,file)
+function ea_maskimg(options,file,prefix)
 directory=[options.root,options.patientname,filesep];
 if ~exist([directory,'brainmask.nii'],'file')
-            ea_genbrainmask(options);
+	ea_genbrainmask(options);
 end
-nii=ea_load_nii(file);
-bm=ea_load_nii([directory,'brainmask.nii']);
-nii.img=nii.img.*double(bm.img);
 [pth,fn,ext]=fileparts(file);
-nii.fname=[pth,filesep,'b',fn,ext];
-spm_write_vol(nii,nii.img);
+if ~exist([pth,filesep,prefix,fn,ext],'file')
+    nii=ea_load_nii(file);
+    bm=ea_load_nii([directory,'brainmask.nii']);
+    nii.img=nii.img.*double(bm.img);
+    nii.fname=[pth,filesep,prefix,fn,ext];
+    spm_write_vol(nii,nii.img);
+end
