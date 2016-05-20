@@ -39,10 +39,15 @@ else
     bprfx='';
 end
 
+ea_dcm2nii([directory,options.prefs.prenii_unnormalized]);
+ea_bias_field_correction([directory,options.prefs.prenii_unnormalized])
+    
 % T1
 if uset1 && ~strcmp(options.primarytemplate,'_t1')
     if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
         disp('Including T1 data for (grey-matter) normalization');
+        ea_dcm2nii([directory,options.prefs.prenii_unnormalized_t1]);
+        ea_bias_field_correction([directory,options.prefs.prenii_unnormalized_t1])
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_t1],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_t1]);
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
         if usebrainmask
@@ -59,6 +64,7 @@ end
 if usepd && ~strcmp(options.primarytemplate,'_pd')
     if exist([directory,options.prefs.prenii_unnormalized_pd],'file')
         disp('Including PD data for (grey-matter) normalization');
+        ea_dcm2nii([directory,options.prefs.prenii_unnormalized_pd]);
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_pd],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_pd]);
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
         if usebrainmask
@@ -81,7 +87,7 @@ if usefa
                 ea_isolate_fa(directory,options);
             end
         end
-        
+        ea_dcm2nii([directory,options.prefs.fa]);
         if exist([directory,options.prefs.fa],'file') % recheck if has been built.
             if options.coregmr.method==6 % would be no coregistration but here we must assume that images are not coregistered yet (just generated FA).
                 options.coregmr.method=2; % i.e. use ANTs as default if not differently stated.
