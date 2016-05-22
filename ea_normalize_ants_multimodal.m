@@ -39,9 +39,7 @@ else
     bprfx='';
 end
 
-ea_dcm2nii([directory,options.prefs.prenii_unnormalized]);
-ea_bias_field_correction([directory,options.prefs.prenii_unnormalized])
-    
+
 % T1
 if uset1 && ~strcmp(options.primarytemplate,'_t1')
     if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
