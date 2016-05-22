@@ -25,5 +25,7 @@ try
     delete([pth,filesep,'o',fn,ext]);
     movefile([pth,filesep,'co',fn,ext],inputimage);
 catch
+    try
     movefile([pth,filesep,'c',fn,ext],inputimage);
+    end
 end

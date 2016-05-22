@@ -27,7 +27,7 @@ end
 
 % Constants DTI
 parametersDTI=[];
-parametersDTI.BackgroundThreshold=150;
+parametersDTI.BackgroundThreshold=120;
 parametersDTI.WhiteMatterExtractionThreshold=0.10;
 parametersDTI.textdisplay=true;
 
