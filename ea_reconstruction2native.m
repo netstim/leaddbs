@@ -10,11 +10,13 @@ if ~exist('reco','var') % old format
    reco.props.elmodel=elmodel;
    reco.props.manually_corrected=manually_corrected;
 end
-    [~,tempfile]=ea_whichnormmethod(directory);
+    [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
     nii=ea_load_nii(tempfile);
-try
-                ea_checkforwardinv(options,'forward')
-end
+    if ~ismember(whichnormmethod,ea_getantsnormfuns)
+        try
+            ea_checkforwardinv(options,'forward')
+        end
+    end
         for side=options.sides
             
             

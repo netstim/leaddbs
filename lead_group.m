@@ -292,6 +292,7 @@ options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),fil
 options.expstatvat.do=M.ui.statvat;
 
 try
+    
 options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 catch
     ea_error('Localizations seem not properly defined.');
