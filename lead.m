@@ -269,6 +269,7 @@ ea_busyaction('on',leadfig,'lead');
 
 options=handles2options(handles);
 
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 ea_run('run',options);
 
@@ -1688,6 +1689,7 @@ ea_busyaction('on',leadfig,'lead');
 
 options=handles2options(handles);
 
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 ea_run('export',options);
 

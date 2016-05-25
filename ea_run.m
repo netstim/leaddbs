@@ -24,7 +24,7 @@ if options.d3.autoserver && options.d3.write
 end
 
 clc
-uipatdirs=getappdata(gcf,'uipatdir');
+uipatdirs=options.uipatdirs;
 
 if isempty(uipatdirs)
     uipatdirs={'No Patient Selected'};

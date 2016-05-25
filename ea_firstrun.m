@@ -28,6 +28,7 @@ end
 
 options=struct;
 options.prefs=ea_prefs(options);
+
 if ~isfield(options.prefs,'firstrun') % first run.
     fprintf(['Welcome to LEAD-DBS.\n \n',...
         'This seems to be your first run of the toolbox.\n',...
