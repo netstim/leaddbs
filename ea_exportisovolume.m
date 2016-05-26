@@ -121,6 +121,8 @@ for side=options.sides
         %% Also write out volume with combined information on both sides (symmetric image).
         
         Vol=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
+        Vol.dt=[16,1];
+        
         niic=spm_read_vols(Vol);
         niic(:)=nan;
         niicsig=niic;
@@ -145,7 +147,7 @@ for side=options.sides
             
             warning('off');
             
-            F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double([V{1};V{2}]),'natural');
+            F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double([V{1};V{2}]));% ,'natural');
             
             
             F.ExtrapolationMethod='none';
@@ -165,9 +167,9 @@ for side=options.sides
                 XYZV=[XYZ,[V{1};V{2}]];
                 PTb=[PT{1};PT{2}];
                 if inside==1
-                    centralsmooth=3;
-                    switch centralsmooth
-                        case 1
+                    significancemethod=3;
+                    switch significancemethod
+                        case 1 % estimate significance by estimating centrality
                             [ixes]=ea_centrality_significance(XYZV);
                             if sum(ixes)>3
                                 XYZV=XYZV(ixes,:); % only significant entries..
@@ -181,8 +183,24 @@ for side=options.sides
                                 
                                 niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
                             end
-                        case 2
+                        case 2 % estimate significance by smoothing and using SPM
                             niicsig=ea_smooth_significance(XYZV,PTb,Vol,niic,options);
+                            
+                        case 3 % estimate significance by applying leave-one-out permutations
+                            [ixes]=ea_leoo_significance(XYZV);
+                            if sum(ixes)>3
+                                XYZV=XYZV(ixes,:); % only significant entries..
+                                XYZV(:,4)=1;
+                                warning('off');
+                                Fsig = scatteredInterpolant(XYZV(:,1),XYZV(:,2),XYZV(:,3),XYZV(:,4));
+                                
+                                Fsig.ExtrapolationMethod='none';
+                                warning('on');
+                                
+                                
+                                niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
+                            end
+                    
                     end
                 end
                 
