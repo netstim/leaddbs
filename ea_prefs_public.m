@@ -110,6 +110,10 @@ prefs.d2.isovolsmoothed='s'; % set to '' if you want to display the raw, unsmoot
 prefs.d2.isovolcolormap='jet'; % color map to use for plotting of isovolume heatmap.
 prefs.d2.isovolsepcomb='combined'; % set to 'combined' to use the lr-combined isovolume and 'lr' to use the separate isovolumes.
 
+%% 3D-Visualization:
+prefs.d3.fiberstyle='tube'; % set to 'line' to show thin fibers
+prefs.d3.fiberdiameter=0.1; % diameter of fibers ? only works in all ML versions with style==tube
+
 %% DICOM files:
 prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
 

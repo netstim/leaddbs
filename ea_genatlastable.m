@@ -554,12 +554,5 @@ for atl=1:length(atlnames)
 end
 
 
-function afv=ea_concatfv(fv)
 
-afv.faces=[];
-afv.vertices=[];
-for f=1:length(fv)
-   afv.faces=[afv.faces;fv(f).faces+length(afv.vertices)];
-   afv.vertices=[afv.vertices;fv(f).vertices];
-end
 %figure, patch(afv)

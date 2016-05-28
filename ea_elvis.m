@@ -196,7 +196,7 @@ end
 slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
 
 % Initialize Convis-Button
-convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome',options),'TooltipString','Slice Control Figure','ClickedCallback',{@openconnectomeviewer,resultfig,options});
+convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome',options),'TooltipString','Connectivity Visualization','ClickedCallback',{@openconnectomeviewer,resultfig,options});
 
 
 

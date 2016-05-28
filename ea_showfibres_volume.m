@@ -45,7 +45,7 @@ for but=1:length(togglenames)
     
     eval([togglenames{but},'=getappdata(resultfig,''',togglenames{but},''');']);
     %fibson=getappdata(resultfig,'fibson');
-            expand=1;
+    expand=1;
     if isempty(eval(togglenames{but}))
         eval([togglenames{but},'=repmat(1,expand,length(options.sides));']);
     end
@@ -62,7 +62,7 @@ load([options.root,options.patientname,filesep,'ea_stats']);
 try
     upriorvatlength=length(ea_stats.vat)+1;
     upriorftlength=length(ea_stats.ft)+1;
-
+    
 catch
     upriorvatlength=1;
     upriorftlength=1;
@@ -81,11 +81,11 @@ if isstruct(VAT{1}.VAT) % e.g. simbio model used
     vat=1;
     for side=1:2
         try
-        nVAT{side}.VAT{vat}=VAT{side}.VAT.vertices;
-        K(side).K{vat}=VAT{side}.VAT.faces;
+            nVAT{side}.VAT{vat}=VAT{side}.VAT.vertices;
+            K(side).K{vat}=VAT{side}.VAT.faces;
         catch
-        nVAT{side}.VAT{vat}=[];
-        K(side).K{vat}=[];
+            nVAT{side}.VAT{vat}=[];
+            K(side).K{vat}=[];
         end
     end
     VAT=nVAT;
@@ -93,21 +93,21 @@ end
 
 
 for side=1:2
-   % if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
+    % if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
     
     for vat=1:length(VAT{side}.VAT)
         
         
         if ~exist('K','var') % e.g. maedler model used
-        K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
+            K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
         else % still maedler model used
-            try  
+            try
                 K(side).K{vat}; % not defined
             catch
-                        K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
+                K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
             end
         end
-
+        
         % show vat
         
         if ~isempty(K(side).K{vat})
@@ -117,66 +117,68 @@ for side=1:2
                 +randn(length(VAT{side}.VAT{vat}),1)*2)');
             
             
-%             % export vatstat if required:
-%             
-%             
-%             if options.expstatvat.do % export statvat nifti images.
-%                 in=inhull(templatecoords,VAT{side}.VAT{vat},K(side).K{vat});
-%                 for vatvar=1:length(options.expstatvat.vars)
-%                     if isempty(thisvatnii{vatvar})
-%                         thisvatnii{vatvar}=tnii; % initialize on blank templatenii.
-%                     end
-%                     thisvatnii{vatvar}(in)=options.expstatvat.vars{vatvar}(options.expstatvat.pt); % set to clinical/regress variable score.
-%                 end
-%             end
-        
-        % the following is some code required for
-        % Web/JSON/BrainBrowser-Export.
-        PL.vatfv(side,vat).vertices=[VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3)];
-        PL.vatfv(side,vat).faces=K(side).K{vat};
-        PL.vatfv(side,vat).normals=get(PL.vatsurfs(side,vat),'Vertexnormals');
-        PL.vatfv(side,vat).colors=repmat([1,0,0,0.7],size(PL.vatfv(side,vat).vertices,1),1);
-        
-        ea_spec_atlas(PL.vatsurfs(side,vat),'vat',jet,1);
-        
-        vatgrad=getappdata(resultfig,'vatgrad');
-        if ~isempty(vatgrad)
-            reduc=1;
+            %             % export vatstat if required:
+            %
+            %
+            %             if options.expstatvat.do % export statvat nifti images.
+            %                 in=inhull(templatecoords,VAT{side}.VAT{vat},K(side).K{vat});
+            %                 for vatvar=1:length(options.expstatvat.vars)
+            %                     if isempty(thisvatnii{vatvar})
+            %                         thisvatnii{vatvar}=tnii; % initialize on blank templatenii.
+            %                     end
+            %                     thisvatnii{vatvar}(in)=options.expstatvat.vars{vatvar}(options.expstatvat.pt); % set to clinical/regress variable score.
+            %                 end
+            %             end
             
-            %             PL.quiv(side)=ea_arrow3([vatgrad.x(1:reduc:end),vatgrad.y(1:reduc:end),vatgrad.z(1:reduc:end)]-...
-            %                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)],...
-            %                 [vatgrad.x(1:reduc:end),vatgrad.y(1:reduc:end),vatgrad.z(1:reduc:end)]+...
-            %                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)]);
-            try % only one hemisphere could be defined.
-                if stimparams(side).volume
-                    PL.quiv(side)=quiver3(vatgrad(side).x(1:reduc:end),vatgrad(side).y(1:reduc:end),vatgrad(side).z(1:reduc:end),vatgrad(side).qx(1:reduc:end),vatgrad(side).qy(1:reduc:end),vatgrad(side).qz(1:reduc:end),3,'w-','LineWidth',1);
+            % the following is some code required for
+            % Web/JSON/BrainBrowser-Export.
+            PL.vatfv(side,vat).vertices=[VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3)];
+            PL.vatfv(side,vat).faces=K(side).K{vat};
+            PL.vatfv(side,vat).normals=get(PL.vatsurfs(side,vat),'Vertexnormals');
+            PL.vatfv(side,vat).colors=repmat([1,0,0,0.7],size(PL.vatfv(side,vat).vertices,1),1);
+            
+            ea_spec_atlas(PL.vatsurfs(side,vat),'vat',jet,1);
+            
+            vatgrad=getappdata(resultfig,'vatgrad');
+            if ~isempty(vatgrad)
+                reduc=1;
+                
+                %             PL.quiv(side)=ea_arrow3([vatgrad.x(1:reduc:end),vatgrad.y(1:reduc:end),vatgrad.z(1:reduc:end)]-...
+                %                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)],...
+                %                 [vatgrad.x(1:reduc:end),vatgrad.y(1:reduc:end),vatgrad.z(1:reduc:end)]+...
+                %                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)]);
+                try % only one hemisphere could be defined.
+                    if stimparams(side).volume
+                        PL.quiv(side)=quiver3(vatgrad(side).x(1:reduc:end),vatgrad(side).y(1:reduc:end),vatgrad(side).z(1:reduc:end),vatgrad(side).qx(1:reduc:end),vatgrad(side).qy(1:reduc:end),vatgrad(side).qz(1:reduc:end),3,'w-','LineWidth',1);
+                    end
                 end
             end
-        end
-
-        
-        
-        if options.writeoutstats
             
             
             
+            if options.writeoutstats
+                
+                
+                
                 load([options.root,options.patientname,filesep,'ea_stats']);
-
-%                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).U=stimparams(side).U(vat);
-%                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).Im=stimparams(side).Im(vat);
-%                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).Contact=vat;
-%                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).Side=side;
-%                 
-
+                
+                %                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).U=stimparams(side).U(vat);
+                %                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).Im=stimparams(side).Im(vat);
+                %                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).Contact=vat;
+                %                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).Side=side;
+                %
+                
                 
                 for atlas=1:size(atlases.XYZ,1)
                     if stimparams(side).volume>0 % stimulation on in this VAT,
+                        clear thisatl
                         
-                        thisatl=atlases.XYZ{atlas,side}.mm;
-                        tpd=atlases.pixdim{atlas,side};
-                        if isempty(thisatl) % for midline or combined atlases, only the right side atlas is used.
+                        if isempty(atlases.XYZ{atlas,side}) % for midline or combined atlases, only the right side atlas is used.
                             thisatl=atlases.XYZ{atlas,1}.mm;
                             tpd=atlases.pixdim{atlas,1};
+                        else
+                            thisatl=atlases.XYZ{atlas,side}.mm;
+                            tpd=atlases.pixdim{atlas,side};
                         end
                         tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
                         
@@ -188,12 +190,9 @@ for side=1:2
                         
                     end
                 end
-          
-           
-           save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
+                           save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
 
-            
-        end
+            end
         end
         
         
@@ -201,22 +200,22 @@ for side=1:2
     
     
     % export vatvar stats if needed:
-%     if options.expstatvat.do
-%         for vatvar=1:length(options.expstatvat.vars)
-%             mkdir([options.expstatvat.dir,'statvat_results']);
-%             switch side
-%                 case 1
-%                     si='rh';
-%                 case 2
-%                     si='lh';
-%             end
-%             keyboard
-%             
-%             tV.fname=[options.expstatvat.dir,'statvat_results',filesep,'s',num2str(options.expstatvat.pt),'_',si,'.nii'];
-%             spm_write_vol(tV,thisvatnii{vatvar});
-%             ea_crop_nii(tV.fname);
-%         end
-%     end
+    %     if options.expstatvat.do
+    %         for vatvar=1:length(options.expstatvat.vars)
+    %             mkdir([options.expstatvat.dir,'statvat_results']);
+    %             switch side
+    %                 case 1
+    %                     si='rh';
+    %                 case 2
+    %                     si='lh';
+    %             end
+    %             keyboard
+    %
+    %             tV.fname=[options.expstatvat.dir,'statvat_results',filesep,'s',num2str(options.expstatvat.pt),'_',si,'.nii'];
+    %             spm_write_vol(tV,thisvatnii{vatvar});
+    %             ea_crop_nii(tV.fname);
+    %         end
+    %     end
     try
         
         vatbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('vat',options),'TooltipString','Volume of activated tissue','OnCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,1},'OffCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,0},'State',getstate(vaton(side)));
@@ -264,7 +263,7 @@ indcol=double(rgb2ind(rgbim,jet));
 function objvisible(hobj,ev,atls,resultfig,what,la,side,onoff)
 % set visibility
 try
-set(atls, 'Visible', getstate(onoff));
+    set(atls, 'Visible', getstate(onoff));
 catch
     keyboard
 end
@@ -555,29 +554,29 @@ function hn=ea_arrow3(p1,p2,s,w,h,ip,alpha,beta)
 %     y  Yellow           :  dotted            0   no lines
 %     m  Magenta          -. dashdot           /   LineWidthOrder
 %     c  Cyan             -- dashed
-%     r  Red              *  LineStyleOrder            _______ __  
-%     g  Green                                       ^        |    
-%     b  Blue                                       / \       |    
-%     w  White                        Arrowhead    /   \   Height  
-%     a  Asparagus                                /     \     |    
-%     d  Dark gray                               /       \    |    
-%     e  Evergreen                              /___   ___\ __|__  
-%     f  Firebrick                             |    | |    |       
-%     h  Hot pink                              |-- Width --|       
-%     i  Indigo                                |    | |    |       
-%     j  Jade                                       | |            
-%     l  Light gray                                 | |            
-%     n  Nutbrown                                   | |            
-%     p  Pear                                       | |            
+%     r  Red              *  LineStyleOrder            _______ __
+%     g  Green                                       ^        |
+%     b  Blue                                       / \       |
+%     w  White                        Arrowhead    /   \   Height
+%     a  Asparagus                                /     \     |
+%     d  Dark gray                               /       \    |
+%     e  Evergreen                              /___   ___\ __|__
+%     f  Firebrick                             |    | |    |
+%     h  Hot pink                              |-- Width --|
+%     i  Indigo                                |    | |    |
+%     j  Jade                                       | |
+%     l  Light gray                                 | |
+%     n  Nutbrown                                   | |
+%     p  Pear                                       | |
 %     q  kumQuat                      Line       -->| |<--LineWidth
-%     s  Sky blue                                   | |            
-%     t  Tawny                                      | |            
-%     u  bUrgundy                                   | |            
-%     v  Violet                                     | |            
-%     z  aZure                                      | |            
-%     x  random                       Initial      /   \           
-%     o  colorOrder                   Point    -->(     )<--IP     
-%     |  magnitude                    Marker       \_ _/           
+%     s  Sky blue                                   | |
+%     t  Tawny                                      | |
+%     u  bUrgundy                                   | |
+%     v  Violet                                     | |
+%     z  aZure                                      | |
+%     x  random                       Initial      /   \
+%     o  colorOrder                   Point    -->(     )<--IP
+%     |  magnitude                    Marker       \_ _/
 %
 %     -------------------------------------------------------------
 %                          Color Equivalencies
@@ -836,7 +835,7 @@ function hn=ea_arrow3(p1,p2,s,w,h,ip,alpha,beta)
 %     03/10/07 - Improved code metrics (TD)
 %     02/21/07 - Preserve existing axis appearance;
 %                use relative sizes for W, H, and IP;
-%                removed version checking; minor bug fixes (TD) 
+%                removed version checking; minor bug fixes (TD)
 %     01/09/04 - Replaced calls to LINSPACE, INTERP1, and
 %                COLORMAP (TD)
 %     12/17/03 - Semilog examples, CAXIS support, magnitude
@@ -882,25 +881,25 @@ global LineWidthOrder ColorOrder
 if nargin<8 || isempty(beta), beta=0.4; end
 beta=abs(beta(1)); if nargout, hn=[]; end
 if strcmpi(p1,'colors')                            % plot color table
-  if nargin>1, beta=abs(p2(1)); end
-  ea_LocalColorTable(1,beta); return
+    if nargin>1, beta=abs(p2(1)); end
+    ea_LocalColorTable(1,beta); return
 end
 fig=gcf; ax=gca;
 if strcmpi(p1,'update'), ad=getappdata(ax,'Arrow3');    % update
-  ea_LocalLogCheck(ax);
-  if size(ad,2)<13, error('Invalid AppData'), end
-  setappdata(ax,'Arrow3',[]); sf=[1,1,1]; flag=0;
-  if nargin>1
-    if strcmpi(p2,'colors'), flag=1;               % update colors
-    elseif ~isempty(p2)                            % update surfaces
-      sf=p2(1)*sf; n=length(p2(:));
-      if n>1, sf(2)=p2(2); if n>2, sf(3)=p2(3); end, end
+    ea_LocalLogCheck(ax);
+    if size(ad,2)<13, error('Invalid AppData'), end
+    setappdata(ax,'Arrow3',[]); sf=[1,1,1]; flag=0;
+    if nargin>1
+        if strcmpi(p2,'colors'), flag=1;               % update colors
+        elseif ~isempty(p2)                            % update surfaces
+            sf=p2(1)*sf; n=length(p2(:));
+            if n>1, sf(2)=p2(2); if n>2, sf(3)=p2(3); end, end
+        end
     end
-  end
-  H=ea_LocalUpdate(fig,ax,ad,sf,flag); if nargout, hn=H; end, return
+    H=ea_LocalUpdate(fig,ax,ad,sf,flag); if nargout, hn=H; end, return
 end
 InputError=['Invalid input, type HELP ',upper(mfilename),...
-  ' for usage examples'];
+    ' for usage examples'];
 if nargin<2, error(InputError), end
 [r1,c1]=size(p1); [r2,c2]=size(p2);
 if c1<2 || c1>3 || r1*r2==0, error(InputError), end
@@ -908,14 +907,14 @@ if r1~=r2, error('P1 and P2 must have same number of rows'), end
 if c1~=c2, error('P1 and P2 must have same number of columns'), end
 p=sum(abs(p2-p1),2)~=0; cone=0;
 if nargin>5 && ~isempty(ip) && strcmpi(ip,'cone')  % cone plot
-  cone=1; p=sum(p2,2)~=0;
-  if ~any(p), error('P2 cannot equal 0'), end
-  set(ax,'tag','Arrow3ConePlot');
+    cone=1; p=sum(p2,2)~=0;
+    if ~any(p), error('P2 cannot equal 0'), end
+    set(ax,'tag','Arrow3ConePlot');
 elseif ~any(p), error('P1 cannot equal P2')
 end
 if ~all(p)
-  warning('Arrow3:ZeroMagnitude','Zero magnitude ignored')
-  p1=p1(p,:); p2=p2(p,:); [r1,c1]=size(p1);
+    warning('Arrow3:ZeroMagnitude','Zero magnitude ignored')
+    p1=p1(p,:); p2=p2(p,:); [r1,c1]=size(p1);
 end
 n=r1; Zeros=zeros(n,1);
 if c1==2, p1=[p1,Zeros]; p2=[p2,Zeros];
@@ -924,75 +923,75 @@ L=get(ax,'LineStyleOrder'); C=get(ax,'ColorOrder');
 ST=get(ax,'DefaultSurfaceTag'); LT=get(ax,'DefaultLineTag');
 EC=get(ax,'DefaultSurfaceEdgeColor');
 if strcmp(get(ax,'nextplot'),'add') && strcmp(get(fig,'nextplot'),'add')
-  Xr=get(ax,'xlim'); Yr=get(ax,'ylim'); Zr=get(ax,'zlim');
-  [xs,ys,xys]=ea_LocalLogCheck(ax); restore=1;
-  if xys, mode='auto';
-    if any([p1(:,3);p2(:,3)]), error('3D log plot not supported'), end
-    if (xs && ~all([p1(:,1);p2(:,1)]>0)) || ...
-       (ys && ~all([p1(:,2);p2(:,2)]>0))
-       error('Nonpositive log data not supported')
+    Xr=get(ax,'xlim'); Yr=get(ax,'ylim'); Zr=get(ax,'zlim');
+    [xs,ys,xys]=ea_LocalLogCheck(ax); restore=1;
+    if xys, mode='auto';
+        if any([p1(:,3);p2(:,3)]), error('3D log plot not supported'), end
+        if (xs && ~all([p1(:,1);p2(:,1)]>0)) || ...
+                (ys && ~all([p1(:,2);p2(:,2)]>0))
+            error('Nonpositive log data not supported')
+        end
+    else mode='manual';
+        if strcmp(get(ax,'WarpToFill'),'on')
+            warning('Arrow3:WarpToFill',['Stretch-to-fill scaling not ',...
+                'supported;\nuse DASPECT or PBASPECT before calling ARROW3.']);
+        end
     end
-  else mode='manual';
-    if strcmp(get(ax,'WarpToFill'),'on')
-      warning('Arrow3:WarpToFill',['Stretch-to-fill scaling not ',...
-        'supported;\nuse DASPECT or PBASPECT before calling ARROW3.']);
-    end
-  end
-  set(ax,'XLimMode',mode,'YLimMode',mode,'ZLimMode',mode,...
-    'CLimMode','manual');
+    set(ax,'XLimMode',mode,'YLimMode',mode,'ZLimMode',mode,...
+        'CLimMode','manual');
 else restore=0; cla reset; xys=0; set(fig,'nextplot','add');
-  if c1==2, azel=[0,90]; else azel=[-37.5,30]; end
-  setappdata(ax,'Arrow3',[]);
-  set(ax,'nextplot','add','View',azel);
+    if c1==2, azel=[0,90]; else azel=[-37.5,30]; end
+    setappdata(ax,'Arrow3',[]);
+    set(ax,'nextplot','add','View',azel);
 end
 
 %-------------------------------------------------------------------------
 % Style Control
 [vc,cn]=ea_LocalColorTable(0); prefix=''; OneColor=0;
 if nargin<3, [c,ls,lw]=LocalValidateCLSW;% default color, linestyle/width
-else 
-  [c,ls,lw]=LocalValidateCLSW(s);
-  if length(c)>1, if sum('_^'==c(1)), prefix=c(1); end, c=c(2); end
-  if c=='x'                              % random named color (less white)
-    [ignore,i]=sort(rand(1,23)); c=cn(i,:);        %#ok
-  elseif c=='o'                                    % ColorOrder
-    if length(ColorOrder)
-      [c,failed]=ea_LocalColorMap(lower(ColorOrder),vc,cn,beta);
-      if failed, ColorOrderWarning=['Invalid ColorOrder ',...
-        'variable, current ColorOrder property will be used'];
-        warning('Arrow3:ColorOrder',ColorOrderWarning)
-      else C=c;
-      end
-    end, c=C;
-  elseif c=='|', map=get(fig,'colormap');          % magnitude coloring
-    M=(p1-p2); M=sqrt(sum(M.*M,2)); minM=min(M); maxM=max(M);
-    if maxM-minM<1, minM=0; end
-    set(ax,'clim',[minM,maxM]); c=ea_LocalInterp(minM,maxM,map,M);
-  elseif ~sum(vc==c), c='k'; ColorWarning=['Invalid color switch, ',...
-    'default color (black) will be used'];
-    warning('Arrow3:Color',ColorWarning)
-  end
+else
+    [c,ls,lw]=LocalValidateCLSW(s);
+    if length(c)>1, if sum('_^'==c(1)), prefix=c(1); end, c=c(2); end
+    if c=='x'                              % random named color (less white)
+        [ignore,i]=sort(rand(1,23)); c=cn(i,:);        %#ok
+    elseif c=='o'                                    % ColorOrder
+        if length(ColorOrder)
+            [c,failed]=ea_LocalColorMap(lower(ColorOrder),vc,cn,beta);
+            if failed, ColorOrderWarning=['Invalid ColorOrder ',...
+                    'variable, current ColorOrder property will be used'];
+                warning('Arrow3:ColorOrder',ColorOrderWarning)
+            else C=c;
+            end
+        end, c=C;
+    elseif c=='|', map=get(fig,'colormap');          % magnitude coloring
+        M=(p1-p2); M=sqrt(sum(M.*M,2)); minM=min(M); maxM=max(M);
+        if maxM-minM<1, minM=0; end
+        set(ax,'clim',[minM,maxM]); c=ea_LocalInterp(minM,maxM,map,M);
+    elseif ~sum(vc==c), c='k'; ColorWarning=['Invalid color switch, ',...
+            'default color (black) will be used'];
+        warning('Arrow3:Color',ColorWarning)
+    end
 end
 if length(c)==1                                    % single color
-  c=ea_LocalColorMap([prefix,c],vc,cn,beta); OneColor=1;
+    c=ea_LocalColorMap([prefix,c],vc,cn,beta); OneColor=1;
 end
 set(ax,'ColorOrder',c); c=ea_LocalRepmat(c,[ceil(n/size(c,1)),1]);
 if ls~='*', set(ax,'LineStyleOrder',ls); end       % LineStyleOrder
 if lw=='/'                                         % LineWidthOrder
-  if length(LineWidthOrder)
-    lw=ea_LocalRepmat(LineWidthOrder(:),[ceil(n/length(LineWidthOrder)),1]);
-  else lw=0.5; LineWidthOrderWarning=['Undefined LineWidthOrder, ',...
-    'default width (0.5) will be used'];
-    warning('Arrow3:LineWidthOrder',LineWidthOrderWarning)
-  end
+    if length(LineWidthOrder)
+        lw=ea_LocalRepmat(LineWidthOrder(:),[ceil(n/length(LineWidthOrder)),1]);
+    else lw=0.5; LineWidthOrderWarning=['Undefined LineWidthOrder, ',...
+            'default width (0.5) will be used'];
+        warning('Arrow3:LineWidthOrder',LineWidthOrderWarning)
+    end
 end
 if nargin<4 || isempty(w), w=1; end                % width
 w=ea_LocalRepmat(abs(w(:)),[ceil(n/length(w)),1]);
 if nargin<5 || isempty(h), h=3*w; end              % height
 h=ea_LocalRepmat(abs(h(:)),[ceil(n/length(h)),1]);
 if nargin>5 && ~isempty(ip) && ~cone               % ip
-  ip=ea_LocalRepmat(ip(:),[ceil(n/length(ip)),1]);
-  i=find(ip==0); ip(i)=w(i);
+    ip=ea_LocalRepmat(ip(:),[ceil(n/length(ip)),1]);
+    i=find(ip==0); ip(i)=w(i);
 else ip=-ones(n,1);
 end
 if nargin<7 || isempty(alpha), alpha=1; end
@@ -1001,52 +1000,52 @@ a=ea_LocalRepmat(alpha(:),[ceil(n/length(alpha)),1]); % FaceAlpha
 %-------------------------------------------------------------------------
 % Log Plot
 if xys
-  units=get(ax,'units'); set(ax,'units','points');
-  pos=get(ax,'position'); set(ax,'units',units);
-  if strcmp(get(ax,'PlotBoxAspectRatioMode'),'auto')
-    set(ax,'PlotBoxAspectRatio',[pos(3),pos(4),1]);
-  end
-  par=get(ax,'PlotBoxAspectRatio');
-  set(ax,'DataAspectRatio',[par(2),par(1),par(3)]);
-  % map coordinates onto unit square
-  q=[p1;p2]; xr=Xr; yr=Yr;
-  if xs, xr=log10(xr); q(:,1)=log10(q(:,1)); end
-  if ys, yr=log10(yr); q(:,2)=log10(q(:,2)); end
-  q=q-ea_LocalRepmat([xr(1),yr(1),0],[2*n,1]);
-  dx=xr(2)-xr(1); dy=yr(2)-yr(1);
-  q=q*diag([1/dx,1/dy,1]);
-  q1=q(1:n,:); q2=q(n+1:end,:);
+    units=get(ax,'units'); set(ax,'units','points');
+    pos=get(ax,'position'); set(ax,'units',units);
+    if strcmp(get(ax,'PlotBoxAspectRatioMode'),'auto')
+        set(ax,'PlotBoxAspectRatio',[pos(3),pos(4),1]);
+    end
+    par=get(ax,'PlotBoxAspectRatio');
+    set(ax,'DataAspectRatio',[par(2),par(1),par(3)]);
+    % map coordinates onto unit square
+    q=[p1;p2]; xr=Xr; yr=Yr;
+    if xs, xr=log10(xr); q(:,1)=log10(q(:,1)); end
+    if ys, yr=log10(yr); q(:,2)=log10(q(:,2)); end
+    q=q-ea_LocalRepmat([xr(1),yr(1),0],[2*n,1]);
+    dx=xr(2)-xr(1); dy=yr(2)-yr(1);
+    q=q*diag([1/dx,1/dy,1]);
+    q1=q(1:n,:); q2=q(n+1:end,:);
 else xs=0; ys=0; dx=0; dy=0; xr=0; yr=0;
 end
 
 %-------------------------------------------------------------------------
 % Line
 if ~cone
-  set(ax,'DefaultLineTag','arrow3');
-  if length(lw)==1
-    if lw>0
-      if OneColor && ls(end)~='*' && n>1 % single color, linestyle/width
-        P=zeros(3*n,3); i=1:n;
-        P(3*i-2,:)=p1(i,:); P(3*i-1,:)=p2(i,:); P(3*i,1)=NaN;
-        H1=plot3(P(:,1),P(:,2),P(:,3),'LineWidth',lw);
-      else                               % single linewidth
-        H1=plot3([p1(:,1),p2(:,1)]',[p1(:,2),p2(:,2)]',...
-          [p1(:,3),p2(:,3)]','LineWidth',lw);
-      end
-    else H1=[];
+    set(ax,'DefaultLineTag','arrow3');
+    if length(lw)==1
+        if lw>0
+            if OneColor && ls(end)~='*' && n>1 % single color, linestyle/width
+                P=zeros(3*n,3); i=1:n;
+                P(3*i-2,:)=p1(i,:); P(3*i-1,:)=p2(i,:); P(3*i,1)=NaN;
+                H1=plot3(P(:,1),P(:,2),P(:,3),'LineWidth',lw);
+            else                               % single linewidth
+                H1=plot3([p1(:,1),p2(:,1)]',[p1(:,2),p2(:,2)]',...
+                    [p1(:,3),p2(:,3)]','LineWidth',lw);
+            end
+        else H1=[];
+        end
+    else                                   % use LineWidthOrder
+        ls=ea_LocalRepmat(cellstr(L),[ceil(n/size(L,1)),1]);
+        H1=Zeros;
+        for i=1:n
+            H1(i)=plot3([p1(i,1),p2(i,1)],[p1(i,2),p2(i,2)],...
+                [p1(i,3),p2(i,3)],ls{i},'Color',c(i,:),'LineWidth',lw(i));
+        end
     end
-  else                                   % use LineWidthOrder
-    ls=ea_LocalRepmat(cellstr(L),[ceil(n/size(L,1)),1]);
-    H1=Zeros;
-    for i=1:n
-      H1(i)=plot3([p1(i,1),p2(i,1)],[p1(i,2),p2(i,2)],...
-        [p1(i,3),p2(i,3)],ls{i},'Color',c(i,:),'LineWidth',lw(i));
-    end
-  end
 else                                     % cone plot
-  P=zeros(3*n,3); i=1:n;
-  P(3*i-2,:)=p1(i,:); P(3*i-1,:)=p1(i,:); P(3*i,1)=NaN;
-  H1=plot3(P(:,1),P(:,2),P(:,3));
+    P=zeros(3*n,3); i=1:n;
+    P(3*i-2,:)=p1(i,:); P(3*i-1,:)=p1(i,:); P(3*i,1)=NaN;
+    H1=plot3(P(:,1),P(:,2),P(:,3));
 end
 
 %-------------------------------------------------------------------------
@@ -1056,7 +1055,7 @@ ar=get(ax,'DataAspectRatio'); ar=sqrt(3)*ar/norm(ar);
 set(ax,'DataAspectRatioMode','manual');
 if xys, sf=1;
 else xr=get(ax,'xlim'); yr=get(ax,'ylim'); zr=get(ax,'zlim');
-  sf=norm(diff([xr;yr;zr],1,2)./ar')/72;
+    sf=norm(diff([xr;yr;zr],1,2)./ar')/72;
 end
 
 %-------------------------------------------------------------------------
@@ -1070,9 +1069,9 @@ whip=sf*[w,h,ip];
 if xys, whip=whip*sqrt(2)/72; p1=q1; p2=q2; end
 w=whip(:,1); h=whip(:,2); ip=whip(:,3);
 if cone                                            % cone plot
-  delete(H1), H1=[];
-  p2=p2./ea_LocalRepmat(sqrt(sum(p2.*p2,2)),[1,3]);
-  p2=p1+p2.*ea_LocalRepmat(ar,[n,1]).*ea_LocalRepmat(h,[1,3]);
+    delete(H1), H1=[];
+    p2=p2./ea_LocalRepmat(sqrt(sum(p2.*p2,2)),[1,3]);
+    p2=p1+p2.*ea_LocalRepmat(ar,[n,1]).*ea_LocalRepmat(h,[1,3]);
 end
 W=(p1-p2)./ea_LocalRepmat(ar,[n,1]);
 W=W./ea_LocalRepmat(sqrt(sum(W.*W,2)),[1,3]);         % new z direction
@@ -1081,8 +1080,8 @@ N=sqrt(sum(U.*U,2)); i=find(N<eps); j=length(i);
 U(i,:)=ea_LocalRepmat([1,0,0],[j,1]); N(i)=ones(j,1);
 U=U./ea_LocalRepmat(N,[1,3]);                         % new x direction
 V=[W(:,2).*U(:,3)-W(:,3).*U(:,2),...               % new y direction
-  W(:,3).*U(:,1)-W(:,1).*U(:,3),...
-  W(:,1).*U(:,2)-W(:,2).*U(:,1)];
+    W(:,3).*U(:,1)-W(:,1).*U(:,3),...
+    W(:,1).*U(:,2)-W(:,2).*U(:,1)];
 
 m=20;                               % surface grid spacing
 set(ax,'DefaultSurfaceTag','arrow3','DefaultSurfaceEdgeColor','none');
@@ -1092,52 +1091,52 @@ G=surface(x/2,y/2,z); dar=diag(ar);
 X=get(G,'XData'); Y=get(G,'YData'); Z=get(G,'ZData');
 H2=Zeros; [j,k]=size(X);
 for i=1:n                           % translate, rotate, and scale
-  H2(i)=copyobj(G,ax);
-  xyz=[w(i)*X(:),w(i)*Y(:),h(i)*Z(:)]*[U(i,:);V(i,:);W(i,:)]*dar;
-  x=reshape(xyz(:,1),j,k)+p2(i,1);
-  y=reshape(xyz(:,2),j,k)+p2(i,2);
-  z=reshape(xyz(:,3),j,k)+p2(i,3);
-  ea_LocalSetSurface(xys,xs,ys,dx,dy,xr,yr,...
-    x,y,z,a(i),c(i,:),H2(i),2,m+1);
+    H2(i)=copyobj(G,ax);
+    xyz=[w(i)*X(:),w(i)*Y(:),h(i)*Z(:)]*[U(i,:);V(i,:);W(i,:)]*dar;
+    x=reshape(xyz(:,1),j,k)+p2(i,1);
+    y=reshape(xyz(:,2),j,k)+p2(i,2);
+    z=reshape(xyz(:,3),j,k)+p2(i,3);
+    ea_LocalSetSurface(xys,xs,ys,dx,dy,xr,yr,...
+        x,y,z,a(i),c(i,:),H2(i),2,m+1);
 end
 delete(G);
 
 %-------------------------------------------------------------------------
 % Initial Point Marker
 if any(ip>0)
-  theta=(-m:2:m)/m*pi; phi=(-m:2:m)'/m*pi/2; cosphi=cos(phi);
-  x=cosphi*cos(theta); y=cosphi*sin(theta); z=sin(phi)*Ones;
-  G=surface(x*ar(1)/2,y*ar(2)/2,z*ar(3)/2);
-  X=get(G,'XData'); Y=get(G,'YData'); Z=get(G,'ZData');
-  H3=zeros(n,1);
-  for i=1:n                                        % translate
-    if ip(i)>0
-      H3(i)=copyobj(G,ax);
-      x=p1(i,1)+X*ip(i); y=p1(i,2)+Y*ip(i); z=p1(i,3)+Z*ip(i);
-      ea_LocalSetSurface(xys,xs,ys,dx,dy,xr,yr,...
-        x,y,z,a(i),c(i,:),H3(i),m+1,m+1);
-    end
-  end, delete(G);
+    theta=(-m:2:m)/m*pi; phi=(-m:2:m)'/m*pi/2; cosphi=cos(phi);
+    x=cosphi*cos(theta); y=cosphi*sin(theta); z=sin(phi)*Ones;
+    G=surface(x*ar(1)/2,y*ar(2)/2,z*ar(3)/2);
+    X=get(G,'XData'); Y=get(G,'YData'); Z=get(G,'ZData');
+    H3=zeros(n,1);
+    for i=1:n                                        % translate
+        if ip(i)>0
+            H3(i)=copyobj(G,ax);
+            x=p1(i,1)+X*ip(i); y=p1(i,2)+Y*ip(i); z=p1(i,3)+Z*ip(i);
+            ea_LocalSetSurface(xys,xs,ys,dx,dy,xr,yr,...
+                x,y,z,a(i),c(i,:),H3(i),m+1,m+1);
+        end
+    end, delete(G);
 else H3=[];
 end
 
 %-------------------------------------------------------------------------
 % Finish
 if restore, xr=Xr; yr=Yr; zr=Zr;
-  if xys, set(ax,'DataAspectRatioMode','auto'); end
+    if xys, set(ax,'DataAspectRatioMode','auto'); end
 else
-  axis tight
-  xr=get(ax,'xlim'); yr=get(ax,'ylim'); zr=get(ax,'zlim');
-  set(ax,'nextplot','replace');
+    axis tight
+    xr=get(ax,'xlim'); yr=get(ax,'ylim'); zr=get(ax,'zlim');
+    set(ax,'nextplot','replace');
 end
 azel=get(ax,'view');
 if abs(azel(2))==90, renderer='ZBuffer'; else renderer='OpenGL'; c1=3; end
 set(fig,'Renderer',renderer);
 set(ax,'LineStyleOrder',L,'ColorOrder',C,'DefaultLineTag',LT,...
-  'DefaultSurfaceTag',ST,'DefaultSurfaceEdgeColor',EC,...
-  'xlim',xr,'ylim',yr,'zlim',zr,'clim',get(ax,'CLim'));
+    'DefaultSurfaceTag',ST,'DefaultSurfaceEdgeColor',EC,...
+    'xlim',xr,'ylim',yr,'zlim',zr,'clim',get(ax,'CLim'));
 if c1==3, set(ax,'CameraViewAngle',get(ax,'CameraViewAngle'),...
-   'PlotBoxAspectRatio',get(ax,'PlotBoxAspectRatio'));
+        'PlotBoxAspectRatio',get(ax,'PlotBoxAspectRatio'));
 end
 if nargout, hn=[H1(:);H2(:);H3(:)]; end
 
@@ -1153,28 +1152,28 @@ H=get(ax,'children'); tag=get(H,'tag'); type=get(H,'type');
 delete(H(strcmp(tag,'arrow3') & strcmp(type,'surface')));
 set(fig,'nextplot','add'); set(ax,'nextplot','add'); H1=[];
 if flag, map=get(fig,'colormap');                  % update colors
-  M=(p1-p2); M=sqrt(sum(M.*M,2)); minM=min(M); maxM=max(M);
-  H1=H(strcmp(tag,'arrow3') & strcmp(type,'line'));
-  MagnitudeWarning=['Cannot perform magnitude coloring on lines ',...
-    'that\nwere drawn with a single color, linestyle, and linewidth'];
-  if length(H1)>1
-    for i=1:length(H1)                             % update line colors
-      x=get(H1(i),'xdata'); y=get(H1(i),'ydata'); z=get(H1(i),'zdata');
-      if length(x)>2                               % multiple lines
-        warning('Arrow3:Magnitude',MagnitudeWarning), continue
-      end
-      m=sqrt((x(1)-x(2))^2+(y(1)-y(2))^2+(z(1)-z(2))^2);
-      c=ea_LocalInterp(minM,maxM,map,m); set(H1(i),'color',c);
+    M=(p1-p2); M=sqrt(sum(M.*M,2)); minM=min(M); maxM=max(M);
+    H1=H(strcmp(tag,'arrow3') & strcmp(type,'line'));
+    MagnitudeWarning=['Cannot perform magnitude coloring on lines ',...
+        'that\nwere drawn with a single color, linestyle, and linewidth'];
+    if length(H1)>1
+        for i=1:length(H1)                             % update line colors
+            x=get(H1(i),'xdata'); y=get(H1(i),'ydata'); z=get(H1(i),'zdata');
+            if length(x)>2                               % multiple lines
+                warning('Arrow3:Magnitude',MagnitudeWarning), continue
+            end
+            m=sqrt((x(1)-x(2))^2+(y(1)-y(2))^2+(z(1)-z(2))^2);
+            c=ea_LocalInterp(minM,maxM,map,m); set(H1(i),'color',c);
+        end
+    elseif length(H1)==1
+        warning('Arrow3:Magnitude',MagnitudeWarning)
     end
-  elseif length(H1)==1
-    warning('Arrow3:Magnitude',MagnitudeWarning)
-  end
-  c=ea_LocalInterp(minM,maxM,map,M);
+    c=ea_LocalInterp(minM,maxM,map,M);
 end
 set(ax,'ColorOrder',c);                            % update surfaces
 ColorOrder=[];
 if strcmp(get(ax,'tag'),'Arrow3ConePlot')
-     H=ea_arrow3(p1,p2,'o' ,w,h,'cone',a);            % update cones
+    H=ea_arrow3(p1,p2,'o' ,w,h,'cone',a);            % update cones
 else H=ea_arrow3(p1,p2,'o0',w,h,    ip,a);
 end, H=[H1(:);H(:)];
 set(ax,'nextplot','replace');
@@ -1183,9 +1182,9 @@ set(ax,'nextplot','replace');
 % SetSurface
 function ea_LocalSetSurface(xys,xs,ys,dx,dy,xr,yr,x,y,z,a,c,H,n,m)
 if xys
-  x=x*dx+xr(1); y=y*dy+yr(1);
-  if xs, x=10.^x; end
-  if ys, y=10.^y; end
+    x=x*dx+xr(1); y=y*dy+yr(1);
+    if xs, x=10.^x; end
+    if ys, y=10.^y; end
 end
 cd=zeros(n,m,3); cd(:,:,1)=c(1); cd(:,:,2)=c(2); cd(:,:,3)=c(3);
 set(H,'XData',x,'YData',y,'ZData',z,'CData',cd,'FaceAlpha',a);
@@ -1196,15 +1195,15 @@ function [vc,cn]=ea_LocalColorTable(n,beta)
 vc='kymcrgbadefhijlnpqstuvzw';                     % valid color codes
 %                k               y               m               c
 cn=[0.00,0.00,0.00; 1.00,1.00,0.00; 1.00,0.00,1.00; 0.00,1.00,1.00;
-%                r               g               b               a
+    %                r               g               b               a
     1.00,0.00,0.00; 0.00,1.00,0.00; 0.00,0.00,1.00; 0.42,0.59,0.24;
-%                d               e               f               h
+    %                d               e               f               h
     0.25,0.25,0.25; 0.00,0.50,0.00; 0.70,0.13,0.13; 1.00,0.41,0.71;
-%                i               j               l               n
+    %                i               j               l               n
     0.29,0.00,0.51; 0.00,0.66,0.42; 0.50,0.50,0.50; 0.50,0.20,0.00;
-%                p               q               s               t
+    %                p               q               s               t
     0.75,0.75,0.00; 1.00,0.50,0.00; 0.00,0.75,0.75; 0.80,0.34,0.00;
-%                u               v               z               w
+    %                u               v               z               w
     0.50,0.00,0.13; 0.75,0.00,0.75; 0.38,0.74,0.99; 1.00,1.00,1.00];
 
 % Named Simulink Colors (zaql)
@@ -1223,34 +1222,34 @@ cn=[0.00,0.00,0.00; 1.00,1.00,0.00; 1.00,0.00,1.00; 0.00,1.00,1.00;
 % Color7    = 0.25  0.25  0.25 = Dark gray
 
 if n, clf reset                                    % plot color table
-  name={'blacK','Yellow','Magenta','Cyan',...
-    'Red','Green','Blue','Asparagus',...
-    'Dark gray','Evergreen','Firebrick','Hot pink',...
-    'Indigo','Jade','Light gray','Nutbrown',...
-    'Pear','kumQuat','Sky blue','Tawny',...
-    'bUrgundy','Violet','aZure','White'};
-  c=['yptn';'gjae';'czsb';'hmvi';'qrfu';'wldk'];
-  set(gcf,'DefaultAxesXTick',[],'DefaultAxesYTick',[],...
-    'DefaultAxesXTickLabel',[],'DefaultAxesYTickLabel',[],...
-    'DefaultAxesXLim',[0,0.75],'DefaultAxesYLim',[0,0.75],...
-    'DefaultRectangleEdgeColor','none');
-  for i=1:24, subplot(4,6,i); box on
-    j=find(vc==c(i)); title(name{j});
-    dark=ea_LocalBrighten(cn(j,:),-beta);
-    light=ea_LocalBrighten(cn(j,:),beta);
-    rectangle('Position',[0,0.00,0.75,0.25],'FaceColor',dark);
-    rectangle('Position',[0,0.25,0.75,0.25],'FaceColor',cn(j,:));
-    rectangle('Position',[0,0.50,0.75,0.25],'FaceColor',light);
-    rectangle('Position',[0,0.00,0.75,0.75],'EdgeColor','k');
-    if rem(i,6)==1
-      set(gca,'YTickLabel',{'dark','normal','light'},...
-        'YTick',[0.125,0.375,0.625]);
-      if i==19
-        text(0,-0.25,['{\bf\itARROW3}  Named Color Table  ',...
-            '( \beta = ',num2str(beta),' )']);
-      end
+    name={'blacK','Yellow','Magenta','Cyan',...
+        'Red','Green','Blue','Asparagus',...
+        'Dark gray','Evergreen','Firebrick','Hot pink',...
+        'Indigo','Jade','Light gray','Nutbrown',...
+        'Pear','kumQuat','Sky blue','Tawny',...
+        'bUrgundy','Violet','aZure','White'};
+    c=['yptn';'gjae';'czsb';'hmvi';'qrfu';'wldk'];
+    set(gcf,'DefaultAxesXTick',[],'DefaultAxesYTick',[],...
+        'DefaultAxesXTickLabel',[],'DefaultAxesYTickLabel',[],...
+        'DefaultAxesXLim',[0,0.75],'DefaultAxesYLim',[0,0.75],...
+        'DefaultRectangleEdgeColor','none');
+    for i=1:24, subplot(4,6,i); box on
+        j=find(vc==c(i)); title(name{j});
+        dark=ea_LocalBrighten(cn(j,:),-beta);
+        light=ea_LocalBrighten(cn(j,:),beta);
+        rectangle('Position',[0,0.00,0.75,0.25],'FaceColor',dark);
+        rectangle('Position',[0,0.25,0.75,0.25],'FaceColor',cn(j,:));
+        rectangle('Position',[0,0.50,0.75,0.25],'FaceColor',light);
+        rectangle('Position',[0,0.00,0.75,0.75],'EdgeColor','k');
+        if rem(i,6)==1
+            set(gca,'YTickLabel',{'dark','normal','light'},...
+                'YTick',[0.125,0.375,0.625]);
+            if i==19
+                text(0,-0.25,['{\bf\itARROW3}  Named Color Table  ',...
+                    '( \beta = ',num2str(beta),' )']);
+            end
+        end
     end
-  end
 end
 
 %-------------------------------------------------------------------------
@@ -1258,16 +1257,16 @@ end
 function [C,failed]=ea_LocalColorMap(c,vc,cn,beta)
 n=length(c); failed=0; C=zeros(n,3); i=1; j=1;
 while 1
-  if ~sum([vc,'_^']==c(i)), failed=1; break, end
-  if sum('_^'==c(i))
-    if i+1>n, failed=1; break, end
-    if ~sum(vc==c(i+1)), failed=1; break, end
-    cc=cn(vc==c(i+1),:); gamma=beta;
-    if c(i)=='_', gamma=-beta; end
-    C(j,:)=ea_LocalBrighten(cc,gamma); i=i+2;
-  else C(j,:)=cn(vc==c(i),:); i=i+1;
-  end
-  if i>n, break, end, j=j+1;
+    if ~sum([vc,'_^']==c(i)), failed=1; break, end
+    if sum('_^'==c(i))
+        if i+1>n, failed=1; break, end
+        if ~sum(vc==c(i+1)), failed=1; break, end
+        cc=cn(vc==c(i+1),:); gamma=beta;
+        if c(i)=='_', gamma=-beta; end
+        C(j,:)=ea_LocalBrighten(cc,gamma); i=i+2;
+    else C(j,:)=cn(vc==c(i),:); i=i+1;
+    end
+    if i>n, break, end, j=j+1;
 end
 if n>j, C(j+1:n,:)=[]; end
 
@@ -1275,13 +1274,13 @@ if n>j, C(j+1:n,:)=[]; end
 % Brighten
 function C=ea_LocalBrighten(c,beta)
 if sum([c==0,c==1])==3 && sum(c==0)<3 && sum(c==1)<3
-  if beta<0
-    C=(1+beta)*c;
-  else
-    C=c;  C(C==0)=beta;
-  end
+    if beta<0
+        C=(1+beta)*c;
+    else
+        C=c;  C(C==0)=beta;
+    end
 else
-  C=c.^((1-min(1-sqrt(eps),abs(beta)))^sign(beta));
+    C=c.^((1-min(1-sqrt(eps),abs(beta)))^sign(beta));
 end
 
 %-------------------------------------------------------------------------
@@ -1289,8 +1288,8 @@ end
 function B=ea_LocalRepmat(A,siz)
 if length(A)==1, B(prod(siz))=A; B(:)=A; B=reshape(B,siz);
 else [m,n]=size(A); mind=(1:m)'; nind=(1:n)';
-  mind=mind(:,ones(1,siz(1))); nind=nind(:,ones(1,siz(2)));
-  B=A(mind,nind);
+    mind=mind(:,ones(1,siz(1))); nind=nind(:,ones(1,siz(2)));
+    B=A(mind,nind);
 end
 
 %-------------------------------------------------------------------------
@@ -1310,7 +1309,7 @@ zs=strcmp(get(ax,'zscale'),'log');
 if zs, error('Z log scale not supported'), end
 xys=xs+ys;
 if xys, azel=get(ax,'view');
-  if abs(azel(2))~=90, error('3D log plot not supported'), end
+    if abs(azel(2))~=90, error('3D log plot not supported'), end
 end
 
 %-------------------------------------------------------------------------
@@ -1318,28 +1317,28 @@ end
 function [c,ls,lw]=LocalValidateCLSW(s)
 if nargin<1, c='k'; ls='-'; lw=0.5;
 else
-  % identify linestyle
-  if findstr(s,'--'), ls='--'; s=strrep(s,'--','');
-  elseif findstr(s,'-.'), ls='-.'; s=strrep(s,'-.','');
-  elseif findstr(s,'-'), ls='-'; s=strrep(s,'-','');
-  elseif findstr(s,':'), ls=':'; s=strrep(s,':','');
-  elseif findstr(s,'*'), ls='*'; s=strrep(s,'*','');
-  else ls='-';
-  end
-
-  % identify linewidth
-  tmp=double(s);
-  tmp=find(tmp>45 & tmp<58);
-  if length(tmp)
-    if any(s(tmp)=='/'), lw='/'; else lw=str2double(s(tmp)); end
-    s(tmp)='';
-  else lw=0.5;
-  end
-
-  % identify color
-  if length(s), s=lower(s);
-    if length(s)>1, c=s(1:2);
-    else c=s(1); end
-  else c='k';
-  end
+    % identify linestyle
+    if findstr(s,'--'), ls='--'; s=strrep(s,'--','');
+    elseif findstr(s,'-.'), ls='-.'; s=strrep(s,'-.','');
+    elseif findstr(s,'-'), ls='-'; s=strrep(s,'-','');
+    elseif findstr(s,':'), ls=':'; s=strrep(s,':','');
+    elseif findstr(s,'*'), ls='*'; s=strrep(s,'*','');
+    else ls='-';
+    end
+    
+    % identify linewidth
+    tmp=double(s);
+    tmp=find(tmp>45 & tmp<58);
+    if length(tmp)
+        if any(s(tmp)=='/'), lw='/'; else lw=str2double(s(tmp)); end
+        s(tmp)='';
+    else lw=0.5;
+    end
+    
+    % identify color
+    if length(s), s=lower(s);
+        if length(s)>1, c=s(1:2);
+        else c=s(1); end
+    else c='k';
+    end
 end

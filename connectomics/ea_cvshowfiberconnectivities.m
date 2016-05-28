@@ -185,8 +185,10 @@ for side=sides
             todelete{side}=[todelete{side},fib];
             cnt=cnt+1;
         end
+        
         if options.writeoutpm
             try
+                
                 pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))=...
                     pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))+1;
                 pm.img(round(thisfibendpoints(1,2)),round(thisfibendpoints(2,2)),round(thisfibendpoints(3,2)))=...
@@ -361,7 +363,10 @@ clear tareas
 
 % Write out probability map of fiber terminals
 if options.writeoutpm
-    save_nii(pm,[options.root,options.patientname,filesep,'ea_pm','.nii']);
+    
+    pm.dt=[16,0];
+    pm.fname=[options.root,options.patientname,filesep,'ea_pm','.nii'];
+    spm_write_vol(pm,pm.img);
     
 end
 
@@ -397,12 +402,10 @@ for side=sides
                 thisfib(dim,:)=double(interp1q([1:size(connectingfibs{side}{fib},2)]',connectingfibs{side}{fib}(dim,:)',[1:0.1:size(connectingfibs{side}{fib},2)]')');
             end
             % plot fibers
+           [PL.fib_plots.fibs(side,fib),fv(fib)]=ea_plot_fiber(thisfib,6,0,options);
+
             
-            PL.fib_plots.fibs(side,fib)=surface([thisfib(1,:);thisfib(1,:)],...
-                [thisfib(2,:);thisfib(2,:)],...
-                [thisfib(3,:);thisfib(3,:)],...
-                [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',5);
-            
+             
             % store for webexport
             
             jetlist=jet;
@@ -422,22 +425,37 @@ for side=sides
             clear thisfib
             
         end
+        if strcmp(options.prefs.d3.fiberstyle,'tube')
+            fv=ea_concatfv(fv);
+            
+            PL.fib_plots.fibs(side,1)=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.2);
+            
+            PL.fib_plots.fibs(:,2:end)=[];
+        end
+        
+        
+        
+        
         dispercent(100,'end');
         
-        fibInd = ishandle(PL.fib_plots.fibs(side,:));
-        if verLessThan('matlab','8.4') % ML <2014b support
-            set(PL.fib_plots.fibs(side,logical(PL.fib_plots.fibs(side,fibInd))),'EdgeAlpha',0.05);
-        else
-            try
-                set(PL.fib_plots.fibs(side,fibInd),'EdgeAlpha',0.2);
-                set(PL.fib_plots.fibs(side,fibInd),'FaceLighting','phong');
-                set(PL.fib_plots.fibs(side,fibInd),'MarkerSize',0.01);
-                set(PL.fib_plots.fibs(side,fibInd),'LineWidth',0.2);
-                set(PL.fib_plots.fibs(side,fibInd), 'SpecularColorReflectance', 0);
-                set(PL.fib_plots.fibs(side,fibInd), 'SpecularExponent', 5);
-                set(PL.fib_plots.fibs(side,fibInd), 'SpecularStrength', 0.5)
-                set(PL.fib_plots.fibs(side,fibInd),'FaceAlpha',0);
-                set(PL.fib_plots.fibs(side,fibInd),'Tag',sprintf('Fiber%d',side));
+        if strcmp(options.prefs.d3.fiberstyle,'line');
+                    fibInd = ishandle(PL.fib_plots.fibs(side,:));
+            if verLessThan('matlab','8.4') % ML <2014b support
+                
+                set(PL.fib_plots.fibs(side,logical(PL.fib_plots.fibs(side,fibInd))),'EdgeAlpha',0.05);
+            else
+                try
+                    set(PL.fib_plots.fibs(side,fibInd),'EdgeAlpha',0.2);
+                    set(PL.fib_plots.fibs(side,fibInd),'FaceLighting','phong');
+                    set(PL.fib_plots.fibs(side,fibInd),'MarkerSize',0.01);
+                    set(PL.fib_plots.fibs(side,fibInd),'LineWidth',0.2);
+                    set(PL.fib_plots.fibs(side,fibInd), 'SpecularColorReflectance', 0);
+                    set(PL.fib_plots.fibs(side,fibInd), 'SpecularExponent', 5);
+                    set(PL.fib_plots.fibs(side,fibInd), 'SpecularStrength', 0.5)
+                    set(PL.fib_plots.fibs(side,fibInd),'FaceAlpha',0);
+                    set(PL.fib_plots.fibs(side,fibInd),'Tag',sprintf('Fiber%d',side));
+                    
+                end
             end
         end
         try

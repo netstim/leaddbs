@@ -50,7 +50,7 @@ end
         targetsfile=[options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii'];
         
         options.writeoutstats=1;
-        options.writeoutpm=0;
+        options.writeoutpm=1;
         
         
         [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seedfile,targetsfile,thresh,'vat');
@@ -58,7 +58,6 @@ end
         if ~ret % something has changed since last time.
             ea_deletePL(resultfig,'PL','vat');
             if dimensionality % one of the vat checkboxes is active
-                
                 [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,S,changedstates,'vat'); % 'vat' only used for storage of changes.
                 if isstruct(handles)
                     set(handles.vatthreshis,'String',num2str(thresh));
