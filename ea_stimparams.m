@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 27-Feb-2016 08:13:10
+% Last Modified by GUIDE v2.5 29-May-2016 07:14:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -834,7 +834,7 @@ function k11im_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of k11im as a double
 S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
 
-eval(['S.Ls',num2str(S.active(2)),'.k9.imp=',num2str(get(hObject,'String')),';']);
+eval(['S.Ls',num2str(S.active(2)),'.k11.imp=',num2str(get(hObject,'String')),';']);
 
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
