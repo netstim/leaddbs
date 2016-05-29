@@ -377,7 +377,14 @@ end
 for side=sides    
     if ~isempty(connectingfibs{side})
         fibmax=length(connectingfibs{side});
+        
+        if fibmax>options.prefs.d3.maxfibers % if too many fibers are selected, reduce amount of them.
+            connectingfibs{side}=connectingfibs{side}(round(linspace(1,length(connectingfibs{side}),options.prefs.d3.maxfibers)));
+            fibmax=options.prefs.d3.maxfibers;
+        end
+        
         dispercent(0,'Plotting fibers that connect to seed');
+        
         for fib=1:fibmax
             dispercent(fib/fibmax);
             %for segment=1:length(connectingfibs{fib})-1;
