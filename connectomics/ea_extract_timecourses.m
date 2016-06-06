@@ -113,7 +113,7 @@ clear X
 
 %% regress out movement parameters
 
-load([directory,'rp_',rf,'.txt']); % rigid body motion parameters.
+rp_rest = load([directory,'rp_',rf,'.txt']); % rigid body motion parameters.
 X(:,1)=ones(signallength,1);
 X(:,2)=rp_rest(1:signallength,1);
 X(:,3)=rp_rest(1:signallength,2);
