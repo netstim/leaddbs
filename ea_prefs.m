@@ -49,16 +49,7 @@ prefs.gctnii=['glpostop_ct.nii'];
 
 
 %% connectome files:
-prefs.rest=['rest.nii']; % raw resting state fMRI data
-prefs.pprest=['srrest.nii']; % preprocessed rs-fMRI data
-prefs.glrest=['glrrest.nii']; % preprocessed and normalized resting state fMRI data
-prefs.gmtc=['rest_tc.mat']; % extracted timecourses of resting state fMRI data
-
-prefs.postoprest=['postop_rest.nii']; % raw postop resting state fMRI data
-prefs.postoppprest=['srpostop_rest.nii']; % preprocessed postop rs-fMRI data
-prefs.postopglrest=['glrpostop_rest.nii']; % preprocessed and normalized postop resting state fMRI data
-prefs.postopgmtc=['postop_rest_tc.mat']; % extracted timecourses of postop resting state fMRI data
-
+prefs.rest=['res*.nii']; % raw resting state fMRI data search string
 
 %% connectome settings:
 prefs.lc.struc.maxdist=2; % maximal distance to form a connection (between fiber terminals and voxel centers, in mm).

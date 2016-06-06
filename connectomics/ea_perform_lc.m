@@ -48,7 +48,7 @@ disp('*** Done.');
 disp(['*** Performing functional parts of LEAD-Connectome...']);
 
 % get files with rs-fMRI data
-restfiles = dir([options.root,options.patientname,filesep,'res*.nii']);
+restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest]);
 
 % get number of files with rs-fMRI data
 options.prefs.n_rest = numel(restfiles);
