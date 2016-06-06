@@ -4,8 +4,6 @@ function ea_perform_lc(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-
-
 %% structural parts
 disp('*** Performing structural parts of LEAD-Connectome...');
 
@@ -47,27 +45,63 @@ disp('*** Done.');
 
 %% functional parts
 
+disp(['*** Performing functional parts of LEAD-Connectome...']);
 
-disp('*** Performing functional parts of LEAD-Connectome...');
+% get files with rs-fMRI data
+restfiles = dir([options.root,options.patientname,filesep,'res*.nii']);
 
-if options.lc.func.compute_CM % create functional connectivity matrix
+% get number of files with rs-fMRI data
+options.prefs.n_rest = numel(restfiles);
+
+% display number of rs-fMRI files to analyze
+disp(['*** ' num2str(options.prefs.n_rest) ' rs-fMRI files to analyze...']);
+
+% the following steps clear existing connectome files which have been defined in `ea_prefs`
+% because we will redefine the filenames in the code that follows
+% ?? delete these names from `ea_prefs` eventually ??
+options.prefs = rmfield(options.prefs,'rest');
+options.prefs = rmfield(options.prefs,'pprest');
+options.prefs = rmfield(options.prefs,'glrest');
+options.prefs = rmfield(options.prefs,'gmtc');
+
+% connectivity matrix steps:
+if options.lc.func.compute_CM 
     if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
         mkdir([options.root,options.patientname,filesep,'connectomics']);
     end
+    % set export folder and check if it exists
     expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
     if ~exist(expfolder,'dir')
         mkdir(expfolder);
     end
-    if ~exist([expfolder,'fMRI_CM.mat'],'file')
-        [fMRI_CM,gmtc]=ea_createCM_fmri(options);
-        cm=ea_export_CM_png(fMRI_CM,'fMRI Connectivity matrix',options);
-        save([expfolder,options.prefs.gmtc],'gmtc');
-        save([expfolder,'fMRI_CM.mat'],'fMRI_CM','-v7.3');
-        saveas(cm,[expfolder,'fMRI_CM.png']);
-    end
-end
 
+    % set filenames for each rs-fMRI file
+    for irest = 1:options.prefs.n_rest
+        % set filenames for this iteration
+        options.prefs.rest = restfiles(irest).name; 
+        [~,name,ext] = fileparts(restfiles(irest).name); % get fileparts for other filenames
+        options.prefs.pprest=strcat('sr',name,ext); % preprocessed rs-fMRI data
+        options.prefs.glrest=strcat('glr',name,ext); % preprocessed and normalized rs-fMRI data
+        options.prefs.gmtc=strcat(name,'_tc.mat'); % extracted timecourses of resting state fMRI data
+        
+        % create connectivity matrix for each rs-fMRI file
+        if ~exist([expfolder,name,'_fMRI_CM.mat'],'file')
+            disp(['Creating connectivity matrix for rs-fMRI file #',num2str(irest),': ',options.prefs.rest]);
+            [fMRI_CM,gmtc]=ea_createCM_fmri(options);
+            cm=ea_export_CM_png(fMRI_CM,['fMRI Connectivity matrix for ',name],options);
+            save([expfolder,options.prefs.gmtc],'gmtc');
+            save([expfolder,name,'_fMRI_CM.mat'],'fMRI_CM','-v7.3');
+            saveas(cm,[expfolder,name,'_fMRI_CM.png']);
+        end % end loop for this rs-fMRI file
+    
+    end % end loop for for all rs-fMRI files
+    
+end % end connectivity matrix section
 
+disp(['*** Done analyzing ' num2str(options.prefs.n_rest) ' rs-fMRI files...']);
+
+% graph metrics section below:
+% for multiple file support: need to edit `ea_computeGM`
 if options.lc.func.compute_GM || options.lc.struc.compute_GM % perform graph metrics
     if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
         mkdir([options.root,options.patientname,filesep,'connectomics']);
