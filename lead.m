@@ -58,7 +58,9 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+if ~isdeployed
 addpath(genpath(fileparts(which(mfilename))));
+end
 ea_dispbn;
 
 

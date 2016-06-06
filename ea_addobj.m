@@ -135,7 +135,7 @@ drawnow
 
 function addfibertract(addobj,resultfig,addht,fina,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
-    [thisset,fibidx]=ea_load_fibertracts(addobj);
+    [thisset,fibidx]=ea_loadfibertracts(addobj);
 else % fibers are already loaded and stored in figure.
     thisset=addobj.fibs;
     fibidx=addobj.idx;
