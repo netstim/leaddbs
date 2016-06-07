@@ -172,7 +172,7 @@ dispercent(0,'Plotting fibers');
 
 % visualization part:
 fibmax=length(thisset);
-
+keyboard
 for fib=1:fibmax
     dispercent(fib/fibmax);
     

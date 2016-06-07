@@ -22,7 +22,7 @@ function varargout = ea_convis(varargin)
 
 % Edit the above text to modify the response to help ea_convis
 
-% Last Modified by GUIDE v2.5 08-Feb-2016 20:11:01
+% Last Modified by GUIDE v2.5 06-Jun-2016 18:04:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -97,8 +97,9 @@ drawnow
 
 %% initialize controls
 ea_initvatlevel(handles,directory,selectedparc,options);
-ea_initmatrixlevel(handles,directory,pdirectory,selectedparc,options);
+ea_initseedlevel(handles,directory,pdirectory,selectedparc,options);
 filesare=ea_initvoxellevel(handles,pdirectory);
+ea_initmatlevel(handles,directory,pdirectory,selectedparc,options);
 
 %% check if sliding window view is possible (timecourses are set as a modality somewhere)
 mmc=get(handles.matmodality,'String');
@@ -118,6 +119,7 @@ end
 resultfig=ea_cvcleanup(handles);
     pV=getappdata(handles.convis,'pV');
     pX=getappdata(handles.convis,'pX');
+    ea_deleteML(resultfig,handles,options);
 if ~hold
     [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
     set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
@@ -135,11 +137,16 @@ if get(handles.vizgraph,'Value'); % show voxel-level results
     ea_cvshowvoxresults(resultfig,directory,filesare,handles,pV,selectedparc,options);
 end
 
-if get(handles.vizmat,'Value'); % show matrix-level results
+if get(handles.vizmat,'Value'); % show seed-based-connectivity results
     
-    ea_cvshowmatresults(resultfig,directory,pV,pX,selectedparc,handles,options);
+    ea_cvshowseedbasedresults(resultfig,directory,pV,pX,selectedparc,handles,options);
 else
     ea_deletePL(resultfig,'PL','mat');
+end
+
+
+if get(handles.wmatedges,'Value') || get(handles.wmatnodes,'Value'); % show matrix-level results
+   ea_cvshowmatresults(resultfig,directory,selectedparc,handles,options);
 end
 
 if (get(handles.vizmat,'Value') || get(handles.vizvat,'Value')) && get(handles.timecircle,'Value') && strcmp(get(handles.timecircle,'Enable'),'on') % cycle over time..
@@ -150,10 +157,52 @@ end
 
 set(convis,'name','Connectome Results');
 
+function     ea_deleteML(resultfig,handles,options)
+
+ML=getappdata(resultfig,'ML');
+if isempty(ML)
+    return
+end
+try    delete(ML.pedges); end
+try delete(ML.pnodes); end
+try delete(ML.hn); end
+try delete(ML.nnodes); end
+% delete matrix level stuff here.
+
+function ea_cvshowmatresults(resultfig,directory,selectedparc,handles,options)
+
+% show matrix level stuff here.
+ML=cv_build_graph_fig(resultfig,directory,selectedparc,handles,options);
+setappdata(resultfig,'ML',ML);
 
 
+function ea_initmatlevel(handles,directory,pdirectory,selectedparc,options)
 
 
+pmdirs=dir([pdirectory,'*_CM.mat']);
+cnt=1;
+modlist=cell(0);
+for pmdir=1:length(pmdirs)
+    [~,modlist{cnt}]=fileparts(pmdirs(pmdir).name);
+    cnt=cnt+1;
+end
+
+if ~exist('modlist','var')
+    %cv_disablewmats(handles);
+else
+    %cv_enablewmats(handles);
+    modlist{end+1}='Choose...';
+    set(handles.wmatmodality,'String',modlist);
+end
+
+if get(handles.wmatmodality,'Value')>length(get(handles.wmatmodality,'String'))
+    set(handles.wmatmodality,'Value',length(get(handles.wmatmodality,'String')));
+end
+
+mods=get(handles.wmatmodality,'String');
+if ~strcmp('Choose...',mods{get(handles.wmatmodality,'Value')});
+    set(handles.chosenwmatstr,'String','');
+end
 
 
 
@@ -176,7 +225,7 @@ graphsurf=ea_showconnectivitypatch(resultfig,gV,gX,thresh);
 
 setappdata(resultfig,'graphsurf',graphsurf);
 
-function ea_cvshowmatresults(resultfig,directory,pV,pX,selectedparc,handles,options)
+function ea_cvshowseedbasedresults(resultfig,directory,pV,pX,selectedparc,handles,options)
 %mV=pV; % duplicate labeling handle
 %mX=pX; % duplicate labeling data
 
@@ -338,7 +387,7 @@ end
 
 
 
-function ea_initmatrixlevel(handles,directory,pdirectory,selectedparc,options)
+function ea_initseedlevel(handles,directory,pdirectory,selectedparc,options)
 
 %% init matrix level controls:
 
@@ -605,6 +654,20 @@ set(handles.matthresh,'Enable','off');
 set(handles.timewindow,'Enable','off');
 set(handles.timeframe,'Enable','off');
 set(handles.timecircle,'Enable','off');
+
+function cv_disablewmats(handles)
+set(handles.vizwmat,'Enable','off');
+set(handles.wmatmodality,'Enable','off');
+set(handles.wmatnodes,'Enable','off');
+set(handles.wmatedges,'Enable','off');
+set(handles.wmatthresh,'Enable','off');
+
+function cv_enablewmats(handles)
+set(handles.vizwmat,'Enable','on');
+set(handles.wmatmodality,'Enable','on');
+set(handles.wmatnodes,'Enable','on');
+set(handles.wmatedges,'Enable','on');
+set(handles.wmatthresh,'Enable','on');
 
 function cv_enablemats(handles)
 
@@ -1123,3 +1186,83 @@ XYZ=[XYZ';ones(1,size(XYZ,1))];
 
 coords=V.mat*XYZ;
 coords=coords(1:3,:)';
+
+
+
+
+
+function wmatthresh_Callback(hObject, eventdata, handles)
+% hObject    handle to wmatthresh (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of wmatthresh as text
+%        str2double(get(hObject,'String')) returns contents of wmatthresh as a double
+refreshcv(handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function wmatthresh_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to wmatthresh (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in wmatmodality.
+function wmatmodality_Callback(hObject, eventdata, handles)
+% hObject    handle to wmatmodality (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns wmatmodality contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from wmatmodality
+
+chosenmod=get(hObject,'String');
+if strcmp('Choose...',chosenmod{get(hObject,'Value')})
+    [fn,pth]=uigetfile('*.mat','Choose connectivity matrix...');
+    if fn
+        set(handles.chosenwmatstr,'String',[pth,filesep,fn]);
+    end
+else
+    set(handles.chosenwmatstr,'String','');
+end
+    
+
+
+% --- Executes during object creation, after setting all properties.
+function wmatmodality_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to wmatmodality (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in wmatnodes.
+function wmatnodes_Callback(hObject, eventdata, handles)
+% hObject    handle to wmatnodes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of wmatnodes
+refreshcv(handles);
+
+
+% --- Executes on button press in wmatedges.
+function wmatedges_Callback(hObject, eventdata, handles)
+% hObject    handle to wmatedges (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of wmatedges
+refreshcv(handles);

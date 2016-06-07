@@ -10,6 +10,11 @@ if nargin==6
     atlaslegend=varargin{5};
     atlasindices=varargin{6};
     showlabels=1;
+elseif nargin==7
+    atlaslegend=varargin{5};
+    atlasindices=varargin{6};
+    showlabels=1;
+    usecolormap=varargin{7};
 else
     showlabels=0;
 end
@@ -74,6 +79,11 @@ jetlist=parula;
 catch
     jetlist=jet;
 end
+
+if exist('usecolormap','var')
+    jetlist=eval(usecolormap);
+end
+
 jetlist=[0,0,0;jetlist];
 rgbnc=jetlist(round(nc)+1,:);
 set(matsurf,'FaceVertexCData',rgbnc);
