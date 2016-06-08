@@ -10,6 +10,7 @@
 *.woff
 *.trk.gz
 *.trk
+*.zip
 
 gibsconnect*.mat
 fibers/
