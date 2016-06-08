@@ -93,7 +93,11 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
 end
 
 
-
+if options.macaquemodus
+    mcr=['toolbox',filesep,'macaque',filesep];
+else
+    mcr='';
+end
 
 if checkrebuild(atlases,options,root,mifix)
     
@@ -119,7 +123,7 @@ if checkrebuild(atlases,options,root,mifix)
             case 0
                 root=[options.root,options.patientname,filesep];
             case 1
-                root=options.earoot;
+                root=[options.earoot,mcr];
             case 2
                 root=[options.root,options.patientname,filesep];
         end
@@ -249,7 +253,11 @@ if checkrebuild(atlases,options,root,mifix)
                     
                     thresh=ea_detthresh(atlases,atlas,nii.img);
                     ea_addnii2lf(atlases,atlas,thresh,options,root,mifix)
+try
                     fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
+catch
+    keyboard
+end
                     fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
                     fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
                     fv.vertices=[fv.vertices;fvc.vertices];
@@ -404,6 +412,7 @@ end
 %try
 
 if strcmp(fname(end-3:end),'.nii') % volumetric
+    
     ea_crop_nii(fname);
     nii=spm_vol(fname);
     

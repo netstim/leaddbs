@@ -2,13 +2,13 @@ function ea_prepare_dti(options)
 % calculates diffusion tensor etc. using the Freiburg DTI&Fibertools
 % http://www.uniklinik-freiburg.de/mr-en/research-groups/diffperf/fibertools.html
 
-if ~exist([options.root,options.patientname,filesep,options.prefs.HARDI],'file');
+if 1; %~exist([options.root,options.patientname,filesep,options.prefs.HARDI],'file');
     disp('Building DTI files...');
     
-    load([options.root,options.patientname,filesep,options.prefs.bval]);
-    [~,bvfname]=fileparts(options.prefs.bval);
-    bvals=eval(bvfname);
-    ea_build_DTD(max(bvals),[options.root,options.patientname,filesep],options.prefs.dti,options.prefs.DTD,options.prefs.HARDI,options.prefs.bval,options.prefs.bvec);
+%    load([options.root,options.patientname,filesep,options.prefs.bval]);
+%    [~,bvfname]=fileparts(options.prefs.bval);
+%    bvals=eval(bvfname);
+%    ea_build_DTD(max(bvals),[options.root,options.patientname,filesep],options.prefs.dti,options.prefs.DTD,options.prefs.HARDI,options.prefs.bval,options.prefs.bvec);
     
     
     % build HARDI in new way:
@@ -19,6 +19,10 @@ if ~exist([options.root,options.patientname,filesep,options.prefs.HARDI],'file')
         [options.root,options.patientname,filesep,options.prefs.bval]);
     
     mrstruct_write(hr,[options.root,options.patientname,filesep,options.prefs.HARDI])
+ 
+    
+    dtd=ea_convertHARDI2DTD(dtdstruct_read([options.root,options.patientname,filesep,options.prefs.HARDI]));
+    dtstruct_write(dtd,[options.root,options.patientname,filesep,options.prefs.DTD])
     
     % export B0
     matlabbatch{1}.impexp_NiftiMrStruct.bo2nifti.srcdtdchoice.srcdtdstruct = {[options.root,options.patientname,filesep,options.prefs.DTD]};
@@ -28,7 +32,7 @@ if ~exist([options.root,options.patientname,filesep,options.prefs.HARDI],'file')
     cfg_util('run',jobs);
     clear jobs matlabbatch
     disp('Done.');
-    
+    keyboard
 else
     disp('HARDI found, no need to rebuild.');
 end

@@ -1,12 +1,25 @@
 % generate atlas
 
-aID = fopen('inia19-NeuroMaps.txt');
+aID = fopen('inia19-NeuroMaps_selection.txt');
 atlas_lgnd=textscan(aID,'%d %s %d %d %d %d');
-mkdir('../atlases/inia19_full');
-mkdir('../atlases/inia19_full/lh');
-mkdir('../atlases/inia19_full/rh');
+mkdir('../atlases/inia19_selection');
+mkdir('../atlases/inia19_selection/lh');
+mkdir('../atlases/inia19_selection/rh');
 atl=ea_load_nii('inia19-NeuroMaps.nii');
 atl.img=round(atl.img);
+
+
+
+% symmetrize hemispheres
+todelete=[];
+for reg=1:length(atlas_lgnd{1})
+   if ~ismember(atlas_lgnd{1}(reg)+1000,atlas_lgnd{1}) && ~ismember(atlas_lgnd{1}(reg)-1000,atlas_lgnd{1})
+       todelete=[todelete,reg];
+   end
+end
+atlas_lgnd{1}(todelete)=[];
+atlas_lgnd{2}(todelete)=[];
+
 for reg=1:length(atlas_lgnd{1})
     
     snii=atl;
@@ -14,9 +27,9 @@ for reg=1:length(atlas_lgnd{1})
     snii.img=logical(snii.img);
     
     if strcmp(atlas_lgnd{2}{reg}(1),'r')
-        odir='../atlases/inia19_full/rh';
+        odir='../atlases/inia19_selection/rh';
     elseif strcmp(atlas_lgnd{2}{reg}(1),'l')
-        odir='../atlases/inia19_full/lh';
+        odir='../atlases/inia19_selection/lh';
     else
         ea_error('Something is not right');
     end

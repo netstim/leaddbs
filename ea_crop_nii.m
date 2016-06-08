@@ -31,6 +31,7 @@ if any(vox<0)
    ea_reslice_nii(filename,filename,abs(vox),0); 
    V=spm_vol(filename);
    [bb,vox] = ea_spm_get_bbox(V, nstring);
+   bb=increasebb(bb);
 end
 
 
@@ -193,8 +194,8 @@ for dim=1:3
     
     [~,minpos]=min(dbb);
     [~,maxpos]=max(dbb);
-    dbb(minpos)=dbb(minpos)-1;
-    dbb(maxpos)=dbb(maxpos)+1;
+    dbb(minpos)=dbb(minpos)-5;
+    dbb(maxpos)=dbb(maxpos)+5;
     
     bb(:,dim)=dbb;
 end

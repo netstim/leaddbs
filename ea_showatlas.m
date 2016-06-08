@@ -29,7 +29,11 @@ catch
 end
 nm=nm(logical(nmind)); % select which shall be performed.
 
-
+if options.macaquemodus
+    mcr=['toolbox',filesep,'macaque',filesep];
+else
+    mcr='';
+end
 
 for nativemni=nm % switch between native and mni space atlases.
     
@@ -39,7 +43,7 @@ for nativemni=nm % switch between native and mni space atlases.
             adir=[root,'atlases',filesep,'mni',filesep,options.atlasset,filesep];
             mifix=['mni',filesep];
         case 1
-            root=options.earoot;
+            root=[options.earoot,mcr];
             adir=[root,'atlases',filesep,options.atlasset,filesep];
             mifix='';
         case 2
