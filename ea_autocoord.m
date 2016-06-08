@@ -31,7 +31,7 @@ end
 
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
     options=ea_assignpretra(options);
-    ea_resliceanat(options);
+    try ea_resliceanat(options); end
     if options.modality==2 % CT support
         options.prefs.tranii=options.prefs.ctnii;
         options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;

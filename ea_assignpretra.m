@@ -11,7 +11,7 @@ end
 
 f=find(fexist);
 if isempty(f)
-    ea_error(['No anatomy information found. Please put either ',options.prefs.rawpreniis{1},', ',  options.prefs.rawpreniis{2},' or ', options.prefs.rawpreniis{3}, ' into subject folder.']);
+    warning(['No anatomy information found. Please put either ',options.prefs.rawpreniis{1},', ',  options.prefs.rawpreniis{2},' or ', options.prefs.rawpreniis{3}, ' into subject folder.']);
 end
 
 
@@ -23,8 +23,11 @@ if ~exist([directory,'.pp'],'file') && ~exist([directory,'ea_normmethod_applied.
     end
     fs=fopen([directory,'.pp'],'w');
 end
-
-options.prefs.prenii_unnormalized=options.prefs.rawpreniis{f(1)};
-options.primarytemplate=ptemps{f(1)};
+try
+    options.prefs.prenii_unnormalized=options.prefs.rawpreniis{f(1)};
+    options.primarytemplate=ptemps{f(1)};
+catch
+    options.primarytemplate=options.prefs.prenii_unnormalized;
+end
 
 
