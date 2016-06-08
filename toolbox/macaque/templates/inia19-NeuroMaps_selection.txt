@@ -11,7 +11,6 @@
 130 l_lateral_geniculate_nucleus 10 19 54 255
 135 l_medial_dorsal_nucleus_-_not_otherwise_specified 63 215 60 255
 136 l_lateral_dorsal_nucleus 221 16 163 255
-137 l_oral_pulvinar_nucleus 87 31 228 255
 139 l_oral_pontine_reticular_nucleus 211 21 171 255
 154 l_magnocellular_part_of_the_red_nucleus 9 209 173 255
 155 l_capsule_of_the_red_nucleus 246 9 122 255
@@ -196,7 +195,6 @@
 1134 r_internal_medullary_lamina 60 221 217 255
 1135 r_medial_dorsal_nucleus_-_not_otherwise_specified 63 215 60 255
 1136 r_lateral_dorsal_nucleus 221 16 163 255
-1137 r_oral_pulvinar_nucleus 87 31 228 255
 1138 r_transverse_pontine_fibers 161 40 73 255
 1139 r_oral_pontine_reticular_nucleus 211 21 171 255
 1140 r_pedunculopontine_tegmental_nucleus 115 222 60 255
