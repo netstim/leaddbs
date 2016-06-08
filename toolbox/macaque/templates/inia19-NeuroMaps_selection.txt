@@ -26,10 +26,8 @@
 173 l_pars_compacta 251 238 60 255
 174 l_medial_mammillary_nucleus 238 22 120 255
 175 l_lateral_mammillary_nucleus 65 244 61 255
-176 l_mammillothalamic_tract_of_the_hypothalamus 75 236 229 255
 177 l_anteromedial_nucleus_of_the_thalamus 173 84 164 255
 178 l_anterodorsal_nucleus_of_the_thalamus 248 240 66 255
-183 l_mammillothalamic_tract_of_the_thalamus 109 207 3 255
 185 l_tuberomammillary_nucleus 245 228 66 255
 186 l_medial_part_of_the_ventral_lateral_nucleus 169 62 89 255
 189 l_lateral_amygdalar_nucleus 97 180 212 255

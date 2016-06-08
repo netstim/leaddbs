@@ -75,7 +75,9 @@ ea_dispbn;
             mstr=['toolbox',filesep,'macaque',filesep];
             disp('*** Macaque modus');
             set(handles.leadfigure,'name','Welcome to LEAD-DBS ** Macaque modus **');
-            
+                   set(handles.targetpopup,'Enable','off');
+                   set(handles.targetpopup,'Value',3);
+
         end
         end
     end
@@ -255,6 +257,7 @@ menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
 f = uimenu('Label','Tools');
     uimenu(f,'Label','Convert ACPC/MNI coordinates','Callback',{@ea_acpcquery,handles.leadfigure});
+    
 setappdata(handles.leadfigure,'menuprobe',1);
 end
 
@@ -724,7 +727,9 @@ if get(hObject,'Value')
 
 
    set(handles.maskwindow_txt,'Enable','on');
-set(handles.targetpopup,'Enable','on');
+   if ~getappdata(handles.leadfigure,'macaquemodus')
+       set(handles.targetpopup,'Enable','on');
+   end
 
 
 
