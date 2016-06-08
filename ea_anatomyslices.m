@@ -25,11 +25,21 @@ if isempty(inverted)
 end
 options.d2.writeatlases=1;
 templateused=getappdata(resultfig,'templateused');
+
+
+
+if options.macaquemodus
+    mcr=['toolbox',filesep,'macaque',filesep];
+else
+    mcr='';
+end
+
+
 if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)
     clear V
     switch togglestates.template
         case 'MNI-Template'
-            V{1}=spm_vol([options.earoot,'templates',filesep,'mni_hires.nii']);
+            V{1}=spm_vol([options.earoot,mcr,'templates',filesep,'mni_hires.nii']);
             
         case 'Patient Post-OP'
             if options.native

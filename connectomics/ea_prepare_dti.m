@@ -5,10 +5,10 @@ function ea_prepare_dti(options)
 if 1; %~exist([options.root,options.patientname,filesep,options.prefs.HARDI],'file');
     disp('Building DTI files...');
     
-%    load([options.root,options.patientname,filesep,options.prefs.bval]);
-%    [~,bvfname]=fileparts(options.prefs.bval);
-%    bvals=eval(bvfname);
-%    ea_build_DTD(max(bvals),[options.root,options.patientname,filesep],options.prefs.dti,options.prefs.DTD,options.prefs.HARDI,options.prefs.bval,options.prefs.bvec);
+   load([options.root,options.patientname,filesep,options.prefs.bval]);
+   [~,bvfname]=fileparts(options.prefs.bval);
+   bvals=eval(bvfname);
+   ea_build_DTD(max(bvals),[options.root,options.patientname,filesep],options.prefs.dti,options.prefs.DTD,options.prefs.HARDI,options.prefs.bval,options.prefs.bvec);
     
     
     % build HARDI in new way:
@@ -21,9 +21,9 @@ if 1; %~exist([options.root,options.patientname,filesep,options.prefs.HARDI],'fi
     mrstruct_write(hr,[options.root,options.patientname,filesep,options.prefs.HARDI])
  
     
-    dtd=ea_convertHARDI2DTD(dtdstruct_read([options.root,options.patientname,filesep,options.prefs.HARDI]));
-    dtstruct_write(dtd,[options.root,options.patientname,filesep,options.prefs.DTD])
-    
+%     dtd=ea_convertHARDI2DTD(dtdstruct_read([options.root,options.patientname,filesep,options.prefs.HARDI]));
+%     dtstruct_write(dtd,[options.root,options.patientname,filesep,options.prefs.DTD])
+%     
     % export B0
     matlabbatch{1}.impexp_NiftiMrStruct.bo2nifti.srcdtdchoice.srcdtdstruct = {[options.root,options.patientname,filesep,options.prefs.DTD]};
     matlabbatch{1}.impexp_NiftiMrStruct.bo2nifti.outname.outimg.outdir = {[options.root,options.patientname,filesep]};
