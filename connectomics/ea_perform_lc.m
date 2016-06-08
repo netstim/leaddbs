@@ -56,14 +56,6 @@ options.prefs.n_rest = numel(restfiles);
 % display number of rs-fMRI files to analyze
 disp(['*** ' num2str(options.prefs.n_rest) ' rs-fMRI files to analyze...']);
 
-% the following steps clear existing connectome files which have been defined in `ea_prefs`
-% because we will redefine the filenames in the code that follows
-% ?? delete these names from `ea_prefs` eventually ??
-options.prefs = rmfield(options.prefs,'rest');
-options.prefs = rmfield(options.prefs,'pprest');
-options.prefs = rmfield(options.prefs,'glrest');
-options.prefs = rmfield(options.prefs,'gmtc');
-
 % connectivity matrix steps:
 if options.lc.func.compute_CM 
     if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
