@@ -2,9 +2,9 @@
 
 aID = fopen('inia19-NeuroMaps_selection.txt');
 atlas_lgnd=textscan(aID,'%d %s %d %d %d %d');
-mkdir('../atlases/inia19_selection');
-mkdir('../atlases/inia19_selection/lh');
-mkdir('../atlases/inia19_selection/rh');
+mkdir('../atlases/INIA19 (Rohlfing 2012)');
+mkdir('../atlases/INIA19 (Rohlfing 2012)/lh');
+mkdir('../atlases/INIA19 (Rohlfing 2012)/rh');
 atl=ea_load_nii('inia19-NeuroMaps.nii');
 atl.img=round(atl.img);
 
@@ -27,9 +27,9 @@ for reg=1:length(atlas_lgnd{1})
     snii.img=logical(snii.img);
     
     if strcmp(atlas_lgnd{2}{reg}(1),'r')
-        odir='../atlases/inia19_selection/rh';
+        odir='../atlases/INIA19 (Rohlfing 2012)/rh';
     elseif strcmp(atlas_lgnd{2}{reg}(1),'l')
-        odir='../atlases/inia19_selection/lh';
+        odir='../atlases/INIA19 (Rohlfing 2012)/lh';
     else
         ea_error('Something is not right');
     end
