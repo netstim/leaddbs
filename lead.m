@@ -32,6 +32,7 @@ gui_State = struct('gui_Name',       mfilename, ...
                    'gui_OutputFcn',  @lead_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
+               
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -63,10 +64,27 @@ addpath(genpath(fileparts(which(mfilename))));
 end
 ea_dispbn;
 
+    mstr='';
+    macaquemodus=0;
+    set(handles.leadfigure,'name','Welcome to LEAD-DBS');
+
+    if nargin
+        try
+        if strcmp('macaque',varargin{1})
+            macaquemodus=1;
+            mstr=['toolbox',filesep,'macaque',filesep];
+            disp('*** Macaque modus');
+            set(handles.leadfigure,'name','Welcome to LEAD-DBS ** Macaque modus **');
+            
+        end
+        end
+    end
+setappdata(handles.leadfigure,'macaquemodus',macaquemodus);
+
 
 % load atlassets
 earoot=[fileparts(which('lead')),filesep];
-as=dir([earoot,'atlases',filesep]);
+as=dir([earoot,mstr,'atlases',filesep]);
 asc=cell(0);
 cnt=1;
 for i=1:length(as)
@@ -145,11 +163,13 @@ end
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 
-set(gcf,'name','Welcome to LEAD-DBS');
+
+
 
 % add normalization methods to menu
 cnt=1;
-ndir=dir([earoot,'ea_normalize_*.m']);
+
+ndir=dir([earoot,mstr,'ea_normalize_*.m']);
 
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);
@@ -205,7 +225,7 @@ setappdata(gcf,'coregctmethod',coregctmethod);
 set(handles.coregctmethod,'String',cdc);
 catch
     if isempty(which('spm'))
-    warning('It seems that SPM is not installed.');
+    ea_error('Please install SPM12 for Lead-DBS to work properly.');
     end
 end
 try % set selection of ctcoregmethod to default entry (specified in ea_prefs).
@@ -244,6 +264,7 @@ getui(handles);
 
 
 
+    
 % UIWAIT makes lead wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 
@@ -269,7 +290,9 @@ function run_button_Callback(hObject, eventdata, handles)
 leadfig=handles.leadfigure;
 ea_busyaction('on',leadfig,'lead');
 
+
 options=handles2options(handles);
+options.macaquemodus=getappdata(handles.leadfigure,'macaquemodus');
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 

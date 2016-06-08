@@ -76,7 +76,7 @@ prefs.normmatrix=['lmat.txt'];
 
 
 %% 2D-Export:
-prefs.d2.useprepost='post'; % can be 'post' or 'pre' to set the backdrop.
+prefs.d2.useprepost='pre'; % can be 'post' or 'pre' to set the backdrop.
 prefs.d2.groupcolors='lead'; % can be 'maxdist' to use ea_distinguishable_colors by Timothy E. Holy, 'lead' to use a handpicked color set inspired by colorblender.com or 'lines' to use the matlab lines colormap (supports only seven colors).
 prefs.d2.isovolsmoothed='s'; % set to 's' if you want to use the smoothed image and '' if you want to display the raw, unsmoothed version of the isovolume.
 prefs.d2.isovolcolormap='jet'; % color map to use for plotting of isovolume heatmap.

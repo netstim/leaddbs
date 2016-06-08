@@ -18,6 +18,7 @@ else
     end
 end
 
+
 for export=expdo % if CT, only do 1, if MR, do 1:3.
     try
         switch export
@@ -49,12 +50,17 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
 
 
         if ~legacy % use new imshowpair viewer
-
-            wires=ea_load_nii([options.earoot,'templates',filesep,'mni_wires.nii']);
+            if options.macaquemodus
+                mcr=['toolbox',filesep,'macaque',filesep];
+            else
+                mcr='';
+            end
+            
+            wires=ea_load_nii([options.earoot,mcr,'templates',filesep,'mni_wires.nii']);
             pt=ea_load_nii(checkf);
             
             if ~isequal(size(wires.img),size(pt.img))
-                matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'mni_wires.nii'];
+                matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_wires.nii'];
                     checkf};
                 matlabbatch{1}.spm.util.imcalc.output = checkfn;
                 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
@@ -69,6 +75,8 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                             pt=ea_load_nii(checkf);
             end
             %mni.img(:)=zscore(mni.img(:));
+
+            
             wires.img=wires.img/max(wires.img(:));
             switch suff
                 case '_fa' % do no windowing for now.
@@ -79,7 +87,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                     pt.img(pt.img>0.5) = 0.5;
                     pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
                     if ~exist('mni_img','var')
-                        mni_img=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
+                        mni_img=ea_load_nii([options.earoot,mcr,'templates',filesep,'mni_hires.nii']);
                         mni_img.img(:)=zscore(mni_img.img(:));
                         mni_img.img=(mni_img.img-min(mni_img.img(:)))/(max(mni_img.img(:))-min(mni_img.img(:)));
                     end
