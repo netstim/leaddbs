@@ -6,10 +6,12 @@ function ea_run(cmd,options)
 % Andreas Horn
 
 
-try
-    options.lc=load([fileparts(which('lead')),filesep,'connectomics',filesep,'lc_options.mat']);
-catch
-    options.lc=[];
+if ~isfield(options,'lc') % might be predefined from an exported script..
+    try
+        options.lc=load([fileparts(which('lead')),filesep,'connectomics',filesep,'lc_options.mat']);
+    catch
+        options.lc=[];
+    end
 end
 
 if options.d3.autoserver && options.d3.write

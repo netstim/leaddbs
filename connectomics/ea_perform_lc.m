@@ -8,6 +8,7 @@ function ea_perform_lc(options)
 disp('*** Performing structural parts of LEAD-Connectome...');
 
 % perform fibertracking
+
 if options.lc.struc.ft.do
     ea_perform_ft_proxy(options);
 end
