@@ -92,12 +92,7 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     
 end
 
-
-if options.macaquemodus
-    mcr=['toolbox',filesep,'macaque',filesep];
-else
-    mcr='';
-end
+mcr=ea_checkmacaque(options);
 
 if checkrebuild(atlases,options,root,mifix)
     

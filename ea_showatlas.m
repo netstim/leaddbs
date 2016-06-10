@@ -29,11 +29,7 @@ catch
 end
 nm=nm(logical(nmind)); % select which shall be performed.
 
-if options.macaquemodus
-    mcr=['toolbox',filesep,'macaque',filesep];
-else
-    mcr='';
-end
+mcr=ea_checkmacaque(options);
 
 for nativemni=nm % switch between native and mni space atlases.
     

@@ -28,11 +28,7 @@ templateused=getappdata(resultfig,'templateused');
 
 
 
-if options.macaquemodus
-    mcr=['toolbox',filesep,'macaque',filesep];
-else
-    mcr='';
-end
+
 
 
 if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)

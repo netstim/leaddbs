@@ -59,6 +59,9 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+
+earoot=[fileparts(which('lead')),filesep];
+
 if ~isdeployed
 addpath(genpath(fileparts(which(mfilename))));
 end
@@ -69,23 +72,25 @@ ea_dispbn;
     set(handles.leadfigure,'name','Welcome to LEAD-DBS');
 
     if nargin
-        try
         if strcmp('macaque',varargin{1})
-            macaquemodus=1;
-            mstr=['toolbox',filesep,'macaque',filesep];
-            disp('*** Macaque modus');
-            set(handles.leadfigure,'name','Welcome to LEAD-DBS ** Macaque modus **');
-                   set(handles.targetpopup,'Enable','off');
-                   set(handles.targetpopup,'Value',3);
-
-        end
+            options.earoot=earoot;
+            [mstr,isinstalled]=ea_checkmacaque(options,'installed?');
+            if isinstalled
+                macaquemodus=1;
+                mstr=['toolbox',filesep,'macaque',filesep];
+                disp('*** Macaque modus');
+                set(handles.leadfigure,'name','Welcome to LEAD-DBS ** Macaque modus **');
+                set(handles.targetpopup,'Enable','off');
+                set(handles.targetpopup,'Value',3);
+            else
+                ea_error('Please install Lead-DBS macaque toolbox prior to starting Lead-DBS in macaque mode.');
+            end
         end
     end
 setappdata(handles.leadfigure,'macaquemodus',macaquemodus);
 
 
 % load atlassets
-earoot=[fileparts(which('lead')),filesep];
 as=dir([earoot,mstr,'atlases',filesep]);
 asc=cell(0);
 cnt=1;
