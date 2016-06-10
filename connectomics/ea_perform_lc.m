@@ -45,18 +45,18 @@ end
 disp('*** Done.');
 
 %% functional parts
-
-disp(['*** Performing functional parts of LEAD-Connectome...']);
-
-% get files with rs-fMRI data
-restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_prefix]);
-
-% get number of files with rs-fMRI data
-options.prefs.n_rest = numel(restfiles);
-
-% display number of rs-fMRI files to analyze
-disp(['*** ' num2str(options.prefs.n_rest) ' rs-fMRI files to analyze...']);
-
+if options.lc.func.compute_GM || options.lc.func.compute_CM
+    disp(['*** Performing functional parts of LEAD-Connectome...']);
+    
+    % get files with rs-fMRI data
+    restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_prefix]);
+    
+    % get number of files with rs-fMRI data
+    options.prefs.n_rest = numel(restfiles);
+    
+    % display number of rs-fMRI files to analyze
+    disp(['*** ' num2str(options.prefs.n_rest) ' rs-fMRI files to analyze...']);
+end
 % connectivity matrix steps:
 if options.lc.func.compute_CM 
     if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
@@ -90,9 +90,9 @@ if options.lc.func.compute_CM
     end % end loop for for all rs-fMRI files
     
 end % end connectivity matrix section
-
+if options.lc.func.compute_GM || options.lc.func.compute_CM
 disp(['*** Done analyzing ' num2str(options.prefs.n_rest) ' rs-fMRI files...']);
-
+end
 % graph metrics section below:
 % for multiple file support: need to edit `ea_computeGM`
 if options.lc.func.compute_GM || options.lc.struc.compute_GM % perform graph metrics

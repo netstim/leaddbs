@@ -2,14 +2,20 @@ function ea_prepare_dti(options)
 % calculates diffusion tensor etc. using the Freiburg DTI&Fibertools
 % http://www.uniklinik-freiburg.de/mr-en/research-groups/diffperf/fibertools.html
 
-if 1; %~exist([options.root,options.patientname,filesep,options.prefs.HARDI],'file');
+if ~exist([options.root,options.patientname,filesep,options.prefs.HARDI],'file');
     disp('Building DTI files...');
     
-   load([options.root,options.patientname,filesep,options.prefs.bval]);
-   [~,bvfname]=fileparts(options.prefs.bval);
-   bvals=eval(bvfname);
-   ea_build_DTD(max(bvals),[options.root,options.patientname,filesep],options.prefs.dti,options.prefs.DTD,options.prefs.HARDI,options.prefs.bval,options.prefs.bvec);
-    
+%    load([options.root,options.patientname,filesep,options.prefs.bval]);
+%    [~,bvfname]=fileparts(options.prefs.bval);
+%    bvals=eval(bvfname);
+%    ea_build_DTD(max(bvals),[options.root,options.patientname,filesep],options.prefs.dti,options.prefs.DTD,options.prefs.HARDI,options.prefs.bval,options.prefs.bvec);
+%   
+
+try %unring
+    dti=ea_load_untouch_nii([options.root,options.patientname,filesep,options.prefs.dti]);
+    dti.img=ea_unring(dti.img);
+    ea_save_untouch_nii(dti,[options.root,options.patientname,filesep,options.prefs.dti]);
+end
     
     % build HARDI in new way:
     
@@ -25,14 +31,10 @@ if 1; %~exist([options.root,options.patientname,filesep,options.prefs.HARDI],'fi
 %     dtstruct_write(dtd,[options.root,options.patientname,filesep,options.prefs.DTD])
 %     
     % export B0
-    matlabbatch{1}.impexp_NiftiMrStruct.bo2nifti.srcdtdchoice.srcdtdstruct = {[options.root,options.patientname,filesep,options.prefs.DTD]};
-    matlabbatch{1}.impexp_NiftiMrStruct.bo2nifti.outname.outimg.outdir = {[options.root,options.patientname,filesep]};
-    matlabbatch{1}.impexp_NiftiMrStruct.bo2nifti.outname.outimg.fname = options.prefs.b0;
-    jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
-    clear jobs matlabbatch
-    disp('Done.');
-    keyboard
+    if ~exist([options.root,options.patientname,filesep,options.prefs.b0],'file');
+        ea_exportb0(options);
+    end
+
 else
     disp('HARDI found, no need to rebuild.');
 end

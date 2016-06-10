@@ -1617,6 +1617,7 @@ options.colormap=jet;
 options.d3.write=1;
 options.d3.prolong_electrode=2;
 options.d3.writeatlases=1;
+options.macaquemodus=0;
 
 
 % --- Executes on button press in groupdir_choosebox.

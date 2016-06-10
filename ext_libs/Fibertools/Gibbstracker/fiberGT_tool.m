@@ -733,8 +733,7 @@ function loadmask(fn,threshold,pmap)
                mrdum.edges(1:3,1:3) = mrdum.edges(1:3,1:3)/2;   
                mrdum.dataAy = zeros(size(ds.b0avg)*2);               
            end;
-                      
-           [mm err] = nifti_to_mrstruct('volume',{fn},mrdum);
+                      [mm err] = nifti_to_mrstruct('volume',{fn},mrdum);
            if isempty(err),
                  if isempty(threshold),
                         threshold = chooseThreshold_stackview(ds.b0avg,mm.dataAy);
