@@ -13,33 +13,27 @@ Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'rb0w',options.lc
 
 %% get fiber definition
 disp('Loading FTR-File.');
-fs=load([[options.root,options.patientname,filesep],options.prefs.FTR_unnormalized]);
 
-if ~isfield(fs,'curveSegCell') % Freiburg Format
-    fn = fieldnames(fs);
-    eval(sprintf('curveSegCell = fs.%s;',fn{1}));
-    if size(curveSegCell,1)>size(curveSegCell,2)
-        curveSegCell=curveSegCell';
-    end
-    convertfromfreiburg=0;
-    fibs=curveSegCell;
-else
-    convertfromfreiburg=1;
-    fibs=fs.curveSegCell;
-end
+[fibs,idx]=ea_loadfibertracts([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized]);
 
-clear curveSegCell fs
+
+
+convertfromfreiburg=0;
+
 
 %ea_dispercent(0,'Calculating seeds and terminals...');
 disp('Calculating seeds and terminals...');
 
-fibercount=length(fibs);
+fibercount=length(idx);
 seeds=zeros(fibercount,3);
 terms=zeros(fibercount,3);
+cnt=1;
 for fiber=1:(fibercount)
+    %thisfib=fibs(fibs(:,4)==fiber,1:3);
  %   ea_dispercent(fiber/fibercount);
-    seeds(fiber,:)=fibs{fiber}(1,:);
-    terms(fiber,:)=fibs{fiber}(end,:);
+    seeds(fiber,:)=fibs(cnt,1:3);
+    terms(fiber,:)=fibs(cnt+idx(fiber)-1,1:3);
+    cnt=cnt+idx(fiber);
 end
 %ea_dispercent(100,'end');
 
@@ -75,7 +69,7 @@ atlas_lgnd=textscan(aID,'%d %s');
 d=length(atlas_lgnd{1}); % how many ROI.
 DTI_CM=zeros(d);
 
-ea_dispercent(0,['Iterating through ',num2str(length(fibs)),' fibers']);
+ea_dispercent(0,['Iterating through ',num2str(length(idx)),' fibers']);
 conns=0;
 endpts=[seedIDX,termIDX];
 conIDX=endpts>0;
@@ -84,7 +78,7 @@ conIDX=find(conIDX==2); % only take fibers into account that dont start/end in z
 for fiber=conIDX'
     percent=fiber/fibercount;
     ea_dispercent(percent);
-    if length(fibs{fiber})>minlen % only include fibers >minimum length
+    if idx(fiber)>minlen % only include fibers >minimum length
         %if sum(thisfib(3,:)<-55)<1 % check if fiber exits the brain through spinal chord.. choose a cutoff(i.e.=-55mm).
         DTI_CM(seedIDX(fiber),termIDX(fiber))    =  ...
             DTI_CM(seedIDX(fiber),termIDX(fiber))    +   1;

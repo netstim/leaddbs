@@ -72,6 +72,7 @@ ea_dispbn;
     set(handles.leadfigure,'name','Welcome to LEAD-DBS');
 
     if nargin
+        try
         if strcmp('macaque',varargin{1})
             options.earoot=earoot;
             [mstr,isinstalled]=ea_checkmacaque(options,'installed?');
@@ -85,6 +86,7 @@ ea_dispbn;
             else
                 ea_error('Please install Lead-DBS macaque toolbox prior to starting Lead-DBS in macaque mode.');
             end
+        end
         end
     end
 setappdata(handles.leadfigure,'macaquemodus',macaquemodus);
