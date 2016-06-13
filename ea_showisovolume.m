@@ -14,6 +14,7 @@ set(0,'CurrentFigure',resultfig);
 
 jetlist=othercolor('BuOr_12');
        % jetlist=jet;
+
 if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
     shifthalfup=1;
 elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts

@@ -27,7 +27,7 @@ options.d2.writeatlases=1;
 templateused=getappdata(resultfig,'templateused');
 
 
-
+mcr=ea_checkmacaque(options);
 
 
 

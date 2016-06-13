@@ -1364,8 +1364,8 @@ end
             % options.patientname='tmp';
             
             ea_stats=M.stats(pt).ea_stats;
-            coords_mm=M.elstruct.coords_mm;
-            trajectory=M.elstruct.trajectory;
+            coords_mm=M.elstruct(pt).coords_mm;
+            trajectory=M.elstruct(pt).trajectory;
             save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
             save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
         end
@@ -1396,26 +1396,26 @@ end
     
     % Step 2: Re-calculate VAT
     if isfield(M,'S')
-    try
-        setappdata(resultfig,'S',M.S(pt));
-    catch
-        ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
-    end
-    vfnames=getappdata(handles.lg_figure,'vatfunctionnames');
-    
-    [~,ix]=ismember(M.vatmodel,vfnames);
-    vfs=getappdata(handles.lg_figure,'genvatfunctions');
-    
-    ea_genvat=eval(['@',vfs{ix}]);
-    
-    for side=1:2
-        setappdata(resultfig,'elstruct',M.elstruct(pt));
-        setappdata(resultfig,'elspec',options.elspec);
-        [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,stimname);
-        stimparams(1,side).volume=volume;
-    end
-    
-    setappdata(resultfig,'stimparams',stimparams(1,:));
+        try
+            setappdata(resultfig,'S',M.S(pt));
+        catch
+            ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
+        end
+        vfnames=getappdata(handles.lg_figure,'vatfunctionnames');
+        
+        [~,ix]=ismember(M.vatmodel,vfnames);
+        vfs=getappdata(handles.lg_figure,'genvatfunctions');
+        
+        ea_genvat=eval(['@',vfs{ix}]);
+        
+        for side=1:2
+            setappdata(resultfig,'elstruct',M.elstruct(pt));
+            setappdata(resultfig,'elspec',options.elspec);
+            [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,stimname);
+            stimparams(1,side).volume=volume;
+        end
+        
+        setappdata(resultfig,'stimparams',stimparams(1,:));
     end
     % Step 3: Re-calculate connectivity from VAT to rest of the brain.
     if ~strcmp(mod,'Do not calculate connectivity stats')

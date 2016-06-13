@@ -18,10 +18,13 @@ else
     reco.mni.trajectory=trajectory;
     reco.mni.markers=markers;
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
+
     
     if isfield(options,'hybridsave');
+        try
         ea_reconstruction2native(options);
         ea_reconstruction2acpc(options);
+        end
     end
 end
 

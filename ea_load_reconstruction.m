@@ -17,9 +17,10 @@
   if exist('reco','var')
       
       if ~isfield(reco,'native') && isfield(reco,'mni') && options.native
-                  ea_reconstruction2native(options);
-                        load([options.root,options.patientname,filesep,'ea_reconstruction']);
-
+          try
+              ea_reconstruction2native(options);
+              load([options.root,options.patientname,filesep,'ea_reconstruction']);
+          end
       elseif isfield(reco,'native') && ~isfield(reco,'mni') && ~options.native
           ea_reconstruction2mni(options);
                 load([options.root,options.patientname,filesep,'ea_reconstruction']);
@@ -68,10 +69,12 @@
       % they are in MNI.
       options.native=0;
       options.hybridsave=1;
+try
       ea_save_reconstruction(coords_mm,trajectory,markers,'Medtronic 3389',0,options);
       options.native=1;
       [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-  end
+end
+end
   
   if ~exist('manually_corrected','var')
       manually_corrected=0;
