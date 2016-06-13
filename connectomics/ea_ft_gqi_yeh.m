@@ -9,7 +9,7 @@ if ischar(options) % return name of method.
     return
 end
 
-
+directory=[options.root,options.patientname,filesep];
 ea_prepare_dti(options)
 
 
@@ -62,11 +62,14 @@ end
 % build .fib.gz file
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
 if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file')
+    disp('Estimating ODF / preparing GQI...');
     res=ea_gqi_reco([options.root,options.patientname,filesep,options.prefs.dti],btable,1.2,options);
-
     save([options.root,options.patientname,filesep,ftrbase,'.fib'],'-struct','res','-v4');
     gzip([options.root,options.patientname,filesep,ftrbase,'.fib']);
     try delete([options.root,options.patientname,filesep,ftrbase,'.fib']); end
+    disp('Done.');
+else
+    disp('.fib.gz file found, no need to rebuild.');
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
