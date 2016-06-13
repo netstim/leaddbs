@@ -9,7 +9,7 @@
 %                     maxW  right border of window used for TV computation (default 3)
 
 
-function v = unring(v,params)
+function v = ea_unring(v,params)
 
 if nargin == 1,
     params = [1 3 20];
