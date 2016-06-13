@@ -27,12 +27,12 @@ end
 % build white matter mask
 if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file');
     ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-    
-    
+
+
     %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
-    
+
     copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
-    
+
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c',options.prefs.prenii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.other = {
@@ -46,11 +46,11 @@ if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file')
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'rb0';
-    
+
     jobs{1}=matlabbatch;
     cfg_util('run',jobs);
     clear matlabbatch jobs;
-    movefile([directory,'rb0c2',options.prefs.prenii_unnormalized],[directory,'trackingmask.nii']); 
+    movefile([directory,'rb0c2',options.prefs.prenii_unnormalized],[directory,'trackingmask.nii']);
 
 tr=ea_load_nii([options.root,options.patientname,filesep,'trackingmask.nii']);
 tr.img=tr.img>0.8;
@@ -62,7 +62,7 @@ end
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
 if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file')
     res=ea_gqi_reco([options.root,options.patientname,filesep,options.prefs.dti],btable,1.2,options);
-    
+
     save([options.root,options.patientname,filesep,ftrbase,'.fib'],'-struct','res','-v4');
     gzip([options.root,options.patientname,filesep,ftrbase,'.fib']);
     try delete([options.root,options.patientname,filesep,ftrbase,'.fib']); end
@@ -73,9 +73,9 @@ basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
 if ismac
     dsistudio = [basedir,'mac',filesep, 'dsi_studio.app',filesep,'Contents',filesep,'MacOS',filesep,'dsi_studio'];
 elseif isunix
-    ea_error('dsi_studio is currently only supported for Mac OS X');
+    dsistudio = [basedir, 'linux',filesep,'dsi_studio'];
 elseif ispc
-        dsistudio = [basedir, 'win',filesep,'dsi_studio.exe'];
+    dsistudio = [basedir, 'win',filesep,'dsi_studio.exe'];
 end
 
 cmd=[dsistudio,' --action=trk --source=',[options.root,options.patientname,filesep,ftrbase,'.fib.gz'],...
