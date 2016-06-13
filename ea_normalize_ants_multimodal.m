@@ -82,7 +82,7 @@ if usefa
             if ~exist([directory,options.prefs.dti],'file')
                 disp('No dMRI data has been found. Proceeding without FA');
             else
-                ea_isolate_fa(directory,options);
+                ea_isolate_fa(options);
             end
         end
         ea_dcm2nii([directory,options.prefs.fa]);

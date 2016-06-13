@@ -1,6 +1,6 @@
-function ea_isolate_fa(directory,options)
+function ea_isolate_fa(options)
 
-
+directory=[options.root,options.patientname,filesep];
 
 Vdti=spm_vol([directory,options.prefs.dti]);
 Xdti=spm_read_vols(Vdti);

@@ -50,6 +50,7 @@ end
 
 
 ea_prepare_dti(options)
+ea_prepare_hardi(options)
 
 %% mask for tracking
 
