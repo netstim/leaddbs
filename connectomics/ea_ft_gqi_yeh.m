@@ -73,22 +73,26 @@ else
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
-
 if ismac
     dsistudio = [basedir,'mac',filesep, 'dsi_studio.app',filesep,'Contents',filesep,'MacOS',filesep,'dsi_studio'];
 elseif isunix
+    ea_libs_helper([basedir, 'linux']);
     dsistudio = [basedir, 'linux',filesep,'dsi_studio'];
+    dsistudio = ['LD_PRELOAD=',basedir, 'linux',filesep,'glibc',filesep,'libc.so.6;',dsistudio];
 elseif ispc
     dsistudio = [basedir, 'win',filesep,'dsi_studio.exe'];
 end
-ea_libs_helper
 cmd=[dsistudio,' --action=trk --source=',[options.root,options.patientname,filesep,ftrbase,'.fib.gz'],...
     ' --method=0',...
     ' --seed=',options.root,options.patientname,filesep,'ttrackingmask.nii',...
     ' --fiber_count=50000',...
     ' --output=',[options.root,options.patientname,filesep,ftrbase,'.mat']];
 
-err=system(cmd);
+if ~ispc
+    system(['bash -c "', cmd, '"']);
+else
+    system(cmd);
+end
 if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end
