@@ -1609,6 +1609,7 @@ end
 
 
 function ea_refreshguisp(varargin)
+
 handles=varargin{1};
 options=varargin{2};
 
@@ -1623,7 +1624,7 @@ end
 if groupmode
         grouploaded=getappdata(handles.stimfig,'grouploaded');
 
-    if isempty(grouploaded)
+    if isempty(grouploaded) % this is done only once and gets the selection info from lead_group initially (which patient shown).
         lgfig=getappdata(handles.stimfig,'resultfig');
         M=getappdata(lgfig,'M');
         actpt=M.ui.listselect;
@@ -1632,7 +1633,7 @@ if groupmode
             actpt=1;
         end
         setappdata(handles.stimfig,'actpt',actpt);
-
+        % set grouploaded true is being done below.
     end
     
     elstruct=getappdata(handles.stimfig,'elstruct');
@@ -1651,33 +1652,60 @@ if groupmode
         end
         setappdata(handles.stimfig,'gSv',gSv);
     end
-    % initially load gS once:
+    % load gS - updated with each refresh:
     gS=getappdata(handles.stimfig,'gS');
-    if ~isempty(gS) && isempty(grouploaded);
-        try
-            if ~isempty(gS(actpt).Rs1)
-                S=gS(actpt);
+    if isempty(grouploaded)
+        
+        
+        
+        
+        if ~isempty(gS)
+            
+            
+            
+            
+            % determine stimlabel from priorly set gS:
+            for sub=1:length(gS)
+                stimlabel=gS(sub).label;
+                if ~isempty(stimlabel)
+                    break
+                end
+            end
+            setappdata(handles.stimfig,'stimlabel',stimlabel);
+            
+            % if gS is defined but group has just now been loaded
+            try
+                if ~isempty(gS(actpt).Rs1) % current patient is defined -> set S to gS of this patient.
+                    S=gS(actpt);
+                end
             end
         end
+        % now tell everyone that the figure has been opened for a while
+        % already:
         setappdata(handles.stimfig,'grouploaded',1);
+    
+        
     end
-    
-
-    
 end
 
 
 
-if isempty(S)
-    S=initializeS;
+
+
+stimlabel=getappdata(handles.stimfig,'stimlabel');
+
+if isempty(S)    
+    S=initializeS(stimlabel);
+    setappdata(handles.stimfig,'stimlabel',S.label);
 else
    if isempty(S.Rs1)
-       S=initializeS;
+       S=initializeS(stimlabel);
+       setappdata(handles.stimfig,'stimlabel',S.label);
    end
 end
 Ractive=S.active(1);
-
 Lactive=S.active(2);
+
 if nargin==3
     if ischar(varargin{3})
         switch varargin{3}
@@ -2297,7 +2325,7 @@ if anycontactnegative && anycontactpositive % only then save results..
 end
 ea_refreshguisp(handles,options,ID);
 
-function S=initializeS
+function S=initializeS(varargin)
 
 % right sources
 for source=1:4
@@ -2326,8 +2354,15 @@ for source=1:4
 end
 
 S.active=[1,1];
-S.label=ea_detstimname;
-
+if nargin
+    if isempty(varargin{1})
+        S.label=  ea_detstimname;
+    else
+        S.label=varargin{1};
+    end
+else
+    S.label=ea_detstimname;
+end
 
 
 function Ls3am_Callback(hObject, eventdata, handles)
@@ -2632,7 +2667,6 @@ function saveparams_Callback(hObject, eventdata, handles)
 % hObject    handle to saveparams (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 S=getappdata(handles.stimfig,'S');
 gS=getappdata(handles.stimfig,'gS');
 actpt=getappdata(handles.stimfig,'actpt');

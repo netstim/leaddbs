@@ -617,7 +617,7 @@ end
 function refreshvifc(handles)
 ea_busyaction('on',handles.lg_figure,'group');
 
-%keyboard
+
 
 % get model data
 
@@ -1631,7 +1631,7 @@ nudir=[uigetdir];
 if ~nudir % user pressed cancel
     return
 end
-ea_busyaction('on',gcf,'group');
+ea_busyaction('on',handles.lg_figure,'group');
 
 nudir=[nudir,filesep];
 M=initializeM;
@@ -1646,8 +1646,13 @@ catch % if not, store it saving M.
 end
 
 M.ui.groupdir=nudir;
-setappdata(gcf,'M',M);
-ea_busyaction('off',gcf,'group');
+setappdata(handles.lg_figure,'M',M);
+try
+setappdata(handles.lg_figure,'S',M.S);
+setappdata(handles.lg_figure,'vatmodel',M.S(1).model);
+end
+
+ea_busyaction('off',handles.lg_figure,'group');
 
 refreshvifc(handles);
 
@@ -1714,6 +1719,9 @@ M.ui.lc.graphmetric=1;
 M.ui.lc.normalization=1;
 M.ui.lc.smooth=1;
 M.ui.tdlegendcheck=1;
+
+M.S=[];
+M.vatmodel=[];
 
 
 % --- Executes on button press in setstimparamsbutton.
@@ -2017,7 +2025,7 @@ ea_busyaction('on',gcf,'group');
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
-    
+    refreshvifc(handles);
     M=getappdata(hObject,'M');
     try
         save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
@@ -2103,6 +2111,7 @@ end
 try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); end
 
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
+    refreshvifc(handles);
     disp('Saving data...');
     % save M
     save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
