@@ -33,7 +33,7 @@ if isempty(uipatdirs)
 end
 
 prefs=ea_prefs('');
-if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do % do parallel processing if available and set in ea_prefs.
+if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do && ~strcmp(cmd,'export') % do parallel processing if available and set in ea_prefs.
     try delete(gcp); end
     pp=parpool(prefs.pp.profile,prefs.pp.csize);
     
@@ -52,8 +52,6 @@ if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do % do paralle
             switch cmd
                 case 'run'
                     ea_autocoord(opts{pat});
-                case 'export'
-                    ea_error('Exporting code not optimized for parallel processing as of yet. Please turn off parallel processing in ea_prefs.m');
             end
         catch
             warning([opts{pat}.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
@@ -63,33 +61,32 @@ if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do % do paralle
     delete(pp);
     
 else
-    
-    for pat=1:length(uipatdirs)
-        % set patient specific options
-        options.root=[fileparts(uipatdirs{pat}),filesep];
-        [root,thispatdir]=fileparts(uipatdirs{pat});
-        options.patientname=thispatdir;
-        % run main function
+    switch cmd
         
-        if length(uipatdirs)>1 % multi mode. Dont stop at errors.
-            try
-                switch cmd
-                    case 'run'
-                        ea_autocoord(options);
-                    case 'export'
-                        ea_export(options);
+        case 'export'
+            
+            ea_export(options);
+            
+        case 'run'
+            
+            for pat=1:length(uipatdirs)
+                % set patient specific options
+                options.root=[fileparts(uipatdirs{pat}),filesep];
+                [root,thispatdir]=fileparts(uipatdirs{pat});
+                options.patientname=thispatdir;
+                % run main function
+                
+                if length(uipatdirs)>1 % multi mode. Dont stop at errors.
+                    try
+                                ea_autocoord(options);
+                    catch
+                        warning([options.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
+                    end
+                else
+                            ea_autocoord(options);
                 end
-            catch
-                warning([options.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
             end
-        else
-            switch cmd
-                case 'run'
-                    ea_autocoord(options);
-                case 'export'
-                    ea_export(options);
-            end
-        end
+            
     end
 end
 
