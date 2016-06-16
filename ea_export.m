@@ -36,11 +36,14 @@ fprintf(fID,'\n');
 fprintf(fID,'%s\n','options=getoptslocal;');
 fprintf(fID,'\n');
 
-
+fprintf(fID,'%s\n',['addpath(genpath(''',options.earoot(1:end-1),'''));']);
+fprintf(fID,'%s\n',['addpath(''',fileparts(which('spm')),''');']);
+fprintf(fID,'\n');
+fprintf(fID,'\n');
 fprintf(fID,'%s\n','for pat=1:length(options.uipatdirs)');
 fprintf(fID,'%s\n','% set subject specific options:');
-fprintf(fID,'%s\n','options.root=[fileparts(uipatdirs{pat}),filesep];');
-fprintf(fID,'%s\n','[~,thispatdir]=fileparts(uipatdirs{pat});');
+fprintf(fID,'%s\n','options.root=[fileparts(options.uipatdirs{pat}),filesep];');
+fprintf(fID,'%s\n','[~,thispatdir]=fileparts(options.uipatdirs{pat});');
 fprintf(fID,'%s\n','options.patientname=thispatdir;');
 fprintf(fID,'%s\n',['ea_run(''run'',options);']);
 fprintf(fID,'%s\n','end');
