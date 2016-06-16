@@ -12,24 +12,28 @@ cnt = 1;
 
 Dcsf = 2;
 Dp = 0.5;
-vf = 0.4;
+vf = 0.7;
 vsw = 0.0;
 
 t = 0.1;
   
- 
-P(cnt).Di = 2;
-P(cnt).Da = 0.8;
-P(cnt).Dp = 0.8;
+Di = 2.4;
+Da = 1.7;
+Dp = 0.6;
+
+
+P(cnt).Di = Di;
+P(cnt).Da = Da;
+P(cnt).Dp = Dp;
 P(cnt).vf = vf;
 P(cnt).vsw = vsw;
 mask{cnt} = R<n*0.4 & R >n*0.25;
 dirs{cnt} = cat(3,(Y-n/2)./(eps+R),-(X-n/2)./(eps+R));
  cnt = cnt + 1;
 
-P(cnt).Di = 1.5;
-P(cnt).Da = 0.8; 
-P(cnt).Dp = 0.8;
+P(cnt).Di = Di;
+P(cnt).Da = Da; 
+P(cnt).Dp = Dp;
 P(cnt).vf = vf; %0.2+0.6*X/n;
 P(cnt).vsw = vsw;
 v = [1 -0.1]; v = v/norm(v);
@@ -39,9 +43,9 @@ mask{cnt} = p < n*t & p > -n*t;
 dirs{cnt} = cat(3,-v(2)*ones(size(X)),v(1)*ones(size(X)));
  cnt = cnt + 1;
 
-P(cnt).Di = 2;
-P(cnt).Da = 1; 
-P(cnt).Dp = 1;
+P(cnt).Di = Di;
+P(cnt).Da = Da; 
+P(cnt).Dp = Dp;
 P(cnt).vf = vf; %0.2+0.6*X/n;
 P(cnt).vsw = vsw;
 %v = [1 -0.1]; v = v/norm(v);

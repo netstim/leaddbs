@@ -1,3 +1,4 @@
+%test
 function Errs = createjointLUTs(ten);
 
 

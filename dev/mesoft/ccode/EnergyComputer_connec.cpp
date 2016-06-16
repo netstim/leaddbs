@@ -37,12 +37,22 @@ public:
     void setParameters(ParamStruct &info)
     {
 		
+        
+        
+   
+        numbshells = int(info.numbvals);
+        lmax =  int(info.lmax/2+1);
+        nip = sinterp->nverts;
+	//	fprintf(stderr,"Data directions (sizeLUT * dirs) : %i * %i\n",nalpha,nip);
+                  
+        
+        
+        
 		particle_weight = info.particle_weight;
         
-		ex_strength = info.num_qspace_samples;
+		ex_strength = info.data_lambda;///num_qspace_samples;
         particle_length_sq = (info.particle_len*info.particle_len);
-		in_strength = info.conpot_lambda/particle_length_sq;
-		eigencon_energy = info.chempot_connection*particle_length_sq	;
+		in_strength = info.conpot_lambda;
         kappa = info.kappa_connection;
         bound_attract = info.bound_attract;
 		
@@ -59,7 +69,8 @@ public:
         fiber_smooth = info.fiberSmooth;
         
 
-        eigen_energy = info.chempot_particle;
+        eigen_energy = info.chempot_particle;                    // 0.1
+		eigencon_energy = info.chempot_connection*eigen_energy;  // 0.1
 
         
         penalty_sw = info.penalty_SW;
@@ -88,132 +99,330 @@ public:
 
 
     //--------- computes data likelihood at a specific location
-	inline REAL computeExternalEnergy(pVector &R)
+	inline REAL computeExternalEnergy(Particle *tp, Particle *dp)
 	{
-
         
-        REAL vfi = 0;      
-        getVF_int(R,vfi);        
-        
-        
-        REAL ss = 1/sigma_s;
-
-		REAL MM = 0;
-        REAL SM = 0;
-                    
-        REAL Ms = getMS(R);
-    
-        REAL res_dummy,res_sw,total_proj_sw;
-        total_proj_sw = 0;
-        int cnt1;
-        Particle **P1 = pcontainer->getCell(R,cnt1);
-        for (int k = 0; k < cnt1; k++)
-        {
-            Particle *p1 = P1[k];
-            SM += getModelSignalCorrelation(p1,vfi);
-            for (int j = k; j < cnt1; j++)
-            {
-                Particle *p2 = P1[j];
-                MM += ((k!=j)?2:1)*
-                        mminteract(p2->q,p2->w,p2->Di,p2->Da,p2->Dp,vfi,0,
-                                   p1->q,p1->w,p1->Di,p1->Da,p1->Dp,vfi,0,  p2->N*p1->N, res_dummy,res_sw);
-            }
-            total_proj_sw += res_sw;
-		}			
-
-        
-        REAL alpha_sw = Ms/particle_weight - total_proj_sw;                           
-
-        if (meanval_sq > 0) // only if sw is modelled imlpicilty
-        {
-            if (alpha_sw < 0)
-            {                        
-                return -INFINITY;
-            }
-        }
-        
-        REAL M0 = 1/particle_weight;
-        REAL energy =   2*SM*M0 - MM - penalty_sw*alpha_sw;
-         
-    
-        return energy*ex_strength;
-        
-	}
-    
- 
-    //--------- computes data likelihood for specific particle    
-	inline REAL computeExternalEnergy(Particle *tp ,Particle *dp)
-	{
-
-		REAL m = SpatProb(tp->R);
+        REAL m = SpatProb(tp->R);
 		if (m == 0)
 		{
 			return -INFINITY;
 		}
+        
+        
+        
+        
+        REAL *alphaSM_self = (REAL*) malloc(sizeof(REAL)*lmax*numbshells); 
+        REAL *alphaMM_self = (REAL*) malloc(sizeof(REAL)*lmax); 
+        for (int k = 0; k < lmax; k++)
+            alphaMM_self[k] = 0;
+        for (int k = 0; k < lmax*numbshells; k++)
+            alphaSM_self[k] = 0;
 
-        REAL vfi;
-        getVF_int(tp->R,vfi);        
         
-               
-	    REAL Dn = getModelSignalCorrelation(tp,vfi);
-        
+        REAL *alphaSM = (REAL*) malloc(sizeof(REAL)*lmax*numbshells); 
+        REAL *alphaMM = (REAL*) malloc(sizeof(REAL)*lmax); 
+        for (int k = 0; k < lmax; k++)
+            alphaMM[k] = 0;
+        for (int k = 0; k < lmax*numbshells; k++)
+            alphaSM[k] = 0;
 
-		REAL Mn = 0;
-        
-        REAL Ms = getMS(tp->R);
         
         
-        REAL res_cur_sw_proj = 0;
-        REAL res_oth_sw_proj = 0;
         
-        REAL res_tmp;
         
         int cnt1;
+        getModelSignalCorrelation_modelfree(tp, alphaSM_self)   ;         
+        mminteract_modelfree(1, tp->w*tp->w,alphaMM_self );
         Particle **P1 = pcontainer->getCell(tp->R,cnt1);
-                
+        if (cnt1 > 0)
+        {
+            for (int k = 0; k < cnt1; k++)
+            {
+                Particle *p1 = P1[k];            
+                if (p1 != dp)
+                {
+                    REAL fac = 2 * tp->w*p1->w;
+                    mminteract_modelfree(tp->N*p1->N, fac,alphaMM_self );
+                }
+            }
+            
+        }
+
+      
+        int at_least_one_other = 0;
         for (int k = 0; k < cnt1; k++)
         {
-            Particle *p = P1[k];
-			if (dp == 0 || dp->ID != p->ID)
-			{                              
-                REAL dot = fabs(tp->N*p->N);
-
-                Mn +=  mminteract(tp->q,tp->w,tp->Di,tp->Da,tp->Dp,vfi,0,
-                                   p->q, p->w, p->Di, p->Da, p->Dp,vfi,0,
-                                              dot,res_cur_sw_proj,res_tmp);
-                res_oth_sw_proj += res_tmp;
-            }          
-
-        }
-                
-        REAL selfinteract =  mminteract(tp->q,tp->w,tp->Di,tp->Da,tp->Dp,vfi,0,
-                                        tp->q,tp->w,tp->Di,tp->Da,tp->Dp,vfi,0, 1.0,res_cur_sw_proj,res_cur_sw_proj) ;
-                
-        REAL alpha_sw = Ms/particle_weight - (res_oth_sw_proj+res_cur_sw_proj);                
-        
-        if (meanval_sq > 0) // only if sw is modelled imlpicilty
-        {        
-            if (alpha_sw < 0)
+            Particle *p1 = P1[k];            
+            if (p1 != dp)
             {
-               return -INFINITY;
+                at_least_one_other = 1;
+                getModelSignalCorrelation_modelfree(p1, alphaSM)   ;         
+                for (int j = k; j < cnt1; j++)
+                {
+                    Particle *p2 = P1[j];
+                    if (p2 != dp)
+                    {
+                        REAL fac = ((k!=j)?2:1) * p1->w*p2->w;
+                        mminteract_modelfree(p2->N*p1->N, fac,alphaMM );
+                    }
+                }            
             }
+        }			
+            
+        
+        int show = 0;
+        if (mtrand.rand() > 0.99)
+        {
+            show = 1;
+        show = 0;
+            //fprintf(stderr,"show %f \n",INFINITY);
         }
         
-        REAL M1 = 1/particle_weight;
-         
+        
+            
+        int cigar = 0;
+        for (int j = 0; j < numbshells;j++)
+        {
+            int k = 1;
+
+            if (alphaSM[k+j*lmax]> 0 || alphaSM_self[k+j*lmax] > 0)
+            {
+                cigar = 1;
+                break;
+            }
+            
+            
+        }
+         dbgflag = 0;
+        if (cigar == 1)
+        {
+            
+            free(alphaSM);
+            free(alphaMM);
+            free(alphaSM_self);
+            free(alphaMM_self);
+            dbgflag = 0;
+            
+            return -INFINITY;
+        }
+        
+        
+        
+        REAL m0 = 0;
+        REAL m0_with =0;      
+            
         REAL energy = 0;
-              
-        energy +=  (2*(M1*Dn-Mn) - selfinteract + penalty_sw*res_cur_sw_proj)*ex_strength;
-          
-        energy -= eigen_energy *ex_strength;
+       
+        REAL myeps = 0.00000;
         
-        REAL dd = tp->Di- (tp->Da+2*tp->Dp);
-        energy -= trace_equality_constraint*dd*dd;
+        int showss =mtrand.frand() >0.9999;
         
+        for (int k = 0; k < lmax; k++)
+        {
+            REAL SM_with = 0;
+            REAL SM = 0;
+            for (int j = 0; j < numbshells; j++)
+            {
+                REAL sm_with = (alphaSM[k+j*lmax]+alphaSM_self[k+j*lmax]); 
+                REAL sm = alphaSM[k+j*lmax];
+                
+                SM_with += sm_with*sm_with;
+                SM += sm*sm;
+            }
+            const REAL myeps = 0;
+            REAL pp = SM_with / fabs(alphaMM[k]+alphaMM_self[k]+myeps);
+            REAL ww = SM / fabs(alphaMM[k]+myeps);
+                  
+            
+            
+            
+            
+//             REAL thres = 0.0001;
+//             if (pp > thres)
+//                 pp = thres;
+//             if (ww > thres)
+//                 ww = thres;
+//             
+
+
+            REAL facy = 1;// (lmax+1);
+            
+//             if (showss) 
+//             {
+//                 fprintf(stderr,"%i) %f %f %f %f %f %f %f\n",k,energy,facy,pp,ww,SM_with,SM,alphaMM[k]+alphaMM_self[k]);
+//             }
+//             
+            
+            if (at_least_one_other == 1)
+                energy += (pp-ww) * facy;
+            else
+                energy += (pp ) * facy;
+            
+            
+
+            if (show==1)
+            {
+              if (k == 1 && SM_with / (alphaMM[k]+alphaMM_self[k]+myeps)  > 1)
+                {
+                
+//                fprintf(stderr,"%i %i(%f %f),\n ",k, at_least_one_other,  SM_with / (alphaMM[k]+alphaMM_self[k]) ,   SM / (alphaMM[k])  );
+                  fprintf(stderr,"%i %i (%f %f %f %f),\n ",k, at_least_one_other, SM_with / (alphaMM[k]+alphaMM_self[k]+myeps) ,SM_with, alphaMM[k], alphaMM_self[k]);                
+                
+                  for (int k = 0; k < cnt1; k++)
+                    {
+                        Particle *p1 = P1[k];            
+                        {
+                            for (int j = k; j < cnt1; j++)
+                            {
+                                Particle *p2 = P1[j];
+                                {
+                                    fprintf(stderr,"%f ",p2->N*p1->N);
+                                }
+                            }            
+                        }
+                    }			
+                    fprintf(stderr,"\n\n"  );
+                
+                
+                }
+            }
+
+        }
+        
+        
+//         if (show==1)
+//         {
+//            fprintf(stderr,"\n\n");
+//         }
+//         if (show==1)
+//             fprintf(stderr,"%f,\n\n ",energy);
+//         
+        energy = energy*ex_strength;
+        
+
+        energy -= eigen_energy;
+            
+            
+            
+        free(alphaSM);
+        free(alphaMM);
+        free(alphaSM_self);
+        free(alphaMM_self);
+                    
         
         return energy;
-  
+        
 	}
+    
+//     
+// 	inline REAL computeExternalEnergy(pVector &R)
+// 	{
+//         
+//         
+//         REAL energy = 0;
+// 
+//         int cnt1;
+//         Particle **P1 = pcontainer->getCell(R,cnt1);
+//         if (cnt1 > 0)
+//         {
+//             REAL *alphaSM = (REAL*) malloc(sizeof(REAL)*nalpha); 
+//             REAL *alphaMM = (REAL*) malloc(sizeof(REAL)*lmax); 
+//             for (int k = 0; k < lmax; k++)
+//                 alphaMM[k] = 0;
+//             for (int k = 0; k < nalpha; k++)
+//                 alphaSM[k] = 0;
+//             
+//             int numsegs = 0;
+//             
+//             for (int k = 0; k < cnt1; k++)
+//             {
+//                 Particle *p1 = P1[k];            
+//                 if (p1->active)
+//                 {
+//                     numsegs++;
+//                     getModelSignalCorrelation_modelfree(p1, alphaSM)   ;         
+//                     for (int j = k; j < cnt1; j++)
+//                     {
+//                         Particle *p2 = P1[j];
+//                         if (p2->active)
+//                         {
+//                             REAL fac = ((k!=j)?2:1) * p1->w*p2->w;
+//                             mminteract_modelfree(p2->N*p1->N, fac,alphaMM );
+//                         }
+//                     }            
+//                 }
+//             }			
+//             
+//             int show = 0;
+//             if (mtrand.rand() > 0.99)
+//                 show = 1;
+//             show = 0;
+//             
+//             if (numsegs>0)
+//             {
+//                 for (int k = 0; k < lmax; k++)
+//                 {
+//                     REAL SM = 0;
+//                     for (int j = 0; j < numbshells; j++)
+//                     {
+//                         SM += alphaSM[k+j*lmax]*alphaSM[k+j*lmax];
+//                     }
+//                     energy += SM / alphaMM[k] *(lmax+1);
+//                      if (show==1)
+//                      {
+//                        fprintf(stderr,"%i(%f %f %f),\n ",k,sqrt(SM),alphaMM[k],SM / alphaMM[k]);
+//                      }
+// 
+//                  }
+//                 if (show==1)
+//                 {
+//                  fprintf(stderr,"\n\n");
+//                 }
+//             }
+//             if (show==1)
+//                 fprintf(stderr,"%f,\n\n ",energy);
+//             
+//             energy -= eigen_energy*numsegs;
+//             
+//             
+//             
+//             free(alphaSM);
+//             free(alphaMM);
+//             
+//         }
+//         
+//         
+//         return energy*ex_strength;
+//         
+// 	}
+//     
+    
+    
+//     
+//     
+// 
+//     //--------- computes data likelihood for specific particle    
+// 	inline REAL computeExternalEnergy(Particle *tp ,Particle *dp)
+// 	{
+// 
+// 		REAL m = SpatProb(tp->R);
+// 		if (m == 0)
+// 		{
+// 			return -INFINITY;
+// 		}
+// 
+// 
+//         REAL energy = computeExternalEnergy(tp->R);
+//         tp->active = false;
+//         energy -= computeExternalEnergy(tp->R);
+//         tp->active = true;
+//                                               
+//         
+//         return energy;
+//   
+// 	}
+//     
+//     
     
     
 
@@ -279,7 +488,7 @@ public:
                     return 0;
                 pVector R = p1->R + (p1->N * (p1->len * ep1));
                 if (isGrayMatter(R) > 0)
-                    return eigencon_energy*in_strength*bound_attract; 
+                    return eigencon_energy*bound_attract; 
                 else
                     return 0;
             }
@@ -314,37 +523,38 @@ public:
 		REAL norm1_ang = (R1-R)*dR; norm1_ang *= norm1_ang;
 		REAL norm2_ang = (R2-R)*dR; norm2_ang *= norm2_ang;
         
-        REAL bendEnergy = (kappa * (norm1_ang + norm2_ang) + (1-kappa)*(norm1-norm1_ang + norm2-norm2_ang))*2;
+       REAL bendEnergy = (kappa * (norm1_ang + norm2_ang) + (1-kappa)*(norm1-norm1_ang + norm2-norm2_ang))*2;
         
-	
+	 //  REAL bendEnergy = (R1-R2).norm_square();
+     
         REAL energy;
-        if (fiber_smooth>0)
-        {
-            REAL vfi1=0;
-            REAL vfi2=0;
-            getVF_int(p1->R,vfi1);
-            getVF_int(p2->R,vfi2);
-            REAL dfi = vfi1-vfi2; dfi *= dfi;
-            REAL dDi = p1->Di-p2->Di; dDi *= dDi;
-            REAL dDa = p1->Da-p2->Da; dDa *= dDa;
-            REAL dDp = p1->Dp-p2->Dp; dDp *= dDp;
-            
-            
-            REAL f_smooth = 0;
-            if (restrictions&1 && restrictions&2)
-                f_smooth = dDi;
-            else if (restrictions&1)
-                f_smooth = dDi+dDa;
-            else if (restrictions&2)
-                f_smooth = dDi+dDp;
-            else 
-                f_smooth = dDi+dDa+dDp;
-                
-            
-    		energy = (eigencon_energy-bendEnergy - fiber_smooth*f_smooth )*in_strength; 
-        }
-        else
-            energy = (eigencon_energy-bendEnergy)*in_strength; 
+//         if (fiber_smooth>0)
+//         {
+//             REAL vfi1=0;
+//             REAL vfi2=0;
+//             getVF_int(p1->R,vfi1);
+//             getVF_int(p2->R,vfi2);
+//             REAL dfi = vfi1-vfi2; dfi *= dfi;
+//             REAL dDi = p1->Di-p2->Di; dDi *= dDi;
+//             REAL dDa = p1->Da-p2->Da; dDa *= dDa;
+//             REAL dDp = p1->Dp-p2->Dp; dDp *= dDp;
+//             
+//             
+//             REAL f_smooth = 0;
+//             if (restrictions&1 && restrictions&2)
+//                 f_smooth = dDi;
+//             else if (restrictions&1)
+//                 f_smooth = dDi+dDa;
+//             else if (restrictions&2)
+//                 f_smooth = dDi+dDp;
+//             else 
+//                 f_smooth = dDi+dDa+dDp;
+//                 
+//             
+//     		energy = (eigencon_energy-bendEnergy - fiber_smooth*f_smooth )*in_strength; 
+//         }
+//         else
+            energy = eigencon_energy-bendEnergy/particle_length_sq*in_strength; 
 
 
 		return energy;

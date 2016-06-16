@@ -38,6 +38,7 @@ public:
     REAL voxelSmooth_Ds_range;
     REAL fiberSmooth;
     REAL conpot_lambda;
+    REAL data_lambda;
     REAL penalty_SW;    
     REAL trace_equality_constraint;
     REAL curv_hardthres;
@@ -50,6 +51,8 @@ public:
     REAL prop_p_Dmod;     
     REAL prop_p_vfmod; 
     REAL prop_p_conprob;
+    REAL numbvals;
+    REAL lmax;
     
     
     void readParameters(const mxArray *mxarr)
@@ -74,6 +77,7 @@ public:
         voxelSmooth_Ds_range = read("voxelSmooth_Ds_range",mxarr);
         fiberSmooth = read("fiberSmooth",mxarr);
         conpot_lambda = read("conpot_lambda",mxarr);
+        data_lambda = read("data_lambda",mxarr);
         penalty_SW = read("penalty_SW",mxarr);
         trace_equality_constraint = read("trace_equality_constraint",mxarr);
         curv_hardthres = read("curv_hardthres",mxarr);
@@ -86,6 +90,8 @@ public:
         prop_p_Dmod = read("prop_p_Dmod",mxarr);     
         prop_p_vfmod = read("prop_p_vfmod",mxarr); 
         prop_p_conprob = read("prop_p_conprob",mxarr);
+        lmax = read("lmax",mxarr); 
+        numbvals = read("numbvals",mxarr);
 
     }
     

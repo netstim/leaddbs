@@ -1,7 +1,7 @@
 % mex all the ccode
-display('mexing c-code');
+%display('mexing c-code');
 cd ccode
-ft_make
+%ft_make
 cd ..
 
 % add the neccesary paths

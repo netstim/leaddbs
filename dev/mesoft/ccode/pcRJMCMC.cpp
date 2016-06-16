@@ -115,7 +115,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	printf(" wrong usage!!!.\n\n");
     return;
-	} else if(nlhs>4) {
+	} else if(nlhs>5) {
 	printf("Too many output arguments\n");
     return;
 	}
@@ -156,8 +156,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const int *datasize = mxGetDimensions(S2andIDX);
     int mask_oversamp_mult = dmsize[0]/datasize[0];
     
-    // a size vector of the full data [N_approx M_sphere w h d] (actually the data itself does not exist anymore in that way, because data it's kept sparsely)
-    const int datacombisize[5] = {dsqsize[0],dsqsize[1], datasize[0],datasize[1],datasize[2]};
     
     // the  voxel size (our coordinates are in mm)
 	const mxArray *VoxSize;
@@ -175,6 +173,15 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	const mxArray *sinterpstruct = prhs[pcnt++];
     SphereInterpolator *sinterp = new SphereInterpolator(sinterpstruct);
 
+ 
+   // a size vector of the full data [N_approx M_sphere w h d] (actually the data itself does not exist anymore in that way, because data it's kept sparsely)
+ 
+   int lmax = int(info.lmax);
+    int numbshells = int(info.numbvals);
+    const int datacombisize[5] = {(lmax/2+1)*numbshells ,sinterp->nverts, datasize[0],datasize[1],datasize[2]};
+     
+//    const int datacombisize[5] = {dsqsize[0],dsqsize[1], datasize[0],datasize[1],datasize[2]};
+     
     
     // if this matlab-handle disappears tracking is stopped
 	double breakhandle = 0;	
@@ -190,38 +197,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     // either initlize vfmap or just get it from previous step
     REAL *vfmap;
-    if (vfmap_in == NULL)
     {
-        int vfmapsize[4] =  { int((REAL)datasize[0]/info.particle_width),
-                              int((REAL)datasize[1]/info.particle_width),
-                              int((REAL)datasize[2]/info.particle_width), 3 };
-        plhs[1] = mxCreateNumericArray(4,vfmapsize,mxGetClassID(Points),mxREAL);
-        vfmap = (REAL*) mxGetData(plhs[1]);
-        for (int z = 0; z < vfmapsize[2]; z++)
-        for (int y = 0; y < vfmapsize[1]; y++)
-        for (int x = 0; x < vfmapsize[0]; x++)
-        {
-            int idx = x+vfmapsize[0]*(y+vfmapsize[1]*z);
-            int midx = floor(REAL(x)*info.particle_width*mask_oversamp_mult) +
-                       floor(REAL(y)*info.particle_width*mask_oversamp_mult)*dmsize[0] + 
-                       floor(REAL(z)*info.particle_width*mask_oversamp_mult)*dmsize[0]*dmsize[1];
-            if (mask[midx] > 0)
-            {                
-                vfmap[idx] = mtrand.frand(); //1.0;
-            }
-            else
-                vfmap[idx] = 1.0;
-            vfmap[idx + vfmapsize[0]*vfmapsize[1]*vfmapsize[2]] = 0.0;
-        }
-                              
-    }
-    else
-    {
-         plhs[1] = mxCreateNumericArray(4,vfmapsize,mxGetClassID(Points),mxREAL);
-         vfmap = (REAL*) mxGetData(plhs[1]);
-         memcpy(vfmap,vfmap_in,sizeof(REAL)*vfmapsize[0]*vfmapsize[1]*vfmapsize[2]*2);
-    }
-            
+    int vfmapsize[5] =  { int((REAL)datasize[0]/info.particle_width),
+                          int((REAL)datasize[1]/info.particle_width),
+                          int((REAL)datasize[2]/info.particle_width), 
+                          int(lmax/2+1) , int(info.numbvals+1)};
+    plhs[1] = mxCreateNumericArray(5,vfmapsize,mxGetClassID(Points),mxREAL);
+    vfmap = (REAL*) mxGetData(plhs[1]);
+    }       
        
 	// initialize everything
 	REAL cellsize = info.particle_len*2;
@@ -246,12 +229,24 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     
     // compute some more maps needed in matlab to calculate all model parameters
-    encomp.computeMeanProjMap();
+    
+    
+    REAL *vf_fibs = 0;
+    if (nlhs >=5)
+    {
+        int vf_fibs_size[3] = {  sampler.pcontainer.pcnt,
+                              int(lmax/2+1) , int(info.numbvals+1)};
+        plhs[4] = mxCreateNumericArray(3,vf_fibs_size,mxGetClassID(Points),mxREAL);
+        vf_fibs = (REAL*) mxGetData(plhs[4]);
+    }
+    
+    
+    encomp.computeMeanProjMap(vf_fibs);
 
     
     // label fibers uniqely.    
     sampler.label_fibers();
-    if (nlhs ==4)
+    if (nlhs >=4)
     {
         vector<RJMCMCBase::Cross> c = sampler.createCrossingList();
         plhs[3] = mxCreateNumericMatrix(4,c.size(),mxGetClassID(Points),mxREAL);
@@ -266,6 +261,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         }
         
     }
+    
+    
 	// write tracking state to matlab variable
 	int cnt = sampler.pcontainer.pcnt;	
 	int dims[] = {sampler.attrcnt, sampler.pcontainer.pcnt};

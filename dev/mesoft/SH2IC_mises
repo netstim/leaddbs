@@ -1,0 +1,21 @@
+%%
+
+
+
+e = strrep(strrep(strrep(char(x),'*','.*'),'^','.^'),'/','./');
+
+
+a = 0:0.1:2;
+f = eval(e);
+f(1) = 1;
+plot(a,f)
+kappa = 0.001;
+n = 8; 
+M =( repmat(f,[n 1]).^repmat((0:(n-1))',[1 size(f,2)]) )';
+
+as = exp(M*pinv(M)*log(a'+kappa))-kappa
+ plot(as,f,'r',a,f,'b')
+alpha =  pinv(M)*log(a'+kappa)
+alpha = [0.0011   -0.0306    0.2841   -1.5668    4.7801   -7.9515    6.6931   -2.2164]*10^3;
+SH2ic = @(f) 1./(exp((repmat(f,[n 1]).^repmat((0:(n-1))',[1 size(f,2)]) )'*alpha')-kappa);
+SH2ic([0.3:0.1:1])

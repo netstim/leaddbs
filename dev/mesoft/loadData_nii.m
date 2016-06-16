@@ -48,31 +48,19 @@ function data = loadData_nii(dwifile,gradfile,maskfile,threshold)
             dwinii = load_untouch_nii(dwifile);
        end;
        
-       gradf1 = load(gradfile{1});
-       gradf2 = load(gradfile{2});
+       gradf1 = importdata(gradfile{1});
+       gradf2 = importdata(gradfile{2});
        if size(gradf1,1) == 3,
            bvec = gradf1;
            bval = gradf2;
-       elseif size(gradf1,2) == 3
-           bvec=gradf1';
-           bval=gradf2';
-       elseif size(gradf2,1)==3
-            bvec = gradf2;
-           bval = gradf1;
-           
-       elseif size(gradf2,2)==3
-           bvec = gradf2';
-           bval = gradf1';
        else
-           error('No suitable grad files found');
+           bvec = gradf2;
+           bval = gradf1;
        end;
-               
-       T = diag([-1 -1 1])*[dwinii.hdr.hist.srow_x(1:3) ; dwinii.hdr.hist.srow_y(1:3) ; dwinii.hdr.hist.srow_z(1:3)];
-       [U S V] = svd(T);
-       T = U*V';
+
+       T = 1;
               
        for k = 1:size(bval,2),
-
            gdir = T*bvec(:,k);
            gdir = gdir / (eps+norm(gdir));
            tensor(:,:,k) = gdir*gdir' *bval(k);
@@ -108,7 +96,7 @@ function data = loadmask(fn,threshold,ref,edges)
         else
             [fp fndum fext] = fileparts(fn);
         end;
-        if strcmp(fext(1:4),'.nii') || strcmp(fext(1:4),'.hdr'),                     
+        if strcmp(fext(1:min(4,end)),'.gz') ||  strcmp(fext(1:min(4,end)),'.nii') || strcmp(fext(1:min(4,end)),'.hdr'),                     
                      
            if iscell(fn)
                masknii = load_untouch_nii(fn{2});
@@ -134,4 +122,5 @@ function data = loadmask(fn,threshold,ref,edges)
         
         data.mask = maskdata;
         data.threshold = threshold;
+        
         

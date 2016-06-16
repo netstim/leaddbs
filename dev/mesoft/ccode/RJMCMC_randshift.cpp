@@ -125,10 +125,8 @@ class RJMCMC : public RJMCMCBase
                 // generate random proposal parameters
                 REAL Di,Da,Dp,w,q;
                 pVector N;
-                if (directional_propsal_distrib>0)
-                    N = enc->drawPriorDir(R);
-                else
-                    N.rand_sphere();        
+            
+                N.rand_sphere();        
                 
                 
                 chooseDap(Di,Da,Dp);                
@@ -148,9 +146,12 @@ class RJMCMC : public RJMCMCBase
                 // compute Energy differences
                 REAL ex_energy;
 				ex_energy = enc->computeExternalEnergy(&proposal,0);                
-                ex_energy += enc->smoothnessSegs(&proposal);
-                ex_energy += enc->computeInternalEnergy(&proposal) ;
+                //ex_energy += enc->smoothnessSegs(&proposal);
+                //ex_energy += enc->computeInternalEnergy(&proposal) ;
                 
+//                 if(mtrand.frandn()>0.9999)
+//                     fprintf(stderr,"%f ",ex_energy);
+//                 
                 // compute Green's ratio
                 int parcnt;
                 
@@ -216,8 +217,8 @@ class RJMCMC : public RJMCMCBase
                         // cmopute Energy differences
                         REAL ex_energy;
                         ex_energy = enc->computeExternalEnergy(dp,dp);
-                        ex_energy += enc->smoothnessSegs(dp);
-                        ex_energy += enc->computeInternalEnergy(dp);
+                      //  ex_energy += enc->smoothnessSegs(dp);
+                      //  ex_energy += enc->computeInternalEnergy(dp);
                         
                         // compute Green's ratio
                         int parcnt;
@@ -229,9 +230,7 @@ class RJMCMC : public RJMCMCBase
                         
                         prob *= exp(-(ex_energy/Temp));
                         
-                        if (directional_propsal_distrib>0)
-                            prob *= enc->getPriorDirProb(dp->R,dp->N);
-                                                
+                                               
                         if (prob > 1 || mtrand.frand() < prob)
                         {
                             pcontainer.remove(pnum);
@@ -259,7 +258,7 @@ class RJMCMC : public RJMCMCBase
 			else  if (randnum < p_birth+p_death+p_Dmod)
 			{
         	
-            
+           
 				REAL energy = 0;
 				if (pcontainer.pcnt > 0)
 				{
@@ -272,20 +271,13 @@ class RJMCMC : public RJMCMCBase
 					Particle prop_p = *p;
                                             
                     
-                    REAL sel = mtrand.frand();                   
-                    if (sel >= 0.1) // either propose new diffusion parameters
-                    {                    
-                        distortDap(prop_p.Di,prop_p.Da,prop_p.Dp);               
-                        prop_p.w =chooseWeight();
-                    }
-                    else // or just a new tracking guide weight
-                        prop_p.q =chooseWeight_guide();
+                     prop_p.w =chooseWeight();
                     
                     
                     // compute Energy differences                    
 					REAL ex_energy = enc->computeExternalEnergy(&prop_p,p) - enc->computeExternalEnergy(p,p);			
-                    ex_energy += (enc->smoothnessSegs(&prop_p) - enc->smoothnessSegs(p));
-                    REAL in_energy = (enc->computeInternalEnergy(&prop_p) - enc->computeInternalEnergy(p));
+                    //ex_energy += (enc->smoothnessSegs(&prop_p) - enc->smoothnessSegs(p));
+                    REAL in_energy = 0; //(enc->computeInternalEnergy(&prop_p) - enc->computeInternalEnergy(p));
                     
                     REAL prob = exp(ex_energy/Temp + in_energy/Temp);
                     
@@ -319,6 +311,7 @@ class RJMCMC : public RJMCMCBase
 			///////////////////////////////////////////////////////////////        
 			else  if (randnum < p_birth+p_death+p_vfmod+p_Dmod)
             {
+            return;
                 
                 // get a random position                                    
 				pVector R ;
@@ -382,6 +375,7 @@ class RJMCMC : public RJMCMCBase
 			///////////////////////////////////////////////////////////////
 			else  if (randnum < p_birth+p_death+p_vfmod+p_shift+p_Dmod)
 			{
+           
                 REAL energy = 0;
 				if (pcontainer.pcnt > 0)
 				{
@@ -405,17 +399,13 @@ class RJMCMC : public RJMCMCBase
                     }
 		
 					REAL ex_energy = enc->computeExternalEnergy(&prop_p,p) - enc->computeExternalEnergy(p,p);
-                    ex_energy += enc->smoothnessSegs(&prop_p)-enc->smoothnessSegs(p);
+                   // ex_energy += enc->smoothnessSegs(&prop_p)-enc->smoothnessSegs(p);
 					REAL in_energy = enc->computeInternalEnergy(&prop_p) - enc->computeInternalEnergy(p);
 							 
                     
                     
 					REAL prob = exp(ex_energy/Temp+in_energy/Temp);
-                    if (directional_propsal_distrib>0)
-                    {
-                       REAL pprior_prop = enc->getPriorDirProb(prop_p.R,prop_p.N)/ enc->getPriorDirProb(p->R,p->N);
-                       prob *= pprior_prop;
-                    }
+                  
                     if (mtrand.frand() < prob)
                     {
                         pVector Rtmp = p->R;
@@ -455,6 +445,7 @@ class RJMCMC : public RJMCMCBase
 			///////////////////////////////////////////////////////////////
 			else 
 			{
+            
 
 
 				if (pcontainer.pcnt > 0)
@@ -778,7 +769,7 @@ class RJMCMC : public RJMCMCBase
 //        REAL t = 0.2;
   //      REAL s = 40;
         
-        return (t + log(exp(mtrand.frand()*s*(1-t)) - (1-exp(-s*t)) )/s);
+        return 1+1*(mtrand.frand()-0.5);//+(t + log(exp(mtrand.frand()*s*(1-t)) - (1-exp(-s*t)) )/s);
         
     }
     

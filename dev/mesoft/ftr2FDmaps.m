@@ -1,4 +1,4 @@
-function [res ftr] = mesoftr2FDmaps(ftr,M)
+function [res ftr] = ftr2FDmaps(ftr,M)
 
 if isstr(ftr),
     ftr = load(ftr);
@@ -51,18 +51,18 @@ for k = 1:3,
 end;
 fibdensRGB = fibdensRGB /max(fibdensRGB(:));
 
-fibdens = AccumulateTrilinWeighted(single(sz*M),single(pts'*M),single(arclen));
+fibdens = AccumulateTrilinWeighted(single(sz*M),single(pts'*M),single(arclen)); 
 if isfield(ftr,'curveD'),
     for k = 1:size(pa,2),
         PaMap{k} = AccumulateTrilinWeighted(single(sz*M),single(pts'*M),single(pa(:,k).*arclen)')./(eps+fibdens);
     end;
 end;
 
-
+ 
 
 nc = cellfun(@ep,ftr.curveSegCell(idx),'UniformOutput',false);
 pts  = cat(1,nc{:})-1;
-epdens = AccumulateTrilin(single(sz*M),single(pts'*M));
+epdens = AccumulateTrilin(single(sz*M),single(pts'*M)); 
 
 res.fdrgb = fibdensRGB;
 res.fd = fibdens;
@@ -78,12 +78,12 @@ if isfield(ftr,'curveD'),
     res.vfe = maps.vfe;
     res.S0 = maps.S0;
     res.segcount = maps.segcount;
-
+    
     gauss = fspecial('gaussian',[5 1],1); [gx gy gz] = ndgrid(gauss); gauss = gx.*gy.*gz;
     res.axondiameter = maps.vfi ./ (imfilter(maps.segcount,gauss)./(eps+ imfilter(double(maps.segcount>0),gauss)));
-
-
-
+    
+    
+    
 end;
 
 

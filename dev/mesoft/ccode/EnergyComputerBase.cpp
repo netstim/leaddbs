@@ -36,7 +36,8 @@ public:
     int w_vf,h_vf,d_vf;    
     
     int nip; // number of data vertices on sphere
-    int nalpha; // number of expansions coeffs in LUT
+    int lmax; // nalpha = lmax*numbshells
+    int numbshells; // nalpha = lmax*numbshells
     
     
 	REAL *msmap; // avergae q-space signal (at native DWI resolution)
@@ -71,7 +72,8 @@ public:
         spatprobimg = spimg;
         this->vfmap = vfmap;
         
-        nalpha = datasz[0];
+        numbshells = 0;
+        lmax =  0;
         nip = datasz[1];
                 
         w = datasz[2];
@@ -98,7 +100,7 @@ public:
         
         
         fprintf(stderr,"Data size (voxels) : %i x %i x %i\n",w,h,d);
-		fprintf(stderr,"Data directions (sizeLUT * dirs) : %i * %i\n",nalpha,nip);
+		fprintf(stderr,"Data directions (sizeLUT * dirs) : %i,%i * %i\n",lmax-2, numbshells,nip);
         
         fprintf(stderr,"voxel size:  %f x %f x %f\n",voxsize_w,voxsize_h,voxsize_d);
         fprintf(stderr,"mask_oversamp_mult: %i\n",spmult);
@@ -167,46 +169,48 @@ public:
     
     
     
+ 
+
     
-    //-------------------- computes model-model correlation function
-    inline REAL mminteract(REAL &q1,REAL &w1,REAL &Di1, REAL &Da1, REAL &Dp1, REAL fi1, REAL fw1,
-                           REAL &q2,REAL &w2,REAL &Di2, REAL &Da2, REAL &Dp2, REAL fi2, REAL fw2, REAL dot,
-                           REAL &res_sw_proj1,REAL &res_sw_proj2)
+       //-------------------- computes model-model correlation function
+    inline void mminteract_modelfree(REAL dot, REAL fac, REAL *alpha)
     {    
+
+        dot = fabs(dot);
         
+        if (dot==1)
+        {
+           for (int k = 0; k < lmax; k++)
+                alpha[k] += fac;
+           return;
+        }
         
-            REAL res = 0;
+        alpha[0] += fac;
+                
+        REAL tmp1 = 1;
+        REAL tmp2 = dot;
+        REAL tmp3,tmp4;
+        
+        for (int k = 0; k < lmax-1; k++)
+        {
+            int l = 2*k+2;
+            tmp3 = ((2*l-1)*dot*tmp2 - (l-1)*tmp1)/l;
+            tmp4 = ((2*l+1)*dot*tmp3 - (l)*tmp2)/(l+1);
+            alpha[k+1] += fac*tmp3;
+            tmp1 = tmp3;
+            tmp2 = tmp4;
             
-            // needed to keep track of positivity of sw fraction
-            res_sw_proj1 = 0;
-            res_sw_proj2 = 0;
-            
-    
-            // modelmodel correlation
-            REAL Mi1 = modelmodelCorr(Di1,0.0,0,0.0,dot);
-            REAL Mi2 = modelmodelCorr(Di2,0.0,0,0.0,dot);
-            REAL Ma1 = modelmodelCorr(Da1,Dp1,0,0,dot);
-            REAL Ma2 = modelmodelCorr(Da2,Dp2,0,0,dot);            
-            res = fi1*fi2*(modelmodelCorr(Di1,0.0,Di2,0.0,dot)- meanval_sq*Mi1*Mi2) + (1-fi1)*(1-fi2)*(modelmodelCorr(Da1,Dp1,Da2,Dp2,dot)-meanval_sq*Ma1*Ma2) +                      
-                    fi1*(1-fi2)*(modelmodelCorr(Di1,0.0,Da2,Dp2,dot)-meanval_sq*Mi1*Ma2) + (1-fi1)*fi2*(modelmodelCorr(Da1,Dp1,Di2,0.0,dot)-meanval_sq*Ma1*Mi2) ;
-            res_sw_proj1 = w1*(fi1*Mi1 + (1-fi1)*Ma1);
-            res_sw_proj2 = w2*(fi2*Mi2 + (1-fi2)*Ma2);                                
-            res *= (w1*w2);
-            
-            // tracking guide prior
-            res += q1*q2*modelmodelCorrFixTis(dot);
-                                
-            return res;
-                    
+        }
+                
+                                    
     }
 
     
-
-    //------------------------- returns the model-signal correlation for a given particle
-    inline REAL getModelSignalCorrelation(Particle *p, REAL volfrac_int)
+    
+    
+  inline void getModelSignalCorrelation_modelfree(Particle *p, REAL *alpha)
 	{
         
-        REAL *alpha = (REAL*) malloc(sizeof(REAL)*nalpha); // windoof
 		int xint,yint,zint,spatindex;
 
         // get voxel index
@@ -218,6 +222,8 @@ public:
         zint = int(floor(Rz));
                 
 
+        int offs = (lmax-2)*numbshells;
+        
         // get barycentric interpolation weights/indices
         int i0,i1,i2;
         REAL w0,w1,w2;
@@ -226,50 +232,84 @@ public:
         #endif
         {
             sinterp->getInterpolation(p->N);
-            i0 = sinterp->idx[0]*nalpha;
-            i1 = sinterp->idx[1]*nalpha;
-            i2 = sinterp->idx[2]*nalpha;
+            i0 = sinterp->idx[0]*offs;
+            i1 = sinterp->idx[1]*offs;
+            i2 = sinterp->idx[2]*offs;
             w0 = sinterp->interpw[0];
             w1 = sinterp->interpw[1];
             w2 = sinterp->interpw[2];
         }
         
-        
-        
+       
         // gather alpha vector needed for modelSignalCorr
         REAL weight;        
-        for (int k = 0; k < nalpha; k++)            
+        const REAL sq23 = 1/(sqrt(2)*3);
+                
+        if (xint >= 0 && xint < w && yint >= 0 && yint < h && zint >= 0 && zint < d)
         {
-                alpha[k] = 0;
+
+            int sindex = idxmap[(xint + w*(yint+h*zint))];
+            if (sindex >= 0)
+            {
+                spatindex =  sindex*(nip*offs + numbshells*7);      
+                REAL tmp ;
                 
-                if (xint >= 0 && xint < w && yint >= 0 && yint < h && zint >= 0 && zint < d)
-                {
-                    
-                    int sindex = idxmap[(xint + w*(yint+h*zint))];
-                    if (sindex >= 0)
+                for(int k = 0; k< numbshells;k++)
+                    for(int j = 2; j < lmax;j++)
                     {
-                        spatindex =  sindex*nip*nalpha;                    
-                        alpha[k] += (dataimg[spatindex+i0+k]*w0 + dataimg[spatindex+i1+k]*w1 + dataimg[spatindex+i2+k]* w2);
+                        int idx = j+k*lmax;
+                        int idx2 = j-2+k*(lmax-2);
+//                         int idx = j+k*numbshells;
+//                         int idx2 = j+(k-2)*numbshells;
+                        alpha[idx] += p->w*(dataimg[spatindex+i0+idx2]*w0 + dataimg[spatindex+i1+idx2]*w1 + dataimg[spatindex+i2+idx2]* w2);
                     }
-                }
-
-		}
-        
-        REAL res = 0;
-        
-        // model signal correaltion
-        res = p->w*(volfrac_int*modelSignalCorr(p->Di, 0.0, alpha) + (1-volfrac_int)*modelSignalCorr(p->Da, p->Dp, alpha));                
                 
-        // tracking guide prior
-        res += p->q*modelSignalCorrGuide(alpha);
-
-        free(alpha);
+//                 for (int k = 2; k < nalpha; k++)
+//                 {
+//                     if (k%lmax > 1)
+//                     {
+//                     alpha[k-2] += p->w*(dataimg[spatindex+i0+k]*w0 + dataimg[spatindex+i1+k]*w1 + dataimg[spatindex+i2+k]* w2);
+//                     }
+//                 }
+                for(int k = 0; k< numbshells;k++)
+                {
+                    pVector n = p->N;
+                    REAL qxx = (2*n.x*n.x - n.y*n.y - n.z*n.z)*sq23;
+                    REAL qyy = (2*n.y*n.y - n.x*n.x - n.z*n.z)*sq23;
+                    REAL qzz = (2*n.z*n.z - n.y*n.y - n.x*n.x)*sq23;
+                    REAL qxy = n.x*n.y;
+                    REAL qxz = n.x*n.z;
+                    REAL qyz = n.z*n.y;
+                    REAL d2 = p->w*3*(
+                     qxx*dataimg[spatindex+nip*offs +1 + k*7 ] +
+                     qyy*dataimg[spatindex+nip*offs +2 + k*7] +
+                     qzz*dataimg[spatindex+nip*offs +3 + k*7] +
+                     qxy*dataimg[spatindex+nip*offs +4 + k*7] +
+                     qxz*dataimg[spatindex+nip*offs +5 + k*7] +
+                     qyz*dataimg[spatindex+nip*offs +6 + k*7]);
+                    
+//                      if (mtrand.frand() > 0.9999)
+//                      {
+//                         if (k == 0)
+//                          fprintf(stderr,"%i) %.20f  \n",k,tmp/d2);
+//                       //   fprintf(stderr,"%i)-- %f  \n",k,dataimg[spatindex+nip*nalpha ]/60/alpha[0+k*lmax]);
+//                      }
+//                     
+                    alpha[0+k*lmax] += dataimg[spatindex+nip*offs +0 + k*7 ]*p->w;
+                    alpha[1+k*lmax] += d2;
+                }
+                    
+            
+            
+            }
+        }
         
-        return res;
+        
+        
+        
 	}
     
     
- 
 
     
     //----------------- gets the q-space average at some position R
@@ -386,139 +426,96 @@ public:
                 return 0;	
         }
         else
-            return (SpatProb(R) == 0);
+            return false; //(SpatProb(R) == 0);
 	}
     
     
     
-    inline REAL getPriorDirProb_t(pVector R,pVector N)
-	{
-        
-		int xint,yint,zint,spatindex;
-
-        // get voxel index
-        REAL Rx = R.x/voxsize_w;
-        REAL Ry = R.y/voxsize_h;
-        REAL Rz = R.z/voxsize_d;        
-        xint = int(floor(Rx));
-        yint = int(floor(Ry));
-        zint = int(floor(Rz));
-
-        
-         // get barycentric interpolation weights/indices
-        int i0,i1,i2;
-        REAL w0,w1,w2;
-        #ifdef PARALLEL_OPENMP
-        #pragma omp critical (SPHEREINTERPOL)
-        #endif
-        {
-            sinterp->getInterpolation(N);
-            i0 = sinterp->idx[0]*nalpha;
-            i1 = sinterp->idx[1]*nalpha;
-            i2 = sinterp->idx[2]*nalpha;
-            w0 = sinterp->interpw[0];
-            w1 = sinterp->interpw[1];
-            w2 = sinterp->interpw[2];
-        }
-        
-        
-        
-        int k = nalpha-1; 
-        if (xint >= 0 && xint < w && yint >= 0 && yint < h && zint >= 0 && zint < d)
-        {
-
-            int sindex = idxmap[(xint + w*(yint+h*zint))];
-            if (sindex >= 0)
-            {                  
-                return (dataimg[spatindex+i0+k]*w0 + dataimg[spatindex+i1+k]*w1 + dataimg[spatindex+i2+k]* w2);                
-            }
-            else
-                return 1;
-        }
-        else
-            return 1;
-                
-        
-        
-    }
-    
-    inline REAL getPriorDirProb(pVector R,pVector N)
-    {
-        //return 1;
-        return 0.5*(getPriorDirProb_t( R, N)+getPriorDirProb_t( R, N*(-1)));
-    }
-
-    
-    
-    inline pVector drawPriorDir(pVector R)
-	{
-        
-        
-		int xint,yint,zint,spatindex;
-
-        // get voxel index
-        REAL Rx = R.x/voxsize_w;
-        REAL Ry = R.y/voxsize_h;
-        REAL Rz = R.z/voxsize_d;        
-        xint = int(floor(Rx));
-        yint = int(floor(Ry));
-        zint = int(floor(Rz));
-
-        pVector dummy;
-        dummy.rand_sphere();        
-        
-      //  return dummy;
-        int k = nalpha-1; 
-        if (xint >= 0 && xint < w && yint >= 0 && yint < h && zint >= 0 && zint < d)
-        {
-
-            int sindex = idxmap[(xint + w*(yint+h*zint))];
-            if (sindex >= 0)
-            {
-                  
-                spatindex =  sindex*nip*nalpha;                    
-                SimpSamp<int> *RS = new SimpSamp<int>(nip);
-                
-                for (int j = 0; j < nip;j++)                    
-                    RS->add(dataimg[spatindex+j*nalpha+k],j);
-                int d = RS->drawObj();
-                pVector N(sinterp->dirs[d*3],sinterp->dirs[d*3+1],sinterp->dirs[d*3+2]);      
-                delete RS;
-                return N;
-            }
-            else
-                return dummy;
-        }
-        else
-            return dummy;
-        
-        
-        
-    }
-    
     
     //---------------- computes 1. the q-space average of the model and 2. the S0 of the model
     //---------------- and stores it for computing the vfsw (in matlab)
-    void computeMeanProjMap()
+    void computeMeanProjMap(REAL *vf_fibs)
     {
+        
+        
+        
+          
+        REAL *alphaSM = (REAL*) malloc(sizeof(REAL)*lmax*numbshells); 
+        REAL *alphaMM = (REAL*) malloc(sizeof(REAL)*lmax); 
+        for (int k = 0; k < lmax; k++)
+            alphaMM[k] = 0;
+        for (int k = 0; k < lmax*numbshells; k++)
+            alphaSM[k] = 0;
+
+   
+        
         for (int z = 0; z < d_vf;z++)
         for (int y = 0; y < h_vf;y++)
         for (int x = 0; x < w_vf;x++)
         {          
             int spatindex = (x + w_vf*(y+h_vf*z));                    
-            vfmap[spatindex+w_vf*h_vf*d_vf] = 0;
-            vfmap[spatindex+w_vf*h_vf*d_vf*2] = 0;
+          
+            
+            for (int k = 0; k < lmax; k++)
+                alphaMM[k] = 0;
+            for (int k = 0; k < lmax*numbshells; k++)
+                alphaSM[k] = 0;
+                        
             
             int cnt1; 
             Particle **P1 = pcontainer->getCell(x,y,z,cnt1);
+            REAL sumW = 0;
             for (int k = 0; k < cnt1; k++)
             {
-                Particle *p1 = P1[k];
-                vfmap[spatindex+w_vf*h_vf*d_vf] += particle_weight*p1->w*(modelmodelCorr(p1->Da,p1->Dp,0,0,1)*(1-vfmap[spatindex]) + modelmodelCorr(p1->Di,0,0,0,1)*vfmap[spatindex]);
-                vfmap[spatindex+2*w_vf*h_vf*d_vf] += particle_weight*p1->w;               
+                Particle *p1 = P1[k];            
+                sumW += p1->w;
+                getModelSignalCorrelation_modelfree(p1, alphaSM)   ;         
+                for (int j = k; j < cnt1; j++)
+                {
+                    Particle *p2 = P1[j];
+                    REAL fac = ((k!=j)?2:1) * p1->w*p2->w;
+                    mminteract_modelfree(p2->N*p1->N, fac,alphaMM );
+                }                                            
+            }
 
-            }            
+            if (vf_fibs != 0)
+            {
+                for (int k = 0; k < cnt1; k++)
+                {
+                    Particle *p1 = P1[k];            
+                    int seg_idx = pcontainer->ID_2_index(p1->ID);
+
+                    for (int k = 0; k < numbshells;k++)
+                        for (int j = 0; j < lmax;j++)
+                        {
+                            int idx = j+(k+1)*lmax;
+                            vf_fibs[seg_idx+pcontainer->pcnt*idx] = alphaSM[j+k*lmax]/sumW;                                        
+                        }
+
+                    for (int j = 0; j < lmax;j++)
+                    {
+                        vf_fibs[seg_idx+pcontainer->pcnt*j] = alphaMM[j]/(sumW*sumW);                                        
+                    }
+                }            
+            }
+            
+            for (int k = 0; k < numbshells;k++)
+                for (int j = 0; j < lmax;j++)
+                {
+                    int idx = j+(k+1)*lmax;
+                    vfmap[spatindex+w_vf*h_vf*d_vf*idx] = alphaSM[j+k*lmax]/sumW;                                        
+                }
+            
+            for (int j = 0; j < lmax;j++)
+            {
+                vfmap[spatindex+w_vf*h_vf*d_vf*j] = alphaMM[j]/(sumW*sumW);                                        
+            }
         }
+
+        
+        free(alphaMM);
+        free(alphaSM);
+        
             
     }
     
@@ -534,7 +531,7 @@ public:
     virtual inline REAL smoothnessSegs(Particle *p) {return 0;}
 };
 
-#include <interactionLUTs.h>
+//#include <interactionLUTs.h>
 
 
 #endif
