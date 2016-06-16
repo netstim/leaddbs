@@ -11,6 +11,9 @@ end
 
 gdti_trackingparams='standard'; % select param-preset here (see below, also to create your own)
 
+try % make sure only one DTI tracker is being used.
+    rmpath(genpath([options.earoot,'dev',filesep,'mesoft']));
+end
 
  load([options.root,options.patientname,filesep,options.prefs.bval]);
    [~,bvfname]=fileparts(options.prefs.bval);

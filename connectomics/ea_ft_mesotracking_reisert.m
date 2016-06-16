@@ -10,6 +10,8 @@ if ischar(options) % return name of method.
 end
 
 gdti_trackingparams='standard'; % select param-preset here (see below, also to create your own)
+% make sure only one DTI tracker is being used.
+    rmpath(genpath([options.earoot,'ext_libs',filesep,'Fibertools']));
 
 
 switch gdti_trackingparams
@@ -80,9 +82,7 @@ end
 
 
 directory=[options.root,options.patientname,filesep];
-if ~exist([directory,options.prefs.b0],'file');
-ea_exportb0(options);
-end
+ea_prepare_dti(options)
 
 % create c2 from anat
 if ~exist([directory,'trackingmask.nii'],'file');
