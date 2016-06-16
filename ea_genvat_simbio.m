@@ -89,11 +89,18 @@ if ea_headmodel_changed(options,side,S,elstruct)
     trajvox=V.mat\trajmm';
     trajvox=trajvox(1:3,:)';
     
-    
+    if max(S.amplitude{side})<=3
+        modelwidth=50;
+    else
+        modelwidth=100;
+    end
+    if max(S.amplitude{side})>5
+        modelwidth=150;
+    end
     
     %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
     
-    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,150,150,1); % set to 250 / 400 this will result in ~10x10x10 mm.
+    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,modelwidth,150,1); % set to 250 / 400 this will result in ~10x10x10 mm.
     mat=mat';
     mkdir([options.root,options.patientname,filesep,'headmodel']);
     Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);
@@ -143,8 +150,9 @@ if ea_headmodel_changed(options,side,S,elstruct)
     setappdata(resultfig,'elstruct',elstruct);
     X = linsolve(A,B); X=X';
     ea_dispercent(0,'Exporting insulating components');
-    
+   
     for ins=1:length(electrode.insulation)
+         
         electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
         electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
         
@@ -586,7 +594,7 @@ indij = intersect(indi,indj);
 rhs(indexj(indij)) = rhs(indexj(indij)) - dirival(indexi(indij)).*s(indij);
 s(indi) = 0;
 dia(dirinodes) = 1; %hier auch, s.u.
-rhs(dirinodes) = dirival(dirinodes); %hier den zugriff geändert
+rhs(dirinodes) = dirival(dirinodes); %hier den zugriff geï¿½ndert
 indij = find(ismember(indexj,dind)&~ismember(indexi,dind));
 rhs(indexi(indij)) = rhs(indexi(indij)) - dirival(indexj(indij)).*s(indij);
 s(indij) = 0;
