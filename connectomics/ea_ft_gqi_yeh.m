@@ -78,7 +78,6 @@ if ismac
 elseif isunix
     ea_libs_helper([basedir, 'linux']);
     dsistudio = [basedir, 'linux',filesep,'dsi_studio'];
-    dsistudio = ['LD_PRELOAD=',basedir, 'linux',filesep,'glibc',filesep,'libc.so.6;',dsistudio];
 elseif ispc
     dsistudio = [basedir, 'win',filesep,'dsi_studio.exe'];
 end
