@@ -22,7 +22,7 @@ function varargout = ea_nbs_advanced(varargin)
 
 % Edit the above text to modify the response to help ea_nbs_advanced
 
-% Last Modified by GUIDE v2.5 18-Jun-2016 08:41:22
+% Last Modified by GUIDE v2.5 18-Jun-2016 08:59:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,6 +52,50 @@ function ea_nbs_advanced_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_nbs_advanced (see VARARGIN)
 
+earoot=[fileparts(which('lead')),filesep];
+set(gcf,'name','Welcome to LEAD-DBS','color','w');
+
+% add parcellation atlases to menu:
+ll=dir([fileparts(which('lead')),filesep,'templates',filesep,'labeling',filesep,'*.nii']);
+for lab=1:length(ll)
+    [~,n]=fileparts(ll(lab).name);
+    parcellation{lab}=n;
+end
+setappdata(gcf,'parcellation',parcellation);
+set(handles.parcellation,'String',parcellation);
+
+
+% add ft methods to menu
+cnt=1;
+ndir=dir([earoot,'connectomics',filesep,'ea_ft_*.m']);
+ftmethod=cell(0);
+fdc=cell(0);
+for nd=length(ndir):-1:1
+    [~,methodf]=fileparts(ndir(nd).name);
+    try
+        [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
+        if ismember(spm('ver'),spmvers)
+        fdc{cnt}=thisndc;
+        ftmethod{cnt}=methodf;
+        cnt=cnt+1;
+        end
+    end
+end
+setappdata(gcf,'ftmethod',ftmethod);
+set(handles.ftmethod,'String',fdc);
+
+
+
+% update UI:
+try
+    lc=load([fileparts(which('lead')),filesep,'connectomics',filesep,'lc_options.mat']);
+catch
+    lc=ea_initlcopts;
+end
+lc2handles(lc,handles);
+
+
+
 % Choose default command line output for ea_nbs_advanced
 handles.output = hObject;
 
@@ -59,7 +103,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes ea_nbs_advanced wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.nbsadvanced);
 
 
 % --- Outputs from this function are returned to the command line.
