@@ -28,7 +28,6 @@ if nargin==1
         ave_coords_mm=coords_mm;
         clear coords_mm
         elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
-   
     
 elseif nargin>1 % elstruct has been supplied, this is a group visualization
     if isstruct(varargin{2})
@@ -189,7 +188,8 @@ for side=options.sides
             
             %title(['Electrode ',num2str(el-1),', transversal view.']);
             
-            [slice,~,boundboxmm]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
+            [slice,~,boundboxmm,sampleheight]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
+            disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
             
             set(0,'CurrentFigure',cuts)
             try
@@ -333,7 +333,17 @@ for side=options.sides
                     elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
 
                     if (elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts)
-                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',cmap(c,:),'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
+                       
+                      wstr='w';
+                       if options.d3.hlactivecontacts
+                           
+                           
+                        if elstruct(c).activecontacts{side}(elcnt)
+                            wstr='r';
+                            
+                        end
+                       end
+                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
                     end
 
                 end
@@ -365,16 +375,16 @@ for side=options.sides
                 
                 % 3. Dampen alpha by distance (this *has* to be performed
                 % last, if not, info is erased by legend again).
-                try % not sure if this is supported by earlier ML versions.
-                    for c=1:length(elstruct)
-                        
-                        dist=abs(diff([elstruct(c).coords_mm{side}(elcnt,planedim),ave_coords_mm{side}(elcnt,planedim)]));
-                        % dampen alpha by distance
-                        alp=2*1/exp(dist);
-                        hMarker = elplt(c).MarkerHandle;
-                        hMarker.EdgeColorData=uint8(255*[cmap(c,:)';alp]);
-                    end
-                end
+%                 try % not sure if this is supported by earlier ML versions.
+%                     for c=1:length(elstruct)
+%                         
+%                         dist=abs(diff([elstruct(c).coords_mm{side}(elcnt,planedim),ave_coords_mm{side}(elcnt,planedim)]));
+%                         % dampen alpha by distance
+%                         alp=2*1/exp(dist);
+%                         hMarker = elplt(c).MarkerHandle;
+%                         hMarker.EdgeColorData=uint8(255*[cmap(c,:)';alp]);
+%                     end
+%                 end
                 
                 
                 

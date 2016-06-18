@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 12-Oct-2015 11:54:40
+% Last Modified by GUIDE v2.5 18-Jun-2016 08:34:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1718,7 +1718,6 @@ M.ui.lc.parcellation=1;
 M.ui.lc.graphmetric=1;
 M.ui.lc.normalization=1;
 M.ui.lc.smooth=1;
-M.ui.tdlegendcheck=1;
 
 M.S=[];
 M.vatmodel=[];
@@ -2081,7 +2080,7 @@ try options.d3.isomatrix_name=M.isomatrix_name; end
 
 options.expstatvat.do=M.ui.statvat;
 
-options.d2.showlegend=M.ui.tdlegendcheck;
+options.d2.showlegend=0;
 
 
 options.d3.isovscloud=M.ui.isovscloudpopup;
@@ -2128,7 +2127,11 @@ if options.expstatvat.do % export to nifti volume
     ea_exportvatmapping(M,options,handles);
 end
 
-
+for pt=1:length(M.patient.list)
+    for side=1:2
+        M.elstruct(pt).activecontacts{side}=M.S(pt).activecontacts{side};
+    end
+end
 cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));
 
 ea_busyaction('off',gcf,'group');
@@ -2312,17 +2315,7 @@ function ea_smooth(fname)
 spm_smooth(fname,[pth,fn,'s',ext],[8 8 8]);
 
 
-% --- Executes on button press in tdlegendcheck.
-function tdlegendcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to tdlegendcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of tdlegendcheck
-M=getappdata(gcf,'M');
-M.ui.tdlegendcheck=get(handles.tdlegendcheck,'Value');
-setappdata(gcf,'M',M);
-refreshvifc(handles);
 
 
 % --- Executes on button press in specify2doptions.
@@ -2389,3 +2382,123 @@ clear normalized_fibers_mm
 ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,options); % export normalized ftr to .trk
 
 options.prefs=ea_prefs(M.ui.groupdir);
+
+
+
+function lc_contrast_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_contrast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of lc_contrast as text
+%        str2double(get(hObject,'String')) returns contents of lc_contrast as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function lc_contrast_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_contrast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in lc_stattest.
+function lc_stattest_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_stattest (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns lc_stattest contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from lc_stattest
+
+
+% --- Executes during object creation, after setting all properties.
+function lc_stattest_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_stattest (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in lc_metric.
+function lc_metric_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_metric (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns lc_metric contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from lc_metric
+
+
+% --- Executes during object creation, after setting all properties.
+function lc_metric_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_metric (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function lc_threshold_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_threshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of lc_threshold as text
+%        str2double(get(hObject,'String')) returns contents of lc_threshold as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function lc_threshold_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_threshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton37.
+function pushbutton37_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton37 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton38.
+function pushbutton38_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton38 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in lc_nbs.
+function lc_nbs_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_nbs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in lc_nbsadvanced.
+function lc_nbsadvanced_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_nbsadvanced (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

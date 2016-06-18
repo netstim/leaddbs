@@ -1,4 +1,4 @@
-function [slice,boundbox,boundboxmm]=ea_sample_slice(vol,tracor,wsize,voxmm,coords,el)
+function [slice,boundbox,boundboxmm,sampleheight]=ea_sample_slice(vol,tracor,wsize,voxmm,coords,el)
 
 % function samples a slice from nifti image based on coordinates and the
 % wsize parameter (will use coordinate and sample a square that is 2xwsize
@@ -48,6 +48,11 @@ switch tracor
         end
         [cmesh.X,cmesh.Y]=meshgrid(boundbox{1},boundbox{2});
         cmesh.Z=repmat(boundbox{3}(1),numel(cmesh.X),1);
+        sampleheight=[1,1,boundbox{3}(1),1]';
+        sampleheight=vol.mat*sampleheight;
+        sampleheight=sampleheight(3);
+        
+        
         ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
         
@@ -64,6 +69,10 @@ switch tracor
         end
         [cmesh.X,cmesh.Z]=meshgrid(boundbox{1},boundbox{3});
         cmesh.Y=repmat(boundbox{2}(1),numel(cmesh.X),1);
+        sampleheight=[1,boundbox{2}(1),1,1]';
+        sampleheight=vol.mat*sampleheight;
+        sampleheight=sampleheight(2);
+        
             ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
         %slice=fliplr(slice);
@@ -79,6 +88,11 @@ switch tracor
         end
         [cmesh.Y,cmesh.Z]=meshgrid(boundbox{2},boundbox{3});
         cmesh.X=repmat(boundbox{1}(1),numel(cmesh.Y),1);
+        
+        sampleheight=[boundbox{1}(1),1,1,1]';
+        sampleheight=vol.mat*sampleheight;
+        sampleheight=sampleheight(1);
+        
             ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
         %slice=fliplr(slice);

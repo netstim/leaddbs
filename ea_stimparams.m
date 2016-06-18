@@ -1641,12 +1641,23 @@ if groupmode
     set(handles.headertxt,'String',['Stimulation parameters: ',elstruct(actpt).name]);
     gSv=getappdata(handles.stimfig,'gSv');
     if isfield(gSv,'vatmodel');
-        [~,ind]=ismember(gSv.vatmodel,get(handles.modelselect,'String'));
-        set(handles.modelselect,'Value',ind);
+        if isempty(gSv.vatmodel)
+            nms=get(handles.modelselect,'String');
+            try
+                gSv.vatmodel=nms{get(handles.modelselect,'Value')};
+            catch
+                keyboard
+            end
+            setappdata(handles.stimfig,'gSv',gSv);
+            
+        else
+            [~,ind]=ismember(gSv.vatmodel,get(handles.modelselect,'String'));
+            set(handles.modelselect,'Value',ind);
+        end
     else
         nms=get(handles.modelselect,'String');
         try
-        gSv.vatmodel=nms{get(handles.modelselect,'Value')};
+            gSv.vatmodel=nms{get(handles.modelselect,'Value')};
         catch
             keyboard
         end
