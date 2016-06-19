@@ -262,18 +262,17 @@ function runbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-outdir = uigetdir('','Specify output directory...',filesep);
+outdir = uigetdir(['','Specify output directory...'],filesep);
 savepatdir(outdir);
 
 
-if outdir == 10
+if outdir ~= 0
 
     %% read prefs?
     options = ea_step1options(handles);
     
     options.root = [fileparts(outdir)];
     [~,options.patientname] = fileparts(outdir);
-    keyboard
 
     % copy files from temp to new folder
     %fis={options.prefs.tranii};
@@ -367,7 +366,7 @@ options.normalize.check=0;
 
 % set modality (MR/CT) in options
 %options.modality = get(handles.MRCT,'Value');
-options.modality=2;
+options.modality=1;
 if options.modality==2; % CT
 
     % coreg CT
