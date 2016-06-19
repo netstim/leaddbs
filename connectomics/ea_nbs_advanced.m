@@ -53,46 +53,25 @@ function ea_nbs_advanced_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to ea_nbs_advanced (see VARARGIN)
 
 earoot=[fileparts(which('lead')),filesep];
-set(gcf,'name','Welcome to LEAD-DBS','color','w');
-
-% add parcellation atlases to menu:
-ll=dir([fileparts(which('lead')),filesep,'templates',filesep,'labeling',filesep,'*.nii']);
-for lab=1:length(ll)
-    [~,n]=fileparts(ll(lab).name);
-    parcellation{lab}=n;
-end
-setappdata(gcf,'parcellation',parcellation);
-set(handles.parcellation,'String',parcellation);
-
-
-% add ft methods to menu
-cnt=1;
-ndir=dir([earoot,'connectomics',filesep,'ea_ft_*.m']);
-ftmethod=cell(0);
-fdc=cell(0);
-for nd=length(ndir):-1:1
-    [~,methodf]=fileparts(ndir(nd).name);
-    try
-        [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
-        if ismember(spm('ver'),spmvers)
-        fdc{cnt}=thisndc;
-        ftmethod{cnt}=methodf;
-        cnt=cnt+1;
-        end
-    end
-end
-setappdata(gcf,'ftmethod',ftmethod);
-set(handles.ftmethod,'String',fdc);
+setappdata(handles.nbsadvanced,'earoot',earoot);
+set(handles.nbsadvanced,'name','NBS advanced settings','color','w');
 
 
 
 % update UI:
+
 try
-    lc=load([fileparts(which('lead')),filesep,'connectomics',filesep,'lc_options.mat']);
+    lc=load([earoot,'connectomics',filesep,'lc_options.mat']);
 catch
-    lc=ea_initlcopts;
+    
+    lc=ea_initlcopts([]);
 end
-lc2handles(lc,handles);
+if ~isfield(lc,'nbs') % compatibility with older stored userdata (<v1.4.9)
+    lc=ea_initlcopts([],lc); % will merely add the nbs stuff
+end
+save([earoot,'connectomics',filesep,'lc_options.mat'],'-struct','lc');
+
+nbsadv2handles(lc,handles);
 
 
 
@@ -214,10 +193,40 @@ function savebutton_Callback(hObject, eventdata, handles)
 % hObject    handle to savebutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+earoot=getappdata(handles.nbsadvanced,'earoot');
+try
+    lc=load([earoot,'connectomics',filesep,'lc_options.mat']);
+catch
+    lc=ea_initlcopts([]);
+end
+lc.nbs.adv.method= get(handles.nbsmethod,'Value');
+lc.nbs.adv.compsize=get(handles.component,'Value'); 
+lc.nbs.adv.perm=str2double(get(handles.numpermutations,'String'));
+lc.nbs.adv.alpha=get(handles.alpha,'Value');
+lc.nbs.adv.exch=getappdata(handles.nbsadvanced,'exchange');
+save([earoot,'connectomics',filesep,'lc_options.mat'],'-struct','lc');
+close(handles.nbsadvanced);
 
 % --- Executes on button press in exchangebutton.
 function exchangebutton_Callback(hObject, eventdata, handles)
 % hObject    handle to exchangebutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+[pth,fi]=uigetfile({'*.mat','*.txt'},'Choose exchange block spec file...');
+if ~fi % user pressed cancel
+    set(hObject,'BackgroundColor',[0.93,0.93,0.93]);
+    setappdata(handles.nbsadvanced,'exchange','');
+    return
+end
+setappdata(handles.nbsadvanced,'exchange',[pth,filesep,fi]);
+set(hObject,'BackgroundColor',[0.1;0.8;0.1]);
+
+
+
+function handles=nbsadv2handles(lc,handles)
+try set(handles.nbsmethod,'Value',lc.nbs.adv.method); end
+try set(handles.component,'Value',lc.nbs.adv.compsize); end
+try set(handles.numpermutations,'String',num2str(lc.nbs.adv.perm)); end
+try set(handles.alpha,'Value',lc.nbs.adv.alpha); end
+try setappdata(handles.nbsadvanced,'exchange',lc.nbs.adv.exch); end

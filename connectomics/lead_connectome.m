@@ -94,7 +94,7 @@ set(handles.ftmethod,'String',fdc);
 try
     lc=load([fileparts(which('lead')),filesep,'connectomics',filesep,'lc_options.mat']);
 catch
-    lc=ea_initlcopts;
+    lc=ea_initlcopts(handles.lead_connectome);
 end
 lc2handles(lc,handles);
 
@@ -103,11 +103,12 @@ lc2handles(lc,handles);
 handles.output = hObject;
 
 % Update handles structure
+
 guidata(hObject, handles);
 
 % UIWAIT makes lead_connectome wait for user response (see UIRESUME)
 
-uiwait(handles.lead_connectome);
+%uiwait(handles.lead_connectome);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -118,7 +119,7 @@ function varargout = lead_connectome_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1}=[];
+varargout{1}=hObject;
 
 % --- Executes on selection change in parcellation.
 function parcellation_Callback(hObject, eventdata, handles)
@@ -436,26 +437,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function lc=ea_initlcopts
-lc.general.parcellation=getappdata(gcf,'parcellation');
-lc.general.parcellationn=1;
-lc.general.parcellation=lc.general.parcellation{lc.general.parcellationn};
-lc.graph.degree_centrality=0;
-lc.graph.eigenvector_centrality=0;
-lc.graph.nodal_efficiency=0;
-lc.graph.struc_func_sim=0;
-lc.graph.fthresh=nan;
-lc.graph.sthresh=nan;
-lc.func.compute_CM=0;
-lc.func.compute_GM=0;
-lc.func.prefs.TR=2;
-lc.struc.compute_CM=0;
-lc.struc.compute_GM=0;
-lc.struc.ft.do=0;
-methodf=getappdata(gcf,'ftmethod');
-methodf=methodf{1};
-lc.struc.ft.method=eval([methodf,'(','''prompt''',')']);
-lc.struc.ft.methodn=1;
-lc.struc.ft.normalize=0;
+
 
 

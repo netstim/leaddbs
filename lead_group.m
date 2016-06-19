@@ -66,6 +66,7 @@ guidata(hObject, handles);
 
 % atlassets:
 options.earoot=[fileparts(which('lead')),filesep];
+setappdata(handles.lg_figure,'earoot',options.earoot);
 as=dir([options.earoot,'atlases',filesep]);
 asc=cell(0);
 cnt=1;
@@ -295,7 +296,7 @@ try
     
 options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 catch
-    ea_error('Localizations seem not properly defined.');
+    ea_warning('Localizations seem not properly defined.');
 end
 options.elmodel=M.elstruct(1).elmodel;
 options=ea_resolve_elspec(options);
@@ -708,9 +709,23 @@ end
 
 
 
+% add modalities to NBS stats metric popup:
 
-
-
+tryparcs=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'*_CM.mat']);
+avparcs=ones(length(tryparcs),1);
+for sub=1:length(M.patient.list)
+    for parc=1:length(tryparcs)
+        if ~exist([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,tryparcs(parc).name],'file');
+        avparcs(parc)=0;
+        end
+    end
+end
+tryparcs=tryparcs(avparcs);
+pcell=cell(length(tryparcs),1);
+for p=1:length(pcell)
+    [~,pcell{p}]=fileparts(tryparcs(p).name);
+end
+set(handles.lc_metric,'String',pcell);
 %% modalities for VAT metrics:
 
 % dMRI:
@@ -2496,9 +2511,137 @@ function lc_nbs_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+clearvars -global nbs
+global nbs
+
+earoot=getappdata(handles.lg_figure,'earoot');
+UI.method.ui = 'Run NBS';
+UI.test.ui = get(handles.lc_stattest,'String');
+UI.test.ui=UI.test.ui{get(handles.lc_stattest,'Value')};
+UI.thresh.ui = get(handles.lc_threshold,'String');
+UI.contrast.ui = get(handles.lc_contrast,'String');
+ea_preparenbs(handles)
+root=get(handles.groupdir_choosebox,'String');
+UI.design.ui = [root,'NBSdesignMatrix.mat'];
+UI.matrices.ui = [root,'NBSdataMatrix.mat'];
+UI.node_coor.ui = '';
+UI.node_label.ui = '';
+
+% get advanced options:
+try
+    lc=load([earoot,'connectomics',filesep,'lc_options.mat']);
+catch
+    lc=ea_initlcopts([]);
+end
+if ~isfield(lc,'nbs') % compatibility with older stored userdata (<v1.4.9)
+    lc=ea_initlcopts([],lc); % will merely add the nbs stuff
+end
+save([earoot,'connectomics',filesep,'lc_options.mat'],'-struct','lc');
+switch lc.nbs.adv.compsize
+    case 1
+        UI.size.ui = 'Extent';
+    case 2
+        UI.size.ui = 'Intensity';
+end
+
+UI.perms.ui = num2str(lc.nbs.adv.perm);
+UI.alpha.ui = num2str(lc.nbs.adv.alpha);
+UI.exchange.ui = lc.nbs.adv.exch;
+
+ea_NBSrun(UI,[]);
+
+load([root,'NBSdataMatrix.mat']);
+load([root,'NBSdesignMatrix.mat']);
+
+switch UI.test.ui
+    case 't-test'
+        c=eval(UI.contrast.ui);
+        if length(c)>2
+            ea_error('Only two-sample t-tests are fully supported at present.');
+        end
+        [~,~,~,tstat]=ttest2(permute(allX(:,:,logical(mX(:,find(c==1)))),[3,1,2]),...
+            permute(allX(:,:,logical(mX(:,find(c==-1)))),[3,1,2]));
+        
+        T=squeeze(tstat.tstat);
+        clear tstat
+        clear pmask
+        pmask=nan(size(T));
+        for network=1:nbs.NBS.n;
+            X=full(nbs.NBS.con_mat{network});
+            X=X+X';
+            pmask(network,:,:)=X;
+            save([root,'sig_',num2str(network)],'X');
+        end
+        pmask=squeeze(sum(pmask,1));
+        T(~pmask)=nan;
+    otherwise
+        
+        for network=1:nbs.NBS.n;
+            X=full(nbs.NBS.con_mat{network});
+            X=X+X';
+            save([root,'sig_',num2str(network)],'X');
+        end
+        ea_error('Only t-test fully supported at present. Please process results manually for other tests.');
+end
+
+thisparc=get(handles.lc_parcellation,'String');
+thisparc=thisparc{get(handles.lc_parcellation,'Value')};
+thismetr=get(handles.lc_metric,'String');
+thismetr=thismetr{get(handles.lc_metric,'Value')};
+eval([thismetr,'=T;']);
+expfn=[root,thisparc,'_',thismetr,'p<',UI.alpha.ui,'.mat'];
+save(expfn,thismetr);
+
+disp('** NBS done.');
+if network
+    disp('NBS found at least one significant network.');
+    disp(['It has been stored in: ',expfn,'.']);
+    
+    disp(['To display the network(s), please load this file in the 3D viewer''s "Connectivity Visualization" under the "Matrix Level" panel.']);
+else
+    disp('NBS found no significant networks.');
+end
+
+
+function ea_preparenbs(handles)
+
+% prepare designmatrix:
+
+gstr=(get(handles.grouplist,'String'));
+
+for pt=1:length(gstr);
+   gv(pt)=str2double(gstr(pt)); 
+end
+mX=zeros(length(gv),max(gv));
+for g=1:max(gv)
+   mX(:,g)=gv==g; 
+end
+save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
+
+% prepare data matrix:
+
+M=getappdata(handles.lg_figure,'M');
+thisparc=get(handles.lc_parcellation,'String');
+thisparc=thisparc{get(handles.lc_parcellation,'Value')};
+thismetr=get(handles.lc_metric,'String');
+thismetr=thismetr{get(handles.lc_metric,'Value')};
+
+for pt=1:length(M.patient.list)
+    X=load([M.patient.list{pt},filesep,'connectomics',filesep,thisparc,filesep,thismetr,'.mat']);
+    fn=fieldnames(X);
+    if ~exist('allX','var')
+       allX=nan([size(X.(fn{1})),length(M.patient.list)]);
+    end
+    allX(:,:,pt)=X.(fn{1});
+end
+save([get(handles.groupdir_choosebox,'String'),'NBSdataMatrix'],'allX','-v7.3');
+
+
 
 % --- Executes on button press in lc_nbsadvanced.
 function lc_nbsadvanced_Callback(hObject, eventdata, handles)
 % hObject    handle to lc_nbsadvanced (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+ea_nbs_advanced;
