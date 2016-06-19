@@ -262,13 +262,15 @@ function runbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-outdir = uigetdir(['','Specify output directory...'],filesep);
+outdir = [uigetdir('','Specify output directory...'),filesep];
 savepatdir(outdir);
 
 
 if outdir ~= 0
 
     %% read prefs?
+
+    
     options = ea_step1options(handles);
     
     options.root = [fileparts(outdir)];
@@ -278,7 +280,7 @@ if outdir ~= 0
     %fis={options.prefs.tranii};
     
     %% run trajectory reconstruction.
-    ea_autocoord(options);
+    %ea_autocoord(options);
 else
     warning('No Directory selected');
 
@@ -358,7 +360,7 @@ options.earoot=[fileparts(which('lead')),filesep];
 options.dicomimp=0;
 
 options.normalize.do=1;
-options.normalize.method='ea_normalize_spmdartel';
+options.normalize.method='ea_normalize_ants';
 options.normalize.methodn=1;
 
 options.normalize.check=0;
@@ -380,6 +382,8 @@ if options.modality==2; % CT
     options.coregctcheck=0;
 else
     options.coregct.do=0;
+    options.coregctcheck=0;
+    options.coregmr.method = 1;
 end
 
 
@@ -456,8 +460,8 @@ options.dolc=0;
 
 % All the Checking Stuff
 % Coreg/Norm/Loc
-function options=ea_step2_normcheck_options(handles)
-options.native=1;
+function options=ea_step2_normcheck_ct_options(handles)
+options.native=0;
 options.earoot=[fileparts(which('lead')),filesep];
 % 
 % %% some manual options that can be set:
@@ -633,11 +637,151 @@ options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 
 
+function options=ea_step2_normcheck_mr_options(handles)
+options.earoot=[fileparts(which('lead')),filesep];
+options.endtolerance = 10;
+options.sprungwert = 4;
+options.refinesteps = 0;
+options.tra_stdfactor = 0.9;
+options.cor_stdfactor = 1;
+options.dicomimp = 0;
+options.normalize.do = false;
+options.normalize.method = 'ea_normalize_ants';
+options.normalize.methodn = 6;
+options.normalize.check = true;
+options.coregct.do = false;
+options.coregct.method = 'ea_coregctmri_ants';
+options.coregct.methodn = 9;
+options.coregct.coregthreshs = NaN;
+options.coregctcheck = 0;
+options.coregmr.method = 1;
+options.modality = 1;
+options.verbose = 3;
+options.sides = [1 2];
+options.doreconstruction = false;
+options.maskwindow = 10;
+options.automask = 1;
+options.autoimprove = 0;
+options.axiscontrast = 8;
+options.zresolution = 10;
+options.atl.genpt = false;
+options.atl.normalize = 0;
+options.atl.can = true;
+options.atl.pt = 0;
+options.atl.ptnative = false;
+options.native = 0;
+options.d2.write = false;
+options.d2.atlasopacity = 0.15;
+options.d2.writeatlases = 1;
+options.manualheightcorrection = false;
+options.d3.write = false;
+options.d3.prolong_electrode = 2;
+options.d3.verbose = 'on';
+options.d3.elrendering = 1;
+options.d3.hlactivecontacts = 0;
+options.d3.showactivecontacts = 1;
+options.d3.showpassivecontacts = 1;
+options.d3.showisovolume = 0;
+options.d3.isovscloud = 0;
+options.d3.autoserver = 0;
+options.d3.writeatlases = 1;
+options.numcontacts = 4;
+options.entrypointn = 3;
+options.writeoutpm = 1;
+options.elmodeln = 1;
+options.atlassetn = 1;
+options.expstatvat.do = 0;
+options.fiberthresh = 10;
+options.writeoutstats = 1;
+%%
+options.colormap = [0 0 0
+                    0.0158730158730159 0.0158730158730159 0.0158730158730159
+                    0.0317460317460317 0.0317460317460317 0.0317460317460317
+                    0.0476190476190476 0.0476190476190476 0.0476190476190476
+                    0.0634920634920635 0.0634920634920635 0.0634920634920635
+                    0.0793650793650794 0.0793650793650794 0.0793650793650794
+                    0.0952380952380952 0.0952380952380952 0.0952380952380952
+                    0.111111111111111 0.111111111111111 0.111111111111111
+                    0.126984126984127 0.126984126984127 0.126984126984127
+                    0.142857142857143 0.142857142857143 0.142857142857143
+                    0.158730158730159 0.158730158730159 0.158730158730159
+                    0.174603174603175 0.174603174603175 0.174603174603175
+                    0.19047619047619 0.19047619047619 0.19047619047619
+                    0.206349206349206 0.206349206349206 0.206349206349206
+                    0.222222222222222 0.222222222222222 0.222222222222222
+                    0.238095238095238 0.238095238095238 0.238095238095238
+                    0.253968253968254 0.253968253968254 0.253968253968254
+                    0.26984126984127 0.26984126984127 0.26984126984127
+                    0.285714285714286 0.285714285714286 0.285714285714286
+                    0.301587301587302 0.301587301587302 0.301587301587302
+                    0.317460317460317 0.317460317460317 0.317460317460317
+                    0.333333333333333 0.333333333333333 0.333333333333333
+                    0.349206349206349 0.349206349206349 0.349206349206349
+                    0.365079365079365 0.365079365079365 0.365079365079365
+                    0.380952380952381 0.380952380952381 0.380952380952381
+                    0.396825396825397 0.396825396825397 0.396825396825397
+                    0.412698412698413 0.412698412698413 0.412698412698413
+                    0.428571428571429 0.428571428571429 0.428571428571429
+                    0.444444444444444 0.444444444444444 0.444444444444444
+                    0.46031746031746 0.46031746031746 0.46031746031746
+                    0.476190476190476 0.476190476190476 0.476190476190476
+                    0.492063492063492 0.492063492063492 0.492063492063492
+                    0.507936507936508 0.507936507936508 0.507936507936508
+                    0.523809523809524 0.523809523809524 0.523809523809524
+                    0.53968253968254 0.53968253968254 0.53968253968254
+                    0.555555555555556 0.555555555555556 0.555555555555556
+                    0.571428571428571 0.571428571428571 0.571428571428571
+                    0.587301587301587 0.587301587301587 0.587301587301587
+                    0.603174603174603 0.603174603174603 0.603174603174603
+                    0.619047619047619 0.619047619047619 0.619047619047619
+                    0.634920634920635 0.634920634920635 0.634920634920635
+                    0.650793650793651 0.650793650793651 0.650793650793651
+                    0.666666666666667 0.666666666666667 0.666666666666667
+                    0.682539682539683 0.682539682539683 0.682539682539683
+                    0.698412698412698 0.698412698412698 0.698412698412698
+                    0.714285714285714 0.714285714285714 0.714285714285714
+                    0.73015873015873 0.73015873015873 0.73015873015873
+                    0.746031746031746 0.746031746031746 0.746031746031746
+                    0.761904761904762 0.761904761904762 0.761904761904762
+                    0.777777777777778 0.777777777777778 0.777777777777778
+                    0.793650793650794 0.793650793650794 0.793650793650794
+                    0.80952380952381 0.80952380952381 0.80952380952381
+                    0.825396825396825 0.825396825396825 0.825396825396825
+                    0.841269841269841 0.841269841269841 0.841269841269841
+                    0.857142857142857 0.857142857142857 0.857142857142857
+                    0.873015873015873 0.873015873015873 0.873015873015873
+                    0.888888888888889 0.888888888888889 0.888888888888889
+                    0.904761904761905 0.904761904761905 0.904761904761905
+                    0.920634920634921 0.920634920634921 0.920634920634921
+                    0.936507936507937 0.936507936507937 0.936507936507937
+                    0.952380952380952 0.952380952380952 0.952380952380952
+                    0.968253968253968 0.968253968253968 0.968253968253968
+                    0.984126984126984 0.984126984126984 0.984126984126984
+                    1 1 1];
+%%
+options.dolc = 0;
+options.lc.general.parcellation = 'aal';
+options.lc.general.parcellationn = 1;
+options.lc.graph.struc_func_sim = 0;
+options.lc.graph.nodal_efficiency = 0;
+options.lc.graph.eigenvector_centrality = 0;
+options.lc.graph.degree_centrality = 0;
+options.lc.graph.fthresh = NaN;
+options.lc.graph.sthresh = NaN;
+options.lc.func.compute_CM = 0;
+options.lc.func.compute_GM = 0;
+options.lc.func.prefs.TR = 2;
+options.lc.struc.compute_CM = 0;
+options.lc.struc.compute_GM = 0;
+options.lc.struc.ft.methodn = 2;
+options.lc.struc.ft.do = 0;
+options.lc.struc.ft.normalize = 1;
+
 
 %options for Coregcheck
 function options=ea_step2_coregcheck_options(handles)
 options.earoot=[fileparts(which('lead')),filesep];
-options.native=1;
+options.native=0;
 options.endtolerance = 10;
 options.sprungwert = 4;
 options.refinesteps = 0;
@@ -780,6 +924,9 @@ options.lc.struc.ft.normalize = 1;
 %options for ManelectrodeHeightCorrection
 function options=ea_step2_manelectrode_options(handles)
 options.earoot=[fileparts(which('lead')),filesep];
+options.elmodeln = get(handles.electrode_model_popup,'Value');
+string_list = get(handles.electrode_model_popup,'String');
+options.elmodel=string_list{options.elmodeln};
 options.endtolerance = 10;
 options.sprungwert = 4;
 options.refinesteps = 0;
@@ -787,7 +934,7 @@ options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
 options.dicomimp = 0;
 options.normalize.do = false;
-options.normalize.method = 'ea_normalize_spmdartel';
+options.normalize.method = 'ea_normalize_ants';
 options.normalize.methodn = 6;
 options.normalize.check = false;
 options.coregct.do = false;
@@ -827,8 +974,8 @@ options.d3.isovscloud = 0;
 options.d3.autoserver = 0;
 options.d3.writeatlases = 1;
 options.numcontacts = 4;
-options.entrypoint = 'STN, GPi or ViM';
-options.entrypointn = 1;
+options.entrypoint = 'Manual';
+options.entrypointn = 3;
 options.writeoutpm = 1;
 options.elmodeln = 1;
 options.atlassetn = 1;
@@ -836,73 +983,72 @@ options.expstatvat.do = 0;
 options.fiberthresh = 10;
 options.writeoutstats = 1;
 %%
-options.colormap = [0 0 0.5625
-                    0 0 0.625
-                    0 0 0.6875
-                    0 0 0.75
-                    0 0 0.8125
-                    0 0 0.875
-                    0 0 0.9375
-                    0 0 1
-                    0 0.0625 1
-                    0 0.125 1
-                    0 0.1875 1
-                    0 0.25 1
-                    0 0.3125 1
-                    0 0.375 1
-                    0 0.4375 1
-                    0 0.5 1
-                    0 0.5625 1
-                    0 0.625 1
-                    0 0.6875 1
-                    0 0.75 1
-                    0 0.8125 1
-                    0 0.875 1
-                    0 0.9375 1
-                    0 1 1
-                    0.0625 1 1
-                    0.125 1 0.9375
-                    0.1875 1 0.875
-                    0.25 1 0.8125
-                    0.3125 1 0.75
-                    0.375 1 0.6875
-                    0.4375 1 0.625
-                    0.5 1 0.5625
-                    0.5625 1 0.5
-                    0.625 1 0.4375
-                    0.6875 1 0.375
-                    0.75 1 0.3125
-                    0.8125 1 0.25
-                    0.875 1 0.1875
-                    0.9375 1 0.125
-                    1 1 0.0625
-                    1 1 0
-                    1 0.9375 0
-                    1 0.875 0
-                    1 0.8125 0
-                    1 0.75 0
-                    1 0.6875 0
-                    1 0.625 0
-                    1 0.5625 0
-                    1 0.5 0
-                    1 0.4375 0
-                    1 0.375 0
-                    1 0.3125 0
-                    1 0.25 0
-                    1 0.1875 0
-                    1 0.125 0
-                    1 0.0625 0
-                    1 0 0
-                    0.9375 0 0
-                    0.875 0 0
-                    0.8125 0 0
-                    0.75 0 0
-                    0.6875 0 0
-                    0.625 0 0
-                    0.5625 0 0];
+options.colormap = [0 0 0
+                    0.0158730158730159 0.0158730158730159 0.0158730158730159
+                    0.0317460317460317 0.0317460317460317 0.0317460317460317
+                    0.0476190476190476 0.0476190476190476 0.0476190476190476
+                    0.0634920634920635 0.0634920634920635 0.0634920634920635
+                    0.0793650793650794 0.0793650793650794 0.0793650793650794
+                    0.0952380952380952 0.0952380952380952 0.0952380952380952
+                    0.111111111111111 0.111111111111111 0.111111111111111
+                    0.126984126984127 0.126984126984127 0.126984126984127
+                    0.142857142857143 0.142857142857143 0.142857142857143
+                    0.158730158730159 0.158730158730159 0.158730158730159
+                    0.174603174603175 0.174603174603175 0.174603174603175
+                    0.19047619047619 0.19047619047619 0.19047619047619
+                    0.206349206349206 0.206349206349206 0.206349206349206
+                    0.222222222222222 0.222222222222222 0.222222222222222
+                    0.238095238095238 0.238095238095238 0.238095238095238
+                    0.253968253968254 0.253968253968254 0.253968253968254
+                    0.26984126984127 0.26984126984127 0.26984126984127
+                    0.285714285714286 0.285714285714286 0.285714285714286
+                    0.301587301587302 0.301587301587302 0.301587301587302
+                    0.317460317460317 0.317460317460317 0.317460317460317
+                    0.333333333333333 0.333333333333333 0.333333333333333
+                    0.349206349206349 0.349206349206349 0.349206349206349
+                    0.365079365079365 0.365079365079365 0.365079365079365
+                    0.380952380952381 0.380952380952381 0.380952380952381
+                    0.396825396825397 0.396825396825397 0.396825396825397
+                    0.412698412698413 0.412698412698413 0.412698412698413
+                    0.428571428571429 0.428571428571429 0.428571428571429
+                    0.444444444444444 0.444444444444444 0.444444444444444
+                    0.46031746031746 0.46031746031746 0.46031746031746
+                    0.476190476190476 0.476190476190476 0.476190476190476
+                    0.492063492063492 0.492063492063492 0.492063492063492
+                    0.507936507936508 0.507936507936508 0.507936507936508
+                    0.523809523809524 0.523809523809524 0.523809523809524
+                    0.53968253968254 0.53968253968254 0.53968253968254
+                    0.555555555555556 0.555555555555556 0.555555555555556
+                    0.571428571428571 0.571428571428571 0.571428571428571
+                    0.587301587301587 0.587301587301587 0.587301587301587
+                    0.603174603174603 0.603174603174603 0.603174603174603
+                    0.619047619047619 0.619047619047619 0.619047619047619
+                    0.634920634920635 0.634920634920635 0.634920634920635
+                    0.650793650793651 0.650793650793651 0.650793650793651
+                    0.666666666666667 0.666666666666667 0.666666666666667
+                    0.682539682539683 0.682539682539683 0.682539682539683
+                    0.698412698412698 0.698412698412698 0.698412698412698
+                    0.714285714285714 0.714285714285714 0.714285714285714
+                    0.73015873015873 0.73015873015873 0.73015873015873
+                    0.746031746031746 0.746031746031746 0.746031746031746
+                    0.761904761904762 0.761904761904762 0.761904761904762
+                    0.777777777777778 0.777777777777778 0.777777777777778
+                    0.793650793650794 0.793650793650794 0.793650793650794
+                    0.80952380952381 0.80952380952381 0.80952380952381
+                    0.825396825396825 0.825396825396825 0.825396825396825
+                    0.841269841269841 0.841269841269841 0.841269841269841
+                    0.857142857142857 0.857142857142857 0.857142857142857
+                    0.873015873015873 0.873015873015873 0.873015873015873
+                    0.888888888888889 0.888888888888889 0.888888888888889
+                    0.904761904761905 0.904761904761905 0.904761904761905
+                    0.920634920634921 0.920634920634921 0.920634920634921
+                    0.936507936507937 0.936507936507937 0.936507936507937
+                    0.952380952380952 0.952380952380952 0.952380952380952
+                    0.968253968253968 0.968253968253968 0.968253968253968
+                    0.984126984126984 0.984126984126984 0.984126984126984
+                    1 1 1];
 %%
 options.dolc = 0;
-options.uipatdirs = [];
 options.lc.general.parcellation = 'aal';
 options.lc.general.parcellationn = 1;
 options.lc.graph.struc_func_sim = 0;
@@ -916,13 +1062,17 @@ options.lc.func.compute_GM = 0;
 options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
+options.lc.struc.ft.method = 'ea_ft_globaltracking_reisert';
 options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
+options.lc.struc.ft.normalize = 1;
 
-options.native=1;
 
 
 function options=ea_step3_2D_options(handles)
+options.elmodeln = get(handles.electrode_model_popup,'Value');
+string_list = get(handles.electrode_model_popup,'String');
+options.elmodel=string_list{options.elmodeln};
 options.earoot=[fileparts(which('lead')),filesep];
 options.endtolerance = 10;
 options.sprungwert = 4;
@@ -930,7 +1080,7 @@ options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
 options.dicomimp = 0;
-options.normalize.do = false;;
+options.normalize.do = false;
 options.normalize.methodn = 6;
 options.normalize.check = false;
 options.coregct.do = false;
@@ -1071,6 +1221,9 @@ options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
 options.atlassetn=get(handles.atlassetpopup,'Value');
 
 function options=ea_step3_3D_options(handles)
+options.elmodeln = get(handles.electrode_model_popup,'Value');
+string_list = get(handles.electrode_model_popup,'String');
+options.elmodel=string_list{options.elmodeln};
 options.earoot=[fileparts(which('lead')),filesep];
 options.endtolerance = 10;
 options.sprungwert = 4;
@@ -1210,13 +1363,17 @@ options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 
-options.native=1;
+options.native=0;
 options.elmodeln = get(handles.electrode_model_popup,'Value');
 string_list = get(handles.electrode_model_popup,'String');
 options.elmodel=string_list{options.elmodeln};
 options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
 options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
 options.atlassetn=get(handles.atlassetpopup,'Value');
+options.elmodeln = get(handles.electrode_model_popup,'Value');
+string_list = get(handles.electrode_model_popup,'String');
+options.elmodel=string_list{options.elmodeln};
+options.earoot=[fileparts(which('lead')),filesep];
 
 % --- Executes on selection change in electrode_model_popup.
 function electrode_model_popup_Callback(hObject, eventdata, handles)
@@ -1261,7 +1418,6 @@ function reviewCoreg_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 outdir=getpatdir();
-keyboard
 if outdir == 0
     outdir = [uigetdir('','Select Patient Directory...'),filesep];
     savepatdir(outdir);
@@ -1408,7 +1564,7 @@ if outdir == 0
     savepatdir(outdir);
 else
     %% read prefs?
-    options = ea_step2_normcheck_options(handles);
+    options = ea_step2_normcheck_mr_options(handles);
 
     options.root = [fileparts(outdir)];
     [~,options.patientname] = fileparts(outdir);
