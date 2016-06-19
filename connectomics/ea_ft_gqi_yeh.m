@@ -15,12 +15,18 @@ ea_prepare_dti(options)
 
 load([options.root,options.patientname,filesep,options.prefs.bval]);
 [~,bvfname]=fileparts(options.prefs.bval);
+
 bvals=eval(bvfname);
+if size(bvals,1)>size(bvals,2)
+    bvals=bvals';
+end
 
 load([options.root,options.patientname,filesep,options.prefs.bvec]);
 [~,bvfname]=fileparts(options.prefs.bvec);
 bvecs=eval(bvfname);
-
+if size(bvecs,1)>size(bvecs,2)
+    bvecs=bvecs';
+end
 btable=[bvals;bvecs];
 
 
