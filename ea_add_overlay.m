@@ -9,6 +9,21 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
     try
     set(cuts,'GraphicsSmoothing','on')
     end
+   if options.macaquemodus 
+%the following changes were done by sahbi  ---begin----
+    % load/generate atlas_index.mat
+    if ~isfield(options,'toolbox/macaque/atlases') % atlases structure can be handed down directly within options struct.
+    if ~exist([options.earoot,'toolbox/macaque/atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
+        atlases=ea_genatlastable([],options.earoot,options);
+    else
+        load([options.earoot,'toolbox/macaque/atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
+        atlases=ea_genatlastable(atlases,options.earoot,options);
+    end
+    else
+        atlases=options.atlases;
+    end
+  
+else 
     % load/generate atlas_index.mat
     if ~isfield(options,'atlases') % atlases structure can be handed down directly within options struct.
     if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
@@ -20,8 +35,9 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
     else
         atlases=options.atlases;
     end
+end   
     
-    
+                                             %---end---- 
     
     for atlas=1:length(atlases.names)
         for side=detsides(atlases.types(atlas))
