@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 02-May-2016 09:07:57
+% Last Modified by GUIDE v2.5 20-Jun-2016 16:34:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1731,3 +1731,14 @@ options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 ea_run('export',options);
 
 ea_busyaction('off',leadfig,'lead');
+
+
+% --- Executes during object creation, after setting all properties.
+function leadfigure_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to leadfigure (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+label='http://www.lead-dbs.org/';
+url='http://www.lead-dbs.org/';
+position=[459,15,160,16];
+ea_hyperlink_label(label, url, position);
