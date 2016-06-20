@@ -22,8 +22,16 @@ for side=1:length(stimparams)
     VAT{side}=stimparams(side).VAT;
 end
 
+%-----------------------------begin changes----------------
+if options.macaquemodus 
+  load([options.earoot,'toolbox/macaque/atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
+else
+  load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);  
+%prepare statvat exports once if needed.
+end
+%--------------------------------end changes---------------------------------
 
-load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
+
 %prepare statvat exports once if needed.
 if options.expstatvat.do % export statvat nifti images.
     tV=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
