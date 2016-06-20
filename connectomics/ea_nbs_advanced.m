@@ -22,7 +22,7 @@ function varargout = ea_nbs_advanced(varargin)
 
 % Edit the above text to modify the response to help ea_nbs_advanced
 
-% Last Modified by GUIDE v2.5 18-Jun-2016 08:59:05
+% Last Modified by GUIDE v2.5 20-Jun-2016 17:21:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -230,3 +230,14 @@ try set(handles.component,'Value',lc.nbs.adv.compsize); end
 try set(handles.numpermutations,'String',num2str(lc.nbs.adv.perm)); end
 try set(handles.alpha,'Value',lc.nbs.adv.alpha); end
 try setappdata(handles.nbsadvanced,'exchange',lc.nbs.adv.exch); end
+
+
+% --- Executes during object creation, after setting all properties.
+function nbsadvanced_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to nbsadvanced (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+label='https://sites.google.com/site/bctnet/comparison/nbs';
+url='https://sites.google.com/site/bctnet/comparison/nbs';
+position=[227, 17, 330,17];
+ea_hyperlink_label(label, url, position);
