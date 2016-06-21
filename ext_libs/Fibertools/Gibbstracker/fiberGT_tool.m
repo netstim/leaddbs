@@ -716,14 +716,14 @@ function loadmask(fn,threshold,pmap)
           ds =  get(MainHandle,'UserData');
         reportstatus('reading');
         if isempty(fn),
-            [fn path] = uigetfile({'*.mat;*.nii','Accepted Files (*.mat,*.nii,*.hdr)'},'Load mrStruct/maskStruct');
+            [fn path] = uigetfile({'*.mat;*.nii;*.img','Accepted Files (*.mat,*.nii,*.img)'},'Load mrStruct/maskStruct');
             if fn == 0,
                 return;
             end;
             fn = [path fn];
         end;          
         [fp fndum fext] = fileparts(fn);
-        if strcmp(fext(1:4),'.nii') || strcmp(fext(1:4),'.hdr'),          
+        if any(strcmp(fext(1:4),{'.nii','.hdr','.img'})),
            mrdum = mrstruct_init;
            mrdum.dataAy = ds.b0avg;
            mrdum.edges = ds.edges;

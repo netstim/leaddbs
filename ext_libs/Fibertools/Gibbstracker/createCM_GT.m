@@ -1,4 +1,4 @@
-function mstruc = createCM_GT(ftr,rois,Nsz,centroids)
+function mstruc = createCM_GT(ftr,ROI,Nsz,centroids)
 
 
 display('building connect mat');
@@ -6,8 +6,13 @@ lens = single(cellfun(@len,ftr.curveSegCell));
 
 fibs = ftr.curveSegCell;
 
+rois = ROI.dataAy;
+T = inv(ROI.edges)*ftr.hMatrix;
+
 terms = cellfun(@(x) [x(1,:); x(end,:)],fibs,'UniformOutput',false);
 terms = cat(1,terms{:})';
+terms = (T*[(terms-1) ; ones(1,size(terms,2))])+1;
+terms = terms(1:3,:);
 
 rois(isnan(rois(:))) = 0;
 
