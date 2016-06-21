@@ -34,7 +34,12 @@
 #include <math.h>
 #include <map>
 #include <string.h>
-#include <sys/time.h>
+
+#if defined(_WIN64)
+    #include "wintime.h"
+#else
+    #include <sys/time.h>
+#endif
 
 using namespace std;
 
@@ -257,12 +262,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
     SphereInterpolator *sinterp = new SphereInterpolator(barycoords,indeximg,nip,isize[2],beta[0]);
 	
-	double breakhandle = 0;	
 	const mxArray *BreakHandle;	
 	if (nrhs == 8)
 	{
 		BreakHandle = prhs[pcnt++];
-		breakhandle = *mxGetPr(BreakHandle);
 	}
 
 	#ifdef TIMING
@@ -308,7 +311,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     encomp.setParameters(particle_weight,particle_width,chempot_connection*particle_len*particle_len,particle_len,curv_hardthres,inex_balance,chempot2,meanval_sq);
     
     fprintf(stderr,"starting to iterate\n"); fflush(stderr);
-	sampler.iterate(breakhandle);
+	sampler.iterate(BreakHandle);
 	
 	int cnt = sampler.pcontainer.pcnt;
 

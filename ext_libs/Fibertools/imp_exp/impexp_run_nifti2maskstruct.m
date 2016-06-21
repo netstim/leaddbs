@@ -107,7 +107,6 @@ if ischar(cmd)
                     [p n e] = fileparts(job.outchoice.outmat.fname);
                     out.mskmat = {fullfile(job.outchoice.outmat.outdir{1}, ...
                                           sprintf('%s.mat',n))};
-                                      
                     [res errstr] = maskstruct_write(msk, out.mskmat{1});
                     if ~isempty(errstr)
                         error('impexp:maskstruct',errstr);
