@@ -188,9 +188,6 @@ for z = 1:dim(3)
     for x = 1:dim(1)
         for y = 1:dim(2)
             ODF=A*reshape(reco_temp(x,y,:),[],1);
-            if ~any(ODF)
-                ODF(1)=0.0001;
-            end
             p = ea_find_peak(ODF,odf_faces);
             max_dif = max(max_dif,mean(ODF));
             min_odf = min(ODF);
