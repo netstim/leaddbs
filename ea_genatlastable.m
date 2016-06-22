@@ -371,6 +371,7 @@ end
         spm_write_vol(V,X);
         
         clear X V
+        ea_crop_nii([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         end
         
         % save table information that has been generated from nii files (on first run with this atlas set).

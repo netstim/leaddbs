@@ -60,10 +60,12 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-earoot=[fileparts(which('lead')),filesep];
+earoot=ea_getearoot;
 
 if ~isdeployed
-addpath(genpath(fileparts(which(mfilename))));
+addpath(genpath(earoot));
+rmpath(genpath([earoot,'.git']));
+rmpath(genpath([earoot,'release']));
 end
 ea_dispbn;
 
