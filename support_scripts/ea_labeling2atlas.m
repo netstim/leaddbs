@@ -2,7 +2,7 @@ function ea_labeling2atlas(labelname)
 % this function will convert a whole-brain parcellation atlas (stored in
 % /templates/labeling) into a Lead-DBS atlas (stored in /atlases).
 
-suppress_suff=2; % cut this many characters from each atlas parcel, e.g. to delete "-R" or "-L" suffixes.
+suppress_suff=0; % cut this many characters from each atlas parcel, e.g. to delete "-R" or "-L" suffixes.
 
 earoot=ea_getearoot;
 odir=[earoot,'atlases',filesep,labelname];
