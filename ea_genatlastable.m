@@ -278,10 +278,10 @@ end
                 
                 try % check if explicit color info for this atlas is available.
                     cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1) ... % C-Data for surface
-                        +randn(length(fv.vertices),1)*2)';
+                        +randn(length(fv.vertices),1)*0.1)';
                 catch
                     cdat=abs(repmat(atlas*(maxcolor/length(atlases.names)),length(fv.vertices),1)... % C-Data for surface
-                        +randn(length(fv.vertices),1)*2)';
+                        +randn(length(fv.vertices),1)*0.1)';
                     atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
                 end
                 
