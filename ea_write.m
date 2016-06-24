@@ -35,7 +35,7 @@ if options.d3.write
     
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.
-    
+    keyboard
     resultfig=ea_elvis(options);
     
     % save scene as matlab figure

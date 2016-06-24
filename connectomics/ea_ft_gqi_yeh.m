@@ -94,9 +94,9 @@ cmd=[dsistudio,' --action=trk --source=',[options.root,options.patientname,files
     ' --output=',[options.root,options.patientname,filesep,ftrbase,'.mat']];
 
 if ~ispc
-    system(['bash -c "', cmd, '"']);
+    err=system(['bash -c "', cmd, '"']);
 else
-    system(cmd);
+    err=system(cmd);
 end
 if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
