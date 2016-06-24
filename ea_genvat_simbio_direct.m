@@ -1,4 +1,4 @@
-function varargout=ea_genvat_simbio(varargin)
+function varargout=ea_genvat_simbio_direct(varargin)
 % This function generates a volume of activated tissue around for each
 % electrode.
 % Usage: VAT=ea_genvat(coords_mm,stimparams,options).
@@ -28,7 +28,7 @@ elseif nargin==6
     thresh=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
-        varargout{1}='SimBio/FieldTrip';
+        varargout{1}='SimBio/FieldTrip direct';
         return
     end
 end
@@ -164,21 +164,9 @@ if ea_headmodel_changed(options,side,S,elstruct)
         % this following method takes quite some time... even more importantly,
         % the info will be transfered from mesh to volume and lateron back to
         % mesh again. For now, this is still the most convenient method.
-        
-        
-        usepol2vox=0; % do not use for now, will generate hollow meshes.
-        if usepol2vox            
-            fv.vertices=[electrode.insulation(ins).vertices,ones(length(electrode.insulation(ins).vertices),1)]';
-            fv.vertices=nii.mat\fv.vertices;
-            fv.vertices=fv.vertices(1:3,:)';
-            fv.faces=electrode.insulation(ins).faces;
-            Xt=polygon2voxel(fv,size(nii.img),'none');
-        else
-            in=ea_intriangulation(electrode.insulation(ins).vertices,electrode.insulation(ins).faces,XYZmm(1:3,:)');
-            Xt=nii.img;
-            Xt(:)=0; Xt(in)=1;
-        end
-
+        in=ea_intriangulation(electrode.insulation(ins).vertices,electrode.insulation(ins).faces,XYZmm(1:3,:)');
+        Xt=nii.img;
+        Xt(:)=0; Xt(in)=1;
         Xins=Xins+Xt;
         ea_dispercent(ins/length(electrode.insulation));
     end
@@ -272,6 +260,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
     end
     
     %% create the mesh using fieldtrip:
+    keyboard
     cfg        = [];
     cfg.tissue      = {'gray','white','contacts','insulation'};
     cfg.method = 'hexahedral';

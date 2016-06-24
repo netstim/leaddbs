@@ -157,6 +157,7 @@ for side=1:2
                 %                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)]);
                 try % only one hemisphere could be defined.
                     if stimparams(side).volume
+                        
                         PL.quiv(side)=quiver3(vatgrad(side).x(1:reduc:end),vatgrad(side).y(1:reduc:end),vatgrad(side).z(1:reduc:end),vatgrad(side).qx(1:reduc:end),vatgrad(side).qy(1:reduc:end),vatgrad(side).qz(1:reduc:end),3,'w-','LineWidth',1);
                     end
                 end
