@@ -93,7 +93,7 @@ end
 
 % write nifti of VAT
 Vvat.mat=mat;
-voxspace=permute(voxspace,[2,1,3]);
+%voxspace=permute(voxspace,[2,1,3]);
 Vvat.dim=size(voxspace);
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
