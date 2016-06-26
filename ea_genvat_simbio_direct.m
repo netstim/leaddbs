@@ -83,7 +83,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
     end
     
     %% convert trajectory mm2vox
-
+load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
     V=spm_vol([options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
     trajmm=[itraj,ones(length(itraj),1)];
     trajvox=V.mat\trajmm';
@@ -260,17 +260,101 @@ if ea_headmodel_changed(options,side,S,elstruct)
     end
     
     %% create the mesh using fieldtrip:
+
+    c0=[]; cnt=1;
+    mesh.tet=[];
+    mesh.pnt=[];
+    mesh.tissue=[];
+    mesh.tissuelabel={'gray','white','contacts','insulation'};
+    % add gm to mesh
+   
+    for atlas=1:numel(atlases.fv)
+        fv(cnt)=atlases.fv{atlas};
+        ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+        c0=[c0;[ins,1]];
+        cnt=cnt+1;
+%         mdim=ceil(max(fv.vertices))+1;
+%         mindim=floor(min(fv.vertices))-1;
+%         [node,elem]=surf2mesh(fv.vertices,fv.faces,mindim,mdim,0.1,2);
+%         mesh.tet=[mesh.tet;elem(:,1:4)+length(mesh.pnt)];
+%         mesh.pnt=[mesh.pnt;node];
+%         mesh.tissue=[mesh.tissue;ones(size(elem,1),1)];
+    end
+        % add white matter:
+
+    bb=[1,smri.dim(1);1,smri.dim(2);1,smri.dim(3);1,1];
+    [node,face]=meshabox([1,1,1],smri.dim,[],1);
+    node=[node,ones(size(node,1),1)]';
+    node=Vexp.mat*node;
+    node=node(1:3,:)';
+ins=surfinterior(node,face);
+    fv(cnt).vertices=node;
+        fv(cnt).faces=face;
+                c0=[c0;[ins,2]];
+                cnt=cnt+1;
+%     [node,elem]=vol2mesh(smri.white,1:size(smri.white,1),1:size(smri.white,2),1:size(smri.white,3),2,2,1);
+%     node=Vexp.mat*[node,ones(length(node),1)]';
+%     mesh.tet=[mesh.tet;elem(:,1:4)+length(mesh.pnt)];
+%     mesh.pnt=[mesh.pnt;node(1:3,:)'];
+%     mesh.tissue=[mesh.tissue;repmat(2,size(elem,1),1)];
+
+      % add contacts to mesh  
+    for con=1:length(electrode.contacts)
+        fv(cnt).faces=electrode.contacts(con).faces;
+        fv(cnt).vertices=electrode.contacts(con).vertices;
+
+        ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+        c0=[c0;[ins,3]];
+        cnt=cnt+1;
+% %         mdim=ceil(max(fv(cnt).vertices))+1;
+% %         mindim=floor(min(fv(cnt).vertices))-1;
+% %         [node,elem]=surf2mesh(fv.vertices,fv.faces,mindim,mdim,0.1,2);
+%         mesh.tet=[mesh.tet;elem(:,1:4)+length(mesh.pnt)];
+%         mesh.pnt=[mesh.pnt;node];
+%         mesh.tissue=[mesh.tissue;repmat(3,size(elem,1),1)];
+    end
+    
+      % add insulation to mesh  
+    for ins=1:length(electrode.insulation)
+        fv(cnt).faces=electrode.insulation(ins).faces;
+                fv(cnt).vertices=electrode.insulation(ins).vertices;
+        ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+        c0=[c0;[ins,4]];
+        cnt=cnt+1;
+%         
+%         mdim=ceil(max(fv.vertices))+1;
+%         mindim=floor(min(fv.vertices))-1;
+%         [node,elem]=surf2mesh(fv.vertices,fv.faces,mindim,mdim,0.1,2);
+%         mesh.tet=[mesh.tet;elem(:,1:4)+length(mesh.pnt)];
+%         mesh.pnt=[mesh.pnt;node];
+%         mesh.tissue=[mesh.tissue;repmat(4,size(elem,1),1)];
+    end
+
+    fv=ea_concatfv(fv);
+    
+    c0coords=[c0(:,1:3),ones(size(c0,1),1)]';
+    c0coords=Vexp.mat\c0coords;
+    c0coords=c0coords(1:3,:)';
+    c0=[c0coords,c0(:,4)];
+    if vizz
+        figure, patch(fv,'FaceColor','b','FaceAlpha',0.1);
+        hold on
+        plot3(c0(:,1),c0(:,2),c0(:,3),'g*');
+    end
+    % convert to voxel space of Vexp to be able to enter correct bb:
+    fv.vertices=[fv.vertices,ones(size(fv.vertices,1),1)]';
+    fv.vertices=Vexp.mat\fv.vertices;
+    fv.vertices=fv.vertices(1:3,:)';
+    [node,elem]=surf2mesh(fv.vertices,fv.faces,[1,1,1],smri.dim,1,[],c0);
+    
     keyboard
-    cfg        = [];
-    cfg.tissue      = {'gray','white','contacts','insulation'};
-    cfg.method = 'hexahedral';
-    cfg.shift  = 0.3;
-    %cfg.numvertices=[100000,100000,100000,100000];
+    if vizz
+        
+        figure
+        tetramesh(mesh.tet,mesh.pnt,round(mesh.tissue*64/4),'FaceAlpha',0.2);
+        
+    end
     
-    
-    cfg.resolution=1;
-    %mesh=ea_ft_prepare_mesh(cfg,smri);
-    [~,mesh]       = evalc('ea_ft_prepare_mesh(cfg,smri);');
     if useSI
         mesh.pnt=mesh.pnt/1000; % in meter
         mesh.unit='m';

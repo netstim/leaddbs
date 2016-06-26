@@ -25,7 +25,7 @@ end
 
 uset1=1; % set to zero if you do not wish to use T1 data for normalization even if present.
 usepd=1; % set to zero if you do not wish to use PD data for normalization even if present.
-usefa=0; % set to zero if you do not wish to use FA data for normalization even if present.
+usefa=1; % set to zero if you do not wish to use FA data for normalization even if present.
 
 usebrainmask=1;
 
