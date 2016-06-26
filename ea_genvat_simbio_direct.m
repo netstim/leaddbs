@@ -68,16 +68,16 @@ coords=acoords{side};
 
 if ea_headmodel_changed(options,side,S,elstruct)
     disp('No suitable headmodel found, rebuilding. This may take a while...');
-
+    
     %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
-
-    %options.earoot=[ea_getearoot];
-
+    
+    %options.earoot=[fileparts(which('lead')),filesep];
+    
     %% some preprocessing to establish the lead trajectory
     traj=[elstruct.markers(side).tail+(elstruct.markers(side).tail-elstruct.markers(side).head);
         elstruct.markers(side).head+(elstruct.markers(side).head-elstruct.markers(side).tail);];
-
-
+    
+    
     for d=1:3
         itraj(:,d)=linspace(traj(1,d),traj(2,d));
     end
@@ -88,7 +88,7 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     trajmm=[itraj,ones(length(itraj),1)];
     trajvox=V.mat\trajmm';
     trajvox=trajvox(1:3,:)';
-
+    
     if max(S.amplitude{side})<=3
         modelwidth=50;
     else
@@ -97,7 +97,7 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     if max(S.amplitude{side})>5
         modelwidth=150;
     end
-
+    
     %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
 
     [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,modelwidth,150,1); % set to 250 / 400 this will result in ~10x10x10 mm.
@@ -105,107 +105,62 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     mkdir([options.root,options.patientname,filesep,'headmodel']);
     Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);
     spm_write_vol(Vexp,cimat);
-
-
-
+    
+    
+    
     % fields: 1: trajectory body; 2: trajectory bottom; 3: trajectory top
     % next three: contact one, etc.
     % next three: contact spacing one, etc.
     % last: tip
-
-
+    
+    
     if vizz
         simbio=figure;
         hold on
     end
-
-
+    
+    
     % establish coordinate grid:
-
-
+    
+    
     nii=ea_load_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii']);
     [xx,yy,zz]=ind2sub(size(nii.img),1:numel(nii.img));
     XYZvx=[xx;yy;zz;ones(1,length(xx))];
     XYZmm=Vexp.mat*XYZvx;
-
-
+    
+    
     clear XYZvx
-
+    
     cnt=1;
     Xcon=nii.img; Xcon(:)=0; % initialize image for all contacts
     Xins=nii.img; Xins(:)=0; % initialize image for all insulated electrode parts
-
-
-
+    
+    
+    
     load([options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
     A=[electrode.head_position,1;
         electrode.tail_position,1
         electrode.x_position,1
         electrode.y_position,1]; % points in model
-
+    
     B=[elstruct.markers(side).head,1;
         elstruct.markers(side).tail,1;
         elstruct.markers(side).x,1;
         elstruct.markers(side).y,1];
     setappdata(resultfig,'elstruct',elstruct);
     X = linsolve(A,B); X=X';
-    ea_dispercent(0,'Exporting insulating components');
-
-    for ins=1:length(electrode.insulation)
-
-        electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
-        electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
-
-        if vizz
-            h=patch(electrode.insulation(ins));
-            ea_specsurf(h,electrode.lead_color,0.5);
-        end
-
-        % this following method takes quite some time... even more importantly,
-        % the info will be transfered from mesh to volume and lateron back to
-        % mesh again. For now, this is still the most convenient method.
-        in=ea_intriangulation(electrode.insulation(ins).vertices,electrode.insulation(ins).faces,XYZmm(1:3,:)');
-        Xt=nii.img;
-        Xt(:)=0; Xt(in)=1;
-        Xins=Xins+Xt;
-        ea_dispercent(ins/length(electrode.insulation));
-    end
-    ea_dispercent(1,'end');
-    ea_dispercent(0,'Exporting contact components');
-
-    for con=1:length(electrode.contacts)
-
-        electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
-        electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
-        % this following method takes quite some time... even more importantly,
-        % the info will be transfered from mesh to volume and lateron back to
-        % a (different) mesh again. For now, this is still the best method.
-        in=ea_intriangulation(electrode.contacts(con).vertices,electrode.contacts(con).faces,XYZmm(1:3,:)');
-        if vizz
-            h=patch(electrode.contacts(con));
-            ea_specsurf(h,electrode.contact_color,0.5);
-        end
-        Xt=nii.img;
-        Xt(:)=0; Xt(in)=1;
-
-        if options.considerpassivecontacts || S.activecontacts{side}(con)
-        Xcon=Xcon+Xt;
-        else % if not add passive contacts to insulating material
-            Xins=Xins+Xt;
-        end
-        ea_dispercent(con/length(electrode.contacts));
-    end
-
+    
+    
     if vizz
         plot3(XYZmm(1,:),XYZmm(2,:),XYZmm(3,:),'r.');
         hold on
         plot3(trajmm(:,1),trajmm(:,2),trajmm(:,3),'g');
     end
-
+    
     ea_dispercent(1,'end');
-
+    
     % set up dipole
-
+    
     disp('Finishing headmodel...');
 
     %% read in gm data and convert to segmented mri
@@ -222,8 +177,8 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     smri.insulation(smri.contacts)=0; % make sure no overlaps.
     smri.gray(smri.contacts)=0; smri.gray(smri.insulation)=0; % remove contact and insulation portions from the gm..
     smri.white(smri.contacts)=0; smri.white(smri.insulation)=0; % .. and white matter portions.
-
-
+    
+    
     if ~any(smri.gray(:))
         smri.gray(1)=1; % dummy point for rare cases where model has no gray matter.
     end
@@ -241,8 +196,8 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
 
     spm_write_vol(Vexp,X);
     clear X
-
-
+    
+    
     %% generate diffusion signal:
     if options.usediffusion
         disp('Loading FTR...');
@@ -267,7 +222,7 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     mesh.tissue=[];
     mesh.tissuelabel={'gray','white','contacts','insulation'};
     % add gm to mesh
-
+   
     for atlas=1:numel(atlases.fv)
         fv(cnt)=atlases.fv{atlas};
         ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
@@ -298,7 +253,7 @@ ins=surfinterior(node,face);
 %     mesh.pnt=[mesh.pnt;node(1:3,:)'];
 %     mesh.tissue=[mesh.tissue;repmat(2,size(elem,1),1)];
 
-      % add contacts to mesh
+      % add contacts to mesh  
     for con=1:length(electrode.contacts)
         fv(cnt).faces=electrode.contacts(con).faces;
         fv(cnt).vertices=electrode.contacts(con).vertices;
@@ -321,7 +276,7 @@ ins=surfinterior(node,face);
         ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
         c0=[c0;[ins,4]];
         cnt=cnt+1;
-%
+%         
 %         mdim=ceil(max(fv.vertices))+1;
 %         mindim=floor(min(fv.vertices))-1;
 %         [node,elem]=surf2mesh(fv.vertices,fv.faces,mindim,mdim,0.1,2);
@@ -331,7 +286,7 @@ ins=surfinterior(node,face);
     end
 
     fv=ea_concatfv(fv);
-
+    
     c0coords=[c0(:,1:3),ones(size(c0,1),1)]';
     c0coords=Vexp.mat\c0coords;
     c0coords=c0coords(1:3,:)';
@@ -346,13 +301,13 @@ ins=surfinterior(node,face);
     fv.vertices=Vexp.mat\fv.vertices;
     fv.vertices=fv.vertices(1:3,:)';
     [node,elem]=surf2mesh(fv.vertices,fv.faces,[1,1,1],smri.dim,1,[],c0);
-
+    
     keyboard
     if vizz
-
+        
         figure
         tetramesh(mesh.tet,mesh.pnt,round(mesh.tissue*64/4),'FaceAlpha',0.2);
-
+        
     end
 
     if useSI
