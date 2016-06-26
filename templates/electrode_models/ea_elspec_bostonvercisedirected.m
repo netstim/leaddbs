@@ -30,80 +30,80 @@ for side=options.sides
     %%
     trajvector=mean(diff(trajectory{side}));
     trajvector=trajvector/norm(trajvector);
-    
-    
+
+
     startpoint=trajectory{side}(1,:)-(1.5*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
     set(0,'CurrentFigure',resultfig);
-    
+
     % draw patientname
     lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
     ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
-    
-    
+
+
     % draw trajectory
     [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-    
-    
-    
+
+
+
     if isfield(elstruct,'group')
         usecolor=elstruct.groupcolors(elstruct.group,:);
     else
         usecolor=elspec.lead_color;
     end
-    
-    
+
+
     aData=1;
-    
-    
+
+
     specsurf(elrender{side}(1),usecolor,aData); specsurf(elrender{side}(2),usecolor,aData); specsurf(elrender{side}(3),usecolor,aData);
-    
+
     cnt=4;
-    
+
     % draw contacts
     for cntct=1:8 % first contact is the tip (see below).
-        
+
         set(0,'CurrentFigure',resultfig);
-        
+
         if cntct==1 % tip!
-            
+
             % draw tip
             usecolor=elspec.tip_color;
             set(0,'CurrentFigure',resultfig);
-            
+
             [cX,cY,cZ] = cylinder((repmat(elspec.tip_diameter/2,1,10)-([10:-1:1].^10/10^10)*(elspec.tip_diameter/2)));
-            
+
             cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
-            
+
             % define two points to define cylinder.
             X1=coords_mm{side}(1,:)+trajvector*(elspec.tip_length/2);
-            
-            
+
+
             cX=cX+X1(1);
             cY=cY+X1(2);
             cZ=cZ+X1(3);
-            
+
             elrender{side}(cnt)=surf(cX,cY,cZ);
-            
+
             specsurf(elrender{side}(cnt),usecolor,aData);
             log(cnt)=1; % contact
             cnt=cnt+1;
         elseif cntct==2 || cntct==3
-            
+
             scyl = ea_segmented_cylinder;
             for contact=1:3
                 usecolor=elspec.contact_color;
-                
+
                 elrender{side}(cnt)=patch(scyl{1,contact});
-                
+
                 % scale size:
                 elrender{side}(cnt).Vertices(:,1)=elrender{side}(cnt).Vertices(:,1).*(elspec.contact_diameter/2); % scale to fit tip-diameter
                 elrender{side}(cnt).Vertices(:,2)=elrender{side}(cnt).Vertices(:,2).*(elspec.contact_diameter/2); % scale to fit tip-diameter
                 elrender{side}(cnt).Vertices(:,3)=elrender{side}(cnt).Vertices(:,3).*(elspec.contact_length); % scale to fit tip-diameter
-                
+
                 % define two points to define cylinder.
                 X1=coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2);
-                
-                
+
+
                 elrender{side}(cnt).Vertices(:,1)=elrender{side}(cnt).Vertices(:,1)+X1(1);
                 elrender{side}(cnt).Vertices(:,2)=elrender{side}(cnt).Vertices(:,2)+X1(2);
                 elrender{side}(cnt).Vertices(:,3)=elrender{side}(cnt).Vertices(:,3)+X1(3);
@@ -111,74 +111,74 @@ for side=options.sides
                 log(cnt)=1; % contact
                 cnt=cnt+1;
             end
-            
-            
-            
+
+
+
             for ins=1:4
                 usecolor=elspec.lead_color;
-                
+
                 elrender{side}(cnt)=patch(scyl{2,ins});
-                
+
                 % scale size:
                 elrender{side}(cnt).Vertices(:,1)=elrender{side}(cnt).Vertices(:,1).*(elspec.contact_diameter/2); % scale to fit tip-diameter
                 elrender{side}(cnt).Vertices(:,2)=elrender{side}(cnt).Vertices(:,2).*(elspec.contact_diameter/2); % scale to fit tip-diameter
                 elrender{side}(cnt).Vertices(:,3)=elrender{side}(cnt).Vertices(:,3).*(elspec.contact_length); % scale to fit tip-diameter
-                
+
                 % define two points to define cylinder.
                 X1=coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2);
-                
-                
+
+
                 elrender{side}(cnt).Vertices(:,1)=elrender{side}(cnt).Vertices(:,1)+X1(1);
                 elrender{side}(cnt).Vertices(:,2)=elrender{side}(cnt).Vertices(:,2)+X1(2);
                 elrender{side}(cnt).Vertices(:,3)=elrender{side}(cnt).Vertices(:,3)+X1(3);
                 specsurf(elrender{side}(cnt),usecolor,1);
                 log(cnt)=0; % insulation
-                
+
                 cnt=cnt+1;
-                
+
             end
-            
-            
-            
+
+
+
         elseif cntct==4 % the only regular contact
-            
+
             usecolor=elspec.lead_color;
-            
+
             [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2),elspec.contact_diameter/2,100,repmat(elspec.contact_color,1,3),1,0);
-            
+
             specsurf(elrender{side}(cnt),elspec.contact_color,aData); specsurf(elrender{side}(cnt+1),elspec.contact_color,aData); specsurf(elrender{side}(cnt+2),elspec.contact_color,aData);
             log(cnt:cnt+2)=1; % contact
             cnt=cnt+3;
-            
+
         end
-        
-        
-        
+
+
+
     end
-    
+
     % draw trajectory between contacts
     for cntct=1:elspec.numel-1
         set(0,'CurrentFigure',resultfig);
-        
+
         [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct+1,:)+trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-        
+
         specsurf(elrender{side}(cnt),usecolor,aData); specsurf(elrender{side}(cnt+1),usecolor,aData); specsurf(elrender{side}(cnt+2),usecolor,aData);
         log(cnt:cnt+2)=0; % insulation
-        
+
         cnt=cnt+3;
     end
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
 end
 
 
@@ -223,7 +223,7 @@ for comp=[1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,22,25,28]
         try % if not already a patch..
             cyl = surf2patch(cyl,'triangles');
         end
-        
+
         try
             electrode.contacts(cntcnt).faces=cyl.Faces;
             electrode.contacts(cntcnt).vertices=cyl.Vertices;
@@ -239,7 +239,7 @@ for comp=[1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,22,25,28]
         try % if not already a patch..
             cyl = surf2patch(cyl,'triangles');
         end
-        
+
         try
             electrode.insulation(inscnt).faces=cyl.Faces;
             electrode.insulation(inscnt).vertices=cyl.Vertices;
@@ -249,7 +249,7 @@ for comp=[1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,22,25,28]
             electrode.insulation(inscnt).vertices=cyl.vertices;
             electrode.insulation(inscnt).facevertexcdata=cyl.facevertexcdata;
         end
-        
+
         inscnt=inscnt+1;
     elseif ismember(comp,12:14) % contacts
         cyl=elrender{side}(comp);
@@ -296,7 +296,7 @@ for comp=[1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,22,25,28]
         electrode.insulation(inscnt)=cyl;
         inscnt=inscnt+1;
     end
-    
+
 end
 
 electrode.electrode_model=elstruct.name;
@@ -320,7 +320,7 @@ electrode.coords_mm(6,:)=coords_mm{side}(3,:)+[0.33,0.66,0];
 electrode.coords_mm(7,:)=coords_mm{side}(3,:)+[0.33,-0.66,0];
 electrode.coords_mm(8,:)=coords_mm{side}(4,:);
 
-save([fileparts(which('lead')),filesep,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 % visualize
 cnt=1;
 if ~nargin
@@ -346,9 +346,9 @@ for con=1:length(electrode.contacts)
     electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
     electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
     elrender{side}(cnt)=patch(electrode.contacts(con));
-    
+
     specsurf(elrender{side}(cnt),elspec.contact_color,aData);
-    
+
     cnt=cnt+1;
 end
 

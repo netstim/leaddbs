@@ -10,8 +10,8 @@ if nargin < 2
     num = false;
 end
 
-ldir=[fileparts(which('lead')),filesep];
-switch com  
+ldir=[ea_getearoot];
+switch com
     case 'web'
         try
             webopts = weboptions('Timeout',5);
@@ -25,7 +25,7 @@ switch com
             end
         end
         if num && ~strcmp(version,'Unknown')
-            
+
             version = ea_strjoin(cellfun(@(x) num2str(str2double(x),'%02d'), ea_strsplit(version,'.'),'UniformOutput',0),'');
             if numel(version) == 6
                 version = [version, '00'];

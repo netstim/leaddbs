@@ -94,7 +94,7 @@ if ~isfield(options.prefs,'firstrun') % first run.
         'Any suggestions are more than welcome (andreas.horn@charite.de). \n'
         ]);
 
-    fid = fopen([fileparts(which('lead')),filesep,'ea_prefs.m'],'a');
+    fid = fopen([ea_getearoot,'ea_prefs.m'],'a');
     fwrite(fid,sprintf(['prefs.firstrun=','''','off','''','; \n']));
     fclose(fid);
 

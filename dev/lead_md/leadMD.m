@@ -57,7 +57,7 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-earoot=[fileparts(which('lead')),filesep];
+earoot=[ea_getearoot];
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
@@ -242,17 +242,17 @@ hObject.String='';
 setappdata(hObject,'path',path);
 
 function outdir=getpatdir()
-root=[fileparts(which('lead')),filesep,'dev',filesep,'lead_md',filesep];
-try 
+root=[ea_getearoot,'dev',filesep,'lead_md',filesep];
+try
     load([root,filesep,'tmp_dir'],'outdir');
 catch
     warning('No patient Folder saved');
 end
 
 function savepatdir(outdir)
-root=[fileparts(which('lead')),filesep,'dev',filesep,'lead_md',filesep];
+root=[ea_getearoot,'dev',filesep,'lead_md',filesep];
 save([root,'tmp_dir'],'outdir');
-    
+
 
 
 
@@ -270,15 +270,15 @@ if outdir ~= 0
 
     %% read prefs?
 
-    
+
     options = ea_step1options(handles);
-    
+
     options.root = [fileparts(outdir)];
     [~,options.patientname] = fileparts(outdir);
 
     % copy files from temp to new folder
     %fis={options.prefs.tranii};
-    
+
     %% run trajectory reconstruction.
     %ea_autocoord(options);
 else
@@ -356,7 +356,7 @@ options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower th
 
 %uipatdir=get(handles.patdir_choosebox,'String');
 
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 options.dicomimp=0;
 
 options.normalize.do=1;
@@ -462,41 +462,41 @@ options.dolc=0;
 % Coreg/Norm/Loc
 function options=ea_step2_normcheck_ct_options(handles)
 options.native=0;
-options.earoot=[fileparts(which('lead')),filesep];
-% 
+options.earoot=[ea_getearoot];
+%
 % %% some manual options that can be set:
-% 
-% 
+%
+%
 % options.endtolerance=10; % how many slices to use with zero signal until end of electrode estimate.
 % options.sprungwert=4; % how far electrode centroid may be (in xy axis) from last to current slice.
 % options.refinesteps=0; % how often to re-iterate to reconstruct trajectory. More than 2 should usually not be beneficial. Use 0 to use the direct measurement.
 % options.tra_stdfactor=0.9; % Default: 0.9 - the lower this factor, the lower the threshold (more included pixels in tra process).
 % options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower the threshold (more included pixels in cor process).
-% 
-% 
-% 
-% 
+%
+%
+%
+%
 % %% set options
-% 
+%
 % %uipatdir=get(handles.patdir_choosebox,'String');
-% 
-% options.earoot=[fileparts(which('lead')),filesep];
+%
+% options.earoot=[ea_getearoot];
 % options.dicomimp=0;
-% 
+%
 % options.normalize.do=0;
 % options.normalize.method='SPM12 DARTEL nonlinear [MR/CT]';
 % options.normalize.methodn=0;
-% 
+%
 % options.normalize.check=1;
-% 
-% 
+%
+%
 % % set modality (MR/CT) in options
 % %options.modality = get(handles.MRCT,'Value');
-% 
+%
 % %if options.modality==2; % CT
 % %    options.coregctcheck=1;
 % end
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 options.endtolerance = 10;
 options.sprungwert = 4;
 options.refinesteps = 0;
@@ -638,7 +638,7 @@ options.lc.struc.ft.normalize = 1;
 
 
 function options=ea_step2_normcheck_mr_options(handles)
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 options.endtolerance = 10;
 options.sprungwert = 4;
 options.refinesteps = 0;
@@ -780,7 +780,7 @@ options.lc.struc.ft.normalize = 1;
 
 %options for Coregcheck
 function options=ea_step2_coregcheck_options(handles)
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 options.native=0;
 options.endtolerance = 10;
 options.sprungwert = 4;
@@ -923,7 +923,7 @@ options.lc.struc.ft.normalize = 1;
 
 %options for ManelectrodeHeightCorrection
 function options=ea_step2_manelectrode_options(handles)
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 options.elmodeln = get(handles.electrode_model_popup,'Value');
 string_list = get(handles.electrode_model_popup,'String');
 options.elmodel=string_list{options.elmodeln};
@@ -1073,7 +1073,7 @@ function options=ea_step3_2D_options(handles)
 options.elmodeln = get(handles.electrode_model_popup,'Value');
 string_list = get(handles.electrode_model_popup,'String');
 options.elmodel=string_list{options.elmodeln};
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 options.endtolerance = 10;
 options.sprungwert = 4;
 options.refinesteps = 0;
@@ -1224,7 +1224,7 @@ function options=ea_step3_3D_options(handles)
 options.elmodeln = get(handles.electrode_model_popup,'Value');
 string_list = get(handles.electrode_model_popup,'String');
 options.elmodel=string_list{options.elmodeln};
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 options.endtolerance = 10;
 options.sprungwert = 4;
 options.refinesteps = 0;
@@ -1373,7 +1373,7 @@ options.atlassetn=get(handles.atlassetpopup,'Value');
 options.elmodeln = get(handles.electrode_model_popup,'Value');
 string_list = get(handles.electrode_model_popup,'String');
 options.elmodel=string_list{options.elmodeln};
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 
 % --- Executes on selection change in electrode_model_popup.
 function electrode_model_popup_Callback(hObject, eventdata, handles)
@@ -1427,7 +1427,7 @@ else
 
     options.root = [fileparts(outdir)];
     [~,options.patientname] = fileparts(outdir);
-    
+
     %% run trajectory reconstruction.
     ea_autocoord(options);
 end
@@ -1473,14 +1473,14 @@ outdir=getpatdir();
 if outdir == 0
     outdir = [uigetdir('','Select Patient Directory...'),filesep];
     savepatdir(outdir);
-    
+
 else
     %% read prefs?
     options = ea_step3_3D_options(handles);
 
     options.root = [fileparts(outdir)];
     [~,options.patientname] = fileparts(outdir);
-    
+
     %% run trajectory reconstruction.
     ea_autocoord(options);
 end
@@ -1498,14 +1498,14 @@ outdir=getpatdir();
 if outdir == 0
     outdir = [uigetdir('','Select Patient Directory...'),filesep];
     savepatdir(outdir);
-    
+
 else
     %% read prefs?
     options = ea_step3_2D_options(handles);
 
     options.root = [fileparts(outdir)];
     [~,options.patientname] = fileparts(outdir);
-    
+
     %% run trajectory reconstruction.
     ea_autocoord(options);
 end
@@ -1568,7 +1568,7 @@ else
 
     options.root = [fileparts(outdir)];
     [~,options.patientname] = fileparts(outdir);
-    
+
     %% run trajectory reconstruction.
     ea_autocoord(options);
 end
@@ -1581,11 +1581,11 @@ function checkheight_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 outdir=getpatdir();
 if outdir == 0
-    outdir = [uigetdir('','Select Patient Directory...'),filesep]; 
+    outdir = [uigetdir('','Select Patient Directory...'),filesep];
     %check for postop_ct?
 else
     %% read prefs?
-    
+
     options = ea_step2_manelectrode_options(handles);
 
     options.root = [fileparts(outdir)];

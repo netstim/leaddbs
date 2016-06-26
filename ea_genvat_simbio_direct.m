@@ -68,27 +68,27 @@ coords=acoords{side};
 
 if ea_headmodel_changed(options,side,S,elstruct)
     disp('No suitable headmodel found, rebuilding. This may take a while...');
-    
+
     %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
-    
-    %options.earoot=[fileparts(which('lead')),filesep];
-    
+
+    %options.earoot=[ea_getearoot];
+
     %% some preprocessing to establish the lead trajectory
     traj=[elstruct.markers(side).tail+(elstruct.markers(side).tail-elstruct.markers(side).head);
         elstruct.markers(side).head+(elstruct.markers(side).head-elstruct.markers(side).tail);];
-    
-    
+
+
     for d=1:3
         itraj(:,d)=linspace(traj(1,d),traj(2,d));
     end
-    
+
     %% convert trajectory mm2vox
 load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
     V=spm_vol([options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
     trajmm=[itraj,ones(length(itraj),1)];
     trajvox=V.mat\trajmm';
     trajvox=trajvox(1:3,:)';
-    
+
     if max(S.amplitude{side})<=3
         modelwidth=50;
     else
@@ -97,52 +97,52 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     if max(S.amplitude{side})>5
         modelwidth=150;
     end
-    
+
     %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
-    
+
     [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,modelwidth,150,1); % set to 250 / 400 this will result in ~10x10x10 mm.
     mat=mat';
     mkdir([options.root,options.patientname,filesep,'headmodel']);
     Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);
     spm_write_vol(Vexp,cimat);
-    
-    
-    
+
+
+
     % fields: 1: trajectory body; 2: trajectory bottom; 3: trajectory top
     % next three: contact one, etc.
     % next three: contact spacing one, etc.
     % last: tip
-    
-    
+
+
     if vizz
         simbio=figure;
         hold on
     end
-    
-    
+
+
     % establish coordinate grid:
-    
-    
+
+
     nii=ea_load_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii']);
     [xx,yy,zz]=ind2sub(size(nii.img),1:numel(nii.img));
     XYZvx=[xx;yy;zz;ones(1,length(xx))];
     XYZmm=Vexp.mat*XYZvx;
-    
-    
+
+
     clear XYZvx
-    
+
     cnt=1;
     Xcon=nii.img; Xcon(:)=0; % initialize image for all contacts
     Xins=nii.img; Xins(:)=0; % initialize image for all insulated electrode parts
-    
-    
-    
+
+
+
     load([options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
     A=[electrode.head_position,1;
         electrode.tail_position,1
         electrode.x_position,1
         electrode.y_position,1]; % points in model
-    
+
     B=[elstruct.markers(side).head,1;
         elstruct.markers(side).tail,1;
         elstruct.markers(side).x,1;
@@ -150,17 +150,17 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     setappdata(resultfig,'elstruct',elstruct);
     X = linsolve(A,B); X=X';
     ea_dispercent(0,'Exporting insulating components');
-   
+
     for ins=1:length(electrode.insulation)
-         
+
         electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
         electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
-        
+
         if vizz
             h=patch(electrode.insulation(ins));
             ea_specsurf(h,electrode.lead_color,0.5);
         end
-        
+
         % this following method takes quite some time... even more importantly,
         % the info will be transfered from mesh to volume and lateron back to
         % mesh again. For now, this is still the most convenient method.
@@ -172,9 +172,9 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     end
     ea_dispercent(1,'end');
     ea_dispercent(0,'Exporting contact components');
-    
+
     for con=1:length(electrode.contacts)
-        
+
         electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
         electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
         % this following method takes quite some time... even more importantly,
@@ -187,7 +187,7 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
         end
         Xt=nii.img;
         Xt(:)=0; Xt(in)=1;
-        
+
         if options.considerpassivecontacts || S.activecontacts{side}(con)
         Xcon=Xcon+Xt;
         else % if not add passive contacts to insulating material
@@ -195,19 +195,19 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
         end
         ea_dispercent(con/length(electrode.contacts));
     end
-    
+
     if vizz
         plot3(XYZmm(1,:),XYZmm(2,:),XYZmm(3,:),'r.');
         hold on
         plot3(trajmm(:,1),trajmm(:,2),trajmm(:,3),'g');
     end
-    
+
     ea_dispercent(1,'end');
-    
+
     % set up dipole
-    
+
     disp('Finishing headmodel...');
-    
+
     %% read in gm data and convert to segmented mri
     % construct ft-like anatomy structure based on SPM nifti info.
     smri.dim=Vexp.dim;
@@ -222,15 +222,15 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     smri.insulation(smri.contacts)=0; % make sure no overlaps.
     smri.gray(smri.contacts)=0; smri.gray(smri.insulation)=0; % remove contact and insulation portions from the gm..
     smri.white(smri.contacts)=0; smri.white(smri.insulation)=0; % .. and white matter portions.
-    
-    
-    if ~any(smri.gray(:))  
+
+
+    if ~any(smri.gray(:))
         smri.gray(1)=1; % dummy point for rare cases where model has no gray matter.
     end
     if ~any(smri.white(:))
         smri.white(2)=2; % dummy point for rare cases where model has no white matter.
     end
-    
+
     % export a nifti version of the headmodel just for control reasons and as
     % an export for other use-cases:
     X=single(smri.gray);
@@ -238,11 +238,11 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     X=X+3*smri.contacts;
     X=X+4*smri.insulation;
 
-    
+
     spm_write_vol(Vexp,X);
     clear X
-    
-    
+
+
     %% generate diffusion signal:
     if options.usediffusion
         disp('Loading FTR...');
@@ -258,7 +258,7 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
             spm_write_vol(Vsig,squeeze(signal(:,:,:,i)));
         end
     end
-    
+
     %% create the mesh using fieldtrip:
 
     c0=[]; cnt=1;
@@ -267,7 +267,7 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     mesh.tissue=[];
     mesh.tissuelabel={'gray','white','contacts','insulation'};
     % add gm to mesh
-   
+
     for atlas=1:numel(atlases.fv)
         fv(cnt)=atlases.fv{atlas};
         ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
@@ -298,7 +298,7 @@ ins=surfinterior(node,face);
 %     mesh.pnt=[mesh.pnt;node(1:3,:)'];
 %     mesh.tissue=[mesh.tissue;repmat(2,size(elem,1),1)];
 
-      % add contacts to mesh  
+      % add contacts to mesh
     for con=1:length(electrode.contacts)
         fv(cnt).faces=electrode.contacts(con).faces;
         fv(cnt).vertices=electrode.contacts(con).vertices;
@@ -313,15 +313,15 @@ ins=surfinterior(node,face);
 %         mesh.pnt=[mesh.pnt;node];
 %         mesh.tissue=[mesh.tissue;repmat(3,size(elem,1),1)];
     end
-    
-      % add insulation to mesh  
+
+      % add insulation to mesh
     for ins=1:length(electrode.insulation)
         fv(cnt).faces=electrode.insulation(ins).faces;
                 fv(cnt).vertices=electrode.insulation(ins).vertices;
         ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
         c0=[c0;[ins,4]];
         cnt=cnt+1;
-%         
+%
 %         mdim=ceil(max(fv.vertices))+1;
 %         mindim=floor(min(fv.vertices))-1;
 %         [node,elem]=surf2mesh(fv.vertices,fv.faces,mindim,mdim,0.1,2);
@@ -331,7 +331,7 @@ ins=surfinterior(node,face);
     end
 
     fv=ea_concatfv(fv);
-    
+
     c0coords=[c0(:,1:3),ones(size(c0,1),1)]';
     c0coords=Vexp.mat\c0coords;
     c0coords=c0coords(1:3,:)';
@@ -346,31 +346,31 @@ ins=surfinterior(node,face);
     fv.vertices=Vexp.mat\fv.vertices;
     fv.vertices=fv.vertices(1:3,:)';
     [node,elem]=surf2mesh(fv.vertices,fv.faces,[1,1,1],smri.dim,1,[],c0);
-    
+
     keyboard
     if vizz
-        
+
         figure
         tetramesh(mesh.tet,mesh.pnt,round(mesh.tissue*64/4),'FaceAlpha',0.2);
-        
+
     end
-    
+
     if useSI
         mesh.pnt=mesh.pnt/1000; % in meter
         mesh.unit='m';
     end
-    
+
     %% calculate volume conductor
     disp('Done. Creating volume conductor...');
 
     %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
-    
+
     if useSI
         SIfx=1;
     else
         SIfx=1000;
     end
-    
+
     try
             vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
@@ -382,11 +382,11 @@ ins=surfinterior(node,face);
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
     end
- 
-    
+
+
     save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','-v7.3');
     ea_save_hmprotocol(options,side,S,elstruct,1);
-    
+
 else
     % simply load vol.
     disp('Loading headmodel...');
@@ -403,25 +403,25 @@ switch side
 end
 
 for source=1:4
-    
+
     stimsource=S.([sidec,'s',num2str(source)]);
-    
+
     for cnt=1:length(cnts)
         U(cnt)=(stimsource.(cnts{cnt}).perc/100)*stimsource.amp;
         if stimsource.(cnts{cnt}).pol==1
             U(cnt)=U(cnt)*-1;
         end
     end
-    
+
     Acnt=find(U);
-    
-    
+
+
     if ~isempty(Acnt)
-        
+
         dpvx=coords(Acnt,:);
-        
+
         volts=U(U~=0);
-        
+
         %% calculate voltage distribution based on dipole
         disp('Done. Calculating voltage distribution...');
         if useSI
@@ -430,7 +430,7 @@ for source=1:4
             SIfx=1;
         end
         ix=knnsearch(vol.pos,dpvx/SIfx); % add dpvx/1000 for m
-        
+
         if any(volts>0)
             unipolar=0;
             U=U/2;
@@ -438,34 +438,34 @@ for source=1:4
         else
             unipolar=1;
         end
-        
+
         constvol=stimsource.va==1; % constvol is 1 for constant voltage and 0 for constant current.
-        
-        
+
+
         if ~constvol
             volts=volts/1000; % from Ampere to mA
         end
-        
+
         potential = ea_apply_dbs(vol,ix,volts,unipolar,constvol,4); % output in V. 4 indexes insulating material.
         disp('Done. Calculating E-Field...');
-        
+
         gradient{source} = ea_calc_gradient(vol,potential); % output in V/m.
-        
+
     else % empty source..
         gradient{source}=zeros(size(vol.hex,1),3);
     end
-    
+
 end
 
 gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient from all sources.
 vol.pos=vol.pos*SIfx; % convert back to mm.
 
     midpts=mean(cat(3,vol.pos(vol.hex(:,1),:),vol.pos(vol.hex(:,2),:),vol.pos(vol.hex(:,3),:),vol.pos(vol.hex(:,4),:),vol.pos(vol.hex(:,5),:),vol.pos(vol.hex(:,6),:),vol.pos(vol.hex(:,7),:),vol.pos(vol.hex(:,8),:)),3);
-    
+
     vatgrad=getappdata(resultfig,'vatgrad');
     if isempty(vatgrad); clear('vatgrad'); end
     reduc=10;
-    
+
     % generate a jittered indices vector to be used to reduce flowfield
     % display by ~factor reduc.
     indices=zeros(length(1:reduc:length(midpts)),1);
@@ -478,7 +478,7 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
     indices(indices==0)=[];
     indices(indices>length(midpts))=[];
     try
-        
+
     vatgrad(side).x=midpts(indices,1); vatgrad(side).y=midpts(indices,2); vatgrad(side).z=midpts(indices,3);
     catch
         keyboard
@@ -493,27 +493,27 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
     norm_gradient(ixx,:)=pols;
     %
     vatgrad(side).qx=norm_gradient(:,1); vatgrad(side).qy=norm_gradient(:,2); vatgrad(side).qz=norm_gradient(:,3);
-    
+
     setappdata(resultfig,'vatgrad',vatgrad);
     %figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))
-    
-    
+
+
     % calculate electric field ET by calculating midpoints of each
     % mesh-connection and setting difference of voltage to these points.
-    
+
     vat.pos=midpts;
-    
+
     ngrad=sqrt(sum(gradient'.^2,1));
     vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.
-    
-    
-    
-    
+
+
+
+
     disp('Done. Calculating VAT...');
-    
+
     vat.ET=vat.ET>thresh;
     vat.pos=vat.pos(vat.ET,:);
-    
+
 %vat.pos=vat.pos*1000; % back to mm.
 
 % change this to keep lower values into scatteredInterpolant..!
@@ -640,16 +640,16 @@ if constvol
     else
         dirinodes = elec;
     end
-    
+
     rhs = zeros(length(vol.pos),1);
     dirival = zeros(size(vol.pos,1),1);
     dirival(elec) = val;
 else
     dirinodes = 1;
     dirival = zeros(size(vol.pos,1),1);
-    
+
     rhs = zeros(size(vol.pos,1),1);
-    
+
     if unipolar
         catnodes = ea_get_surf_nodes(vol.hex,vol.tissue,lowconducting);
         rhs(elec) = val;
@@ -798,7 +798,7 @@ if any(strcmp(method, {'nonlinear', 'nonlin0', 'nonlin1', 'nonlin2', 'nonlin3', 
     y = input(:,2);
     z = input(:,3);
     s = size(M);
-    
+
     if s(1)~=3
         error('invalid size of nonlinear transformation matrix');
     elseif strcmp(method, 'nonlin0') && s(2)~=1
@@ -814,7 +814,7 @@ if any(strcmp(method, {'nonlinear', 'nonlin0', 'nonlin1', 'nonlin2', 'nonlin3', 
     elseif strcmp(method, 'nonlin5') && s(2)~=56
         error('invalid size of nonlinear transformation matrix');
     end
-    
+
     if s(2)==1
         % this is a translation, which in a strict sense is not the 0th order nonlinear transformation
         xx = M(1,1) + x;
@@ -843,9 +843,9 @@ if any(strcmp(method, {'nonlinear', 'nonlin0', 'nonlin1', 'nonlin2', 'nonlin3', 
     else
         error('invalid size of nonlinear transformation matrix');
     end
-    
+
     warped = [xx yy zz];
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % linear warping using homogenous coordinate transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -860,13 +860,13 @@ elseif strcmp(method, 'homogenous') || strcmp(method, 'homogeneous')
             M(3,1) M(3,2)  0  M(3,3)
             ];
     end
-    
+
     %warped = M * [input'; ones(1, size(input, 1))];
     %warped = warped(1:3,:)';
-    
+
     % below achieves the same as lines 154-155
     warped = [input ones(size(input, 1),1)]*M(1:3,:)';
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % using external function that returns a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -874,12 +874,12 @@ elseif exist(method, 'file') && ~isa(M, 'struct')
     % get the homogenous transformation matrix
     H = feval(method, M);
     warped = ea_ft_warp_apply(H, input, 'homogeneous');
-    
+
 elseif strcmp(method, 'sn2individual') && isa(M, 'struct')
     % use SPM structure with parameters for an inverse warp
     % from normalized space to individual, can be non-linear
     warped = sn2individual(M, input);
-    
+
 elseif strcmp(method, 'individual2sn') && isa(M, 'struct')
     % use SPM structure with parameters for a warp from
     % individual space to normalized space, can be non-linear
@@ -1076,39 +1076,39 @@ end
 if isfield(vol, 'type') && ~(ea_ft_datatype(vol, 'grad') || ea_ft_datatype(vol, 'sens')) % grad and sens also contain .type fields
     % preferably the structure specifies its own type
     type = vol.type;
-    
+
 elseif isfield(vol, 'r') && numel(vol.r)==1 && ~isfield(vol, 'label')
     type = 'singlesphere';
-    
+
 elseif isfield(vol, 'r') && isfield(vol, 'o') && isfield(vol, 'label')
     % this is before the spheres have been assigned to the coils
     % and every sphere is still associated with a channel
     type = 'localspheres';
-    
+
 elseif isfield(vol, 'r') && isfield(vol, 'o') && size(vol.r,1)==size(vol.o,1) && size(vol.r,1)>4
     % this is after the spheres have been assigned to the coils
     % note that this one is easy to confuse with the concentric one
     type = 'localspheres';
-    
+
 elseif isfield(vol, 'r') && numel(vol.r)>=2 && ~isfield(vol, 'label')
     type = 'concentricspheres';
-    
+
 elseif isfield(vol, 'bnd') && isfield(vol, 'mat')
     type = 'bem'; % it could be dipoli, asa, bemcp or openmeeg
-    
+
 elseif isfield(vol, 'bnd') && isfield(vol, 'forwpar')
     type = 'singleshell';
-    
+
 elseif isfield(vol, 'bnd') && numel(vol.bnd)==1
     type = 'singleshell';
-    
+
 elseif isempty(vol) || (isstruct(vol) && isequal(fieldnames(vol), {'unit'}))
     % it is empty, or only contains a specification of geometrical units
     type = 'infinite';
-    
+
 else
     type = 'unknown';
-    
+
 end % if isfield(vol, 'type')
 
 if ~isempty(desired)
@@ -1271,7 +1271,7 @@ switch cfg.method
         % the MRI is assumed to contain a segmentation
         % call the corresponding helper function
         bnd = ea_prepare_mesh_hexahedral(cfg, mri);
-        
+
 end
 
 % copy the geometrical units from the input to the output
@@ -1299,11 +1299,11 @@ function sens = ea_undobalancing(sens)
 while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(sens.balance.current, 'none')
     fnames = setdiff(fieldnames(sens.balance), 'current');
     indx   = find(ismember(fnames, sens.balance.current));
-    
+
     if length(indx)==1,
         % undo the synthetic gradient balancing
         fprintf('undoing the %s balancing for the gradiometer definition\n', sens.balance.current);
-        
+
         % if componentanalysis was followed by rejectcomponent, the balancing matrix is rank deficient
         % leading to problems in the correct allocation of the coils to the channels
         if strcmp(sens.balance.current, 'invcomp') && strcmp(sens.balance.previous{1}, 'comp')
@@ -1318,16 +1318,16 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
             sens.balance.invcomp.tra = tra3;
             % FIXME check whether this is robust
         end
-        
+
         if strcmp(sens.balance.current, 'planar')
             if isfield(sens, 'type') && ~isempty(strfind(sens.type, '_planar'))
                 % remove the planar postfox from the sensor type
                 sens.type = sens.type(1:(end-7));
             end
         end
-        
+
         sens = ft_apply_montage(sens, sens.balance.(sens.balance.current), 'inverse', 'yes', 'keepunused', 'yes', 'warning', 'no');
-        
+
         if ~isfield(sens, 'chanpos') || any(isnan(sens.chanpos(:))) || any(isnan(sens.chanori(:)))
             % this happens if the data has been component-analyzed
             % try to reconstruct the channel position and orientation
@@ -1336,7 +1336,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
             sens.chanpos(sel1,:) = pos(sel2,:);
             sens.chanori(sel1,:) = ori(sel2,:);
         end
-        
+
     else
         warning('cannot undo %s balancing in the gradiometer definition\n', sens.balance.current);
         break
@@ -1450,39 +1450,39 @@ if (cfg.resolution ~= 1)
     % this should be done like this: split seg into probabilistic, reslice
     % single compartments, take maximum values
     seg_array = [];
-    
+
     seg_indices = unique(seg);
-    
+
     for i=1:(length(unique(seg)))
         seg_reslice.anatomy = double(seg == (i-1));
         seg_reslice.dim = mri.dim;
         seg_reslice.transform = eye(4);
         seg_reslice.transform(1:3,4) = -ceil(mri.dim/2);
-        
+
         cfg_reslice = [];
         cfg_reslice.resolution = cfg.resolution;
         cfg_reslice.dim = ceil(mri.dim/cfg.resolution);
-        
+
         seg_build = ft_volumereslice(cfg_reslice,seg_reslice);
-        
+
         seg_array = [seg_array,seg_build.anatomy(:)];
-        
+
         clear seg_reslice;
     end
-    
+
     [max_seg seg_build.seg] = max(seg_array,[],2);
-    
+
     clear max_seg seg_array;
-    
+
     seg_build.seg = reshape(seg_build.seg,seg_build.dim);
     seg_build.seg = seg_indices(seg_build.seg);
     seg_build.transform = mri.transform;
-    
+
     clear seg_build.anatomy;
 else
     seg_build.seg = seg;
     seg_build.dim = mri.dim;
-    
+
     clear seg;
 end
 
@@ -1555,9 +1555,9 @@ fprintf('Created nodes...\n' )
 if(shift < 0 | shift > 0.3)
     error('Please choose a shift parameter between 0 and 0.3!');
 elseif(shift > 0)
-    
+
     mesh.pnt = shift_nodes(mesh.pnt,mesh.hex,labels, shift,x_dim,y_dim,z_dim);
-    
+
 end
 
 %background = 1;
@@ -1780,7 +1780,7 @@ if ~isequal(feedback, 'no')
         ncomp = size(data.topo,2);
         fprintf('the input is component data with %d components and %d original channels\n', ncomp, nchan);
     end
-    
+
     if israw
         nchan = length(data.label);
         ntrial = length(data.trial);
@@ -1882,7 +1882,7 @@ if ~isempty(dtype)
     if ~isa(dtype, 'cell')
         dtype = {dtype};
     end
-    
+
     okflag = 0;
     for i=1:length(dtype)
         % check that the data matches with one or more of the required ft_datatypes
@@ -1921,7 +1921,7 @@ if ~isempty(dtype)
                 okflag = okflag + isparcellation;
         end % switch dtype
     end % for dtype
-    
+
     % try to convert the data if needed
     for iCell = 1:length(dtype)
         if okflag
@@ -2053,7 +2053,7 @@ if ~isempty(dtype)
             isfreq = 0;
             israw = 1;
             okflag = 1;
-            
+
         elseif isequal(dtype(iCell), {'raw'}) && ischan
             data = ea_chan2timelock(data);
             data = eatimelock2raw(data);
@@ -2087,7 +2087,7 @@ if ~isempty(dtype)
             okflag  = 1;
         end
     end % for iCell
-    
+
     if ~okflag
         % construct an error message
         if length(dtype)>1
@@ -2104,13 +2104,13 @@ if ~isempty(dimord)
     if ~isa(dimord, 'cell')
         dimord = {dimord};
     end
-    
+
     if isfield(data, 'dimord')
         okflag = any(strcmp(data.dimord, dimord));
     else
         okflag = 0;
     end
-    
+
     if ~okflag
         % construct an error message
         if length(dimord)>1
@@ -2127,7 +2127,7 @@ if ~isempty(stype)
     if ~isa(stype, 'cell')
         stype = {stype};
     end
-    
+
     if isfield(data, 'grad') || isfield(data, 'elec')
         if any(strcmp(ft_senstype(data), stype))
             okflag = 1;
@@ -2138,7 +2138,7 @@ if ~isempty(stype)
             okflag = 0;
         end
     end
-    
+
     if ~okflag
         % construct an error message
         if length(stype)>1
@@ -2157,7 +2157,7 @@ if ~isempty(ismeg)
     elseif isequal(ismeg, 'no')
         okflag = ~isfield(data, 'grad');
     end
-    
+
     if ~okflag && isequal(ismeg, 'yes')
         error('This function requires MEG data with a ''grad'' field');
     elseif ~okflag && isequal(ismeg, 'no')
@@ -2172,7 +2172,7 @@ if ~isempty(inside)
     % TODO absorb the fixinside function into this code
     data   = fixinside(data, inside);
     okflag = isfield(data, 'inside');
-    
+
     if ~okflag
         % construct an error message
         error('This function requires data with an ''inside'' field.');
@@ -2204,7 +2204,7 @@ if issource || isvolume,
     % the following section is to make a dimord-consistent representation of
     % volume and source data, taking trials, time and frequency into account
     if isequal(hasdimord, 'yes') && (~isfield(data, 'dimord') || ~strcmp(data.dimord,sourcedimord))
-        
+
         % determine the size of the data
         if isfield(data, 'dimord'),
             dimtok = tokenize(data.dimord, '_');
@@ -2214,7 +2214,7 @@ if issource || isvolume,
             Nfreq = 1;
             Ntime = 1;
         end
-        
+
         %convert old style source representation into new style
         if isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpt_pos'),
             %frequency domain source representation convert to single trial power
@@ -2268,7 +2268,7 @@ if issource || isvolume,
         else
             Nrpt = 1;
         end
-        
+
         % start with an initial specification of the dimord and dim
         if (~isfield(data, 'dim') || ~isfield(data, 'dimord'))
             if issource
@@ -2281,7 +2281,7 @@ if issource || isvolume,
                 data.dimord = 'dim1_dim2_dim3';
             end
         end
-        
+
         % add the additional dimensions
         if Nfreq>1
             data.dimord = [data.dimord '_freq'];
@@ -2298,7 +2298,7 @@ if issource || isvolume,
             data.dimord = ['rpttap_' data.dimord];
             data.dim    = [Nrpt   data.dim ];
         end
-        
+
         % the nested trial structure is not compatible with dimord
         if isfield(data, 'trial') && isstruct(data.trial)
             param = fieldnames(data.trial);
@@ -2318,7 +2318,7 @@ if issource || isvolume,
             data = rmfield(data, 'trial');
         end
     end
-    
+
     % ensure consistent dimensions of the source reconstructed data
     % reshape each of the source reconstructed parameters
     if issource && isfield(data, 'dim') && prod(data.dim)==size(data.pos,1)
@@ -2358,14 +2358,14 @@ if issource || isvolume,
         end % try
         if numel(dim)==1, dim(1,2) = 1; end;
     end
-    
+
     % these fields should not be reshaped
     exclude = {'cfg' 'fwhm' 'leadfield' 'q' 'rough' 'pos'};
     if ~isempty(inside) && ~strcmp(inside, 'logical')
         % also exclude the inside/outside from being reshaped
         exclude = cat(2, exclude, {'inside' 'outside'});
     end
-    
+
     param = setdiff(ea_parameterselection('all', data), exclude);
     for i=1:length(param)
         if any(param{i}=='.')
@@ -2391,7 +2391,7 @@ if issource || isvolume,
             data = setfield(data, param{i}, tmp);
         end
     end
-    
+
 end
 
 if isequal(hastrials, 'yes')
@@ -2705,7 +2705,7 @@ end
 % first go from univariate fourier to the required bivariate representation
 if isequal(current, desired)
     % nothing to do
-    
+
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     dimtok = tokenize(data.dimord, '_');
     if ~isempty(strmatch('rpttap',   dimtok)),
@@ -2716,10 +2716,10 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     end
     if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);      else nfrq = 1; end
     if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);      else ntim = 1; end
-    
+
     fastflag = all(data.cumtapcnt(:)==data.cumtapcnt(1));
     flag     = nrpt==1; % needed to truncate the singleton dimension upfront
-    
+
     %create auto-spectra
     nchan     = length(data.label);
     if fastflag
@@ -2740,7 +2740,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
             powspctrm(p,:,:,:) = (sum(tmpdat.*conj(tmpdat),1))./data.cumtapcnt(p);
         end
     end
-    
+
     %create cross-spectra
     if ~isempty(channelcmb),
         ncmb      = size(channelcmb,1);
@@ -2754,7 +2754,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
                 labelcmb(k,:) = data.label([ch1 ch2])';
             end
         end
-        
+
         crsspctrm = zeros(nrpt,ncmb,nfrq,ntim)+i.*zeros(nrpt,ncmb,nfrq,ntim);
         if fastflag
             for p = 1:ntap
@@ -2781,14 +2781,14 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     else
         data.dimord = 'chan_freq';
     end
-    
+
     if nrpt>1,
         data.dimord = ['rpt_',data.dimord];
     end
-    
+
     if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]); end
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
-    
+
     if isempty(channelcmb), error('no channel combinations are specified'); end
     dimtok = tokenize(data.dimord, '_');
     if ~isempty(strmatch('rpttap',   dimtok)),
@@ -2799,7 +2799,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
     end
     if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq); else nfrq = 1; end
     if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time); else ntim = 1; end
-    
+
     flag      = nrpt==1; % flag needed to squeeze first dimension if singleton
     ncmb      = size(channelcmb,1);
     cmbindx   = zeros(ncmb,2);
@@ -2812,30 +2812,30 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
             labelcmb(k,:) = data.label([ch1 ch2])';
         end
     end
-    
+
     sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
     fastflag  = all(data.cumtapcnt(:)==data.cumtapcnt(1));
-    
+
     if fastflag && nrpt>1
         ntap = data.cumtapcnt(1);
-        
+
         % compute running sum across tapers
         siz = [size(data.fourierspctrm) 1];
-        
+
         for p = 1:ntap
             indx      = p:ntap:nrpt*ntap;
-            
+
             if p==1.
-                
+
                 tmpc = zeros(numel(indx), size(cmbindx,1), siz(3), siz(4)) + ...
                     1i.*zeros(numel(indx), size(cmbindx,1), siz(3), siz(4));
             end
-            
+
             for k = 1:size(cmbindx,1)
                 tmpc(:,k,:,:) = data.fourierspctrm(indx,cmbindx(k,1),:,:).*  ...
                     conj(data.fourierspctrm(indx,cmbindx(k,2),:,:));
             end
-            
+
             if p==1
                 crsspctrm = tmpc;
             else
@@ -2861,14 +2861,14 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
     else
         data.dimord = 'chancmb_freq';
     end
-    
+
     if nrpt>1,
         data.dimord = ['rpt_',data.dimord];
     end
-    
+
     if flag, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]); end
 elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
-    
+
     % this is how it is currently and the desired functionality of prepare_freq_matrices
     dimtok = tokenize(data.dimord, '_');
     if ~isempty(strmatch('rpttap',   dimtok)),
@@ -2898,28 +2898,28 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
     end
     data.crsspctrm = crsspctrm;
     data           = rmfield(data, 'fourierspctrm');
-    
+
     if ntim>1,
         data.dimord = 'chan_chan_freq_time';
     else
         data.dimord = 'chan_chan_freq';
     end
-    
+
     if nrpt>1,
         data.dimord = ['rpt_',data.dimord];
     end
-    
+
     % remove first singleton dimension
     if flag || nrpt==1, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, siz(2:end)); end
-    
+
 elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
-    
+
     dimtok = tokenize(data.dimord, '_');
     nrpt = size(data.fourierspctrm, 1);
     nchn = numel(data.label);
     nfrq = numel(data.freq);
     if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time); else ntim = 1; end
-    
+
     data.fourierspctrm = reshape(data.fourierspctrm, [nrpt nchn nfrq*ntim]);
     data.fourierspctrm(~isfinite(data.fourierspctrm)) = 0;
     crsspctrm = complex(zeros(nchn,nchn,nfrq*ntim));
@@ -2935,33 +2935,33 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
     else
         data.dimord = 'chan_chan_freq';
     end
-    
+
     if isfield(data, 'trialinfo'),  data = rmfield(data, 'trialinfo'); end;
     if isfield(data, 'sampleinfo'), data = rmfield(data, 'sampleinfo'); end;
     if isfield(data, 'cumsumcnt'),  data = rmfield(data, 'cumsumcnt');  end;
     if isfield(data, 'cumtapcnt'),  data = rmfield(data, 'cumtapcnt');  end;
-    
+
 end % convert to the requested bivariate representation
 
 % from one bivariate representation to another
 if isequal(current, desired)
     % nothing to do
-    
+
 elseif (strcmp(current, 'full')       && strcmp(desired, 'fourier')) || ...
         (strcmp(current, 'sparse')        && strcmp(desired, 'fourier')) || ...
         (strcmp(current, 'sparsewithpow') && strcmp(desired, 'fourier'))
     % this is not possible
     error('converting the cross-spectrum into a Fourier representation is not possible');
-    
+
 elseif strcmp(current, 'full') && strcmp(desired, 'sparsewithpow')
     error('not yet implemented');
-    
+
 elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
     % convert back to crsspctrm/powspctrm representation: useful for plotting functions etc
     indx     = labelcmb2indx(data.labelcmb);
     autoindx = indx(indx(:,1)==indx(:,2), 1);
     cmbindx  = setdiff([1:size(indx,1)]', autoindx);
-    
+
     if strcmp(data.dimord(1:3), 'rpt')
         data.powspctrm = data.crsspctrm(:, autoindx, :, :);
         data.crsspctrm = data.crsspctrm(:, cmbindx,  :, :);
@@ -2971,12 +2971,12 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
     end
     data.label    = data.labelcmb(autoindx,1);
     data.labelcmb = data.labelcmb(cmbindx, :);
-    
+
     if isempty(cmbindx)
         data = rmfield(data, 'crsspctrm');
         data = rmfield(data, 'labelcmb');
     end
-    
+
 elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
     dimtok = tokenize(data.dimord, '_');
     if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
@@ -2995,7 +2995,7 @@ elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
             k = k+1;
         end
     end
-    
+
     % reshape all possible fields
     fn = fieldnames(data);
     for ii=1:numel(fn)
@@ -3017,11 +3017,11 @@ elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
     else
         data.dimord = 'chancmb_freq';
     end
-    
+
     if nrpt>1,
         data.dimord = ['rpt_',data.dimord];
     end
-    
+
 elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
     % this representation for sparse data contains autospectra as e.g. {'A' 'A'} in labelcmb
     if isfield(data, 'crsspctrm'),
@@ -3036,13 +3036,13 @@ elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
         data           = rmfield(data, 'powspctrm');
     end
     data = rmfield(data, 'label');
-    
+
 elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
     dimtok = tokenize(data.dimord, '_');
     if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
     if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
     if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
-    
+
     if ~isfield(data, 'label')
         % ensure that the bivariate spectral factorization results can be
         % processed. FIXME this is experimental and will not work if the user
@@ -3053,11 +3053,11 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
         end
         data.label = unique(data.labelcmb(:));
     end
-    
+
     nchan     = length(data.label);
     ncmb      = size(data.labelcmb,1);
     cmbindx   = zeros(nchan,nchan);
-    
+
     for k = 1:size(data.labelcmb,1)
         ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
         ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
@@ -3065,18 +3065,18 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
             cmbindx(ch1,ch2) = k;
         end
     end
-    
+
     complete = all(cmbindx(:)~=0);
-    
+
     fn = fieldnames(data);
     for ii=1:numel(fn)
         if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
             if nrpt==1,
                 data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
             end
-            
+
             tmpall = nan(nrpt,nchan,nchan,nfrq,ntim);
-            
+
             for j = 1:nrpt
                 for k = 1:ntim
                     for m = 1:nfrq
@@ -3093,7 +3093,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
                     end % for m
                 end % for k
             end % for j
-            
+
             % replace the data in the old representation with the new representation
             if nrpt>1,
                 data.(fn{ii}) = tmpall;
@@ -3102,36 +3102,36 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
             end
         end % if numel
     end % for ii
-    
+
     % remove obsolete fields
     try data      = rmfield(data, 'powspctrm');  end
     try data      = rmfield(data, 'labelcmb');   end
     try data      = rmfield(data, 'dof');        end
-    
+
     if ntim>1,
         data.dimord = 'chan_chan_freq_time';
     else
         data.dimord = 'chan_chan_freq';
     end
-    
+
     if nrpt>1,
         data.dimord = ['rpt_',data.dimord];
     end
-    
+
 elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
     dimtok = tokenize(data.dimord, '_');
     if ~isempty(strmatch('rpt',   dimtok)), nrpt=size(data.cumtapcnt,1); else nrpt = 1; end
     if ~isempty(strmatch('freq',  dimtok)), nfrq=numel(data.freq);      else nfrq = 1; end
     if ~isempty(strmatch('time',  dimtok)), ntim=numel(data.time);      else ntim = 1; end
-    
+
     if ~isfield(data, 'label')
         data.label = unique(data.labelcmb(:));
     end
-    
+
     nchan     = length(data.label);
     ncmb      = size(data.labelcmb,1);
     cmbindx   = zeros(nchan,nchan);
-    
+
     for k = 1:size(data.labelcmb,1)
         ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
         ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
@@ -3139,18 +3139,18 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
             cmbindx(ch1,ch2) = k;
         end
     end
-    
+
     complete = all(cmbindx(:)~=0);
-    
+
     fn = fieldnames(data);
     for ii=1:numel(fn)
         if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
             if nrpt==1,
                 data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
             end
-            
+
             tmpall = nan(nchan,nchan,nfrq,ntim);
-            
+
             for k = 1:ntim
                 for m = 1:nfrq
                     tmpdat = nan(nchan,nchan);
@@ -3165,7 +3165,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
                     tmpall(:,:,m,k) = tmpdat;
                 end % for m
             end % for k
-            
+
             % replace the data in the old representation with the new representation
             if nrpt>1,
                 data.(fn{ii}) = tmpall;
@@ -3174,23 +3174,23 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
             end
         end % if numel
     end % for ii
-    
+
     % remove obsolete fields
     try data      = rmfield(data, 'powspctrm');  end
     try data      = rmfield(data, 'labelcmb');   end
     try data      = rmfield(data, 'dof');        end
-    
+
     if ntim>1,
         data.dimord = 'chan_chan_freq_time';
     else
         data.dimord = 'chan_chan_freq';
     end
-    
+
 elseif strcmp(current, 'sparsewithpow') && any(strcmp(desired, {'full', 'fullfast'}))
     % this is how is currently done in prepare_freq_matrices
     data = ea_ft_checkdata(data, 'cmbrepresentation', 'sparse');
     data = ea_ft_checkdata(data, 'cmbrepresentation', 'full');
-    
+
 end % convert from one to another bivariate representation
 
 
@@ -3351,7 +3351,7 @@ function data = ea_source2volume(data)
 
 if isfield(data, 'dimord')
     % it is a modern source description
-    
+
     %this part depends on the assumption that the list of positions is describing a full 3D volume in
     %an ordered way which allows for the extraction of a transformation matrix
     %i.e. slice by slice
@@ -3441,7 +3441,7 @@ if ntrial==1
     data        = rmfield(data, 'trial');
     data.dimord = 'chan_time';
 else
-    
+
     % code below tries to construct a general time-axis where samples of all trials can fall on
     % find earliest beginning and latest ending
     begtime = min(cellfun(@min,data.time));
@@ -3452,23 +3452,23 @@ else
     nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
     % construct general time-axis
     time = linspace(begtime,endtime,nsmp);
-    
+
     % concatenate all trials
     tmptrial = nan(ntrial, nchan, length(time));
-    
+
     for i=1:ntrial
         begsmp(i) = nearest(time, data.time{i}(1));
         endsmp(i) = nearest(time, data.time{i}(end));
         tmptrial(i,:,begsmp(i):endsmp(i)) = data.trial{i};
     end
-    
+
     % update the sampleinfo
     begpad = begsmp - min(begsmp);
     endpad = max(endsmp) - endsmp;
     if isfield(data, 'sampleinfo')
         data.sampleinfo = data.sampleinfo + [-begpad(:) endpad(:)];
     end
-    
+
     % construct the output timelocked data
     % data.avg     = reshape(nanmean(tmptrial,     1), nchan, length(tmptime));
     % data.var     = reshape(nanvar (tmptrial, [], 1), nchan, length(tmptime))
@@ -3557,23 +3557,23 @@ for iUnit = 1:nUnits
     spikeTimes  = []; % we dont know how large it will be, so use concatenation inside loop
     trialInds   = [];
     for iTrial = 1:nTrials
-        
+
         % read in the spike times
         [spikeTimesTrial]    = ea_getspiketimes(data, iTrial, unitIndx);
         nSpikes              = length(spikeTimesTrial);
         spikeTimes           = [spikeTimes; spikeTimesTrial(:)];
         trialInds            = [trialInds; ones(nSpikes,1)*iTrial];
-        
+
         % get the begs and ends of trials
         hasNum = find(~isnan(data.time{iTrial}));
         if iUnit==1, trialTimes(iTrial,:) = data.time{iTrial}([hasNum(1) hasNum(end)]); end
     end
-    
+
     spike.label{iUnit}     = data.label{unitIndx};
     spike.waveform{iUnit}  = [];
     spike.time{iUnit}      = spikeTimes(:)';
     spike.trial{iUnit}     = trialInds(:)';
-    
+
     if iUnit==1, spike.trialtime             = trialTimes; end
 end
 
@@ -3642,35 +3642,35 @@ nTrials = size(spike.trialtime,1);
 data.trial(1:nTrials) = {[]};
 data.time(1:nTrials)  = {[]};
 for iTrial = 1:nTrials
-    
+
     % make bins: note that the spike.time is already within spike.trialtime
     x = [spike.trialtime(iTrial,1):(1/fsample):spike.trialtime(iTrial,2)];
     timeBins   = [x x(end)+1/fsample] - (0.5/fsample);
     time       = (spike.trialtime(iTrial,1):(1/fsample):spike.trialtime(iTrial,2));
-    
+
     % convert to continuous
     trialData = zeros(nUnits,length(time));
     for iUnit = 1:nUnits
-        
+
         % get the timestamps and only select those timestamps that are in the trial
         ts       = spike.time{iUnit};
         hasTrial = spike.trial{iUnit}==iTrial;
         ts       = ts(hasTrial);
-        
+
         N = histc(ts,timeBins);
         if isempty(N)
             N = zeros(1,length(timeBins)-1);
         else
             N(end) = [];
         end
-        
+
         % store it in a matrix
         trialData(iUnit,:) = N;
     end
-    
+
     data.trial{iTrial} = trialData;
     data.time{iTrial}  = time;
-    
+
 end % for all trials
 
 % create the associated labels and other aspects of data such as the header
@@ -4022,19 +4022,19 @@ switch segversion
         fn = fieldnames(segmentation);
         fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
         [indexed, probabilistic] = ea_determine_segmentationstyle(segmentation, fn, segmentation.dim);
-        
+
         % ignore the fields that do not contain a segmentation
         sel = indexed | probabilistic;
         fn            = fn(sel);
         indexed       = indexed(sel);
         probabilistic = probabilistic(sel);
-        
+
         % convert from an exclusive to cumulative representation
         % this is only only for demonstration purposes
         % for i=1:length(sel)
         %   segmentation.(fn{sel(i)}) = volumefillholes(segmentation.(fn{sel(i)}));
         % end
-        
+
         [dum, i] = intersect(fn, {'scalp', 'skull', 'brain'});
         if numel(i)==3
             % put them in the preferred order
@@ -4045,22 +4045,22 @@ switch segversion
             % put them in the preferred order
             fn(i) = {'skin', 'skull', 'brain'};
         end
-        
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % ensure that the segmentation is internally consistent
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
+
         if any(probabilistic)
             segmentation = ea_fixsegmentation(segmentation, fn(probabilistic), 'probabilistic');
         end
         if any(indexed)
             segmentation = ea_fixsegmentation(segmentation, fn(indexed), 'indexed');
         end
-        
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % convert the segmentation to the desired style
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
+
         if isempty(segmentationstyle)
             % keep it as it is
         elseif strcmp(segmentationstyle, 'indexed') && any(probabilistic)
@@ -4072,11 +4072,11 @@ switch segversion
             probabilistic(indexed) = true;  % these are now probabilistic
             indexed(indexed)       = false; % these are now probabilistic
         end % converting between probabilistic and indexed
-        
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % add the brain if requested
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
+
         if hasbrain
             if all(indexed)
                 fn = fieldnames(segmentation);
@@ -4085,7 +4085,7 @@ switch segversion
                     sel(i) = any(strcmp(fn, [fn{i} 'label']));
                 end
                 fn = fn(sel);
-                
+
                 if numel(fn)>1
                     error('cannot construct a brain mask on the fly; this requires a single indexed representation');
                 else
@@ -4109,7 +4109,7 @@ switch segversion
                         segmentation.brain = brain;
                     end % try to construct the brain
                 end
-                
+
             elseif all(probabilistic)
                 if ~isfield(segmentation, 'brain')
                     if ~all(isfield(segmentation, {'gray' 'white' 'csf'}))
@@ -4132,7 +4132,7 @@ switch segversion
                 error('cannot construct a brain mask on the fly; this requires a uniquely indexed or a uniquely probabilitic representation');
             end
         end % if hasbrain
-        
+
     case '2005'
         % the only difference is that the indexed representation for xxx did not have the xxxlabel field prior to the 2012 version
         fn = fieldnames(segmentation);
@@ -4140,7 +4140,7 @@ switch segversion
         segmentation = rmfield(segmentation, fn(sel));
         % furthermore it corresponds to the oldest version of the volume representation
         volversion = '2003';
-        
+
     otherwise
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         error('unsupported version "%s" for segmentation datatype', segversion);
@@ -4264,11 +4264,11 @@ switch version
         if isfield(volume, 'dimord')
             volume = rmfield(volume, 'dimord');
         end
-        
+
         if isfield(volume, 'anatomy')
             volume.anatomy(~isfinite(volume.anatomy)) = 0;
         end
-        
+
         if isfield(volume, 'avg') && isstruct(volume.avg)
             % move the average fields to the main structure
             fn = fieldnames(volume.avg);
@@ -4284,50 +4284,50 @@ switch version
             end
             volume = rmfield(volume, 'avg');
         end
-        
+
         % ensure that it is always logical
         volume = ea_fixinside(volume, 'logical');
-        
+
     case '2012b'
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if isfield(volume, 'dimord')
             volume = rmfield(volume, 'dimord');
         end
-        
+
         if isfield(volume, 'anatomy')
             volume.anatomy(~isfinite(volume.anatomy)) = 0;
         end
-        
+
     case '2012'
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % THIS ONE DOES NOT SEEM TO HAVE EVER BEEN USED
         % HOWEVER, KEEP IT FOR DOCUMENTATION PURPOSES
-        
+
         if isfield(volume, 'dimord')
             volume = rmfield(volume, 'dimord');
         end
-        
+
         % ensure the axes system in the transformation matrix to be
         % right-handed
         volume = volumeflip(volume, 'right');
-        
+
     case '2011'
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if isfield(volume, 'dimord')
             volume = rmfield(volume, 'dimord');
         end
-        
+
     case '2010'
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % this might have been N-dimensional and contained a dimord, but in general cannot
         % be reconstructed on the fly
-        
+
     case '2003'
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if isfield(volume, 'dimord')
             volume = rmfield(volume, 'dimord');
         end
-        
+
     otherwise
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         error('unsupported version "%s" for volume datatype', version);
@@ -4424,15 +4424,15 @@ function segmentation = ea_fixsegmentation(segmentation, fn, style)
 
 switch style
     case 'indexed'
-        
+
         for i=1:length(fn)
             indexval = unique(segmentation.(fn{i})(:));  % find the unique tissue types
             indexval = indexval(indexval~=0);            % these are the only ones that matter
-            
+
             if any(indexval<0)
                 error('an indexed representation cannot contain negative numbers');
             end
-            
+
             if ~isfield(segmentation, [fn{i} 'label'])
                 % ensure that the tissues have labels
                 indexlabel = {};
@@ -4453,7 +4453,7 @@ switch style
                 %   indexlabel = {'a', 'b', 'c', 'd'} or {'a', 'b', [], 'd'}
                 % which happens if the segmentation unexpectedly does not contain a certain tissue type
             end
-            
+
             % ensure that the indices are subsequent integers, i.e. [1 2 3] rather than [1 2 4]
             for j=1:length(indexval)
                 tmp = segmentation.(fn{i});
@@ -4463,9 +4463,9 @@ switch style
             segmentation.([fn{i} 'label']) = segmentation.([fn{i} 'label'])(indexval);
         end
         clear tmp indexval indexlabel
-        
+
     case 'probabilistic'
-        
+
         % convert from a cumulative to an exclusive representation
         contains = false(length(fn));
         if length(fn)>4
@@ -4492,7 +4492,7 @@ switch style
             end
         end
         clear segi segj contains
-        
+
     otherwise
         error('unsupported style "%s"', style);
 end
@@ -4621,27 +4621,27 @@ if isa(opt, 'struct') || isa(opt, 'config')
     else
         val = opt.(key);
     end
-    
+
 elseif isa(opt, 'cell')
     % get the key-value from the cell-array
     if mod(length(opt),2)
         error('optional input arguments should come in key-value pairs, i.e. there should be an even number');
     end
-    
+
     % the 1st, 3rd, etc. contain the keys, the 2nd, 4th, etc. contain the values
     keys = opt(1:2:end);
     vals = opt(2:2:end);
-    
+
     % the following may be faster than cellfun(@ischar, keys)
     valid = false(size(keys));
     for i=1:numel(keys)
         valid(i) = ischar(keys{i});
     end
-    
+
     if ~all(valid)
         error('optional input arguments should come in key-value pairs, the optional input argument %d is invalid (should be a string)', i);
     end
-    
+
     hit = find(strcmpi(key, keys));
     if isempty(hit)
         % the requested key was not found
@@ -4652,7 +4652,7 @@ elseif isa(opt, 'cell')
     else
         error('multiple input arguments with the same name');
     end
-    
+
 elseif isempty(opt)
     % no options are specified, return default
     val = default;
@@ -4805,7 +4805,7 @@ if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
 end
 
 if ~isdeployed
-    
+
     % Some people mess up their path settings and then have
     % different versions of certain toolboxes on the path.
     % The following will issue a warning
@@ -4837,33 +4837,33 @@ if ~isdeployed
     ea_checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
     ea_checkMultipleToolbox('biosig',              'sopen.m');
     ea_checkMultipleToolbox('icasso',              'icassoEst.m');
-    
+
     if isempty(which('ft_hastoolbox'))
         % the fieldtrip/utilities directory contains the ft_hastoolbox function
         % which is required for the remainder of this script
         addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
     end
-    
+
     try
         % external/signal directory contains alternative implementations of some signal processing functions
         addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
     end
-    
+
     try
         % some alternative implementations of statistics functions
         addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
-    
+
     try
         % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
         ea_ft_hastoolbox('fileexchange', 3, 1); % not required
     end
-    
+
     try
         % this directory contains the backward compatibility wrappers for the ft_xxx function name change
         ea_ft_hastoolbox('compat', 3, 1); % not required
     end
-    
+
     try
         % these directories contain functions that were added to MATLAB in
         % recent versions to replace an older function.
@@ -4871,7 +4871,7 @@ if ~isdeployed
             ea_ft_hastoolbox('compat/matlablt2012a', 2, 1);
         end
     end
-    
+
     try
         % these contains template layouts, neighbour structures, MRIs and cortical meshes
         ea_ft_hastoolbox('template/layout', 1, 1);
@@ -4881,52 +4881,52 @@ if ~isdeployed
         ea_ft_hastoolbox('template/neighbours', 1, 1);
         ea_ft_hastoolbox('template/sourcemodel', 1, 1);
     end
-    
+
     try
         % this is used in statistics
         ea_ft_hastoolbox('statfun', 1, 1);
     end
-    
+
     try
         % this is used in definetrial
         ea_ft_hastoolbox('trialfun', 1, 1);
     end
-    
+
     try
         % this contains the low-level reading functions
         ea_ft_hastoolbox('fileio', 1, 1);
     end
-    
+
     try
         % this is for filtering time-series data
         ea_ft_hastoolbox('preproc', 1, 1);
     end
-    
+
     try
         % this contains forward models for the EEG and MEG volume conduction problem
         ea_ft_hastoolbox('forward', 1, 1);
     end
-    
+
     try
         % numerous functions depend on this module
         ea_ft_hastoolbox('inverse', 1, 1);
     end
-    
+
     try
         % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
         ea_ft_hastoolbox('plotting', 1, 1);
     end
-    
+
     try
         % this contains the functions to compute connecitivy metrics
         ea_ft_hastoolbox('connectivity', 1,1);
     end
-    
+
     try
         % this contains the functions for spike and spike-field analysis
         ea_ft_hastoolbox('spike', 1,1);
     end
-    
+
     try
         % this contains specific code and examples for realtime processing
         ea_ft_hastoolbox('realtime/example', 3, 1);    % not required
@@ -4934,12 +4934,12 @@ if ~isdeployed
         ea_ft_hastoolbox('realtime/online_meg', 3, 1); % not required
         ea_ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
     end
-    
+
     try
         % this contains intermediate-level functions for spectral analysis
         ea_ft_hastoolbox('specest', 1, 1);
     end
-    
+
 end
 
 % remember that the function has executed in a persistent variable
@@ -5230,7 +5230,7 @@ if isdata
         sens.label = input.label;
         islabel    = true;
     end
-    
+
 elseif isheader
     if isfield(input, 'grad')
         sens   = input.grad;
@@ -5245,25 +5245,25 @@ elseif isheader
         sens.label = input.label;
         islabel    = true;
     end
-    
+
 elseif isgrad
     sens = input;
-    
+
 elseif iselec
     sens = input;
-    
+
 elseif isnirs
     sens = input;
-    
+
 elseif islabel
     sens.label = input;
-    
+
 elseif haslabel
     % it does not resemble anything that we had expected at this location, but it does have channel labels
     % the channel labels can be used to determine the type of sensor array
     sens.label = input.label;
     islabel    = true;
-    
+
 else
     sens = [];
 end
@@ -5272,26 +5272,26 @@ end
 if isfield(sens, 'type')
     % preferably the structure specifies its own type
     type = sens.type;
-    
+
     % do not make a distinction between the neuromag data with or without space in the channel names
     if strcmp(type, 'neuromag306alt')
         type = 'neuromag306';
     elseif strcmp(type, 'neuromag122alt')
         type = 'neuromag122';
     end
-    
+
 elseif isfield(input, 'nChans') && input.nChans==1 && isfield(input, 'label') && ~isempty(regexp(input.label{1}, '^csc', 'once'))
     % this is a single channel header that was read from a Neuralynx file, might be fcdc_matbin or neuralynx_nsc
     type = 'neuralynx';
-    
+
 elseif ea_issubfield(input, 'orig.FileHeader') &&  ea_issubfield(input, 'orig.VarHeader')
     % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
     type = 'plexon';
-    
+
 elseif ea_issubfield(input, 'orig.stname')
     % this is a complete header that was read from an ITAB dataset
     type = 'itab';
-    
+
 elseif ea_issubfield(input, 'orig.sys_name')
     % this is a complete header that was read from a Yokogawa dataset
     if strcmp(input.orig.sys_name, '9ch Biomagnetometer System') || input.orig.channel_count<20
@@ -5306,25 +5306,25 @@ elseif ea_issubfield(input, 'orig.sys_name')
         % FIXME this might fail if there are many bad channels
         type = 'yokogawa440';
     end
-    
+
 elseif ea_issubfield(input, 'orig.FILE.Ext') && strcmp(input.orig.FILE.Ext, 'edf')
     % this is a complete header that was read from an EDF or EDF+ dataset
     type = 'eeg';
-    
+
 else
     % start with unknown, then try to determine the proper type by looking at the labels
     type = 'unknown';
-    
+
     if isgrad && isfield(sens, 'type')
         type = sens.type;
-        
+
     elseif isgrad
         % this looks like MEG
         % revert the component balancing that was previously applied
         if isfield(sens, 'balance') && strcmp(sens.balance.current, 'comp')
             sens = ea_undobalancing(sens);
         end
-        
+
         % determine the type of magnetometer/gradiometer system based on the channel names alone
         % this uses a recursive call to the "islabel" section further down
         type = ea_ft_senstype(sens.label);
@@ -5333,10 +5333,10 @@ else
             % although we don't know the type, we do know that it is MEG
             type = 'meg';
         end
-        
+
     elseif iselec
         % this looks like EEG
-        
+
         % determine the type of eeg/acquisition system based on the channel names alone
         % this uses a recursive call to the "islabel" section further down
         type = ea_ft_senstype(sens.label);
@@ -5345,10 +5345,10 @@ else
             % although we don't know the type, we do know that it is EEG
             type = 'eeg';
         end
-        
+
     elseif isnirs
         % this looks like NIRS
-        
+
         % determine the type of eeg/acquisition system based on the channel names alone
         % this uses a recursive call to the "islabel" section further down
         type = ft_senstype(sens.label);
@@ -5357,7 +5357,7 @@ else
             % although we don't know the type, we do know that it is EEG
             type = 'nirs';
         end
-        
+
     elseif islabel
         % look only at the channel labels
         if     (mean(ismember(ea_ft_senslabel('ant128'),         sens.label)) > 0.8)
@@ -5388,7 +5388,7 @@ else
             type = 'itab153';
         elseif (mean(ismember(ea_ft_senslabel('itab153_planar'), sens.label)) > 0.8)
             type = 'itab153_planar';
-            
+
             % the order is important for the different yokogawa systems, because they all share the same channel names
         elseif (mean(ismember(ea_ft_senslabel('yokogawa440'),        sens.label)) > 0.7)
             type = 'yokogawa440';
@@ -5404,12 +5404,12 @@ else
             type = 'yokogawa64_planar';
         elseif all(ismember(ea_ft_senslabel('yokogawa9'),            sens.label))
             type = 'yokogawa9';
-            
+
         elseif any(mean(ismember(ea_ft_senslabel('neuromag306'),     sens.label)) > 0.4) % there are two possibilities for the channel labels: with and without a space
             type = 'neuromag306';
         elseif any(mean(ismember(ea_ft_senslabel('neuromag122'),     sens.label)) > 0.4) % there are two possibilities for the channel labels: with and without a space
             type = 'neuromag122';
-            
+
         elseif (mean(ismember(ea_ft_senslabel('biosemi256'),         sens.label)) > 0.8)
             type = 'biosemi256';
         elseif (mean(ismember(ea_ft_senslabel('biosemi128'),         sens.label)) > 0.8)
@@ -5424,7 +5424,7 @@ else
             type = 'egi64';
         elseif (mean(ismember(ea_ft_senslabel('egi32'),              sens.label)) > 0.8)
             type = 'egi32';
-            
+
             % the following check on the fraction of channels in the user's data rather than on the fraction of channels in the predefined set
         elseif (mean(ismember(sens.label, ea_ft_senslabel('eeg1020'))) > 0.8)
             type = 'eeg1020';
@@ -5432,14 +5432,14 @@ else
             type = 'eeg1010';
         elseif (mean(ismember(sens.label, ea_ft_senslabel('eeg1005'))) > 0.8)
             type = 'eeg1005';
-            
+
         elseif (sum(ismember(sens.label, ea_ft_senslabel('eeg1005'))) > 10) % Otherwise it's not even worth recognizing
             type = 'ext1020'; % this will also cover small subsets of eeg1020, eeg1010 and eeg1005
         elseif any(ismember(ea_ft_senslabel('btiref'), sens.label))
             type = 'bti'; % it might be 148 or 248 channels
         elseif any(ismember(ea_ft_senslabel('ctfref'), sens.label))
             type = 'ctf'; % it might be 151 or 275 channels
-            
+
             %     elseif (mean(ismember(sens.label,    ft_senslabel('nirs'))) > 0.8)
             %       type = 'nirs';
         end
@@ -5660,10 +5660,10 @@ output  = ea_ft_getopt(varargin, 'output', 'normal'); % 'normal' or 'planarcombi
 
 if ~exist(type, 'var')
     error('the requested sensor type "%s" is not supported', type);
-    
+
 elseif isempty(eval(type))
     % assign the list of channels only once, keep it as persistent variable
-    
+
     switch type
         case 'ant128'
             label = {
@@ -5796,7 +5796,7 @@ elseif isempty(eval(type))
                 'RE4'
                 'Rm'
                 };
-            
+
         case 'btiref'
             label = {
                 'MRxA'
@@ -5823,13 +5823,13 @@ elseif isempty(eval(type))
                 'GyyA'
                 'GzyA'
                 };
-            
+
         case 'bti148'
             label = cell(148,1);
             for i=1:148
                 label{i,1} = sprintf('A%d', i);
             end
-            
+
         case 'bti148_planar'
             label = cell(148,3);
             for i=1:148
@@ -5839,13 +5839,13 @@ elseif isempty(eval(type))
             end
             bti148_planar_combined = label(:,3);
             label = label(:,1:2);
-            
+
         case 'bti248'
             label = cell(248,1);
             for i=1:248
                 label{i,1} = sprintf('A%d', i);
             end
-            
+
         case 'bti248_planar'
             label = cell(248,3);
             for i=1:248
@@ -5855,7 +5855,7 @@ elseif isempty(eval(type))
             end
             bti248_planar_combined = label(:,3);
             label = label(:,1:2);
-            
+
         case 'ctfref'
             label = {
                 'BG1'
@@ -5888,7 +5888,7 @@ elseif isempty(eval(type))
                 'R22'
                 'R23'
                 };
-            
+
         case 'ctfheadloc'
             label = {
                 'HLC0011'
@@ -5916,7 +5916,7 @@ elseif isempty(eval(type))
                 'HLC0036'
                 'HLC0037'
                 };
-            
+
         case 'ctf64'
             label = {
                 'SL11'
@@ -5984,7 +5984,7 @@ elseif isempty(eval(type))
                 'SR51'
                 'SR52'
                 };
-            
+
         case 'ctf151'
             label = {
                 'MLC11'
@@ -6139,7 +6139,7 @@ elseif isempty(eval(type))
                 'MZP01'
                 'MZP02'
                 };
-            
+
         case 'ctf151_planar'
             label = {
                 'MLC11_dH'  'MLC11_dV'  'MLC11'
@@ -6296,7 +6296,7 @@ elseif isempty(eval(type))
                 };
             ctf151_planar_combined = label(:,3);
             label = label(:,1:2);
-            
+
         case 'ctf275'
             label = {
                 'MLC11'
@@ -6575,7 +6575,7 @@ elseif isempty(eval(type))
                 'MZO03'
                 'MZP01'
                 };
-            
+
         case 'ctf275_planar'
             label = {
                 'MLC11_dH'  'MLC11_dV'  'MLC11'
@@ -6856,7 +6856,7 @@ elseif isempty(eval(type))
                 };
             ctf275_planar_combined = label(:,3);
             label = label(:,1:2);
-            
+
         case {'neuromag122' 'neuromag122alt'}
             % this is the combination of the two versions (with and without space)
             label = {
@@ -6987,7 +6987,7 @@ elseif isempty(eval(type))
             neuromag122_combined = label(:,3);
             neuromag122alt_combined = label(:,3);
             label = label(:,1:2);
-            
+
         case {'neuromag306' 'neuromag306alt'}
             % this is the combination of the two versions (with and without space)
             label = {
@@ -7200,7 +7200,7 @@ elseif isempty(eval(type))
             neuromag306_combined = label(:,4);
             neuromag306alt_combined = label(:,4);
             label = label(:,1:3);
-            
+
         case 'eeg1020'
             label = {
                 'Fp1'
@@ -7224,10 +7224,10 @@ elseif isempty(eval(type))
                 'O1'
                 'Oz'
                 'O2'};
-            
+
             % Add also reference and some alternative labels that might be used
             label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
-            
+
         case 'eeg1010'
             label = {
                 'Fp1'
@@ -7317,10 +7317,10 @@ elseif isempty(eval(type))
                 'Iz'
                 'I2'
                 };
-            
+
             % Add also reference and some alternative labels that might be used
             label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
-            
+
         case 'eeg1005'
             label = {
                 'Fp1'
@@ -7659,10 +7659,10 @@ elseif isempty(eval(type))
                 'OIz'
                 'OI2'
                 };
-            
+
             % Add also reference and some alternative labels that might be used
             label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
-            
+
         case 'ext1020'
             % start with the eeg1005 list
             label = {
@@ -8002,13 +8002,13 @@ elseif isempty(eval(type))
                 'OIz'
                 'OI2'
                 };
-            
+
             % Add also reference and some alternative labels that might be used
             label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
-            
+
             % This is to account for all variants of case in 1020 systems
             label = unique(cat(1, label, upper(label), lower(label)));
-            
+
         case 'biosemi64'
             label = {
                 'A1'
@@ -8076,7 +8076,7 @@ elseif isempty(eval(type))
                 'B31'
                 'B32'
                 };
-            
+
         case 'biosemi128'
             label = {
                 'A1'
@@ -8208,7 +8208,7 @@ elseif isempty(eval(type))
                 'D31'
                 'D32'
                 };
-            
+
         case 'biosemi256'
             label = {
                 'A1'
@@ -8468,7 +8468,7 @@ elseif isempty(eval(type))
                 'H31'
                 'H32'
                 };
-            
+
         case 'egi32'
             % this should be  uppercase for consistency with ft_read_header
             label = cell(33, 1);
@@ -8477,7 +8477,7 @@ elseif isempty(eval(type))
             end
             % there might also be a reference channel, but its name is inconsistent
             % it might be Cz, REF, VREF or 'vertex reference'
-            
+
         case 'egi64'
             % this should be  uppercase for consistency with ft_read_header
             label = cell(65, 1);
@@ -8486,7 +8486,7 @@ elseif isempty(eval(type))
             end
             % there might also be a reference channel, but its name is inconsistent
             % it might be Cz, REF, VREF or 'vertex reference'
-            
+
         case 'egi128'
             % this should be  uppercase for consistency with ft_read_header
             label = cell(129, 1);
@@ -8495,7 +8495,7 @@ elseif isempty(eval(type))
             end
             % there might also be a reference channel, but its name is inconsistent
             % it might be Cz, REF, VREF or 'vertex reference'
-            
+
         case 'egi256'
             % this should be  uppercase for consistency with ft_read_header
             label = cell(257, 1);
@@ -8504,7 +8504,7 @@ elseif isempty(eval(type))
             end
             % there might also be a reference channel, but its name is inconsistent
             % it might be Cz, REF, VREF or 'vertex reference'
-            
+
         case 'itab28'
             label = {
                 'MAG_1'
@@ -8528,14 +8528,14 @@ elseif isempty(eval(type))
                 'MAG_27'
                 'MAG_28'
                 };
-            
+
         case 'itab153'
             label = cell(153,1);
             for i=1:153
                 % channel names start counting at zero
                 label{i} = sprintf('MAG_%03d',  i-1);
             end
-            
+
         case 'itab153_planar'
             label = cell(153,3);
             for i=1:153
@@ -8546,7 +8546,7 @@ elseif isempty(eval(type))
             end
             itab153_planar_combined = label(:,3);
             label = label(:,1:2);
-            
+
         case 'yokogawa9'
             % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
             % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -8554,7 +8554,7 @@ elseif isempty(eval(type))
             for i=1:9
                 label{i} = sprintf('M%03d',  i);
             end
-            
+
         case 'yokogawa64'
             % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
             % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -8562,7 +8562,7 @@ elseif isempty(eval(type))
             for i=1:64
                 label{i} = sprintf('AG%03d', i);
             end
-            
+
         case 'yokogawa64_planar'
             % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
             % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -8574,7 +8574,7 @@ elseif isempty(eval(type))
             end
             yokogawa64_planar_combined = label(:,3);
             label = label(:,1:2);
-            
+
         case 'yokogawa160'
             % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
             % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -8582,7 +8582,7 @@ elseif isempty(eval(type))
             for i=1:160
                 label{i} = sprintf('AG%03d', i);
             end
-            
+
         case 'yokogawa160_planar'
             % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
             % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -8594,7 +8594,7 @@ elseif isempty(eval(type))
             end
             yokogawa160_planar_combined = label(:,3);
             label = label(:,1:2);
-            
+
         case 'yokogawa440'
             % this should be consistent with read_yokogawa_header, with ft_channelselection and with yokogawa2grad
             label = {
@@ -9011,7 +9011,7 @@ elseif isempty(eval(type))
                 'RM411'
                 'RM412'
                 };
-            
+
         case 'yokogawa440_planar'
             % this should be consistent with read_yokogawa_header, with
             % ft_channelselection and with yokogawa2grad
@@ -9229,21 +9229,21 @@ elseif isempty(eval(type))
                 };
             yokogawa440_planar_combined = label(:,3);
             label = label(:,1:2);
-            
+
         case {'eeg' 'electrode'}
             % there is no default set of electrode labels for all possible EEG systems
             % but nevertheless the requested input type should not result in an error
             label = {};
-            
+
         otherwise
             error('the requested sensor type "%s" is not supported', type);
-            
+
     end % switch
-    
+
     % remember this set of labels to speed up subsequent function calls
     eval(sprintf('%s = label;', type));
     clear label
-    
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -9255,16 +9255,16 @@ switch output
         % return labels as 2*Nx1 cell-array for planar systems or 3*Nx1 for neuromag306
         % return labels as   Nx1 cell-array for non-planar systems
         label = eval(type);
-        
+
     case 'planarcombined'
         % return labels as Nx3 cell-array for the planar channels, 3rd column contains the combination
         planar    = eval(type);
         combined  = eval([type '_combined']);
         label     = [planar(:,1:2) combined]; % magnetometers are in the 3rd column for neuromag306
-        
+
     otherwise
         error('unsupported output "%s"', output);
-        
+
 end
 
 function vol = ea_ft_headmodel_simbio(geom, varargin)
@@ -9457,19 +9457,19 @@ end
 
 switch parcelversion
     case '2012'
-        
+
         if isfield(parcellation, 'pnt')
             parcellation.pos = parcellation.pnt;
             parcellation = rmfield(parcellation, 'pnt');
         end
-        
+
         % convert the inside/outside fields, they should be logical rather than an index
         if isfield(parcellation, 'inside')
             parcellation = ea_fixinside(parcellation, 'logical');
         end
-        
+
         dim = size(parcellation.pos,1);
-        
+
         % make a list of fields that represent a parcellation
         fn = fieldnames(parcellation);
         fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
@@ -9479,16 +9479,16 @@ switch parcelversion
         end
         % only consider numeric fields of the correct size
         fn = fn(sel);
-        
+
         % determine whether the style of the input fields is probabilistic or indexed
         [indexed, probabilistic] = ea_determine_segmentationstyle(parcellation, fn, dim);
-        
+
         % ignore the fields that do not contain a parcellation
         sel = indexed | probabilistic;
         fn            = fn(sel);
         indexed       = indexed(sel);
         probabilistic = probabilistic(sel);
-        
+
         if ~any(probabilistic) && ~any(indexed)
             % rather than being described with a tissue label for each vertex
             % it can also be described with a tissue label for each surface or volme element
@@ -9505,29 +9505,29 @@ switch parcelversion
             end
             [indexed, probabilistic] = ea_determine_segmentationstyle(parcellation, fn, dim);
         end
-        
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % ensure that the parcellation is internally consistent
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
+
         if any(probabilistic)
             parcellation = ea_fixsegmentation(parcellation, fn(probabilistic), 'probabilistic');
         end
-        
+
         if any(indexed)
             parcellation = ea_fixsegmentation(parcellation, fn(indexed), 'indexed');
         end
-        
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % convert the parcellation to the desired style
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
+
         if strcmp(parcellationstyle, 'indexed') && any(probabilistic)
             parcellation  = convert_segmentationstyle(parcellation, fn(probabilistic), [dim 1], 'indexed');
         elseif strcmp(parcellationstyle, 'probabilistic') && any(indexed)
             parcellation  = convert_segmentationstyle(parcellation, fn(indexed), [dim 1], 'probabilistic');
         end % converting converting to desired style
-        
+
     otherwise
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         error('unsupported version "%s" for parcellation datatype', parcelversion);
@@ -9646,10 +9646,10 @@ switch version
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % ensure that it has individual source positions
         source = ea_fixpos(source);
-        
+
         % ensure that it is always logical
         source = ea_fixinside(source, 'logical');
-        
+
         % remove obsolete fields
         if isfield(source, 'method')
             source = rmfield(source, 'method');
@@ -9666,7 +9666,7 @@ switch version
         if isfield(source, 'zgrid')
             source = rmfield(source, 'zgrid');
         end
-        
+
         if isfield(source, 'avg') && isstruct(source.avg)
             % move the average fields to the main structure
             fn = fieldnames(source.avg);
@@ -9681,7 +9681,7 @@ switch version
             end % j
             source = rmfield(source, 'avg');
         end
-        
+
         if isfield(source, 'inside')
             % the inside is by definition logically indexed
             probe = find(source.inside, 1, 'first');
@@ -9689,27 +9689,27 @@ switch version
             % just take the first source position
             probe = 1;
         end
-        
+
         if isfield(source, 'trial') && isstruct(source.trial)
             npos = size(source.pos,1);
-            
+
             % concatenate the fields for each trial and move them to the main structure
             fn = fieldnames(source.trial);
-            
+
             for i=1:length(fn)
                 % some fields are descriptive and hence identical over trials
                 if strcmp(fn{i}, 'csdlabel')
                     source.csdlabel = dat;
                     continue
                 end
-                
+
                 % start with the first trial
                 dat    = source.trial(1).(fn{i});
                 datsiz = ea_getdimsiz(source, fn{i});
                 nrpt   = datsiz(1);
                 datsiz = datsiz(2:end);
-                
-                
+
+
                 if iscell(dat)
                     datsiz(1) = nrpt; % swap the size of pos with the size of rpt
                     val  = cell(npos,1);
@@ -9724,10 +9724,10 @@ switch version
                         for k=1:length(indx)
                             val{indx(k)}(j,:,:,:) = dat{indx(k)};
                         end
-                        
+
                     end % for all trials
                     source.(fn{i}) = val;
-                    
+
                 else
                     % concatenate all data as pos_rpt_etc
                     val = nan([datsiz(1) nrpt datsiz(2:end)]);
@@ -9737,7 +9737,7 @@ switch version
                         val(:,j,:,:,:) = dat(:,:,:,:);
                     end % for all trials
                     source.(fn{i}) = val;
-                    
+
                     %         else
                     %           siz = size(dat);
                     %           if prod(siz)==npos
@@ -9753,23 +9753,23 @@ switch version
                     %             val(:,j,:,:,:) = dat(:);
                     %           end % for all trials
                     %           source.(fn{i}) = val;
-                    
+
                 end
             end % for each field
-            
+
             source = rmfield(source, 'trial');
-            
+
         end % if trial
-        
+
         % ensure that it has a dimord (or multiple for the different fields)
         source = ea_fixdimord(source);
-        
-        
+
+
     case '2011'
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % ensure that it has individual source positions
         source = ea_fixpos(source);
-        
+
         % remove obsolete fields
         if isfield(source, 'xgrid')
             source = rmfield(source, 'xgrid');
@@ -9783,15 +9783,15 @@ switch version
         if isfield(source, 'transform')
             source = rmfield(source, 'transform');
         end
-        
+
         % ensure that it has a dimord (or multiple for the different fields)
         source = ea_fixdimord(source);
-        
+
     case '2010'
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % ensure that it has individual source positions
         source = ea_fixpos(source);
-        
+
         % remove obsolete fields
         if isfield(source, 'xgrid')
             source = rmfield(source, 'xgrid');
@@ -9802,15 +9802,15 @@ switch version
         if isfield(source, 'zgrid')
             source = rmfield(source, 'zgrid');
         end
-        
+
         % ensure that it has a dimord (or multiple for the different fields)
         source = ea_fixdimord(source);
-        
+
     case '2007'
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % ensure that it has individual source positions
         source = ea_fixpos(source);
-        
+
         % remove obsolete fields
         if isfield(source, 'dimord')
             source = rmfield(source, 'dimord');
@@ -9824,13 +9824,13 @@ switch version
         if isfield(source, 'zgrid')
             source = rmfield(source, 'zgrid');
         end
-        
+
     case '2003'
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if isfield(source, 'dimord')
             source = rmfield(source, 'dimord');
         end
-        
+
         if ~isfield(source, 'xgrid') || ~isfield(source, 'ygrid') || ~isfield(source, 'zgrid')
             if isfield(source, 'dim')
                 minx = min(source.pos(:,1));
@@ -9844,7 +9844,7 @@ switch version
                 source.zgrid = linspace(minz, maxz, source.dim(3));
             end
         end
-        
+
     otherwise
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         error('unsupported version "%s" for source datatype', version);
@@ -9973,7 +9973,7 @@ if ~isfield(data, 'dimord')
             sel(i) = ~isempty(strfind(fn{i}, 'dimord'));
         end
         df = fn(sel);
-        
+
         if isempty(df)
             if ea_ft_datatype(data, 'source') || ea_ft_datatype(data, 'parcellation')
                 % it is old-style source data -> this is ok
@@ -9983,7 +9983,7 @@ if ~isfield(data, 'dimord')
                 error('the data does not contain a dimord, but it also does not resemble raw or component data');
             end
         end
-        
+
         % use this function recursively on the XXXdimord fields
         for i=1:length(df)
             data.dimord = data.(df{i});
@@ -10011,55 +10011,55 @@ for i=1:length(dimtok)
     switch dimtok{i}
         case {'tim' 'time' 'toi' 'latency'}
             dimtok{i} = 'time';
-            
+
         case {'frq' 'freq' 'foi' 'frequency'}
             dimtok{i} = 'freq';
-            
+
         case {'sgn' 'label' 'chan'}
             dimtok{i} = 'chan';
-            
+
         case {'rpt' 'trial'}
             dimtok{i} = 'rpt';
-            
+
         case {'subj' 'subject'}
             dimtok{i} = 'subj';
-            
+
         case {'comp'}
             % don't change, it is ok
-            
+
         case {'sgncmb' 'labelcmb' 'chancmb'}
             dimtok{i} = 'chancmb';
-            
+
         case {'rpttap'}
             % this is a 2-D field, coding trials and tapers along the same dimension
             % don't change, it is ok
-            
+
         case {'refchan'}
             % don't change, it is ok
-            
+
         case {'ori'}
             % don't change, it is ok
-            
+
         case {'rgb'}
             % don't change, it is ok
-            
+
         case {'voxel' 'vox' 'repl' 'wcond'}
             % these are used in some fieldtrip functions, but are not considered standard
             warning_once('unexpected dimord "%s"', data.dimord);
-            
+
         case {'pos'}
             % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
-            
+
         case {'{pos}' '{pos}_rpt' '{pos}_rpttap'}
             % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
             % the data itself is represented in a cell-array, e.g. source.mom or source.leadfield
-            
+
         case {'{pos_pos}'}
             % this is for bivariate source data on a 3-d grid, a cortical sheet, or unstructured positions
-            
+
         otherwise
             error(sprintf('unexpected dimord "%s"', data.dimord));
-            
+
     end % switch dimtok
 end % for length dimtok
 
@@ -10441,7 +10441,7 @@ for i=1:numel(fn)
             clear sel
             probabilistic(i) =  islogical(tmp) || all(tmp>=-0.001 & tmp<=1.001); % allow some roundoff error
             indexed(i)       = ~islogical(tmp) && all(abs(tmp - round(tmp))<1000*eps);
-            
+
             if probabilistic(i) && indexed(i)
                 % the xxxlabel does not exist, so treat it as a probabilistic representation
                 probabilistic(i) = true;

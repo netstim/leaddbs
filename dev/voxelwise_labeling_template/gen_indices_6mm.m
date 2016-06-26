@@ -7,7 +7,7 @@
 
 clear
 clc
-ea_reslice_nii([fileparts(which('lead')),filesep,'templates/mni_icbm152_gm_tal_nlin_asym_09c.nii'],'mni_gm_06.nii',[6,6,6]);
+ea_reslice_nii([ea_getearoot,'templates/mni_icbm152_gm_tal_nlin_asym_09c.nii'],'mni_gm_06.nii',[6,6,6]);
 V=spm_vol('mni_gm_06.nii');
 X=spm_read_vols(V);
 X(X<0.5)=0;

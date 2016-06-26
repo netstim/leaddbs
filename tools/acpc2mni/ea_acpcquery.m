@@ -53,7 +53,7 @@ function ea_acpcquery_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to ea_acpcquery (see VARARGIN)
 
 try
-leaddir=[fileparts(which('lead')),filesep];
+leaddir=[ea_getearoot];
 im=imread([leaddir,'ea_logo.png']);
 image(im);
 axis off;
@@ -74,7 +74,7 @@ setappdata(hObject,'leadfigure',varargin{3});
 set(hObject,'name','ACPC/MNI-space conversions');
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_acpcquery_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_acpcquery_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -308,7 +308,7 @@ leadfigure=getappdata(handles.acpcfig,'leadfigure');
 fid=ea_acpc2mni(cfg,leadfigure);
 
 
-leaddir=[fileparts(which('lead')),filesep];
+leaddir=[ea_getearoot];
         tempfile=[leaddir,'templates',filesep,'mni_hires.nii'];
 
 

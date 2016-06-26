@@ -11,15 +11,15 @@ else % incremental update
     update=2;
 end
 
-if nargin    
+if nargin
     if strcmp(varargin{1},'force')
-    	update=1; 
+    	update=1;
     else
         return
     end
 end
 
-earoot=[fileparts(which('lead')),filesep];
+earoot=[ea_getearoot];
 
 updurl = 'http://www.lead-dbs.org/release/download.php';
 if update

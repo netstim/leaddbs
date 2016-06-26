@@ -10,7 +10,7 @@ clc
 % HarvardOxford-cort-maxprob-thr0-1mm.nii
 % HarvardOxford-sub-maxprob-thr0-1mm.nii
 
-leaddir=[fileparts(which('lead')),filesep];
+leaddir=[ea_getearoot];
 mkdir([leaddir,'atlases',filesep,'Depression']);
 
 for region=[27,29,28,33]
@@ -26,11 +26,11 @@ for region=[27,29,28,33]
             reg='PaC';
         case 33
             str='midline';
-            
+
             reg='FOC';
     end
         mkdir([leaddir,'atlases',filesep,'Depression',filesep,str]);
-        
+
         matlabbatch{1}.spm.util.imcalc.input = {['HarvardOxford-cort-maxprob-thr50-1mm.nii,1']};
         matlabbatch{1}.spm.util.imcalc.output = [reg,'.nii'];
         matlabbatch{1}.spm.util.imcalc.outdir = {[leaddir,'atlases',filesep,'Depression',filesep,str,filesep]};
@@ -42,9 +42,9 @@ for region=[27,29,28,33]
         jobs{1}=matlabbatch;
         cfg_util('run',jobs);
         clear matlabbatch jobs
-        
 
-    
+
+
 end
 
 
@@ -71,11 +71,11 @@ for lr=[26,58] % accumbens
         jobs{1}=matlabbatch;
         cfg_util('run',jobs);
         clear matlabbatch jobs
-        
-        
-   
-        
-        
+
+
+
+
+
 end
 
 

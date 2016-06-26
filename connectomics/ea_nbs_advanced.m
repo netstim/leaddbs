@@ -52,7 +52,7 @@ function ea_nbs_advanced_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_nbs_advanced (see VARARGIN)
 
-earoot=[fileparts(which('lead')),filesep];
+earoot=[ea_getearoot];
 setappdata(handles.nbsadvanced,'earoot',earoot);
 set(handles.nbsadvanced,'name','NBS advanced settings','color','w');
 
@@ -63,7 +63,7 @@ set(handles.nbsadvanced,'name','NBS advanced settings','color','w');
 try
     lc=load([earoot,'connectomics',filesep,'lc_options.mat']);
 catch
-    
+
     lc=ea_initlcopts([]);
 end
 if ~isfield(lc,'nbs') % compatibility with older stored userdata (<v1.4.9)
@@ -86,7 +86,7 @@ guidata(hObject, handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_nbs_advanced_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_nbs_advanced_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -200,7 +200,7 @@ catch
     lc=ea_initlcopts([]);
 end
 lc.nbs.adv.method= get(handles.nbsmethod,'Value');
-lc.nbs.adv.compsize=get(handles.component,'Value'); 
+lc.nbs.adv.compsize=get(handles.component,'Value');
 lc.nbs.adv.perm=str2double(get(handles.numpermutations,'String'));
 lc.nbs.adv.alpha=get(handles.alpha,'Value');
 lc.nbs.adv.exch=getappdata(handles.nbsadvanced,'exchange');

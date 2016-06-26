@@ -23,7 +23,7 @@ end
 
 mni=[cfg.xmm,cfg.ymm,cfg.zmm];
 fidpoints_mm=[fidpoints_mm;mni];
-leaddir=[fileparts(which('lead')),filesep];
+leaddir=[ea_getearoot];
 
 if ~length(uidir)
 ea_error('Please choose and normalize patients first.');
@@ -32,25 +32,25 @@ end
 disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
 %ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
-    
-    
-    
+
+
+
  %   ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
     [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
 
-    
+
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile);
-    
+
     [~,ptname]=fileparts(uidir{pt});
     options.prefs=ea_prefs(ptname);
-    
+
     % warp into patient space:
-    
+
     [fpinsub_mm] = ea_map_coords(fidpoints_vox', tempfile, [directory,'y_ea_normparams.nii'], '');
     fpinsub_mm=fpinsub_mm';
-    
-    
+
+
     fid(pt).AC=fpinsub_mm(1,:);
     fid(pt).PC=fpinsub_mm(2,:);
     fid(pt).MSP=fpinsub_mm(3,:);
@@ -63,11 +63,11 @@ for pt=1:length(uidir)
     % y-dimension (just move from ac to pc and scale by y dimension):
     yvec=(fpinsub_mm(2,:)-fpinsub_mm(1,:));
     yvec=yvec/norm(yvec);
-    
+
     % z-dimension (just move from ac to msag plane by z dimension):
     zvec=(fpinsub_mm(3,:)-fpinsub_mm(1,:));
-    zvec=zvec/norm(zvec);    
-    
+    zvec=zvec/norm(zvec);
+
     switch cfg.acmcpc
         case 1 % relative to AC:
             warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(1,:)');
@@ -76,7 +76,7 @@ for pt=1:length(uidir)
         case 3 % relative to PC:
             warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(2,:)');
     end
-    
+
     fid(pt).WarpedPointACPC=[warpcoord_mm(1),-warpcoord_mm(2),warpcoord_mm(3)];
     fid(pt).WarpedPointNative=fpinsub_mm(4,:);
 end

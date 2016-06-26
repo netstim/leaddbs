@@ -6,7 +6,7 @@ function prefs=ea_prefs(patientname)
 
 % load loaded prefs (-> prefs.lp)
 try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
+load([ea_getearoot,'ea_prefs']);
 prefs.lp=lp;
 end
 
@@ -128,6 +128,6 @@ prefs.ls.autosave=0;
 
 %% environment
 prefs.env.dev=0;
-prefs.firstrun='off'; 
+prefs.firstrun='off';
 
 prefs.ls.dir='/PA/Neuro/_projects/lead/lead_server/';

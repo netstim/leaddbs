@@ -1,7 +1,7 @@
 function ea_generate_tpm(varargin)
 
 spmdir=[fileparts(which('spm')),filesep];
-earoot=[fileparts(which('lead')),filesep];
+earoot=[ea_getearoot];
 if nargin
     earoot=varargin{1}.earoot;
 end
@@ -38,7 +38,7 @@ end
 % matlabbatch{1}.spm.util.cat.name = [earoot,'templates',filesep,'TPM.nii'];
 % matlabbatch{1}.spm.util.cat.dtype = 4;
 % cfg_util('run',{matlabbatch});
-% 
+%
 % for fi=1:length(fis)
 %     delete(fis{fi});
 % end

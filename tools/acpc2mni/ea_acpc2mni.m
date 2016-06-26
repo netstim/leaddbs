@@ -38,7 +38,7 @@ if cfg.mapmethod
     end
 end
 
-leaddir=[fileparts(which('lead')),filesep];
+leaddir=[ea_getearoot];
 
 if ~length(uidir)
 ea_error('Please choose and normalize patients first.');
@@ -50,7 +50,7 @@ for pt=1:length(uidir)
  %   ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
 
-    
+
 if nargin>2
     whichnormmethod=varargin{3};
     tempfile=varargin{4};
@@ -59,21 +59,21 @@ else
 end
 
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile);
-    
+
     [~,ptname]=fileparts(uidir{pt});
     options.prefs=ea_prefs(ptname);
 
     % warp into patient space:
-    
+
 %     try
     [fpinsub_mm] = ea_map_coords(fidpoints_vox', tempfile, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
 %     catch
 %         ea_error(['Please check deformation field in ',directory,'.']);
 %     end
-    
+
     fpinsub_mm=fpinsub_mm';
-    
-    
+
+
     fid(pt).AC=fpinsub_mm(1,:);
     fid(pt).PC=fpinsub_mm(2,:);
     fid(pt).MSP=fpinsub_mm(3,:);
@@ -86,10 +86,10 @@ end
     % y-dimension (just move from ac to pc and scale by y dimension):
     yvec=(fid(pt).PC-fid(pt).AC);
     yvec=yvec/norm(yvec);
-    
+
     % z-dimension (just move from ac to msag plane by z dimension):
     zvec=(fid(pt).MSP-fid(pt).AC);
-    zvec=zvec/norm(zvec);    
+    zvec=zvec/norm(zvec);
     switch cfg.acmcpc
         case 1 % relative to AC:
             warpcoord_mm=fid(pt).AC+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
@@ -103,7 +103,7 @@ end
     warpcoord_vox=anat.mat\warpcoord_mm;
     warpcoord_vox=warpcoord_vox(1:3);
     fid(pt).WarpedPointNative=warpcoord_mm(1:3)';
-    
+
     % check it inverse normparams file has correct voxel size.
     if ~ismember(whichnormmethod,ea_getantsnormfuns)
     Vinv=spm_vol([directory,'y_ea_inv_normparams.nii']);
@@ -114,10 +114,10 @@ end
         % re-warp into MNI:
 
         [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], tempfile,whichnormmethod);
-    
+
     warppts(pt,:)=warpinmni_mm';
     fid(pt).WarpedPointMNI=warppts(pt,:);
-    
+
     if cfg.mapmethod==2
         anat.img(:)=0;
         anat.img(round(warpcoord_vox(1)),round(warpcoord_vox(2)),round(warpcoord_vox(3)))=1;
@@ -144,18 +144,18 @@ if cfg.mapmethod==1
     bb.img(:)=0;
     warppts_vox=[warppts';ones(1,size(warppts,1))];
     warppts_vox=round(bb.mat\warppts_vox);
-    
+
     for pnt=1:size(warppts_vox,2);
         try
             bb.img(warppts_vox(1,pnt),warppts_vox(2,pnt),warppts_vox(3,pnt))=1;
         end
     end
-    
+
     bb.fname=[PathName,FileName];
     spm_write_vol(bb,bb.img);
 elseif cfg.mapmethod==2
     % create innativespacemapped files:
-    
+
     matlabbatch{1}.spm.util.imcalc.input = wfis;
     matlabbatch{1}.spm.util.imcalc.output = [FileName];
     matlabbatch{1}.spm.util.imcalc.outdir = {PathName};

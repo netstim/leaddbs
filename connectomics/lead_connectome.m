@@ -52,7 +52,7 @@ function lead_connectome_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead_connectome (see VARARGIN)
 
-earoot=[fileparts(which('lead')),filesep];
+earoot=[ea_getearoot];
 im=imread('ea_logo.png');
 image(im);
 axis off;
@@ -60,7 +60,7 @@ axis equal;
 set(gcf,'name','Welcome to LEAD-DBS','color','w');
 
 % add parcellation atlases to menu:
-ll=dir([fileparts(which('lead')),filesep,'templates',filesep,'labeling',filesep,'*.nii']);
+ll=dir([ea_getearoot,'templates',filesep,'labeling',filesep,'*.nii']);
 for lab=1:length(ll)
     [~,n]=fileparts(ll(lab).name);
     parcellation{lab}=n;
@@ -92,7 +92,7 @@ set(handles.ftmethod,'String',fdc);
 
 % update UI:
 try
-    lc=load([fileparts(which('lead')),filesep,'connectomics',filesep,'lc_options.mat']);
+    lc=load([ea_getearoot,'connectomics',filesep,'lc_options.mat']);
 catch
     lc=ea_initlcopts(handles.lead_connectome);
 end
@@ -112,7 +112,7 @@ guidata(hObject, handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = lead_connectome_OutputFcn(hObject, eventdata, handles) 
+function varargout = lead_connectome_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -202,7 +202,7 @@ function savebutn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 lc_options=handles2lc(handles);
-save([fileparts(which('lead')),filesep,'connectomics',filesep,'lc_options.mat'],'-struct','lc_options');
+save([ea_getearoot,'connectomics',filesep,'lc_options.mat'],'-struct','lc_options');
 delete(handles.lead_connectome);
 uiresume
 

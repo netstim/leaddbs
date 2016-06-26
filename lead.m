@@ -32,7 +32,7 @@ gui_State = struct('gui_Name',       mfilename, ...
                    'gui_OutputFcn',  @lead_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
-               
+
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -124,7 +124,7 @@ set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 % set DICOM input and output name strings:
 try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
+load([ea_getearoot,'ea_prefs']);
 set(handles.setdicomout,'String',lp.dicom.outfolder);
 set(handles.setdicomin,'String',lp.dicom.infolder);
 end
@@ -190,7 +190,7 @@ for nd=length(ndir):-1:1
         ndc{cnt}=thisndc;
         normmethod{cnt}=methodf;
         if strcmp(ndc{cnt},eval([options.prefs.normalize.default,'(','''prompt''',')']))
-         defentry=cnt;   
+         defentry=cnt;
         end
         cnt=cnt+1;
         end
@@ -225,7 +225,7 @@ for nd=length(ndir):-1:1
         cdc{cnt}=thisndc;
         coregctmethod{cnt}=methodf;
         if strcmp(cdc{cnt},eval([options.prefs.ctcoreg.default,'(','''prompt''',')']))
-         defentry=cnt;   
+         defentry=cnt;
         end
         cnt=cnt+1;
         end
@@ -248,16 +248,16 @@ end
 
 
 if nargin
-    
+
     if ~isempty(varargin)
         switch varargin{1}
             case 'loadsubs'
-                
+
                 ea_load_pts(handles,varargin{2});
-                
+
         end
     end
-    
+
 end
 
 
@@ -266,7 +266,7 @@ menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
 f = uimenu('Label','Tools');
     uimenu(f,'Label','Convert ACPC/MNI coordinates','Callback',{@ea_acpcquery,handles.leadfigure});
-    
+
 setappdata(handles.leadfigure,'menuprobe',1);
 end
 
@@ -276,7 +276,7 @@ getui(handles);
 
 
 
-    
+
 % UIWAIT makes lead wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 
@@ -607,7 +607,7 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 p='/';
 try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
+load([ea_getearoot,'ea_prefs']);
 p=lp.dicom.outfolder;
 end
 
@@ -1007,7 +1007,7 @@ storeui(handles);
 
 p='';
 try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
+load([ea_getearoot,'ea_prefs']);
 p=lp.dicom.infolder;
 end
 
@@ -1020,10 +1020,10 @@ end
 set(handles.setdicomin,'String',dicindir);
 
 try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
+load([ea_getearoot,'ea_prefs']);
 end
 lp.dicom.infolder=[dicindir,filesep];
-save([fileparts(which('lead')),filesep,'ea_prefs'],'lp');
+save([ea_getearoot,'ea_prefs'],'lp');
 
 
 % --- Executes on button press in setdicomout.
@@ -1035,7 +1035,7 @@ storeui(handles);
 
 p='';
 try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
+load([ea_getearoot,'ea_prefs']);
 p=lp.dicom.outfolder;
 end
 
@@ -1046,10 +1046,10 @@ if ~dicoutdir
 end
 set(handles.setdicomout,'String',dicoutdir);
 try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
+load([ea_getearoot,'ea_prefs']);
 end
 lp.dicom.outfolder=[dicoutdir,filesep];
-save([fileparts(which('lead')),filesep,'ea_prefs'],'lp');
+save([ea_getearoot,'ea_prefs'],'lp');
 
 
 
@@ -1107,10 +1107,10 @@ end
 % determine if patientfolder is set
 switch chooseboxname
     case 'Choose Patient Directory'
-        outdir=[fileparts(which('lead')),filesep];
+        outdir=[ea_getearoot];
     otherwise
         if strcmp(chooseboxname(1:8),'Multiple')
-                    outdir=[fileparts(which('lead')),filesep];
+                    outdir=[ea_getearoot];
 
         else
         outdir=[get(handles.patdir_choosebox,'String'),filesep];
@@ -1205,7 +1205,7 @@ function getui(handles)
 % determine if patientfolder is set
 switch get(handles.patdir_choosebox,'String')
     case {'Choose Patient Directory','Multiple'}
-        outdir=[fileparts(which('lead')),filesep];
+        outdir=[ea_getearoot];
     otherwise
         outdir=get(handles.patdir_choosebox,'String');
 end
@@ -1235,7 +1235,7 @@ options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower th
 
 %uipatdir=get(handles.patdir_choosebox,'String');
 
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 options.dicomimp=get(handles.dicomcheck,'Value');
 
 options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
@@ -1595,7 +1595,7 @@ function openresultdir_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 try
-    load([fileparts(which('lead')),filesep,'ea_prefs']);
+    load([ea_getearoot,'ea_prefs']);
     outfolder = lp.dicom.outfolder;
 catch
     msgbox('Please set the working directory first!', 'Error','error');
@@ -1628,7 +1628,7 @@ function dlgroupc_Callback(hObject, eventdata, handles)
 choice = questdlg('Lead will download and install the Horn 2013 Group connectome files. This may take a while...', ...
     'Start GC Download', ...
     'OK','Cancel','OK');
-earoot=[fileparts(which('lead')),filesep];
+earoot=[ea_getearoot];
 if strcmp(choice,'OK')
     disp('Downloading Horn 2013 Group Connectome');
     websave([earoot,'fibers',filesep,'gc.zip'],'http://www.lead-dbs.org/release/download.php?id=group')
@@ -1653,7 +1653,7 @@ if get(hObject,'Value')==2
    set(handles.writeout2d_checkbox,'Enable','off');
    set(handles.writeout2d_checkbox,'Value',0);
 else
-   set(handles.writeout2d_checkbox,'Enable','on');    
+   set(handles.writeout2d_checkbox,'Enable','on');
    %set(handles.writeout2d_checkbox,'Value',1);
 end
 
