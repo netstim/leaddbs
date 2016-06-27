@@ -55,7 +55,7 @@ if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file')
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'rb0';
     
     jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     clear matlabbatch jobs;
     movefile([directory,'rb0c2',options.prefs.prenii_unnormalized],[directory,'trackingmask.nii']);
     
@@ -63,19 +63,6 @@ if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file')
     tr.img=tr.img>0.8;
     tr.fname=[options.root,options.patientname,filesep,'ttrackingmask.nii'];
     spm_write_vol(tr,tr.img);
-end
-
-% build .fib.gz file
-[~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
-if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file')
-    disp('Estimating ODF / preparing GQI...');
-    res=ea_gqi_reco([options.root,options.patientname,filesep,options.prefs.dti],btable,1.2,options);
-    save([options.root,options.patientname,filesep,ftrbase,'.fib'],'-struct','res','-v4');
-    gzip([options.root,options.patientname,filesep,ftrbase,'.fib']);
-    try delete([options.root,options.patientname,filesep,ftrbase,'.fib']); end
-    disp('Done.');
-else
-    disp('.fib.gz file found, no need to rebuild.');
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
@@ -87,21 +74,30 @@ elseif isunix
 elseif ispc
     dsistudio = [basedir, 'win',filesep,'dsi_studio.exe'];
 end
+
+
+% build .fib.gz file
+[~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
+if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file')
+    disp('Estimating ODF / preparing GQI...');
+    ea_prepare_fib_gqi(dsistudio,btable,1.2,options);
+    
+    disp('Done.');
+else
+    disp('.fib.gz file found, no need to rebuild.');
+end
+
+
 cmd=[dsistudio,' --action=trk --source=',[options.root,options.patientname,filesep,ftrbase,'.fib.gz'],...
     ' --method=0',...
     ' --seed=',options.root,options.patientname,filesep,'ttrackingmask.nii',...
-    ' --fiber_count=50000',...
+    ' --fiber_count=150000',...
     ' --output=',[options.root,options.patientname,filesep,ftrbase,'.mat']];
 
-if ~ispc
-    err=system(['bash -c "', cmd, '"']);
-else
-    err=system(cmd);
-end
+err=ea_submitcmd(cmd);
 if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end
-
 
 % now store tract in lead-dbs format
 ea_dispercent(0,'Converting fibers');
@@ -134,6 +130,60 @@ save([options.root,options.patientname,filesep,ftrbase,'.mat'],'-struct','ftr','
 disp('Done.');
 
 
+
+
+function ea_prepare_fib_gqi(dsistudio,btable,mean_diffusion_distance_ratio,options)
+[~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
+
+if exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file')
+   disp('.fib.gz file already present, no need to rebuild.');
+   return
+end
+
+% try the DSI-studio way (faster):
+
+% source images
+cmd=[dsistudio,' --action=src --source=',[options.root,options.patientname,filesep,options.prefs.dti],...
+    ' --bval=',[options.root,options.patientname,filesep,options.prefs.bval]...
+    ' --bvec=',[options.root,options.patientname,filesep,options.prefs.bvec]...
+    ' --output=',[options.root,options.patientname,filesep,'dti.src.gz']];
+
+err=ea_submitcmd(cmd);
+
+if err
+    warning(['Sourcing from command line with dsi_studio failed (error code=',num2str(err),').']);
+end
+
+% create .fib file
+cmd=[dsistudio,' --action=rec --source=',[options.root,options.patientname,filesep,'dti.src.gz'],...
+    ' --mask=',[options.root,options.patientname,filesep,'ttrackingmask.nii']...
+    ' --method=4',...
+    ' --param0=1.25'];
+
+err=ea_submitcmd(cmd);
+delete([options.root,options.patientname,filesep,'dti.src.gz']);
+if err
+    warning(['Reconstruction from command line with dsi_studio failed (error code=',num2str(err),').']);
+end
+
+
+    di=dir([options.root,options.patientname,filesep,'dti.src.gz*.fib.gz']);
+    if length(di)>1
+        ea_error('Too many .fib.gz files present in folder. Please delete older files');
+    end
+    movefile([options.root,options.patientname,filesep,di(1).name],[options.root,options.patientname,filesep,ftrbase,'.fib.gz']);
+
+if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file');
+    disp('Reconstruction from command line failed. Reattempting inside Matlab.');
+    
+    % do it the matlab way
+    
+    res=ea_gqi_reco([options.root,options.patientname,filesep,options.prefs.dti],btable,mean_diffusion_distance_ratio,options);
+    save([options.root,options.patientname,filesep,ftrbase,'.fib'],'-struct','res','-v4');
+    gzip([options.root,options.patientname,filesep,ftrbase,'.fib']);
+    try delete([options.root,options.patientname,filesep,ftrbase,'.fib']); end
+    
+end
 
 function res=ea_gqi_reco(filename,b_table,mean_diffusion_distance_ratio,options)
 % Direct GQI reconstruction from huge image data
@@ -180,6 +230,7 @@ A = sinc(odf_vertices'*b_vector*mean_diffusion_distance_ratio/pi);
 
 %f =fopen(filename);
 max_dif = 0;
+
 for z = 1:dim(3)
     for d = 1:dif
         %fseek(f,((z-1)*plane_size+(d-1)*dim(1)*dim(2)*dim(3))*pixel_size,'bof');
@@ -187,6 +238,7 @@ for z = 1:dim(3)
     end
     for x = 1:dim(1)
         for y = 1:dim(2)
+            
             ODF=A*reshape(reco_temp(x,y,:),[],1);
             p = ea_find_peak(ODF,odf_faces);
             max_dif = max(max_dif,mean(ODF));

@@ -63,10 +63,16 @@ guidata(hObject, handles);
 earoot=ea_getearoot;
 
 if ~isdeployed
-addpath(genpath(earoot));
-rmpath(genpath([earoot,'.git']));
-rmpath(genpath([earoot,'release']));
+    addpath(genpath(earoot));
+    rmpath(genpath([earoot,'.git']));
+    rmpath(genpath([earoot,'release']));
+    try
+        spm_jobman('initcfg');
+    catch
+        ea_error('SPM seems to be not installed. Please install SPM12');
+    end
 end
+
 ea_dispbn;
 
     mstr='';

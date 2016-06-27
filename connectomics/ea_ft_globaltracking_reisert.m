@@ -106,7 +106,7 @@ matlabbatch{1}.dtijobs.tracking.GTtrack.maxlen = Inf;
 
 
 jobs{1}=matlabbatch;
-cfg_util('run',jobs);
+spm_jobman('run',jobs);
 clear matlabbatch jobs;
 
 
