@@ -284,25 +284,36 @@ ins=surfinterior(node,face);
 %         mesh.pnt=[mesh.pnt;node];
 %         mesh.tissue=[mesh.tissue;repmat(4,size(elem,1),1)];
     end
-
-    fv=ea_concatfv(fv);
+keyboard
+    %fv=ea_concatfv(fv);
+    
+    GMind=find(c0(:,4)==1);
+    WMind=find(c0(:,4)==2);    
+    ELind=find(c0(:,4)==3);    
+    INSind=find(c0(:,4)==4);
+    
+    % create WM mesh with holes for GM and EL + INS:
+    afv=ea_concatfv(fv);
+    
+    
     
     c0coords=[c0(:,1:3),ones(size(c0,1),1)]';
     c0coords=Vexp.mat\c0coords;
     c0coords=c0coords(1:3,:)';
     c0=[c0coords,c0(:,4)];
+    
     if vizz
-        figure, patch(fv,'FaceColor','b','FaceAlpha',0.1);
+        figure, patch(afv,'FaceColor','b','FaceAlpha',0.1);
         hold on
         plot3(c0(:,1),c0(:,2),c0(:,3),'g*');
     end
     % convert to voxel space of Vexp to be able to enter correct bb:
-    fv.vertices=[fv.vertices,ones(size(fv.vertices,1),1)]';
-    fv.vertices=Vexp.mat\fv.vertices;
-    fv.vertices=fv.vertices(1:3,:)';
-    [node,elem]=surf2mesh(fv.vertices,fv.faces,[1,1,1],smri.dim,1,[],c0);
+    afv.vertices=[afv.vertices,ones(size(afv.vertices,1),1)]';
+    afv.vertices=Vexp.mat\afv.vertices;
+    afv.vertices=afv.vertices(1:3,:)';
+    [node,elem]=surf2mesh(afv.vertices,afv.faces,[1,1,1],smri.dim,1,[],c0(WMind,:),c0([GMind;ELind;INSind],:));
     
-    keyboard
+    
     if vizz
         
         figure

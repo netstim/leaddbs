@@ -1,5 +1,10 @@
 function ea_prepare_hardi(options)
-    % build HARDI in new way:
+    
+% build DTD in new way:
+
+nifti_to_DTD.m
+
+% build HARDI in new way:
     
     if ~exist([options.root,options.patientname,filesep,options.prefs.HARDI],'file');
         hr=ea_DPS_nifti_to_hardi([options.root,options.patientname,filesep,options.prefs.dti],...

@@ -180,6 +180,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     try
                     [~,centroid]=kmeans(XYZ.mm(:,1:3),1);
                     catch
+                        keyboard
                         centroid=mean(XYZ(:,1:3),1);
                     end
                 else
