@@ -1,9 +1,5 @@
 function ea_prepare_hardi(options)
     
-% build DTD in new way:
-
-nifti_to_DTD.m
-
 % build HARDI in new way:
     
     if ~exist([options.root,options.patientname,filesep,options.prefs.HARDI],'file');
@@ -11,5 +7,13 @@ nifti_to_DTD.m
             [options.root,options.patientname,filesep,options.prefs.bvec],...
             [options.root,options.patientname,filesep,options.prefs.bval]);
         
-        mrstruct_write(hr,[options.root,options.patientname,filesep,options.prefs.HARDI])
+        mrstruct_write(hr,[options.root,options.patientname,filesep,options.prefs.HARDI]);
+       % convert to DTD
+    hr=mrstruct_read([options.root,options.patientname,filesep,options.prefs.HARDI]);
+    hr=convertHARDI2DTD(hr,0,0);
+    save([options.root,options.patientname,filesep,options.prefs.DTD],'-struct','hr');
+    
+    else
+        disp('HARDI found, no need to rebuild new one.');
     end
+    

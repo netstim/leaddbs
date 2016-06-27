@@ -9,7 +9,7 @@ if ischar(options) % return name of method.
     return
 end
 
-gdti_trackingparams='standard'; % select param-preset here (see below, also to create your own)
+gdti_trackingparams='sparse'; % select param-preset here (see below, also to create your own)
 
 try % make sure only one DTI tracker is being used.
     rmpath(genpath([options.earoot,'dev',filesep,'mesoft']));

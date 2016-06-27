@@ -285,6 +285,8 @@ ins=surfinterior(node,face);
 %         mesh.tissue=[mesh.tissue;repmat(4,size(elem,1),1)];
     end
 keyboard
+
+Mesh2Tetra(afv.vertices,afv.faces);
     %fv=ea_concatfv(fv);
     
     GMind=find(c0(:,4)==1);
