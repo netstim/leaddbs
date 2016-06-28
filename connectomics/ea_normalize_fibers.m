@@ -4,8 +4,9 @@ directory=[options.root,options.patientname,filesep];
 
 % create (unnormalized) trackvis version
 disp('Exporting to TrackVis');
+
+[fibers,idx]=ea_loadfibertracts([directory,options.prefs.FTR_unnormalized]);
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
-ftr = load([directory,options.prefs.FTR_unnormalized]);
 
 try
 %     if ~exist([directory,ftrfname,'.trk'],'file')
@@ -97,80 +98,80 @@ if vizz
 end
 
 ea_dispercent(0,'Normalizing fibers');
-numfibs=length(ftr.curveSegCell);
+numfibs=size(idx,1);
 
 if ~ismember(whichnormmethod,ea_getantsnormfuns) 
     ynii=nifti([directory,'y_ea_inv_normparams.nii']);
     P = [repmat([directory,'y_ea_inv_normparams.nii'],3,1),[',1,1';',1,2';',1,3']];
     Vnii = spm_vol(P);
 end
-wfibs=cell(length(ftr.curveSegCell),1);
+wfibs=fibers;
 deletefibers=[];
-numfibs=20000;
-for fib=1:numfibs
 
-    ea_dispercent(fib/numfibs);
+% for fib=1:numfibs
+% 
+%     ea_dispercent(fib/numfibs);
 
-    %% transpose from freiburg to spm notation.
-    %wfibs{fib}=[ftr.curveSegCell{fib}(:,1),ftr.curveSegCell{fib}(:,2),ftr.curveSegCell{fib}(:,3),ones(length(ftr.curveSegCell{fib}),1)];
-    wfibs{fib}=[ftr.curveSegCell{fib}(:,2),ysize-ftr.curveSegCell{fib}(:,1),ftr.curveSegCell{fib}(:,3),ones(length(ftr.curveSegCell{fib}),1)];
     if vizz
-       thisfib=wfibs{fib}';
+       thisfib=wfibs(1:100000,1:3)';
         subplot(1,3,1)
-        plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'-','color',[0.1707    0.2919    0.7792]);
+        plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'.','color',[0.1707    0.2919    0.7792]);
     end
 
     %% first apply affine transform from b0 to prenii
-    wfibs{fib}=affinematrix1*wfibs{fib}';
+    wfibs=affinematrix1*[wfibs(:,1:3),ones(size(wfibs,1),1)]';
     if vizz
-        thisfib=wfibs{fib};
+        thisfib=wfibs(:,1:100000);
         subplot(1,3,2)
-        plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'-','color',[0.1707    0.2919    0.7792]);
+        plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'.','color',[0.1707    0.2919    0.7792]);
     end
     
     %% -> coordinates are now in voxel-space of single subject anat file.
 
     %% map from prenii voxelspace to mni millimeter space
 if ~ismember(whichnormmethod,ea_getantsnormfuns)
-    wfibs{fib} = vox2mm_mni(wfibs{fib},Vnii,ynii)';
-        wfibsvox{fib}=[wfibs{fib},ones(size(wfibs{fib},1),1)]';
+    wfibs = vox2mm_mni(wfibs,Vnii,ynii)';
+        wfibsvox=[wfibs,ones(size(wfibs,1),1)]';
 else
     
             
             %XYZ_vxLPS=[V.dim(1)-XYZ_vx(1,:);V.dim(2)-XYZ_vx(2,:);XYZ_vx(3,:);ones(1,size(XYZ_vx,2))];
             
-             XYZ_mm_beforetransform=Vmprage(1).mat*wfibs{fib};
+             XYZ_mm_beforetransform=Vmprage(1).mat*wfibs;
              XYZ_mm_beforetransform(1,:)=-XYZ_mm_beforetransform(1,:);
              XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
              
-            wfibs{fib}=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform,1);
-            wfibs{fib}(1,:)=-wfibs{fib}(1,:);
-            wfibs{fib}(2,:)=-wfibs{fib}(2,:);
-             wfibsvox{fib}=wfibs{fib};
-            wfibs{fib}=wfibs{fib}';
+            wfibs=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform,1);
+            wfibs(1,:)=-wfibs(1,:);
+            wfibs(2,:)=-wfibs(2,:);
+             wfibsvox=wfibs;
+            wfibs=wfibs';
             
             
 end
     if vizz
-        thisfib=wfibs{fib}';
+        thisfib=wfibs(1:100000,:)';
         subplot(1,3,3)
-        plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'-','color',[0.1707    0.2919    0.7792]);
+        plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'.','color',[0.1707    0.2919    0.7792]);
     end
 
     %% map from mni millimeter space to mni voxel space (only needed for trackvis convertion and cleansing fibers).
-    wfibsvox{fib}=Vmni(1).mat\wfibsvox{fib};
-    wfibsvox{fib}=wfibsvox{fib}(1:3,:)';
+    wfibsvox=Vmni(1).mat\wfibsvox;
+    wfibsvox=wfibsvox(1:3,:)';
+wfibsvox=[wfibsvox,fibers(:,4)];
 
+wfibs=[wfibs(:,1:3),fibers(:,4)];
+    
     %% cleansing fibers..
     if cleanse_fibers % delete anything too far from wm.
-
-        todelete=~mnimask(sub2ind(size(mnimask),round(wfibsvox{fib}(:,1)),round(wfibsvox{fib}(:,2)),round(wfibsvox{fib}(:,3))));
+        ea_error('Clease fibers not supported at present');
+        todelete=~mnimask(sub2ind(size(mnimask),round(wfibsvox(:,1)),round(wfibsvox(:,2)),round(wfibsvox(:,3))));
 
         if all(todelete) % all fibers outside WM
             deletefibers=[deletefibers,fib];
         else
-            wfibs{fib}(todelete,:)=[];
-            wfibsvox{fib}(todelete,:)=[];
+            wfibs(todelete,:)=[];
+            wfibsvox(todelete,:)=[];
         end
 
     end
@@ -178,24 +179,21 @@ end
     %% cleanup
     %wfibs{fib}=wfibs{fib}(:,1:3);
    if vizz; drawnow; end
-end
+%end
 
 wfibs(deletefibers)=[]; % delete fibers that were in total outside WM
 wfibsvox(deletefibers)=[]; % delete fibers that were in total outside WM
 
 ea_dispercent(100,'end');
 
-wfibsvox=wfibsvox';
-nftr.fibers=wfibs; clear wfibs
-nftr.fibers_vox=wfibsvox; clear wfibsvox
-if isfield(ftr,'curveD')
-    nftr.curveD=ftr.curveD;
-end
-nftr.trackParam=ftr.trackParam;
-%nftr.user=ftr.user;
+wfibsvox=wfibsvox;
 disp('Saving files...');
+[~,ftrbase]=fileparts(options.prefs.FTR_normalized);
+
+ea_savefibertracts([directory,options.prefs.FTR_normalized],wfibs,idx,'mm');
+ea_savefibertracts([directory,ftrbase,'_vox.mat'],wfibsvox,idx,'vox',Vmni(1).mat);
+
 save([directory,options.prefs.FTR_normalized],'-struct','nftr','-v7.3');
-%save([directory,'vox_',options.prefs.FTR_normalized],'normalized_fibers_vox');
 disp('Done.');
 
 %% create trackvis version
