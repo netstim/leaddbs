@@ -56,47 +56,90 @@ alltc=spm_read_vols(spm_vol(rfile));
 
 interpol_tc=interpol_tc';
 
-% detrend global signal
-nDim1 = size(alltc,1); nDim2 = size(alltc,2); nDim3 = size(alltc,3); nDim4 =size(alltc,4);
-
-for x=1:nDim1
-    oneslice =double(alltc(x, :, :, :));
-    oneslice =reshape(oneslice, 1*nDim2*nDim3, nDim4)';
-    oneslice =detrend(oneslice) +repmat(mean(oneslice), [size(oneslice,1), 1]);
-    oneslice =reshape(oneslice', 1,nDim2,nDim3, nDim4);
-    alltc(x, :, :, :) =(oneslice);
-end;
+% % detrend global signal
+% nDim1 = size(alltc,1); nDim2 = size(alltc,2); nDim3 = size(alltc,3); nDim4 =size(alltc,4);
+% 
+% for x=1:nDim1
+%     oneslice =double(alltc(x, :, :, :));
+%     oneslice =reshape(oneslice, 1*nDim2*nDim3, nDim4)';
+%     oneslice =detrend(oneslice) +repmat(mean(oneslice), [size(oneslice,1), 1]);
+%     oneslice =reshape(oneslice', 1,nDim2,nDim3, nDim4);
+%     alltc(x, :, :, :) =(oneslice);
+% end;
 
 
 %% Data corrections steps
 
 
-disp('Calculating C2 and CSF-signals for signal regression...');
+disp('Calculating Global, WM and CSF-signals for signal regression...');
 
 % regression steps
 [~,rf]=fileparts(options.prefs.rest);
+c1=ea_load_nii([directory,'rr',rf,'c1',options.prefs.prenii_unnormalized]);
 c2=ea_load_nii([directory,'rr',rf,'c2',options.prefs.prenii_unnormalized]);
 c3=ea_load_nii([directory,'rr',rf,'c3',options.prefs.prenii_unnormalized]);
 
+globmap=logical((c1.img>0.5)+(c2.img)>0.5+(c3.img>0.5));
 ec2map=c2.img; ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
 ec3map=c3.img; ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
 
 
-%% regress out WM- and CSF-Timecourses
-WMTimecourse=zeros(signallength,1);
-CSFTimecourse=zeros(signallength,1);
-for tmpt = 1:signallength
-    OneTimePoint=alltc(:,:,:,tmpt);
-    WMTimecourse(tmpt)=squeeze(nanmean(nanmean(nanmean(OneTimePoint(ec2map)))));
-    CSFTimecourse(tmpt)=squeeze(nanmean(nanmean(nanmean(OneTimePoint(ec3map)))));
-end
+
+
 
 disp('Done. Regressing out nuisance variables...');
+%% regress out movement parameters
+
+rp_rest = load([directory,'rp_',rf,'.txt']); % rigid body motion parameters.
+X(:,1)=ones(signallength,1);
+X(:,2)=rp_rest(1:signallength,1);
+X(:,3)=rp_rest(1:signallength,2);
+X(:,4)=rp_rest(1:signallength,3);
+X(:,5)=rp_rest(1:signallength,4);
+X(:,6)=rp_rest(1:signallength,5);
+X(:,7)=rp_rest(1:signallength,6);
+%% actual regression:
+for voxx=1:size(interpol_tc,1)
+    beta_hat  = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
+    if ~isnan(beta_hat)
+    interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
+    else
+        warning('Regression of WM-/CSF-Signals could not be performed.');
+    end 
+end
+
+% do the same on whole brain tc to get WM/GM/Global signal:
+for xx=1:size(alltc,1)
+    for yy=1:size(alltc,2)
+        for zz=1:size(alltc,3)
+            beta_hat  = (X'*X)\X'*squeeze(alltc(xx,yy,zz,:));
+
+    if ~isnan(beta_hat)
+    alltc(xx,yy,zz,:)=squeeze(alltc(xx,yy,zz,:))-X*beta_hat;
+    else
+        warning('Regression of WM-/CSF-Signals could not be performed.');
+    end 
+        end
+    end
+end
 
 
+%% average Glob-, WM- and CSF-Timecourses
+WMTimecourse=zeros(signallength,1);
+CSFTimecourse=zeros(signallength,1);
+GlobTimecourse=zeros(signallength,1);
+for tmpt = 1:signallength
+    OneTimePoint=alltc(:,:,:,tmpt);
+    GlobTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec2map(:))));
+    WMTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec2map(:))));
+    CSFTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec3map(:))));
+end
+
+clear X
     X(:,1)=ones(signallength,1);
-    X(:,2)=WMTimecourse;
-    X(:,3)=CSFTimecourse;
+    X(:,2)=GlobTimecourse;
+    X(:,3)=WMTimecourse;
+    X(:,4)=CSFTimecourse;
 
 %% actual regression:
 for voxx=1:size(interpol_tc,1)
@@ -111,27 +154,18 @@ end
 
 clear X
 
-%% regress out movement parameters
 
-rp_rest = load([directory,'rp_',rf,'.txt']); % rigid body motion parameters.
-X(:,1)=ones(signallength,1);
-X(:,2)=rp_rest(1:signallength,1);
-X(:,3)=rp_rest(1:signallength,2);
-X(:,4)=rp_rest(1:signallength,3);
-X(:,5)=rp_rest(1:signallength,4);
-X(:,6)=rp_rest(1:signallength,5);
-X(:,7)=rp_rest(1:signallength,6);
 
-for voxx=1:size(interpol_tc,1)
-
-    beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
-    if ~isnan(beta_hat)
-    interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
-    else
-        warning('Regression of Motion parameters could not be performed.');
-    end
-
-end
+% for voxx=1:size(interpol_tc,1)
+% 
+%     beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
+%     if ~isnan(beta_hat)
+%     interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
+%     else
+%         warning('Regression of Motion parameters could not be performed.');
+%     end
+% 
+% end
 
 
 %% begin rest bandpass
