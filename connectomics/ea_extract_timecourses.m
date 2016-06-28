@@ -113,7 +113,6 @@ for xx=1:size(alltc,1)
     for yy=1:size(alltc,2)
         for zz=1:size(alltc,3)
             beta_hat  = (X'*X)\X'*squeeze(alltc(xx,yy,zz,:));
-
     if ~isnan(beta_hat)
     alltc(xx,yy,zz,:)=squeeze(alltc(xx,yy,zz,:))-X*beta_hat;
     else
@@ -135,24 +134,34 @@ for tmpt = 1:signallength
     CSFTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec3map(:))));
 end
 
-clear X
-    X(:,1)=ones(signallength,1);
-    X(:,2)=GlobTimecourse;
-    X(:,3)=WMTimecourse;
-    X(:,4)=CSFTimecourse;
+%clear X
+    X2(:,1)=ones(signallength,1);
+    X2(:,2)=GlobTimecourse;
+    X2(:,3)=WMTimecourse;
+    X2(:,4)=CSFTimecourse;
 
+    % regress out X from X2
+    
+    for tc=1:size(X2,2)
+        
+           beta_hat        = (X'*X)\X'*squeeze(X2(:,tc));
+ 
+        X2(:,tc)=X2(:,tc)-X*beta_hat;
+    end
+    
+    
 %% actual regression:
 for voxx=1:size(interpol_tc,1)
 
-    beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
+    beta_hat        = (X2'*X2)\X2'*squeeze(interpol_tc(voxx,:))';
     if ~isnan(beta_hat)
-    interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
+    interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X2*beta_hat;
     else
         warning('Regression of WM-/CSF-Signals could not be performed.');
     end
 end
 
-clear X
+clear X X2
 
 
 
