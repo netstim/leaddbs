@@ -120,6 +120,7 @@ if vizz
 end
 
 %% regress out movement parameters
+[~,rf]=fileparts(options.prefs.rest);
 
 rp_rest = load([directory,'rp_',rf,'.txt']); % rigid body motion parameters.
 X1(:,1)=ones(signallength,1);
@@ -184,7 +185,6 @@ end
 disp('Calculating Global, WM and CSF-signals for signal regression...');
 
 % regression steps
-[~,rf]=fileparts(options.prefs.rest);
 c1=ea_load_nii([directory,'rr',rf,'c1',options.prefs.prenii_unnormalized]);
 c2=ea_load_nii([directory,'rr',rf,'c2',options.prefs.prenii_unnormalized]);
 c3=ea_load_nii([directory,'rr',rf,'c3',options.prefs.prenii_unnormalized]);
