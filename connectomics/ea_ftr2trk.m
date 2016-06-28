@@ -1,34 +1,29 @@
 function ea_ftr2trk(ftrfilename,directory,specs,options)
 
-convertfromfreiburg=0;
 
 if ischar(ftrfilename)
     disp('Loading FTR-File.');
-    fs=load([options.root,options.patientname,filesep,ftrfilename]);
-    if isfield(fs,'curveSegCell') % Freiburg Format
-        convertfromfreiburg=1;
-        fibs=fs.curveSegCell;
-
-    elseif isfield(fs,'normalized_fibers_vox') % lead format
-        fibs=fs.normalized_fibers_vox;
-        convertfromfreiburg=0;
-    else % unknown format, use first field for fibers.
-        fn = fieldnames(fs);
-
-        eval(sprintf('fibs = fs.%s;',fn{1}));
-        if size(fibs,1)>size(fibs,2)
-            fibs=fibs';
-        end
-        convertfromfreiburg=0;
-        fibs=fibs;
-    end
+    [fibs,idx,voxmm,mat]=ea_loadfibertracts([directory,ftrfilename,'.mat']);
 else % direct ftr import
+    ea_error('Direct FTR import not supported at present.');
     fibs=ftrfilename{1};
     ftrfilename{1}=[];
 end
 
 %% set header
 [header, tracks]=ea_trk_read([options.earoot,'ext_libs',filesep,'example.trk']);
+if strcmp(voxmm,'vox')
+    if ~isempty(mat)
+        if isempty(specs.affine)
+            specs.affine=mat;
+        else
+            if ~isequal(mat,specs.affine)
+                ea_error('Affine matrix of Fibertracts and image do not match');
+            end
+        end
+    end
+end
+
 specs = ea_aff2hdr(specs.affine, specs);
 try
     header.voxel_size=specs.voxel_size;
@@ -44,30 +39,37 @@ header.property_name=char(repmat(' ',10,20));
 header.reserved=char(repmat(' ',444,1));
 header.image_orientation_patient=specs.image_orientation_patient;
 header.invert_x=0;
-header.invert_y=1;
+header.invert_y=0;
 header.invert_z=0;
 header.swap_xy=0;
 header.swap_yz=0;
 header.swap_zx=0;
-header.n_count=length(fibs);% header.invert_x=1;
+header.n_count=length(idx);% header.invert_x=1;
 header.version=2;
 header.hdr_size=1000;
 
 %% convert data
-ysize=specs.dim(2)+1;
-if convertfromfreiburg
-   for fib=1:length(fibs)
-       fibs{fib}=[fibs{fib}(:,2),ysize-fibs{fib}(:,1),fibs{fib}(:,3)];
-   end
-end
+
 %for i=1:length(fibs)
 %fibs{i}=double(fibs{i});
 %end
-
-for track_number=1:length(fibs)
-   tracks(1,track_number).nPoints=size(fibs{track_number},1);
-   tracks(1,track_number).matrix=fibs{track_number};
+tracks=struct('nPoints',nan,'matrix',nan);
+offset=1;
+for track_number=1:length(idx)
+   tracks(1,track_number).nPoints=idx(track_number);
+   tracks(1,track_number).matrix=fibs(offset:offset+idx(track_number)-1,1:3);
+   offset=offset+idx(track_number);
 end
+
+
+if strcmp(voxmm,'mm') % have to retranspose to vox
+    for i=1:length(tracks)
+       tracks(i).matrix=[tracks(i).matrix,ones(size(tracks(i).matrix,1),1)]';
+        tracks(i).matrix=specs.affine\tracks(i).matrix;
+        tracks(i).matrix=tracks(i).matrix(1:3,:)';
+    end
+end
+
 
 for i = 1:length(tracks)
     try
@@ -76,6 +78,8 @@ for i = 1:length(tracks)
         tracks(i).matrix=bsxfun(@times, tracks(i).matrix',header.voxel_size);
     end
 end
+
+
 
 %% write .trk file
 if ischar(ftrfilename)

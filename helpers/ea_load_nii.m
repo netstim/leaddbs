@@ -22,21 +22,35 @@ if mode
     X=spm_read_vols(V);
     nii.img=X;
     nii.hdr=V;
+    nii.hdr.dime.pixdim=ea_detvoxsize(V(1).mat);
 else
+    
     nii=spm_vol(fname);
     img=spm_read_vols(nii);
     if length(nii)>1 % multi volume;
-       for n=1:length(nii)
-          nii(n).img=squeeze(img(:,:,:,n));
-       end
+        anii=nii(1);
+        anii.img=img;
+        nii=anii;
+        clear anii
     else
         nii.img=img;
     end
     try
-        nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
+        nii.hdr.dime.pixdim=ea_detvoxsize(nii(1).mat);
     end
 end
 
 if wasgzip
     delete(fname); % since gunzip makes a copy of the zipped file.
+end
+
+
+function vsize=ea_detvoxsize(mat)
+for dim=1:3
+    pt1=[1;1;1;1];
+    pt2=pt1;
+    pt2(dim)=2;
+    pt1=mat*pt1;
+    pt2=mat*pt2;
+    vsize(dim)=pdist([pt1(1:3),pt2(1:3)]');
 end

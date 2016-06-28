@@ -193,20 +193,19 @@ disp('Saving files...');
 ea_savefibertracts([directory,options.prefs.FTR_normalized],wfibs,idx,'mm');
 ea_savefibertracts([directory,ftrbase,'_vox.mat'],wfibsvox,idx,'vox',Vmni(1).mat);
 
-save([directory,options.prefs.FTR_normalized],'-struct','nftr','-v7.3');
 disp('Done.');
 
 %% create trackvis version
 disp('Creating TrackVis version...');
 try
-    reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires.nii'];
+    reftemplate=[options.earoot,'templates',filesep,'mni_hires.nii'];
     dnii=ea_load_nii(reftemplate);
     niisize=size(dnii(1).img); % get dimensions of reference template.
 
     specs.origin=[0,0,0];
     specs.dim=niisize;
-    specs.vox=ftr.vox;
-    specs.affine=dnii(1).mat;
+    specs.vox=dnii.hdr.dime.pixdim;
+    specs.affine=dnii.mat;
 
     [~,ftrfname]=fileparts(options.prefs.FTR_normalized);
     ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk

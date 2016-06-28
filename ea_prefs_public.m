@@ -56,6 +56,10 @@ prefs.lc.struc.minlen=3; % minimum fiber length to consider to form connections 
 prefs.lc.graphsurfc=[0.2081    0.1663    0.5292]; % default color for graph metric 3D-visualizations.
 prefs.lc.matsurfc=[0.8 0.7 0.4]; % default color for matrix-level correlations 3D-visualizations.
 prefs.lc.seedsurfc=[0.8 0.1 0.1]; % default color for seed of matrix-level correlations 3D-visualizations.
+prefs.lc.func.regress_global=1;
+prefs.lc.func.regress_wmcsf=1;
+prefs.lc.func.bphighcutoff=0.08;
+prefs.lc.func.bplowcutoff=0.009;
 
 %% DTI-files:
 prefs.b0=['b0.nii'];

@@ -1,4 +1,4 @@
-function [fibers,idx]=ea_loadfibertracts(cfile)
+function [fibers,idx,voxmm,mat]=ea_loadfibertracts(cfile)
 
 if strcmp(cfile(end-3:end),'.mat')
     fibinfo=load(cfile);
@@ -8,11 +8,18 @@ if strcmp(cfile(end-3:end),'.mat')
 
     fibers=fibinfo.fibers;
     idx=fibinfo.idx;
+    if nargout>2
+       voxmm=fibinfo.voxmm;
+       mat=[];
+       try
+           mat=fibinfo.mat;
+       end
+    end
 else
     ea_trk2ftr(cfile);
     [pth,fn,~]=fileparts(cfile);
     cfile=fullfile(pth,[fn,'.mat']);
-    [fibers,idx]=ea_loadfibertracts(cfile);
+    [fibers,idx,voxmm]=ea_loadfibertracts(cfile);
 end
 
 
@@ -51,8 +58,10 @@ function ftr=ea_convertfibs2newformat(fibinfo,cfile)
 
 if isfield(fn,'normalized_fibers_mm')
     fibers=fibinfo.normalized_fibers_mm;
+    voxmm='mm';
 else
     fibers=eval(['fibinfo.',fn{1},';']);
+    voxmm='mm'
 end
 
 c=size(fibers);
@@ -76,11 +85,5 @@ ea_dispercent(1,'end');
 
 fibers=[fibers,idxv];
 
-[pth,fn,ext]=fileparts(cfile);
-ftr.fourindex=1;
-ftr.ea_fibformat='1.0';
-ftr.fibers=fibers;
-ftr.idx=idx;
-disp('Saving fibers in new format');
-save(fullfile(pth,[fn,'.mat']),'-struct','ftr','-v7.3');
-disp('Done.');
+
+ea_savefibertracts(cfile,fibers,idx,'mm')

@@ -52,7 +52,7 @@ function lead_connectome_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead_connectome (see VARARGIN)
 
-earoot=[ea_getearoot];
+earoot=ea_getearoot;
 im=imread('ea_logo.png');
 image(im);
 axis off;
