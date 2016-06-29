@@ -101,6 +101,8 @@ end
 disp('Done. Regressing out nuisance variables...');
 %% regress out sessions
 X0(:,1)=ones(signallength,1);
+
+
 X0=[X0,sessvec+1];
 
 %% actual regression:

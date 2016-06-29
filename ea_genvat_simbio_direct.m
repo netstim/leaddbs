@@ -137,18 +137,7 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     
     
     
-    load([options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
-    A=[electrode.head_position,1;
-        electrode.tail_position,1
-        electrode.x_position,1
-        electrode.y_position,1]; % points in model
-    
-    B=[elstruct.markers(side).head,1;
-        elstruct.markers(side).tail,1;
-        elstruct.markers(side).x,1;
-        elstruct.markers(side).y,1];
-    setappdata(resultfig,'elstruct',elstruct);
-    X = linsolve(A,B); X=X';
+
     
     
     if vizz
@@ -226,6 +215,7 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     for atlas=1:numel(atlases.fv)
         fv(cnt)=atlases.fv{atlas};
         ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+                tissuetype(cnt)=1;
         c0=[c0;[ins,1]];
         cnt=cnt+1;
 %         mdim=ceil(max(fv.vertices))+1;
@@ -242,10 +232,11 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     node=[node,ones(size(node,1),1)]';
     node=Vexp.mat*node;
     node=node(1:3,:)';
-ins=surfinterior(node,face);
+t=surfinterior(node,face);
     fv(cnt).vertices=node;
         fv(cnt).faces=face;
-                c0=[c0;[ins,2]];
+                tissuetype(cnt)=2;
+                c0=[c0;[t,2]];
                 cnt=cnt+1;
 %     [node,elem]=vol2mesh(smri.white,1:size(smri.white,1),1:size(smri.white,2),1:size(smri.white,3),2,2,1);
 %     node=Vexp.mat*[node,ones(length(node),1)]';
@@ -253,13 +244,34 @@ ins=surfinterior(node,face);
 %     mesh.pnt=[mesh.pnt;node(1:3,:)'];
 %     mesh.tissue=[mesh.tissue;repmat(2,size(elem,1),1)];
 
+
+
+    
+    load([options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
+    A=[electrode.head_position,1;
+        electrode.tail_position,1
+        electrode.x_position,1
+        electrode.y_position,1]; % points in model
+    
+    B=[elstruct.markers(side).head,1;
+        elstruct.markers(side).tail,1;
+        elstruct.markers(side).x,1;
+        elstruct.markers(side).y,1];
+    setappdata(resultfig,'elstruct',elstruct);
+    X = linsolve(A,B); X=X';
+
       % add contacts to mesh  
     for con=1:length(electrode.contacts)
+        
+                electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+        electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
+       
+        
         fv(cnt).faces=electrode.contacts(con).faces;
         fv(cnt).vertices=electrode.contacts(con).vertices;
-
-        ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
-        c0=[c0;[ins,3]];
+        tissuetype(cnt)=3;
+        t=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+        c0=[c0;[t,3]];
         cnt=cnt+1;
 % %         mdim=ceil(max(fv(cnt).vertices))+1;
 % %         mindim=floor(min(fv(cnt).vertices))-1;
@@ -269,12 +281,21 @@ ins=surfinterior(node,face);
 %         mesh.tissue=[mesh.tissue;repmat(3,size(elem,1),1)];
     end
 
+    
       % add insulation to mesh
     for ins=1:length(electrode.insulation)
+        
+        electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+        electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
+
+        
+        
         fv(cnt).faces=electrode.insulation(ins).faces;
-                fv(cnt).vertices=electrode.insulation(ins).vertices;
-        ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
-        c0=[c0;[ins,4]];
+        fv(cnt).vertices=electrode.insulation(ins).vertices;
+        t=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+        
+        tissuetype(cnt)=4;
+        c0=[c0;[t,4]];
         cnt=cnt+1;
 %         
 %         mdim=ceil(max(fv.vertices))+1;

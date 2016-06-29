@@ -709,23 +709,7 @@ end
 
 
 
-% add modalities to NBS stats metric popup:
 
-tryparcs=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'*_CM.mat']);
-avparcs=ones(length(tryparcs),1);
-for sub=1:length(M.patient.list)
-    for parc=1:length(tryparcs)
-        if ~exist([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,tryparcs(parc).name],'file');
-        avparcs(parc)=0;
-        end
-    end
-end
-tryparcs=tryparcs(avparcs);
-pcell=cell(length(tryparcs),1);
-for p=1:length(pcell)
-    [~,pcell{p}]=fileparts(tryparcs(p).name);
-end
-set(handles.lc_metric,'String',pcell);
 %% modalities for VAT metrics:
 
 % dMRI:
@@ -817,8 +801,32 @@ try
     end
 end
 
-
+%% patient specific part:
 if ~isempty(M.patient.list)
+    
+    % add modalities to NBS stats metric popup:
+    
+    tryparcs=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'*_CM.mat']);
+if isempty(tryparcs)
+    set(handles.lc_metric,'String','No data found.');
+else
+    avparcs=ones(length(tryparcs),1);
+    for sub=1:length(M.patient.list)
+        for parc=1:length(tryparcs)
+            if ~exist([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,tryparcs(parc).name],'file');
+                avparcs(parc)=0;
+            end
+        end
+    end
+    tryparcs=tryparcs(avparcs);
+    pcell=cell(length(tryparcs),1);
+    for p=1:length(pcell)
+        [~,pcell{p}]=fileparts(tryparcs(p).name);
+    end
+    set(handles.lc_metric,'String',pcell);
+end
+    
+    
     for pt=1:length(M.patient.list)
         % set stimparams based on values provided by user
         for side=1:2
