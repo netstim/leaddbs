@@ -66,13 +66,6 @@ if ~isdeployed
     addpath(genpath(earoot));
     rmpath(genpath([earoot,'.git']));
     rmpath(genpath([earoot,'release']));
-    if isempty(which('cfg'))
-        try
-            spm_jobman('initcfg');
-        catch
-            ea_error('SPM seems to be not installed. Please install SPM12');
-        end
-    end
 end
 
 ea_dispbn;
