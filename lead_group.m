@@ -140,7 +140,6 @@ for lab=1:length(ll)
 end
 
 set(handles.labelpopup,'String',labelcell);
-set(handles.lc_parcellation,'String',labelcell);
 
 try
     priorselection=find(ismember(labelcell,stimparams.labelatlas)); % retrieve prior selection of fiberset.
@@ -695,8 +694,8 @@ end
 % add graph metrics to connectome graph-metrics popup:
 
 
-thisparc=get(handles.lc_parcellation,'String');
-thisparc=thisparc{get(handles.lc_parcellation,'Value')};
+thisparc=get(handles.labelpopup,'String');
+thisparc=thisparc{get(handles.labelpopup,'Value')};
 try
     gmdir=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
 
@@ -782,7 +781,7 @@ try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
 try set(handles.labelpopup,'Value',M.ui.labelpopup); end
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
-try set(handles.lc_parcellation,'Value',M.ui.lc.parcellation); end
+try set(handles.labelpopup,'Value',M.ui.lc.parcellation); end
 try set(handles.lc_normalization,'Value',M.ui.lc.normalization); end
 try set(handles.lc_graphmetric,'Value',M.ui.lc.graphmetric); end
 
@@ -2168,14 +2167,14 @@ function lc_SPM_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-spmdir=[M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs,filesep,'SPM'];
+spmdir=[M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs,filesep,'SPM'];
 rmdir(spmdir,'s');
 mkdir([M.ui.groupdir,'connectomics']);
-mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String')]);
-mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph']);
+mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String')]);
+mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph']);
 gecs=get(handles.lc_graphmetrics,'String');
 [~,gecs]=gecs{M.ui.lc.graphmetrics};
-mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs]);
+mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs]);
 mkdir(spmdir);
 
 
@@ -2184,18 +2183,18 @@ for sub=1:length(M.patient.list)
         zzz='';
     elseif M.ui.lc.normalize==2;
         zzz='z';
-        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs,'.nii,1'],2);
+        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs,'.nii,1'],2);
     elseif M.ui.lc.normalize==3;
         zzz='k';
-        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs,'.nii,1'],3);
+        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs,'.nii,1'],3);
     end
     if M.ui.lc.smooth
         sss='s';
-        ea_smooth([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,zzz,gecs,'.nii,1']);
+        ea_smooth([M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,zzz,gecs,'.nii,1']);
     else
         sss='';
     end
-    fis{sub}=[M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,sss,zzz,gecs,'.nii,1'];
+    fis{sub}=[M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,sss,zzz,gecs,'.nii,1'];
 end
 
 %% model specification:
@@ -2279,30 +2278,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in lc_parcellation.
-function lc_parcellation_Callback(hObject, eventdata, handles)
-% hObject    handle to lc_parcellation (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns lc_parcellation contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from lc_parcellation
-M=getappdata(gcf,'M');
-
-M.ui.lc.parcellation=get(handles.lc_parcellation,'Value');
-setappdata(gcf,'M',M);
-
-% --- Executes during object creation, after setting all properties.
-function lc_parcellation_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to lc_parcellation (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in lc_smooth.
@@ -2574,7 +2550,7 @@ switch UI.test.ui
         T=squeeze(tstat.tstat);
         clear tstat
         clear pmask
-        pmask=nan(size(T));
+        pmask=zeros(size(T));
         for network=1:nbs.NBS.n;
             X=full(nbs.NBS.con_mat{network});
             X=X+X';
@@ -2593,8 +2569,8 @@ switch UI.test.ui
         ea_error('Only t-test fully supported at present. Please process results manually for other tests.');
 end
 
-thisparc=get(handles.lc_parcellation,'String');
-thisparc=thisparc{get(handles.lc_parcellation,'Value')};
+thisparc=get(handles.labelpopup,'String');
+thisparc=thisparc{get(handles.labelpopup,'Value')};
 thismetr=get(handles.lc_metric,'String');
 thismetr=thismetr{get(handles.lc_metric,'Value')};
 eval([thismetr,'=T;']);
@@ -2630,8 +2606,8 @@ save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
 % prepare data matrix:
 
 M=getappdata(handles.lg_figure,'M');
-thisparc=get(handles.lc_parcellation,'String');
-thisparc=thisparc{get(handles.lc_parcellation,'Value')};
+thisparc=get(handles.labelpopup,'String');
+thisparc=thisparc{get(handles.labelpopup,'Value')};
 thismetr=get(handles.lc_metric,'String');
 thismetr=thismetr{get(handles.lc_metric,'Value')};
 
