@@ -36,7 +36,7 @@ matlabbatch{1}.spm.tools.preproc8.warp.reg = 4;
 matlabbatch{1}.spm.tools.preproc8.warp.affreg = 'mni';
 matlabbatch{1}.spm.tools.preproc8.warp.samp = 3;
 matlabbatch{1}.spm.tools.preproc8.warp.write = [0 0];
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 
@@ -64,7 +64,7 @@ for c=1:3
     Xm=spm_read_vols(Vm);
     delete([options.root,options.patientname,filesep,'c',num2str(c),options.prefs.prenii_unnormalized]);
     M=M+Xm>0.1;
-    
+
 end
 clear Xm
 

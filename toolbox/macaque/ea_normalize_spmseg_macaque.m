@@ -101,7 +101,7 @@ matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = 'nmi';
 matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
 matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
 matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 
 
 % now segment the preoperative version.
@@ -128,7 +128,7 @@ cfg_util('run',{matlabbatch});
 
 jobs{1}=matlabbatch;
 try
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     disp('*** Segmentation of preoperative version worked.');
 catch
     disp('*** Segmentation of transversal version failed.');
@@ -189,7 +189,7 @@ matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
 
 jobs{1}=matlabbatch;
 try
-cfg_util('run',jobs);
+spm_jobman('run',jobs);
 end
 clear matlabbatch jobs;
 end
@@ -229,7 +229,7 @@ for export=expdo
     matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
     jobs{1}=matlabbatch;
     try
-        cfg_util('run',jobs);
+        spm_jobman('run',jobs);
     end
     clear matlabbatch jobs;
 end
@@ -266,9 +266,9 @@ for export=expdo
 
     voxi=[0.5 0.5 0.5]; % export highres
     bbi=nan(2,3);
-    
-    
-    
+
+
+
     matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg_sn.mat']};
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
@@ -278,11 +278,11 @@ matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 4;
 matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
 matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
 matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
-    
+
 
     jobs{1}=matlabbatch;
     try
-        cfg_util('run',jobs);
+        spm_jobman('run',jobs);
         movefile(wfina,outf);
     end
     clear matlabbatch jobs;
@@ -296,7 +296,7 @@ for inverse=0:1
     else
         addstr='';
     end
-    
+
     matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg',addstr,'_sn.mat']};
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = nan(1,3);
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = nan(2,3);
@@ -304,7 +304,7 @@ matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = ['ea',addstr,'_normparams']
 matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
     jobs{1}=matlabbatch;
 
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     disp('*** Exported normalization parameters to y_ea_normparams.nii');
     clear matlabbatch jobs;
 end

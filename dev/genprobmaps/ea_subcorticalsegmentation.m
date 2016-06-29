@@ -35,27 +35,27 @@ cleanup=0;
 if genmaps
     for s=1:length(structures)
         pts=ea_readcsv([structures{s},'.fcsv']);
-        
+
         [~,tempfile]=ea_whichnormmethod(directory);
         V=spm_vol(tempfile);
         pts=V.mat\pts;
         pts=ea_map_coords(pts,tempfile,[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
         label=structures{s};
-        
+
         ea_generate_probmaps(pts(1:3,:)',label,srcs,directory);
     end
 end
 
 if wtamaps
-    
+
     dfactor=1.2;
-    
+
     for s=1:length(structures)
         S{s}=ea_load_nii([directory,'s',structures{s},'_secondlevel.nii']);
         A(:,:,:,s)=S{s}.img;
         S{s}.img(:)=nan;
     end
-    
+
     ea_dispercent(0,'WTAing');
     for xx=1:size(S{s}.img,1)
         for yy=1:size(S{s}.img,2)
@@ -83,7 +83,7 @@ if wtamaps
         S{s}.fname=[directory,structures{s},'_wta.nii'];
         spm_write_vol(S{s},S{s}.img);
         ea_largestcomponent_nii([directory,structures{s},'_wta.nii'],'hemispheres');
-        
+
         movefile([directory,structures{s},'_wta_lh.nii'],[atldir,filesep,'lh',filesep,structures{s},'.nii']);
         movefile([directory,structures{s},'_wta_rh.nii'],[atldir,filesep,'rh',filesep,structures{s},'.nii']);
         ea_crop_nii([atldir,filesep,'lh',filesep,structures{s},'.nii']);
@@ -128,7 +128,7 @@ switch whichnormmethod
         matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[directory,options.prenii_unnormalized]};
         matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
         matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [0 0 0];
-        cfg_util('run',{matlabbatch});
+        spm_jobman('run',{matlabbatch});
         clear matlabbatch
 end
 
@@ -151,7 +151,7 @@ matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 matlabbatch{1}.spm.spatial.smooth.data = {[directory,'bb',options.prefs.prenii_unnormalized]};
@@ -159,7 +159,7 @@ matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
 matlabbatch{1}.spm.spatial.smooth.dtype = 0;
 matlabbatch{1}.spm.spatial.smooth.im = 0;
 matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 delete([directory,'bb',options.prefs.prenii_unnormalized]);
@@ -192,8 +192,8 @@ for m=1:length(mults)
                 [directory,mults(m).name],...
                 [directory,mults(m).name],0);
     end
-    
-    
+
+
     matlabbatch{1}.spm.util.imcalc.input = {[directory,'wbb.nii']
         [directory,mults(m).name]};
     matlabbatch{1}.spm.util.imcalc.output = ['bb',mults(m).name];
@@ -204,17 +204,17 @@ for m=1:length(mults)
     matlabbatch{1}.spm.util.imcalc.options.mask = 0;
     matlabbatch{1}.spm.util.imcalc.options.interp = 1;
     matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-    cfg_util('run',{matlabbatch});
+    spm_jobman('run',{matlabbatch});
     clear matlabbatch
-    
+
     matlabbatch{1}.spm.spatial.smooth.data = {[directory,'bb',mults(m).name]};
     matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
     matlabbatch{1}.spm.spatial.smooth.dtype = 0;
     matlabbatch{1}.spm.spatial.smooth.im = 0;
     matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-    cfg_util('run',{matlabbatch});
+    spm_jobman('run',{matlabbatch});
     clear matlabbatch
-    
+
     delete([directory,'bb',mults(m).name]);
 end
 

@@ -33,7 +33,7 @@ for export=1:3
             case 3
                 fina=[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,',1'];
         end
-        
+
         try
             ea_docoreg_spm(fina,[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],costfuns{costfun},doreslice)
             normlog(1)=1;
@@ -48,7 +48,7 @@ for export=1:3
                 fina};
             jobs{1}=matlabbatch;
             try % CT
-                cfg_util('run',jobs);
+                spm_jobman('run',jobs);
 
                 yninp = input('Please check reg between Post-OP versions. Is result precise? (y/n)..','s');
                 if strcmpi(yninp,'y')

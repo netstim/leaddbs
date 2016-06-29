@@ -15,7 +15,7 @@ gdti_trackingparams='standard'; % select param-preset here (see below, also to c
 
 
 switch gdti_trackingparams
-    
+
     case 'hd_book'
         para_weight = 0.0006;
         para_other = [1
@@ -76,7 +76,7 @@ switch gdti_trackingparams
             3
             0.2
             1.5];
-        
+
 end
 
 
@@ -90,7 +90,7 @@ if ~exist([directory,'trackingmask.nii'],'file');
         ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
     end
     %% coreg anat to b0
-    
+
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c2',options.prefs.prenii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.other = {''};
@@ -102,8 +102,8 @@ if ~exist([directory,'trackingmask.nii'],'file');
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
-    cfg_util('run',{matlabbatch}); clear matlabbatch
-    
+    spm_jobman('run',{matlabbatch}); clear matlabbatch
+
     for c=3:5
         delete([directory,'c',num2str(c),options.prefs.prenii_unnormalized]);
     end
@@ -116,7 +116,7 @@ if ~exist([directory,'gmmask.nii'],'file');
         ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
     end
     %% coreg anat to b0
-    
+
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c1',options.prefs.prenii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.other = {''};
@@ -128,8 +128,8 @@ if ~exist([directory,'gmmask.nii'],'file');
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
-    cfg_util('run',{matlabbatch}); clear matlabbatch
-    
+    spm_jobman('run',{matlabbatch}); clear matlabbatch
+
     for c=3:5
         delete([directory,'c',num2str(c),options.prefs.prenii_unnormalized]);
     end
@@ -161,8 +161,8 @@ mesoGT_tool('start');
 
 movefile([directory,dfn,'_FTR.mat'],[directory,options.prefs.FTR_unnormalized]);
 delete(findobj('tag','fiberGT_main'))
-% 
-% 
+%
+%
 %% export .trk copy for trackvis visualization
 
 dnii=nifti([directory,options.prefs.b0]);

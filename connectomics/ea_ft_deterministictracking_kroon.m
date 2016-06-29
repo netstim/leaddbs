@@ -41,7 +41,7 @@ matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
 matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'rb0';
 
 jobs{1}=matlabbatch;
-cfg_util('run',jobs);
+spm_jobman('run',jobs);
 clear matlabbatch jobs;
 
 

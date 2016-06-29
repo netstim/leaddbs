@@ -27,34 +27,34 @@ for vatfname=1:2
 end
 
 
-    
-if donorm
-    %% warp vat into pre_tra-space:  
-    
 
-           
+if donorm
+    %% warp vat into pre_tra-space:
+
+
+
     switch spm('ver')
         case 'SPM8'
-            
-    
+
+
             matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
             matlabbatch{1}.spm.util.defs.ofname = '';
             matlabbatch{1}.spm.util.defs.fnames = vatspresent;
             matlabbatch{1}.spm.util.defs.savedir.saveusr = {[directory,'stimulations',filesep,stim,filesep,filesep]};
             matlabbatch{1}.spm.util.defs.interp = 0;
-     
+
         case 'SPM12'
-            
+
             matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
             matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = vatspresent;
             matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[directory,'stimulations',filesep,stim,filesep,filesep]};
             matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 0;
             matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
             matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
-            
+
     end
     % execute batch..
-    cfg_util('run',{matlabbatch});
+    spm_jobman('run',{matlabbatch});
     clear matlabbatch
 end
 if docoreg
@@ -71,9 +71,9 @@ if docoreg
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = ['r',b0rest];
-    cfg_util('run',{matlabbatch});
+    spm_jobman('run',{matlabbatch});
     clear matlabbatch
-    
+
     delete([options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
     delete([options.root,options.patientname,filesep,'r',b0rest,'c',options.prefs.prenii_unnormalized]);
 end

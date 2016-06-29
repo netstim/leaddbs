@@ -49,14 +49,14 @@ matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
 matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
 matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
 matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 
 matlabbatch{1}.spm.stats.fmri_est.spmmat = {[sdir,filesep,'SPM.mat']};
 matlabbatch{1}.spm.stats.fmri_est.write_residuals = 0;
 matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1;
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 matlabbatch{1}.spm.stats.con.spmmat = {[sdir,filesep,'SPM.mat']};
@@ -64,7 +64,7 @@ matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'mainfx';
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = 1;
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{1}.spm.stats.con.delete = 1;
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 matlabbatch{1}.spm.stats.results.spmmat = {[sdir,filesep,'SPM.mat']};
@@ -77,7 +77,7 @@ matlabbatch{1}.spm.stats.results.conspec.mask.none = 1;
 matlabbatch{1}.spm.stats.results.units = 1;
 matlabbatch{1}.spm.stats.results.print = false;
 matlabbatch{1}.spm.stats.results.write.tspm.basename = 'result';
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 matlabbatch{1}.spm.util.imcalc.input = {Vol.fname;
@@ -90,7 +90,7 @@ matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 

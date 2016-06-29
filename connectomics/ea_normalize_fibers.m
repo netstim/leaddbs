@@ -100,7 +100,7 @@ end
 ea_dispercent(0,'Normalizing fibers');
 numfibs=size(idx,1);
 
-if ~ismember(whichnormmethod,ea_getantsnormfuns) 
+if ~ismember(whichnormmethod,ea_getantsnormfuns)
     ynii=nifti([directory,'y_ea_inv_normparams.nii']);
     P = [repmat([directory,'y_ea_inv_normparams.nii'],3,1),[',1,1';',1,2';',1,3']];
     Vnii = spm_vol(P);
@@ -109,7 +109,7 @@ wfibs=fibers;
 deletefibers=[];
 
 % for fib=1:numfibs
-% 
+%
 %     ea_dispercent(fib/numfibs);
 
     if vizz
@@ -125,7 +125,7 @@ deletefibers=[];
         subplot(1,3,2)
         plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'.','color',[0.1707    0.2919    0.7792]);
     end
-    
+
     %% -> coordinates are now in voxel-space of single subject anat file.
 
     %% map from prenii voxelspace to mni millimeter space
@@ -133,21 +133,21 @@ if ~ismember(whichnormmethod,ea_getantsnormfuns)
     wfibs = vox2mm_mni(wfibs,Vnii,ynii)';
         wfibsvox=[wfibs,ones(size(wfibs,1),1)]';
 else
-    
-            
+
+
             %XYZ_vxLPS=[V.dim(1)-XYZ_vx(1,:);V.dim(2)-XYZ_vx(2,:);XYZ_vx(3,:);ones(1,size(XYZ_vx,2))];
-            
+
              XYZ_mm_beforetransform=Vmprage(1).mat*wfibs;
              XYZ_mm_beforetransform(1,:)=-XYZ_mm_beforetransform(1,:);
              XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
-             
+
             wfibs=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform,1);
             wfibs(1,:)=-wfibs(1,:);
             wfibs(2,:)=-wfibs(2,:);
              wfibsvox=wfibs;
             wfibs=wfibs';
-            
-            
+
+
 end
     if vizz
         thisfib=wfibs(1:100000,:)';
@@ -161,7 +161,7 @@ end
 wfibsvox=[wfibsvox,fibers(:,4)];
 
 wfibs=[wfibs(:,1:3),fibers(:,4)];
-    
+
     %% cleansing fibers..
     if cleanse_fibers % delete anything too far from wm.
         ea_error('Clease fibers not supported at present');
@@ -255,7 +255,7 @@ if dartelused
         matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
         matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
         matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
-        cfg_util('run',{matlabbatch});
+        spm_jobman('run',{matlabbatch});
         clear matlabbatch
     end
 end

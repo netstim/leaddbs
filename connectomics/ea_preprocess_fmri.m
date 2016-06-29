@@ -45,7 +45,7 @@ if ~exist([directory,'r',options.prefs.rest],'file');
     matlabbatch{1}.spm.spatial.realign.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.realign.estwrite.roptions.mask = 1;
     matlabbatch{1}.spm.spatial.realign.estwrite.roptions.prefix = 'r';
-    cfg_util('run',{matlabbatch});
+    spm_jobman('run',{matlabbatch});
     clear matlabbatch;
     delete([directory,'mean',options.prefs.rest]);
     disp('Done.');
@@ -94,7 +94,7 @@ if ~exist([directory,'rr',rf,options.prefs.prenii_unnormalized],'file')
 
     try
         jobs{1}=matlabbatch;
-        cfg_util('run',jobs);
+        spm_jobman('run',jobs);
     end
 
     clear matlabbatch jobs;
@@ -127,6 +127,6 @@ if ~exist([directory,'sr',options.prefs.rest],'file')
     matlabbatch{1}.spm.spatial.smooth.im = 0;
     matlabbatch{1}.spm.spatial.smooth.prefix = 's';
     jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     clear jobs matlabbatch
 end

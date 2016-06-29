@@ -45,7 +45,7 @@ switch options.modality
             fis{5}=[subdir,options.prefs.fa2anat];
             ofis{5}=[subdir,'gl',options.prefs.fa2anat];
             lfis{5}=[subdir,'l',options.prefs.fa2anat];
-        end   
+        end
     case 2 % CT
         fis{1}=[subdir,options.prefs.prenii_unnormalized];
         fis{2}=[subdir,options.prefs.ctnii_coregistered];
@@ -68,17 +68,17 @@ for fi=1:length(fis)
            ' --dimensionality 3 --float 1' ...
            ' -i ',ea_path_helper(fis{fi}), ...
            ' -o ',ea_path_helper(ofis{fi})];
-           
+
        if useinverse
            if isempty(refim)
                refim=[subdir,options.prefs.prenii_unnormalized];
            end
-           
+
            if exist([subdir,lprebase,'Composite.h5'],'file')
                tr=[' -r ',refim,...
                    ' -t [',ea_path_helper([subdir,lprebase]),'InverseComposite.h5,0]'];
            else
-               
+
                tr=[' -r ',refim,...
                    ' -t [',ea_path_helper([subdir,lprebase]),'1InverseWarp.nii.gz,0]',...
                    ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'];
@@ -96,10 +96,10 @@ for fi=1:length(fis)
                    ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,0]'];
            end
        end
-       
+
        cmd=[cmd,...
            tr];
-       
+
     if ~ispc
         try
         system(['bash -c "', cmd, '"']);
@@ -122,8 +122,8 @@ for fi=1:length(fis)
         matlabbatch{1}.spm.util.imcalc.options.mask = 0;
         matlabbatch{1}.spm.util.imcalc.options.interp = 1;
         matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-        
-         try   cfg_util('run',{matlabbatch}); end
+
+         try   spm_jobman('run',{matlabbatch}); end
         clear matlabbatch
     end
 end

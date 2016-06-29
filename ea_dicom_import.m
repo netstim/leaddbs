@@ -100,7 +100,7 @@ for scan=1:length(f)
         jobs(1)=matlabbatch;
 
         try
-            cfg_util('run',jobs);
+            spm_jobman('run',jobs);
             worked=1;
         catch
             warning('Invalid DICOM structure.');

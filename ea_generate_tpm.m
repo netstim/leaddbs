@@ -30,14 +30,14 @@ end
 %     matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 %     matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 %     matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-%     cfg_util('run',{matlabbatch});
+%     spm_jobman('run',{matlabbatch});
 %     fis{tp}=[earoot,'templates',filesep,'TPM_',num2str(tp),'.nii'];
 % end
 % clear matlabbatch
 % matlabbatch{1}.spm.util.cat.vols = fis;
 % matlabbatch{1}.spm.util.cat.name = [earoot,'templates',filesep,'TPM.nii'];
 % matlabbatch{1}.spm.util.cat.dtype = 4;
-% cfg_util('run',{matlabbatch});
+% spm_jobman('run',{matlabbatch});
 %
 % for fi=1:length(fis)
 %     delete(fis{fi});

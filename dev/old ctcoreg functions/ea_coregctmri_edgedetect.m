@@ -170,7 +170,7 @@ matlabbatch{1}.spm.util.reorient.transform.transM = M;
 matlabbatch{1}.spm.util.reorient.prefix = 'r';
 jobs{1}=matlabbatch;
 try
-cfg_util('run',jobs);
+spm_jobman('run',jobs);
 catch
     warning('Pre-coregistration did not work. Please choose a different threshold.');
 end
@@ -195,14 +195,14 @@ for costfun=1:3
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
 
     jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     clear matlabbatch jobs;
 end
 
 matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
     [options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized,',1']};
 jobs{1}=matlabbatch;
-cfg_util('run',jobs);
+spm_jobman('run',jobs);
 clear matlabbatch jobs;
 
 % keep users naming scheme:

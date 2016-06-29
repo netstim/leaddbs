@@ -63,7 +63,7 @@ switch spm('ver')
         matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.patientname,filesep,'vat_resources']};
         matlabbatch{1}.spm.util.defs.interp = 1;
         jobs{1}=matlabbatch;
-        cfg_util('run',jobs);
+        spm_jobman('run',jobs);
         clear jobs matlabbatch
         movefile([options.root,options.patientname,filesep,'vat_resources',filesep,'wtrackmask_mni.nii'],[options.root,options.patientname,filesep,'vat_resources',filesep,'trackmask_pre.nii']);
     case 'SPM12'
@@ -75,7 +75,7 @@ switch spm('ver')
         matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
         matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [4 4 4];
         jobs{1}=matlabbatch;
-        cfg_util('run',jobs);
+        spm_jobman('run',jobs);
         clear jobs matlabbatch
 
         movefile([options.root,options.patientname,filesep,'vat_resources',filesep,'swtrackmask_mni.nii'],[options.root,options.patientname,filesep,'vat_resources',filesep,'trackmask_pre.nii']);
@@ -98,7 +98,7 @@ matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
 matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
 matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
 jobs{1}=matlabbatch;
-cfg_util('run',jobs);
+spm_jobman('run',jobs);
 clear matlabbatch jobs
 
 movefile([options.root,options.patientname,filesep,'vat_resources',filesep,'rtrackmask_pre.nii'],[options.root,options.patientname,filesep,'vat_resources',filesep,'trackmask_b0.nii']);
@@ -112,7 +112,7 @@ matlabbatch{1}.impexp_NiftiMrStruct.nifti2roistruct.nfval = false;
 matlabbatch{1}.impexp_NiftiMrStruct.nifti2roistruct.outchoice.outmat.outdir = {[options.root,options.patientname,filesep,'vat_resources']};
 matlabbatch{1}.impexp_NiftiMrStruct.nifti2roistruct.outchoice.outmat.fname = 'trackmask_b0.mat';
 jobs{1}=matlabbatch;
-cfg_util('run',jobs);
+spm_jobman('run',jobs);
 clear matlabbatch jobs
 
 % clean up..
@@ -139,7 +139,7 @@ if ~exist([options.root,options.patientname,filesep,'vat_resources',filesep,'lea
     matlabbatch{1}.dtijobs.tracking.GTtrack.minlen = 1;
     matlabbatch{1}.dtijobs.tracking.GTtrack.maxlen = Inf;
     jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     clear matlabbatch jobs
     disp('Done fibertracking.');
 end

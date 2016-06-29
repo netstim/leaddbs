@@ -23,7 +23,7 @@ for side=1:2
             sidec='lh';
     end
     for src=1:length(srcs)
-        
+
         switch whichnormmethod
             case ea_getantsnormfuns
                 ea_ants_applytransforms(options,{[natatldir,sidec,filesep,srcs{src},'.nii']},{[mniatldir,sidec,filesep,srcs{src},'.nii']},0,[options.earoot,'templates',filesep,'bb.nii']);
@@ -35,12 +35,12 @@ for side=1:2
                 matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[options.earoot,'templates',filesep,'bb.nii']};
                 matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
                 matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [0 0 0];
-                cfg_util('run',{matlabbatch});
+                spm_jobman('run',{matlabbatch});
                 clear matlabbatch
                 movefile([mniatldir,sidec,filesep,'w',srcs{src},'.nii'],[mniatldir,sidec,filesep,srcs{src},'.nii']);
         end
         ea_crop_nii([mniatldir,sidec,filesep,srcs{src},'.nii']);
-        
+
     end
 end
 

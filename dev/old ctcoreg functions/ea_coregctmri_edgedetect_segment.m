@@ -52,7 +52,7 @@ matlabbatch{1}.spm.tools.preproc8.warp.samp = 3;
 matlabbatch{1}.spm.tools.preproc8.warp.write = [0 0];
 jobs{1}=matlabbatch;
 if 0
-cfg_util('run',jobs);
+spm_jobman('run',jobs);
 end
 clear jobs matlabbatch
 
@@ -73,7 +73,7 @@ matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
     jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     clear matlabbatch jobs;
 
 
@@ -211,7 +211,7 @@ matlabbatch{1}.spm.util.reorient.srcfiles = {[options.root,options.patientname,f
 matlabbatch{1}.spm.util.reorient.transform.transM = M;
 matlabbatch{1}.spm.util.reorient.prefix = 'r';
 jobs{1}=matlabbatch;
-cfg_util('run',jobs);
+spm_jobman('run',jobs);
 clear jobs matlabbatch
 
 
@@ -232,7 +232,7 @@ clear jobs matlabbatch
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
 
     jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     clear matlabbatch jobs;
 
     % 2.
@@ -250,7 +250,7 @@ matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
     jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     clear matlabbatch jobs;
 
     % skullstrip CT:
@@ -266,7 +266,7 @@ matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
     jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     clear matlabbatch jobs;
 
 
@@ -282,7 +282,7 @@ for costfun=1:3
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
 
     jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     clear matlabbatch jobs;
 end
 
@@ -296,5 +296,5 @@ disp('Done.');
 matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
     [options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized,',1']};
 jobs{1}=matlabbatch;
-cfg_util('run',jobs);
+spm_jobman('run',jobs);
 clear matlabbatch jobs;

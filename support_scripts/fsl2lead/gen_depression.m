@@ -40,7 +40,7 @@ for region=[27,29,28,33]
         matlabbatch{1}.spm.util.imcalc.options.interp = 0;
         matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
         jobs{1}=matlabbatch;
-        cfg_util('run',jobs);
+        spm_jobman('run',jobs);
         clear matlabbatch jobs
 
 
@@ -69,7 +69,7 @@ for lr=[26,58] % accumbens
         matlabbatch{1}.spm.util.imcalc.options.interp = 0;
         matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
         jobs{1}=matlabbatch;
-        cfg_util('run',jobs);
+        spm_jobman('run',jobs);
         clear matlabbatch jobs
 
 

@@ -2201,14 +2201,14 @@ matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
 matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
 matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
 matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 %% model estimation:
 matlabbatch{1}.spm.stats.fmri_est.spmmat = {spmdir};
 matlabbatch{1}.spm.stats.fmri_est.write_residuals = 0;
 matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1;
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 %% contrast manager:
@@ -2217,7 +2217,7 @@ matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'main effect';
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = 1;
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{1}.spm.stats.con.delete = 1;
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 

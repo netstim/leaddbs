@@ -21,11 +21,11 @@ atlas_lgnd{1}(todelete)=[];
 atlas_lgnd{2}(todelete)=[];
 
 for reg=1:length(atlas_lgnd{1})
-    
+
     snii=atl;
     snii.img(snii.img~=atlas_lgnd{1}(reg))=0;
     snii.img=logical(snii.img);
-    
+
     if strcmp(atlas_lgnd{2}{reg}(1),'r')
         odir='../atlases/INIA19 (Rohlfing 2012)/rh';
     elseif strcmp(atlas_lgnd{2}{reg}(1),'l')
@@ -35,11 +35,11 @@ for reg=1:length(atlas_lgnd{1})
     end
 
     if any(snii.img(:))
-        
+
         snii.fname=[odir,filesep,atlas_lgnd{2}{reg}(3:end),'.nii'];
         spm_write_vol(snii,snii.img);
          [pth,fn,ext]=fileparts(snii.fname);
-        
+
         % warp to MNI:
         matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {'inia19_to_mni_hires_sn.mat'};
         matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = [0.5 0.5 0.5];
@@ -51,10 +51,10 @@ for reg=1:length(atlas_lgnd{1})
         matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
         matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
         matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
-        
-        cfg_util('run',{matlabbatch});
+
+        spm_jobman('run',{matlabbatch});
         clear matlabbatch
-        
+
         ea_crop_nii([pth,filesep,'w',fn,ext]);
         movefile([pth,filesep,'w',fn,ext],[pth,filesep,fn,ext]);
     end

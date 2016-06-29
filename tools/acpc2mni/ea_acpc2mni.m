@@ -131,7 +131,7 @@ end
         matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 4;
         matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
         matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
-        cfg_util('run',{matlabbatch});
+        spm_jobman('run',{matlabbatch});
         clear matlabbatch
         wfis{pt}=[directory,'wACPCquerypoint.nii'];
     end
@@ -165,7 +165,7 @@ elseif cfg.mapmethod==2
     matlabbatch{1}.spm.util.imcalc.options.mask = 0;
     matlabbatch{1}.spm.util.imcalc.options.interp = 1;
     matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-    cfg_util('run',{matlabbatch});
+    spm_jobman('run',{matlabbatch});
     clear matlabbatch
 end
 
@@ -177,7 +177,7 @@ matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
 matlabbatch{1}.spm.spatial.smooth.dtype = 0;
 matlabbatch{1}.spm.spatial.smooth.im = 0;
 matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 [pth,fn,ext]=fileparts(bb.fname);

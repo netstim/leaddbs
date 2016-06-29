@@ -320,7 +320,7 @@ else % DICOM
     matlabbatch{1}.spm.util.import.dicom.protfilter = '.*';
     matlabbatch{1}.spm.util.import.dicom.convopts.format = 'nii';
     matlabbatch{1}.spm.util.import.dicom.convopts.icedims = 0;
-    cfg_util('run',{matlabbatch});
+    spm_jobman('run',{matlabbatch});
     clear matlabbatch
 
     di=dir([directory,'*.nii']);

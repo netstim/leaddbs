@@ -11,7 +11,7 @@ function varargout=ea_normalize_ants_macaque(options)
 % normalization of such image data.
 %
 % The procedure used here uses the ANTs Syn approach to map a patient's
-% brain to MNI space directly. 
+% brain to MNI space directly.
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
@@ -28,8 +28,8 @@ end
 
     ea_coregmr(options,options.prefs.normalize.coreg);
 
-    
-    
+
+
     % do a linear coregistration into mni space
 
 
@@ -73,10 +73,10 @@ matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = 'nmi';
 matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
 matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
 matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 
 
-    
+
 
 directory=[options.root,options.patientname,filesep];
 ea_ants_nonlinear([options.earoot,'toolbox',filesep,'macaque',filesep,'templates',filesep,'mni_hires','.nii'],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii]);

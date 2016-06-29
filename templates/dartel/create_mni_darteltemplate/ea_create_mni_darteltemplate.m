@@ -19,7 +19,7 @@ for s=1:6
             matlabbatch{1}.spm.spatial.smooth.im = 0;
             matlabbatch{1}.spm.spatial.smooth.prefix = ['s',num2str(gs(s))];
             jobs{1}=matlabbatch;
-            cfg_util('run',jobs);
+            spm_jobman('run',jobs);
                     clear jobs matlabbatch
 
         else
@@ -33,7 +33,7 @@ for s=1:6
             matlabbatch{1}.spm.util.imcalc.options.interp = 1;
             matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
             jobs{1}=matlabbatch;
-            cfg_util('run',jobs);
+            spm_jobman('run',jobs);
                     clear jobs matlabbatch
 
         end
@@ -50,7 +50,7 @@ for s=1:6
         matlabbatch{1}.spm.util.imcalc.options.interp = 1;
         matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
         jobs{1}=matlabbatch;
-        cfg_util('run',jobs);
+        spm_jobman('run',jobs);
         clear jobs matlabbatch
 
 
@@ -64,7 +64,7 @@ for s=1:6
     matlabbatch{1}.spm.util.cat.name = [wd,'dartelmni_',num2str(expo(s)),'.nii'];
     matlabbatch{1}.spm.util.cat.dtype = 0;
     jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     clear jobs matlabbatch
 
     disp('Cleaning up.');
