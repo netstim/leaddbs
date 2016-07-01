@@ -17,11 +17,16 @@ end
 
 
 
-
+if length(fis)==1
+ expr='X';   
+else
+    expr='mean(X)';
+end
+    
 matlabbatch{1}.spm.util.imcalc.input = fis';
 matlabbatch{1}.spm.util.imcalc.output = [options.prefs.b0];
 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname]};
-matlabbatch{1}.spm.util.imcalc.expression = 'mean(X)';
+matlabbatch{1}.spm.util.imcalc.expression = expr;
 matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
 matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
