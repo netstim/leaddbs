@@ -999,58 +999,6 @@ function dicomcheck_Callback(hObject, eventdata, handles)
 storeui(handles);
 
 
-% --- Executes on button press in setdicomin.
-function setdicomin_Callback(hObject, eventdata, handles)
-% hObject    handle to setdicomin (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-storeui(handles);
-
-p='';
-try
-load([ea_getearoot,'ea_prefs']);
-p=lp.dicom.infolder;
-end
-
-dicindir=uigetdir(p);
-
-if ~dicindir
-    return
-end
-
-set(handles.setdicomin,'String',dicindir);
-
-try
-load([ea_getearoot,'ea_prefs']);
-end
-lp.dicom.infolder=[dicindir,filesep];
-save([ea_getearoot,'ea_prefs'],'lp');
-
-
-% --- Executes on button press in setdicomout.
-function setdicomout_Callback(hObject, eventdata, handles)
-% hObject    handle to setdicomout (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-storeui(handles);
-
-p='';
-try
-load([ea_getearoot,'ea_prefs']);
-p=lp.dicom.outfolder;
-end
-
-dicoutdir=uigetdir(p);
-
-if ~dicoutdir
-    return
-end
-set(handles.setdicomout,'String',dicoutdir);
-try
-load([ea_getearoot,'ea_prefs']);
-end
-lp.dicom.outfolder=[dicoutdir,filesep];
-save([ea_getearoot,'ea_prefs'],'lp');
 
 
 
@@ -1590,28 +1538,7 @@ function specify2dwrite_Callback(hObject, eventdata, handles)
 ea_spec2dwrite;
 
 
-% --- Executes on button press in openresultdir.
-function openresultdir_Callback(hObject, eventdata, handles)
-% hObject    handle to openresultdir (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-try
-    load([ea_getearoot,'ea_prefs']);
-    outfolder = lp.dicom.outfolder;
-catch
-    msgbox('Please set the working directory first!', 'Error','error');
-    return;
-end
 
-if ismac
-    system(['open ', outfolder]);
-elseif isunix
-    system(['xdg-open ', outfolder]);
-elseif ispc
-    system(['explorer ', outfolder]);
-end
-
-cd(outfolder);
 
 % --- Executes on button press in viewmanual.
 function viewmanual_Callback(hObject, eventdata, handles)
@@ -1741,7 +1668,7 @@ function leadfigure_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to leadfigure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-label='http://www.lead-dbs.org/';
+label='lead-dbs.org';
 url='http://www.lead-dbs.org/';
-position=[459,15,160,16];
+position=[51,535,160,16];
 ea_hyperlink_label(label, url, position);
