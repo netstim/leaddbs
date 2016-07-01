@@ -5,11 +5,9 @@ function SH = cpmSH(dirin,L)
 if size(dirin,3) > 1,
     for k = 1:size(dirin,3),
         [V D] = eigs(dirin(:,:,k));
-        if verLessThan('matlab','8.4')
-        dir(:,k) = V(:,1);
-        else
-        dir(:,k) = V(:,3);
-        end
+        [~,ix]=sort(D(logical(eye(length(D)))));
+        dir(:,k) = V(:,ix(3));
+
     end;
 else
     dir = dirin;
