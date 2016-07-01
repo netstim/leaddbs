@@ -10,8 +10,7 @@ function ea_dicom_import(options)
 
 disp('Importing DICOM files...');
 
-global dcfilename
-global tmpoutdir
+
 
 
 indir=[options.root,options.patientname,filesep,'DICOM',filesep];
@@ -35,7 +34,7 @@ ea_dcm2niix(indir,outdir);
 di=dir([outdir,'*.nii']);
 for d=1:length(di)
     dcfilename=[outdir,di(d).name];
-    ea_imageclassifier;
+    ea_imageclassifier(dcfilename);
 
 end
 
