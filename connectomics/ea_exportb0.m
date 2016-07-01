@@ -18,18 +18,32 @@ end
 
 
 if length(fis)==1
- expr='X';   
+    expr='i1';
+    
+    matlabbatch{1}.spm.util.imcalc.input = fis';
+    matlabbatch{1}.spm.util.imcalc.output = [options.prefs.b0];
+    matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname]};
+    matlabbatch{1}.spm.util.imcalc.expression = expr;
+    matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+    matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+    matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+    spm_jobman('run',{matlabbatch}); clear matlabbatch
 else
     expr='mean(X)';
+    
+    matlabbatch{1}.spm.util.imcalc.input = fis';
+    matlabbatch{1}.spm.util.imcalc.output = [options.prefs.b0];
+    matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname]};
+    matlabbatch{1}.spm.util.imcalc.expression = expr;
+    matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+    matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
+    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+    matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+    spm_jobman('run',{matlabbatch}); clear matlabbatch
+    
 end
     
-matlabbatch{1}.spm.util.imcalc.input = fis';
-matlabbatch{1}.spm.util.imcalc.output = [options.prefs.b0];
-matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname]};
-matlabbatch{1}.spm.util.imcalc.expression = expr;
-matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
-matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
-matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-spm_jobman('run',{matlabbatch}); clear matlabbatch
+

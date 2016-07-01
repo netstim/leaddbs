@@ -295,7 +295,7 @@ try
 
 options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 catch
-    ea_warning('Localizations seem not properly defined.');
+    warning('Localizations seem not properly defined.');
 end
 options.elmodel=M.elstruct(1).elmodel;
 options=ea_resolve_elspec(options);
