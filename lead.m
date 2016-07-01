@@ -123,12 +123,6 @@ set(hObject,'Color',[1 1 1]);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 
-% set DICOM input and output name strings:
-try
-load([ea_getearoot,'ea_prefs']);
-set(handles.setdicomout,'String',lp.dicom.outfolder);
-set(handles.setdicomin,'String',lp.dicom.infolder);
-end
 
 
 % check if group connectome files are present
@@ -159,18 +153,6 @@ image(im);
 axis off;
 axis equal;
 
-try
-warning('off');
-set(handles.dicompanel,'BackgroundColor','none');
-set(handles.gopanel,'BackgroundColor','none');
-set(handles.psapanel,'BackgroundColor','none');
-set(handles.normpanel,'BackgroundColor','none');
-set(handles.reconpanel,'BackgroundColor','none');
-set(handles.reviewpanel,'BackgroundColor','none');
-set(handles.vizpanel,'BackgroundColor','none');
-set(handles.coregctpanel,'BackgroundColor','none');
-warning('on');
-end
 
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
@@ -608,8 +590,7 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 p='/';
 try
-load([ea_getearoot,'ea_prefs']);
-p=lp.dicom.outfolder;
+p=pwd;
 end
 
 uipatdir=ea_uigetdir(p,'Please choose patient folder(s)...');

@@ -22,7 +22,7 @@ function varargout = ea_imageclassifier(varargin)
 
 % Edit the above text to modify the response to help ea_imageclassifier
 
-% Last Modified by GUIDE v2.5 15-Nov-2015 15:11:22
+% Last Modified by GUIDE v2.5 01-Jul-2016 14:40:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -66,7 +66,11 @@ setappdata(hObject,'dcfilename',dcfilename);
 setappdata(hObject,'tmpoutdir',tmpoutdir);
 
 
+try
 nii=ea_load_nii(getappdata(gcf,'dcfilename'));
+catch
+    keyboard
+end
 nii.img=double(nii.img)/double(max(nii.img(:)));
 set(0,'CurrentFigure',hObject);
 try
@@ -86,8 +90,11 @@ view(270,90)
 axis equal
 axis tight
 axis off
+
+uiwait(handles.imclassf);
+
 % UIWAIT makes ea_imageclassifier wait for user response (see UIRESUME)
-%uiwait(handles.figure1);
+%uiwait(handles.imclassf);
 
 
 
@@ -212,6 +219,18 @@ finishandclose(prefs.rawctnii_unnormalized);
     case 'u'
         finishandclose('unknown');
         
+    case 'd'
+        tmpoutdir=getappdata(gcf,'tmpoutdir');
+        
+        [~,pt]=fileparts(tmpoutdir);
+        prefs=ea_prefs(pt);
+        finishandclose(prefs.dti);
+    case 'f'
+        tmpoutdir=getappdata(gcf,'tmpoutdir');
+        
+        [~,pt]=fileparts(tmpoutdir);
+        prefs=ea_prefs(pt);
+        finishandclose(prefs.rest_default);
     otherwise
         return
 end
@@ -230,3 +249,27 @@ movefile([getappdata(gcf,'dcfilename')],[getappdata(gcf,'tmpoutdir'),filesep,nam
 
 close(gcf)
         
+
+
+% --- Executes on button press in restpush.
+function restpush_Callback(hObject, eventdata, handles)
+% hObject    handle to restpush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+tmpoutdir=getappdata(gcf,'tmpoutdir');
+
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.rest_default);
+
+
+% --- Executes on button press in dtipush.
+function dtipush_Callback(hObject, eventdata, handles)
+% hObject    handle to dtipush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+tmpoutdir=getappdata(gcf,'tmpoutdir');
+
+[~,pt]=fileparts(tmpoutdir);
+prefs=ea_prefs(pt);
+finishandclose(prefs.dti);
