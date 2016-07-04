@@ -22,7 +22,7 @@ function varargout = ea_imageclassifier(varargin)
 
 % Edit the above text to modify the response to help ea_imageclassifier
 
-% Last Modified by GUIDE v2.5 01-Jul-2016 17:02:37
+% Last Modified by GUIDE v2.5 04-Jul-2016 12:39:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;

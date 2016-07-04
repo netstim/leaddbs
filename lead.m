@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 03-Jul-2016 20:29:44
+% Last Modified by GUIDE v2.5 04-Jul-2016 11:32:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1699,7 +1699,7 @@ function leadfigure_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 label='lead-dbs.org';
 url='http://www.lead-dbs.org/';
-position=[51,535,160,16];
+position=[52,527,160,16];
 ea_hyperlink_label(label, url, position);
 
 
@@ -1738,4 +1738,3 @@ function recentpts_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
