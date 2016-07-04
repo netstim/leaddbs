@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 04-Jul-2016 11:32:41
+% Last Modified by GUIDE v2.5 04-Jul-2016 12:40:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -597,9 +597,16 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % hObject    handle to patdir_choosebox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-p='/';
+
+
+p='/'; % default use root
 try
-p=pwd;
+p=pwd; % if possible use pwd instead (could not work if deployed)
+end
+try % finally use last patient parent dir if set.
+earoot=ea_getearoot;
+load([earoot,'ea_recentpatients.mat']);
+p=fileparts(fullrpts{1});
 end
 
 uipatdir=ea_uigetdir(p,'Please choose patient folder(s)...');
@@ -698,6 +705,8 @@ function normalize_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of normalize_checkbox
+
+
 storeui(handles);
 
 
@@ -1738,3 +1747,250 @@ function recentpts_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+function normalize_checkbox_ButtonDownFcn(hObject,eventdata,handles)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over normcheck.
+function normcheck_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to normcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over doreconstruction_checkbox.
+function doreconstruction_checkbox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to doreconstruction_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over manualheight_checkbox.
+function manualheight_checkbox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to manualheight_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over include_lead_connectome_subroutine.
+function include_lead_connectome_subroutine_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to include_lead_connectome_subroutine (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over dicomcheck.
+function dicomcheck_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to dicomcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregct_checkbox.
+function coregct_checkbox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregct_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregctcheck.
+function coregctcheck_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregctcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over writeout2d_checkbox.
+function writeout2d_checkbox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to writeout2d_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over render_checkbox.
+function render_checkbox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to render_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over exportservercheck.
+function exportservercheck_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to exportservercheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over run_button.
+function run_button_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to run_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over exportcode.
+function exportcode_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to exportcode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over openpatientdir.
+function openpatientdir_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to openpatientdir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over viewmanual.
+function viewmanual_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to viewmanual (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over patdir_choosebox.
+function patdir_choosebox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to patdir_choosebox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over recentpts.
+function recentpts_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over electrode_model_popup.
+function electrode_model_popup_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to electrode_model_popup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over MRCT.
+function MRCT_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to MRCT (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregctmethod.
+function coregctmethod_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregctmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregthreshs.
+function coregthreshs_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregthreshs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over atlassetpopup.
+function atlassetpopup_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to atlassetpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over vizspacepopup.
+function vizspacepopup_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to vizspacepopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over specify2dwrite.
+function specify2dwrite_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to specify2dwrite (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over cmappushbutton.
+function cmappushbutton_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to cmappushbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over dlgroupc.
+function dlgroupc_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to dlgroupc (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over updatebutn.
+function updatebutn_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to updatebutn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregmrpopup.
+function coregmrpopup_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
