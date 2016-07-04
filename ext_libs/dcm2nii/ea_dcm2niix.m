@@ -1,5 +1,5 @@
 function ea_dcm2niix(inputimage,ofolder)
-% Wrapper for dcm2nii, just used for reorientation and cropping currently
+% Wrapper for dcm2niix
 
 ea_libs_helper;
 
@@ -23,17 +23,17 @@ end
 % -o option seems not to work in dcm2niix yet. Move files manually:
 di=dir([inputimage,'*.nii']);
 for d=1:length(di)
-movefile([inputimage,di(d).name],[ofolder,di(d).name]);
+    movefile([inputimage,di(d).name],[ofolder,di(d).name]);
 end
 
 di=dir([inputimage,'*.bval']);
 for d=1:length(di)
-movefile([inputimage,di(d).name],[ofolder,di(d).name]);
+    movefile([inputimage,di(d).name],[ofolder,di(d).name]);
 end
 
 di=dir([inputimage,'*.bvec']);
 for d=1:length(di)
-movefile([inputimage,di(d).name],[ofolder,di(d).name]);
+    movefile([inputimage,di(d).name],[ofolder,di(d).name]);
 end
 
 % try
@@ -41,6 +41,6 @@ end
 %     movefile([pth,filesep,'co',fn,ext],inputimage);
 % catch
 %     try
-%     movefile([pth,filesep,'c',fn,ext],inputimage);
+%         movefile([pth,filesep,'c',fn,ext],inputimage);
 %     end
 % end
