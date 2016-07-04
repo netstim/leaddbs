@@ -684,13 +684,13 @@ The Standard Space Atlases
 
 The standard space atlases included in the repository,
 are released under the terms of the main Lead-DBS License above, 
-at the request of their owners with the exception of the Hammersmith atlas (see below). These atlases should therefore not be used for commercial purposes; for such
+at the request of their owners with the exception of the Hammers_mith atlas (see below). These atlases should therefore not be used for commercial purposes; for such
 purposes please contact the primary co-ordinator for the relevant
 atlas.
 
 -------------------------------------------------------------------
 
-The Hammersmith Atlas
+The Hammers_mith Atlas
 
 FREE ACADEMIC END USER LICENCE AGREEMENT
 © Copyright Imperial College of Science Technology & Medicine (“Imperial”), 2004-2016.
