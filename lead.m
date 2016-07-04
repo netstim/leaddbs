@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 21-Jun-2016 11:19:09
+% Last Modified by GUIDE v2.5 03-Jul-2016 20:29:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,6 +61,15 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 earoot=ea_getearoot;
+
+% add recent patients...
+try
+    load([earoot,'ea_recentpatients.mat']);
+catch
+    fullrpts={'No recent patients found'};
+end
+save([earoot,'ea_recentpatients.mat'],'fullrpts');
+ea_updaterecentpatients(handles);
 
 if ~isdeployed
     addpath(genpath(earoot));
@@ -601,7 +610,44 @@ end
 
 ea_load_pts(handles,uipatdir);
 
+function ea_addrecentpatient(handles,uipatdir,chosenix)
+earoot=ea_getearoot;
+load([earoot,'ea_recentpatients.mat']);
+if strcmp(fullrpts,'No recent patients found')
+    fullrpts={};
+end
 
+if ~exist('chosenix','var')
+    try
+        chosenix=fullrpts{get(handles.recentpts,'Value')};
+    catch
+        chosenix='Recent patients:';
+    end
+end
+
+fullrpts=[uipatdir';fullrpts];
+
+[fullrpts]=unique(fullrpts,'stable');
+if length(fullrpts)>10
+    
+   fullrpts=fullrpts(1:10);
+end
+[~,nuchosenix]=ismember(chosenix,fullrpts);
+save([earoot,'ea_recentpatients.mat'],'fullrpts');
+
+ea_updaterecentpatients(handles,nuchosenix);
+
+function ea_updaterecentpatients(handles,nuchosenix)
+earoot=ea_getearoot;
+load([earoot,'ea_recentpatients.mat']);
+for i=1:length(fullrpts)
+    [~,fullrpts{i}]=fileparts(fullrpts{i});
+end
+fullrpts=[{'Recent patients:'};fullrpts];
+set(handles.recentpts,'String',fullrpts);
+if exist('nuchosenix','var')
+   set(handles.recentpts,'Value',nuchosenix+1); 
+end
 
 function ea_load_pts(handles,uipatdir)
 
@@ -622,6 +668,8 @@ ea_switchctmr(handles);
 
 getui(handles); % update ui from patient
 storeui(handles); % save in pt folder
+ea_addrecentpatient(handles,uipatdir,'Recent patients:');
+
 
 % --- Executes on button press in left_checkbox.
 function left_checkbox_Callback(hObject, eventdata, handles)
@@ -1653,3 +1701,41 @@ label='lead-dbs.org';
 url='http://www.lead-dbs.org/';
 position=[51,535,160,16];
 ea_hyperlink_label(label, url, position);
+
+
+% --- Executes on selection change in recentpts.
+function recentpts_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpts
+if get(handles.recentpts,'Value')==1
+    return
+end
+earoot=ea_getearoot;
+load([earoot,'ea_recentpatients.mat']);
+if iscell(fullrpts)
+fullrpts=fullrpts(get(handles.recentpts,'Value')-1);
+end
+
+if strcmp('No recent patients found',fullrpts)
+   return 
+end
+
+
+ea_load_pts(handles,fullrpts);
+
+% --- Executes during object creation, after setting all properties.
+function recentpts_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
