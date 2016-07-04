@@ -1,3 +1,6 @@
+Lead-DBS (c) 2014 – (the "Software")
+
+
 GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
@@ -672,3 +675,41 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <http://www.gnu.org/philosophy/why-not-lgpl.html>.
+
+
+
+-------------------------------------------------------------------
+
+The Standard Space Atlases
+
+The standard space atlases included in the repository,
+are released under the terms of the main Lead-DBS License above, 
+at the request of their owners with the exception of the Hammersmith atlas (see below). These atlases should therefore not be used for commercial purposes; for such
+purposes please contact the primary co-ordinator for the relevant
+atlas.
+
+-------------------------------------------------------------------
+
+The Hammersmith Atlas
+
+FREE ACADEMIC END USER LICENCE AGREEMENT
+© Copyright Imperial College of Science Technology & Medicine (“Imperial”), 2004-2016.
+Maximum probability brain atlas based on manually drawn atlases from 30 healthy adults (with 83 regions each) (the “Atlas”), with a list of regions (together the “Materials”) [Release v[1.0] 2008]
+All Rights Reserved
+Developed jointly by Alexander Hammers1, Ioannis S. Gousias1, Laila Ahsan1, Spyridon Vossos1, Chi-Hua Chen1, Rolf Heckemann1, Tim M Williams2, Louis Lemieux3, David J Brooks1, John S Duncan3 and Matthias J Koepp3 (the “Authors”) 
+1 Department of Clinical Neuroscience and MRC Clinical Sciences Centre, Division of Neuroscience and Mental Health, Faculty of Medicine Imperial College London
+2 Psychopharmacology Unit, University of Bristol
+3 Department of Clinical and Experimental Epilepsy, Institute of Neurology, University College London
+In accessing the materials, documents and content (you agree to the following terms and conditions:
+
+1. The materials, documents and content (“Materials”) on this site are protected by copyright, moral rights and/or database right throughout the world and are owned by Imperial and/or the Authors. The Authors assert their moral rights to be identified as the authors of the Materials.
+2. You may read, print and download the Materials for academic, non-commercial research including teaching.
+3. You may use the Materials (in whole or in part) for the purposes of academic, non-commercial research and teaching (“Permitted Purpose”). For the avoidance of doubt, the Permitted Purpose does not include using Materials for (i) commercially-sponsored research or (ii) the diagnosis, treatment or medical care of patients.
+4. You shall not (i) sub-licence or distribute the Materials to third parties or (ii) use the Materials (in whole or in part) as the basis of any commercial product. If you require a commercial licence for the Materials please contact Imperial’s technology commercialisation company, Imperial Innovations Limited (http://www.imperialinnovations.co.uk).
+5. You must not alter, modify, add to or delete anything from the Materials you download or use, except as is permitted in paragraphs 2 and 3 above. Subject both to the previous sentence and paragraph 6, any alterations, modifications, additions or deletions from the Materials must be clearly described in any publications or presentations.
+6. You shall, in any use of the Materials, include an acknowledgement in the form of “© Copyright Imperial College of Science, Technology and Medicine 2007. All rights reserved.” In addition, in all publications or presentations, you shall cite (i) the source of the Materials as “www.brain-development.org” and (ii) the appropriate paper or papers documenting the creation of the Atlas (Hammers A, Allom R et al., Hum Brain Mapp 2003 for regions 1- 49 and the principle; Gousias IS et al. Neuroimage 2008 for regions 50-83).
+7. The Materials are being provided as a service to the academic community and on a non-commercial basis, without charge. Accordingly, to the fullest extent permitted under applicable law, Imperial accepts no liability and offers no warranties in relation to the Materials.
+8. Without prejudice to the generality of the foregoing paragraph, the Materials provided under this free, academic end-user licence are a research tool undergoing further development and are not intended to be a clinical diagnostic aid. They are provided ‘as is’ and without any express or implied warranties, representations or undertakings. As examples, but without limiting the foregoing, Imperial does not give any warranty that the Materials do not infringe third party rights, are of merchantable or satisfactory quality, are fit for any particular purpose or for use under any specific conditions, or comply with any statement, demonstration or model provided or supplied by Imperial.
+9. In no event, unless required by law or agreed to in writing, will Imperial be liable to you for damages, including any general, special, incidental or consequential damages arising out of the use or inability to use the Materials (including but not limited to loss of data, data being rendered inaccurate, losses being sustained by you or third parties), or a failure of the Materials to operate with any materials or software used by you.
+10. You agree to indemnify Imperial and its officers, employees, students, other researchers and agents (together, the “Indemnitees”) and hold the Indemnitees harmless from and against any and all claims, damages and liabilities asserted by third parties (including claims for negligence) which arise directly or indirectly from the use of the Materials or the sale of any products based on the Materials.
+11. To maintain the protection of human subjects you undertake not to use the Materials so as to attempt in any way to discover the identity of or make contact with any individual from whom the information originated.
