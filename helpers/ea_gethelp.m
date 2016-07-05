@@ -68,7 +68,7 @@ end
 
 
 if ~hhg
-    ea_error('Unfortunately, no help information is available for this item.');
+    msgbox('Unfortunately, no help information is available for this item.','Oops!','Help');
 end
 
 
