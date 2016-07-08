@@ -35,10 +35,12 @@ for export=1:3
         end
 
         try
-            ea_docoreg_spm(fina,[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],costfuns{costfun},doreslice)
-            normlog(1)=1;
-            disp('*** Coregistration between transversal and coronar versions worked.');
-            finas{export}=fina; % assign only if worked.
+            if exist(fina(1:end-2),'file')
+                ea_docoreg_spm(fina,[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],costfuns{costfun},doreslice)
+                normlog(1)=1;
+                disp(['*** Coregistration between transversal and coronar versions worked (',costfuns{costfun},').');
+                finas{export}=fina; % assign only if worked.
+            end
         catch
             disp('*** Coregistration between transversal and coronar versions failed / Using CT Modality.');
             %ea_error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
