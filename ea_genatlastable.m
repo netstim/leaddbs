@@ -165,6 +165,13 @@ if checkrebuild(atlases,options,root,mifix)
                 colorc=colornames(1);
                 colorc=rgb(colorc);
                 if isfield(nii,'img') % volumetric atlas
+                    
+                    if options.prefs.hullsmooth
+                        
+                        nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
+                        
+                    end
+                    
                     [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); % find 3D-points that have correct value.
                     vv=nii.img(nii.img(:)>0);
 
@@ -240,11 +247,7 @@ if checkrebuild(atlases,options,root,mifix)
 
 
                     [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-                    if options.prefs.hullsmooth
-                        try
-                            nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
-                        end
-                    end
+  
 
                     thresh=ea_detthresh(atlases,atlas,nii.img);
                     ea_addnii2lf(atlases,atlas,thresh,options,root,mifix)
