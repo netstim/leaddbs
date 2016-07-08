@@ -30,12 +30,21 @@ end
 
 ea_dcm2niix(indir,outdir);
 
+if options.prefs.dicom.dicomfiles % delete DICOM folder
+    rmdir([options.root,options.patientname,filesep,'DICOM'],'s');
+end
+
+
+% remove uncropped versions
+di=dir([outdir,'*_Crop_1.nii']);
+for d=1:length(di)
+    delete([outdir,di(d).name(1:end-11),'.nii']);    
+end
 
 di=dir([outdir,'*.nii']);
 for d=1:length(di)
     dcfilename=[outdir,di(d).name];
     ea_imageclassifier(dcfilename);
-
 end
 
 
