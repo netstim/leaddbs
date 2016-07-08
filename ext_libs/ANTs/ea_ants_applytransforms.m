@@ -62,6 +62,10 @@ end
 end
 
 for fi=1:length(fis)
+    if ~exist(fis{fi},'file')   % skip if unnormalized file doesn't exist
+        fprintf('%s not found. Skipping. /n');
+        continue
+    end
     % generate gl*.nii files
     [~,lprebase]=fileparts(options.prefs.prenii);
     cmd = [applyTransforms,' --verbose 1' ...
