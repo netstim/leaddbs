@@ -112,7 +112,7 @@ prefs.d3.fiberdiameter=0.1; % diameter of fibers ? only works in all ML versions
 prefs.d3.maxfibers=200; % set to inf to show all fibers (but this could lead to crashes).
 
 %% DICOM files:
-prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
+prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 0: Leave DICOMs at pt/DICOM folder after conversion.
 
 
 %% fibers:

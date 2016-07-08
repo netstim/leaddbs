@@ -95,7 +95,7 @@ prefs.d3.maxfibers=200; % set to inf to show all fibers (but this could lead to 
 
 %% DICOM-Handling:
 
-prefs.dicom.dicomfiles=1; % 1: delete DICOMs after conversion, 2: move DICOMs to pt/DICOM folder after conversion. 0: leave DICOMs where they were (not recommended: DICOMs will then be always re-imported from the import folder).
+prefs.dicom.dicomfiles=1; % 1: delete DICOMs after conversion, 0: Leave DICOMs at pt/DICOM folder after conversion.
 
 %% Normalization:
 prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
@@ -111,11 +111,11 @@ prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
 prefs.hullsmooth=5; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
-prefs.hullsimplify=1; % 0.1 would reduce hulldata to 10%. set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
+prefs.hullsimplify=0.5; % 0.1 would reduce hulldata to 10%. set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
 
 %% labels:
 prefs.lhullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
-prefs.lhullsmooth=3; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
+prefs.lhullsmooth=7; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
 prefs.lhullsimplify='auto'; % 0.1 would reduce hulldata to 10% ? set to simplify hulldata. Set to 1 to not simplify. Only applies if isosurface is used.
 
 
