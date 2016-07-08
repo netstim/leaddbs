@@ -7,6 +7,7 @@ percent=round(varargin{1}*100);
 
 if nargin==2
     if strcmp(varargin{2},'end')
+        fprintf(1,[varargin{2},':     ']); 
         fprintf('\n')
         fprintf('\n')          
     else
