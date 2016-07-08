@@ -63,7 +63,7 @@ end
 
 for fi=1:length(fis)
     if ~exist(fis{fi},'file')   % skip if unnormalized file doesn't exist
-        fprintf('%s not found. Skipping. /n');
+        fprintf('%s not found. Skipping. /n',fis{fi});
         continue
     end
     % generate gl*.nii files
