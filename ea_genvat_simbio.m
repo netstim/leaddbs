@@ -101,6 +101,8 @@ if ea_headmodel_changed(options,side,S,elstruct)
     %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
 
     [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,modelwidth,150,1); % set to 250 / 400 this will result in ~10x10x10 mm.
+    cimat(isnan(cimat))=0; % for out of FOV values.
+    
     mat=mat';
     mkdir([options.root,options.patientname,filesep,'headmodel']);
     Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);
