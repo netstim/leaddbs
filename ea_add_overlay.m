@@ -56,8 +56,9 @@ for atlas=1:length(atlases.names)
         try
             dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*3;
         catch % fibertracts
-            dists=dists<1*2.5;
+            dists=dists<1*1;
         end
+        
         if any(dists) % only if intersection exists plot the atlas.
             
             xyatl=atlvx(dists,ea_planesdim(tracor));
