@@ -1,4 +1,4 @@
-function [str, tag, cind] = gencode(item, tag, tagctx)
+function [str, tag, cind] = ea_gencode(item, tag, tagctx)
 
 % GENCODE  Generate code to recreate any MATLAB struct/cell variable.
 % For any MATLAB variable, this function generates a .m file that
@@ -32,7 +32,7 @@ function [str, tag, cind] = gencode(item, tag, tagctx)
 % Copyright (C) 2007 Freiburg Brain Imaging
 
 % Volkmar Glauche
-% $Id: gencode.m 410 2009-06-23 11:47:26Z glauche $
+% $Id: ea_gencode.m 410 2009-06-23 11:47:26Z glauche $
 
 rev = '$Rev: 410 $'; %#ok
 
@@ -73,7 +73,7 @@ else
             subs = gensubs('()', {':',':'}, szitem(3:end));
             for k = 1:numel(subs)
                 substag = ea_gencode_substruct(subs{k}, tag);
-                str1 = gencode(subsref(item, subs{k}), substag{1}, tagctx);
+                str1 = ea_gencode(subsref(item, subs{k}), substag{1}, tagctx);
                 str  = [str(:)' str1(:)'];
             end
         case 'cell'
@@ -82,7 +82,7 @@ else
             subs = gensubs('{}', {}, szitem);
             for k = 1:numel(subs)
                 substag = ea_gencode_substruct(subs{k}, tag);
-                str1 = gencode(subsref(item, subs{k}), substag{1}, tagctx);
+                str1 = ea_gencode(subsref(item, subs{k}), substag{1}, tagctx);
                 str  = [str(:)' str1(:)'];
             end
         case 'struct'
@@ -108,9 +108,9 @@ else
             elseif issparse(item)
                 % recreate sparse matrix from indices
                 [tmpi tmpj tmps] = find(item);
-                [stri tagi cindi] = gencode(tmpi);
-                [strj tagj cindj] = gencode(tmpj);
-                [strs tags cinds] = gencode(tmps);
+                [stri tagi cindi] = ea_gencode(tmpi);
+                [strj tagj cindj] = ea_gencode(tmpj);
+                [strs tags cinds] = ea_gencode(tmps);
                 str = [stri(:)' strj(:)' strs(:)'];
                 cind = cind + cindi + cindj + cinds;
                 str{end+1} = sprintf('%s = sparse(tmpi, tmpj, tmps);', tag);
@@ -120,7 +120,7 @@ else
                 subs = gensubs('()', {':',':'}, szitem(3:end));
                 for k = 1:numel(subs)
                     substag = ea_gencode_substruct(subs{k}, tag);
-                    str1 = gencode(subsref(item, subs{k}), substag{1}, tagctx);
+                    str1 = ea_gencode(subsref(item, subs{k}), substag{1}, tagctx);
                     str  = [str(:)' str1(:)'];
                 end
             end
@@ -202,7 +202,7 @@ elseif numel(item) == 1
         str{1} = sprintf('%s = %s;', tag, citem);
     end
     for l = 1:numel(fn)
-        str1 = gencode(item.(fn{l}), sprintf('%s.%s', tag, fn{l}), tagctx);
+        str1 = ea_gencode(item.(fn{l}), sprintf('%s.%s', tag, fn{l}), tagctx);
         str  = [str(:)' str1(:)'];
     end
 else
@@ -216,7 +216,7 @@ else
         for l = 1:numel(fn)
             csubs = [subs{k} substruct('.', fn{l})];
             substag = ea_gencode_substruct(csubs, tag);
-            str1 = gencode(subsref(item, csubs), substag{1}, tagctx);
+            str1 = ea_gencode(subsref(item, csubs), substag{1}, tagctx);
             str  = [str(:)' str1(:)'];
         end
     end

@@ -1,4 +1,4 @@
-function [str, sts] = gencode_rvalue(item)
+function [str, sts] = ea_gencode_rvalue(item)
 
 % GENCODE_RVALUE  Code for right hand side of MATLAB assignment
 % Generate the right hand side for a valid MATLAB variable
@@ -57,7 +57,7 @@ switch class(item)
         elseif ndims(item) == 2 && any(size(item) == 1)
             str1 = {};
             for k = 1:numel(item)
-                [str2 sts] = gencode_rvalue(item{k});
+                [str2 sts] = ea_gencode_rvalue(item{k});
                 if ~sts
                     break;
                 end
@@ -114,7 +114,7 @@ switch class(item)
                     sitem = mat2str(item,'class');
                 end
                 bsz   = max(numel(sitem)+2,100); % bsz needs to be > 100 and larger than string length
-                str1 = textscan(sitem, '%s', 'delimiter',';', 'bufsize',bsz); 
+                str1 = textscan(sitem, '%s', 'delimiter',';'); 
                 if numel(str1{1}) > 1
                     str = str1{1};
                 else

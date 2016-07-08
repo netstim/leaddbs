@@ -1,4 +1,4 @@
-function str = gencode_substruct(subs, name)
+function str = ea_gencode_substruct(subs, name)
 
 % GENCODE_SUBSTRUCT  String representation of subscript structure.
 % Generate MATLAB code equivalent to subscript structure subs. See help
