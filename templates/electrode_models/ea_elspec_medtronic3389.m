@@ -48,6 +48,7 @@ for side=options.sides
 
 
 
+
     if isfield(elstruct,'group')
         usecolor=elstruct.groupcolors(elstruct.group,:);
     else
@@ -100,8 +101,10 @@ for side=options.sides
     end
     set(0,'CurrentFigure',resultfig);
 
-    [cX,cY,cZ] = cylinder((repmat(elspec.tip_diameter/2,1,10)-([10:-1:1].^10/10^10)*(elspec.tip_diameter/2)));
-
+    tipdiams=repmat(elspec.tip_diameter/2,1,19)-([10:-0.5:1].^10/10^10)*(elspec.tip_diameter/2);
+    tipdiams(end+1)=1.27/2;
+    [cX,cY,cZ] = ea_singlecylinder((tipdiams),200);
+keyboard
     cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
 
     % define two points to define cylinder.
@@ -151,19 +154,29 @@ ea_dispercent(0,'Exporting electrode components');
 
 for comp=1:options.elspec.numel*2+1
     ea_dispercent(comp/(options.elspec.numel*2+1));
-    try % shaft and contacts, here three surface components
+    
+    if comp<9 % shaft and contacts, here two surface components
         cyl=elrender{side}(cnt); top=elrender{side}(cnt+1); bottom=elrender{side}(cnt+2);
         cyl = surf2patch(cyl,'triangles');
-        cyl.faces=[cyl.faces;top.Faces+length(cyl.vertices);bottom.Faces+length(cyl.vertices)+length(top.Vertices)];
-        cyl.vertices=[cyl.vertices;top.Vertices;bottom.Vertices];
+        cyl.faces=[cyl.faces;top.Faces+length(cyl.vertices)]; %;bottom.Faces+length(cyl.vertices)+length(top.Vertices)];
+        cyl.vertices=[cyl.vertices;top.Vertices]; %;bottom.Vertices];
         cnt=cnt+3;
-    catch % tip of the electrode, here only one surface component..
+%     elseif comp==8
+%         cyl=elrender{side}(cnt); top=elrender{side}(cnt+1); bottom=elrender{side}(cnt+2);
+%         cyl = surf2patch(cyl,'triangles');
+%         cyl.faces=[cyl.faces;top.Faces+length(cyl.vertices);bottom.Faces+length(cyl.vertices)+length(top.Vertices)];
+%         cyl.vertices=[cyl.vertices;top.Vertices;bottom.Vertices];
+%         cnt=cnt+3;
+    elseif comp==9 % tip of the electrode, here only one surface component..
         cyl=elrender{side}(cnt);
         cyl = surf2patch(cyl,'triangles');
+        % + steal bottom from upper cylinder for tip:
+        
+        cyl.faces=[cyl.faces;bottom.Faces+length(cyl.vertices)];
+        cyl.vertices=[cyl.vertices;bottom.Vertices];
     end
-    % this following method takes quite some time... even more importantly,
-    % the info will be transfered from mesh to volume and lateron back to
-    % mesh again. For now, this is still the most convenient method.
+
+    
     if comp>1 && comp<options.elspec.numel+2 % these are the CONTACTS
         electrode.contacts(cntcnt)=cyl;
         cntcnt=cntcnt+1;
@@ -270,11 +283,12 @@ set(surfc,'AlphaDataMapping','none');
 set(surfc,'FaceLighting','phong');
 set(surfc,'SpecularColorReflectance',0);
 set(surfc,'SpecularExponent',10);
-set(surfc,'EdgeColor','none')
+%set(surfc,'EdgeColor','none')
 
 if nargin==3
     set(surfc,'FaceAlpha',aData);
 end
+set(surfc,'FaceAlpha',0.3);
 
 function C=rgb(C) % returns rgb values for the colors.
 
