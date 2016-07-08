@@ -27,20 +27,25 @@
 
 
 % Calculating the length of the cylinder
-length_cyl=norm(X2-X1);
+length_cyl=norm(abs(X2-X1));
 
 % Creating a circle in the YZ plane
 t=linspace(0,2*pi,n)';
 x2=r*cos(t);
-x3=r*sin(t);
+
+sintheta = sin(t); sintheta(n) = 0;
+
+x3=r*sintheta;
+
+
 
 % Creating the points in the X-Direction
-x1=[0 length_cyl];
+x1=[length_cyl 0];
 
 % Creating (Extruding) the cylinder points in the X-Directions
-xx1=repmat(x1,length(x2),1);
+xx3=repmat(x1,length(x2),1);
 xx2=repmat(x2,1,2);
-xx3=repmat(x3,1,2);
+xx1=repmat(x3,1,2);
 
 % Drawing two filled cirlces to close the cylinder
 if closed==1
@@ -48,7 +53,7 @@ if closed==1
     %EndPlate1=fill3(xx1(:,1),xx2(:,1),xx3(:,1),'r');
     
     f.vertices=[xx1(:,1),xx2(:,1),xx3(:,1)];
-    f.vertices=[[0,0,0];f.vertices];
+    f.vertices=[mean(f.vertices);f.vertices];
     f.faces=zeros(length(xx1)-1,3);
     for face=1:length(f.faces)
         f.faces(face,:)=[1,face+1,face+2];
@@ -56,7 +61,7 @@ if closed==1
     EndPlate1=patch('Vertices',f.vertices,'Faces',f.faces);
     
     f.vertices=[xx1(:,2),xx2(:,2),xx3(:,2)];
-    f.vertices=[mean(f.vertices);f.vertices];
+    f.vertices=[[0,0,0];f.vertices];
     f.faces=zeros(length(xx1)-1,3);
     for face=1:length(f.faces)
         f.faces(face,:)=[1,face+1,face+2];
@@ -72,8 +77,8 @@ end
 % from Origin
 Cylinder=mesh(xx1,xx2,xx3);
 
-% Defining Unit vector along the X-direction
-unit_Vx=[1 0 0];
+% Defining Unit vector along the Z-direction
+unit_Vx=[0 0 1];
 
 % Calulating the angle between the x direction and the required direction
 % of cylinder through dot product
@@ -86,31 +91,32 @@ axis_rot=cross([1 0 0],(X2-X1) );
 % Rotating the plotted cylinder and the end plate circles to the required
 % angles
 
-%keyboard
 
-if angle_X1X2~=0 % Rotation is not needed if required direction is along X
-    rotate(Cylinder,axis_rot,angle_X1X2,[0 0 0])
-    if closed==1
-        
-        rotate(EndPlate1,axis_rot,angle_X1X2,[0 0 0])
-        rotate(EndPlate2,axis_rot,angle_X1X2,[0 0 0])
-    end
-end
+
+% if angle_X1X2~=0 % Rotation is not needed if required direction is along X
+%     rotate(Cylinder,axis_rot,angle_X1X2,[0 0 0])
+%     if closed==1
+%         
+%         rotate(EndPlate1,axis_rot,angle_X1X2,[0 0 0])
+%         rotate(EndPlate2,axis_rot,angle_X1X2,[0 0 0])
+%     end
+% end
 
 % Till now cylinder has only been aligned with the required direction, but
 % position starts from the origin. so it will now be shifted to the right
 % position
+
 if closed==1
     vx=get(EndPlate1,'Vertices');
-    vx(:,1)=vx(:,1)+X1(1); vx(:,2)=vx(:,2)+X1(2); vx(:,3)=vx(:,3)+X1(3);
+    vx(:,1)=vx(:,1)+X2(1); vx(:,2)=vx(:,2)+X2(2); vx(:,3)=vx(:,3)+X2(3);
     set(EndPlate1,'Vertices',vx);
     vx=get(EndPlate2,'Vertices');
-    vx(:,1)=vx(:,1)+X1(1); vx(:,2)=vx(:,2)+X1(2); vx(:,3)=vx(:,3)+X1(3);
+    vx(:,1)=vx(:,1)+X2(1); vx(:,2)=vx(:,2)+X2(2); vx(:,3)=vx(:,3)+X2(3);
     set(EndPlate2,'Vertices',vx);
 end
-set(Cylinder,'XData',get(Cylinder,'XData')+X1(1))
-set(Cylinder,'YData',get(Cylinder,'YData')+X1(2))
-set(Cylinder,'ZData',get(Cylinder,'ZData')+X1(3))
+set(Cylinder,'XData',get(Cylinder,'XData')+X2(1))
+set(Cylinder,'YData',get(Cylinder,'YData')+X2(2))
+set(Cylinder,'ZData',get(Cylinder,'ZData')+X2(3))
 
 % Setting the color to the cylinder and the end plates
 set(Cylinder,'FaceColor',cyl_color)

@@ -24,7 +24,7 @@ resultfig=figure('visible','off');
 
 jetlist=othercolor('BuOr_12');
 %   jetlist=jet;
-
+N=100; % resolution of electrode points
 
 for side=options.sides
     %% nullmodel:
@@ -37,15 +37,37 @@ for side=options.sides
 
     startpoint=trajectory{side}(1,:)-(1.5*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
     set(0,'CurrentFigure',resultfig);
-
+hold on
     % draw patientname
     lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
     ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
 
 
     % draw trajectory
-    [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-
+    lowerpoint=coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2);
+    set(0,'CurrentFigure',resultfig);
+    diams=repmat(elspec.lead_diameter/2,1,2);
+    [cX,cY,cZ] = ea_singlecylinder((diams),N);
+    
+    cZ=cZ.*(startpoint(3)-lowerpoint(3)); % scale to fit tip-diameter
+    cZ=cZ+lowerpoint(3);
+    
+    p=surf2patch(surf(cX,cY,cZ),'triangles');
+    
+    % add endplates:
+    p.vertices=[p.vertices;...
+        [0,0,startpoint(3)];...
+        [0,0,lowerpoint(3)]];
+    for pt=2:2:(N-1)*2
+        p.faces=[p.faces;pt,pt+2,length(p.vertices)-1];
+    end
+    for pt=1:2:(N-1)*2
+        p.faces=[p.faces;pt,pt+2,length(p.vertices)];
+    end
+    
+    elrender{side}(1)=patch(p);
+    
+    cnt=2;
 
 
 
@@ -59,30 +81,64 @@ for side=options.sides
         aData=1;
 
 
-    specsurf(elrender{side}(1),usecolor,aData); specsurf(elrender{side}(2),usecolor,aData); specsurf(elrender{side}(3),usecolor,aData);
-
-    cnt=4;
+    specsurf(elrender{side}(1),usecolor,aData);
 
     % draw contacts
     for cntct=1:elspec.numel
-
         set(0,'CurrentFigure',resultfig);
-
-
-        [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2),elspec.contact_diameter/2,100,repmat(elspec.contact_color,1,3),1,0);
-
-        specsurf(elrender{side}(cnt),elspec.contact_color,aData); specsurf(elrender{side}(cnt+1),elspec.contact_color,aData); specsurf(elrender{side}(cnt+2),elspec.contact_color,aData);
-        cnt=cnt+3;
+        diams=repmat(elspec.contact_diameter/2,1,2);
+        [cX,cY,cZ] = ea_singlecylinder((diams),N);
+        
+        cZ=cZ.*(elspec.contact_length); % scale to fit tip-diameter
+        htd=(max(cZ(:))/2);
+        cZ=cZ-htd;
+        cZ=cZ+coords_mm{side}(cntct,3);
+        
+        p=surf2patch(surf(cX,cY,cZ),'triangles');
+        
+        % add endplates:
+        p.vertices=[p.vertices;...
+            coords_mm{side}(cntct,:)+[0,0,htd];...
+            coords_mm{side}(cntct,:)-[0,0,htd]];
+        for pt=2:2:(N-1)*2
+            p.faces=[p.faces;pt,pt+2,length(p.vertices)-1];
+        end
+        for pt=1:2:(N-1)*2
+            p.faces=[p.faces;pt,pt+2,length(p.vertices)];
+        end
+        
+        elrender{side}(cnt)=patch(p);
+        cnt=cnt+1;
+        
     end
 
     % draw trajectory between contacts
     for cntct=1:elspec.numel-1
         set(0,'CurrentFigure',resultfig);
-
-        [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct+1,:)+trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-
-        specsurf(elrender{side}(cnt),usecolor,aData); specsurf(elrender{side}(cnt+1),usecolor,aData); specsurf(elrender{side}(cnt+2),usecolor,aData);
-        cnt=cnt+3;
+        diams=repmat(elspec.lead_diameter/2,1,2);
+        [cX,cY,cZ] = ea_singlecylinder((diams),N);
+        
+        cZ=cZ.*(elspec.contact_spacing); % scale to fit tip-diameter
+        htd=(max(cZ(:))/2);
+        cZ=cZ-htd;
+        hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing/2;
+        cZ=cZ+hait;
+        
+        p=surf2patch(surf(cX,cY,cZ),'triangles');
+        
+        % add endplates:
+        p.vertices=[p.vertices;...
+            [0,0,hait+htd];...
+            [0,0,hait-htd]];
+        for pt=2:2:(N-1)*2
+            p.faces=[p.faces;pt,pt+2,length(p.vertices)-1];
+        end
+        for pt=1:2:(N-1)*2
+            p.faces=[p.faces;pt,pt+2,length(p.vertices)];
+        end
+        
+        elrender{side}(cnt)=patch(p);
+        cnt=cnt+1;
     end
 
 
@@ -103,8 +159,8 @@ for side=options.sides
 
     tipdiams=repmat(elspec.tip_diameter/2,1,19)-([10:-0.5:1].^10/10^10)*(elspec.tip_diameter/2);
     tipdiams(end+1)=1.27/2;
-    [cX,cY,cZ] = ea_singlecylinder((tipdiams),200);
-keyboard
+    [cX,cY,cZ] = ea_singlecylinder((tipdiams),N);
+
     cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
 
     % define two points to define cylinder.
@@ -116,9 +172,19 @@ keyboard
     cY=cY+X1(2);
     cZ=cZ-(2*elspec.tip_length)/2+X1(3);
 
+    p=surf2patch(surf(cX,cY,cZ),'triangles');
+    
+    % add endplate:
+    p.vertices=[p.vertices;...
+        [0,0,elspec.tip_length]];
 
+    for pt=20:20:(length(p.vertices)-20)
+        p.faces=[p.faces;pt,pt+20,length(p.vertices)];
+    end
+       
+       
 
-    elrender{side}(cnt)=surf(cX,cY,cZ);
+    elrender{side}(cnt)=patch(p);
 
     % Calulating the angle between the x direction and the required direction
     % of cylinder through dot product
@@ -129,13 +195,15 @@ keyboard
     axis_rot=cross([0 0 -1],(X2-X1) );
 
     if any(axis_rot) || angle_X1X2
-        rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
+ %       rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
     end
     specsurf(elrender{side}(cnt),usecolor,aData);
 
 
 
 end
+
+
 
 
 if ~exist('elrender','var')
@@ -155,26 +223,9 @@ ea_dispercent(0,'Exporting electrode components');
 for comp=1:options.elspec.numel*2+1
     ea_dispercent(comp/(options.elspec.numel*2+1));
     
-    if comp<9 % shaft and contacts, here two surface components
-        cyl=elrender{side}(cnt); top=elrender{side}(cnt+1); bottom=elrender{side}(cnt+2);
-        cyl = surf2patch(cyl,'triangles');
-        cyl.faces=[cyl.faces;top.Faces+length(cyl.vertices)]; %;bottom.Faces+length(cyl.vertices)+length(top.Vertices)];
-        cyl.vertices=[cyl.vertices;top.Vertices]; %;bottom.Vertices];
-        cnt=cnt+3;
-%     elseif comp==8
-%         cyl=elrender{side}(cnt); top=elrender{side}(cnt+1); bottom=elrender{side}(cnt+2);
-%         cyl = surf2patch(cyl,'triangles');
-%         cyl.faces=[cyl.faces;top.Faces+length(cyl.vertices);bottom.Faces+length(cyl.vertices)+length(top.Vertices)];
-%         cyl.vertices=[cyl.vertices;top.Vertices;bottom.Vertices];
-%         cnt=cnt+3;
-    elseif comp==9 % tip of the electrode, here only one surface component..
+
         cyl=elrender{side}(cnt);
-        cyl = surf2patch(cyl,'triangles');
-        % + steal bottom from upper cylinder for tip:
-        
-        cyl.faces=[cyl.faces;bottom.Faces+length(cyl.vertices)];
-        cyl.vertices=[cyl.vertices;bottom.Vertices];
-    end
+        cnt=cnt+1;
 
     
     if comp>1 && comp<options.elspec.numel+2 % these are the CONTACTS
@@ -206,9 +257,13 @@ g=figure;
 X=eye(4);
 
         for ins=1:length(electrode.insulation)
-            electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
-            electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
-            elrender{side}(cnt)=patch(electrode.insulation(ins));
+            try
+            vs=X*[electrode.insulation(ins).Vertices,ones(size(electrode.insulation(ins).Vertices,1),1)]';
+            catch
+                keyboard
+            end
+            electrode.insulation(ins).Vertices=vs(1:3,:)';
+            elrender{side}(cnt)=patch('Faces',electrode.insulation(ins).Faces,'Vertices',electrode.insulation(ins).Vertices);
         if isfield(elstruct,'group')
             usecolor=elstruct.groupcolors(elstruct.group,:);
         else
@@ -218,9 +273,10 @@ X=eye(4);
             cnt=cnt+1;
         end
         for con=1:length(electrode.contacts)
-            electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
-            electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
-            elrender{side}(cnt)=patch(electrode.contacts(con));
+
+            vs=X*[electrode.contacts(con).Vertices,ones(size(electrode.contacts(con).Vertices,1),1)]';
+            electrode.contacts(con).Vertices=vs(1:3,:)';
+            elrender{side}(cnt)=patch('Faces',electrode.contacts(con).Faces,'Vertices',electrode.contacts(con).Vertices);
 
                 specsurf(elrender{side}(cnt),elspec.contact_color,aData);
 
@@ -273,8 +329,8 @@ set(surfc,'FaceColor','interp');
 set(surfc,'CData',cd);
 
 try % for patches
-    vertices=get(surfc,'Vertices');
-    cd=zeros(size(vertices));
+    Vertices=get(surfc,'Vertices');
+    cd=zeros(size(Vertices));
     cd(:)=color(1);
     set(surfc,'FaceVertexCData',cd);
 end
@@ -283,12 +339,12 @@ set(surfc,'AlphaDataMapping','none');
 set(surfc,'FaceLighting','phong');
 set(surfc,'SpecularColorReflectance',0);
 set(surfc,'SpecularExponent',10);
-%set(surfc,'EdgeColor','none')
+set(surfc,'EdgeColor','none')
 
 if nargin==3
     set(surfc,'FaceAlpha',aData);
 end
-set(surfc,'FaceAlpha',0.3);
+%set(surfc,'FaceAlpha',0.3);
 
 function C=rgb(C) % returns rgb values for the colors.
 
