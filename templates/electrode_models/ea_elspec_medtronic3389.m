@@ -229,10 +229,14 @@ for comp=1:options.elspec.numel*2+1
 
     
     if comp>1 && comp<options.elspec.numel+2 % these are the CONTACTS
-        electrode.contacts(cntcnt)=cyl;
+        electrode.contacts(cntcnt).vertices=cyl.Vertices;
+        electrode.contacts(cntcnt).faces=cyl.Faces;
+        electrode.contacts(cntcnt).facevertexcdata=cyl.FaceVertexCData;
         cntcnt=cntcnt+1;
     else % these are the insulated shaft, tip and spacings..
-        electrode.insulation(inscnt)=cyl;
+        electrode.insulation(inscnt).vertices=cyl.Vertices;
+        electrode.insulation(inscnt).faces=cyl.Faces;
+        electrode.insulation(cntcnt).facevertexcdata=cyl.FaceVertexCData;
         inscnt=inscnt+1;
     end
 end
@@ -257,13 +261,10 @@ g=figure;
 X=eye(4);
 
         for ins=1:length(electrode.insulation)
-            try
-            vs=X*[electrode.insulation(ins).Vertices,ones(size(electrode.insulation(ins).Vertices,1),1)]';
-            catch
-                keyboard
-            end
-            electrode.insulation(ins).Vertices=vs(1:3,:)';
-            elrender{side}(cnt)=patch('Faces',electrode.insulation(ins).Faces,'Vertices',electrode.insulation(ins).Vertices);
+            
+            vs=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+            electrode.insulation(ins).vertices=vs(1:3,:)';
+            elrender{side}(cnt)=patch('Faces',electrode.insulation(ins).faces,'Vertices',electrode.insulation(ins).vertices);
         if isfield(elstruct,'group')
             usecolor=elstruct.groupcolors(elstruct.group,:);
         else
@@ -274,9 +275,9 @@ X=eye(4);
         end
         for con=1:length(electrode.contacts)
 
-            vs=X*[electrode.contacts(con).Vertices,ones(size(electrode.contacts(con).Vertices,1),1)]';
-            electrode.contacts(con).Vertices=vs(1:3,:)';
-            elrender{side}(cnt)=patch('Faces',electrode.contacts(con).Faces,'Vertices',electrode.contacts(con).Vertices);
+            vs=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+            electrode.contacts(con).vertices=vs(1:3,:)';
+            elrender{side}(cnt)=patch('Faces',electrode.contacts(con).faces,'Vertices',electrode.contacts(con).vertices);
 
                 specsurf(elrender{side}(cnt),elspec.contact_color,aData);
 
