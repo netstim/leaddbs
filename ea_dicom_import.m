@@ -40,6 +40,11 @@ di=dir([outdir,'*_Crop_1.nii']);
 for d=1:length(di)
     delete([outdir,di(d).name(1:end-11),'.nii']);    
 end
+% remove untilted versions
+di=dir([outdir,'*_Tilt_1.nii']);
+for d=1:length(di)
+    delete([outdir,di(d).name(1:end-11),'.nii']);    
+end
 
 di=dir([outdir,'*.nii']);
 for d=1:length(di)
