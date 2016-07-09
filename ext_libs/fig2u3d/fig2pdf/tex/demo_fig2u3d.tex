@@ -1,0 +1,34 @@
+% compile with:
+%   xelatex --interaction=nonstopmode demo_fig2u3d.tex
+\documentclass[a4paper]{article}
+\usepackage[no-math]{fontspec}
+\usepackage{xunicode,xltxtra}
+\usepackage[dvipdfmx]{media9}
+\usepackage[colorlinks=true]{hyperref}
+\begin{document}
+\title{Embedding U3D file from Matlab}
+\author{Ioannis F. Filippidis}
+\maketitle
+
+\includemedia[%
+width=0.9\linewidth,%
+height=0.9\linewidth,%
+activate=pagevisible,%
+deactivate=pageinvisible,%
+3Dviews=./img/matfig.vws,%
+3Dtoolbar]{%
+	\includegraphics[width=0.6\textwidth]{./img/matfig.pdf}%
+}{./img/matfig.u3d}
+
+Produced using
+\begin{itemize}
+	\item \texttt{demo\_fig2u3d.tex}
+	\item \texttt{./img/matfig.u3d}
+	\item \texttt{./img/matfig.vws}
+	\item \texttt{./img/matfig.pdf}.
+\end{itemize}
+The code which saves the \texttt{U3D} and \texttt{VWS} files from MATLAB is included in the function \texttt{example\_fig2u3d}.
+
+If a 2D image is visible, instead of an interactive 3D figure, then open the pdf file with Adobe Reader.
+
+\end{document}

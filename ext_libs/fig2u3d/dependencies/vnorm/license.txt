@@ -1,0 +1,4 @@
+VNORM.M is Copyright (c) 2006 by Winston Smith
+
+VNORM.M is a MATLAB File Exchange File with ID: #10708
+http://www.mathworks.com/matlabcentral/fileexchange/10708-vector-norm
