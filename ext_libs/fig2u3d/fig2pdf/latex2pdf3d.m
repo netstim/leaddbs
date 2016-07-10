@@ -1,4 +1,4 @@
-function [] = latex2pdf3d(fname, latex_compiler)
+function [] = latex2pdf3d(fname, latex_compiler,options)
 %LATEX2PDF3D    Compile LaTeX code to PDF.
 %
 % usage
@@ -33,26 +33,15 @@ function [] = latex2pdf3d(fname, latex_compiler)
 %   {pdflatex | xelatex}, {media9 | movie15}
 
 %% input
-if nargin < 1
-    fname = 'matfig';
-end
-
-if nargin < 2
-    latex_compiler = 'xelatex';
-end
 
 %% Use pdflatex to generate the pdf
-switch latex_compiler
-    case 'pdflatex'
-        cmd = ['pdflatex --interaction=nonstopmode ', fname, '.tex'];
-    case 'xelatex'
-        cmd = ['xelatex --interaction=nonstopmode ', fname, '.tex'];
-    otherwise
-        error('latex:compiler', 'Unknown LaTeX compiler.')
-end 
-ea_libs_helper
+cd(fileparts(fname));
+cmd = [options.prefs.ltx.pdfconverter,' --interaction=nonstopmode ', fname, '.tex'];
 
 status = system(cmd);
+% run twice to correct references.
+status = system(cmd);
+
 if status ~= 0
-    error('latex:compile', 'LaTeX compilation failed.')
+    warning('latex:compile', 'LaTeX compilation warning.')
 end

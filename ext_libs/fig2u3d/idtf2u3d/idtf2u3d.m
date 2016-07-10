@@ -1,4 +1,4 @@
-function [] = idtf2u3d(idtffile, u3dfile)
+function [] = idtf2u3d(fn)
 %IDTF2U3D   Convert IDTF to U3D file.
 %
 % usage
@@ -44,15 +44,13 @@ if nargin < 1
     u3dfile = 'matfig.u3d';
 end
 
-if nargin < 2
-    u3dfile = clear_file_extension(idtffile, '.idtf');
-end
+
 
 %% filenames & extensions
 
 % fname extensions ok ?
-idtffile = ea_path_helper(full_fname_with_extension(idtffile, 'idtf'));
-u3dfile = ea_path_helper(full_fname_with_extension(u3dfile, 'u3d'));
+idtffile = ea_path_helper([fn, '.idtf']);
+u3dfile = ea_path_helper([fn, '.u3d']);
 
 %% prepare command
 execdir = [fileparts(mfilename('fullpath')), filesep, 'bin',filesep, computer, filesep];

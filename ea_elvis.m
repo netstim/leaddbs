@@ -245,8 +245,9 @@ end
 
 
 if options.d3.expdf
-fig2pdf3d(gca,[options.root,options.patientname,filesep,'3D_scene']);
+fig2pdf3d(gca,[options.root,options.patientname,filesep,'Lead-DBS_Electrode_Localization'],options);
 close(resultfig);
+return
 end
 
 %% End of patient-specific part.

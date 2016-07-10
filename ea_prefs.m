@@ -132,6 +132,9 @@ prefs.addfibers={}; % additional fibers to show.
 
 prefs.ls.autosave=0;
 
+%% xelatex executable path:
+prefs.ltx.pdfconverter='/Library/TeX/texbin/xelatex';
+
 %% environment
 prefs.env.dev=0;
 prefs.firstrun='off';

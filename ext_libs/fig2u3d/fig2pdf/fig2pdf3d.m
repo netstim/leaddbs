@@ -1,4 +1,4 @@
-function [] = fig2pdf3d(ax, filename, media9_or_movie15, pdforxelatex)
+function [] = fig2pdf3d(ax, filename,options,media9_or_movie15, pdforxelatex)
 %FIG2PDF3D  Convert axes to PDF with embedded interactive 3D image.
 %
 % usage
@@ -50,20 +50,20 @@ if nargin < 2
 end
 
 % which package to use ?
-if nargin < 3
+if nargin < 4
     media9_or_movie15 = 'media9';
 end
 
 % which LaTeX compiler ?
-if nargin < 4
-    pdforxelatex = 'pdflatex';
+if nargin < 5
+    pdforxelatex = 'xelatex';
 end
 
 %% Generate Latex file
 fig2latex(ax, filename, media9_or_movie15, pdforxelatex);
-ea_mod_tex(filename);
+ea_mod_tex(filename,options);
 
-latex2pdf3d(filename, pdforxelatex)
+latex2pdf3d(filename, pdforxelatex,options)
 rm_aux_files(filename)
 
 function [] = rm_aux_files(fname)
@@ -73,6 +73,7 @@ delete([fname, '.png'] )
 delete([fname, '.tex'] )
 delete([fname, '_small.tex'] )
 delete([fname, '.u3d'] )
+delete([fname, '.idtf'] )
 delete([fname, '.vws'] )
 delete([fname, '.aux'] )
 delete([fname, '.log'] )
