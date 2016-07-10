@@ -103,7 +103,31 @@ if options.lc.func.compute_GM || options.lc.struc.compute_GM % perform graph met
     if ~exist(expfolder,'dir')
         mkdir(expfolder);
     end
-    ea_computeGM(options);
+    
+    modes=cell(0);
+    finas=cell(0);
+    threshs=cell(0);
+    fs=[]; % functional/structural measure (for structure-function agreement
+    if options.lc.func.compute_GM
+        for irest = 1:options.prefs.n_rest
+            modes{end+1}='fMRI';
+            [~,rbase]=fileparts(restfiles(irest).name);
+            finas{end+1}=[rbase,'_fMRI'];
+            threshs{end+1}=options.lc.graph.fthresh;
+            fs(end+1)=1;
+        end
+    end
+    
+    if options.lc.struc.compute_GM
+        modes{end+1}='DTI';
+        finas{end+1}='DTI';
+        threshs{end+1}=options.lc.graph.sthresh;
+        fs(end+1)=2;
+    end
+    
+    ea_computeGM(options,modes,finas,threshs,fs);
+
+    
 end
 
 disp('*** Done.');

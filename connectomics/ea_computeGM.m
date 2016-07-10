@@ -1,18 +1,9 @@
-function ea_computeGM(options)
+function ea_computeGM(options,modes,finas,threshs,fs)
 expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
-modes=cell(0);
-threshs=cell(0);
-if options.lc.func.compute_GM
-    modes{end+1}='fMRI';
-    threshs{end+1}=options.lc.graph.fthresh;
-end
-if options.lc.struc.compute_GM
-    modes{end+1}='DTI';
-    threshs{end+1}=options.lc.graph.sthresh;
-end
+
 
 for mode=1:length(modes)
-    load([expfolder,modes{mode},'_CM.mat']);
+    load([expfolder,finas{mode},'_CM.mat']);
     X=eval([modes{mode},'_CM']);
     if ~isnan(threshs{mode}) % apply threshold.
         X(X<threshs(mode))=0;
@@ -20,36 +11,42 @@ for mode=1:length(modes)
     end
     clear([modes{mode},'_CM']);
     if options.lc.graph.degree_centrality
-        disp(['Calculating degree centrality for ',modes{mode},' data...'])
+        disp(['Calculating degree centrality for ',finas{mode},' data...'])
         C=ea_deg(X);
-        ea_export_cmeasure(C,'deg',modes{mode},options);
+        ea_export_cmeasure(C,'deg',finas{mode},options);
         disp('Done.');
     end
     if options.lc.graph.eigenvector_centrality
-        disp(['Calculating eigenvector centrality for ',modes{mode},' data...'])
+        disp(['Calculating eigenvector centrality for ',finas{mode},' data...'])
         C=ea_eig(X);
-        ea_export_cmeasure(C,'eig',modes{mode},options);
+        ea_export_cmeasure(C,'eig',finas{mode},options);
         disp('Done.');
     end
     if options.lc.graph.nodal_efficiency
-        disp(['Calculating nodal efficiency for ',modes{mode},' data...'])
+        disp(['Calculating nodal efficiency for ',finas{mode},' data...'])
         C=ea_eff(X);
-        ea_export_cmeasure(C,'eff',modes{mode},options);
+        ea_export_cmeasure(C,'eff',finas{mode},options);
         disp('Done.');
     end
 end
 
 
 if options.lc.graph.struc_func_sim
-    load([expfolder,'fMRI_CM.mat']);
+    
+    for mode=find(fs==1)
+        dtimode=find(fs==2);
+    
+    
+    load([expfolder,finas{mode},'_CM.mat']);
     X=fMRI_CM;
     load([expfolder,'DTI_CM.mat']);
     Y=DTI_CM;
     disp(['Calculating structure-function similarity ...'])
     C=ea_sfs(X,Y);
     
-    ea_export_cmeasure(C,'sfs','DTI_fMRI',options);
+    ea_export_cmeasure(C,'sfs',['DTI_',finas{mode}],options);
     disp('Done.');
+    end
 end
 
 
