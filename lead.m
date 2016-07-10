@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 04-Jul-2016 12:40:37
+% Last Modified by GUIDE v2.5 09-Jul-2016 18:47:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1282,6 +1282,7 @@ else
 end
 
 options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
+
 options.d2.atlasopacity=0.15;
 
 
@@ -1297,6 +1298,7 @@ options.d3.showisovolume=0;
 options.d3.isovscloud=0;
 options.d3.autoserver=get(handles.exportservercheck,'Value');
 
+options.d3.expdf=get(handles.expdf,'Value');
 options.numcontacts=4;
 options.entrypoint=get(handles.targetpopup,'String');
 options.entrypoint=options.entrypoint{get(handles.targetpopup,'Value')};
@@ -1994,3 +1996,14 @@ function coregmrpopup_ButtonDownFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- Executes on button press in expdf.
+function expdf_Callback(hObject, eventdata, handles)
+% hObject    handle to expdf (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of expdf
+
+storeui(handles);

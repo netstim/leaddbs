@@ -173,7 +173,7 @@ for side=options.sides
                     else
                         V=Vcor;
                     end
-                case 3 % saggital images
+                case 3 % sagittal images
                     if manualtracor
                         V=manualV;
                     else
@@ -418,7 +418,7 @@ for side=options.sides
                     case 2
                         ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_coronar',isofnadd,'.png']);
                     case 3
-                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_saggital',isofnadd,'.png']);
+                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_sagittal',isofnadd,'.png']);
                 end
             end
             

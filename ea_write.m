@@ -32,7 +32,6 @@ end
 % Render 3D Visualization
 if options.d3.write
 
-    
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.
     
@@ -48,6 +47,19 @@ if options.d3.write
        close(resultfig);
     end
     
+end
+
+if options.d3.expdf
+    
+    if ~ea_checkslicespresent(options)
+            cuts=ea_writeplanes(options);
+    end
+    
+    isverb=options.d3.verbose;
+    options.d3.verbose='off';
+    ea_elvis(options);
+    options.d3.verbose=isverb;
+    clear isverb
 end
 
 %% check traject sanity
@@ -94,3 +106,24 @@ end
     
 N = sum(~isnan(x), dim);
 y = nansum(x, dim) ./ N;
+
+
+function present=ea_checkslicespresent(options)
+present=1;
+directory=[options.root,options.patientname,filesep];
+for el=1:length(options.elspec.contactnames)
+    for tracor=1:3
+        switch tracor
+            case 1
+                ppend='_axial.png';
+            case 2
+                ppend='_coronar.png';
+            case 3
+                ppend='_sagittal.png';
+        end
+        if ~exist([directory,options.elspec.contactnames{el},ppend],'file');
+            present=0;
+        end
+    end
+end
+

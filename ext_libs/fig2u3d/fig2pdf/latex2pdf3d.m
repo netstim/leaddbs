@@ -50,6 +50,7 @@ switch latex_compiler
     otherwise
         error('latex:compiler', 'Unknown LaTeX compiler.')
 end 
+ea_libs_helper
 
 status = system(cmd);
 if status ~= 0

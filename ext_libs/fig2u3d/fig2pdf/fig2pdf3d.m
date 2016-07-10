@@ -56,11 +56,13 @@ end
 
 % which LaTeX compiler ?
 if nargin < 4
-    pdforxelatex = 'xelatex';
+    pdforxelatex = 'pdflatex';
 end
 
 %% Generate Latex file
 fig2latex(ax, filename, media9_or_movie15, pdforxelatex);
+ea_mod_tex(filename);
+
 latex2pdf3d(filename, pdforxelatex)
 rm_aux_files(filename)
 

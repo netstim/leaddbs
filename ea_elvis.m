@@ -244,6 +244,11 @@ end
 
 
 
+if options.d3.expdf
+fig2pdf3d(gca,[options.root,options.patientname,filesep,'3D_scene']);
+close(resultfig);
+end
+
 %% End of patient-specific part.
 
 

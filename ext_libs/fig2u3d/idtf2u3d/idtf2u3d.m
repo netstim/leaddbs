@@ -51,12 +51,12 @@ end
 %% filenames & extensions
 
 % fname extensions ok ?
-idtffile = full_fname_with_extension(idtffile, 'idtf');
-u3dfile = full_fname_with_extension(u3dfile, 'u3d');
+idtffile = ea_path_helper(full_fname_with_extension(idtffile, 'idtf'));
+u3dfile = ea_path_helper(full_fname_with_extension(u3dfile, 'u3d'));
 
 %% prepare command
 execdir = [fileparts(mfilename('fullpath')), filesep, 'bin',filesep, computer, filesep];
-libs_helper(execdir);
+ea_libs_helper(execdir);
 
 if ispc
     IDTF = [execdir, 'IDTFConverter.exe'];
@@ -68,11 +68,12 @@ end
 %% idtf -> u3d conversion
 cmd = [IDTF, ' -input ', idtffile, ' -output ', u3dfile];
 disp(cmd);
+
 [status, result] = system(cmd);
 
 disp(result)
 if status ~= 0
-    error('idtf2u3d:conversion',...
+    warning('idtf2u3d:conversion',...
           'IDTFConverter executable returned with error.')
 end
 
