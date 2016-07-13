@@ -14,7 +14,7 @@ for tracor=1:length(vfi)
         nii=spm_vol(cf);
         if ~isequal(bb.mat,nii.mat)
             % export images that have wrong dimension with correct bounding box
-
+            
             matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
                 cf};
             matlabbatch{1}.spm.util.imcalc.output = [fn,ext];
@@ -25,9 +25,9 @@ for tracor=1:length(vfi)
             matlabbatch{1}.spm.util.imcalc.options.interp = 1;
             matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
             jobs{1}=matlabbatch;
-            spm_jobman('run',jobs);
+            cfg_util('run',jobs);
             clear matlabbatch jobs;
-
+            
         end
     catch
         if tracor==1
@@ -35,7 +35,7 @@ for tracor=1:length(vfi)
         end
         warning([fn,' not present']);
     end
-
+    
 end
 
 

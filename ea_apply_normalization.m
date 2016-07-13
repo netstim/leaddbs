@@ -38,7 +38,7 @@ switch whichnormmethod
                 matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.patientname,filesep]};
                 matlabbatch{1}.spm.util.defs.interp = 1;
                 jobs{1}=matlabbatch;
-                spm_jobman('run',jobs);
+                cfg_util('run',jobs);
                 clear matlabbatch jobs;
 
                 % rename files:
@@ -77,7 +77,7 @@ switch whichnormmethod
                         matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
                         matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = gaussdim;
                         jobs{1}=matlabbatch;
-                        spm_jobman('run',jobs);
+                        cfg_util('run',jobs);
                         clear matlabbatch jobs;
 
                     end
@@ -106,7 +106,7 @@ switch whichnormmethod
                         matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
                         matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = gaussdim;
                         jobs{1}=matlabbatch;
-                        spm_jobman('run',jobs);
+                        cfg_util('run',jobs);
                         clear matlabbatch jobs;
                     end
                 end

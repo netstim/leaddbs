@@ -21,7 +21,7 @@ function varargout=ea_normalize_spmnewseg(options)
 if ischar(options) % return name of method.
     switch spm('ver')
         case 'SPM12'
-    varargout{1}='SPM12 Segment nonlinear [MR/CT]';
+    varargout{1}='SPM12 Segment nonlinear [MR/CT]'; 
         case 'SPM8'
     varargout{1}='SPM8 New Segment nonlinear [MR/CT]';
     end
@@ -31,7 +31,7 @@ end
 
 if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
     ea_generate_tpm;
-
+    
 end
 
 
@@ -48,8 +48,8 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
     try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,'.gz']);
     end
-
-
+    
+    
     try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
     end
@@ -86,13 +86,13 @@ movefile([options.root,options.patientname,filesep,'iy_',options.prefs.prenii_un
 
 ea_apply_normalization(options)
 
-%
+% 
 % switch spm('ver')
-%
+%     
 %     case 'SPM8'
 %         matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_normparams.nii']};
 %         matlabbatch{1}.spm.util.defs.ofname = '';
-%
+%         
 %         postops={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,options.prefs.prenii_unnormalized,options.prefs.ctnii_coregistered};
 %         cnt=1;
 %         for postop=1:length(postops)
@@ -101,13 +101,13 @@ ea_apply_normalization(options)
 %                 cnt=cnt+1;
 %             end
 %         end
-%
+%         
 %         matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.patientname,filesep]};
 %         matlabbatch{1}.spm.util.defs.interp = 1;
 %         jobs{1}=matlabbatch;
-%         spm_jobman('run',jobs);
+%         cfg_util('run',jobs);
 %         clear matlabbatch jobs;
-%
+%         
 %         % rename files:
 %         try copyfile([options.root,options.patientname,filesep,'w',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.gprenii]); end
 %         try movefile([options.root,options.patientname,filesep,'w',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.prenii]); end
@@ -122,7 +122,7 @@ ea_apply_normalization(options)
 %     case 'SPM12'
 %         % export lfiles (fine resolution, small bounding box.
 %         postops={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,options.prefs.prenii_unnormalized,options.prefs.ctnii_coregistered};
-%
+%         
 %         for postop=1:length(postops)
 %             if exist([options.root,options.patientname,filesep,postops{postop}],'file')
 %                 nii=ea_load_untouch_nii([options.root,options.patientname,filesep,postops{postop}]);
@@ -139,20 +139,20 @@ ea_apply_normalization(options)
 %                 matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
 %                 matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = gaussdim;
 %                 jobs{1}=matlabbatch;
-%                 spm_jobman('run',jobs);
+%                 cfg_util('run',jobs);
 %                 clear matlabbatch jobs;
 %             end
 %         end
-%
-%
+%         
+%         
 %         try movefile([options.root,options.patientname,filesep,'swr',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.prenii]); end
 %         try movefile([options.root,options.patientname,filesep,'swr',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii]); end
 %         try movefile([options.root,options.patientname,filesep,'swr',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii]); end
 %         try movefile([options.root,options.patientname,filesep,'swr',options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,options.prefs.sagnii]); end
 %         try movefile([options.root,options.patientname,filesep,'swr',options.prefs.ctnii_coregistered],[options.root,options.patientname,filesep,options.prefs.ctnii]); end
-%
+%         
 %         % export glfiles (a bit more coarse resolution, full brain bounding box.
-%
+%         
 %         for postop=1:length(postops)
 %             if exist([options.root,options.patientname,filesep,postops{postop}],'file')
 %                 nii=ea_load_untouch_nii([options.root,options.patientname,filesep,postops{postop}]);
@@ -168,11 +168,11 @@ ea_apply_normalization(options)
 %                 matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
 %                 matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = gaussdim;
 %                 jobs{1}=matlabbatch;
-%                 spm_jobman('run',jobs);
+%                 cfg_util('run',jobs);
 %                 clear matlabbatch jobs;
 %             end
 %         end
-%
+%         
 %         try movefile([options.root,options.patientname,filesep,'swr',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.gprenii]); end
 %         try movefile([options.root,options.patientname,filesep,'swr',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.gtranii]); end
 %         try movefile([options.root,options.patientname,filesep,'swr',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.gcornii]); end
@@ -183,7 +183,7 @@ ea_apply_normalization(options)
 %         try delete([options.root,options.patientname,filesep,'r',options.prefs.cornii_unnormalized]); end
 %         try delete([options.root,options.patientname,filesep,'r',options.prefs.sagnii_unnormalized]); end
 %         try delete([options.root,options.patientname,filesep,'r',options.prefs.ctnii_coregistered]); end
-%
+%         
 % end
 
 

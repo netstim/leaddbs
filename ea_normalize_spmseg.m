@@ -87,7 +87,7 @@ end
 
 jobs{1}=matlabbatch;
 try
-    spm_jobman('run',jobs);
+    cfg_util('run',jobs);
     disp('*** Segmentation of preoperative version worked.');
 catch
     disp('*** Segmentation of transversal version failed.');
@@ -141,7 +141,7 @@ matlabbatch{1}.spm.util.defs.interp = 6;
 
 jobs{1}=matlabbatch;
 try
-spm_jobman('run',jobs);
+cfg_util('run',jobs);
 end
 clear matlabbatch jobs;
 end
@@ -181,7 +181,7 @@ for export=expdo
     matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
     jobs{1}=matlabbatch;
     try
-        spm_jobman('run',jobs);
+        cfg_util('run',jobs);
     end
     clear matlabbatch jobs;
 end
@@ -230,7 +230,7 @@ for export=expdo
 
     jobs{1}=matlabbatch;
     try
-        spm_jobman('run',jobs);
+        cfg_util('run',jobs);
         movefile(wfina,outf);
     end
     clear matlabbatch jobs;
@@ -253,7 +253,7 @@ for inverse=0:1
     matlabbatch{1}.spm.util.defs.interp = 1;
     jobs{1}=matlabbatch;
 
-    spm_jobman('run',jobs);
+    cfg_util('run',jobs);
     disp('*** Exported normalization parameters to y_ea_normparams.nii');
     clear matlabbatch jobs;
 end

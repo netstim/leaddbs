@@ -21,7 +21,7 @@ if ~legacy % use new imshowpair tool
         matlabbatch{1}.spm.util.imcalc.options.interp = 1;
         matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
         jobs{1}=matlabbatch;
-        spm_jobman('run',jobs);
+        cfg_util('run',jobs);
         clear matlabbatch jobs;
         ct=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
     end
@@ -49,7 +49,7 @@ if ~legacy % use new imshowpair tool
     ea_imshowpair(wim,options,'Preoperative MRI & Postoperative CT');
     % ----------------------------------------------------------
 
-
+    
 elseif legacy
 % export wireframe of CT:
 disp('Generating wireframe from CT image...');
@@ -100,7 +100,7 @@ matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
 jobs{1}=matlabbatch;
-spm_jobman('run',jobs);
+cfg_util('run',jobs);
 clear matlabbatch jobs;
 
 disp('Done. Showing results.');
