@@ -190,6 +190,7 @@ end
 %Design matrix
 [nbs.GLM.X,UI.design.ok,DIMS]=read_design(UI.design.ui,DIMS); 
 %Contrast
+
 [nbs.GLM.contrast,UI.contrast.ok]=read_contrast(UI.contrast.ui,DIMS);
 %Node coordinates [optional, but mandatory for NBSview]
 [tmp,UI.node_coor.ok]=read_node_coor(UI.node_coor.ui,DIMS); 

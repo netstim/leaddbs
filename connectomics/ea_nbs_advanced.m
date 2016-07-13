@@ -202,8 +202,9 @@ end
 lc.nbs.adv.method= get(handles.nbsmethod,'Value');
 lc.nbs.adv.compsize=get(handles.component,'Value');
 lc.nbs.adv.perm=str2double(get(handles.numpermutations,'String'));
-lc.nbs.adv.alpha=get(handles.alpha,'Value');
+lc.nbs.adv.alpha=get(handles.alpha,'String');
 lc.nbs.adv.exch=getappdata(handles.nbsadvanced,'exchange');
+
 save([earoot,'connectomics',filesep,'lc_options.mat'],'-struct','lc');
 close(handles.nbsadvanced);
 
@@ -228,7 +229,7 @@ function handles=nbsadv2handles(lc,handles)
 try set(handles.nbsmethod,'Value',lc.nbs.adv.method); end
 try set(handles.component,'Value',lc.nbs.adv.compsize); end
 try set(handles.numpermutations,'String',num2str(lc.nbs.adv.perm)); end
-try set(handles.alpha,'Value',lc.nbs.adv.alpha); end
+try set(handles.alpha,'String',lc.nbs.adv.alpha); end
 try setappdata(handles.nbsadvanced,'exchange',lc.nbs.adv.exch); end
 
 

@@ -2546,6 +2546,7 @@ switch UI.test.ui
             permute(allX(:,:,logical(mX(:,find(c==-1)))),[3,1,2]));
         
         T=squeeze(tstat.tstat);
+        uT=T;
         clear tstat
         clear pmask
         pmask=zeros(size(T));
@@ -2555,7 +2556,9 @@ switch UI.test.ui
             pmask(network,:,:)=X;
             save([root,'sig_',num2str(network)],'X');
         end
+        if network
         pmask=squeeze(sum(pmask,1));
+        end
         T(~pmask)=nan;
     otherwise
         
@@ -2572,7 +2575,10 @@ thisparc=thisparc{get(handles.labelpopup,'Value')};
 thismetr=get(handles.lc_metric,'String');
 thismetr=thismetr{get(handles.lc_metric,'Value')};
 eval([thismetr,'=T;']);
-expfn=[root,thisparc,'_',thismetr,'p<',UI.alpha.ui,'.mat'];
+expfn=[root,thisparc,'_',thismetr,'T_p<',UI.alpha.ui,'.mat'];
+save(expfn,thismetr);
+eval([thismetr,'=uT;']);
+expfn=[root,thisparc,'_',thismetr,'T_unthresholded.mat'];
 save(expfn,thismetr);
 
 disp('** NBS done.');
@@ -2615,7 +2621,16 @@ for pt=1:length(M.patient.list)
     if ~exist('allX','var')
         allX=nan([size(X.(fn{1})),length(M.patient.list)]);
     end
-    allX(:,:,pt)=X.(fn{1});
+    
+    X=X.(fn{1});
+    switch get(handles.normregpopup,'Value');
+        case 2
+X(:)=ea_nanzscore(X(:));  
+        case 3
+X(:)=ea_normal(X(:)); 
+    end
+
+    allX(:,:,pt)=X;
 end
 save([get(handles.groupdir_choosebox,'String'),'NBSdataMatrix'],'allX','-v7.3');
 
