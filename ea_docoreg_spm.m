@@ -21,4 +21,4 @@ else
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
 end
 
-spm_jobman('run',{matlabbatch});
+cfg_util('run',{matlabbatch});

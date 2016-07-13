@@ -115,7 +115,7 @@ for pt=1:length(elstruct)
         
         
        cnt=1;
-        for side=options.sides
+        for side=1:length(options.sides)
             extract=1:length(el_render(pt).el_render{side});
             for ex=extract
                 
@@ -166,8 +166,8 @@ for pt=1:length(elstruct)
         else
             caption{1}='Electrode_Left'; caption{2}='Electrode_Right';
         end
-        eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on'},'OffCallback',{@elvisible,el_render,pt,2,'off'},'State','on');
-        eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on'},'OffCallback',{@elvisible,el_render,pt,1,'off'},'State','on');
+        eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
+        eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
       cnt=cnt+2;
         end
 end
@@ -213,7 +213,7 @@ if options.d3.writeatlases
         end
         % export vizstruct
         try
-        for side=1:2
+        for side=1:length(options.sides)
             for atl=1:length(atlases.fv)
                 
                 if isfield(atlases.fv{atl,side},'faces')
@@ -243,13 +243,6 @@ if options.d3.showisovolume
 end
 
 
-
-if options.d3.expdf
-    %cd([options.root,options.patientname]);
-    fig2pdf3d(gca,[options.root,options.patientname,filesep,'Lead-DBS_Electrode_Localization'],options);
-    close(resultfig);
-    return
-end
 
 %% End of patient-specific part.
 
@@ -383,14 +376,14 @@ set(atls, 'Visible', 'on');
 function objinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
 
-function elvisible(hobj,ev,atls,pt,side,onoff)
+function elvisible(hobj,ev,atls,pt,side,onoff,options)
 
 if(getappdata(gcf,'altpressed'))
     
     eltog=getappdata(gcf,'eltog');
     set(eltog,'State',onoff);
     for el=1:length(atls)
-        for side=1:2
+        for side=1:length(options.sides)
            try
                set(atls(el).el_render{side}, 'Visible', onoff);
            end

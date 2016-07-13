@@ -74,7 +74,7 @@ matlabbatch{1}.spm.spatial.preproc.opts.samp = 3;
 matlabbatch{1}.spm.spatial.preproc.opts.msk = {''};
 jobs{1}=matlabbatch;
 try
-spm_jobman('run',jobs);
+cfg_util('run',jobs);
 normlog(1)=1;
 disp('*** Segmentation worked.');
 catch
@@ -100,7 +100,7 @@ matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
 
 jobs{1}=matlabbatch;
 try
-spm_jobman('run',jobs);
+cfg_util('run',jobs);
 end
 clear matlabbatch jobs;
 
@@ -127,7 +127,7 @@ matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
 
 jobs{1}=matlabbatch;
 try
-spm_jobman('run',jobs);
+cfg_util('run',jobs);
 normlog(1)=1;
 disp('*** Coregistration between transversal and coronar versions worked.');
 catch
@@ -151,7 +151,7 @@ matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
 
 jobs{1}=matlabbatch;
 try
-spm_jobman('run',jobs);
+cfg_util('run',jobs);
 normlog(1)=1;
 disp('*** Coregistration between preop and postop versions worked.');
 catch
@@ -183,7 +183,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.wrap = [0 0 0];
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.prefix = 'w1';
 jobs{1}=matlabbatch;
 try
-spm_jobman('run',jobs);
+cfg_util('run',jobs);
 normlog(2)=1;
 disp('*** Grand mean normalization (1/3) worked.');
 catch
@@ -220,7 +220,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.prefix = 'w2';
 
 jobs{1}=matlabbatch;
 try
-    spm_jobman('run',jobs);
+    cfg_util('run',jobs);
     normlog(3)=1;
     disp('*** Subcortical normalization (2/3) worked.');
 catch
@@ -254,7 +254,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.wrap = [0 0 0];
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.prefix = 'w3';
 jobs{1}=matlabbatch;
 try
-    spm_jobman('run',jobs);
+    cfg_util('run',jobs);
     normlog(4)=1;
     disp('*** Subcortical fine normalization (3/3) worked.');
 catch
@@ -303,7 +303,7 @@ matlabbatch{1}.spm.util.defs.interp = 6;
 
 jobs{1}=matlabbatch;
 try
-    spm_jobman('run',jobs);
+    cfg_util('run',jobs);
 catch % CT
 
     matlabbatch{1}.spm.util.defs.fnames = {
@@ -313,7 +313,7 @@ catch % CT
     jobs{1}=matlabbatch;
 
 
-    spm_jobman('run',jobs);
+    cfg_util('run',jobs);
 
 end
 clear matlabbatch jobs;
@@ -404,7 +404,7 @@ matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
 jobs{1}=matlabbatch;
 try
-spm_jobman('run',jobs);
+cfg_util('run',jobs);
 end
 clear matlabbatch jobs;
 end

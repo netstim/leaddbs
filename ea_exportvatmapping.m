@@ -21,22 +21,22 @@ for pt=1:length(M.patient.list)
     for stim=1:length(stims)
         if ~strcmp(stims(stim).name(1),'.')
             if stims(stim).datenum>pdate
-
-
+                
+                
                 pdate=stims(stim).datenum;
-
+                
                 mostrecentstim=stim;
             end
         end
     end
-
+    
     try
     Vvatr=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,stims(mostrecentstim).name,filesep,'vat_right.nii']);
     Vvatl=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,stims(mostrecentstim).name,filesep,'vat_left.nii']);
     catch
-
-       keyboard
-
+        
+       keyboard 
+        
     end
     Vvatr.img(Vvatr.img==0)=nan;     Vvatl.img(Vvatl.img==0)=nan;
     zVvatr=Vvatr; zVvatl=Vvatl;
@@ -51,14 +51,14 @@ for pt=1:length(M.patient.list)
         zVvatr.img=zVvatr.img*zselectedregressor(pt,1);
         zVvatl.img=zVvatl.img*zselectedregressor(pt,1);
     end
-
+    
     % writeout
-
+    
     Vvatr.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','rh','.nii'];
     Vvatl.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','lh','.nii'];
     zVvatr.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'zs',num2str(pt),'_','rh','.nii'];
     zVvatl.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'zs',num2str(pt),'_','lh','.nii'];
-
+    
     Vvatr.dt=[16,2]; Vvatl.dt=[16,2];      zVvatr.dt=[16,2]; zVvatl.dt=[16,2];
     spm_write_vol(Vvatr,Vvatr.img);     spm_write_vol(Vvatl,Vvatl.img);
     spm_write_vol(zVvatr,zVvatr.img);     spm_write_vol(zVvatl,zVvatl.img);
@@ -95,12 +95,12 @@ for z=0:1
     matlabbatch{1}.spm.util.imcalc.options.mask = 0;
     matlabbatch{1}.spm.util.imcalc.options.interp = 1;
     matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
-
-    spm_jobman('run',{matlabbatch});
+        
+    cfg_util('run',{matlabbatch});
             ea_crop_nii([options.root,options.patientname,filesep,'statvat_results',filesep,matlabbatch{1}.spm.util.imcalc.output]);
 
     clear matlabbatch
-
+    
 
 
 end
@@ -112,7 +112,7 @@ tempzallV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep
 
 
 for pt=1:length(tempzallV)-1
-
+    
     matlabbatch{1}.spm.util.imcalc.input = zallV;
     matlabbatch{1}.spm.util.imcalc.output = tempzallV{pt+1};
     matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname,filesep,'statvat_results',filesep]};
@@ -122,9 +122,9 @@ for pt=1:length(tempzallV)-1
     matlabbatch{1}.spm.util.imcalc.options.mask = 0;
     matlabbatch{1}.spm.util.imcalc.options.interp = 1;
     matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
-    spm_jobman('run',{matlabbatch});
+    cfg_util('run',{matlabbatch});
     clear matlabbatch
-
+    
 end
 
 dostats=0;
@@ -148,23 +148,23 @@ matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
 matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
 matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
 matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
-    spm_jobman('run',{matlabbatch});
+    cfg_util('run',{matlabbatch});
     clear matlabbatch
-
+    
     matlabbatch{1}.spm.stats.fmri_est.spmmat = {[options.root,options.patientname,filesep,'statvat_results',filesep,'SPM',filesep,'SPM.mat']};
 matlabbatch{1}.spm.stats.fmri_est.write_residuals = 0;
 matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1;
-    spm_jobman('run',{matlabbatch});
+    cfg_util('run',{matlabbatch});
     clear matlabbatch
-
+    
     matlabbatch{1}.spm.stats.con.spmmat = {[options.root,options.patientname,filesep,'statvat_results',filesep,'SPM',filesep,'SPM.mat']};
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'mainFX';
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = 1;
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{1}.spm.stats.con.delete = 0;
-    spm_jobman('run',{matlabbatch});
+    cfg_util('run',{matlabbatch});
     clear matlabbatch
-
+    
     matlabbatch{1}.spm.stats.results.spmmat = {[options.root,options.patientname,filesep,'statvat_results',filesep,'SPM',filesep,'SPM.mat']};
 matlabbatch{1}.spm.stats.results.conspec.titlestr = '';
 matlabbatch{1}.spm.stats.results.conspec.contrasts = 1;
@@ -175,10 +175,10 @@ matlabbatch{1}.spm.stats.results.conspec.mask.none = 1;
 matlabbatch{1}.spm.stats.results.units = 1;
 matlabbatch{1}.spm.stats.results.print = false;
 matlabbatch{1}.spm.stats.results.write.tspm.basename = 'spm_result.nii';
-    spm_jobman('run',{matlabbatch});
+    cfg_util('run',{matlabbatch});
     clear matlabbatch
-
+    
     % cleanup
     delete([options.root,options.patientname,filesep,'statvat_results',filesep,'*_temp.nii']);
 end
-
+    
