@@ -258,6 +258,7 @@ menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
 f = uimenu('Label','Tools');
     uimenu(f,'Label','Convert ACPC/MNI coordinates','Callback',{@ea_acpcquery,handles.leadfigure});
+    uimenu(f,'Label','Export .STL files for selected patient(s)','Callback',{@ea_pat2stl,handles});
 
 setappdata(handles.leadfigure,'menuprobe',1);
 end
@@ -670,7 +671,7 @@ end
 % store patient directories in figure
 
 
-setappdata(gcf,'uipatdir',uipatdir);
+setappdata(handles.leadfigure,'uipatdir',uipatdir);
 ea_switchctmr(handles);
 
 getui(handles); % update ui from patient

@@ -115,6 +115,13 @@ if ~isfield(options.d3,'writeatlases')
     options.d2.writeatlases=1;
 end
 
+if ~isfield(options.d3,'hlactivecontacts')
+    options.d3.hlactivecontacts=0;
+end
+
+if ~isfield(options.d3,'elrendering')
+    options.d3.elrendering=1;
+end
 
 if ~isfield(options,'dostimulation')
     options.dostimulation=1;

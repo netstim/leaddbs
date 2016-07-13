@@ -781,7 +781,6 @@ try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
 try set(handles.labelpopup,'Value',M.ui.labelpopup); end
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
-try set(handles.labelpopup,'Value',M.ui.lc.parcellation); end
 try set(handles.lc_normalization,'Value',M.ui.lc.normalization); end
 try set(handles.lc_graphmetric,'Value',M.ui.lc.graphmetric); end
 
@@ -1737,7 +1736,6 @@ M.ui.elmodelselect=1;
 M.ui.detached=0;
 M.ui.normregpopup=1;
 M.ui.colorpointcloudcheck=0;
-M.ui.lc.parcellation=1;
 M.ui.lc.graphmetric=1;
 M.ui.lc.normalization=1;
 M.ui.lc.smooth=1;
