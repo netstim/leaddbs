@@ -7,13 +7,16 @@ if options.modality==2 % CT support
     tra_nii.img=tra_nii.img*-1;
 end
 
+if ~isfield(options, 'flip')
+    options.flip = false;
+end
 
 %Vtra=spm_vol([options.root,patientname,filesep,patientname,'_tra_brain_A3_final.nii']);
 slice=zeros(size(tra_nii.img,1),size(tra_nii.img,2));
 masknii=tra_nii;
-if side==1
+if side==1 & ~options.flip
     if options.verbose>1; progressfig=figure('name','Finding left electrode','NumberTitle','off','Menubar','none','ToolBar','none'); set(gcf,'color','w'); axis off; end
-else
+elseif side==2 | options.flip
     if options.verbose>1; progressfig=figure('name','Finding right electrode','NumberTitle','off','Menubar','none','ToolBar','none'); set(gcf,'color','w'); axis off; end
 end
 
@@ -40,12 +43,12 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
     switch options.entrypoint
         case 'STN, GPi or ViM'
             mask(200:350,70:220)=1;
-            if side==1
+            if side==1 & ~options.flip
                 mask=fliplr(mask);
             end
         case 'Cg25'
             mask(390:490,270:370)=1;
-            if side==1
+            if side==1 & ~options.flip
                 mask=fliplr(mask);
             end
         case 'Manual'
@@ -53,7 +56,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             colormask=zeros(size(slice,1),size(slice,2),3);
             colormask(:,:,1)=1;
             mask(200:350,70:220)=1;
-            if side==1
+            if side==1 & ~options.flip
                 mask=fliplr(mask);
             end
             slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.

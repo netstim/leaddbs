@@ -51,10 +51,10 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
 
         if ~legacy % use new imshowpair viewer
   mcr=ea_checkmacaque(options);
-
+            
             wires=ea_load_nii([options.earoot,mcr,'templates',filesep,'mni_wires.nii']);
             pt=ea_load_nii(checkf);
-
+            
             if ~isequal(size(wires.img),size(pt.img))
                 matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_wires.nii'];
                     checkf};
@@ -66,13 +66,13 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
                 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
                 jobs{1}=matlabbatch;
-                spm_jobman('run',jobs);
+                cfg_util('run',jobs);
                 clear matlabbatch jobs;
                             pt=ea_load_nii(checkf);
             end
             %mni.img(:)=zscore(mni.img(:));
 
-
+            
             wires.img=wires.img/max(wires.img(:));
             switch suff
                 case '_fa' % do no windowing for now.
@@ -90,7 +90,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             end
             %joint_im=0.5*wires.img+pt.img;
             joint_im=pt.img;
-
+            
             joint_im(wires.img>0.5)=mean(cat(4,joint_im(wires.img>0.5),wires.img(wires.img>0.5)),4);
             %joint_im=repmat(joint_im,1,1,1,3);
 %            jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
@@ -103,7 +103,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             wim = cat(4,pt.img,mni_img.img,joint_im);
             clear joint_im pt
             ea_imshowpair(wim,options,addstr);
-
+            
             % ----------------------------------------------------------
 
         else legacy % use old wireframe images
@@ -117,7 +117,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             matlabbatch{1}.spm.util.imcalc.options.interp = 1;
             matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
             jobs{1}=matlabbatch;
-            spm_jobman('run',jobs);
+            cfg_util('run',jobs);
             clear matlabbatch jobs;
 
 

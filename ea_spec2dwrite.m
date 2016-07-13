@@ -60,14 +60,14 @@ guidata(hObject, handles);
 
 % UIWAIT makes ea_spec2dwrite wait for user response (see UIRESUME)
 % uiwait(handles.ea_spec2dwrite);
-try thandles=load([ea_getearoot,'td_options.mat']);
+try thandles=load([fileparts(which('lead')),filesep,'td_options.mat']); 
 delete(handles.ea_spec2dwrite)
 handles=thandles;
 end
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_spec2dwrite_OutputFcn(hObject, eventdata, handles)
+function varargout = ea_spec2dwrite_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -140,5 +140,5 @@ function savebutton_Callback(hObject, eventdata, handles)
 % hObject    handle to savebutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-save([ea_getearoot,'td_options.mat'],'-struct','handles');
+save([fileparts(which('lead')),filesep,'td_options.mat'],'-struct','handles');
 delete(handles.ea_spec2dwrite);

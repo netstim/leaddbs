@@ -22,7 +22,7 @@ if options.d2.write
     
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.
-    
+
     cuts=ea_writeplanes(options);
     
 end
@@ -32,6 +32,7 @@ end
 % Render 3D Visualization
 if options.d3.write
 
+    
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.
     
@@ -51,7 +52,7 @@ end
 
 %% check traject sanity
 
-for side=options.sides
+for side=1:length(options.sides)
     try
         trajectissane=ea_checktrajectsanity(trajvector{side});
         if ~trajectissane
@@ -93,5 +94,3 @@ end
     
 N = sum(~isnan(x), dim);
 y = nansum(x, dim) ./ N;
-
-

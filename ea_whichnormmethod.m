@@ -12,11 +12,11 @@ while 1
     end
 
 end
-catch
+catch 
     whichnormmethod='';
 end
 
-leaddir=[ea_getearoot];
+leaddir=[fileparts(which('lead')),filesep];
 
 switch whichnormmethod
     case 'ea_normalize_spmdartel' % use dartel MNI template
