@@ -141,7 +141,7 @@ end
 
 if ~isfield(options,'earoot')
     
-    options.earoot=[fileparts(which('eAuto')),filesep]; % Specify electrode model here. Review or add available electrode models in ea_resolve_elspec.m
+    options.earoot=ea_getearoot; 
 end
 
 if ~isfield(options,'fiberthresh')

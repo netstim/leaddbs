@@ -1,10 +1,9 @@
-function fv=ea_electrode2stl(directory,side)
+function fv=ea_electrode2stl(directory,side,handles)
 
-options=ea_defaultoptions;
+options=ea_handles2options(handles);
+options=ea_resolve_elspec(options);
 [options.root,options.patientname]=fileparts(directory);
 options.root=[options.root,filesep];
-options.native=0;
-options=ea_resolve_elspec(options);
 
 
 
@@ -33,7 +32,7 @@ elrend=el_render.el_render;
     end
     fv=ea_concatfv(fv);
     fv=ea_mapcolvert2face(fv);
-    ea_stlwrite([directory,'stlexport',filesep,sidec,'electrode.stl'],fv,'FACECOLOR',fv.facevertexcdata);
+    ea_stlwrite([directory,'export',filesep,'stl',filesep,sidec,'electrode.stl'],fv,'FACECOLOR',fv.facevertexcdata);
 
 
 

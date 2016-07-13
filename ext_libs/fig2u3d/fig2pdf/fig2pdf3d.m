@@ -72,8 +72,13 @@ fname = clear_file_extension(fname, '.tex');
 delete([fname, '.png'] )
 delete([fname, '.tex'] )
 delete([fname, '_small.tex'] )
-delete([fname, '.u3d'] )
+%delete([fname, '.u3d'] )
 delete([fname, '.idtf'] )
 delete([fname, '.vws'] )
 delete([fname, '.aux'] )
 delete([fname, '.log'] )
+
+[pth,fn]=fileparts(fname);
+pth=[pth,filesep];
+movefile([pth,fn,'.u3d'],[pth,'export',filesep,'pdf',filesep,fn,'.u3d']);
+movefile([pth,fn,'.pdf'],[pth,'export',filesep,'pdf',filesep,fn,'.pdf']);

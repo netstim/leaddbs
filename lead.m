@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 09-Jul-2016 18:47:27
+% Last Modified by GUIDE v2.5 13-Jul-2016 11:14:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -258,7 +258,10 @@ menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
 f = uimenu('Label','Tools');
     uimenu(f,'Label','Convert ACPC/MNI coordinates','Callback',{@ea_acpcquery,handles.leadfigure});
-    uimenu(f,'Label','Export .STL files for selected patient(s)','Callback',{@ea_pat2stl,handles});
+e = uimenu(f,'Label','Export');
+uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles});
+uimenu(e,'Label','Export .STL files for selected patient(s)','Callback',{@ea_exportpat,'STL',handles});
+uimenu(e,'Label','Export .PLY files for selected patient(s)','Callback',{@ea_exportpat,'PLY',handles});
 
 setappdata(handles.leadfigure,'menuprobe',1);
 end
@@ -296,7 +299,7 @@ leadfig=handles.leadfigure;
 ea_busyaction('on',leadfig,'lead');
 
 
-options=handles2options(handles);
+options=ea_handles2options(handles);
 options.macaquemodus=getappdata(handles.leadfigure,'macaquemodus');
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
@@ -1107,7 +1110,7 @@ end
 
 updatestatus(handles);
 
-options=handles2options(handles);
+options=ea_handles2options(handles);
 try save([outdir,'ea_ui'],'-struct','options'); end
 
 
@@ -1200,204 +1203,14 @@ end
 try
 
 options=load([outdir,'ea_ui']);
-options2handles(options,handles); % update UI
+ea_options2handles(options,handles); % update UI
 end
 
 
 
-function options=handles2options(handles)
-
-%% some manual options that can be set:
-
-
-options.endtolerance=10; % how many slices to use with zero signal until end of electrode estimate.
-options.sprungwert=4; % how far electrode centroid may be (in xy axis) from last to current slice.
-options.refinesteps=0; % how often to re-iterate to reconstruct trajectory. More than 2 should usually not be beneficial. Use 0 to use the direct measurement.
-options.tra_stdfactor=0.9; % Default: 0.9 - the lower this factor, the lower the threshold (more included pixels in tra process).
-options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower the threshold (more included pixels in cor process).
 
 
 
-
-%% set options
-
-%uipatdir=get(handles.patdir_choosebox,'String');
-
-options.earoot=[ea_getearoot];
-options.dicomimp=get(handles.dicomcheck,'Value');
-
-options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
-options.normalize.method=getappdata(gcf,'normmethod');
-options.normalize.method=options.normalize.method{get(handles.normmethod,'Value')};
-options.normalize.methodn=get(handles.normmethod,'Value');
-
-options.normalize.check=(get(handles.normcheck,'Value') == get(handles.normcheck,'Max'));
-
-% coreg CT
-options.coregct.do=(get(handles.coregct_checkbox,'Value') == get(handles.coregct_checkbox,'Max'));
-options.coregct.method=getappdata(gcf,'coregctmethod');
-options.coregct.method=options.coregct.method{get(handles.coregctmethod,'Value')};
-options.coregct.methodn=get(handles.coregctmethod,'Value');
-options.coregct.coregthreshs= eval( [ '[', get(handles.coregthreshs,'String'), ']' ] );
-
-options.coregctcheck=get(handles.coregctcheck,'Value');
-
-
-options.coregmr.method=get(handles.coregmrpopup,'Value');
-
-% set modality (MR/CT) in options
-options.modality = get(handles.MRCT,'Value');
-
-
-
-
-options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback.
-
-%sidelog=[get(handles.right_checkbox,'Value') == get(handles.right_checkbox,'Max'),get(handles.left_checkbox,'Value') == get(handles.left_checkbox,'Max')];
-%sidepos=[1,2];
-
-%options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
-options.sides=1:2;
-
-options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
-if strcmp(get(handles.maskwindow_txt,'String'),'auto')
-options.maskwindow=10; % initialize at 10
-options.automask=1; % set automask flag
-else
-options.maskwindow=str2num(get(handles.maskwindow_txt,'String')); % size of the window that follows the trajectory
-options.automask=0; % unset automask flag
-end
-options.autoimprove=0; % if true, templates will be modified.
-options.axiscontrast=8; % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
-options.zresolution=10; % voxels are being parcellated into this amount of portions.
-
-options.atl.genpt=get(handles.vizspacepopup,'Value')==2; % generate patient specific atlases
-options.atl.normalize=0; % normalize patient specific atlasset. This is not done anymore for now.
-options.atl.can=get(handles.vizspacepopup,'Value')==1; % display canonical atlases
-options.atl.pt=0; % display patient specific atlases. This is not done anymore for now.
-options.atl.ptnative=get(handles.vizspacepopup,'Value')==2; % show results in native space.
-if options.atl.ptnative
-    options.native=1;
-else
-    options.native=0;
-end
-
-options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
-
-options.d2.atlasopacity=0.15;
-
-
-options.manualheightcorrection=(get(handles.manualheight_checkbox,'Value') == get(handles.manualheight_checkbox,'Max'));
-options.d3.write=(get(handles.render_checkbox,'Value') == get(handles.render_checkbox,'Max'));
-options.d3.prolong_electrode=2;
-options.d3.verbose='on';
-options.d3.elrendering=1;
-options.d3.hlactivecontacts=0;
-options.d3.showactivecontacts=1;
-options.d3.showpassivecontacts=1;
-options.d3.showisovolume=0;
-options.d3.isovscloud=0;
-options.d3.autoserver=get(handles.exportservercheck,'Value');
-
-options.d3.expdf=get(handles.expdf,'Value');
-options.numcontacts=4;
-options.entrypoint=get(handles.targetpopup,'String');
-options.entrypoint=options.entrypoint{get(handles.targetpopup,'Value')};
-options.entrypointn=get(handles.targetpopup,'Value');
-
-options.writeoutpm=1;
-
-options.elmodeln = get(handles.electrode_model_popup,'Value');
-string_list = get(handles.electrode_model_popup,'String');
-options.elmodel=string_list{options.elmodeln};
-options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
-options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
-options.atlassetn=get(handles.atlassetpopup,'Value');
-
-if strcmp(options.atlasset,'Use none');
-    options.d3.writeatlases=0;
-    options.d2.writeatlases=1;
-else
-    options.d3.writeatlases=1;
-    options.d2.writeatlases=1;
-end
-
-
-options.expstatvat.do=0;
-
-options.fiberthresh=10;
-options.writeoutstats=1;
-
-
-options.colormap=colormap;
-
-options.dolc=get(handles.include_lead_connectome_subroutine,'Value');
-
-
-
-
-
-function options2handles(options,handles)
-
-
-%% set handles
-set(handles.dicomcheck,'Value',options.dicomimp);
-set(handles.normalize_checkbox,'Value',options.normalize.do);
-if options.normalize.methodn>length(handles.normmethod,'String')
-set(handles.normmethod,'Value',1);
-else
-set(handles.normmethod,'Value',options.normalize.methodn);
-end
-set(handles.normcheck,'Value',options.normalize.check);
-
-% CT coregistration
-set(handles.coregct_checkbox,'Value',options.coregct.do);
-if options.coregct.methodn>length(handles.coregctmethod,'String')
-set(handles.coregctmethod,'Value',1);
-else
-set(handles.coregctmethod,'Value',options.coregct.methodn);
-end
-set(handles.coregthreshs,'String',options.coregct.coregthreshs);
-
-set(handles.coregctcheck,'Value',options.coregctcheck);
-
-
-
-set(handles.MRCT,'Value',options.modality);
-
-if ismember(1,options.sides)
-    set(handles.right_checkbox,'Value',1);
-else
-        set(handles.right_checkbox,'Value',0);
-end
-if ismember(2,options.sides)
-    set(handles.left_checkbox,'Value',1);
-else
-    set(handles.left_checkbox,'Value',0);
-end
-
-
-set(handles.doreconstruction_checkbox,'Value',options.doreconstruction);
-
-
-if options.automask
-    set(handles.maskwindow_txt,'String','auto')
-else
-    set(handles.maskwindow_txt,'String',num2str(options.maskwindow));
-end
-set(handles.genptatlascheck,'Value',options.atl.genpt); % generate patient specific atlases
-set(handles.writeout2d_checkbox,'Value',options.d2.write);
-set(handles.tdcolorscheck,'Value',options.d2.col_overlay);
-set(handles.tdcontourcheck,'Value',options.d2.con_overlay);
-setappdata(handles.tdcontourcolor,'color',options.d2.con_color);
-set(handles.tdlabelcheck,'Value',options.d2.lab_overlay);
-set(handles.bbsize,'String',num2str(options.d2.bbsize));
-set(handles.manualheight_checkbox,'Value',options.manualheightcorrection);
-set(handles.render_checkbox,'Value',options.d3.write);
-set(handles.targetpopup,'Value',options.entrypointn);
-set(handles.electrode_model_popup,'Value',options.elmodeln);
-set(handles.atlassetpopup,'Value',options.atlassetn);
-set(handles.exportservercheck,'Value',options.d3.autoserver);
 
 
 
@@ -1695,7 +1508,7 @@ function exportcode_Callback(hObject, eventdata, handles)
 leadfig=handles.leadfigure;
 ea_busyaction('on',leadfig,'lead');
 
-options=handles2options(handles);
+options=ea_handles2options(handles);
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
@@ -1999,12 +1812,3 @@ function coregmrpopup_ButtonDownFcn(hObject, eventdata, handles)
 ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 
 
-% --- Executes on button press in expdf.
-function expdf_Callback(hObject, eventdata, handles)
-% hObject    handle to expdf (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of expdf
-
-storeui(handles);

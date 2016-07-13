@@ -83,6 +83,7 @@ facets = reshape(facets(:,faces'), 3, 3, []);
 % Compute their normals
 V1 = squeeze(facets(:,2,:) - facets(:,1,:));
 V2 = squeeze(facets(:,3,:) - facets(:,1,:));
+
 normals = V1([2 3 1],:) .* V2([3 1 2],:) - V2([2 3 1],:) .* V1([3 1 2],:);
 clear V1 V2
 normals = bsxfun(@times, normals, 1 ./ sqrt(sum(normals .* normals, 1)));
