@@ -115,6 +115,13 @@ if ~isfield(options.d3,'writeatlases')
     options.d2.writeatlases=1;
 end
 
+if ~isfield(options.d3,'hlactivecontacts')
+    options.d3.hlactivecontacts=0;
+end
+
+if ~isfield(options.d3,'elrendering')
+    options.d3.elrendering=1;
+end
 
 if ~isfield(options,'dostimulation')
     options.dostimulation=1;
@@ -134,7 +141,7 @@ end
 
 if ~isfield(options,'earoot')
     
-    options.earoot=[fileparts(which('eAuto')),filesep]; % Specify electrode model here. Review or add available electrode models in ea_resolve_elspec.m
+    options.earoot=ea_getearoot; 
 end
 
 if ~isfield(options,'fiberthresh')

@@ -65,7 +65,7 @@ guidata(hObject, handles);
 % Build popup tables:
 
 % atlassets:
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 setappdata(handles.lg_figure,'earoot',options.earoot);
 as=dir([options.earoot,'atlases',filesep]);
 asc=cell(0);
@@ -88,7 +88,7 @@ set(handles.atlassetpopup,'String',asc);
 % setup vat functions
 
 cnt=1;
-earoot=[fileparts(which('lead')),filesep];
+earoot=[ea_getearoot];
 ndir=dir([earoot,'ea_genvat_*.m']);
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);
@@ -140,7 +140,6 @@ for lab=1:length(ll)
 end
 
 set(handles.labelpopup,'String',labelcell);
-set(handles.lc_parcellation,'String',labelcell);
 
 try
     priorselection=find(ismember(labelcell,stimparams.labelatlas)); % retrieve prior selection of fiberset.
@@ -294,9 +293,9 @@ options.expstatvat.do=M.ui.statvat;
 
 try
     
-options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
+    options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 catch
-    ea_warning('Localizations seem not properly defined.');
+    warning('Localizations seem not properly defined.');
 end
 options.elmodel=M.elstruct(1).elmodel;
 options=ea_resolve_elspec(options);
@@ -695,8 +694,8 @@ end
 % add graph metrics to connectome graph-metrics popup:
 
 
-thisparc=get(handles.lc_parcellation,'String');
-thisparc=thisparc{get(handles.lc_parcellation,'Value')};
+thisparc=get(handles.labelpopup,'String');
+thisparc=thisparc{get(handles.labelpopup,'Value')};
 try
     gmdir=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
     
@@ -709,32 +708,17 @@ end
 
 
 
-% add modalities to NBS stats metric popup:
 
-tryparcs=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'*_CM.mat']);
-avparcs=ones(length(tryparcs),1);
-for sub=1:length(M.patient.list)
-    for parc=1:length(tryparcs)
-        if ~exist([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,tryparcs(parc).name],'file');
-        avparcs(parc)=0;
-        end
-    end
-end
-tryparcs=tryparcs(avparcs);
-pcell=cell(length(tryparcs),1);
-for p=1:length(pcell)
-    [~,pcell{p}]=fileparts(tryparcs(p).name);
-end
-set(handles.lc_metric,'String',pcell);
 %% modalities for VAT metrics:
 
 % dMRI:
 cnt=1;
 options.prefs=ea_prefs('');
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 try
     directory=[M.patient.list{1},filesep];
     modlist=ea_genmodlist(directory,thisparc,options);
+    modlist{end+1}='Patient-specific fiber tracts';
     modlist{end+1}='Do not calculate connectivity stats';
     set(handles.fiberspopup,'String',modlist);
     if get(handles.fiberspopup,'Value')>length(modlist);
@@ -797,7 +781,6 @@ try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
 try set(handles.labelpopup,'Value',M.ui.labelpopup); end
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
-try set(handles.lc_parcellation,'Value',M.ui.lc.parcellation); end
 try set(handles.lc_normalization,'Value',M.ui.lc.normalization); end
 try set(handles.lc_graphmetric,'Value',M.ui.lc.graphmetric); end
 
@@ -816,8 +799,32 @@ try
     end
 end
 
-
+%% patient specific part:
 if ~isempty(M.patient.list)
+    
+    % add modalities to NBS stats metric popup:
+    
+    tryparcs=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'*_CM.mat']);
+    if isempty(tryparcs)
+        set(handles.lc_metric,'String','No data found.');
+    else
+        avparcs=ones(length(tryparcs),1);
+        for sub=1:length(M.patient.list)
+            for parc=1:length(tryparcs)
+                if ~exist([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,tryparcs(parc).name],'file');
+                    avparcs(parc)=0;
+                end
+            end
+        end
+        tryparcs=tryparcs(avparcs);
+        pcell=cell(length(tryparcs),1);
+        for p=1:length(pcell)
+            [~,pcell{p}]=fileparts(tryparcs(p).name);
+        end
+        set(handles.lc_metric,'String',pcell);
+    end
+    
+    
     for pt=1:length(M.patient.list)
         % set stimparams based on values provided by user
         for side=1:2
@@ -1100,7 +1107,7 @@ vc_labels={};
 
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
-        usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis! 
+        usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis!
         for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).ft,2)
             for vat=1;
                 if side==1 % right hemisphere
@@ -1289,19 +1296,18 @@ M=getappdata(gcf,'M');
 % set options
 options=ea_setopts_local(handles);
 stimname=ea_detstimname();
-mod = 'Do not calculate connectivity stats';
-try
-    % determine if fMRI or dMRI
-    mods=get(handles.fiberspopup,'String');
-    mod=mods{get(handles.fiberspopup,'Value')};
-    switch mod
-        case {'Patient-specific fiber tracts','rest_tc'}
-            fibersfile=mod;
-        case 'Do not calculate connectivity stats'
-        otherwise % load fibertracts once and for all subs here.
-                [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([fileparts(which('lead')),filesep,'fibers',filesep,mod,'.mat']);
-    end
+
+% determine if fMRI or dMRI
+mods=get(handles.fiberspopup,'String');
+mod=mods{get(handles.fiberspopup,'Value')};
+switch mod
+    case {'Patient-specific fiber tracts','rest_tc'}
+        fibersfile=mod;
+    case 'Do not calculate connectivity stats'
+    otherwise % load fibertracts once and for all subs here.
+        [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([ea_getearoot,'fibers',filesep,mod,'.mat']);
 end
+
 
 for pt=M.ui.listselect
     
@@ -1326,11 +1332,11 @@ for pt=M.ui.listselect
     end
     
     disp(['Processing ',options.patientname,'.']);
-try
-    options.numcontacts=size(M.elstruct(pt).coords_mm{1},1);
-catch % no localization present or in wrong format.
-    ea_error(['Please localize ',options.patientname,' first.']);
-end
+    try
+        options.numcontacts=size(M.elstruct(pt).coords_mm{1},1);
+    catch % no localization present or in wrong format.
+        ea_error(['Please localize ',options.patientname,' first.']);
+    end
     options.elmodel=M.elstruct(pt).elmodel;
     options=ea_resolve_elspec(options);
     options.prefs=ea_prefs(options.patientname);
@@ -1357,34 +1363,34 @@ end
     options.expstatvat.dir=M.ui.groupdir;
     processlocal=0;
     
-        if M.ui.detached
-            processlocal=1;
-            mkdir([M.ui.groupdir,options.patientname]);
-            options.root=M.ui.groupdir;
-            %    options.patientname='tmp';
-            
-            ea_stats=M.stats(pt).ea_stats;
-            coords_mm=M.elstruct(pt).coords_mm;
-            trajectory=M.elstruct(pt).trajectory;
-            save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
-            save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
-        end
+    if M.ui.detached
+        processlocal=1;
+        mkdir([M.ui.groupdir,options.patientname]);
+        options.root=M.ui.groupdir;
+        %    options.patientname='tmp';
+        
+        ea_stats=M.stats(pt).ea_stats;
+        coords_mm=M.elstruct(pt).coords_mm;
+        trajectory=M.elstruct(pt).trajectory;
+        save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
+        save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
+    end
     
-        if ~exist(options.root,'file') % data is not there. Act as if detached. Process in tmp-dir.
-            processlocal=1;
-            warning('on');
-            warning('Data has been detached from group-directory. Will process locally. Please be aware that you might loose this newly-processed data once you re-attach the single-patient data to the analysis!');
-            warning('off');
-            mkdir([M.ui.groupdir,options.patientname]);
-            options.root=M.ui.groupdir;
-            % options.patientname='tmp';
-            
-            ea_stats=M.stats(pt).ea_stats;
-            coords_mm=M.elstruct(pt).coords_mm;
-            trajectory=M.elstruct(pt).trajectory;
-            save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
-            save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
-        end
+    if ~exist(options.root,'file') % data is not there. Act as if detached. Process in tmp-dir.
+        processlocal=1;
+        warning('on');
+        warning('Data has been detached from group-directory. Will process locally. Please be aware that you might loose this newly-processed data once you re-attach the single-patient data to the analysis!');
+        warning('off');
+        mkdir([M.ui.groupdir,options.patientname]);
+        options.root=M.ui.groupdir;
+        % options.patientname='tmp';
+        
+        ea_stats=M.stats(pt).ea_stats;
+        coords_mm=M.elstruct(pt).coords_mm;
+        trajectory=M.elstruct(pt).trajectory;
+        save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
+        save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
+    end
     
     
     %delete([options.root,options.patientname,filesep,'ea_stats.mat']);
@@ -1408,7 +1414,7 @@ end
     end
     
     
-
+    
     
     % Step 2: Re-calculate VAT
     if isfield(M,'S')
@@ -1424,7 +1430,7 @@ end
         
         ea_genvat=eval(['@',vfs{ix}]);
         
-        for side=1:length(options.sides)
+        for side=1:2
             setappdata(resultfig,'elstruct',M.elstruct(pt));
             setappdata(resultfig,'elspec',options.elspec);
             [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,stimname);
@@ -1475,7 +1481,6 @@ end
         
         
     end
-    keyboard
 end
 %% processing done here.
 
@@ -1610,7 +1615,7 @@ end
 
 function options=ea_setopts_local(handles)
 
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 options.verbose=3;
 options.sides=1:2; % re-check this later..
 options.atlasset=get(handles.atlassetpopup,'String');
@@ -1665,8 +1670,8 @@ end
 M.ui.groupdir=nudir;
 setappdata(handles.lg_figure,'M',M);
 try
-setappdata(handles.lg_figure,'S',M.S);
-setappdata(handles.lg_figure,'vatmodel',M.S(1).model);
+    setappdata(handles.lg_figure,'S',M.S);
+    setappdata(handles.lg_figure,'vatmodel',M.S(1).model);
 end
 
 ea_busyaction('off',handles.lg_figure,'group');
@@ -1731,7 +1736,6 @@ M.ui.elmodelselect=1;
 M.ui.detached=0;
 M.ui.normregpopup=1;
 M.ui.colorpointcloudcheck=0;
-M.ui.lc.parcellation=1;
 M.ui.lc.graphmetric=1;
 M.ui.lc.normalization=1;
 M.ui.lc.smooth=1;
@@ -2161,14 +2165,14 @@ function lc_SPM_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-spmdir=[M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs,filesep,'SPM'];
+spmdir=[M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs,filesep,'SPM'];
 rmdir(spmdir,'s');
 mkdir([M.ui.groupdir,'connectomics']);
-mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String')]);
-mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph']);
+mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String')]);
+mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph']);
 gecs=get(handles.lc_graphmetrics,'String');
 [~,gecs]=gecs{M.ui.lc.graphmetrics};
-mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs]);
+mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs]);
 mkdir(spmdir);
 
 
@@ -2177,18 +2181,18 @@ for sub=1:length(M.patient.list)
         zzz='';
     elseif M.ui.lc.normalize==2;
         zzz='z';
-        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs,'.nii,1'],2);
+        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs,'.nii,1'],2);
     elseif M.ui.lc.normalize==3;
         zzz='k';
-        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,gecs,'.nii,1'],3);
+        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs,'.nii,1'],3);
     end
     if M.ui.lc.smooth
         sss='s';
-        ea_smooth([M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,zzz,gecs,'.nii,1']);
+        ea_smooth([M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,zzz,gecs,'.nii,1']);
     else
         sss='';
     end
-    fis{sub}=[M.patient.list{sub},'connectomics',filesep,get(handles.lc_parcellation,'String'),filesep,'graph',filesep,sss,zzz,gecs,'.nii,1'];
+    fis{sub}=[M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,sss,zzz,gecs,'.nii,1'];
 end
 
 %% model specification:
@@ -2202,14 +2206,14 @@ matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
 matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
 matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
 matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 %% model estimation:
 matlabbatch{1}.spm.stats.fmri_est.spmmat = {spmdir};
 matlabbatch{1}.spm.stats.fmri_est.write_residuals = 0;
 matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1;
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 %% contrast manager:
@@ -2218,7 +2222,7 @@ matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'main effect';
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = 1;
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{1}.spm.stats.con.delete = 1;
-cfg_util('run',{matlabbatch});
+spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 
@@ -2272,30 +2276,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in lc_parcellation.
-function lc_parcellation_Callback(hObject, eventdata, handles)
-% hObject    handle to lc_parcellation (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns lc_parcellation contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from lc_parcellation
-M=getappdata(gcf,'M');
-
-M.ui.lc.parcellation=get(handles.lc_parcellation,'Value');
-setappdata(gcf,'M',M);
-
-% --- Executes during object creation, after setting all properties.
-function lc_parcellation_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to lc_parcellation (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in lc_smooth.
@@ -2378,7 +2359,7 @@ load([M.ui.groupdir,options.prefs.FTR_normalized]);
 % convert to vox format
 options.root=[fileparts(fileparts(M.ui.groupdir)),filesep];
 [~,options.patientname]=fileparts(fileparts(M.ui.groupdir));
-options.earoot=[fileparts(which('lead')),filesep];
+options.earoot=[ea_getearoot];
 specs.origin=[0,0,0];
 
 nii=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
@@ -2567,7 +2548,7 @@ switch UI.test.ui
         T=squeeze(tstat.tstat);
         clear tstat
         clear pmask
-        pmask=nan(size(T));
+        pmask=zeros(size(T));
         for network=1:nbs.NBS.n;
             X=full(nbs.NBS.con_mat{network});
             X=X+X';
@@ -2586,8 +2567,8 @@ switch UI.test.ui
         ea_error('Only t-test fully supported at present. Please process results manually for other tests.');
 end
 
-thisparc=get(handles.lc_parcellation,'String');
-thisparc=thisparc{get(handles.lc_parcellation,'Value')};
+thisparc=get(handles.labelpopup,'String');
+thisparc=thisparc{get(handles.labelpopup,'Value')};
 thismetr=get(handles.lc_metric,'String');
 thismetr=thismetr{get(handles.lc_metric,'Value')};
 eval([thismetr,'=T;']);
@@ -2612,19 +2593,19 @@ function ea_preparenbs(handles)
 gstr=(get(handles.grouplist,'String'));
 
 for pt=1:length(gstr);
-   gv(pt)=str2double(gstr(pt)); 
+    gv(pt)=str2double(gstr(pt));
 end
 mX=zeros(length(gv),max(gv));
 for g=1:max(gv)
-   mX(:,g)=gv==g; 
+    mX(:,g)=gv==g;
 end
 save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
 
 % prepare data matrix:
 
 M=getappdata(handles.lg_figure,'M');
-thisparc=get(handles.lc_parcellation,'String');
-thisparc=thisparc{get(handles.lc_parcellation,'Value')};
+thisparc=get(handles.labelpopup,'String');
+thisparc=thisparc{get(handles.labelpopup,'Value')};
 thismetr=get(handles.lc_metric,'String');
 thismetr=thismetr{get(handles.lc_metric,'Value')};
 
@@ -2632,7 +2613,7 @@ for pt=1:length(M.patient.list)
     X=load([M.patient.list{pt},filesep,'connectomics',filesep,thisparc,filesep,thismetr,'.mat']);
     fn=fieldnames(X);
     if ~exist('allX','var')
-       allX=nan([size(X.(fn{1})),length(M.patient.list)]);
+        allX=nan([size(X.(fn{1})),length(M.patient.list)]);
     end
     allX(:,:,pt)=X.(fn{1});
 end

@@ -29,7 +29,7 @@ catch
 end
 nm=nm(logical(nmind)); % select which shall be performed.
 
-
+mcr=ea_checkmacaque(options);
 
 for nativemni=nm % switch between native and mni space atlases.
     
@@ -39,7 +39,7 @@ for nativemni=nm % switch between native and mni space atlases.
             adir=[root,'atlases',filesep,'mni',filesep,options.atlasset,filesep];
             mifix=['mni',filesep];
         case 1
-            root=options.earoot;
+            root=[options.earoot,mcr];
             adir=[root,'atlases',filesep,options.atlasset,filesep];
             mifix='';
         case 2
@@ -180,6 +180,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     try
                     [~,centroid]=kmeans(XYZ.mm(:,1:3),1);
                     catch
+                        keyboard
                         centroid=mean(XYZ(:,1:3),1);
                     end
                 else

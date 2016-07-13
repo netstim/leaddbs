@@ -22,7 +22,7 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 02-May-2016 09:07:57
+% Last Modified by GUIDE v2.5 13-Jul-2016 11:14:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -32,7 +32,7 @@ gui_State = struct('gui_Name',       mfilename, ...
                    'gui_OutputFcn',  @lead_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
-               
+
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -60,11 +60,23 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-earoot=[fileparts(which('lead')),filesep];
+earoot=ea_getearoot;
+
+% add recent patients...
+try
+    load([earoot,'ea_recentpatients.mat']);
+catch
+    fullrpts={'No recent patients found'};
+end
+save([earoot,'ea_recentpatients.mat'],'fullrpts');
+ea_updaterecentpatients(handles);
 
 if ~isdeployed
-addpath(genpath(fileparts(which(mfilename))));
+    addpath(genpath(earoot));
+    rmpath(genpath([earoot,'.git']));
+    rmpath(genpath([earoot,'release']));
 end
+
 ea_dispbn;
 
     mstr='';
@@ -120,12 +132,6 @@ set(hObject,'Color',[1 1 1]);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 
-% set DICOM input and output name strings:
-try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
-set(handles.setdicomout,'String',lp.dicom.outfolder);
-set(handles.setdicomin,'String',lp.dicom.infolder);
-end
 
 
 % check if group connectome files are present
@@ -156,18 +162,6 @@ image(im);
 axis off;
 axis equal;
 
-try
-warning('off');
-set(handles.dicompanel,'BackgroundColor','none');
-set(handles.gopanel,'BackgroundColor','none');
-set(handles.psapanel,'BackgroundColor','none');
-set(handles.normpanel,'BackgroundColor','none');
-set(handles.reconpanel,'BackgroundColor','none');
-set(handles.reviewpanel,'BackgroundColor','none');
-set(handles.vizpanel,'BackgroundColor','none');
-set(handles.coregctpanel,'BackgroundColor','none');
-warning('on');
-end
 
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
@@ -188,7 +182,7 @@ for nd=length(ndir):-1:1
         ndc{cnt}=thisndc;
         normmethod{cnt}=methodf;
         if strcmp(ndc{cnt},eval([options.prefs.normalize.default,'(','''prompt''',')']))
-         defentry=cnt;   
+         defentry=cnt;
         end
         cnt=cnt+1;
         end
@@ -223,7 +217,7 @@ for nd=length(ndir):-1:1
         cdc{cnt}=thisndc;
         coregctmethod{cnt}=methodf;
         if strcmp(cdc{cnt},eval([options.prefs.ctcoreg.default,'(','''prompt''',')']))
-         defentry=cnt;   
+         defentry=cnt;
         end
         cnt=cnt+1;
         end
@@ -246,16 +240,16 @@ end
 
 
 if nargin
-    
+
     if ~isempty(varargin)
         switch varargin{1}
             case 'loadsubs'
-                
+
                 ea_load_pts(handles,varargin{2});
-                
+
         end
     end
-    
+
 end
 
 
@@ -264,7 +258,11 @@ menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
 f = uimenu('Label','Tools');
     uimenu(f,'Label','Convert ACPC/MNI coordinates','Callback',{@ea_acpcquery,handles.leadfigure});
-    
+e = uimenu(f,'Label','Export');
+uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles});
+uimenu(e,'Label','Export .STL files for selected patient(s)','Callback',{@ea_exportpat,'STL',handles});
+uimenu(e,'Label','Export .PLY files for selected patient(s)','Callback',{@ea_exportpat,'PLY',handles});
+
 setappdata(handles.leadfigure,'menuprobe',1);
 end
 
@@ -274,7 +272,7 @@ getui(handles);
 
 
 
-    
+
 % UIWAIT makes lead wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 
@@ -301,7 +299,7 @@ leadfig=handles.leadfigure;
 ea_busyaction('on',leadfig,'lead');
 
 
-options=handles2options(handles);
+options=ea_handles2options(handles);
 options.macaquemodus=getappdata(handles.leadfigure,'macaquemodus');
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
@@ -603,10 +601,16 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % hObject    handle to patdir_choosebox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-p='/';
+
+
+p='/'; % default use root
 try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
-p=lp.dicom.outfolder;
+p=pwd; % if possible use pwd instead (could not work if deployed)
+end
+try % finally use last patient parent dir if set.
+earoot=ea_getearoot;
+load([earoot,'ea_recentpatients.mat']);
+p=fileparts(fullrpts{1});
 end
 
 uipatdir=ea_uigetdir(p,'Please choose patient folder(s)...');
@@ -617,7 +621,44 @@ end
 
 ea_load_pts(handles,uipatdir);
 
+function ea_addrecentpatient(handles,uipatdir,chosenix)
+earoot=ea_getearoot;
+load([earoot,'ea_recentpatients.mat']);
+if strcmp(fullrpts,'No recent patients found')
+    fullrpts={};
+end
 
+if ~exist('chosenix','var')
+    try
+        chosenix=fullrpts{get(handles.recentpts,'Value')};
+    catch
+        chosenix='Recent patients:';
+    end
+end
+
+fullrpts=[uipatdir';fullrpts];
+
+[fullrpts]=unique(fullrpts,'stable');
+if length(fullrpts)>10
+    
+   fullrpts=fullrpts(1:10);
+end
+[~,nuchosenix]=ismember(chosenix,fullrpts);
+save([earoot,'ea_recentpatients.mat'],'fullrpts');
+
+ea_updaterecentpatients(handles,nuchosenix);
+
+function ea_updaterecentpatients(handles,nuchosenix)
+earoot=ea_getearoot;
+load([earoot,'ea_recentpatients.mat']);
+for i=1:length(fullrpts)
+    [~,fullrpts{i}]=fileparts(fullrpts{i});
+end
+fullrpts=[{'Recent patients:'};fullrpts];
+set(handles.recentpts,'String',fullrpts);
+if exist('nuchosenix','var')
+   set(handles.recentpts,'Value',nuchosenix+1); 
+end
 
 function ea_load_pts(handles,uipatdir)
 
@@ -633,11 +674,13 @@ end
 % store patient directories in figure
 
 
-setappdata(gcf,'uipatdir',uipatdir);
+setappdata(handles.leadfigure,'uipatdir',uipatdir);
 ea_switchctmr(handles);
 
 getui(handles); % update ui from patient
 storeui(handles); % save in pt folder
+ea_addrecentpatient(handles,uipatdir,'Recent patients:');
+
 
 % --- Executes on button press in left_checkbox.
 function left_checkbox_Callback(hObject, eventdata, handles)
@@ -666,6 +709,8 @@ function normalize_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of normalize_checkbox
+
+
 storeui(handles);
 
 
@@ -996,58 +1041,6 @@ function dicomcheck_Callback(hObject, eventdata, handles)
 storeui(handles);
 
 
-% --- Executes on button press in setdicomin.
-function setdicomin_Callback(hObject, eventdata, handles)
-% hObject    handle to setdicomin (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-storeui(handles);
-
-p='';
-try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
-p=lp.dicom.infolder;
-end
-
-dicindir=uigetdir(p);
-
-if ~dicindir
-    return
-end
-
-set(handles.setdicomin,'String',dicindir);
-
-try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
-end
-lp.dicom.infolder=[dicindir,filesep];
-save([fileparts(which('lead')),filesep,'ea_prefs'],'lp');
-
-
-% --- Executes on button press in setdicomout.
-function setdicomout_Callback(hObject, eventdata, handles)
-% hObject    handle to setdicomout (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-storeui(handles);
-
-p='';
-try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
-p=lp.dicom.outfolder;
-end
-
-dicoutdir=uigetdir(p);
-
-if ~dicoutdir
-    return
-end
-set(handles.setdicomout,'String',dicoutdir);
-try
-load([fileparts(which('lead')),filesep,'ea_prefs']);
-end
-lp.dicom.outfolder=[dicoutdir,filesep];
-save([fileparts(which('lead')),filesep,'ea_prefs'],'lp');
 
 
 
@@ -1105,10 +1098,10 @@ end
 % determine if patientfolder is set
 switch chooseboxname
     case 'Choose Patient Directory'
-        outdir=[fileparts(which('lead')),filesep];
+        outdir=[ea_getearoot];
     otherwise
         if strcmp(chooseboxname(1:8),'Multiple')
-                    outdir=[fileparts(which('lead')),filesep];
+                    outdir=[ea_getearoot];
 
         else
         outdir=[get(handles.patdir_choosebox,'String'),filesep];
@@ -1117,7 +1110,7 @@ end
 
 updatestatus(handles);
 
-options=handles2options(handles);
+options=ea_handles2options(handles);
 try save([outdir,'ea_ui'],'-struct','options'); end
 
 
@@ -1203,209 +1196,21 @@ function getui(handles)
 % determine if patientfolder is set
 switch get(handles.patdir_choosebox,'String')
     case {'Choose Patient Directory','Multiple'}
-        outdir=[fileparts(which('lead')),filesep];
+        outdir=[ea_getearoot];
     otherwise
         outdir=get(handles.patdir_choosebox,'String');
 end
 try
 
 options=load([outdir,'ea_ui']);
-options2handles(options,handles); % update UI
+ea_options2handles(options,handles); % update UI
 end
 
 
 
-function options=handles2options(handles)
-
-%% some manual options that can be set:
-
-
-options.endtolerance=10; % how many slices to use with zero signal until end of electrode estimate.
-options.sprungwert=4; % how far electrode centroid may be (in xy axis) from last to current slice.
-options.refinesteps=0; % how often to re-iterate to reconstruct trajectory. More than 2 should usually not be beneficial. Use 0 to use the direct measurement.
-options.tra_stdfactor=0.9; % Default: 0.9 - the lower this factor, the lower the threshold (more included pixels in tra process).
-options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower the threshold (more included pixels in cor process).
 
 
 
-
-%% set options
-
-%uipatdir=get(handles.patdir_choosebox,'String');
-
-options.earoot=[fileparts(which('lead')),filesep];
-options.dicomimp=get(handles.dicomcheck,'Value');
-
-options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
-options.normalize.method=getappdata(gcf,'normmethod');
-options.normalize.method=options.normalize.method{get(handles.normmethod,'Value')};
-options.normalize.methodn=get(handles.normmethod,'Value');
-
-options.normalize.check=(get(handles.normcheck,'Value') == get(handles.normcheck,'Max'));
-
-% coreg CT
-options.coregct.do=(get(handles.coregct_checkbox,'Value') == get(handles.coregct_checkbox,'Max'));
-options.coregct.method=getappdata(gcf,'coregctmethod');
-options.coregct.method=options.coregct.method{get(handles.coregctmethod,'Value')};
-options.coregct.methodn=get(handles.coregctmethod,'Value');
-options.coregct.coregthreshs= eval( [ '[', get(handles.coregthreshs,'String'), ']' ] );
-
-options.coregctcheck=get(handles.coregctcheck,'Value');
-
-
-options.coregmr.method=get(handles.coregmrpopup,'Value');
-
-% set modality (MR/CT) in options
-options.modality = get(handles.MRCT,'Value');
-
-
-
-
-options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback.
-
-%sidelog=[get(handles.right_checkbox,'Value') == get(handles.right_checkbox,'Max'),get(handles.left_checkbox,'Value') == get(handles.left_checkbox,'Max')];
-%sidepos=[1,2];
-
-%options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
-options.sides=1:2;
-
-options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
-if strcmp(get(handles.maskwindow_txt,'String'),'auto')
-options.maskwindow=10; % initialize at 10
-options.automask=1; % set automask flag
-else
-options.maskwindow=str2num(get(handles.maskwindow_txt,'String')); % size of the window that follows the trajectory
-options.automask=0; % unset automask flag
-end
-options.autoimprove=0; % if true, templates will be modified.
-options.axiscontrast=8; % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
-options.zresolution=10; % voxels are being parcellated into this amount of portions.
-
-options.atl.genpt=get(handles.vizspacepopup,'Value')==2; % generate patient specific atlases
-options.atl.normalize=0; % normalize patient specific atlasset. This is not done anymore for now.
-options.atl.can=get(handles.vizspacepopup,'Value')==1; % display canonical atlases
-options.atl.pt=0; % display patient specific atlases. This is not done anymore for now.
-options.atl.ptnative=get(handles.vizspacepopup,'Value')==2; % show results in native space.
-if options.atl.ptnative
-    options.native=1;
-else
-    options.native=0;
-end
-
-options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
-options.d2.atlasopacity=0.15;
-
-
-options.manualheightcorrection=(get(handles.manualheight_checkbox,'Value') == get(handles.manualheight_checkbox,'Max'));
-options.d3.write=(get(handles.render_checkbox,'Value') == get(handles.render_checkbox,'Max'));
-options.d3.prolong_electrode=2;
-options.d3.verbose='on';
-options.d3.elrendering=1;
-options.d3.hlactivecontacts=0;
-options.d3.showactivecontacts=1;
-options.d3.showpassivecontacts=1;
-options.d3.showisovolume=0;
-options.d3.isovscloud=0;
-options.d3.autoserver=get(handles.exportservercheck,'Value');
-
-options.numcontacts=4;
-options.entrypoint=get(handles.targetpopup,'String');
-options.entrypoint=options.entrypoint{get(handles.targetpopup,'Value')};
-options.entrypointn=get(handles.targetpopup,'Value');
-
-options.writeoutpm=1;
-
-options.elmodeln = get(handles.electrode_model_popup,'Value');
-string_list = get(handles.electrode_model_popup,'String');
-options.elmodel=string_list{options.elmodeln};
-options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
-options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
-options.atlassetn=get(handles.atlassetpopup,'Value');
-
-if strcmp(options.atlasset,'Use none');
-    options.d3.writeatlases=0;
-    options.d2.writeatlases=1;
-else
-    options.d3.writeatlases=1;
-    options.d2.writeatlases=1;
-end
-
-
-options.expstatvat.do=0;
-
-options.fiberthresh=10;
-options.writeoutstats=1;
-
-
-options.colormap=colormap;
-
-options.dolc=get(handles.include_lead_connectome_subroutine,'Value');
-
-
-
-
-
-function options2handles(options,handles)
-
-
-%% set handles
-set(handles.dicomcheck,'Value',options.dicomimp);
-set(handles.normalize_checkbox,'Value',options.normalize.do);
-if options.normalize.methodn>length(handles.normmethod,'String')
-set(handles.normmethod,'Value',1);
-else
-set(handles.normmethod,'Value',options.normalize.methodn);
-end
-set(handles.normcheck,'Value',options.normalize.check);
-
-% CT coregistration
-set(handles.coregct_checkbox,'Value',options.coregct.do);
-if options.coregct.methodn>length(handles.coregctmethod,'String')
-set(handles.coregctmethod,'Value',1);
-else
-set(handles.coregctmethod,'Value',options.coregct.methodn);
-end
-set(handles.coregthreshs,'String',options.coregct.coregthreshs);
-
-set(handles.coregctcheck,'Value',options.coregctcheck);
-
-
-
-set(handles.MRCT,'Value',options.modality);
-
-if ismember(1,options.sides)
-    set(handles.right_checkbox,'Value',1);
-else
-        set(handles.right_checkbox,'Value',0);
-end
-if ismember(2,options.sides)
-    set(handles.left_checkbox,'Value',1);
-else
-    set(handles.left_checkbox,'Value',0);
-end
-
-
-set(handles.doreconstruction_checkbox,'Value',options.doreconstruction);
-
-
-if options.automask
-    set(handles.maskwindow_txt,'String','auto')
-else
-    set(handles.maskwindow_txt,'String',num2str(options.maskwindow));
-end
-set(handles.genptatlascheck,'Value',options.atl.genpt); % generate patient specific atlases
-set(handles.writeout2d_checkbox,'Value',options.d2.write);
-set(handles.tdcolorscheck,'Value',options.d2.col_overlay);
-set(handles.tdcontourcheck,'Value',options.d2.con_overlay);
-setappdata(handles.tdcontourcolor,'color',options.d2.con_color);
-set(handles.tdlabelcheck,'Value',options.d2.lab_overlay);
-set(handles.bbsize,'String',num2str(options.d2.bbsize));
-set(handles.manualheight_checkbox,'Value',options.manualheightcorrection);
-set(handles.render_checkbox,'Value',options.d3.write);
-set(handles.targetpopup,'Value',options.entrypointn);
-set(handles.electrode_model_popup,'Value',options.elmodeln);
-set(handles.atlassetpopup,'Value',options.atlassetn);
-set(handles.exportservercheck,'Value',options.d3.autoserver);
 
 
 
@@ -1587,28 +1392,7 @@ function specify2dwrite_Callback(hObject, eventdata, handles)
 ea_spec2dwrite;
 
 
-% --- Executes on button press in openresultdir.
-function openresultdir_Callback(hObject, eventdata, handles)
-% hObject    handle to openresultdir (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-try
-    load([fileparts(which('lead')),filesep,'ea_prefs']);
-    outfolder = lp.dicom.outfolder;
-catch
-    msgbox('Please set the working directory first!', 'Error','error');
-    return;
-end
 
-if ismac
-    system(['open ', outfolder]);
-elseif isunix
-    system(['xdg-open ', outfolder]);
-elseif ispc
-    system(['explorer ', outfolder]);
-end
-
-cd(outfolder);
 
 % --- Executes on button press in viewmanual.
 function viewmanual_Callback(hObject, eventdata, handles)
@@ -1626,7 +1410,7 @@ function dlgroupc_Callback(hObject, eventdata, handles)
 choice = questdlg('Lead will download and install the Horn 2013 Group connectome files. This may take a while...', ...
     'Start GC Download', ...
     'OK','Cancel','OK');
-earoot=[fileparts(which('lead')),filesep];
+earoot=[ea_getearoot];
 if strcmp(choice,'OK')
     disp('Downloading Horn 2013 Group Connectome');
     websave([earoot,'fibers',filesep,'gc.zip'],'http://www.lead-dbs.org/release/download.php?id=group')
@@ -1651,7 +1435,7 @@ if get(hObject,'Value')==2
    set(handles.writeout2d_checkbox,'Enable','off');
    set(handles.writeout2d_checkbox,'Value',0);
 else
-   set(handles.writeout2d_checkbox,'Enable','on');    
+   set(handles.writeout2d_checkbox,'Enable','on');
    %set(handles.writeout2d_checkbox,'Value',1);
 end
 
@@ -1724,10 +1508,307 @@ function exportcode_Callback(hObject, eventdata, handles)
 leadfig=handles.leadfigure;
 ea_busyaction('on',leadfig,'lead');
 
-options=handles2options(handles);
+options=ea_handles2options(handles);
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 ea_run('export',options);
 
 ea_busyaction('off',leadfig,'lead');
+
+
+% --- Executes during object creation, after setting all properties.
+function leadfigure_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to leadfigure (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+label='lead-dbs.org';
+url='http://www.lead-dbs.org/';
+position=[52,527,160,16];
+ea_hyperlink_label(label, url, position);
+
+
+% --- Executes on selection change in recentpts.
+function recentpts_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpts
+if get(handles.recentpts,'Value')==1
+    return
+end
+earoot=ea_getearoot;
+load([earoot,'ea_recentpatients.mat']);
+if iscell(fullrpts)
+fullrpts=fullrpts(get(handles.recentpts,'Value')-1);
+end
+
+if strcmp('No recent patients found',fullrpts)
+   return 
+end
+
+
+ea_load_pts(handles,fullrpts);
+
+% --- Executes during object creation, after setting all properties.
+function recentpts_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function normalize_checkbox_ButtonDownFcn(hObject,eventdata,handles)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over normcheck.
+function normcheck_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to normcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over doreconstruction_checkbox.
+function doreconstruction_checkbox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to doreconstruction_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over manualheight_checkbox.
+function manualheight_checkbox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to manualheight_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over include_lead_connectome_subroutine.
+function include_lead_connectome_subroutine_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to include_lead_connectome_subroutine (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over dicomcheck.
+function dicomcheck_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to dicomcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregct_checkbox.
+function coregct_checkbox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregct_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregctcheck.
+function coregctcheck_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregctcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over writeout2d_checkbox.
+function writeout2d_checkbox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to writeout2d_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over render_checkbox.
+function render_checkbox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to render_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over exportservercheck.
+function exportservercheck_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to exportservercheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over run_button.
+function run_button_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to run_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over exportcode.
+function exportcode_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to exportcode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over openpatientdir.
+function openpatientdir_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to openpatientdir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over viewmanual.
+function viewmanual_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to viewmanual (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over patdir_choosebox.
+function patdir_choosebox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to patdir_choosebox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over recentpts.
+function recentpts_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over electrode_model_popup.
+function electrode_model_popup_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to electrode_model_popup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over MRCT.
+function MRCT_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to MRCT (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregctmethod.
+function coregctmethod_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregctmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregthreshs.
+function coregthreshs_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregthreshs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over atlassetpopup.
+function atlassetpopup_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to atlassetpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over vizspacepopup.
+function vizspacepopup_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to vizspacepopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over specify2dwrite.
+function specify2dwrite_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to specify2dwrite (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over cmappushbutton.
+function cmappushbutton_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to cmappushbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over dlgroupc.
+function dlgroupc_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to dlgroupc (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over updatebutn.
+function updatebutn_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to updatebutn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregmrpopup.
+function coregmrpopup_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
+
+

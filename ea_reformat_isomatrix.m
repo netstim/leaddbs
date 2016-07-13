@@ -12,7 +12,7 @@ function isom=ea_reformat_isomatrix(isom,M,options)
 if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]}), if not convert to one.
     if min(size(isom))==1 && length(size(isom))==2 % single vector (1 value for each patient)
         
-        for side=1:length(options.sides)
+        for side=1:2
             try
                 stimmat{side}=cat(1,M.stimparams(:,1).U);
             catch
@@ -22,7 +22,7 @@ if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]
             stimmat{side}=bsxfun(@times,stimmat{side}>0,isom);
         end
     elseif min(size(isom))==2 && length(size(isom))==2 % 2xn matrix (1 value for each hemisphere)
-        for side=1:length(options.sides)
+        for side=1:2
             try
                 stimmat{side}=cat(1,M.stimparams(:,1).U);
             catch
@@ -46,7 +46,7 @@ end
 
 
 if options.normregressor>1 % apply normalization to regressor data
-    for side=1:length(options.sides)
+    for side=1:2
         if options.normregressor==2 % apply z-score
             stimmat{side}=reshape(nanzscore(stimmat{side}(:)),size(stimmat{side},1),size(stimmat{side},2));
         elseif options.normregressor==3 % apply normal method from van albada 2008

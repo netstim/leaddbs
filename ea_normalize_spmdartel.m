@@ -147,7 +147,7 @@ matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.cyc = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.its = 3;
 jobs{1}=matlabbatch;
 %try
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     disp('*** Dartel coregistration of preoperative version worked.');
 %catch
 %    ea_error('*** Dartel coregistration failed.');
@@ -184,7 +184,7 @@ for inverse=0:1
     end
     jobs{1}=matlabbatch;
 
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     disp('*** Exported normalization parameters to y_ea_normparams.nii');
     clear matlabbatch jobs;
 end

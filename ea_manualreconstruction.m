@@ -347,7 +347,7 @@ end
 
 % for now, rotation will always be constant. This will be the place to
 % insert rotation functions..
-for side=1:length(options.sides)
+for side=options.sides
     normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
     orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
     markers(side).x=markers(side).head+orth(:,1)';
@@ -422,7 +422,7 @@ delete(captions);
 % Plot spacing distance info text and correct inhomogeneous spacings.
 %emp_eldist(1)=mean([pdist([markers(1).head;markers(1).tail]),pdist([markers(2).head;markers(2).tail])])/3;
 clear emp_eldist
-for side=1:length(options.sides)
+for side=1:2
     A{side}=squareform(pdist(coords_mm{side}));
     emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
 end
@@ -488,7 +488,7 @@ setappdata(mcfig,'spacetext',spacetext);
 
 % %% plot trajectory lines
 
-for side=1:length(options.sides)
+for side=options.sides
     
     try
         
@@ -507,7 +507,7 @@ planecnt=1;
 %% plot slices in x and y planes
 
 for doxx=0:1
-    for side=1:length(options.sides)
+    for side=options.sides
         %try
             sample_width=20-doxx*5; % a bit smaller sample size in x direction to avoid overlap.
             meantrajectory=genhd_inside(trajectory{side});
@@ -840,7 +840,7 @@ end
 function movedel=whichelmoved(coordhandle)
 
 mplot = getappdata(gcf,'mplot');
-for side=1:length(options.sides)
+for side=1:2
     for el=1:2;
         
         if coordhandle==mplot(el,side)

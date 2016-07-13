@@ -40,7 +40,7 @@ else
 end
 
 cnt=1;
-    
+
 for atlas=1:length(atlases.names)
     switch atlases.types(atlas)
         case 1 % left hemispheric atlas.
@@ -91,7 +91,7 @@ for atlas=1:length(atlases.names)
                 atln=atlases.names{atlas};
                 wasgz(cnt)=0;
             end
-            
+
             if options.prefs.normalize.inverse.customtpm
                 nii=ea_load_nii([atlf,atln]);
                 nii.img=double(nii.img);
@@ -100,31 +100,31 @@ for atlas=1:length(atlases.names)
                 spm_write_vol(nii,nii.img);
                 clear nii
             end
-        
+
         atlasfile{cnt}=[atlf,'t',atln,',1'];
         oatlasfile{cnt}=[atlf,atln];
 
         tatlasfile{cnt}=[atlf,'t',atln];
         rawatlasfile{cnt}=[atlf,atln];
-        
+
         atlfname{cnt}=atln;
         atlaspath{cnt}=patlf;
         cnt=cnt+1;
-        
 
-        
+
+
     end
 end % collecting files loop
 
 
 %% generate TPM
 if options.prefs.normalize.inverse.customtpm
-    
+
     if ~exist([aroot,'TPM.nii'],'file') || ~exist([aroot,'TPM.nii.gz'],'file') || force % check for pre-built TPM
-        
-        
-        
-        
+
+
+
+
         matlabbatch{1}.spm.util.imcalc.input = [{
             [troot,'TPM.nii,1'];
             }
@@ -136,36 +136,36 @@ if options.prefs.normalize.inverse.customtpm
         matlabbatch{1}.spm.util.imcalc.options.mask = -1;
         matlabbatch{1}.spm.util.imcalc.options.interp = -4;
         matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
-        
-        
+
+
         jobs{1}=matlabbatch;
-        
-        cfg_util('run',jobs);
+
+        spm_jobman('run',jobs);
         clear jobs matlabbatch
-        
-        
-        
-        
+
+
+
+
         tnii=ea_load_untouch_nii([troot,'TPM.nii']);
         anii=ea_load_untouch_nii([aroot,'TPM.nii']);
-        
+
         tnii.img(:,:,:,1)=0.5*tnii.img(:,:,:,1)+0.5*anii.img(:,:,:,1);
         tnii.img(:,:,:,2)=0.5*tnii.img(:,:,:,2)-0.5*anii.img(:,:,:,1);
         c1=tnii.img(:,:,:,1); c2=tnii.img(:,:,:,2);
         c1(c1>1)=1; c2(c2<0)=0;
         tnii.img(:,:,:,1)=c1; clear('c1'); tnii.img(:,:,:,2)=c2; clear('c2');
         ea_save_untouch_nii(tnii,[aroot,'TPM.nii']);
-        
+
     end
-    
-    
-    
+
+
+
     %% apply deformation fields:
-    
+
     if exist([aroot,'TPM.nii.gz'],'file')
         gunzip([aroot,'TPM.nii.gz']);
     end
-    
+
     tpmroot=aroot;
 
 
@@ -203,7 +203,7 @@ matlabbatch{1}.spm.tools.preproc8.warp.affreg = 'mni';
 matlabbatch{1}.spm.tools.preproc8.warp.samp = 3;
 matlabbatch{1}.spm.tools.preproc8.warp.write = [1 1];
 jobs{1}=matlabbatch;
-cfg_util('run',jobs);
+spm_jobman('run',jobs);
 clear matlabbatch jobs
     gzip([aroot,'TPM.nii']);
     delete([aroot,'TPM.nii']);
@@ -234,7 +234,7 @@ for fi=1:length(oatlasfile)
     matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
     matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
     jobs{1}=matlabbatch;
-    cfg_util('run',jobs);
+    spm_jobman('run',jobs);
     clear matlabbatch jobs
     movefile([atlaspath{fi},'w',atlfname{fi}],[atlaspath{fi},atlfname{fi}]);
     ea_crop_nii([atlaspath{fi},atlfname{fi}]);

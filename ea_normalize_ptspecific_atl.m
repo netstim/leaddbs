@@ -24,11 +24,11 @@ mkdir([proot,'atlases',filesep,'mni',filesep,options.atlasset,filesep,'midline']
 
 
     if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
-        
+
         atlases=ea_genatlastable([],root,options);
     else
         load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-       atlases=ea_genatlastable(atlases,options.earoot,options);     
+       atlases=ea_genatlastable(atlases,options.earoot,options);
     end
 
 for atlas=1:length(atlases.names)
@@ -51,7 +51,7 @@ for atlas=1:length(atlases.names)
             natlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'midline',filesep];
             patlf=[proot,'atlases',filesep,'mni',filesep,options.atlasset,filesep,'midline',filesep];
     end
-    
+
     for side=detsides(atlases.types(atlas))
         if atlases.types(atlas)==3
             switch side
@@ -64,7 +64,7 @@ for atlas=1:length(atlases.names)
             end
         end
         % gzip support
-        
+
         if strcmp(atlases.names{atlas}(end-2:end),'.gz')
             try
                 gunzip([natlf,atlases.names{atlas}]);
@@ -75,13 +75,13 @@ for atlas=1:length(atlases.names)
             atln=atlases.names{atlas};
             wasgz=0;
         end
-        
-       
-        
+
+
+
         if ~exist([patlf,atlases.names{atlas}],'file') || force
 
             % apply original transformation back to warped atlas.
-            
+
             matlabbatch{1}.spm.util.defs.comp{1}.def = {[proot,'y_ea_normparams.nii']};
             matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[natlf,atln]};
             matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {patlf};
@@ -89,12 +89,12 @@ for atlas=1:length(atlases.names)
             matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
             matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
             jobs{1}=matlabbatch;
-            cfg_util('run',jobs);
+            spm_jobman('run',jobs);
             clear matlabbatch jobs
-            
+
             movefile([patlf,'w',atln],[patlf,atln]);
-            
-            
+
+
             % re-gzip tpm, patl and atlas file.
             if wasgz
                 try gzip([natlf,atln]); end
@@ -103,14 +103,14 @@ for atlas=1:length(atlases.names)
                 try delete([patlf,atln]); end
             end
         end
-        
-        
-        
+
+
+
     end
-    
-    
-    
-    
+
+
+
+
 end
 
 
@@ -129,5 +129,5 @@ switch opt
         sides=1:2;
     case 5
         sides=1; % midline
-        
+
 end

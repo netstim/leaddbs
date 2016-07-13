@@ -141,7 +141,7 @@ end
 %XYZ_src_vx = src.mat \ XYZ_mm;
 
 
-for side=1:length(options.sides)
+for side=options.sides
     %% write out axial images
     for tracor=find(tracorpresent)'
         
@@ -173,7 +173,7 @@ for side=1:length(options.sides)
                     else
                         V=Vcor;
                     end
-                case 3 % saggital images
+                case 3 % sagittal images
                     if manualtracor
                         V=manualV;
                     else
@@ -418,7 +418,7 @@ for side=1:length(options.sides)
                     case 2
                         ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_coronar',isofnadd,'.png']);
                     case 3
-                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_saggital',isofnadd,'.png']);
+                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_sagittal',isofnadd,'.png']);
                 end
             end
             

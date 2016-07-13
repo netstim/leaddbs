@@ -15,14 +15,23 @@ disp('Calculating VAT/Fibers/Connectivity...');
 
 hold on
 % get app data
+
 stimparams=getappdata(resultfig,'stimparams');
 
 for side=1:length(stimparams)
     VAT{side}=stimparams(side).VAT;
 end
 
+%-----------------------------begin changes----------------
+if options.macaquemodus 
+  load([options.earoot,'toolbox/macaque/atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
+else
+  load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);  
+%prepare statvat exports once if needed.
+end
+%--------------------------------end changes---------------------------------
 
-load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
+
 %prepare statvat exports once if needed.
 if options.expstatvat.do % export statvat nifti images.
     tV=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
@@ -78,7 +87,7 @@ end
 
 if isstruct(VAT{1}.VAT) % e.g. simbio model used
     vat=1;
-    for side=1:length(options.sides)
+    for side=1:2
         try
             nVAT{side}.VAT{vat}=VAT{side}.VAT.vertices;
             K(side).K{vat}=VAT{side}.VAT.faces;
@@ -91,7 +100,7 @@ if isstruct(VAT{1}.VAT) % e.g. simbio model used
 end
 
 
-for side=1:length(options.sides)
+for side=1:2
     % if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
     
     for vat=1:length(VAT{side}.VAT)
@@ -148,6 +157,7 @@ for side=1:length(options.sides)
                 %                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)]);
                 try % only one hemisphere could be defined.
                     if stimparams(side).volume
+                        
                         PL.quiv(side)=quiver3(vatgrad(side).x(1:reduc:end),vatgrad(side).y(1:reduc:end),vatgrad(side).z(1:reduc:end),vatgrad(side).qx(1:reduc:end),vatgrad(side).qy(1:reduc:end),vatgrad(side).qz(1:reduc:end),3,'w-','LineWidth',1);
                     end
                 end
@@ -229,7 +239,7 @@ end
 % correct togglestates
 
 
-for side=1:length(options.sides)
+for side=options.sides
     
     if ~vaton(side)
         try
