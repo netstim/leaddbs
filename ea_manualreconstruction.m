@@ -557,7 +557,7 @@ for doxx=0:1
                     lthresh=800; % initial guesses for CT
                     uthresh=2800;
                     try % try estimating a better guess..
-                        for tries=1:200
+                        for tries=1:5
                             timat=imat;
                             timat(timat<lthresh)=0;
                             timat(timat>uthresh)=0;

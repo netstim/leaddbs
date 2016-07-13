@@ -91,7 +91,7 @@ options.d3.showpassivecontacts=1;
 options.d3.showisovolume=0;
 options.d3.isovscloud=0;
 options.d3.autoserver=get(handles.exportservercheck,'Value');
-
+options.d3.expdf=0;
 options.numcontacts=4;
 options.entrypoint=get(handles.targetpopup,'String');
 options.entrypoint=options.entrypoint{get(handles.targetpopup,'Value')};

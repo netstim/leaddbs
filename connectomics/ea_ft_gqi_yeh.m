@@ -12,6 +12,7 @@ end
 directory=[options.root,options.patientname,filesep];
 ea_prepare_dti(options)
 
+vizz=0;
 
 load([options.root,options.patientname,filesep,options.prefs.bval]);
 [~,bvfname]=fileparts(options.prefs.bval);
@@ -106,6 +107,34 @@ fibers=fibinfo.tracts;
 idx=fibinfo.length';
 clear fibinfo
 fibers=fibers';
+b0=spm_vol([options.root,options.patientname,filesep,options.prefs.b0]);
+
+% default is a x- and y-flip as per communication with fang-cheng yeh
+% 07-13-2016
+
+if b0.mat(1)>0
+    % flip x
+    fibers(:,1)=(b0.dim(1))-fibers(:,1);
+end
+if b0.mat(6)>0
+    %flip y
+    fibers(:,2)=(b0.dim(2))-fibers(:,2);
+end
+if b0.mat(11)<0
+    %flip z
+    fibers(:,3)=(b0.dim(3))-fibers(:,3);
+end
+
+if vizz
+figure
+thresh=700; % set to a good grey value.
+plot3(fibers(:,1),fibers(:,2),fibers(:,3),'r.')
+hold on
+b0=ea_load_nii([options.root,options.patientname,filesep,options.prefs.b0]);
+[xx,yy,zz]=ind2sub(size(b0.img),find(b0.img(:)>thresh));
+plot3(xx,yy,zz,'g.')
+end
+
 
 clear length
 idxv=zeros(size(fibers,1),1);

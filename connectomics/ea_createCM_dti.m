@@ -13,7 +13,7 @@ Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'rb0w',options.lc
 
 %% get fiber definition
 disp('Loading FTR-File.');
-
+vizz=0;
 [fibs,idx]=ea_loadfibertracts([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized]);
 
 
@@ -56,8 +56,17 @@ else
    end
 end
 
-seedIDX=int16(spm_sample_vol(Vatl,seeds(:,1), seeds(:,2), seeds(:,3),0));
-termIDX=int16(spm_sample_vol(Vatl,terms(:,1), terms(:,2), terms(:,3),0));
+seedIDX=round(spm_sample_vol(Vatl,seeds(:,1), seeds(:,2), seeds(:,3),0));
+termIDX=round(spm_sample_vol(Vatl,terms(:,1), terms(:,2), terms(:,3),0));
+
+
+if vizz
+    figure, plot3(seeds(:,1),seeds(:,2),seeds(:,3),'r.')
+    nii=ea_load_nii(Vatl.fname);
+    hold on
+    [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img(:)>0));
+    plot3(xx,yy,zz,'g.');
+end
 
 clear seeds terms
 
@@ -71,6 +80,7 @@ DTI_CM=zeros(d);
 
 ea_dispercent(0,['Iterating through ',num2str(length(idx)),' fibers']);
 conns=0;
+
 endpts=[seedIDX,termIDX];
 conIDX=endpts>0;
 conIDX=sum(conIDX,2);
@@ -80,10 +90,11 @@ for fiber=conIDX'
     ea_dispercent(percent);
     if idx(fiber)>minlen % only include fibers >minimum length
         %if sum(thisfib(3,:)<-55)<1 % check if fiber exits the brain through spinal chord.. choose a cutoff(i.e.=-55mm).
-        DTI_CM(seedIDX(fiber),termIDX(fiber))    =  ...
-            DTI_CM(seedIDX(fiber),termIDX(fiber))    +   1;
-        DTI_CM(termIDX(fiber),seedIDX(fiber))    =  ...
-            DTI_CM(seedIDX(fiber),termIDX(fiber));  % symmetrize Matrix.
+        DTI_CM(atlas_lgnd{1}==seedIDX(fiber),atlas_lgnd{1}==termIDX(fiber))    =  ...
+            DTI_CM(atlas_lgnd{1}==seedIDX(fiber),atlas_lgnd{1}==termIDX(fiber))    +   1;
+
+        DTI_CM(atlas_lgnd{1}==termIDX(fiber),atlas_lgnd{1}==seedIDX(fiber))    =  ...
+            DTI_CM(atlas_lgnd{1}==seedIDX(fiber),atlas_lgnd{1}==termIDX(fiber));  % symmetrize Matrix.
         conns=conns+1; % connection count
         %end
     end
