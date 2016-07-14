@@ -310,7 +310,9 @@ function handles=lc2handles(lc,handles)
 % General settings
 
 try set(handles.parcellation,'Value',lc.general.parcellationn); end
-
+if get(handles.parcellation,'Value')>length(get(handles.parcellation,'String'))
+    set(handles.parcellation,'Value',length(get(handles.parcellation,'String')));
+end
 
 % Graph options:
 try set(handles.struc_func_sim,'Value',lc.graph.struc_func_sim); end

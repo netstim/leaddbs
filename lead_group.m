@@ -695,7 +695,13 @@ end
 
 
 thisparc=get(handles.labelpopup,'String');
-thisparc=thisparc{get(handles.labelpopup,'Value')};
+
+if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'))
+    useparc=length(get(handles.labelpopup,'String'));
+else
+    useparc=get(handles.labelpopup,'Value');
+end
+thisparc=thisparc{useparc};
 try
     gmdir=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
     
@@ -837,6 +843,10 @@ if ~isempty(M.patient.list)
                 M.ui.fiberspopup=length(get(handles.fiberspopup,'String'));
             end
             M.stimparams(pt,side).labelatlas=get(handles.labelpopup,'String');
+            
+            if M.ui.labelpopup>length(get(handles.labelpopup,'String'))
+                M.ui.labelpopup=length(get(handles.labelpopup,'String'));
+            end
             M.stimparams(pt,side).labelatlas=M.stimparams(pt,side).labelatlas(M.ui.labelpopup);
             M.stimparams(pt,side).showfibers=1;
             M.stimparams(pt,side).fiberthresh=1;
@@ -2549,13 +2559,14 @@ switch UI.test.ui
         uT=T;
         clear tstat
         clear pmask
-        pmask=zeros(size(T));
+        pmask=zeros([nbs.NBS.n,size(T)]);
         for network=1:nbs.NBS.n;
             X=full(nbs.NBS.con_mat{network});
             X=X+X';
             pmask(network,:,:)=X;
             save([root,'sig_',num2str(network)],'X');
         end
+        
         if network
         pmask=squeeze(sum(pmask,1));
         end

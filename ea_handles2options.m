@@ -21,6 +21,7 @@ options.dicomimp=get(handles.dicomcheck,'Value');
 
 options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
 options.normalize.method=getappdata(handles.leadfigure,'normmethod');
+
 options.normalize.method=options.normalize.method{get(handles.normmethod,'Value')};
 options.normalize.methodn=get(handles.normmethod,'Value');
 

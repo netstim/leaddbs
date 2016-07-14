@@ -157,6 +157,7 @@ end
 %axis fill
 
 %set(0,'gca',handles.logoaxes);
+set(0,'CurrentFigure',handles.leadfigure);
 im=imread('ea_logo.png');
 image(im);
 axis off;
@@ -192,7 +193,7 @@ end
 
 
 try
-setappdata(gcf,'normmethod',normmethod);
+setappdata(handles.leadfigure,'normmethod',normmethod);
 set(handles.normmethod,'String',ndc);
 catch
     if isempty(which('spm'))
@@ -224,7 +225,7 @@ for nd=length(ndir):-1:1
     end
 end
 try
-setappdata(gcf,'coregctmethod',coregctmethod);
+setappdata(handles.leadfigure,'coregctmethod',coregctmethod);
 set(handles.coregctmethod,'String',cdc);
 catch
     if isempty(which('spm'))
@@ -636,7 +637,11 @@ if ~exist('chosenix','var')
     end
 end
 
+try
 fullrpts=[uipatdir';fullrpts];
+catch % calls from lead_group could end up transposed
+fullrpts=[uipatdir;fullrpts];    
+end
 
 [fullrpts]=unique(fullrpts,'stable');
 if length(fullrpts)>10
@@ -1117,7 +1122,7 @@ try save([outdir,'ea_ui'],'-struct','options'); end
 
 function updatestatus(handles)
 try
-uipatdir=getappdata(gcf,'uipatdir');
+uipatdir=getappdata(handles.leadfigure,'uipatdir');
 
 set(handles.statusone,'String','One or more MR-/CT-volumes missing.');
 modality=ea_checkctmrpresent(handles);
@@ -1251,7 +1256,7 @@ function coregctmethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns coregctmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from coregctmethod
-methods=getappdata(gcf,'coregctmethod');
+methods=getappdata(handles.leadfigure,'coregctmethod');
 wm=get(handles.coregctmethod,'Value');
 
 [~,~,alphasug]=eval([methods{wm},'(''probe'')']);

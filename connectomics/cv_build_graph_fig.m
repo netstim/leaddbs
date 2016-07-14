@@ -13,11 +13,11 @@ parc=ea_load_nii([options.earoot,'templates',filesep,'labeling',filesep,selected
 parc.img=round(parc.img);
 centr=zeros(D,3);
 for reg=1:D
-   [xx,yy,zz]=ind2sub(size(parc.img),find(parc.img==reg));
+   [xx,yy,zz]=ind2sub(size(parc.img),find(parc.img==atlas_lgnd{1}(reg)));
     XYZ=[xx,yy,zz,ones(length(zz),1)]';
     
     XYZ=parc.mat*XYZ;
-    centr(reg,:)=mean(XYZ(1:3,:),2)';
+    centr(reg,:)=ea_nanmean(XYZ(1:3,:),2)';
 end
 
 % load CM into tCM variable
@@ -73,6 +73,7 @@ if get(handles.wmatedges,'Value')
     pcnt=1;
     ncnt=1;
     for edge=find(~isnan(tCM))';
+        
         [ii,jj]=ind2sub(size(tCM),edge);
         if isbipolar
             if tCM(edge)<0
