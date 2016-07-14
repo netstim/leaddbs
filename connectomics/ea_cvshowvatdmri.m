@@ -13,6 +13,9 @@ elseif iscell(handles) % called from lead_group
     vsname=handles{2};
     thresh='auto';
     usevat={'right','left'};
+    if isfield(options, 'flip')
+        usevat = flip(usevat);
+    end
     dimensionality=2; % how many ROI.
     sides=[1,2];
 end
@@ -35,13 +38,13 @@ end
         % seed filename
 
         seedfile={};
-        for v=1:dimensionality
+        for v=1:length(options.sides)
             
-            seedfile{v}=[directory,'stimulations',filesep,vsname,filesep,'vat_',usevat{v},'.nii'];
+            seedfile{v}=[directory,'stimulations',filesep,vsname,filesep,'vat_',usevat{options.sides(v)},'.nii'];
         end
-        for side=sides
+        for side=1:length(options.sides)
 try
-            load([directory,'stimulations',filesep,vsname,filesep,'stimparameters_',usevat{side},'.mat']);
+            load([directory,'stimulations',filesep,vsname,filesep,'stimparameters_',usevat{options.sides(side)},'.mat']);
 catch
     keyboard
 end

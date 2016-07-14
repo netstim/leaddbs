@@ -87,7 +87,7 @@ end
 
 if isstruct(VAT{1}.VAT) % e.g. simbio model used
     vat=1;
-    for side=1:2
+    for side=1:length(options.sides)
         try
             nVAT{side}.VAT{vat}=VAT{side}.VAT.vertices;
             K(side).K{vat}=VAT{side}.VAT.faces;
@@ -100,7 +100,7 @@ if isstruct(VAT{1}.VAT) % e.g. simbio model used
 end
 
 
-for side=1:2
+for side=1:length(options.sides)
     % if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
     
     for vat=1:length(VAT{side}.VAT)
@@ -239,7 +239,7 @@ end
 % correct togglestates
 
 
-for side=options.sides
+for side=1:length(options.sides)
     
     if ~vaton(side)
         try
