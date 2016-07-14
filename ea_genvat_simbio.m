@@ -322,7 +322,7 @@ else
     load([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat']);
 end
 
-switch side
+switch options.sides(side)
     case 1
         sidec='R';
         cnts={'k0','k1','k2','k3','k4','k5','k6','k7'};
@@ -494,13 +494,15 @@ end
 % determine stimulation name:
 mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
 
-switch side
-    case 1
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];
-        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_right.mat'];
-    case 2
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
-        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_left.mat'];
+if ~isfield(options, 'flip')
+    options.flip = false;
+end
+if options.sides(side) == 1 & ~options.flip
+    Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];
+    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_right.mat'];
+elseif options.sides(side) == 2 | options.flip
+    Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
+    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_left.mat'];
 end
 save(stimfile,'S');
 %spm_write_vol(Vvat,flipdim(eg,3));
