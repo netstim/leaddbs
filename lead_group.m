@@ -2174,36 +2174,44 @@ function lc_SPM_Callback(hObject, eventdata, handles)
 % hObject    handle to lc_SPM (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+M=getappdata(handles.lg_figure,'M');
 
-spmdir=[M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs,filesep,'SPM'];
+gecs=get(handles.lc_graphmetric,'String');
+[~,gecs]=fileparts(gecs{M.ui.lc.graphmetric});
+parc=get(handles.labelpopup,'String');
+parc=parc{get(handles.labelpopup,'Value')};
+
+spmdir=[M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,filesep,'SPM'];
+try
 rmdir(spmdir,'s');
+end
 mkdir([M.ui.groupdir,'connectomics']);
-mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String')]);
-mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph']);
-gecs=get(handles.lc_graphmetrics,'String');
-[~,gecs]=gecs{M.ui.lc.graphmetrics};
-mkdir([M.ui.groupdir,'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs]);
+mkdir([M.ui.groupdir,'connectomics',filesep,parc]);
+mkdir([M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph']);
+
+mkdir([M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,gecs]);
 mkdir(spmdir);
 
 
 for sub=1:length(M.patient.list)
-    if M.ui.lc.normalize==1;
+    if M.ui.lc.normalization==1;
         zzz='';
-    elseif M.ui.lc.normalize==2;
+    elseif M.ui.lc.normalization==2;
         zzz='z';
-        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs,'.nii,1'],2);
-    elseif M.ui.lc.normalize==3;
+        ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,'.nii,1'],2);
+    elseif M.ui.lc.normalization==3;
         zzz='k';
-        ea_histnormalize([M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,gecs,'.nii,1'],3);
+        ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,'.nii,1'],3);
     end
     if M.ui.lc.smooth
         sss='s';
-        ea_smooth([M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,zzz,gecs,'.nii,1']);
+        ea_smooth([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,zzz,gecs,'.nii,1']);
     else
         sss='';
     end
-    fis{sub}=[M.patient.list{sub},'connectomics',filesep,get(handles.labelpopup,'String'),filesep,'graph',filesep,sss,zzz,gecs,'.nii,1'];
+    fis{sub}=[M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,sss,zzz,gecs,'.nii,1'];
 end
+
 
 %% model specification:
 matlabbatch{1}.spm.stats.factorial_design.dir = {spmdir};
@@ -2305,16 +2313,20 @@ setappdata(gcf,'M',M);
 function ea_histnormalize(fname,zzz)
 nii=ea_load_nii(fname);
 [pth,fn,ext]=fileparts(fname);
-vals=nii.img(~isnan(nii.img));
+
+msk=isnan(nii.img);
+msk=msk+(nii.img==0);
+vals=nii.img(~msk);
+ext=ext(1:end-2);
 switch zzz
     case 2 % zscore
-        nii.fname=[pth,'z',fn,ext];
+        nii.fname=[pth,filesep,'z',fn,ext];
         vals=zscore(vals(:));
     case 3 % albada
-        nii.fname=[pth,'k',fn,ext];
-        vals=ea_normal(vals(:));
+        nii.fname=[pth,filesep,'k',fn,ext];
+        vals=ea_normal(vals(:));      
 end
-nii.img(~isnan(nii.img))=vals;
+nii.img(~msk)=vals;
 spm_write_vol(nii,nii.img);
 
 function ea_smooth(fname)
