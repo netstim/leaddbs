@@ -141,7 +141,7 @@ end
 %XYZ_src_vx = src.mat \ XYZ_mm;
 
 
-for side=options.sides
+for side=1:length(options.sides)
     %% write out axial images
     for tracor=find(tracorpresent)'
         

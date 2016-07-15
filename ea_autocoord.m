@@ -119,10 +119,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         ea_checkfiles(options);
         
         
-        for side=options.sides
+        for side=1:length(options.sides)
             %try
             % call main routine reconstructing trajectory for one side.
-            [coords,trajvector{side},trajectory{side},tramat]=ea_reconstruct(patientname,options,side);
+            [coords,trajvector{side},trajectory{side},tramat]=ea_reconstruct(patientname,options,options.sides(side));
             
             
             
@@ -178,7 +178,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         
         
         % transform trajectory to mm space:
-        for side=options.sides
+        for side=1:length(options.sides)
             
             try
                 if ~isempty(trajectory{side})

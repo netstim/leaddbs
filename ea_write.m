@@ -51,7 +51,7 @@ end
 
 %% check traject sanity
 
-for side=options.sides
+for side=1:length(options.sides)
     try
         trajectissane=ea_checktrajectsanity(trajvector{side});
         if ~trajectissane
