@@ -15,8 +15,8 @@ mkdir([mniatldir,'rh']);
 [whichnormmethod]=ea_whichnormmethod(directory);
 
 srcs={'Pallidum','Ruber','STN'};
-for side=1:2
-    switch side
+for side=1:length(options.sides)
+    switch options.sides(side)
         case 1
             sidec='rh';
         case 2
