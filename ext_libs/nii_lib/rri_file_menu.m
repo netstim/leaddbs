@@ -100,8 +100,7 @@ function init(fig, no_close)
       'callback','rri_file_menu(''export_fig'');', ...
       'label','Save Figure ...');
 
-   arch = computer;
-   if ~strcmpi(arch(1:2),'PC')
+   if ~ispc
       set(h1, 'enable', 'off');
    end
 
@@ -120,9 +119,7 @@ function init(fig, no_close)
 %  Copy to clipboard
 %
 function copy_fig
-
-   arch = computer;
-   if(~strcmpi(arch(1:2),'PC'))
+   if ~ispc
       error('copy to clipboard can only be used under MS Windows');
       return;
    end

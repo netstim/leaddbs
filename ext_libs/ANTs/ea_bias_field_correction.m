@@ -7,8 +7,8 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
     N4BiasFieldCorrection = [basedir, 'N4BiasFieldCorrection.exe'];
-elseif isunix
-    N4BiasFieldCorrection = [basedir, 'N4BiasFieldCorrection.', computer];
+else
+    N4BiasFieldCorrection = [basedir, 'N4BiasFieldCorrection.', computer('arch')];
 end
 
 cmd=[N4BiasFieldCorrection, ...
@@ -18,7 +18,7 @@ cmd=[N4BiasFieldCorrection, ...
     ' --shrink-factor 4' ...
     ' --bspline-fitting [200]' ...
     ' --convergence [50x50x50x50,0.000001]'];
-       
+
 if ~ispc
     system(['bash -c "', cmd, '"']);
 else

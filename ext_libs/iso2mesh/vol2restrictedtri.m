@@ -32,7 +32,6 @@ if(radbound<1)
 end
 
 exesuff=getexeext;
-exesuff=fallbackexeext(exesuff,'cgalsurf');
 
 saveinr(vol,mwpath('pre_extract.inr'));
 deletemeshfile(mwpath('post_extract.off'));

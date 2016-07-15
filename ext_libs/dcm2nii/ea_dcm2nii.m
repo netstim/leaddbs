@@ -7,8 +7,8 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
     dcm2nii = [basedir, 'dcm2nii.exe'];
-elseif isunix
-    dcm2nii = [basedir, 'dcm2nii.', computer];
+else
+    dcm2nii = [basedir, 'dcm2nii.', computer('arch')];
 end
 
 cmd=[dcm2nii, ' -g n -x y ', inputimage];
@@ -26,7 +26,7 @@ end
 
 try
     movefile([pth,filesep,'co',fn,ext],inputimage);
-    delete([pth,filesep,'o',fn,ext]); 
+    delete([pth,filesep,'o',fn,ext]);
 catch
     try
         movefile([pth,filesep,'c',fn,ext],inputimage);

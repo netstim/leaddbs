@@ -63,7 +63,11 @@ end
 fig2latex(ax, filename, media9_or_movie15, pdforxelatex);
 ea_mod_tex(filename,options);
 
-latex2pdf3d(filename, pdforxelatex,options)
+if ismac
+    latex2pdf3d(filename, options.prefs.ltx.pdfconverter)
+else
+    latex2pdf3d(filename)
+end
 rm_aux_files(filename)
 
 function [] = rm_aux_files(fname)

@@ -35,12 +35,12 @@ btable=[bvals;bvecs];
 % build white matter mask
 if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file');
     ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-    
-    
+
+
     %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
-    
+
     copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
-    
+
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c',options.prefs.prenii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.other = {
@@ -54,12 +54,12 @@ if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file')
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'rb0';
-    
+
     jobs{1}=matlabbatch;
     spm_jobman('run',jobs);
     clear matlabbatch jobs;
     movefile([directory,'rb0c2',options.prefs.prenii_unnormalized],[directory,'trackingmask.nii']);
-    
+
     tr=ea_load_nii([options.root,options.patientname,filesep,'trackingmask.nii']);
     tr.img=tr.img>0.8;
     tr.fname=[options.root,options.patientname,filesep,'ttrackingmask.nii'];
@@ -82,7 +82,7 @@ end
 if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file')
     disp('Estimating ODF / preparing GQI...');
     ea_prepare_fib_gqi(dsistudio,btable,1.2,options);
-    
+
     disp('Done.');
 else
     disp('.fib.gz file found, no need to rebuild.');
@@ -204,14 +204,14 @@ end
 
 if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file');
     disp('Reconstruction from command line failed. Reattempting inside Matlab.');
-    
+
     % do it the matlab way
-    
+
     res=ea_gqi_reco([options.root,options.patientname,filesep,options.prefs.dti],btable,mean_diffusion_distance_ratio,options);
     save([options.root,options.patientname,filesep,ftrbase,'.fib'],'-struct','res','-v4');
     gzip([options.root,options.patientname,filesep,ftrbase,'.fib']);
     try delete([options.root,options.patientname,filesep,ftrbase,'.fib']); end
-    
+
 end
 
 function res=ea_gqi_reco(filename,b_table,mean_diffusion_distance_ratio,options)
@@ -267,7 +267,7 @@ for z = 1:dim(3)
     end
     for x = 1:dim(1)
         for y = 1:dim(2)
-            
+
             ODF=A*reshape(reco_temp(x,y,:),[],1);
             p = ea_find_peak(ODF,odf_faces);
             max_dif = max(max_dif,mean(ODF));

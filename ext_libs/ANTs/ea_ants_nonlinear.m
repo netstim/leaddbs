@@ -8,7 +8,7 @@ outputimage=varargin{3};
 
 
 [outputdir, outputname, ~] = fileparts(outputimage);
-if outputdir 
+if outputdir
     outputbase = [outputdir, filesep, outputname];
 else
     outputbase = ['.', filesep, outputname];
@@ -24,11 +24,11 @@ else
 end
 
 if nargin>3
-    
+
     weights=varargin{4};
     metrics=varargin{5};
     options=varargin{6};
-    
+
 else
     weights=ones(length(fixedimage),1);
     metrics=repmat({'MI'},length(fixedimage),1);
@@ -61,9 +61,9 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     HEADER = [basedir, 'PrintHeader.exe'];
     ANTS = [basedir, 'antsRegistration.exe'];
-elseif isunix
-    HEADER = [basedir, 'PrintHeader.', computer];
-    ANTS = [basedir, 'antsRegistration.', computer];
+else
+    HEADER = [basedir, 'PrintHeader.', computer('arch')];
+    ANTS = [basedir, 'antsRegistration.', computer('arch')];
 end
 
 if ~ispc
@@ -77,7 +77,7 @@ if any(imgsize>256)
     rigidconvergence='[1000x500x250x0,1e-6,10]';
     rigidshrinkfactors='12x8x4x2';
     rigidsoomthingssigmas='4x3x2x1vox';
-    
+
     affineconvergence='[1000x500x250x0,1e-6,10]';
     affineshrinkfactors='12x8x4x2';
     affinesoomthingssigmas='4x3x2x1vox';
@@ -85,7 +85,7 @@ else
     rigidconvergence='[1000x500x250x0,1e-6,10]';
     rigidshrinkfactors='8x4x2x1';
     rigidsoomthingssigmas='3x2x1x0vox';
-    
+
     affineconvergence='[1000x500x250x0,1e-6,10]';
     affineshrinkfactors='8x4x2x1';
     affinesoomthingssigmas='3x2x1x0vox';
@@ -110,7 +110,7 @@ for fi=1:length(fixedimage)
     end
     rigidstage=[rigidstage,...
         ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
-    
+
 end
 
 affinestage = [' --transform Affine[0.1]'...
@@ -162,9 +162,9 @@ cmd = [ANTS, ' --verbose 1' ...
              ' --winsorize-image-intensities [0.15,0.85]', ...
              ' --write-composite-transform 1', ...
              rigidstage, affinestage, synstage];
-         
 
-         
+
+
 if ~ispc
     system(['bash -c "', cmd, '"']);
 else
