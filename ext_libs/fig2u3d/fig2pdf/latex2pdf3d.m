@@ -37,6 +37,12 @@ if nargin < 2
     latex_compiler = 'xelatex';
 end
 
+%% test if xelatex is available
+if system([latex_compiler, ' -v'])~=0
+    msgbox('Please make sure that Latex is correctly configured on your system.','xelatex not found!','Help');
+    return
+end
+
 %% Use pdflatex to generate the pdf
 cd(fileparts(fname));
 cmd = [latex_compiler, ' --interaction=nonstopmode ', fname, '.tex'];
