@@ -26,7 +26,7 @@ end
      %   jetlist=jet;
 
 
-for side=1:length(options.sides)
+for side=options.sides
     trajvector=mean(diff(trajectory{side}));
 
     trajvector=trajvector/norm(trajvector);

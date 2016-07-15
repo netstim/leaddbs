@@ -15,7 +15,7 @@ elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts
 else
     ea_error('Isomatrix has wrong size. Please specify a correct matrix.')
 end
-for side=1:length(options.sides)
+for side=options.sides
 
     cnt=1;
     for sub=1:length(elstruct)

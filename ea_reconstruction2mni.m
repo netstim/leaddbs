@@ -11,7 +11,7 @@ if ~isfield(options,'elspec')
     options=ea_resolve_elspec(options);
 end
     
-        for side=1:length(options.sides)
+        for side=options.sides
             reco.mni.coords_mm{side}=ea_warpcoord(reco.native.coords_mm{side},nii,options);
             reco.mni.markers(side).head=ea_warpcoord(reco.native.markers(side).head,nii,options);
             reco.mni.markers(side).tail=ea_warpcoord(reco.native.markers(side).tail,nii,options);

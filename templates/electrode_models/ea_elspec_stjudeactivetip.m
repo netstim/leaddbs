@@ -26,7 +26,7 @@ jetlist=othercolor('BuOr_12');
 %   jetlist=jet;
 
 
-for side=options.sides(side)
+for side=options.sides
     %% nullmodel:
     coords_mm{side}=[0,0,1.5+0.75;0,0,1.5+0.75+1*2;0,0,1.5+0.75+2*2;0,0,1.5+0.75+3*2];
     trajectory{side}=[zeros(30,2),linspace(30,0,30)'];

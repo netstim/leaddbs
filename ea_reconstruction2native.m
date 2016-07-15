@@ -17,7 +17,7 @@ end
             ea_checkforwardinv(options,'forward')
         end
     end
-        for side=1:length(options.sides)
+        for side=options.sides
             
             
             reco.native.coords_mm{side}=ea_warpcoord(reco.mni.coords_mm{side},nii,options);
