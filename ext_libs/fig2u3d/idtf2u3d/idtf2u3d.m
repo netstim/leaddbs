@@ -44,11 +44,7 @@ if nargin < 1
     u3dfile = 'matfig.u3d';
 end
 
-
-
 %% filenames & extensions
-
-% fname extensions ok ?
 idtffile = ea_path_helper([fn, '.idtf']);
 u3dfile = ea_path_helper([fn, '.u3d']);
 
@@ -61,7 +57,6 @@ if ispc
 else
     IDTF = [execdir, 'IDTFConverter'];
 end
-
 
 %% idtf -> u3d conversion
 cmd = [IDTF, ' -input ', idtffile, ' -output ', u3dfile];

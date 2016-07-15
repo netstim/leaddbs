@@ -1,4 +1,4 @@
-function [] = latex2pdf3d(fname, latex_compiler,options)
+function [] = latex2pdf3d(fname, latex_compiler)
 %LATEX2PDF3D    Compile LaTeX code to PDF.
 %
 % usage
@@ -7,7 +7,7 @@ function [] = latex2pdf3d(fname, latex_compiler,options)
 %
 % optional input
 %   fname = file name string
-%   latex_compiler = 'pdflatex' | 'xelatex'
+%   latex_compiler = 'xelatex' | PATH_TO_XELATEX
 %
 % output
 %   If compilation succeeds, then a PDF file is produced.
@@ -30,13 +30,16 @@ function [] = latex2pdf3d(fname, latex_compiler,options)
 %   and is covered by the BSD License.
 
 % depends
-%   {pdflatex | xelatex}, {media9 | movie15}
+%   {xelatex}, {media9 | movie15}
 
 %% input
+if nargin < 2
+    latex_compiler = 'xelatex';
+end
 
 %% Use pdflatex to generate the pdf
 cd(fileparts(fname));
-cmd = [options.prefs.ltx.pdfconverter,' --interaction=nonstopmode ', fname, '.tex'];
+cmd = [latex_compiler, ' --interaction=nonstopmode ', fname, '.tex'];
 
 status = system(cmd);
 % run twice to correct references.

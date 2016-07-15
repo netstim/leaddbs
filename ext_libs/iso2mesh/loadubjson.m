@@ -14,22 +14,22 @@ function data = loadubjson(fname,varargin)
 % input:
 %      fname: input file name, if fname contains "{}" or "[]", fname
 %             will be interpreted as a UBJSON string
-%      opt: a struct to store parsing options, opt can be replaced by 
+%      opt: a struct to store parsing options, opt can be replaced by
 %           a list of ('param',value) pairs - the param string is equivallent
-%           to a field in opt. opt can have the following 
+%           to a field in opt. opt can have the following
 %           fields (first in [.|.] is the default)
 %
 %           opt.SimplifyCell [0|1]: if set to 1, loadubjson will call cell2mat
-%                         for each element of the JSON data, and group 
+%                         for each element of the JSON data, and group
 %                         arrays based on the cell2mat rules.
 %           opt.IntEndian [B|L]: specify the endianness of the integer fields
-%                         in the UBJSON input data. B - Big-Endian format for 
-%                         integers (as required in the UBJSON specification); 
+%                         in the UBJSON input data. B - Big-Endian format for
+%                         integers (as required in the UBJSON specification);
 %                         L - input integer fields are in Little-Endian order.
-%           opt.NameIsString [0|1]: for UBJSON Specification Draft 8 or 
-%                         earlier versions (JSONLab 1.0 final or earlier), 
-%                         the "name" tag is treated as a string. To load 
-%                         these UBJSON data, you need to manually set this 
+%           opt.NameIsString [0|1]: for UBJSON Specification Draft 8 or
+%                         earlier versions (JSONLab 1.0 final or earlier),
+%                         the "name" tag is treated as a string. To load
+%                         these UBJSON data, you need to manually set this
 %                         flag to 1.
 %
 % output:
@@ -44,7 +44,7 @@ function data = loadubjson(fname,varargin)
 %      dat=loadubjson(['examples' filesep 'example1.ubj'],'SimplifyCell',1)
 %
 % license:
-%     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+%     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
 %
 % -- this function is part of JSONLab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
 %
@@ -74,7 +74,7 @@ index_esc = 1; len_esc = length(esc);
 
 opt=varargin2struct(varargin{:});
 fileendian=upper(jsonopt('IntEndian','B',opt));
-[os,maxelem,systemendian]=computer;
+[~,~,systemendian]=computer;
 
 jsoncount=1;
 while pos <= len
@@ -410,7 +410,7 @@ while(pos<len)
         if(~(pos>1 && str(pos-1)=='\'))
             endpos=pos;
             return;
-        end        
+        end
     end
     pos=pos+1;
 end
@@ -451,7 +451,7 @@ while(pos<=len)
     end
     pos=pos+1;
 end
-if(endpos==0) 
+if(endpos==0)
     error('unmatched "]"');
 end
 
