@@ -25,7 +25,7 @@ else
                 ' -t [',ea_path_helper([subdir,lprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
                 ];
         end
-        
+
     else
         if exist([subdir,lprebase,'Composite.h5'],'file')
             tstring=[' -t [',ea_path_helper([subdir,lprebase]),istr,'Composite.h5,0]'];
@@ -43,8 +43,8 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
     applyTransformsToPoints = [basedir, 'antsApplyTransformsToPoints.exe'];
-elseif isunix
-    applyTransformsToPoints = [basedir, 'antsApplyTransformsToPoints.', computer];
+else
+    applyTransformsToPoints = [basedir, 'antsApplyTransformsToPoints.', computer('arch')];
 end
 
 
@@ -54,7 +54,7 @@ cmd = [applyTransformsToPoints, ...
     ' --input ', ea_path_helper([subdir,'tmpin.csv']) ...  % input csv file with x,y,z,t (at least) as the column header
     ' --output ', ea_path_helper([subdir,'tmpout.csv']) ...    % warped output csv file
 tstring];
-    
+
 ea_writecsv([subdir,'tmpin.csv'],input);
 
 if ~ispc
@@ -84,6 +84,6 @@ function c=ea_writecsv(pth,input)
 fid=fopen(pth,'w');
 fprintf(fid,'x,y,z,t \n');
 for c=1:size(input,2)
-   fprintf(fid,[num2str(input(1,c)),',',num2str(input(2,c)),',',num2str(input(3,c)),',0 \n']); 
+   fprintf(fid,[num2str(input(1,c)),',',num2str(input(2,c)),',',num2str(input(3,c)),',0 \n']);
 end
 fclose(fid);

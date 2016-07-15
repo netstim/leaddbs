@@ -21,8 +21,8 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
     applyTransforms = [basedir, 'antsApplyTransforms.exe'];
-elseif isunix
-    applyTransforms = [basedir, 'antsApplyTransforms.', computer];
+else
+    applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end
 
 subdir=[options.root,options.patientname,filesep];

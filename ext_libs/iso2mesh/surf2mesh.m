@@ -22,7 +22,7 @@ function [node,elem,face]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,for
 % outputs:
 %      node: output, node coordinates of the tetrahedral mesh
 %      elem: output, element list of the tetrahedral mesh
-%      face: output, mesh surface element list of the tetrahedral mesh 
+%      face: output, mesh surface element list of the tetrahedral mesh
 %             the last column denotes the boundary ID
 %
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
@@ -31,7 +31,6 @@ function [node,elem,face]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,for
 fprintf(1,'generating tetrahedral mesh from closed surfaces ...\n');
 
 exesuff=getexeext;
-exesuff=fallbackexeext(exesuff,'tetgen');
 
 if(keepratio>1 | keepratio<0)
    warn(['The "keepratio" parameter is required to be between 0 and 1. '...

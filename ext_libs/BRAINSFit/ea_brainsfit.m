@@ -35,7 +35,7 @@ paramset{1} = [fixparams, ...
                ' --ROIAutoDilateSize 3'];
 % second attempt...
 paramset{2} = [fixparams, ...
-               ' --initializeTransformMode useGeometryAlign'];          
+               ' --initializeTransformMode useGeometryAlign'];
 % third attempt...
 if exist([volumedir, 'ct2anat.txt'],'file')
     paramset{3} = [fixparams, ...
@@ -61,8 +61,8 @@ basename = [fileparts(mfilename('fullpath')), filesep, 'BRAINSFit'];
 
 if ispc
     BRAINSFit = [basename, '.exe '];
-elseif isunix
-    BRAINSFit = [basename, '.', computer, ' '];
+else
+    BRAINSFit = [basename, '.', computer('arch'), ' '];
 end
 
 ea_libs_helper

@@ -7,8 +7,8 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
     dcm2nii = [basedir, 'dcm2niix.exe'];
-elseif isunix
-    dcm2nii = [basedir, 'dcm2niix.', computer];
+else
+    dcm2nii = [basedir, 'dcm2niix.', computer('arch')];
 end
 
 cmd=[dcm2nii, ' -o ',ofolder,' -z n -x y ',inputimage];
