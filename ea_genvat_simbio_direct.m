@@ -391,7 +391,10 @@ switch side
         cnts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 end
 
-for source=1:4
+if ~isfield(S, 'sources')
+    S.sources=1:4;
+end
+for source=S.sources
 
     stimsource=S.([sidec,'s',num2str(source)]);
 

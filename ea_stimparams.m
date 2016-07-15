@@ -1663,7 +1663,7 @@ if groupmode
         end
         setappdata(handles.stimfig,'gSv',gSv);
     end
-    % load gS -?updated with each refresh:
+    % load gS - updated with each refresh:
     gS=getappdata(handles.stimfig,'gS');
     if isempty(grouploaded)
 

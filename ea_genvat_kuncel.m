@@ -44,7 +44,10 @@ end
 
 radius=repmat(1.5,options.elspec.numel,1); % some default setting.
 %try % if stimparams are set.
-for source=1:4
+if ~isfield(S, 'sources')
+    S.sources=1:4;
+end
+for source=S.sources
     
     stimsource=S.([sidec,'s',num2str(source)]);
     
@@ -85,7 +88,7 @@ XYZmm=[gvmm{1}(XYZv(1,:));...
     gvmm{3}(XYZv(3,:));...
     ones(1,length(XYZv))];
 mat=linsolve(XYZv',XYZmm')';
-for source=1:4
+for source=S.sources
     in=ea_intriangulation(VAT{source},K{source},XYZmm(1:3,:)');
     voxspace(sub2ind(size(voxspace),XYZv(1,in),XYZv(2,in),XYZv(3,in)))=1;
 end
@@ -106,13 +109,11 @@ end
 mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
 %S(side).volume=sum(volume);
 
-if ~isfield(options, 'flip')
-    options.flip = false;
-end
-if options.sides(side) == 1 & ~options.flip
+
+if options.sides(side) == 1
     Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];
     stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_right.mat'];
-elseif options.sides(side) == 2 | options.flip
+elseif options.sides(side) == 2
     Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
     stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_left.mat'];
 end

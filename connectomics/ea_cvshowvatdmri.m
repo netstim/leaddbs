@@ -13,9 +13,6 @@ elseif iscell(handles) % called from lead_group
     vsname=handles{2};
     thresh='auto';
     usevat={'right','left'};
-    if isfield(options, 'flip')
-        usevat = flip(usevat);
-    end
     dimensionality=2; % how many ROI.
     sides=[1,2];
 end
