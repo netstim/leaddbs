@@ -12,9 +12,9 @@ end
 slice=zeros(size(tra_nii.img,1),size(tra_nii.img,2));
 masknii=tra_nii;
 if side==1
-    if options.verbose>1; progressfig=figure('name','Finding left electrode','NumberTitle','off','Menubar','none','ToolBar','none'); set(gcf,'color','w'); axis off; end
-else
     if options.verbose>1; progressfig=figure('name','Finding right electrode','NumberTitle','off','Menubar','none','ToolBar','none'); set(gcf,'color','w'); axis off; end
+elseif side==2
+    if options.verbose>1; progressfig=figure('name','Finding left electrode','NumberTitle','off','Menubar','none','ToolBar','none'); set(gcf,'color','w'); axis off; end
 end
 
 set(progressfig,'KeyPressFcn',@ea_keystr);

@@ -1663,7 +1663,7 @@ if groupmode
         end
         setappdata(handles.stimfig,'gSv',gSv);
     end
-    % load gS - updated with each refresh:
+    % load gS - updated with each refresh:
     gS=getappdata(handles.stimfig,'gS');
     if isempty(grouploaded)
 
@@ -1946,15 +1946,15 @@ switch model
     case 'SimBio/FieldTrip'
         ea_hide_impedance(handles);
         S.monopolarmodel=0;
-        ea_enable_vas(handles);
+        ea_enable_vas(handles,options);
     case 'Maedler 2012'
         ea_show_impedance(handles);
         S.monopolarmodel=1;
-        ea_disable_vas(handles);
+        ea_disable_vas(handles,options);
     case 'Kuncel 2008'
         ea_hide_impedance(handles);
         S.monopolarmodel=1;
-        ea_disable_vas(handles);
+        ea_disable_vas(handles,options);
 end
 
 S.model=model;
@@ -1998,22 +1998,22 @@ set(handles.perctext4,'visible',cmd);
 set(handles.kohmtext4,'visible',cmd);
 
 
-function ea_disable_vas(handles)
+function ea_disable_vas(handles,options)
 
 RL={'R','L'};
-for side=1:2
+for side=1:length(options.sides)
 for Rva=1:4
-set(handles.([RL{side},'s',num2str(Rva),'va']),'enable','off');
-set(handles.([RL{side},'s',num2str(Rva),'va']),'value',1);
+set(handles.([RL{options.sides(side)},'s',num2str(Rva),'va']),'enable','off');
+set(handles.([RL{options.sides(side)},'s',num2str(Rva),'va']),'value',1);
 end
 end
 
-function ea_enable_vas(handles)
+function ea_enable_vas(handles,options)
 
 RL={'R','L'};
-for side=1:2
+for side=1:length(options.sides)
 for Rva=1:4
-set(handles.([RL{side},'s',num2str(Rva),'va']),'enable','on');
+set(handles.([RL{options.sides(side)},'s',num2str(Rva),'va']),'enable','on');
 end
 end
 
