@@ -13,6 +13,7 @@ end
 
 cmd=[dcm2nii, ' -g n -x y ', inputimage];
 
+display(sprintf('\nReorient and crop image...'))
 if ~ispc
     system(['bash -c "', cmd, '"']);
 else
@@ -30,5 +31,7 @@ try
 catch
     try
         movefile([pth,filesep,'c',fn,ext],inputimage);
+    catch
+        disp('No need to cropping!');
     end
 end

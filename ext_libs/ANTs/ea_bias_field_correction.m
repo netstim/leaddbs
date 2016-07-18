@@ -19,6 +19,7 @@ cmd=[N4BiasFieldCorrection, ...
     ' --bspline-fitting [200]' ...
     ' --convergence [50x50x50x50,0.000001]'];
 
+display(sprintf('\nBias field correction...'))
 if ~ispc
     system(['bash -c "', cmd, '"']);
 else
