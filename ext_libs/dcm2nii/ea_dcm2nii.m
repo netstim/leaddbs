@@ -25,13 +25,11 @@ if isempty(pth)
     pth = '.';
 end
 
-try
+if exist([pth,filesep,'co',fn,ext], 'file')
     movefile([pth,filesep,'co',fn,ext],inputimage);
     delete([pth,filesep,'o',fn,ext]);
-catch
-    try
-        movefile([pth,filesep,'c',fn,ext],inputimage);
-    catch
-        disp('No need to cropping!');
-    end
+elseif exist([pth,filesep,'c',fn,ext], 'file')
+    movefile([pth,filesep,'c',fn,ext],inputimage);
+else
+	disp('No need to cropping!');
 end
