@@ -51,7 +51,14 @@ options.verbose=3; % 4: Show figures but close them 3: Show all but close all fi
 %sidepos=[1,2];
 
 %options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
-options.sides=1:2;
+switch get(handles.sidespopup,'Value')
+    case 1
+        options.sides=1:2;
+    case 2
+        options.sides=1;
+    case 3
+        options.sides=1;
+end
 
 options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
 if strcmp(get(handles.maskwindow_txt,'String'),'auto')
