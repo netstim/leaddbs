@@ -1,13 +1,17 @@
 function ea_newseg(directory,file,dartel,options)
 
-if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
-    ea_generate_tpm(options);
-end
+% we cannot generate the TPM from the SPM TPM anymore since 
+% we use the enhanced TPM by Lorio / Draganski:
+% http://unil.ch/lren/home/menuinst/data--utilities.html
+
+% if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
+%     ea_generate_tpm(options);
+% end
 
 disp('Segmentation...');
 
 load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob12']);
-tpminf=[options.earoot,'templates',filesep,'TPM.nii'];
+tpminf=[options.earoot,'templates',filesep,'TPM_Lorio_Draganski.nii'];
 job.channel.vols{1}=[directory,file,',1'];
 for tpm=1:6
     job.tissue(tpm).tpm=[tpminf,',',num2str(tpm)];

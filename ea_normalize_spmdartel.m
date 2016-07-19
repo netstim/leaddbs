@@ -39,10 +39,8 @@ if ischar(options) % return name of method.
     varargout{2}={'SPM8','SPM12'};
     return
 end
-if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
-   ea_generate_tpm; % will generate a hd_template out of SPM's TPM.nii
 
-end
+disp('This Normalization routine uses the advanced TPMs by Lorio 2016. See http://unil.ch/lren/home/menuinst/data--utilities.html');
 
 segmentresolution=0.5; % resolution of the DARTEL-Warps. Setting this value to larger values will generate the usual DARTEL-Workflow.
 
