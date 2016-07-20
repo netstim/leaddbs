@@ -117,16 +117,16 @@ end % collecting files loop
 %% generate TPM
 if options.prefs.normalize.inverse.customtpm
 
-    if ~exist([aroot,'TPM.nii'],'file') || ~exist([aroot,'TPM.nii.gz'],'file') || force % check for pre-built TPM
+    if ~exist([aroot,'TPM_Lorio_Draganski.nii'],'file') || ~exist([aroot,'TPM_Lorio_Draganski.nii.gz'],'file') || force % check for pre-built TPM
 
 
 
 
         matlabbatch{1}.spm.util.imcalc.input = [{
-            [troot,'TPM.nii,1'];
+            [troot,'TPM_Lorio_Draganski.nii,1'];
             }
             atlasfile'];
-        matlabbatch{1}.spm.util.imcalc.output = ['TPM.nii'];
+        matlabbatch{1}.spm.util.imcalc.output = ['TPM_Lorio_Draganski.nii'];
         matlabbatch{1}.spm.util.imcalc.outdir = {aroot};
         matlabbatch{1}.spm.util.imcalc.expression = 'sum(X)';
         matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
@@ -143,15 +143,15 @@ if options.prefs.normalize.inverse.customtpm
 
 
 
-        tnii=ea_load_untouch_nii([troot,'TPM.nii']);
-        anii=ea_load_untouch_nii([aroot,'TPM.nii']);
+        tnii=ea_load_untouch_nii([troot,'TPM_Lorio_Draganski.nii']);
+        anii=ea_load_untouch_nii([aroot,'TPM_Lorio_Draganski.nii']);
 
         tnii.img(:,:,:,1)=0.5*tnii.img(:,:,:,1)+0.5*anii.img(:,:,:,1);
         tnii.img(:,:,:,2)=0.5*tnii.img(:,:,:,2)-0.5*anii.img(:,:,:,1);
         c1=tnii.img(:,:,:,1); c2=tnii.img(:,:,:,2);
         c1(c1>1)=1; c2(c2<0)=0;
         tnii.img(:,:,:,1)=c1; clear('c1'); tnii.img(:,:,:,2)=c2; clear('c2');
-        ea_save_untouch_nii(tnii,[aroot,'TPM.nii']);
+        ea_save_untouch_nii(tnii,[aroot,'TPM_Lorio_Draganski.nii']);
 
     end
 
@@ -159,8 +159,8 @@ if options.prefs.normalize.inverse.customtpm
 
     %% apply deformation fields:
 
-    if exist([aroot,'TPM.nii.gz'],'file')
-        gunzip([aroot,'TPM.nii.gz']);
+    if exist([aroot,'TPM_Lorio_Draganski.nii.gz'],'file')
+        gunzip([aroot,'TPM_Lorio_Draganski.nii.gz']);
     end
 
     tpmroot=aroot;
@@ -170,27 +170,27 @@ matlabbatch{1}.spm.tools.preproc8.channel.vols = {[proot,options.prefs.prenii_un
 matlabbatch{1}.spm.tools.preproc8.channel.biasreg = 0.0001;
 matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm = 60;
 matlabbatch{1}.spm.tools.preproc8.channel.write = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(1).tpm = {[tpmroot,'TPM.nii,1']};
+matlabbatch{1}.spm.tools.preproc8.tissue(1).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,1']};
 matlabbatch{1}.spm.tools.preproc8.tissue(1).ngaus = 2;
 matlabbatch{1}.spm.tools.preproc8.tissue(1).native = [0 0];
 matlabbatch{1}.spm.tools.preproc8.tissue(1).warped = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(2).tpm = {[tpmroot,'TPM.nii,2']};
+matlabbatch{1}.spm.tools.preproc8.tissue(2).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,2']};
 matlabbatch{1}.spm.tools.preproc8.tissue(2).ngaus = 2;
 matlabbatch{1}.spm.tools.preproc8.tissue(2).native = [0 0];
 matlabbatch{1}.spm.tools.preproc8.tissue(2).warped = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(3).tpm = {[tpmroot,'TPM.nii,3']};
+matlabbatch{1}.spm.tools.preproc8.tissue(3).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,3']};
 matlabbatch{1}.spm.tools.preproc8.tissue(3).ngaus = 2;
 matlabbatch{1}.spm.tools.preproc8.tissue(3).native = [0 0];
 matlabbatch{1}.spm.tools.preproc8.tissue(3).warped = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(4).tpm = {[tpmroot,'TPM.nii,4']};
+matlabbatch{1}.spm.tools.preproc8.tissue(4).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,4']};
 matlabbatch{1}.spm.tools.preproc8.tissue(4).ngaus = 2;
 matlabbatch{1}.spm.tools.preproc8.tissue(4).native = [0 0];
 matlabbatch{1}.spm.tools.preproc8.tissue(4).warped = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(5).tpm = {[tpmroot,'TPM.nii,5']};
+matlabbatch{1}.spm.tools.preproc8.tissue(5).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,5']};
 matlabbatch{1}.spm.tools.preproc8.tissue(5).ngaus = 2;
 matlabbatch{1}.spm.tools.preproc8.tissue(5).native = [0 0];
 matlabbatch{1}.spm.tools.preproc8.tissue(5).warped = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(6).tpm = {[tpmroot,'TPM.nii,6']};
+matlabbatch{1}.spm.tools.preproc8.tissue(6).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,6']};
 matlabbatch{1}.spm.tools.preproc8.tissue(6).ngaus = 2;
 matlabbatch{1}.spm.tools.preproc8.tissue(6).native = [0 0];
 matlabbatch{1}.spm.tools.preproc8.tissue(6).warped = [0 0];
@@ -202,8 +202,8 @@ matlabbatch{1}.spm.tools.preproc8.warp.write = [1 1];
 jobs{1}=matlabbatch;
 spm_jobman('run',jobs);
 clear matlabbatch jobs
-    gzip([aroot,'TPM.nii']);
-    delete([aroot,'TPM.nii']);
+    gzip([aroot,'TPM_Lorio_Draganski.nii']);
+    delete([aroot,'TPM_Lorio_Draganski.nii']);
     movefile([proot,'iy_',options.prefs.prenii_unnormalized],[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'iy_warp.nii'])
     movefile([proot,'y_',options.prefs.prenii_unnormalized],[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'y_warp.nii'])
     warpfile=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'iy_warp.nii'];

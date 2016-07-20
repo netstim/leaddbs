@@ -1,12 +1,9 @@
 function ea_newseg(directory,file,dartel,options)
 
-% we cannot generate the TPM from the SPM TPM anymore since 
+% we cannot generate the TPM from the SPM TPM anymore since
 % we use the enhanced TPM by Lorio / Draganski:
 % http://unil.ch/lren/home/menuinst/data--utilities.html
 
-% if ~exist([options.earoot,'templates',filesep,'TPM.nii'],'file')
-%     ea_generate_tpm(options);
-% end
 
 disp('Segmentation...');
 
