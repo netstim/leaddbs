@@ -9,7 +9,11 @@ if strcmp(cfile(end-3:end),'.mat')
     fibers=fibinfo.fibers;
     idx=fibinfo.idx;
     if nargout>2
+        try
        voxmm=fibinfo.voxmm;
+        catch % assume voxel
+            voxmm='vox';
+        end
        mat=[];
        try
            mat=fibinfo.mat;

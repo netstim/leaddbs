@@ -51,8 +51,12 @@ ropts.vox=vox;
 ropts.interp=1;
 ropts.wrap=[0,0,0];
 ropts.prefix=prefix;
+try
 spm_write_sn([filename,',1'], sn,ropts);
-
+catch % init SPM first
+    spm_jobman('initcfg');
+spm_write_sn([filename,',1'], sn,ropts);    
+end
 if nargin<2
     [pth,fname,ext]=fileparts(filename);
     if ~isempty(pth)

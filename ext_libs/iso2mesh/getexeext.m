@@ -15,4 +15,5 @@ function exesuff=getexeext()
 if ispc
     exesuff = '.exe';
 else
-    exesuff = computer('arch');
+    exesuff = ['.',computer('arch')];
+end

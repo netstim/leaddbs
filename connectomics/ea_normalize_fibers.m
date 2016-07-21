@@ -9,6 +9,7 @@ disp('Exporting to TrackVis');
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
 
 try
+    
 %     if ~exist([directory,ftrfname,'.trk'],'file')
         reftemplate=[directory,options.prefs.b0];
         dnii=ea_load_nii(reftemplate);
@@ -16,7 +17,17 @@ try
 
         specs.origin=[0,0,0];
         specs.dim=niisize;
-        specs.vox=ftr.vox;
+        
+        
+        for d=1:3
+            ptm=[1,1,1,1];
+            m1=dnii(1).mat*ptm';
+            ptm(d)=2;
+            m2=dnii(1).mat*ptm';
+            voxel_size(d) = pdist([m1,m2]');
+        end
+        
+        specs.vox=voxel_size;
         specs.affine=dnii.mat;
 
         ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
@@ -29,7 +40,7 @@ disp('Done.');
 %     ea_error('Please run a compatible normalization of the preoperative MRI-volume first. Final (inverse) normalization parameters should be stored as y_ea_inv_normparams.nii inside of the subject folder.');
 % end
 
-vizz=0; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
+vizz=1; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
 cleanse_fibers=0; % deletes everything outside the white matter of the template.
 
 % check which normalization routine has been used..
@@ -43,6 +54,7 @@ cleanse_fibers=0; % deletes everything outside the white matter of the template.
 % get affinematrix from b0 to preop mri
 Vb0=spm_vol([directory,options.prefs.b0,',1']);
 Vmprage=spm_vol([directory,options.prefs.prenii_unnormalized,',1']);
+
 x=spm_coreg(Vb0,Vmprage);
 affinematrix1=Vmprage.mat\spm_matrix(x(:)')*Vb0.mat;
 
@@ -62,10 +74,8 @@ end
 if isempty(whichnormmethod)
     ea_error('Please run normalization for this subject first.');
 end
+Vmni=spm_vol(reft);
 
-Vmni=spm_vol(reftemplate);
-mnimask=spm_read_vols(Vmni);
-mnimask=mnimask>0.01;
 
 if vizz
     figure('color','w');
@@ -85,7 +95,7 @@ if vizz
     axis vis3d off tight equal;
     hold on
     % plot MNI
-    mni=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
+    mni=ea_load_nii(reft);
     subplot(1,3,3);
     title('MNI space');
     [xx,yy,zz]=ind2sub(size(mni.img),find(mni.img>max(mni.img(:))/3));
@@ -112,11 +122,11 @@ deletefibers=[];
 %
 %     ea_dispercent(fib/numfibs);
 
-    if vizz
-       thisfib=wfibs(1:100000,1:3)';
-        subplot(1,3,1)
-        plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'.','color',[0.1707    0.2919    0.7792]);
-    end
+if vizz
+    thisfib=wfibs(1:100000,1:3)';
+    subplot(1,3,1)
+    plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'.','color',[0.1707    0.2919    0.7792]);
+end
 
     %% first apply affine transform from b0 to prenii
     wfibs=affinematrix1*[wfibs(:,1:3),ones(size(wfibs,1),1)]';
@@ -129,26 +139,25 @@ deletefibers=[];
     %% -> coordinates are now in voxel-space of single subject anat file.
 
     %% map from prenii voxelspace to mni millimeter space
-if ~ismember(whichnormmethod,ea_getantsnormfuns)
-    wfibs = vox2mm_mni(wfibs,Vnii,ynii)';
+    if ~ismember(whichnormmethod,ea_getantsnormfuns)
+        wfibs = vox2mm_mni(wfibs,Vnii,ynii)';
         wfibsvox=[wfibs,ones(size(wfibs,1),1)]';
-else
+    else %ANTs support
 
-
-            %XYZ_vxLPS=[V.dim(1)-XYZ_vx(1,:);V.dim(2)-XYZ_vx(2,:);XYZ_vx(3,:);ones(1,size(XYZ_vx,2))];
-
-             XYZ_mm_beforetransform=Vmprage(1).mat*wfibs;
-             XYZ_mm_beforetransform(1,:)=-XYZ_mm_beforetransform(1,:);
-             XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
-
-            wfibs=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform,1);
-            wfibs(1,:)=-wfibs(1,:);
-            wfibs(2,:)=-wfibs(2,:);
-             wfibsvox=wfibs;
-            wfibs=wfibs';
-
-
-end
+        %XYZ_vxLPS=[V.dim(1)-XYZ_vx(1,:);V.dim(2)-XYZ_vx(2,:);XYZ_vx(3,:);ones(1,size(XYZ_vx,2))];
+        
+        XYZ_mm_beforetransform=Vmprage(1).mat*wfibs;
+        XYZ_mm_beforetransform(1,:)=-XYZ_mm_beforetransform(1,:);
+        XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
+        
+        wfibs=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform,1);
+        wfibs(1,:)=-wfibs(1,:);
+        wfibs(2,:)=-wfibs(2,:);
+        wfibsvox=wfibs;
+        wfibs=wfibs';
+        
+        
+    end
     if vizz
         thisfib=wfibs(1:100000,:)';
         subplot(1,3,3)
