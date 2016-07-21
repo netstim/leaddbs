@@ -122,8 +122,54 @@ if vizz
     title('Time series cleaned from session vector.')
 end
 
-%% regress out movement parameters
+
+% do the same on whole brain tc to get WM/GM/Global signal:
+
+for xx=1:size(alltc,1)
+    for yy=1:size(alltc,2)
+        for zz=1:size(alltc,3)
+            beta_hat  = X0reg*squeeze(alltc(xx,yy,zz,:));
+            if ~any(isnan(beta_hat))
+                alltc(xx,yy,zz,:)=squeeze(alltc(xx,yy,zz,:))-X0*beta_hat;
+            else
+                warning('Regression of WM-/CSF-Signals could not be performed.');
+            end
+        end
+    end
+end
+
+
+%% average Glob-, WM- and CSF-Timecourses
+disp('Calculating Global, WM and CSF-signals for signal regression...');
+
 [~,rf]=fileparts(options.prefs.rest);
+% regression steps
+c1=ea_load_nii([directory,'rr',rf,'c1',options.prefs.prenii_unnormalized]);
+c2=ea_load_nii([directory,'rr',rf,'c2',options.prefs.prenii_unnormalized]);
+c3=ea_load_nii([directory,'rr',rf,'c3',options.prefs.prenii_unnormalized]);
+
+globmap=logical((c1.img>0.5)+(c2.img)>0.5+(c3.img>0.5));
+ec2map=c2.img; ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
+ec3map=c3.img; ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
+
+WMTimecourse=zeros(signallength,1);
+CSFTimecourse=zeros(signallength,1);
+GlobTimecourse=zeros(signallength,1);
+for tmpt = 1:signallength
+    OneTimePoint=alltc(:,:,:,tmpt);
+    GlobTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(globmap(:))));
+    WMTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec2map(:))));
+    CSFTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec3map(:))));
+end
+
+if vizz
+        subplot(4,2,4)
+    plot([GlobTimecourse,WMTimecourse,CSFTimecourse]);
+    title('Global/WM/CSF Timecourses (cleaned from session).');
+end
+
+
+%% regress out movement parameters
 
 rp_rest = load([directory,'rp_',rf,'.txt']); % rigid body motion parameters.
 X1(:,1)=ones(signallength,1);
@@ -133,6 +179,9 @@ X1(:,4)=rp_rest(1:signallength,3);
 X1(:,5)=rp_rest(1:signallength,4);
 X1(:,6)=rp_rest(1:signallength,5);
 X1(:,7)=rp_rest(1:signallength,6);
+X1(:,7)=WMTimecourse;
+X1(:,7)=CSFTimecourse;
+X1(:,7)=GlobTimecourse;
 
 % regress sessions from movement parameters
 for mov=2:size(X1,2)
@@ -145,7 +194,7 @@ for mov=2:size(X1,2)
 end
 
 if vizz
-    subplot(4,2,4)
+    subplot(4,2,5)
     plot(X1);
     title('Motion parameters (cleaned from session vector).');
 end
@@ -162,55 +211,12 @@ for voxx=1:size(interpol_tc,1)
 end
 
 if vizz
-    subplot(4,2,5)
+    subplot(4,2,6)
     plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
     title('Time series cleaned from motion parameters.');
 end
 
-% do the same on whole brain tc to get WM/GM/Global signal:
-X01=[X0,X1(:,2:end)];
-X01reg=(X01'*X01)\X01';
-for xx=1:size(alltc,1)
-    for yy=1:size(alltc,2)
-        for zz=1:size(alltc,3)
-            beta_hat  = X01reg*squeeze(alltc(xx,yy,zz,:));
-            if ~any(isnan(beta_hat))
-                alltc(xx,yy,zz,:)=squeeze(alltc(xx,yy,zz,:))-X01*beta_hat;
-            else
-                warning('Regression of WM-/CSF-Signals could not be performed.');
-            end
-        end
-    end
-end
 
-
-%% average Glob-, WM- and CSF-Timecourses
-disp('Calculating Global, WM and CSF-signals for signal regression...');
-
-% regression steps
-c1=ea_load_nii([directory,'rr',rf,'c1',options.prefs.prenii_unnormalized]);
-c2=ea_load_nii([directory,'rr',rf,'c2',options.prefs.prenii_unnormalized]);
-c3=ea_load_nii([directory,'rr',rf,'c3',options.prefs.prenii_unnormalized]);
-
-globmap=logical((c1.img>0.5)+(c2.img)>0.5+(c3.img>0.5));
-ec2map=c2.img; ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
-ec3map=c3.img; ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
-
-WMTimecourse=zeros(signallength,1);
-CSFTimecourse=zeros(signallength,1);
-GlobTimecourse=zeros(signallength,1);
-for tmpt = 1:signallength
-    OneTimePoint=alltc(:,:,:,tmpt);
-    GlobTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec2map(:))));
-    WMTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec2map(:))));
-    CSFTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec3map(:))));
-end
-
-if vizz
-        subplot(4,2,6)
-    plot([GlobTimecourse,WMTimecourse,CSFTimecourse]);
-    title('Global/WM/CSF Timecourses (cleaned from session / mov).');
-end
 
 X2(:,1)=ones(signallength,1);
 if options.prefs.lc.func.regress_wmcsf
