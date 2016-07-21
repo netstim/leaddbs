@@ -57,7 +57,7 @@ end
 save(fullfile(pth,[fn,'.mat']),'-struct','ftr','-v7.3');
 delete(cfile);
 
-function ftr=ea_convertfibs2newformat(fibinfo,cfile)
+function fibers=ea_convertfibs2newformat(fibinfo,cfile)
     fn=fieldnames(fibinfo);
 
 if isfield(fn,'normalized_fibers_mm')
