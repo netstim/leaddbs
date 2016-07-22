@@ -259,11 +259,10 @@ sampleFreq 	 = 1/TR;
 sampleLength = signallength;
 paddedLength = rest_nextpow2_one35(sampleLength); %2^nextpow2(sampleLength);
 
-voxelmask.locsvx=ones(size(interpol_tc,1),1);
-voxelmask.locsvx(:)=1;
-maskLowPass =	repmat(voxelmask.locsvx, [1, paddedLength]);
+mask=ones(size(interpol_tc,1),1);
+mask(:)=1;
+maskLowPass =	repmat(mask, [1, paddedLength]);
 maskHighPass=	maskLowPass;
-clear mask.locsvx;
 %% GENERATE LOW PASS WINDOW	20070514, reference: fourior_filter.c in AFNI
 %Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band.
 
