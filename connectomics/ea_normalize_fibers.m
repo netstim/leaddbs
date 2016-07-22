@@ -78,7 +78,7 @@ Vmni=spm_vol(reft);
 
 
 if vizz
-    figure('color','w');
+    figure('color','w','name','Fibertrack normalization','numbertitle','off');
     % plot b0
     subplot(1,3,1);
     title('b0 space');
@@ -123,7 +123,11 @@ deletefibers=[];
 %     ea_dispercent(fib/numfibs);
 
 if vizz
+    try
     thisfib=wfibs(1:100000,1:3)';
+    catch
+        thisfib=wfibs(1:end,1:3)';
+    end
     subplot(1,3,1)
     plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'.','color',[0.1707    0.2919    0.7792]);
 end
@@ -131,7 +135,11 @@ end
     %% first apply affine transform from b0 to prenii
     wfibs=affinematrix1*[wfibs(:,1:3),ones(size(wfibs,1),1)]';
     if vizz
-        thisfib=wfibs(:,1:100000);
+        try
+            thisfib=wfibs(1:3,1:100000);
+        catch
+            thisfib=wfibs(1:3,:);
+        end
         subplot(1,3,2)
         plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'.','color',[0.1707    0.2919    0.7792]);
     end
@@ -146,11 +154,22 @@ end
 
         %XYZ_vxLPS=[V.dim(1)-XYZ_vx(1,:);V.dim(2)-XYZ_vx(2,:);XYZ_vx(3,:);ones(1,size(XYZ_vx,2))];
         
+        % RAS to LPS (ANTs as ITK uses LPS)
         XYZ_mm_beforetransform=Vmprage(1).mat*wfibs;
         XYZ_mm_beforetransform(1,:)=-XYZ_mm_beforetransform(1,:);
         XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
         
+        
+%         % other way to do this:
+%         tmat=Vmprage(1).mat;
+%         mirrormat=eye(4);
+%         mirrormat(1)=-1;
+%         mirrormat(6)=-1;
+%         tmat=mirrormat*tmat;
+%         XYZ_mm_beforetransform=tmat*wfibs;
+        
         wfibs=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform,1);
+        % get LPS coordinates back to RAS
         wfibs(1,:)=-wfibs(1,:);
         wfibs(2,:)=-wfibs(2,:);
         wfibsvox=wfibs;
@@ -159,17 +178,21 @@ end
         
     end
     if vizz
-        thisfib=wfibs(1:100000,:)';
-        subplot(1,3,3)
+    try
+    thisfib=wfibs(1:100000,1:3)';
+    catch
+        thisfib=wfibs(1:end,1:3)';
+    end
+    subplot(1,3,3)
         plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'.','color',[0.1707    0.2919    0.7792]);
     end
 
     %% map from mni millimeter space to mni voxel space (only needed for trackvis convertion and cleansing fibers).
     wfibsvox=Vmni(1).mat\wfibsvox;
     wfibsvox=wfibsvox(1:3,:)';
-wfibsvox=[wfibsvox,fibers(:,4)];
-
-wfibs=[wfibs(:,1:3),fibers(:,4)];
+    wfibsvox=[wfibsvox,fibers(:,4)];
+    
+    wfibs=[wfibs(:,1:3),fibers(:,4)];
 
     %% cleansing fibers..
     if cleanse_fibers % delete anything too far from wm.

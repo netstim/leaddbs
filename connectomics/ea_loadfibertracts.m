@@ -3,9 +3,9 @@ function [fibers,idx,voxmm,mat]=ea_loadfibertracts(cfile)
 if strcmp(cfile(end-3:end),'.mat')
     fibinfo=load(cfile);
     if ~isfield(fibinfo,'ea_fibformat')
-        fibinfo=ea_convertfibs2newformat(fibinfo,cfile);
+        ea_convertfibs2newformat(fibinfo,cfile);
+        fibinfo=load(cfile);
     end
-
     fibers=fibinfo.fibers;
     idx=fibinfo.idx;
     if nargout>2
@@ -16,7 +16,7 @@ if strcmp(cfile(end-3:end),'.mat')
         end
         mat=[];
         try
-           mat=fibinfo.mat;
+            mat=fibinfo.mat;
         end
     end
 else
@@ -53,15 +53,19 @@ end
 save(fullfile(pth,[fn,'.mat']),'-struct','ftr','-v7.3');
 delete(cfile);
 
-function ftr=ea_convertfibs2newformat(fibinfo,cfile)
+function ea_convertfibs2newformat(fibinfo,cfile)
 
-fn=fieldnames(fibinfo);
-if isfield(fn,'normalized_fibers_mm')
+    fn=fieldnames(fibinfo);
+
+if isfield(fibinfo,'normalized_fibers_mm')
     fibers=fibinfo.normalized_fibers_mm;
     voxmm='mm';
+elseif isfield(fibinfo,'curveSegCell') % original Freiburg format
+    fibers=fibinfo.curveSegCell;
+    freiburgconvert=1;
 else
     fibers=eval(['fibinfo.',fn{1},';']);
-    voxmm='mm'
+    voxmm='mm';
 end
 
 c=size(fibers);
@@ -85,8 +89,32 @@ ea_dispercent(1,'end');
 
 fibers=[fibers,idxv];
 
-ftr.fibers=fibers;
-ftr.idx=idx;
-fibinfo.voxmm=voxmm;
+if exist('freiburgconvert','var')
+    ver=str2double(fibinfo.version(2:end));
+    if ver<1.1 % not entirely sure from which version on did Marco stop the yx swap and y-flip..
+        % we have to flip in y-dimensionality from original Freiburg format
+        % ?�thus need to find the y-size of the DTI image first.. unfortunately
+        % need to load the b0 image header for this I guess.
+        [pth, fn]=fileparts(cfile);
+        prefs=ea_prefs('');
+        if isempty(pth)
+            b0fi=[prefs.b0];
+        else
+            b0fi=[pth,filesep,prefs.b0];
+        end
+        V=spm_vol(b0fi);
+        ysize=V.dim(2)+1;
+        
+        % now perform Freiburg2World transform
+        tfibs=fibers;
+        
+        tfibs(:,1)=ysize-fibers(:,2);
+        tfibs(:,2)=fibers(:,1);
+        fibers=tfibs;
+        clear tfibs
+    end
+end
 
-ea_savefibertracts(cfile,fibers,idx,'mm')
+
+ea_savefibertracts(cfile,fibers,idx,'mm');
+

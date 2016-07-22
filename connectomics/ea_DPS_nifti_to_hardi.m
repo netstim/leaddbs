@@ -3,7 +3,7 @@ function [mrs nii_orig] = DPS_nifti_to_hardi(niiName,bvecname,bvalname)
 nii_orig = load_untouch_nii(niiName);
 nii = nii_orig;
 
-mrs = DPS_nifti_to_mrs(nii);
+mrs = ea_DPS_nifti_to_mrs(nii);
 
 if nargin == 1,
     bvec = importdata([niiName(1:end-3), 'bvec']);
