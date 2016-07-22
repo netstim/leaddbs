@@ -21,7 +21,7 @@ end
 
 % create structural CM
 if options.lc.struc.compute_CM
-    
+
     if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
         mkdir([options.root,options.patientname,filesep,'connectomics']);
     end
@@ -47,18 +47,18 @@ disp('*** Done.');
 %% functional parts
 if options.lc.func.compute_GM || options.lc.func.compute_CM
     disp(['*** Performing functional parts of LEAD-Connectome...']);
-    
+
     % get files with rs-fMRI data
     restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_prefix]);
-    
+
     % get number of files with rs-fMRI data
     options.prefs.n_rest = numel(restfiles);
-    
+
     % display number of rs-fMRI files to analyze
     disp(['*** ' num2str(options.prefs.n_rest) ' rs-fMRI files to analyze...']);
 end
 % connectivity matrix steps:
-if options.lc.func.compute_CM 
+if options.lc.func.compute_CM
     if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
         mkdir([options.root,options.patientname,filesep,'connectomics']);
     end
@@ -71,12 +71,12 @@ if options.lc.func.compute_CM
     % set filenames for each rs-fMRI file
     for irest = 1:options.prefs.n_rest
         % set filenames for this iteration
-        options.prefs.rest = restfiles(irest).name; 
+        options.prefs.rest = restfiles(irest).name;
         [~,name,ext] = fileparts(restfiles(irest).name); % get fileparts for other filenames
         options.prefs.pprest=strcat('sr',name,ext); % preprocessed rs-fMRI data
         options.prefs.glrest=strcat('glr',name,ext); % preprocessed and normalized rs-fMRI data
         options.prefs.gmtc=strcat(name,'_tc.mat'); % extracted timecourses of resting state fMRI data
-        
+
         % create connectivity matrix for each rs-fMRI file
         if ~exist([expfolder,name,'_fMRI_CM.mat'],'file')
             disp(['Creating connectivity matrix for rs-fMRI file #',num2str(irest),': ',options.prefs.rest]);
@@ -86,9 +86,9 @@ if options.lc.func.compute_CM
             save([expfolder,name,'_fMRI_CM.mat'],'fMRI_CM','-v7.3');
             saveas(cm,[expfolder,name,'_fMRI_CM.png']);
         end % end loop for this rs-fMRI file
-    
+
     end % end loop for for all rs-fMRI files
-    
+
 end % end connectivity matrix section
 if options.lc.func.compute_GM || options.lc.func.compute_CM
 disp(['*** Done analyzing ' num2str(options.prefs.n_rest) ' rs-fMRI files...']);
@@ -103,7 +103,7 @@ if options.lc.func.compute_GM || options.lc.struc.compute_GM % perform graph met
     if ~exist(expfolder,'dir')
         mkdir(expfolder);
     end
-    
+
     modes=cell(0);
     finas=cell(0);
     threshs=cell(0);
@@ -117,42 +117,17 @@ if options.lc.func.compute_GM || options.lc.struc.compute_GM % perform graph met
             fs(end+1)=1;
         end
     end
-    
+
     if options.lc.struc.compute_GM
         modes{end+1}='DTI';
         finas{end+1}='DTI';
         threshs{end+1}=options.lc.graph.sthresh;
         fs(end+1)=2;
     end
-    
+
     ea_computeGM(options,modes,finas,threshs,fs);
 
-    
+
 end
 
 disp('*** Done.');
-
-
-
-
-
-
-function ea_perform_ft_proxy(options)
-%#function ea_ft_mesotracking_reisert
-%#function ea_ft_deterministictracking_kroon
-%#function ea_ft_globaltracking_reisert
-
-eval([options.lc.struc.ft.method,'(options)']); % triggers the fibertracking function and passes the options struct to it.
-try load([options.root,options.patientname,filesep,'ea_ftmethod_applied']); end
-if exist('ft_method_applied','var')
-    try
-        ft_method_applied{end+1}=options.lc.struc.ft.method;
-    catch
-        clear ft_method_applied
-        ft_method_applied{1}=options.lc.struc.ft.method;
-    end
-else
-    ft_method_applied{1}=options.lc.struc.ft.method;
-end
-ft_method_applied=options.lc.struc.ft.method;
-save([options.root,options.patientname,filesep,'ea_ftmethod_applied'],'ft_method_applied');
