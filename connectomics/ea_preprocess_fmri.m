@@ -58,11 +58,10 @@ directory=[options.root,options.patientname,filesep];
 %% new segment.
 if ~exist([directory,'c1',file],'file');
     ea_newseg(directory,file,0,options);
-    delete([directory,'c4',file]);
-    delete([directory,'c5',file]);
     [~,rf]=fileparts(file);
+    delete([directory,'c4',rf,'.nii']);
+    delete([directory,'c5',rf,'.nii']);
     delete([directory,rf,'_seg8.mat']);
-
 end
 
 function ea_coreg_pre2fmri(options)
