@@ -24,10 +24,10 @@ svfig=1;
 figvisible='on';
 if nargin==1
     % load prior results
-        coords_mm=ea_load_reconstruction(options);
-        ave_coords_mm=coords_mm;
-        clear coords_mm
-        elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
+    coords_mm=ea_load_reconstruction(options);
+    ave_coords_mm=coords_mm;
+    clear coords_mm
+    elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
     
 elseif nargin>1 % elstruct has been supplied, this is a group visualization
     if isstruct(varargin{2})
@@ -61,7 +61,7 @@ if strcmp(options.prefs.d2.useprepost,'pre') % use preoperative images, overwrit
     options.prefs.sagnii=options.prefs.prenii;
 elseif strcmp(options.prefs.d2.useprepost,'template')
     
-  options.modality=3;
+    options.modality=3;
 end
 
 % resolve 2d-options from td_options.mat
@@ -228,13 +228,13 @@ for side=1:length(options.sides)
                     end
                     [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
                     [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el);
-
+                    
                 else
                     coordsi{side}=Viso.mat\[coordsmm(1);coordsmm(1);coordsmm(1);1];
                     coordsi{side}=coordsi{side}(1:3,:)';
                     [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
                     [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el);
-
+                    
                 end
                 slice(slice==0)=nan;
                 rwholemap=spm_read_vols(Visoraw);
@@ -331,21 +331,21 @@ for side=1:length(options.sides)
                     end
                     
                     elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
-
+                    
                     if (elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts)
-                       
-                      wstr='w';
-                       if options.d3.hlactivecontacts
-                           
-                           
-                        if elstruct(c).activecontacts{side}(elcnt)
-                            wstr='r';
+                        
+                        wstr='w';
+                        if options.d3.hlactivecontacts
                             
+                            
+                            if elstruct(c).activecontacts{side}(elcnt)
+                                wstr='r';
+                                
+                            end
                         end
-                       end
                         elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
                     end
-
+                    
                 end
                 
                 
@@ -375,16 +375,16 @@ for side=1:length(options.sides)
                 
                 % 3. Dampen alpha by distance (this *has* to be performed
                 % last, if not, info is erased by legend again).
-%                 try % not sure if this is supported by earlier ML versions.
-%                     for c=1:length(elstruct)
-%                         
-%                         dist=abs(diff([elstruct(c).coords_mm{side}(elcnt,planedim),ave_coords_mm{side}(elcnt,planedim)]));
-%                         % dampen alpha by distance
-%                         alp=2*1/exp(dist);
-%                         hMarker = elplt(c).MarkerHandle;
-%                         hMarker.EdgeColorData=uint8(255*[cmap(c,:)';alp]);
-%                     end
-%                 end
+                %                 try % not sure if this is supported by earlier ML versions.
+                %                     for c=1:length(elstruct)
+                %
+                %                         dist=abs(diff([elstruct(c).coords_mm{side}(elcnt,planedim),ave_coords_mm{side}(elcnt,planedim)]));
+                %                         % dampen alpha by distance
+                %                         alp=2*1/exp(dist);
+                %                         hMarker = elplt(c).MarkerHandle;
+                %                         hMarker.EdgeColorData=uint8(255*[cmap(c,:)';alp]);
+                %                     end
+                %                 end
                 
                 
                 
@@ -463,7 +463,7 @@ for side=1:length(coords_mm)
             vals=zeros(length(elstruct),1);
             for vv=1:length(elstruct)
                 if ~isempty(elstruct(vv).coords_mm{side})
-                vals(vv)=elstruct(vv).coords_mm{side}(xx,yy);
+                    vals(vv)=elstruct(vv).coords_mm{side}(xx,yy);
                 end
             end
             coords_mm{side}(xx,yy)=mean(vals);
@@ -564,7 +564,7 @@ switch tracor
                 plusminusr='plus';
                 plusminusl='minus';
         end
-
+        
 end
 
 

@@ -43,7 +43,7 @@ V=spm_vol(single_s_files);
 
 for i=1:signallength
     interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1);
-
+    
 end
 
 aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.txt']);
@@ -59,7 +59,7 @@ interpol_tc=interpol_tc';
 
 % % detrend global signal
 % nDim1 = size(alltc,1); nDim2 = size(alltc,2); nDim3 = size(alltc,3); nDim4 =size(alltc,4);
-% 
+%
 % for x=1:nDim1
 %     oneslice =double(alltc(x, :, :, :));
 %     oneslice =reshape(oneslice, 1*nDim2*nDim3, nDim4)';
@@ -68,27 +68,27 @@ interpol_tc=interpol_tc';
 %     alltc(x, :, :, :) =(oneslice);
 % end;
 
- 
- [~,restbase]=fileparts(restfilename);
- if exist([directory,restbase(3:end),'_sessvec.mat'],'file')
-     load([directory,restbase(3:end),'_sessvec.mat']);
- else
-     sessvec=ones(size(interpol_tc,2),1);
- end
- 
- sessvec=ea_gensessvec(sessvec);
- 
+
+[~,restbase]=fileparts(restfilename);
+if exist([directory,restbase(3:end),'_sessvec.mat'],'file')
+    multsess=1;
+    load([directory,restbase(3:end),'_sessvec.mat']);
+else
+    multsess=0;
+    sessvec=ones(size(interpol_tc,2),1);
+end
+
+sessvec=ea_gensessvec(sessvec);
+
 if vizz
     figure
-    subplot(4,2,1)
+    pcnt=1;
+    subplot(4,2,pcnt)
+    pcnt=pcnt+1;
     plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
     title('Raw timeseries')
 end
-if vizz
-    subplot(4,2,2)
-    plot(sessvec);
-    title('Session vector')
-end
+
 %% Data corrections steps
 
 
@@ -99,45 +99,54 @@ end
 
 
 disp('Done. Regressing out nuisance variables...');
-%% regress out sessions
-X0(:,1)=ones(signallength,1);
-
-
-X0=[X0,sessvec+1];
-
-%% actual regression:
-X0reg=(X0'*X0)\X0';
-for voxx=1:size(interpol_tc,1)
-    beta_hat  = X0reg*squeeze(interpol_tc(voxx,:))';
-    if ~any(isnan(beta_hat))
-    interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X0*beta_hat;
-    else
-        warning('Regression of WM-/CSF-Signals could not be performed.');
-    end 
-end
-
-if vizz
-    subplot(4,2,3)
-    plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
-    title('Time series cleaned from session vector.')
-end
-
-
-% do the same on whole brain tc to get WM/GM/Global signal:
-
-for xx=1:size(alltc,1)
-    for yy=1:size(alltc,2)
-        for zz=1:size(alltc,3)
-            beta_hat  = X0reg*squeeze(alltc(xx,yy,zz,:));
-            if ~any(isnan(beta_hat))
-                alltc(xx,yy,zz,:)=squeeze(alltc(xx,yy,zz,:))-X0*beta_hat;
-            else
-                warning('Regression of WM-/CSF-Signals could not be performed.');
+if multsess
+    if vizz
+        subplot(4,2,pcnt)
+        pcnt=pcnt+1;
+        plot(sessvec);
+        title('Session vector')
+    end
+    %% regress out sessions
+    X0(:,1)=ones(signallength,1);
+    
+    
+    X0=[X0,sessvec+1];
+    
+    %% actual regression:
+    X0reg=(X0'*X0)\X0';
+    for voxx=1:size(interpol_tc,1)
+        beta_hat  = X0reg*squeeze(interpol_tc(voxx,:))';
+        if ~any(isnan(beta_hat))
+            interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X0*beta_hat;
+        else
+            
+            warning('Regression of WM-/CSF-Signals could not be performed.');
+        end
+    end
+    
+    if vizz
+        subplot(4,2,pcnt)
+        pcnt=pcnt+1;
+        plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
+        title('Time series cleaned from session vector.')
+    end
+    
+    
+    % do the same on whole brain tc to get WM/GM/Global signal:
+    
+    for xx=1:size(alltc,1)
+        for yy=1:size(alltc,2)
+            for zz=1:size(alltc,3)
+                beta_hat  = X0reg*squeeze(alltc(xx,yy,zz,:));
+                if ~any(isnan(beta_hat))
+                    alltc(xx,yy,zz,:)=squeeze(alltc(xx,yy,zz,:))-X0*beta_hat;
+                else
+                    warning('Regression of WM-/CSF-Signals could not be performed.');
+                end
             end
         end
     end
 end
-
 
 %% average Glob-, WM- and CSF-Timecourses
 disp('Calculating Global, WM and CSF-signals for signal regression...');
@@ -163,7 +172,8 @@ for tmpt = 1:signallength
 end
 
 if vizz
-        subplot(4,2,4)
+    subplot(4,2,pcnt)
+    pcnt=pcnt+1;
     plot([GlobTimecourse,WMTimecourse,CSFTimecourse]);
     title('Global/WM/CSF Timecourses (cleaned from session).');
 end
@@ -183,18 +193,21 @@ X1(:,7)=WMTimecourse;
 X1(:,7)=CSFTimecourse;
 X1(:,7)=GlobTimecourse;
 
-% regress sessions from movement parameters
-for mov=2:size(X1,2)
-    beta_hat  = X0reg*squeeze(X1(:,mov));
-    if ~any(isnan(beta_hat))
-    X1(:,mov)=squeeze(X1(:,mov))-X0*beta_hat;
-    else
-        warning('Regression of WM-/CSF-Signals could not be performed.');
-    end 
+if multsess
+    % regress sessions from movement parameters
+    for mov=2:size(X1,2)
+        beta_hat  = X0reg*squeeze(X1(:,mov));
+        if ~any(isnan(beta_hat))
+            X1(:,mov)=squeeze(X1(:,mov))-X0*beta_hat;
+        else
+            warning('Regression of WM-/CSF-Signals could not be performed.');
+        end
+    end
 end
 
 if vizz
-    subplot(4,2,5)
+    subplot(4,2,pcnt)
+    pcnt=pcnt+1;
     plot(X1);
     title('Motion parameters (cleaned from session vector).');
 end
@@ -204,14 +217,15 @@ X1reg=(X1'*X1)\X1';
 for voxx=1:size(interpol_tc,1)
     beta_hat  = X1reg*squeeze(interpol_tc(voxx,:))';
     if ~any(isnan(beta_hat))
-    interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X1*beta_hat;
+        interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X1*beta_hat;
     else
         warning('Regression of WM-/CSF-Signals could not be performed.');
-    end 
+    end
 end
 
 if vizz
-    subplot(4,2,6)
+    subplot(4,2,pcnt)
+    pcnt=pcnt+1;
     plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
     title('Time series cleaned from motion parameters.');
 end
@@ -225,22 +239,23 @@ if options.prefs.lc.func.regress_wmcsf
 end
 if options.prefs.lc.func.regress_global
     X2(:,4)=GlobTimecourse;
-end    
-    
+end
+
 %% actual regression of cleaned X2 (WM/Global) from time courses:
 X2reg=(X2'*X2)\X2';
 for voxx=1:size(interpol_tc,1)
-
+    
     beta_hat        = X2reg*squeeze(interpol_tc(voxx,:))';
     if ~any(isnan(beta_hat))
-    interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X2*beta_hat;
+        interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X2*beta_hat;
     else
         warning('Regression of WM-/CSF-Signals could not be performed.');
     end
 end
 
 if vizz
-    subplot(4,2,7)
+    subplot(4,2,pcnt)
+    pcnt=pcnt+1;
     plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
     title('Time series (cleaned from global/csf/wm).');
 end
@@ -282,7 +297,7 @@ maskHighPass(:,idxCutoff2+1:paddedLength)=0;	%Low eliminate
 
 % 	%20070513	remove trend --> FFT --> filter --> inverse FFT --> retrend
 % YAN Chao-Gan, 100401. remove the mean --> FFT --> filter --> inverse FFT --> add mean back
-    fftw('dwisdom');
+fftw('dwisdom');
 
 
 theMean=mean(interpol_tc,2);
