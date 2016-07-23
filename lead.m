@@ -63,13 +63,7 @@ guidata(hObject, handles);
 earoot=ea_getearoot;
 
 % add recent patients...
-try
-    load([earoot,'ea_recentpatients.mat']);
-catch
-    fullrpts={'No recent patients found'};
-end
-save([earoot,'ea_recentpatients.mat'],'fullrpts');
-ea_updaterecentpatients(handles);
+ea_initrecentpatients(handles);
 
 if ~isdeployed
     addpath(genpath(earoot));
@@ -98,6 +92,16 @@ ea_dispbn;
             else
                 ea_error('Please install Lead-DBS macaque toolbox prior to starting Lead-DBS in macaque mode.');
             end
+        elseif strcmp('connectome',varargin{1})
+            
+            lead_connectome;
+            delete(handles.leadfigure)
+            return
+        elseif strcmp('group',varargin{1})
+            
+            lead_group;
+            delete(handles.leadfigure)
+            return
         end
         end
     end
@@ -170,42 +174,9 @@ set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 
 
 
-% add normalization methods to menu
-cnt=1;
+% add norm methods to menu
 
-ndir=dir([earoot,mstr,'ea_normalize_*.m']);
-
-for nd=length(ndir):-1:1
-    [~,methodf]=fileparts(ndir(nd).name);
-    try
-        [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
-        if ismember(spm('ver'),spmvers)
-        ndc{cnt}=thisndc;
-        normmethod{cnt}=methodf;
-        if strcmp(ndc{cnt},eval([options.prefs.normalize.default,'(','''prompt''',')']))
-         defentry=cnt;
-        end
-        cnt=cnt+1;
-        end
-    end
-end
-
-
-
-try
-setappdata(handles.leadfigure,'normmethod',normmethod);
-set(handles.normmethod,'String',ndc);
-catch
-    if isempty(which('spm'))
-    warning('It seems that SPM is not installed.');
-    end
-end
-try % set selection of normmethod to default entry (specified in ea_prefs).
-    if defentry<=length(get(handles.normmethod,'String'))
-        set(handles.normmethod,'Value',defentry);
-    end
-end
-clear defentry
+ea_addnormmethods(handles,options,mstr);
 
 % add coreg methods to menu
 cnt=1;
@@ -268,7 +239,7 @@ setappdata(handles.leadfigure,'menuprobe',1);
 end
 
 ea_firstrun(handles);
-getui(handles);
+ea_getui(handles);
 
 
 
@@ -286,8 +257,9 @@ function varargout = lead_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
+try
 varargout{1} = handles.output;
-
+end
 
 % --- Executes on button press in run_button.
 function run_button_Callback(hObject, eventdata, handles)
@@ -295,7 +267,6 @@ function run_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-%% run trajectory reconstruction.
 leadfig=handles.leadfigure;
 ea_busyaction('on',leadfig,'lead');
 
@@ -319,7 +290,7 @@ function edit1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit1 as text
 %        str2double(get(hObject,'String')) returns contents of edit1 as a double
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -343,7 +314,7 @@ function electrode_model_popup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = get(hObject,'String') returns electrode_model_popup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from electrode_model_popup
-storeui(handles);
+ea_storeui(handles);
 
 
 
@@ -370,7 +341,7 @@ function endtol_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of endtol_txt as text
 %        str2double(get(hObject,'String')) returns contents of endtol_txt as a double
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -395,7 +366,7 @@ function distance_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of distance_txt as text
 %        str2double(get(hObject,'String')) returns contents of distance_txt as a double
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -419,7 +390,7 @@ function axis_std_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of axis_std_txt as text
 %        str2double(get(hObject,'String')) returns contents of axis_std_txt as a double
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -443,7 +414,7 @@ function cor_std_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of cor_std_txt as text
 %        str2double(get(hObject,'String')) returns contents of cor_std_txt as a double
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -467,7 +438,7 @@ function axiscontrast_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of axiscontrast_txt as text
 %        str2double(get(hObject,'String')) returns contents of axiscontrast_txt as a double
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -490,7 +461,7 @@ function slowdemo_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of slowdemo_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 
@@ -501,7 +472,7 @@ function z_contrast_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of z_contrast_txt as text
 %        str2double(get(hObject,'String')) returns contents of z_contrast_txt as a double
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -524,7 +495,7 @@ function prolong_electrode_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of prolong_electrode_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in render_checkbox.
@@ -534,7 +505,7 @@ function render_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of render_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in showatlases_checkbox.
@@ -544,7 +515,7 @@ function showatlases_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of showatlases_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in showfibers_checkbox.
@@ -554,7 +525,7 @@ function showfibers_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of showfibers_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in showconnectivities_checkbox.
@@ -564,7 +535,7 @@ function showconnectivities_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of showconnectivities_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in writeout2d_checkbox.
@@ -574,7 +545,7 @@ function writeout2d_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of writeout2d_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in showatlases2d_checkbox.
@@ -584,7 +555,7 @@ function showatlases2d_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of showatlases2d_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in manualheight_checkbox.
@@ -594,7 +565,7 @@ function manualheight_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of manualheight_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in patdir_choosebox.
@@ -603,88 +574,12 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-p='/'; % default use root
-try
-p=pwd; % if possible use pwd instead (could not work if deployed)
-end
-try % finally use last patient parent dir if set.
-earoot=ea_getearoot;
-load([earoot,'ea_recentpatients.mat']);
-p=fileparts(fullrpts{1});
-end
-
-uipatdir=ea_uigetdir(p,'Please choose patient folder(s)...');
-
-if isempty(uipatdir)
-    return
-end
-
-ea_load_pts(handles,uipatdir);
-
-function ea_addrecentpatient(handles,uipatdir,chosenix)
-earoot=ea_getearoot;
-load([earoot,'ea_recentpatients.mat']);
-if strcmp(fullrpts,'No recent patients found')
-    fullrpts={};
-end
-
-if ~exist('chosenix','var')
-    try
-        chosenix=fullrpts{get(handles.recentpts,'Value')};
-    catch
-        chosenix='Recent patients:';
-    end
-end
-
-try
-fullrpts=[uipatdir';fullrpts];
-catch % calls from lead_group could end up transposed
-fullrpts=[uipatdir;fullrpts];    
-end
-
-[fullrpts]=unique(fullrpts,'stable');
-if length(fullrpts)>10
-    
-   fullrpts=fullrpts(1:10);
-end
-[~,nuchosenix]=ismember(chosenix,fullrpts);
-save([earoot,'ea_recentpatients.mat'],'fullrpts');
-
-ea_updaterecentpatients(handles,nuchosenix);
-
-function ea_updaterecentpatients(handles,nuchosenix)
-earoot=ea_getearoot;
-load([earoot,'ea_recentpatients.mat']);
-for i=1:length(fullrpts)
-    [~,fullrpts{i}]=fileparts(fullrpts{i});
-end
-fullrpts=[{'Recent patients:'};fullrpts];
-set(handles.recentpts,'String',fullrpts);
-if exist('nuchosenix','var')
-   set(handles.recentpts,'Value',nuchosenix+1); 
-end
-
-function ea_load_pts(handles,uipatdir)
+ea_getpatients(handles)
 
 
-if length(uipatdir)>1
-    set(handles.patdir_choosebox,'String',['Multiple (',num2str(length(uipatdir)),')']);
-    set(handles.patdir_choosebox,'TooltipString',ea_strjoin(uipatdir,', '));
-else
-    set(handles.patdir_choosebox,'String',uipatdir{1});
-    set(handles.patdir_choosebox,'TooltipString',uipatdir{1});
-end
-
-% store patient directories in figure
 
 
-setappdata(handles.leadfigure,'uipatdir',uipatdir);
-ea_switchctmr(handles);
 
-getui(handles); % update ui from patient
-storeui(handles); % save in pt folder
-ea_addrecentpatient(handles,uipatdir,'Recent patients:');
 
 
 % --- Executes on button press in left_checkbox.
@@ -694,7 +589,7 @@ function left_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of left_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in right_checkbox.
@@ -704,7 +599,7 @@ function right_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of right_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in normalize_checkbox.
@@ -716,7 +611,7 @@ function normalize_checkbox_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of normalize_checkbox
 
 
-storeui(handles);
+ea_storeui(handles);
 
 
 
@@ -727,7 +622,7 @@ function refinesteps_txt_Callback(~, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of refinesteps_txt as text
 %        str2double(get(hObject,'String')) returns contents of refinesteps_txt as a double
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -756,7 +651,7 @@ function maskwindow_txt_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of maskwindow_txt as text
 %        str2double(get(hObject,'String')) returns contents of maskwindow_txt as a double
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -795,7 +690,7 @@ else
    set(handles.targetpopup,'Enable','off');
    set(handles.maskwindow_txt,'Enable','off');
 end
-storeui(handles);
+ea_storeui(handles);
 
 
 
@@ -811,7 +706,7 @@ function MRCT_Callback(hObject, eventdata, handles)
 ea_switchctmr(handles,get(hObject,'Value'));
 
 
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -834,7 +729,7 @@ function stimcheckbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of stimcheckbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in cg25check.
@@ -844,7 +739,7 @@ function cg25check_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of cg25check
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on selection change in normmethod.
@@ -855,7 +750,7 @@ function normmethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns normmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from normmethod
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -879,7 +774,7 @@ function axispopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns axispopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from axispopup
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -904,7 +799,7 @@ function zpopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns zpopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from zpopup
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -929,7 +824,7 @@ function targetpopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns targetpopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from targetpopup
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -962,7 +857,7 @@ function atlassetpopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns atlassetpopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from atlassetpopup
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -985,7 +880,7 @@ function normcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of normcheck
-storeui(handles);
+ea_storeui(handles);
 
 
 
@@ -1002,7 +897,7 @@ function cmappushbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 colormapeditor;
-storeui(handles);
+ea_storeui(handles);
 
 
 
@@ -1013,7 +908,7 @@ function canatlcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of canatlcheck
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in patatlcheck.
@@ -1023,7 +918,7 @@ function patatlcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of patatlcheck
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in normptatlascheck.
@@ -1033,7 +928,7 @@ function normptatlascheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of normptatlascheck
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in dicomcheck.
@@ -1043,44 +938,13 @@ function dicomcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of dicomcheck
-storeui(handles);
+ea_storeui(handles);
 
 
 
 
 
-function [pathname] = ea_uigetdir(start_path, dialog_title)
-% Pick a directory with the Java widgets instead of uigetdir
 
-import javax.swing.JFileChooser;
-
-if nargin == 0 || strcmp(start_path,'') % Allow a null argument.
-    start_path = pwd;
-end
-
-jchooser = javaObjectEDT('javax.swing.JFileChooser', start_path);
-
-jchooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-if nargin > 1
-    jchooser.setDialogTitle(dialog_title);
-end
-
-jchooser.setMultiSelectionEnabled(true);
-
-status = jchooser.showOpenDialog([]);
-
-if status == JFileChooser.APPROVE_OPTION
-    jFile = jchooser.getSelectedFiles();
-    pathname{size(jFile, 1)}=[];
-    for i=1:size(jFile, 1)
-        pathname{i} = char(jFile(i).getAbsolutePath);
-    end
-
-elseif status == JFileChooser.CANCEL_OPTION
-    pathname = [];
-else
-    error('Error occured while picking file.');
-end
 
 
 % --- Executes on button press in genptatlascheck.
@@ -1090,33 +954,10 @@ function genptatlascheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of genptatlascheck
-storeui(handles);
+ea_storeui(handles);
 
 
-function storeui(handles)
 
-try
-chooseboxname=get(handles.patdir_choosebox,'String');
-catch
-    return
-end
-% determine if patientfolder is set
-switch chooseboxname
-    case 'Choose Patient Directory'
-        outdir=[ea_getearoot];
-    otherwise
-        if strcmp(chooseboxname(1:8),'Multiple')
-                    outdir=[ea_getearoot];
-
-        else
-        outdir=[get(handles.patdir_choosebox,'String'),filesep];
-        end
-end
-
-updatestatus(handles);
-
-options=ea_handles2options(handles);
-try save([outdir,'ea_ui'],'-struct','options'); end
 
 
 
@@ -1194,22 +1035,7 @@ if ~(sum(switchto>0)>1) && ~isempty(switchto) % e.g. MR and CT present
 end
 updatestatus(handles);
 
-function getui(handles)
 
-
-
-% determine if patientfolder is set
-switch get(handles.patdir_choosebox,'String')
-    case {'Choose Patient Directory','Multiple'}
-        outdir=[ea_getearoot];
-    otherwise
-        outdir=get(handles.patdir_choosebox,'String');
-end
-try
-
-options=load([outdir,'ea_ui']);
-ea_options2handles(options,handles); % update UI
-end
 
 
 
@@ -1235,7 +1061,7 @@ function exportservercheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of exportservercheck
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in coregct_checkbox.
@@ -1245,7 +1071,7 @@ function coregct_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of coregct_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on selection change in coregctmethod.
@@ -1261,7 +1087,7 @@ wm=get(handles.coregctmethod,'Value');
 
 [~,~,alphasug]=eval([methods{wm},'(''probe'')']);
 set(handles.coregthreshs,'String',alphasug);
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1275,7 +1101,7 @@ function coregctmethod_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-storeui(handles);
+ea_storeui(handles);
 
 
 
@@ -1286,7 +1112,7 @@ function coregthreshs_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of coregthreshs as text
 %        str2double(get(hObject,'String')) returns contents of coregthreshs as a double
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1300,7 +1126,7 @@ function coregthreshs_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in coregctcheck.
@@ -1310,7 +1136,7 @@ function coregctcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of coregctcheck
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes on button press in ft_checkbox.
@@ -1320,7 +1146,7 @@ function ft_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of ft_checkbox
-storeui(handles);
+ea_storeui(handles);
 
 % --- Executes on selection change in ftmethod.
 function ftmethod_Callback(hObject, eventdata, handles)
@@ -1330,7 +1156,7 @@ function ftmethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns ftmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ftmethod
-storeui(handles);
+ea_storeui(handles);
 
 % --- Executes during object creation, after setting all properties.
 function ftmethod_CreateFcn(hObject, eventdata, handles)
@@ -1356,7 +1182,7 @@ function parcellation_atlas_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns parcellation_atlas contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from parcellation_atlas
-storeui(handles);
+ea_storeui(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1386,7 +1212,7 @@ function openleadconnectome_Callback(hObject, eventdata, handles)
 % hObject    handle to openleadconnectome (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-lead_connectome;
+lead_connectome('dependent');
 
 
 % --- Executes on button press in specify2dwrite.

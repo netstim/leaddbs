@@ -1,15 +1,15 @@
 function varargout = lead_connectome(varargin)
-% LEAD_CONNECTOME MATLAB code for lead_connectome.fig
-%      LEAD_CONNECTOME, by itself, creates a new LEAD_CONNECTOME or raises the existing
+% LEADFIGURE MATLAB code for leadfigure.fig
+%      LEADFIGURE, by itself, creates a new LEADFIGURE or raises the existing
 %      singleton*.
 %
-%      H = LEAD_CONNECTOME returns the handle to a new LEAD_CONNECTOME or the handle to
+%      H = LEADFIGURE returns the handle to a new LEADFIGURE or the handle to
 %      the existing singleton*.
 %
-%      LEAD_CONNECTOME('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in LEAD_CONNECTOME.M with the given input arguments.
+%      LEADFIGURE('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in LEADFIGURE.M with the given input arguments.
 %
-%      LEAD_CONNECTOME('Property','Value',...) creates a new LEAD_CONNECTOME or raises the
+%      LEADFIGURE('Property','Value',...) creates a new LEADFIGURE or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
 %      applied to the GUI before lead_connectome_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
@@ -20,9 +20,9 @@ function varargout = lead_connectome(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help lead_connectome
+% Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 14-May-2015 19:47:03
+% Last Modified by GUIDE v2.5 23-Jul-2016 15:05:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -44,20 +44,20 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before lead_connectome is made visible.
+% --- Executes just before leadfigure is made visible.
 function lead_connectome_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to lead_connectome (see VARARGIN)
+% varargin   command line arguments to leadfigure (see VARARGIN)
 
 earoot=ea_getearoot;
 im=imread('ea_logo.png');
 image(im);
 axis off;
 axis equal;
-set(gcf,'name','Welcome to LEAD-DBS','color','w');
+set(handles.leadfigure,'name','Welcome to LEAD-DBS','color','w');
 
 % add parcellation atlases to menu:
 ll=dir([ea_getearoot,'templates',filesep,'labeling',filesep,'*.nii']);
@@ -67,6 +67,8 @@ for lab=1:length(ll)
 end
 setappdata(gcf,'parcellation',parcellation);
 set(handles.parcellation,'String',parcellation);
+
+set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 
 % add ft methods to menu
@@ -89,26 +91,53 @@ setappdata(gcf,'ftmethod',ftmethod);
 set(handles.ftmethod,'String',fdc);
 
 
+% add normmethods to menu
+options.prefs=ea_prefs('');
+ea_addnormmethods(handles,options,'');
+
+% add recent patients...
+ea_initrecentpatients(handles,'subjects');
+
 
 % update UI:
 try
     lc=load([ea_getearoot,'connectomics',filesep,'lc_options.mat']);
 catch
-    lc=ea_initlcopts(handles.lead_connectome);
+    lc=ea_initlcopts(handles.leadfigure);
 end
 lc2handles(lc,handles);
 
 
-% Choose default command line output for lead_connectome
+
+if isempty(varargin) % "standard alone" mode, i.e. not dependend from lead
+    isindependent=1;
+else
+    if strcmp(varargin{1},'dependent')
+        isindependent=0;
+        ea_makehidelcindep(handles);
+    end
+end
+
+setappdata(handles.leadfigure,'isindependent',isindependent);
+    
+
+
+% Choose default command line output for leadfigure
 handles.output = hObject;
 
 % Update handles structure
 
 guidata(hObject, handles);
 
-% UIWAIT makes lead_connectome wait for user response (see UIRESUME)
+% UIWAIT makes leadfigure wait for user response (see UIRESUME)
 
-%uiwait(handles.lead_connectome);
+%uiwait(handles.leadfigure);
+
+function ea_makehidelcindep(handles)
+
+set(handles.importpanel,'visible','off');
+set(handles.runsavebutn,'String','Save and close');
+set(handles.exportcode,'visible','off');
 
 
 % --- Outputs from this function are returned to the command line.
@@ -195,16 +224,38 @@ function compute_CM_struc_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of compute_CM_struc
 
 
-% --- Executes on button press in savebutn.
-function savebutn_Callback(hObject, eventdata, handles)
-% hObject    handle to savebutn (see GCBO)
+% --- Executes on button press in runsavebutn.
+function runsavebutn_Callback(hObject, eventdata, handles)
+% hObject    handle to runsavebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% check wether this is run or save (independent or dependent mode)
+
+isindependent=getappdata(handles.leadfigure,'isindependent');
+
 lc_options=handles2lc(handles);
 save([ea_getearoot,'connectomics',filesep,'lc_options.mat'],'-struct','lc_options');
-delete(handles.lead_connectome);
-uiresume
+
+if ~isindependent
+    delete(handles.leadfigure);
+    
+    return
+end
+
+% run execution:
+
+cfig=handles.leadfigure;
+ea_busyaction('on',cfig,'lead_connectome');
+
+
+options=ea_handles2options(handles);
+options.macaquemodus=0;
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+
+ea_run('run',options);
+
+ea_busyaction('off',cfig,'lead_connectome');
 
 
 % --- Executes on button press in degree_centrality.
@@ -440,5 +491,128 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
+% --- Executes on button press in normalize_checkbox.
+function normalize_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to normalize_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of normalize_checkbox
 
 
+% --- Executes on selection change in normmethod.
+function normmethod_Callback(hObject, eventdata, handles)
+% hObject    handle to normmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns normmethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from normmethod
+
+
+% --- Executes during object creation, after setting all properties.
+function normmethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to normmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in normcheck.
+function normcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to normcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of normcheck
+
+
+% --- Executes on button press in dicomcheck.
+function dicomcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to dicomcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of dicomcheck
+
+
+% --- Executes on button press in exportcode.
+function exportcode_Callback(hObject, eventdata, handles)
+% hObject    handle to exportcode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+lc_options=handles2lc(handles);
+save([ea_getearoot,'connectomics',filesep,'lc_options.mat'],'-struct','lc_options');
+
+
+% run execution:
+
+cfig=handles.leadfigure;
+ea_busyaction('on',cfig,'lead_connectome');
+
+
+options=ea_handles2options(handles);
+options.macaquemodus=0;
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+
+ea_run('export',options);
+
+ea_busyaction('off',cfig,'lead_connectome');
+
+% --- Executes on button press in patdir_choosebox.
+function patdir_choosebox_Callback(hObject, eventdata, handles)
+% hObject    handle to patdir_choosebox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_getpatients(handles)
+
+% --- Executes on selection change in recentpts.
+function recentpts_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpts
+if get(handles.recentpts,'Value')==1
+    return
+end
+earoot=ea_getearoot;
+load([earoot,'ea_recentpatients.mat']);
+if iscell(fullrpts)
+fullrpts=fullrpts(get(handles.recentpts,'Value')-1);
+end
+
+if strcmp('No recent subjects found',fullrpts)
+   return 
+end
+
+
+ea_load_pts(handles,fullrpts,'subjects');
+
+% --- Executes during object creation, after setting all properties.
+function recentpts_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in include_lead_connectome_subroutine.
+function include_lead_connectome_subroutine_Callback(hObject, eventdata, handles)
+% hObject    handle to include_lead_connectome_subroutine (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of include_lead_connectome_subroutine
