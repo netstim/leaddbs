@@ -814,6 +814,7 @@ if ~isempty(M.patient.list)
     if isempty(tryparcs)
         set(handles.lc_metric,'String','No data found.');
     else
+        
         avparcs=ones(length(tryparcs),1);
         for sub=1:length(M.patient.list)
             for parc=1:length(tryparcs)
@@ -822,10 +823,24 @@ if ~isempty(M.patient.list)
                 end
             end
         end
-        tryparcs=tryparcs(avparcs);
+
+        tryparcs=tryparcs(logical(avparcs));
         pcell=cell(length(tryparcs),1);
+        restcnt=1;
         for p=1:length(pcell)
             [~,pcell{p}]=fileparts(tryparcs(p).name);
+            if strcmp(pcell{p}(1:4),'rest')
+                ix=strfind(pcell{p},'_');
+               restcell{restcnt}=pcell{p}(ix(1)+1:ix(2)-1);
+               restcnt=restcnt+1;
+            end
+        end
+        for restii=1:length(restcell)
+            for restjj=1:length(restcell)
+                if restii>restjj
+                   pcell{end+1}=['rest_',restcell{restii},'&',restcell{restjj},'_fMRI_CM']; 
+                end
+            end
         end
         set(handles.lc_metric,'String',pcell);
     end
@@ -2564,6 +2579,7 @@ switch UI.test.ui
         if length(c)>2
             ea_error('Only two-sample t-tests are fully supported at present.');
         end
+        
         [~,~,~,tstat]=ttest2(permute(allX(:,:,logical(mX(:,find(c==1)))),[3,1,2]),...
             permute(allX(:,:,logical(mX(:,find(c==-1)))),[3,1,2]));
         
@@ -2597,6 +2613,11 @@ thisparc=get(handles.labelpopup,'String');
 thisparc=thisparc{get(handles.labelpopup,'Value')};
 thismetr=get(handles.lc_metric,'String');
 thismetr=thismetr{get(handles.lc_metric,'Value')};
+
+if ismember('&',thismetr) % clean from & for variable
+    [~,ix]=ismember('&',thismetr);
+    thismetr(ix)='';
+end
 eval([thismetr,'=T;']);
 expfn=[root,thisparc,'_',thismetr,'T_p<',UI.alpha.ui,'.mat'];
 save(expfn,thismetr);
@@ -2635,25 +2656,53 @@ save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
 M=getappdata(handles.lg_figure,'M');
 thisparc=get(handles.labelpopup,'String');
 thisparc=thisparc{get(handles.labelpopup,'Value')};
+
 thismetr=get(handles.lc_metric,'String');
 thismetr=thismetr{get(handles.lc_metric,'Value')};
 
-for pt=1:length(M.patient.list)
-    X=load([M.patient.list{pt},filesep,'connectomics',filesep,thisparc,filesep,thismetr,'.mat']);
-    fn=fieldnames(X);
-    if ~exist('allX','var')
-        allX=nan([size(X.(fn{1})),length(M.patient.list)]);
+if ismember('&',thismetr)
+    % e.g. ON vs OFF metric - need to load two matrices per subject!
+    [~,plusix]=ismember('&',thismetr);
+    [scix]=strfind(thismetr,'_');
+    suffx1=thismetr(scix(1)+1:plusix-1);
+    suffx2=thismetr(plusix+1:scix(2)-1);
+    base=thismetr(1:scix(1)-1);
+    cap=thismetr(scix(2)+1:end);
+    clear thismetr
+    metrix{1}=[base,'_',suffx1,'_',cap];
+    metrix{2}=[base,'_',suffx2,'_',cap];
+    
+    % inflate design matrix
+    if ~all(mX==1)
+        ea_error('Multi subject measurements only supported for a single cohort. All group values must be 1.');
     end
     
-    X=X.(fn{1});
-    switch get(handles.normregpopup,'Value');
-        case 2
-X(:)=ea_nanzscore(X(:));  
-        case 3
-X(:)=ea_normal(X(:)); 
-    end
+    mX=repmat(eye(2),length(mX),1);
+    save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
+else
+ metrix{1}=thismetr;
+end
 
-    allX(:,:,pt)=X;
+Xcnt=1;
+for pt=1:length(M.patient.list)
+    for metr=1:length(metrix)
+        X=load([M.patient.list{pt},filesep,'connectomics',filesep,thisparc,filesep,metrix{metr},'.mat']);
+        fn=fieldnames(X);
+        if ~exist('allX','var')
+            allX=nan([size(X.(fn{1})),length(M.patient.list)]);
+        end
+        
+        X=X.(fn{1});
+        switch get(handles.normregpopup,'Value');
+            case 2
+                X(:)=ea_nanzscore(X(:));
+            case 3
+                X(:)=ea_normal(X(:));
+        end
+        
+        allX(:,:,Xcnt)=X;
+        Xcnt=Xcnt+1;
+    end
 end
 save([get(handles.groupdir_choosebox,'String'),'NBSdataMatrix'],'allX','-v7.3');
 
