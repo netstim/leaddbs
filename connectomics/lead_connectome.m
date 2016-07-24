@@ -55,6 +55,7 @@ function lead_connectome_OpeningFcn(hObject, eventdata, handles, varargin)
 earoot=ea_getearoot;
 im=imread('ea_logo.png');
 image(im);
+axes(handles.logoaxes);
 axis off;
 axis equal;
 set(handles.leadfigure,'name','Welcome to LEAD-DBS','color','w');
@@ -138,6 +139,28 @@ function ea_makehidelcindep(handles)
 set(handles.importpanel,'visible','off');
 set(handles.runsavebutn,'String','Save and close');
 set(handles.exportcode,'visible','off');
+
+moveup=110;
+
+pos=get(handles.logoaxes,'Position');
+pos(2)=pos(2)-moveup;
+set(handles.logoaxes,'Position',pos);
+
+pos=get(handles.titletext,'Position');
+pos(2)=pos(2)-moveup;
+set(handles.titletext,'Position',pos);
+
+pos=get(handles.versiontxt,'Position');
+pos(2)=pos(2)-moveup;
+set(handles.versiontxt,'Position',pos);
+
+pos=get(handles.nclinuse,'Position');
+pos(2)=pos(2)-moveup;
+set(handles.nclinuse,'Position',pos);
+
+pos=get(handles.leadfigure,'Position');
+pos(4)=pos(4)-moveup;
+set(handles.leadfigure,'Position',pos);
 
 
 % --- Outputs from this function are returned to the command line.
