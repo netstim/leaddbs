@@ -241,7 +241,7 @@ if checkrebuild(atlases,options,root,mifix)
                                 ea_error('Mixed atlas does not show positive voxels on the left side');
                             end
                             nii.img=nii.img(gv{1}<0,:,:);
-                            keyboard
+                            
                             gv{1}=gv{1}(gv{1}<0);
                             XYZ.vx=XYZ.vx(XYZ.mm(:,1)<0,:,:);
                             XYZ.val=XYZ.val(XYZ.mm(:,1)<0,:,:);

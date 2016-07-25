@@ -65,6 +65,8 @@ delete(handles.ea_spec2dwrite)
 handles=thandles;
 end
 
+set(handles.ea_spec2dwrite,'Name','Specify 2D Output options');
+
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_spec2dwrite_OutputFcn(hObject, eventdata, handles)
@@ -140,5 +142,7 @@ function savebutton_Callback(hObject, eventdata, handles)
 % hObject    handle to savebutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+warning('off');
 save([ea_getearoot,'td_options.mat'],'-struct','handles');
+warning('on');
 delete(handles.ea_spec2dwrite);
