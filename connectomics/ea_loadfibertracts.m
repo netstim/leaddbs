@@ -55,8 +55,9 @@ delete(cfile);
 
 function ea_convertfibs2newformat(fibinfo,cfile)
 
-    fn=fieldnames(fibinfo);
+display('Converting fibers...');
 
+fn=fieldnames(fibinfo);
 if isfield(fibinfo,'normalized_fibers_mm')
     fibers=fibinfo.normalized_fibers_mm;
     voxmm='mm';
@@ -73,19 +74,19 @@ if c(1)<c(2)
     fibers=fibers';
 end
 
-ea_dispercent(0,'Converting fibers');
+% ea_dispercent(0,'Converting fibers');
 [idx,~]=cellfun(@size,fibers);
 
 fibers=cell2mat(fibers);
 idxv=zeros(size(fibers,1),1);
 lid=1; cnt=1;
 for id=idx'
-    ea_dispercent(cnt/length(idx));
+%     ea_dispercent(cnt/length(idx));
     idxv(lid:lid+id-1)=cnt;
     lid=lid+id;
     cnt=cnt+1;
 end
-ea_dispercent(1,'end');
+% ea_dispercent(1,'end');
 
 fibers=[fibers,idxv];
 
@@ -115,6 +116,4 @@ if exist('freiburgconvert','var')
     end
 end
 
-
 ea_savefibertracts(cfile,fibers,idx,'mm');
-
