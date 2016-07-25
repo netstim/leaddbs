@@ -22,6 +22,7 @@ if isfield(atlases,'threshold')
                 thresh=sso(1);
             end
         case 'relative_intensity'
+            
             thresh=max(img(:))*(1-atlases.threshold.value);
         case 'relative_intensity_vector'
             thresh=max(img(:))*(1-atlases.threshold.value(atlas));

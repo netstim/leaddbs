@@ -102,6 +102,10 @@ ea_dispbn;
             lead_group;
             delete(handles.leadfigure)
             return
+        elseif strcmp('speak',varargin{1})
+            fprintf('\n \n \n \n %s \n \n','L337-D8Z: "H3LLo 7o joO MY Phr13nd. l1V3 Lon9 4nd pRO5P3r."'); % yes, this indeed is an easter-egg.
+            delete(handles.leadfigure)
+            return
         end
         end
     end

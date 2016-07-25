@@ -224,7 +224,9 @@ if checkrebuild(atlases,options,root,mifix)
                         if side==1
                             bnii=nii;
                             bXYZ=XYZ;
-
+                            if ~any(gv{1}>0)
+                                ea_error('Mixed atlas does not show positive voxels on the right side');
+                            end
                             nii.img=nii.img(gv{1}>0,:,:);
                             gv{1}=gv{1}(gv{1}>0);
 
@@ -235,7 +237,11 @@ if checkrebuild(atlases,options,root,mifix)
 
                             nii.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
                         elseif side==2
+                            if ~any(gv{1}<0)
+                                ea_error('Mixed atlas does not show positive voxels on the left side');
+                            end
                             nii.img=nii.img(gv{1}<0,:,:);
+                            keyboard
                             gv{1}=gv{1}(gv{1}<0);
                             XYZ.vx=XYZ.vx(XYZ.mm(:,1)<0,:,:);
                             XYZ.val=XYZ.val(XYZ.mm(:,1)<0,:,:);

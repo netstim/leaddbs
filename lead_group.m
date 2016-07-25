@@ -2175,7 +2175,9 @@ end
 
 for pt=1:length(M.patient.list)
     for side=1:2
+        try
         M.elstruct(pt).activecontacts{side}=M.S(pt).activecontacts{side};
+        end
     end
 end
 cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));
