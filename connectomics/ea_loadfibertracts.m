@@ -96,15 +96,16 @@ if exist('freiburgconvert','var')
         % we have to flip in y-dimensionality from original Freiburg format
         % ?�thus need to find the y-size of the DTI image first.. unfortunately
         % need to load the b0 image header for this I guess.
-        [pth, fn]=fileparts(cfile);
+        display('Flip fibers...');
+        [pth, ~]=fileparts(cfile);
         prefs=ea_prefs('');
         if isempty(pth)
             b0fi=[prefs.b0];
         else
             b0fi=[pth,filesep,prefs.b0];
         end
-        V=spm_vol(b0fi);
-        ysize=V.dim(2)+1;
+        dim=getfield(spm_vol(b0fi),'dim');
+        ysize=dim(2)+1;
         
         % now perform Freiburg2World transform
         tfibs=fibers;

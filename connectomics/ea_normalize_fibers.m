@@ -40,7 +40,7 @@ disp('Done.');
 %     ea_error('Please run a compatible normalization of the preoperative MRI-volume first. Final (inverse) normalization parameters should be stored as y_ea_inv_normparams.nii inside of the subject folder.');
 % end
 
-vizz=1; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
+vizz=0; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
 cleanse_fibers=0; % deletes everything outside the white matter of the template.
 
 % check which normalization routine has been used..
@@ -107,8 +107,9 @@ if vizz
     hold on
 end
 
-ea_dispercent(0,'Normalizing fibers');
-numfibs=size(idx,1);
+% ea_dispercent(0,'Normalizing fibers');
+% numfibs=size(idx,1);
+display('Normalizing fibers...');
 
 if ~ismember(whichnormmethod,ea_getantsnormfuns)
     ynii=nifti([directory,'y_ea_inv_normparams.nii']);
@@ -124,7 +125,7 @@ deletefibers=[];
 
 if vizz
     try
-    thisfib=wfibs(1:100000,1:3)';
+        thisfib=wfibs(1:100000,1:3)';
     catch
         thisfib=wfibs(1:end,1:3)';
     end
@@ -179,7 +180,7 @@ end
     end
     if vizz
     try
-    thisfib=wfibs(1:100000,1:3)';
+        thisfib=wfibs(1:100000,1:3)';
     catch
         thisfib=wfibs(1:end,1:3)';
     end
@@ -299,7 +300,7 @@ if ~dartelused
 else
     useb0=['c2',options.prefs.b0];
     useanat=['rc2',options.prefs.prenii_unnormalized];
-        reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires.nii,2'];
+    reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires.nii,2'];
 end
 
 
@@ -308,15 +309,15 @@ ixs = double(coord(1:3, :));
 
 % old method
 for i = 1:3
-coord(i,:)=ynii.dat(sub2ind(size(ynii.dat),ixs(1,:)',ixs(2,:)',ixs(3,:)',ones(size(ixs,2),1),repmat(i,size(ixs,2),1)));
+    coord(i,:)=ynii.dat(sub2ind(size(ynii.dat),ixs(1,:)',ixs(2,:)',ixs(3,:)',ones(size(ixs,2),1),repmat(i,size(ixs,2),1)));
 end
 
 function coord = vox2mm_mni(coord, Vnii,ynii)
 % new method
 ixs_new = double(coord(1:3, :));
 coord=[spm_sample_vol(Vnii(1),ixs_new(1,:),ixs_new(2,:),ixs_new(3,:),1);
-    spm_sample_vol(Vnii(2),ixs_new(1,:),ixs_new(2,:),ixs_new(3,:),1);
-    spm_sample_vol(Vnii(3),ixs_new(1,:),ixs_new(2,:),ixs_new(3,:),1)];
+spm_sample_vol(Vnii(2),ixs_new(1,:),ixs_new(2,:),ixs_new(3,:),1);
+spm_sample_vol(Vnii(3),ixs_new(1,:),ixs_new(2,:),ixs_new(3,:),1)];
 
 
 % %old method

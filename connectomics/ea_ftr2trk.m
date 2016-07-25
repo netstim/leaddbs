@@ -11,7 +11,7 @@ else % direct ftr import
 end
 
 %% set header
-[header, tracks]=ea_trk_read([options.earoot,'ext_libs',filesep,'example.trk']);
+[header, ~]=ea_trk_read([options.earoot,'ext_libs',filesep,'example.trk']);
 if strcmp(voxmm,'vox')
     if ~isempty(mat)
         if isempty(specs.affine)

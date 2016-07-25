@@ -83,7 +83,5 @@ function c=ea_writecsv(pth,input)
 
 fid=fopen(pth,'w');
 fprintf(fid,'x,y,z,t \n');
-for c=1:size(input,2)
-   fprintf(fid,[num2str(input(1,c)),',',num2str(input(2,c)),',',num2str(input(3,c)),',0 \n']);
-end
+fprintf(fid,'%f,%f,%f,0\n',input(1:3,:)');
 fclose(fid);
