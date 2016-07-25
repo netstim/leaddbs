@@ -109,7 +109,7 @@ end
 
 % ea_dispercent(0,'Normalizing fibers');
 % numfibs=size(idx,1);
-display('Normalizing fibers...');
+display(sprintf('\nNormalizing fibers...'));
 
 if ~ismember(whichnormmethod,ea_getantsnormfuns)
     ynii=nifti([directory,'y_ea_inv_normparams.nii']);
@@ -170,6 +170,7 @@ end
 %         XYZ_mm_beforetransform=tmat*wfibs;
         
         wfibs=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform,1);
+        disp('Done.');
         % get LPS coordinates back to RAS
         wfibs(1,:)=-wfibs(1,:);
         wfibs(2,:)=-wfibs(2,:);
@@ -179,12 +180,12 @@ end
         
     end
     if vizz
-    try
-        thisfib=wfibs(1:100000,1:3)';
-    catch
-        thisfib=wfibs(1:end,1:3)';
-    end
-    subplot(1,3,3)
+        try
+            thisfib=wfibs(1:100000,1:3)';
+        catch
+            thisfib=wfibs(1:end,1:3)';
+        end
+        subplot(1,3,3)
         plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'.','color',[0.1707    0.2919    0.7792]);
     end
 
@@ -210,23 +211,18 @@ end
     end
 
     %% cleanup
-    %wfibs{fib}=wfibs{fib}(:,1:3);
-   if vizz; drawnow; end
+	%wfibs{fib}=wfibs{fib}(:,1:3);
+    if vizz; drawnow; end
 %end
 
 wfibs(deletefibers)=[]; % delete fibers that were in total outside WM
 wfibsvox(deletefibers)=[]; % delete fibers that were in total outside WM
 
-ea_dispercent(100,'end');
+% ea_dispercent(100,'end');
 
-wfibsvox=wfibsvox;
-disp('Saving files...');
 [~,ftrbase]=fileparts(options.prefs.FTR_normalized);
-
 ea_savefibertracts([directory,options.prefs.FTR_normalized],wfibs,idx,'mm');
 ea_savefibertracts([directory,ftrbase,'_vox.mat'],wfibsvox,idx,'vox',Vmni(1).mat);
-
-disp('Done.');
 
 %% create trackvis version
 disp('Creating TrackVis version...');

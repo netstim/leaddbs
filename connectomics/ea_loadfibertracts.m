@@ -92,7 +92,7 @@ fibers=[fibers,idxv];
 
 if exist('freiburgconvert','var')
     ver=str2double(fibinfo.version(2:end));
-    if ver<1.1 % not entirely sure from which version on did Marco stop the yx swap and y-flip..
+    if ver<=1.1 % not entirely sure from which version on did Marco stop the yx swap and y-flip..
         % we have to flip in y-dimensionality from original Freiburg format
         % ?�thus need to find the y-size of the DTI image first.. unfortunately
         % need to load the b0 image header for this I guess.
@@ -110,8 +110,8 @@ if exist('freiburgconvert','var')
         % now perform Freiburg2World transform
         tfibs=fibers;
         
-        tfibs(:,1)=ysize-fibers(:,2);
-        tfibs(:,2)=fibers(:,1);
+        tfibs(:,1)=fibers(:,2);
+        tfibs(:,2)=ysize-fibers(:,1);
         fibers=tfibs;
         clear tfibs
     end

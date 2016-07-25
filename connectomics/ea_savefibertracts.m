@@ -7,9 +7,9 @@ ftr.ea_fibformat='1.1';
 ftr.fibers=fibers;
 ftr.idx=idx;
 ftr.voxmm=voxmm;
-if exist('mat','var')
+if nargin == 5
     ftr.mat=mat;
 end
-disp('Saving fibers...');
+display(sprintf('Saving fibers: %s.mat...',fn));
 save(fullfile(pth,[fn,'.mat']),'-struct','ftr','-v7.3');
 disp('Done.');
