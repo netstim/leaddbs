@@ -99,11 +99,10 @@ if exist('freiburgconvert','var')
         display('Flip fibers...');
         
         dim=getfield(spm_vol(b0fi),'dim');
-        ysize=dim(2)+1;
         
         % Freiburg2World transform: xy-swap and y-flip
         tfibs=fibers;
-        tfibs(:,1)=dim(1)+1-fibers(:,2);
+        tfibs(:,1)=fibers(:,2);
         tfibs(:,2)=dim(2)+1-fibers(:,1);
         fibers=tfibs;
         clear tfibs
