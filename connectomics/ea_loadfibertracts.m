@@ -63,6 +63,7 @@ if isfield(fibinfo,'normalized_fibers_mm')
     voxmm='mm';
 elseif isfield(fibinfo,'curveSegCell') % original Freiburg format
     fibers=fibinfo.curveSegCell;
+    voxmm='vox';
     freiburgconvert=1;
 else
     fibers=eval(['fibinfo.',fn{1},';']);
@@ -74,47 +75,41 @@ if c(1)<c(2)
     fibers=fibers';
 end
 
-% ea_dispercent(0,'Converting fibers');
 [idx,~]=cellfun(@size,fibers);
-
 fibers=cell2mat(fibers);
 idxv=zeros(size(fibers,1),1);
 lid=1; cnt=1;
 for id=idx'
-%     ea_dispercent(cnt/length(idx));
     idxv(lid:lid+id-1)=cnt;
     lid=lid+id;
     cnt=cnt+1;
 end
-% ea_dispercent(1,'end');
-
 fibers=[fibers,idxv];
 
 if exist('freiburgconvert','var')
+    [pth, ~]=fileparts(cfile);
+    prefs=ea_prefs('');
+    if isempty(pth)
+        b0fi=[prefs.b0];
+    else
+        b0fi=[pth,filesep,prefs.b0];
+    end
     ver=str2double(fibinfo.version(2:end));
-    if ver<=1.1 % not entirely sure from which version on did Marco stop the yx swap and y-flip..
-        % we have to flip in y-dimensionality from original Freiburg format
-        % ?�thus need to find the y-size of the DTI image first.. unfortunately
-        % need to load the b0 image header for this I guess.
+    if ver<=1.1
         display('Flip fibers...');
-        [pth, ~]=fileparts(cfile);
-        prefs=ea_prefs('');
-        if isempty(pth)
-            b0fi=[prefs.b0];
-        else
-            b0fi=[pth,filesep,prefs.b0];
-        end
+        
         dim=getfield(spm_vol(b0fi),'dim');
         ysize=dim(2)+1;
         
-        % now perform Freiburg2World transform
+        % Freiburg2World transform: xy-swap and y-flip
         tfibs=fibers;
-        
-        tfibs(:,1)=fibers(:,2);
-        tfibs(:,2)=ysize-fibers(:,1);
+        tfibs(:,1)=dim(1)+1-fibers(:,2);
+        tfibs(:,2)=dim(2)+1-fibers(:,1);
         fibers=tfibs;
         clear tfibs
     end
+    mat=getfield(spm_vol(b0fi),'mat');
+    ea_savefibertracts(cfile,fibers,idx,voxmm,mat);
+else
+    ea_savefibertracts(cfile,fibers,idx,voxmm);
 end
-
-ea_savefibertracts(cfile,fibers,idx,'mm');
