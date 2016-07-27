@@ -12,7 +12,7 @@ natatldir=[directory,'atlases',filesep,'native',filesep,options.patientname,file
 mkdir(mniatldir);
 mkdir([mniatldir,'lh']);
 mkdir([mniatldir,'rh']);
-[whichnormmethod]=ea_whichnormmethod(directory);
+whichnormmethod=ea_whichnormmethod(directory);
 
 srcs={'Pallidum','Ruber','STN'};
 for side=1:length(options.sides)

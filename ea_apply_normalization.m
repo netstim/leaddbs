@@ -10,7 +10,7 @@ function ea_apply_normalization(options)
 % Apply estimated deformation to (coregistered) post-op data.
 
 directory=[options.root,options.patientname,filesep];
-[whichnormmethod]=ea_whichnormmethod(directory);
+whichnormmethod=ea_whichnormmethod(directory);
 
 switch whichnormmethod
 

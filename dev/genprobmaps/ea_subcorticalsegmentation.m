@@ -23,7 +23,6 @@ for m=1:length(mults)
 end
 
 
-
 %% start multimodal subcortical segmentation algorithm.
 structures={'STN','Pallidum','Ruber'};
 %structures={'wm','gm','csf'};
@@ -36,10 +35,10 @@ if genmaps
     for s=1:length(structures)
         pts=ea_readcsv([structures{s},'.fcsv']);
 
-        [~,tempfile]=ea_whichnormmethod(directory);
-        V=spm_vol(tempfile);
+        [~,template]=ea_whichnormmethod(directory);
+        V=spm_vol(template);
         pts=V.mat\pts;
-        pts=ea_map_coords(pts,tempfile,[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
+        pts=ea_map_coords(pts,template,[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
         label=structures{s};
 
         ea_generate_probmaps(pts(1:3,:)',label,srcs,directory);
@@ -114,7 +113,7 @@ if isempty(mults)
 end
 ea_normalize_reslicepretra(options);
 
-[whichnormmethod]=ea_whichnormmethod(directory);
+whichnormmethod=ea_whichnormmethod(directory);
 % warp bb into folder.
 
 switch whichnormmethod

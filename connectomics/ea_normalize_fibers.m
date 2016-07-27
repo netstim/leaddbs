@@ -9,25 +9,13 @@ disp('Exporting to TrackVis');
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
 
 try
-    
 %     if ~exist([directory,ftrfname,'.trk'],'file')
         reftemplate=[directory,options.prefs.b0];
         dnii=ea_load_nii(reftemplate);
-        niisize=size(dnii.img); % get dimensions of reference template.
 
         specs.origin=[0,0,0];
-        specs.dim=niisize;
-        
-        
-        for d=1:3
-            ptm=[1,1,1,1];
-            m1=dnii(1).mat*ptm';
-            ptm(d)=2;
-            m2=dnii(1).mat*ptm';
-            voxel_size(d) = pdist([m1,m2]');
-        end
-        
-        specs.vox=voxel_size;
+        specs.dim=size(dnii.img);
+        specs.vox=ea_detvoxsize(dnii.mat);
         specs.affine=dnii.mat;
 
         ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
@@ -75,7 +63,6 @@ if isempty(whichnormmethod)
     ea_error('Please run normalization for this subject first.');
 end
 Vmni=spm_vol(reft);
-
 
 if vizz
     figure('color','w','name','Fibertrack normalization','numbertitle','off');
@@ -229,10 +216,9 @@ disp('Creating TrackVis version...');
 try
     reftemplate=[options.earoot,'templates',filesep,'mni_hires.nii'];
     dnii=ea_load_nii(reftemplate);
-    niisize=size(dnii(1).img); % get dimensions of reference template.
 
     specs.origin=[0,0,0];
-    specs.dim=niisize;
+    specs.dim=size(dnii.img);
     specs.vox=dnii.hdr.dime.pixdim;
     specs.affine=dnii.mat;
 
@@ -249,7 +235,7 @@ disp('Done.');
 function [useb0,useanat,reftemplate]=ea_checkdartelused(options)
 directory=[options.root,options.patientname,filesep];
 
-[whichnormmethod,tempfile]=ea_whichnormmethod(directory);
+whichnormmethod=ea_whichnormmethod(directory);
 switch whichnormmethod
     case 'ea_normalize_spmdartel'
         dartelused=1;

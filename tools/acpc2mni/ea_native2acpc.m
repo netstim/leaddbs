@@ -32,14 +32,12 @@ end
 %ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
 
-
-
  %   ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
-    [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
+    [~,template]=ea_whichnormmethod(directory);
 
 
-    fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile);
+    fidpoints_vox=ea_getfidpoints(fidpoints_mm,template);
 
     [options.root,options.patientname]=fileparts(uidir{pt});
     options.root=[options.root,filesep];
@@ -47,7 +45,7 @@ for pt=1:length(uidir)
     options=ea_assignpretra(options);
     % warp into patient space:
 
-    [fpinsub_mm] = ea_map_coords(fidpoints_vox', tempfile, [directory,'y_ea_normparams.nii'], '');
+    [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], '');
     V=spm_vol([directory,options.prefs.prenii_unnormalized]);
     fpinsub_mm=fpinsub_mm';
 

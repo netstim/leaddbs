@@ -24,7 +24,6 @@ if mode
     nii.hdr=V;
     nii.hdr.dime.pixdim=ea_detvoxsize(V(1).mat);
 else
-    
     nii=spm_vol(fname);
     img=spm_read_vols(nii);
     if length(nii)>1 % multi volume;
@@ -42,15 +41,4 @@ end
 
 if wasgzip
     delete(fname); % since gunzip makes a copy of the zipped file.
-end
-
-
-function vsize=ea_detvoxsize(mat)
-for dim=1:3
-    pt1=[1;1;1;1];
-    pt2=pt1;
-    pt2(dim)=2;
-    pt1=mat*pt1;
-    pt2=mat*pt2;
-    vsize(dim)=pdist([pt1(1:3),pt2(1:3)]');
 end

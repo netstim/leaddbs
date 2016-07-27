@@ -12,21 +12,21 @@ function [XYZ_mm, XYZ_src_vx] = ea_map_coords(varargin)
 
 
 try
-XYZ_vx=varargin{1};
+    XYZ_vx=varargin{1};
 end
 try
-trg=varargin{2};
+    trg=varargin{2};
 end
 try
-xfrm=varargin{3};
+    xfrm=varargin{3};
 end
 try
-src=varargin{4};
+    src=varargin{4};
 end
 
 if nargin < 2
     error('map_coords:usage',...
-        'Must specify at least coords and trg; empty [] for GUI prompt')
+          'Must specify at least coords and trg; empty [] for GUI prompt')
 end
 
 % Input coordinates
@@ -71,7 +71,7 @@ if ~isempty(xfrm)
         % check if ANTs has been used here:
         directory=[fileparts(xfrm),filesep];
         if nargin<5
-                [whichnormmethod]=ea_whichnormmethod(directory);
+            whichnormmethod=ea_whichnormmethod(directory);
         else
             whichnormmethod=varargin{5};
         end

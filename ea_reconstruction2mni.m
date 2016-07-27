@@ -3,7 +3,7 @@ function ea_reconstruction2mni(options)
 directory=[options.root,options.patientname,filesep];
 load([directory,filesep,'ea_reconstruction.mat']);
 
-    %[~,tempfile]=ea_whichnormmethod(directory);
+    %[~,template]=ea_whichnormmethod(directory);
     nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
 
 if ~isfield(options,'elspec')
@@ -37,7 +37,7 @@ c=[c,ones(size(c,1),1)]';
 % to template voxel space:
 c=nii(1).mat\c;
 try
-    [whichnormmethod]=ea_whichnormmethod([options.root,options.patientname,filesep]);
+    whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
     if ~ismember(whichnormmethod,ea_getantsnormfuns);
         V=spm_vol([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']);
         if ~isequal(V.dim,nii.dim)

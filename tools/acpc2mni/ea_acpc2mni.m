@@ -8,26 +8,20 @@ function fid=ea_acpc2mni(varargin)
 % fidpoints_mm=[-0.4,1.53,-2.553       % AC
 %     -0.24,-26.314,-4.393            % PC
 %     -0.4,1.53,20];              % Midsag
-fidpoints_mm=[0.25,1.298,-5.003       % AC
-    -0.188,-24.756,-2.376            % PC
-    0.25,1.298,55];              % Midsag
+fidpoints_mm=[ 0.25,   1.298,   -5.003    % AC
+              -0.188, -24.756,  -2.376    % PC
+               0.25,   1.298,    55];     % Midsag
 
 cfg=varargin{1};
 leadfig=varargin{2};
 
-
-
-
-
 if iscell(leadfig)
-uidir=leadfig;
+    uidir=leadfig;
 else
-uidir=getappdata(leadfig,'uipatdir');
+    uidir=getappdata(leadfig,'uipatdir');
 end
 
 % prompt for ACPC-coordinates:
-
-
 acpc=[cfg.xmm,-cfg.ymm,cfg.zmm];
 if cfg.mapmethod
     if nargin<5
@@ -38,10 +32,10 @@ if cfg.mapmethod
     end
 end
 
-leaddir=[ea_getearoot];
+leaddir=ea_getearoot;
 
-if ~length(uidir)
-ea_error('Please choose and normalize patients first.');
+if isempty(uidir)
+    ea_error('Please choose and normalize patients first.');
 end
 
 disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
@@ -53,12 +47,12 @@ for pt=1:length(uidir)
 
 if nargin>2
     whichnormmethod=varargin{3};
-    tempfile=varargin{4};
+    template=varargin{4};
 else
-    [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
+    [whichnormmethod,template]=ea_whichnormmethod(directory);
 end
 
-    fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile);
+    fidpoints_vox=ea_getfidpoints(fidpoints_mm,template);
 
     [~,ptname]=fileparts(uidir{pt});
     options.prefs=ea_prefs(ptname);
@@ -66,7 +60,7 @@ end
     % warp into patient space:
 
 %     try
-    [fpinsub_mm] = ea_map_coords(fidpoints_vox', tempfile, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
+    [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
 %     catch
 %         ea_error(['Please check deformation field in ',directory,'.']);
 %     end
@@ -113,7 +107,7 @@ end
     end
         % re-warp into MNI:
 
-        [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], tempfile,whichnormmethod);
+        [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], template,whichnormmethod);
 
     warppts(pt,:)=warpinmni_mm';
     fid(pt).WarpedPointMNI=warppts(pt,:);

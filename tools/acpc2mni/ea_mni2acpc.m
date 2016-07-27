@@ -8,14 +8,14 @@ function fid=ea_mni2acpc(cfg,leadfig)
 % fidpoints_mm=[-0.4,1.53,-2.553       % AC
 %     -0.24,-26.314,-4.393            % PC
 %     -0.4,1.53,20];              % Midsag
-fidpoints_mm=[0.25,1.298,-5.003       % AC
-    -0.188,-24.756,-2.376            % PC
-    0.25,1.298,55];              % Midsag
+fidpoints_mm=[ 0.25,   1.298,   -5.003    % AC
+              -0.188, -24.756,  -2.376    % PC
+               0.25,   1.298,    55];     % Midsag
 
 if iscell(leadfig)
-uidir=leadfig;
+    uidir=leadfig;
 else
-uidir=getappdata(leadfig,'uipatdir');
+    uidir=getappdata(leadfig,'uipatdir');
 end
 
 % prompt for MNI-coordinates:
@@ -23,31 +23,27 @@ end
 
 mni=[cfg.xmm,cfg.ymm,cfg.zmm];
 fidpoints_mm=[fidpoints_mm;mni];
-leaddir=[ea_getearoot];
 
-if ~length(uidir)
-ea_error('Please choose and normalize patients first.');
+if isempty(uidir)
+    ea_error('Please choose and normalize patients first.');
 end
 
 disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
 %ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
-
-
-
  %   ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
-    [whichnormmethod,tempfile]=ea_whichnormmethod(directory);
+    [~,template]=ea_whichnormmethod(directory);
 
 
-    fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile);
+    fidpoints_vox=ea_getfidpoints(fidpoints_mm,template);
 
     [~,ptname]=fileparts(uidir{pt});
     options.prefs=ea_prefs(ptname);
 
     % warp into patient space:
 
-    [fpinsub_mm] = ea_map_coords(fidpoints_vox', tempfile, [directory,'y_ea_normparams.nii'], '');
+    [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], '');
     fpinsub_mm=fpinsub_mm';
 
 
@@ -81,8 +77,6 @@ for pt=1:length(uidir)
     fid(pt).WarpedPointNative=fpinsub_mm(4,:);
 end
 %ea_dispercent(1,'end');
-
-
 
 assignin('base','fid',fid);
 
