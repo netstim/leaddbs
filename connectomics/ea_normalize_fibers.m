@@ -28,7 +28,7 @@ disp('Done.');
 %     ea_error('Please run a compatible normalization of the preoperative MRI-volume first. Final (inverse) normalization parameters should be stored as y_ea_inv_normparams.nii inside of the subject folder.');
 % end
 
-vizz=0; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
+vizz=1; % turn this value to 1 to visualize fiber normalization (option for debugging only, this will drastically slow down the process).
 cleanse_fibers=0; % deletes everything outside the white matter of the template.
 
 % check which normalization routine has been used..
@@ -156,7 +156,7 @@ end
 %         tmat=mirrormat*tmat;
 %         XYZ_mm_beforetransform=tmat*wfibs;
         
-        wfibs=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform,1);
+        wfibs=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform(1:3,:),1);
         disp('Done.');
         % get LPS coordinates back to RAS
         wfibs(1,:)=-wfibs(1,:);
@@ -168,12 +168,12 @@ end
     end
     if vizz
         try
-            thisfib=wfibs(1:100000,1:3)';
+            thisfib=wfibs(1:3,1:100000)';
         catch
-            thisfib=wfibs(1:end,1:3)';
+            thisfib=wfibs(1:3,1:end)';
         end
         subplot(1,3,3)
-        plot3(thisfib(1,:),thisfib(2,:),thisfib(3,:),'.','color',[0.1707    0.2919    0.7792]);
+        plot3(thisfib(:,1),thisfib(:,2),thisfib(:,3),'.','color',[0.1707    0.2919    0.7792]);
     end
 
     %% map from mni millimeter space to mni voxel space (only needed for trackvis convertion and cleansing fibers).
