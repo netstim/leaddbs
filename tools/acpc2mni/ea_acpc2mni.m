@@ -32,7 +32,18 @@ if cfg.mapmethod
     end
 end
 
+<<<<<<< Updated upstream
 leaddir=ea_getearoot;
+=======
+
+if nargin>5
+    automan=varargin{6};
+else
+    automan='auto';
+end
+
+leaddir=[ea_getearoot];
+>>>>>>> Stashed changes
 
 if isempty(uidir)
     ea_error('Please choose and normalize patients first.');
@@ -57,6 +68,9 @@ end
     [~,ptname]=fileparts(uidir{pt});
     options.prefs=ea_prefs(ptname);
 
+    switch automan
+        case 'auto' % auto AC/PC detection
+    
     % warp into patient space:
 
 %     try
@@ -71,7 +85,11 @@ end
     fid(pt).AC=fpinsub_mm(1,:);
     fid(pt).PC=fpinsub_mm(2,:);
     fid(pt).MSP=fpinsub_mm(3,:);
-
+        case 'manual' % manual AC/PC definition, assume F.fcsv file inside pt folder
+            
+       keyboard     
+            
+    end
     % x-dimension
     A=fid(pt).MSP-fid(pt).AC;
     B=fid(pt).PC-fid(pt).AC;

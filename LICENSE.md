@@ -690,6 +690,90 @@ atlas.
 
 -------------------------------------------------------------------
 
+The MNI templates
+
+The following applies to the files mni_hires.nii (which is the t2-template), mni_hires_t1.nii, mni_hires_pd.nii (which are originally distributed as the ICBM 2009b asymmetrical template series available here: http://nist.mni.mcgill.ca/?page_id=714) as well as to the files mni_icbm152_gm_tal_nlin_asym_09c, mni_icbm152_wm_tal_nlin_asym_09c and mni_icbm152_csf_tal_nlin_asym_09c.nii which are part of the ICBM 2009c asymmetric template series available from the same location.
+
+Copyright (C) 1993-2004 Louis Collins, McConnell Brain
+Imaging Centre, Montreal Neurological Institute, McGill University.
+Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies.  The
+authors and McGill University make no representations about the
+suitability of this software for any purpose.  It is provided „as
+is“ without express or implied warranty.  The authors are not
+responsible for any data loss, equipment damage, property loss, or
+injury to subjects or patients resulting from the use or misuse of
+this software package. 
+
+-------------------------------------------------------------------
+
+The FSL FA standard template
+
+The mni_hires_fa.nii template stems from the FMRIB Software Library v5.0 and has been warped from 6th generation MNI space to MNI 2009b nonlinear space by applying the nonlinear deformation published here (https://figshare.com/articles/MNI_T1_6thGen_NLIN_to_MNI_2009b_NLIN_ANTs_transform/3502238).
+
+FMRIB Software Library, Release 5.0 (c) 2012, The University of Oxford
+(the „Software“)
+
+The Software remains the property of the University of Oxford („the
+University“).
+
+The Software is distributed „AS IS“ under this Licence solely for
+non-commercial use in the hope that it will be useful, but in order
+that the University as a charitable foundation protects its assets for
+the benefit of its educational and research purposes, the University
+makes clear that no condition is made or to be implied, nor is any
+warranty given or to be implied, as to the accuracy of the Software,
+or that it will be suitable for any particular purpose or for use
+under any specific conditions. Furthermore, the University disclaims
+all responsibility for the use which is made of the Software. It
+further disclaims any liability for the outcomes arising from using
+the Software.
+
+The Licensee agrees to indemnify the University and hold the
+University harmless from and against any and all claims, damages and
+liabilities asserted by third parties (including claims for
+negligence) which arise directly or indirectly from the use of the
+Software or the sale of any products based on the Software.
+
+No part of the Software may be reproduced, modified, transmitted or
+transferred in any form or by any means, electronic or mechanical,
+without the express permission of the University. The permission of
+the University is not required if the said reproduction, modification,
+transmission or transference is done without financial return, the
+conditions of this Licence are imposed upon the receiver of the
+product, and all original and amended source code is included in any
+transmitted product. You may be held legally responsible for any
+copyright infringement that is caused or encouraged by your failure to
+abide by these terms and conditions.
+
+You are not permitted under this Licence to use this Software
+commercially. Use for which any financial return is received shall be
+defined as commercial use, and includes (1) integration of all or part
+of the source code or the Software into a product for sale or license
+by or on behalf of Licensee to third parties or (2) use of the
+Software or any derivative of it for research with the final aim of
+developing software products for sale or license to a third party or
+(3) use of the Software or any derivative of it for research with the
+final aim of developing non-software products for sale or license to a
+third party, or (4) use of the Software to provide any service to an
+external organisation for which payment is received. If you are
+interested in using the Software commercially, please contact Isis
+Innovation Limited („Isis“), the technology transfer company of the
+University, to negotiate a licence. Contact details are:
+innovation@isis.ox.ac.uk quoting reference BS/9564.
+
+
+-------------------------------------------------------------------
+
+Novel tissue priors (templates/TPM_Lorio_Draganski.nii)
+
+The novel tissue priors have been graciously contributed by Bogdan Draganski and information can be found here:
+http://unil.ch/lren/home/menuinst/data--utilities.html
+
+
+-------------------------------------------------------------------
+
 The Hammers_mith Atlas
 
 FREE ACADEMIC END USER LICENCE AGREEMENT
