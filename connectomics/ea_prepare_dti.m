@@ -15,9 +15,9 @@ if ~exist([options.root,options.patientname,filesep,options.prefs.b0],'file');
     end
     
     % export FA
-    ea_isolate_fa(options);
-
-    
+    if ~exist([options.root,options.patientname,filesep,options.prefs.fa],'file');
+        ea_isolate_fa(options);
+    end   
 else
     disp('B0 found, no need to rebuild.');
 end

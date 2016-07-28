@@ -9,10 +9,10 @@ bval=load([directory,options.prefs.bval]);
 bvec=load([directory,options.prefs.bvec]);
 
 if size(bvec,1)~=3
-bvec=bvec';
+    bvec=bvec';
 end
 if size(bval,1)~=1
-bval=bval';
+    bval=bval';
 end
 
 for i=1:size(Xdti,4)
@@ -41,5 +41,3 @@ spm_write_vol(V,FA);
 V.fname=[directory,options.prefs.b0];
 V.dt=[16,1];
 spm_write_vol(V,Bo);
-
-

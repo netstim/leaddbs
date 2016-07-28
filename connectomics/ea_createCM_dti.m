@@ -16,12 +16,8 @@ disp('Loading FTR-File.');
 vizz=0;
 [fibs,idx]=ea_loadfibertracts([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized]);
 
-
-
 convertfromfreiburg=0;
 
-
-%ea_dispercent(0,'Calculating seeds and terminals...');
 disp('Calculating seeds and terminals...');
 
 fibercount=length(idx);
@@ -29,14 +25,10 @@ seeds=zeros(fibercount,3);
 terms=zeros(fibercount,3);
 cnt=1;
 for fiber=1:(fibercount)
-    %thisfib=fibs(fibs(:,4)==fiber,1:3);
- %   ea_dispercent(fiber/fibercount);
     seeds(fiber,:)=fibs(cnt,1:3);
     terms(fiber,:)=fibs(cnt+idx(fiber)-1,1:3);
     cnt=cnt+idx(fiber);
 end
-%ea_dispercent(100,'end');
-
 
 if convertfromfreiburg % already in voxel notation
    Xatl=spm_read_vols(Vatl);
@@ -101,7 +93,6 @@ for fiber=conIDX'
 end
 
 ea_dispercent(100,'end')
-
 
 disp(['In total used ',num2str(conns),'/',num2str(fiber),' fibers to connect ',num2str(length(DTI_CM)),' regions.']);
 

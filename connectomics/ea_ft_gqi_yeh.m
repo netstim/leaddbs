@@ -30,15 +30,11 @@ if size(bvecs,1)>size(bvecs,2)
 end
 btable=[bvals;bvecs];
 
-
-
 % build white matter mask
 if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file');
     ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
 
-
     %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
-
     copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
 
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
@@ -126,15 +122,14 @@ if b0.mat(11)<0
 end
 
 if vizz
-figure
-thresh=700; % set to a good grey value.
-plot3(fibers(:,1),fibers(:,2),fibers(:,3),'r.')
-hold on
-b0=ea_load_nii([options.root,options.patientname,filesep,options.prefs.b0]);
-[xx,yy,zz]=ind2sub(size(b0.img),find(b0.img(:)>thresh));
-plot3(xx,yy,zz,'g.')
+    figure
+    thresh=700; % set to a good grey value.
+    plot3(fibers(:,1),fibers(:,2),fibers(:,3),'r.')
+    hold on
+    b0=ea_load_nii([options.root,options.patientname,filesep,options.prefs.b0]);
+    [xx,yy,zz]=ind2sub(size(b0.img),find(b0.img(:)>thresh));
+    plot3(xx,yy,zz,'g.')
 end
-
 
 clear length
 idxv=zeros(size(fibers,1),1);
@@ -149,7 +144,6 @@ ea_dispercent(1,'end');
 
 fibers=[fibers,idxv];
 
-
 ftr.fourindex=1;
 ftr.ea_fibformat='1.0';
 ftr.fibers=fibers;
@@ -157,8 +151,6 @@ ftr.idx=idx;
 disp('Saving fibers...');
 save([options.root,options.patientname,filesep,ftrbase,'.mat'],'-struct','ftr','-v7.3');
 disp('Done.');
-
-
 
 
 function ea_prepare_fib_gqi(dsistudio,btable,mean_diffusion_distance_ratio,options)
@@ -195,24 +187,23 @@ if err
     warning(['Reconstruction from command line with dsi_studio failed (error code=',num2str(err),').']);
 end
 
-
-    di=dir([options.root,options.patientname,filesep,'dti.src.gz*.fib.gz']);
-    if length(di)>1
-        ea_error('Too many .fib.gz files present in folder. Please delete older files');
-    end
-    movefile([options.root,options.patientname,filesep,di(1).name],[options.root,options.patientname,filesep,ftrbase,'.fib.gz']);
+di=dir([options.root,options.patientname,filesep,'dti.src.gz*.fib.gz']);
+if length(di)>1
+    ea_error('Too many .fib.gz files present in folder. Please delete older files');
+end
+movefile([options.root,options.patientname,filesep,di(1).name],[options.root,options.patientname,filesep,ftrbase,'.fib.gz']);
 
 if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file');
     disp('Reconstruction from command line failed. Reattempting inside Matlab.');
 
     % do it the matlab way
-
     res=ea_gqi_reco([options.root,options.patientname,filesep,options.prefs.dti],btable,mean_diffusion_distance_ratio,options);
     save([options.root,options.patientname,filesep,ftrbase,'.fib'],'-struct','res','-v4');
     gzip([options.root,options.patientname,filesep,ftrbase,'.fib']);
     try delete([options.root,options.patientname,filesep,ftrbase,'.fib']); end
 
 end
+
 
 function res=ea_gqi_reco(filename,b_table,mean_diffusion_distance_ratio,options)
 % Direct GQI reconstruction from huge image data
@@ -267,7 +258,6 @@ for z = 1:dim(3)
     end
     for x = 1:dim(1)
         for y = 1:dim(2)
-
             ODF=A*reshape(reco_temp(x,y,:),[],1);
             p = ea_find_peak(ODF,odf_faces);
             max_dif = max(max_dif,mean(ODF));
@@ -297,9 +287,6 @@ res.index2 = reshape(index2,1,[]);
 res.dimension = dim;
 res.odf_faces=odf_faces;
 res.odf_vertices=odf_vertices;
-
-
-
 
 
 function p = ea_find_peak(odf,odf_faces)
