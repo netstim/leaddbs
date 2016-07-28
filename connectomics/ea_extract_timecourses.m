@@ -1,14 +1,13 @@
-function gmtc=ea_extract_timecourses(options)
+function [gmtc,interpol_tc,voxelmask]=ea_extract_timecourses(options)
+% Extract timecourses based on template
 
-% prepare voxelmask:
-
+%% prepare voxelmask:
 directory=[options.root,options.patientname,filesep];
-
 ea_warp_parcellation(options.prefs.pprest,'rest',options);
 vizz=0;
 
 %% create voxelmask
-
+disp('Extracting time courses...');
 Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'rrestw',options.lc.general.parcellation,'.nii,1']);
 Xatl=spm_read_vols(Vatl);
 
@@ -24,7 +23,6 @@ voxelmask.locsmm=voxelmask.locsmm(:,1:3);
 voxelmask.vals=round(vv);
 
 %% set some initial parameters here:
-
 TR=options.lc.func.prefs.TR;
 directory=[options.root,options.patientname,filesep];
 restfilename=options.prefs.pprest;
@@ -37,25 +35,18 @@ end
 single_s_files=cellfun(@(x) [directory,restfilename,',',x],stringnum,'Uniformoutput',false);
 single_s_files=single_s_files';
 
-
 %% Extract timecourses of specified ROI
 V=spm_vol(single_s_files);
-
 for i=1:signallength
-    interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1);
-    
+    interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1); 
 end
+interpol_tc=interpol_tc';
 
-aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.txt']);
-atlas_lgnd=textscan(aID,'%d %s');
-dimensionality=length(atlas_lgnd{1}); % how many ROI.
+disp('Done.');
 
-
-%% Extract timecourses of complete volume for signal regression..
+%% Load complete volume for signal regression..
 rfile=[directory,restfilename];
 alltc=spm_read_vols(spm_vol(rfile));
-
-interpol_tc=interpol_tc';
 
 % % detrend global signal
 % nDim1 = size(alltc,1); nDim2 = size(alltc,2); nDim3 = size(alltc,3); nDim4 =size(alltc,4);
@@ -67,7 +58,6 @@ interpol_tc=interpol_tc';
 %     oneslice =reshape(oneslice', 1,nDim2,nDim3, nDim4);
 %     alltc(x, :, :, :) =(oneslice);
 % end;
-
 
 [~,restbase]=fileparts(restfilename);
 if exist([directory,restbase(3:end),'_sessvec.mat'],'file')
@@ -90,15 +80,7 @@ if vizz
 end
 
 %% Data corrections steps
-
-
-
-
-
-
-
-
-disp('Done. Regressing out nuisance variables...');
+disp('Regressing out nuisance variables...');
 if multsess
     if vizz
         subplot(4,2,pcnt)
@@ -106,13 +88,12 @@ if multsess
         plot(sessvec);
         title('Session vector')
     end
-    %% regress out sessions
+    
+    % regress out sessions
     X0(:,1)=ones(signallength,1);
-    
-    
     X0=[X0,sessvec+1];
     
-    %% actual regression:
+    % actual regression:
     X0reg=(X0'*X0)\X0';
     for voxx=1:size(interpol_tc,1)
         beta_hat  = X0reg*squeeze(interpol_tc(voxx,:))';
@@ -131,9 +112,7 @@ if multsess
         title('Time series cleaned from session vector.')
     end
     
-    
     % do the same on whole brain tc to get WM/GM/Global signal:
-    
     for xx=1:size(alltc,1)
         for yy=1:size(alltc,2)
             for zz=1:size(alltc,3)
@@ -148,7 +127,7 @@ if multsess
     end
 end
 
-%% average Glob-, WM- and CSF-Timecourses
+% average Glob-, WM- and CSF-Timecourses
 disp('Calculating Global, WM and CSF-signals for signal regression...');
 
 [~,rf]=fileparts(options.prefs.rest);
@@ -178,9 +157,7 @@ if vizz
     title('Global/WM/CSF Timecourses (cleaned from session).');
 end
 
-
-%% regress out movement parameters
-
+% regress out movement parameters
 rp_rest = load([directory,'rp_',rf,'.txt']); % rigid body motion parameters.
 X1(:,1)=ones(signallength,1);
 X1(:,2)=rp_rest(1:signallength,1);
@@ -212,7 +189,7 @@ if vizz
     title('Motion parameters (cleaned from session vector).');
 end
 
-%% actual regression:
+% actual regression:
 X1reg=(X1'*X1)\X1';
 for voxx=1:size(interpol_tc,1)
     beta_hat  = X1reg*squeeze(interpol_tc(voxx,:))';
@@ -230,8 +207,6 @@ if vizz
     title('Time series cleaned from motion parameters.');
 end
 
-
-
 X2(:,1)=ones(signallength,1);
 if options.prefs.lc.func.regress_wmcsf
     X2(:,2)=WMTimecourse;
@@ -241,7 +216,7 @@ if options.prefs.lc.func.regress_global
     X2(:,4)=GlobTimecourse;
 end
 
-%% actual regression of cleaned X2 (WM/Global) from time courses:
+% actual regression of cleaned X2 (WM/Global) from time courses:
 X2reg=(X2'*X2)\X2';
 for voxx=1:size(interpol_tc,1)
     
@@ -253,6 +228,9 @@ for voxx=1:size(interpol_tc,1)
     end
 end
 
+clear X X2
+disp('Done.')
+
 if vizz
     subplot(4,2,pcnt)
     pcnt=pcnt+1;
@@ -260,17 +238,12 @@ if vizz
     title('Time series (cleaned from global/csf/wm).');
 end
 
-clear X X2
-
-
-%% begin rest bandpass
-
+%% Bandpass filtering
 lp_HighCutoff=options.prefs.lc.func.bphighcutoff;
 hp_LowCutoff=options.prefs.lc.func.bplowcutoff;
 
-
-disp('Done. Bandpass-filtering...');
-sampleFreq 	 = 1/TR;
+disp('Bandpass-filtering...');
+% sampleFreq   = 1/TR;
 sampleLength = signallength;
 paddedLength = rest_nextpow2_one35(sampleLength); %2^nextpow2(sampleLength);
 
@@ -278,27 +251,24 @@ mask=ones(size(interpol_tc,1),1);
 mask(:)=1;
 maskLowPass =	repmat(mask, [1, paddedLength]);
 maskHighPass=	maskLowPass;
-%% GENERATE LOW PASS WINDOW	20070514, reference: fourior_filter.c in AFNI
-%Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band.
 
+% GENERATE LOW PASS WINDOW	20070514, reference: fourior_filter.c in AFNI
+% Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band.
 % Low pass, such as freq < 0.08 Hz
 idxCutoff	=round(lp_HighCutoff *paddedLength *TR + 1); % Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band. %idxCutoff	=round(ALowPass_HighCutoff *paddedLength *TR);
 idxCutoff2	=paddedLength+2 -idxCutoff;				%Center Index =(paddedLength/2 +1)
 maskLowPass(:,idxCutoff+1:idxCutoff2-1)=0; %High eliminate
 
-%%GENERATE HIGH PASS WINDOW
-
+% GENERATE HIGH PASS WINDOW
 % high pass, such as freq > 0.01 Hz
 idxCutoff	=round(hp_LowCutoff *paddedLength *TR + 1); % Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band. %idxCutoff	=round(AHighPass_LowCutoff *paddedLength *TR);
 idxCutoff2	=paddedLength+2 -idxCutoff;				%Center Index =(paddedLength/2 +1)
 maskHighPass(:,1:idxCutoff-1)=0;	%Low eliminate
 maskHighPass(:,idxCutoff2+1:paddedLength)=0;	%Low eliminate
 
-
-% 	%20070513	remove trend --> FFT --> filter --> inverse FFT --> retrend
+% 20070513	remove trend --> FFT --> filter --> inverse FFT --> retrend
 % YAN Chao-Gan, 100401. remove the mean --> FFT --> filter --> inverse FFT --> add mean back
 fftw('dwisdom');
-
 
 theMean=mean(interpol_tc,2);
 interpol_tc=interpol_tc-repmat(theMean,[1, sampleLength]);
@@ -321,7 +291,6 @@ interpol_tc =interpol_tc(:, 1:sampleLength);%remove the padded parts
 % Add the mean back after filter.
 interpol_tc=interpol_tc+repmat(theMean,[1, sampleLength]);
 
-%% end  bandpass
 disp('Done.');
 
 if vizz
@@ -330,22 +299,20 @@ if vizz
     title('Bandpass filtered time series.');
 end
 
-
 %% average gmtc over ROI
+aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.txt']);
+atlas_lgnd=textscan(aID,'%d %s');
+dimensionality=length(atlas_lgnd{1}); % how many ROI.
 
 gmtc=nan(size(interpol_tc,2),dimensionality);
-
 for c=1:dimensionality
     gmtc(:,c)=mean(interpol_tc(voxelmask.vals==c,:));
 end
 
 
-
 function sl=ea_detsiglength(fname)
-
 V=spm_vol(fname);
 sl=length(V);
-
 
 
 function Result = rest_nextpow2_one35(n)
@@ -435,7 +402,6 @@ Result =NaN;    % Should not reach, except when n=1
 
 
 function sessvec=ea_gensessvec(sessvec)
-
 X=zeros(size(sessvec,1),max(sessvec));
 for sess=1:max(sessvec)
     X(:,sess)=sessvec==sess;
