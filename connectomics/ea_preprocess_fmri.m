@@ -10,14 +10,13 @@ signallength=length(V);
 ea_realign_fmri(signallength,options); % realign fMRI
 
 % new segment (fMRI, preoperative anatomical image):
-fis={['r',options.prefs.rest,',1'],options.prefs.prenii_unnormalized};
+fis={['r',options.prefs.rest],options.prefs.prenii_unnormalized};
 for fi=1:length(fis)
     ea_newsegment_proxy(fis{fi},options); % new Segment fMRI
 end
 
 ea_coreg_pre2fmri(options); % register pre 2 fmri (for timecourse-extraction).
 ea_smooth_fmri(signallength,options); % slightly smooth fMRI data
-
 
 
 function ea_realign_fmri(signallength,options)
@@ -64,6 +63,7 @@ if ~exist([directory,'c1',file],'file');
     delete([directory,rf,'_seg8.mat']);
 end
 
+
 function ea_coreg_pre2fmri(options)
 directory=[options.root,options.patientname,filesep];
 [~,rf]=fileparts(options.prefs.rest);
@@ -89,7 +89,6 @@ if ~exist([directory,'rr',rf,options.prefs.prenii_unnormalized],'file')
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = ['rr',rf];
-
 
     try
         jobs{1}=matlabbatch;

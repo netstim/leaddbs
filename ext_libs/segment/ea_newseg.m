@@ -19,7 +19,6 @@ if ~exist([directory, 'c1', file], 'file')
     job.warp.write=[1,1];
     spm_preproc_run(job); % run "Segment" in SPM 12 (Old "Segment" is now referred to as "Old Segment").
 
-
     disp('Done.');
 else
     disp('Segmentation already done...');
