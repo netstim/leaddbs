@@ -1,4 +1,4 @@
-function [DTI_CM] = ea_createCM_dti(options)
+function [DTI_CM, DTI_LEN] = ea_createCM_dti(options)
 % This function creates a structural (dMRI-based) Connectivity matrix.
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
@@ -51,7 +51,6 @@ end
 seedIDX=round(spm_sample_vol(Vatl,seeds(:,1), seeds(:,2), seeds(:,3),0));
 termIDX=round(spm_sample_vol(Vatl,terms(:,1), terms(:,2), terms(:,3),0));
 
-
 if vizz
     figure, plot3(seeds(:,1),seeds(:,2),seeds(:,3),'r.')
     nii=ea_load_nii(Vatl.fname);
@@ -69,6 +68,7 @@ aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,options.lc.ge
 atlas_lgnd=textscan(aID,'%d %s');
 d=length(atlas_lgnd{1}); % how many ROI.
 DTI_CM=zeros(d);
+DTI_LEN=zeros(d);
 
 ea_dispercent(0,['Iterating through ',num2str(length(idx)),' fibers']);
 conns=0;
@@ -87,10 +87,20 @@ for fiber=conIDX'
 
         DTI_CM(atlas_lgnd{1}==termIDX(fiber),atlas_lgnd{1}==seedIDX(fiber))    =  ...
             DTI_CM(atlas_lgnd{1}==seedIDX(fiber),atlas_lgnd{1}==termIDX(fiber));  % symmetrize Matrix.
+        
+        DTI_LEN(atlas_lgnd{1}==seedIDX(fiber),atlas_lgnd{1}==termIDX(fiber))    =  ...
+            DTI_LEN(atlas_lgnd{1}==seedIDX(fiber),atlas_lgnd{1}==termIDX(fiber))    +  idx(fiber);
+
+        DTI_LEN(atlas_lgnd{1}==termIDX(fiber),atlas_lgnd{1}==seedIDX(fiber))    =  ...
+            DTI_LEN(atlas_lgnd{1}==seedIDX(fiber),atlas_lgnd{1}==termIDX(fiber));  % symmetrize Matrix.
+        
         conns=conns+1; % connection count
         %end
     end
 end
+
+DTI_LEN = DTI_LEN./DTI_CM;
+DTI_LEN(isnan(DTI_LEN) | isinf(DTI_LEN))=0;
 
 ea_dispercent(100,'end')
 
