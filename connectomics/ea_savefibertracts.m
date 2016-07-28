@@ -10,6 +10,6 @@ ftr.voxmm=voxmm;
 if nargin == 5
     ftr.mat=mat;
 end
-display(sprintf('Saving fibers: %s.mat...',fn));
+display(sprintf('\nSaving fibers: %s.mat...',fn));
 save(fullfile(pth,[fn,'.mat']),'-struct','ftr','-v7.3');
 disp('Done.');

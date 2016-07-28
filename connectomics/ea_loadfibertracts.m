@@ -1,31 +1,30 @@
 function [fibers,idx,voxmm,mat]=ea_loadfibertracts(cfile)
 
-if strcmp(cfile(end-3:end),'.mat')
-    fibinfo=load(cfile);
-    if ~isfield(fibinfo,'ea_fibformat')
-        ea_convertfibs2newformat(fibinfo,cfile);
-        fibinfo=load(cfile);
-    end
-    fibers=fibinfo.fibers;
-    idx=fibinfo.idx;
-    if nargout>2
-        try
-            voxmm=fibinfo.voxmm;
-        catch % assume voxel
-            voxmm='vox';
-        end
-        mat=[];
-        try
-            mat=fibinfo.mat;
-        end
-    end
-else
+if ~strcmp(cfile(end-3:end),'.mat')
     ea_trk2ftr(cfile);
     [pth,fn,~]=fileparts(cfile);
     cfile=fullfile(pth,[fn,'.mat']);
-    [fibers,idx,voxmm]=ea_loadfibertracts(cfile);
 end
 
+fibinfo=load(cfile);
+if ~isfield(fibinfo,'ea_fibformat')
+    ea_convertfibs2newformat(fibinfo,cfile);
+    fibinfo=load(cfile);
+end
+fibers=fibinfo.fibers;
+idx=fibinfo.idx;
+if nargout>2
+    try
+        voxmm=fibinfo.voxmm;
+    catch % assume voxel
+        voxmm='vox';
+    end
+    try
+        mat=fibinfo.mat;
+    catch
+        mat=[];
+    end
+end
 
 
 function ea_trk2ftr(cfile)
@@ -35,7 +34,7 @@ function ea_trk2ftr(cfile)
 ftr.vox=hdr.voxel_size;
 
 %V=spm_vol([spm('dir'),filesep,'canonical',filesep,'avg152T2.nii']); % assume MNI152 official to be voxel space of tracts
-V=spm_vol([ea_getearoot,'templates',filesep,'mni_hires.nii']);
+%V=spm_vol([ea_getearoot,'templates',filesep,'mni_hires.nii']);
 for i=1:length(trks)
     ftr.curveSegCell{i}=[trks(i).matrix(:,1)/ftr.vox(1),trks(i).matrix(:,2)/ftr.vox(2),trks(i).matrix(:,3)/ftr.vox(3)];
 

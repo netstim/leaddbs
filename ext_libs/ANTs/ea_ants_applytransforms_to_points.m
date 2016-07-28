@@ -68,20 +68,15 @@ delete([subdir,'tmpout.csv']);
 delete([subdir,'tmpin.csv']);
 
 
-
-
-function c=ea_readcsv(pth)
+function coord=ea_readcsv(pth)
 fid=fopen(pth);
 C=textscan(fid,'%f %f %f %f','commentStyle', '#','delimiter', ',','Headerlines',1);
 fclose(fid);
-for coord=1:length(C{1})
-   c(:,coord)=[C{1}(coord);C{2}(coord);C{3}(coord);1];
-end
+coord=cell2mat(C(1:3));
 
 
-function c=ea_writecsv(pth,input)
-
+function ea_writecsv(pth,input)
 fid=fopen(pth,'w');
 fprintf(fid,'x,y,z,t \n');
-fprintf(fid,'%f,%f,%f,0\n',input(1:3,:)');
+fprintf(fid,'%f,%f,%f,0\n',input');
 fclose(fid);

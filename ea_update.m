@@ -19,7 +19,7 @@ if nargin
     end
 end
 
-earoot=[ea_getearoot];
+earoot=ea_getearoot;
 
 updurl = 'http://www.lead-dbs.org/release/download.php';
 if update

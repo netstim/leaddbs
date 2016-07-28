@@ -1,8 +1,8 @@
 function ea_ftr2trk(ftrfilename,directory,specs,options)
-
+% export FTR matrix to TrackVis trk format
 
 if ischar(ftrfilename)
-    disp('Loading FTR-File.');
+    disp('Loading FTR-File...');
     [fibs,idx,voxmm,mat]=ea_loadfibertracts([directory,ftrfilename,'.mat']);
 else % direct ftr import
     ea_error('Direct FTR import not supported at present.');
