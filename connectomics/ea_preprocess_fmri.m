@@ -12,7 +12,7 @@ ea_realign_fmri(signallength,options); % realign fMRI
 % new segment (fMRI, preoperative anatomical image):
 fis={['r',options.prefs.rest],options.prefs.prenii_unnormalized};
 for fi=1:length(fis)
-    ea_newsegment_proxy(fis{fi},options); % new Segment fMRI
+    ea_newseg(directory,fis{fi},0,options); % new Segment fMRI
 end
 
 ea_coreg_pre2fmri(options); % register pre 2 fmri (for timecourse-extraction).
@@ -48,19 +48,6 @@ if ~exist([directory,'r',options.prefs.rest],'file');
     clear matlabbatch;
     delete([directory,'mean',options.prefs.rest]);
     disp('Done.');
-end
-
-
-function ea_newsegment_proxy(file,options)
-directory=[options.root,options.patientname,filesep];
-
-%% new segment.
-if ~exist([directory,'c1',file],'file');
-    ea_newseg(directory,file,0,options);
-    [~,rf]=fileparts(file);
-    delete([directory,'c4',rf,'.nii']);
-    delete([directory,'c5',rf,'.nii']);
-    delete([directory,rf,'_seg8.mat']);
 end
 
 

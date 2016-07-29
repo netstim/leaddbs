@@ -15,14 +15,9 @@ if ischar(options) % return name of method.
 end
 
 if ~exist([options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized],'file')
-    
     ea_nc_segment(options);
 end
 
-
-
 %% run standard coregistration
-
 options.usediffmr_coregct=['c',options.prefs.prenii_unnormalized];
-
 ea_coregctmri_edgedetect_imtbx(options);

@@ -10,27 +10,15 @@ if ischar(options) % return name of method.
 end
 
 %% mask for tracking
-
-
-%% mask for tracking
-
 directory=[options.root,options.patientname,filesep];
-
-
-    if ~exist([directory,'c2',options.prefs.prenii_unnormalized],'file')
-        ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-    end
-
+ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
 
 %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
-
-
 matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
 matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c1',options.prefs.prenii_unnormalized,',1'];
-    [directory,'c2',options.prefs.prenii_unnormalized,',1'];
-    [directory,'c3',options.prefs.prenii_unnormalized,',1']
-    };
+                                                   [directory,'c2',options.prefs.prenii_unnormalized,',1'];
+                                                   [directory,'c3',options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
@@ -65,7 +53,6 @@ for i=1:size(Xdti,4)
    DTIdata(i).Bvalue=bval(:,i);
 end
 
-
 % Constants DTI
 parametersDTI=[];
 parametersDTI.BackgroundTreshold=150;
@@ -74,7 +61,6 @@ parametersDTI.textdisplay=true;
 
 % Perform DTI calculation
 [ADC,FA,VectorF,DifT]=ea_DTI(DTIdata,parametersDTI);
-
 
 % load mask
 Vmask=spm_vol([directory,'rb0c2',options.prefs.prenii_unnormalized,',1']);
@@ -101,15 +87,10 @@ parametersFT.FAmax=0.8;
 
 % Perform FT
 fibers=ea_FT(FA,VectorF,Xmask,parametersFT);
-
-
 save([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized],'fibers');
 
 
-
-
 %% export .trk copy for trackvis visualization
-
 dnii=ea_load_nii([directory,options.prefs.b0]);
 niisize=size(dnii.img); % get dimensions of reference template.
 specs.origin=[0,0,0];
@@ -120,8 +101,3 @@ specs.affine=dnii.mat;
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
 ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
 disp('Done.');
-
-
-
-
-

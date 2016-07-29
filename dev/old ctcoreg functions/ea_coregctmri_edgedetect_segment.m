@@ -9,15 +9,13 @@ if ischar(options) % return name of method.
     return
 end
 
+directory = [options.root,options.patientname,filesep];
+
 Dopt=1;
 maxiter=200;
 
-
-
 %% segment MRI
-
-
-matlabbatch{1}.spm.tools.preproc8.channel.vols = {[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized,',1']};
+matlabbatch{1}.spm.tools.preproc8.channel.vols = {[directory,options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.tools.preproc8.channel.biasreg = 0.0001;
 matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm = 60;
 matlabbatch{1}.spm.tools.preproc8.channel.write = [0 0];
@@ -57,39 +55,44 @@ end
 clear jobs matlabbatch
 
 
-
 % generate "skull-contrast" image
-matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.patientname,filesep,'c1',options.prefs.prenii_unnormalized];
-    [options.root,options.patientname,filesep,'c2',options.prefs.prenii_unnormalized];
-    [options.root,options.patientname,filesep,'c3',options.prefs.prenii_unnormalized];
-[options.root,options.patientname,filesep,'c4',options.prefs.prenii_unnormalized];
-[options.root,options.patientname,filesep,'c5',options.prefs.prenii_unnormalized];
-[options.root,options.patientname,filesep,'c6',options.prefs.prenii_unnormalized]};
+matlabbatch{1}.spm.util.imcalc.input = {[directory,'c1',options.prefs.prenii_unnormalized];
+                                        [directory,'c2',options.prefs.prenii_unnormalized];
+                                        [directory,'c3',options.prefs.prenii_unnormalized];
+                                        [directory,'c4',options.prefs.prenii_unnormalized];
+                                        [directory,'c5',options.prefs.prenii_unnormalized];
+                                        [directory,'c6',options.prefs.prenii_unnormalized]};
 matlabbatch{1}.spm.util.imcalc.output = ['skullcon',options.prefs.prenii_unnormalized];
-matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname,filesep]};
+matlabbatch{1}.spm.util.imcalc.outdir = {directory};
 matlabbatch{1}.spm.util.imcalc.expression = 'i4-(i1+i2+i3+i5+i6)';
 matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-    jobs{1}=matlabbatch;
-    spm_jobman('run',jobs);
-    clear matlabbatch jobs;
+jobs{1}=matlabbatch;
+spm_jobman('run',jobs);
+clear matlabbatch jobs;
 
+try delete([directory,'c4',options.prefs.prenii_unnormalized]); end
+try delete([directory,'c5',options.prefs.prenii_unnormalized]); end
+try delete([directory,'c6',options.prefs.prenii_unnormalized]); end
+try delete([directory, 'y_', options.prefs.prenii_unnormalized]); end
+try delete([directory, 'iy_', options.prefs.prenii_unnormalized]); end
+[~,fn]=fileparts(options.prefs.prenii_unnormalized);
+try delete([directory,fn,'_seg8.mat']); end
 
 % use skull volume here:
-ea_reslice_nii([options.root,options.patientname,filesep,'skullcon',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[4 4 4]);
-ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],[4 4 4]);
-
+ea_reslice_nii([directory,'skullcon',options.prefs.prenii_unnormalized],[directory,'small_',options.prefs.prenii_unnormalized],[4 4 4]);
+ea_reslice_nii([directory,options.prefs.rawctnii_unnormalized],[directory,'small_',options.prefs.rawctnii_unnormalized],[4 4 4]);
 
 vizz=1; % visualization on
 alphas=options.coregct.coregthreshs;
 %% estimate
 disp('Loading images...');
-CT=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],'simple');
-MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],'simple');
-delete([options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized]);
-delete([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
+CT=ea_load_nii([directory,'small_',options.prefs.rawctnii_unnormalized],'simple');
+MR=ea_load_nii([directory,'small_',options.prefs.prenii_unnormalized],'simple');
+delete([directory,'small_',options.prefs.rawctnii_unnormalized]);
+delete([directory,'small_',options.prefs.prenii_unnormalized]);
 
 disp('Done. Smoothing...');
 MR.img(MR.img<100)=0; % remove noise around brain.
@@ -207,7 +210,7 @@ end
 % M has been estimated and maps from voxels in CT to voxels in MR.
 %% export coregistered CT.
 
-matlabbatch{1}.spm.util.reorient.srcfiles = {[options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized,',1']};
+matlabbatch{1}.spm.util.reorient.srcfiles = {[directory,options.prefs.rawctnii_unnormalized,',1']};
 matlabbatch{1}.spm.util.reorient.transform.transM = M;
 matlabbatch{1}.spm.util.reorient.prefix = 'r';
 jobs{1}=matlabbatch;
@@ -223,8 +226,8 @@ clear jobs matlabbatch
 % CT.img=reshape(ea_normal(CT.img(:)),size(CT.img,1),size(CT.img,2),size(CT.img,3));
 
 % 1. initial coreg
-    matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[options.root,options.patientname,filesep,'',options.prefs.prenii_unnormalized]};
-    matlabbatch{1}.spm.spatial.coreg.estimate.source = {[options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized,',1']};
+    matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[directory,options.prefs.prenii_unnormalized]};
+    matlabbatch{1}.spm.spatial.coreg.estimate.source = {[directory,'r',options.prefs.rawctnii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.coreg.estimate.other = {''};
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = 'nmi';
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
@@ -235,47 +238,45 @@ clear jobs matlabbatch
     spm_jobman('run',jobs);
     clear matlabbatch jobs;
 
-    % 2.
-% multiply both CT and MRI with c1-3 volume of images:
+% 2. multiply both CT and MRI with c1-3 volume of images:
 % skullstrip MR:
-matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.patientname,filesep,'c1',options.prefs.prenii_unnormalized];
-    [options.root,options.patientname,filesep,'c2',options.prefs.prenii_unnormalized];
-    [options.root,options.patientname,filesep,'c3',options.prefs.prenii_unnormalized];
-    [options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]};
+matlabbatch{1}.spm.util.imcalc.input = {[directory,'c1',options.prefs.prenii_unnormalized];
+                                        [directory,'c2',options.prefs.prenii_unnormalized];
+                                        [directory,'c3',options.prefs.prenii_unnormalized];
+                                        [directory,options.prefs.prenii_unnormalized]};
 matlabbatch{1}.spm.util.imcalc.output = ['b',options.prefs.prenii_unnormalized];
-matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname,filesep]};
+matlabbatch{1}.spm.util.imcalc.outdir = {[directory]};
 matlabbatch{1}.spm.util.imcalc.expression = '(i1+i2+i3).*i4';
 matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-    jobs{1}=matlabbatch;
-    spm_jobman('run',jobs);
-    clear matlabbatch jobs;
+jobs{1}=matlabbatch;
+spm_jobman('run',jobs);
+clear matlabbatch jobs;
 
-    % skullstrip CT:
-matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.patientname,filesep,'c1',options.prefs.prenii_unnormalized];
-    [options.root,options.patientname,filesep,'c2',options.prefs.prenii_unnormalized];
-    [options.root,options.patientname,filesep,'c3',options.prefs.prenii_unnormalized];
-    [options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized]};
+% skullstrip CT:
+matlabbatch{1}.spm.util.imcalc.input = {[directory,'c1',options.prefs.prenii_unnormalized];
+                                        [directory,'c2',options.prefs.prenii_unnormalized];
+                                        [directory,'c3',options.prefs.prenii_unnormalized];
+                                        [directory,'r',options.prefs.rawctnii_unnormalized]};
 matlabbatch{1}.spm.util.imcalc.output = ['br',options.prefs.rawctnii_unnormalized];
-matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname,filesep]};
+matlabbatch{1}.spm.util.imcalc.outdir = {[directory]};
 matlabbatch{1}.spm.util.imcalc.expression = '(i1+i2+i3).*i4';
 matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-    jobs{1}=matlabbatch;
-    spm_jobman('run',jobs);
-    clear matlabbatch jobs;
+jobs{1}=matlabbatch;
+spm_jobman('run',jobs);
+clear matlabbatch jobs;
 
-
-    % 3. Final coreg.
+% 3. final coreg.
 costfuns={'nmi','mi','ecc'};
 for costfun=1:3
-    matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[options.root,options.patientname,filesep,'b',options.prefs.prenii_unnormalized,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estimate.source = {[options.root,options.patientname,filesep,'br',options.prefs.rawctnii_unnormalized,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estimate.other = {[options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized,',1']};
+    matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[directory,'b',options.prefs.prenii_unnormalized,',1']};
+    matlabbatch{1}.spm.spatial.coreg.estimate.source = {[directory,'br',options.prefs.rawctnii_unnormalized,',1']};
+    matlabbatch{1}.spm.spatial.coreg.estimate.other = {[directory,'r',options.prefs.rawctnii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = costfuns{costfun};
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
@@ -287,14 +288,14 @@ for costfun=1:3
 end
 
 disp('Cleaning up...');
-delete([options.root,options.patientname,filesep,'br',options.prefs.rawctnii_unnormalized]);
-delete([options.root,options.patientname,filesep,'b',options.prefs.prenii_unnormalized]);
-delete([options.root,options.patientname,filesep,'skullcon',options.prefs.prenii_unnormalized]);
+delete([directory,'br',options.prefs.rawctnii_unnormalized]);
+delete([directory,'b',options.prefs.prenii_unnormalized]);
+delete([directory,'skullcon',options.prefs.prenii_unnormalized]);
 
 disp('Done.');
 
-matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
-    [options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized,',1']};
+matlabbatch{1}.spm.util.checkreg.data = {[directory,options.prefs.prenii_unnormalized];
+                                         [directory,'r',options.prefs.rawctnii_unnormalized,',1']};
 jobs{1}=matlabbatch;
 spm_jobman('run',jobs);
 clear matlabbatch jobs;

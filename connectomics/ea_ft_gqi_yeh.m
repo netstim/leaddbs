@@ -72,7 +72,6 @@ elseif ispc
     dsistudio = [basedir, 'win',filesep,'dsi_studio.exe'];
 end
 
-
 % build .fib.gz file
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
 if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file')

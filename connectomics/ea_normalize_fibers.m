@@ -179,8 +179,6 @@ switch whichnormmethod
         if ~exist([directory,'c2',options.prefs.b0],'file');
             disp('Segmenting B0 file for DARTEL import space coregistration...');
             ea_newseg(directory,options.prefs.b0,0,options);
-            delete([directory,'c4',options.prefs.b0]);
-            delete([directory,'c5',options.prefs.b0]);
             disp('Done.');
         end
         % coreg b0 and anat
@@ -190,9 +188,8 @@ switch whichnormmethod
             matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0]};
             matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'k',options.prefs.prenii_unnormalized]};
             matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c1',options.prefs.prenii_unnormalized];
-                [directory,'c2',options.prefs.prenii_unnormalized];
-                [directory,'c3',options.prefs.prenii_unnormalized]
-                };
+                                                               [directory,'c2',options.prefs.prenii_unnormalized];
+                                                               [directory,'c3',options.prefs.prenii_unnormalized]};
             matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
             matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
             matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];

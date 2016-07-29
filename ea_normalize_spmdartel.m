@@ -43,71 +43,48 @@ end
 disp('This Normalization routine uses the advanced TPMs by Lorio 2016. See http://unil.ch/lren/home/menuinst/data--utilities.html');
 
 segmentresolution=0.5; % resolution of the DARTEL-Warps. Setting this value to larger values will generate the usual DARTEL-Workflow.
-
-
-
 usecombined=0; % if set, eauto will try to fuse coronar and transversal images before normalizing them.
 usesegmentnew=0;
 costfuns={'nmi','mi','ecc','ncc'};
 
-if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz'],'file')
-    try
-        gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
-    end
-    try
-        gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']);
-    end
-    try
-        gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,'.gz']);
-    end
-
-
-    try
-        gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
+if isfield(options.prefs, 'tranii_unnormalized')
+    if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz'],'file')
+        try
+            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
+        end
+        try
+            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']);
+        end
+        try
+            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,'.gz']);
+        end
+        try
+            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
+        end
     end
 end
-
 
 % First, do the coreg part:
 try
     ea_coregmr(options,options.prefs.normalize.coreg);
 end
 
-
-
 % now dartel-import the preoperative version.
+disp('Segmenting preoperative version (Import to DARTEL-space)');
+ea_newseg([options.root,options.prefs.patientdir,filesep],options.prefs.prenii_unnormalized,1,options);
+disp('*** Segmentation of preoperative MRI done.');
 
-%try
-
-
-
-    disp('Segmenting preoperative version (Import to DARTEL-space)');
-    ea_newseg([options.root,options.prefs.patientdir,filesep],options.prefs.prenii_unnormalized,1,options);
-    delete([options.root,options.prefs.patientdir,filesep,'c4',options.prefs.prenii_unnormalized]);
-    delete([options.root,options.prefs.patientdir,filesep,'c5',options.prefs.prenii_unnormalized]);
-    disp('*** Segmentation of preoperative MRI done.');
-
-
-
-    % check if darteltemplate is available, if not generate one
-
-    if exist([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'],'file')
-        % There is a DARTEL-Template. Check if it will match:
-        Vt=spm_vol([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii']);
-        Vp=spm_vol([options.root,filesep,options.patientname,filesep,'rc1',options.prefs.prenii_unnormalized]);
-        if ~isequal(Vp.dim,Vt(1).dim) || ~isequal(Vp.mat,Vt(1).mat) % Dartel template not matching. -> create matching one.
-            ea_create_mni_darteltemplate([options.root,filesep,options.patientname,filesep,'rc1',options.prefs.prenii_unnormalized]);
-        end
-
-    else % no dartel template present. -> Create matching dartel templates from highres version.
+% check if darteltemplate is available, if not generate one
+if exist([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'],'file')
+    % There is a DARTEL-Template. Check if it will match:
+    Vt=spm_vol([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii']);
+    Vp=spm_vol([options.root,filesep,options.patientname,filesep,'rc1',options.prefs.prenii_unnormalized]);
+    if ~isequal(Vp.dim,Vt(1).dim) || ~isequal(Vp.mat,Vt(1).mat) % Dartel template not matching. -> create matching one.
         ea_create_mni_darteltemplate([options.root,filesep,options.patientname,filesep,'rc1',options.prefs.prenii_unnormalized]);
-
     end
-
-    %
-
-
-
+else % no dartel template present. -> Create matching dartel templates from highres version.
+    ea_create_mni_darteltemplate([options.root,filesep,options.patientname,filesep,'rc1',options.prefs.prenii_unnormalized]);
+end
 
 % Normalize to MNI using DARTEL.
 matlabbatch{1}.spm.tools.dartel.warp1.images = {
@@ -144,12 +121,14 @@ matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.lmreg = 0.01;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.cyc = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.its = 3;
 jobs{1}=matlabbatch;
+
 %try
     spm_jobman('run',jobs);
     disp('*** Dartel coregistration of preoperative version worked.');
 %catch
 %    ea_error('*** Dartel coregistration failed.');
 %end
+
 clear matlabbatch jobs;
 
 % export normalization parameters:
@@ -170,9 +149,6 @@ for inverse=0:1
             matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
             matlabbatch{1}.spm.util.defs.interp = 1;
         case 'SPM12'
-
-
-
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1-inverse 0+inverse];
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
@@ -187,5 +163,4 @@ for inverse=0:1
     clear matlabbatch jobs;
 end
 
-
-ea_apply_normalization(options)
+% ea_apply_normalization(options)

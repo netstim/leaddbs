@@ -15,7 +15,5 @@ if ~exist([options.root,options.patientname,filesep,'c',options.prefs.prenii_unn
 end
 
 %% run standard coregistration
-
 options.usediffmr_coregct=['c',options.prefs.prenii_unnormalized];
-
 ea_coregctmri_edgedetect(options);

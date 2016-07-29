@@ -39,7 +39,6 @@ else
     bprfx='';
 end
 
-
 % T1
 if uset1 && ~strcmp(options.primarytemplate,'_t1')
     if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
@@ -134,9 +133,7 @@ for fr=1:length(from)
     switch [fn,ext]
         case options.prefs.fa2anat
             if ~exist([directory,'tc2',options.prefs.prenii_unnormalized],'file')
-                if ~exist([directory,'c2',options.prefs.prenii_unnormalized],'file')
-                    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-                end
+                ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
                 % assume that tc2 doesn't exist
                 nii=ea_load_nii([directory,'c2',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.7;
@@ -147,9 +144,7 @@ for fr=1:length(from)
             masks{fr,2}=[directory,'tc2',options.prefs.prenii_unnormalized];
         otherwise
             if ~exist([directory,'tc1',options.prefs.prenii_unnormalized],'file')
-                if ~exist([directory,'c1',options.prefs.prenii_unnormalized],'file')
-                    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-                end
+                ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
                 % assume that tc1 doesn't exist
                 nii=ea_load_nii([directory,'c1',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.3;
@@ -169,17 +164,6 @@ if ~exist([directory,'tc1c2',options.prefs.prenii_unnormalized],'file')
     spm_write_vol(Vc1,Vc1.img);
 end
 
-try delete([directory,'c1',options.prefs.prenii_unnormalized]); end
-try delete([directory,'c2',options.prefs.prenii_unnormalized]); end
-try delete([directory,'c3',options.prefs.prenii_unnormalized]); end
-try delete([directory,'c4',options.prefs.prenii_unnormalized]); end
-try delete([directory,'c5',options.prefs.prenii_unnormalized]); end
-try delete([directory,'c6',options.prefs.prenii_unnormalized]); end
-try delete([directory,'y_',options.prefs.prenii_unnormalized]); end
-try delete([directory,'iy_',options.prefs.prenii_unnormalized]); end
-[~,fna]=fileparts(options.prefs.prenii_unnormalized);
-try delete([directory,fna,'_seg8.mat']); end
-
 
 function ea_genbrainmask(options)
 directory=[options.root,options.patientname,filesep];
@@ -192,13 +176,6 @@ bm.img=c1.img+c2.img+c3.img;
 bm.fname=[directory,'brainmask.nii'];
 bm.img=bm.img>0.5;
 spm_write_vol(bm,bm.img);
-for c=1:5
-    try delete([directory,'c',num2str(c),options.prefs.prenii_unnormalized]); end
-end
-try delete([directory,'y_',options.prefs.prenii_unnormalized]); end
-try delete([directory,'iy_',options.prefs.prenii_unnormalized]); end
-[~,fna]=fileparts(options.prefs.prenii_unnormalized);
-try delete([directory,fna,'_seg8.mat']); end
 
 
 function ea_maskimg(options,file,prefix)

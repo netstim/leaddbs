@@ -1,8 +1,12 @@
-function ea_newseg(directory,file,dartel,options)
-
+function ea_newseg(directory,file,dartel,options,del)
+% SPM NewSegment
 % we cannot generate the TPM from the SPM TPM anymore since
 % we use the enhanced TPM by Lorio / Draganski:
 % http://unil.ch/lren/home/menuinst/data--utilities.html
+
+if nargin < 5
+    del = 1;
+end
 
 if ~exist([directory, 'c1', file], 'file')
     disp('Segmentation...');
@@ -18,7 +22,20 @@ if ~exist([directory, 'c1', file], 'file')
     end
     job.warp.write=[1,1];
     spm_preproc_run(job); % run "Segment" in SPM 12 (Old "Segment" is now referred to as "Old Segment").
-
+    
+    % delete unused files
+    try delete([directory, 'c4', file]); end
+    try delete([directory, 'c5', file]); end
+    try delete([directory, 'c6', file]); end
+    [~,fn]=fileparts(file);
+    try delete([directory,fn,'_seg8.mat']); end
+    
+    % del==0: keep the deformation field when for ea_normalize_spmnewseg
+    if del
+        try delete([directory, 'y_', file]); end
+        try delete([directory, 'iy_', file]); end
+    end
+    
     disp('Done.');
 else
     disp('Segmentation already done...');

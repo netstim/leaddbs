@@ -1,6 +1,8 @@
 function [finas]=ea_coregmr(options,automan)
+% wrapper for coreg routines
 
-if options.modality==2 % in CT imaging, coregistration is done elsewhere.
+% in CT imaging, coregistration is done elsewhere.
+if options.modality==2
     return
 end
 
@@ -15,18 +17,21 @@ end
 % from original files in any case.
 if exist([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],'file')
     copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
+else
+    copyfile([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized]);
 end
-try copyfile([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized]); end
+
 if exist([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],'file')
     copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
+else
+    copyfile([options.root,options.patientname,filesep,options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized]);
 end
-try copyfile([options.root,options.patientname,filesep,options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized]); end
+
 if exist([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],'file')
     copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized]);
+else
+    copyfile([options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized]);
 end
-try copyfile([options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized]); end
-
-
 
 switch options.coregmr.method
     case 1 % SPM
@@ -47,4 +52,3 @@ switch options.coregmr.method
     case 6 % Do nothing
         return
 end
-

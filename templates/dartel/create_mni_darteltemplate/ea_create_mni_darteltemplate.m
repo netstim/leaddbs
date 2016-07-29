@@ -1,6 +1,5 @@
 function ea_create_mni_darteltemplate(segmentresult)
 
-
 wd=[fileparts(which('ea_create_mni_darteltemplate')),filesep];
 gunzip([wd,'dartelmni_6_hires.nii.gz']);
 spm_file_split([wd,'dartelmni_6_hires.nii']);
@@ -21,9 +20,7 @@ for s=1:6
             jobs{1}=matlabbatch;
             spm_jobman('run',jobs);
                     clear jobs matlabbatch
-
         else
-
             matlabbatch{1}.spm.util.imcalc.input = {[wd,'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii,1']};
             matlabbatch{1}.spm.util.imcalc.output = [wd,'s0','dartelmni_6_hires_',sprintf('%05d',tpm),'.nii'];
             matlabbatch{1}.spm.util.imcalc.outdir = {wd};
@@ -35,7 +32,6 @@ for s=1:6
             jobs{1}=matlabbatch;
             spm_jobman('run',jobs);
                     clear jobs matlabbatch
-
         end
         clear jobs matlabbatch
 
@@ -52,15 +48,11 @@ for s=1:6
         jobs{1}=matlabbatch;
         spm_jobman('run',jobs);
         clear jobs matlabbatch
-
-
-
     end
 
     matlabbatch{1}.spm.util.cat.vols = {[wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',1),'.nii'];
-        [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',2),'.nii'];
-        [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',3),'.nii']
-        };
+                                        [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',2),'.nii'];
+                                        [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',3),'.nii']};
     matlabbatch{1}.spm.util.cat.name = [wd,'dartelmni_',num2str(expo(s)),'.nii'];
     matlabbatch{1}.spm.util.cat.dtype = 0;
     jobs{1}=matlabbatch;

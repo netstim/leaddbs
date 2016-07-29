@@ -11,8 +11,7 @@ end
 
 gdti_trackingparams='standard'; % select param-preset here (see below, also to create your own)
 % make sure only one DTI tracker is being used.
-    rmpath(genpath([options.earoot,'ext_libs',filesep,'Fibertools']));
-
+rmpath(genpath([options.earoot,'ext_libs',filesep,'Fibertools']));
 
 switch gdti_trackingparams
 
@@ -79,18 +78,14 @@ switch gdti_trackingparams
 
 end
 
-
-
 directory=[options.root,options.patientname,filesep];
 ea_prepare_dti(options)
 
 % create c2 from anat
 if ~exist([directory,'trackingmask.nii'],'file');
-    if ~exist([directory,'c2',options.prefs.prenii_unnormalized],'file')
-        ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-    end
-    %% coreg anat to b0
+    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
 
+    %% coreg anat to b0
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c2',options.prefs.prenii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.other = {''};
@@ -104,19 +99,13 @@ if ~exist([directory,'trackingmask.nii'],'file');
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
     spm_jobman('run',{matlabbatch}); clear matlabbatch
 
-    for c=3:5
-        delete([directory,'c',num2str(c),options.prefs.prenii_unnormalized]);
-    end
     movefile([directory,'rc2',options.prefs.prenii_unnormalized],[directory,'trackingmask.nii']);
 end
 
 % create c1 from anat
 if ~exist([directory,'gmmask.nii'],'file');
-    if ~exist([directory,'c1',options.prefs.prenii_unnormalized],'file')
-        ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-    end
+    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
     %% coreg anat to b0
-
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c1',options.prefs.prenii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.other = {''};
@@ -130,16 +119,11 @@ if ~exist([directory,'gmmask.nii'],'file');
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
     spm_jobman('run',{matlabbatch}); clear matlabbatch
 
-    for c=3:5
-        delete([directory,'c',num2str(c),options.prefs.prenii_unnormalized]);
-    end
     movefile([directory,'rc1',options.prefs.prenii_unnormalized],[directory,'gmmask.nii']);
 end
 
 
 %% mesoft part goes here
-
-
 [~,dfn]=fileparts(options.prefs.dti);
 try delete([directory,dfn,'_FTR.mat']); end
 % addpath(genpath('/media/Data/MATLAB/release'));
@@ -147,9 +131,6 @@ try delete([directory,dfn,'_FTR.mat']); end
 % addpath(genpath('/media/Data/MATLAB/dti_tools'));
 
 %ea_prepare_dti(options);
-
-
-
 
 % mesoGT_tool('loadData','nii',[directory,options.prefs.dti],{[directory,options.prefs.bvec],[directory,options.prefs.bval],...
 %    },[directory,'trackingmask.nii'],0.5);
@@ -161,10 +142,9 @@ mesoGT_tool('start');
 
 movefile([directory,dfn,'_FTR.mat'],[directory,options.prefs.FTR_unnormalized]);
 delete(findobj('tag','fiberGT_main'))
-%
-%
-%% export .trk copy for trackvis visualization
 
+
+%% export .trk copy for trackvis visualization
 dnii=nifti([directory,options.prefs.b0]);
 niisize=size(dnii.dat); % get dimensions of reference template.
 specs.origin=[0,0,0];
@@ -174,9 +154,3 @@ specs.affine=dnii.mat;
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
 ea_ftr2trk(ftrfname,directory,specs,options); % export unnormalized ftr to .trk
 disp('Done.');
-
-
-
-
-
-

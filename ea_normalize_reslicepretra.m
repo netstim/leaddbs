@@ -9,10 +9,11 @@ if ischar(options) % return name of method.
     varargout{2}={'SPM8','SPM12'};
     return
 end
-V=spm_vol([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
+directory=[options.root,options.patientname,filesep];
+V=spm_vol([directory,options.prefs.prenii_unnormalized]);
 
 dim=V.mat(logical(eye(4)));
 dim=abs(dim(1:3));
 if any(dim>0.7)
-ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[0.7 0.7 0.7],1);
+    ea_reslice_nii([directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized],[0.7 0.7 0.7],1);
 end
