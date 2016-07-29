@@ -1,5 +1,6 @@
 function ea_isolate_fa(options)
 
+disp('Export fa...');
 directory=[options.root,options.patientname,filesep];
 
 Vdti=spm_vol([directory,options.prefs.dti]);
@@ -23,7 +24,6 @@ for i=1:size(Xdti,4)
        DTIdata(i).Gradient=zeros(3,1);
    end
 end
-
 
 % Constants DTI
 parametersDTI=[];

@@ -1,5 +1,4 @@
-%%%%%%%%
-%
+function v = ea_unring(v,params)
 % unring - tool for removal of the Gibbs ringing artefact
 % Usage: outvol = unring(invol,params)
 % Options: invol - input volume 
@@ -8,9 +7,7 @@
 %                     minW  left border of window used for TV computation (default 1)
 %                     maxW  right border of window used for TV computation (default 3)
 
-
-function v = ea_unring(v,params)
-
+disp('Unring DTI...');
 if nargin == 1,
     params = [1 3 20];
 end;

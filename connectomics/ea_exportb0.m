@@ -1,5 +1,6 @@
 function ea_exportb0(options)
 
+disp('Export b0...');
 bvals=load([options.root,options.patientname,filesep,options.prefs.bval]);
 idx=find(bvals<10);
 cnt=1;
