@@ -16,8 +16,7 @@ end
 
 disp('(Re)-applying priorly estimated normalizations...');
 if options.modality==1 % MR
-
-            ea_coregmr(options,'auto');
+    ea_coregmr(options,'auto');
 end
 ea_apply_normalization(options);
 

@@ -22,9 +22,6 @@ function varargout=ea_normalize_schoenecker_pre(options)
 
 usecombined=0; % if set, eauto will try to fuse coronar and transversal images before normalizing them.
 
-
-
-
 if ischar(options) % return name of method.
     varargout{1}='Schönecker 2009 linear threestep (Include Pre-OP) [MR/CT]';
     varargout{2}={'SPM8'};
@@ -32,25 +29,19 @@ if ischar(options) % return name of method.
 end
 
 if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz'],'file')
-try
+    try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']);
     catch
-
-    try system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']); end
+        system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']);
     end
-
     try
-    gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
-    gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
-
+        gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
+        gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
     catch
-    system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
-    system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
+        system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
+        system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
     end
 end
-
-
-
 
 % now segment the pre-op version to get some normalization weights.
 matlabbatch{1}.spm.spatial.preproc.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};

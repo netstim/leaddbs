@@ -5,7 +5,6 @@ fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
-
 if nargin>3
     writematout=varargin{4};
 else
@@ -64,8 +63,6 @@ else
     affinesoomthingssigmas='3x2x1x0vox';
 end
 
-
-
 % determine how many runs have been performed before..
 runs=0;
 for r=1:5;
@@ -75,9 +72,6 @@ for r=1:5;
         break
     end
 end
-
-
-
 
 if runs==0 % mattes MI affine + rigid
     rigidstage = [' --transform Rigid[0.1]' ...
@@ -126,8 +120,6 @@ elseif runs>=3 % go directly to affine stage, try GC again
         ' --shrink-factors ', affineshrinkfactors ...
         ' --smoothing-sigmas ', affinesoomthingssigmas];
 end
-
-
 
 ea_libs_helper
 cmd = [ANTS, ' --verbose 1' ...

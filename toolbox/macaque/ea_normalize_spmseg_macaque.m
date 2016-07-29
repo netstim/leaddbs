@@ -49,17 +49,14 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
     end
 end
 
-
-
-
 % First, do the coreg part:
 if options.modality==1
-    ea_coregmr(options,options.prefs.normalize.coreg);
+    try
+        ea_coregmr(options,options.prefs.normalize.coreg);
+    end
 end
 
 % do a linear coregistration into mni space
-
-
 if options.modality==1 %MR
     expdo=2:4;
 elseif options.modality==2 % CT
@@ -93,7 +90,6 @@ for export=expdo
     end
 end
 
-
 matlabbatch{1}.spm.spatial.coreg.estimate.ref = {fullfile(options.earoot,'toolbox','macaque','templates','mni_hires.nii,1')};
 matlabbatch{1}.spm.spatial.coreg.estimate.source = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.coreg.estimate.other = finas;
@@ -105,26 +101,25 @@ spm_jobman('run',{matlabbatch});
 
 
 % now segment the preoperative version.
-
-    matlabbatch{1}.spm.spatial.preproc.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
-    matlabbatch{1}.spm.spatial.preproc.output.GM = [0 0 1];
-    matlabbatch{1}.spm.spatial.preproc.output.WM = [0 0 1];
-    matlabbatch{1}.spm.spatial.preproc.output.CSF = [0 0 0];
-    matlabbatch{1}.spm.spatial.preproc.output.biascor = 0;
-    matlabbatch{1}.spm.spatial.preproc.output.cleanup = 0;
-    matlabbatch{1}.spm.spatial.preproc.opts.tpm = {
-        fullfile(options.earoot,'toolbox','macaque','templates','mni_inia19_prob_c1.nii');
-        fullfile(options.earoot,'toolbox','macaque','templates','mni_inia19_prob_c2.nii');
-        fullfile(options.earoot,'toolbox','macaque','templates','mni_inia19_prob_c3.nii')
-        };
-    matlabbatch{1}.spm.spatial.preproc.opts.ngaus = [2; 2; 2; 4];
-    matlabbatch{1}.spm.spatial.preproc.opts.regtype = 'mni'; %'mni';
-    matlabbatch{1}.spm.spatial.preproc.opts.warpreg = 1;
-    matlabbatch{1}.spm.spatial.preproc.opts.warpco = 25;
-    matlabbatch{1}.spm.spatial.preproc.opts.biasreg = 0.0001;
-    matlabbatch{1}.spm.spatial.preproc.opts.biasfwhm = 60;
-    matlabbatch{1}.spm.spatial.preproc.opts.samp = 3;
-    matlabbatch{1}.spm.spatial.preproc.opts.msk = {''};
+matlabbatch{1}.spm.spatial.preproc.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
+matlabbatch{1}.spm.spatial.preproc.output.GM = [0 0 1];
+matlabbatch{1}.spm.spatial.preproc.output.WM = [0 0 1];
+matlabbatch{1}.spm.spatial.preproc.output.CSF = [0 0 0];
+matlabbatch{1}.spm.spatial.preproc.output.biascor = 0;
+matlabbatch{1}.spm.spatial.preproc.output.cleanup = 0;
+matlabbatch{1}.spm.spatial.preproc.opts.tpm = {
+    fullfile(options.earoot,'toolbox','macaque','templates','mni_inia19_prob_c1.nii');
+    fullfile(options.earoot,'toolbox','macaque','templates','mni_inia19_prob_c2.nii');
+    fullfile(options.earoot,'toolbox','macaque','templates','mni_inia19_prob_c3.nii')
+    };
+matlabbatch{1}.spm.spatial.preproc.opts.ngaus = [2; 2; 2; 4];
+matlabbatch{1}.spm.spatial.preproc.opts.regtype = 'mni'; %'mni';
+matlabbatch{1}.spm.spatial.preproc.opts.warpreg = 1;
+matlabbatch{1}.spm.spatial.preproc.opts.warpco = 25;
+matlabbatch{1}.spm.spatial.preproc.opts.biasreg = 0.0001;
+matlabbatch{1}.spm.spatial.preproc.opts.biasfwhm = 60;
+matlabbatch{1}.spm.spatial.preproc.opts.samp = 3;
+matlabbatch{1}.spm.spatial.preproc.opts.msk = {''};
 
 jobs{1}=matlabbatch;
 try
@@ -172,9 +167,6 @@ for export=expdo
 voxi=[0.22 0.22 0.22]; % export highres
 bbi=[-22 20 22; 22 -40 -10]; % with small bounding box
 
-
-
-
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg_sn.mat']};
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
 matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
@@ -185,8 +177,6 @@ matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
 matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
 matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
 
-
-
 jobs{1}=matlabbatch;
 try
 spm_jobman('run',jobs);
@@ -195,8 +185,6 @@ clear matlabbatch jobs;
 end
 
 % make normalization "permanent" and include correct bounding box.
-
-
 for export=expdo
     switch export
         case 2
@@ -234,10 +222,7 @@ for export=expdo
     clear matlabbatch jobs;
 end
 
-
-
 % build global versions of files
-
 for export=expdo
     switch export
         case 2
@@ -267,18 +252,15 @@ for export=expdo
     voxi=[0.5 0.5 0.5]; % export highres
     bbi=nan(2,3);
 
-
-
     matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg_sn.mat']};
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
-matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {fina};
-matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[options.root,options.prefs.patientdir]};
-matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 4;
-matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
-matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
-matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
-
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = voxi;
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = bbi;
+    matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {fina};
+    matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[options.root,options.prefs.patientdir]};
+    matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 4;
+    matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
+    matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
+    matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
 
     jobs{1}=matlabbatch;
     try
@@ -298,10 +280,10 @@ for inverse=0:1
     end
 
     matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {[options.root,options.prefs.patientdir,filesep,nm,'_seg',addstr,'_sn.mat']};
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = nan(1,3);
-matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = nan(2,3);
-matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = ['ea',addstr,'_normparams'];
-matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.vox = nan(1,3);
+    matlabbatch{1}.spm.util.defs.comp{1}.sn2def.bb = nan(2,3);
+    matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = ['ea',addstr,'_normparams'];
+    matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
     jobs{1}=matlabbatch;
 
     spm_jobman('run',jobs);
@@ -309,15 +291,11 @@ matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {[options.root,opt
     clear matlabbatch jobs;
 end
 
-
-
 try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gtranii]); end
 try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.prenii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii]); end
 try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.sagnii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gsagnii]); end
 try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.gcornii]); end
 try movefile([options.root,options.prefs.patientdir,filesep,'w',options.prefs.ctnii_coregistered],[options.root,options.prefs.patientdir,filesep,options.prefs.gctnii]); end
-
-
 
 
 function [flirtmat spmvoxmat fslvoxmat] = worldmat2flirtmat(worldmat, src, trg)
@@ -345,7 +323,6 @@ srcscl = nifti2scl(src);
 flirtmat = inv( srcscl * fslvoxmat * inv(trgscl) );
 
 
-
 function flirtmat_write(fname, mat)
 %flirtmat_write: save a 4-by-4 matrix to a file as handled by flirt -init
 % Example:
@@ -360,8 +337,6 @@ fid = fopen(fname, 'w');
 str = sprintf('%f  %f  %f  %f\n', mat');
 fprintf(fid, str(1:end-1)); % drop final newline
 fclose(fid);
-
-
 
 
 function [worldmat spmvoxmat fslvoxmat] = flirtmat2worldmat(flirtmat, src, trg)
@@ -422,4 +397,3 @@ if det(N.mat) > 0
     xflip(1, 4) = N.dat.dim(1)-1; % reflect about centre
     scl = scl * xflip;
 end
-

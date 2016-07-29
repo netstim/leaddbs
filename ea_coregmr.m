@@ -1,10 +1,13 @@
-function [finas]=ea_coregmr(options,automan)
+function ea_coregmr(options,automan)
 % wrapper for coreg routines
 
 % in CT imaging, coregistration is done elsewhere.
-if options.modality==2
+% also ignore when there is no tra/cor/sag existing (normal conn study)
+if options.modality==2 || ~isfield(options.prefs,'tranii_unnormalized')
     return
 end
+
+directory=[options.root,options.patientname,filesep];
 
 whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
 if ismember(whichnormmethod,ea_getantsnormfuns)
@@ -15,22 +18,22 @@ end
 
 % restore raw files -> postop files from prior attempts. & make backups
 % from original files in any case.
-if exist([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],'file')
-    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]);
+if exist([directory,'raw_',options.prefs.tranii_unnormalized],'file')
+    copyfile([directory,'raw_',options.prefs.tranii_unnormalized],[directory,options.prefs.tranii_unnormalized]);
 else
-    copyfile([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.tranii_unnormalized]);
+    copyfile([directory,options.prefs.tranii_unnormalized],[directory,'raw_',options.prefs.tranii_unnormalized]);
 end
 
-if exist([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],'file')
-    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]);
+if exist([directory,'raw_',options.prefs.cornii_unnormalized],'file')
+    copyfile([directory,'raw_',options.prefs.cornii_unnormalized],[directory,options.prefs.cornii_unnormalized]);
 else
-    copyfile([options.root,options.patientname,filesep,options.prefs.cornii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.cornii_unnormalized]);
+    copyfile([directory,options.prefs.cornii_unnormalized],[directory,'raw_',options.prefs.cornii_unnormalized]);
 end
 
-if exist([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],'file')
-    copyfile([options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized]);
+if exist([directory,'raw_',options.prefs.sagnii_unnormalized],'file')
+    copyfile([directory,'raw_',options.prefs.sagnii_unnormalized],[directory,options.prefs.sagnii_unnormalized]);
 else
-    copyfile([options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized],[options.root,options.patientname,filesep,'raw_',options.prefs.sagnii_unnormalized]);
+    copyfile([directory,options.prefs.sagnii_unnormalized],[directory,'raw_',options.prefs.sagnii_unnormalized]);
 end
 
 switch options.coregmr.method

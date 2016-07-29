@@ -119,7 +119,9 @@ metrics{cnt}='MI';
 cnt=cnt+1;
 
 % Do the coreg part for postoperative images:
-ea_coregmr(options,options.prefs.normalize.coreg);
+try
+    ea_coregmr(options,options.prefs.normalize.coreg);
+end
 
 ea_ants_nonlinear(to,...
     from,...
@@ -134,8 +136,7 @@ for fr=1:length(from)
     switch [fn,ext]
         case options.prefs.fa2anat
             if ~exist([directory,'tc2',options.prefs.prenii_unnormalized],'file')
-                    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-                end
+            	ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
                 % assume that tc2 doesn't exist
                 nii=ea_load_nii([directory,'c2',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.7;
@@ -144,10 +145,10 @@ for fr=1:length(from)
             end
             masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c2mask.nii'];
             masks{fr,2}=[directory,'tc2',options.prefs.prenii_unnormalized];
+            
         otherwise
             if ~exist([directory,'tc1',options.prefs.prenii_unnormalized],'file')
-                    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-                end
+                ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
                 % assume that tc1 doesn't exist
                 nii=ea_load_nii([directory,'c1',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.3;

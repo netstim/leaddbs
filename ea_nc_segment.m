@@ -45,9 +45,6 @@ Xskull=spm_read_vols(Vskull);
 
 try delete([directory,'c4',options.prefs.prenii_unnormalized]); end
 try delete([directory,'c5',options.prefs.prenii_unnormalized]); end
-try delete([directory,'c6',options.prefs.prenii_unnormalized]); end
-try delete([directory, 'y_', options.prefs.prenii_unnormalized]); end
-try delete([directory, 'iy_', options.prefs.prenii_unnormalized]); end
 [~,fn]=fileparts(options.prefs.prenii_unnormalized);
 try delete([directory,fn,'_seg8.mat']); end
 

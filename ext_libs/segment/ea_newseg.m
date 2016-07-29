@@ -8,7 +8,9 @@ if nargin < 5
     del = 1;
 end
 
-if ~exist([directory, 'c1', file], 'file')
+if ~dartel && exist([directory, 'c1', file], 'file') || dartel && exist([directory, 'rc1', file], 'file')
+    disp('Segmentation already done...');
+else
     disp('Segmentation...');
 
     load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob12']);
@@ -16,17 +18,17 @@ if ~exist([directory, 'c1', file], 'file')
     job.channel.vols{1}=[directory,file,',1'];
     for tpm=1:6
         job.tissue(tpm).tpm=[tpminf,',',num2str(tpm)];
-        if dartel && tpm < 4
-            job.tissue(tpm).native(2)=1;
+        if tpm <= 3 && dartel
+            job.tissue(tpm).native=[1 1];
+        end
+        if tpm >= 4
+            job.tissue(tpm).native=[0 0];
         end
     end
     job.warp.write=[1,1];
     spm_preproc_run(job); % run "Segment" in SPM 12 (Old "Segment" is now referred to as "Old Segment").
     
     % delete unused files
-    try delete([directory, 'c4', file]); end
-    try delete([directory, 'c5', file]); end
-    try delete([directory, 'c6', file]); end
     [~,fn]=fileparts(file);
     try delete([directory,fn,'_seg8.mat']); end
     
@@ -36,7 +38,5 @@ if ~exist([directory, 'c1', file], 'file')
         try delete([directory, 'iy_', file]); end
     end
     
-    disp('Done.');
-else
-    disp('Segmentation already done...');
+    disp('Done.');    
 end

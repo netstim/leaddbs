@@ -5,12 +5,14 @@ function ea_ants_applytransforms(varargin)
 ea_libs_helper;
 
 options=varargin{1};
+
 useinverse=0;
 if nargin>1 % manual application
     fis=varargin{2};
     ofis=varargin{3};
     useinverse=varargin{4};
 end
+
 if nargin>4
     refim=varargin{5};
 else
@@ -25,45 +27,53 @@ else
     applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end
 
-subdir=[options.root,options.patientname,filesep];
+directory=[options.root,options.patientname,filesep];
 if nargin==1
-switch options.modality
-    case 1 % MR
-        fis{1}=[subdir,options.prefs.prenii_unnormalized];
-        fis{2}=[subdir,options.prefs.tranii_unnormalized];
-        fis{3}=[subdir,options.prefs.cornii_unnormalized];
-        fis{4}=[subdir,options.prefs.sagnii_unnormalized];
-        ofis{1}=[subdir,options.prefs.gprenii];
-        ofis{2}=[subdir,options.prefs.gtranii];
-        ofis{3}=[subdir,options.prefs.gcornii];
-        ofis{4}=[subdir,options.prefs.gsagnii];
-        lfis{1}=[options.prefs.prenii];
-        lfis{2}=[options.prefs.tranii];
-        lfis{3}=[options.prefs.cornii];
-        lfis{4}=[options.prefs.sagnii];
-        if exist([subdir,options.prefs.fa2anat],'file');
-            fis{5}=[subdir,options.prefs.fa2anat];
-            ofis{5}=[subdir,'gl',options.prefs.fa2anat];
-            lfis{5}=[subdir,'l',options.prefs.fa2anat];
-        end
-    case 2 % CT
-        fis{1}=[subdir,options.prefs.prenii_unnormalized];
-        fis{2}=[subdir,options.prefs.ctnii_coregistered];
-        ofis{1}=[subdir,options.prefs.gprenii];
-        ofis{2}=[subdir,options.prefs.gctnii];
-        lfis{1}=[options.prefs.prenii];
-        lfis{2}=[options.prefs.ctnii];
-        if exist([subdir,options.prefs.fa2anat],'file');
-            fis{3}=[subdir,options.prefs.fa2anat];
-            ofis{3}=[subdir,'gl',options.prefs.fa2anat];
-            lfis{3}=[subdir,'l',options.prefs.fa2anat];
-        end
-end
+    switch options.modality
+        case 1 % MR
+            fis={[directory,options.prefs.prenii_unnormalized]};
+            try fis=[fis,[directory,options.prefs.tranii_unnormalized]]; end
+            try fis=[fis,[directory,options.prefs.cornii_unnormalized]]; end
+            try fis=[fis,[directory,options.prefs.sagnii_unnormalized]]; end
+
+            ofis={[directory,options.prefs.gprenii]};
+            try ofis=[ofis,[directory,options.prefs.gtranii]]; end
+            try ofis=[ofis,[directory,options.prefs.gcornii]]; end
+            try ofis=[ofis,[directory,options.prefs.gsagnii]]; end
+
+            try lfis={[options.prefs.prenii]}; end
+            try lfis=[lfis,[options.prefs.tranii]]; end
+            try lfis=[lfis,[options.prefs.cornii]]; end
+            try lfis=[lfis,[options.prefs.sagnii]]; end
+
+            try
+                if exist([directory,options.prefs.fa2anat],'file');
+                    fis{5}=[directory,options.prefs.fa2anat];
+                    ofis{5}=[directory,'gl',options.prefs.fa2anat];
+                    lfis{5}=[directory,'l',options.prefs.fa2anat];
+                end
+            end
+        case 2 % CT
+            fis{1}=[directory,options.prefs.prenii_unnormalized];
+            fis{2}=[directory,options.prefs.ctnii_coregistered];
+            ofis{1}=[directory,options.prefs.gprenii];
+            ofis{2}=[directory,options.prefs.gctnii];
+            lfis{1}=[options.prefs.prenii];
+            lfis{2}=[options.prefs.ctnii];
+            if exist([directory,options.prefs.fa2anat],'file');
+                fis{3}=[directory,options.prefs.fa2anat];
+                ofis{3}=[directory,'gl',options.prefs.fa2anat];
+                lfis{3}=[directory,'l',options.prefs.fa2anat];
+            end
+    end
 end
 
 for fi=1:length(fis)
     if ~exist(fis{fi},'file')   % skip if unnormalized file doesn't exist
         warning('%s not found. Skipping...\n',fis{fi});
+        continue
+    end
+    if exist(ofis{fi},'file')   % skip already normalized file
         continue
     end
     % generate gl*.nii files
@@ -75,59 +85,60 @@ for fi=1:length(fis)
 
        if useinverse
            if isempty(refim)
-               refim=[subdir,options.prefs.prenii_unnormalized];
+               refim=[directory,options.prefs.prenii_unnormalized];
            end
 
-           if exist([subdir,lprebase,'Composite.h5'],'file')
+           if exist([directory,lprebase,'Composite.h5'],'file')
                tr=[' -r ',refim,...
-                   ' -t [',ea_path_helper([subdir,lprebase]),'InverseComposite.h5,0]'];
+                   ' -t [',ea_path_helper([directory,lprebase]),'InverseComposite.h5,0]'];
            else
 
                tr=[' -r ',refim,...
-                   ' -t [',ea_path_helper([subdir,lprebase]),'1InverseWarp.nii.gz,0]',...
-                   ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'];
+                   ' -t [',ea_path_helper([directory,lprebase]),'1InverseWarp.nii.gz,0]',...
+                   ' -t [',ea_path_helper([directory,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'];
            end
        else
            if isempty(refim)
                refim=[options.earoot,'templates',filesep,'mni_hires.nii'];
            end
-           if exist([subdir,lprebase,'Composite.h5'],'file')
+           if exist([directory,lprebase,'Composite.h5'],'file')
                tr=[' -r ',refim,...
-                   ' -t [',ea_path_helper([subdir,lprebase]),'Composite.h5,0]'];
+                   ' -t [',ea_path_helper([directory,lprebase]),'Composite.h5,0]'];
            else
                tr=[' -r ',refim,...
-                   ' -t [',ea_path_helper([subdir,lprebase]),'1Warp.nii.gz,0]'...
-                   ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,0]'];
+                   ' -t [',ea_path_helper([directory,lprebase]),'1Warp.nii.gz,0]'...
+                   ' -t [',ea_path_helper([directory,lprebase]),'0GenericAffine.mat,0]'];
            end
        end
 
-       cmd=[cmd,...
-           tr];
+       cmd=[cmd, tr];
 
     if ~ispc
         try
-        system(['bash -c "', cmd, '"']);
+            system(['bash -c "', cmd, '"']);
         end
     else
         try
-        system(cmd);
+            system(cmd);
         end
     end
+    
     % generate l*.nii files
     if nargin==1 % standard case
-        matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
-            [ofis{fi},',1']
-            };
-        matlabbatch{1}.spm.util.imcalc.output = lfis{fi};
-        matlabbatch{1}.spm.util.imcalc.outdir = {subdir};
-        matlabbatch{1}.spm.util.imcalc.expression = 'i2';
-        matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
-        matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-        matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-        matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-        matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+        try
+            matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
+                                                    [ofis{fi},',1']};
+            matlabbatch{1}.spm.util.imcalc.output = lfis{fi};
+            matlabbatch{1}.spm.util.imcalc.outdir = {directory};
+            matlabbatch{1}.spm.util.imcalc.expression = 'i2';
+            matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+            matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+            matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+            matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+            matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
 
-         try   spm_jobman('run',{matlabbatch}); end
-        clear matlabbatch
+            try spm_jobman('run',{matlabbatch}); end
+            clear matlabbatch
+        end
     end
 end

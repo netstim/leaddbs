@@ -42,24 +42,21 @@ end
 
 disp('This Normalization routine uses the advanced TPMs by Lorio 2016. See http://unil.ch/lren/home/menuinst/data--utilities.html');
 
-segmentresolution=0.5; % resolution of the DARTEL-Warps. Setting this value to larger values will generate the usual DARTEL-Workflow.
-usecombined=0; % if set, eauto will try to fuse coronar and transversal images before normalizing them.
-usesegmentnew=0;
-costfuns={'nmi','mi','ecc','ncc'};
+directory = [options.root,options.prefs.patientdir,filesep];
 
 if isfield(options.prefs, 'tranii_unnormalized')
-    if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz'],'file')
+    if exist([directory,options.prefs.tranii_unnormalized,'.gz'],'file')
         try
-            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
+            gunzip([directory,options.prefs.tranii_unnormalized,'.gz']);
         end
         try
-            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']);
+            gunzip([directory,options.prefs.cornii_unnormalized,'.gz']);
         end
         try
-            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,'.gz']);
+            gunzip([directory,options.prefs.sagnii_unnormalized,'.gz']);
         end
         try
-            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
+            gunzip([directory,options.prefs.prenii_unnormalized,'.gz']);
         end
     end
 end
@@ -72,7 +69,7 @@ end
 % now dartel-import the preoperative version.
 disp('Segmenting preoperative version (Import to DARTEL-space)');
 ea_newseg([options.root,options.prefs.patientdir,filesep],options.prefs.prenii_unnormalized,1,options);
-disp('*** Segmentation of preoperative MRI done.');
+disp('Segmentation of preoperative MRI done.');
 
 % check if darteltemplate is available, if not generate one
 if exist([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'],'file')
@@ -88,9 +85,9 @@ end
 
 % Normalize to MNI using DARTEL.
 matlabbatch{1}.spm.tools.dartel.warp1.images = {
-                                                {[options.root,options.prefs.patientdir,filesep,'rc1',options.prefs.prenii_unnormalized,',1']};
-                                                {[options.root,options.prefs.patientdir,filesep,'rc2',options.prefs.prenii_unnormalized,',1']};
-                                                {[options.root,options.prefs.patientdir,filesep,'rc3',options.prefs.prenii_unnormalized,',1']}
+                                                {[directory,'rc1',options.prefs.prenii_unnormalized,',1']};
+                                                {[directory,'rc2',options.prefs.prenii_unnormalized,',1']};
+                                                {[directory,'rc3',options.prefs.prenii_unnormalized,',1']}
                                                 }';
 matlabbatch{1}.spm.tools.dartel.warp1.settings.rform = 0;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).its = 3;
@@ -122,12 +119,8 @@ matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.cyc = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.its = 3;
 jobs{1}=matlabbatch;
 
-%try
-    spm_jobman('run',jobs);
-    disp('*** Dartel coregistration of preoperative version worked.');
-%catch
-%    ea_error('*** Dartel coregistration failed.');
-%end
+spm_jobman('run',jobs);
+disp('*** Dartel coregistration of preoperative version worked.');
 
 clear matlabbatch jobs;
 
@@ -141,7 +134,7 @@ for inverse=0:1
 
     switch spm('ver')
         case 'SPM8'
-            matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
+            matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1-inverse 0+inverse];
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
             matlabbatch{1}.spm.util.defs.ofname = ['ea',addstr,'_normparams'];
@@ -149,7 +142,7 @@ for inverse=0:1
             matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.prefs.patientdir,filesep]};
             matlabbatch{1}.spm.util.defs.interp = 1;
         case 'SPM12'
-            matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[options.root,options.prefs.patientdir,filesep,'u_rc1',options.prefs.prenii_unnormalized]};
+            matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1-inverse 0+inverse];
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
             matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
@@ -161,6 +154,7 @@ for inverse=0:1
     spm_jobman('run',jobs);
     disp('*** Exported normalization parameters to y_ea_normparams.nii');
     clear matlabbatch jobs;
+    delete([directory,'u_rc1',options.prefs.prenii_unnormalized]);
 end
 
-% ea_apply_normalization(options)
+ea_apply_normalization(options)

@@ -54,7 +54,6 @@ spm_jobman('run',jobs);
 end
 clear jobs matlabbatch
 
-
 % generate "skull-contrast" image
 matlabbatch{1}.spm.util.imcalc.input = {[directory,'c1',options.prefs.prenii_unnormalized];
                                         [directory,'c2',options.prefs.prenii_unnormalized];
@@ -76,8 +75,6 @@ clear matlabbatch jobs;
 try delete([directory,'c4',options.prefs.prenii_unnormalized]); end
 try delete([directory,'c5',options.prefs.prenii_unnormalized]); end
 try delete([directory,'c6',options.prefs.prenii_unnormalized]); end
-try delete([directory, 'y_', options.prefs.prenii_unnormalized]); end
-try delete([directory, 'iy_', options.prefs.prenii_unnormalized]); end
 [~,fn]=fileparts(options.prefs.prenii_unnormalized);
 try delete([directory,fn,'_seg8.mat']); end
 

@@ -42,29 +42,19 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
     try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,'.gz']);
     end
-
-
     try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
     end
 end
 
-
-
-
-
-
-
-
 % First, do the coreg part:
 if options.modality==1
-    finas=ea_coregmr(options,options.prefs.normalize.coreg);
+    try
+        ea_coregmr(options,options.prefs.normalize.coreg);
+    end
 end
 
-
-
 % now segment the preoperative version.
-
     matlabbatch{1}.spm.spatial.preproc.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.preproc.output.GM = [0 0 1];
     matlabbatch{1}.spm.spatial.preproc.output.WM = [0 0 1];
@@ -147,8 +137,6 @@ clear matlabbatch jobs;
 end
 
 % make normalization "permanent" and include correct bounding box.
-
-
 for export=expdo
     switch export
         case 2
@@ -189,7 +177,6 @@ end
 
 
 % build global versions of files
-
 for export=expdo
     switch export
         case 2

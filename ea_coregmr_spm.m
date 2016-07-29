@@ -33,7 +33,7 @@ for export=1:3
                 ea_docoreg_spm(fina,[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],costfuns{costfun},doreslice)
                 normlog(1)=1;
                 disp(['*** Coregistration between transversal and coronar versions worked (',costfuns{costfun},').']);
-                finas{export}=fina; % assign only if worked.
+%                 finas{export}=fina; % assign only if worked.
             end
         catch
             disp('*** Coregistration between transversal and coronar versions failed / Using CT Modality.');
@@ -42,7 +42,7 @@ for export=1:3
         
         if manual
             matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
-                fina};
+                                                      fina};
             jobs{1}=matlabbatch;
             try % CT
                 spm_jobman('run',jobs);

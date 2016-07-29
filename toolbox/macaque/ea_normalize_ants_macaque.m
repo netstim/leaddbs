@@ -23,16 +23,12 @@ if ischar(options) % return name of method.
     return
 end
 
-
 % First, do the coreg part:
+try
+	ea_coregmr(options,options.prefs.normalize.coreg);
+end
 
-    ea_coregmr(options,options.prefs.normalize.coreg);
-
-
-
-    % do a linear coregistration into mni space
-
-
+% do a linear coregistration into mni space
 if options.modality==1 %MR
     expdo=2:4;
 elseif options.modality==2 % CT
@@ -65,7 +61,6 @@ for export=expdo
     end
 end
 
-
 matlabbatch{1}.spm.spatial.coreg.estimate.ref = {fullfile(options.earoot,'toolbox','macaque','templates','mni_hires.nii,1')};
 matlabbatch{1}.spm.spatial.coreg.estimate.source = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.coreg.estimate.other = finas;
@@ -75,11 +70,7 @@ matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0
 matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
 spm_jobman('run',{matlabbatch});
 
-
-
-
 directory=[options.root,options.patientname,filesep];
 ea_ants_nonlinear([options.earoot,'toolbox',filesep,'macaque',filesep,'templates',filesep,'mni_hires','.nii'],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii]);
-
 
 ea_apply_normalization(options)

@@ -27,29 +27,22 @@ if ischar(options) % return name of method.
     return
 end
 
-
 usecombined=0; % if set, eauto will try to fuse coronar and transversal images before normalizing them.
-
 
 if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz'],'file')
     try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']);
     catch
-
-        try system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']); end
+        system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']);
     end
-
     try
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
-
     catch
         system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
         system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
     end
 end
-
-
 
 
 % now segment the transversal version to get some normalization weights.
@@ -121,10 +114,7 @@ if usecombined
     clear matlabbatch jobs;
 end
 
-
-
 % first step, coregistration between transversal and coronar versions. on full brain
-
 
 normlog=zeros(4,1); % log success of processing steps. 4 steps: 1. coreg tra and cor, 2. grand mean normalization 3. subcortical normalization 4. subcortical fine normalization that spares the ventricles.
 
