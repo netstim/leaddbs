@@ -32,18 +32,13 @@ if cfg.mapmethod
     end
 end
 
-<<<<<<< Updated upstream
 leaddir=ea_getearoot;
-=======
 
 if nargin>5
     automan=varargin{6};
 else
     automan='auto';
 end
-
-leaddir=[ea_getearoot];
->>>>>>> Stashed changes
 
 if isempty(uidir)
     ea_error('Please choose and normalize patients first.');
@@ -70,26 +65,72 @@ end
 
     switch automan
         case 'auto' % auto AC/PC detection
-    
-    % warp into patient space:
-
-%     try
-    [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
-%     catch
-%         ea_error(['Please check deformation field in ',directory,'.']);
-%     end
-
-    fpinsub_mm=fpinsub_mm';
-
-
-    fid(pt).AC=fpinsub_mm(1,:);
-    fid(pt).PC=fpinsub_mm(2,:);
-    fid(pt).MSP=fpinsub_mm(3,:);
-        case 'manual' % manual AC/PC definition, assume F.fcsv file inside pt folder
             
-       keyboard     
+            % warp into patient space:
+            
+            %     try
+            [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
+            %     catch
+            %         ea_error(['Please check deformation field in ',directory,'.']);
+            %     end
+            
+            fpinsub_mm=fpinsub_mm';
+            
+            
+            fid(pt).AC=fpinsub_mm(1,:);
+            fid(pt).PC=fpinsub_mm(2,:);
+            fid(pt).MSP=fpinsub_mm(3,:);
+        case {'manual'} % manual AC/PC definition, assume F.fcsv file inside pt folder
+            
+            
+            copyfile([directory,'F.fcsv'],[directory,'F.dat'])
+            Ct=readtable([directory,'F.dat']);
+            
+            
+            
+            
+            
+            
+            % AC
+            cnt=1;
+            fid(pt).AC=zeros(1,3);
+            for i=17:19
+                thisval=table2array(Ct(i,1));
+                fid(pt).AC(cnt)=str2double(thisval{1});
+                cnt=cnt+1;
+            end
+            
+            % PC
+            cnt=1;
+            fid(pt).PC=zeros(1,3);
+            for i=31:33
+                thisval=table2array(Ct(i,1));
+                fid(pt).PC(cnt)=str2double(thisval{1});
+                cnt=cnt+1;
+            end
+            
+            
+            % MSP
+            cnt=1;
+            fid(pt).MSP=zeros(1,3);
+            for i=45:47
+                thisval=table2array(Ct(i,1));
+                fid(pt).MSP(cnt)=str2double(thisval{1});
+                cnt=cnt+1;
+            end
+            
+            
+            
+        case 'mnidirect'
+            
+            fid(pt).AC=[0.25,   1.298,   -5.003];
+            fid(pt).PC=[-0.188, -24.756,  -2.376];
+            fid(pt).MSP=[0.25,   1.298,    55];
             
     end
+    
+    
+    
     % x-dimension
     A=fid(pt).MSP-fid(pt).AC;
     B=fid(pt).PC-fid(pt).AC;
@@ -99,9 +140,16 @@ end
     yvec=(fid(pt).PC-fid(pt).AC);
     yvec=yvec/norm(yvec);
 
-    % z-dimension (just move from ac to msag plane by z dimension):
-    zvec=(fid(pt).MSP-fid(pt).AC);
-    zvec=zvec/norm(zvec);
+    switch automan
+        case {'manual','mnidirect'}
+            zvec=cross(xvec,yvec);
+            zvec=zvec/norm(zvec);
+            zvec=-zvec;
+        case 'auto' % the above should also work here but it's simpler with the auto coords
+            % z-dimension (just move from ac to msag plane by z dimension):
+            zvec=(fid(pt).MSP-fid(pt).AC);
+            zvec=zvec/norm(zvec);
+    end
     switch cfg.acmcpc
         case 1 % relative to AC:
             warpcoord_mm=fid(pt).AC+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
@@ -124,12 +172,16 @@ end
     end
     end
         % re-warp into MNI:
-
+switch automan
+    case 'mnidirect'
+        
+     fid(pt).WarpedPointMNI=warpcoord_mm(1:3)';   
+    otherwise
         [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], template,whichnormmethod);
 
     warppts(pt,:)=warpinmni_mm';
     fid(pt).WarpedPointMNI=warppts(pt,:);
-
+end
     if cfg.mapmethod==2
         anat.img(:)=0;
         anat.img(round(warpcoord_vox(1)),round(warpcoord_vox(2)),round(warpcoord_vox(3)))=1;

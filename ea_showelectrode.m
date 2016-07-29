@@ -53,7 +53,7 @@ end
             electrode.tail_position,1
             electrode.x_position,1
             electrode.y_position,1]; % points in model
-        redomarkers=0;
+        redomarkers=1;
         if ~isfield(elstruct,'markers') % backward compatibility to old electrode format
             redomarkers=1;
             

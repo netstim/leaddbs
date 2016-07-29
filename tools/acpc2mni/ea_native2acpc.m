@@ -1,4 +1,4 @@
-function fid=ea_native2acpc(cfg,leadfig)
+function fid=ea_native2acpc(cfg,leadfig,automan)
 % leadfig can be either a handle to the lead figure with selected patient
 % directories or a cell of patient directories.
 % __________________________________________________________________________________
@@ -18,6 +18,9 @@ else
 uidir=getappdata(leadfig,'uipatdir');
 end
 
+if ~exist('automan','var')
+    automan='auto';
+end
 % prompt for MNI-coordinates:
 
 
@@ -36,7 +39,9 @@ for pt=1:length(uidir)
     directory=[uidir{pt},filesep];
     [~,template]=ea_whichnormmethod(directory);
 
-
+switch automan
+    
+    case 'auto'
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,template);
 
     [options.root,options.patientname]=fileparts(uidir{pt});
@@ -54,6 +59,47 @@ for pt=1:length(uidir)
     fid(pt).PC=fpinsub_mm(2,:);
     fid(pt).MSP=fpinsub_mm(3,:);
 
+    case 'manual'
+        
+        
+        copyfile([directory,'F.fcsv'],[directory,'F.dat'])
+        Ct=readtable([directory,'F.dat']);
+        
+        
+        % AC
+        cnt=1;
+        fid(pt).AC=zeros(1,3);
+        for i=17:19
+            thisval=table2array(Ct(i,1));
+            fid(pt).AC(cnt)=str2double(thisval{1});
+            cnt=cnt+1;
+        end
+        
+        % PC
+        cnt=1;
+        fid(pt).PC=zeros(1,3);
+        for i=31:33
+            thisval=table2array(Ct(i,1));
+            fid(pt).PC(cnt)=str2double(thisval{1});
+            cnt=cnt+1;
+        end
+        
+        
+        % MSP
+        cnt=1;
+        fid(pt).MSP=zeros(1,3);
+        for i=45:47
+            thisval=table2array(Ct(i,1));
+            fid(pt).MSP(cnt)=str2double(thisval{1});
+            cnt=cnt+1;
+        end
+        
+        
+            fpinsub_mm(1,:)=fid(pt).AC;
+    fpinsub_mm(2,:)=fid(pt).PC;
+    fpinsub_mm(3,:)=fid(pt).MSP;
+        
+end
     % x-dimension
     A=fpinsub_mm(3,:)-fpinsub_mm(1,:);
     B=fpinsub_mm(2,:)-fpinsub_mm(1,:);
@@ -64,9 +110,22 @@ for pt=1:length(uidir)
     yvec=(fpinsub_mm(2,:)-fpinsub_mm(1,:));
     yvec=yvec/norm(yvec);
 
-    % z-dimension (just move from ac to msag plane by z dimension):
-    zvec=(fpinsub_mm(3,:)-fpinsub_mm(1,:));
-    zvec=zvec/norm(zvec);
+    
+    
+    switch automan
+        case 'manual'
+            zvec=cross(xvec,yvec);
+            zvec=zvec/norm(zvec);
+            zvec=-zvec;
+        case 'auto' % the above should also work here but it's simpler with the auto coords
+            % z-dimension (just move from ac to msag plane by z dimension):
+            zvec=(fid(pt).MSP-fid(pt).AC);
+            zvec=zvec/norm(zvec);
+    end
+    
+%     % z-dimension (just move from ac to msag plane by z dimension):
+%     zvec=(fpinsub_mm(3,:)-fpinsub_mm(1,:));
+%     zvec=zvec/norm(zvec);
 
     switch cfg.acmcpc
         case 1 % relative to AC:

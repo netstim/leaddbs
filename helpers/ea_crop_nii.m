@@ -25,47 +25,51 @@ V=spm_vol(filename);
 
 
 [bb,vox] = ea_spm_get_bbox(V, nstring);
+
 bb=increasebb(bb);
 
 if any(vox<0)
-   ea_reslice_nii(filename,filename,abs(vox),0); 
-   V=spm_vol(filename);
+    
+    ea_reslice_nii(filename,filename,abs(vox),0); 
+    V=spm_vol(filename);
    [bb,vox] = ea_spm_get_bbox(V, nstring);
    bb=increasebb(bb);
 end
 
 
-
-
-% create sn structure:
-sn.VG=V;
-sn.VF=V;
-sn.Affine=eye(4);
-sn.Tr=[];
-sn.flags=[];
-
-% create ropts structure:
-ropts.preserve=0;
-ropts.bb=bb;
-ropts.vox=vox;
-ropts.interp=1;
-ropts.wrap=[0,0,0];
-ropts.prefix=prefix;
-try
-spm_write_sn([filename,',1'], sn,ropts);
-catch % init SPM first
-    spm_jobman('initcfg');
-spm_write_sn([filename,',1'], sn,ropts);    
-end
-if nargin<2
-    [pth,fname,ext]=fileparts(filename);
-    if ~isempty(pth)
-    movefile([pth,filesep,'w',fname,ext],[pth,filesep,fname,ext]);
-    else
-            movefile(['w',fname,ext],[fname,ext]);
+dist=diff(bb); % check for weird zero bbs in small files.
+if all(dist)
+    
+    % create sn structure:
+    sn.VG=V;
+    sn.VF=V;
+    sn.Affine=eye(4);
+    sn.Tr=[];
+    sn.flags=[];
+    
+    % create ropts structure:
+    ropts.preserve=0;
+    ropts.bb=bb;
+    ropts.vox=vox;
+    ropts.interp=1;
+    ropts.wrap=[0,0,0];
+    ropts.prefix=prefix;
+    try
+        spm_write_sn([filename,',1'], sn,ropts);
+    catch % init SPM first
+        spm_jobman('initcfg');
+        spm_write_sn([filename,',1'], sn,ropts);
     end
+    if nargin<2
+        [pth,fname,ext]=fileparts(filename);
+        if ~isempty(pth)
+            movefile([pth,filesep,'w',fname,ext],[pth,filesep,fname,ext]);
+        else
+            movefile(['w',fname,ext],[fname,ext]);
+        end
+    end
+    
 end
-
 
 
 

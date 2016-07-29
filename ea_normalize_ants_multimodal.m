@@ -39,6 +39,7 @@ else
     bprfx='';
 end
 
+
 % T1
 if uset1 && ~strcmp(options.primarytemplate,'_t1')
     if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
@@ -133,7 +134,8 @@ for fr=1:length(from)
     switch [fn,ext]
         case options.prefs.fa2anat
             if ~exist([directory,'tc2',options.prefs.prenii_unnormalized],'file')
-                ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+                    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+                end
                 % assume that tc2 doesn't exist
                 nii=ea_load_nii([directory,'c2',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.7;
@@ -144,7 +146,8 @@ for fr=1:length(from)
             masks{fr,2}=[directory,'tc2',options.prefs.prenii_unnormalized];
         otherwise
             if ~exist([directory,'tc1',options.prefs.prenii_unnormalized],'file')
-                ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+                    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+                end
                 % assume that tc1 doesn't exist
                 nii=ea_load_nii([directory,'c1',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.3;

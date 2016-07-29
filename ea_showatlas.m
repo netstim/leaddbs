@@ -155,7 +155,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
                 
-                rndfactor=2;
+                rndfactor=1;
                 try
                 switch atlases.names{atlas,side}(end-2:end)
                     case 'nii'

@@ -167,9 +167,8 @@ if checkrebuild(atlases,options,root,mifix)
                 if isfield(nii,'img') % volumetric atlas
                     
                     if options.prefs.hullsmooth
-                        
                         nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
-                        
+                  
                     end
                     
                     [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); % find 3D-points that have correct value.
@@ -253,12 +252,22 @@ if checkrebuild(atlases,options,root,mifix)
 
 
                     [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-  
+                    
+                    
+%                     Xvx=linspace(1,length(gv{1}),3*length(gv{1}));
+%                     Yvx=linspace(1,length(gv{2}),3*length(gv{2}));
+%                     Zvx=linspace(1,length(gv{3}),3*length(gv{3}));
+%                     [Xq,Yq,Zq]=meshgrid(interp1(gv{1},Xvx),...
+%                         interp1(gv{2},Yvx),...
+%                         interp1(gv{3},Zvx));
 
+  
                     thresh=ea_detthresh(atlases,atlas,nii.img);
                     ea_addnii2lf(atlases,atlas,thresh,options,root,mifix)
 try
                     fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
+                    %fv=isosurface(Xq,Yq,Zq,permute(interp3(nii.img,Xvx,Yvx,Zvx),[2,1,3]),thresh);
+                    
 catch
     keyboard
 end
@@ -286,11 +295,9 @@ end
                     % set cdata
 
                 try % check if explicit color info for this atlas is available.
-                    cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1) ... % C-Data for surface
-                        +randn(length(fv.vertices),1)*0.1)';
+                    cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1));
                 catch
-                    cdat=abs(repmat(atlas*(maxcolor/length(atlases.names)),length(fv.vertices),1)... % C-Data for surface
-                        +randn(length(fv.vertices),1)*0.1)';
+                    cdat=abs(repmat(atlas*(maxcolor/length(atlases.names)),length(fv.vertices),1));
                     atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
                 end
 
