@@ -16,7 +16,12 @@ if nargin>1
         
      varargout{2}=1;
     else
-        varargout{2}=0;
+        varargout{2}=0;       
+        % macaque toolbox not installed. installing:
+        success=ea_checkinstall('macaque');
+        if success
+        varargout{2}=1;
+        end
     end
 end
         

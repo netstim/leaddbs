@@ -127,7 +127,9 @@ if ~manualtracor
                     Vcor=spm_vol(fullfile(options.earoot,'templates','mni_hires_bbt1.nii'));
                     Vsag=spm_vol(fullfile(options.earoot,'templates','mni_hires_bbt1.nii'));
                 case 'BigBrain 100 um ICBM 152 2009b Sym'
-                    ea_checkinstall('bigbrain');
+                    if ~ea_checkinstall('bigbrain')
+                       ea_error('BigBrain is not installed and could not be installed automatically. Please make sure that Matlab is connected to the internet.'); 
+                    end
                     Vtra=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
                     Vcor=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
                     Vsag=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
