@@ -52,20 +52,22 @@ if svfig
     disp('Exporting 2D slice output...');
 end
 
-if strcmp(options.prefs.d2.useprepost,'pre') % use preoperative images, overwrite filenames to preoperative version
+
+
+% resolve 2d-options from td_options.mat
+options=resolve2doptions(options);
+
+if strcmp(options.d2.backdrop,'Patient Pre-Op') % use preoperative images, overwrite filenames to preoperative version
     options.prefs.gtranii=options.prefs.gprenii;
     options.prefs.tranii=options.prefs.prenii;
     options.prefs.gcornii=options.prefs.gprenii;
     options.prefs.cornii=options.prefs.prenii;
     options.prefs.gsagnii=options.prefs.gprenii;
     options.prefs.sagnii=options.prefs.prenii;
-elseif strcmp(options.prefs.d2.useprepost,'template')
-    
+elseif strcmp(options.d2.backdrop,'Patient Post-Op') % do nothing
+else % use a template
     options.modality=3;
 end
-
-% resolve 2d-options from td_options.mat
-options=resolve2doptions(options);
 
 scrsz = get(0,'ScreenSize');
 
@@ -115,9 +117,21 @@ if ~manualtracor
             Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
             tracorpresent(1:3)=1;
         case 3 % use template
-            Vtra=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
-            Vcor=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
-            Vsag=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
+            switch options.d2.backdrop
+                case 'ICBM 152 2009b NLIN Asym T2'
+                    Vtra=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
+                    Vcor=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
+                    Vsag=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
+                case 'ICBM 152 2009b NLIN Asym T1'
+                    Vtra=spm_vol(fullfile(options.earoot,'templates','mni_hires_bbt1.nii'));
+                    Vcor=spm_vol(fullfile(options.earoot,'templates','mni_hires_bbt1.nii'));
+                    Vsag=spm_vol(fullfile(options.earoot,'templates','mni_hires_bbt1.nii'));
+                case 'BigBrain 100 um ICBM 152 2009b Sym'
+                    ea_checkinstall('bigbrain');
+                    Vtra=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
+                    Vcor=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
+                    Vsag=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
+            end
             tracorpresent(1:3)=1;
     end
 else
@@ -573,6 +587,8 @@ function options=resolve2doptions(options)
 try
     tdhandles=load([options.earoot,'td_options.mat']);
     set(tdhandles.ea_spec2dwrite,'visible','off');
+    options.d2.backdrop=get(tdhandles.tdbackdrop,'String');
+    options.d2.backdrop=options.d2.backdrop{get(tdhandles.tdbackdrop,'Value')};
     options.d2.col_overlay=get(tdhandles.tdcolorscheck,'Value');
     options.d2.con_overlay=get(tdhandles.tdcontourcheck,'Value');
     options.d2.con_color=getappdata(tdhandles.tdcontourcolor,'color');
@@ -588,5 +604,6 @@ catch % defaults
     options.d2.con_color=[1,1,1];
     options.d2.lab_overlay=1;
     options.d2.bbsize=50;
+    options.d2.backdrop='ICBM 152 2009b NLIN Asym T2';
 end
 

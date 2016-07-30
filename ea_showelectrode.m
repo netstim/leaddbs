@@ -33,7 +33,7 @@ for side=1:length(options.sides)
 try
     startpoint=trajectory{side}(1,:)-(2*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
 catch
-    keyboard
+    
 end
     if options.d3.elrendering<3
        
@@ -53,7 +53,7 @@ end
             electrode.tail_position,1
             electrode.x_position,1
             electrode.y_position,1]; % points in model
-        redomarkers=1;
+        redomarkers=0;
         if ~isfield(elstruct,'markers') % backward compatibility to old electrode format
             redomarkers=1;
             

@@ -178,9 +178,9 @@ switch automan
      fid(pt).WarpedPointMNI=warpcoord_mm(1:3)';   
     otherwise
         [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], template,whichnormmethod);
-
-    warppts(pt,:)=warpinmni_mm';
-    fid(pt).WarpedPointMNI=warppts(pt,:);
+        
+        warppts(pt,:)=warpinmni_mm';
+        fid(pt).WarpedPointMNI=warppts(pt,:);
 end
     if cfg.mapmethod==2
         anat.img(:)=0;

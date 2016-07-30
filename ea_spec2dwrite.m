@@ -22,7 +22,7 @@ function varargout = ea_spec2dwrite(varargin)
 
 % Edit the above text to modify the response to help ea_spec2dwrite
 
-% Last Modified by GUIDE v2.5 03-Aug-2015 09:02:05
+% Last Modified by GUIDE v2.5 29-Jul-2016 16:40:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -146,3 +146,26 @@ warning('off');
 save([ea_getearoot,'td_options.mat'],'-struct','handles');
 warning('on');
 delete(handles.ea_spec2dwrite);
+
+
+% --- Executes on selection change in tdbackdrop.
+function tdbackdrop_Callback(hObject, eventdata, handles)
+% hObject    handle to tdbackdrop (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns tdbackdrop contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from tdbackdrop
+
+
+% --- Executes during object creation, after setting all properties.
+function tdbackdrop_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to tdbackdrop (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

@@ -55,7 +55,9 @@ cmd = [applyTransformsToPoints, ...
     ' --output ', ea_path_helper([subdir,'tmpout.csv']) ...    % warped output csv file
 tstring];
 
-ea_writecsv([subdir,'tmpin.csv'],input);
+ea_writecsv([subdir,'tmpin.csv'],input(1:3,:));
+
+
 
 if ~ispc
     system(['bash -c "', cmd, '"']);
@@ -77,6 +79,7 @@ coord=cell2mat(C(1:3));
 
 function ea_writecsv(pth,input)
 fid=fopen(pth,'w');
+
 fprintf(fid,'x,y,z,t \n');
 fprintf(fid,'%f,%f,%f,0\n',input');
 fclose(fid);

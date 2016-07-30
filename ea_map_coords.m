@@ -91,10 +91,11 @@ if ~isempty(xfrm)
              XYZ_mm_beforetransform(1,:)=-XYZ_mm_beforetransform(1,:);
              XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
              
-            XYZ_mm=ea_ants_applytransforms_to_points([directory],XYZ_mm_beforetransform,useinverse);
+            XYZ_mm=ea_ants_applytransforms_to_points([directory],XYZ_mm_beforetransform,useinverse)';
             %XYZ_mm=ea_ants_applytransforms_to_points([directory,filesep],XYZ_mm_beforetransform,1);
             XYZ_mm(1,:)=-XYZ_mm(1,:);
             XYZ_mm(2,:)=-XYZ_mm(2,:);
+
         else
             XYZ_mm = hdw_trgvx2srcmm(XYZ_vx, xfrm);
         end
@@ -127,13 +128,12 @@ if nargout > 1
     end
 end
 
-% Use consistent style of coordinates between input and output
-if ~homog % drop homogeneous ones from output
-    XYZ_mm(4, :) = [];
-    if exist('XYZ_src_vx', 'var')
-        XYZ_src_vx(4, :) = [];
-    end
+XYZ_mm=XYZ_mm(1:3,:);
+try
+XYZ_src_vx=XYZ_src_vx(1:3,:);
 end
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
