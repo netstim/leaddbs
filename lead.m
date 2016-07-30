@@ -82,16 +82,12 @@ if nargin>3
             fprintf('\n \n \n \n %s \n \n','L337-D8Z: "H3LLo 7o joO MY Phr13nd. l1V3 Lon9 4nd pRO5P3r."'); % yes, this indeed is an easter-egg.
             delete(handles.leadfigure)
     end
-
-
-
-
-
-
-
-
 return
 end
+
+
+set(handles.leadfigure,'name','Welcome to Lead Toolbox');
+
 
 set(0,'CurrentFigure',handles.leadfigure);
 im=imread([earoot,'icons',filesep,'logo_lead.png']);

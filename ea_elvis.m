@@ -244,12 +244,12 @@ end
 
 
 if isfield(options.d3,'expdf');
-if options.d3.expdf
+    if options.d3.expdf
         %cd([options.root,options.patientname]);
         fig2pdf3d(gca,[options.root,options.patientname,filesep,'Lead-DBS_Electrode_Localization'],options);
         close(resultfig);
         return
-end
+    end
 end
 %% End of patient-specific part.
 
