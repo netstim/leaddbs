@@ -53,7 +53,7 @@ function lead_connectome_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to leadfigure (see VARARGIN)
 
 earoot=ea_getearoot;
-im=imread('ea_logo.png');
+im=imread([earoot,'icons',filesep,'logo_lead_connectome.png']);
 image(im);
 axes(handles.logoaxes);
 axis off;

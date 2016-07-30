@@ -110,7 +110,7 @@ set(handles.elmodelselect,'String',[{'Patient specified'},ea_resolve_elspec]);
 
 % set background image
 set(gcf,'color','w');
-im=imread('ea_logo.png');
+im=imread([earoot,'icons',filesep,'logo_lead_group.png']);
 image(im);
 axis off;
 axis equal;
@@ -1711,7 +1711,7 @@ function opensubgui_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
-lead('loadsubs',M.patient.list(M.ui.listselect));
+lead_dbs('loadsubs',M.patient.list(M.ui.listselect));
 
 
 % --- Executes on button press in choosegroupcolors.
