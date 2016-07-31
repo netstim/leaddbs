@@ -86,7 +86,7 @@ return
 end
 
 
-set(handles.leadfigure,'name','Welcome to Lead Toolbox');
+set(handles.leadfigure,'name','Welcome to the Lead Neuroimaging Suite');
 
 
 set(0,'CurrentFigure',handles.leadfigure);

@@ -95,7 +95,7 @@ set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 
 set(gcf,'name','Welcome to LEAD-DBS MD');
 
-im=imread('ea_logo.png');
+im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
 image(im);
 axis off;
 axis equal;

@@ -54,7 +54,7 @@ function ea_acpcquery_OpeningFcn(hObject, eventdata, handles, varargin)
 
 try
 leaddir=[ea_getearoot];
-im=imread([leaddir,'ea_logo.png']);
+im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
 image(im);
 axis off;
 axis equal;

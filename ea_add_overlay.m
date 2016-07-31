@@ -55,7 +55,7 @@ for atlas=1:length(atlases.names)
         dists=abs(atlhts-planehts(1));
         try
             
-            dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*5;
+            dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*1;
         catch % fibertracts
             dists=dists<1*1;
         end
