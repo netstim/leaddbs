@@ -60,10 +60,18 @@ guidata(hObject, handles);
 
 % UIWAIT makes ea_spec2dwrite wait for user response (see UIRESUME)
 % uiwait(handles.ea_spec2dwrite);
-try thandles=load([ea_getearoot,'td_options.mat']);
-delete(handles.ea_spec2dwrite)
-handles=thandles;
+
+% add backdrops
+backdrops=ea_assignbackdrop('list');
+
+set(handles.tdbackdrop,'String',backdrops);
+if get(handles.tdbackdrop,'Value')>length(backdrops)
+    set(handles.tdbackdrop,'Value',1);
 end
+
+
+    d2=load([ea_getearoot,'td_options.mat']);
+    ea_options2tdhandles(handles,d2);
 
 set(handles.ea_spec2dwrite,'Name','Specify 2D Output options');
 
@@ -142,9 +150,8 @@ function savebutton_Callback(hObject, eventdata, handles)
 % hObject    handle to savebutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-warning('off');
-save([ea_getearoot,'td_options.mat'],'-struct','handles');
-warning('on');
+d2=ea_tdhandles2options(handles);
+save([ea_getearoot,'td_options.mat'],'-struct','d2');
 delete(handles.ea_spec2dwrite);
 
 

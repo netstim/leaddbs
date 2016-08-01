@@ -41,12 +41,14 @@ elseif nargin>1 % elstruct has been supplied, this is a group visualization
     end
 end
 
-if nargin==7 % also has flags to hide and not to save the result (as it will be used by 3D-figure).
+if nargin>5 % also has flags to hide and not to save the result (as it will be used by 3D-figure).
     manualtracor=varargin{3}; % manually specify if to export tra, cor or sag image.
     manualV=varargin{4};
     figvisible=varargin{5};
     svfig=varargin{6};
+    try
     atlases=varargin{7};
+    end
 end
 if svfig
     disp('Exporting 2D slice output...');
@@ -54,91 +56,21 @@ end
 
 
 
-% resolve 2d-options from td_options.mat
-options=resolve2doptions(options);
-
-if strcmp(options.d2.backdrop,'Patient Pre-Op') % use preoperative images, overwrite filenames to preoperative version
-    options.prefs.gtranii=options.prefs.gprenii;
-    options.prefs.tranii=options.prefs.prenii;
-    options.prefs.gcornii=options.prefs.gprenii;
-    options.prefs.cornii=options.prefs.prenii;
-    options.prefs.gsagnii=options.prefs.gprenii;
-    options.prefs.sagnii=options.prefs.prenii;
-elseif strcmp(options.d2.backdrop,'Patient Post-Op') % do nothing
-else % use a template
-    options.modality=3;
-end
-
 scrsz = get(0,'ScreenSize');
 
 
-cuts=figure('name',[options.patientname,': 2D cut views (figure is being saved)...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible);
+cuts=figure('name',[options.patientname,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible);
 axis off
 set(cuts,'position',[100, 100, 800 ,800]);
 set(cuts,'color','w');
 tracorpresent=zeros(3,1); % check if files are present.
 if ~manualtracor
-    
-    switch options.modality
-        case 1 % MR
-            try
-                Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
-                tracorpresent(1)=1;
-            catch
-                try
-                    Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
-                    tracorpresent(1)=1;
-                end
-                
-            end
-            try
-                Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gcornii));
-                tracorpresent(2)=1;
-                
-            catch
-                try
-                    Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.cornii));
-                    tracorpresent(1)=1;
-                end
-            end
-            try
-                Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gsagnii));
-                tracorpresent(3)=1;
-                
-            catch
-                try
-                    Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.sagnii));
-                    tracorpresent(3)=1;
-                end
-            end
-        case 2 % CT
-            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
-            Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
-            Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
-            tracorpresent(1:3)=1;
-        case 3 % use template
-            switch options.d2.backdrop
-                case 'ICBM 152 2009b NLIN Asym T2'
-                    Vtra=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
-                    Vcor=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
-                    Vsag=spm_vol(fullfile(options.earoot,'templates','mni_hires_bb.nii'));
-                case 'ICBM 152 2009b NLIN Asym T1'
-                    Vtra=spm_vol(fullfile(options.earoot,'templates','mni_hires_bbt1.nii'));
-                    Vcor=spm_vol(fullfile(options.earoot,'templates','mni_hires_bbt1.nii'));
-                    Vsag=spm_vol(fullfile(options.earoot,'templates','mni_hires_bbt1.nii'));
-                case 'BigBrain 100 um ICBM 152 2009b Sym'
-                    if ~ea_checkinstall('bigbrain')
-                       ea_error('BigBrain is not installed and could not be installed automatically. Please make sure that Matlab is connected to the internet.'); 
-                    end
-                    Vtra=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
-                    Vcor=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
-                    Vsag=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
-            end
-            tracorpresent(1:3)=1;
-    end
+    tracorpresent=ones(3,1);
+    [Vtra,Vcor,Vsag]=ea_assignbackdrop(options.d2.backdrop,options,'Patient');
 else
     tracorpresent(manualtracor)=1; % only export specified orientation.
 end
+
 
 
 if isstruct(elstruct)
@@ -413,15 +345,15 @@ for side=1:length(options.sides)
                 set(cuts,'visible','on');
             end
             axis off
-            if svfig
+            if svfig>0
                 set(cuts,'position',[100, 100, 600 ,600]);
-            else
+            elseif svfig==0
                 set(cuts,'position',[100, 100, 3200 ,3200]);
             end
             set(0,'CurrentFigure',cuts)
             set(gca,'position',[0,0,1,1],'units','normalized'); % fullscreen plot.
             expslice=double(frame2im(getframe(cuts))); % export plot.
-            if svfig % only export if figure needs to be saved.
+            if svfig==1 % only export if figure needs to be saved.
                 if options.d3.showisovolume
                     isofnadd=['_',options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb];
                 else
@@ -446,8 +378,9 @@ end
 
 
 
-
+if svfig<2
 close(cuts)
+end
 if svfig
     disp('Done.');
 end
@@ -584,28 +517,5 @@ switch tracor
 end
 
 
-function options=resolve2doptions(options)
 
-try
-    tdhandles=load([options.earoot,'td_options.mat']);
-    set(tdhandles.ea_spec2dwrite,'visible','off');
-    options.d2.backdrop=get(tdhandles.tdbackdrop,'String');
-    options.d2.backdrop=options.d2.backdrop{get(tdhandles.tdbackdrop,'Value')};
-    options.d2.col_overlay=get(tdhandles.tdcolorscheck,'Value');
-    options.d2.con_overlay=get(tdhandles.tdcontourcheck,'Value');
-    options.d2.con_color=getappdata(tdhandles.tdcontourcolor,'color');
-    if isempty(options.d2.con_color)
-        options.d2.con_color=[1,1,1]; % white
-    end
-    options.d2.lab_overlay=get(tdhandles.tdlabelcheck,'Value');
-    options.d2.bbsize=str2double(get(tdhandles.bbsize,'String'));
-    delete(tdhandles.ea_spec2dwrite);
-catch % defaults
-    options.d2.col_overlay=1;
-    options.d2.con_overlay=1;
-    options.d2.con_color=[1,1,1];
-    options.d2.lab_overlay=1;
-    options.d2.bbsize=50;
-    options.d2.backdrop='ICBM 152 2009b NLIN Asym T2';
-end
 

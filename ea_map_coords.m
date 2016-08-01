@@ -95,7 +95,6 @@ if ~isempty(xfrm)
             %XYZ_mm=ea_ants_applytransforms_to_points([directory,filesep],XYZ_mm_beforetransform,1);
             XYZ_mm(1,:)=-XYZ_mm(1,:);
             XYZ_mm(2,:)=-XYZ_mm(2,:);
-
         else
             XYZ_mm = hdw_trgvx2srcmm(XYZ_vx, xfrm);
         end

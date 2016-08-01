@@ -66,8 +66,8 @@ else
 end
 
 output=ea_readcsv([subdir,'tmpout.csv']);
-delete([subdir,'tmpout.csv']);
-delete([subdir,'tmpin.csv']);
+%delete([subdir,'tmpout.csv']);
+%delete([subdir,'tmpin.csv']);
 
 
 function coord=ea_readcsv(pth)
@@ -81,5 +81,7 @@ function ea_writecsv(pth,input)
 fid=fopen(pth,'w');
 
 fprintf(fid,'x,y,z,t \n');
-fprintf(fid,'%f,%f,%f,0\n',input');
+for c=1:size(input,2)
+fprintf(fid,'%f,%f,%f,0\n',input(:,c)');
+end
 fclose(fid);

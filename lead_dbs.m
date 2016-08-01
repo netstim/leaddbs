@@ -955,37 +955,7 @@ ea_storeui(handles);
 
 
 
-function updatestatus(handles)
-try
-uipatdir=getappdata(handles.leadfigure,'uipatdir');
 
-set(handles.statusone,'String','One or more MR-/CT-volumes missing.');
-modality=ea_checkctmrpresent(handles);
-
-% check if MRCT popup is set correctly
-
-if any(modality)
-
-   if ~modality(get(handles.MRCT,'Value'))
-       set(handles.MRCT,'ForegroundColor',[0.8,0.5,0.5]);
-   else
-       set(handles.MRCT,'ForegroundColor',[0.5,0.8,0.5]);
-   end
-
-end
-
-
-% check for reconstructions
-if exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','Fiducials and Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','Fiducials information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
-elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    set(handles.statustwo,'String','No reconstruction available in folder. Set "Reconstruct" to start.');
-end
-end
 
 
 
@@ -1324,21 +1294,7 @@ function recentpts_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
-if get(handles.recentpts,'Value')==1
-    return
-end
-earoot=ea_getearoot;
-load([earoot,'ea_recentpatients.mat']);
-if iscell(fullrpts)
-fullrpts=fullrpts(get(handles.recentpts,'Value')-1);
-end
-
-if strcmp('No recent patients found',fullrpts)
-   return 
-end
-
-
-ea_load_pts(handles,fullrpts);
+ea_rcpatientscallback(handles);
 
 % --- Executes during object creation, after setting all properties.
 function recentpts_CreateFcn(hObject, eventdata, handles)

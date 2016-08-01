@@ -122,6 +122,7 @@ end
 setappdata(handles.leadfigure,'isindependent',isindependent);
     
 
+ea_firstrun(handles);
 
 % Choose default command line output for leadfigure
 handles.output = hObject;
@@ -603,21 +604,8 @@ function recentpts_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
-if get(handles.recentpts,'Value')==1
-    return
-end
-earoot=ea_getearoot;
-load([earoot,'ea_recentpatients.mat']);
-if iscell(fullrpts)
-fullrpts=fullrpts(get(handles.recentpts,'Value')-1);
-end
+ea_rcpatientscallback(handles);
 
-if strcmp('No recent subjects found',fullrpts)
-   return 
-end
-
-
-ea_load_pts(handles,fullrpts,'subjects');
 
 % --- Executes during object creation, after setting all properties.
 function recentpts_CreateFcn(hObject, eventdata, handles)

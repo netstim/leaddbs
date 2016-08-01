@@ -22,16 +22,16 @@ function varargout = lead(varargin)
 
 % Edit the above text to modify the response to help lead
 
-% Last Modified by GUIDE v2.5 30-Jul-2016 12:31:57
+% Last Modified by GUIDE v2.5 31-Jul-2016 21:00:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @lead_OpeningFcn, ...
-                   'gui_OutputFcn',  @lead_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @lead_OpeningFcn, ...
+    'gui_OutputFcn',  @lead_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -66,23 +66,33 @@ if nargin>3
         case 'dbs'
             lead_dbs;
             delete(handles.leadfigure)
+            return
         case 'group';
             lead_group;
             delete(handles.leadfigure)
+            return
         case 'connectome';
             lead_connectome;
             delete(handles.leadfigure)
+            return
+        case 'anatomy';
+            lead_anatomy;
+            delete(handles.leadfigure)
+            return
         case 'macaque';
             lead_dbs macaque;
             delete(handles.leadfigure)
+            return
         case 'version'
             disp(ea_getvsn('local'));
             delete(handles.leadfigure)
+            return
         case 'speak'
             fprintf('\n \n \n \n %s \n \n','L337-D8Z: "H3LLo 7o joO MY Phr13nd. l1V3 Lon9 4nd pRO5P3r."'); % yes, this indeed is an easter-egg.
             delete(handles.leadfigure)
+            return
     end
-return
+    
 end
 
 
@@ -101,7 +111,9 @@ ea_setbuttonbackdrop(handles.startdbs,[earoot,'icons',filesep,'logo_lead_dbs.png
 ea_setbuttonbackdrop(handles.startconnectome,[earoot,'icons',filesep,'logo_lead_connectome.png']);
 ea_setbuttonbackdrop(handles.startgroup,[earoot,'icons',filesep,'logo_lead_group.png']);
 ea_setbuttonbackdrop(handles.startmacaque,[earoot,'icons',filesep,'logo_lead_dbs_macaque.png']);
+ea_setbuttonbackdrop(handles.startanatomy,[earoot,'icons',filesep,'logo_lead_anatomy.png']);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
+
 
 
 
@@ -120,7 +132,7 @@ set(buttonhandle,'String','');
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = lead_OutputFcn(hObject, eventdata, handles) 
+function varargout = lead_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -159,3 +171,12 @@ function startmacaque_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 lead macaque
+
+
+% --- Executes on button press in startanatomy.
+function startanatomy_Callback(hObject, eventdata, handles)
+% hObject    handle to startanatomy (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+lead anatomy

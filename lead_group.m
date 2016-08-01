@@ -176,6 +176,7 @@ if isempty(M)
 end
 setappdata(gcf,'M',M);
 refreshvifc(handles);
+ea_firstrun(handles);
 
 
 

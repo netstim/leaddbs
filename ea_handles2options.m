@@ -1,5 +1,8 @@
 function options=ea_handles2options(handles)
 
+% main function converting GUI handles to options struct used in
+% ea_autocoord & ea_write (i.e. the main lead batch functions).
+
 %% some manual options that can be set:
 
 
@@ -17,16 +20,21 @@ options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower th
 %uipatdir=get(handles.patdir_choosebox,'String');
 
 options.earoot=[ea_getearoot];
-options.dicomimp=get(handles.dicomcheck,'Value');
-
-options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
+try % not working when calling from lead_anatomy
+    options.dicomimp=get(handles.dicomcheck,'Value');
+    options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
+catch
+    options.dicomimp=0;
+    options.normalize.do=0;
+end
 options.normalize.method=getappdata(handles.leadfigure,'normmethod');
-
 options.normalize.method=options.normalize.method{get(handles.normmethod,'Value')};
 options.normalize.methodn=get(handles.normmethod,'Value');
-
-options.normalize.check=(get(handles.normcheck,'Value') == get(handles.normcheck,'Max'));
-
+try % not working when calling from lead_anatomy
+    options.normalize.check=(get(handles.normcheck,'Value') == get(handles.normcheck,'Max'));
+catch
+    options.normalize.check=0;
+end
 try % not working when calling from lead_connectome
     % coreg CT
     options.coregct.do=(get(handles.coregct_checkbox,'Value') == get(handles.coregct_checkbox,'Max'));
@@ -36,19 +44,21 @@ try % not working when calling from lead_connectome
     options.coregct.coregthreshs= eval( [ '[', get(handles.coregthreshs,'String'), ']' ] );
     
     options.coregctcheck=get(handles.coregctcheck,'Value');
+    options.coregmr.method=get(handles.coregmrpopup,'Value');
+    
 
-
-options.coregmr.method=get(handles.coregmrpopup,'Value');
-
-% set modality (MR/CT) in options
-options.modality = get(handles.MRCT,'Value');
 catch
     options.coregmr.method=0;
-    options.modality=0;
     options.coregct.do=0;
     options.coregctcheck=0;
 end
 
+try
+        % set modality (MR/CT) in options
+    options.modality = get(handles.MRCT,'Value');
+catch
+        options.modality=0;
+end
 
 
 options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback.
@@ -86,34 +96,34 @@ options.autoimprove=0; % if true, templates will be modified.
 options.axiscontrast=8; % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
 try
-options.atl.genpt=get(handles.vizspacepopup,'Value')==2; % generate patient specific atlases
+    options.atl.genpt=get(handles.vizspacepopup,'Value')==2; % generate patient specific atlases
 catch
     options.atl.genpt=0;
 end
 options.atl.normalize=0; % normalize patient specific atlasset. This is not done anymore for now.
 try
-options.atl.can=get(handles.vizspacepopup,'Value')==1; % display canonical atlases
+    options.atl.can=get(handles.vizspacepopup,'Value')==1; % display canonical atlases
 catch
-  options.atl.can=1;  
+    options.atl.can=1;
 end
 options.atl.pt=0; % display patient specific atlases. This is not done anymore for now.
 try
-options.atl.ptnative=get(handles.vizspacepopup,'Value')==2; % show results in native space.
+    options.atl.ptnative=get(handles.vizspacepopup,'Value')==2; % show results in native space.
 catch
     options.atl.ptnative=0;
 end
 try
-if options.atl.ptnative
-    options.native=1;
-else
-    options.native=0;
-end
+    if options.atl.ptnative
+        options.native=1;
+    else
+        options.native=0;
+    end
 catch
-   options.native=0; 
+    options.native=0;
 end
 
 try
-options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
+    options.d2.write=(get(handles.writeout2d_checkbox,'Value') == get(handles.writeout2d_checkbox,'Max'));
 catch
     options.d2.write=0;
 end
@@ -121,12 +131,12 @@ options.d2.atlasopacity=0.15;
 
 
 try
-options.manualheightcorrection=(get(handles.manualheight_checkbox,'Value') == get(handles.manualheight_checkbox,'Max'));
+    options.manualheightcorrection=(get(handles.manualheight_checkbox,'Value') == get(handles.manualheight_checkbox,'Max'));
 catch
     options.manualheightcorrection=0;
 end
 try
-options.d3.write=(get(handles.render_checkbox,'Value') == get(handles.render_checkbox,'Max'));
+    options.d3.write=(get(handles.render_checkbox,'Value') == get(handles.render_checkbox,'Max'));
 catch
     options.d3.write=0;
 end
@@ -139,7 +149,7 @@ options.d3.showpassivecontacts=1;
 options.d3.showisovolume=0;
 options.d3.isovscloud=0;
 try
-options.d3.autoserver=get(handles.exportservercheck,'Value');
+    options.d3.autoserver=get(handles.exportservercheck,'Value');
 catch
     options.d3.autoserver=0;
 end
@@ -152,12 +162,14 @@ try
 end
 options.writeoutpm=1;
 try
-options.elmodeln = get(handles.electrode_model_popup,'Value');
-string_list = get(handles.electrode_model_popup,'String');
-options.elmodel=string_list{options.elmodeln};
-options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
-options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
-options.atlassetn=get(handles.atlassetpopup,'Value');
+    options.elmodeln = get(handles.electrode_model_popup,'Value');
+    string_list = get(handles.electrode_model_popup,'String');
+    options.elmodel=string_list{options.elmodeln};
+end
+try
+    options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
+    options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
+    options.atlassetn=get(handles.atlassetpopup,'Value');
 end
 try
     if strcmp(options.atlasset,'Use none');
@@ -177,6 +189,8 @@ options.writeoutstats=1;
 
 
 options.colormap=colormap;
-
-options.dolc=get(handles.include_lead_connectome_subroutine,'Value');
-
+try % not working when calling from lead_anatomy
+    options.dolc=get(handles.include_lead_connectome_subroutine,'Value');
+catch
+    options.dolc=0;
+end
