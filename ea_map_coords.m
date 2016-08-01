@@ -4,7 +4,7 @@ function [XYZ_mm, XYZ_src_vx] = ea_map_coords(varargin)
 % interpolations in high dimensional warping with SPM.
 
 %  % high-dimensional warping / y_ deformation field:
-%   % from target voxel space to source world and voxel space
+%  % from target voxel space to source world and voxel space
 %    [XYZ_mm XYZ_src_vx] = map_coords(XYZ_vx, '', 'y_img.nii', src);
 %
 % Ged Ridgway (drc.spm at gmail.com)
@@ -93,6 +93,7 @@ if ~isempty(xfrm)
             
             % normalization
             XYZ_mm=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform(1:3,:)',useinverse)';
+            XYZ_mm=[XYZ_mm;ones(1,size(XYZ_mm,2))];
             
             % LPS to RAS
             XYZ_mm(1,:)=-XYZ_mm(1,:);
