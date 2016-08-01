@@ -106,8 +106,16 @@ switch whichnormmethod
         % tranform from anat voxel space to anat mm space
         fibers_mm_mprage=[wfibs,ones(size(wfibs,1),1)]*Vmprage.mat';
         
+        % RAS-LPS conversion
+        fibers_mm_mprage(:,1)=-fibers_mm_mprage(:,1);
+        fibers_mm_mprage(:,2)=-fibers_mm_mprage(:,2);
+        
         % normalize
         wfibs = ea_ants_applytransforms_to_points(directory,fibers_mm_mprage(:,1:3),0);
+        
+        % LPS-RAS conversion
+        wfibs(:,1) = -wfibs(:,1);
+        wfibs(:,2) = -wfibs(:,2);
 end
 
 %% map from mni millimeter space to mni voxel space (only needed for trackvis convertion and cleansing fibers).
@@ -225,6 +233,6 @@ if ischar(V)
 end
 
 vox = double(vox);
-mm_norm = [spm_sample_vol(V(1),vox(:,1),vox(:,2),vox(:,3),1);
-          spm_sample_vol(V(2),vox(:,1),vox(:,2),vox(:,3),1);
-          spm_sample_vol(V(3),vox(:,1),vox(:,2),vox(:,3),1)]';
+mm_norm = [spm_sample_vol(V(1),vox(:,1),vox(:,2),vox(:,3),1),...
+          spm_sample_vol(V(2),vox(:,1),vox(:,2),vox(:,3),1),...
+          spm_sample_vol(V(3),vox(:,1),vox(:,2),vox(:,3),1)];

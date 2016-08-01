@@ -66,8 +66,7 @@ if ~isempty(xfrm)
         XYZ_mm = sn_trgvx2srcmm(XYZ_vx, xfrm);
     elseif ~isempty(regexp(xfrm, 'y_.*(nii|img)$', 'once'))
         % HDW transformation field
-        
-        
+
         % check if ANTs has been used here:
         directory=[fileparts(xfrm),filesep];
         if nargin<5
@@ -85,14 +84,17 @@ if ~isempty(xfrm)
             end
             V=spm_vol(trg);
             
-            %XYZ_vxLPS=[V.dim(1)-XYZ_vx(1,:);V.dim(2)-XYZ_vx(2,:);XYZ_vx(3,:);ones(1,size(XYZ_vx,2))];
+            % voxel to mm
+            XYZ_mm_beforetransform=V(1).mat*XYZ_vx;
             
-             XYZ_mm_beforetransform=V(1).mat*XYZ_vx;
-             XYZ_mm_beforetransform(1,:)=-XYZ_mm_beforetransform(1,:);
-             XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
-             
-            XYZ_mm=ea_ants_applytransforms_to_points([directory],XYZ_mm_beforetransform,useinverse)';
-            %XYZ_mm=ea_ants_applytransforms_to_points([directory,filesep],XYZ_mm_beforetransform,1);
+            % RAS to LPS
+            XYZ_mm_beforetransform(1,:)=-XYZ_mm_beforetransform(1,:);
+            XYZ_mm_beforetransform(2,:)=-XYZ_mm_beforetransform(2,:);
+            
+            % normalization
+            XYZ_mm=ea_ants_applytransforms_to_points(directory,XYZ_mm_beforetransform(1:3,:)',useinverse)';
+            
+            % LPS to RAS
             XYZ_mm(1,:)=-XYZ_mm(1,:);
             XYZ_mm(2,:)=-XYZ_mm(2,:);
         else
@@ -129,10 +131,8 @@ end
 
 XYZ_mm=XYZ_mm(1:3,:);
 try
-XYZ_src_vx=XYZ_src_vx(1:3,:);
+    XYZ_src_vx=XYZ_src_vx(1:3,:);
 end
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
