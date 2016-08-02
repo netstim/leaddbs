@@ -12,7 +12,17 @@ end
 
 [~,ptname]=fileparts(subdir);
 options.prefs=ea_prefs(ptname);
+
+
 [~,glprebase]=fileparts(options.prefs.gprenii);
+% use 'gl' affix for tranforms
+try
+    [~,lprebase]=fileparts(options.prefs.prenii);
+    if exist([subdir,lprebase,'Composite.h5'],'file')
+        movefile([subdir,lprebase,'Composite.h5'],[subdir,glprebase,'Composite.h5'])
+    end
+end
+
 if nargin>3
     transform=varargin{4};
     tstring=[' --transform [',transform, ',',num2str(useinverse),']']; % [transformFileName,useInverse]

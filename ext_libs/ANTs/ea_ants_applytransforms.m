@@ -78,6 +78,14 @@ for fi=1:length(fis)
     end
     % generate gl*.nii files
     [~,glprebase]=fileparts(options.prefs.gprenii);
+    % use 'gl' affix for tranforms
+    try
+        [~,lprebase]=fileparts(options.prefs.prenii);
+        if exist([subdir,lprebase,'Composite.h5'],'file')
+            movefile([subdir,lprebase,'Composite.h5'],[subdir,glprebase,'Composite.h5'])
+        end
+    end
+    
     cmd = [applyTransforms,' --verbose 1' ...
            ' --dimensionality 3 --float 1' ...
            ' -i ',ea_path_helper(fis{fi}), ...
