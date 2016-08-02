@@ -31,19 +31,20 @@ end
 
 disp('This Normalization routine uses the advanced TPMs by Lorio 2016. See http://unil.ch/lren/home/menuinst/data--utilities.html');
 
+directory=[options.root,options.patientname,filesep];
 if isfield(options.prefs, 'tranii_unnormalized')
-    if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz'],'file')
+    if exist([directory,options.prefs.tranii_unnormalized,'.gz'],'file')
         try
-            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
+            gunzip([directory,options.prefs.tranii_unnormalized,'.gz']);
         end
         try
-            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']);
+            gunzip([directory,options.prefs.cornii_unnormalized,'.gz']);
         end
         try
-            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,'.gz']);
+            gunzip([directory,options.prefs.sagnii_unnormalized,'.gz']);
         end
         try
-            gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
+            gunzip([directory,options.prefs.prenii_unnormalized,'.gz']);
         end
     end
 end
@@ -54,13 +55,13 @@ try
 end
 
 % now segment the preoperative version.
-disp('Segmenting preoperative version.');
-ea_newseg([options.root,options.prefs.patientdir,filesep],options.prefs.prenii_unnormalized,0,options,0);
-disp('*** Segmentation of preoperative MRI done.');
+disp('Segmenting preoperative version...');
+ea_newseg([directory],options.prefs.prenii_unnormalized,0,options,0);
+disp('done.');
 
 % Rename deformation fields:
-movefile([options.root,options.patientname,filesep,'y_',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'y_ea_normparams.nii']);
-movefile([options.root,options.patientname,filesep,'iy_',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']);
+try movefile([directory,'y_',options.prefs.prenii_unnormalized],[directory,'y_ea_normparams.nii']); end
+try movefile([directory,'iy_',options.prefs.prenii_unnormalized],[directory,'y_ea_inv_normparams.nii']); end
 
 % Apply estimated deformation to (coregistered) post-op data.
 

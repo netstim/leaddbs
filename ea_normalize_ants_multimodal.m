@@ -123,9 +123,7 @@ try
     ea_coregmr(options,options.prefs.normalize.coreg);
 end
 
-ea_ants_nonlinear(to,...
-    from,...
-    [directory,options.prefs.prenii],weights,metrics,options);
+ea_ants_nonlinear(to,from,[directory,options.prefs.gprenii],weights,metrics,options);
 
 ea_apply_normalization(options);
 

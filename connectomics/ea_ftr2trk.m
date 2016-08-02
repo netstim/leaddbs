@@ -24,7 +24,12 @@ if strcmp(voxmm,'vox')
     end
 end
 
+% check if x-axis of the affine matrix is negative, flip it if so
+if det(specs.affine) < 0
+    specs.affine = diag([-1 1 1 1])*specs.affine;
+end
 specs = ea_aff2hdr(specs.affine, specs);
+
 try
     header.voxel_size=specs.voxel_size;
 catch
@@ -49,10 +54,6 @@ header.version=2;
 header.hdr_size=1000;
 
 %% convert data
-
-%for i=1:length(fibs)
-%fibs{i}=double(fibs{i});
-%end
 tracks=struct('nPoints',nan,'matrix',nan);
 offset=1;
 for track_number=1:length(idx)
@@ -60,7 +61,6 @@ for track_number=1:length(idx)
    tracks(1,track_number).matrix=fibs(offset:offset+idx(track_number)-1,1:3);
    offset=offset+idx(track_number);
 end
-
 
 if strcmp(voxmm,'mm') % have to retranspose to vox
     for i=1:length(tracks)
@@ -70,7 +70,6 @@ if strcmp(voxmm,'mm') % have to retranspose to vox
     end
 end
 
-
 for i = 1:length(tracks)
     try
         tracks(i).matrix=bsxfun(@times, tracks(i).matrix,header.voxel_size);
@@ -78,8 +77,6 @@ for i = 1:length(tracks)
         tracks(i).matrix=bsxfun(@times, tracks(i).matrix',header.voxel_size);
     end
 end
-
-
 
 %% write .trk file
 if ischar(ftrfilename)

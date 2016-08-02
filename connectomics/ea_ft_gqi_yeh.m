@@ -55,6 +55,8 @@ if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file')
     spm_jobman('run',jobs);
     clear matlabbatch jobs;
     movefile([directory,'rb0c2',options.prefs.prenii_unnormalized],[directory,'trackingmask.nii']);
+    delete([directory,'c',options.prefs.prenii_unnormalized]);
+    delete([directory,'rb0c',options.prefs.prenii_unnormalized]);
 
     tr=ea_load_nii([options.root,options.patientname,filesep,'trackingmask.nii']);
     tr.img=tr.img>0.8;

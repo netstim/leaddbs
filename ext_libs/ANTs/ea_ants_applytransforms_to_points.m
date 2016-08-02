@@ -12,26 +12,26 @@ end
 
 [~,ptname]=fileparts(subdir);
 options.prefs=ea_prefs(ptname);
-[~,lprebase]=fileparts(options.prefs.prenii);
+[~,glprebase]=fileparts(options.prefs.gprenii);
 if nargin>3
     transform=varargin{4};
     tstring=[' --transform [',transform, ',',num2str(useinverse),']']; % [transformFileName,useInverse]
 else
     if useinverse
-        if exist([subdir,lprebase,'Composite.h5'],'file')
-            tstring=[' -t [',ea_path_helper([subdir,lprebase]),istr,'Composite.h5,0]'];
+        if exist([subdir,glprebase,'Composite.h5'],'file')
+            tstring=[' -t [',ea_path_helper([subdir,glprebase]),istr,'Composite.h5,0]'];
         else
-            tstring=    [  ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']',...
-                ' -t [',ea_path_helper([subdir,lprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
+            tstring=    [  ' -t [',ea_path_helper([subdir,glprebase]),'0GenericAffine.mat,',num2str(useinverse),']',...
+                ' -t [',ea_path_helper([subdir,glprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
                 ];
         end
 
     else
-        if exist([subdir,lprebase,'Composite.h5'],'file')
-            tstring=[' -t [',ea_path_helper([subdir,lprebase]),istr,'Composite.h5,0]'];
+        if exist([subdir,glprebase,'Composite.h5'],'file')
+            tstring=[' -t [',ea_path_helper([subdir,glprebase]),istr,'Composite.h5,0]'];
         else
-            tstring=[' -t [',ea_path_helper([subdir,lprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
-                ' -t [',ea_path_helper([subdir,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'...
+            tstring=[' -t [',ea_path_helper([subdir,glprebase]),'1',istr,'Warp.nii.gz,',num2str(0),']',...
+                ' -t [',ea_path_helper([subdir,glprebase]),'0GenericAffine.mat,',num2str(useinverse),']'...
                 ];
         end
     end

@@ -58,6 +58,39 @@ switch whichnormmethod
                 try movefile([directory,'w',options.prefs.ctnii_coregistered],[directory,options.prefs.ctnii]); end
                 
             case 'SPM12'
+                % export glfiles (a bit more coarse resolution, full brain bounding box.
+                gfis={[options.prefs.gprenii]};
+                try gfis=[gfis,[options.prefs.gtranii]]; end
+                try gfis=[gfis,[options.prefs.gcornii]]; end
+                try gfis=[gfis,[options.prefs.gsagnii]]; end
+                try gfis=[gfis,[options.prefs.gctnii]]; end
+                
+                for pos=1:length(gfis)
+                    if exist([directory,postops{pos}],'file')
+                        nii=ea_load_untouch_nii([directory,postops{pos}]);
+                        gaussdim=abs(nii.hdr.dime.pixdim(2:4));
+                        %gaussdim=abs(gaussdim(1:3)).*2;
+                        if mean(gaussdim>1)
+                            resize_img([directory,postops{pos}],gaussdim./2,nan(2,3),0);
+                        else
+                            copyfile([directory,postops{pos}],[directory,'r',postops{pos}]);
+                        end
+                        
+                        matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
+                        matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[directory,'r',postops{pos},''];
+                        matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
+                        matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {directory};
+                        matlabbatch{1}.spm.util.defs.out{1}.push.fov.bbvox.bb = [-78 -112 -50; 78 76 85];
+                        matlabbatch{1}.spm.util.defs.out{1}.push.fov.bbvox.vox = [0.5 0.5 0.5];
+                        matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
+                        matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = gaussdim;
+                        jobs{1}=matlabbatch;
+                        spm_jobman('run',jobs);
+                        clear matlabbatch jobs;
+                        try movefile([directory,'swr',postops{pos}],[directory,gfis{pos}]); end
+                    end
+                end
+                
                 % export lfiles (fine resolution, small bounding box.
                 try lfis={[options.prefs.prenii]}; end
                 try lfis=[lfis,[options.prefs.tranii]]; end
@@ -70,17 +103,17 @@ switch whichnormmethod
                         if exist([directory,postops{pos}],'file')
                             nii=ea_load_untouch_nii([directory,postops{pos}]);
                             gaussdim=abs(nii.hdr.dime.pixdim(2:4));
+                            %gaussdim=abs(gaussdim(1:3)).*2;
                             if mean(gaussdim>1)
                                 resize_img([directory,postops{pos}],gaussdim./2,nan(2,3),0);
                             else
                                 copyfile([directory,postops{pos}],[directory,'r',postops{pos}]);
                             end
 
-                            %gaussdim=abs(gaussdim(1:3)).*2;
                             matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
                             matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[directory,'r',postops{pos},''];
                             matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
-                            matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {[directory]};
+                            matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {directory};
                             matlabbatch{1}.spm.util.defs.out{1}.push.fov.bbvox.bb = [-55 45 9.5; 55 -65 -25];
                             matlabbatch{1}.spm.util.defs.out{1}.push.fov.bbvox.vox = [0.22 0.22 0.22];
                             matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
@@ -90,33 +123,6 @@ switch whichnormmethod
                             clear matlabbatch jobs;
                         end
                         try movefile([directory,'swr',postops{pos}],[directory,lfis{pos}]); end
-                    end
-                end
-
-                % export glfiles (a bit more coarse resolution, full brain bounding box.
-                gfis={[options.prefs.gprenii]};
-                try gfis=[lfis,[options.prefs.gtranii]]; end
-                try gfis=[lfis,[options.prefs.gcornii]]; end
-                try gfis=[lfis,[options.prefs.gsagnii]]; end
-                try gfis=[lfis,[options.prefs.gctnii]]; end
-                
-                for pos=1:length(gfis)
-                    if exist([directory,postops{pos}],'file')
-                        nii=ea_load_untouch_nii([directory,postops{pos}]);
-                        gaussdim=abs(nii.hdr.dime.pixdim(2:4));
-                        %gaussdim=abs(gaussdim(1:3)).*2;
-                        matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
-                        matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[directory,'r',postops{pos},''];
-                        matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
-                        matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {[directory]};
-                        matlabbatch{1}.spm.util.defs.out{1}.push.fov.bbvox.bb = [-78 -112 -50; 78 76 85];
-                        matlabbatch{1}.spm.util.defs.out{1}.push.fov.bbvox.vox = [0.5 0.5 0.5];
-                        matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
-                        matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = gaussdim;
-                        jobs{1}=matlabbatch;
-                        spm_jobman('run',jobs);
-                        clear matlabbatch jobs;
-                        try movefile([directory,'swr',postops{pos}],[directory,gfis{pos}]); end
                     end
                 end
 

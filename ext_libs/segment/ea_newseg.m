@@ -9,7 +9,7 @@ if nargin < 5
 end
 
 if ~dartel && exist([directory, 'c1', file], 'file') || dartel && exist([directory, 'rc1', file], 'file')
-    disp('Segmentation already done...');
+    disp('Segmentation already done!');
 else
     disp('Segmentation...');
 

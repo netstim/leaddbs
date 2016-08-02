@@ -48,9 +48,9 @@ if nargin==1
 
             try
                 if exist([directory,options.prefs.fa2anat],'file');
-                    fis{5}=[directory,options.prefs.fa2anat];
-                    ofis{5}=[directory,'gl',options.prefs.fa2anat];
-                    lfis{5}=[directory,'l',options.prefs.fa2anat];
+                    fis=[fis,[directory,options.prefs.fa2anat]];
+                    ofis=[fis,[directory,'gl',options.prefs.fa2anat]];
+                    lfis=[fis,[directory,'l',options.prefs.fa2anat]];
                 end
             end
         case 2 % CT
@@ -77,7 +77,7 @@ for fi=1:length(fis)
         continue
     end
     % generate gl*.nii files
-    [~,lprebase]=fileparts(options.prefs.prenii);
+    [~,glprebase]=fileparts(options.prefs.gprenii);
     cmd = [applyTransforms,' --verbose 1' ...
            ' --dimensionality 3 --float 1' ...
            ' -i ',ea_path_helper(fis{fi}), ...
@@ -88,26 +88,26 @@ for fi=1:length(fis)
                refim=[directory,options.prefs.prenii_unnormalized];
            end
 
-           if exist([directory,lprebase,'Composite.h5'],'file')
+           if exist([directory,glprebase,'Composite.h5'],'file')
                tr=[' -r ',refim,...
-                   ' -t [',ea_path_helper([directory,lprebase]),'InverseComposite.h5,0]'];
+                   ' -t [',ea_path_helper([directory,glprebase]),'InverseComposite.h5,0]'];
            else
 
                tr=[' -r ',refim,...
-                   ' -t [',ea_path_helper([directory,lprebase]),'1InverseWarp.nii.gz,0]',...
-                   ' -t [',ea_path_helper([directory,lprebase]),'0GenericAffine.mat,',num2str(useinverse),']'];
+                   ' -t [',ea_path_helper([directory,glprebase]),'1InverseWarp.nii.gz,0]',...
+                   ' -t [',ea_path_helper([directory,glprebase]),'0GenericAffine.mat,',num2str(useinverse),']'];
            end
        else
            if isempty(refim)
                refim=[options.earoot,'templates',filesep,'mni_hires.nii'];
            end
-           if exist([directory,lprebase,'Composite.h5'],'file')
+           if exist([directory,glprebase,'Composite.h5'],'file')
                tr=[' -r ',refim,...
-                   ' -t [',ea_path_helper([directory,lprebase]),'Composite.h5,0]'];
+                   ' -t [',ea_path_helper([directory,glprebase]),'Composite.h5,0]'];
            else
                tr=[' -r ',refim,...
-                   ' -t [',ea_path_helper([directory,lprebase]),'1Warp.nii.gz,0]'...
-                   ' -t [',ea_path_helper([directory,lprebase]),'0GenericAffine.mat,0]'];
+                   ' -t [',ea_path_helper([directory,glprebase]),'1Warp.nii.gz,0]'...
+                   ' -t [',ea_path_helper([directory,glprebase]),'0GenericAffine.mat,0]'];
            end
        end
 

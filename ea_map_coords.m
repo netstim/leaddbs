@@ -9,8 +9,6 @@ function [XYZ_mm, XYZ_src_vx] = ea_map_coords(varargin)
 %
 % Ged Ridgway (drc.spm at gmail.com)
 
-
-
 try
     XYZ_vx=varargin{1};
 end
