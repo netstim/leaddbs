@@ -15,11 +15,19 @@ options.prefs=ea_prefs(ptname);
 
 
 [~,glprebase]=fileparts(options.prefs.gprenii);
+[~,lprebase]=fileparts(options.prefs.prenii);
 % use 'gl' affix for tranforms
 try
-    [~,lprebase]=fileparts(options.prefs.prenii);
     if exist([subdir,lprebase,'Composite.h5'],'file')
-        movefile([subdir,lprebase,'Composite.h5'],[subdir,glprebase,'Composite.h5'])
+        movefile([subdir,lprebase,'Composite.h5'],[subdir,glprebase,'Composite.h5']);
+        movefile([subdir,lprebase,'InverseComposite.h5'],[subdir,glprebase,'InverseComposite.h5']);
+    end
+end
+try
+    if exist([subdir,lprebase,'0GenericAffine.mat'],'file')
+        movefile([subdir,lprebase,'0GenericAffine.mat'],[subdir,glprebase,'0GenericAffine.mat']);
+        try movefile([subdir,lprebase,'1Warp.nii.gz'],[subdir,glprebase,'1Warp.nii.gz']); end
+        try movefile([subdir,lprebase,'1InverseWarp.nii.gz'],[subdir,glprebase,'1InverseWarp.nii.gz']); end
     end
 end
 
