@@ -174,6 +174,6 @@ spm_jobman('run',jobs);
 disp('*** Exported normalization parameters to y_ea_inv_normparams.nii');
 clear matlabbatch jobs;
 
-delete([directory,'u_rc1',options.prefs.prenii_unnormalized]);
+% delete([directory,'u_rc1',options.prefs.prenii_unnormalized]);
 
 ea_apply_normalization(options)
