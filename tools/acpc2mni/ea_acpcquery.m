@@ -52,13 +52,12 @@ function ea_acpcquery_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_acpcquery (see VARARGIN)
 
-try
-leaddir=[ea_getearoot];
+
+earoot=ea_getearoot;
 im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
 image(im);
 axis off;
 axis equal;
-end
 
 % Choose default command line output for ea_acpcquery
 handles.output = hObject;
