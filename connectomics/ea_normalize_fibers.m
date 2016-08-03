@@ -23,13 +23,13 @@ try
 end
 
 % get transform from b0 to anat and affine matrix of anat
-[refb0,refanat,refnorm,b02anat,anataffine,whichnormmethod]=ea_checktransform(options);
+[refb0,refanat,refnorm,b02anat,whichnormmethod]=ea_checktransform(options);
 
 % plot reference volumes
 if vizz
     figure('color','w','name','Fibertrack normalization','numbertitle','off');
     % plot b0
-    b0=ea_load_nii([directory,refb0]);
+    b0=ea_load_nii(refb0);
     subplot(1,3,1);
     title('b0 space');
     [xx,yy,zz]=ind2sub(size(b0.img),find(b0.img>max(b0.img(:))/7));
@@ -38,7 +38,7 @@ if vizz
     hold on
     
     % plot anat
-    anat=ea_load_nii([directory,refanat]);
+    anat=ea_load_nii(refanat);
     subplot(1,3,2);
     title('anat space');
     [xx,yy,zz]=ind2sub(size(anat.img),find(anat.img>max(anat.img(:))/3));
@@ -75,9 +75,12 @@ display(sprintf('\nNormalizing fibers...'));
 
 %% Normalize fibers
 
-%% first apply affine transform from b0 to prenii
+%% map from b0 voxel space to anat voxel space
 wfibsvox_anat=[fibers(:,1:3),ones(size(fibers,1),1)]*b02anat';
 wfibsvox_anat=wfibsvox_anat(:,1:3);
+
+%% map from anat voxel space to anat mm space
+anataffine=spm_get_space(refanat);
 wfibsmm_anat=[wfibsvox_anat,ones(size(wfibsvox_anat,1),1)]*anataffine';
 wfibsmm_anat=wfibsmm_anat(:,1:3);
 
@@ -92,7 +95,7 @@ if vizz
     plot3(thisfib(:,1),thisfib(:,2),thisfib(:,3),'.','color',[0.1707    0.2919    0.7792]);
 end
 
-%% map from prenii voxelspace to mni millimeter space
+%% map from anat voxel space to mni mm space
 display(sprintf('\nPoints normalization...'));
 switch whichnormmethod
     case {'ea_normalize_spmdartel','ea_normalize_spmnewseg'}
@@ -110,7 +113,7 @@ switch whichnormmethod
         wfibsmm_mni(:,2) = -wfibsmm_mni(:,2);
 end
 
-%% map from mni millimeter space to mni voxel space
+%% map from mni mm space to mni voxel space
 mniaffine=spm_get_space(refnorm);
 wfibsvox_mni=[wfibsmm_mni,ones(size(wfibsmm_mni,1),1)]*inv(mniaffine)';
 wfibsvox_mni=wfibsvox_mni(:,1:3);
@@ -140,6 +143,7 @@ if vizz
     drawnow;
 end
 
+%% export fibers
 wfibsmm_mni=[wfibsmm_mni,fibers(:,4)];
 wfibsvox_mni=[wfibsvox_mni,fibers(:,4)];
 [~,ftrbase]=fileparts(options.prefs.FTR_normalized);
@@ -162,7 +166,7 @@ try
 end
 
 
-function [refb0,refanat,refnorm,b02anat,anataffine,whichnormmethod]=ea_checktransform(options)
+function [refb0,refanat,refnorm,b02anat,whichnormmethod]=ea_checktransform(options)
 directory=[options.root,options.patientname,filesep];
 % segment b0.
 if ~exist([directory,'c2',options.prefs.b0],'file');
@@ -185,40 +189,31 @@ if isempty(whichnormmethod)
 end
 
 % determine the refimage for b0 and anat space visualization
-refb0=['c2',options.prefs.b0];
-refanat=['c2',options.prefs.prenii_unnormalized];
+refb0=[directory,'c2',options.prefs.b0];
+refanat=[directory,'c2',options.prefs.prenii_unnormalized];
+
+% determin the template for fiber normalization and visualization
+if ismember(whichnormmethod,{'ea_normalize_spmdartel','ea_normalize_spmnewseg'})
+	refnorm=[refnorm,',2'];  
+end
+
+% unzip spm dartel template
 if strcmp(whichnormmethod, 'ea_normalize_spmdartel')
-    refanat=['rc2',options.prefs.prenii_unnormalized];
     if ~exist([options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires.nii'],'file')
         gunzip([options.earoot,'templates',filesep,'dartel',filesep,'create_mni_darteltemplate',filesep,'dartelmni_6_hires.nii.gz'],...
                [options.earoot,'templates',filesep,'dartel']);
     end
 end
 
-% determin the template for fiber normalization and visualization
-if ~strcmp(whichnormmethod, 'ea_normalize_ants')
-	refnorm=[refnorm,',2'];  
-end
-
+% generate b0 to anat tranformation
 if ~exist([directory,'b02anat.mat'],'file')
     display('Register b0 to anat...');
-    switch whichnormmethod
-        case 'ea_normalize_spmdartel'
-            % if dartel was used, we need to register c2b0 to rc2anat
-            % since deformation fields were estimated for the rc*anat,not the native anat
-            anataffine=spm_get_space([directory,'rc2',options.prefs.prenii_unnormalized]);
-            Vb0=spm_vol([directory,'c2',options.prefs.b0]);
-            Vanat=spm_vol([directory,'rc2',options.prefs.prenii_unnormalized]);
-            x=spm_coreg(Vb0,Vanat);
-            b02anat=Vanat.mat\spm_matrix(x(:)')*Vb0.mat;
-        otherwise
-            anataffine=spm_get_space([directory,options.prefs.prenii_unnormalized]);
-            Vb0=spm_vol([directory,options.prefs.b0]);
-            Vanat=spm_vol([directory,options.prefs.prenii_unnormalized]);
-            x=spm_coreg(Vb0,Vanat);
-            b02anat=Vanat.mat\spm_matrix(x(:)')*Vb0.mat;
-    end
-    save([directory,'b02anat.mat'],'b02anat','anataffine');
+    
+    Vb0=spm_vol([directory,options.prefs.b0]);
+    Vanat=spm_vol([directory,options.prefs.prenii_unnormalized]);
+    x=spm_coreg(Vb0,Vanat);
+    b02anat=Vanat.mat\spm_matrix(x(:)')*Vb0.mat;
+    save([directory,'b02anat.mat'],'b02anat');
 end
 load([directory,'b02anat.mat']);
 

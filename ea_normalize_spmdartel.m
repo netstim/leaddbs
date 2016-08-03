@@ -85,35 +85,35 @@ end
 
 % Normalize to MNI using DARTEL.
 matlabbatch{1}.spm.tools.dartel.warp1.images = {
-                                                {[directory,'rc1',options.prefs.prenii_unnormalized,',1']};
-                                                {[directory,'rc2',options.prefs.prenii_unnormalized,',1']};
+                                                {[directory,'rc1',options.prefs.prenii_unnormalized,',1']}
+                                                {[directory,'rc2',options.prefs.prenii_unnormalized,',1']}
                                                 {[directory,'rc3',options.prefs.prenii_unnormalized,',1']}
                                                 }';
 matlabbatch{1}.spm.tools.dartel.warp1.settings.rform = 0;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).rparam = [4 2 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).K = 0;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(2).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(2).rparam = [2 1 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(2).K = 0;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(2).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_5.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(2).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_2.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(3).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(3).rparam = [1 0.5 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(3).K = 1;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(3).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_4.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(3).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_3.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(4).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(4).rparam = [0.5 0.25 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(4).K = 2;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(4).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_3.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(4).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_4.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(5).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(5).rparam = [0.25 0.125 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(5).K = 4;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(5).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_2.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(5).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_5.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(6).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(6).rparam = [0.25 0.125 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(6).K = 6;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(6).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(6).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.lmreg = 0.01;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.cyc = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.its = 3;
@@ -124,37 +124,56 @@ disp('*** Dartel coregistration of preoperative version worked.');
 
 clear matlabbatch jobs;
 
-% export normalization parameters:
-for inverse=0:1
-    if inverse
-        addstr='_inv';
-    else
-        addstr='';
-    end
-
-    switch spm('ver')
-        case 'SPM8'
-            matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
-            matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1-inverse 0+inverse];
-            matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
-            matlabbatch{1}.spm.util.defs.ofname = ['ea',addstr,'_normparams'];
-            matlabbatch{1}.spm.util.defs.fnames = '';
-            matlabbatch{1}.spm.util.defs.savedir.saveusr = {directory};
-            matlabbatch{1}.spm.util.defs.interp = 1;
-        case 'SPM12'
-            matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
-            matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1-inverse 0+inverse];
-            matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
-            matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
-            matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = ['ea',addstr,'_normparams'];
-            matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
-    end
-    jobs{1}=matlabbatch;
-
-    spm_jobman('run',jobs);
-    disp('*** Exported normalization parameters to y_ea_normparams.nii');
-    clear matlabbatch jobs;
+% Export normalization parameters:
+% backward
+switch spm('ver')
+    case 'SPM8'
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1 0];
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
+        matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
+        matlabbatch{1}.spm.util.defs.fnames = '';
+        matlabbatch{1}.spm.util.defs.savedir.saveusr = {directory};
+        matlabbatch{1}.spm.util.defs.interp = 1;
+    case 'SPM12'
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1 0];
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
+        matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = ['ea_normparams'];
+        matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
 end
+jobs{1}=matlabbatch;
+
+spm_jobman('run',jobs);
+disp('*** Exported normalization parameters to y_ea_normparams.nii');
+clear matlabbatch jobs;
+    
+% forward (inverse)
+switch spm('ver')
+    case 'SPM8'
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [0 1];
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
+        matlabbatch{1}.spm.util.defs.ofname = 'ea_inv_normparams';
+        matlabbatch{1}.spm.util.defs.fnames = '';
+        matlabbatch{1}.spm.util.defs.savedir.saveusr = {directory};
+        matlabbatch{1}.spm.util.defs.interp = 1;
+    case 'SPM12'
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [0 1];
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
+        matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
+        matlabbatch{1}.spm.util.defs.comp{2}.id.space = {[directory,options.prefs.prenii_unnormalized]};
+        matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = 'ea_inv_normparams';
+        matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
+end
+jobs{1}=matlabbatch;
+
+spm_jobman('run',jobs);
+disp('*** Exported normalization parameters to y_ea_inv_normparams.nii');
+clear matlabbatch jobs;
+
 delete([directory,'u_rc1',options.prefs.prenii_unnormalized]);
 
 ea_apply_normalization(options)
