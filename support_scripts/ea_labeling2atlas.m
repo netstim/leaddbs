@@ -25,9 +25,9 @@ parc.img=round(parc.img);
 
 ea_dispercent(0,'Iterating atlas components');
 cnt=1;
+
 for p=A{1}'
     ea_dispercent(cnt/length(A{1}));
-    cnt=cnt+1;
     
     thisp=parc.img;
     thisp(~(thisp==p))=0;
@@ -56,7 +56,8 @@ for p=A{1}'
     
     thisparcnii=parc;
     thisparcnii.img=thisp;
-    thisparcnii.fname=[thisodir,filesep,A{2}{p}(1:end-suppress_suff),'.nii'];
+    thisparcnii.fname=[thisodir,filesep,A{2}{cnt}(1:end-suppress_suff),'.nii'];
+        cnt=cnt+1;
     ea_write_nii(thisparcnii);
 end
 ea_dispercent(1,'end');

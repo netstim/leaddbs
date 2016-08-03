@@ -50,7 +50,7 @@ prefs.gctnii='glpostop_ct.nii';
 
 %% connectome files:
 prefs.rest_prefix='res*.nii'; % raw resting state fMRI data search string
-prefs.rest_default='rest.nii'; % default for dcm2nii export.
+prefs.rest='rest.nii'; % default for dcm2nii export.
 
 %% connectome settings:
 prefs.lc.struc.maxdist=2; % maximal distance to form a connection (between fiber terminals and voxel centers, in mm).

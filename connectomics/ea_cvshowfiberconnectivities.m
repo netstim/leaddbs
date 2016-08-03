@@ -117,7 +117,7 @@ origtargets=targets; % original targets map.
 
 dispercent(0,'Selecting connecting fibers...');
 cnt=1;
-for side=1:length(options.sides)
+for side=1:length(seed)
 
     in=ea_intriangulation(seed_fv{side}.vertices,seed_fv{side}.faces,fibers);
     selectedfibs{side}=unique(idxv(in));
@@ -135,7 +135,7 @@ connectingfibs=cell(2,1);
 disp('Reformating fibers...');
 fibers=mat2cell(fibers,fibersidx,3)';
 disp('Done.');
-for side=1:length(options.sides)
+for side=1:length(seed)
     try        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
     
     try      connectingfibs{side}=fibers(sideselectedfibs{side}); end
@@ -152,7 +152,7 @@ end
 doubleconnectingfibs=cell(2,1);
 
 la=1;
-for side=1:length(options.sides)
+for side=1:length(seed)
     
     todelete{side}=[];
     
@@ -510,7 +510,7 @@ setappdata(resultfig,[mode,'PL'],PL);
 
 function [fv,volume]=ea_fvseeds(seed,options)
 
-for s=1:length(options.sides)
+for s=1:length(seed)
     volume{s}=sum(seed{s}.img(:))*seed{s}.mat(1)*seed{s}.mat(6)*seed{s}.mat(11);   
     fv{s}=isosurface(permute(seed{s}.img,[2,1,3]),0.3);
     fv{s}.vertices=[fv{s}.vertices,ones(size(fv{s}.vertices,1),1)]';

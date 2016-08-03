@@ -6,7 +6,7 @@ if ~exist('force','var')
 end
 switch cmd
     case 'bigbrain'
-        if ~exist([earoot,'templates',filesep,'bigbrain_2015_100um_bb.nii'],'file') || force
+        if ~exist([earoot,'templates',filesep,'bigbrain_2015_100um_bb.nii'],'file') || force
             disp('BigBrain not installed. Downloading...')
             try
             websave([earoot,'templates',filesep,'bigbrain_2015_100um_bb.nii.gz'],'http://www.lead-dbs.org/release/data/bigbrain_2015_100um_bb.nii.gz');
@@ -20,7 +20,7 @@ switch cmd
             disp('BigBrain is installed.')
         end
     case 'macaque'
-        if ~exist([earoot,'toolbox',filesep,'macaque'],'file') || force
+        if ~exist([earoot,'toolbox',filesep,'macaque'],'file') || force
             disp('Macaque toolbox not installed. Downloading...')
             try
             websave([earoot,'toolbox',filesep,'macaque.zip'],'http://www.lead-dbs.org/release/download.php?id=macaque');
@@ -34,7 +34,7 @@ switch cmd
             disp('Macaque toolbox is installed.')
         end
     case 'groupconnectome2013'
-        if ~exist([earoot,'fibers',filesep,'Groupconnectome (Horn 2013) full.mat'],'file') || force
+        if ~exist([earoot,'fibers',filesep,'Groupconnectome (Horn 2013) full.mat'],'file') || force
             try
             websave([earoot,'fibers',filesep,'groupconnectome2013.zip'],'http://www.lead-dbs.org/release/download.php?id=group');
             unzip([earoot,'fibers',filesep,'groupconnectome2013.zip']);

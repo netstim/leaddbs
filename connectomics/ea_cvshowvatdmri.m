@@ -35,11 +35,12 @@ end
         % seed filename
 
         seedfile={};
-        for v=1:length(options.sides)
+        
+        for v=1:length(usevat)
             
             seedfile{v}=[directory,'stimulations',filesep,vsname,filesep,'vat_',usevat{options.sides(v)},'.nii'];
         end
-        for side=1:length(options.sides)
+        for side=1:length(usevat)
 try
             load([directory,'stimulations',filesep,vsname,filesep,'stimparameters_',usevat{options.sides(side)},'.mat']);
 catch

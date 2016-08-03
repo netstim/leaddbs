@@ -44,7 +44,7 @@ if isempty(uidir)
     ea_error('Please choose and normalize patients first.');
 end
 
-disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
+%disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
 %ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
  %   ea_dispercent(pt/length(uidir));
@@ -81,8 +81,6 @@ end
             fid(pt).PC=fpinsub_mm(2,:);
             fid(pt).MSP=fpinsub_mm(3,:);
         case {'manual'} % manual AC/PC definition, assume F.fcsv file inside pt folder
-            
-            
             copyfile([directory,'F.fcsv'],[directory,'F.dat'])
             Ct=readtable([directory,'F.dat']);
             
@@ -139,17 +137,17 @@ end
     % y-dimension (just move from ac to pc and scale by y dimension):
     yvec=(fid(pt).PC-fid(pt).AC);
     yvec=yvec/norm(yvec);
+    yvec=-yvec; % this vector points to anterior of the AC!! (but acpc y coordinates are given with - sign).
 
-    switch automan
-        case {'manual','mnidirect'}
+%     switch automan
+%         case {'manual','mnidirect'}
             zvec=cross(xvec,yvec);
             zvec=zvec/norm(zvec);
-            zvec=-zvec;
-        case 'auto' % the above should also work here but it's simpler with the auto coords
-            % z-dimension (just move from ac to msag plane by z dimension):
-            zvec=(fid(pt).MSP-fid(pt).AC);
-            zvec=zvec/norm(zvec);
-    end
+%         case 'auto' % the above should also work here but it's simpler with the auto coords
+%             % z-dimension (just move from ac to msag plane by z dimension):
+%             zvec=(fid(pt).MSP-fid(pt).AC);
+%             zvec=zvec/norm(zvec);
+%     end
     switch cfg.acmcpc
         case 1 % relative to AC:
             warpcoord_mm=fid(pt).AC+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
@@ -158,6 +156,7 @@ end
         case 3 % relative to PC:
             warpcoord_mm=fid(pt).PC+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
     end
+    
     anat=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
     warpcoord_mm=[warpcoord_mm';1];
     warpcoord_vox=anat.mat\warpcoord_mm;

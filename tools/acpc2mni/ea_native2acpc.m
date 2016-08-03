@@ -95,11 +95,14 @@ switch automan
         end
         
         
-            fpinsub_mm(1,:)=fid(pt).AC;
-    fpinsub_mm(2,:)=fid(pt).PC;
-    fpinsub_mm(3,:)=fid(pt).MSP;
+        fpinsub_mm(1,:)=fid(pt).AC;
+        fpinsub_mm(2,:)=fid(pt).PC;
+        fpinsub_mm(3,:)=fid(pt).MSP;
         
 end
+
+
+
     % x-dimension
     A=fpinsub_mm(3,:)-fpinsub_mm(1,:);
     B=fpinsub_mm(2,:)-fpinsub_mm(1,:);
@@ -109,19 +112,19 @@ end
     % y-dimension (just move from ac to pc and scale by y dimension):
     yvec=(fpinsub_mm(2,:)-fpinsub_mm(1,:));
     yvec=yvec/norm(yvec);
-
+    yvec=-yvec;
+    keyboard
     
-    
-    switch automan
-        case 'manual'
+%     switch automan
+%         case 'manual'
             zvec=cross(xvec,yvec);
             zvec=zvec/norm(zvec);
-            zvec=-zvec;
-        case 'auto' % the above should also work here but it's simpler with the auto coords
-            % z-dimension (just move from ac to msag plane by z dimension):
-            zvec=(fid(pt).MSP-fid(pt).AC);
-            zvec=zvec/norm(zvec);
-    end
+          %  zvec=-zvec;
+%         case 'auto' % the above should also work here but it's simpler with the auto coords
+%             % z-dimension (just move from ac to msag plane by z dimension):
+%             zvec=(fid(pt).MSP-fid(pt).AC);
+%             zvec=zvec/norm(zvec);
+%     end
     
 %     % z-dimension (just move from ac to msag plane by z dimension):
 %     zvec=(fpinsub_mm(3,:)-fpinsub_mm(1,:));

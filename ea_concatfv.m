@@ -12,6 +12,10 @@ end
 if isfield(fv,'facevertexcdata')
     afv.facevertexcdata=[];
     for f=1:length(fv) 
+        
+        if size(fv(f).facevertexcdata,1)<size(fv(f).facevertexcdata,2)
+            fv(f).facevertexcdata=fv(f).facevertexcdata';
+        end
         afv.facevertexcdata=[afv.facevertexcdata;fv(f).facevertexcdata];
     end
     
