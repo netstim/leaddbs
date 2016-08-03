@@ -65,15 +65,15 @@ else
     applyTransformsToPoints = [basedir, 'antsApplyTransformsToPoints.', computer('arch')];
 end
 
+    guid=ea_generate_guid;
 
 cmd = [applyTransformsToPoints, ...
     ' --dimensionality 3' ...   % dimensionality
     ' --precision 1' ...    % double precision
-    ' --input ', ea_path_helper([subdir,'tmpin.csv']) ...  % input csv file with x,y,z,t (at least) as the column header
-    ' --output ', ea_path_helper([subdir,'tmpout.csv']) ...    % warped output csv file
+    ' --input ', ea_path_helper([subdir,'tmpin_',guid,'.csv']) ...  % input csv file with x,y,z,t (at least) as the column header
+    ' --output ', ea_path_helper([subdir,'tmpout_',guid,'.csv']) ...    % warped output csv file
 tstring];
 
-    guid=ea_generate_guid;
 
 
 ea_writecsv([subdir,'tmpin_',guid,'.csv'],input);
@@ -91,6 +91,7 @@ delete([subdir,'tmpin_',guid,'.csv']);
 
 function coord=ea_readcsv(pth)
 fid=fopen(pth);
+
 C=textscan(fid,'%f %f %f %f','commentStyle', '#','delimiter', ',','Headerlines',1);
 fclose(fid);
 coord=cell2mat(C(1:3));
