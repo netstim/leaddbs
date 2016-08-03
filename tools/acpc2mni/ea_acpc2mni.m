@@ -22,7 +22,7 @@ else
 end
 
 % prompt for ACPC-coordinates:
-acpc=[cfg.xmm,-cfg.ymm,cfg.zmm];
+acpc=[cfg.xmm,cfg.ymm,cfg.zmm];
 if cfg.mapmethod
     if nargin<5
         [FileName,PathName] = uiputfile('ACPC2MNI_Mapping.nii','Save Mapping...');

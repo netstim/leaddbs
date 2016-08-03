@@ -113,7 +113,7 @@ end
     yvec=(fpinsub_mm(2,:)-fpinsub_mm(1,:));
     yvec=yvec/norm(yvec);
     yvec=-yvec;
-    keyboard
+    
     
 %     switch automan
 %         case 'manual'
@@ -139,7 +139,7 @@ end
             warpcoord_mm=linsolve([xvec',yvec',zvec'],native'-fpinsub_mm(2,:)');
     end
 
-    fid(pt).WarpedPointACPC=[warpcoord_mm(1),-warpcoord_mm(2),warpcoord_mm(3)];
+    fid(pt).WarpedPointACPC=[warpcoord_mm(1),warpcoord_mm(2),warpcoord_mm(3)];
     fid(pt).WarpedPointNative=native;
 end
 %ea_dispercent(1,'end');
