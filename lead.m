@@ -107,11 +107,11 @@ axis equal;
 
 % add logos
 
-ea_setbuttonbackdrop(handles.startdbs,[earoot,'icons',filesep,'logo_lead_dbs.png']);
-ea_setbuttonbackdrop(handles.startconnectome,[earoot,'icons',filesep,'logo_lead_connectome.png']);
-ea_setbuttonbackdrop(handles.startgroup,[earoot,'icons',filesep,'logo_lead_group.png']);
-ea_setbuttonbackdrop(handles.startmacaque,[earoot,'icons',filesep,'logo_lead_dbs_macaque.png']);
-ea_setbuttonbackdrop(handles.startanatomy,[earoot,'icons',filesep,'logo_lead_anatomy.png']);
+ea_setbuttonbackdrop(handles.startdbs,[earoot,'icons',filesep,'logo_lead_dbs_small.png']);
+ea_setbuttonbackdrop(handles.startconnectome,[earoot,'icons',filesep,'logo_lead_connectome_small.png']);
+ea_setbuttonbackdrop(handles.startgroup,[earoot,'icons',filesep,'logo_lead_group_small.png']);
+ea_setbuttonbackdrop(handles.startmacaque,[earoot,'icons',filesep,'logo_lead_dbs_macaque_small.png']);
+ea_setbuttonbackdrop(handles.startanatomy,[earoot,'icons',filesep,'logo_lead_anatomy_small.png']);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 
@@ -123,10 +123,7 @@ set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 function ea_setbuttonbackdrop(buttonhandle,im)
 im=imread(im);
-sz=get(buttonhandle,'Position');
 
-imsz=size(im,2);
-im=imresize(im,(sz(3)-10)/imsz);
 set(buttonhandle,'CData',im);
 set(buttonhandle,'String','');
 
