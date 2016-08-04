@@ -113,9 +113,10 @@ axis equal;
 ea_addnormmethods(handles,options,'');
 
 % load 2d settings
+try % if user had called it before, 2D-options will be stored here:
     d2=load([ea_getearoot,'td_options.mat']);
     ea_options2tdhandles(handles,d2);
-
+end
 
     ea_firstrun(handles);
     
