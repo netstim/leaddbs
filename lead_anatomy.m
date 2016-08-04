@@ -107,6 +107,8 @@ im=imread([earoot,'icons',filesep,'logo_lead_anatomy.png']);
 image(im);
 axis off;
 axis equal;
+set(handles.leadfigure,'name','Lead-Anatomy','color','w');
+
 
 % add norm methods to menu
 

@@ -58,7 +58,7 @@ image(im);
 axes(handles.logoaxes);
 axis off;
 axis equal;
-set(handles.leadfigure,'name','Welcome to LEAD-DBS','color','w');
+set(handles.leadfigure,'name','Lead-Connectome','color','w');
 
 % add parcellation atlases to menu:
 ll=dir([ea_getearoot,'templates',filesep,'labeling',filesep,'*.nii']);

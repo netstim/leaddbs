@@ -942,7 +942,7 @@ if ~isempty(M.patient.list)
         if ~isfield(M,'stats')
             % if no stats  present yet, return.
             setappdata(handles.lg_figure,'M',M);
-            set(handles.lg_figure,'name','LEAD-DBS Group Analysis');
+            set(handles.lg_figure,'name','Lead-Group Analysis');
             break
         end
         

@@ -18,18 +18,18 @@ if ischar(pos)
         case 'lead'
             sz=get(fighandle,'Position');
             pos=[sz(3)-50-2 sz(4)-50-2 50 50]; 
-            onfigtit='Welcome to Lead-DBS (busy...)';
-            offfigtit='Welcome to Lead-DBS';
+            onfigtit='Lead-DBS (busy...)';
+            offfigtit='Lead-DBS';
         case 'anatomy'
             sz=get(fighandle,'Position');
             pos=[sz(3)-50-2 sz(4)-50-2 50 50];
-            onfigtit='Welcome to Lead-Anatomy (busy...)';
-            offfigtit='Welcome to Lead-Anatomy';
+            onfigtit='Lead-Anatomy (busy...)';
+            offfigtit='Lead-Anatomy';
         case 'lead_connectome'
             sz=get(fighandle,'Position');
             pos=[sz(3)-50-2 sz(4)-50-2 50 50];
-            onfigtit='Welcome to Lead-Connectome (busy...)';
-            offfigtit='Welcome to Lead-Connectome';
+            onfigtit='Lead-Connectome (busy...)';
+            offfigtit='Lead-Connectome';
         case 'acpc'
             sz=get(fighandle,'Position');
             pos=[sz(3)-50-2 sz(4)-50-2 50 50]; 
@@ -38,8 +38,8 @@ if ischar(pos)
         case 'group'
             sz=get(fighandle,'Position');
             pos=[sz(3)-50-5 sz(4)-50 50 50];
-            onfigtit='Lead-DBS Group Analysis (busy...)';
-            offfigtit='Lead-DBS Group Analysis';
+            onfigtit='Lead-Group Analysis (busy...)';
+            offfigtit='Lead-Group Analysis';
         case 'reco'
             sz=get(fighandle,'Position');
             pos=[sz(3)-50-2 sz(4)-50-2 50 50];
