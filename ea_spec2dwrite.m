@@ -69,10 +69,10 @@ if get(handles.tdbackdrop,'Value')>length(backdrops)
     set(handles.tdbackdrop,'Value',1);
 end
 
-
+try
     d2=load([ea_getearoot,'td_options.mat']);
     ea_options2tdhandles(handles,d2);
-
+end
 set(handles.ea_spec2dwrite,'Name','Specify 2D Output options');
 
 
