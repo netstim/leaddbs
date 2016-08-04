@@ -225,10 +225,11 @@ uimenu(e,'Label','Export .PLY files for selected patient(s)','Callback',{@ea_exp
 setappdata(handles.leadfigure,'menuprobe',1);
 end
 
-if strcmp('macaque',varargin{1})
-    handles.prod='macaque';
-else
-    handles.prod='dbs';
+handles.prod='dbs';
+if ~isempty(varargin)
+    if strcmp('macaque',varargin{1})
+        handles.prod='macaque';
+    end
 end
 ea_firstrun(handles);
 ea_getui(handles);

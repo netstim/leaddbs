@@ -122,9 +122,9 @@ end
 setappdata(handles.leadfigure,'isindependent',isindependent);
 
 if isindependent
-    handles.prod='connectome_indep';
-else
     handles.prod='connectome';
+else
+    handles.prod='dbs_connectome';
 end
 ea_firstrun(handles);
 

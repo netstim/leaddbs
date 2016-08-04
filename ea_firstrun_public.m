@@ -17,13 +17,15 @@ else
     set(handles.updatebutn,'Visible','off');
 end
 
-try
-    webopts=weboptions('Timeout',5);
-    webread('http://www.lead-dbs.org/release/stats.php','id',handles.prod,'ver',['R',version('-release')],webopts);
-catch
+if ~strcmp(handles.prod,'dbs_connectome')
     try
-        urlread(['http://www.lead-dbs.org/release/stats.php?id=',handles.prod,'&ver=R', version('-release')],'Timeout',5);
+        webopts=weboptions('Timeout',5);
+        webread('http://www.lead-dbs.org/release/stats.php','id',handles.prod,'ver',['R',version('-release')],webopts);
     catch
+        try
+            urlread(['http://www.lead-dbs.org/release/stats.php?id=',handles.prod,'&ver=R', version('-release')],'Timeout',5);
+        catch
+        end
     end
 end
 
