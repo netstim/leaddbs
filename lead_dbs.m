@@ -56,7 +56,6 @@ function lead_dbs_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for lead_dbs
 handles.output = hObject;
 
-
 % Update handles structure
 guidata(hObject, handles);
 
@@ -73,28 +72,29 @@ end
 
 ea_dispbn;
 
-    mstr='';
-    macaquemodus=0;
-    set(handles.leadfigure,'name','Welcome to LEAD-DBS');
+mstr='';
+macaquemodus=0;
+set(handles.leadfigure,'name','Welcome to LEAD-DBS');
 
-    if nargin
-        try
-        if strcmp('macaque',varargin{1})
-            options.earoot=earoot;
-            [mstr,isinstalled]=ea_checkmacaque(options,'installed?');
-            if isinstalled
-                macaquemodus=1;
-                mstr=['toolbox',filesep,'macaque',filesep];
-                disp('*** Macaque modus');
-                set(handles.leadfigure,'name','Welcome to LEAD-DBS ** Macaque modus **');
-                set(handles.targetpopup,'Enable','off');
-                set(handles.targetpopup,'Value',3);
-            else
-                ea_error('Please install Lead-DBS macaque toolbox prior to starting Lead-DBS in macaque mode.');
-            end
-        end
+if nargin
+    try
+    if strcmp('macaque',varargin{1})
+        options.earoot=earoot;
+        [mstr,isinstalled]=ea_checkmacaque(options,'installed?');
+        if isinstalled
+            macaquemodus=1;
+            mstr=['toolbox',filesep,'macaque',filesep];
+            disp('*** Macaque modus');
+            set(handles.leadfigure,'name','Welcome to LEAD-DBS ** Macaque modus **');
+            set(handles.targetpopup,'Enable','off');
+            set(handles.targetpopup,'Value',3);
+        else
+            ea_error('Please install Lead-DBS macaque toolbox prior to starting Lead-DBS in macaque mode.');
         end
     end
+    end
+end
+
 setappdata(handles.leadfigure,'macaquemodus',macaquemodus);
 
 
@@ -153,20 +153,16 @@ end
 %set(0,'gca',handles.logoaxes);
 set(0,'CurrentFigure',handles.leadfigure);
 if macaquemodus
-im=imread([earoot,'icons',filesep,'logo_lead_dbs_macaque.png']);
+    im=imread([earoot,'icons',filesep,'logo_lead_dbs_macaque.png']);
 else
-im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
+    im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
 end
 image(im);
 axis off;
 axis equal;
 
-
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
-
-
-
 
 % add norm methods to menu
 
@@ -203,8 +199,6 @@ try % set selection of ctcoregmethod to default entry (specified in ea_prefs).
     end
 end
 
-
-
 if nargin
 
     if ~isempty(varargin)
@@ -217,7 +211,6 @@ if nargin
     end
 
 end
-
 
 %% add tools menu
 menuprobe=getappdata(handles.leadfigure,'menuprobe');
@@ -232,11 +225,13 @@ uimenu(e,'Label','Export .PLY files for selected patient(s)','Callback',{@ea_exp
 setappdata(handles.leadfigure,'menuprobe',1);
 end
 
+if strcmp('macaque',varargin{1})
+    handles.prod='macaque';
+else
+    handles.prod='dbs';
+end
 ea_firstrun(handles);
 ea_getui(handles);
-
-
-
 
 
 % UIWAIT makes lead_dbs wait for user response (see UIRESUME)

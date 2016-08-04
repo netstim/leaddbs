@@ -25,12 +25,12 @@ updurl = 'http://www.lead-dbs.org/release/download.php';
 if update
     try
         if update==1 % full update
-            id='lead_dbs';
+            id='lead';
         elseif update==2 % incremental update
             id=['updates_',strrep(local,'.',''),'-',strrep(web,'.','')];
         end
 
-        disp('*** Updating LEAD-DBS. Please do not quit MATLAB.');
+        disp('*** Updating LEAD. Please do not quit MATLAB.');
         mkdir([earoot,'tmp'])
         disp('Downloading code...');
         try
@@ -81,7 +81,7 @@ if update
         rmdir([earoot,'tmp'],'s')
         disp('Done.');
 
-        disp('Restarting LEAD-DBS.');
+        disp('Restarting LEAD.');
         lead;
         disp('*** Update finished.');
     catch
@@ -91,7 +91,7 @@ if update
         msgbox(info,'Update','Error');
     end
 else
-    info=sprintf(['LEAD-DBS aleady up-to-date!\n',...
+    info=sprintf(['LEAD aleady up-to-date!\n',...
                   'Alternatively, you can re-download the latest verion from: http://www.lead-dbs.org/release/download.php']);
     disp(info);
     msgbox(info,'Update','Help');

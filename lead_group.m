@@ -65,7 +65,7 @@ guidata(hObject, handles);
 % Build popup tables:
 
 % atlassets:
-options.earoot=[ea_getearoot];
+options.earoot=ea_getearoot;
 setappdata(handles.lg_figure,'earoot',options.earoot);
 as=dir([options.earoot,'atlases',filesep]);
 asc=cell(0);
@@ -176,6 +176,8 @@ if isempty(M)
 end
 setappdata(gcf,'M',M);
 refreshvifc(handles);
+
+handles.prod='group';
 ea_firstrun(handles);
 
 

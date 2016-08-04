@@ -120,8 +120,12 @@ else
 end
 
 setappdata(handles.leadfigure,'isindependent',isindependent);
-    
 
+if isindependent
+    handles.prod='connectome_indep';
+else
+    handles.prod='connectome';
+end
 ea_firstrun(handles);
 
 % Choose default command line output for leadfigure
