@@ -261,14 +261,14 @@ t=surfinterior(node,face);
     X = linsolve(A,B); X=X';
 
       % add contacts to mesh  
-    for con=1:length(electrode.contacts)
+    for con=1:length(electrode.meshel.con)
         
-                electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
-        electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
+        electrode.meshel.con{con}.vertices=X*[electrode.meshel.con{con}.vertices,ones(size(electrode.meshel.con{con}.vertices,1),1)]';
+        electrode.meshel.con{con}.vertices=electrode.meshel.con{con}.vertices(1:3,:)';
        
         
-        fv(cnt).faces=electrode.contacts(con).faces;
-        fv(cnt).vertices=electrode.contacts(con).vertices;
+        fv(cnt).faces=electrode.meshel.con{con}.faces;
+        fv(cnt).vertices=electrode.meshel.con{con}.vertices;
         tissuetype(cnt)=3;
         t=surfinterior(fv(cnt).vertices,fv(cnt).faces);
         c0=[c0;[t,3]];
@@ -283,15 +283,15 @@ t=surfinterior(node,face);
 
     
       % add insulation to mesh
-    for ins=1:length(electrode.insulation)
-        
-        electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
-        electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
+    for ins=1:length(electrode.meshel.ins)
+        electrode.meshel.ins{ins}.vertices=X*[electrode.meshel.ins{ins}.vertices,ones(size(electrode.meshel.ins{ins}.vertices,1),1)]';
+       
+        electrode.meshel.ins{ins}.vertices=electrode.meshel.ins{ins}.vertices(1:3,:)';
 
         
         
-        fv(cnt).faces=electrode.insulation(ins).faces;
-        fv(cnt).vertices=electrode.insulation(ins).vertices;
+        fv(cnt).faces=electrode.meshel.ins{ins}.faces;
+        fv(cnt).vertices=electrode.meshel.ins{ins}.vertices;
         t=surfinterior(fv(cnt).vertices,fv(cnt).faces);
         
         tissuetype(cnt)=4;

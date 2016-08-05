@@ -33,16 +33,16 @@ for side=1:length(options.sides)
     %%
     trajvector=mean(diff(trajectory{side}));
     trajvector=trajvector/norm(trajvector);
-
-
+    
+    
     startpoint=trajectory{side}(1,:)-(1.5*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
     set(0,'CurrentFigure',resultfig);
-hold on
+    hold on
     % draw patientname
     lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
     ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
-
-
+    
+    
     % draw trajectory
     lowerpoint=coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2);
     set(0,'CurrentFigure',resultfig);
@@ -53,6 +53,14 @@ hold on
     cZ=cZ+lowerpoint(3);
     
     p=surf2patch(surf(cX,cY,cZ),'triangles');
+
+    % add meshing-version to it
+    a=surf2patch(surf(cX,cY,cZ));
+    a=ea_reordercylinder(a);
+    meshel.ins{1}.faces=a.faces;
+    meshel.ins{1}.vertices=a.vertices;
+    ndiv=length(meshel.ins{1}.vertices)/2;
+    meshel.ins{1}.endplates=[1:ndiv;ndiv+1:2*ndiv];
     
     % add endplates:
     p.vertices=[p.vertices;...
@@ -68,21 +76,21 @@ hold on
     elrender{side}(1)=patch(p);
     
     cnt=2;
-
-
-
+    
+    
+    
     if isfield(elstruct,'group')
         usecolor=elstruct.groupcolors(elstruct.group,:);
     else
         usecolor=elspec.lead_color;
     end
-
-
-        aData=1;
-
-
+    
+    
+    aData=1;
+    
+    
     specsurf(elrender{side}(1),usecolor,aData);
-
+    
     % draw contacts
     for cntct=1:elspec.numel
         set(0,'CurrentFigure',resultfig);
@@ -95,6 +103,15 @@ hold on
         cZ=cZ+coords_mm{side}(cntct,3);
         
         p=surf2patch(surf(cX,cY,cZ),'triangles');
+        
+        % add meshing-version to it
+        a=surf2patch(surf(cX,cY,cZ));
+        a=ea_reordercylinder(a);
+        meshel.con{cntct}.faces=a.faces;
+        meshel.con{cntct}.vertices=a.vertices;
+        ndiv=length(meshel.con{cntct}.vertices)/2;
+        meshel.con{cntct}.endplates=[1:ndiv;ndiv+1:2*ndiv];
+        
         
         % add endplates:
         p.vertices=[p.vertices;...
@@ -111,7 +128,7 @@ hold on
         cnt=cnt+1;
         
     end
-
+    
     % draw trajectory between contacts
     for cntct=1:elspec.numel-1
         set(0,'CurrentFigure',resultfig);
@@ -125,6 +142,16 @@ hold on
         cZ=cZ+hait;
         
         p=surf2patch(surf(cX,cY,cZ),'triangles');
+        
+        
+        % add meshing-version to it
+        a=surf2patch(surf(cX,cY,cZ));
+        a=ea_reordercylinder(a);
+        meshel.ins{cntct+1}.faces=a.faces;
+        meshel.ins{cntct+1}.vertices=a.vertices;
+        ndiv=length(meshel.ins{cntct+1}.vertices)/2;
+        meshel.ins{cntct+1}.endplates=[1:ndiv;ndiv+1:2*ndiv];
+        
         
         % add endplates:
         p.vertices=[p.vertices;...
@@ -140,67 +167,77 @@ hold on
         elrender{side}(cnt)=patch(p);
         cnt=cnt+1;
     end
-
-
-
-
-
-
-
-
+    
+    
+    
+    
+    
+    
+    
+    
     % draw tip
-
+    
     if isfield(elstruct,'group')
         usecolor=elstruct.groupcolors(elstruct.group,:);
     else
         usecolor=elspec.tip_color;
     end
     set(0,'CurrentFigure',resultfig);
-
+    
     tipdiams=repmat(elspec.tip_diameter/2,1,19)-([10:-0.5:1].^10/10^10)*(elspec.tip_diameter/2);
     tipdiams(end+1)=1.27/2;
     [cX,cY,cZ] = ea_singlecylinder((tipdiams),N);
-
+    
     cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
-
+    
     % define two points to define cylinder.
     X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
     X2=X1+trajvector*elspec.tip_length;
-
-
+    
+    
     cX=cX+X1(1);
     cY=cY+X1(2);
     cZ=cZ-(2*elspec.tip_length)/2+X1(3);
-
+    
     p=surf2patch(surf(cX,cY,cZ),'triangles');
+    
+            % add meshing-version to it
+        a=surf2patch(surf(cX,cY,cZ));
+        
+        a=ea_reordercylinder(a,20);
+        meshel.ins{end+1}.faces=a.faces;
+        meshel.ins{end}.vertices=a.vertices;
+        ndiv=100;
+        meshel.ins{end}.endplates=[1:ndiv];
+        
     
     % add endplate:
     p.vertices=[p.vertices;...
         [0,0,elspec.tip_length]];
-
+    
     for pt=20:20:(length(p.vertices)-20)
         p.faces=[p.faces;pt,pt+20,length(p.vertices)];
     end
-       
-       
-
+    
+    
+    
     elrender{side}(cnt)=patch(p);
-
+    
     % Calulating the angle between the x direction and the required direction
     % of cylinder through dot product
     angle_X1X2=acos( dot( [0 0 -1],(X2-X1) )/( norm([0 0 -1])*norm(X2-X1)) )*180/pi;
-
+    
     % Finding the axis of rotation (single rotation) to roate the cylinder in
     % X-direction to the required arbitrary direction through cross product
     axis_rot=cross([0 0 -1],(X2-X1) );
-
+    
     if any(axis_rot) || angle_X1X2
- %       rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
+        %       rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
     end
     specsurf(elrender{side}(cnt),usecolor,aData);
-
-
-
+    
+    
+    
 end
 
 
@@ -223,10 +260,10 @@ ea_dispercent(0,'Exporting electrode components');
 for comp=1:options.elspec.numel*2+1
     ea_dispercent(comp/(options.elspec.numel*2+1));
     
-
-        cyl=elrender{side}(cnt);
-        cnt=cnt+1;
-
+    
+    cyl=elrender{side}(cnt);
+    cnt=cnt+1;
+    
     
     if comp>1 && comp<options.elspec.numel+2 % these are the CONTACTS
         electrode.contacts(cntcnt).vertices=cyl.Vertices;
@@ -252,6 +289,7 @@ electrode.numel=options.elspec.numel;
 electrode.contact_color=options.elspec.contact_color;
 electrode.lead_color=options.elspec.lead_color;
 electrode.coords_mm=coords_mm{side};
+electrode.meshel=meshel;
 save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 
 
@@ -260,29 +298,29 @@ cnt=1;
 g=figure;
 X=eye(4);
 
-        for ins=1:length(electrode.insulation)
-            
-            vs=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
-            electrode.insulation(ins).vertices=vs(1:3,:)';
-            elrender{side}(cnt)=patch('Faces',electrode.insulation(ins).faces,'Vertices',electrode.insulation(ins).vertices);
-        if isfield(elstruct,'group')
-            usecolor=elstruct.groupcolors(elstruct.group,:);
-        else
-            usecolor=elspec.lead_color;
-        end
-        specsurf(elrender{side}(cnt),usecolor,aData);
-            cnt=cnt+1;
-        end
-        for con=1:length(electrode.contacts)
-
-            vs=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
-            electrode.contacts(con).vertices=vs(1:3,:)';
-            elrender{side}(cnt)=patch('Faces',electrode.contacts(con).faces,'Vertices',electrode.contacts(con).vertices);
-
-                specsurf(elrender{side}(cnt),elspec.contact_color,aData);
-
-            cnt=cnt+1;
-        end
+for ins=1:length(electrode.insulation)
+    
+    vs=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+    electrode.insulation(ins).vertices=vs(1:3,:)';
+    elrender{side}(cnt)=patch('Faces',electrode.insulation(ins).faces,'Vertices',electrode.insulation(ins).vertices);
+    if isfield(elstruct,'group')
+        usecolor=elstruct.groupcolors(elstruct.group,:);
+    else
+        usecolor=elspec.lead_color;
+    end
+    specsurf(elrender{side}(cnt),usecolor,aData);
+    cnt=cnt+1;
+end
+for con=1:length(electrode.contacts)
+    
+    vs=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+    electrode.contacts(con).vertices=vs(1:3,:)';
+    elrender{side}(cnt)=patch('Faces',electrode.contacts(con).faces,'Vertices',electrode.contacts(con).vertices);
+    
+    specsurf(elrender{side}(cnt),elspec.contact_color,aData);
+    
+    cnt=cnt+1;
+end
 
 axis equal
 view(0,0);
