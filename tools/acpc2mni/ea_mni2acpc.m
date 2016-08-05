@@ -59,9 +59,9 @@ for pt=1:length(uidir)
     % y-dimension (just move from ac to pc and scale by y dimension):
     yvec=(fpinsub_mm(2,:)-fpinsub_mm(1,:));
     yvec=yvec/norm(yvec);
+    yvec=-yvec; % this vector points to anterior of the AC!! (but acpc y coordinates are given with - sign).
 
-    % z-dimension (just move from ac to msag plane by z dimension):
-    zvec=(fpinsub_mm(3,:)-fpinsub_mm(1,:));
+    zvec=cross(xvec,yvec);
     zvec=zvec/norm(zvec);
 
     switch cfg.acmcpc
@@ -73,7 +73,7 @@ for pt=1:length(uidir)
             warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(2,:)');
     end
 
-    fid(pt).WarpedPointACPC=[warpcoord_mm(1),-warpcoord_mm(2),warpcoord_mm(3)];
+    fid(pt).WarpedPointACPC=[warpcoord_mm(1),warpcoord_mm(2),warpcoord_mm(3)];
     fid(pt).WarpedPointNative=fpinsub_mm(4,:);
 end
 %ea_dispercent(1,'end');

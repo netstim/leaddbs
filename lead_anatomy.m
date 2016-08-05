@@ -69,6 +69,10 @@ if ~isdeployed
     rmpath(genpath([earoot,'release']));
 end
 
+% for now disable space dropdown
+
+set(handles.vizspacepopup,'enable','off');
+
 % add backdrops
 backdrops=ea_assignbackdrop('list');
 

@@ -149,7 +149,8 @@ for side=1:length(options.sides)
             end
             set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
             axis([min(boundboxmm{onedim}),max(boundboxmm{onedim}),min(boundboxmm{secdim}),max(boundboxmm{secdim})])
-            axis square
+            
+            axis equal
             hold on
             
             
