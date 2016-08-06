@@ -6,10 +6,10 @@ costfuns={'nmi','mi','ecc','ncc'};
 
 switch automan
     case 'manual'
-        cfundo=1:4;
+        cfundo=1:3;
         manual=1;
     case 'auto'
-        cfundo=[2,1,3,4];
+        cfundo=[2,1,3];
         manual=0;
     otherwise
         ea_error('Coregistration prefs must be either set to auto or manual. Please modify ea_prefs.m accordingly.');
