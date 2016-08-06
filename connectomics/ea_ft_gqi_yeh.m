@@ -36,11 +36,12 @@ if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file')
 
     %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
     copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
+    copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]);
 
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c',options.prefs.prenii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.other = {
-        [directory,'c2',options.prefs.prenii_unnormalized,',1']
+        [directory,'cc2',options.prefs.prenii_unnormalized,',1']
         };
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
@@ -54,8 +55,11 @@ if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file')
     jobs{1}=matlabbatch;
     spm_jobman('run',jobs);
     clear matlabbatch jobs;
+    
+    
     movefile([directory,'rb0c2',options.prefs.prenii_unnormalized],[directory,'trackingmask.nii']);
     delete([directory,'c',options.prefs.prenii_unnormalized]);
+    delete([directory,'cc2',options.prefs.prenii_unnormalized]);
     delete([directory,'rb0c',options.prefs.prenii_unnormalized]);
 
     tr=ea_load_nii([options.root,options.patientname,filesep,'trackingmask.nii']);
