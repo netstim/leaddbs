@@ -73,12 +73,14 @@ for fi=1:length(fis)
         warning('%s not found. Skipping...\n',fis{fi});
         continue
     end
-    if exist(ofis{fi},'file')   % skip already normalized file
-        continue
-    end
+    % we should never skip re-warping since we often need to reapply normalizations if they failed!
+%     if exist(ofis{fi},'file')   % skip already normalized file
+%         continue
+%     end
     % generate gl*.nii files
     [~,glprebase]=fileparts(options.prefs.gprenii);
     % use 'gl' affix for tranforms
+    subdir=[options.root,options.patientname,filesep];
     try
         [~,lprebase]=fileparts(options.prefs.prenii);
         if exist([subdir,lprebase,'Composite.h5'],'file')
