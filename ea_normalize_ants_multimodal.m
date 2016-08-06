@@ -30,7 +30,7 @@ usefa=1; % set to zero if you do not wish to use FA data for normalization even 
 usebrainmask=1;
 
 directory=[options.root,options.patientname,filesep];
-options.coregmr.method=2; % hard-code to ANTs for now here.
+options.coregmr.method=4; % hard-code to ANTs for now here.
 cnt=1;
 
 if usebrainmask

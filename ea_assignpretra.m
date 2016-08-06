@@ -1,4 +1,4 @@
-function options=ea_assignpretra(options)
+function [options,presentfiles]=ea_assignpretra(options)
 
 
 directory=[options.root,options.patientname,filesep];
@@ -29,5 +29,7 @@ try
 catch
     options.primarytemplate=options.prefs.prenii_unnormalized;
 end
+
+presentfiles=options.prefs.rawpreniis(f);
 
 
