@@ -1,4 +1,4 @@
-function varargout=ea_normalize_ants_multimodal(options)
+function varargout=ea_normalize_ants_multimodal(options,coregonly,includedistal)
 % This is a function that normalizes both a copy of transversal and coronar
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
@@ -21,6 +21,13 @@ if ischar(options) % return name of method.
     varargout{1}='Advanced Normalization Tools (ANTs) SyN - multimodal (T1,T2, PD & FA)';
     varargout{2}={'SPM8','SPM12'};
     return
+end
+
+if ~exist('coregonly','var')
+    coregonly=0;
+end
+if ~exist('includedistal','var')
+    includedistal=0;
 end
 
 uset1=1; % set to zero if you do not wish to use T1 data for normalization even if present.
@@ -118,14 +125,24 @@ weights(cnt)=1.5;
 metrics{cnt}='MI';
 cnt=cnt+1;
 
+if includedistal % append as last to make criterion converge on this one.
+   to{cnt}=[options.earoot,'templates',filesep,'mni_hires_distal.nii.gz'];
+   from{cnt}=[directory,'anat_distal.nii.gz'];
+   weights(cnt)=1.5;
+   metrics{cnt}='MI'; % could think about changing this to CC
+   cnt=cnt+1;
+end
+
+
 % Do the coreg part for postoperative images:
 try
     ea_coregmr(options,options.prefs.normalize.coreg);
 end
 
-ea_ants_nonlinear(to,from,[directory,options.prefs.gprenii],weights,metrics,options);
-
-ea_apply_normalization(options);
+if ~coregonly
+    ea_ants_nonlinear(to,from,[directory,options.prefs.gprenii],weights,metrics,options);
+    ea_apply_normalization(options);
+end
 
 function masks=segmentall(from,options)
 directory=[fileparts(from{1}),filesep];
