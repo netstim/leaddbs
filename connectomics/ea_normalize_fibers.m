@@ -168,19 +168,19 @@ end
 
 function [refb0,refanat,refnorm,b02anat,whichnormmethod]=ea_checktransform(options)
 directory=[options.root,options.patientname,filesep];
-% segment b0.
-if ~exist([directory,'c2',options.prefs.b0],'file');
-    disp('Segmenting b0...');
-    ea_newseg(directory,options.prefs.b0,0,options);
-    disp('Done.');
-end
+% % segment b0.
+% if ~exist([directory,'c2',options.prefs.b0],'file');
+%     disp('Segmenting b0...');
+%     ea_newseg(directory,options.prefs.b0,0,options);
+%     disp('Done.');
+% end
 
-% segment anat.
-if ~exist([directory,'c2',options.prefs.prenii_unnormalized],'file');
-    disp('Segmenting anat...');
-    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-    disp('Done.');
-end
+% % segment anat.
+% if ~exist([directory,'c2',options.prefs.prenii_unnormalized],'file');
+%     disp('Segmenting anat...');
+%     ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+%     disp('Done.');
+% end
 
 % check normalization routine used, determine template
 [whichnormmethod,refnorm]=ea_whichnormmethod(directory);
@@ -189,8 +189,8 @@ if isempty(whichnormmethod)
 end
 
 % determine the refimage for b0 and anat space visualization
-refb0=[directory,'c2',options.prefs.b0];
-refanat=[directory,'c2',options.prefs.prenii_unnormalized];
+refb0=[directory,options.prefs.b0];
+refanat=[directory,options.prefs.prenii_unnormalized];
 
 % determin the template for fiber normalization and visualization
 if ismember(whichnormmethod,{'ea_normalize_spmdartel','ea_normalize_spmnewseg'})
@@ -206,17 +206,31 @@ if strcmp(whichnormmethod, 'ea_normalize_spmdartel')
 end
 
 % generate b0 to anat tranformation
-if ~exist([directory,'b02anat.mat'],'file')
-    display('Register b0 to anat...');
-    
-    Vb0=spm_vol([directory,options.prefs.b0]);
-    Vanat=spm_vol([directory,options.prefs.prenii_unnormalized]);
-    x=spm_coreg(Vb0,Vanat);
-    b02anat=Vanat.mat\spm_matrix(x(:)')*Vb0.mat;
-    save([directory,'b02anat.mat'],'b02anat');
-end
-load([directory,'b02anat.mat']);
+Vb0=spm_vol([directory,options.prefs.b0]);
+Vanat=spm_vol([directory,options.prefs.prenii_unnormalized]);
 
+switch options.coregmr.method
+    case 2 % ANTs
+        ea_ants([directory,options.prefs.prenii_unnormalized],[directory,options.prefs.b0],[directory,'r',options.prefs.b0],1);
+        load([directory,'ct2anat1.mat']);
+        delete([directory,'ct2anat1.mat']);
+        b02anat=eye(4);
+        b02anat(1:3,1)=AffineTransform_float_3_3(1:3);
+        b02anat(1:3,2)=AffineTransform_float_3_3(4:6);
+        b02anat(1:3,3)=AffineTransform_float_3_3(7:9);
+        b02anat(1:3,4)=AffineTransform_float_3_3(10:12);
+
+        % the following is only empirically determined for now. This could
+        % be wrong in some cases.
+
+        b02anat([7,10,15])=b02anat([7,10,15])*-1;
+        b02anat=Vanat.mat\b02anat*Vb0.mat;
+    otherwise % default use SPM ? BRAINSFit not supported here
+        display('Register b0 to anat...');
+        x=spm_coreg(Vb0,Vanat);
+        b02anat=Vanat.mat\spm_matrix(x(:)')*Vb0.mat;
+end
+    save([directory,'b02anat.mat'],'b02anat');
 
 function mm_norm = vox2mm_norm(vox, V)
 % returns normalized mm coordinates based on deformation field

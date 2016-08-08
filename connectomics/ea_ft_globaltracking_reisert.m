@@ -56,28 +56,7 @@ directory=[options.root,options.patientname,filesep];
 
 % 'new segment' options.prefs.prenii_unnormalized
 if ~exist([directory,'trackingmask.nii'],'file');
-    ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-
-    %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
-    copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
-
-    matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[directory,'c',options.prefs.prenii_unnormalized,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'c2',options.prefs.prenii_unnormalized,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [2 2];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 1;
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'rb0';
-
-    jobs{1}=matlabbatch;
-    spm_jobman('run',jobs);
-    clear matlabbatch jobs;
-
-    movefile([directory,'rb0c2',options.prefs.prenii_unnormalized],[directory,'trackingmask.nii']);
+ea_gentrackingmask(options,0)
 end
 
 
