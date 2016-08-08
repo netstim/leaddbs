@@ -30,8 +30,8 @@ if ispc
 else
     applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end
+    directory=[options.root,options.patientname,filesep];
 
-directory=[options.root,options.patientname,filesep];
 if nargin==1
     switch options.modality
         case 1 % MR
@@ -112,9 +112,9 @@ for fi=1:length(fis)
            end
 
            if exist('transformfile','var')
-               [pth,fn]=fileparts(transformfile);
+               [pth,fn,ext]=fileparts(transformfile);
                tr=[' -r ',refim,...
-                   ' -t [',ea_path_helper(pth),filesep,fn,'.h5,0]'];
+                   ' -t [',ea_path_helper(pth),filesep,fn,ext,',0]'];
            else
                
                if exist([directory,glprebase,'Composite.h5'],'file')
@@ -133,9 +133,9 @@ for fi=1:length(fis)
            end
            
            if exist('transformfile','var')
-               [pth,fn]=fileparts(transformfile);
+               [pth,fn,ext]=fileparts(transformfile);
                tr=[' -r ',refim,...
-                   ' -t [',ea_path_helper(pth),filesep,fn,'.h5,0]'];
+                   ' -t [',ea_path_helper(pth),filesep,fn,ext,',0]'];
            else
                
                if exist([directory,glprebase,'Composite.h5'],'file')

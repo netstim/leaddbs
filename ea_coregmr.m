@@ -23,17 +23,19 @@ if exist([directory,'raw_',options.prefs.tranii_unnormalized],'file')
 else
     copyfile([directory,options.prefs.tranii_unnormalized],[directory,'raw_',options.prefs.tranii_unnormalized]);
 end
-
-if exist([directory,'raw_',options.prefs.cornii_unnormalized],'file')
-    copyfile([directory,'raw_',options.prefs.cornii_unnormalized],[directory,options.prefs.cornii_unnormalized]);
-else
-    copyfile([directory,options.prefs.cornii_unnormalized],[directory,'raw_',options.prefs.cornii_unnormalized]);
+try
+    if exist([directory,'raw_',options.prefs.cornii_unnormalized],'file')
+        copyfile([directory,'raw_',options.prefs.cornii_unnormalized],[directory,options.prefs.cornii_unnormalized]);
+    else
+        copyfile([directory,options.prefs.cornii_unnormalized],[directory,'raw_',options.prefs.cornii_unnormalized]);
+    end
 end
-
-if exist([directory,'raw_',options.prefs.sagnii_unnormalized],'file')
-    copyfile([directory,'raw_',options.prefs.sagnii_unnormalized],[directory,options.prefs.sagnii_unnormalized]);
-else
-    copyfile([directory,options.prefs.sagnii_unnormalized],[directory,'raw_',options.prefs.sagnii_unnormalized]);
+try
+    if exist([directory,'raw_',options.prefs.sagnii_unnormalized],'file')
+        copyfile([directory,'raw_',options.prefs.sagnii_unnormalized],[directory,options.prefs.sagnii_unnormalized]);
+    else
+        copyfile([directory,options.prefs.sagnii_unnormalized],[directory,'raw_',options.prefs.sagnii_unnormalized]);
+    end
 end
 
 switch options.coregmr.method

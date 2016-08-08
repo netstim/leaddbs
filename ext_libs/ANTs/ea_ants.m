@@ -10,6 +10,9 @@ if nargin>3
 else
     writematout=1;
 end
+if nargin>4
+    otherfiles=varargin{5};
+end
 
 if fileparts(movingimage)
     volumedir = [fileparts(movingimage), filesep];
@@ -133,6 +136,17 @@ if ~ispc
     system(['bash -c "', cmd, '"']);
 else
     system(cmd);
+end
+
+if exist('otherfiles','var')
+    if ~isempty(otherfiles)
+        for ofi=1:length(otherfiles)
+        [options.root,options.patientname]=fileparts(fileparts(otherfiles{ofi}));
+        options.root=[options.root,filesep];
+        options.prefs=ea_prefs(options.patientname);
+        ea_ants_applytransforms(options,otherfiles(ofi),otherfiles(ofi),0,fixedimage,[outputbase, '0GenericAffine.mat']);
+        end
+    end
 end
 
 if ~writematout

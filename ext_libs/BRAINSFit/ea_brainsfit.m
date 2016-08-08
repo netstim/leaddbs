@@ -9,6 +9,9 @@ if nargin>3
 else
     writematout=1;
 end
+if nargin>4
+ea_error('BRAINSFit is not (yet) supported for this operation. Please choose a different registration algorithm.');
+end
 if fileparts(movingVolume)
     volumedir = [fileparts(movingVolume), filesep];
 else

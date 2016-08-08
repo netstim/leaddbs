@@ -1,4 +1,4 @@
-function varargout=ea_normalize_ants_multimodal(options,coregonly,includedistal)
+function varargout=ea_normalize_ants_multimodal(options,coregonly,includeatlas)
 % This is a function that normalizes both a copy of transversal and coronar
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
@@ -26,8 +26,8 @@ end
 if ~exist('coregonly','var')
     coregonly=0;
 end
-if ~exist('includedistal','var')
-    includedistal=0;
+if ~exist('includeatlas','var')
+    includeatlas=0;
 end
 
 uset1=1; % set to zero if you do not wish to use T1 data for normalization even if present.
@@ -37,7 +37,7 @@ usefa=1; % set to zero if you do not wish to use FA data for normalization even 
 usebrainmask=1;
 
 directory=[options.root,options.patientname,filesep];
-options.coregmr.method=4; % hard-code to ANTs for now here.
+options.coregmr.method=2; % hard-code to ANTs for now here.
 cnt=1;
 
 if usebrainmask
@@ -51,9 +51,11 @@ end
 if uset1 && ~strcmp(options.primarytemplate,'_t1')
     if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
         disp('Including T1 data for (grey-matter) normalization');
+        if ~includeatlas
         ea_dcm2nii([directory,options.prefs.prenii_unnormalized_t1]);
         ea_bias_field_correction([directory,options.prefs.prenii_unnormalized_t1])
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_t1],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_t1]);
+        end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
         if usebrainmask
             ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_t1],bprfx);
@@ -69,8 +71,10 @@ end
 if usepd && ~strcmp(options.primarytemplate,'_pd')
     if exist([directory,options.prefs.prenii_unnormalized_pd],'file')
         disp('Including PD data for (grey-matter) normalization');
+        if ~includeatlas
         ea_dcm2nii([directory,options.prefs.prenii_unnormalized_pd]);
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_pd],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_pd]);
+        end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
         if usebrainmask
             ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_pd],bprfx);
@@ -92,12 +96,14 @@ if usefa
                 ea_isolate_fa(options);
             end
         end
+        if ~includeatlas
         ea_dcm2nii([directory,options.prefs.fa]);
         if exist([directory,options.prefs.fa],'file') % recheck if has been built.
             if options.coregmr.method==6 % would be no coregistration but here we must assume that images are not coregistered yet (just generated FA).
                 options.coregmr.method=2; % i.e. use ANTs as default if not differently stated.
             end
             ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
+        end
         end
     end
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
@@ -117,7 +123,7 @@ end
 
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 to{cnt}=[options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'];
-if usebrainmask
+if usebrainmask && (~includeatlas)
     ea_maskimg(options,[directory,options.prefs.prenii_unnormalized],bprfx);
 end
 from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized];
@@ -125,9 +131,9 @@ weights(cnt)=1.5;
 metrics{cnt}='MI';
 cnt=cnt+1;
 
-if includedistal % append as last to make criterion converge on this one.
-   to{cnt}=[options.earoot,'templates',filesep,'mni_hires_distal.nii.gz'];
-   from{cnt}=[directory,'anat_distal.nii.gz'];
+if includeatlas % append as last to make criterion converge on this one.
+   to{cnt}=[options.earoot,'templates',filesep,'mni_hires_atlas.nii.gz'];
+   from{cnt}=[directory,'anat_atlas.nii.gz'];
    weights(cnt)=1.5;
    metrics{cnt}='MI'; % could think about changing this to CC
    cnt=cnt+1;

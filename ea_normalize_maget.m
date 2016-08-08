@@ -7,13 +7,29 @@ if ischar(options) % return name of method.
 end
 
 reforce=0;
-atlastouse='DISTAL_manual';
+atlastouse='DISTAL_manual'; % for now, only the distal atlas is supported!
 
 peerfolders={'/Volumes/Neuro_Charite/maget/3102'
-'/Volumes/Neuro_Charite/maget/3105'
 '/Volumes/Neuro_Charite/maget/3107'
 '/Volumes/Neuro_Charite/maget/3108'
-'/Volumes/Neuro_Charite/maget/3111'};
+'/Volumes/Neuro_Charite/maget/3111'
+'/Volumes/Neuro_Charite/maget/3116'
+'/Volumes/Neuro_Charite/maget/3118'
+'/Volumes/Neuro_Charite/maget/3119'
+'/Volumes/Neuro_Charite/maget/3120'
+'/Volumes/Neuro_Charite/maget/3122'
+'/Volumes/Neuro_Charite/maget/3123'
+'/Volumes/Neuro_Charite/maget/3124'
+'/Volumes/Neuro_Charite/maget/3125'
+'/Volumes/Neuro_Charite/maget/3126'
+'/Volumes/Neuro_Charite/maget/3127'
+'/Volumes/Neuro_Charite/maget/3128'
+'/Volumes/Neuro_Charite/maget/3129'
+'/Volumes/Neuro_Charite/maget/3130'
+'/Volumes/Neuro_Charite/maget/3132'
+'/Volumes/Neuro_Charite/maget/3134'
+'/Volumes/Neuro_Charite/maget/3150'
+'/Volumes/Neuro_Charite/maget/3154'};
 
 %% step 0: check if all subjects have been processed with ANTs multimodal or ANTs
 for peer=1:length(peerfolders)
@@ -182,10 +198,11 @@ end
 %% step 4: Perform majority voting on final atlas
 mkdir([subdirec,'atlases']);
 mkdir([subdirec,'atlases',filesep,'native']);
-mkdir([subdirec,'atlases',filesep,'native',filesep,'lh']);
-mkdir([subdirec,'atlases',filesep,'native',filesep,'rh']);
-mkdir([subdirec,'atlases',filesep,'native',filesep,'mixed']);
-mkdir([subdirec,'atlases',filesep,'native',filesep,'midline']);
+mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse]);
+mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'lh']);
+mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'rh']);
+mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'mixed']);
+mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'midline']);
 for atlas=1:length(warpednuclei{peer})
     for peer=1:length(peerfolders) % seek to average across peers
         nii=ea_load_nii(warpednuclei{peer}{atlas}); % add gz support
@@ -197,16 +214,17 @@ for atlas=1:length(warpednuclei{peer})
     X(X<0.5)=0; % binarize each image
     X(X>0)=1;
     X=mean(X,4);
+    
+    X=X/max(X(:));
     X(X<0.5)=0;
     X(X>0)=1;
-    X=X/max(X(:));
     % save atlas
     [pth,atlasname]=fileparts(warpednuclei{peer}{atlas});
     if strcmp('.nii',atlasname(end-3:end))
         atlasname=atlasname(1:end-4);
     end
     [~,base]=fileparts(pth);
-    nii.fname=[subdirec,'atlases',filesep,'native',filesep,base,filesep,atlasname,'.nii'];
+    nii.fname=[subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,base,filesep,atlasname,'.nii'];
     nii.img=X;
     if ~exist('AllX','var')
         AllX=X;
@@ -222,15 +240,17 @@ for atlas=1:length(warpednuclei{peer})
 end
 
 
-% -> Now segmentation is done.
+% -> Now segmentation is done. Add normalization.
 
 %% step 5: Normalize using multimodal DISTAL warp
 
 % write out anat_distal
-nii.fname=[subdirec,'anat_distal.nii'];
+nii.fname=[subdirec,'anat_atlas.nii'];
+AllX(AllX>1)=1;
+AllX=smooth3(AllX,'gaussian',[5 5 5]);
 nii.img=AllX;
 ea_write_nii(nii);
 gzip(nii.fname);
 delete(nii.fname);
 
-ea_normalize_ants_multimodal(options,0,'includedistal'); 
+ea_normalize_ants_multimodal(options,0,1); 
