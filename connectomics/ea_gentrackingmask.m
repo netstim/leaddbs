@@ -13,7 +13,7 @@ delete([directory,'c',options.prefs.prenii_unnormalized]);
 
 tr=ea_load_nii([options.root,options.patientname,filesep,'trackingmask.nii']);
 if threshold
-    tr.img=tr.img>0.8;
+    tr.img=tr.img>0.5;
     tr.fname=[options.root,options.patientname,filesep,'ttrackingmask.nii'];
     ea_write_nii(tr);
 end
