@@ -13,7 +13,7 @@ for pat=1:length(uipatdirs)
     options.root=[fileparts(uipatdirs{pat}),filesep];
     [~,thispatdir]=fileparts(uipatdirs{pat});
     options.patientname=thispatdir;
-    options.uipatdirs=uipatdir(pat); % only process one patient at a time on a cluster (all is submitted).
+    options.uipatdirs=uipatdirs(pat); % only process one patient at a time on a cluster (all is submitted).
     % run main function
     feval(eval(['@',clusterfunctionname]),options);
 end
