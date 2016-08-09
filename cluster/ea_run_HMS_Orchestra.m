@@ -7,5 +7,5 @@ function ea_run_Orchestra(options)
 
 jobID=ea_generate_guid;
 save(jobID,'options')
-cmdstring=['bsub -q short -W 10:0 matlab -nodisplay -r "ea_run runcluster ',[pwd,filesep,jobID],'"'];
+cmdstring=['bsub -q short -W 10:0 -o ',[options.root,options.patientname,filesep,jobID],'.out -e ',[options.root,options.patientname,filesep,jobID],'.err matlab -nodisplay -r "ea_run runcluster ',[pwd,filesep,jobID],'"'];
 system(cmdstring);
