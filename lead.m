@@ -59,6 +59,11 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 earoot=ea_getearoot;
+if ~isdeployed
+    addpath(genpath(earoot));
+    rmpath(genpath([earoot,'.git']));
+    rmpath(genpath([earoot,'release']));
+end
 
 % check for commands first
 if nargin>3
