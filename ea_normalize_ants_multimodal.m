@@ -57,7 +57,7 @@ if uset1 && ~strcmp(options.primarytemplate,'_t1')
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_t1],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_t1]);
         end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
-        if usebrainmask
+        if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
             ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_t1],bprfx);
         end
         from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized_t1];
@@ -76,7 +76,7 @@ if usepd && ~strcmp(options.primarytemplate,'_pd')
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_pd],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_pd]);
         end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
-        if usebrainmask
+        if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
             ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_pd],bprfx);
         end
         from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized_pd];
@@ -96,19 +96,18 @@ if usefa
                 ea_isolate_fa(options);
             end
         end
-        if ~includeatlas
-        ea_dcm2nii([directory,options.prefs.fa]);
-        if exist([directory,options.prefs.fa],'file') % recheck if has been built.
-            if options.coregmr.method==6 % would be no coregistration but here we must assume that images are not coregistered yet (just generated FA).
-                options.coregmr.method=2; % i.e. use ANTs as default if not differently stated.
+        if exist([directory,options.prefs.fa],'file') % check again since could have been built above
+            if ~includeatlas % if includeatlas is set we can assume that images have been coregistered and skulstripped already
+                ea_dcm2nii([directory,options.prefs.fa]);
+                if exist([directory,options.prefs.fa],'file') % recheck if has been built.
+                    ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
+                end
             end
-            ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
-        end
         end
     end
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
         disp('Including FA information for white-matter normalization.');
-        if usebrainmask
+        if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
             ea_maskimg(options,[directory,options.prefs.fa2anat],bprfx);
         end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_fa.nii'];
@@ -123,7 +122,7 @@ end
 
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 to{cnt}=[options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'];
-if usebrainmask && (~includeatlas)
+if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
     ea_maskimg(options,[directory,options.prefs.prenii_unnormalized],bprfx);
 end
 from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized];

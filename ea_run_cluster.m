@@ -6,13 +6,14 @@ ea_busyaction('on',leadfig,'lead');
 options=ea_handles2options(handles);
 options.macaquemodus=getappdata(handles.leadfigure,'macaquemodus');
 
-options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
-for pat=1:length(options.uipatdirs)
+for pat=1:length(uipatdirs)
     % set patient specific options
-    options.root=[fileparts(options.uipatdirs{pat}),filesep];
-    [root,thispatdir]=fileparts(options.uipatdirs{pat});
+    options.root=[fileparts(uipatdirs{pat}),filesep];
+    [~,thispatdir]=fileparts(uipatdirs{pat});
     options.patientname=thispatdir;
+    options.uipatdirs=uipatdir(pat); % only process one patient at a time on a cluster (all is submitted).
     % run main function
     feval(eval(['@',clusterfunctionname]),options);
 end
