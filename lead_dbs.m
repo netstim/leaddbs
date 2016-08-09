@@ -222,6 +222,13 @@ uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exp
 uimenu(e,'Label','Export .STL files for selected patient(s)','Callback',{@ea_exportpat,'STL',handles});
 uimenu(e,'Label','Export .PLY files for selected patient(s)','Callback',{@ea_exportpat,'PLY',handles});
 
+s = uimenu(f,'Label','Submit Jobs to');
+cscripts=dir([earoot,'cluster',filesep,'ea_run_*.m']);
+for cscript=1:length(cscripts)
+    clustername=ea_sub2space(cscripts(cscript).name(8:end-2));
+    [~,functionname]=fileparts(cscripts(cscript).name);
+    uimenu(s,'Label',clustername,'Callback',{@ea_run_cluster,functionname,handles});
+end
 setappdata(handles.leadfigure,'menuprobe',1);
 end
 

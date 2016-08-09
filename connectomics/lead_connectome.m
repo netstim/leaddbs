@@ -100,6 +100,7 @@ ea_addnormmethods(handles,options,'');
 ea_initrecentpatients(handles,'subjects');
 
 
+
 % update UI:
 try
     lc=load([ea_getearoot,'connectomics',filesep,'lc_options.mat']);
@@ -126,6 +127,26 @@ if isindependent
 else
     handles.prod='dbs_connectome';
 end
+
+if isindependent
+    %% add tools menu
+    menuprobe=getappdata(handles.leadfigure,'menuprobe');
+    if isempty(menuprobe)
+        f = uimenu('Label','Tools');
+        e = uimenu(f,'Label','Export');
+        uimenu(e,'Label','Export .STL files for selected subject(s)','Callback',{@ea_exportpat,'STL',handles});
+        uimenu(e,'Label','Export .PLY files for selected subject(s)','Callback',{@ea_exportpat,'PLY',handles});
+        s = uimenu(f,'Label','Submit Jobs to');
+        cscripts=dir([earoot,'cluster',filesep,'ea_run_*.m']);
+        for cscript=1:length(cscripts)
+            clustername=ea_sub2space(cscripts(cscript).name(8:end-2));
+            [~,functionname]=fileparts(cscripts(cscript).name);
+            uimenu(s,'Label',clustername,'Callback',{@ea_run_cluster,functionname,handles});
+        end
+        setappdata(handles.leadfigure,'menuprobe',1);
+    end
+end
+
 ea_firstrun(handles);
 
 % Choose default command line output for leadfigure
