@@ -5,6 +5,14 @@ function ea_run(cmd,options)
 % Copyright (C) 2016 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
+if strcmp(cmd,'runcluster')
+    opath=options;
+    load(opath); % options will be provided as a .mat file.
+    delete(opath);
+    cmd='run';
+    addpath(genpath(ea_getearoot));
+end
+
 
 if ~isfield(options,'lc') % might be predefined from an exported script..
     try
