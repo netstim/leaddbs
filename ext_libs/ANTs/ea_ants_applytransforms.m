@@ -36,27 +36,27 @@ if nargin==1
     switch options.modality
         case 1 % MR
             fis={[directory,options.prefs.prenii_unnormalized]};
-            try fis=[fis,[directory,options.prefs.tranii_unnormalized]]; end
-            try fis=[fis,[directory,options.prefs.cornii_unnormalized]]; end
-            try fis=[fis,[directory,options.prefs.sagnii_unnormalized]]; end
+            fis=[fis,[directory,options.prefs.tranii_unnormalized]];
+            fis=[fis,[directory,options.prefs.cornii_unnormalized]];
+            fis=[fis,[directory,options.prefs.sagnii_unnormalized]];
 
             ofis={[directory,options.prefs.gprenii]};
-            try ofis=[ofis,[directory,options.prefs.gtranii]]; end
-            try ofis=[ofis,[directory,options.prefs.gcornii]]; end
-            try ofis=[ofis,[directory,options.prefs.gsagnii]]; end
+            ofis=[ofis,[directory,options.prefs.gtranii]];
+            ofis=[ofis,[directory,options.prefs.gcornii]];
+            ofis=[ofis,[directory,options.prefs.gsagnii]];
 
-            try lfis={[options.prefs.prenii]}; end
-            try lfis=[lfis,[options.prefs.tranii]]; end
-            try lfis=[lfis,[options.prefs.cornii]]; end
-            try lfis=[lfis,[options.prefs.sagnii]]; end
+            lfis={[options.prefs.prenii]};
+            lfis=[lfis,[options.prefs.tranii]];
+            lfis=[lfis,[options.prefs.cornii]];
+            lfis=[lfis,[options.prefs.sagnii]];
 
-            try
+            
                 if exist([directory,options.prefs.fa2anat],'file');
                     fis=[fis,[directory,options.prefs.fa2anat]];
-                    ofis=[fis,[directory,'gl',options.prefs.fa2anat]];
-                    lfis=[fis,[directory,'l',options.prefs.fa2anat]];
+                    ofis=[ofis,[directory,'gl',options.prefs.fa2anat]];
+                    lfis=[lfis,[directory,'l',options.prefs.fa2anat]];
                 end
-            end
+            
         case 2 % CT
             fis{1}=[directory,options.prefs.prenii_unnormalized];
             fis{2}=[directory,options.prefs.ctnii_coregistered];

@@ -27,7 +27,7 @@ end
 
 % plot reference volumes
 if vizz
-    figure('color','w','name','Fibertrack normalization','numbertitle','off');
+    figure('color','w','name',['Fibertrack normalization: ',options.patientname],'numbertitle','off');
     % plot b0
     b0=ea_load_nii(refb0);
     subplot(1,3,1);

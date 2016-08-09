@@ -2,12 +2,12 @@ function b=ea_reordercylinder(a,shift)
 % highly specialized function.. this assumes zip-like ordering of vertices
 
 if ~exist('shift','var')
-    shift=1;
+    shift=2;
 end
 
    dict=[];
    for d=shift:-1:1
-      dict=[dict,d:d:length(a.vertices)];  
+      dict=[dict,d:shift:length(a.vertices)];  
    end
    
    b=a;

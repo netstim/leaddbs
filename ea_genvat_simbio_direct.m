@@ -305,6 +305,156 @@ t=surfinterior(node,face);
 %         mesh.pnt=[mesh.pnt;node];
 %         mesh.tissue=[mesh.tissue;repmat(4,size(elem,1),1)];
     end
+    
+    keyboard
+    
+    
+    
+    %% begin qianqian code
+    
+    meshel=electrode.meshel;
+    
+        save('newfv','fv','meshel');
+
+    
+orig=[10.1,-15.07,-9.978];    % starting point of the electrode  !!INPUT!!
+v0=[34.39,20.23,43.14]-orig;   % direction of the electrode      !!INPUT!!
+v0=v0/norm(v0);                % unitary dir
+ndiv=20;                    % number of nodes to evenly divide the circle
+c0=[0 0 0];
+v=[0 0 1];
+
+%% loading the electrode surface model
+
+ncyl=[];
+fcyl=[];
+scyl=[];
+seeds=[];
+for i=1:length(meshel.ins)
+    fcyl=[fcyl; meshel.ins{i}.faces+size(ncyl,1)];
+    if(i<length(meshel.ins))
+        scyl=[scyl; [1:2:200; 2:2:200]+size(ncyl,1)]; % had to rebuild the endplates
+    end
+    ncyl=[ncyl; meshel.ins{i}.vertices];
+    seeds=[seeds; mean(meshel.ins{i}.vertices)];
+end
+for i=1:length(meshel.con)
+    fcyl=[fcyl; meshel.con{i}.faces+size(ncyl,1)];
+    scyl=[scyl; [1:2:200; 2:2:200]+size(ncyl,1)];
+    ncyl=[ncyl; meshel.con{i}.vertices];
+    seeds=[seeds; mean(meshel.ins{i}.vertices)];
+end
+
+[ncyl, I, J]=unique(ncyl, 'rows');
+fcyl=unique(round(J(fcyl)),'rows');
+scyl=unique(round(J(scyl)),'rows');
+
+ncyl=ncyl-repmat(orig,size(ncyl,1),1);
+seeds=seeds-repmat(orig,size(seeds,1),1);
+
+ncyl=rotatevec3d(ncyl,v,v0);
+fcyl=num2cell(fcyl,2);
+scyl=num2cell(scyl,2);
+
+
+%seeds=rotatevec3d(seeds,v,v0);
+
+% here, you need to add another function to create the tip: define the
+% nodes and triangles, and conver the triangles into cell arrays, and
+% append it with fcyl, which is a cell array. 
+
+%% conver the cylinder series from PLC form into tetrahedral mesh
+[node,elem,face]=s2m(ncyl,{fcyl{:}, scyl{:}},0.2,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
+
+plotmesh(node,elem) % plot the electrode mesh for now
+
+%% load intersecting nucleus surface
+nobj=fv(4).vertices;
+
+nobj=nobj-repmat(orig(:)',size(nobj,1),1);
+nobj=rotatevec3d(nobj,v,v0);
+fobj=fv(4).faces;
+[no,fo]=meshresample(nobj,fobj,0.3); % mesh is too dense, reduce the density by 80%
+[no,fo]=meshcheckrepair(no,fo,'meshfix');  % clean topological defects
+
+%% merge the electrode mesh with the nucleus mesh
+ISO2MESH_SURFBOOLEAN='cork';   % now intersect the electrode to the nucleus
+[nboth,fboth]=surfboolean(node,face(:,[1 3 2]),'resolve',no,fo);
+clear ISO2MESH_SURFBOOLEAN;
+
+%% create a bounding cylinder
+c0bbc=c0+v*0.5;
+c1bbc=c0+v*8;
+[nbcyl,fbcyl]=meshacylinder(c0bbc, c1bbc,3,0.3,10,50);
+seedbbc=nbcyl(1,:)*(1-1e-4)+c1bbc*1e-4;  % define a seed point for the bounding cylinder
+
+%% cut the electrode+nucleus mesh by the bounding cylinder
+ISO2MESH_SURFBOOLEAN='cork';
+[nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'first',nboth,fboth);
+clear ISO2MESH_SURFBOOLEAN;
+
+%% remove duplicated nodes in the surface
+[nboth3,fboth3]=meshcheckrepair(nboth2,fboth2,'dup');
+[nboth4,fboth4]=meshcheckrepair(nboth3,fboth3,'deep');
+
+%% define seeds along the electrode axis
+[t,baryu,baryv,faceidx]=raytrace(c0-v,v,nboth4,fboth4);
+t=sort(t(faceidx));
+t=(t(1:end-1)+t(2:end))*0.5;
+seedlen=length(t);
+electrodeseeds=repmat(c0(:)',seedlen,1)+repmat(v(:)',seedlen,1).*repmat(t(:)-1,1,3);
+%% create tetrahedral mesh of the final combined mesh
+[nmesh,emesh]=s2m(nboth3,fboth3,1,5,'tetgen',[seedbbc;electrodeseeds]);
+
+%% plot the final tetrahedral mesh
+figure
+plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.4)
+hold on;
+plotmesh(electrodeseeds,'b*')
+
+toc
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    %% end Qianqian code
 keyboard
 
 Mesh2Tetra(afv.vertices,afv.faces);
