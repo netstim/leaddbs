@@ -113,7 +113,7 @@ if usefa
         end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_fa.nii'];
         from{cnt}=[directory,bprfx,options.prefs.fa2anat];
-        weights(cnt)=1;
+        weights(cnt)=0.5;
         metrics{cnt}='MI';
         cnt=cnt+1;
     end
