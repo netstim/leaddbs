@@ -10,8 +10,8 @@ options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 for pat=1:length(options.uipatdirs)
     % set patient specific options
-    options.root=[fileparts(uipatdirs{pat}),filesep];
-    [root,thispatdir]=fileparts(uipatdirs{pat});
+    options.root=[fileparts(options.uipatdirs{pat}),filesep];
+    [root,thispatdir]=fileparts(options.uipatdirs{pat});
     options.patientname=thispatdir;
     % run main function
     feval(eval(['@',clusterfunctionname]),options);
