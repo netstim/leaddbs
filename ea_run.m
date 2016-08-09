@@ -11,6 +11,9 @@ if strcmp(cmd,'runcluster')
     delete(opath);
     cmd='run';
     addpath(genpath(ea_getearoot));
+    needtoexit=1;
+else
+    needtoexit=0;
 end
 
 
@@ -100,6 +103,10 @@ else
             end
             
     end
+end
+
+if needtoexit % on a cluster, need to close Matlab properly after job is done.
+    exit
 end
 
 
