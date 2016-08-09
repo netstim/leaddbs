@@ -8,7 +8,7 @@ function ea_run(cmd,options)
 if strcmp(cmd,'runcluster')
     opath=options;
     load(opath); % options will be provided as a .mat file.
-    delete(opath);
+%    delete(opath);
     cmd='run';
     addpath(genpath(ea_getearoot));
     needtoexit=1;
