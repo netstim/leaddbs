@@ -2,7 +2,7 @@ function ea_run_cluster(~,~,clusterfunctionname,handles)
 
 leadfig=handles.leadfigure;
 ea_busyaction('on',leadfig,'lead');
-
+cd(ea_getearoot);
 options=ea_handles2options(handles);
 options.macaquemodus=getappdata(handles.leadfigure,'macaquemodus');
 
