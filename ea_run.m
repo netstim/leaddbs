@@ -11,7 +11,7 @@ if strcmp(cmd,'runcluster')
 %    delete(opath);
     cmd='run';
     addpath(genpath(ea_getearoot));
-    addpath(genpath(which('spm')));
+    addpath(genpath(options.spmdir));
     needtoexit=1;
 else
     needtoexit=0;
