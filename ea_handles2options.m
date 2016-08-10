@@ -35,6 +35,11 @@ try % not working when calling from lead_anatomy
 catch
     options.normalize.check=0;
 end
+try
+    options.coregmr.method=get(handles.coregmrpopup,'Value');
+catch
+    options.coregmr.method=1;
+end
 try % not working when calling from lead_connectome
     % coreg CT
     options.coregct.do=(get(handles.coregct_checkbox,'Value') == get(handles.coregct_checkbox,'Max'));
@@ -44,11 +49,7 @@ try % not working when calling from lead_connectome
     options.coregct.coregthreshs= eval( [ '[', get(handles.coregthreshs,'String'), ']' ] );
     
     options.coregctcheck=get(handles.coregctcheck,'Value');
-    options.coregmr.method=get(handles.coregmrpopup,'Value');
-    
-
 catch
-    options.coregmr.method=0;
     options.coregct.do=0;
     options.coregctcheck=0;
 end

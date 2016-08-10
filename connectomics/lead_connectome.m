@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 23-Jul-2016 15:05:31
+% Last Modified by GUIDE v2.5 10-Aug-2016 11:34:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -166,7 +166,7 @@ set(handles.importpanel,'visible','off');
 set(handles.runsavebutn,'String','Save and close');
 set(handles.exportcode,'visible','off');
 
-moveup=110;
+moveup=136;
 
 pos=get(handles.logoaxes,'Position');
 pos(2)=pos(2)-moveup;
@@ -394,15 +394,6 @@ lc.struc.ft.method=lc.struc.ft.method{get(handles.ftmethod,'Value')};
 lc.struc.ft.methodn=get(handles.ftmethod,'Value');
 lc.struc.ft.do=get(handles.perf_ft,'Value');
 lc.struc.ft.normalize=get(handles.normalize_fibers,'Value');
-
-
-
-
-
-
-
-
-
 
 
 function handles=lc2handles(lc,handles)
@@ -652,3 +643,35 @@ function include_lead_connectome_subroutine_Callback(hObject, eventdata, handles
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of include_lead_connectome_subroutine
+
+
+% --- Executes on button press in coregmr_checkbox.
+function coregmr_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to coregmr_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of coregmr_checkbox
+
+
+% --- Executes on selection change in coregmrpopup.
+function coregmrpopup_Callback(hObject, eventdata, handles)
+% hObject    handle to coregmrpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns coregmrpopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from coregmrpopup
+
+
+% --- Executes during object creation, after setting all properties.
+function coregmrpopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

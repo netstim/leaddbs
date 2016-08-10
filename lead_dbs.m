@@ -938,12 +938,6 @@ function dicomcheck_Callback(hObject, eventdata, handles)
 ea_storeui(handles);
 
 
-
-
-
-
-
-
 % --- Executes on button press in genptatlascheck.
 function genptatlascheck_Callback(hObject, eventdata, handles)
 % hObject    handle to genptatlascheck (see GCBO)
@@ -952,28 +946,6 @@ function genptatlascheck_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of genptatlascheck
 ea_storeui(handles);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 % --- Executes on button press in updatebutn.
@@ -1032,7 +1004,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 ea_storeui(handles);
-
 
 
 function coregthreshs_Callback(hObject, eventdata, handles)
@@ -1099,9 +1070,6 @@ function ftmethod_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-
 
 
 % --- Executes on selection change in parcellation_atlas.
