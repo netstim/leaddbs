@@ -831,11 +831,18 @@ stiff = stiff + diag(dia);
 
 
 
-function surf_nodes_clear = ea_get_surf_nodes(cell,field,lowconducting)
-con_cell = cell(find(field == lowconducting),:);
+
+
+function surf_nodes = ea_get_surf_nodes(cell)
 connectivity = hist(cell(:),unique(cell));
-surf_nodes = find(connectivity ~= 8);
-surf_nodes_clear = setdiff(surf_nodes,con_cell(:));
+if size(cell,1) == 8 || size(cell,2) == 8
+    surf_nodes = find(connectivity ~= 8);
+elseif size(cell,1) == 4 || size(cell,2) == 4
+    surf_nodes = find(connectivity ~= 4);
+else
+    error('Unknown element type');
+end
+end
 
 function [warped] = ea_ft_warp_apply(M, input, method, tol)
 
