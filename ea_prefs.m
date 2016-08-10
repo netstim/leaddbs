@@ -141,3 +141,4 @@ prefs.env.dev=0;
 prefs.firstrun='off';
 
 prefs.ls.dir='/PA/Neuro/_projects/lead/lead_server/';
+prefs.ixi.dir='/Volumes/TimeMachine/IXI/DB/';

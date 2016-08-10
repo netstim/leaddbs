@@ -22,16 +22,16 @@ function varargout = ea_acpcquery(varargin)
 
 % Edit the above text to modify the response to help ea_acpcquery
 
-% Last Modified by GUIDE v2.5 28-Jan-2016 11:55:48
+% Last Modified by GUIDE v2.5 10-Aug-2016 10:50:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @ea_acpcquery_OpeningFcn, ...
-                   'gui_OutputFcn',  @ea_acpcquery_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @ea_acpcquery_OpeningFcn, ...
+    'gui_OutputFcn',  @ea_acpcquery_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -302,13 +302,20 @@ guidata(hObject, handles);
 
 % Use UIRESUME instead of delete because the OutputFcn needs
 % to get the updated handles structure.
-leadfigure=getappdata(handles.acpcfig,'leadfigure');
 
-fid=ea_acpc2mni(cfg,leadfigure);
-
+switch get(handles.cohortpopup,'Value')
+    case 1 % use Lead-DBS specified patients
+        leadfigure=getappdata(handles.acpcfig,'leadfigure');
+        fid=ea_acpc2mni(cfg,leadfigure);
+    case 2 % use IXI database
+        npts=str2double(get(handles.npatientsinput,'String'));
+        meanage=str2double(get(handles.meanageinput,'String'));
+        IDs=ea_getIXI_IDs(npts,meanage);
+        fid=ea_acpc2mni(cfg,IDs);
+end
 
 leaddir=[ea_getearoot];
-        tempfile=[leaddir,'templates',filesep,'mni_hires.nii'];
+tempfile=[leaddir,'templates',filesep,'mni_hires.nii'];
 
 
 for pt=1:length(fid)
@@ -440,12 +447,17 @@ end
 
 % Use UIRESUME instead of delete because the OutputFcn needs
 % to get the updated handles structure.
-leadfigure=getappdata(handles.acpcfig,'leadfigure');
-fid=ea_mni2acpc(cfg,leadfigure);
 
-
-
-
+switch get(handles.cohortpopup,'Value')
+    case 1 % use Lead-DBS specified patients
+        leadfigure=getappdata(handles.acpcfig,'leadfigure');
+        fid=ea_mni2acpc(cfg,leadfigure);
+    case 2 % use IXI database
+        npts=str2double(get(handles.npatientsinput,'String'));
+        meanage=str2double(get(handles.meanageinput,'String'));
+        IDs=ea_getIXI_IDs(npts,meanage);
+        fid=ea_mni2acpc(cfg,IDs);
+end
 
 
 for pt=1:length(fid)
@@ -472,3 +484,84 @@ set(handles.xmm,'String',num2str(meanacpc(1))); set(handles.ymm,'String',num2str
 set(handles.xstdacpc,'String',['± ',sprintf('%.2f', stdacpc(1)),' mm']); set(handles.ystdacpc,'String',['± ',sprintf('%.2f', stdacpc(2)),' mm']); set(handles.zstdacpc,'String',['± ',sprintf('%.2f', stdacpc(3)),' mm']);
 
 ea_busyaction('off',handles.acpcfig,'acpc');
+
+
+% --- Executes on selection change in cohortpopup.
+function cohortpopup_Callback(hObject, eventdata, handles)
+% hObject    handle to cohortpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns cohortpopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from cohortpopup
+
+if get(hObject,'Value')==1
+    set(handles.meanagestatic,'enable','off');
+    set(handles.meanageinput,'enable','off');
+    set(handles.npatientsstatic,'enable','off');
+    set(handles.npatientsinput,'enable','off');
+elseif get(hObject,'Value')==2
+    set(handles.meanagestatic,'enable','on');
+    set(handles.meanageinput,'enable','on');
+    set(handles.npatientsstatic,'enable','on');
+    set(handles.npatientsinput,'enable','on');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function cohortpopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to cohortpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function meanageinput_Callback(hObject, eventdata, handles)
+% hObject    handle to meanageinput (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of meanageinput as text
+%        str2double(get(hObject,'String')) returns contents of meanageinput as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function meanageinput_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to meanageinput (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function npatientsinput_Callback(hObject, eventdata, handles)
+% hObject    handle to npatientsinput (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of npatientsinput as text
+%        str2double(get(hObject,'String')) returns contents of npatientsinput as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function npatientsinput_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to npatientsinput (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
