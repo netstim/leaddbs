@@ -12,8 +12,26 @@ function exesuff=getexeext()
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-if ispc
-    exesuff = '.exe';
-else
-    exesuff = ['.',computer('arch')];
+exesuff='.exe';
+if(isunix) 
+	exesuff=['.',mexext];
+end
+if(isoctavemesh)
+   if(~ispc)
+      if(~ismac)
+	   if(isempty(regexp(computer,'86_64')))
+	      exesuff='.mexglx';
+	   else
+              exesuff='.mexa64';
+	   end
+      else
+           if(isempty(regexp(computer,'86_64')))
+              exesuff='.mexmaci';
+           else
+              exesuff='.mexmaci64';
+           end
+      end
+   else
+      exesuff='.exe';
+   end
 end

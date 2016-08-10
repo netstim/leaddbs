@@ -3,7 +3,7 @@ function [newnode,newelem,newelem0]=surfboolean(node,elem,varargin)
 % [newnode,newelem,newelem0]=surfboolean(node1,elem1,op2,node2,elem2,op3,node3,elem3,...)
 %
 % merge two or more triangular meshes and resolve intersecting elements
-%
+% 
 % author: Qianqian Fang <fangq at nmr.mgh.harvard.edu>
 %
 % input:
@@ -21,7 +21,7 @@ function [newnode,newelem,newelem0]=surfboolean(node,elem,varargin)
 %                    3: mesh 1 inside of mesh 2
 %                    4: mesh 2 inside of mesh 1
 %                  you can use newelem(find(mod(newelem(:,4),2)==1),:) to
-%                  get mesh 1 cut by mesh 2, or newelem(find(mod(newelem(:,4),2)==0),:)
+%                  get mesh 1 cut by mesh 2, or newelem(find(mod(newelem(:,4),2)==0),:) 
 %                  to get mesh 2 cut by mesh 1;
 %           'first': combine 1 and 3 from the output of 'all'
 %           'second': combine 2 and 4 from the output of 'all'
@@ -77,7 +77,11 @@ if(strcmp(exename,'cork'))
     isgts=0;
 end
 
-exesuff=getexeext;
+exesuff=fallbackexeext(getexeext,exename);
+randseed=hex2dec('623F9A9E'); % "U+623F U+9A9E"
+if(~isempty(getvarfrom({'caller','base'},'ISO2MESH_RANDSEED')))
+    randseed=getvarfrom({'caller','base'},'ISO2MESH_RANDSEED');
+end
 
 for i=1:3:len
    op=varargin{i};
@@ -88,9 +92,9 @@ for i=1:3:len
    if(strcmp(op,'xor'))  opstr='all';   end
    if(strcmp(op,'and'))
         if(isgts)
-           opstr='inter';
+           opstr='inter'; 
         else
-	   opstr='isct';
+	   opstr='isct'; 
 	end
    end
    if(strcmp(op,'-'))    opstr='diff';  end
@@ -147,8 +151,8 @@ for i=1:3:len
        else
            saveoff(newnode(:,1:3),newelem(:,1:3),mwpath(['pre_surfbool1.' tempsuff]));
            saveoff(no(:,1:3),el(:,1:3),mwpath(['pre_surfbool2.' tempsuff]));
-           cmd=sprintf('cd "%s" && "%s%s" %s%s "%s" "%s" "%s"',mwpath,mcpath(exename),exesuff,'-',...
-               opstr,mwpath(['pre_surfbool1.' tempsuff]),mwpath(['pre_surfbool2.' tempsuff]),mwpath('post_surfbool.off'));
+           cmd=sprintf('cd "%s" && "%s%s" %s%s "%s" "%s" "%s" -%d',mwpath,mcpath(exename),exesuff,'-',...
+               opstr,mwpath(['pre_surfbool1.' tempsuff]),mwpath(['pre_surfbool2.' tempsuff]),mwpath('post_surfbool.off'),randseed);
        end
    end
    [status outstr]=system(cmd);
