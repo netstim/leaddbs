@@ -38,7 +38,7 @@ end
 try
     options.coregmr.method=get(handles.coregmrpopup,'Value');
 catch
-    options.coregmr.method=1;
+    options.coregmr.method=0;
 end
 try % not working when calling from lead_connectome
     % coreg CT
