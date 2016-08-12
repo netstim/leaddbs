@@ -58,11 +58,12 @@ if nargin==1
                 ofis=[ofis,[directory,options.prefs.gsagnii]];
                 lfis=[lfis,[options.prefs.sagnii]];
             end
-            
-            if exist([directory,options.prefs.fa2anat],'file') && isfield(options.prefs,'fa2anat');
-                fis=[fis,[directory,options.prefs.fa2anat]];
-                ofis=[ofis,[directory,'gl',options.prefs.fa2anat]];
-                lfis=[lfis,[directory,'l',options.prefs.fa2anat]];
+            if isfield(options.prefs,'fa2anat')
+                if exist([directory,options.prefs.fa2anat],'file');
+                    fis=[fis,[directory,options.prefs.fa2anat]];
+                    ofis=[ofis,[directory,'gl',options.prefs.fa2anat]];
+                    lfis=[lfis,[directory,'l',options.prefs.fa2anat]];
+                end
             end
         case 2 % CT
             fis{1}=[directory,options.prefs.prenii_unnormalized];
