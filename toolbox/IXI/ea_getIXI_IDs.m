@@ -4,17 +4,17 @@ function IDs=ea_getIXI_IDs(n,age,sd)
 load([ea_getearoot,'toolbox',filesep,'IXI',filesep,'IXI_demographics.mat']); % adds vars IXI.AGE and IXI.ID
 
 if ~exist('age','var') % give n random IDs back
-    numids=randperm(length(IXI.ID));
-    IDs=IXI.ID(numids(1:n));
+    numids=randperm(length(IXI.uID));
+    IDs=IXI.uID(numids(1:n));
     IDs=ea_convID2cell(IDs);
     return
 end
 
 
 if ~exist('sd','var') % five n closest IDs to specified age back 
-    agediff=abs(IXI.AGE-age);
+    agediff=abs(IXI.uAGE-age);
     [agediff,idx]=sort(agediff,'ascend');
-    IDs=IXI.ID(idx(1:n));
+    IDs=IXI.uID(idx(1:n));
     IDs=ea_convID2cell(IDs);
     return
 end
