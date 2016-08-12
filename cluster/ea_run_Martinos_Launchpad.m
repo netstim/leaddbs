@@ -1,4 +1,4 @@
-function ea_run_Orchestra(options)
+function ea_run_Martinos_Launchpad(options)
 
 % This is a function that runs code for each subject on a cluster. It needs
 % to be adapted to suit your needs. Then, you can "Export code" using
@@ -6,6 +6,8 @@ function ea_run_Orchestra(options)
 
 
 jobID=ea_generate_guid;
-save(jobID,'options')
-cmdstring=['bsub -q short -W 10:0 matlab -nodisplay -r "ea_run runcluster ',[pwd,filesep,jobID],'"'];
+options.spmdir=spm('dir');
+save([options.root,options.patientname,filesep,'job_',jobID],'options')
+cmdstring=['pbsubmit -q matlab -c "matlab.new -nodisplay -nodesktop -r ea_run runcluster ',[options.root,options.patientname,filesep,'job_',jobID],'"'];
+
 system(cmdstring);
