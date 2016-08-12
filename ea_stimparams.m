@@ -107,6 +107,7 @@ setappdata(handles.stimfig,'stimparams',stimparams); % store stimulation setting
 
 cnt=1;
 earoot=[ea_getearoot];
+
 ndir=dir([earoot,'ea_genvat_*.m']);
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);

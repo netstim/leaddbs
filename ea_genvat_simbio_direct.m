@@ -66,7 +66,7 @@ elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 
-if ea_headmodel_changed(options,side,S,elstruct)
+if 1 %ea_headmodel_changed(options,side,S,elstruct)
     disp('No suitable headmodel found, rebuilding. This may take a while...');
     
     %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
@@ -259,26 +259,22 @@ t=surfinterior(node,face);
         elstruct.markers(side).y,1];
     setappdata(resultfig,'elstruct',elstruct);
     X = linsolve(A,B); X=X';
-
+cnt=1;
       % add contacts to mesh  
     for con=1:length(electrode.meshel.con)
         
         electrode.meshel.con{con}.vertices=X*[electrode.meshel.con{con}.vertices,ones(size(electrode.meshel.con{con}.vertices,1),1)]';
         electrode.meshel.con{con}.vertices=electrode.meshel.con{con}.vertices(1:3,:)';
-       
+        electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+        electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
         
-        fv(cnt).faces=electrode.meshel.con{con}.faces;
-        fv(cnt).vertices=electrode.meshel.con{con}.vertices;
+        elfv(cnt).faces=electrode.contacts(con).faces;
+        elfv(cnt).vertices=electrode.contacts(con).vertices;
         tissuetype(cnt)=3;
-        t=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+        t=surfinterior(elfv(cnt).vertices,elfv(cnt).faces);
         c0=[c0;[t,3]];
         cnt=cnt+1;
-% %         mdim=ceil(max(fv(cnt).vertices))+1;
-% %         mindim=floor(min(fv(cnt).vertices))-1;
-% %         [node,elem]=surf2mesh(fv.vertices,fv.faces,mindim,mdim,0.1,2);
-%         mesh.tet=[mesh.tet;elem(:,1:4)+length(mesh.pnt)];
-%         mesh.pnt=[mesh.pnt;node];
-%         mesh.tissue=[mesh.tissue;repmat(3,size(elem,1),1)];
+
     end
 
     
@@ -287,12 +283,13 @@ t=surfinterior(node,face);
         electrode.meshel.ins{ins}.vertices=X*[electrode.meshel.ins{ins}.vertices,ones(size(electrode.meshel.ins{ins}.vertices,1),1)]';
        
         electrode.meshel.ins{ins}.vertices=electrode.meshel.ins{ins}.vertices(1:3,:)';
-
+        electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+        electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
         
         
-        fv(cnt).faces=electrode.meshel.ins{ins}.faces;
-        fv(cnt).vertices=electrode.meshel.ins{ins}.vertices;
-        t=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+        elfv(cnt).faces=electrode.insulation(ins).faces;
+        elfv(cnt).vertices=electrode.insulation(ins).vertices;
+        t=surfinterior(elfv(cnt).vertices,elfv(cnt).faces);
         
         tissuetype(cnt)=4;
         c0=[c0;[t,4]];
@@ -305,194 +302,14 @@ t=surfinterior(node,face);
 %         mesh.pnt=[mesh.pnt;node];
 %         mesh.tissue=[mesh.tissue;repmat(4,size(elem,1),1)];
     end
-    
-    keyboard
-    
-    
-    
-    %% begin qianqian code
-    
-    meshel=electrode.meshel;
-    
-        save('newfv','fv','meshel');
-
-    
-orig=[10.1,-15.07,-9.978];    % starting point of the electrode  !!INPUT!!
-v0=[34.39,20.23,43.14]-orig;   % direction of the electrode      !!INPUT!!
-v0=v0/norm(v0);                % unitary dir
-ndiv=20;                    % number of nodes to evenly divide the circle
-c0=[0 0 0];
-v=[0 0 1];
-
-%% loading the electrode surface model
-
-ncyl=[];
-fcyl=[];
-scyl=[];
-seeds=[];
-for i=1:length(meshel.ins)
-    fcyl=[fcyl; meshel.ins{i}.faces+size(ncyl,1)];
-    if(i<length(meshel.ins))
-        scyl=[scyl; [1:2:200; 2:2:200]+size(ncyl,1)]; % had to rebuild the endplates
-    end
-    ncyl=[ncyl; meshel.ins{i}.vertices];
-    seeds=[seeds; mean(meshel.ins{i}.vertices)];
-end
-for i=1:length(meshel.con)
-    fcyl=[fcyl; meshel.con{i}.faces+size(ncyl,1)];
-    scyl=[scyl; [1:2:200; 2:2:200]+size(ncyl,1)];
-    ncyl=[ncyl; meshel.con{i}.vertices];
-    seeds=[seeds; mean(meshel.ins{i}.vertices)];
-end
-
-[ncyl, I, J]=unique(ncyl, 'rows');
-fcyl=unique(round(J(fcyl)),'rows');
-scyl=unique(round(J(scyl)),'rows');
-
-ncyl=ncyl-repmat(orig,size(ncyl,1),1);
-seeds=seeds-repmat(orig,size(seeds,1),1);
-
-ncyl=rotatevec3d(ncyl,v,v0);
-fcyl=num2cell(fcyl,2);
-scyl=num2cell(scyl,2);
 
 
-%seeds=rotatevec3d(seeds,v,v0);
+[mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,electrode.meshel);
 
-% here, you need to add another function to create the tip: define the
-% nodes and triangles, and conver the triangles into cell arrays, and
-% append it with fcyl, which is a cell array. 
 
-%% conver the cylinder series from PLC form into tetrahedral mesh
-[node,elem,face]=s2m(ncyl,{fcyl{:}, scyl{:}},0.2,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
+mesh.tissue=mesh.tet(:,5);
+mesh.tet=mesh.tet(:,1:4);
 
-plotmesh(node,elem) % plot the electrode mesh for now
-
-%% load intersecting nucleus surface
-nobj=fv(4).vertices;
-
-nobj=nobj-repmat(orig(:)',size(nobj,1),1);
-nobj=rotatevec3d(nobj,v,v0);
-fobj=fv(4).faces;
-[no,fo]=meshresample(nobj,fobj,0.3); % mesh is too dense, reduce the density by 80%
-[no,fo]=meshcheckrepair(no,fo,'meshfix');  % clean topological defects
-
-%% merge the electrode mesh with the nucleus mesh
-ISO2MESH_SURFBOOLEAN='cork';   % now intersect the electrode to the nucleus
-[nboth,fboth]=surfboolean(node,face(:,[1 3 2]),'resolve',no,fo);
-clear ISO2MESH_SURFBOOLEAN;
-
-%% create a bounding cylinder
-c0bbc=c0+v*0.5;
-c1bbc=c0+v*8;
-[nbcyl,fbcyl]=meshacylinder(c0bbc, c1bbc,3,0.3,10,50);
-seedbbc=nbcyl(1,:)*(1-1e-4)+c1bbc*1e-4;  % define a seed point for the bounding cylinder
-
-%% cut the electrode+nucleus mesh by the bounding cylinder
-ISO2MESH_SURFBOOLEAN='cork';
-[nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'first',nboth,fboth);
-clear ISO2MESH_SURFBOOLEAN;
-
-%% remove duplicated nodes in the surface
-[nboth3,fboth3]=meshcheckrepair(nboth2,fboth2,'dup');
-[nboth4,fboth4]=meshcheckrepair(nboth3,fboth3,'deep');
-
-%% define seeds along the electrode axis
-[t,baryu,baryv,faceidx]=raytrace(c0-v,v,nboth4,fboth4);
-t=sort(t(faceidx));
-t=(t(1:end-1)+t(2:end))*0.5;
-seedlen=length(t);
-electrodeseeds=repmat(c0(:)',seedlen,1)+repmat(v(:)',seedlen,1).*repmat(t(:)-1,1,3);
-%% create tetrahedral mesh of the final combined mesh
-[nmesh,emesh]=s2m(nboth3,fboth3,1,5,'tetgen',[seedbbc;electrodeseeds]);
-
-%% plot the final tetrahedral mesh
-figure
-plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.4)
-hold on;
-plotmesh(electrodeseeds,'b*')
-
-toc
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    %% end Qianqian code
-keyboard
-
-Mesh2Tetra(afv.vertices,afv.faces);
-    %fv=ea_concatfv(fv);
-    
-    GMind=find(c0(:,4)==1);
-    WMind=find(c0(:,4)==2);    
-    ELind=find(c0(:,4)==3);    
-    INSind=find(c0(:,4)==4);
-    
-    % create WM mesh with holes for GM and EL + INS:
-    afv=ea_concatfv(fv);
-    
-    
-    
-    c0coords=[c0(:,1:3),ones(size(c0,1),1)]';
-    c0coords=Vexp.mat\c0coords;
-    c0coords=c0coords(1:3,:)';
-    c0=[c0coords,c0(:,4)];
-    
-    if vizz
-        figure, patch(afv,'FaceColor','b','FaceAlpha',0.1);
-        hold on
-        plot3(c0(:,1),c0(:,2),c0(:,3),'g*');
-    end
-    % convert to voxel space of Vexp to be able to enter correct bb:
-    afv.vertices=[afv.vertices,ones(size(afv.vertices,1),1)]';
-    afv.vertices=Vexp.mat\afv.vertices;
-    afv.vertices=afv.vertices(1:3,:)';
-    [node,elem]=surf2mesh(afv.vertices,afv.faces,[1,1,1],smri.dim,1,[],c0(WMind,:),c0([GMind;ELind;INSind],:));
-    
-    
-    if vizz
-        
-        figure
-        tetramesh(mesh.tet,mesh.pnt,round(mesh.tissue*64/4),'FaceAlpha',0.2);
-        
-    end
 
     if useSI
         mesh.pnt=mesh.pnt/1000; % in meter
@@ -516,8 +333,8 @@ Mesh2Tetra(afv.vertices,afv.faces);
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
 
     catch % reorder elements so not to be degenerated.
-        mesh.hex=mesh.hex(:,[4 3 2 1 8 7 6 5]);
-         vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+        mesh.tet=mesh.tet(:,[1 2 4 3]);
+            vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
     end
@@ -544,6 +361,7 @@ end
 if ~isfield(S, 'sources')
     S.sources=1:4;
 end
+keyboard
 for source=S.sources
 
     stimsource=S.([sidec,'s',num2str(source)]);
@@ -764,7 +582,7 @@ end
 
 %% begin FieldTrip/SimBio functions:
 function gradient = ea_calc_gradient(vol,potential)
-gradient = zeros(size(vol.hex,1),3);
+gradient = zeros(size(vol.tet,1),3);
 gradient = gradient + 0.25*repmat(potential(vol.hex(:,1)),1,3).*((vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:))./abs(vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:)));
 gradient = gradient + 0.25*repmat(potential(vol.hex(:,2)),1,3).*((vol.pos(vol.hex(:,2),:)-vol.pos(vol.hex(:,8),:))./abs(vol.pos(vol.hex(:,2),:)-vol.pos(vol.hex(:,8),:)));
 gradient = gradient + 0.25*repmat(potential(vol.hex(:,3)),1,3).*((vol.pos(vol.hex(:,3),:)-vol.pos(vol.hex(:,5),:))./abs(vol.pos(vol.hex(:,3),:)-vol.pos(vol.hex(:,5),:)));
@@ -777,7 +595,7 @@ gradient = gradient + 0.25*repmat(potential(vol.hex(:,8)),1,3).*((vol.pos(vol.he
 function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol,lowconducting)
 if constvol
     if unipolar
-        dirinodes = ea_get_surf_nodes(vol.hex,vol.tissue,lowconducting);
+        dirinodes = ea_get_surf_nodes(vol.tet,vol.tissue,lowconducting);
         dirinodes = [dirinodes, elec'];
     else
         dirinodes = elec;
@@ -793,7 +611,7 @@ else
     rhs = zeros(size(vol.pos,1),1);
 
     if unipolar
-        catnodes = ea_get_surf_nodes(vol.hex,vol.tissue,lowconducting);
+        catnodes = ea_get_surf_nodes(vol.tet,vol.tissue,lowconducting);
         rhs(elec) = val;
         rhs(catnodes) = -sum(val)/length(catnodes);
     else
@@ -822,7 +640,7 @@ indij = intersect(indi,indj);
 rhs(indexj(indij)) = rhs(indexj(indij)) - dirival(indexi(indij)).*s(indij);
 s(indi) = 0;
 dia(dirinodes) = 1; %hier auch, s.u.
-rhs(dirinodes) = dirival(dirinodes); %hier den zugriff ge�ndert
+rhs(dirinodes) = dirival(dirinodes); %hier den zugriff ge?ndert
 indij = find(ismember(indexj,dind)&~ismember(indexi,dind));
 rhs(indexi(indij)) = rhs(indexi(indij)) - dirival(indexj(indij)).*s(indij);
 s(indij) = 0;
@@ -831,18 +649,11 @@ stiff = stiff + diag(dia);
 
 
 
-
-
-function surf_nodes = ea_get_surf_nodes(cell)
+function surf_nodes_clear = ea_get_surf_nodes(cell,field,lowconducting)
+con_cell = cell(find(field == lowconducting),:);
 connectivity = hist(cell(:),unique(cell));
-if size(cell,1) == 8 || size(cell,2) == 8
-    surf_nodes = find(connectivity ~= 8);
-elseif size(cell,1) == 4 || size(cell,2) == 4
-    surf_nodes = find(connectivity ~= 4);
-else
-    error('Unknown element type');
-end
-end
+surf_nodes = find(connectivity ~= 8);
+surf_nodes_clear = setdiff(surf_nodes,con_cell(:));
 
 function [warped] = ea_ft_warp_apply(M, input, method, tol)
 
@@ -9463,48 +9274,53 @@ conductivity    = ea_ft_getopt(varargin, 'conductivity');
 geom = ea_ft_datatype_parcellation(geom);
 vol = [];
 if isfield(geom,'pos')
-    vol.pos = geom.pos;
+  vol.pos = geom.pos;
 else
-    error('Vertex field is required!')
+  error('Vertex field is required!')
 end
 
 if isfield(geom,'tet')
-    vol.tet = geom.tet;
+  vol.tet = geom.tet;
 elseif isfield(geom,'hex')
-    vol.hex = geom.hex;
+  vol.hex = geom.hex;
 else
-    error('Connectivity information is required!')
+  error('Connectivity information is required!')
 end
 
 if isfield(geom,'tissue')
-    vol.tissue = geom.tissue;
+  vol.tissue = geom.tissue;
 else
-    error('No element indices declared!')
+  error('No element indices declared!')
 end
 
 if isempty(conductivity)
-    error('No conductivity information!')
+  error('No conductivity information!')
 end
 
 if length(conductivity) >= length(unique(vol.tissue))
-    vol.cond = conductivity;
+  vol.cond = conductivity;
 else
-    error('Wrong conductivity information!')
+  error('Wrong conductivity information!')
 end
 
 if ~isfield(geom,'tissuelabel')
-    numlabels = size(unique(geom.tissue),1);
-    vol.tissuelabel = {};
-    ulabel = unique(labels);
-    for i = 1:numlabels
-        vol.tissuelabel{i} = num2str(ulabel(i));
-    end
+  numlabels = size(unique(geom.tissue),1);
+  vol.tissuelabel = {};
+  ulabel = unique(labels);
+  for i = 1:numlabels
+    vol.tissuelabel{i} = num2str(ulabel(i));
+  end
 else
-    vol.tissuelabel = geom.tissuelabel;
+  vol.tissuelabel = geom.tissuelabel;
 end
 
 vol.stiff = ea_sb_calc_stiff(vol);
 vol.type = 'simbio';
+
+
+
+
+
 
 function parcellation = ea_ft_datatype_parcellation(parcellation, varargin)
 
@@ -10729,4 +10545,3 @@ elseif(size(elem,2) == 8)
 else
     error('Invalid number of nodes per element!');
 end
-

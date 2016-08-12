@@ -157,6 +157,7 @@ for i=1:3:len
    end
    [status outstr]=system(cmd);
    if(status~=0 && strcmp(op,'self')==0)
+       
        error(sprintf('surface boolean command failed:\n%s\nERROR: %s\n',cmd,outstr));
    end
    if(status~=0 && strcmp(op,'self') && ~isempty(strfind(outstr,'(new_ear): assertion failed')))
