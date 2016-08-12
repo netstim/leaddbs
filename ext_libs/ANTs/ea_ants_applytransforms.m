@@ -36,27 +36,34 @@ if nargin==1
     switch options.modality
         case 1 % MR
             fis={[directory,options.prefs.prenii_unnormalized]};
-            try fis=[fis,[directory,options.prefs.tranii_unnormalized]]; end
-            try fis=[fis,[directory,options.prefs.cornii_unnormalized]]; end
-            try fis=[fis,[directory,options.prefs.sagnii_unnormalized]]; end
-
             ofis={[directory,options.prefs.gprenii]};
-            try ofis=[ofis,[directory,options.prefs.gtranii]]; end
-            try ofis=[ofis,[directory,options.prefs.gcornii]]; end
-            try ofis=[ofis,[directory,options.prefs.gsagnii]]; end
-
-            try lfis={[options.prefs.prenii]}; end
-            try lfis=[lfis,[options.prefs.tranii]]; end
-            try lfis=[lfis,[options.prefs.cornii]]; end
-            try lfis=[lfis,[options.prefs.sagnii]]; end
-
-            try 
-                if exist([directory,options.prefs.fa2anat],'file');
-                    fis=[fis,[directory,options.prefs.fa2anat]];
-                    ofis=[ofis,[directory,'gl',options.prefs.fa2anat]];
-                    lfis=[lfis,[directory,'l',options.prefs.fa2anat]];
-                end
-            end 
+            if isfield(options.prefs,'prenii')
+                lfis={[options.prefs.prenii]};
+            end
+            
+            if isfield(options.prefs,'tranii_unnormalized')
+                fis=[fis,[directory,options.prefs.tranii_unnormalized]];
+                ofis=[ofis,[directory,options.prefs.gtranii]];
+                lfis=[lfis,[options.prefs.tranii]];
+            end
+            
+            if isfield(options.prefs,'cornii_unnormalized')
+                fis=[fis,[directory,options.prefs.cornii_unnormalized]];
+                ofis=[ofis,[directory,options.prefs.gcornii]];
+                lfis=[lfis,[options.prefs.cornii]];
+            end
+            
+            if isfield(options.prefs,'sagnii_unnormalized')
+                fis=[fis,[directory,options.prefs.sagnii_unnormalized]];
+                ofis=[ofis,[directory,options.prefs.gsagnii]];
+                lfis=[lfis,[options.prefs.sagnii]];
+            end
+            
+            if exist([directory,options.prefs.fa2anat],'file') && isfield(options.prefs,'fa2anat');
+                fis=[fis,[directory,options.prefs.fa2anat]];
+                ofis=[ofis,[directory,'gl',options.prefs.fa2anat]];
+                lfis=[lfis,[directory,'l',options.prefs.fa2anat]];
+            end
         case 2 % CT
             fis{1}=[directory,options.prefs.prenii_unnormalized];
             fis{2}=[directory,options.prefs.ctnii_coregistered];
