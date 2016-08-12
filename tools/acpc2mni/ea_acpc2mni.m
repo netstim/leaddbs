@@ -76,8 +76,11 @@ end
             
             fpinsub_mm=fpinsub_mm';
             
-            
+try            
             fid(pt).AC=fpinsub_mm(1,:);
+catch
+    keyboard
+end
             fid(pt).PC=fpinsub_mm(2,:);
             fid(pt).MSP=fpinsub_mm(3,:);
         case {'manual'} % manual AC/PC definition, assume F.fcsv file inside pt folder
@@ -177,8 +180,11 @@ switch automan
      fid(pt).WarpedPointMNI=warpcoord_mm(1:3)';   
     otherwise
         [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], template,whichnormmethod);
-        
+try        
         warppts(pt,:)=warpinmni_mm';
+catch
+    keyboard
+end
         fid(pt).WarpedPointMNI=warppts(pt,:);
 end
     if cfg.mapmethod==2
