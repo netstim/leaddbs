@@ -58,7 +58,7 @@ try
         % set modality (MR/CT) in options
     options.modality = get(handles.MRCT,'Value');
 catch
-        options.modality=0;
+        options.modality=1;
 end
 
 
