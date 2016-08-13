@@ -1,4 +1,4 @@
-function varargout=ea_normalize_maget(options)
+function varargout=ea_normalize_maget_buckets(options)
 
 if ischar(options) % return name of method.
     varargout{1}='MAGeT Brain-like Segmentation/Normalization DISTAL atlas (Chakravarty 2013, Ewert 2016)';
@@ -119,9 +119,8 @@ for peer=1:length(peerfolders)
     %% step 2, generate warps from peers to the selected patient brain
 
     
-    if ~exist([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.nii.gz'],'file') || reforce
+    if ~exist([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5'],'file') || reforce
     
-        keyboard
     
 
         [~,peerpresentfiles]=ea_assignpretra(poptions);
@@ -183,7 +182,7 @@ for peer=1:length(peerfolders)
     warpednuclei{peer}=sub_tos;
 end
 
-keyboard
+
 
 %% step 4: Perform majority voting on final atlas
 mkdir([subdirec,'atlases']);
@@ -272,4 +271,3 @@ end
 cmd=[cmd,' -o [compositeDisplacementField.h5,1]'];
 
 system(cmd)
-
