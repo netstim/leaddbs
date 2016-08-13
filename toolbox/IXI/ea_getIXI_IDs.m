@@ -8,6 +8,12 @@ load([ea_getearoot,'toolbox',filesep,'IXI',filesep,'IXI_demographics.mat']); % a
 IXI.uID(idx)=[];
 IXI.uAGE(idx)=[];
 
+if ~exist('n','var')
+   IDs=IXI.uID;
+   IDs=ea_convID2cell(IDs);
+   return
+end
+
 if ~exist('age','var') % give n random IDs back
     numids=randperm(length(IXI.uID));
     IDs=IXI.uID(numids(1:n));

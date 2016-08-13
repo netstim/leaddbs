@@ -11,7 +11,7 @@ atlastouse='DISTAL_manual'; % for now, only the distal atlas is supported!
 
 ptage=ea_getpatientage([options.root,options.patientname,filesep]);
 
-peerfolders=ea_getIXI_IDs(3,ptage);
+peerfolders=ea_getIXI_IDs(21,ptage);
 
 %% step 0: check if all subjects have been processed with an ANTs-based normalization function
 for peer=1:length(peerfolders)
