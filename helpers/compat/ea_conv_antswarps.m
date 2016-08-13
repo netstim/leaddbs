@@ -48,6 +48,7 @@ end
 
 
 % delete all old-version warps
+warning('off')
 switch outputformat
     case '.nii.gz'
         try delete([directory,'glanatComposite.h5']); end
@@ -56,7 +57,6 @@ switch outputformat
         try delete([directory,'glanatComposite.nii.gz']); end
         try delete([directory,'glanatInverseComposite.nii.gz']); end
 end
-warning('off')
 try delete([directory,'lanatComposite.h5']); end
 try delete([directory,'lanatInverseComposite.h5']); end
 try delete([directory,'glanat0GenericeAffine.mat']); end

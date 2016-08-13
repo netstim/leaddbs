@@ -25,7 +25,7 @@ if ~ismember(ea_whichnormmethod(subdirec),ea_getantsnormfuns)
    ea_normalize_ants_multimodal(options,'coregonly'); 
 end
 
-%% step 1, warp DISTAL back to each peer brain
+%% step 1, setup DISTAL warps back to sub via each peer brain
 earoot=ea_getearoot;
 atlasbase=[earoot,'atlases',filesep,atlastouse,filesep];
 for peer=1:length(peerfolders)
@@ -36,15 +36,6 @@ for peer=1:length(peerfolders)
     poptions.root=[poptions.root,filesep];
     poptions=ea_assignpretra(poptions);
 
-        
-            mkdir([peerdirec,'MAGeT']);
-            mkdir([peerdirec,'MAGeT',filesep,'atlases']);
-            mkdir([peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse]);
-            mkdir([peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse,filesep,'lh']);
-            mkdir([peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse,filesep,'rh']);
-            mkdir([peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse,filesep,'midline']);
-            mkdir([peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse,filesep,'mixed']);
-            mkdir([peerdirec,'MAGeT']);
             mkdir([subdirec,'MAGeT',filesep,'atlasreceives']);
             mkdir([subdirec,'MAGeT',filesep,'atlasreceives',filesep,poptions.patientname]);
             mkdir([subdirec,'MAGeT',filesep,'atlasreceives',filesep,poptions.patientname,filesep,atlastouse]);
@@ -53,7 +44,6 @@ for peer=1:length(peerfolders)
             mkdir([subdirec,'MAGeT',filesep,'atlasreceives',filesep,poptions.patientname,filesep,atlastouse,filesep,'midline']);
             mkdir([subdirec,'MAGeT',filesep,'atlasreceives',filesep,poptions.patientname,filesep,atlastouse,filesep,'mixed']);
         
-        oatlasbase=[peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse,filesep];
         satlasbase=[subdirec,'MAGeT',filesep,'atlasreceives',filesep,poptions.patientname,filesep,atlastouse,filesep];
 
         load([atlasbase,'atlas_index.mat']);
@@ -64,35 +54,29 @@ for peer=1:length(peerfolders)
             switch atlases.types(atlas)
                 case 1 % LH only
                     froms{cnt}=[atlasbase,'lh',filesep,atlases.names{atlas}];
-                    tos{cnt}=[oatlasbase,'lh',filesep,atlases.names{atlas}];
                     sub_tos{cnt}=[satlasbase,'lh',filesep,atlases.names{atlas}];
                     
                     cnt=cnt+1;
                 case 2 % RH
                     froms{cnt}=[atlasbase,'rh',filesep,atlases.names{atlas}];
-                    tos{cnt}=[oatlasbase,'rh',filesep,atlases.names{atlas}];
                     sub_tos{cnt}=[satlasbase,'rh',filesep,atlases.names{atlas}];
 
                     cnt=cnt+1;
                 case 3 % both RH / LH present
                     froms{cnt}=[atlasbase,'lh',filesep,atlases.names{atlas}];
-                    tos{cnt}=[oatlasbase,'lh',filesep,atlases.names{atlas}];
                     sub_tos{cnt}=[satlasbase,'lh',filesep,atlases.names{atlas}];
 
                     froms{cnt+1}=[atlasbase,'rh',filesep,atlases.names{atlas}];
-                    tos{cnt+1}=[oatlasbase,'rh',filesep,atlases.names{atlas}];
                     sub_tos{cnt+1}=[satlasbase,'rh',filesep,atlases.names{atlas}];
 
                     cnt=cnt+2;
                 case 4 % Mixed
                     froms{cnt}=[atlasbase,'mixed',filesep,atlases.names{atlas}];
-                    tos{cnt}=[oatlasbase,'mixed',filesep,atlases.names{atlas}];
                     sub_tos{cnt}=[satlasbase,'mixed',filesep,atlases.names{atlas}];
 
                     cnt=cnt+1;
                 case 5 % Midline
                     froms{cnt}=[atlasbase,'midline',filesep,atlases.names{atlas}];
-                    tos{cnt}=[oatlasbase,'midline',filesep,atlases.names{atlas}];
                     sub_tos{cnt}=[satlasbase,'midline',filesep,atlases.names{atlas}];
 
                     cnt=cnt+1;
@@ -104,29 +88,20 @@ for peer=1:length(peerfolders)
         for fi=1:length(froms)
             if ~exist(froms{fi},'file') && exist([froms{fi},'.gz'],'file')
                 froms{fi}=[froms{fi},'.gz'];
-                tos{fi}=[tos{fi},'.gz']; % stay consistent here
                 sub_tos{fi}=[sub_tos{fi},'.gz'];
             else
                 ea_error(['Atlas file not found or dual .nii.gz/.nii version present: ',froms{fi}]);
             end
         end
-        
             
-            ea_ants_applytransforms(poptions,froms,tos,1,[peerdirec,poptions.prefs.prenii_unnormalized]);
-    
     
     
     %% step 2, generate warps from peers to the selected patient brain
 
     
-    if ~exist([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5'],'file') || reforce
-    
-    
-
+    if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii.gz'],'file') || reforce
         [~,peerpresentfiles]=ea_assignpretra(poptions);
         [~,subpresentfiles]=ea_assignpretra(options);
-        
-
         presentinboth=ismember(subpresentfiles,peerpresentfiles);
         peerpresentfiles=peerpresentfiles(presentinboth);
         if ~isequal(subpresentfiles,peerpresentfiles) % then I made something wrong.
@@ -153,15 +128,41 @@ for peer=1:length(peerfolders)
            
         end
         
-        defoutput=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname];
-        if ~exist([subdirec,'MAGeT',filesep,'warpreceives',filesep],'file')
-            mkdir([subdirec,'MAGeT',filesep,'warpreceives',filesep]);
+        defoutput=[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname];
+        if ~exist([subdirec,'MAGeT',filesep,'warps',filesep],'file')
+            mkdir([subdirec,'MAGeT',filesep,'warps',filesep]);
         end
         
         
-        ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,metrics,options);
-        delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii']); % we only need the warp
-        %delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
+        ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],weights,metrics,options);
+        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii']); % we only need the warp
+        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
+  
+        % Now export composite transform from MNI -> Peer -> Subject
+    
+        if ispc
+            sufx='.exe';
+        else
+            sufx=computer('arch');
+        end
+        
+        antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
+        
+        template=[ea_getearoot,'templates',filesep,'mni_hires.nii'];
+        prenii=[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
+        cmd=[antsApply,' -r ',template,' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5'],' -t ',[peerfolders{peer},filesep,'glanatInverseComposite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii.gz',',1]']];
+        icmd=[antsApply,' -r ',template,' -t ',[peerfolders{peer},filesep,'glanatInverseComposite.h5'],' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2sub.nii.gz',',1]']];
+            if ~ispc
+                system(['bash -c "', cmd, '"']);
+                system(['bash -c "', icmd, '"']);
+            else
+                system(cmd);
+                system(icmd);
+            end
+            
+            % delete intermediary files
+            delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
+            delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);   
     end
     
     
@@ -169,18 +170,35 @@ for peer=1:length(peerfolders)
     
     %if ~exist([peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse],'file') % assume the work has been done already
         % caution: old tos is new from here! this is correct.
-        transformfile=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5'];
-        ea_ants_applytransforms(poptions,tos,sub_tos,0,[subdirec,poptions.prefs.prenii_unnormalized],transformfile);
+        transformfile=[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2sub.nii.gz'];
+        ea_ants_applytransforms(poptions,froms,sub_tos,0,[subdirec,poptions.prefs.prenii_unnormalized],transformfile);
         
     %end
 
-    transforms{peer}{1}=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']; % from sub to peer
-    transforms{peer}{2}=[peerfolders{peer},filesep,'glanatInverseComposite.h5'];
-    
-    
     % gather all files for majority voting
     warpednuclei{peer}=sub_tos;
 end
+
+
+% aggregate all warps together and average them
+
+if ispc
+    sufx='.exe';
+else
+    sufx=computer('arch');
+end
+antsAve=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsAverageImages.',sufx];
+warpbase=[options.root,options.patientname,filesep,'MAGeT',filesep,'warps'];
+cmd=[antsAve,' 3 ',warpbase,'ave2mni.nii.gz',' 0 ',warpbase,'*2mni.nii.gz'];
+icmd=[antsAve,' 3 ',warpbase,'ave2sub.nii.gz',' 0 ',warpbase,'*2sub.nii.gz'];
+if ~ispc
+    system(['bash -c "', cmd, '"']);
+    system(['bash -c "', icmd, '"']);
+else
+    system(cmd);
+    system(icmd);
+end
+
 
 keyboard
 
@@ -230,7 +248,8 @@ end
 
 
 % -> Now segmentation is done. Add normalization.
-
+switch normmethod
+    case 'atlasbased'
 %% step 5: Normalize using multimodal DISTAL warp
 
 % write out anat_distal
@@ -244,7 +263,10 @@ delete(nii.fname);
 
 ea_normalize_ants_multimodal(options,0,1); 
 
-
+    case 'wholebrain'
+        
+        
+end
 
 function ea_writecompositewarp(transforms)
 basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
