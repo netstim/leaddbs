@@ -31,7 +31,7 @@ else
     applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end
     directory=[options.root,options.patientname,filesep];
-
+ea_conv_antswarps(directory);
 if nargin==1
     switch options.modality
         case 1 % MR
@@ -92,18 +92,18 @@ for fi=1:length(fis)
     subdir=[options.root,options.patientname,filesep];
     try
         [~,lprebase]=fileparts(options.prefs.prenii);
-        if exist([subdir,lprebase,'Composite.h5'],'file')
-            movefile([subdir,lprebase,'Composite.h5'],[subdir,glprebase,'Composite.h5']);
-            movefile([subdir,lprebase,'InverseComposite.h5'],[subdir,glprebase,'InverseComposite.h5']);
-        end
+%         if exist([subdir,lprebase,'Composite.h5'],'file')
+%             movefile([subdir,lprebase,'Composite.h5'],[subdir,glprebase,'Composite.h5']);
+%             movefile([subdir,lprebase,'InverseComposite.h5'],[subdir,glprebase,'InverseComposite.h5']);
+%         end
     end
     try
         [~,lprebase]=fileparts(options.prefs.prenii);
-        if exist([subdir,lprebase,'0GenericAffine.mat'],'file')
-            movefile([subdir,lprebase,'0GenericAffine.mat'],[subdir,glprebase,'0GenericAffine.mat']);
-            try movefile([subdir,lprebase,'1Warp.nii.gz'],[subdir,glprebase,'1Warp.nii.gz']); end
-            try movefile([subdir,lprebase,'1InverseWarp.nii.gz'],[subdir,glprebase,'1InverseWarp.nii.gz']); end
-        end
+%         if exist([subdir,lprebase,'0GenericAffine.mat'],'file')
+%             movefile([subdir,lprebase,'0GenericAffine.mat'],[subdir,glprebase,'0GenericAffine.mat']);
+%             try movefile([subdir,lprebase,'1Warp.nii.gz'],[subdir,glprebase,'1Warp.nii.gz']); end
+%             try movefile([subdir,lprebase,'1InverseWarp.nii.gz'],[subdir,glprebase,'1InverseWarp.nii.gz']); end
+%         end
     end
     
     cmd = [applyTransforms,' --verbose 1' ...
@@ -125,11 +125,11 @@ for fi=1:length(fis)
                if exist([directory,glprebase,'Composite.h5'],'file')
                    tr=[' -r ',refim,...
                        ' -t [',ea_path_helper([directory,glprebase]),'InverseComposite.h5,0]'];
-               else
-                   
-                   tr=[' -r ',refim,...
-                       ' -t [',ea_path_helper([directory,glprebase]),'1InverseWarp.nii.gz,0]',...
-                       ' -t [',ea_path_helper([directory,glprebase]),'0GenericAffine.mat,',num2str(useinverse),']'];
+                   %                else
+                   %
+                   %                    tr=[' -r ',refim,...
+                   %                        ' -t [',ea_path_helper([directory,glprebase]),'1InverseWarp.nii.gz,0]',...
+                   %                        ' -t [',ea_path_helper([directory,glprebase]),'0GenericAffine.mat,',num2str(useinverse),']'];
                end
            end
        else
@@ -146,10 +146,10 @@ for fi=1:length(fis)
                if exist([directory,glprebase,'Composite.h5'],'file')
                    tr=[' -r ',refim,...
                        ' -t [',ea_path_helper([directory,glprebase]),'Composite.h5,0]'];
-               else
-                   tr=[' -r ',refim,...
-                       ' -t [',ea_path_helper([directory,glprebase]),'1Warp.nii.gz,0]'...
-                       ' -t [',ea_path_helper([directory,glprebase]),'0GenericAffine.mat,0]'];
+%                else
+%                    tr=[' -r ',refim,...
+%                        ' -t [',ea_path_helper([directory,glprebase]),'1Warp.nii.gz,0]'...
+%                        ' -t [',ea_path_helper([directory,glprebase]),'0GenericAffine.mat,0]'];
                end
            end
        end

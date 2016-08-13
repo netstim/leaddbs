@@ -9,29 +9,11 @@ end
 reforce=0;
 atlastouse='DISTAL_manual'; % for now, only the distal atlas is supported!
 
-peerfolders={'/Volumes/Neuro_Charite/maget/3102'
-'/Volumes/Neuro_Charite/maget/3107'
-'/Volumes/Neuro_Charite/maget/3108'
-'/Volumes/Neuro_Charite/maget/3111'
-'/Volumes/Neuro_Charite/maget/3116'
-'/Volumes/Neuro_Charite/maget/3118'
-'/Volumes/Neuro_Charite/maget/3119'
-'/Volumes/Neuro_Charite/maget/3120'
-'/Volumes/Neuro_Charite/maget/3122'
-'/Volumes/Neuro_Charite/maget/3123'
-'/Volumes/Neuro_Charite/maget/3124'
-'/Volumes/Neuro_Charite/maget/3125'
-'/Volumes/Neuro_Charite/maget/3126'
-'/Volumes/Neuro_Charite/maget/3127'
-'/Volumes/Neuro_Charite/maget/3128'
-'/Volumes/Neuro_Charite/maget/3129'
-'/Volumes/Neuro_Charite/maget/3130'
-'/Volumes/Neuro_Charite/maget/3132'
-'/Volumes/Neuro_Charite/maget/3134'
-'/Volumes/Neuro_Charite/maget/3150'
-'/Volumes/Neuro_Charite/maget/3154'};
+ptage=ea_getpatientage([options.root,options.patientname,filesep]);
 
-%% step 0: check if all subjects have been processed with ANTs multimodal or ANTs
+peerfolders=ea_getIXI_IDs(3,ptage);
+
+%% step 0: check if all subjects have been processed with an ANTs-based normalization function
 for peer=1:length(peerfolders)
    if ~ismember(ea_whichnormmethod([peerfolders{peer},filesep]),ea_getantsnormfuns)
       ea_error('Please make sure that all peers selected have been normalized using ANTs.')
@@ -163,10 +145,12 @@ for peer=1:length(peerfolders)
         % add FA if present ? add to beginning since will use last entry to
         % converge
         if exist([subdirec,options.prefs.fa2anat],'file') && exist([peerdirec,options.prefs.fa2anat],'file')
-           spfroms=[{[peerdirec,options.prefs.fa2anat]};spfroms];
-           sptos=[{[subdirec,options.prefs.fa2anat]};spfroms];
-           weights=[1,weights];
-           metrics=[{'CC'},metrics];
+            spfroms=[{[peerdirec,options.prefs.fa2anat]},spfroms];
+            sptos=[{[subdirec,options.prefs.fa2anat]},sptos];
+            
+           weights=[0.5;weights];
+           metrics=[{'MI'},metrics];
+           
         end
         
         defoutput=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname];
@@ -177,7 +161,7 @@ for peer=1:length(peerfolders)
         
         ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,metrics,options);
         delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii']); % we only need the warp
-        delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
+        %delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
     end
     
     
@@ -189,11 +173,16 @@ for peer=1:length(peerfolders)
         ea_ants_applytransforms(poptions,tos,sub_tos,0,[subdirec,poptions.prefs.prenii_unnormalized],transformfile);
         
     %end
+
+    transforms{peer}{1}=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']; % from sub to peer
+    transforms{peer}{2}=[peerfolders{peer},filesep,'glanatInverseComposite.h5'];
+    
     
     % gather all files for majority voting
     warpednuclei{peer}=sub_tos;
 end
 
+keyboard
 
 %% step 4: Perform majority voting on final atlas
 mkdir([subdirec,'atlases']);
@@ -254,3 +243,32 @@ gzip(nii.fname);
 delete(nii.fname);
 
 ea_normalize_ants_multimodal(options,0,1); 
+
+
+
+function ea_writecompositewarp(transforms)
+basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
+if ispc
+    applyTransforms = [basedir, 'antsApplyTransforms.exe'];
+else
+    applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
+end
+
+
+cmd=[applyTransforms];
+refim=[options.earoot,'templates',filesep,'mni_hires.nii'];
+% add transforms:
+for t=1:length(transforms)
+    [pth1,fn1,ext1]=fileparts(transforms{t}{1});
+    [pth2,fn2,ext2]=fileparts(transforms{t}{2});
+        tr=[' -r ',refim,...
+        ' -t [',ea_path_helper([pth1,filesep,fn1,ext1]),',0]',...
+        ' -t [',ea_path_helper([pth2,filesep,fn2,ext2]),',0]'];
+cmd=[cmd,tr];
+end
+
+% add output:
+cmd=[cmd,' -o [compositeDisplacementField.h5,1]'];
+
+system(cmd)
+

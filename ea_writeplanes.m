@@ -137,6 +137,9 @@ for side=1:length(options.sides)
             %title(['Electrode ',num2str(el-1),', transversal view.']);
             
             
+
+
+            
             [slice,~,boundboxmm,sampleheight]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
             disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
             

@@ -142,3 +142,4 @@ prefs.firstrun='off';
 
 prefs.ls.dir='/PA/Neuro/_projects/lead/lead_server/';
 prefs.ixi.dir='/Volumes/TimeMachine/IXI/DB_multispectral/';
+prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in folder.
