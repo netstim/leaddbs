@@ -36,12 +36,14 @@ elseif exist([directory,'lanat1Warp.nii.gz'])
     icmd=[antsApply,' -r ',prenii,' -t ',[directory,'lanat1InverseWarp.nii.gz'],' -t [',[directory,'lanat0GenericAffine.mat,1]'],' -o [',[directory,'glanatInverseComposite',outputformat,',1]']];
 end
 
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-    system(['bash -c "', icmd, '"']);
-else
-    system(cmd);
-    system(icmd);
+if exist('cmd','var')
+    if ~ispc
+        system(['bash -c "', cmd, '"']);
+        system(['bash -c "', icmd, '"']);
+    else
+        system(cmd);
+        system(icmd);
+    end
 end
 
 
@@ -54,7 +56,7 @@ switch outputformat
         try delete([directory,'glanatComposite.nii.gz']); end
         try delete([directory,'glanatInverseComposite.nii.gz']); end
 end
-
+warning('off')
 try delete([directory,'lanatComposite.h5']); end
 try delete([directory,'lanatInverseComposite.h5']); end
 try delete([directory,'glanat0GenericeAffine.mat']); end
@@ -63,3 +65,4 @@ try delete([directory,'glanat1InverseWarp.mat']); end
 try delete([directory,'lanat0GenericeAffine.mat']); end
 try delete([directory,'lanat1Warp.mat']); end
 try delete([directory,'lanat1InverseWarp.mat']); end
+warning('on')
