@@ -18,10 +18,12 @@ end
 
 % restore raw files -> postop files from prior attempts. & make backups
 % from original files in any case.
+try
 if exist([directory,'raw_',options.prefs.tranii_unnormalized],'file')
     copyfile([directory,'raw_',options.prefs.tranii_unnormalized],[directory,options.prefs.tranii_unnormalized]);
 else
     copyfile([directory,options.prefs.tranii_unnormalized],[directory,'raw_',options.prefs.tranii_unnormalized]);
+end
 end
 try
     if exist([directory,'raw_',options.prefs.cornii_unnormalized],'file')

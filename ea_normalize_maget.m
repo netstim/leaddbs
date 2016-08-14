@@ -30,6 +30,7 @@ earoot=ea_getearoot;
 atlasbase=[earoot,'atlases',filesep,atlastouse,filesep];
 for peer=1:length(peerfolders)
     
+    clear spfroms sptos weights metrics
     peerdirec=[peerfolders{peer},filesep];
     poptions=options;
     [poptions.root,poptions.patientname]=fileparts(peerfolders{peer});
@@ -76,8 +77,11 @@ for peer=1:length(peerfolders)
             mkdir([subdirec,'MAGeT',filesep,'warps',filesep]);
         end
         
-        
+try        
         ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],weights,metrics,options);
+catch
+    keyboard
+end
         delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii']); % we only need the warp
         %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
         
@@ -151,7 +155,7 @@ ea_apply_normalization(options);
 
 % finally, cleanup.
 
-rmdir([subdirec,'MAGeT'],'s');
+%rmdir([subdirec,'MAGeT'],'s');
 
 
 

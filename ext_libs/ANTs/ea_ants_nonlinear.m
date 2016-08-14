@@ -97,9 +97,10 @@ for fi=1:length(fixedimage)
         case 'GC'
             suffx=',15,Random,0.05';
     end
+    
     rigidstage=[rigidstage,...
         ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
-end
+    end
 
 affinestage = [' --transform Affine[0.1]'...
                ' --convergence ', affineconvergence, ...

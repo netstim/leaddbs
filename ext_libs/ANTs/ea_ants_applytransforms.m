@@ -32,6 +32,7 @@ else
 end
     directory=[options.root,options.patientname,filesep];
 ea_conv_antswarps(directory);
+
 if nargin==1
     switch options.modality
         case 1 % MR
@@ -70,8 +71,8 @@ if nargin==1
             fis{2}=[directory,options.prefs.ctnii_coregistered];
             ofis{1}=[directory,options.prefs.gprenii];
             ofis{2}=[directory,options.prefs.gctnii];
-            lfis{1}=[options.prefs.prenii];
-            lfis{2}=[options.prefs.ctnii];
+            lfis{1}=[directory,options.prefs.prenii];
+            lfis{2}=[directory,options.prefs.ctnii];
             if exist([directory,options.prefs.fa2anat],'file');
                 fis{3}=[directory,options.prefs.fa2anat];
                 ofis{3}=[directory,'gl',options.prefs.fa2anat];
