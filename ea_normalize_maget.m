@@ -13,6 +13,12 @@ ptage=ea_getpatientage([options.root,options.patientname,filesep]);
 
 peerfolders=ea_getIXI_IDs(21,ptage);
 
+
+% make sure no peer is also the subject:
+ps=ismember(peerfolders,[options.root,options.patientname,filesep]);
+peerfolders(ps)=[];
+
+
 %% step 0: check if all subjects have been processed with an ANTs-based normalization function
 for peer=1:length(peerfolders)
     if ~ismember(ea_whichnormmethod([peerfolders{peer},filesep]),ea_getantsnormfuns)
@@ -28,6 +34,7 @@ end
 %% step 1, setup DISTAL warps back to sub via each peer brain
 earoot=ea_getearoot;
 atlasbase=[earoot,'atlases',filesep,atlastouse,filesep];
+
 for peer=1:length(peerfolders)
     
     clear spfroms sptos weights metrics
@@ -36,8 +43,6 @@ for peer=1:length(peerfolders)
     [poptions.root,poptions.patientname]=fileparts(peerfolders{peer});
     poptions.root=[poptions.root,filesep];
     poptions=ea_assignpretra(poptions);
-    
-    
     
     
     %% step 1, generate warps from peers to the selected patient brain
@@ -55,8 +60,8 @@ for peer=1:length(peerfolders)
             clear subpresentfiles peerpresentfiles
         end
         for anatfi=1:length(presentfiles)
-            spfroms{anatfi}=[peerdirec,presentfiles{anatfi}];
-            sptos{anatfi}=[subdirec,presentfiles{anatfi}];
+            spfroms{anatfi}=[subdirec,presentfiles{anatfi}];
+            sptos{anatfi}=[peerdirec,presentfiles{anatfi}];
             metrics{anatfi}='MI';
         end
         weights=repmat(1.5,length(presentfiles),1);
@@ -64,8 +69,8 @@ for peer=1:length(peerfolders)
         % add FA if present ? add to beginning since will use last entry to
         % converge
         if exist([subdirec,options.prefs.fa2anat],'file') && exist([peerdirec,options.prefs.fa2anat],'file')
-            spfroms=[{[peerdirec,options.prefs.fa2anat]},spfroms];
-            sptos=[{[subdirec,options.prefs.fa2anat]},sptos];
+            spfroms=[{[subdirec,options.prefs.fa2anat]},spfroms];
+            sptos=[{[peerdirec,options.prefs.fa2anat]},sptos];
             
             weights=[0.5;weights];
             metrics=[{'MI'},metrics];
@@ -97,8 +102,8 @@ end
         
         template=[ea_getearoot,'templates',filesep,'mni_hires.nii'];
         prenii=[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
-        cmd=[antsApply,' -r ',template,' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5'],' -t ',[peerfolders{peer},filesep,'glanatInverseComposite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii.gz',',1]']];
-        icmd=[antsApply,' -r ',prenii,' -t ',[peerfolders{peer},filesep,'glanatInverseComposite.h5'],' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2sub.nii.gz',',1]']];
+        cmd=[antsApply,' -r ',template,' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],' -t ',[peerfolders{peer},filesep,'glanatComposite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
+        icmd=[antsApply,' -r ',prenii,' -t ',[peerfolders{peer},filesep,'glanatInverseComposite.h5'],' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2sub.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
         if ~ispc
             system(['bash -c "', cmd, '"']);
             system(['bash -c "', icmd, '"']);
@@ -117,37 +122,38 @@ end
 
 % aggregate all warps together and average them
 
-if ispc
-    sufx='.exe';
-else
-    sufx=computer('arch');
-end
-antsAve=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsAverageImages.',sufx];
 warpbase=[options.root,options.patientname,filesep,'MAGeT',filesep,'warps',filesep];
-cmd=[antsAve,' 3 ',warpbase,'ave2mni.nii.gz',' 0 ',warpbase,'*2mni.nii.gz'];
-icmd=[antsAve,' 3 ',warpbase,'ave2sub.nii.gz',' 0 ',warpbase,'*2sub.nii.gz'];
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-    system(['bash -c "', icmd, '"']);
-else
-    system(cmd);
-    system(icmd);
+fis=dir([warpbase,'*2mni.nii']);
+for fi=1:length(fis)
+ficell{fi}=[warpbase,fis(fi).name];
 end
+ea_robustaverage_nii(ficell,[warpbase,'ave2mni.nii']);
+gzip([warpbase,'ave2mni.nii']);
 
-
-% now convert to .h5 again and place in sub directory:
-antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
-template=[ea_getearoot,'templates',filesep,'mni_hires.nii'];
-prenii=[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
-cmd=[antsApply,' -r ',template,' -t ',[warpbase,'ave2mni.nii.gz'],' -o [',[subdirec,'glanatComposite.h5,1]']];
-icmd=[antsApply,' -r ',prenii,' -t ',[warpbase,'ave2sub.nii.gz'],' -o [',[subdirec,'glanatInverseComposite.h5,1]']];;
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-    system(['bash -c "', icmd, '"']);
-else
-    system(cmd);
-    system(icmd);
+clear ficell
+fis=dir([warpbase,'*sub.nii']);
+for fi=1:length(fis)
+ficell{fi}=[warpbase,fis(fi).name];
 end
+ea_robustaverage_nii(ficell,[warpbase,'ave2sub.nii']);
+gzip([warpbase,'ave2sub.nii']);
+
+movefile([warpbase,'ave2mni.nii.gz'],[subdirec,'glanatComposite.nii.gz']);
+movefile([warpbase,'ave2sub.nii.gz'],[subdirec,'glanatInverseComposite.nii.gz']);
+
+% % now convert to .h5 again and place in sub directory:
+% antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
+% template=[ea_getearoot,'templates',filesep,'mni_hires.nii'];
+% prenii=[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
+% cmd=[antsApply,' -r ',template,' -t ',[warpbase,'ave2mni.nii.gz'],' -o [',[subdirec,'glanatComposite.nii.gz,1]']];
+% icmd=[antsApply,' -r ',prenii,' -t ',[warpbase,'ave2sub.nii.gz'],' -o [',[subdirec,'glanatInverseComposite.nii.gz,1]']];
+% if ~ispc
+%     system(['bash -c "', cmd, '"']);
+%     system(['bash -c "', icmd, '"']);
+% else
+%     system(cmd);
+%     system(icmd);
+% end
 
 % apply warps as always:
 ea_apply_normalization(options);

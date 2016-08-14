@@ -30,8 +30,8 @@ if ispc
 else
     applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end
-    directory=[options.root,options.patientname,filesep];
-ea_conv_antswarps(directory);
+directory=[options.root,options.patientname,filesep];
+warpsuffix=ea_conv_antswarps(directory);
 
 if nargin==1
     switch options.modality
@@ -122,16 +122,8 @@ for fi=1:length(fis)
                tr=[' -r ',refim,...
                    ' -t [',ea_path_helper(pth),filesep,fn,ext,',0]'];
            else
-               
-               if exist([directory,glprebase,'Composite.h5'],'file')
                    tr=[' -r ',refim,...
-                       ' -t [',ea_path_helper([directory,glprebase]),'InverseComposite.h5,0]'];
-                   %                else
-                   %
-                   %                    tr=[' -r ',refim,...
-                   %                        ' -t [',ea_path_helper([directory,glprebase]),'1InverseWarp.nii.gz,0]',...
-                   %                        ' -t [',ea_path_helper([directory,glprebase]),'0GenericAffine.mat,',num2str(useinverse),']'];
-               end
+                       ' -t [',ea_path_helper([directory,glprebase]),'InverseComposite',warpsuffix,',0]'];
            end
        else
            if isempty(refim)
@@ -143,15 +135,8 @@ for fi=1:length(fis)
                tr=[' -r ',refim,...
                    ' -t [',ea_path_helper(pth),filesep,fn,ext,',0]'];
            else
-               
-               if exist([directory,glprebase,'Composite.h5'],'file')
                    tr=[' -r ',refim,...
-                       ' -t [',ea_path_helper([directory,glprebase]),'Composite.h5,0]'];
-%                else
-%                    tr=[' -r ',refim,...
-%                        ' -t [',ea_path_helper([directory,glprebase]),'1Warp.nii.gz,0]'...
-%                        ' -t [',ea_path_helper([directory,glprebase]),'0GenericAffine.mat,0]'];
-               end
+                       ' -t [',ea_path_helper([directory,glprebase]),'Composite',warpsuffix,',0]'];
            end
        end
 

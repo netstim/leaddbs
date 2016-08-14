@@ -155,7 +155,7 @@ else
     system(cmd);
 end
 
-% convert .h5 file to .nii.gz file
+
 directory=fileparts(movingimage{1});
 directory=[directory,filesep];
 ea_conv_antswarps(directory);

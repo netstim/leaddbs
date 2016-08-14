@@ -1,7 +1,12 @@
-function ea_conv_antswarps(directory,outputformat)
+function outputformat=ea_conv_antswarps(directory,outputformat)
 
 if ~exist('outputformat','var')
-   outputformat='.h5'; 
+    % check which version is present:
+    if ~exist([directory,'glanatComposite.h5'],'file') && exist([directory,'glanatComposite.nii.gz'],'file')
+        outputformat='.nii.gz';
+    else
+        outputformat='.h5';
+    end
 end
 
 if ispc
