@@ -19,14 +19,14 @@ ea_dispercent(0,'Sampling');
 
 for slice=1:dimensionality
     if useimgtbx
-    edgedslice=edge(squeeze(X(:,:,slice)),'canny',alpha); 
+    edgedslice=edge(squeeze(X(:,:,slice)),'canny',alpha);
     else
     edgedslice=ea_edgedetection(squeeze(X(:,:,slice)),alpha);
     end
     Y(:,:,slice)=edgedslice;
     ea_dispercent(slice/dimensionality);
 end
-ea_dispercent(100,'end');
+ea_dispercent(1,'end');
 
 
 function outimg=ea_edgedetection(inimg,alpha)
@@ -41,7 +41,7 @@ convimgx= conv2(inimg,filterx,'same');
 
 % Y-axis direction edge detection
 filtery=d2dgauss(Ny1,Sigmay1,Ny2,Sigmay2,Theta2);
-convimgy=conv2(inimg,filtery,'same'); 
+convimgy=conv2(inimg,filtery,'same');
 
 convimg=sqrt(convimgx.*convimgx+convimgy.*convimgy);
 
@@ -53,7 +53,7 @@ thinimg=max(convimg,level.*ones(size(convimg)));
 
 
 
-% Thinning (Using interpolation to find the pixels where the norms of 
+% Thinning (Using interpolation to find the pixels where the norms of
 % gradient are local maximum.)
 [n,m]=size(thinimg);
 outimg=zeros(n-1,m-1);
@@ -97,7 +97,7 @@ function h = d2dgauss(n1,sigma1,n2,sigma2,theta)
 r=[cos(theta) -sin(theta);
    sin(theta)  cos(theta)];
 h=zeros(n1,n2);
-for i = 1 : n2 
+for i = 1 : n2
     for j = 1 : n1
         u = r * [j-(n1+1)/2 i-(n2+1)/2]';
         h(i,j) = gauss(u(1),sigma1)*dgauss(u(2),sigma2);

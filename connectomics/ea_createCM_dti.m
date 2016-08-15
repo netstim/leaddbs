@@ -87,13 +87,13 @@ for fiber=conIDX'
 
         DTI_CM(atlas_lgnd{1}==termIDX(fiber),atlas_lgnd{1}==seedIDX(fiber))    =  ...
             DTI_CM(atlas_lgnd{1}==seedIDX(fiber),atlas_lgnd{1}==termIDX(fiber));  % symmetrize Matrix.
-        
+
         DTI_LEN(atlas_lgnd{1}==seedIDX(fiber),atlas_lgnd{1}==termIDX(fiber))    =  ...
             DTI_LEN(atlas_lgnd{1}==seedIDX(fiber),atlas_lgnd{1}==termIDX(fiber))    +  idx(fiber);
 
         DTI_LEN(atlas_lgnd{1}==termIDX(fiber),atlas_lgnd{1}==seedIDX(fiber))    =  ...
             DTI_LEN(atlas_lgnd{1}==seedIDX(fiber),atlas_lgnd{1}==termIDX(fiber));  % symmetrize Matrix.
-        
+
         conns=conns+1; % connection count
         %end
     end
@@ -102,7 +102,7 @@ end
 DTI_LEN = DTI_LEN./DTI_CM;
 DTI_LEN(isnan(DTI_LEN) | isinf(DTI_LEN))=0;
 
-ea_dispercent(100,'end')
+ea_dispercent(1,'end')
 
 disp(['In total used ',num2str(conns),'/',num2str(fiber),' fibers to connect ',num2str(length(DTI_CM)),' regions.']);
 
