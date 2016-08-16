@@ -86,6 +86,9 @@ asc{end+1}='Use none';
 
 set(handles.atlassetpopup,'String',asc);
 
+set(handles.atlassetpopup,'String',asc);
+[~,defix]=ismember(options.prefs.atlases.default,asc);
+set(handles.atlassetpopup,'Value',defix);
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 

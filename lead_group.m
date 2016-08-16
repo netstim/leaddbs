@@ -66,6 +66,7 @@ guidata(hObject, handles);
 
 % atlassets:
 options.earoot=ea_getearoot;
+options.prefs=ea_prefs('');
 setappdata(handles.lg_figure,'earoot',options.earoot);
 as=dir([options.earoot,'atlases',filesep]);
 asc=cell(0);
@@ -82,6 +83,9 @@ asc(ismember(asc,excludes))=[];
 asc{end+1}='Use none';
 
 set(handles.atlassetpopup,'String',asc);
+set(handles.atlassetpopup,'String',asc);
+[~,defix]=ismember(options.prefs.atlases.default,asc);
+set(handles.atlassetpopup,'Value',defix);
 
 
 

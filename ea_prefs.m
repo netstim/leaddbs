@@ -103,6 +103,10 @@ prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration
 prefs.normalize.default='ea_normalize_ants';
 prefs.normalize.inverse.customtpm=0; % set to 1 if custom TPM shall be built for inverse warpings.
 
+
+%% Atlas-Sets:
+prefs.atlases.default='STN-Subdivisions (Accolla 2014)';
+
 %% Coregistration (CT/MR):
 prefs.ctcoreg.default='ea_coregctmri_ants';
 
