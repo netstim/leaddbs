@@ -1,5 +1,7 @@
 function fn=ea_niigz(base)
-% wrapper for nifti file names. will return the filename present
+% wrapper for nifti file names. will return the filename present, if none
+% present will return .nii.gz (e.g. used for writing output nonexistent
+% files)
 
 % rm base: 
 [pth,base]=fileparts(base);
