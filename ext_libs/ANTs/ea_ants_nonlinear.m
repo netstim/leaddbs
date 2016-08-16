@@ -34,10 +34,10 @@ elseif ~iscell(movingimage)
 end
 
 for fi=1:length(fixedimage)
-    fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi})));
+    fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
 end
 for fi=1:length(movingimage)
-    movingimage{fi} = ea_path_helper(ea_niigz(movingimage{fi})));
+    movingimage{fi} = ea_path_helper(ea_niigz(movingimage{fi}));
 end
 
 if length(fixedimage)~=length(movingimage)

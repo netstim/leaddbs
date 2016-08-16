@@ -70,7 +70,7 @@ for peer=1:length(peerfolders)
         % converge
         if exist([subdirec,options.prefs.fa2anat],'file') && exist([peerdirec,options.prefs.fa2anat],'file')
             spfroms=[{ea_niigz([subdirec,options.prefs.fa2anat])},spfroms];
-            sptos=[{[ea_niigz(peerdirec,options.prefs.fa2anat])},sptos];
+            sptos=[{[ea_niigz(peerdirec,options.prefs.fa2anat)]},sptos];
             
             weights=[0.5;weights];
             metrics=[{'MI'},metrics];
