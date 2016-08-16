@@ -36,47 +36,47 @@ warpsuffix=ea_conv_antswarps(directory);
 if nargin==1
     switch options.modality
         case 1 % MR
-            fis={[directory,options.prefs.prenii_unnormalized]};
-            ofis={[directory,options.prefs.gprenii]};
+            fis={ea_niigz([directory,options.prefs.prenii_unnormalized])};
+            ofis={ea_niigz([directory,options.prefs.gprenii])};
             if isfield(options.prefs,'prenii')
-                lfis={[options.prefs.prenii]};
+                lfis={ea_niigz([options.prefs.prenii])};
             end
             
             if isfield(options.prefs,'tranii_unnormalized')
-                fis=[fis,[directory,options.prefs.tranii_unnormalized]];
-                ofis=[ofis,[directory,options.prefs.gtranii]];
-                lfis=[lfis,[options.prefs.tranii]];
+                fis=[fis,{ea_niigz([directory,options.prefs.tranii_unnormalized])}];
+                ofis=[ofis,{ea_niigz([directory,options.prefs.gtranii])}];
+                lfis=[lfis,{ea_niigz([options.prefs.tranii])}];
             end
             
             if isfield(options.prefs,'cornii_unnormalized')
-                fis=[fis,[directory,options.prefs.cornii_unnormalized]];
-                ofis=[ofis,[directory,options.prefs.gcornii]];
-                lfis=[lfis,[options.prefs.cornii]];
+                fis=[fis,{ea_niigz([directory,options.prefs.cornii_unnormalized])}];
+                ofis=[ofis,{ea_niigz([directory,options.prefs.gcornii])}];
+                lfis=[lfis,{ea_niigz([options.prefs.cornii])}];
             end
             
             if isfield(options.prefs,'sagnii_unnormalized')
-                fis=[fis,[directory,options.prefs.sagnii_unnormalized]];
-                ofis=[ofis,[directory,options.prefs.gsagnii]];
-                lfis=[lfis,[options.prefs.sagnii]];
+                fis=[fis,{ea_niigz([directory,options.prefs.sagnii_unnormalized])}];
+                ofis=[ofis,{ea_niigz([directory,options.prefs.gsagnii])}];
+                lfis=[lfis,{ea_niigz([options.prefs.sagnii])}];
             end
             if isfield(options.prefs,'fa2anat')
                 if exist([directory,options.prefs.fa2anat],'file');
-                    fis=[fis,[directory,options.prefs.fa2anat]];
-                    ofis=[ofis,[directory,'gl',options.prefs.fa2anat]];
-                    lfis=[lfis,[directory,'l',options.prefs.fa2anat]];
+                    fis=[fis,{ea_niigz([directory,options.prefs.fa2anat])}];
+                    ofis=[ofis,{ea_niigz([directory,'gl',options.prefs.fa2anat])}];
+                    lfis=[lfis,{ea_niigz([directory,'l',options.prefs.fa2anat])}];
                 end
             end
         case 2 % CT
-            fis{1}=[directory,options.prefs.prenii_unnormalized];
-            fis{2}=[directory,options.prefs.ctnii_coregistered];
-            ofis{1}=[directory,options.prefs.gprenii];
-            ofis{2}=[directory,options.prefs.gctnii];
-            lfis{1}=[directory,options.prefs.prenii];
-            lfis{2}=[directory,options.prefs.ctnii];
+            fis{1}=ea_niigz([directory,options.prefs.prenii_unnormalized]);
+            fis{2}=ea_niigz([directory,options.prefs.ctnii_coregistered]);
+            ofis{1}=ea_niigz([directory,options.prefs.gprenii]);
+            ofis{2}=ea_niigz([directory,options.prefs.gctnii]);
+            lfis{1}=ea_niigz([directory,options.prefs.prenii]);
+            lfis{2}=ea_niigz([directory,options.prefs.ctnii]);
             if exist([directory,options.prefs.fa2anat],'file');
-                fis{3}=[directory,options.prefs.fa2anat];
-                ofis{3}=[directory,'gl',options.prefs.fa2anat];
-                lfis{3}=[directory,'l',options.prefs.fa2anat];
+                fis{3}=ea_niigz([directory,options.prefs.fa2anat]);
+                ofis{3}=ea_niigz([directory,'gl',options.prefs.fa2anat]);
+                lfis{3}=ea_niigz([directory,'l',options.prefs.fa2anat]);
             end
     end
 end

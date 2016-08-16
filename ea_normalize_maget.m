@@ -60,8 +60,8 @@ for peer=1:length(peerfolders)
             clear subpresentfiles peerpresentfiles
         end
         for anatfi=1:length(presentfiles)
-            spfroms{anatfi}=[subdirec,presentfiles{anatfi}];
-            sptos{anatfi}=[peerdirec,presentfiles{anatfi}];
+            spfroms{anatfi}=ea_niigz([subdirec,presentfiles{anatfi}]);
+            sptos{anatfi}=ea_niigz([peerdirec,presentfiles{anatfi}]);
             metrics{anatfi}='MI';
         end
         weights=repmat(1.5,length(presentfiles),1);
@@ -69,8 +69,8 @@ for peer=1:length(peerfolders)
         % add FA if present ? add to beginning since will use last entry to
         % converge
         if exist([subdirec,options.prefs.fa2anat],'file') && exist([peerdirec,options.prefs.fa2anat],'file')
-            spfroms=[{[subdirec,options.prefs.fa2anat]},spfroms];
-            sptos=[{[peerdirec,options.prefs.fa2anat]},sptos];
+            spfroms=[{ea_niigz([subdirec,options.prefs.fa2anat])},spfroms];
+            sptos=[{[ea_niigz(peerdirec,options.prefs.fa2anat])},sptos];
             
             weights=[0.5;weights];
             metrics=[{'MI'},metrics];
@@ -100,8 +100,8 @@ end
         
         antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
         
-        template=[ea_getearoot,'templates',filesep,'mni_hires.nii'];
-        prenii=[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
+        template=ea_niigz([ea_getearoot,'templates',filesep,'mni_hires.nii']);
+        prenii=ea_niigz([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
         cmd=[antsApply,' -r ',template,' -t ',[peerfolders{peer},filesep,'glanatComposite.h5'],' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
         icmd=[antsApply,' -r ',prenii,' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5'],' -t ',[peerfolders{peer},filesep,'glanatInverseComposite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2sub.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
         if ~ispc
@@ -125,7 +125,7 @@ end
 warpbase=[options.root,options.patientname,filesep,'MAGeT',filesep,'warps',filesep];
 fis=dir([warpbase,'*2mni.nii']);
 for fi=1:length(fis)
-ficell{fi}=[warpbase,fis(fi).name];
+ficell{fi}=ea_niigz([warpbase,fis(fi).name]);
 end
 ea_robustaverage_nii(ficell,[warpbase,'ave2mni.nii']);
 gzip([warpbase,'ave2mni.nii']);
