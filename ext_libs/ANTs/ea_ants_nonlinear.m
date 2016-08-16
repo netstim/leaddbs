@@ -34,17 +34,17 @@ elseif ~iscell(movingimage)
 end
 
 for fi=1:length(fixedimage)
-    fixedimage{fi} = ea_path_helper(fixedimage{fi});
+    fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi})));
 end
 for fi=1:length(movingimage)
-    movingimage{fi} = ea_path_helper(movingimage{fi});
+    movingimage{fi} = ea_path_helper(ea_niigz(movingimage{fi})));
 end
 
 if length(fixedimage)~=length(movingimage)
     ea_error('Please supply pairs of moving and fixed images (can be repetitive).');
 end
 
-outputimage = ea_path_helper(outputimage);
+outputimage = ea_path_helper(ea_niigz(outputimage));
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 

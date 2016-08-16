@@ -6,7 +6,7 @@ if ischar(options) % return name of method.
     return
 end
 
-reforce=0;
+reforce=1;
 atlastouse='DISTAL_manual'; % for now, only the distal atlas is supported!
 
 ptage=ea_getpatientage([options.root,options.patientname,filesep]);
@@ -102,8 +102,8 @@ end
         
         template=[ea_getearoot,'templates',filesep,'mni_hires.nii'];
         prenii=[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
-        cmd=[antsApply,' -r ',template,' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],' -t ',[peerfolders{peer},filesep,'glanatComposite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
-        icmd=[antsApply,' -r ',prenii,' -t ',[peerfolders{peer},filesep,'glanatInverseComposite.h5'],' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2sub.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
+        cmd=[antsApply,' -r ',template,' -t ',[peerfolders{peer},filesep,'glanatComposite.h5'],' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
+        icmd=[antsApply,' -r ',prenii,' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5'],' -t ',[peerfolders{peer},filesep,'glanatInverseComposite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2sub.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
         if ~ispc
             system(['bash -c "', cmd, '"']);
             system(['bash -c "', icmd, '"']);
@@ -113,8 +113,8 @@ end
         end
         
         % delete intermediary files
-        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
-        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);
+        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
+        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);
     end
     
 end

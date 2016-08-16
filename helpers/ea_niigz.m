@@ -5,12 +5,16 @@ function fn=ea_niigz(base)
 [pth,base]=fileparts(base);
 
 
-if exist(fullfile(pth,[base,'.nii']),'file') && ~exist(fullfile(pth,[base,'.nii.gz']),'file')
-    fn=fullfile(pth,[base,'.nii']);
-elseif ~exist(fullfile(pth,[base,'.nii']),'file') && exist(fullfile(pth,[base,'.nii.gz']),'file')
-    fn=fullfile(pth,[base,'.nii.gz']);
-elseif exist(fullfile(pth,[base,'.nii']),'file') && exist(fullfile(pth,[base,'.nii.gz']),'file')
-    ea_error(['Duplicate .nii/.nii.gz files detected. Aborting. ',fullfile(pth,base),'.']);
-else % return empty string
-    fn='';
+di=dir(fullfile(pth,[base,'*']));
+if length(di)>1
+        ea_error(['Duplicate .nii/.nii.gz files detected. Aborting. ',fullfile(pth,base),'.']);
+end
+[~,~,ext]=fileparts(di.name);
+switch ext
+    case '.gz'
+        fn=fullfile(pth,[base,'.nii.gz']);
+    case '.nii'
+        fn=fullfile(pth,[base,'.nii']);
+    otherwise
+        fn='';
 end

@@ -18,9 +18,9 @@ else
     volumedir =['.', filesep];
 end
 
-fixedVolume = ea_path_helper(fixedVolume);
-movingVolume = ea_path_helper(movingVolume);
-outputVolume = ea_path_helper(outputVolume);
+fixedVolume = ea_path_helper(ea_niigz(fixedVolume));
+movingVolume = ea_path_helper(ea_niigz(movingVolume));
+outputVolume = ea_path_helper(ea_niigz(outputVolume));
 
 fixparams = [' --fixedVolume ' , fixedVolume, ...
              ' --movingVolume ', movingVolume, ...

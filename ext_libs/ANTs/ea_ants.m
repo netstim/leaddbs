@@ -27,9 +27,9 @@ else
     outputbase = ['.', filesep, outputname];
 end
 
-fixedimage = ea_path_helper(fixedimage);
-movingimage = ea_path_helper(movingimage);
-outputimage = ea_path_helper(outputimage);
+fixedimage = ea_path_helper(ea_niigz(fixedimage));
+movingimage = ea_path_helper(ea_niigz(movingimage));
+outputimage = ea_path_helper(ea_niigz(outputimage));
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
