@@ -132,12 +132,16 @@ switch whichnormmethod
                         try movefile([directory,'swr',postops{pos}],[directory,lfis{pos}]); end
                     end
                 end
-
-                try delete([directory,'r',options.prefs.prenii_unnormalized]); end
-                try delete([directory,'r',options.prefs.tranii_unnormalized]); end
-                try delete([directory,'r',options.prefs.cornii_unnormalized]); end
-                try delete([directory,'r',options.prefs.sagnii_unnormalized]); end
-                try delete([directory,'r',options.prefs.ctnii_coregistered]); end
+                switch options.modality
+                    case 1
+                        try delete([directory,'r',options.prefs.prenii_unnormalized]); end
+                        try delete([directory,'r',options.prefs.tranii_unnormalized]); end
+                        try delete([directory,'r',options.prefs.cornii_unnormalized]); end
+                        try delete([directory,'r',options.prefs.sagnii_unnormalized]); end
+                    case 2
+                        try delete([directory,'r',options.prefs.ctnii_coregistered]); end
+                        try delete([directory,'r',options.prefs.prenii_unnormalized]); end
+                end
         end
 end
 
