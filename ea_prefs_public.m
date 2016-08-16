@@ -89,6 +89,10 @@ prefs.ctcoreg.default='ea_coregctmri_ants';
 %% Coregistration (MR/MR):
 prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
 
+%% Atlas-Sets:
+prefs.atlases.default='STN-Subdivisions (Accolla 2014)';
+
+
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
 prefs.hullsmooth=5; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
