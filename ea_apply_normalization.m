@@ -19,12 +19,28 @@ switch whichnormmethod
         ea_ants_applytransforms(options);
 
     otherwise
-        
-        postops={options.prefs.prenii_unnormalized};
-        try postops=[postops;options.prefs.tranii_unnormalized]; end
-        try postops=[postops;options.prefs.cornii_unnormalized]; end
-        try postops=[postops;options.prefs.sagnii_unnormalized]; end
-        try postops=[postops;options.prefs.ctnii_coregistered]; end
+        switch options.modality
+            case 1 % MR
+                postops{1}=options.prefs.prenii_unnormalized;
+                postops{2}=options.prefs.tranii_unnormalized;
+                postops{3}=options.prefs.cornii_unnormalized;
+                postops{4}=options.prefs.sagnii_unnormalized;
+                gfis{1}=options.prefs.gprenii;
+                gfis{2}=options.prefs.gtranii;
+                gfis{3}=options.prefs.gcornii;
+                gfis{4}=options.prefs.gsagnii;
+                lfis{1}=options.prefs.prenii;
+                lfis{2}=options.prefs.tranii;
+                lfis{3}=options.prefs.cornii;
+                lfis{4}=options.prefs.sagnii;                
+            case 2 % CT
+                postops{1}=options.prefs.prenii_unnormalized;
+                postops{2}=options.prefs.ctnii_coregistered;
+                gfis{1}=options.prefs.gprenii;
+                gfis{2}=options.prefs.gctnii;
+                lfis{1}=options.prefs.prenii;
+                lfis{2}=options.prefs.ctnii;
+        end
         
         switch spm('ver')
             case 'SPM8'
@@ -58,12 +74,8 @@ switch whichnormmethod
                 try movefile([directory,'w',options.prefs.ctnii_coregistered],[directory,options.prefs.ctnii]); end
                 
             case 'SPM12'
-                % export glfiles (a bit more coarse resolution, full brain bounding box.
-                gfis={[options.prefs.gprenii]};
-                try gfis=[gfis,[options.prefs.gtranii]]; end
-                try gfis=[gfis,[options.prefs.gcornii]]; end
-                try gfis=[gfis,[options.prefs.gsagnii]]; end
-                try gfis=[gfis,[options.prefs.gctnii]]; end
+                % export glfiles (a bit more coarse resolution, full brain bounding box).
+
                 
                 for pos=1:length(gfis)
                     if exist([directory,postops{pos}],'file')
@@ -92,12 +104,7 @@ switch whichnormmethod
                 end
                 
                 % export lfiles (fine resolution, small bounding box.
-                try lfis={[options.prefs.prenii]}; end
-                try lfis=[lfis,[options.prefs.tranii]]; end
-                try lfis=[lfis,[options.prefs.cornii]]; end
-                try lfis=[lfis,[options.prefs.sagnii]]; end
-                try lfis=[lfis,[options.prefs.ctnii]]; end
-                
+
                 try 
                     for pos=1:length(lfis)
                         if exist([directory,postops{pos}],'file')
