@@ -313,14 +313,15 @@ function viz2d_Callback(hObject, eventdata, handles)
 leadfig=handles.leadfigure;
 ea_busyaction('on',leadfig,'anatomy');
 
-
 options=ea_handles2options(handles);
 options.macaquemodus=0;
 options.d2=ea_tdhandles2options(handles,options.d2);
 
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
-
+if isempty(options.uipatdirs)
+    options.uipatdirs={''};
+end
 
 for pt=1:length(options.uipatdirs)
 [pth,ptname]=fileparts(options.uipatdirs{pt});
