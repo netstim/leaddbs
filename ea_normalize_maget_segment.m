@@ -99,14 +99,10 @@ for peer=1:length(peerfolders)
     %% step 2, generate warps from MNI via peers to the selected patient brain
     
     
-    if ~exist([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.nii.gz'],'file') || reforce
-        
-        
-        
+    if ~exist([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz'],'file') || reforce
         [~,peerpresentfiles]=ea_assignpretra(poptions);
         [~,subpresentfiles]=ea_assignpretra(options);
-        
-        
+  
         presentinboth=ismember(subpresentfiles,peerpresentfiles);
         peerpresentfiles=peerpresentfiles(presentinboth);
         if ~isequal(subpresentfiles,peerpresentfiles) % then I did something wrong.
@@ -140,27 +136,36 @@ for peer=1:length(peerfolders)
         
         
         ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,metrics,options);
-        delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii']); % we only need the warp
-        %delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
+        delete(ea_niigz([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'])); % we only need the warp
+        delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
    
-    keyboard
-    % combine warp from MNI -> Peer and Peer -> Subject
-    
+    % Now export composite transform from MNI -> Peer -> Subject
+        
+        if ispc
+            sufx='.exe';
+        else
+            sufx=computer('arch');
+        end
+        
+        antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
+        prenii=ea_niigz([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
+        icmd=[antsApply,' -r ',prenii,' -t ',[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5'],' -t ',[peerfolders{peer},filesep,'glanatInverseComposite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz',',1]']];
+        if ~ispc
+            system(['bash -c "', icmd, '"']);
+        else
+            system(icmd);
+        end
+        % can cleanup the Peer -> patient transform already.
+        delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5']); % we dont need the inverse warp
+
     end
     
     
     %% step 3: warp all atlas nuclei from MNI via peer to sub
     
     %if ~exist([peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse],'file') % assume the work has been done already
-    % caution: old tos is new from here! this is correct.
-    transformfile=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5'];
-    ea_ants_applytransforms(poptions,tos,sub_tos,0,[subdirec,poptions.prefs.prenii_unnormalized],transformfile);
-    
-    %end
-    
-    transforms{peer}{1}=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']; % from sub to peer
-    transforms{peer}{2}=[peerfolders{peer},filesep,'glanatInverseComposite.h5'];
-    
+    transformfile=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz'];
+    ea_ants_applytransforms(poptions,froms,sub_tos,0,[subdirec,poptions.prefs.prenii_unnormalized],transformfile);
     
     % gather all files for majority voting
     warpednuclei{peer}=sub_tos;
