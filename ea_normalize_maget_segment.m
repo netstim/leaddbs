@@ -103,8 +103,12 @@ for peer=1:length(peerfolders)
         [~,peerpresentfiles]=ea_assignpretra(poptions);
         [~,subpresentfiles]=ea_assignpretra(options);
   
-        presentinboth=ismember(subpresentfiles,peerpresentfiles);
-        peerpresentfiles=peerpresentfiles(presentinboth);
+        [~,presentinboth]=ismember(subpresentfiles,peerpresentfiles);
+        subpresentfiles=subpresentfiles(logical(presentinboth));
+        % check the other way:
+        [~,presentinboth]=ismember(peerpresentfiles,subpresentfiles);
+        peerpresentfiles=peerpresentfiles(logical(presentinboth));
+        
         if ~isequal(subpresentfiles,peerpresentfiles) % then I did something wrong.
             keyboard
         else
@@ -135,7 +139,7 @@ for peer=1:length(peerfolders)
         end
         
         
-        ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,metrics,options);
+e        ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,metrics,options);
         delete(ea_niigz([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'])); % we only need the warp
         delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
    

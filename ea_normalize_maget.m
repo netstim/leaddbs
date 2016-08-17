@@ -43,8 +43,11 @@ for peer=1:length(peerfolders)
     if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii.gz'],'file') || reforce
         [~,peerpresentfiles]=ea_assignpretra(poptions);
         [~,subpresentfiles]=ea_assignpretra(options);
-        presentinboth=ismember(subpresentfiles,peerpresentfiles);
-        peerpresentfiles=peerpresentfiles(presentinboth);
+        [~,presentinboth]=ismember(subpresentfiles,peerpresentfiles);
+        subpresentfiles=subpresentfiles(logical(presentinboth));
+        % check the other way:
+        [~,presentinboth]=ismember(peerpresentfiles,subpresentfiles);
+        peerpresentfiles=peerpresentfiles(logical(presentinboth));
         if ~isequal(subpresentfiles,peerpresentfiles) % then I made something wrong.
             keyboard
         else
