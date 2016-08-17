@@ -5,10 +5,11 @@ function fn=ea_niigz(base)
 
 % rm base: 
 [pth,base]=fileparts(base);
+try
 if strcmp(base(end-3:end),'.nii') % still has .nii ? .nii.gz has been applied
     [~,base]=fileparts(base);
 end
-
+end
 
 nii=dir(fullfile(pth,[base,'.nii']));
 niigz=dir(fullfile(pth,[base,'.nii.gz']));
