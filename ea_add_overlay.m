@@ -219,34 +219,34 @@ switch opt
         
 end
 
-    function in=ea_intersecdim(tracor)
-        
-        switch tracor
-            case 1
-                in=3;
-            case 2
-                in=2;
-            case 3
-                in=1;
-        end
-        
-        function pl=ea_planesdim(tracor)
-            
-            switch tracor
-                case 1
-                    pl=[1,2];
-                case 2
-                    pl=[1,3];
-                case 3
-                    pl=[2,3];
-            end
-            
-            
-            function fslice=ea_zeroframe(slice)
-                
-                fslice=zeros(size(slice)+[2,2]);
-                fslice(2:end-1,2:end-1)=slice;
-                
-                
-                function str=sub2space(str) % replaces subscores with spaces
-                    str(str=='_')=' ';
+function in=ea_intersecdim(tracor)
+
+switch tracor
+    case 1
+        in=3;
+    case 2
+        in=2;
+    case 3
+        in=1;
+end
+
+function pl=ea_planesdim(tracor)
+
+switch tracor
+    case 1
+        pl=[1,2];
+    case 2
+        pl=[1,3];
+    case 3
+        pl=[2,3];
+end
+
+
+function fslice=ea_zeroframe(slice)
+
+fslice=zeros(size(slice)+[2,2]);
+fslice(2:end-1,2:end-1)=slice;
+
+
+function str=sub2space(str) % replaces subscores with spaces
+str(str=='_')=' ';
