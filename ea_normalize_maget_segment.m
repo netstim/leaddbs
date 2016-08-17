@@ -139,7 +139,7 @@ for peer=1:length(peerfolders)
         end
         
         
-e        ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,metrics,options);
+        ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,metrics,options);
         delete(ea_niigz([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'])); % we only need the warp
         delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
    
