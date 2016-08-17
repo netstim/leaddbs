@@ -11,11 +11,11 @@ elseif ~strcmp(web,'Unknown')
 end
 
 try
-if vcheck
-    set(handles.updatebutn,'BackgroundColor',[0.2,0.8,0.2]);
-else
-    set(handles.updatebutn,'BackgroundColor',[0.94,0.94,0.94]);
-end
+    if vcheck
+        set(handles.updatebutn,'BackgroundColor',[0.2,0.8,0.2]);
+    else
+        set(handles.updatebutn,'BackgroundColor',[0.94,0.94,0.94]);
+    end
 end
 
 % if ~strcmp(handles.prod,'dbs_connectome')
