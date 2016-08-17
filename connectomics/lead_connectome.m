@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 10-Aug-2016 11:34:15
+% Last Modified by GUIDE v2.5 17-Aug-2016 15:14:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -109,7 +109,7 @@ catch
 end
 lc2handles(lc,handles);
 
-
+set(handles.coregmrpopup,'Value',2); % default ANTs
 
 if isempty(varargin) % "standard alone" mode, i.e. not dependend from lead
     isindependent=1;
@@ -165,6 +165,7 @@ function ea_makehidelcindep(handles)
 set(handles.importpanel,'visible','off');
 set(handles.runsavebutn,'String','Save and close');
 set(handles.exportcode,'visible','off');
+
 
 moveup=136;
 
@@ -548,6 +549,7 @@ function normmethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns normmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from normmethod
+ea_switchnormmethod(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -675,3 +677,12 @@ function coregmrpopup_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in normsettings.
+function normsettings_Callback(hObject, eventdata, handles)
+% hObject    handle to normsettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+currentNormMethod=getappdata(handles.normsettings,'currentNormMethod');
+ea_shownormsettings(currentNormMethod,handles)

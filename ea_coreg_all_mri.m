@@ -1,17 +1,5 @@
-function varargout=ea_normalize_ants_multimodal(options,includeatlas)
-% This is a function that normalizes both a copy of transversal and coronar
-% images into MNI-space. The goal was to make the procedure both robust and
-% automatic, but still, it must be said that normalization results should
-% be taken with much care because all reconstruction results heavily depend
-% on these results. Normalization of DBS-MR-images is especially
-% problematic since usually, the field of view doesn't cover the whole
-% brain (to reduce SAR-levels during acquisition) and since electrode
-% artifacts can impair the normalization process. Therefore, normalization
-% might be best archieved with other tools that have specialized on
-% normalization of such image data.
-%
-% The procedure used here uses the ANTs Syn approach to map a patient's
-% brain to MNI space directly.
+function varargout=ea_coreg_all_mri(options,usebrainmask)
+
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
@@ -23,26 +11,20 @@ if ischar(options) % return name of method.
     return
 end
 
-
-
+if ~exist('coregonly','var')
+    coregonly=0;
+end
 if ~exist('includeatlas','var')
     includeatlas=0;
 end
-usebrainmask=0;
+
 uset1=1; % set to zero if you do not wish to use T1 data for normalization even if present.
 usepd=1; % set to zero if you do not wish to use PD data for normalization even if present.
 usefa=1; % set to zero if you do not wish to use FA data for normalization even if present.
 
-if ~includeatlas % second run from maget-brain segment
-    if ~seemscoregistered(options) % check headers of files to see if already coregistered.
-        ea_coreg_all_mri(options,usebrainmask)
-    end
-end
-
-
 
 directory=[options.root,options.patientname,filesep];
-options.coregmr.method=2; % hard-code to ANTs for now here.
+%options.coregmr.method=2; % hard-code to ANTs for now here.
 cnt=1;
 
 if usebrainmask
@@ -56,6 +38,11 @@ end
 if uset1 && ~strcmp(options.primarytemplate,'_t1')
     if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
         disp('Including T1 data for (grey-matter) normalization');
+        if ~includeatlas
+        ea_dcm2nii([directory,options.prefs.prenii_unnormalized_t1]);
+        ea_bias_field_correction([directory,options.prefs.prenii_unnormalized_t1])
+        ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_t1],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_t1]);
+        end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
         if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
             ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_t1],bprfx);
@@ -71,6 +58,10 @@ end
 if usepd && ~strcmp(options.primarytemplate,'_pd')
     if exist([directory,options.prefs.prenii_unnormalized_pd],'file')
         disp('Including PD data for (grey-matter) normalization');
+        if ~includeatlas
+        ea_dcm2nii([directory,options.prefs.prenii_unnormalized_pd]);
+        ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_pd],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_pd]);
+        end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
         if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
             ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_pd],bprfx);
@@ -83,8 +74,29 @@ if usepd && ~strcmp(options.primarytemplate,'_pd')
 end
 
 if usefa
+    % check for presence of FA map
+    if ~exist([directory,options.prefs.fa2anat],'file')
+        if ~exist([directory,options.prefs.fa],'file')
+            if ~exist([directory,options.prefs.dti],'file')
+                disp('No dMRI data has been found. Proceeding without FA');
+            else
+                ea_isolate_fa(options);
+            end
+        end
+        if exist([directory,options.prefs.fa],'file') % check again since could have been built above
+            if ~includeatlas % if includeatlas is set we can assume that images have been coregistered and skulstripped already
+                ea_dcm2nii([directory,options.prefs.fa]);
+                if exist([directory,options.prefs.fa],'file') % recheck if has been built.
+                    ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
+                end
+            end
+        end
+    end
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
         disp('Including FA information for white-matter normalization.');
+        if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
+            ea_maskimg(options,[directory,options.prefs.fa2anat],bprfx);
+        end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_fa.nii'];
         from{cnt}=[directory,bprfx,options.prefs.fa2anat];
         weights(cnt)=0.5;
@@ -97,7 +109,9 @@ end
 
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 to{cnt}=[options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'];
-
+if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
+    ea_maskimg(options,[directory,options.prefs.prenii_unnormalized],bprfx);
+end
 from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized];
 weights(cnt)=1.5;
 metrics{cnt}='MI';
@@ -112,9 +126,10 @@ if includeatlas % append as last to make criterion converge on this one.
 end
 
 
-
-    ea_ants_nonlinear(to,from,[directory,options.prefs.gprenii],weights,metrics,options);
-    ea_apply_normalization(options);
+% Do the coreg part for postoperative images:
+try
+    ea_coregmr(options,options.prefs.normalize.coreg);
+end
 
 function masks=segmentall(from,options)
 directory=[fileparts(from{1}),filesep];

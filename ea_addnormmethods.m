@@ -41,3 +41,5 @@ try % set selection of normmethod to default entry (specified in ea_prefs).
     end
 end
 clear defentry
+
+ea_switchnormmethod(handles);

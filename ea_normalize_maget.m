@@ -3,37 +3,29 @@ function varargout=ea_normalize_maget(options)
 if ischar(options) % return name of method.
     varargout{1}='MAGeT Brain-like Normalization (Chakravarty 2013)';
     varargout{2}={'SPM8','SPM12'};
+    varargout{3}=1; % hassettings.
     return
 end
 
 reforce=1;
-atlastouse='DISTAL_manual'; % for now, only the distal atlas is supported!
 
-ptage=ea_getpatientage([options.root,options.patientname,filesep]);
-
-peerfolders=ea_getIXI_IDs(21,ptage);
-
-
-% make sure no peer is also the subject:
-ps=ismember(peerfolders,[options.root,options.patientname,filesep]);
-peerfolders(ps)=[];
+peerfolders=ea_getmagetpeers(options);
 
 
 %% step 0: check if all subjects have been processed with an ANTs-based normalization function
 for peer=1:length(peerfolders)
     if ~ismember(ea_whichnormmethod([peerfolders{peer},filesep]),ea_getantsnormfuns)
-        ea_error('Please make sure that all peers selected have been normalized using ANTs.')
+        ea_error(['Please make sure that all peers selected have been normalized using ANTs. ',peerfolders{peer},filesep])
     end
 end
 
 subdirec=[options.root,options.patientname,filesep];
-if ~ismember(ea_whichnormmethod(subdirec),ea_getantsnormfuns)
-    ea_normalize_ants_multimodal(options,'coregonly');
+if ~ea_seemscoregistered(options)
+    ea_coreg_all_mri(options,0);
 end
 
 %% step 1, setup DISTAL warps back to sub via each peer brain
 earoot=ea_getearoot;
-atlasbase=[earoot,'atlases',filesep,atlastouse,filesep];
 
 for peer=1:length(peerfolders)
     

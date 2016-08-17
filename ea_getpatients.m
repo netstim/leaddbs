@@ -1,4 +1,4 @@
-function ea_getpatients(handles)
+function uipatdir=ea_getpatients(handles)
 
 
 p='/'; % default use root
@@ -17,4 +17,6 @@ if isempty(uipatdir)
     return
 end
 
+if exist('handles','var')
 ea_load_pts(handles,uipatdir);
+end
