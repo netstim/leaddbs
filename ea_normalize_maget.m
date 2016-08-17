@@ -121,13 +121,20 @@ end
 
 
 % aggregate all warps together and average them
-
+clear ficell
 warpbase=[options.root,options.patientname,filesep,'MAGeT',filesep,'warps',filesep];
 fis=dir([warpbase,'*2mni.nii']);
+delete([warpbase,'ave2mni.nii']);
 for fi=1:length(fis)
 ficell{fi}=ea_niigz([warpbase,fis(fi).name]);
 end
 ea_robustaverage_nii(ficell,[warpbase,'ave2mni.nii']);
+% need to do the following due to file format issues:
+niione=ea_load_untouch_nii(ficell{fi});
+niiave=ea_load_untouch_nii([warpbase,'ave2mni.nii']);
+niione.img=niiave.img;
+ea_save_untouch_nii(niione,[warpbase,'ave2mni.nii']);
+%
 gzip([warpbase,'ave2mni.nii']);
 
 clear ficell
@@ -136,6 +143,12 @@ for fi=1:length(fis)
 ficell{fi}=[warpbase,fis(fi).name];
 end
 ea_robustaverage_nii(ficell,[warpbase,'ave2sub.nii']);
+% need to do the following due to file format issues:
+niione=ea_load_untouch_nii(ficell{fi});
+niiave=ea_load_untouch_nii([warpbase,'ave2sub.nii']);
+niione.img=niiave.img;
+ea_save_untouch_nii(niione,[warpbase,'ave2sub.nii']);
+%
 gzip([warpbase,'ave2sub.nii']);
 
 movefile([warpbase,'ave2mni.nii.gz'],[subdirec,'glanatComposite.nii.gz']);

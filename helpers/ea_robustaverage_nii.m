@@ -26,7 +26,7 @@ for i=1:numel(V{1});
         Y=ea_robustmean(Y,3);
         %Y=mean(Y,3);
         O(i) = spm_write_plane(O(i),Y,p);
-        ea_dispercent((p/V{1}(1).dim(3))/numel(V{1}));
+        ea_dispercent(((p/V{1}(1).dim(3)))/numel(V{1}));
     end
 end
 ea_dispercent(1,'end');
