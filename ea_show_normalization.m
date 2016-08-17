@@ -2,7 +2,6 @@ function ea_show_normalization(options)
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
-legacy=0;
 
 if options.modality==1
     expdo=1:3;
@@ -49,13 +48,16 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
         end
 
 
-        if ~legacy % use new imshowpair viewer
-  mcr=ea_checkmacaque(options);
-
-            wires=ea_load_nii([options.earoot,mcr,'templates',filesep,'mni_wires.nii']);
+            mcr=ea_checkmacaque(options);
+            
+          
+            
+            wires=ea_load_nii(ea_niigz([options.earoot,mcr,'templates',filesep,'mni_wires.nii']));
             pt=ea_load_nii(checkf);
-
+            
             if ~isequal(size(wires.img),size(pt.img))
+                Vw=ea_open_vol(wires.fname);
+                Vp=ea_open_vol(pt.fname);
                 matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_wires.nii'];
                     checkf};
                 matlabbatch{1}.spm.util.imcalc.output = checkfn;
@@ -68,11 +70,13 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 jobs{1}=matlabbatch;
                 spm_jobman('run',jobs);
                 clear matlabbatch jobs;
-                            pt=ea_load_nii(checkf);
+                pt=ea_load_nii(checkf);
+                ea_close_vol(Vw);
+                ea_close_col(Vp);
             end
             %mni.img(:)=zscore(mni.img(:));
-
-
+            
+            
             wires.img=wires.img/max(wires.img(:));
             switch suff
                 case '_fa' % do no windowing for now.
@@ -90,67 +94,23 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             end
             %joint_im=0.5*wires.img+pt.img;
             joint_im=pt.img;
-
+            
             joint_im(wires.img>0.5)=mean(cat(4,joint_im(wires.img>0.5),wires.img(wires.img>0.5)),4);
             %joint_im=repmat(joint_im,1,1,1,3);
-%            jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
-                   %     ea_imshowpair(jim,options,addstr);
-
+            %            jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
+            %     ea_imshowpair(jim,options,addstr);
+            
             % ----------------------------------------------------------
             % edited by TH 2016-02-17 to add windowed normalization check
             % ----------------------------------------------------------
-
+            
             wim = cat(4,pt.img,mni_img.img,joint_im);
             clear joint_im pt
             ea_imshowpair(wim,options,addstr);
-
+            
             % ----------------------------------------------------------
-
-        else legacy % use old wireframe images
-            matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'mni_wires.nii,1'];
-                checkf};
-            matlabbatch{1}.spm.util.imcalc.output = outf;
-            matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
-            matlabbatch{1}.spm.util.imcalc.expression = ['5*i1+i2'];
-            matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-            matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-            matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-            matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-            jobs{1}=matlabbatch;
-            spm_jobman('run',jobs);
-            clear matlabbatch jobs;
-
-
-            nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,outf]);
-
-            h1=figure('name',['Normalization results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
-            set(gcf,'color','w')
-            imagesc(flipud(squeeze(nii.img(:,:,round(end/2)))'));
-            axis('equal')
-            axis('off')
-            colormap gray
-
-            tightfig;
-
-            h2=figure('name',['Normalization results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
-
-
-            subplot(2,1,1);
-            imat=scale_image(flipud(squeeze(nii.img(:,round(end/2),:))'),[2,1]);
-            imagesc(imat);
-            axis('equal')
-            axis('off')
-            subplot(2,1,2);
-            imat=scale_image(flipud(squeeze(nii.img(round(end/2),:,:))'),[2,1]);
-            imagesc(imat);
-            axis('equal')
-            axis('off')
-            colormap gray
-
-            tightfig;
-            saveas(h1,[options.root,options.prefs.patientdir,filesep,'normalization_check',suff,'_axial.png']);
-            saveas(h2,[options.root,options.prefs.patientdir,filesep,'normalization_check',suff,'_corsag.png']);
-        end
+            
+            
     catch
         warning(['Error showing normalization of ',checkf,'.']);
     end

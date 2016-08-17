@@ -9,6 +9,8 @@ if nargin < 2
     mode = 0; 
 end
 
+fname=ea_niigz(fname);
+
 if strcmp(fname(end-2:end),'.gz')
     wasgzip=1;
     gunzip(fname);

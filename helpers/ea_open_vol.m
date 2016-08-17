@@ -1,5 +1,5 @@
 function V=ea_open_vol(fname)
-
+fname=ea_niigz(fname);
 % opens a nifti for reading/writing (i.e. gunzipping and spm_vol
 
 if strcmp(fname(end-2:end),'.gz')
