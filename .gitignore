@@ -11,6 +11,7 @@
 *.trk.gz
 *.trk
 *.zip
+*.6
 
 gibsconnect*.mat
 fibers/
