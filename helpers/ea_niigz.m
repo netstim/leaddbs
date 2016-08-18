@@ -20,7 +20,7 @@ elseif isempty(nii) && ~isempty(niigz)
     fn=fullfile(pth,[base,'.nii.gz']);
 elseif ~isempty(nii) && isempty(niigz)
     fn=fullfile(pth,[base,'.nii']);
-else % file not (yet) present, using .nii.gz as default
-    fn=fullfile(pth,[base,'.nii.gz']);
+else % file not (yet) present, for now use .nii as default for output.
+    fn=fullfile(pth,[base,'.nii']);
 end
 
