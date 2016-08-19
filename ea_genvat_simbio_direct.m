@@ -259,7 +259,9 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
         elstruct.markers(side).x,1;
         elstruct.markers(side).y,1];
     setappdata(resultfig,'elstruct',elstruct);
-    X = linsolve(A,B); X=X';
+    X = ea_linsolve(A,B); X=X';
+    
+    
 cnt=1;
 
 % overwrite head and tail of model with actual values for mesh generation lateron:
@@ -308,7 +310,7 @@ electrode.tail_position=B(2,1:3);
 %         mesh.tissue=[mesh.tissue;repmat(4,size(elem,1),1)];
     end
 
-
+keyboard
 [mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,electrode);
 
 
@@ -366,7 +368,7 @@ end
 if ~isfield(S, 'sources')
     S.sources=1:4;
 end
-keyboard
+
 for source=S.sources
 
     stimsource=S.([sidec,'s',num2str(source)]);
@@ -518,7 +520,7 @@ S(side).volume=vatvolume;
 
 
 chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);
-Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
+Vvat.mat=ea_linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
 Vvat.dim=[100,100,100];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];

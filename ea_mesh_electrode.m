@@ -14,13 +14,29 @@ if vizz
     for f=1:length(elfv)
         patch(elfv(f),'FaceColor','none');
     end
+    
+%     figure
+%     rgbcs='rgbcmyrgbcmyrgbcmy';
+%     for f=1:length(elfv)
+%         patch(elfv(f),'FaceColor',rgbcs(f),'FaceAlpha',0.5,'EdgeColor','none');
+%     end
+%     axis equal
+%     
 end
+
+
+
 
 %% user defined parameters
 
 
-orig=electrode.tail_position-2*(electrode.head_position-electrode.tail_position);
-etop=electrode.head_position-2*(electrode.tail_position-electrode.head_position);
+orig=electrode.tail_position-3*(electrode.head_position-electrode.tail_position);
+etop=electrode.head_position-3*(electrode.tail_position-electrode.head_position);
+if vizz
+    hold on
+    plot3(orig(1),orig(2),orig(3),'y*');
+    plot3(etop(1),etop(2),etop(3),'y*');
+end
 %orig=[10.1,-15.07,-9.978];    % starting point of the electrode axis
 %etop=[34.39,20.23,43.14];     % end point of the electrode axis
 electrodelen=norm(etop-orig); % length of the electrode
