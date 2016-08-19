@@ -8,5 +8,5 @@ function ea_run_HMS_Orchestra(options)
 jobID=ea_generate_guid;
 options.spmdir=spm('dir');
 save([options.root,options.patientname,filesep,'job_',jobID],'options')
-cmdstring=['bsub -q short -W 10:0 -o ',[options.root,options.patientname,filesep,'job_',jobID],'.out -e ',[options.root,options.patientname,filesep,'job_',jobID],'.err matlab -nodisplay -r "ea_run runcluster ',[options.root,options.patientname,filesep,'job_',jobID],'"'];
+cmdstring=['bsub -q short -W 10:0 -o ',[options.root,options.patientname,filesep,'job_',jobID],'.out -e ',[options.root,options.patientname,filesep,'job_',jobID],'.err matlab -singleCompThread -nodisplay -r "ea_run runcluster ',[options.root,options.patientname,filesep,'job_',jobID],'"'];
 system(cmdstring);
