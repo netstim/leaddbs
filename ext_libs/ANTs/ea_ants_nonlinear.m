@@ -5,8 +5,6 @@ fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
-directory=fileparts(movingimage{1});
-directory=[directory,filesep];
 
 [outputdir, outputname, ~] = fileparts(outputimage);
 if outputdir
@@ -20,6 +18,10 @@ if ischar(fixedimage)
 elseif ~iscell(fixedimage)
 	ea_error('Please supply variable fixedimage as either char or cellstring');
 end
+
+directory=fileparts(movingimage{1});
+directory=[directory,filesep];
+
 
 if nargin>3
     weights=varargin{4};
