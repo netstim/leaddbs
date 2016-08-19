@@ -8,5 +8,6 @@ function ea_run_HMS_Orchestra(options)
 jobID=ea_generate_guid;
 options.spmdir=spm('dir');
 save([options.root,options.patientname,filesep,'job_',jobID],'options')
+setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS','1')
 cmdstring=['bsub -q short -W 10:0 -o ',[options.root,options.patientname,filesep,'job_',jobID],'.out -e ',[options.root,options.patientname,filesep,'job_',jobID],'.err matlab -singleCompThread -nodisplay -r "ea_run runcluster ',[options.root,options.patientname,filesep,'job_',jobID],'"'];
 system(cmdstring);
