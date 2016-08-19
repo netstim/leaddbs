@@ -108,8 +108,8 @@ end
         end
         
         % delete intermediary files
-        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
-        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);
+        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
+        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);
     end
     
 end
@@ -169,7 +169,7 @@ ea_apply_normalization(options);
 
 % finally, cleanup.
 
-%rmdir([subdirec,'MAGeT'],'s');
+rmdir([subdirec,'MAGeT'],'s');
 
 
 
