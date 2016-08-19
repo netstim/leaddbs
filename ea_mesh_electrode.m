@@ -1,13 +1,28 @@
-function [emesh,nmesh]=ea_mesh_electrode(fv,elfv,meshel)
+function [emesh,nmesh]=ea_mesh_electrode(fv,elfv,electrode)
 % meshing an electrode and tissue structures bounded by a cylinder
 
 %% load the nucleus data
 
 tic
+meshel=electrode.meshel;
+vizz=1;
+if vizz
+    figure
+    for f=1:length(fv)
+        patch(fv(f),'FaceColor','none');
+    end
+    for f=1:length(elfv)
+        patch(elfv(f),'FaceColor','none');
+    end
+end
 
 %% user defined parameters
-orig=[10.1,-15.07,-9.978];    % starting point of the electrode axis
-etop=[34.39,20.23,43.14];     % end point of the electrode axis
+
+
+orig=electrode.tail_position-2*(electrode.head_position-electrode.tail_position);
+etop=electrode.head_position-2*(electrode.tail_position-electrode.head_position);
+%orig=[10.1,-15.07,-9.978];    % starting point of the electrode axis
+%etop=[34.39,20.23,43.14];     % end point of the electrode axis
 electrodelen=norm(etop-orig); % length of the electrode
 electroderadius=0.65;            % radius of the electrode
 
@@ -20,7 +35,7 @@ cylz1=25;     % define the upper end of the bounding cylinder
 cylradius=15; % define the radius of the bounding cylinder  
 ndiv=50;      % division of circle for the bounding cylinder
 
-ncount=8;     % the number of nuclei meshes inside fv()
+ncount=length(fv);     % the number of nuclei meshes inside fv()
 
 v0=(etop-orig)/electrodelen;               % unitary dir
 c0=[0 0 0];
@@ -80,12 +95,6 @@ ISO2MESH_SURFBOOLEAN='cork';   % now intersect the electrode to the nucleus
 [nboth,fboth]=surfboolean(node,face(:,[1 3 2]),'resolve',nobj,fobj);
 clear ISO2MESH_SURFBOOLEAN;
 
-%% create a bounding box - this causes cork segfault, use below instead
-% nbbx=fv(9).vertices;
-% fbbx=fv(9).faces;
-% seedbbc=nbbx(1,:)*(1-1e-4)+nbbx(end-1,:)*1e-4;  % define a seed point for the bounding cylinder
-% [nbcyl,fbcyl]=s2m(nbbx,fbbx,1,10);
-
 %% create a bounding cylinder
 c0bbc=c0+cylz0*v;     
 c1bbc=c0+cylz1*v;
@@ -112,10 +121,6 @@ electrodeseeds=repmat(orig(:)',seedlen,1)+repmat(v0(:)',seedlen,1).*repmat(t(:)-
 %% create tetrahedral mesh of the final combined mesh (seeds are ignored, tetgen 1.5 automatically find regions)
 [nmesh,emesh]=s2m(nboth3,fboth3,1,5);
 
-%% plot the final tetrahedral mesh
-figure
-hold on;
-plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.2)
 
 %% remapping the region labels
 etype=emesh(:,end);
@@ -178,13 +183,23 @@ tissuetype(ismember(emesh(:,5),contactlabels))=3;
 tissuetype(ismember(emesh(:,5),insulationlabels))=4;
 
 emesh(:,5)=tissuetype;
-% until now, electrodelabel stores the regions inside the electrode;
-%            bcyllabel stores the region for the bounding cylinder
-%            nucleuslabel stores the regions for the nuclei
 
-%gmidx=ismember(etype,gmlabels);
+if vizz
+%% plot the final tetrahedral mesh
+figure
+hold on;
+plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.2)
+end
 
-%plotmesh(nmesh,emesh(gmidx,:),'facealpha',0.5,'edgealpha',0.1);
+% plot all 4 tissue types:
+if vizz
+    for t=1:4
+        figure('Name',['Tissue ',num2str(t)]);
+        hold on;
+        plotmesh(nmesh,emesh(emesh(:,5)==t,:),'linestyle','none','facealpha',0.2)
+    end
+end
+
 
 toc
 

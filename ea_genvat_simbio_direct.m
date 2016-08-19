@@ -159,6 +159,7 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
     smri.transform=Vexp.mat;
     smri.transform(4,:)=[0,0,0,1]; % will prevent error below for floating point accuracy.
     smri.unit='mm';
+    cimat(isnan(cimat))=0;
     smri.gray=logical(cimat); % gm portion of the file
     smri.white=~smri.gray; % first, set everything that is not gm to wm
     smri.contacts=logical(Xcon); % include electrode contacts to the model
@@ -225,19 +226,19 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
 %         mesh.pnt=[mesh.pnt;node];
 %         mesh.tissue=[mesh.tissue;ones(size(elem,1),1)];
     end
-        % add white matter:
-
-    bb=[1,smri.dim(1);1,smri.dim(2);1,smri.dim(3);1,1];
-    [node,face]=meshabox([1,1,1],smri.dim,[],1);
-    node=[node,ones(size(node,1),1)]';
-    node=Vexp.mat*node;
-    node=node(1:3,:)';
-t=surfinterior(node,face);
-    fv(cnt).vertices=node;
-        fv(cnt).faces=face;
-                tissuetype(cnt)=2;
-                c0=[c0;[t,2]];
-                cnt=cnt+1;
+%         % add white matter:
+% 
+%     bb=[1,smri.dim(1);1,smri.dim(2);1,smri.dim(3);1,1];
+%     [node,face]=meshabox([1,1,1],smri.dim,[],1);
+%     node=[node,ones(size(node,1),1)]';
+%     node=Vexp.mat*node;
+%     node=node(1:3,:)';
+% t=surfinterior(node,face);
+%     fv(cnt).vertices=node;
+%         fv(cnt).faces=face;
+%                 tissuetype(cnt)=2;
+%                 c0=[c0;[t,2]];
+%                 cnt=cnt+1;
 %     [node,elem]=vol2mesh(smri.white,1:size(smri.white,1),1:size(smri.white,2),1:size(smri.white,3),2,2,1);
 %     node=Vexp.mat*[node,ones(length(node),1)]';
 %     mesh.tet=[mesh.tet;elem(:,1:4)+length(mesh.pnt)];
@@ -260,6 +261,10 @@ t=surfinterior(node,face);
     setappdata(resultfig,'elstruct',elstruct);
     X = linsolve(A,B); X=X';
 cnt=1;
+
+% overwrite head and tail of model with actual values for mesh generation lateron:
+electrode.head_position=B(1,1:3);
+electrode.tail_position=B(2,1:3);
       % add contacts to mesh  
     for con=1:length(electrode.meshel.con)
         
@@ -304,7 +309,7 @@ cnt=1;
     end
 
 
-[mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,electrode.meshel);
+[mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,electrode);
 
 
 mesh.tissue=mesh.tet(:,5);

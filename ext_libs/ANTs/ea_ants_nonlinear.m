@@ -5,6 +5,9 @@ fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
+directory=fileparts(movingimage{1});
+directory=[directory,filesep];
+
 [outputdir, outputname, ~] = fileparts(outputimage);
 if outputdir
     outputbase = [outputdir, filesep, outputname];
@@ -156,6 +159,5 @@ else
 end
 
 
-directory=fileparts(movingimage{1});
-directory=[directory,filesep];
+
 ea_conv_antswarps(directory);
