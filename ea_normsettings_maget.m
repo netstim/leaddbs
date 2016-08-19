@@ -59,7 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 set(handles.setfig,'Name','Normalization Settings');
-set(handles.titletext,'String','MAGeT Normalization Settings');
+set(handles.titletext,'String','MAGeT Normalization');
 
 % store mother handles in setfig
 setappdata(handles.setfig,'motherhandles',varargin{1});
