@@ -19,8 +19,6 @@ elseif ~iscell(fixedimage)
 	ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 
-directory=fileparts(movingimage{1});
-directory=[directory,filesep];
 
 
 if nargin>3
@@ -37,6 +35,11 @@ if ischar(movingimage)
 elseif ~iscell(movingimage)
     ea_error('Please supply variable fixedimage as either char or cellstring');
 end
+
+directory=fileparts(movingimage{1});
+directory=[directory,filesep];
+
+
 
 for fi=1:length(fixedimage)
     fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
