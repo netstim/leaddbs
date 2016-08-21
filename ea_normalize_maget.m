@@ -97,8 +97,8 @@ end
         
         template=ea_niigz([ea_getearoot,'templates',filesep,'mni_hires.nii']);
         prenii=ea_niigz([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
-        cmd=[antsApply,' -r ',template,' -t ',[peerfolders{peer},filesep,'glanatComposite.h5'],' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
-        icmd=[antsApply,' -r ',prenii,' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5'],' -t ',[peerfolders{peer},filesep,'glanatInverseComposite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2sub.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
+        cmd=[antsApply,' -r ',template,' -t ',[peerfolders{peer},filesep,'glanatComposite',ea_getantstransformext([peerfolders{peer},filesep],options)],' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
+        icmd=[antsApply,' -r ',prenii,' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5'],' -t ',[peerfolders{peer},filesep,'glanatInverseComposite',ea_getantstransformext([peerfolders{peer},filesep],options)],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2sub.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
         if ~ispc
             system(['bash -c "', cmd, '"']);
             system(['bash -c "', icmd, '"']);
@@ -107,7 +107,7 @@ end
             system(icmd);
         end
         
-        % delete intermediary files
+        % delete intermediary transforms
         delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
         delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);
     end
@@ -148,6 +148,15 @@ gzip([warpbase,'ave2sub.nii']);
 
 movefile([warpbase,'ave2mni.nii.gz'],[subdirec,'glanatComposite.nii.gz']);
 movefile([warpbase,'ave2sub.nii.gz'],[subdirec,'glanatInverseComposite.nii.gz']);
+
+% delete older .h5 transforms if present.
+if exist([subdirec,'glanatComposite.h5'],'file')
+    delete([subdirec,'glanatComposite.h5']);
+end
+
+if exist([subdirec,'glanatInverseComposite.h5'],'file')
+    delete([subdirec,'glanatInverseComposite.h5']);
+end
 
 % % now convert to .h5 again and place in sub directory:
 % antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
