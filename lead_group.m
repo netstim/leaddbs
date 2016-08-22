@@ -1139,10 +1139,11 @@ vc_labels={};
 
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
-        usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis!
+        S.label='gs';
+        [ea_stats,usewhichstim]=ea_assignstimcnt(M.stats(pt).ea_stats,S);
         for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).ft,2)
             for vat=1;
-                if side==1 % right hemisphere
+                if side==1 % right hemisphere                    
                     vicorr_right(ptcnt,vicnt)=vicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
                     nvicorr_right(ptcnt,vicnt)=nvicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
                 elseif side==2 % left hemisphere
@@ -1327,7 +1328,7 @@ M=getappdata(gcf,'M');
 
 % set options
 options=ea_setopts_local(handles);
-stimname=ea_detstimname();
+%stimname=ea_detstimname();
 
 % determine if fMRI or dMRI
 mods=get(handles.fiberspopup,'String');
@@ -1465,12 +1466,16 @@ for pt=M.ui.listselect
         for side=1:2
             setappdata(resultfig,'elstruct',M.elstruct(pt));
             setappdata(resultfig,'elspec',options.elspec);
-            [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,stimname);
+            [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,'gs');
             stimparams(1,side).volume=volume;
         end
 
         setappdata(resultfig,'stimparams',stimparams(1,:));
     end
+    % this will add the volume stats (atlasIntersections) to stats file:
+    ea_showfibres_volume(resultfig,options);
+
+    
     % Step 3: Re-calculate connectivity from VAT to rest of the brain.
     if ~strcmp(mod,'Do not calculate connectivity stats')
 
@@ -1490,13 +1495,14 @@ for pt=M.ui.listselect
                     pX=spm_read_vols(pV);
                     ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
                 otherwise
-                    ea_cvshowvatdmri(resultfig,directory,{mod,stimname},selectedparc,options);
+                    ea_cvshowvatdmri(resultfig,directory,{mod,'gs'},selectedparc,options);
             end
         else
-            ea_cvshowvatdmri(resultfig,directory,{fibersfile,stimname},selectedparc,options);
+            ea_cvshowvatdmri(resultfig,directory,{fibersfile,'gs'},selectedparc,options);
         end
     end
     close(resultfig);
+    keyboard
 
     if processlocal % gather stats and recos to M
         load([M.ui.groupdir,options.patientname,filesep,'ea_stats']);

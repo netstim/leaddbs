@@ -947,6 +947,7 @@ for el=1:length(elstruct)
     else % single patient
 
         [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,S,side,options,stimname);
+
         stimparams(1,side).volume=volume;
         flix=1;
     end
@@ -965,7 +966,7 @@ clear PL
 
 for group=flix
     setappdata(resultfig,'stimparams',stimparams(group,:));
-
+setappdata(resultfig,'S',S(group))
     ea_showfibres_volume(resultfig,options);
     copyfile([options.root,options.patientname,filesep,'ea_stats.mat'],[options.root,options.patientname,filesep,'ea_stats_group_',num2str(group),'.mat']);
     try
@@ -979,6 +980,7 @@ for group=flix
 end
 setappdata(resultfig,'PL',PL);
 ea_busyaction('off',handles.stimfig,'stim');
+
 
 
 function deletePL(PL)
@@ -1678,7 +1680,7 @@ if groupmode
 
             % determine stimlabel from priorly set gS:
             for sub=1:length(gS)
-                stimlabel=gS(sub).label;
+                stimlabel='gs';
                 if ~isempty(stimlabel)
                     break
                 end
@@ -2368,7 +2370,7 @@ end
 S.active=[1,1];
 if nargin
     if isempty(varargin{1})
-        S.label=  ea_detstimname;
+        S.label=ea_detstimname;
     else
         S.label=varargin{1};
     end

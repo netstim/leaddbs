@@ -17,7 +17,7 @@ hold on
 % get app data
 
 stimparams=getappdata(resultfig,'stimparams');
-
+S=getappdata(resultfig,'S');
 for side=1:length(stimparams)
     VAT{side}=stimparams(side).VAT;
 end
@@ -70,18 +70,15 @@ load([options.root,options.patientname,filesep,'ea_stats']);
 try
     upriorvatlength=length(ea_stats.vat)+1;
     upriorftlength=length(ea_stats.ft)+1;
-    
 catch
     upriorvatlength=1;
     upriorftlength=1;
 end
 
-% check how many stimulation fields are already in the struct
-try
-    priorstimlength=length(ea_stats.stimulation); % check if there are already stimulations inside.
-catch
-    priorstimlength=0;
-end
+% assign the place where to write stim stats into struct
+S.label='gs'; % hard reset label to group stim label
+[ea_stats,thisstim]=ea_assignstimcnt(ea_stats,S);
+
 
 
 
@@ -171,15 +168,16 @@ for side=1:length(options.sides)
                 
                 load([options.root,options.patientname,filesep,'ea_stats']);
                 
-                %                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).U=stimparams(side).U(vat);
-                %                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).Im=stimparams(side).Im(vat);
-                %                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).Contact=vat;
-                %                 ea_stats.stimulation(priorstimlength+1).vat(side,vat).Side=side;
-                %
+                                ea_stats.stimulation(thisstim).vat(side,vat).amp=S.amplitude{side};
+                                ea_stats.stimulation(thisstim).vat(side,vat).label=S.label;
+                                ea_stats.stimulation(thisstim).vat(side,vat).contact=vat;
+                                ea_stats.stimulation(thisstim).vat(side,vat).side=side;
+                
                 
                 
                 for atlas=1:size(atlases.XYZ,1)
-                    if stimparams(side).volume>0 % stimulation on in this VAT,
+                    
+                    if stimparams(side).volume(vat)>0 % stimulation on in this VAT,
                         clear thisatl
                         
                         if isempty(atlases.XYZ{atlas,side}) % for midline or combined atlases, only the right side atlas is used.
@@ -191,14 +189,16 @@ for side=1:length(options.sides)
                         end
                         tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
                         
-                        ea_stats.stimulation(priorstimlength+1).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(VAT{side}.VAT{vat},K(side).K{vat},thisatl))*tpv;
-                        ea_stats.stimulation(priorstimlength+1).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(priorstimlength+1).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
+                        ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(VAT{side}.VAT{vat},K(side).K{vat},thisatl))*tpv;
+                        ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
+                    
                     else % simply set vi to zero.
-                        ea_stats.stimulation(priorstimlength+1).vat(side,vat).AtlasIntersection(atlas)=0;
-                        ea_stats.stimulation(priorstimlength+1).vat(side,vat).nAtlasIntersection(atlas)=0;
+                        ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
+                        ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
                         
                     end
                 end
+                
                            save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
 
             end
@@ -206,6 +206,7 @@ for side=1:length(options.sides)
         
         
     end
+    
     
     
     % export vatvar stats if needed:

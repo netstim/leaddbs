@@ -17,15 +17,9 @@ disp('Calculating Fibers/Connectivity...');
 
 hold on
 
-% check how many stimulation fields are already in the struct
-if options.writeoutstats
-    try
-    load([options.root,options.patientname,filesep,'ea_stats']);
-        priorstimlength=length(ea_stats.stimulation); % check if there are already stimulations inside.
-    catch
-        priorstimlength=0;
-    end
-end
+
+
+
 
 %% load fibers (either from file or from figure and store in figure for next time).
 % get app data
@@ -136,7 +130,7 @@ disp('Reformating fibers...');
 fibers=mat2cell(fibers,fibersidx,3)';
 disp('Done.');
 for side=1:length(seed)
-    try        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
+    try      sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
     
     try      connectingfibs{side}=fibers(sideselectedfibs{side}); end
 end
@@ -217,11 +211,15 @@ for side=1:length(seed)
     
     % Write out connectivity stats
     if options.writeoutstats
-        ea_stats.stimulation(priorstimlength+1).ft(side).fibercounts{la}=howmanyfibs{side}/numtotalfibs;
+        load([options.root,options.patientname,filesep,'ea_stats']);
+        % assign the place where to write stim stats into struct
+        stimparams.label='gs';
+        [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,stimparams);
+        ea_stats.stimulation(thisstim).ft(side).fibercounts{la}=howmanyfibs{side}/numtotalfibs;
         
-        ea_stats.stimulation(priorstimlength+1).ft(side).nfibercounts{la}=ea_stats.stimulation(priorstimlength+1).ft(side).fibercounts{la}/volume{side};
-        ea_stats.stimulation(priorstimlength+1).ft(side).labels{la}=atlas_lgnd{2};
-            save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
+        ea_stats.stimulation(thisstim).ft(side).nfibercounts{la}=ea_stats.stimulation(thisstim).ft(side).fibercounts{la}/volume{side};
+        ea_stats.stimulation(thisstim).ft(side).labels{la}=atlas_lgnd{2};
+        save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
     end
     
     
