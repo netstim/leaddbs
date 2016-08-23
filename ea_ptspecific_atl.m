@@ -15,7 +15,7 @@ if ~exist([proot,'atlases',filesep,'native',filesep,'ea_nativebuilt.mat'],'file'
             ea_warp_atlas_to_native(troot,aroot,proot,0,options)
     end
     built=1;
-    save([proot,'native',filesep,'ea_nativebuilt.mat'],'built');
+    save([proot,'atlases',filesep,'native',filesep,'ea_nativebuilt.mat'],'built');
 end
 
 function ea_warp_atlas_to_native(troot,aroot,proot,force,options)
