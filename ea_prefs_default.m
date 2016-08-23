@@ -123,6 +123,8 @@ prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 0: Leave DICOMs a
 
 prefs.addfibers={}; % additional fibers to show.
 
+%% native-space:
+prefs.native.warp='inverse'; % set to 'tpm' in case you wish to create a atlas-specific tpm to warp atlases, set to 'inverse' to apply the inverse transform of your normalization.
 
 %% lead server:
 
