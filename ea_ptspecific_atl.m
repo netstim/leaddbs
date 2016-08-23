@@ -8,7 +8,7 @@ troot=[options.earoot,'templates',filesep];
 aroot=[options.earoot,'atlases',filesep,options.atlasset,filesep];
 proot=[options.root,options.patientname,filesep];
 if ~exist([proot,'native',filesep,'ea_nativebuilt.mat'],'file') % check rebuild needed
-    switch options.prefs.native.warp
+    switch prefs.normalize.inverse.warp
         case 'tpm'
             generate_local_tpm(troot,aroot,proot,0,options)
         case 'inverse'
