@@ -26,7 +26,6 @@ if options.dicomimp % do DICOM-Import.
     
     ea_dicom_import(options);
     
-    
 end
 
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.

@@ -235,7 +235,7 @@ ea_write_nii(nii);
 gzip(nii.fname);
 delete(nii.fname);
 
-ea_normalize_ants_multimodal(options,0,1);
+ea_normalize_ants_multimodal(options,1);
 
 
 

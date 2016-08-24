@@ -12,7 +12,6 @@ disp('Importing DICOM files...');
 
 
 
-
 indir=[options.root,options.patientname,filesep,'DICOM',filesep];
 outdir=[options.root,options.patientname,filesep];
 tmpoutdir=outdir;
