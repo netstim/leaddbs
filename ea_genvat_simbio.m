@@ -301,6 +301,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
     end
 
     try
+        
             vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
