@@ -34,7 +34,7 @@ usepd=1; % set to zero if you do not wish to use PD data for normalization even 
 usefa=1; % set to zero if you do not wish to use FA data for normalization even if present.
 
 if ~includeatlas % second run from maget-brain segment
-    if ~seemscoregistered(options) % check headers of files to see if already coregistered.
+    if ~ea_seemscoregistered(options) % check headers of files to see if already coregistered.
         ea_coreg_all_mri(options,usebrainmask)
     end
 end
