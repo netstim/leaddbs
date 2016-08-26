@@ -215,6 +215,6 @@ try
     options.lcm.struc.connectome=get(handles.fiberspopup,'String');
     options.lcm.struc.connectome=options.lcm.struc.connectome{get(handles.fiberspopup,'Value')};
     options.lcm.func.connectome=get(handles.fmripopup,'String');
-    options.lcm.func.connectome=options.lcm.struc.connectome{get(handles.fmripopup,'Value')};
+    options.lcm.func.connectome=options.lcm.func.connectome{get(handles.fmripopup,'Value')};
     options.lcm.struc.espace=get(handles.strucexportspace,'Value');
 end

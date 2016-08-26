@@ -14,11 +14,8 @@ switch cmd
             map.img(:)=0;
             Vseed=ea_load_nii(seedfiles{s});
             
-            if isempty(varargin{4});
-                maxdist=abs(Vseed.mat(1))/2;
-            else
-                maxdist=varargin{4};
-            end
+            maxdist=abs(Vseed.mat(1))/2;
+     
             Vseed.img(isnan(Vseed.img))=0;
             
             ixs=find(Vseed.img);
@@ -34,7 +31,9 @@ switch cmd
             
             ids=rangesearch(tree,XYZmm,maxdist,'distance','chebychev');
             % select fibers for each ix
-            for ix=1:length(ixvals)
+            ea_dispercent(0,'Iterating voxels');
+            ixdim=length(ixvals);
+            for ix=1:ixdim
                 % assign fibers on map with this weighted value.
                 fibnos=unique(fibers(ids{ix},4));
                 
@@ -43,7 +42,9 @@ switch cmd
                 allfibcs(:,logical(sum(allfibcs<1,1)))=[];
                 topaint=sub2ind(mapsz,allfibcs(1,:),allfibcs(2,:),allfibcs(3,:));
                 map.img(topaint)=map.img(topaint)+ixvals(ix);
+            ea_dispercent(ix/ixdim);
             end
+                        ea_dispercent(1,'end');
             
             [pth,fn]=fileparts(seedfiles{s});
             

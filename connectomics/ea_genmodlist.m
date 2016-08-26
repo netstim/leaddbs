@@ -1,6 +1,7 @@
 function [modlist,sf]=ea_genmodlist(directory,selectedparc,options)
 cnt=1;
 modlist=cell(0);
+sf=[];
 % patientspecific part
 if exist('directory','var')
     % check if pat-specific fibertracts are present:

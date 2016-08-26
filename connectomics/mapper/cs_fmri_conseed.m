@@ -12,6 +12,8 @@ else
     end
 end
 
+
+
 if ~exist('dfold','var')
     dfold=''; % assume all data needed is stored here.
 else
@@ -20,17 +22,27 @@ else
     end
 end
 
+dfoldsurf=[dfold,'surf',filesep];
+dfoldvol=[dfold,'vol',filesep]; % expand to /vol subdir.
 
 
-msk=ea_load_nii([dfold,'outtemplate.nii']);
-load([dfold,'outidx']);
-load([dfold,'subIDs']);
+
+msk=ea_load_nii([ea_getconnectomebase,'spacedefinitions',filesep,'222.nii']);
+
+load([dfoldvol,'outidx']);
+load([dfoldvol,'subIDs']);
 if exist('outputmask','var')
+    if ~isempty(outputmask)
     omask=ea_load_nii(outputmask);
     omaskidx=find(omask.img(:));
     [~,maskuseidx]=ismember(omaskidx,outidx);
+    else
+        omaskidx=outidx;
+        maskuseidx=1:length(outidx);
+    end
 else
     omaskidx=outidx; % use all.
+        maskuseidx=1:length(outidx);
 end
 
 if iscell(sfile) % already supplied in cell format
@@ -124,7 +136,7 @@ for mcfi=1:numsub
             for s=1:numseed
                 thiscorr=zeros(length(omaskidx),howmanyruns);
                 for run=1:howmanyruns
-                    load([dfold,subIDs{mcfi}{run+1}])
+                    load([dfoldvol,subIDs{mcfi}{run+1}])
                     gmtc=single(gmtc);
                     stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s});
                     thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
@@ -147,7 +159,7 @@ for mcfi=1:numsub
 
                        thiscorr=zeros(length(omaskidx),howmanyruns);
                 for run=1:howmanyruns
-                    load([dfold,subIDs{mcfi}{run+1}])
+                    load([dfoldvol,subIDs{mcfi}{run+1}])
                     gmtc=single(gmtc);
                     
                     switch cmd
@@ -190,7 +202,7 @@ for mcfi=1:numsub
             
         otherwise
             for run=1:howmanyruns
-                load([dfold,subIDs{mcfi}{run+1}])
+                load([dfoldvol,subIDs{mcfi}{run+1}])
                 gmtc=single(gmtc);
                 
                 for s=1:numseed
