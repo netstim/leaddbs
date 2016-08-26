@@ -205,7 +205,7 @@ if ea_headmodel_changed(options,side,elstruct)
 
         load([options.earoot,'dev',filesep,'bTensor']) % b-Tensor of a simple 6fold diffusion series
         %ftr=load([options.root,options.patientname,filesep,options.prefs.FTR_normalized]);
-        ftr=load([options.earoot,ea_getconnectomebase('dmri'),filesep,'Groupconnectome (Horn 2013) thinned out x 50']);
+        ftr=load([ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) thinned out x 50']);
 
         %aniso=ea_ftr2aniso(ftr.normalized_fibers_mm,smri,ten);
         aniso=ea_ftr2aniso(ftr.gibbsconnectome,smri,ten);

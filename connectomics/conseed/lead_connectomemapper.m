@@ -261,3 +261,13 @@ function odirbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to odirbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+seeds=getappdata(handles.seedbutton,'seeds');
+if ~isempty(seeds) % seeds defined already
+   seedbase=fileparts(seeds{1}); 
+else
+    seedbase='';
+end
+odir=uigetdir(seedbase,'Choose output location');
+setappdata(hObject,'odir',[odir,filesep]);
+set(hObject,'String',odir);
