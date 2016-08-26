@@ -243,7 +243,7 @@ else % use fiberset
             case 'Patient-specific fiber tracts'
                 fibersfile=[directory,options.prefs.FTR_normalized];
             otherwise
-                fibersfile=[options.earoot,'fibers',filesep,matmodality,'.mat'];
+                fibersfile=[options.earoot,'connectomes',filesep,'dMRI',filesep,matmodality,'.mat'];
         end
         
         % seed filename
@@ -399,7 +399,7 @@ if exist([directory,options.prefs.FTR_normalized],'file');
     cnt=cnt+1;
 end
 % check for canonical fiber sets
-fdfibs=dir([options.earoot,'fibers',filesep,'*.mat']);
+fdfibs=dir([options.earoot,'connectomes',filesep,'dMRI',filesep,'*.mat']);
 for fdf=1:length(fdfibs)
     [~,fn]=fileparts(fdfibs(fdf).name);
     modlist{cnt}=fn;

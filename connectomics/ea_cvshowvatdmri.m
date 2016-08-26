@@ -28,7 +28,7 @@ end
             case 'Patient-specific fiber tracts'
                 fibersfile=[directory,options.prefs.FTR_normalized];
             otherwise
-                fibersfile=[options.earoot,'fibers',filesep,vatmodality,'.mat'];
+                fibersfile=[options.earoot,'connectomes',filesep,'dMRI',filesep,vatmodality,'.mat'];
         end
         end
         

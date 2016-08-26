@@ -1,4 +1,4 @@
-function fig=ea_corrplot(varargin)
+function [R,p]=ea_corrplot(varargin)
 % this simple function is a small wrapper for a corrplot figure.
 
 

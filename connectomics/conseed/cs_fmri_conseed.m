@@ -1,0 +1,299 @@
+function cs_fmri_conseed(dfold,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
+tic
+if ~isdeployed
+    addpath(genpath('/autofs/cluster/nimlab/USERS/Andy/lead_dbs'));
+    addpath('/autofs/cluster/nimlab/USERS/Andy/spm12');
+end
+if ~exist('writeoutsinglefiles','var')
+    writeoutsinglefiles=0;
+else
+    if ischar(writeoutsinglefiles)
+    writeoutsinglefiles=str2double(writeoutsinglefiles);
+    end
+end
+if ~exist('outputfolder','var')
+    [pth,fn,ext]=fileparts(sfile); % exit to same folder as seed.
+    outputfolder=[pth,filesep];
+else
+    if isempty(outputfolder) % from shell wrapper.
+    [pth,fn,ext]=fileparts(sfile); % exit to same folder as seed.
+    outputfolder=[pth,filesep];    
+    end
+    if ~strcmp(outputfolder(end),filesep)
+        outputfolder=[outputfolder,filesep];
+    end
+end
+if ~exist('dfold','var')
+    dfold=''; % assume all data needed is stored here.
+else
+    if ~strcmp(dfold(end),filesep)
+        dfold=[dfold,filesep];
+    end
+end
+
+
+
+msk=ea_load_nii([dfold,'outtemplate.nii']);
+load([dfold,'outidx']);
+load([dfold,'subIDs']);
+if exist('outputmask','var')
+    omask=ea_load_nii(outputmask);
+    omaskidx=find(omask.img(:));
+    [~,maskuseidx]=ismember(omaskidx,outidx);
+else
+    omaskidx=outidx; % use all.
+end
+
+
+[pth,fn,ext]=fileparts(sfile);
+if strcmp(ext,'.txt')
+    roilist=1;
+    sfile=getrois(sfile);
+else
+    roilist=0;
+    sfile={sfile};
+end
+
+
+
+if strcmp(sfile{1}(end-2:end),'.gz')
+    %gunzip(sfile)
+    %sfile=sfile(1:end-3);
+    usegzip=1;
+else
+    usegzip=0;
+end
+
+for s=1:length(sfile)
+    seed{s}=load_nii(sfile{s});
+    
+    [~,seedfn{s}]=fileparts(sfile{s});
+    
+    sweights=seed{s}.img(outidx);
+    sweights(isnan(sweights))=0;
+    % assure sum of sweights is 1
+    sweights(logical(sweights))=sweights(logical(sweights))/sum(sweights(logical(sweights)));
+    sweightmx=repmat(sweights,1,120);
+    
+    sweightidx{s}=find(sweights);
+    sweightidxmx{s}=double(sweightmx(sweightidx{s},:));
+end
+numseed=s;
+
+
+pixdim=length(outidx);
+
+numsub=length(subIDs);
+switch cmd
+    case {'seed','seedvox_ram','seedvox_noram'}
+        for s=1:numseed
+            fX{s}=nan(length(omaskidx),numsub);
+        end
+    otherwise
+        fX=nan(numseed,numsub);
+end
+
+switch cmd
+    case 'corr'
+        addp='';
+    case 'pcorr'
+        addp='p';
+end
+
+ea_dispercent(0,'Iterating through subjects');
+
+for mcfi=1:numsub
+    ea_dispercent(mcfi/numsub);
+    howmanyruns=length(subIDs{mcfi})-1;
+    switch cmd
+        
+        case 'seed'
+            
+            for s=1:numseed
+                       thiscorr=zeros(length(omaskidx),howmanyruns);
+                for run=1:howmanyruns
+                    load([dfold,subIDs{mcfi}{run+1}])
+                    gmtc=single(gmtc);
+                    stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s});
+                    thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
+                end
+                
+                fX{s}(:,mcfi)=mean(thiscorr,2);
+                if writeoutsinglefiles
+                    ccmap=msk;
+                    ccmap.img=single(ccmap.img);
+                    ccmap.fname=[outputfolder,seedfn{s},'_',subIDs{mcfi}{1},'_corr.nii'];
+                    ccmap.img(omaskidx)=fX{s}(:,mcfi);    
+                    spm_write_vol(ccmap,ccmap.img);
+                end
+            end
+            
+        case {'seedvox_ram','seedvox_noram'}
+            
+               for s=1:numseed
+                   swlength=length(sweightidx{s});
+
+                       thiscorr=zeros(length(omaskidx),howmanyruns);
+                for run=1:howmanyruns
+                    load([dfold,subIDs{mcfi}{run+1}])
+                    gmtc=single(gmtc);
+                    
+                    switch cmd
+                        case 'seedvox_ram'
+                            stc=gmtc(logical(sweights),:);
+                            X=corr(stc',gmtc');
+                            Xweights=repmat(sweights(logical(sweights)),1,pixdim);
+                            X=X.*Xweights;
+                            clear Xweights
+                            thiscorr(:,run)=mean(X,1);
+                            clear X
+                        case 'seedvox_noram'
+                            gmtc=gmtc';
+                            thiscorr=thiscorr';
+                            
+                            for seedvox=1:swlength
+                                stc=gmtc(:,sweightidx{s}(seedvox));
+                                addval=(corr(stc,gmtc(:,maskuseidx))*sweightidxmx{s}(seedvox,1));
+                                addval(isnan(addval))=0;
+                                thiscorr(run,:)=thiscorr(run,:)+addval;
+                            end
+                            
+                            thiscorr=thiscorr';
+                           thiscorr(:,run)=thiscorr(:,run)/seedvox; % averaging  
+                    end
+                    
+                end
+                fX{s}(:,mcfi)=mean(thiscorr,2);
+
+                if writeoutsinglefiles
+                    ccmap=msk;
+                    ccmap.img=single(ccmap.img);
+                    ccmap.fname=[outputfolder,seedfn{s},'_',subIDs{mcfi}{1},'_corr.nii'];
+                    ccmap.img(omaskidx)=fX{s}(:,mcfi);    
+
+                    spm_write_vol(ccmap,ccmap.img);
+                end
+            end
+            
+            
+        otherwise
+            for run=1:howmanyruns
+                load([dfold,subIDs{mcfi}{run+1}])
+                gmtc=single(gmtc);
+                
+                for s=1:numseed
+                    stc(s,:)=mean(gmtc(sweightidx{s},:).*sweightidxmx{s});
+                end
+                
+                switch cmd
+                    case 'corr'
+                        X=corrcoef(stc');
+                        
+                    case 'pcorr'
+                        X=partialcorr(stc');
+                end
+                thiscorr(:,run)=X(:);
+            end
+            fX(:,mcfi)=X(logical(triu(ones(numseed),1)));
+            if writeoutsinglefiles
+                save([outputfolder,addp,'corrMx_',subIDs{mcfi}{1},'.mat'],'X','-v7.3');
+            end
+    end
+end
+ea_dispercent(1,'end');
+
+switch cmd
+    case {'seed','seedvox_ram','seedvox_noram'}
+        for s=1:numseed
+            % export mean
+            
+            M=nanmean(fX{s}');
+            mmap=msk;
+            mmap.dt=[16,0];
+            mmap.img(:)=0;
+            mmap.img=single(mmap.img);
+            mmap.img(omaskidx)=M;
+
+            mmap.fname=[outputfolder,seedfn{s},'_','AvgR.nii'];
+            spm_write_vol(mmap,mmap.img);
+            if usegzip
+                gzip(mmap.fname);
+                delete(mmap.fname);
+            end
+            
+            
+            % fisher-transform:
+            fX{s}=atanh(fX{s});
+            
+            % export fz-mean
+            
+            M=nanmean(fX{s}');
+            mmap=msk;
+            mmap.dt=[16,0];
+            mmap.img(:)=0;
+            mmap.img=single(mmap.img);
+            mmap.img(omaskidx)=M;
+            mmap.fname=[outputfolder,seedfn{s},'_','AvgR_Fz.nii'];
+            spm_write_vol(mmap,mmap.img);
+            if usegzip
+                gzip(mmap.fname);
+                delete(mmap.fname);
+            end
+            
+            % export T
+            
+            [~,~,~,tstat]=ttest(fX{s}');
+            tmap=msk;
+            tmap.img(:)=0;
+            tmap.dt=[16,0];
+            tmap.img=single(tmap.img);
+            
+                tmap.img(omaskidx)=tstat.tstat;
+
+            tmap.fname=[outputfolder,seedfn{s},'_','T.nii'];
+            spm_write_vol(tmap,tmap.img);
+            if usegzip
+                gzip(tmap.fname);
+                delete(mmap.fname);
+            end
+        end
+        
+    otherwise
+        
+        % export mean
+        M=nanmean(fX');
+        X=ones(numseed);
+        X(logical(triu(ones(numseed),1)))=M;
+        X(logical(tril(ones(numseed),-1)))=M;
+        save([outputfolder,addp,'corrMx_AvgR.mat'],'X','-v7.3');
+        % fisher-transform:
+        fX=atanh(fX);
+        M=nanmean(fX');
+        X(logical(triu(ones(numseed),1)))=M;
+        X(logical(tril(ones(numseed),-1)))=M;
+        save([outputfolder,addp,'corrMx_AvgR_Fz.mat'],'X','-v7.3');
+        
+        % export T
+        [~,~,~,tstat]=ttest(fX');
+        X(logical(triu(ones(numseed),1)))=tstat.tstat;
+        X(logical(tril(ones(numseed),-1)))=tstat.tstat;
+        save([outputfolder,addp,'corrMx_T.mat'],'X','-v7.3');
+        
+end
+
+
+toc
+
+function sfile=getrois(sfile)
+
+fID=fopen(sfile);
+sfile=textscan(fID,'%s');
+sfile=sfile{1};
+fclose(fID);
+
+
+
+
+
+
+
