@@ -34,15 +34,15 @@ switch cmd
             disp('Macaque toolbox is installed.')
         end
     case 'groupconnectome2013'
-        if ~exist([earoot,'connectomes',filesep,'dMRI',filesep,'Groupconnectome (Horn 2013) full.mat'],'file') || force
+        if ~exist([earoot,ea_getconnectomebase('dmri'),filesep,'Groupconnectome (Horn 2013) full.mat'],'file') || force
             try
-            websave([earoot,'connectomes',filesep,'dMRI',filesep,'groupconnectome2013.zip'],'http://www.lead-dbs.org/release/download.php?id=group');
-            unzip([earoot,'connectomes',filesep,'dMRI',filesep,'groupconnectome2013.zip']);
+            websave([earoot,ea_getconnectomebase('dmri'),filesep,'groupconnectome2013.zip'],'http://www.lead-dbs.org/release/download.php?id=group');
+            unzip([earoot,ea_getconnectomebase('dmri'),filesep,'groupconnectome2013.zip']);
             catch
                 success=0;
             end
-            try delete([earoot,'connectomes',filesep,'dMRI',filesep,'groupconnectome2013.zip']); end
-            try delete([earoot,'connectomes',filesep,'dMRI',filesep,'groupconnectome2013.zip.html']); end    
+            try delete([earoot,ea_getconnectomebase('dmri'),filesep,'groupconnectome2013.zip']); end
+            try delete([earoot,ea_getconnectomebase('dmri'),filesep,'groupconnectome2013.zip.html']); end    
         else
             disp('Group Connectome (Horn 2013) is installed.')
         end

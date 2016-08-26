@@ -1338,7 +1338,7 @@ switch mod
         fibersfile=mod;
     case 'Do not calculate connectivity stats'
     otherwise % load fibertracts once and for all subs here.
-        [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([ea_getearoot,'connectomes',filesep,'dMRI',filesep,mod,'.mat']);
+        [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([ea_getearoot,ea_getconnectomebase('dmri'),filesep,mod,'.mat']);
 end
 
 

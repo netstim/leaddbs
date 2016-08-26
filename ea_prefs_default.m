@@ -61,6 +61,7 @@ prefs.lc.func.regress_global=1;
 prefs.lc.func.regress_wmcsf=1;
 prefs.lc.func.bphighcutoff=0.08;
 prefs.lc.func.bplowcutoff=0.009;
+prefs.lc.datadir=[ea_getearoot,'connectomes',filesep];
 
 %% DTI-files:
 prefs.b0='b0.nii';

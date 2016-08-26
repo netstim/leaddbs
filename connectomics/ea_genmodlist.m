@@ -7,7 +7,7 @@ if exist([directory,options.prefs.FTR_normalized],'file');
     cnt=cnt+1;
 end
 % check for canonical fiber sets
-fdfibs=dir([options.earoot,'connectomes',filesep,'dMRI',filesep,'*.mat']);
+fdfibs=dir([options.earoot,ea_getconnectomebase('dmri'),filesep,'*.mat']);
 for fdf=1:length(fdfibs)
     [~,fn]=fileparts(fdfibs(fdf).name);
     modlist{cnt}=fn;

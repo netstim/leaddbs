@@ -63,8 +63,7 @@ set(handles.leadfigure,'name','Lead-Connectome Mapper','color','w');
 
 
 
-
-
+ea_menu_initmenu(handles,{'cluster','prefs'});
 
 
 
