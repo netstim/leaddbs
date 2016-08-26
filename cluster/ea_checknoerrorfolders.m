@@ -1,5 +1,6 @@
-function ifcell=ea_checkforerrors(ifcell)
-
+function ifcell=ea_checknoerrorfolders(ifcell)
+cnt=1;
+ecnt=1;
 
 for f=1:length(ifcell)
    
