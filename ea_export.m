@@ -1,4 +1,4 @@
-function ea_export(options)
+function ea_export(options,clusterfunctionname)
 % This function exports jobs created by the GUI of Lead-DBS. It is
 % distributed within Lead-DBS toolbox (www.lead-dbs.org)
 % __________________________________________________________________________________
@@ -45,7 +45,13 @@ fprintf(fID,'%s\n','% set subject specific options:');
 fprintf(fID,'%s\n','options.root=[fileparts(options.uipatdirs{pat}),filesep];');
 fprintf(fID,'%s\n','[~,thispatdir]=fileparts(options.uipatdirs{pat});');
 fprintf(fID,'%s\n','options.patientname=thispatdir;');
-fprintf(fID,'%s\n',['ea_run(''run'',options);']);
+
+if exist('clusterfunctionname','var') % submit to cluster instead of directly running
+    fprintf(fID,'%s\n',['clusterfunctionname=''',clusterfunctionname,''';']);
+    fprintf(fID,'%s\n','feval(eval([''@'',clusterfunctionname]),options)');
+else
+    fprintf(fID,'%s\n',['ea_run(''run'',options);']);
+end
 fprintf(fID,'%s\n','end');
 fprintf(fID,'\n');
 fprintf(fID,'\n');

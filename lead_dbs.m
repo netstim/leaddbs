@@ -215,24 +215,12 @@ if nargin
 end
 
 %% add tools menu
-menuprobe=getappdata(handles.leadfigure,'menuprobe');
-if isempty(menuprobe)
-f = uimenu('Label','Tools');
-    uimenu(f,'Label','Convert ACPC/MNI coordinates','Callback',{@ea_acpcquery,handles.leadfigure});
-e = uimenu(f,'Label','Export');
-uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles});
-uimenu(e,'Label','Export .STL files for selected patient(s)','Callback',{@ea_exportpat,'STL',handles});
-uimenu(e,'Label','Export .PLY files for selected patient(s)','Callback',{@ea_exportpat,'PLY',handles});
+ea_menu_initmenu(handles,{'acpc','export','cluster','prefs'});
 
-s = uimenu(f,'Label','Submit Jobs to');
-cscripts=dir([earoot,'cluster',filesep,'ea_run_*.m']);
-for cscript=1:length(cscripts)
-    clustername=ea_sub2space(cscripts(cscript).name(8:end-2));
-    [~,functionname]=fileparts(cscripts(cscript).name);
-    uimenu(s,'Label',clustername,'Callback',{@ea_run_cluster,functionname,handles});
-end
-setappdata(handles.leadfigure,'menuprobe',1);
-end
+
+
+
+
 
 handles.prod='dbs';
 if ~isempty(varargin)

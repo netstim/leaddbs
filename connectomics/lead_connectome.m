@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 17-Aug-2016 15:14:31
+% Last Modified by GUIDE v2.5 26-Aug-2016 12:03:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -130,21 +130,8 @@ end
 
 if isindependent
     %% add tools menu
-    menuprobe=getappdata(handles.leadfigure,'menuprobe');
-    if isempty(menuprobe)
-        f = uimenu('Label','Tools');
-        e = uimenu(f,'Label','Export');
-        uimenu(e,'Label','Export .STL files for selected subject(s)','Callback',{@ea_exportpat,'STL',handles});
-        uimenu(e,'Label','Export .PLY files for selected subject(s)','Callback',{@ea_exportpat,'PLY',handles});
-        s = uimenu(f,'Label','Submit Jobs to');
-        cscripts=dir([earoot,'cluster',filesep,'ea_run_*.m']);
-        for cscript=1:length(cscripts)
-            clustername=ea_sub2space(cscripts(cscript).name(8:end-2));
-            [~,functionname]=fileparts(cscripts(cscript).name);
-            uimenu(s,'Label',clustername,'Callback',{@ea_run_cluster,functionname,handles});
-        end
-        setappdata(handles.leadfigure,'menuprobe',1);
-    end
+    ea_menu_initmenu(handles,{'export','cluster','prefs'});
+    
 end
 
 ea_firstrun(handles);

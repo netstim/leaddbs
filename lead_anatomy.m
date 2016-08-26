@@ -128,9 +128,15 @@ try % if user had called it before, 2D-options will be stored here:
     ea_options2tdhandles(handles,d2);
 end
 
+    %% add tools menu
+    ea_menu_initmenu(handles,{'export','cluster','prefs'});
+    
+
 handles.prod='anatomy';
 ea_firstrun(handles);
     
+
+
 % UIWAIT makes lead_anatomy wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 
