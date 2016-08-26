@@ -39,6 +39,9 @@ fprintf(fID,'\n');
 fprintf(fID,'%s\n',['addpath(genpath(''',options.earoot(1:end-1),'''));']);
 fprintf(fID,'%s\n',['addpath(''',fileparts(which('spm')),''');']);
 fprintf(fID,'\n');
+if exist('clusterfunctionname','var') % submit to cluster instead of directly running
+fprintf(fID,'%s\n',['% options.uipatdirs=ea_checknoerrorfolders(options.uipatdirs); % uncomment this line to only apply to folders that ran into errors the last time.']);
+end
 fprintf(fID,'\n');
 fprintf(fID,'%s\n','for pat=1:length(options.uipatdirs)');
 fprintf(fID,'%s\n','% set subject specific options:');
