@@ -203,18 +203,18 @@ end
 % lead connectome mapper options:
 
 try
-
-options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
-options.lcm.odir=getappdata(handles.odirbutton,'odir');
-if isempty(options.lcm.odir)
-    options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
-end
-options.lcm.struc.do=get(handles.dostructural,'Value');
-options.lcm.func.do=get(handles.dofunctional,'Value');
-options.lcm.cmd=get(handles.command,'Value');
-options.lcm.struc.connectome=get(handles.fiberspopup,'String');
-options.lcm.struc.connectome=options.lcm.struc.connectome{get(handles.fiberspopup,'Value')};
-options.lcm.func.connectome=get(handles.fmripopup,'String');
-options.lcm.func.connectome=options.lcm.struc.connectome{get(handles.fmripopup,'Value')};
-
+    options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
+    options.lcm.odir=getappdata(handles.odirbutton,'odir');
+    if isempty(options.lcm.odir)
+        options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
+    end
+    options.lcm.omask=getappdata(handles.omaskbutton,'omask');
+    options.lcm.struc.do=get(handles.dostructural,'Value');
+    options.lcm.func.do=get(handles.dofunctional,'Value');
+    options.lcm.cmd=get(handles.command,'Value');
+    options.lcm.struc.connectome=get(handles.fiberspopup,'String');
+    options.lcm.struc.connectome=options.lcm.struc.connectome{get(handles.fiberspopup,'Value')};
+    options.lcm.func.connectome=get(handles.fmripopup,'String');
+    options.lcm.func.connectome=options.lcm.struc.connectome{get(handles.fmripopup,'Value')};
+    options.lcm.struc.espace=get(handles.strucexportspace,'Value');
 end

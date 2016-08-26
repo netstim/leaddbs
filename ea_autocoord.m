@@ -28,6 +28,18 @@ if options.dicomimp % do DICOM-Import.
     
 end
 
+
+
+
+% check connectome-mapper tags
+
+if options.lcm.func.do
+    ea_lcm_func(options);
+end
+if options.lcm.struc.do
+    ea_lcm_struc(options);
+end
+
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
     options=ea_assignpretra(options);
     try ea_resliceanat(options); end
@@ -217,16 +229,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         ea_write(options)
     end
     
-    
-    % check connectome-mapper tags
-    
-    if options.lcm.func.do
-       ea_lcm_func(options); 
-    end
-    if options.lcm.struc.do
-       ea_lcm_struc(options); 
-    end
-    
+
     
 else
     ea_write(options)

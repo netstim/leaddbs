@@ -11,18 +11,7 @@ else
     writeoutsinglefiles=str2double(writeoutsinglefiles);
     end
 end
-if ~exist('outputfolder','var')
-    [pth,fn,ext]=fileparts(sfile); % exit to same folder as seed.
-    outputfolder=[pth,filesep];
-else
-    if isempty(outputfolder) % from shell wrapper.
-    [pth,fn,ext]=fileparts(sfile); % exit to same folder as seed.
-    outputfolder=[pth,filesep];    
-    end
-    if ~strcmp(outputfolder(end),filesep)
-        outputfolder=[outputfolder,filesep];
-    end
-end
+
 if ~exist('dfold','var')
     dfold=''; % assume all data needed is stored here.
 else
@@ -44,14 +33,37 @@ else
     omaskidx=outidx; % use all.
 end
 
-
-[pth,fn,ext]=fileparts(sfile);
-if strcmp(ext,'.txt')
-    roilist=1;
-    sfile=getrois(sfile);
+if iscell(sfile) % already supplied in cell format
+    if length(sfile)>1
+        roilist=1;
+    else
+        roilist=0;
+    end
+    
 else
-    roilist=0;
-    sfile={sfile};
+    [pth,fn,ext]=fileparts(sfile);
+    if strcmp(ext,'.txt')
+        roilist=1;
+        sfile=getrois(sfile);
+    else
+        roilist=0;
+        sfile={sfile};
+    end
+end
+
+
+
+if ~exist('outputfolder','var')
+    [pth,fn,ext]=fileparts(sfile); % exit to same folder as seed.
+    outputfolder=[pth,filesep];
+else
+    if isempty(outputfolder) % from shell wrapper.
+    [pth,fn,ext]=fileparts(sfile); % exit to same folder as seed.
+    outputfolder=[pth,filesep];    
+    end
+    if ~strcmp(outputfolder(end),filesep)
+        outputfolder=[outputfolder,filesep];
+    end
 end
 
 
@@ -94,9 +106,9 @@ switch cmd
 end
 
 switch cmd
-    case 'corr'
+    case 'matrix'
         addp='';
-    case 'pcorr'
+    case 'pmatrix'
         addp='p';
 end
 
@@ -110,7 +122,7 @@ for mcfi=1:numsub
         case 'seed'
             
             for s=1:numseed
-                       thiscorr=zeros(length(omaskidx),howmanyruns);
+                thiscorr=zeros(length(omaskidx),howmanyruns);
                 for run=1:howmanyruns
                     load([dfold,subIDs{mcfi}{run+1}])
                     gmtc=single(gmtc);
@@ -186,10 +198,10 @@ for mcfi=1:numsub
                 end
                 
                 switch cmd
-                    case 'corr'
+                    case 'matrix'
                         X=corrcoef(stc');
                         
-                    case 'pcorr'
+                    case 'pmatrix'
                         X=partialcorr(stc');
                 end
                 thiscorr(:,run)=X(:);
@@ -214,7 +226,7 @@ switch cmd
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
 
-            mmap.fname=[outputfolder,seedfn{s},'_','AvgR.nii'];
+            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
             spm_write_vol(mmap,mmap.img);
             if usegzip
                 gzip(mmap.fname);
@@ -233,7 +245,7 @@ switch cmd
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
-            mmap.fname=[outputfolder,seedfn{s},'_','AvgR_Fz.nii'];
+            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz.nii'];
             spm_write_vol(mmap,mmap.img);
             if usegzip
                 gzip(mmap.fname);
@@ -250,7 +262,7 @@ switch cmd
             
                 tmap.img(omaskidx)=tstat.tstat;
 
-            tmap.fname=[outputfolder,seedfn{s},'_','T.nii'];
+            tmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T.nii'];
             spm_write_vol(tmap,tmap.img);
             if usegzip
                 gzip(tmap.fname);
@@ -265,19 +277,19 @@ switch cmd
         X=ones(numseed);
         X(logical(triu(ones(numseed),1)))=M;
         X(logical(tril(ones(numseed),-1)))=M;
-        save([outputfolder,addp,'corrMx_AvgR.mat'],'X','-v7.3');
+        save([outputfolder,cmd,'_corrMx_AvgR.mat'],'X','-v7.3');
         % fisher-transform:
         fX=atanh(fX);
         M=nanmean(fX');
         X(logical(triu(ones(numseed),1)))=M;
         X(logical(tril(ones(numseed),-1)))=M;
-        save([outputfolder,addp,'corrMx_AvgR_Fz.mat'],'X','-v7.3');
+        save([outputfolder,cmd,'_corrMx_AvgR_Fz.mat'],'X','-v7.3');
         
         % export T
         [~,~,~,tstat]=ttest(fX');
         X(logical(triu(ones(numseed),1)))=tstat.tstat;
         X(logical(tril(ones(numseed),-1)))=tstat.tstat;
-        save([outputfolder,addp,'corrMx_T.mat'],'X','-v7.3');
+        save([outputfolder,cmd,'_corrMx_T.mat'],'X','-v7.3');
         
 end
 
