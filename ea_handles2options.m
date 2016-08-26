@@ -28,9 +28,11 @@ catch
     options.dicomimp=0;
     options.normalize.do=0;
 end
+try
 options.normalize.method=getappdata(handles.leadfigure,'normmethod');
 options.normalize.method=options.normalize.method{get(handles.normmethod,'Value')};
 options.normalize.methodn=get(handles.normmethod,'Value');
+end
 try % not working when calling from lead_anatomy
     options.normalize.check=(get(handles.normcheck,'Value') == get(handles.normcheck,'Max'));
 catch
@@ -195,4 +197,24 @@ try % not working when calling from lead_anatomy
     options.dolc=get(handles.include_lead_connectome_subroutine,'Value');
 catch
     options.dolc=0;
+end
+
+
+% lead connectome mapper options:
+
+try
+
+options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
+options.lcm.odir=getappdata(handles.odirbutton,'odir');
+if isempty(options.lcm.odir)
+    options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
+end
+options.lcm.struc.do=get(handles.dostructural,'Value');
+options.lcm.func.do=get(handles.dofunctional,'Value');
+options.lcm.cmd=get(handles.command,'Value');
+options.lcm.struc.connectome=get(handles.fiberspopup,'String');
+options.lcm.struc.connectome=options.lcm.struc.connectome{get(handles.fiberspopup,'Value')};
+options.lcm.func.connectome=get(handles.fmripopup,'String');
+options.lcm.func.connectome=options.lcm.struc.connectome{get(handles.fmripopup,'Value')};
+
 end

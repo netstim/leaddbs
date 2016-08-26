@@ -25,6 +25,11 @@ if ischar(pos)
             pos=[sz(3)-50-2 sz(4)-50-2 50 50];
             onfigtit='Lead-Anatomy (busy...)';
             offfigtit='Lead-Anatomy';
+        case 'mapper'
+            sz=get(fighandle,'Position');
+            pos=[sz(3)-50-2 sz(4)-50-2 50 50];
+            onfigtit='Lead-Connectome Mapper (busy...)';
+            offfigtit='Lead-Connectome Mapper';
         case 'lead_connectome'
             sz=get(fighandle,'Position');
             pos=[sz(3)-50-2 sz(4)-50-2 50 50];
