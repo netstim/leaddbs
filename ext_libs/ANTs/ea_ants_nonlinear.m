@@ -158,7 +158,8 @@ cmd = [ANTS, ' --verbose 1' ...
              rigidstage, affinestage, synstage];
 
 if ~ispc
-    system(['bash -c "', cmd, '"']);
+    system(cmd);
+%    system(['bash -c "', cmd, '"']);
 else
     system(cmd);
 end
