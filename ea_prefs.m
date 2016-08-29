@@ -16,10 +16,12 @@ try
     delete([ea_getearoot,uid,'.m']);
 end
 
-ufn=fieldnames(uprefs);
-
-for uf=1:length(ufn)
-   prefs.(ufn{uf})=uprefs.(ufn{uf}); 
+try
+    ufn=fieldnames(uprefs);
+    
+    for uf=1:length(ufn)
+        prefs.(ufn{uf})=uprefs.(ufn{uf});
+    end
 end
 
 
