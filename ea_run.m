@@ -10,8 +10,10 @@ if strcmp(cmd,'runcluster')
     load(opath); % options will be provided as a .mat file.
 %    delete(opath);
     cmd='run';
-    addpath(genpath(ea_getearoot));
-    addpath(genpath(options.spmdir));
+    if ~isdeployed
+        addpath(genpath(ea_getearoot));
+        addpath(genpath(options.spmdir));
+    end
     needtoexit=1;
 else
     needtoexit=0;
