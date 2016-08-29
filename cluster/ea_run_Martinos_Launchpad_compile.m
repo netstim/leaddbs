@@ -12,14 +12,14 @@ setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS','1')
 
 cmdstring=['pbsubmit -q highio -O ',[options.root,options.patientname,filesep,'job_',jobID],'.out',...
     ' -E ',[options.root,options.patientname,filesep,'job_',jobID],'.err',...
-    ' -c "',[ea_getearoot,filesep,'cluster',filesep,'ea_run_binary.',computer('arch')],'',...
+    ' -c "',[ea_getearoot,'cluster',filesep,'run_ea_run_binary.sh'],...
     ' ','/usr/pubsw/common/matlab/8.6',...
-    ' runcluster ',[options.root,options.patientname,filesep,'job_',jobID],'"'];
+    ' runcluster ''',ea_path_helper([options.root,options.patientname,filesep,'job_',jobID]),'''"'];
 
-if ~exist([ea_getearoot,'cluster',filesep,'ea_run_binary.',computer('arch')],'file');
+if ~exist([ea_getearoot,'cluster',filesep,'ea_run_binary'],'file');
 mcc('-m','ea_run','-o',['ea_run_binary']);
-movefile('ea_run_binary',['cluster',filesep,'ea_run_binary.',computer('arch')]);
-delete('run_ea_run_binary.sh');
+movefile('ea_run_binary',['cluster',filesep,'ea_run_binary']);
+movefile('run_ea_run_binary.sh',['cluster',filesep,'run_ea_run_binary.sh']);
 end
 keyboard
 system(cmdstring);

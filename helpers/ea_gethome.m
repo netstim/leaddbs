@@ -8,5 +8,6 @@ end
 
 home=[home,filesep];
 if isdeployed
-   home=[ctfroot,filesep]; 
+   mkdir([ctfroot,filesep,'home',filesep]);
+   home=[ctfroot,filesep,'home',filesep]; 
 end
