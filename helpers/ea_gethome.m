@@ -7,3 +7,6 @@ home = getenv('HOME');
 end
 
 home=[home,filesep];
+if isdeployed
+   home=[ctfroot,filesep]; 
+end
