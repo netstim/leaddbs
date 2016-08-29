@@ -76,6 +76,9 @@ if isempty(get(handles.fmripopup,'String'))
     set(handles.fmripopup,'String','No functional connectome found.');
 end
 
+
+set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
+
 % Choose default command line output for lead_connectomemapper
 handles.output = hObject;
 

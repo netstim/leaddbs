@@ -28,9 +28,12 @@ dfoldvol=[dfold,'vol',filesep]; % expand to /vol subdir.
 
 
 msk=ea_load_nii([ea_getconnectomebase,'spacedefinitions',filesep,'222.nii']);
+lmsk=ea_load_nii([ea_getconnectomebase,'spacedefinitions',filesep,'lh_fsaverage.nii']);
+rmsk=ea_load_nii([ea_getconnectomebase,'spacedefinitions',filesep,'rh_fsaverage.nii']);
 
 load([dfoldvol,'outidx']);
 load([dfoldvol,'subIDs']);
+load([dfoldsurf,'subIDs']);
 if exist('outputmask','var')
     if ~isempty(outputmask)
     omask=ea_load_nii(outputmask);
@@ -112,6 +115,8 @@ switch cmd
     case {'seed','seedvox_ram','seedvox_noram'}
         for s=1:numseed
             fX{s}=nan(length(omaskidx),numsub);
+            rh.fX{s}=nan(10242,numsub);
+            lh.fX{s}=nan(10242,numsub);
         end
     otherwise
         fX=nan(numseed,numsub);
@@ -140,9 +145,21 @@ for mcfi=1:numsub
                     gmtc=single(gmtc);
                     stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s});
                     thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
+                    
+                    % include surface:
+                    ls=load([dfoldsurf,lsurfIDs{mcfi}{run+1}]);
+                    rs=load([dfoldsurf,rsurfIDs{mcfi}{run+1}]);
+                    rs.gmtc=single(rs.gmtc);
+                    ls.gmtc=single(ls.gmtc);
+                    ls.thiscorr(:,run)=corr(stc',ls.gmtc','type','Pearson');
+                    rs.thiscorr(:,run)=corr(stc',rs.gmtc','type','Pearson');
                 end
                 
                 fX{s}(:,mcfi)=mean(thiscorr,2);
+                lh.fX{s}(:,mcfi)=mean(ls.thiscorr,2);
+                rh.fX{s}(:,mcfi)=mean(rs.thiscorr,2);                
+                
+                
                 if writeoutsinglefiles
                     ccmap=msk;
                     ccmap.img=single(ccmap.img);
@@ -239,15 +256,45 @@ switch cmd
             mmap.img(omaskidx)=M;
 
             mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
-            spm_write_vol(mmap,mmap.img);
+            ea_write_nii(mmap);
             if usegzip
                 gzip(mmap.fname);
                 delete(mmap.fname);
             end
             
+            % lh surf
+            lM=nanmean(lh.fX{s}');
+            lmmap=lmsk;
+            lmmap.dt=[16,0];
+            lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
+            lmmap.img=single(lmmap.img);
+            lmmap.img(:)=lM(:);
+            lmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_surf_lh.nii'];
+            ea_write_nii(lmmap);
+            if usegzip
+                gzip(lmmap.fname);
+                delete(lmmap.fname);
+            end
+            
+            % rh surf
+            rM=nanmean(rh.fX{s}');
+            rmmap=rmsk;
+            rmmap.dt=[16,0];
+            rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
+            rmmap.img=single(rmmap.img);
+            rmmap.img(:)=rM(:);
+            rmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_surf_rh.nii'];
+            ea_write_nii(rmmap);
+            if usegzip
+                gzip(rmmap.fname);
+                delete(rmmap.fname);
+            end
+            
             
             % fisher-transform:
             fX{s}=atanh(fX{s});
+            lh.fX{s}=atanh(lh.fX{s});
+            rh.fX{s}=atanh(rh.fX{s});
             
             % export fz-mean
             
@@ -264,6 +311,35 @@ switch cmd
                 delete(mmap.fname);
             end
             
+            % lh surf
+            lM=nanmean(lh.fX{s}');
+            lmmap=lmsk;
+            lmmap.dt=[16,0];
+            lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
+            lmmap.img=single(lmmap.img);
+            lmmap.img(:)=lM(:);
+            lmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz_surf_lh.nii'];
+            ea_write_nii(lmmap);
+            if usegzip
+                gzip(lmmap.fname);
+                delete(lmmap.fname);
+            end
+            
+            % rh surf
+            rM=nanmean(rh.fX{s}');
+            rmmap=rmsk;
+            rmmap.dt=[16,0];
+            rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
+            rmmap.img=single(rmmap.img);
+            rmmap.img(:)=rM(:);
+            rmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz_surf_rh.nii'];
+            ea_write_nii(rmmap);
+            if usegzip
+                gzip(rmmap.fname);
+                delete(rmmap.fname);
+            end
+            
+            
             % export T
             
             [~,~,~,tstat]=ttest(fX{s}');
@@ -279,6 +355,39 @@ switch cmd
             if usegzip
                 gzip(tmap.fname);
                 delete(mmap.fname);
+            end
+            
+            
+            
+            
+            
+            
+            % lh surf
+            [~,~,~,ltstat]=ttest(lh.fX{s}');
+            lmmap=lmsk;
+            lmmap.dt=[16,0];
+            lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
+            lmmap.img=single(lmmap.img);
+            lmmap.img(:)=ltstat.tstat(:);
+            lmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T_surf_lh.nii'];
+            ea_write_nii(lmmap);
+            if usegzip
+                gzip(lmmap.fname);
+                delete(lmmap.fname);
+            end
+            
+            % rh surf
+            [~,~,~,rtstat]=ttest(rh.fX{s}');
+            rmmap=rmsk;
+            rmmap.dt=[16,0];
+            rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
+            rmmap.img=single(rmmap.img);
+            rmmap.img(:)=rtstat.tstat(:);
+            rmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T_surf_rh.nii'];
+            ea_write_nii(rmmap);
+            if usegzip
+                gzip(rmmap.fname);
+                delete(rmmap.fname);
             end
         end
         
