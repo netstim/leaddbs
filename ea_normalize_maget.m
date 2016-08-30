@@ -113,23 +113,50 @@ end
     end
     
 end
-
+dosecondpass=1;
 
 % aggregate all warps together and average them
 clear ficell
 warpbase=[options.root,options.patientname,filesep,'MAGeT',filesep,'warps',filesep];
-fis=dir([warpbase,'*2mni.nii']);
 delete([warpbase,'ave2mni.nii']);
+fis=dir([warpbase,'*2mni.nii']);
 for fi=1:length(fis)
 ficell{fi}=ea_niigz([warpbase,fis(fi).name]);
 end
 ea_robustaverage_nii(ficell,[warpbase,'ave2mni.nii']);
 % need to do the following due to file format issues:
 niione=ea_load_untouch_nii(ficell{fi});
-niiave=ea_load_untouch_nii([warpbase,'ave2mni.nii']);
-niione.img=niiave.img;
+niiave1=ea_load_untouch_nii([warpbase,'ave2mni_1.nii']);
+niiave2=ea_load_untouch_nii([warpbase,'ave2mni_2.nii']);
+niiave3=ea_load_untouch_nii([warpbase,'ave2mni_3.nii']);
+niione.img(:,:,:,1,1)=niiave1.img;
+niione.img(:,:,:,1,2)=niiave2.img;
+niione.img(:,:,:,1,3)=niiave3.img;
 ea_save_untouch_nii(niione,[warpbase,'ave2mni.nii']);
-%
+
+todelete=[];
+if dosecondpass % discard warps that are too far off the robustmean
+    for fi=1:length(ficell)
+        testnii=ea_load_untouch_nii(ficell{fi});
+        R=corr(testnii.img(1:100:end)',niione.img(1:100:end)');
+        if R<0.9
+            todelete=[todelete,fi];
+        end
+    end
+    % redo the whole thing
+    ficell(todelete)=[];
+    ea_robustaverage_nii(ficell,[warpbase,'ave2mni.nii']);
+    % need to do the following due to file format issues:
+    niione=ea_load_untouch_nii(ficell{1});
+    niiave1=ea_load_untouch_nii([warpbase,'ave2mni_1.nii']);
+    niiave2=ea_load_untouch_nii([warpbase,'ave2mni_2.nii']);
+    niiave3=ea_load_untouch_nii([warpbase,'ave2mni_3.nii']);
+    niione.img(:,:,:,1,1)=niiave1.img;
+    niione.img(:,:,:,1,2)=niiave2.img;
+    niione.img(:,:,:,1,3)=niiave3.img;
+    ea_save_untouch_nii(niione,[warpbase,'ave2mni.nii']);
+end
+
 gzip([warpbase,'ave2mni.nii']);
 
 clear ficell
@@ -137,11 +164,16 @@ fis=dir([warpbase,'*sub.nii']);
 for fi=1:length(fis)
 ficell{fi}=[warpbase,fis(fi).name];
 end
+ficell(todelete)=[];
 ea_robustaverage_nii(ficell,[warpbase,'ave2sub.nii']);
 % need to do the following due to file format issues:
-niione=ea_load_untouch_nii(ficell{fi});
-niiave=ea_load_untouch_nii([warpbase,'ave2sub.nii']);
-niione.img=niiave.img;
+niione=ea_load_untouch_nii(ficell{1});
+niiave1=ea_load_untouch_nii([warpbase,'ave2sub_1.nii']);
+niiave2=ea_load_untouch_nii([warpbase,'ave2sub_2.nii']);
+niiave3=ea_load_untouch_nii([warpbase,'ave2sub_3.nii']);
+niione.img(:,:,:,1,1)=niiave1.img;
+niione.img(:,:,:,1,2)=niiave2.img;
+niione.img(:,:,:,1,3)=niiave3.img;
 ea_save_untouch_nii(niione,[warpbase,'ave2sub.nii']);
 %
 gzip([warpbase,'ave2sub.nii']);
