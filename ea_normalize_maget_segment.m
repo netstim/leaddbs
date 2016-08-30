@@ -174,7 +174,7 @@ for peer=1:length(peerfolders)
     % gather all files for majority voting
     warpednuclei{peer}=sub_tos;
 end
-keyboard
+
 
 
 %% step 4: Perform majority voting on final atlas
@@ -194,12 +194,12 @@ for atlas=1:length(warpednuclei{peer})
         X(:,:,:,peer)=nii.img;
     end
    % X(X<0.5)=0; % binarize each image (initial DISTAL atlas is binary, but
-   % when warping nonlinearly it can be that two former voxels which intensity 1 and 0 form only
+   % when warping nonlinearly it can be that two former voxels which intensity value 1 and 0 form only
    % one target voxel with intensitiy value 0.5, (or 0.333 depending on the
-   % number ov voxels), so this first binarizes the files on the subject
+   % number of voxels), so this first binarizes the files on the subject
    % level and makes them more conservative and then fuses all images and
-   % performs again the majority voting which also makes the resulting
-   % images more conservative)
+   % performs again the majority voting on the overlaid images which also
+   % makes the result more conservative)
    % X(X>0)=1;
     X=mean(X,4);
     
