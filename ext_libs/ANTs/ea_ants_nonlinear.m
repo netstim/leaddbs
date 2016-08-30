@@ -106,8 +106,15 @@ for fi=1:length(fixedimage)
             suffx=',15,Random,0.05';
     end
     
+    try
     rigidstage=[rigidstage,...
         ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+    catch
+        keyboard
+    end
+            
+       
+        
     end
 
 affinestage = [' --transform Affine[0.1]'...

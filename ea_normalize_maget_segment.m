@@ -110,7 +110,7 @@ for peer=1:length(peerfolders)
         peerpresentfiles=peerpresentfiles(logical(presentinboth));
         
         if ~isequal(subpresentfiles,peerpresentfiles) % then I did something wrong.
-            keyboard
+        keyboard
         else
             presentfiles=subpresentfiles;
             clear subpresentfiles peerpresentfiles
@@ -169,12 +169,12 @@ for peer=1:length(peerfolders)
     
     %if ~exist([peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse],'file') % assume the work has been done already
     transformfile=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz'];
-    ea_ants_applytransforms(poptions,froms,sub_tos,0,[subdirec,poptions.prefs.prenii_unnormalized],transformfile);
+    ea_ants_applytransforms(poptions,froms,sub_tos,0,[subdirec,presentfiles{1}],transformfile);
     
     % gather all files for majority voting
     warpednuclei{peer}=sub_tos;
 end
-
+keyboard
 
 
 %% step 4: Perform majority voting on final atlas
@@ -193,13 +193,19 @@ for atlas=1:length(warpednuclei{peer})
         end
         X(:,:,:,peer)=nii.img;
     end
-    X(X<0.5)=0; % binarize each image
-    X(X>0)=1;
+   % X(X<0.5)=0; % binarize each image (initial DISTAL atlas is binary, but
+   % when warping nonlinearly it can be that two former voxels which intensity 1 and 0 form only
+   % one target voxel with intensitiy value 0.5, (or 0.333 depending on the
+   % number ov voxels), so this first binarizes the files on the subject
+   % level and makes them more conservative and then fuses all images and
+   % performs again the majority voting which also makes the resulting
+   % images more conservative)
+   % X(X>0)=1;
     X=mean(X,4);
     
     X=X/max(X(:));
-    X(X<0.5)=0;
-    X(X>0)=1;
+   % X(X<0.25)=0; %defines sensitivitiy of majority voting
+   % X(X>0)=1;
     % save atlas
     [pth,atlasname]=fileparts(warpednuclei{peer}{atlas});
     if strcmp('.nii',atlasname(end-3:end))

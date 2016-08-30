@@ -82,7 +82,7 @@ try
 catch
     keyboard
 end
-        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii']); % we only need the warp
+        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii']); % we only need the warp
         %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
         
         % Now export composite transform from MNI -> Peer -> Subject
@@ -108,8 +108,8 @@ end
         end
         
         % delete intermediary transforms
-        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
-        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);
+        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
+        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);
     end
     
 end
@@ -210,7 +210,7 @@ ea_apply_normalization(options);
 
 % finally, cleanup.
 
-rmdir([subdirec,'MAGeT'],'s');
+%rmdir([subdirec,'MAGeT'],'s');
 
 
 
