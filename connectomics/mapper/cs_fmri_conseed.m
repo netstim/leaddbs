@@ -22,14 +22,14 @@ else
     end
 end
 
-dfoldsurf=[dfold,'surf',filesep];
-dfoldvol=[dfold,'vol',filesep]; % expand to /vol subdir.
+dfoldsurf=[dfold,'fMRI',filesep,'surf',filesep];
+dfoldvol=[dfold,'fMRI',filesep,'vol',filesep]; % expand to /vol subdir.
 
 
 
-msk=ea_load_nii([ea_getconnectomebase,'spacedefinitions',filesep,'222.nii']);
-lmsk=ea_load_nii([ea_getconnectomebase,'spacedefinitions',filesep,'lh_fsaverage.nii']);
-rmsk=ea_load_nii([ea_getconnectomebase,'spacedefinitions',filesep,'rh_fsaverage.nii']);
+msk=ea_load_nii([dfold,'spacedefinitions',filesep,'222.nii']);
+lmsk=ea_load_nii([dfold,'spacedefinitions',filesep,'lh_fsaverage.nii']);
+rmsk=ea_load_nii([dfold,'spacedefinitions',filesep,'rh_fsaverage.nii']);
 
 load([dfoldvol,'outidx']);
 load([dfoldvol,'subIDs']);
