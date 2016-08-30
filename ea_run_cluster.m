@@ -23,6 +23,7 @@ switch cmd
         
     case 'export'
         options.uipatdirs=uipatdirs;
+        options=ea_amendtoolboxoptions(options);
         ea_export(options,clusterfunctionname);
 end
 
