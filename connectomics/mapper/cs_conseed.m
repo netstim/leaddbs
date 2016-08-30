@@ -1,6 +1,9 @@
 function cs_conseed(dofMRI,dodMRI,dfold,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
 % wrapper for both dmri and fmri to generate seed2map files
 
+if strcmp(outputmask,'.')
+   outputmask=[]; 
+end
 if ~isdeployed
     addpath(genpath('/autofs/cluster/nimlab/connectomes/software/lead_dbs'));
     addpath('/autofs/cluster/nimlab/connectomes/software/spm12');
