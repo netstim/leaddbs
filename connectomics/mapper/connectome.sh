@@ -111,13 +111,33 @@ if [ -z $filename ]
         #echo $extension
         if [ $extension == "txt" ] && [ $command == "seed" ]; then # multiple seeds, read in and supply separately.
             while IFS='' read -r line || [[ -n "$line" ]]; do
+                if [ $doboth == 1 ]
+                    then # split jobs for fMRI and dMRI
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname"
+                    echo $cmd
+                    pbsubmit -q highio -l vmem=20gb -c "$cmd"
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname"
+                    echo $cmd
+                    pbsubmit -q highio -l vmem=20gb -c "$cmd"
+                else
                 cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 $dofMRI $dodMRI /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname"
                 echo $cmd
                 pbsubmit -q highio -c "$cmd"
+            fi
             done < "$filename"
         else
-        echo $cmd
-        pbsubmit -q highio -c "$cmd"
+            if [ $doboth == 1 ]
+                then # split jobs for fMRI and dMRI
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname"
+                    echo $cmd
+                    pbsubmit -q highio -l vmem=20gb -c "$cmd"
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname"
+                    echo $cmd
+                    pbsubmit -q highio -l vmem=20gb -c "$cmd"
+            else
+                echo $cmd
+                pbsubmit -q highio -l vmem=20gb -c "$cmd"
+            fi
         fi
 
     else
