@@ -13,6 +13,17 @@ if ~strcmp(outputfolder(end),filesep)
    outputfolder=[outputfolder,filesep]; 
 end
 
+% reformat inputs ? everything will be received as a string.
+if ischar(dofMRI)
+    dofMRI=str2double(fMRI);
+end
+if ischar(dodMRI)
+    dodMRI=str2double(dMRI);
+end
+if ischar(writeoutsinglefiles)
+    writeoutsinglefiles=str2double(writeoutsinglefiles);
+end
+
 if dofMRI
     ndfold=[dfold,filesep];
     cs_fmri_conseed(dfold,'yeo1000',sfile,cmd,writeoutsinglefiles,outputfolder,outputmask);
