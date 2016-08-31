@@ -106,7 +106,7 @@ if [ -z $filename ]
 
     if [ "`hostname`" == "launchpad" ]; then
 
-        filebasename=$(filename "$fullfile")
+        filebasename=$(basename "$filename")
         extension="${filebasename##*.}"
         if [ $extension == ".txt"] && [ $command == "seed" ]; then # multiple seeds, read in and supply separately.
             while IFS='' read -r line || [[ -n "$line" ]]; do
