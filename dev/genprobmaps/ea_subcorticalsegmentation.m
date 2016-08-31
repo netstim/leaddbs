@@ -12,14 +12,14 @@ if ~exist([directory,'mmpreprocessed.mat'],'file');
     ea_preparesubcorticalsegmentation(options);
 end
 
+[options,mults]=ea_assignpretra(options);
 
-mults=dir([directory,'sbbmult*.nii']);
 if isempty(mults)
     ea_error('Please place additional MR modality acquisitions into patient folder (called mult1.nii, mult2.nii and so on.');
 end
-srcs{1}=[directory,'sbb',options.prefs.prenii_unnormalized];
-for m=1:length(mults)
-    srcs{1+m}=[directory,mults(m).name];
+
+for mult=1:length(mults)
+srcs{mult}=[directory,'sbb',mults{mult}];
 end
 
 
@@ -107,7 +107,12 @@ save([directory,'mmprocessed.mat'],'mmprocessed');
 function ea_preparesubcorticalsegmentation(options)
 directory=[options.root,options.patientname,filesep];
 
-mults=dir([directory,'mult*.nii']);
+
+[options,mults]=ea_assignpretra(options);
+
+[~,whichinpresent]=ismember(options.prefs.prenii_unnormalized,mults);
+mults(whichinpresent)=[];
+
 if isempty(mults)
     ea_error('Please place additional MR modality acquisitions into patient folder (called multi1.nii, multi2.nii and so on.');
 end
@@ -167,35 +172,35 @@ delete([directory,'bb',options.prefs.prenii_unnormalized]);
 % mults
 
 for m=1:length(mults)
-    try movefile([directory,'raw_',mults(m).name],[directory,mults(m).name]); end
-    copyfile([directory,mults(m).name],[directory,'raw_',mults(m).name]);
+    try movefile([directory,'raw_',mults{m}],[directory,mults{m}]); end
+    copyfile([directory,mults{m}],[directory,'raw_',mults{m}]);
     switch options.coregmr.method
         case 1 % SPM
-            ea_docoreg_spm([directory,mults(m).name],[directory,options.prefs.prenii_unnormalized],'nmi',1)
+            ea_docoreg_spm([directory,mults{m}],[directory,options.prefs.prenii_unnormalized],'nmi',1)
         case 2 % ANTs
             ea_ants([directory,options.prefs.prenii_unnormalized],...
-                [directory,mults(m).name],...
-                [directory,mults(m).name],0);
+                [directory,mults{m}],...
+                [directory,mults{m}],0);
         case 3 % BRAINSFit
             ea_brainsfit([directory,options.prefs.prenii_unnormalized],...
-                [directory,mults(m).name],...
-                [directory,mults(m).name],0);
+                [directory,mults{m}],...
+                [directory,mults{m}],0);
         case 4 % Hybrid SPM -> ANTs
-            ea_docoreg_spm([directory,mults(m).name],[directory,options.prefs.prenii_unnormalized],'nmi',0)
+            ea_docoreg_spm([directory,mults{m}],[directory,options.prefs.prenii_unnormalized],'nmi',0)
             ea_ants([directory,options.prefs.prenii_unnormalized],...
-                [directory,mults(m).name],...
-                [directory,mults(m).name],0);
+                [directory,mults{m}],...
+                [directory,mults{m}],0);
         case 5 % Hybrid SPM -> Brainsfit
-            ea_docoreg_spm([directory,mults(m).name],[directory,options.prefs.prenii_unnormalized],'nmi',0)
+            ea_docoreg_spm([directory,mults{m}],[directory,options.prefs.prenii_unnormalized],'nmi',0)
             ea_brainsfit([directory,options.prefs.prenii_unnormalized],...
-                [directory,mults(m).name],...
-                [directory,mults(m).name],0);
+                [directory,mults{m}],...
+                [directory,mults{m}],0);
     end
 
 
     matlabbatch{1}.spm.util.imcalc.input = {[directory,'wbb.nii']
-        [directory,mults(m).name]};
-    matlabbatch{1}.spm.util.imcalc.output = ['bb',mults(m).name];
+        [directory,mults{m}]};
+    matlabbatch{1}.spm.util.imcalc.output = ['bb',mults{m}];
     matlabbatch{1}.spm.util.imcalc.outdir = {directory};
     matlabbatch{1}.spm.util.imcalc.expression = 'i2';
     matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
@@ -206,7 +211,7 @@ for m=1:length(mults)
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
 
-    matlabbatch{1}.spm.spatial.smooth.data = {[directory,'bb',mults(m).name]};
+    matlabbatch{1}.spm.spatial.smooth.data = {[directory,'bb',mults{m}]};
     matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
     matlabbatch{1}.spm.spatial.smooth.dtype = 0;
     matlabbatch{1}.spm.spatial.smooth.im = 0;
@@ -214,7 +219,7 @@ for m=1:length(mults)
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
 
-    delete([directory,'bb',mults(m).name]);
+    delete([directory,'bb',mults{m}]);
 end
 
 delete([directory,'wbb.nii']);
