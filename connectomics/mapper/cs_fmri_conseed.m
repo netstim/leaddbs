@@ -31,9 +31,9 @@ msk=ea_load_nii([dfold,'spacedefinitions',filesep,'222.nii']);
 lmsk=ea_load_nii([dfold,'spacedefinitions',filesep,'lh_fsaverage.nii']);
 rmsk=ea_load_nii([dfold,'spacedefinitions',filesep,'rh_fsaverage.nii']);
 
-load([dfoldvol,'outidx']);
-load([dfoldvol,'subIDs']);
-load([dfoldsurf,'subIDs']);
+load([dfoldvol,'outidx.mat']);
+load([dfoldvol,'subIDs.mat']);
+load([dfoldsurf,'subIDs.mat']);
 if exist('outputmask','var')
     if ~isempty(outputmask)
     omask=ea_load_nii(outputmask);
