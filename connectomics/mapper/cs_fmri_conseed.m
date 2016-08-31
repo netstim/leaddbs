@@ -1,4 +1,4 @@
-function cs_fmri_conseed(dfold,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
+function cs_fmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
 tic
 if ~isdeployed
     addpath(genpath('/autofs/cluster/nimlab/connectomes/software/lead_dbs'));
@@ -22,8 +22,8 @@ else
     end
 end
 
-dfoldsurf=[dfold,'fMRI',filesep,'surf',filesep];
-dfoldvol=[dfold,'fMRI',filesep,'vol',filesep]; % expand to /vol subdir.
+dfoldsurf=[dfold,'fMRI',filesep,cname,filesep,'surf',filesep];
+dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to /vol subdir.
 
 
 

@@ -1,10 +1,10 @@
-function cs_dmri_conseed(dfold,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,space)
+function cs_dmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,space)
 %# ea_load_nii
 
 switch cmd
     case 'seed'
         map=ea_load_nii(space);
-        cfile=dfold;
+        cfile=[dfold,'dMRI',filesep,cname];
         load(cfile,'fibers');
         mapsz=size(map.img);
 

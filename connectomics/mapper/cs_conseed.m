@@ -15,10 +15,10 @@ end
 
 if dofMRI
     ndfold=[dfold,filesep];
-    cs_fmri_conseed(dfold,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask);
+    cs_fmri_conseed(dfold,'yeo1000',sfile,cmd,writeoutsinglefiles,outputfolder,outputmask);
 end
 
 if dodMRI
     ndfold=[dfold,filesep];
-    cs_dmri_conseed([dfold,'dMRI',filesep,'HCP_MGH_30fold_groupconnectome_gqi_lite.mat'],sfile,cmd,writeoutsinglefiles,outputfolder,outputmask);
+    cs_dmri_conseed(dfold,'HCP_MGH_30fold_groupconnectome_gqi_lite.mat',sfile,cmd,writeoutsinglefiles,outputfolder,outputmask);
 end
