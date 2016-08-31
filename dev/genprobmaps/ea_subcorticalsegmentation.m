@@ -129,7 +129,7 @@ switch whichnormmethod
         matlabbatch{1}.spm.util.defs.out{1}.push.fnames = {[options.earoot,'templates',filesep,'bb.nii']};
         matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
         matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {directory};
-        matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[directory,options.prenii_unnormalized]};
+        matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[directory,options.prefs.prenii_unnormalized]};
         matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
         matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [0 0 0];
         spm_jobman('run',{matlabbatch});
