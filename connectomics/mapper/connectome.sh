@@ -96,7 +96,7 @@ if [ -z $filename ]
             dodMRI="1"
     fi
 
-if [[ dofMRI=="1"] && [ dodMRI=="1" ]]
+if [[ $dofMRI=="1"] && [ $dodMRI=="1" ]]
     then
     doboth=1
 
