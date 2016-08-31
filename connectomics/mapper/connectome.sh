@@ -111,11 +111,11 @@ if [ -z $filename ]
         if [ $extension == ".txt" ] && [ $command == "seed" ]; then # multiple seeds, read in and supply separately.
             while IFS='' read -r line || [[ -n "$line" ]]; do
                 cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 $dofMRI $dodMRI /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname"
-                echo cmd
+                echo $cmd
                 #pbsubmit -q highio -c "$cmd"
             done < "$filename"
         else
-            echo cmd
+            echo $cmd
         #pbsubmit -q highio -c "$cmd"
         fi
 
