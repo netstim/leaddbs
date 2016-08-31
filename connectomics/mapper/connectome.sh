@@ -81,8 +81,8 @@ if [ -z $filename ]
     then
 
         echo "Please supply a seed filename (.nii/.nii.gz/.txt)!"
-
-    else
+        exit
+    fi
 
         if [ $outputfolder == $HOME ]
             then
@@ -96,21 +96,19 @@ if [ -z $filename ]
             dodMRI="1"
     fi
 
-if [[ $dofMRI=="1"] && [ $dodMRI=="1" ]]
-    then
-    doboth=1
-
-fi
-# setup command here:
+        if [ $dofMRI == "1" ] && [ $dodMRI == "1" ]; then
+            doboth=1
+        fi
+        # setup command here:
         cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 $dofMRI $dodMRI /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname"
 
-# check if we are on launchpad:
+    # check if we are on launchpad:
 
     if [ "`hostname`" == "launchpad" ]; then
 
         filebasename=$(filename "$fullfile")
         extension="${filebasename##*.}"
-        if [[ $extension == ".txt"] && [ $command == "seed" ]]; then # multiple seeds, read in and supply separately.
+        if [ $extension == ".txt"] && [ $command == "seed" ]; then # multiple seeds, read in and supply separately.
             while IFS='' read -r line || [[ -n "$line" ]]; do
                 cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 $dofMRI $dodMRI /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname"
                 echo cmd
@@ -126,7 +124,7 @@ fi
         #echo $cmd
         $cmd
     fi
-fi
+
 
 
 
