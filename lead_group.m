@@ -2390,9 +2390,11 @@ allidx=[];
 ea_dispercent(0,'Concatenating connectome');
 for sub=1:length(M.patient.list)
     ea_dispercent(sub/length(M.patient.list));
-    
+
     [nfibs,idx]=ea_loadfibertracts([M.patient.list{sub},filesep,options.prefs.FTR_normalized]);
-    
+    idx=idx(1:20000); % only use first 20k fibers of each subject.
+    sumidx=sum(idx);
+    nfibs=nfibs(1:sumidx,:);
     normalized_fibers_mm=[normalized_fibers_mm;nfibs];
     allidx=[allidx;idx];
 end
