@@ -131,6 +131,9 @@ switch cmd
         addp='p';
 end
 
+
+disp([num2str(numseed),' seeds, command = ',cmd,'.']);
+
 ea_dispercent(0,'Iterating through subjects');
 
 for mcfi=1:numsub
