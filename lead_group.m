@@ -2385,53 +2385,47 @@ function calcgroupconnectome_Callback(hObject, eventdata, handles)
 options.prefs=ea_prefs('tmp');
 M=getappdata(gcf,'M');
 
-normalized_fibers_mm={}; % combined connectome
+normalized_fibers_mm=[]; % combined connectome
+allidx=[];
 ea_dispercent(0,'Concatenating connectome');
 for sub=1:length(M.patient.list)
     ea_dispercent(sub/length(M.patient.list));
-    fs=load([M.patient.list{sub},filesep,options.prefs.FTR_normalized]);
-    if isfield(fs,'normalized_fibers_mm')
-        nfibs=fs.normalized_fibers_mm;
-    else
-        fn = fieldnames(fs);
-        eval(sprintf('nfibs = fs.%s;',fn{1}));
-    end
-    if size(nfibs,1)>size(nfibs,2)
-        nfibs=nfibs';
-    end
-    nfibs=nfibs(1:20000);
-    normalized_fibers_mm=[normalized_fibers_mm,nfibs];
+    
+    [nfibs,idx]=ea_loadfibertracts([M.patient.list{sub},filesep,options.prefs.FTR_normalized]);
+    
+    normalized_fibers_mm=[normalized_fibers_mm;nfibs];
+    allidx=[allidx;idx];
 end
 ea_dispercent(1,'end');
-save([M.ui.groupdir,options.prefs.FTR_normalized],'normalized_fibers_mm','-v7.3');
-load([M.ui.groupdir,options.prefs.FTR_normalized]);
-
-% export to trackvis
-
-% convert to vox format
-options.root=[fileparts(fileparts(M.ui.groupdir)),filesep];
-[~,options.patientname]=fileparts(fileparts(M.ui.groupdir));
-options.earoot=[ea_getearoot];
-specs.origin=[0,0,0];
-
-nii=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
-specs.dim=nii.dim;
-specs.affine=nii.mat;
-ea_dispercent(0,'Converting fibers to voxel format');
-for fib=1:length(normalized_fibers_mm);
-    ea_dispercent(fib/length(normalized_fibers_mm));
-    normalized_fibers_mm{fib}=[normalized_fibers_mm{fib},ones(size(normalized_fibers_mm{fib},1),1)]';
-    normalized_fibers_mm{fib}=nii.mat\normalized_fibers_mm{fib};
-    normalized_fibers_mm{fib}=normalized_fibers_mm{fib}(1:3,:)';
-end
-ea_dispercent(1,'end');
-normalized_fibers_vox=normalized_fibers_mm;
-clear normalized_fibers_mm
+ea_savefibertracts([M.ui.groupdir,options.prefs.FTR_normalized],normalized_fibers_mm,allidx,'mm');
 
 
-ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,options); % export normalized ftr to .trk
-
-options.prefs=ea_prefs(M.ui.groupdir);
+% % export to trackvis
+% 
+% % convert to vox format
+% options.root=[fileparts(fileparts(M.ui.groupdir)),filesep];
+% [~,options.patientname]=fileparts(fileparts(M.ui.groupdir));
+% options.earoot=[ea_getearoot];
+% specs.origin=[0,0,0];
+% 
+% nii=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
+% specs.dim=nii.dim;
+% specs.affine=nii.mat;
+% ea_dispercent(0,'Converting fibers to voxel format');
+% for fib=1:length(normalized_fibers_mm);
+%     ea_dispercent(fib/length(normalized_fibers_mm));
+%     normalized_fibers_mm{fib}=[normalized_fibers_mm{fib},ones(size(normalized_fibers_mm{fib},1),1)]';
+%     normalized_fibers_mm{fib}=nii.mat\normalized_fibers_mm{fib};
+%     normalized_fibers_mm{fib}=normalized_fibers_mm{fib}(1:3,:)';
+% end
+% ea_dispercent(1,'end');
+% normalized_fibers_vox=normalized_fibers_mm;
+% clear normalized_fibers_mm
+% 
+% 
+% ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,options); % export normalized ftr to .trk
+% 
+% options.prefs=ea_prefs(M.ui.groupdir);
 
 
 
