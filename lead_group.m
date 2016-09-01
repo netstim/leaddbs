@@ -2425,7 +2425,7 @@ ea_savefibertracts([M.ui.groupdir,options.prefs.FTR_normalized],normalized_fiber
 % 
 % ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,options); % export normalized ftr to .trk
 % 
-% options.prefs=ea_prefs(M.ui.groupdir);
+% options.prefs=ea_prefs(M.uite.groupdir);
 
 
 

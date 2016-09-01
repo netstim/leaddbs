@@ -112,7 +112,7 @@ numseed=s;
 
 pixdim=length(outidx);
 
-numsub=length(subIDs);
+numsub=5; %length(subIDs);
 switch cmd
     case {'seed','seedvox_ram','seedvox_noram'}
         for s=1:numseed
@@ -121,7 +121,7 @@ switch cmd
             lh.fX{s}=nan(10242,numsub);
         end
     otherwise
-        fX=nan(numseed,numsub);
+        fX=nan(((numseed^2)-numseed)/2,numsub);
 end
 
 switch cmd
@@ -240,6 +240,7 @@ for mcfi=1:numsub
                 end
                 thiscorr(:,run)=X(:);
             end
+            
             fX(:,mcfi)=X(logical(triu(ones(numseed),1)));
             if writeoutsinglefiles
                 save([outputfolder,addp,'corrMx_',subIDs{mcfi}{1},'.mat'],'X','-v7.3');
