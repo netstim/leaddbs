@@ -59,6 +59,7 @@ else
     [pth,fn,ext]=fileparts(sfile);
     if strcmp(ext,'.txt')
         roilist=1;
+        
         sfile=getrois(sfile);
     else
         roilist=0;
@@ -98,6 +99,7 @@ for s=1:length(sfile)
     
     sweights=seed{s}.img(outidx);
     sweights(isnan(sweights))=0;
+    sweights=double(sweights);
     % assure sum of sweights is 1
     sweights(logical(sweights))=sweights(logical(sweights))/sum(sweights(logical(sweights)));
     sweightmx=repmat(sweights,1,120);
@@ -246,8 +248,7 @@ ea_dispercent(1,'end');
 switch cmd
     case {'seed','seedvox_ram','seedvox_noram'}
         for s=1:numseed
-            % export mean
-            
+            % export mean            
             M=nanmean(fX{s}');
             mmap=msk;
             mmap.dt=[16,0];
