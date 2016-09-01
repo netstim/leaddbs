@@ -15,10 +15,10 @@ end
 
 % reformat inputs ? everything will be received as a string.
 if ischar(dofMRI)
-    dofMRI=str2double(fMRI);
+    dofMRI=str2double(dofMRI);
 end
 if ischar(dodMRI)
-    dodMRI=str2double(dMRI);
+    dodMRI=str2double(dodMRI);
 end
 if ischar(writeoutsinglefiles)
     writeoutsinglefiles=str2double(writeoutsinglefiles);
