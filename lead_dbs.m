@@ -130,21 +130,7 @@ set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 
 
-% check if group connectome files are present
-if ~exist([ea_getconnectomebase('dmri')],'file') || ...
-        ~exist([ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) full.mat'],'file') || ...
-        ~exist([ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) thinned out x 2.mat'],'file') || ...
-        ~exist([ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) thinned out x 5.mat'],'file') || ...
-        ~exist([ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) thinned out x 5.mat'],'file') || ...
-        ~exist([ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) thinned out x 10.mat'],'file') || ...
-        ~exist([ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) thinned out x 50.mat'],'file') || ...
-        ~exist([ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) thinned out x 100.mat'],'file') || ...
-        ~exist([ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) thinned out x 500.mat'],'file')
-    set(handles.dlgroupc,'Visible','on');
-    set(handles.dlgroupc,'BackgroundColor',[0.2,0.8,0.2]);
-else
-    set(handles.dlgroupc,'Visible','off');
-end
+
 
 
 %im = imread('bg_gui.png');
@@ -1122,19 +1108,7 @@ function viewmanual_Callback(hObject, eventdata, handles)
 web('http://www.lead-dbs.org/?page_id=71', '-browser')
 
 
-% --- Executes on button press in dlgroupc.
-function dlgroupc_Callback(hObject, eventdata, handles)
-% hObject    handle to dlgroupc (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-choice = questdlg('Lead will download and install the Horn 2013 Group connectome files. This may take a while...', ...
-    'Start GC Download', ...
-    'OK','Cancel','OK');
-earoot=[ea_getearoot];
-if strcmp(choice,'OK')
-    disp('Downloading Horn 2013 Group Connectome');
-    success=ea_checkinstall('groupconnectome2013',force);
-end
+
 
 
 % --- Executes on selection change in vizspacepopup.

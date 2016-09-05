@@ -115,33 +115,33 @@ if [ -z $filename ]
                     then # split jobs for fMRI and dMRI
                     cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname"
                     echo $cmd
-                    pbsubmit -q highio -l vmem=20gb -c "$cmd"
+                    pbsubmit -q highio -l vmem=30gb -c "$cmd"
                     cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname"
                     echo $cmd
-                    pbsubmit -q highio -l vmem=20gb -c "$cmd"
+                    pbsubmit -q highio -l vmem=30gb -c "$cmd"
                 else
                 cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 $dofMRI $dodMRI /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname"
                 echo $cmd
-                pbsubmit -q highio -c "$cmd"
-            fi
+                pbsubmit -q highio -l vmem=30gb highio -c "$cmd"
+                fi
             done < "$filename"
         else
             if [ $doboth == 1 ]
                 then # split jobs for fMRI and dMRI
                     cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname"
                     echo $cmd
-                    pbsubmit -q highio -l vmem=20gb -c "$cmd"
+                    pbsubmit -q highio -l vmem=30gb -c "$cmd"
                     cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname"
                     echo $cmd
-                    pbsubmit -q highio -l vmem=20gb -c "$cmd"
+                    pbsubmit -q highio -l vmem=30gb -c "$cmd"
             else
                 echo $cmd
-                pbsubmit -q highio -l vmem=20gb -c "$cmd"
+                pbsubmit -q highio -l vmem=30gb -c "$cmd"
             fi
         fi
 
     else
-        # submit to actual script:
+        # run actual script:
         echo $cmd
         $cmd
     fi

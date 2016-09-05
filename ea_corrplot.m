@@ -3,8 +3,16 @@ function fig=ea_corrplot(varargin)
 
 
 X=varargin{1};
+try
 description=varargin{2};
+catch
+    description='';
+end
+try
 labels=varargin{3};
+catch
+    labels='';
+end
 if nargin==4
     handles=varargin{4};
 end

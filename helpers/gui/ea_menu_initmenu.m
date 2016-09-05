@@ -18,4 +18,12 @@ if isempty(menuprobe)
         ea_menu_addsubmit(handles);
         setappdata(handles.leadfigure,'menuprobe',1);
     end
+    
+    % always add install addons
+    g = uimenu('Label','Install');
+    [list,commands]=ea_checkinstall('list');
+    for l=1:length(list)
+       uimenu(g,'Label',list{l},'Callback',{@ea_menuinstall,commands{l},0}); 
+    end
+    
 end

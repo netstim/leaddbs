@@ -2388,6 +2388,7 @@ M=getappdata(gcf,'M');
 normalized_fibers_mm=[]; % combined connectome
 allidx=[];
 ea_dispercent(0,'Concatenating connectome');
+maxfibno=0;
 for sub=1:length(M.patient.list)
     ea_dispercent(sub/length(M.patient.list));
 
@@ -2395,8 +2396,10 @@ for sub=1:length(M.patient.list)
     idx=idx(1:20000); % only use first 20k fibers of each subject.
     sumidx=sum(idx);
     nfibs=nfibs(1:sumidx,:);
+    nfibs(:,4)=nfibs(:,4)+maxfibno; % add offset
     normalized_fibers_mm=[normalized_fibers_mm;nfibs];
     allidx=[allidx;idx];
+    maxfibno=max(normalized_fibers_mm(:,4));
 end
 ea_dispercent(1,'end');
 ea_savefibertracts([M.ui.groupdir,options.prefs.FTR_normalized],normalized_fibers_mm,allidx,'mm');
