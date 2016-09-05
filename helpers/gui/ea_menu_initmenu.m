@@ -23,7 +23,12 @@ if isempty(menuprobe)
     g = uimenu('Label','Install');
     [list,commands]=ea_checkinstall('list');
     for l=1:length(list)
-       uimenu(g,'Label',list{l},'Callback',{@ea_menuinstall,commands{l},0}); 
+        if ea_checkinstall(commands{l},0,1)
+           addstr='v';
+        else
+            addstr='ø';
+        end
+       uimenu(g,'Label',[list{l},' (',addstr,')'],'Callback',{@ea_menuinstall,commands{l},0}); 
     end
     
 end

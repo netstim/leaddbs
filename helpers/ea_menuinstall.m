@@ -7,8 +7,11 @@ if ~strcmp(choice,'Proceed')
 end
 
 success=ea_checkinstall(cmd,force);
+
+if ~(success==-1) % user aborted.
 if ~success
     errordlg([cmd,' dataset could not be installed.']);
 else
     msgbox([cmd,' successfully installed.']);
+end
 end
