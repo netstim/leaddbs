@@ -1,4 +1,4 @@
-function [emesh,nmesh]=ea_mesh_electrode(fv,elfv,electrode)
+function [emesh,nmesh]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode)
 % meshing an electrode and tissue structures bounded by a cylinder
 
 %% load the nucleus data
@@ -46,8 +46,8 @@ electrodetrisize=0.2;  % the maximum triangle size of the electrode mesh
 bcyltrisize=0.3;       % the maximum triangle size of the bounding cyl
 nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
 
-cylz0=-1;     % define the lower end of the bounding cylinder
-cylz1=25;     % define the upper end of the bounding cylinder
+cylz0=-15;     % define the lower end of the bounding cylinder
+cylz1=35;     % define the upper end of the bounding cylinder
 cylradius=15; % define the radius of the bounding cylinder  
 ndiv=50;      % division of circle for the bounding cylinder
 
@@ -133,7 +133,7 @@ clear ISO2MESH_SURFBOOLEAN;
 t=sort(t(faceidx));
 t=(t(1:end-1)+t(2:end))*0.5;
 seedlen=length(t);
-electrodeseeds=repmat(orig(:)',seedlen,1)+repmat(v0(:)',seedlen,1).*repmat(t(:)-1,1,3);
+%electrodeseeds=repmat(orig(:)',seedlen,1)+repmat(v0(:)',seedlen,1).*repmat(t(:)-1,1,3);
 %% create tetrahedral mesh of the final combined mesh (seeds are ignored, tetgen 1.5 automatically find regions)
 [nmesh,emesh]=s2m(nboth3,fboth3,1,5);
 
@@ -149,54 +149,84 @@ zrange=zeros(length(labels),2);
 centroids=zeros(length(labels),3);
 for i=1:length(labels)
     centroids(i,:)=mean(meshcentroid(nmesh,emesh(etype==labels(i),1:3)));
+    maxext(i,:)=max(nmesh(emesh(etype==labels(i),1),:));
     cc=(meshcentroid(eleccoord,emesh(etype==labels(i),1:3))); % centroids of each label
     maxradius(i)=sqrt(max(sum(cc(:,1:2).*cc(:,1:2),2)));
     zrange(i,:)=[min(cc(:,3)) max(cc(:,3))];
 end
 
-electrodelabel=find(zrange(:,1)>0 & zrange(:,2)<electrodelen & maxradius<=electroderadius); % select labels that are 
 
-% further compare zrange to seeds variable to get insulating/conducting
-% material right:
-condins=zeros(length(meshel.ins)+length(meshel.con),1);
-condins(1:length(meshel.ins))=2; % insulation
-condins(length(meshel.ins)+1:length(meshel.ins)+length(meshel.con))=1; % conducting
-elcentroids=centroids(electrodelabel,:);
-
-iscontact=zeros(length(electrodelabel),1);
-for comp=1:length(elcentroids)
-
-    for con=1:4
-        
-        in=ea_intriangulation(elfv(con).vertices,elfv(con).faces,elcentroids(comp,:));
+disp(['We have ',num2str(length(centroids)),' regions and need to map these to tissue types.']);
+tissuelabels=zeros(length(centroids),1);
+for reg=1:length(centroids)
+   % first check if whether contact or insulator
+   
+   % a - check contacts:
+    
+   for con=find(eltissuetype==3);
+        in=ea_intriangulation(elfv(con).vertices,elfv(con).faces,centroids(reg,:));
         if in
-            iscontact(comp)=1;
+            tissuelabels(reg)=3; % set contact
             break
         end
-        
-        
     end
-
+   if tissuelabels(reg); continue; end % move to next component if already assigned.
+ 
+   % b - check insulation:
+    
+   for ins=find(eltissuetype==4);
+        in=ea_intriangulation(elfv(ins).vertices,elfv(ins).faces,centroids(reg,:));
+        if in
+            tissuelabels(reg)=4; % set insulation
+            break
+        end
+    end
+   if tissuelabels(reg); continue; end % move to next component if already assigned.
+     
+    
+    % if not: if grey matter, then white matter
+    
+    for gm=1:length(fv)
+        in=ea_intriangulation(fv(gm).vertices,fv(gm).faces,centroids(reg,:));
+        if in
+            tissuelabels(reg)=1; % set grey matter
+            break
+        end
+    end
+    if tissuelabels(reg); continue; end
+    
+    
+    % assign the rest to white matter
+    tissuelabels(reg)=2; % set white matter
 end
 
-contactlabels=electrodelabel(logical(iscontact));
-insulationlabels=electrodelabel(logical(~iscontact));
-%plotmesh(seeds, 'y*'); % all region centroids
+tissuelabels(1)=1;
 
 
-%plotmesh(centroids, 'ro'); % all region centroids
-%plotmesh(centroids(electrodelabel,:),'k*'); % all electrode segments
 
-[maxr, wmlabels]=max(maxradius);   % the label for the bounding cyl is identified with the max radius
+% if vizz
+% %% plot the final tetrahedral mesh
+% figure
+% hold on;
+% plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.2)
+% plotmesh(seeds, 'y*'); % all region centroids
+% 
+%     plotmesh(centroids, 'ro'); % all region centroids
+% 
+% %plotmesh(centroids(electrodelabel,:),'k*'); % all electrode segments
+% 
+% end
 
-gmlabels=setdiff(labels,[wmlabels; electrodelabel]); % the remaining ones are from nuclei meshes.
 
+
+%gmlabels=setdiff(labels,[wmlabels; electrodelabel]); % the remaining ones are from nuclei meshes.
 
 tissuetype=emesh(:,5);
-tissuetype(ismember(emesh(:,5),gmlabels))=1;
-tissuetype(ismember(emesh(:,5),wmlabels))=2;
-tissuetype(ismember(emesh(:,5),contactlabels))=3;
-tissuetype(ismember(emesh(:,5),insulationlabels))=4;
+for tt=1:4
+    tl=find(tissuelabels==tt);
+    tissuetype(ismember(emesh(:,5),tl))=tt;
+    disp([num2str(length(tl)),' components with ',num2str(sum(tissuetype==tt)),' tetraeders total assigned to tissue type ',num2str(tt),'.']);
+end
 
 emesh(:,5)=tissuetype;
 
@@ -207,6 +237,16 @@ hold on;
 plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.2)
 end
 
+stlexport=1;
+keyboard
+if stlexport
+    tissuelabels={'grey','white','contacts','insulation'};
+    for tt=1:length(tissuelabels)
+        savestl(nmesh,emesh(emesh(:,5)==tt,1:3),[tissuelabels{tt},'.stl'],tissuelabels{tt});
+        
+    end
+    
+end
 % plot all 4 tissue types:
 if vizz
     for t=1:4

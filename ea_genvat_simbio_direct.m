@@ -310,8 +310,8 @@ electrode.tail_position=B(2,1:3);
 %         mesh.tissue=[mesh.tissue;repmat(4,size(elem,1),1)];
     end
 
-keyboard
-[mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,electrode);
+
+[mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,tissuetype,electrode);
 
 
 mesh.tissue=mesh.tet(:,5);

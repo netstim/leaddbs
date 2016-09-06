@@ -64,11 +64,7 @@ earoot=ea_getearoot;
 % add recent patients...
 ea_initrecentpatients(handles);
 
-if ~isdeployed
-    addpath(genpath(earoot));
-    rmpath(genpath([earoot,'.git']));
-    rmpath(genpath([earoot,'release']));
-end
+
 
 ea_dispbn;
 
