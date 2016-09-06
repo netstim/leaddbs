@@ -226,25 +226,6 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
 %         mesh.pnt=[mesh.pnt;node];
 %         mesh.tissue=[mesh.tissue;ones(size(elem,1),1)];
     end
-%         % add white matter:
-% 
-%     bb=[1,smri.dim(1);1,smri.dim(2);1,smri.dim(3);1,1];
-%     [node,face]=meshabox([1,1,1],smri.dim,[],1);
-%     node=[node,ones(size(node,1),1)]';
-%     node=Vexp.mat*node;
-%     node=node(1:3,:)';
-% t=surfinterior(node,face);
-%     fv(cnt).vertices=node;
-%         fv(cnt).faces=face;
-%                 tissuetype(cnt)=2;
-%                 c0=[c0;[t,2]];
-%                 cnt=cnt+1;
-%     [node,elem]=vol2mesh(smri.white,1:size(smri.white,1),1:size(smri.white,2),1:size(smri.white,3),2,2,1);
-%     node=Vexp.mat*[node,ones(length(node),1)]';
-%     mesh.tet=[mesh.tet;elem(:,1:4)+length(mesh.pnt)];
-%     mesh.pnt=[mesh.pnt;node(1:3,:)'];
-%     mesh.tissue=[mesh.tissue;repmat(2,size(elem,1),1)];
-
 
 
     
@@ -312,7 +293,7 @@ electrode.tail_position=B(2,1:3);
 
 
 [mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,tissuetype,electrode);
-
+keyboard
 
 mesh.tissue=mesh.tet(:,5);
 mesh.tet=mesh.tet(:,1:4);

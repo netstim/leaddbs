@@ -6,6 +6,7 @@ function [emesh,nmesh]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode)
 tic
 meshel=electrode.meshel;
 vizz=1;
+stlexport=0;
 if vizz
     figure
     for f=1:length(fv)
@@ -158,15 +159,33 @@ end
 
 disp(['We have ',num2str(length(centroids)),' regions and need to map these to tissue types.']);
 tissuelabels=zeros(length(centroids),1);
+if vizz
+%     h=figure;
+%     plotmesh(nmesh,emesh(:,1:5),'linestyle','none','facealpha',0.1);
+%     hold on
+end
 for reg=1:length(centroids)
    % first check if whether contact or insulator
    
    % a - check contacts:
     
    for con=find(eltissuetype==3);
-        in=ea_intriangulation(elfv(con).vertices,elfv(con).faces,centroids(reg,:));
-        if in
+        convin=ea_intriangulation(elfv(con).vertices,elfv(con).faces,centroids(reg,:));
+        dirinodes=nmesh(emesh(emesh(1:end,5)==reg,1:4),:);
+        dirinodes=ea_nudgedirinodes(dirinodes,centroids(reg,:));
+        in=double(ea_intriangulation(elfv(con).vertices,elfv(con).faces,dirinodes));
+
+        if convin && mean(in)>0.7
             tissuelabels(reg)=3; % set contact
+            disp(['Region ',num2str(reg),' captured by contact material.']);
+            if vizz
+%                  figure('name',['Conducting region ',num2str(reg)]);
+%                  hold on
+%                  patch('vertices',elfv(con).vertices,'faces',elfv(con).faces,'FaceColor','none','EdgeColor','b');
+%                  patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
+%                  plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
+%                  axis equal
+            end
             break
         end
     end
@@ -175,9 +194,21 @@ for reg=1:length(centroids)
    % b - check insulation:
     
    for ins=find(eltissuetype==4);
-        in=ea_intriangulation(elfv(ins).vertices,elfv(ins).faces,centroids(reg,:));
-        if in
+        convin=ea_intriangulation(elfv(ins).vertices,elfv(ins).faces,centroids(reg,:));
+        dirinodes=nmesh(emesh(emesh(1:end,5)==reg,1:4),:);
+        dirinodes=ea_nudgedirinodes(dirinodes,centroids(reg,:));
+        in=double(ea_intriangulation(elfv(ins).vertices,elfv(ins).faces,dirinodes));
+        if convin && mean(in)>0.7
             tissuelabels(reg)=4; % set insulation
+            disp(['Region ',num2str(reg),' captured by insulating material.']);
+            if vizz
+%                 figure('name',['Insulating region ',num2str(reg)]);
+%                 hold on
+%                 patch('vertices',elfv(ins).vertices,'faces',elfv(ins).faces,'FaceColor','none','EdgeColor','b');
+%                 patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
+%                 plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
+%                 axis equal
+            end
             break
         end
     end
@@ -187,9 +218,22 @@ for reg=1:length(centroids)
     % if not: if grey matter, then white matter
     
     for gm=1:length(fv)
-        in=ea_intriangulation(fv(gm).vertices,fv(gm).faces,centroids(reg,:));
-        if in
+        convin=ea_intriangulation(fv(gm).vertices,fv(gm).faces,centroids(reg,:));
+        dirinodes=nmesh(emesh(emesh(1:end,5)==reg,1:4),:);
+        dirinodes=ea_nudgedirinodes(dirinodes,centroids(reg,:));
+        in=double(ea_intriangulation(fv(gm).vertices,fv(gm).faces,dirinodes));
+       
+        if convin && mean(in)>0.7
             tissuelabels(reg)=1; % set grey matter
+            disp(['Region ',num2str(reg),' captured by grey matter.']);
+            if vizz
+%                 figure('name',['GM Region ',num2str(reg)]);
+%                 hold on
+%                 patch('vertices',fv(gm).vertices,'faces',fv(gm).faces,'FaceColor','none','EdgeColor','b');
+%                 patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
+%                 plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
+%                 axis equal
+            end
             break
         end
     end
@@ -198,25 +242,22 @@ for reg=1:length(centroids)
     
     % assign the rest to white matter
     tissuelabels(reg)=2; % set white matter
+    
+    if vizz
+        figure('name',['WM Region ',num2str(reg)]);
+        hold on
+        patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
+        for g=1:length(fv)
+        patch('vertices',fv(g).vertices,'faces',fv(g).faces,'FaceColor','none','EdgeColor','b');
+        end
+        for e=1:length(elfv)
+        patch('vertices',elfv(e).vertices,'faces',elfv(e).faces,'FaceColor','none','EdgeColor','b'); 
+        end
+        plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
+        axis equal
+    end
+    
 end
-
-tissuelabels(1)=1;
-
-
-
-% if vizz
-% %% plot the final tetrahedral mesh
-% figure
-% hold on;
-% plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.2)
-% plotmesh(seeds, 'y*'); % all region centroids
-% 
-%     plotmesh(centroids, 'ro'); % all region centroids
-% 
-% %plotmesh(centroids(electrodelabel,:),'k*'); % all electrode segments
-% 
-% end
-
 
 
 %gmlabels=setdiff(labels,[wmlabels; electrodelabel]); % the remaining ones are from nuclei meshes.
@@ -237,13 +278,11 @@ hold on;
 plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.2)
 end
 
-stlexport=1;
-keyboard
+
 if stlexport
     tissuelabels={'grey','white','contacts','insulation'};
     for tt=1:length(tissuelabels)
         savestl(nmesh,emesh(emesh(:,5)==tt,1:3),[tissuelabels{tt},'.stl'],tissuelabels{tt});
-        
     end
     
 end
@@ -258,4 +297,17 @@ end
 
 
 toc
+
+
+
+function nodes=ea_nudgedirinodes(nodes,centroid)
+% get to ~1000 comparison points
+div=round(length(nodes)/1000);
+if div<1
+    div=1;
+end
+nodes=nodes(1:div:end,:);
+nodes=nodes.*9;
+nodes=nodes+repmat(centroid,length(nodes),1);
+nodes=nodes./10;
 
