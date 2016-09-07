@@ -112,7 +112,7 @@ numseed=s;
 
 pixdim=length(outidx);
 
-numsub=length(subIDs);
+numsub=10; %length(subIDs);
 switch cmd
     case {'seed','seedvox_ram','seedvox_noram'}
         for s=1:numseed
@@ -240,7 +240,8 @@ for mcfi=1:numsub
                 end
                 thiscorr(:,run)=X(:);
             end
-            
+            thiscorr=mean(thiscorr,2);
+            X(:)=thiscorr;
             fX(:,mcfi)=X(logical(triu(ones(numseed),1)));
             if writeoutsinglefiles
                 save([outputfolder,addp,'corrMx_',subIDs{mcfi}{1},'.mat'],'X','-v7.3');
@@ -400,21 +401,26 @@ switch cmd
         
         % export mean
         M=nanmean(fX');
-        X=ones(numseed);
+        X=zeros(numseed);
         X(logical(triu(ones(numseed),1)))=M;
-        X(logical(tril(ones(numseed),-1)))=M;
+        X=X+X';
+        X(logical(eye(length(X))))=1;
         save([outputfolder,cmd,'_corrMx_AvgR.mat'],'X','-v7.3');
         % fisher-transform:
         fX=atanh(fX);
         M=nanmean(fX');
+        X=zeros(numseed);
         X(logical(triu(ones(numseed),1)))=M;
-        X(logical(tril(ones(numseed),-1)))=M;
+        X=X+X';
+        X(logical(eye(length(X))))=1;
         save([outputfolder,cmd,'_corrMx_AvgR_Fz.mat'],'X','-v7.3');
         
         % export T
         [~,~,~,tstat]=ttest(fX');
+        X=zeros(numseed);
         X(logical(triu(ones(numseed),1)))=tstat.tstat;
-        X(logical(tril(ones(numseed),-1)))=tstat.tstat;
+        X=X+X';
+        X(logical(eye(length(X))))=1;
         save([outputfolder,cmd,'_corrMx_T.mat'],'X','-v7.3');
         
 end
