@@ -112,7 +112,7 @@ numseed=s;
 
 pixdim=length(outidx);
 
-numsub=10; %length(subIDs);
+numsub=length(subIDs);
 switch cmd
     case {'seed','seedvox_ram','seedvox_noram'}
         for s=1:numseed
