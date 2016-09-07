@@ -1,4 +1,4 @@
-function [emesh,nmesh]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode)
+function [emesh,nmesh]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options)
 % meshing an electrode and tissue structures bounded by a cylinder
 
 %% load the nucleus data
@@ -6,7 +6,7 @@ function [emesh,nmesh]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode)
 tic
 meshel=electrode.meshel;
 vizz=1;
-stlexport=0;
+stlexport=1;
 if vizz
     figure
     for f=1:length(fv)
@@ -37,6 +37,8 @@ if vizz
     hold on
     plot3(orig(1),orig(2),orig(3),'y*');
     plot3(etop(1),etop(2),etop(3),'y*');
+    oe=[orig;etop];
+    plot3(oe(:,1),oe(:,2),oe(:,3),'r-');
 end
 %orig=[10.1,-15.07,-9.978];    % starting point of the electrode axis
 %etop=[34.39,20.23,43.14];     % end point of the electrode axis
@@ -47,7 +49,7 @@ electrodetrisize=0.2;  % the maximum triangle size of the electrode mesh
 bcyltrisize=0.3;       % the maximum triangle size of the bounding cyl
 nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
 
-cylz0=-15;     % define the lower end of the bounding cylinder
+cylz0=-35;     % define the lower end of the bounding cylinder
 cylz1=35;     % define the upper end of the bounding cylinder
 cylradius=15; % define the radius of the bounding cylinder  
 ndiv=50;      % division of circle for the bounding cylinder
@@ -113,11 +115,20 @@ ISO2MESH_SURFBOOLEAN='cork';   % now intersect the electrode to the nucleus
 clear ISO2MESH_SURFBOOLEAN;
 
 %% create a bounding cylinder
+%[anbcyl,afbcyl]=meshacylinder(orig, etop,cylradius,bcyltrisize,10,ndiv);
+
+
 c0bbc=c0+cylz0*v;     
 c1bbc=c0+cylz1*v;
 [nbcyl,fbcyl]=meshacylinder(c0bbc, c1bbc,cylradius,bcyltrisize,10,ndiv);
 nbcyl=rotatevec3d(nbcyl,v0,v);
 nbcyl=nbcyl+repmat(orig,size(nbcyl,1),1);
+
+
+%figure
+%patch('vertices',anbcyl,'faces',afbcyl,'FaceColor','none','EdgeColor','b');
+%patch('vertices',nbcyl,'faces',fbcyl,'FaceColor','none','EdgeColor','r');
+
 seedbbc=nbcyl(1,:)*(1-1e-2)+mean(nbcyl)*1e-2;  % define a seed point for the bounding cylinder
 
 %% cut the electrode+nucleus mesh by the bounding cylinder
@@ -171,6 +182,7 @@ for reg=1:length(centroids)
     
    for con=find(eltissuetype==3);
         convin=ea_intriangulation(elfv(con).vertices,elfv(con).faces,centroids(reg,:));
+
         dirinodes=nmesh(emesh(emesh(1:end,5)==reg,1:4),:);
         dirinodes=ea_nudgedirinodes(dirinodes,centroids(reg,:));
         in=double(ea_intriangulation(elfv(con).vertices,elfv(con).faces,dirinodes));
@@ -244,17 +256,17 @@ for reg=1:length(centroids)
     tissuelabels(reg)=2; % set white matter
     
     if vizz
-        figure('name',['WM Region ',num2str(reg)]);
-        hold on
-        patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
-        for g=1:length(fv)
-        patch('vertices',fv(g).vertices,'faces',fv(g).faces,'FaceColor','none','EdgeColor','b');
-        end
-        for e=1:length(elfv)
-        patch('vertices',elfv(e).vertices,'faces',elfv(e).faces,'FaceColor','none','EdgeColor','b'); 
-        end
-        plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
-        axis equal
+%         figure('name',['WM Region ',num2str(reg)]);
+%         hold on
+%         patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
+%         for g=1:length(fv)
+%         patch('vertices',fv(g).vertices,'faces',fv(g).faces,'FaceColor','none','EdgeColor','b');
+%         end
+%         for e=1:length(elfv)
+%         patch('vertices',elfv(e).vertices,'faces',elfv(e).faces,'FaceColor','none','EdgeColor','b'); 
+%         end
+%         plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
+%         axis equal
     end
     
 end
@@ -281,10 +293,10 @@ end
 
 if stlexport
     tissuelabels={'grey','white','contacts','insulation'};
+    mkdir([options.root,options.patientname,filesep,'headmodel',filesep]);
     for tt=1:length(tissuelabels)
-        savestl(nmesh,emesh(emesh(:,5)==tt,1:3),[tissuelabels{tt},'.stl'],tissuelabels{tt});
+        savestl(nmesh,emesh(emesh(:,5)==tt,1:4),[options.root,options.patientname,filesep,'headmodel',filesep,tissuelabels{tt},'.stl'],tissuelabels{tt});
     end
-    
 end
 % plot all 4 tissue types:
 if vizz

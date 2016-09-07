@@ -292,7 +292,7 @@ electrode.tail_position=B(2,1:3);
     end
 
 
-[mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,tissuetype,electrode);
+[mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options);
 keyboard
 
 mesh.tissue=mesh.tet(:,5);
