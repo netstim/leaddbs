@@ -3,7 +3,7 @@ function cs_dmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,
 
 switch cmd
     case 'seed'
-        map=ea_load_nii(space);
+        map=ea_load_nii([dfold,'spacedefinitions',filesep,space,'.nii']);
         cfile=[dfold,'dMRI',filesep,cname];
         load(cfile,'fibers');
         mapsz=size(map.img);
