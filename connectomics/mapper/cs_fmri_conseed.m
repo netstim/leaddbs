@@ -93,7 +93,7 @@ else
 end
 
 for s=1:length(sfile)
-    seed{s}=ea_load_nii(sfile{s});
+    seed{s}=ea_load_nii(ea_niigz(sfile{s}));
     
     [~,seedfn{s}]=fileparts(sfile{s});
     
