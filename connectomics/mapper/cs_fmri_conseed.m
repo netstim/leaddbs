@@ -360,7 +360,7 @@ switch cmd
             spm_write_vol(tmap,tmap.img);
             if usegzip
                 gzip(tmap.fname);
-                delete(mmap.fname);
+                delete(tmap.fname);
             end
             
             
