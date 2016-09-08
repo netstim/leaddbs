@@ -8,7 +8,7 @@ switch options.normalize.settings.peerset
         peerfolders=options.uipatdirs;
     case 'IXI-Dataset'
         ptage=ea_getpatientage([options.root,options.patientname,filesep]);
-        peerfolders=ea_getIXI_IDs(3,ptage);
+        peerfolders=ea_getIXI_IDs(21,ptage);
     case 'User-Defined'
         peerfolders=options.normalize.settings.peersetcell;
 end
