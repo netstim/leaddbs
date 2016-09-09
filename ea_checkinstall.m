@@ -1,7 +1,10 @@
-function [success,commands]=ea_checkinstall(cmd,force,checkonly)
+function [success,commands]=ea_checkinstall(cmd,force,checkonly,robot)
 success=1;
 if ~exist('checkonly','var')
     checkonly=0;
+end
+if ~exist('robot','var')
+    robot=0;
 end
 earoot=ea_getearoot;
 if ~exist('force','var')
@@ -13,7 +16,7 @@ switch cmd
         commands={'bigbrain','macaque','groupconnectome2013'};
     case 'bigbrain'
         checkf=[earoot,'templates',filesep,'bigbrain_2015_100um_bb.nii'];
-        force=ea_alreadyinstalled(checkf,checkonly);
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly;            success=~force; return; end
                 if force==-1;      success=-1;       return; end
         if ~exist(checkf,'file') || force
@@ -25,7 +28,7 @@ switch cmd
         end
     case 'macaque'
         checkf=[earoot,'toolbox',filesep,'macaque'];
-        force=ea_alreadyinstalled(checkf,checkonly);
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
                 if checkonly;            success=~force; return; end
                                 if force==-1;      success=-1;       return; end
 
@@ -38,7 +41,7 @@ switch cmd
         end
     case 'groupconnectome2013'
         checkf=[ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) full.mat'];
-        force=ea_alreadyinstalled(checkf,checkonly);
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
                 if checkonly;            success=~force; return; end
                                 if force==-1;      success=-1;       return; end
 
@@ -67,7 +70,7 @@ try delete(destination); end
 try delete([destination,'.html']); end
 
 
-function force=ea_alreadyinstalled(checkf,checkonly)
+function force=ea_alreadyinstalled(checkf,checkonly,robot)
 if ~exist(checkf,'file') % then file not there, should install anyways.
     force=1;
     return
@@ -76,6 +79,7 @@ if checkonly % return here.
     force=0;
     return
 end
+if ~robot
 choice = questdlg('This dataset seems already to be installed. Do you wish to re-download it?', ...
     'Redownload Dataset?', ...
     'Yes','No','No');
@@ -83,4 +87,7 @@ if strcmp(choice,'Yes')
     force=1;
 else
     force=-1;
+end
+else
+    force=0;
 end

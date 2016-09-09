@@ -36,7 +36,7 @@ switch bdstring
         varargout{2}=spm_vol(fullfile(options.earoot,'templates','mni_hirest1.nii'));
         varargout{3}=spm_vol(fullfile(options.earoot,'templates','mni_hirest1.nii'));
     case 'BigBrain 100 um ICBM 152 2009b Sym'
-        if ~ea_checkinstall('bigbrain')
+        if ~ea_checkinstall('bigbrain',0,0,1)
             ea_error('BigBrain is not installed and could not be installed automatically. Please make sure that Matlab is connected to the internet.');
         end
         varargout{1}=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
