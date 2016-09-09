@@ -158,9 +158,11 @@ for side=1:length(options.sides)
             %axis equal
             hold on
             
-            
+            if manualtracor
             aspectratio=V.dim(onedim)/V.dim(secdim);
-            
+            else
+                aspectratio=1;
+            end
             % Show overlays
             if options.d2.writeatlases
                 try options.atlases=atlases; end
@@ -357,6 +359,7 @@ for side=1:length(options.sides)
                 set(cuts,'position',[100, 100, 3200*aspectratio,3200]);
             end
             set(0,'CurrentFigure',cuts)
+            set(gca, 'LooseInset', [0,0,0,0]);
             axis equal
             set(gca,'position',[0,0,1,1],'units','normalized'); % fullscreen plot.
             expslice=double(frame2im(getframe(cuts))); % export plot.
