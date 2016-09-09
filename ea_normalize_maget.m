@@ -210,7 +210,7 @@ ea_apply_normalization(options);
 
 % finally, cleanup.
 
-%rmdir([subdirec,'MAGeT'],'s');
+rmdir([subdirec,'MAGeT'],'s');
 
 
 
