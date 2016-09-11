@@ -1,4 +1,4 @@
-function ea_open_vol(V)
+function ea_close_vol(V)
 
 V.fname=ea_niigz(V.fname);
 [~,~,ext]=fileparts(V.fname);
