@@ -39,25 +39,25 @@ if nargin==1
             fis={ea_niigz([directory,options.prefs.prenii_unnormalized])};
             ofis={ea_niigz([directory,options.prefs.gprenii])};
             if isfield(options.prefs,'prenii')
-                lfis={ea_niigz([options.prefs.prenii])};
+                lfis={ea_niigz([directory,options.prefs.prenii])};
             end
-            
+
             if isfield(options.prefs,'tranii_unnormalized')
                 fis=[fis,{ea_niigz([directory,options.prefs.tranii_unnormalized])}];
                 ofis=[ofis,{ea_niigz([directory,options.prefs.gtranii])}];
-                lfis=[lfis,{ea_niigz([options.prefs.tranii])}];
+                lfis=[lfis,{ea_niigz([directory,options.prefs.tranii])}];
             end
-            
+
             if isfield(options.prefs,'cornii_unnormalized')
                 fis=[fis,{ea_niigz([directory,options.prefs.cornii_unnormalized])}];
                 ofis=[ofis,{ea_niigz([directory,options.prefs.gcornii])}];
-                lfis=[lfis,{ea_niigz([options.prefs.cornii])}];
+                lfis=[lfis,{ea_niigz([directory,options.prefs.cornii])}];
             end
-            
+
             if isfield(options.prefs,'sagnii_unnormalized')
                 fis=[fis,{ea_niigz([directory,options.prefs.sagnii_unnormalized])}];
                 ofis=[ofis,{ea_niigz([directory,options.prefs.gsagnii])}];
-                lfis=[lfis,{ea_niigz([options.prefs.sagnii])}];
+                lfis=[lfis,{ea_niigz([directory,options.prefs.sagnii])}];
             end
             if isfield(options.prefs,'fa2anat')
                 if exist([directory,options.prefs.fa2anat],'file');
@@ -106,7 +106,7 @@ for fi=1:length(fis)
 %             try movefile([subdir,lprebase,'1InverseWarp.nii.gz'],[subdir,glprebase,'1InverseWarp.nii.gz']); end
 %         end
     end
-    
+
     cmd = [applyTransforms,' --verbose 1' ...
            ' --dimensionality 3 --float 1' ...
            ' -i ',ea_path_helper(fis{fi}), ...
@@ -129,7 +129,7 @@ for fi=1:length(fis)
            if isempty(refim)
                refim=[options.earoot,'templates',filesep,'mni_hires.nii'];
            end
-           
+
            if exist('transformfile','var')
                [pth,fn,ext]=fileparts(transformfile);
                tr=[' -r ',refim,...
