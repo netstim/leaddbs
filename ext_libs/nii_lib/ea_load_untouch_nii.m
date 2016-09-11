@@ -12,12 +12,12 @@
 %  together with "save_untouch_nii.m", and do not use "save_nii.m" or
 %  "view_nii.m" for the data that is loaded by "load_untouch_nii.m". For
 %  normal situation, you should use "load_nii.m" instead.
-%  
+%
 %  Usage: nii = load_untouch_nii(filename, [img_idx], [dim5_idx], [dim6_idx], ...
 %			[dim7_idx], [old_RGB], [slice_idx])
-%  
+%
 %  filename  - 	NIFTI or ANALYZE file name.
-%  
+%
 %  img_idx (optional)  -  a numerical array of image volume indices.
 %	Only the specified volumes will be loaded. All available image
 %	volumes will be loaded, if it is default or empty.
@@ -41,7 +41,7 @@
 %	from old RGB24. New RGB24 uses RGB triple sequentially for each
 %	voxel, like [R1 G1 B1 R2 G2 B2 ...]. Analyze 6.0 from AnalyzeDirect
 %	uses old RGB24, in a way like [R1 R2 ... G1 G2 ... B1 B2 ...] for
-%	each slices. If the image that you view is garbled, try to set 
+%	each slices. If the image that you view is garbled, try to set
 %	old_RGB variable to 1 and try again, because it could be in
 %	old RGB24. It will be set to 0, if it is default or empty.
 %
@@ -50,12 +50,12 @@
 %	slices will be loaded, if it is default or empty.
 %
 %  Returned values:
-%  
+%
 %  nii structure:
 %
 %	hdr -		struct with NIFTI header fields.
 %
-%	filetype -	Analyze format .hdr/.img (0); 
+%	filetype -	Analyze format .hdr/.img (0);
 %			NIFTI .hdr/.img (1);
 %			NIFTI .nii (2)
 %
@@ -67,7 +67,7 @@
 %
 %  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
-function nii = load_untouch_nii(filename, img_idx, dim5_idx, dim6_idx, dim7_idx, ...
+function nii = ea_load_untouch_nii(filename, img_idx, dim5_idx, dim6_idx, dim7_idx, ...
 			old_RGB, slice_idx)
 
    if ~exist('filename','var')
@@ -187,11 +187,11 @@ function nii = load_untouch_nii(filename, img_idx, dim5_idx, dim6_idx, dim7_idx,
    end
 
 
-   
+
    nii.mat=[nii.hdr.hist.srow_x
        nii.hdr.hist.srow_y
        nii.hdr.hist.srow_z
        [0,0,0,1]];
-   
+
    return					% load_untouch_nii
 
