@@ -24,7 +24,7 @@ try
 end
 try
     if ~exist(prefs.ixi.dir,'file')
-        ea_warning('IXI data directory empty. Please set prefs.ixi.dir folder to a valid directory in preferences.');
+        warning('IXI data directory empty. Please set prefs.ixi.dir folder to a valid directory in preferences.');
         mkdir(prefs.ixi.dir);
         if ~exist(prefs.ixi.dir,'file')
             warning('IXI data directory could not be established. Please set prefs.ixi.dir folder to a valid directory in preferences.');
