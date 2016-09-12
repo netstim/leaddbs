@@ -83,7 +83,6 @@ disp(['Downloading ',assetname,'...'])
 try
     webopts=weboptions('Timeout',5);
     websave(destination,downloadurl,'id',id,webopts);
-    unzip(destination);
 catch
     try
         urlwrite([downloadurl,'?id=',id],destination,'Timeout',5);
@@ -92,6 +91,15 @@ catch
     end
 end
 
+if success
+    [~,~,ext] = fileparts(destination);
+    if strcmp(ext,'.gz')
+        gunzip(destination);
+    elseif strcmp(ext,'.zip')
+        unzip(destination);
+    end
+end
+    
 try delete(destination); end
 
 
