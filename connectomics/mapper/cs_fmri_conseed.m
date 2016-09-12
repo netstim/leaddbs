@@ -101,7 +101,8 @@ for s=1:length(sfile)
     sweights(isnan(sweights))=0;
     sweights=double(sweights);
     % assure sum of sweights is 1
-    sweights(logical(sweights))=sweights(logical(sweights))/sum(sweights(logical(sweights)));
+    
+    %sweights(logical(sweights))=sweights(logical(sweights))/abs(sum(sweights(logical(sweights))));
     sweightmx=repmat(sweights,1,120);
     
     sweightidx{s}=find(sweights);
@@ -112,7 +113,7 @@ numseed=s;
 
 pixdim=length(outidx);
 
-numsub=length(subIDs);
+numsub=5; %length(subIDs);
 switch cmd
     case {'seed','seedvox_ram','seedvox_noram'}
         for s=1:numseed
