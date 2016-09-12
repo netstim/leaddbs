@@ -85,10 +85,14 @@ try
     websave(destination,downloadurl,'id',id,webopts);
     unzip(destination);
 catch
-    success=0;
+    try
+        urlwrite([downloadurl,'?id=',id],destination,'Timeout',5);
+    catch
+        success=0;
+    end
 end
+
 try delete(destination); end
-% try delete([destination,'.html']); end
 
 
 function force=ea_alreadyinstalled(checkf,checkonly,robot)
