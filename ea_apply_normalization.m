@@ -21,25 +21,25 @@ switch whichnormmethod
     otherwise
         switch options.modality
             case 1 % MR
-                postops{1}=ea_niigz(options.prefs.prenii_unnormalized);
-                postops{2}=ea_niigz(options.prefs.tranii_unnormalized);
-                postops{3}=ea_niigz(options.prefs.cornii_unnormalized);
-                postops{4}=ea_niigz(options.prefs.sagnii_unnormalized);
-                gfis{1}=ea_niigz(options.prefs.gprenii);
-                gfis{2}=ea_niigz(options.prefs.gtranii);
-                gfis{3}=ea_niigz(options.prefs.gcornii);
-                gfis{4}=ea_niigz(options.prefs.gsagnii);
-                lfis{1}=ea_niigz(options.prefs.prenii);
-                lfis{2}=ea_niigz(options.prefs.tranii);
-                lfis{3}=ea_niigz(options.prefs.cornii);
-                lfis{4}=ea_niigz(options.prefs.sagnii);                
+                postops{1}=options.prefs.prenii_unnormalized;
+                postops{2}=options.prefs.tranii_unnormalized;
+                postops{3}=options.prefs.cornii_unnormalized;
+                postops{4}=options.prefs.sagnii_unnormalized;
+                gfis{1}=options.prefs.gprenii;
+                gfis{2}=options.prefs.gtranii;
+                gfis{3}=options.prefs.gcornii;
+                gfis{4}=options.prefs.gsagnii;
+                lfis{1}=options.prefs.prenii;
+                lfis{2}=options.prefs.tranii;
+                lfis{3}=options.prefs.cornii;
+                lfis{4}=options.prefs.sagnii;                
             case 2 % CT
-                postops{1}=ea_niigz(options.prefs.prenii_unnormalized);
-                postops{2}=ea_niigz(options.prefs.ctnii_coregistered);
-                gfis{1}=ea_niigz(options.prefs.gprenii);
-                gfis{2}=ea_niigz(options.prefs.gctnii);
-                lfis{1}=ea_niigz(options.prefs.prenii);
-                lfis{2}=ea_niigz(options.prefs.ctnii);
+                postops{1}=options.prefs.prenii_unnormalized;
+                postops{2}=options.prefs.ctnii_coregistered;
+                gfis{1}=options.prefs.gprenii;
+                gfis{2}=options.prefs.gctnii;
+                lfis{1}=options.prefs.prenii;
+                lfis{2}=options.prefs.ctnii;
         end
         
         switch spm('ver')
