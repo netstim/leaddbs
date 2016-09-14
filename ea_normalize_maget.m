@@ -54,6 +54,7 @@ for peer=1:length(peerfolders)
             presentfiles=subpresentfiles;
             clear subpresentfiles peerpresentfiles
         end
+        clear sptos spfroms metrics weights
         for anatfi=1:length(presentfiles)
             spfroms{anatfi}=ea_niigz([subdirec,presentfiles{anatfi}]);
             sptos{anatfi}=ea_niigz([peerdirec,presentfiles{anatfi}]);

@@ -115,6 +115,7 @@ for peer=1:length(peerfolders)
             presentfiles=subpresentfiles;
             clear subpresentfiles peerpresentfiles
         end
+        clear sptos spfroms metrics weights %clear all variables, if not, the last image file will be transferred onto the next peer 
         for anatfi=1:length(presentfiles)
             spfroms{anatfi}=[peerdirec,presentfiles{anatfi}];
             sptos{anatfi}=[subdirec,presentfiles{anatfi}];
