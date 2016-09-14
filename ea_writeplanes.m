@@ -299,7 +299,7 @@ for side=1:length(options.sides)
                                 
                             end
                         end
-                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
+                        %elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
                     end
                     
                 end
@@ -359,9 +359,10 @@ for side=1:length(options.sides)
                 set(cuts,'position',[100, 100, 3200*aspectratio,3200]);
             end
             set(0,'CurrentFigure',cuts)
-            set(gca, 'LooseInset', [0,0,0,0]);
+%            set(gca, 'LooseInset', [0,0,0,0]);
             axis equal
             set(gca,'position',[0,0,1,1],'units','normalized'); % fullscreen plot.
+            
             expslice=double(frame2im(getframe(cuts))); % export plot.
             expslice=(expslice-min(expslice(:)))/(max(expslice(:))-min(expslice(:))); % set 0 to 1
 
