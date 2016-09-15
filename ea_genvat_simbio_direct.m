@@ -293,7 +293,7 @@ electrode.tail_position=B(2,1:3);
 
 
 [mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options);
-keyboard
+
 
 mesh.tissue=mesh.tet(:,5);
 mesh.tet=mesh.tet(:,1:4);
@@ -400,7 +400,7 @@ for source=S.sources
         gradient{source} = ea_calc_gradient(vol,potential); % output in V/m.
 
     else % empty source..
-        gradient{source}=zeros(size(vol.hex,1),3);
+        gradient{source}=zeros(size(vol.tet,1),3);
     end
 
 end
@@ -408,7 +408,7 @@ end
 gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient from all sources.
 vol.pos=vol.pos*SIfx; % convert back to mm.
 
-    midpts=mean(cat(3,vol.pos(vol.hex(:,1),:),vol.pos(vol.hex(:,2),:),vol.pos(vol.hex(:,3),:),vol.pos(vol.hex(:,4),:),vol.pos(vol.hex(:,5),:),vol.pos(vol.hex(:,6),:),vol.pos(vol.hex(:,7),:),vol.pos(vol.hex(:,8),:)),3);
+    midpts=mean(cat(3,vol.pos(vol.tet(:,1),:),vol.pos(vol.tet(:,2),:),vol.pos(vol.tet(:,3),:),vol.pos(vol.tet(:,4),:)),3);
 
     vatgrad=getappdata(resultfig,'vatgrad');
     if isempty(vatgrad); clear('vatgrad'); end
@@ -501,7 +501,7 @@ S(side).volume=vatvolume;
 
 
 chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);
-Vvat.mat=ea_linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
+Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
 Vvat.dim=[100,100,100];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
@@ -570,15 +570,20 @@ end
 
 %% begin FieldTrip/SimBio functions:
 function gradient = ea_calc_gradient(vol,potential)
+%gradient = zeros(size(vol.hex,1),3);
+%gradient = gradient + 0.25*repmat(potential(vol.hex(:,1)),1,3).*((vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:))./abs(vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:)));
+%gradient = gradient + 0.25*repmat(potential(vol.hex(:,2)),1,3).*((vol.pos(vol.hex(:,2),:)-vol.pos(vol.hex(:,8),:))./abs(vol.pos(vol.hex(:,2),:)-vol.pos(vol.hex(:,8),:)));
+%gradient = gradient + 0.25*repmat(potential(vol.hex(:,3)),1,3).*((vol.pos(vol.hex(:,3),:)-vol.pos(vol.hex(:,5),:))./abs(vol.pos(vol.hex(:,3),:)-vol.pos(vol.hex(:,5),:)));
+%gradient = gradient + 0.25*repmat(potential(vol.hex(:,4)),1,3).*((vol.pos(vol.hex(:,4),:)-vol.pos(vol.hex(:,6),:))./abs(vol.pos(vol.hex(:,4),:)-vol.pos(vol.hex(:,6),:)));
+%gradient = gradient + 0.25*repmat(potential(vol.hex(:,5)),1,3).*((vol.pos(vol.hex(:,5),:)-vol.pos(vol.hex(:,3),:))./abs(vol.pos(vol.hex(:,5),:)-vol.pos(vol.hex(:,3),:)));
+%gradient = gradient + 0.25*repmat(potential(vol.hex(:,6)),1,3).*((vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:))./abs(vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:)));
+%gradient = gradient + 0.25*repmat(potential(vol.hex(:,7)),1,3).*((vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:))./abs(vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:)));
+%gradient = gradient + 0.25*repmat(potential(vol.hex(:,8)),1,3).*((vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:))./abs(vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:)));
 gradient = zeros(size(vol.tet,1),3);
-gradient = gradient + 0.25*repmat(potential(vol.hex(:,1)),1,3).*((vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:))./abs(vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:)));
-gradient = gradient + 0.25*repmat(potential(vol.hex(:,2)),1,3).*((vol.pos(vol.hex(:,2),:)-vol.pos(vol.hex(:,8),:))./abs(vol.pos(vol.hex(:,2),:)-vol.pos(vol.hex(:,8),:)));
-gradient = gradient + 0.25*repmat(potential(vol.hex(:,3)),1,3).*((vol.pos(vol.hex(:,3),:)-vol.pos(vol.hex(:,5),:))./abs(vol.pos(vol.hex(:,3),:)-vol.pos(vol.hex(:,5),:)));
-gradient = gradient + 0.25*repmat(potential(vol.hex(:,4)),1,3).*((vol.pos(vol.hex(:,4),:)-vol.pos(vol.hex(:,6),:))./abs(vol.pos(vol.hex(:,4),:)-vol.pos(vol.hex(:,6),:)));
-gradient = gradient + 0.25*repmat(potential(vol.hex(:,5)),1,3).*((vol.pos(vol.hex(:,5),:)-vol.pos(vol.hex(:,3),:))./abs(vol.pos(vol.hex(:,5),:)-vol.pos(vol.hex(:,3),:)));
-gradient = gradient + 0.25*repmat(potential(vol.hex(:,6)),1,3).*((vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:))./abs(vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:)));
-gradient = gradient + 0.25*repmat(potential(vol.hex(:,7)),1,3).*((vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:))./abs(vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:)));
-gradient = gradient + 0.25*repmat(potential(vol.hex(:,8)),1,3).*((vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:))./abs(vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:)));
+gradient = gradient + repmat(potential(vol.tet(:,1))-potential(vol.tet(:,2)),1,3).*(vol.pos(vol.tet(:,1),:)-vol.pos(vol.tet(:,2),:))./repmat(sqrt(sum((vol.pos(vol.tet(:,1),:)-vol.pos(vol.tet(:,2),:)).^2,2)),1,3);
+gradient = gradient + repmat(potential(vol.tet(:,2))-potential(vol.tet(:,3)),1,3).*(vol.pos(vol.tet(:,2),:)-vol.pos(vol.tet(:,3),:))./repmat(sqrt(sum((vol.pos(vol.tet(:,2),:)-vol.pos(vol.tet(:,3),:)).^2,2)),1,3);
+gradient = gradient + repmat(potential(vol.tet(:,3))-potential(vol.tet(:,4)),1,3).*(vol.pos(vol.tet(:,3),:)-vol.pos(vol.tet(:,4),:))./repmat(sqrt(sum((vol.pos(vol.tet(:,3),:)-vol.pos(vol.tet(:,4),:)).^2,2)),1,3);
+gradient = gradient + repmat(potential(vol.tet(:,4))-potential(vol.tet(:,1)),1,3).*(vol.pos(vol.tet(:,4),:)-vol.pos(vol.tet(:,1),:))./repmat(sqrt(sum((vol.pos(vol.tet(:,4),:)-vol.pos(vol.tet(:,1),:)).^2,2)),1,3);
 
 function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol,lowconducting)
 if constvol
@@ -638,10 +643,21 @@ stiff = stiff + diag(dia);
 
 
 function surf_nodes_clear = ea_get_surf_nodes(cell,field,lowconducting)
-con_cell = cell(find(field == lowconducting),:);
-connectivity = hist(cell(:),unique(cell));
-surf_nodes = find(connectivity ~= 8);
-surf_nodes_clear = setdiff(surf_nodes,con_cell(:));
+if size(cell,1) == 4
+   cell = cell';
+end
+non_con_cell = cell(field ~= lowconducting,:);
+faces = [cell(non_con_cell,[1,2,3]);cell(non_con_cell,[2,3,4]);cell(non_con_cell,[3,4,1]);cell(non_con_cell,[4,1,2])];
+faces = sort(faces);
+faces = sortrows(faces);
+k = find(all(diff(faces)==0,2));
+faces([k;k+1],:) = [];
+surf_nodes_clear = faces(:);
+%    con_cell = cell(field == lowconducting,:);
+%    connectivity = hist(cell(:),unique(cell));
+%    surf_nodes = find(connectivity ~= 8);
+%    surf_nodes_clear = setdiff(surf_nodes,con_cell(:));
+
 
 function [warped] = ea_ft_warp_apply(M, input, method, tol)
 
@@ -1490,7 +1506,7 @@ fprintf('Dimensions of the segmentation after restriction to bounding-box: %i %i
 
 % create elements
 
-mesh.hex = ea_create_elements(x_dim,y_dim,z_dim);
+mesh.tet = ea_create_elements(x_dim,y_dim,z_dim);
 fprintf('Created elements...\n' )
 
 
@@ -1504,14 +1520,14 @@ if(shift < 0 | shift > 0.3)
     error('Please choose a shift parameter between 0 and 0.3!');
 elseif(shift > 0)
 
-    mesh.pnt = shift_nodes(mesh.pnt,mesh.hex,labels, shift,x_dim,y_dim,z_dim);
+    mesh.pnt = shift_nodes(mesh.pnt,mesh.tet,labels, shift,x_dim,y_dim,z_dim);
 
 end
 
 %background = 1;
 % delete background voxels(if desired)
 if(background == 0)
-    mesh.hex = mesh.hex(labels ~= 0,:);
+    mesh.tet = mesh.tet(labels ~= 0,:);
     mesh.labels = labels(labels ~= 0);
 else
     mesh.labels = labels(:);
@@ -1519,10 +1535,10 @@ end
 
 
 % delete unused nodes
-[C, ia, ic] = unique(mesh.hex(:));
+[C, ia, ic] = unique(mesh.tet(:));
 mesh.pnt = mesh.pnt(C,:,:,:);
 mesh.pnt = mesh.pnt + repmat(shift_coord,size(mesh.pnt,1),1);
-mesh.hex(:) = ic;
+mesh.tet(:) = ic;
 
 % function creating elements from a MRI-Image with the dimensions x_dim,
 % y_dim, z_dim. Each voxel of the MRI-Image corresponds to one element in
@@ -3661,7 +3677,7 @@ end
 
 
 % function shifting the nodes
-function nodes = shift_nodes(points,hex,labels, sh,x_dim,y_dim,z_dim)
+function nodes = shift_nodes(points,tet,labels, sh,x_dim,y_dim,z_dim)
 cfg = [];
 fprintf('Applying shift %f\n', sh);
 nodes = points;
@@ -3676,7 +3692,7 @@ b = 1:(x_dim+1)*(y_dim+1)*(z_dim+1);
 % of the surrounding elements(see below).
 offset = (b - nodes(b,2)' - (nodes(b,3))'*(y_dim+1+x_dim))';
 offset(offset <= 0) = size(labels,1)+1;
-offset(offset > size(hex,1)) = size(labels,1)+1;
+offset(offset > size(tet,1)) = size(labels,1)+1;
 
 % create array containing the surrounding elements for each node
 %surrounding = zeros((x_dim+1)*(y_dim+1)*(z_dim+1),8);
@@ -3756,9 +3772,9 @@ distribution(distribution == 0) = Inf;
 clear distribution;
 
 % calculate the centroid for each element
-centroids = zeros(size(hex,1),3);
+centroids = zeros(size(tet,1),3);
 for l=1:3
-    centroids(:,l) = sum(reshape(nodes(hex(:,:),l),size(hex,1),8)')'/8;
+    centroids(:,l) = sum(reshape(nodes(tet(:,:),l),size(tet,1),8)')'/8;
 end
 
 % set a dummy centroid

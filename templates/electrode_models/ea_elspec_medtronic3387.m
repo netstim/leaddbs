@@ -24,7 +24,7 @@ resultfig=figure('visible','off');
 
 jetlist=othercolor('BuOr_12');
 %   jetlist=jet;
-N=100; % resolution of electrode points
+N=200; % resolution of electrode points
 
 for side=1:length(options.sides)
     %% nullmodel:
