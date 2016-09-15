@@ -421,14 +421,16 @@ delete(captions);
 
 % Plot spacing distance info text and correct inhomogeneous spacings.
 %emp_eldist(1)=mean([pdist([markers(1).head;markers(1).tail]),pdist([markers(2).head;markers(2).tail])])/3;
-clear emp_eldist
-for side=1:length(options.sides)
-    A{side}=squareform(pdist(coords_mm{side}));
-    emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
-end
-memp_eldist=mean([emp_eldist{1},emp_eldist{2}]);
-if abs(emp_eldist{1}-emp_eldist{2})>0.005 && options.native % check if spacings on both sides are the same.
-[~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
+if length(options.sides) > 1
+    clear emp_eldist
+    for side=1:length(options.sides)
+        A{side}=squareform(pdist(coords_mm{side}));
+        emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
+    end
+    memp_eldist=mean([emp_eldist{1},emp_eldist{2}]);
+    if abs(emp_eldist{1}-emp_eldist{2})>0.005 && options.native % check if spacings on both sides are the same.
+    [~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
+    end
 end
 %% plot coords
 hold on
