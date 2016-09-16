@@ -1950,6 +1950,10 @@ switch model
         ea_hide_impedance(handles);
         S.monopolarmodel=0;
         ea_enable_vas(handles,options);
+    case 'SimBio/Iso2Mesh'
+        ea_hide_impedance(handles);
+        S.monopolarmodel=0;
+        ea_enable_vas(handles,options);
     case 'Maedler 2012'
         ea_show_impedance(handles);
         S.monopolarmodel=1;

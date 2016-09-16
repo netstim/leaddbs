@@ -1,8 +1,7 @@
-function [emesh,nmesh,activesurfidx]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S)
+function [emesh,nmesh,activeidx]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel)
 % meshing an electrode and tissue structures bounded by a cylinder
 
 %% load the nucleus data
-activesurfidx=nan;
 tic
 meshel=electrode.meshel;
 vizz=0;
@@ -172,6 +171,27 @@ if vizz
 %     plotmesh(nmesh,emesh(:,1:5),'linestyle','none','facealpha',0.1);
 %     hold on
 end
+
+
+% init activeidx:
+
+for s=1:4
+    for c=1:elnumel
+        activeidx(s).con(c).ix=[];
+        activeidx(s).con(c).perc=0;
+        activeidx(s).con(c).pol=0;
+    end
+end
+
+
+active=find(S.activecontacts{side});
+
+switch side
+    case 1
+        sidec='R';
+    case 2
+        sidec='L';
+end
 for reg=1:length(centroids)
    % first check if whether contact or insulator
    
@@ -179,12 +199,28 @@ for reg=1:length(centroids)
     
    for con=find(eltissuetype==3);
         convin=ea_intriangulation(elfv(con).vertices,elfv(con).faces,centroids(reg,:));
-
-        dirinodes=nmesh(emesh(emesh(1:end,5)==reg,1:4),:);
+        thiscompsnodes=emesh(emesh(1:end,5)==reg,1:4); % get this components nodes
+        dirinodes=nmesh(thiscompsnodes,:);
         dirinodes=ea_nudgedirinodes(dirinodes,centroids(reg,:));
         in=double(ea_intriangulation(elfv(con).vertices,elfv(con).faces,dirinodes));
 
         if convin && mean(in)>0.7
+            if ismember(con,active)
+                
+                % we captured an active contact. need to assign to correct
+                % source and polarity
+                for source=1:4
+                   if S.([sidec,'s',num2str(source)]).amp % then this active contact could be from this source since source is active
+                       if S.([sidec,'s',num2str(source)]).(['k',num2str(con-1)]).perc % current captured contact is from this source    
+                           activeidx(source).con(con).ix=[activeidx(source).con(con).ix;unique(thiscompsnodes(:))];
+                           activeidx(source).con(con).pol=S.([sidec,'s',num2str(source)]).(['k',num2str(con-1)]).pol;
+                           activeidx(source).con(con).perc=S.([sidec,'s',num2str(source)]).(['k',num2str(con-1)]).perc;
+                       end
+                   end
+                end
+                
+                
+            end
             tissuelabels(reg)=3; % set contact
             disp(['Region ',num2str(reg),' captured by contact material.']);
             if vizz

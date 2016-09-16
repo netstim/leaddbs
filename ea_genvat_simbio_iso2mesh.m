@@ -28,7 +28,7 @@ elseif nargin==6
     thresh=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
-        varargout{1}='SimBio/FieldTrip direct';
+        varargout{1}='SimBio/Iso2Mesh';
         return
     end
 end
@@ -131,7 +131,7 @@ if 1 %ea_headmodel_changed(options,side,S,elstruct)
     end
 
     
-    [mesh.tet,mesh.pnt,activesurf]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S);
+    [mesh.tet,mesh.pnt,activeidx]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel);
     
     
     mesh.tissue=mesh.tet(:,5);
@@ -204,24 +204,32 @@ for source=S.sources
         else
             SIfx=1;
         end
-        ix=knnsearch(vol.pos,dpvx/SIfx); % add dpvx/1000 for m
+        %ix=knnsearch(vol.pos,dpvx/SIfx); % add dpvx/1000 for m
 
+        
         if any(volts>0)
             unipolar=0;
             U=U/2;
-            volts=volts/2;
+            %volts=volts/2;
         else
             unipolar=1;
         end
-
+        ix=[];
+        voltix=[];
+        for ac=Acnt
+            ix=[ix;activeidx(source).con(ac).ix];
+            voltix=[voltix;repmat(U(ac),length(activeidx(source).con(ac).ix),1)*(activeidx(source).con(ac).perc/100)];
+        end
+        
+        
         constvol=stimsource.va==1; % constvol is 1 for constant voltage and 0 for constant current.
 
 
         if ~constvol
-            volts=volts/1000; % from Ampere to mA
+            voltix=voltix/1000; % from Ampere to mA
         end
 
-        potential = ea_apply_dbs(vol,ix,volts,unipolar,constvol,4); % output in V. 4 indexes insulating material.
+        potential = ea_apply_dbs(vol,ix,voltix,unipolar,constvol,4); % output in V. 4 indexes insulating material.
         disp('Done. Calculating E-Field...');
 
         gradient{source} = ea_calc_gradient(vol,potential); % output in V/m.
