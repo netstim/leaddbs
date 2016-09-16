@@ -218,8 +218,9 @@ for source=S.sources
         voltix=[];
         for ac=Acnt
             ix=[ix;activeidx(source).con(ac).ix];
-            voltix=[voltix;repmat(U(ac),length(activeidx(source).con(ac).ix),1)*(activeidx(source).con(ac).perc/100)];
+            voltix=[voltix;repmat(U(ac),length(activeidx(source).con(ac).ix),1)];
         end
+        
         
         
         constvol=stimsource.va==1; % constvol is 1 for constant voltage and 0 for constant current.
@@ -269,15 +270,19 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
     catch
         keyboard
     end
+    
     norm_gradient=gradient(indices,:);
-    anormgrad=mean(abs(norm_gradient),2);
+        anormgrad=sqrt(sum(norm_gradient'.^2,1));
     % add compression of really large gradient values for visualization..
-    maxval=(mean(anormgrad)+10*std(anormgrad));
+    maxval=thresh; % 100*ea_robustmean(anormgrad);
     ixx=anormgrad>maxval;
+    % normalize grad to max 1
+    norm_gradient=norm_gradient/maxval;
     pols=norm_gradient(ixx,:)./abs(norm_gradient(ixx,:));
     pols=pols.*repmat(maxval,size(pols,1),size(pols,2));
     norm_gradient(ixx,:)=pols;
     %
+    norm_gradient=norm_gradient/10; % set max to 0.5
     vatgrad(side).qx=norm_gradient(:,1); vatgrad(side).qy=norm_gradient(:,2); vatgrad(side).qz=norm_gradient(:,3);
 
     setappdata(resultfig,'vatgrad',vatgrad);
