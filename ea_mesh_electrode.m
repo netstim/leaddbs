@@ -1,8 +1,8 @@
-function [emesh,nmesh]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options)
+function [emesh,nmesh,activesurfidx]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S)
 % meshing an electrode and tissue structures bounded by a cylinder
 
 %% load the nucleus data
-
+activesurfidx=nan;
 tic
 meshel=electrode.meshel;
 vizz=0;
@@ -24,9 +24,6 @@ if vizz
 %     axis equal
 %     
 end
-
-
-
 
 %% user defined parameters
 

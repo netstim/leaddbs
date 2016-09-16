@@ -15,9 +15,9 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=0.05;
+    thresh=0.2;
     if useSI
-        %thresh=thresh.*(10^-3);
+        thresh=thresh.*(10^3);
     end
 elseif nargin==6
     acoords=varargin{1};
@@ -131,11 +131,12 @@ if 1 %ea_headmodel_changed(options,side,S,elstruct)
     end
 
     
-    [mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options);
+    [mesh.tet,mesh.pnt,activesurf]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S);
     
     
     mesh.tissue=mesh.tet(:,5);
     mesh.tet=mesh.tet(:,1:4);
+    
     if useSI
         mesh.pnt=mesh.pnt/1000; % in meter
         mesh.unit='m';
@@ -232,6 +233,7 @@ for source=S.sources
 end
 
 gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient from all sources.
+
 vol.pos=vol.pos*SIfx; % convert back to mm.
 
     midpts=mean(cat(3,vol.pos(vol.tet(:,1),:),vol.pos(vol.tet(:,2),:),vol.pos(vol.tet(:,3),:),vol.pos(vol.tet(:,4),:)),3);
@@ -240,6 +242,8 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
     if isempty(vatgrad); clear('vatgrad'); end
     reduc=10;
 
+    
+    %% generate flowfield visualization:
     % generate a jittered indices vector to be used to reduce flowfield
     % display by ~factor reduc.
     indices=zeros(length(1:reduc:length(midpts)),1);
@@ -272,7 +276,7 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
     %figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))
 
 
-    % calculate electric field ET by calculating midpoints of each
+    %% calculate electric field ET by calculating midpoints of each
     % mesh-connection and setting difference of voltage to these points.
 
     vat.pos=midpts;
