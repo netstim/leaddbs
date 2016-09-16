@@ -579,11 +579,14 @@ function gradient = ea_calc_gradient(vol,potential)
 %gradient = gradient + 0.25*repmat(potential(vol.hex(:,6)),1,3).*((vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:))./abs(vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:)));
 %gradient = gradient + 0.25*repmat(potential(vol.hex(:,7)),1,3).*((vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:))./abs(vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:)));
 %gradient = gradient + 0.25*repmat(potential(vol.hex(:,8)),1,3).*((vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:))./abs(vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:)));
-gradient = zeros(size(vol.tet,1),3);
-gradient = gradient + repmat(potential(vol.tet(:,1))-potential(vol.tet(:,2)),1,3).*(vol.pos(vol.tet(:,1),:)-vol.pos(vol.tet(:,2),:))./repmat(sqrt(sum((vol.pos(vol.tet(:,1),:)-vol.pos(vol.tet(:,2),:)).^2,2)),1,3);
-gradient = gradient + repmat(potential(vol.tet(:,2))-potential(vol.tet(:,3)),1,3).*(vol.pos(vol.tet(:,2),:)-vol.pos(vol.tet(:,3),:))./repmat(sqrt(sum((vol.pos(vol.tet(:,2),:)-vol.pos(vol.tet(:,3),:)).^2,2)),1,3);
-gradient = gradient + repmat(potential(vol.tet(:,3))-potential(vol.tet(:,4)),1,3).*(vol.pos(vol.tet(:,3),:)-vol.pos(vol.tet(:,4),:))./repmat(sqrt(sum((vol.pos(vol.tet(:,3),:)-vol.pos(vol.tet(:,4),:)).^2,2)),1,3);
-gradient = gradient + repmat(potential(vol.tet(:,4))-potential(vol.tet(:,1)),1,3).*(vol.pos(vol.tet(:,4),:)-vol.pos(vol.tet(:,1),:))./repmat(sqrt(sum((vol.pos(vol.tet(:,4),:)-vol.pos(vol.tet(:,1),:)).^2,2)),1,3);
+normal = cross(vol.pts(vol.tet(:,4),:)-vol.pts(vol.tet(:,3),:),vol.pts(vol.tet(:,3),:)-vol.pts(vol.tet(:,2),:));
+gradient = repmat(potential(vol.tet(:,1))./sum(normal.*(vol.pts(vol.tet(:,1),:)-(vol.pts(vol.tet(:,2),:)+vol.pts(vol.tet(:,3),:)+vol.pts(vol.tet(:,4),:))/3),2),1,3).*normal;
+normal = cross(vol.pts(vol.tet(:,1),:)-vol.pts(vol.tet(:,4),:),vol.pts(vol.tet(:,4),:)-vol.pts(vol.tet(:,3),:));
+gradient = gradient + repmat(potential(vol.tet(:,2))./sum(normal.*(vol.pts(vol.tet(:,2),:)-(vol.pts(vol.tet(:,3),:)+vol.pts(vol.tet(:,4),:)+vol.pts(vol.tet(:,1),:))/3),2),1,3).*normal;
+normal = cross(vol.pts(vol.tet(:,2),:)-vol.pts(vol.tet(:,1),:),vol.pts(vol.tet(:,1),:)-vol.pts(vol.tet(:,4),:));
+gradient = gradient + repmat(potential(vol.tet(:,3))./sum(normal.*(vol.pts(vol.tet(:,3),:)-(vol.pts(vol.tet(:,4),:)+vol.pts(vol.tet(:,1),:)+vol.pts(vol.tet(:,2),:))/3),2),1,3).*normal;
+normal = cross(vol.pts(vol.tet(:,3),:)-vol.pts(vol.tet(:,2),:),vol.pts(vol.tet(:,2),:)-vol.pts(vol.tet(:,1),:));
+gradient = gradient + repmat(potential(vol.tet(:,4))./sum(normal.*(vol.pts(vol.tet(:,4),:)-(vol.pts(vol.tet(:,1),:)+vol.pts(vol.tet(:,2),:)+vol.pts(vol.tet(:,3),:))/3),2),1,3).*normal;
 
 function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol,lowconducting)
 if constvol
