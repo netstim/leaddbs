@@ -33,8 +33,6 @@ elseif nargin==1
     end
 end
 
-
-
 S=ea_activecontacts(S);
 if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     fv.vertices=[0,0,0
@@ -46,16 +44,8 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     return
 end
 
-
-
 vizz=0;
 options.considerpassivecontacts=0;
-
-
-% if isempty(find(S(side).U))
-%     varargout{1}=[]; varargout{2}=[];
-%     return
-% end
 
 
 
@@ -68,143 +58,9 @@ coords=acoords{side};
 
 if 1 %ea_headmodel_changed(options,side,S,elstruct)
     disp('No suitable headmodel found, rebuilding. This may take a while...');
-    
-    %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'
-    
-    %options.earoot=[fileparts(which('lead')),filesep];
-    
-    %% some preprocessing to establish the lead trajectory
-    traj=[elstruct.markers(side).tail+(elstruct.markers(side).tail-elstruct.markers(side).head);
-        elstruct.markers(side).head+(elstruct.markers(side).head-elstruct.markers(side).tail);];
-    
-    
-    for d=1:3
-        itraj(:,d)=linspace(traj(1,d),traj(2,d));
-    end
 
-    %% convert trajectory mm2vox
-load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-    V=spm_vol([options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
-    trajmm=[itraj,ones(length(itraj),1)];
-    trajvox=V.mat\trajmm';
-    trajvox=trajvox(1:3,:)';
-    
-    if max(S.amplitude{side})<=3
-        modelwidth=50;
-    else
-        modelwidth=100;
-    end
-    if max(S.amplitude{side})>5
-        modelwidth=150;
-    end
-    
-    %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
+ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
 
-    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,modelwidth,150,1); % set to 250 / 400 this will result in ~10x10x10 mm.
-    mat=mat';
-    mkdir([options.root,options.patientname,filesep,'headmodel']);
-    Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);
-    spm_write_vol(Vexp,cimat);
-    
-    
-    
-    % fields: 1: trajectory body; 2: trajectory bottom; 3: trajectory top
-    % next three: contact one, etc.
-    % next three: contact spacing one, etc.
-    % last: tip
-    
-    
-    if vizz
-        simbio=figure;
-        hold on
-    end
-    
-    
-    % establish coordinate grid:
-    
-    
-    nii=ea_load_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii']);
-    [xx,yy,zz]=ind2sub(size(nii.img),1:numel(nii.img));
-    XYZvx=[xx;yy;zz;ones(1,length(xx))];
-    XYZmm=Vexp.mat*XYZvx;
-    
-    
-    clear XYZvx
-    
-    cnt=1;
-    Xcon=nii.img; Xcon(:)=0; % initialize image for all contacts
-    Xins=nii.img; Xins(:)=0; % initialize image for all insulated electrode parts
-    
-    
-    
-
-    
-    
-    if vizz
-        plot3(XYZmm(1,:),XYZmm(2,:),XYZmm(3,:),'r.');
-        hold on
-        plot3(trajmm(:,1),trajmm(:,2),trajmm(:,3),'g');
-    end
-    
-    ea_dispercent(1,'end');
-    
-    % set up dipole
-    
-    disp('Finishing headmodel...');
-
-    %% read in gm data and convert to segmented mri
-    % construct ft-like anatomy structure based on SPM nifti info.
-    smri.dim=Vexp.dim;
-    smri.hdr=Vexp;
-    smri.transform=Vexp.mat;
-    smri.transform(4,:)=[0,0,0,1]; % will prevent error below for floating point accuracy.
-    smri.unit='mm';
-    cimat(isnan(cimat))=0;
-    smri.gray=logical(cimat); % gm portion of the file
-    smri.white=~smri.gray; % first, set everything that is not gm to wm
-    smri.contacts=logical(Xcon); % include electrode contacts to the model
-    smri.insulation=logical(Xins); % include insulation to the model
-    smri.insulation(smri.contacts)=0; % make sure no overlaps.
-    smri.gray(smri.contacts)=0; smri.gray(smri.insulation)=0; % remove contact and insulation portions from the gm..
-    smri.white(smri.contacts)=0; smri.white(smri.insulation)=0; % .. and white matter portions.
-    
-    
-    if ~any(smri.gray(:))
-        smri.gray(1)=1; % dummy point for rare cases where model has no gray matter.
-    end
-    if ~any(smri.white(:))
-        smri.white(2)=2; % dummy point for rare cases where model has no white matter.
-    end
-
-    % export a nifti version of the headmodel just for control reasons and as
-    % an export for other use-cases:
-    X=single(smri.gray);
-    X=X+2*smri.white;
-    X=X+3*smri.contacts;
-    X=X+4*smri.insulation;
-
-
-    spm_write_vol(Vexp,X);
-    clear X
-    
-    
-    %% generate diffusion signal:
-    if options.usediffusion
-        disp('Loading FTR...');
-        load([options.earoot,'dev',filesep,'bTensor']) % b-Tensor of a simple 6fold diffusion series
-        ftr=load([options.root,options.patientname,filesep,options.prefs.FTR_normalized]);
-        disp('Done. Estimating diffusion signal based on fibertracts...');
-        signal=ea_ftr2Sigmaps(ftr,ten);
-        disp('Done. Calculating Tensors...');
-        reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii,2'];
-        Vsig=spm_vol(reftemplate);
-        for i=1:size(signal,4);
-            Vsig.fname=[options.root,options.patientname,filesep,'headmodel',filesep,'dti_',num2str(i),'.nii'];
-            spm_write_vol(Vsig,squeeze(signal(:,:,:,i)));
-        end
-    end
-
-    %% create the mesh using fieldtrip:
 
     c0=[]; cnt=1;
     mesh.tet=[];
@@ -219,16 +75,8 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
                 tissuetype(cnt)=1;
         c0=[c0;[ins,1]];
         cnt=cnt+1;
-%         mdim=ceil(max(fv.vertices))+1;
-%         mindim=floor(min(fv.vertices))-1;
-%         [node,elem]=surf2mesh(fv.vertices,fv.faces,mindim,mdim,0.1,2);
-%         mesh.tet=[mesh.tet;elem(:,1:4)+length(mesh.pnt)];
-%         mesh.pnt=[mesh.pnt;node];
-%         mesh.tissue=[mesh.tissue;ones(size(elem,1),1)];
     end
 
-
-    
     load([options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
     A=[electrode.head_position,1;
         electrode.tail_position,1
@@ -241,14 +89,12 @@ load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat
         elstruct.markers(side).y,1];
     setappdata(resultfig,'elstruct',elstruct);
     X = ea_linsolve(A,B); X=X';
+    cnt=1;
     
-    
-cnt=1;
-
-% overwrite head and tail of model with actual values for mesh generation lateron:
-electrode.head_position=B(1,1:3);
-electrode.tail_position=B(2,1:3);
-      % add contacts to mesh  
+    % overwrite head and tail of model with actual values for mesh generation lateron:
+    electrode.head_position=B(1,1:3);
+    electrode.tail_position=B(2,1:3);
+    % add contacts to mesh
     for con=1:length(electrode.meshel.con)
         
         electrode.meshel.con{con}.vertices=X*[electrode.meshel.con{con}.vertices,ones(size(electrode.meshel.con{con}.vertices,1),1)]';
@@ -282,23 +128,14 @@ electrode.tail_position=B(2,1:3);
         tissuetype(cnt)=4;
         c0=[c0;[t,4]];
         cnt=cnt+1;
-%         
-%         mdim=ceil(max(fv.vertices))+1;
-%         mindim=floor(min(fv.vertices))-1;
-%         [node,elem]=surf2mesh(fv.vertices,fv.faces,mindim,mdim,0.1,2);
-%         mesh.tet=[mesh.tet;elem(:,1:4)+length(mesh.pnt)];
-%         mesh.pnt=[mesh.pnt;node];
-%         mesh.tissue=[mesh.tissue;repmat(4,size(elem,1),1)];
     end
 
-
-[mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options);
-
-
-mesh.tissue=mesh.tet(:,5);
-mesh.tet=mesh.tet(:,1:4);
-
-
+    
+    [mesh.tet,mesh.pnt]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options);
+    
+    
+    mesh.tissue=mesh.tet(:,5);
+    mesh.tet=mesh.tet(:,1:4);
     if useSI
         mesh.pnt=mesh.pnt/1000; % in meter
         mesh.unit='m';
@@ -316,15 +153,10 @@ mesh.tet=mesh.tet(:,1:4);
     end
 
     try
-            vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-        %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-        %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-
+        vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
     catch % reorder elements so not to be degenerated.
         mesh.tet=mesh.tet(:,[1 2 4 3]);
-            vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-        %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-        %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+        vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
     end
 
 
@@ -345,15 +177,11 @@ switch side
         sidec='L';
         cnts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 end
-
 if ~isfield(S, 'sources')
     S.sources=1:4;
 end
-
 for source=S.sources
-
     stimsource=S.([sidec,'s',num2str(source)]);
-
     for cnt=1:length(cnts)
         U(cnt)=(stimsource.(cnts{cnt}).perc/100)*stimsource.amp;
         if stimsource.(cnts{cnt}).pol==1
@@ -361,9 +189,7 @@ for source=S.sources
         end
     end
 
-    Acnt=find(U);
-
-
+    Acnt=find(U); % active contact
     if ~isempty(Acnt)
 
         dpvx=coords(Acnt,:);
@@ -579,14 +405,14 @@ function gradient = ea_calc_gradient(vol,potential)
 %gradient = gradient + 0.25*repmat(potential(vol.hex(:,6)),1,3).*((vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:))./abs(vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:)));
 %gradient = gradient + 0.25*repmat(potential(vol.hex(:,7)),1,3).*((vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:))./abs(vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:)));
 %gradient = gradient + 0.25*repmat(potential(vol.hex(:,8)),1,3).*((vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:))./abs(vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:)));
-normal = cross(vol.pts(vol.tet(:,4),:)-vol.pts(vol.tet(:,3),:),vol.pts(vol.tet(:,3),:)-vol.pts(vol.tet(:,2),:));
-gradient = repmat(potential(vol.tet(:,1))./sum(normal.*(vol.pts(vol.tet(:,1),:)-(vol.pts(vol.tet(:,2),:)+vol.pts(vol.tet(:,3),:)+vol.pts(vol.tet(:,4),:))/3),2),1,3).*normal;
-normal = cross(vol.pts(vol.tet(:,1),:)-vol.pts(vol.tet(:,4),:),vol.pts(vol.tet(:,4),:)-vol.pts(vol.tet(:,3),:));
-gradient = gradient + repmat(potential(vol.tet(:,2))./sum(normal.*(vol.pts(vol.tet(:,2),:)-(vol.pts(vol.tet(:,3),:)+vol.pts(vol.tet(:,4),:)+vol.pts(vol.tet(:,1),:))/3),2),1,3).*normal;
-normal = cross(vol.pts(vol.tet(:,2),:)-vol.pts(vol.tet(:,1),:),vol.pts(vol.tet(:,1),:)-vol.pts(vol.tet(:,4),:));
-gradient = gradient + repmat(potential(vol.tet(:,3))./sum(normal.*(vol.pts(vol.tet(:,3),:)-(vol.pts(vol.tet(:,4),:)+vol.pts(vol.tet(:,1),:)+vol.pts(vol.tet(:,2),:))/3),2),1,3).*normal;
-normal = cross(vol.pts(vol.tet(:,3),:)-vol.pts(vol.tet(:,2),:),vol.pts(vol.tet(:,2),:)-vol.pts(vol.tet(:,1),:));
-gradient = gradient + repmat(potential(vol.tet(:,4))./sum(normal.*(vol.pts(vol.tet(:,4),:)-(vol.pts(vol.tet(:,1),:)+vol.pts(vol.tet(:,2),:)+vol.pts(vol.tet(:,3),:))/3),2),1,3).*normal;
+normal = cross(vol.pos(vol.tet(:,4),:)-vol.pos(vol.tet(:,3),:),vol.pos(vol.tet(:,3),:)-vol.pos(vol.tet(:,2),:));
+gradient = repmat(potential(vol.tet(:,1))./sum(normal.*(vol.pos(vol.tet(:,1),:)-(vol.pos(vol.tet(:,2),:)+vol.pos(vol.tet(:,3),:)+vol.pos(vol.tet(:,4),:))/3),2),1,3).*normal;
+normal = cross(vol.pos(vol.tet(:,1),:)-vol.pos(vol.tet(:,4),:),vol.pos(vol.tet(:,4),:)-vol.pos(vol.tet(:,3),:));
+gradient = gradient + repmat(potential(vol.tet(:,2))./sum(normal.*(vol.pos(vol.tet(:,2),:)-(vol.pos(vol.tet(:,3),:)+vol.pos(vol.tet(:,4),:)+vol.pos(vol.tet(:,1),:))/3),2),1,3).*normal;
+normal = cross(vol.pos(vol.tet(:,2),:)-vol.pos(vol.tet(:,1),:),vol.pos(vol.tet(:,1),:)-vol.pos(vol.tet(:,4),:));
+gradient = gradient + repmat(potential(vol.tet(:,3))./sum(normal.*(vol.pos(vol.tet(:,3),:)-(vol.pos(vol.tet(:,4),:)+vol.pos(vol.tet(:,1),:)+vol.pos(vol.tet(:,2),:))/3),2),1,3).*normal;
+normal = cross(vol.pos(vol.tet(:,3),:)-vol.pos(vol.tet(:,2),:),vol.pos(vol.tet(:,2),:)-vol.pos(vol.tet(:,1),:));
+gradient = gradient + repmat(potential(vol.tet(:,4))./sum(normal.*(vol.pos(vol.tet(:,4),:)-(vol.pos(vol.tet(:,1),:)+vol.pos(vol.tet(:,2),:)+vol.pos(vol.tet(:,3),:))/3),2),1,3).*normal;
 
 function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol,lowconducting)
 if constvol

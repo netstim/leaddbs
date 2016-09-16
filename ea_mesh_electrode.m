@@ -5,7 +5,7 @@ function [emesh,nmesh]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options)
 
 tic
 meshel=electrode.meshel;
-vizz=1;
+vizz=0;
 stlexport=1;
 if vizz
     figure
