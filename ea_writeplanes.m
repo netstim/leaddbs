@@ -360,7 +360,7 @@ for side=1:length(options.sides)
             end
             set(0,'CurrentFigure',cuts)
 %            set(gca, 'LooseInset', [0,0,0,0]);
-            axis equal
+%            axis equal
             set(gca,'position',[0,0,1,1],'units','normalized'); % fullscreen plot.
             
             expslice=double(frame2im(getframe(cuts))); % export plot.

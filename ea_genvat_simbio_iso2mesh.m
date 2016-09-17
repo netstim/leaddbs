@@ -275,12 +275,12 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
         anormgrad=sqrt(sum(norm_gradient'.^2,1));
         
     % add compression of really large gradient values for visualization..
-    maxval=200*thresh; % 100*ea_robustmean(anormgrad);
+    maxval=100*thresh; % 100*ea_robustmean(anormgrad);
     ixx=anormgrad>maxval;
     % normalize grad to max 1
     norm_gradient(ixx,:)=norm_gradient(ixx,:)./repmat(anormgrad(ixx)',1,3); % set superthreshold arrows to 1
          norm_gradient(ixx,:)=norm_gradient(ixx,:).*maxval; % set superthreshold arrows to maxval
-    norm_gradient=norm_gradient/(10*maxval);
+    norm_gradient=norm_gradient/(100*maxval);
     vatgrad(side).qx=norm_gradient(:,1); vatgrad(side).qy=norm_gradient(:,2); vatgrad(side).qz=norm_gradient(:,3);
 
     setappdata(resultfig,'vatgrad',vatgrad);
