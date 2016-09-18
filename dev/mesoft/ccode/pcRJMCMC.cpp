@@ -184,14 +184,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
      
     
     // if this matlab-handle disappears tracking is stopped
-	double breakhandle = 0;	
-	const mxArray *BreakHandle;	
-	if (nrhs == 9)
-	{
-		BreakHandle = prhs[pcnt++];
-		breakhandle = *mxGetPr(BreakHandle);
-	}
-
+    const mxArray *BreakHandle;
+    if (nrhs == 9)
+    {
+        BreakHandle = prhs[pcnt++];
+    }
 	////////////////////////////////////
             
     
@@ -224,7 +221,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     //----------- start tracking
     fprintf(stderr,"starting to iterate\n"); fflush(stderr);
-	sampler.iterate(breakhandle);
+	sampler.iterate(BreakHandle);
     //-------------------------
     
     

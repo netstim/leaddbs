@@ -195,7 +195,7 @@ class RJMCMCBase
     
     
     /////////////////////////////// the MAIN LOOP
-	void iterate(double handle)
+	void iterate(const mxArray *Handle)
 	{
 		#ifdef TIMING
 		tic(&total_time);
@@ -318,10 +318,10 @@ class RJMCMCBase
             REAL cr = (REAL) pcontainer.celloverflows;
             if (cr > 0.01)
                 fprintf(stderr,"warning: celloverflows : %.2f \n",cr);
-            if (handle != 0)
+            if (*mxGetPr(Handle) != 0)
             {
                 mexEvalString("drawnow");
-                if (mexGet(handle,"Tag") == 0)
+                if (mxGetProperty(Handle,0,"Tag") == 0)
                 {
                     fprintf(stderr,"Termination by User.\n\n");
                 	break;

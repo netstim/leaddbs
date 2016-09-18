@@ -50,6 +50,13 @@ function data = loadData_nii(dwifile,gradfile,maskfile,threshold)
        
        gradf1 = importdata(gradfile{1});
        gradf2 = importdata(gradfile{2});
+       
+       % make sure bvec and bval have the size of 3xN and 1xN
+       if size(gradf1,1) == length(gradf1)
+           gradf1 = gradf1';
+           gradf2 = gradf2';
+       end
+       
        if size(gradf1,1) == 3,
            bvec = gradf1;
            bval = gradf2;
@@ -87,7 +94,7 @@ function data = loadData_nii(dwifile,gradfile,maskfile,threshold)
        
        
        
-      
+      MATLA
 function data = loadmask(fn,threshold,ref,edges)
         data = [];
         
