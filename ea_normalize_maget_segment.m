@@ -14,7 +14,7 @@ reforce=0;
 atlastouse=options.normalize.settings.atlasset; % for now, only the distal atlas is supported!
 
 peerfolders=ea_getmagetpeers(options);
-
+keyboard
 %% step 0: check if all subjects have been processed with an ANTs-based normalization function
 for peer=1:length(peerfolders)
     if ~ismember(ea_whichnormmethod([peerfolders{peer},filesep]),ea_getantsnormfuns)
@@ -26,6 +26,7 @@ subdirec=[options.root,options.patientname,filesep];
 if ~ea_seemscoregistered(options)
     ea_coreg_all_mri(options,0);
 end
+
 %% step 1, warp DISTAL back to each peer brain
 earoot=ea_getearoot;
 atlasbase=[earoot,'atlases',filesep,atlastouse,filesep];
@@ -98,7 +99,6 @@ for peer=1:length(peerfolders)
     
     %% step 2, generate warps from MNI via peers to the selected patient brain
     
-    
     if ~exist([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz'],'file') || reforce
         [~,peerpresentfiles]=ea_assignpretra(poptions);
         [~,subpresentfiles]=ea_assignpretra(options);
@@ -110,10 +110,13 @@ for peer=1:length(peerfolders)
         peerpresentfiles=peerpresentfiles(logical(presentinboth));
         
         if ~isequal(subpresentfiles,peerpresentfiles) % then I did something wrong.
-        keyboard
+        
         else
             presentfiles=subpresentfiles;
             clear subpresentfiles peerpresentfiles
+        end
+        if isempty(presentfiles)
+            ea_error(['Please supply a peer/subject with valid anatomy files: ',poptions.patientname,'/',options.patientname,'.']);
         end
         clear sptos spfroms metrics weights %clear all variables, if not, the last image file will be transferred onto the next peer 
         for anatfi=1:length(presentfiles)
@@ -139,6 +142,7 @@ for peer=1:length(peerfolders)
             mkdir([subdirec,'MAGeT',filesep,'warpreceives',filesep]);
         end
         
+        keyboard
         
         ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,metrics,options);
         delete(ea_niigz([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'])); % we only need the warp
