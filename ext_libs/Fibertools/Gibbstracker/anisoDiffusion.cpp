@@ -35,7 +35,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
  	
     if(nrhs != 3) {
-	printf("\nUsage: res = aniosDiffusion(img,Dcoeff,[alpha it])\n\n",nrhs);
+	printf("\nUsage: res = aniosDiffusion(img,Dcoeff,[alpha it])\n\n");
 	printf(" Propagates Heat equation with position dependedd conductivity Dcoeff\n\n");
 	printf(" img - inital state\n");
 	printf(" Dcoeff - contains Dtensor of size [ 6 size(img)] with compnents xx yy zz xz yz xz \n");

@@ -17,12 +17,13 @@ MTRand mtrand;
 int dbgflag;
 
 
-#ifndef LINUX_MACHINE    
-    #define INFINITY 9999999999999  // not defined on a windows pc
+#ifdef _WIN64
+    #include "wintime.h"
 #else
     #include <sys/time.h>
 #endif
 
+//     #define INFINITY 9999999999999  // not defined on a windows pc
 
 ////////// to monitor statistics
 #define ntype 100000
@@ -205,7 +206,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
        
 	// initialize everything
 	REAL cellsize = info.particle_len*2;
-    REAL cellsize2[3] = {info.particle_width*voxsize[0] , info.particle_width*voxsize[1], info.particle_width*voxsize[2]};
+    REAL cellsize2[3] = {static_cast<float>(info.particle_width*voxsize[0]) , static_cast<float>(info.particle_width*voxsize[1]), static_cast<float>(info.particle_width*voxsize[2])};
 	
     fprintf(stderr,"setting up MH-sampler \n"); fflush(stderr);
 	RJMCMC sampler(points,numPoints, vfmap, dimg, datacombisize, voxsize, cellsize,cellsize2,info.particle_len,info.numcores);

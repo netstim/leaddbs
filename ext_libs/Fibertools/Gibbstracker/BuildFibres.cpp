@@ -236,7 +236,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
  	
     if(nrhs != 2) {
-	printf("\nUsage: Df = STderivative(f)\n\n",nrhs);
+	printf("\nUsage: Df = STderivative(f)\n\n");
 	printf(" Computes xxx\n");
 	printf(" Parameters:\n");
 	printf("   f - 2D input image of type REAL \n");
