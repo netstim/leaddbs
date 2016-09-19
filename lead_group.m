@@ -834,6 +834,7 @@ if ~isempty(M.patient.list)
         tryparcs=tryparcs(logical(avparcs));
         pcell=cell(length(tryparcs),1);
         restcnt=1;
+        restcell=cell(0);
         for p=1:length(pcell)
             [~,pcell{p}]=fileparts(tryparcs(p).name);
             if strcmp(pcell{p}(1:4),'rest')

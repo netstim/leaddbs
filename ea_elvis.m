@@ -104,9 +104,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 % show electrodes..
 
 for pt=1:length(elstruct)
-    
-    [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
-    
+    try
+        [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
+    catch
+        ea_error(['Couldn''''t visualize electrode from patient ',num2str(pt),'.']);
+    end
     if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
         
                 % this part for brainbrowser support.

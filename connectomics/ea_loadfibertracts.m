@@ -94,7 +94,7 @@ if exist('freiburgconvert','var')
         b0fi=[pth,filesep,prefs.b0];
     end
     ver=str2double(fibinfo.version(2:end));
-    if ver<=1.1
+    if ver<1.1
         display('Flip fibers...');
         
         dim=getfield(spm_vol(b0fi),'dim');
