@@ -272,15 +272,19 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
     end
     
     norm_gradient=gradient(indices,:);
-        anormgrad=sqrt(sum(norm_gradient'.^2,1));
+        anormgrad=sqrt(sum(norm_gradient'.^2,1))';
+        gaussgrad=ea_normal(anormgrad);
+        norm2gauss=gaussgrad./anormgrad;
         
-    % add compression of really large gradient values for visualization..
-    maxval=100*thresh; % 100*ea_robustmean(anormgrad);
-    ixx=anormgrad>maxval;
-    % normalize grad to max 1
-    norm_gradient(ixx,:)=norm_gradient(ixx,:)./repmat(anormgrad(ixx)',1,3); % set superthreshold arrows to 1
-         norm_gradient(ixx,:)=norm_gradient(ixx,:).*maxval; % set superthreshold arrows to maxval
-    norm_gradient=norm_gradient/(100*maxval);
+%     add compression of really large gradient values for visualization..
+%     maxval=100*thresh; % 100*ea_robustmean(anormgrad);
+%     ixx=anormgrad>maxval;
+%     normalize grad to max 1
+%     norm_gradient(ixx,:)=norm_gradient(ixx,:)./repmat(anormgrad(ixx)',1,3); % set superthreshold arrows to 1
+%          norm_gradient(ixx,:)=norm_gradient(ixx,:).*maxval; % set superthreshold arrows to maxval
+%     norm_gradient=norm_gradient/(100*maxval);
+norm_gradient=norm_gradient.*repmat(norm2gauss,1,3);
+norm_gradient=norm_gradient.^2;
     vatgrad(side).qx=norm_gradient(:,1); vatgrad(side).qy=norm_gradient(:,2); vatgrad(side).qz=norm_gradient(:,3);
 
     setappdata(resultfig,'vatgrad',vatgrad);
