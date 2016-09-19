@@ -1,4 +1,4 @@
-function [mrs nii_orig] = DPS_nifti_to_hardi(niiName,bvecname,bvalname)
+function [mrs nii_orig] = ea_DPS_nifti_to_hardi(niiName,bvecname,bvalname)
 
 nii_orig = load_untouch_nii(niiName);
 nii = nii_orig;
@@ -10,7 +10,7 @@ if nargin == 1,
     bval = importdata([niiName(1:end-3), 'bval']);
 else
     bvec = importdata(bvecname);
-    bval = importdata(bvalname);    
+    bval = importdata(bvalname);
 end
 
 T = 1;
