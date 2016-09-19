@@ -94,7 +94,7 @@ function data = loadData_nii(dwifile,gradfile,maskfile,threshold)
        
        
        
-      MATLA
+      
 function data = loadmask(fn,threshold,ref,edges)
         data = [];
         
