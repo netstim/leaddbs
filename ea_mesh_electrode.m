@@ -39,14 +39,13 @@ end
 %orig=[10.1,-15.07,-9.978];    % starting point of the electrode axis
 %etop=[34.39,20.23,43.14];     % end point of the electrode axis
 electrodelen=norm(etop-orig); % length of the electrode
-electroderadius=0.65;            % radius of the electrode
 
 electrodetrisize=0.2;  % the maximum triangle size of the electrode mesh
 bcyltrisize=0.3;       % the maximum triangle size of the bounding cyl
 nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
 
 cylz0=-35;     % define the lower end of the bounding cylinder
-cylz1=35;     % define the upper end of the bounding cylinder
+cylz1=50;     % define the upper end of the bounding cylinder
 cylradius=15; % define the radius of the bounding cylinder  
 ndiv=50;      % division of circle for the bounding cylinder
 
@@ -209,6 +208,7 @@ for reg=1:length(centroids)
                 
                 % we captured an active contact. need to assign to correct
                 % source and polarity
+                
                 for source=1:4
                    if S.([sidec,'s',num2str(source)]).amp % then this active contact could be from this source since source is active
                        if S.([sidec,'s',num2str(source)]).(['k',num2str(con-1)]).perc % current captured contact is from this source    

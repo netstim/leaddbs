@@ -70,7 +70,11 @@ if 1 %ea_headmodel_changed(options,side,S,elstruct)
     % add gm to mesh
    
     for atlas=1:numel(atlases.fv)
+            if isempty(atlases.fv{atlas})
+                continue
+            end
         fv(cnt)=atlases.fv{atlas};
+
         ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
                 tissuetype(cnt)=1;
         c0=[c0;[ins,1]];
@@ -272,8 +276,8 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
     end
     
     norm_gradient=gradient(indices,:);
-        anormgrad=sqrt(sum(norm_gradient'.^2,1))';
-        gaussgrad=ea_normal(anormgrad);
+        anormgrad=sqrt(sum(norm_gradient',1))';
+        gaussgrad=ea_normal(anormgrad).^(1/2);
         norm2gauss=gaussgrad./anormgrad;
         
 %     add compression of really large gradient values for visualization..
@@ -304,8 +308,15 @@ norm_gradient=norm_gradient.^2;
 
     disp('Done. Calculating VAT...');
 
-    vat.ET=vat.ET>thresh;
-    vat.pos=vat.pos(vat.ET,:);
+    vat.tET=vat.ET>thresh;
+    vat.pos=vat.pos(vat.tET,:);
+    vat.ET(~vat.tET)=0;
+    vat.nET=vat.ET;
+    vat.nET(vat.tET)=ea_normal(vat.ET(vat.tET)')';
+    vat.nET(vat.tET)=vat.nET(vat.tET)-min(vat.nET(vat.tET));
+    vat.nET(vat.tET)=vat.nET(vat.tET)/max(vat.nET(vat.tET));
+    vat.nET(~vat.tET)=0;
+
 
 %vat.pos=vat.pos*1000; % back to mm.
 
@@ -318,6 +329,13 @@ norm_gradient=norm_gradient.^2;
 
 F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),ones(size(vat.pos(:,1))));
 F.ExtrapolationMethod='none';
+
+Fe=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.ET(vat.tET)');
+Fe.ExtrapolationMethod='none';
+
+Fne=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.nET(vat.tET)');
+Fne.ExtrapolationMethod='none';
+
 gv=cell(3,1); spacing=zeros(3,1);
 try
     for dim=1:3
@@ -332,6 +350,14 @@ end
 eg = F(xg,yg,zg);
 eg(isnan(eg))=0;
 eg(eg>0)=1;
+
+
+eeg = Fe(xg,yg,zg);
+eeg(isnan(eeg))=0;
+
+neg = Fne(xg,yg,zg);
+neg(isnan(neg))=0;
+
 
 XYZmax=[max(xg(eg>0)),max(yg(eg>0)),max(zg(eg>0))];
 try
@@ -361,14 +387,22 @@ mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]
 switch side
     case 1
         Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];
+        Vvate=Vvat; Vvatne=Vvat;
+        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_right.nii'];
+        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_gauss_right.nii'];
         stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_right.mat'];
     case 2
         Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
+        Vvate=Vvat; Vvatne=Vvat;
+        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_left.nii'];
+        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_gauss_left.nii'];
         stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_left.mat'];
 end
 save(stimfile,'S');
 %spm_write_vol(Vvat,flipdim(eg,3));
 spm_write_vol(Vvat,permute(eg,[2,1,3]));
+spm_write_vol(Vvate,permute(eeg,[2,1,3]));
+spm_write_vol(Vvatne,permute(neg,[2,1,3]));
 
 % define function outputs
 
