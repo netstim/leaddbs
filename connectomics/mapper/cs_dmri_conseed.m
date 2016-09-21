@@ -48,7 +48,7 @@ switch cmd
             
             [pth,fn]=fileparts(seedfiles{s});
             
-            map.fname=fullfile(outputfolder,[fn,'_struc',cmd,'.nii']);
+            map.fname=fullfile(outputfolder,[fn,'_struc_',cmd,'.nii']);
             map.dt=[16,0];
             spm_write_vol(map,map.img);
         end
