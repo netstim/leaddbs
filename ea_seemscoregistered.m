@@ -22,7 +22,7 @@ for comp=2:length(peerpresentfiles)
         iscoreg=0;
         return
     end
-    if ~isequal(Vref.mat,Vcomp.dim)
+    if ~isequal(Vref.mat,Vcomp.mat)
         iscoreg=0;
         return
     end

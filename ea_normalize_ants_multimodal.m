@@ -35,6 +35,9 @@ usefa=1; % set to zero if you do not wish to use FA data for normalization even 
 
 if ~includeatlas % second run from maget-brain segment
     if ~ea_seemscoregistered(options) % check headers of files to see if already coregistered.
+        if options.coregmr.method==6
+           ea_error('You specified that images are already coregistered & resliced but based on their NIFtI Headers they seem not. Please set an MR coregistration option and re-run.'); 
+        end
         ea_coreg_all_mri(options,usebrainmask)
     end
 end
@@ -97,7 +100,6 @@ end
 
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 to{cnt}=[options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'];
-
 from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized];
 weights(cnt)=1.5;
 metrics{cnt}='MI';

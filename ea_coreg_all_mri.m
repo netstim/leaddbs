@@ -39,8 +39,8 @@ if uset1 && ~strcmp(options.primarytemplate,'_t1')
     if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
         disp('Including T1 data for (grey-matter) normalization');
         if ~includeatlas
-        ea_dcm2nii([directory,options.prefs.prenii_unnormalized_t1]);
-        ea_bias_field_correction([directory,options.prefs.prenii_unnormalized_t1])
+%        ea_dcm2nii([directory,options.prefs.prenii_unnormalized_t1]);
+%        ea_bias_field_correction([directory,options.prefs.prenii_unnormalized_t1])
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_t1],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_t1]);
         end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
@@ -59,7 +59,7 @@ if usepd && ~strcmp(options.primarytemplate,'_pd')
     if exist([directory,options.prefs.prenii_unnormalized_pd],'file')
         disp('Including PD data for (grey-matter) normalization');
         if ~includeatlas
-        ea_dcm2nii([directory,options.prefs.prenii_unnormalized_pd]);
+%        ea_dcm2nii([directory,options.prefs.prenii_unnormalized_pd]);
         ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_pd],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_pd]);
         end
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
@@ -85,7 +85,7 @@ if usefa
         end
         if exist([directory,options.prefs.fa],'file') % check again since could have been built above
             if ~includeatlas % if includeatlas is set we can assume that images have been coregistered and skulstripped already
-                ea_dcm2nii([directory,options.prefs.fa]);
+ %               ea_dcm2nii([directory,options.prefs.fa]);
                 if exist([directory,options.prefs.fa],'file') % recheck if has been built.
                     ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
                 end
