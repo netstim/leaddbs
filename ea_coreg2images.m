@@ -13,8 +13,9 @@ mfilen=[mfilen,ext];
 
 if exist([directory,'raw_',mfilen],'file');
     copyfile([directory,'raw_',mfilen],[directory,mfilen]);
+else
+    copyfile([directory,mfilen],[directory,'raw_',mfilen]);
 end
-copyfile([directory,mfilen],[directory,'raw_',mfilen]);
 
 switch options.coregmr.method
     case 1 % SPM
