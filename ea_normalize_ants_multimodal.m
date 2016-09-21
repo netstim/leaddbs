@@ -99,6 +99,11 @@ end
 %masks=segmentall(from,options); % masks not yet implemented.
 
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
+
+if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
+    ea_maskimg(options,[directory,options.prefs.prenii_unnormalized],bprfx);
+end
+
 to{cnt}=[options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'];
 from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized];
 weights(cnt)=1.5;
@@ -167,7 +172,7 @@ c3=ea_load_nii([directory,'c3',options.prefs.prenii_unnormalized]);
 bm=c1;
 bm.img=c1.img+c2.img+c3.img;
 bm.fname=[directory,'brainmask.nii'];
-bm.img=bm.img>0.5;
+bm.img=bm.img>0.6;
 spm_write_vol(bm,bm.img);
 
 
