@@ -60,6 +60,7 @@ axes(handles.logoaxes);
 axis off;
 axis equal;
 set(handles.leadfigure,'name','Lead-Connectome Mapper','color','w');
+setappdata(handles.leadfigure,'uipatdir',{ea_gethome});
 
 
 
@@ -210,7 +211,6 @@ ea_busyaction('on',leadfig,'mapper');
 
 
 options=ea_handles2options(handles);
-options.uipatdirs='';
 ea_run('run',options);
 
 ea_busyaction('off',leadfig,'mapper');
@@ -226,7 +226,7 @@ leadfig=handles.leadfigure;
 ea_busyaction('on',leadfig,'mapper');
 
 options=ea_handles2options(handles);
-options.uipatdirs='';
+
 ea_run('export',options);
 
 ea_busyaction('off',leadfig,'mapper');
