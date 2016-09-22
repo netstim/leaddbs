@@ -60,7 +60,7 @@ axes(handles.logoaxes);
 axis off;
 axis equal;
 set(handles.leadfigure,'name','Lead-Connectome Mapper','color','w');
-setappdata(handles.leadfigure,'uipatdir',{ea_gethome});
+setappdata(handles.leadfigure,'uipatdir',{ea_gethome(1:end-1)});
 
 
 
