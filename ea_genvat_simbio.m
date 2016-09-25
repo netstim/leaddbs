@@ -61,8 +61,16 @@ options.considerpassivecontacts=0;
 
 %% get electrodes handles // initial parameters:
 resultfig=getappdata(gcf,'resultfig');
-elstruct=getappdata(resultfig,'elstruct');
-elspec=getappdata(resultfig,'elspec');
+auto = true;
+try
+    elstruct=getappdata(resultfig,'elstruct');
+    elspec=getappdata(resultfig,'elspec');
+    auto = false;
+end
+if auto
+    elstruct = S.elstruct;
+    elspec = options.elspec;
+end
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 
@@ -149,7 +157,9 @@ if ea_headmodel_changed(options,side,S,elstruct)
         elstruct.markers(side).tail,1;
         elstruct.markers(side).x,1;
         elstruct.markers(side).y,1];
-    setappdata(resultfig,'elstruct',elstruct);
+    try
+        setappdata(resultfig,'elstruct',elstruct);
+    end
     X = linsolve(A,B); X=X';
     ea_dispercent(0,'Exporting insulating components');
 
@@ -395,7 +405,12 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
 
     midpts=mean(cat(3,vol.pos(vol.hex(:,1),:),vol.pos(vol.hex(:,2),:),vol.pos(vol.hex(:,3),:),vol.pos(vol.hex(:,4),:),vol.pos(vol.hex(:,5),:),vol.pos(vol.hex(:,6),:),vol.pos(vol.hex(:,7),:),vol.pos(vol.hex(:,8),:)),3);
 
-    vatgrad=getappdata(resultfig,'vatgrad');
+    try
+        vatgrad=getappdata(resultfig,'vatgrad');
+    end
+    if ~exist('vatgrad', 'var')
+        vatgrad = [];
+    end
     if isempty(vatgrad); clear('vatgrad'); end
     reduc=10;
 
@@ -426,8 +441,10 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
     norm_gradient(ixx,:)=pols;
     %
     vatgrad(side).qx=norm_gradient(:,1); vatgrad(side).qy=norm_gradient(:,2); vatgrad(side).qz=norm_gradient(:,3);
-
-    setappdata(resultfig,'vatgrad',vatgrad);
+    
+    try
+        setappdata(resultfig,'vatgrad',vatgrad);
+    end
     %figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))
 
 
