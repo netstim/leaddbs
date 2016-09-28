@@ -114,9 +114,11 @@ end
 asc{end+1}='Use none';
 
 set(handles.atlassetpopup,'String',asc);
-[~,defix]=ismember(options.prefs.atlases.default,asc);
-set(handles.atlassetpopup,'Value',defix);
 
+[~,defix]=ismember(options.prefs.atlases.default,asc);
+if defix
+set(handles.atlassetpopup,'Value',defix);
+end
 
 set(handles.normalize_checkbox,'Value',0);
 

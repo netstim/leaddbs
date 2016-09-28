@@ -27,10 +27,9 @@ for export=1:3
             case 3
                 fina=[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,',1'];
         end
-
         try
             if exist(fina(1:end-2),'file')
-                ea_docoreg_spm(fina,[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],costfuns{costfun},doreslice)
+                ea_docoreg_spm(fina,[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],costfuns{costfun},doreslice,{''})
                 normlog(1)=1;
                 disp(['*** Coregistration between transversal and coronar versions worked (',costfuns{costfun},').']);
 %                 finas{export}=fina; % assign only if worked.
