@@ -48,24 +48,7 @@ else
         maskuseidx=1:length(outidx);
 end
 
-if iscell(sfile) % already supplied in cell format
-    if length(sfile)>1
-        roilist=1;
-    else
-        roilist=0;
-    end
-    
-else
-    [pth,fn,ext]=fileparts(sfile);
-    if strcmp(ext,'.txt')
-        roilist=1;
-        
-        sfile=getrois(sfile);
-    else
-        roilist=0;
-        sfile={sfile};
-    end
-end
+[sfile,roilist]=ea_handleseeds(sfile);
 
 
 
@@ -427,13 +410,6 @@ end
 
 
 toc
-
-function sfile=getrois(sfile)
-
-fID=fopen(sfile);
-sfile=textscan(fID,'%s');
-sfile=sfile{1};
-fclose(fID);
 
 
 

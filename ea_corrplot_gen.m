@@ -45,6 +45,9 @@ for area=1:length(R_upd)
     title([description,' (R=',sprintf('%.3f',R_upd(area)),', p=',sprintf('%.3f',p_upd(area)),').'],'FontSize',16,'FontName','Helvetica');
     xlabel(sub2space(labels{1}),'FontSize',16,'FontName','Helvetica');
     ylabel(labels{2},'FontSize',16,'FontName','Helvetica');
+ %   spacing=mean([nanvar(X(:,1)),nanvar(X(:,area+1))]);
+ %   xlim([nanmin(X(:,1))-spacing,nanmax(X(:,2))+spacing]);
+ %   ylim([nanmin(X(:,area+1))-spacing,nanmax(X(:,area+1))+spacing]);
     if nargin==4
         if ~isempty(varargin{4})
         odir=get(handles.groupdir_choosebox,'String');

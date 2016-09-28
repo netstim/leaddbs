@@ -1,6 +1,14 @@
 function cs_dmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,space)
 %# ea_load_nii
 
+
+
+
+[sfile,roilist]=ea_handleseeds(sfile);
+
+
+
+
 switch cmd
     case 'seed'
         map=ea_load_nii([dfold,'spacedefinitions',filesep,space,'.nii']);

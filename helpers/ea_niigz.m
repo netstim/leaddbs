@@ -4,7 +4,7 @@ function fn=ea_niigz(base)
 % files)
 
 % rm base: 
-[pth,base]=fileparts(base);
+[pth,base,ext]=fileparts(base);
 try
 if strcmp(base(end-3:end),'.nii') % still has .nii ? .nii.gz has been applied
     [~,base]=fileparts(base);
@@ -16,7 +16,13 @@ niigz=dir(fullfile(pth,[base,'.nii.gz']));
 
 if ~isempty(nii) && ~isempty(niigz)
     warning(['Duplicate .nii/.nii.gz files detected. ',fullfile(pth,base),'.']);
-    fn=fullfile(pth,[base,'.nii.gz']);
+    switch ext
+        case '.nii' % explicitly asked for .nii
+            fn=fullfile(pth,[base,'.nii']);
+            warning('Using .nii version since explicitly asked for.');
+        otherwise
+            fn=fullfile(pth,[base,'.nii.gz']);
+    end
 elseif isempty(nii) && ~isempty(niigz)
     fn=fullfile(pth,[base,'.nii.gz']);
 elseif ~isempty(nii) && isempty(niigz)
