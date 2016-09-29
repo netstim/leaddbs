@@ -33,7 +33,7 @@ end
 
 if dodMRI
     ndfold=[dfold,filesep];
-    cs_dmri_conseed(dfold,'HCP_MGH_30fold_groupconnectome_gqi_lite.mat',sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,'111');
+    cs_dmri_conseed(dfold,'HCP_MGH_30fold_groupconnectome_gqi_lite.mat',sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,'222');
 end
 
 exit
