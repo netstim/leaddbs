@@ -19,8 +19,7 @@ end
 if ~exist([directory,'.pp'],'file') && ~exist([directory,'ea_normmethod_applied.mat'],'file') % only do this once, small hidden flag .pp inside patient folder will show this has been done before.
     for fi=f
         % apply biasfieldcorrection and reorient/crop
-        ea_dcm2nii([directory,options.prefs.rawpreniis{fi}]);
-        ea_bias_field_correction([directory,options.prefs.rawpreniis{fi}])
+        ea_anatpreprocess([directory,options.prefs.rawpreniis{fi}]);
     end
     try
     fs=fopen([directory,'.pp'],'w');
