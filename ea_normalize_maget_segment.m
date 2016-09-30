@@ -142,7 +142,7 @@ for peer=1:length(peerfolders)
             mkdir([subdirec,'MAGeT',filesep,'warpreceives',filesep]);
         end
         
-        keyboard
+       
         
         ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,metrics,options);
         delete(ea_niigz([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'])); % we only need the warp
