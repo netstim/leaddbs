@@ -235,14 +235,15 @@ for side=1:length(seed)
     %targets.img(targets.img<thresh)=0;
     
     
-    
-    try
-    [PL.matsurf{side},PL.conlabels{side}]=ea_showconnectivitypatch(resultfig,targets,contargets,thresh,atlas_lgnd{2},tareas{side});
-    catch
-        keyboard
-    end
+    % always show seed patch (i.e. VAT)
     PL.matseedsurf{side}=ea_showseedpatch(resultfig,seed{side},seed{side}.img,options);
-    
+
+    if get(handles.vizvat_regs,'Value') || get(handles.vizvat_labs,'Value')
+        [PL.matsurf{side},PL.conlabels{side}]=ea_showconnectivitypatch(resultfig,targets,contargets,thresh,atlas_lgnd{2},tareas{side},[],get(handles.vizvat_regs,'Value'),get(handles.vizvat_labs,'Value'));
+    else
+        PL.matsurf{side}=[];
+        PL.conlabels{side}=[];
+    end
     clear allcareas conareas
 %     %% now show areas
 %     targets.img=round(targets.img);

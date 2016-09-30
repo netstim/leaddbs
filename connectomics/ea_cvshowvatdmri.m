@@ -24,12 +24,12 @@ end
             fibersfile=vatmodality;
             
         else
-        switch vatmodality
-            case 'Patient-specific fiber tracts'
-                fibersfile=[directory,options.prefs.FTR_normalized];
-            otherwise
-                fibersfile=[ea_getconnectomebase('dmri'),vatmodality,'.mat'];
-        end
+            switch vatmodality
+                case 'Patient-specific fiber tracts'
+                    fibersfile=[directory,options.prefs.FTR_normalized];
+                otherwise
+                    fibersfile=[ea_getconnectomebase('dmri'),vatmodality,'.mat'];
+            end
         end
         
         % seed filename
@@ -41,11 +41,11 @@ end
             seedfile{v}=[directory,'stimulations',filesep,vsname,filesep,'vat_',usevat{options.sides(v)},'.nii'];
         end
         for side=1:length(usevat)
-try
-            load([directory,'stimulations',filesep,vsname,filesep,'stimparameters_',usevat{options.sides(side)},'.mat']);
-catch
-    keyboard
-end
+            try
+                load([directory,'stimulations',filesep,vsname,filesep,'stimparameters_',usevat{options.sides(side)},'.mat']);
+            catch
+                keyboard
+            end
         end
         
         targetsfile=[options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii'];

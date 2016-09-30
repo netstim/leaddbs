@@ -83,7 +83,7 @@ end
 %sX=ismember(round(pX),currentseed);
 set(0,'CurrentFigure',resultfig)
 set(handles.vatthreshis,'String',num2str(thresh));
-    vatsurf{side}=ea_showconnectivitypatch(resultfig,pV,mX,thresh);
+    vatsurf{side}=ea_showconnectivitypatch(resultfig,pV,mX,thresh,[],[],[],1,0);
 end
 setappdata(resultfig,'vatsurf',vatsurf);
 setappdata(resultfig,'vatseedsurf',vatseedsurf);

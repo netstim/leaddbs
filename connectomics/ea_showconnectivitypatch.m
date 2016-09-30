@@ -1,23 +1,7 @@
-function [matsurf,labels]=ea_showconnectivitypatch(varargin)
+function [matsurf,labels]=ea_showconnectivitypatch(resultfig,pV,mX,thresh,atlaslegend,atlasindices,showregs,showlabels)
 
 
-resultfig=varargin{1};
-pV=varargin{2};
-mX=varargin{3};
-thresh=varargin{4};
 
-if nargin==6
-    atlaslegend=varargin{5};
-    atlasindices=varargin{6};
-    showlabels=1;
-elseif nargin==7
-    atlaslegend=varargin{5};
-    atlasindices=varargin{6};
-    showlabels=1;
-    usecolormap=varargin{7};
-else
-    showlabels=0;
-end
 
 tmX=mX>thresh;
 
@@ -53,45 +37,48 @@ end
 
 
 set(0,'CurrentFigure',resultfig)
-matsurf=patch(fv,'facealpha',0.7,'EdgeColor','none','facelighting','phong','FaceColor','interp');
-
- zidx=mX==0;
- zidx=logical(zidx+isnan(mX));
-% 
-% %cgX(isnan(cgX))=0;
-% try % if cgX isn't empty..
-% cgX(cgX~=0)=cgX(cgX~=0)-ea_nanmin(cgX(cgX~=0));
-% 
-% cgX(cgX~=0)=(cgX(cgX~=0)/ea_nanmax(cgX(cgX~=0)))*64;
-% end
-% 
- mX(zidx)=0; % reset prior zero/nan values to zero
-
-nc=isocolors(X,Y,Z,permute(mX,[2,1,3]),matsurf);
-nnz=nc==0;
-nc(nc~=0)=nc(nc~=0)-min(nc(nc~=0));
-nc(nc~=0)=(nc(nc~=0)/max(nc(nc~=0)))*64;
-nc(nnz)=0;
-
-
-try
-jetlist=parula;
-catch
-    jetlist=jet;
+if showregs
+    matsurf=patch(fv,'facealpha',0.7,'EdgeColor','none','facelighting','phong','FaceColor','interp');
+    
+    zidx=mX==0;
+    zidx=logical(zidx+isnan(mX));
+    %
+    % %cgX(isnan(cgX))=0;
+    % try % if cgX isn't empty..
+    % cgX(cgX~=0)=cgX(cgX~=0)-ea_nanmin(cgX(cgX~=0));
+    %
+    % cgX(cgX~=0)=(cgX(cgX~=0)/ea_nanmax(cgX(cgX~=0)))*64;
+    % end
+    %
+    mX(zidx)=0; % reset prior zero/nan values to zero
+    
+    nc=isocolors(X,Y,Z,permute(mX,[2,1,3]),matsurf);
+    nnz=nc==0;
+    nc(nc~=0)=nc(nc~=0)-min(nc(nc~=0));
+    nc(nc~=0)=(nc(nc~=0)/max(nc(nc~=0)))*64;
+    nc(nnz)=0;
+    
+    
+    try
+        jetlist=parula;
+    catch
+        jetlist=jet;
+    end
+    
+    if exist('usecolormap','var')
+        if ~isempty(usecolormap)
+            jetlist=eval(usecolormap);
+        end
+    end
+    
+    jetlist=[0,0,0;jetlist];
+    rgbnc=jetlist(round(nc)+1,:);
+    set(matsurf,'FaceVertexCData',rgbnc);
+    
+    set(matsurf,'DiffuseStrength',0.9)
+    set(matsurf,'SpecularStrength',0.1)
+    set(matsurf,'FaceAlpha',0.2);
 end
-
-if exist('usecolormap','var')
-    jetlist=eval(usecolormap);
-end
-
-jetlist=[0,0,0;jetlist];
-rgbnc=jetlist(round(nc)+1,:);
-set(matsurf,'FaceVertexCData',rgbnc);
-
-set(matsurf,'DiffuseStrength',0.9)
-set(matsurf,'SpecularStrength',0.1)
-set(matsurf,'FaceAlpha',0.2);
-
 
 
 if showlabels

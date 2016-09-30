@@ -22,7 +22,7 @@ function varargout = ea_convis(varargin)
 
 % Edit the above text to modify the response to help ea_convis
 
-% Last Modified by GUIDE v2.5 06-Jun-2016 18:04:32
+% Last Modified by GUIDE v2.5 30-Sep-2016 17:26:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -76,8 +76,12 @@ refreshcv(handles);
 function refreshcv(varargin)
 handles=varargin{1};
 hold=0; % do refresh seed coordinates
+apply=0;
 if nargin>1
     hold=varargin{2};
+end
+if nargin>2
+    apply=varargin{3};
 end
 
 
@@ -114,47 +118,47 @@ else
     cv_enabletime(handles);
 end
 
-
-%% retrieve and delete prior results
-resultfig=ea_cvcleanup(handles);
+if apply % update elvis
+    %% retrieve and delete prior results
+    resultfig=ea_cvcleanup(handles);
     pV=getappdata(handles.convis,'pV');
     pX=getappdata(handles.convis,'pX');
     ea_deleteML(resultfig,handles,options);
-if ~hold
-    [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
-    set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
-    set(handles.matseed,'ForegroundColor',[0,0,0]);
-end
-
-%% now show results
-if get(handles.vizvat,'Value'); % show voxel-level results
-    ea_cvshowvatresults(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
-else
-    ea_deletePL(resultfig,'PL','vat');
-end
-
-if get(handles.vizgraph,'Value'); % show voxel-level results
-    ea_cvshowvoxresults(resultfig,directory,filesare,handles,pV,selectedparc,options);
-end
-
-if get(handles.vizmat,'Value'); % show seed-based-connectivity results
+    if ~hold
+        [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
+        set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
+        set(handles.matseed,'ForegroundColor',[0,0,0]);
+    end
     
-    ea_cvshowseedbasedresults(resultfig,directory,pV,pX,selectedparc,handles,options);
-else
-    ea_deletePL(resultfig,'PL','mat');
-end
-
-
-if get(handles.wmatedges,'Value') || get(handles.wmatnodes,'Value'); % show matrix-level results
-   ea_cvshowmatresults(resultfig,directory,selectedparc,handles,options);
-end
-
-if (get(handles.vizmat,'Value') || get(handles.vizvat,'Value')) && get(handles.timecircle,'Value') && strcmp(get(handles.timecircle,'Enable'),'on') % cycle over time..
-    pause(0.1);
+    %% now show results
+    if get(handles.vizvat,'Value'); % show voxel-level results
+        ea_cvshowvatresults(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
+    else
+        ea_deletePL(resultfig,'PL','vat');
+    end
     
-    refreshcv(handles);
+    if get(handles.vizgraph,'Value'); % show voxel-level results
+        ea_cvshowvoxresults(resultfig,directory,filesare,handles,pV,selectedparc,options);
+    end
+    
+    if get(handles.vizmat,'Value'); % show seed-based-connectivity results
+        
+        ea_cvshowseedbasedresults(resultfig,directory,pV,pX,selectedparc,handles,options);
+    else
+        ea_deletePL(resultfig,'PL','mat');
+    end
+    
+    
+    if get(handles.wmatedges,'Value') || get(handles.wmatnodes,'Value'); % show matrix-level results
+        ea_cvshowmatresults(resultfig,directory,selectedparc,handles,options);
+    end
+    
+    if (get(handles.vizmat,'Value') || get(handles.vizvat,'Value')) && get(handles.timecircle,'Value') && strcmp(get(handles.timecircle,'Enable'),'on') % cycle over time..
+        pause(0.1);
+        
+        refreshcv(handles);
+    end
 end
-
 set(convis,'name','Connectome Results');
 
 function     ea_deleteML(resultfig,handles,options)
@@ -221,7 +225,7 @@ else
     thresh=str2double(thresh);
 end
 set(handles.voxthreshis,'String',num2str(thresh));
-graphsurf=ea_showconnectivitypatch(resultfig,gV,gX,thresh);
+graphsurf=ea_showconnectivitypatch(resultfig,gV,gX,thresh,[],[],[],1,0);
 
 setappdata(resultfig,'graphsurf',graphsurf);
 
@@ -238,37 +242,37 @@ if ~isempty(strfind(matmodality,'_CM')) || ~isempty(strfind(matmodality,'_tc'))
     ea_cvshowmatresultsCMTC(resultfig,directory,pV,pX,handles,options);
 else % use fiberset
     
-     % fibers filename
-        switch matmodality
-            case 'Patient-specific fiber tracts'
-                fibersfile=[directory,options.prefs.FTR_normalized];
-            otherwise
-                fibersfile=[ea_getconnectomebase('dmri'),matmodality,'.mat'];
-        end
+    % fibers filename
+    switch matmodality
+        case 'Patient-specific fiber tracts'
+            fibersfile=[directory,options.prefs.FTR_normalized];
+        otherwise
+            fibersfile=[ea_getconnectomebase('dmri'),matmodality,'.mat'];
+    end
+    
+    % seed filename
+    seed=ea_load_nii([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+    % delete everything but set selected parcellation to 1.
+    oseed=seed.img;
+    seed.img(:)=0;
+    seed.img(round(oseed)==get(handles.matseed,'Value'))=1;
+    
+    targetsfile=ea_load_nii([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+    targetsfile.img(round(targetsfile.img)==get(handles.matseed,'Value'))=0;
+    thresh=get(handles.matthresh,'String');
+    options.writeoutstats=0;
+    options.writeoutpm=1;
+    
+    
+    [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seed,targetsfile,thresh,'mat');
+    
+    if ~ret % something has changed since last time.
+        ea_deletePL(resultfig,'PL','mat');
         
-        % seed filename
-        seed=ea_load_nii([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
-        % delete everything but set selected parcellation to 1.
-        oseed=seed.img;
-        seed.img(:)=0;
-        seed.img(round(oseed)==get(handles.matseed,'Value'))=1;
+        [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seed,targetsfile,thresh,1,options,'',changedstates,'mat');
+        set(handles.matthreshis,'String',num2str(thresh));
         
-        targetsfile=ea_load_nii([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
-        targetsfile.img(round(targetsfile.img)==get(handles.matseed,'Value'))=0;
-        thresh=get(handles.matthresh,'String');
-        options.writeoutstats=0;
-        options.writeoutpm=1;
-        
-        
-        [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seed,targetsfile,thresh,'mat');
-        
-        if ~ret % something has changed since last time.
-            ea_deletePL(resultfig,'PL','mat');
-            
-                [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seed,targetsfile,thresh,1,options,'',changedstates,'mat');
-            set(handles.matthreshis,'String',num2str(thresh));
-
-        end
+    end
     
     
 end
@@ -333,7 +337,7 @@ for cs=1:length(tseedcon) % assign each voxel of the corresponding cluster with 
 end
 sX=ismember(round(pX),currentseed);
 set(handles.matthreshis,'String',num2str(thresh));
-matsurf=ea_showconnectivitypatch(resultfig,pV,mX,thresh);
+matsurf=ea_showconnectivitypatch(resultfig,pV,mX,thresh,[],[],[],1,0);
 seedsurf=ea_showseedpatch(resultfig,pV,sX,options);
 
 setappdata(resultfig,'matsurf',matsurf);
@@ -351,8 +355,8 @@ pdirs=dir([options.earoot,filesep,'templates',filesep,'labeling',filesep,'*.nii'
 cnt=1;
 
 for pdir=1:length(pdirs)
-        [~,parcs{cnt}]=fileparts(pdirs(pdir).name);
-        cnt=cnt+1;
+    [~,parcs{cnt}]=fileparts(pdirs(pdir).name);
+    cnt=cnt+1;
 end
 
 set(handles.labelpopup,'String',parcs);
@@ -380,9 +384,9 @@ for pdir=1:length(pdirs)
 end
 
 if ~ismember({selectedparc},parcs)
-  
+    
     cv_enablevats(handles);
-%
+    %
 end
 
 
@@ -559,10 +563,10 @@ else
     set(handles.rvatcheck,'Enable', ea_getonofftruefalse(ismember('vat_right.nii',vatcell)));
     set(handles.lvatcheck,'Enable', ea_getonofftruefalse(ismember('vat_left.nii',vatcell)));
     if strcmp(get(handles.rvatcheck,'Enable'),'off')
-    set(handles.rvatcheck,'Value', 0);
+        set(handles.rvatcheck,'Value', 0);
     end
     if strcmp(get(handles.lvatcheck,'Enable'),'off')
-    set(handles.lvatcheck,'Value', 0);
+        set(handles.lvatcheck,'Value', 0);
     end
 end
 
@@ -593,9 +597,9 @@ try delete(vatseedsurf); catch
     end
 end
 try delete(vatsurf); catch
-   for l=1:length(vatsurf)
-      try delete(vatsurf{l}); end 
-   end
+    for l=1:length(vatsurf)
+        try delete(vatsurf{l}); end
+    end
 end
 try delete(seedsurf); end
 try delete(graphsurf); end
@@ -608,7 +612,7 @@ function cv_enablevats(handles)
 % set(handles.labelpopup,'Enable','on');
 % set(handles.vizgraph,'Enable','off');
 % set(handles.voxmodality,'Enable','off');
-% 
+%
 % set(handles.voxmetric,'Enable','off');
 % set(handles.voxthresh,'Enable','off');
 % set(handles.vizmat,'Enable','off');
@@ -1232,7 +1236,7 @@ if strcmp('Choose...',chosenmod{get(hObject,'Value')})
 else
     set(handles.chosenwmatstr,'String','');
 end
-    
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1265,4 +1269,62 @@ function wmatedges_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of wmatedges
+refreshcv(handles);
+
+
+% --- Executes on button press in apply.
+function apply_Callback(hObject, eventdata, handles)
+% hObject    handle to apply (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+refreshcv(handles,0,1);
+
+
+% --- Executes on button press in vizvat_regs.
+function vizvat_regs_Callback(hObject, eventdata, handles)
+% hObject    handle to vizvat_regs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of vizvat_regs
+refreshcv(handles);
+
+
+% --- Executes on button press in vizvat_labs.
+function vizvat_labs_Callback(hObject, eventdata, handles)
+% hObject    handle to vizvat_labs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of vizvat_labs
+refreshcv(handles);
+
+
+% --- Executes on button press in vizmat_regs.
+function vizmat_regs_Callback(hObject, eventdata, handles)
+% hObject    handle to vizmat_regs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of vizmat_regs
+refreshcv(handles);
+
+
+% --- Executes on button press in vizmat_labs.
+function vizmat_labs_Callback(hObject, eventdata, handles)
+% hObject    handle to vizmat_labs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of vizmat_labs
+refreshcv(handles);
+
+
+% --- Executes on button press in wmatlabs.
+function wmatlabs_Callback(hObject, eventdata, handles)
+% hObject    handle to wmatlabs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of wmatlabs
 refreshcv(handles);

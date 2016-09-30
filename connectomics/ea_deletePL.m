@@ -46,6 +46,7 @@ if verLessThan('matlab','8.5') % ML <2014a support
             todelete=PL(p).regionsurfs(logical(PL(p).regionsurfs));
             delete(todelete(:));
         end
+        
         if isfield(PL(p),'conlabels')
             todelete=PL(p).conlabels(logical(PL(p).conlabels));
             delete(todelete(:));
@@ -88,6 +89,7 @@ else
         if isfield(PL(p),'regionsurfs')
             delete(PL(p).regionsurfs);
         end
+        
         if isfield(PL(p),'conlabels')
             delete(PL(p).conlabels);
         end

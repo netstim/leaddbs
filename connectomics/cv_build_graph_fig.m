@@ -130,9 +130,9 @@ if get(handles.wmatnodes,'Value')
     end
     
     
-    pgraphsurf=ea_showconnectivitypatch(resultfig,parc,tparc.img,0,atlas_lgnd{2},ptnodeix,'autumn');
+    pgraphsurf=ea_showconnectivitypatch(resultfig,parc,tparc.img,0,atlas_lgnd{2},ptnodeix,'autumn',get(handles.wmatnodes,'Value'),get(handles.wmatlabs,'Value'));
     
-    ngraphsurf=ea_showconnectivitypatch(resultfig,parc,tparc.img*-1,0,atlas_lgnd{2},ntnodeix,'winter');
+    ngraphsurf=ea_showconnectivitypatch(resultfig,parc,tparc.img*-1,0,atlas_lgnd{2},ntnodeix,'winter',get(handles.wmatnodes,'Value'),get(handles.wmatlabs,'Value'));
     
 end
 % export structures as ML
