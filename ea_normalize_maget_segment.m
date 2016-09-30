@@ -14,7 +14,7 @@ reforce=0;
 atlastouse=options.normalize.settings.atlasset; % for now, only the distal atlas is supported!
 
 peerfolders=ea_getmagetpeers(options);
-keyboard
+
 %% step 0: check if all subjects have been processed with an ANTs-based normalization function
 for peer=1:length(peerfolders)
     if ~ismember(ea_whichnormmethod([peerfolders{peer},filesep]),ea_getantsnormfuns)
