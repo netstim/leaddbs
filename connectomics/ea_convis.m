@@ -269,7 +269,7 @@ else % use fiberset
     if ~ret % something has changed since last time.
         ea_deletePL(resultfig,'PL','mat');
         
-        [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seed,targetsfile,thresh,1,options,'',changedstates,'mat');
+        [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seed,targetsfile,thresh,1,options,'',changedstates,'mat',get(handles.vizmat_regs,'Value'),get(handles.vizmat_labs,'Value'));
         set(handles.matthreshis,'String',num2str(thresh));
         
     end

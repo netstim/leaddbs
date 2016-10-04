@@ -1,4 +1,4 @@
-function [PL,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,stimparams,changedstates,mode)
+function [PL,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,stimparams,changedstates,mode,showregs,showlabs)
 % This function shows fiber-connectivity from a volume defined by a nx3
 % point-list (volume). If stimparams.showconnectivities is set, connected
 % areas to the volume are also visualized. To do so, the function uses
@@ -238,12 +238,8 @@ for side=1:length(seed)
     % always show seed patch (i.e. VAT)
     PL.matseedsurf{side}=ea_showseedpatch(resultfig,seed{side},seed{side}.img,options);
 
-    if get(handles.vizvat_regs,'Value') || get(handles.vizvat_labs,'Value')
-        [PL.matsurf{side},PL.conlabels{side}]=ea_showconnectivitypatch(resultfig,targets,contargets,thresh,atlas_lgnd{2},tareas{side},[],get(handles.vizvat_regs,'Value'),get(handles.vizvat_labs,'Value'));
-    else
-        PL.matsurf{side}=[];
-        PL.conlabels{side}=[];
-    end
+        [PL.matsurf{side},PL.conlabels{side}]=ea_showconnectivitypatch(resultfig,targets,contargets,thresh,atlas_lgnd{2},tareas{side},[],showregs,showlabs);
+
     clear allcareas conareas
 %     %% now show areas
 %     targets.img=round(targets.img);
