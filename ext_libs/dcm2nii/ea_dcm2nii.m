@@ -13,7 +13,7 @@ end
 
 cmd=[dcm2nii, ' -g n -x y ', inputimage];
 
-display(sprintf('\nReorient and crop image...'))
+fprintf('\nReorient and crop image...\n')
 if ~ispc
     system(['bash -c "', cmd, '"']);
 else
