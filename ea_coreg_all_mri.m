@@ -83,7 +83,7 @@ if usefa
         end
         if exist([directory,options.prefs.fa],'file') % check again since could have been built above
             if ~includeatlas % if includeatlas is set we can assume that images have been coregistered and skulstripped already
- %               ea_dcm2nii([directory,options.prefs.fa]);
+ %               ea_rocrop([directory,options.prefs.fa]);
                 if exist([directory,options.prefs.fa],'file') % recheck if has been built.
                     ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
                 end

@@ -1,5 +1,11 @@
-function ea_dcm2nii(inputimage)
+function [cmdout, tempf] = ea_dcm2nii(inputimage, outputimage)
 % Wrapper for dcm2nii, just used for reorientation and cropping currently
+
+% Save the result to a new file, when the second parameter is specified
+if nargin == 2
+    copyfile(inputimage,outputimage)
+    inputimage = outputimage;
+end
 
 ea_libs_helper;
 
@@ -13,23 +19,26 @@ end
 
 cmd=[dcm2nii, ' -g n -x y ', inputimage];
 
-fprintf('\nReorient and crop image...\n')
+fprintf('\nReorient and crop image...\n\n');
 if ~ispc
-    system(['bash -c "', cmd, '"']);
+    [~,cmdout] = system(['bash -c "', cmd, '"']);
 else
-    system(cmd);
+    [~,cmdout] = system(cmd);
 end
 
-[pth,fn,ext]=fileparts(inputimage);
-if isempty(pth)
-    pth = '.';
-end
+disp(cmdout);
 
-if exist([pth,filesep,'co',fn,ext], 'file')
-    movefile([pth,filesep,'co',fn,ext],inputimage);
-    delete([pth,filesep,'o',fn,ext]);
-elseif exist([pth,filesep,'c',fn,ext], 'file')
-    movefile([pth,filesep,'c',fn,ext],inputimage);
+% Check the output files of dcm2nii
+savedf = regexp(cmdout, '(?<=Saving )\S+','match');
+
+if ~isempty(savedf)
+    movefile(savedf{end}, inputimage);
+    if numel(savedf) == 2
+        delete(savedf{1});
+    end
+    tempf = savedf{end};
+    disp('Reorientation and/or cropping applied.');
 else
-	disp('No need to cropping!');
+    tempf = inputimage;
+    disp('No need to reorient or crop!');
 end
