@@ -11,8 +11,16 @@ function ea_dicom_import(options)
 disp('Importing DICOM files...');
 
 
+% finding DICOM folder in patients directory
+dfnames=ea_getdicomfoldernames;
+for df=1:length(dfnames)
+    di=dir([options.root,options.patientname,filesep,dfnames{df}]);
+    if ~isempty(di)
+        break
+    end
+end
 
-indir=[options.root,options.patientname,filesep,'DICOM',filesep];
+indir=[options.root,options.patientname,filesep,di(1).name,filesep];
 outdir=[options.root,options.patientname,filesep];
 tmpoutdir=outdir;
 
@@ -51,4 +59,9 @@ for d=1:length(di)
     ea_imageclassifier(dcfilename);
 end
 
+
+
+function fnames=ea_getdicomfoldernames;
+
+fnames={'DICOM','dicom','DICOMDAT'};
 

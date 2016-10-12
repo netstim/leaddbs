@@ -10,7 +10,10 @@ else
     writematout=1;
 end
 if nargin>4
-ea_error('BRAINSFit is not (yet) supported for this operation. Please choose a different registration algorithm.');
+    
+    if ~isempty(varargin{5})
+        ea_error('BRAINSFit is not (yet) supported for this operation. Please choose a different registration algorithm.');
+    end
 end
 if fileparts(movingVolume)
     volumedir = [fileparts(movingVolume), filesep];

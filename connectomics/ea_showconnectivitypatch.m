@@ -1,5 +1,6 @@
 function [matsurf,labels]=ea_showconnectivitypatch(resultfig,pV,mX,thresh,atlaslegend,atlasindices,usecolormap,showregs,showlabels)
-
+matsurf=[];
+labels=[];
 
 
 if showregs

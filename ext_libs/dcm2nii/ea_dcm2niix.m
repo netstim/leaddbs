@@ -21,6 +21,7 @@ end
 
 
 % -o option seems not to work in dcm2niix yet. Move files manually:
+try
 di=dir([inputimage,'*.nii']);
 for d=1:length(di)
     movefile([inputimage,di(d).name],[ofolder,di(d).name]);
@@ -34,6 +35,7 @@ end
 di=dir([inputimage,'*.bvec']);
 for d=1:length(di)
     movefile([inputimage,di(d).name],[ofolder,di(d).name]);
+end
 end
 
 % try

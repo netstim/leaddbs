@@ -38,6 +38,7 @@ for atlas=1:length(atlases.names)
             thresh=0.5;
         end
         atlmm=atlases.XYZ{atlas,side}.mm(:,1:3);
+
         %ratlmm=round(atlmm);
         try
             atlvx=atlases.XYZ{atlas,side}.vx;
