@@ -212,6 +212,7 @@ ea_busyaction('on',leadfig,'mapper');
 
 
 options=ea_handles2options(handles);
+options.uipatdirs={''};
 ea_run('run',options);
 
 ea_busyaction('off',leadfig,'mapper');
