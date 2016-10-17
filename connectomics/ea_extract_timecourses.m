@@ -168,7 +168,7 @@ X1(:,6)=rp_rest(1:signallength,5);
 X1(:,7)=rp_rest(1:signallength,6);
 X1(:,7)=WMTimecourse;
 X1(:,7)=CSFTimecourse;
-X1(:,7)=GlobTimecourse;
+%X1(:,7)=GlobTimecourse;
 
 if multsess
     % regress sessions from movement parameters
