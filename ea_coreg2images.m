@@ -1,7 +1,7 @@
 function ea_coreg2images(options,moving,fixed,ofile,otherfiles,writeoutmat)
 
 if ~exist('otherfiles','var')
-   otherfiles={}; 
+   otherfiles={''}; 
 end
 if ~exist('writeoutmat','var')
     writeoutmat=0;
@@ -19,11 +19,14 @@ end
 
 switch options.coregmr.method
     case 1 % SPM
+        
         ea_docoreg_spm(moving,fixed,'nmi',1,otherfiles)
         movefile([directory,'r',mfilen],ofile);
         for ofi=1:length(otherfiles)
            [pth,fn,ext]=fileparts(otherfiles{ofi});
+           try % could be empty cell.
            movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
+           end
         end
     case 2 % ANTs
         ea_ants(fixed,...
