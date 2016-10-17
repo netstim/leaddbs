@@ -14,13 +14,11 @@ disp('Importing DICOM files...');
 % finding DICOM folder in patients directory
 dfnames=ea_getdicomfoldernames;
 for df=1:length(dfnames)
-    di=dir([options.root,options.patientname,filesep,dfnames{df}]);
-    if ~isempty(di)
+    if exist([options.root,options.patientname,filesep,dfnames{df}],'file')
         break
     end
 end
-
-indir=[options.root,options.patientname,filesep,di(1).name,filesep];
+indir=[options.root,options.patientname,filesep,dfnames{df},filesep];
 outdir=[options.root,options.patientname,filesep];
 tmpoutdir=outdir;
 
