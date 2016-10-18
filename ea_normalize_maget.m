@@ -14,8 +14,18 @@ peerfolders=ea_getmagetpeers(options);
 
 %% step 0: check if all subjects have been processed with an ANTs-based normalization function
 for peer=1:length(peerfolders)
+    poptions=options;
+    [poptions.root,poptions.patientname]=fileparts(peerfolders{peer});
+    poptions.root=[poptions.root,filesep];
+    poptions=ea_assignpretra(poptions);
+    % make sure peer has been normalized using ANTs
     if ~ismember(ea_whichnormmethod([peerfolders{peer},filesep]),ea_getantsnormfuns)
-        ea_error(['Please make sure that all peers selected have been normalized using ANTs. ',peerfolders{peer},filesep])
+        ea_normalize_ants_multimodal(options)
+    else
+        % make sure peer's anatomy files have been coregistered.
+        if ~ea_seemscoregistered(poptions)
+            ea_coreg_all_mri(poptions,0);
+        end
     end
 end
 
@@ -83,8 +93,12 @@ try
 catch
     keyboard
 end
-        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii']); % we only need the warp
-        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
+        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii']); % we only need the warp
+        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
+        
+        if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],'file')
+            ea_error(['Something went wrong ? could not generate a nonlinear warp from ',subdirec,' to ',peerdirec,'.']);
+        end
         
         % Now export composite transform from MNI -> Peer -> Subject
         
