@@ -2,11 +2,7 @@ function ea_show_ctcoregistration(options)
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
-
-legacy=0;
-
-if ~legacy % use new imshowpair tool
-
+disp('Preparing images to show CT-/MR Coregistration...');
     ct=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
     mr=ea_load_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
 
@@ -46,106 +42,10 @@ if ~legacy % use new imshowpair tool
     % edited by TH 2016-02-17 to add windowed coregistration view
     % ----------------------------------------------------------
     wim = cat(4,mr.img,ct.img,jim);
-    ea_imshowpair(wim,options,'Preoperative MRI & Postoperative CT');
+    ea_imshowpair(wim,options,'Preoperative MRI & Postoperative CT','ctcoregistration');
     % ----------------------------------------------------------
+disp('Done.');
 
-
-elseif legacy
-% export wireframe of CT:
-disp('Generating wireframe from CT image...');
-if ~exist('edge.m','file')
-    disp('Image toolbox not found, using a slower replacement function...');
-    ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],[options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered],[2 2 2],0);
-    CT=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered],'simple');
-    useimtbx=0;
-    alpha=0.01;
-else % use image toolbox
-    CT=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],'simple');
-    useimtbx=1;
-    alpha=0.1;
-end
-
-%delete([options.root,options.patientname,filesep,'small_',options.prefs.ctnii_coregistered]);
-
-%disp('Done. Smoothing...');
-CT.img(CT.img<0)=0; % remove negative hounsfield parts.
-%CT.img=smooth3(CT.img,'gaussian',[11 11 11]);
-
-
-eCT=logical(ea_detect_edges_3d(CT.img,alpha,useimtbx));
-
-CT.hdr.fname=[options.root,options.patientname,filesep,'wires_',options.prefs.ctnii_coregistered];
-CT.hdr.dt=[4,0];
-spm_write_vol(CT.hdr,eCT);
-
-disp('Done. Fusing images...');
-
-checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
-
-nii=ea_load_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
-dims=nii.hdr.dime.pixdim(2:4);
-outf=['check_coregct_',options.prefs.prenii_unnormalized];
-
-suff='_pre_tra';
-
-
-matlabbatch{1}.spm.util.imcalc.input = {checkf;
-    [options.root,options.patientname,filesep,'wires_',options.prefs.ctnii_coregistered,',1']
-    };
-matlabbatch{1}.spm.util.imcalc.output = outf;
-matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
-matlabbatch{1}.spm.util.imcalc.expression = ['i1+1000*i2'];
-matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-jobs{1}=matlabbatch;
-spm_jobman('run',jobs);
-clear matlabbatch jobs;
-
-disp('Done. Showing results.');
-nii=load_untouch_nii([options.root,options.prefs.patientdir,filesep,outf]);
-
-h1=figure('name',['Coregistration (CT+MR) results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
-set(gcf,'color','w')
-imagesc(scale_image(squeeze(nii.img(:,:,round(end/2)))',[dims(1)/dims(2),1]));
-axis('equal')
-axis('off')
-axis xy
-colormap gray
-tightfig;
-
-
-h2=figure('name',['Coregistration (CT+MR) results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
-try
-imat=scale_image(squeeze(nii.img(:,round(end/2),:))',[dims(3)/dims(1),1]);
-catch
-    ea_error('Image seems to have wrong orientation');
-end
-imagesc(imat);
-axis('equal')
-axis('off')
-axis xy
-colormap gray
-tightfig;
-
-
-h3=figure('name',['Coregistration (CT+MR) results for ',options.prefs.patientdir,'_',outf],'NumberTitle','off');
-imat=scale_image(squeeze(nii.img(round(end/2),:,:))',[dims(3)/dims(2),1]);
-imagesc(imat);
-axis('equal')
-axis('off')
-axis xy
-colormap gray
-tightfig;
-
-saveas(h1,[options.root,options.prefs.patientdir,filesep,'ctmrcoreg_check',suff,'_d1.png']);
-saveas(h2,[options.root,options.prefs.patientdir,filesep,'ctmrcoreg_check',suff,'_d2.png']);
-saveas(h3,[options.root,options.prefs.patientdir,filesep,'ctmrcoreg_check',suff,'_d3.png']);
-
-
-
-end
 
 
 function hfig = tightfig(hfig)

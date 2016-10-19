@@ -41,8 +41,18 @@ if isfield(options,'lcm')
     end
 end
 
+
+
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
-    options=ea_assignpretra(options);
+    [options,presentfiles]=ea_assignpretra(options);
+    
+    
+    if ~isempty(presentfiles)
+       if ~exist(ea_niigz([options.root,options.patientname,filesep,'grid.nii']),'file')
+           ea_gengrid(options);
+       end
+    end
+    
     try ea_resliceanat(options); end
     if options.modality==2 % CT support
         options.prefs.tranii=options.prefs.ctnii;

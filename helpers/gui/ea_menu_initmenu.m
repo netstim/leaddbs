@@ -4,7 +4,8 @@ menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
     % tools menu  & edit prefs present in all apps.
     f = uimenu('Label','Tools');
-    uimenu(f,'Label','Edit Preferences file...','Callback',{@ea_editprefs});
+    uimenu(f,'Label','Edit Preferences File...','Callback',{@ea_editprefs});
+    uimenu(f,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
     if ismember('acpc',cmd)
         uimenu(f,'Label','Convert ACPC/MNI coordinates','Callback',{@ea_acpcquery,handles.leadfigure});
     end

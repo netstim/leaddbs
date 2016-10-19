@@ -29,6 +29,7 @@ switch options.coregmr.method
            end
         end
     case 2 % ANTs
+        
         ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);

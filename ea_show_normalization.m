@@ -16,10 +16,10 @@ else
         expdo=[1,4];
     end
 end
-
+disp('Preparing images to show Normalization...');
 
 for export=expdo % if CT, only do 1, if MR, do 1:3.
-    try
+    %try
         switch export
             case 1
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
@@ -52,13 +52,12 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             
           
             
-            wires=ea_load_nii(ea_niigz([options.earoot,mcr,'templates',filesep,'mni_wires.nii']));
+            w=load([options.earoot,mcr,'templates',filesep,'mni_wires.mat']);
             pt=ea_load_nii(checkf);
             
-            if ~isequal(size(wires.img),size(pt.img))
-                Vw=ea_open_vol(wires.fname);
+            if ~isequal(size(w.wires),size(pt.img))
                 Vp=ea_open_vol(pt.fname);
-                matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_wires.nii'];
+                matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
                     checkf};
                 matlabbatch{1}.spm.util.imcalc.output = checkfn;
                 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
@@ -71,13 +70,14 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 spm_jobman('run',jobs);
                 clear matlabbatch jobs;
                 pt=ea_load_nii(checkf);
-                ea_close_vol(Vw);
-                ea_close_col(Vp);
+                ea_close_vol(Vp);
             end
             %mni.img(:)=zscore(mni.img(:));
             
-            
-            wires.img=wires.img/max(wires.img(:));
+            w.wires=single(w.wires);
+            w.wires=w.wires/255;
+            w.wires=w.wires.*0.2;
+            w.wires=w.wires+0.8;
             switch suff
                 case '_fa' % do no windowing for now.
                     mni_img=ea_load_nii([options.earoot,'templates',filesep,'mni_hires_fa.nii']);
@@ -94,8 +94,8 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             end
             %joint_im=0.5*wires.img+pt.img;
             joint_im=pt.img;
-            
-            joint_im(wires.img>0.5)=mean(cat(4,joint_im(wires.img>0.5),wires.img(wires.img>0.5)),4);
+            joint_im=joint_im.*w.wires;
+%            joint_im(wires.img>0.8)=1;
             %joint_im=repmat(joint_im,1,1,1,3);
             %            jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
             %     ea_imshowpair(jim,options,addstr);
@@ -103,20 +103,33 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             % ----------------------------------------------------------
             % edited by TH 2016-02-17 to add windowed normalization check
             % ----------------------------------------------------------
+            pt.img=single(pt.img);
+            mni_img.img=single(mni_img.img);
+            joint_im=single(joint_im);
+            if exist([options.root,options.patientname,filesep,'glgrid.mat']);
+                g=load([options.root,options.patientname,filesep,'glgrid.mat']);
+                g.grid=single(g.grid);
+                g.grid=g.grid-min(g.grid(:));
+                g.grid=g.grid./max(g.grid(:));
+                g.grid=g.grid.*0.2;
+                g.grid=g.grid+0.8;
+                grid_im=pt.img.*g.grid;
+%                grid_im(g.grid>0.7)=1;
+                wim = cat(4,pt.img,mni_img.img,joint_im,grid_im);
+            else
+                wim = cat(4,pt.img,mni_img.img,joint_im);
+            end
             
-            wim = cat(4,pt.img,mni_img.img,joint_im);
-            clear joint_im pt
-            ea_imshowpair(wim,options,addstr);
+            clear joint_im pt grid_im
+            ea_imshowpair(wim,options,addstr,'normalization');
             
-            % ----------------------------------------------------------
-            
-            
-    catch
-        warning(['Error showing normalization of ',checkf,'.']);
-    end
+%     catch
+%         warning(['Error showing normalization of ',checkf,'.']);
+%     end
 
 end
 
+disp('Done.');
 
 
 

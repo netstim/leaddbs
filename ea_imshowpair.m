@@ -1,8 +1,20 @@
-function  ea_imshowpair( Img, options ,addstring)
+function  ea_imshowpair( Img, options ,addstring,callingfunction)
 % this function is based on IMSHOW3DFULL by Maysam Shahedi and supports
 % truecolor images. Windowed view is adapted from MAGNIFY by Rick Hindman.
 % 
 % Todd Herrington, 2016-03-16
+
+if ~exist('callingfunction','var')
+   callingfunction='normalization'; 
+end
+switch callingfunction
+    case 'ctcoregistration'
+    wiresIX=3:5;
+    gridIX=nan;    
+    case 'normalization'
+    wiresIX=3;
+    gridIX=4;
+end
 
 if nargin==2
     figtit=[options.patientname];
@@ -385,11 +397,24 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             SagittalView([]);       
         elseif (strcmpi(eventdata.Key,'x'));
             if MainImage(1)==1
-                MainImage=3:size(Img,4);
-            elseif MainImage(1)==3
+                MainImage=wiresIX;
+            elseif MainImage(1)==wiresIX(1)
                 MainImage=1;
+            elseif MainImage(1)==gridIX
+                MainImage=wiresIX;
             end
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
+        elseif (strcmpi(eventdata.Key,'g'));
+            if size(Img,4)==4 && strcmp(callingfunction,'normalization') % only do if grid is available.
+                if MainImage(1)==1
+                    MainImage=gridIX;
+                elseif MainImage(1)==gridIX
+                    MainImage=1;
+                elseif MainImage(1)==wiresIX
+                    MainImage=gridIX;
+                end
+                set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
+            end
         elseif (strcmpi(eventdata.Key,'z')) % toggles zoom in/out
             ImgZ=~ImgZ;
             switch View

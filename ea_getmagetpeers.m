@@ -17,5 +17,5 @@ if length(peerfolders)<3
     ea_error('Please specify a valid number of peers for MAGeT-Brain like approaches');
 end
 % make sure no peer is also the subject:
-ps=ismember(peerfolders,[options.root,options.patientname,filesep]);
+ps=ismember(peerfolders,[options.root,options.patientname]);
 peerfolders(ps)=[];

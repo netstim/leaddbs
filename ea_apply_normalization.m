@@ -41,7 +41,7 @@ switch whichnormmethod
                 lfis{1}=options.prefs.prenii;
                 lfis{2}=options.prefs.ctnii;
         end
-        
+        [postops,gfis,lfis]=ea_appendgrid(options,postops,gfis,lfis,0);
         switch spm('ver')
             case 'SPM8'
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
@@ -144,6 +144,14 @@ switch whichnormmethod
                 end
         end
 end
+
+
+nii=ea_load_nii([directory,'glgrid.nii']);
+nii.img=nii.img/max(nii.img(:));
+nii.img=nii.img.*255;
+grid=uint8(nii.img);
+save([directory,'glgrid.mat'],'grid');
+delete([directory,'glgrid.nii']);
 
 
 function resize_img(imnames, Voxdim, BB, ismask)

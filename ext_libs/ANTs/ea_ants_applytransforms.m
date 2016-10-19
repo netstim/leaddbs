@@ -79,7 +79,10 @@ if nargin==1
                 lfis{3}=ea_niigz([directory,'l',options.prefs.fa2anat]);
             end
     end
+    
+            [fis,ofis,lfis]=ea_appendgrid(options,fis,ofis,lfis,1);
 end
+
 
 for fi=1:length(fis)
     if ~exist(fis{fi},'file')   % skip if unnormalized file doesn't exist
