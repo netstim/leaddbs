@@ -145,14 +145,16 @@ switch whichnormmethod
         end
 end
 
-
-nii=ea_load_nii([directory,'glgrid.nii']);
-nii.img=nii.img/max(nii.img(:));
-nii.img=nii.img.*255;
-grid=uint8(nii.img);
-save([directory,'glgrid.mat'],'grid');
-delete([directory,'glgrid.nii']);
-
+if options.prefs.normalize.createwarpgrids
+    try
+        nii=ea_load_nii([directory,'glgrid.nii']);
+        nii.img=nii.img/max(nii.img(:));
+        nii.img=nii.img.*255;
+        grid=uint8(nii.img);
+        save([directory,'glgrid.mat'],'grid');
+        delete([directory,'glgrid.nii']);
+    end
+end
 
 function resize_img(imnames, Voxdim, BB, ismask)
 %  resize_img -- resample images to have specified voxel dims and BBox
