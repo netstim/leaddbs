@@ -20,7 +20,8 @@ for peer=1:length(peerfolders)
     poptions=ea_assignpretra(poptions);
     % make sure peer has been normalized using ANTs
     if ~ismember(ea_whichnormmethod([peerfolders{peer},filesep]),ea_getantsnormfuns)
-        ea_normalize_ants_multimodal(options)
+        ea_dumpnormmethod(options,'ea_normalize_ants_multimodal');
+        ea_normalize_ants_multimodal(poptions)
     else
         % make sure peer's anatomy files have been coregistered.
         if ~ea_seemscoregistered(poptions)
@@ -97,6 +98,7 @@ end
         delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
         
         if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],'file')
+            keyboard
             ea_error(['Something went wrong ? could not generate a nonlinear warp from ',subdirec,' to ',peerdirec,'.']);
         end
         

@@ -88,22 +88,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     
     
     if options.normalize.do
-        try load([options.root,options.patientname,filesep,'ea_normmethod_applied']); end
-        if exist('norm_method_applied','var')
-            try
-                norm_method_applied{end+1}=options.normalize.method;
-            catch
-                clear norm_method_applied
-                norm_method_applied{1}=options.normalize.method;
-            end
-        else
-            norm_method_applied{1}=options.normalize.method;
-        end
-        save([options.root,options.patientname,filesep,'ea_normmethod_applied'],'norm_method_applied');
-        
+        ea_dumpnormmethod(options,options.normalize.method);
         eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
-        
-        
     end
     
     
