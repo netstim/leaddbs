@@ -51,7 +51,7 @@ for peer=1:length(peerfolders)
     %% step 1, generate warps from peers to the selected patient brain
     
     
-    if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii.gz'],'file') || reforce
+    if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii'],'file') || reforce
         [~,peerpresentfiles]=ea_assignpretra(poptions);
         [~,subpresentfiles]=ea_assignpretra(options);
         [~,presentinboth]=ismember(subpresentfiles,peerpresentfiles);
@@ -89,17 +89,15 @@ for peer=1:length(peerfolders)
             mkdir([subdirec,'MAGeT',filesep,'warps',filesep]);
         end
         
-try        
-        ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],weights,metrics,options);
-catch
-    keyboard
-end
+        try
+            ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],weights,metrics,options);
+        catch
+            ea_error(['Something went wrong - could not generate a nonlinear warp from ',subdirec,' to ',peerdirec,'.']);
+        end
         delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii']); % we only need the warp
-        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
         
-        if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],'file')
-            keyboard
-            ea_error(['Something went wrong ? could not generate a nonlinear warp from ',subdirec,' to ',peerdirec,'.']);
+        if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],'file')
+            ea_error(['Something went wrong - could not generate a nonlinear warp from ',subdirec,' to ',peerdirec,'.']);
         end
         
         % Now export composite transform from MNI -> Peer -> Subject
@@ -125,8 +123,9 @@ end
         end
         
         % delete intermediary transforms
-        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
-        %delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);
+        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);
+        delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
+
     end
     
 end
