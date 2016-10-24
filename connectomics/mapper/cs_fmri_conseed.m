@@ -251,6 +251,21 @@ switch cmd
                 delete(mmap.fname);
             end
             
+            % export variance
+            M=nanvar(fX{s}');
+            mmap=msk;
+            mmap.dt=[16,0];
+            mmap.img(:)=0;
+            mmap.img=single(mmap.img);
+            mmap.img(omaskidx)=M;
+
+            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_VarR.nii'];
+            ea_write_nii(mmap);
+            if usegzip
+                gzip(mmap.fname);
+                delete(mmap.fname);
+            end
+            
             % lh surf
             lM=nanmean(lh.fX{s}');
             lmmap=lmsk;
@@ -389,6 +404,15 @@ switch cmd
         X=X+X';
         X(logical(eye(length(X))))=1;
         save([outputfolder,cmd,'_corrMx_AvgR.mat'],'X','-v7.3');
+        
+        % export variance
+        M=nanvar(fX');
+        X=zeros(numseed);
+        X(logical(triu(ones(numseed),1)))=M;
+        X=X+X';
+        X(logical(eye(length(X))))=1;
+        save([outputfolder,cmd,'_corrMx_VarR.mat'],'X','-v7.3');
+        
         % fisher-transform:
         fX=atanh(fX);
         M=nanmean(fX');

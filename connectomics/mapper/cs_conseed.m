@@ -1,8 +1,11 @@
-function cs_conseed(dofMRI,dodMRI,dfold,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
+function cs_conseed(dofMRI,dodMRI,dfold,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,dmrispace)
 % wrapper for both dmri and fmri to generate seed2map files
 
 if strcmp(outputmask,'.')
    outputmask=[]; 
+end
+if ~exist('dmrispace','var')
+   dmrispace='222'; 
 end
 if ~isdeployed
     addpath(genpath('/autofs/cluster/nimlab/connectomes/software/lead_dbs'));
@@ -33,7 +36,7 @@ end
 
 if dodMRI
     ndfold=[dfold,filesep];
-    cs_dmri_conseed(dfold,'HCP_MGH_30fold_groupconnectome_gqi_lite.mat',sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,'222');
+    cs_dmri_conseed(dfold,'HCP_MGH_30fold_groupconnectome_gqi_lite.mat',sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,dmrispace);
 end
 
 exit
