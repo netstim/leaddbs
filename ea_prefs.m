@@ -16,13 +16,36 @@ try
     delete([ea_getearoot,uid,'.m']);
 end
 
-try
-    ufn=fieldnames(uprefs);
-    
-    for uf=1:length(ufn)
+
+ufn=fieldnames(uprefs);
+
+for uf=1:length(ufn) % compare user preferences with defaults and overwrite defaults where present.
+    try
+        ufn2=fieldnames(uprefs.(ufn{uf}));
+        for uf2=1:length(ufn2)
+            try
+                ufn3=fieldnames(uprefs.(ufn{uf}).(ufn2{uf2}));
+                for uf3=1:length(ufn3)
+                    try
+                        ufn4=fieldnames(uprefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3}));
+                        for uf4=1:length(ufn4) % add fourth level entries
+                            prefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3}).(ufn4{uf4})=uprefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3}).(ufn4{uf4});
+                        end
+                    catch % add third level entries
+                        prefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3})=uprefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3});
+                    end
+                end
+            catch % add second level entries
+                prefs.(ufn{uf}).(ufn2{uf2})=uprefs.(ufn{uf}).(ufn2{uf2});
+            end
+        end
+    catch % add first level entries
         prefs.(ufn{uf})=uprefs.(ufn{uf});
     end
 end
+
+
+
 
 
 
