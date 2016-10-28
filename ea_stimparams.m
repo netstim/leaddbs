@@ -966,14 +966,14 @@ clear PL
 
 for group=flix
     setappdata(resultfig,'stimparams',stimparams(group,:));
-setappdata(resultfig,'S',S(group))
+    setappdata(resultfig,'S',S(group))
     ea_showfibres_volume(resultfig,options);
     copyfile([options.root,options.patientname,filesep,'ea_stats.mat'],[options.root,options.patientname,filesep,'ea_stats_group_',num2str(group),'.mat']);
     try
-    copyfile([options.root,options.patientname,filesep,'ea_pm.nii'],[options.root,options.patientname,filesep,'ea_pm_group_',num2str(group),'.nii']);
+        copyfile([options.root,options.patientname,filesep,'ea_pm.nii'],[options.root,options.patientname,filesep,'ea_pm_group_',num2str(group),'.nii']);
     end
     try
-    PL(group)=getappdata(resultfig,'PL');
+        PL(group)=getappdata(resultfig,'PL');
     catch
         keyboard
     end

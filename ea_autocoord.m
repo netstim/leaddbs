@@ -23,9 +23,7 @@ options.prefs=ea_prefs(patientname);
 
 
 if options.dicomimp % do DICOM-Import.
-    
     ea_dicom_import(options);
-    
 end
 
 
@@ -44,6 +42,8 @@ end
 
 
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
+    ea_compat_patfolder(options);
+    
     [options,presentfiles]=ea_assignpretra(options);
     
     
@@ -78,12 +78,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     end
     
     if options.coregctcheck
-        
-        
         % export "control" niftis with wireframe of normal anatomy..
-        
         ea_show_ctcoregistration(options);
-        
     end
     
     

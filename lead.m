@@ -88,8 +88,8 @@ if nargin>3
             lead_connectome;
             delete(handles.leadfigure)
             return
-        case {'connectomemapper','mapper'};
-            lead_connectomemapper;
+        case {'mapper'};
+            lead_mapper;
             delete(handles.leadfigure)
             return
         case 'anatomy';

@@ -1,35 +1,35 @@
-function varargout = lead_connectomemapper(varargin)
-% LEAD_CONNECTOMEMAPPER MATLAB code for lead_connectomemapper.fig
-%      LEAD_CONNECTOMEMAPPER, by itself, creates a new LEAD_CONNECTOMEMAPPER or raises the existing
+function varargout = lead_mapper(varargin)
+% LEAD_MAPPER MATLAB code for lead_mapper.fig
+%      LEAD_MAPPER, by itself, creates a new LEAD_MAPPER or raises the existing
 %      singleton*.
 %
-%      H = LEAD_CONNECTOMEMAPPER returns the handle to a new LEAD_CONNECTOMEMAPPER or the handle to
+%      H = LEAD_MAPPER returns the handle to a new LEAD_MAPPER or the handle to
 %      the existing singleton*.
 %
-%      LEAD_CONNECTOMEMAPPER('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in LEAD_CONNECTOMEMAPPER.M with the given input arguments.
+%      LEAD_MAPPER('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in LEAD_MAPPER.M with the given input arguments.
 %
-%      LEAD_CONNECTOMEMAPPER('Property','Value',...) creates a new LEAD_CONNECTOMEMAPPER or raises the
+%      LEAD_MAPPER('Property','Value',...) creates a new LEAD_MAPPER or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before lead_connectomemapper_OpeningFcn gets called.  An
+%      applied to the GUI before lead_mapper_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to lead_connectomemapper_OpeningFcn via varargin.
+%      stop.  All inputs are passed to lead_mapper_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help lead_connectomemapper
+% Edit the above text to modify the response to help lead_mapper
 
-% Last Modified by GUIDE v2.5 26-Aug-2016 13:21:31
+% Last Modified by GUIDE v2.5 28-Oct-2016 08:55:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @lead_connectomemapper_OpeningFcn, ...
-                   'gui_OutputFcn',  @lead_connectomemapper_OutputFcn, ...
+                   'gui_OpeningFcn', @lead_mapper_OpeningFcn, ...
+                   'gui_OutputFcn',  @lead_mapper_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,13 +44,13 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before lead_connectomemapper is made visible.
-function lead_connectomemapper_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before lead_mapper is made visible.
+function lead_mapper_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to lead_connectomemapper (see VARARGIN)
+% varargin   command line arguments to lead_mapper (see VARARGIN)
 
 
 earoot=ea_getearoot;
@@ -81,18 +81,18 @@ end
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
-% Choose default command line output for lead_connectomemapper
+% Choose default command line output for lead_mapper
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes lead_connectomemapper wait for user response (see UIRESUME)
+% UIWAIT makes lead_mapper wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = lead_connectomemapper_OutputFcn(hObject, eventdata, handles) 
+function varargout = lead_mapper_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB

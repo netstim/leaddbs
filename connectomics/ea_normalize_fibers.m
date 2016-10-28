@@ -147,8 +147,11 @@ end
 wfibsmm_mni=[wfibsmm_mni,fibers(:,4)];
 wfibsvox_mni=[wfibsvox_mni,fibers(:,4)];
 [~,ftrbase]=fileparts(options.prefs.FTR_normalized);
-ea_savefibertracts([directory,ftrbase,'.mat'],wfibsmm_mni,idx,'mm');
-ea_savefibertracts([directory,ftrbase,'_vox.mat'],wfibsvox_mni,idx,'vox',mniaffine);
+if ~exist([directory,'connectomes',filesep,'dMRI'],'file')
+    mkdir([directory,'connectomes',filesep,'dMRI']);
+end
+ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'.mat'],wfibsmm_mni,idx,'mm');
+ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'_vox.mat'],wfibsvox_mni,idx,'vox',mniaffine);
 
 %% create normalized trackvis version
 try
