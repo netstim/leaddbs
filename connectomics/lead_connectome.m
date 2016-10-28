@@ -283,7 +283,7 @@ end
 % run execution:
 
 cfig=handles.leadfigure;
-ea_busyaction('on',cfig,'lead_connectome');
+ea_busyaction('on',cfig,'connectome');
 
 
 options=ea_handles2options(handles);
@@ -292,7 +292,7 @@ options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 ea_run('run',options);
 
-ea_busyaction('off',cfig,'lead_connectome');
+ea_busyaction('off',cfig,'connectome');
 
 
 % --- Executes on button press in degree_centrality.
@@ -583,7 +583,7 @@ save([ea_getearoot,'connectomics',filesep,'lc_options.mat'],'-struct','lc_option
 % run execution:
 
 cfig=handles.leadfigure;
-ea_busyaction('on',cfig,'lead_connectome');
+ea_busyaction('on',cfig,'connectome');
 
 
 options=ea_handles2options(handles);
@@ -592,14 +592,17 @@ options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 ea_run('export',options);
 
-ea_busyaction('off',cfig,'lead_connectome');
+ea_busyaction('off',cfig,'connectome');
 
 % --- Executes on button press in patdir_choosebox.
 function patdir_choosebox_Callback(hObject, eventdata, handles)
 % hObject    handle to patdir_choosebox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ea_busyaction('on',handles.leadfigure,'connectome');
+
 ea_getpatients(handles);
+ea_busyaction('on',handles.leadfigure,'connectome');
 
 % --- Executes on selection change in recentpts.
 function recentpts_Callback(hObject, eventdata, handles)
@@ -609,7 +612,9 @@ function recentpts_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
+ea_busyaction('on',handles.leadfigure,'connectome');
 ea_rcpatientscallback(handles);
+ea_busyaction('off',handles.leadfigure,'connectome');
 
 
 % --- Executes during object creation, after setting all properties.

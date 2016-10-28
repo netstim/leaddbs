@@ -204,10 +204,31 @@ end
 % lead connectome mapper options:
 
 try
-    options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
+
+    sdp=get(handles.seeddefpopup,'String');
+    if iscell(sdp)
+    sdp=sdp{get(handles.seeddefpopup,'Value')};
+    end
+    switch sdp
+        case 'Manually choose seeds'
+            options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
+            options.lcm.seeddef='manual';
+        otherwise
+            stimname=sdp(11:end);
+            options.lcm.seeds=stimname;
+            options.lcm.seeddef='vats';
+    end
     options.lcm.odir=getappdata(handles.odirbutton,'odir');
     if isempty(options.lcm.odir)
-        options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
+        if ~strcmp(options.lcm.seeddef,'vats')
+            try
+            options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
+            catch
+               ea_error('Please define a seed first.'); 
+            end
+        else
+            options.lcm.odir='';
+        end
     end
     options.lcm.omask=getappdata(handles.omaskbutton,'omask');
     options.lcm.struc.do=get(handles.dostructural,'Value');

@@ -42,7 +42,7 @@ end
 
 
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
-    ea_compat_patfolder(options);
+    try    ea_compat_patfolder(options); end
     
     [options,presentfiles]=ea_assignpretra(options);
     

@@ -4,5 +4,5 @@ if exist([directory,options.prefs.options.prefs.FTR_normalized],'file')
     if ~exist([directory,'connectomes',filesep,'dMRI'],'file')
         mkdir([directory,'connectomes',filesep,'dMRI']);
     end
-    movefile([directory,options.prefs.options.prefs.FTR_normalized],[directory,'connectomes',filesep,'dMRI',filesep,options.prefs.options.prefs.FTR_normalized]);
+    movefile([directory,options.prefs.options.prefs.FTR_normalized],[directory,'connectomes',filesep,'data',filesep,'dMRI',filesep,options.prefs.options.prefs.FTR_normalized]);
 end

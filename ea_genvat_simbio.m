@@ -271,7 +271,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
     if options.usediffusion
         disp('Loading FTR...');
         load([options.earoot,'dev',filesep,'bTensor']) % b-Tensor of a simple 6fold diffusion series
-        ftr=load([options.root,options.patientname,filesep,options.prefs.FTR_normalized]);
+        ftr=load([options.root,options.patientname,filesep,'connectomes',filesep,'data',filesep,'dMRI',filesep,options.prefs.FTR_normalized]);
         disp('Done. Estimating diffusion signal based on fibertracts...');
         signal=ea_ftr2Sigmaps(ftr,ten);
         disp('Done. Calculating Tensors...');

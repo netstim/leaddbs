@@ -199,7 +199,7 @@ if nargin
 end
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','cluster','prefs'});
+ea_menu_initmenu(handles,{'acpc','export','cluster','prefs','vatcon'});
 
 
 
@@ -238,8 +238,8 @@ function run_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-leadfig=handles.leadfigure;
-ea_busyaction('on',leadfig,'lead');
+leadfigure=handles.leadfigure;
+ea_busyaction('on',leadfigure,'dbs');
 
 
 options=ea_handles2options(handles);
@@ -249,7 +249,7 @@ options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 ea_run('run',options);
 
-ea_busyaction('off',leadfig,'lead');
+ea_busyaction('off',leadfigure,'dbs');
 
 
 
@@ -544,9 +544,11 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % hObject    handle to patdir_choosebox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ea_busyaction('on',handles.leadfigure,'dbs');
 
 ea_getpatients(handles);
 
+ea_busyaction('off',handles.leadfigure,'dbs');
 
 
 
@@ -1192,8 +1194,8 @@ function exportcode_Callback(hObject, eventdata, handles)
 % hObject    handle to exportcode (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-leadfig=handles.leadfigure;
-ea_busyaction('on',leadfig,'lead');
+leadfigure=handles.leadfigure;
+ea_busyaction('on',leadfigure,'dbs');
 
 options=ea_handles2options(handles);
 
@@ -1201,7 +1203,7 @@ options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 ea_run('export',options);
 
-ea_busyaction('off',leadfig,'lead');
+ea_busyaction('off',leadfigure,'dbs');
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1223,7 +1225,9 @@ function recentpts_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
+ea_busyaction('on',handles.leadfigure,'dbs');
 ea_rcpatientscallback(handles);
+ea_busyaction('off',handles.leadfigure,'dbs');
 
 % --- Executes during object creation, after setting all properties.
 function recentpts_CreateFcn(hObject, eventdata, handles)

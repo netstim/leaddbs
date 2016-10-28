@@ -22,7 +22,7 @@ function varargout = lead_mapper(varargin)
 
 % Edit the above text to modify the response to help lead_mapper
 
-% Last Modified by GUIDE v2.5 28-Oct-2016 08:55:02
+% Last Modified by GUIDE v2.5 28-Oct-2016 09:59:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,22 +61,17 @@ axis off;
 axis equal;
 set(handles.leadfigure,'name','Lead-Connectome Mapper','color','w');
 homedir=ea_gethome;
-setappdata(handles.leadfigure,'uipatdir',{homedir(1:end-1)});
+%setappdata(handles.leadfigure,'uipatdir',{homedir(1:end-1)});
 
+% add recent patients...
+ea_initrecentpatients(handles);
 
 
 ea_menu_initmenu(handles,{'cluster','prefs'});
 
 
 [mdl,sf]=ea_genmodlist;
-set(handles.fiberspopup,'String',mdl(sf==1));
-set(handles.fmripopup,'String',mdl(sf==2));
-if isempty(get(handles.fiberspopup,'String'))
-    set(handles.fiberspopup,'String','No structural connectome found.');
-end
-if isempty(get(handles.fmripopup,'String'))
-    set(handles.fmripopup,'String','No functional connectome found.');
-end
+ea_updatemodpopups(mdl,sf,handles)
 
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
@@ -207,15 +202,15 @@ function run_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-leadfig=handles.leadfigure;
-ea_busyaction('on',leadfig,'mapper');
+leadfigure=handles.leadfigure;
+ea_busyaction('on',leadfigure,'mapper');
 
 
 options=ea_handles2options(handles);
-options.uipatdirs={''};
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 ea_run('run',options);
 
-ea_busyaction('off',leadfig,'mapper');
+ea_busyaction('off',leadfigure,'mapper');
 
 
 % --- Executes on button press in exportcode.
@@ -224,14 +219,14 @@ function exportcode_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-leadfig=handles.leadfigure;
-ea_busyaction('on',leadfig,'mapper');
+leadfigure=handles.leadfigure;
+ea_busyaction('on',leadfigure,'mapper');
 
 options=ea_handles2options(handles);
-
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 ea_run('export',options);
 
-ea_busyaction('off',leadfig,'mapper');
+ea_busyaction('off',leadfigure,'mapper');
 
 
 % --- Executes on selection change in command.
@@ -338,3 +333,89 @@ function omaskbutton_Callback(hObject, eventdata, handles)
 omask=uigetfile({'*.nii';'*.nii.gz'},'Choose output location');
 setappdata(hObject,'omask',[omask]);
 set(hObject,'String',omask);
+
+
+% --- Executes on button press in patdir_choosebox.
+function patdir_choosebox_Callback(hObject, eventdata, handles)
+% hObject    handle to patdir_choosebox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_busyaction('on',handles.leadfigure,'mapper');
+ea_getpatients(handles);
+% update cons
+if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
+    directory=get(handles.patdir_choosebox,'String');
+    [~,ptname]=fileparts(directory);
+    selectedparc='nan';
+    options.prefs=ea_prefs(ptname);
+    [mdl,sf]=ea_genmodlist(directory,selectedparc,options);
+    ea_updatemodpopups(mdl,sf,handles);
+end
+ea_busyaction('off',handles.leadfigure,'mapper');
+
+function ea_updatemodpopups(mdl,sf,handles)
+
+set(handles.fiberspopup,'String',mdl(sf==1));
+set(handles.fmripopup,'String',mdl(sf==2));
+if isempty(get(handles.fiberspopup,'String'))
+    set(handles.fiberspopup,'String','No structural connectome found.');
+end
+if isempty(get(handles.fmripopup,'String'))
+    set(handles.fmripopup,'String','No functional connectome found.');
+end
+
+% --- Executes on selection change in recentpts.
+function recentpts_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpts
+ea_busyaction('on',handles.leadfigure,'mapper');
+ea_rcpatientscallback(handles);
+ea_busyaction('off',handles.leadfigure,'mapper');
+
+
+% --- Executes during object creation, after setting all properties.
+function recentpts_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in seeddefpopup.
+function seeddefpopup_Callback(hObject, eventdata, handles)
+% hObject    handle to seeddefpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns seeddefpopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from seeddefpopup
+
+str=get(hObject,'String');
+str=str{get(hObject,'Value')};
+if strcmp(str,'Manually choose seeds')
+   set(handles.seedbutton,'enable','on');
+else
+   set(handles.seedbutton,'enable','off');
+   set(handles.seedbutton,'String','Choose seeds...');
+end
+
+% --- Executes during object creation, after setting all properties.
+function seeddefpopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to seeddefpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

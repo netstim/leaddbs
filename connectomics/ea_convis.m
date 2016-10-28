@@ -245,7 +245,7 @@ else % use fiberset
     % fibers filename
     switch matmodality
         case 'Patient-specific fiber tracts'
-            fibersfile=[directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized];
+            fibersfile=[directory,'connectomes',filesep,'data',filesep,'dMRI',filesep,options.prefs.FTR_normalized];
         otherwise
             fibersfile=[ea_getconnectomebase('dmri'),matmodality,'.mat'];
     end
@@ -398,7 +398,7 @@ function ea_initseedlevel(handles,directory,pdirectory,selectedparc,options)
 % dMRI:
 cnt=1;
 % check if pat-specific fibertracts are present:
-if exist([directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],'file');
+if exist([directory,'connectomes',filesep,'data',filesep,'dMRI',filesep,options.prefs.FTR_normalized],'file');
     modlist{cnt}='Patient-specific fiber tracts';
     cnt=cnt+1;
 end
