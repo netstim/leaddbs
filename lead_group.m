@@ -2393,7 +2393,7 @@ maxfibno=0;
 for sub=1:length(M.patient.list)
     ea_dispercent(sub/length(M.patient.list));
 
-    [nfibs,idx]=ea_loadfibertracts([M.patient.list{sub},filesep,'connectomes',filesep,'data',filesep,'dMRI',filesep,options.prefs.FTR_normalized]);
+    [nfibs,idx]=ea_loadfibertracts([M.patient.list{sub},filesep,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized]);
     idx=idx(1:20000); % only use first 20k fibers of each subject.
     sumidx=sum(idx);
     nfibs=nfibs(1:sumidx,:);
@@ -2403,7 +2403,7 @@ for sub=1:length(M.patient.list)
     maxfibno=max(normalized_fibers_mm(:,4));
 end
 ea_dispercent(1,'end');
-ea_savefibertracts([M.ui.groupdir,'connectomes',filesep,'data',filesep,'dMRI',filesep,options.prefs.FTR_normalized],normalized_fibers_mm,allidx,'mm');
+ea_savefibertracts([M.ui.groupdir,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],normalized_fibers_mm,allidx,'mm');
 
 
 % % export to trackvis

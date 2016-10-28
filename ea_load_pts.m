@@ -47,7 +47,32 @@ if isfield(handles,'seeddefpopup')
     remstims=ea_prependvat(remstims);
     set(handles.seeddefpopup,'String',[{'Manually choose seeds'},remstims]);
     
+    
+    % update cons
+    if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
+        directory=get(handles.patdir_choosebox,'String');
+        [~,ptname]=fileparts(directory);
+        selectedparc='nan';
+        options.prefs=ea_prefs(ptname);
+        [mdl,sf]=ea_genmodlist([directory,filesep],selectedparc,options);
+        ea_updatemodpopups(mdl,sf,handles);
+    end
+    
+    
 end
+
+function ea_updatemodpopups(mdl,sf,handles)
+
+set(handles.fiberspopup,'String',mdl(sf==1));
+set(handles.fmripopup,'String',mdl(sf==2));
+if isempty(get(handles.fiberspopup,'String'))
+    set(handles.fiberspopup,'String','No structural connectome found.');
+end
+if isempty(get(handles.fmripopup,'String'))
+    set(handles.fmripopup,'String','No functional connectome found.');
+end
+
+
 
 function remstims=ea_prependvat(remstims)
 for rs=1:length(remstims)

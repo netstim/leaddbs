@@ -7,11 +7,14 @@ function cs_dmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,
 [sfile,roilist]=ea_handleseeds(sfile);
 
 
-
+cbase=ea_getconnectomebase;
+if isdeployed
+    cbase=dfold;
+end
 
 switch cmd
     case 'seed'
-        map=ea_load_nii([dfold,'spacedefinitions',filesep,space,'.nii']);
+        map=ea_load_nii([cbase,'spacedefinitions',filesep,space,'.nii']);
         cfile=[dfold,'dMRI',filesep,cname];
         load(cfile,'fibers');
         mapsz=size(map.img);

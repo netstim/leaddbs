@@ -342,27 +342,8 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'mapper');
 ea_getpatients(handles);
-% update cons
-if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
-    directory=get(handles.patdir_choosebox,'String');
-    [~,ptname]=fileparts(directory);
-    selectedparc='nan';
-    options.prefs=ea_prefs(ptname);
-    [mdl,sf]=ea_genmodlist(directory,selectedparc,options);
-    ea_updatemodpopups(mdl,sf,handles);
-end
+
 ea_busyaction('off',handles.leadfigure,'mapper');
-
-function ea_updatemodpopups(mdl,sf,handles)
-
-set(handles.fiberspopup,'String',mdl(sf==1));
-set(handles.fmripopup,'String',mdl(sf==2));
-if isempty(get(handles.fiberspopup,'String'))
-    set(handles.fiberspopup,'String','No structural connectome found.');
-end
-if isempty(get(handles.fmripopup,'String'))
-    set(handles.fmripopup,'String','No functional connectome found.');
-end
 
 % --- Executes on selection change in recentpts.
 function recentpts_Callback(hObject, eventdata, handles)

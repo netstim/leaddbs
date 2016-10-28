@@ -26,7 +26,7 @@ end
         else
             switch vatmodality
                 case 'Patient-specific fiber tracts'
-                    fibersfile=[directory,'connectomes',filesep,'data',filesep,'dMRI',filesep,options.prefs.FTR_normalized];
+                    fibersfile=[directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized];
                 otherwise
                     fibersfile=[ea_getconnectomebase('dmri'),vatmodality,'.mat'];
             end

@@ -368,7 +368,7 @@ end
 vatfv=isosurface(xg,yg,zg,eg,0.75);
 
 vatvolume=sum(eg(:))*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
-S(side).volume=vatvolume;
+S.volume(side)=vatvolume;
 
 
 chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);

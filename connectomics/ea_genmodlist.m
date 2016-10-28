@@ -3,9 +3,10 @@ cnt=1;
 modlist=cell(0);
 sf=[];
 % patientspecific part
+
 if exist('directory','var')
     % check if pat-specific fibertracts are present:
-    if exist([directory,'connectomes',filesep,'data',filesep,'dMRI',options.prefs.FTR_normalized],'file');
+    if exist([directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],'file');
         modlist{cnt}='Patient-specific fiber tracts';
         sf(cnt)=1;
         cnt=cnt+1;
