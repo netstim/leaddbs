@@ -175,22 +175,22 @@ for m=1:length(mults)
     try movefile([directory,'raw_',mults{m}],[directory,mults{m}]); end
     copyfile([directory,mults{m}],[directory,'raw_',mults{m}]);
     switch options.coregmr.method
-        case 1 % SPM
+        case 'Coreg MRIs: SPM' % SPM
             ea_docoreg_spm([directory,mults{m}],[directory,options.prefs.prenii_unnormalized],'nmi',1)
-        case 2 % ANTs
+        case 'Coreg MRIs: ANTs' % ANTs
             ea_ants([directory,options.prefs.prenii_unnormalized],...
                 [directory,mults{m}],...
                 [directory,mults{m}],0);
-        case 3 % BRAINSFit
+        case 'Coreg MRIs: BRAINSFIT' % BRAINSFit
             ea_brainsfit([directory,options.prefs.prenii_unnormalized],...
                 [directory,mults{m}],...
                 [directory,mults{m}],0);
-        case 4 % Hybrid SPM -> ANTs
+        case 'Coreg MRIs: Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
             ea_docoreg_spm([directory,mults{m}],[directory,options.prefs.prenii_unnormalized],'nmi',0)
             ea_ants([directory,options.prefs.prenii_unnormalized],...
                 [directory,mults{m}],...
                 [directory,mults{m}],0);
-        case 5 % Hybrid SPM -> Brainsfit
+        case 'Coreg MRIs: Hybrid SPM & ' % Hybrid SPM -> Brainsfit
             ea_docoreg_spm([directory,mults{m}],[directory,options.prefs.prenii_unnormalized],'nmi',0)
             ea_brainsfit([directory,options.prefs.prenii_unnormalized],...
                 [directory,mults{m}],...

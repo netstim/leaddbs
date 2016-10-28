@@ -164,6 +164,13 @@ for nativemni=nm % switch between native and mni space atlases.
                         rndfactor=0.2;
                 end
                 end
+                
+                try
+                    if ~options.prefs.d3.colorjitter
+                       rndfactor=0; 
+                    end
+                end
+                    
                 cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1) ... % C-Data for surface
                     +randn(length(fv.vertices),1)*rndfactor)';
                 XYZ=atlases.XYZ{atlas,side};

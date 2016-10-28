@@ -39,9 +39,10 @@ catch
     options.normalize.check=0;
 end
 try
-    options.coregmr.method=get(handles.coregmrpopup,'Value');
+    options.coregmr.method=get(handles.coregmrpopup,'String');
+    options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
 catch
-    options.coregmr.method=0;
+    options.coregmr.method='';
 end
 try % not working when calling from lead_connectome
     % coreg CT

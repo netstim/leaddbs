@@ -18,7 +18,7 @@ else
 end
 
 switch options.coregmr.method
-    case 1 % SPM
+    case 'Coreg MRIs: SPM' % SPM
         
         ea_docoreg_spm(moving,fixed,'nmi',1,otherfiles)
         movefile([directory,'r',mfilen],ofile);
@@ -28,21 +28,22 @@ switch options.coregmr.method
            movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
            end
         end
-    case 2 % ANTs
+        
+    case 'Coreg MRIs: ANTs' % ANTs
         
         ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 3 % BRAINSFit
+    case 'Coreg MRIs: BRAINSFIT' % BRAINSFit
         ea_brainsfit(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 4 % Hybrid SPM -> ANTs
+    case 'Coreg MRIs: Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
         ea_docoreg_spm(moving,fixed,'nmi',0,otherfiles)
         ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 5 % Hybrid SPM -> Brainsfit
+    case 'Coreg MRIs: Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
         ea_docoreg_spm(moving,fixed,'nmi',0,otherfiles)
         ea_brainsfit(fixed,...
             moving,...
