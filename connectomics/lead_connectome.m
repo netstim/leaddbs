@@ -109,7 +109,7 @@ catch
 end
 lc2handles(lc,handles);
 
-set(handles.coregmrpopup,'Value',2); % default ANTs
+ea_init_coregmrpopup(handles);
 
 if isempty(varargin) % "standard alone" mode, i.e. not dependend from lead
     isindependent=1;

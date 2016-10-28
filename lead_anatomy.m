@@ -116,7 +116,7 @@ axis off;
 axis equal;
 set(handles.leadfigure,'name','Lead-Anatomy','color','w');
 
-set(handles.coregmrpopup,'Value',2); % default ANTs
+ea_init_coregmrpopup(handles);
 
 % add norm methods to menu
 
