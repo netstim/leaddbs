@@ -16,6 +16,7 @@ switch cmd
     case 'seed'
         map=ea_load_nii([cbase,'spacedefinitions',filesep,space,'.nii']);
         cfile=[dfold,'dMRI',filesep,cname];
+        
         load(cfile,'fibers');
         mapsz=size(map.img);
 

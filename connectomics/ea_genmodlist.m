@@ -34,9 +34,13 @@ end
 fc=dir([ea_getconnectomebase('fmri'),filesep,'']);
 for fdf=1:length(fc)
     if fc(fdf).isdir && ~strcmp(fc(fdf).name(1),'.')
-    [~,fn]=fileparts(fc(fdf).name);
-    modlist{cnt}=fn;
-    sf(cnt)=2;
-    cnt=cnt+1;
+        
+        d=load([ea_getconnectomebase('fmri'),filesep,fc(fdf).name,filesep,'dataset_info.mat']);
+        [~,fn]=fileparts(fc(fdf).name);
+        for ds=1:length(d.dataset.subsets)
+            modlist{cnt}=[fn,' > ',d.dataset.subsets(ds).name];
+            sf(cnt)=2;
+            cnt=cnt+1;
+        end
     end
 end

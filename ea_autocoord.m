@@ -31,11 +31,8 @@ end
 
 % check connectome-mapper tags
 if isfield(options,'lcm')
-    if options.lcm.func.do
-        ea_lcm_func(options);
-    end
-    if options.lcm.struc.do
-        ea_lcm_struc(options);
+    if options.lcm.func.do || options.lcm.struc.do
+        ea_lcm(options);
     end
 end
 

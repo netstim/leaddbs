@@ -22,30 +22,32 @@ else
     end
 end
 
+if ismember('>',cname)
+    delim=strfind(cname,'>');
+    subset=cname(delim+2:end);
+    cname=cname(1:delim-2);
+end
+
+
 dfoldsurf=[dfold,'fMRI',filesep,cname,filesep,'surf',filesep];
 dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to /vol subdir.
 
 
-
-msk=ea_load_nii([dfold,'spacedefinitions',filesep,'222.nii']);
-lmsk=ea_load_nii([dfold,'spacedefinitions',filesep,'lh_fsaverage.nii']);
-rmsk=ea_load_nii([dfold,'spacedefinitions',filesep,'rh_fsaverage.nii']);
-
-load([dfoldvol,'outidx.mat']);
-load([dfoldvol,'subIDs.mat']);
-load([dfoldsurf,'subIDs.mat']);
+d=load([dfold,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
+dataset=d.dataset;
+clear d;
 if exist('outputmask','var')
     if ~isempty(outputmask)
-    omask=ea_load_nii(outputmask);
-    omaskidx=find(omask.img(:));
-    [~,maskuseidx]=ismember(omaskidx,outidx);
+        omask=ea_load_nii(outputmask);
+        omaskidx=find(omask.img(:));
+        [~,maskuseidx]=ismember(omaskidx,dataset.vol.outidx);
     else
-        omaskidx=outidx;
-        maskuseidx=1:length(outidx);
+        omaskidx=dataset.vol.outidx;
+        maskuseidx=1:length(dataset.vol.outidx);
     end
 else
-    omaskidx=outidx; % use all.
-        maskuseidx=1:length(outidx);
+    omaskidx=dataset.vol.outidx; % use all.
+        maskuseidx=1:length(dataset.vol.outidx);
 end
 
 [sfile,roilist]=ea_handleseeds(sfile);
@@ -77,10 +79,9 @@ end
 
 for s=1:length(sfile)
     seed{s}=ea_load_nii(ea_niigz(sfile{s}));
-    
     [~,seedfn{s}]=fileparts(sfile{s});
     
-    sweights=seed{s}.img(outidx);
+    sweights=seed{s}.img(dataset.vol.outidx);
     sweights(isnan(sweights))=0;
     sweights=double(sweights);
     % assure sum of sweights is 1
@@ -93,9 +94,9 @@ end
 numseed=s;
 
 
-pixdim=length(outidx);
+pixdim=length(dataset.vol.outidx);
 
-numsub=length(subIDs);
+numsub=length(dataset.vol.subIDs);
 switch cmd
     case {'seed','seedvox_ram','seedvox_noram'}
         for s=1:numseed
@@ -119,9 +120,22 @@ disp([num2str(numseed),' seeds, command = ',cmd,'.']);
 
 ea_dispercent(0,'Iterating through subjects');
 
-for mcfi=1:numsub
+if ~exist('subset','var') % use all subjects
+    usesubjects=1:numsub;
+else
+    for ds=1:length(dataset.subsets)
+        if strcmp(subset,dataset.subsets(ds).name)
+            usesubjects=dataset.subsets(ds).subs;
+            break
+        end
+    end
+end
+
+
+
+for mcfi=usesubjects
     ea_dispercent(mcfi/numsub);
-    howmanyruns=length(subIDs{mcfi})-1;
+    howmanyruns=length(dataset.vol.subIDs{mcfi})-1;
     switch cmd
         
         case 'seed'
@@ -129,14 +143,14 @@ for mcfi=1:numsub
             for s=1:numseed
                 thiscorr=zeros(length(omaskidx),howmanyruns);
                 for run=1:howmanyruns
-                    load([dfoldvol,subIDs{mcfi}{run+1}])
+                    load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
                     gmtc=single(gmtc);
                     stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s});
                     thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
                     
                     % include surface:
-                    ls=load([dfoldsurf,lsurfIDs{mcfi}{run+1}]);
-                    rs=load([dfoldsurf,rsurfIDs{mcfi}{run+1}]);
+                    ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
+                    rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
                     rs.gmtc=single(rs.gmtc);
                     ls.gmtc=single(ls.gmtc);
                     ls.thiscorr(:,run)=corr(stc',ls.gmtc','type','Pearson');
@@ -149,9 +163,9 @@ for mcfi=1:numsub
                 
                 
                 if writeoutsinglefiles
-                    ccmap=msk;
+                    ccmap=dataset.vol.space;
                     ccmap.img=single(ccmap.img);
-                    ccmap.fname=[outputfolder,seedfn{s},'_',subIDs{mcfi}{1},'_corr.nii'];
+                    ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr.nii'];
                     ccmap.img(omaskidx)=fX{s}(:,mcfi);    
                     spm_write_vol(ccmap,ccmap.img);
                 end
@@ -164,7 +178,7 @@ for mcfi=1:numsub
 
                        thiscorr=zeros(length(omaskidx),howmanyruns);
                 for run=1:howmanyruns
-                    load([dfoldvol,subIDs{mcfi}{run+1}])
+                    load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
                     gmtc=single(gmtc);
                     
                     switch cmd
@@ -195,11 +209,10 @@ for mcfi=1:numsub
                 fX{s}(:,mcfi)=mean(thiscorr,2);
 
                 if writeoutsinglefiles
-                    ccmap=msk;
+                    ccmap=dataset.vol.space;
                     ccmap.img=single(ccmap.img);
-                    ccmap.fname=[outputfolder,seedfn{s},'_',subIDs{mcfi}{1},'_corr.nii'];
+                    ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr.nii'];
                     ccmap.img(omaskidx)=fX{s}(:,mcfi);    
-
                     spm_write_vol(ccmap,ccmap.img);
                 end
             end
@@ -207,7 +220,7 @@ for mcfi=1:numsub
             
         otherwise
             for run=1:howmanyruns
-                load([dfoldvol,subIDs{mcfi}{run+1}])
+                load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
                 gmtc=single(gmtc);
                 
                 for s=1:numseed
@@ -227,7 +240,7 @@ for mcfi=1:numsub
             X(:)=thiscorr;
             fX(:,mcfi)=X(logical(triu(ones(numseed),1)));
             if writeoutsinglefiles
-                save([outputfolder,addp,'corrMx_',subIDs{mcfi}{1},'.mat'],'X','-v7.3');
+                save([outputfolder,addp,'corrMx_',dataset.vol.subIDs{mcfi}{1},'.mat'],'X','-v7.3');
             end
     end
 end
@@ -238,7 +251,7 @@ switch cmd
         for s=1:numseed
             % export mean            
             M=nanmean(fX{s}');
-            mmap=msk;
+            mmap=dataset.vol.space;
             mmap.dt=[16,0];
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
@@ -253,7 +266,7 @@ switch cmd
             
             % export variance
             M=nanvar(fX{s}');
-            mmap=msk;
+            mmap=dataset.vol.space;
             mmap.dt=[16,0];
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
@@ -268,7 +281,7 @@ switch cmd
             
             % lh surf
             lM=nanmean(lh.fX{s}');
-            lmmap=lmsk;
+            lmmap=dataset.surf.l.space;
             lmmap.dt=[16,0];
             lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
             lmmap.img=single(lmmap.img);
@@ -282,7 +295,7 @@ switch cmd
             
             % rh surf
             rM=nanmean(rh.fX{s}');
-            rmmap=rmsk;
+            rmmap=dataset.surf.r.space;
             rmmap.dt=[16,0];
             rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
             rmmap.img=single(rmmap.img);
@@ -303,7 +316,7 @@ switch cmd
             % export fz-mean
             
             M=nanmean(fX{s}');
-            mmap=msk;
+            mmap=dataset.vol.space;
             mmap.dt=[16,0];
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
@@ -317,7 +330,7 @@ switch cmd
             
             % lh surf
             lM=nanmean(lh.fX{s}');
-            lmmap=lmsk;
+            lmmap=dataset.surf.l.space;
             lmmap.dt=[16,0];
             lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
             lmmap.img=single(lmmap.img);
@@ -331,7 +344,7 @@ switch cmd
             
             % rh surf
             rM=nanmean(rh.fX{s}');
-            rmmap=rmsk;
+            rmmap=dataset.surf.r.space;
             rmmap.dt=[16,0];
             rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
             rmmap.img=single(rmmap.img);
@@ -347,7 +360,7 @@ switch cmd
             % export T
             
             [~,~,~,tstat]=ttest(fX{s}');
-            tmap=msk;
+            tmap=dataset.vol.space;
             tmap.img(:)=0;
             tmap.dt=[16,0];
             tmap.img=single(tmap.img);
@@ -368,7 +381,7 @@ switch cmd
             
             % lh surf
             [~,~,~,ltstat]=ttest(lh.fX{s}');
-            lmmap=lmsk;
+            lmmap=dataset.surf.l.space;
             lmmap.dt=[16,0];
             lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
             lmmap.img=single(lmmap.img);
@@ -382,7 +395,7 @@ switch cmd
             
             % rh surf
             [~,~,~,rtstat]=ttest(rh.fX{s}');
-            rmmap=rmsk;
+            rmmap=dataset.surf.r.space;
             rmmap.dt=[16,0];
             rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
             rmmap.img=single(rmmap.img);

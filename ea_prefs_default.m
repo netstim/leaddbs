@@ -63,6 +63,9 @@ prefs.lc.func.bphighcutoff=0.08;
 prefs.lc.func.bplowcutoff=0.009;
 prefs.lc.datadir=[ea_getearoot,'connectomes',filesep];
 
+%% connectome mapper settings:
+prefs.lcm.vatseed='binary'; % set to 'efield_gauss' to use weighted seed of normalized E-field (or 'efield' to use weighted seed of unmodified e-field ? not recommended).
+
 %% DTI-files:
 prefs.b0='b0.nii';
 prefs.fa='fa.nii';

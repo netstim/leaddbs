@@ -9,8 +9,14 @@ disp('Running structural connectivity...');
 if isempty(options.uipatdirs)
     base=ea_getconnectomebase();
 else
-    base=[options.uipatdirs,'connectomes',filesep,'data',filesep];
+    base=[options.root,options.patientname,filesep,'connectomes',filesep];
 end
+
+if strcmp(options.lcm.struc.connectome,'Patient-specific fiber tracts')
+    options.lcm.struc.connectome=options.prefs.FTR_normalized;
+end
+keyboard
+
 cs_dmri_conseed(base,options.lcm.struc.connectome,...
     options.lcm.seeds,...
     ea_lcm_resolvecmd(options.lcm.cmd),...
@@ -31,3 +37,4 @@ switch sp
     case 3
         fi=['555.nii'];
 end
+
