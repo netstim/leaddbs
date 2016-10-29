@@ -223,8 +223,6 @@ try
         if ~strcmp(options.lcm.seeddef,'vats')
             try
             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
-            catch
-               ea_error('Please define a seed first.'); 
             end
         else
             options.lcm.odir='';

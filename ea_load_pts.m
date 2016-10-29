@@ -44,13 +44,14 @@ if isfield(handles,'seeddefpopup')
         remstims(todel)=[];
     end
     end
+    % for now only check first subject for pt. specific fibers..
     remstims=ea_prependvat(remstims);
     set(handles.seeddefpopup,'String',[{'Manually choose seeds'},remstims]);
-    
+    ea_resetpopup(handles.seeddefpopup);
     
     % update cons
     if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
-        directory=get(handles.patdir_choosebox,'String');
+        directory=uipatdir{1};
         [~,ptname]=fileparts(directory);
         selectedparc='nan';
         options.prefs=ea_prefs(ptname);
@@ -59,17 +60,6 @@ if isfield(handles,'seeddefpopup')
     end
     
     
-end
-
-function ea_updatemodpopups(mdl,sf,handles)
-
-set(handles.fiberspopup,'String',mdl(sf==1));
-set(handles.fmripopup,'String',mdl(sf==2));
-if isempty(get(handles.fiberspopup,'String'))
-    set(handles.fiberspopup,'String','No structural connectome found.');
-end
-if isempty(get(handles.fmripopup,'String'))
-    set(handles.fmripopup,'String','No functional connectome found.');
 end
 
 

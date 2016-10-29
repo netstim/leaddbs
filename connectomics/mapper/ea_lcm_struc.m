@@ -15,7 +15,7 @@ end
 if strcmp(options.lcm.struc.connectome,'Patient-specific fiber tracts')
     options.lcm.struc.connectome=options.prefs.FTR_normalized;
 end
-keyboard
+
 
 cs_dmri_conseed(base,options.lcm.struc.connectome,...
     options.lcm.seeds,...
