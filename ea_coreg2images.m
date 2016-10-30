@@ -28,7 +28,11 @@ switch options.coregmr.method
            movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
            end
         end
+    case 'Coreg MRIs: FSL' % FSL
         
+        ea_flirt(fixed,...
+            moving,...
+            ofile,writeoutmat,otherfiles);        
     case 'Coreg MRIs: ANTs' % ANTs
         
         ea_ants(fixed,...
@@ -41,6 +45,11 @@ switch options.coregmr.method
     case 'Coreg MRIs: Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
         ea_docoreg_spm(moving,fixed,'nmi',0,otherfiles)
         ea_ants(fixed,...
+            moving,...
+            ofile,writeoutmat,otherfiles);
+    case 'Coreg MRIs: Hybrid SPM & FSL' % Hybrid SPM -> FSL
+        ea_docoreg_spm(moving,fixed,'nmi',0,otherfiles)
+        ea_flirt(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Coreg MRIs: Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit

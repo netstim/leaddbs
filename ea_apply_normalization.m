@@ -17,6 +17,10 @@ switch whichnormmethod
     case ea_getantsnormfuns
 
         ea_ants_applytransforms(options);
+        
+    case ea_getfslnormfuns
+        
+        ea_fsl_applytransforms(options);
 
     otherwise
         switch options.modality

@@ -41,19 +41,23 @@ try
 end
 
 switch options.coregmr.method
-    case 1 % SPM
+    case 'Coreg MRIs: SPM' % SPM
         ea_coregmr_spm(options,automan,doreslice);
         return
-    case 2 % ANTs
+        
+    case 'Coreg MRIs: FSL' % FSL
+        ea_coregmr_flirt(options);
+        return
+    case 'Coreg MRIs: ANTs' % ANTs
         ea_coregmr_ants(options);
         return
-    case 3 % Brainsfit
+    case 'Coreg MRIs: BRAINSFIT' % BRAINSFit
         ea_coregmr_brainsfit(options);
         return
-    case 4 % Hybrid SPM & ANTs
+    case 'Coreg MRIs: Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
         ea_coregmr_spm(options,automan,0); % dont use doreslice here to refrain for doing two interpolations.
         ea_coregmr_ants(options);
-    case 5 % Hybrid SPM & Brainsfit
+    case 'Coreg MRIs: Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
         ea_coregmr_spm(options,automan,0); % dont use doreslice here to refrain for doing two interpolations.
         ea_coregmr_brainsfit(options);
     case 6 % Do nothing
