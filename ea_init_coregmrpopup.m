@@ -10,4 +10,4 @@ cmethods={'Coreg MRIs: SPM',...
     'Do not coregister MRIs (already coregistered)'};
 
 set(handles.coregmrpopup,'String',cmethods)
-set(handles.coregmrpopup,'Value',2); % default ANTs
+set(handles.coregmrpopup,'Value',3); % default ANTs
