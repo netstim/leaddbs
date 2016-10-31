@@ -41,6 +41,8 @@ fprintf(fID,'%s\n',['addpath(''',fileparts(which('spm')),''');']);
 fprintf(fID,'\n');
 if exist('clusterfunctionname','var') % submit to cluster instead of directly running
     fprintf(fID,'%s\n',['% options.uipatdirs=ea_checknoerrorfolders(options.uipatdirs); % uncomment this line to only apply to folders that ran into errors the last time.']);
+    fprintf(fID,'%s\n',['% options.uipatdirs=ea_checknofilefolders(options.uipatdirs,filename); % uncomment this line to only apply to folders that MISS a certain file.']);
+    fprintf(fID,'%s\n',['% options.uipatdirs=ea_checkfilefolders(options.uipatdirs,filename); % uncomment this line to only apply to folders that CONTAIN a certain file.']);
 end
 fprintf(fID,'\n');
 
