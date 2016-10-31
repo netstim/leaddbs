@@ -88,6 +88,7 @@ prefs.normalize.default='ea_normalize_ants';
 prefs.normalize.inverse.warp='inverse'; % set to 'tpm' in case you wish to create a atlas-specific tpm to warp atlases, set to 'inverse' to apply the inverse transform of your normalization.
 prefs.normalize.inverse.customtpm=0; % set to 1 if custom TPM shall be built for inverse warpings. Only applies if the above is set to 'tpm'.
 prefs.normalize.createwarpgrids=0; % set to 1 to create grid files that show deformation fields in "Show Normalization" option.
+prefs.normalize.fsl.warpres=8; % Defines the warp resolution in FSL warps.
 
 %% Coregistration (CT/MR):
 prefs.ctcoreg.default='ea_coregctmri_ants';

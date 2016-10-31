@@ -96,6 +96,25 @@ if ~isempty(xfrm)
             % LPS to RAS
             XYZ_mm(1,:)=-XYZ_mm(1,:);
             XYZ_mm(2,:)=-XYZ_mm(2,:);
+        elseif ismember(whichnormmethod,ea_getfslnormfuns)
+            
+            [~,fn]=fileparts(xfrm);
+            if ~isempty(strfind(fn,'inv'))
+                useinverse=1;
+            else
+                useinverse=0;
+            end
+            V=spm_vol(trg);
+            XYZ_mm_beforetransform=V(1).mat*XYZ_vx;
+            prefs=ea_prefs('');
+            hdr=cbiReadNiftiHeader(V.fname);
+            [~,preniibase]=fileparts(prefs.gprenii);
+
+            if ~useinverse
+                XYZ_mm = fslApplyWarpCoords(XYZ_mm_beforetransform,ea_detvoxsize(V(1).mat),0.5, [directory,preniibase,'Composite.nii'], [directory,preniibase,'WC.nii'], hdr, 1);
+            else
+                XYZ_mm = fslApplyWarpCoords(XYZ_mm_beforetransform,ea_detvoxsize(V(1).mat),0.5, [directory,preniibase,'InverseComposite.nii'], [directory,preniibase,'InverseWC.nii'], hdr, 1);
+            end
         else
             XYZ_mm = hdw_trgvx2srcmm(XYZ_vx, xfrm);
         end

@@ -124,7 +124,7 @@ for fi=1:length(fis)
                    ' -w ',ea_path_helper(pth),filesep,fn,ext,''];
            else
                    tr=[' -r ',refim,...
-                       ' -w ',ea_path_helper([directory,glprebase]),'InverseComposite',warpsuffix,''];
+                       ' -w ',ea_path_helper([directory,glprebase]),'InverseComposite.nii'];
            end
        else
            if isempty(refim)
@@ -137,7 +137,7 @@ for fi=1:length(fis)
                    ' -w ',ea_path_helper(pth),filesep,fn,ext,''];
            else
                    tr=[' -r ',refim,...
-                       ' -w ',ea_path_helper([directory,glprebase]),'Composite',warpsuffix,''];
+                       ' -w ',ea_path_helper([directory,glprebase]),'Composite.nii'];
            end
        end
 
