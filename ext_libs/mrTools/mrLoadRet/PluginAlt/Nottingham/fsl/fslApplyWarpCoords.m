@@ -14,7 +14,7 @@
 %
 % $Id: fslApplyWarp.m 2107 2011-04-17 19:49:52Z julien $
 
-function warpedCoords = fslApplyWarpCoords(coords,coordsVoxelSize,warpResolution, warpCoefFilename, tempFilename, hdr, verbose)
+function warpedCoords = fslApplyWarpCoords(coords,coordsVoxelSize,warpResolution, inversewarpfile, hdr)
 
 
 if ieNotDefined('verbose')
@@ -28,34 +28,11 @@ end
     hdr.sform44 = hdr.sform44*diag([1./scalingFactor 1]);
     hdr.qform44 = hdr.sform44*diag([1./scalingFactor 1]);
 
-if ~exist(tempFilename,'file') % only needs to be done once..
-   
-    
-    cbiWriteNifti(tempFilename, data, hdr,[],[],[],verbose);
-    clear data
-    
-    if ispc
-        FNIRTUTILS=ea_path_helper([ea_getearoot,'ext_libs',filesep,'fsl',filesep,'fnirtfileutils','.exe']);
-    else
-        FNIRTUTILS=ea_path_helper([ea_getearoot,'ext_libs',filesep,'fsl',filesep,'fnirtfileutils','.', computer('arch')]);
-    end
-    
-    command =  sprintf(' --in=%s --ref=%s --out=%s  --withaff', warpCoefFilename, tempFilename, tempFilename);
-    if verbose
-        fprintf('(fslApplyWarpCoords) Computing FNIRT warp fields at a resolution of %s mm:\n',mat2str(hdr.pixdim(2:4)));
-        disp(['  ' command])
-    end;
-    lcmd=[FNIRTUTILS,command];
-    if ~ispc
-        system(['bash -c "', lcmd, '"']);
-    else
-        system(lcmd);
-    end
-end
+
   
   
 %read the warped fields
-warpFields = mlrImageReadNifti(tempFilename);
+warpFields = mlrImageReadNifti(inversewarpfile);
 
 scaledCoords = repmat([scalingFactor 1]',1,size(coords,2)).*(coords-.5) + .5;
 

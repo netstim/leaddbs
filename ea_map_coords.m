@@ -111,9 +111,11 @@ if ~isempty(xfrm)
             [~,preniibase]=fileparts(prefs.gprenii);
 
             if ~useinverse
-                XYZ_mm = fslApplyWarpCoords(XYZ_mm_beforetransform,ea_detvoxsize(V(1).mat),0.5, [directory,preniibase,'Composite.nii'], [directory,preniibase,'WC.nii'], hdr, 1);
+                ea_fsl_gencoordwarpfile(1, [directory,preniibase,'Composite.nii'],[directory,preniibase,'CompositeCoords.nii'], hdr);
+                XYZ_vx_trsf = fslApplyWarpCoords(XYZ_vx,ea_detvoxsize(V(1).mat),1, [directory,preniibase,'CompositeCoords.nii'], hdr);
             else
-                XYZ_mm = fslApplyWarpCoords(XYZ_mm_beforetransform,ea_detvoxsize(V(1).mat),0.5, [directory,preniibase,'InverseComposite.nii'], [directory,preniibase,'InverseWC.nii'], hdr, 1);
+                ea_fsl_gencoordwarpfile(1, [directory,preniibase,'InverseComposite.nii'],[directory,preniibase,'InverseCompositeCoords.nii'], hdr);
+                XYZ_vx_trsf = fslApplyWarpCoords(XYZ_vx,ea_detvoxsize(V(1).mat),1, [directory,preniibase,'CompositeCoords.nii'], hdr);
             end
         else
             XYZ_mm = hdw_trgvx2srcmm(XYZ_vx, xfrm);
