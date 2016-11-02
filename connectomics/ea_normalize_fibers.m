@@ -97,21 +97,7 @@ end
 
 %% map from anat voxel space to mni mm space
 display(sprintf('\nPoints normalization...'));
-switch whichnormmethod
-    case {'ea_normalize_spmdartel','ea_normalize_spmnewseg'}
-        wfibsmm_mni = vox2mm_norm(wfibsvox_anat,[directory,'y_ea_inv_normparams.nii']);
-    case ea_getantsnormfuns
-        % RAS-LPS conversion
-        wfibsmm_anat(:,1)=-wfibsmm_anat(:,1);
-        wfibsmm_anat(:,2)=-wfibsmm_anat(:,2);
-        
-        % Normalize to MNI space
-        wfibsmm_mni = ea_ants_applytransforms_to_points(directory,wfibsmm_anat,1);
-        
-        % LPS-RAS conversion
-        wfibsmm_mni(:,1) = -wfibsmm_mni(:,1);
-        wfibsmm_mni(:,2) = -wfibsmm_mni(:,2);
-end
+wfibsmm_mni = ea_map_coords(wfibsvox_anat',refanat,'y_ea_inv_normparams.nii')';
 
 %% map from mni mm space to mni voxel space
 mniaffine=spm_get_space(refnorm);
@@ -228,21 +214,9 @@ switch options.coregmr.method
 
         b02anat([7,10,15])=b02anat([7,10,15])*-1;
         b02anat=Vanat.mat\b02anat*Vb0.mat;
-    otherwise % default use SPM ? BRAINSFit not supported here
+    otherwise % default use SPM, BRAINSFit not supported here
         display('Register b0 to anat...');
         x=spm_coreg(Vb0,Vanat);
         b02anat=Vanat.mat\spm_matrix(x(:)')*Vb0.mat;
 end
-    save([directory,'b02anat.mat'],'b02anat');
-
-function mm_norm = vox2mm_norm(vox, V)
-% returns normalized mm coordinates based on deformation field
-
-if ischar(V)
-    V = spm_vol([repmat(V,3,1),[',1,1';',1,2';',1,3']]);
-end
-
-vox = double(vox);
-mm_norm = [spm_sample_vol(V(1),vox(:,1),vox(:,2),vox(:,3),1),...
-          spm_sample_vol(V(2),vox(:,1),vox(:,2),vox(:,3),1),...
-          spm_sample_vol(V(3),vox(:,1),vox(:,2),vox(:,3),1)];
+save([directory,'b02anat.mat'],'b02anat');

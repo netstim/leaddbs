@@ -1,7 +1,7 @@
 function output=ea_ants_applytransforms_to_points(varargin)
 % Wrapper for antsApplyTransformsToPoints
 
-subdir=varargin{1};
+subdir=fullfile(varargin{1},filesep);
 input=varargin{2};
 useinverse=varargin{3};
 if useinverse

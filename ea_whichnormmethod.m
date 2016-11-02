@@ -1,6 +1,6 @@
 function [whichnormmethod,template]=ea_whichnormmethod(directory)
 try
-    load([directory,'ea_normmethod_applied']);
+    load(fullfile(directory,'ea_normmethod_applied'));
     cnt=0;
     while 1
         whichnormmethod=norm_method_applied{end-cnt};

@@ -1,7 +1,7 @@
 function filepath = ea_path_helper(filepath)
 % handle special characters in the path for cli compatibility
 
-if isempty(fileparts(filepath))
+if isempty(fileparts(filepath)) && ~strcmp(filepath,'.')
     filepath = ['.', filesep, filepath];
 end
 

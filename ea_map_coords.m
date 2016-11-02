@@ -66,7 +66,10 @@ if ~isempty(xfrm)
         % HDW transformation field
 
         % check if ANTs has been used here:
-        directory=[fileparts(xfrm),filesep];
+        directory = fileparts(xfrm);
+        if isempty(directory)
+            directory = '.';
+        end
         if nargin<5
             whichnormmethod=ea_whichnormmethod(directory);
         else
@@ -111,11 +114,11 @@ if ~isempty(xfrm)
             [~,preniibase]=fileparts(prefs.gprenii);
 
             if ~useinverse
-                ea_fsl_gencoordwarpfile(1, [directory,preniibase,'Composite.nii'],[directory,preniibase,'CompositeCoords.nii'], hdr);
-                XYZ_vx_trsf = fslApplyWarpCoords(XYZ_vx,ea_detvoxsize(V(1).mat),1, [directory,preniibase,'CompositeCoords.nii'], hdr);
+                ea_fsl_gencoordwarpfile(1, [directory,filesep,preniibase,'Composite.nii'],[directory,filesep,preniibase,'CompositeCoords.nii'], hdr);
+                XYZ_vx_trsf = fslApplyWarpCoords(XYZ_vx,ea_detvoxsize(V(1).mat),1, [directory,filesep,preniibase,'CompositeCoords.nii'], hdr);
             else
-                ea_fsl_gencoordwarpfile(1, [directory,preniibase,'InverseComposite.nii'],[directory,preniibase,'InverseCompositeCoords.nii'], hdr);
-                XYZ_vx_trsf = fslApplyWarpCoords(XYZ_vx,ea_detvoxsize(V(1).mat),1, [directory,preniibase,'CompositeCoords.nii'], hdr);
+                ea_fsl_gencoordwarpfile(1, [directory,filesep,preniibase,'InverseComposite.nii'],[directory,filesep,preniibase,'InverseCompositeCoords.nii'], hdr);
+                XYZ_vx_trsf = fslApplyWarpCoords(XYZ_vx,ea_detvoxsize(V(1).mat),1, [directory,filesep,preniibase,'CompositeCoords.nii'], hdr);
             end
         else
             XYZ_mm = hdw_trgvx2srcmm(XYZ_vx, xfrm);
@@ -184,21 +187,19 @@ coord = sn.VF.mat * sn.Affine * coord;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function coord = hdw_trgvx2srcmm(coord, hdwim)
-% src_mm = hdw_trgvx2srcmm(trg_vx, y_hdw)
-inds = coord(1:3, :);
-% if abs(coord(1:3, :) - inds) > 0.01
-%     warning('map_coords:hdw_rounding',...
-%         'target voxel coords rounded for HDW')
-% end
+function src_mm = hdw_trgvx2srcmm(trg_vx, y_hdw)
+% returns normalized mm coordinates based on deformation field 'y_hdw'
 
-Vx=spm_vol([hdwim,',1,1']);
-Vy=spm_vol([hdwim,',1,2']);
-Vz=spm_vol([hdwim,',1,3']);
-
-for i = 1:size(coord, 2)
-    ind = inds(:, i);
-    coord(1,i)=spm_sample_vol(Vx,ind(1),ind(2),ind(3),1);
-    coord(2,i)=spm_sample_vol(Vy,ind(1),ind(2),ind(3),1);
-    coord(3,i)=spm_sample_vol(Vz,ind(1),ind(2),ind(3),1);
+if ischar(y_hdw)
+    y_hdw = spm_vol([repmat(y_hdw,3,1),[',1,1';',1,2';',1,3']]);
 end
+
+trg_vx = double(trg_vx);
+src_mm = [spm_sample_vol(y_hdw(1,:),trg_vx(1,:),trg_vx(2,:),trg_vx(3,:),1);...
+          spm_sample_vol(y_hdw(2,:),trg_vx(1,:),trg_vx(2,:),trg_vx(3,:),1);...
+          spm_sample_vol(y_hdw(3,:),trg_vx(1,:),trg_vx(2,:),trg_vx(3,:),1)];
+if size(trg_vx,1) == 4
+    src_mm = [src_mm; trg_vx(4,:)];
+end
+
+    
