@@ -68,7 +68,7 @@ end
 
 % now dartel-import the preoperative version.
 disp('Segmenting preoperative version (Import to DARTEL-space)');
-ea_newseg(directory,options.prefs.prenii_unnormalized,1,options);
+ea_newseg(directory,options.prefs.prenii_unnormalized,1,options,0);
 disp('Segmentation of preoperative MRI done.');
 
 % check if darteltemplate is available, if not generate one
