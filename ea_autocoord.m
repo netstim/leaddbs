@@ -106,12 +106,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     
     
     if options.normalize.check
-        
-        
         % export "control" niftis with wireframe of normal anatomy..
-        
         ea_show_normalization(options);
-        
+    end
+    if options.normalize.checkfigures
+        ea_gencoregcheckfigs(options); 
     end
     
     

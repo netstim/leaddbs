@@ -15,28 +15,29 @@ if ismember(whichnormmethod,ea_getantsnormfuns)
 else
     doreslice=0;
 end
-
-% restore raw files -> postop files from prior attempts. & make backups
-% from original files in any case.
-try
-    if exist([directory,'raw_',options.prefs.tranii_unnormalized],'file')
-        copyfile([directory,'raw_',options.prefs.tranii_unnormalized],[directory,options.prefs.tranii_unnormalized]);
-    else
-        copyfile([directory,options.prefs.tranii_unnormalized],[directory,'raw_',options.prefs.tranii_unnormalized]);
+if ~strcmp(options.coregmr.method,'Do not coregister MRIs (already coregistered)')
+    % restore raw files -> postop files from prior attempts. & make backups
+    % from original files in any case.
+    try
+        if exist([directory,'raw_',options.prefs.tranii_unnormalized],'file')
+            copyfile([directory,'raw_',options.prefs.tranii_unnormalized],[directory,options.prefs.tranii_unnormalized]);
+        else
+            copyfile([directory,options.prefs.tranii_unnormalized],[directory,'raw_',options.prefs.tranii_unnormalized]);
+        end
     end
-end
-try
-    if exist([directory,'raw_',options.prefs.cornii_unnormalized],'file')
-        copyfile([directory,'raw_',options.prefs.cornii_unnormalized],[directory,options.prefs.cornii_unnormalized]);
-    else
-        copyfile([directory,options.prefs.cornii_unnormalized],[directory,'raw_',options.prefs.cornii_unnormalized]);
+    try
+        if exist([directory,'raw_',options.prefs.cornii_unnormalized],'file')
+            copyfile([directory,'raw_',options.prefs.cornii_unnormalized],[directory,options.prefs.cornii_unnormalized]);
+        else
+            copyfile([directory,options.prefs.cornii_unnormalized],[directory,'raw_',options.prefs.cornii_unnormalized]);
+        end
     end
-end
-try
-    if exist([directory,'raw_',options.prefs.sagnii_unnormalized],'file')
-        copyfile([directory,'raw_',options.prefs.sagnii_unnormalized],[directory,options.prefs.sagnii_unnormalized]);
-    else
-        copyfile([directory,options.prefs.sagnii_unnormalized],[directory,'raw_',options.prefs.sagnii_unnormalized]);
+    try
+        if exist([directory,'raw_',options.prefs.sagnii_unnormalized],'file')
+            copyfile([directory,'raw_',options.prefs.sagnii_unnormalized],[directory,options.prefs.sagnii_unnormalized]);
+        else
+            copyfile([directory,options.prefs.sagnii_unnormalized],[directory,'raw_',options.prefs.sagnii_unnormalized]);
+        end
     end
 end
 

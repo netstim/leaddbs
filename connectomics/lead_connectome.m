@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 26-Aug-2016 12:03:57
+% Last Modified by GUIDE v2.5 02-Nov-2016 11:25:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -678,3 +678,12 @@ function normsettings_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 currentNormMethod=getappdata(handles.normsettings,'currentNormMethod');
 ea_shownormsettings(currentNormMethod,handles)
+
+
+% --- Executes on button press in checkfigures.
+function checkfigures_Callback(hObject, eventdata, handles)
+% hObject    handle to checkfigures (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkfigures
