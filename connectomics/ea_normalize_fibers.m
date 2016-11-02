@@ -97,7 +97,7 @@ end
 
 %% map from anat voxel space to mni mm space
 display(sprintf('\nPoints normalization...'));
-wfibsmm_mni = ea_map_coords(wfibsvox_anat',refanat,'y_ea_inv_normparams.nii')';
+wfibsmm_mni = ea_map_coords(wfibsvox_anat',refanat,[directory,'y_ea_inv_normparams.nii'])';
 
 %% map from mni mm space to mni voxel space
 mniaffine=spm_get_space(refnorm);
