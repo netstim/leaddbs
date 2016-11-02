@@ -27,16 +27,16 @@ else
     end
     job.warp.write=[1,1];
     spm_preproc_run(job); % run "Segment" in SPM 12 (Old "Segment" is now referred to as "Old Segment").
-    
+
     % delete unused files
     [~,fn]=fileparts(file);
-    try delete([directory,fn,'_seg8.mat']); end
-    
+    ea_delete([directory,fn,'_seg8.mat']);
+
     % del==0: keep the deformation field when for ea_normalize_spmnewseg
     if del
-        try delete([directory, 'y_', file]); end
-        try delete([directory, 'iy_', file]); end
+        ea_delete([directory, 'y_', file]);
+        ea_delete([directory, 'iy_', file]);
     end
-    
-    disp('Done.');    
+
+    disp('Done.');
 end

@@ -173,7 +173,7 @@ if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file');
     res=ea_gqi_reco([options.root,options.patientname,filesep,options.prefs.dti],btable,mean_diffusion_distance_ratio,options);
     save([options.root,options.patientname,filesep,ftrbase,'.fib'],'-struct','res','-v4');
     gzip([options.root,options.patientname,filesep,ftrbase,'.fib']);
-    try delete([options.root,options.patientname,filesep,ftrbase,'.fib']); end
+    ea_delete([options.root,options.patientname,filesep,ftrbase,'.fib']);
 
 end
 

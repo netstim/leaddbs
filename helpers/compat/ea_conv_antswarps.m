@@ -56,18 +56,18 @@ end
 warning('off')
 switch outputformat
     case '.nii.gz'
-        try delete([directory,'glanatComposite.h5']); end
-        try delete([directory,'glanatInverseComposite.h5']); end
+        ea_delete([directory,'glanatComposite.h5']);
+        ea_delete([directory,'glanatInverseComposite.h5']);
     case '.h5'
-        try delete([directory,'glanatComposite.nii.gz']); end
-        try delete([directory,'glanatInverseComposite.nii.gz']); end
+        ea_delete([directory,'glanatComposite.nii.gz']);
+        ea_delete([directory,'glanatInverseComposite.nii.gz']);
 end
-try delete([directory,'lanatComposite.h5']); end
-try delete([directory,'lanatInverseComposite.h5']); end
-try delete([directory,'glanat0GenericeAffine.mat']); end
-try delete([directory,'glanat1Warp.mat']); end
-try delete([directory,'glanat1InverseWarp.mat']); end
-try delete([directory,'lanat0GenericeAffine.mat']); end
-try delete([directory,'lanat1Warp.mat']); end
-try delete([directory,'lanat1InverseWarp.mat']); end
+ea_delete([directory,'lanatComposite.h5']);
+ea_delete([directory,'lanatInverseComposite.h5']);
+ea_delete([directory,'glanat0GenericeAffine.mat']);
+ea_delete([directory,'glanat1Warp.mat']);
+ea_delete([directory,'glanat1InverseWarp.mat']);
+ea_delete([directory,'lanat0GenericeAffine.mat']);
+ea_delete([directory,'lanat1Warp.mat']);
+ea_delete([directory,'lanat1InverseWarp.mat']);
 warning('on')

@@ -125,9 +125,7 @@ end
 
 %% mesoft part goes here
 [~,dfn]=fileparts(options.prefs.dti);
-if exist([directory,dfn,'_FTR.mat'],'file')
-    delete([directory,dfn,'_FTR.mat']);
-end
+ea_delete([directory,dfn,'_FTR.mat']);
 % addpath(genpath('/media/Data/MATLAB/release'));
 % addpath(genpath('/media/Data/MATLAB/marco_reisert'));
 % addpath(genpath('/media/Data/MATLAB/dti_tools'));

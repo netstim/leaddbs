@@ -2,7 +2,7 @@ function ea_nc_segment(options)
 %% neck-crop and segment MR-image
 
 directory = [options.root,options.patientname,filesep];
-    
+
 matlabbatch{1}.spm.tools.preproc8.channel.vols = {[directory,options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.tools.preproc8.channel.biasreg = 0.0001;
 matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm = 60;
@@ -43,10 +43,10 @@ Vskull=spm_vol([directory,'c4',options.prefs.prenii_unnormalized]);
 Xskull=spm_read_vols(Vskull);
 [xx,yy,zz]=ind2sub(size(Xskull),find(Xskull>0.2));
 
-try delete([directory,'c4',options.prefs.prenii_unnormalized]); end
-try delete([directory,'c5',options.prefs.prenii_unnormalized]); end
+ea_delete([directory,'c4',options.prefs.prenii_unnormalized]);
+ea_delete([directory,'c5',options.prefs.prenii_unnormalized]);
 [~,fn]=fileparts(options.prefs.prenii_unnormalized);
-try delete([directory,fn,'_seg8.mat']); end
+ea_delete([directory,fn,'_seg8.mat']);
 
 % crop:
 V=spm_vol([directory,options.prefs.prenii_unnormalized]);

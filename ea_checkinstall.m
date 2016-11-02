@@ -99,8 +99,8 @@ if success
         unzip(destination);
     end
 end
-    
-try delete(destination); end
+
+ea_delete(destination);
 
 
 function force=ea_alreadyinstalled(checkf,checkonly,robot)

@@ -352,21 +352,21 @@ end
 
 
 % now the files have been normalized, cleanup first
-try delete([options.root,options.prefs.patientdir,filesep,'w1',options.prefs.prenii_unnormalized]); end
-try delete([options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.prenii_unnormalized]); end
-try delete([options.root,options.prefs.patientdir,filesep,'w3w2w1',options.prefs.prenii_unnormalized]); end
+ea_delete([options.root,options.prefs.patientdir,filesep,'w1',options.prefs.prenii_unnormalized]);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.prenii_unnormalized]);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w3w2w1',options.prefs.prenii_unnormalized]);
 
-try delete([options.root,options.prefs.patientdir,filesep,'c1',options.prefs.tranii_unnormalized]); end
-try delete([options.root,options.prefs.patientdir,filesep,'c2',options.prefs.tranii_unnormalized]); end
+ea_delete([options.root,options.prefs.patientdir,filesep,'c1',options.prefs.tranii_unnormalized]);
+ea_delete([options.root,options.prefs.patientdir,filesep,'c2',options.prefs.tranii_unnormalized]);
 
 
-try delete([options.root,options.prefs.patientdir,filesep,'c1c2mask.nii']); end
-try delete([options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii']); end
-try delete([options.root,options.prefs.patientdir,filesep,'w2w1c1c2mask.nii']); end
+ea_delete([options.root,options.prefs.patientdir,filesep,'c1c2mask.nii']);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii']);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w2w1c1c2mask.nii']);
 
-try delete([options.root,options.prefs.patientdir,filesep,nm,'_sn.mat']); end
-try delete([options.root,options.prefs.patientdir,filesep,'w1',nm,'_sn.mat']); end
-try delete([options.root,options.prefs.patientdir,filesep,'w2w1',nm,'_sn.mat']); end
+ea_delete([options.root,options.prefs.patientdir,filesep,nm,'_sn.mat']);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w1',nm,'_sn.mat']);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w2w1',nm,'_sn.mat']);
 
 % make normalization "permanent" and include correct bounding box.
 for export=2:5
@@ -426,24 +426,24 @@ if ~strcmp(options.prefs.ctnii,['w',options.prefs.rawctnii_unnormalized])
 end
 
 % now the files have been normalized, cleanup.
-try delete([options.root,options.prefs.patientdir,filesep,'w1',options.prefs.tranii_unnormalized]); end
-try delete([options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.tranii_unnormalized]); end
-try delete([options.root,options.prefs.patientdir,filesep,'w3w2w1',options.prefs.tranii_unnormalized]); end
+ea_delete([options.root,options.prefs.patientdir,filesep,'w1',options.prefs.tranii_unnormalized]);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.tranii_unnormalized]);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w3w2w1',options.prefs.tranii_unnormalized]);
 
-try delete([options.root,options.prefs.patientdir,filesep,'c1',options.prefs.tranii_unnormalized]); end
-try delete([options.root,options.prefs.patientdir,filesep,'c2',options.prefs.tranii_unnormalized]); end
+ea_delete([options.root,options.prefs.patientdir,filesep,'c1',options.prefs.tranii_unnormalized]);
+ea_delete([options.root,options.prefs.patientdir,filesep,'c2',options.prefs.tranii_unnormalized]);
 
-try delete([options.root,options.prefs.patientdir,filesep,'c',options.prefs.cornii_unnormalized]); end
-try delete([options.root,options.prefs.patientdir,filesep,'rc',options.prefs.cornii_unnormalized]); end
+ea_delete([options.root,options.prefs.patientdir,filesep,'c',options.prefs.cornii_unnormalized]);
+ea_delete([options.root,options.prefs.patientdir,filesep,'rc',options.prefs.cornii_unnormalized]);
 
 
-try delete([options.root,options.prefs.patientdir,filesep,'c1c2mask.nii']); end
-try delete([options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii']); end
-try delete([options.root,options.prefs.patientdir,filesep,'w2w1c1c2mask.nii']); end
+ea_delete([options.root,options.prefs.patientdir,filesep,'c1c2mask.nii']);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii']);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w2w1c1c2mask.nii']);
 
-try delete([options.root,options.prefs.patientdir,filesep,nm,'_sn.mat']); end
-try delete([options.root,options.prefs.patientdir,filesep,'w1',nm,'_sn.mat']); end
-try delete([options.root,options.prefs.patientdir,filesep,'w2w1',nm,'_sn.mat']); end
+ea_delete([options.root,options.prefs.patientdir,filesep,nm,'_sn.mat']);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w1',nm,'_sn.mat']);
+ea_delete([options.root,options.prefs.patientdir,filesep,'w2w1',nm,'_sn.mat']);
 
 
 

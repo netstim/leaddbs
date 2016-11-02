@@ -72,11 +72,11 @@ jobs{1}=matlabbatch;
 spm_jobman('run',jobs);
 clear matlabbatch jobs;
 
-try delete([directory,'c4',options.prefs.prenii_unnormalized]); end
-try delete([directory,'c5',options.prefs.prenii_unnormalized]); end
-try delete([directory,'c6',options.prefs.prenii_unnormalized]); end
+ea_delete([directory,'c4',options.prefs.prenii_unnormalized]);
+ea_delete([directory,'c5',options.prefs.prenii_unnormalized]);
+ea_delete([directory,'c6',options.prefs.prenii_unnormalized]);
 [~,fn]=fileparts(options.prefs.prenii_unnormalized);
-try delete([directory,fn,'_seg8.mat']); end
+ea_delete([directory,fn,'_seg8.mat']);
 
 % use skull volume here:
 ea_reslice_nii([directory,'skullcon',options.prefs.prenii_unnormalized],[directory,'small_',options.prefs.prenii_unnormalized],[4 4 4]);

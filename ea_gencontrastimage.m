@@ -5,21 +5,21 @@ switch howto
      case 2
         %% use raw tra version
         imat=squeeze(imat(:,:,:,1));
-    
+
     case 3
         %% use smoothed tra only
         imat=squeeze(imat(:,:,:,1));
 
         imat = smooth3(imat,'gaussian',3);
-        
+
     case 4
         %% use smoothed mean of tra and cor
         imat=mean(imat,4);
 
         imat = smooth3(imat,'gaussian',3);
 
-        
-   
+
+
     case 6
         %% use cor only
         imat=squeeze(imat(:,:,:,end));
@@ -29,7 +29,7 @@ switch howto
         imat=squeeze(imat(:,:,:,end));
 
         imat = smooth3(imat,'gaussian',3);
-        
+
     case 8
         %% use average of cor and tra:
         imat=mean(imat,4);
@@ -47,12 +47,10 @@ switch howto
 
         imat = smooth3(imat,'gaussian',3);
 
-        
+
     otherwise
         ea_error('Please set Contrast accurately.');
-        
+
 end
 
-if exist('tmp.nii','file')
-delete('tmp.nii')
-end
+ea_delete('tmp.nii');

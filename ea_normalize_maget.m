@@ -39,18 +39,18 @@ end
 earoot=ea_getearoot;
 
 for peer=1:length(peerfolders)
-    
+
     clear spfroms sptos weights metrics
     peerdirec=[peerfolders{peer},filesep];
     poptions=options;
     [poptions.root,poptions.patientname]=fileparts(peerfolders{peer});
     poptions.root=[poptions.root,filesep];
     poptions=ea_assignpretra(poptions);
-    
-    
+
+
     %% step 1, generate warps from peers to the selected patient brain
-    
-    
+
+
     if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii'],'file') || reforce
         [~,peerpresentfiles]=ea_assignpretra(poptions);
         [~,subpresentfiles]=ea_assignpretra(options);
@@ -72,44 +72,44 @@ for peer=1:length(peerfolders)
             metrics{anatfi}='MI';
         end
         weights=repmat(1.5,length(presentfiles),1);
-        
+
         % add FA if present ? add to beginning since will use last entry to
         % converge
         if exist([subdirec,options.prefs.fa2anat],'file') && exist([peerdirec,options.prefs.fa2anat],'file')
             spfroms=[{ea_niigz([subdirec,options.prefs.fa2anat])},spfroms];
             sptos=[{ea_niigz([peerdirec,options.prefs.fa2anat])},sptos];
-            
+
             weights=[0.5;weights];
             metrics=[{'MI'},metrics];
-            
+
         end
-        
+
         defoutput=[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname];
         if ~exist([subdirec,'MAGeT',filesep,'warps',filesep],'file')
             mkdir([subdirec,'MAGeT',filesep,'warps',filesep]);
         end
-        
+
         try
             ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],weights,metrics,options);
         catch
             ea_error(['Something went wrong - could not generate a nonlinear warp from ',subdirec,' to ',peerdirec,'.']);
         end
         delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii']); % we only need the warp
-        
+
         if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],'file')
             ea_error(['Something went wrong - could not generate a nonlinear warp from ',subdirec,' to ',peerdirec,'.']);
         end
-        
+
         % Now export composite transform from MNI -> Peer -> Subject
-        
+
         if ispc
             sufx='.exe';
         else
             sufx=computer('arch');
         end
-        
+
         antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
-        
+
         template=ea_niigz([ea_getearoot,'templates',filesep,'mni_hires.nii']);
         prenii=ea_niigz([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
         cmd=[antsApply,' -r ',template,' -t ',[peerfolders{peer},filesep,'glanatComposite',ea_getantstransformext([peerfolders{peer},filesep],options)],' -t ',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii',',1]']]; % temporary write out uncompressed (.nii) since will need to average slice by slice lateron.
@@ -121,13 +121,13 @@ for peer=1:length(peerfolders)
             system(cmd);
             system(icmd);
         end
-        
+
         % delete intermediary transforms
         delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);
         delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
 
     end
-    
+
 end
 dosecondpass=1;
 
@@ -198,13 +198,9 @@ movefile([warpbase,'ave2mni.nii.gz'],[subdirec,'glanatComposite.nii.gz']);
 movefile([warpbase,'ave2sub.nii.gz'],[subdirec,'glanatInverseComposite.nii.gz']);
 
 % delete older .h5 transforms if present.
-if exist([subdirec,'glanatComposite.h5'],'file')
-    delete([subdirec,'glanatComposite.h5']);
-end
+ea_delete([subdirec,'glanatComposite.h5']);
 
-if exist([subdirec,'glanatInverseComposite.h5'],'file')
-    delete([subdirec,'glanatInverseComposite.h5']);
-end
+ea_delete([subdirec,'glanatInverseComposite.h5']);
 
 % % now convert to .h5 again and place in sub directory:
 % antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];

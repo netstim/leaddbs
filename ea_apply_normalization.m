@@ -17,9 +17,9 @@ switch whichnormmethod
     case ea_getantsnormfuns
 
         ea_ants_applytransforms(options);
-        
+
     case ea_getfslnormfuns
-        
+
         ea_fsl_applytransforms(options);
 
     otherwise
@@ -36,7 +36,7 @@ switch whichnormmethod
                 lfis{1}=options.prefs.prenii;
                 lfis{2}=options.prefs.tranii;
                 lfis{3}=options.prefs.cornii;
-                lfis{4}=options.prefs.sagnii;                
+                lfis{4}=options.prefs.sagnii;
             case 2 % CT
                 postops{1}=options.prefs.prenii_unnormalized;
                 postops{2}=options.prefs.ctnii_coregistered;
@@ -76,11 +76,11 @@ switch whichnormmethod
                 try movefile([directory,'w',options.prefs.sagnii_unnormalized],[directory,options.prefs.sagnii]); end
                 try copyfile([directory,'w',options.prefs.ctnii_coregistered],[directory,options.prefs.gctnii]); end
                 try movefile([directory,'w',options.prefs.ctnii_coregistered],[directory,options.prefs.ctnii]); end
-                
+
             case 'SPM12'
                 % export glfiles (a bit more coarse resolution, full brain bounding box).
 
-                
+
                 for pos=1:length(gfis)
                     if exist([directory,postops{pos}],'file')
                         nii=ea_load_untouch_nii([directory,postops{pos}]);
@@ -91,7 +91,7 @@ switch whichnormmethod
                         else
                             copyfile([directory,postops{pos}],[directory,'r',postops{pos}]);
                         end
-                        
+
                         matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
                         matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[directory,'r',postops{pos},''];
                         matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
@@ -106,10 +106,10 @@ switch whichnormmethod
                         try movefile([directory,'swr',postops{pos}],[directory,gfis{pos}]); end
                     end
                 end
-                
+
                 % export lfiles (fine resolution, small bounding box.
 
-                try 
+                try
                     for pos=1:length(lfis)
                         if exist([directory,postops{pos}],'file')
                             nii=ea_load_untouch_nii([directory,postops{pos}]);
@@ -138,13 +138,13 @@ switch whichnormmethod
                 end
                 switch options.modality
                     case 1
-                        try delete([directory,'r',options.prefs.prenii_unnormalized]); end
-                        try delete([directory,'r',options.prefs.tranii_unnormalized]); end
-                        try delete([directory,'r',options.prefs.cornii_unnormalized]); end
-                        try delete([directory,'r',options.prefs.sagnii_unnormalized]); end
+                        ea_delete([directory,'r',options.prefs.prenii_unnormalized]);
+                        ea_delete([directory,'r',options.prefs.tranii_unnormalized]);
+                        ea_delete([directory,'r',options.prefs.cornii_unnormalized]);
+                        ea_delete([directory,'r',options.prefs.sagnii_unnormalized]);
                     case 2
-                        try delete([directory,'r',options.prefs.ctnii_coregistered]); end
-                        try delete([directory,'r',options.prefs.prenii_unnormalized]); end
+                        ea_delete([directory,'r',options.prefs.ctnii_coregistered]);
+                        ea_delete([directory,'r',options.prefs.prenii_unnormalized]);
                 end
         end
 end

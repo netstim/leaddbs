@@ -98,9 +98,9 @@ for atlas=1:length(atlases.names)
             % re-gzip tpm, patl and atlas file.
             if wasgz
                 try gzip([natlf,atln]); end
-                try delete([natlf,atln]); end
+                ea_delete([natlf,atln]);
                 try gzip([patlf,atln]); end
-                try delete([patlf,atln]); end
+                ea_delete([patlf,atln]);
             end
         end
 
