@@ -60,8 +60,8 @@ ea_newseg([directory],options.prefs.prenii_unnormalized,0,options,0);
 disp('done.');
 
 % Rename deformation fields:
-try movefile([directory,'y_',options.prefs.prenii_unnormalized],[directory,'y_ea_normparams.nii']); end
-try movefile([directory,'iy_',options.prefs.prenii_unnormalized],[directory,'y_ea_inv_normparams.nii']); end
+try copyfile([directory,'y_',options.prefs.prenii_unnormalized],[directory,'y_ea_normparams.nii']); end
+try copyfile([directory,'iy_',options.prefs.prenii_unnormalized],[directory,'y_ea_inv_normparams.nii']); end
 
 % Apply estimated deformation to (coregistered) post-op data.
 
