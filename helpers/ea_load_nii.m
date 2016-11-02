@@ -9,7 +9,8 @@ if nargin < 2
     mode = 0; 
 end
 
-fname=ea_niigz(fname);
+% need to consider the spm_vol('image.nii,1') case
+fname=[ea_niigz(fname), fname(strfind(fname, ','):end)];
 
 if strcmp(fname(end-2:end),'.gz')
     wasgzip=1;
