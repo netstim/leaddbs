@@ -240,8 +240,12 @@ try
     options.lcm.func.do=get(handles.dofunctional,'Value');
     options.lcm.cmd=get(handles.command,'Value');
     options.lcm.struc.connectome=get(handles.fiberspopup,'String');
+    if iscell(options.lcm.struc.connectome)
     options.lcm.struc.connectome=options.lcm.struc.connectome{get(handles.fiberspopup,'Value')};
+    end
     options.lcm.func.connectome=get(handles.fmripopup,'String');
+    if iscell(options.lcm.func.connectome)
     options.lcm.func.connectome=options.lcm.func.connectome{get(handles.fmripopup,'Value')};
+    end
     options.lcm.struc.espace=get(handles.strucexportspace,'Value');
 end

@@ -35,10 +35,35 @@ else
     SLICER = [basedir, 'slicer.', computer('arch')];    
 end
 cnt=1;
+try
+    nm=load([directory,'ea_normmethod_applied.mat']);
+    nm=nm.norm_method_applied{end};
+catch
+    nm='';
+end
+try
+    cm=load([directory,'ea_coregctmethod_applied.mat']);
+    cm=cm.coregct_method_applied{end};
+catch
+    cm='';
+end
+try
+    mm=load([directory,'ea_coregmrmethod_applied.mat']);
+    mm=mm.coregmr_method_applied{end};
+catch
+    mm='';
+end
 for fi=1:length(fis2anat)
     [~,fname]=fileparts(fis2anat{fi});
     [~,rfname]=fileparts(primanat);
-    ofname{cnt}=[fname,'2',rfname,'.png'];
+    switch [fname,'.nii'] % cannot use options.modality here since also in CT imaging, e.g. anat_t1 or anat_pd could be used using coregmrmethod applied.
+        case options.prefs.postop_ct_unnormalized
+            suffx=cm; % CT suffix
+        otherwise
+            suffx=mm; % MR suffix
+    end
+    ofname{cnt}=[fname,'2',rfname,'_',cm,'.png'];
+    
     cmd{cnt}=[SLICER,' ',ea_path_helper(fis2anat{fi}),' ',ea_path_helper(primanat),' -a ',ea_path_helper([directory,'checkreg',filesep,ofname{cnt}])];    
 
     cnt=cnt+1;
@@ -46,7 +71,7 @@ end
 for fi=1:length(fis2mni)
     [~,fname]=fileparts(fis2mni{fi});
     [~,rfname]=fileparts(mnihires);
-    ofname{cnt}=[fname,'2',rfname,'.png'];
+    ofname{cnt}=[fname,'2',rfname,'_',nm,'.png'];
     cmd{cnt}=[SLICER,' ',ea_path_helper(fis2mni{fi}),' ',ea_path_helper(mnihires),' -a ',ea_path_helper([directory,'checkreg',filesep,ofname{cnt}])];
 
     cnt=cnt+1;

@@ -59,19 +59,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     
     if options.coregct.do
         eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
-        try load([options.root,options.patientname,filesep,'ea_coregctmethod_applied']); end
-        if exist('coregct_method_applied','var')
-            try
-                coregct_method_applied{end+1}=options.coregct.method;
-            catch
-                clear coregct_method_applied
-                coregct_method_applied{1}=options.coregct.method;
-            end
-        else
-            coregct_method_applied{1}=options.coregct.method;
-        end
-        coregct_method_applied=options.coregct.method;
-        save([options.root,options.patientname,filesep,'ea_coregctmethod_applied'],'coregct_method_applied');
+        ea_dumpnormmethod(options,options.coregct.method,'coregctmethod');
     end
     
     if options.coregctcheck
@@ -81,8 +69,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     
     
     if options.normalize.do
-        ea_dumpnormmethod(options,options.normalize.method);
         eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
+        ea_dumpnormmethod(options,options.normalize.method,'normmethod');
     end
     
     

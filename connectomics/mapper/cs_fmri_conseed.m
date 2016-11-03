@@ -135,26 +135,45 @@ end
 
 for mcfi=usesubjects
     ea_dispercent(mcfi/numsub);
-    howmanyruns=length(dataset.vol.subIDs{mcfi})-1;
+    howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
     switch cmd
         
         case 'seed'
             
             for s=1:numseed
+                
                 thiscorr=zeros(length(omaskidx),howmanyruns);
                 for run=1:howmanyruns
-                    load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
-                    gmtc=single(gmtc);
-                    stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s});
-                    thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
-                    
-                    % include surface:
-                    ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
-                    rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
-                    rs.gmtc=single(rs.gmtc);
-                    ls.gmtc=single(ls.gmtc);
-                    ls.thiscorr(:,run)=corr(stc',ls.gmtc','type','Pearson');
-                    rs.thiscorr(:,run)=corr(stc',rs.gmtc','type','Pearson');
+                    switch dataset.type
+                        case 'fMRI_matrix'
+                            keyboard
+                            if ~exist('mat','var') && ~exist('loaded','var')
+                            mat=[]; loaded=[];
+                            end
+                            cnt=1;
+                            Rw=nan(length(sweightidx{s}),pixdim);
+                            for ix=sweightidx{s}'
+                            [mat,loaded]=ea_getmat(mat,loaded,ix,dataset.vol.matchunk,[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]);
+                            entry=ix-loaded;
+                            %    testnii.img(outidx)=mat(entry,:); % R
+                            Rw(cnt,:)=(double(mat(entry,:))/((2^15)-1)); % Fz
+                            cnt=cnt+1;
+                            end
+                        case 'fMRI_timecourses'
+                            load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
+                            gmtc=single(gmtc);
+                            stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s});
+                            thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
+                            if isfield(dataset,'surf')
+                                % include surface:
+                                ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
+                                rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
+                                rs.gmtc=single(rs.gmtc);
+                                ls.gmtc=single(ls.gmtc);
+                                ls.thiscorr(:,run)=corr(stc',ls.gmtc','type','Pearson');
+                                rs.thiscorr(:,run)=corr(stc',rs.gmtc','type','Pearson');
+                            end
+                    end
                 end
                 
                 fX{s}(:,mcfi)=mean(thiscorr,2);
@@ -450,7 +469,23 @@ toc
 
 
 
+function howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi)
+if strcmp(dataset.type,'fMRI_matrix')
+    howmanyruns=1;
+else
+    howmanyruns=length(dataset.vol.subIDs{mcfi})-1;
+end
 
 
+function [mat,loaded]=ea_getmat(mat,loaded,idx,chunk,datadir)
 
+rightmat=(idx-1)/chunk;
+rightmat=floor(rightmat);
+rightmat=rightmat*chunk;
+if rightmat==loaded;
+    return
+end
+
+load([datadir,num2str(rightmat),'.mat']);
+loaded=rightmat;
 

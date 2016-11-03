@@ -1,15 +1,35 @@
-function ea_dumpnormmethod(options,normmethod)
+function ea_dumpnormmethod(options,normmethod,whatmethod)
 
 
-try load([options.root,options.patientname,filesep,'ea_normmethod_applied']); end
-if exist('norm_method_applied','var')
+switch whatmethod
+    case 'normmethod'
+        varname='norm_method_applied';
+    case 'coregctmethod'
+        varname='coregct_method_applied';
+    case 'coregmrmethod'
+        varname='coregmr_method_applied';
+end
+
+
+try load([options.root,options.patientname,filesep,'ea_',whatmethod,'_applied']);
+    vn=eval(varname);
+catch
+    vn={};
+end
+if ~iscell(vn)
+    vc{1}=vn;
+    vn=vc;
+end
+
+if exist('vn','var')
     try
-        norm_method_applied{end+1}=normmethod;
+        vn{end+1}=normmethod;
     catch
-        clear norm_method_applied
-        norm_method_applied{1}=normmethod;
+        clear(['norm_',whatmethod,'_applied']);
+        vn{1}=normmethod;
     end
 else
-    norm_method_applied{1}=normmethod;
+    vn{1}=normmethod;
 end
-save([options.root,options.patientname,filesep,'ea_normmethod_applied'],'norm_method_applied');
+eval([varname,'=vn;']);
+save([options.root,options.patientname,filesep,'ea_',whatmethod,'_applied'],varname);

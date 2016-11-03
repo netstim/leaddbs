@@ -39,28 +39,29 @@ if ~strcmp(options.coregmr.method,'Do not coregister MRIs (already coregistered)
             copyfile([directory,options.prefs.sagnii_unnormalized],[directory,'raw_',options.prefs.sagnii_unnormalized]);
         end
     end
-end
 
-switch options.coregmr.method
-    case 'Coreg MRIs: SPM' % SPM
-        ea_coregmr_spm(options,automan,doreslice);
-        return
-        
-    case 'Coreg MRIs: FSL' % FSL
-        ea_coregmr_flirt(options);
-        return
-    case 'Coreg MRIs: ANTs' % ANTs
-        ea_coregmr_ants(options);
-        return
-    case 'Coreg MRIs: BRAINSFIT' % BRAINSFit
-        ea_coregmr_brainsfit(options);
-        return
-    case 'Coreg MRIs: Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
-        ea_coregmr_spm(options,automan,0); % dont use doreslice here to refrain for doing two interpolations.
-        ea_coregmr_ants(options);
-    case 'Coreg MRIs: Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
-        ea_coregmr_spm(options,automan,0); % dont use doreslice here to refrain for doing two interpolations.
-        ea_coregmr_brainsfit(options);
-    case 6 % Do nothing
-        return
+
+    switch options.coregmr.method
+        case 'Coreg MRIs: SPM' % SPM
+            ea_coregmr_spm(options,automan,doreslice);
+            return
+            
+        case 'Coreg MRIs: FSL' % FSL
+            ea_coregmr_flirt(options);
+            return
+        case 'Coreg MRIs: ANTs' % ANTs
+            ea_coregmr_ants(options);
+            return
+        case 'Coreg MRIs: BRAINSFIT' % BRAINSFit
+            ea_coregmr_brainsfit(options);
+            return
+        case 'Coreg MRIs: Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
+            ea_coregmr_spm(options,automan,0); % dont use doreslice here to refrain for doing two interpolations.
+            ea_coregmr_ants(options);
+        case 'Coreg MRIs: Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
+            ea_coregmr_spm(options,automan,0); % dont use doreslice here to refrain for doing two interpolations.
+            ea_coregmr_brainsfit(options);
+            
+    end
+    ea_dumpnormmethod(options,options.coregmr.method,'coregmrmethod');
 end
