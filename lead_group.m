@@ -2153,7 +2153,7 @@ options.d2.write=1;
 options.d2.atlasopacity=0.15;
 
 options.modality=3; % use template image
-
+options=ea_amendtoolboxoptions(options);
 
 if strcmp(options.atlasset,'Use none');
     options.d2.writeatlases=1;
