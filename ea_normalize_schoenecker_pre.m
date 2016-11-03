@@ -407,22 +407,16 @@ end
 % cleanup wfilename files if prefs are set differently
 % transversal images
 if ~strcmp(options.prefs.tranii,['w',options.prefs.tranii_unnormalized])
-    try
-    delete([options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized]);
-    end
+    ea_delete([options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized]);
 end
 % coronar images
 if ~strcmp(options.prefs.cornii,['w',options.prefs.cornii_unnormalized])
-    try
-    delete([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized]);
-    end
+    ea_delete([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized]);
 end
 
 % ct images
 if ~strcmp(options.prefs.ctnii,['w',options.prefs.rawctnii_unnormalized])
-    try
-    delete([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized]);
-    end
+    ea_delete([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized]);
 end
 
 % now the files have been normalized, cleanup.

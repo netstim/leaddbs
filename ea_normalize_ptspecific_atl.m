@@ -24,11 +24,10 @@ mkdir([proot,'atlases',filesep,'mni',filesep,options.atlasset,filesep,'midline']
 
 
     if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
-
         atlases=ea_genatlastable([],root,options);
     else
         load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-       atlases=ea_genatlastable(atlases,options.earoot,options);
+        atlases=ea_genatlastable(atlases,options.earoot,options);
     end
 
 for atlas=1:length(atlases.names)

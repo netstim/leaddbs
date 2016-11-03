@@ -93,10 +93,10 @@ end
 
 if cleanup
     for s=1:length(structures)
-        try       delete([directory,'',structures{s},'_secondlevel.nii']); end
-        try       delete([directory,'',structures{s},'_firstlevel.nii']); end
-        try       delete([directory,'',structures{s},'_wta.nii']); end
-        try       delete([directory,'s',structures{s},'_secondlevel.nii']); end
+        ea_delete([directory,'',structures{s},'_secondlevel.nii']);
+        ea_delete([directory,'',structures{s},'_firstlevel.nii']);
+        ea_delete([directory,'',structures{s},'_wta.nii']); end
+        ea_delete([directory,'s',structures{s},'_secondlevel.nii']);
     end
 end
 

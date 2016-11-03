@@ -264,7 +264,7 @@ M.patient.list(deleteentry)=[];
 M.patient.group(deleteentry)=[];
 
 try M.elstruct(deleteentry)=[]; end
-try    M.stimparams(deleteentry)=[]; end
+try M.stimparams(deleteentry)=[]; end
 
 for cvar=1:length(M.clinical.vars)
     M.clinical.vars{cvar}(deleteentry,:)=[];
@@ -1144,7 +1144,7 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
         [ea_stats,usewhichstim]=ea_assignstimcnt(M.stats(pt).ea_stats,S);
         for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).ft,2)
             for vat=1;
-                if side==1 % right hemisphere                    
+                if side==1 % right hemisphere
                     vicorr_right(ptcnt,vicnt)=vicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
                     nvicorr_right(ptcnt,vicnt)=nvicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
                 elseif side==2 % left hemisphere
@@ -1476,7 +1476,7 @@ for pt=M.ui.listselect
     % this will add the volume stats (atlasIntersections) to stats file:
     ea_showfibres_volume(resultfig,options);
 
-    
+
     % Step 3: Re-calculate connectivity from VAT to rest of the brain.
     if ~strcmp(mod,'Do not calculate connectivity stats')
 
@@ -2407,13 +2407,13 @@ ea_savefibertracts([M.ui.groupdir,'connectomes',filesep,'dMRI',filesep,options.p
 
 
 % % export to trackvis
-% 
+%
 % % convert to vox format
 % options.root=[fileparts(fileparts(M.ui.groupdir)),filesep];
 % [~,options.patientname]=fileparts(fileparts(M.ui.groupdir));
 % options.earoot=[ea_getearoot];
 % specs.origin=[0,0,0];
-% 
+%
 % nii=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
 % specs.dim=nii.dim;
 % specs.affine=nii.mat;
@@ -2427,10 +2427,10 @@ ea_savefibertracts([M.ui.groupdir,'connectomes',filesep,'dMRI',filesep,options.p
 % ea_dispercent(1,'end');
 % normalized_fibers_vox=normalized_fibers_mm;
 % clear normalized_fibers_mm
-% 
-% 
+%
+%
 % ea_ftr2trk({normalized_fibers_vox,options.prefs.FTR_normalized},M.ui.groupdir,specs,options); % export normalized ftr to .trk
-% 
+%
 % options.prefs=ea_prefs(M.uite.groupdir);
 
 
