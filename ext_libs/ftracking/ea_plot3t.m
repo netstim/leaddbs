@@ -166,7 +166,8 @@ for i=1:length(linex)-1,
     % Create vertex list
     n_cylinders=n_cylinders+1;
     fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
-  cdat(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num))=icolor(i);
+    cdat(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num))=icolor(1);
+
     pnormal2=normal(i+1,:); pline2=line(i+1,:);
        
     % Translate the circle on it's position on the line

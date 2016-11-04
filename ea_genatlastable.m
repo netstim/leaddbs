@@ -337,8 +337,13 @@ end
 
                         %atlassurfs(atlascnt,fib)=ea_plot3(thisfib(:,1),thisfib(:,2),thisfib(:,3),'-','color',[rr,gg,bb]);
                         %atlassurfs(atlascnt,fcnt)=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,[rr,gg,bb],6,0);
-
-                        [~,fv(fcnt)]=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,'r',6,0);
+                        
+                            [~,thisfv]=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,'r',6,0);
+                            % need to manually shuffle the results in case
+                            % of mixture fibertracking/nuclei atlases.
+                            fv(fcnt).vertices=thisfv.vertices;
+                            fv(fcnt).faces=thisfv.faces;
+                            fv(fcnt).facevertexdata=thisfv.facevertexcdata;
 
                         fcnt=fcnt+1;
                     end
