@@ -220,7 +220,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     [~,thislabel]=fileparts(thislabel);
                 end
             end
-            atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline','HorizontalAlignment','Center');
+            atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'VerticalAlignment','Baseline','HorizontalAlignment','Center');
 
             if ~exist('labelbutton','var')
                 labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Labels');

@@ -69,8 +69,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     
     
     if options.normalize.do
+        ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
         eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
-        ea_dumpnormmethod(options,options.normalize.method,'normmethod');
     end
     
     
