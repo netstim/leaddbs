@@ -171,8 +171,16 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
                     
-                cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1) ... % C-Data for surface
-                    +randn(length(fv.vertices),1)*rndfactor)';
+                cdat=repmat(atlases.colors(atlas),length(fv.vertices),1); % C-Data for surface
+                
+                if size(cdat,2)==1
+                   cdat=atlases.colormap(round(cdat),:); 
+                end
+               
+                
+                % add color jitter
+                cdat=cdat+(randn(size(cdat,1),3)*rndfactor);
+        
                 XYZ=atlases.XYZ{atlas,side};
                 pixdim=atlases.pixdim{atlas,side};
                 colorc=nan;
@@ -207,7 +215,8 @@ for nativemni=nm % switch between native and mni space atlases.
                 
                 
                 set(0,'CurrentFigure',resultfig);
-                atlassurfs(atlascnt,1)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
+
+                atlassurfs(atlascnt,1)=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
                 
            % end
             
@@ -239,6 +248,7 @@ for nativemni=nm % switch between native and mni space atlases.
             catch
                 keyboard
             end
+
             colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,atlascnt,'on'},'OffCallback',{@atlasvisible,atlascnt,'off'},'State','on');
             
             % gather contact statistics

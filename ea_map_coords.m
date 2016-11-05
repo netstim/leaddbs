@@ -1,13 +1,7 @@
 function [XYZ_mm, XYZ_src_vx] = ea_map_coords(varargin)
-% This version of map_coords is based on Ged Ridgway's version but is
-% optimized for usage in Lead-DBS. Especially, it supports ANTs and
-% interpolations in high dimensional warping with SPM.
-
-%  % high-dimensional warping / y_ deformation field:
-%  % from target voxel space to source world and voxel space
-%    [XYZ_mm XYZ_src_vx] = map_coords(XYZ_vx, '', 'y_img.nii', src);
-%
-% Ged Ridgway (drc.spm at gmail.com)
+% Please use this function for any point transform within the Lead Suite
+% environment. It should automatically detect whether to use ANTs, SPM or
+% FSL based transforms for the respective subject.
 
 try
     XYZ_vx=varargin{1};
@@ -100,26 +94,52 @@ if ~isempty(xfrm)
             XYZ_mm(1,:)=-XYZ_mm(1,:);
             XYZ_mm(2,:)=-XYZ_mm(2,:);
         elseif ismember(whichnormmethod,ea_getfslnormfuns)
+            % When using FSL ? at least for now ? we DO NOT use inverse
+            % transforms for coordinates but instead use "warpfields" that
+            % need to be generated. This is different than in SPM and ANTs
+            % (where point transforms need the inverse deformation fields
+            % in comparison to respective niftis/volumes). So here, in the
+            % FSL case, we need to "invert" the "useinverse" cases and also
+            % need to switch the respective trg and src vols.
             
             [~,fn]=fileparts(xfrm);
-            if ~isempty(strfind(fn,'inv'))
+            if isempty(strfind(fn,'inv')) % flipped case in comparison to SPM/ANTs
                 useinverse=1;
             else
                 useinverse=0;
             end
-            V=spm_vol(trg);
-            XYZ_mm_beforetransform=V(1).mat*XYZ_vx;
-            prefs=ea_prefs('');
-            hdr=cbiReadNiftiHeader(V.fname);
-            [~,preniibase]=fileparts(prefs.gprenii);
-
+            Vs=spm_vol(src);
+            Vt=spm_vol(trg);
+%             XYZ_mm_beforetransform=V(1).mat*XYZ_vx;
+             prefs=ea_prefs('');
+%             hdr=cbiReadNiftiHeader(V.fname);
+             [~,preniibase]=fileparts(prefs.gprenii);
+            keyboard
+                        if ~useinverse
+                            ea_fsl_gencoordwarpfile(1, [directory,filesep,preniibase,'InverseCompositeCoeffs.nii'],[directory,filesep,preniibase,'Composite.nii'], src);
+               %             XYZ_vx_trsf = fslApplyWarpCoords(XYZ_vx,ea_detvoxsize(V(1).mat),1, [directory,filesep,preniibase,'CompositeCoords.nii'], hdr);
+                        else
+                            ea_fsl_gencoordwarpfile(1, [directory,filesep,preniibase,'CompositeCoeffs.nii'],[directory,filesep,preniibase,'InverseComposite.nii'], src);
+                %            XYZ_vx_trsf = fslApplyWarpCoords(XYZ_vx,ea_detvoxsize(V(1).mat),1, [directory,filesep,preniibase,'InverseCompositeCoords.nii'], hdr);
+                        end
+            
+            %                         XYZ_mm = hdw_trgvx2srcmm(AC, [directory,filesep,'glanatInverseComposite.nii']);
+            
             if ~useinverse
-                ea_fsl_gencoordwarpfile(1, [directory,filesep,preniibase,'Composite.nii'],[directory,filesep,preniibase,'CompositeCoords.nii'], hdr);
-                XYZ_vx_trsf = fslApplyWarpCoords(XYZ_vx,ea_detvoxsize(V(1).mat),1, [directory,filesep,preniibase,'CompositeCoords.nii'], hdr);
+                warp=spm_vol([directory,filesep,'glanatComposite.nii']);
             else
-                ea_fsl_gencoordwarpfile(1, [directory,filesep,preniibase,'InverseComposite.nii'],[directory,filesep,preniibase,'InverseCompositeCoords.nii'], hdr);
-                XYZ_vx_trsf = fslApplyWarpCoords(XYZ_vx,ea_detvoxsize(V(1).mat),1, [directory,filesep,preniibase,'CompositeCoords.nii'], hdr);
+                warp=spm_vol([directory,filesep,'glanatInverseComposite.nii']);
             end
+            XYZdispl=[spm_sample_vol(warp(1),XYZ_vx(1,:),XYZ_vx(2,:),XYZ_vx(3,:),1);...
+                spm_sample_vol(warp(2),XYZ_vx(1,:),XYZ_vx(2,:),XYZ_vx(3,:),1);...
+                spm_sample_vol(warp(3),XYZ_vx(1,:),XYZ_vx(2,:),XYZ_vx(3,:),1);...
+                ]; % displacement to add to original coordinates.
+            
+            XYZ_transfo=XYZ_vx;
+            XYZ_transfo(1:3,:)=XYZ_transfo(1:3,:)+XYZdispl;
+            
+            XYZ_mm=Vs(1).mat*XYZ_transfo;
+             
         else
             XYZ_mm = hdw_trgvx2srcmm(XYZ_vx, xfrm);
         end

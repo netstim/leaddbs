@@ -17,10 +17,9 @@
   if exist('reco','var')
       
       if ~isfield(reco,'native') && isfield(reco,'mni') && options.native
-          try
               ea_reconstruction2native(options);
               load([options.root,options.patientname,filesep,'ea_reconstruction']);
-          end
+
       elseif isfield(reco,'native') && ~isfield(reco,'mni') && ~options.native
           ea_reconstruction2mni(options);
                 load([options.root,options.patientname,filesep,'ea_reconstruction']);

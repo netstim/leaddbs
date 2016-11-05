@@ -12,9 +12,12 @@ directory=[options.root,options.patientname,filesep];
 whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
 if ismember(whichnormmethod,ea_getantsnormfuns)
     doreslice=1;
+elseif ismember(whichnormmethod,ea_getfslnormfuns)
+    doreslice=1;
 else
     doreslice=0;
 end
+
 if ~strcmp(options.coregmr.method,'Do not coregister MRIs (already coregistered)')
     % restore raw files -> postop files from prior attempts. & make backups
     % from original files in any case.
