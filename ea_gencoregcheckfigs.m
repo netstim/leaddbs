@@ -5,12 +5,12 @@ directory=[options.root,options.patientname,filesep];
 primanat=[directory,filespresent{1}];
 mnihires=[ea_getearoot,'templates',filesep,'mni_hires.nii'];
 try
-oanat=filespresent{2:end};
+    oanat=filespresent(2:end);
 catch
-   oanat={}; 
+	oanat={}; 
 end
 for oa=1:length(oanat)
-   oanat{oa}=[directory,oanat{oa}]; 
+	oanat{oa}=[directory,oanat{oa}]; 
 end
 switch options.modality
     case 1
@@ -57,7 +57,7 @@ for fi=1:length(fis2anat)
     [~,fname]=fileparts(fis2anat{fi});
     [~,rfname]=fileparts(primanat);
     switch [fname,'.nii'] % cannot use options.modality here since also in CT imaging, e.g. anat_t1 or anat_pd could be used using coregmrmethod applied.
-        case options.prefs.postop_ct_unnormalized
+        case options.prefs.rawctnii_unnormalized
             suffx=cm; % CT suffix
         otherwise
             suffx=mm; % MR suffix
@@ -80,6 +80,7 @@ if ~exist([directory,'checkreg'],'file')
     mkdir([directory,'checkreg']);
 end
 
+setenv('FSLOUTPUTTYPE','NIFTI')
 for c=1:length(cmd)
     if ~ispc
         system(['bash -c "', cmd{c}, '"']);
