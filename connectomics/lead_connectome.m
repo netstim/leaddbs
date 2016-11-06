@@ -130,7 +130,9 @@ end
 
 if isindependent
     %% add tools menu
-    ea_menu_initmenu(handles,{'export','cluster','prefs'});
+    ea_processguiargs(handles,varargin)
+
+    ea_menu_initmenu(handles,{'export','cluster','prefs','transfer'});
     
 end
 

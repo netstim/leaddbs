@@ -66,8 +66,9 @@ homedir=ea_gethome;
 % add recent patients...
 ea_initrecentpatients(handles);
 
+ea_processguiargs(handles,varargin)
 
-ea_menu_initmenu(handles,{'cluster','prefs'});
+ea_menu_initmenu(handles,{'cluster','prefs','transfer'});
 
 
 [mdl,sf]=ea_genmodlist;

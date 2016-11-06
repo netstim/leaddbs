@@ -185,21 +185,11 @@ try % set selection of ctcoregmethod to default entry (specified in ea_prefs).
     end
 end
 
-if nargin
+ea_processguiargs(handles,varargin)
 
-    if ~isempty(varargin)
-        switch varargin{1}
-            case 'loadsubs'
-
-                ea_load_pts(handles,varargin{2});
-
-        end
-    end
-
-end
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','cluster','prefs','vatcon'});
+ea_menu_initmenu(handles,{'acpc','export','cluster','prefs','vatcon','transfer'});
 
 
 

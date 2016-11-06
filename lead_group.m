@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 18-Jun-2016 08:34:44
+% Last Modified by GUIDE v2.5 06-Nov-2016 13:53:29
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,7 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes lead_group wait for user response (see UIRESUME)
-% uiwait(handles.lg_figure);
+% uiwait(handles.leadfigure);
 
 
 % Build popup tables:
@@ -67,7 +67,7 @@ guidata(hObject, handles);
 % atlassets:
 options.earoot=ea_getearoot;
 options.prefs=ea_prefs('');
-setappdata(handles.lg_figure,'earoot',options.earoot);
+setappdata(handles.leadfigure,'earoot',options.earoot);
 as=dir([options.earoot,'atlases',filesep]);
 asc=cell(0);
 cnt=1;
@@ -171,6 +171,10 @@ set(handles.grouplist,'Max',100,'Min',0);
 set(handles.vilist,'Max',100,'Min',0);
 set(handles.fclist,'Max',100,'Min',0);
 set(handles.clinicallist,'Max',100,'Min',0);
+
+
+ea_menu_initmenu(handles,{'prefs','transfer'});
+
 
 
 M=getappdata(gcf,'M');
@@ -288,7 +292,7 @@ function vizbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 clc;
 M=getappdata(gcf,'M');
-ea_busyaction('on',handles.lg_figure,'group');
+ea_busyaction('on',handles.leadfigure,'group');
 % set options
 options=ea_setopts_local(handles);
 % set pt specific options
@@ -352,7 +356,7 @@ try
 end
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 
-ea_busyaction('off',handles.lg_figure,'group');
+ea_busyaction('off',handles.leadfigure,'group');
 
 
 % --- Executes on button press in corrbutton.
@@ -622,16 +626,16 @@ end
 
 
 function refreshvifc(handles)
-ea_busyaction('on',handles.lg_figure,'group');
+ea_busyaction('on',handles.leadfigure,'group');
 
 
 
 % get model data
 
-M=getappdata(handles.lg_figure,'M');
+M=getappdata(handles.leadfigure,'M');
 
 if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % not set yet.
-    ea_busyaction('off',handles.lg_figure,'group');
+    ea_busyaction('off',handles.leadfigure,'group');
     return
 end
 
@@ -755,14 +759,14 @@ end
 %     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 % end
 
-S=getappdata(handles.lg_figure,'S');
+S=getappdata(handles.leadfigure,'S');
 
 if ~isempty(S)
     set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
     M.S=S;
     M.S=ea_activecontacts(M.S);
 
-    M.vatmodel=getappdata(handles.lg_figure,'vatmodel');
+    M.vatmodel=getappdata(handles.leadfigure,'vatmodel');
 else
     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 end
@@ -946,8 +950,8 @@ if ~isempty(M.patient.list)
 
         if ~isfield(M,'stats')
             % if no stats  present yet, return.
-            setappdata(handles.lg_figure,'M',M);
-            set(handles.lg_figure,'name','Lead-Group Analysis');
+            setappdata(handles.leadfigure,'M',M);
+            set(handles.leadfigure,'name','Lead-Group Analysis');
             break
         end
 
@@ -996,7 +1000,7 @@ if ~isempty(M.patient.list)
     end
 
     try
-        setappdata(handles.lg_figure,'elstruct',elstruct);
+        setappdata(handles.leadfigure,'elstruct',elstruct);
     end
 else
     M.vilist={};
@@ -1005,7 +1009,7 @@ end
 
 
 % store everything in Model
-setappdata(handles.lg_figure,'M',M);
+setappdata(handles.leadfigure,'M',M);
 
 % refresh UI
 
@@ -1014,7 +1018,7 @@ set(handles.fclist,'String',M.fclist);
 
 
 
-ea_busyaction('off',handles.lg_figure,'group');
+ea_busyaction('off',handles.leadfigure,'group');
 
 
 % --- Executes on selection change in grouplist.
@@ -1457,10 +1461,10 @@ for pt=M.ui.listselect
         catch
             ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
         end
-        vfnames=getappdata(handles.lg_figure,'vatfunctionnames');
+        vfnames=getappdata(handles.leadfigure,'vatfunctionnames');
 
         [~,ix]=ismember(M.vatmodel,vfnames);
-        vfs=getappdata(handles.lg_figure,'genvatfunctions');
+        vfs=getappdata(handles.leadfigure,'genvatfunctions');
 
         ea_genvat=eval(['@',vfs{ix}]);
 
@@ -1692,7 +1696,7 @@ nudir=[uigetdir];
 if ~nudir % user pressed cancel
     return
 end
-ea_busyaction('on',handles.lg_figure,'group');
+ea_busyaction('on',handles.leadfigure,'group');
 
 nudir=[nudir,filesep];
 M=initializeM;
@@ -1707,13 +1711,13 @@ catch % if not, store it saving M.
 end
 
 M.ui.groupdir=nudir;
-setappdata(handles.lg_figure,'M',M);
+setappdata(handles.leadfigure,'M',M);
 try
-    setappdata(handles.lg_figure,'S',M.S);
-    setappdata(handles.lg_figure,'vatmodel',M.S(1).model);
+    setappdata(handles.leadfigure,'S',M.S);
+    setappdata(handles.leadfigure,'vatmodel',M.S(1).model);
 end
 
-ea_busyaction('off',handles.lg_figure,'group');
+ea_busyaction('off',handles.leadfigure,'group');
 
 refreshvifc(handles);
 
@@ -1808,7 +1812,7 @@ M=getappdata(gcf,'M');
 options=ea_setopts_local(handles);
 refreshvifc(handles);
 
-ea_stimparams(M.elstruct,handles.lg_figure,options);
+ea_stimparams(M.elstruct,handles.leadfigure,options);
 
 
 
@@ -2072,9 +2076,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes when user attempts to close lg_figure.
-function lg_figure_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to lg_figure (see GCBO)
+% --- Executes when user attempts to close leadfigure.
+function leadfigure_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to leadfigure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -2205,7 +2209,7 @@ function lc_SPM_Callback(hObject, eventdata, handles)
 % hObject    handle to lc_SPM (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-M=getappdata(handles.lg_figure,'M');
+M=getappdata(handles.leadfigure,'M');
 
 gecs=get(handles.lc_graphmetric,'String');
 [~,gecs]=fileparts(gecs{M.ui.lc.graphmetric});
@@ -2549,7 +2553,7 @@ function lc_nbs_Callback(hObject, eventdata, handles)
 clearvars -global nbs
 global nbs
 
-earoot=getappdata(handles.lg_figure,'earoot');
+earoot=getappdata(handles.leadfigure,'earoot');
 UI.method.ui = 'Run NBS';
 UI.test.ui = get(handles.lc_stattest,'String');
 UI.test.ui=UI.test.ui{get(handles.lc_stattest,'Value')};
@@ -2668,7 +2672,7 @@ save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
 
 % prepare data matrix:
 
-M=getappdata(handles.lg_figure,'M');
+M=getappdata(handles.leadfigure,'M');
 thisparc=get(handles.labelpopup,'String');
 thisparc=thisparc{get(handles.labelpopup,'Value')};
 

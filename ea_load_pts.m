@@ -4,6 +4,10 @@ if ~exist('patsub','var')
     patsub='patients';
 end
 
+if ~iscell(uipatdir)
+    uipatdirc{1}=uipatdir;
+    uipatdir=uipatdirc;
+end
 if length(uipatdir)>1
     set(handles.patdir_choosebox,'String',['Multiple (',num2str(length(uipatdir)),')']);
     set(handles.patdir_choosebox,'TooltipString',ea_strjoin(uipatdir,', '));

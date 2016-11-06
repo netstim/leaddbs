@@ -1,5 +1,7 @@
 function ea_menu_initmenu(handles,cmd)
 
+callingfunction=dbstack;
+callingfunction=callingfunction(4).name;
 menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
     % tools menu  & edit prefs present in all apps.
@@ -22,6 +24,10 @@ if isempty(menuprobe)
     if ismember('cluster',cmd)
         ea_menu_addsubmit(handles);
         setappdata(handles.leadfigure,'menuprobe',1);
+    end
+    
+    if ismember('transfer',cmd)
+       ea_menu_addtransfer(handles,callingfunction); 
     end
     
     % always add install addons

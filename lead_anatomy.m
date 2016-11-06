@@ -128,8 +128,11 @@ try % if user had called it before, 2D-options will be stored here:
     ea_options2tdhandles(handles,d2);
 end
 
+ea_processguiargs(handles,varargin)
+
+
     %% add tools menu
-    ea_menu_initmenu(handles,{'export','cluster','prefs'});
+    ea_menu_initmenu(handles,{'export','cluster','prefs','transfer'});
     
 
 handles.prod='anatomy';
