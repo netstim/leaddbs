@@ -117,9 +117,10 @@ else
     if strcmp(varargin{1},'dependent')
         isindependent=0;
         ea_makehidelcindep(handles);
+    else
+        isindependent=1;
     end
 end
-
 setappdata(handles.leadfigure,'isindependent',isindependent);
 
 if isindependent

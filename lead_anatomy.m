@@ -227,7 +227,7 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % hObject    handle to patdir_choosebox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_getpatients(handles)
+ea_getpatients(handles);
 
 
 % --- Executes on selection change in recentpts.

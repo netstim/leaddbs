@@ -23,7 +23,6 @@ if isempty(menuprobe)
     end
     if ismember('cluster',cmd)
         ea_menu_addsubmit(handles);
-        setappdata(handles.leadfigure,'menuprobe',1);
     end
     
     if ismember('transfer',cmd)
@@ -42,4 +41,6 @@ if isempty(menuprobe)
        uimenu(g,'Label',[list{l},' (',addstr,')'],'Callback',{@ea_menuinstall,commands{l},0}); 
     end
     
+    % mark that menu has already been installed.
+        setappdata(handles.leadfigure,'menuprobe',1);
 end

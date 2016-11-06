@@ -4,6 +4,7 @@ if ~exist('patsub','var')
     patsub='patients';
 end
 
+
 if ~iscell(uipatdir)
     uipatdirc{1}=uipatdir;
     uipatdir=uipatdirc;
