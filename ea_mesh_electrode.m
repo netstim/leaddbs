@@ -329,7 +329,7 @@ if stlexport
     tissuelabels={'grey','white','contacts','insulation'};
     mkdir([options.root,options.patientname,filesep,'headmodel',filesep]);
     for tt=1:length(tissuelabels)
-        savestl(nmesh,emesh(emesh(:,5)==tt,1:4),[options.root,options.patientname,filesep,'headmodel',filesep,tissuelabels{tt},'.stl'],tissuelabels{tt});
+        savestl(nmesh,emesh(emesh(:,5)==tt,1:4),[options.root,options.patientname,filesep,'headmodel',filesep,tissuelabels{tt},num2str(side),'.stl'],tissuelabels{tt});
     end
 end
 % plot all 4 tissue types:

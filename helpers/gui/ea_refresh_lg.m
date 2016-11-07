@@ -1,10 +1,9 @@
 function ea_refresh_lg(handles)
-ea_busyaction('on',handles.leadfigure,'group');
 
 
 
 % get model data
-
+disp('Getting model data...');
 M=getappdata(handles.leadfigure,'M');
 
 if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % not set yet.
@@ -12,7 +11,7 @@ if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % n
     return
 end
 
-
+disp('Refreshing group list...');
 % refresh group list
 set(handles.grouplist,'String',M.patient.group);
 if length(get(handles.patientlist,'String'))<max(M.ui.listselect)
@@ -22,12 +21,12 @@ end
 try set(handles.grouplist,'Value',M.ui.listselect);  end
 
 
-
+disp('Refreshing patient list...');
 % refresh patient list
 set(handles.patientlist,'String',M.patient.list);
 try set(handles.patientlist,'Value',M.ui.listselect); end
 
-
+disp('Refreshing clinical list...');
 % refresh clinical list
 set(handles.clinicallist,'String',M.clinical.labels);
 try set(handles.clinicallist,'Value',M.ui.clinicallist); end
@@ -37,13 +36,14 @@ if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
     set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
 end
 
-
+disp('Creating isomatrix from regressor list...');
 % set isomatrix from variable in clinical list
 try
     M.isomatrix=M.clinical.vars{get(handles.clinicallist,'Value')};
     M.isomatrix_name=M.clinical.labels{get(handles.clinicallist,'Value')};
 end
 
+disp('Refreshing selections on VI / FC Lists...');
 % refresh selections on VI and FC Lists:
 try
 
@@ -74,7 +74,7 @@ if ~isequal(size(M.groups.color),[length(M.groups.group),3])
     M.groups.color=repmat(0.2,length(M.groups.group),3);
 end
 
-
+disp('Adding graph metrics to connectome popup...');
 % add graph metrics to connectome graph-metrics popup:
 
 
@@ -118,6 +118,7 @@ end
 
 
 % update UI
+disp('Updating UI...');
 
 
 
@@ -131,7 +132,7 @@ end
 % else
 %     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 % end
-
+disp('Getting stimulation parameters...');
 S=getappdata(handles.leadfigure,'S');
 
 if ~isempty(S)
@@ -193,6 +194,7 @@ end
 if ~isempty(M.patient.list)
 
     % add modalities to NBS stats metric popup:
+disp('Adding modalities to NBS popup...');
 
     tryparcs=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'*_CM.mat']);
     if isempty(tryparcs)
@@ -230,9 +232,10 @@ if ~isempty(M.patient.list)
         set(handles.lc_metric,'String',pcell);
     end
 
-
+disp('Loading localizations...');
     for pt=1:length(M.patient.list)
         % set stimparams based on values provided by user
+
         for side=1:2
 
             M.stimparams(pt,side).usefiberset=get(handles.fiberspopup,'String');
@@ -254,6 +257,7 @@ if ~isempty(M.patient.list)
             M.stimparams(pt,side).showconnectivities=1;
         end
         % load localization
+
 
         [~,pats{pt}]=fileparts(M.patient.list{pt});
 
@@ -311,7 +315,7 @@ if ~isempty(M.patient.list)
 
 
     % load stats for group
-
+disp('Loading stats for group...');
     for pt=1:length(M.patient.list)
 
 
@@ -338,6 +342,8 @@ if ~isempty(M.patient.list)
                 M.vilist={};
             end
         end
+        
+        %disp('Comparing stats with prior atlas intersection list...');
         % check and compare with prior atlas intersection list.
 
         if ~isempty(priorvilist) && ~isequal(priorvilist,M.vilist)
@@ -382,6 +388,8 @@ end
 
 
 % store everything in Model
+disp('Storing everything in model...');
+
 setappdata(handles.leadfigure,'M',M);
 
 % refresh UI
@@ -389,6 +397,7 @@ setappdata(handles.leadfigure,'M',M);
 set(handles.vilist,'String',M.vilist);
 set(handles.fclist,'String',M.fclist);
 
+disp('Done.');
 
 
-ea_busyaction('off',handles.leadfigure,'group');
+%ea_busyaction('off',handles.leadfigure,'group');

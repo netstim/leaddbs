@@ -78,7 +78,14 @@ else
 end
 
 for s=1:length(sfile)
+    
     seed{s}=ea_load_nii(ea_niigz(sfile{s}));
+    if ~isequal(seed{s}.mat,dataset.vol.space.mat)
+        oseedfname=seed{s}.fname;
+        seed{s}=ea_conformseedtofmri(dataset,seed{s});
+        seed{s}.fname=oseedfname; % restore original filename if even unneccessary at present.
+    end
+    
     [~,seedfn{s}]=fileparts(sfile{s});
     
     sweights=seed{s}.img(dataset.vol.outidx);
@@ -192,10 +199,10 @@ for mcfi=usesubjects
             
         case {'seedvox_ram','seedvox_noram'}
             
-               for s=1:numseed
-                   swlength=length(sweightidx{s});
-
-                       thiscorr=zeros(length(omaskidx),howmanyruns);
+            for s=1:numseed
+                swlength=length(sweightidx{s});
+                
+                thiscorr=zeros(length(omaskidx),howmanyruns);
                 for run=1:howmanyruns
                     load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
                     gmtc=single(gmtc);
@@ -221,17 +228,17 @@ for mcfi=usesubjects
                             end
                             
                             thiscorr=thiscorr';
-                           thiscorr(:,run)=thiscorr(:,run)/seedvox; % averaging  
+                            thiscorr(:,run)=thiscorr(:,run)/seedvox; % averaging
                     end
                     
                 end
                 fX{s}(:,mcfi)=mean(thiscorr,2);
-
+                
                 if writeoutsinglefiles
                     ccmap=dataset.vol.space;
                     ccmap.img=single(ccmap.img);
                     ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr.nii'];
-                    ccmap.img(omaskidx)=fX{s}(:,mcfi);    
+                    ccmap.img(omaskidx)=fX{s}(:,mcfi);
                     spm_write_vol(ccmap,ccmap.img);
                 end
             end
@@ -467,6 +474,15 @@ end
 
 toc
 
+
+function s=ea_conformseedtofmri(dataset,s)
+td=tempdir;
+dataset.vol.space.fname=[td,'tmpspace.nii'];
+ea_write_nii(dataset.vol.space);
+s.fname=[td,'tmpseed.nii'];
+ea_write_nii(s);
+ea_conformspaceto([td,'tmpspace.nii'],[td,'tmpseed.nii']);
+s=ea_load_nii(s.fname);
 
 
 function howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi)
