@@ -954,8 +954,9 @@ switch mod
         [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([ea_getconnectomebase('dmri'),mod,'.mat']);
 end
 
+[selection]=ea_groupselectorwholelist(M.ui.listselect,M.patient.list);
 
-for pt=M.ui.listselect
+for pt=selection
 
     % set pt specific options
 
@@ -1115,7 +1116,7 @@ for pt=M.ui.listselect
         end
     end
     close(resultfig);
-    keyboard
+    
 
     if processlocal % gather stats and recos to M
         load([M.ui.groupdir,options.patientname,filesep,'ea_stats']);
@@ -1337,7 +1338,9 @@ function opensubgui_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
-lead_dbs('loadsubs',M.patient.list(M.ui.listselect));
+[selection]=ea_groupselectorwholelist(M.ui.listselect,M.patient.list);
+
+lead_dbs('loadsubs',M.patient.list(selection));
 
 
 % --- Executes on button press in choosegroupcolors.
@@ -1664,12 +1667,14 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
     % save M
     ea_refresh_lg(handles);
     M=getappdata(hObject,'M');
+    disp('Saving data to disk...');
     try
         save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
     catch
         warning('Data could not be saved.');
         keyboard
     end
+    disp('Done.');
     disp('Bye for now.');
 end
 ea_busyaction('off',gcf,'group');
