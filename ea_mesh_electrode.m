@@ -46,7 +46,7 @@ nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
 
 cylz0=-35;     % define the lower end of the bounding cylinder
 cylz1=50;     % define the upper end of the bounding cylinder
-cylradius=15; % define the radius of the bounding cylinder  
+cylradius=25; % define the radius of the bounding cylinder  
 ndiv=50;      % division of circle for the bounding cylinder
 
 ncount=length(fv);     % the number of nuclei meshes inside fv()
