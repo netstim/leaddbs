@@ -1,4 +1,5 @@
 function ea_gencoregcheckfigs(options)
+disp(['Exporting coregistration check images to ',options.root,options.patientname,filesep,'checkreg...']);
 directory=[options.root,options.patientname,filesep];
 [~,filespresent]=ea_assignpretra(options);
 
@@ -90,7 +91,7 @@ for c=1:length(cmd)
         system(cmd{c});
     end
 end
-
+disp('Done.');
 
 function name=ea_cleanmethodname(name)
 name(strfind(name,':'))=[];

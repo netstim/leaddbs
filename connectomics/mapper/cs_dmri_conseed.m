@@ -14,7 +14,7 @@ end
 
 switch cmd
     case 'seed'
-        map=ea_load_nii([cbase,'spacedefinitions',filesep,space,'.nii']);
+        map=ea_load_nii([cbase,'spacedefinitions',filesep,space,'.nii.gz']);
         cfile=[dfold,'dMRI',filesep,cname];
         
         load(cfile,'fibers');
@@ -34,6 +34,7 @@ switch cmd
             % subtract nan values from these
             
             ixvals=Vseed.img(ixs);
+            
             [xx,yy,zz]=ind2sub(size(Vseed.img),ixs);
             XYZvx=[xx,yy,zz,ones(length(xx),1)]';
             clear ixs

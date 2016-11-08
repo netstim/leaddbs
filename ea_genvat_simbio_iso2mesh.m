@@ -815,7 +815,12 @@ catch
     s(1) = 1;
     L = sparse(indexi,indexj,s,sys_size,sys_size,length(s));
     clear dia;
+    try
     L = ichol(L);
+    catch % fix by AH 11/7/2016
+        nalpha = max(sum(abs(L),2)./diag(L))-2;
+        L = ichol(L, struct('type','ict','droptol',1e-3,'diagcomp',nalpha));
+    end
 end
 %startvektor
 %disp('Finding startvector...')

@@ -81,9 +81,9 @@ set(atls, 'EdgeColor','none');
 
 set(atls, 'FaceLighting', 'gouraud');
 set(atls, 'LineStyle', '--');
-set(atls, 'SpecularColorReflectance', 0);
-set(atls, 'SpecularExponent', 10);
-set(atls, 'SpecularStrength', 0.1)
+set(atls, 'SpecularColorReflectance', 1);
+set(atls, 'SpecularExponent', 3);
+set(atls, 'SpecularStrength', 0.3)
 
 set(atls, 'DiffuseStrength', 0.4)
 %alpha(0.7);
