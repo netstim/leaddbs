@@ -64,17 +64,19 @@ for fi=1:length(fis2anat)
     end
     ofname{cnt}=[fname,'2',rfname,suffx,'.png'];
     
-    cmd{cnt}=[SLICER,' ',ea_path_helper(fis2anat{fi}),' ',ea_path_helper(primanat),' -a ',ea_path_helper([directory,'checkreg',filesep,ofname{cnt}])];    
-
-    cnt=cnt+1;
+    if exist(fis2anat{fi},'file')
+        cmd{cnt}=[SLICER,' ',ea_path_helper(fis2anat{fi}),' ',ea_path_helper(primanat),' -a ',ea_path_helper([directory,'checkreg',filesep,ofname{cnt}])];
+        cnt=cnt+1;
+    end
 end
 for fi=1:length(fis2mni)
     [~,fname]=fileparts(fis2mni{fi});
     [~,rfname]=fileparts(mnihires);
     ofname{cnt}=[fname,'2',rfname,nm,'.png'];
-    cmd{cnt}=[SLICER,' ',ea_path_helper(fis2mni{fi}),' ',ea_path_helper(mnihires),' -a ',ea_path_helper([directory,'checkreg',filesep,ofname{cnt}])];
-
-    cnt=cnt+1;
+    if exist(fis2mni{fi},'file')
+        cmd{cnt}=[SLICER,' ',ea_path_helper(fis2mni{fi}),' ',ea_path_helper(mnihires),' -a ',ea_path_helper([directory,'checkreg',filesep,ofname{cnt}])]; 
+        cnt=cnt+1;
+    end
 end
 if ~exist([directory,'checkreg'],'file')
     mkdir([directory,'checkreg']);
