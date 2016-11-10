@@ -9,13 +9,10 @@ signallength=length(V);
 %% run sequence of proxyfunctions (below):
 ea_realign_fmri(signallength,options); % realign fMRI
 
-% new segment (fMRI, preoperative anatomical image):
-fis={['r',options.prefs.rest],options.prefs.prenii_unnormalized};
-for fi=1:length(fis)
-    ea_newseg(directory,fis{fi},0,options); % new Segment fMRI
-end
+ea_newseg(directory,options.prefs.prenii_unnormalized,0,options); % Segment anat
 
 ea_coreg_pre2fmri(options); % register pre 2 fmri (for timecourse-extraction).
+
 ea_smooth_fmri(signallength,options); % slightly smooth fMRI data
 
 

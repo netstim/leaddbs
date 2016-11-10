@@ -4,8 +4,9 @@ function ea_newseg(directory,file,dartel,options,del)
 % we use the enhanced TPM by Lorio / Draganski:
 % http://unil.ch/lren/home/menuinst/data--utilities.html
 
+% keep the 'y_*' and 'iy_*' file by default
 if nargin < 5
-    del = 1;
+    del = 0;
 end
 
 if ~dartel && exist([directory, 'c1', file], 'file') || dartel && exist([directory, 'rc1', file], 'file')
@@ -32,7 +33,7 @@ else
     [~,fn]=fileparts(file);
     ea_delete([directory,fn,'_seg8.mat']);
 
-    % del==0: keep the deformation field when for ea_normalize_spmnewseg
+    % delete the deformation field file
     if del
         ea_delete([directory, 'y_', file]);
         ea_delete([directory, 'iy_', file]);
