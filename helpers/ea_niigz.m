@@ -3,31 +3,25 @@ function fn=ea_niigz(base)
 % present will return .nii.gz (e.g. used for writing output nonexistent
 % files)
 
-% rm base: 
-[pth,base,ext]=fileparts(base);
-try
-    if strcmp(base(end-3:end),'.nii') % still has .nii ?�.nii.gz has been applied
-        [~,base]=fileparts(base);
-    end
-end
+[pth,name,ext]=ea_niifileparts(base);
 
-nii=dir(fullfile(pth,[base,'.nii']));
-niigz=dir(fullfile(pth,[base,'.nii.gz']));
+nii=dir([pth,'.nii']);
+niigz=dir([pth,'.nii.gz']);
 
 if ~isempty(nii) && ~isempty(niigz)
-    warning(['Duplicate .nii/.nii.gz files detected. ',fullfile(pth,base),'.']);
+    warning(['Duplicate .nii/.nii.gz files detected for ',name]);
     switch ext
         case '.nii' % explicitly asked for .nii
-            fn=fullfile(pth,[base,'.nii']);
+            fn=[pth,'.nii'];
             warning('Using .nii version since explicitly asked for.');
         otherwise
-            fn=fullfile(pth,[base,'.nii.gz']);
+            fn=[pth,'.nii.gz'];
     end
 elseif isempty(nii) && ~isempty(niigz)
-    fn=fullfile(pth,[base,'.nii.gz']);
+    fn=[pth,'.nii.gz'];
 elseif ~isempty(nii) && isempty(niigz)
-    fn=fullfile(pth,[base,'.nii']);
+    fn=[pth,'.nii'];
 else % file not (yet) present, for now use .nii as default for output.
-    fn=fullfile(pth,[base,'.nii']);
+    fn=[pth,'.nii'];
 end
 

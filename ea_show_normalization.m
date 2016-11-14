@@ -19,7 +19,7 @@ end
 disp('Preparing images to show Normalization...');
 
 for export=expdo % if CT, only do 1, if MR, do 1:3.
-    %try
+    try
         switch export
             case 1
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
@@ -49,19 +49,16 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
 
 
             mcr=ea_checkmacaque(options);
-            
-          
-            
+                
             w=load([options.earoot,mcr,'templates',filesep,'mni_wires.mat']);
             pt=ea_load_nii(checkf);
             
             if ~isequal(size(w.wires),size(pt.img))
-                Vp=ea_open_vol(pt.fname);
                 matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
                     checkf};
                 matlabbatch{1}.spm.util.imcalc.output = checkfn;
                 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
-                matlabbatch{1}.spm.util.imcalc.expression = ['i2'];
+                matlabbatch{1}.spm.util.imcalc.expression = 'i2';
                 matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
                 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
                 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
@@ -70,7 +67,6 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 spm_jobman('run',jobs);
                 clear matlabbatch jobs;
                 pt=ea_load_nii(checkf);
-                ea_close_vol(Vp);
             end
             %mni.img(:)=zscore(mni.img(:));
             
@@ -95,10 +91,10 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             %joint_im=0.5*wires.img+pt.img;
             joint_im=pt.img;
             joint_im=joint_im.*w.wires;
-%            joint_im(wires.img>0.8)=1;
+            %joint_im(wires.img>0.8)=1;
             %joint_im=repmat(joint_im,1,1,1,3);
-            %            jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
-            %     ea_imshowpair(jim,options,addstr);
+            %jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
+            %ea_imshowpair(jim,options,addstr);
             
             % ----------------------------------------------------------
             % edited by TH 2016-02-17 to add windowed normalization check
@@ -106,26 +102,48 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             pt.img=single(pt.img);
             mni_img.img=single(mni_img.img);
             joint_im=single(joint_im);
-            if exist([options.root,options.patientname,filesep,'glgrid.mat']);
-                g=load([options.root,options.patientname,filesep,'glgrid.mat']);
-                g.grid=single(g.grid);
-                g.grid=g.grid-min(g.grid(:));
-                g.grid=g.grid./max(g.grid(:));
-                g.grid=g.grid.*0.2;
-                g.grid=g.grid+0.8;
-                grid_im=pt.img.*g.grid;
-%                grid_im(g.grid>0.7)=1;
+            
+            gridf = [options.root,options.patientname,filesep,'glgrid.nii'];
+            if exist(gridf, 'file');
+                g=ea_load_nii(gridf);
+                if ~isequal(size(w.wires),size(g.img))
+                    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
+                        [gridf,',1']};
+                    matlabbatch{1}.spm.util.imcalc.output = 'glgrid.nii';
+                    matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
+                    matlabbatch{1}.spm.util.imcalc.expression = 'i2';
+                    matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+                    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+                    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+                    matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+                    jobs{1}=matlabbatch;
+                    spm_jobman('run',jobs);
+                    clear matlabbatch jobs;
+                    g=ea_load_nii([gridf,',1']);
+                end
+                
+                g.img=g.img/max(g.img(:));
+                g.img=g.img.*255;
+                grid=single(g.img);
+                
+                grid=grid-min(grid(:));
+                grid=grid./max(grid(:));
+                grid=grid.*0.2;
+                grid=grid+0.8;
+                grid_im=pt.img.*grid;
+                %grid_im(grid>0.7)=1;
                 wim = cat(4,pt.img,mni_img.img,joint_im,grid_im);
             else
+                fprintf('\ngrid file not found!\n');
                 wim = cat(4,pt.img,mni_img.img,joint_im);
             end
             
             clear joint_im pt grid_im
             ea_imshowpair(wim,options,addstr,'normalization');
             
-%     catch
-%         warning(['Error showing normalization of ',checkf,'.']);
-%     end
+    catch
+        fprintf(['Skip showing normalization of ',checkf,'\n']);
+    end
 
 end
 
@@ -287,6 +305,3 @@ oldClass = class(imat);  % Original image type
 imat = double(imat);      % Convert image to double precision for interpolation
 scaled = interp2(imat,newX,newY(:),'cubic');
 scaled = cast(scaled,oldClass);  % Convert back to original image type
-
-
-

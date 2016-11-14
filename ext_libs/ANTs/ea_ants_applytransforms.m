@@ -23,13 +23,6 @@ if nargin>5
     transformfile=varargin{6};
 end
 
-basedir = [fileparts(mfilename('fullpath')), filesep];
-
-if ispc
-    applyTransforms = [basedir, 'antsApplyTransforms.exe'];
-else
-    applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
-end
 directory=[options.root,options.patientname,filesep];
 warpsuffix=ea_conv_antswarps(directory);
 
@@ -83,10 +76,16 @@ if nargin==1
             [fis,ofis,lfis]=ea_appendgrid(options,fis,ofis,lfis,1);
 end
 
+basedir = [fileparts(mfilename('fullpath')), filesep];
+if ispc
+    applyTransforms = [basedir, 'antsApplyTransforms.exe'];
+else
+    applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
+end
 
 for fi=1:length(fis)
     if ~exist(fis{fi},'file')   % skip if unnormalized file doesn't exist
-        warning('%s not found. Skipping...\n',fis{fi});
+        fprintf('%s not found. Skip normalization...\n',fis{fi});
         continue
     end
 
@@ -122,10 +121,10 @@ for fi=1:length(fis)
 
            if exist('transformfile','var')
                [pth,fn,ext]=fileparts(transformfile);
-               tr=[' -r ',refim,...
+               tr=[' -r ',ea_path_helper(refim),...
                    ' -t [',ea_path_helper(pth),filesep,fn,ext,',0]'];
            else
-                   tr=[' -r ',refim,...
+                   tr=[' -r ',ea_path_helper(refim),...
                        ' -t [',ea_path_helper([directory,glprebase]),'InverseComposite',warpsuffix,',0]'];
            end
        else
@@ -135,10 +134,10 @@ for fi=1:length(fis)
 
            if exist('transformfile','var')
                [pth,fn,ext]=fileparts(transformfile);
-               tr=[' -r ',refim,...
+               tr=[' -r ',ea_path_helper(refim),...
                    ' -t [',ea_path_helper(pth),filesep,fn,ext,',0]'];
            else
-                   tr=[' -r ',refim,...
+                   tr=[' -r ',ea_path_helper(refim),...
                        ' -t [',ea_path_helper([directory,glprebase]),'Composite',warpsuffix,',0]'];
            end
        end
@@ -158,21 +157,24 @@ end
 
 % generate l*.nii files
 if nargin==1 % standard case
-    for fi=1:length(ofis)
-        try
-            matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
-                                                    [ofis{fi},',1']};
-            matlabbatch{1}.spm.util.imcalc.output = lfis{fi};
-            matlabbatch{1}.spm.util.imcalc.outdir = {directory};
-            matlabbatch{1}.spm.util.imcalc.expression = 'i2';
-            matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
-            matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-            matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-            matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-            matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-
-            try spm_jobman('run',{matlabbatch}); end
-            clear matlabbatch
+    for fi=1:length(lfis)
+        if ~exist(ofis{fi}, 'file')   % skip if normalized file doesn't exist
+            fprintf('%s not found. Skip generating l*.nii files (small bounding box)...\n',ofis{fi});
+            continue
         end
+        
+        matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
+                                                [ofis{fi},',1']};
+        matlabbatch{1}.spm.util.imcalc.output = lfis{fi};
+        matlabbatch{1}.spm.util.imcalc.outdir = {directory};
+        matlabbatch{1}.spm.util.imcalc.expression = 'i2';
+        matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+        matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+        matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+        matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+        matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+
+        try spm_jobman('run',{matlabbatch}); end
+        clear matlabbatch
     end
 end

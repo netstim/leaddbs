@@ -12,10 +12,15 @@ end
 % need to consider the spm_vol('image.nii,1') case
 fname=[ea_niigz(fname), fname(strfind(fname, ','):end)];
 
-if strcmp(fname(end-2:end),'.gz')
+if regexp(fname, '\.nii.gz$', 'once') % 'image.nii.gz'
     wasgzip=1;
     gunzip(fname);
     fname=fname(1:end-3);
+elseif regexp(fname, '\.nii.gz,\d+$', 'once') % 'image.nii.gz,1'
+    wasgzip=1;
+    [pth, ~, ~, slice] = ea_niifileparts(fname);
+    gunzip([pth, '.nii.gz']);
+    fname = [pth, '.nii', slice];
 else
     wasgzip=0;
 end
@@ -39,9 +44,11 @@ else
     end
     try
         nii.hdr.dime.pixdim=ea_detvoxsize(nii(1).mat);
+    catch
+        fprintf('Can not determine the voxel size..\n')
     end
 end
 
 if wasgzip
-    delete(fname); % since gunzip makes a copy of the zipped file.
+    delete([ea_niifileparts(fname), '.nii.gz']); % since gunzip makes a copy of the zipped file.
 end

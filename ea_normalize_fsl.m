@@ -31,8 +31,8 @@ end
 % ANTs nolinear registration
 directory=[options.root,options.patientname,filesep];
 ea_fnirt([options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'],...
-                  [directory,options.prefs.prenii_unnormalized],...
-                  [directory,options.prefs.gprenii]);
+         [directory,options.prefs.prenii_unnormalized],...
+         [directory,options.prefs.gprenii]);
 
 % Apply registration
 ea_apply_normalization(options)

@@ -1,6 +1,5 @@
 function [options,presentfiles]=ea_assignpretra(options)
 
-
 directory=[options.root,options.patientname,filesep];
 ptemps={'','_t1','_pd'};
 

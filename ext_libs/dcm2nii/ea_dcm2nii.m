@@ -1,7 +1,10 @@
 function [cmdout, tempf] = ea_dcm2nii(inputimage, outputimage)
 % Wrapper for dcm2nii, just used for reorientation and cropping currently
 
-% Save the result to a new file, when the second parameter is specified
+% Save the result to a new file, when the second parameter is specified.
+% Use ea_rocrop is you want to overwrite the original image, dcm2ii itself
+% is not stable enough in some cases (will output corrupted file with 1KB
+% size).
 if nargin == 2
     copyfile(inputimage,outputimage)
     inputimage = outputimage;
@@ -17,7 +20,7 @@ else
     dcm2nii = [basedir, 'dcm2nii.', computer('arch')];
 end
 
-cmd=[dcm2nii, ' -g n -x y ', inputimage];
+cmd=[dcm2nii, ' -g n -x y ', ea_path_helper(inputimage)];
 
 fprintf('\nReorient and crop image...\n\n');
 if ~ispc

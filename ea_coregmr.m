@@ -47,8 +47,7 @@ if ~strcmp(options.coregmr.method,'Do not coregister MRIs (already coregistered)
     switch options.coregmr.method
         case 'Coreg MRIs: SPM' % SPM
             ea_coregmr_spm(options,automan,doreslice);
-            return
-            
+            return    
         case 'Coreg MRIs: FSL' % FSL
             ea_coregmr_flirt(options);
             return

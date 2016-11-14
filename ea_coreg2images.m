@@ -1,10 +1,14 @@
-function ea_coreg2images(options,moving,fixed,ofile,otherfiles,writeoutmat)
+function affinefile = ea_coreg2images(options,moving,fixed,ofile,otherfiles,writeoutmat)
 
-if ~exist('otherfiles','var')
-   otherfiles={''}; 
+if nargin < 5
+    otherfiles={''}; 
+elseif ischar(otherfiles)
+    otherfiles = {otherfiles};
 end
-if ~exist('writeoutmat','var')
-    writeoutmat=0;
+
+if nargin < 6
+    writeoutmat = 0;
+    affinefile = {''};
 end
 
 [directory,mfilen,ext]=fileparts(moving);
@@ -19,42 +23,37 @@ end
 
 switch options.coregmr.method
     case 'Coreg MRIs: SPM' % SPM
-        
-        ea_docoreg_spm(moving,fixed,'nmi',1,otherfiles)
+        affinefile = ea_docoreg_spm(moving,fixed,'nmi',1,otherfiles,writeoutmat);
         movefile([directory,'r',mfilen],ofile);
         for ofi=1:length(otherfiles)
-           [pth,fn,ext]=fileparts(otherfiles{ofi});
-           try % could be empty cell.
-           movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
-           end
+            [pth,fn,ext]=fileparts(otherfiles{ofi});
+            movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
         end
-    case 'Coreg MRIs: FSL' % FSL
-        
-        ea_flirt(fixed,...
+    case 'Coreg MRIs: FSL' % FSL 
+        affinefile = ea_flirt(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);        
     case 'Coreg MRIs: ANTs' % ANTs
-        
-        ea_ants(fixed,...
+        affinefile = ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Coreg MRIs: BRAINSFIT' % BRAINSFit
-        ea_brainsfit(fixed,...
+        affinefile = ea_brainsfit(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Coreg MRIs: Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
         ea_docoreg_spm(moving,fixed,'nmi',0,otherfiles)
-        ea_ants(fixed,...
+        affinefile = ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Coreg MRIs: Hybrid SPM & FSL' % Hybrid SPM -> FSL
         ea_docoreg_spm(moving,fixed,'nmi',0,otherfiles)
-        ea_flirt(fixed,...
+        affinefile = ea_flirt(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Coreg MRIs: Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
         ea_docoreg_spm(moving,fixed,'nmi',0,otherfiles)
-        ea_brainsfit(fixed,...
+        affinefile = ea_brainsfit(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-end
+end 

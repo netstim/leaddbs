@@ -6,6 +6,10 @@ switch ea_whichnormmethod(directory);
         
         ea_ants_applytransforms(options,from,to,useinverse);
         
+    case ea_getfslnormfuns % FSL part here
+        
+        ea_fsl_applytransforms(options,from,to,useinverse);
+        
     otherwise % SPM part here
         for fi=1:length(from) % assume from and to have same length (must have for this to work)
             matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']}; % non-inverse usage okay here since using pushforward method.

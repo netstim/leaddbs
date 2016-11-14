@@ -158,7 +158,10 @@ for peer=1:length(peerfolders)
         
         antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
         prenii=ea_niigz([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
-        icmd=[antsApply,' -r ',prenii,' -t ',[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5'],' -t ',[peerfolders{peer},filesep,'glanatInverseComposite.h5'],' -o [',[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz',',1]']];
+        icmd=[antsApply,' -r ',ea_path_helper(prenii),...
+            ' -t ',ea_path_helper([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5']),...
+            ' -t ',ea_path_helper([peerfolders{peer},filesep,'glanatInverseComposite.h5']),...
+            ' -o [',ea_path_helper([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz']),',1]'];
         if ~ispc
             system(['bash -c "', icmd, '"']);
         else

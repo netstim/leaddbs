@@ -45,7 +45,7 @@ end
 
 
 directory=[options.root,options.patientname,filesep];
-options.coregmr.method=2; % hard-code to ANTs for now here.
+options.coregmr.method = 'Coreg MRIs: ANTs'; % hard-code to ANTs for now here.
 cnt=1;
 
 if usebrainmask

@@ -17,8 +17,16 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
     switch whichnormmethod
         case ea_getantsnormfuns
 
-            ea_ants_applytransforms(options,{[options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.nii']},{[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},1);
-
+            ea_ants_applytransforms(options, ...
+                {[options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.nii']}, ...
+                {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},1);
+        
+        case ea_getfslnormfuns
+            
+            ea_fsl_applytransforms(options, ...
+                {[options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.nii']}, ...
+                {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},1); 
+            
         otherwise
             switch spm('ver')
                 case 'SPM8'
@@ -46,6 +54,7 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
             end
     end
 end
+
 if ~exist([directory,'templates',filesep,'labeling',filesep,'r',b0rest,'w',options.lc.general.parcellation,'.nii'],'file')
     %% coreg atlas into b0-space:
     copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);

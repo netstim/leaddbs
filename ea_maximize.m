@@ -15,6 +15,7 @@ function ea_maximize(hFig)
 if nargin < 1
     hFig = gcf;
 end
-drawnow % Required to avoid Java errors
-jFig = get(handle(hFig), 'JavaFrame'); 
-jFig.setMaximized(true);
+% drawnow % Required to avoid Java errors
+% jFig = get(handle(hFig), 'JavaFrame'); 
+% jFig.setMaximized(true);
+set(hFig, 'Units','normalized','OuterPosition',[0 0 1 1]);

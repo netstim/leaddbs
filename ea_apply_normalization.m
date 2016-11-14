@@ -78,9 +78,8 @@ switch whichnormmethod
                 try movefile([directory,'w',options.prefs.ctnii_coregistered],[directory,options.prefs.ctnii]); end
 
             case 'SPM12'
+                
                 % export glfiles (a bit more coarse resolution, full brain bounding box).
-
-
                 for pos=1:length(gfis)
                     if exist([directory,postops{pos}],'file')
                         nii=ea_load_untouch_nii([directory,postops{pos}]);
@@ -108,7 +107,6 @@ switch whichnormmethod
                 end
 
                 % export lfiles (fine resolution, small bounding box.
-
                 try
                     for pos=1:length(lfis)
                         if exist([directory,postops{pos}],'file')
@@ -136,6 +134,8 @@ switch whichnormmethod
                         try movefile([directory,'swr',postops{pos}],[directory,lfis{pos}]); end
                     end
                 end
+                
+                ea_delete([directory,'rgrid.nii']);
                 switch options.modality
                     case 1
                         ea_delete([directory,'r',options.prefs.prenii_unnormalized]);
@@ -149,16 +149,6 @@ switch whichnormmethod
         end
 end
 
-if options.prefs.normalize.createwarpgrids
-    try
-        nii=ea_load_nii([directory,'glgrid.nii']);
-        nii.img=nii.img/max(nii.img(:));
-        nii.img=nii.img.*255;
-        grid=uint8(nii.img);
-        save([directory,'glgrid.mat'],'grid');
-        delete([directory,'glgrid.nii']);
-    end
-end
 
 function resize_img(imnames, Voxdim, BB, ismask)
 %  resize_img -- resample images to have specified voxel dims and BBox

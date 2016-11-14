@@ -1,96 +1,109 @@
-function ea_flirt(varargin)
+function affinefile = ea_flirt(varargin)
 % Wrapper for FSL linear registration
 
-fixedimage=varargin{1};
-movingimage=varargin{2};
-outputimage=varargin{3};
+fixedimage = varargin{1};
+movingimage = varargin{2};
+outputimage = varargin{3};
 
-if nargin>3
-    writematout=varargin{4};
+if nargin >= 4
+    writeoutmat = varargin{4};
 else
-    writematout=1;
-end
-if nargin>4
-    otherfiles=varargin{5};
+    writeoutmat = 0;
 end
 
-if fileparts(movingimage)
-    volumedir = [fileparts(movingimage), filesep];
+if nargin >= 5
+    if ischar(varargin{5})
+        otherfiles = varargin(5);
+    else
+        otherfiles = varargin{5};
+    end
 else
-    volumedir =['.', filesep];
+    otherfiles = {};
 end
 
-[outputdir, outputname, ~] = fileparts(outputimage);
-if outputdir
-    outputbase = [outputdir, filesep, outputname];
+% Prepare bet image for flirt, generate the brain masks '*_bet_mask.nii'
+fixedimage_bet = [ea_niifileparts(fixedimage), '_bet'];
+movingimage_bet = [ea_niifileparts(movingimage), '_bet'];
+if isempty(dir([fixedimage_bet,'.nii*']))
+    ea_bet(fixedimage, 1, fixedimage_bet);
+end
+if isempty(dir([movingimage_bet,'.nii*']))
+    ea_bet(movingimage, 1, movingimage_bet);
+end
+
+volumedir = [fileparts(ea_niifileparts(movingimage)), filesep]; 
+
+% name of the output transformation
+[~, mov] = ea_niifileparts(movingimage);
+[~, fix] = ea_niifileparts(fixedimage);
+xfm = [mov, '2', fix, '_flirt'];
+% determine how many runs have been performed before
+runs = dir([volumedir, xfm, '*.mat']);
+if isempty(runs)
+    runs = 0;
 else
-    outputbase = ['.', filesep, outputname];
+    runs = str2double(runs(end).name(numel(xfm)+1:end-4)); % suppose runs<10
 end
 
-fixedimage = ea_path_helper(ea_niigz(fixedimage));
-movingimage = ea_path_helper(ea_niigz(movingimage));
-outputimage = ea_path_helper(ea_niigz(outputimage));
+% affine params
+affinestage = [' -cost mutualinfo' ...
+               ' -searchcost mutualinfo' ...
+               ' -interp sinc' ...
+               ' -verbose 1'];
+
+if runs == 0 % mattes MI affine + rigid
+    affinestage = [affinestage, ...
+                   ' -omat ', ea_path_helper(volumedir), xfm ,num2str(runs+1), '.mat'];
+elseif runs > 0
+    affinestage = [affinestage, ...
+                   ' -init ', ea_path_helper(volumedir), xfm, num2str(runs), '.mat' ...
+                   ' -omat ', ea_path_helper(volumedir), xfm, num2str(runs+1), '.mat'];
+end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
-setenv('FSLOUTPUTTYPE','NIFTI')
 if ispc
     FLIRT = [basedir, 'flirt.exe'];
+    COVERT_XFM = [basedir, 'convert_xfm.exe'];
 else
     FLIRT = [basedir, 'flirt.', computer('arch')];
+    COVERT_XFM = [basedir, 'convert_xfm.', computer('arch')];
 end
 
+flirtcmd = [FLIRT, ...
+            ' -ref ', ea_path_helper(fixedimage_bet), ...
+            ' -in ', ea_path_helper(movingimage_bet), ...
+            ' -out ', ea_path_helper(outputimage) ...
+            affinestage];
 
-% determine how many runs have been performed before..
-runs=0;
-for r=1:5;
-    if exist([volumedir, 'fslaffine',num2str(r),'.mat'],'file')
-        runs=r;
-    else
-        break
-    end
-end
-
-if runs==0 % mattes MI affine + rigid
-
-    affinestage = [' -cost mutualinfo' ...
-    ' -searchcost mutualinfo' ...
-    ' -interp sinc' ...
-    ' -omat fslaffine',num2str(runs),'.mat' ...
-    ' -verbose 1'];
-
-elseif runs>0
-
-    affinestage = [' -init fslaffine',num2str(runs),'.mat' ...
-    ' -cost mutualinfo' ...
-    ' -searchcost mutualinfo' ...
-    ' -interp sinc' ...
-    ' -omat ct2anat',num2str(runs),'.mat' ...
-    ' -verbose 1'];
-
-end
-
-ea_libs_helper
-cmd = [FLIRT, ...
-    ' -ref ',fixedimage, ...
-    ' -in ',movingimage, ...
-    ' -out ',outputimage ...
-    affinestage];
+% Output inverse xfm because FSL won't handle the inversion internally when
+% apply the transformation
+invxfm = [fix, '2', mov, '_flirt'];
+convertxfmcmd = [COVERT_XFM, ...
+              ' -omat ', ea_path_helper(volumedir), invxfm, num2str(runs+1), '.mat' ...
+              ' -inverse ', ea_path_helper(volumedir), xfm, num2str(runs+1), '.mat'];
+          
+setenv('FSLOUTPUTTYPE','NIFTI');
 if ~ispc
-    system(['bash -c "', cmd, '"']);
+    system(['bash -c "', flirtcmd, '"']);
+    system(['bash -c "', convertxfmcmd, '"']);
 else
-    system(cmd);
+    system(flirtcmd);
+    system(convertxfmcmd);
 end
 
-if exist('otherfiles','var')
-    ea_error('This procedure is not yet supported using FSL. Please choose a different coregistration method.');
-    if ~isempty(otherfiles)
-        for ofi=1:length(otherfiles)
-        [options.root,options.patientname]=fileparts(fileparts(otherfiles{ofi}));
-        options.root=[options.root,filesep];
-        options.prefs=ea_prefs(options.patientname);
-        ea_ants_applytransforms(options,otherfiles(ofi),otherfiles(ofi),0,fixedimage,[outputbase, '0GenericAffine.mat']);
-        end
+if ~isempty(otherfiles)
+    for fi = 1:numel(otherfiles)
+        ea_fsl_flirt_applytransform(fixedimage, otherfiles{fi}, otherfiles{fi}, ...
+                                    [ea_path_helper(volumedir), xfm, num2str(runs+1), '.mat']);
     end
 end
 
+if ~writeoutmat
+    ea_delete([volumedir, xfm, num2str(runs+1), '.mat'])
+    ea_delete([volumedir, invxfm, num2str(runs+1), '.mat'])
+    affinefile = {''};
+else
+    affinefile = {[volumedir, xfm, num2str(runs+1), '.mat'], ...
+                  [volumedir, invxfm, num2str(runs+1), '.mat']};
+end
 

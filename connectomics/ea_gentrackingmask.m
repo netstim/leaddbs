@@ -6,7 +6,21 @@ ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
 %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
 copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
 copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]);
-ea_coreg2images(options,[directory,'c',options.prefs.prenii_unnormalized],[directory,options.prefs.b0],[directory,'c',options.prefs.prenii_unnormalized],{[directory,'cc2',options.prefs.prenii_unnormalized]},1);
+affinefile = ea_coreg2images(options, ...
+    [directory,'c',options.prefs.prenii_unnormalized], ... % moving
+    [directory,options.prefs.b0], ... % fix
+    [directory,'c',options.prefs.prenii_unnormalized], ... % out 
+    {[directory,'cc2',options.prefs.prenii_unnormalized]}, ... % other
+    1); % writeout transform
+
+% Rename saved transform for further use: canat2b0*.mat to anat2b0*.mat, 
+% and b02canat2b0*.mat to b02anat*.mat 
+[~, anat] = ea_niifileparts(options.prefs.prenii_unnormalized);
+if ~isempty(affinefile)
+    for i = 1:numel(affinefile)
+        movefile(affinefile{i}, strrep(affinefile{i}, ['c',anat], anat));
+    end
+end
 
 movefile([directory,'cc2',options.prefs.prenii_unnormalized],[directory,'trackingmask.nii']);
 delete([directory,'c',options.prefs.prenii_unnormalized]);

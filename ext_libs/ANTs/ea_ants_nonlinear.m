@@ -107,15 +107,12 @@ for fi=1:length(fixedimage)
     end
     
     try
-    rigidstage=[rigidstage,...
+        rigidstage=[rigidstage,...
         ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
     catch
         keyboard
-    end
-            
-       
-        
-    end
+    end    
+end
 
 affinestage = [' --transform Affine[0.1]'...
                ' --convergence ', affineconvergence, ...
@@ -169,7 +166,5 @@ if ~ispc
 else
     system(cmd);
 end
-
-
 
 ea_conv_antswarps(directory);

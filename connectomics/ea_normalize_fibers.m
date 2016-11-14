@@ -23,12 +23,12 @@ try
 end
 
 % get transform from b0 to anat and affine matrix of anat
-[refb0,refanat,refnorm,b02anat,whichnormmethod]=ea_checktransform(options);
+[refb0,refanat,refnorm,whichnormmethod]=ea_checktransform(options);
 
 % plot reference volumes
 if vizz
     figure('color','w','name',['Fibertrack normalization: ',options.patientname],'numbertitle','off');
-    % plot b0
+    % plot b0, voxel space
     b0=ea_load_nii(refb0);
     subplot(1,3,1);
     title('b0 space');
@@ -37,7 +37,7 @@ if vizz
     axis vis3d off tight equal;
     hold on
     
-    % plot anat
+    % plot anat, voxel space
     anat=ea_load_nii(refanat);
     subplot(1,3,2);
     title('anat space');
@@ -46,7 +46,7 @@ if vizz
     axis vis3d off tight equal;
     hold on
     
-    % plot MNI
+    % plot MNI, world space
     mni=ea_load_nii(refnorm);
     subplot(1,3,3);
     title('MNI space');
@@ -60,11 +60,20 @@ end
 % load fibers
 [fibers,idx]=ea_loadfibertracts([directory,options.prefs.FTR_unnormalized]);
 
+% Reduce the number of the fibers when FSL is used for normalization,
+% otherwise the Non-linear points mapping takes forever (about 2 seconds
+% for 1 point). Linear transformation from b0 to anat is okay...
+% NEED OTHER SOLUTION
+if ismember(whichnormmethod, ea_getfslnormfuns)
+    fibers = fibers(1:10000,:);
+end
+
 % plot unnormalized fibers
+maxvisfiber = 100000;
 if vizz
-    try
-        thisfib=fibers(1:100000,:);
-    catch
+    if size(fibers,1) > maxvisfiber
+        thisfib=fibers(1:maxvisfiber,:);
+    else
         thisfib=fibers;
     end
     subplot(1,3,1)
@@ -75,34 +84,39 @@ display(sprintf('\nNormalizing fibers...'));
 
 %% Normalize fibers
 
-%% map from b0 voxel space to anat voxel space
-wfibsvox_anat=[fibers(:,1:3),ones(size(fibers,1),1)]*b02anat';
-wfibsvox_anat=wfibsvox_anat(:,1:3);
-
-%% map from anat voxel space to anat mm space
-anataffine=spm_get_space(refanat);
-wfibsmm_anat=[wfibsvox_anat,ones(size(wfibsvox_anat,1),1)]*anataffine';
-wfibsmm_anat=wfibsmm_anat(:,1:3);
+%% map from b0 voxel space to anat mm and voxel space
+display(sprintf('\nMapping from b0 to anat...'));
+[~, mov] = fileparts(options.prefs.b0);
+[~, fix] = fileparts(options.prefs.prenii_unnormalized);
+[~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
+                                   refb0, ...
+                                   [directory, mov, '2', fix, '.mat'], ...
+                                   refanat, ...
+                                   options.coregmr.method);
+wfibsvox_anat = wfibsvox_anat';
 
 % plot fibers in anat space
 if vizz
-    try
-        thisfib=wfibsvox_anat(1:100000,:);
-    catch
+    if size(wfibsvox_anat,1) > maxvisfiber
+        thisfib=wfibsvox_anat(1:maxvisfiber,:);
+    else
         thisfib=wfibsvox_anat;
     end
     subplot(1,3,2)
     plot3(thisfib(:,1),thisfib(:,2),thisfib(:,3),'.','color',[0.1707    0.2919    0.7792]);
 end
 
-%% map from anat voxel space to mni mm space
-display(sprintf('\nPoints normalization...'));
-wfibsmm_mni = ea_map_coords(wfibsvox_anat',refanat,[directory,'y_ea_inv_normparams.nii'])';
+%% map from anat voxel space to mni mm and voxel space
+display(sprintf('\nMapping from anat to mni...'));
+[wfibsmm_mni, wfibsvox_mni] = ea_map_coords(wfibsvox_anat', ...
+                                            refanat, ...
+                                            [directory,'y_ea_inv_normparams.nii'], ...
+                                            refnorm);
 
-%% map from mni mm space to mni voxel space
+wfibsmm_mni = wfibsmm_mni';
+wfibsvox_mni = wfibsvox_mni';
+
 mniaffine=spm_get_space(refnorm);
-wfibsvox_mni=[wfibsmm_mni,ones(size(wfibsmm_mni,1),1)]*inv(mniaffine)';
-wfibsvox_mni=wfibsvox_mni(:,1:3);
 
 display(sprintf('\nNormalization done.'));
 
@@ -119,9 +133,9 @@ end
 
 % plot fibers in MNI space
 if vizz
-    try
-        thisfib=wfibsmm_mni(1:100000,:);
-    catch
+    if size(wfibsmm_mni,1) > maxvisfiber
+        thisfib=wfibsmm_mni(1:maxvisfiber,:);
+    else
         thisfib=wfibsmm_mni;
     end
     subplot(1,3,3)
@@ -155,21 +169,8 @@ try
 end
 
 
-function [refb0,refanat,refnorm,b02anat,whichnormmethod]=ea_checktransform(options)
+function [refb0,refanat,refnorm,whichnormmethod]=ea_checktransform(options)
 directory=[options.root,options.patientname,filesep];
-% % segment b0.
-% if ~exist([directory,'c2',options.prefs.b0],'file');
-%     disp('Segmenting b0...');
-%     ea_newseg(directory,options.prefs.b0,0,options);
-%     disp('Done.');
-% end
-
-% % segment anat.
-% if ~exist([directory,'c2',options.prefs.prenii_unnormalized],'file');
-%     disp('Segmenting anat...');
-%     ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
-%     disp('Done.');
-% end
 
 % check normalization routine used, determine template
 [whichnormmethod,refnorm]=ea_whichnormmethod(directory);
@@ -195,28 +196,30 @@ if strcmp(whichnormmethod, 'ea_normalize_spmdartel')
 end
 
 % generate b0 to anat tranformation
-Vb0=spm_vol([directory,options.prefs.b0]);
-Vanat=spm_vol([directory,options.prefs.prenii_unnormalized]);
-
-switch options.coregmr.method
-    case 2 % ANTs
-        ea_ants([directory,options.prefs.prenii_unnormalized],[directory,options.prefs.b0],[directory,'r',options.prefs.b0],1);
-        load([directory,'ct2anat1.mat']);
-        delete([directory,'ct2anat1.mat']);
-        b02anat=eye(4);
-        b02anat(1:3,1)=AffineTransform_float_3_3(1:3);
-        b02anat(1:3,2)=AffineTransform_float_3_3(4:6);
-        b02anat(1:3,3)=AffineTransform_float_3_3(7:9);
-        b02anat(1:3,4)=AffineTransform_float_3_3(10:12);
-
-        % the following is only empirically determined for now. This could
-        % be wrong in some cases.
-
-        b02anat([7,10,15])=b02anat([7,10,15])*-1;
-        b02anat=Vanat.mat\b02anat*Vb0.mat;
-    otherwise % default use SPM, BRAINSFit not supported here
-        display('Register b0 to anat...');
-        x=spm_coreg(Vb0,Vanat);
-        b02anat=Vanat.mat\spm_matrix(x(:)')*Vb0.mat;
-end
-save([directory,'b02anat.mat'],'b02anat');
+% Vb0=spm_vol([directory,options.prefs.b0]);
+% Vanat=spm_vol([directory,options.prefs.prenii_unnormalized]);
+% 
+% switch options.coregmr.method
+%     case 'Coreg MRIs: ANTs' % ANTs
+%         affinefile = ea_ants([directory,options.prefs.prenii_unnormalized],[directory,options.prefs.b0],[directory,'r',options.prefs.b0],1);
+%         load(affinefile);
+% %         delete(affinefile);
+%         b02anat=eye(4);
+%         b02anat(1:3,1)=AffineTransform_float_3_3(1:3);
+%         b02anat(1:3,2)=AffineTransform_float_3_3(4:6);
+%         b02anat(1:3,3)=AffineTransform_float_3_3(7:9);
+%         b02anat(1:3,4)=AffineTransform_float_3_3(10:12);
+% 
+%         % the following is only empirically determined for now. This could
+%         % be wrong in some cases.
+% 
+%         b02anat([7,10,15])=b02anat([7,10,15])*-1;
+%         b02anat=Vanat.mat\b02anat*Vb0.mat;
+%     case 'Coreg MRIs: FSL'
+%         
+%     otherwise % default use SPM
+%         display('Register b0 to anat...');
+%         x=spm_coreg(Vb0,Vanat); % b0 is thr fixed image,
+%         b02anat=Vanat.mat\spm_matrix(x(:)')*Vb0.mat;
+% end
+% save([directory,'b02anat.mat'],'b02anat');

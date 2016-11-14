@@ -14,7 +14,7 @@ tempfsize = tempf.bytes/1024;
 
 % To be safe, retry when the file size smaller than 10 KB
 while tempfsize < 10
-    disp('dcm2nii returns corrupt file, retrying...')
+    disp('dcm2nii returns corrupted file, retrying...')
     ea_dcm2nii(inputimage, [pth, filesep, 'temp.nii']);
     tempf=dir([pth,filesep,'temp.nii']);
     tempfsize = tempf.bytes/1024;
