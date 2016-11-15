@@ -45,7 +45,7 @@ switch whichnormmethod
                 lfis{1}=options.prefs.prenii;
                 lfis{2}=options.prefs.ctnii;
         end
-        [postops,gfis,lfis]=ea_appendgrid(options,postops,gfis,lfis,0);
+        [postops,gfis]=ea_appendgrid(options,postops,gfis,0);
         switch spm('ver')
             case 'SPM8'
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
@@ -106,7 +106,7 @@ switch whichnormmethod
                     end
                 end
 
-                % export lfiles (fine resolution, small bounding box.
+                % export lfiles (fine resolution, small bounding box).
                 try
                     for pos=1:length(lfis)
                         if exist([directory,postops{pos}],'file')

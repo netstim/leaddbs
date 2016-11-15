@@ -1,4 +1,4 @@
-function  [postops,gfis,lfis]=ea_appendgrid(options,postops,gfis,lfis,fullpath)
+function  [postops,gfis]=ea_appendgrid(options,postops,gfis,fullpath)
 if options.prefs.normalize.createwarpgrids
     if exist([options.root,options.patientname,filesep,'grid.nii'],'file')
         if fullpath

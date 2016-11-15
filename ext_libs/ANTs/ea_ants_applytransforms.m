@@ -84,7 +84,7 @@ if nargin == 1
             end
     end
     
-            [fis,ofis,lfis] = ea_appendgrid(options,fis,ofis,lfis,1);
+            [fis,ofis] = ea_appendgrid(options,fis,ofis,1);
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
@@ -154,24 +154,26 @@ end
 
 % generate l*.nii files
 if nargin == 1 % standard case
-    for fi = 1:length(lfis)
-        if ~exist(ofis{fi}, 'file')   % skip if normalized file doesn't exist
-            fprintf('%s not found. Skip generating l*.nii files (small bounding box)...\n',ofis{fi});
-            continue
-        end
-        
-        matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
-                                                [ofis{fi},',1']};
-        matlabbatch{1}.spm.util.imcalc.output = lfis{fi};
-        matlabbatch{1}.spm.util.imcalc.outdir = {directory};
-        matlabbatch{1}.spm.util.imcalc.expression = 'i2';
-        matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
-        matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-        matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-        matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-        matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+    for fi = 1:length(ofis)
+        try
+            if ~exist(ofis{fi}, 'file')   % skip if normalized file doesn't exist
+                fprintf('%s not found. Skip generating l*.nii files (small bounding box)...\n',ofis{fi});
+                continue
+            end
 
-        try spm_jobman('run',{matlabbatch}); end
-        clear matlabbatch
+            matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
+                                                    [ofis{fi},',1']};
+            matlabbatch{1}.spm.util.imcalc.output = lfis{fi};
+            matlabbatch{1}.spm.util.imcalc.outdir = {directory};
+            matlabbatch{1}.spm.util.imcalc.expression = 'i2';
+            matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+            matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+            matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+            matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+            matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+
+            try spm_jobman('run',{matlabbatch}); end
+            clear matlabbatch
+        end
     end
 end
