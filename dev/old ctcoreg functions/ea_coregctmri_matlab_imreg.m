@@ -20,11 +20,11 @@ disp('Loading images...');
 
 % MR
 ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'hd_',options.prefs.prenii_unnormalized],[0.5 0.5 0.5],0);
-MR=ea_load_nii([options.root,options.patientname,filesep,'hd_',options.prefs.prenii_unnormalized],'simple');
+MR=ea_load_nii([options.root,options.patientname,filesep,'hd_',options.prefs.prenii_unnormalized]);
 
 % CT
 ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'hd_',options.prefs.rawctnii_unnormalized],[0.5 0.5 0.5],0);
-CT=ea_load_nii([options.root,options.patientname,filesep,'hd_',options.prefs.rawctnii_unnormalized],'simple');
+CT=ea_load_nii([options.root,options.patientname,filesep,'hd_',options.prefs.rawctnii_unnormalized]);
 
 disp('Done. Smoothing...');
 MR.img(isnan(MR.img))=0;
@@ -43,8 +43,8 @@ alphas=options.coregct.coregthreshs;
 
 [optimizer,metric] = imregconfig('multimodal');
 
-RMR  = imref3d(size(MR.img),abs(MR.hdr.mat(6)),abs(MR.hdr.mat(1)),abs(MR.hdr.mat(11)));
-RCT = imref3d(size(CT.img),abs(CT.hdr.mat(6)),abs(CT.hdr.mat(1)),abs(CT.hdr.mat(11)));
+RMR  = imref3d(size(MR.img),abs(MR.mat(6)),abs(MR.mat(1)),abs(MR.mat(11)));
+RCT = imref3d(size(CT.img),abs(CT.mat(6)),abs(CT.mat(1)),abs(CT.mat(11)));
 
 
 optimizer.InitialRadius = 0.004;
@@ -55,11 +55,11 @@ M = imregtform(sCT,RCT, sMR,RMR, 'affine', optimizer, metric,'PyramidLevels',3,'
 
 disp('Done. Writing out rCT image...');
 rCT=MR;
-rCT.hdr.fname=[options.root,options.patientname,filesep,options.prefs.ctnii_coregistered];
+rCT.fname=[options.root,options.patientname,filesep,options.prefs.ctnii_coregistered];
 rCT.img = imwarp(CT.img,RCT,M,'bicubic','OutputView',RMR);
 
 
-spm_write_vol(rCT.hdr,rCT.img);
+spm_write_vol(rCT,rCT.img);
 
 disp('Done. Cleaning up...');
 

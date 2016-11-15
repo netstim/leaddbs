@@ -132,16 +132,16 @@ if checkrebuild(atlases,options,root,mifix)
             %ea_dispercent(atlas/length(atlases.names));
             switch atlases.types(atlas)
                 case 1 % right hemispheric atlas.
-                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
+                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
                 case 2 % left hemispheric atlas.
-                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
+                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
                 case 3 % both-sides atlas composed of 2 files.
-                    lnii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],options);
-                    rnii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],options);
+                    lnii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
+                    rnii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
                 case 4 % mixed atlas (one file with both sides information).
-                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],options);
+                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}]);
                 case 5 % midline atlas (one file with both sides information.
-                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],options);
+                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}]);
             end
 
 
@@ -154,11 +154,6 @@ if checkrebuild(atlases,options,root,mifix)
                         nii=lnii;
                     end
                 end
-
-
-
-
-
 
                 colornames='bgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywk'; % red is reserved for the VAT.
 
@@ -192,13 +187,6 @@ if checkrebuild(atlases,options,root,mifix)
 
                     %surface(xx(1:10)',yy(1:10)',zz(1:10)',ones(10,1)');
                     %             hold on
-
-
-
-
-
-
-
 
                     if atlases.types(atlas)==4 && side==2 % restore from backup
                         nii=bnii;
@@ -416,51 +404,34 @@ end
 
 
 
-function nii=load_nii_crop(fname,options)
+function nii=load_nii_crop(fname)
 
 if strcmp(fname(end-2:end),'.gz')
     wasgzip=1;
     gunzip(fname);
-    delete(fname);
     fname=fname(1:end-3);
 else
     wasgzip=0;
 end
-%try
 
 if strcmp(fname(end-3:end),'.nii') % volumetric
 
     ea_crop_nii(fname);
-    nii=spm_vol(fname);
-
-    nii.img=spm_read_vols(nii);
-
-    %catch
-
-    %end
-
-
-    nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
-    if ~all(abs(nii.hdr.dime.pixdim(1:3))<=0.7)
+    
+    nii=ea_load_nii(fname);
+    if ~all(abs(nii.voxsize)<=0.7)
         ea_reslice_nii(fname,fname,[0.4,0.4,0.4],3);
-
-        nii=spm_vol(fname);
-        nii.img=spm_read_vols(nii);
-        nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
-
+        nii=ea_load_nii(fname);
     end
+    
     if wasgzip
-        gzip(fname); % since gunzip makes a copy of the zipped file.
-        delete(fname);
+        delete(fname); % since gunzip makes a copy of the zipped file.
     end
 
 elseif strcmp(fname(end-3:end),'.trk') || strcmp(fname(end-3:end),'.mat') % tracts in mat format % tracts in trk format
-
     [fibers,idx]=ea_loadfibertracts(fname);
     nii.fibers=fibers;
     nii.idx=idx;
-
-
 end
 
 

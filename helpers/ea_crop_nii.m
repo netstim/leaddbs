@@ -23,19 +23,16 @@ end
 
 V=spm_vol(filename);
 
-
 [bb,vox] = ea_spm_get_bbox(V, nstring);
 
 bb=increasebb(bb);
 
 if any(vox<0)
-    
     ea_reslice_nii(filename,filename,abs(vox),0); 
     V=spm_vol(filename);
-   [bb,vox] = ea_spm_get_bbox(V, nstring);
-   bb=increasebb(bb);
+    [bb,vox] = ea_spm_get_bbox(V, nstring);
+    bb=increasebb(bb);
 end
-
 
 dist=diff(bb); % check for weird zero bbs in small files.
 if all(dist)
@@ -70,11 +67,6 @@ if all(dist)
     end
     
 end
-
-
-
-
-
 
 
 function [BB,vx] = ea_spm_get_bbox(V, thr, premul)

@@ -1,10 +1,8 @@
-function mrs = DPS_nifti_to_mrs(nii)
+function mrs = ea_DPS_nifti_to_mrs(nii)
 
-if isstr(nii),
-    nii = load_untouch_nii(nii);
-end;
-
-nii.mat = [nii.hdr.hist.srow_x ; nii.hdr.hist.srow_y ; nii.hdr.hist.srow_z; 0 0 0 1];
+if ischar(nii)
+    nii = ea_load_untouch_nii(nii);
+end
 
 if ndims(nii.img) > 3
     mrs = mrstruct_init( 'series3D', double(nii.img) );

@@ -14,7 +14,7 @@ try
 
         specs.origin=[0,0,0];
         specs.dim=size(dnii.img);
-        specs.vox=dnii.hdr.dime.pixdim;
+        specs.vox=dnii.voxsize;
         specs.affine=dnii.mat;
 
         ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
@@ -160,7 +160,7 @@ try
 
     specs.origin=[0,0,0];
     specs.dim=size(dnii.img);
-    specs.vox=dnii.hdr.dime.pixdim;
+    specs.vox=dnii.voxsize;
     specs.affine=dnii.mat;
 
     [~,ftrfname]=fileparts(options.prefs.FTR_normalized);

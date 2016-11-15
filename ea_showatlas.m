@@ -439,40 +439,6 @@ coords=V.mat*XYZ;
 coords=coords(1:3,:)';
 
 
-
-function nii=load_nii_proxy(fname,options)
-
-if strcmp(fname(end-2:end),'.gz')
-    wasgzip=1;
-    gunzip(fname);
-    fname=fname(1:end-3);
-else
-    wasgzip=0;
-end
-try
-    nii=spm_vol(fname);
-    
-    nii.img=spm_read_vols(nii);
-catch
-    
-end
-
-
-nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
-if ~all(abs(nii.hdr.dime.pixdim(1:3))<=1)
-    ea_reslice_nii(fname,fname,[0.5,0.5,0.5],3);
-    
-    nii=spm_vol(fname);
-    nii.img=spm_read_vols(nii);
-    nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
-    
-end
-if wasgzip
-    delete(fname); % since gunzip makes a copy of the zipped file.
-end
-
-
-%
 % function six=sideix(side,howmany)
 % howmany=howmany/2;
 % six=side*howmany-(howmany-1):side*howmany;

@@ -1,6 +1,6 @@
 function [mrs nii_orig] = ea_DPS_nifti_to_hardi(niiName,bvecname,bvalname)
 
-nii_orig = load_untouch_nii(niiName);
+nii_orig = ea_load_untouch_nii(niiName);
 nii = nii_orig;
 
 mrs = ea_DPS_nifti_to_mrs(nii);

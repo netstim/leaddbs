@@ -24,12 +24,12 @@ maxiter=200;
 % MR
 if isfield(options,'usediffmr_coregct')
     ea_reslice_nii([options.root,options.patientname,filesep,options.usediffmr_coregct],[options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],[2 2 2],0);
-    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],'simple');
+    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
     delete([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
 
 else
     ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
-    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],'simple');
+    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
     delete([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
 
 end
@@ -37,12 +37,12 @@ end
 % MR
 if isfield(options,'usediffmr_coregct')
     ea_reslice_nii([options.root,options.patientname,filesep,options.usediffmr_coregct],[options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],[2 2 2],0);
-    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],'simple');
+    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
     delete([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
 
 else
     ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
-    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],'simple');
+    MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
     delete([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
 
 end
@@ -86,10 +86,10 @@ for alpha=1:length(alphas)
 
     [xx,yy,zz]=ind2sub(size(eMR),find(eMR(:)));
     ptMR=[xx,yy,zz,ones(length(xx),1)]';
-    ptMR=MR.hdr.mat*ptMR; % mm notation
+    ptMR=MR.mat*ptMR; % mm notation
     [xx,yy,zz]=ind2sub(size(eCT),find(eCT(:)));
     ptCT=[xx,yy,zz,ones(length(xx),1)]';
-    ptCT=CT.hdr.mat*ptCT; % mm notation
+    ptCT=CT.mat*ptCT; % mm notation
     disp('Done.');
 
 

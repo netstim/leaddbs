@@ -95,7 +95,7 @@ dnii=ea_load_nii([directory,options.prefs.b0]);
 niisize=size(dnii.img); % get dimensions of reference template.
 specs.origin=[0,0,0];
 specs.dim=niisize;
-specs.vox=dnii.hdr.dime.pixdim(2:4);
+specs.vox=dnii.voxsize;
 specs.affine=dnii.mat;
 
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);

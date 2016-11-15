@@ -1,36 +1,36 @@
-function [trimpath, basename, ext, slice] = ea_niifileparts(niifile)
+function [trimpath, basename, ext, vol] = ea_niifileparts(niifile)
 % Return the nii file path and name without '.nii' or '.nii.gz' ext.
 % Useful for FSL cli.
 % For example, input '/PATH/TO/image.nii.gz,1' will return 
 % ['/PATH/TO/image', 'image', 'nii.gz', ',1']
 
-if regexp(niifile, '\.nii$', 'once') % 'image.nii'
+if regexp(niifile, '\.nii$', 'once') % '/PATH/TO/image.nii'
     trimpath = niifile(1:end-4);
     ext = '.nii';
-    slice = '';
-elseif ~isempty(regexp(niifile, '(?<=\.nii),\d+$', 'match')) % 'image.nii,1'
+    vol = '';
+elseif ~isempty(regexp(niifile, '(?<=\.nii),\d+$', 'match')) % '/PATH/TO/image.nii,1'
     trimpath = niifile(1:regexp(niifile, '\.nii,\d+$', 'once')-1);
     ext = '.nii';
-    slice = regexp(niifile, '(?<=\.nii),\d+$', 'match');
-    slice = slice{:};
-elseif regexp(niifile, '\.nii.gz$', 'once') % 'image.nii.gz'
+    vol = regexp(niifile, '(?<=\.nii),\d+$', 'match');
+    vol = vol{:};
+elseif regexp(niifile, '\.nii.gz$', 'once') % '/PATH/TO/image.nii.gz'
     trimpath = niifile(1:end-7);
     ext = '.nii.gz';
-    slice = '';
-elseif ~isempty(regexp(niifile, '(?<=\.nii.gz),\d+$', 'match')) % 'image.nii.gz,1'
+    vol = '';
+elseif ~isempty(regexp(niifile, '(?<=\.nii.gz),\d+$', 'match')) % '/PATH/TO/image.nii.gz,1'
     trimpath = niifile(1:regexp(niifile, '\.nii.gz,\d+$', 'once')-1);
     ext = '.nii.gz';
-    slice = regexp(niifile, '(?<=\.nii.gz),\d+$', 'match');
-    slice = slice{:};
-elseif ~isempty(regexp(niifile, ',\d+$', 'match')) % rare case: 'image,1'
+    vol = regexp(niifile, '(?<=\.nii.gz),\d+$', 'match');
+    vol = vol{:};
+elseif ~isempty(regexp(niifile, ',\d+$', 'match')) % '/PATH/TO/image,1'
     trimpath = niifile(1:regexp(niifile, ',\d+$', 'once')-1);
     ext = '';
-    slice = regexp(niifile, ',\d+$', 'match');
-    slice = slice{:};
-else
+    vol = regexp(niifile, ',\d+$', 'match');
+    vol = vol{:};
+else % '/PATH/TO/image'
     trimpath = niifile;
     ext = '';
-    slice = '';
+    vol = '';
 end
 
 if isempty(fileparts(niifile))

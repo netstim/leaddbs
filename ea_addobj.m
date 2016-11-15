@@ -54,21 +54,18 @@ setappdata(resultfig,'addht',addht);
 function addroi(addobj,resultfig,addht,fina,options)
 
 % load nifti
-
-
-nii=load_nii_proxy(addobj,options);
+nii=ea_load_nii(addobj);
+if ~all(abs(nii.voxsize)<=1)
+    ea_reslice_nii(addobj,addobj,[0.5,0.5,0.5],3);
+    nii=ea_load_nii(addobj);
+end
 %nii.img=round(nii.img);
 
 [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); %(mean(nii.img(nii.img~=0))/3))); % find 3D-points that have correct value.
 
-
 if ~isempty(xx)
-    
     XYZ=[xx,yy,zz]; % concatenate points to one matrix.
-    
     XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
-    
-    
 end
 
 
@@ -340,34 +337,7 @@ XYZ=[XYZ';ones(1,size(XYZ,1))];
 coords=V.mat*XYZ;
 coords=coords(1:3,:)';
 
-
-function nii=load_nii_proxy(fname,options)
-
-if strcmp(fname(end-2:end),'.gz')
-    wasgzip=1;
-    gunzip(fname);
-    fname=fname(1:end-3);
-else
-    wasgzip=0;
-end
-try
-    nii=ea_load_nii(fname);
-catch
-    
-end
-
-nii.hdr.dime.pixdim=nii.mat(logical(eye(4)));
-if ~all(abs(nii.hdr.dime.pixdim(1:3))<=1)
-    ea_reslice_nii(fname,fname,[0.5,0.5,0.5],3);
-    
-    nii=ea_load_nii(fname);
-end
-if wasgzip
-    delete(fname); % since gunzip makes a copy of the zipped file.
-end
-
 function indcol=detcolor(mat) % determine color based on traversing direction.
-
     
 xyz=abs(diff(mat,1,2));
 rgb=xyz/max(xyz(:));
