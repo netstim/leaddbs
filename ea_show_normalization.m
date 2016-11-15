@@ -133,6 +133,9 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 grid_im=pt.img.*grid;
                 %grid_im(grid>0.7)=1;
                 wim = cat(4,pt.img,mni_img.img,joint_im,grid_im);
+                catch
+                wim = cat(4,pt.img,mni_img.img,joint_im);                    
+                end
             else
                 fprintf('\ngrid file not found!\n');
                 wim = cat(4,pt.img,mni_img.img,joint_im);
