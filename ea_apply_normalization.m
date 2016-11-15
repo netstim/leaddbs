@@ -82,8 +82,8 @@ switch whichnormmethod
                 % export glfiles (a bit more coarse resolution, full brain bounding box).
                 for pos=1:length(gfis)
                     if exist([directory,postops{pos}],'file')
-                        nii=ea_load_untouch_nii([directory,postops{pos}]);
-                        gaussdim=abs(nii.hdr.dime.pixdim(2:4));
+                        nii=ea_load_nii([directory,postops{pos}]);
+                        gaussdim=abs(ea_detvoxsize(nii.mat));
                         %gaussdim=abs(gaussdim(1:3)).*2;
                         if mean(gaussdim>1)
                             resize_img([directory,postops{pos}],gaussdim./2,nan(2,3),0);
