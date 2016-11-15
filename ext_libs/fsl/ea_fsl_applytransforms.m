@@ -23,6 +23,15 @@ else
     transformfile = ''; % use defaults
 end
 
+if nargin >= 7
+    interp=varargin{7};
+else
+    % Linear, NearestNeighbor, MultiLabel, Gaussian, BSpline
+    % CosineWindowedSinc, WelchWindowedSinc, HammingWindowedSinc, LanczosWindowedSinc
+    % GenericLabel
+    interp='trilinear'; 
+end
+
 directory = [options.root,options.patientname,filesep];
 if nargin == 1
     switch options.modality
@@ -122,6 +131,11 @@ for fi = 1:length(fis)
                    ' --warp=', ea_path_helper(transformfile)];
         end
     end
+    
+    if ~isempty(interp)
+        cmd = [cmd, ' --interp=', interp];
+    end
+
     
     if ~ispc
         system(['bash -c "', cmd, '"']);
