@@ -19,7 +19,7 @@ end
 disp('Preparing images to show Normalization...');
 
 for export=expdo % if CT, only do 1, if MR, do 1:3.
-    try
+    %try
         switch export
             case 1
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
@@ -91,7 +91,11 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             %joint_im=0.5*wires.img+pt.img;
             joint_im=pt.img;
             joint_im=joint_im.*w.wires;
-            %joint_im(wires.img>0.8)=1;
+            %joint_im(w.wires>0.9)=1;
+            stand=std(joint_im(:));
+            joint_im=joint_im-min(joint_im(:));
+                joint_im=joint_im./(max(joint_im(:))-stand);
+                joint_im(joint_im>1)=1;
             %joint_im=repmat(joint_im,1,1,1,3);
             %jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
             %ea_imshowpair(jim,options,addstr);
@@ -103,11 +107,15 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             mni_img.img=single(mni_img.img);
             joint_im=single(joint_im);
             
-            gridf = [options.root,options.patientname,filesep,'glgrid.nii'];
+            gridf = [options.root,options.patientname,filesep,'glgrid.mat'];
+            
             if exist(gridf, 'file');
                 try
-                g=ea_load_nii(gridf);
-                if ~isequal(size(w.wires),size(g.img))
+                  g=load(gridf);  
+
+                if ~isequal(size(w.wires),size(g.grid))
+                    
+                    
                     matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
                         [gridf,',1']};
                     matlabbatch{1}.spm.util.imcalc.output = 'glgrid.nii';
@@ -130,9 +138,11 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 grid=grid-min(grid(:));
                 grid=grid./max(grid(:));
                 grid=grid.*0.2;
-                grid=grid+0.8;
+                grid=grid+1;
                 grid_im=pt.img.*grid;
                 %grid_im(grid>0.7)=1;
+                grid_im=grid_im-min(grid_im(:));
+                grid_im=grid_im./max(grid_im(:));
                 wim = cat(4,pt.img,mni_img.img,joint_im,grid_im);
                 catch
                 wim = cat(4,pt.img,mni_img.img,joint_im);                    
@@ -145,9 +155,9 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             clear joint_im pt grid_im
             ea_imshowpair(wim,options,addstr,'normalization');
             
-    catch
-        fprintf(['Skip showing normalization of ',checkf,'\n']);
-    end
+    %catch
+    %    fprintf(['Skip showing normalization of ',checkf,'\n']);
+    %end
 
 end
 
