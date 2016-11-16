@@ -105,6 +105,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             
             gridf = [options.root,options.patientname,filesep,'glgrid.nii'];
             if exist(gridf, 'file');
+                try
                 g=ea_load_nii(gridf);
                 if ~isequal(size(w.wires),size(g.img))
                     matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
