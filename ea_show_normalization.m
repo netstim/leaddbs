@@ -19,7 +19,7 @@ end
 disp('Preparing images to show Normalization...');
 
 for export=expdo % if CT, only do 1, if MR, do 1:3.
-    %try
+%     try
         switch export
             case 1
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
@@ -55,7 +55,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             
             if ~isequal(size(w.wires),size(pt.img))
                 matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
-                    checkf};
+                                                         checkf};
                 matlabbatch{1}.spm.util.imcalc.output = checkfn;
                 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
                 matlabbatch{1}.spm.util.imcalc.expression = 'i2';
@@ -109,32 +109,38 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             
             gridf = [options.root,options.patientname,filesep,'glgrid.mat'];
             
-            if exist(gridf, 'file');
-                try
-                  g=load(gridf);  
-
-                if ~isequal(size(w.wires),size(g.grid))
-                    
-                    
-                    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
-                        [gridf,',1']};
-                    matlabbatch{1}.spm.util.imcalc.output = 'glgrid.nii';
-                    matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
-                    matlabbatch{1}.spm.util.imcalc.expression = 'i2';
-                    matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-                    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-                    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-                    matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-                    jobs{1}=matlabbatch;
-                    spm_jobman('run',jobs);
-                    clear matlabbatch jobs;
-                    g=ea_load_nii([gridf,',1']);
+            if ~exist(gridf, 'file') % 'glgrid.mat' doesn't exist, try to generat it here and then delete the glgrid.nii file
+                if exist([options.root,options.patientname,filesep,'glgrid.nii'],'file')
+                    gridnii=ea_load_nii([options.root,options.patientname,filesep,'glgrid.nii,1']);
+                    if ~isequal(size(w.wires),size(gridnii.img))
+                        matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
+                                                                [options.root,options.patientname,filesep,'glgrid.nii,1']};
+                        matlabbatch{1}.spm.util.imcalc.output = 'glgrid.nii';
+                        matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
+                        matlabbatch{1}.spm.util.imcalc.expression = 'i2';
+                        matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+                        matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+                        matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+                        matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+                        jobs{1}=matlabbatch;
+                        spm_jobman('run',jobs);
+                        clear matlabbatch jobs;
+                        gridnii=ea_load_nii([options.root,options.patientname,filesep,'glgrid.nii,1']);
+                    end            
+                    gridnii.img=gridnii.img/max(gridnii.img(:));
+                    gridnii.img=gridnii.img.*255;
+                    grid=uint8(gridnii.img);
+                    save(gridf, 'grid');
+                    delete([options.root,options.patientname,filesep,'glgrid.nii']);
+                else
+                    fprintf('No glgrid.nii file found!\n');
                 end
-                
-                g.img=g.img/max(g.img(:));
-                g.img=g.img.*255;
-                grid=single(g.img);
-                
+            end
+            
+            % 'glgrid.mat' does exist, append the grid image in wim
+            try
+                g=load(gridf);  
+                grid=single(g.grid);
                 grid=grid-min(grid(:));
                 grid=grid./max(grid(:));
                 grid=grid.*0.2;
@@ -144,20 +150,16 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 grid_im=grid_im-min(grid_im(:));
                 grid_im=grid_im./max(grid_im(:));
                 wim = cat(4,pt.img,mni_img.img,joint_im,grid_im);
-                catch
+            catch
                 wim = cat(4,pt.img,mni_img.img,joint_im);                    
-                end
-            else
-                fprintf('\ngrid file not found!\n');
-                wim = cat(4,pt.img,mni_img.img,joint_im);
             end
             
             clear joint_im pt grid_im
             ea_imshowpair(wim,options,addstr,'normalization');
             
-    %catch
-    %    fprintf(['Skip showing normalization of ',checkf,'\n']);
-    %end
+%     catch
+%        fprintf(['Skip showing normalization of ',checkf,'\n']);
+%     end
 
 end
 
