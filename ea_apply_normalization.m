@@ -83,8 +83,7 @@ switch whichnormmethod
                 for pos=1:length(gfis)
                     if exist([directory,postops{pos}],'file')
                         nii=ea_load_nii([directory,postops{pos}]);
-
-                        gaussdim=abs(ea_detvoxsize(nii.mat));
+                        gaussdim=abs(nii.voxsize);
                         %gaussdim=abs(gaussdim(1:3)).*2;
                         if mean(gaussdim>1)
                             resize_img([directory,postops{pos}],gaussdim./2,nan(2,3),0);
@@ -96,8 +95,7 @@ switch whichnormmethod
                         matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[directory,'r',postops{pos},''];
                         matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
                         matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {directory};
-                        matlabbatch{1}.spm.util.defs.out{1}.push.fov.bbvox.bb = [-78 -112 -50; 78 76 85];
-                        matlabbatch{1}.spm.util.defs.out{1}.push.fov.bbvox.vox = [0.5 0.5 0.5];
+                        matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[options.earoot,'templates',filesep,'mni_hires.nii']};
                         matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
                         matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = gaussdim;
                         jobs{1}=matlabbatch;
@@ -111,8 +109,8 @@ switch whichnormmethod
                 try
                     for pos=1:length(lfis)
                         if exist([directory,postops{pos}],'file')
-                            nii=ea_load_untouch_nii([directory,postops{pos}]);
-                            gaussdim=abs(nii.hdr.dime.pixdim(2:4));
+                            nii=ea_load_nii([directory,postops{pos}]);
+                            gaussdim=abs(nii.voxsize);
                             %gaussdim=abs(gaussdim(1:3)).*2;
                             if mean(gaussdim>1)
                                 resize_img([directory,postops{pos}],gaussdim./2,nan(2,3),0);
@@ -124,8 +122,7 @@ switch whichnormmethod
                             matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[directory,'r',postops{pos},''];
                             matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
                             matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {directory};
-                            matlabbatch{1}.spm.util.defs.out{1}.push.fov.bbvox.bb = [-55 45 9.5; 55 -65 -25];
-                            matlabbatch{1}.spm.util.defs.out{1}.push.fov.bbvox.vox = [0.22 0.22 0.22];
+                            matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[options.earoot,'templates',filesep,'bb.nii']};
                             matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
                             matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = gaussdim;
                             jobs{1}=matlabbatch;
