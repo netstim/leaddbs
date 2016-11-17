@@ -7,9 +7,10 @@ function cs_dmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,
 [sfile,roilist]=ea_handleseeds(sfile);
 
 
-cbase=ea_getconnectomebase;
 if isdeployed
     cbase=dfold;
+else
+cbase=ea_getconnectomebase;
 end
 
 switch cmd
