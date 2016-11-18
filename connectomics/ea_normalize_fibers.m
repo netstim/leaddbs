@@ -23,7 +23,7 @@ try
 end
 
 % get transform from b0 to anat and affine matrix of anat
-[refb0,refanat,refnorm,whichnormmethod]=ea_checktransform(options);
+[refb0,refanat,refnorm]=ea_checktransform(options);
 
 % plot reference volumes
 if vizz
@@ -59,14 +59,6 @@ end
 
 % load fibers
 [fibers,idx]=ea_loadfibertracts([directory,options.prefs.FTR_unnormalized]);
-
-% Reduce the number of the fibers when FSL is used for normalization,
-% otherwise the Non-linear points mapping takes forever (about 2 seconds
-% for 1 point). Linear transformation from b0 to anat is okay...
-% NEED OTHER SOLUTION
-if ismember(whichnormmethod, ea_getfslnormfuns)
-    fibers = fibers(1:10000,:);
-end
 
 % plot unnormalized fibers
 maxvisfiber = 100000;

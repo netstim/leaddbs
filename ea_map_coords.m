@@ -79,15 +79,20 @@ function [XYZ_dest_mm, XYZ_dest_vx] = ea_map_coords(varargin)
 %
 % For SPM and ANTs, to map the coords in src image to the coords in dest
 % image (the registration was done using src image as moving image and dest
-% image as fixed image). the INVERSE version of the transformation should 
+% image as fixed image), the INVERSE version of the transformation should 
 % be used.
 %
-% HOWEVER, for FSL, to map the coords in src image to the coords in dest
-% image (still, the registration was done using src image as moving image 
-% and dest image as fixed image) you should use the direct affine matrix or
-% warp field. Use the inverse version only if you want to map the coords
-% from dest image to src image.
-% 
+% For FSL, to map the coords in src image to the coords in dest image
+% (still, the registration was done using src image as moving image and
+% dest image as fixed image), the direct warp field is used as in the
+% official document. But this way has severe performance issue since it
+% internally inverts the warp field for each point in each iteration. To 
+% solve this problem, here we make a modified version of 'img2imgcoord',
+% which can also use the inverse version of the warp filed. Thus the coords
+% mapping is extremely speeded up. So it is recommended here to use the
+% inverse version of the warp field if you want to do the coords mapping 
+% manually.
+%
 % If the registration was done by ANTs, and you want to manually do the
 % coords mapping (outside the LEAD environment):
 %    XYZ_dest_mm = ea_map_coords(XYZ_src_vx, src, transform, dest, 'ANTS');
@@ -289,11 +294,9 @@ if ~isempty(transform)
    	% 'y_ea_normparams.nii' or 'y_ea_inv_normparams.nii' supplied, LEAD's
    	% non-linear case, proper tranformation files will be automatically 
     % detected for ANTs and FSL. 'y_ea_inv_normparams.nii' should be used
-    % if you want to map src coords to dest coords (internally, for SPM and
-    % ANTs the inverse of the deformation field is used for the mapping;
-    % for FSL the direct one is used, the code here can handle this
-    % correctly, see below comments in the FSL part which toggle the
-    % USEINVERSE flag. NOLINEAR case.
+    % if you want to map src coords to dest coords (internally, for SPM,
+    % ANTs and FSL, the inverse of the deformation field is used for the 
+    % mapping). NOLINEAR case.
     elseif ~isempty(regexp(transform, 'y_ea_.*normparams\.nii$', 'once'))
         
         % check which normalization method has been used
@@ -331,13 +334,13 @@ if ~isempty(transform)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
                 
             case ea_getfslnormfuns % FSL (ea_fnirt) used in lead
-                % toggle 'USEINVERSE' flag since FSL has different naming 
-                % regarding the src/dest image and warp filed, actually 
-                % CLEARER and MORE STRAIGHTFORWARD
+                % if 'y_ea_inv_normparams.nii' is specified, it means
+                % mapping from src coords to dest coords, i.e., NOT the 
+                % inverse mapping (from dest coords to src coords).
                 if ~isempty(strfind(transform, 'y_ea_inv_normparams.nii'))
-                    useinverse = 0;
+                    inversemap = 0;
                 else
-                    useinverse = 1;
+                    inversemap = 1;
                 end
 
                 % vox to mm, use img2imgcoord to do mm coords
@@ -346,7 +349,7 @@ if ~isempty(transform)
 
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
-                XYZ_dest_mm = ea_fsl_applytransforms_to_points(directory,XYZ_src_mm(1:3,:)',useinverse)';
+                XYZ_dest_mm = ea_fsl_applytransforms_to_points(directory,XYZ_src_mm(1:3,:)',inversemap)';
                 
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
@@ -381,8 +384,7 @@ if ~isempty(transform)
                 if nargin >= 6
                     useinverse = varargin{6};
                 else
-                    useinverse = 1; % suppose regstration was done from src to dest, then useinverse by default
-%                     error('Please indicate whether to use inverse or not for applyTransforms!');
+                    useinverse = 0; % suppose proper deformation field specified, no need to invert
                 end
                 
                 directory = fileparts(transform);

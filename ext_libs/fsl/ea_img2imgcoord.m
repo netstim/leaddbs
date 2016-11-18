@@ -9,9 +9,9 @@ transform = varargin{4};
 
 % Apply warp field or affine transform
 if strcmp(varargin{5}, 'l')
-    type = 'xfm';
+    type = ' -xfm';
 elseif strcmp(varargin{5}, 'n')
-    type = 'warp';
+    type = ' -inv -warp'; % inverse warp field supplied
 end
 
 % Input coords in mm by default
@@ -21,8 +21,8 @@ else
     space = 'mm';
 end
 
-if nargin >= 7
-    premat = varargin{7};
+if nargin >= 9
+    premat = varargin{9};
 else
     premat = '';
 end
@@ -37,7 +37,7 @@ end
 cmd = [IMG2IMGCOORD, ...
        ' -src ' ea_path_helper(src), ...
        ' -dest ' ea_path_helper(dest), ...
-       ' -', type, ' ', ea_path_helper(transform)];
+       type, ' ', ea_path_helper(transform)];
 
 if strcmp(space, 'mm')
     cmd = [cmd, ' -mm'];
