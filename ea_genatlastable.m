@@ -174,14 +174,14 @@ if checkrebuild(atlases,options,root,mifix)
                         XYZ.vx=[xx,yy,zz]; % concatenate points to one matrix.
                         XYZ.val=vv;
                         XYZ.mm=map_coords_proxy(XYZ.vx,nii); % map to mm-space
-                        XYZ.dims=nii.hdr.dime.pixdim;
+                        XYZ.dims=nii.voxsize;
 
 
                     else
                         XYZ.vx=[];
                         XYZ.val=[];
                         XYZ.mm=[];
-                        XYZ.dims=nii.hdr.dime.pixdim;
+                        XYZ.dims=nii.voxsize;
 
                     end
 
@@ -296,7 +296,7 @@ end
                 catch
                     keyboard
                 end
-                ipixdim{atlas,side}=nii.hdr.dime.pixdim(1:3); % later stored
+                ipixdim{atlas,side}=nii.voxsize(1:3); % later stored
 
                 icolorc{atlas,side}=colorc; % later stored
 

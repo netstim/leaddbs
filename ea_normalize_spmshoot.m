@@ -77,10 +77,10 @@ if exist([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni
     Vt=spm_vol([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii']);
     Vp=spm_vol([directory,'rc1',options.prefs.prenii_unnormalized]);
     if ~isequal(Vp.dim,Vt(1).dim) || ~isequal(Vp.mat,Vt(1).mat) % Dartel template not matching. -> create matching one.
-        ea_create_mni_darteltemplate([directory,'rc1',options.prefs.prenii_unnormalized]);
+        ea_create_tpm_darteltemplate; %([directory,'rc1',options.prefs.prenii_unnormalized]);
     end
 else % no dartel template present. -> Create matching dartel templates from highres version.
-    ea_create_mni_darteltemplate([directory,'rc1',options.prefs.prenii_unnormalized]);
+    ea_create_tpm_darteltemplate; %([directory,'rc1',options.prefs.prenii_unnormalized]);
 end
 
 % Normalize to MNI using DARTEL.
