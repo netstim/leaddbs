@@ -89,7 +89,7 @@ prefs.normalize.inverse.warp='inverse'; % set to 'tpm' in case you wish to creat
 prefs.normalize.inverse.customtpm=0; % set to 1 if custom TPM shall be built for inverse warpings. Only applies if the above is set to 'tpm'.
 prefs.normalize.createwarpgrids=0; % set to 1 to create grid files that show deformation fields in "Show Normalization" option.
 prefs.normalize.fsl.warpres=8; % Defines the warp resolution in FSL warps.
-prefs.normalize.spm.resolution=1; % Defines resolution in mm when using SPM normalization routines (New Segment, DARTEL, SHOOT). Changes only apply if you delete the TPM_2009b.nii file located in /templates.
+prefs.normalize.spm.resolution=1; % Defines resolution in mm when using SPM normalization routines (New Segment, DARTEL, SHOOT).
 
 %% Coregistration (CT/MR):
 prefs.ctcoreg.default='ea_coregctmri_ants';

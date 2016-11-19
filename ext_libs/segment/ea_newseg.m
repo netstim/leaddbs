@@ -9,15 +9,18 @@ if ~exist('del','var')
     del = 0;
 end
 
-
-
 if ~dartel && exist([directory, 'c1', file], 'file') || dartel && exist([directory, 'rc1', file], 'file')
     disp('Segmentation already done!');
 else
+    
+    
+    if ea_checktpmresolution(options)
+        ea_create_tpm_darteltemplate;
+    end
+
+    
     disp('Segmentation...');
-if ~exist([options.earoot,'templates',filesep,'TPM_2009b.nii'])
-    ea_create_tpm_darteltemplate;
-end
+
     
     
     load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob12']);
@@ -47,3 +50,20 @@ end
 
     disp('Done.');
 end
+
+
+function needstobebuilt=ea_checktpmresolution(options)
+
+needstobebuilt=1;
+if ~exist([options.earoot,'templates',filesep,'TPM_2009b.nii'])
+    return
+end
+% check resolution of TPM
+V=ea_open_vol([options.earoot,'templates',filesep,'TPM_2009b.nii']);
+vox=ea_detvoxsize(V(1).mat);
+if vox(1)==options.prefs.normalize.spm.resolution
+    needstobebuilt=0;
+end
+
+
+
