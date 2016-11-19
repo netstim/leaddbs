@@ -40,7 +40,6 @@ if ischar(options) % return name of method.
     return
 end
 
-disp('This Normalization routine uses the advanced TPMs by Lorio 2016. See http://unil.ch/lren/home/menuinst/data--utilities.html');
 
 directory = [options.root,options.patientname,filesep];
 

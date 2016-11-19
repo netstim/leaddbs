@@ -1,10 +1,14 @@
 function ea_create_tpm_darteltemplate()
 
+if exist([ea_getearoot,'templates',filesep,'TPM_2009b.nii'],'file')
+    return
+end
 answ=questdlg('Lead Neuroimaging Suite needs to generate some files needed for the process. This only needs to be done once but will take some additional time. The process you started will be performed afterwards.','Additional files needed','Proceed','Abort','Proceed');
 switch answ
     case 'Abort'
         ea_error('Process aborted by user');
 end
+
     matlabbatch{1}.spm.spatial.preproc.channel(1).vols = {[ea_getearoot,'templates',filesep,'mni_hires.nii,1']};
     matlabbatch{1}.spm.spatial.preproc.channel(1).biasreg = 0.001;
     matlabbatch{1}.spm.spatial.preproc.channel(1).biasfwhm = 60;
@@ -70,9 +74,15 @@ end
     c3=ea_load_nii([ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',3),'.nii']);
     c3.img(distal.img>0.1)=0;
     ea_write_nii(c3);
-    
+    prefs=ea_prefs('');
+
     for c=1:6
-        matlabbatch{1}.spm.util.cat.vols{c} = [ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
+        fina=[ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
+        if ~(prefs.normalize.spm.resolution==0.5) % reslice images
+            ea_reslice_nii(fina,fina,[prefs.normalize.spm.resolution prefs.normalize.spm.resolution prefs.normalize.spm.resolution],1,[],3);
+        end
+        
+        matlabbatch{1}.spm.util.cat.vols{c} = fina;
     end
     matlabbatch{1}.spm.util.cat.vols = matlabbatch{1}.spm.util.cat.vols';
     
@@ -83,6 +93,8 @@ end
     delete([ea_getearoot,'templates',filesep,'TPM_2009b.mat']);
 
 
+
+    
 
 wd=[ea_getearoot,'templates',filesep,'dartel',filesep];
 %gunzip([wd,'dartelmni_6_hires.nii.gz']);
@@ -109,19 +121,19 @@ for s=1:6
         end
         clear jobs matlabbatch
         
-%         % set to resolution of darteltemp file
-%         matlabbatch{1}.spm.util.imcalc.input = {[segmentresult,',1'];
-%             [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii']};
-%         matlabbatch{1}.spm.util.imcalc.output = [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii'];
-%         matlabbatch{1}.spm.util.imcalc.outdir = {wd};
-%         matlabbatch{1}.spm.util.imcalc.expression = 'i2';
-%         matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-%         matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-%         matlabbatch{1}.spm.util.imcalc.options.interp = 5;
-%         matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
-%         jobs{1}=matlabbatch;
-%         spm_jobman('run',jobs);
-%         clear jobs matlabbatch
+        % set to resolution of TPM file
+        matlabbatch{1}.spm.util.imcalc.input = {[ea_getearoot,'templates',filesep,'TPM_2009b.nii,1'];
+            [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii']};
+        matlabbatch{1}.spm.util.imcalc.output = [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii'];
+        matlabbatch{1}.spm.util.imcalc.outdir = {wd};
+        matlabbatch{1}.spm.util.imcalc.expression = 'i2';
+        matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+        matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+        matlabbatch{1}.spm.util.imcalc.options.interp = 5;
+        matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
+        jobs{1}=matlabbatch;
+        spm_jobman('run',jobs);
+        clear jobs matlabbatch
     end
     
     matlabbatch{1}.spm.util.cat.vols = {[wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',1),'.nii'];

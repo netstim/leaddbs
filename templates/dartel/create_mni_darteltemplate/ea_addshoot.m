@@ -1,5 +1,5 @@
 function ea_addshoot
-
+if ~exist([ea_getearoot,'templates',filesep,'dartel',filesep,'shootmni_1.nii'],'file');
 root=[ea_getearoot,'templates',filesep,'dartel',filesep];
 for dt=1:6
     nii=ea_load_nii([root,'dartelmni_',num2str(dt),'.nii']);
@@ -31,4 +31,5 @@ for dt=1:6
         delete([root,'dartelmni_',num2str(dt),'_',sprintf('%05.0f',i),'.nii']);
     end
     delete([root,'shootmni_',num2str(dt),'.mat']);
+end
 end

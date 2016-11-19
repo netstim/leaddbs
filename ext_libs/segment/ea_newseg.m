@@ -33,11 +33,8 @@ end
         end
     end
     job.warp.write=[1,1];
-    if dartel==2 % HD
-        
-    else
-    ea_spm_preproc_run_hd(job); % run "Segment" in SPM 12 (Old "Segment" is now referred to as "Old Segment").
-    end
+
+    spm_preproc_run(job); % run "Segment" in SPM 12 (Old "Segment" is now referred to as "Old Segment").
     % delete unused files
     [~,fn]=fileparts(file);
     ea_delete([directory,fn,'_seg8.mat']);
