@@ -56,7 +56,7 @@ function addroi(addobj,resultfig,addht,fina,options)
 % load nifti
 nii=ea_load_nii(addobj);
 if ~all(abs(nii.voxsize)<=1)
-    ea_reslice_nii(addobj,addobj,[0.5,0.5,0.5],3);
+    ea_reslice_nii(addobj,addobj,[0.5,0.5,0.5],0,[],3);
     nii=ea_load_nii(addobj);
 end
 %nii.img=round(nii.img);
