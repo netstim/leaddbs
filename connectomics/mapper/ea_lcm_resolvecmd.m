@@ -8,4 +8,6 @@ switch cmd
         cmds='matrix';
     case 4
         cmds='pmatrix';
+    case 5
+        cmds='pmap';
 end

@@ -21,7 +21,7 @@ end
     
     
     load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob12']);
-    tpminf=[options.earoot,'templates',filesep,'TPM_Lorio_Draganski.nii'];
+    tpminf=[options.earoot,'templates',filesep,'TPM_2009b.nii'];
     job.channel.vols{1}=[directory,file,',1'];
     for tpm=1:6
         job.tissue(tpm).tpm=[tpminf,',',num2str(tpm)];

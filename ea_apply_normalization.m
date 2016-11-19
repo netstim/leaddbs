@@ -83,6 +83,7 @@ switch whichnormmethod
                 for pos=1:length(gfis)
                     if exist([directory,postops{pos}],'file')
                         nii=ea_load_nii([directory,postops{pos}]);
+
                         gaussdim=abs(nii.voxsize);
                         %gaussdim=abs(gaussdim(1:3)).*2;
                         if mean(gaussdim>1)
