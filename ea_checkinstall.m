@@ -12,8 +12,8 @@ if ~exist('force','var')
 end
 switch cmd
     case 'list' % simply return list of installable datasets
-        success={'Big Brain 100um subcortical (Amunts 2013)','Lead-DBS Macaque Toolbox','Structural group connectome (Horn 2013)'};
-        commands={'bigbrain','macaque','groupconnectome2013'};
+        success={'Apply Hotfix','Big Brain 100um subcortical (Amunts 2013)','Lead-DBS Macaque Toolbox','Structural group connectome (Horn 2013)'};
+        commands={'hotfix','bigbrain','macaque','groupconnectome2013'};
     case 'bigbrain'
         checkf=[earoot,'templates',filesep,'bigbrain_2015_100um_bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
@@ -70,6 +70,10 @@ switch cmd
                 'group');
         else
             disp('Group Connectome (Horn 2013) is installed.')
+        end
+    case 'hotfix'
+        if ~checkonly
+        ea_hotfix;
         end
     otherwise
         success=0;
