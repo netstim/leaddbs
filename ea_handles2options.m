@@ -39,11 +39,6 @@ catch
     options.normalize.check=0;
 end
 
-try % not working when calling from lead_anatomy
-    options.normalize.checkfigures=(get(handles.checkfigures,'Value') == get(handles.checkfigures,'Max'));
-catch
-    options.normalize.checkfigures=0;
-end
 
 try
     options.coregmr.method=get(handles.coregmrpopup,'String');

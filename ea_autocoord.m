@@ -60,6 +60,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     if options.coregct.do
         eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
         ea_dumpnormmethod(options,options.coregct.method,'coregctmethod');
+        ea_gencoregcheckfigs(options); % generate checkreg figures
     end
     
     if options.coregctcheck
@@ -71,6 +72,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     if options.normalize.do
         ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
         eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
+        ea_gencoregcheckfigs(options); % generate checkreg figures
     end
     
     
@@ -97,9 +99,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         % export "control" niftis with wireframe of normal anatomy..
         ea_show_normalization(options);
     end
-    if options.normalize.checkfigures
-        ea_gencoregcheckfigs(options); 
-    end
+
     
     
     
