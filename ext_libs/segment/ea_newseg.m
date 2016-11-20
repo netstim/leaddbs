@@ -1,4 +1,4 @@
-function ea_newseg(directory,files,dartel,options,del)
+function ea_newseg(directory,files,dartel,options,del,force)
 % SPM NewSegment
 % we cannot generate the TPM from the SPM TPM anymore since
 % we use the enhanced TPM by Lorio / Draganski:
@@ -8,6 +8,9 @@ function ea_newseg(directory,files,dartel,options,del)
 if ~exist('del','var')
     del = 0;
 end
+if ~exist('force','var')
+    force=0;
+end
 if ischar(files)
     files={files};
 end
@@ -16,7 +19,7 @@ if ea_checktpmresolution
     ea_create_tpm_darteltemplate;
 end
 
-if ~dartel && exist([directory, 'c1', files{1}], 'file') || dartel && exist([directory, 'rc1', files{1}], 'file')
+if (~dartel && exist([directory, 'c1', files{1}], 'file') || dartel && exist([directory, 'rc1', files{1}], 'file')) && (~force)
     disp('Segmentation already done!');
 else
     

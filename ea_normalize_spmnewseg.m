@@ -56,7 +56,7 @@ end
 
 % now segment the preoperative version.
 disp('Segmenting preoperative version...');
-ea_newseg_pt(options,0);
+ea_newseg_pt(options,0,0,1);
 disp('done.');
 
 % Rename deformation fields:

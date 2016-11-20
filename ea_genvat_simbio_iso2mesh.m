@@ -44,7 +44,6 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     return
 end
 
-vizz=0;
 options.considerpassivecontacts=0;
 
 
