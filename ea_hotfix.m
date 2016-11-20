@@ -1,6 +1,6 @@
-function ea_hotfix(varargin)
+function success=ea_hotfix(varargin)
 % lead hotfix
-
+success=0;
 local = ea_getvsn('local');
 web = ea_getvsn('web');
 
@@ -66,6 +66,7 @@ if hotfix
 
         disp('Restarting LEAD.');
         lead;
+        success=1;
         disp('*** Update finished.');
     catch
         info=sprintf(['Hotfix does not exist or failed to apply hotfix!\n',...
