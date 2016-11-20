@@ -10,7 +10,7 @@ if ~exist('del','var')
 end
 
 
-    if ea_checktpmresolution(options)
+    if ea_checktpmresolution
         ea_create_tpm_darteltemplate;
     end
 
@@ -55,18 +55,6 @@ else
 end
 
 
-function needstobebuilt=ea_checktpmresolution(options)
-
-needstobebuilt=1;
-if ~exist([options.earoot,'templates',filesep,'TPM_2009b.nii'])
-    return
-end
-% check resolution of TPM
-V=ea_open_vol([options.earoot,'templates',filesep,'TPM_2009b.nii']);
-vox=ea_detvoxsize(V(1).mat);
-if vox(1)==options.prefs.normalize.spm.resolution
-    needstobebuilt=0;
-end
 
 
 

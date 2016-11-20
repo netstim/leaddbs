@@ -1,6 +1,6 @@
 function ea_create_tpm_darteltemplate()
 
-if exist([ea_getearoot,'templates',filesep,'TPM_2009b.nii'],'file')
+if exist([ea_getearoot,'templates',filesep,'TPM_2009b.nii'],'file') && ~ea_checktpmresolution
     return
 end
 answ=questdlg('Lead Neuroimaging Suite needs to generate some files needed for the process. This only needs to be done once but will take some additional time. The process you started will be performed afterwards.','Additional files needed','Proceed','Abort','Proceed');
