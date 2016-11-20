@@ -22,59 +22,20 @@ function varargout=ea_normalize_schoenecker(options)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Schönecker 2009 linear threestep (Post-OP only) [MR]';
+    varargout{1}='Schoenecker 2009 linear threestep (Post-OP only) [MR]';
     varargout{2}={'SPM8'};
     return
 end
 
-usecombined=0; % if set, eauto will try to fuse coronar and transversal images before normalizing them.
 
-if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz'],'file')
-    try
-        gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']);
-    catch
-        system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,'.gz']);
-    end
-    try
-        gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
-        gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
-    catch
-        system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,'.gz']);
-        system(['gunzip ',options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
-    end
-end
 
+directory=[options.root,options.prefs.patientdir,filesep];
+keyboard
+ea_coregmr(options,'auto');
 
 % now segment the transversal version to get some normalization weights.
-matlabbatch{1}.spm.spatial.preproc.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
-matlabbatch{1}.spm.spatial.preproc.output.GM = [0 0 1];
-matlabbatch{1}.spm.spatial.preproc.output.WM = [0 0 1];
-matlabbatch{1}.spm.spatial.preproc.output.CSF = [0 0 0];
-matlabbatch{1}.spm.spatial.preproc.output.biascor = 0;
-matlabbatch{1}.spm.spatial.preproc.output.cleanup = 0;
-matlabbatch{1}.spm.spatial.preproc.opts.tpm = {
-    fullfile(fileparts(which('spm')),'tpm','grey.nii');
-    fullfile(fileparts(which('spm')),'tpm','white.nii');
-    fullfile(fileparts(which('spm')),'tpm','csf.nii')
-    };
-matlabbatch{1}.spm.spatial.preproc.opts.ngaus = [2; 2; 2; 4];
-matlabbatch{1}.spm.spatial.preproc.opts.regtype = 'mni'; %'mni';
-matlabbatch{1}.spm.spatial.preproc.opts.warpreg = 1;
-matlabbatch{1}.spm.spatial.preproc.opts.warpco = 25;
-matlabbatch{1}.spm.spatial.preproc.opts.biasreg = 0.0001;
-matlabbatch{1}.spm.spatial.preproc.opts.biasfwhm = 60;
-matlabbatch{1}.spm.spatial.preproc.opts.samp = 3;
-matlabbatch{1}.spm.spatial.preproc.opts.msk = {''};
+ea_newseg(directory,options.prefs.tranii_unnormalized,0,options);
 
-jobs{1}=matlabbatch;
-try
-    spm_jobman('run',jobs);
-    disp('*** Segmentation of transversal version worked.');
-catch
-    disp('*** Segmentation of transversal version failed.');
-    ea_error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
-end
-clear matlabbatch jobs;
 
 
 % Now fuse c1 and c2 to get a weight.
@@ -94,54 +55,10 @@ spm_jobman('run',jobs);
 clear matlabbatch jobs;
 
 
-if usecombined
-    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,'c',options.prefs.tranii_unnormalized]);
-
-    % create combined version of tra and cor and use this one as tra (for
-    % normalization). Will later be restored.
-    matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1'];
-        [options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized,',1']
-        };
-    matlabbatch{1}.spm.util.imcalc.output = [options.prefs.tranii_unnormalized];
-    matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
-    matlabbatch{1}.spm.util.imcalc.expression = '(i1+i2)/2';
-    matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-    matlabbatch{1}.spm.util.imcalc.options.mask = 2;
-    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-    matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-    jobs{1}=matlabbatch;
-    spm_jobman('run',jobs);
-    clear matlabbatch jobs;
-end
 
 % first step, coregistration between transversal and coronar versions. on full brain
 
 normlog=zeros(4,1); % log success of processing steps. 4 steps: 1. coreg tra and cor, 2. grand mean normalization 3. subcortical normalization 4. subcortical fine normalization that spares the ventricles.
-
-
-try
-    copyfile([options.root,options.prefs.patientdir,filesep,options.prefs.cornii_unnormalized],[options.root,options.prefs.patientdir,filesep,'c',options.prefs.cornii_unnormalized]);
-end
-
-matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1']};
-matlabbatch{1}.spm.spatial.coreg.estimate.source = {[options.root,options.prefs.patientdir,filesep,'c',options.prefs.cornii_unnormalized,',1']};
-matlabbatch{1}.spm.spatial.coreg.estimate.other = {''};
-matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = 'ncc';
-matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
-matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
-matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
-
-jobs{1}=matlabbatch;
-try
-    spm_jobman('run',jobs);
-    normlog(1)=1;
-    disp('*** Coregistration between transversal and coronar versions worked.');
-catch
-    disp('*** Coregistration between transversal and coronar versions failed.');
-    %ea_error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
-end
-clear matlabbatch jobs;
-
 
 
 %% 1/3: grand mean normalize
@@ -164,21 +81,13 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.interp = 1;
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.wrap = [0 0 0];
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.prefix = 'w1';
 jobs{1}=matlabbatch;
-try
     spm_jobman('run',jobs);
     normlog(2)=1;
     disp('*** Grand mean normalization (1/3) worked.');
-catch
-    disp('*** Grand mean normalization (1/3) failed.');
-    ea_error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
-end
+
 clear matlabbatch jobs;
 
 %% 2/3: subcortical normalize
-
-
-
-
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,options.prefs.patientdir,filesep,'w1',options.prefs.tranii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w1',options.prefs.tranii_unnormalized,',1'];
@@ -201,22 +110,15 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.prefix = 'w2';
 
 
 jobs{1}=matlabbatch;
-try
     spm_jobman('run',jobs);
     normlog(3)=1;
     disp('*** Subcortical normalization (2/3) worked.');
-catch
-    disp('*** Subcortical normalization (2/3) failed.');
-    warning('Probably, this normalization is not accurate enough. Please try normalizing the MR-images with a different software suite.');
-end
+
 clear matlabbatch jobs;
 
 
 
 %% 3/3: small mask normalize
-
-
-
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.tranii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'w2w1c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.tranii_unnormalized,',1']};
@@ -235,22 +137,15 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.interp = 1;
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.wrap = [0 0 0];
 matlabbatch{1}.spm.spatial.normalise.estwrite.roptions.prefix = 'w3';
 jobs{1}=matlabbatch;
-try
     spm_jobman('run',jobs);
     normlog(4)=1;
     disp('*** Subcortical fine normalization (3/3) worked.');
-catch
-    disp('*** Subcortical fine normalization (3/3) failed.');
-    warning('This normalization might not be accurate enough. Please check normalization thoroughly.');
-end
+
 clear matlabbatch jobs;
 
 
 % apply estimated transformations to cor and tra.
 
-if usecombined % restore original tra version before applying final deformation.
-    movefile([options.root,options.prefs.patientdir,filesep,'c',options.prefs.tranii_unnormalized],[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized]);
-end
 
 [~,nm]=fileparts(options.prefs.tranii_unnormalized); % cut off file extension
 includedefs=1:3;
