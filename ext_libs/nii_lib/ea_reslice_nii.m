@@ -59,6 +59,38 @@
 %
 function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, method, img_idx, preferredForm)
 
+usespm=1;
+if usespm
+
+
+V = spm_vol(old_fn);
+for i=1:numel(V)
+   bb        = spm_get_bbox(V(i));
+   VV(1:2)   = V(i);
+   VV(1).mat = spm_matrix([bb(1,:) 0 0 0 voxel_size])*spm_matrix([-1 -1 -1]);
+   VV(1).dim = ceil(VV(1).mat \ [bb(2,:) 1]' - 0.1)';
+   VV(1).dim = VV(1).dim(1:3);
+   VV(1).fname=new_fn;
+   spm_reslice(VV,struct('mean',false,'which',1,'interp',method,'mask',true)); % 1 for linear
+end
+[pth,fn,ext]=fileparts(new_fn);
+movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+else
+
    if ~exist('old_fn','var') | ~exist('new_fn','var')
       error('Usage: reslice_nii(old_fn, new_fn, [voxel_size], [verbose], [bg], [method], [img_idx])');
    end
@@ -123,7 +155,7 @@ function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, method, img_idx
    save_nii(nii, new_fn);
 
    return;					% reslice_nii
-
+end
 
 %--------------------------------------------------------------------
 function [nii] = load_nii_no_xform(filename, img_idx, old_RGB, preferredForm)

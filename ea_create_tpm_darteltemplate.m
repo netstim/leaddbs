@@ -76,12 +76,29 @@ end
     ea_write_nii(c3);
     prefs=ea_prefs('');
 
+
     for c=1:6
         fina=[ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
+        nii=ea_load_nii(fina); % change datatype to something high for reslicing and smoothing.
+        nii.dt=[16,0];
+        ea_write_nii(nii);
         if ~(prefs.normalize.spm.resolution==0.5) % reslice images
-            ea_reslice_nii(fina,fina,[prefs.normalize.spm.resolution prefs.normalize.spm.resolution prefs.normalize.spm.resolution],1,[],3);
+            ea_reslice_nii(fina,fina,[prefs.normalize.spm.resolution prefs.normalize.spm.resolution prefs.normalize.spm.resolution],1,[],6);
         end
-        
+        % apply very light smooth
+        job{1}.spm.spatial.smooth.data = {fina};
+        job{1}.spm.spatial.smooth.fwhm = [0.5 0.5 0.5];
+        job{1}.spm.spatial.smooth.dtype = 0;
+        job{1}.spm.spatial.smooth.im = 0;
+        job{1}.spm.spatial.smooth.prefix = 's';
+        spm_jobman('run',{job});
+        clear job
+        [pth,fn,ext]=fileparts(fina);
+        movefile(fullfile(pth,['s',fn,ext]),fullfile(pth,[fn,ext]));
+        nii=ea_load_nii(fina); % change datatype back to uint8
+        nii.dt=[2,0];
+        delete(fina);
+        ea_write_nii(nii);
         matlabbatch{1}.spm.util.cat.vols{c} = fina;
     end
     matlabbatch{1}.spm.util.cat.vols = matlabbatch{1}.spm.util.cat.vols';
