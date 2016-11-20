@@ -115,7 +115,7 @@ metrics{cnt}='MI';
 cnt=cnt+1;
 
 if includeatlas % append as last to make criterion converge on this one.
-   to{cnt}=[options.earoot,'templates',filesep,'mni_hires_atlas.nii.gz'];
+   to{cnt}=[options.earoot,'templates',filesep,'mni_hires_distal.nii'];
    from{cnt}=[directory,'anat_atlas.nii.gz'];
    weights(cnt)=1.5;
    metrics{cnt}='MI'; % could think about changing this to CC
