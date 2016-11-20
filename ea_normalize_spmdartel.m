@@ -32,7 +32,7 @@ function varargout=ea_normalize_spmdartel(options)
 
 if ischar(options) % return name of method.
     if strcmp(spm('ver'),'SPM12')
-        varargout{1}='SPM12 DARTEL nonlinear [MR/CT]';
+        varargout{1}='SPM12 DARTEL nonlinear (Ashburner 2007)';
     elseif strcmp(spm('ver'),'SPM8')
         varargout{1}='SPM8 DARTEL nonlinear [MR/CT]';
     end
@@ -67,7 +67,7 @@ end
 
 % now dartel-import the preoperative version.
 disp('Segmenting preoperative version (Import to DARTEL-space)');
-ea_newseg(directory,options.prefs.prenii_unnormalized,1,options,0);
+ea_newseg_pt(options,1);
 disp('Segmentation of preoperative MRI done.');
 
 % check if darteltemplate is available, if not generate one

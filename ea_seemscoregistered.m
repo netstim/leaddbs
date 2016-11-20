@@ -6,18 +6,22 @@ function iscoreg=ea_seemscoregistered(options)
 iscoreg=1;
 directory=[options.root,options.patientname,filesep];
 
-[~,peerpresentfiles]=ea_assignpretra(options);
+[~,presentfiles]=ea_assignpretra(options);
 if exist(ea_niigz([directory,options.prefs.fa2anat]),'file')
-    peerpresentfiles=[peerpresentfiles,{options.prefs.fa2anat}];
+    presentfiles=[presentfiles,{options.prefs.fa2anat}];
 end
 
-if length(peerpresentfiles)==1 % only one anatomical image present, nothing to coregister
+if length(presentfiles)==1 % only one anatomical image present, nothing to coregister
     return
 end
 
-Vref=ea_open_vol([directory,peerpresentfiles{1}]);
-for comp=2:length(peerpresentfiles)
-    Vcomp=ea_open_vol([directory,peerpresentfiles{comp}]);
+if isempty(presentfiles)
+    iscoreg=0;
+    return
+end
+Vref=ea_open_vol([directory,presentfiles{1}]);
+for comp=2:length(presentfiles)
+    Vcomp=ea_open_vol([directory,presentfiles{comp}]);
     if ~isequal(Vref.dim,Vcomp.dim)
         iscoreg=0;
         return

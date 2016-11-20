@@ -21,9 +21,9 @@ function varargout=ea_normalize_spmnewseg(options)
 if ischar(options) % return name of method.
     switch spm('ver')
         case 'SPM12'
-    varargout{1}='SPM12 Segment nonlinear [MR/CT]';
+    varargout{1}='SPM12 Segment nonlinear (Ashburner 2005)';
         case 'SPM8'
-    varargout{1}='SPM8 New Segment nonlinear [MR/CT]';
+    varargout{1}='SPM8 New Segment nonlinear (Ashburner 2005)';
     end
     varargout{2}={'SPM8','SPM12'};
     return
@@ -56,7 +56,7 @@ end
 
 % now segment the preoperative version.
 disp('Segmenting preoperative version...');
-ea_newseg([directory],options.prefs.prenii_unnormalized,0,options,0);
+ea_newseg_pt(options,0);
 disp('done.');
 
 % Rename deformation fields:

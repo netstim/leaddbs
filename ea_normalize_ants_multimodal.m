@@ -18,7 +18,7 @@ function varargout=ea_normalize_ants_multimodal(options,includeatlas)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Advanced Normalization Tools (ANTs) SyN - multimodal (T1,T2, PD & FA)';
+    varargout{1}='Advanced Normalization Tools (ANTs) SyN - multimodal (Avants 2008)';
     varargout{2}={'SPM8','SPM12'};
     return
 end
@@ -34,12 +34,7 @@ usepd=1; % set to zero if you do not wish to use PD data for normalization even 
 usefa=1; % set to zero if you do not wish to use FA data for normalization even if present.
 
 if ~includeatlas % second run from maget-brain segment
-    if ~ea_seemscoregistered(options) % check headers of files to see if already coregistered.
-        if strcmp(options.coregmr.method,'Do not coregister MRIs (already coregistered)')
-           ea_error('You specified that images are already coregistered & resliced but based on their NIFtI Headers they seem not. Please set an MR coregistration option and re-run.'); 
-        end
-        ea_coreg_all_mri(options,usebrainmask)
-    end
+ea_checkcoregallmri(options,usebrainmask)
 end
 
 

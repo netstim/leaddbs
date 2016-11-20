@@ -1,4 +1,4 @@
-function varargout=ea_coreg_all_mri(options,usebrainmask)
+function varargout=ea_coreg_all_mri(options,usebrainmask,usefa)
 
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
@@ -17,10 +17,12 @@ end
 if ~exist('includeatlas','var')
     includeatlas=0;
 end
+if ~exist('usefa','var')
+    usefa=1;
+end
 
 uset1=1; % set to zero if you do not wish to use T1 data for normalization even if present.
 usepd=1; % set to zero if you do not wish to use PD data for normalization even if present.
-usefa=1; % set to zero if you do not wish to use FA data for normalization even if present.
 
 
 directory=[options.root,options.patientname,filesep];

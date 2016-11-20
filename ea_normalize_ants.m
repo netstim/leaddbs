@@ -18,7 +18,7 @@ function varargout=ea_normalize_ants(options)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Advanced Normalization Tools (ANTs) SyN';
+    varargout{1}='Advanced Normalization Tools (ANTs) SyN (Avants 2008)';
     varargout{2}={'SPM8','SPM12'};
     return
 end
