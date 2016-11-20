@@ -9,14 +9,17 @@ if ~exist('del','var')
     del = 0;
 end
 
+
+    if ea_checktpmresolution(options)
+        ea_create_tpm_darteltemplate;
+    end
+
 if ~dartel && exist([directory, 'c1', file], 'file') || dartel && exist([directory, 'rc1', file], 'file')
     disp('Segmentation already done!');
 else
     
     
-    if ea_checktpmresolution(options)
-        ea_create_tpm_darteltemplate;
-    end
+
 
     
     disp('Segmentation...');
