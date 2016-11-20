@@ -179,13 +179,7 @@ if ismember(whichnormmethod,{'ea_normalize_spmdartel','ea_normalize_spmnewseg'})
 	refnorm=[refnorm,',2'];  
 end
 
-% unzip spm dartel template
-if strcmp(whichnormmethod, 'ea_normalize_spmdartel')
-    if ~exist([options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires.nii'],'file')
-        gunzip([options.earoot,'templates',filesep,'dartel',filesep,'create_mni_darteltemplate',filesep,'dartelmni_6_hires.nii.gz'],...
-               [options.earoot,'templates',filesep,'dartel']);
-    end
-end
+
 
 % generate b0 to anat tranformation
 % Vb0=spm_vol([directory,options.prefs.b0]);
