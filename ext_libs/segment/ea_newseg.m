@@ -22,15 +22,8 @@ end
 if (~dartel && exist([directory, 'c1', files{1}], 'file') || dartel && exist([directory, 'rc1', files{1}], 'file')) && (~force)
     disp('Segmentation already done!');
 else
-    
-    
-    
-    
-    
     disp('Segmentation...');
-    
-    
-    
+
     load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob12']);
     tpminf=[options.earoot,'templates',filesep,'TPM_2009b.nii'];
     for fi=1:length(files) % add channels for multispectral segmentation
