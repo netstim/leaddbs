@@ -1,4 +1,4 @@
-  function  [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(varargin)
+  function  [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(varargin)
 
   options=varargin{1};
   
@@ -36,6 +36,7 @@
           trajectory=reco.mni.trajectory;
           markers=reco.mni.markers;
       end
+      coords_acpc=reco.acpc.coords_mm;
       
       manually_corrected=reco.props.manually_corrected;
       elmodel=reco.props.elmodel;

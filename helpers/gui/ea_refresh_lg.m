@@ -272,7 +272,8 @@ disp('Loading localizations...');
             [options.root,options.patientname]=fileparts(M.patient.list{pt});
             options.root=[options.root,filesep];
 
-            [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+            [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
+            
             if M.ui.elmodelselect==1 % use patient specific elmodel
                 if exist('elmodel','var')
                     M.elstruct(pt).elmodel=elmodel;
@@ -285,6 +286,7 @@ disp('Loading localizations...');
 
             end
             M.elstruct(pt).coords_mm=coords_mm;
+            M.elstruct(pt).coords_acpc=coords_acpc;
             M.elstruct(pt).trajectory=trajectory;
 
             M.elstruct(pt).name=[pats{pt}];
