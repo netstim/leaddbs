@@ -175,11 +175,9 @@ refb0=[directory,options.prefs.b0];
 refanat=[directory,options.prefs.prenii_unnormalized];
 
 % determin the template for fiber normalization and visualization
-if ismember(whichnormmethod,{'ea_normalize_spmdartel','ea_normalize_spmnewseg'})
+if ismember(whichnormmethod,{'ea_normalize_spmshoot','ea_normalize_spmdartel','ea_normalize_spmnewseg'})
 	refnorm=[refnorm,',2'];  
 end
-
-
 
 % generate b0 to anat tranformation
 % Vb0=spm_vol([directory,options.prefs.b0]);

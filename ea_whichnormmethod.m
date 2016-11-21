@@ -18,10 +18,12 @@ end
 leaddir=ea_getearoot;
 
 switch whichnormmethod
-    case 'ea_normalize_spmdartel' % use dartel MNI template
+    case 'ea_normalize_spmshoot'
+        template=[leaddir,'templates',filesep,'dartel',filesep,'shootmni_6.nii'];
+    case 'ea_normalize_spmdartel'
         template=[leaddir,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'];
     case 'ea_normalize_spmnewseg'
-        template=[leaddir,'templates',filesep,'TPM_Lorio_Draganski.nii'];
-    otherwise % use mni_hires
+        template=[leaddir,'templates',filesep,'TPM_2009b.nii'];
+    otherwise
         template=[leaddir,'templates',filesep,'mni_hires.nii'];
 end
