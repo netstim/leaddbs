@@ -58,6 +58,25 @@
 %  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
 function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, method, img_idx, preferredForm)
+if ~exist('old_fn','var') || ~exist('new_fn','var')
+    error('Usage: reslice_nii(old_fn, new_fn, [voxel_size], [verbose], [bg], [method], [img_idx])');
+end
+
+if ~exist('method','var') || isempty(method)
+    method = 1;
+end
+
+if ~exist('img_idx','var') || isempty(img_idx)
+    img_idx = [];
+end
+
+if ~exist('verbose','var') || isempty(verbose)
+    verbose = 1;
+end
+
+if ~exist('preferredForm','var') || isempty(preferredForm)
+    preferredForm= 's';				% Jeff
+end
 
 usespm=1;
 if usespm
@@ -73,8 +92,8 @@ for i=1:numel(V)
    VV(1).fname=new_fn;
    spm_reslice(VV,struct('mean',false,'which',1,'interp',method,'mask',true)); % 1 for linear
 end
-[pth,fn,ext]=fileparts(new_fn);
-movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
+[pth,fn,ext]=fileparts(old_fn);
+movefile(fullfile(pth,['r',fn,ext]),new_fn);
 
 
 
@@ -91,25 +110,7 @@ movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
 
 else
 
-   if ~exist('old_fn','var') | ~exist('new_fn','var')
-      error('Usage: reslice_nii(old_fn, new_fn, [voxel_size], [verbose], [bg], [method], [img_idx])');
-   end
 
-   if ~exist('method','var') | isempty(method)
-      method = 1;
-   end
-
-   if ~exist('img_idx','var') | isempty(img_idx)
-      img_idx = [];
-   end
-
-   if ~exist('verbose','var') | isempty(verbose)
-      verbose = 1;
-   end
-
-   if ~exist('preferredForm','var') | isempty(preferredForm)
-      preferredForm= 's';				% Jeff
-   end
 
    nii = load_nii_no_xform(old_fn, img_idx, 0, preferredForm);
 
