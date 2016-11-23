@@ -53,11 +53,11 @@ affinestage = [' -cost mutualinfo' ...
 
 if runs == 0 % mattes MI affine + rigid
     affinestage = [affinestage, ...
-                   ' -omat ', ea_path_helper(volumedir), xfm ,num2str(runs+1), '.mat'];
+                   ' -omat ', ea_path_helper([volumedir, xfm ,num2str(runs+1), '.mat'])];
 elseif runs > 0
     affinestage = [affinestage, ...
-                   ' -init ', ea_path_helper(volumedir), xfm, num2str(runs), '.mat' ...
-                   ' -omat ', ea_path_helper(volumedir), xfm, num2str(runs+1), '.mat'];
+                   ' -init ', ea_path_helper([volumedir, xfm, num2str(runs), '.mat']), ...
+                   ' -omat ', ea_path_helper([volumedir, xfm, num2str(runs+1), '.mat'])];
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
@@ -79,8 +79,8 @@ flirtcmd = [FLIRT, ...
 % apply the transformation
 invxfm = [fix, '2', mov, '_flirt'];
 convertxfmcmd = [COVERT_XFM, ...
-              ' -omat ', ea_path_helper(volumedir), invxfm, num2str(runs+1), '.mat' ...
-              ' -inverse ', ea_path_helper(volumedir), xfm, num2str(runs+1), '.mat'];
+              ' -omat ', ea_path_helper([volumedir, invxfm, num2str(runs+1), '.mat']), ...
+              ' -inverse ', ea_path_helper([volumedir, xfm, num2str(runs+1), '.mat'])];
           
 setenv('FSLOUTPUTTYPE','NIFTI');
 if ~ispc
@@ -94,7 +94,7 @@ end
 if ~isempty(otherfiles)
     for fi = 1:numel(otherfiles)
         ea_fsl_flirt_applytransform(fixedimage, otherfiles{fi}, otherfiles{fi}, ...
-                                    [ea_path_helper(volumedir), xfm, num2str(runs+1), '.mat']);
+                                    [volumedir, xfm, num2str(runs+1), '.mat']);
     end
 end
 

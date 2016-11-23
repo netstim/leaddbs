@@ -115,14 +115,13 @@ for fi = 1:length(fis)
         end
 
         if ~isempty(transformfile)
-            [pth,fn,ext] = fileparts(transformfile);
             cmd = [cmd, ...
                    ' --reference-image ',ea_path_helper(refim),...
-                   ' --transform [',ea_path_helper(pth),filesep,fn,ext,',0]'];
+                   ' --transform [',ea_path_helper(transformfile),',0]'];
         else
             cmd = [cmd, ...
                    ' --reference-image ',ea_path_helper(refim),...
-                   ' --transform [',ea_path_helper([directory,glprebase]),'InverseComposite',warpsuffix,',0]'];
+                   ' --transform [',ea_path_helper([directory,glprebase,'InverseComposite',warpsuffix]),',0]'];
         end
     else
         if isempty(refim)
@@ -130,14 +129,13 @@ for fi = 1:length(fis)
         end
 
         if ~isempty(transformfile)
-            [pth,fn,ext] = fileparts(transformfile);
             cmd = [cmd, ...
                    ' --reference-image ',ea_path_helper(refim),...
-                   ' --transform [',ea_path_helper(pth),filesep,fn,ext,',0]'];
+                   ' --transform [',ea_path_helper(transformfile),',0]'];
         else
             cmd = [cmd, ...
                    ' --reference-image ',ea_path_helper(refim),...
-                   ' --transform [',ea_path_helper([directory,glprebase]),'Composite',warpsuffix,',0]'];
+                   ' --transform [',ea_path_helper([directory,glprebase,'Composite',warpsuffix]),',0]'];
         end
     end
     
