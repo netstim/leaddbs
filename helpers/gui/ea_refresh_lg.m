@@ -168,6 +168,10 @@ try set(handles.lc_smooth,'Value',M.ui.lc.smooth); end
 % update selectboxes:
 try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
 try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
+if M.ui.atlassetpopup>length(get(handles.atlassetpopup,'String'))
+    M.ui.atlassetpopup=length(get(handles.atlassetpopup,'String'));
+    set(handles.atlassetpopup,'Value',length(get(handles.atlassetpopup,'String')));
+end
 try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
 try set(handles.labelpopup,'Value',M.ui.labelpopup); end
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
