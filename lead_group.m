@@ -988,11 +988,12 @@ for pt=selection
     options=ea_resolve_elspec(options);
     options.prefs=ea_prefs(options.patientname);
     options.d3.verbose='off';
-
+    options.d3.elrendering=1; % hard code to viz electrodes in this setting.
+    options.d3.colorpointcloud=0;
+    options.d3.isomatrix{1}=nan;
+    options.d3.isomatrix{2}=nan;
     options.native=0;
 
-
-    options.d3.elrendering=M.ui.elrendering;
     options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
     options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
     options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');

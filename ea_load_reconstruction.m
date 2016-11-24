@@ -36,8 +36,11 @@
           trajectory=reco.mni.trajectory;
           markers=reco.mni.markers;
       end
+      try
       coords_acpc=reco.acpc.coords_mm;
-      
+      catch
+          coords_acpc=nan;
+      end
       manually_corrected=reco.props.manually_corrected;
       elmodel=reco.props.elmodel;
       
