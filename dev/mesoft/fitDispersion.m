@@ -42,10 +42,11 @@ function res = fitDispersion(Dpara_in,Dpara_ex,Dorth,vf,vf_csf,snr,noisedeg, pro
         if any(isnan(Mten(:))) | any(isinf(Mten(:))),
             Mten = randn(3,3);
         end;
+ 
         [U D] = eigs(Mten);
-        pd = U(:,1);
-       
-         
+        [~,ix]=sort(D(logical(eye(length(D)))));
+        pd = U(:,ix(3));
+
       %%       
       
       

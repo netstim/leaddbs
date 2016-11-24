@@ -144,8 +144,13 @@ img = ds.img;
             plot3([n(1,k) -n(1,k)]*w,[n(2,k) -n(2,k)]*w,[n(3,k) -n(3,k)]*w,'linewidth',2); hold on;
             Mten = Mten + n(:,k)*n(:,k)' *w;
         end;
+
+        
         [U D] = eigs(Mten);
-        pd = U(:,1);
+        [~,ix]=sort(D(logical(eye(length(D)))));
+        pd = U(:,ix(3));
+
+        
         plot3([pd(1) -pd(1)],[pd(2) -pd(2)],[pd(3) -pd(3)],'r');
         
         hold off;
@@ -187,8 +192,13 @@ img = ds.img;
           
       
         for k = 1:size(ds.hr.user.bTensor,3);
-            [U D] = eigs(ds.hr.user.bTensor(:,:,k));
-            dirs(:,k) = U(:,1);
+
+            
+                               [U D] = eigs(ds.hr.user.bTensor(:,:,k));
+               [~,ix]=sort(D(logical(eye(length(D)))));
+                   dirs(:,k) = U(:,ix(3));   
+
+            
         end;
         lmax = 2;
         p1 = 0;

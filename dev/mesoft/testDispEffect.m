@@ -2,8 +2,12 @@ function testDispEffect
 %%
 ten = evalin('base','hr.user.bTensor')/1000;
 for k = 1:size(ten,3),
-    [U D] = eigs(ten(:,:,k));
-    scheme(:,k) = sqrt(D(1,1))*U(:,1);
+
+    
+                       [U D] = eigs(ten(:,:,k));
+               [~,ix]=sort(D(logical(eye(length(D)))));
+                   scheme(:,k) = sqrt(D(1,1))*U(:,ix(3));   
+
 end;
 
 D = 2; 

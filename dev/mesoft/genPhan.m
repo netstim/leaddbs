@@ -132,8 +132,11 @@ function K = smker(ten)
 %%
 clear dir
 for k = 1:size(ten,3),
+
     [U D] = eigs(ten(:,:,k));
-    dir(:,k) = U(:,1);
+    [~,ix]=sort(D(logical(eye(length(D)))));
+    dir(:,k) = U(:,ix(3));
+
 end;
 
 dir = [dir  -dir];

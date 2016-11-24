@@ -18,9 +18,9 @@ proto.b = squeeze(round((proto.ten(1,1,:)+proto.ten(2,2,:)+proto.ten(3,3,:))));
 proto.buni = unique(round(proto.b/100))*100;  
 for k = 1:size(proto.ten,3);
     
-                   [U D] = eigs(proto.ten(:,:,k));
-               [~,ix]=sort(D(logical(eye(length(D)))));
-                   proto.dirs(:,k) = U(:,ix(3));    
+    [U D] = eigs(proto.ten(:,:,k));
+    [~,ix]=sort(D(logical(eye(length(D)))));
+    proto.dirs(:,k) = U(:,ix(3));
     
 end;
 
@@ -123,8 +123,11 @@ img = ds.img;
     buni = unique(round(b/100))*100;
   
         for k = 1:size(ds.hr.user.bTensor,3);
+            
             [U D] = eigs(ds.hr.user.bTensor(:,:,k));
-            dirs(:,k) = U(:,1);
+            [~,ix]=sort(D(logical(eye(length(D)))));
+            dirs(:,k) = U(:,ix(3));
+
         end;
 
         
