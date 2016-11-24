@@ -690,8 +690,11 @@ function preprocessData(bTensor,signal,mask)
        
        if datastruct.params.directional_propsal_distrib,
            for k = 1:size(bTensor,3),
-               [U D] = eigs(bTensor(:,:,k));           
-               bDir(:,k) = U(:,1)*sqrt(D(1,1)*1000);
+               
+               [U D] = eigs(bTensor(:,:,k));
+               [~,ix]=sort(D(logical(eye(length(D)))));
+               bDir(:,k) = U(:,ix(3))*sqrt(D(1,1)*1000);
+               
            end;
 
            ds = GLQball_DSI(signal,bDir,'lambda',5,'Nmax',10,'shell',4.5,'sinterp',datastruct.sphereInterpolation,'D',2);
@@ -738,8 +741,9 @@ function preprocessData(bTensor,signal,mask)
        bval = squeeze(bTensor(1,1,:)+bTensor(2,2,:)+bTensor(3,3,:))';
        
        for k = 1:size(bTensor,3),
-            [U D] = eigs(bTensor(:,:,k));           
-            bDir(:,k) = U(:,1);
+            [U D] = eigs(bTensor(:,:,k));
+            [~,ix]=sort(D(logical(eye(length(D)))));
+            bDir(:,k) = U(:,ix(3));
        end;
 
        lmax = Pstruc.lmax;

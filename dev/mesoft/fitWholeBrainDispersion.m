@@ -14,8 +14,10 @@ function results = fitWholeBrainDispersion(hr)
     proto.b = squeeze(round((proto.ten(1,1,:)+proto.ten(2,2,:)+proto.ten(3,3,:))));     
     proto.buni = unique(round(proto.b/100))*100;  
     for k = 1:size(proto.ten,3);
-        [U D] = eigs(proto.ten(:,:,k));
-        proto.dirs(:,k) = U(:,1);
+        
+                       [U D] = eigs(proto.ten(:,:,k));
+               [~,ix]=sort(D(logical(eye(length(D)))));
+                proto.dirs(:,k) = U(:,ix(3));
     end;
     
     
