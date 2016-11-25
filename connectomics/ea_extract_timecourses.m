@@ -73,7 +73,7 @@ sessvec=ea_gensessvec(sessvec);
 if vizz
     figure
     pcnt=1;
-    subplot(4,2,pcnt)
+    subplot(3,2,pcnt)
     pcnt=pcnt+1;
     plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
     title('Raw timeseries')
@@ -83,7 +83,7 @@ end
 disp('Regressing out nuisance variables...');
 if multsess
     if vizz
-        subplot(4,2,pcnt)
+        subplot(3,2,pcnt)
         pcnt=pcnt+1;
         plot(sessvec);
         title('Session vector')
@@ -106,7 +106,7 @@ if multsess
     end
     
     if vizz
-        subplot(4,2,pcnt)
+        subplot(3,2,pcnt)
         pcnt=pcnt+1;
         plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
         title('Time series cleaned from session vector.')
@@ -151,7 +151,7 @@ for tmpt = 1:signallength
 end
 
 if vizz
-    subplot(4,2,pcnt)
+    subplot(3,2,pcnt)
     pcnt=pcnt+1;
     plot([GlobTimecourse,WMTimecourse,CSFTimecourse]);
     title('Global/WM/CSF Timecourses (cleaned from session).');
@@ -183,7 +183,7 @@ if multsess
 end
 
 if vizz
-    subplot(4,2,pcnt)
+    subplot(3,2,pcnt)
     pcnt=pcnt+1;
     plot(X1);
     title('Motion parameters (cleaned from session vector).');
@@ -201,7 +201,7 @@ for voxx=1:size(interpol_tc,1)
 end
 
 if vizz
-    subplot(4,2,pcnt)
+    subplot(3,2,pcnt)
     pcnt=pcnt+1;
     plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
     title('Time series cleaned from motion parameters.');
@@ -232,7 +232,7 @@ clear X X2
 disp('Done.')
 
 if vizz
-    subplot(4,2,pcnt)
+    subplot(3,2,pcnt)
     pcnt=pcnt+1;
     plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
     title('Time series (cleaned from global/csf/wm).');
@@ -294,7 +294,7 @@ interpol_tc=interpol_tc+repmat(theMean,[1, sampleLength]);
 disp('Done.');
 
 if vizz
-    subplot(4,2,8)
+    subplot(3,2,pcnt)
     plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
     title('Bandpass filtered time series.');
 end
