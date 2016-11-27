@@ -19,7 +19,7 @@ else
     dcm2niix = [basedir, 'dcm2niix.', computer('arch')];
 end
 
-cmd=[dcm2niix, ' -o ', ea_path_helper(outdir), ' -z n -x y ', ea_path_helper(dicomdir)];
+cmd=[dcm2niix, ' -o ', ea_path_helper(fileparts(outdir)), ' -z n -x y ', ea_path_helper(fileparts(dicomdir))];
 
 if ~ispc
     system(['bash -c "', cmd, '"']);
