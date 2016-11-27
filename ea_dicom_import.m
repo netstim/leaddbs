@@ -10,9 +10,8 @@ function ea_dicom_import(options)
 
 disp('Importing DICOM files...');
 
-
 % finding DICOM folder in patients directory
-dfnames=ea_getdicomfoldernames;
+dfnames = {'DICOM','dicom','DICOMDAT'};
 for df=1:length(dfnames)
     if exist([options.root,options.patientname,filesep,dfnames{df}],'file')
         break
@@ -20,18 +19,16 @@ for df=1:length(dfnames)
 end
 indir=[options.root,options.patientname,filesep,dfnames{df},filesep];
 outdir=[options.root,options.patientname,filesep];
-tmpoutdir=outdir;
 
 f=dir(indir);
 % zipfile support..
 for scan=1:length(f)
-   [p,fi,e]=fileparts(f(scan).name);
+   [~,~,e]=fileparts(f(scan).name);
    if strcmp(e,'.zip')
        unzip([indir,f(scan).name],indir);
        delete([indir,f(scan).name]);
    end
 end
-
 
 ea_dcm2niix(indir,outdir);
 
@@ -39,27 +36,19 @@ if options.prefs.dicom.dicomfiles % delete DICOM folder
     rmdir([options.root,options.patientname,filesep,'DICOM'],'s');
 end
 
-
 % remove uncropped versions
 di=dir([outdir,'*_Crop_1.nii']);
 for d=1:length(di)
-    delete([outdir,di(d).name(1:end-11),'.nii']);    
+    ea_delete([outdir,di(d).name(1:end-11),'.nii']);    
 end
 % remove untilted versions
 di=dir([outdir,'*_Tilt_1.nii']);
 for d=1:length(di)
-    delete([outdir,di(d).name(1:end-11),'.nii']);    
+    ea_delete([outdir,di(d).name(1:end-11),'.nii']);    
 end
 
 di=dir([outdir,'*.nii']);
 for d=1:length(di)
     dcfilename=[outdir,di(d).name];
-    ea_imageclassifier(dcfilename);
+    ea_imageclassifier({dcfilename});
 end
-
-
-
-function fnames=ea_getdicomfoldernames;
-
-fnames={'DICOM','dicom','DICOMDAT'};
-

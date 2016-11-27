@@ -32,6 +32,7 @@ gui_State = struct('gui_Name',       mfilename, ...
                    'gui_OutputFcn',  @ea_imageclassifier_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
+               
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -58,28 +59,28 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-
 set(hObject,'name','Please specify image type');
 
-tmpoutdir=fileparts(varargin{1});
+tmpoutdir=fileparts(varargin{1}{:});
 
-setappdata(hObject,'dcfilename',varargin{1});
+setappdata(hObject,'dcfilename',varargin{1}{:});
 setappdata(hObject,'tmpoutdir',tmpoutdir);
 
-[pth,dcfn]=fileparts(getappdata(handles.imclassf,'dcfilename'));
+[~,dcfn]=fileparts(getappdata(handles.imclassf,'dcfilename'));
 % check for already classified images:
 for append=[0,2:15] % check for duplicates, too.
     [base_lead_fis,all_lead_fis]=ea_getbasefilenames('',append);
+    
     if ismember([dcfn,'.nii'],base_lead_fis)
         finishandclose(handles,'');
         return
     end
+    
     if ismember([dcfn,'.nii'],all_lead_fis)
         finishandclose(handles,'');
         return
     end
-    
-    
+
     if append
         append=num2str(append);
     else
@@ -90,10 +91,12 @@ for append=[0,2:15] % check for duplicates, too.
         finishandclose(handles,'');
         return
     end
+    
     if strcmp([dcfn,'.nii'],['corrupt_data',append,'.nii'])
         finishandclose(handles,'');
         return
     end
+    
     if strcmp([dcfn,'.nii'],['auto_ignore',append,'.nii'])
         finishandclose(handles,'');
         return
@@ -101,38 +104,34 @@ for append=[0,2:15] % check for duplicates, too.
 end
 
 try
-nii=ea_load_nii(getappdata(handles.imclassf,'dcfilename'));
+    nii=ea_load_nii(getappdata(handles.imclassf,'dcfilename'));
 catch
     finishandclose(handles,'corrupt_data');
     return
 end
 
-
-
 if any(nii.dim<20)
-finishandclose(handles,'auto_ignore');
-return
+    finishandclose(handles,'auto_ignore');
+    return
 end
 
 hdrtext=genhdrtext(nii);
 
-
 nii.img=double(nii.img)/double(max(nii.img(:)));
 try
-set(0,'CurrentFigure',handles.imclassf);
+    set(0,'CurrentFigure',handles.imclassf);
 catch
     keyboard
 end
 
 try
-h=slice(double(squeeze(nii.img(:,:,:,1))),round(size(nii.img,1)/2),...
+    h=slice(double(squeeze(nii.img(:,:,:,1))),round(size(nii.img,1)/2),...
     round(size(nii.img,2)/2),...
     round(size(nii.img,3)/2));
-set(h,'FaceColor','interp',...
-	'EdgeColor','none',...
-	'DiffuseStrength',.8)
+    set(h,'FaceColor','interp',...
+        'EdgeColor','none',...
+        'DiffuseStrength',.8)
 catch
-    
     keyboard
 end
 colormap gray
@@ -147,11 +146,8 @@ axis off
 
 set(handles.imghdrinfo,'String',hdrtext);
 
-
 % UIWAIT makes ea_imageclassifier wait for user response (see UIRESUME)
-%uiwait(handles.imclassf);
-
-
+uiwait(handles.imclassf);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -165,7 +161,6 @@ function varargout = ea_imageclassifier_OutputFcn(hObject, eventdata, handles)
 %uiwait(handles.imclassf);
 
 
-
 % --- Executes on button press in trapush.
 function trapush_Callback(hObject, eventdata, handles)
 % hObject    handle to trapush (see GCBO)
@@ -175,6 +170,7 @@ tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
 [~,pt]=fileparts(tmpoutdir);
 prefs=ea_prefs(pt);
 finishandclose(handles,prefs.tranii_unnormalized);
+
 
 % --- Executes on button press in pretrapush.
 function pretrapush_Callback(hObject, eventdata, handles)
@@ -186,6 +182,7 @@ tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
 prefs=ea_prefs(pt);
 finishandclose(handles,prefs.prenii_unnormalized);
 
+
 % --- Executes on button press in corpush.
 function corpush_Callback(hObject, eventdata, handles)
 % hObject    handle to corpush (see GCBO)
@@ -196,6 +193,7 @@ tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
 prefs=ea_prefs(pt);
 finishandclose(handles,prefs.cornii_unnormalized);
 
+
 % --- Executes on button press in sagpush.
 function sagpush_Callback(hObject, eventdata, handles)
 % hObject    handle to sagpush (see GCBO)
@@ -205,6 +203,7 @@ tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
 [~,pt]=fileparts(tmpoutdir);
 prefs=ea_prefs(pt);
 finishandclose(handles,prefs.sagnii_unnormalized);
+
 
 % --- Executes on button press in ctpush.
 function ctpush_Callback(hObject, eventdata, handles)
@@ -227,69 +226,57 @@ finishandclose(handles,'unknown');
 
 
 function ea_keystr(icfig,event,handles)
-%    pause
+% pause
 %commnd=get (handles.imclassf, 'CurrentKey');
 
-        %global current_imclass
+% global current_imclass
 %% get vars
 eltog=getappdata(handles.imclassf,'eltog');
 elplot=getappdata(handles.imclassf,'elplot');
 coords_mm=getappdata(handles.imclassf,'coords_mm');
 
-
-
-
 commnd=lower(event.Character);
 switch commnd
     case 't'
         tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
-[~,pt]=fileparts(tmpoutdir);
-prefs=ea_prefs(pt);
-finishandclose(handles,prefs.tranii_unnormalized);
+        [~,pt]=fileparts(tmpoutdir);
+        prefs=ea_prefs(pt);
+        finishandclose(handles,prefs.tranii_unnormalized);
     case 'p'
-tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
-[~,pt]=fileparts(tmpoutdir);
-prefs=ea_prefs(pt);
-finishandclose(handles,prefs.prenii_unnormalized);
-        
+        tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
+        [~,pt]=fileparts(tmpoutdir);
+        prefs=ea_prefs(pt);
+        finishandclose(handles,prefs.prenii_unnormalized);
     case 's'
         tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
-[~,pt]=fileparts(tmpoutdir);
-prefs=ea_prefs(pt);
-finishandclose(handles,prefs.sagnii_unnormalized);
-        
-        
+        [~,pt]=fileparts(tmpoutdir);
+        prefs=ea_prefs(pt);
+        finishandclose(handles,prefs.sagnii_unnormalized);
     case 'c'
         tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
-[~,pt]=fileparts(tmpoutdir);
-prefs=ea_prefs(pt);
-finishandclose(handles,prefs.cornii_unnormalized);
-        
+        [~,pt]=fileparts(tmpoutdir);
+        prefs=ea_prefs(pt);
+        finishandclose(handles,prefs.cornii_unnormalized);
     case 'a'
         tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
-[~,pt]=fileparts(tmpoutdir);
-prefs=ea_prefs(pt);
-finishandclose(handles,prefs.rawctnii_unnormalized);
-        
+        [~,pt]=fileparts(tmpoutdir);
+        prefs=ea_prefs(pt);
+        finishandclose(handles,prefs.rawctnii_unnormalized);
     case 'u'
         finishandclose(handles,'unknown');
-        
     case 'd'
         tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
-        
         [~,pt]=fileparts(tmpoutdir);
         prefs=ea_prefs(pt);
         finishandclose(handles,prefs.dti);
     case 'f'
         tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
-        
         [~,pt]=fileparts(tmpoutdir);
         prefs=ea_prefs(pt);
         finishandclose(handles,prefs.rest_default);
     otherwise
         return
 end
-
 
 
 function finishandclose(handles,current_imclass)
@@ -309,7 +296,7 @@ if ~isempty(current_imclass)
             append=num2str(app+1);
         end
     end
-    movefile([getappdata(handles.imclassf,'dcfilename')],[getappdata(handles.imclassf,'tmpoutdir'),filesep,current_imclass,append,'.nii']);
+    movefile(getappdata(handles.imclassf,'dcfilename'),[getappdata(handles.imclassf,'tmpoutdir'),filesep,current_imclass,append,'.nii']);
     
     [~,dti]=fileparts(prefs.dti);
     if strcmp(dti,current_imclass)
@@ -326,14 +313,12 @@ if ~isempty(current_imclass)
             movefile([pth,filesep,fn,'.bvec'],[pth,filesep,prefs.bvec]);
         else
             warning('No .bvec file found for dMRI image.');
-        end
-        
-    end
-    
+        end   
+    end 
 end
+
 close(handles.imclassf)
         
-
 
 % --- Executes on button press in restpush.
 function restpush_Callback(hObject, eventdata, handles)
@@ -357,7 +342,6 @@ tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
 [~,pt]=fileparts(tmpoutdir);
 prefs=ea_prefs(pt);
 finishandclose(handles,prefs.dti);
-
 
 
 function hdrtxt=genhdrtext(nii)

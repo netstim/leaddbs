@@ -19,9 +19,7 @@ else
     needtoexit=0;
 end
 
-
 options=ea_amendtoolboxoptions(options);
-
 
 if options.d3.autoserver && options.d3.write
     choice = questdlg('Are you sure you want to export results to the server automatically?', ...
@@ -55,7 +53,6 @@ if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do && ~strcmp(c
     end
     
     parfor pat=1:length(uipatdirs)
-        
         % run main function
         try
             switch cmd
@@ -64,24 +61,18 @@ if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do && ~strcmp(c
             end
         catch
             warning([opts{pat}.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
-        end
-        
+        end      
     end
     delete(pp);
-    
 else
     switch cmd
-        
         case 'export'
-            
-            ea_export(options);
-            
+            ea_export(options); 
         case 'run'
-            
             for pat=1:length(uipatdirs)
                 % set patient specific options
                 options.root=[fileparts(uipatdirs{pat}),filesep];
-                [root,thispatdir]=fileparts(uipatdirs{pat});
+                [~,thispatdir]=fileparts(uipatdirs{pat});
                 options.patientname=thispatdir;
                 % run main function
                 
@@ -95,15 +86,9 @@ else
                     ea_autocoord(options);
                 end
             end
-            
     end
 end
 
 if needtoexit % on a cluster, need to close Matlab properly after job is done.
     exit
 end
-
-
-
-
-
