@@ -137,12 +137,12 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
     if options.manualheightcorrection
         % load reconstruction results
-        %     try
-        %         [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-        %     catch
-        %         ea_error([patientname,': No reconstruction information found. Please run reconstruction first.']);
-        %     end
-        %     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+        % try
+        %     [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+        % catch
+        %     ea_error([patientname,': No reconstruction information found. Please run reconstruction first.']);
+        % end
+        % ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
         mcfig=figure('name',[patientname,': Manual Height Correction'],'numbertitle','off');
         warning('off');
         try

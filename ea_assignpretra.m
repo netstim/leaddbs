@@ -12,14 +12,16 @@ if isempty(f)
     warning(['No anatomy information found. Please put either ',options.prefs.rawpreniis{1},', ',  options.prefs.rawpreniis{2},' or ', options.prefs.rawpreniis{3}, ' into subject folder.']);
 end
 
-if ~exist([directory,'.pp'],'file') && ~exist([directory,'ea_normmethod_applied.mat'],'file') % only do this once, small hidden flag .pp inside patient folder will show this has been done before.
+% anat preprocess, only do once.
+% a small hidden file '.pp' inside patient folder will show this has been done before.
+if ~exist([directory,'.pp'],'file') && ~exist([directory,'ea_normmethod_applied.mat'],'file')
     for fi=f
-        % apply biasfieldcorrection and reorient/crop
+        % apply reorient/crop and biasfieldcorrection
         ea_anatpreprocess([directory,options.prefs.rawpreniis{fi}]);
     end
     try
         fs=fopen([directory,'.pp'],'w');
-        fprintf(fs,'%s','dcmbiasfielddone');
+        fprintf(fs,'%s','anat preprocess done');
         fclose(fs);
     end
 end

@@ -12,7 +12,6 @@ function resultfig=ea_elvis(varargin)
 % Andreas Horn
 
 
-
 % Initialize inputs
 options=varargin{1};
 if nargin>2
@@ -23,11 +22,9 @@ end
 if nargin==4
     fiberthresh=varargin{4};
 else
-    
+
     fiberthresh=options.fiberthresh;
 end
-
-
 
 % Initialize figure
 
@@ -39,8 +36,6 @@ ssz(3:4)=ssz(3:4)-200;
 set(resultfig, 'Position', ssz); % Maximize figure.
 
 % initialize some ui elements
-
-
 ht=uitoolbar(resultfig);
 
 % add custom rotator:
@@ -56,7 +51,6 @@ fh1 = uimenu(mh,'Label','Open Tract','Callback',{@ea_addobj,resultfig,'tract',op
 fh2 = uimenu(mh,'Label','Open ROI','Callback',{@ea_addobj,resultfig,'roi',options});
 
 % Set some visualization parameters
-
 set(resultfig,'Renderer','opengl')
 axis off
 %set(gca,'DrawMode','fast')
@@ -68,7 +62,6 @@ set(gca,'NextPlot','replacechildren');
 %set(gca,'Erasemode','none');
 
 % Get paramters (Coordinates and fitted line).
-
 figtitle=get(gcf,'Name');
 set(gcf,'Name',[figtitle,'...building...']);
 axis equal
@@ -77,117 +70,95 @@ axis fill
 %% Patient specific part (skipped if no patient is selected or no reco available):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
     if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') || nargin>1;
-        
         if nargin>1
             multiplemode=1;
             elstruct=varargin{2};
-            
         else
             multiplemode=0;
-            
-            
+
             [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
-            
+
             elstruct(1).coords_mm=coords_mm;
             elstruct(1).coords_mm=ea_resolvecoords(markers,options);
             elstruct(1).trajectory=trajectory;
             elstruct(1).name=options.patientname;
             elstruct(1).markers=markers;
             clear coords_mm trajectory
-            
         end
 
+        % show electrodes..
+        for pt=1:length(elstruct)
+            try
+                [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
+            catch
+                ea_error(['Couldn''''t visualize electrode from patient ',num2str(pt),'.']);
+            end
+            if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
+               % this part for brainbrowser support.
+               vizstruct=struct('faces',[],'vertices',[],'colors',[]);
 
+               cnt=1;
+                for side=1:length(options.sides)
+                    extract=1:length(el_render(pt).el_render{side});
+                    for ex=extract
+                        tp=el_render(pt).el_render{side}(ex);
 
+                        try % works only in ML 2015
+                            tr=triangulation(get(el_render(pt).el_render{side}(ex),'Faces'),get(el_render(pt).el_render{side}(ex),'Vertices'));
+                            vizstruct(cnt).normals = vertexNormal(tr);
+                        catch % workaround for older versions..
+                            vizstruct(cnt).normals=get(tp,'VertexNormals')*-1;
+                        end
 
-
-% show electrodes..
-
-for pt=1:length(elstruct)
-    try
-        [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
-    catch
-        ea_error(['Couldn''''t visualize electrode from patient ',num2str(pt),'.']);
-    end
-    if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
-        
-                % this part for brainbrowser support.
-
-        vizstruct=struct('faces',[],'vertices',[],'colors',[]);
-        
-        
-       cnt=1;
-        for side=1:length(options.sides)
-            extract=1:length(el_render(pt).el_render{side});
-            for ex=extract
-                
-                    tp=el_render(pt).el_render{side}(ex);
-
-                
-                try % works only in ML 2015
-                    tr=triangulation(get(el_render(pt).el_render{side}(ex),'Faces'),get(el_render(pt).el_render{side}(ex),'Vertices'));
-                    vizstruct(cnt).normals = vertexNormal(tr);
-                    
-                catch % workaround for older versions..
-                    vizstruct(cnt).normals=get(tp,'VertexNormals')*-1;
+                        vizstruct(cnt).faces=get(tp,'Faces');
+                        vizstruct(cnt).vertices=get(tp,'Vertices');
+                        scolor=get(el_render(pt).el_render{side}(ex),'FaceVertexCData');
+                        vizstruct(cnt).colors=scolor;
+                        %vizstruct(cnt).colors=repmat([squeeze(scolor(1,1,:))',0.7],length(vizstruct(cnt).faces),1);
+                        vizstruct(cnt).name='';
+                        cnt=cnt+1;
+                    end
                 end
-                        
-                
-                vizstruct(cnt).faces=get(tp,'Faces');
-                vizstruct(cnt).vertices=get(tp,'Vertices');
-                scolor=get(el_render(pt).el_render{side}(ex),'FaceVertexCData');
-                vizstruct(cnt).colors=scolor;
-                %vizstruct(cnt).colors=repmat([squeeze(scolor(1,1,:))',0.7],length(vizstruct(cnt).faces),1);
-                vizstruct(cnt).name='';
-                cnt=cnt+1;
-                
             end
         end
+
+        setappdata(resultfig,'el_render',el_render);
+        % add handles to buttons. Can't be combined with the above loop since all
+        % handles need to be set for the buttons to work properly (if alt is
+        % pressed, all electrodes are made visible/invisible).
+        drawnow
+
+        try
+            set(el_label,'Visible','off');
+            ellabeltog=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Electrode labels','OnCallback',{@objvisible,el_label},'OffCallback',{@objinvisible,el_label},'State','off');
+        end
+
+        cnt=1;
+        for pt=1:length(elstruct)
+                try
+                    if multiplemode
+                        caption{1}=[elstruct(pt).name,'_Left'];         caption{2}=[elstruct(pt).name,'_Right'];
+                    else
+                        caption{1}='Electrode_Left'; caption{2}='Electrode_Right';
+                    end
+                    eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
+                    eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
+                    cnt=cnt+2;
+                end
+        end
+        setappdata(resultfig,'eltog',eltog);
+
+        clear cnt
+
+        % Initialize Stimulation-Button
+
+        stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation',options),'TooltipString','Stimulation Control Figure','ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
+
+    else
+        options.writeoutstats=0; % if no electrodes are there, stats can't be written.
+        elstruct=struct;
     end
     
-end
-
-
-setappdata(resultfig,'el_render',el_render);
-% add handles to buttons. Can't be combined with the above loop since all
-% handles need to be set for the buttons to work properly (if alt is
-% pressed, all electrodes are made visible/invisible).
-drawnow
-
-try
-    
-set(el_label,'Visible','off');
-ellabeltog=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Electrode labels','OnCallback',{@objvisible,el_label},'OffCallback',{@objinvisible,el_label},'State','off');
-
-end
-cnt=1;
-for pt=1:length(elstruct)
-        try
-        if multiplemode
-            caption{1}=[elstruct(pt).name,'_Left'];         caption{2}=[elstruct(pt).name,'_Right'];
-        else
-            caption{1}='Electrode_Left'; caption{2}='Electrode_Right';
-        end
-        eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
-        eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
-      cnt=cnt+2;
-        end
-end
-setappdata(resultfig,'eltog',eltog);
-
-
-clear cnt
-
-
-% Initialize Stimulation-Button
-
-stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation',options),'TooltipString','Stimulation Control Figure','ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
-
-
-else
-    options.writeoutstats=0; % if no electrodes are there, stats can't be written.
-    elstruct=struct;
-end
 else
     options.writeoutstats=0; % if no electrodes are there, stats can't be written.
     elstruct=struct;
@@ -200,10 +171,6 @@ slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','
 % Initialize Convis-Button
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome',options),'TooltipString','Connectivity Visualization','ClickedCallback',{@openconnectomeviewer,resultfig,options});
 
-
-
-
-
 % Show atlas data
 if options.d3.writeatlases
     atlases=ea_showatlas(resultfig,elstruct,options);
@@ -215,35 +182,27 @@ if options.d3.writeatlases
         end
         % export vizstruct
         try
-        for side=1:length(options.sides)
-            for atl=1:length(atlases.fv)
-                
-                if isfield(atlases.fv{atl,side},'faces')
-                    vizstruct(cnt+1).faces=atlases.fv{atl,side}.faces;
-                    vizstruct(cnt+1).vertices=atlases.fv{atl,side}.vertices;
-                    vizstruct(cnt+1).normals=atlases.normals{atl,side};
-                    vizstruct(cnt+1).colors=[squeeze(ind2rgb(round(atlases.cdat{atl,side}),atlases.colormap)),repmat(0.7,size(atlases.normals{atl,side},1),1)];
-                    cnt=cnt+1;
+            for side=1:length(options.sides)
+                for atl=1:length(atlases.fv)
+
+                    if isfield(atlases.fv{atl,side},'faces')
+                        vizstruct(cnt+1).faces=atlases.fv{atl,side}.faces;
+                        vizstruct(cnt+1).vertices=atlases.fv{atl,side}.vertices;
+                        vizstruct(cnt+1).normals=atlases.normals{atl,side};
+                        vizstruct(cnt+1).colors=[squeeze(ind2rgb(round(atlases.cdat{atl,side}),atlases.colormap)),repmat(0.7,size(atlases.normals{atl,side},1),1)];
+                        cnt=cnt+1;
+                    end
                 end
             end
         end
-        end
-        
-        
     end
 end
-
-
-
 
 % Show isomatrix data
 
 if options.d3.showisovolume
-    
     ea_showisovolume(resultfig,elstruct,options);
-    
 end
-
 
 if isfield(options.d3,'expdf');
     if options.d3.expdf
@@ -254,7 +213,6 @@ if isfield(options.d3,'expdf');
     end
 end
 %% End of patient-specific part.
-
 
 % Initialize a draggable lightbulb
 hold on
@@ -274,7 +232,6 @@ hdsavebutton=uipushtool(ht,'CData',ea_get_icn('save',options),'TooltipString','S
 % Initialize Video-Export button
 
 videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video',options),'TooltipString','Save video','ClickedCallback',{@export_video,options});
-
 
 
 % Initialize Export to Lead-Server button
@@ -308,7 +265,7 @@ zoom(6)
 opensliceviewer([],[],resultfig,options);
 
 if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
-try    
+try
     % store json in figure file
     bbstruct=ea_viz2brainbrowser(vizstruct);
     setappdata(resultfig,'bbstruct',bbstruct);
@@ -319,21 +276,11 @@ end
 end
 
 
-
-
-
-
-
-
-
-
-
-
-
 function opensliceviewer(hobj,ev,resultfig,options)
 awin=ea_anatomycontrol(resultfig,options);
 setappdata(resultfig,'awin',awin);
 try WinOnTop(awin,true); end
+
 
 function openconnectomeviewer(hobj,ev,resultfig,options)
 awin=ea_convis(gcf,options);
@@ -345,7 +292,6 @@ function openstimviewer(hobj,ev,elstruct,resultfig,options)
 stimwin=ea_stimparams(elstruct,gcf,options);
 setappdata(resultfig,'stimwin',stimwin);
 try WinOnTop(stimwin,true); end
-
 
 
 function closesattelites(src,evnt)
@@ -378,17 +324,20 @@ set(gcf, 'Color', [1,1,1]);
 imwrite(cdata, [PathName,FileName], 'png');
 end
 
+
 function objvisible(hobj,ev,atls)
 set(atls, 'Visible', 'on');
+
 
 
 function objinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
 
+
 function elvisible(hobj,ev,atls,pt,side,onoff,options)
 
 if(getappdata(gcf,'altpressed'))
-    
+
     eltog=getappdata(gcf,'eltog');
     set(eltog,'State',onoff);
     for el=1:length(atls)
@@ -403,8 +352,6 @@ set(atls(pt).el_render{side}, 'Visible', onoff);
 end
 
 
-
-
 function res=ea_if(condition)
 res=0;
 if ~isempty(condition)
@@ -412,6 +359,7 @@ if ~isempty(condition)
         res=1;
     end
 end
+
 
 function ea_keypress(resultfig,event)
 % this is the main keypress function for the resultfigure. Add event
@@ -430,11 +378,10 @@ end
 %     otherwise % arrow keys, plus, minus
 % end
 
+
 function ea_keyrelease(resultfig,event)
 setappdata(resultfig,'altpressed',0);
 %disp('Altunpressed');
-
-
 
 
 function [varargout] = ea_myaa(varargin)
@@ -668,6 +615,7 @@ elseif nargout == 2
     close(self.myaa_figure);
 end
 
+
 %% A simple lowpass filter kernel (Butterworth).
 % sz is the size of the filter
 % subsmp is the downsampling factor to be used later
@@ -682,10 +630,12 @@ kk = ifftshift(1./(1+(rr./cut_frequency).^(2*n)));
 kk = fftshift(real(ifft2(kk)));
 kk = kk./sum(kk(:));
 
+
 function keypress(src,evnt)
 if isempty(evnt.Character)
     return
 end
+
 recognized = 0;
 self = get(gcf,'userdata');
 
@@ -711,139 +661,63 @@ elseif find('123456789' == evnt.Character)
 end
 
 
-
-
-
-
-function WasOnTop = WinOnTop( FigureHandle, IsOnTop )
-%WINONTOP allows to trigger figure's "Always On Top" state
-% INPUT ARGUMENTS:
-% * FigureHandle - Matlab's figure handle, scalar
-% * IsOnTop      - logical scalar or empty array
-%
-% USAGE:
-% * WinOnTop( hfigure, bool );
-% * WinOnTop( hfigure );            - equal to WinOnTop( hfigure,true);
-% * WinOnTop();                     - equal to WinOnTop( gcf, true);
-% * WasOnTop = WinOnTop(...);       - returns boolean value "if figure WAS on top"
-% * IsOnTop  = WinOnTop(hfigure,[]) - gets "if figure is on top" property
-%
-% LIMITATIONS:
-% * java enabled
-% * figure must be visible
-% * figure's "WindowStyle" should be "normal"
-%
-%
-% Written by Igor
-% i3v@mail.ru
-%
-% 16 June 2013 - Initial version
-% 27 June 2013 - removed custom "ishandle_scalar" function call
-%
-
-%% Parse Inputs
-
-if ~exist('FigureHandle','var');FigureHandle = gcf; end
-assert(...
-    isscalar( FigureHandle ) && ishandle( FigureHandle ) &&  strcmp(get(FigureHandle,'Type'),'figure'),...
-    'WinOnTop:Bad_FigureHandle_input',...
-    '%s','Provided FigureHandle input is not a figure handle'...
-    );
-
-assert(...
-    strcmp('on',get(FigureHandle,'Visible')),...
-    'WinOnTop:FigInisible',...
-    '%s','Figure Must be Visible'...
-    );
-
-assert(...
-    strcmp('normal',get(FigureHandle,'WindowStyle')),...
-    'WinOnTop:FigWrongWindowStyle',...
-    '%s','WindowStyle Must be Normal'...
-    );
-
-if ~exist('IsOnTop','var');IsOnTop=true;end
-assert(...
-    islogical( IsOnTop ) &&  isscalar( IsOnTop) || isempty( IsOnTop ), ...
-    'WinOnTop:Bad_IsOnTop_input',...
-    '%s','Provided IsOnTop input is neither boolean, nor empty'...
-    );
-%% Pre-checks
-
-error(javachk('swing',mfilename)) % Swing components must be available.
-
-
-%% Action
-
-% Flush the Event Queue of Graphic Objects and Update the Figure Window.
-drawnow expose
-
-jFrame = get(handle(FigureHandle),'JavaFrame');
-
-drawnow
-
-WasOnTop = jFrame.fHG1Client.getWindow.isAlwaysOnTop;
-
-if ~isempty(IsOnTop)
-    jFrame.fHG1Client.getWindow.setAlwaysOnTop(IsOnTop);
-end
-
 function ea_distogrotate
 uibjs=getappdata(gcf,'uibjs');
 set(uibjs.rotate3dtog,'State','off');
+
 
 function ea_distogzoomin
 uibjs=getappdata(gcf,'uibjs');
 set(uibjs.magnifyplus,'State','off');
 
+
 function ea_distogzoomout
 uibjs=getappdata(gcf,'uibjs');
 set(uibjs.magnifyminus,'State','off');
+
 
 function ea_distogpan
 uibjs=getappdata(gcf,'uibjs');
 set(uibjs.handtog,'State','off');
 
 
+function ea_rotate(h,~,cmd)
 
-
-function ea_rotate(hbj,~,cmd)
-
-    h = rotate3d;
+h = rotate3d;
 h.RotateStyle = 'orbit';
 h.Enable = cmd;
-if strcmp(cmd,'on');
-ea_distogzoomin;
-ea_distogzoomout;
-ea_distogpan;
+if strcmp(cmd,'on')
+    ea_distogzoomin;
+    ea_distogzoomout;
+    ea_distogpan;
 end
 
-function ea_pan(hbj,~,cmd)
+function ea_pan(h,~,cmd)
 
-    pan(cmd);
-    if strcmp(cmd,'on');
-        
-        ea_distogzoomin;
-        ea_distogzoomout;
-        ea_distogrotate;
-    end
+pan(cmd);
+if strcmp(cmd,'on')
+    ea_distogzoomin;
+    ea_distogzoomout;
+    ea_distogrotate;
+end
 
-function ea_zoomin(hbj,~,cmd)
-if strcmp(cmd,'on');
-    
+
+function ea_zoomin(h,~,cmd)
+
+if strcmp(cmd,'on')
     ea_distogpan;
     ea_distogrotate;
-    
-            ea_distogzoomout;
+    ea_distogzoomout;
 end
-    h=zoom;
+h=zoom;
 h.Enable=cmd;
 h.Motion='both';
 h.Direction='in';
 
 
-function ea_zoomout(hbj,~,cmd)
-if strcmp(cmd,'on');
+function ea_zoomout(h,~,cmd)
+
+if strcmp(cmd,'on')
     ea_distogpan;
     ea_distogrotate;
     ea_distogzoomin;

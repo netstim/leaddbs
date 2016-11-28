@@ -33,7 +33,7 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     lhatlases=[lhatlases;lhtrks;lhmats];
 
 
-    for i=1:length(lhatlases);
+    for i=1:length(lhatlases)
         lhcell{i}=lhatlases(i).name;
     end
     delete([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,'*_temp.ni*']);
@@ -42,7 +42,7 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     rhmats=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.mat']);
     rhatlases=[rhatlases;rhtrks;rhmats];
 
-    for i=1:length(rhatlases);
+    for i=1:length(rhatlases)
         rhcell{i}=rhatlases(i).name;
     end
     delete([root,'atlases',filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*_temp.ni*']);
@@ -51,7 +51,7 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     mixedmats=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.mat']);
     mixedatlases=[mixedatlases;mixedtrks;mixedmats];
 
-    for i=1:length(mixedatlases);
+    for i=1:length(mixedatlases)
         mixedcell{i}=mixedatlases(i).name;
     end
     delete([root,'atlases',filesep,mifix,options.atlasset,filesep,'midline',filesep,'*_temp.ni*']);
@@ -61,7 +61,7 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     midlinemats=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.mat']);
     midlineatlases=[midlineatlases;midlinetrks;midlinemats];
 
-    for i=1:length(midlineatlases);
+    for i=1:length(midlineatlases)
         midlinecell{i}=midlineatlases(i).name;
     end
 
@@ -69,13 +69,11 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     todeletelh=[];
     todeleterh=[];
     for i=1:length(lhcell)
-
         [ism, loc]=ismember(lhcell{i},rhcell);
         if ism
             todeletelh=[todeletelh,i];
             todeleterh=[todeleterh,loc];
         end
-
     end
 
     bothcell=lhcell(todeletelh);
@@ -83,26 +81,23 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     rhcell(todeleterh)=[];
 
     allcell=[rhcell,lhcell,bothcell,mixedcell,midlinecell];
-    typecell=[repmat(1,1,length(rhcell)),repmat(2,1,length(lhcell)),repmat(3,1,length(bothcell)),repmat(4,1,length(mixedcell)),repmat(5,1,length(midlinecell))];
+    typecell=[ones(1,length(rhcell)),2*ones(1,length(lhcell)),3*ones(1,length(bothcell)),4*ones(1,length(mixedcell)),5*ones(1,length(midlinecell))];
     atlases.names=allcell;
     atlases.types=typecell;
     atlases.rebuild=0;
     atlases.threshold.type='relative_intensity';
     atlases.threshold.value=0.5;
-
 end
 
 mcr=ea_checkmacaque(options);
 
 if checkrebuild(atlases,options,root,mifix)
 
-
     %% build iXYZ tables:
 
     maxcolor=64; % change to 45 to avoid red / 64 to use all colors
 
-
-    nm=[0:2]; % native and mni
+    nm=0:2; % native and mni
     try
         nmind=[options.atl.pt,options.atl.can,options.atl.ptnative]; % which shall be performed?
     catch
@@ -110,10 +105,7 @@ if checkrebuild(atlases,options,root,mifix)
     end
     nm=nm(logical(nmind)); % select which shall be performed.
 
-
-
     for nativemni=nm % switch between native and mni space atlases.
-
         switch nativemni
             case 0
                 root=[options.root,options.patientname,filesep];
@@ -124,7 +116,6 @@ if checkrebuild(atlases,options,root,mifix)
         end
 
         atlascnt=1;
-
 
         % iterate through atlases, visualize them and write out stats.
         disp('Building atlas table...');
@@ -144,8 +135,6 @@ if checkrebuild(atlases,options,root,mifix)
                     nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}]);
             end
 
-
-
             for side=detsides(atlases.types(atlas));
                 if atlases.types(atlas)==3 % both-sides atlas composed of 2 files.
                     if side==1
@@ -160,7 +149,6 @@ if checkrebuild(atlases,options,root,mifix)
                 colorc=colornames(1);
                 colorc=rgb(colorc);
                 if isfield(nii,'img') % volumetric atlas
-                    
                     if options.prefs.hullsmooth
                         nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
                   
@@ -175,14 +163,11 @@ if checkrebuild(atlases,options,root,mifix)
                         XYZ.val=vv;
                         XYZ.mm=map_coords_proxy(XYZ.vx,nii); % map to mm-space
                         XYZ.dims=nii.voxsize;
-
-
                     else
                         XYZ.vx=[];
                         XYZ.val=[];
                         XYZ.mm=[];
                         XYZ.dims=nii.voxsize;
-
                     end
 
                     %surface(xx(1:10)',yy(1:10)',zz(1:10)',ones(10,1)');
@@ -194,18 +179,18 @@ if checkrebuild(atlases,options,root,mifix)
                         XYZ.val=bXYZ.val;
                         XYZ.vx=bXYZ.vx;
                     end
+                    
                     try
                         bb=[0,0,0;size(nii.img)];
                     catch
                         keyboard
                     end
+                    
                     bb=map_coords_proxy(bb,nii);
                     gv=cell(3,1);
                     for dim=1:3
                         gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));
                     end
-
-
 
                     if atlases.types(atlas)==4 % mixed atlas, divide
                         if side==1
@@ -220,7 +205,6 @@ if checkrebuild(atlases,options,root,mifix)
                             XYZ.vx=XYZ.vx(XYZ.mm(:,1)>0,:,:);
                             XYZ.val=XYZ.val(XYZ.mm(:,1)>0,:,:);
                             XYZ.mm=XYZ.mm(XYZ.mm(:,1)>0,:,:);
-
 
                             nii.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
                         elseif side==2
@@ -241,7 +225,6 @@ if checkrebuild(atlases,options,root,mifix)
 
                     [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
                     
-                    
 %                     Xvx=linspace(1,length(gv{1}),3*length(gv{1}));
 %                     Yvx=linspace(1,length(gv{2}),3*length(gv{2}));
 %                     Zvx=linspace(1,length(gv{3}),3*length(gv{3}));
@@ -252,19 +235,15 @@ if checkrebuild(atlases,options,root,mifix)
   
                     thresh=ea_detthresh(atlases,atlas,nii.img);
                     ea_addnii2lf(atlases,atlas,thresh,options,root,mifix)
-try
-                    fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
-                    %fv=isosurface(Xq,Yq,Zq,permute(interp3(nii.img,Xvx,Yvx,Zvx),[2,1,3]),thresh);
-                    
-catch
-    keyboard
-end
+                    try
+                        fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
+                        %fv=isosurface(Xq,Yq,Zq,permute(interp3(nii.img,Xvx,Yvx,Zvx),[2,1,3]),thresh);
+                    catch
+                        keyboard
+                    end
                     fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
                     fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
                     fv.vertices=[fv.vertices;fvc.vertices];
-
-
-
 
                     try % works only in ML 2015:
                         tr=triangulation(fv.faces,fv.vertices);
@@ -282,50 +261,43 @@ end
 
                     % set cdata
 
-                try % check if explicit color info for this atlas is available.
-                    cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1));
-                catch
-                    cdat=abs(repmat(atlas*(maxcolor/length(atlases.names)),length(fv.vertices),1));
-                    atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
-                end
+                    try % check if explicit color info for this atlas is available.
+                        cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1));
+                    catch
+                        cdat=abs(repmat(atlas*(maxcolor/length(atlases.names)),length(fv.vertices),1));
+                        atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
+                    end
 
-                ifv{atlas,side}=fv; % later stored
-                icdat{atlas,side}=cdat; % later stored
-                try
-                    iXYZ{atlas,side}=XYZ; % later stored
-                catch
-                    keyboard
-                end
-                ipixdim{atlas,side}=nii.voxsize(1:3); % later stored
-
-                icolorc{atlas,side}=colorc; % later stored
-
-                pixdim=ipixdim{atlas,side};
-
-
-
-
-                atlascnt=atlascnt+1;
+                    ifv{atlas,side}=fv; % later stored
+                    icdat{atlas,side}=cdat; % later stored
+                    try
+                        iXYZ{atlas,side}=XYZ; % later stored
+                    catch
+                        keyboard
+                    end
+                    
+                    ipixdim{atlas,side}=nii.voxsize(1:3); % later stored
+                    icolorc{atlas,side}=colorc; % later stored
+                    pixdim=ipixdim{atlas,side};
+                    atlascnt=atlascnt+1;
 
                 elseif isfield(nii,'fibers') % fibertract
-                  %% concat fibers to one patch object
-                 [~,alnm]=fileparts(atlases.names{atlas});
+                    % concat fibers to one patch object
+                    [~,alnm]=fileparts(atlases.names{atlas});
 
                     ea_dispercent(0,['Concatenating ',alnm]);
-                fibmax=length(nii.idx);
-                fcnt=1;
+                    fibmax=length(nii.idx);
+                    fcnt=1;
 
-                for fib=1:fibmax
-                    ea_dispercent(fib/fibmax);
-                    thisfib=nii.fibers(nii.fibers(:,4)==fib,:);
-                    if size(thisfib,1)>5 % neglect very small fibertracts
-                        % set 4th dim color
+                    for fib=1:fibmax
+                        ea_dispercent(fib/fibmax);
+                        thisfib=nii.fibers(nii.fibers(:,4)==fib,:);
+                        if size(thisfib,1)>5 % neglect very small fibertracts
+                            % set 4th dim color
 
+                            %atlassurfs(atlascnt,fib)=ea_plot3(thisfib(:,1),thisfib(:,2),thisfib(:,3),'-','color',[rr,gg,bb]);
+                            %atlassurfs(atlascnt,fcnt)=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,[rr,gg,bb],6,0);
 
-
-                        %atlassurfs(atlascnt,fib)=ea_plot3(thisfib(:,1),thisfib(:,2),thisfib(:,3),'-','color',[rr,gg,bb]);
-                        %atlassurfs(atlascnt,fcnt)=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,[rr,gg,bb],6,0);
-                        
                             [~,thisfv]=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,'r',6,0);
                             % need to manually shuffle the results in case
                             % of mixture fibertracking/nuclei atlases.
@@ -333,34 +305,34 @@ end
                             fv(fcnt).faces=thisfv.faces;
                             fv(fcnt).facevertexdata=thisfv.facevertexcdata;
 
-                        fcnt=fcnt+1;
+                            fcnt=fcnt+1;
+                        end
                     end
-                end
-                                    ea_dispercent(1,'end');
+
+                    ea_dispercent(1,'end');
 
 
-                fv=ea_concatfv(fv);
-                if length(fv.vertices)>200000
-                   simpl=200000/length(fv.vertices);
-                   fv=reducepatch(fv,simpl);
-                end
-
-
+                    fv=ea_concatfv(fv);
+                    if length(fv.vertices)>200000
+                       simpl=200000/length(fv.vertices);
+                       fv=reducepatch(fv,simpl);
+                    end
+                
                     nii.mm=nii.fibers;
                     nii=rmfield(nii,'fibers');
                     iXYZ{atlas,side}=nii;
                     icolorc{atlas,side}=colorc;
                     ifv{atlas,side}=fv;
                     ipixdim{atlas,side}='fibers';
-                                        icdat{atlas,side}=[];
-                                        normals{atlas,side}=[];
+                    icdat{atlas,side}=[];
+                    normals{atlas,side}=[];
                     try
                         atlases.colors(atlas); % check if predefined color exists
                     catch
                         atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
                     end
+                
                 end
-
             end
         end
 
@@ -369,18 +341,18 @@ end
 
         % finish gm_mask file for leadfield computation.
         try % fibertract only atlases dont have a gm_mask
-        V=spm_vol([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
-        X=spm_read_vols(V);
+            V=spm_vol([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            X=spm_read_vols(V);
 
-        X(X<1.5)=0;
-        X(X>1.5)=1;
+            X(X<1.5)=0;
+            X(X>1.5)=1;
 
-        V.dt=[4,0];
+            V.dt=[4,0];
 
-        spm_write_vol(V,X);
+            spm_write_vol(V,X);
 
-        clear X V
-        ea_crop_nii([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            clear X V
+            ea_crop_nii([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         end
 
         % save table information that has been generated from nii files (on first run with this atlas set).
@@ -393,11 +365,9 @@ end
 
         atlases.normals=normals;
 
-
         atlases.rebuild=0; % always reset rebuild flag.
         save([root,'atlases',filesep,mifix,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
-
-
+        
     end
 
 end

@@ -69,7 +69,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             
             mask=zeros(size(slice,1),size(slice,2));
             
-            mask(Y-10:Y+10,X-10:X+10)=1;
+            mask(round(Y-10:Y+10),round(X-10:X+10))=1;
     end
     
     

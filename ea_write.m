@@ -1,8 +1,8 @@
 function ea_write(options)
-try
-ea_updatemodel(options);
-end
 
+try
+    ea_updatemodel(options);
+end
 
 if options.d2.write || options.d3.write
    if strcmp(options.atlasset,'Segment patient anatomy')
@@ -12,26 +12,20 @@ if options.d2.write || options.d3.write
           ea_normsubcorticalsegm(options);
       end
       options.atlasset=options.patientname;
-              options.atl.pt=1;
-              options.atl.can=0;
+      options.atl.pt=1;
+      options.atl.can=0;
    end
 end
 
 % Slice 2D Visualization
 if options.d2.write
-    
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.
-    
     cuts=ea_writeplanes(options);
-    
 end
-
-
 
 % Render 3D Visualization
 if options.d3.write
-
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.
     
@@ -39,14 +33,13 @@ if options.d3.write
     
     % save scene as matlab figure
     try % if path is not defined, don't save.
-    saveas(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig']);
+        saveas(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig']);
     end
     %figure2xhtml([options.root,options.patientname,filesep,'eAuto_scene'],resultfig);
     if options.d3.autoserver
        ea_export_server([],[],options);
        close(resultfig);
     end
-    
 end
 
 %% check traject sanity
@@ -57,7 +50,6 @@ for side=1:length(options.sides)
         if ~trajectissane
             disp(['Trajectory of side ',num2str(side),' seems not to have been correctly reconstructed. Check manually.']);
         end
-        
     end
 end
 
@@ -70,12 +62,8 @@ try
     
     results.realcoords=realcoords;
     
-    
-    
     for electrode=1:length(coords_mm)
-        
         results.distances(electrode)=pdist([coords_mm(electrode,:);realcoords(electrode,:)]);
-        
     end
     results.fit=ea_nanmean(results.distances);
     
@@ -93,5 +81,3 @@ end
     
 N = sum(~isnan(x), dim);
 y = nansum(x, dim) ./ N;
-
-
