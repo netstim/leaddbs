@@ -1,7 +1,7 @@
 function ea_coregmr_ants(options)
 % uses ANTs instead of SPM to coregister MRIs.
 
-disp('Interpolating preoperative anatomical image');
+fprintf('\nInterpolating preoperative anatomical image\n')
 ea_normalize_reslicepretra(options);
 disp('Done.');
 

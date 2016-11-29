@@ -7,6 +7,8 @@ if isempty(pth)
     pth = '.';
 end
 
+disp(inputimage);
+
 ea_dcm2nii(inputimage, [pth, filesep, 'temp.nii']);
 
 tempf=dir([pth,filesep,'temp.nii']);
