@@ -9,13 +9,17 @@ if nargin < 4
 end
 if nargin < 5
     otherfiles = {''};
+elseif isempty(otherfiles)  % [] or {} or ''
+    otherfiles = {''};
+elseif ischar(otherfiles) % single file, make it to cell string
+    otherfiles = {otherfiles};
 end
 
 % Write out the transform from moving image vox to fixed image mm (also
 % from fixed image vox to moving image mm)
 if nargin < 6
     writeoutmat = 0;
-    affinefile = {''};
+    affinefile = {};
 end
 
 % Read the original affine matrix from the moving image (the header will be 
@@ -46,6 +50,8 @@ else
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
 end
 
+spm_jobman('run',{matlabbatch});
+
 if writeoutmat
     [~, mov] = ea_niifileparts(moving);
     [~, fix] = ea_niifileparts(fixed);
@@ -54,8 +60,7 @@ if writeoutmat
     spmaffine = spm_get_space(moving); % affine from mov vox to fix mm already stored in the mov header after coreg
     save([fileparts(ea_niifileparts(moving)), filesep, mov, '2', fix, '_spm.mat'], 'spmaffine', 'movingmat', 'fixedmat');
     
-    % save inverse transform: fix vox to mov mm, switch fixedmat and
-    % movingmat
+    % save inverse transform: fix vox to mov mm, switch fixedmat and movingmat
     spmaffine = movingmat/spm_get_space(moving)*fixedmat;
     tmp = movingmat;
     movingmat = fixedmat;
@@ -66,4 +71,4 @@ if writeoutmat
                   [fileparts(ea_niifileparts(moving)), filesep, fix, '2', mov, '_spm.mat']};
 end
 
-spm_jobman('run',{matlabbatch});
+

@@ -12,7 +12,6 @@ else
 end
 
 if nargin>4
-    
     if ~isempty(varargin{5})
         ea_error('BRAINSFit is not (yet) supported for this operation. Please choose a different registration algorithm.');
     end
@@ -93,7 +92,7 @@ end
 
 if ~writematout
     delete([volumedir, xfm, '.mat']);
-    affinefile = {''};
+    affinefile = {};
 else
     affinefile = {[volumedir, xfm, '.mat']};
 end

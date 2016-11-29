@@ -5,14 +5,22 @@ fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
-if nargin>3
+if nargin >= 4
     writematout=varargin{4};
 else
     writematout=1;
 end
 
-if nargin>4
-    otherfiles=varargin{5};
+if nargin >= 5
+    if isempty(varargin{5}) % [] or {} or ''
+        otherfiles = {};
+    elseif ischar(varargin{5}) % single file, make it to cell string
+        otherfiles = varargin(5);
+    else % cell string
+        otherfiles = varargin{5};
+    end
+else
+    otherfiles = {};
 end
 
 outputbase = ea_niifileparts(outputimage);
@@ -138,21 +146,19 @@ else
     system(invaffinecmd);
 end
 
-if exist('otherfiles','var')
-    if ~isempty(otherfiles)
-        for ofi=1:length(otherfiles)
+if ~isempty(otherfiles)
+    for ofi=1:length(otherfiles)
         [options.root,options.patientname]=fileparts(fileparts(otherfiles{ofi}));
         options.root=[options.root,filesep];
         options.prefs=ea_prefs(options.patientname);
         ea_ants_applytransforms(options,otherfiles(ofi),otherfiles(ofi),0,fixedimage,[outputbase, '0GenericAffine.mat']);
-        end
     end
 end
 
 if ~writematout
     delete([outputbase, '0GenericAffine.mat']);
     delete([outputbase, 'Inverse0GenericAffine.mat']);
-    affinefile = {''};
+    affinefile = {};
 else
     movefile([outputbase, '0GenericAffine.mat'], [volumedir, xfm, num2str(runs+1), '.mat']);
     invxfm = [fix, '2', mov, '_ants'];

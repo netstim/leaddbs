@@ -1,14 +1,16 @@
 function affinefile = ea_coreg2images(options,moving,fixed,ofile,otherfiles,writeoutmat)
 
 if nargin < 5
-    otherfiles={''}; 
-elseif ischar(otherfiles)
+    otherfiles = {}; 
+elseif isempty(otherfiles) % [] or {} or ''
+    otherfiles = {};
+elseif ischar(otherfiles) % single file, make it to cell string
     otherfiles = {otherfiles};
 end
 
 if nargin < 6
     writeoutmat = 0;
-    affinefile = {''};
+    affinefile = {};
 end
 
 [directory,mfilen,ext]=fileparts(moving);

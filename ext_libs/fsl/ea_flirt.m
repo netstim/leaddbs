@@ -12,9 +12,11 @@ else
 end
 
 if nargin >= 5
-    if ischar(varargin{5})
+    if isempty(varargin{5}) % [] or {} or ''
+        otherfiles = {};
+    elseif ischar(varargin{5}) % single file, make it to cell string
         otherfiles = varargin(5);
-    else
+    else % cell string
         otherfiles = varargin{5};
     end
 else
@@ -101,7 +103,7 @@ end
 if ~writeoutmat
     ea_delete([volumedir, xfm, num2str(runs+1), '.mat'])
     ea_delete([volumedir, invxfm, num2str(runs+1), '.mat'])
-    affinefile = {''};
+    affinefile = {};
 else
     affinefile = {[volumedir, xfm, num2str(runs+1), '.mat'], ...
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
