@@ -156,7 +156,7 @@ try
     specs.affine=dnii.mat;
 
     [~,ftrfname]=fileparts(options.prefs.FTR_normalized);
-    ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
+    ea_ftr2trk(ftrfname,[directory,'connectomes',filesep,'dMRI',filesep],specs,options); % export normalized ftr to .trk
     disp('Done.');
 end
 
@@ -178,32 +178,3 @@ refanat=[directory,options.prefs.prenii_unnormalized];
 if ismember(whichnormmethod,{'ea_normalize_spmshoot','ea_normalize_spmdartel','ea_normalize_spmnewseg'})
 	refnorm=[refnorm,',2'];  
 end
-
-% generate b0 to anat tranformation
-% Vb0=spm_vol([directory,options.prefs.b0]);
-% Vanat=spm_vol([directory,options.prefs.prenii_unnormalized]);
-% 
-% switch options.coregmr.method
-%     case 'Coreg MRIs: ANTs' % ANTs
-%         affinefile = ea_ants([directory,options.prefs.prenii_unnormalized],[directory,options.prefs.b0],[directory,'r',options.prefs.b0],1);
-%         load(affinefile);
-% %         delete(affinefile);
-%         b02anat=eye(4);
-%         b02anat(1:3,1)=AffineTransform_float_3_3(1:3);
-%         b02anat(1:3,2)=AffineTransform_float_3_3(4:6);
-%         b02anat(1:3,3)=AffineTransform_float_3_3(7:9);
-%         b02anat(1:3,4)=AffineTransform_float_3_3(10:12);
-% 
-%         % the following is only empirically determined for now. This could
-%         % be wrong in some cases.
-% 
-%         b02anat([7,10,15])=b02anat([7,10,15])*-1;
-%         b02anat=Vanat.mat\b02anat*Vb0.mat;
-%     case 'Coreg MRIs: FSL'
-%         
-%     otherwise % default use SPM
-%         display('Register b0 to anat...');
-%         x=spm_coreg(Vb0,Vanat); % b0 is thr fixed image,
-%         b02anat=Vanat.mat\spm_matrix(x(:)')*Vb0.mat;
-% end
-% save([directory,'b02anat.mat'],'b02anat');

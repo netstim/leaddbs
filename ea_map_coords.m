@@ -193,7 +193,7 @@ if ~isempty(transform)
             case {'SPM'} % Registration done by SPM (ea_docoreg_spm)
                 % fuzzy match, transform can be specified as XX2XX_spm.mat
                 % or simply XX2XX.mat
-                if ~strcmp(transform(end-8:end), '_spm.mat')
+                if ~strcmp(transform(end-7:end), '_spm.mat')
                     transform = [transform(1:end-4), '_spm.mat'];
                 end
                 transform = load(transform, 'spmaffine');
