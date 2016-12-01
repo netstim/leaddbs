@@ -43,7 +43,7 @@ for peer=1:length(peerfolders)
         % check the other way:
         [~,presentinboth]=ismember(peerpresentfiles,subpresentfiles);
         peerpresentfiles=peerpresentfiles(logical(presentinboth));
-        if ~isequal(subpresentfiles,peerpresentfiles) % then I made something wrong.
+        if ~isequal(subpresentfiles,peerpresentfiles) % then I did something wrong.
             keyboard
         else
             presentfiles=subpresentfiles;
