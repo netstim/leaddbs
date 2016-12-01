@@ -66,7 +66,7 @@ if ~isdeployed
     rmpath(genpath([earoot,'release']));
 end
 
-
+ea_checkspm;
 
 % check existence of directories
 
