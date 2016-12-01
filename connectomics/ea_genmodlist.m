@@ -1,8 +1,12 @@
-function [modlist,sf]=ea_genmodlist(directory,selectedparc,options)
+function [modlist,sf]=ea_genmodlist(directory,selectedparc,options,vat)
 cnt=1;
 modlist=cell(0);
 sf=[];
 % patientspecific part
+
+if ~exist('vat','var')
+    vat=0;
+end
 
 if exist('directory','var')
     % check if pat-specific fibertracts are present:
@@ -43,4 +47,15 @@ for fdf=1:length(fc)
             cnt=cnt+1;
         end
     end
+end
+
+if vat
+   resdir=dir([directory,options.prefs.rest_prefix]);
+   
+   for rd=1:length(resdir)
+       [~,fn,ext]=fileparts(resdir(rd).name);
+       modlist{cnt}=[fn,'_tc'];
+       cnt=cnt+1;
+   end
+    
 end

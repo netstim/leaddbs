@@ -19,7 +19,11 @@ end
 % from fixed image vox to moving image mm)
 if nargin < 6
     writeoutmat = 0;
-    affinefile = {};
+    affinefile = {''};
+else
+    if ~writeoutmat
+        affinefile={''};
+    end
 end
 
 % Read the original affine matrix from the moving image (the header will be 
@@ -40,6 +44,13 @@ if doreslice
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
+    
+    
+
+    
+    
+    
+    
 else
     matlabbatch{1}.spm.spatial.coreg.estimate.ref = {fixed};
     matlabbatch{1}.spm.spatial.coreg.estimate.source = {moving};

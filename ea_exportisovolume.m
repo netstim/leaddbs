@@ -120,12 +120,12 @@ for side=1:length(options.sides)
 
         %% Also write out volume with combined information on both sides (symmetric image).
 
-        Vol=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
-        Vol.dt=[16,1];
+        niic=ea_load_nii([ea_getearoot,'templates',filesep,'bb.nii']);
+        niic.dt=[16,1];
 
-        niic=spm_read_vols(Vol);
-        niic(:)=nan;
-        niicsig=niic;
+        %niic=spm_read_vols(Vol);
+        niic.img(:)=nan;
+        niicsig=niic.img;
         for inside=1:2
             switch inside
                 case 1 % flip infos from right to left
@@ -133,7 +133,7 @@ for side=1:length(options.sides)
                 case 2 % flip infos from left to right
                     XYZ=[[X{1};-X{2}],[Y{1};Y{2}],[Z{1};Z{2}],ones(length([X{1};X{2}]),1)]';
             end
-            XYZ=Vol.mat\XYZ; % to voxel space.
+            XYZ=niic.mat\XYZ; % to voxel space.
             XYZ=(XYZ(1:3,:)');
             % repeat the above but in voxel space..
             clear bb
@@ -158,7 +158,7 @@ for side=1:length(options.sides)
 
             xixc=bb(1,1):bb(1,2); yixc=bb(2,1):bb(2,2); zixc=bb(3,1):bb(3,2);
 
-            niic(xixc,yixc,zixc)=F({xixc,yixc,zixc});
+            niic.img(xixc,yixc,zixc)=F({xixc,yixc,zixc});
 
 
             %% write out significant volume:
@@ -184,7 +184,7 @@ for side=1:length(options.sides)
                                 niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
                             end
                         case 2 % estimate significance by smoothing and using SPM
-                            niicsig=ea_smooth_significance(XYZV,PTb,Vol,niic,options);
+                            niicsig=ea_smooth_significance(XYZV,PTb,niic,niic.img,options);
 
                         case 3 % estimate significance by applying leave-one-out permutations
                             [ixes]=ea_leoo_significance(XYZV);
@@ -208,8 +208,8 @@ for side=1:length(options.sides)
             end
         end
 
-        Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'];
-        spm_write_vol(Vol,niic);
+        niic.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'];
+        ea_write_nii(niic);
         %ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'],'','nn');
         % smooth image.
         matlabbatch{1}.spm.spatial.smooth.data = {[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii,1']};
@@ -224,8 +224,9 @@ for side=1:length(options.sides)
         %% write out significant volume:
 
         try
-        Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined_p05.nii'];
-        spm_write_vol(Vol,niicsig);
+        niic.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined_p05.nii'];
+        niic.img=niicsig;
+        ea_write_nii(niic);
         end
 
 

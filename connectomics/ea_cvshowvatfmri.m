@@ -12,6 +12,7 @@ end
 
 pX=round(pX);
 
+
 if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat'],'file');
     ea_warp_vat(options.prefs.rest,'rest',options,handles);
     vat_tc=ea_extract_timecourses_vat(options,handles,usevat,dimensionality);

@@ -49,6 +49,7 @@ setappdata(resultfig,'uibjs',uibjs);
 mh = uimenu(resultfig,'Label','Add Objects');
 fh1 = uimenu(mh,'Label','Open Tract','Callback',{@ea_addobj,resultfig,'tract',options});
 fh2 = uimenu(mh,'Label','Open ROI','Callback',{@ea_addobj,resultfig,'roi',options});
+fh3 = uimenu(mh,'Label','Show tracts weighted by activation map','Callback',{@ea_addobj,resultfig,'tractmap',options});
 
 % Set some visualization parameters
 set(resultfig,'Renderer','opengl')

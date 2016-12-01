@@ -155,8 +155,7 @@ if apply % update elvis
     
     if (get(handles.vizmat,'Value') || get(handles.vizvat,'Value')) && get(handles.timecircle,'Value') && strcmp(get(handles.timecircle,'Enable'),'on') % cycle over time..
         pause(0.1);
-        
-        refreshcv(handles);
+        refreshcv(handles,0,1);
     end
 end
 set(convis,'name','Connectome Results');
@@ -512,7 +511,7 @@ end
 
 function ea_initvatlevel(handles,directory,selectedparc,options)
 
-modlist=ea_genmodlist(directory,selectedparc,options);
+modlist=ea_genmodlist(directory,selectedparc,options,'vat');
 
 
 %% VATs:

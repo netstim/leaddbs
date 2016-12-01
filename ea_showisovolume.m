@@ -53,7 +53,7 @@ for side=1:length(options.sides)
     bb(2,:)=[min(Y{side}),max(Y{side})];
     bb(3,:)=[min(Z{side}),max(Z{side})];
     [XI,YI,ZI]=meshgrid(linspace(bb(1,1),bb(1,2),100),linspace(bb(2,1),bb(2,2),100),linspace(bb(3,1),bb(3,2),100));
-    keyboard
+    
     F = scatteredInterpolant(X{side},Y{side},Z{side},double(V{side}));
     F.ExtrapolationMethod='none';
     VI{side}=F(XI,YI,ZI);

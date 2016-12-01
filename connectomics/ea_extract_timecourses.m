@@ -4,7 +4,7 @@ function [gmtc,interpol_tc,voxelmask]=ea_extract_timecourses(options)
 %% prepare voxelmask:
 directory=[options.root,options.patientname,filesep];
 ea_warp_parcellation(options.prefs.pprest,'rest',options);
-vizz=0;
+vizz=1;
 
 %% create voxelmask
 disp('Extracting time courses...');

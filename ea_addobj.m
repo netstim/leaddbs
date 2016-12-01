@@ -43,6 +43,11 @@ switch type
         end
         
         
+    case 'tractmap'
+        [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
+        [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
+addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,tfina,rfina,options)
+        
         
 end
 
@@ -50,6 +55,73 @@ axis fill
 
 
 setappdata(resultfig,'addht',addht);
+
+
+function addtractweighted(tract,weight,resultfig,addht,tfina,rfina,options)
+disp('Loading fibertracts...');
+[fibers,idx,voxmm,mat]=ea_loadfibertracts(tract);
+disp('Done.');
+
+disp('Loading weight...');
+nii=ea_load_nii(weight);
+disp('Done.');
+
+nii.img(isnan(nii.img))=0;
+nzeros=nii.img~=0;
+nzeros=find(nzeros(:));
+weights=nii.img(nzeros);
+cmweights=weights;
+cmweights=cmweights-min(cmweights);
+cmweights=cmweights/max(cmweights);
+cmweights=(cmweights*63)+1; % normalize to colormap
+
+[nzX,nzY,nzZ]=ind2sub(size(nii.img),nzeros);
+nzXYZ=[nzX,nzY,nzZ]; clear nzX nzY nzZ
+
+disp('Selecting fibertracts...')
+[ix,d]=knnsearch(nzXYZ,fibers(:,1:3));
+disp('Done.');
+ea_dispercent(0,'Assigning colors to fibers');
+ftractcols=zeros(length(idx),1);
+fibno=length(idx);
+idcnt=1;
+for ftract=1:fibno
+    thisfibentries=idcnt:idcnt+idx(ftract)-1;
+    idcnt=idcnt+idx(ftract);
+    ftdists=d(thisfibentries);
+    [mindist,mindistix]=min(ftdists);
+    if mindist<2
+        minidentifier=thisfibentries(mindistix);
+        ftractcols(ftract)=cmweights(ix(minidentifier));
+    end
+    ea_dispercent(ftract/fibno);
+end
+ea_dispercent(1,'end');
+
+ea_dispercent(0,'Plotting fibers')
+cnt=1;
+coloredfibs=find(ftractcols)';
+numcoloredfibs=length(coloredfibs);
+for fib=coloredfibs
+    ea_dispercent(cnt/numcoloredfibs);
+    thisfib=fibers(fibers(:,4)==fib,1:3);
+    thisfib=[thisfib,repmat(ftractcols(fib),size(thisfib,1),1)];
+    [~,fv(cnt)]=ea_plot_fiber(thisfib',6,0,options);
+    cnt=cnt+1;
+end
+ea_dispercent(1,'end');
+fv=ea_concatfv(fv);
+addobjr=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.3);
+
+% add toggle button:
+
+addbutn=uitoggletool(addht,'CData',ea_get_icn('fiber'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@atlasvisible,addobjr},'OffCallback',{@atlasinvisible,addobjr},'State','on');
+%storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
+drawnow
+
+disp('Done.');
+
+
 
 function addroi(addobj,resultfig,addht,fina,options)
 

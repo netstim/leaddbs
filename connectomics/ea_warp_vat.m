@@ -26,54 +26,55 @@ for vatfname=1:2
     end
 end
 
+reffile=get(handles.vatmodality,'String');
+reffile=reffile{get(handles.vatmodality,'Value')};
 
+if strfind(reffile,'_tc')
+   reffile(strfind(reffile,'_tc'):end)=[];
+    reffile=ea_niigz([directory,reffile]);
+end
 
 if donorm
     %% warp vat into pre_tra-space:
-
-
-
-    switch spm('ver')
-        case 'SPM8'
-
-
-            matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
-            matlabbatch{1}.spm.util.defs.ofname = '';
-            matlabbatch{1}.spm.util.defs.fnames = vatspresent;
-            matlabbatch{1}.spm.util.defs.savedir.saveusr = {[directory,'stimulations',filesep,stim,filesep,filesep]};
-            matlabbatch{1}.spm.util.defs.interp = 0;
-
-        case 'SPM12'
-
+    
+    whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
+    switch whichnormmethod
+        case ea_getantsnormfuns
+            
+            ea_ants_applytransforms(options, ...
+                vatspresent, ...
+                wvatspresent,...
+                1,'','','NearestNeighbor');
+            
+        case ea_getfslnormfuns
+            
+            ea_fsl_applytransforms(options, ...
+                vatspresent, ...
+                wvatspresent,...
+                1,'','','nn');
+        otherwise
+            
+            
             matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
             matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = vatspresent;
             matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[directory,'stimulations',filesep,stim,filesep,filesep]};
             matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 0;
             matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
             matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
-
+            
+            
+            % execute batch..
+            spm_jobman('run',{matlabbatch});
+            clear matlabbatch
     end
-    % execute batch..
-    spm_jobman('run',{matlabbatch});
-    clear matlabbatch
 end
 if docoreg
-    %% coreg vat into b0/rest-space:
-    copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
-    matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[options.root,options.patientname,filesep,ref_filename,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.other = wvatspresent;
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [7 7];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 0;
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = ['r',b0rest];
-    spm_jobman('run',{matlabbatch});
-    clear matlabbatch
-
-    delete([options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
-    delete([options.root,options.patientname,filesep,'r',b0rest,'c',options.prefs.prenii_unnormalized]);
+    
+    for vat=1:length(wvatspresent)
+        copyfile(wvatspresent{vat},rwvatspresent{vat});
+    end
+    
+    ea_coreg2images(options,[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],reffile,[options.root,options.patientname,filesep,'r',options.prefs.prenii_unnormalized],rwvatspresent,0);
+    movefile([options.root,options.patientname,filesep,'raw_',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]); % reset original anat
+    delete([options.root,options.patientname,filesep,'r',b0rest,options.prefs.prenii_unnormalized]);
 end

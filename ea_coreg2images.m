@@ -25,8 +25,12 @@ end
 
 switch options.coregmr.method
     case 'Coreg MRIs: SPM' % SPM
-        affinefile = ea_docoreg_spm(moving,fixed,'nmi',1,otherfiles,writeoutmat);
-        movefile([directory,'r',mfilen],ofile);
+commaoneotherfiles=prepforspm(otherfiles);
+
+        affinefile = ea_docoreg_spm(appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat);
+        try % will fail if ofile is same string as r mfilen..
+            movefile([directory,'r',mfilen],ofile);
+        end
         for ofi=1:length(otherfiles)
             [pth,fn,ext]=fileparts(otherfiles{ofi});
             movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
@@ -44,18 +48,42 @@ switch options.coregmr.method
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Coreg MRIs: Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
-        ea_docoreg_spm(moving,fixed,'nmi',0,otherfiles)
+         commaoneotherfiles=prepforspm(otherfiles);
+        ea_docoreg_spm(appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles)
         affinefile = ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Coreg MRIs: Hybrid SPM & FSL' % Hybrid SPM -> FSL
-        ea_docoreg_spm(moving,fixed,'nmi',0,otherfiles)
+         commaoneotherfiles=prepforspm(otherfiles);
+        ea_docoreg_spm(appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles)
         affinefile = ea_flirt(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Coreg MRIs: Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
-        ea_docoreg_spm(moving,fixed,'nmi',0,otherfiles)
+         commaoneotherfiles=prepforspm(otherfiles);
+        ea_docoreg_spm(appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles)
         affinefile = ea_brainsfit(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
 end 
+
+
+    function otherfiles=prepforspm(otherfiles)
+        
+        
+        if size(otherfiles,1)<size(otherfiles,2)
+            otherfiles=otherfiles';
+        end
+        
+        for fi=1:length(otherfiles)
+
+                otherfiles{fi}=appendcommaone(otherfiles{fi});
+            
+        end
+        
+        
+        function fname=appendcommaone(fname)
+            if ~strcmp(fname(end-1:end),',1')
+                fname= [fname,',1'];
+            end
+    
