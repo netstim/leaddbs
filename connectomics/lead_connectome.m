@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 02-Nov-2016 11:25:38
+% Last Modified by GUIDE v2.5 07-Dec-2016 15:43:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -689,3 +689,11 @@ function checkfigures_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of checkfigures
+
+
+% --- Executes on button press in openpatientdir.
+function openpatientdir_Callback(hObject, eventdata, handles)
+% hObject    handle to openpatientdir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_openpatdir(handles);

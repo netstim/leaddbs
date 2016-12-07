@@ -1137,23 +1137,8 @@ function openpatientdir_Callback(hObject, eventdata, handles)
 % hObject    handle to openpatientdir (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ea_openpatdir(handles);
 
-outfolder=get(handles.patdir_choosebox,'String');
-
-if strcmp(outfolder,'No Patient Selected')
-    msgbox('Please set the working directory first!', 'Error','error');
-    return;
-end
-
-if ismac
-    system(['open ', outfolder]);
-elseif isunix
-    system(['xdg-open ', outfolder]);
-elseif ispc
-    system(['explorer ', outfolder]);
-end
-
-cd(outfolder);
 
 
 % --- Executes on selection change in coregmrpopup.
