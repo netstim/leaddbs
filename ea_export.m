@@ -48,13 +48,16 @@ fprintf(fID,'\n');
 
 if ~isempty(options.uipatdirs)
     
-    fprintf(fID,'%s\n','for pat=1:length(options.uipatdirs)');
+
+    fprintf(fID,'%s\n','allpatdirs=options.uipatdirs;');    
+    fprintf(fID,'%s\n','for pat=1:length(allpatdirs)');
     fprintf(fID,'%s\n','% set subject specific options:');
-    fprintf(fID,'%s\n','options.root=[fileparts(options.uipatdirs{pat}),filesep];');
-    fprintf(fID,'%s\n','[~,thispatdir]=fileparts(options.uipatdirs{pat});');
+    fprintf(fID,'%s\n','options.root=[fileparts(allpatdirs{pat}),filesep];');
+    fprintf(fID,'%s\n','[~,thispatdir]=fileparts(allpatdirs{pat});');
     fprintf(fID,'%s\n','options.patientname=thispatdir;');
     
     if exist('clusterfunctionname','var') % submit to cluster instead of directly running
+        fprintf(fID,'%s\n','options.uipatdirs=allpatdirs{pat};');
         fprintf(fID,'%s\n',['clusterfunctionname=''',clusterfunctionname,''';']);
         fprintf(fID,'%s\n','feval(eval([''@'',clusterfunctionname]),options)');
     else
