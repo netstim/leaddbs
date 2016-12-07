@@ -35,7 +35,7 @@ if options.lc.struc.compute_CM
             ea_perform_ft_proxy(options);
         end
         DTI_CM=ea_createCM_dti(options);
-        cm=ea_export_CM_png(DTI_CM,'DTI Connectivity matrix',options,[0 10]);
+        cm=ea_export_CM_png(DTI_CM,'DTI Connectivity matrix',options,[0 mean(DTI_CM(:))+2*std(DTI_CM(:))]);
         save([expfolder,'DTI_CM.mat'],'DTI_CM','-v7.3');
         saveas(cm,[expfolder,'DTI_CM.png']);
     end

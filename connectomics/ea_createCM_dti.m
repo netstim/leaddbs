@@ -4,22 +4,68 @@ function [DTI_CM, DTI_LEN] = ea_createCM_dti(options)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
+useendpointsonly=0;
+ea_warp_parcellation(options.prefs.b0,'b0',options);
+
 minlen=options.prefs.lc.struc.minlen;
 directory=[options.root,options.patientname,filesep];
 
 %% get node definition of current parcellation scheme
-ea_warp_parcellation(options.prefs.b0,'b0',options);
-Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'rb0w',options.lc.general.parcellation,'.nii,1']);
+Vatl=ea_load_nii([directory,'templates',filesep,'labeling',filesep,'rb0w',options.lc.general.parcellation,'.nii,1']);
 
 %% get fiber definition
 disp('Loading FTR-File.');
 vizz=0;
 [fibs,idx]=ea_loadfibertracts([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized]);
 
-convertfromfreiburg=0;
+%% create CM
+display('Initializing structural CM.');
+
+aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.txt']);
+atlas_lgnd=textscan(aID,'%d %s');
+d=length(atlas_lgnd{1}); % how many ROI.
+DTI_CM=zeros(d);
+DTI_LEN=zeros(d);
+
+if useendpointsonly
+    [DTI_CM, DTI_LEN] = ea_createCM_dti_endpoints(options,fibs,idx,Vatl,minlen,directory,DTI_CM,DTI_LEN);
+
+else    
+    [DTI_CM] = ea_createCM_dti_tracts(options,fibs,idx,Vatl,minlen,directory,DTI_CM,DTI_LEN);
+    
+end
+
+%DTI_CM=DTI_CM./length(idx); % normalize by total number of fibers.
+
+    
+
+function [DTI_CM] = ea_createCM_dti_tracts(options,fibs,idx,Vatl,minlen,directory,DTI_CM,DTI_LEN)
+
+fib2parc=round(spm_sample_vol(Vatl,fibs(:,1), fibs(:,2), fibs(:,3),0));
+cnt=1;
+fibercount=length(idx);
+ea_dispercent(0,['Iterating through ',num2str(fibercount),' fibers']);
+
+for fiber=1:fibercount
+    if idx(fiber)>minlen % only include fibers >minimum length
+        thisfibconnects=unique(fib2parc(cnt:cnt+idx(fiber)-1));
+        %fibs(cnt:cnt+idx(fiber)-1,4)
+        thisfibconnects=thisfibconnects(thisfibconnects>0);
+        conmesh=meshgrid(thisfibconnects,thisfibconnects);
+        matindices=sub2ind(size(DTI_CM),conmesh,conmesh');
+        DTI_CM(matindices)=DTI_CM(matindices)+1;
+        cnt=cnt+idx(fiber);
+        ea_dispercent(fiber/fibercount);
+    end
+end
+    ea_dispercent(1,'end');
+ 
+    
+    
+function [DTI_CM, DTI_LEN] = ea_createCM_dti_endpoints(options,fibs,idx,Vatl,minlen,directory,DTI_CM,DTI_LEN)
+
 
 disp('Calculating seeds and terminals...');
-
 fibercount=length(idx);
 seeds=zeros(fibercount,3);
 terms=zeros(fibercount,3);
@@ -30,14 +76,7 @@ for fiber=1:(fibercount)
     cnt=cnt+idx(fiber);
 end
 
-if convertfromfreiburg % already in voxel notation
-   Xatl=spm_read_vols(Vatl);
-   ysize=size(Xatl,2)+1;
-   seeds=[ysize-seeds(:,2),seeds(:,1),seeds(:,3),ones(size(seeds,1),1)]; % yflip, switch x and y (reversing freiburg notation)
-   terms=[ysize-terms(:,2),terms(:,1),terms(:,3),ones(size(terms,1),1)];
-   seeds=seeds(:,1:3);
-   terms=terms(:,1:3);
-else
+
    if any(seeds(:)<-1) || any(terms(:)<-1) % mm-notation, convert to voxel notation
        seeds=[seeds(:,1),seeds(:,2),seeds(:,3),ones(size(seeds,1),1)]';
        terms=[terms(:,1),terms(:,2),terms(:,3),ones(size(terms,1),1)]';
@@ -46,7 +85,7 @@ else
        seeds=seeds(:,1:3);
        terms=terms(:,1:3);
    end
-end
+
 
 seedIDX=round(spm_sample_vol(Vatl,seeds(:,1), seeds(:,2), seeds(:,3),0));
 termIDX=round(spm_sample_vol(Vatl,terms(:,1), terms(:,2), terms(:,3),0));
@@ -61,14 +100,7 @@ end
 
 clear seeds terms
 
-%% create CM
-display('Initializing structural CM.');
 
-aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.txt']);
-atlas_lgnd=textscan(aID,'%d %s');
-d=length(atlas_lgnd{1}); % how many ROI.
-DTI_CM=zeros(d);
-DTI_LEN=zeros(d);
 
 ea_dispercent(0,['Iterating through ',num2str(length(idx)),' fibers']);
 conns=0;
