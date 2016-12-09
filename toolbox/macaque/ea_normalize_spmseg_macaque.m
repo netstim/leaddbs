@@ -84,7 +84,7 @@ for export=expdo
     end
 end
 
-matlabbatch{1}.spm.spatial.coreg.estimate.ref = {fullfile(options.earoot,'toolbox','macaque','templates','mni_hires.nii,1')};
+matlabbatch{1}.spm.spatial.coreg.estimate.ref = {fullfile(options.earoot,'toolbox','macaque','templates','mni_hires_t2.nii,1')};
 matlabbatch{1}.spm.spatial.coreg.estimate.source = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.coreg.estimate.other = finas;
 matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = 'nmi';

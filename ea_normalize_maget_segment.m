@@ -257,7 +257,7 @@ end
 
 
 cmd=[applyTransforms];
-refim=[options.earoot,'templates',filesep,'mni_hires.nii'];
+refim=[options.earoot,'templates',filesep,'mni_hires_t2.nii'];
 % add transforms:
 for t=1:length(transforms)
     [pth1,fn1,ext1]=fileparts(transforms{t}{1});

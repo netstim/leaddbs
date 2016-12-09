@@ -5,7 +5,7 @@ earoot=ea_getearoot;
 
 copyfile([earoot,'atlases',filesep,atlasname],[earoot,'atlases',filesep,atlasname,'_copy']);
 if ~exist('spacefile','var')
-spacefile=[earoot,'templates',filesep,'mni_hires.nii'];
+spacefile=[earoot,'templates',filesep,'mni_hires_t2.nii'];
 end
 
 copybase=[earoot,'atlases',filesep,atlasname,'_copy',filesep];

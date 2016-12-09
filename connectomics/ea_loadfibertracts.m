@@ -34,7 +34,7 @@ function ea_trk2ftr(cfile)
 ftr.vox=hdr.voxel_size;
 
 %V=spm_vol([spm('dir'),filesep,'canonical',filesep,'avg152T2.nii']); % assume MNI152 official to be voxel space of tracts
-%V=spm_vol([ea_getearoot,'templates',filesep,'mni_hires.nii']);
+%V=spm_vol([ea_getearoot,'templates',filesep,'mni_hires_t2.nii']);
 for i=1:length(trks)
     ftr.curveSegCell{i}=[trks(i).matrix(:,1)/ftr.vox(1),trks(i).matrix(:,2)/ftr.vox(2),trks(i).matrix(:,3)/ftr.vox(3)];
 

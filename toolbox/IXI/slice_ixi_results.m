@@ -9,5 +9,5 @@ setenv('FSLOUTPUTTYPE', 'NIFTI_GZ'); % this to tell what the output type would b
 
 for ixi=1:length(ixiids)
 [pth,ixibase]=fileparts(ixiids{ixi});
-system(['/usr/local/fsl/bin/slicer ',ixiids{ixi},filesep,'glanat.nii.gz /PA/Neuro/_projects/lead/lead_dbs/templates/mni_hires.nii -a mono',ixibase,'.png']);
+system(['/usr/local/fsl/bin/slicer ',ixiids{ixi},filesep,'glanat.nii.gz /PA/Neuro/_projects/lead/lead_dbs/templates/mni_hires_t2.nii -a mono',ixibase,'.png']);
 end

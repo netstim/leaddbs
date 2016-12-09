@@ -158,7 +158,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,optio
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
                                                                [options.root,options.prefs.patientdir,filesep,'c1c2mask.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires_t2.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = '';
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smosrc = 10;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smoref = 10;
@@ -192,7 +192,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,optio
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w1',options.prefs.prenii_unnormalized,',1'];
                                                                 [options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires_t2.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[options.earoot,filesep,'templates',filesep,'schoenecker',filesep,'secondstepmask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smosrc = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smoref = 8;
@@ -229,7 +229,7 @@ clear matlabbatch jobs;
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.prenii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'w2w1c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.prenii_unnormalized,',1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires_t2.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[options.earoot,filesep,'templates',filesep,'schoenecker',filesep,'thirdstepmask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smosrc = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smoref = 8;

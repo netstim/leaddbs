@@ -115,7 +115,7 @@ display(sprintf('\nNormalization done.'));
 %% cleansing fibers..
 if cleanse_fibers % delete anything too far from wm.
     ea_error('Clease fibers not supported at present');
-    mnimask=spm_read_vols(spm_vol(refnorm)); % FIX_ME: NEED WM VOLUME OF mni_hires.nii
+    mnimask=spm_read_vols(spm_vol(refnorm)); % FIX_ME: NEED WM VOLUME OF mni_hires_t2.nii
     mnimask=mnimask>0.01;
     todelete = ~mnimask(sub2ind(size(mnimask),round(wfibsvox_mni(:,1)),round(wfibsvox_mni(:,2)),round(wfibsvox_mni(:,3))));
 

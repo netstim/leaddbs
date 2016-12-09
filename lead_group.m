@@ -2001,7 +2001,7 @@ ea_savefibertracts([M.ui.groupdir,'connectomes',filesep,'dMRI',filesep,options.p
 % options.earoot=[ea_getearoot];
 % specs.origin=[0,0,0];
 %
-% nii=ea_load_nii([options.earoot,'templates',filesep,'mni_hires.nii']);
+% nii=ea_load_nii([options.earoot,'templates',filesep,'mni_hires_t2.nii']);
 % specs.dim=nii.dim;
 % specs.affine=nii.mat;
 % ea_dispercent(0,'Converting fibers to voxel format');

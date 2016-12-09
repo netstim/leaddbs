@@ -10,7 +10,7 @@ switch answ
         ea_error('Process aborted by user');
 end
 
-matlabbatch{1}.spm.spatial.preproc.channel(1).vols = {[ea_getearoot,'templates',filesep,'mni_hires.nii,1']};
+matlabbatch{1}.spm.spatial.preproc.channel(1).vols = {[ea_getearoot,'templates',filesep,'mni_hires_t2.nii,1']};
 matlabbatch{1}.spm.spatial.preproc.channel(1).biasreg = 0.001;
 matlabbatch{1}.spm.spatial.preproc.channel(1).biasfwhm = 60;
 matlabbatch{1}.spm.spatial.preproc.channel(1).write = [0 0];
@@ -62,7 +62,7 @@ if ~exist([ea_getearoot,'templates',filesep,'dartel'], 'dir')
     mkdir([ea_getearoot,'templates',filesep,'dartel']);
 end
 for c=1:6
-    movefile([ea_getearoot,'templates',filesep,'c',num2str(c),'mni_hires.nii'],[ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
+    movefile([ea_getearoot,'templates',filesep,'c',num2str(c),'mni_hires_t2.nii'],[ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
 end
 
 % add distal

@@ -118,7 +118,7 @@ for fi = 1:length(fis)
         end
     else
         if isempty(refim)
-           refim = [options.earoot,'templates',filesep,'mni_hires.nii'];
+           refim = [options.earoot,'templates',filesep,'mni_hires_t2.nii'];
         end
 
         if isempty(transformfile)

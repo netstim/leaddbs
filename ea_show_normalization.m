@@ -54,7 +54,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             pt=ea_load_nii(checkf);
             
             if ~isequal(size(w.wires),size(pt.img))
-                matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
+                matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires_t2.nii'];
                                                          checkf};
                 matlabbatch{1}.spm.util.imcalc.output = checkfn;
                 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
@@ -83,7 +83,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                     pt.img(pt.img>0.5) = 0.5;
                     pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
                     if ~exist('mni_img','var')
-                        mni_img=ea_load_nii([options.earoot,mcr,'templates',filesep,'mni_hires.nii']);
+                        mni_img=ea_load_nii([options.earoot,mcr,'templates',filesep,'mni_hires_t2.nii']);
                         mni_img.img(:)=zscore(mni_img.img(:));
                         mni_img.img=(mni_img.img-min(mni_img.img(:)))/(max(mni_img.img(:))-min(mni_img.img(:)));
                     end
@@ -113,7 +113,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 if exist([options.root,options.patientname,filesep,'glgrid.nii'],'file')
                     gridnii=ea_load_nii([options.root,options.patientname,filesep,'glgrid.nii,1']);
                     if ~isequal(size(w.wires),size(gridnii.img))
-                        matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
+                        matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires_t2.nii'];
                                                                 [options.root,options.patientname,filesep,'glgrid.nii,1']};
                         matlabbatch{1}.spm.util.imcalc.output = 'glgrid.nii';
                         matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};

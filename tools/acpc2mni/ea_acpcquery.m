@@ -315,7 +315,7 @@ switch get(handles.cohortpopup,'Value')
 end
 
 leaddir=[ea_getearoot];
-tempfile=[leaddir,'templates',filesep,'mni_hires.nii'];
+tempfile=[leaddir,'templates',filesep,'mni_hires_t2.nii'];
 
 
 for pt=1:length(fid)

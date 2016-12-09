@@ -4,7 +4,7 @@ directory=[options.root,options.patientname,filesep];
 [~,filespresent]=ea_assignpretra(options);
 
 primanat=[directory,filespresent{1}];
-mnihires=[ea_getearoot,'templates',filesep,'mni_hires.nii'];
+mnihires=[ea_getearoot,'templates',filesep,'mni_hires_t2.nii'];
 setenv('FSLOUTPUTTYPE','NIFTI');
 try
     oanat=filespresent(2:end);
