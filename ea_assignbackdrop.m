@@ -20,6 +20,11 @@ switch bdstring
                 nopatientmode=0;
             end
         end
+        try 
+                    [Vtra,Vcor,Vsag]=assignpatspecific(options);
+        catch
+            nopatientmode=1;
+        end
         if nopatientmode
             varargout{1}={'ICBM 152 2009b NLIN Asym T2',...
                 'ICBM 152 2009b NLIN Asym T1',...
@@ -55,9 +60,9 @@ switch bdstring
         varargout{2}=Vcor;
         varargout{3}=Vsag;
     case 'ICBM 152 2009b NLIN Asym T2'
-        varargout{1}=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
-        varargout{2}=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
-        varargout{3}=spm_vol(fullfile(options.earoot,'templates','mni_hires.nii'));
+        varargout{1}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t2.nii'));
+        varargout{2}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t2.nii'));
+        varargout{3}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t2.nii'));
     case 'ICBM 152 2009b NLIN Asym T1'
         varargout{1}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t1.nii'));
         varargout{2}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t1.nii'));
