@@ -49,11 +49,6 @@ if isfield(options.prefs, 'tranii_unnormalized')
     end
 end
 
-% First, do the coreg part:
-try
-    ea_coregmr(options,options.prefs.normalize.coreg);
-end
-
 % now segment the preoperative version.
 disp('Segmenting preoperative version...');
 ea_newseg_pt(options,0,0,1);

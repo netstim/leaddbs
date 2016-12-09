@@ -1,75 +1,23 @@
-function varargout=ea_coreg_all_mri(options,usebrainmask,usefa)
+function ea_coreg_all_mri(options,usebrainmask,usefa)
 
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
 
-if ischar(options) % return name of method.
-    varargout{1}='Advanced Normalization Tools (ANTs) SyN - multimodal (T1,T2, PD & FA)';
-    varargout{2}={'SPM8','SPM12'};
-    return
-end
 
-if ~exist('coregonly','var')
-    coregonly=0;
-end
-if ~exist('includeatlas','var')
-    includeatlas=0;
-end
 if ~exist('usefa','var')
     usefa=1;
 end
 
-uset1=1; % set to zero if you do not wish to use T1 data for normalization even if present.
-usepd=1; % set to zero if you do not wish to use PD data for normalization even if present.
 
-
+[options,presentfiles]=ea_assignpretra(options);
 directory=[options.root,options.patientname,filesep];
-cnt=1;
 
-if usebrainmask
-    bprfx='b';
-else
-    bprfx='';
+for coregfi=2:length(presentfiles)
+    ea_coreg2images(options,[directory,presentfiles{coregfi}],[directory,presentfiles{1}],[directory,presentfiles{coregfi}]);
 end
 
-
-% T1
-if uset1 && ~strcmp(options.primarytemplate,'_t1')
-    if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
-        disp('Including T1 data for (grey-matter) normalization');
-        if ~includeatlas
-            ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_t1],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_t1]);
-        end
-        to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
-        if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
-            ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_t1],bprfx);
-        end
-        from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized_t1];
-        weights(cnt)=1.25;
-        metrics{cnt}='MI';
-        cnt=cnt+1;
-    end
-end
-
-% PD
-if usepd && ~strcmp(options.primarytemplate,'_pd')
-    if exist([directory,options.prefs.prenii_unnormalized_pd],'file')
-        disp('Including PD data for (grey-matter) normalization');
-        if ~includeatlas
-            ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized_pd],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized_pd]);
-        end
-        to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
-        if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
-            ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_pd],bprfx);
-        end
-        from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized_pd];
-        weights(cnt)=1.25;
-        metrics{cnt}='MI';
-        cnt=cnt+1;
-    end
-end
 
 if usefa
     % check for presence of FA map
@@ -83,7 +31,7 @@ if usefa
         end
         if exist([directory,options.prefs.fa],'file') % check again since could have been built above
             if ~includeatlas % if includeatlas is set we can assume that images have been coregistered and skulstripped already
- %               ea_rocrop([directory,options.prefs.fa]);
+                %               ea_rocrop([directory,options.prefs.fa]);
                 if exist([directory,options.prefs.fa],'file') % recheck if has been built.
                     ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
                 end
@@ -95,38 +43,7 @@ if usefa
         if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
             ea_maskimg(options,[directory,options.prefs.fa2anat],bprfx);
         end
-        to{cnt}=[options.earoot,'templates',filesep,'mni_hires_fa.nii'];
-        from{cnt}=[directory,bprfx,options.prefs.fa2anat];
-        weights(cnt)=0.5;
-        metrics{cnt}='MI';
-        cnt=cnt+1;
     end
-end
-
-%masks=segmentall(from,options); % masks not yet implemented.
-
-% The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
-to{cnt}=[options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'];
-if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
-    ea_maskimg(options,[directory,options.prefs.prenii_unnormalized],bprfx);
-end
-from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized];
-weights(cnt)=1.5;
-metrics{cnt}='MI';
-cnt=cnt+1;
-
-if includeatlas % append as last to make criterion converge on this one.
-   to{cnt}=[options.earoot,'templates',filesep,'mni_hires_distal.nii'];
-   from{cnt}=[directory,'anat_atlas.nii.gz'];
-   weights(cnt)=1.5;
-   metrics{cnt}='MI'; % could think about changing this to CC
-   cnt=cnt+1;
-end
-
-
-% Do the coreg part for postoperative images:
-try
-    ea_coregmr(options,options.prefs.normalize.coreg);
 end
 
 function masks=segmentall(from,options)

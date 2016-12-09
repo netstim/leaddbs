@@ -23,10 +23,6 @@ if ischar(options) % return name of method.
     return
 end
 
-% First, do the coreg part:
-try
-    ea_coregmr(options,options.prefs.normalize.coreg);
-end
 
 % ANTs nolinear registration
 directory=[options.root,options.patientname,filesep];

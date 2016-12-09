@@ -28,16 +28,12 @@ end
 if ~exist('includeatlas','var')
     includeatlas=0;
 end
-usebrainmask=0;
-uset1=1; % set to zero if you do not wish to use T1 data for normalization even if present.
-usepd=1; % set to zero if you do not wish to use PD data for normalization even if present.
-usefa=1; % set to zero if you do not wish to use FA data for normalization even if present.
 
 if ~includeatlas % second run from maget-brain segment
 ea_checkcoregallmri(options,usebrainmask)
 end
 
-
+keyboard
 
 directory=[options.root,options.patientname,filesep];
 options.coregmr.method = 'Coreg MRIs: ANTs'; % hard-code to ANTs for now here.

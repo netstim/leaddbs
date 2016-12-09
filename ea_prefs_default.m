@@ -16,10 +16,13 @@ prefs.pp.csize=4; % specify how many clusters to recruit.
 prefs.pp.profile='local'; % specify parallel processing profile.
 
 %% general file handling:
-prefs.prenii_unnormalized='anat.nii'; % not needed if schoenecker normalization is used.
-prefs.prenii_unnormalized_t1='anat_t1.nii'; % (preoperative) anatomical MR image
-prefs.prenii_unnormalized_pd='anat_pd.nii'; % (preoperative) anatomical MR image
-prefs.rawpreniis={prefs.prenii_unnormalized,prefs.prenii_unnormalized_t1,prefs.prenii_unnormalized_pd};
+
+%prefs.prenii_unnormalized='anat_t2.nii'; % (preoperative) anatomical MR image
+%prefs.prenii_unnormalized_t1='anat_t1.nii'; % (preoperative) anatomical MR image
+%prefs.prenii_unnormalized_pd='anat_pd.nii'; % (preoperative) anatomical MR image
+prefs.prenii_searchstring='anat_*.nii';
+prefs.prenii_order={'t2','t1','pd'}; % assign order of anatomical images used (nonspecified images matching the searchstring will be added afterwards).
+
 prefs.tranii_unnormalized='postop_tra.nii';
 prefs.sagnii_unnormalized='postop_sag.nii';
 prefs.cornii_unnormalized='postop_cor.nii';

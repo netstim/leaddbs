@@ -16,16 +16,10 @@ atlastouse=options.normalize.settings.atlasset; % for now, only the distal atlas
 peerfolders=ea_getmagetpeers(options);
 
 %% step 0: check if all subjects have been processed with an ANTs-based normalization function
-for peer=1:length(peerfolders)
-    if ~ismember(ea_whichnormmethod([peerfolders{peer},filesep]),ea_getantsnormfuns)
-        ea_error('Please make sure that all peers selected have been normalized using ANTs.')
-    end
-end
+ea_magetcheck_norm_peers(options,peerfolders)
 
 subdirec=[options.root,options.patientname,filesep];
-if ~ea_seemscoregistered(options)
-    ea_coreg_all_mri(options,0);
-end
+
 
 %% step 1, warp DISTAL back to each peer brain
 earoot=ea_getearoot;

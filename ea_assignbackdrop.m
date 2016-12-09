@@ -1,16 +1,43 @@
-function varargout=ea_assignbackdrop(bdstring,options,subpat)
+function varargout=ea_assignbackdrop(bdstring,options,subpat,native)
 
 if ~exist('subpat','var')
     subpat='Patient';
 end
+if ~exist('native','var')
+    native=0;
+end
 
 switch bdstring
     case 'list'
-        varargout{1}={[subpat,' Pre-OP'],...
-        [subpat,' Post-OP'],...
-        'ICBM 152 2009b NLIN Asym T2',...
-        'ICBM 152 2009b NLIN Asym T1',...
-        'BigBrain 100 um ICBM 152 2009b Sym'};
+        % determine whether we are in No patient mode (could be called from
+        % lead group or called from an empty patient viewer / lead anatomy
+        if isfield(options,'groupmode')
+            nopatientmode=options.groupmode;
+        else
+            if strcmp(options.patientname,'No Patient Selected')
+                nopatientmode=1;
+            else
+                nopatientmode=0;
+            end
+        end
+        if nopatientmode
+            varargout{1}={'ICBM 152 2009b NLIN Asym T2',...
+                'ICBM 152 2009b NLIN Asym T1',...
+                'ICBM 152 2009b NLIN Asym PD',...
+                'BigBrain 100 um ICBM 152 2009b Sym'};
+        else
+            if native
+                varargout{1}={[subpat,' Pre-OP'],...
+                    [subpat,' Post-OP']};
+            else
+                varargout{1}={[subpat,' Pre-OP'],...
+                    [subpat,' Post-OP'],...
+                    'ICBM 152 2009b NLIN Asym T2',...
+                    'ICBM 152 2009b NLIN Asym T1',...
+                    'ICBM 152 2009b NLIN Asym PD',...
+                    'BigBrain 100 um ICBM 152 2009b Sym'};
+            end
+        end
     case [subpat,' Pre-OP']
         options.prefs.gtranii=options.prefs.gprenii;
         options.prefs.tranii=options.prefs.prenii;
@@ -35,6 +62,10 @@ switch bdstring
         varargout{1}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t1.nii'));
         varargout{2}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t1.nii'));
         varargout{3}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t1.nii'));
+    case 'ICBM 152 2009b NLIN Asym PD'
+        varargout{1}=spm_vol(fullfile(options.earoot,'templates','mni_hires_pd.nii'));
+        varargout{2}=spm_vol(fullfile(options.earoot,'templates','mni_hires_pd.nii'));
+        varargout{3}=spm_vol(fullfile(options.earoot,'templates','mni_hires_pd.nii'));
     case 'BigBrain 100 um ICBM 152 2009b Sym'
         if ~ea_checkinstall('bigbrain',0,0,1)
             ea_error('BigBrain is not installed and could not be installed automatically. Please make sure that Matlab is connected to the internet.');

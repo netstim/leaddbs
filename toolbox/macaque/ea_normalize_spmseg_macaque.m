@@ -49,12 +49,6 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
     end
 end
 
-% First, do the coreg part:
-if options.modality==1
-    try
-        ea_coregmr(options,options.prefs.normalize.coreg);
-    end
-end
 
 % do a linear coregistration into mni space
 if options.modality==1 %MR

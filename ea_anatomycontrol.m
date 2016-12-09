@@ -70,25 +70,13 @@ togglestates=getappdata(resultfig,'togglestates'); % get info from resultfig.
 setappdata(hObject,'togglestates',togglestates); % store anatomy toggle data from resultfig to anatomyslice (this) fig for subroutines.
 set(handles.acontrolfig,'Visible',options.d3.verbose);
 
-try
-if options.native
-        set(handles.templatepopup,'String',{'Patient Post-OP'
-'Patient Pre-OP'
-'Choose...'});
-    
-else
-    set(handles.templatepopup,'String',{'MNI-Template'
-'Patient Post-OP'
-'Patient Pre-OP'
-'Choose...'});
+
+if ~isfield(options,'native')
+    options.native=0;
 end
-catch
-      set(handles.templatepopup,'String',{'MNI-Template'
-'Patient Post-OP'
-'Patient Pre-OP'
-'Choose...'});  
-    
-end
+list=ea_assignbackdrop('list',options,'Patient',options.native);
+set(handles.templatepopup,'String',list);
+
 if ~isempty(togglestates) % anatomy toggles have been used before..
 % reset figure handle.
 

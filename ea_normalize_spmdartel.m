@@ -60,10 +60,7 @@ if isfield(options.prefs, 'tranii_unnormalized')
     end
 end
 
-% First, do the coreg part:
-try
-    ea_coregmr(options,options.prefs.normalize.coreg);
-end
+
 
 % now dartel-import the preoperative version.
 disp('Segmenting preoperative version (Import to DARTEL-space)');

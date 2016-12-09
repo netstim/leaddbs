@@ -28,14 +28,14 @@ end
 
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
     try  ea_compat_patfolder(options); end
-    
+try    
     [options,presentfiles]=ea_assignpretra(options);
-
     if ~isempty(presentfiles)
        if ~exist(ea_niigz([options.root,options.patientname,filesep,'grid.nii']),'file')
            ea_gengrid(options);
        end
     end
+end
     
     try ea_resliceanat(options); end
     if options.modality==2 % CT support
@@ -57,8 +57,20 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     
     
     if options.normalize.do
+        % 1. coreg all available preop MRI
+        ea_checkcoregallmri(options,0,1); % check and coregister all preoperative MRIs here.
+
+        % 2. then coreg post to pre MRI:
+        try
+            ea_coregmr(options,options.prefs.normalize.coreg);
+        end
+        
+        % 3. finally perform normalization based on dominant or all preop
+        % MRIs:
         ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
         eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
+        
+        % 4. generate coreg-check figs (all to all).
         ea_gencoregcheckfigs(options); % generate checkreg figures
     end
 

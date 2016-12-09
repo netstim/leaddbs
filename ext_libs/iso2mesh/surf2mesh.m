@@ -100,8 +100,11 @@ catch
         cmdopt='';
     end
 end
+
+
+
 if(isempty(cmdopt))
-  system([' "' mcpath('tetgen') exesuff '" -A -q1.414a' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+  system([' "' mcpath('tetgen') exesuff '" -A -q2 -a' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 else
   system([' "' mcpath('tetgen') exesuff '" ' cmdopt ' "' mwpath('post_vmesh.poly') '"']);
 end

@@ -85,6 +85,7 @@ fcyl=num2cell(fcyl,2);
 scyl=num2cell(scyl,2);
 
 %% convert the obtain the electrode surface mesh model
+keyboard
 [node,elem,face]=s2m(ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
 
 %plotmesh(node,elem) % plot the electrode mesh for now
@@ -142,6 +143,7 @@ t=(t(1:end-1)+t(2:end))*0.5;
 seedlen=length(t);
 %electrodeseeds=repmat(orig(:)',seedlen,1)+repmat(v0(:)',seedlen,1).*repmat(t(:)-1,1,3);
 %% create tetrahedral mesh of the final combined mesh (seeds are ignored, tetgen 1.5 automatically find regions)
+
 [nmesh,emesh]=s2m(nboth3,fboth3,1,5);
 
 

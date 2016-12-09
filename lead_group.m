@@ -355,6 +355,8 @@ try
         M.elstruct(pt).activecontacts=M.S(pt).activecontacts;
     end
 end
+options.groupmode=1;
+
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 
 ea_busyaction('off',handles.leadfigure,'group');

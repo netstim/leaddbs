@@ -7,6 +7,6 @@ if ~exist('force','var')
 end
 
 directory=[options.root,options.patientname,filesep];
-ea_checkcoregallmri(options,0,0); % dont use FA here. Except that may borrow same function as in ANTs multimodal.
 [options,presentfiles]=ea_assignpretra(options);
+
 ea_newseg(directory,presentfiles,dartel,options,del,force)

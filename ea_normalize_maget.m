@@ -13,27 +13,11 @@ peerfolders=ea_getmagetpeers(options);
 
 
 %% step 0: check if all subjects have been processed with an ANTs-based normalization function
-for peer=1:length(peerfolders)
-    poptions=options;
-    [poptions.root,poptions.patientname]=fileparts(peerfolders{peer});
-    poptions.root=[poptions.root,filesep];
-    poptions=ea_assignpretra(poptions);
-    % make sure peer has been normalized using ANTs
-    if ~ismember(ea_whichnormmethod([peerfolders{peer},filesep]),ea_getantsnormfuns)
-        ea_dumpnormmethod(poptions,'ea_normalize_ants_multimodal');
-        ea_normalize_ants_multimodal(poptions)
-    else
-        % make sure peer's anatomy files have been coregistered.
-        if ~ea_seemscoregistered(poptions)
-            ea_coreg_all_mri(poptions,0);
-        end
-    end
-end
+ea_magetcheck_norm_peers(options,peerfolders)
+
 
 subdirec=[options.root,options.patientname,filesep];
-if ~ea_seemscoregistered(options)
-    ea_coreg_all_mri(options,0);
-end
+
 
 %% step 1, setup DISTAL warps back to sub via each peer brain
 earoot=ea_getearoot;

@@ -23,10 +23,7 @@ if ischar(options) % return name of method.
     return
 end
 
-% First, do the coreg part:
-try
-	ea_coregmr(options,options.prefs.normalize.coreg);
-end
+
 
 % do a linear coregistration into mni space
 if options.modality==1 %MR
