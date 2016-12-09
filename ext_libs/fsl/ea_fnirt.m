@@ -6,13 +6,16 @@ movingimage = varargin{2};
 outputimage = varargin{3};
 
 % Do linear registration first, generate the affine matrix 'fslaffine*.mat'
-movingimage_flirt = [ea_niifileparts(movingimage), '_flirt'];
+[movpath, movname] = ea_niifileparts(movingimage);
+movingimage_flirt = [fileparts(movpath), filesep, 'flirt_', movname];
+
 if isempty(dir([movingimage_flirt,'.nii*']))
     ea_flirt(fixedimage, movingimage, movingimage_flirt, 1);
 end
 
-fixedimage_bet_mask = [ea_niifileparts(fixedimage), '_bet_mask'];
-movingimage_bet_mask = [ea_niifileparts(movingimage), '_bet_mask'];
+movingimage_bet_mask = [fileparts(movpath), filesep, 'bet_', movname, '_mask'];
+[fixpath, fixname] = ea_niifileparts(fixedimage);
+fixedimage_bet_mask = [fileparts(fixpath), filesep, 'bet_', fixname, '_mask'];
 
 volumedir = [fileparts(ea_niifileparts(movingimage)), filesep]; 
 

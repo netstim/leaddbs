@@ -24,13 +24,15 @@ else
 end
 
 % Prepare bet image for flirt, generate the brain masks '*_bet_mask.nii'
-fixedimage_bet = [ea_niifileparts(fixedimage), '_bet'];
-movingimage_bet = [ea_niifileparts(movingimage), '_bet'];
-if isempty(dir([fixedimage_bet,'.nii*']))
-    ea_bet(fixedimage, 1, fixedimage_bet);
-end
+[movpath, movname] = ea_niifileparts(movingimage);
+[fixpath, fixname] = ea_niifileparts(fixedimage);
+movingimage_bet = [fileparts(movpath), filesep, 'bet_', movname];
+fixedimage_bet = [fileparts(fixpath), filesep, 'bet_', fixname];
 if isempty(dir([movingimage_bet,'.nii*']))
     ea_bet(movingimage, 1, movingimage_bet);
+end
+if isempty(dir([fixedimage_bet,'.nii*']))
+    ea_bet(fixedimage, 1, fixedimage_bet);
 end
 
 volumedir = [fileparts(ea_niifileparts(movingimage)), filesep]; 
