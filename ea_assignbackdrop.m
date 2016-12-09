@@ -21,7 +21,7 @@ switch bdstring
             end
         end
         try 
-                    [Vtra,Vcor,Vsag]=assignpatspecific(options);
+            assignpatspecific(options); % use this as a probe to see if patient is defined.
         catch
             nopatientmode=1;
         end

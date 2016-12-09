@@ -1,4 +1,4 @@
-function ea_coreg_all_mri(options,usebrainmask,usefa)
+function ea_coreg_all_mri(options,usebrainmask)
 
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
@@ -19,32 +19,6 @@ for coregfi=2:length(presentfiles)
 end
 
 
-if usefa
-    % check for presence of FA map
-    if ~exist([directory,options.prefs.fa2anat],'file')
-        if ~exist([directory,options.prefs.fa],'file')
-            if ~exist([directory,options.prefs.dti],'file')
-                disp('No dMRI data has been found. Proceeding without FA');
-            else
-                ea_isolate_fa(options);
-            end
-        end
-        if exist([directory,options.prefs.fa],'file') % check again since could have been built above
-            if ~includeatlas % if includeatlas is set we can assume that images have been coregistered and skulstripped already
-                %               ea_rocrop([directory,options.prefs.fa]);
-                if exist([directory,options.prefs.fa],'file') % recheck if has been built.
-                    ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
-                end
-            end
-        end
-    end
-    if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
-        disp('Including FA information for white-matter normalization.');
-        if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
-            ea_maskimg(options,[directory,options.prefs.fa2anat],bprfx);
-        end
-    end
-end
 
 function masks=segmentall(from,options)
 directory=[fileparts(from{1}),filesep];
