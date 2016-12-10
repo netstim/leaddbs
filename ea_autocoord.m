@@ -28,14 +28,15 @@ end
 
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
     try  ea_compat_patfolder(options); end
-try    
-    [options,presentfiles]=ea_assignpretra(options);
-    if ~isempty(presentfiles)
-       if ~exist(ea_niigz([options.root,options.patientname,filesep,'grid.nii']),'file')
-           ea_gengrid(options);
-       end
+    
+    try    
+        [options,presentfiles]=ea_assignpretra(options);
+        if ~isempty(presentfiles)
+           if ~exist(ea_niigz([options.root,options.patientname,filesep,'grid.nii']),'file')
+               ea_gengrid(options);
+           end
+        end
     end
-end
     
     try ea_resliceanat(options); end
     if options.modality==2 % CT support
@@ -163,7 +164,7 @@ end
         ea_manualreconstruction(mcfig,patientname,options); 
     else
         ea_write(options)
-    end
+    end 
 else
     ea_write(options)
 end

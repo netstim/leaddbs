@@ -11,7 +11,7 @@ function varargout=ea_normalize_ants(options)
 % normalization of such image data.
 %
 % The procedure used here uses the ANTs Syn approach to map a patient's
-% brain to MNI space directly. 
+% brain to MNI space directly.
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
@@ -26,7 +26,7 @@ end
 
 % ANTs nolinear registration
 directory=[options.root,options.patientname,filesep];
-ea_ants_nonlinear([options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'],...
+ea_ants_nonlinear([options.earoot,'templates',filesep,'mni_hires_',options.primarytemplate,'.nii'],...
                   [directory,options.prefs.prenii_unnormalized],...
                   [directory,options.prefs.gprenii]);
 

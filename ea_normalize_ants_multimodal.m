@@ -47,7 +47,7 @@ end
 
 
 % T1
-if uset1 && ~strcmp(options.primarytemplate,'_t1')
+if uset1 && ~strcmp(options.primarytemplate,'t1')
     if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
         disp('Including T1 data for (grey-matter) normalization');
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
@@ -62,7 +62,7 @@ if uset1 && ~strcmp(options.primarytemplate,'_t1')
 end
 
 % PD
-if usepd && ~strcmp(options.primarytemplate,'_pd')
+if usepd && ~strcmp(options.primarytemplate,'pd')
     if exist([directory,options.prefs.prenii_unnormalized_pd],'file')
         disp('Including PD data for (grey-matter) normalization');
         to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
@@ -95,7 +95,7 @@ if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that i
     ea_maskimg(options,[directory,options.prefs.prenii_unnormalized],bprfx);
 end
 
-to{cnt}=[options.earoot,'templates',filesep,'mni_hires',options.primarytemplate,'.nii'];
+to{cnt}=[options.earoot,'templates',filesep,'mni_hires_',options.primarytemplate,'.nii'];
 from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized];
 weights(cnt)=1.5;
 metrics{cnt}='MI';
@@ -130,7 +130,7 @@ for fr=1:length(from)
             end
             masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c2mask.nii'];
             masks{fr,2}=[directory,'tc2',options.prefs.prenii_unnormalized];
-            
+
         otherwise
             if ~exist([directory,'tc1',options.prefs.prenii_unnormalized],'file')
                 ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
