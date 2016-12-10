@@ -83,7 +83,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                     pt.img(pt.img>0.5) = 0.5;
                     pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
                     if ~exist('mni_img','var')
-                        mni_img=ea_load_nii([options.earoot,mcr,'templates',filesep,'mni_hires_t2.nii']);
+                        mni_img=ea_load_nii([options.earoot,mcr,'templates',filesep,'mni_hires',options.primarytemplate,'.nii']);
                         mni_img.img(:)=zscore(mni_img.img(:));
                         mni_img.img=(mni_img.img-min(mni_img.img(:)))/(max(mni_img.img(:))-min(mni_img.img(:)));
                     end
