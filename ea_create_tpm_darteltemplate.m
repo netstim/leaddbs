@@ -178,6 +178,21 @@ disp('Done.');
 ea_addshoot;
 
 
+% lightly smooth TPM
+for tp=1:6
+matlabbatch{1}.spm.spatial.smooth.data{tp} = [ea_getearoot,'templates',filesep,'TPM_2009b.nii,',num2str(tp)];
+end
+matlabbatch{1}.spm.spatial.smooth.data=matlabbatch{1}.spm.spatial.smooth.data';
+matlabbatch{1}.spm.spatial.smooth.fwhm = [3 3 3];
+matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+matlabbatch{1}.spm.spatial.smooth.im = 0;
+matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+spm_jobman('run',{matlabbatch});
+clear matlabbatch
+movefile([ea_getearoot,'templates',filesep,'sTPM_2009b.nii'],[ea_getearoot,'templates',filesep,'TPM_2009b.nii']);
+
+
+
 function ea_addshoot
 if ~exist([ea_getearoot,'templates',filesep,'dartel',filesep,'shootmni_1.nii'],'file');
     root=[ea_getearoot,'templates',filesep,'dartel',filesep];
