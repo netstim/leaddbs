@@ -17,9 +17,6 @@ prefs.pp.profile='local'; % specify parallel processing profile.
 
 %% general file handling:
 
-%prefs.prenii_unnormalized='anat_t2.nii'; % (preoperative) anatomical MR image
-%prefs.prenii_unnormalized_t1='anat_t1.nii'; % (preoperative) anatomical MR image
-%prefs.prenii_unnormalized_pd='anat_pd.nii'; % (preoperative) anatomical MR image
 prefs.prenii_searchstring='anat_*.nii';
 prefs.prenii_order={'t2','t1','pd'}; % assign order of anatomical images used (nonspecified images matching the searchstring will be added afterwards).
 
