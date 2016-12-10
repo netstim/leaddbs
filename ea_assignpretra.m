@@ -20,6 +20,10 @@ for priority=1:length(options.prefs.prenii_order)
         cnt=cnt+1;
     end
 end
+
+if ~exist('ptempts','var') % could happen if neither T2, T1 or PD is present but only custom sequences are being used
+    ptemps='_t2'; % default T2.
+end
 pfcell_priority=[pfcell_priority,pfcell];
 
 
