@@ -17,6 +17,30 @@ else % could happen if neither T2, T1 or PD is present but only custom sequences
     options.primarytemplate = 't2'; % default T2.
 end
 
+% define correct order:
+cnt=1;
+for priority=1:length(options.prefs.prenii_order)
+    [check,ix]=ismember(strrep(options.prefs.prenii_searchstring,'*',options.prefs.prenii_order{priority}),pfcell);
+    if check;
+        pfcell_priority{cnt}=pfcell{ix};
+        pfcell(ix)=[];
+        if cnt==1 % also assign template suffix
+            ptemps=options.prefs.prenii_order{priority};
+        end
+        cnt=cnt+1;
+    end
+end
+
+
+if ~exist('ptempts','var') % could happen if neither T2, T1 or PD is present but only custom sequences are being used
+    ptemps='_t2'; % default T2.
+end
+try
+pfcell_priority=[pfcell_priority,pfcell];
+catch
+    pfcell_priority=pfcell; % if no single anatomy file inside folder matching the search string.
+end
+
 if isempty(pfcell_priority)
     warning(['No anatomy information found. Please put either ',options.prefs.rawpreniis{1},', ',  options.prefs.rawpreniis{2},' or ', options.prefs.rawpreniis{3}, ' into subject folder.']);
 end

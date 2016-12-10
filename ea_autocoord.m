@@ -27,6 +27,7 @@ if isfield(options,'lcm')
 end
 
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
+
     try  ea_compat_patfolder(options); end
     
     try    

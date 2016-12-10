@@ -162,6 +162,10 @@ V.fname=[expfolder,exstr,'_',mode,'.nii'];
 V.dt=[64,1];
 spm_write_vol(V,Y);
 
+% also write out .MAT file with values:
+save([expfolder,exstr,'_',mode,'.mat'],'C');
+
+
 
 
 function D=distance_inv(A_)

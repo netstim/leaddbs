@@ -1,6 +1,6 @@
 function ea_isolate_fa(options)
 
-disp('Export fa...');
+disp('Export FA...');
 directory=[options.root,options.patientname,filesep];
 
 Vdti=spm_vol([directory,options.prefs.dti]);

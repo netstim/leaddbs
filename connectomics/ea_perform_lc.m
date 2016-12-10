@@ -124,10 +124,11 @@ if options.lc.func.compute_GM || options.lc.struc.compute_GM % perform graph met
         threshs{end+1}=options.lc.graph.sthresh;
         fs(end+1)=2;
     end
-
-    ea_computeGM(options,modes,finas,threshs,fs);
-
-
+    try
+        ea_computeGM(options,modes,finas,threshs,fs);
+    catch
+        ea_error('Please export connectivity matrices first.');
+    end
 end
 
 disp('*** Done.');
