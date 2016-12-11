@@ -12,8 +12,9 @@ function ea_autocoord(options)
 
 % get accurate electrode specifications and save it in options.
 options=ea_resolve_elspec(options);
-patientname=options.patientname;
-options.prefs=ea_prefs(patientname);
+options.prefs=ea_prefs(options.patientname);
+
+directory = [options.root,options.patientname,filesep];
 
 if options.dicomimp % do DICOM-Import.
     ea_dicom_import(options);
@@ -27,24 +28,39 @@ if isfield(options,'lcm')
 end
 
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
-
+    
+    % move files for compatibility
     try  ea_compat_patfolder(options); end
     
-    try    
-        [options,presentfiles]=ea_assignpretra(options);
-        if ~isempty(presentfiles)
-           if ~exist(ea_niigz([options.root,options.patientname,filesep,'grid.nii']),'file')
-               ea_gengrid(options);
-           end
+    % assign/order anatomical images
+    [options,presentfiles]=ea_assignpretra(options);
+    
+    % generate grid file
+    if ~exist(ea_niigz([directory,'grid.nii']),'file')
+       ea_gengrid(options);
+    end
+    
+    % anat preprocess, only do once.
+    % a small hidden file '.pp' inside patient folder will show this has been done before.
+    if ~exist([directory,'.pp'],'file') && ~exist([directory,'ea_normmethod_applied.mat'],'file')
+        for fi=1:length(presentfiles)
+            % apply reorient/crop and biasfieldcorrection
+            ea_anatpreprocess([directory,presentfiles{fi}]);
+        end
+        try
+            fs = fopen([directory,'.pp'],'w');
+            fprintf(fs,'%s','anat preprocess done');
+            fclose(fs);
         end
     end
     
+    % reslice anatomical images
     try ea_resliceanat(options); end
+    
     if options.modality==2 % CT support
         options.prefs.tranii=options.prefs.ctnii;
         options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
     end
-    results=nan;
     
     if options.coregct.do
         eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
@@ -81,8 +97,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     end
 
     if options.atl.genpt % generate patient specific atlas set
-        ea_ptspecific_atl(options);
-        
+        ea_ptspecific_atl(options); 
     end
     
     if options.atl.normalize % normalize patient-specific atlas-set.
@@ -100,14 +115,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         for side=1:length(options.sides)
             %try
             % call main routine reconstructing trajectory for one side.
-            [coords,trajvector{side},trajectory{side},tramat]=ea_reconstruct(patientname,options,options.sides(side));
+            [coords,trajvector{side},trajectory{side},tramat]=ea_reconstruct(options.patientname,options,options.sides(side));
 
             % refit electrodes starting from first electrode (this is redundant at this point).
-            coords_mm{side} = ea_map_coords(coords', [options.root,options.prefs.patientdir,filesep,options.prefs.tranii])';
+            coords_mm{side} = ea_map_coords(coords', [directory,options.prefs.tranii])';
 
-            [~,distmm]=ea_calc_distance(options.elspec.eldist,trajvector{side},tramat(1:3,1:3),[options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
+            [~,distmm]=ea_calc_distance(options.elspec.eldist,trajvector{side},tramat(1:3,1:3),[directory,options.prefs.tranii]);
             
-            comp = ea_map_coords([0,0,0;trajvector{side}]', [options.root,options.prefs.patientdir,filesep,options.prefs.tranii])'; % (XYZ_mm unaltered)
+            comp = ea_map_coords([0,0,0;trajvector{side}]', [directory,options.prefs.tranii])'; % (XYZ_mm unaltered)
             
             trajvector{side}=diff(comp);
             
@@ -139,7 +154,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         for side=1:length(options.sides)
             try
                 if ~isempty(trajectory{side})
-                    trajectory{side}=ea_map_coords(trajectory{side}', [options.root,patientname,filesep,options.prefs.tranii])';
+                    trajectory{side}=ea_map_coords(trajectory{side}', [directory,options.prefs.tranii])';
                 end
                 
             end
@@ -157,12 +172,12 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         %     ea_error([patientname,': No reconstruction information found. Please run reconstruction first.']);
         % end
         % ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
-        mcfig=figure('name',[patientname,': Manual Height Correction'],'numbertitle','off');
+        mcfig=figure('name',[options.patientname,': Manual Height Correction'],'numbertitle','off');
         warning('off');
         try
             ea_maximize(mcfig);
         end
-        ea_manualreconstruction(mcfig,patientname,options); 
+        ea_manualreconstruction(mcfig,options.patientname,options); 
     else
         ea_write(options)
     end 

@@ -28,16 +28,12 @@ prefs.ctnii_coregistered='rpostop_ct.nii';
 
 prefs.patientdir=patientname;
 prefs.prenii='lanat.nii';
-prefs.prenii_t1='lanat_t1.nii';
-prefs.prenii_pd='lanat_pd.nii';
 prefs.tranii='lpostop_tra.nii';
 prefs.cornii='lpostop_cor.nii';
 prefs.sagnii='lpostop_sag.nii';
 prefs.ctnii='lpostop_ct.nii';
 
 prefs.gprenii='glanat.nii';
-prefs.gprenii_t1='glanat_t1.nii';
-prefs.gprenii_pd='glanat_pd.nii';
 prefs.gtranii='glpostop_tra.nii';
 prefs.gcornii='glpostop_cor.nii';
 prefs.gsagnii='glpostop_sag.nii';
