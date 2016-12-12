@@ -49,15 +49,16 @@ if update
 
         disp('Extracting code...');
         try
-            unzip([earoot,'tmp',filesep,'updates.zip'],[earoot,'tmp',filesep]);
+            unzip([earoot,'tmp',filesep,'updates.zip'],[earoot,'tmp',filesep,id]);
         catch
-            system(['unzip -q ',earoot,'tmp',filesep,'updates.zip -d ', earoot,'tmp']);
+            system(['unzip -q ',earoot,'tmp',filesep,'updates.zip -d ', earoot,'tmp', filesep, id]);
         end
         delete([earoot,'tmp',filesep,'updates.zip']);
 
         disp('Deleting outdated code...');
         try
-            if update==2 % delete files during incremental updating
+            % delete files during incremental updating
+            if update==2 && exist([earoot,'tmp',filesep,id,filesep,'DELETE'], 'file')
                 dfid = fopen([earoot,'tmp',filesep,id,filesep,'DELETE']);
                 dels=textscan(dfid,'%s');
                 fclose(dfid);

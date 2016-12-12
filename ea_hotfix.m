@@ -34,25 +34,27 @@ if hotfix
 
         disp('Extracting code...');
         try
-            unzip([earoot,'tmp',filesep,'hotfix.zip'],[earoot,'tmp',filesep]);
+            unzip([earoot,'tmp',filesep,'hotfix.zip'],[earoot,'tmp',filesep,'hotfix']);
         catch
-            system(['unzip -q ',earoot,'tmp',filesep,'hotfix.zip -d ', earoot,'tmp']);
+            system(['unzip -q ',earoot,'tmp',filesep,'hotfix.zip -d ', earoot,'tmp',filesep,'hotfix']);
         end
         delete([earoot,'tmp',filesep,'hotfix.zip']);
 
         disp('Deleting outdated code...');
         try
-            dfid = fopen([earoot,'tmp',filesep,'hotfix',filesep,'DELETE']);
-            dels=textscan(dfid,'%s');
-            fclose(dfid);
-            for f=1:length(dels{1})
-                if isdir([earoot,dels{1}{f}])
-                    rmdir([earoot,dels{1}{f}],'s')
-                else
-                    delete([earoot,dels{1}{f}])
+            if exist([earoot,'tmp',filesep,'hotfix',filesep,'DELETE'], 'file')
+                dfid = fopen([earoot,'tmp',filesep,'hotfix',filesep,'DELETE']);
+                dels=textscan(dfid,'%s');
+                fclose(dfid);
+                for f=1:length(dels{1})
+                    if isdir([earoot,dels{1}{f}])
+                        rmdir([earoot,dels{1}{f}],'s')
+                    else
+                        delete([earoot,dels{1}{f}])
+                    end
                 end
+                delete([earoot,'tmp',filesep,'hotfix',filesep,'DELETE'])
             end
-            delete([earoot,'tmp',filesep,'hotfix',filesep,'DELETE'])
         catch
             disp('Error while deleting some files. You may ignore this.');
         end
