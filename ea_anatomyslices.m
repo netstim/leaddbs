@@ -36,8 +36,9 @@ end
 
 if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)
     clear V
-       [V1,V2,V3]=ea_assignbackdrop(togglestates.template,options,'Patient',options.native);
-       V{1}=V1; V{2}=V2; V{3}=V3;
+    [V1,V2,V3]=ea_assignbackdrop(togglestates.template,options,'Patient',options.native);
+
+    V{1}=V1; V{2}=V2; V{3}=V3;
     setappdata(resultfig,'templateused',togglestates.template); % refresh used template.
 end
 
