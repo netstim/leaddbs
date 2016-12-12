@@ -28,7 +28,7 @@ switch options.modality
         fis2mni={[directory,options.prefs.gprenii],...
             [directory,options.prefs.gctnii]};
 end
-fis2anat=[fis2anat,oanat];
+fis2anat=[fis2anat,oanat'];
 
 basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
 if ispc

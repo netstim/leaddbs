@@ -75,6 +75,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     
     
     if options.normalize.do
+        
         % 1. coreg all available preop MRI
         ea_checkcoregallmri(options,0,1); % check and coregister all preoperative MRIs here.
 
