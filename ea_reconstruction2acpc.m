@@ -10,8 +10,10 @@ load([directory,filesep,'ea_reconstruction.mat']);
             cfg.zmm=reco.native.coords_mm{side}(c,3);
             cfg.acmcpc=2; % map to AC
             fid=ea_native2acpc(cfg,{directory});
-            
             reco.acpc.coords_mm{side}(c,:)=fid.WarpedPointACPC;
+            reco.acpc.ac=fid.AC;
+            reco.acpc.pc=fid.PC;
+            reco.acpc.msp=fid.MSP;
         end
     end
     
