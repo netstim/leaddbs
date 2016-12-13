@@ -24,7 +24,11 @@ if ischar(options) % return name of method.
 end
 
 
-
+usebrainmask=0;
+uset1=1;
+uset2=1;
+usepd=1;
+usefa=1;
 if ~exist('includeatlas','var')
     includeatlas=0;
 end
@@ -33,7 +37,7 @@ if ~includeatlas % second run from maget-brain segment
 ea_checkcoregallmri(options,usebrainmask)
 end
 
-keyboard
+
 
 directory=[options.root,options.patientname,filesep];
 options.coregmr.method = 'Coreg MRIs: ANTs'; % hard-code to ANTs for now here.
