@@ -7,9 +7,7 @@ iscoreg=1;
 directory=[options.root,options.patientname,filesep];
 
 [~,presentfiles]=ea_assignpretra(options);
-if exist(ea_niigz([directory,options.prefs.fa2anat]),'file')
-    presentfiles=[presentfiles,{options.prefs.fa2anat}];
-end
+
 
 if length(presentfiles)==1 % only one anatomical image present, nothing to coregister
     return
