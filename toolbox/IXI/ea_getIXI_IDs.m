@@ -3,10 +3,10 @@ function IDs=ea_getIXI_IDs(n,age,sd)
 
 load([ea_getearoot,'toolbox',filesep,'IXI',filesep,'IXI_demographics.mat']); % adds vars IXI.AGE and IXI.ID
 
-% excludeIDs with wrong warpings:
-[~,idx]=ismember(IXI.excl,IXI.uID);
-IXI.uID(idx)=[];
-IXI.uAGE(idx)=[];
+% % excludeIDs with wrong warpings:
+% [~,idx]=ismember(IXI.excl,IXI.uID);
+% IXI.uID(idx)=[];
+% IXI.uAGE(idx)=[];
 
 if ~exist('n','var')
    IDs=IXI.uID;
