@@ -38,6 +38,9 @@ uipatdirs=options.uipatdirs;
 if isempty(uipatdirs)
     uipatdirs={'No Patient Selected'};
 end
+if ~iscell(uipatdirs)
+   uipatdirs={uipatdirs}; 
+end
 
 prefs=ea_prefs('');
 if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do && ~strcmp(cmd,'export') % do parallel processing if available and set in ea_prefs.
