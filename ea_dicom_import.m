@@ -12,10 +12,20 @@ disp('Importing DICOM files...');
 
 % finding DICOM folder in patients directory
 dfnames = {'DICOM','dicom','DICOMDAT'};
+founddicomsubdir=0;
 for df=1:length(dfnames)
     if exist([options.root,options.patientname,filesep,dfnames{df}],'file')
+        founddicomsubdir=1;
         break
     end
+end
+if ~founddicomsubdir
+   if isempty(dir([options.root,options.patientname,filesep,'*.nii'])) % no .nii file inside folder - assume complete directory is DICOMs
+       movefile([options.root,options.patientname],[options.root,options.patientname,'_tmp'])
+       mkdir([options.root,options.patientname]);
+       movefile([options.root,options.patientname,'_tmp'],[options.root,options.patientname,filesep,'DICOM']);
+       df=1; % default DICOM folder.
+   end
 end
 indir=[options.root,options.patientname,filesep,dfnames{df},filesep];
 outdir=[options.root,options.patientname,filesep];
