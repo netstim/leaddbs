@@ -12,6 +12,7 @@ end
 gdti_trackingparams='standard'; % select param-preset here (see below, also to create your own)
 % make sure only one DTI tracker is being used.
 rmpath(genpath([options.earoot,'ext_libs',filesep,'Fibertools']));
+addpath(genpath([options.earoot,'ext_libs',filesep,'mesoft']));
 
 switch gdti_trackingparams
 
