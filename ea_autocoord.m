@@ -36,8 +36,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     [options,presentfiles]=ea_assignpretra(options);
     
     % generate grid file
+    
     if ~exist(ea_niigz([directory,'grid.nii']),'file')
-       ea_gengrid(options);
+    try
+        ea_gengrid(options);
+    end
     end
     
     % anat preprocess, only do once.

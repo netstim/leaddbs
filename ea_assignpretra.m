@@ -11,9 +11,9 @@ prenii_order = cellfun(@(x) strrep(options.prefs.prenii_searchstring,'*',x), opt
 presentfiles = pfcell([nonzeros(idx)',setdiff(1:numel(pfcell),nonzeros(idx))]);
 
 if isempty(presentfiles)
-    ea_error(['No anatomy information found!\nPlease put either ', ...
-        prenii_order{1},', ',prenii_order{2},' or ',prenii_order{3},' into subject folder.'], ...
-        'Error', dbstack);
+    warning(['No anatomy information found!\nPlease put either ', ...
+        prenii_order{1},', ',prenii_order{2},' or ',prenii_order{3},' into subject folder.']);
+    return
 end
 
 % set prenii_unnormalized
