@@ -30,5 +30,18 @@ end
 if(nargin<=6)
     holes=[];
 end
-[node,elem,face]=surf2mesh(v,f,[],[],keepratio,maxvol,regions,holes);
+[node,elem,face,success]=surf2mesh(v,f,[],[],keepratio,maxvol,regions,holes);
 
+if ~success % try with gmsh next
+    keyboard
+    %     verts=v;
+    %     faces=zeros(length(f),4);
+    facc=cell2mat(f);
+    fv.vertices=v;
+    fv.faces=f;
+    faaa=patch('faces',f,'vertices',v);
+    % convert to .gmsh
+    gmsh_mesh3d_write(mwpath('post_vmesh.geo'),3,size(verts,1),verts',4,size(faces,1),faces');
+    
+    
+end

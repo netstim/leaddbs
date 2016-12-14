@@ -19,13 +19,14 @@ if nargin==5
     if useSI
         thresh=thresh.*(10^3);
     end
-elseif nargin==6
+elseif nargin==7
     acoords=varargin{1};
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
     thresh=varargin{6};
+    lgfigure=varargin{7};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='SimBio/Iso2Mesh';
@@ -49,7 +50,8 @@ options.considerpassivecontacts=0;
 
 
 %% get electrodes handles // initial parameters:
-resultfig=getappdata(gcf,'resultfig');
+
+resultfig=getappdata(lgfigure,'resultfig');
 elstruct=getappdata(resultfig,'elstruct');
 elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
@@ -91,7 +93,10 @@ if 1 %ea_headmodel_changed(options,side,S,elstruct)
         elstruct.markers(side).x,1;
         elstruct.markers(side).y,1];
     setappdata(resultfig,'elstruct',elstruct);
-    X = ea_linsolve(A,B); X=X';
+    Y = ea_linsolve(A,B); Y=Y';
+    
+    X=ones(4); % identity.
+    
     cnt=1;
     
     % overwrite head and tail of model with actual values for mesh generation lateron:
@@ -99,10 +104,11 @@ if 1 %ea_headmodel_changed(options,side,S,elstruct)
     electrode.tail_position=B(2,1:3);
     % add contacts to mesh
     for con=1:length(electrode.meshel.con)
-        
-        electrode.meshel.con{con}.vertices=X*[electrode.meshel.con{con}.vertices,ones(size(electrode.meshel.con{con}.vertices,1),1)]';
-        electrode.meshel.con{con}.vertices=electrode.meshel.con{con}.vertices(1:3,:)';
-        electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+        % do not rotate electrode for now.        
+        %electrode.meshel.con{con}.vertices=X*[electrode.meshel.con{con}.vertices,ones(size(electrode.meshel.con{con}.vertices,1),1)]';
+        %electrode.meshel.con{con}.vertices=electrode.meshel.con{con}.vertices(1:3,:)';
+        % only rotate contacts.
+        electrode.contacts(con).vertices=Y*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
         electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
         
         elfv(cnt).faces=electrode.contacts(con).faces;
@@ -117,10 +123,11 @@ if 1 %ea_headmodel_changed(options,side,S,elstruct)
     
     % add insulation to mesh
     for ins=1:length(electrode.meshel.ins)
-        electrode.meshel.ins{ins}.vertices=X*[electrode.meshel.ins{ins}.vertices,ones(size(electrode.meshel.ins{ins}.vertices,1),1)]';
-        
-        electrode.meshel.ins{ins}.vertices=electrode.meshel.ins{ins}.vertices(1:3,:)';
-        electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+        % do not rotate insulation for now
+        %electrode.meshel.ins{ins}.vertices=X*[electrode.meshel.ins{ins}.vertices,ones(size(electrode.meshel.ins{ins}.vertices,1),1)]';
+        %electrode.meshel.ins{ins}.vertices=electrode.meshel.ins{ins}.vertices(1:3,:)';
+        % only rotate insulation.
+        electrode.insulation(ins).vertices=Y*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
         electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
         
         
@@ -134,7 +141,7 @@ if 1 %ea_headmodel_changed(options,side,S,elstruct)
     end
     
     
-    [mesh.tet,mesh.pnt,activeidx]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel);
+    [mesh.tet,mesh.pnt,activeidx]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel,Y);
     
     
     mesh.tissue=mesh.tet(:,5);

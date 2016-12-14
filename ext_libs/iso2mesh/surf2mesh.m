@@ -1,4 +1,4 @@
-function [node,elem,face]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,forcebox)
+function [node,elem,face,success]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,forcebox)
 %
 % [node,elem,face]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,forcebox)
 %
@@ -108,19 +108,25 @@ end
 
 
 if(isempty(cmdopt))
-  system([' "' mcpath('tetgen') exesuff '" -A -q2 -a' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+  system([' "' mcpath('tetgen_latest') exesuff '" -A -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 else
   system([' "' mcpath('tetgen') exesuff '" ' cmdopt ' "' mwpath('post_vmesh.poly') '"']);
 end
-  system([' "' mcpath('tetgen') exesuff '' mwpath('post_vmesh.poly') '"']);
+ % system([' "' mcpath('tetgen') exesuff '' mwpath('post_vmesh.poly') '"']);
 
 % read in the generated mesh
+success=1;
 try
-[node,elem,face]=readtetgen(mwpath('post_vmesh.1'));
+    [node,elem,face]=readtetgen(mwpath('post_vmesh.1'));
+    fprintf(1,'volume mesh generation is complete\n');
+    
 catch
-    keyboard
+    node=[];
+    elem=[];
+    face=[];
+    success=0;
+    
 end
-fprintf(1,'volume mesh generation is complete\n');
 
 function sweeptempdir
 file=mwpath('post_vmesh.poly');

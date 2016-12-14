@@ -1,10 +1,10 @@
-function [emesh,nmesh,activeidx]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel)
+function [emesh,nmesh,activeidx]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix)
 % meshing an electrode and tissue structures bounded by a cylinder
 
 %% load the nucleus data
 tic
 meshel=electrode.meshel;
-vizz=1;
+vizz=0;
 stlexport=1;
 if vizz
     figure
@@ -41,7 +41,7 @@ end
 %etop=[34.39,20.23,43.14];     % end point of the electrode axis
 electrodelen=norm(etop-orig); % length of the electrode
 
-electrodetrisize=0.2;  % the maximum triangle size of the electrode mesh
+electrodetrisize=0.1;  % the maximum triangle size of the electrode mesh
 bcyltrisize=0.3;       % the maximum triangle size of the bounding cyl
 nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
 
@@ -65,6 +65,7 @@ seeds=[];
 
 for i=1:length(meshel.ins)
     fcyl=[fcyl; meshel.ins{i}.faces+size(ncyl,1)];
+
     if(i<length(meshel.ins))
         scyl=[scyl; meshel.ins{i}.endplates+size(ncyl,1)]; % had to rebuild the endplates
     end
@@ -78,16 +79,49 @@ for i=1:length(meshel.con)
     seeds=[seeds; mean(meshel.ins{i}.vertices)];
 end
 
-[ncyl, I, J]=unique(ncyl, 'rows');
-fcyl=unique(round(J(fcyl)),'rows');
-scyl=unique(round(J(scyl)),'rows');
 
-fcyl=num2cell(fcyl,2);
-scyl=num2cell(scyl,2);
+
+
+ [unique_ncyl, I, J]=unique(ncyl, 'rows');
+ unique_fcyl=unique(round(J(fcyl)),'rows');
+ unique_scyl=unique(round(J(scyl)),'rows');
+if vizz
+ figure
+ patch('faces',fcyl,'vertices',ncyl,'edgecolor','k','facecolor','none');
+ 
+  figure
+ patch('faces',unique_fcyl,'vertices',unique_ncyl,'edgecolor','b','facecolor','none');
+end
+ fcyl=num2cell(unique_fcyl,2);
+scyl=num2cell(unique_scyl,2);
+
+% clean from duplicate indices:
+
+    for ff=1:length(fcyl)
+        [has,which]=ea_hasduplicates(fcyl{ff});
+        if has
+            doubles=find(fcyl{ff}==which);
+            fcyl{ff}(doubles(2:end))=[]; 
+        end
+    end
+    
+    for ff=1:length(scyl)
+        [has,which]=ea_hasduplicates(scyl{ff});
+        if has
+            doubles=find(scyl{ff}==which);
+            scyl{ff}(doubles(2:end))=[];
+        end
+    end
+    
 
 %% convert to obtain the electrode surface mesh model
 
-[node,elem,face]=s2m(ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
+[node,~,face]=s2m(unique_ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
+
+% apply transformation matrix to electrode nodes:
+node=transformmatrix*[node,ones(size(node,1),1)]';
+node=node(1:3,:)';
+
 % - this is the node / elem / face made by tetgen of the electrode only.
 if vizz
    fvv.faces=face(:,1:3);
@@ -390,7 +424,17 @@ end
 
 toc
 
+function [has,repeatedValues]=ea_hasduplicates(X)
 
+uniqueX = unique(X);
+countOfX = hist(X,uniqueX);
+indexToRepeatedValue = (countOfX~=1);
+repeatedValues = uniqueX(indexToRepeatedValue);
+if ~isempty(repeatedValues)
+    has=1;
+else
+    has=0;
+end
 
 function nodes=ea_nudgedirinodes(nodes,centroid)
 % get to ~1000 comparison points

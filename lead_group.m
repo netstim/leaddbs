@@ -1080,11 +1080,11 @@ for pt=selection
         vfs=getappdata(handles.leadfigure,'genvatfunctions');
 
         ea_genvat=eval(['@',vfs{ix}]);
-
+setappdata(handles.leadfigure,'resultfig',resultfig);
         for side=1:2
             setappdata(resultfig,'elstruct',M.elstruct(pt));
             setappdata(resultfig,'elspec',options.elspec);
-            [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,'gs');
+            [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,'gs',0.2,handles.leadfigure);
             stimparams(1,side).volume=volume;
         end
 
