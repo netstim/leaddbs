@@ -80,7 +80,10 @@ end
 if(~iscell(el) & ~isempty(no) & ~isempty(el))
 	saveoff(no(:,1:3),el(:,1:3),mwpath('post_vmesh.off'));
 end
+
 deletemeshfile(mwpath('post_vmesh.mtr'));
+
+sweeptempdir;
 savesurfpoly(no,el,holes,regions,p0,p1,mwpath('post_vmesh.poly'),dobbx);
 
 moreopt='';
@@ -103,14 +106,25 @@ end
 
 
 
+
 if(isempty(cmdopt))
   system([' "' mcpath('tetgen') exesuff '" -A -q2 -a' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 else
   system([' "' mcpath('tetgen') exesuff '" ' cmdopt ' "' mwpath('post_vmesh.poly') '"']);
 end
+  system([' "' mcpath('tetgen') exesuff '' mwpath('post_vmesh.poly') '"']);
 
 % read in the generated mesh
+try
 [node,elem,face]=readtetgen(mwpath('post_vmesh.1'));
-
+catch
+    keyboard
+end
 fprintf(1,'volume mesh generation is complete\n');
 
+function sweeptempdir
+file=mwpath('post_vmesh.poly');
+pth=fileparts(file);
+warning('off');
+delete([pth,filesep,'*']);
+warning('on');

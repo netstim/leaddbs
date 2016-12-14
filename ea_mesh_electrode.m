@@ -4,7 +4,7 @@ function [emesh,nmesh,activeidx]=ea_mesh_electrode(fv,elfv,eltissuetype,electrod
 %% load the nucleus data
 tic
 meshel=electrode.meshel;
-vizz=0;
+vizz=1;
 stlexport=1;
 if vizz
     figure
@@ -29,6 +29,7 @@ end
 
 orig=electrode.tail_position-3*(electrode.head_position-electrode.tail_position);
 etop=electrode.head_position-3*(electrode.tail_position-electrode.head_position);
+
 if vizz
     hold on
     plot3(orig(1),orig(2),orig(3),'y*');
@@ -84,9 +85,15 @@ scyl=unique(round(J(scyl)),'rows');
 fcyl=num2cell(fcyl,2);
 scyl=num2cell(scyl,2);
 
-%% convert the obtain the electrode surface mesh model
-keyboard
+%% convert to obtain the electrode surface mesh model
+
 [node,elem,face]=s2m(ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
+% - this is the node / elem / face made by tetgen of the electrode only.
+if vizz
+   fvv.faces=face(:,1:3);
+   fvv.vertices=node;
+   patch(fvv,'edgecolor','b','facecolor','none');
+end
 
 %plotmesh(node,elem) % plot the electrode mesh for now
 
@@ -110,41 +117,78 @@ ISO2MESH_SURFBOOLEAN='cork';   % now intersect the electrode to the nucleus
 [nboth,fboth]=surfboolean(node,face(:,[1 3 2]),'resolve',nobj,fobj);
 clear ISO2MESH_SURFBOOLEAN;
 
+if vizz
+   fvv.faces=fboth(:,1:3);
+   fvv.vertices=nboth;
+   patch(fvv,'edgecolor','b','facecolor','none');
+end
+
+
+
 %% create a bounding cylinder
 %[anbcyl,afbcyl]=meshacylinder(orig, etop,cylradius,bcyltrisize,10,ndiv);
 
 
-c0bbc=c0+cylz0*v;     
+c0bbc=c0+cylz0*v;
 c1bbc=c0+cylz1*v;
 [nbcyl,fbcyl]=meshacylinder(c0bbc, c1bbc,cylradius,bcyltrisize,10,ndiv);
+
 nbcyl=rotatevec3d(nbcyl,v0,v);
 nbcyl=nbcyl+repmat(orig,size(nbcyl,1),1);
-
+if vizz
+    fva.faces=fbcyl(:,1:3);
+    fva.vertices=nbcyl;
+    patch(fva,'edgecolor','m','facecolor','none');
+    axis equal
+end
 
 %figure
 %patch('vertices',anbcyl,'faces',afbcyl,'FaceColor','none','EdgeColor','b');
 %patch('vertices',nbcyl,'faces',fbcyl,'FaceColor','none','EdgeColor','r');
 
-seedbbc=nbcyl(1,:)*(1-1e-2)+mean(nbcyl)*1e-2;  % define a seed point for the bounding cylinder
+%seedbbc=nbcyl(1,:)*(1-1e-2)+mean(nbcyl)*1e-2;  % define a seed point for the bounding cylinder
 
 %% cut the electrode+nucleus mesh by the bounding cylinder
 ISO2MESH_SURFBOOLEAN='cork';
 [nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'first',nboth,fboth);
 clear ISO2MESH_SURFBOOLEAN;
+if vizz
+   figure('name','nboth2'); 
+    fvv.faces=fboth2(:,1:3);
+    fvv.vertices=nboth2;
+    patch(fvv,'edgecolor','green','facecolor','none');
+    axis equal
+end
+
 
 %% remove duplicated nodes in the surface
 [nboth3,fboth3]=meshcheckrepair(nboth2,fboth2,'dup');
 [nboth4,fboth4]=meshcheckrepair(nboth3,fboth3,'deep');
-
+if vizz
+   figure('name','nboth3'); 
+    fvv.faces=fboth3(:,1:3);
+    fvv.vertices=nboth3;
+    patch(fvv,'edgecolor','m','facecolor','none');
+    axis equal
+end
 %% define seeds along the electrode axis
-[t,baryu,baryv,faceidx]=raytrace(orig,v0,nboth4,fboth4);
-t=sort(t(faceidx));
-t=(t(1:end-1)+t(2:end))*0.5;
-seedlen=length(t);
+%[t,baryu,baryv,faceidx]=raytrace(orig,v0,nboth4,fboth4);
+%t=sort(t(faceidx));
+%t=(t(1:end-1)+t(2:end))*0.5;
+%seedlen=length(t);
 %electrodeseeds=repmat(orig(:)',seedlen,1)+repmat(v0(:)',seedlen,1).*repmat(t(:)-1,1,3);
-%% create tetrahedral mesh of the final combined mesh (seeds are ignored, tetgen 1.5 automatically find regions)
 
-[nmesh,emesh]=s2m(nboth3,fboth3,1,5);
+%% create tetrahedral mesh of the final combined mesh (seeds are ignored, tetgen 1.5 automatically find regions)
+% - this is the part where we have all 4 element types combined already.
+[nmesh,emesh,face]=s2m(nboth3,fboth3,1,5);
+if vizz
+   figure('name','Final mesh'); 
+    fvv.faces=face(:,1:3);
+    fvv.vertices=nmesh;
+    patch(fvv,'edgecolor','k','facecolor','none');
+    axis equal
+end
+
 
 
 %% remapping the region labels
