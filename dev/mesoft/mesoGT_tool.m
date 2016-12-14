@@ -149,7 +149,7 @@ if isempty(hmain),
     uicontrol('Style','text','String','status: ready ...','Position',[5,5,300,20],'Tag','fiberGT_status','HorizontalAlignment','left');
      
     uicontrol('Style','pushbutton','String','Start Tracking','Position',[280,240,100,25],'Tag','fiberGT_startstop','Callback',{@startstop_Callback,gcbo,[],[]});
-    uicontrol('Style','checkbox','String','accumulate tracts','Position',[400 240 150 25],'Value',false,'HorizontalAlignment','left','tag','fiberGT_accum');  
+    uicontrol('Style','checkbox','String','accumulate tracts','Position',[400 240 150 25],'Value',true,'HorizontalAlignment','left','tag','fiberGT_accum');  
 
     uicontrol('Style','pushbutton','String','Reset State','Position',[680,240,100,25],'Tag','fiberGT_reset','Callback',{@reset_Callback,gcbo,[],[]});   
   
