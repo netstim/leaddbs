@@ -1,4 +1,4 @@
-function [emesh,nmesh,activeidx]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix)
+function [emesh,nmesh,activeidx]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix,elspec)
 % meshing an electrode and tissue structures bounded by a cylinder
 
 %% load the nucleus data
@@ -24,9 +24,10 @@ if vizz
 %     
 end
 
-%% user defined parameters
 
 
+elmodel_fn=[options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'];
+if ~exist(elmodel_fn,'file')
 orig=electrode.tail_position-3*(electrode.head_position-electrode.tail_position);
 etop=electrode.head_position-3*(electrode.tail_position-electrode.head_position);
 
@@ -55,6 +56,8 @@ ncount=length(fv);     % the number of nuclei meshes inside fv()
 v0=(etop-orig)/electrodelen;               % unitary dir
 c0=[0 0 0];
 v=[0 0 1];
+
+
 
 %% loading the electrode surface model
 
@@ -117,6 +120,11 @@ scyl=num2cell(unique_scyl,2);
 %% convert to obtain the electrode surface mesh model
 
 [node,~,face]=s2m(unique_ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
+save(elmodel_fn,'node','face');
+else
+    load(elmodel_fn);
+end
+
 
 % apply transformation matrix to electrode nodes:
 node=transformmatrix*[node,ones(size(node,1),1)]';

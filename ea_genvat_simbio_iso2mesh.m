@@ -57,7 +57,7 @@ elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 
-if 1 %ea_headmodel_changed(options,side,S,elstruct)
+if ea_headmodel_changed(options,side,S,elstruct)
     disp('No suitable headmodel found, rebuilding. This may take a while...');
     
     load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
@@ -140,7 +140,7 @@ if 1 %ea_headmodel_changed(options,side,S,elstruct)
     end
     
     
-    [mesh.tet,mesh.pnt,activeidx]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel,Y);
+    [mesh.tet,mesh.pnt,activeidx]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
     
     
     mesh.tissue=mesh.tet(:,5);
@@ -170,7 +170,7 @@ if 1 %ea_headmodel_changed(options,side,S,elstruct)
     end
     
     
-    save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','-v7.3');
+    save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','mesh','activeidx','-v7.3');
     ea_save_hmprotocol(options,side,S,elstruct,1);
     
 else
@@ -375,11 +375,13 @@ eg=eg>thresh;
 % binary e-field - "vat"
 
 neeg=eeg;
-neeg(~eg)=0;
-neeg(neeg>0)=ea_normal(neeg(neeg>0));
-% normalized e-field (gaussianized).
-neeg(:)=neeg(:)-min(neeg(:));
-neeg(:)=neeg(:)/max(neeg(:)); % 0-1 distributed.
+neeg(~eg)=nan;
+
+
+neeg(neeg>0)=zscore(neeg(neeg>0));
+% normalized e-field (zscored).
+neeg(~isnan(neeg))=neeg(~isnan(neeg))-min(neeg(~isnan(neeg)));
+neeg(~isnan(neeg))=neeg(~isnan(neeg))/sum(neeg(~isnan(neeg))); % 0-1 distributed.
 
 
 XYZmax=[max(xg(eg>0)),max(yg(eg>0)),max(zg(eg>0))];
