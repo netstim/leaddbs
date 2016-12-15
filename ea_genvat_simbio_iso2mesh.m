@@ -8,7 +8,7 @@ function varargout=ea_genvat_simbio_iso2mesh(varargin)
 % This function only touches the .VAT entry of stimparams struct of the
 % given side.
 useSI=1;
-
+vizz=0;
 if nargin==5
     acoords=varargin{1};
     S=varargin{2};
@@ -170,7 +170,7 @@ if ea_headmodel_changed(options,side,elstruct)
     
     
     save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','mesh','activeidx','-v7.3');
-    ea_save_hmprotocol(options,side,S,elstruct,1);
+    ea_save_hmprotocol(options,side,elstruct,1);
     
 else
     % simply load vol.
@@ -316,15 +316,9 @@ vat.tET=vat.ET>thresh;
 vat.tpos=vat.pos(vat.tET,:);
 outliers=ea_removeoutliers(vat.tpos);
 vat.tpos(outliers,:)=[];
+if vizz
 figure, plot3(vat.tpos(:,1),vat.tpos(:,2),vat.tpos(:,3),'r.');
-
-
-
-%vat.pos=vat.pos*1000; % back to mm.
-
-% change this to keep lower values into scatteredInterpolant..!
-
-
+end
 
 % the following will be used for volume 2 isosurf creation as well as
 % volumetrics of the vat in mm^3.
@@ -389,6 +383,9 @@ try
 catch
     keyboard
 end
+
+
+eg=smooth3(eg,'gaussian',[15 15 15]);
 vatfv=isosurface(xg,yg,zg,eg,0.75);
 
 vatvolume=sum(eg(:))*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
@@ -437,7 +434,7 @@ function outliers=ea_removeoutliers(pointcloud)
 
 mp=ea_robustmean(pointcloud,1);
 D=pointcloud-repmat(mp,size(pointcloud,1),1);
-S=1.5*std(D,[],1);
+S=3*std(D,[],1);
 outliers=D>repmat(S,size(D,1),1);
 outliers=any(outliers,2);
 
