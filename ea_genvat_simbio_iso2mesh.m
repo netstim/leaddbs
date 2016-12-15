@@ -16,9 +16,7 @@ if nargin==5
     options=varargin{4};
     stimname=varargin{5};
     thresh=0.2;
-    if useSI
-        thresh=thresh.*(10^3);
-    end
+
 elseif nargin==7
     acoords=varargin{1};
     S=varargin{2};
@@ -33,7 +31,9 @@ elseif nargin==1
         return
     end
 end
-
+    if useSI
+        thresh=thresh.*(10^3);
+    end
 S=ea_activecontacts(S);
 if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     fv.vertices=[0,0,0
@@ -81,7 +81,7 @@ if 1 %ea_headmodel_changed(options,side,S,elstruct)
         c0=[c0;[ins,1]];
         cnt=cnt+1;
     end
-    
+
     load([options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
     A=[electrode.head_position,1;
         electrode.tail_position,1
@@ -95,7 +95,6 @@ if 1 %ea_headmodel_changed(options,side,S,elstruct)
     setappdata(resultfig,'elstruct',elstruct);
     Y = ea_linsolve(A,B); Y=Y';
     
-    X=ones(4); % identity.
     
     cnt=1;
     
@@ -315,13 +314,11 @@ vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.
 disp('Done. Calculating VAT...');
 
 vat.tET=vat.ET>thresh;
-vat.pos=vat.pos(vat.tET,:);
-vat.ET(~vat.tET)=0;
-vat.nET=vat.ET;
-vat.nET(vat.tET)=ea_normal(vat.ET(vat.tET)')';
-vat.nET(vat.tET)=vat.nET(vat.tET)-min(vat.nET(vat.tET));
-vat.nET(vat.tET)=vat.nET(vat.tET)/max(vat.nET(vat.tET));
-vat.nET(~vat.tET)=0;
+vat.tpos=vat.pos(vat.tET,:);
+outliers=ea_removeoutliers(vat.tpos);
+vat.tpos(outliers,:)=[];
+figure, plot3(vat.tpos(:,1),vat.tpos(:,2),vat.tpos(:,3),'r.');
+
 
 
 %vat.pos=vat.pos*1000; % back to mm.
@@ -333,19 +330,19 @@ vat.nET(~vat.tET)=0;
 % the following will be used for volume 2 isosurf creation as well as
 % volumetrics of the vat in mm^3.
 
-F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),ones(size(vat.pos(:,1))));
-F.ExtrapolationMethod='none';
+F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.ET','natural','none');
 
-Fe=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.ET(vat.tET)');
-Fe.ExtrapolationMethod='none';
-
-Fne=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.nET(vat.tET)');
-Fne.ExtrapolationMethod='none';
+% 
+% Fe=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.ET');
+% Fe.ExtrapolationMethod='none';
+% 
+% Fne=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.nET');
+% Fne.ExtrapolationMethod='none';
 
 gv=cell(3,1); spacing=zeros(3,1);
 try
     for dim=1:3
-        gv{dim}=linspace(min(round(vat.pos(:,dim)))-1,max(round(vat.pos(:,dim)))+1,100);
+        gv{dim}=linspace(min(round(vat.tpos(:,dim)))-1,max(round(vat.tpos(:,dim)))+1,100);
         spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
     end
 catch
@@ -353,16 +350,36 @@ catch
 end
 
 [xg,yg,zg] = meshgrid(gv{1},gv{2},gv{3});
-eg = F(xg,yg,zg);
-eg(isnan(eg))=0;
-eg(eg>0)=1;
+
+% create nifti
+chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);
+Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
+Vvat.dim=[100,100,100];
+Vvat.dt=[4,0];
+Vvat.n=[1 1];
+Vvat.descrip='lead dbs - vat';
+if ~exist([options.root,options.patientname,filesep,'stimulations'],'file')
+    mkdir([options.root,options.patientname,filesep,'stimulations']);
+end
 
 
-eeg = Fe(xg,yg,zg);
+
+
+
+eeg = F(xg,yg,zg);
 eeg(isnan(eeg))=0;
+% e-field in matrix form.
 
-neg = Fne(xg,yg,zg);
-neg(isnan(neg))=0;
+eg=eeg;
+eg=eg>thresh;
+% binary e-field - "vat"
+
+neeg=eeg;
+neeg(~eg)=0;
+neeg(neeg>0)=ea_normal(neeg(neeg>0));
+% normalized e-field (gaussianized).
+neeg(:)=neeg(:)-min(neeg(:));
+neeg(:)=neeg(:)/max(neeg(:)); % 0-1 distributed.
 
 
 XYZmax=[max(xg(eg>0)),max(yg(eg>0)),max(zg(eg>0))];
@@ -377,15 +394,7 @@ vatvolume=sum(eg(:))*spacing(1)*spacing(2)*spacing(3); % returns volume of vat i
 S.volume(side)=vatvolume;
 
 
-chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);
-Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
-Vvat.dim=[100,100,100];
-Vvat.dt=[4,0];
-Vvat.n=[1 1];
-Vvat.descrip='lead dbs - vat';
-if ~exist([options.root,options.patientname,filesep,'stimulations'],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations']);
-end
+
 
 % determine stimulation name:
 mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
@@ -406,9 +415,14 @@ switch side
 end
 save(stimfile,'S');
 %spm_write_vol(Vvat,flipdim(eg,3));
-spm_write_vol(Vvat,permute(eg,[2,1,3]));
-spm_write_vol(Vvate,permute(eeg,[2,1,3]));
-spm_write_vol(Vvatne,permute(neg,[2,1,3]));
+Vvat.img=permute(eg,[2,1,3]);
+ea_write_nii(Vvat);
+
+Vvate.img=permute(eeg,[2,1,3]);
+ea_write_nii(Vvate);
+
+Vvatne.img=permute(neeg,[2,1,3]);
+ea_write_nii(Vvatne);
 
 % define function outputs
 
@@ -417,6 +431,14 @@ varargout{2}=vatvolume;
 varargout{3}=radius;
 disp('Done...');
 
+
+function outliers=ea_removeoutliers(pointcloud)
+
+mp=ea_robustmean(pointcloud,1);
+D=pointcloud-repmat(mp,size(pointcloud,1),1);
+S=1.5*std(D,[],1);
+outliers=D>repmat(S,size(D,1),1);
+outliers=any(outliers,2);
 
 function changed=ea_headmodel_changed(options,side,S,elstruct)
 % function that checked if anything (user settings) has changed and

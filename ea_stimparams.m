@@ -946,7 +946,7 @@ for el=1:length(elstruct)
 
     else % single patient
 
-        [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,S,side,options,stimname);
+        [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,S,side,options,stimname,0.2,handles.stimfig);
 
         stimparams(1,side).volume=volume;
         flix=1;
