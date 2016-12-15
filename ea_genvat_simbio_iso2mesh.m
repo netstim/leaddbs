@@ -45,7 +45,6 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     return
 end
 
-options.considerpassivecontacts=0;
 
 
 
@@ -57,7 +56,7 @@ elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 
-if ea_headmodel_changed(options,side,S,elstruct)
+if ea_headmodel_changed(options,side,elstruct)
     disp('No suitable headmodel found, rebuilding. This may take a while...');
     
     load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
@@ -442,29 +441,23 @@ S=1.5*std(D,[],1);
 outliers=D>repmat(S,size(D,1),1);
 outliers=any(outliers,2);
 
-function changed=ea_headmodel_changed(options,side,S,elstruct)
+function changed=ea_headmodel_changed(options,side,elstruct)
 % function that checked if anything (user settings) has changed and
 % headmodel needs to be recalculated..
 changed=1; % in doubt always reconstruct headmodel
 
 
-if isequal(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,S,elstruct,0))
+if isequal(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,elstruct,0))
     changed=0;
 end
 
-function protocol=ea_save_hmprotocol(options,side,S,elstruct,sv)
+function protocol=ea_save_hmprotocol(options,side,elstruct,sv)
 % function to construct and/or save protocol.
 protocol=struct; % default for errors
 protocol.elmodel=options.elmodel;
 protocol.elstruct=elstruct;
 protocol.usediffusion=options.usediffusion;
-protocol.considerpassivecontacts=options.considerpassivecontacts;
 protocol.atlas=options.atlasset;
-protocol.relevantcontacts=S.activecontacts;
-if protocol.considerpassivecontacts % if passives are considered, all are relevant.
-    protocol.relevantcontacts{1}(:)=1;
-    protocol.relevantcontacts{2}(:)=1;
-end
 
 if sv % save protocol to disk
     save([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat'],'protocol');
