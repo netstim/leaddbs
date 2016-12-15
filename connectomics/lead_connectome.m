@@ -156,7 +156,7 @@ set(handles.importpanel,'visible','off');
 set(handles.runsavebutn,'String','Save and close');
 set(handles.exportcode,'visible','off');
 
-
+set(handles.openpatientdir,'visible','off');
 moveup=136;
 
 pos=get(handles.logoaxes,'Position');
