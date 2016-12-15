@@ -8,6 +8,8 @@ function ea_dicom_import(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
+
+
 disp('Importing DICOM files...');
 
 outdir = [options.root, options.patientname, filesep];
@@ -18,8 +20,8 @@ dcmnames = ea_regexpdir(outdir, '^dicom(DAT)?(/|\\|\.zip)$', 0);
 
 if isempty(dcmnames)
     % not found, suppose the subject folder is actually DICOM folder
-    warndlg(sprintf(['DICOM folder/zip not found!\nWill move the contents' ...
-        ' under subject''s folder into a DICOM subfolder...']), 'Warn!');
+    warning(['DICOM folder/zip not found!\nWill move the contents' ...
+        ' under subject''s folder into a DICOM subfolder...']);
     movefile([outdir, '*'],[outdir, 'DICOM'])
     movefile([outdir, 'DICOM', filesep, 'ea_ui.mat'], outdir);
     dcmname = [outdir, 'DICOM', filesep];
@@ -47,14 +49,15 @@ if options.prefs.dicom.dicomfiles % delete DICOM folder
 end
 
 % remove uncropped and untilted versions
-fclean = regexpdir(outdir,'(_Crop_1.nii|_Tilt_1)\.nii$',0);
+fclean = ea_regexpdir(outdir,'(_Crop_1.nii|_Tilt_1)\.nii$',0);
 for f=1:length(fclean)
     delete(fclean{f});    
 end
-
-% assign image type here
-di = dir([outdir,'*.nii']);
-for d=1:length(di)
-    dcfilename=[outdir,di(d).name];
-    ea_imageclassifier({dcfilename});
+if prefs.dicom.assign
+    % assign image type here
+    di = dir([outdir,'*.nii']);
+    for d=1:length(di)
+        dcfilename=[outdir,di(d).name];
+        ea_imageclassifier({dcfilename});
+    end
 end

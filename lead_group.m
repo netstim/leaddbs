@@ -993,8 +993,6 @@ for pt=selection
     options.d3.verbose='off';
     options.d3.elrendering=1; % hard code to viz electrodes in this setting.
     options.d3.colorpointcloud=0;
-    options.d3.isomatrix{1}=nan;
-    options.d3.isomatrix{2}=nan;
     options.native=0;
 
     options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');

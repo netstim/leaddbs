@@ -56,7 +56,7 @@ elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 
-if ea_headmodel_changed(options,side,elstruct)
+if 1% ea_headmodel_changed(options,side,elstruct)
     disp('No suitable headmodel found, rebuilding. This may take a while...');
     
     load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);

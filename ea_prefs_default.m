@@ -125,7 +125,7 @@ prefs.d3.colorjitter=0; % set to 0 to show no color jitter at all.
 
 %% DICOM files:
 prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 0: Leave DICOMs at pt/DICOM folder after conversion.
-
+prefs.dicom.assign=1; % also assign DICOM files (ea_imageclassifier).
 
 %% fibers:
 
