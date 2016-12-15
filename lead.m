@@ -60,11 +60,7 @@ guidata(hObject, handles);
 
 earoot=ea_getearoot;
 
-if ~isdeployed
-    addpath(genpath(earoot));
-    rmpath(genpath([earoot,'.git']));
-    rmpath(genpath([earoot,'release']));
-end
+ea_setpath;
 
 ea_checkspm;
 

@@ -11,7 +11,7 @@ if strcmp(cmd,'runcluster')
 %    delete(opath);
     cmd='run';
     if ~isdeployed
-        addpath(genpath(ea_getearoot));
+        ea_setpath;
         addpath(genpath(options.spmdir));
     end
     needtoexit=1;
