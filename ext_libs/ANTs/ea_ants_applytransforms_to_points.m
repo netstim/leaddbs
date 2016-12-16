@@ -96,7 +96,7 @@ coord=cell2mat(C(1:3));
 function ea_writecsv(pth,input)
 fid=fopen(pth,'w');
 try
-fprintf(fid,'x,y,z,t \n');
+    fprintf(fid,'x,y,z,t \n');
 catch
     ea_error(['Cannot open file for writing at ',pth,'.']);
 end
