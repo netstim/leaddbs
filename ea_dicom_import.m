@@ -8,8 +8,6 @@ function ea_dicom_import(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-
-
 disp('Importing DICOM files...');
 
 outdir = [options.root, options.patientname, filesep];
@@ -51,9 +49,9 @@ end
 % remove uncropped and untilted versions
 fclean = ea_regexpdir(outdir,'(_Crop_1.nii|_Tilt_1)\.nii$',0);
 for f=1:length(fclean)
-    delete(fclean{f});    
+    delete(fclean{f});
 end
-if prefs.dicom.assign
+if options.prefs.dicom.assign
     % assign image type here
     di = dir([outdir,'*.nii']);
     for d=1:length(di)

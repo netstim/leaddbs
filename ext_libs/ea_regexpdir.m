@@ -1,30 +1,30 @@
-function dirlist = regexpdir(rootdir, expstr, recursive)
+function dirlist = ea_regexpdir(rootdir, expstr, recursive)
 % REGEXPDIR Gives a directory listing based on a regular expression
-%    REGEXPDIR(ROOTDIR, REGEXP) gives a directory listing of the directory 
+%    REGEXPDIR(ROOTDIR, REGEXP) gives a directory listing of the directory
 %    ROOTDIR based on the pattern specified by the regular expression
-%    REGEXP. 
-% 
-%    REGEXPDIR(ROOTDIR, REGEXP, RECURSIVE) By default REGEXPDIR traverses 
+%    REGEXP.
+%
+%    REGEXPDIR(ROOTDIR, REGEXP, RECURSIVE) By default REGEXPDIR traverses
 %    all subdirectories recursively. This behaviour can be controlled by
 %    supplying the optional boolean RECURSIVE. Setting this to 'false' will
-%    limit the function to the directory specified in ROOTDIR. 
-% 
+%    limit the function to the directory specified in ROOTDIR.
+%
 %    Example:
 %     rootdir = 'C:\';
 %     expstr = '^.*\.exe$';
 %     dirlist = regexpdir(rootdir, expstr);
-% 
-%    The above example will return any EXE files on the C-drive. 
-% 
+%
+%    The above example will return any EXE files on the C-drive.
+%
 %    By default REGEXPDIR searches case insensitive. To make it case
-%    senstitive please specify it in the regular expression by adding 
+%    senstitive please specify it in the regular expression by adding
 %    '(?-i)' to it. Ommitting to specify the beginning '^' and ending '$'
 %    of the regular expression may result in unexpected behaviour.
-% 
-%    Have a look at the source code for more information. For more 
+%
+%    Have a look at the source code for more information. For more
 %    info on this function and how to use it, bug reports, feature
 %    requests, etc. feel free to contact the author.
-% 
+%
 %    See also DIR, REGEXP, REGEXPTRANSLATE
 
 %==========================================================================
@@ -38,12 +38,12 @@ if ~exist('recursive','var')
 end
 
 % Check if the root directory contains a trailing file seperator or supply
-rootdir = char(rootdir); 
+rootdir = char(rootdir);
 if ~strcmp(rootdir(length(rootdir)), filesep)
     rootdir=[rootdir, filesep];
 end
 
-% Remember initial starting directory when traversing. 
+% Remember initial starting directory when traversing.
 persistent basedir;
 if isempty(basedir)
     basedir = rootdir;
