@@ -246,6 +246,7 @@ for mcfi=usesubjects
                         if writeoutsinglefiles
                             ea_error('Write out single files not (yet) supported for this action');
                             ccmap=dataset.vol.space;
+                            ccmap.dt=[16 0];
                             ccmap.img=single(ccmap.img);
                             ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr.nii'];
                             ccmap.img(omaskidx)=fX{s}(:,mcfi);
