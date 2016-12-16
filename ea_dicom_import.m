@@ -18,8 +18,8 @@ dcmnames = ea_regexpdir(outdir, '^dicom(DAT)?(/|\\|\.zip)$', 0);
 
 if isempty(dcmnames)
     % not found, suppose the subject folder is actually DICOM folder
-    warning(['DICOM folder/zip not found!\nWill move the contents' ...
-        ' under subject''s folder into a DICOM subfolder...']);
+    warning(sprintf(['DICOM folder/zip not found!\nWill move the contents' ...
+        ' under subject''s folder into a DICOM subfolder...']));
     movefile([outdir, '*'],[outdir, 'DICOM'])
     movefile([outdir, 'DICOM', filesep, 'ea_ui.mat'], outdir);
     dcmname = [outdir, 'DICOM', filesep];
@@ -51,6 +51,7 @@ fclean = ea_regexpdir(outdir,'(_Crop_1.nii|_Tilt_1)\.nii$',0);
 for f=1:length(fclean)
     delete(fclean{f});
 end
+
 if options.prefs.dicom.assign
     % assign image type here
     di = dir([outdir,'*.nii']);
