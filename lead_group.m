@@ -103,8 +103,9 @@ for nd=length(ndir):-1:1
         cnt=cnt+1;
     end
 end
-setappdata(gcf,'genvatfunctions',genvatfunctions);
-setappdata(gcf,'vatfunctionnames',ndc);
+
+setappdata(handles.leadfigure,'genvatfunctions',genvatfunctions);
+setappdata(handles.leadfigure,'vatfunctionnames',ndc);
 
 
 
@@ -1076,9 +1077,12 @@ for pt=selection
 
         [~,ix]=ismember(M.vatmodel,vfnames);
         vfs=getappdata(handles.leadfigure,'genvatfunctions');
-
+try
         ea_genvat=eval(['@',vfs{ix}]);
-setappdata(handles.leadfigure,'resultfig',resultfig);
+catch
+    keyboard
+end
+        setappdata(handles.leadfigure,'resultfig',resultfig);
         for side=1:2
             setappdata(resultfig,'elstruct',M.elstruct(pt));
             setappdata(resultfig,'elspec',options.elspec);
