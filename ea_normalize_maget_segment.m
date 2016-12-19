@@ -243,8 +243,14 @@ ea_write_nii(nii);
 gzip(nii.fname);
 delete(nii.fname);
 
-ea_normalize_ants_multimodal(options,1);
-
+if strcmp(options.prefs.dev.profile,'se')
+    ; % do siobhanspecific stuff (here do nothing)
+else 
+    ea_normalize_ants_multimodal(options,1); % do general user specific stuff, here --> performs normalization with
+% DISTAL as anchorpoint, commented when segmentation is wanted and not
+% normalization, also some results of this normalization are off
+end
+   
 
 
 function ea_writecompositewarp(transforms)
