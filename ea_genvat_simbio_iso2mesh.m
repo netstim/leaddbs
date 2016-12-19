@@ -56,7 +56,7 @@ elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 
-if 1% ea_headmodel_changed(options,side,elstruct)
+if ea_headmodel_changed(options,side,elstruct)
     disp('No suitable headmodel found, rebuilding. This may take a while...');
     
     load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
@@ -321,15 +321,10 @@ end
 
 % the following will be used for volume 2 isosurf creation as well as
 % volumetrics of the vat in mm^3.
-
+disp('Calculating interpolant on scattered FEM mesh data...');
 F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.ET','natural','none');
 
-% 
-% Fe=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.ET');
-% Fe.ExtrapolationMethod='none';
-% 
-% Fne=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.nET');
-% Fne.ExtrapolationMethod='none';
+disp('Converting to equispaced image data...');
 res=100;
 gv=cell(3,1); spacing=zeros(3,1);
 try
@@ -384,8 +379,7 @@ catch
 end
 
 
-eg=smooth3(eg,'gaussian',[15 15 15]);
-vatfv=isosurface(xg,yg,zg,eg,0.75);
+%eg=smooth3(eg,'gaussian',[25 25 25]);
 
 vatvolume=sum(eg(:))*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
 S.volume(side)=vatvolume;
@@ -412,8 +406,6 @@ switch side
 end
 save(stimfile,'S');
 %spm_write_vol(Vvat,flipdim(eg,3));
-Vvat.img=permute(eg,[2,1,3]);
-ea_write_nii(Vvat);
 
 Vvate.img=permute(eeg,[2,1,3]);
 ea_write_nii(Vvate);
@@ -421,8 +413,25 @@ ea_write_nii(Vvate);
 Vvatne.img=permute(neeg,[2,1,3]);
 ea_write_nii(Vvatne);
 
-% define function outputs
+Vvat.img=permute(eg,[2,1,3]);
+ea_write_nii(Vvat);
 
+[pth,fn,ext]=fileparts(Vvat.fname);
+
+matlabbatch{1}.spm.spatial.smooth.data = {[Vvat.fname]};
+matlabbatch{1}.spm.spatial.smooth.fwhm = [0.4 0.4 0.4];
+matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+matlabbatch{1}.spm.spatial.smooth.im = 0;
+matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+spm_jobman('run',{matlabbatch});
+
+Vvat=ea_load_nii(fullfile(pth,['s',fn,ext]));
+vatfv=isosurface(xg,yg,zg,Vvat.img,0.75);
+movefile(fullfile(pth,['s',fn,ext]),fullfile(pth,[fn,ext]));
+
+
+
+% define function outputs
 varargout{1}=vatfv;
 varargout{2}=vatvolume;
 varargout{3}=radius;
@@ -765,42 +774,8 @@ if ~isempty(tol)
     end
 end
 
-function vecx = ea_sb_calc_vecx(stiff,vecb,ref)
 
-% SB_CALC_VECX
-%
-% $Id: sb_calc_vecx.m 8776 2013-11-14 09:04:48Z roboos $
 
-vecdi = zeros(size(stiff,1),1);
-vecdi(ref) = 1;
-vecva = zeros(size(stiff,1),1);
-[stiff, vecb] = ea_sb_set_bndcon(stiff,vecb,vecdi,vecva);
-clear vecdi, vecva;
-vecx = ea_sb_solve(stiff,vecb);
-
-function [stiff,rhs] = ea_sb_set_bndcon(stiff,rhs,dirinode,dirival)
-
-% SB_SET_BNDCON
-%
-% $Id: sb_set_bndcon.m 8776 2013-11-14 09:04:48Z roboos $
-
-dia = diag(stiff);
-stiff = stiff - diag(dia);
-[indexi indexj s] = find(stiff);
-clear stiff;
-dind = find(dirinode > 0);
-indi = find(ismember(indexi,dind));
-indj = find(~ismember(indexj,dind));
-indij = intersect(indi,indj);
-rhs(indexj(indij)) = rhs(indexj(indij)) + dirival(indexi(indij)).*s(indij);
-s(indi) = 0;
-dia(indexi(indi)) = 1;
-rhs(indexi(indi)) = -dirival(indexi(indi));
-indij = find(ismember(indexj,dind)&~ismember(indexi,dind));
-rhs(indexi(indij)) = rhs(indexi(indij)) + dirival(indexj(indij)).*s(indij);
-s(indij) = 0;
-stiff = sparse(indexi,indexj,s,length(dia),length(dia));
-stiff = stiff + diag(dia);
 
 function x = ea_sb_solve(sysmat,vecb)
 
@@ -999,167 +974,6 @@ previous_argout = current_argout;
 
 return % voltype main()
 
-function [bnd, cfg] = ea_ft_prepare_mesh(cfg, mri)
-
-% FT_PREPARE_MESH creates a triangulated surface mesh for the volume
-% conduction model. The mesh can either be selected manually from raw
-% mri data or can be generated starting from a segmented volume
-% information stored in the mri structure. The result is a bnd
-% structure which contains the information about all segmented surfaces
-% related to mri and are expressed in world coordinates.
-%
-% Use as
-%   bnd = ft_prepare_mesh(cfg, mri)
-%   bnd = ft_prepare_mesh(cfg, seg)
-%
-% Configuration options:
-%   cfg.method      = string, can be 'interactive', 'projectmesh', 'iso2mesh', 'isosurface',
-%                     'headshape', 'hexahedral', 'tetrahedral'
-%   cfg.tissue      = cell-array with tissue types or numeric vector with integer values
-%   cfg.numvertices = numeric vector, should have same number of elements as cfg.tissue
-%   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
-%   cfg.headshape   = (optional) a filename containing headshape, a Nx3 matrix with surface
-%                     points, or a structure with a single or multiple boundaries
-%
-% To facilitate data-handling and distributed computing you can use
-%   cfg.inputfile   =  ...
-%   cfg.outputfile  =  ...
-% If you specify one of these (or both) the input data will be read from a *.mat
-% file on disk and/or the output data will be written to a *.mat file. These mat
-% files should contain only a single variable, corresponding with the
-% input/output structure.
-%
-% Example
-%   mri             = ft_read_mri('Subject01.mri');
-%
-%   cfg             = [];
-%   cfg.output      = {'scalp', 'skull', 'brain'};
-%   segmentation    = ft_volumesegment(cfg, mri);
-%
-%   cfg             = [];
-%   cfg.tissue      = {'scalp', 'skull', 'brain'};
-%   cfg.numvertices = [800, 1600, 2400];
-%   bnd             = ft_prepare_mesh(cfg, segmentation);
-%
-% See also FT_VOLUMESEGMENT, FT_PREPARE_HEADMODEL, FT_PLOT_MESH
-
-% Undocumented functionality: at this moment it allows for either
-%   bnd = ft_prepare_mesh(cfg)             or
-%   bnd = ft_prepare_mesh(cfg, headmodel)
-% but more consistent would be to specify a volume conduction model with
-%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
-%   cfg.headshape     = name of file containing the volume conduction model, see FT_READ_VOL
-%
-% Undocumented options, I have no clue why they exist
-%   cfg.method = {'singlesphere' 'concentricspheres' 'localspheres'}
-
-% Copyrights (C) 2009-2012, Robert Oostenveld & Cristiano Micheli
-% Copyrights (C) 2012-2013, Robert Oostenveld & Lilla Magyari
-%
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id: ft_prepare_mesh.m 9654 2014-06-21 07:24:04Z roboos $
-
-revision = '$Id: ft_prepare_mesh.m 9654 2014-06-21 07:24:04Z roboos $';
-
-% do the general setup of the function
-ea_ft_defaults
-ea_ft_preamble init
-ea_ft_preamble provenance
-ea_ft_preamble trackconfig
-ea_ft_preamble debug
-ea_ft_preamble loadvar mri
-
-% the abort variable is set to true or false in ft_preamble_init
-% if abort
-%   return
-% end
-
-% we cannot use nargin, because the data might have been loaded from cfg.inputfile
-hasdata = exist('mri', 'var');
-
-% check if the input cfg is valid for this function
-%cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'sourceunits', 'mriunits'});
-
-% get the options
-cfg.downsample  = ea_ft_getopt(cfg, 'downsample', 1); % default is no downsampling
-cfg.numvertices = ea_ft_getopt(cfg, 'numvertices');   % no default
-
-
-
-% This was changed on 3 December 2013, this backward compatibility can be removed in 6 months from now.
-if isfield(cfg, 'interactive')
-    if strcmp(cfg.interactive, 'yes')
-        warning('please specify cfg.method=''interactive'' instead of cfg.interactive=''yes''');
-        cfg.method = 'interactive';
-    end
-    cfg = rmfield(cfg, 'interactive');
-end
-
-% This was changed on 3 December 2013, it makes sense to keep it like this on the
-% long term (previously there was no explicit use of cfg.method, now there is).
-% Translate the input options in the appropriate cfg.method.
-if ~isfield(cfg, 'method')
-    if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
-        warning('please specify cfg.method=''headshape''');
-        cfg.method = 'headshape';
-    elseif hasdata && ~strcmp(ea_ft_voltype(mri), 'unknown')
-        % the input is a spherical volume conduction model
-        cfg.method = ea_ft_voltype(mri);
-    elseif hasdata
-        warning('please specify cfg.method=''projectmesh'', ''iso2mesh'' or ''isosurface''');
-        warning('using ''projectmesh'' as default');
-        cfg.method = 'projectmesh';
-    end
-end
-
-%% the following does not apply in our case
-% if hasdata && cfg.downsample~=1
-%   % optionally downsample the anatomical volume and/or tissue segmentations
-%   tmpcfg = keepfields(cfg, {'downsample'});
-%   mri = ft_volumedownsample(tmpcfg, mri);
-%   [cfg, mri] = rollback_provenance(cfg, mri);
-% end
-
-switch cfg.method
-    % deleted other methods from original fieldtrip function..
-    case 'hexahedral'
-        % the MRI is assumed to contain a segmentation
-        % call the corresponding helper function
-        bnd = ea_prepare_mesh_hexahedral(cfg, mri);
-        
-end
-
-% copy the geometrical units from the input to the output
-if ~isfield(bnd, 'unit') && hasdata && isfield(mri, 'unit')
-    for i=1:numel(bnd)
-        bnd(i).unit = mri.unit;
-    end
-elseif ~isfield(bnd, 'unit')
-    bnd = ft_convert_units(bnd);
-end
-
-% do the general cleanup and bookkeeping at the end of the function
-ea_ft_postamble debug
-ea_ft_postamble trackconfig
-ea_ft_postamble provenance
-ea_ft_postamble previous mri
-ea_ft_postamble history bnd
-
 function sens = ea_undobalancing(sens)
 
 % UNDOBALANCING removes all balancing coefficients from the gradiometer sensor array
@@ -1212,296 +1026,6 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
         break
     end
 end
-
-function mesh=ea_prepare_mesh_hexahedral(cfg,mri)
-
-% PREPARE_MESH_HEXAHEDRAL
-%
-% See also PREPARE_MESH_SEGMENTATION, PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE
-%
-% Configuration options for generating a regular 3-D grid
-%   cfg.tissue = cell with the names of the compartments that should be
-%   meshed
-%   cfg.resolution = desired resolution of the mesh (standard = 1)
-
-% Copyrights (C) 2012-2013, Johannes Vorwerk
-%
-% $Id: prepare_mesh_hexahedral.m 10264 2015-03-02 10:14:28Z eelspa $
-
-% ensure that the input is consistent with what this function expects
-mri = ea_ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
-
-% get the default options
-cfg.tissue      = ea_ft_getopt(cfg, 'tissue');
-cfg.resolution  = ea_ft_getopt(cfg, 'resolution');
-cfg.shift       = ea_ft_getopt(cfg, 'shift');
-cfg.background  = ea_ft_getopt(cfg, 'background');
-
-if isempty(cfg.tissue)
-    mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
-    fn = fieldnames(mri);
-    for i=1:numel(fn),if (numel(mri.(fn{i}))==prod(mri.dim))&(~strcmp(fn{i},'inside')), segfield=fn{i};end;end
-    cfg.tissue=setdiff(unique(mri.(segfield)(:)),0);
-end
-
-if ischar(cfg.tissue)
-    % it should either be something like {'brain', 'skull', 'scalp'}, or something like [1 2 3]
-    cfg.tissue = {cfg.tissue};
-end
-
-if iscell(cfg.tissue)
-    % the code below assumes that it is a probabilistic representation
-    if any(strcmp(cfg.tissue, 'brain'))
-        mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic', 'hasbrain', 'yes');
-    else
-        mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
-    end
-else
-    % the code below assumes that it is an indexed representation
-    mri = ea_ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
-end
-
-if isempty(cfg.resolution)
-    warning('Using standard resolution 1 mm')
-    cfg.resolution = 1;
-end
-
-if isempty(cfg.shift)
-    warning('No node-shift selected')
-    cfg.shift = 0;
-elseif cfg.shift > 0.3
-    warning('Node-shift should not be larger than 0.3')
-    cfg.shift = 0.3;
-end
-
-if isempty(cfg.background)
-    cfg.background = 0;
-end
-
-% do the mesh extraction
-% this has to be adjusted for FEM!!!
-if iscell(cfg.tissue)
-    % this assumes that it is a probabilistic representation
-    % for example {'brain', 'skull', scalp'}
-    try
-        temp = zeros(size(mri.(cfg.tissue{1})(:)));
-        for i=1:numel(cfg.tissue)
-            temp = [temp,mri.(cfg.tissue{i})(:)];
-        end
-        [val,seg] = max(temp,[],2);
-        seg = seg - 1;
-        seg = reshape(seg,mri.dim);
-    catch
-        error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
-    end
-    tissue = cfg.tissue;
-else
-    % this assumes that it is an indexed representation
-    % for example [3 2 1]
-    seg = zeros(mri.dim);
-    tissue = {};
-    for i=1:numel(cfg.tissue)
-        seg = seg + i*(mri.seg==cfg.tissue(i));
-        if isfield(mri, 'seglabel')
-            try
-                tissue{i} = mri.seglabel{cfg.tissue(i)};
-            catch
-                error('Please specify cfg.tissue to correspond to (the name or number of) tissue types in the segmented MRI')
-            end
-        else
-            tissue{i} = sprintf('tissue %d', i);
-        end
-    end
-end
-
-% reslice to desired resolution
-
-if (cfg.resolution ~= 1)
-    % this should be done like this: split seg into probabilistic, reslice
-    % single compartments, take maximum values
-    seg_array = [];
-    
-    seg_indices = unique(seg);
-    
-    for i=1:(length(unique(seg)))
-        seg_reslice.anatomy = double(seg == (i-1));
-        seg_reslice.dim = mri.dim;
-        seg_reslice.transform = eye(4);
-        seg_reslice.transform(1:3,4) = -ceil(mri.dim/2);
-        
-        cfg_reslice = [];
-        cfg_reslice.resolution = cfg.resolution;
-        cfg_reslice.dim = ceil(mri.dim/cfg.resolution);
-        
-        seg_build = ft_volumereslice(cfg_reslice,seg_reslice);
-        
-        seg_array = [seg_array,seg_build.anatomy(:)];
-        
-        clear seg_reslice;
-    end
-    
-    [max_seg seg_build.seg] = max(seg_array,[],2);
-    
-    clear max_seg seg_array;
-    
-    seg_build.seg = reshape(seg_build.seg,seg_build.dim);
-    seg_build.seg = seg_indices(seg_build.seg);
-    seg_build.transform = mri.transform;
-    
-    clear seg_build.anatomy;
-else
-    seg_build.seg = seg;
-    seg_build.dim = mri.dim;
-    
-    clear seg;
-end
-
-% ensure that the segmentation is binary and that there is a single contiguous region
-% FIXME is this still needed when it is already binary?
-%seg = volumethreshold(seg, 0.5, tissue);
-
-
-% build the mesh
-
-mesh = ea_build_mesh_hexahedral(cfg,seg_build);
-
-% converting position of meshpoints to the head coordinate system
-
-if (cfg.resolution ~= 1)
-    mesh.pnt = cfg.resolution * mesh.pnt;
-end
-
-mesh.pnt = ea_ft_warp_apply(mri.transform,mesh.pnt,'homogeneous');
-
-labels = mesh.labels;
-
-clear mesh.labels;
-
-mesh.tissue = zeros(size(labels));
-numlabels = size(unique(labels),1);
-mesh.tissuelabel = {};
-ulabel = sort(unique(labels));
-for i = 1:numlabels
-    mesh.tissue(labels == ulabel(i)) = i;
-    mesh.tissuelabel{i} = tissue{i};
-end
-
-function mesh = ea_build_mesh_hexahedral(cfg,mri)
-
-background = cfg.background;
-shift = cfg.shift;
-% extract number of voxels in each direction
-% x_dim = mri.dim(1);
-% y_dim = mri.dim(2);
-% z_dim = mri.dim(3);
-%labels = mri.seg;
-fprintf('Dimensions of the segmentation before restriction to bounding-box: %i %i %i\n', mri.dim(1), mri.dim(2), mri.dim(3));
-
-[bb_x, bb_y, bb_z] = ind2sub(size(mri.seg),find(mri.seg));
-shift_coord = [min(bb_x) - 2,min(bb_y) - 2,min(bb_z) - 2];
-bb_x = [min(bb_x), max(bb_x)];
-bb_y = [min(bb_y), max(bb_y)];
-bb_z = [min(bb_z), max(bb_z)];
-x_dim = size(bb_x(1)-1:bb_x(2)+1,2);
-y_dim = size(bb_y(1)-1:bb_y(2)+1,2);
-z_dim = size(bb_z(1)-1:bb_z(2)+1,2);
-labels = zeros(x_dim,y_dim,z_dim);
-labels(2:(x_dim-1),2:(y_dim-1),2:(z_dim-1)) = mri.seg(bb_x(1):bb_x(2),bb_y(1):bb_y(2),bb_z(1):bb_z(2));
-
-fprintf('Dimensions of the segmentation after restriction to bounding-box: %i %i %i\n', x_dim, y_dim, z_dim);
-
-% create elements
-
-mesh.tet = ea_create_elements(x_dim,y_dim,z_dim);
-fprintf('Created elements...\n' )
-
-
-% create nodes
-
-mesh.pnt = ea_create_nodes(x_dim,y_dim,z_dim);
-fprintf('Created nodes...\n' )
-
-
-if(shift < 0 | shift > 0.3)
-    error('Please choose a shift parameter between 0 and 0.3!');
-elseif(shift > 0)
-    
-    mesh.pnt = shift_nodes(mesh.pnt,mesh.tet,labels, shift,x_dim,y_dim,z_dim);
-    
-end
-
-%background = 1;
-% delete background voxels(if desired)
-if(background == 0)
-    mesh.tet = mesh.tet(labels ~= 0,:);
-    mesh.labels = labels(labels ~= 0);
-else
-    mesh.labels = labels(:);
-end
-
-
-% delete unused nodes
-[C, ia, ic] = unique(mesh.tet(:));
-mesh.pnt = mesh.pnt(C,:,:,:);
-mesh.pnt = mesh.pnt + repmat(shift_coord,size(mesh.pnt,1),1);
-mesh.tet(:) = ic;
-
-% function creating elements from a MRI-Image with the dimensions x_dim,
-% y_dim, z_dim. Each voxel of the MRI-Image corresponds to one element in
-% the hexahedral mesh. The numbering of the elements is as follows:
-% the first x-y-plane(z == 1) is numbered by incrementing in x-direction
-% first until x_dim is reached. This is done for each row in y-direction
-% until y_dim is reached. Using the resulting x_dim-by-y_dim numbering as
-% an overlay and adding (i-1)*(x_dim*y_dim) to the overlay while i is
-% iterating through the z-dimension(until i==z_dim) we obtain a numbering
-% for all the elements.
-% The node-numbering is done accordingly: the bottom left node in element i
-% has number i in the node-numbering. All the remaining nodes are numbered
-% in the same manner as described above for the element numbering(note the
-% different dimensionalities: x_dim+1 instead of x_dim etc.).
-function elements = ea_create_elements(x_dim,y_dim,z_dim)
-elements = zeros(x_dim*y_dim*z_dim,8);
-% create an offset vector for the bottom-left nodes in each element
-b = 1:((x_dim+1)*(y_dim));
-% delete the entries where the node does not correspond to an element's
-% bottom-left node(i.e. where the x-component of the node is equal to
-% x_dim+1)
-b = b(mod(b,(x_dim+1)) ~= 0);
-% repeat offset to make it fit the number of elements
-b = repmat(b,1,(z_dim));
-
-% create vector accounting for the offset of the nodes in z-direction
-c = fix([0:((x_dim)*(y_dim)*(z_dim)-1)]/((x_dim)*(y_dim))) * (x_dim+1)*(y_dim+1);
-
-% create the elements by assigning the nodes to them. entries 1 through 4
-% describe the bottom square of the hexahedron, entries 5 through 8 the top
-% square.
-elements(:,1) = b + c;
-elements(:,2) = b + c + 1;
-elements(:,3) = b + c + (x_dim+1) + 1;
-elements(:,4) = b + c + (x_dim+1);
-elements(:,5) = b + c + (x_dim + 1)*(y_dim+1);
-elements(:,6) = b + c + (x_dim + 1)*(y_dim+1) + 1;
-elements(:,7) = b + c + (x_dim + 1)*(y_dim+1) + (x_dim+1) + 1;
-elements(:,8) = b + c + (x_dim + 1)*(y_dim+1) + (x_dim+1);
-clear b;
-clear c;
-
-% function creating the nodes and assigning coordinates in the
-% [0,x_dim]x[0,y_dim]x[0,z_dim] box. for details on the node-numbering see
-% comments for create_elements.
-function nodes = ea_create_nodes(x_dim, y_dim, z_dim)
-nodes = zeros(((x_dim+1)*(y_dim+1)*(z_dim + 1)),3);
-% offset vector for node coordinates
-b=[0:((x_dim+1)*(y_dim+1)*(z_dim+1)-1)];
-
-% assign coordinates within the box
-nodes(:,1) = mod(b,(x_dim+1));
-nodes(:,2) = mod(fix(b/(x_dim+1)),(y_dim+1));
-nodes(:,3) = fix(b/((x_dim + 1)*(y_dim+1)));
-
-clear b;
-
 
 function [data] = ea_ft_checkdata(data, varargin)
 
@@ -2317,7 +1841,6 @@ if isfield(data, 'elec')
     data.elec = ft_datatype_sens(data.elec);
 end
 
-
 function [select] = ea_parameterselection(param, data)
 
 % PARAMETERSELECTION selects the parameters that are present as a volume in the data
@@ -2543,8 +2066,6 @@ else
     % convert numerical value to boolean
     y = logical(x);
 end
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % represent the cross-spectral density matrix in a particular manner
@@ -3064,93 +2585,6 @@ elseif strcmp(current, 'sparsewithpow') && any(strcmp(desired, {'full', 'fullfas
 end % convert from one to another bivariate representation
 
 
-%-------------------------------------------------------
-function [dimord] = ea_createdimord(output, fname, rptflag)
-
-if nargin==2, rptflag = 0; end
-
-tmp = output.(fname);
-
-dimord = '';
-dimnum = 1;
-hasori = isfield(output, 'ori'); %if not, this is probably singleton and not relevant at the end
-
-if iscell(tmp) && (size(output.pos,1)==size(tmp,dimnum) || size(output.pos,1)==size(tmp,2))
-    dimord = [dimord,'{pos}'];
-    dimnum = dimnum + 1;
-elseif ~iscell(tmp) && size(output.pos,1)==size(tmp,dimnum)
-    dimord = [dimord,'pos'];
-    dimnum = dimnum + 1;
-end
-
-if isfield(output, 'inside')
-    if islogical(output.inside)
-        firstinside = find(output.inside, 1);
-    else
-        firstinside = output.inside(1);
-    end
-end
-
-switch fname
-    case 'cov'
-        if hasori, dimord = [dimord,'_ori_ori']; end;
-    case 'csd'
-        if hasori, dimord = [dimord,'_ori_ori']; end;
-    case 'csdlabel'
-        dimord = dimord;
-    case 'filter'
-        dimord = [dimord,'_ori_chan'];
-    case 'leadfield'
-        dimord = [dimord,'_chan_ori'];
-    case 'mom'
-        if isfield(output, 'cumtapcnt') && sum(output.cumtapcnt)==size(tmp{firstinside},1)
-            if hasori,
-                dimord = [dimord,'_rpttap_ori'];
-            else
-                dimord = [dimord,'_rpttap'];
-            end
-        elseif isfield(output, 'time') && numel(output.time)>1
-            if rptflag,
-                dimord = [dimord,'_rpt'];
-                dimnum = dimnum + 1;
-            end
-            if numel(output.time)==size(tmp{firstinside},dimnum)
-                dimord = [dimord,'_ori_time'];
-            end
-        end
-        if isfield(output, 'freq') && numel(output.freq)>1
-            dimord = [dimord,'_freq'];
-        end
-    case 'nai'
-        if isfield(output, 'freq') && numel(output.freq)==size(tmp,dimnum)
-            dimord = [dimord,'_freq'];
-        end
-    case 'noise'
-        if isfield(output, 'freq') && numel(output.freq)==size(tmp,dimnum)
-            dimord = [dimord,'_freq'];
-        end
-    case 'noisecsd'
-        dimord = [dimord,'_ori_ori'];
-    case 'noisecov'
-        dimord = [dimord,'_ori_ori'];
-    case 'ori'
-        dimord = '';
-    case {'pow' 'dspm'}
-        if isfield(output, 'cumtapcnt') && size(output.cumtapcnt,1)==size(tmp,dimnum)
-            dimord = [dimord,'_rpt'];
-            dimnum = dimnum + 1;
-        end
-        if isfield(output, 'freq') && numel(output.freq)>1 && numel(output.freq)==size(tmp,dimnum)
-            dimord = [dimord,'_freq'];
-            dimnum = dimnum+1;
-        end
-        if isfield(output, 'time') && numel(output.time)>1 && numel(output.time)==size(tmp,dimnum)
-            dimord = [dimord,'_time'];
-            dimnum = dimnum+1;
-        end
-    otherwise
-        warning('skipping unknown fieldname %s', fname);
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
@@ -3199,20 +2633,6 @@ end
 source = copyfields(data, source, {'time', 'freq'});
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert between datatypes
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function data = ea_volume2source(data)
-if isfield(data, 'dimord')
-    % it is a modern source description
-else
-    % it is an old-fashioned source description
-    xgrid = 1:data.dim(1);
-    ygrid = 1:data.dim(2);
-    zgrid = 1:data.dim(3);
-    [x y z] = ndgrid(xgrid, ygrid, zgrid);
-    data.pos = ea_ft_warp_apply(data.transform, [x(:) y(:) z(:)]);
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
@@ -3296,103 +2716,7 @@ end
 if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert between datatypes
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = ea_raw2timelock(data)
 
-nsmp = cellfun('size',data.time,2);
-data   = ea_ft_checkdata(data, 'hassampleinfo', 'yes');
-ntrial = numel(data.trial);
-nchan  = numel(data.label);
-if ntrial==1
-    data.time   = data.time{1};
-    data.avg    = data.trial{1};
-    data        = rmfield(data, 'trial');
-    data.dimord = 'chan_time';
-else
-    
-    % code below tries to construct a general time-axis where samples of all trials can fall on
-    % find earliest beginning and latest ending
-    begtime = min(cellfun(@min,data.time));
-    endtime = max(cellfun(@max,data.time));
-    % find 'common' sampling rate
-    fsample = 1./mean(cellfun(@mean,cellfun(@diff,data.time,'uniformoutput',false)));
-    % estimate number of samples
-    nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
-    % construct general time-axis
-    time = linspace(begtime,endtime,nsmp);
-    
-    % concatenate all trials
-    tmptrial = nan(ntrial, nchan, length(time));
-    
-    for i=1:ntrial
-        begsmp(i) = nearest(time, data.time{i}(1));
-        endsmp(i) = nearest(time, data.time{i}(end));
-        tmptrial(i,:,begsmp(i):endsmp(i)) = data.trial{i};
-    end
-    
-    % update the sampleinfo
-    begpad = begsmp - min(begsmp);
-    endpad = max(endsmp) - endsmp;
-    if isfield(data, 'sampleinfo')
-        data.sampleinfo = data.sampleinfo + [-begpad(:) endpad(:)];
-    end
-    
-    % construct the output timelocked data
-    % data.avg     = reshape(nanmean(tmptrial,     1), nchan, length(tmptime));
-    % data.var     = reshape(nanvar (tmptrial, [], 1), nchan, length(tmptime))
-    % data.dof     = reshape(sum(~isnan(tmptrial), 1), nchan, length(tmptime));
-    data.trial   = tmptrial;
-    data.time    = time;
-    data.dimord = 'rpt_chan_time';
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% convert between datatypes
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = ea_timelock2raw(data)
-switch data.dimord
-    case 'chan_time'
-        data.trial{1} = data.avg;
-        data.time     = {data.time};
-        data          = rmfield(data, 'avg');
-    case 'rpt_chan_time'
-        tmptrial = {};
-        tmptime  = {};
-        ntrial = size(data.trial,1);
-        nchan  = size(data.trial,2);
-        ntime  = size(data.trial,3);
-        for i=1:ntrial
-            tmptrial{i} = reshape(data.trial(i,:,:), [nchan, ntime]);
-            tmptime{i}  = data.time;
-        end
-        data       = rmfield(data, 'trial');
-        data.trial = tmptrial;
-        data.time  = tmptime;
-    case 'subj_chan_time'
-        tmptrial = {};
-        tmptime  = {};
-        ntrial = size(data.individual,1);
-        nchan  = size(data.individual,2);
-        ntime  = size(data.individual,3);
-        for i=1:ntrial
-            tmptrial{i} = reshape(data.individual(i,:,:), [nchan, ntime]);
-            tmptime{i}  = data.time;
-        end
-        data       = rmfield(data, 'individual');
-        data.trial = tmptrial;
-        data.time  = tmptime;
-    otherwise
-        error('unsupported dimord');
-end
-% remove the unwanted fields
-if isfield(data, 'avg'),        data = rmfield(data, 'avg'); end
-if isfield(data, 'var'),        data = rmfield(data, 'var'); end
-if isfield(data, 'cov'),        data = rmfield(data, 'cov'); end
-if isfield(data, 'dimord'),     data = rmfield(data, 'dimord'); end
-if isfield(data, 'numsamples'), data = rmfield(data, 'numsamples'); end
-if isfield(data, 'dof'),        data = rmfield(data, 'dof'); end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
@@ -3583,188 +2907,6 @@ end
 
 
 % function shifting the nodes
-function nodes = shift_nodes(points,tet,labels, sh,x_dim,y_dim,z_dim)
-cfg = [];
-fprintf('Applying shift %f\n', sh);
-nodes = points;
-
-% helper vector for indexing the nodes
-b = 1:(x_dim+1)*(y_dim+1)*(z_dim+1);
-
-% vector which gives the corresponding element to a node(in the sense
-% of how the node-numbering was done, see comment for create_elements).
-% note that this vector still contains values for nodes which do not have a
-% corresponding element. this will be manually omitted in the finding
-% of the surrounding elements(see below).
-offset = (b - nodes(b,2)' - (nodes(b,3))'*(y_dim+1+x_dim))';
-offset(offset <= 0) = size(labels,1)+1;
-offset(offset > size(tet,1)) = size(labels,1)+1;
-
-% create array containing the surrounding elements for each node
-%surrounding = zeros((x_dim+1)*(y_dim+1)*(z_dim+1),8);
-
-% find out the surrounding of each node(if there is any)
-% find element to which the node is bottom left front
-%surrounding((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1) = offset((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim));
-% bottom right front
-%surrounding(nodes(b,1) > 0,2) = offset(nodes(b,1) > 0,1) -1;
-% bottom left back
-%surrounding(nodes(b,2) > 0,3) = offset(nodes(b,2) > 0,1) - x_dim;
-% bottom right back
-%surrounding((nodes(b,2) > 0) & (nodes(b,1) > 0),4) = offset((nodes(b,2) > 0) & (nodes(b,1) > 0),1) - (x_dim) - 1;
-% top left front
-%surrounding(nodes(b,3) > 0,5) = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim);
-% top right front
-%surrounding(nodes(b,3) > 0,6) = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - 1;
-% top left back
-%surrounding(nodes(b,3) > 0,7) = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - x_dim;
-% top right back
-%surrounding((nodes(b,3) > 0) & (nodes(b,2) > 0),8) = offset((nodes(b,3) > 0) & (nodes(b,2) > 0),1) - (x_dim)*(y_dim) - (x_dim) -1;
-%clear offset;
-%clear b;
-
-% those entries in the surrounding matrix which point to non-existing
-% elements(> size(hex,1) or <= 0) we overwrite with a
-% dummy element
-%surrounding(surrounding <= 0) = size(labels,1) + 1;
-%surrounding(surrounding > size(hex,1)) = size(labels,1)+1;
-
-% set the label of the dummy element to be zero(background)
-labels(size(labels,1)+1) = 0;
-
-% matrixs holding the label of each surrounding element
-%surroundinglabels = labels(surrounding);
-surroundinglabels = zeros((x_dim+1)*(y_dim+1)*(z_dim+1),8);
-surroundinglabels((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1) = labels(offset((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim)));
-surroundinglabels(nodes(b,1) > 0,2) = labels(offset(nodes(b,1) > 0,1) -1);
-surroundinglabels(nodes(b,2) > 0,3) = labels(offset(nodes(b,2) > 0,1) - x_dim);
-offsetnow = offset((nodes(b,2) > 0) & (nodes(b,1) > 0),1) - (x_dim) - 1;
-offsetnow(offsetnow <= 0) = size(labels,1)+1;
-surroundinglabels((nodes(b,2) > 0) & (nodes(b,1) > 0),4) = labels(offsetnow);
-offsetnow = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim);
-offsetnow(offsetnow <= 0) = size(labels,1)+1;
-surroundinglabels(nodes(b,3) > 0,5) = labels(offsetnow);
-offsetnow = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - 1;
-offsetnow(offsetnow <= 0) = size(labels,1)+1;
-surroundinglabels(nodes(b,3) > 0,6) = labels(offsetnow);
-offsetnow = offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - x_dim;
-offsetnow(offsetnow <= 0) = size(labels,1)+1;
-surroundinglabels(nodes(b,3) > 0,7) = labels(offsetnow);
-offsetnow = offset((nodes(b,3) > 0) & (nodes(b,2) > 0),1) - (x_dim)*(y_dim) - (x_dim) -1;
-offsetnow(offsetnow <= 0) = size(labels,1)+1;
-surroundinglabels((nodes(b,3) > 0) & (nodes(b,2) > 0),8) = labels(offsetnow);
-
-% matrix showing how many types of each label are around a given node
-distribution = zeros(size(nodes,1), size(unique(labels),1));
-% the following assumes that the labels are 1,2,...
-for l=1:size(unique(labels),1)
-    for k=1:8
-        distribution(:,l) = distribution(:,l) + (surroundinglabels(:,k) == l);
-    end
-end
-
-% fill up the last column with the amount of background labels
-distribution(:,(size(unique(labels),1))) = 8 - sum(distribution(:,1:size(unique(labels),1))');
-
-% how many different labels are there around each node
-distsum = sum(distribution>0,2);
-
-% set zeros to Inf in order to make the finding of a minimum
-% meaningful
-distribution(distribution == 0) = Inf;
-
-% find out which is the minority label
-[mins,minpos] = min(distribution, [],2);
-clear distribution;
-
-% calculate the centroid for each element
-centroids = zeros(size(tet,1),3);
-for l=1:3
-    centroids(:,l) = sum(reshape(nodes(tet(:,:),l),size(tet,1),8)')'/8;
-end
-
-% set a dummy centroid
-centroids(size(centroids,1) +1,:) = 0;
-
-tbc = zeros(size(surroundinglabels));
-% helper matrix, c(i,j,k) is one when surroundinglabels(i,j) == k
-for i=1:size(unique(labels),1)+1
-    c = zeros(size(surroundinglabels,2), size(unique(labels),1)+1);
-    if (i == size(unique(labels),1)+1)
-        c = surroundinglabels == 0;
-    else
-        c = surroundinglabels == i;
-    end
-    tbc(ismember(minpos,i) == 1,:) = c(ismember(minpos,i) == 1,:);
-end
-
-%     % matrix that shows which elements are to be considered as minority
-%     % around a given node
-%     clear surroundinglabels;
-%      % helper matrix, c(i,j,k) is one when surroundinglabels(i,j) == k
-%     c = zeros(size(surroundinglabels,1),size(surroundinglabels,2),size(unique(labels),1)+1);
-%     for i=1:size(unique(labels),1)
-%         c(:,:,i) = surroundinglabels == i;
-%     end
-%     c(:,:,size(unique(labels),1)+1) = surroundinglabels == 0;
-%
-%
-%     % matrix that shows which elements are to be considered as minority
-%     % around a given node
-%     tbc = zeros(size(surroundinglabels));
-%     clear surroundinglabels;
-%     for i=1:size(unique(labels),1)+1
-%     tbc(ismember(minpos,i) == 1,:) = c(ismember(minpos,i) == 1,:,i);
-%     end
-clear c;
-
-% delete cases in which we don't have a real minimum
-tbcsum = sum(tbc,2);
-tbc(tbcsum == 8,:) = 0;
-tbc(tbcsum == 4,:) = 0;
-tbcsum((distsum>2) & (mins > 1),:) = 0;
-tbcsum(tbcsum == 8) = 0;
-tbcsum(tbcsum == 4) = 0;
-tbcsum((distsum>2) & (mins > 1)) = 0;
-
-%surroundingconsidered = surrounding.*tbc;
-surroundingconsidered = zeros(size(tbc));
-surroundingconsidered((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1) = offset((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim)).*tbc((nodes(b,1) < x_dim) & (nodes(b,3) < z_dim),1);
-surroundingconsidered(nodes(b,1) > 0,2) = (offset(nodes(b,1) > 0,1) -1).*(tbc(nodes(b,1) > 0,2));
-surroundingconsidered(nodes(b,2) > 0,3) = (offset(nodes(b,2) > 0,1) - x_dim).*tbc(nodes(b,2) > 0,3);
-surroundingconsidered((nodes(b,2) > 0) & (nodes(b,1) > 0),4) = (offset((nodes(b,2) > 0) & (nodes(b,1) > 0),1) - (x_dim) - 1).*tbc((nodes(b,2) > 0) & (nodes(b,1) > 0),4).*tbc((nodes(b,2) > 0) & (nodes(b,1) > 0),4);
-surroundingconsidered(nodes(b,3) > 0,5) = (offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim)).*tbc(nodes(b,3) > 0,5);
-surroundingconsidered(nodes(b,3) > 0,6) = (offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - 1).*tbc(nodes(b,3) > 0,6);
-surroundingconsidered(nodes(b,3) > 0,7) = (offset(nodes(b,3) > 0,1) - (x_dim)*(y_dim) - x_dim).*tbc(nodes(b,3) > 0,7);
-surroundingconsidered((nodes(b,3) > 0) & (nodes(b,2) > 0),8) = (offset((nodes(b,3) > 0) & (nodes(b,2) > 0),1) - (x_dim)*(y_dim) - (x_dim) -1).*tbc((nodes(b,3) > 0) & (nodes(b,2) > 0),8);
-%clear surrounding;
-clear tbc;
-
-tbcsum(tbcsum == 8) = 0;
-tbcsum(tbcsum == 4) = 0;
-tbcsum((distsum>2) & (mins > 1)) = 0;
-
-clear distsum;
-% get the surrounding elements which are to be considered for the shift
-
-
-% use the dummy centroid to make computations easier
-surroundingconsidered(surroundingconsidered == 0) = size(centroids,1);
-
-% calculate the combination of the centroids which are to be considered
-% for the shift
-centroidcomb = zeros(size(nodes));
-centroidcomb(:,1) = sum(reshape(centroids(surroundingconsidered,1), [], 8),2);
-centroidcomb(:,2) = sum(reshape(centroids(surroundingconsidered,2), [], 8),2);
-centroidcomb(:,3) = sum(reshape(centroids(surroundingconsidered,3), [], 8),2);
-clear surroundingconsidered;
-centroidcomb(tbcsum ~= 0,1) = centroidcomb(tbcsum ~=0,1)./tbcsum(tbcsum ~=0);
-centroidcomb(tbcsum ~= 0,2) = centroidcomb(tbcsum ~=0,2)./tbcsum(tbcsum ~=0);
-centroidcomb(tbcsum ~= 0,3) = centroidcomb(tbcsum ~=0,3)./tbcsum(tbcsum ~=0);
-
-% finally apply the shift
-nodes(tbcsum == 0,:) = points(tbcsum == 0,:);
-nodes(tbcsum ~= 0,:) = (1-sh)*nodes(tbcsum ~= 0,:) + sh*centroidcomb(tbcsum ~= 0,:);
 
 function segmentation = ea_ft_datatype_segmentation(segmentation, varargin)
 
@@ -4367,67 +3509,6 @@ switch style
         error('unsupported style "%s"', style);
 end
 
-function ea_ft_postamble(cmd, varargin)
-
-% FT_POSTAMBLE is a helper function that is included in many of the FieldTrip
-% functions and which takes care of some general settings and operations at the end
-% of the function.
-%
-% This ft_postamble m-file is a function, but internally it executes a number of
-% private scripts in the callers workspace. This allows the private script to access
-% the variables in the callers workspace and behave as if the script were included as
-% a header file in C-code.
-%
-% See also FT_PREAMBLE
-
-% Copyright (C) 2011-2012, Robert Oostenveld, DCCN
-%
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id: ft_postamble.m 9573 2014-05-21 15:17:03Z roboos $
-
-% ideally this would be a script, because the local variables would then be
-% shared with the calling function. Instead, this is a function which then
-% passes the variables explicitely to another script which is eval'ed.
-
-% the following section ensures that these scripts are included as
-% dependencies when using the MATLAB compiler
-%
-%#function ft_postamble_debug
-%#function ft_postamble_trackconfig
-%#function ft_postamble_provenance
-%#function ft_postamble_previous
-%#function ft_postamble_history
-%#function ft_postamble_savevar
-%#function ft_postamble_randomseed
-
-global ft_default
-
-% this is a trick to pass the input arguments into the ft_postamble_xxx script
-ft_default.postamble = varargin;
-
-if exist(['ft_postamble_' cmd], 'file')
-    evalin('caller', ['ft_postamble_' cmd]);
-end
-
-if isfield(ft_default, 'postamble')
-    % the postamble field should not remain in the ft_default structure
-    ft_default = rmfield(ft_default, 'postamble');
-end
 
 function val = ea_ft_getopt(opt, key, default, emptymeaningful)
 
@@ -4536,302 +3617,9 @@ if isempty(val) && ~isempty(default) && ~emptymeaningful
     val = default;
 end
 
-function ea_ft_preamble(cmd, varargin)
 
-% FT_PREAMBLE is a helper function that is included in many of the FieldTrip
-% functions and which takes care of some general settings and operations at the
-% begin of the function.
-%
-% This ft_preamble m-file is a function, but internally it executes a
-% number of private scripts in the callers workspace. This allows the
-% private script to access the variables in the callers workspace and
-% behave as if the script were included as a header file in C-code.
-%
-% See also FT_POSTAMBLE
 
-% Copyright (C) 2011-2012, Robert Oostenveld, DCCN
-%
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id: ft_preamble.m 9520 2014-05-14 09:33:28Z roboos $
 
-% ideally this would be a script, because the local variables would then be
-% shared with the calling function. Instead, this is a function which then
-% passes the variables explicitely to another script which is eval'ed.
-
-% the following section ensures that these scripts are included as
-% dependencies when using the MATLAB compiler
-%
-%#function ft_preamble_init
-%#function ft_preamble_debug
-%#function ft_preamble_trackconfig
-%#function ft_preamble_provenance
-%#function ft_preamble_loadvar
-%#function ft_preamble_randomseed
-
-global ft_default
-
-% this is a trick to pass the input arguments into the ft_preamble_xxx script
-ft_default.preamble = varargin;
-
-if exist(['ft_preamble_' cmd], 'file')
-    evalin('caller', ['ft_preamble_' cmd]);
-end
-
-if isfield(ft_default, 'preamble')
-    % the preamble field should not remain in the ft_default structure
-    ft_default = rmfield(ft_default, 'preamble');
-end
-
-function ea_ft_defaults
-
-% FT_DEFAULTS (ending with "s") sets some general settings in the global variable
-% ft_default (without the "s") and takes care of the required path settings. This
-% function is called at the begin of all FieldTrip functions.
-%
-% The configuration defaults are stored in the global "ft_default" structure.
-% The ft_checkconfig function that is called by many FieldTrip functions will
-% merge this global ft_default structure with the cfg ctructure that you pass to
-% the FieldTrip function that you are calling.
-%
-% The global options and their default values are
-%   ft_default.trackconfig    string, can be cleanup, report, off (default = 'off')
-%   ft_default.checkconfig    string, can be pedantic, loose, silent (default = 'loose')
-%   ft_default.checksize      number in bytes, can be inf (default = 1e5)
-%   ft_default.showcallinfo   string, can be yes or no (default = 'yes')
-%   ft_default.debug          string, can be 'display', 'displayonerror', 'displayonsuccess',
-%                             'save', 'saveonerror', saveonsuccess' or 'no' (default = 'no')
-%
-% See also FT_HASTOOLBOX, FT_CHECKCONFIG
-
-% Note that this should be a function and not a script, otherwise the
-% ft_hastoolbox function appears not be found in fieldtrip/private.
-
-% Copyright (C) 2009-2012, Robert Oostenveld
-%
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id: ft_defaults.m 9674 2014-06-24 07:49:49Z eelspa $
-
-global ft_default
-persistent initialized
-
-% Set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration.
-% Note that ea_ft_getopt might not be available on the path at this moment and can therefore not yet be used.
-
-if ~isfield(ft_default, 'trackconfig'),    ft_default.trackconfig    = 'off';    end % cleanup, report, off
-if ~isfield(ft_default, 'checkconfig'),    ft_default.checkconfig    = 'loose';  end % pedantic, loose, silent
-if ~isfield(ft_default, 'checksize'),      ft_default.checksize      = 1e5;      end % number in bytes, can be inf
-if ~isfield(ft_default, 'showcallinfo'),   ft_default.showcallinfo   = 'yes';    end % yes or no, this is used in ft_pre/postamble_provenance
-if ~isfield(ft_default, 'debug'),          ft_default.debug          = 'no';     end % no, save, saveonerror, display, displayonerror, this is used in ft_pre/postamble_debug
-
-% these options allow to disable parts of the provenance
-if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';    end % yes or no
-if ~isfield(ft_default, 'trackdatainfo'),  ft_default.trackdatainfo  = 'no';     end % yes or no, this is still under development
-if ~isfield(ft_default, 'trackparaminfo'), ft_default.trackparaminfo = 'no';     end % yes or no, this is still under development
-
-% track whether we have executed ft_defaults already. Note that we should
-% not use ft_default itself directly, because the user might have set stuff
-% in that struct already before ft_defaults is called for the first time.
-if ~isempty(initialized) && exist('ft_hastoolbox', 'file')
-    return;
-end
-
-% Ensure that the path containing ft_defaults is on the path.
-% This allows people to do "cd path_to_fieldtrip; ft_defaults"
-ftPath = fileparts(mfilename('fullpath')); % get path, strip away 'ft_defaults'
-ftPath = strrep(ftPath, '\', '\\');
-if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
-    warning('FieldTrip is not yet on your MATLAB path, adding %s', strrep(ftPath, '\\', '\'));
-    addpath(ftPath);
-end
-
-if ~isdeployed
-    
-    % Some people mess up their path settings and then have
-    % different versions of certain toolboxes on the path.
-    % The following will issue a warning
-    ea_checkMultipleToolbox('FieldTrip',           'ft_defaults.m');
-    ea_checkMultipleToolbox('spm',                 'spm.m');
-    ea_checkMultipleToolbox('mne',                 'fiff_copy_tree.m');
-    ea_checkMultipleToolbox('eeglab',              'eeglab2fieldtrip.m');
-    ea_checkMultipleToolbox('dipoli',              'write_tri.m');
-    ea_checkMultipleToolbox('eeprobe',             'read_eep_avr.mexa64');
-    ea_checkMultipleToolbox('yokogawa',            'GetMeg160ChannelInfoM.p');
-    ea_checkMultipleToolbox('simbio',              'sb_compile_vista.m');
-    ea_checkMultipleToolbox('fns',                 'fns_region_read.m');
-    ea_checkMultipleToolbox('bemcp',               'bem_Cii_cst.mexa64');
-    ea_checkMultipleToolbox('bci2000',             'load_bcidat.m');
-    ea_checkMultipleToolbox('openmeeg',            'openmeeg_helper.m');
-    ea_checkMultipleToolbox('freesurfer',          'vox2ras_ksolve.m');
-    ea_checkMultipleToolbox('fastica',             'fastica.m');
-    ea_checkMultipleToolbox('besa',                'readBESAmul.m');
-    ea_checkMultipleToolbox('neuroshare',          'ns_GetAnalogData.m');
-    ea_checkMultipleToolbox('ctf',                 'setCTFDataBalance.m');
-    ea_checkMultipleToolbox('afni',                'WriteBrikHEAD.m');
-    ea_checkMultipleToolbox('gifti',               '@gifti/display.m');
-    ea_checkMultipleToolbox('sqdproject',          'sqdread.m');
-    ea_checkMultipleToolbox('xml4mat',             'xml2mat.m');
-    ea_checkMultipleToolbox('cca',                 'ccabss.m');
-    ea_checkMultipleToolbox('bsmart',              'armorf.m');
-    ea_checkMultipleToolbox('iso2mesh',            'iso2meshver.m');
-    ea_checkMultipleToolbox('bct',                 'degrees_und.m');
-    ea_checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
-    ea_checkMultipleToolbox('biosig',              'sopen.m');
-    ea_checkMultipleToolbox('icasso',              'icassoEst.m');
-    
-    if isempty(which('ft_hastoolbox'))
-        % the fieldtrip/utilities directory contains the ft_hastoolbox function
-        % which is required for the remainder of this script
-        addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
-    end
-    
-    try
-        % external/signal directory contains alternative implementations of some signal processing functions
-        addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
-    end
-    
-    try
-        % some alternative implementations of statistics functions
-        addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
-    end
-    
-    try
-        % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
-        ea_ft_hastoolbox('fileexchange', 3, 1); % not required
-    end
-    
-    try
-        % this directory contains the backward compatibility wrappers for the ft_xxx function name change
-        ea_ft_hastoolbox('compat', 3, 1); % not required
-    end
-    
-    try
-        % these directories contain functions that were added to MATLAB in
-        % recent versions to replace an older function.
-        if matlabversion(-Inf, '2011b')
-            ea_ft_hastoolbox('compat/matlablt2012a', 2, 1);
-        end
-    end
-    
-    try
-        % these contains template layouts, neighbour structures, MRIs and cortical meshes
-        ea_ft_hastoolbox('template/layout', 1, 1);
-        ea_ft_hastoolbox('template/anatomy', 1, 1);
-        ea_ft_hastoolbox('template/headmodel', 1, 1);
-        ea_ft_hastoolbox('template/electrode', 1, 1);
-        ea_ft_hastoolbox('template/neighbours', 1, 1);
-        ea_ft_hastoolbox('template/sourcemodel', 1, 1);
-    end
-    
-    try
-        % this is used in statistics
-        ea_ft_hastoolbox('statfun', 1, 1);
-    end
-    
-    try
-        % this is used in definetrial
-        ea_ft_hastoolbox('trialfun', 1, 1);
-    end
-    
-    try
-        % this contains the low-level reading functions
-        ea_ft_hastoolbox('fileio', 1, 1);
-    end
-    
-    try
-        % this is for filtering time-series data
-        ea_ft_hastoolbox('preproc', 1, 1);
-    end
-    
-    try
-        % this contains forward models for the EEG and MEG volume conduction problem
-        ea_ft_hastoolbox('forward', 1, 1);
-    end
-    
-    try
-        % numerous functions depend on this module
-        ea_ft_hastoolbox('inverse', 1, 1);
-    end
-    
-    try
-        % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
-        ea_ft_hastoolbox('plotting', 1, 1);
-    end
-    
-    try
-        % this contains the functions to compute connecitivy metrics
-        ea_ft_hastoolbox('connectivity', 1,1);
-    end
-    
-    try
-        % this contains the functions for spike and spike-field analysis
-        ea_ft_hastoolbox('spike', 1,1);
-    end
-    
-    try
-        % this contains specific code and examples for realtime processing
-        ea_ft_hastoolbox('realtime/example', 3, 1);    % not required
-        ea_ft_hastoolbox('realtime/online_mri', 3, 1); % not required
-        ea_ft_hastoolbox('realtime/online_meg', 3, 1); % not required
-        ea_ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
-    end
-    
-    try
-        % this contains intermediate-level functions for spectral analysis
-        ea_ft_hastoolbox('specest', 1, 1);
-    end
-    
-end
-
-% remember that the function has executed in a persistent variable
-initialized = true;
-
-function ea_checkMultipleToolbox(toolbox, keyfile)
-% do nothing (delete this function one day)..
-
-function Vexp=ea_synth_nii(fname,mat,dt,Y)
-Vexp.mat=mat;
-Vexp.fname=fname;
-Vexp.dt=dt;
-Vexp.dim=size(Y);
-Vexp.n=[1 1];
-Vexp.descrip='lead dbs - leadfield';
-Vexp.private=nifti;
-Vexp.private.mat=Vexp.mat;
-Vexp.private.mat0=Vexp.mat;
-Vexp.private.mat_intent='Aligned';
-Vexp.private.mat0_intent='Aligned';
-Vexp.private.descrip='lead dbs - leadfield';
-%Vexp.private.dat=Y;
 
 function [output] = ea_ft_transform_geometry(transform, input)
 
@@ -9226,9 +8014,6 @@ end
 
 vol.stiff = ea_sb_calc_stiff(vol);
 vol.type = 'simbio';
-
-
-
 
 
 
