@@ -309,7 +309,7 @@ vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.
 
 
 
-ea_dispt('Calculating VAT...');
+ea_dispt('Preparing VAT...');
 
 vat.tET=vat.ET>thresh;
 vat.tpos=vat.pos(vat.tET,:);
@@ -322,7 +322,7 @@ end
 % the following will be used for volume 2 isosurf creation as well as
 % volumetrics of the vat in mm^3.
 ea_dispt('Calculating interpolant on scattered FEM mesh data...');
-F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.ET','natural','none');
+F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.ET','linear','none');
 
 ea_dispt('Converting to equispaced image data...');
 res=100;
@@ -336,8 +336,7 @@ catch
     keyboard % vat empty..!
 end
 
-[xg,yg,zg] = meshgrid(gv{1},gv{2},gv{3});
-
+ea_dispt('Creating nifti header for export...');
 % create nifti
 chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);
 Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,res)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,res)]')';
@@ -349,13 +348,11 @@ if ~exist([options.root,options.patientname,filesep,'stimulations'],'file')
     mkdir([options.root,options.patientname,filesep,'stimulations']);
 end
 
-
-
-
-
-eeg = F(xg,yg,zg);
+ea_dispt('Filling data with values from interpolant...');
+eeg = F(gv);
 eeg(isnan(eeg))=0;
 % e-field in matrix form.
+
 ea_dispt('Calculating output file data...');
 eg=eeg;
 eg=eg>thresh;
@@ -370,8 +367,9 @@ neeg(neeg>0)=zscore(neeg(neeg>0));
 neeg(~isnan(neeg))=neeg(~isnan(neeg))-min(neeg(~isnan(neeg)));
 neeg(~isnan(neeg))=neeg(~isnan(neeg))/sum(neeg(~isnan(neeg))); % 0-1 distributed.
 
+[xg,yg,zg] = meshgrid(gv{1},gv{2},gv{3});
 
-XYZmax=[max(xg(eg>0)),max(yg(eg>0)),max(zg(eg>0))];
+XYZmax=[max(yg(eg>0)),max(xg(eg>0)),max(zg(eg>0))]; % x and y need to be permuted here (should be correct but wouldnt matter anyways since only serves to calc radius)
 try
     radius=pdist([XYZmax;dpvx]);
 catch
@@ -390,7 +388,9 @@ S.volume(side)=vatvolume;
 ea_dispt('Writing files...');
 
 % determine stimulation name:
+if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,stimname],'file');
 mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
+end
 
 switch side
     case 1
@@ -418,8 +418,8 @@ ea_write_nii(Vvatne);
 Vvat.img=permute(eg,[2,1,3]);
 ea_write_nii(Vvat);
 
-smoothvat=0;
-if smoothvat
+smoothvat=0; % 1 is use SPM, 2 is use Matlab, 0 is not smooth at all
+if smoothvat==1
     ea_dispt('Smoothing VTA...');
     [pth,fn,ext]=fileparts(Vvat.fname);
     matlabbatch{1}.spm.spatial.smooth.data = {[Vvat.fname]};
@@ -431,12 +431,25 @@ if smoothvat
     
     Vvat=ea_load_nii(fullfile(pth,['s',fn,ext]));
     movefile(fullfile(pth,['s',fn,ext]),fullfile(pth,[fn,ext]));
+elseif smoothvat==2
+    Vvat.img=smooth3(Vvat.img,'gaussian',[29 29 29]);
 end
 
 ea_dispt('Calculating isosurface to display...');
 vatfv=isosurface(xg,yg,zg,Vvat.img,0.75);
-
-
+try
+    vatfv=ea_smoothpatch(vatfv);
+catch
+    try
+        cd([ea_getearoot,'ext_libs',filesep,'smoothpatch']);
+        mex ea_smoothpatch_curvature_double.c -v
+        mex ea_smoothpatch_inversedistance_double.c -v
+        mex ea_vertex_neighbours_double.c -v
+        vatfv=ea_smoothpatch(vatfv);
+    catch
+        warning('Patch could not be smoothed');
+    end
+end
 
 % define function outputs
 varargout{1}=vatfv;
@@ -484,15 +497,6 @@ end
 
 %% begin FieldTrip/SimBio functions:
 function gradient = ea_calc_gradient(vol,potential)
-%gradient = zeros(size(vol.hex,1),3);
-%gradient = gradient + 0.25*repmat(potential(vol.hex(:,1)),1,3).*((vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:))./abs(vol.pos(vol.hex(:,1),:)-vol.pos(vol.hex(:,7),:)));
-%gradient = gradient + 0.25*repmat(potential(vol.hex(:,2)),1,3).*((vol.pos(vol.hex(:,2),:)-vol.pos(vol.hex(:,8),:))./abs(vol.pos(vol.hex(:,2),:)-vol.pos(vol.hex(:,8),:)));
-%gradient = gradient + 0.25*repmat(potential(vol.hex(:,3)),1,3).*((vol.pos(vol.hex(:,3),:)-vol.pos(vol.hex(:,5),:))./abs(vol.pos(vol.hex(:,3),:)-vol.pos(vol.hex(:,5),:)));
-%gradient = gradient + 0.25*repmat(potential(vol.hex(:,4)),1,3).*((vol.pos(vol.hex(:,4),:)-vol.pos(vol.hex(:,6),:))./abs(vol.pos(vol.hex(:,4),:)-vol.pos(vol.hex(:,6),:)));
-%gradient = gradient + 0.25*repmat(potential(vol.hex(:,5)),1,3).*((vol.pos(vol.hex(:,5),:)-vol.pos(vol.hex(:,3),:))./abs(vol.pos(vol.hex(:,5),:)-vol.pos(vol.hex(:,3),:)));
-%gradient = gradient + 0.25*repmat(potential(vol.hex(:,6)),1,3).*((vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:))./abs(vol.pos(vol.hex(:,6),:)-vol.pos(vol.hex(:,4),:)));
-%gradient = gradient + 0.25*repmat(potential(vol.hex(:,7)),1,3).*((vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:))./abs(vol.pos(vol.hex(:,7),:)-vol.pos(vol.hex(:,1),:)));
-%gradient = gradient + 0.25*repmat(potential(vol.hex(:,8)),1,3).*((vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:))./abs(vol.pos(vol.hex(:,8),:)-vol.pos(vol.hex(:,2),:)));
 normal = cross(vol.pos(vol.tet(:,4),:)-vol.pos(vol.tet(:,3),:),vol.pos(vol.tet(:,3),:)-vol.pos(vol.tet(:,2),:));
 gradient = repmat(potential(vol.tet(:,1))./sum(normal.*(vol.pos(vol.tet(:,1),:)-(vol.pos(vol.tet(:,2),:)+vol.pos(vol.tet(:,3),:)+vol.pos(vol.tet(:,4),:))/3),2),1,3).*normal;
 normal = cross(vol.pos(vol.tet(:,1),:)-vol.pos(vol.tet(:,4),:),vol.pos(vol.tet(:,4),:)-vol.pos(vol.tet(:,3),:));
@@ -541,7 +545,7 @@ function [stiff,rhs] = ea_dbs(stiff,rhs,dirinodes,dirival)
 
 dia = diag(stiff);
 stiff = stiff - diag(dia);
-[indexi indexj s] = find(stiff);
+[indexi,indexj,s] = find(stiff);
 clear stiff;
 dind = dirinodes;
 indi = find(ismember(indexi,dind));
