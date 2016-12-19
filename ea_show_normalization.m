@@ -19,7 +19,7 @@ end
 disp('Preparing images to show Normalization...');
 
 for export=expdo % if CT, only do 1, if MR, do 1:3.
-     try
+     %try
         switch export
             case 1
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
@@ -49,12 +49,12 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
 
 
             mcr=ea_checkmacaque(options);
-
+                
             w=load([options.earoot,mcr,'templates',filesep,'mni_wires.mat']);
             pt=ea_load_nii(checkf);
-
+            
             if ~isequal(size(w.wires),size(pt.img))
-                matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires_t2.nii'];
+                matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
                                                          checkf};
                 matlabbatch{1}.spm.util.imcalc.output = checkfn;
                 matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
@@ -69,7 +69,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 pt=ea_load_nii(checkf);
             end
             %mni.img(:)=zscore(mni.img(:));
-
+            
             w.wires=single(w.wires);
             w.wires=w.wires/255;
             w.wires=w.wires.*0.2;
@@ -90,7 +90,11 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             end
             %joint_im=0.5*wires.img+pt.img;
             joint_im=pt.img;
-            joint_im=joint_im.*w.wires;
+            if strcmp(options.prefs.dev.profile,'se') % do siobhan specific stuff (here don't show wires to enable any template to be used as normalization template)
+                ;
+            else
+            joint_im=joint_im.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires
+            end
             %joint_im(w.wires>0.9)=1;
             stand=std(joint_im(:));
             joint_im=joint_im-min(joint_im(:));
@@ -99,21 +103,21 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             %joint_im=repmat(joint_im,1,1,1,3);
             %jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
             %ea_imshowpair(jim,options,addstr);
-
+            
             % ----------------------------------------------------------
             % edited by TH 2016-02-17 to add windowed normalization check
             % ----------------------------------------------------------
             pt.img=single(pt.img);
             mni_img.img=single(mni_img.img);
             joint_im=single(joint_im);
-
+            
             gridf = [options.root,options.patientname,filesep,'glgrid.mat'];
-
+            
             if ~exist(gridf, 'file') % 'glgrid.mat' doesn't exist, try to generat it here and then delete the glgrid.nii file
                 if exist([options.root,options.patientname,filesep,'glgrid.nii'],'file')
                     gridnii=ea_load_nii([options.root,options.patientname,filesep,'glgrid.nii,1']);
                     if ~isequal(size(w.wires),size(gridnii.img))
-                        matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires_t2.nii'];
+                        matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,mcr,'templates',filesep,'mni_hires.nii'];
                                                                 [options.root,options.patientname,filesep,'glgrid.nii,1']};
                         matlabbatch{1}.spm.util.imcalc.output = 'glgrid.nii';
                         matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
@@ -126,7 +130,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                         spm_jobman('run',jobs);
                         clear matlabbatch jobs;
                         gridnii=ea_load_nii([options.root,options.patientname,filesep,'glgrid.nii,1']);
-                    end
+                    end            
                     gridnii.img=gridnii.img/max(gridnii.img(:));
                     gridnii.img=gridnii.img.*255;
                     grid=uint8(gridnii.img);
@@ -136,10 +140,10 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                     fprintf('No glgrid.nii file found!\n');
                 end
             end
-
+            
             % 'glgrid.mat' does exist, append the grid image in wim
             try
-                g=load(gridf);
+                g=load(gridf);  
                 grid=single(g.grid);
                 grid=grid-min(grid(:));
                 grid=grid./max(grid(:));
@@ -151,15 +155,15 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 grid_im=grid_im./max(grid_im(:));
                 wim = cat(4,pt.img,mni_img.img,joint_im,grid_im);
             catch
-                wim = cat(4,pt.img,mni_img.img,joint_im);
+                wim = cat(4,pt.img,mni_img.img,joint_im);                    
             end
-
+            
             clear joint_im pt grid_im
             ea_imshowpair(wim,options,addstr,'normalization');
-
-     catch
+            
+     %catch
         fprintf('Skip showing normalization of %s\n', checkf);
-     end
+     %end
 
 end
 
