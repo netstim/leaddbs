@@ -1,0 +1,42 @@
+%-----------------------------------------------------------------------
+% Job configuration created by cfg_util (rev $Rev: 459 $)
+%-----------------------------------------------------------------------
+matlabbatch{1}.dtijobs.tracking.probabilistic.filename = '<UNDEFINED>';
+matlabbatch{1}.dtijobs.tracking.probabilistic.seedchoice.seedroi.seedfile = '<UNDEFINED>';
+matlabbatch{1}.dtijobs.tracking.probabilistic.seedchoice.seedroi.seedmask = '<UNDEFINED>';
+matlabbatch{1}.dtijobs.tracking.probabilistic.defroi.defarea.deffile = '<UNDEFINED>';
+matlabbatch{1}.dtijobs.tracking.probabilistic.defroi.defarea.defmask = '<UNDEFINED>';
+matlabbatch{1}.dtijobs.tracking.probabilistic.nowalks = 1000;
+matlabbatch{1}.dtijobs.tracking.probabilistic.revisits = 1;
+matlabbatch{1}.dtijobs.tracking.probabilistic.fibrelength = 150;
+matlabbatch{1}.dtijobs.tracking.probabilistic.probrand = 2;
+matlabbatch{1}.dtijobs.tracking.probabilistic.exponent = 4;
+matlabbatch{1}.dtijobs.tracking.probabilistic.newprobfile = '<UNDEFINED>';
+matlabbatch{2}.dtijobs.tracking.mori.filename = '<UNDEFINED>';
+matlabbatch{2}.dtijobs.tracking.mori.start.startdef.startfile = '<UNDEFINED>';
+matlabbatch{2}.dtijobs.tracking.mori.start.startdef.startmask = '<UNDEFINED>';
+matlabbatch{2}.dtijobs.tracking.mori.stop.stopdef.stopfile = '<UNDEFINED>';
+matlabbatch{2}.dtijobs.tracking.mori.stop.stopdef.stopmask = '<UNDEFINED>';
+matlabbatch{2}.dtijobs.tracking.mori.maxangle = 53.1;
+matlabbatch{2}.dtijobs.tracking.mori.randsampler = 2;
+matlabbatch{2}.dtijobs.tracking.mori.minvox = 5;
+matlabbatch{2}.dtijobs.tracking.mori.randsampno = 2;
+matlabbatch{2}.dtijobs.tracking.mori.newmorifile = '<UNDEFINED>';
+matlabbatch{3}.dtijobs.ftrop.selectbyROI.filename1 = '<UNDEFINED>';
+matlabbatch{3}.dtijobs.ftrop.selectbyROI.roidef.roiname = '<UNDEFINED>';
+matlabbatch{3}.dtijobs.ftrop.selectbyROI.roidef.mask = '<UNDEFINED>';
+matlabbatch{3}.dtijobs.ftrop.selectbyROI.fibername = 'fiber_001';
+matlabbatch{3}.dtijobs.ftrop.selectbyROI.newfilename = '.mat';
+matlabbatch{4}.dtijobs.ftrop.eliminatebyROI.filename1 = '<UNDEFINED>';
+matlabbatch{4}.dtijobs.ftrop.eliminatebyROI.roidef.roiname = '<UNDEFINED>';
+matlabbatch{4}.dtijobs.ftrop.eliminatebyROI.roidef.mask = '<UNDEFINED>';
+matlabbatch{4}.dtijobs.ftrop.eliminatebyROI.fibername = 'fiber_001';
+matlabbatch{4}.dtijobs.ftrop.eliminatebyROI.newfilename = '.mat';
+matlabbatch{5}.dtijobs.ftrop.visitMask.filename1 = '<UNDEFINED>';
+matlabbatch{5}.dtijobs.ftrop.visitMask.fibersubset = 1;
+matlabbatch{5}.dtijobs.ftrop.visitMask.filename2 = '<UNDEFINED>';
+matlabbatch{5}.dtijobs.ftrop.visitMask.newfilename = '.mat';
+matlabbatch{6}.dtijobs.ftrop.endpointMask.filename1 = '<UNDEFINED>';
+matlabbatch{6}.dtijobs.ftrop.endpointMask.fibersubset = 1;
+matlabbatch{6}.dtijobs.ftrop.endpointMask.filename2 = '<UNDEFINED>';
+matlabbatch{6}.dtijobs.ftrop.endpointMask.newfilename = '.mat';
