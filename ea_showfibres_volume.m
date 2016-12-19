@@ -11,7 +11,7 @@ PL.ht=uitoolbar(resultfig);
 set(0,'CurrentFigure',resultfig)
 colornames='rbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywk';
 
-disp('Calculating VAT/Fibers/Connectivity...');
+ea_dispt('Calculating VAT/Fibers/Connectivity...');
 
 hold on
 % get app data
@@ -122,18 +122,7 @@ for side=1:length(options.sides)
                 +randn(length(VAT{side}.VAT{vat}),1)*2)');
             
             
-            %             % export vatstat if required:
-            %
-            %
-            %             if options.expstatvat.do % export statvat nifti images.
-            %                 in=inhull(templatecoords,VAT{side}.VAT{vat},K(side).K{vat});
-            %                 for vatvar=1:length(options.expstatvat.vars)
-            %                     if isempty(thisvatnii{vatvar})
-            %                         thisvatnii{vatvar}=tnii; % initialize on blank templatenii.
-            %                     end
-            %                     thisvatnii{vatvar}(in)=options.expstatvat.vars{vatvar}(options.expstatvat.pt); % set to clinical/regress variable score.
-            %                 end
-            %             end
+
             
             % the following is some code required for
             % Web/JSON/BrainBrowser-Export.
@@ -155,7 +144,7 @@ for side=1:length(options.sides)
                 try % only one hemisphere could be defined.
                     if stimparams(side).volume
                         
-                        PL.quiv(side)=quiver3(vatgrad(side).x(1:reduc:end),vatgrad(side).y(1:reduc:end),vatgrad(side).z(1:reduc:end),vatgrad(side).qx(1:reduc:end),vatgrad(side).qy(1:reduc:end),vatgrad(side).qz(1:reduc:end),3,'w-','LineWidth',1);
+                        PL.quiv(side)=quiver3(vatgrad(side).x(1:reduc:end),vatgrad(side).y(1:reduc:end),vatgrad(side).z(1:reduc:end),vatgrad(side).qx(1:reduc:end),vatgrad(side).qy(1:reduc:end),vatgrad(side).qz(1:reduc:end),0,'w-','LineWidth',1);
                     end
                 end
             end
@@ -163,7 +152,7 @@ for side=1:length(options.sides)
             
             
             if options.writeoutstats
-                
+                ea_dispt('Writing out stats...');
                 
                 
                 load([options.root,options.patientname,filesep,'ea_stats']);
@@ -207,27 +196,8 @@ for side=1:length(options.sides)
         
     end
     
-    
-    
-    % export vatvar stats if needed:
-    %     if options.expstatvat.do
-    %         for vatvar=1:length(options.expstatvat.vars)
-    %             mkdir([options.expstatvat.dir,'statvat_results']);
-    %             switch side
-    %                 case 1
-    %                     si='rh';
-    %                 case 2
-    %                     si='lh';
-    %             end
-    %             keyboard
-    %
-    %             tV.fname=[options.expstatvat.dir,'statvat_results',filesep,'s',num2str(options.expstatvat.pt),'_',si,'.nii'];
-    %             spm_write_vol(tV,thisvatnii{vatvar});
-    %             ea_crop_nii(tV.fname);
-    %         end
-    %     end
+
     try
-        
         vatbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('vat',options),'TooltipString','Volume of activated tissue','OnCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,1},'OffCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,0},'State',getstate(vaton(side)));
         quivbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('quiver',options),'TooltipString','E-field','OnCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,1},'OffCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,0},'State',getstate(quivon(side)));
     end
@@ -258,7 +228,7 @@ end
 
 
 setappdata(resultfig,'PL',PL);
-
+ea_dispt('');
 
 function indcol=detcolor(mat) % determine color based on traversing direction.
 

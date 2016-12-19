@@ -263,6 +263,8 @@ reduc=10;
 %% generate flowfield visualization:
 % generate a jittered indices vector to be used to reduce flowfield
 % display by ~factor reduc.
+ea_dispt('Calculating quiver field of gradient for display purposes...');
+
 indices=zeros(length(1:reduc:length(midpts)),1);
 cnt=1;
 for idx=1:reduc:length(midpts)
@@ -272,27 +274,21 @@ end
 indices=unique(indices(2:end-1));
 indices(indices==0)=[];
 indices(indices>length(midpts))=[];
-try
-    vatgrad(side).x=midpts(indices,1); vatgrad(side).y=midpts(indices,2); vatgrad(side).z=midpts(indices,3);
-catch
-    keyboard
-end
 
-norm_gradient=gradient(indices,:);
-anormgrad=sqrt(sum(norm_gradient',1))';
-gaussgrad=ea_normal(anormgrad).^(1/2);
-norm2gauss=gaussgrad./anormgrad;
+% define midpoints of quiver field
+vatgrad(side).x=midpts(indices,1); vatgrad(side).y=midpts(indices,2); vatgrad(side).z=midpts(indices,3);
 
-%     add compression of really large gradient values for visualization..
-%     maxval=100*thresh; % 100*ea_robustmean(anormgrad);
-%     ixx=anormgrad>maxval;
-%     normalize grad to max 1
-%     norm_gradient(ixx,:)=norm_gradient(ixx,:)./repmat(anormgrad(ixx)',1,3); % set superthreshold arrows to 1
-%          norm_gradient(ixx,:)=norm_gradient(ixx,:).*maxval; % set superthreshold arrows to maxval
-%     norm_gradient=norm_gradient/(100*maxval);
-norm_gradient=norm_gradient.*repmat(norm2gauss,1,3);
-norm_gradient=norm_gradient.^2;
-vatgrad(side).qx=norm_gradient(:,1); vatgrad(side).qy=norm_gradient(:,2); vatgrad(side).qz=norm_gradient(:,3);
+gradvis=gradient(indices,:);
+mag_gradvis=sqrt(sum(gradvis'.^2,1))';
+nmag_gradvis=mag_gradvis; % copy to get normalized version
+nmag_gradvis(nmag_gradvis>thresh)=thresh;
+nmag_gradvis=(nmag_gradvis-min(nmag_gradvis(:)))/max(nmag_gradvis-min(nmag_gradvis(:))); % norm from 1 - 0
+nmag_gradvis=nmag_gradvis/5; % largest grad vector will be 1/50 mm long
+
+% now apply scaling to gradvis:
+gradvis=gradvis.*repmat(nmag_gradvis,1,3);
+gradvis=gradvis./repmat(mag_gradvis,1,3);
+vatgrad(side).qx=gradvis(:,1); vatgrad(side).qy=gradvis(:,2); vatgrad(side).qz=gradvis(:,3);
 
 setappdata(resultfig,'vatgrad',vatgrad);
 %figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))
@@ -418,27 +414,11 @@ ea_write_nii(Vvatne);
 Vvat.img=permute(eg,[2,1,3]);
 ea_write_nii(Vvat);
 
-smoothvat=0; % 1 is use SPM, 2 is use Matlab, 0 is not smooth at all
-if smoothvat==1
-    ea_dispt('Smoothing VTA...');
-    [pth,fn,ext]=fileparts(Vvat.fname);
-    matlabbatch{1}.spm.spatial.smooth.data = {[Vvat.fname]};
-    matlabbatch{1}.spm.spatial.smooth.fwhm = [0.4 0.4 0.4];
-    matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-    matlabbatch{1}.spm.spatial.smooth.im = 0;
-    matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-    spm_jobman('run',{matlabbatch});
-    
-    Vvat=ea_load_nii(fullfile(pth,['s',fn,ext]));
-    movefile(fullfile(pth,['s',fn,ext]),fullfile(pth,[fn,ext]));
-elseif smoothvat==2
-    Vvat.img=smooth3(Vvat.img,'gaussian',[29 29 29]);
-end
 
 ea_dispt('Calculating isosurface to display...');
 vatfv=isosurface(xg,yg,zg,Vvat.img,0.75);
 try
-    vatfv=ea_smoothpatch(vatfv);
+    vatfv=ea_smoothpatch(vatfv,1,100);
 catch
     try
         cd([ea_getearoot,'ext_libs',filesep,'smoothpatch']);
@@ -447,9 +427,12 @@ catch
         mex ea_vertex_neighbours_double.c -v
         vatfv=ea_smoothpatch(vatfv);
     catch
-        warning('Patch could not be smoothed');
+        warndlg('Patch could not be smoothed. Please supply a compatible Matlab compiler to smooth VTAs.');
     end
 end
+Vvat.img=surf2vol(vatfv.vertices,vatfv.faces,gv{1},gv{2},gv{3});
+Vvat.img=imfill(Vvat.img,'holes');
+ea_write_nii(Vvat);
 
 % define function outputs
 varargout{1}=vatfv;
