@@ -57,7 +57,7 @@ options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only
 coords=acoords{side};
 
 if ea_headmodel_changed(options,side,elstruct)
-    disp('No suitable headmodel found, rebuilding. This may take a while...');
+    ea_dispt('No suitable headmodel found, rebuilding. This may take a while...');
     
     load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
     
@@ -151,7 +151,7 @@ if ea_headmodel_changed(options,side,elstruct)
     end
     
     %% calculate volume conductor
-    disp('Done. Creating volume conductor...');
+    ea_dispt('Creating volume conductor...');
     
     %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
     
@@ -174,7 +174,7 @@ if ea_headmodel_changed(options,side,elstruct)
     
 else
     % simply load vol.
-    disp('Loading headmodel...');
+    ea_dispt('Loading headmodel...');
     load([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat']);
 end
 
@@ -206,7 +206,7 @@ for source=S.sources
         volts=U(U~=0);
         
         %% calculate voltage distribution based on dipole
-        disp('Done. Calculating voltage distribution...');
+        ea_dispt('Calculating voltage distribution...');
         if useSI
             SIfx=1000;
         else
@@ -239,7 +239,7 @@ for source=S.sources
         end
         
         potential = ea_apply_dbs(vol,ix,voltix,unipolar,constvol,4); % output in V. 4 indexes insulating material.
-        disp('Done. Calculating E-Field...');
+        ea_dispt('Calculating E-Field...');
         
         gradient{source} = ea_calc_gradient(vol,potential); % output in V/m.
         
@@ -309,7 +309,7 @@ vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.
 
 
 
-disp('Done. Calculating VAT...');
+ea_dispt('Calculating VAT...');
 
 vat.tET=vat.ET>thresh;
 vat.tpos=vat.pos(vat.tET,:);
@@ -321,10 +321,10 @@ end
 
 % the following will be used for volume 2 isosurf creation as well as
 % volumetrics of the vat in mm^3.
-disp('Calculating interpolant on scattered FEM mesh data...');
+ea_dispt('Calculating interpolant on scattered FEM mesh data...');
 F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.ET','natural','none');
 
-disp('Converting to equispaced image data...');
+ea_dispt('Converting to equispaced image data...');
 res=100;
 gv=cell(3,1); spacing=zeros(3,1);
 try
@@ -356,7 +356,7 @@ end
 eeg = F(xg,yg,zg);
 eeg(isnan(eeg))=0;
 % e-field in matrix form.
-
+ea_dispt('Calculating output file data...');
 eg=eeg;
 eg=eg>thresh;
 % binary e-field - "vat"
@@ -380,12 +380,14 @@ end
 
 
 %eg=smooth3(eg,'gaussian',[25 25 25]);
+ea_dispt('Calculating volume...');
 
 vatvolume=sum(eg(:))*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
 S.volume(side)=vatvolume;
 
 
 
+ea_dispt('Writing files...');
 
 % determine stimulation name:
 mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
@@ -416,18 +418,23 @@ ea_write_nii(Vvatne);
 Vvat.img=permute(eg,[2,1,3]);
 ea_write_nii(Vvat);
 
-[pth,fn,ext]=fileparts(Vvat.fname);
+smoothvat=0;
+if smoothvat
+    ea_dispt('Smoothing VTA...');
+    [pth,fn,ext]=fileparts(Vvat.fname);
+    matlabbatch{1}.spm.spatial.smooth.data = {[Vvat.fname]};
+    matlabbatch{1}.spm.spatial.smooth.fwhm = [0.4 0.4 0.4];
+    matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+    matlabbatch{1}.spm.spatial.smooth.im = 0;
+    matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+    spm_jobman('run',{matlabbatch});
+    
+    Vvat=ea_load_nii(fullfile(pth,['s',fn,ext]));
+    movefile(fullfile(pth,['s',fn,ext]),fullfile(pth,[fn,ext]));
+end
 
-matlabbatch{1}.spm.spatial.smooth.data = {[Vvat.fname]};
-matlabbatch{1}.spm.spatial.smooth.fwhm = [0.4 0.4 0.4];
-matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-matlabbatch{1}.spm.spatial.smooth.im = 0;
-matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-spm_jobman('run',{matlabbatch});
-
-Vvat=ea_load_nii(fullfile(pth,['s',fn,ext]));
+ea_dispt('Calculating isosurface to display...');
 vatfv=isosurface(xg,yg,zg,Vvat.img,0.75);
-movefile(fullfile(pth,['s',fn,ext]),fullfile(pth,[fn,ext]));
 
 
 
@@ -435,7 +442,7 @@ movefile(fullfile(pth,['s',fn,ext]),fullfile(pth,[fn,ext]));
 varargout{1}=vatfv;
 varargout{2}=vatvolume;
 varargout{3}=radius;
-disp('Done...');
+ea_dispt(''); % stop chain of timed processes.
 
 
 function outliers=ea_removeoutliers(pointcloud)
