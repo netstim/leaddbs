@@ -1,4 +1,4 @@
-function electrode=ea_elspec_medtronic3389(varargin)
+function electrode=ea_elspec_medtronic3387(varargin)
 % This function creates the electrode specification for a certain
 % lead. Since this code is usually only executed once (to
 % establish the model), it is not optimized in any way. You can however use
@@ -8,12 +8,13 @@ function electrode=ea_elspec_medtronic3389(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-if nargin
-    options.elmodel=varargin{1};
-else
-    options.elmodel='Medtronic 3389';
-end
 
+    options.elmodel='Medtronic 3387';
+    if nargin
+        vizz=0;
+    else
+        vizz=1;
+    end
 pt=1;
 
 options.sides=1;
@@ -28,7 +29,7 @@ N=200; % resolution of electrode points
 
 for side=1:length(options.sides)
     %% nullmodel:
-    coords_mm{side}=[0,0,1.5+0.75;0,0,1.5+0.75+1*2;0,0,1.5+0.75+2*2;0,0,1.5+0.75+3*2];
+    coords_mm{side}=[0,0,1.5+0.75;0,0,1.5+0.75+1*3;0,0,1.5+0.75+2*3;0,0,1.5+0.75+3*3];
     trajectory{side}=[zeros(30,2),linspace(30,0,30)'];
     %%
     trajvector=mean(diff(trajectory{side}));
@@ -333,36 +334,38 @@ save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfnam
 
 
 % visualize
-cnt=1;
-g=figure;
-X=eye(4);
-
-for ins=1:length(electrode.insulation)
+if vizz
+    cnt=1;
+    g=figure;
+    X=eye(4);
     
-    vs=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
-    electrode.insulation(ins).vertices=vs(1:3,:)';
-    elrender{side}(cnt)=patch('Faces',electrode.insulation(ins).faces,'Vertices',electrode.insulation(ins).vertices);
-    if isfield(elstruct,'group')
-        usecolor=elstruct.groupcolors(elstruct.group,:);
-    else
-        usecolor=elspec.lead_color;
+    for ins=1:length(electrode.insulation)
+        
+        vs=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+        electrode.insulation(ins).vertices=vs(1:3,:)';
+        elrender{side}(cnt)=patch('Faces',electrode.insulation(ins).faces,'Vertices',electrode.insulation(ins).vertices);
+        if isfield(elstruct,'group')
+            usecolor=elstruct.groupcolors(elstruct.group,:);
+        else
+            usecolor=elspec.lead_color;
+        end
+        specsurf(elrender{side}(cnt),usecolor,aData);
+        cnt=cnt+1;
     end
-    specsurf(elrender{side}(cnt),usecolor,aData);
-    cnt=cnt+1;
+    for con=1:length(electrode.contacts)
+        
+        vs=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+        electrode.contacts(con).vertices=vs(1:3,:)';
+        elrender{side}(cnt)=patch('Faces',electrode.contacts(con).faces,'Vertices',electrode.contacts(con).vertices);
+        
+        specsurf(elrender{side}(cnt),elspec.contact_color,aData);
+        
+        cnt=cnt+1;
+    end
+    
+    axis equal
+    view(0,0);
 end
-for con=1:length(electrode.contacts)
-    
-    vs=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
-    electrode.contacts(con).vertices=vs(1:3,:)';
-    elrender{side}(cnt)=patch('Faces',electrode.contacts(con).faces,'Vertices',electrode.contacts(con).vertices);
-    
-    specsurf(elrender{side}(cnt),elspec.contact_color,aData);
-    
-    cnt=cnt+1;
-end
-
-axis equal
-view(0,0);
 
 
 

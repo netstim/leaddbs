@@ -8,7 +8,7 @@ function varargout=ea_resolve_elspec(varargin)
 
 
 varargout{1}={'Medtronic 3389','Medtronic 3387','Medtronic 3391','Boston Scientific Vercise','Boston Scientific Vercise Directed','St. Jude ActiveTip'};
-varargout{2}={'medtronic_3389','medtronic_3387','medtronic_3391','boston_vercise','boston_vercise_directed','stjudeactivetip'};
+varargout{2}={'medtronic_3389','medtronic_3387','medtronic_3391','boston_vercise','boston_vercise_directed','stjude_activetip'};
 if ~nargin
     return
 else

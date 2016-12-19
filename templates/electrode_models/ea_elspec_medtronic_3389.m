@@ -1,4 +1,4 @@
-function electrode=ea_elspec_medtronic3387(varargin)
+function electrode=ea_elspec_medtronic3389(varargin)
 % This function creates the electrode specification for a certain
 % lead. Since this code is usually only executed once (to
 % establish the model), it is not optimized in any way. You can however use
@@ -8,10 +8,13 @@ function electrode=ea_elspec_medtronic3387(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
+
+options.elmodel='Medtronic 3389';
+
 if nargin
-    options.elmodel=varargin{1};
+    vizz=0;
 else
-    options.elmodel='Medtronic 3387';
+    vizz=1;
 end
 
 pt=1;
@@ -28,7 +31,7 @@ N=200; % resolution of electrode points
 
 for side=1:length(options.sides)
     %% nullmodel:
-    coords_mm{side}=[0,0,1.5+0.75;0,0,1.5+0.75+1*3;0,0,1.5+0.75+2*3;0,0,1.5+0.75+3*3];
+    coords_mm{side}=[0,0,1.5+0.75;0,0,1.5+0.75+1*2;0,0,1.5+0.75+2*2;0,0,1.5+0.75+3*2];
     trajectory{side}=[zeros(30,2),linspace(30,0,30)'];
     %%
     trajvector=mean(diff(trajectory{side}));
@@ -53,9 +56,9 @@ for side=1:length(options.sides)
     cZ=cZ+lowerpoint(3);
     
     p=surf2patch(surf(cX,cY,cZ),'triangles');
-
     
-
+    
+    
     
     
     % add meshing-version to it
@@ -112,7 +115,7 @@ for side=1:length(options.sides)
         
         p=surf2patch(surf(cX,cY,cZ),'triangles');
         
-
+        
         
         
         % add meshing-version to it
@@ -227,28 +230,28 @@ for side=1:length(options.sides)
     
     p=surf2patch(surf(cX,cY,cZ),'triangles');
     
-            % add meshing-version to it
-            
-            [cX,cY,cZ] = ea_singlecylinder((tipdiams),20);
-            
-            cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
-            
-            % define two points to define cylinder.
-            X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
-            X2=X1+trajvector*elspec.tip_length;
-            
-            
-            cX=cX+X1(1);
-            cY=cY+X1(2);
-            cZ=cZ-(2*elspec.tip_length)/2+X1(3);
-        a=surf2patch(surf(cX,cY,cZ));
-        
-        a=ea_reordercylinder(a,20);
-        meshel.ins{end+1}.faces=a.faces;
-        meshel.ins{end}.vertices=a.vertices;
-        ndiv=100;
-        meshel.ins{end}.endplates=[1:ndiv];
-        
+    % add meshing-version to it
+    
+    [cX,cY,cZ] = ea_singlecylinder((tipdiams),20);
+    
+    cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
+    
+    % define two points to define cylinder.
+    X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
+    X2=X1+trajvector*elspec.tip_length;
+    
+    
+    cX=cX+X1(1);
+    cY=cY+X1(2);
+    cZ=cZ-(2*elspec.tip_length)/2+X1(3);
+    a=surf2patch(surf(cX,cY,cZ));
+    
+    a=ea_reordercylinder(a,20);
+    meshel.ins{end+1}.faces=a.faces;
+    meshel.ins{end}.vertices=a.vertices;
+    ndiv=100;
+    meshel.ins{end}.endplates=[1:ndiv];
+    
     
     % add endplate:
     p.vertices=[p.vertices;...
@@ -331,38 +334,130 @@ electrode.coords_mm=coords_mm{side};
 electrode.meshel=meshel;
 save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 
-
-% visualize
-cnt=1;
-g=figure;
-X=eye(4);
-
-for ins=1:length(electrode.insulation)
+if vizz
+    % visualize
+    cnt=1;
+    g=figure;
+    X=eye(4);
     
-    vs=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
-    electrode.insulation(ins).vertices=vs(1:3,:)';
-    elrender{side}(cnt)=patch('Faces',electrode.insulation(ins).faces,'Vertices',electrode.insulation(ins).vertices);
-    if isfield(elstruct,'group')
-        usecolor=elstruct.groupcolors(elstruct.group,:);
-    else
-        usecolor=elspec.lead_color;
+    for ins=1:length(electrode.insulation)
+        
+        vs=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+        electrode.insulation(ins).vertices=vs(1:3,:)';
+        elrender{side}(cnt)=patch('Faces',electrode.insulation(ins).faces,'Vertices',electrode.insulation(ins).vertices);
+        if isfield(elstruct,'group')
+            usecolor=elstruct.groupcolors(elstruct.group,:);
+        else
+            usecolor=elspec.lead_color;
+        end
+        specsurf(elrender{side}(cnt),usecolor,aData);
+        cnt=cnt+1;
     end
-    specsurf(elrender{side}(cnt),usecolor,aData);
-    cnt=cnt+1;
-end
-for con=1:length(electrode.contacts)
+    for con=1:length(electrode.contacts)
+        
+        vs=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+        electrode.contacts(con).vertices=vs(1:3,:)';
+        elrender{side}(cnt)=patch('Faces',electrode.contacts(con).faces,'Vertices',electrode.contacts(con).vertices);
+        
+        specsurf(elrender{side}(cnt),elspec.contact_color,aData);
+        
+        cnt=cnt+1;
+    end
     
-    vs=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
-    electrode.contacts(con).vertices=vs(1:3,:)';
-    elrender{side}(cnt)=patch('Faces',electrode.contacts(con).faces,'Vertices',electrode.contacts(con).vertices);
-    
-    specsurf(elrender{side}(cnt),elspec.contact_color,aData);
-    
-    cnt=cnt+1;
+    axis equal
+    view(0,0);
 end
 
-axis equal
-view(0,0);
+
+
+
+%% build volumetric addition to it:
+electrodetrisize=0.1;  % the maximum triangle size of the electrode mesh
+
+%
+if vizz
+    hold on
+    plot3(orig(1),orig(2),orig(3),'y*');
+    plot3(etop(1),etop(2),etop(3),'y*');
+    oe=[orig;etop];
+    plot3(oe(:,1),oe(:,2),oe(:,3),'r-');
+end
+
+
+
+
+
+
+%% loading the electrode surface model
+
+ncyl=[];
+fcyl=[];
+scyl=[];
+seeds=[];
+
+for i=1:length(meshel.ins)
+    fcyl=[fcyl; meshel.ins{i}.faces+size(ncyl,1)];
+    
+    if(i<length(meshel.ins))
+        scyl=[scyl; meshel.ins{i}.endplates+size(ncyl,1)]; % had to rebuild the endplates
+    end
+    ncyl=[ncyl; meshel.ins{i}.vertices];
+    seeds=[seeds; mean(meshel.ins{i}.vertices)];
+end
+for i=1:length(meshel.con)
+    fcyl=[fcyl; meshel.con{i}.faces+size(ncyl,1)];
+    scyl=[scyl; meshel.ins{i}.endplates+size(ncyl,1)];
+    ncyl=[ncyl; meshel.con{i}.vertices];
+    seeds=[seeds; mean(meshel.ins{i}.vertices)];
+end
+
+
+
+
+[unique_ncyl, I, J]=unique(ncyl, 'rows');
+unique_fcyl=unique(round(J(fcyl)),'rows');
+unique_scyl=unique(round(J(scyl)),'rows');
+if vizz
+    figure
+    patch('faces',fcyl,'vertices',ncyl,'edgecolor','k','facecolor','none');
+
+    figure
+    patch('faces',unique_fcyl,'vertices',unique_ncyl,'edgecolor','b','facecolor','none');
+end
+fcyl=num2cell(unique_fcyl,2);
+scyl=num2cell(unique_scyl,2);
+
+% clean from duplicate indices:
+
+for ff=1:length(fcyl)
+    [has,which]=ea_hasduplicates(fcyl{ff});
+    if has
+        doubles=find(fcyl{ff}==which);
+        fcyl{ff}(doubles(2:end))=[];
+    end
+end
+
+for ff=1:length(scyl)
+    [has,which]=ea_hasduplicates(scyl{ff});
+    if has
+        doubles=find(scyl{ff}==which);
+        scyl{ff}(doubles(2:end))=[];
+    end
+end
+
+
+%% convert to obtain the electrode surface mesh model
+
+[node,~,face]=s2m(unique_ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');
+
+
+
+
+
+
+
+
 
 
 

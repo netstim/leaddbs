@@ -273,7 +273,6 @@ indices=unique(indices(2:end-1));
 indices(indices==0)=[];
 indices(indices>length(midpts))=[];
 try
-    
     vatgrad(side).x=midpts(indices,1); vatgrad(side).y=midpts(indices,2); vatgrad(side).z=midpts(indices,3);
 catch
     keyboard
@@ -331,11 +330,11 @@ F=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.ET','natural',
 % 
 % Fne=scatteredInterpolant(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),vat.nET');
 % Fne.ExtrapolationMethod='none';
-
+res=100;
 gv=cell(3,1); spacing=zeros(3,1);
 try
     for dim=1:3
-        gv{dim}=linspace(min(round(vat.tpos(:,dim)))-1,max(round(vat.tpos(:,dim)))+1,100);
+        gv{dim}=linspace(min(round(vat.tpos(:,dim)))-1,max(round(vat.tpos(:,dim)))+1,res);
         spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
     end
 catch
@@ -345,9 +344,9 @@ end
 [xg,yg,zg] = meshgrid(gv{1},gv{2},gv{3});
 
 % create nifti
-chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);
-Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
-Vvat.dim=[100,100,100];
+chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);
+Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,res)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,res)]')';
+Vvat.dim=[res,res,res];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';

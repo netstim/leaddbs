@@ -21,7 +21,6 @@ etop=electrode.head_position-3*(electrode.tail_position-electrode.head_position)
 
 nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
 
-electrodetrisize=0.1;  % the maximum triangle size of the electrode mesh
 bcyltrisize=0.3;       % the maximum triangle size of the bounding cyl
 
 cylz0=-35;     % define the lower end of the bounding cylinder
@@ -37,82 +36,7 @@ v=[0 0 1];
 
 elmodel_fn=[options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'];
 if ~exist(elmodel_fn,'file')
-    
-    if vizz
-        hold on
-        plot3(orig(1),orig(2),orig(3),'y*');
-        plot3(etop(1),etop(2),etop(3),'y*');
-        oe=[orig;etop];
-        plot3(oe(:,1),oe(:,2),oe(:,3),'r-');
-    end
-    
-    
-    
-    
-    
-    
-    %% loading the electrode surface model
-    
-    ncyl=[];
-    fcyl=[];
-    scyl=[];
-    seeds=[];
-    
-    for i=1:length(meshel.ins)
-        fcyl=[fcyl; meshel.ins{i}.faces+size(ncyl,1)];
-        
-        if(i<length(meshel.ins))
-            scyl=[scyl; meshel.ins{i}.endplates+size(ncyl,1)]; % had to rebuild the endplates
-        end
-        ncyl=[ncyl; meshel.ins{i}.vertices];
-        seeds=[seeds; mean(meshel.ins{i}.vertices)];
-    end
-    for i=1:length(meshel.con)
-        fcyl=[fcyl; meshel.con{i}.faces+size(ncyl,1)];
-        scyl=[scyl; meshel.ins{i}.endplates+size(ncyl,1)];
-        ncyl=[ncyl; meshel.con{i}.vertices];
-        seeds=[seeds; mean(meshel.ins{i}.vertices)];
-    end
-    
-    
-    
-    
-    [unique_ncyl, I, J]=unique(ncyl, 'rows');
-    unique_fcyl=unique(round(J(fcyl)),'rows');
-    unique_scyl=unique(round(J(scyl)),'rows');
-    if vizz
-        figure
-        patch('faces',fcyl,'vertices',ncyl,'edgecolor','k','facecolor','none');
-        
-        figure
-        patch('faces',unique_fcyl,'vertices',unique_ncyl,'edgecolor','b','facecolor','none');
-    end
-    fcyl=num2cell(unique_fcyl,2);
-    scyl=num2cell(unique_scyl,2);
-    
-    % clean from duplicate indices:
-    
-    for ff=1:length(fcyl)
-        [has,which]=ea_hasduplicates(fcyl{ff});
-        if has
-            doubles=find(fcyl{ff}==which);
-            fcyl{ff}(doubles(2:end))=[];
-        end
-    end
-    
-    for ff=1:length(scyl)
-        [has,which]=ea_hasduplicates(scyl{ff});
-        if has
-            doubles=find(scyl{ff}==which);
-            scyl{ff}(doubles(2:end))=[];
-        end
-    end
-    
-    
-    %% convert to obtain the electrode surface mesh model
-    
-    [node,~,face]=s2m(unique_ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
-    save(elmodel_fn,'node','face');
+  ea_generate_electrode_specs; % regenerate all electrode specifications
 else
     load(elmodel_fn);
 end
@@ -214,7 +138,7 @@ end
 
 %% create tetrahedral mesh of the final combined mesh (seeds are ignored, tetgen 1.5 automatically find regions)
 % - this is the part where we have all 4 element types combined already.
-[nmesh,emesh,face]=s2m(nboth3,fboth3,1,5);
+[nmesh,emesh,face]=s2m(nboth3,fboth3,1,3);
 if vizz
     figure('name','Final mesh');
     fvv.faces=face(:,1:3);
@@ -424,17 +348,7 @@ end
 
 toc
 
-function [has,repeatedValues]=ea_hasduplicates(X)
 
-uniqueX = unique(X);
-countOfX = hist(X,uniqueX);
-indexToRepeatedValue = (countOfX~=1);
-repeatedValues = uniqueX(indexToRepeatedValue);
-if ~isempty(repeatedValues)
-    has=1;
-else
-    has=0;
-end
 
 function nodes=ea_nudgedirinodes(nodes,centroid)
 % get to ~1000 comparison points

@@ -8,11 +8,13 @@ function electrode=ea_elspec_medtronic3391(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-if nargin
-    options.elmodel=varargin{1};
-else
+
     options.elmodel='Medtronic 3391';
-end
+    if nargin
+        vizz=0;
+    else
+        vizz=1;
+    end
 
 pt=1;
 
@@ -189,6 +191,8 @@ electrode.lead_color=options.elspec.lead_color;
 electrode.coords_mm=coords_mm{side};
 
 save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
+
+if vizz
 % visualize
 cnt=1;
 g=figure;
@@ -218,7 +222,7 @@ X=eye(4);
 
 axis equal
 view(0,0);
-
+end
 
 
 function m=maxiso(cellinp) % simply returns the highest entry of matrices in a cell.

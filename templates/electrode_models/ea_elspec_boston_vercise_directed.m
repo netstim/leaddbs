@@ -8,7 +8,11 @@ function electrode=ea_elspec_bostonvercisedirected(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-
+    if nargin
+        vizz=0;
+    else
+        vizz=1;
+    end
     options.elmodel='Boston Scientific Vercise Directed';
 
 pt=1;
@@ -322,38 +326,40 @@ electrode.coords_mm(8,:)=coords_mm{side}(4,:);
 
 save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 % visualize
-cnt=1;
-if ~nargin
-g=figure;
-else
-    axes(varargin{1});
-end
-X=eye(4);
-
-for ins=1:length(electrode.insulation)
-    electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
-    electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
-    elrender{side}(cnt)=patch(electrode.insulation(ins));
-    if isfield(elstruct,'group')
-        usecolor=elstruct.groupcolors(elstruct.group,:);
+if vizz
+    cnt=1;
+    if ~nargin
+        g=figure;
     else
-        usecolor=elspec.lead_color;
+        axes(varargin{1});
     end
-    specsurf(elrender{side}(cnt),usecolor,aData);
-    cnt=cnt+1;
+    X=eye(4);
+    
+    for ins=1:length(electrode.insulation)
+        electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+        electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
+        elrender{side}(cnt)=patch(electrode.insulation(ins));
+        if isfield(elstruct,'group')
+            usecolor=elstruct.groupcolors(elstruct.group,:);
+        else
+            usecolor=elspec.lead_color;
+        end
+        specsurf(elrender{side}(cnt),usecolor,aData);
+        cnt=cnt+1;
+    end
+    for con=1:length(electrode.contacts)
+        electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+        electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
+        elrender{side}(cnt)=patch(electrode.contacts(con));
+        
+        specsurf(elrender{side}(cnt),elspec.contact_color,aData);
+        
+        cnt=cnt+1;
+    end
+    
+    axis equal
+    view(0,0);
 end
-for con=1:length(electrode.contacts)
-    electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
-    electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
-    elrender{side}(cnt)=patch(electrode.contacts(con));
-
-    specsurf(elrender{side}(cnt),elspec.contact_color,aData);
-
-    cnt=cnt+1;
-end
-
-axis equal
-view(0,0);
 
 
 
