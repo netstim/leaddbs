@@ -45,6 +45,7 @@ for side=1:length(options.sides)
 
 
     % draw trajectory
+    
     [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
 
 
