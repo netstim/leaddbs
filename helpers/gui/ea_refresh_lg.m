@@ -1,7 +1,7 @@
 function ea_refresh_lg(handles)
 
 
-
+ea_busyaction('on',handles.leadfigure,'group');
 % get model data
 disp('Getting model data...');
 M=getappdata(handles.leadfigure,'M');
@@ -406,4 +406,4 @@ set(handles.fclist,'String',M.fclist);
 disp('Done.');
 
 
-%ea_busyaction('off',handles.leadfigure,'group');
+ea_busyaction('off',handles.leadfigure,'group');
