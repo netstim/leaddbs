@@ -11,6 +11,9 @@ switch bdstring
     case 'list'
         % determine whether we are in No patient mode (could be called from
         % lead group or called from an empty patient viewer / lead anatomy
+        if ~exist('options','var')
+           options.patientname=''; 
+        end
         if isfield(options,'groupmode')
             nopatientmode=options.groupmode;
         else

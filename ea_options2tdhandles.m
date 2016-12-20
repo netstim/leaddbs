@@ -1,9 +1,13 @@
 function d2=ea_options2tdhandles(tdhandles,d2)
 
-try    
+try   
+    
     allbackdrops=get(tdhandles.tdbackdrop,'String');
     [~,bdix]=ismember(d2.backdrop,allbackdrops);
     set(tdhandles.tdbackdrop,'Value',bdix);
+if get(tdhandles.tdbackdrop,'Value')>length(allbackdrops) || get(tdhandles.tdbackdrop,'Value')<1
+    set(tdhandles.tdbackdrop,'Value',1);
+end
 
     set(tdhandles.tdcolorscheck,'Value',d2.col_overlay);
     set(tdhandles.tdcontourcheck,'Value',d2.con_overlay);
