@@ -90,6 +90,7 @@ for s=1:length(sfile)
     
     sweights=seed{s}.img(dataset.vol.outidx);
     sweights(isnan(sweights))=0;
+    sweights(abs(sweights)<0.0001)=0;
     sweights=double(sweights);
     % assure sum of sweights is 1
     %sweights(logical(sweights))=sweights(logical(sweights))/abs(sum(sweights(logical(sweights))));
@@ -113,6 +114,7 @@ switch cmd
             lh.fX{s}=nan(10242,numsub);
         end
     case 'pmap'
+        
         for s=1:numseed-1
             fX{s}=nan(length(omaskidx),numsub);
         end
@@ -204,13 +206,15 @@ for mcfi=usesubjects
             end
         case 'pmap'
 
-
+            
+            targetix=sweightidx{1};
             clear stc
-                thiscorr=zeros(length(omaskidx),howmanyruns);
+            thiscorr=cell(numseed-1,1);
+            for s=1:numseed-1
+                thiscorr{s}=zeros(length(omaskidx),howmanyruns);
+            end
             for run=1:howmanyruns
                 for s=2:numseed
-                    
-                    thiscorr=zeros(length(omaskidx),howmanyruns);
                     switch dataset.type
                         case 'fMRI_matrix'
                             keyboard
@@ -234,7 +238,6 @@ for mcfi=usesubjects
                 end
                 % now we have all seeds, need to iterate across voxels of
                 % target to get pmap values
-                targetix=sweightidx{1};
                     
                     for s=1:size(stc,2)
                         seedstc=stc(:,s);
@@ -242,19 +245,24 @@ for mcfi=usesubjects
                         otherstc(:,s)=[];
           
                         targtc=gmtc(targetix,:);
-                        thiscorr(targetix,run)=partialcorr(targtc',seedstc,otherstc);
-                        fX{s}(:,mcfi)=mean(thiscorr,2);
-                        if writeoutsinglefiles
-                            ea_error('Write out single files not (yet) supported for this action');
-                            ccmap=dataset.vol.space;
-                            ccmap.dt=[16 0];
-                            ccmap.img=single(ccmap.img);
-                            ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr.nii'];
-                            ccmap.img(omaskidx)=fX{s}(:,mcfi);
-                            spm_write_vol(ccmap,ccmap.img);
-                        end
+                        thiscorr{s}(targetix,run)=partialcorr(targtc',seedstc,otherstc);
+
                     end
-            end            
+            end 
+            
+
+            for s=1:size(stc,2)
+                fX{s}(:,mcfi)=mean(thiscorr{s},2);
+                if writeoutsinglefiles
+                    ccmap=dataset.vol.space;
+                    ccmap.dt=[16 0];
+                    ccmap.img=single(ccmap.img);
+                    ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_pmap.nii'];
+                    ccmap.img(omaskidx)=fX{s}(:,mcfi);
+                    spm_write_vol(ccmap,ccmap.img);
+                end
+            end
+            
             
         otherwise
             for run=1:howmanyruns
