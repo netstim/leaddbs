@@ -197,7 +197,8 @@ for mcfi=usesubjects
                     ccmap=dataset.vol.space;
                     ccmap.img=single(ccmap.img);
                     ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr.nii'];
-                    ccmap.img(omaskidx)=fX{s}(:,mcfi);    
+                    ccmap.img(omaskidx)=fX{s}(:,mcfi);  
+                    ccmap.dt=[16,0];
                     spm_write_vol(ccmap,ccmap.img);
                 end
             end
