@@ -24,7 +24,7 @@ for comp=2:length(presentfiles)
         iscoreg=0;
         return
     end
-    if any(abs(nii1.mat(:)-nii2.mat(:))>0.0001) % very small rounding errors should be ignored, thus not use isequal here.
+    if any(abs(Vref.mat(:)-Vcomp.mat(:))>0.0001) % very small rounding errors should be ignored, thus not use isequal here.
         iscoreg=0;
         return
     end
