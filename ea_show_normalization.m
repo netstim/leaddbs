@@ -19,7 +19,7 @@ end
 disp('Preparing images to show Normalization...');
 
 for export=expdo % if CT, only do 1, if MR, do 1:3.
-     %try
+     try
         switch export
             case 1
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
@@ -161,9 +161,9 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             clear joint_im pt grid_im
             ea_imshowpair(wim,options,addstr,'normalization');
             
-     %catch
+     catch
         fprintf('Skip showing normalization of %s\n', checkf);
-     %end
+     end
 
 end
 
