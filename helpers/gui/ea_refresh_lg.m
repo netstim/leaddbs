@@ -39,8 +39,11 @@ end
 disp('Creating isomatrix from regressor list...');
 % set isomatrix from variable in clinical list
 try
-    M.isomatrix=M.clinical.vars{get(handles.clinicallist,'Value')};
-    M.isomatrix_name=M.clinical.labels{get(handles.clinicallist,'Value')};
+    M.isomatrix=M.clinical.vars(get(handles.clinicallist,'Value'));
+    M.isomatrix_name=M.clinical.labels(get(handles.clinicallist,'Value'));
+catch
+    M.isomatrix={};
+    M.isomatrix_name={};
 end
 
 disp('Refreshing selections on VI / FC Lists...');
