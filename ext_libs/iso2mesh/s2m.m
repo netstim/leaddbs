@@ -33,7 +33,7 @@ end
 [node,elem,face,success]=surf2mesh(v,f,[],[],keepratio,maxvol,regions,holes);
 
 if ~success % try with gmsh next
-    keyboard
+    error('Something went wrong / probably self-intersecting faces.');
     %     verts=v;
     %     faces=zeros(length(f),4);
     facc=cell2mat(f);

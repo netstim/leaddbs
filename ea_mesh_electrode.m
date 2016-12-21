@@ -108,7 +108,7 @@ end
 
 %% cut the electrode+nucleus mesh by the bounding cylinder
 ISO2MESH_SURFBOOLEAN='cork';
-[nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'first',nboth,fboth);
+[nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'resolve',nboth,fboth);
 clear ISO2MESH_SURFBOOLEAN;
 if vizz
     figure('name','nboth2');
@@ -121,7 +121,12 @@ end
 
 %% remove duplicated nodes in the surface
 [nboth3,fboth3]=meshcheckrepair(nboth2,fboth2,'dup');
-[nboth4,fboth4]=meshcheckrepair(nboth3,fboth3,'deep');
+%[nboth4,fboth4]=meshcheckrepair(nboth3,fboth3,'deep');
+
+
+
+%figure, patch('faces',fboth4,'vertices',nboth4,'facecolor','r','facealpha',0.3);
+
 if vizz
     figure('name','nboth3');
     fvv.faces=fboth3(:,1:3);
