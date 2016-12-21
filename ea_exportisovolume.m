@@ -117,7 +117,6 @@ for side=1:length(options.sides)
         jobs{1}=matlabbatch;
         spm_jobman('run',jobs);
         clear jobs matlabbatch
-
         %% Also write out volume with combined information on both sides (symmetric image).
 
         niic=ea_load_nii([ea_getearoot,'templates',filesep,'bb.nii']);
@@ -167,7 +166,7 @@ for side=1:length(options.sides)
                 XYZV=[XYZ,[V{1};V{2}]];
                 PTb=[PT{1};PT{2}];
                 if inside==1
-                    significancemethod=0;
+                    significancemethod=5;
                     switch significancemethod
                         case 1 % estimate significance by estimating centrality
                             [ixes]=ea_centrality_significance(XYZV);
@@ -186,8 +185,10 @@ for side=1:length(options.sides)
                         case 2 % estimate significance by smoothing and using SPM
                             niicsig=ea_smooth_significance(XYZV,PTb,niic,niic.img,options);
 
-                        case 3 % estimate significance by applying leave-one-out permutations
-                            [ixes]=ea_leoo_significance(XYZV);
+                        case 3 % estimate significance by applying leave-one-out permutations on scattered interpolant
+                            [ixes,R,p]=ea_leoo_significance(XYZV);
+                            ea_dumpsigtxt([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_leoo_sig_scatteredinterpolant.txt'],R,p);
+
                             if sum(ixes)>3
                                 XYZV=XYZV(ixes,:); % only significant entries..
                                 XYZV(:,4)=1;
@@ -200,7 +201,36 @@ for side=1:length(options.sides)
 
                                 niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
                             end
+                        case 4 % estimate significance by applying leave-one-out permutations on weighted average (by distance) from rest of data
+                            [ixes,R,p]=ea_leoo_significance_weightedave(XYZV);
+                            ea_dumpsigtxt([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_leoo_sig_weightedave.txt'],R,p);
+                            if sum(ixes)>3
+                                XYZV=XYZV(ixes,:); % only significant entries..
+                                XYZV(:,4)=1;
+                                warning('off');
+                                Fsig = scatteredInterpolant(XYZV(:,1),XYZV(:,2),XYZV(:,3),XYZV(:,4));
+                                
+                                Fsig.ExtrapolationMethod='none';
+                                warning('on');
+                                niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
+                            end
+                            
+                        case 5 % estimate significance by applying leave-one-out permutations on weighted distance (by value) from rest of data
+                            [ixes,R,p]=ea_leoo_significance_weighteddist(XYZV);
+                            ea_dumpsigtxt([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_leoo_sig_weighteddist.txt'],R,p);
 
+                            if sum(ixes)>3
+                                XYZV=XYZV(ixes,:); % only significant entries..
+                                XYZV(:,4)=1;
+                                warning('off');
+                                Fsig = scatteredInterpolant(XYZV(:,1),XYZV(:,2),XYZV(:,3),XYZV(:,4));
+                                
+                                Fsig.ExtrapolationMethod='none';
+                                warning('on');
+                                
+                                
+                                niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
+                            end
                     end
                 end
 
@@ -224,12 +254,19 @@ for side=1:length(options.sides)
         %% write out significant volume:
 
         try
-        niic.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined_p05.nii'];
-        niic.img=niicsig;
-        ea_write_nii(niic);
+            if any(niicsig(:))
+                niic.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined_p05.nii'];
+                niic.img=niicsig;
+                ea_write_nii(niic);
+                ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_combined_p05.nii']);
+            end 
         end
 
-
+        ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'],'w','nz',1);
+        ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_lr.nii'],'w','nz',1);
+        ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'],'w','nz',1);
+        ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_combined.nii'],'w','nz',1);
+        
 
     end
 
@@ -240,3 +277,14 @@ for side=1:length(options.sides)
 end
 
 disp('*** Done exporting isovolume to nifti files.');
+
+
+function ea_dumpsigtxt(filepath,R,p)
+fid=fopen(filepath,'w');
+
+if p<0.05 && R>0
+    fprintf(fid,['Found significant positive relationship in data without permutations (R=',num2str(R),', p=',num2str(p),').']);
+else
+    fprintf(fid,['No significant positive relationship in data found (R=',num2str(R),', p=',num2str(p),').']);
+end
+fclose(fid);
