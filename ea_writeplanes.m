@@ -88,7 +88,7 @@ else
 end
 %XYZ_src_vx = src.mat \ XYZ_mm;
 
-
+fid=fopen([options.root,options.patientname,filesep,'cuts_export_coordinates.txt'],'w');
 for side=1:length(options.sides)
     %% write out axial images
     for tracor=find(tracorpresent)'
@@ -143,7 +143,7 @@ for side=1:length(options.sides)
             
             [slice,~,boundboxmm,sampleheight]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
             disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
-            
+            fprintf(fid,'%s\n',['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
             set(0,'CurrentFigure',cuts)
             try
                 hi=imagesc(slice,...
@@ -176,20 +176,22 @@ for side=1:length(options.sides)
             if options.d3.showisovolume
                 Visoraw=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
                 Viso=spm_vol([options.root,options.patientname,filesep,options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
-                Visostat=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'_p05.nii']);
+                try
+                Visostat=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'_p05.nii']); 
+                end
                 if exist('ave_coords_mm','var')
                     for siso=1:length(ave_coords_mm)
                         coordsi{siso}=Viso.mat\[ave_coords_mm{siso},ones(size(ave_coords_mm{siso},1),1)]';
                         coordsi{siso}=coordsi{siso}(1:3,:)';
                     end
                     [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
-                    [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el);
+                    try [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el); end
                     
                 else
                     coordsi{side}=Viso.mat\[coordsmm(1);coordsmm(1);coordsmm(1);1];
                     coordsi{side}=coordsi{side}(1:3,:)';
                     [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
-                    [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el);
+                    try [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el); end
                     
                 end
                 slice(slice==0)=nan;
@@ -236,13 +238,15 @@ for side=1:length(options.sides)
                 set(isv,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
                 set(isv,'AlphaData',alpha);
                 
-                % draw significance countour:
-                slicestat(isnan(slicestat))=0;
-                warning('off')
-                [cmat,statcontour]=contour(slicestat,1);
-                set(statcontour,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
-                set(statcontour,'Color','w');
-                warning('on')
+                % draw significance countour if available:
+                try
+                    slicestat(isnan(slicestat))=0;
+                    warning('off')
+                    [cmat,statcontour]=contour(slicestat,1);
+                    set(statcontour,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
+                    set(statcontour,'Color','w');
+                    warning('on')
+                end
                 
             end
             
@@ -392,6 +396,7 @@ for side=1:length(options.sides)
         end
     end
 end
+fclose(fid);
 
 
 
