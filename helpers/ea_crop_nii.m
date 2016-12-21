@@ -19,7 +19,11 @@ if nargin>2 % exclude nans/zeros
 else
     nstring='nz';
 end
-
+if nargin>3
+    cleannan=varargin{3};
+else
+    cleannan=0;
+end
 
 V=spm_vol(filename);
 
@@ -48,7 +52,7 @@ if all(dist)
     ropts.preserve=0;
     ropts.bb=bb;
     ropts.vox=vox;
-    ropts.interp=1;
+    ropts.interp=0;
     ropts.wrap=[0,0,0];
     ropts.prefix=prefix;
     try
@@ -59,15 +63,23 @@ if all(dist)
     end
     if nargin<2
         [pth,fname,ext]=fileparts(filename);
-        if ~isempty(pth)
-            movefile([pth,filesep,'w',fname,ext],[pth,filesep,fname,ext]);
-        else
-            movefile(['w',fname,ext],[fname,ext]);
+        
+        movefile(fullfile(pth,[filesep,'w',fname,ext]),fullfile(pth,[filesep,fname,ext]));
+    else
+        if strcmp(prefix,'w')
+            [pth,fname,ext]=fileparts(filename);
+            
+            movefile(fullfile(pth,[filesep,'w',fname,ext]),fullfile(pth,[filesep,fname,ext]));
+            
         end
     end
     
 end
-
+if cleannan
+nii=ea_load_nii(fullfile(pth,[filesep,fname,ext]));
+nii.img(abs(nii.img)<0.01)=nan; % reduce noise in originally zero compartments.
+ea_write_nii(nii);
+end
 
 function [BB,vx] = ea_spm_get_bbox(V, thr, premul)
 % Compute volume's bounding box, for full field of view or object bounds
