@@ -999,7 +999,11 @@ for pt=selection
     options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
     options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
     options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
-    try options.d3.isomatrix=M.isomatrix; end
+    try 
+        options.d3.isomatrix=M.isomatrix;
+    catch
+        options.d3.isomatrix={};
+    end
 
     options.d3.isovscloud=M.ui.isovscloudpopup;
     options.d3.showisovolume=M.ui.showisovolumecheck;
@@ -1077,11 +1081,11 @@ for pt=selection
 
         [~,ix]=ismember(M.vatmodel,vfnames);
         vfs=getappdata(handles.leadfigure,'genvatfunctions');
-try
-        ea_genvat=eval(['@',vfs{ix}]);
-catch
-    keyboard
-end
+        try
+            ea_genvat=eval(['@',vfs{ix}]);
+        catch
+            keyboard
+        end
         setappdata(handles.leadfigure,'resultfig',resultfig);
         for side=1:2
             setappdata(resultfig,'elstruct',M.elstruct(pt));
@@ -1724,8 +1728,14 @@ options.d3.elrendering=M.ui.elrendering;
 options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
 options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
 options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
-try options.d3.isomatrix=M.isomatrix; end
-try options.d3.isomatrix_name=M.isomatrix_name; end
+try options.d3.isomatrix=M.isomatrix; 
+catch
+    options.d3.isomatrix={};
+end
+try options.d3.isomatrix_name=M.isomatrix_name; 
+catch
+    options.d3.isomatrix_name={};
+end
 
 options.expstatvat.do=M.ui.statvat;
 
@@ -1756,37 +1766,52 @@ end
 % Prepare isomatrix (includes a normalization step if M.ui.normregpopup
 % says so:
 
-try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); end
 
-if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
-    ea_refresh_lg(handles);
-    disp('Saving data...');
-    % save M
-    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
-    disp('Done.');
+if options.d3.showisovolume || options.expstatvat.do % regressors be used ? iterate through all
+    allisomatrices=options.d3.isomatrix;
+    allisonames=options.d3.isomatrix_name;
+    for reg=1:length(allisomatrices)
+        options.d3.isomatrix=allisomatrices{reg};
+        options.d3.isomatrix_name=allisonames{reg};
+        M.isomatrix=allisomatrices{reg};
+        M.isomatrix_name=allisonames{reg};
+        
+        try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); end
+        
+        if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
+            ea_refresh_lg(handles);
+            disp('Saving data...');
+            % save M
+            save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+            disp('Done.');
+        end
+        
+        % export coordinate-mapping
+        if options.d3.showisovolume % export to nifti volume
+            ea_exportisovolume(M.elstruct(get(handles.patientlist,'Value')),options);
+        end
+        % export VAT-mapping
+        if options.expstatvat.do % export to nifti volume
+            ea_exportvatmapping(M,options,handles);
+        end
+        
+        ea_out2d(M,options,handles);
+    end
+else
+    ea_out2d(M,options,handles);
 end
+ea_busyaction('off',gcf,'group');
 
-
-% export coordinate-mapping
-if options.d3.showisovolume % export to nifti volume
-    ea_exportisovolume(M.elstruct(get(handles.patientlist,'Value')),options);
-end
-% export VAT-mapping
-if options.expstatvat.do % export to nifti volume
-    ea_exportvatmapping(M,options,handles);
-end
+function ea_out2d(M,options,handles)
 
 for pt=1:length(M.patient.list)
     for side=1:2
         try
-        M.elstruct(pt).activecontacts{side}=M.S(pt).activecontacts{side};
+            M.elstruct(pt).activecontacts{side}=M.S(pt).activecontacts{side};
         end
     end
 end
 cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));
-
-ea_busyaction('off',gcf,'group');
-
 
 
 % --- Executes on button press in lc_SPM.
