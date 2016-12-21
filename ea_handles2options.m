@@ -155,6 +155,7 @@ options.d3.showactivecontacts=1;
 options.d3.showpassivecontacts=1;
 options.d3.showisovolume=0;
 options.d3.isovscloud=0;
+options.d3.mirrorsides=0;
 try
     options.d3.autoserver=get(handles.exportservercheck,'Value');
 catch

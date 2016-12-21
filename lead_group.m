@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 06-Nov-2016 13:53:29
+% Last Modified by GUIDE v2.5 21-Dec-2016 16:19:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -305,7 +305,6 @@ options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),fil
 options.expstatvat.do=M.ui.statvat;
 
 try
-
     options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 catch
     warning('Localizations seem not properly defined.');
@@ -319,6 +318,7 @@ options.d3.elrendering=M.ui.elrendering;
 options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
 options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
 options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
+options.d3.mirrorsides=get(handles.mirrorsides,'Value');
 try options.d3.isomatrix=M.isomatrix; end
 try options.d3.isomatrix_name=M.isomatrix_name; end
 
@@ -336,8 +336,9 @@ options.normregressor=M.ui.normregpopup;
 % Prepare isomatrix (includes a normalization step if M.ui.normregpopup
 % says so:
 
-try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); end
-
+for reg=1:length(options.d3.isomatrix)
+try options.d3.isomatrix{reg}=ea_reformat_isomatrix(options.d3.isomatrix{reg},M,options); end
+end
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
@@ -2140,18 +2141,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in pushbutton37.
-function pushbutton37_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton37 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in pushbutton38.
-function pushbutton38_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton38 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 
 % --- Executes on button press in lc_nbs.
@@ -2344,3 +2333,12 @@ function lc_nbsadvanced_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 ea_nbs_advanced;
+
+
+% --- Executes on button press in mirrorsides.
+function mirrorsides_Callback(hObject, eventdata, handles)
+% hObject    handle to mirrorsides (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of mirrorsides

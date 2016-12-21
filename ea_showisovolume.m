@@ -3,11 +3,14 @@ function ea_showisovolume(resultfig,elstruct,options)
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
-
-ht=uitoolbar(gcf);
 set(0,'CurrentFigure',resultfig);
 
-
+isobar=getappdata(resultfig,'isobar');
+if isempty(isobar)
+isobar=uitoolbar(resultfig);
+setappdata(resultfig,'isobar',isobar);
+end
+hold on
 
 %
 
@@ -77,19 +80,34 @@ for side=1:length(options.sides)
             end
         end
     elseif options.d3.isovscloud==2 % show isovolume
-        VI{side}=smooth3(VI{side},'gaussian',3);
+        VI{side}=smooth3(VI{side},'gaussian',[5 5 5]);
+        %keyboard
+        thresh=ea_nanmean(VI{side}(:))+2*ea_nanstd(VI{side}(:));
+        fv{side}=isosurface(XI,YI,ZI,VI{side},thresh);
+        fv{side}=ea_smoothpatch(fv{side},1,70);
+        C=VI{side};
+        C(C<thresh)=nan;
+        C=C-ea_nanmin(C(:));
+        C=C./ea_nanmax(C(:));
+        C=C.*63;
+        C(isnan(C))=0;
+        C=C+1;
+        %C=smooth3(C,'gaussian',[11 11 11]);
+        C=C-ea_nanmin(C(:));
+        C=C./ea_nanmax(C(:));
+        C=C.*63;
+        C=C+1;
+
+        nc=isocolors(XI,YI,ZI,C,fv{side}.vertices);
+        isopatch(side,1)=patch(fv{side},'CData',nc,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
         
-        fv{side}=isosurface(XI,YI,ZI,VI{side},max(VI{side}(:))/3);
-        fv{side}=reducepatch(fv{side},0.5);
-        cdat=repmat(60,(length(fv{side}.vertices)),1);
-        isopatch(side,1)=patch(fv{side},'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
         jetlist=jet;
         ea_spec_atlas(isopatch(side,1),'isovolume',jet,1);
         
     end
     
        %ea_exportisovolume(elstruct,options);    
-    patchbutton(side)=uitoggletool(ht,'CData',ea_get_icn('isovolume',options),'TooltipString','Isovolume','OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
+    patchbutton(side)=uitoggletool(isobar,'CData',ea_get_icn('isovolume',options),'TooltipString',options.d3.isomatrix_name,'OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
     
 end
 

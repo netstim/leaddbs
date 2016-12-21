@@ -74,6 +74,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         if nargin>1
             multiplemode=1;
             elstruct=varargin{2};
+            
+            if options.d3.mirrorsides
+               elstruct=ea_mirrorsides(elstruct); 
+            end
+            
         else
             multiplemode=0;
 
@@ -202,7 +207,18 @@ end
 % Show isomatrix data
 
 if options.d3.showisovolume
-    ea_showisovolume(resultfig,elstruct,options);
+    allisomatrices=options.d3.isomatrix;
+    allisonames=options.d3.isomatrix_name;
+    for reg=1:length(allisomatrices)
+        options.d3.isomatrix=allisomatrices{reg};
+        options.d3.isomatrix_name=allisonames{reg};
+        
+        
+        if options.d3.mirrorsides
+           options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); 
+        end
+        ea_showisovolume(resultfig,elstruct,options);
+    end
 end
 
 if isfield(options.d3,'expdf');
