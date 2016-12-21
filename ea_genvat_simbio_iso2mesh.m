@@ -138,9 +138,14 @@ if ea_headmodel_changed(options,side,elstruct)
         cnt=cnt+1;
     end
     
-    
-    [mesh.tet,mesh.pnt,activeidx]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
-    
+    while 1
+        try
+            [mesh.tet,mesh.pnt,activeidx]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
+            break
+        catch
+            Y=Y+randn(4)/1000; % very small jitter on electrode
+        end
+    end
     
     mesh.tissue=mesh.tet(:,5);
     mesh.tet=mesh.tet(:,1:4);
@@ -325,7 +330,7 @@ res=100;
 gv=cell(3,1); spacing=zeros(3,1);
 try
     for dim=1:3
-        gv{dim}=linspace(min(round(vat.tpos(:,dim)))-1,max(round(vat.tpos(:,dim)))+1,res);
+        gv{dim}=linspace(min(round(vat.tpos(:,dim)))-3,max(round(vat.tpos(:,dim)))+3,res);
         spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
     end
 catch
@@ -417,6 +422,13 @@ ea_write_nii(Vvat);
 
 ea_dispt('Calculating isosurface to display...');
 vatfv=isosurface(xg,yg,zg,Vvat.img,0.75);
+
+caps=isocaps(xg,yg,zg,Vvat.img,0.5);
+
+                    vatfv.faces=[vatfv.faces;caps.faces+size(vatfv.vertices,1)];
+                    vatfv.vertices=[vatfv.vertices;caps.vertices];
+                    
+                    
 try
     vatfv=ea_smoothpatch(vatfv,1,100);
 catch
@@ -445,7 +457,7 @@ function outliers=ea_removeoutliers(pointcloud)
 
 mp=ea_robustmean(pointcloud,1);
 D=pointcloud-repmat(mp,size(pointcloud,1),1);
-S=3*std(D,[],1);
+S=4*std(D,[],1);
 outliers=D>repmat(S,size(D,1),1);
 outliers=any(outliers,2);
 
