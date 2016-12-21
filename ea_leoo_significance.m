@@ -1,4 +1,4 @@
-function [ixes]=ea_leoo_significance(XYZV)
+function [ixes,R,p]=ea_leoo_significance(XYZV)
 
 
 
@@ -8,7 +8,6 @@ XYZV(isnan(XYZV(:,4)),:)=[];
 
 
 % setup randomization:
-ea_dispercent(0,'Permutation based statistics on leave-one-out prediction');
 maxiter=1001;
 csize=nan(maxiter,size(XYZV,1));
 dimen=length(XYZV);
@@ -27,13 +26,23 @@ pdat=zeros(dimen,1);
         
         odat=dat(othere,:);
         
-        F = scatteredInterpolant(odat(:,1),odat(:,2),odat(:,3),odat(:,4)); %,'natural');
-        F.ExtrapolationMethod='none';
+        F = scatteredInterpolant(odat(:,1),odat(:,2),odat(:,3),odat(:,4),'linear','none');
         
         pdat(entry)=F(dat(entry,1),dat(entry,2),dat(entry,3));
         
     end
     
+    if iter==1
+       [R,p]=corr(dat(:,4),pdat,'rows','pairwise');
+       if p<0.05 && R>0
+           disp(['Found significant relationship in data without permutations (R=',num2str(R),', p=',num2str(p),').']);
+       else
+           disp(['No significant relationship in data found (R=',num2str(R),', p=',num2str(p),').']);
+           ixes=[];
+          return 
+       end
+       ea_dispercent(0,'Permutation based statistics on leave-one-out prediction');
+    end
     
     % estimate differences between dat and pdat
     csize(iter,:)=abs(pdat-dat(:,4))';
