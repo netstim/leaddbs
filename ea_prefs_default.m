@@ -20,7 +20,7 @@ prefs.pp.profile='local'; % specify parallel processing profile.
 
 %% general file handling:
 prefs.prenii_searchstring='anat_*.nii';
-prefs.prenii_order={'t2','t1','pd'}; % assign order of anatomical images used (nonspecified images matching the searchstring will be added afterwards).
+prefs.prenii_order={'t1','t2','pd'}; % assign order of anatomical images used (nonspecified images matching the searchstring will be added afterwards).
 prefs.prenii_unnormalized='anat_t2.nii'; % default (still used for DICOM import)
 prefs.prenii_unnormalized_t1='anat_t1.nii'; % default (still used for DICOM import)
 prefs.prenii_unnormalized_pd='anat_pd.nii'; % default (still used for DICOM import)
