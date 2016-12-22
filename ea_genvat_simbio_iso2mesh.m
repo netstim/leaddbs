@@ -143,7 +143,7 @@ if ea_headmodel_changed(options,side,elstruct)
             [mesh.tet,mesh.pnt,activeidx,wmboundary]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
             break
         catch
-            Y=Y+randn(4)/1000; % very small jitter on electrode
+            Y=Y+randn(4)/5000; % very small jitter on transformation which will be used on electrode.
         end
     end
     
@@ -366,7 +366,7 @@ neeg=eeg;
 neeg(~eg)=nan;
 
 
-neeg(neeg>0)=zscore(neeg(neeg>0));
+neeg(neeg>0)=ea_normal(neeg(neeg>0));
 % normalized e-field (zscored).
 neeg(~isnan(neeg))=neeg(~isnan(neeg))-min(neeg(~isnan(neeg)));
 neeg(~isnan(neeg))=neeg(~isnan(neeg))/sum(neeg(~isnan(neeg))); % 0-1 distributed.
