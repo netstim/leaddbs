@@ -80,11 +80,14 @@ for side=1:length(options.sides)
             end
         end
     elseif options.d3.isovscloud==2 % show isovolume
-        VI{side}=smooth3(VI{side},'gaussian',[5 5 5]);
+        VI{side}=smooth3(VI{side},'gaussian',[15 15 15]);
         %keyboard
-        thresh=ea_nanmean(VI{side}(:))+2*ea_nanstd(VI{side}(:));
-        fv{side}=isosurface(XI,YI,ZI,VI{side},thresh);
-        fv{side}=ea_smoothpatch(fv{side},1,70);
+        thresh=ea_nanmean(VI{side}(:))-2*ea_nanstd(VI{side}(:));
+        
+        Vol=VI{side};
+        Vol(isnan(Vol))=0;
+        fv{side}=isosurface(XI,YI,ZI,Vol,thresh);
+try        fv{side}=ea_smoothpatch(fv{side},1,100); end
         C=VI{side};
         C(C<thresh)=nan;
         C=C-ea_nanmin(C(:));

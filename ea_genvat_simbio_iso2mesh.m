@@ -140,7 +140,7 @@ if ea_headmodel_changed(options,side,elstruct)
     
     while 1
         try
-            [mesh.tet,mesh.pnt,activeidx]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
+            [mesh.tet,mesh.pnt,activeidx,wmboundary]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
             break
         catch
             Y=Y+randn(4)/1000; % very small jitter on electrode
@@ -174,7 +174,7 @@ if ea_headmodel_changed(options,side,elstruct)
     end
     
     
-    save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','mesh','activeidx','-v7.3');
+    save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','mesh','activeidx','wmboundary','-v7.3');
     ea_save_hmprotocol(options,side,elstruct,1);
     
 else
@@ -240,10 +240,12 @@ for source=S.sources
         
         
         if ~constvol
-            voltix=voltix/1000; % from Ampere to mA
+            voltix=voltix/1000000; % from mA to A
+            %voltix=voltix;
         end
         
-        potential = ea_apply_dbs(vol,ix,voltix,unipolar,constvol,4); % output in V. 4 indexes insulating material.
+  %       save('data','vol','ix','voltix','unipolar','constvol','wmboundary');
+        potential = ea_apply_dbs(vol,ix,voltix,unipolar,constvol,wmboundary); % output in V. 4 indexes insulating material.
         ea_dispt('Calculating E-Field...');
         
         gradient{source} = ea_calc_gradient(vol,potential); % output in V/m.
@@ -314,8 +316,9 @@ ea_dispt('Preparing VAT...');
 
 vat.tET=vat.ET>thresh;
 vat.tpos=vat.pos(vat.tET,:);
-outliers=ea_removeoutliers(vat.tpos);
+outliers=ea_removeoutliers(vat.tpos,mean(dpvx,1),voltix,constvol);
 vat.tpos(outliers,:)=[];
+
 if vizz
 figure, plot3(vat.tpos(:,1),vat.tpos(:,2),vat.tpos(:,3),'r.');
 end
@@ -425,10 +428,10 @@ vatfv=isosurface(xg,yg,zg,Vvat.img,0.75);
 
 caps=isocaps(xg,yg,zg,Vvat.img,0.5);
 
-                    vatfv.faces=[vatfv.faces;caps.faces+size(vatfv.vertices,1)];
-                    vatfv.vertices=[vatfv.vertices;caps.vertices];
-                    
-                    
+vatfv.faces=[vatfv.faces;caps.faces+size(vatfv.vertices,1)];
+vatfv.vertices=[vatfv.vertices;caps.vertices];
+
+
 try
     vatfv=ea_smoothpatch(vatfv,1,100);
 catch
@@ -453,13 +456,38 @@ varargout{3}=radius;
 ea_dispt(''); % stop chain of timed processes.
 
 
-function outliers=ea_removeoutliers(pointcloud)
+function outliers=ea_removeoutliers(pointcloud,dpvx,voltix,constvol)
 
-mp=ea_robustmean(pointcloud,1);
+vmax=max(abs(voltix));
+
+if ~constvol
+   vmax=vmax*1000; 
+end
+r=maedler12_eq3(vmax,1000);
+r=r*1.5;
+mp=dpvx;
 D=pointcloud-repmat(mp,size(pointcloud,1),1);
-S=4*std(D,[],1);
+S=[r,r,r];%std(D,[],1); % fixed 50 cm
 outliers=D>repmat(S,size(D,1),1);
 outliers=any(outliers,2);
+
+function r=maedler12_eq3(U,Im)
+% This function radius of Volume of Activated Tissue for stimulation settings U and Ohm. See Maedler 2012 for details.
+% Clinical measurements of DBS electrode impedance typically range from
+% 500?1500 Ohm (Butson 2006).
+r=0; %
+if U %(U>0)
+    
+    k1=-1.0473;
+    k3=0.2786;
+    k4=0.0009856;
+    
+    
+    r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)...
+        /...
+        (2*k3);
+end
+
 
 function changed=ea_headmodel_changed(options,side,elstruct)
 % function that checked if anything (user settings) has changed and
@@ -478,6 +506,7 @@ protocol.elmodel=options.elmodel;
 protocol.elstruct=elstruct;
 protocol.usediffusion=options.usediffusion;
 protocol.atlas=options.atlasset;
+protocol.version=1.0;
 
 if sv % save protocol to disk
     save([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat'],'protocol');
@@ -501,11 +530,10 @@ gradient = gradient + repmat(potential(vol.tet(:,3))./sum(normal.*(vol.pos(vol.t
 normal = cross(vol.pos(vol.tet(:,3),:)-vol.pos(vol.tet(:,2),:),vol.pos(vol.tet(:,2),:)-vol.pos(vol.tet(:,1),:));
 gradient = gradient + repmat(potential(vol.tet(:,4))./sum(normal.*(vol.pos(vol.tet(:,4),:)-(vol.pos(vol.tet(:,1),:)+vol.pos(vol.tet(:,2),:)+vol.pos(vol.tet(:,3),:))/3),2),1,3).*normal;
 
-function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol,lowconducting)
+function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol,boundarynodes)
 if constvol
     if unipolar
-        dirinodes = ea_get_surf_nodes(vol.tet,vol.tissue,lowconducting);
-        dirinodes = [dirinodes, elec'];
+        dirinodes = [boundarynodes, elec'];
     else
         dirinodes = elec;
     end
@@ -520,7 +548,7 @@ else
     rhs = zeros(size(vol.pos,1),1);
     
     if unipolar
-        catnodes = ea_get_surf_nodes(vol.tet,vol.tissue,lowconducting);
+        catnodes = boundarynodes;
         rhs(elec) = val;
         rhs(catnodes) = -sum(val)/length(catnodes);
     else
@@ -549,30 +577,13 @@ indij = intersect(indi,indj);
 rhs(indexj(indij)) = rhs(indexj(indij)) - dirival(indexi(indij)).*s(indij);
 s(indi) = 0;
 dia(dirinodes) = 1; %hier auch, s.u.
-rhs(dirinodes) = dirival(dirinodes); %hier den zugriff ge?ndert
+rhs(dirinodes) = dirival(dirinodes); %hier den zugriff geaendert
 indij = find(ismember(indexj,dind)&~ismember(indexi,dind));
 rhs(indexi(indij)) = rhs(indexi(indij)) - dirival(indexj(indij)).*s(indij);
 s(indij) = 0;
 stiff = sparse(indexi,indexj,s,length(dia),length(dia));
 stiff = stiff + diag(dia);
 
-
-
-function surf_nodes_clear = ea_get_surf_nodes(cell,field,lowconducting)
-if size(cell,1) == 4
-    cell = cell';
-end
-non_con_cell = cell(field ~= lowconducting,:);
-faces = [cell(non_con_cell,[1,2,3]);cell(non_con_cell,[2,3,4]);cell(non_con_cell,[3,4,1]);cell(non_con_cell,[4,1,2])];
-faces = sort(faces);
-faces = sortrows(faces);
-k = find(all(diff(faces)==0,2));
-faces([k;k+1],:) = [];
-surf_nodes_clear = faces(:);
-%    con_cell = cell(field == lowconducting,:);
-%    connectivity = hist(cell(:),unique(cell));
-%    surf_nodes = find(connectivity ~= 8);
-%    surf_nodes_clear = setdiff(surf_nodes,con_cell(:));
 
 
 function [warped] = ea_ft_warp_apply(M, input, method, tol)
@@ -1532,7 +1543,7 @@ if ~isempty(stype)
         if any(strcmp(ft_senstype(data), stype))
             okflag = 1;
         elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
-            % this is required to detect more general types, such as "meg" or "ctf" rather than "ctf275"
+            % this is req uired to detect more general types, such as "meg" or "ctf" rather than "ctf275"
             okflag = 1;
         else
             okflag = 0;

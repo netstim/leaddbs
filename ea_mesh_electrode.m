@@ -1,4 +1,4 @@
-function [emesh,nmesh,activeidx]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix,elspec)
+function [emesh,nmesh,activeidx,wmboundary]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix,elspec)
 % meshing an electrode and tissue structures bounded by a cylinder
 
 %% load the nucleus data
@@ -200,6 +200,7 @@ switch side
     case 2
         sidec='L';
 end
+wmboundary=[];
 for reg=1:length(centroids)
     % first check if whether contact or insulator
     
@@ -295,26 +296,78 @@ for reg=1:length(centroids)
     if tissuelabels(reg); continue; end
     
     
-    % assign the rest to white matter
-    tissuelabels(reg)=2; % set white matter
+    % assign the rest to white matter: (this following code will not be executed if
+    % label has already been assigned above).
     
+    tissuelabels(reg)=2; % set white matter
+    disp(['Region ',num2str(reg),' captured by white matter.']);
+    
+    % now we need to get surface nodes based on nbcyl
+    % first create cylinder surface nodes from nbcyl and fbcyl:
+    
+    node=nbcyl;
+    
+    tess = fbcyl;
+    tess = sort(tess,2);
+    
+    % all faces
+    faces=[tess(:,[1 2 3]);tess(:,[1 2 4]); ...
+        tess(:,[1 3 4]);tess(:,[2 3 4])];
+    
+    % find replicate faces
+    faces = sortrows(faces);
+    k = find(all(diff(faces)==0,2));
+    
+    % delete the internal (shared) faces
+    faces([k;k+1],:) = [];
+    
+    surfacenodes = unique(faces(:));
+    nbcyl=nbcyl(surfacenodes,:);
+    
+    % now use these surface nodes (now nbcyl) to get surface nodes of WM
+    % mesh:
+    tess=thiscompsnodes;
+    node=nmesh(thiscompsnodes,:);
+    
+    % for speed improvements, only get "surface" nodes from this set
+    % (surface here could also be on boundary to gm, i.e. inside the
+    % cylinder):
+    
+    % all faces
+    faces=[tess(:,[1 2 3]);tess(:,[1 2 4]); ...
+        tess(:,[1 3 4]);tess(:,[2 3 4])];
+    
+    % find replicate faces
+    faces = sortrows(faces);
+    k = find(all(diff(faces)==0,2));
+    
+    % delete the internal (shared) faces
+    faces([k;k+1],:) = [];
+    
+    surfacenodes = unique(faces(:));
+    
+    
+    % now perform costly knnsearch:
+    snodes=node(surfacenodes,:);
+    [~,d]=knnsearch(nbcyl,snodes);
+    surfnodes=snodes(d<0.1,:);
+    [~,nodeix]=ismember(surfnodes,nmesh,'rows');
+    
+    wmboundary=[wmboundary;unique(nodeix(:))];
+
     if vizz
-        %         figure('name',['WM Region ',num2str(reg)]);
-        %         hold on
-        %         patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
-        %         for g=1:length(fv)
-        %         patch('vertices',fv(g).vertices,'faces',fv(g).faces,'FaceColor','none','EdgeColor','b');
-        %         end
-        %         for e=1:length(elfv)
-        %         patch('vertices',elfv(e).vertices,'faces',elfv(e).faces,'FaceColor','none','EdgeColor','b');
-        %         end
-        %         plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
-        %         axis equal
+        % both below should display only WM boundaries of the final
+        % cylindrical mesh
+        figure, plot3(surfnodes(:,1),surfnodes(:,2),surfnodes(:,3),'r.');
+        
+    figure, plot3(nmesh(wmboundary,1),nmesh(wmboundary,2),nmesh(wmboundary,3),'r.');
+    axis equal
     end
+    
     
 end
 
-
+wmboundary=wmboundary';
 %gmlabels=setdiff(labels,[wmlabels; electrodelabel]); % the remaining ones are from nuclei meshes.
 
 tissuetype=emesh(:,5);
@@ -333,7 +386,7 @@ if vizz
     plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.2)
 end
 
-
+ea_dispt('Exporting STL files');
 if stlexport
     tissuelabels={'grey','white','contacts','insulation'};
     if ~exist([options.root,options.patientname,filesep,'headmodel',filesep],'file')
