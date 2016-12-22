@@ -19,7 +19,11 @@ end
 disp('Preparing images to show Normalization...');
 
 for export=expdo % if CT, only do 1, if MR, do 1:3.
-     try
+%     if strcmp(options.prefs.dev.profile,'se') 
+%         ;
+%     else
+    try
+%     end
         switch export
             case 1
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
@@ -93,7 +97,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             if strcmp(options.prefs.dev.profile,'se') % do siobhan specific stuff (here don't show wires to enable any template to be used as normalization template)
                 ;
             else
-            joint_im=joint_im.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires
+            joint_im=joint_im.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
             end
             %joint_im(w.wires>0.9)=1;
             stand=std(joint_im(:));
@@ -160,10 +164,13 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             
             clear joint_im pt grid_im
             ea_imshowpair(wim,options,addstr,'normalization');
-            
-     catch
+     
+%       if strcmp(options.prefs.dev.profile,'se') 
+%         ;
+%       else
+        catch
         fprintf('Skip showing normalization of %s\n', checkf);
-     end
+    end
 
 end
 
