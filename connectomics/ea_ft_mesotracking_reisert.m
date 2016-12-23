@@ -142,7 +142,7 @@ mesoGT_tool('loadData','nii',[directory,options.prefs.dti],{[directory,options.p
 mesoGT_tool('reset');
 mesoGT_tool('start');
 
-movefile([directory,dfn,'_FTR.mat'],[directory,options.prefs.FTR_unnormalized]);
+movefile([directory,dfn,'_accum_FTR.mat'],[directory,options.prefs.FTR_unnormalized]);
 delete(findobj('tag','fiberGT_main'))
 
 
