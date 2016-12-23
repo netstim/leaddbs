@@ -1,6 +1,7 @@
 #include "mex.h"
 #include "math.h"
 #include "stdio.h"
+#include <string.h>
 
 /* Coordinates to index */
 int mindex3(int x, int y, int z, int sizx, int sizy) { return z*sizx*sizy+y*sizx+x;}

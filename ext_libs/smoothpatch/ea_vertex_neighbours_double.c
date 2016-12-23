@@ -1,5 +1,6 @@
 #include "mex.h"
 #include "math.h"
+#include <string.h>
 
 /*
  * Ne=vertex_neighbours_double2(Fa,Fb,Fc,Vx,Vy,Vz)
