@@ -22,9 +22,7 @@ end
 
 % check connectome-mapper tags
 if isfield(options,'lcm')
-    if options.lcm.func.do || options.lcm.struc.do
         ea_lcm(options);
-    end
 end
 
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
