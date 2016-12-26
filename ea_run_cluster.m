@@ -6,6 +6,10 @@ cd(ea_getearoot);
 options=ea_handles2options(handles);
 options.macaquemodus=getappdata(handles.leadfigure,'macaquemodus');
 
+if strcmp(handles.prod,'connectome')
+   ea_savelcopts(handles); 
+end
+
 uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 switch cmd 
