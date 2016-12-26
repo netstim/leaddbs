@@ -3,7 +3,7 @@ function ea_show_ctcoregistration(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 disp('Preparing images to show CT-/MR Coregistration...');
-if exist([options.root,options.patientname,filesep,'tp_',options.prefs.ctnii_coregistered],'file')
+if ~exist([options.root,options.patientname,filesep,'tp_',options.prefs.ctnii_coregistered],'file')
     ea_tonemapct_file(options);
 end
     ctfile=[options.root,options.patientname,filesep,'tp_',options.prefs.ctnii_coregistered];
