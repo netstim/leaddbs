@@ -3,14 +3,20 @@ function ea_show_ctcoregistration(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 disp('Preparing images to show CT-/MR Coregistration...');
-    ct=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
-    mr=ea_load_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
+if exist([options.root,options.patientname,filesep,'tp_',options.prefs.ctnii_coregistered],'file')
+    ea_tonemapct_file(options);
+end
+    ctfile=[options.root,options.patientname,filesep,'tp_',options.prefs.ctnii_coregistered];
 
-    if ~isequal(size(mr.img),size(ct.img))
+    ct=ea_open_vol(ctfile);
+    mr=ea_open_vol([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
+   
+    if ~ea_hdr_iscoreg(mr,ct)
+        [pctfile,fctfile,ectfile]=fileparts(ctfile);
         matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized];
-            [options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]};
-        matlabbatch{1}.spm.util.imcalc.output = [options.prefs.ctnii_coregistered];
-        matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};
+            ctfile};
+        matlabbatch{1}.spm.util.imcalc.output = [fctfile,ectfile];
+        matlabbatch{1}.spm.util.imcalc.outdir = {[pctfile,filesep]};
         matlabbatch{1}.spm.util.imcalc.expression = ['i2'];
         matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
         matlabbatch{1}.spm.util.imcalc.options.mask = 0;
@@ -19,10 +25,9 @@ disp('Preparing images to show CT-/MR Coregistration...');
         jobs{1}=matlabbatch;
         spm_jobman('run',jobs);
         clear matlabbatch jobs;
-        ct=ea_load_nii([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
     end
-
-    ct.img=ea_tonemap_ct(ct.img);
+    ct=ea_load_nii(ctfile);
+    mr=ea_load_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
 
     ct.img(:)=ea_nanzscore(ct.img(:)); %     ct.img(:)=ea_nanzscore(ct.img(:),'robust');
     ct.img=(ct.img+2.5)/5; % set max/min to -/+ 2.5 standard deviations
@@ -203,15 +208,5 @@ scaled = interp2(imat,newX,newY(:),'cubic');
 scaled = cast(scaled,oldClass);  % Convert back to original image type
 
 
-function tmct=ea_tonemap_ct(ct)
-tmct=ct;
-% brain window: center = 40, width = 80
-tmct(ct>0 & ct<80)=tmct(ct>0 & ct<80)/80;
 
-% bone window: center = 300, width = 2000
-tmct(ct>80 & ct<1300)=(tmct(ct>80 & ct<1300)-80)/1220;
-
-% saturate above and below levels:
-tmct(ct>1300)=1;
-tmct(ct<0)=0;
 

@@ -24,7 +24,8 @@ switch options.modality
             [directory,options.prefs.gcornii],...
             [directory,options.prefs.gsagnii]};
     case 2
-        fis2anat={[directory,options.prefs.ctnii_coregistered]};
+        ea_tonemapct_file(options);
+        fis2anat={[directory,'tp_',options.prefs.ctnii_coregistered]};
         fis2mni={[directory,options.prefs.gprenii],...
             [directory,options.prefs.gctnii]};
 end
@@ -92,6 +93,7 @@ for c=1:length(cmd)
     end
 end
 disp('Done.');
+
 
 function name=ea_cleanmethodname(name)
 name(strfind(name,':'))=[];

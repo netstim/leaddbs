@@ -20,12 +20,5 @@ end
 Vref=ea_open_vol([directory,presentfiles{1}]);
 for comp=2:length(presentfiles)
     Vcomp=ea_open_vol([directory,presentfiles{comp}]);
-    if ~isequal(Vref.dim,Vcomp.dim)
-        iscoreg=0;
-        return
-    end
-    if any(abs(Vref.mat(:)-Vcomp.mat(:))>0.0001) % very small rounding errors should be ignored, thus not use isequal here.
-        iscoreg=0;
-        return
-    end
+    iscoreg=ea_hdr_iscoreg(Vcomp,Vref);
 end
