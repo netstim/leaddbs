@@ -25,6 +25,10 @@ if isempty(menuprobe)
         ea_menu_addsubmit(handles);
     end
     
+    if ismember('checkregfigs',cmd)
+       uimenu(f,'Label','Generate Checkreg figures','Callback',{@ea_gencheckreg,handles}); 
+    end
+    
     if ismember('transfer',cmd)
        ea_menu_addtransfer(handles,callingfunction); 
     end

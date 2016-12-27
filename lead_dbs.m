@@ -189,7 +189,7 @@ ea_processguiargs(handles,varargin)
 
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','cluster','prefs','vatcon','transfer'});
+ea_menu_initmenu(handles,{'acpc','export','cluster','prefs','vatcon','transfer','checkregfigs'});
 
 
 

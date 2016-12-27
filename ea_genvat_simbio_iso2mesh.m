@@ -337,7 +337,10 @@ try
         spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
     end
 catch
-    keyboard % vat empty..!
+varargout{1}=nan;
+varargout{2}=nan;
+varargout{3}=nan;
+return
 end
 
 ea_dispt('Creating nifti header for export...');
@@ -413,20 +416,20 @@ end
 save(stimfile,'S');
 %spm_write_vol(Vvat,flipdim(eg,3));
 
-Vvate.img=permute(eeg,[2,1,3]);
+Vvate.img=eeg; %permute(eeg,[2,1,3]);
 ea_write_nii(Vvate);
 
-Vvatne.img=permute(neeg,[2,1,3]);
+Vvatne.img=neeg; %permute(neeg,[2,1,3]);
 ea_write_nii(Vvatne);
 
-Vvat.img=permute(eg,[2,1,3]);
+Vvat.img=eg; %permute(eg,[1,2,3]);
 ea_write_nii(Vvat);
 
 
 ea_dispt('Calculating isosurface to display...');
-vatfv=isosurface(xg,yg,zg,Vvat.img,0.75);
+vatfv=isosurface(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.75);
 
-caps=isocaps(xg,yg,zg,Vvat.img,0.5);
+caps=isocaps(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.5);
 
 vatfv.faces=[vatfv.faces;caps.faces+size(vatfv.vertices,1)];
 vatfv.vertices=[vatfv.vertices;caps.vertices];

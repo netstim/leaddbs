@@ -24,10 +24,11 @@ switch options.modality
             [directory,options.prefs.gcornii],...
             [directory,options.prefs.gsagnii]};
     case 2
-        ea_tonemapct_file(options);
+        ea_tonemapct_file(options,'native');
+        ea_tonemapct_file(options,'mni');
         fis2anat={[directory,'tp_',options.prefs.ctnii_coregistered]};
         fis2mni={[directory,options.prefs.gprenii],...
-            [directory,options.prefs.gctnii]};
+            [directory,'tp_',options.prefs.gctnii]};
 end
 fis2anat=[fis2anat,oanat'];
 

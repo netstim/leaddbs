@@ -104,7 +104,13 @@ for side=1:length(options.sides)
         
         
         if ~exist('K','var') % e.g. maedler model used
-            K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
+            try
+                K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
+            catch
+                if isnan(VAT{side}.VAT) % empty VTA
+                    continue
+                end
+            end
         else % still maedler model used
             try
                 K(side).K{vat}; % not defined

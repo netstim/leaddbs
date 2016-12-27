@@ -94,6 +94,12 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         ea_gencoregcheckfigs(options); % generate checkreg figures
     end
 
+    if isfield(options,'gencheckreg') % this case is an exception when calling from the Tools menu.
+        if options.gencheckreg
+                    ea_gencoregcheckfigs(options); % generate checkreg figures
+        end
+    end
+    
     if options.dolc % perform lead connectome subroutine..
         ea_perform_lc(options);
     end
