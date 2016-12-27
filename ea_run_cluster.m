@@ -6,8 +6,10 @@ cd(ea_getearoot);
 options=ea_handles2options(handles);
 options.macaquemodus=getappdata(handles.leadfigure,'macaquemodus');
 
-if strcmp(handles.prod,'connectome')
-   ea_savelcopts(handles); 
+if isfield(handles,'prod')
+    if strcmp(handles.prod,'connectome')
+        ea_savelcopts(handles);
+    end
 end
 
 uipatdirs=getappdata(handles.leadfigure,'uipatdir');
