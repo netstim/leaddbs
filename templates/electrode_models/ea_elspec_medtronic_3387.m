@@ -29,7 +29,11 @@ N=200; % resolution of electrode points
 
 for side=1:length(options.sides)
     %% nullmodel:
-    coords_mm{side}=[0,0,1.5+0.75;0,0,1.5+0.75+1*3;0,0,1.5+0.75+2*3;0,0,1.5+0.75+3*3];
+    coords_mm{side}=[0,0,options.elspec.tip_length+(options.elspec.contact_length/2);...
+        0,0,options.elspec.tip_length+(options.elspec.contact_length/2)+1*(options.elspec.contact_spacing+options.elspec.contact_length);...
+        0,0,options.elspec.tip_length+(options.elspec.contact_length/2)+2*(options.elspec.contact_spacing+options.elspec.contact_length);...
+        0,0,options.elspec.tip_length+(options.elspec.contact_length/2)+3*(options.elspec.contact_spacing+options.elspec.contact_length)];
+    
     trajectory{side}=[zeros(30,2),linspace(30,0,30)'];
     %%
     trajvector=mean(diff(trajectory{side}));
