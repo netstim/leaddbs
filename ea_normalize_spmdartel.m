@@ -33,10 +33,8 @@ function varargout=ea_normalize_spmdartel(options)
 if ischar(options) % return name of method.
     if strcmp(spm('ver'),'SPM12')
         varargout{1}='SPM12 DARTEL nonlinear (Ashburner 2007)';
-    elseif strcmp(spm('ver'),'SPM8')
-        varargout{1}='SPM8 DARTEL nonlinear [MR/CT]';
     end
-    varargout{2}={'SPM8','SPM12'};
+    varargout{2}={'SPM12'};
     return
 end
 
@@ -124,13 +122,7 @@ clear matlabbatch jobs;
 % backward
 switch spm('ver')
     case 'SPM8'
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1 0];
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
-        matlabbatch{1}.spm.util.defs.ofname = 'ea_normparams';
-        matlabbatch{1}.spm.util.defs.fnames = '';
-        matlabbatch{1}.spm.util.defs.savedir.saveusr = {directory};
-        matlabbatch{1}.spm.util.defs.interp = 1;
+        ea_error('SPM8 is not supported anymore in this version of Lead-DBS');
     case 'SPM12'
         matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
         matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1 0];
@@ -148,13 +140,7 @@ clear matlabbatch jobs;
 % forward (inverse)
 switch spm('ver')
     case 'SPM8'
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [0 1];
-        matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
-        matlabbatch{1}.spm.util.defs.ofname = 'ea_inv_normparams';
-        matlabbatch{1}.spm.util.defs.fnames = '';
-        matlabbatch{1}.spm.util.defs.savedir.saveusr = {directory};
-        matlabbatch{1}.spm.util.defs.interp = 1;
+        ea_error('SPM8 is not supported anymore in this version of Lead-DBS');
     case 'SPM12'
         matlabbatch{1}.spm.util.defs.comp{1}.dartel.flowfield = {[directory,'u_rc1',options.prefs.prenii_unnormalized]};
         matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [0 1];
