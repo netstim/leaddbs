@@ -18,14 +18,13 @@ dcmnames = ea_regexpdir(outdir, '^dicom(DAT)?(/|\\|\.zip)$', 0);
 
 if isempty(dcmnames)
     % not found, suppose the subject folder is actually DICOM folder
-    warning(sprintf(['DICOM folder/zip not found!\nWill move the contents' ...
-        ' under subject''s folder into a DICOM subfolder...']));
     movefile([outdir, '*'],[outdir, 'DICOM'])
-    movefile([outdir, 'DICOM', filesep, 'ea_ui.mat'], outdir);
+    try    movefile([outdir, 'DICOM', filesep, 'ea_ui.mat'], outdir); end % this isn't created when selecting multiple folders.
     dcmname = [outdir, 'DICOM', filesep];
 else % found DICOM folder/zipfile
     dcmname = dcmnames{1}; % only choose the first found one
 end
+
 
 if strcmp(dcmname(end-3:end), '.zip') % zip file under subject folder
     unzip(dcmname, [outdir, 'DICOM']);
