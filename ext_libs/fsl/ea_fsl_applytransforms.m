@@ -26,9 +26,7 @@ end
 if nargin >= 7
     interp=varargin{7};
 else
-    % Linear, NearestNeighbor, MultiLabel, Gaussian, BSpline
-    % CosineWindowedSinc, WelchWindowedSinc, HammingWindowedSinc, LanczosWindowedSinc
-    % GenericLabel
+    % nn, trilinear, sinc, spline
     interp='trilinear'; 
 end
 
@@ -135,8 +133,7 @@ for fi = 1:length(fis)
     if ~isempty(interp)
         cmd = [cmd, ' --interp=', interp];
     end
-
-    
+   
     if ~ispc
         system(['bash -c "', cmd, '"']);
     else
