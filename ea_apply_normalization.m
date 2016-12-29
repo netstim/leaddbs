@@ -48,34 +48,7 @@ switch whichnormmethod
         [postops,gfis]=ea_appendgrid(options,postops,gfis,0);
         switch spm('ver')
             case 'SPM8'
-                matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
-                matlabbatch{1}.spm.util.defs.ofname = '';
-
-                cnt=1;
-                for pos=1:length(postops)
-                    if exist([directory,postops{pos}],'file')
-                        matlabbatch{1}.spm.util.defs.fnames{cnt}=[directory,postops{pos},',1'];
-                        cnt=cnt+1;
-                    end
-                end
-
-                matlabbatch{1}.spm.util.defs.savedir.saveusr = {directory};
-                matlabbatch{1}.spm.util.defs.interp = 1;
-                jobs{1}=matlabbatch;
-                spm_jobman('run',jobs);
-                clear matlabbatch jobs;
-
-                % rename files:
-                try copyfile([directory,'w',options.prefs.prenii_unnormalized],[directory,options.prefs.gprenii]); end
-                try movefile([directory,'w',options.prefs.prenii_unnormalized],[directory,options.prefs.prenii]); end
-                try copyfile([directory,'w',options.prefs.tranii_unnormalized],[directory,options.prefs.gtranii]); end
-                try movefile([directory,'w',options.prefs.tranii_unnormalized],[directory,options.prefs.tranii]); end
-                try copyfile([directory,'w',options.prefs.cornii_unnormalized],[directory,options.prefs.gcornii]); end
-                try movefile([directory,'w',options.prefs.cornii_unnormalized],[directory,options.prefs.cornii]); end
-                try copyfile([directory,'w',options.prefs.sagnii_unnormalized],[directory,options.prefs.gsagnii]); end
-                try movefile([directory,'w',options.prefs.sagnii_unnormalized],[directory,options.prefs.sagnii]); end
-                try copyfile([directory,'w',options.prefs.ctnii_coregistered],[directory,options.prefs.gctnii]); end
-                try movefile([directory,'w',options.prefs.ctnii_coregistered],[directory,options.prefs.ctnii]); end
+                ea_error('SPM8 is not supported anymore. Please upgrade to SPM12 for use with Lead-DBS.');
 
             case 'SPM12'
                 
@@ -91,7 +64,6 @@ switch whichnormmethod
                         else
                             copyfile([directory,postops{pos}],[directory,'r',postops{pos}]);
                         end
-
                         matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
                         matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[directory,'r',postops{pos},''];
                         matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
