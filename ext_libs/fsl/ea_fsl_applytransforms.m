@@ -58,7 +58,7 @@ if nargin == 1
                 lfis = [lfis,{ea_niigz([directory,options.prefs.sagnii])}];
             end
             if isfield(options.prefs,'fa2anat')
-                if exist([directory,options.prefs.fa2anat],'file');
+                if exist([directory,options.prefs.fa2anat],'file')
                     fis = [fis,{ea_niigz([directory,options.prefs.fa2anat])}];
                     ofis = [ofis,{ea_niigz([directory,'gl',options.prefs.fa2anat])}];
                     lfis = [lfis,{ea_niigz([directory,'l',options.prefs.fa2anat])}];
@@ -71,7 +71,7 @@ if nargin == 1
             ofis{2} = ea_niigz([directory,options.prefs.gctnii]);
             lfis{1} = ea_niigz([directory,options.prefs.prenii]);
             lfis{2} = ea_niigz([directory,options.prefs.ctnii]);
-            if exist([directory,options.prefs.fa2anat],'file');
+            if exist([directory,options.prefs.fa2anat],'file')
                 fis{3} = ea_niigz([directory,options.prefs.fa2anat]);
                 ofis{3} = ea_niigz([directory,'gl',options.prefs.fa2anat]);
                 lfis{3} = ea_niigz([directory,'l',options.prefs.fa2anat]);

@@ -1,7 +1,9 @@
-function   ea_apply_normalization_tofile(options,from,to,directory,useinverse)
+function ea_apply_normalization_tofile(options,from,to,directory,useinverse)
 % this function applies lead-dbs normalizations to nifti files.
+% currently just used to generate patient specific atlases,i.e., from MNI
+% space to natice space
 
-switch ea_whichnormmethod(directory);
+switch ea_whichnormmethod(directory)
     case ea_getantsnormfuns % ANTs part here
         
         ea_ants_applytransforms(options,from,to,useinverse);
@@ -25,6 +27,5 @@ switch ea_whichnormmethod(directory);
             [pth]=fileparts(to{fi});
             [~,fn,ext]=fileparts(from{fi});
             movefile(fullfile(pth,['w',fn,ext]),to{fi});
-        end
-        
+        end       
 end

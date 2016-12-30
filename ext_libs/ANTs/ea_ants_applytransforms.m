@@ -64,7 +64,7 @@ if nargin == 1
                 lfis = [lfis,{ea_niigz([directory,options.prefs.sagnii])}];
             end
             if isfield(options.prefs,'fa2anat')
-                if exist([directory,options.prefs.fa2anat],'file');
+                if exist([directory,options.prefs.fa2anat],'file')
                     fis = [fis,{ea_niigz([directory,options.prefs.fa2anat])}];
                     ofis = [ofis,{ea_niigz([directory,'gl',options.prefs.fa2anat])}];
                     lfis = [lfis,{ea_niigz([directory,'l',options.prefs.fa2anat])}];
@@ -77,7 +77,7 @@ if nargin == 1
             ofis{2} = ea_niigz([directory,options.prefs.gctnii]);
             lfis{1} = ea_niigz([directory,options.prefs.prenii]);
             lfis{2} = ea_niigz([directory,options.prefs.ctnii]);
-            if exist([directory,options.prefs.fa2anat],'file');
+            if exist([directory,options.prefs.fa2anat],'file')
                 fis{3} = ea_niigz([directory,options.prefs.fa2anat]);
                 ofis{3} = ea_niigz([directory,'gl',options.prefs.fa2anat]);
                 lfis{3} = ea_niigz([directory,'l',options.prefs.fa2anat]);
@@ -114,28 +114,28 @@ for fi = 1:length(fis)
             refim = [directory,options.prefs.prenii_unnormalized];
         end
 
-        if ~isempty(transformfile)
-            cmd = [cmd, ...
-                   ' --reference-image ',ea_path_helper(refim),...
-                   ' --transform [',ea_path_helper(transformfile),',0]'];
-        else
+        if isempty(transformfile)
             cmd = [cmd, ...
                    ' --reference-image ',ea_path_helper(refim),...
                    ' --transform [',ea_path_helper([directory,glprebase,'InverseComposite',warpsuffix]),',0]'];
+        else
+            cmd = [cmd, ...
+                   ' --reference-image ',ea_path_helper(refim),...
+                   ' --transform [',ea_path_helper(transformfile),',0]'];         
         end
     else
         if isempty(refim)
             refim = [options.earoot,'templates',filesep,'mni_hires_t2.nii'];
         end
 
-        if ~isempty(transformfile)
-            cmd = [cmd, ...
-                   ' --reference-image ',ea_path_helper(refim),...
-                   ' --transform [',ea_path_helper(transformfile),',0]'];
-        else
+        if isempty(transformfile)
             cmd = [cmd, ...
                    ' --reference-image ',ea_path_helper(refim),...
                    ' --transform [',ea_path_helper([directory,glprebase,'Composite',warpsuffix]),',0]'];
+        else
+            cmd = [cmd, ...
+                   ' --reference-image ',ea_path_helper(refim),...
+                   ' --transform [',ea_path_helper(transformfile),',0]'];
         end
     end
     
