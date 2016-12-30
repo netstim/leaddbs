@@ -22,7 +22,11 @@ if ischar(options) % return name of method.
     varargout{1}='SUIT DARTEL normalization (Diedrichsen 2006)';
     switch spm('ver')
         case 'SPM12'
-            varargout{2}=1;
+            if  isempty(which('suit_isolate_seg'))
+                varargout{2}=1;
+            else
+                varargout{2}=0;
+            end
         otherwise
             varargout{2}=0;
     end
@@ -50,8 +54,8 @@ if isfield(options.prefs, 'tranii_unnormalized')
 end
 
 % check for SUIT installation
-if isempty(which('suit_isolate_seg'))
-    warning('Cannot find SUIT, starting SPM12.');
+if isempty(which('suit_isolate_seg')) % this function is only visible while SPM is actually "running" (not just on the path). This needs to happen for SUIT to run.
+    warning('Cannot find SUIT, starting SPM12.'); % this should not happen since checked for in the beginning. Still leaving this snippet for robustnes (e.g. if someone closes SPM between starting Lead and pressing run).
     spm fmri
     if isempty(which('suit_isolate_seg')) % still not found.
         ea_error('SUIT toolbox not found. Please install SUIT toolbox for SPM12 first (http://www.diedrichsenlab.org/imaging/suit.htm).');
@@ -66,10 +70,10 @@ ea_dispt('Isolating cerebellum & brainstem...');
 
 [options,presentfiles]=ea_assignpretra(options);
 for an=1:length(presentfiles)
-   anats{an}=[directory,presentfiles{an}]; 
-   if exist([directory,'orig_',presentfiles{an}],'file') % restore if SUIT had been run before.
-       movefile([directory,'orig_',presentfiles{an}],[directory,presentfiles{an}]);
-   end
+    anats{an}=[directory,presentfiles{an}];
+    if exist([directory,'orig_',presentfiles{an}],'file') % restore if SUIT had been run before.
+        movefile([directory,'orig_',presentfiles{an}],[directory,presentfiles{an}]);
+    end
 end
 
 
@@ -105,7 +109,7 @@ switch spm('ver')
         matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1 0];
         matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
         matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
-        matlabbatch{1}.spm.util.defs.comp{2}.def = {[ea_getearoot,'templates',filesep,'suit',filesep,'y_suit2icbm2009b.nii']};
+        matlabbatch{1}.spm.util.defs.comp{2}.def = {[ea_getearoot,'templates',filesep,'suit',filesep,'y_suit2icbm2009b.nii']}; % add deformation from SUIT Dartel space to ICBM 2009b
         
         matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = ['ea_normparams'];
         matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
@@ -121,7 +125,7 @@ switch spm('ver')
     case 'SPM8'
         ea_error('SPM8 is not supported in this version of Lead-DBS anymore');
     case 'SPM12'
-        matlabbatch{1}.spm.util.defs.comp{1}.def = {[ea_getearoot,'templates',filesep,'suit',filesep,'y_icbm2009b2suit.nii']};
+        matlabbatch{1}.spm.util.defs.comp{1}.def = {[ea_getearoot,'templates',filesep,'suit',filesep,'y_icbm2009b2suit.nii']}; % add deformation from ICBM 2009b to SUIT Dartel space
         matlabbatch{1}.spm.util.defs.comp{2}.dartel.flowfield = {[directory,'u_a_',anatbase,'_seg1.nii']};
         matlabbatch{1}.spm.util.defs.comp{2}.dartel.times = [0 1];
         matlabbatch{1}.spm.util.defs.comp{2}.dartel.K = 6;
