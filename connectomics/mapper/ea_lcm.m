@@ -33,7 +33,7 @@ end
 % convert VTA seeds also if neither func or struc conn is chosen.
 if (~options.lcm.func.do) && (~options.lcm.struc.do)
     if strcmp(options.lcm.seeddef,'vats')
-        ea_resolvevatseeds(options,'dMRI');
+        %ea_resolvevatseeds(options,'dMRI');
         
         ea_resolvevatseeds(options,'fMRI');
     end
@@ -108,6 +108,9 @@ for suffix=1:3
                 
                 if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                     copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
+                    tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
+                    tnii.dt=[64,0];
+                    ea_write_nii(tnii);
                     cname=options.lcm.func.connectome;
                     if ismember('>',cname)
                         delim=strfind(cname,'>');
@@ -116,9 +119,15 @@ for suffix=1:3
                     end
                     d=load([ea_getconnectomebase,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
                     d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
+                    d.dataset.vol.space.dt=[16,0];
                     ea_write_nii(d.dataset.vol.space);
-                    ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],1);
+                    ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],6);
+                    
                     nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
+                    nii(cnt).img(isnan(nii(cnt).img))=0;
+                    if ~any(nii(cnt).img(:))
+                       msgbox(['Created empty VTA for ',options.patientname,', ',sidec,' hemisphere.']);
+                    end
                     cnt=cnt+1;
                 end
                 
