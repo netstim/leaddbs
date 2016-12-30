@@ -19,16 +19,19 @@ function varargout=ea_normalize_suit(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
+    varargout{1}='SUIT DARTEL normalization (Diedrichsen 2006)';
     switch spm('ver')
         case 'SPM12'
-            varargout{1}='SUIT DARTEL normalization (Diedrichsen 2006)';
+            varargout{2}=1;
+        otherwise
+            varargout{2}=0;
     end
-    varargout{2}={'SPM12'};
     return
 end
 
 
 directory=[options.root,options.patientname,filesep];
+
 if isfield(options.prefs, 'tranii_unnormalized')
     if exist([directory,options.prefs.tranii_unnormalized,'.gz'],'file')
         try
@@ -48,7 +51,11 @@ end
 
 % check for SUIT installation
 if isempty(which('suit_isolate_seg'))
-    ea_error('SUIT toolbox not found. Please install SUIT toolbox for SPM12 first (http://www.diedrichsenlab.org/imaging/suit.htm).');
+    warning('Cannot find SUIT, starting SPM12.');
+    spm fmri
+    if isempty(which('suit_isolate_seg')) % still not found.
+        ea_error('SUIT toolbox not found. Please install SUIT toolbox for SPM12 first (http://www.diedrichsenlab.org/imaging/suit.htm).');
+    end
 end
 
 % now segment the preoperative version.
@@ -60,7 +67,13 @@ ea_dispt('Isolating cerebellum & brainstem...');
 [options,presentfiles]=ea_assignpretra(options);
 for an=1:length(presentfiles)
    anats{an}=[directory,presentfiles{an}]; 
+   if exist([directory,'orig_',presentfiles{an}],'file') % restore if SUIT had been run before.
+       movefile([directory,'orig_',presentfiles{an}],[directory,presentfiles{an}]);
+   end
 end
+
+
+
 
 %% 1: isolate cerebellum
 suit_defaults;

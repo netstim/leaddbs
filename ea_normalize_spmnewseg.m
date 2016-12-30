@@ -19,13 +19,13 @@ function varargout=ea_normalize_spmnewseg(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
+    varargout{1}='SPM12 Segment nonlinear (Ashburner 2005)';
     switch spm('ver')
         case 'SPM12'
-    varargout{1}='SPM12 Segment nonlinear (Ashburner 2005)';
-        case 'SPM8'
-    varargout{1}='SPM8 New Segment nonlinear (Ashburner 2005)';
+            varargout{2}=1; % compatible
+        otherwise
+            varargout{2}=0; % not compatible
     end
-    varargout{2}={'SPM8','SPM12'};
     return
 end
 

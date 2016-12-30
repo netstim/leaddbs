@@ -1,6 +1,3 @@
-%-----------------------------------------------------------------------
-% Job configuration created by cfg_util (rev $Rev: 4252 $)
-%-----------------------------------------------------------------------
 function ea_normalize_ptspecific_atl(options)
 
 troot=[options.earoot,'templates',filesep,'segment',filesep];

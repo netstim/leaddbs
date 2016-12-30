@@ -109,7 +109,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     end
     
     if options.atl.normalize % normalize patient-specific atlas-set.
-        ea_normalize_ptspecific_atl(options)
+        ea_norm_ptspecific_atl(options)
     end
 
     if options.normalize.check

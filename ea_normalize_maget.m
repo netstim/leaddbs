@@ -2,7 +2,7 @@ function varargout=ea_normalize_maget(options)
 
 if ischar(options) % return name of method.
     varargout{1}='MAGeT Brain-like Normalization (Chakravarty 2013)';
-    varargout{2}={'SPM8','SPM12'};
+    varargout{2}=1; % is compatible
     varargout{3}=1; % hassettings.
     return
 end

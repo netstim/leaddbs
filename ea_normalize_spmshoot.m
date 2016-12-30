@@ -31,12 +31,12 @@ function varargout=ea_normalize_spmshoot(options)
 
 
 if ischar(options) % return name of method.
+    varargout{1}='SPM12 SHOOT nonlinear (Ashburner 2011)';
     if strcmp(spm('ver'),'SPM12')
-        varargout{1}='SPM12 SHOOT nonlinear (Ashburner 2011)';
-    elseif strcmp(spm('ver'),'SPM8')
-        varargout{1}='SPM8 SHOOT nonlinear [MR/CT]';
+        varargout{2}=1; % compatible
+    else
+        varargout{2}=0; % not compatible
     end
-    varargout{2}={'SPM12'};
     return
 end
 

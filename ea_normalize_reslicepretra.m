@@ -6,7 +6,7 @@ function varargout=ea_normalize_reslicepretra(options)
 
 if ischar(options) % return name of method.
     varargout{1}='Reslice Preoperative MRI (for manual fusion with CT)';
-    varargout{2}={'SPM8','SPM12'};
+    varargout{2}=1;
     return
 end
 directory=[options.root,options.patientname,filesep];

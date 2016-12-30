@@ -33,8 +33,12 @@ function varargout=ea_normalize_spmdartel(options)
 if ischar(options) % return name of method.
     if strcmp(spm('ver'),'SPM12')
         varargout{1}='SPM12 DARTEL nonlinear (Ashburner 2007)';
+        varargout{2}=1; % compatible
+    else
+        varargout{1}='SPM12 DARTEL nonlinear (Ashburner 2007)';
+        varargout{2}=0; % incompatible
     end
-    varargout{2}={'SPM12'};
+
     return
 end
 

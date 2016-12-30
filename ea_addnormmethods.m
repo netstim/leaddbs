@@ -13,14 +13,14 @@ ndir=dir([earoot,mstr,'ea_normalize_*.m']);
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);
     try
-        [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
-        if ismember(spm('ver'),spmvers)
-        ndc{cnt}=thisndc;
-        normmethod{cnt}=methodf;
-        if strcmp(ndc{cnt},eval([options.prefs.normalize.default,'(','''prompt''',')']))
-         defentry=cnt;
-        end
-        cnt=cnt+1;
+        [thisndc,compat]=eval([methodf,'(','''prompt''',')']);
+        if compat
+            ndc{cnt}=thisndc;
+            normmethod{cnt}=methodf;
+            if strcmp(ndc{cnt},eval([options.prefs.normalize.default,'(','''prompt''',')']))
+                defentry=cnt;
+            end
+            cnt=cnt+1;
         end
     end
 end

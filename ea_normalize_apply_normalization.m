@@ -10,7 +10,7 @@ function varargout=ea_normalize_apply_normalization(options)
 
 if ischar(options) % return name of method.
     varargout{1}='(Re-)apply (priorly) estimated normalization.';
-    varargout{2}={'SPM8','SPM12'};
+    varargout{2}=1;
     return
 end
 
