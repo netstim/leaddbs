@@ -22,7 +22,8 @@ if ischar(options) % return name of method.
     varargout{1}='SUIT DARTEL normalization (Diedrichsen 2006)';
     switch spm('ver')
         case 'SPM12'
-            if  isempty(which('suit_isolate_seg'))
+            
+            if  ~isempty(which('suit_isolate_seg'))
                 varargout{2}=1;
             else
                 varargout{2}=0;
