@@ -382,7 +382,9 @@ function seeddefpopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from seeddefpopup
 
 str=get(hObject,'String');
-str=str{get(hObject,'Value')};
+if iscell(str)
+    str=str{get(hObject,'Value')};
+end
 if strcmp(str,'Manually choose seeds')
    set(handles.seedbutton,'enable','on');
 else
