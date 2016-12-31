@@ -1,6 +1,7 @@
 function affinefile = ea_ants(varargin)
 % Wrapper for ANTs linear registration
 
+
 fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
@@ -21,6 +22,23 @@ if nargin >= 5
     end
 else
     otherfiles = {};
+end
+
+
+try
+    refine=varargin{6};
+catch
+    refine=0;
+end
+try
+    options=varargin{7};
+catch
+    options=struct;
+end
+
+
+if refine
+    ea_addtsmask(options);
 end
 
 outputbase = ea_niifileparts(outputimage);
@@ -74,6 +92,7 @@ else
     runs = str2double(runs(end).name(length(xfm)+1:end-4)); % suppose runs<10
 end
 
+
 if runs==0 % mattes MI affine + rigid
     rigidstage = [' --transform Rigid[0.1]' ...
     ' --convergence ', rigidconvergence, ...
@@ -87,6 +106,7 @@ if runs==0 % mattes MI affine + rigid
     ' --convergence ', affineconvergence, ...
     ' --shrink-factors ', affineshrinkfactors ...
     ' --smoothing-sigmas ', affinesoomthingssigmas];
+
 
 elseif runs==1
     rigidstage = [' --transform Rigid[0.1]' ...
@@ -123,6 +143,33 @@ elseif runs>=3 % go directly to affine stage, try GC again
         ' --smoothing-sigmas ', affinesoomthingssigmas];
 end
 
+
+if refine
+    rigidstage=[rigidstage, ... % add nonexisting mask for this stage
+        ' --masks [nan,nan]'];
+    affinestage=[affinestage, ... % add nonexisting mask for this stage
+        ' --masks [nan,nan]'];
+    
+    rerigidstage = [' --transform Rigid[0.1]' ...
+        ' --convergence ', rigidconvergence, ...
+        ' --shrink-factors ', rigidshrinkfactors, ...
+        ' --smoothing-sigmas ', rigidsoomthingssigmas, ...
+        ' --initial-moving-transform ',ea_path_helper([volumedir, xfm, num2str(runs), '.mat']), ...
+        ' --metric GC[', ea_path_helper(fixedimage), ',', ea_path_helper(movingimage), ',1,32,Regular,0.25]', ...
+        ' --masks [', ea_path_helper([volumedir,'bgmsk.nii']),',',ea_path_helper([volumedir,'bgmsk.nii']),']'];
+    
+    reaffinestage = [' --transform Affine[0.1]'...
+        ' --metric MI[', ea_path_helper(fixedimage), ',', ea_path_helper(movingimage), ',1,32,Regular,0.25]' ...
+        ' --convergence ', affineconvergence, ...
+        ' --shrink-factors ', affineshrinkfactors ...
+        ' --smoothing-sigmas ', affinesoomthingssigmas ...
+        ' --masks [', ea_path_helper([volumedir,'bgmsk.nii']),',',ea_path_helper([volumedir,'bgmsk.nii']),']']; 
+else
+    rerigidstage='';
+    reaffinestage='';
+end
+
+
 ea_libs_helper;
 antscmd = [ANTS, ' --verbose 1' ...
     ' --dimensionality 3 --float 1' ...
@@ -130,20 +177,24 @@ antscmd = [ANTS, ' --verbose 1' ...
     ' --interpolation Linear' ...
     ' --use-histogram-matching 1' ...
     ' --winsorize-image-intensities [0.005,0.995]', ...
-    rigidstage, affinestage];
-
-invaffinecmd = [antsApplyTransforms, ' --verbose 1' ...
-                ' --dimensionality 3 --float 1' ...
-                ' --reference-image ', ea_path_helper(movingimage), ...
-                ' --transform [', ea_path_helper([outputbase, '0GenericAffine.mat']),',1]' ...
-                ' --output Linear[', ea_path_helper([outputbase, 'Inverse0GenericAffine.mat']),']'];
-
+    rigidstage, affinestage,rerigidstage,reaffinestage];
+if writematout % inverse only needed if matrix is written out.
+    invaffinecmd = [antsApplyTransforms, ' --verbose 1' ...
+        ' --dimensionality 3 --float 1' ...
+        ' --reference-image ', ea_path_helper(movingimage), ...
+        ' --transform [', ea_path_helper([outputbase, '0GenericAffine.mat']),',1]' ...
+        ' --output Linear[', ea_path_helper([outputbase, 'Inverse0GenericAffine.mat']),']'];
+end
 if ~ispc
     system(['bash -c "', antscmd, '"']);
+    if writematout
     system(['bash -c "', invaffinecmd, '"']);
+    end
 else
     system(antscmd);
+    if writematout
     system(invaffinecmd);
+    end
 end
 
 if ~isempty(otherfiles)
@@ -157,7 +208,8 @@ end
 
 if ~writematout
     delete([outputbase, '0GenericAffine.mat']);
-    delete([outputbase, 'Inverse0GenericAffine.mat']);
+%    delete([outputbase, 'Inverse0GenericAffine.mat']); % will not be
+%    generated anymore if not writematout
     affinefile = {};
 else
     movefile([outputbase, '0GenericAffine.mat'], [volumedir, xfm, num2str(runs+1), '.mat']);

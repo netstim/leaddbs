@@ -1,23 +1,11 @@
-function ea_coregmr_spm(options,automan,doreslice)
+function ea_coregmr_spm(options,doreslice,refine)
+% this function coregisters postoperative images to preoperative images
+% using SPM.
 
 costfuns={'nmi','mi','ecc','ncc'};
-
-% first step, coregistration between transversal and coronar/sagittal versions. on full brain
-
-switch automan
-    case 'manual'
-        cfundo=1:3;
-        manual=1;
-    case 'auto'
-        cfundo=[2,1,3];
-        manual=0;
-    otherwise
-        ea_error('Coregistration prefs must be either set to auto or manual. Please modify ea_prefs.m accordingly.');
-end
-
-normlog=zeros(4,1); % log success of processing steps. 4 steps: 1. coreg tra and cor, 2. grand mean normalization 3. subcortical normalization 4. subcortical fine normalization that spares the ventricles.
-
+cfundo=[2,1];
 for export=1:3
+    cnt=1;
     for costfun=cfundo
         switch export
             case 1
@@ -27,39 +15,16 @@ for export=1:3
             case 3
                 fina=[options.root,options.prefs.patientdir,filesep,options.prefs.sagnii_unnormalized,',1'];
         end
-        try
-            if exist(fina(1:end-2),'file')
-                ea_docoreg_spm(fina,[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],costfuns{costfun},doreslice,{''})
-                normlog(1)=1;
-                disp(['*** Coregistration between transversal and coronar versions worked (',costfuns{costfun},').']);
-%                 finas{export}=fina; % assign only if worked.
+        if exist(fina(1:end-2),'file')
+            if cnt==length(cfundo) % only at final stage apply refining if set
+                ea_docoreg_spm(options,fina,[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],costfuns{costfun},doreslice,{''},0,refine);
+            else % dont reslice, dont refine (not last pass).
+                ea_docoreg_spm(options,fina,[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'],costfuns{costfun},0,{''},0,0);
             end
-        catch
-            disp('*** Coregistration between transversal and coronar versions failed / Using CT Modality.');
-            %ea_error('This normalization cannot be performed automatically with eAuto. Try using different software for the normalization step. Examples are to use SPM directly, or to use FSL, Slicer or Bioimaging Suite.');
+            cnt=cnt+1;
+            disp(['*** Coregistration pass (',costfuns{costfun},') completed.']);
         end
         
-        if manual
-            matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,',1'];
-                                                      fina};
-            jobs{1}=matlabbatch;
-            try % CT
-                spm_jobman('run',jobs);
-
-                yninp = input('Please check reg between Post-OP versions. Is result precise? (y/n)..','s');
-                if strcmpi(yninp,'y')
-                    disp('Good. Moving on...');
-                    break
-                else
-                    if costfun==4
-                        ea_error('Problem cannot be solved automatically.')
-                    else
-                        disp('Trying with another cost-function');
-                    end
-                end
-            end
-            clear matlabbatch jobs;
-        end
     end
 end
 

@@ -92,7 +92,7 @@ if nargin
 end
 
 setappdata(handles.leadfigure,'macaquemodus',macaquemodus);
-ea_init_coregmrpopup(handles);
+ea_init_coregmrpopup(handles,1);
 
 % load atlassets
 as=dir([earoot,mstr,'atlases',filesep]);
