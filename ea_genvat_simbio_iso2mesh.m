@@ -137,14 +137,18 @@ if ea_headmodel_changed(options,side,elstruct)
         c0=[c0;[t,4]];
         cnt=cnt+1;
     end
-    
-    while 1
+    success=0;
+    for attempt=1:10
         try
             [mesh.tet,mesh.pnt,activeidx,wmboundary]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
+            success=1;
             break
         catch
-            Y=Y+randn(4)/5000; % very small jitter on transformation which will be used on electrode.
+            Y=Y+randn(4)/1000; % very small jitter on transformation which will be used on electrode.
         end
+    end
+    if ~success
+        ea_error('Lead-DBS could not solve the current estimation.');
     end
     
     mesh.tissue=mesh.tet(:,5);
