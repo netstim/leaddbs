@@ -9,11 +9,11 @@ function varargout=ea_resolve_elspec(varargin)
 
 varargout{1}={'Medtronic 3389', 'Medtronic 3387', 'Medtronic 3391', ...
               'Boston Scientific Vercise', 'Boston Scientific Vercise Directed', ...
-              'St. Jude ActiveTip', ...
+              'St. Jude ActiveTip (6146-6149)','St. Jude ActiveTip (6142-6145)' ...
               'PINS L301', 'PINS L302' 'PINS L303'};
 varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', ...
               'boston_vercise', 'boston_vercise_directed', ...
-              'stjudeactivetip', ...
+              'stjude_activetip_2mm','stjude_activetip_3mm' ...
               'pins_l301', 'pins_l302', 'pins_l303'};
 if ~nargin
     return
@@ -79,8 +79,8 @@ try
             elspec.numel=8;
             elspec.tipiscontact=0;
             elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15'};
-        case 'St. Jude ActiveTip'
-            elspec.matfname='stjudeactivetip';
+        case 'St. Jude ActiveTip (6146-6149)'
+            elspec.matfname='stjude_activetip_2mm';
             elspec.lead_diameter=1.27;
             elspec.lead_color=0.7;
             elspec.contact_length=1.5;
@@ -90,6 +90,20 @@ try
             elspec.tip_color=0.3;
             elspec.tip_length=1.5;
             elspec.contact_spacing=0.5;
+            elspec.numel=4;
+            elspec.tipiscontact=1;
+            elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
+        case 'St. Jude ActiveTip (6142-6145)'
+            elspec.matfname='stjude_activetip_3mm';
+            elspec.lead_diameter=1.27;
+            elspec.lead_color=0.7;
+            elspec.contact_length=1.5;
+            elspec.contact_diameter=1.27;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=1.27;
+            elspec.tip_color=0.3;
+            elspec.tip_length=1.5;
+            elspec.contact_spacing=1.5;
             elspec.numel=4;
             elspec.tipiscontact=1;
             elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};

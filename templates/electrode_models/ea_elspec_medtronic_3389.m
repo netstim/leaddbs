@@ -1,4 +1,4 @@
-function electrode=ea_elspec_medtronic3389(varargin)
+function electrode=ea_elspec_medtronic_3389(varargin)
 % This function creates the electrode specification for a certain
 % lead. Since this code is usually only executed once (to
 % establish the model), it is not optimized in any way. You can however use

@@ -28,9 +28,9 @@ for i=1:length(meshel.ins)
 end
 for i=1:length(meshel.con)
     fcyl=[fcyl; meshel.con{i}.faces+size(ncyl,1)];
-    scyl=[scyl; meshel.ins{i}.endplates+size(ncyl,1)];
+    scyl=[scyl; meshel.con{i}.endplates+size(ncyl,1)];
     ncyl=[ncyl; meshel.con{i}.vertices];
-    seeds=[seeds; mean(meshel.ins{i}.vertices)];
+    seeds=[seeds; mean(meshel.con{i}.vertices)];
 end
 
 
