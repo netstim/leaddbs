@@ -176,7 +176,7 @@ for mcfi=usesubjects
                         case 'fMRI_timecourses'
                             load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
                             gmtc=single(gmtc);
-                            stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s});
+                            stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s},1);
                             thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
                             if isfield(dataset,'surf')
                                 % include surface:
