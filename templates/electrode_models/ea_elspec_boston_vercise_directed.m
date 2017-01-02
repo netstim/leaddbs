@@ -25,8 +25,10 @@ resultfig=figure('visible','off');
 
 jetlist=othercolor('BuOr_12');
 %   jetlist=jet;
-
-
+N=200; % resolution of electrode points
+ aData=1;
+ 
+ cnt=4;
 for side=1:length(options.sides)
     %% nullmodel:
     coords_mm{side}=[0,0,1.5+0.75;0,0,1.5+0.75+1*2;0,0,1.5+0.75+2*2;0,0,1.5+0.75+3*2];
@@ -44,9 +46,8 @@ for side=1:length(options.sides)
     ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
 
 
-    % draw trajectory
     
-    [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
+    [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(4,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
 
 
 
@@ -62,7 +63,6 @@ for side=1:length(options.sides)
 
     specsurf(elrender{side}(1),usecolor,aData); specsurf(elrender{side}(2),usecolor,aData); specsurf(elrender{side}(3),usecolor,aData);
 
-    cnt=4;
 
     % draw contacts
     for cntct=1:8 % first contact is the tip (see below).
@@ -88,7 +88,6 @@ for side=1:length(options.sides)
             cZ=cZ+X1(3);
 
             elrender{side}(cnt)=surf(cX,cY,cZ);
-
             specsurf(elrender{side}(cnt),usecolor,aData);
             log(cnt)=1; % contact
             cnt=cnt+1;
@@ -162,11 +161,14 @@ for side=1:length(options.sides)
     end
 
     % draw trajectory between contacts
-    for cntct=1:elspec.numel-1
+    
+    for cntct=1:3
+        
         set(0,'CurrentFigure',resultfig);
-
-        [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct+1,:)+trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-
+        shift=[0,0,0.5];
+        [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2)-shift,coords_mm{side}(cntct+1,:)+trajvector*(elspec.contact_length/2)-shift,elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
+        
+  
         specsurf(elrender{side}(cnt),usecolor,aData); specsurf(elrender{side}(cnt+1),usecolor,aData); specsurf(elrender{side}(cnt+2),usecolor,aData);
         log(cnt:cnt+2)=0; % insulation
 
@@ -219,10 +221,14 @@ for comp=[1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,22,25,28]
     if comp==1 % shaft
         cyl=elrender{side}(comp); top=elrender{side}(comp+1); bottom=elrender{side}(comp+2);
         cyl = surf2patch(cyl,'triangles');
+
         cyl.faces=[cyl.faces;top.Faces+length(cyl.vertices);bottom.Faces+length(cyl.vertices)+length(top.Vertices)];
         cyl.vertices=[cyl.vertices;top.Vertices;bottom.Vertices];
         electrode.insulation(inscnt)=cyl;
         inscnt=inscnt+1;
+        
+        
+        
     elseif ismember(comp,4:7) % first 4 contacts
         cyl=elrender{side}(comp);
         try % if not already a patch..
@@ -247,11 +253,11 @@ for comp=[1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,22,25,28]
 
         try
             electrode.insulation(inscnt).faces=cyl.Faces;
-            electrode.insulation(inscnt).vertices=cyl.Vertices;
+            electrode.insulation(inscnt).vertices=nudgetomean(cyl.Vertices);
             electrode.insulation(inscnt).facevertexcdata=cyl.FaceVertexCData;
         catch
             electrode.insulation(inscnt).faces=cyl.faces;
-            electrode.insulation(inscnt).vertices=cyl.vertices;
+            electrode.insulation(inscnt).vertices=nudgetomean(cyl.vertices);
             electrode.insulation(inscnt).facevertexcdata=cyl.facevertexcdata;
         end
 
@@ -278,11 +284,11 @@ for comp=[1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,22,25,28]
         end
         try
             electrode.insulation(inscnt).faces=cyl.Faces;
-            electrode.insulation(inscnt).vertices=cyl.Vertices;
+            electrode.insulation(inscnt).vertices=nudgetomean(cyl.Vertices);
             electrode.insulation(inscnt).facevertexcdata=cyl.FaceVertexCData;
         catch
             electrode.insulation(inscnt).faces=cyl.faces;
-            electrode.insulation(inscnt).vertices=cyl.vertices;
+            electrode.insulation(inscnt).vertices=nudgetomean(cyl.vertices);
             electrode.insulation(inscnt).facevertexcdata=cyl.facevertexcdata;
         end
         inscnt=inscnt+1;
@@ -347,6 +353,7 @@ if vizz
         end
         specsurf(elrender{side}(cnt),usecolor,aData);
         cnt=cnt+1;
+        
     end
     for con=1:length(electrode.contacts)
         electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
@@ -356,6 +363,7 @@ if vizz
         specsurf(elrender{side}(cnt),elspec.contact_color,aData);
         
         cnt=cnt+1;
+         
     end
     
     axis equal
@@ -363,6 +371,37 @@ if vizz
 end
 
 
+% add meshel
+
+for con=1:length(electrode.contacts)
+    meshel.con{con}.faces=electrode.contacts(con).faces;
+    meshel.con{con}.vertices=round(electrode.contacts(con).vertices,50);   
+    [meshel.con{con}.vertices,meshel.con{con}.faces]=meshcheckrepair(meshel.con{con}.vertices,meshel.con{con}.faces,'dup');
+    [meshel.con{con}.vertices,meshel.con{con}.faces]=meshcheckrepair(meshel.con{con}.vertices,meshel.con{con}.faces,'deep');
+
+end
+
+for ins=1:length(electrode.insulation)
+    meshel.ins{ins}.faces=electrode.insulation(ins).faces;
+    meshel.ins{ins}.vertices=round(electrode.insulation(ins).vertices,50);
+    [meshel.ins{ins}.vertices,meshel.ins{ins}.faces]=meshcheckrepair(meshel.ins{ins}.vertices,meshel.ins{ins}.faces,'dup');
+    [meshel.ins{ins}.vertices,meshel.ins{ins}.faces]=meshcheckrepair(meshel.ins{ins}.vertices,meshel.ins{ins}.faces,'deep');
+end
+ea_genvol_boston_dir(meshel,elspec,vizz);
+
+
+
+function node=nudgetomean(node)
+nudge=0;
+
+
+if nudge
+
+   centroid=mean(node,1);
+   tos=repmat(centroid,size(node,1),1)-node; 
+   tos=tos*0.01;
+   node=node+tos;
+end
 
 function m=maxiso(cellinp) % simply returns the highest entry of matrices in a cell.
 m=0;
