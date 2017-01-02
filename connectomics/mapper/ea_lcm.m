@@ -33,7 +33,7 @@ end
 % convert VTA seeds also if neither func or struc conn is chosen.
 if (~options.lcm.func.do) && (~options.lcm.struc.do)
     if strcmp(options.lcm.seeddef,'vats')
-        %ea_resolvevatseeds(options,'dMRI');
+        ea_resolvevatseeds(options,'dMRI');
         
         ea_resolvevatseeds(options,'fMRI');
     end
