@@ -30,7 +30,9 @@ end
 if(nargin<=6)
     holes=[];
 end
-[node,elem,face,success]=surf2mesh(v,f,[],[],keepratio,maxvol,regions,holes);
+
+
+[node,elem,face,success]=surf2mesh(v,f,min(v,[],1),max(v,[],1),keepratio,maxvol,regions,holes);
 
 if ~success % try with gmsh next
     error('Something went wrong / probably self-intersecting faces.');

@@ -84,6 +84,7 @@ end
 deletemeshfile(mwpath('post_vmesh.mtr'));
 
 sweeptempdir;
+
 savesurfpoly(no,el,holes,regions,p0,p1,mwpath('post_vmesh.poly'),dobbx);
 
 moreopt='';
@@ -106,7 +107,7 @@ end
 
 
 
-
+keyboard
 if(isempty(cmdopt))
 
   system([' "' mcpath('tetgen_latest') exesuff '" -A -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
