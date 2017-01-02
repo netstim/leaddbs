@@ -18,6 +18,7 @@ directory = [options.root,options.patientname,filesep];
 
 if options.dicomimp % do DICOM-Import.
     ea_dicom_import(options);
+    return
 end
 
 % check connectome-mapper tags
