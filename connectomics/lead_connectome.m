@@ -529,7 +529,8 @@ function dicomcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of dicomcheck
-
+ea_storeui(handles);
+ea_deselectall_dicom(handles);
 
 % --- Executes on button press in exportcode.
 function exportcode_Callback(hObject, eventdata, handles)
