@@ -31,9 +31,9 @@ elseif nargin==1
         return
     end
 end
-    if useSI
-        thresh=thresh.*(10^3);
-    end
+if useSI
+    thresh=thresh.*(10^3);
+end
 S=ea_activecontacts(S);
 if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     fv.vertices=[0,0,0
