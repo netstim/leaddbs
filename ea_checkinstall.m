@@ -12,8 +12,28 @@ if ~exist('force','var')
 end
 switch cmd
     case 'list' % simply return list of installable datasets
-        success={'Apply Hotfix','Big Brain 100um subcortical (Amunts 2013)','Lead-DBS Macaque Toolbox','Structural group connectome (Horn 2013)'};
-        commands={'hotfix','bigbrain','macaque','groupconnectome2013'};
+        success={'Redownload Data files','Apply Hotfix','Big Brain 100um subcortical (Amunts 2013)','Lead-DBS Macaque Toolbox','Structural group connectome (Horn 2013)'};
+        commands={'leaddata','hotfix','bigbrain','macaque','groupconnectome2013'};
+    case 'leaddata'
+        checkf=[earoot,'templates',filesep,'mni_hires_bb.nii'];
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
+        if checkonly;
+            success=~force;
+            return;
+        end
+        if force==-1;
+            success=-1;
+            return;
+        end
+        
+        if ~exist(checkf,'file') || force
+            success=ea_downloadasset('Lead Datafiles',...
+                [],...
+                '');
+        else
+            disp('Lead datafiles is installed.')
+        end
+        
     case 'bigbrain'
         checkf=[earoot,'templates',filesep,'bigbrain_2015_100um_bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
@@ -81,30 +101,36 @@ end
 
 
 function success=ea_downloadasset(assetname,destination,id)
-downloadurl = 'http://www.lead-dbs.org/release/download.php';
-success=1;
-disp(['Downloading ',assetname,'...'])
-try
-    webopts=weboptions('Timeout',5);
-    websave(destination,downloadurl,'id',id,webopts);
-catch
+
+if strcmp(assetname,'Lead Datafiles')
+    ea_update_data('full');
+    
+else
+    downloadurl = 'http://www.lead-dbs.org/release/download.php';
+    success=1;
+    disp(['Downloading ',assetname,'...'])
     try
-        urlwrite([downloadurl,'?id=',id],destination,'Timeout',5);
+        webopts=weboptions('Timeout',5);
+        websave(destination,downloadurl,'id',id,webopts);
     catch
-        success=0;
+        try
+            urlwrite([downloadurl,'?id=',id],destination,'Timeout',5);
+        catch
+            success=0;
+        end
     end
-end
-
-if success
-    [~,~,ext] = fileparts(destination);
-    if strcmp(ext,'.gz')
-        gunzip(destination);
-    elseif strcmp(ext,'.zip')
-        unzip(destination);
+    
+    if success
+        [~,~,ext] = fileparts(destination);
+        if strcmp(ext,'.gz')
+            gunzip(destination);
+        elseif strcmp(ext,'.zip')
+            unzip(destination);
+        end
     end
+    
+    ea_delete(destination);
 end
-
-ea_delete(destination);
 
 
 function force=ea_alreadyinstalled(checkf,checkonly,robot)
