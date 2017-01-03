@@ -55,10 +55,10 @@ if update
         end
         delete([earoot,'tmp',filesep,'updates.zip']);
 
-        disp('Deleting outdated code...');
         try
             % delete files during incremental updating
             if update==2 && exist([earoot,'tmp',filesep,id,filesep,'DELETE'], 'file')
+                disp('Deleting outdated code...');
                 dfid = fopen([earoot,'tmp',filesep,id,filesep,'DELETE']);
                 dels=textscan(dfid,'%s');
                 fclose(dfid);
