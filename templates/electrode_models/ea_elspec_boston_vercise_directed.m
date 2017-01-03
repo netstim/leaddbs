@@ -1,4 +1,4 @@
-function electrode=ea_elspec_bostonvercisedirected(varargin)
+function electrode=ea_elspec_boston_vercise_directed(varargin)
 % This function creates the electrode specification for a certain
 % lead. Since this code is usually only executed once (to
 % establish the model), it is not optimized in any way. You can however use
@@ -231,8 +231,59 @@ for comp=[1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,22,25,28]
         
     elseif ismember(comp,4:7) % first 4 contacts
         cyl=elrender{side}(comp);
+       
         try % if not already a patch..
             cyl = surf2patch(cyl,'triangles');
+        end
+        
+         if comp==4 % tip
+            % close lid (add endplate)
+            
+
+            % find all vertices at Z=3mm
+            z3=cyl.vertices(cyl.vertices(:,3)==3,:);
+            z3ix=find(cyl.vertices(:,3)==3);
+            
+            % add 0,0,3 (lid midpoint)
+            cyl.vertices=[cyl.vertices;0,0,3];
+            
+            midpointix=length(cyl.vertices);
+            
+            for face=1:length(z3ix)
+                try
+               cyl.faces=[cyl.faces;z3ix(face),z3ix(face+1),midpointix];
+                catch
+               cyl.faces=[cyl.faces;z3ix(face),z3ix(1),midpointix];      
+                end
+            end
+             
+% 
+%             
+%             z3ix=z3ix';
+%             keyboard
+%             vtc=nan(length(cyl.faces)+1,21);
+%             vtc(1:length(cyl.faces),1:3)=cell2mat([num2cell(cyl.faces,2)]);
+%             vtc(end,:)=z3ix;
+% %       
+if vizz
+             figure 
+             h=patch('vertices',cyl.vertices,'faces',cyl.faces,'facecolor','r','edgecolor','k');
+end      
+             [ncyl.vertices,ncyl.faces]=meshcheckrepair(cyl.vertices,cyl.faces,'meshfix');
+if vizz
+             figure, patch('vertices',ncyl.vertices,'faces',ncyl.faces,'facecolor','r');
+end      
+             [ncyl.vertices,~,ncyl.faces]=s2m(ncyl.vertices,ncyl.faces,1,1,'tetgen');
+                          figure, patch('vertices',ncyl.vertices,'faces',ncyl.faces(:,1:3),'facecolor','r');
+
+ncyl.facevertexcdata=repmat(cyl.facevertexcdata(1,:),size(ncyl.vertices,1),1);
+                          %cyl=ncyl;
+                          %cyl.faces=cyl.faces(:,1:3);
+                          
+%             meshresample(h.Vertices,h.Faces,1);
+ %           [nodecon,~,facecon]=s2m(cyl.vertices,[num2cell(cyl.faces,2);{flip(z3ix,2)}],0.2,1,'tetgen'); % generate a tetrahedral mesh of the cylinders
+
+            %figure, patch(cyl,'facecolor','r')
         end
 
         try
@@ -244,6 +295,10 @@ for comp=[1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,22,25,28]
             electrode.contacts(cntcnt).vertices=cyl.vertices;
             electrode.contacts(cntcnt).facevertexcdata=cyl.facevertexcdata;
         end
+        
+  
+        
+        
         cntcnt=cntcnt+1;
     elseif ismember(comp,8:11) % insulation
         cyl=elrender{side}(comp);
@@ -359,7 +414,7 @@ if vizz
         electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
         electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
         elrender{side}(cnt)=patch(electrode.contacts(con));
-        
+
         specsurf(elrender{side}(cnt),elspec.contact_color,aData);
         
         cnt=cnt+1;
@@ -387,7 +442,7 @@ for ins=1:length(electrode.insulation)
     [meshel.ins{ins}.vertices,meshel.ins{ins}.faces]=meshcheckrepair(meshel.ins{ins}.vertices,meshel.ins{ins}.faces,'dup');
     [meshel.ins{ins}.vertices,meshel.ins{ins}.faces]=meshcheckrepair(meshel.ins{ins}.vertices,meshel.ins{ins}.faces,'deep');
 end
-ea_genvol_boston_dir(meshel,elspec,vizz);
+ea_genvol_boston_dir(meshel,elspec,z3ix,vizz);
 
 
 
