@@ -85,6 +85,15 @@ if update
         disp('Restarting LEAD.');
         lead;
         disp('*** Update finished.');
+        
+        if getResponseCode(openConnection(java.net.URL([updurl,'?id=updates_data']))) == 200
+            info=sprintf(['LEAD data need to be updated!\n',...
+                      'Click the data update button, or download it from:\n', ...
+                      'http://www.lead-dbs.org/release/download.php?id=updates_data']);
+            disp(info);
+            msgbox(info,'Data Update Found','Help');
+            ea_update_data();
+        end
     catch
         info=sprintf(['Failed to update!\n',...
                       'Alternatively, you can download the latest verion from: http://www.lead-dbs.org/release/download.php']);
