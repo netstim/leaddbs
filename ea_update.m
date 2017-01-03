@@ -87,9 +87,7 @@ if update
         disp('*** Update finished.');
         
         if getResponseCode(openConnection(java.net.URL([updurl,'?id=updates_data']))) == 200
-            info=sprintf(['LEAD data need to be updated!\n',...
-                      'Click the data update button, or download it from:\n', ...
-                      'http://www.lead-dbs.org/release/download.php?id=updates_data']);
+            info=sprintf('Start updating LEAD data...');
             disp(info);
             msgbox(info,'Data Update Found','Help');
             ea_update_data();
