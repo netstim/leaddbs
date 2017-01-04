@@ -194,9 +194,9 @@ img = ds.img;
         for k = 1:size(ds.hr.user.bTensor,3);
 
             
-                               [U D] = eigs(ds.hr.user.bTensor(:,:,k));
-               [~,ix]=sort(D(logical(eye(length(D)))));
-                   dirs(:,k) = U(:,ix(3));   
+            [U D] = eigs(ds.hr.user.bTensor(:,:,k));
+            [~,ix]=sort(D(logical(eye(length(D)))));
+            dirs(:,k) = U(:,ix(3));
 
             
         end;

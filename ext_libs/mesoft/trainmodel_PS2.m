@@ -32,11 +32,11 @@ n = n./repmat(sqrt(sum(n.^2)),[3 1]);
 %ten = ds.original_bTensor;
 ten = evalin('base','hr.user.bTensor')/1000;
 for k = 1:size(ten,3),
-
     
-                       [U D] = eigs(ten(:,:,k));
-               [~,ix]=sort(D(logical(eye(length(D)))));
-                   scheme(:,k) = sqrt(D(1,1))*U(:,ix(3));   
+    
+    [U D] = eigs(ten(:,:,k));
+    [~,ix]=sort(D(logical(eye(length(D)))));
+    scheme(:,k) = sqrt(D(1,1))*U(:,ix(3));
 
 end;
 
