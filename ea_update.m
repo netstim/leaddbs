@@ -40,9 +40,14 @@ if update
             try
                 urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',5);
             catch
-                info='Download error! Please retry later.';
+                if update==1
+                    info='Download error! Please retry later.';
+                elseif update==2
+                    info=sprintf(['Update error! Please retry later or download the full version from:\n',...
+                                  'http://www.lead-dbs.org/release/download.php?id=lead']);
+                end
                 disp(info);
-                msgbox(info,'Update','Error')
+                msgbox(info,'Error','Error')
                 return
             end
         end
@@ -85,9 +90,9 @@ if update
         disp('Restarting LEAD.');
         lead;
         disp('*** Update finished.');
-        
+
         if getResponseCode(openConnection(java.net.URL([updurl,'?id=updates_data']))) == 200
-            info=sprintf('Start updating LEAD data...');
+            info='Start updating LEAD data...';
             disp(info);
             msgbox(info,'Data Update Found','Help');
             ea_update_data();

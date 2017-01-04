@@ -22,7 +22,7 @@ if strcmp(id, 'updates_data')
                       'Alternatively, you can download the full data zip from:\n', ...
                       'http://www.lead-dbs.org/release/download.php?id=data']);
         disp(info);
-        msgbox(info,'Update','Help');
+        msgbox(info,'No Update','Help');
         return
     end
     disp('Downloading lead data update...');
@@ -39,7 +39,7 @@ catch
     catch
         info='Download error! Please retry later.';
         disp(info);
-        msgbox(info,'Update','Error')
+        msgbox(info,'Error','Error')
         return
     end
 end
