@@ -57,7 +57,7 @@ matlabbatch{1}.spm.spatial.preproc.warp.write = [0 0];
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
-delete([ea_getearoot,'templates',filesep,'mni_hires_seg8.mat']); 
+delete([ea_getearoot,'templates',filesep,'mni_hires_t2_seg8.mat']); 
 if ~exist([ea_getearoot,'templates',filesep,'dartel'], 'dir')
     mkdir([ea_getearoot,'templates',filesep,'dartel']);
 end
