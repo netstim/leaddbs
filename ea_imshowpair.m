@@ -1,19 +1,19 @@
 function  ea_imshowpair( Img, options ,addstring,callingfunction)
 % this function is based on IMSHOW3DFULL by Maysam Shahedi and supports
 % truecolor images. Windowed view is adapted from MAGNIFY by Rick Hindman.
-% 
+%
 % Todd Herrington, 2016-03-16
 
 if ~exist('callingfunction','var')
-   callingfunction='normalization'; 
+   callingfunction='normalization';
 end
 switch callingfunction
     case 'ctcoregistration'
-    wiresIX=3:5;
-    gridIX=nan;    
+        wiresIX=3:5;
+        gridIX=nan;
     case 'normalization'
-    wiresIX=3;
-    gridIX=4;
+        wiresIX=3;
+        gridIX=4;
 end
 
 if nargin==2
@@ -99,7 +99,7 @@ elseif isa(Img,'logical')
     LevV =0.5;
     Win = 1;
     WLAdjCoe = 0.1;
-end 
+end
 
 ImgO = Img; % ImgO will never be permuted. ImgCr and ImgSg won't be used anymore but generated on the fly via ImgO.
 %ImgCr = flip(permute(Img, [3 1 2 4]),1);   % Coronal view image
@@ -139,10 +139,10 @@ MainImage = 1;
 XImage=1:size(Img,1);
 YImage=1:size(Img,2);
 
-        try % image toolbox     
-            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+        try % image toolbox
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         catch
-            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         end;
         showhelptext;
 
@@ -169,7 +169,7 @@ if sno > 1
 %    stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
 else
 %    stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String','2D image', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
-end    
+end
 %ltxthand = uicontrol('Style', 'text','Position', Ltxt_Pos,'String','Level: ', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', LFntSz);
 %wtxthand = uicontrol('Style', 'text','Position', Wtxt_Pos,'String','Window: ', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', WFntSz);
 %lvalhand = uicontrol('Style', 'edit','Position', Lval_Pos,'String',sprintf('%6.0f',LevV), 'BackgroundColor', [1 1 1], 'FontSize', LVFntSz,'Callback', @WinLevChanged);
@@ -275,12 +275,12 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 i1 = object;
                 a1 = get(i1,'Parent');
                 f1 = get(a1,'Parent');
-                
+
                 a2 = copyobj(a1,f1, 'legacy');
-                
+
                 i2 = get(a2,'Children');
                 i2=i2(2);
-                
+
                 set(f1, ...
                     'UserData',[f1,a1,a2], ...
                     'Pointer','crosshair', ...
@@ -289,7 +289,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                     'UserData',[1,0.1], ...  %magnification, frame size
                     'Color',get(a1,'Color'), ...
                     'Box','on');
-                set(i2,'CData',Img(XImage,YImage,S,1+mod(MainImage,2)));
+                set(i2,'CData',Img(XImage,YImage,S,2));
                 xlabel(''); ylabel(''); zlabel(''); title('');
                 set(a1, ...
                     'Color',get(a1,'Color')*0.95);
@@ -297,7 +297,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                     'CurrentAxes',a1);
                 set(f1,'WindowButtonMotionFcn', @ButtonMotionCallback)
                 ButtonMotionCallback(f1);
-                
+
             end
     end
 
@@ -347,7 +347,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
         [Rmin, Rmax] = WL2R(Win,LevV);
         caxis([Rmin, Rmax])
-        
+
     end
 
 % -=< Window and level to range conversion >=-
@@ -372,7 +372,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
     function KeyPressCallback(object,eventdata)
         H = get(gcf,'UserData');
-        
+
         if ~isempty(H)
             f1 = H(1); a1 = H(2); a2 = H(3);
             a2_param = get(a2,'UserData');
@@ -394,8 +394,8 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         elseif (strcmpi(eventdata.Key,'a'))
             AxialView([]);
         elseif (strcmpi(eventdata.Key,'s'))
-            SagittalView([]);       
-        elseif (strcmpi(eventdata.Key,'x'));
+            SagittalView([]);
+        elseif (strcmpi(eventdata.Key,'x'))
             if MainImage(1)==1
                 MainImage=wiresIX;
             elseif MainImage(1)==wiresIX(1)
@@ -404,7 +404,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 MainImage=wiresIX;
             end
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
-        elseif (strcmpi(eventdata.Key,'g'));
+        elseif (strcmpi(eventdata.Key,'g'))
             if size(Img,4)==4 && strcmp(callingfunction,'normalization') % only do if grid is available.
                 if MainImage(1)==1
                     MainImage=gridIX;
@@ -436,15 +436,15 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             S_s = S;
         elseif View == 'C'
             S_c = S;
-        end            
+        end
         View = 'A';
-        
+
         Img = ImgO;
         S = S_a;
         sno = sno_a;
         cla(hdl_im);
         hdl_im = axes('position',[0,0,1,1]);
-        
+
         if ~ImgZ
             XImage=ImgZax{1};
             YImage=ImgZax{2};
@@ -452,32 +452,32 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             XImage=ImgZax{3};
             YImage=ImgZax{4};
         end
-        
-        
 
-        
-        try % image toolbox     
-            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+
+
+
+        try % image toolbox
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         catch
-            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         end;
         showhelptext;
-        
-        
+
+
         if sno > 1
         %    shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
             %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
         else
             %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String','2D image', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
         end
-        
+
         caxis([Rmin Rmax])
         if sno > 1
             %set(stxthand, 'String', sprintf('Slice# %d / %d',S, sno));
         else
             %set(stxthand, 'String', '2D image');
         end
-        
+
         set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
@@ -489,7 +489,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             S_a = S;
         elseif View == 'C'
             S_c = S;
-        end            
+        end
         View = 'S';
 
         if ~ImgZ
@@ -499,29 +499,29 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             XImage=ImgZsg{3};
             YImage=ImgZsg{4};
         end
-        
+
         Img = flip(permute(ImgO, [3 2 1 4]),1);   % Sagittal view image;
         S = S_s;
         sno = sno_s;
         cla(hdl_im);
         hdl_im = axes('position',[0,0,1,1]);
-        
-        try % image toolbox     
-            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+
+        try % image toolbox
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         catch
-            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         end;
         showhelptext;
 
-        
-        
+
+
         if sno > 1
           %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
             %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
         else
             %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String','2D image', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
         end
-        
+
         caxis([Rmin Rmax])
         if sno > 1
 %            set(stxthand, 'String', sprintf('Slice# %d / %d',S, sno));
@@ -541,9 +541,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             S_a = S;
         elseif View == 'S'
             S_s = S;
-        end            
+        end
         View = 'C';
-        
+
         if ~ImgZ
             XImage=ImgZcr{1};
             YImage=ImgZcr{2};
@@ -551,27 +551,27 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             XImage=ImgZcr{3};
             YImage=ImgZcr{4};
         end
-        
+
         Img = flip(permute(ImgO, [3 1 2 4]),1);   % Coronal view image;
         S = S_c;
         sno = sno_c;
         cla(hdl_im);
         hdl_im = axes('position',[0,0,1,1]);
-        
-        try % image toolbox     
-            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
+
+        try % image toolbox
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         catch
-            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]); 
-        end;        
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
+        end;
         showhelptext;
-        
+
         if sno > 1
           %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
             %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
         else
             %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String','2D image', 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
         end
-        
+
         caxis([Rmin Rmax])
 
         set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
@@ -610,8 +610,12 @@ function [fig_pointer_pos, axes_pointer_val] = pointer2d(fig_hndl,axes_hndl)
 
     % Rick Hindman - 4/18/01
 
-    if (nargin == 0), fig_hndl = gcf; axes_hndl = gca; end;
-    if (nargin == 1), axes_hndl = get(fig_hndl,'CurrentAxes'); end;
+    if (nargin == 0)
+        fig_hndl = gcf;
+        axes_hndl = gca;
+    elseif (nargin == 1)
+        axes_hndl = get(fig_hndl,'CurrentAxes');
+    end
 
     set(fig_hndl,'Units','pixels');
 
