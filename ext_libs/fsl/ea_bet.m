@@ -21,6 +21,8 @@ if nargin < 4
     fraintthreshold = 0.5;
 end
 
+fprintf(['\n\nRunning FSL BET2: ', inputimage, '\n\n']);
+
 inputimage = ea_path_helper(ea_niigz(inputimage));
 outputimage = ea_path_helper(ea_niigz(outputimage));
 
@@ -51,3 +53,5 @@ if ~ispc
 else
     system(cmd);    
 end
+
+fprintf('\nFSL BET2 finished\n');

@@ -36,6 +36,8 @@ else
     end
 end
 
+fprintf(['\n\nRunning FSL FNIRT: ', movingimage, '\n\n']);
+
 [~, warpprefix] = ea_niifileparts(outputimage);
 
 % template config
@@ -108,3 +110,5 @@ else
     system(fnirtcmd);
     system(invwarpcmd);
 end
+
+fprintf('\nFSL FNIRT finished\n');

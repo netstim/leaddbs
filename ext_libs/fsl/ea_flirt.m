@@ -23,6 +23,8 @@ else
     otherfiles = {};
 end
 
+fprintf(['\n\nRunning FSL FLIRT: ', movingimage, '\n\n']);
+
 % Prepare bet image for flirt, generate the brain masks '*_bet_mask.nii'
 [movpath, movname] = ea_niifileparts(movingimage);
 [fixpath, fixname] = ea_niifileparts(fixedimage);
@@ -111,3 +113,4 @@ else
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
 
+fprintf('\nFSL FLIRT finished\n');
