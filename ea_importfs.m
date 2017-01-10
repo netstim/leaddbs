@@ -9,7 +9,7 @@ function ea_importfs(handles)
 % 1) Locate freesurfer directory
 % 2) Save cortex.mat to patientdirectory
 % __________________________________________________________________________________
-% Copyright (C) 2016 University of Pittsburgh (UPMC), Brain Modulation Lab
+% Copyright (C) 2017 University of Pittsburgh (UPMC), Brain Modulation Lab
 %
 % Ari Kappel
 
