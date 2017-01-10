@@ -390,7 +390,7 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
     
     nii=ea_load_nii(fname);
     if ~all(abs(nii.voxsize)<=0.7)
-        ea_reslice_nii(fname,fname,[0.4,0.4,0.4],0,[],3);
+        ea_reslice_nii(fname,fname,[0.4,0.4,0.4],0,[],0);
         nii=ea_load_nii(fname);
     end
     
