@@ -45,12 +45,17 @@ if ~isempty(strfind(slicecontroldata.templateused,'Patient'))
     nm = 0;
 end
 
+% macaque brain currently not supported % mcr=ea_checkmacaque(options);
+mcr = '';
+
 for nativemni=nm % switch between native and mni space.
     
     switch nativemni
-        case 0 % patient cortex in mni space
+        case 0 % patient cortex in mni space in future release
+            % root=[options.root,options.patientname,filesep];
+            % adir=[root,''];
             root=[options.root,options.patientname,filesep];
-            adir=[root,''];
+            adir=[root,'templates/cortex/'];
             reslice='yes';
         case 1 % template cortex in mni space
             root=[options.earoot,mcr];
@@ -73,9 +78,7 @@ end
 
 % % reslice patient cortex to mni space in future release
 % % for now always use template cortex in mni space
-% if strcmp(reslice,'yes')
-%     
-% end
+% if strcmp(reslice,'yes'); end
 
 % Show cortex
 hold on
