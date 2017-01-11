@@ -95,30 +95,7 @@ setappdata(handles.leadfigure,'macaquemodus',macaquemodus);
 ea_init_coregmrpopup(handles,1);
 
 % load atlassets
-as=dir([earoot,mstr,'atlases',filesep]);
-asc=cell(0);
-cnt=1;
-for i=1:length(as)
-    if as(i).isdir
-    asc{cnt}=as(i).name;
-    cnt=cnt+1;
-    end
-end
-options.prefs=ea_prefs('');
-
-excludes={'.','..'};
-asc(ismember(asc,excludes))=[];
-if options.prefs.env.dev
-    asc{end+1}='Segment patient anatomy';
-end
-asc{end+1}='Use none';
-
-set(handles.atlassetpopup,'String',asc);
-
-[~,defix]=ismember(options.prefs.atlases.default,asc);
-if defix
-set(handles.atlassetpopup,'Value',defix);
-end
+ea_listatlassets(handles,1);
 
 set(handles.normalize_checkbox,'Value',0);
 
@@ -151,6 +128,8 @@ axis equal;
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 
 % add norm methods to menu
+options.earoot=ea_getearoot;
+options.prefs=ea_prefs('');
 
 ea_addnormmethods(handles,options,mstr);
 
@@ -1121,13 +1100,14 @@ function vizspacepopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns vizspacepopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from vizspacepopup
 
-if get(hObject,'Value')==2
-   set(handles.writeout2d_checkbox,'Enable','off');
-   set(handles.writeout2d_checkbox,'Value',0);
-else
-   set(handles.writeout2d_checkbox,'Enable','on');
-   %set(handles.writeout2d_checkbox,'Value',1);
-end
+% if get(hObject,'Value')==2
+%    set(handles.writeout2d_checkbox,'Enable','off');
+%    set(handles.writeout2d_checkbox,'Value',0);
+% else
+%    set(handles.writeout2d_checkbox,'Enable','on');
+%    %set(handles.writeout2d_checkbox,'Value',1);
+% end
+ea_listatlassets(handles,get(handles.vizspacepopup,'Value'));
 
 
 % --- Executes during object creation, after setting all properties.
