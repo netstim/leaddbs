@@ -318,7 +318,7 @@ function opencortexviewer(hobj,ev,resultfig,options)
 hpcortex=ea_showcortex(resultfig,options);
 setappdata(resultfig,'cortex',hpcortex);
 try WinOnTop(hpcortex,true); end
-%update slice viewer
+% reload slice viewer to update opacity control
 awin=ea_anatomycontrol(resultfig,options);
 setappdata(resultfig,'awin',awin);
 try WinOnTop(awin,true); end
