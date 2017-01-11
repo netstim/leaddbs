@@ -45,17 +45,12 @@ end
 if ~exist([fsdir '/mri/T1.mgz'],'file')
     msg = ['Choose Freesurfer Folder for ' patientname ' (Missing ' patientname '_FS/mri/T1.mgz)...'];
     fsdir = ea_uigetdir(ptdir,msg);
-elseif ~exit([fsdir '/surf/lh.pial'],'file')
+elseif ~exist([fsdir '/surf/lh.pial'],'file')
     msg = ['Choose Freesurfer Folder for ' patientname ' (Missing ' patientname '_FS/surf/lh.pial)...'];
     fsdir = ea_uigetdir(ptdir,msg);
 elseif~exist([fsdir '/mri/T1.mgz'],'file')
     msg = ['Choose Freesurfer Folder for ' patientname ' (Missing ' patientname '_FS/surf/rh.pial)...'];
     fsdir = ea_uigetdir(ptdir,msg);
-end
-if iscell(fsdir) && length(fsdir)==1
-    fsdir = char(fsdir);
-else
-    ea_error('Please choose one FS folder at a time')
 end
 
 % Convert T1.mgz to T1.nii (Freesurfer Dependent)

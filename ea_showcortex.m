@@ -30,6 +30,7 @@ else
     clear appdata
 end
 
+    
 nm=[0:2]; % native and mni
 try
     nmind=[options.atl.pt,options.atl.can,options.atl.ptnative]; % which shall be performed?
@@ -38,23 +39,27 @@ catch
 end
 nm=nm(logical(nmind)); % select which shall be performed.
 
-mcr=ea_checkmacaque(options);
+% switch between patient and template cortex
+slicecontroldata = getappdata(gcf);
+if ~isempty(strfind(slicecontroldata.templateused,'Patient'))
+    nm = 0;
+end
 
 for nativemni=nm % switch between native and mni space.
     
     switch nativemni
-        case 0 % update case 0
-            root=[options.earoot,mcr];
-            adir=[root,'templates/cortex/'];
-            mifix='';
-        case 1
-            root=[options.earoot,mcr];
-            adir=[root,'templates/cortex/'];
-            mifix=['mni',filesep];
-        case 2
+        case 0 % patient cortex in mni space
             root=[options.root,options.patientname,filesep];
             adir=[root,''];
-            mifix=['native',filesep];
+            reslice='yes';
+        case 1 % template cortex in mni space
+            root=[options.earoot,mcr];
+            adir=[root,'templates/cortex/'];
+            reslice='no';
+        case 2 % patient cortex in native space
+            root=[options.root,options.patientname,filesep];
+            adir=[root,''];
+            reslice='no';
     end
 end
 
@@ -65,6 +70,12 @@ catch
     ea_importfs(options)
     load([adir,'cortex.mat'])
 end
+
+% % reslice patient cortex to mni space in future release
+% % for now always use template cortex in mni space
+% if strcmp(reslice,'yes')
+%     
+% end
 
 % Show cortex
 hold on
