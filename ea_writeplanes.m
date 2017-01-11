@@ -143,7 +143,9 @@ for side=1:length(options.sides)
             
             [slice,~,boundboxmm,sampleheight]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
             disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
-            fprintf(fid,'%s\n',['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
+            if fid>0 % only if file exists (does sometimes not exist if called from lead anatomy or the slice-cuts feature of elvis)
+                fprintf(fid,'%s\n',['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
+            end
             set(0,'CurrentFigure',cuts)
             try
                 hi=imagesc(slice,...
@@ -303,7 +305,7 @@ for side=1:length(options.sides)
                                 
                             end
                         end
-                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
+%                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
                     end
                     
                 end
@@ -396,8 +398,9 @@ for side=1:length(options.sides)
         end
     end
 end
+if fid>0
 fclose(fid);
-
+end
 
 
 if svfig<2

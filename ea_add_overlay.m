@@ -102,9 +102,11 @@ for atlas=1:length(atlases.names)
                         end
                     end
                 end
+                jetlist=jet;
                 atlases.colormap=jetlist;
                 
                 try % see if there is explicit color information for this atlas
+                    
                     atlasc=squeeze(jetlist(round(atlases.colors(atlas)),:)); % color for toggle button icon
                 catch
                     atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));

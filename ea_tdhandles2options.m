@@ -29,21 +29,20 @@ function d2=tdhandles2options(tdhandles,fd2)
     end
     
     
-try
-    d2.backdrop=get(tdhandles.tdbackdrop,'String');
-    d2.backdrop=d2.backdrop{get(tdhandles.tdbackdrop,'Value')};
-    d2.col_overlay=get(tdhandles.tdcolorscheck,'Value');
-    d2.con_overlay=get(tdhandles.tdcontourcheck,'Value');
-    d2.con_color=getappdata(tdhandles.tdcontourcolor,'color');
+  try  d2.backdrop=get(tdhandles.tdbackdrop,'String'); end
+  try  d2.backdrop=d2.backdrop{get(tdhandles.tdbackdrop,'Value')}; end
+  try  d2.col_overlay=get(tdhandles.tdcolorscheck,'Value'); end
+  try  d2.con_overlay=get(tdhandles.tdcontourcheck,'Value'); end
+  try  d2.con_color=getappdata(tdhandles.tdcontourcolor,'color'); end
     if isempty(d2.con_color)
         d2.con_color=[1,1,1]; % white
     end
-    d2.lab_overlay=get(tdhandles.tdlabelcheck,'Value');
-    d2.bbsize=str2double(get(tdhandles.bbsize,'String'));
+ try   d2.lab_overlay=get(tdhandles.tdlabelcheck,'Value'); end
+ try   d2.bbsize=str2double(get(tdhandles.bbsize,'String')); end
 
-end
 
-    try % additional values when called from lead_anatomy
-    d2.tracor=get(tdhandles.tracor,'Value');
-    d2.depth=str2double(get(tdhandles.depth,'String'));
-    end
+ 
+ try % additional values when called from lead_anatomy
+     d2.tracor=get(tdhandles.tracor,'Value');
+     d2.depth=str2double(get(tdhandles.depth,'String'));
+ end
