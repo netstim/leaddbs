@@ -1065,7 +1065,12 @@ function specify2dwrite_Callback(hObject, eventdata, handles)
 % hObject    handle to specify2dwrite (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_spec2dwrite;
+options.native=get(handles.vizspacepopup,'Value')==2;
+[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
+    options.root=[options.root,filesep];
+    options.modality=get(handles.MRCT,'Value');
+    options.prefs=ea_prefs(options.patientname);
+ea_spec2dwrite(options);
 
 
 

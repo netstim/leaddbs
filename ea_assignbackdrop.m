@@ -4,7 +4,14 @@ if ~exist('subpat','var')
     subpat='Patient';
 end
 if ~exist('native','var')
-    native=0;
+    native=0; % default
+try % options.native may not be defined
+    if options.native
+        native=1;
+    else
+        native=0;
+    end
+end
 end
 
 switch bdstring
@@ -28,6 +35,9 @@ switch bdstring
         try
             assignpatspecific(options); % use this as a probe to see if patient is defined.
             haspostop=1;
+            options=ea_tempswitchoptstopre(options);
+            assignpatspecific(options); % use this as a probe to see if patient is defined.
+            haspreop=1;
         catch
             try
                 options=ea_tempswitchoptstopre(options);
