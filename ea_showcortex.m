@@ -25,7 +25,7 @@ else
     color = options.prefs.d3.cortexcolor;
     appdata = getappdata(resultfig);
     appdata = getappdata(appdata.awin);
-    alpha = appdata.UsedByGUIData_m.cortexalphaslider.Value;
+    alpha = str2double(appdata.UsedByGUIData_m.cortexalpha.String);
     clear appdata
 end
 

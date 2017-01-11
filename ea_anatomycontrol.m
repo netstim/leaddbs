@@ -22,7 +22,7 @@ function varargout = ea_anatomycontrol(varargin)
 
 % Edit the above text to modify the response to help ea_anatomycontrol
 
-% Last Modified by GUIDE v2.5 10-Jan-2017 17:31:47
+% Last Modified by GUIDE v2.5 10-Jan-2017 18:34:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,10 +80,10 @@ set(handles.templatepopup,'String',list);
 % turn off cortex alpha slider if cortex is not in scene
 appdata = getappdata(resultfig);
 if ~isfield(appdata,'cortex')
-    set(handles.cortexalphaslider,'Visible','off')
+    set(handles.cortexalpha,'Visible','off')
 elseif isfield(getappdata(resultfig),'cortex')
-    set(handles.cortexalphaslider,'Visible','on')
-    set(handles.cortexalphaslider,'Value',appdata.cortex.FaceAlpha)
+    set(handles.cortexalpha,'Visible','on')
+    set(handles.cortexalpha,'String',num2str(appdata.cortex.FaceAlpha))
 end
 clear appdata
 
@@ -489,34 +489,37 @@ ea_spec2dwrite;
 
 
 % --- Executes on slider movement.
-function cortexalphaslider_Callback(hObject, eventdata, handles)
-% hObject    handle to cortexalphaslider (see GCBO)
+function cortexalpha_Callback(hObject, eventdata, handles)
+% hObject    handle to cortexalpha (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
-% Notes: Error when moving too fast with buttons. resultfig is empty
-% resultfig = ;
-% set(gcf, 'pointer', 'watch');       
-% ea_busyaction('on',resultfig,'anatomy')
+% Notes: Error when moving too fast with buttons. resultfig is empty   
+% ea_busyaction('on',gcf,'anatomy')
 if isempty(getappdata(gcf,'resultfig'))
-    disp('Slow down and use the slider')
+    ea_error('Figure handle is empty. Please, try again.')
     return
 end
 hpcortex = getappdata(getappdata(gcf,'resultfig'),'cortex');
-set(hpcortex,'FaceAlpha',get(hObject,'Value'))
+alpha = str2double(get(hObject,'String'));
+if 0<=alpha && alpha<=1
+    set(hpcortex,'FaceAlpha',alpha)
+else
+    ea_error('Please enter a valid number between 0 and 1 for cortical opacity.')
+    set(handles.cortexalpha,'String',hpcortex.FaceAlpha)
+end
 setappdata(getappdata(gcf,'resultfig'),'cortex',hpcortex);
-% ea_busyaction('del',resultfig,'anatomy')
-% set(gcf, 'pointer', 'arrow');
+% ea_busyaction('del',gcf,'anatomy')
 
 refreshresultfig(handles)
 
 
 % --- Executes during object creation, after setting all properties.
-function cortexalphaslider_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to cortexalphaslider (see GCBO)
+function cortexalpha_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to cortexalpha (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
