@@ -22,7 +22,7 @@ function varargout = ea_anatomycontrol(varargin)
 
 % Edit the above text to modify the response to help ea_anatomycontrol
 
-% Last Modified by GUIDE v2.5 08-Feb-2016 18:56:44
+% Last Modified by GUIDE v2.5 10-Jan-2017 18:34:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -77,6 +77,16 @@ end
 list=ea_assignbackdrop('list',options,'Patient',options.native);
 set(handles.templatepopup,'String',list);
 
+% turn off cortex alpha slider if cortex is not in scene
+appdata = getappdata(resultfig);
+if ~isfield(appdata,'cortex')
+    set(handles.cortexalpha,'Visible','off')
+elseif isfield(getappdata(resultfig),'cortex')
+    set(handles.cortexalpha,'Visible','on')
+    set(handles.cortexalpha,'String',num2str(appdata.cortex.FaceAlpha))
+end
+clear appdata
+
 if ~isempty(togglestates) % anatomy toggles have been used before..
 % reset figure handle.
 
@@ -113,6 +123,7 @@ end
 else
     togglestates.cutview='3d';
     
+
 setappdata(getappdata(handles.acontrolfig,'resultfig'),'togglestates',togglestates);
 end
 
@@ -475,3 +486,45 @@ function specify2dwrite_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_spec2dwrite;
+
+
+% --- Executes on slider movement.
+function cortexalpha_Callback(hObject, eventdata, handles)
+% hObject    handle to cortexalpha (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+% Notes: Error when moving too fast with buttons. resultfig is empty   
+% ea_busyaction('on',gcf,'anatomy')
+if isempty(getappdata(gcf,'resultfig'))
+    ea_error('Figure handle is empty. Please, try again.')
+    return
+end
+hpcortex = getappdata(getappdata(gcf,'resultfig'),'cortex');
+alpha = str2double(get(hObject,'String'));
+if 0<=alpha && alpha<=1
+    set(hpcortex,'FaceAlpha',alpha)
+else
+    ea_error('Please enter a valid number between 0 and 1 for cortical opacity.')
+    set(handles.cortexalpha,'String',hpcortex.FaceAlpha)
+end
+setappdata(getappdata(gcf,'resultfig'),'cortex',hpcortex);
+% ea_busyaction('del',gcf,'anatomy')
+
+refreshresultfig(handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function cortexalpha_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to cortexalpha (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+set(hObject,'Value')
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end

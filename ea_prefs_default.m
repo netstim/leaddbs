@@ -125,6 +125,10 @@ prefs.d3.fiberdiameter=0.1; % diameter of fibers ? only works in all ML versions
 prefs.d3.maxfibers=200; % set to inf to show all fibers (but this could lead to crashes).
 prefs.d3.colorjitter=0; % set to 0 to show no color jitter at all.
 
+%% Cortex-Visualization:
+prefs.d3.cortexcolor=[0.65 0.65 0.65]; % default color is gray
+prefs.d3.cortexalpha=0.5; % default alpha is 0.5
+
 %% DICOM files:
 prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 0: Leave DICOMs at pt/DICOM folder after conversion.
 prefs.dicom.assign=1; % also assign DICOM files (ea_imageclassifier).

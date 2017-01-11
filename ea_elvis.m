@@ -177,6 +177,9 @@ slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','
 % Initialize Convis-Button
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome',options),'TooltipString','Connectivity Visualization','ClickedCallback',{@openconnectomeviewer,resultfig,options});
 
+% Initialize FS Cortex-Button
+corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex',options),'TooltipString','Cortical Reconstruction Visualization','ClickedCallback',{@opencortexviewer,resultfig,options});
+
 % Show atlas data
 if options.d3.writeatlases
     atlases=ea_showatlas(resultfig,elstruct,options);
@@ -309,6 +312,17 @@ function openstimviewer(hobj,ev,elstruct,resultfig,options)
 stimwin=ea_stimparams(elstruct,gcf,options);
 setappdata(resultfig,'stimwin',stimwin);
 try WinOnTop(stimwin,true); end
+
+
+function opencortexviewer(hobj,ev,resultfig,options)
+hpcortex=ea_showcortex(resultfig,options);
+setappdata(resultfig,'cortex',hpcortex);
+try WinOnTop(hpcortex,true); end
+% reload slice viewer to update opacity control
+awin=ea_anatomycontrol(resultfig,options);
+setappdata(resultfig,'awin',awin);
+try WinOnTop(awin,true); end
+
 
 
 function closesattelites(src,evnt)

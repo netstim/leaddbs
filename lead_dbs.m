@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 02-Nov-2016 11:23:33
+% Last Modified by GUIDE v2.5 10-Jan-2017 00:06:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1087,6 +1087,16 @@ function specify2dwrite_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_spec2dwrite;
+
+
+
+
+% --- Executes on button press in importfs.
+function importfs_Callback(hObject, eventdata, handles)
+% hObject    handle to importfs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_importfs(handles)
 
 
 
