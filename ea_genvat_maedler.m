@@ -8,12 +8,12 @@ function varargout=ea_genvat_maedler(varargin)
 % This function only touches the .VAT entry of stimparams struct of the
 % given side.
 
-if nargin==5
+if nargin>=5
     coords=varargin{1};
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
-    stimname=varargin{5};
+    stimname=varargin{5};    
 elseif nargin==1
     
     if ischar(varargin{1}) % return name of method.

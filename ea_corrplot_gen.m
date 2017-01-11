@@ -1,4 +1,4 @@
-function [R_upd,p_upd,R,p]=ea_corrplot(varargin)
+function [R_upd,p_upd,R,p,f]=ea_corrplot(varargin)
 % this simple function is a small wrapper for a corrplot figure.
 
 
@@ -9,7 +9,11 @@ if nargin>3
     handles=varargin{4};
 end
 if nargin>4
-    groups=varargin{5};
+    if ischar(varargin{5}) || isequal([1 3],size(varargin{5}))
+        color=varargin{5};
+    else
+        groups=varargin{5};
+    end
 else
     groups=ones(length(X),1);
 end
@@ -29,12 +33,15 @@ p_upd=p(2:end,1);
 
 
 jetlist=lines;
-jetlist(groups,:);
+%jetlist(groups,:);
 for area=1:length(R_upd)
     %% plot areas:
     f=figure('color','w','name',description);
-    
-    scatter(X(:,1),X(:,area+1),[],jetlist(groups,:),'filled');
+    if exist('color','var')
+        scatter(X(:,1),X(:,area+1),[],color,'filled');
+    else
+        scatter(X(:,1),X(:,area+1),[],jetlist(groups,:),'filled');
+    end
     h=lsline;
     set(h,'color','k');
     axis square

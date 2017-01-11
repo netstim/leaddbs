@@ -244,7 +244,7 @@ for source=S.sources
         
         
         if ~constvol
-            voltix=voltix/1000000; % from mA to A
+            voltix=voltix/1000; % from mA to A
             %voltix=voltix;
         end
         

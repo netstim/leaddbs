@@ -31,7 +31,11 @@ else
     % Linear, NearestNeighbor, MultiLabel, Gaussian, BSpline
     % CosineWindowedSinc, WelchWindowedSinc, HammingWindowedSinc, LanczosWindowedSinc
     % GenericLabel (Recommanded for label image)
-    interp = 'BSpline'; 
+    if useinverse
+        interp = 'GenericLabel';
+    else
+        interp = 'BSpline';
+    end
 end
 
 directory = [options.root,options.patientname,filesep];

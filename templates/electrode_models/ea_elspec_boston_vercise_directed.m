@@ -396,7 +396,6 @@ if vizz
         axes(varargin{1});
     end
     X=eye(4);
-    
     for ins=1:length(electrode.insulation)
         electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
         electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
@@ -407,8 +406,9 @@ if vizz
             usecolor=elspec.lead_color;
         end
         specsurf(elrender{side}(cnt),usecolor,aData);
+        fv(cnt).vertices=electrode.insulation(ins).vertices;
+        fv(cnt).faces=electrode.insulation(ins).faces;
         cnt=cnt+1;
-        
     end
     for con=1:length(electrode.contacts)
         electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
@@ -416,7 +416,9 @@ if vizz
         elrender{side}(cnt)=patch(electrode.contacts(con));
 
         specsurf(elrender{side}(cnt),elspec.contact_color,aData);
-        
+        fv(cnt).vertices=electrode.contacts(con).vertices;
+        fv(cnt).faces=electrode.contacts(con).faces;
+
         cnt=cnt+1;
          
     end
@@ -424,6 +426,17 @@ if vizz
     axis equal
     view(0,0);
 end
+
+
+% export to .STL
+
+
+    fv=ea_concatfv(fv,1);
+%    fv=ea_mapcolvert2face(fv);
+    ea_stlwrite(['bsc_vercise_directed.stl'],fv);
+
+
+
 
 
 % add meshel

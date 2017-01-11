@@ -325,6 +325,10 @@ ea_busyaction('on',leadfig,'anatomy');
 
 options=ea_handles2options(handles);
 options.macaquemodus=0;
+
+d2=ea_tdhandles2options(handles);
+
+save([ea_getearoot,'td_options.mat'],'-struct','d2');
 options.d2=ea_tdhandles2options(handles,options.d2);
 
 

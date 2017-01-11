@@ -8,7 +8,7 @@ function varargout=ea_genvat_kuncel(varargin)
 % This function only touches the .VAT entry of stimparams struct of the
 % given side.
 
-if nargin==5
+if nargin>=5
     coords=varargin{1};
     S=varargin{2};
     side=varargin{3};
