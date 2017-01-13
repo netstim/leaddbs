@@ -1,5 +1,9 @@
 function ea_ptspecific_atl(options)
 
+if strcmp(options.atlasset(1:13),'Local atlas: ') % manually installed atlas coded with this prefix by lead-dbs.
+    return
+end
+
 troot=[options.earoot,'templates',filesep];
 aroot=[options.earoot,'atlases',filesep,options.atlasset,filesep];
 proot=[options.root,options.patientname,filesep];

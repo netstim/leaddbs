@@ -128,7 +128,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
             % refit electrodes starting from first electrode (this is redundant at this point).
             coords_mm{side} = ea_map_coords(coords', [directory,options.prefs.tranii])';
-q
+
             [~,distmm]=ea_calc_distance(options.elspec.eldist,trajvector{side},tramat(1:3,1:3),[directory,options.prefs.tranii]);
             
             comp = ea_map_coords([0,0,0;trajvector{side}]', [directory,options.prefs.tranii])'; % (XYZ_mm unaltered)

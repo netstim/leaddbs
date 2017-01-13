@@ -4,15 +4,23 @@ if ~exist('subpat','var')
     subpat='Patient';
 end
 if ~exist('native','var')
-    native=0;
+    native=0; % default
+try % options.native may not be defined
+    if options.native
+        native=1;
+    else
+        native=0;
+    end
+end
 end
 
 switch bdstring
     case 'list'
+        
         % determine whether we are in No patient mode (could be called from
         % lead group or called from an empty patient viewer / lead anatomy
         if ~exist('options','var')
-           options.patientname=''; 
+            options.patientname='';
         end
         if isfield(options,'groupmode')
             nopatientmode=options.groupmode;
@@ -23,10 +31,21 @@ switch bdstring
                 nopatientmode=0;
             end
         end
-        try 
+        haspostop=0; haspreop=0;
+        try
             assignpatspecific(options); % use this as a probe to see if patient is defined.
+            haspostop=1;
+            options=ea_tempswitchoptstopre(options);
+            assignpatspecific(options); % use this as a probe to see if patient is defined.
+            haspreop=1;
         catch
-            nopatientmode=1;
+            try
+                options=ea_tempswitchoptstopre(options);
+                assignpatspecific(options); % use this as a probe to see if patient is defined.
+                haspreop=1;
+            catch
+                nopatientmode=1;
+            end
         end
         if nopatientmode
             varargout{1}={'ICBM 152 2009b NLIN Asym T2',...
@@ -35,24 +54,21 @@ switch bdstring
                 'BigBrain 100 um ICBM 152 2009b Sym'};
         else
             if native
-                varargout{1}={[subpat,' Pre-OP'],...
-                    [subpat,' Post-OP']};
+                varargout{1}=[ea_checkhas({[subpat,' Pre-OP']},haspreop),...
+                    ea_checkhas({[subpat,' Post-OP']},haspostop)];
             else
-                varargout{1}={'ICBM 152 2009b NLIN Asym T2',...
+                varargout{1}=[{'ICBM 152 2009b NLIN Asym T2',...
                     'ICBM 152 2009b NLIN Asym T1',...
                     'ICBM 152 2009b NLIN Asym PD',...
-                    'BigBrain 100 um ICBM 152 2009b Sym',...
-                    [subpat,' Pre-OP'],...
-                    [subpat,' Post-OP']};
+                    'BigBrain 100 um ICBM 152 2009b Sym'},...
+                    ea_checkhas({[subpat,' Pre-OP']},haspreop),...
+                    ea_checkhas({[subpat,' Post-OP']},haspostop)];
             end
         end
+        
+        
     case [subpat,' Pre-OP']
-        options.prefs.gtranii=options.prefs.gprenii;
-        options.prefs.tranii=options.prefs.prenii;
-        options.prefs.gcornii=options.prefs.gprenii;
-        options.prefs.cornii=options.prefs.prenii;
-        options.prefs.gsagnii=options.prefs.gprenii;
-        options.prefs.sagnii=options.prefs.prenii;
+        options=ea_tempswitchoptstopre(options);
         [Vtra,Vcor,Vsag]=assignpatspecific(options);
         varargout{1}=Vtra;
         varargout{2}=Vcor;
@@ -83,26 +99,68 @@ switch bdstring
         varargout{3}=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
 end
 
+function cells=ea_checkhas(cells,has)
 
+if ~has
+    cells=cell(0);
+end
 
 function [Vtra,Vcor,Vsag]=assignpatspecific(options)
-
-switch options.modality
-    case 1 % MR
-        Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
-        try
-            Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gcornii));
-        catch
+if options.native
+    switch options.modality
+        case 1 % MR
+            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
+            try
+                Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.cornii_unnormalized));
+            catch
+                Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
+            end
+            try
+                Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.sagnii_unnormalized));
+            catch
+                Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
+            end
+        case 2 % CT
+            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
+            Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
+            Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
+            tracorpresent(1:3)=1;
+    end
+    
+else
+    switch options.modality
+        case 1 % MR
+            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
+            try
+                Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gcornii));
+            catch
+                Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
+            end
+            try
+                Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gsagnii));
+            catch
+                Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
+            end
+        case 2 % CT
+            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
             Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
-        end
-        try
-            Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gsagnii));
-        catch
             Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
-        end
-    case 2 % CT
-        Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
-        Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
-        Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii));
-        tracorpresent(1:3)=1;
+            tracorpresent(1:3)=1;
+    end
+end
+
+
+function options=ea_tempswitchoptstopre(options)
+
+if options.native
+    options.prefs.tranii_unnormalized=options.prefs.prenii_unnormalized;
+    options.prefs.cornii_unnormalized=options.prefs.prenii_unnormalized;
+    options.prefs.sagnii_unnormalized=options.prefs.prenii_unnormalized;
+else
+    options.prefs.gtranii=options.prefs.gprenii;
+    options.prefs.tranii=options.prefs.prenii;
+    options.prefs.gcornii=options.prefs.gprenii;
+    options.prefs.cornii=options.prefs.prenii;
+    options.prefs.gsagnii=options.prefs.gprenii;
+    options.prefs.sagnii=options.prefs.prenii;
 end

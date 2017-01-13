@@ -14,6 +14,9 @@ if options.d2.write || options.d3.write
       options.atlasset=options.patientname;
       options.atl.pt=1;
       options.atl.can=0;
+      
+   elseif strcmp(options.atlasset(1:13),'Local atlas: ')
+       options.atlasset=options.atlasset(14:end);
    end
 end
 

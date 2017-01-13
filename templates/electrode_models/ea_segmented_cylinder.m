@@ -114,7 +114,6 @@ end
 a=camlight('headlight');
 set(gcf,'Renderer','OpenGL')
 [h]=ea_show_light(h);
-
 close(h)
 varargout{1}=fvx;
 

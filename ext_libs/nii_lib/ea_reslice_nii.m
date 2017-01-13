@@ -57,7 +57,7 @@
 %  
 %  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
-function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, method, img_idx, preferredForm)
+function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, method, img_idx, preferredForm,usespm)
 if ~exist('old_fn','var') || ~exist('new_fn','var')
     error('Usage: reslice_nii(old_fn, new_fn, [voxel_size], [verbose], [bg], [method], [img_idx])');
 end
@@ -77,8 +77,9 @@ end
 if ~exist('preferredForm','var') || isempty(preferredForm)
     preferredForm= 's';				% Jeff
 end
-
+if ~exist('usespm','var')
 usespm=1;
+end
 if usespm
 
 
@@ -94,17 +95,6 @@ for i=1:numel(V)
 end
 [pth,fn,ext]=fileparts(old_fn);
 movefile(fullfile(pth,['r',fn,ext]),new_fn);
-
-
-
-
-
-
-
-
-
-
-
 
 
 

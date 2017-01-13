@@ -62,7 +62,9 @@ guidata(hObject, handles);
 % uiwait(handles.ea_spec2dwrite);
 
 % add backdrops
-backdrops=ea_assignbackdrop('list');
+options=varargin{1};
+
+backdrops=ea_assignbackdrop('list',options);
 
 set(handles.tdbackdrop,'String',backdrops);
 if get(handles.tdbackdrop,'Value')>length(backdrops)

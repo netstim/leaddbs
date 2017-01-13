@@ -31,14 +31,17 @@ V=spm_vol(filename);
 
 bb=increasebb(bb);
 
-if any(vox<0)
-    ea_reslice_nii(filename,filename,abs(vox),0); 
+diagentries=V.mat(logical(eye(4)));
+if any(vox<0) || any(diagentries<0)
+    ea_reslice_nii(filename,filename,abs(vox),0,[],2,[],[],0); % last zero is to not use SPM. this has shown to not work when voxel sizes are negative
     V=spm_vol(filename);
     [bb,vox] = ea_spm_get_bbox(V, nstring);
     bb=increasebb(bb);
 end
 
+
 dist=diff(bb); % check for weird zero bbs in small files.
+
 if all(dist)
     
     % create sn structure:
@@ -64,7 +67,7 @@ if all(dist)
     if nargin<2
         [pth,fname,ext]=fileparts(filename);
         
-        movefile(fullfile(pth,[filesep,'w',fname,ext]),fullfile(pth,[filesep,fname,ext]));
+        movefile(fullfile(pth,['w',fname,ext]),fullfile(pth,[fname,ext]));
     else
         if strcmp(prefix,'w')
             [pth,fname,ext]=fileparts(filename);
@@ -76,7 +79,7 @@ if all(dist)
     
 end
 if cleannan
-nii=ea_load_nii(fullfile(pth,[filesep,fname,ext]));
+nii=ea_load_nii(fullfile(pth,[fname,ext]));
 nii.img(abs(nii.img)<0.01)=nan; % reduce noise in originally zero compartments.
 ea_write_nii(nii);
 end
