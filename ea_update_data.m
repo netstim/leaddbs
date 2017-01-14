@@ -30,6 +30,10 @@ elseif strcmp(id, 'data')
     disp('Downloading lead data...');
 end
 
+if ~exist([earoot,'tmp'],'dir')
+    mkdir([earoot,'tmp']);
+end
+
 try
     webopts=weboptions('Timeout',5);
     websave([earoot,'tmp',filesep,'updates.zip'],updurl,'id',id,webopts);
