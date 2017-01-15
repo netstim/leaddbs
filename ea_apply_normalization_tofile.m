@@ -26,6 +26,8 @@ switch ea_whichnormmethod(directory)
             clear matlabbatch
             [pth]=fileparts(to{fi});
             [~,fn,ext]=fileparts(from{fi});
+            try % fails if to is a w prefixed file already
             movefile(fullfile(pth,['w',fn,ext]),to{fi});
+            end
         end       
 end

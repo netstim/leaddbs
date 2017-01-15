@@ -15,12 +15,14 @@ if options.d2.write || options.d3.write
       options.atl.pt=1;
       options.atl.can=0;
       
+
    elseif length(options.atlasset)>=13 && strcmp(options.atlasset(1:13),'Local atlas: ')
        options.atlasset=options.atlasset(14:end);
    
    elseif strcmp(options.atlasset,'Use none')
        % do nothing
    end
+
 end
 
 % Slice 2D Visualization

@@ -142,18 +142,19 @@ for side=1:length(options.sides)
             
             
             [slice,~,boundboxmm,sampleheight]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
+            slice=ea_contrast(slice,2.5,1);
             disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
             if fid>0 % only if file exists (does sometimes not exist if called from lead anatomy or the slice-cuts feature of elvis)
                 fprintf(fid,'%s\n',['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
             end
             set(0,'CurrentFigure',cuts)
-            try
-                hi=imagesc(slice,...
-                    [ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
-            catch
+%             try
+%                 hi=imagesc(slice,...
+%                     [ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
+%             catch
                 hi=imagesc(slice);
                 
-            end
+          %  end
             set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
             axis([min(boundboxmm{onedim}),max(boundboxmm{onedim}),min(boundboxmm{secdim}),max(boundboxmm{secdim})])
             

@@ -11,6 +11,7 @@ if isempty(menuprobe)
     if ismember('acpc',cmd)
         uimenu(f,'Label','Convert ACPC/MNI coordinates','Callback',{@ea_acpcquery,handles.leadfigure});
     end
+    
     if ismember('export',cmd)
         e = uimenu(f,'Label','Export');
         uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles});
@@ -20,6 +21,12 @@ if isempty(menuprobe)
         d = uimenu(f,'Label','Convert');
         uimenu(d,'Label','Convert selected atlas to .STL','Callback',{@ea_exportatlas,'STL',handles});
         uimenu(d,'Label','Convert selected atlas to .PLY','Callback',{@ea_exportatlas,'PLY',handles});
+    end
+    
+    if ismember('applynorm',cmd)
+        uimenu(f,'Label','Apply Patient Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,0});
+        uimenu(f,'Label','Apply Patient Inverse Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,1});
+
     end
     if ismember('cluster',cmd)
         ea_menu_addsubmit(handles);
