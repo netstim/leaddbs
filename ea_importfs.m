@@ -36,10 +36,8 @@ end
 
 %% Handle File Options
 % Check if CortexHiRes.mat and CortexLowRes_*.mat already exists
-filenames = dir([ptdir '/cortex']);
-filenames = filenames(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {filenames.name}));
-filenames = filenames(~[filenames.isdir]);
-filenames = {filenames(~cellfun(@isempty , strfind({filenames.name},'Cortex'))).name};
+files = dir([ptdir '/cortex']); files = files(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {files.name}));
+files = files(~[files.isdir]); files = {files(~cellfun(@isempty , strfind({files.name},'Cortex'))).name};
 overwrite = ~cellfun(@isempty,strfind(filenames,'CortexHiRes.mat'));
 overwrite = overwrite+~cellfun(@isempty,strfind(filenames,'CortexLowRes'));
 V = cell(size(overwrite,2)-1);

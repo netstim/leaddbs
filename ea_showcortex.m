@@ -1,4 +1,4 @@
-function [Hp,cortex] = ea_showcortex(varargin)
+function [showcortex,cortex] = ea_showcortex(varargin)
 % This function shows a cortical reconstruction in the 3D-Scene viewer. It
 % reads in cortex.mat found in the eAuto_root/templates/cortex folder, or 
 % in the patientdirectory on button press (Cortical Reconstruction
@@ -9,7 +9,6 @@ function [Hp,cortex] = ea_showcortex(varargin)
 % Copyright (C) 2017 University of Pittsburgh (UPMC), Brain Modulation Lab
 % Ari Kappel
 
-resultfig=varargin{1};
 if nargin==2
     options=varargin{2};
 end
@@ -18,11 +17,17 @@ if nargin>2
     options=varargin{3};
 end
 
+resultfig=varargin{1};
+set(0, 'currentfigure', resultfig);  % for figures
+showcortex=getappdata(resultfig,'showcortex');
+try delete(showcortex); end
+
 % Initial Opening
 if ~isfield(getappdata(resultfig),'cortex')
     color = options.prefs.d3.cortexcolor; % default color is gray
     alpha = options.prefs.d3.cortexalpha; % default alph is 0.333
 else
+    
     color = options.prefs.d3.cortexcolor;
     appdata = getappdata(resultfig);
     appdata = getappdata(appdata.awin);
@@ -41,7 +46,7 @@ nm=nm(logical(nmind)); % select which shall be performed.
 
 % switch between patient and template cortex
 slicecontroldata = getappdata(gcf);
-if ~isempty(strfind(slicecontroldata.templateused,'Patient'))
+if nm==1 && ~isempty(strfind(slicecontroldata.templateused,'Patient'))
     nm = 0;
 end
 
@@ -63,17 +68,32 @@ for nativemni=nm % switch between native and mni space.
             reslice='no';
         case 2 % patient cortex in native space
             root=[options.root,options.patientname,filesep];
-            adir=[root,''];
+            adir=[root,'cortex/'];
             reslice='no';
     end
 end
 
-try
-    load([adir,'cortex.mat'])
-catch
-    disp('Running Import FS...')
+% Check if CortexHiRes.mat and CortexLowRes_*.mat already exists
+files = dir(adir); files = files(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {files.name}));
+files = files(~[files.isdir]); files = {files(~cellfun(@isempty , strfind({files.name},'Cortex'))).name};
+
+if size(files,2)>=2
+    str = [{'More than one Cortex found.'},...
+        {'Please, select which Cortex you would like to view.'}];
+    file = char(files(listdlg('PromptString',str,'Name',options.patientname,...
+        'SelectionMode','single','ListString',files,...
+        'ListSize',[250 150])));
+    cortex = load([adir,file],'Vertices','Faces');
+elseif ~isempty(files)
+    file = files{1};
+    cortex = load([adir,file],'Vertices','Faces');
+else
+    fprintf('No Cortex found in patient directory. \nRunning Import FS...\n')
     ea_importfs(options)
-    load([adir,'cortex.mat'])
+    try
+        load([adir,'CortexHiRes.mat','Vertices','Faces']);
+    catch
+    end
 end
 
 % % reslice patient cortex to mni space in future release
@@ -81,8 +101,9 @@ end
 % if strcmp(reslice,'yes'); end
 
 % Show cortex
-hold on
-Hp = patch('vertices',cortex.vert,'faces',cortex.tri(:,[1 3 2]),...
+set(0, 'currentfigure', resultfig); hold on
+showcortex = patch('vertices',cortex.Vertices,'faces',cortex.Faces(:,[1 3 2]),...
     'facecolor',color,'edgecolor','none','FaceAlpha',alpha,...
     'facelighting', 'gouraud', 'specularstrength', .25);
+setappdata(resultfig,'showcortex',showcortex);
 % camlight('headlight','infinite'); axis equal;

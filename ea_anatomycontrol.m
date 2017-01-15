@@ -79,11 +79,11 @@ set(handles.templatepopup,'String',list);
 
 % turn off cortex alpha slider if cortex is not in scene
 appdata = getappdata(resultfig);
-if ~isfield(appdata,'cortex')
+if ~isfield(appdata,'showcortex')
     set(handles.cortexalpha,'Visible','off')
-elseif isfield(getappdata(resultfig),'cortex')
+elseif isfield(getappdata(resultfig),'showcortex')
     set(handles.cortexalpha,'Visible','on')
-    set(handles.cortexalpha,'String',num2str(appdata.cortex.FaceAlpha))
+    set(handles.cortexalpha,'String',num2str(appdata.showcortex.FaceAlpha))
 end
 clear appdata
 
@@ -503,15 +503,15 @@ if isempty(getappdata(gcf,'resultfig'))
     ea_error('Figure handle is empty. Please, try again.')
     return
 end
-hpcortex = getappdata(getappdata(gcf,'resultfig'),'cortex');
+showcortex = getappdata(getappdata(gcf,'resultfig'),'showcortex');
 alpha = str2double(get(hObject,'String'));
 if 0<=alpha && alpha<=1
-    set(hpcortex,'FaceAlpha',alpha)
+    set(showcortex,'FaceAlpha',alpha)
 else
     ea_error('Please enter a valid number between 0 and 1 for cortical opacity.')
-    set(handles.cortexalpha,'String',hpcortex.FaceAlpha)
+    set(handles.cortexalpha,'String',showcortex.FaceAlpha)
 end
-setappdata(getappdata(gcf,'resultfig'),'cortex',hpcortex);
+setappdata(getappdata(gcf,'resultfig'),'showcortex',showcortex);
 % ea_busyaction('del',gcf,'anatomy')
 
 refreshresultfig(handles)
