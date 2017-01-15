@@ -107,6 +107,9 @@ try
 catch
     options.atl.genpt=0;
 end
+if get(handles.vizspacepopup,'Value')==2 && strcmp(handles.atlassetpopup.String(handles.atlassetpopup.Value),'Use none')
+    options.atl.genpt=0;
+end
 options.atl.normalize=0; % normalize patient specific atlasset. This is not done anymore for now.
 try
     options.atl.can=get(handles.vizspacepopup,'Value')==1; % display canonical atlases
