@@ -12,6 +12,9 @@ if ~ischar(fis) && ~iscell(fis)
         return
     end
 end
+if ischar(fis)
+    fis={fis};
+end
 
 for fi=1:length(fis) 
    to{fi}=[path,'w',fis{fi}];
