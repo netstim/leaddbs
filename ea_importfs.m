@@ -198,7 +198,7 @@ if strcmp(DownsampleOption,'Yes')
     else 
         response = [];
     end
-    if ~isempty(response) && ~strcmp(response,{'Cancel','No'})
+    if isempty(V) || ~isempty(response) && ~strcmp(response,{'Cancel','No'})
     newNbVertices = str2double(newNbVertices);
     oldNbVertices = size(CortexHiRes.Vertices,1);
     
