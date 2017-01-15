@@ -34,33 +34,50 @@ elseif isfield(varargin{1},'uipatdirs')
 
 end
 
-% Check if cortex.mat already exists
-overwrite = '';
-if exist([ptdir '/cortex/CortexHiRes.mat'],'file')
-    overwrite = questdlg([{'Warning: There is already a cortex defined for this subject.'},
-            {'Are you sure you want to overwrite the previous cortex?'}],'Import FreeSurfer folder');
+%% Handle File Options
+% Check if CortexHiRes.mat and CortexLowRes_*.mat already exists
+filenames = dir([ptdir '/cortex']);
+filenames = filenames(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {filenames.name}));
+filenames = filenames(~[filenames.isdir]);
+filenames = {filenames(~cellfun(@isempty , strfind({filenames.name},'Cortex'))).name};
+overwrite = ~cellfun(@isempty,strfind(filenames,'CortexHiRes.mat'));
+overwrite = overwrite+~cellfun(@isempty,strfind(filenames,'CortexLowRes'));
+V = cell(size(overwrite,2)-1);
+if size(overwrite,2)>=2
+  for f = 1:size(overwrite,2)-1
+      tmp = strsplit(filenames{f+1},'_');
+      V{f} = tmp{2}(1:end-4);
+  end 
 end
-if strcmp(overwrite,'Cancel')
-    disp(['No cortex created in Patient Directory: ' ptdir '/cortex'])
-    return
-elseif strcmp(overwrite,'No') || strcmp(overwrite,'Cancel')
-    disp(['No cortex created in Patient Directory: ' ptdir '/cortex'])
-    if ~exist([ptdir 'cortex/CortElecs.mat'],'file')
-    qst = {'Do you have subdural electrode coordinates'; 'that you would like to import now?'};
-    ImportElecsOption = questdlg(qst,'Import FS'); clear qst
-    if strcmp(ImportElecsOption,'Yes')
-        vars = {'patientname','ptdir','fsdir'};
-        info = load([ptdir '/cortex/CortexHiRes.mat'],vars{:});
-        CortElecs = ea_importcorticalels(info);
-        if exist('CortElecs','var')
-            disp(['Saving to ' ptdir '/cortex/CortElecs.mat'])
-            save([ptdir '/cortex/CortElecs.mat'],'-struct','CortElecs')
+
+if overwrite
+    qst = [{'Warning:' }...
+        {'There is already a Hi Resolution Cortex defined for this subject.'},...
+        {'Are you sure you want to overwrite the previous CortexHiRes.mat?'}];
+        %         ['     Found: ' ptdir '/cortex/' filenames{1}]];
+    response = questdlg(qst,'Import FreeSurfer folder');
+    if strcmp(response,'Cancel')
+        disp(['No cortex created in Patient Directory: ' ptdir '/cortex'])
+        return
+    elseif strcmp(response,'No') || strcmp(response,'Cancel')
+        disp(['No cortex created in Patient Directory: ' ptdir '/cortex'])
+        if ~exist([ptdir 'cortex/CortElecs.mat'],'file')
+            qst = {'Do you have subdural electrode coordinates'; 'that you would like to import now?'};
+            ImportElecsOption = questdlg(qst,'Import FS'); clear qst
+            if strcmp(ImportElecsOption,'Yes')
+                vars = {'patientname','ptdir','fsdir'};
+                info = load([ptdir '/cortex/CortexHiRes.mat'],vars{:});
+                CortElecs = ea_importcorticalels(info);
+                if exist('CortElecs','var')
+                    disp(['Saving to ' ptdir '/cortex/CortElecs.mat'])
+                    save([ptdir '/cortex/CortElecs.mat'],'-struct','CortElecs')
+                end
+            elseif strcmp(ImportElecsOption,'No') || strcmp(ImportElecsOption,'Cancel')
+                return
+            end
         end
-    elseif strcmp(ImportElecsOption,'No') || strcmp(ImportElecsOption,'Cancel')
         return
     end
-    end
-return
 end
 
 % Choose Freesurfer Directory
@@ -165,20 +182,32 @@ end
 qst = {'Would you like to downsample the high '; sprintf('resolution cortex with %d vertices?',size(CortexHiRes.Vertices,1))};
 DownsampleOption = questdlg(qst,'Import FreeSurfer');
 
+
 if strcmp(DownsampleOption,'Yes')
     
     newNbVertices = inputdlg({'Enter the number of vertices for low resolution cortex surface:'},...
         'Import FreeSurfer folder',1,{'15000'});
+    
+    if ~isempty(V)
+        overwrite = strcmp(V,strcat(newNbVertices,'V'));
+        qst = [{'Warning:' },...
+            strcat({'There is already a Low Resolution Cortex ('},...
+            newNbVertices,{'V) for this subject.'}),...
+            {['Are you sure you want to overwrite the previous CortexLowRes_' V{overwrite} '.mat?']}];
+        response = questdlg(qst,'Import FreeSurfer folder');
+    else 
+        response = [];
+    end
+    if ~isempty(response) && ~strcmp(response,{'Cancel','No'})
     newNbVertices = str2double(newNbVertices);
     oldNbVertices = size(CortexHiRes.Vertices,1);
     
     if isempty(newNbVertices) || isnan(newNbVertices) || newNbVertices==0
-        disp(sprintf('Cortex not resampled, Hi Resolution only %d Vertices',size(CortexHiRes.Vertices,1)))
+        fprintf('Cortex not resampled, Hi Resolution only %d Vertices',size(CortexHiRes.Vertices,1))
     else
         
         if (newNbVertices >= oldNbVertices)
-            CortexLowRes = CortexHiRes;
-            disp(sprintf('Cortex> Surface has %d vertices, cannot downsample to %d vertices.', oldNbVertices, newNbVertices));
+            sprintf('Cortex> Surface has %d vertices, cannot downsample to %d vertices.', oldNbVertices, newNbVertices);
             return;
         end
         
@@ -187,14 +216,16 @@ if strcmp(DownsampleOption,'Yes')
         CortexLowRes.ptdir = CortexHiRes.ptdir;
         CortexLowRes.fsdir = CortexHiRes.fsdir;
         
-        disp(sprintf('Downsampling Cortex From %d Vertices to %d Vertices...',oldNbVertices,newNbVertices))
+        fprintf('Downsampling Cortex From %d Vertices to %d Vertices...',oldNbVertices,newNbVertices)
         [CortexLowRes.Vertices_lh, CortexLowRes.Faces_lh] = ea_downsamplecortex(CortexHiRes.Vertices_lh, CortexHiRes.Faces_lh, nVertHemi, 'reducepath');
         [CortexLowRes.Vertices_rh, CortexLowRes.Faces_rh] = ea_downsamplecortex(CortexHiRes.Vertices_rh, CortexHiRes.Faces_rh, nVertHemi, 'reducepath');
         [CortexLowRes.Vertices, CortexLowRes.Faces] = ea_downsamplecortex(CortexHiRes.Vertices, CortexHiRes.Faces, newNbVertices, 'reducepath');
         
     end
-    disp(['Saving to ' fullfile(ptdir,'cortex/CortexLowRes.mat') '...'])
-    save(fullfile(ptdir,'cortex/CortexLowRes.mat'),'-struct','CortexLowRes')
+      
+    disp(['Saving to ' fullfile(ptdir,['cortex/CortexLowRes_' num2str(newNbVertices) 'V.mat']) '...'])
+    save(fullfile(ptdir,['cortex/CortexLowRes_' num2str(newNbVertices) 'V.mat']),'-struct','CortexLowRes')
+    end
 end
 
 %% Import Cortical Electrodes
