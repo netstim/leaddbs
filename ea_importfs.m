@@ -40,17 +40,22 @@ if exist([ptdir '/cortex/CortexHiRes.mat'],'file')
     overwrite = questdlg([{'Warning: There is already a cortex defined for this subject.'},
             {'Are you sure you want to overwrite the previous cortex?'}],'Import FreeSurfer folder');
 end
-if strcmp(overwrite,'No') || strcmp(overwrite,'Cancel')
+if strcmp(overwrite,'Cancel')
+    disp(['No cortex created in Patient Directory: ' ptdir '/cortex'])
+    return
+elseif strcmp(overwrite,'No') || strcmp(overwrite,'Cancel')
     disp(['No cortex created in Patient Directory: ' ptdir '/cortex'])
     if ~exist([ptdir 'cortex/CortElecs.mat'],'file')
     qst = {'Do you have subdural electrode coordinates'; 'that you would like to import now?'};
     ImportElecsOption = questdlg(qst,'Import FS'); clear qst
     if strcmp(ImportElecsOption,'Yes')
-        load([ptdir '/cortex/CortexHiRes.mat'])
-        options.patientname = CortexHiRes.patientname;
-        options.uipatdirs = CortexHiRes.ptdir;
-        options.fsdir = CortexHiRes.fsdir;
-        ea_importcorticalels(options)
+        vars = {'patientname','ptdir','fsdir'};
+        info = load([ptdir '/cortex/CortexHiRes.mat'],vars{:});
+        CortElecs = ea_importcorticalels(info);
+        if exist('CortElecs','var')
+            disp(['Saving to ' ptdir '/cortex/CortElecs.mat'])
+            save([ptdir '/cortex/CortElecs.mat'],'-struct','CortElecs')
+        end
     elseif strcmp(ImportElecsOption,'No') || strcmp(ImportElecsOption,'Cancel')
         return
     end
@@ -62,6 +67,9 @@ end
 FsDir = ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname]);
 if iscell(FsDir) && length(FsDir)==1
     FsDir = char(FsDir);
+elseif isempty(FsDir)
+    disp('No files saved')
+    return
 else
     ea_error('Please choose one FS folder at a time')
 end
@@ -104,8 +112,8 @@ end
 
 % Read Annotation Files
 % external/freesurfer/read_annotation.m
- [vertices.lh, label.lh, colortable.lh] = read_annotation(AnnotLH);
- [vertices.rh, label.rh, colortable.rh] = read_annotation(AnnotRH);
+%  [vertices.lh, label.lh, colortable.lh] = read_annotation(AnnotLH);
+%  [vertices.rh, label.rh, colortable.rh] = read_annotation(AnnotRH);
     
 %     AnnotLhFiles = {file_find(FsDir, 'lh.pRF.annot', 2), file_find(FsDir, 'lh.aparc.a2009s.annot', 2), file_find(FsDir, 'lh.aparc.annot', 2), file_find(FsDir, 'lh.BA.annot', 2), file_find(FsDir, 'lh.BA.thresh.annot', 2), file_find(FsDir, 'lh.aparc.DKTatlas40.annot', 2), ...
 %                 file_find(FsDir, 'lh.PALS_B12_Brodmann.annot', 2), file_find(FsDir, 'lh.PALS_B12_Lobes.annot', 2), file_find(FsDir, 'lh.PALS_B12_OrbitoFrontal.annot', 2), file_find(FsDir, 'lh.PALS_B12_Visuotopic.annot', 2), file_find(FsDir, 'lh.Yeo2011_7Networks_N1000.annot', 2), file_find(FsDir, 'lh.Yeo2011_17Networks_N1000.annot', 2)};
@@ -121,32 +129,36 @@ CortexHiRes.fsdir = FsDir;
    
 disp('Loading reconstruction...')
 % Read surface files
-[CortexHiRes.Vertices_lh,CortexHiRes.Faces_lh]= read_surf(LhPial); % Reading left side pial surface
-[CortexHiRes.Vertices_rh,CortexHiRes.Faces_rh]= read_surf(RhPial); % Reading right side pial surface
+[CortexHiRes.raw.Vertices_lh,CortexHiRes.raw.Faces_lh]= read_surf(LhPial); % Reading left side pial surface
+[CortexHiRes.raw.Vertices_rh,CortexHiRes.raw.Faces_rh]= read_surf(RhPial); % Reading right side pial surface
 
 % Generate entire cortex
-CortexHiRes.Vertices = [CortexHiRes.Vertices_lh; CortexHiRes.Vertices_rh]; % Combining both hemispheres
-CortexHiRes.Faces = [CortexHiRes.Faces_lh; (CortexHiRes.Faces_rh + length(CortexHiRes.Vertices_lh))]; % Combining Faces
-
-% freesurfer starts at 0 for indexing
-CortexHiRes.Faces_lh=CortexHiRes.Faces_lh+1; 
-CortexHiRes.Faces_rh=CortexHiRes.Faces_rh+1;
-CortexHiRes.Faces=CortexHiRes.Faces+1;
+CortexHiRes.raw.Vertices = [CortexHiRes.raw.Vertices_lh; CortexHiRes.raw.Vertices_rh]; % Combining both hemispheres
+CortexHiRes.raw.Faces = [CortexHiRes.raw.Faces_lh; (CortexHiRes.raw.Faces_rh + length(CortexHiRes.raw.Vertices_lh))]; % Combining Faces
 
 % Reading in MRI parameters
-f=MRIread(fullfile(FsDir,'mri/T1.nii'));
+T1nii=MRIread(fullfile(FsDir,'mri/T1.nii'));
 
 % Translating into the appropriate space
-for k=1:size(CortexHiRes.Vertices,1)
-    a=f.vox2ras/f.tkrvox2ras*[CortexHiRes.Vertices(k,:) 1]';
-    CortexHiRes.Vertices(k,:)=a(1:3)';
-end
+disp('Translating into native space...')
+aff = T1nii.vox2ras/T1nii.tkrvox2ras;
+aff([4,8,12])=aff([13:15]); aff([13:15])=0;
+tform = affine3d(aff);
+CortexHiRes.Vertices_lh = transformPointsForward(tform,CortexHiRes.raw.Vertices_lh);
+CortexHiRes.Vertices_rh = transformPointsForward(tform,CortexHiRes.raw.Vertices_rh);
+CortexHiRes.Vertices = transformPointsForward(tform,CortexHiRes.raw.Vertices);
+
+% freesurfer starts at 0 for indexing
+CortexHiRes.Faces_lh=CortexHiRes.raw.Faces_lh+1; 
+CortexHiRes.Faces_rh=CortexHiRes.raw.Faces_rh+1;
+CortexHiRes.Faces=CortexHiRes.raw.Faces+1;
+
 %% Save Output to PatientDirectory/cortex/
 if ~exist(fullfile(ptdir,'cortex'),'dir')
     mkdir(fullfile(ptdir,'cortex'))
 end
     disp(['Saving to ' fullfile(ptdir,'cortex/CortexHiRes.mat') '...'])
-    save(fullfile(ptdir,'cortex/CortexHiRes.mat'),'CortexHiRes')
+    save(fullfile(ptdir,'cortex/CortexHiRes.mat'),'-struct','CortexHiRes')
 
 %% Option to Downsample CortexHiRes
 % newNbVertices = '15000';
@@ -182,19 +194,26 @@ if strcmp(DownsampleOption,'Yes')
         
     end
     disp(['Saving to ' fullfile(ptdir,'cortex/CortexLowRes.mat') '...'])
-    save(fullfile(ptdir,'cortex/CortexLowRes.mat'),'CortexLowRes')
+    save(fullfile(ptdir,'cortex/CortexLowRes.mat'),'-struct','CortexLowRes')
 end
 
 %% Import Cortical Electrodes
 % Guarantee Options
 options.patientname = patientname;
 options.uipatdirs = ptdir;
-options.fsdir = fsdir;
+options.fsdir = FsDir;
 
 qst = {'Do you have subdural electrode coordinates'; 'that you would like to import now?'};
 ImportElecsOption = questdlg(qst,'Import FS'); clear qst
 if strcmp(ImportElecsOption,'Yes')
-    ea_importcorticalels(options)
+    CortElecs = ea_importcorticalels(options);
 end
 
+% Save To PatientDirectory/cortex
+if exist('CortElecs','var')
+disp(['Saving to ' ptdir '/cortex/CortElecs.mat'])
+    save([ptdir '/cortex/CortElecs.mat'],'-struct','CortElecs')
+end
+
+%%
 disp('Done')
