@@ -122,7 +122,7 @@ switch togglestates.cutview
 end
 else
     togglestates.cutview='3d';
-    
+    togglestates.refreshcuts=1;
 
 setappdata(getappdata(handles.acontrolfig,'resultfig'),'togglestates',togglestates);
 end
