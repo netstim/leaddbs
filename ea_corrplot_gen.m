@@ -40,7 +40,10 @@ for area=1:length(R_upd)
     if exist('color','var')
         scatter(X(:,1),X(:,area+1),[],color,'filled');
     else
+        
         scatter(X(:,1),X(:,area+1),[],jetlist(groups,:),'filled');
+
+        
     end
     h=lsline;
     set(h,'color','k');
