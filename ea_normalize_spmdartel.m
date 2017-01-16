@@ -70,9 +70,9 @@ ea_newseg_pt(options,1,1);
 disp('Segmentation of preoperative MRI done.');
 
 % check if darteltemplate is available, if not generate one
-if exist([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'],'file')
+if exist([ea_space(options,'dartel'),'dartelmni_6.nii'],'file')
     % There is a DARTEL-Template. Check if it will match:
-    Vt=spm_vol([options.earoot,filesep,'templates',filesep,'dartel',filesep,'dartelmni_6.nii']);
+    Vt=spm_vol([ea_space(options,'dartel'),'dartelmni_6.nii']);
     Vp=spm_vol([directory,'rc1',options.prefs.prenii_unnormalized]);
     if ~isequal(Vp.dim,Vt(1).dim) || ~isequal(Vp.mat,Vt(1).mat) % Dartel template not matching. -> create matching one.
         ea_create_tpm_darteltemplate; %([directory,'rc1',options.prefs.prenii_unnormalized]);
@@ -91,27 +91,27 @@ matlabbatch{1}.spm.tools.dartel.warp1.settings.rform = 0;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).rparam = [4 2 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).K = 0;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(1).template = {[ea_space(options,'dartel'),'dartelmni_1.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(2).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(2).rparam = [2 1 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(2).K = 0;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(2).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_2.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(2).template = {[ea_space(options,'dartel'),'dartelmni_2.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(3).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(3).rparam = [1 0.5 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(3).K = 1;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(3).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_3.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(3).template = {[ea_space(options,'dartel'),'dartelmni_3.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(4).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(4).rparam = [0.5 0.25 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(4).K = 2;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(4).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_4.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(4).template = {[ea_space(options,'dartel'),'dartelmni_4.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(5).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(5).rparam = [0.25 0.125 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(5).K = 4;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(5).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_5.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(5).template = {[ea_space(options,'dartel'),'dartelmni_5.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(6).its = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(6).rparam = [0.25 0.125 1e-06];
 matlabbatch{1}.spm.tools.dartel.warp1.settings.param(6).K = 6;
-matlabbatch{1}.spm.tools.dartel.warp1.settings.param(6).template = {[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_6.nii']};
+matlabbatch{1}.spm.tools.dartel.warp1.settings.param(6).template = {[ea_space(options,'dartel'),'dartelmni_6.nii']};
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.lmreg = 0.01;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.cyc = 3;
 matlabbatch{1}.spm.tools.dartel.warp1.settings.optim.its = 3;

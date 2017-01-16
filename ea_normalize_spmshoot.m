@@ -65,9 +65,9 @@ ea_newseg_pt(options,1,1);
 disp('Segmentation of preoperative MRI done.');
 
 % check if darteltemplate is available, if not generate one
-if exist([options.earoot,filesep,'templates',filesep,'dartel',filesep,'shootmni_6.nii'],'file')
+if exist([ea_space(options,'dartel'),'shootmni_6.nii'],'file')
     % There is a DARTEL-Template. Check if it will match:
-    Vt=spm_vol([options.earoot,filesep,'templates',filesep,'dartel',filesep,'shootmni_6.nii']);
+    Vt=spm_vol([ea_space(options,'dartel'),'shootmni_6.nii']);
     Vp=spm_vol([directory,'rc1',options.prefs.prenii_unnormalized]);
     if ~isequal(Vp.dim,Vt(1).dim) || ~isequal(Vp.mat,Vt(1).mat) % Dartel template not matching. -> create matching one.
         ea_create_tpm_darteltemplate; %([directory,'rc1',options.prefs.prenii_unnormalized]);
