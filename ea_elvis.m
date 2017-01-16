@@ -193,7 +193,7 @@ convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome',options),'TooltipStri
 corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex',options),'TooltipString','Cortical Reconstruction Visualization','ClickedCallback',{@opencortexviewer,resultfig,options});
 
 % Initialize Cortical Strip-Button
-cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip',options),'TooltipString','Cortical Reconstruction Visualization','ClickedCallback',{@opencortelsviewer,resultfig,options});
+% cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip',options),'TooltipString','Cortical Reconstruction Visualization','ClickedCallback',{@opencortelsviewer,resultfig,options});
 
 % Show atlas data
 if options.d3.writeatlases
