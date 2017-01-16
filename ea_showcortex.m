@@ -59,12 +59,12 @@ for nativemni=nm % switch between native and mni space.
         case 0 % patient cortex in mni space in future release
             % root=[options.root,options.patientname,filesep];
             % adir=[root,''];
-            root=[options.root,options.patientname,filesep];
-            adir=[root,'templates/space/mni_icbm2009b/cortex/'];
-            reslice='yes';
+            root=[options.earoot,mcr];
+            adir=[root,'templates/spaces/mni_icbm2009b/cortex/'];
+            reslice='yes'; %future option to import patient brain and reslice to mni space
         case 1 % template cortex in mni space
             root=[options.earoot,mcr];
-            adir=[root,'templates/space/mni_icbm2009b/cortex/'];
+            adir=[root,'templates/spaces/mni_icbm2009b/cortex/'];
             reslice='no';
         case 2 % patient cortex in native space
             root=[options.root,options.patientname,filesep];
