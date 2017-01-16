@@ -35,7 +35,7 @@ switch ea_whichnormmethod(directory)
                 matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
                 matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
                 matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {fileparts(to{fi})};
-                matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {ea_getmnihires(options)};
+                matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {ea_template(options)};
                 matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
                 matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [0 0 0];
                 matlabbatch{1}.spm.util.defs.out{1}.push.prefix = '';

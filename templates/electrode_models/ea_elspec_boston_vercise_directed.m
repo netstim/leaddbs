@@ -92,8 +92,25 @@ for side=1:length(options.sides)
             log(cnt)=1; % contact
             cnt=cnt+1;
         elseif cntct==2 || cntct==3
+                % define two points to define cylinder.
+                X1=coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2);
 
+            [no,fc,seeds] = ea_segmented_cylinder_vol(60,1,0.5,1,3,0.8);
+            meshel.mixed{mcnt}.Vertices=no;
+            meshel.mixed{mcnt}.Faces=fc;
+            
+            % scale to size:
+            meshel.mixed{mcnt}.Vertices(:,1)=meshel.mixed{mcnt}.Vertices(:,1).*(elspec.contact_diameter/2); % scale to fit tip-diameter
+            meshel.mixed{mcnt}.Vertices(:,2)=meshel.mixed{mcnt}.Vertices(:,2).*(elspec.contact_diameter/2); % scale to fit tip-diameter
+            meshel.mixed{mcnt}.Vertices(:,3)=meshel.mixed{mcnt}.Vertices(:,3).*(elspec.contact_length); % scale to fit tip-diameter
+            
+            meshel.mixed{mcnt}.Vertices(:,1)=meshel.mixed{mcnt}.Vertices(:,1)+X1(1);
+            meshel.mixed{mcnt}.Vertices(:,2)=meshel.mixed{mcnt}.Vertices(:,2)+X1(2);
+            meshel.mixed{mcnt}.Vertices(:,3)=meshel.mixed{mcnt}.Vertices(:,3)+X1(3);
+            
+            
             scyl = ea_segmented_cylinder;
+keyboard
             for contact=1:3
                 usecolor=elspec.contact_color;
 
@@ -104,8 +121,6 @@ for side=1:length(options.sides)
                 elrender{side}(cnt).Vertices(:,2)=elrender{side}(cnt).Vertices(:,2).*(elspec.contact_diameter/2); % scale to fit tip-diameter
                 elrender{side}(cnt).Vertices(:,3)=elrender{side}(cnt).Vertices(:,3).*(elspec.contact_length); % scale to fit tip-diameter
 
-                % define two points to define cylinder.
-                X1=coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2);
 
 
                 elrender{side}(cnt).Vertices(:,1)=elrender{side}(cnt).Vertices(:,1)+X1(1);
