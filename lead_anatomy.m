@@ -94,7 +94,7 @@ end
 options.prefs=ea_prefs('');
 
 % load atlassets
-ea_listatlassets(handles,1);
+ea_listatlassets(handles,1); 
 
 set(hObject,'Color',[1 1 1]);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
