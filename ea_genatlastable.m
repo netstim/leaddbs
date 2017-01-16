@@ -26,39 +26,39 @@ end
 if isempty(atlases) % create from scratch - if not empty, rebuild flag has been set.
     disp('Generating Atlas table (first run with new atlas only). This may take a while...');
     lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0);
-    delete([root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,'*_temp.ni*']);
-    lhatlases=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.ni*']);
-    lhtrks=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.tr*']);
-    lhmats=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.mat']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*_temp.ni*']);
+    lhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.ni*']);
+    lhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.tr*']);
+    lhmats=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.mat']);
     lhatlases=[lhatlases;lhtrks;lhmats];
 
 
     for i=1:length(lhatlases)
         lhcell{i}=lhatlases(i).name;
     end
-    delete([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,'*_temp.ni*']);
-    rhatlases=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.ni*']);
-    rhtrks=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.tr*']);
-    rhmats=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.mat']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*_temp.ni*']);
+    rhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.ni*']);
+    rhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.tr*']);
+    rhmats=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.mat']);
     rhatlases=[rhatlases;rhtrks;rhmats];
 
     for i=1:length(rhatlases)
         rhcell{i}=rhatlases(i).name;
     end
-    delete([root,'atlases',filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*_temp.ni*']);
-    mixedatlases=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.ni*']);
-    mixedtrks=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.tr*']);
-    mixedmats=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.mat']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*_temp.ni*']);
+    mixedatlases=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.ni*']);
+    mixedtrks=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.tr*']);
+    mixedmats=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.mat']);
     mixedatlases=[mixedatlases;mixedtrks;mixedmats];
 
     for i=1:length(mixedatlases)
         mixedcell{i}=mixedatlases(i).name;
     end
-    delete([root,'atlases',filesep,mifix,options.atlasset,filesep,'midline',filesep,'*_temp.ni*']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*_temp.ni*']);
 
-    midlineatlases=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.ni*']);
-    midlinetrks=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.tr*']);
-    midlinemats=dir([root,'atlases',filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.mat']);
+    midlineatlases=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.ni*']);
+    midlinetrks=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.tr*']);
+    midlinemats=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.mat']);
     midlineatlases=[midlineatlases;midlinetrks;midlinemats];
 
     for i=1:length(midlineatlases)
@@ -97,22 +97,20 @@ if checkrebuild(atlases,options,root,mifix)
 
     maxcolor=64; % change to 45 to avoid red / 64 to use all colors
 
-    nm=0:2; % native and mni
+    nm=1:2; % native and mni
     try
-        nmind=[options.atl.pt,options.atl.can,options.atl.ptnative]; % which shall be performed?
+        nmind=[options.atl.can,options.atl.ptnative]; % which shall be performed?
     catch
-        nmind=[0 1 0];
+        nmind=[1 0];
     end
     nm=nm(logical(nmind)); % select which shall be performed.
 
     for nativemni=nm % switch between native and mni space atlases.
         switch nativemni
-            case 0
-                root=[options.root,options.patientname,filesep];
             case 1
                 root=[options.earoot,mcr];
             case 2
-                root=[options.root,options.patientname,filesep];
+                root=[options.root,options.patientname,filesep,'atlases',filesep];
         end
 
         atlascnt=1;
@@ -123,16 +121,17 @@ if checkrebuild(atlases,options,root,mifix)
             %ea_dispercent(atlas/length(atlases.names));
             switch atlases.types(atlas)
                 case 1 % right hemispheric atlas.
-                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
+                    nii=load_nii_crop([root,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
                 case 2 % left hemispheric atlas.
-                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
+                    nii=load_nii_crop([root,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
                 case 3 % both-sides atlas composed of 2 files.
-                    lnii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
-                    rnii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
+                    lnii=load_nii_crop([root,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
+                    rnii=load_nii_crop([root,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
                 case 4 % mixed atlas (one file with both sides information).
-                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}]);
+                    nii=load_nii_crop([root,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}]);
+
                 case 5 % midline atlas (one file with both sides information.
-                    nii=load_nii_crop([root,'atlases',filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}]);
+                    nii=load_nii_crop([root,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}]);
             end
 
             for side=detsides(atlases.types(atlas));
@@ -341,7 +340,7 @@ if checkrebuild(atlases,options,root,mifix)
 
         % finish gm_mask file for leadfield computation.
         try % fibertract only atlases dont have a gm_mask
-            V=spm_vol([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             X=spm_read_vols(V);
 
             X(X<1.5)=0;
@@ -352,7 +351,7 @@ if checkrebuild(atlases,options,root,mifix)
             spm_write_vol(V,X);
 
             clear X V
-            ea_crop_nii([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            ea_crop_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         end
 
         % save table information that has been generated from nii files (on first run with this atlas set).
@@ -366,7 +365,7 @@ if checkrebuild(atlases,options,root,mifix)
         atlases.normals=normals;
 
         atlases.rebuild=0; % always reset rebuild flag.
-        save([root,'atlases',filesep,mifix,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
+        save([root,filesep,mifix,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
         
     end
 
@@ -450,7 +449,7 @@ if isfield(atlases,'fv')
         reb=1;
     end
 end
-% if ~exist([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file');
+% if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file');
 %     reb=1;
 % end
 try
@@ -464,16 +463,16 @@ function ea_addnii2lf(atlases,atlas,thresh,options,root,mifix)
 
 switch atlases.types(atlas)
     case 1 % right hemispheric atlas.
-        atlnames{1}=[root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
+        atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
     case 2 % left hemispheric atlas.
-        atlnames{1}=[root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
+        atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
     case 3 % both-sides atlas composed of 2 files.
-        atlnames{1}=[root,'atlases',filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
-        atlnames{2}=[root,'atlases',filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
+        atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
+        atlnames{2}=[root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
     case 4 % mixed atlas (one file with both sides information).
-        atlnames{1}=[root,'atlases',filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}];
+        atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}];
     case 5 % midline atlas (one file with both sides information.
-        atlnames{1}=[root,'atlases',filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
+        atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
 end
 
 for atl=1:length(atlnames)
@@ -488,9 +487,9 @@ for atl=1:length(atlnames)
         wasgzip=0;
     end
 
-    if ~exist([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file') % first atlas, generate empty hdtemplate in atlas dir...
-        copyfile([options.earoot,'templates',filesep,'mni_hires_t2.nii'],[root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
-        V=spm_vol([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+    if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file') % first atlas, generate empty hdtemplate in atlas dir...
+        copyfile([ea_space(options),'t2.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+        V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         X=spm_read_vols(V);
         X(:)=0;
         spm_write_vol(V,X);
@@ -500,11 +499,11 @@ for atl=1:length(atlnames)
 
     % add atlas file to hdtemplate in atlas dir
     matlabbatch{1}.spm.util.imcalc.input = {
-        [root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii,1'];
+        [root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii,1'];
         [atlname,',1']
         };
     matlabbatch{1}.spm.util.imcalc.output = 'gm_mask.nii';
-    matlabbatch{1}.spm.util.imcalc.outdir = {[root,'atlases',filesep,mifix,options.atlasset,filesep]};
+    matlabbatch{1}.spm.util.imcalc.outdir = {[root,filesep,mifix,options.atlasset,filesep]};
     matlabbatch{1}.spm.util.imcalc.expression = ['i1+(i2>',num2str(thresh),')'];
     matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
     matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;

@@ -1,7 +1,8 @@
 function ea_listatlassets(handles,mninative)
 % mninative==1: MNI space, ==2: native space
 
-as=dir([ea_getearoot,ea_checkmacaque(handles),'atlases',filesep]);
+options.prefs=ea_prefs('');
+as=dir([ea_space(options,'atlases')]);
 
 asc=cell(0);
 cnt=1;
@@ -23,7 +24,7 @@ if mninative==2
     if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
        
         % sweep pt dir for atlases
-        nas=dir([get(handles.patdir_choosebox,'String'),filesep,'atlases',filesep,'native',filesep]);
+        nas=dir([get(handles.patdir_choosebox,'String'),filesep,'atlases',filesep]);
         cnt=1;
         for i=1:length(nas)
             if nas(i).isdir && ~strcmp(nas(i).name(1),'.')

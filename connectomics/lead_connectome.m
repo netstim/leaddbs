@@ -61,12 +61,13 @@ axis equal;
 set(handles.leadfigure,'name','Lead-Connectome','color','w');
 
 % add parcellation atlases to menu:
-ll=dir([ea_getearoot,'templates',filesep,'labeling',filesep,'*.nii']);
+ll=dir([ea_space([],'labeling'),'*.nii']);
+
 for lab=1:length(ll)
     [~,n]=fileparts(ll(lab).name);
     parcellation{lab}=n;
 end
-setappdata(gcf,'parcellation',parcellation);
+setappdata(handles.leadfigure,'parcellation',parcellation);
 set(handles.parcellation,'String',parcellation);
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
@@ -103,7 +104,7 @@ ea_initrecentpatients(handles,'subjects');
 
 % update UI:
 try
-    lc=load([ea_getearoot,'connectomics',filesep,'lc_options.mat']);
+    lc=options.prefs.machine.lc;
 catch
     lc=ea_initlcopts(handles.leadfigure);
 end
@@ -133,7 +134,7 @@ if isindependent
     %% add tools menu
     ea_processguiargs(handles,varargin)
 
-    ea_menu_initmenu(handles,{'export','cluster','prefs','transfer'});
+    ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'});
     
 end
 

@@ -79,25 +79,27 @@ switch bdstring
         varargout{2}=Vcor;
         varargout{3}=Vsag;
     case 'ICBM 152 2009b NLIN Asym T2'
-        varargout{1}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t2.nii'));
-        varargout{2}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t2.nii'));
-        varargout{3}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t2.nii'));
+        varargout{1}=spm_vol(fullfile(ea_space(options),'t2.nii'));
+        varargout{2}=spm_vol(fullfile(ea_space(options),'t2.nii'));
+        varargout{3}=spm_vol(fullfile(ea_space(options),'t2.nii'));
     case 'ICBM 152 2009b NLIN Asym T1'
-        varargout{1}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t1.nii'));
-        varargout{2}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t1.nii'));
-        varargout{3}=spm_vol(fullfile(options.earoot,'templates','mni_hires_t1.nii'));
+        varargout{1}=spm_vol(fullfile(ea_space(options),'t1.nii'));
+        varargout{2}=spm_vol(fullfile(ea_space(options),'t1.nii'));
+        varargout{3}=spm_vol(fullfile(ea_space(options),'t1.nii'));
     case 'ICBM 152 2009b NLIN Asym PD'
-        varargout{1}=spm_vol(fullfile(options.earoot,'templates','mni_hires_pd.nii'));
-        varargout{2}=spm_vol(fullfile(options.earoot,'templates','mni_hires_pd.nii'));
-        varargout{3}=spm_vol(fullfile(options.earoot,'templates','mni_hires_pd.nii'));
+        varargout{1}=spm_vol(fullfile(ea_space(options),'pd.nii'));
+        varargout{2}=spm_vol(fullfile(ea_space(options),'pd.nii'));
+        varargout{3}=spm_vol(fullfile(ea_space(options),'pd.nii'));
     case 'BigBrain 100 um ICBM 152 2009b Sym'
         if ~ea_checkinstall('bigbrain',0,0,1)
             ea_error('BigBrain is not installed and could not be installed automatically. Please make sure that Matlab is connected to the internet.');
         end
-        varargout{1}=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
-        varargout{2}=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
-        varargout{3}=spm_vol(fullfile(options.earoot,'templates','bigbrain_2015_100um_bb.nii'));
+        varargout{1}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
+        varargout{2}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
+        varargout{3}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
+        
 end
+
 
 function cells=ea_checkhas(cells,has)
 

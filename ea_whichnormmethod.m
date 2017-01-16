@@ -23,7 +23,8 @@ switch whichnormmethod
     case 'ea_normalize_spmdartel'
         template=[leaddir,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'];
     case 'ea_normalize_spmnewseg'
-        template=[leaddir,'templates',filesep,'TPM_2009b.nii'];
+        template=[ea_space,'TPM.nii'];
     otherwise
-        template=[leaddir,'templates',filesep,'mni_hires_t2.nii'];
+        options.prefs=ea_prefs('');
+        template=[ea_space,'t1.nii'];
 end

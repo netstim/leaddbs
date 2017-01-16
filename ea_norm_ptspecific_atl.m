@@ -1,4 +1,4 @@
-function ea_normalize_ptspecific_atl(options)
+function ea_norm_ptspecific_atl(options)
 
 troot=[options.earoot,'templates',filesep,'segment',filesep];
 aroot=[options.earoot,'atlases',filesep,options.atlasset,filesep];
@@ -21,10 +21,10 @@ mkdir([proot,'atlases',filesep,'mni',filesep,options.atlasset,filesep,'midline']
 
 
     if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
-        atlases=ea_genatlastable([],root,options);
+        atlases=ea_genatlastable([],ea_space('atlases'),options);
     else
         load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-        atlases=ea_genatlastable(atlases,options.earoot,options);
+        atlases=ea_genatlastable(atlases,ea_space('atlases'),options);
     end
 
 for atlas=1:length(atlases.names)

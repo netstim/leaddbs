@@ -59,6 +59,7 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+
 earoot=ea_getearoot;
 
 % add recent patients...
@@ -168,7 +169,7 @@ ea_processguiargs(handles,varargin)
 
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon','transfer','checkregfigs'});
+ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon','transfer','checkregfigs','space'});
 
 
 

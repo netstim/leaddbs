@@ -15,7 +15,7 @@ switch cmd
         success={'Redownload Data files','Apply Hotfix','Big Brain 100um subcortical (Amunts 2013)','Lead-DBS Macaque Toolbox','Structural group connectome (Horn 2013)'};
         commands={'leaddata','hotfix','bigbrain','macaque','groupconnectome2013'};
     case 'leaddata'
-        checkf=[earoot,'templates',filesep,'mni_hires_bb.nii'];
+        checkf=[ea_space,filesep,'bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly;
             success=~force;
@@ -35,7 +35,7 @@ switch cmd
         end
         
     case 'bigbrain'
-        checkf=[earoot,'templates',filesep,'bigbrain_2015_100um_bb.nii'];
+        checkf=[ea_space,filesep,'bigbrain_2015_100um_bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly;
             success=~force;
@@ -48,7 +48,7 @@ switch cmd
 
         if ~exist(checkf,'file') || force
             success=ea_downloadasset('Bigbrain 100um subcortical',...
-                [earoot,'templates',filesep,'bigbrain_2015_100um_bb.nii.gz'],...
+                [ea_space,filesep,'bigbrain_2015_100um_bb.nii.gz'],...
                 'bigbrain');
         else
             disp('BigBrain is installed.')

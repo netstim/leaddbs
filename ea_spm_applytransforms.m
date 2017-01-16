@@ -49,7 +49,7 @@ for pos=1:length(gfis)
         matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[directory,'r',postops{pos},''];
         matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
         matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {directory};
-        matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[options.earoot,'templates',filesep,'mni_hires_t2.nii']};
+        matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[ea_space(options),options.primarytemplate,'.nii']};
         matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
         matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = gaussdim;
         jobs{1}=matlabbatch;
@@ -76,7 +76,7 @@ try
             matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[directory,'r',postops{pos},''];
             matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
             matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {directory};
-            matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[options.earoot,'templates',filesep,'bb.nii']};
+            matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[ea_space(options),'bb.nii']};
             matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
             matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = gaussdim;
             jobs{1}=matlabbatch;

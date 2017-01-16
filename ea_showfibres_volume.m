@@ -34,7 +34,7 @@ end
 
 %prepare statvat exports once if needed.
 if options.expstatvat.do % export statvat nifti images.
-    tV=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
+    tV=spm_vol([ea_space(options),'bb.nii']);
     tnii=spm_read_vols(tV);
     tnii(:)=0;
     generate mesh of hires MNI

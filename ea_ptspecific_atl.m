@@ -1,13 +1,15 @@
 function ea_ptspecific_atl(options)
 
-if strcmp(options.atlasset(1:13),'Local atlas: ') % manually installed atlas coded with this prefix by lead-dbs.
-    return
+if length(options.atlasset)>13
+    if strcmp(options.atlasset(1:13),'Local atlas: ') % manually installed atlas coded with this prefix by lead-dbs.
+        return
+    end
 end
 
 troot=[options.earoot,'templates',filesep];
-aroot=[options.earoot,'atlases',filesep,options.atlasset,filesep];
+aroot=[ea_space(options,'atlases'),options.atlasset,filesep];
 proot=[options.root,options.patientname,filesep];
-if ~exist([proot,'atlases',filesep,'native',filesep,options.atlasset],'file') % check rebuild needed
+if ~exist([proot,'atlases',filesep,options.atlasset],'file') % check rebuild needed
     switch options.prefs.normalize.inverse.warp
         case 'tpm'
             generate_local_tpm(troot,aroot,proot,0,options)
@@ -20,18 +22,17 @@ function ea_warp_atlas_to_native(troot,aroot,proot,force,options)
 
 
 warning('off');
-mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset]);
-mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'lh']);
-mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'rh']);
-mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'mixed']);
-mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'midline']);
+mkdir([proot,'atlases',filesep,options.atlasset]);
+mkdir([proot,'atlases',filesep,options.atlasset,filesep,'lh']);
+mkdir([proot,'atlases',filesep,options.atlasset,filesep,'rh']);
+mkdir([proot,'atlases',filesep,options.atlasset,filesep,'mixed']);
+mkdir([proot,'atlases',filesep,options.atlasset,filesep,'midline']);
 warning('on');
 
-if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
+if ~exist([ea_space(options,'atlases',0),options.atlasset,filesep,'atlas_index.mat'],'file')
 ea_error('Please visualize this atlas in MNI space once before visualizing the atlas in native space.');
 else
-    load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-%    atlases=ea_genatlastable(atlases,options.earoot,options);
+    load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 end
 
 cnt=1;
@@ -39,23 +40,23 @@ cnt=1;
 for atlas=1:length(atlases.names)
     switch atlases.types(atlas)
         case 1 % left hemispheric atlas.
-            atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
-            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'lh',filesep];
+            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'lh',filesep];
+            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
         case 2 % right hemispheric atlas.
-            atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
-            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'rh',filesep];
+            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'rh',filesep];
+            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
         case 3 % both-sides atlas composed of 2 files.
-            ratlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
-            pratlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'rh',filesep];
+            ratlf=[ea_space(options,'atlases'),options.atlasset,filesep,'rh',filesep];
+            pratlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
 
-            latlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
-            platlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'lh',filesep];
+            latlf=[ea_space(options,'atlases'),options.atlasset,filesep,'lh',filesep];
+            platlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
         case 4 % mixed atlas (one file with both sides information.
-            atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep];
-            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'mixed',filesep];
+            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'mixed',filesep];
+            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep];
         case 5 % midline atlas (one file with both sides information.
-            atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
-            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'midline',filesep];
+            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'midline',filesep];
+            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
     end
     
     
@@ -74,22 +75,21 @@ function generate_local_tpm(troot,aroot,proot,force,options)
 % make directories in patient folder
 mkdir([proot,'atlases']);
 mkdir([proot,'atlases',filesep,'native']);
-if exist([proot,'atlases',filesep,'native',filesep,options.atlasset],'file')
+if exist([proot,'atlases',filesep,options.atlasset],'file')
     return
 end
-mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset]);
-mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'lh']);
-mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'rh']);
-mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'mixed']);
-mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'midline']);
+mkdir([proot,'atlases',filesep,options.atlasset]);
+mkdir([proot,'atlases',filesep,options.atlasset,filesep,'lh']);
+mkdir([proot,'atlases',filesep,options.atlasset,filesep,'rh']);
+mkdir([proot,'atlases',filesep,options.atlasset,filesep,'mixed']);
+mkdir([proot,'atlases',filesep,options.atlasset,filesep,'midline']);
 
 
 
-if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
+if ~exist([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat'],'file')
     atlases=ea_genatlastable([],root,options);
 else
-    load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-%    atlases=ea_genatlastable(atlases,options.earoot,options);
+    load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 end
 
 cnt=1;
@@ -97,29 +97,29 @@ cnt=1;
 for atlas=1:length(atlases.names)
     switch atlases.types(atlas)
         case 1 % left hemispheric atlas.
-            atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
-            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'lh',filesep];
-            tpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'lh',filesep];
+            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'lh',filesep];
+            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
+            tpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'lh',filesep];
         case 2 % right hemispheric atlas.
-            atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
-            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'rh',filesep];
-            tpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'rh',filesep];
+            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'rh',filesep];
+            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
+            tpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'rh',filesep];
         case 3 % both-sides atlas composed of 2 files.
-            ratlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
-            pratlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'rh',filesep];
+            ratlf=[ea_space(options,'atlases'),options.atlasset,filesep,'rh',filesep];
+            pratlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
 
-            latlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
-            platlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'lh',filesep];
-            rtpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'rh',filesep];
-            ltpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'lh',filesep];
+            latlf=[ea_space(options,'atlases'),options.atlasset,filesep,'lh',filesep];
+            platlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
+            rtpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'rh',filesep];
+            ltpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'lh',filesep];
         case 4 % mixed atlas (one file with both sides information.
-            atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep];
-            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'mixed',filesep];
-            tpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'mixed',filesep];
+            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'mixed',filesep];
+            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep];
+            tpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'mixed',filesep];
         case 5 % midline atlas (one file with both sides information.
-            atlf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
-            patlf=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'midline',filesep];
-            tpmf=[options.earoot,'atlases',filesep,options.atlasset,filesep,'tpm',filesep,'midline',filesep];
+            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'midline',filesep];
+            patlf=[proot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
+            tpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'midline',filesep];
     end
 
     for side=detsides(atlases.types(atlas))
@@ -260,9 +260,9 @@ spm_jobman('run',jobs);
 clear matlabbatch jobs
     gzip([aroot,'TPM_Lorio_Draganski.nii']);
     delete([aroot,'TPM_Lorio_Draganski.nii']);
-    movefile([proot,'iy_',options.prefs.prenii_unnormalized],[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'iy_warp.nii'])
-    movefile([proot,'y_',options.prefs.prenii_unnormalized],[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'y_warp.nii'])
-    warpfile=[proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'iy_warp.nii'];
+    movefile([proot,'iy_',options.prefs.prenii_unnormalized],[proot,'atlases',filesep,options.atlasset,filesep,'iy_warp.nii'])
+    movefile([proot,'y_',options.prefs.prenii_unnormalized],[proot,'atlases',filesep,options.atlasset,filesep,'y_warp.nii'])
+    warpfile=[proot,'atlases',filesep,options.atlasset,filesep,'iy_warp.nii'];
 else
     warpfile=[proot,'y_ea_inv_normparams.nii'];
 end

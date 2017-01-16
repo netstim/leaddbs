@@ -1,4 +1,4 @@
-function    ea_checkfiles(options)
+function ea_checkfiles(options)
 % load files
 if strcmp(options.prefs.patientdir,'Choose Patient Directory')
     ea_error('Please choose patient directory first');
@@ -6,7 +6,7 @@ end
 
 
 vfi={'tra','cor','sag'};
-bb=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
+bb=spm_vol([ea_space(options),'bb.nii']);
 for tracor=1:length(vfi)
     cf=[options.root,options.prefs.patientdir,filesep,options.prefs.([vfi{tracor},'nii'])];
     [pth,fn,ext]=fileparts(cf);
@@ -15,7 +15,7 @@ for tracor=1:length(vfi)
         if ~isequal(bb.mat,nii.mat)
             % export images that have wrong dimension with correct bounding box
 
-            matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
+            matlabbatch{1}.spm.util.imcalc.input = {[ea_space(options),'bb.nii,1'];
                 cf};
             matlabbatch{1}.spm.util.imcalc.output = [fn,ext];
             matlabbatch{1}.spm.util.imcalc.outdir = {pth};

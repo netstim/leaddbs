@@ -34,7 +34,7 @@ for fr=1:length(from)
                 nii.fname=[directory,'tc2',options.prefs.prenii_unnormalized];
                 spm_write_vol(nii,nii.img);
             end
-            masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c2mask.nii'];
+            masks{fr,1}=[ea_space(options),'c2mask.nii'];
             masks{fr,2}=[directory,'tc2',options.prefs.prenii_unnormalized];
             
         otherwise
@@ -46,7 +46,7 @@ for fr=1:length(from)
                 nii.fname=[directory,'tc1',options.prefs.prenii_unnormalized];
                 spm_write_vol(nii,nii.img);
             end
-            masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c1mask.nii'];
+            masks{fr,1}=[ea_space(options),'c1mask.nii'];
             masks{fr,2}=[directory,'tc1',options.prefs.prenii_unnormalized];
     end
 end

@@ -46,7 +46,7 @@ for side=1:length(options.sides)
 
     X{side}=X{side}(:);        Y{side}=Y{side}(:);        Z{side}=Z{side}(:); V{side}=V{side}(:); PT{side}=PT{side}(:);
 
-    Vol=spm_vol([options.earoot,'templates',filesep,'bb.nii']);
+    Vol=spm_vol([ea_space(options),'bb.nii']);
     nii{side}=spm_read_vols(Vol);
     nii{side}(:)=nan;
     XYZ=[X{side},Y{side},Z{side},ones(length(X{side}),1)]';

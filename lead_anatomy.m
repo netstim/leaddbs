@@ -93,17 +93,8 @@ for i=1:length(as)
 end
 options.prefs=ea_prefs('');
 
-excludes={'.','..'};
-asc(ismember(asc,excludes))=[];
-if options.prefs.env.dev
-    asc{end+1}='Segment patient anatomy';
-end
-asc{end+1}='Use none';
-
-set(handles.atlassetpopup,'String',asc);
-set(handles.atlassetpopup,'String',asc);
-[~,defix]=ismember(options.prefs.atlases.default,asc);
-set(handles.atlassetpopup,'Value',defix);
+% load atlassets
+ea_listatlassets(handles,1); 
 
 set(hObject,'Color',[1 1 1]);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
@@ -124,7 +115,7 @@ ea_addnormmethods(handles,options,'');
 
 % load 2d settings
 try % if user had called it before, 2D-options will be stored here:
-    d2=load([ea_getearoot,'td_options.mat']);
+    d2=options.prefs.machine.d2;
     ea_options2tdhandles(handles,d2);
 end
 
@@ -132,7 +123,7 @@ ea_processguiargs(handles,varargin)
 
 
     %% add tools menu
-    ea_menu_initmenu(handles,{'export','cluster','prefs','transfer'});
+    ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'});
     
 
 handles.prod='anatomy';
@@ -328,7 +319,7 @@ options.macaquemodus=0;
 
 d2=ea_tdhandles2options(handles);
 
-save([ea_getearoot,'td_options.mat'],'-struct','d2');
+ea_storemachineprefs('d2',d2);
 options.d2=ea_tdhandles2options(handles,options.d2);
 
 
@@ -456,7 +447,7 @@ function leadfigure_CloseRequestFcn(hObject, eventdata, handles)
 
 % Hint: delete(hObject) closes the figure
 d2=ea_tdhandles2options(handles);
-save([ea_getearoot,'td_options.mat'],'-struct','d2');
+ea_storemachineprefs('d2',d2);
 
 delete(hObject);
 
