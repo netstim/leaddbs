@@ -14,7 +14,18 @@ switch ea_whichnormmethod(directory)
         
     otherwise % SPM part here
         for fi=1:length(from) % assume from and to have same length (must have for this to work)
+            if strcmp(from{fi}(end-2:end),'.gz') % .gz support
+                [pth,fn,ext]=fileparts(from{fi});
+                copyfile(from{fi},[tempdir,fn,'.gz']);
+                gunzip([tempdir,fn,'.gz']);
+                from{fi}=[tempdir,fn];
+                wasgz=1;
+            else
+                wasgz=0;
+            end
             if useinverse
+                
+               
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']}; % non-inverse usage okay here since using pushforward method.
                 matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
                 matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
@@ -31,6 +42,9 @@ switch ea_whichnormmethod(directory)
                     movefile(fullfile(pth,['w',fn,ext]),to{fi});
                 end
             else
+                
+                
+                
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']}; % inverse usage okay here since using pushforward method.
                 matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
                 matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
@@ -46,6 +60,10 @@ switch ea_whichnormmethod(directory)
                 try % fails if to is a w prefixed file already
                     movefile(fullfile(pth,['w',fn,ext]),to{fi});
                 end
+            end
+            if wasgz
+               gzip(to{fi});
+               delete(to{fi});
             end
         end       
 end

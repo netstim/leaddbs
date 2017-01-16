@@ -1,4 +1,4 @@
-function ea_normalize_ptspecific_atl(options)
+function ea_norm_ptspecific_atl(options)
 
 troot=[options.earoot,'templates',filesep,'segment',filesep];
 aroot=[options.earoot,'atlases',filesep,options.atlasset,filesep];

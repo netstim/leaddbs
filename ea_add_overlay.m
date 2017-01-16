@@ -13,7 +13,7 @@ end
 mcr=ea_checkmacaque(options);
 
 if options.native
-   atlroot=[options.root,options.patientname,filesep,'atlases',filesep,'native',filesep];    
+   atlroot=[options.root,options.patientname,filesep,'atlases',filesep];    
 else
    atlroot=[ea_space(options,'atlases')];
 end

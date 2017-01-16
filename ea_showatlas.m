@@ -34,15 +34,12 @@ mcr=ea_checkmacaque(options);
 for nativemni=nm % switch between native and mni space atlases.
     
     switch nativemni
-        case 0
-            adir=[[options.root,options.patientname,filesep],'atlases',filesep,'mni',filesep,options.atlasset,filesep];
-            mifix=['mni',filesep];
         case 1
             adir=[ea_space(options,'atlases'),options.atlasset,filesep];
             mifix='';
         case 2
-            adir=[[options.root,options.patientname,filesep],'atlases',filesep,'native',filesep,options.atlasset,filesep];
-            mifix=['native',filesep];
+            adir=[[options.root,options.patientname,filesep],'atlases',filesep,options.atlasset,filesep];
+            mifix='';
     end
     
     
