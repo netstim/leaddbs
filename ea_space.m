@@ -1,16 +1,30 @@
-function [path]=ea_space(options,cmd)
+function [path]=ea_space(options,cmd,native)
 
 spacename='mni_icbm2009b'; % as default for now
 if ~exist('cmd','var')
     cmd='space';
 end
+if ~exist('native','var')
+    native=0; % additional native variable will be used if not working in native space but still wanting to e.g. list atlases from native space. Is not important.
+end
+if ~exist('options','var')
+   options.prefs=ea_prefs(''); % get minimal options from prefs. 
+end
+if ~isfield(options,'native')
+    options.native=0;
+end
+
 switch cmd
     case 'space'
         
         path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep];
         
     case 'atlases'
-        path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'atlases',filesep];
+        if options.native || native
+            path=[options.root,options.patientname,filesep,'atlases',filesep];
+        else
+            path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'atlases',filesep];
+        end
     case {'subcortical','schoenecker'} 
         path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'subcortical',filesep];
     case 'cortex'

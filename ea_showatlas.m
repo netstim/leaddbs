@@ -35,16 +35,13 @@ for nativemni=nm % switch between native and mni space atlases.
     
     switch nativemni
         case 0
-            root=[options.root,options.patientname,filesep];
-            adir=[root,'atlases',filesep,'mni',filesep,options.atlasset,filesep];
+            adir=[[options.root,options.patientname,filesep],'atlases',filesep,'mni',filesep,options.atlasset,filesep];
             mifix=['mni',filesep];
         case 1
-            root=[options.earoot,mcr];
-            adir=[root,'atlases',filesep,options.atlasset,filesep];
+            adir=[ea_space('atlases'),options.atlasset,filesep];
             mifix='';
         case 2
-            root=[options.root,options.patientname,filesep];
-            adir=[root,'atlases',filesep,'native',filesep,options.atlasset,filesep];
+            adir=[[options.root,options.patientname,filesep],'atlases',filesep,'native',filesep,options.atlasset,filesep];
             mifix=['native',filesep];
     end
     
@@ -54,10 +51,10 @@ for nativemni=nm % switch between native and mni space atlases.
     
     if ~exist([adir,'atlas_index.mat'],'file')
         
-        atlases=ea_genatlastable([],root,options,mifix);
+        atlases=ea_genatlastable([],adir,options,mifix);
     else
         load([adir,'atlas_index.mat']);
-        atlases=ea_genatlastable(atlases,root,options,mifix);
+        atlases=ea_genatlastable(atlases,adir,options,mifix);
     end
     
     
@@ -334,7 +331,7 @@ for nativemni=nm % switch between native and mni space atlases.
     end
     try
         atlases.rebuild=0; % always reset rebuild flag.
-        save([root,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
+        save([adir,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
     end
     
     if options.writeoutstats

@@ -15,16 +15,16 @@ mcr=ea_checkmacaque(options);
 if options.native
    atlroot=[options.root,options.patientname,filesep,'atlases',filesep,'native',filesep];    
 else
-   atlroot=[options.earoot,mcr,'atlases',filesep];
+   atlroot=[ea_space(options,'atlases')];
 end
 
 % load/generate atlas_index.mat
 if ~isfield(options,'atlases') % atlases structure can be handed down directly within options struct.
     if ~exist([atlroot,options.atlasset,filesep,'atlas_index.mat'],'file')
-        atlases=ea_genatlastable([],options.earoot,options);
+        atlases=ea_genatlastable([],ea_space('atlases'),options);
     else
         load([atlroot,options.atlasset,filesep,'atlas_index.mat']);
-        atlases=ea_genatlastable(atlases,options.earoot,options);
+        atlases=ea_genatlastable(atlases,ea_space('atlases'),options);
     end
 else
     atlases=options.atlases;
@@ -209,7 +209,6 @@ end
 %axis off
 
 % save table information
-%save([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases');
 
 
 function sides=detsides(opt)

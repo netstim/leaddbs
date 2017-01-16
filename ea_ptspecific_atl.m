@@ -30,8 +30,7 @@ warning('on');
 if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
 ea_error('Please visualize this atlas in MNI space once before visualizing the atlas in native space.');
 else
-    load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-%    atlases=ea_genatlastable(atlases,options.earoot,options);
+    load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 end
 
 cnt=1;
@@ -88,8 +87,7 @@ mkdir([proot,'atlases',filesep,'native',filesep,options.atlasset,filesep,'midlin
 if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
     atlases=ea_genatlastable([],root,options);
 else
-    load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-%    atlases=ea_genatlastable(atlases,options.earoot,options);
+    load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 end
 
 cnt=1;
