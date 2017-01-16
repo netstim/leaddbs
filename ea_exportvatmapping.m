@@ -3,9 +3,9 @@ function ea_exportvatmapping(M,options,handles)
 selectedregressor=M.clinical.vars{get(handles.clinicallist,'Value')};
 zselectedregressor=zscore(selectedregressor);
     mkdir([options.root,options.patientname,filesep,'statvat_results']);
-allV{1}=[options.earoot,'templates',filesep,'bb.nii'];
-zallV{1}=[options.earoot,'templates',filesep,'bb.nii'];
-tempzallV{1}=[options.earoot,'templates',filesep,'bb.nii'];
+allV{1}=[ea_space(options),'bb.nii'];
+zallV{1}=[ea_space(options),'bb.nii'];
+tempzallV{1}=[ea_space(options),'bb.nii'];
 
 if size(selectedregressor,2)==1;
     bihemispheric=0;

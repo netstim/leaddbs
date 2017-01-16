@@ -54,7 +54,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
 
             mcr=ea_checkmacaque(options);
                 
-            w=load([options.earoot,mcr,'templates',filesep,'mni_wires.mat']);
+            w=load([ea_space(options),'wires.mat']);
             pt=ea_load_nii(checkf);
             
             if ~isequal(size(w.wires),size(pt.img))

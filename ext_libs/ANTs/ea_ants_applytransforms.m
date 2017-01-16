@@ -163,7 +163,7 @@ if nargin == 1 % standard case
                 continue
             end
 
-            matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
+            matlabbatch{1}.spm.util.imcalc.input = {[ea_space(options),'bb.nii,1'];
                                                     [ofis{fi},',1']};
             matlabbatch{1}.spm.util.imcalc.output = lfis{fi};
             matlabbatch{1}.spm.util.imcalc.outdir = {directory};

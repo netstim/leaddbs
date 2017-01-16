@@ -59,6 +59,8 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+try ea_compat_data; end
+
 earoot=ea_getearoot;
 
 % add recent patients...

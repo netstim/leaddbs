@@ -21,11 +21,11 @@ if nargin>2
 end
 
 
-nm=[0:2]; % native and mni
+nm=[1:2]; % native and mni
 try
-    nmind=[options.atl.pt,options.atl.can,options.atl.ptnative]; % which shall be performed?
+    nmind=[options.atl.can,options.atl.ptnative]; % which shall be performed?
 catch
-    nmind=[0 1 0];
+    nmind=[1 0];
 end
 nm=nm(logical(nmind)); % select which shall be performed.
 
@@ -38,7 +38,7 @@ for nativemni=nm % switch between native and mni space atlases.
             adir=[[options.root,options.patientname,filesep],'atlases',filesep,'mni',filesep,options.atlasset,filesep];
             mifix=['mni',filesep];
         case 1
-            adir=[ea_space('atlases'),options.atlasset,filesep];
+            adir=[ea_space(options,'atlases'),options.atlasset,filesep];
             mifix='';
         case 2
             adir=[[options.root,options.patientname,filesep],'atlases',filesep,'native',filesep,options.atlasset,filesep];
