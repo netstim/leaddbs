@@ -32,13 +32,13 @@ switch cmd
     case {'subcortical','schoenecker'} 
         path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'subcortical',filesep];
     case 'cortex'
-        path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'atlases',filesep];
+        path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'cortex',filesep];
         
     case 'labeling'
-        path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'atlases',filesep];
+        path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'labeling',filesep];
 
     case 'dartel'
-        path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'atlases',filesep];
+        path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'dartel',filesep];
 
         
 end
