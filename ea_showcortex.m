@@ -51,7 +51,7 @@ if nm==1 && ~isempty(strfind(slicecontroldata.templateused,'Patient'))
 end
 
 % macaque brain currently not supported % mcr=ea_checkmacaque(options);
-mcr = '';
+% mcr = '';
 
 for nativemni=nm % switch between native and mni space.
     
@@ -59,16 +59,19 @@ for nativemni=nm % switch between native and mni space.
         case 0 % patient cortex in mni space in future release
             % root=[options.root,options.patientname,filesep];
             % adir=[root,''];
-            root=[options.earoot,mcr];
+            root=[options.earoot];
             adir=[root,'templates/spaces/mni_icbm2009b/cortex/'];
+            casestr = 'Template';
             reslice='yes'; %future option to import patient brain and reslice to mni space
         case 1 % template cortex in mni space
-            root=[options.earoot,mcr];
+            root=[options.earoot];
             adir=[root,'templates/spaces/mni_icbm2009b/cortex/'];
+            casestr = 'Template';
             reslice='no';
         case 2 % patient cortex in native space
             root=[options.root,options.patientname,filesep];
             adir=[root,'cortex/'];
+            casestr = 'Patient';
             reslice='no';
     end
 end
@@ -78,7 +81,7 @@ files = dir(adir); files = files(cellfun(@(x) isempty(regexp(x, '^\.', 'once')),
 files = files(~[files.isdir]); files = {files(~cellfun(@isempty , strfind({files.name},'Cortex'))).name};
 
 if size(files,2)>=2
-    str = [{'More than one Cortex found.'},...
+    str = [{['More than one Cortex found in the ' casestr ' folder.']},...
         {'Please, select which Cortex you would like to view.'}];
     file = char(files(listdlg('PromptString',str,'Name',options.patientname,...
         'SelectionMode','single','ListString',files,...
