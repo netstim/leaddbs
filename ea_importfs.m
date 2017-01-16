@@ -158,7 +158,7 @@ T1nii=MRIread(fullfile(FsDir,'mri/T1.nii'));
 disp('Translating into native space...')
 aff = T1nii.vox2ras/T1nii.tkrvox2ras;
 aff([4,8,12])=aff([13:15]); aff([13:15])=0;
-tform = affine3d(aff);
+tform = affine3d(aff); CortexHiRes.raw.tform = tform;
 CortexHiRes.Vertices_lh = transformPointsForward(tform,CortexHiRes.raw.Vertices_lh);
 CortexHiRes.Vertices_rh = transformPointsForward(tform,CortexHiRes.raw.Vertices_rh);
 CortexHiRes.Vertices = transformPointsForward(tform,CortexHiRes.raw.Vertices);

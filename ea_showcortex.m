@@ -60,11 +60,11 @@ for nativemni=nm % switch between native and mni space.
             % root=[options.root,options.patientname,filesep];
             % adir=[root,''];
             root=[options.root,options.patientname,filesep];
-            adir=[root,'templates/cortex/'];
+            adir=[root,'templates/space/'];
             reslice='yes';
         case 1 % template cortex in mni space
             root=[options.earoot,mcr];
-            adir=[root,'templates/cortex/'];
+            adir=[root,'templates/space/'];
             reslice='no';
         case 2 % patient cortex in native space
             root=[options.root,options.patientname,filesep];
