@@ -13,6 +13,10 @@ end
 if ~isfield(options,'native')
     options.native=0;
 end
+if exist('native','var') % overwrite options.native with native
+   options.native=native; 
+end
+    
 
 switch cmd
     case 'space'
