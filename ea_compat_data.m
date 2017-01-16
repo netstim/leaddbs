@@ -12,6 +12,8 @@ if exist([ea_getearoot,'templates',filesep,'mni_hires_t1.nii'],'file');
     movefile([ea_space,'mni_hires_pd.nii'],[ea_space,'pd.nii']);
     movefile([ea_space,'mni_hires_fa.nii'],[ea_space,'fa.nii']);
     movefile([ea_space,'mni_hires_bb.nii'],[ea_space,'bb.nii']);
+    movefile([ea_space,'mni_hires_c1mask.nii'],[ea_space,'c1mask.nii']);
+    movefile([ea_space,'mni_hires_c2mask.nii'],[ea_space,'c2mask.nii']);
     movefile([ea_space,'TPM_2009b.nii'],[ea_space,'TPM.nii']);
     movefile([ea_space,'mni_hires_distal.nii'],[ea_space,'distal.nii']);
     movefile([ea_space,'mni_hires_wires.mat'],[ea_space,'wires.mat']);
