@@ -9,8 +9,8 @@ switch cmd
         
     case 'atlases'
         path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'atlases',filesep];
-        
-        
+    case {'subcortical','schoenecker'} 
+        path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'subcortical',filesep];
     case 'cortex'
         path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'atlases',filesep];
         
@@ -21,4 +21,8 @@ switch cmd
         path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'atlases',filesep];
 
         
+end
+
+if ~exist(path,'file')
+    ea_error('This functionality seems not to be compatible with the space you are working in. Please consider using the default ICBM 2009b nonlinear asymmetric space for this procedure.');
 end
