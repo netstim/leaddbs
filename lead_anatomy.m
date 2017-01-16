@@ -124,7 +124,7 @@ ea_addnormmethods(handles,options,'');
 
 % load 2d settings
 try % if user had called it before, 2D-options will be stored here:
-    d2=load([ea_getearoot,'td_options.mat']);
+    d2=options.prefs.machine.d2;
     ea_options2tdhandles(handles,d2);
 end
 
@@ -328,7 +328,7 @@ options.macaquemodus=0;
 
 d2=ea_tdhandles2options(handles);
 
-save([ea_getearoot,'td_options.mat'],'-struct','d2');
+ea_storemachineprefs('d2',d2);
 options.d2=ea_tdhandles2options(handles,options.d2);
 
 
@@ -456,7 +456,7 @@ function leadfigure_CloseRequestFcn(hObject, eventdata, handles)
 
 % Hint: delete(hObject) closes the figure
 d2=ea_tdhandles2options(handles);
-save([ea_getearoot,'td_options.mat'],'-struct','d2');
+ea_storemachineprefs('d2',d2);
 
 delete(hObject);
 

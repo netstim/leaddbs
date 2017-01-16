@@ -9,14 +9,39 @@ uid=['ea_prefs_',dash2sub(ea_generate_guid)];
 if ~exist([home,'.ea_prefs.m'],'file')
     copyfile([ea_getearoot,'ea_prefs_default.m'],[home,'.ea_prefs.m']);
 end
+if ~exist([home,'.ea_prefs.mat'],'file')
+    copyfile([ea_getearoot,'ea_prefs_default.mat'],[home,'.ea_prefs.mat']);
+end
+
+
+defmachine=load([ea_getearoot,'ea_prefs_default.mat']);
+defmachine=defmachine.machine;
 try
     copyfile([home,'.ea_prefs.m'],[ea_getearoot,uid,'.m'])
     uprefs=feval(uid,patientname);
     delete([ea_getearoot,uid,'.m']);
+
+    load([home,'.ea_prefs.mat']);
+    
 catch
    warning('User preferences file could not be read. Please set write permissions to Lead-DBS install directory accordingly.');
    return
 end
+
+prefs=combinestructs(prefs,uprefs);
+
+machine=combinestructs(defmachine,machine);
+
+prefs.machine=machine;
+
+
+
+function str=dash2sub(str) % replaces subscores with spaces
+str(str=='-')='_';
+
+
+function prefs=combinestructs(prefs,uprefs)
+
 
 ufn=fieldnames(uprefs);
 
@@ -44,6 +69,3 @@ for uf=1:length(ufn) % compare user preferences with defaults and overwrite defa
         prefs.(ufn{uf})=uprefs.(ufn{uf});
     end
 end
-
-function str=dash2sub(str) % replaces subscores with spaces
-str(str=='-')='_';

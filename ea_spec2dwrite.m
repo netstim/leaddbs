@@ -73,7 +73,7 @@ end
 
 
 try
-    d2=load([ea_getearoot,'td_options.mat']);
+    d2=options.prefs.machine.d2;
     ea_options2tdhandles(handles,d2);
 end
 set(handles.ea_spec2dwrite,'Name','Specify 2D Output options');
@@ -154,7 +154,7 @@ function savebutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 d2=ea_tdhandles2options(handles);
-save([ea_getearoot,'td_options.mat'],'-struct','d2');
+ea_storemachineprefs('d2',d2);
 delete(handles.ea_spec2dwrite);
 
 

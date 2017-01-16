@@ -1,2 +1,5 @@
 function space=ea_getspace
-space='mni_icbm2009b';
+
+prefs=ea_prefs('');
+
+space=prefs.machine.space;

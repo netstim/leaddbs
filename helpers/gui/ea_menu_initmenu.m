@@ -32,6 +32,10 @@ if isempty(menuprobe)
         ea_menu_addsubmit(handles);
     end
     
+    if ismember('space',cmd)
+        ea_menu_addspace(handles);
+    end
+    
     if ismember('checkregfigs',cmd)
        uimenu(f,'Label','Generate Checkreg figures','Callback',{@ea_gencheckreg,handles}); 
     end
