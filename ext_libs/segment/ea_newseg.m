@@ -25,7 +25,7 @@ else
     disp('Segmentation...');
 
     load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob12']);
-    tpminf=[options.earoot,'templates',filesep,'TPM_2009b.nii'];
+    tpminf=[ea_space,'TPM.nii'];
     for fi=1:length(files) % add channels for multispectral segmentation
         job.channel(fi).vols = {[directory,files{fi},',1']};
         job.channel(fi).biasreg = 0.001;
