@@ -1,6 +1,6 @@
 function [path]=ea_space(options,cmd,native)
 
-spacename='mni_icbm2009b'; % as default for now
+spacename=ea_getspace; % as default for now
 if ~exist('cmd','var')
     cmd='space';
 end
