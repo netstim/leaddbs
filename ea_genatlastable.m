@@ -489,7 +489,7 @@ for atl=1:length(atlnames)
     end
 
     if ~exist([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file') % first atlas, generate empty hdtemplate in atlas dir...
-        copyfile([options.earoot,'templates',filesep,'mni_hires_t2.nii'],[root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+        copyfile([ea_space(options),'t2.nii'],[root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         V=spm_vol([root,'atlases',filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         X=spm_read_vols(V);
         X(:)=0;

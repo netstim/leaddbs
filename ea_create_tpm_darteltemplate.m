@@ -10,39 +10,39 @@ switch answ
         ea_error('Process aborted by user');
 end
 
-matlabbatch{1}.spm.spatial.preproc.channel(1).vols = {[ea_getearoot,'templates',filesep,'mni_hires_t2.nii,1']};
+matlabbatch{1}.spm.spatial.preproc.channel(1).vols = {[ea_space,t2.nii,1']};
 matlabbatch{1}.spm.spatial.preproc.channel(1).biasreg = 0.001;
 matlabbatch{1}.spm.spatial.preproc.channel(1).biasfwhm = 60;
 matlabbatch{1}.spm.spatial.preproc.channel(1).write = [0 0];
-matlabbatch{1}.spm.spatial.preproc.channel(2).vols = {[ea_getearoot,'templates',filesep,'mni_hires_t1.nii,1']};
+matlabbatch{1}.spm.spatial.preproc.channel(2).vols = {[ea_space,t1.nii,1']};
 matlabbatch{1}.spm.spatial.preproc.channel(2).biasreg = 0.001;
 matlabbatch{1}.spm.spatial.preproc.channel(2).biasfwhm = 60;
 matlabbatch{1}.spm.spatial.preproc.channel(2).write = [0 0];
-matlabbatch{1}.spm.spatial.preproc.channel(3).vols = {[ea_getearoot,'templates',filesep,'mni_hires_pd.nii,1']};
+matlabbatch{1}.spm.spatial.preproc.channel(3).vols = {[ea_space,pd.nii,1']};
 matlabbatch{1}.spm.spatial.preproc.channel(3).biasreg = 0.001;
 matlabbatch{1}.spm.spatial.preproc.channel(3).biasfwhm = 60;
 matlabbatch{1}.spm.spatial.preproc.channel(3).write = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(1).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,1']};
+matlabbatch{1}.spm.spatial.preproc.tissue(1).tpm = {[ea_space,,'TPM_Lorio_Draganski.nii,1']};
 matlabbatch{1}.spm.spatial.preproc.tissue(1).ngaus = 1;
 matlabbatch{1}.spm.spatial.preproc.tissue(1).native = [1 0];
 matlabbatch{1}.spm.spatial.preproc.tissue(1).warped = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(2).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,2']};
+matlabbatch{1}.spm.spatial.preproc.tissue(2).tpm = {[ea_space,,'TPM_Lorio_Draganski.nii,2']};
 matlabbatch{1}.spm.spatial.preproc.tissue(2).ngaus = 1;
 matlabbatch{1}.spm.spatial.preproc.tissue(2).native = [1 0];
 matlabbatch{1}.spm.spatial.preproc.tissue(2).warped = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(3).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,3']};
+matlabbatch{1}.spm.spatial.preproc.tissue(3).tpm = {[ea_space,,'TPM_Lorio_Draganski.nii,3']};
 matlabbatch{1}.spm.spatial.preproc.tissue(3).ngaus = 2;
 matlabbatch{1}.spm.spatial.preproc.tissue(3).native = [1 0];
 matlabbatch{1}.spm.spatial.preproc.tissue(3).warped = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(4).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,4']};
+matlabbatch{1}.spm.spatial.preproc.tissue(4).tpm = {[ea_space,,'TPM_Lorio_Draganski.nii,4']};
 matlabbatch{1}.spm.spatial.preproc.tissue(4).ngaus = 3;
 matlabbatch{1}.spm.spatial.preproc.tissue(4).native = [1 0];
 matlabbatch{1}.spm.spatial.preproc.tissue(4).warped = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(5).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,5']};
+matlabbatch{1}.spm.spatial.preproc.tissue(5).tpm = {[ea_space,,'TPM_Lorio_Draganski.nii,5']};
 matlabbatch{1}.spm.spatial.preproc.tissue(5).ngaus = 4;
 matlabbatch{1}.spm.spatial.preproc.tissue(5).native = [1 0];
 matlabbatch{1}.spm.spatial.preproc.tissue(5).warped = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(6).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,6']};
+matlabbatch{1}.spm.spatial.preproc.tissue(6).tpm = {[ea_space,,'TPM_Lorio_Draganski.nii,6']};
 matlabbatch{1}.spm.spatial.preproc.tissue(6).ngaus = 2;
 matlabbatch{1}.spm.spatial.preproc.tissue(6).native = [1 0];
 matlabbatch{1}.spm.spatial.preproc.tissue(6).warped = [0 0];
@@ -57,32 +57,32 @@ matlabbatch{1}.spm.spatial.preproc.warp.write = [0 0];
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
-delete([ea_getearoot,'templates',filesep,'mni_hires_t2_seg8.mat']); 
-if ~exist([ea_getearoot,'templates',filesep,'dartel'], 'dir')
-    mkdir([ea_getearoot,'templates',filesep,'dartel']);
+delete([ea_space,t2_seg8.mat']); 
+if ~exist([ea_space('dartel')], 'dir')
+    mkdir([ea_space('dartel')]);
 end
 for c=1:6
-    movefile([ea_getearoot,'templates',filesep,'c',num2str(c),'mni_hires_t2.nii'],[ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
+    movefile([ea_space,'c',num2str(c),'t2.nii'],[ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
 end
 
 % add distal
-copyfile([ea_getearoot,'templates',filesep,'mni_hires_distal.nii'],[ea_getearoot,'templates',filesep,'dartel',filesep,'mni_hires_distal.nii']);
-ea_conformspaceto([ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii'],[ea_getearoot,'templates',filesep,'dartel',filesep,'mni_hires_distal.nii'],6);
+copyfile([ea_space,distal.nii'],[ea_space('dartel'),filesep,'distal.nii']);
+ea_conformspaceto([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii'],[ea_space('dartel'),filesep,'distal.nii'],6);
 
-c1=ea_load_nii([ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii']);
-distal=ea_load_nii([ea_getearoot,'templates',filesep,'dartel',filesep,'mni_hires_distal.nii']);
+c1=ea_load_nii([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii']);
+distal=ea_load_nii([ea_space('dartel'),filesep,'distal.nii']);
 c1.img(distal.img>0.1)=distal.img(distal.img>0.1);
 ea_write_nii(c1);
-c2=ea_load_nii([ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',2),'.nii']);
+c2=ea_load_nii([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',2),'.nii']);
 c2.img(distal.img>0.1)=0;
 ea_write_nii(c2);
-c3=ea_load_nii([ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',3),'.nii']);
+c3=ea_load_nii([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',3),'.nii']);
 c3.img(distal.img>0.1)=0;
 ea_write_nii(c3);
 prefs=ea_prefs('');
 
 for c=1:6
-    fina=[ea_getearoot,'templates',filesep,'dartel',filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
+    fina=[ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
     nii=ea_load_nii(fina); % change datatype to something high for reslicing and smoothing.
     nii.dt=[16,0];
     ea_write_nii(nii);
@@ -115,7 +115,7 @@ clear matlabbatch
 
 delete([ea_getearoot,'templates',filesep,'TPM_2009b.mat']);
 
-wd=[ea_getearoot,'templates',filesep,'dartel',filesep];
+wd=[ea_space('dartel'),filesep];
 %gunzip([wd,'dartelmni_6_hires.nii.gz']);
 %spm_file_split([wd,'dartelmni_6_hires.nii']);
 gs=[0,2,3,5,6,8];
@@ -198,8 +198,8 @@ fclose(fid);
 
 
 function ea_addshoot
-if ~exist([ea_getearoot,'templates',filesep,'dartel',filesep,'shootmni_1.nii'],'file');
-    root=[ea_getearoot,'templates',filesep,'dartel',filesep];
+if ~exist([ea_space('dartel'),filesep,'shootmni_1.nii'],'file');
+    root=[ea_space('dartel'),filesep];
     for dt=1:6
         nii=ea_load_nii([root,'dartelmni_',num2str(dt),'.nii']);
 

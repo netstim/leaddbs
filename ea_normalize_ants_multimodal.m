@@ -54,7 +54,7 @@ end
 if uset1 && ~strcmp(options.primarytemplate,'t1')
     if exist([directory,options.prefs.prenii_unnormalized_t1],'file')
         disp('Including T1 data for (grey-matter) normalization');
-        to{cnt}=[options.earoot,'templates',filesep,'mni_hires_t1.nii'];
+        to{cnt}=[ea_space(options),'t1.nii'];
         if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
             ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_t1],bprfx);
         end
@@ -69,7 +69,7 @@ end
 if usepd && ~strcmp(options.primarytemplate,'pd')
     if exist([directory,options.prefs.prenii_unnormalized_pd],'file')
         disp('Including PD data for (grey-matter) normalization');
-        to{cnt}=[options.earoot,'templates',filesep,'mni_hires_pd.nii'];
+        to{cnt}=[ea_space(options),'pd.nii'];
         if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
             ea_maskimg(options,[directory,options.prefs.prenii_unnormalized_pd],bprfx);
         end
@@ -83,7 +83,7 @@ end
 if usefa
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
         disp('Including FA information for white-matter normalization.');
-        to{cnt}=[options.earoot,'templates',filesep,'mni_hires_fa.nii'];
+        to{cnt}=[ea_space(options),'fa.nii'];
         from{cnt}=[directory,bprfx,options.prefs.fa2anat];
         weights(cnt)=0.5;
         metrics{cnt}='MI';
@@ -99,14 +99,14 @@ if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that i
     ea_maskimg(options,[directory,options.prefs.prenii_unnormalized],bprfx);
 end
 
-to{cnt}=[options.earoot,'templates',filesep,'mni_hires_',options.primarytemplate,'.nii'];
+to{cnt}=[ea_space(options),options.primarytemplate,'.nii'];
 from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized];
 weights(cnt)=1.5;
 metrics{cnt}='MI';
 cnt=cnt+1;
 
 if includeatlas % append as last to make criterion converge on this one.
-   to{cnt}=[options.earoot,'templates',filesep,'mni_hires_distal.nii'];
+   to{cnt}=[ea_space(options),'distal.nii'];
    from{cnt}=[directory,'anat_atlas.nii.gz'];
    weights(cnt)=1.5;
    metrics{cnt}='MI'; % could think about changing this to CC
@@ -132,7 +132,7 @@ for fr=1:length(from)
                 nii.fname=[directory,'tc2',options.prefs.prenii_unnormalized];
                 spm_write_vol(nii,nii.img);
             end
-            masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c2mask.nii'];
+            masks{fr,1}=[ea_space(options),'c2mask.nii'];
             masks{fr,2}=[directory,'tc2',options.prefs.prenii_unnormalized];
 
         otherwise
@@ -144,7 +144,7 @@ for fr=1:length(from)
                 nii.fname=[directory,'tc1',options.prefs.prenii_unnormalized];
                 spm_write_vol(nii,nii.img);
             end
-            masks{fr,1}=[options.earoot,'templates',filesep,'mni_hires_c1mask.nii'];
+            masks{fr,1}=[ea_space(options),'c1mask.nii'];
             masks{fr,2}=[directory,'tc1',options.prefs.prenii_unnormalized];
     end
 end

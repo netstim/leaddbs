@@ -94,7 +94,7 @@ for peer=1:length(peerfolders)
 
         antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
 
-        template=ea_niigz([ea_getearoot,'templates',filesep,'mni_hires_t2.nii']);
+        template=ea_niigz([ea_space(options),'t2.nii']);
         prenii=ea_niigz([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
         cmd=[antsApply,' -r ',template,...
             ' -t ',ea_path_helper([peerfolders{peer},filesep,'glanatComposite',ea_getantstransformext([peerfolders{peer},filesep],options)]),...
@@ -192,20 +192,6 @@ ea_delete([subdirec,'glanatComposite.h5']);
 
 ea_delete([subdirec,'glanatInverseComposite.h5']);
 
-% % now convert to .h5 again and place in sub directory:
-% antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
-% template=[ea_getearoot,'templates',filesep,'mni_hires_t2.nii'];
-% prenii=[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
-% cmd=[antsApply,' -r ',template,' -t ',[warpbase,'ave2mni.nii.gz'],' -o [',[subdirec,'glanatComposite.nii.gz,1]']];
-% icmd=[antsApply,' -r ',prenii,' -t ',[warpbase,'ave2sub.nii.gz'],' -o [',[subdirec,'glanatInverseComposite.nii.gz,1]']];
-% if ~ispc
-%     system(['bash -c "', cmd, '"']);
-%     system(['bash -c "', icmd, '"']);
-% else
-%     system(cmd);
-%     system(icmd);
-% end
-
 % apply warps as always:
 ea_apply_normalization(options);
 
@@ -214,31 +200,4 @@ ea_apply_normalization(options);
 
 rmdir([subdirec,'MAGeT'],'s');
 
-
-
-function ea_writecompositewarp(transforms)
-basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
-if ispc
-    applyTransforms = [basedir, 'antsApplyTransforms.exe'];
-else
-    applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
-end
-
-
-cmd=[applyTransforms];
-refim=[options.earoot,'templates',filesep,'mni_hires_t2.nii'];
-% add transforms:
-for t=1:length(transforms)
-    [pth1,fn1,ext1]=fileparts(transforms{t}{1});
-    [pth2,fn2,ext2]=fileparts(transforms{t}{2});
-    tr=[' -r ',refim,...
-        ' -t [',ea_path_helper([pth1,filesep,fn1,ext1]),',0]',...
-        ' -t [',ea_path_helper([pth2,filesep,fn2,ext2]),',0]'];
-    cmd=[cmd,tr];
-end
-
-% add output:
-cmd=[cmd,' -o [compositeDisplacementField.h5,1]'];
-
-system(cmd)
 

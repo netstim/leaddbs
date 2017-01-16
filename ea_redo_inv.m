@@ -17,7 +17,7 @@ switch forinv
     case 'forward'
         
         
-        matlabbatch{1}.spm.util.defs.comp{1}.id.space = {[options.earoot,'templates',filesep,'mni_hires_t2.nii']};
+        matlabbatch{1}.spm.util.defs.comp{1}.id.space = {[ea_space(options),options.primarytemplate,'.nii']};
         matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
         matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = 'ea_normparams.nii';
         matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};

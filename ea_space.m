@@ -1,7 +1,9 @@
 function [path]=ea_space(options,cmd)
 
 spacename='mni_icbm2009b'; % as default for now
-
+if ~exist('cmd','var')
+    cmd='space';
+end
 switch cmd
     case 'space'
         

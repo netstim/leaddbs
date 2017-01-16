@@ -25,5 +25,5 @@ switch whichnormmethod
     case 'ea_normalize_spmnewseg'
         template=[leaddir,'templates',filesep,'TPM_2009b.nii'];
     otherwise
-        template=[leaddir,'templates',filesep,'mni_hires_t2.nii'];
+        template=[ea_space(options),'t1.nii'];
 end
