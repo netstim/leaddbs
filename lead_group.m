@@ -138,7 +138,7 @@ end
 % Labels:
 
 
-ll=dir([options.earoot,'templates',filesep,'labeling',filesep,'*.nii']);
+ll=dir([ea_space(options,'labeling'),'*.nii']);
 for lab=1:length(ll)
     [~,n]=fileparts(ll(lab).name);
     labelcell{lab}=n;
@@ -1116,7 +1116,7 @@ for pt=selection
             switch mod
                 case 'rest_tc'
                     ea_error('Group statistics for fMRI are not yet supported. Sorry, check back later!');
-                    pV=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+                    pV=spm_vol([ea_space(options,'labeling'),selectedparc,'.nii']);
                     pX=spm_read_vols(pV);
                     ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
                 otherwise
