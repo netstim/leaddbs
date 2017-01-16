@@ -43,6 +43,6 @@ switch cmd
         
 end
 
-if ~exist(path,'file')
+if ~exist(path,'dir')
     ea_error('This functionality seems not to be compatible with the space you are working in. Please consider using the default ICBM 2009b nonlinear asymmetric space for this procedure.');
 end
