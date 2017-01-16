@@ -21,10 +21,10 @@ end
 % load/generate atlas_index.mat
 if ~isfield(options,'atlases') % atlases structure can be handed down directly within options struct.
     if ~exist([atlroot,options.atlasset,filesep,'atlas_index.mat'],'file')
-        atlases=ea_genatlastable([],ea_space('atlases'),options);
+        atlases=ea_genatlastable([],ea_space(options,'atlases'),options);
     else
         load([atlroot,options.atlasset,filesep,'atlas_index.mat']);
-        atlases=ea_genatlastable(atlases,ea_space('atlases'),options);
+        atlases=ea_genatlastable(atlases,ea_space(options,'atlases'),options);
     end
 else
     atlases=options.atlases;

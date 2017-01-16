@@ -1,4 +1,4 @@
-function d2=tdhandles2options(tdhandles,fd2)
+function d2=ea_tdhandles2options(tdhandles,fd2)
 
 
 % defaults:
@@ -12,7 +12,8 @@ function d2=tdhandles2options(tdhandles,fd2)
     if isempty(tdhandles) % call from somewhere else, return defaults or loaded file
         
         try
-            d2=load([ea_getearoot,'td_options']);
+            p=ea_prefs('');
+            d2=p.machine.d2;
         end
         
     end
