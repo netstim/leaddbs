@@ -38,12 +38,12 @@ end
 % Check if CortexHiRes.mat and CortexLowRes_*.mat already exists
 files = dir([ptdir '/cortex']); files = files(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {files.name}));
 files = files(~[files.isdir]); files = {files(~cellfun(@isempty , strfind({files.name},'Cortex'))).name};
-overwrite = ~cellfun(@isempty,strfind(filenames,'CortexHiRes.mat'));
-overwrite = overwrite+~cellfun(@isempty,strfind(filenames,'CortexLowRes'));
+overwrite = ~cellfun(@isempty,strfind(files,'CortexHiRes.mat'));
+overwrite = overwrite+~cellfun(@isempty,strfind(files,'CortexLowRes'));
 V = cell(size(overwrite,2)-1);
 if size(overwrite,2)>=2
   for f = 1:size(overwrite,2)-1
-      tmp = strsplit(filenames{f+1},'_');
+      tmp = strsplit(files{f+1},'_');
       V{f} = tmp{2}(1:end-4);
   end 
 end
@@ -90,38 +90,45 @@ else
 end
 
 %% Parse Freesurfer Folder
+
+if ~exist([FsDir '/mri/T1.mgz'],'file')
+    msg = ['Missing: ' FsDir '/mri/T1.mgz'];
+    w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
+    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+elseif ~exist([FsDir '/mri/aseg.mgz'],'file')
+    msg = ['Missing: ' FsDir '/mri/aseg.mgz'];
+    w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
+    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+elseif ~exist([FsDir '/surf/lh.pial'],'file')
+    msg = ['Missing: ' FsDir '/mri/lh.pial'];
+    w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
+    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+elseif ~exist([FsDir '/surf/rh.pial'],'file')
+    msg = ['Missing: ' FsDir '/mri/rh.pial'];
+    w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
+    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+elseif ~exist([FsDir '/label/lh.aparc.a2009s.annot'],'file')
+    msg = ['Missing: ' FsDir '/mri/lh.aparc.a2009s.annot'];
+    w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
+    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+elseif ~exist([FsDir '/label/rh.aparc.a2009s.annot'],'file')
+    msg = ['Missing: ' FsDir '/mri/lh.aparc.a2009s.annot'];
+    w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
+    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+end
+
 MriFile  = [FsDir '/mri/T1.mgz'];
 LhPial   = [FsDir '/surf/lh.pial'];
 RhPial   = [FsDir '/surf/rh.pial'];
-AsegFile = [FsDir '/mri/aseg.mgz'];
-AnnotLH  = [FsDir '/label/lh.aparc.a2009s.annot'];
-AnnotRH  = [FsDir '/label/rh.aparc.a2009s.annot'];
+% AsegFile = [FsDir '/mri/aseg.mgz'];
+% AnnotLH  = [FsDir '/label/lh.aparc.a2009s.annot'];
+% AnnotRH  = [FsDir '/label/rh.aparc.a2009s.annot'];
 % sAtlas.Name = 'Destrieux';
 
-if ~exist(MriFile,'file')
-    msg = ['Choose Freesurfer Folder for ' patientname ' (Missing ' patientname '_FS/mri/T1.mgz)...'];
-    FsDir = ea_uigetdir(ptdir,msg); end
-if ~exist(AsegFile,'file')
-    msg = ['Choose Freesurfer Folder for ' patientname ' (Missing ' patientname '_FS/mri/aseg.mgz)...'];
-    FsDir = ea_uigetdir(ptdir,msg); end
-if ~exist(LhPial,'file')
-    msg = ['Choose Freesurfer Folder for ' patientname ' (Missing ' patientname '_FS/surf/lh.pial)...'];
-    FsDir = ea_uigetdir(ptdir,msg); end
-if ~exist(RhPial,'file')
-    msg = ['Choose Freesurfer Folder for ' patientname ' (Missing ' patientname '_FS/surf/rh.pial)...'];
-    FsDir = ea_uigetdir(ptdir,msg); end
-if ~exist(AnnotLH,'file')
-    msg = ['Choose Freesurfer Folder for ' patientname ' (Missing ' patientname '_FS/label/lh.aparc.a2009s.annot)...'];
-    FsDir = ea_uigetdir(ptdir,msg); end
-if ~exist(AnnotRH,'file')
-    msg = ['Choose Freesurfer Folder for ' patientname ' (Missing ' patientname '_FS/label/rh.aparc.a2009s.annot)...'];
-    FsDir = ea_uigetdir(ptdir,msg); 
-end
-
 % Convert T1.mgz to T1.nii (Freesurfer Dependent)
-if ~exist([FsDir '/mri/T1.nii'],'file')
-    system(['mri_convert -i ' FsDir '/mri/T1.mgz ' -o ' FsDir '/mri/T1.nii -it mgz -ot nii'])
-end
+% if ~exist([FsDir '/mri/T1.nii'],'file')
+%     system(['mri_convert -i ' FsDir '/mri/T1.mgz ' -o ' FsDir '/mri/T1.nii -it mgz -ot nii'])
+% end
     % Notes: need to add PC functionality
     % Notes: need to add ea_libs_helper for Freesurfer compatibility
 
@@ -152,7 +159,7 @@ CortexHiRes.raw.Vertices = [CortexHiRes.raw.Vertices_lh; CortexHiRes.raw.Vertice
 CortexHiRes.raw.Faces = [CortexHiRes.raw.Faces_lh; (CortexHiRes.raw.Faces_rh + length(CortexHiRes.raw.Vertices_lh))]; % Combining Faces
 
 % Reading in MRI parameters
-T1nii=MRIread(fullfile(FsDir,'mri/T1.nii'));
+T1nii=MRIread(MriFile);
 
 % Translating into the appropriate space
 disp('Translating into native space...')
@@ -196,7 +203,7 @@ if strcmp(DownsampleOption,'Yes')
     else 
         response = [];
     end
-    if isempty(V) || ~isempty(response) && ~strcmp(response,{'Cancel','No'})
+    if isempty(V) || ~isempty(response) && ~strcmp(response,{'Cancel'}) && ~strcmp(response,{'No'})
     newNbVertices = str2double(newNbVertices);
     oldNbVertices = size(CortexHiRes.Vertices,1);
     
@@ -214,7 +221,7 @@ if strcmp(DownsampleOption,'Yes')
         CortexLowRes.ptdir = CortexHiRes.ptdir;
         CortexLowRes.fsdir = CortexHiRes.fsdir;
         
-        fprintf('Downsampling Cortex From %d Vertices to %d Vertices...',oldNbVertices,newNbVertices)
+        fprintf('Downsampling Cortex From %d Vertices to %d Vertices...\n',oldNbVertices,newNbVertices)
         [CortexLowRes.Vertices_lh, CortexLowRes.Faces_lh] = ea_downsamplecortex(CortexHiRes.Vertices_lh, CortexHiRes.Faces_lh, nVertHemi, 'reducepath');
         [CortexLowRes.Vertices_rh, CortexLowRes.Faces_rh] = ea_downsamplecortex(CortexHiRes.Vertices_rh, CortexHiRes.Faces_rh, nVertHemi, 'reducepath');
         [CortexLowRes.Vertices, CortexLowRes.Faces] = ea_downsamplecortex(CortexHiRes.Vertices, CortexHiRes.Faces, newNbVertices, 'reducepath');
