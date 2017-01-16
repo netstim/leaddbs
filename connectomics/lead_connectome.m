@@ -103,7 +103,7 @@ ea_initrecentpatients(handles,'subjects');
 
 % update UI:
 try
-    lc=load([ea_getearoot,'connectomics',filesep,'lc_options.mat']);
+    lc=options.prefs.machine.lc;
 catch
     lc=ea_initlcopts(handles.leadfigure);
 end
