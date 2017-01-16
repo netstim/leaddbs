@@ -3,7 +3,7 @@ function ea_compat_data
 if exist([ea_getearoot,'templates',filesep,'mni_hires_t1.nii'],'file');
     movefile([ea_getearoot,'templates'], [ea_getearoot,'templates_temp']);
     mkdir([ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM']);
-    movefile([ea_getearoot,'templates_temp'],[ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM',filesep,'templates']);
+    movefile([ea_getearoot,'templates_temp'],[ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM']);
     
     movefile([ea_getearoot,'atlases'],[ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM',filesep,'atlases']);
     
