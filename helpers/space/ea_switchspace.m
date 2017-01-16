@@ -4,8 +4,9 @@ answ=questdlg('Please be aware that switching the default template space is a cr
 
 if strcmp(answ,'Sure')
    ea_storemachineprefs('space',spacename);
+   close all
+
 end
 
-close all
 
 
