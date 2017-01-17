@@ -22,8 +22,9 @@ options.root=ea_space;
 options.patientname='subj';
 options.prefs=ea_prefs('');
 options.earoot=ea_getearoot;
-% temporarily switch back to MNI 2009b to get warps
-ea_switchspace([],[],fromwhich);
+% temporarily switch back to from space to get warps
+ea_switchspace([],[],fromwhich,'mute');
+[options,presentfiles]=ea_assignpretra(options);
 ea_normalize_spmshoot(options);
 
 

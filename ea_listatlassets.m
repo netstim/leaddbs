@@ -2,6 +2,7 @@ function ea_listatlassets(handles,mninative)
 % mninative==1: MNI space, ==2: native space
 
 options.prefs=ea_prefs('');
+
 as=dir([ea_space(options,'atlases')]);
 
 asc=cell(0);

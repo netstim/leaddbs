@@ -57,11 +57,14 @@ movefile([ea_space,'rthirdstepmask.nii'],[ea_space,'subcortical',filesep,'thirds
 delete([ea_space,'thirdstepmask.nii']); delete([ea_space,'secondstepmask.nii']);
 
 %% 3. Create atlas.nii from selected atlas:
-
-atlassetname=get(handles.atlassetpopup,'String');
-if ~isempty(atlassetname)
-    atlassetname=atlassetname{get(handles.atlassetpopup,'Value')};
-    ea_flattenatlas(atlassetname);
+if ischar(handles)
+    atlassetname=handles;
+else
+    atlassetname=get(handles.atlassetpopup,'String');
+    if ~isempty(atlassetname)
+        atlassetname=atlassetname{get(handles.atlassetpopup,'Value')};
+        ea_flattenatlas(atlassetname);
+    end
 end
 
 %% 4. Create TPM, DARTEL and SHOOT templates:
