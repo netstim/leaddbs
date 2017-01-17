@@ -1,27 +1,23 @@
-function ea_create_tpm_darteltemplate()
+function ea_create_tpm_darteltemplate(mute)
 
 if exist([ea_space,'TPM.nii'],'file') && ~ea_checktpmresolution && exist([ea_space,'.newtpm'],'file')
     return
 end
-
-answ=questdlg('Lead Neuroimaging Suite needs to generate some files needed for the process. This only needs to be done once but will take some additional time. The process you started will be performed afterwards.','Additional files needed','Proceed','Abort','Proceed');
-switch answ
-    case 'Abort'
-        ea_error('Process aborted by user');
+if ~exist('mute','var')
+    answ=questdlg('Lead Neuroimaging Suite needs to generate some files needed for the process. This only needs to be done once but will take some additional time. The process you started will be performed afterwards.','Additional files needed','Proceed','Abort','Proceed');
+    switch answ
+        case 'Abort'
+            ea_error('Process aborted by user');
+    end
 end
 
-matlabbatch{1}.spm.spatial.preproc.channel(1).vols = {[ea_space,'t2.nii,1']};
-matlabbatch{1}.spm.spatial.preproc.channel(1).biasreg = 0.001;
-matlabbatch{1}.spm.spatial.preproc.channel(1).biasfwhm = 60;
-matlabbatch{1}.spm.spatial.preproc.channel(1).write = [0 0];
-matlabbatch{1}.spm.spatial.preproc.channel(2).vols = {[ea_space,'t1.nii,1']};
-matlabbatch{1}.spm.spatial.preproc.channel(2).biasreg = 0.001;
-matlabbatch{1}.spm.spatial.preproc.channel(2).biasfwhm = 60;
-matlabbatch{1}.spm.spatial.preproc.channel(2).write = [0 0];
-matlabbatch{1}.spm.spatial.preproc.channel(3).vols = {[ea_space,'pd.nii,1']};
-matlabbatch{1}.spm.spatial.preproc.channel(3).biasreg = 0.001;
-matlabbatch{1}.spm.spatial.preproc.channel(3).biasfwhm = 60;
-matlabbatch{1}.spm.spatial.preproc.channel(3).write = [0 0];
+load([ea_space,'ea_space_def.mat']);
+for t=1:length(spacedef.templates) 
+    matlabbatch{1}.spm.spatial.preproc.channel(t).vols = {[ea_space,spacedef.templates{t},'.nii,1']};
+    matlabbatch{1}.spm.spatial.preproc.channel(t).biasreg = 0.001;
+    matlabbatch{1}.spm.spatial.preproc.channel(t).biasfwhm = 60;
+    matlabbatch{1}.spm.spatial.preproc.channel(t).write = [0 0];
+end
 matlabbatch{1}.spm.spatial.preproc.tissue(1).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,1']}; % This is correct ? TPM Lorio Draganski to be kept in /templates folder since will be used to generate TPM in each space.
 matlabbatch{1}.spm.spatial.preproc.tissue(1).ngaus = 1;
 matlabbatch{1}.spm.spatial.preproc.tissue(1).native = [1 0];
@@ -42,7 +38,7 @@ matlabbatch{1}.spm.spatial.preproc.tissue(5).tpm = {[ea_getearoot,'templates',fi
 matlabbatch{1}.spm.spatial.preproc.tissue(5).ngaus = 4;
 matlabbatch{1}.spm.spatial.preproc.tissue(5).native = [1 0];
 matlabbatch{1}.spm.spatial.preproc.tissue(5).warped = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(6).tpm = {[ea_space,'TPM_Lorio_Draganski.nii,6']};
+matlabbatch{1}.spm.spatial.preproc.tissue(6).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,6']};
 matlabbatch{1}.spm.spatial.preproc.tissue(6).ngaus = 2;
 matlabbatch{1}.spm.spatial.preproc.tissue(6).native = [1 0];
 matlabbatch{1}.spm.spatial.preproc.tissue(6).warped = [0 0];
@@ -57,32 +53,37 @@ matlabbatch{1}.spm.spatial.preproc.warp.write = [0 0];
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
-delete([ea_space,t2_seg8.mat']); 
-if ~exist([ea_space('dartel')], 'dir')
-    mkdir([ea_space('dartel')]);
+delete([ea_space,spacedef.templates{1},'_seg8.mat']); 
+if ~exist([ea_space,'dartel'], 'dir')
+    mkdir([ea_space,'dartel']);
 end
 for c=1:6
-    movefile([ea_space,'c',num2str(c),'t2.nii'],[ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
+    if c<3
+       copyfile([ea_space,'c',num2str(c),spacedef.templates{1},'.nii'],[ea_space,'c',num2str(c),'mask.nii']);
+    end
+    movefile([ea_space,'c',num2str(c),spacedef.templates{1},'.nii'],[ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
 end
 
 % add atlas
-copyfile([ea_space,'atlas.nii'],[ea_space('dartel'),filesep,'atlas.nii']);
-ea_conformspaceto([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii'],[ea_space('dartel'),filesep,'atlas.nii'],6);
-
-c1=ea_load_nii([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii']);
-atlas=ea_load_nii([ea_space('dartel'),filesep,'atlas.nii']);
-c1.img(atlas.img>0.1)=atlas.img(atlas.img>0.1);
-ea_write_nii(c1);
-c2=ea_load_nii([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',2),'.nii']);
-c2.img(atlas.img>0.1)=0;
-ea_write_nii(c2);
-c3=ea_load_nii([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',3),'.nii']);
-c3.img(atlas.img>0.1)=0;
-ea_write_nii(c3);
+if exist([ea_space,'atlas.nii'],'file')
+    copyfile([ea_space,'atlas.nii'],[ea_space([],'dartel'),filesep,'atlas.nii']);
+    ea_conformspaceto([ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii'],[ea_space([],'dartel'),filesep,'atlas.nii'],6);
+    
+    c1=ea_load_nii([ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii']);
+    atlas=ea_load_nii([ea_space([],'dartel'),filesep,'atlas.nii']);
+    c1.img(atlas.img>0.1)=atlas.img(atlas.img>0.1);
+    ea_write_nii(c1);
+    c2=ea_load_nii([ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',2),'.nii']);
+    c2.img(atlas.img>0.1)=0;
+    ea_write_nii(c2);
+    c3=ea_load_nii([ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',3),'.nii']);
+    c3.img(atlas.img>0.1)=0;
+    ea_write_nii(c3);
+end
 prefs=ea_prefs('');
 
 for c=1:6
-    fina=[ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
+    fina=[ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
     nii=ea_load_nii(fina); % change datatype to something high for reslicing and smoothing.
     nii.dt=[16,0];
     ea_write_nii(nii);
@@ -115,7 +116,7 @@ clear matlabbatch
 
 delete([ea_space,'TPM.mat']);
 
-wd=[ea_space('dartel'),filesep];
+wd=[ea_space([],'dartel'),filesep];
 %gunzip([wd,'dartelmni_6_hires.nii.gz']);
 %spm_file_split([wd,'dartelmni_6_hires.nii']);
 gs=[0,2,3,5,6,8];
@@ -198,8 +199,8 @@ fclose(fid);
 
 
 function ea_addshoot
-if ~exist([ea_space('dartel'),filesep,'shootmni_1.nii'],'file');
-    root=[ea_space('dartel'),filesep];
+if ~exist([ea_space([],'dartel'),filesep,'shootmni_1.nii'],'file');
+    root=[ea_space([],'dartel'),filesep];
     for dt=1:6
         nii=ea_load_nii([root,'dartelmni_',num2str(dt),'.nii']);
 

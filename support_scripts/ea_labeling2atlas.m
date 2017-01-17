@@ -5,7 +5,7 @@ function ea_labeling2atlas(labelname)
 suppress_suff=0; % cut this many characters from each atlas parcel, e.g. to delete "-R" or "-L" suffixes.
 
 earoot=ea_getearoot;
-odir=[earoot,'atlases',filesep,labelname];
+odir=[ea_space([],'atlases'),labelname];
 if ~exist(odir,'file')
     mkdir(odir)
 
@@ -17,10 +17,10 @@ else
     ea_error('Atlas with this name already exists.');
 end
 
-fid=fopen([earoot,'templates',filesep,'labeling',filesep,labelname,'.txt']);
+fid=fopen([ea_space([],'labeling'),labelname,'.txt']);
 A=textscan(fid,'%d %s');
 
-parc=ea_load_nii([earoot,'templates',filesep,'labeling',filesep,labelname,'.nii']);
+parc=ea_load_nii([ea_space([],'labeling'),labelname,'.nii']);
 parc.img=round(parc.img);
 
 ea_dispercent(0,'Iterating atlas components');

@@ -89,8 +89,7 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     atlases.threshold.value=0.5;
 end
 
-mcr=ea_checkmacaque(options);
-
+mcr='';
 if checkrebuild(atlases,options,root,mifix)
 
     %% build iXYZ tables:
@@ -108,7 +107,7 @@ if checkrebuild(atlases,options,root,mifix)
     for nativemni=nm % switch between native and mni space atlases.
         switch nativemni
             case 1
-                root=[options.earoot,mcr];
+                root=[ea_space([],'atlases')];
             case 2
                 root=[options.root,options.patientname,filesep,'atlases',filesep];
         end
