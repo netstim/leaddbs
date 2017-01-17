@@ -34,4 +34,6 @@ end
 if exist([ea_space,'distal.nii'],'file')
    movefile( [ea_space,'distal.nii'],[ea_space,'atlas.nii']);
 end
-
+if exist([ea_space,'TPM_Lorio_Draganski.nii'])
+   movefile([ea_space,'TPM_Lorio_Draganski.nii'],[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii']);
+end
