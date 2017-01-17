@@ -19,4 +19,16 @@ if exist([ea_getearoot,'templates',filesep,'mni_hires_t1.nii'],'file');
     movefile([ea_space,'mni_hires_wires.mat'],[ea_space,'wires.mat']);
 end
 
+if ~exist([ea_space,'norm_mapping.mat'],'file')
+    norm_mapping={{'t1'},{'t1'}
+        {'t2'},{'t2'}
+        {'pd'},{'pd'}
+        {'fa'},{'fa'}
+        {'*'},{'t1'}
+        };
+    templates={'t1','t2','pd','fa'};
+    save([ea_space,'norm_mapping.mat'],'norm_mapping','av_templates');
+    
+end
+
 
