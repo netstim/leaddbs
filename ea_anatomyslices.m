@@ -139,7 +139,7 @@ if togglestates.xyztoggles(2)
         
     else
         [xx,yy,zz]=meshgrid(1:0.5:V{1+usecor}.dim(1),xyzv(2),1:0.5:V{1+usecor}.dim(3));
-        slice=flipud(squeeze((spm_sample_vol(V{1+usecor},squeeze(xx),squeeze(yy),squeeze(zz),2))));
+        slice=flip(flipud(squeeze((spm_sample_vol(V{1+usecor},squeeze(xx),squeeze(yy),squeeze(zz),2)))),1);
     end
     %slice=ea_invert(slice,inverted);
     
