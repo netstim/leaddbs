@@ -65,6 +65,22 @@ if uset1 && ~strcmp(options.primarytemplate,'t1')
     end
 end
 
+% T2
+if uset2 && ~strcmp(options.primarytemplate,'t2')
+    if exist([directory,options.prefs.prenii_unnormalized],'file')
+        disp('Including T1 data for (grey-matter) normalization');
+        to{cnt}=[ea_space(options),'t2.nii'];
+        if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
+            ea_maskimg(options,[directory,options.prefs.prenii_unnormalized],bprfx);
+        end
+        from{cnt}=[directory,bprfx,options.prefs.prenii_unnormalized];
+        weights(cnt)=1.25;
+        metrics{cnt}='MI';
+        cnt=cnt+1;
+    end
+end
+
+
 % PD
 if usepd && ~strcmp(options.primarytemplate,'pd')
     if exist([directory,options.prefs.prenii_unnormalized_pd],'file')

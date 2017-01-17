@@ -10,15 +10,15 @@ switch answ
         ea_error('Process aborted by user');
 end
 
-matlabbatch{1}.spm.spatial.preproc.channel(1).vols = {[ea_space,t2.nii,1']};
+matlabbatch{1}.spm.spatial.preproc.channel(1).vols = {[ea_space,'t2.nii,1']};
 matlabbatch{1}.spm.spatial.preproc.channel(1).biasreg = 0.001;
 matlabbatch{1}.spm.spatial.preproc.channel(1).biasfwhm = 60;
 matlabbatch{1}.spm.spatial.preproc.channel(1).write = [0 0];
-matlabbatch{1}.spm.spatial.preproc.channel(2).vols = {[ea_space,t1.nii,1']};
+matlabbatch{1}.spm.spatial.preproc.channel(2).vols = {[ea_space,'t1.nii,1']};
 matlabbatch{1}.spm.spatial.preproc.channel(2).biasreg = 0.001;
 matlabbatch{1}.spm.spatial.preproc.channel(2).biasfwhm = 60;
 matlabbatch{1}.spm.spatial.preproc.channel(2).write = [0 0];
-matlabbatch{1}.spm.spatial.preproc.channel(3).vols = {[ea_space,pd.nii,1']};
+matlabbatch{1}.spm.spatial.preproc.channel(3).vols = {[ea_space,'pd.nii,1']};
 matlabbatch{1}.spm.spatial.preproc.channel(3).biasreg = 0.001;
 matlabbatch{1}.spm.spatial.preproc.channel(3).biasfwhm = 60;
 matlabbatch{1}.spm.spatial.preproc.channel(3).write = [0 0];
