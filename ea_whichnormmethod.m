@@ -16,12 +16,11 @@ catch
 end
 
 leaddir=ea_getearoot;
-
 switch whichnormmethod
     case 'ea_normalize_spmshoot'
-        template=[leaddir,'templates',filesep,'dartel',filesep,'shootmni_6.nii'];
+        template=[ea_space([],'dartel'),'shootmni_6.nii'];
     case 'ea_normalize_spmdartel'
-        template=[leaddir,'templates',filesep,'dartel',filesep,'dartelmni_6.nii'];
+        template=[ea_space([],'dartel'),'dartelmni_6.nii'];
     case 'ea_normalize_spmnewseg'
         template=[ea_space,'TPM.nii'];
     otherwise
