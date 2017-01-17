@@ -31,4 +31,7 @@ if ~exist([ea_space,'norm_mapping.mat'],'file')
     
 end
 
+if exist([ea_space,'distal.nii'],'file')
+   movefile( [ea_space,'distal.nii'],[ea_space,'atlas.nii']);
+end
 

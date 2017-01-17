@@ -65,19 +65,19 @@ for c=1:6
     movefile([ea_space,'c',num2str(c),'t2.nii'],[ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
 end
 
-% add distal
-copyfile([ea_space,distal.nii'],[ea_space('dartel'),filesep,'distal.nii']);
-ea_conformspaceto([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii'],[ea_space('dartel'),filesep,'distal.nii'],6);
+% add atlas
+copyfile([ea_space,'atlas.nii'],[ea_space('dartel'),filesep,'atlas.nii']);
+ea_conformspaceto([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii'],[ea_space('dartel'),filesep,'atlas.nii'],6);
 
 c1=ea_load_nii([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii']);
-distal=ea_load_nii([ea_space('dartel'),filesep,'distal.nii']);
-c1.img(distal.img>0.1)=distal.img(distal.img>0.1);
+atlas=ea_load_nii([ea_space('dartel'),filesep,'atlas.nii']);
+c1.img(atlas.img>0.1)=atlas.img(atlas.img>0.1);
 ea_write_nii(c1);
 c2=ea_load_nii([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',2),'.nii']);
-c2.img(distal.img>0.1)=0;
+c2.img(atlas.img>0.1)=0;
 ea_write_nii(c2);
 c3=ea_load_nii([ea_space('dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',3),'.nii']);
-c3.img(distal.img>0.1)=0;
+c3.img(atlas.img>0.1)=0;
 ea_write_nii(c3);
 prefs=ea_prefs('');
 
