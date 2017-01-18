@@ -48,7 +48,7 @@ for nativemni=nm % switch between native and mni space atlases.
     
     if ~exist([adir,'atlas_index.mat'],'file')
         
-        atlases=ea_genatlastable([],fileparts(adir),options,mifix);
+        atlases=ea_genatlastable([],fileparts(fileparts(adir)),options,mifix);
     else
         load([adir,'atlas_index.mat']);
         atlases=ea_genatlastable(atlases,fileparts(adir),options,mifix);

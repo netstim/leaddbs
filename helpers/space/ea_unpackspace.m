@@ -2,12 +2,12 @@ function ea_unpackspace
 
 disp(['Unpacking space ',ea_getspace,'...']);
 disp('This could take a while...');
-gunzip([ea_space,'*.nii.gz']);
-delete([ea_space,'*.nii.gz']);
+try gunzip([ea_space,'*.nii.gz']); end
+try delete([ea_space,'*.nii.gz']); end
 load([ea_space,'ea_space_def.mat']);
-ea_genauxspace([],[],templates.defaultatlas);
+ea_genauxspace([],[],spacedef.defaultatlas);
 
-delete([ea_space,'packed']);
+delete([ea_space,'need_build']);
 
 disp('Unpacking done.');
 
