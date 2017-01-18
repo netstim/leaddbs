@@ -60,10 +60,10 @@ guidata(hObject, handles);
  try
     ea_compat_data; 
  end
-ea_checkbuildspace;
 earoot=ea_getearoot;
 
 ea_setpath;
+ea_checkbuildspace;
 
 ea_checkspm;
 
