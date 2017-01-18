@@ -91,6 +91,7 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
 end
 
 mcr='';
+
 if checkrebuild(atlases,options,root,mifix)
 
     %% build iXYZ tables:

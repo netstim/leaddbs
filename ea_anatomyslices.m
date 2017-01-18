@@ -123,19 +123,19 @@ end
 if togglestates.xyztoggles(2)
     
     % check whether second nii is being used:
-    usecor=length(V)>1; % check if explicit coronar volume is available
+    usecor=length(V)>1; % check if explicit coronal volume is available
     if inverted
         [~,slice]=ea_writeplanes(options, togglestates.xyzmm(2),2,V{1+usecor},'off', 0,atlases);
         
-        if V{1}.mat(6)>0
-            slice=flip(permute(double(slice),[2,1,3]),2);
-        else
+%         if V{1}.mat(6)>0
+           %  slice=flip(permute(double(slice),[2,1,3]),2);
+%         else
             slice=permute(double(slice),[2,1,3]);
-        end
+        %end
         
-        if V{1}.mat(11)<0
+        %if V{1}.mat(11)<0
             slice=flip(slice,1);
-        end
+        %end
         
     else
         [xx,yy,zz]=meshgrid(1:0.5:V{1+usecor}.dim(1),xyzv(2),1:0.5:V{1+usecor}.dim(3));
