@@ -250,13 +250,13 @@ else % use fiberset
     end
 
     % seed filename
-    seed=ea_load_nii([ea_space,'labeling',filesep,selectedparc,'.nii']);
+    seed=ea_load_nii([ea_space(options,'labeling'),selectedparc,'.nii']);
     % delete everything but set selected parcellation to 1.
     oseed=seed.img;
     seed.img(:)=0;
     seed.img(round(oseed)==get(handles.matseed,'Value'))=1;
 
-    targetsfile=ea_load_nii([ea_space,'labeling',filesep,selectedparc,'.nii']);
+    targetsfile=ea_load_nii([ea_space(options,'labeling'),selectedparc,'.nii']);
     targetsfile.img(round(targetsfile.img)==get(handles.matseed,'Value'))=0;
     thresh=get(handles.matthresh,'String');
     options.writeoutstats=0;
@@ -350,7 +350,7 @@ function [directory,pdirectory,selectedparc]=ea_cvinitgui(handles,options)
 % parcellation popup:
 
 
-pdirs=dir([ea_space,'labeling',filesep,'*.nii']);
+pdirs=dir([ea_space(options,'labeling'),'*.nii']);
 cnt=1;
 
 for pdir=1:length(pdirs)
@@ -439,12 +439,12 @@ if get(handles.matmodality,'Value')>length(get(handles.matmodality,'String'));
 end
 
 % parcellation scheme
-aID = fopen([ea_space,'labeling',filesep,selectedparc,'.txt']);
+aID = fopen([ea_space(options,'labeling'),selectedparc,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
 
 % store selected parcellation in figure:
 % store pV and pX in figure
-pV=spm_vol([ea_space,'labeling',filesep,selectedparc,'.nii']);
+pV=spm_vol([ea_space(options,'labeling'),selectedparc,'.nii']);
 pX=spm_read_vols(pV);
 setappdata(handles.convis,'pV',pV);
 setappdata(handles.convis,'pX',pX);

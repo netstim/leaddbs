@@ -93,7 +93,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,option
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w1',options.prefs.tranii_unnormalized,',1'];
     [options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[ea_space,'t2.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[ea_space,'subcortical',filesep,'secondstepmask.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[ea_space(options,'subcortical'),'secondstepmask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smosrc = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smoref = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.regtype = 'mni';
@@ -123,7 +123,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,optio
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'w2w1c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.tranii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[ea_space,'t2.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[ea_space,'subcortical',filesep,'thirdstepmask.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[ea_space(options,'subcortical'),'thirdstepmask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smosrc = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smoref = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.regtype = 'mni';

@@ -21,7 +21,7 @@ vizz=0;
 %% create CM
 display('Initializing structural CM.');
 
-aID = fopen([ea_space,'labeling',filesep,options.lc.general.parcellation,'.txt']);
+aID = fopen([ea_space(options,'labeling'),options.lc.general.parcellation,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
 d=length(atlas_lgnd{1}); % how many ROI.
 DTI_CM=zeros(d);

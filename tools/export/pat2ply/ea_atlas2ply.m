@@ -6,8 +6,8 @@ end
 cnt=1;
 earoot=ea_getearoot;
 for atl=1:length(atlasnames)
-    
-    load([earoot,'atlases',filesep,atlasnames{atl},filesep,'atlas_index.mat']);
+
+    load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
     for side=1:2
     for mesh=1:length(atlases.names)
         cfv(cnt).vertices=atlases.fv{mesh,side}.vertices;

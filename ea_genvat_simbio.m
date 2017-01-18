@@ -92,7 +92,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
 
     %% convert trajectory mm2vox
 
-    V=spm_vol([options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
+    V=spm_vol([ea_space(options,'atlases'),options.atlasset,filesep,'gm_mask.nii']);
     trajmm=[itraj,ones(length(itraj),1)];
     trajvox=V.mat\trajmm';
     trajvox=trajvox(1:3,:)';
@@ -108,7 +108,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
 
     %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
 
-    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,modelwidth,150,1); % set to 250 / 400 this will result in ~10x10x10 mm.
+    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[ea_space(options,'atlases'),options.atlasset,filesep,'gm_mask.nii'],0,modelwidth,150,1); % set to 250 / 400 this will result in ~10x10x10 mm.
     cimat(isnan(cimat))=0; % for out of FOV values.
 
     mat=mat';
@@ -275,7 +275,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
         disp('Done. Estimating diffusion signal based on fibertracts...');
         signal=ea_ftr2Sigmaps(ftr,ten);
         disp('Done. Calculating Tensors...');
-        reftemplate=[ea_space,'dartel',filesep,'dartelmni_1.nii,2'];
+        reftemplate=[ea_space(options,'dartel'),'dartelmni_1.nii,2'];
         Vsig=spm_vol(reftemplate);
         for i=1:size(signal,4);
             Vsig.fname=[options.root,options.patientname,filesep,'headmodel',filesep,'dti_',num2str(i),'.nii'];

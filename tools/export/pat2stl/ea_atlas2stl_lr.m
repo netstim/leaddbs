@@ -5,8 +5,8 @@ if ~iscell(atlasnames)
 end
 earoot=ea_getearoot;
 for atl=1:length(atlasnames)
-    
-    load([earoot,'atlases',filesep,atlasnames{atl},filesep,'atlas_index.mat']);
+
+    load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
     for side=1:2
         cnt=1;
         clear cfv
@@ -17,18 +17,18 @@ for atl=1:length(atlasnames)
         if isempty(cfv(cnt).facevertexcdata) % fiber atlas
             cfv(cnt).facevertexcdata=repmat(atlases.colors(mesh),size(cfv(cnt).faces,1),1);
         end
-        
+
         cnt=cnt+1;
     end
-    
+
     cfv=ea_concatfv(cfv);
-    
+
     cfv=ea_mapcolvert2face(cfv);
-    
+
     [pth,fn,ext]=fileparts(ofn);
     sofn=fullfile(pth,[fn,'_',num2str(side),ext]);
     ea_stlwrite(sofn,cfv,'FACECOLOR',cfv.facevertexcdata);
-    
+
     end
 end
 

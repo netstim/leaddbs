@@ -68,7 +68,7 @@ guidata(hObject, handles);
 options.earoot=ea_getearoot;
 options.prefs=ea_prefs('');
 setappdata(handles.leadfigure,'earoot',options.earoot);
-as=dir([options.earoot,'atlases',filesep]);
+as=dir([ea_space(options,'atlases')]);
 asc=cell(0);
 cnt=1;
 for i=1:length(as)
@@ -1000,7 +1000,7 @@ for pt=selection
     options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
     options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
     options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
-    try 
+    try
         options.d3.isomatrix=M.isomatrix;
     catch
         options.d3.isomatrix={};
@@ -1127,7 +1127,7 @@ for pt=selection
         end
     end
     close(resultfig);
-    
+
 
     if processlocal % gather stats and recos to M
         load([M.ui.groupdir,options.patientname,filesep,'ea_stats']);
@@ -1729,11 +1729,11 @@ options.d3.elrendering=M.ui.elrendering;
 options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
 options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
 options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
-try options.d3.isomatrix=M.isomatrix; 
+try options.d3.isomatrix=M.isomatrix;
 catch
     options.d3.isomatrix={};
 end
-try options.d3.isomatrix_name=M.isomatrix_name; 
+try options.d3.isomatrix_name=M.isomatrix_name;
 catch
     options.d3.isomatrix_name={};
 end
@@ -1776,9 +1776,9 @@ if options.d3.showisovolume || options.expstatvat.do % regressors be used ? iter
         options.d3.isomatrix_name=allisonames{reg};
         M.isomatrix=allisomatrices{reg};
         M.isomatrix_name=allisonames{reg};
-        
+
         try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); end
-        
+
         if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
             ea_refresh_lg(handles);
             disp('Saving data...');
@@ -1786,7 +1786,7 @@ if options.d3.showisovolume || options.expstatvat.do % regressors be used ? iter
             save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
             disp('Done.');
         end
-        
+
         % export coordinate-mapping
         if options.d3.showisovolume % export to nifti volume
             ea_exportisovolume(M.elstruct(get(handles.patientlist,'Value')),options);
@@ -1795,7 +1795,7 @@ if options.d3.showisovolume || options.expstatvat.do % regressors be used ? iter
         if options.expstatvat.do % export to nifti volume
             ea_exportvatmapping(M,options,handles);
         end
-        
+
         ea_out2d(M,options,handles);
     end
 else

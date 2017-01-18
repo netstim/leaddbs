@@ -10,8 +10,7 @@ clc
 % HarvardOxford-cort-maxprob-thr0-1mm.nii
 % HarvardOxford-sub-maxprob-thr0-1mm.nii
 
-leaddir=[ea_getearoot];
-mkdir([leaddir,'atlases',filesep,'Depression']);
+mkdir([ea_space([],'atlases'),'Depression']);
 
 for region=[27,29,28,33]
     switch region
@@ -29,11 +28,11 @@ for region=[27,29,28,33]
 
             reg='FOC';
     end
-        mkdir([leaddir,'atlases',filesep,'Depression',filesep,str]);
+        mkdir([ea_space([],'atlases'),'Depression',filesep,str]);
 
         matlabbatch{1}.spm.util.imcalc.input = {['HarvardOxford-cort-maxprob-thr50-1mm.nii,1']};
         matlabbatch{1}.spm.util.imcalc.output = [reg,'.nii'];
-        matlabbatch{1}.spm.util.imcalc.outdir = {[leaddir,'atlases',filesep,'Depression',filesep,str,filesep]};
+        matlabbatch{1}.spm.util.imcalc.outdir = {[ea_space([],'atlases'),'Depression',filesep,str,filesep]};
         matlabbatch{1}.spm.util.imcalc.expression = ['i1==',num2str(region)];
         matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
         matlabbatch{1}.spm.util.imcalc.options.mask = 0;
@@ -59,10 +58,10 @@ for lr=[26,58] % accumbens
             str='rh';
     end
 
-        mkdir([leaddir,'atlases',filesep,'Depression',filesep,str]);
+        mkdir([ea_space([],'atlases'),'Depression',filesep,str]);
         matlabbatch{1}.spm.util.imcalc.input = {['HarvardOxford-sub-maxprob-thr50-1mm.nii,1']};
         matlabbatch{1}.spm.util.imcalc.output = ['N_Acc','.nii'];
-        matlabbatch{1}.spm.util.imcalc.outdir = {[leaddir,'atlases',filesep,'Depression',filesep,str,filesep]};
+        matlabbatch{1}.spm.util.imcalc.outdir = {[ea_space([],'atlases'),'Depression',filesep,str,filesep]};
         matlabbatch{1}.spm.util.imcalc.expression = ['i1==',num2str(lr)];
         matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
         matlabbatch{1}.spm.util.imcalc.options.mask = 0;

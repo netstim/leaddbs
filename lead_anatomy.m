@@ -81,8 +81,10 @@ if get(handles.tdbackdrop,'Value')>length(backdrops)
     set(handles.tdbackdrop,'Value',1);
 end
 
+options.prefs=ea_prefs('');
+
 % load atlassets
-as=dir([earoot,'atlases',filesep]);
+as=dir(ea_space(options,'atlases'));
 asc=cell(0);
 cnt=1;
 for i=1:length(as)
@@ -91,10 +93,9 @@ for i=1:length(as)
     cnt=cnt+1;
     end
 end
-options.prefs=ea_prefs('');
 
 % load atlassets
-ea_listatlassets(handles,1); 
+ea_listatlassets(handles,1);
 
 set(hObject,'Color',[1 1 1]);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
@@ -124,11 +125,11 @@ ea_processguiargs(handles,varargin)
 
     %% add tools menu
     ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'});
-    
+
 
 handles.prod='anatomy';
 ea_firstrun(handles);
-    
+
 
 
 % UIWAIT makes lead_anatomy wait for user response (see UIRESUME)
@@ -136,7 +137,7 @@ ea_firstrun(handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = lead_anatomy_OutputFcn(hObject, eventdata, handles) 
+function varargout = lead_anatomy_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -267,7 +268,7 @@ set(handles.xyzslice,'String','z = ');
     case 2
 set(handles.xyzslice,'String','y = ');
     case 3
-set(handles.xyzslice,'String','x = ');        
+set(handles.xyzslice,'String','x = ');
 end
 
 % --- Executes during object creation, after setting all properties.

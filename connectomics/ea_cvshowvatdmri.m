@@ -48,7 +48,7 @@ end
             end
         end
 
-        targetsfile=[ea_space,'labeling',filesep,selectedparc,'.nii'];
+        targetsfile=[ea_space(options,'labeling'),selectedparc,'.nii'];
 
         options.writeoutstats=1;
         options.writeoutpm=1;

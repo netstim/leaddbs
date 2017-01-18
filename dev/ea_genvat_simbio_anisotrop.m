@@ -54,7 +54,7 @@ if ea_headmodel_changed(options,side,elstruct)
     end
 
     %% convert trajectory mm2vox
-    V=spm_vol([options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
+    V=spm_vol([ea_space(options,'atlases'),options.atlasset,filesep,'gm_mask.nii']);
     trajmm=[itraj,ones(length(itraj),1)];
     trajvox=V.mat\trajmm';
     trajvox=trajvox(1:3,:)';
@@ -63,7 +63,7 @@ if ea_headmodel_changed(options,side,elstruct)
 
     %% we will now produce a cubic headmodel that is aligned around the electrode using lead dbs:
 
-    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,50,70,1); % this will result in ~10x10x10 mm.
+    [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[ea_space(options,'atlases'),options.atlasset,filesep,'gm_mask.nii'],0,50,70,1); % this will result in ~10x10x10 mm.
     mat=mat';
     mkdir([options.root,options.patientname,filesep,'headmodel']);
     Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);

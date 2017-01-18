@@ -1,7 +1,7 @@
 function ea_norm_ptspecific_atl(options)
 
 % troot=[options.earoot,'templates',filesep,'segment',filesep];
-% aroot=[options.earoot,'atlases',filesep,options.atlasset,filesep];
+% aroot=[ea_space(options,'atlases'),options.atlasset,filesep];
 proot=[options.root,options.patientname,filesep];
 
 force=0; % always re-process..
@@ -20,10 +20,10 @@ mkdir([proot,'atlases',filesep,'mni',filesep,options.atlasset,filesep,'mixed']);
 mkdir([proot,'atlases',filesep,'mni',filesep,options.atlasset,filesep,'midline']);
 
 
-    if ~exist([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'file')
+    if ~exist([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat'],'file')
         atlases=ea_genatlastable([],ea_space('atlases'),options);
     else
-        load([options.earoot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
+        load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
         atlases=ea_genatlastable(atlases,ea_space('atlases'),options);
     end
 

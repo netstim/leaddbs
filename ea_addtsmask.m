@@ -6,7 +6,7 @@ if ~exist([options.root,options.patientname,filesep,'bgmsk.nii'],'file')
 
     copyfile([ea_space(options,'space'),options.primarytemplate,'.nii'],[options.root,options.patientname,filesep,'tmp.nii']);
     copyfile([ea_space(options,'subcortical'),'secondstepmask.nii'],[options.root,options.patientname,filesep,'bgmsk.nii']);
-    % copyfile([ea_space,'subcortical',filesep,'thirdstepmask.nii'],[options.root,options.patientname,filesep,'bgmsk2.nii']);
+    % copyfile([ea_space(options,'subcortical'),'thirdstepmask.nii'],[options.root,options.patientname,filesep,'bgmsk2.nii']);
 
     if strfind(options.coregmr.method,' + Subcortical Refine')
         options.coregmr.method=strrep(options.coregmr.method,' + Subcortical Refine','');

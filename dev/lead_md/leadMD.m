@@ -57,16 +57,16 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-earoot=[ea_getearoot];
-
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 set(handles.reviewtab,'visible','off');
 set(handles.importtab,'visible','on');
 set(handles.vistab,'visible','off');
 
+options.prefs=ea_prefs('');
+
 % load atlassets
-as = dir([earoot,'atlases',filesep]);
+as = dir(ea_space(options,'atlases'));
 asc=cell(0);
 cnt=1;
 for i=1:length(as)
@@ -75,7 +75,6 @@ for i=1:length(as)
         cnt=cnt+1;
     end
 end
-options.prefs=ea_prefs('');
 
 excludes={'.','..'};
 asc(ismember(asc,excludes))=[];

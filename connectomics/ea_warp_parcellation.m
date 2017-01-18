@@ -18,14 +18,14 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
         case ea_getantsnormfuns
 
             ea_ants_applytransforms(options, ...
-                {[ea_space,'labeling',filesep,options.lc.general.parcellation,'.nii']}, ...
+                {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']}, ...
                 {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},...
                 1,'','','GenericLabel');
 
         case ea_getfslnormfuns
 
             ea_fsl_applytransforms(options, ...
-                {[ea_space,'labeling',filesep,options.lc.general.parcellation,'.nii']}, ...
+                {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']}, ...
                 {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},...
                 1,'','','nn');
 
@@ -36,7 +36,7 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
 
                     matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
                     matlabbatch{1}.spm.util.defs.ofname = '';
-                    matlabbatch{1}.spm.util.defs.fnames = {[ea_space,'labeling',filesep,options.lc.general.parcellation,'.nii,1']};
+                    matlabbatch{1}.spm.util.defs.fnames = {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii,1']};
                     matlabbatch{1}.spm.util.defs.savedir.saveusr = {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep]};
                     matlabbatch{1}.spm.util.defs.interp = 0;
                     spm_jobman('run',{matlabbatch});
@@ -45,7 +45,7 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
                 case 'SPM12'
 
                     matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
-                    matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[ea_space,'labeling',filesep,options.lc.general.parcellation,'.nii']};
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']};
                     matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep]};
                     matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 0;
                     matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;

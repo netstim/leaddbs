@@ -23,15 +23,15 @@ subdirec=[options.root,options.patientname,filesep];
 
 %% step 1, warp DISTAL back to each peer brain
 earoot=ea_getearoot;
-atlasbase=[earoot,'atlases',filesep,atlastouse,filesep];
+atlasbase=[ea_space(options,'atlases'),atlastouse,filesep];
 for peer=1:length(peerfolders)
-    
+
     peerdirec=[peerfolders{peer},filesep];
     poptions=options;
     [poptions.root,poptions.patientname]=fileparts(peerfolders{peer});
     poptions.root=[poptions.root,filesep];
     poptions=ea_assignpretra(poptions);
-    
+
     %             mkdir([peerdirec,'MAGeT']);
     %             mkdir([peerdirec,'MAGeT',filesep,'atlases']);
     %             mkdir([peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse]);
@@ -47,64 +47,64 @@ for peer=1:length(peerfolders)
     mkdir([subdirec,'MAGeT',filesep,'atlasreceives',filesep,poptions.patientname,filesep,atlastouse,filesep,'rh']);
     mkdir([subdirec,'MAGeT',filesep,'atlasreceives',filesep,poptions.patientname,filesep,atlastouse,filesep,'midline']);
     mkdir([subdirec,'MAGeT',filesep,'atlasreceives',filesep,poptions.patientname,filesep,atlastouse,filesep,'mixed']);
-    
+
     satlasbase=[subdirec,'MAGeT',filesep,'atlasreceives',filesep,poptions.patientname,filesep,atlastouse,filesep];
-    
+
     load([atlasbase,'atlas_index.mat']);
     cnt=1;
     for atlas=1:length(atlases.names)
         % warp atlas to peer
-        
+
         switch atlases.types(atlas)
             case 1 % LH only
                 froms{cnt}=ea_niigz([atlasbase,'lh',filesep,atlases.names{atlas}]);
                 sub_tos{cnt}=ea_niigz([satlasbase,'lh',filesep,atlases.names{atlas}]);
-                
+
                 cnt=cnt+1;
             case 2 % RH
                 froms{cnt}=ea_niigz([atlasbase,'rh',filesep,atlases.names{atlas}]);
                 sub_tos{cnt}=ea_niigz([satlasbase,'rh',filesep,atlases.names{atlas}]);
-                
+
                 cnt=cnt+1;
             case 3 % both RH / LH present
                 froms{cnt}=ea_niigz([atlasbase,'lh',filesep,atlases.names{atlas}]);
                 sub_tos{cnt}=ea_niigz([satlasbase,'lh',filesep,atlases.names{atlas}]);
-                
+
                 froms{cnt+1}=ea_niigz([atlasbase,'rh',filesep,atlases.names{atlas}]);
                 sub_tos{cnt+1}=ea_niigz([satlasbase,'rh',filesep,atlases.names{atlas}]);
-                
+
                 cnt=cnt+2;
             case 4 % Mixed
                 froms{cnt}=ea_niigz([atlasbase,'mixed',filesep,atlases.names{atlas}]);
                 sub_tos{cnt}=ea_niigz([satlasbase,'mixed',filesep,atlases.names{atlas}]);
-                
+
                 cnt=cnt+1;
             case 5 % Midline
                 froms{cnt}=ea_niigz([atlasbase,'midline',filesep,atlases.names{atlas}]);
                 sub_tos{cnt}=ea_niigz([satlasbase,'midline',filesep,atlases.names{atlas}]);
                 cnt=cnt+1;
         end
-        
+
     end
-    
-    
+
+
     %ea_ants_applytransforms(poptions,froms,tos,1,[peerdirec,poptions.prefs.prenii_unnormalized]);
-    
-    
+
+
     %% step 2, generate warps from MNI via peers to the selected patient brain
-    
+
     if ~exist([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz'],'file') || reforce
         [~,peerpresentfiles]=ea_assignpretra(poptions);
         [~,subpresentfiles]=ea_assignpretra(options);
-  
+
         [~,presentinboth]=ismember(subpresentfiles,peerpresentfiles);
         subpresentfiles=subpresentfiles(logical(presentinboth));
         % check the other way:
         [~,presentinboth]=ismember(peerpresentfiles,subpresentfiles);
         peerpresentfiles=peerpresentfiles(logical(presentinboth));
-        
+
         if ~isequal(subpresentfiles,peerpresentfiles) % then I did something wrong.
-        
+
         else
             presentfiles=subpresentfiles;
             clear subpresentfiles peerpresentfiles
@@ -112,44 +112,44 @@ for peer=1:length(peerfolders)
         if isempty(presentfiles)
             ea_error(['Please supply a peer/subject with valid anatomy files: ',poptions.patientname,'/',options.patientname,'.']);
         end
-        clear sptos spfroms metrics weights %clear all variables, if not, the last image file will be transferred onto the next peer 
+        clear sptos spfroms metrics weights %clear all variables, if not, the last image file will be transferred onto the next peer
         for anatfi=1:length(presentfiles)
             spfroms{anatfi}=[peerdirec,presentfiles{anatfi}];
             sptos{anatfi}=[subdirec,presentfiles{anatfi}];
             metrics{anatfi}='MI';
         end
         weights=repmat(1.5,length(presentfiles),1);
-        
+
         % add FA if present ? add to beginning since will use last entry to
         % converge
         if exist([subdirec,options.prefs.fa2anat],'file') && exist([peerdirec,options.prefs.fa2anat],'file')
             spfroms=[{[peerdirec,options.prefs.fa2anat]},spfroms];
             sptos=[{[subdirec,options.prefs.fa2anat]},sptos];
-            
+
             weights=[0.5;weights];
             metrics=[{'MI'},metrics];
-            
+
         end
-        
+
         defoutput=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname];
         if ~exist([subdirec,'MAGeT',filesep,'warpreceives',filesep],'file')
             mkdir([subdirec,'MAGeT',filesep,'warpreceives',filesep]);
         end
-        
-       
-        
+
+
+
         ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,metrics,options);
         delete(ea_niigz([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'])); % we only need the warp
         delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
-   
+
     % Now export composite transform from MNI -> Peer -> Subject
-        
+
         if ispc
             sufx='.exe';
         else
             sufx=computer('arch');
         end
-        
+
         antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
         prenii=ea_niigz([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
         icmd=[antsApply,' -r ',ea_path_helper(prenii),...
@@ -165,14 +165,14 @@ for peer=1:length(peerfolders)
         delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5']); % we dont need the inverse warp
 
     end
-    
-    
+
+
     %% step 3: warp all atlas nuclei from MNI via peer to sub
-    
+
     %if ~exist([peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse],'file') % assume the work has been done already
     transformfile=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz'];
     ea_ants_applytransforms(poptions,froms,sub_tos,0,[subdirec,presentfiles{1}],transformfile);
-    
+
     % gather all files for majority voting
     warpednuclei{peer}=sub_tos;
 end
@@ -204,7 +204,7 @@ for atlas=1:length(warpednuclei{peer})
    % makes the result more conservative)
    % X(X>0)=1;
     X=mean(X,4);
-    
+
     X=X/max(X(:));
    % X(X<0.25)=0; %defines sensitivitiy of majority voting
    % X(X>0)=1;
@@ -221,7 +221,7 @@ for atlas=1:length(warpednuclei{peer})
     else
         AllX=AllX+X;
     end
-    
+
     clear X
     ea_write_nii(nii);
     ea_crop_nii(nii.fname);
@@ -245,12 +245,12 @@ delete(nii.fname);
 
 if strcmp(options.prefs.dev.profile,'se')
     ; % do siobhanspecific stuff (here do nothing)
-else 
+else
     ea_normalize_ants_multimodal(options,1); % do general user specific stuff, here --> performs normalization with
 % DISTAL as anchorpoint, commented when segmentation is wanted and not
 % normalization, also some results of this normalization are off
 end
-   
+
 
 
 function ea_writecompositewarp(transforms)

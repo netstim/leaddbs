@@ -1,13 +1,13 @@
 function ML=cv_build_graph_fig(resultfig,directory,selectedparc,handles,options)
 
 % read in atlas structures:
-aID = fopen([ea_space,'labeling',filesep,selectedparc,'.txt']);
+aID = fopen([ea_space(options,'labeling'),selectedparc,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
 
 
 D=length(atlas_lgnd{2});
 
-parc=ea_load_nii([ea_space,'labeling',filesep,selectedparc,'.nii']);
+parc=ea_load_nii([ea_space(options,'labeling'),selectedparc,'.nii']);
 
 % build centroid mesh
 parc.img=round(parc.img);

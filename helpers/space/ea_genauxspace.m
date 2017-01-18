@@ -52,8 +52,8 @@ clear matlabbatch
 
 %% 2. Create "subcortical" folder:
 mkdir([ea_space,'subcortical']);
-movefile([ea_space,'rsecondstepmask.nii'],[ea_space,'subcortical',filesep,'secondstepmask.nii']);
-movefile([ea_space,'rthirdstepmask.nii'],[ea_space,'subcortical',filesep,'thirdstepmask.nii']);
+movefile([ea_space,'rsecondstepmask.nii'],[ea_space(options,'subcortical'),'secondstepmask.nii']);
+movefile([ea_space,'rthirdstepmask.nii'],[ea_space(options,'subcortical'),'thirdstepmask.nii']);
 delete([ea_space,'thirdstepmask.nii']); delete([ea_space,'secondstepmask.nii']);
 
 %% 3. Create atlas.nii from selected atlas:

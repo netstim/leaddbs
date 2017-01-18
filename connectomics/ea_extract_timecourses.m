@@ -300,7 +300,7 @@ if vizz
 end
 
 %% average gmtc over ROI
-aID = fopen([ea_space,'labeling',filesep,options.lc.general.parcellation,'.txt']);
+aID = fopen([ea_space(options,'labeling'),options.lc.general.parcellation,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
 dimensionality=length(atlas_lgnd{1}); % how many ROI.
 

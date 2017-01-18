@@ -143,10 +143,10 @@ end
 
 function ea_export_cmeasure(C,exstr,mode,options)
 
-V=spm_vol([ea_space,'labeling',filesep,options.lc.general.parcellation,'.nii']);
+V=spm_vol([ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']);
 X=spm_read_vols(V);
 X=round(X);
-aID = fopen([ea_space,'labeling',filesep,options.lc.general.parcellation,'.txt']);
+aID = fopen([ea_space(options,'labeling'),options.lc.general.parcellation,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
 d=length(atlas_lgnd{1}); % how many ROI.
 Y=X;
