@@ -62,7 +62,7 @@ set(handles.leadfigure,'name','Lead-Connectome','color','w');
 
 % add parcellation atlases to menu:
 ll=dir([ea_space([],'labeling'),'*.nii']);
-
+parcellation={};
 for lab=1:length(ll)
     [~,n]=fileparts(ll(lab).name);
     parcellation{lab}=n;
