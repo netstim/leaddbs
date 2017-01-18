@@ -110,7 +110,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
 
     [cimat,~,mat]=ea_sample_cuboid(trajvox,options,[options.earoot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii'],0,modelwidth,150,1); % set to 250 / 400 this will result in ~10x10x10 mm.
     cimat(isnan(cimat))=0; % for out of FOV values.
-    
+
     mat=mat';
     mkdir([options.root,options.patientname,filesep,'headmodel']);
     Vexp=ea_synth_nii([options.root,options.patientname,filesep,'headmodel',filesep,'structural',num2str(side),'.nii'],mat,[2,0],cimat);
@@ -275,7 +275,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
         disp('Done. Estimating diffusion signal based on fibertracts...');
         signal=ea_ftr2Sigmaps(ftr,ten);
         disp('Done. Calculating Tensors...');
-        reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii,2'];
+        reftemplate=[ea_space,'dartel',filesep,'dartelmni_1.nii,2'];
         Vsig=spm_vol(reftemplate);
         for i=1:size(signal,4);
             Vsig.fname=[options.root,options.patientname,filesep,'headmodel',filesep,'dti_',num2str(i),'.nii'];
@@ -311,7 +311,7 @@ if ea_headmodel_changed(options,side,S,elstruct)
     end
 
     try
-        
+
             vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         %vol=ea_ft_headmodel_simbio(mesh,'conductivity',1000*[0.33 0.33 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
@@ -441,7 +441,7 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
     norm_gradient(ixx,:)=pols;
     %
     vatgrad(side).qx=norm_gradient(:,1); vatgrad(side).qy=norm_gradient(:,2); vatgrad(side).qz=norm_gradient(:,3);
-    
+
     try
         setappdata(resultfig,'vatgrad',vatgrad);
     end

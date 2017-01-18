@@ -66,7 +66,7 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,optio
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unnormalized,',1'];
     [options.root,options.prefs.patientdir,filesep,'c1c2mask.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires_t2.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[ea_space,'t2.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = '';
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smosrc = 10;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smoref = 10;
@@ -92,8 +92,8 @@ matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,optio
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w1',options.prefs.tranii_unnormalized,',1'];
     [options.root,options.prefs.patientdir,filesep,'w1c1c2mask.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires_t2.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[options.earoot,filesep,'templates',filesep,'schoenecker',filesep,'secondstepmask.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[ea_space,'t2.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[ea_space,'subcortical',filesep,'secondstepmask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smosrc = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smoref = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.regtype = 'mni';
@@ -122,8 +122,8 @@ clear matlabbatch jobs;
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.source = {[options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.tranii_unnormalized,',1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.wtsrc = {[options.root,options.prefs.patientdir,filesep,'w2w1c1c2mask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {[options.root,options.prefs.patientdir,filesep,'w2w1',options.prefs.tranii_unnormalized,',1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[options.earoot,filesep,'templates',filesep,'mni_hires_t2.nii,1']};
-matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[options.earoot,filesep,'templates',filesep,'schoenecker',filesep,'thirdstepmask.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.template = {[ea_space,'t2.nii,1']};
+matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.weight = {[ea_space,'subcortical',filesep,'thirdstepmask.nii,1']};
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smosrc = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.smoref = 8;
 matlabbatch{1}.spm.spatial.normalise.estwrite.eoptions.regtype = 'mni';
@@ -262,7 +262,7 @@ for export=2:3
         case 3
             outf=options.prefs.cornii;
     end
-    matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
+    matlabbatch{1}.spm.util.imcalc.input = {[ea_space,'bb.nii,1'];
         [options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1'];
         [options.root,options.prefs.patientdir,filesep,'wc',options.prefs.cornii_unnormalized,',1']};
     matlabbatch{1}.spm.util.imcalc.output = outf;
@@ -278,7 +278,7 @@ for export=2:3
 
     catch % only tra present..
         try
-            matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
+            matlabbatch{1}.spm.util.imcalc.input = {[ea_space,'bb.nii,1'];
                 [options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized,',1']};
             matlabbatch{1}.spm.util.imcalc.output = outf;
             matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.prefs.patientdir,filesep]};

@@ -129,30 +129,30 @@ if apply % update elvis
         set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
         set(handles.matseed,'ForegroundColor',[0,0,0]);
     end
-    
+
     %% now show results
     if get(handles.vizvat,'Value'); % show voxel-level results
         ea_cvshowvatresults(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
     else
         ea_deletePL(resultfig,'PL','vat');
     end
-    
+
     if get(handles.vizgraph,'Value'); % show voxel-level results
         ea_cvshowvoxresults(resultfig,directory,filesare,handles,pV,selectedparc,options);
     end
-    
+
     if get(handles.vizmat,'Value'); % show seed-based-connectivity results
-        
+
         ea_cvshowseedbasedresults(resultfig,directory,pV,pX,selectedparc,handles,options);
     else
         ea_deletePL(resultfig,'PL','mat');
     end
-    
-    
+
+
     if get(handles.wmatedges,'Value') || get(handles.wmatnodes,'Value'); % show matrix-level results
         ea_cvshowmatresults(resultfig,directory,selectedparc,handles,options);
     end
-    
+
     if (get(handles.vizmat,'Value') || get(handles.vizvat,'Value')) && get(handles.timecircle,'Value') && strcmp(get(handles.timecircle,'Enable'),'on') % cycle over time..
         pause(0.1);
         refreshcv(handles,0,1);
@@ -240,7 +240,7 @@ if ~isempty(strfind(matmodality,'_CM')) || ~isempty(strfind(matmodality,'_tc'))
     ea_deletePL(resultfig,'PL','mat');
     ea_cvshowmatresultsCMTC(resultfig,directory,pV,pX,handles,options);
 else % use fiberset
-    
+
     % fibers filename
     switch matmodality
         case 'Patient-specific fiber tracts'
@@ -248,32 +248,32 @@ else % use fiberset
         otherwise
             fibersfile=[ea_getconnectomebase('dmri'),matmodality,'.mat'];
     end
-    
+
     % seed filename
-    seed=ea_load_nii([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+    seed=ea_load_nii([ea_space,'labeling',filesep,selectedparc,'.nii']);
     % delete everything but set selected parcellation to 1.
     oseed=seed.img;
     seed.img(:)=0;
     seed.img(round(oseed)==get(handles.matseed,'Value'))=1;
-    
-    targetsfile=ea_load_nii([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+
+    targetsfile=ea_load_nii([ea_space,'labeling',filesep,selectedparc,'.nii']);
     targetsfile.img(round(targetsfile.img)==get(handles.matseed,'Value'))=0;
     thresh=get(handles.matthresh,'String');
     options.writeoutstats=0;
     options.writeoutpm=1;
-    
-    
+
+
     [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seed,targetsfile,thresh,'mat');
-    
+
     if ~ret % something has changed since last time.
         ea_deletePL(resultfig,'PL','mat');
-        
+
         [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seed,targetsfile,thresh,1,options,'',changedstates,'mat',get(handles.vizmat_regs,'Value'),get(handles.vizmat_labs,'Value'));
         set(handles.matthreshis,'String',num2str(thresh));
-        
+
     end
-    
-    
+
+
 end
 
 
@@ -289,11 +289,11 @@ CM=eval(['CM.',fn{1},';']);
 if ~isempty(strfind(mms{get(handles.matmodality,'Value')},'_tc'))
     % timecourses selected: need to create a CM first. In this case, the variable CM is
     % not a connectivity matrix but time-courses!
-    
+
     timedim=size(CM,1);
     tiwindow=get(handles.timewindow,'String');
     tiframe=get(handles.timeframe,'String');
-    
+
     if strcmp(tiwindow,'all') || strcmp(tiframe,'all')
         % use whole CM
         CM=corrcoef(CM);
@@ -307,7 +307,7 @@ if ~isempty(strfind(mms{get(handles.matmodality,'Value')},'_tc'))
             end
         end
         CM=corrcoef(CM(tiframe:tiframe+tiwindow,:)); % actual correlation
-        
+
         if get(handles.timecircle,'Value')
             % make a step to next timeframe (prepare next iteration).
             if (tiframe+tiwindow+1)>timedim
@@ -350,7 +350,7 @@ function [directory,pdirectory,selectedparc]=ea_cvinitgui(handles,options)
 % parcellation popup:
 
 
-pdirs=dir([options.earoot,filesep,'templates',filesep,'labeling',filesep,'*.nii']);
+pdirs=dir([ea_space,'labeling',filesep,'*.nii']);
 cnt=1;
 
 for pdir=1:length(pdirs)
@@ -383,7 +383,7 @@ for pdir=1:length(pdirs)
 end
 
 if ~ismember({selectedparc},parcs)
-    
+
     cv_enablevats(handles);
     %
 end
@@ -439,12 +439,12 @@ if get(handles.matmodality,'Value')>length(get(handles.matmodality,'String'));
 end
 
 % parcellation scheme
-aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.txt']);
+aID = fopen([ea_space,'labeling',filesep,selectedparc,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
 
 % store selected parcellation in figure:
 % store pV and pX in figure
-pV=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+pV=spm_vol([ea_space,'labeling',filesep,selectedparc,'.nii']);
 pX=spm_read_vols(pV);
 setappdata(handles.convis,'pV',pV);
 setappdata(handles.convis,'pX',pX);
@@ -476,7 +476,7 @@ if exist([pdirectory,'graph'],'file')
             cnt=cnt+1;
         end
     end
-    
+
     if ~isempty(labelsare)
         set(handles.voxmetric,'String',labelsare);
         if get(handles.voxmetric,'Value')>length(get(handles.voxmetric,'String'));
@@ -494,7 +494,7 @@ end
 if exist('filesare','var')
     selectedmetric=get(handles.voxmetric,'Value');
     selectedprefix=filesare{selectedmetric}; % deg_, eig_, eff_ or sfs_
-    
+
     fis=dir([pdirectory,'graph',filesep,selectedprefix,'*.nii']);
     cnt=1;
     mods{1}='';
@@ -551,14 +551,14 @@ if isempty(vdicell) || isempty(modlist)
     cv_disablevats(handles)
 else
     cv_enablevats(handles)
-    
+
     %% check if left/right VATs are present
     stimfolder=vdicell{get(handles.vatseed,'Value')};
     vatdir=dir([directory,'stimulations',filesep,stimfolder,filesep,'*.nii']);
     for vt=1:length(vatdir)
         vatcell{vt}=vatdir(vt).name;
     end
-    
+
     set(handles.rvatcheck,'Enable', ea_getonofftruefalse(ismember('vat_right.nii',vatcell)));
     set(handles.lvatcheck,'Enable', ea_getonofftruefalse(ismember('vat_left.nii',vatcell)));
     if strcmp(get(handles.rvatcheck,'Enable'),'off')

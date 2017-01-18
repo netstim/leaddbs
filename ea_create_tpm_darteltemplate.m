@@ -12,7 +12,7 @@ if ~exist('mute','var')
 end
 
 load([ea_space,'ea_space_def.mat']);
-for t=1:length(spacedef.templates) 
+for t=1:length(spacedef.templates)
     matlabbatch{1}.spm.spatial.preproc.channel(t).vols = {[ea_space,spacedef.templates{t},'.nii,1']};
     matlabbatch{1}.spm.spatial.preproc.channel(t).biasreg = 0.001;
     matlabbatch{1}.spm.spatial.preproc.channel(t).biasfwhm = 60;
@@ -53,7 +53,7 @@ matlabbatch{1}.spm.spatial.preproc.warp.write = [0 0];
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
-delete([ea_space,spacedef.templates{1},'_seg8.mat']); 
+delete([ea_space,spacedef.templates{1},'_seg8.mat']);
 if ~exist([ea_space,'dartel'], 'dir')
     mkdir([ea_space,'dartel']);
 end
@@ -68,7 +68,7 @@ end
 if exist([ea_space,'atlas.nii'],'file')
     copyfile([ea_space,'atlas.nii'],[ea_space([],'dartel'),filesep,'atlas.nii']);
     ea_conformspaceto([ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii'],[ea_space([],'dartel'),filesep,'atlas.nii'],6);
-    
+
     c1=ea_load_nii([ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',1),'.nii']);
     atlas=ea_load_nii([ea_space([],'dartel'),filesep,'atlas.nii']);
     c1.img(atlas.img>0.1)=atlas.img(atlas.img>0.1);
@@ -122,7 +122,7 @@ wd=[ea_space([],'dartel'),filesep];
 gs=[0,2,3,5,6,8];
 expo=6:-1:1;
 for s=1:6
-    for tpm=1:3 
+    for tpm=1:3
         % smooth
         if gs(s)
             matlabbatch{1}.spm.spatial.smooth.data = {[wd,'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii,1']};
@@ -137,7 +137,7 @@ for s=1:6
             copyfile([wd,'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii'],[wd,'s0','dartelmni_6_hires_',sprintf('%05d',tpm),'.nii']);
         end
         clear jobs matlabbatch
-        
+
         % set to resolution of TPM file
         matlabbatch{1}.spm.util.imcalc.input = {[ea_space,'TPM.nii,1'];
             [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii']};
@@ -152,7 +152,7 @@ for s=1:6
         spm_jobman('run',jobs);
         clear jobs matlabbatch
     end
-    
+
     matlabbatch{1}.spm.util.cat.vols = {[wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',1),'.nii'];
         [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',2),'.nii'];
         [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',3),'.nii']};
@@ -161,9 +161,9 @@ for s=1:6
     jobs{1}=matlabbatch;
     spm_jobman('run',jobs);
     clear jobs matlabbatch
-    
+
     disp('Cleaning up.');
-    
+
     % cleanup
     delete([wd,'s',num2str(gs(s)),'dartelmni_6_hires_00*.*']);
 end

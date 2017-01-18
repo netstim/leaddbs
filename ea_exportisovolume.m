@@ -119,7 +119,7 @@ for side=1:length(options.sides)
         clear jobs matlabbatch
         %% Also write out volume with combined information on both sides (symmetric image).
 
-        niic=ea_load_nii([ea_getearoot,'templates',filesep,'bb.nii']);
+        niic=ea_load_nii([ea_space,'bb.nii']);
         niic.dt=[16,1];
 
         %niic=spm_read_vols(Vol);
@@ -209,12 +209,12 @@ for side=1:length(options.sides)
                                 XYZV(:,4)=1;
                                 warning('off');
                                 Fsig = scatteredInterpolant(XYZV(:,1),XYZV(:,2),XYZV(:,3),XYZV(:,4));
-                                
+
                                 Fsig.ExtrapolationMethod='none';
                                 warning('on');
                                 niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
                             end
-                            
+
                         case 5 % estimate significance by applying leave-one-out permutations on weighted distance (by value) from rest of data
                             [ixes,R,p]=ea_leoo_significance_weighteddist(XYZV);
                             ea_dumpsigtxt([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_leoo_sig_weighteddist.txt'],R,p);
@@ -224,11 +224,11 @@ for side=1:length(options.sides)
                                 XYZV(:,4)=1;
                                 warning('off');
                                 Fsig = scatteredInterpolant(XYZV(:,1),XYZV(:,2),XYZV(:,3),XYZV(:,4));
-                                
+
                                 Fsig.ExtrapolationMethod='none';
                                 warning('on');
-                                
-                                
+
+
                                 niicsig(xixc,yixc,zixc)=Fsig({xixc,yixc,zixc});
                             end
                     end
@@ -259,14 +259,14 @@ for side=1:length(options.sides)
                 niic.img=niicsig;
                 ea_write_nii(niic);
                 ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_combined_p05.nii']);
-            end 
+            end
         end
 
         ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'],'w','nz',1);
         ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_lr.nii'],'w','nz',1);
         ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'],'w','nz',1);
         ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_combined.nii'],'w','nz',1);
-        
+
 
     end
 

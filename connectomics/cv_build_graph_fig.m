@@ -1,13 +1,13 @@
 function ML=cv_build_graph_fig(resultfig,directory,selectedparc,handles,options)
 
 % read in atlas structures:
-aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.txt']);
+aID = fopen([ea_space,'labeling',filesep,selectedparc,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
 
 
 D=length(atlas_lgnd{2});
 
-parc=ea_load_nii([options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii']);
+parc=ea_load_nii([ea_space,'labeling',filesep,selectedparc,'.nii']);
 
 % build centroid mesh
 parc.img=round(parc.img);
@@ -15,7 +15,7 @@ centr=zeros(D,3);
 for reg=1:D
    [xx,yy,zz]=ind2sub(size(parc.img),find(parc.img==atlas_lgnd{1}(reg)));
     XYZ=[xx,yy,zz,ones(length(zz),1)]';
-    
+
     XYZ=parc.mat*XYZ;
     centr(reg,:)=ea_nanmean(XYZ(1:3,:),2)';
 end
@@ -69,11 +69,11 @@ if get(handles.wmatedges,'Value')
     % draw edges:
     stemfactor=0.1;
     tipfactor=0.1;
-    
+
     pcnt=1;
     ncnt=1;
     for edge=find(~isnan(tCM))';
-        
+
         [ii,jj]=ind2sub(size(tCM),edge);
         if isbipolar
             if tCM(edge)<0
@@ -87,17 +87,17 @@ if get(handles.wmatedges,'Value')
             end
         else
             cstr='b';
-            
+
             pfv(pcnt)=mArrow3(centr(ii,:),centr(jj,:),'color',cstr,'stemWidth',ntCM(edge)*stemfactor,'tipWidth',ntCM(edge)*tipfactor);
             pcnt=pcnt+1;
         end
     end
-    
+
     if exist('pfv','var')
         pfv=ea_concatfv(pfv);
         set(0,'CurrentFigure',resultfig);
         hp=patch(pfv);
-        
+
         set(hp,'Facecolor',[0.8,0.2,0.1]);
         set(hp,'EdgeColor','none');
         set(hp,'FaceAlpha',0.5);
@@ -116,11 +116,11 @@ if get(handles.wmatedges,'Value')
 end
 if get(handles.wmatnodes,'Value')
     % show all areas which are connected above threshold
-    
-    
+
+
     tparc=parc;
     tnodes=ea_nansum(tCM,1);
-    
+
     tnodeix=find(~isnan(tnodes));
     ptnodeix=tnodeix(tnodes(tnodeix)>0);
         ntnodeix=tnodeix(tnodes(tnodeix)<0);
@@ -128,12 +128,12 @@ if get(handles.wmatnodes,'Value')
     for node=tnodeix
         tparc.img(parc.img==node)=tnodes(node);
     end
-    
-    
+
+
     pgraphsurf=ea_showconnectivitypatch(resultfig,parc,tparc.img,0,atlas_lgnd{2},ptnodeix,'autumn',get(handles.wmatnodes,'Value'),get(handles.wmatlabs,'Value'));
-    
+
     ngraphsurf=ea_showconnectivitypatch(resultfig,parc,tparc.img*-1,0,atlas_lgnd{2},ntnodeix,'winter',get(handles.wmatnodes,'Value'),get(handles.wmatlabs,'Value'));
-    
+
 end
 % export structures as ML
 ML=struct;
@@ -156,12 +156,12 @@ function [fv] = mArrow3(p1,p2,varargin)
 %           properties: 'color':      color according to MATLAB specification
 %                                     (see MATLAB help item 'ColorSpec')
 %                       'stemWidth':  width of the line
-%                       'tipWidth':   width of the cone                       
+%                       'tipWidth':   width of the cone
 %
 %           Additionally, you can specify any patch object properties. (For
 %           example, you can make the arrow semitransparent by using
 %           'facealpha'.)
-%                       
+%
 % example1: h = mArrow3([0 0 0],[1 1 1])
 %           (Draws an arrow from [0 0 0] to [1 1 1] with default properties.)
 %
@@ -172,7 +172,7 @@ function [fv] = mArrow3(p1,p2,varargin)
 %
 
 propertyNames = {'edgeColor'};
-propertyValues = {'none'};    
+propertyValues = {'none'};
 
 %% evaluate property specifications
 for argno = 1:2:nargin-2
@@ -196,7 +196,7 @@ for argno = 1:2:nargin-2
             propertyNames = {propertyNames{:},varargin{argno}};
             propertyValues = {propertyValues{:},varargin{argno+1}};
     end
-end            
+end
 
 %% default parameters
 if ~exist('stemWidth','var')

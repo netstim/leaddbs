@@ -22,7 +22,7 @@ if ischar(options) % return name of method.
     varargout{1}='SUIT DARTEL normalization (Diedrichsen 2006)';
     switch spm('ver')
         case 'SPM12'
-            
+
             if  ~isempty(which('suit_isolate_seg'))
                 varargout{2}=1;
             else
@@ -110,8 +110,8 @@ switch spm('ver')
         matlabbatch{1}.spm.util.defs.comp{1}.dartel.times = [1 0];
         matlabbatch{1}.spm.util.defs.comp{1}.dartel.K = 6;
         matlabbatch{1}.spm.util.defs.comp{1}.dartel.template = {''};
-        matlabbatch{1}.spm.util.defs.comp{2}.def = {[ea_getearoot,'templates',filesep,'suit',filesep,'y_suit2icbm2009b.nii']}; % add deformation from SUIT Dartel space to ICBM 2009b
-        
+        matlabbatch{1}.spm.util.defs.comp{2}.def = {[ea_space,'suit',filesep,'y_suit2icbm2009b.nii']}; % add deformation from SUIT Dartel space to ICBM 2009b
+
         matlabbatch{1}.spm.util.defs.out{1}.savedef.ofname = ['ea_normparams'];
         matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
 end
@@ -126,7 +126,7 @@ switch spm('ver')
     case 'SPM8'
         ea_error('SPM8 is not supported in this version of Lead-DBS anymore');
     case 'SPM12'
-        matlabbatch{1}.spm.util.defs.comp{1}.def = {[ea_getearoot,'templates',filesep,'suit',filesep,'y_icbm2009b2suit.nii']}; % add deformation from ICBM 2009b to SUIT Dartel space
+        matlabbatch{1}.spm.util.defs.comp{1}.def = {[ea_space,'suit',filesep,'y_icbm2009b2suit.nii']}; % add deformation from ICBM 2009b to SUIT Dartel space
         matlabbatch{1}.spm.util.defs.comp{2}.dartel.flowfield = {[directory,'u_a_',anatbase,'_seg1.nii']};
         matlabbatch{1}.spm.util.defs.comp{2}.dartel.times = [0 1];
         matlabbatch{1}.spm.util.defs.comp{2}.dartel.K = 6;

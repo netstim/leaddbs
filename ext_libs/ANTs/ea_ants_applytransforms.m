@@ -87,7 +87,7 @@ if nargin == 1
                 lfis{3} = ea_niigz([directory,'l',options.prefs.fa2anat]);
             end
     end
-    
+
             [fis,ofis] = ea_appendgrid(options,fis,ofis,1);
 end
 
@@ -125,11 +125,11 @@ for fi = 1:length(fis)
         else
             cmd = [cmd, ...
                    ' --reference-image ',ea_path_helper(refim),...
-                   ' --transform [',ea_path_helper(transformfile),',0]'];         
+                   ' --transform [',ea_path_helper(transformfile),',0]'];
         end
     else
         if isempty(refim)
-            refim = [options.earoot,'templates',filesep,'mni_hires_t2.nii'];
+            refim = [ea_space,'t2.nii'];
         end
 
         if isempty(transformfile)
@@ -142,7 +142,7 @@ for fi = 1:length(fis)
                    ' --transform [',ea_path_helper(transformfile),',0]'];
         end
     end
-    
+
     if ~isempty(interp)
         cmd = [cmd, ' --interpolation ', interp];
     end

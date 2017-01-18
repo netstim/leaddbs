@@ -27,7 +27,7 @@ if nargin >= 7
     interp=varargin{7};
 else
     % nn, trilinear, sinc, spline
-    interp='trilinear'; 
+    interp='trilinear';
 end
 
 directory = [options.root,options.patientname,filesep];
@@ -94,7 +94,7 @@ for fi = 1:length(fis)
         fprintf('%s not found. Skip normalization...\n',fis{fi});
         continue
     end
-    
+
 	cmd = [APPLYWARP, ...
            ' --verbose' ...
            ' --in=', ea_path_helper(fis{fi}), ...
@@ -116,7 +116,7 @@ for fi = 1:length(fis)
         end
     else
         if isempty(refim)
-           refim = [options.earoot,'templates',filesep,'mni_hires_t2.nii'];
+           refim = [ea_space,'t2.nii'];
         end
 
         if isempty(transformfile)
@@ -129,11 +129,11 @@ for fi = 1:length(fis)
                    ' --warp=', ea_path_helper(transformfile)];
         end
     end
-    
+
     if ~isempty(interp)
         cmd = [cmd, ' --interp=', interp];
     end
-   
+
     if ~ispc
         system(['bash -c "', cmd, '"']);
     else
@@ -150,7 +150,7 @@ if nargin == 1 % standard case
                 continue
             end
 
-            matlabbatch{1}.spm.util.imcalc.input = {[options.earoot,'templates',filesep,'bb.nii,1'];
+            matlabbatch{1}.spm.util.imcalc.input = {[ea_space,'bb.nii,1'];
                                                     [ofis{fi},',1']};
             matlabbatch{1}.spm.util.imcalc.output = lfis{fi};
             matlabbatch{1}.spm.util.imcalc.outdir = {directory};

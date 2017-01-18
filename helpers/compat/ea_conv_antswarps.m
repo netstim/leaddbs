@@ -17,7 +17,7 @@ end
 
 antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
 
-template=[ea_getearoot,'templates',filesep,'mni_hires_t2.nii'];
+template=[ea_space,'t2.nii'];
 [options.root,options.patientname]=fileparts(fileparts(directory)); % 'directory' is /a/b/c/
 options.root=[options.root,filesep];
 options.prefs=ea_prefs(options.patientname);

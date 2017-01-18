@@ -36,7 +36,7 @@ if vizz
     plot3(xx(1:10:end),yy(1:10:end),zz(1:10:end),'.','color',[0.9598    0.9218    0.0948]);
     axis vis3d off tight equal;
     hold on
-    
+
     % plot anat, voxel space
     anat=ea_load_nii(refanat);
     subplot(1,3,2);
@@ -45,7 +45,7 @@ if vizz
     plot3(xx(1:1000:end),yy(1:1000:end),zz(1:1000:end),'.','color',[0.9598    0.9218    0.0948]);
     axis vis3d off tight equal;
     hold on
-    
+
     % plot MNI, world space
     mni=ea_load_nii(refnorm);
     subplot(1,3,3);
@@ -176,5 +176,5 @@ refanat=[directory,options.prefs.prenii_unnormalized];
 
 % determin the template for fiber normalization and visualization
 if ismember(whichnormmethod,{'ea_normalize_spmshoot','ea_normalize_spmdartel','ea_normalize_spmnewseg'})
-	refnorm=[refnorm,',2'];  
+	refnorm=[refnorm,',2'];
 end

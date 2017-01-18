@@ -146,7 +146,7 @@ if usediffusion
     disp('Done. Estimating diffusion signal based on fibertracts...');
     signal=ea_ftr2Sigmaps(ftr,ten);
     disp('Done. Calculating Tensors...');
-    reftemplate=[options.earoot,'templates',filesep,'dartel',filesep,'dartelmni_1.nii,2'];
+    reftemplate=[ea_space,'dartel',filesep,'dartelmni_1.nii,2'];
     Vsig=spm_vol(reftemplate);
     for i=1:size(signal,4);
         Vsig.fname=[options.root,options.patientname,filesep,'headmodel',filesep,'dti_',num2str(i),'.nii'];

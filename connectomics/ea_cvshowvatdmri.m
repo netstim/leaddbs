@@ -16,13 +16,13 @@ elseif iscell(handles) % called from lead_group
     dimensionality=2; % how many ROI.
     sides=[1,2];
 end
-    
+
 
 
         % fibers filename
         if isstruct(vatmodality)
             fibersfile=vatmodality;
-            
+
         else
             switch vatmodality
                 case 'Patient-specific fiber tracts'
@@ -31,13 +31,13 @@ end
                     fibersfile=[ea_getconnectomebase('dmri'),vatmodality,'.mat'];
             end
         end
-        
+
         % seed filename
 
         seedfile={};
-        
+
         for v=1:length(usevat)
-            
+
             seedfile{v}=[directory,'stimulations',filesep,vsname,filesep,'vat_',usevat{options.sides(v)},'.nii'];
         end
         for side=1:length(usevat)
@@ -47,15 +47,15 @@ end
                 keyboard
             end
         end
-        
-        targetsfile=[options.earoot,'templates',filesep,'labeling',filesep,selectedparc,'.nii'];
-        
+
+        targetsfile=[ea_space,'labeling',filesep,selectedparc,'.nii'];
+
         options.writeoutstats=1;
         options.writeoutpm=1;
-        
-        
+
+
         [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seedfile,targetsfile,thresh,'vat');
-        
+
         if ~ret % something has changed since last time.
             ea_deletePL(resultfig,'PL','vat');
             if dimensionality % one of the vat checkboxes is active
@@ -68,5 +68,5 @@ end
                     set(handles.vatthreshis,'String',num2str(thresh));
                 end
             end
-            
+
         end

@@ -32,18 +32,18 @@ end
 
 
 if options.lc.graph.struc_func_sim
-    
+
     for mode=find(fs==1)
         dtimode=find(fs==2);
-    
-    
+
+
     load([expfolder,finas{mode},'_CM.mat']);
     X=fMRI_CM;
     load([expfolder,'DTI_CM.mat']);
     Y=DTI_CM;
     disp(['Calculating structure-function similarity ...'])
     C=ea_sfs(X,Y);
-    
+
     ea_export_cmeasure(C,'sfs',['DTI_',finas{mode}],options);
     disp('Done.');
     end
@@ -72,16 +72,16 @@ if islogical(X)
     %   Mika Rubinov, U Cambridge
     %   Jonathan Clayden, UCL
     %   2008-2013
-    
+
     % Modification history:
     % 2008: Original (MR)
     % 2013: Bug fix, enforce zero distance for self-connections (JC)
     % 2013: Local efficiency generalized to directed networks
-    
+
     n=length(X);                                %number of nodes
     X(1:n+1:end)=0;                             %clear diagonal
     X=double(X~=0);                             %enforce double precision
-    
+
     C=zeros(n,1);
     for u=1:n
         V=find(X(u,:)|X(:,u).');            %neighbors
@@ -94,25 +94,25 @@ if islogical(X)
             C(u)=numer/denom;               %local efficiency
         end
     end
-    
-    
+
+
 else
-    
-    % based on 
+
+    % based on
     %EFFICIENCY_WEI
     %
     %   Mika Rubinov, U Cambridge, 2011-2012
-    
+
     %Modification history
     % 2011: Original (based on efficiency.m and distance_wei.m)
     % 2013: Local efficiency generalized to directed networks
-    
+
     n=length(X);                                    %number of nodes
     L = X;
     A = X~=0;
     ind = L~=0;
     L(ind) = 1./L(ind);                             %connection-length matrix
-    
+
     C=zeros(n,1);
     for u=1:n
         V=find(A(u,:)|A(:,u).');                %neighbors
@@ -135,7 +135,7 @@ for n=1:size(X,1)
     % mask nan and inf values for both variables equally.
     nanix=isnan(X(:,n)); nanix=nanix+isnan(Y(:,n)); nanix=nanix+isinf(X(:,n)); nanix=nanix+isinf(Y(:,n));
     try
-   C(n)=corr(X(~nanix,n),Y(~nanix,n),'rows','pairwise'); 
+   C(n)=corr(X(~nanix,n),Y(~nanix,n),'rows','pairwise');
     catch
 
     end
@@ -143,10 +143,10 @@ end
 
 function ea_export_cmeasure(C,exstr,mode,options)
 
-V=spm_vol([options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.nii']);
+V=spm_vol([ea_space,'labeling',filesep,options.lc.general.parcellation,'.nii']);
 X=spm_read_vols(V);
 X=round(X);
-aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.txt']);
+aID = fopen([ea_space,'labeling',filesep,options.lc.general.parcellation,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
 d=length(atlas_lgnd{1}); % how many ROI.
 Y=X;
@@ -204,12 +204,12 @@ for u=1:n_
             T=find(W1_(v,:));                   %neighbours of shortest nodes
             D(u,T)=min([D(u,T);D(u,v)+W1_(v,T)]);%smallest of old/new path lengths
         end
-        
+
         minD=min(D(u,S));
         if isempty(minD)||isinf(minD),          %isempty: all nodes reached;
             break,                              %isinf: some nodes cannot be reached
         end;
-        
+
         V=find(D(u,:)==minD);
     end
 end

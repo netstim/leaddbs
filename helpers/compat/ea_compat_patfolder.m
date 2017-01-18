@@ -9,7 +9,7 @@ end
 
 % move T2 reference image
 try
-    movefile([ea_getearoot,'templates',filesep,'mni_hires.nii'],[ea_getearoot,'templates',filesep,'mni_hires_t2.nii']);
+    movefile([ea_getearoot,'templates',filesep,'mni_hires.nii'],[ea_space,'t2.nii']);
 end
 
 % move legacy ANTs warps

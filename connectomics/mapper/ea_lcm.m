@@ -3,7 +3,7 @@ function ea_lcm(options)
 
 % the order may be crucial since VAT-seeds are resliced in fMRI
 if options.lcm.struc.do
-    
+
     % main wrapper for lead connectome mapper runs
     if strcmp(options.lcm.seeddef,'vats')
         originalseeds=options.lcm.seeds;
@@ -12,11 +12,11 @@ if options.lcm.struc.do
             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
         end
     end
-    
+
     ea_lcm_struc(options);
 end
 if options.lcm.func.do
-    
+
     if strcmp(options.lcm.seeddef,'vats')
         if exist('originalseeds','var')
             options.lcm.seeds=originalseeds;
@@ -26,7 +26,7 @@ if options.lcm.func.do
             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
         end
     end
-    
+
     ea_lcm_func(options);
 end
 
@@ -34,7 +34,7 @@ end
 if (~options.lcm.func.do) && (~options.lcm.struc.do)
     if strcmp(options.lcm.seeddef,'vats')
         ea_resolvevatseeds(options,'dMRI');
-        
+
         ea_resolvevatseeds(options,'fMRI');
     end
 end
@@ -47,7 +47,7 @@ vatdir=[options.root,options.patientname,filesep,'stimulations',filesep,options.
 
 suffices={'binary','efield','efield_gauss'};
 for suffix=1:3
-    
+
     switch suffices{suffix}
         case 'binary'
             addstr='';
@@ -61,7 +61,7 @@ for suffix=1:3
     else
         keepthisone=0;
     end
-    
+
     % prepare for dMRI
     switch modality
         case 'dMRI'
@@ -73,10 +73,10 @@ for suffix=1:3
                     case 2
                         sidec='left';
                 end
-                
+
                 if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                     copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
-                    ea_conformspaceto([ea_getearoot,'templates',filesep,'mni_hires_bb.nii'],[vatdir,'tmp_',sidec,'.nii'],1);
+                    ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],1);
                     nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                     cnt=cnt+1;
                 end
@@ -94,7 +94,7 @@ for suffix=1:3
             end
             ea_split_nii_lr(Cnii.fname);
             disp('Done.');
-            
+
         case 'fMRI'
             % prepare for fMRI
             cnt=1;
@@ -105,7 +105,7 @@ for suffix=1:3
                     case 2
                         sidec='left';
                 end
-                
+
                 if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                     copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
                     tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
@@ -122,7 +122,7 @@ for suffix=1:3
                     d.dataset.vol.space.dt=[16,0];
                     ea_write_nii(d.dataset.vol.space);
                     ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],6);
-                    
+
                     nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                     nii(cnt).img(isnan(nii(cnt).img))=0;
                     if ~any(nii(cnt).img(:))
@@ -130,7 +130,7 @@ for suffix=1:3
                     end
                     cnt=cnt+1;
                 end
-                
+
             end
             Cnii=nii(1);
             for n=2:length(nii)

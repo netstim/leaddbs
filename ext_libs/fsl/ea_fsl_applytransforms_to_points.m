@@ -23,14 +23,14 @@ options.prefs=ea_prefs(fileparts(directory));
 [~, warpprefix] = ea_niifileparts(options.prefs.gprenii);
 
 if inversemap
-    src = [ea_getearoot, 'templates', filesep, 'mni_hires_t2.nii'];
+    src = [ea_space,'t2.nii'];
     dest = [directory, options.prefs.prenii_unnormalized];
     if isempty(transform)
         transform = [directory, warpprefix, 'WarpFiled.nii'];
     end
 else
     src = [directory, options.prefs.prenii_unnormalized];
-    dest = [ea_getearoot, 'templates', filesep, 'mni_hires_t2.nii'];
+    dest = [ea_space,'t2.nii'];
     if isempty(transform)
         transform = [directory, warpprefix, 'InverseWarpFiled.nii'];
     end

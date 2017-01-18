@@ -38,7 +38,7 @@ single_s_files=single_s_files';
 %% Extract timecourses of specified ROI
 V=spm_vol(single_s_files);
 for i=1:signallength
-    interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1); 
+    interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1);
 end
 interpol_tc=interpol_tc';
 
@@ -88,11 +88,11 @@ if multsess
         plot(sessvec);
         title('Session vector')
     end
-    
+
     % regress out sessions
     X0(:,1)=ones(signallength,1);
     X0=[X0,sessvec+1];
-    
+
     % actual regression:
     X0reg=(X0'*X0)\X0';
     for voxx=1:size(interpol_tc,1)
@@ -100,18 +100,18 @@ if multsess
         if ~any(isnan(beta_hat))
             interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X0*beta_hat;
         else
-            
+
             warning('Regression of WM-/CSF-Signals could not be performed.');
         end
     end
-    
+
     if vizz
         subplot(3,2,pcnt)
         pcnt=pcnt+1;
         plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
         title('Time series cleaned from session vector.')
     end
-    
+
     % do the same on whole brain tc to get WM/GM/Global signal:
     for xx=1:size(alltc,1)
         for yy=1:size(alltc,2)
@@ -219,7 +219,7 @@ end
 % actual regression of cleaned X2 (WM/Global) from time courses:
 X2reg=(X2'*X2)\X2';
 for voxx=1:size(interpol_tc,1)
-    
+
     beta_hat        = X2reg*squeeze(interpol_tc(voxx,:))';
     if ~any(isnan(beta_hat))
         interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X2*beta_hat;
@@ -300,7 +300,7 @@ if vizz
 end
 
 %% average gmtc over ROI
-aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.txt']);
+aID = fopen([ea_space,'labeling',filesep,options.lc.general.parcellation,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
 dimensionality=length(atlas_lgnd{1}); % how many ROI.
 

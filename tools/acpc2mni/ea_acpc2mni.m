@@ -65,18 +65,18 @@ end
 
     switch automan
         case 'auto' % auto AC/PC detection
-            
+
             % warp into patient space:
-            
+
             %     try
             [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
             %     catch
             %         ea_error(['Please check deformation field in ',directory,'.']);
             %     end
-            
+
             fpinsub_mm=fpinsub_mm';
-            
-try            
+
+try
             fid(pt).AC=fpinsub_mm(1,:);
 catch
     keyboard
@@ -86,12 +86,12 @@ end
         case {'manual'} % manual AC/PC definition, assume F.fcsv file inside pt folder
             copyfile([directory,'F.fcsv'],[directory,'F.dat'])
             Ct=readtable([directory,'F.dat']);
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
             % AC
             cnt=1;
             fid(pt).AC=zeros(1,3);
@@ -100,7 +100,7 @@ end
                 fid(pt).AC(cnt)=str2double(thisval{1});
                 cnt=cnt+1;
             end
-            
+
             % PC
             cnt=1;
             fid(pt).PC=zeros(1,3);
@@ -109,8 +109,8 @@ end
                 fid(pt).PC(cnt)=str2double(thisval{1});
                 cnt=cnt+1;
             end
-            
-            
+
+
             % MSP
             cnt=1;
             fid(pt).MSP=zeros(1,3);
@@ -119,19 +119,19 @@ end
                 fid(pt).MSP(cnt)=str2double(thisval{1});
                 cnt=cnt+1;
             end
-            
-            
-            
+
+
+
         case 'mnidirect'
-            
+
             fid(pt).AC=[0.25,   1.298,   -5.003];
             fid(pt).PC=[-0.188, -24.756,  -2.376];
             fid(pt).MSP=[0.25,   1.298,    55];
-            
+
     end
-    
-    
-    
+
+
+
     % x-dimension
     A=fid(pt).MSP-fid(pt).AC;
     B=fid(pt).PC-fid(pt).AC;
@@ -159,7 +159,7 @@ end
         case 3 % relative to PC:
             warpcoord_mm=fid(pt).PC+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
     end
-    
+
     anat=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
     warpcoord_mm=[warpcoord_mm';1];
     warpcoord_vox=anat.mat\warpcoord_mm;
@@ -176,11 +176,11 @@ end
         % re-warp into MNI:
 switch automan
     case 'mnidirect'
-        
-     fid(pt).WarpedPointMNI=warpcoord_mm(1:3)';   
+
+     fid(pt).WarpedPointMNI=warpcoord_mm(1:3)';
     otherwise
         [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], template,whichnormmethod);
-try        
+try
         warppts(pt,:)=warpinmni_mm';
 catch
     keyboard
@@ -209,7 +209,7 @@ end
 
 % create clear cut version:
 if cfg.mapmethod==1
-    bb=ea_load_nii([leaddir,'templates',filesep,'bb.nii']);
+    bb=ea_load_nii([ea_space,'bb.nii']);
     bb.img(:)=0;
     warppts_vox=[warppts';ones(1,size(warppts,1))];
     warppts_vox=round(bb.mat\warppts_vox);

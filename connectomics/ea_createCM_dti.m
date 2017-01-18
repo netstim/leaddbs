@@ -21,7 +21,7 @@ vizz=0;
 %% create CM
 display('Initializing structural CM.');
 
-aID = fopen([options.earoot,'templates',filesep,'labeling',filesep,options.lc.general.parcellation,'.txt']);
+aID = fopen([ea_space,'labeling',filesep,options.lc.general.parcellation,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
 d=length(atlas_lgnd{1}); % how many ROI.
 DTI_CM=zeros(d);
@@ -30,14 +30,14 @@ DTI_LEN=zeros(d);
 if useendpointsonly
     [DTI_CM, DTI_LEN] = ea_createCM_dti_endpoints(options,fibs,idx,Vatl,minlen,directory,DTI_CM,DTI_LEN);
 
-else    
+else
     [DTI_CM] = ea_createCM_dti_tracts(options,fibs,idx,Vatl,minlen,directory,DTI_CM,DTI_LEN);
-    
+
 end
 
 %DTI_CM=DTI_CM./length(idx); % normalize by total number of fibers.
 
-    
+
 
 function [DTI_CM] = ea_createCM_dti_tracts(options,fibs,idx,Vatl,minlen,directory,DTI_CM,DTI_LEN)
 
@@ -59,9 +59,9 @@ for fiber=1:fibercount
     end
 end
     ea_dispercent(1,'end');
- 
-    
-    
+
+
+
 function [DTI_CM, DTI_LEN] = ea_createCM_dti_endpoints(options,fibs,idx,Vatl,minlen,directory,DTI_CM,DTI_LEN)
 
 
