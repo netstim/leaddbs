@@ -10,15 +10,17 @@ if ~exist('reco','var') % old format
     reco.props.elmodel=elmodel;
     reco.props.manually_corrected=manually_corrected;
 end
+
 [whichnormmethod,template]=ea_whichnormmethod(directory);
 nii=ea_load_nii(template);
+
 if ~ismember(whichnormmethod,ea_getantsnormfuns)
     try
         ea_checkforwardinv(options,'forward')
     end
 end
+
 for side=1:length(options.sides)
-    
     
     reco.native.coords_mm{side}=ea_warpcoord(reco.mni.coords_mm{side},nii,options);
     reco.native.markers(side).head=ea_warpcoord(reco.mni.markers(side).head,nii,options);
@@ -28,15 +30,12 @@ for side=1:length(options.sides)
     normtrajvector{side}=mean(diff(reco.native.trajectory{side}))/norm(mean(diff(reco.native.trajectory{side})));
     orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
     
-    
     reco.native.markers(side).x=reco.native.markers(side).head+orth(:,1)';
     reco.native.markers(side).y=reco.native.markers(side).head+orth(:,2)'; % corresponding points in reality
     
 end
 
-
 save([directory,filesep,'ea_reconstruction.mat'],'reco');
-
 
 
 function c=ea_warpcoord(c,nii,options)

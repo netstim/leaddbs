@@ -20,13 +20,10 @@ for side=1:length(options.sides)
     normtrajvector{side}=mean(diff(reco.mni.trajectory{side}))/norm(mean(diff(reco.mni.trajectory{side})));
     
     orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
-    
-    
+     
     reco.mni.markers(side).x=reco.mni.markers(side).head+orth(:,1)';
-    reco.mni.markers(side).y=reco.mni.markers(side).head+orth(:,2)'; % corresponding points in reality
-    
+    reco.mni.markers(side).y=reco.mni.markers(side).head+orth(:,2)'; % corresponding points in reality    
 end
-
 
 save([directory,filesep,'ea_reconstruction.mat'],'reco');
 
@@ -38,7 +35,7 @@ c=[c,ones(size(c,1),1)]';
 c=nii(1).mat\c;
 try
     whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
-    if ~ismember(whichnormmethod,ea_getantsnormfuns);
+    if ~ismember(whichnormmethod,ea_getantsnormfuns)
         V=spm_vol([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']);
         if ~isequal(V.dim,nii.dim)
             ea_redo_inv([options.root,options.patientname,filesep],options);
