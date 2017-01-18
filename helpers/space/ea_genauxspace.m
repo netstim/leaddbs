@@ -74,10 +74,7 @@ ea_create_tpm_darteltemplate('mute')
 ea_binmasks
 
 %% 6. Create Wires:
-nii=ea_load_nii([ea_space,spacedef.templates{1},'.nii']);
-wires=ea_detect_edges_3d(nii.img,0.1);
-wires=wires>0;
-save([ea_space,'wires.mat'],'wires');
+ea_genwires
 
 
 

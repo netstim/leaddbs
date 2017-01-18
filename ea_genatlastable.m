@@ -16,6 +16,7 @@ function atlases=ea_genatlastable(varargin)
 
 atlases=varargin{1};
 root=varargin{2};
+
 options=varargin{3};
 if nargin==4
     mifix=varargin{4};
@@ -487,7 +488,8 @@ for atl=1:length(atlnames)
     end
 
     if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file') % first atlas, generate empty hdtemplate in atlas dir...
-        copyfile([ea_space(options),'t2.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+    load([ea_space,'ea_space_def.mat'])
+        copyfile([ea_space(options),spacedef.templates{1},'.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         X=spm_read_vols(V);
         X(:)=0;
