@@ -88,43 +88,42 @@ end
 clear appdata
 
 if ~isempty(togglestates) % anatomy toggles have been used before..
-% reset figure handle.
+    % reset figure handle.
 
-% xyz values
-set(handles.xval,'String',num2str(togglestates.xyzmm(1)));
-set(handles.yval,'String',num2str(togglestates.xyzmm(2)));
-set(handles.zval,'String',num2str(togglestates.xyzmm(3)));
-% toggle buttons
-set(handles.xtoggle,'Value',togglestates.xyztoggles(1));
-set(handles.ytoggle,'Value',togglestates.xyztoggles(2));
-set(handles.ztoggle,'Value',togglestates.xyztoggles(3));
-% transparencies
-set(handles.xtrans,'String',num2str(togglestates.xyztransparencies(1)));
-set(handles.ytrans,'String',num2str(togglestates.xyztransparencies(2)));
-set(handles.ztrans,'String',num2str(togglestates.xyztransparencies(3)));
+    % xyz values
+    set(handles.xval,'String',num2str(togglestates.xyzmm(1)));
+    set(handles.yval,'String',num2str(togglestates.xyzmm(2)));
+    set(handles.zval,'String',num2str(togglestates.xyzmm(3)));
+    % toggle buttons
+    set(handles.xtoggle,'Value',togglestates.xyztoggles(1));
+    set(handles.ytoggle,'Value',togglestates.xyztoggles(2));
+    set(handles.ztoggle,'Value',togglestates.xyztoggles(3));
+    % transparencies
+    set(handles.xtrans,'String',num2str(togglestates.xyztransparencies(1)));
+    set(handles.ytrans,'String',num2str(togglestates.xyztransparencies(2)));
+    set(handles.ztrans,'String',num2str(togglestates.xyztransparencies(3)));
 
-% template name
-set(handles.templatepopup,'Value',find(ismember(get(handles.templatepopup,'String'),togglestates.template)));
+    % template name
+    set(handles.templatepopup,'Value',find(ismember(get(handles.templatepopup,'String'),togglestates.template)));
 
-% invertcheck
-set(handles.invertcheck,'Value',togglestates.tinvert);
+    % invertcheck
+    set(handles.invertcheck,'Value',togglestates.tinvert);
 
-% cut items.
-switch togglestates.cutview
-    case '3d'
-        set(handles.threedradio,'Value',1);
-    case 'xcut'
-        set(handles.xcutradio,'Value',1);
-    case 'ycut'
-        set(handles.ycutradio,'Value',1);
-    case 'zcut'
-        set(handles.zcutradio,'Value',1);
-end
+    % cut items.
+    switch togglestates.cutview
+        case '3d'
+            set(handles.threedradio,'Value',1);
+        case 'xcut'
+            set(handles.xcutradio,'Value',1);
+        case 'ycut'
+            set(handles.ycutradio,'Value',1);
+        case 'zcut'
+            set(handles.zcutradio,'Value',1);
+    end
 else
     togglestates.cutview='3d';
     togglestates.refreshcuts=1;
-
-setappdata(getappdata(handles.acontrolfig,'resultfig'),'togglestates',togglestates);
+    setappdata(getappdata(handles.acontrolfig,'resultfig'),'togglestates',togglestates);
 end
 
 pos=get(hObject,'position');
@@ -357,10 +356,10 @@ function refreshresultfig(handles)
 
 resultfig=getappdata(handles.acontrolfig,'resultfig');
 try
-togglestates=getappdata(resultfig,'togglestates');
+    togglestates=getappdata(resultfig,'togglestates');
 catch
     resultfig=gcf;
-togglestates=getappdata(handles.acontrolfig,'togglestates');
+    togglestates=getappdata(handles.acontrolfig,'togglestates');
 end
 if ~isfield(togglestates,'refreshcuts')
     togglestates.refreshcuts=0;
