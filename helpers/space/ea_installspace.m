@@ -14,6 +14,6 @@ downloadurl = 'http://www.lead-dbs.org/release/download.php';
 disp('Download done. Will now continue building/unpacking space.');
 unzip(destination,ea_space);
 delete(destination);
-
+delete([ea_space,'need_install']);
 ea_unpackspace;
 
