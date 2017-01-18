@@ -74,7 +74,9 @@ ea_create_tpm_darteltemplate('mute')
 ea_binmasks
 
 %% 6. Create Wires:
+if ~exist([ea_space,'wires.mat'],'file')
 ea_genwires
+end
 
 
 
