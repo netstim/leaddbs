@@ -16,7 +16,7 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
         movefile([ea_space,'mni_hires_c2mask.nii'],[ea_space,'c2mask.nii']);
         movefile([ea_space,'TPM_2009b.nii'],[ea_space,'TPM.nii']);
         movefile([ea_space,'mni_hires_distal.nii'],[ea_space,'distal.nii']);
-        movefile([ea_space,'mni_hires_wires.mat'],[ea_space,'wires.mat']);
+        movefile([ea_space,'mni_wires.mat'],[ea_space,'wires.mat']);
     end
     
     if ~exist([ea_space,'norm_mapping.mat'],'file')
