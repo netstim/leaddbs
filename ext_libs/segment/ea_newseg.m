@@ -32,8 +32,8 @@ else
         job.channel(fi).biasfwhm = 60;
         job.channel(fi).write = [0 0];
     end
-    
-    for tpm=1:6
+    tn=ea_open_vol(tpminf);
+    for tpm=1:length(tn)
         job.tissue(tpm).tpm=[tpminf,',',num2str(tpm)];
         if tpm <= 3 && dartel
             job.tissue(tpm).native=[1 1];
