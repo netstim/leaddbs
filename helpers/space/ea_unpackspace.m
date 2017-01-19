@@ -7,7 +7,6 @@ try delete([ea_space,'*.nii.gz']); end
 load([ea_space,'ea_space_def.mat']);
 ea_genauxspace([],[],spacedef.defaultatlas);
 
-delete([ea_space,'need_build']);
+ea_delete([ea_space,'need_build']);
 
 disp('Unpacking done.');
-

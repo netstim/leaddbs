@@ -18,8 +18,8 @@ copyfile([ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_
 matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[ea_space,spacedef.templates{1},'.nii,1']}; % for now assume there is a T1 at least in that new space..
 matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[ea_space,'tempt.nii,1']};
 matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[ea_space,'bb.nii,1']
-    [ea_space,'secondstepmask.nii']
-    [ea_space,'thirdstepmask.nii']};
+                                                   [ea_space,'secondstepmask.nii']
+                                                   [ea_space,'thirdstepmask.nii']};
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
 matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
@@ -33,7 +33,6 @@ clear matlabbatch
 delete([ea_space,'rbb.nii']);
 delete([ea_space,'rtempt.nii']);
 delete([ea_space,'tempt.nii']);
-
 
 matlabbatch{1}.spm.util.imcalc.input = {
                                         [ea_space,'bb.nii,1']
@@ -61,24 +60,22 @@ if ischar(handles)
     atlassetname=handles;
 else
     atlassetname=get(handles.atlassetpopup,'String');
+    if ~isempty(atlassetname)
+        atlassetname=atlassetname{get(handles.atlassetpopup,'Value')};  
+    end
 end
-if ~isempty(atlassetname)
-    atlassetname=atlassetname{get(handles.atlassetpopup,'Value')};
-    ea_flattenatlas(atlassetname);
-end
+ea_flattenatlas(atlassetname);
 
 %% 4. Create TPM, DARTEL and SHOOT templates:
 ea_create_tpm_darteltemplate('mute')
-
 
 %% 5. binarize c1 and c2 masks that come out of this as a by-product:
 ea_binmasks
 
 %% 6. Create Wires:
 if ~exist([ea_space,'wires.mat'],'file')
-ea_genwires
+    ea_genwires
 end
-
 
 
 function ea_binmasks

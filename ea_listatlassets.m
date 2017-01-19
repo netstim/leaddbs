@@ -38,11 +38,9 @@ if mninative==2
     
 end
 
-
 set(handles.atlassetpopup,'String',[asc,nasc]);
 
 [~,defix]=ismember(options.prefs.atlases.default,asc);
 if defix
     set(handles.atlassetpopup,'Value',defix);
 end
-

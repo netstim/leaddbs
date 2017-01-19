@@ -13,13 +13,8 @@ downloadurl = 'http://www.lead-dbs.org/release/download.php';
     end
 disp('Download done. Will now continue building/unpacking space.');
 
-space=ea_space;
-rmdir(space,'s');
-unzip(destination,space);
-[~,spacename]=fileparts(fileparts(space));
-movefile([space,spacename],[space(1:end-1),'_tmp']);
-rmdir(space,'s');
-movefile([space(1:end-1),'_tmp'],[space(1:end-1)]);
+unzip(destination,fileparts(fileparts(ea_space)));
+ea_delete([ea_space,'need_install']);
 delete(destination);
 ea_unpackspace;
 
