@@ -1,0 +1,5 @@
+  1     Thal_1
+  2     Thal_2
+  3     Thal_3
+  4     Thal_4
+  5     Thal_5
