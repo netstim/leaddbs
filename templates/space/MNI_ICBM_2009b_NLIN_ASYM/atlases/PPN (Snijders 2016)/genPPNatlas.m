@@ -3,7 +3,7 @@ function genPPNatlas
 % Neurology (2016) entitled "Physiology of Freezing of Gait", the PPN was
 % identified by a skilled neuroanatomist based on CHAT positive neuronal
 % populations described in Mesulam 1989 ("Human reticular formation: cho-
-% linergic neurons of the pedunculopontine and laterodorsal tegmental nuclei 
+% linergic neurons of the pedunculopontine and laterodorsal tegmental nuclei
 % and some cytochemical comparisons to forebrain cholinergic neurons.").
 % This was done directly within ICBM2009b space under additional anatomical
 % information provided by the BigBrain 2nd revision template (available
@@ -20,7 +20,7 @@ function genPPNatlas
 % more than once is written in a very unefficient way).
 % - A. Horn 12/2016
 
-nii=ea_load_nii([ea_getearoot,'templates',filesep,'mni_hires_bb.nii']);
+nii=ea_load_nii([ea_space,'bb.nii']);
 [xx,yy,zz]=ind2sub(size(nii.img),1:numel(nii.img));
 
 XYZ=[xx;yy;zz;ones(1,length(xx))];
