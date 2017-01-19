@@ -18,30 +18,20 @@ for t=1:length(spacedef.templates)
     matlabbatch{1}.spm.spatial.preproc.channel(t).biasfwhm = 60;
     matlabbatch{1}.spm.spatial.preproc.channel(t).write = [0 0];
 end
-matlabbatch{1}.spm.spatial.preproc.tissue(1).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,1']}; % This is correct ? TPM Lorio Draganski to be kept in /templates folder since will be used to generate TPM in each space.
-matlabbatch{1}.spm.spatial.preproc.tissue(1).ngaus = 1;
-matlabbatch{1}.spm.spatial.preproc.tissue(1).native = [1 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(1).warped = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(2).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,2']};
-matlabbatch{1}.spm.spatial.preproc.tissue(2).ngaus = 1;
-matlabbatch{1}.spm.spatial.preproc.tissue(2).native = [1 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(2).warped = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(3).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,3']};
-matlabbatch{1}.spm.spatial.preproc.tissue(3).ngaus = 2;
-matlabbatch{1}.spm.spatial.preproc.tissue(3).native = [1 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(3).warped = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(4).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,4']};
-matlabbatch{1}.spm.spatial.preproc.tissue(4).ngaus = 3;
-matlabbatch{1}.spm.spatial.preproc.tissue(4).native = [1 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(4).warped = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(5).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,5']};
-matlabbatch{1}.spm.spatial.preproc.tissue(5).ngaus = 4;
-matlabbatch{1}.spm.spatial.preproc.tissue(5).native = [1 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(5).warped = [0 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(6).tpm = {[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii,6']};
-matlabbatch{1}.spm.spatial.preproc.tissue(6).ngaus = 2;
-matlabbatch{1}.spm.spatial.preproc.tissue(6).native = [1 0];
-matlabbatch{1}.spm.spatial.preproc.tissue(6).warped = [0 0];
+
+if ~isempty(strfind(lower(ea_getspace),'macaque'))
+    tpmfile=[ea_space,'TPM.nii'];
+else
+    tpmfile=[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii']; 
+end
+tpn=ea_open_vol(tpmfile);
+
+for tpspectr=1:length(tpn)
+    matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).tpm = {[tpmfile,',',num2str(tpspectr)]}; % This is correct ? TPM Lorio Draganski to be kept in /templates folder since will be used to generate TPM in each space.
+    matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).ngaus = 1;
+    matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).native = [1 0];
+    matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).warped = [0 0];
+end
 matlabbatch{1}.spm.spatial.preproc.warp.mrf = 1;
 matlabbatch{1}.spm.spatial.preproc.warp.cleanup = 1;
 matlabbatch{1}.spm.spatial.preproc.warp.reg = [0 0.001 0.5 0.05 0.2];
@@ -57,11 +47,11 @@ delete([ea_space,spacedef.templates{1},'_seg8.mat']);
 if ~exist([ea_space,'dartel'], 'dir')
     mkdir([ea_space,'dartel']);
 end
-for c=1:6
+for c=1:length(tpn)
     if c<3
        copyfile([ea_space,'c',num2str(c),spacedef.templates{1},'.nii'],[ea_space,'c',num2str(c),'mask.nii']);
     end
-    movefile([ea_space,'c',num2str(c),spacedef.templates{1},'.nii'],[ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
+    movefile([ea_space,'c',num2str(c),spacedef.templates{1},'.nii'],[ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']); 
 end
 
 % add atlas
@@ -82,7 +72,7 @@ if exist([ea_space,'atlas.nii'],'file')
 end
 prefs=ea_prefs('');
 
-for c=1:6
+for c=1:length(tpn)
     fina=[ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
     nii=ea_load_nii(fina); % change datatype to something high for reslicing and smoothing.
     nii.dt=[16,0];
@@ -181,7 +171,7 @@ ea_addshoot;
 
 
 % lightly smooth TPM
-for tp=1:6
+for tp=1:length(tpn)
 matlabbatch{1}.spm.spatial.smooth.data{tp} = [ea_space,'TPM.nii,',num2str(tp)];
 end
 matlabbatch{1}.spm.spatial.smooth.data=matlabbatch{1}.spm.spatial.smooth.data';

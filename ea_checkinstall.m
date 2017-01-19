@@ -12,7 +12,7 @@ if ~exist('force','var')
 end
 switch cmd
     case 'list' % simply return list of installable datasets
-        success={'Redownload Data files','Apply Hotfix','Big Brain 100um subcortical (Amunts 2013)','Lead-DBS Macaque Toolbox','Structural group connectome (Horn 2013)'};
+        success={'Redownload Data files','Apply Hotfix','Big Brain 100um subcortical (Amunts 2013)','Structural group connectome (Horn 2013)'};
         commands={'leaddata','hotfix','bigbrain','macaque','groupconnectome2013'};
     case 'leaddata'
         checkf=[ea_space,'bb.nii'];
@@ -52,25 +52,6 @@ switch cmd
                 'bigbrain');
         else
             disp('BigBrain is installed.')
-        end
-    case 'macaque'
-        checkf=[earoot,'toolbox',filesep,'macaque'];
-        force=ea_alreadyinstalled(checkf,checkonly,robot);
-        if checkonly;
-            success=~force;
-            return;
-        end
-        if force==-1;
-            success=-1;
-            return;
-        end
-
-        if ~exist(checkf,'file') || force
-            success=ea_downloadasset('Lead-DBS Macaque toolbox',...
-                [earoot,'toolbox',filesep,'macaque.zip'],...
-                'macaque');
-        else
-            disp('Macaque toolbox is installed.')
         end
     case 'groupconnectome2013'
         checkf=[ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) full.mat'];
