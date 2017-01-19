@@ -77,7 +77,7 @@ for c=1:length(tpn)
     nii=ea_load_nii(fina); % change datatype to something high for reslicing and smoothing.
     nii.dt=[16,0];
     ea_write_nii(nii);
-    if ~(prefs.normalize.spm.resolution==0.5) % reslice images
+    if ~(prefs.normalize.spm.resolution==0.5) && isempty(strfind(lower(ea_getspace),'macaque')) % reslice images
         ea_reslice_nii(fina,fina,[prefs.normalize.spm.resolution prefs.normalize.spm.resolution prefs.normalize.spm.resolution],1,[],6);
     end
     % apply very light smooth

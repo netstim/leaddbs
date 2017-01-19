@@ -42,6 +42,8 @@ else
             job.tissue(tpm).native=[0 0];
         end
     end
+    
+    job.tissue(tpm+1:end)=[];
     if del
         job.warp.write=[0,0];
     else
