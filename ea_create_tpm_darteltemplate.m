@@ -12,40 +12,66 @@ if ~exist('mute','var')
 end
 
 load([ea_space,'ea_space_def.mat']);
-for t=1:length(spacedef.templates)
-    matlabbatch{1}.spm.spatial.preproc.channel(t).vols = {[ea_space,spacedef.templates{t},'.nii,1']};
-    matlabbatch{1}.spm.spatial.preproc.channel(t).biasreg = 0.001;
-    matlabbatch{1}.spm.spatial.preproc.channel(t).biasfwhm = 60;
-    matlabbatch{1}.spm.spatial.preproc.channel(t).write = [0 0];
-end
 
-if ~isempty(strfind(lower(ea_getspace),'macaque'))
-    tpmfile=[ea_space,'TPM.nii'];
-else
-    tpmfile=[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii']; 
+if ~exist([ea_space,'dartel'], 'dir')
+    mkdir([ea_space,'dartel']);
+end
+tpmfile=[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii'];
+rebuildtpm=1;
+if isfield(spacedef,'tpm')
+    
+    switch spacedef.tpm
+        case 'custom_fixed'
+            tpmfile=[ea_space,'TPM.nii'];
+            rebuildtpm=0;
+        case 'custom_rebuild'
+            tpmfile=[ea_space,'TPM.nii'];
+            rebuildtpm=1;
+            if exist([ea_space,'raw_TPM.nii'],'file')
+                copyfile([ea_space,'raw_TPM.nii'],[ea_space,'TPM.nii']);
+            else
+                copyfile([ea_space,'TPM.nii'],[ea_space,'raw_TPM.nii']);
+            end
+    end
 end
 tpn=ea_open_vol(tpmfile);
 
-for tpspectr=1:length(tpn)
-    matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).tpm = {[tpmfile,',',num2str(tpspectr)]}; % This is correct ? TPM Lorio Draganski to be kept in /templates folder since will be used to generate TPM in each space.
-    matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).ngaus = 1;
-    matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).native = [1 0];
-    matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).warped = [0 0];
-end
-matlabbatch{1}.spm.spatial.preproc.warp.mrf = 1;
-matlabbatch{1}.spm.spatial.preproc.warp.cleanup = 1;
-matlabbatch{1}.spm.spatial.preproc.warp.reg = [0 0.001 0.5 0.05 0.2];
-matlabbatch{1}.spm.spatial.preproc.warp.affreg = 'mni';
-matlabbatch{1}.spm.spatial.preproc.warp.fwhm = 0;
-matlabbatch{1}.spm.spatial.preproc.warp.samp = 3;
-matlabbatch{1}.spm.spatial.preproc.warp.write = [0 0];
-
-spm_jobman('run',{matlabbatch});
-clear matlabbatch
-
-delete([ea_space,spacedef.templates{1},'_seg8.mat']);
-if ~exist([ea_space,'dartel'], 'dir')
-    mkdir([ea_space,'dartel']);
+if rebuildtpm
+    for t=1:length(spacedef.templates)
+        matlabbatch{1}.spm.spatial.preproc.channel(t).vols = {[ea_space,spacedef.templates{t},'.nii,1']};
+        matlabbatch{1}.spm.spatial.preproc.channel(t).biasreg = 0.001;
+        matlabbatch{1}.spm.spatial.preproc.channel(t).biasfwhm = 60;
+        matlabbatch{1}.spm.spatial.preproc.channel(t).write = [0 0];
+    end
+    for tpspectr=1:length(tpn)
+        matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).tpm = {[tpmfile,',',num2str(tpspectr)]}; % This is correct ? TPM Lorio Draganski to be kept in /templates folder since will be used to generate TPM in each space.
+        matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).ngaus = 1;
+        matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).native = [1 0];
+        matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).warped = [0 0];
+    end
+    matlabbatch{1}.spm.spatial.preproc.warp.mrf = 1;
+    matlabbatch{1}.spm.spatial.preproc.warp.cleanup = 1;
+    matlabbatch{1}.spm.spatial.preproc.warp.reg = [0 0.001 0.5 0.05 0.2];
+    matlabbatch{1}.spm.spatial.preproc.warp.affreg = 'mni';
+    matlabbatch{1}.spm.spatial.preproc.warp.fwhm = 0;
+    matlabbatch{1}.spm.spatial.preproc.warp.samp = 3;
+    matlabbatch{1}.spm.spatial.preproc.warp.write = [0 0];
+    
+    spm_jobman('run',{matlabbatch});
+    clear matlabbatch
+    
+    delete([ea_space,spacedef.templates{1},'_seg8.mat']);
+    
+else
+    % split TPM
+    matlabbatch{1}.spm.util.split.vol = {[ea_space,'TPM.nii,1']};
+    matlabbatch{1}.spm.util.split.outdir = {ea_space};
+    spm_jobman('run',{matlabbatch});
+    clear matlabbatch
+    
+    for t=1:length(tpn)
+       movefile(['TPM_',sprintf('%05.f',t),'.nii'],['c',num2str(t),spacedef.templates{1},'.nii']); 
+    end
 end
 for c=1:length(tpn)
     if c<3
@@ -53,6 +79,7 @@ for c=1:length(tpn)
     end
     movefile([ea_space,'c',num2str(c),spacedef.templates{1},'.nii'],[ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']); 
 end
+
 
 % add atlas
 if exist([ea_space,'atlas.nii'],'file')
@@ -71,42 +98,46 @@ if exist([ea_space,'atlas.nii'],'file')
     ea_write_nii(c3);
 end
 prefs=ea_prefs('');
-
-for c=1:length(tpn)
-    fina=[ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
-    nii=ea_load_nii(fina); % change datatype to something high for reslicing and smoothing.
-    nii.dt=[16,0];
-    ea_write_nii(nii);
-    if ~(prefs.normalize.spm.resolution==0.5) && isempty(strfind(lower(ea_getspace),'macaque')) % reslice images
-        ea_reslice_nii(fina,fina,[prefs.normalize.spm.resolution prefs.normalize.spm.resolution prefs.normalize.spm.resolution],1,[],6);
+if ~strcmp(spacedef.tpm(1:6),'custom')
+    
+    for c=1:length(tpn)
+        
+        fina=[ea_space([],'dartel'),'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
+        nii=ea_load_nii(fina); % change datatype to something high for reslicing and smoothing.
+        nii.dt=[16,0];
+        ea_write_nii(nii);
+        if ~(prefs.normalize.spm.resolution==0.5) % reslice images
+            ea_reslice_nii(fina,fina,[prefs.normalize.spm.resolution prefs.normalize.spm.resolution prefs.normalize.spm.resolution],1,[],6);
+        end
+        % apply very light smooth on custom TPMs
+        job{1}.spm.spatial.smooth.data = {fina};
+        job{1}.spm.spatial.smooth.fwhm = [0.5 0.5 0.5];
+        job{1}.spm.spatial.smooth.dtype = 0;
+        job{1}.spm.spatial.smooth.im = 0;
+        job{1}.spm.spatial.smooth.prefix = 's';
+        spm_jobman('run',{job});
+        clear job
+        [pth,fn,ext]=fileparts(fina);
+        movefile(fullfile(pth,['s',fn,ext]),fullfile(pth,[fn,ext]));
+        
+        nii=ea_load_nii(fina); % change datatype back to uint8
+        nii.dt=[2,0];
+        delete(fina);
+        ea_write_nii(nii);
+        
+        matlabbatch{1}.spm.util.cat.vols{c} = fina;
     end
-    % apply very light smooth
-    job{1}.spm.spatial.smooth.data = {fina};
-    job{1}.spm.spatial.smooth.fwhm = [0.5 0.5 0.5];
-    job{1}.spm.spatial.smooth.dtype = 0;
-    job{1}.spm.spatial.smooth.im = 0;
-    job{1}.spm.spatial.smooth.prefix = 's';
-    spm_jobman('run',{job});
-    clear job
-    [pth,fn,ext]=fileparts(fina);
-    movefile(fullfile(pth,['s',fn,ext]),fullfile(pth,[fn,ext]));
-    nii=ea_load_nii(fina); % change datatype back to uint8
-    nii.dt=[2,0];
-    delete(fina);
-    ea_write_nii(nii);
-    matlabbatch{1}.spm.util.cat.vols{c} = fina;
+    
+    matlabbatch{1}.spm.util.cat.vols = matlabbatch{1}.spm.util.cat.vols';
+    
+    matlabbatch{1}.spm.util.cat.name = [ea_space,'TPM.nii'];
+    matlabbatch{1}.spm.util.cat.dtype = 16;
+    spm_jobman('run',{matlabbatch});
+    clear matlabbatch
+    delete([ea_space,'TPM.mat']);
 end
 
-matlabbatch{1}.spm.util.cat.vols = matlabbatch{1}.spm.util.cat.vols';
-
-matlabbatch{1}.spm.util.cat.name = [ea_space,'TPM.nii'];
-matlabbatch{1}.spm.util.cat.dtype = 16;
-spm_jobman('run',{matlabbatch});
-clear matlabbatch
-
-delete([ea_space,'TPM.mat']);
-
-wd=[ea_space([],'dartel'),filesep];
+wd=[ea_space([],'dartel')];
 %gunzip([wd,'dartelmni_6_hires.nii.gz']);
 %spm_file_split([wd,'dartelmni_6_hires.nii']);
 gs=[0,2,3,5,6,8];
@@ -160,7 +191,7 @@ end
 
 % further cleanup
 delete([wd,'dartelmni_*.mat']);
-for c=1:6
+for c=1:length(tpn)
     delete([wd,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
 end
 %gzip([wd,'dartelmni_6_hires.nii']);
@@ -171,17 +202,20 @@ ea_addshoot;
 
 
 % lightly smooth TPM
-for tp=1:length(tpn)
-matlabbatch{1}.spm.spatial.smooth.data{tp} = [ea_space,'TPM.nii,',num2str(tp)];
+if ~strcmp(spacedef.tpm,'custom_fixed')
+    for tp=1:length(tpn)
+        matlabbatch{1}.spm.spatial.smooth.data{tp} = [ea_space,'TPM.nii,',num2str(tp)];
+    end
+    matlabbatch{1}.spm.spatial.smooth.data=matlabbatch{1}.spm.spatial.smooth.data';
+    matlabbatch{1}.spm.spatial.smooth.fwhm = [3 3 3];
+    matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+    matlabbatch{1}.spm.spatial.smooth.im = 0;
+    matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+    spm_jobman('run',{matlabbatch});
+    clear matlabbatch
+    
+    movefile([ea_space,'sTPM.nii'],[ea_space,'TPM.nii']);
 end
-matlabbatch{1}.spm.spatial.smooth.data=matlabbatch{1}.spm.spatial.smooth.data';
-matlabbatch{1}.spm.spatial.smooth.fwhm = [3 3 3];
-matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-matlabbatch{1}.spm.spatial.smooth.im = 0;
-matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-spm_jobman('run',{matlabbatch});
-clear matlabbatch
-movefile([ea_space,'sTPM.nii'],[ea_space,'TPM.nii']);
 % set marker that last gen TPM has been set.
 fid=fopen([ea_space,'.newtpm'],'w');
 fprintf(fid,'%s','Novel TPM generated by Lead Neuroimaging Suite.');
