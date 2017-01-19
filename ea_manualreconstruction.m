@@ -109,7 +109,7 @@ function ea_endfcn(mcfig)
 % This subfunction terminates the process of manual correction and saves
 % results.
     disp('Saving results.');
-    
+
     ea_busyaction('on',mcfig,'reco');
 %markers=getappdata(gcf,'markers');
 %trajectory=getappdata(gcf,'trajectory');
@@ -169,7 +169,7 @@ switch lower(commnd)
     case {'x','a','p','y','l','r'} % view angles.
         %markers=getappdata(mcfig,'markers');
         ea_view(nan,nan,commnd);
-        
+
     case {'0','3','4','7'}
         switch lower(commnd)
             case '0'
@@ -194,10 +194,10 @@ switch lower(commnd)
             for i=1:4
                 set(eltog(i),'State','off');
             end
-            
+
             % set the correct toggletool again.
             set(eltog(selectrode),'State','on');
-            
+
             % store selected electrode in appdata.
             setappdata(mcfig,'selectrode',selectrode);
             updatescene([],[],mcfig);
@@ -211,35 +211,35 @@ switch lower(commnd)
 %         increaseoffset(nan,nan,event);
 %     case 'n'
 %         decreaseoffset(nan,nan,event);
-        
+
     case {'s','d'}
-        
-        
+
+
     otherwise % arrow keys, plus, minus
-        
+
         if ismember(event.Key,{'rightarrow','leftarrow','uparrow','downarrow'}) || ismember(event.Character,{'+','-','*','_'})
         selectrode=getappdata(mcfig,'selectrode');
         if ~selectrode % no electrode is highlighted, move electrodes alongside trajectory or increase/decrease spacing.
             %markers=getappdata(mcfig,'markers');
             %trajectory=getappdata(mcfig,'trajectory');
             [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-            
-            
+
+
             markers=ea_correctcoords(markers,trajectory,event);
             ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
-            
+
             %            setappdata(mcfig,'markers',markers);
             updatescene([],[],mcfig);
             [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-            
+
             %           markers=getappdata(mcfig,'markers');
         else % electrode is highlighted. Move in xy dirs.
-            
+
 %             markers=getappdata(mcfig,'markers');
 %             trajectory=getappdata(mcfig,'trajectory');
             [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
             movedcoords=moveonecoord(markers,selectrode,event); % move the correct coord to the correct direction.
-            
+
             for side=1:length(markers)
                     set(mplot(1,side),'XData',movedcoords(side).head(1),'YData',movedcoords(side).head(2),'ZData',movedcoords(side).head(3))
                     set(mplot(2,side),'XData',movedcoords(side).tail(1),'YData',movedcoords(side).tail(2),'ZData',movedcoords(side).tail(3))
@@ -254,7 +254,7 @@ switch lower(commnd)
             %update_coords(elplot(selectrode),markers,trajectory,movedcoords); % refresh scene view (including update for all other electrodes).
             %setappdata(gcf,'markers',markers);
             %setappdata(mcfig,'trajectory',trajectory);
-            
+
         end
         end
 end
@@ -295,7 +295,7 @@ hdtrajectory(:,3)=interp1q([1:length(trajectory)]',trajectory(:,3),[1:1/resoluti
 
 
 function updatescene(varargin)
- 
+
 hobj=varargin{1};
 ev=varargin{2};
 mcfig=varargin{3};
@@ -437,7 +437,7 @@ hold on
 
 if isempty(elplot) % first time plot electrode contacts
 cnt=1;
-    
+
     for side=1:length(markers)
         mplot(1,side)=plot3(markers(side).head(1),markers(side).head(2),markers(side).head(3),'*','MarkerEdgeColor',[0.9 0.2 0.2],'MarkerFaceColor','none','MarkerSize',25);
         mplot(2,side)=plot3(markers(side).tail(1),markers(side).tail(2),markers(side).tail(3),'*','MarkerEdgeColor',[0.2 0.9 0.2],'MarkerFaceColor','none','MarkerSize',25);
@@ -446,25 +446,25 @@ cnt=1;
             cnt=cnt+1;
         end
     end
-   setappdata(mcfig,'elplot',elplot); 
-   setappdata(mcfig,'mplot',mplot); 
-   
+   setappdata(mcfig,'elplot',elplot);
+   setappdata(mcfig,'mplot',mplot);
+
 else % update coordinates in elplot & mplot:
     cnt=1;
 
     for side=1:length(markers)
-        
+
         set(mplot(1,side),'XData',markers(side).head(1));
         set(mplot(1,side),'YData',markers(side).head(2));
         set(mplot(1,side),'ZData',markers(side).head(3));
-        
+
         set(mplot(2,side),'XData',markers(side).tail(1));
         set(mplot(2,side),'YData',markers(side).tail(2));
         set(mplot(2,side),'ZData',markers(side).tail(3));
 
-        
+
         for el=1:size(coords_mm{side},1)
-            
+
             set(elplot(cnt),'XData',coords_mm{side}(el,1));
             set(elplot(cnt),'YData',coords_mm{side}(el,2));
             set(elplot(cnt),'ZData',coords_mm{side}(el,3));
@@ -482,20 +482,20 @@ midpt=mean([markers(1).head;markers(2).head]);
 
 
 
-spacetext=text(midpt(1),midpt(2),midpt(3)-1,['Electrode Spacing: ',num2str(memp_eldist),' mm.'],'Color','w','BackgroundColor','k','HorizontalAlignment','center'); 
+spacetext=text(midpt(1),midpt(2),midpt(3)-1,['Electrode Spacing: ',num2str(memp_eldist),' mm.'],'Color','w','BackgroundColor','k','HorizontalAlignment','center');
 set(mcfig,'name',[options.patientname,', Electrode Spacing: ',num2str(memp_eldist),' mm.']);
 setappdata(mcfig,'spacetext',spacetext);
 
 % %% plot trajectory lines
 
 for side=1:length(options.sides)
-    
+
     try
-        
+
         if ~isempty(trajectory{side})
-            
+
             if options.verbose>1; trajectory_plot(side)=plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'color',[0.5,0.5,0.5],'linew',1.5); end
-            
+
         end
     end
 end
@@ -513,47 +513,47 @@ for doxx=0:1
             meantrajectory=genhd_inside(trajectory{side});
             clear imat
             %% sample plane left and right from meantrajectory
-            
+
             if doxx
                 Vcor=getV(mcfig,'Vcor',options);
                 imat=ea_resample_planes(Vcor,meantrajectory',sample_width,doxx,0.2);
-                
+
             else
                 Vsag=getV(mcfig,'Vsag',options);
                 imat=ea_resample_planes(Vsag,meantrajectory',sample_width,doxx,0.2);
-                
+
             end
-            
-            
+
+
             colormap gray
-            
-            
+
+
             if doxx % span surface in x direction
                 spanvector=[sample_width,0,0];
             else % span surface in y direction
                 spanvector=[0,sample_width,0];
             end
-            
+
             boundingbox=[meantrajectory(1,:)-spanvector;...
                 meantrajectory(1,:)+spanvector;...
                 meantrajectory(end,:)-spanvector;...
                 meantrajectory(end,:)+spanvector];
-            
-            
+
+
             xx=[boundingbox(1,1),boundingbox(2,1);boundingbox(3,1),boundingbox(4,1)];
             yy=[boundingbox(1,2),boundingbox(2,2);boundingbox(3,2),boundingbox(4,2)];
             zz=[boundingbox(1,3),boundingbox(2,3);boundingbox(3,3),boundingbox(4,3)];
-            
-            
+
+
             alphamap=imat;
             alphamap(:)=0.9;
-            
+
             if ~getappdata(mcfig,'planecset') % initially and once set contrast based on image data.
-                
+
                 if options.modality==1 % MR
                     c_lims=[ea_nanmean(imat(:))-ea_nanstd(imat(:))-3*ea_nanstd(imat(:)),ea_nanmean(imat(:))-ea_nanstd(imat(:))+3*ea_nanstd(imat(:))];
                 elseif options.modality==2 % CT
-                    
+
                     lthresh=800; % initial guesses for CT
                     uthresh=2800;
                     try % try estimating a better guess..
@@ -561,7 +561,7 @@ for doxx=0:1
                             timat=imat;
                             timat(timat<lthresh)=0;
                             timat(timat>uthresh)=0;
-                            
+
                             nomi=ea_nmi(round(imat),round(timat));
                             if nomi>0.9
                                 break
@@ -576,22 +576,22 @@ for doxx=0:1
                     end
                    % disp(['Lthresh: ',num2str(lthresh),'; Uthresh: ',num2str(uthresh),'.']);
                     c_lims=[lthresh,uthresh]; % Initial guess, CT
-                    
-                    
+
+
                 end
                 caxis(c_lims);
                 setappdata(mcfig,'c_lims',c_lims);
                 setappdata(mcfig,'planecset',1);
             end
-            
-            
+
+
             planes(planecnt)=surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'alphadata',alphamap,'FaceAlpha', 'texturemap','FaceColor','texturemap','EdgeColor','none','alphadatamapping','none');
-            
+
             planecnt=planecnt+1;
             if ~doxx
-                
+
                 if side==1
-                    
+
 %                     captions(1)=text(0,... % x
 %                         ((min(boundingbox(:,2))+max(boundingbox(:,2)))/2)+20,... % y
 %                         0,... % z
@@ -602,17 +602,17 @@ for doxx=0:1
 %                         'P','Color','w','BackgroundColor','k');
 %                     % captions(1)=text(0,0,0,... % z
 %                     %  'C','Color','w');
-%                     
+%
 %                     captions(3)=text(40,... % x
 %                         0,... % y
 %                         0,... % z
 %                         'R','Color','w','BackgroundColor','k');
-%                     
+%
 %                     captions(4)=text(-40,... % x
 %                         0,... % y
 %                         0,... % z
 %                         'L','Color','w','BackgroundColor','k');
-%                     
+%
 
 
 captions(1)=text(midpt(1),... % x
@@ -632,13 +632,13 @@ captions(4)=text(midpt(1)+10,... % x
     midpt(3)+10,... % z
     'R','Color','w','BackgroundColor','k');
 
-                    
-                    
+
+
                     setappdata(mcfig,'captions',captions);
-                    
+
                 end
             else
-                
+
             end
         %end
     end
@@ -661,20 +661,20 @@ wsize=10;
 cmap=[1,4,5,8];
 for subpl=1:4
     subplot(4,5,subpl*5)
-    
+
     slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
     try
         imagesc(slice,[ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
     catch
         imagesc(slice);
     end
-    
+
     hold on
-    
-    
-    
+
+
+
     if selectrode && subpl==selectrode
-        
+
         fc='y';
     else
         if ismember(subpl,[1,3])
@@ -683,13 +683,13 @@ for subpl=1:4
             fc='g';
         end
     end
-    
+
     plot((wsize+1)*2,(wsize+1)*2,'*','MarkerSize',15,'MarkerEdgeColor',fc,'LineWidth',2,'LineSmoothing','on');
     hold off
     axis square
     axis off
     caxis([c_lims(1) c_lims(2)]);
-    
+
 end
 
 
@@ -699,7 +699,7 @@ legplot=getappdata(mcfig,'legplot');
 if isempty(legplot)
 elax=subplot(4,5,[1,6,11,16]); % left electrode plot
 axis off
-load([options.earoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname])
+load([ea_space,'electrode_models',filesep,options.elspec.matfname])
 
 % visualize
 cnt=1;
@@ -716,9 +716,9 @@ for con=1:length(electrode.contacts)
     electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
     electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
     elrender{side}(cnt)=patch(electrode.contacts(con));
-    
+
     ea_specsurf(elrender{side}(cnt),options.elspec.contact_color,0.5);
-    
+
     cnt=cnt+1;
 end
 
@@ -778,7 +778,7 @@ function V=getV(mcfig,ID,options)
 if options.native
     addon='_unnormalized';
 else
-    addon='';    
+    addon='';
 end
 
 switch options.modality
@@ -797,14 +797,14 @@ if isempty(V)
                 V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
             end
         case 'Vtra'
-            
+
             V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
 
         case 'Vsag'
             try
                 V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['sagnii',addon])]);
-                
-            
+
+
             catch
                 try
                     V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['cornii',addon])]);
@@ -842,11 +842,11 @@ function movedel=whichelmoved(coordhandle)
 mplot = getappdata(gcf,'mplot');
 for side=1:2
     for el=1:2;
-        
+
         if coordhandle==mplot(el,side)
             movedel=sub2ind([2,2],el,side);
         end
-        
+
     end
 end
 
@@ -864,7 +864,7 @@ numarkers=markers;
 nutrajectory=trajectory;
 
 switch movel
-    
+
     case 1 % lower right
         olddist=abs(pdist([markers(1).head;markers(1).tail]));
         refel=4;
@@ -872,11 +872,11 @@ switch movel
         cchangecoord=1;
         usefit=1;
         spin=-1;
-        
+
         refpt=markers(1).tail;
         movedpt=movedmarkers(1,:);
         move='head';
-        
+
     case 3 % lower left
         olddist=abs(pdist([markers(2).head;markers(2).tail]));
         refel=4;
@@ -884,11 +884,11 @@ switch movel
         cchangecoord=2;
         usefit=2;
         spin=-1;
-        
+
         refpt=markers(2).tail;
         movedpt=movedmarkers(3,:);
         move='head';
-        
+
     case 2 % upper right
         olddist=abs(pdist([markers(1).head;markers(1).tail]));
         refel=1;
@@ -896,24 +896,24 @@ switch movel
         cchangecoord=1;
         usefit=1;
         spin=1;
-        
+
         refpt=markers(1).head;
         movedpt=movedmarkers(2,:);
         move='tail';
-        
+
     case 4 % upper left
         olddist=abs(pdist([markers(2).head;markers(2).tail]));
         refel=1;
         changecoord=2:4;
         cchangecoord=2;
-        
+
         usefit=2;
         spin=1;
-        
+
         refpt=markers(2).head;
         movedpt=movedmarkers(4,:);
          move='tail';
-         
+
 end
 
 
@@ -948,14 +948,14 @@ nutrajectory{usefit}=[];
 cnt=1;
 
 for ix=-50:0.5:50
-    
+
     thispoint=refpt+(nutraj*ix);
     if thispoint(3)<max(origtrajectory{usefit}(:,3)) && thispoint(3)>min(origtrajectory{usefit}(:,3))
         nutrajectory{usefit}(cnt,:)=thispoint;
         cnt=cnt+1;
     end
-    
-    
+
+
 end
 nutrajectory{usefit}=sortrows(nutrajectory{usefit},-3); % Make sure that trajectory is always listed in correct order.
 
@@ -976,12 +976,12 @@ switch command.Key
         movedcoords(selectrode,1)=movedcoords(selectrode,1)+grone(1+ismember('shift',command.Modifier));
     case 'uparrow'
         movedcoords(selectrode,2)=movedcoords(selectrode,2)+grone(1+ismember('shift',command.Modifier));
-        
+
     case 'downarrow'
         movedcoords(selectrode,2)=movedcoords(selectrode,2)-grone(1+ismember('shift',command.Modifier));
-        
-        
-        
+
+
+
 end
 markers(1).head=movedcoords(1,:);
 markers(1).tail=movedcoords(2,:);
@@ -1092,7 +1092,7 @@ elseif nargin==1
 x=varargin{1};
     dim=1;
 end
-    
+
 N = sum(~isnan(x), dim);
 y = nansum(x, dim) ./ N;
 
@@ -1110,15 +1110,15 @@ function M = ea_nmi(X,Y)
 % function M = MI_GG(X,Y)
 % Compute the mutual information of two images: X and Y, having
 % integer values.
-% 
+%
 % INPUT:
-% X --> first image 
+% X --> first image
 % Y --> second image (same size of X)
 %
 % OUTPUT:
 % M --> mutual information of X and Y
 %
-% Written by GIANGREGORIO Generoso. 
+% Written by GIANGREGORIO Generoso.
 % DATE: 04/05/2012
 % E-MAIL: ggiangre@unisannio.it
 %__________________________________________________________________________
@@ -1126,7 +1126,7 @@ function M = ea_nmi(X,Y)
 X = double(X);
 Y = double(Y);
 
-X_norm = X - min(X(:)) +1; 
+X_norm = X - min(X(:)) +1;
 Y_norm = Y - min(Y(:)) +1;
 
 matAB(:,1) = X_norm(:);
@@ -1134,7 +1134,7 @@ matAB(:,2) = Y_norm(:);
 h = accumarray(matAB+1, 1); % joint histogram
 
 hn = h./sum(h(:)); % normalized joint histogram
-y_marg=sum(hn,1); 
+y_marg=sum(hn,1);
 x_marg=sum(hn,2);
 
 Hy = - sum(y_marg.*log2(y_marg + (y_marg == 0))); % Entropy of Y

@@ -67,7 +67,7 @@ coord2extract=zeros(length(1:zdim)* length(-xdim:xdim)*length(-ydim:ydim),3);
 for zz=1:zdim
     for xx=-xdim:xdim
         for yy=-ydim:ydim
-            
+
             pt=startpt+zz*trajvector;
             coord2extract(cnt,:)=[pt(1)+orthx(1)*xx+orthy(1)*yy; ...
                 pt(2)+orthx(2)*xx+orthy(2)*yy; ...
@@ -100,8 +100,8 @@ switch options.modality
 end
 
 
-if exist([options.earoot,'templates',filesep,'electrode_contacts',filesep,mrstr,filesep,'template.nii'],'file')
-    template=load_nii([options.earoot,'templates',filesep,'electrode_contacts',filesep,mrstr,filesep,'template.nii']);
+if exist([ea_space,'electrode_contacts',filesep,mrstr,filesep,'template.nii'],'file')
+    template=load_nii([ea_space,'electrode_contacts',filesep,mrstr,filesep,'template.nii']);
     nutimg=zeros(size(template.img,1),size(template.img,2),size(template.img,3),size(template.img,4)+1);
     nutimg(:,:,:,1:end-1)=template.img;
 else
@@ -110,7 +110,7 @@ end
 
 nutimg(:,:,:,end)=imat;
 cnii=make_nii(nutimg);
-save_nii(cnii,[options.earoot,'templates',filesep,'electrode_contacts',filesep,mrstr,filesep,'template.nii']);
+save_nii(cnii,[ea_space,'electrode_contacts',filesep,mrstr,filesep,'template.nii']);
 
 % switch options.elspec.eldist
 %     case 3

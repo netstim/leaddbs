@@ -19,7 +19,7 @@ seeds=[];
 
 for i=1:length(meshel.ins)
     fcyl=[fcyl; meshel.ins{i}.faces+size(ncyl,1)];
-    
+
     if(i<length(meshel.ins))
         scyl=[scyl; meshel.ins{i}.endplates+size(ncyl,1)]; % had to rebuild the endplates
     end
@@ -71,4 +71,4 @@ end
 %% convert to obtain the electrode surface mesh model
 
 [node,~,face]=s2m(unique_ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
-save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');
+save([ea_space,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');

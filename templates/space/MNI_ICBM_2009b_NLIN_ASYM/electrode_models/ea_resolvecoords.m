@@ -16,27 +16,27 @@ if nargin==4
     rszfactor=varargin{4};
 end
 
-load([options.earoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname]);
+load([ea_space,'electrode_models',filesep,options.elspec.matfname]);
 for side=1:length(markers)
-    
-    
+
+
     if resize
        can_dist=pdist([electrode.head_position;electrode.tail_position]);
        %emp_dist=pdist([markers(side).head;markers(side).tail]);
-        
+
            A=squareform(pdist(electrode.coords_mm));
            can_eldist=sum(sum(tril(triu(A,1),1)))/(options.elspec.numel-1);
-       
+
        vec=(markers(side).tail-markers(side).head)/norm(markers(side).tail-markers(side).head);
        if nargin>3
           stretch=can_dist*(rszfactor/can_eldist);
        else
-          stretch=can_dist; 
+          stretch=can_dist;
        end
-       
+
        markers(side).tail=markers(side).head+vec*stretch;
     end
-    
+
 M=[markers(side).head,1;markers(side).tail,1;markers(side).x,1;markers(side).y,1];
 E=[electrode.head_position,1;electrode.tail_position,1;electrode.x_position,1;electrode.y_position,1];
 X=linsolve(E,M);

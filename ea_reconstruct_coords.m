@@ -10,9 +10,9 @@ vizz=0;
 
 switch options.modality
     case 1
-        headtemp=ea_load_nii(fullfile(options.earoot,'templates','electrode_contacts','mr','template.nii'));
+        headtemp=ea_load_nii(fullfile(ea_space,'electrode_contacts','mr','template.nii'));
     case 2
-        headtemp=ea_load_nii(fullfile(options.earoot,'templates','electrode_contacts','ct','template.nii'));
+        headtemp=ea_load_nii(fullfile(ea_space,'electrode_contacts','ct','template.nii'));
 end
 
 htemp=headtemp.img;
@@ -26,11 +26,11 @@ temp=ea_nanmean(htemp(:,:,:,:),4);
 
 disp('Calculating cross-correlation series for all x and y values within the cuboid volume.');
 
-    
-    
+
+
  %   cnii=make_nii(temp);
  %   save_nii(cnii,['template_run',num2str(1),'.nii']);
-    
+
 cnt=1;
 corrs=zeros(size(cimat,1)*size(cimat,2),299);
 for xx=1:size(cimat,1)
@@ -53,12 +53,12 @@ if vizz
    icimat=cat(3,cimat,zeros(31,31,maxi));
    imagesc(squeeze(icimat(15,:,:)));
    colormap gray
-    
+
    subplot(2,1,2);
    itemp=cat(3,zeros(31,31,maxi),temp);
    imagesc(squeeze(itemp(15,:,:)));
    colormap gray
-    
+
 end
 
 try
@@ -69,7 +69,7 @@ catch
    goodz=min(trajectory(:,3));
    maxi=1;
 end
-if isempty(goodz) 
+if isempty(goodz)
       ea_showdis(['Probably algorithm stopped to early. No guess of electrode heights possible.'],options.verbose);
    goodz=min(trajectory(:,3));
    maxi=1;
@@ -103,7 +103,7 @@ elseif nargin==1
 x=varargin{1};
     dim=1;
 end
-    
+
 N = sum(~isnan(x), dim);
 y = nansum(x, dim) ./ N;
 

@@ -14,7 +14,7 @@ if vizz
     for f=1:length(elfv)
         patch(elfv(f),'FaceColor','none');
     end
-    
+
 end
 orig=electrode.tail_position-3*(electrode.head_position-electrode.tail_position);
 etop=electrode.head_position-3*(electrode.tail_position-electrode.head_position);
@@ -34,7 +34,7 @@ v0=(etop-orig)/electrodelen;               % unitary dir
 c0=[0 0 0];
 v=[0 0 1];
 
-elmodel_fn=[options.earoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'];
+elmodel_fn=[ea_space,'electrode_models',filesep,elspec.matfname,'_vol.mat'];
 if ~exist(elmodel_fn,'file')
   ea_generate_electrode_specs; % regenerate all electrode specifications
 else
@@ -203,23 +203,23 @@ end
 wmboundary=[];
 for reg=1:length(centroids)
     % first check if whether contact or insulator
-    
+
     % a - check contacts:
-    
+
     for con=find(eltissuetype==3);
         convin=ea_intriangulation(elfv(con).vertices,elfv(con).faces,centroids(reg,:));
-        
+
         thiscompsnodes=emesh(emesh(1:end,5)==reg,1:4); % get this components nodes
         dirinodes=nmesh(thiscompsnodes,:);
         dirinodes=ea_nudgedirinodes(dirinodes,centroids(reg,:));
         in=double(ea_intriangulation(elfv(con).vertices,elfv(con).faces,dirinodes));
-        
+
         if convin && mean(in)>0.7
             if ismember(con,active)
-                
+
                 % we captured an active contact. need to assign to correct
                 % source and polarity
-                
+
                 for source=1:4
                     if S.([sidec,'s',num2str(source)]).amp % then this active contact could be from this source since source is active
                         if S.([sidec,'s',num2str(source)]).(['k',num2str(con+8*(side-1)-1)]).perc % current captured contact is from this source
@@ -229,8 +229,8 @@ for reg=1:length(centroids)
                         end
                     end
                 end
-                
-                
+
+
             end
             tissuelabels(reg)=3; % set contact
             disp(['Region ',num2str(reg),' captured by contact material.']);
@@ -246,9 +246,9 @@ for reg=1:length(centroids)
         end
     end
     if tissuelabels(reg); continue; end % move to next component if already assigned.
-    
+
     % b - check insulation:
-    
+
     for ins=find(eltissuetype==4);
         convin=ea_intriangulation(elfv(ins).vertices,elfv(ins).faces,centroids(reg,:));
         dirinodes=nmesh(emesh(emesh(1:end,5)==reg,1:4),:);
@@ -269,16 +269,16 @@ for reg=1:length(centroids)
         end
     end
     if tissuelabels(reg); continue; end % move to next component if already assigned.
-    
-    
+
+
     % if not: if grey matter, then white matter
-    
+
     for gm=1:length(fv)
         convin=ea_intriangulation(fv(gm).vertices,fv(gm).faces,centroids(reg,:));
         dirinodes=nmesh(emesh(emesh(1:end,5)==reg,1:4),:);
         dirinodes=ea_nudgedirinodes(dirinodes,centroids(reg,:));
         in=double(ea_intriangulation(fv(gm).vertices,fv(gm).faces,dirinodes));
-        
+
         if convin && mean(in)>0.7
             tissuelabels(reg)=1; % set grey matter
             disp(['Region ',num2str(reg),' captured by grey matter.']);
@@ -294,77 +294,77 @@ for reg=1:length(centroids)
         end
     end
     if tissuelabels(reg); continue; end
-    
-    
+
+
     % assign the rest to white matter: (this following code will not be executed if
     % label has already been assigned above).
-    
+
     tissuelabels(reg)=2; % set white matter
     disp(['Region ',num2str(reg),' captured by white matter.']);
-    
+
     % now we need to get surface nodes based on nbcyl
     % first create cylinder surface nodes from nbcyl and fbcyl:
-    
+
     node=nbcyl;
-    
+
     tess = fbcyl;
     tess = sort(tess,2);
-    
+
     % all faces
     faces=[tess(:,[1 2 3]);tess(:,[1 2 4]); ...
         tess(:,[1 3 4]);tess(:,[2 3 4])];
-    
+
     % find replicate faces
     faces = sortrows(faces);
     k = find(all(diff(faces)==0,2));
-    
+
     % delete the internal (shared) faces
     faces([k;k+1],:) = [];
-    
+
     surfacenodes = unique(faces(:));
     nbcyl=nbcyl(surfacenodes,:);
-    
+
     % now use these surface nodes (now nbcyl) to get surface nodes of WM
     % mesh:
     tess=thiscompsnodes;
     node=nmesh(thiscompsnodes,:);
-    
+
     % for speed improvements, only get "surface" nodes from this set
     % (surface here could also be on boundary to gm, i.e. inside the
     % cylinder):
-    
+
     % all faces
     faces=[tess(:,[1 2 3]);tess(:,[1 2 4]); ...
         tess(:,[1 3 4]);tess(:,[2 3 4])];
-    
+
     % find replicate faces
     faces = sortrows(faces);
     k = find(all(diff(faces)==0,2));
-    
+
     % delete the internal (shared) faces
     faces([k;k+1],:) = [];
-    
+
     surfacenodes = unique(faces(:));
-    
-    
+
+
     % now perform costly knnsearch:
     snodes=node(surfacenodes,:);
     [~,d]=knnsearch(nbcyl,snodes);
     surfnodes=snodes(d<0.1,:);
     [~,nodeix]=ismember(surfnodes,nmesh,'rows');
-    
+
     wmboundary=[wmboundary;unique(nodeix(:))];
 
     if vizz
         % both below should display only WM boundaries of the final
         % cylindrical mesh
         figure, plot3(surfnodes(:,1),surfnodes(:,2),surfnodes(:,3),'r.');
-        
+
     figure, plot3(nmesh(wmboundary,1),nmesh(wmboundary,2),nmesh(wmboundary,3),'r.');
     axis equal
     end
-    
-    
+
+
 end
 
 wmboundary=wmboundary';

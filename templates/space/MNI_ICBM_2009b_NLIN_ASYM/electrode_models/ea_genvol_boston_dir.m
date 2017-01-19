@@ -83,7 +83,7 @@ seeds=[];
 
 for i=1:length(meshel.ins)
     fcyl=[fcyl; meshel.ins{i}.faces+size(ncyl,1)];
-    
+
     ncyl=[ncyl; meshel.ins{i}.vertices];
     seeds=[seeds; mean(meshel.ins{i}.vertices)];
 end
@@ -110,7 +110,7 @@ end
 fcyl=num2cell(unique_fcyl,2);
 
 % clean from duplicate indices:
-% 
+%
 % for ff=1:length(fcyl)
 %     [has,which]=ea_hasduplicates(fcyl{ff});
 %     if has
@@ -143,17 +143,17 @@ convhull=convhulln(outer_node);
 clear ISO2MESH_SURFBOOLEAN;
 if vizz
     figure
-    
+
     patch('faces',comb_face(:,1:3),'vertices',comb_node(:,1:3),'edgecolor','k','facecolor','none');
 
     figure
-    
+
     patch('faces',outer_face(:,1:3),'vertices',outer_node(:,1:3),'edgecolor','k','facecolor','none');
 
   figure
-    
+
     patch('faces',ins_face(:,1:3),'vertices',ins_node(:,1:3),'edgecolor','k','facecolor','none');
-    
+
 end
 
 
@@ -173,6 +173,6 @@ keyboard
 
 
 
-save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');
+save([ea_space,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');
 
 

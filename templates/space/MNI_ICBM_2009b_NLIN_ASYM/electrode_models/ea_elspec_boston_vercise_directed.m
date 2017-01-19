@@ -27,7 +27,7 @@ jetlist=othercolor('BuOr_12');
 %   jetlist=jet;
 N=200; % resolution of electrode points
  aData=1;
- 
+
  cnt=4;
 for side=1:length(options.sides)
     %% nullmodel:
@@ -46,7 +46,7 @@ for side=1:length(options.sides)
     ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
 
 
-    
+
     [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(4,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
 
 
@@ -98,17 +98,17 @@ for side=1:length(options.sides)
             [no,fc,seeds] = ea_segmented_cylinder_vol(60,1,0.5,1,3,0.8);
             meshel.mixed{mcnt}.Vertices=no;
             meshel.mixed{mcnt}.Faces=fc;
-            
+
             % scale to size:
             meshel.mixed{mcnt}.Vertices(:,1)=meshel.mixed{mcnt}.Vertices(:,1).*(elspec.contact_diameter/2); % scale to fit tip-diameter
             meshel.mixed{mcnt}.Vertices(:,2)=meshel.mixed{mcnt}.Vertices(:,2).*(elspec.contact_diameter/2); % scale to fit tip-diameter
             meshel.mixed{mcnt}.Vertices(:,3)=meshel.mixed{mcnt}.Vertices(:,3).*(elspec.contact_length); % scale to fit tip-diameter
-            
+
             meshel.mixed{mcnt}.Vertices(:,1)=meshel.mixed{mcnt}.Vertices(:,1)+X1(1);
             meshel.mixed{mcnt}.Vertices(:,2)=meshel.mixed{mcnt}.Vertices(:,2)+X1(2);
             meshel.mixed{mcnt}.Vertices(:,3)=meshel.mixed{mcnt}.Vertices(:,3)+X1(3);
-            
-            
+
+
             scyl = ea_segmented_cylinder;
 keyboard
             for contact=1:3
@@ -176,14 +176,14 @@ keyboard
     end
 
     % draw trajectory between contacts
-    
+
     for cntct=1:3
-        
+
         set(0,'CurrentFigure',resultfig);
         shift=[0,0,0.5];
         [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2)-shift,coords_mm{side}(cntct+1,:)+trajvector*(elspec.contact_length/2)-shift,elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-        
-  
+
+
         specsurf(elrender{side}(cnt),usecolor,aData); specsurf(elrender{side}(cnt+1),usecolor,aData); specsurf(elrender{side}(cnt+2),usecolor,aData);
         log(cnt:cnt+2)=0; % insulation
 
@@ -241,60 +241,60 @@ for comp=[1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,22,25,28]
         cyl.vertices=[cyl.vertices;top.Vertices;bottom.Vertices];
         electrode.insulation(inscnt)=cyl;
         inscnt=inscnt+1;
-        
-        
-        
+
+
+
     elseif ismember(comp,4:7) % first 4 contacts
         cyl=elrender{side}(comp);
-       
+
         try % if not already a patch..
             cyl = surf2patch(cyl,'triangles');
         end
-        
+
          if comp==4 % tip
             % close lid (add endplate)
-            
+
 
             % find all vertices at Z=3mm
             z3=cyl.vertices(cyl.vertices(:,3)==3,:);
             z3ix=find(cyl.vertices(:,3)==3);
-            
+
             % add 0,0,3 (lid midpoint)
             cyl.vertices=[cyl.vertices;0,0,3];
-            
+
             midpointix=length(cyl.vertices);
-            
+
             for face=1:length(z3ix)
                 try
                cyl.faces=[cyl.faces;z3ix(face),z3ix(face+1),midpointix];
                 catch
-               cyl.faces=[cyl.faces;z3ix(face),z3ix(1),midpointix];      
+               cyl.faces=[cyl.faces;z3ix(face),z3ix(1),midpointix];
                 end
             end
-             
-% 
-%             
+
+%
+%
 %             z3ix=z3ix';
 %             keyboard
 %             vtc=nan(length(cyl.faces)+1,21);
 %             vtc(1:length(cyl.faces),1:3)=cell2mat([num2cell(cyl.faces,2)]);
 %             vtc(end,:)=z3ix;
-% %       
+% %
 if vizz
-             figure 
+             figure
              h=patch('vertices',cyl.vertices,'faces',cyl.faces,'facecolor','r','edgecolor','k');
-end      
+end
              [ncyl.vertices,ncyl.faces]=meshcheckrepair(cyl.vertices,cyl.faces,'meshfix');
 if vizz
              figure, patch('vertices',ncyl.vertices,'faces',ncyl.faces,'facecolor','r');
-end      
+end
              [ncyl.vertices,~,ncyl.faces]=s2m(ncyl.vertices,ncyl.faces,1,1,'tetgen');
                           figure, patch('vertices',ncyl.vertices,'faces',ncyl.faces(:,1:3),'facecolor','r');
 
 ncyl.facevertexcdata=repmat(cyl.facevertexcdata(1,:),size(ncyl.vertices,1),1);
                           %cyl=ncyl;
                           %cyl.faces=cyl.faces(:,1:3);
-                          
+
 %             meshresample(h.Vertices,h.Faces,1);
  %           [nodecon,~,facecon]=s2m(cyl.vertices,[num2cell(cyl.faces,2);{flip(z3ix,2)}],0.2,1,'tetgen'); % generate a tetrahedral mesh of the cylinders
 
@@ -310,10 +310,10 @@ ncyl.facevertexcdata=repmat(cyl.facevertexcdata(1,:),size(ncyl.vertices,1),1);
             electrode.contacts(cntcnt).vertices=cyl.vertices;
             electrode.contacts(cntcnt).facevertexcdata=cyl.facevertexcdata;
         end
-        
-  
-        
-        
+
+
+
+
         cntcnt=cntcnt+1;
     elseif ismember(comp,8:11) % insulation
         cyl=elrender{side}(comp);
@@ -401,7 +401,7 @@ electrode.coords_mm(6,:)=coords_mm{side}(3,:)+[0.33,0.66,0];
 electrode.coords_mm(7,:)=coords_mm{side}(3,:)+[0.33,-0.66,0];
 electrode.coords_mm(8,:)=coords_mm{side}(4,:);
 
-save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
+save([ea_space,'electrode_models',filesep,elspec.matfname],'electrode');
 % visualize
 if vizz
     cnt=1;
@@ -435,9 +435,9 @@ if vizz
         fv(cnt).faces=electrode.contacts(con).faces;
 
         cnt=cnt+1;
-         
+
     end
-    
+
     axis equal
     view(0,0);
 end
@@ -458,7 +458,7 @@ end
 
 for con=1:length(electrode.contacts)
     meshel.con{con}.faces=electrode.contacts(con).faces;
-    meshel.con{con}.vertices=round(electrode.contacts(con).vertices,50);   
+    meshel.con{con}.vertices=round(electrode.contacts(con).vertices,50);
     [meshel.con{con}.vertices,meshel.con{con}.faces]=meshcheckrepair(meshel.con{con}.vertices,meshel.con{con}.faces,'dup');
     [meshel.con{con}.vertices,meshel.con{con}.faces]=meshcheckrepair(meshel.con{con}.vertices,meshel.con{con}.faces,'deep');
 
@@ -481,7 +481,7 @@ nudge=0;
 if nudge
 
    centroid=mean(node,1);
-   tos=repmat(centroid,size(node,1),1)-node; 
+   tos=repmat(centroid,size(node,1),1)-node;
    tos=tos*0.01;
    node=node+tos;
 end
