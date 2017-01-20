@@ -13,7 +13,9 @@ downloadurl = 'http://www.lead-dbs.org/release/download.php';
 disp('Download done. Will now continue building/unpacking space.');
 
 unzip(destination,fileparts(fileparts(ea_space)));
-if ~exist([ea_getearoot,'.git'],'dir') % keep 'need_install' in dev environment
+% delete 'need_install' in user environment
+% keep 'need_install' in dev environment
+if ~exist([ea_getearoot,'.git'],'dir')
     ea_delete([ea_space,'need_install']);
 end
 delete(destination);
