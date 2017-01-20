@@ -9,7 +9,12 @@ nativemnistr = [];
 openFigs = findall(0,'Type','Figure');
 openNames = {openFigs(:).Name};
 idx = ~cellfun(@isempty,strfind(openNames,'Lead-DBS'));
-appdata = getappdata(openFigs(idx));
+try
+    appdata = getappdata(openFigs(idx));
+catch
+    nativemni=1;
+    return
+end
 vizspacevalue = appdata.UsedByGUIData_m.vizspacepopup.Value;
 
 nativemnistr = char(appdata.UsedByGUIData_m.vizspacepopup.String(vizspacevalue));
