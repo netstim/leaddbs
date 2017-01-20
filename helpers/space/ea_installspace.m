@@ -1,6 +1,5 @@
 function ea_installspace
 
-
 disp(['Installing / Downloading space ',ea_getspace,'...']);
 disp('This could take a while...');
 downloadurl = 'http://www.lead-dbs.org/release/download.php';
@@ -14,7 +13,9 @@ downloadurl = 'http://www.lead-dbs.org/release/download.php';
 disp('Download done. Will now continue building/unpacking space.');
 
 unzip(destination,fileparts(fileparts(ea_space)));
-ea_delete([ea_space,'need_install']);
+if ~exist([ea_getearoot,'.git'],'dir') % keep 'need_install' in dev environment
+    ea_delete([ea_space,'need_install']);
+end
 delete(destination);
 ea_unpackspace;
 
