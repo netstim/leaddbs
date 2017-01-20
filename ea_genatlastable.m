@@ -489,8 +489,12 @@ for atl=1:length(atlnames)
     end
 
     if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file') % first atlas, generate empty hdtemplate in atlas dir...
-    load([ea_space,'ea_space_def.mat'])
-        copyfile([ea_space(options),spacedef.templates{1},'.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+        if ~options.native
+            load([ea_space,'ea_space_def.mat'])
+            copyfile([ea_space(options),spacedef.templates{1},'.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+        else
+            copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[root,mifix,options.atlasset,filesep,'gm_mask.nii']);
+        end
         V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         X=spm_read_vols(V);
         X(:)=0;
