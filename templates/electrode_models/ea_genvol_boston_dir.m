@@ -173,6 +173,6 @@ keyboard
 
 
 
-save([ea_space,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');
 
 

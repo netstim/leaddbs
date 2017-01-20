@@ -101,7 +101,7 @@ if ea_headmodel_changed(options,side,elstruct)
 
 
 
-    load([ea_space,'electrode_models',filesep,elspec.matfname])
+    load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
     A=[electrode.head_position,1;
         electrode.tail_position,1
         electrode.x_position,1

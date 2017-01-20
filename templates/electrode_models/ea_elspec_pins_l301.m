@@ -1,4 +1,4 @@
-function electrode=ea_elspec_medtronic_3389(varargin)
+function electrode=ea_elspec_pins_l301(varargin)
 % This function creates the electrode specification for a certain
 % lead. Since this code is usually only executed once (to
 % establish the model), it is not optimized in any way. You can however use
@@ -8,7 +8,7 @@ function electrode=ea_elspec_medtronic_3389(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-options.elmodel='Medtronic 3389';
+options.elmodel='PINS L301';
 
 if nargin
     vizz=0;
@@ -335,7 +335,7 @@ electrode.contact_color=elspec.contact_color;
 electrode.lead_color=elspec.lead_color;
 electrode.coords_mm=coords_mm{side};
 electrode.meshel=meshel;
-save([ea_space,'electrode_models',filesep,elspec.matfname],'electrode');
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 
 if vizz
     % visualize
@@ -375,7 +375,7 @@ end
 
 
 %% build volumetric addition to it:
-ea_genvol_medtronic(meshel,elspec,vizz);
+ea_genvol_pins(meshel,elspec,vizz);
 
 
 

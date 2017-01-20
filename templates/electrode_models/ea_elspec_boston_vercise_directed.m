@@ -401,7 +401,7 @@ electrode.coords_mm(6,:)=coords_mm{side}(3,:)+[0.33,0.66,0];
 electrode.coords_mm(7,:)=coords_mm{side}(3,:)+[0.33,-0.66,0];
 electrode.coords_mm(8,:)=coords_mm{side}(4,:);
 
-save([ea_space,'electrode_models',filesep,elspec.matfname],'electrode');
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 % visualize
 if vizz
     cnt=1;

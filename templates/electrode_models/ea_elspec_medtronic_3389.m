@@ -1,4 +1,4 @@
-function electrode=ea_elspec_medtronic_3387(varargin)
+function electrode=ea_elspec_medtronic_3389(varargin)
 % This function creates the electrode specification for a certain
 % lead. Since this code is usually only executed once (to
 % establish the model), it is not optimized in any way. You can however use
@@ -8,7 +8,7 @@ function electrode=ea_elspec_medtronic_3387(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-options.elmodel='Medtronic 3387';
+options.elmodel='Medtronic 3389';
 
 if nargin
     vizz=0;
@@ -233,27 +233,27 @@ for side=1:length(options.sides)
 
     p=surf2patch(surf(cX,cY,cZ),'triangles');
 
-            % add meshing-version to it
+    % add meshing-version to it
 
-            [cX,cY,cZ] = ea_singlecylinder((tipdiams),20);
+    [cX,cY,cZ] = ea_singlecylinder((tipdiams),20);
 
-            cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
+    cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
 
-            % define two points to define cylinder.
-            X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
-            X2=X1+trajvector*elspec.tip_length;
+    % define two points to define cylinder.
+    X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
+    X2=X1+trajvector*elspec.tip_length;
 
 
-            cX=cX+X1(1);
-            cY=cY+X1(2);
-            cZ=cZ-(2*elspec.tip_length)/2+X1(3);
-        a=surf2patch(surf(cX,cY,cZ));
+    cX=cX+X1(1);
+    cY=cY+X1(2);
+    cZ=cZ-(2*elspec.tip_length)/2+X1(3);
+    a=surf2patch(surf(cX,cY,cZ));
 
-        a=ea_reordercylinder(a,20);
-        meshel.ins{end+1}.faces=a.faces;
-        meshel.ins{end}.vertices=a.vertices;
-        ndiv=100;
-        meshel.ins{end}.endplates=[1:ndiv];
+    a=ea_reordercylinder(a,20);
+    meshel.ins{end+1}.faces=a.faces;
+    meshel.ins{end}.vertices=a.vertices;
+    ndiv=100;
+    meshel.ins{end}.endplates=[1:ndiv];
 
 
     % add endplate:
@@ -335,11 +335,10 @@ electrode.contact_color=elspec.contact_color;
 electrode.lead_color=elspec.lead_color;
 electrode.coords_mm=coords_mm{side};
 electrode.meshel=meshel;
-save([ea_space,'electrode_models',filesep,elspec.matfname],'electrode');
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 
-
-% visualize
 if vizz
+    % visualize
     cnt=1;
     g=figure;
     X=eye(4);
@@ -374,7 +373,16 @@ end
 
 
 
+
+%% build volumetric addition to it:
 ea_genvol_medtronic(meshel,elspec,vizz);
+
+
+
+
+
+
+
 
 
 

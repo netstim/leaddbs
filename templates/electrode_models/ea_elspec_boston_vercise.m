@@ -1,4 +1,4 @@
-function electrode=ea_elspec_medtronic_3391(varargin)
+function electrode=ea_elspec_boston_vercise(varargin)
 % This function creates the electrode specification for a certain
 % lead. Since this code is usually only executed once (to
 % establish the model), it is not optimized in any way. You can however use
@@ -8,7 +8,7 @@ function electrode=ea_elspec_medtronic_3391(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-options.elmodel='Medtronic 3391';
+options.elmodel='Boston Scientific Vercise';
 
 if nargin
     vizz=0;
@@ -30,12 +30,14 @@ N=200; % resolution of electrode points
 
 for side=1:length(options.sides)
     %% nullmodel:
-
- coords_mm{side}=[0,0,elspec.tip_length+(elspec.contact_length/2);...
+    coords_mm{side}=[0,0,elspec.tip_length+(elspec.contact_length/2);...
         0,0,elspec.tip_length+(elspec.contact_length/2)+1*(elspec.contact_spacing+elspec.contact_length);...
         0,0,elspec.tip_length+(elspec.contact_length/2)+2*(elspec.contact_spacing+elspec.contact_length);...
-        0,0,elspec.tip_length+(elspec.contact_length/2)+3*(elspec.contact_spacing+elspec.contact_length)];
-
+        0,0,elspec.tip_length+(elspec.contact_length/2)+3*(elspec.contact_spacing+elspec.contact_length);...
+        0,0,elspec.tip_length+(elspec.contact_length/2)+4*(elspec.contact_spacing+elspec.contact_length);...
+        0,0,elspec.tip_length+(elspec.contact_length/2)+5*(elspec.contact_spacing+elspec.contact_length);...
+        0,0,elspec.tip_length+(elspec.contact_length/2)+6*(elspec.contact_spacing+elspec.contact_length);...
+        0,0,elspec.tip_length+(elspec.contact_length/2)+7*(elspec.contact_spacing+elspec.contact_length)];
 
     trajectory{side}=[zeros(30,2),linspace(30,0,30)'];
     %%
@@ -337,7 +339,7 @@ electrode.contact_color=elspec.contact_color;
 electrode.lead_color=elspec.lead_color;
 electrode.coords_mm=coords_mm{side};
 electrode.meshel=meshel;
-save([ea_space,'electrode_models',filesep,elspec.matfname],'electrode');
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 
 if vizz
     % visualize
@@ -377,7 +379,7 @@ end
 
 
 %% build volumetric addition to it:
-ea_genvol_medtronic(meshel,elspec,vizz);
+ea_genvol_boston_und(meshel,elspec,vizz);
 
 
 

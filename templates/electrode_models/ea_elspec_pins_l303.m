@@ -1,4 +1,4 @@
-function electrode=ea_elspec_stjude_activetip_2mm(varargin)
+function electrode=ea_elspec_pins_l303(varargin)
 % This function creates the electrode specification for a certain
 % lead. Since this code is usually only executed once (to
 % establish the model), it is not optimized in any way. You can however use
@@ -8,7 +8,7 @@ function electrode=ea_elspec_stjude_activetip_2mm(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-options.elmodel='St. Jude ActiveTip (6142-6145)';
+options.elmodel='PINS L303';
 
 if nargin
     vizz=0;
@@ -30,10 +30,12 @@ N=200; % resolution of electrode points
 
 for side=1:length(options.sides)
     %% nullmodel:
-    coords_mm{side}=[0,0,elspec.tip_length+(elspec.contact_length/2);...
+
+ coords_mm{side}=[0,0,elspec.tip_length+(elspec.contact_length/2);...
         0,0,elspec.tip_length+(elspec.contact_length/2)+1*(elspec.contact_spacing+elspec.contact_length);...
         0,0,elspec.tip_length+(elspec.contact_length/2)+2*(elspec.contact_spacing+elspec.contact_length);...
         0,0,elspec.tip_length+(elspec.contact_length/2)+3*(elspec.contact_spacing+elspec.contact_length)];
+
 
     trajectory{side}=[zeros(30,2),linspace(30,0,30)'];
     %%
@@ -89,7 +91,7 @@ for side=1:length(options.sides)
 
     elrender{side}(1)=patch(p);
 
-    cnt=3; % #2 will be used for tip-contact
+    cnt=2;
 
 
 
@@ -106,7 +108,7 @@ for side=1:length(options.sides)
     specsurf(elrender{side}(1),usecolor,aData);
 
     % draw contacts
-    for cntct=2:elspec.numel
+    for cntct=1:elspec.numel
         set(0,'CurrentFigure',resultfig);
         diams=repmat(elspec.contact_diameter/2,1,2);
         [cX,cY,cZ] = ea_singlecylinder((diams),N);
@@ -207,7 +209,6 @@ for side=1:length(options.sides)
 
 
 
-
     % draw tip
 
     if isfield(elstruct,'group')
@@ -221,7 +222,7 @@ for side=1:length(options.sides)
     tipdiams(end+1)=elspec.tip_diameter/2;
     [cX,cY,cZ] = ea_singlecylinder((tipdiams),N);
 
-    cZ=cZ.*(elspec.tip_length+elspec.contact_length); % scale to fit tip-diameter
+    cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
 
     % define two points to define cylinder.
     X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
@@ -238,7 +239,7 @@ for side=1:length(options.sides)
 
     [cX,cY,cZ] = ea_singlecylinder((tipdiams),20);
 
-    cZ=cZ.*(elspec.tip_length+elspec.contact_length); % scale to fit tip-diameter
+    cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
 
     % define two points to define cylinder.
     X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
@@ -251,10 +252,10 @@ for side=1:length(options.sides)
     a=surf2patch(surf(cX,cY,cZ));
 
     a=ea_reordercylinder(a,20);
-    meshel.con{1}.faces=a.faces;
-    meshel.con{1}.vertices=a.vertices;
+    meshel.ins{end+1}.faces=a.faces;
+    meshel.ins{end}.vertices=a.vertices;
     ndiv=100;
-    meshel.con{1}.endplates=[1:ndiv];
+    meshel.ins{end}.endplates=[1:ndiv];
 
 
     % add endplate:
@@ -267,7 +268,7 @@ for side=1:length(options.sides)
 
 
 
-    elrender{side}(2)=patch(p);
+    elrender{side}(cnt)=patch(p);
 
     % Calulating the angle between the x direction and the required direction
     % of cylinder through dot product
@@ -280,7 +281,7 @@ for side=1:length(options.sides)
     if any(axis_rot) || angle_X1X2
         %       rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
     end
-    specsurf(elrender{side}(2),usecolor,aData);
+    specsurf(elrender{side}(cnt),usecolor,aData);
 
 
 
@@ -303,7 +304,7 @@ view(0,0);
 cnt=1; cntcnt=1; inscnt=1;
 ea_dispercent(0,'Exporting electrode components');
 
-for comp=1:elspec.numel*2
+for comp=1:elspec.numel*2+1
     ea_dispercent(comp/(elspec.numel*2+1));
 
 
@@ -311,15 +312,15 @@ for comp=1:elspec.numel*2
     cnt=cnt+1;
 
 
-    if (comp>1 && comp<elspec.numel+2) % these are the CONTACTS + Tip in this specific case (St. Jude activetip)
+    if comp>1 && comp<elspec.numel+2 % these are the CONTACTS
         electrode.contacts(cntcnt).vertices=cyl.Vertices;
         electrode.contacts(cntcnt).faces=cyl.Faces;
         electrode.contacts(cntcnt).facevertexcdata=cyl.FaceVertexCData;
         cntcnt=cntcnt+1;
-    else % these are the insulated shaft and spacings..
+    else % these are the insulated shaft, tip and spacings..
         electrode.insulation(inscnt).vertices=cyl.Vertices;
         electrode.insulation(inscnt).faces=cyl.Faces;
-        electrode.insulation(inscnt).facevertexcdata=cyl.FaceVertexCData;
+        electrode.insulation(cntcnt).facevertexcdata=cyl.FaceVertexCData;
         inscnt=inscnt+1;
     end
 end
@@ -336,7 +337,7 @@ electrode.contact_color=elspec.contact_color;
 electrode.lead_color=elspec.lead_color;
 electrode.coords_mm=coords_mm{side};
 electrode.meshel=meshel;
-save([ea_space,'electrode_models',filesep,elspec.matfname],'electrode');
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
 
 if vizz
     % visualize
@@ -356,7 +357,6 @@ if vizz
         end
         specsurf(elrender{side}(cnt),usecolor,aData);
         cnt=cnt+1;
-
     end
     for con=1:length(electrode.contacts)
 
@@ -367,7 +367,6 @@ if vizz
         specsurf(elrender{side}(cnt),elspec.contact_color,aData);
 
         cnt=cnt+1;
-
     end
 
     axis equal
@@ -378,7 +377,7 @@ end
 
 
 %% build volumetric addition to it:
-ea_genvol_stjude(meshel,elspec,vizz);
+ea_genvol_pins(meshel,elspec,vizz);
 
 
 
