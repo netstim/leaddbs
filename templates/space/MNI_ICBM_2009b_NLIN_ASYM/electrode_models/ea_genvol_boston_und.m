@@ -76,4 +76,4 @@ scyl=num2cell(unique_scyl,2);
 
 
 [node,~,face]=s2m(unique_ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
-save([ea_space,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');

@@ -34,7 +34,7 @@ v0=(etop-orig)/electrodelen;               % unitary dir
 c0=[0 0 0];
 v=[0 0 1];
 
-elmodel_fn=[ea_space,'electrode_models',filesep,elspec.matfname,'_vol.mat'];
+elmodel_fn=[ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'];
 if ~exist(elmodel_fn,'file')
   ea_generate_electrode_specs; % regenerate all electrode specifications
 else

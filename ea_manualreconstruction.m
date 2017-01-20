@@ -699,7 +699,7 @@ legplot=getappdata(mcfig,'legplot');
 if isempty(legplot)
 elax=subplot(4,5,[1,6,11,16]); % left electrode plot
 axis off
-load([ea_space,'electrode_models',filesep,options.elspec.matfname])
+load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname])
 
 % visualize
 cnt=1;

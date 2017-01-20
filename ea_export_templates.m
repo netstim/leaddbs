@@ -100,8 +100,8 @@ switch options.modality
 end
 
 
-if exist([ea_space,'electrode_contacts',filesep,mrstr,filesep,'template.nii'],'file')
-    template=load_nii([ea_space,'electrode_contacts',filesep,mrstr,filesep,'template.nii']);
+if exist([ea_getearoot,'templates',filesep,'electrode_contacts',filesep,mrstr,filesep,'template.nii'],'file')
+    template=load_nii([ea_getearoot,'templates',filesep,'electrode_contacts',filesep,mrstr,filesep,'template.nii']);
     nutimg=zeros(size(template.img,1),size(template.img,2),size(template.img,3),size(template.img,4)+1);
     nutimg(:,:,:,1:end-1)=template.img;
 else
@@ -110,7 +110,7 @@ end
 
 nutimg(:,:,:,end)=imat;
 cnii=make_nii(nutimg);
-save_nii(cnii,[ea_space,'electrode_contacts',filesep,mrstr,filesep,'template.nii']);
+save_nii(cnii,[ea_getearoot,'templates',filesep,'electrode_contacts',filesep,mrstr,filesep,'template.nii']);
 
 % switch options.elspec.eldist
 %     case 3

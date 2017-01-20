@@ -16,7 +16,7 @@ if nargin==4
     rszfactor=varargin{4};
 end
 
-load([ea_space,'electrode_models',filesep,options.elspec.matfname]);
+load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname]);
 for side=1:length(markers)
 
 
