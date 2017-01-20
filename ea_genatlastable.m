@@ -109,9 +109,9 @@ if checkrebuild(atlases,options,root,mifix)
     for nativemni=nm % switch between native and mni space atlases.
         switch nativemni
             case 1
-                root=[ea_space([],'atlases')];
+                root=fileparts(ea_space([],'atlases'));
             case 2
-                root=[options.root,options.patientname,filesep,'atlases',filesep];
+                root=[options.root,options.patientname,filesep,'atlases'];
         end
 
         atlascnt=1;
@@ -122,17 +122,17 @@ if checkrebuild(atlases,options,root,mifix)
             %ea_dispercent(atlas/length(atlases.names));
             switch atlases.types(atlas)
                 case 1 % right hemispheric atlas.
-                    nii=load_nii_crop([root,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
+                    nii=load_nii_crop([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
                 case 2 % left hemispheric atlas.
-                    nii=load_nii_crop([root,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
+                    nii=load_nii_crop([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
                 case 3 % both-sides atlas composed of 2 files.
-                    lnii=load_nii_crop([root,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
-                    rnii=load_nii_crop([root,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
+                    lnii=load_nii_crop([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
+                    rnii=load_nii_crop([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
                 case 4 % mixed atlas (one file with both sides information).
-                    nii=load_nii_crop([root,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}]);
+                    nii=load_nii_crop([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}]);
 
                 case 5 % midline atlas (one file with both sides information.
-                    nii=load_nii_crop([root,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}]);
+                    nii=load_nii_crop([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}]);
             end
 
             for side=detsides(atlases.types(atlas));
@@ -493,7 +493,7 @@ for atl=1:length(atlnames)
             load([ea_space,'ea_space_def.mat'])
             copyfile([ea_space(options),spacedef.templates{1},'.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         else
-            copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[root,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         end
         V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         X=spm_read_vols(V);
