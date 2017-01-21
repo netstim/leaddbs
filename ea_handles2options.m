@@ -107,8 +107,10 @@ try
 catch
     options.atl.genpt=0;
 end
-if get(handles.vizspacepopup,'Value')==2 && strcmp(handles.atlassetpopup.String(handles.atlassetpopup.Value),'Use none')
-    options.atl.genpt=0;
+if isfield(handles,'vizspacepopup')
+    if get(handles.vizspacepopup,'Value')==2 && strcmp(handles.atlassetpopup.String(handles.atlassetpopup.Value),'Use none')
+        options.atl.genpt=0;
+    end
 end
 options.atl.normalize=0; % normalize patient specific atlasset. This is not done anymore for now.
 try

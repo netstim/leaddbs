@@ -1,5 +1,7 @@
 function cs_fmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
 tic
+
+
 if ~isdeployed
     addpath(genpath('/autofs/cluster/nimlab/connectomes/software/lead_dbs'));
     addpath('/autofs/cluster/nimlab/connectomes/software/spm12');
@@ -8,7 +10,7 @@ if ~exist('writeoutsinglefiles','var')
     writeoutsinglefiles=0;
 else
     if ischar(writeoutsinglefiles)
-    writeoutsinglefiles=str2double(writeoutsinglefiles);
+        writeoutsinglefiles=str2double(writeoutsinglefiles);
     end
 end
 
@@ -47,7 +49,7 @@ if exist('outputmask','var')
     end
 else
     omaskidx=dataset.vol.outidx; % use all.
-        maskuseidx=1:length(dataset.vol.outidx);
+    maskuseidx=1:length(dataset.vol.outidx);
 end
 
 [sfile,roilist]=ea_handleseeds(sfile);
@@ -55,12 +57,10 @@ end
 
 
 if ~exist('outputfolder','var')
-    [pth,fn,ext]=fileparts(sfile); % exit to same folder as seed.
-    outputfolder=[pth,filesep];
+    ea_getoutputfolder(sfile)
 else
     if isempty(outputfolder) % from shell wrapper.
-    [pth,fn,ext]=fileparts(sfile); % exit to same folder as seed.
-    outputfolder=[pth,filesep];    
+        ea_getoutputfolder(sfile)
     end
     if ~strcmp(outputfolder(end),filesep)
         outputfolder=[outputfolder,filesep];
@@ -78,27 +78,49 @@ else
 end
 
 for s=1:length(sfile)
-    
-    seed{s}=ea_load_nii(ea_niigz(sfile{s}));
-    if ~isequal(seed{s}.mat,dataset.vol.space.mat)
-        oseedfname=seed{s}.fname;
-        seed{s}=ea_conformseedtofmri(dataset,seed{s});
-        seed{s}.fname=oseedfname; % restore original filename if even unneccessary at present.
+    if size(sfile(s,:),2)>1
+        dealingwithsurface=1;
+    else
+        dealingwithsurface=0;
     end
-    
-    [~,seedfn{s}]=fileparts(sfile{s});
-    
-    sweights=seed{s}.img(dataset.vol.outidx);
-    sweights(isnan(sweights))=0;
-    sweights(abs(sweights)<0.0001)=0;
-    sweights=double(sweights);
-    % assure sum of sweights is 1
-    %sweights(logical(sweights))=sweights(logical(sweights))/abs(sum(sweights(logical(sweights))));
-    sweightmx=repmat(sweights,1,120);
-    
-    sweightidx{s}=find(sweights);
-    sweightidxmx{s}=double(sweightmx(sweightidx{s},:));
+    for lr=1:size(sfile(s,:),2)
+        if exist(ea_niigz(sfile{s,lr}),'file')
+            seed{s,lr}=ea_load_nii(ea_niigz(sfile{s,lr}));
+        else
+            switch lr
+                case 1
+                    sidec='l';
+                case 2
+                    sidec='r';
+            end
+            seed{s,lr}=dataset.surf.(sidec).space; % supply with empty space
+            seed{s,lr}.fname='';
+            seed{s,lr}.img(:)=0;
+        end
+        if ~isequal(seed{s,lr}.mat,dataset.vol.space.mat) && (~dealingwithsurface)
+            oseedfname=seed{s,lr}.fname;
+            seed{s,lr}=ea_conformseedtofmri(dataset,seed{s,lr});
+            seed{s,lr}.fname=oseedfname; % restore original filename if even unneccessary at present.
+        end
+        
+        [~,seedfn{s,lr}]=fileparts(sfile{s,lr});
+        if dealingwithsurface
+            sweights=seed{s,lr}.img(:);
+        else
+            sweights=seed{s,lr}.img(dataset.vol.outidx);
+        end
+        sweights(isnan(sweights))=0;
+        sweights(abs(sweights)<0.0001)=0;
+        sweights=double(sweights);
+        % assure sum of sweights is 1
+        %sweights(logical(sweights))=sweights(logical(sweights))/abs(sum(sweights(logical(sweights))));
+        sweightmx=repmat(sweights,1,120);
+        
+        sweightidx{s,lr}=find(sweights);
+        sweightidxmx{s,lr}=double(sweightmx(sweightidx{s,lr},:));
+    end
 end
+
 numseed=s;
 
 
@@ -160,28 +182,36 @@ for mcfi=usesubjects
                 for run=1:howmanyruns
                     switch dataset.type
                         case 'fMRI_matrix'
-                            keyboard
                             if ~exist('mat','var') && ~exist('loaded','var')
-                            mat=[]; loaded=[];
+                                mat=[]; loaded=[];
                             end
                             cnt=1;
                             Rw=nan(length(sweightidx{s}),pixdim);
                             for ix=sweightidx{s}'
-                            [mat,loaded]=ea_getmat(mat,loaded,ix,dataset.vol.matchunk,[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]);
-                            entry=ix-loaded;
-                            %    testnii.img(outidx)=mat(entry,:); % R
-                            Rw(cnt,:)=(double(mat(entry,:))/((2^15)-1)); % Fz
-                            cnt=cnt+1;
+                                [mat,loaded]=ea_getmat(mat,loaded,ix,dataset.vol.matchunk,[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]);
+                                entry=ix-loaded;
+                                %    testnii.img(outidx)=mat(entry,:); % R
+                                Rw(cnt,:)=(double(mat(entry,:))/((2^15)-1)); % Fz
+                                cnt=cnt+1;
                             end
                         case 'fMRI_timecourses'
                             load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
-                            gmtc=single(gmtc);
-                            stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s},1);
-                            thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
                             if isfield(dataset,'surf')
                                 % include surface:
                                 ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
                                 rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
+                            end
+                            gmtc=single(gmtc);
+                            if size(sfile(s,:),2)>1 % dealing with surface seed
+                                ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
+                                stc=mean([ls.gmtc(sweightidx{s,1},:).*sweightidxmx{s,1};...
+                                    rs.gmtc(sweightidx{s,2},:).*sweightidxmx{s,2}],1); % seed time course
+                            else % volume seed
+                                stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s},1); % seed time course
+                            end
+                            thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
+                            if isfield(dataset,'surf')
+                                % include surface:
                                 rs.gmtc=single(rs.gmtc);
                                 ls.gmtc=single(ls.gmtc);
                                 ls.thiscorr(:,run)=corr(stc',ls.gmtc','type','Pearson');
@@ -192,20 +222,20 @@ for mcfi=usesubjects
                 
                 fX{s}(:,mcfi)=mean(thiscorr,2);
                 lh.fX{s}(:,mcfi)=mean(ls.thiscorr,2);
-                rh.fX{s}(:,mcfi)=mean(rs.thiscorr,2);                
+                rh.fX{s}(:,mcfi)=mean(rs.thiscorr,2);
                 
                 
                 if writeoutsinglefiles
                     ccmap=dataset.vol.space;
                     ccmap.img=single(ccmap.img);
                     ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr.nii'];
-                    ccmap.img(omaskidx)=fX{s}(:,mcfi);  
+                    ccmap.img(omaskidx)=fX{s}(:,mcfi);
                     ccmap.dt=[16,0];
                     spm_write_vol(ccmap,ccmap.img);
                 end
             end
         case 'pmap'
-
+            
             
             targetix=sweightidx{1};
             clear stc
@@ -238,19 +268,19 @@ for mcfi=usesubjects
                 end
                 % now we have all seeds, need to iterate across voxels of
                 % target to get pmap values
+                
+                for s=1:size(stc,2)
+                    seedstc=stc(:,s);
+                    otherstc=stc;
+                    otherstc(:,s)=[];
                     
-                    for s=1:size(stc,2)
-                        seedstc=stc(:,s);
-                        otherstc=stc;
-                        otherstc(:,s)=[];
-          
-                        targtc=gmtc(targetix,:);
-                        thiscorr{s}(targetix,run)=partialcorr(targtc',seedstc,otherstc);
-
-                    end
-            end 
+                    targtc=gmtc(targetix,:);
+                    thiscorr{s}(targetix,run)=partialcorr(targtc',seedstc,otherstc);
+                    
+                end
+            end
             
-
+            
             for s=1:size(stc,2)
                 fX{s}(:,mcfi)=mean(thiscorr{s},2);
                 if writeoutsinglefiles
@@ -268,9 +298,14 @@ for mcfi=usesubjects
             for run=1:howmanyruns
                 load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
                 gmtc=single(gmtc);
-                
-                for s=1:numseed
-                    stc(s,:)=mean(gmtc(sweightidx{s},:).*sweightidxmx{s});
+                ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
+                for s=1:numseed                   
+                    if size(sfile(s,:),2)>1 % dealing with surface seed
+                        stc=mean([ls.gmtc(sweightidx{s,1},:).*sweightidxmx{s,1};...
+                            rs.gmtc(sweightidx{s,2},:).*sweightidxmx{s,2}],1); % seed time course
+                    else % volume seed
+                        stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s},1); % seed time course
+                    end
                 end
                 
                 switch cmd
@@ -298,15 +333,15 @@ end
 switch cmd
     case {'seed','pmap'}
         for s=1:length(seedfn) % subtract 1 in case of pmap command
-     
-            % export mean            
+            
+            % export mean
             M=nanmean(fX{s}');
             mmap=dataset.vol.space;
             mmap.dt=[16,0];
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
-
+            
             mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
             ea_write_nii(mmap);
             if usegzip
@@ -533,3 +568,7 @@ end
 load([datadir,num2str(rightmat),'.mat']);
 loaded=rightmat;
 
+function outputfolder=ea_getoutputfolder(sfile)
+file=sfile{1};
+[pth,fn,ext]=fileparts(file); % exit to same folder as seed.
+outputfolder=[pth,filesep];
