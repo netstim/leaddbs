@@ -1,7 +1,11 @@
-function ea_apply_normalization_tofile(options,from,to,directory,useinverse)
+function ea_apply_normalization_tofile(options,from,to,directory,useinverse,interp)
 % this function applies lead-dbs normalizations to nifti files.
 % currently just used to generate patient specific atlases,i.e., from MNI
 % space to native space
+
+if ~exist('interp','var')
+    interp=4;
+end
 
 switch ea_whichnormmethod(directory)
     case ea_getantsnormfuns % ANTs part here
@@ -24,16 +28,27 @@ switch ea_whichnormmethod(directory)
                 wasgz=0;
             end
             if useinverse
-                
                
-                matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']}; % non-inverse usage okay here since using pushforward method.
-                matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
-                matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
-                matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {fileparts(to{fi})};
-                matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[directory,options.prefs.prenii_unnormalized]};
-                matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
-                matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [0 0 0];
-                matlabbatch{1}.spm.util.defs.out{1}.push.prefix = '';
+                matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
+                
+                matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
+                matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
+                matlabbatch{1}.spm.util.defs.out{1}.pull.interp = interp;
+                matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
+                matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
+                matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
+                
+                
+                
+                
+                             
+                
+                
+                
+                
+                
+                
+                
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
                 [pth]=fileparts(to{fi});
@@ -43,16 +58,15 @@ switch ea_whichnormmethod(directory)
                 end
             else
                 
+                matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']}; 
+                matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
+                matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
+                matlabbatch{1}.spm.util.defs.out{1}.pull.interp = interp;
+                matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
+                matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
+                matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
                 
-                
-                matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']}; % inverse usage okay here since using pushforward method.
-                matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
-                matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
-                matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {fileparts(to{fi})};
-                matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {ea_template(options)};
-                matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
-                matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [0 0 0];
-                matlabbatch{1}.spm.util.defs.out{1}.push.prefix = '';
+ 
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
                 [pth]=fileparts(to{fi});

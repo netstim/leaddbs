@@ -25,5 +25,6 @@ switch whichnormmethod
         template=[ea_space,'TPM.nii'];
     otherwise
         options.prefs=ea_prefs('');
-        template=[ea_space,'t1.nii'];
+        spacedef=ea_getspacedef;
+        template=[ea_space,spacedef.templates{1},'.nii'];
 end
