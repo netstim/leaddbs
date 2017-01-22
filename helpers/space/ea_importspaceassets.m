@@ -1,7 +1,7 @@
 function ea_importspaceassets(~,~,fromspace,what)
 
 ea_genwarp2space(fromspace);
-norm_method_applied{1}='ea_normalize_spmshoot';
+norm_method_applied{1}='ea_normalize_spmdartel';
 save([ea_space,fromspace,filesep,'ea_normmethod_applied.mat'],'norm_method_applied');
 
 switch what
@@ -13,9 +13,9 @@ switch what
         
     case 'labeling'
         ea_warplabelassets(fromspace)
-        
-        
+
 end
+rmdir([ea_space,fromspace],'s'); % cleanup all.
 
 
 function ea_warplabelassets(fromspace)
@@ -42,7 +42,7 @@ end
 
 for p=1:length(parcellation)
    from{1}=[wlabeling,parcellation{p},'.nii'];
-   to{1}=[ea_space([],'labeling'),parcellation{p},'.nii'];
+   to{1}=[ea_space([],'labeling'),parcellation{p},' [imported from ',fromspace,']','.nii'];
        if exist(to{1},'file')
           disp(['A whole-brain parcellation with the same name (',to{1},') already exists! Skipping!']);
           continue
@@ -51,7 +51,7 @@ for p=1:length(parcellation)
             options.prefs=ea_prefs('');
             ea_apply_normalization_tofile(options,from,to,directory,0,0);
        end
-    movefile([wlabeling,parcellation{p},'.txt'],[ea_space([],'labeling'),parcellation{p},'.txt']);
+    movefile([wlabeling,parcellation{p},'.txt'],[ea_space([],'labeling'),parcellation{p},' [imported from ',fromspace,']','.txt']);
 
     
 end
@@ -79,7 +79,7 @@ end
 
 
 for atlasset=1:length(asc)
-    if exist([ea_space([],'atlases'),asc{atlasset}],'dir')
+    if exist([ea_space([],'atlases'),asc{atlasset},' [imported from ',fromspace,']'],'dir')
         disp([ea_space([],'atlases'),asc{atlasset},' already exists! Skipping...'])
         continue
     else
@@ -94,7 +94,7 @@ for atlasset=1:length(asc)
     atlroot=[ea_space,fromspace,filesep,asc{atlasset},filesep];
     
     load([atlroot,'atlas_index.mat'])
-    for atlas=1:length(atlases)
+    for atlas=1:length(atlases.names)
         [~,~,ext]=fileparts(atlases.names{atlas});
         if strcmp(ext,'.gz')
             wasgzip=1;
@@ -128,6 +128,7 @@ for atlasset=1:length(asc)
             ea_apply_normalization_tofile(options,from,to,directory,0,1);
             if wasgzip
                 gzip(nii{n});
+                delete(nii{n});
             end
         end
 
@@ -135,10 +136,9 @@ for atlasset=1:length(asc)
     % finally rebuild index:
     % and move to atlases dir
     delete([atlroot,'atlas_index.mat']);
-    options.atlasset=asc{atlas};
     
-    movefile(atlroot,[ea_space([],'atlases'),asc{atlas}]);
-
+    movefile(atlroot,[ea_space([],'atlases'),asc{atlasset},' [imported from ',fromspace,']']);
+    options.atlasset=[asc{atlasset},' [imported from ',fromspace,']'];
     ea_genatlastable([],fileparts([ea_space([],'atlases')]),options);
     
     
