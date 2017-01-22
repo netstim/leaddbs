@@ -1,3 +1,4 @@
+
 if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
     if exist([ea_getearoot,'templates',filesep,'mni_hires_t1.nii'],'file');
         try movefile([ea_getearoot,'templates'], [ea_getearoot,'templates_temp']); end

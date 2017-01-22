@@ -57,11 +57,11 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+ea_setpath;
 
     ea_compat_data; 
 earoot=ea_getearoot;
 
-ea_setpath;
 ea_checkbuildspace;
 
 ea_checkspm;
