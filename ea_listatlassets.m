@@ -1,6 +1,8 @@
-function ea_listatlassets(handles,mninative)
+function ea_listatlassets(handles,mninative,oldatlas)
 % mninative==1: MNI space, ==2: native space
-
+if ~exist('oldatlas','var')
+    oldatlas='';
+end
 options.prefs=ea_prefs('');
 
 as=dir([ea_space(options,'atlases')]);
@@ -39,8 +41,13 @@ if mninative==2
 end
 
 set(handles.atlassetpopup,'String',[asc,nasc]);
-
-[~,defix]=ismember(options.prefs.atlases.default,asc);
+[~,defix]=ismember(options.prefs.atlases.default,[asc,nasc]);
 if defix
     set(handles.atlassetpopup,'Value',defix);
+end
+if ~isempty(oldatlas)
+    [~,oldix]=ismember(oldatlas,[asc,nasc]);
+    if oldix
+    set(handles.atlassetpopup,'Value',oldix);
+    end
 end

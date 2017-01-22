@@ -21,4 +21,9 @@ if exist('handles','var')
     ea_load_pts(handles,uipatdir);
 end
 
-ea_listatlassets(handles,get(handles.vizspacepopup,'Value'));
+
+
+atlasset=get(handles.atlassetpopup,'String');
+atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+
+ea_listatlassets(handles,get(handles.vizspacepopup,'Value'),atlasset);

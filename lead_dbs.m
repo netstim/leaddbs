@@ -1107,7 +1107,10 @@ function vizspacepopup_Callback(hObject, eventdata, handles)
 %    set(handles.writeout2d_checkbox,'Enable','on');
 %    %set(handles.writeout2d_checkbox,'Value',1);
 % end
-ea_listatlassets(handles,get(handles.vizspacepopup,'Value'));
+atlasset=get(handles.atlassetpopup,'String');
+atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+
+ea_listatlassets(handles,get(handles.vizspacepopup,'Value'),atlasset);
 
 
 % --- Executes during object creation, after setting all properties.
