@@ -2315,3 +2315,10 @@ function mirrorsides_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of mirrorsides
+
+M=getappdata(gcf,'M');
+M.ui.mirrorsides=get(handles.mirrorsides,'Value');
+
+
+setappdata(gcf,'M',M);
+ea_refresh_lg(handles);

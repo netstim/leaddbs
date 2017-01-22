@@ -165,6 +165,7 @@ try set(handles.showisovolumecheck,'Value',M.ui.showisovolumecheck); end
 try set(handles.statvatcheck,'Value',M.ui.statvat); end
 try set(handles.colorpointcloudcheck,'Value',M.ui.colorpointcloudcheck); end
 try set(handles.lc_smooth,'Value',M.ui.lc.smooth); end
+try set(handles.mirrorsides,'Value',M.ui.lc.mirrorsides); end
 
 
 
