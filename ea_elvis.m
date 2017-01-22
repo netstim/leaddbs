@@ -68,6 +68,10 @@ set(gcf,'Name',[figtitle,'...building...']);
 axis equal
 axis fill
 
+
+
+
+
 %% Patient specific part (skipped if no patient is selected or no reco available):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
     if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') || nargin>1;
@@ -77,6 +81,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             
             if options.d3.mirrorsides
                elstruct=ea_mirrorsides(elstruct); 
+               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix);
             end
             
         else
@@ -182,6 +187,8 @@ else
     elstruct=struct;
 end
 
+
+
 % Initialize Sliceview-Button
 
 slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
@@ -231,10 +238,7 @@ if options.d3.showisovolume
         options.d3.isomatrix=allisomatrices{reg};
         options.d3.isomatrix_name=allisonames{reg};
         
-        
-        if options.d3.mirrorsides
-           options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); 
-        end
+
         ea_showisovolume(resultfig,elstruct,options);
     end
 end

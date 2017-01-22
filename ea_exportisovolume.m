@@ -13,6 +13,7 @@ if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
 elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts
     shifthalfup=0;
 else
+    
     ea_error('Isomatrix has wrong size. Please specify a correct matrix.')
 end
 for side=1:length(options.sides)
