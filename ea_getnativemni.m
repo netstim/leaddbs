@@ -5,6 +5,7 @@ function nativemni = ea_getnativemni
 % Ari Kappel
 
 nativemnistr = [];
+    nativemni=1; % default
 
 openFigs = findall(0,'Type','Figure');
 openNames = {openFigs(:).Name};

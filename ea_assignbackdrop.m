@@ -48,19 +48,13 @@ switch bdstring
             end
         end
         if nopatientmode
-            varargout{1}={'ICBM 152 2009b NLIN Asym T2',...
-                'ICBM 152 2009b NLIN Asym T1',...
-                'ICBM 152 2009b NLIN Asym PD',...
-                'BigBrain 100 um ICBM 152 2009b Sym'};
+            varargout{1}=ea_standardspacelist;
         else
             if native
                 varargout{1}=[ea_checkhas({[subpat,' Pre-OP']},haspreop),...
                     ea_checkhas({[subpat,' Post-OP']},haspostop)];
             else
-                varargout{1}=[{'ICBM 152 2009b NLIN Asym T2',...
-                    'ICBM 152 2009b NLIN Asym T1',...
-                    'ICBM 152 2009b NLIN Asym PD',...
-                    'BigBrain 100 um ICBM 152 2009b Sym'},...
+                varargout{1}=[ea_standardspacelist,...
                     ea_checkhas({[subpat,' Pre-OP']},haspreop),...
                     ea_checkhas({[subpat,' Post-OP']},haspostop)];
             end
@@ -78,18 +72,6 @@ switch bdstring
         varargout{1}=Vtra;
         varargout{2}=Vcor;
         varargout{3}=Vsag;
-    case 'ICBM 152 2009b NLIN Asym T2'
-        varargout{1}=spm_vol(fullfile(ea_space(options),'t2.nii'));
-        varargout{2}=spm_vol(fullfile(ea_space(options),'t2.nii'));
-        varargout{3}=spm_vol(fullfile(ea_space(options),'t2.nii'));
-    case 'ICBM 152 2009b NLIN Asym T1'
-        varargout{1}=spm_vol(fullfile(ea_space(options),'t1.nii'));
-        varargout{2}=spm_vol(fullfile(ea_space(options),'t1.nii'));
-        varargout{3}=spm_vol(fullfile(ea_space(options),'t1.nii'));
-    case 'ICBM 152 2009b NLIN Asym PD'
-        varargout{1}=spm_vol(fullfile(ea_space(options),'pd.nii'));
-        varargout{2}=spm_vol(fullfile(ea_space(options),'pd.nii'));
-        varargout{3}=spm_vol(fullfile(ea_space(options),'pd.nii'));
     case 'BigBrain 100 um ICBM 152 2009b Sym'
         if ~ea_checkinstall('bigbrain',0,0,1)
             ea_error('BigBrain is not installed and could not be installed automatically. Please make sure that Matlab is connected to the internet.');
@@ -98,6 +80,11 @@ switch bdstring
         varargout{2}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
         varargout{3}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
         
+    otherwise
+        template=lower(strrep(bdstring,[ea_getspace,' '],''));
+        varargout{1}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
+        varargout{2}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
+        varargout{3}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
 end
 
 
@@ -151,6 +138,16 @@ else
     end
 end
 
+function standardlist=ea_standardspacelist
+
+spacedef=ea_getspacedef;
+standardlist=cell(1,length(spacedef.templates));
+for t=1:length(spacedef.templates)
+   standardlist{t}=[spacedef.name,' ',upper(spacedef.templates{t})];
+end
+if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
+   standardlist{t+1}='BigBrain 100 um ICBM 152 2009b Sym';
+end
 
 function options=ea_tempswitchoptstopre(options)
 

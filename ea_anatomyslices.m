@@ -134,7 +134,7 @@ if togglestates.xyztoggles(2)
         %end
         
         %if V{1}.mat(11)<0
-            slice=flip(slice,1);
+            slice=flip(flip(slice,1),2);
         %end
         
     else
