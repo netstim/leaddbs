@@ -22,7 +22,7 @@ if ~isfield(elstruct,'activecontacts')
     elstruct.activecontacts{1}=zeros(elspec.numel,1);
     elstruct.activecontacts{2}=zeros(elspec.numel,1);
 end
-jetlist=jet;
+jetlist=parula;
 %   jetlist=jet;
 
 
@@ -159,6 +159,8 @@ for side=1:length(options.sides)
         try
             minval=ea_nanmin(options.d3.isomatrix{1}{side}(:));
             maxval=ea_nanmax(options.d3.isomatrix{1}{side}(:));
+            minval=-1;
+            maxval=1;
         end
         for cntct=1:elspec.numel-shifthalfup
             
