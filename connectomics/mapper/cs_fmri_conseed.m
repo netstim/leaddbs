@@ -99,6 +99,7 @@ for s=1:length(sfile)
         end
         if ~isequal(seed{s,lr}.mat,dataset.vol.space.mat) && (~dealingwithsurface)
             oseedfname=seed{s,lr}.fname;
+            
             seed{s,lr}=ea_conformseedtofmri(dataset,seed{s,lr});
             seed{s,lr}.fname=oseedfname; % restore original filename if even unneccessary at present.
         end
@@ -298,13 +299,19 @@ for mcfi=usesubjects
             for run=1:howmanyruns
                 load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
                 gmtc=single(gmtc);
-                ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
+                
+                if size(sfile(s,:),2)>1
+                    % include surface:
+                    ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
+                    rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
+                    ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
+                end
                 for s=1:numseed                   
                     if size(sfile(s,:),2)>1 % dealing with surface seed
-                        stc=mean([ls.gmtc(sweightidx{s,1},:).*sweightidxmx{s,1};...
+                        stc(s,:)=mean([ls.gmtc(sweightidx{s,1},:).*sweightidxmx{s,1};...
                             rs.gmtc(sweightidx{s,2},:).*sweightidxmx{s,2}],1); % seed time course
                     else % volume seed
-                        stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s},1); % seed time course
+                        stc(s,:)=mean(gmtc(sweightidx{s},:).*sweightidxmx{s},1); % seed time course
                     end
                 end
                 
@@ -320,6 +327,7 @@ for mcfi=usesubjects
             thiscorr=mean(thiscorr,2);
             X(:)=thiscorr;
             fX(:,mcfi)=X(logical(triu(ones(numseed),1)));
+ 
             if writeoutsinglefiles
                 save([outputfolder,addp,'corrMx_',dataset.vol.subIDs{mcfi}{1},'.mat'],'X','-v7.3');
             end
