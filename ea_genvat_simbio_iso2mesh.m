@@ -55,137 +55,88 @@ elstruct=getappdata(resultfig,'elstruct');
 elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
+setappdata(resultfig,'elstruct',elstruct);
 
-if 1% ea_headmodel_changed(options,side,elstruct)
-    ea_dispt('No suitable headmodel found, rebuilding. This may take a while...');
-
-    load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
-
-
-    c0=[]; cnt=1;
-    mesh.tet=[];
-    mesh.pnt=[];
-    mesh.tissue=[];
-    mesh.tissuelabel={'gray','white','contacts','insulation'};
-    % add gm to mesh
-
-    for atlas=1:numel(atlases.fv)
-        if isempty(atlases.fv{atlas})
-            continue
+    if ea_headmodel_changed(options,side,elstruct)
+        ea_dispt('No suitable headmodel found, rebuilding. This may take a while...');
+        
+        load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
+        
+        cnt=1;
+        mesh.tet=[];
+        mesh.pnt=[];
+        mesh.tissue=[];
+        mesh.tissuelabel={'gray','white','contacts','insulation'};
+        % add gm to mesh
+        
+        for atlas=1:numel(atlases.fv)
+            if isempty(atlases.fv{atlas})
+                continue
+            end
+            fv(cnt)=atlases.fv{atlas};
+            
+            ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+            %tissuetype(cnt)=1;
+            cnt=cnt+1;
         end
-        fv(cnt)=atlases.fv{atlas};
-
-        ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
-        tissuetype(cnt)=1;
-        c0=[c0;[ins,1]];
-        cnt=cnt+1;
-    end
-
-    load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
-    A=[electrode.head_position,1;
-        electrode.tail_position,1
-        electrode.x_position,1
-        electrode.y_position,1]; % points in model
-
-    B=[elstruct.markers(side).head,1;
-        elstruct.markers(side).tail,1;
-        elstruct.markers(side).x,1;
-        elstruct.markers(side).y,1];
-    setappdata(resultfig,'elstruct',elstruct);
-    Y = ea_linsolve(A,B); Y=Y';
-
-
-    cnt=1;
-
-    % overwrite head and tail of model with actual values for mesh generation lateron:
-    electrode.head_position=B(1,1:3);
-    electrode.tail_position=B(2,1:3);
-    % add contacts to mesh
-    for con=1:length(electrode.meshel.con)
-        % do not rotate electrode for now.
-        %electrode.meshel.con{con}.vertices=X*[electrode.meshel.con{con}.vertices,ones(size(electrode.meshel.con{con}.vertices,1),1)]';
-        %electrode.meshel.con{con}.vertices=electrode.meshel.con{con}.vertices(1:3,:)';
-        % only rotate contacts.
-        electrode.contacts(con).vertices=Y*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
-        electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
-
-        elfv(cnt).faces=electrode.contacts(con).faces;
-        elfv(cnt).vertices=electrode.contacts(con).vertices;
-        tissuetype(cnt)=3;
-        t=surfinterior(elfv(cnt).vertices,elfv(cnt).faces);
-        c0=[c0;[t,3]];
-        cnt=cnt+1;
-
-    end
-
-
-    % add insulation to mesh
-    for ins=1:length(electrode.meshel.ins)
-        % do not rotate insulation for now
-        %electrode.meshel.ins{ins}.vertices=X*[electrode.meshel.ins{ins}.vertices,ones(size(electrode.meshel.ins{ins}.vertices,1),1)]';
-        %electrode.meshel.ins{ins}.vertices=electrode.meshel.ins{ins}.vertices(1:3,:)';
-        % only rotate insulation.
-        electrode.insulation(ins).vertices=Y*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
-        electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
-
-
-        elfv(cnt).faces=electrode.insulation(ins).faces;
-        elfv(cnt).vertices=electrode.insulation(ins).vertices;
-        t=surfinterior(elfv(cnt).vertices,elfv(cnt).faces);
-
-        tissuetype(cnt)=4;
-        c0=[c0;[t,4]];
-        cnt=cnt+1;
-    end
-    success=0;
-    for attempt=1:10
+        
+        [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
+        success=0;
+        for attempt=1:10
+            try
+                [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
+                success=1;
+                break
+            catch
+                Y=Y+randn(4)/1000; % very small jitter on transformation which will be used on electrode.
+            end
+        end
+        if ~success
+            ea_error('Lead-DBS could not solve the current estimation.');
+        end
+        
+        mesh.tissue=tissuetype;
+        meshregions=mesh.tet(:,5);
+        mesh.tet=mesh.tet(:,1:4);
+        
+        if useSI
+            mesh.pnt=mesh.pnt/1000; % in meter
+            mesh.unit='m';
+        end
+        
+        %% calculate volume conductor
+        ea_dispt('Creating volume conductor...');
+        
+        %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
+        
+        if useSI
+            SIfx=1;
+        else
+            SIfx=1000;
+        end
+        
         try
-            [mesh.tet,mesh.pnt,activeidx,wmboundary]=ea_mesh_electrode(fv,elfv,tissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
-            success=1;
-            break
-        catch
-            Y=Y+randn(4)/1000; % very small jitter on transformation which will be used on electrode.
+            vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+        catch % reorder elements so not to be degenerated.
+            tmesh=mesh;
+            tmesh.tet=tmesh.tet(:,[1 2 4 3]);
+            vol=ea_ft_headmodel_simbio(tmesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         end
-    end
-    if ~success
-        ea_error('Lead-DBS could not solve the current estimation.');
-    end
-
-    mesh.tissue=mesh.tet(:,5);
-    mesh.tet=mesh.tet(:,1:4);
-
-    if useSI
-        mesh.pnt=mesh.pnt/1000; % in meter
-        mesh.unit='m';
-    end
-
-    %% calculate volume conductor
-    ea_dispt('Creating volume conductor...');
-
-    %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
-
-    if useSI
-        SIfx=1;
+        if useSI % convert back before saving headmodel
+            mesh.pnt=mesh.pnt*1000; % in meter
+            mesh.unit='mm';
+        end
+        
+        save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
+        ea_save_hmprotocol(options,side,elstruct,1);
+        
     else
-        SIfx=1000;
+        % simply load vol.
+        ea_dispt('Loading headmodel...');
+        load([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat']);
+        activeidx=ea_getactiveidx(S,side,centroids,mesh,elfv,elspec,meshregions);
+        
     end
-
-    try
-        vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-    catch % reorder elements so not to be degenerated.
-        mesh.tet=mesh.tet(:,[1 2 4 3]);
-        vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-    end
-
-
-    save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','mesh','activeidx','wmboundary','-v7.3');
-    ea_save_hmprotocol(options,side,elstruct,1);
-
-else
-    % simply load vol.
-    ea_dispt('Loading headmodel...');
-    load([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat']);
-end
 
 switch side
     case 1
