@@ -50,7 +50,9 @@ spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 %% 2. Create "subcortical" folder:
-mkdir([ea_space,'subcortical']);
+if ~exist([ea_space,'subcortical'], 'dir')
+    mkdir([ea_space,'subcortical']);
+end
 movefile([ea_space,'rsecondstepmask.nii'],[ea_space(options,'subcortical'),'secondstepmask.nii']);
 movefile([ea_space,'rthirdstepmask.nii'],[ea_space(options,'subcortical'),'thirdstepmask.nii']);
 delete([ea_space,'thirdstepmask.nii']); delete([ea_space,'secondstepmask.nii']);

@@ -70,7 +70,7 @@ else
     clear matlabbatch
     
     for t=1:length(tpn)
-       movefile(['TPM_',sprintf('%05.f',t),'.nii'],['c',num2str(t),spacedef.templates{1},'.nii']); 
+       movefile([ea_space,'TPM_',sprintf('%05.f',t),'.nii'],[ea_space,'c',num2str(t),spacedef.templates{1},'.nii']); 
     end
 end
 for c=1:length(tpn)
