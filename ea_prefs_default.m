@@ -94,7 +94,6 @@ prefs.normalize.spm.resolution=1; % Defines resolution in mm when using SPM norm
 
 %% Coregistration (CT/MR):
 prefs.ctcoreg.default='ea_coregctmri_ants';
-prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregistration transformation
 
 %% Coregistration (MR/MR):
 prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
