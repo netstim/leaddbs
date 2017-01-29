@@ -55,7 +55,7 @@ fh3 = uimenu(mh,'Label','Show tracts weighted by activation map','Callback',{@ea
 set(resultfig,'Renderer','opengl')
 axis off
 %set(gca,'DrawMode','fast')
-set(resultfig,'color','w');
+set(resultfig,'color','k');
 set(resultfig, 'InvertHardCopy', 'off');
 %set(resultfig,'visible','off');
 set(resultfig,'Clipping','off');
