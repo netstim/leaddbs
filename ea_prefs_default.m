@@ -97,6 +97,7 @@ prefs.ctcoreg.default='ea_coregctmri_ants';
 
 %% Coregistration (MR/MR):
 prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
+prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregistration transformation
 
 %% Atlas-Sets:
 prefs.atlases.default='STN-Subdivisions (Accolla 2014)';
