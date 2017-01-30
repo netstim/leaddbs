@@ -59,11 +59,19 @@ for nativemni=nm % switch between native and mni space.
         case 0 % patient cortex in mni space in future release
             % root=[options.root,options.patientname,filesep];
             % adir=[root,''];
+            if ~exist([ea_space(options,'cortex'),'CortexHiRes.mat'],'file')
+                ea_error('Missing Template Cortex')
+                return
+            end
             adir=ea_space(options,'cortex');
             casestr = 'Template';
             reslice='yes'; %future option to import patient brain and reslice to mni space
         case 1 % template cortex in mni space
             %root=[options.earoot];
+            if ~exist([ea_space(options,'cortex'),'CortexHiRes.mat'],'file')
+                ea_error('Missing Template Cortex')
+                return
+            end
             adir=ea_space(options,'cortex');
             casestr = 'Template';
             reslice='no';
