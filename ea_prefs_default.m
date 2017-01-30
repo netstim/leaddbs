@@ -126,6 +126,12 @@ prefs.d3.fiberdiameter=0.1; % diameter of fibers ? only works in all ML versions
 prefs.d3.maxfibers=200; % set to inf to show all fibers (but this could lead to crashes).
 prefs.d3.colorjitter=0; % set to 0 to show no color jitter at all.
 
+%% Video export
+prefs.video.path=[-90,10;-110,10;-180,80;-250,10;-360,10;-450,10];
+prefs.video.opts.FrameRate=24;
+prefs.video.opts.Duration=30;
+prefs.video.opts.Periodic=true;
+
 %% Cortex-Visualization:
 prefs.d3.cortexcolor=[0.65 0.65 0.65]; % default color is gray
 prefs.d3.cortexalpha=0.5; % default alpha is 0.5
@@ -148,4 +154,5 @@ prefs.ls.autosave=0;
 %% environment
 prefs.env.dev=0;
 prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in folder.
+
 

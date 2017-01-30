@@ -55,7 +55,6 @@ fh3 = uimenu(mh,'Label','Show tracts weighted by activation map','Callback',{@ea
 set(resultfig,'Renderer','opengl')
 axis off
 %set(gca,'DrawMode','fast')
-set(resultfig,'color','w');
 set(resultfig, 'InvertHardCopy', 'off');
 %set(resultfig,'visible','off');
 set(resultfig,'Clipping','off');
@@ -267,6 +266,8 @@ rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb',options),'Toolt
 % Initialize HD-Export button
 
 hdsavebutton=uipushtool(ht,'CData',ea_get_icn('save',options),'TooltipString','Save Scene','ClickedCallback',@export_hd);
+dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth',options),'TooltipString','Save Scene with depth of field','ClickedCallback',{@ea_export_depth_of_field,resultfig});
+
 
 % Initialize Video-Export button
 
@@ -281,14 +282,14 @@ hold off
 
 set(0,'CurrentFigure',resultfig);
 
-set(gcf,'Renderer','OpenGL')
+set(resultfig,'Renderer','OpenGL')
 axis off
-set(gcf,'color','w');
+set(resultfig,'color','k');
 axis vis3d
 axis equal
 set(resultfig,'Name',figtitle);
 set(0,'CurrentFigure',resultfig);
-ax=gca;
+ax=resultfig.CurrentAxes;
 set(ax,'XLim',[-140 140]);
 set(ax,'YLim',[-140 140]);
 set(ax,'ZLim',[-140 140]);

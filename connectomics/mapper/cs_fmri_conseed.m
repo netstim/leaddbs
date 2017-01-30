@@ -180,21 +180,26 @@ for mcfi=usesubjects
             for s=1:numseed
                 
                 thiscorr=zeros(length(omaskidx),howmanyruns);
+                
                 for run=1:howmanyruns
                     switch dataset.type
                         case 'fMRI_matrix'
                             if ~exist('mat','var') && ~exist('loaded','var')
                                 mat=[]; loaded=[];
                             end
-                            cnt=1;
                             Rw=nan(length(sweightidx{s}),pixdim);
+                            
+                            if ~exist('db','var')
+                                db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
+                            end
+                            cnt=1;
                             for ix=sweightidx{s}'
-                                [mat,loaded]=ea_getmat(mat,loaded,ix,dataset.vol.matchunk,[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]);
-                                entry=ix-loaded;
                                 %    testnii.img(outidx)=mat(entry,:); % R
-                                Rw(cnt,:)=(double(mat(entry,:))/((2^15)-1)); % Fz
+                                Rw(cnt,:)=db.X(sweightidx{s}(cnt),:);
                                 cnt=cnt+1;
                             end
+                            Rw=mean(Rw,1);
+                            Rw=Rw/(2^15);
                         case 'fMRI_timecourses'
                             load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
                             if isfield(dataset,'surf')
@@ -222,11 +227,12 @@ for mcfi=usesubjects
                 end
                 
                 fX{s}(:,mcfi)=mean(thiscorr,2);
-                lh.fX{s}(:,mcfi)=mean(ls.thiscorr,2);
-                rh.fX{s}(:,mcfi)=mean(rs.thiscorr,2);
+                if isfield(dataset,'surf')
+                    lh.fX{s}(:,mcfi)=mean(ls.thiscorr,2);
+                    rh.fX{s}(:,mcfi)=mean(rs.thiscorr,2);
+                end
                 
-                
-                if writeoutsinglefiles
+                if writeoutsinglefiles && (~strcmp(dataset.type,'fMRI_matrix'))
                     ccmap=dataset.vol.space;
                     ccmap.img=single(ccmap.img);
                     ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr.nii'];
@@ -248,19 +254,9 @@ for mcfi=usesubjects
                 for s=2:numseed
                     switch dataset.type
                         case 'fMRI_matrix'
-                            keyboard
-                            if ~exist('mat','var') && ~exist('loaded','var')
-                                mat=[]; loaded=[];
-                            end
-                            cnt=1;
-                            Rw=nan(length(sweightidx{s}),pixdim);
-                            for ix=sweightidx{s}'
-                                [mat,loaded]=ea_getmat(mat,loaded,ix,dataset.vol.matchunk,[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]);
-                                entry=ix-loaded;
-                                %    testnii.img(outidx)=mat(entry,:); % R
-                                Rw(cnt,:)=(double(mat(entry,:))/((2^15)-1)); % Fz
-                                cnt=cnt+1;
-                            end
+                            
+                           ea_error('Pmap not supported with use of fMRI_Matrix (yet).');
+                            
                         case 'fMRI_timecourses'
                             load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
                             gmtc=single(gmtc);
@@ -338,208 +334,233 @@ ispmap=strcmp(cmd,'pmap');
 if ispmap
     seedfn(1)=[]; % delete first seed filename (which is target).
 end
-switch cmd
-    case {'seed','pmap'}
-        for s=1:length(seedfn) % subtract 1 in case of pmap command
-            
-            % export mean
-            M=nanmean(fX{s}');
-            mmap=dataset.vol.space;
-            mmap.dt=[16,0];
-            mmap.img(:)=0;
-            mmap.img=single(mmap.img);
-            mmap.img(omaskidx)=M;
-            
-            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
-            ea_write_nii(mmap);
-            if usegzip
-                gzip(mmap.fname);
-                delete(mmap.fname);
-            end
-            
-            % export variance
-            M=nanvar(fX{s}');
-            mmap=dataset.vol.space;
-            mmap.dt=[16,0];
-            mmap.img(:)=0;
-            mmap.img=single(mmap.img);
-            mmap.img(omaskidx)=M;
-            
-            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_VarR.nii'];
-            ea_write_nii(mmap);
-            if usegzip
-                gzip(mmap.fname);
-                delete(mmap.fname);
-            end
-            
-            if ~ispmap
-                % lh surf
-                lM=nanmean(lh.fX{s}');
-                lmmap=dataset.surf.l.space;
-                lmmap.dt=[16,0];
-                lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
-                lmmap.img=single(lmmap.img);
-                lmmap.img(:)=lM(:);
-                lmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_surf_lh.nii'];
-                ea_write_nii(lmmap);
+switch dataset.type
+    case 'fMRI_matrix'
+        switch cmd
+            case {'seed'}
+                
+                mmap=dataset.vol.space;
+                mmap.dt=[16,0];
+                mmap.img(:)=0;
+                mmap.img=single(mmap.img);
+                mmap.img(omaskidx)=Rw;
+                mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
+                ea_write_nii(mmap);
                 if usegzip
-                    gzip(lmmap.fname);
-                    delete(lmmap.fname);
+                    gzip(mmap.fname);
+                    delete(mmap.fname);
                 end
                 
-                % rh surf
-                rM=nanmean(rh.fX{s}');
-                rmmap=dataset.surf.r.space;
-                rmmap.dt=[16,0];
-                rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
-                rmmap.img=single(rmmap.img);
-                rmmap.img(:)=rM(:);
-                rmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_surf_rh.nii'];
-                ea_write_nii(rmmap);
-                if usegzip
-                    gzip(rmmap.fname);
-                    delete(rmmap.fname);
-                end
-            end
-            
-            
-            % fisher-transform:
-            fX{s}=atanh(fX{s});
-            if ~ispmap
-                lh.fX{s}=atanh(lh.fX{s});
-                rh.fX{s}=atanh(rh.fX{s});
-            end
-            % export fz-mean
-            
-            M=nanmean(fX{s}');
-            mmap=dataset.vol.space;
-            mmap.dt=[16,0];
-            mmap.img(:)=0;
-            mmap.img=single(mmap.img);
-            mmap.img(omaskidx)=M;
-            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz.nii'];
-            spm_write_vol(mmap,mmap.img);
-            if usegzip
-                gzip(mmap.fname);
-                delete(mmap.fname);
-            end
-            if ~ispmap
-                % lh surf
-                lM=nanmean(lh.fX{s}');
-                lmmap=dataset.surf.l.space;
-                lmmap.dt=[16,0];
-                lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
-                lmmap.img=single(lmmap.img);
-                lmmap.img(:)=lM(:);
-                lmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz_surf_lh.nii'];
-                ea_write_nii(lmmap);
-                if usegzip
-                    gzip(lmmap.fname);
-                    delete(lmmap.fname);
-                end
                 
-                % rh surf
-                rM=nanmean(rh.fX{s}');
-                rmmap=dataset.surf.r.space;
-                rmmap.dt=[16,0];
-                rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
-                rmmap.img=single(rmmap.img);
-                rmmap.img(:)=rM(:);
-                rmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz_surf_rh.nii'];
-                ea_write_nii(rmmap);
-                if usegzip
-                    gzip(rmmap.fname);
-                    delete(rmmap.fname);
-                end
-            end
-            
-            % export T
-            
-            [~,~,~,tstat]=ttest(fX{s}');
-            tmap=dataset.vol.space;
-            tmap.img(:)=0;
-            tmap.dt=[16,0];
-            tmap.img=single(tmap.img);
-            
-            tmap.img(omaskidx)=tstat.tstat;
-            
-            tmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T.nii'];
-            spm_write_vol(tmap,tmap.img);
-            if usegzip
-                gzip(tmap.fname);
-                delete(tmap.fname);
-            end
-            
-            
-            
-            
-            
-            if ~ispmap
-                % lh surf
-                [~,~,~,ltstat]=ttest(lh.fX{s}');
-                lmmap=dataset.surf.l.space;
-                lmmap.dt=[16,0];
-                lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
-                lmmap.img=single(lmmap.img);
-                lmmap.img(:)=ltstat.tstat(:);
-                lmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T_surf_lh.nii'];
-                ea_write_nii(lmmap);
-                if usegzip
-                    gzip(lmmap.fname);
-                    delete(lmmap.fname);
-                end
                 
-                % rh surf
-                [~,~,~,rtstat]=ttest(rh.fX{s}');
-                rmmap=dataset.surf.r.space;
-                rmmap.dt=[16,0];
-                rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
-                rmmap.img=single(rmmap.img);
-                rmmap.img(:)=rtstat.tstat(:);
-                rmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T_surf_rh.nii'];
-                ea_write_nii(rmmap);
-                if usegzip
-                    gzip(rmmap.fname);
-                    delete(rmmap.fname);
-                end
-            end
+            otherwise
+                ea_error(['Command ',cmd,' in combination with an fMRI-matrix not (yet) supported.']);
         end
         
-    otherwise
-        
-        % export mean
-        M=nanmean(fX');
-        X=zeros(numseed);
-        X(logical(triu(ones(numseed),1)))=M;
-        X=X+X';
-        X(logical(eye(length(X))))=1;
-        save([outputfolder,cmd,'_corrMx_AvgR.mat'],'X','-v7.3');
-        
-        % export variance
-        M=nanvar(fX');
-        X=zeros(numseed);
-        X(logical(triu(ones(numseed),1)))=M;
-        X=X+X';
-        X(logical(eye(length(X))))=1;
-        save([outputfolder,cmd,'_corrMx_VarR.mat'],'X','-v7.3');
-        
-        % fisher-transform:
-        fX=atanh(fX);
-        M=nanmean(fX');
-        X=zeros(numseed);
-        X(logical(triu(ones(numseed),1)))=M;
-        X=X+X';
-        X(logical(eye(length(X))))=1;
-        save([outputfolder,cmd,'_corrMx_AvgR_Fz.mat'],'X','-v7.3');
-        
-        % export T
-        [~,~,~,tstat]=ttest(fX');
-        X=zeros(numseed);
-        X(logical(triu(ones(numseed),1)))=tstat.tstat;
-        X=X+X';
-        X(logical(eye(length(X))))=1;
-        save([outputfolder,cmd,'_corrMx_T.mat'],'X','-v7.3');
-        
+    case 'fMRI_timecourses'
+        switch cmd
+            case {'seed','pmap'}
+                for s=1:length(seedfn) % subtract 1 in case of pmap command
+                    
+                    % export mean
+                    M=nanmean(fX{s}');
+                    mmap=dataset.vol.space;
+                    mmap.dt=[16,0];
+                    mmap.img(:)=0;
+                    mmap.img=single(mmap.img);
+                    mmap.img(omaskidx)=M;
+                    
+                    mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
+                    ea_write_nii(mmap);
+                    if usegzip
+                        gzip(mmap.fname);
+                        delete(mmap.fname);
+                    end
+                    
+                    % export variance
+                    M=nanvar(fX{s}');
+                    mmap=dataset.vol.space;
+                    mmap.dt=[16,0];
+                    mmap.img(:)=0;
+                    mmap.img=single(mmap.img);
+                    mmap.img(omaskidx)=M;
+                    
+                    mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_VarR.nii'];
+                    ea_write_nii(mmap);
+                    if usegzip
+                        gzip(mmap.fname);
+                        delete(mmap.fname);
+                    end
+                    
+                    if ~ispmap && isfield(dataset,'surf')
+                        % lh surf
+                        lM=nanmean(lh.fX{s}');
+                        lmmap=dataset.surf.l.space;
+                        lmmap.dt=[16,0];
+                        lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
+                        lmmap.img=single(lmmap.img);
+                        lmmap.img(:)=lM(:);
+                        lmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_surf_lh.nii'];
+                        ea_write_nii(lmmap);
+                        if usegzip
+                            gzip(lmmap.fname);
+                            delete(lmmap.fname);
+                        end
+                        
+                        % rh surf
+                        rM=nanmean(rh.fX{s}');
+                        rmmap=dataset.surf.r.space;
+                        rmmap.dt=[16,0];
+                        rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
+                        rmmap.img=single(rmmap.img);
+                        rmmap.img(:)=rM(:);
+                        rmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_surf_rh.nii'];
+                        ea_write_nii(rmmap);
+                        if usegzip
+                            gzip(rmmap.fname);
+                            delete(rmmap.fname);
+                        end
+                    end
+                    
+                    
+                    % fisher-transform:
+                    fX{s}=atanh(fX{s});
+                    if ~ispmap && isfield(dataset,'surf')
+                        lh.fX{s}=atanh(lh.fX{s});
+                        rh.fX{s}=atanh(rh.fX{s});
+                    end
+                    % export fz-mean
+                    
+                    M=nanmean(fX{s}');
+                    mmap=dataset.vol.space;
+                    mmap.dt=[16,0];
+                    mmap.img(:)=0;
+                    mmap.img=single(mmap.img);
+                    mmap.img(omaskidx)=M;
+                    mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz.nii'];
+                    spm_write_vol(mmap,mmap.img);
+                    if usegzip
+                        gzip(mmap.fname);
+                        delete(mmap.fname);
+                    end
+                    if ~ispmap && isfield(dataset,'surf')
+                        % lh surf
+                        lM=nanmean(lh.fX{s}');
+                        lmmap=dataset.surf.l.space;
+                        lmmap.dt=[16,0];
+                        lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
+                        lmmap.img=single(lmmap.img);
+                        lmmap.img(:)=lM(:);
+                        lmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz_surf_lh.nii'];
+                        ea_write_nii(lmmap);
+                        if usegzip
+                            gzip(lmmap.fname);
+                            delete(lmmap.fname);
+                        end
+                        
+                        % rh surf
+                        rM=nanmean(rh.fX{s}');
+                        rmmap=dataset.surf.r.space;
+                        rmmap.dt=[16,0];
+                        rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
+                        rmmap.img=single(rmmap.img);
+                        rmmap.img(:)=rM(:);
+                        rmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz_surf_rh.nii'];
+                        ea_write_nii(rmmap);
+                        if usegzip
+                            gzip(rmmap.fname);
+                            delete(rmmap.fname);
+                        end
+                    end
+                    
+                    % export T
+                    
+                    [~,~,~,tstat]=ttest(fX{s}');
+                    tmap=dataset.vol.space;
+                    tmap.img(:)=0;
+                    tmap.dt=[16,0];
+                    tmap.img=single(tmap.img);
+                    
+                    tmap.img(omaskidx)=tstat.tstat;
+                    
+                    tmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T.nii'];
+                    spm_write_vol(tmap,tmap.img);
+                    if usegzip
+                        gzip(tmap.fname);
+                        delete(tmap.fname);
+                    end
+                    
+                    
+                    
+                    
+                    
+                    if ~ispmap && isfield(dataset,'surf')
+                        % lh surf
+                        [~,~,~,ltstat]=ttest(lh.fX{s}');
+                        lmmap=dataset.surf.l.space;
+                        lmmap.dt=[16,0];
+                        lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
+                        lmmap.img=single(lmmap.img);
+                        lmmap.img(:)=ltstat.tstat(:);
+                        lmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T_surf_lh.nii'];
+                        ea_write_nii(lmmap);
+                        if usegzip
+                            gzip(lmmap.fname);
+                            delete(lmmap.fname);
+                        end
+                        
+                        % rh surf
+                        [~,~,~,rtstat]=ttest(rh.fX{s}');
+                        rmmap=dataset.surf.r.space;
+                        rmmap.dt=[16,0];
+                        rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
+                        rmmap.img=single(rmmap.img);
+                        rmmap.img(:)=rtstat.tstat(:);
+                        rmmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T_surf_rh.nii'];
+                        ea_write_nii(rmmap);
+                        if usegzip
+                            gzip(rmmap.fname);
+                            delete(rmmap.fname);
+                        end
+                    end
+                end
+                
+            otherwise
+                
+                % export mean
+                M=nanmean(fX');
+                X=zeros(numseed);
+                X(logical(triu(ones(numseed),1)))=M;
+                X=X+X';
+                X(logical(eye(length(X))))=1;
+                save([outputfolder,cmd,'_corrMx_AvgR.mat'],'X','-v7.3');
+                
+                % export variance
+                M=nanvar(fX');
+                X=zeros(numseed);
+                X(logical(triu(ones(numseed),1)))=M;
+                X=X+X';
+                X(logical(eye(length(X))))=1;
+                save([outputfolder,cmd,'_corrMx_VarR.mat'],'X','-v7.3');
+                
+                % fisher-transform:
+                fX=atanh(fX);
+                M=nanmean(fX');
+                X=zeros(numseed);
+                X(logical(triu(ones(numseed),1)))=M;
+                X=X+X';
+                X(logical(eye(length(X))))=1;
+                save([outputfolder,cmd,'_corrMx_AvgR_Fz.mat'],'X','-v7.3');
+                
+                % export T
+                [~,~,~,tstat]=ttest(fX');
+                X=zeros(numseed);
+                X(logical(triu(ones(numseed),1)))=tstat.tstat;
+                X=X+X';
+                X(logical(eye(length(X))))=1;
+                save([outputfolder,cmd,'_corrMx_T.mat'],'X','-v7.3');
+                
+        end
 end
 
 
