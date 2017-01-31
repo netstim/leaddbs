@@ -11,13 +11,41 @@ atlases=getappdata(resultfig,'atlases');
 togglestates.xyztransparencies=double(togglestates.xyztransparencies/100);
 
 xsliceplot=getappdata(resultfig,'xsliceplot');
-try delete(xsliceplot); end
 ysliceplot=getappdata(resultfig,'ysliceplot');
-try delete(ysliceplot); end
-
 zsliceplot=getappdata(resultfig,'zsliceplot');
-try delete(zsliceplot); end
-
+switch togglestates.cutview
+    case 'xcut'
+        try delete(ysliceplot); end
+        try delete(zsliceplot); end
+        if isvalid(xsliceplot) 
+            setappdata(resultfig,'xsliceplot',xsliceplot);
+            setappdata(resultfig,'ysliceplot',ysliceplot);
+            setappdata(resultfig,'zsliceplot',zsliceplot);
+            return 
+        end
+    case 'ycut'
+        try delete(xsliceplot); end
+        try delete(zsliceplot); end
+        if isvalid(ysliceplot)
+            setappdata(resultfig,'xsliceplot',xsliceplot);
+            setappdata(resultfig,'ysliceplot',ysliceplot);
+            setappdata(resultfig,'zsliceplot',zsliceplot);
+            return
+        end
+    case 'zcut'
+        try delete(xsliceplot); end
+        try delete(ysliceplot); end     
+        if isvalid(zsliceplot)
+            setappdata(resultfig,'xsliceplot',xsliceplot);
+            setappdata(resultfig,'ysliceplot',ysliceplot);
+            setappdata(resultfig,'zsliceplot',zsliceplot);
+        return
+        end
+    case '3d'
+        try delete(xsliceplot); end
+        try delete(ysliceplot); end
+        try delete(zsliceplot); end
+end
 V=getappdata(resultfig,'V');
 inverted=getappdata(resultfig,'inverted');
 if isempty(inverted)
@@ -41,7 +69,6 @@ if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)
     V{1}=V1; V{2}=V2; V{3}=V3;
     setappdata(resultfig,'templateused',togglestates.template); % refresh used template.
 end
-
 
 
 if ~inverted==togglestates.tinvert
@@ -79,7 +106,15 @@ if togglestates.xyztoggles(1)
     end
     
     xsliceplot=slice3i(V{1}.private.dat,V{1}.mat,1,round(size(V{1}.private.dat,1)/2));
-    
+    switch togglestates.cutview
+        case 'xcut'
+            try delete(ysliceplot); end
+            try delete(zsliceplot); end
+            setappdata(resultfig,'xsliceplot',xsliceplot);
+            setappdata(resultfig,'ysliceplot',ysliceplot);
+            setappdata(resultfig,'zsliceplot',zsliceplot);
+            return
+    end
 end
 
 if togglestates.xyztoggles(2)
@@ -92,8 +127,17 @@ if togglestates.xyztoggles(2)
             slice=flip(flip(slice,1),2);
     else
     end
+    
     ysliceplot=slice3i(V{1}.private.dat,V{1}.mat,2,round(size(V{1}.private.dat,2)/2));
-
+    switch togglestates.cutview
+        case 'ycut'
+            try delete(xsliceplot); end
+            try delete(zsliceplot); end
+            setappdata(resultfig,'xsliceplot',xsliceplot);
+            setappdata(resultfig,'ysliceplot',ysliceplot);
+            setappdata(resultfig,'zsliceplot',zsliceplot);
+            return
+    end
 end
 
 if togglestates.xyztoggles(3)
@@ -111,8 +155,18 @@ if togglestates.xyztoggles(3)
         end
         
     else
-     end
+    end
+     
     zsliceplot=slice3i(V{1}.private.dat,V{1}.mat,3,round(size(V{1}.private.dat,3)/2));    
+    switch togglestates.cutview
+        case 'zcut'
+            try delete(xsliceplot); end
+            try delete(ysliceplot); end
+            setappdata(resultfig,'xsliceplot',xsliceplot);
+            setappdata(resultfig,'ysliceplot',ysliceplot);
+            setappdata(resultfig,'zsliceplot',zsliceplot);
+            return
+    end
 end
 
 % store data in figure
@@ -124,13 +178,10 @@ setappdata(resultfig,'inverted',inverted);
 
 colormap gray
 
-
 function slice=ea_invert(slice,flag)
 if flag
 slice=slice*-1+max(slice(:));
 end
-
-
 
 
 function imin=proxy_slice(slice,togglestates,dim)
@@ -142,3 +193,4 @@ slice=(slice/(maxv-minv))*255; % 255 highest number.
 imin=repmat(uint8((((slice)))),[1,1,4]);
 imin(:,:,4)=uint8(togglestates.xyztransparencies(dim));
 
+    
