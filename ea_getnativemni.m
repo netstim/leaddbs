@@ -8,19 +8,23 @@ nativemnistr = [];
     nativemni=1; % default
 
 openFigs = findall(0,'Type','Figure');
-openNames = {openFigs(:).Name};
-idx = ~cellfun(@isempty,strfind(openNames,'Lead-DBS'));
 try
-    appdata = getappdata(openFigs(idx));
+    openNames = {openFigs(:).Name};
+    idx = ~cellfun(@isempty,strfind(openNames,'Lead-DBS'));
+    try
+        appdata = getappdata(openFigs(idx));
+    catch
+        nativemni=1;
+        return
+    end
+    vizspacevalue = appdata.UsedByGUIData_m.vizspacepopup.Value;
+    
+    nativemnistr = char(appdata.UsedByGUIData_m.vizspacepopup.String(vizspacevalue));
+    nativemnistr = strsplit(nativemnistr);
+    nativemnistr = nativemnistr{1};
 catch
-    nativemni=1;
-    return
+    nativemnistr='MNI'; %default to MNI space
 end
-vizspacevalue = appdata.UsedByGUIData_m.vizspacepopup.Value;
-
-nativemnistr = char(appdata.UsedByGUIData_m.vizspacepopup.String(vizspacevalue));
-nativemnistr = strsplit(nativemnistr); 
-nativemnistr = nativemnistr{1};
 
 if isempty(nativemnistr)
     ea_error('Main Lead-DBS GUI must be open to use ea_getnativemni')
