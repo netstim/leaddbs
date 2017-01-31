@@ -254,8 +254,8 @@ end
 
 % Initialize a draggable lightbulb
 hold on
-%[resultfig]=ea_show_light(resultfig);
-%set(lightbulb, 'Visible', 'off');
+[resultfig]=ea_show_light(resultfig,0);
+% set(lightbulb, 'Visible', 'off');
 
 lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'cam_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'cam_lamp')},'State','off');
 clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'ceiling_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'ceiling_lamp')},'State','off');
