@@ -26,7 +26,9 @@ function h = slice3i(vol, I2X, slicedim, sliceidx, handle)
 % SEE ALSO: image3, imagesc3
 %
 % Author: Anders Brun, anders@cb.uu.se (2009)
-% 
+% ==========================================
+% AutoAdjust Function by Todd Herrington, 2016-03-16
+% Modified by Ari Kappel 01-31-17
 
 try
     h = update_slice(vol, I2X, slicedim, sliceidx, h);
@@ -137,9 +139,27 @@ else
     error('Slicedim should be 1, 2 or 3')
 end
 
-
+sliceim = AutoAdjust(sliceim);
 if nargin<5 || handle == 0
   h = image3(sliceim,ij2xyz);
 else
   h = image3(sliceim,ij2xyz,handle);
 end
+
+
+% -=< Window and level auto adjustment callback function >=-
+function sliceim = AutoAdjust(image,object,eventdata)
+    Win = double(max(image(:))-min(image(:)));
+    Win (Win < 1) = 1;
+    LevV = double(min(image(:)) + (Win/2));
+    [Rmin, Rmax] = WL2R(Win,LevV);
+    sliceim = image./Rmax*64;
+   
+    
+% -=< Window and level to range conversion >=-
+function [Rmn Rmx] = WL2R(W,L)
+    Rmn = L - (W/2);
+    Rmx = L + (W/2);
+    if (Rmn >= Rmx)
+        Rmx = Rmn + 1;
+    end
