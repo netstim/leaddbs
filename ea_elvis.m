@@ -254,13 +254,13 @@ end
 
 % Initialize a draggable lightbulb
 hold on
-[resultfig]=ea_show_light(resultfig);
-%set(lightbulb, 'Visible', 'off');
+[resultfig]=ea_show_light(resultfig,0);
+% set(lightbulb, 'Visible', 'off');
 
-lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'cam_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'cam_lamp')},'State','on');
-clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'ceiling_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'ceiling_lamp')},'State','on');
-llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'right_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'right_lamp')},'State','on');
-rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'left_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'left_lamp')},'State','on');
+lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'cam_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'cam_lamp')},'State','off');
+clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'ceiling_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'ceiling_lamp')},'State','off');
+llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'right_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'right_lamp')},'State','off');
+rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'left_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'left_lamp')},'State','off');
 
 
 % Initialize HD-Export button
@@ -337,6 +337,18 @@ try WinOnTop(stimwin,true); end
 function opencortexviewer(hobj,ev,resultfig,options)
 showcortex=ea_showcortex(resultfig,options);
 setappdata(resultfig,'showcortex',showcortex);
+% Set Lighting
+objvisible(hobj,ev,getappdata(resultfig,'left_lamp'))
+objvisible(hobj,ev,getappdata(resultfig,'right_lamp'))
+objinvisible(hobj,ev,getappdata(resultfig,'ceiling_lamp'))
+objinvisible(hobj,ev,getappdata(resultfig,'cam_lamp'))
+% toggle uistate
+ndx = find(strcmp(get(resultfig.Children(:),'Type'),'uitoolbar')==1);
+idx = find(strcmp(get(resultfig.Children(ndx).Children(:),'TooltipString'),'Lightbulb')==1);
+set(resultfig.Children(ndx).Children(idx(4)),'State','off');
+set(resultfig.Children(ndx).Children(idx(3)),'State','off');
+set(resultfig.Children(ndx).Children(idx(2)),'State','on');
+set(resultfig.Children(ndx).Children(idx(1)),'State','on');
 try WinOnTop(showcortex,true); end
 % reload slice viewer to update opacity control
 awin=ea_anatomycontrol(resultfig,options);
