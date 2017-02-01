@@ -22,5 +22,5 @@ options.dostimulation=0;
 [coords_mm,resultfig]=ea_elvis(patientname,options);
 
 % save scene as matlab figure
-saveas(resultfig,[options.root,patientname,filesep,'eAuto_scene.fig']);
+% savefig(resultfig,[options.root,patientname,filesep,'eAuto_scene.fig'],'compact');
 %figure2xhtml([options.root,patientname,filesep,'eAuto_scene'],resultfig);
