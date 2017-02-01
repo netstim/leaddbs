@@ -79,12 +79,14 @@ end
     
 togglestates.xyzmm=[togglestates.xyzmm';1];
 try
-xyzv= V{1}.mat \ togglestates.xyzmm;
+    xyzv= V{1}.mat \ togglestates.xyzmm;
 catch
     keyboard
 end
 xyzv=round(xyzv(1:3)); % now in voxel coordinates.
 
+% balance the contrast
+[balanced, cmap] = ea_autocontrast(double(V{1}.private.dat),2.5);
 
 if togglestates.xyztoggles(1)
 
@@ -105,7 +107,7 @@ if togglestates.xyztoggles(1)
 
     end
     
-    xsliceplot=slice3i(V{1}.private.dat,V{1}.mat,1,round(size(V{1}.private.dat,1)/2));
+    xsliceplot=slice3i(balanced,V{1}.mat,1,round(size(balanced,1)/2));
     switch togglestates.cutview
         case 'xcut'
             try delete(ysliceplot); end
@@ -128,7 +130,7 @@ if togglestates.xyztoggles(2)
     else
     end
     
-    ysliceplot=slice3i(V{1}.private.dat,V{1}.mat,2,round(size(V{1}.private.dat,2)/2));
+    ysliceplot=slice3i(balanced,V{1}.mat,2,round(size(balanced,2)/2));
     switch togglestates.cutview
         case 'ycut'
             try delete(xsliceplot); end
@@ -157,7 +159,7 @@ if togglestates.xyztoggles(3)
     else
     end
      
-    zsliceplot=slice3i(V{1}.private.dat,V{1}.mat,3,round(size(V{1}.private.dat,3)/2));    
+    zsliceplot=slice3i(balanced,V{1}.mat,3,round(size(balanced,3)/2));    
     switch togglestates.cutview
         case 'zcut'
             try delete(xsliceplot); end
@@ -169,6 +171,8 @@ if togglestates.xyztoggles(3)
     end
 end
 
+colormap(cmap);
+
 % store data in figure
 setappdata(resultfig,'xsliceplot',xsliceplot);
 setappdata(resultfig,'ysliceplot',ysliceplot);
@@ -176,7 +180,6 @@ setappdata(resultfig,'zsliceplot',zsliceplot);
 setappdata(resultfig,'V',V);
 setappdata(resultfig,'inverted',inverted);
 
-colormap gray
 
 function slice=ea_invert(slice,flag)
 if flag

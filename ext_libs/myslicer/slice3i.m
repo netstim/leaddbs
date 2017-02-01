@@ -139,27 +139,8 @@ else
     error('Slicedim should be 1, 2 or 3')
 end
 
-sliceim = AutoAdjust(sliceim);
 if nargin<5 || handle == 0
   h = image3(sliceim,ij2xyz);
 else
   h = image3(sliceim,ij2xyz,handle);
 end
-
-
-% -=< Window and level auto adjustment callback function >=-
-function sliceim = AutoAdjust(image,object,eventdata)
-    Win = double(max(image(:))-min(image(:)));
-    Win (Win < 1) = 1;
-    LevV = double(min(image(:)) + (Win/2));
-    [Rmin, Rmax] = WL2R(Win,LevV);
-    sliceim = image./Rmax*64;
-   
-    
-% -=< Window and level to range conversion >=-
-function [Rmn Rmx] = WL2R(W,L)
-    Rmn = L - (W/2);
-    Rmx = L + (W/2);
-    if (Rmn >= Rmx)
-        Rmx = Rmn + 1;
-    end
