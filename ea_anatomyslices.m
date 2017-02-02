@@ -107,7 +107,7 @@ if togglestates.xyztoggles(1)
 
     end
     
-    xsliceplot=slice3i(balanced,V{1}.mat,1,round(size(balanced,1)/2));
+    xsliceplot=slice3i(balanced,V{1}.mat,1,xyzv(1));
     switch togglestates.cutview
         case 'xcut'
             try delete(ysliceplot); end
@@ -130,7 +130,7 @@ if togglestates.xyztoggles(2)
     else
     end
     
-    ysliceplot=slice3i(balanced,V{1}.mat,2,round(size(balanced,2)/2));
+    ysliceplot=slice3i(balanced,V{1}.mat,2,xyzv(2));
     switch togglestates.cutview
         case 'ycut'
             try delete(xsliceplot); end
@@ -159,7 +159,7 @@ if togglestates.xyztoggles(3)
     else
     end
      
-    zsliceplot=slice3i(balanced,V{1}.mat,3,round(size(balanced,3)/2));    
+    zsliceplot=slice3i(balanced,V{1}.mat,3,xyzv(3));    
     switch togglestates.cutview
         case 'zcut'
             try delete(xsliceplot); end

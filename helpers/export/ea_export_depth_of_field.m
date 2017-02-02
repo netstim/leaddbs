@@ -1,4 +1,4 @@
-function ea_export_depth_of_field(figurehandle)
+function ea_export_depth_of_field(~,~,figurehandle)
 
 [FileName,PathName] = uiputfile('LEAD_Scene.png','Save file name');
 if FileName

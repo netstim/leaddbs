@@ -25,7 +25,7 @@ disp(description);
 
 
 
-[R,p]=corrcoef(X,'rows','pairwise');
+[R,p]=corr(X,'rows','pairwise','type','Pearson');
 R_upd=R(2:end,1);
 p_upd=p(2:end,1);
 
