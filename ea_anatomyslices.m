@@ -57,6 +57,9 @@ end
 end
 
 %% Render slices
+try delete(xsliceplot); end
+try delete(ysliceplot); end
+try delete(zsliceplot); end
 V=getappdata(resultfig,'V');
 inverted=getappdata(resultfig,'inverted');
 if isempty(inverted)
