@@ -139,6 +139,14 @@ else
     error('Slicedim should be 1, 2 or 3')
 end
 
+sliceim=ea_contrast(sliceim,0.5,0.5)*64;
+resdivs=1; % could increase to 2 but would render a bit slow.
+sliceim=interp2(sliceim,resdivs);
+
+
+
+ij2xyz(:,1:2)=ij2xyz(:,1:2)/(2^resdivs);
+
 if nargin<5 || handle == 0
   h = image3(sliceim,ij2xyz);
 else

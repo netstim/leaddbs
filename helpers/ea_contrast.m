@@ -5,7 +5,7 @@ slice(:)=contrast*zscore(slice(:));
 slice=slice+offset;
 
 slice=ea_sigmoid(slice);
-
+slice=ea_minmax(slice);
 
 
 
