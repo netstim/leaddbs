@@ -25,7 +25,6 @@ switch togglestates.cutview
         setappdata(resultfig,'xsliceplot',xsliceplot);
         setappdata(resultfig,'ysliceplot',ysliceplot);
         setappdata(resultfig,'zsliceplot',zsliceplot);
-        return
     case 'ycut'
         set(xsliceplot,'Visible','off')
         set(ysliceplot,'Visible','on')
@@ -34,7 +33,6 @@ switch togglestates.cutview
         setappdata(resultfig,'xsliceplot',xsliceplot);
         setappdata(resultfig,'ysliceplot',ysliceplot);
         setappdata(resultfig,'zsliceplot',zsliceplot);
-        return
     case 'zcut'
         set(xsliceplot,'Visible','off')
         set(ysliceplot,'Visible','off')
@@ -43,7 +41,6 @@ switch togglestates.cutview
         setappdata(resultfig,'xsliceplot',xsliceplot);
         setappdata(resultfig,'ysliceplot',ysliceplot);
         setappdata(resultfig,'zsliceplot',zsliceplot);
-        return
     case '3d'
         set(xsliceplot,'Visible','on')
         set(ysliceplot,'Visible','on')
@@ -52,10 +49,29 @@ switch togglestates.cutview
         setappdata(resultfig,'xsliceplot',xsliceplot);
         setappdata(resultfig,'ysliceplot',ysliceplot);
         setappdata(resultfig,'zsliceplot',zsliceplot);
-        return
 end
 end
 
+if ~isempty(xsliceplot) && ~isequal(togglestates.xyztoggles,[1 1 1]) && strcmp(togglestates.cutview,'3d')
+    if togglestates.xyztoggles(1)
+        set(xsliceplot,'Visible','on'); else
+        set(xsliceplot,'Visible','off'); end
+    if togglestates.xyztoggles(2)
+        set(ysliceplot,'Visible','on'); else
+        set(ysliceplot,'Visible','off'); end
+    if togglestates.xyztoggles(3)
+        set(zsliceplot,'Visible','on'); else
+        set(zsliceplot,'Visible','off');
+    end    
+    ea_settransparency(resultfig,togglestates)
+    setappdata(resultfig,'xsliceplot',xsliceplot);
+    setappdata(resultfig,'ysliceplot',ysliceplot);
+    setappdata(resultfig,'zsliceplot',zsliceplot);
+end
+
+if ~isempty(xsliceplot) && ~togglestates.refreshcuts
+    return
+end
 %% Render slices
 try delete(xsliceplot); end
 try delete(ysliceplot); end
