@@ -15,7 +15,7 @@ ysliceplot=getappdata(resultfig,'ysliceplot');
 zsliceplot=getappdata(resultfig,'zsliceplot');
 
 %% Parse togglestates
-if ~isempty(xsliceplot)
+if ~isempty(xsliceplot) && ~togglestates.refreshcuts
 switch togglestates.cutview
     case 'xcut'
         set(xsliceplot,'Visible','on')

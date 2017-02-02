@@ -155,11 +155,11 @@ function templatepopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns templatepopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from templatepopup
-setfield(getfield(handles,'threedradio'),'Value',1)
 resultfig=getappdata(handles.acontrolfig,'resultfig');
 togglestates = getappdata(resultfig,'togglestates');
-    togglestates.cutview = '3d';
-    togglestates.refreshcuts = 1;
+handles.threedradio.Value = 1;
+togglestates.cutview = '3d';
+togglestates.refreshcuts = 1;
 setappdata(resultfig,'togglestates',togglestates);
 
 popvals=get(hObject,'String');
