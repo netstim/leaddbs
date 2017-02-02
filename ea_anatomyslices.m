@@ -13,11 +13,14 @@ togglestates.xyztransparencies=double(togglestates.xyztransparencies/100);
 xsliceplot=getappdata(resultfig,'xsliceplot');
 ysliceplot=getappdata(resultfig,'ysliceplot');
 zsliceplot=getappdata(resultfig,'zsliceplot');
+
+%% Parse togglestates
 switch togglestates.cutview
     case 'xcut'
         try delete(ysliceplot); end
         try delete(zsliceplot); end
-        if isvalid(xsliceplot) 
+        if isvalid(xsliceplot)
+            ea_settransparency(resultfig,togglestates)
             setappdata(resultfig,'xsliceplot',xsliceplot);
             setappdata(resultfig,'ysliceplot',ysliceplot);
             setappdata(resultfig,'zsliceplot',zsliceplot);
@@ -27,6 +30,7 @@ switch togglestates.cutview
         try delete(xsliceplot); end
         try delete(zsliceplot); end
         if isvalid(ysliceplot)
+            ea_settransparency(resultfig,togglestates)
             setappdata(resultfig,'xsliceplot',xsliceplot);
             setappdata(resultfig,'ysliceplot',ysliceplot);
             setappdata(resultfig,'zsliceplot',zsliceplot);
@@ -36,16 +40,26 @@ switch togglestates.cutview
         try delete(xsliceplot); end
         try delete(ysliceplot); end     
         if isvalid(zsliceplot)
+            ea_settransparency(resultfig,togglestates)
             setappdata(resultfig,'xsliceplot',xsliceplot);
             setappdata(resultfig,'ysliceplot',ysliceplot);
             setappdata(resultfig,'zsliceplot',zsliceplot);
         return
         end
     case '3d'
-        try delete(xsliceplot); end
-        try delete(ysliceplot); end
-        try delete(zsliceplot); end
+        if ~isempty(xsliceplot)
+            if ~isvalid(xsliceplot)||~isvalid(ysliceplot)||~isvalid(zsliceplot)
+                try delete(xsliceplot); end
+                try delete(ysliceplot); end
+                try delete(zsliceplot); end
+            else
+                ea_settransparency(resultfig,togglestates)
+                return
+            end
+        end
 end
+
+%% Render slices
 V=getappdata(resultfig,'V');
 inverted=getappdata(resultfig,'inverted');
 if isempty(inverted)
@@ -112,6 +126,7 @@ if togglestates.xyztoggles(1)
         case 'xcut'
             try delete(ysliceplot); end
             try delete(zsliceplot); end
+            ea_settransparency(resultfig,togglestates)
             setappdata(resultfig,'xsliceplot',xsliceplot);
             setappdata(resultfig,'ysliceplot',ysliceplot);
             setappdata(resultfig,'zsliceplot',zsliceplot);
@@ -135,6 +150,7 @@ if togglestates.xyztoggles(2)
         case 'ycut'
             try delete(xsliceplot); end
             try delete(zsliceplot); end
+            ea_settransparency(resultfig,togglestates)
             setappdata(resultfig,'xsliceplot',xsliceplot);
             setappdata(resultfig,'ysliceplot',ysliceplot);
             setappdata(resultfig,'zsliceplot',zsliceplot);
@@ -164,6 +180,7 @@ if togglestates.xyztoggles(3)
         case 'zcut'
             try delete(xsliceplot); end
             try delete(ysliceplot); end
+            ea_settransparency(resultfig,togglestates)
             setappdata(resultfig,'xsliceplot',xsliceplot);
             setappdata(resultfig,'ysliceplot',ysliceplot);
             setappdata(resultfig,'zsliceplot',zsliceplot);
@@ -177,6 +194,7 @@ colormap(cmap);
 setappdata(resultfig,'xsliceplot',xsliceplot);
 setappdata(resultfig,'ysliceplot',ysliceplot);
 setappdata(resultfig,'zsliceplot',zsliceplot);
+ea_settransparency(resultfig,togglestates)
 setappdata(resultfig,'V',V);
 setappdata(resultfig,'inverted',inverted);
 
