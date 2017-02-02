@@ -130,12 +130,13 @@ pixdim=length(dataset.vol.outidx);
 numsub=length(dataset.vol.subIDs);
 % init vars:
 switch cmd
-    case {'seed'}
+    case {'seed','pseed'}
         for s=1:numseed
             fX{s}=nan(length(omaskidx),numsub);
             rh.fX{s}=nan(10242,numsub);
             lh.fX{s}=nan(10242,numsub);
         end
+
     case 'pmap'
         
         for s=1:numseed-1
@@ -170,12 +171,12 @@ end
 
 
 
-for mcfi=usesubjects
+for mcfi=usesubjects % iterate across subjects
     ea_dispercent(mcfi/numsub);
     howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
     switch cmd
         
-        case 'seed'
+        case {'seed','pseed'}
             
             for s=1:numseed
                 
@@ -184,6 +185,9 @@ for mcfi=usesubjects
                 for run=1:howmanyruns
                     switch dataset.type
                         case 'fMRI_matrix'
+                            if strcmp(cmd,'pseed')
+                                ea_error('Cannot run partial seed on fMRI Matrix dataset.');
+                            end
                             if ~exist('mat','var') && ~exist('loaded','var')
                                 mat=[]; loaded=[];
                             end
@@ -208,12 +212,31 @@ for mcfi=usesubjects
                                 rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
                             end
                             gmtc=single(gmtc);
-                            if size(sfile(s,:),2)>1 % dealing with surface seed
-                                ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
-                                stc=mean([ls.gmtc(sweightidx{s,1},:).*sweightidxmx{s,1};...
-                                    rs.gmtc(sweightidx{s,2},:).*sweightidxmx{s,2}],1); % seed time course
-                            else % volume seed
-                                stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s},1); % seed time course
+                            
+                            switch cmd % build up seed tc for present subject
+                                case 'seed'
+                                    if size(sfile(s,:),2)>1 % dealing with surface seed
+                                        ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
+                                        stc=mean([ls.gmtc(sweightidx{s,1},:).*sweightidxmx{s,1};...
+                                            rs.gmtc(sweightidx{s,2},:).*sweightidxmx{s,2}],1); % seed time course
+                                    else % volume seed
+                                        stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s},1); % seed time course
+                                    end
+                                    
+                                case 'pseed'
+                                    clear stc
+                                    for subs=1:numseed
+                                        if size(sfile(subs,:),2)>1 % dealing with surface seed
+                                            ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
+                                            stc(:,subs)=mean([ls.gmtc(sweightidx{subs,1},:).*sweightidxmx{subs,1};...
+                                                rs.gmtc(sweightidx{subs,2},:).*sweightidxmx{subs,2}],1); % seed time course
+                                        else % volume seed
+                                            stc(:,subs)=mean(gmtc(sweightidx{subs},:).*sweightidxmx{subs},1); % seed time course
+                                        end
+                                    end
+                                    os=1:numseed; os(s)=[]; % remaining seeds
+                                    [~,~,stc]=regress(stc(:,s),addone(stc(:,os))); % regress out other time series from current one
+                                    stc=stc';
                             end
                             thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
                             if isfield(dataset,'surf')
@@ -241,6 +264,9 @@ for mcfi=usesubjects
                     spm_write_vol(ccmap,ccmap.img);
                 end
             end
+
+            
+            
         case 'pmap'
             
             
@@ -255,7 +281,7 @@ for mcfi=usesubjects
                     switch dataset.type
                         case 'fMRI_matrix'
                             
-                           ea_error('Pmap not supported with use of fMRI_Matrix (yet).');
+                            ea_error('Pmap not supported with use of fMRI_Matrix (yet).');
                             
                         case 'fMRI_timecourses'
                             load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
@@ -302,7 +328,7 @@ for mcfi=usesubjects
                     rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
                     ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
                 end
-                for s=1:numseed                   
+                for s=1:numseed
                     if size(sfile(s,:),2)>1 % dealing with surface seed
                         stc(s,:)=mean([ls.gmtc(sweightidx{s,1},:).*sweightidxmx{s,1};...
                             rs.gmtc(sweightidx{s,2},:).*sweightidxmx{s,2}],1); % seed time course
@@ -319,11 +345,12 @@ for mcfi=usesubjects
                         X=partialcorr(stc');
                 end
                 thiscorr(:,run)=X(:);
+                
             end
             thiscorr=mean(thiscorr,2);
             X(:)=thiscorr;
             fX(:,mcfi)=X(logical(triu(ones(numseed),1)));
- 
+            
             if writeoutsinglefiles
                 save([outputfolder,addp,'corrMx_',dataset.vol.subIDs{mcfi}{1},'.mat'],'X','-v7.3');
             end
@@ -359,7 +386,7 @@ switch dataset.type
         
     case 'fMRI_timecourses'
         switch cmd
-            case {'seed','pmap'}
+            case {'seed','pmap','pseed'}
                 for s=1:length(seedfn) % subtract 1 in case of pmap command
                     
                     % export mean
@@ -584,6 +611,8 @@ else
     howmanyruns=length(dataset.vol.subIDs{mcfi})-1;
 end
 
+function X=addone(X)
+X=[ones(size(X,1),1),X];
 
 function [mat,loaded]=ea_getmat(mat,loaded,idx,chunk,datadir)
 
