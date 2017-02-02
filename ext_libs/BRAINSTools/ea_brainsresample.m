@@ -1,4 +1,4 @@
-function ea_brainsfit_applytransform(varargin)
+function ea_brainsresample(varargin)
 % Wrapper to apply BRAINSFit transformation using BRAINSResample
 
 fixedVolume = varargin{1};
@@ -15,7 +15,7 @@ else
     [~, fix] = ea_niifileparts(fixedVolume);
     xfm = [mov, '2', fix, '_brainsfit'];
     affine = dir([volumedir, xfm, '.h5']);
-    
+
     if numel(affine) == 0
         error('Please run ea_brainsfit first before apply the transformation!');
     else
@@ -53,7 +53,7 @@ cmd = [BRAINSResample, ...
        ' --warpTransform ', ea_path_helper(affine), ...
        ' --interpolationMode ', interp, ...
        ' --pixelType float'];
-   
+
 if inverse
     cmd = [cmd, ' --inverseTransform'];
 end
