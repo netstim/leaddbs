@@ -84,7 +84,7 @@ prefs.sampledtidicom='sample_dti_dicom.dcm'; % sample DICOM file of DTI image (u
 prefs.normmatrix='lmat.txt';
 
 %% Normalization:
-prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
+% prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
 prefs.normalize.default='ea_normalize_ants';
 prefs.normalize.inverse.warp='inverse'; % set to 'tpm' in case you wish to create a atlas-specific tpm to warp atlases, set to 'inverse' to apply the inverse transform of your normalization.
 prefs.normalize.inverse.customtpm=0; % set to 1 if custom TPM shall be built for inverse warpings. Only applies if the above is set to 'tpm'.
@@ -154,5 +154,3 @@ prefs.ls.autosave=0;
 %% environment
 prefs.env.dev=0;
 prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in folder.
-
-

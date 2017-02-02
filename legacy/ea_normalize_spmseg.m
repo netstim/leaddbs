@@ -50,7 +50,7 @@ end
 % First, do the coreg part:
 if options.modality==1
     try
-        ea_coregmr(options,options.prefs.normalize.coreg);
+        ea_coregmr(options);
     end
 end
 

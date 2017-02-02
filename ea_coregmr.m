@@ -1,4 +1,4 @@
-function ea_coregmr(options,automan)
+function ea_coregmr(options)
 % wrapper for coreg routines
 
 % in CT imaging, coregistration is done elsewhere.
