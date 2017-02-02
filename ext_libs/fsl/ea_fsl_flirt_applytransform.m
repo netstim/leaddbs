@@ -13,8 +13,8 @@ else
     % determine the affine matrix to be used
     [~, mov] = ea_niifileparts(movingimage);
     [~, fix] = ea_niifileparts(fixedimage);
-    xfm = [mov, '2', fix];
-    affine = dir([volumedir, xfm, '*.txt']);
+    xfm = [mov, '2', fix, '_flirt'];
+    affine = dir([volumedir, xfm, '*.mat']);
     
     if numel(affine) == 0
         error('Please run ea_flirt first before apply the transformation!');
