@@ -15,48 +15,45 @@ ysliceplot=getappdata(resultfig,'ysliceplot');
 zsliceplot=getappdata(resultfig,'zsliceplot');
 
 %% Parse togglestates
+if ~isempty(xsliceplot)
 switch togglestates.cutview
     case 'xcut'
-        try delete(ysliceplot); end
-        try delete(zsliceplot); end
-        if isvalid(xsliceplot)
-            ea_settransparency(resultfig,togglestates)
-            setappdata(resultfig,'xsliceplot',xsliceplot);
-            setappdata(resultfig,'ysliceplot',ysliceplot);
-            setappdata(resultfig,'zsliceplot',zsliceplot);
-            return 
-        end
-    case 'ycut'
-        try delete(xsliceplot); end
-        try delete(zsliceplot); end
-        if isvalid(ysliceplot)
-            ea_settransparency(resultfig,togglestates)
-            setappdata(resultfig,'xsliceplot',xsliceplot);
-            setappdata(resultfig,'ysliceplot',ysliceplot);
-            setappdata(resultfig,'zsliceplot',zsliceplot);
-            return
-        end
-    case 'zcut'
-        try delete(xsliceplot); end
-        try delete(ysliceplot); end     
-        if isvalid(zsliceplot)
-            ea_settransparency(resultfig,togglestates)
-            setappdata(resultfig,'xsliceplot',xsliceplot);
-            setappdata(resultfig,'ysliceplot',ysliceplot);
-            setappdata(resultfig,'zsliceplot',zsliceplot);
+        set(xsliceplot,'Visible','on')
+        set(ysliceplot,'Visible','off')
+        set(zsliceplot,'Visible','off')
+        ea_settransparency(resultfig,togglestates)
+        setappdata(resultfig,'xsliceplot',xsliceplot);
+        setappdata(resultfig,'ysliceplot',ysliceplot);
+        setappdata(resultfig,'zsliceplot',zsliceplot);
         return
-        end
+    case 'ycut'
+        set(xsliceplot,'Visible','off')
+        set(ysliceplot,'Visible','on')
+        set(zsliceplot,'Visible','off')
+        ea_settransparency(resultfig,togglestates)
+        setappdata(resultfig,'xsliceplot',xsliceplot);
+        setappdata(resultfig,'ysliceplot',ysliceplot);
+        setappdata(resultfig,'zsliceplot',zsliceplot);
+        return
+    case 'zcut'
+        set(xsliceplot,'Visible','off')
+        set(ysliceplot,'Visible','off')
+        set(zsliceplot,'Visible','on')
+        ea_settransparency(resultfig,togglestates)
+        setappdata(resultfig,'xsliceplot',xsliceplot);
+        setappdata(resultfig,'ysliceplot',ysliceplot);
+        setappdata(resultfig,'zsliceplot',zsliceplot);
+        return
     case '3d'
-        if ~isempty(xsliceplot)
-            if ~isvalid(xsliceplot)||~isvalid(ysliceplot)||~isvalid(zsliceplot)
-                try delete(xsliceplot); end
-                try delete(ysliceplot); end
-                try delete(zsliceplot); end
-            else
-                ea_settransparency(resultfig,togglestates)
-                return
-            end
-        end
+        set(xsliceplot,'Visible','on')
+        set(ysliceplot,'Visible','on')
+        set(zsliceplot,'Visible','on')
+        ea_settransparency(resultfig,togglestates)
+        setappdata(resultfig,'xsliceplot',xsliceplot);
+        setappdata(resultfig,'ysliceplot',ysliceplot);
+        setappdata(resultfig,'zsliceplot',zsliceplot);
+        return
+end
 end
 
 %% Render slices
