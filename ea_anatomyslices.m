@@ -117,18 +117,8 @@ if togglestates.xyztoggles(1)
 
     end
     
-    
     xsliceplot=slice3i(balanced,V{1+usesag}.mat,1,xyzv(1));
-    switch togglestates.cutview
-        case 'xcut'
-            try delete(ysliceplot); end
-            try delete(zsliceplot); end
-            ea_settransparency(resultfig,togglestates)
-            setappdata(resultfig,'xsliceplot',xsliceplot);
-            setappdata(resultfig,'ysliceplot',ysliceplot);
-            setappdata(resultfig,'zsliceplot',zsliceplot);
-            return
-    end
+    
 end
 
 if togglestates.xyztoggles(2)
@@ -143,16 +133,7 @@ if togglestates.xyztoggles(2)
     end
     
     ysliceplot=slice3i(balanced,V{1+usecor}.mat,2,xyzv(2));
-    switch togglestates.cutview
-        case 'ycut'
-            try delete(xsliceplot); end
-            try delete(zsliceplot); end
-            ea_settransparency(resultfig,togglestates)
-            setappdata(resultfig,'xsliceplot',xsliceplot);
-            setappdata(resultfig,'ysliceplot',ysliceplot);
-            setappdata(resultfig,'zsliceplot',zsliceplot);
-            return
-    end
+    
 end
 
 if togglestates.xyztoggles(3)
@@ -173,16 +154,7 @@ if togglestates.xyztoggles(3)
     end
      
     zsliceplot=slice3i(balanced,V{1}.mat,3,xyzv(3));    
-    switch togglestates.cutview
-        case 'zcut'
-            try delete(xsliceplot); end
-            try delete(ysliceplot); end
-            ea_settransparency(resultfig,togglestates)
-            setappdata(resultfig,'xsliceplot',xsliceplot);
-            setappdata(resultfig,'ysliceplot',ysliceplot);
-            setappdata(resultfig,'zsliceplot',zsliceplot);
-            return
-    end
+    
 end
 
 colormap(cmap);

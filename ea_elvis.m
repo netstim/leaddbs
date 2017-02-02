@@ -337,18 +337,6 @@ try WinOnTop(stimwin,true); end
 function opencortexviewer(hobj,ev,resultfig,options)
 showcortex=ea_showcortex(resultfig,options);
 setappdata(resultfig,'showcortex',showcortex);
-% Set Lighting
-objvisible(hobj,ev,getappdata(resultfig,'left_lamp'))
-objvisible(hobj,ev,getappdata(resultfig,'right_lamp'))
-objinvisible(hobj,ev,getappdata(resultfig,'ceiling_lamp'))
-objinvisible(hobj,ev,getappdata(resultfig,'cam_lamp'))
-% toggle uistate
-ndx = find(strcmp(get(resultfig.Children(:),'Type'),'uitoolbar')==1);
-idx = find(strcmp(get(resultfig.Children(ndx).Children(:),'TooltipString'),'Lightbulb')==1);
-set(resultfig.Children(ndx).Children(idx(4)),'State','off');
-set(resultfig.Children(ndx).Children(idx(3)),'State','off');
-set(resultfig.Children(ndx).Children(idx(2)),'State','on');
-set(resultfig.Children(ndx).Children(idx(1)),'State','on');
 try WinOnTop(showcortex,true); end
 % reload slice viewer to update opacity control
 awin=ea_anatomycontrol(resultfig,options);
