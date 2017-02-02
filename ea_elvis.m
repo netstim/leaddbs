@@ -254,7 +254,7 @@ end
 
 % Initialize a draggable lightbulb
 hold on
-[resultfig]=ea_show_light(resultfig,0);
+[resultfig]=ea_show_light(resultfig,1);
 % set(lightbulb, 'Visible', 'off');
 
 lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'cam_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'cam_lamp')},'State','on');
