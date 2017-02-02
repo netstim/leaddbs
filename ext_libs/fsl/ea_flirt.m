@@ -37,7 +37,7 @@ if isempty(dir([fixedimage_bet,'.nii*']))
     ea_bet(fixedimage, 1, fixedimage_bet);
 end
 
-volumedir = [fileparts(ea_niifileparts(movingimage)), filesep]; 
+volumedir = [fileparts(ea_niifileparts(movingimage)), filesep];
 
 % name of the output transformation
 [~, mov] = ea_niifileparts(movingimage);
@@ -87,7 +87,7 @@ invxfm = [fix, '2', mov, '_flirt'];
 convertxfmcmd = [COVERT_XFM, ...
               ' -omat ', ea_path_helper([volumedir, invxfm, num2str(runs+1), '.mat']), ...
               ' -inverse ', ea_path_helper([volumedir, xfm, num2str(runs+1), '.mat'])];
-          
+
 setenv('FSLOUTPUTTYPE','NIFTI');
 if ~ispc
     system(['bash -c "', flirtcmd, '"']);
@@ -113,4 +113,4 @@ else
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
 
-fprintf('\nFSL FLIRT finished\n');
+fprintf('\nFSL FLIRT done.\n');

@@ -229,3 +229,5 @@ else
     affinefile = {[volumedir, xfm, num2str(runs+1), '.mat'], ...
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
+
+fprintf('\nANTs LINEAR registration done.\n');
