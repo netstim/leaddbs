@@ -420,10 +420,11 @@ switch togglestates.cutview
         end
     case '3d'
         set(0,'CurrentFigure',resultfig);
-        if togglestates.refreshcuts && nativemni==1
+        [az,el]=view;
+        if ~(az==142 && el==13.6) || togglestates.refreshcuts && nativemni==1
             view(142,13.6)
             axis([-100 100 -130 100 -70 100]); 
-        elseif togglestates.refreshcuts && nativemni==2
+        elseif ~(az==142 && el==13.6) || togglestates.refreshcuts && nativemni==2
             view(142,13.6)
             axis([-200 200 -50 250 -100 150]); 
         end
