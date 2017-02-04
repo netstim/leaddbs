@@ -114,8 +114,6 @@ for nativemni=nm % switch between native and mni space atlases.
     % iterate through atlases, visualize them and write out stats.
     for atlas=1:length(atlases.names)
         
-        
-        
         for side=detsides(atlases.types(atlas));
             
 %             if ischar(atlases.pixdim{atlas,side}) % we are dealing with fibers
@@ -133,11 +131,12 @@ for nativemni=nm % switch between native and mni space atlases.
                 fv=atlases.fv{atlas,side};
                 
                 
-                if ischar(options.prefs.hullsimplify)
-                    
+                if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
                     % get to 700 faces
                     simplify=700/length(fv.faces);
-                    fv=reducepatch(fv,simplify);
+                    if simplify < 1 % skip volumes with fewer than 700 faces
+                        fv=reducepatch(fv,simplify);
+                    end
                     
                 else
                     if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
