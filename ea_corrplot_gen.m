@@ -45,10 +45,17 @@ for area=1:length(R_upd)
 
         
     end
+    
     h=lsline;
     set(h,'color','k');
     axis square
-    [~,fn]=fileparts(labels{area+1});
+    
+    ax=gca;
+ax.YTick=[-20:20:90];
+ax.YLim=[-20,90];
+ax.XTick=[-20:10:90];
+ax.XLim=[20,70];
+[~,fn]=fileparts(labels{area+1});
     if strcmp(fn(end-3:end),'.nii')
         [~,fn]=fileparts(fn);
     end

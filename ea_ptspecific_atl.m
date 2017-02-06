@@ -20,7 +20,11 @@ end
 
 function ea_warp_atlas_to_native(troot,aroot,proot,force,options)
 
-
+if strcmp(options.prefs.dev.profile,'se')
+    interp=0;
+else
+    interp=1;
+end
 warning('off');
 mkdir([proot,'atlases',filesep,options.atlasset]);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'lh']);
@@ -61,10 +65,12 @@ for atlas=1:length(atlases.names)
     
     
     if atlases.types(atlas)==3
-        ea_apply_normalization_tofile(options,{ea_niigz([ratlf,atlases.names{atlas}])},{ea_niigz([pratlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1);
-        ea_apply_normalization_tofile(options,{ea_niigz([latlf,atlases.names{atlas}])},{ea_niigz([platlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1);
+
+        ea_apply_normalization_tofile(options,{ea_niigz([ratlf,atlases.names{atlas}])},{ea_niigz([pratlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],interp);
+        ea_apply_normalization_tofile(options,{ea_niigz([latlf,atlases.names{atlas}])},{ea_niigz([platlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],interp);
+        
     else
-        ea_apply_normalization_tofile(options,{ea_niigz([atlf,atlases.names{atlas}])},{ea_niigz([patlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1);
+        ea_apply_normalization_tofile(options,{ea_niigz([atlf,atlases.names{atlas}])},{ea_niigz([patlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],interp);
     end
 end
 
