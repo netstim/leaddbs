@@ -70,6 +70,12 @@ togglestates=getappdata(resultfig,'togglestates'); % get info from resultfig.
 setappdata(hObject,'togglestates',togglestates); % store anatomy toggle data from resultfig to anatomyslice (this) fig for subroutines.
 set(handles.acontrolfig,'Visible',options.d3.verbose);
 
+spacedef=ea_getspacedef;
+if isfield(spacedef,'guidef')
+set(handles.xval,'String',num2str(spacedef.guidef.xyzdef(1)));
+set(handles.yval,'String',num2str(spacedef.guidef.xyzdef(2)));
+set(handles.zval,'String',num2str(spacedef.guidef.xyzdef(3)));
+end
 
 if ~isfield(options,'native')
     options.native=0;
@@ -383,7 +389,7 @@ setappdata(getappdata(handles.acontrolfig,'resultfig'),'togglestates',togglestat
 
 ea_anatomyslices(getappdata(handles.acontrolfig,'resultfig'),...
     togglestates,...
-    getappdata(handles.acontrolfig,'options'));
+    getappdata(handles.acontrolfig,'options'),handles);
 
 nativemni = ea_getnativemni;
 

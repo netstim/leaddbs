@@ -73,26 +73,13 @@ mstr='';
 macaquemodus=0;
 set(handles.leadfigure,'name','Welcome to LEAD-DBS');
 
-if nargin
-    try
-    if strcmp('macaque',varargin{1})
-        options.earoot=earoot;
-        [mstr,isinstalled]=ea_checkmacaque(options,'installed?');
-        if isinstalled
-            macaquemodus=1;
-            mstr=['toolbox',filesep,'macaque',filesep];
-            disp('*** Macaque modus');
-            set(handles.leadfigure,'name','Welcome to LEAD-DBS ** Macaque modus **');
-            set(handles.targetpopup,'Enable','off');
-            set(handles.targetpopup,'Value',3);
-        else
-            ea_error('Please install Lead-DBS macaque toolbox prior to starting Lead-DBS in macaque mode.');
-        end
-    end
-    end
+spacedef=ea_getspacedef;
+if isfield(spacedef,'guidef')
+    set(handles.targetpopup,'String',[spacedef.guidef.entrypoints,{'Manual'}]);
+    
 end
 
-setappdata(handles.leadfigure,'macaquemodus',macaquemodus);
+
 ea_init_coregmrpopup(handles,1);
 
 % load atlassets
@@ -110,11 +97,8 @@ set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 %set(0,'gca',handles.logoaxes);
 set(0,'CurrentFigure',handles.leadfigure);
-if macaquemodus
-    im=imread([earoot,'icons',filesep,'logo_lead_dbs_macaque.png']);
-else
     im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
-end
+
 image(im);
 axis off;
 axis equal;
@@ -171,11 +155,6 @@ ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon'
 
 
 handles.prod='dbs';
-if ~isempty(varargin)
-    if strcmp('macaque',varargin{1})
-        handles.prod='macaque';
-    end
-end
 ea_firstrun(handles);
 ea_getui(handles);
 
@@ -207,7 +186,6 @@ ea_busyaction('on',leadfigure,'dbs');
 
 
 options=ea_handles2options(handles);
-options.macaquemodus=getappdata(handles.leadfigure,'macaquemodus');
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 

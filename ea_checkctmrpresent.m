@@ -10,7 +10,6 @@ end
 % check for MR-files
 [~,patientname]=fileparts(uipatdir{1});
 
-prefs=ea_prefs(patientname);
 
 modality=zeros(2,1);
 % check for unnormalized images first:

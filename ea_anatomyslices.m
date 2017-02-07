@@ -1,4 +1,4 @@
-function ea_anatomyslices(resultfig,togglestates,options)
+function ea_anatomyslices(resultfig,togglestates,options,controlhandles)
 % input xyz in mm coordinates.
 % this function plots an anatomical slice to the 3D viewer of lead-dbs.
 % __________________________________________________________________________________
@@ -69,13 +69,8 @@ if ~isempty(xsliceplot) && ~isequal(togglestates.xyztoggles,[1 1 1]) && strcmp(t
     setappdata(resultfig,'zsliceplot',zsliceplot);
 end
 
-if ~isempty(xsliceplot) && ~togglestates.refreshcuts
-    return
-end
 %% Render slices
-try delete(xsliceplot); end
-try delete(ysliceplot); end
-try delete(zsliceplot); end
+
 V=getappdata(resultfig,'V');
 inverted=getappdata(resultfig,'inverted');
 if isempty(inverted)
@@ -84,8 +79,6 @@ end
 options.d2.writeatlases=1;
 templateused=getappdata(resultfig,'templateused');
 
-
-mcr=ea_checkmacaque(options);
 
 
 if ~isfield(options,'native')
@@ -107,11 +100,13 @@ else
 end
     
 togglestates.xyzmm=[togglestates.xyzmm';1];
+
 try
     xyzv= V{1}.mat \ togglestates.xyzmm;
 catch
     keyboard
 end
+
 xyzv=round(xyzv(1:3)); % now in voxel coordinates.
 
 % balance the contrast
@@ -136,7 +131,7 @@ if togglestates.xyztoggles(1)
 
     end
     
-    xsliceplot=slice3i(balanced,V{1+usesag}.mat,1,xyzv(1));
+    xsliceplot=slice3i(resultfig,balanced,V{1+usesag}.mat,1,xyzv(1),controlhandles);
     
 end
 
@@ -151,7 +146,7 @@ if togglestates.xyztoggles(2)
     else
     end
     
-    ysliceplot=slice3i(balanced,V{1+usecor}.mat,2,xyzv(2));
+    ysliceplot=slice3i(resultfig,balanced,V{1+usecor}.mat,2,xyzv(2),controlhandles);
     
 end
 
@@ -172,7 +167,7 @@ if togglestates.xyztoggles(3)
     else
     end
      
-    zsliceplot=slice3i(balanced,V{1}.mat,3,xyzv(3));    
+    zsliceplot=slice3i(resultfig,balanced,V{1}.mat,3,xyzv(3),controlhandles);    
     
 end
 

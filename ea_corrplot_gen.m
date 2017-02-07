@@ -52,9 +52,9 @@ for area=1:length(R_upd)
     
     ax=gca;
 ax.YTick=[-20:20:90];
-ax.YLim=[-20,90];
+ax.YLim=[-15,90];
 ax.XTick=[-20:10:90];
-ax.XLim=[20,70];
+ax.XLim=[25,65];
 [~,fn]=fileparts(labels{area+1});
     if strcmp(fn(end-3:end),'.nii')
         [~,fn]=fileparts(fn);

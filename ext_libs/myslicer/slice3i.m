@@ -1,4 +1,4 @@
-function h = slice3i(vol, I2X, slicedim, sliceidx, handle)
+function h = slice3i(resultfig,vol, I2X, slicedim, sliceidx, controlhandles)
 % Display a slice from a volume in 3-D
 % h = slice3(vol, I2X, slicedim, sliceidx, handle) 
 %
@@ -30,11 +30,19 @@ function h = slice3i(vol, I2X, slicedim, sliceidx, handle)
 % AutoAdjust Function by Todd Herrington, 2016-03-16
 % Modified by Ari Kappel 01-31-17
 
-try
-    h = update_slice(vol, I2X, slicedim, sliceidx, h);
-catch
-    h = update_slice(vol, I2X, slicedim, sliceidx);
+switch slicedim
+    case 1
+        h=getappdata(resultfig,'xsliceplot');
+    case 2
+
+        h=getappdata(resultfig,'ysliceplot');
+    case 3
+
+        h=getappdata(resultfig,'zsliceplot');
+        
 end
+
+    h = update_slice(vol, I2X, slicedim, sliceidx, h,controlhandles);
     
 % set up gui
 gui.handle = h;
@@ -42,11 +50,11 @@ gui.vol = vol;
 gui.I2X = I2X;
 gui.slicedim = slicedim;
 gui.sliceidx = sliceidx;
-set(gui.handle,'ButtonDownFcn',@startmovit);
+set(gui.handle,'ButtonDownFcn',{@startmovit,controlhandles});
 set(h,'UserData',gui);
 
 
-function startmovit(src,evnt)
+function startmovit(src,evnt,controlhandles)
 % Unpack gui object
 gui = get(src,'UserData');
 %turn off mouse pointer
@@ -58,12 +66,12 @@ gui.startray = get(gca,'CurrentPoint');
 gui.startidx = gui.sliceidx;
 % Store gui object
 set(src,'UserData',gui);
-set(thisfig,'WindowButtonMotionFcn',@movit);
+set(thisfig,'WindowButtonMotionFcn',{@movit,controlhandles});
 set(thisfig,'WindowButtonUpFcn',@stopmovit);
 set(thisfig,'UserData',src);
 
 
-function movit(src,evnt)
+function movit(src,evnt,controlhandles)
 % Unpack gui object
 gui = get(get(gcf,'UserData'),'UserData');
 % Some safetymeasures
@@ -93,7 +101,7 @@ slicediff = alphanow-alphastart;
 
 gui.sliceidx = gui.startidx+slicediff;
 gui.sliceidx = min(max(1,gui.sliceidx),size(gui.vol,gui.slicedim));
-update_slice(gui.vol, gui.I2X, gui.slicedim, gui.sliceidx, gui.handle);
+update_slice(gui.vol, gui.I2X, gui.slicedim, gui.sliceidx, gui.handle,controlhandles);
 drawnow;
 
 % Store gui object
@@ -112,7 +120,7 @@ set(get(gcf,'UserData'),'UserData',gui);
 set(gcf,'UserData',[]);
 drawnow;
 
-function h = update_slice(vol, I2X, slicedim, sliceidx, handle)
+function h = update_slice(vol, I2X, slicedim, sliceidx, handle,controlhandles)
 
 if ndims(vol) == 3         %Scalar mode
 elseif ndims(vol) == 4     %RGB mode
@@ -124,17 +132,33 @@ end
 if slicedim == 3 % k
   ij2xyz = I2X(:,[1 2]);
   ij2xyz(:,3) = I2X*[0 0 sliceidx 1]';
+  if round(sliceidx)<1
+      sliceidx=1;
+  elseif round(sliceidx)>size(vol,3)
+      sliceidx=size(vol,3);
+  end
   sliceim = squeeze(vol(:,:,round(sliceidx),:));
 
 elseif slicedim == 2 % j
   ij2xyz = I2X(:,[1 3]);
   ij2xyz(:,3) = I2X*[0 sliceidx 0 1]';
+  if round(sliceidx)<1
+      sliceidx=1;
+  elseif round(sliceidx)>size(vol,2)
+      sliceidx=size(vol,2);
+  end
   sliceim = squeeze(vol(:,round(sliceidx),:,:));
 
 elseif slicedim == 1 % i
   ij2xyz = I2X(:,[2 3]);
   ij2xyz(:,3) = I2X*[sliceidx 0 0 1]';
+  if round(sliceidx)<1
+      sliceidx=1;
+  elseif round(sliceidx)>size(vol,1)
+      sliceidx=size(vol,1);
+  end
   sliceim = squeeze(vol(round(sliceidx),:,:,:));
+
 else
     error('Slicedim should be 1, 2 or 3')
 end
@@ -146,9 +170,30 @@ sliceim=interp2(sliceim,resdivs);
 
 
 ij2xyz(:,1:2)=ij2xyz(:,1:2)/(2^resdivs);
-
-if nargin<5 || handle == 0
+ea_update_anatomycontrol(sliceidx,slicedim,I2X,controlhandles);
+if isempty(handle)
   h = image3(sliceim,ij2xyz);
 else
   h = image3(sliceim,ij2xyz,handle);
 end
+
+
+
+
+function ea_update_anatomycontrol(sliceidx,slicedim,mat,controlhandles)
+
+        slicecoord=[ones(4,1)];
+        slicecoord(slicedim)=sliceidx;
+        slicecoord=mat*slicecoord;
+        switch slicedim
+            case 1
+                slicehdl='xval';
+            case 2
+                slicehdl='yval';
+            case 3
+                slicehdl='zval';
+        end
+        set(controlhandles.(slicehdl),'String',num2str(slicecoord(slicedim)));
+        
+
+

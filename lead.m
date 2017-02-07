@@ -64,6 +64,7 @@ earoot=ea_getearoot;
 
 ea_checkbuildspace;
 
+
 ea_checkspm;
 
 % check existence of directories
