@@ -8,7 +8,7 @@ if ~exist('native','var')
     native=0; % additional native variable will be used if not working in native space but still wanting to e.g. list atlases from native space. Is not important.
 end
 if ~exist('options','var')
-   options.prefs=ea_prefs(''); % get minimal options from prefs. 
+   options=struct; 
 end
 if ~isfield(options,'native')
     options.native=0;

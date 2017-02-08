@@ -95,7 +95,7 @@ for i=1:length(as)
 end
 
 % load atlassets
-ea_listatlassets(handles,1);
+ea_listatlassets(options,handles,1);
 
 set(hObject,'Color',[1 1 1]);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
@@ -128,7 +128,7 @@ ea_processguiargs(handles,varargin)
 
 
 handles.prod='anatomy';
-ea_firstrun(handles);
+ea_firstrun(handles,options);
 
 
 

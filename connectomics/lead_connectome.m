@@ -138,7 +138,7 @@ if isindependent
     
 end
 
-ea_firstrun(handles);
+ea_firstrun(handles,options);
 
 % Choose default command line output for leadfigure
 handles.output = hObject;

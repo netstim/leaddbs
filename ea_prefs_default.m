@@ -154,3 +154,12 @@ prefs.ls.autosave=0;
 %% environment
 prefs.env.dev=0;
 prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in folder.
+
+%% xelatex executable path:
+prefs.ltx.pdfconverter=''; % set path to xelatex here (for PDF export)
+
+
+
+prefs.ls.dir=''; % set path to lead server here (for web export)
+prefs.ixi.dir=''; % set path to ixi database here
+prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in folder.

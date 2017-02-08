@@ -79,11 +79,12 @@ if isfield(spacedef,'guidef')
     
 end
 
+options.prefs=ea_prefs('');
 
 ea_init_coregmrpopup(handles,1);
 
 % load atlassets
-ea_listatlassets(handles,1);
+ea_listatlassets(options,handles,1);
 
 set(handles.normalize_checkbox,'Value',0);
 
@@ -108,7 +109,6 @@ set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 
 % add norm methods to menu
 options.earoot=ea_getearoot;
-options.prefs=ea_prefs('');
 
 ea_addnormmethods(handles,options,mstr);
 
@@ -155,7 +155,7 @@ ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon'
 
 
 handles.prod='dbs';
-ea_firstrun(handles);
+ea_firstrun(handles,options);
 ea_getui(handles);
 
 

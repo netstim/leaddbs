@@ -1,5 +1,9 @@
 function prefs=ea_prefs(patientname)
 
+if ~exist('patientname','var')
+    patientname='';
+end
+
 % get default prefs
 prefs=ea_prefs_default(patientname);
 % now overwrite with user prefs stored in /home
@@ -46,26 +50,26 @@ function prefs=combinestructs(prefs,uprefs)
 ufn=fieldnames(uprefs);
 
 for uf=1:length(ufn) % compare user preferences with defaults and overwrite defaults where present.
-    try
+    if isstruct(uprefs.(ufn{uf}))
         ufn2=fieldnames(uprefs.(ufn{uf}));
         for uf2=1:length(ufn2)
-            try
+            if isstruct(uprefs.(ufn{uf}).(ufn2{uf2}))
                 ufn3=fieldnames(uprefs.(ufn{uf}).(ufn2{uf2}));
                 for uf3=1:length(ufn3)
-                    try
+                    if isstruct(uprefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3}));
                         ufn4=fieldnames(uprefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3}));
                         for uf4=1:length(ufn4) % add fourth level entries
                             prefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3}).(ufn4{uf4})=uprefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3}).(ufn4{uf4});
                         end
-                    catch % add third level entries
+                    else % add third level entries
                         prefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3})=uprefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3});
                     end
                 end
-            catch % add second level entries
+            else % add second level entries
                 prefs.(ufn{uf}).(ufn2{uf2})=uprefs.(ufn{uf}).(ufn2{uf2});
             end
         end
-    catch % add first level entries
+    else % add first level entries
         prefs.(ufn{uf})=uprefs.(ufn{uf});
     end
 end
