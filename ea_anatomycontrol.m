@@ -397,40 +397,40 @@ switch togglestates.cutview
     case 'xcut'
         set(0,'CurrentFigure',resultfig);
                 [az,el]=view;
-        if ~(az==90 && el==0) || togglestates.refreshcuts && nativemni==1       
+        if ~(az==90 && el==0) && togglestates.refreshcuts && nativemni==1       
             %axis([str2double(get(handles.xval,'String'))-1 str2double(get(handles.xval,'String'))+1 -130 100 -70 100])
             view(90,0);
-        elseif ~(az==90 && el==0) || togglestates.refreshcuts && nativemni==2       
+        elseif ~(az==90 && el==0) && togglestates.refreshcuts && nativemni==2       
             %axis([str2double(get(handles.xval,'String'))-1 str2double(get(handles.xval,'String'))+1 -50 250 -100 150])
             view(90,0);
         end
     case 'ycut'
         set(0,'CurrentFigure',resultfig);
                 [az,el]=view;
-        if ~(az==0 && el==0) || togglestates.refreshcuts && nativemni==1
+        if ~(az==0 && el==0) && togglestates.refreshcuts && nativemni==1
             %axis([-100 100 str2double(get(handles.yval,'String'))-1 str2double(get(handles.yval,'String'))+1 -70 100])
             view(0,0);
-        elseif ~(az==0 && el==0) || togglestates.refreshcuts && nativemni==2
+        elseif ~(az==0 && el==0) && togglestates.refreshcuts && nativemni==2
             %axis([-200 200 str2double(get(handles.yval,'String'))-1 str2double(get(handles.yval,'String'))+1 -100 150])
             view(0,0);
         end
     case 'zcut'
         set(0,'CurrentFigure',resultfig);
         [az,el]=view;
-        if ~(az==0 && el==90) || togglestates.refreshcuts && nativemni==1
+        if ~(az==0 && el==90) && togglestates.refreshcuts && nativemni==1
             %axis([-100 100 -130 100 str2double(get(handles.zval,'String'))-1,str2double(get(handles.zval,'String'))+1])
             view(0,90);
-        elseif ~(az==0 && el==90) || togglestates.refreshcuts && nativemni==2
+        elseif ~(az==0 && el==90) && togglestates.refreshcuts && nativemni==2
             %axis([-200 200 -50 -100 str2double(get(handles.zval,'String'))-1,str2double(get(handles.zval,'String'))+1])
             view(0,90);
         end
     case '3d'
         set(0,'CurrentFigure',resultfig);
         [az,el]=view;
-        if ~(az==142 && el==13.6) || togglestates.refreshcuts && nativemni==1
+        if ~(az==142 && el==13.6) && togglestates.refreshcuts && nativemni==1
             view(142,13.6)
             axis([-100 100 -130 100 -70 100]); 
-        elseif ~(az==142 && el==13.6) || togglestates.refreshcuts && nativemni==2
+        elseif ~(az==142 && el==13.6) && togglestates.refreshcuts && nativemni==2
             view(142,13.6)
             axis([-200 200 -50 250 -100 150]); 
         end
