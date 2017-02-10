@@ -186,7 +186,7 @@ setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
 handles.prod='group';
-ea_firstrun(handles);
+ea_firstrun(handles,options);
 
 ea_menu_initmenu(handles,{'prefs','transfer'});
 
