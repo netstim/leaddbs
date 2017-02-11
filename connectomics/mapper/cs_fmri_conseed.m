@@ -188,14 +188,14 @@ for mcfi=usesubjects % iterate across subjects
                             if strcmp(cmd,'pseed')
                                 ea_error('Cannot run partial seed on fMRI Matrix dataset.');
                             end
-                            if ~exist('mat','var') && ~exist('loaded','var')
-                                mat=[]; loaded=[];
-                            end
+
                             Rw=nan(length(sweightidx{s}),pixdim);
                             
                             if ~exist('db','var')
                                 db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
                             end
+                            
+                           
                             cnt=1;
                             for ix=sweightidx{s}'
                                 %    testnii.img(outidx)=mat(entry,:); % R
@@ -225,13 +225,13 @@ for mcfi=usesubjects % iterate across subjects
                                     
                                 case 'pseed'
                                     clear stc
-                                    for subs=1:numseed
-                                        if size(sfile(subs,:),2)>1 % dealing with surface seed
+                                    for subseed=1:numseed
+                                        if size(sfile(subseed,:),2)>1 % dealing with surface seed
                                             ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
-                                            stc(:,subs)=mean([ls.gmtc(sweightidx{subs,1},:).*sweightidxmx{subs,1};...
-                                                rs.gmtc(sweightidx{subs,2},:).*sweightidxmx{subs,2}],1); % seed time course
+                                            stc(:,subseed)=mean([ls.gmtc(sweightidx{subseed,1},:).*sweightidxmx{subseed,1};...
+                                                rs.gmtc(sweightidx{subseed,2},:).*sweightidxmx{subseed,2}],1); % seed time course
                                         else % volume seed
-                                            stc(:,subs)=mean(gmtc(sweightidx{subs},:).*sweightidxmx{subs},1); % seed time course
+                                            stc(:,subseed)=mean(gmtc(sweightidx{subseed},:).*sweightidxmx{subseed},1); % seed time course
                                         end
                                     end
                                     os=1:numseed; os(s)=[]; % remaining seeds

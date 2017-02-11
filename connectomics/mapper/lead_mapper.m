@@ -178,7 +178,7 @@ load([earoot,'ea_recentpatients.mat']);
 p=fileparts(fullrpts{1});
 end
 
-[seeds,path]=uigetfile({'*.txt';'*.nii.gz';'*.nii'},'Please choose seed definition(s)...','MultiSelect','on');
+[seeds,path]=uigetfile({'*.nii','NIfTI';'*.txt','Text';'*.nii.gz','NIfTI'},'Please choose seed definition(s)...','MultiSelect','on');
 
 if iscell(seeds)
     set(hObject,'String',['Multiple (',num2str(length(seeds)),')']);
