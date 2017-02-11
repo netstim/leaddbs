@@ -23,12 +23,8 @@ for side=1:length(stimparams)
 end
 
 %-----------------------------begin changes----------------
-if options.macaquemodus
-  load([options.earoot,'toolbox/macaque/atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-else
+
   load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
-%prepare statvat exports once if needed.
-end
 %--------------------------------end changes---------------------------------
 
 
