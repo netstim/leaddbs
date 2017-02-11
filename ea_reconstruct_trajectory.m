@@ -71,7 +71,9 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             mask(round(Y-10:Y+10),round(X-10:X+10))=1;
         otherwise
             mask(masksz(1):masksz(2),masksz(3):masksz(4))=1;
-            
+            if side==1
+                mask=fliplr(mask);
+            end
     end
     
     % initialize slice. mean average for entrypoint over the first 4 slices.
