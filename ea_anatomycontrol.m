@@ -112,9 +112,6 @@ if ~isempty(togglestates) % anatomy toggles have been used before..
     % template name
     set(handles.templatepopup,'Value',find(ismember(get(handles.templatepopup,'String'),togglestates.template)));
 
-    % invertcheck
-    set(handles.invertcheck,'Value',togglestates.tinvert);
-
     % cut items.
     switch togglestates.cutview
         case '3d'
@@ -383,7 +380,7 @@ togglestates.xyztoggles=[get(handles.xtoggle,'Value'),get(handles.ytoggle,'Value
 togglestates.xyztransparencies=[str2double(get(handles.xtrans,'String')),str2double(get(handles.ytrans,'String')),str2double(get(handles.ztrans,'String'))];
 togglestates.template=get(handles.templatepopup,'String');
 togglestates.template=togglestates.template{get(handles.templatepopup,'Value')};
-togglestates.tinvert=get(handles.invertcheck,'Value');
+togglestates.tinvert=0;
 togglestates.customfile=getappdata(gcf,'customfile');
 setappdata(getappdata(handles.acontrolfig,'resultfig'),'togglestates',togglestates); % also store toggle data in resultfig.
 
