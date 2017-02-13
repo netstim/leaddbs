@@ -27,12 +27,14 @@ end
 
 
 % check for canonical fiber sets
-fdfibs=dir([ea_getconnectomebase('dmri'),filesep,'*.mat']);
+fdfibs=dir([ea_getconnectomebase('dmri'),filesep]);
 for fdf=1:length(fdfibs)
-    [~,fn]=fileparts(fdfibs(fdf).name);
-    modlist{cnt}=fn;
-    sf(cnt)=1;
-    cnt=cnt+1;
+    if fdfibs(fdf).isdir && ~strcmp(fdfibs(fdf).name(1),'.')
+        [~,fn]=fileparts(fdfibs(fdf).name);
+        modlist{cnt}=fn;
+        sf(cnt)=1;
+        cnt=cnt+1;
+    end
 end
 
 fc=dir([ea_getconnectomebase('fmri'),filesep,'']);

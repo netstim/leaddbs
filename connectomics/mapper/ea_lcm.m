@@ -34,7 +34,6 @@ end
 if (~options.lcm.func.do) && (~options.lcm.struc.do)
     if strcmp(options.lcm.seeddef,'vats')
         ea_resolvevatseeds(options,'dMRI');
-
         ea_resolvevatseeds(options,'fMRI');
     end
 end

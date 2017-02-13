@@ -26,6 +26,7 @@ end
 
 
 for s=1:length(sfile)
+    
    if strcmp(sfile{s,1}(1),'[')
        
        comma=strfind(sfile{s},',');

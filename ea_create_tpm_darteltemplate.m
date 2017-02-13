@@ -142,8 +142,15 @@ wd=[ea_space([],'dartel')];
 %spm_file_split([wd,'dartelmni_6_hires.nii']);
 gs=[0,2,3,5,6,8];
 expo=6:-1:1;
+spacedef=ea_getspacedef;
+if isfield(spacedef,'dartelpreserve')
+    dpres=spacedef.dartelpreserve;
+else
+    dpres=3;
+end
+
 for s=1:6
-    for tpm=1:3
+    for tpm=1:dpres
         % smooth
         if gs(s)
             matlabbatch{1}.spm.spatial.smooth.data = {[wd,'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii,1']};
@@ -174,9 +181,10 @@ for s=1:6
         clear jobs matlabbatch
     end
 
-    matlabbatch{1}.spm.util.cat.vols = {[wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',1),'.nii'];
-        [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',2),'.nii'];
-        [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',3),'.nii']};
+    for tpm=1:dpres
+    matlabbatch{1}.spm.util.cat.vols{tpm} = [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii'];
+    end
+    matlabbatch{1}.spm.util.cat.vols=matlabbatch{1}.spm.util.cat.vols';
     matlabbatch{1}.spm.util.cat.name = [wd,'dartelmni_',num2str(expo(s)),'.nii'];
     matlabbatch{1}.spm.util.cat.dtype = 0;
     jobs{1}=matlabbatch;
@@ -223,6 +231,13 @@ fclose(fid);
 
 
 function ea_addshoot
+spacedef=ea_getspacedef;
+if isfield(spacedef,'dartelpreserve')
+    dpres=spacedef.dartelpreserve;
+else
+    dpres=3;
+end
+
 if ~exist([ea_space([],'dartel'),filesep,'shootmni_1.nii'],'file');
     root=[ea_space([],'dartel'),filesep];
     for dt=1:6
@@ -238,10 +253,10 @@ if ~exist([ea_space([],'dartel'),filesep,'shootmni_1.nii'],'file');
 
         nii=ea_load_nii([root,'dartelmni_',num2str(dt),'_',sprintf('%05.0f',1),'.nii']);
         nii.img=X;
-        nii.fname=[root,'/dartelmni_',num2str(dt),'_',sprintf('%05.0f',4),'.nii'];
+        nii.fname=[root,'/dartelmni_',num2str(dt),'_',sprintf('%05.0f',dpres+1),'.nii'];
         ea_write_nii(nii);
 
-        for i=1:4
+        for i=1:dpres+1
             matlabbatch{1}.spm.util.cat.vols{i} = [root,'dartelmni_',num2str(dt),'_',sprintf('%05.0f',i),'.nii'];
         end
         matlabbatch{1}.spm.util.cat.vols=matlabbatch{1}.spm.util.cat.vols';
@@ -250,7 +265,7 @@ if ~exist([ea_space([],'dartel'),filesep,'shootmni_1.nii'],'file');
         spm_jobman('run',{matlabbatch});
         clear matlabbatch
 
-        for i=1:4 % cleanup
+        for i=1:dpres+1 % cleanup
             delete([root,'dartelmni_',num2str(dt),'_',sprintf('%05.0f',i),'.nii']);
         end
         delete([root,'shootmni_',num2str(dt),'.mat']);

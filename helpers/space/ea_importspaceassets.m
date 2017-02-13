@@ -1,4 +1,4 @@
-function ea_importspaceassets(~,~,fromspace,what)
+function ea_importspaceassets(~,~,fromspace,what,infname,outfname)
 
 ea_genwarp2space(fromspace);
 norm_method_applied{1}='ea_normalize_spmdartel';
@@ -6,17 +6,21 @@ save([ea_space,fromspace,filesep,'ea_normmethod_applied.mat'],'norm_method_appli
 
 switch what
     case 'both'
-        ea_warplabelassets(fromspace)
-        ea_warpatlasassets(fromspace)
+        ea_warplabelassets(fromspace);
+        ea_warpatlasassets(fromspace);
     case 'atlases'
-        ea_warpatlasassets(fromspace)
+        ea_warpatlasassets(fromspace);
         
     case 'labeling'
-        ea_warplabelassets(fromspace)
+        ea_warplabelassets(fromspace);
+        
+    case 'custom'
+        ea_warpfilefromspace(fromspace,infname,outfname);
 
 end
+if ~strcmp(what,'custom')
 rmdir([ea_space,fromspace],'s'); % cleanup all.
-
+end
 
 function ea_warplabelassets(fromspace)
 labelinginotherspace=[ea_getearoot,'templates',filesep,'space',filesep,fromspace,filesep,'labeling',filesep];
@@ -55,6 +59,11 @@ for p=1:length(parcellation)
 
     
 end
+
+
+function ea_warpfilefromspace(fromspace,infname,outfname)
+
+keyboard
 
 
 

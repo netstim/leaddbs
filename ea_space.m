@@ -40,7 +40,6 @@ switch cmd
     case 'dartel'
         path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'dartel',filesep];
 
-        
 end
 
 if ~exist(path,'dir')

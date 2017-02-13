@@ -6,10 +6,10 @@ if strcmp(options.lcm.struc.connectome,'No structural connectome found.')
 end
 disp('Running structural connectivity...');
 
-if isempty(options.uipatdirs)
-    base=ea_getconnectomebase();
-else
+if strcmp(options.lcm.struc.connectome,'Patient-specific fiber tracts')
     base=[options.root,options.patientname,filesep,'connectomes',filesep];
+else
+    base=ea_getconnectomebase();
 end
 
 if strcmp(options.lcm.struc.connectome,'Patient-specific fiber tracts')
@@ -18,7 +18,7 @@ end
 
 
 cs_dmri_conseed(base,options.lcm.struc.connectome,...
-    options.lcm.seeds,...
+    options.lcm.seeds',...
     ea_lcm_resolvecmd(options.lcm.cmd),...
     '0',...
     options.lcm.odir,...

@@ -22,8 +22,9 @@ if exist('handles','var')
 end
 
 
-
+if isfield(handles,'atlassetpopup') % not present in connectome mapper
 atlasset=get(handles.atlassetpopup,'String');
 atlasset=atlasset{get(handles.atlassetpopup,'Value')};
 
 ea_listatlassets(handles,get(handles.vizspacepopup,'Value'),atlasset);
+end
