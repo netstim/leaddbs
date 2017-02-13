@@ -63,8 +63,10 @@ end
 
 function ea_warpfilefromspace(fromspace,infname,outfname)
 
-keyboard
 
+options.prefs=ea_prefs('');
+directory=[ea_space,fromspace,filesep];
+ea_apply_normalization_tofile(options,{infname},{outfname},directory,0,0);
 
 
 

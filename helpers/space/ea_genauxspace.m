@@ -48,46 +48,10 @@ ea_importspaceassets([],[],'MNI_ICBM_2009b_NLIN_ASYM','custom',[ea_getearoot,'te
 ea_importspaceassets([],[],'MNI_ICBM_2009b_NLIN_ASYM','custom',[ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM',filesep,'t1.nii'],[ea_space,'tempt.nii'])
 %ea_importspaceassets([],[],'MNI_ICBM_2009b_NLIN_ASYM','delete') % remove warp directory again.
 
-%% 1. generate bb.nii
-copyfile([ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM',filesep,'t1.nii'],[ea_space,'tempt.nii']);
-copyfile([ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM',filesep,'subcortical',filesep,'secondstepmask.nii'],[ea_space,'secondstepmask.nii']);
-copyfile([ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM',filesep,'subcortical',filesep,'thirdstepmask.nii'],[ea_space,'thirdstepmask.nii']);
-
-
-matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[ea_space,spacedef.templates{1},'.nii,1']}; % for now assume there is a T1 at least in that new space..
-matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[ea_space,'tempt.nii,1']};
-matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[ea_space,'bb.nii,1']
-                                                   [ea_space,'secondstepmask.nii']
-                                                   [ea_space,'thirdstepmask.nii']};
-matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
-matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
-matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
-matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [7 7];
-matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 4;
-matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
-matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
-matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
-spm_jobman('run',{matlabbatch});
-clear matlabbatch
-delete([ea_space,'rbb.nii']);
-delete([ea_space,'rtempt.nii']);
-delete([ea_space,'tempt.nii']);
-
-matlabbatch{1}.spm.util.imcalc.input = {
-                                        [ea_space,'bb.nii,1']
-                                        [ea_space,spacedef.templates{1},'.nii,1']
-                                        };
-matlabbatch{1}.spm.util.imcalc.output = 'bb.nii';
-matlabbatch{1}.spm.util.imcalc.outdir = {ea_space};
-matlabbatch{1}.spm.util.imcalc.expression = 'i2';
-matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
-matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-spm_jobman('run',{matlabbatch});
-clear matlabbatch
-
+nii=ea_load_nii([ea_space,'bb.nii']);
+nii.img=nii.img>0.1;
+ea_write_nii(nii);
+ea_crop_nii([ea_space,'bb.nii']);
 
 function ea_binmasks
 nii=ea_load_nii([ea_space,'c1mask.nii']);

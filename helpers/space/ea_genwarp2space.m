@@ -3,9 +3,10 @@ function ea_genwarp2space(fromwhich)
 if strcmp(ea_getspace,fromwhich)
     return
 end
-if exist([ea_getspace,fromwhich],'dir') % warp exists
+if exist([ea_getspace,filesep,fromwhich],'dir') % warp exists
     return
 end
+
 foreignspaceroot=[ea_getearoot,'templates',filesep,'space',filesep,fromwhich,filesep];
 load([foreignspaceroot,'ea_space_def.mat'])
 
