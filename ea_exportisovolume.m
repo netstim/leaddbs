@@ -167,7 +167,7 @@ for side=1:length(options.sides)
                 XYZV=[XYZ,[V{1};V{2}]];
                 PTb=[PT{1};PT{2}];
                 if inside==1
-                    significancemethod=5;
+                    significancemethod=0;
                     switch significancemethod
                         case 1 % estimate significance by estimating centrality
                             [ixes]=ea_centrality_significance(XYZV);

@@ -61,6 +61,7 @@ for pat=1:length(allpatdirs)
 options.root=[fileparts(allpatdirs{pat}),filesep];
 [~,thispatdir]=fileparts(allpatdirs{pat});
 options.patientname=thispatdir;
+options.uipatdirs=allpatdirs{pat};
 ea_run('run',options);
 end
 
