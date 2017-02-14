@@ -113,16 +113,16 @@ if ~isempty(togglestates) % anatomy toggles have been used before..
     set(handles.templatepopup,'Value',find(ismember(get(handles.templatepopup,'String'),togglestates.template)));
 
     % cut items.
-    switch togglestates.cutview
-        case '3d'
-            set(handles.threedradio,'Value',1);
-        case 'xcut'
-            set(handles.xcutradio,'Value',1);
-        case 'ycut'
-            set(handles.ycutradio,'Value',1);
-        case 'zcut'
-            set(handles.zcutradio,'Value',1);
-    end
+    %     switch togglestates.cutview
+    %         case '3d'
+    %             set(handles.threedradio,'Value',1);
+    %         case 'xcut'
+    %             set(handles.xcutradio,'Value',1);
+    %         case 'ycut'
+    %             set(handles.ycutradio,'Value',1);
+    %         case 'zcut'
+    %             set(handles.zcutradio,'Value',1);
+    %     end
 else
     togglestates.cutview='3d';
     togglestates.refreshcuts=1;
