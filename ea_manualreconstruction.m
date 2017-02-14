@@ -426,9 +426,11 @@ for side=1:length(options.sides)
     A{side}=squareform(pdist(coords_mm{side}));
     emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
 end
-memp_eldist=mean([emp_eldist{1},emp_eldist{2}]);
-if abs(emp_eldist{1}-emp_eldist{2})>0.005 && options.native % check if spacings on both sides are the same.
-[~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
+memp_eldist=mean([emp_eldist{:}]);
+if length(emp_eldist)>1 && abs(diff([emp_eldist{:}]))>0.005 && options.native % check if spacings on both sides are the same.
+    [~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
+elseif length(emp_eldist{1})<2 && abs(emp_eldist{1})>0.005 && options.native % check if spacings on both sides are the same.
+    [~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
 end
 %% plot coords
 hold on
@@ -477,9 +479,11 @@ end
 
 
 
-
-midpt=mean([markers(1).head;markers(2).head]);
-
+try
+    midpt=mean([markers(1).head;markers(2).head]);
+catch
+    midpt=mean([markers(1).head;0 0 0]);
+end
 
 
 spacetext=text(midpt(1),midpt(2),midpt(3)-1,['Electrode Spacing: ',num2str(memp_eldist),' mm.'],'Color','w','BackgroundColor','k','HorizontalAlignment','center');
@@ -652,10 +656,16 @@ caxis([c_lims(1) c_lims(2)]);
 
 
 Vtra=getV(mcfig,'Vtra',options);
-mks=[markers(1).head;markers(1).tail;markers(2).head;markers(2).tail];
+try
+    mks=[markers(1).head;markers(1).tail;markers(2).head;markers(2).tail];
+        mks=Vtra.mat\[mks,ones(size(mks,1),1)]';
+        mks=mks(1:3,:)';
+catch
+    mks=[markers(1).head;markers(1).tail;0 0 0;0 0 0];
     mks=Vtra.mat\[mks,ones(size(mks,1),1)]';
     mks=mks(1:3,:)';
-
+end
+    
 %title(['Electrode ',num2str(el-1),', transversal view.']);
 wsize=10;
 cmap=[1,4,5,8];
