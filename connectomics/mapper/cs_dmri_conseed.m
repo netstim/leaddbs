@@ -18,6 +18,7 @@ switch cmd
         for s=1:length(sfile)
             map=ea_load_nii([cbase,'spacedefinitions',filesep,space]);
             cfile=[dfold,'dMRI',filesep,cname];
+            
             if exist([cfile,filesep,'data.mat'],'file') % regular mat file
                 if ~exist('fibers','var')
                     load([cfile,filesep,'data.mat'],'fibers');
@@ -64,7 +65,7 @@ switch cmd
             % select fibers for each ix
             ea_dispercent(0,'Iterating voxels');
             ixdim=length(ixvals);
-            keyboard
+            
             for ix=1:ixdim
                 % assign fibers on map with this weighted value.
                 fibnos=unique(fibers(ids{ix},4));
@@ -128,27 +129,10 @@ idx=fibinfo.length';
 clear fibinfo
 fibers=fibers';
 
-t.mat=[     1     0     0   -99
-    0     1     0  -135
-    0     0     1   -73
-    0     0     0     1];
-t.dim= [197   233   189];
 
-% default is a x- and y-flip as per communication with fang-cheng yeh
-% 07-13-2016
-
-if t.mat(1)>0
-    % flip x
-    fibers(:,1)=(t.dim(1))-fibers(:,1);
-end
-if t.mat(6)>0
-    %flip y
-    fibers(:,2)=(t.dim(2))-fibers(:,2);
-end
-if t.mat(11)<0
-    %flip z
-    fibers(:,3)=(t.dim(3))-fibers(:,3);
-end
+fibers(:,1)=78.0-fibers(:,1);
+fibers(:,2)=76.0-fibers(:,2);
+fibers(:,3)=-50.0+fibers(:,3);
 
 clear length
 idxv=zeros(size(fibers,1),1);
@@ -161,10 +145,6 @@ for id=idx'
 end
 ea_dispercent(1,'end');
 
-
-fibers=([fibers,ones(size(fibers,1),1)])';
-fibers=t.mat*fibers; % convert to mm
-fibers=fibers(1:3,:)';
 
 
 fibers=[fibers,idxv];

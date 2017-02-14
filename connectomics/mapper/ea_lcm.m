@@ -3,7 +3,7 @@ function ea_lcm(options)
 
 % the order may be crucial since VAT-seeds are resliced in fMRI
 if options.lcm.struc.do
-
+    
     % main wrapper for lead connectome mapper runs
     if strcmp(options.lcm.seeddef,'vats')
         originalseeds=options.lcm.seeds;
@@ -12,11 +12,11 @@ if options.lcm.struc.do
             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
         end
     end
-
+    
     ea_lcm_struc(options);
 end
 if options.lcm.func.do
-
+    
     if strcmp(options.lcm.seeddef,'vats')
         if exist('originalseeds','var')
             options.lcm.seeds=originalseeds;
@@ -26,7 +26,7 @@ if options.lcm.func.do
             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
         end
     end
-
+    
     ea_lcm_func(options);
 end
 
@@ -46,7 +46,7 @@ vatdir=[options.root,options.patientname,filesep,'stimulations',filesep,options.
 
 suffices={'binary','efield','efield_gauss'};
 for suffix=1:3
-
+    
     switch suffices{suffix}
         case 'binary'
             addstr='';
@@ -60,88 +60,93 @@ for suffix=1:3
     else
         keepthisone=0;
     end
-
+    
     % prepare for dMRI
     switch modality
         case 'dMRI'
-            cnt=1;
-            for side=1:2
-                switch side
-                    case 1
-                        sidec='right';
-                    case 2
-                        sidec='left';
+            if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file');
+                cnt=1;
+                for side=1:2
+                    switch side
+                        case 1
+                            sidec='right';
+                        case 2
+                            sidec='left';
+                    end
+                    
+                    if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
+                        copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
+                        ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],1);
+                        nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
+                        cnt=cnt+1;
+                    end
                 end
-
-                if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
-                    copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
-                    ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],1);
-                    nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
-                    cnt=cnt+1;
+                Cnii=nii(1);
+                for n=2:length(nii)
+                    Cnii.img=Cnii.img+nii(n).img;
                 end
+                Cnii.fname=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
+                ea_write_nii(Cnii);
+                ea_crop_nii(Cnii.fname);
+                delete([vatdir,'tmp_*']);
+                
+                ea_split_nii_lr(Cnii.fname);
+                disp('Done.');
             end
-            Cnii=nii(1);
-            for n=2:length(nii)
-                Cnii.img=Cnii.img+nii(n).img;
-            end
-            Cnii.fname=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
-            ea_write_nii(Cnii);
-            ea_crop_nii(Cnii.fname);
-            delete([vatdir,'tmp_*']);
             if keepthisone
-                seeds{1}=Cnii.fname;
+                seeds{1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
             end
-            ea_split_nii_lr(Cnii.fname);
-            disp('Done.');
-
         case 'fMRI'
             % prepare for fMRI
-            cnt=1;
-            for side=1:2
-                switch side
-                    case 1
-                        sidec='right';
-                    case 2
-                        sidec='left';
-                end
-
-                if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
-                    copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
-                    tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
-                    tnii.dt=[64,0];
-                    ea_write_nii(tnii);
-                    cname=options.lcm.func.connectome;
-                    if ismember('>',cname)
-                        delim=strfind(cname,'>');
-                        subset=cname(delim+2:end);
-                        cname=cname(1:delim-2);
+            if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file');
+                cnt=1;
+                for side=1:2
+                    switch side
+                        case 1
+                            sidec='right';
+                        case 2
+                            sidec='left';
                     end
-                    d=load([ea_getconnectomebase,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
-                    d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
-                    d.dataset.vol.space.dt=[16,0];
-                    ea_write_nii(d.dataset.vol.space);
-                    ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],6);
-
-                    nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
-                    nii(cnt).img(isnan(nii(cnt).img))=0;
-                    if ~any(nii(cnt).img(:))
-                       msgbox(['Created empty VTA for ',options.patientname,', ',sidec,' hemisphere.']);
+                    
+                    if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
+                        copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
+                        tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
+                        tnii.dt=[64,0];
+                        ea_write_nii(tnii);
+                        cname=options.lcm.func.connectome;
+                        if ismember('>',cname)
+                            delim=strfind(cname,'>');
+                            subset=cname(delim+2:end);
+                            cname=cname(1:delim-2);
+                        end
+                        d=load([ea_getconnectomebase,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
+                        d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
+                        d.dataset.vol.space.dt=[16,0];
+                        ea_write_nii(d.dataset.vol.space);
+                        ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],6);
+                        
+                        nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
+                        nii(cnt).img(isnan(nii(cnt).img))=0;
+                        if ~any(nii(cnt).img(:))
+                            msgbox(['Created empty VTA for ',options.patientname,', ',sidec,' hemisphere.']);
+                        end
+                        cnt=cnt+1;
                     end
-                    cnt=cnt+1;
+                    
                 end
-
+                Cnii=nii(1);
+                for n=2:length(nii)
+                    Cnii.img=Cnii.img+nii(n).img;
+                end
+                Cnii.fname=[vatdir,'vat_seed_compound_fMRI',addstr,'.nii'];
+                ea_write_nii(Cnii);
+                delete([vatdir,'tmp_*']);
+             
+                ea_split_nii_lr(Cnii.fname);
+                disp('Done.');
             end
-            Cnii=nii(1);
-            for n=2:length(nii)
-                Cnii.img=Cnii.img+nii(n).img;
-            end
-            Cnii.fname=[vatdir,'vat_seed_compound_fMRI',addstr,'.nii'];
-            ea_write_nii(Cnii);
-            delete([vatdir,'tmp_*']);
             if keepthisone
-                seeds{1}=Cnii.fname;
+                seeds{1}=[vatdir,'vat_seed_compound_fMRI',addstr,'.nii'];
             end
-            ea_split_nii_lr(Cnii.fname);
-            disp('Done.');
     end
 end

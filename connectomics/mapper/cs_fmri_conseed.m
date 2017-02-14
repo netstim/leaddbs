@@ -172,7 +172,6 @@ end
 
 
 for mcfi=usesubjects % iterate across subjects
-    ea_dispercent(mcfi/numsub);
     howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
     switch cmd
         
@@ -355,6 +354,7 @@ for mcfi=usesubjects % iterate across subjects
                 save([outputfolder,addp,'corrMx_',dataset.vol.subIDs{mcfi}{1},'.mat'],'X','-v7.3');
             end
     end
+        ea_dispercent(mcfi/numsub);
 end
 ea_dispercent(1,'end');
 ispmap=strcmp(cmd,'pmap');

@@ -7,7 +7,7 @@ if iscell(sfile) % already supplied in cell format
     else
         roilist=0;
     end
-    
+    sfile=sfile';
 else
     [pth,fn,ext]=fileparts(sfile);
     if strcmp(ext,'.txt')

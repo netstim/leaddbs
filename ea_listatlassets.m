@@ -14,7 +14,6 @@ for i=1:length(as)
         cnt=cnt+1;
     end
 end
-
 if options.prefs.env.dev
     asc{end+1}='Segment patient anatomy';
 end
@@ -37,8 +36,11 @@ if mninative==2
     end
     
 end
-
+try
 set(handles.atlassetpopup,'String',[asc,nasc]);
+catch
+    keyboard
+end
 [~,defix]=ismember(options.prefs.atlases.default,[asc,nasc]);
 if defix
     set(handles.atlassetpopup,'Value',defix);

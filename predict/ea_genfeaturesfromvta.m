@@ -1,27 +1,43 @@
-function ea_genfeaturesfromvta(uipatdirs, stimname)
+function X=ea_genfeaturesfromvta(uipatdirs, stimname)
 
-uipatdirs={
-    '/Current_Projects/predict/01_MDST'
-    '/Current_Projects/predict/02_MDST'
-    };
-
-
-uipatdirs={
-    '/Current_Projects/predict/01_MDST'
-    };
-
-stimname='gs';
 
 ea_run_mapper(uipatdirs, stimname);
+options.prefs=ea_prefs('');
+
+fts=load(fullfile(ea_getearoot,'predict','models','horn_fox','feature_idx.mat'));
+allfeatsix=cell2mat(fts.idx');
+
+switch options.prefs.lcm.vatseed
+    case 'binary'
+        efsx='_';
+    case 'efield_gauss'
+        efsx='efield_gauss_';
+    case 'efield'
+        efsx='efield_';
+end
 
 
-keyboard
+options.native=0;
+for pt=1:length(uipatdirs)
+    thispt=uipatdirs{pt};
+    options=ea_getrootptname(thispt,options);
+    coords_mm=ea_load_reconstruction(options);
+    load([thispt,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_right.mat']);
+    for side=1:2
+        acnt{side}=mean(coords_mm{side}(logical(S.activecontacts{side}),:),1);
+    end
+    strucnii=ea_load_nii([thispt,filesep,'stimulations',filesep,stimname,filesep,'vat_seed_compound_dMRI_',efsx,'struc_seed.nii']);
+    funcnii=ea_load_nii([thispt,filesep,'stimulations',filesep,stimname,filesep,'vat_seed_compound_fMRI_',efsx,'func_seed_AvgR.nii']);
+    % assign feature vector X:
+    X(pt,:)=[cell2mat(acnt),strucnii.img(allfeatsix)',funcnii.img(allfeatsix)'];
+end
 
 
 
 
-
-
+function options=ea_getrootptname(folder,options)
+[options.root,options.patientname]=fileparts(folder);
+options.root=[options.root,filesep];
 
 
 
