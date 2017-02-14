@@ -45,15 +45,20 @@ disp('Preparing VATs as seedfiles...');
 vatdir=[options.root,options.patientname,filesep,'stimulations',filesep,options.lcm.seeds,filesep];
 
 suffices={'binary','efield','efield_gauss'};
-for suffix=1:3
+
+[~,dowhich]=ismember(options.prefs.lcm.vatseed,suffices);
+for suffix=dowhich
     
     switch suffices{suffix}
         case 'binary'
             addstr='';
+            dinterp=0;
         case 'efield_gauss'
             addstr='_efield_gauss';
+            dinterp=1;
         case 'efield'
             addstr='_efield';
+            dinterp=1;
     end
     if strcmp(options.prefs.lcm.vatseed,suffices{suffix})
         keepthisone=1;
@@ -64,7 +69,7 @@ for suffix=1:3
     % prepare for dMRI
     switch modality
         case 'dMRI'
-            if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file');
+            %if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file');
                 cnt=1;
                 for side=1:2
                     switch side
@@ -76,7 +81,7 @@ for suffix=1:3
                     
                     if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                         copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
-                        ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],1);
+                        ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],dinterp);
                         nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                         cnt=cnt+1;
                     end
@@ -92,7 +97,7 @@ for suffix=1:3
                 
                 ea_split_nii_lr(Cnii.fname);
                 disp('Done.');
-            end
+            %end
             if keepthisone
                 seeds{1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
             end

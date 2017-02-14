@@ -1989,7 +1989,10 @@ function specify2doptions_Callback(hObject, eventdata, handles)
 % hObject    handle to specify2doptions (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_spec2dwrite;
+options.prefs=ea_prefs('');
+options.groupmode=1;
+options.native=0;
+ea_spec2dwrite(options);
 
 
 % --- Executes on button press in calcgroupconnectome.

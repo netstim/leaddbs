@@ -11,7 +11,9 @@ try
 end
 
 mcr=ea_checkmacaque(options);
-
+if ~isfield(options,'native')
+    options.native=0;
+end
 if options.native
    atlroot=[options.root,options.patientname,filesep,'atlases',filesep];    
 else
