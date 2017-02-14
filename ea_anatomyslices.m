@@ -68,7 +68,9 @@ if ~isempty(xsliceplot) && ~isequal(togglestates.xyztoggles,[1 1 1]) && strcmp(t
     setappdata(resultfig,'ysliceplot',ysliceplot);
     setappdata(resultfig,'zsliceplot',zsliceplot);
 end
-
+if ~togglestates.refreshcuts
+    return
+end
 %% Render slices
 
 V=getappdata(resultfig,'V');
