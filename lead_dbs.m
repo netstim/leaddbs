@@ -70,7 +70,6 @@ set(handles.vizspacepopup,'String',{[ea_sub2space(ea_getspace), ' Space'];'Nativ
 ea_dispbn;
 
 mstr='';
-macaquemodus=0;
 set(handles.leadfigure,'name','Welcome to LEAD-DBS');
 
 spacedef=ea_getspacedef;
@@ -590,21 +589,12 @@ function doreconstruction_checkbox_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of doreconstruction_checkbox
 
-if get(hObject,'Value')
-
-
    set(handles.maskwindow_txt,'Enable','on');
-   if ~getappdata(handles.leadfigure,'macaquemodus')
        set(handles.targetpopup,'Enable','on');
-   end
 
 
 
-else
 
-   set(handles.targetpopup,'Enable','off');
-   set(handles.maskwindow_txt,'Enable','off');
-end
 ea_storeui(handles);
 
 
