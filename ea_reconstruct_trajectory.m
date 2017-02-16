@@ -40,6 +40,8 @@ mmvx=tra_nii.mat\mmpt;
 startslice=round(mmvx(3));
 clear mmpt mmvx
 
+flipside=1+(tra_nii.mat(1)<0);
+
 if ~refine % if this is not a refine-run but an initial run, mask of first slice has to be defined heuristically.
     % define initial mask
     mask=zeros(size(slice,1),size(slice,2));
@@ -47,12 +49,9 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
         case 'Manual'
             colormask=zeros(size(slice,1),size(slice,2),3);
             colormask(:,:,1)=1;
-            try
-                mask(masksz(1):masksz(2),masksz(3):masksz(4))=1;
-            catch
-                keyboard
-            end
-            if side==1
+            mask(masksz(1):masksz(2),masksz(3):masksz(4))=1;
+      
+            if side==flipside
                 mask=fliplr(mask);
             end
             slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
@@ -72,7 +71,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
         otherwise
             
             mask(masksz(1):masksz(2),masksz(3):masksz(4))=1;
-            if side==1
+            if side==flipside
                 mask=fliplr(mask);
             end
     end
