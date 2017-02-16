@@ -163,7 +163,9 @@ else
     error('Slicedim should be 1, 2 or 3')
 end
 
-%sliceim=ea_contrast(sliceim,0.5,0.5)*64;
+if ~isempty(strfind(controlhandles.templatepopup.String{controlhandles.templatepopup.Value},'BigBrain'))
+    sliceim=ea_contrast(sliceim,0.5,0.5)*64;
+end
 resdivs=1; % could increase to 2 but would render a bit slow.
 sliceim=interp2(sliceim,resdivs);
 
