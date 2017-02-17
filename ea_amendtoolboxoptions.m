@@ -2,7 +2,7 @@ function options=ea_amendtoolboxoptions(options)
 
 if ~isfield(options,'lc') % might be predefined from an exported script..
     try
-        options.lc=prefs.machine.lc;
+        options.lc=options.prefs.machine.lc;
     catch
         options.lc=[];
     end

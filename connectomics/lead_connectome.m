@@ -273,20 +273,21 @@ function runsavebutn_Callback(hObject, eventdata, handles)
 
 % check wether this is run or save (independent or dependent mode)
 
+cfig=handles.leadfigure;
+options=ea_handles2options(handles);
+isindependent=getappdata(handles.leadfigure,'isindependent');
+options.uipatdirs=getappdata(cfig,'uipatdir');
 ea_savelcopts(handles)
 
 % run execution:
 
-cfig=handles.leadfigure;
 ea_busyaction('on',cfig,'connectome');
 
 
-options=ea_handles2options(handles);
-options.macaquemodus=0;
-options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
+if isindependent
 ea_run('run',options);
-
+end
 ea_busyaction('off',cfig,'connectome');
 
 

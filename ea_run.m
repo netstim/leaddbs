@@ -18,7 +18,7 @@ if strcmp(cmd,'runcluster')
 else
     needtoexit=0;
 end
-
+options.prefs=ea_prefs('');
 options=ea_amendtoolboxoptions(options);
 
 if options.d3.autoserver && options.d3.write
