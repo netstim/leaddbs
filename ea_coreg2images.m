@@ -67,19 +67,19 @@ switch options.coregmr.method
             ofile,writeoutmat,otherfiles);
     case 'Coreg MRIs: Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
         commaoneotherfiles=prepforspm(otherfiles);
-        ea_docoreg_spm(appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles)
+        ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat,0)
         affinefile = ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Coreg MRIs: Hybrid SPM & FSL' % Hybrid SPM -> FSL
         commaoneotherfiles=prepforspm(otherfiles);
-        ea_docoreg_spm(appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles)
+        ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat,0)
         affinefile = ea_flirt(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Coreg MRIs: Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
         commaoneotherfiles=prepforspm(otherfiles);
-        ea_docoreg_spm(appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles)
+        ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat,0)
         affinefile = ea_brainsfit(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
