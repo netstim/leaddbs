@@ -7,9 +7,9 @@ function [atlassurfs] = ea_keepatlaslabels(varargin)
 %   ea_keepatlaslabels('STN','RN','GPi','GPe')
 %   atlassurfs = ea_keepatlaslabels('STN','RN','GP')
 % __________________________________________________________________________________
-% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+% Copyright (C) 2017 University of Pittsburgh, Brain Modulation Lab
 %
-% Andreas Horn
+% Ari Kappel
 
 
 H = findall(0,'type','figure');
@@ -25,3 +25,8 @@ end
     set(atlassurfs(idx>0),'Visible','on')
     
 atlassurfs = atlassurfs(idx>0);
+
+
+% view(0,90) %Z-axis view(180,-90)
+% view(90,0) %X-axis
+% view(180,0) %Y-axis
