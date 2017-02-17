@@ -299,8 +299,8 @@ set(ax,'XLim',[-140 140]);
 set(ax,'YLim',[-140 140]);
 set(ax,'ZLim',[-140 140]);
 set(ax,'XLimMode','manual'); set(ax,'YLimMode','manual'); set(ax,'ZLimMode','manual');
-view(133,56);
-zoom(6)
+view(142,13.6)
+zoom(1.5)
 %set(resultfig,'visible','on');
 opensliceviewer([],[],resultfig,options);
 

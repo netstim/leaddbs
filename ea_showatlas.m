@@ -223,7 +223,15 @@ for nativemni=nm % switch between native and mni space atlases.
                 end
             end
             atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'VerticalAlignment','Baseline','HorizontalAlignment','Center');
-
+            
+            % tag atlassurfs 
+            if side==1;
+                sidestring='Right';
+            elseif side==2;
+                sidestring='Left';
+            end
+            set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',sidestring])
+            
             if ~exist('labelbutton','var')
                 labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Labels');
                 labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors',options),'TooltipString','Label Color');
