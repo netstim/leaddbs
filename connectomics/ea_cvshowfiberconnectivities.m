@@ -160,7 +160,7 @@ for side=1:length(seed)
     end
     
     [~,labelname]=fileparts(targets.fname);
-    aID = fopen(fullfile(options.earoot,'templates','labeling',[labelname,'.txt']));
+    aID = fopen(fullfile(ea_space([],'labeling'),[labelname,'.txt']));
     atlas_lgnd=textscan(aID,'%d %s');
     allcareas=[];
     
@@ -433,9 +433,9 @@ for side=1:length(options.sides)
         end
         if strcmp(options.prefs.d3.fiberstyle,'tube')
             fv=ea_concatfv(fv);
-            
+            set(0,'CurrentFigure',resultfig);
             PL.fib_plots.fibs(side,1)=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.2);
-            
+            set(PL.fib_plots.fibs(side,1),'FaceVertexCData',squeeze(ind2rgb(get(PL.fib_plots.fibs(side,1),'FaceVertexCData'),jet)));
             PL.fib_plots.fibs(:,2:end)=[];
         end
         
@@ -527,7 +527,11 @@ rgb=xyz/max(xyz(:));
 rgb=[rgb,rgb(:,end)];
 rgbim=zeros(1,size(rgb,2),3);
 rgbim(1,:,:)=rgb';
+try
 indcol=double(rgb2ind(rgbim,jet));
+catch
+    keyboard
+end
 
 function objvisible(hobj,ev,atls,resultfig,what,la,side,onoff)
 % set visibility

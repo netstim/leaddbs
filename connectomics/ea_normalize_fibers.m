@@ -78,6 +78,7 @@ display(sprintf('\nNormalizing fibers...'));
 
 %% map from b0 voxel space to anat mm and voxel space
 display(sprintf('\nMapping from b0 to anat...'));
+ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
 [~, mov] = fileparts(options.prefs.b0);
 [~, fix] = fileparts(options.prefs.prenii_unnormalized);
 [~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...

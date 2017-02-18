@@ -51,37 +51,38 @@ switch cmd
             % subtract nan values from these
             
             ixvals=Vseed.img(ixs);
-            if sum(ixvals-double(logical(ixvals)))<0.0001
+            if sum(abs(ixvals-double(logical(ixvals))))<0.0001
                 allbinary=1;
             else
                 allbinary=0;
             end
-            if ~allbinary
-            [xx,yy,zz]=ind2sub(size(Vseed.img),ixs);
-            XYZvx=[xx,yy,zz,ones(length(xx),1)]';
-            clear ixs
-            XYZmm=Vseed.mat*XYZvx;
-            XYZmm=XYZmm(1:3,:)';
-            clear Vseed
-            if ~exist('tree','var') || redotree % only compute for first seed.
-                tree=KDTreeSearcher(fibers(:,1:3));
-            end
-            ids=rangesearch(tree,XYZmm,maxdist,'distance','chebychev');
-            % select fibers for each ix
-            ea_dispercent(0,'Iterating voxels');
-            ixdim=length(ixvals);
             
-            for ix=1:ixdim
-                % assign fibers on map with this weighted value.
-                fibnos=unique(fibers(ids{ix},4));
+            if ~allbinary
+                [xx,yy,zz]=ind2sub(size(Vseed.img),ixs);
+                XYZvx=[xx,yy,zz,ones(length(xx),1)]';
+                clear ixs
+                XYZmm=Vseed.mat*XYZvx;
+                XYZmm=XYZmm(1:3,:)';
+                clear Vseed
+                if ~exist('tree','var') || redotree % only compute for first seed.
+                    tree=KDTreeSearcher(fibers(:,1:3));
+                end
+                ids=rangesearch(tree,XYZmm,maxdist,'distance','chebychev');
+                % select fibers for each ix
+                ea_dispercent(0,'Iterating voxels');
+                ixdim=length(ixvals);
                 
-                allfibcs=fibers(ismember(fibers(:,4),fibnos),1:3);
-                allfibcs=round(map.mat\[allfibcs,ones(size(allfibcs,1),1)]');
-                allfibcs(:,logical(sum(allfibcs<1,1)))=[];
-                topaint=sub2ind(mapsz,allfibcs(1,:),allfibcs(2,:),allfibcs(3,:));
-                map.img(topaint)=map.img(topaint)+ixvals(ix);
-                ea_dispercent(ix/ixdim);
-            end
+                for ix=1:ixdim
+                    % assign fibers on map with this weighted value.
+                    fibnos=unique(fibers(ids{ix},4));
+                    
+                    allfibcs=fibers(ismember(fibers(:,4),fibnos),1:3);
+                    allfibcs=round(map.mat\[allfibcs,ones(size(allfibcs,1),1)]');
+                    allfibcs(:,logical(sum(allfibcs<1,1)))=[];
+                    topaint=sub2ind(mapsz,allfibcs(1,:),allfibcs(2,:),allfibcs(3,:));
+                    map.img(topaint)=map.img(topaint)+ixvals(ix);
+                    ea_dispercent(ix/ixdim);
+                end
             ea_dispercent(1,'end');
             else % if all is binary, can be much quicker.
                 allfibcs=fibers(:,1:3);
