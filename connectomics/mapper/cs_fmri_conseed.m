@@ -111,6 +111,8 @@ for s=1:length(sfile)
             sweights=seed{s,lr}.img(dataset.vol.outidx);
         end
         sweights(isnan(sweights))=0;
+        sweights(isinf(sweights))=0; %
+        
         sweights(abs(sweights)<0.0001)=0;
         sweights=double(sweights);
         % assure sum of sweights is 1
@@ -221,6 +223,7 @@ for mcfi=usesubjects % iterate across subjects
                                     else % volume seed
                                         stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s},1); % seed time course
                                     end
+                                    
                                     
                                 case 'pseed'
                                     clear stc
