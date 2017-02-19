@@ -160,8 +160,8 @@ for side=1:length(options.sides)
         try
             minval=ea_nanmin(options.d3.isomatrix{1}{side}(:));
             maxval=ea_nanmax(options.d3.isomatrix{1}{side}(:));
-            minval=-1;
-            maxval=1;
+            %minval=-1;
+            %maxval=1;
         end
         for cntct=1:elspec.numel-shifthalfup
             
@@ -177,6 +177,7 @@ for side=1:length(options.sides)
                     ms=10;
                 end
                 % define color
+                
                 if options.d3.colorpointcloud
                     % draw contacts as colored cloud defined by isomatrix.
                     

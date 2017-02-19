@@ -83,7 +83,7 @@ for side=1:length(options.sides)
         VI{side}=smooth3(VI{side},'gaussian',[15 15 15]);
         %keyboard
         thresh=ea_nanmean(VI{side}(:))-2*ea_nanstd(VI{side}(:));
-        
+        thresh=nanmin(VI{side}(:));
         Vol=VI{side};
         Vol(isnan(Vol))=0;
         fv{side}=isosurface(XI,YI,ZI,Vol,thresh);
@@ -102,7 +102,8 @@ try        fv{side}=ea_smoothpatch(fv{side},1,100); end
         C=C+1;
 
         nc=isocolors(XI,YI,ZI,C,fv{side}.vertices);
-        isopatch(side,1)=patch(fv{side},'CData',nc,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
+        nc=squeeze(ind2rgb(round(nc),jet));
+        isopatch(side,1)=patch(fv{side},'FaceVertexCData',nc,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
         
         jetlist=jet;
         ea_spec_atlas(isopatch(side,1),'isovolume',jet,1);

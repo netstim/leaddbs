@@ -15,6 +15,7 @@ end
 directory=[options.root,options.patientname,filesep];
 
 for coregfi=2:length(presentfiles)
+    
     ea_coreg2images(options,[directory,presentfiles{coregfi}],[directory,presentfiles{1}],[directory,presentfiles{coregfi}]);
 end
 

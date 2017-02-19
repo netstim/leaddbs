@@ -4,6 +4,7 @@ directory=[options.root,options.patientname,filesep];
 load([directory,filesep,'ea_reconstruction.mat']);
 
 %[~,template]=ea_whichnormmethod(directory);
+options=ea_assignpretra(options);
 nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
 
 if ~isfield(options,'elspec')
