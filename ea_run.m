@@ -81,6 +81,12 @@ else
                 
                 if length(uipatdirs)>1 % multi mode. Dont stop at errors.
                     try
+                        % autoadjust MRCT modality for this patient:
+                        try
+                            modality=ea_checkctmrpresent([options.root,options.patientname,filesep]);
+                            modality=find(modality);
+                            options.modality=modality(1);
+                        end
                         ea_autocoord(options);
                     catch
                         warning([options.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
