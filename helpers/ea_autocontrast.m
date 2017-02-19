@@ -1,4 +1,4 @@
-function [balanced, cmap] = ea_autocontrast(img, percent)
+function [balanced,cmap] = ea_autocontrast(img, percent)
 % Balance the contrast for visualization of nifti image
 %
 % Follow the fashion in MRIcron, the brightest PERCENT% of the voxels are

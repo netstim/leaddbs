@@ -167,6 +167,7 @@ if ~isempty(strfind(controlhandles.templatepopup.String{controlhandles.templatep
     sliceim=ea_contrast(sliceim,0.5,0.5)*64;
 end
 resdivs=1; % could increase to 2 but would render a bit slow.
+sliceim=ea_contrast(sliceim)*64;
 sliceim=interp2(sliceim,resdivs);
 
 
@@ -195,7 +196,7 @@ function ea_update_anatomycontrol(sliceidx,slicedim,mat,controlhandles)
             case 3
                 slicehdl='zval';
         end
-        set(controlhandles.(slicehdl),'String',num2str(slicecoord(slicedim)));
+        set(controlhandles.(slicehdl),'String',sprintf('%1.1f',slicecoord(slicedim)));
         
 
 

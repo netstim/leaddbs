@@ -216,7 +216,7 @@ function xval_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of xval as text
 %        str2double(get(hObject,'String')) returns contents of xval as a double
 
-refreshresultfig(handles)
+refreshresultfig(handles,1)
 
 % --- Executes during object creation, after setting all properties.
 function xval_CreateFcn(hObject, eventdata, handles)
@@ -239,7 +239,7 @@ function yval_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of yval as text
 %        str2double(get(hObject,'String')) returns contents of yval as a double
-refreshresultfig(handles)
+refreshresultfig(handles,1)
 
 % --- Executes during object creation, after setting all properties.
 function yval_CreateFcn(hObject, eventdata, handles)
@@ -262,7 +262,8 @@ function zval_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of zval as text
 %        str2double(get(hObject,'String')) returns contents of zval as a double
-refreshresultfig(handles)
+
+refreshresultfig(handles,1)
 
 % --- Executes during object creation, after setting all properties.
 function zval_CreateFcn(hObject, eventdata, handles)
@@ -359,7 +360,7 @@ function invertcheck_Callback(hObject, eventdata, handles)
 refreshresultfig(handles)
 
 
-function refreshresultfig(handles)
+function refreshresultfig(handles,refresh)
 % this part makes changes of the figure active:
 
 
@@ -372,6 +373,12 @@ catch
 end
 if ~isfield(togglestates,'refreshcuts')
     togglestates.refreshcuts=0;
+end
+
+if exist('refresh','var')
+    togglestates.refreshview=refresh;
+else
+    togglestates.refreshview=0;
 end
 
 % reset states based on gui:
@@ -396,6 +403,7 @@ elseif togglestates.refreshcuts && nativemni==2
 end
 
 togglestates.refreshcuts=0;
+togglestates.refreshview=0;
 setappdata(resultfig,'togglestates',togglestates);
 % fprintf('Figure updated\n')
 

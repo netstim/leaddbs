@@ -1,10 +1,15 @@
 function slice=ea_contrast(slice,contrast,offset)
+if ~exist('contrast','var')
+    contrast=1;
+end
+if ~exist('offset','var')
+    offset=0;
+end
 
-
-slice(:)=contrast*zscore(slice(:));
+slice(slice(:)~=0)=contrast*zscore(slice(slice(:)~=0));
 slice=slice+offset;
 
-slice=ea_sigmoid(slice);
+%slice=ea_sigmoid(slice);
 slice=ea_minmax(slice);
 
 

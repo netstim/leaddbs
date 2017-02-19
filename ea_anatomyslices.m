@@ -68,7 +68,8 @@ if ~isempty(xsliceplot) && ~isequal(togglestates.xyztoggles,[1 1 1]) && strcmp(t
     setappdata(resultfig,'ysliceplot',ysliceplot);
     setappdata(resultfig,'zsliceplot',zsliceplot);
 end
-if ~togglestates.refreshcuts
+
+if (~togglestates.refreshcuts) && (~togglestates.refreshview)
     return
 end
 %% Render slices
@@ -79,7 +80,6 @@ if isempty(inverted)
     inverted=0;
 end
 options.d2.writeatlases=1;
-templateused=getappdata(resultfig,'templateused');
 
 
 
@@ -87,7 +87,7 @@ if ~isfield(options,'native')
     options.native=0;
 end
 
-if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)
+if togglestates.refreshcuts % reload image(s)
     clear V
     [V1,V2,V3]=ea_assignbackdrop(togglestates.template,options,'Patient',options.native);
 
@@ -96,9 +96,7 @@ if ~strcmp(templateused,togglestates.template) || isempty(V) % reload image(s)
 end
 
 if ~inverted==togglestates.tinvert
-    inverted=togglestates.tinvert;
-else
-    
+    inverted=togglestates.tinvert;    
 end
     
 togglestates.xyzmm=[togglestates.xyzmm';1];
@@ -110,76 +108,36 @@ catch
 end
 
 xyzv=round(xyzv(1:3)); % now in voxel coordinates.
-
+%keyboard
 % balance the contrast
-[balanced, cmap] = ea_autocontrast(double(V{1}.private.dat),2.5);
+% if togglestates.refreshcuts
+% [balanced,colormap] = ea_autocontrast(double(V{1}.private.dat),2.5);
+% end
 
 if togglestates.xyztoggles(1)
-
-    
-    usesag=(length(V)>2)*2; % check if explicit saggital volume is available
-    if inverted
-        [~,slice]=ea_writeplanes(options, togglestates.xyzmm(1),3,V{1+usesag},'off', 0,atlases);
-        
-        if V{1}.mat(11)>0
-            slice=flip(permute(double(slice),[2,1,3]),2);
-        else
-            slice=permute(double(slice),[2,1,3]);
-        end
-        
-        if V{1}.mat(6)<0
-            slice=flip(slice,1);
-        end
-
-    end
-    
-    xsliceplot=slice3i(resultfig,balanced,V{1+usesag}.mat,1,xyzv(1),controlhandles);
-    
+    usesag=(length(V)>2)*2; % check if explicit saggital volume is available    
+    xsliceplot=slice3i(resultfig,V{1+usesag}.private.dat,V{1+usesag}.mat,1,xyzv(1),controlhandles);
 end
 
 if togglestates.xyztoggles(2)
-    
     % check whether second nii is being used:
-    usecor=length(V)>1; % check if explicit coronal volume is available
-    if inverted
-        [~,slice]=ea_writeplanes(options, togglestates.xyzmm(2),2,V{1+usecor},'off', 0,atlases);
-            slice=permute(double(slice),[2,1,3]);
-            slice=flip(flip(slice,1),2);
-    else
-    end
-    
-    ysliceplot=slice3i(resultfig,balanced,V{1+usecor}.mat,2,xyzv(2),controlhandles);
-    
+    usecor=length(V)>1; % check if explicit coronal volume is available    
+    ysliceplot=slice3i(resultfig,V{1+usecor}.private.dat,V{1+usecor}.mat,2,xyzv(2),controlhandles);
 end
 
 if togglestates.xyztoggles(3)
-    
-    if inverted
-        [~,slice]=ea_writeplanes(options, togglestates.xyzmm(3),1,V{1},'off', 0,atlases);
-        if V{1}.mat(1)>0
-        slice=flip(permute(double(slice),[2,1,3]),2);
-        else
-        slice=permute(double(slice),[2,1,3]);
-        end
-        
-        if V{1}.mat(6)<0
-            slice=flip(slice,1);
-        end
-        
-    else
-    end
      
-    zsliceplot=slice3i(resultfig,balanced,V{1}.mat,3,xyzv(3),controlhandles);    
+    zsliceplot=slice3i(resultfig,V{1}.private.dat,V{1}.mat,3,xyzv(3),controlhandles);    
     
 end
 
-colormap(cmap);
+%colormap(cmap);
 
 % store data in figure
 setappdata(resultfig,'xsliceplot',xsliceplot);
 setappdata(resultfig,'ysliceplot',ysliceplot);
 setappdata(resultfig,'zsliceplot',zsliceplot);
-ea_settransparency(resultfig,togglestates)
+%ea_settransparency(resultfig,togglestates)
 setappdata(resultfig,'V',V);
 setappdata(resultfig,'inverted',inverted);
 
