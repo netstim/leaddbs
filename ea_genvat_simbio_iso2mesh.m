@@ -323,7 +323,7 @@ eg=eg>thresh;
 neeg=eeg;
 neeg(~eg)=nan;
 
-
+keyboard
 neeg(neeg>0)=ea_normal(neeg(neeg>0));
 % normalized e-field (zscored).
 neeg(~isnan(neeg))=neeg(~isnan(neeg))-min(neeg(~isnan(neeg)));
