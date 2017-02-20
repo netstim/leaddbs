@@ -114,6 +114,7 @@ for nativemni=nm % switch between native and mni space atlases.
     % iterate through atlases, visualize them and write out stats.
     for atlas=1:length(atlases.names)
         
+        [~,sidestr]=detsides(atlases.types(atlas));
         for side=detsides(atlases.types(atlas));
             
 %             if ischar(atlases.pixdim{atlas,side}) % we are dealing with fibers
@@ -222,12 +223,9 @@ for nativemni=nm % switch between native and mni space atlases.
                     [~,thislabel]=fileparts(thislabel);
                 end
             end
-            atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'VerticalAlignment','Baseline','HorizontalAlignment','Center');
+            atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
             
-            % tag atlassurfs 
-            set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',num2str(side)])
-            set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlas,side))
-            
+           
             if ~exist('labelbutton','var')
                 labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Labels');
                 labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors',options),'TooltipString','Label Color');
@@ -247,6 +245,11 @@ for nativemni=nm % switch between native and mni space atlases.
             end
 
             colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,atlascnt,'on'},'OffCallback',{@atlasvisible,atlascnt,'off'},'State','on');
+            
+            % set Tags
+            set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
+            set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',sidestr{side}])
+            set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlas,side))
             
             % gather contact statistics
             if options.writeoutstats
@@ -292,7 +295,7 @@ for nativemni=nm % switch between native and mni space atlases.
             
             set(gcf,'Renderer','OpenGL')
             axis off
-            set(gcf,'color','w');
+            % set(gcf,'color','w');
             axis equal
             
             drawnow
@@ -410,19 +413,24 @@ function atlasinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
 %disp([atls,'invisible clicked']);
 
-function sides=detsides(opt)
+function [sides,sidestr]=detsides(opt)
 
 switch opt
-    case 1 % left hemispheric atlas
+    case 1 % right hemispheric atlas
         sides=1;
-    case 2 % right hemispheric atlas
+        sidestr={'right'};
+    case 2 % left hemispheric atlas
         sides=2;
+        sidestr={[''],'left'};
     case 3
         sides=1:2;
+        sidestr={'right','left'};
     case 4
         sides=1:2;
+        sidestr={'right','left'};
     case 5
         sides=1; % midline
+        sidestr={'midline'};
         
 end
 
