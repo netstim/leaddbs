@@ -23,17 +23,15 @@ for side=1:length(options.sides)
         for cont=1:size(options.d3.isomatrix{1},2)
             if ~isnan(options.d3.isomatrix{side}(sub,cont));
                 try
-                if ~shifthalfup
-                    X{side}(cnt)=elstruct(sub).coords_mm{side}(cont,1);
-                    Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);
-                    Z{side}(cnt)=elstruct(sub).coords_mm{side}(cont,3);
-                else % using pairs of electrode contacts (i.e. 3 pairs if there are 4 contacts)
-
+                    if ~shifthalfup
+                        X{side}(cnt)=elstruct(sub).coords_mm{side}(cont,1);
+                        Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);
+                        Z{side}(cnt)=elstruct(sub).coords_mm{side}(cont,3);
+                    else % using pairs of electrode contacts (i.e. 3 pairs if there are 4 contacts)
                         X{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,1),elstruct(sub).coords_mm{side}(cont+1,1)]);
                         Y{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,2),elstruct(sub).coords_mm{side}(cont+1,2)]);
                         Z{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,3),elstruct(sub).coords_mm{side}(cont+1,3)]);
-
-                end
+                    end
                 V{side}(cnt)=options.d3.isomatrix{side}(sub,cont);
 
                 PT{side}(cnt)=sub;
@@ -50,6 +48,7 @@ for side=1:length(options.sides)
     Vol=spm_vol([ea_space(options),'bb.nii']);
     nii{side}=spm_read_vols(Vol);
     nii{side}(:)=nan;
+    
     XYZ=[X{side},Y{side},Z{side},ones(length(X{side}),1)]';
     XYZ=Vol.mat\XYZ; % to voxel space.
     XYZ=(XYZ(1:3,:)');
@@ -64,14 +63,16 @@ for side=1:length(options.sides)
 
     F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double(V{side}),'natural');
     warning('on')
-    F.ExtrapolationMethod='none';
+    F.ExtrapolationMethod='linear';
 
     %    [p,idx]=ea_isosignificance([XYZ,double([V{side}])],1,0.5);
 
     xix{side}=bb(1,1):bb(1,2); yix{side}=bb(2,1):bb(2,2); zix{side}=bb(3,1):bb(3,2);
 
     nii{side}(xix{side},yix{side},zix{side})=F({xix{side},yix{side},zix{side}});
+    nii2{side}=nii{side};
 
+    
 
 
 
@@ -116,6 +117,7 @@ for side=1:length(options.sides)
         matlabbatch{1}.spm.spatial.smooth.im = 1;
         matlabbatch{1}.spm.spatial.smooth.prefix = 's';
         jobs{1}=matlabbatch;
+        
         spm_jobman('run',jobs);
         clear jobs matlabbatch
         %% Also write out volume with combined information on both sides (symmetric image).
@@ -243,13 +245,8 @@ for side=1:length(options.sides)
         ea_write_nii(niic);
         %ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'],'','nn');
         % smooth image.
-        matlabbatch{1}.spm.spatial.smooth.data = {[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii,1']};
-        matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
-        matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-        matlabbatch{1}.spm.spatial.smooth.im = 1;
-        matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-        jobs{1}=matlabbatch;
-        spm_jobman('run',jobs);
+
+        
         clear jobs matlabbatch
 
         %% write out significant volume:
@@ -266,8 +263,15 @@ for side=1:length(options.sides)
         ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'],'w','nz',1);
         ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_lr.nii'],'w','nz',1);
         ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'],'w','nz',1);
-        ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_combined.nii'],'w','nz',1);
 
+        
+        matlabbatch{1}.spm.spatial.smooth.data = {[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii,1']};
+        matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
+        matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+        matlabbatch{1}.spm.spatial.smooth.im = 1;
+        matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+        jobs{1}=matlabbatch;
+        spm_jobman('run',jobs);
 
     end
 

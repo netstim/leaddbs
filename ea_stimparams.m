@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 29-May-2016 07:14:02
+% Last Modified by GUIDE v2.5 20-Feb-2017 13:44:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2944,3 +2944,10 @@ S.active(2)=4;
 S.Ls4.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
+
+
+% --- Executes on button press in predictstim.
+function predictstim_Callback(hObject, eventdata, handles)
+% hObject    handle to predictstim (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

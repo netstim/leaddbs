@@ -323,8 +323,10 @@ eg=eg>thresh;
 neeg=eeg;
 neeg(~eg)=nan;
 
-keyboard
-neeg(neeg>0)=ea_normal(neeg(neeg>0));
+
+%neeg(neeg>0)=ea_normal(neeg(neeg>0));
+neeg(neeg>0)=zscore(neeg(neeg>0));
+
 % normalized e-field (zscored).
 neeg(~isnan(neeg))=neeg(~isnan(neeg))-min(neeg(~isnan(neeg)));
 neeg(~isnan(neeg))=neeg(~isnan(neeg))/sum(neeg(~isnan(neeg))); % 0-1 distributed.

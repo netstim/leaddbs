@@ -1,4 +1,4 @@
-function ea_firstrun(handles)
+function ea_firstrun(handles,options)
 
 % check if a newer version is available..
 local=ea_getvsn('local',1);
@@ -31,8 +31,6 @@ if ~strcmp(handles.prod,'dbs_connectome')
     end
 end
 
-options=struct;
-options.prefs=ea_prefs(options);
 if ~isfield(options.prefs,'firstrun') % first run.
     fprintf(['Welcome to LEAD-DBS.\n \n',...
         'This seems to be your first run of the toolbox.\n',...
