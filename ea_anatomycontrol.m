@@ -22,7 +22,7 @@ function varargout = ea_anatomycontrol(varargin)
 
 % Edit the above text to modify the response to help ea_anatomycontrol
 
-% Last Modified by GUIDE v2.5 10-Jan-2017 18:34:38
+% Last Modified by GUIDE v2.5 19-Feb-2017 19:22:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -218,6 +218,7 @@ function xval_Callback(hObject, eventdata, handles)
 
 refreshresultfig(handles,1)
 
+
 % --- Executes during object creation, after setting all properties.
 function xval_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to xval (see GCBO)
@@ -240,6 +241,7 @@ function yval_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of yval as text
 %        str2double(get(hObject,'String')) returns contents of yval as a double
 refreshresultfig(handles,1)
+
 
 % --- Executes during object creation, after setting all properties.
 function yval_CreateFcn(hObject, eventdata, handles)
@@ -523,4 +525,47 @@ set(hObject,'Value')
 % Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+% --- Executes on selection change in slicepopup.
+function slicepopup_Callback(hObject, eventdata, handles)
+% hObject    handle to slicepopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns slicepopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from slicepopup
+resultfig = getappdata(handles.acontrolfig,'resultfig');
+V=getappdata(resultfig,'V');
+xyzmm=[str2double(get(handles.xval,'String')),str2double(get(handles.yval,'String')),str2double(get(handles.zval,'String'))];
+
+if get(hObject,'Value')==1 && strcmp(eventdata.EventName,'Action')
+    % switch from index to mm
+    xyzmm = V{1}.mat * [xyzmm';1];
+    set(handles.xval,'String',num2str(xyzmm(1)))
+    set(handles.yval,'String',num2str(xyzmm(2)))
+    set(handles.zval,'String',num2str(xyzmm(3)))
+    
+elseif get(handles.slicepopup,'Value')==2 && strcmp(eventdata.EventName,'Action')
+    % switch from mm to index
+    xyzmm=V{1}.mat \ [xyzmm';1];
+    set(handles.xval,'String',num2str(xyzmm(1)))
+    set(handles.yval,'String',num2str(xyzmm(2)))
+    set(handles.zval,'String',num2str(xyzmm(3)))
+    
+end
+refreshresultfig(handles,1)
+
+
+% --- Executes during object creation, after setting all properties.
+function slicepopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slicepopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end

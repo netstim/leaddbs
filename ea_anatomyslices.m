@@ -99,16 +99,27 @@ if ~inverted==togglestates.tinvert
     inverted=togglestates.tinvert;    
 end
     
-togglestates.xyzmm=[togglestates.xyzmm';1];
+slicestr = get(controlhandles.slicepopup,'String');
+if get(controlhandles.slicepopup,'Value')==1
 
-try
-    xyzv= V{1}.mat \ togglestates.xyzmm;
-catch
-    keyboard
+    togglestates.xyzmm=[togglestates.xyzmm';1];
+
+    try
+        xyzv= V{1}.mat \ togglestates.xyzmm;
+    catch
+        keyboard
+    end
+    
+    xyzv=round(xyzv(1:3)); % now in voxel coordinates.
+    %keyboard
+    
+elseif get(controlhandles.slicepopup,'Value')==2
+
+    xyzv= togglestates.xyzmm;
+    % xyzv= V{1}.mat * togglestates.xyzmm;
+
 end
 
-xyzv=round(xyzv(1:3)); % now in voxel coordinates.
-%keyboard
 % balance the contrast
 % if togglestates.refreshcuts
 % [balanced,colormap] = ea_autocontrast(double(V{1}.private.dat),2.5);

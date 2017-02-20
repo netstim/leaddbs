@@ -1,4 +1,4 @@
-function h = slice3i(resultfig,vol, I2X, slicedim, sliceidx, controlhandles)
+function h = slice3i(resultfig, vol, I2X, slicedim, sliceidx, controlhandles)
 % Display a slice from a volume in 3-D
 % h = slice3(vol, I2X, slicedim, sliceidx, handle) 
 %
@@ -27,8 +27,6 @@ function h = slice3i(resultfig,vol, I2X, slicedim, sliceidx, controlhandles)
 %
 % Author: Anders Brun, anders@cb.uu.se (2009)
 % ==========================================
-% AutoAdjust Function by Todd Herrington, 2016-03-16
-% Modified by Ari Kappel 01-31-17
 
 switch slicedim
     case 1
@@ -196,7 +194,11 @@ function ea_update_anatomycontrol(sliceidx,slicedim,mat,controlhandles)
             case 3
                 slicehdl='zval';
         end
-        set(controlhandles.(slicehdl),'String',sprintf('%1.1f',slicecoord(slicedim)));
         
+        if get(controlhandles.slicepopup,'Value')==1
+            set(controlhandles.(slicehdl),'String',sprintf('%1.1f',slicecoord(slicedim)));
+        elseif get(controlhandles.slicepopup,'Value')==2
+            set(controlhandles.(slicehdl),'String',sprintf('%1.0f',sliceidx));
+        end
 
 
