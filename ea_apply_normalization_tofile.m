@@ -10,7 +10,7 @@ end
 switch ea_whichnormmethod(directory)
     case ea_getantsnormfuns % ANTs part here
         
-        ea_ants_applytransforms(options,from,to,useinverse);
+        ea_ants_applytransforms(options,from,to,useinverse,'','',interp);
         
     case ea_getfslnormfuns % FSL part here
         

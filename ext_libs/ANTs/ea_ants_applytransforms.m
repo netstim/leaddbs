@@ -27,6 +27,16 @@ end
 
 if nargin >= 7
     interp = varargin{7};
+    if ~ischar(interp)
+        switch interp
+            case 0
+                interp='NearestNeighbor';
+            case 1
+                interp='Linear';
+            otherwise
+                interp='BSpline';
+        end
+    end
 else
     % Linear, NearestNeighbor, MultiLabel, Gaussian, BSpline
     % CosineWindowedSinc, WelchWindowedSinc, HammingWindowedSinc, LanczosWindowedSinc
@@ -147,7 +157,6 @@ for fi = 1:length(fis)
     if ~isempty(interp)
         cmd = [cmd, ' --interpolation ', interp];
     end
-
     if ~ispc
         system(['bash -c "', cmd, '"']);
     else
