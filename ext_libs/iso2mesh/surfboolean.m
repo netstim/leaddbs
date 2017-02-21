@@ -91,11 +91,11 @@ for i=1:3:len
    if(strcmp(op,'or'))   opstr='union'; end
    if(strcmp(op,'xor'))  opstr='all';   end
    if(strcmp(op,'and'))
-        if(isgts)
-           opstr='inter'; 
-        else
-	   opstr='isct'; 
-	end
+       if(isgts)
+           opstr='inter';
+       else
+           opstr='isct';
+       end
    end
    if(strcmp(op,'-'))    opstr='diff';  end
    if(strcmp(op,'self')) opstr='inter -s';  end

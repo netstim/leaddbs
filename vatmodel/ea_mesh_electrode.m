@@ -32,7 +32,6 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     ndiv=50;      % division of circle for the bounding cylinder
     electrodelen=norm(etop-orig); % length of the electrode
     
-    ncount=length(fv);     % the number of nuclei meshes inside fv()
     v0=(etop-orig)/electrodelen;               % unitary dir
     c0=[0 0 0];
     v=[0 0 1];
@@ -58,11 +57,48 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     
     %plotmesh(node,elem) % plot the electrode mesh for now
     
+    
+        
+    %% create a bounding cylinder
+    %[anbcyl,afbcyl]=meshacylinder(orig, etop,cylradius,bcyltrisize,10,ndiv);
+    
+    
+    c0bbc=c0+cylz0*v;
+    c1bbc=c0+cylz1*v;
+    [nbcyl,fbcyl]=meshacylinder(c0bbc, c1bbc,cylradius,bcyltrisize,10,ndiv);
+    
+    nbcyl=rotatevec3d(nbcyl,v0,v);
+    nbcyl=nbcyl+repmat(orig,size(nbcyl,1),1);
+    if vizz
+        figure
+        fva.faces=fbcyl(:,1:3);
+        fva.vertices=nbcyl;
+        patch(fva,'edgecolor','m','facecolor','none');
+        axis equal
+    end
+    
+    if isempty(fv) % use TPM
+        c1=ea_load_nii([ea_space(options),'TPM.nii,1']);
+        voxnbcyl=c1.mat\[nbcyl,ones(length(nbcyl),1)]';
+        voxnbcyl=voxnbcyl(1:3,:)';
+        cyl=surf2vol(voxnbcyl,fbcyl,1:size(c1.img,2),1:size(c1.img,1),1:size(c1.img,3));
+        cyl=imfill(cyl,'holes');
+        
+        cyl=double(smooth3(cyl,'gaussian',[3 3 3]));
+        c1.img=c1.img.*permute(cyl,[2,1,3]);
+        fv=isosurface(c1.img,0.5,'noshare');
+        fv.vertices=c1.mat*[fv.vertices,ones(length(fv.vertices),1)]';
+        fv.vertices=fv.vertices(1:3,:)';
+        tpmuse=1;
+    else
+        tpmuse=0;
+    end
     %% load the nucleus surfaces
     nobj=[];
     fobj=[];
     nseeds=[];
-    
+    ncount=length(fv);     % the number of nuclei meshes inside fv()
+
     for i=1:ncount
         no=fv(i).vertices;
         fo=fv(i).faces;
@@ -79,6 +115,7 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     clear ISO2MESH_SURFBOOLEAN;
     
     if vizz
+        figure
         fvv.faces=fboth(:,1:3);
         fvv.vertices=nboth;
         patch(fvv,'edgecolor','b','facecolor','none');
@@ -86,22 +123,7 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     
     
     
-    %% create a bounding cylinder
-    %[anbcyl,afbcyl]=meshacylinder(orig, etop,cylradius,bcyltrisize,10,ndiv);
-    
-    
-    c0bbc=c0+cylz0*v;
-    c1bbc=c0+cylz1*v;
-    [nbcyl,fbcyl]=meshacylinder(c0bbc, c1bbc,cylradius,bcyltrisize,10,ndiv);
-    
-    nbcyl=rotatevec3d(nbcyl,v0,v);
-    nbcyl=nbcyl+repmat(orig,size(nbcyl,1),1);
-    if vizz
-        fva.faces=fbcyl(:,1:3);
-        fva.vertices=nbcyl;
-        patch(fva,'edgecolor','m','facecolor','none');
-        axis equal
-    end
+
     
     %figure
     %patch('vertices',anbcyl,'faces',afbcyl,'FaceColor','none','EdgeColor','b');
@@ -111,6 +133,7 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     
     %% cut the electrode+nucleus mesh by the bounding cylinder
     ISO2MESH_SURFBOOLEAN='cork';
+    
     [nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'resolve',nboth,fboth);
     clear ISO2MESH_SURFBOOLEAN;
     if vizz
@@ -277,25 +300,33 @@ for reg=1:length(centroids)
     
     
     % if not: if grey matter, then white matter
-    
-    for gm=1:length(fv)
-        convin=ea_intriangulation(fv(gm).vertices,fv(gm).faces,centroids(reg,:));
-        dirinodes=nmesh(emesh(emesh(1:end,5)==reg,1:4),:);
-        dirinodes=ea_nudgedirinodes(dirinodes,centroids(reg,:));
-        in=double(ea_intriangulation(fv(gm).vertices,fv(gm).faces,dirinodes));
-        
-        if convin && mean(in)>0.7
-            tissuelabels(reg)=1; % set grey matter
-            disp(['Region ',num2str(reg),' captured by grey matter.']);
-            if vizz
-                %                 figure('name',['GM Region ',num2str(reg)]);
-                %                 hold on
-                %                 patch('vertices',fv(gm).vertices,'faces',fv(gm).faces,'FaceColor','none','EdgeColor','b');
-                %                 patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
-                %                 plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
-                %                 axis equal
+    if ~tpmuse
+        for gm=1:length(fv)
+            convin=ea_intriangulation(fv(gm).vertices,fv(gm).faces,centroids(reg,:));
+            dirinodes=nmesh(emesh(emesh(1:end,5)==reg,1:4),:);
+            dirinodes=ea_nudgedirinodes(dirinodes,centroids(reg,:));
+            in=double(ea_intriangulation(fv(gm).vertices,fv(gm).faces,dirinodes));
+            
+            if convin && mean(in)>0.7
+                tissuelabels(reg)=1; % set grey matter
+                disp(['Region ',num2str(reg),' captured by grey matter.']);
+                if vizz
+                    %                 figure('name',['GM Region ',num2str(reg)]);
+                    %                 hold on
+                    %                 patch('vertices',fv(gm).vertices,'faces',fv(gm).faces,'FaceColor','none','EdgeColor','b');
+                    %                 patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
+                    %                 plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
+                    %                 axis equal
+                end
+                break
             end
-            break
+        end
+    else
+        thisc=c1.mat\[centroids(reg,:),1]';
+        pval=spm_sample_vol(c1,thisc(1),thisc(2),thisc(3),1);
+        if pval>0.5 % GM
+            tissuelabels(reg)=1;
+            disp(['Region ',num2str(reg),' captured by grey matter.']);
         end
     end
     if tissuelabels(reg); continue; end
@@ -307,9 +338,9 @@ for reg=1:length(centroids)
     tissuelabels(reg)=2; % set white matter
     disp(['Region ',num2str(reg),' captured by white matter.']);
     
-    % now we need to get surface nodes based on nbcyl
-    % first create cylinder surface nodes from nbcyl and fbcyl:
     
+    
+    if 0
     node=nbcyl;
     
     tess = fbcyl;
@@ -327,8 +358,11 @@ for reg=1:length(centroids)
     faces([k;k+1],:) = [];
     
     surfacenodes = unique(faces(:));
+try
     nbcyl=nbcyl(surfacenodes,:);
-    
+catch
+    keyboard
+end
     % now use these surface nodes (now nbcyl) to get surface nodes of WM
     % mesh:
     tess=thiscompsnodes;
@@ -369,10 +403,19 @@ for reg=1:length(centroids)
         axis equal
     end
     
-    
+    end
 end
 
-wmboundary=wmboundary';
+
+ % now we need to get surface nodes based on nbcyl
+    % first create cylinder surface nodes from nbcyl and fbcyl:
+   
+    
+    ch=convhulln(nmesh);
+    wmboundary=unique(ch(:))';
+   
+
+
 %gmlabels=setdiff(labels,[wmlabels; electrodelabel]); % the remaining ones are from nuclei meshes.
 
 tissuetype=emesh(:,5);

@@ -32,11 +32,11 @@ if(~iscell(f) & size(f,2)==4)
     f=f(:,1:3);
 end
 
-if(~iscell(f))
-    edges=surfedge(f);
-else
+% if(~iscell(f))
+%     edges=surfedge(f);
+% else
     edges=[];
-end
+% end
 bbxnum=0;
 
 nodesize=[];

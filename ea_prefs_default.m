@@ -14,7 +14,7 @@ end
 prefs.dev.profile='user';
 
 %% general settings:
-prefs.pp.do=1; % use parallel processing if available.
+prefs.pp.do=0; % use parallel processing if available.
 prefs.pp.csize=4; % specify how many clusters to recruit.
 prefs.pp.profile='local'; % specify parallel processing profile.
 

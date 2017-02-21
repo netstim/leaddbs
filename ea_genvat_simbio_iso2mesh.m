@@ -36,11 +36,11 @@ if useSI
 end
 S=ea_activecontacts(S);
 if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
-    fv.vertices=[0,0,0
+    ofv.vertices=[0,0,0
         0,0,0
         0,0,0];
-    fv.faces=[1,2,3];
-    varargout{1}=fv;
+    ofv.faces=[1,2,3];
+    varargout{1}=ofv;
     varargout{2}=0;
     return
 end
@@ -68,28 +68,32 @@ setappdata(resultfig,'elstruct',elstruct);
         mesh.tissue=[];
         mesh.tissuelabel={'gray','white','contacts','insulation'};
         % add gm to mesh
-        
-        for atlas=1:numel(atlases.fv)
-            if isempty(atlases.fv{atlas})
-                continue
-            end
-            fv(cnt)=atlases.fv{atlas};
-            
-            ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
-            %tissuetype(cnt)=1;
-            cnt=cnt+1;
+        switch options.prefs.vat.gm
+            case 'atlas'
+                for atlas=1:numel(atlases.fv)
+                    if isempty(atlases.fv{atlas})
+                        continue
+                    end
+                    fv(cnt)=atlases.fv{atlas};
+                    
+                    ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+                    %tissuetype(cnt)=1;
+                    cnt=cnt+1;
+                end
+            case 'tpm'
+               fv=[];
         end
         
         [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
         success=0;
         for attempt=1:10
-            try
+            %try
                 [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
                 success=1;
                 break
-            catch
-                Y=Y+randn(4)/1000; % very small jitter on transformation which will be used on electrode.
-            end
+            %catch
+            %    Y=Y+randn(4)/1000; % very small jitter on transformation which will be used on electrode.
+            %end
         end
         if ~success
             ea_error('Lead-DBS could not solve the current estimation.');
