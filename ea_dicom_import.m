@@ -44,12 +44,13 @@ ea_dcm2niix(indir, outdir);
 if options.prefs.dicom.dicomfiles % delete DICOM folder
     rmdir(indir,'s');
 end
-
+keyboard
 % remove uncropped and untilted versions
-fclean = ea_regexpdir(outdir,'(_Crop_1.nii|_Tilt_1)\.nii$',0);
+fclean = ea_regexpdir(outdir,'(_Tilt_1|_Crop_1)\.nii$',0);
 for f=1:length(fclean)
     delete(fclean{f});
 end
+
 
 if options.prefs.dicom.assign
     % assign image type here
