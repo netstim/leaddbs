@@ -342,7 +342,8 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'mapper');
-ea_getpatients(handles);
+options.prefs=ea_prefs('');
+ea_getpatients(options,handles);
 
 ea_busyaction('off',handles.leadfigure,'mapper');
 
