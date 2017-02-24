@@ -112,7 +112,7 @@ if ea_headmodel_changed(options,side,elstruct)
         elstruct.markers(side).x,1;
         elstruct.markers(side).y,1];
     setappdata(resultfig,'elstruct',elstruct);
-    X = ea_linsolve(A,B); X=X';
+    X = mldivide(A,B); X=X';
     ea_dispercent(0,'Exporting insulating components');
 
     for ins=1:length(electrode.insulation)
@@ -380,7 +380,7 @@ vatvolume=nnz(eg)*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in m
 S(side).volume=vatvolume;
 
 chun1=randperm(100); chun2=randperm(100); chun3=randperm(100);
-Vvat.mat=ea_linsolve([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
+Vvat.mat=mldivide([(chun1);(chun2);(chun3);ones(1,100)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,100)]')';
 Vvat.dim=[100,100,100];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];

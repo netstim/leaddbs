@@ -305,7 +305,7 @@ end
 ea_dispt('Creating nifti header for export...');
 % create nifti
 chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);
-Vvat.mat=linsolve([(chun1);(chun2);(chun3);ones(1,res)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,res)]')';
+Vvat.mat=mldivide([(chun1);(chun2);(chun3);ones(1,res)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,res)]')';
 Vvat.dim=[res,res,res];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];

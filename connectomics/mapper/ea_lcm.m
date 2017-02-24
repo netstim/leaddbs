@@ -69,7 +69,7 @@ for suffix=dowhich
     % prepare for dMRI
     switch modality
         case 'dMRI'
-            if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file');
+            %if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file');
                 cnt=1;
                 for side=1:2
                     switch side
@@ -97,13 +97,13 @@ for suffix=dowhich
                 
                 ea_split_nii_lr(Cnii.fname);
                 disp('Done.');
-            end
+            %end
             if keepthisone
                 seeds{1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
             end
         case 'fMRI'
             % prepare for fMRI
-            if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file');
+            %if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file');
                 cnt=1;
                 for side=1:2
                     switch side
@@ -149,7 +149,7 @@ for suffix=dowhich
              
                 ea_split_nii_lr(Cnii.fname);
                 disp('Done.');
-            end
+            %end
             if keepthisone
                 seeds{1}=[vatdir,'vat_seed_compound_fMRI',addstr,'.nii'];
             end

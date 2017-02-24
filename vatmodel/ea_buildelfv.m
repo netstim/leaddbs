@@ -10,7 +10,7 @@ load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfnam
         elstruct.markers(side).tail,1;
         elstruct.markers(side).x,1;
         elstruct.markers(side).y,1];
-    Y = ea_linsolve(A,B); Y=Y';
+    Y = mldivide(A,B); Y=Y';
 
 
     cnt=1;

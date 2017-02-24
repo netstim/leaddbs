@@ -185,7 +185,7 @@ if nargout>2 % also export V.mat
 coord2extract=V.mat*[coord2extract';ones(1,size(coord2extract,1))];
 %coord2extract=coord2extract(1:3,:)';
 coord2write=[coord2write,ones(size(coord2write,1),1)];
-mat=linsolve(coord2write,coord2extract');
+mat=mldivide(coord2write,coord2extract');
 end
    
 

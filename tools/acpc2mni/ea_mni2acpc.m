@@ -66,11 +66,11 @@ for pt=1:length(uidir)
 
     switch cfg.acmcpc
         case 1 % relative to AC:
-            warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(1,:)');
+            warpcoord_mm=mldivide([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(1,:)');
         case 2 % relative to midcommissural point:
-            warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-mean([fpinsub_mm(1,:);fpinsub_mm(2,:)],1)');
+            warpcoord_mm=mldivide([xvec',yvec',zvec'],fpinsub_mm(4,:)'-mean([fpinsub_mm(1,:);fpinsub_mm(2,:)],1)');
         case 3 % relative to PC:
-            warpcoord_mm=linsolve([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(2,:)');
+            warpcoord_mm=mldivide([xvec',yvec',zvec'],fpinsub_mm(4,:)'-fpinsub_mm(2,:)');
     end
 
     fid(pt).WarpedPointACPC=[warpcoord_mm(1),warpcoord_mm(2),warpcoord_mm(3)];
