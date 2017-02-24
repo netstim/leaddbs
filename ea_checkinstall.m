@@ -51,7 +51,7 @@ switch cmd
                 [ea_space,'bigbrain_2015_100um_bb.nii.gz'],...
                 'bigbrain');
         else
-            disp('BigBrain is installed.')
+            %disp('BigBrain is installed.')
         end
     case 'groupconnectome2013'
         checkf=[ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) full.mat'];
