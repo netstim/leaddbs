@@ -40,7 +40,7 @@ switch slicedim
         
 end
 
-    h = update_slice(vol, I2X, slicedim, sliceidx, h,controlhandles);
+    h = update_slice(vol, I2X, slicedim, sliceidx, h,controlhandles,resultfig);
     
 % set up gui
 gui.handle = h;
@@ -48,11 +48,11 @@ gui.vol = vol;
 gui.I2X = I2X;
 gui.slicedim = slicedim;
 gui.sliceidx = sliceidx;
-set(gui.handle,'ButtonDownFcn',{@startmovit,controlhandles});
+set(gui.handle,'ButtonDownFcn',{@startmovit,controlhandles,resultfig});
 set(h,'UserData',gui);
 
 
-function startmovit(src,evnt,controlhandles)
+function startmovit(src,evnt,controlhandles,resultfig)
 % Unpack gui object
 gui = get(src,'UserData');
 %turn off mouse pointer
@@ -64,12 +64,12 @@ gui.startray = get(gca,'CurrentPoint');
 gui.startidx = gui.sliceidx;
 % Store gui object
 set(src,'UserData',gui);
-set(thisfig,'WindowButtonMotionFcn',{@movit,controlhandles});
+set(thisfig,'WindowButtonMotionFcn',{@movit,controlhandles,resultfig});
 set(thisfig,'WindowButtonUpFcn',@stopmovit);
 set(thisfig,'UserData',src);
 
 
-function movit(src,evnt,controlhandles)
+function movit(src,evnt,controlhandles,resultfig)
 % Unpack gui object
 gui = get(get(gcf,'UserData'),'UserData');
 % Some safetymeasures
@@ -99,7 +99,7 @@ slicediff = alphanow-alphastart;
 
 gui.sliceidx = gui.startidx+slicediff;
 gui.sliceidx = min(max(1,gui.sliceidx),size(gui.vol,gui.slicedim));
-update_slice(gui.vol, gui.I2X, gui.slicedim, gui.sliceidx, gui.handle,controlhandles);
+update_slice(gui.vol, gui.I2X, gui.slicedim, gui.sliceidx, gui.handle,controlhandles,resultfig);
 drawnow;
 
 % Store gui object
@@ -118,7 +118,7 @@ set(get(gcf,'UserData'),'UserData',gui);
 set(gcf,'UserData',[]);
 drawnow;
 
-function h = update_slice(vol, I2X, slicedim, sliceidx, handle,controlhandles)
+function h = update_slice(vol, I2X, slicedim, sliceidx, handle,controlhandles,resultfig)
 
 if ndims(vol) == 3         %Scalar mode
 elseif ndims(vol) == 4     %RGB mode
@@ -160,12 +160,18 @@ elseif slicedim == 1 % i
 else
     error('Slicedim should be 1, 2 or 3')
 end
+c=0.5; o=0.5;
+sc=getappdata(resultfig,'slidecontrast');
 
-if ~isempty(strfind(controlhandles.templatepopup.String{controlhandles.templatepopup.Value},'BigBrain'))
-    sliceim=ea_contrast(sliceim,0.5,0.5)*64;
+if ~isempty(sc) % add contrast from user GUI
+    c=c+sc.c;
+    o=o+sc.o;
 end
+% if ~isempty(strfind(controlhandles.templatepopup.String{controlhandles.templatepopup.Value},'BigBrain'))
+%     sliceim=ea_contrast(sliceim,c,o)*64;
+% end
 resdivs=1; % could increase to 2 but would render a bit slow.
-sliceim=ea_contrast(sliceim)*64;
+sliceim=ea_contrast(sliceim,c,o)*64;
 sliceim=interp2(sliceim,resdivs);
 
 

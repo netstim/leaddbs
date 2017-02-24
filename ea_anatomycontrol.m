@@ -57,6 +57,7 @@ set(hObject,'Name','Anatomy Slices');
 % Choose default command line output for ea_anatomycontrol
 handles.output = hObject;
 
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -69,6 +70,19 @@ setappdata(hObject,'options',options);
 togglestates=getappdata(resultfig,'togglestates'); % get info from resultfig.
 setappdata(hObject,'togglestates',togglestates); % store anatomy toggle data from resultfig to anatomyslice (this) fig for subroutines.
 set(handles.acontrolfig,'Visible',options.d3.verbose);
+
+ht=getappdata(handles.acontrolfig,'toolbar');
+if isempty(ht)
+ht=uitoolbar(handles.acontrolfig);
+c_step=2;
+minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus',options),'TooltipString','Decrease Contrast','ClickedCallback',{@setslidecontrast,'c',-0.1,resultfig,handles});
+pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus',options),'TooltipString','Increase Contrast','ClickedCallback',{@setslidecontrast,'c',0.1,resultfig,handles});
+minusoffset=uipushtool(ht,'CData',ea_get_icn('extleft',options),'TooltipString','Decrease Offset','ClickedCallback',{@setslidecontrast,'o',-0.1,resultfig,handles});
+plusoffset=uipushtool(ht,'CData',ea_get_icn('extright',options),'TooltipString','Increase Offset','ClickedCallback',{@setslidecontrast,'o',0.1,resultfig,handles});
+setappdata(handles.acontrolfig,'toolbar',ht);
+end
+
+
 
 spacedef=ea_getspacedef;
 if isfield(spacedef,'guidef')
@@ -408,6 +422,30 @@ togglestates.refreshcuts=0;
 togglestates.refreshview=0;
 setappdata(resultfig,'togglestates',togglestates);
 % fprintf('Figure updated\n')
+
+
+
+
+function setslidecontrast(~,~,contrastoffset,posneg,resultfig,handles)
+sc=getappdata(resultfig,'slidecontrast');
+if isempty(sc)
+    sc.c=1;
+    sc.o=0;
+end
+switch contrastoffset
+    case 'c' % contrast
+        sc.c=sc.c+posneg;
+    case 'o' % offset
+        sc.o=sc.o+posneg;
+end
+setappdata(resultfig,'slidecontrast',sc);
+
+
+togglestates = getappdata(resultfig,'togglestates');
+togglestates.refreshcuts = 1;
+setappdata(resultfig,'togglestates',togglestates);
+
+refreshresultfig(handles);
 
 
 % --------------------------------------------------------------------
