@@ -254,13 +254,13 @@ end
 
 % Initialize a draggable lightbulb
 hold on
-[resultfig]=ea_show_light(resultfig,1);
+ea_show_light(resultfig,1);
 % set(lightbulb, 'Visible', 'off');
 
-lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'cam_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'cam_lamp')},'State','on');
-clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'ceiling_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'ceiling_lamp')},'State','on');
-llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'right_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'right_lamp')},'State','on');
-rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(gcf,'left_lamp')},'OffCallback',{@objinvisible,getappdata(gcf,'left_lamp')},'State','on');
+lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'cam_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'cam_lamp')},'State','on');
+clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'ceiling_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'ceiling_lamp')},'State','on');
+llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'left_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'left_lamp')},'State','on');
+rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'right_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
 
 
 % Initialize HD-Export button

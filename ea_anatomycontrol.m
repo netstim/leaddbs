@@ -429,7 +429,7 @@ setappdata(resultfig,'togglestates',togglestates);
 function setslidecontrast(~,~,contrastoffset,posneg,resultfig,handles)
 sc=getappdata(resultfig,'slidecontrast');
 if isempty(sc)
-    sc.c=1;
+    sc.c=0;
     sc.o=0;
 end
 switch contrastoffset

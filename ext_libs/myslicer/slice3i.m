@@ -177,7 +177,7 @@ sliceim=interp2(sliceim,resdivs);
 
 
 ij2xyz(:,1:2)=ij2xyz(:,1:2)/(2^resdivs);
-ea_update_anatomycontrol(sliceidx,slicedim,I2X,controlhandles);
+try ea_update_anatomycontrol(sliceidx,slicedim,I2X,controlhandles); end
 if isempty(handle)
   h = image3(sliceim,ij2xyz);
 else

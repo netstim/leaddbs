@@ -1,4 +1,4 @@
-function [resultfig]=ea_show_light(resultfig,viz)
+function ea_show_light(resultfig,viz)
 % if viz = 1; turn on
 % if viz = 0; turn off
 % default viz=1;
@@ -12,10 +12,10 @@ ceiling_lamp=light('Position',[0 0 100]); % not modifiable, infinite light.
 
 %set(ceiling_lamp,'Color',[0.5,0.5,0.5]);
 
-right_lamp=light('Position',[100 0 0]); % not modifiable, infinite light.
+right_lamp=light('Position',[-100 0 0]); % not modifiable, infinite light.
 %set(right_lamp,'Color',[0.5,0.3,0.5]);
 
-left_lamp=light('Position',[-100 0 0]); % not modifiable, infinite light.
+left_lamp=light('Position',[100 0 0]); % not modifiable, infinite light.
 %set(left_lamp,'Color',[0.5,0.5,0.3]);
 
 %lightobj=light('Position',[30 30 30],'Style','local');
