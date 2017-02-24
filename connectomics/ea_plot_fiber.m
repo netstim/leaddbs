@@ -3,7 +3,7 @@ function [h,fv]=ea_plot_fiber(thisfib,numpol,show,options)
 
 switch options.prefs.d3.fiberstyle
     case 'tube'
-        [h,fv]=ea_plot3t(thisfib(1,:),thisfib(2,:),thisfib(3,:),options.prefs.d3.fiberdiameter,thisfib(4,:),numpol,show);
+        [h,fv]=ea_plot3t(thisfib(1,:),thisfib(2,:),thisfib(3,:),options.prefs.d3.fiberdiameter,thisfib(4:end,:),numpol,show);
     case 'line'
         h=surface([thisfib(1,:);thisfib(1,:)],...
             [thisfib(2,:);thisfib(2,:)],...

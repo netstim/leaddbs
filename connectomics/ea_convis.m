@@ -110,6 +110,9 @@ mmc=get(handles.matmodality,'String');
 vmc=get(handles.vatmodality,'String');
 vomc=get(handles.voxmodality,'String');
 
+if isempty(mmc)
+   cv_disabletime(handles); 
+else
 if isempty(strfind(mmc{get(handles.matmodality,'Value')},'_tc')) && ...
         isempty(strfind(vmc{get(handles.vatmodality,'Value')},'_tc')) && ...
         isempty(strfind(vomc{get(handles.voxmodality,'Value')},'_tc')) % no timeseries selected.
@@ -117,7 +120,7 @@ if isempty(strfind(mmc{get(handles.matmodality,'Value')},'_tc')) && ...
 else
     cv_enabletime(handles);
 end
-
+end
 if apply % update elvis
     %% retrieve and delete prior results
     resultfig=ea_cvcleanup(handles);
@@ -393,34 +396,35 @@ end
 function ea_initseedlevel(handles,directory,pdirectory,selectedparc,options)
 
 %% init matrix level controls:
-
-% dMRI:
-cnt=1;
-% check if pat-specific fibertracts are present:
-if exist([directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],'file');
-    modlist{cnt}='Patient-specific fiber tracts';
-    cnt=cnt+1;
-end
-% check for canonical fiber sets
-fdfibs=dir([ea_getconnectomebase('dmri'),'*.mat']);
-for fdf=1:length(fdfibs)
-    [~,fn]=fileparts(fdfibs(fdf).name);
-    modlist{cnt}=fn;
-    cnt=cnt+1;
-end
-
-
-pmdirs=dir([pdirectory,'*_CM.mat']);
-
-for pmdir=1:length(pmdirs)
-    [~,modlist{end+1}]=fileparts(pmdirs(pmdir).name);
-end
-
-tcdirs=dir([pdirectory,'*_tc.mat']);
-
-for tcdir=1:length(tcdirs)
-    [~,modlist{end+1}]=fileparts(tcdirs(tcdir).name);
-end
+modlist=ea_genmodlist(directory,selectedparc,options);
+% % dMRI:
+% cnt=1;
+% % check if pat-specific fibertracts are present:
+% if exist([directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],'file');
+%     modlist{cnt}='Patient-specific fiber tracts';
+%     cnt=cnt+1;
+% end
+% 
+% % check for canonical fiber sets
+% fdfibs=dir([ea_getconnectomebase('dmri'),'*.mat']);
+% for fdf=1:length(fdfibs)
+%     [~,fn]=fileparts(fdfibs(fdf).name);
+%     modlist{cnt}=fn;
+%     cnt=cnt+1;
+% end
+% 
+% 
+% pmdirs=dir([pdirectory,'*_CM.mat']);
+% 
+% for pmdir=1:length(pmdirs)
+%     [~,modlist{end+1}]=fileparts(pmdirs(pmdir).name);
+% end
+% 
+% tcdirs=dir([pdirectory,'*_tc.mat']);
+% 
+% for tcdir=1:length(tcdirs)
+%     [~,modlist{end+1}]=fileparts(tcdirs(tcdir).name);
+% end
 
 if ~exist('modlist','var')
     cv_disablevats(handles);

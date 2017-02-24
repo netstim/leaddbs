@@ -1077,8 +1077,8 @@ function vizspacepopup_Callback(hObject, eventdata, handles)
 % end
 atlasset=get(handles.atlassetpopup,'String');
 atlasset=atlasset{get(handles.atlassetpopup,'Value')};
-
-ea_listatlassets(handles,get(handles.vizspacepopup,'Value'),atlasset);
+options.prefs=ea_prefs('');
+ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
 
 
 % --- Executes during object creation, after setting all properties.
