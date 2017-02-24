@@ -44,6 +44,10 @@ if isempty(menuprobe)
        ea_menu_addtransfer(handles,callingfunction); 
     end
     
+    if ismember('vats',cmd)
+       ea_menu_addvats(f,handles); 
+    end
+    
     % always add install addons
     g = uimenu('Label','Install');
     [list,commands]=ea_checkinstall('list');

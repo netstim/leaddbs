@@ -68,7 +68,7 @@ ea_initrecentpatients(handles);
 
 ea_processguiargs(handles,varargin)
 
-ea_menu_initmenu(handles,{'cluster','prefs','transfer'});
+ea_menu_initmenu(handles,{'cluster','prefs','transfer','vats'});
 
 
 [mdl,sf]=ea_genmodlist;
