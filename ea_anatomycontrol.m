@@ -393,6 +393,7 @@ end
 
 if exist('refresh','var')
     togglestates.refreshview=refresh;
+elseif isfield(togglestates,'refreshview')    
 else
     togglestates.refreshview=0;
 end
@@ -442,10 +443,10 @@ setappdata(resultfig,'slidecontrast',sc);
 
 
 togglestates = getappdata(resultfig,'togglestates');
-togglestates.refreshcuts = 1;
+togglestates.refreshview = 1;
 setappdata(resultfig,'togglestates',togglestates);
 
-refreshresultfig(handles);
+refreshresultfig(handles,1);
 
 
 % --------------------------------------------------------------------
