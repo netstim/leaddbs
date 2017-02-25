@@ -9,7 +9,7 @@ if isempty(menuprobe)
     uimenu(f,'Label','Edit Preferences File...','Callback',{@ea_editprefs});
     uimenu(f,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
     if ismember('acpc',cmd)
-        uimenu(f,'Label','Convert ACPC/MNI coordinates','Callback',{@ea_acpcquery,handles.leadfigure});
+        uimenu(f,'Label','Convert ACPC/MNI coordinates (Horn 2017)','Callback',{@ea_acpcquery,handles.leadfigure});
     end
     
     if ismember('export',cmd)
