@@ -249,7 +249,7 @@ else % use fiberset
         case 'Patient-specific fiber tracts'
             fibersfile=[directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized];
         otherwise
-            fibersfile=[ea_getconnectomebase('dmri'),matmodality,'.mat'];
+            fibersfile=[ea_getconnectomebase('dmri'),matmodality,filesep,'data.mat'];
     end
 
     % seed filename

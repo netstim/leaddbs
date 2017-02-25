@@ -54,7 +54,7 @@ switch cmd
             %disp('BigBrain is installed.')
         end
     case 'groupconnectome2013'
-        checkf=[ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) full.mat'];
+        checkf=[ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) full',filesep,'data.mat'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly;
             success=~force;
