@@ -323,7 +323,7 @@ for pt=1:length(fid)
 end
 
 meanmni=mean(mnipoints,1);
-set(handles.xmni,'String',num2str(meanmni(1))); set(handles.ymni,'String',num2str(meanmni(2))); set(handles.zmni,'String',num2str(meanmni(3)));
+set(handles.xmni,'String',sprintf('%0.2f',meanmni(1))); set(handles.ymni,'String',sprintf('%0.2f',meanmni(2))); set(handles.zmni,'String',sprintf('%0.2f',meanmni(3)));
 stdmni=std(mnipoints,0,1);
 set(handles.xstdmni,'String',['± ',sprintf('%.2f', stdmni(1)),' mm']); set(handles.ystdmni,'String',['± ',sprintf('%.2f', stdmni(2)),' mm']); set(handles.zstdmni,'String',['± ',sprintf('%.2f', stdmni(3)),' mm']);
 
@@ -480,7 +480,7 @@ if get(handles.zflip,'Value')==1
     meanacpc(3)=meanacpc(3)*-1;
 end
 
-set(handles.xmm,'String',num2str(meanacpc(1))); set(handles.ymm,'String',num2str(meanacpc(2))); set(handles.zmm,'String',num2str(meanacpc(3)));
+set(handles.xmm,'String',sprintf('%0.2f',(meanacpc(1)))); set(handles.ymm,'String',sprintf('%0.2f',meanacpc(2))); set(handles.zmm,'String',sprintf('%0.2f',meanacpc(3)));
 set(handles.xstdacpc,'String',['± ',sprintf('%.2f', stdacpc(1)),' mm']); set(handles.ystdacpc,'String',['± ',sprintf('%.2f', stdacpc(2)),' mm']); set(handles.zstdacpc,'String',['± ',sprintf('%.2f', stdacpc(3)),' mm']);
 
 ea_busyaction('off',handles.acpcfig,'acpc');

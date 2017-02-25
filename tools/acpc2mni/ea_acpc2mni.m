@@ -60,8 +60,10 @@ end
 
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,template);
 
-    [~,ptname]=fileparts(uidir{pt});
-    options.prefs=ea_prefs(ptname);
+    [options.root,options.patientname]=fileparts(uidir{pt});
+    options.root=[options.root,filesep];
+    options.prefs=ea_prefs(options.patientname);
+    options=ea_assignpretra(options);
 
     switch automan
         case 'auto' % auto AC/PC detection
