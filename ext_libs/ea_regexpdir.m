@@ -12,10 +12,3 @@ end
 
 clear regexpdir
 dirlist = regexpdir(rootdir, expstr, recursive);
-for i=1:length(dirlist)
-    if contains(dirlist(i),'_Crop_1.nii');
-        loc = strfind(dirlist{i},'_Crop_1.nii');
-        dirlist{i} = strcat(dirlist{i}(1:loc-1),'.nii');
-    end
-end
-    

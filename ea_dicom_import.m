@@ -41,15 +41,17 @@ end
 
 ea_dcm2niix(indir, outdir);
 
-if options.prefs.dicom.dicomfiles % delete DICOM folder
+% delete DICOM folder
+if options.prefs.dicom.dicomfiles
     rmdir(indir,'s');
 end
-% remove uncropped and untilted versions
-fclean = ea_regexpdir(outdir,'(_Tilt_1|_Crop_1)\.nii$',0);
-for f=1:length(fclean)
-    delete(fclean{f});
-end
 
+% remove uncropped and untilted versions
+fclean = ea_regexpdir(outdir, '(_Crop_1|_Tilt_1)\.nii$', 0);
+fclean = unique(regexprep(fclean, '(_Crop_1|_Tilt_1)', ''));
+for f=1:length(fclean)
+    ea_delete(fclean{f});
+end
 
 if options.prefs.dicom.assign
     % assign image type here
