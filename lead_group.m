@@ -1776,8 +1776,12 @@ if options.d3.showisovolume || options.expstatvat.do % regressors be used ? iter
         options.d3.isomatrix_name=allisonames{reg};
         M.isomatrix=allisomatrices{reg};
         M.isomatrix_name=allisonames{reg};
-
-        try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); end
+        options.shifthalfup=0;
+        try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); 
+        if size(options.d3.isomatrix{1},2)==3 % pairs
+        options.shifthalfup=1;
+        end
+        end
 
         if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
             ea_refresh_lg(handles);

@@ -61,7 +61,7 @@ for side=1:length(options.sides)
     [XI,YI,ZI]=meshgrid([bb(1,1):bb(1,2)],[bb(2,1):bb(2,2)],[bb(3,1):bb(3,2)]);
     warning('off')
 
-    F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double(V{side}),'natural');
+    F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double(V{side}),'nearest');
     warning('on')
     F.ExtrapolationMethod='linear';
 
@@ -73,9 +73,6 @@ for side=1:length(options.sides)
     nii2{side}=nii{side};
 
     
-
-
-
 
 
     switch side

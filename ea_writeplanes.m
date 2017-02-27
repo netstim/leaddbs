@@ -33,7 +33,8 @@ elseif nargin>1 % elstruct has been supplied, this is a group visualization
     if isstruct(varargin{2})
         elstruct=varargin{2};
         % average coords_mm for image slicing
-        ave_coords_mm=ea_ave_elstruct(elstruct);
+        ave_coords_mm=ea_ave_elstruct(elstruct,options);
+        
     else % concrete height is being supplied (without electrode star plotting).
         
         elstruct=varargin{2};
@@ -50,6 +51,7 @@ if nargin>5 % also has flags to hide and not to save the result (as it will be u
     atlases=varargin{7};
     end
 end
+
 if svfig
     disp('Exporting 2D slice output...');
 end
@@ -93,7 +95,7 @@ for side=1:length(options.sides)
     %% write out axial images
     for tracor=find(tracorpresent)'
         
-        for elcnt=1:options.elspec.numel
+        for elcnt=1:(options.elspec.numel-options.shifthalfup)
             
             
             if ~isstruct(elstruct)
@@ -187,7 +189,9 @@ for side=1:length(options.sides)
                         coordsi{siso}=Viso.mat\[ave_coords_mm{siso},ones(size(ave_coords_mm{siso},1),1)]';
                         coordsi{siso}=coordsi{siso}(1:3,:)';
                     end
+                    
                     [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
+                    
                     try [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el); end
                     
                 else
@@ -598,7 +602,7 @@ end
 
 
 
-function coords_mm=ea_ave_elstruct(elstruct)
+function coords_mm=ea_ave_elstruct(elstruct,options)
 % simply averages coordinates of a group to one coords_mm 1x2 cell
 coords_mm=elstruct(1).coords_mm; % initialize mean variable
 for side=1:length(coords_mm)
@@ -611,12 +615,21 @@ for side=1:length(coords_mm)
                     vals(vv)=elstruct(vv).coords_mm{side}(xx,yy);
                 end
             end
-            coords_mm{side}(xx,yy)=mean(vals);
+            coords_mm{side}(xx,yy)=ea_robustmean(vals);
             
         end
     end
 end
-
+if options.shifthalfup
+    
+    for side=1:length(coords_mm)
+        for c=1:length(coords_mm{side})-1
+           scoords_mm{side}(c,:)=mean([coords_mm{side}(c,:);coords_mm{side}(c+1,:)],1);
+            
+        end
+    end
+    coords_mm=scoords_mm;
+end
 
 function val=addsubsigned(val,add,command)
 

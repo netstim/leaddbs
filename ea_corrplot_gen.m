@@ -38,10 +38,10 @@ for area=1:length(R_upd)
     %% plot areas:
     f=figure('color','w','name',description);
     if exist('color','var')
-        scatter(X(:,1),X(:,area+1),[],color,'filled');
+        scatter(X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',color);
     else
         
-        scatter(X(:,1),X(:,area+1),[],jetlist(groups,:),'filled');
+        scatter(X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',jetlist(groups,:));
 
         
     end
