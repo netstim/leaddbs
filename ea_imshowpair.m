@@ -1,4 +1,4 @@
-function  ea_imshowpair( Img, options ,addstring,callingfunction)
+function  ea_imshowpair(Img, options, addstring, callingfunction)
 % this function is based on IMSHOW3DFULL by Maysam Shahedi and supports
 % truecolor images. Windowed view is adapted from MAGNIFY by Rick Hindman.
 %
@@ -16,12 +16,12 @@ switch callingfunction
         gridIX=4;
 end
 
-if nargin==2
-    figtit=[options.patientname];
-elseif nargin==3
-    figtit=[options.patientname,', ',addstring];
-else
-    figtit='';
+if nargin == 1
+    figtit = '';
+elseif nargin == 2
+    figtit = options.patientname;
+elseif nargin >= 3
+    figtit = [options.patientname,', ',addstring];
 end
 isp=figure('color','k','Name',figtit,'NumberTitle','off','MenuBar','none','DockControls','off','ToolBar','none');
 ea_maximize(isp);
