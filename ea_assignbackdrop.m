@@ -16,7 +16,7 @@ end
 
 switch bdstring
     case 'list'
-        
+
         % determine whether we are in No patient mode (could be called from
         % lead group or called from an empty patient viewer / lead anatomy
         if ~exist('options','var')
@@ -59,8 +59,8 @@ switch bdstring
                     ea_checkhas({[subpat,' Post-OP']},haspostop)];
             end
         end
-        
-        
+
+
     case [subpat,' Pre-OP']
         options=ea_tempswitchoptstopre(options);
         [Vtra,Vcor,Vsag]=assignpatspecific(options);
@@ -73,13 +73,13 @@ switch bdstring
         varargout{2}=Vcor;
         varargout{3}=Vsag;
     case 'BigBrain 100 um ICBM 152 2009b Sym'
-        if ~ea_checkinstall('bigbrain',0,0,1)
+        if ~ea_checkinstall('bigbrain',0,1)
             ea_error('BigBrain is not installed and could not be installed automatically. Please make sure that Matlab is connected to the internet.');
         end
         varargout{1}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
         varargout{2}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
         varargout{3}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
-        
+
     otherwise
         template=lower(strrep(bdstring,[ea_getspace,' '],''));
         varargout{1}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
@@ -115,7 +115,7 @@ if options.native
             Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
             tracorpresent(1:3)=1;
     end
-    
+
 else
     switch options.modality
         case 1 % MR
