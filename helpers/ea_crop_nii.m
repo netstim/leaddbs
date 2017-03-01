@@ -20,9 +20,14 @@ else
     nstring='nz';
 end
 if nargin>3
-    cleannan=varargin{3};
+    cleannan=varargin{4};
 else
     cleannan=0;
+end
+if nargin>4
+    interp=varargin{5};
+else
+   interp=0; 
 end
 
 V=spm_vol(filename);
@@ -55,7 +60,7 @@ if all(dist)
     ropts.preserve=0;
     ropts.bb=bb;
     ropts.vox=vox;
-    ropts.interp=0;
+    ropts.interp=interp;
     ropts.wrap=[0,0,0];
     ropts.prefix=prefix;
     try

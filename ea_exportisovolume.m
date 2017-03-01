@@ -50,6 +50,7 @@ for side=1:length(options.sides)
     nii{side}(:)=nan;
     
     XYZ=[X{side},Y{side},Z{side},ones(length(X{side}),1)]';
+    
     XYZ=Vol.mat\XYZ; % to voxel space.
     XYZ=(XYZ(1:3,:)');
     % repeat the above but in voxel space..
@@ -61,9 +62,10 @@ for side=1:length(options.sides)
     [XI,YI,ZI]=meshgrid([bb(1,1):bb(1,2)],[bb(2,1):bb(2,2)],[bb(3,1):bb(3,2)]);
     warning('off')
 
-    F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double(V{side}),'nearest');
+    nanix=~isnan(V{side});
+    F = scatteredInterpolant(XYZ(nanix,1),XYZ(nanix,2),XYZ(nanix,3),double(V{side}(nanix)),'natural');
     warning('on')
-    F.ExtrapolationMethod='linear';
+    F.ExtrapolationMethod='none';
 
     %    [p,idx]=ea_isosignificance([XYZ,double([V{side}])],1,0.5);
 
@@ -146,7 +148,9 @@ for side=1:length(options.sides)
 
             warning('off');
 
-            F = scatteredInterpolant(XYZ(:,1),XYZ(:,2),XYZ(:,3),double([V{1};V{2}]));% ,'natural');
+            nanix=[(~isnan(V{1}));(~isnan(V{2}))];
+            AllV=[V{1};V{2}];
+            F = scatteredInterpolant(XYZ(nanix,1),XYZ(nanix,2),XYZ(nanix,3),double(AllV(nanix)),'natural');
 
 
             F.ExtrapolationMethod='none';
@@ -257,9 +261,9 @@ for side=1:length(options.sides)
             end
         end
 
-        ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'],'w','nz',1);
-        ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_lr.nii'],'w','nz',1);
-        ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'],'w','nz',1);
+        ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'],'w','nz',1,1);
+        ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_lr.nii'],'w','nz',1,1);
+        ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'],'w','nz',1,1);
 
         
         matlabbatch{1}.spm.spatial.smooth.data = {[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii,1']};
