@@ -956,7 +956,7 @@ switch mod
         fibersfile=mod;
     case 'Do not calculate connectivity stats'
     otherwise % load fibertracts once and for all subs here.
-        [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([ea_getconnectomebase('dmri'),mod,'.mat']);
+        [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([ea_getconnectomebase('dmri'),mod,filesep,'data.mat']);
 end
 
 [selection]=ea_groupselectorwholelist(M.ui.listselect,M.patient.list);
@@ -1777,7 +1777,7 @@ if options.d3.showisovolume || options.expstatvat.do % regressors be used ? iter
         M.isomatrix=allisomatrices{reg};
         M.isomatrix_name=allisonames{reg};
         options.shifthalfup=0;
-        try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options); 
+        try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options);
         if size(options.d3.isomatrix{1},2)==3 % pairs
         options.shifthalfup=1;
         end
