@@ -28,6 +28,11 @@ if isempty(menuprobe)
         uimenu(f,'Label','Apply Patient Inverse Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,1});
 
     end
+    
+    
+    if ismember('subcorticalrefine',cmd)
+        uimenu(f,'Label','Add subcortical refine post 2 pre transform...','Callback',{@ea_subcorticalrefine_menu,handles});        
+    end
     if ismember('cluster',cmd)
         ea_menu_addsubmit(handles);
     end

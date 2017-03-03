@@ -146,7 +146,7 @@ ea_processguiargs(handles,varargin)
 
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon','transfer','checkregfigs','space'});
+ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon','transfer','checkregfigs','space','subcorticalrefine'});
 
 
 

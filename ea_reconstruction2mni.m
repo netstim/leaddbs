@@ -12,11 +12,25 @@ if ~isfield(options,'elspec')
     options=ea_resolve_elspec(options);
 end
 
+if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file')
+    usenative='scrf';
+else
+    usenative='native';
+end
+
+% apply native to scrf matrix if available
+if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file')
+load([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'])
+mat=[reshape(AffineTransform_float_3_3,[3,4]);[0,0,0,1]];
+reco.scrf=ea_applyscrfmat(mat,reco.native);
+end   
+
+
 for side=1:length(options.sides)
-    reco.mni.coords_mm{side}=ea_warpcoord(reco.native.coords_mm{side},nii,options);
-    reco.mni.markers(side).head=ea_warpcoord(reco.native.markers(side).head,nii,options);
-    reco.mni.markers(side).tail=ea_warpcoord(reco.native.markers(side).tail,nii,options);
-    reco.mni.trajectory{side}=ea_warpcoord(reco.native.trajectory{side},nii,options);
+    reco.mni.coords_mm{side}=ea_warpcoord(reco.(usenative).coords_mm{side},nii,options);
+    reco.mni.markers(side).head=ea_warpcoord(reco.(usenative).markers(side).head,nii,options);
+    reco.mni.markers(side).tail=ea_warpcoord(reco.(usenative).markers(side).tail,nii,options);
+    reco.mni.trajectory{side}=ea_warpcoord(reco.(usenative).trajectory{side},nii,options);
     
     normtrajvector{side}=mean(diff(reco.mni.trajectory{side}))/norm(mean(diff(reco.mni.trajectory{side})));
     

@@ -1,11 +1,22 @@
-function X=ea_genfeaturesfromvta(uipatdirs, stimname)
+function X=ea_genfeaturesfromvta(uipatdirs, stimname, atlname)
 
 
 %ea_run_mapper(uipatdirs, stimname);
 options.prefs=ea_prefs('');
-
-fts=load(fullfile(ea_getearoot,'predict','models','horn_fox','feature_idx.mat'));
-allfeatsix=cell2mat(fts.idx');
+if exist('atlname','var')
+    
+    copyfile([ea_space([],'labeling'),atlname,'.nii'],[tempdir,'label.nii']);
+    ea_conformspaceto(fullfile(ea_getearoot,'predict','spaces','222.nii'),[tempdir,'label.nii'],0);
+    nii=ea_load_nii([tempdir,'label.nii']);
+    cnt=1;
+    for parc=unique(nii.img(nii.img>0))'
+        allfeatsix{cnt}=find(nii.img==parc);
+        cnt=cnt+1;
+    end
+else
+    fts=load(fullfile(ea_getearoot,'predict','models','horn_fox','feature_idx.mat'));
+    allfeatsix=cell2mat(fts.idx');
+end
 
 switch options.prefs.lcm.vatseed
     case 'binary'
@@ -29,8 +40,19 @@ for pt=1:length(uipatdirs)
     strucnii=ea_load_nii([thispt,filesep,'stimulations',filesep,stimname,filesep,'vat_seed_compound_dMRI_',efsx,'struc_seed.nii']);
     funcnii=ea_load_nii([thispt,filesep,'stimulations',filesep,stimname,filesep,'vat_seed_compound_fMRI_',efsx,'func_seed_AvgR.nii']);
     % assign feature vector X:
-    X(pt,:)=[cell2mat(acnt),strucnii.img(allfeatsix)',funcnii.img(allfeatsix)'];
+    if iscell(allfeatsix)
+       for c=1:length(allfeatsix)
+          Fu(pt,c)=mean(funcnii.img(allfeatsix{c}));
+          St(pt,c)=mean(strucnii.img(allfeatsix{c}));
+       end
+       X(pt,:)=[St(pt,:),Fu(pt,:)];
+        
+    else
+        %   X(pt,:)=[cell2mat(acnt),strucnii.img(allfeatsix)',funcnii.img(allfeatsix)'];
+        X(pt,:)=[strucnii.img(allfeatsix)',funcnii.img(allfeatsix)'];
+    end
 end
+
 
 
 
