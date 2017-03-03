@@ -17,6 +17,7 @@ gibsconnect*.mat
 fibers/
 release/
 tmp/
+lead_standalone/
 
 # dev only
 ea_make_release.m
