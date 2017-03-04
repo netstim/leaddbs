@@ -79,6 +79,7 @@ function ea_refreshscrf(lfhandles,handles,directory)
 
 standardslice=ea_loadrefineslice(directory,lfhandles,0);
 refineslice=ea_loadrefineslice(directory,lfhandles,1);
+set(0,'CurrentFigure',handles.scrf);
 
 handles.scrf.CurrentAxes=handles.standardax;
 imshow(standardslice);
@@ -96,8 +97,11 @@ end
 
 ea_createrefineslice(directory,lfhandles,refine); 
 %ea_createcompimg(directory,refine,refstr,lfhandles)
-
+try
 slice=imread([directory,'scrf',filesep,refstr,'.png']);
+catch
+    slice=zeros(10,10,3);
+end
 
 function ea_createcompimg(directory,refine,refstr,lfhandles)
 return
@@ -257,6 +261,8 @@ otherfiles=ea_createmovim(directory,options);
 
 ea_coreg2images(options,[directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,options.prefs.prenii_unnormalized],...
     [directory,'scrf',filesep,'scrfmovim.nii'],otherfiles,1);
+movefile([directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,'scrfmovim.nii']);
+movefile([directory,'scrf',filesep,'raw_movim.nii'],[directory,'scrf',filesep,'movim.nii']);
 ea_refreshscrf(lfhandles,handles,directory);
 
 movefile([directory,'scrf',filesep,'movim2',ea_stripex(options.prefs.prenii_unnormalized),'_ants1.mat'],[directory,'scrf',filesep,'scrf_instore.mat']);

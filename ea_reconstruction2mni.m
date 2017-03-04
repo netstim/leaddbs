@@ -21,7 +21,7 @@ end
 % apply native to scrf matrix if available
 if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file')
 load([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'])
-mat=[reshape(AffineTransform_float_3_3,[3,4]);[0,0,0,1]];
+mat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
 reco.scrf=ea_applyscrfmat(mat,reco.native);
 end   
 

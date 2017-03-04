@@ -57,6 +57,7 @@ if ~exist([directory,'scrf',],'file')
 end
 
 setenv('FSLOUTPUTTYPE','NIFTI')
+if exist('cmd','var')
 for c=1:length(cmd)
     if ~ispc
         system(['bash -c "', cmd{c}, '"']);
@@ -65,6 +66,7 @@ for c=1:length(cmd)
     end
 end
 disp('Done.');
+end
 
 
 
