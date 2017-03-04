@@ -1,5 +1,11 @@
 function ea_write(options)
 
+
+if options.scrf
+       ea_subcorticalrefine(options); 
+end
+
+
 try
     ea_updatemodel(options);
 end

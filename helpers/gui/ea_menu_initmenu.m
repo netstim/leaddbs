@@ -29,10 +29,6 @@ if isempty(menuprobe)
 
     end
     
-    
-    if ismember('subcorticalrefine',cmd)
-        uimenu(f,'Label','Add subcortical refine post 2 pre transform...','Callback',{@ea_subcorticalrefine_menu,handles});        
-    end
     if ismember('cluster',cmd)
         ea_menu_addsubmit(handles);
     end

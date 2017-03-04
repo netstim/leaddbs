@@ -55,15 +55,17 @@ function ea_subcorticalrefine_OpeningFcn(hObject, eventdata, handles, varargin)
 
 
 
-directory=[varargin{1},filesep];
-lfhandles=varargin{2};
-setappdata(handles.scrf,'lfhandles',lfhandles);
+    options=varargin{1};
+directory=[options.root,options.patientname,filesep];
+
+
+setappdata(handles.scrf,'options',options);
 setappdata(handles.scrf,'directory',directory);
 
 [pth,patientname]=fileparts(fileparts(directory));
 handles.patientname.String=patientname;
 
-ea_refreshscrf(lfhandles,handles,directory);
+ea_refreshscrf(options,handles,directory);
 
 
 % Choose default command line output for ea_subcorticalrefine
@@ -73,12 +75,12 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes ea_subcorticalrefine wait for user response (see UIRESUME)
-% uiwait(handles.scrf);
+ uiwait(handles.scrf);
 
-function ea_refreshscrf(lfhandles,handles,directory)
+function ea_refreshscrf(options,handles,directory)
 
-standardslice=ea_loadrefineslice(directory,lfhandles,0);
-refineslice=ea_loadrefineslice(directory,lfhandles,1);
+standardslice=ea_loadrefineslice(directory,options,0);
+refineslice=ea_loadrefineslice(directory,options,1);
 set(0,'CurrentFigure',handles.scrf);
 
 handles.scrf.CurrentAxes=handles.standardax;
@@ -86,7 +88,7 @@ imshow(standardslice);
 handles.scrf.CurrentAxes=handles.scfax;
 imshow(refineslice);
 
-function slice=ea_loadrefineslice(directory,lfhandles,refine)
+function slice=ea_loadrefineslice(directory,options,refine)
 
 switch refine
     case 1
@@ -95,66 +97,21 @@ switch refine
         refstr='standard';
 end
 
-ea_createrefineslice(directory,lfhandles,refine); 
-%ea_createcompimg(directory,refine,refstr,lfhandles)
+ea_createrefineslice(directory,options,refine); 
 try
 slice=imread([directory,'scrf',filesep,refstr,'.png']);
 catch
     slice=zeros(10,10,3);
 end
 
-function ea_createcompimg(directory,refine,refstr,lfhandles)
-return
-options.modality=lfhandles.MRCT.Value;
-[options.root,options.patientname]=fileparts(fileparts(directory));
-options.root=[options.root,filesep];
-options.prefs=ea_prefs(options.patientname);
-options=ea_assignpretra(options);
-switch refine
-    case 1
-        scrf='scrf';
-    case 0
-        scrf='';
-end
-switch options.modality
-    case 1
-        fis={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized};
-        
-        for fi=1:length(fis)
-            cnt=1;
-            if exist([directory,'scrf',filesep,scrf,ea_stripex(fis{fi}),'2',ea_stripex(options.prefs.prenii_unnormalized),'.png'],'file');
-                thisim=imread([directory,'scrf',filesep,scrf,ea_stripex(fis{fi}),'2',ea_stripex(options.prefs.prenii_unnormalized),'.png']);
-                if ~exist('chan','var')
-                    chan=thisim;
-                else
-                    chan=chan+thisim;
-                end
-                cnt=cnt+1;
-            end
-            if ~exist('chan','var') % files not present.
-                chan=zeros(100,100,3);
-            end
-            chan=chan/cnt;
-        end
-    case 2
-        chan=imread([directory,'scrf',filesep,scrf,'tp_',ea_stripex(options.prefs.ct_coregistered),'2',ea_stripex(options.prefs.prenii_unnormalized),'.png']);
-
-end
-
-imwrite(chan,[directory,'scrf',filesep,refstr,'.png']);
 
 
 function fn=ea_stripex(fn)
 [~,fn]=fileparts(fn);
 
-function ea_createrefineslice(directory,lfhandles,refine)
+function ea_createrefineslice(directory,options,refine)
 
 
-options.modality=lfhandles.MRCT.Value;
-[options.root,options.patientname]=fileparts(fileparts(directory));
-options.root=[options.root,filesep];
-options.prefs=ea_prefs(options.patientname);
-options=ea_assignpretra(options);
 switch refine
     case 1
         scrf='scrf';
@@ -163,36 +120,46 @@ switch refine
 end
 
 
-if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
-    ea_createbbfiles(directory);
-end
+ea_createbbfiles(directory); % needs to unfortunately be done each time since coregistration may have changed.
 ea_createmovim(directory,options);
 ea_gencoregcheckfigs_scrf(directory,scrf,options);
 
 
 function ea_createbbfiles(directory)
-
 [options.root,options.patientname]=fileparts(directory);
 options.root=[options.root,filesep];
 options.earoot=ea_getearoot;
 options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);
+if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
 
-if ~exist([directory,'scrf'],'dir')
-    mkdir([directory,'scrf']);
+    
+    if ~exist([directory,'scrf'],'dir')
+        mkdir([directory,'scrf']);
+    end
+    
+    to{1}=[directory,'scrf',filesep,'bb.nii'];
+    from{1}=[ea_space,'bb.nii'];
+    
+    ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],1);
+    ea_crop_nii([directory,'scrf',filesep,'bb.nii']);
+    
+    % do put in primary anat file ? needs to be done only once.
+    fis={options.prefs.prenii_unnormalized};
+    copyfile([directory,fis{1}],[directory,'scrf',filesep,fis{1}])
+    ea_conformspaceto([directory,'scrf',filesep,'bb.nii'],[directory,'scrf',filesep,fis{1}]);
+    % cleanup:
+    delete([directory,'scrf',filesep,'bb.nii']);
 end
-
-to{1}=[directory,'scrf',filesep,'bb.nii'];
-from{1}=[ea_space,'bb.nii'];
-
-
-ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],1);
-ea_crop_nii([directory,'scrf',filesep,'bb.nii']);
-fis={options.prefs.prenii_unnormalized,options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,options.prefs.ctnii_coregistered};
+% apply tonemapping if needed
+if ~exist([directory,'tp_',options.prefs.ctnii_coregistered],'file') && exist([directory,options.prefs.ctnii_coregistered],'file')
+   ea_tonemapct_file(options,'native'); 
+end
+fis={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,['tp_',options.prefs.ctnii_coregistered]};
 for fi=1:length(fis)
     if exist([directory,fis{fi}],'file')
         copyfile([directory,fis{fi}],[directory,'scrf',filesep,fis{fi}])
-        ea_conformspaceto([directory,'scrf',filesep,'bb.nii'],[directory,'scrf',filesep,fis{fi}]);
+        ea_conformspaceto([directory,'scrf',filesep,options.prefs.prenii_unnormalized],[directory,'scrf',filesep,fis{fi}]);
     end
 end
 
@@ -204,7 +171,7 @@ function varargout = ea_subcorticalrefine_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
+%varargout{1} = handles.output;
 
 
 % --- Executes on selection change in methodbutton.
@@ -236,14 +203,8 @@ function computebutn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-lfhandles=getappdata(handles.scrf,'lfhandles');
-options.modality=lfhandles.MRCT.Value;
+options=getappdata(handles.scrf,'options');
 directory=getappdata(handles.scrf,'directory');
-
-[options.root,options.patientname]=fileparts(fileparts(directory));
-options.root=[options.root,filesep];
-   options.prefs=ea_prefs('');
-   options=ea_assignpretra(options);
    
 if iscell(handles.methodbutton.String)
     method=handles.methodbutton.String{handles.methodbutton.Value};
@@ -256,14 +217,15 @@ switch(method)
     case 'SPM'
      options.coregmr.method='Coreg MRIs: SPM';  
 end
-otherfiles=ea_createmovim(directory,options);
+
+otherfiles={};
 
 
 ea_coreg2images(options,[directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,options.prefs.prenii_unnormalized],...
     [directory,'scrf',filesep,'scrfmovim.nii'],otherfiles,1);
 movefile([directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,'scrfmovim.nii']);
 movefile([directory,'scrf',filesep,'raw_movim.nii'],[directory,'scrf',filesep,'movim.nii']);
-ea_refreshscrf(lfhandles,handles,directory);
+ea_refreshscrf(options,handles,directory);
 
 movefile([directory,'scrf',filesep,'movim2',ea_stripex(options.prefs.prenii_unnormalized),'_ants1.mat'],[directory,'scrf',filesep,'scrf_instore.mat']);
 delete([directory,'scrf',filesep,ea_stripex(options.prefs.prenii_unnormalized),'2movim','_ants1.mat']);
@@ -275,22 +237,27 @@ switch options.modality
         otherfiles={[directory,'scrf',filesep,options.prefs.tranii_unnormalized],...
             [directory,'scrf',filesep,options.prefs.cornii_unnormalized],...
             [directory,'scrf',filesep,options.prefs.sagnii_unnormalized]};
-        
-        for ofi=1:length(otherfiles)
-           nii=ea_load_nii(otherfiles{ofi});
-           if ~exist('AllX','var')
-               AllX=nii.img;
-           else
-               AllX=AllX+nii.img;
-           end
-        end
-        nii.img=AllX./ofi;
-        clear AllX
-        nii.fname=[directory,'scrf',filesep,'movim.nii'];
-        ea_write_nii(nii);
+        cnt=1;
+            for ofi=1:length(otherfiles)
+                if exist(otherfiles{ofi},'file')
+                nii=ea_load_nii(otherfiles{ofi});
+                delete(otherfiles{ofi});
+                nii.img(abs(nii.img)<0.01)=nan;
+                if ~exist('AllX','var')
+                    AllX=nii.img;
+                else
+                    AllX(:,:,:,cnt)=nii.img;
+                end
+                cnt=cnt+1;
+                end
+            end
+            nii.img=ea_nanmean(AllX,4);
+            clear AllX
+            nii.fname=[directory,'scrf',filesep,'movim.nii'];
+            ea_write_nii(nii);
     case 2
-        otherfiles={[directory,'scrf',filesep,options.prefs.ctnii_coregistered]};
-        copyfile([directory,'scrf',filesep,options.prefs.ctnii_coregistered],[directory,'scrf',filesep,'movim.nii']);
+        otherfiles={[directory,'scrf',filesep,'tp_',options.prefs.ctnii_coregistered]};
+        copyfile([directory,'scrf',filesep,'tp_',options.prefs.ctnii_coregistered],[directory,'scrf',filesep,'movim.nii']);
 end
 
 % --- Executes on button press in savebutn.
@@ -300,11 +267,26 @@ function savebutn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 directory=getappdata(handles.scrf,'directory');
 copyfile([directory,'scrf',filesep,'scrf_instore.mat'],[directory,'scrf',filesep,'scrf.mat']);
-handles.msgtxt.String='Transform saved.';
-
+closescrf(handles);
 
 % --- Executes on button press in rejectbutn.
 function rejectbutn_Callback(hObject, eventdata, handles)
 % hObject    handle to rejectbutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+directory=getappdata(handles.scrf,'directory');
+if exist([directory,'scrf',filesep,'scrf.mat']);
+    delete([directory,'scrf',filesep,'scrf.mat']);
+end
+closescrf(handles);
+
+function closescrf(handles)
+
+options=getappdata(handles.scrf,'options');
+% read / write reco to include subcortical refine transform.
+[coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+options.hybridsave=1;
+ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_corrected,options);
+
+uiresume(handles.scrf);
+delete(handles.scrf);

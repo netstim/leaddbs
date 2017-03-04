@@ -138,7 +138,6 @@ if options.autoimprove
     disp('Done.');
 end
 % continue with rest of the program schedule..
-
 ea_write(options);
 
 

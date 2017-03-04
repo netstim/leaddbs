@@ -23,6 +23,10 @@ if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'f
 load([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'])
 mat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
 reco.scrf=ea_applyscrfmat(mat,reco.native);
+else
+    if isfield(reco,'scrf')
+        reco=rmfield(reco,'scrf'); % delete subcortical transform if user apparently deleted the transform file.
+    end
 end   
 
 

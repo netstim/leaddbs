@@ -147,6 +147,13 @@ try
 catch
     options.manualheightcorrection=0;
 end
+
+try
+    options.scrf=get(handles.scrf,'Value');
+catch
+    options.scrf=0;
+end
+
 try
     options.d3.write=(get(handles.render_checkbox,'Value') == get(handles.render_checkbox,'Max'));
 catch

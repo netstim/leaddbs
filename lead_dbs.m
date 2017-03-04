@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 10-Jan-2017 00:06:47
+% Last Modified by GUIDE v2.5 04-Mar-2017 11:43:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -146,7 +146,7 @@ ea_processguiargs(handles,varargin)
 
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon','transfer','checkregfigs','space','subcorticalrefine'});
+ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon','transfer','checkregfigs','space'});
 
 
 
@@ -1466,3 +1466,12 @@ function checkfigures_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of checkfigures
+
+
+% --- Executes on button press in scrf.
+function scrf_Callback(hObject, eventdata, handles)
+% hObject    handle to scrf (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of scrf

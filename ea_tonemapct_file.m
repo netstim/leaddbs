@@ -20,18 +20,6 @@ switch nativemni
         ct.fname=[directory,'tp_',options.prefs.gctnii];
         ct.img=ea_tonemap_ct(ct.img);
         ea_write_nii(ct);
-    case 'scrfscrf'
-        directory=[options.root,options.patientname,filesep];
-        ct=ea_load_nii([directory,'scrf',filesep,'scrf',options.prefs.ctnii_coregistered]);
-        ct.fname=[directory,'scrf',filesep,'tp_','scrf',options.prefs.ctnii_coregistered];
-        ct.img=ea_tonemap_ct(ct.img);
-        ea_write_nii(ct); 
-    case 'scrf'
-        directory=[options.root,options.patientname,filesep];
-        ct=ea_load_nii([directory,'scrf',filesep,'',options.prefs.ctnii_coregistered]);
-        ct.fname=[directory,'scrf',filesep,'tp_','',options.prefs.ctnii_coregistered];
-        ct.img=ea_tonemap_ct(ct.img);
-        ea_write_nii(ct);
 end
 
 ea_dispt('');
