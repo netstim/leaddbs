@@ -14,7 +14,7 @@ if exist('startup','file')
         fileparts(which('startup')));
 end
 
-if ~nargin, outdir = fullfile(ea_getearoot,'lead_standalone'); mkdir(outdir); end
+if ~nargin, outdir = fullfile(ea_getearoot,'../lead_standalone'); mkdir(outdir); end
 
 %==========================================================================
 %-Static listing of SPM toolboxes
