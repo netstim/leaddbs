@@ -9,10 +9,10 @@ mat=reshape(afftransform,[3,4]);
 for i=1:3
     offset(i)=translation(i)+fixed(i);
     for j=1:3
-       offset(i)=offset(i)-mat(i,j) * fixed(j); 
+       offset(i)=offset(i)-(mat(j,i) * fixed(j)); 
     end
 end
-offset(3)=-offset(3); % empirical for now
+offset(1:2)=-offset(1:2); % convert RAS to LPS (ITK uses RAS)
 mat(:,4)=offset;
 mat=[mat;[0,0,0,1]];
 
