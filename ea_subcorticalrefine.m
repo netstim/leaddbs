@@ -22,7 +22,7 @@ function varargout = ea_subcorticalrefine(varargin)
 
 % Edit the above text to modify the response to help ea_subcorticalrefine
 
-% Last Modified by GUIDE v2.5 03-Mar-2017 15:41:22
+% Last Modified by GUIDE v2.5 04-Mar-2017 20:01:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -83,10 +83,18 @@ standardslice=ea_loadrefineslice(directory,options,0);
 refineslice=ea_loadrefineslice(directory,options,1);
 set(0,'CurrentFigure',handles.scrf);
 
+
 handles.scrf.CurrentAxes=handles.standardax;
 imshow(standardslice);
 handles.scrf.CurrentAxes=handles.scfax;
 imshow(refineslice);
+
+% display matrix:
+if exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
+load([directory,'scrf',filesep,'scrf_instore.mat']);
+mat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+handles.affmatrix.String=sprintf('%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f',mat');
+end
 
 function slice=ea_loadrefineslice(directory,options,refine)
 
@@ -203,32 +211,54 @@ function computebutn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+ea_compute_scrf(handles)
+
+function ea_compute_scrf(handles)
+
 options=getappdata(handles.scrf,'options');
 directory=getappdata(handles.scrf,'directory');
-   
-if iscell(handles.methodbutton.String)
-    method=handles.methodbutton.String{handles.methodbutton.Value};
-else
-    method=handles.methodbutton.String;
-end
-switch(method)
-    case 'ANTs'
-     options.coregmr.method='Coreg MRIs: ANTs';
-    case 'SPM'
-     options.coregmr.method='Coreg MRIs: SPM';  
-end
 
+options.coregmr.method='Coreg MRIs: ANTs';
+
+if ~handles.mask0.Value
+    if ~exist([directory,'scrf',filesep,'bgmsk.nii'],'file')
+        ea_addtsmask(options,1);
+        for msk=1:2
+            if msk==2
+                btts='2';
+            else
+                btts='';
+            end
+            movefile([directory,'bgmsk',btts,'.nii'],[directory,'scrf',filesep,'bgmsk',btts,'.nii']);
+            ea_conformspaceto([directory,'scrf',filesep,options.prefs.prenii_unnormalized],[directory,'scrf',filesep,'bgmsk',btts,'.nii'],0);
+        end
+    end
+    for msk=1:2
+        if msk==2
+            btts='2';
+        else
+            btts='';
+        end
+        msks{msk}=[directory,'scrf',filesep,'bgmsk',btts,'.nii'];
+    end
+end
 otherfiles={};
 
+if handles.mask1.Value
+   msks=msks(1); % only use first mask. 
+end
 
 ea_coreg2images(options,[directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,options.prefs.prenii_unnormalized],...
-    [directory,'scrf',filesep,'scrfmovim.nii'],otherfiles,1);
-movefile([directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,'scrfmovim.nii']);
+    [directory,'scrf',filesep,'scrfmovim.nii'],otherfiles,1,msks);
+%movefile([directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,'scrfmovim.nii']);
 movefile([directory,'scrf',filesep,'raw_movim.nii'],[directory,'scrf',filesep,'movim.nii']);
-ea_refreshscrf(options,handles,directory);
 
 movefile([directory,'scrf',filesep,'movim2',ea_stripex(options.prefs.prenii_unnormalized),'_ants1.mat'],[directory,'scrf',filesep,'scrf_instore.mat']);
 delete([directory,'scrf',filesep,ea_stripex(options.prefs.prenii_unnormalized),'2movim','_ants1.mat']);
+ea_refreshscrf(options,handles,directory);
+
+
+
 
 function otherfiles=ea_createmovim(directory,options)
 
@@ -290,3 +320,37 @@ ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_corrected,o
 
 uiresume(handles.scrf);
 delete(handles.scrf);
+
+
+% --- Executes on button press in mask1.
+function mask1_Callback(hObject, eventdata, handles)
+% hObject    handle to mask1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.mask0.Value=0;
+handles.mask2.Value=0;
+% Hint: get(hObject,'Value') returns toggle state of mask1
+
+
+% --- Executes on button press in mask2.
+function mask2_Callback(hObject, eventdata, handles)
+% hObject    handle to mask2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.mask0.Value=0;
+handles.mask1.Value=0;
+% Hint: get(hObject,'Value') returns toggle state of mask2
+
+
+% --- Executes on button press in mask0.
+function mask0_Callback(hObject, eventdata, handles)
+% hObject    handle to mask0 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of mask0
+
+handles.mask1.Value=0;
+handles.mask2.Value=0;
+% --- Executes on button press in mask1.
+

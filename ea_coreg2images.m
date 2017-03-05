@@ -1,4 +1,4 @@
-function affinefile = ea_coreg2images(options,moving,fixed,ofile,otherfiles,writeoutmat)
+function affinefile = ea_coreg2images(options,moving,fixed,ofile,otherfiles,writeoutmat,msks)
 
 if nargin < 5
     otherfiles = {};
@@ -35,17 +35,6 @@ switch options.coregmr.method
             [pth,fn,ext]=fileparts(otherfiles{ofi});
             movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
         end
-    case 'Coreg MRIs: SPM + Subcortical Refine' % SPM + Subcortical Refine
-        commaoneotherfiles=prepforspm(otherfiles);
-        
-        affinefile = ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat,1);
-        try % will fail if ofile is same string as r mfilen..
-            movefile([directory,'r',mfilen],ofile);
-        end
-        for ofi=1:length(otherfiles)
-            [pth,fn,ext]=fileparts(otherfiles{ofi});
-            movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
-        end
         
     case 'Coreg MRIs: FSL' % FSL
         affinefile = ea_flirt(fixed,...
@@ -54,13 +43,7 @@ switch options.coregmr.method
     case 'Coreg MRIs: ANTs' % ANTs
         affinefile = ea_ants(fixed,...
             moving,...
-            ofile,writeoutmat,otherfiles);
-        
-    case 'Coreg MRIs: ANTs + Subcortical Refine' % ANTs
-        affinefile = ea_ants(fixed,...
-            moving,...
-            ofile,writeoutmat,otherfiles,1,options);       
-        
+            ofile,writeoutmat,otherfiles,msks);
     case 'Coreg MRIs: BRAINSFIT' % BRAINSFit
         affinefile = ea_brainsfit(fixed,...
             moving,...

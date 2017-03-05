@@ -25,10 +25,12 @@ else
 end
 
 
+
 try
-    refine=varargin{6};
+    msks=varargin{6};
+    usemasks=1;
 catch
-    refine=0;
+    usemasks=0;
 end
 try
     options=varargin{7};
@@ -36,10 +38,6 @@ catch
     options=struct;
 end
 
-
-if refine
-    ea_addtsmask(options);
-end
 
 outputbase = ea_niifileparts(outputimage);
 volumedir = [fileparts(outputbase), filesep];
@@ -156,33 +154,33 @@ end
 
 
 
-if refine
+if usemasks
     usereaffine=1; % additional affine step based on mask is probably too much.
     
     rigidstage=[rigidstage, ... % add nonexisting mask for this stage
         ' --masks [nan,nan]'];
     affinestage=[affinestage, ... % add nonexisting mask for this stage
         ' --masks [nan,nan]'];
-    rerigidstage = [' --transform Rigid[0.1]' ...
+    mask1stage = [' --transform Affine[0.1]' ...
         ' --convergence ', rigidconvergence, ...
         ' --shrink-factors ', rigidshrinkfactors, ...
         ' --smoothing-sigmas ', rigidsoomthingssigmas, ...
         ' --initial-moving-transform [', ea_path_helper(fixedimage), ',', ea_path_helper(movingimage), ',1]', ...
         ' --metric Mattes[', ea_path_helper(fixedimage), ',', ea_path_helper(movingimage), ',1,32,Regular,0.25]', ...
-        ' --masks [', ea_path_helper([volumedir,'bgmsk.nii']),',nan]'];
-    if usereaffine
-        reaffinestage = [' --transform Affine[0.1]'...
+        ' --masks [', ea_path_helper(msks{1}),',',ea_path_helper(msks{1}),']'];
+    if length(msks)>1
+        mask2stage = [' --transform Affine[0.1]'...
             ' --metric MI[', ea_path_helper(fixedimage), ',', ea_path_helper(movingimage), ',1,32,Regular,0.25]' ...
             ' --convergence ', affineconvergence, ...
             ' --shrink-factors ', affineshrinkfactors ...
             ' --smoothing-sigmas ', affinesoomthingssigmas ...
-            ' --masks [', ea_path_helper([volumedir,'bgmsk.nii']),',nan]'];
+            ' --masks [', ea_path_helper(msks{2}),',',ea_path_helper(msks{2}),']'];
     else
-        reaffinestage='';
+        mask2stage='';
     end
 else
-    rerigidstage='';
-    reaffinestage='';
+    mask1stage='';
+    mask2stage='';
 end
 
 
@@ -193,7 +191,7 @@ antscmd = [ANTS, ' --verbose 1' ...
     ' --interpolation Linear' ...
     ' --use-histogram-matching 1' ...
     ' --winsorize-image-intensities [0.005,0.995]', ...
-    rigidstage, affinestage,rerigidstage,reaffinestage];
+    rigidstage, affinestage,mask1stage,mask2stage];
 if writematout % inverse only needed if matrix is written out.
     invaffinecmd = [antsApplyTransforms, ' --verbose 1' ...
         ' --dimensionality 3 --float 1' ...
@@ -235,9 +233,5 @@ else
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
 
-if refine
-    delete([volumedir,'fixfullframe.nii']);
-    delete([volumedir,'movfullframe.nii']);
-end
 
 fprintf('\nANTs LINEAR registration done.\n');
