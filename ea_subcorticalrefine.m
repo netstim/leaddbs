@@ -22,7 +22,7 @@ function varargout = ea_subcorticalrefine(varargin)
 
 % Edit the above text to modify the response to help ea_subcorticalrefine
 
-% Last Modified by GUIDE v2.5 04-Mar-2017 20:01:52
+% Last Modified by GUIDE v2.5 05-Mar-2017 12:51:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -109,7 +109,7 @@ ea_createrefineslice(directory,options,refine);
 try
 slice=imread([directory,'scrf',filesep,refstr,'.png']);
 catch
-    slice=zeros(10,10,3);
+    slice=imread([ea_getearoot,'helpers',filesep,'gui',filesep,'scrf_msg.png']);
 end
 
 
@@ -353,4 +353,3 @@ function mask0_Callback(hObject, eventdata, handles)
 handles.mask1.Value=0;
 handles.mask2.Value=0;
 % --- Executes on button press in mask1.
-
