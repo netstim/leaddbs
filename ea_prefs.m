@@ -1,5 +1,5 @@
 function prefs=ea_prefs(patientname)
-
+%#ea_prefs_default
 if ~exist('patientname','var')
     patientname='';
 end

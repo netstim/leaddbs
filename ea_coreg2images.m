@@ -12,7 +12,9 @@ if nargin < 6
     writeoutmat = 0;
     affinefile = {};
 end
-
+if ~exist('msks','var')
+    msks={};
+end
 [directory,mfilen,ext]=fileparts(moving);
 directory=[directory,filesep];
 mfilen=[mfilen,ext];

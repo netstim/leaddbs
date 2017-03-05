@@ -28,7 +28,11 @@ end
 
 try
     msks=varargin{6};
+    if isempty(msks)
+        usemasks=0;
+    else
     usemasks=1;
+    end
 catch
     usemasks=0;
 end
