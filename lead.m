@@ -52,6 +52,10 @@ function lead_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead (see VARARGIN)
 
+%#ea_prefs_default.mat
+%#ea_prefs_default.m
+
+
 % Choose default command line output for lead
 handles.output = hObject;
 
