@@ -23,11 +23,15 @@ dim=size(X,2);
 disp(description);
 
 
-
+nnans=isnan(sum(X,2));
+X(nnans,:)=[];
+try groups(nnans)=[]; end
 
 [R,p]=corr(X,'rows','pairwise','type','Pearson');
 R_upd=R(2:end,1);
 p_upd=p(2:end,1);
+% support for nans
+
 
 %labels=M.stats(1).ea_stats.atlases.names(lidx);
 
@@ -40,9 +44,12 @@ for area=1:length(R_upd)
     if exist('color','var')
         scatter(X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',color);
     else
-        
+        try
         scatter(X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',jetlist(groups,:));
-
+        catch
+        scatter(X(:,1),X(:,area+1),[],jetlist(groups,:));
+            
+        end
         
     end
     
