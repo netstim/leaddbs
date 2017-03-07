@@ -247,6 +247,9 @@ otherfiles={};
 if handles.mask1.Value
    msks=msks(1); % only use first mask. 
 end
+if ~exist('msks','var')
+    msks={};
+end
 
 ea_coreg2images(options,[directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,options.prefs.prenii_unnormalized],...
     [directory,'scrf',filesep,'scrfmovim.nii'],otherfiles,1,msks);
@@ -296,8 +299,12 @@ function savebutn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 directory=getappdata(handles.scrf,'directory');
+if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
+   msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".'); 
+else
 copyfile([directory,'scrf',filesep,'scrf_instore.mat'],[directory,'scrf',filesep,'scrf.mat']);
 closescrf(handles);
+end
 
 % --- Executes on button press in rejectbutn.
 function rejectbutn_Callback(hObject, eventdata, handles)
