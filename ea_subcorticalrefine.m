@@ -55,7 +55,7 @@ function ea_subcorticalrefine_OpeningFcn(hObject, eventdata, handles, varargin)
 
 
 
-    options=varargin{1};
+options=varargin{1};
 directory=[options.root,options.patientname,filesep];
 
 
@@ -64,9 +64,31 @@ setappdata(handles.scrf,'directory',directory);
 
 [pth,patientname]=fileparts(fileparts(directory));
 handles.patientname.String=patientname;
-
 ea_refreshscrf(options,handles,directory);
-
+switch options.prefs.scrf.auto
+    case 'nomask'
+        handles.mask0.Value=1;
+        handles.mask1.Value=0;
+        handles.mask2.Value=0;
+        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],file) && ~exist([directory,'scrf',filesep,'scrf.mat'],file)
+            ea_compute_scrf(handles)
+        end
+    case 'mask1'
+        handles.mask0.Value=0;
+        handles.mask1.Value=1;
+        handles.mask2.Value=0;
+        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],file) && ~exist([directory,'scrf',filesep,'scrf.mat'],file)
+            ea_compute_scrf(handles)
+        end
+    case 'mask2'
+        handles.mask0.Value=0;
+        handles.mask1.Value=0;
+        handles.mask2.Value=1;
+        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],file) && ~exist([directory,'scrf',filesep,'scrf.mat'],file)
+            ea_compute_scrf(handles)
+        end
+end
+        
 
 % Choose default command line output for ea_subcorticalrefine
 handles.output = hObject;
@@ -134,7 +156,7 @@ ea_gencoregcheckfigs_scrf(directory,scrf,options);
 
 
 function ea_createbbfiles(directory)
-[options.root,options.patientname]=fileparts(directory);
+[options.root,options.patientname]=fileparts(fileparts(directory));
 options.root=[options.root,filesep];
 options.earoot=ea_getearoot;
 options.prefs=ea_prefs(options.patientname);
@@ -145,7 +167,6 @@ if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
     if ~exist([directory,'scrf'],'dir')
         mkdir([directory,'scrf']);
     end
-    
     to{1}=[directory,'scrf',filesep,'bb.nii'];
     from{1}=[ea_space,'bb.nii'];
     
@@ -229,6 +250,9 @@ if ~handles.mask0.Value
             else
                 btts='';
             end
+            if ~exist([directory,'scrf',filesep],'dir')
+                mkdir([directory,'scrf',filesep]);
+            end
             movefile([directory,'bgmsk',btts,'.nii'],[directory,'scrf',filesep,'bgmsk',btts,'.nii']);
             ea_conformspaceto([directory,'scrf',filesep,options.prefs.prenii_unnormalized],[directory,'scrf',filesep,'bgmsk',btts,'.nii'],0);
         end
@@ -253,6 +277,7 @@ end
 
 ea_coreg2images(options,[directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,options.prefs.prenii_unnormalized],...
     [directory,'scrf',filesep,'scrfmovim.nii'],otherfiles,1,msks);
+
 %movefile([directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,'scrfmovim.nii']);
 movefile([directory,'scrf',filesep,'raw_movim.nii'],[directory,'scrf',filesep,'movim.nii']);
 
@@ -287,6 +312,9 @@ switch options.modality
             nii.img=ea_nanmean(AllX,4);
             clear AllX
             nii.fname=[directory,'scrf',filesep,'movim.nii'];
+            nii.img(isnan(nii.img))=0;
+            nii.img(~(nii.img==0))=zscore(nii.img(~(nii.img==0)));
+            
             ea_write_nii(nii);
     case 2
         otherfiles={[directory,'scrf',filesep,'tp_',options.prefs.ctnii_coregistered]};
@@ -321,6 +349,8 @@ function closescrf(handles)
 
 options=getappdata(handles.scrf,'options');
 % read / write reco to include subcortical refine transform.
+
+options.native=1;
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 options.hybridsave=1;
 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_corrected,options);
