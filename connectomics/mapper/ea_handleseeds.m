@@ -5,9 +5,17 @@ if iscell(sfile) % already supplied in cell format
     if length(sfile)>1
         roilist=1;
     else
-        roilist=0;
+        [pth,fn,ext]=fileparts(sfile{1});
+        if strcmp(ext,'.txt')
+            roilist=1;
+            
+            sfile=ea_getrois(sfile{1});
+        else
+            roilist=0;
+                sfile=sfile';
+
+        end
     end
-    sfile=sfile';
 else
     [pth,fn,ext]=fileparts(sfile);
     if strcmp(ext,'.txt')
@@ -19,9 +27,6 @@ else
         sfile={sfile};
     end
 end
-
-
-
 
 
 
