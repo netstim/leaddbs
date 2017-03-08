@@ -99,6 +99,9 @@ prefs.ctcoreg.default='ea_coregctmri_ants';
 prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
 prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregistration transformation
 
+%% Subcortical refine (Post to Pre):
+prefs.scrf.auto='off'; % can be 'off' to not perform automatic subcortical refine, 'nomask' to just use cropped image, 'mask1' to use Schoenecker mask 1 or 'mask2' to use both Schoenecker masks.
+
 %% Atlas-Sets:
 prefs.atlases.default='STN-Subdivisions (Accolla 2014)';
 
