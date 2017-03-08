@@ -27,7 +27,7 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     cylradius=25; % define the radius of the bounding cylinder
     
     if max(S.amplitude{side})>4
-    cylradius=round(25*(max(S.amplitude{side})/3));
+    cylradius=round(25*(max(S.amplitude{side})/2));
     end
     ndiv=50;      % division of circle for the bounding cylinder
     electrodelen=norm(etop-orig); % length of the electrode
