@@ -147,6 +147,7 @@ pos=get(hObject,'position');
 set(hObject,'position',[0,0,pos(3),pos(4)]);
 refreshresultfig(handles)
 view(142,13.6)
+set(handles.acontrolfig,'Visible',options.d3.verbose);
 
 
 

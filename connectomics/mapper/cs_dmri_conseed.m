@@ -25,11 +25,13 @@ switch cmd
                 end
                 
                 redotree=0;
+                ctype='mat';
             elseif exist([cfile,filesep,'data.fib.gz'],'file') % regular .fib.gz file
                 
                 ftr=track_seed_gqi([cfile,filesep,'data.fib.gz'],sfile{s});
                 fibers=ftr.fibers;
                 redotree=1;
+                ctype='fibgz';
                 
             else % connectome type not supported
                 ea_error('Connectome file vanished or not supported!');
@@ -57,7 +59,8 @@ switch cmd
                 allbinary=0;
             end
             
-            if ~allbinary
+            if ~allbinary || strcmp(ctype,'mat')
+                
                 [xx,yy,zz]=ind2sub(size(Vseed.img),ixs);
                 XYZvx=[xx,yy,zz,ones(length(xx),1)]';
                 clear ixs
@@ -71,26 +74,41 @@ switch cmd
                 % select fibers for each ix
                 ea_dispercent(0,'Iterating voxels');
                 ixdim=length(ixvals);
-                
+                fiberstrength=zeros(size(fibers,1),1); % in this var we will store a mean value for each fiber traversing through seed
+                fiberstrengthn=zeros(size(fibers,1),1); % counting variable to average strengths
                 for ix=1:ixdim
                     % assign fibers on map with this weighted value.
-                    fibnos=unique(fibers(ids{ix},4));
+                    if ~isempty(ids{ix})
+                        fibnos=unique(fibers(ids{ix},4)); % these fiber ids go through this particular voxel.
+                        fiberstrength(fibnos)=fiberstrength(fibnos)+ixvals(ix);
+                        fiberstrengthn(fibnos)=fiberstrengthn(fibnos)+1;
+                    end
+                    ea_dispercent(ix/ixdim);
                     
-                    allfibcs=fibers(ismember(fibers(:,4),fibnos),1:3);
+                end
+                nzz=~(fiberstrength==0);
+                fiberstrength(nzz)=fiberstrength(nzz)./fiberstrengthn(nzz); % now each fiber has a strength mediated by the seed.
+                ea_dispercent(1,'end');
+                
+                ea_dispercent(0,'Iterating fibers');
+                cfibers=find(fiberstrength);
+                cfibdim=length(cfibers);
+                for f=cfibers % iterate through fibers that have assigned a nonzero value and paint to map.
+                    allfibcs=fibers(fibers(:,4)==f,1:3);
                     allfibcs=round(map.mat\[allfibcs,ones(size(allfibcs,1),1)]');
                     allfibcs(:,logical(sum(allfibcs<1,1)))=[];
                     topaint=sub2ind(mapsz,allfibcs(1,:),allfibcs(2,:),allfibcs(3,:));
-                    map.img(topaint)=map.img(topaint)+ixvals(ix);
-                    ea_dispercent(ix/ixdim);
+                    map.img(topaint)=map.img(topaint)+fiberstrength(f);
+                    ea_dispercent(f/cfibdim);
                 end
-            ea_dispercent(1,'end');
-            else % if all is binary, can be much quicker.
+                ea_dispercent(1,'end');
+            else % if all is binary && using a .fib.gz file (i.e. all fibers go through seed already), can be much quicker.
                 allfibcs=fibers(:,1:3);
                 allfibcs=round(map.mat\[allfibcs,ones(size(allfibcs,1),1)]');
-                topaint=sub2ind(mapsz,allfibcs(1,:),allfibcs(2,:),allfibcs(3,:)); 
+                topaint=sub2ind(mapsz,allfibcs(1,:),allfibcs(2,:),allfibcs(3,:));
                 utopaint=unique(topaint);
                 c=countmember(utopaint,topaint);
-                map.img(utopaint)=c;                
+                map.img(utopaint)=c;
             end
             
             [~,fn]=fileparts(seedfiles{s});
