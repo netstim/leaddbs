@@ -70,21 +70,21 @@ switch options.prefs.scrf.auto
         handles.mask0.Value=1;
         handles.mask1.Value=0;
         handles.mask2.Value=0;
-        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],file) && ~exist([directory,'scrf',filesep,'scrf.mat'],file)
+        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
         end
     case 'mask1'
         handles.mask0.Value=0;
         handles.mask1.Value=1;
         handles.mask2.Value=0;
-        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],file) && ~exist([directory,'scrf',filesep,'scrf.mat'],file)
+        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
         end
     case 'mask2'
         handles.mask0.Value=0;
         handles.mask1.Value=0;
         handles.mask2.Value=1;
-        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],file) && ~exist([directory,'scrf',filesep,'scrf.mat'],file)
+        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
         end
 end
