@@ -285,11 +285,16 @@ set(0,'CurrentFigure',resultfig);
 set(resultfig,'Renderer','OpenGL')
 axis off
 set(resultfig,'color','k');
+
 axis vis3d
 axis equal
 set(resultfig,'Name',figtitle);
 set(0,'CurrentFigure',resultfig);
 ax=resultfig.CurrentAxes;
+set(ax,'XLimMode','auto');
+set(ax,'YLimMode','auto');
+set(ax,'ZLimMode','auto');
+
 % set(ax,'XLim',[-140 140]);
 % set(ax,'YLim',[-140 140]);
 % set(ax,'ZLim',[-140 140]);
@@ -298,7 +303,6 @@ ax=resultfig.CurrentAxes;
 % set(ax,'XLim',[-140 140]);
 % set(ax,'YLim',[-140 140]);
 % set(ax,'ZLim',[-140 140]);
-set(ax,'XLimMode','manual'); set(ax,'YLimMode','manual'); set(ax,'ZLimMode','manual');
 view(142,13.6)
 zoom(1.5)
 %set(resultfig,'visible','on');
