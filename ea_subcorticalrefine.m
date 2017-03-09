@@ -25,7 +25,7 @@ function varargout = ea_subcorticalrefine(varargin)
 % Last Modified by GUIDE v2.5 05-Mar-2017 12:51:37
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
+gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @ea_subcorticalrefine_OpeningFcn, ...
@@ -58,35 +58,36 @@ function ea_subcorticalrefine_OpeningFcn(hObject, eventdata, handles, varargin)
 options=varargin{1};
 directory=[options.root,options.patientname,filesep];
 
-
 setappdata(handles.scrf,'options',options);
 setappdata(handles.scrf,'directory',directory);
 
 [pth,patientname]=fileparts(fileparts(directory));
 handles.patientname.String=patientname;
+
+set(handles.scrf,'name',['Brainshift Correction: ',patientname]);
 ea_refreshscrf(options,handles,directory);
 switch options.prefs.scrf.auto
     case 'nomask'
         handles.mask0.Value=1;
         handles.mask1.Value=0;
         handles.mask2.Value=0;
-        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
+        %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
-        end
+        %end
     case 'mask1'
         handles.mask0.Value=0;
         handles.mask1.Value=1;
         handles.mask2.Value=0;
-        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
+        %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
-        end
+        %end
     case 'mask2'
         handles.mask0.Value=0;
         handles.mask1.Value=0;
         handles.mask2.Value=1;
-        if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
+        %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
-        end
+        %end
 end
         
 
@@ -97,7 +98,10 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes ea_subcorticalrefine wait for user response (see UIRESUME)
- uiwait(handles.scrf);
+
+if options.d2.write || options.d3.write
+uiwait(handles.scrf);
+end
 
 function ea_refreshscrf(options,handles,directory)
 
@@ -162,8 +166,6 @@ options.earoot=ea_getearoot;
 options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);
 if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
-
-    
     if ~exist([directory,'scrf'],'dir')
         mkdir([directory,'scrf']);
     end
@@ -296,26 +298,26 @@ switch options.modality
             [directory,'scrf',filesep,options.prefs.cornii_unnormalized],...
             [directory,'scrf',filesep,options.prefs.sagnii_unnormalized]};
         cnt=1;
-            for ofi=1:length(otherfiles)
-                if exist(otherfiles{ofi},'file')
+        for ofi=1:length(otherfiles)
+            if exist(otherfiles{ofi},'file')
                 nii=ea_load_nii(otherfiles{ofi});
                 delete(otherfiles{ofi});
-                nii.img(abs(nii.img)<0.01)=nan;
+                nii.img(abs(nii.img)<0.1)=nan;
                 if ~exist('AllX','var')
                     AllX=nii.img;
                 else
                     AllX(:,:,:,cnt)=nii.img;
                 end
                 cnt=cnt+1;
-                end
             end
-            nii.img=ea_nanmean(AllX,4);
-            clear AllX
-            nii.fname=[directory,'scrf',filesep,'movim.nii'];
-            nii.img(isnan(nii.img))=0;
-            nii.img(~(nii.img==0))=zscore(nii.img(~(nii.img==0)));
-            
-            ea_write_nii(nii);
+        end
+        nii.img=ea_nanmean(AllX,4);
+        clear AllX
+        nii.fname=[directory,'scrf',filesep,'movim.nii'];
+        nii.img(isnan(nii.img))=0;
+        %nii.img(~(nii.img==0))=zscore(nii.img(~(nii.img==0)));
+        
+        ea_write_nii(nii);
     case 2
         otherfiles={[directory,'scrf',filesep,'tp_',options.prefs.ctnii_coregistered]};
         copyfile([directory,'scrf',filesep,'tp_',options.prefs.ctnii_coregistered],[directory,'scrf',filesep,'movim.nii']);
@@ -354,8 +356,9 @@ options.native=1;
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 options.hybridsave=1;
 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_corrected,options);
-
+if options.d2.write || options.d3.write
 uiresume(handles.scrf);
+end
 delete(handles.scrf);
 
 
