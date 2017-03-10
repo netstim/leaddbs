@@ -11,6 +11,11 @@ if isempty(menuprobe)
     if ismember('acpc',cmd)
         uimenu(f,'Label','Convert ACPC/MNI coordinates (Horn 2017)','Callback',{@ea_acpcquery,handles.leadfigure});
     end
+    
+    if ismember('dbs',cmd)
+        dbs=uimenu(f,'Label','DBS');
+        uimenu(dbs,'Label','Recalculate DBS reconstruction in template space','Callback',{@ea_recalc_reco,handles});
+    end
 
     if ismember('export',cmd)
         e = uimenu(f,'Label','Export');

@@ -33,6 +33,7 @@ switch bdstring
         end
         haspostop=0; haspreop=0;
         try
+            
             assignpatspecific(options); % use this as a probe to see if patient is defined.
             haspostop=1;
             options=ea_tempswitchoptstopre(options);
@@ -110,9 +111,9 @@ if options.native
                 Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
             end
         case 2 % CT
-            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
-            Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
-            Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tranii_unnormalized));
+            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.ctnii_coregistered));
+            Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.ctnii_coregistered));
+            Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.ctnii_coregistered));
             tracorpresent(1:3)=1;
     end
 
@@ -131,9 +132,9 @@ else
                 Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
             end
         case 2 % CT
-            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
-            Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
-            Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.gtranii));
+            Vtra=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tp_gctnii));
+            Vcor=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tp_gctnii));
+            Vsag=spm_vol(fullfile(options.root,options.prefs.patientdir,options.prefs.tp_gctnii));
             tracorpresent(1:3)=1;
     end
 end
@@ -150,11 +151,13 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
 end
 
 function options=ea_tempswitchoptstopre(options)
-
+% this generates a very temporary fake options struct that points to preop
+% data instead of postop data.
 if options.native
     options.prefs.tranii_unnormalized=options.prefs.prenii_unnormalized;
     options.prefs.cornii_unnormalized=options.prefs.prenii_unnormalized;
     options.prefs.sagnii_unnormalized=options.prefs.prenii_unnormalized;
+    options.prefs.tp_ctnii_coregistered=options.prefs.prenii_unnormalized;
 else
     options.prefs.gtranii=options.prefs.gprenii;
     options.prefs.tranii=options.prefs.prenii;
@@ -162,4 +165,5 @@ else
     options.prefs.cornii=options.prefs.prenii;
     options.prefs.gsagnii=options.prefs.gprenii;
     options.prefs.sagnii=options.prefs.prenii;
+    options.prefs.tp_gctnii=options.prefs.gprenii;
 end

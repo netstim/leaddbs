@@ -30,6 +30,7 @@ prefs.sagnii_unnormalized='postop_sag.nii';
 prefs.cornii_unnormalized='postop_cor.nii';
 prefs.rawctnii_unnormalized='postop_ct.nii';
 prefs.ctnii_coregistered='rpostop_ct.nii';
+prefs.tp_ctnii_coregistered=['tp_',prefs.ctnii_coregistered];
 
 prefs.patientdir=patientname;
 prefs.prenii='lanat.nii';
@@ -43,7 +44,7 @@ prefs.gtranii='glpostop_tra.nii';
 prefs.gcornii='glpostop_cor.nii';
 prefs.gsagnii='glpostop_sag.nii';
 prefs.gctnii='glpostop_ct.nii';
-
+prefs.tp_gctnii=['tp_',prefs.gctnii];
 
 
 
