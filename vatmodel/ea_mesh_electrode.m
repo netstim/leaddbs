@@ -16,9 +16,9 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
         
     end
     if max(S.amplitude{side})>4
-        stretchfactor=(max(S.amplitude{side})/3);
+        stretchfactor=0.75; %(max(S.amplitude{side})/10);
     else
-        stretchfactor=1;
+        stretchfactor=0.5;
     end
         
     orig=electrode.tail_position-3*stretchfactor*(electrode.head_position-electrode.tail_position);

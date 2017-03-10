@@ -60,9 +60,9 @@ setappdata(resultfig,'elstruct',elstruct);
 % changed. Larger stim amplitudes need larger bounding boxes so
 % stretchfactor must be incorporated here.
     if max(S.amplitude{side})>4 
-        elstruct.stretchfactor=(max(S.amplitude{side})/3);
+        elstruct.stretchfactor=0.75; %(max(S.amplitude{side})/10);
     else
-        elstruct.stretchfactor=1;
+        elstruct.stretchfactor=0.5;
     end
 
     if ea_headmodel_changed(options,side,elstruct)
@@ -336,8 +336,8 @@ neeg=eeg;
 neeg(~eg)=nan;
 
 
-%neeg(neeg>0)=ea_normal(neeg(neeg>0));
-neeg(neeg>0)=zscore(neeg(neeg>0));
+neeg(neeg>0)=ea_normal(neeg(neeg>0));%
+%neeg(neeg>0)=zscore(neeg(neeg>0));
 
 % normalized e-field (zscored).
 neeg(~isnan(neeg))=neeg(~isnan(neeg))-min(neeg(~isnan(neeg)));
