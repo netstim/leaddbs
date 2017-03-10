@@ -56,9 +56,17 @@ elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 setappdata(resultfig,'elstruct',elstruct);
+% Add stretchfactor to elstruct simply for purpose of checking if headmodel
+% changed. Larger stim amplitudes need larger bounding boxes so
+% stretchfactor must be incorporated here.
+    if max(S.amplitude{side})>4 
+        elstruct.stretchfactor=(max(S.amplitude{side})/3);
+    else
+        elstruct.stretchfactor=1;
+    end
 
     if ea_headmodel_changed(options,side,elstruct)
-        ea_dispt('No suitable headmodel found, rebuilding. This may take a while...');
+        ea_dispt('Headmodel needs to be re-calculated. This may take a while...');
         
         load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
         
@@ -86,14 +94,14 @@ setappdata(resultfig,'elstruct',elstruct);
         
         [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
         success=0;
-        for attempt=1:10
-            %try
+        for attempt=1:3 % allow three attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
+            try
                 [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
                 success=1;
                 break
-            %catch
-            %    Y=Y+randn(4)/1000; % very small jitter on transformation which will be used on electrode.
-            %end
+            catch
+                Y=Y+randn(4)/1000; % very small jitter on transformation which will be used on electrode.
+            end
         end
         if ~success
             ea_error('Lead-DBS could not solve the current estimation.');
@@ -421,7 +429,7 @@ ea_dispt(''); % stop chain of timed processes.
 
 
 function outliers=ea_removeoutliers(pointcloud,dpvx,voltix,constvol)
-
+% using the heuristic Maedler/Coenen model to detect outliers
 vmax=max(abs(voltix));
 
 if ~constvol
@@ -445,7 +453,6 @@ if U %(U>0)
     k1=-1.0473;
     k3=0.2786;
     k4=0.0009856;
-
 
     r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)...
         /...

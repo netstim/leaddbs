@@ -16,7 +16,7 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
         
     end
     if max(S.amplitude{side})>4
-        stretchfactor=(max(S.amplitude{side})/4);
+        stretchfactor=(max(S.amplitude{side})/3);
     else
         stretchfactor=1;
     end
