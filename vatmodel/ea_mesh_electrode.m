@@ -15,8 +15,14 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
         end
         
     end
-    orig=electrode.tail_position-3*(electrode.head_position-electrode.tail_position);
-    etop=electrode.head_position-3*(electrode.tail_position-electrode.head_position);
+    if max(S.amplitude{side})>4
+        stretchfactor=(max(S.amplitude{side})/4);
+    else
+        stretchfactor=1;
+    end
+        
+    orig=electrode.tail_position-3*stretchfactor*(electrode.head_position-electrode.tail_position);
+    etop=electrode.head_position-3*stretchfactor*(electrode.tail_position-electrode.head_position);
     
     nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
     
@@ -24,11 +30,8 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     
     cylz0=-35;     % define the lower end of the bounding cylinder
     cylz1=50;     % define the upper end of the bounding cylinder
-    cylradius=25; % define the radius of the bounding cylinder
-    
-    if max(S.amplitude{side})>4
-    cylradius=round(25*(max(S.amplitude{side})/2));
-    end
+    cylradius=25*stretchfactor; % define the radius of the bounding cylinder
+
     ndiv=50;      % division of circle for the bounding cylinder
     electrodelen=norm(etop-orig); % length of the electrode
     
