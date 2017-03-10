@@ -56,6 +56,9 @@ if svfig
     disp('Exporting 2D slice output...');
 end
 
+if ~isfield(options,'shifthalfup')
+    options.shifthalfup=0;
+end
 
 
 scrsz = get(0,'ScreenSize');
