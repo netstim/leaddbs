@@ -350,12 +350,14 @@ closescrf(handles);
 function closescrf(handles)
 
 options=getappdata(handles.scrf,'options');
+if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') % apply brainshift correction to reconstruction
 % read / write reco to include subcortical refine transform.
 
 options.native=1;
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 options.hybridsave=1;
 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_corrected,options);
+end
 if options.d2.write || options.d3.write
 uiresume(handles.scrf);
 end
