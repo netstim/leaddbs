@@ -80,6 +80,27 @@ end
 ea_ants_nonlinear_subcortical_distal(to,from,[directory,options.prefs.gprenii],weights,metrics,options);
 ea_apply_normalization(options);
 
+%% add methods dump:
+[scit,lcit]=ea_getspacedefcit;
+cits={
+    'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
+    'Schönecker, T., Kupsch, A., Kühn, A. A., Schneider, G.-H., & Hoffmann, K. T. (2009). Automated Optimization of Subcortical Cerebral MR Imaging-Atlas Coregistration for Improved Postoperative Electrode Localization in Deep Brain Stimulation. AJNR Am J Neuroradiol, 30(10), 1914?1921. http://doi.org/10.3174/ajnr.A1741'
+    'Ewert, S., Plettig, P., Chakravarty, M. M., Kuehn, A. A., & Horn, A. (2016). Toward defining deep brain stimulation targets in MNI space: A subcortical atlas based on multimodal MRI, histology and structural connectivity. bioRxiv, 062851. http://doi.org/10.1101/062851'
+    };
+if ~isempty(lcit)
+    cits=[cits;{lcit}];
+end
+
+ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using the'...
+    ' SyN registration approach as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/).',...
+    ' Nonlinear deformation into template space was achieved in six stages: After two linear (rigid followed by affine) steps, ',...
+    ' A nonlinear (whole brain) SyN-registration stage was followed by three nonlinear SyN-registrations that consecutively focused on the area of interest ',...
+    ' as defined by subcortical masks in Schönecker 2008. A final step only focused on the primary DBS areas of interest (subthalamic nucleus, '...
+    ' pallidum and red nucleus) in a region defined by the DISTAL atlas (Ewert 2016) that were smoothed using a 10 x 10 x 10 FWHM Gaussian kernel and ',...
+    ' thresholded at an intensity value of 0.1.'],...
+    cits);
+
+
 function masks=segmentall(from,options)
 directory=[fileparts(from{1}),filesep];
 for fr=1:length(from)
