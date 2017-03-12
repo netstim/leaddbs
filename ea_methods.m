@@ -13,7 +13,7 @@ if ~strcmp(directory(end),filesep) % make sure directory has a / in the end
 end
 
 h=dbstack;
-callingfunction=h(4).name;
+callingfunction=h(2).name;
 expstr='\n\n';
 expstr=[expstr,[datestr(datetime('now')),': ',callingfunction,'\n','--------------------------\n',...
     parsestr]];
