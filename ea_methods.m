@@ -29,7 +29,7 @@ expstr=[expstr,'\n\n***'];
 
 fprintf(expstr);
 
-metfile=fopen([directory,'ea_methods.txt'],'w');
+metfile=fopen([directory,'ea_methods.txt'],'a');
 
 fprintf(metfile,expstr);
 fclose(metfile);
