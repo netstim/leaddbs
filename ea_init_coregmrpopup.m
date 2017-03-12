@@ -12,4 +12,4 @@ end
         'Coreg MRIs: Hybrid SPM & BRAINSFIT',...
         'Do not coregister MRIs (already coregistered)'};
 set(handles.coregmrpopup,'String',cmethods)
-set(handles.coregmrpopup,'Value',4); % default ANTs
+set(handles.coregmrpopup,'Value',1); % default SPM
