@@ -31,7 +31,12 @@ try
     if isempty(msks)
         usemasks=0;
     else
-    usemasks=1;
+        if ~iscell(msks)
+            msks={};
+            usemasks=0;
+        else
+            usemasks=1;
+        end
     end
 catch
     usemasks=0;

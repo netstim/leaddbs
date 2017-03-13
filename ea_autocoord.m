@@ -83,9 +83,9 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         ea_checkcoregallmri(options,0,1); % check and coregister all preoperative MRIs here.
 
         % 2. then coreg post to pre MRI:
-        try % fix me - can we get rid of this try/catch here?
+        %try % fix me - can we get rid of this try/catch here?
             ea_coregmr(options);
-        end
+        %end
 
         % 3. finally perform normalization based on dominant or all preop
         % MRIs:

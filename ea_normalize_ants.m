@@ -76,7 +76,7 @@ if includeatlas % append as last to make criterion converge on this one.
    metrics{cnt}='MI'; % could think about changing this to CC
    cnt=cnt+1;
 end
-keyboard
+
 ea_ants_nonlinear(to,from,[directory,options.prefs.gprenii],weights,metrics,options);
 ea_apply_normalization(options);
 
