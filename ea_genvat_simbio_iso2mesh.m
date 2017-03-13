@@ -513,26 +513,34 @@ if constvol
     dirival = zeros(size(vol.pos,1),1);
     dirival(elec) = val;
 else
-    dirinodes = 1;
+    if unipolar
+        dirinodes = boundarynodes;
+    else
+        dirinodes = 1;
+    end
     dirival = zeros(size(vol.pos,1),1);
 
     rhs = zeros(size(vol.pos,1),1);
 
     if unipolar
-        catnodes = boundarynodes;
-        rhs(elec) = val;
-        rhs(catnodes) = -sum(val)/length(catnodes);
+        elec_center_id = ea_find_elec_center(elec,vol.pos);
+        rhs(elec_center_id) = val(1);
     else
-        rhs(elec) = val;
-        if abs(sum(val > 1e-10))
-            warning('Sum of current is not zero! This leads to an inaccurate simulation!');
-        end
+        warning('Bipolar constant current stimulation currently not implemented!');
     end
 end
 
 [stiff, rhs] = ea_dbs(vol.stiff,rhs,dirinodes,dirival);
 
 potential = ea_sb_solve(stiff,rhs);
+                     
+function center_id = ea_find_elec_center(elec, pos)
+                     
+center = mean(pos(elec,:));
+
+dist_center = sqrt(sum((pos(elec,:)-repmat(center,length(elec),1)).^2,2));
+[dist, elec_id] = min(dist_center);
+center_id = elec(elec_id);
 
 
 function [stiff,rhs] = ea_dbs(stiff,rhs,dirinodes,dirival)
