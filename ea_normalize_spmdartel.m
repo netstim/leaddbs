@@ -174,6 +174,7 @@ cits={
 if ~isempty(lcit)
     cits=[cits;{lcit}];
 end
+[~,anatpresent]=ea_assignpretra(options);
 
 ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using a'...
     ' fast diffeomorphic image registration algorithm (DARTEL) as implemented in SPM12 (Ashburner 2007; www.fil.ion.ucl.ac.uk/spm/software/spm12/).',...
