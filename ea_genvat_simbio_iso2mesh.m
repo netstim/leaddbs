@@ -103,6 +103,7 @@ setappdata(resultfig,'elstruct',elstruct);
                 Y=Y+randn(4)/1000; % very small jitter on transformation which will be used on electrode.
             end
         end
+        
         if ~success
             ea_error('Lead-DBS could not solve the current estimation.');
         end
@@ -211,10 +212,10 @@ for source=S.sources
             %voltix=voltix;
         end
 
-  %       save('data','vol','ix','voltix','unipolar','constvol','wmboundary');
         potential = ea_apply_dbs(vol,ix,voltix,unipolar,constvol,wmboundary); % output in V. 4 indexes insulating material.
-        ea_dispt('Calculating E-Field...');
+           %      save('data','mesh','vol','ix','voltix','unipolar','constvol','wmboundary','potential_3v','potential_3ma');
 
+        ea_dispt('Calculating E-Field...');
         gradient{source} = ea_calc_gradient(vol,potential); % output in V/m.
 
     else % empty source..

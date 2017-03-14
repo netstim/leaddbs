@@ -28,8 +28,8 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     
     bcyltrisize=0.3;       % the maximum triangle size of the bounding cyl
     
-    cylz0=-35;     % define the lower end of the bounding cylinder
-    cylz1=50;     % define the upper end of the bounding cylinder
+    cylz0=-20;     % define the upper end of the bounding cylinder
+    cylz1=20;     % define the lowe end of the bounding cylinder
     cylradius=25*stretchfactor; % define the radius of the bounding cylinder
 
     ndiv=50;      % division of circle for the bounding cylinder
@@ -115,6 +115,8 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     %% merge the electrode mesh with the nucleus mesh
     ISO2MESH_SURFBOOLEAN='cork';   % now intersect the electrode to the nucleus
     [nboth,fboth]=surfboolean(node,face(:,[1 3 2]),'resolve',nobj,fobj);
+
+        
     clear ISO2MESH_SURFBOOLEAN;
     
     if vizz
@@ -138,6 +140,11 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     ISO2MESH_SURFBOOLEAN='cork';
     
     [nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'resolve',nboth,fboth);
+        
+
+%    [nbothbc,fbothbc]=surfboolean(nboth2,fboth2,'and',nbcyl,fbcyl);
+
+    
     clear ISO2MESH_SURFBOOLEAN;
     if vizz
         figure('name','nboth2');
@@ -172,7 +179,7 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     
     %% create tetrahedral mesh of the final combined mesh (seeds are ignored, tetgen 1.5 automatically find regions)
     % - this is the part where we have all 4 element types combined already.
-    [nmesh,emesh,face]=s2m(nboth3,fboth3,1,3);
+    [nmesh,emesh,fmesh]=s2m(nboth3,fboth3,1,3);
     if vizz
         figure('name','Final mesh');
         fvv.faces=face(:,1:3);
@@ -406,16 +413,41 @@ end
         axis equal
     end
     
+    else
+    
+    
     end
 end
 
 
- % now we need to get surface nodes based on nbcyl
-    % first create cylinder surface nodes from nbcyl and fbcyl:
-   
+% now we need to get surface nodes based on nbcyl:
+
+
+
+wmboundary=rangesearch(nmesh,nbcyl,0.1);
+wmboundary=unique(cell2mat(wmboundary'));
+
+if vizz
     
-    ch=convhulln(nmesh);
-    wmboundary=unique(ch(:))';
+    figure,
+    hold on
+    plot3(nmesh(wmboundary,1),nmesh(wmboundary,2),nmesh(wmboundary,3),'r.');
+    plot3(nbcyl(:,1),nbcyl(:,2),nbcyl(:,3),'b.');
+    
+    plot3(nmesh(:,1),nmesh(:,2),nmesh(:,3),'g.')
+
+end
+
+% [nbothbc]=surfboolean(nmesh,fmesh(:,1:3),'second',nbcyl,fbcyl);
+% 
+% 
+% 
+% [~,wmboundary]=ismember(nbothbc,nmesh,'rows');
+% wmboundary(wmboundary==0)=[];
+
+
+
+   
    
 
 
