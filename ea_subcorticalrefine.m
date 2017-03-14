@@ -241,7 +241,7 @@ function ea_compute_scrf(handles)
 options=getappdata(handles.scrf,'options');
 directory=getappdata(handles.scrf,'directory');
 
-options.coregmr.method='Coreg MRIs: ANTs';
+options.coregmr.method='ANTs';
 
 if ~handles.mask0.Value
     if ~exist([directory,'scrf',filesep,'bgmsk.nii'],'file')

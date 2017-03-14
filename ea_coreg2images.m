@@ -26,7 +26,7 @@ else
 end
 
 switch options.coregmr.method
-    case 'Coreg MRIs: SPM' % SPM
+    case 'SPM' % SPM
         commaoneotherfiles=prepforspm(otherfiles);
         
         affinefile = ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat,0);
@@ -38,31 +38,31 @@ switch options.coregmr.method
             movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
         end
         
-    case 'Coreg MRIs: FSL' % FSL
+    case 'FSL' % FSL
         affinefile = ea_flirt(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 'Coreg MRIs: ANTs' % ANTs
+    case 'ANTs' % ANTs
         affinefile = ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles,msks);
-    case 'Coreg MRIs: BRAINSFIT' % BRAINSFit
+    case 'BRAINSFIT' % BRAINSFit
         affinefile = ea_brainsfit(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 'Coreg MRIs: Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
+    case 'Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
         commaoneotherfiles=prepforspm(otherfiles);
         ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat,0)
         affinefile = ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 'Coreg MRIs: Hybrid SPM & FSL' % Hybrid SPM -> FSL
+    case 'Hybrid SPM & FSL' % Hybrid SPM -> FSL
         commaoneotherfiles=prepforspm(otherfiles);
         ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat,0)
         affinefile = ea_flirt(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 'Coreg MRIs: Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
+    case 'Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
         commaoneotherfiles=prepforspm(otherfiles);
         ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat,0)
         affinefile = ea_brainsfit(fixed,...
