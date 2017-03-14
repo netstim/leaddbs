@@ -192,6 +192,9 @@ end
 
 slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
 
+% Initialize MER-Button
+% merbutton=uipushtool(ht,'CData',ea_get_icn('mer',options),'TooltipString','MER Control Figure','ClickedCallback',{@openmerviewer,resultfig,options});
+
 % Initialize Convis-Button
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome',options),'TooltipString','Connectivity Visualization','ClickedCallback',{@openconnectomeviewer,resultfig,options});
 
@@ -337,6 +340,10 @@ stimwin=ea_stimparams(elstruct,gcf,options);
 setappdata(resultfig,'stimwin',stimwin);
 try WinOnTop(stimwin,true); end
 
+function openmerviewer(hobj,ev,resultfig,options)
+merwin=ea_mercontrol(resultfig,options);
+setappdata(resultfig,'merwin',merwin);
+try WinOnTop(merwin,true); end
 
 function opencortexviewer(hobj,ev,resultfig,options)
 showcortex=ea_showcortex(resultfig,options);
@@ -357,6 +364,10 @@ end
 awin=getappdata(gcf,'awin');
 try
     close(awin)
+end
+merwin=getappdata(gcf,'merwin');
+try
+    close(merwin)
 end
 delete(gcf)
 
@@ -436,10 +447,132 @@ end
 function ea_keypress(resultfig,event)
 % this is the main keypress function for the resultfigure. Add event
 % listeners here.
-
 if ismember('alt',event.Modifier)
-    setappdata(resultfig,'altpressed',1);
+%     setappdata(resultfig,'altpressed',1);
 %    disp('Altpressed');
+elseif ismember('shift',event.Modifier)
+%     setappdata(resultfig,'shiftpressed',1);
+end
+
+try
+    merwin = getappdata(resultfig,'merwin');
+    options = getappdata(merwin,'options');
+    %merstruct = getappdata(resultfig,'merstruct');
+    merhandles = getappdata(resultfig,'merhandles');
+    mermarkers = getappdata(resultfig,'mermarkers');
+    keymer = getappdata(resultfig,'keymer');
+catch
+    merwin=[];
+end
+if ~isempty(merwin) && isvalid(merwin)
+    commnd=event.Key; % event.Character;
+    sphere = load([options.earoot,'helpers',filesep,'sphere.mat']);
+    n = length(mermarkers);
+    sSize = 0.5;
+    % CData = parula; CData = repmat(CData(1:length(sphere.x),:),[1 size(sphere.x,2)/3]);
+    % colormap = repmat([1 1 0],[size(sphere.x,1) size(sphere.x,2)/3]);
+    % tmp = parula;
+    % colormap = repmat(tmp(end:-2:1,:),[4 1]); clear tmp
+    %colormap = [1 1 0; 0 0 1];
+    
+    if isempty(keymer)
+        return
+    else
+        trajectory = [get(merhandles.(keymer(4:end)),'XData')',get(merhandles.(keymer(4:end)),'YData')',get(merhandles.(keymer(4:end)),'ZData')'];
+        if n>0 && isequal(trajectory(1,:),mermarkers(n).coords_mm) && ~strcmp(event.Key,'s') && ~strcmp(event.Key,'n')
+            fprintf('Location along %s %s tract already marked: [%f,%f,%f].\n',keymer(strfind(keymer,'_')+1:end),keymer(4:strfind(keymer,'_')-1),trajectory(1,:))
+            return
+        end
+    end   
+    
+    if sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
+        sphere.x = sphere.x*sSize+trajectory(1,1);
+        sphere.y = sphere.y*sSize+trajectory(1,2);
+        sphere.z = sphere.z*sSize+trajectory(1,3);
+        mermarkers(n+1).side = keymer(regexp(keymer,'_')+1:end);
+        mermarkers(n+1).tract = keymer(4:regexp(keymer,'_')-1);
+        mermarkers(n+1).depth = str2double(getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['pos' keymer(4:end)]),'String'));
+        mermarkers(n+1).coords_mm = trajectory(1,:);
+        mermarkers(n+1).dat.implantedtract = getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtract' keymer(regexp(keymer,'_'):end)]),'String');
+        mermarkers(n+1).dat.implantedtract = mermarkers(n+1).dat.implantedtract{getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtract' keymer(regexp(keymer,'_'):end)]),'Value')};
+        mermarkers(n+1).dat.leaddepth = str2double(getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['editimplanteddepth' keymer(regexp(keymer,'_'):end)]),'String'));
+        mermarkers(n+1).dat.offset = event.Key;
+        mermarkers(n+1).dat.key = event.Key;
+        mermarkers(n+1).tag.depth = getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['pos' keymer(4:end)]),'String');
+        mermarkers(n+1).tag.visible = options.prefs.mer.tag.visible;
+        [mermarkers(n+1).tag.handle,mermarkers(n+1).tag.string] = ea_setmertag(mermarkers(n+1).tag,keymer,trajectory(1,:));
+
+        % 'm' = MER; 'l' = LFP; 't' = Top; 'b' = Bottom
+        switch lower(commnd)
+            case 'space'
+                mermarkers(n+1).notes
+                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                    'FaceColor',[0.5 0.5 0],'EdgeColor','none',...
+                    'FaceAlpha',0.7,'tag','Generic');
+                mermarkers(n+1).markertype = 'Generic';
+            case 'm'
+                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                    'FaceColor',[0.5 0 0],'EdgeColor','none',...
+                    'FaceAlpha',0.7,'tag','MER');
+                mermarkers(n+1).markertype = 'MER recording';
+                mermarkers(n+1).session = char(inputdlg('Enter Session'));
+            case 'l'
+                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                    'FaceColor',[0 0.5 0],'EdgeColor','none',...
+                    'FaceAlpha',0.7,'tag','LFP');
+                mermarkers(n+1).markertype = 'LFP recording';
+                mermarkers(n+1).session = char(inputdlg('Enter Session'));
+            case 't'
+                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                    'FaceColor',[0 0 0.5],'EdgeColor','none',...
+                    'FaceAlpha',0.7,'tag','Top');
+                mermarkers(n+1).markertype = 'Top border';
+            case 'b'
+                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                    'FaceColor',[0 0 0.5],'EdgeColor','none',...
+                    'FaceAlpha',0.7,'tag','Bottom');
+                mermarkers(n+1).markertype = 'Bottom border';
+            case 's'
+                mermarkers(n).session = char(inputdlg('Enter Session'));
+            case 'n'
+                mermarkers(n).notes = char(inputdlg('Enter Notes'));
+        end
+
+        setappdata(resultfig,'mermarkers',mermarkers);
+        ea_updatemercontrol(keymer,getappdata(merwin,'UsedByGUIData_m'),mermarkers,resultfig,options)
+   
+    else
+        switch commnd
+            case {'uparrow','leftarrow'}
+            if isempty(keymer); return
+            else
+              trajectory = [getfield(getappdata(resultfig,['mer' keymer(4:end)]),'XData')',getfield(getappdata(resultfig,['mer' keymer(4:end)]),'YData')',getfield(getappdata(resultfig,['mer' keymer(4:end)]),'ZData')'];            
+            end
+            if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
+                d=0.25; % step size
+            elseif ismember(event.Modifier,'shift')
+                d=0.75;    % large step
+            elseif ismember(event.Modifier,'alt')
+                d=0.05;    % small step size
+            end
+            newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
+            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,['mer' keymer(4:end)])
+        case {'downarrow','rightarrow'}
+            if isempty(keymer); return
+            else
+              trajectory = [getfield(getappdata(resultfig,['mer' keymer(4:end)]),'XData')',getfield(getappdata(resultfig,['mer' keymer(4:end)]),'YData')',getfield(getappdata(resultfig,['mer' keymer(4:end)]),'ZData')'];            
+            end
+            if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
+                d=-0.25; % movement distance
+            elseif ismember(event.Modifier,'shift')
+                d=-0.75; % large step
+            elseif ismember(event.Modifier,'alt')
+                d=-0.05;
+            end
+            newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
+            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,['mer' keymer(4:end)])
+        end
+    end
 end
 % commnd=event.Character;
 % switch lower(commnd)
@@ -798,3 +931,67 @@ h=zoom;
 h.Enable=cmd;
 h.Motion='both';
 h.Direction='out';
+
+function [handle,string] = ea_setmertag(tag,keymer,trajectory)
+% tag.string; tag.visible; tag.color;
+d = 3.2;
+pos = [trajectory(1,1)/abs(trajectory(1,1))*d+trajectory(1,1),trajectory(1,2:3)];
+% string = sprintf('%s%s Depth: %smm',upper(keymer(4)),keymer(5:strfind(keymer,'_')-1),tag.depth);
+string = sprintf('%s%s: %smm',upper(keymer(4)),keymer(5:strfind(keymer,'_')-1),tag.depth);
+handle = text(pos(1),pos(2),pos(3),string,'Color','w','HorizontalAlignment','center','Visible',tag.visible);
+
+
+function ea_updatemercontrol(keymer,handles,mermarkers,resultfig,options)
+n=length(mermarkers);
+markerstring.right = get(handles.popupmermarkers_right,'String');
+markerstring.left = get(handles.popupmermarkers_left,'String');
+
+if isempty(markerstring.right)
+    markerstring.right = {'none selected...'};
+end
+
+if isempty(markerstring.left)
+    markerstring.left = {'none selected...'};
+end
+
+if strcmp(keymer(strfind(keymer,'_')+1:end),'right')
+    % side = 1;
+    markerstring.right{end+1} = sprintf('%0.0f. %s',n,mermarkers(n).tag.string);
+elseif strcmp(keymer(strfind(keymer,'_')+1:end),'left')
+    % side = 2;
+    markerstring.left{end+1} = sprintf('%0.0f. %s',n,mermarkers(n).tag.string);
+end
+
+setappdata(resultfig,'markerstring',markerstring)
+set(handles.popupmermarkers_right,'Visible','off','String',markerstring.right,'Value',1)
+set(handles.popupmermarkers_left,'Visible','off','String',markerstring.left,'Value',1)
+% set(handles.togglemarkertags,'Visible','on','Value',1)
+
+function outputtrajectory = ea_getmertrajectory(trajectory,dist,length,n)
+if size(trajectory,1)<2
+    error('Must input a vector')
+end
+dxyz = sqrt((diff(trajectory(1:2,1))^2)+(diff(trajectory(1:2,2))^2)+diff(trajectory(1:2,3))^2);
+slope = mean(diff(trajectory))/dxyz;
+startpoint = trajectory(1,:)+slope.*dist;
+
+outputtrajectory(:,1) = linspace(startpoint(1,1),startpoint(1,1)+slope(1)*length,n);
+outputtrajectory(:,2) = linspace(startpoint(1,2),startpoint(1,2)+slope(2)*length,n);
+outputtrajectory(:,3) = linspace(startpoint(1,3),startpoint(1,3)+slope(3)*length,n);
+
+
+function ea_updatemertrajectory(handles,trajectory,dist,tag) 
+resultfig=getappdata(handles.mercontrolfig,'resultfig');
+% Update position in resultfig
+% XData = get(getappdata(resultfig,tag),'XData');
+% YData = get(getappdata(resultfig,tag),'YData');
+% ZData = get(getappdata(resultfig,tag),'ZData');
+h = getappdata(resultfig,tag);
+set(h,'XData',trajectory(:,1)')
+set(h,'YData',trajectory(:,2)')
+set(h,'ZData',trajectory(:,3)')
+setappdata(resultfig,tag,h)
+set(handles.(['key' tag(4:end)]),'Value',1)
+setappdata(resultfig,'keymer',['key' tag(4:end)])
+newdiststr = num2str(str2double(get(handles.(['pos' tag(4:end)]),'String'))+dist);
+set(handles.(['pos' tag(4:end)]),'String',newdiststr)
