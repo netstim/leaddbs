@@ -47,6 +47,12 @@ catch
     options=struct;
 end
 
+try 
+    interp=varargin{8};
+catch
+    interp='Linear';
+end
+
 
 outputbase = ea_niifileparts(outputimage);
 volumedir = [fileparts(outputbase), filesep];
@@ -75,7 +81,7 @@ if any(imgsize>256)
     rigidsoomthingssigmas='4x3x2x1vox';
 
     affineconvergence='[1000x500x250x0,1e-6,10]';
-    affineshrinkfactors='12x8x4x2';
+    affineshrinkfactors='8x4x2x1';
     affinesoomthingssigmas='4x3x2x1vox';
 else
     rigidconvergence='[1000x500x250x0,1e-6,10]';
@@ -197,7 +203,7 @@ ea_libs_helper;
 antscmd = [ANTS, ' --verbose 1' ...
     ' --dimensionality 3 --float 1' ...
     ' --output [',ea_path_helper(outputbase), ',', ea_path_helper(outputimage), ']' ...
-    ' --interpolation Linear' ...
+    ' --interpolation ',interp ...
     ' --use-histogram-matching 1' ...
     ' --winsorize-image-intensities [0.005,0.995]', ...
     rigidstage, affinestage,mask1stage,mask2stage];

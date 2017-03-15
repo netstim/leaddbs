@@ -77,7 +77,7 @@ if all(dist)
         if strcmp(prefix,'w')
             [pth,fname,ext]=fileparts(filename);
             
-            movefile(fullfile(pth,[filesep,'w',fname,ext]),fullfile(pth,[filesep,fname,ext]));
+            movefile(fullfile(pth,['w',fname,ext]),fullfile(pth,[fname,ext]));
             
         end
     end

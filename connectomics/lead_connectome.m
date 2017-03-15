@@ -158,7 +158,7 @@ set(handles.runsavebutn,'String','Save and close');
 set(handles.exportcode,'visible','off');
 
 set(handles.openpatientdir,'visible','off');
-moveup=136;
+moveup=165;
 
 pos=get(handles.logoaxes,'Position');
 pos(2)=pos(2)-moveup;
