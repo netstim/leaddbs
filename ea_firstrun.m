@@ -56,7 +56,7 @@ if ~isfield(options.prefs,'firstrun') % first run.
 
     copyfile([ea_getearoot,'ea_prefs_default.m'],[ea_gethome,'.ea_prefs.m']);
     fid = fopen([ea_gethome,'.ea_prefs.m'],'a');
-    fwrite(fid,sprintf(['prefs.firstrun=','''','off','''','; \n']));
+    fprintf(fid, '\n\nprefs.firstrun=''off'';\n');
     fclose(fid);
 
 end
