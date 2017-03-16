@@ -18,7 +18,7 @@ function varargout=ea_normalize_ants_subcorticalfocus(options,includeatlas)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Advanced Normalization Tools (ANTs) SyN - subcortical refine (Avants 2008)';
+    varargout{1}='Advanced Normalization Tools (ANTs) SyN - subcortical refine (Avants 2008)';
     varargout{2}=1;
     return
 end
@@ -62,7 +62,7 @@ anatpresent=flip(anatpresent); % reverse order since most important transform sh
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 for anatf=1:length(anatpresent)
     disp(['Including ',anatpresent{anatf},' data for (grey-matter) normalization']);
-    
+
     to{cnt}=[ea_space(options),ea_det_to(anatpresent{anatf},spacedef),'.nii'];
         if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
         ea_maskimg(options,[directory,anatpresent{anatf}],bprfx);
