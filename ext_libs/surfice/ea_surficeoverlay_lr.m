@@ -45,15 +45,7 @@ end
 
  sidest={'r','l'};
 
-basedir=[ea_getearoot,'ext_libs',filesep,'surfice',filesep];
-if ismac
-    surfice = [basedir,'mac',filesep, 'surfice.app',filesep,'Contents',filesep,'MacOS',filesep,'surfice'];
-elseif isunix
-    ea_libs_helper([basedir, 'linux']);
-    surfice = [basedir, 'linux',filesep,'surfice'];
-elseif ispc
-    surfice = [basedir, 'win',filesep,'surfice.exe'];
-end
+
 
 % get thresholds
 if autothresh
@@ -93,8 +85,9 @@ for side=sides
     script=[script,...
         ' QUIT',...
         ' END.'];
-    cmd=[surfice,' -S "',script,'"'];
-    system(cmd);
+    
+   
+    ea_surfice(script);
     % crop files
     for fi=1:length(fis)
         [im,~,transp]=imread(expfn_medial{fi});

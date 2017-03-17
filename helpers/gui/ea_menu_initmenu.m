@@ -21,8 +21,8 @@ if isempty(menuprobe)
 
     if ismember('surfice',cmd)
        si=uimenu(f,'Label','Surfice'); 
-        uimenu(si,'Label','Visualize DBS-scene in Surfice (template space)','Callback',{@ea_elvis_surfice,handles,'template'});
-        uimenu(si,'Label','Visualize DBS-scene in Surfice (native space)','Callback',{@ea_elvis_surfice,handles,'native'});
+        uimenu(si,'Label','Visualize DBS-scene in Surfice (template space)','Callback',{@ea_elvis_surfice,handles,0});
+        %uimenu(si,'Label','Visualize DBS-scene in Surfice (native space)','Callback',{@ea_elvis_surfice,handles,1});
         sini=uimenu(si,'Label','Export heatmaps from nifti file(s)');
         siaco=uimenu(sini,'Label','Auto Window');
         uimenu(siaco,'Label','Right hemisphere views','Callback',{@ea_surfice_heatmap_menu,handles,1,0});

@@ -8,7 +8,9 @@ end
 
 
 for pt=1:length(uipatdir)
+    if ~exist([uipatdir{pt},filesep,'export'],'dir')
     mkdir([uipatdir{pt},filesep,'export']);
+    end
     switch exptype
         case 'PDF'
             mkdir([uipatdir{pt},filesep,'export',filesep,'pdf']);

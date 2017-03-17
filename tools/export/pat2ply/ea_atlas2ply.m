@@ -25,4 +25,5 @@ cfv=ea_concatfv(cfv);
 
 
 cfv=ea_mapcolvert2ind(cfv);
+cfv.faces=[cfv.faces(:,2),cfv.faces(:,1),cfv.faces(:,3)];
 ea_patch2ply(ofn,cfv.vertices',cfv.faces',cfv.facevertexcdata');

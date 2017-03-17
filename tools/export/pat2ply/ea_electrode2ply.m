@@ -32,6 +32,7 @@ elrend=el_render.el_render;
     end
     fv=ea_concatfv(fv);
     fv=ea_mapcolvert2ind(fv);
+fv.faces=[fv.faces(:,2),fv.faces(:,1),fv.faces(:,3)];
 
 ea_patch2ply([directory,'export',filesep,'ply',filesep,sidec,'electrode.ply'],fv.vertices',fv.faces',fv.facevertexcdata');
 
