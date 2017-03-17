@@ -21,13 +21,17 @@ if isempty(menuprobe)
 
     if ismember('surfice',cmd)
        si=uimenu(f,'Label','Surfice'); 
-        uimenu(si,'Label','Visualize DBS-scene in Surfice (template space)',{@ea_elvis_surfice,handles,'template'});
-        uimenu(si,'Label','Visualize DBS-scene in Surfice (native space)',{@ea_elvis_surfice,handles,'native'});
+        uimenu(si,'Label','Visualize DBS-scene in Surfice (template space)','Callback',{@ea_elvis_surfice,handles,'template'});
+        uimenu(si,'Label','Visualize DBS-scene in Surfice (native space)','Callback',{@ea_elvis_surfice,handles,'native'});
         sini=uimenu(si,'Label','Export heatmaps from nifti file(s)');
-        uimenu(sini,'Label','Right hemisphere views',{@ea_surfice_heatmap_menu,handles,1});
-        uimenu(sini,'Label','Left hemisphere views',{@ea_surfice_heatmap_menu,handles,2});
-        uimenu(sini,'Label','Bilateral views',{@ea_surfice_heatmap_menu,handles,[1,2]});
-        
+        siaco=uimenu(sini,'Label','Auto Window');
+        uimenu(siaco,'Label','Right hemisphere views','Callback',{@ea_surfice_heatmap_menu,handles,1,0});
+        uimenu(siaco,'Label','Left hemisphere views','Callback',{@ea_surfice_heatmap_menu,handles,2,0});
+        uimenu(siaco,'Label','Bilateral views','Callback',{@ea_surfice_heatmap_menu,handles,[1,2],0});
+        simco=uimenu(sini,'Label','Manual Window');
+        uimenu(simco,'Label','Right hemisphere views','Callback',{@ea_surfice_heatmap_menu,handles,1,1});
+        uimenu(simco,'Label','Left hemisphere views','Callback',{@ea_surfice_heatmap_menu,handles,2,1});
+        uimenu(simco,'Label','Bilateral views','Callback',{@ea_surfice_heatmap_menu,handles,[1,2],1});
     end
     
     if ismember('export',cmd)

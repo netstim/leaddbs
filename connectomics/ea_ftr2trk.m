@@ -1,4 +1,4 @@
-function ea_ftr2trk(ftrfilename,directory,specs,options)
+function ea_ftr2trk(ftrfilename,directory,specs)
 % export FTR matrix to TrackVis trk format
 
 if ischar(ftrfilename)

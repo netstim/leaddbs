@@ -27,11 +27,16 @@ if ~exist('sides','var')
     sides=1:2;
 end
 
-pth=fileparts(heatmap);
-hms=dir(heatmap);
-for hm=1:length(hms)
-   fis{hm}=fullfile(pth,hms(hm).name); 
+if ~iscell(heatmap)
+    pth=fileparts(heatmap);
+    hms=dir(heatmap);
+    for hm=1:length(hms)
+        fis{hm}=fullfile(pth,hms(hm).name);
+    end
+else % already supplied via menu
+    fis=heatmap;
 end
+
 if ~autothresh
     if ~(size(threshs,1)==size(fis,1))
         threshs=repmat(threshs,size(fis,1),1);
@@ -52,25 +57,7 @@ end
 
 % get thresholds
 if autothresh
-    for fi=1:length(fis)
-        
-        
-        
-        nii=ea_load_nii(fis{fi});
-        nii.img(nii.img==0)=nan;
-        thisstd=ea_nanstd(nii.img(:));
-        if min(nii.img(:))<0 % has negative values, calculate 4 vals
-            threshs(fi,1)=thisstd;
-            threshs(fi,2)=1.7*thisstd;
-            threshs(fi,3)=-thisstd;
-            threshs(fi,4)=-1.7*thisstd;
-        else % only positive vals
-            threshs(fi,1)=thisstd;
-            threshs(fi,2)=1.7*thisstd;
-        end
-        
-        
-    end
+threshs=ea_sfc_getautothresh(fis);
 end
 for side=sides
 
@@ -82,14 +69,14 @@ for side=sides
         ' RESETDEFAULTS;'];
     for fi=1:length(fis)
             [pth,fn]=fileparts(fis{fi});
-    expfn_medial=fullfile(pth,[fn,'_',sidest{side},'_med.png']);
-    expfn_lateral=fullfile(pth,[fn,'_',sidest{side},'_lat.png']);
+    expfn_medial{fi}=fullfile(pth,[fn,'_',sidest{side},'_med.png']);
+    expfn_lateral{fi}=fullfile(pth,[fn,'_',sidest{side},'_lat.png']);
         script=[script,...
             ' MESHLOAD(''',mesh,''');',...
             ' OVERLAYLOAD(''',fis{fi},''');',...
             ' OVERLAYCOLORNAME(1, ''Red-Yellow'');',...
             ' OVERLAYMINMAX(1,',num2str(threshs(fi,1)),',',num2str(threshs(fi,2)),');']; 
-        if size(threshs,2)>2
+        if ~isnan(thresh(fi,3)) % has a negative threshold as well
             script=[script,...
                 ' OVERLAYLOAD(''',fis{fi},''');',...
                 ' OVERLAYCOLORNAME(2, ''Blue-Green'');',...
@@ -98,24 +85,26 @@ for side=sides
         script=[script,...
             ' COLORBARVISIBLE(',colorbar,');',...
             ' AZIMUTHELEVATION(',num2str(90+(180*side-1)),', 0);',...
-            ' SAVEBMP(''',expfn_medial,''');',...
+            ' SAVEBMP(''',expfn_medial{fi},''');',...
             ' AZIMUTHELEVATION(',num2str(270+(180*side-1)),', 0);',...
-            ' SAVEBMP(''',expfn_lateral,''');'];
+            ' SAVEBMP(''',expfn_lateral{fi},''');',...
+            ' OVERLAYCLOSEALL;'];
     end
     script=[script,...
         ' QUIT',...
         ' END.'];
     cmd=[surfice,' -S "',script,'"'];
     system(cmd);
-    
-    [im,map,transp]=imread(expfn_medial);
-    [im,transp]=crop_img(im,transp);
-    imwrite(im,expfn_medial,'Alpha',transp);
-    
-        [im,map,transp]=imread(expfn_lateral);
-    [im,transp]=crop_img(im,transp);
-    imwrite(im,expfn_lateral,'Alpha',transp);
-    
+    % crop files
+    for fi=1:length(fis)
+        [im,~,transp]=imread(expfn_medial{fi});
+        [im,transp]=crop_img(im,transp);
+        imwrite(im,expfn_medial{fi},'Alpha',transp);
+        
+        [im,~,transp]=imread(expfn_lateral{fi});
+        [im,transp]=crop_img(im,transp);
+        imwrite(im,expfn_lateral{fi},'Alpha',transp);
+    end
 end
 
 
