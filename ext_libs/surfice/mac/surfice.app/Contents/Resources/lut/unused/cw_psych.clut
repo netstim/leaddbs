@@ -1,0 +1,19 @@
+#Connectome Workbench: used with permission
+# https://github.com/Washington-University/workbench/tree/master/src/Palette
+[FLT]
+min=0
+max=0
+[INT]
+numnodes=5
+[BYT]
+nodeintensity0=0
+nodeintensity1=64
+nodeintensity2=128
+nodeintensity3=192
+nodeintensity4=255
+[RGBA255]
+nodergba0=0|68|255|55
+nodergba1=255|68|0|73
+nodergba2=255|105|0|91
+nodergba3=255|204|0|109
+nodergba4=238|238|85|128
