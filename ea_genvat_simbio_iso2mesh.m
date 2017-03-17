@@ -104,6 +104,40 @@ setappdata(resultfig,'elstruct',elstruct);
             end
         end
         
+        % replace wmboundary:
+        tess = mesh.tet(:,1:4);
+        tess = sort(tess,2);
+        
+        % all faces
+        faces=[tess(:,[1 2 3]);tess(:,[1 2 4]); ...
+            tess(:,[1 3 4]);tess(:,[2 3 4])];
+        
+        % find replicate faces
+        faces = sortrows(faces);
+        k = find(all(diff(faces)==0,2));
+        
+        % delete the internal (shared) faces
+        faces([k;k+1],:) = [];
+        
+        wmboundary = unique(faces(:))';
+        % end replace.
+
+        
+        
+        if vizz
+            figure
+            hold on
+            plot3(mesh.pnt(wmboundary,1),mesh.pnt(wmboundary,2),mesh.pnt(wmboundary,3),'r*');
+            plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'b.');
+        end
+        
+        
+        
+        
+        
+        
+        
+        
         if ~success
             ea_error('Lead-DBS could not solve the current estimation.');
         end
@@ -213,7 +247,15 @@ for source=S.sources
         end
 
         potential = ea_apply_dbs(vol,ix,voltix,unipolar,constvol,wmboundary); % output in V. 4 indexes insulating material.
-           %      save('data','mesh','vol','ix','voltix','unipolar','constvol','wmboundary','potential_3v','potential_3ma');
+           %      save('results','mesh','vol','ix','voltix','unipolar','constvol','wmboundary','potential3v','potential3ma','gradient3v','gradient3ma');
+
+if vizz
+figure
+hold on
+plot3(mesh.pnt(wmboundary,1),mesh.pnt(wmboundary,2),mesh.pnt(wmboundary,3),'r*');
+plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'b.');
+
+end
 
         ea_dispt('Calculating E-Field...');
         gradient{source} = ea_calc_gradient(vol,potential); % output in V/m.

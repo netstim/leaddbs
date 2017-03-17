@@ -28,8 +28,8 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     
     bcyltrisize=0.3;       % the maximum triangle size of the bounding cyl
     
-    cylz0=-20;     % define the upper end of the bounding cylinder
-    cylz1=20;     % define the lowe end of the bounding cylinder
+    cylz0=-30;     % define the upper end of the bounding cylinder
+    cylz1=30;     % define the lowe end of the bounding cylinder
     cylradius=25*stretchfactor; % define the radius of the bounding cylinder
 
     ndiv=50;      % division of circle for the bounding cylinder

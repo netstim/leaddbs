@@ -12,11 +12,24 @@ if isempty(menuprobe)
         uimenu(f,'Label','Convert ACPC/MNI coordinates (Horn 2017)','Callback',{@ea_acpcquery,handles.leadfigure});
     end
     
+    
+    
     if ismember('dbs',cmd)
         dbs=uimenu(f,'Label','DBS');
         uimenu(dbs,'Label','Recalculate DBS reconstruction in template space','Callback',{@ea_recalc_reco,handles});
     end
 
+    if ismember('surfice',cmd)
+       si=uimenu(f,'Label','Surfice'); 
+        uimenu(si,'Label','Visualize DBS-scene in Surfice (template space)',{@ea_elvis_surfice,handles,'template'});
+        uimenu(si,'Label','Visualize DBS-scene in Surfice (native space)',{@ea_elvis_surfice,handles,'native'});
+        sini=uimenu(si,'Label','Export heatmaps from nifti file(s)');
+        uimenu(sini,'Label','Right hemisphere views',{@ea_surfice_heatmap_menu,handles,1});
+        uimenu(sini,'Label','Left hemisphere views',{@ea_surfice_heatmap_menu,handles,2});
+        uimenu(sini,'Label','Bilateral views',{@ea_surfice_heatmap_menu,handles,[1,2]});
+        
+    end
+    
     if ismember('export',cmd)
         e = uimenu(f,'Label','Export');
         uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles});

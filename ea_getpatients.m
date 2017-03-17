@@ -19,12 +19,12 @@ end
 
 if exist('handles','var')
     ea_load_pts(handles,uipatdir);
-end
-
-
-if isfield(handles,'atlassetpopup') % not present in connectome mapper
-atlasset=get(handles.atlassetpopup,'String');
-atlasset=atlasset{get(handles.atlassetpopup,'Value')};
-
-ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+    
+    
+    if isfield(handles,'atlassetpopup') % not present in connectome mapper
+        atlasset=get(handles.atlassetpopup,'String');
+        atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+        
+        ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+    end
 end

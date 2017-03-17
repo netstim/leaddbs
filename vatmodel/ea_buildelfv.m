@@ -1,6 +1,8 @@
 function [elfv,tissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side)
 
+
 load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
+
     A=[electrode.head_position,1;
         electrode.tail_position,1
         electrode.x_position,1
