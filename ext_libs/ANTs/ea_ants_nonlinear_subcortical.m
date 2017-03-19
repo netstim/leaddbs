@@ -72,27 +72,22 @@ end
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
-if any(imgsize>256)
-    rigidconvergence='[100x50x25x0x0,1e-6,10]';
-    rigidshrinkfactors='12x8x4x2x1';
-    rigidsmoothingssigmas='4x3x2x1x0vox';
 
-    affineconvergence='[100x50x25x0x0,1e-6,10]';
-    affineshrinkfactors='12x8x4x2x1';
-    affinesmoothingssigmas='4x3x2x1x0vox';
-else
-    rigidconvergence='[100x50x25x0x0,1e-6,10]';
-    rigidshrinkfactors='8x4x2x1x1';
-    rigidsmoothingssigmas='3x2x1x0x0vox';
+rigidconvergence='[50x25x12x0,1e-6,10]';
+rigidshrinkfactors='12x8x4x2';
+rigidsmoothingssigmas='4x3x2x1vox';
 
-    affineconvergence='[100x50x25x0x0,1e-6,10]';
-    affineshrinkfactors='8x4x2x1x1';
-    affinesmoothingssigmas='3x2x1x0x0vox';
-end
+affineconvergence='[50x25x12x0,1e-6,10]';
+affineshrinkfactors='12x8x4x2';
+affinesmoothingssigmas='4x3x2x1vox';
 
-synconvergence='[100x50x25x0x0,1e-6,10]';
-synshrinkfactors='8x4x2x1x1';
-synsmoothingssigmas='3x2x1x0x0vox';
+synconvergence='[25x12x0,1e-6,10]';
+synshrinkfactors='8x4x2';
+synsmoothingssigmas='2x1x0vox';
+
+synmaskconvergence='[7x0,1e-6,10]';
+synmaskshrinkfactors='2x1';
+synmasksmoothingssigmas='2x0vox';
 
 
 rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1}, ',1]' ...
@@ -107,7 +102,7 @@ for fi=1:length(fixedimage)
         case 'MI'
             suffx=',32,Regular,0.25';
         case 'CC'
-            suffx=',4,Regular,1';
+            suffx=',4,Regular,0.25';
         case 'GC'
             suffx=',15,Random,0.05';
     end
@@ -131,7 +126,7 @@ for fi=1:length(fixedimage)
         case 'MI'
             suffx=',32,Regular,0.25';
         case 'CC'
-            suffx=',15,Random,0.05';
+            suffx=',4,Regular,0.25';
         case 'GC'
             suffx=',15,Random,0.05';
 	end
@@ -146,15 +141,15 @@ synstage = [' --transform SyN[0.3]'...
     ' --masks [NULL,NULL]'];
 
 synmask2stage = [' --transform SyN[0.3]'...
-    ' --convergence ', synconvergence, ...
-    ' --shrink-factors ', synshrinkfactors ...
-    ' --smoothing-sigmas ', synsmoothingssigmas, ...
+    ' --convergence ', synmaskconvergence, ...
+    ' --shrink-factors ', synmaskshrinkfactors ...
+    ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
     ' --masks [',ea_space([],'subcortical'),'secondstepmask.nii',',NULL]'];
 synmask3stage = [' --transform SyN[0.3]'...
     ' --convergence ', synconvergence, ...
     ' --shrink-factors ', synshrinkfactors ...
     ' --smoothing-sigmas ', synsmoothingssigmas, ...
-    ' --masks [',ea_space([],'subcortical'),'thirdstepmask.nii',',NULL]'];
+    ' --masks [',ea_space([],'subcortical'),'thirdstepmask.nii',',',ea_space([],'subcortical'),'thirdstepmask.nii',']'];
 synmask3stage='';
         
 for fi=1:length(fixedimage)
@@ -162,16 +157,16 @@ for fi=1:length(fixedimage)
         case 'MI'
             suffx=',32,Regular,0.25';
         case 'CC'
-            suffx=',15,Random,0.05';
+            suffx=',4,Regular,0.25';
         case 'GC'
             suffx=',15,Random,0.05';
     end
     synstage=[synstage,...
         ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
     synmask2stage=[synmask2stage,...
-        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),',32,Regular,1',']'];
+        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),',4,Regular,0.25',']'];
     synmask3stage=[synmask3stage,...
-        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),',32,Regular,1',']'];
+        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),',4,Regular,0.25',']'];
     synmask3stage='';
 
 end
@@ -183,7 +178,6 @@ cmd = [ANTS, ' --verbose 1' ...
              ' --output [',ea_path_helper(outputbase), ',', outputimage, ']' ...
              ' --interpolation Linear' ...
              ' --use-histogram-matching 1' ...
-             ' --winsorize-image-intensities [0.15,0.85]', ...
              ' --write-composite-transform 1', ...
              rigidstage, affinestage, synstage, synmask2stage, synmask3stage];
 

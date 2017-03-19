@@ -3,7 +3,7 @@ if ~exist('patsub','var')
     patsub='patients';
 end
 earoot=ea_getearoot;
-load([earoot,'ea_recentpatients.mat']);
+load([earoot,'common',filesep,'ea_recentpatients.mat']);
 for i=1:length(fullrpts)
     [~,fullrpts{i}]=fileparts(fullrpts{i});
 end

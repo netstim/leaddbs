@@ -80,26 +80,26 @@ imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 if any(imgsize>256)
     rigidconvergence='[1000x500x250x0,1e-6,10]';
     rigidshrinkfactors='12x8x4x2';
-    rigidsoomthingssigmas='4x3x2x1vox';
+    rigidsmoothingssigmas='4x3x2x1vox';
 
     affineconvergence='[1000x500x250x0,1e-6,10]';
     affineshrinkfactors='8x4x2x1';
-    affinesoomthingssigmas='4x3x2x1vox';
+    affinesmoothingssigmas='4x3x2x1vox';
 else
     rigidconvergence='[1000x500x250x0,1e-6,10]';
     rigidshrinkfactors='8x4x2x1';
-    rigidsoomthingssigmas='3x2x1x0vox';
+    rigidsmoothingssigmas='3x2x1x0vox';
 
     affineconvergence='[1000x500x250x0,1e-6,10]';
     affineshrinkfactors='8x4x2x1';
-    affinesoomthingssigmas='3x2x1x0vox';
+    affinesmoothingssigmas='3x2x1x0vox';
 end
 
 rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1}, ',1]' ...
               ' --transform Rigid[0.1]' ...
               ' --convergence ', rigidconvergence, ...
               ' --shrink-factors ', rigidshrinkfactors, ...
-              ' --smoothing-sigmas ', rigidsoomthingssigmas];
+              ' --smoothing-sigmas ', rigidsmoothingssigmas];
 
 for fi=1:length(fixedimage)
     switch metrics{fi}
@@ -122,7 +122,7 @@ end
 affinestage = [' --transform Affine[0.1]'...
                ' --convergence ', affineconvergence, ...
                ' --shrink-factors ', affineshrinkfactors ...
-               ' --smoothing-sigmas ', affinesoomthingssigmas];
+               ' --smoothing-sigmas ', affinesmoothingssigmas];
 
 for fi=1:length(fixedimage)
 	switch metrics{fi}
@@ -140,7 +140,7 @@ end
 synstage = [' --transform SyN[0.3]'...
             ' --convergence ', affineconvergence, ...
             ' --shrink-factors ', affineshrinkfactors ...
-            ' --smoothing-sigmas ', affinesoomthingssigmas];
+            ' --smoothing-sigmas ', affinesmoothingssigmas];
 
 for fi=1:length(fixedimage)
     switch metrics{fi}

@@ -3,7 +3,7 @@ earoot=ea_getearoot;
 if ~exist('patsub','var')
     patsub='patients';
 end
-load([earoot,'ea_recentpatients.mat']);
+load([earoot,'common',filesep,'ea_recentpatients.mat']);
 if strcmp(fullrpts,['No recent ',patsub,' found'])
     fullrpts={};
 end
@@ -28,6 +28,6 @@ if length(fullrpts)>10
    fullrpts=fullrpts(1:10);
 end
 [~,nuchosenix]=ismember(chosenix,fullrpts);
-save([earoot,'ea_recentpatients.mat'],'fullrpts');
+save([earoot,'common',filesep,'ea_recentpatients.mat'],'fullrpts');
 
 ea_updaterecentpatients(handles,patsub,nuchosenix);

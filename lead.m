@@ -65,6 +65,7 @@ ea_setpath;
 if isdeployed
 fprintf(1, '%s', ctfroot);
 end
+
     ea_compat_data; 
 earoot=ea_getearoot;
 

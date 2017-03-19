@@ -9,16 +9,19 @@ prefs=ea_prefs_default(patientname);
 % now overwrite with user prefs stored in /home
 home=ea_gethome;
 uid=['ea_prefs_',dash2sub(ea_generate_guid)];
+if isdeployed
+    disp(['Running Lead-DBS in compiled mode, CTFROOT=',ea_getearoot,'; HOME=',home,'.']);
+end
 
 if ~exist([home,'.ea_prefs.m'],'file')
-    copyfile([ea_getearoot,'ea_prefs_default.m'],[home,'.ea_prefs.m']);
+    copyfile([ea_getearoot,'common',filesep,'ea_prefs_default.m'],[home,'.ea_prefs.m']);
 end
 if ~exist([home,'.ea_prefs.mat'],'file')
-    copyfile([ea_getearoot,'ea_prefs_default.mat'],[home,'.ea_prefs.mat']);
+    copyfile([ea_getearoot,'common',filesep,'ea_prefs_default.mat'],[home,'.ea_prefs.mat']);
 end
 
 
-defmachine=load([ea_getearoot,'ea_prefs_default.mat']);
+defmachine=load([ea_getearoot,'common',filesep,'ea_prefs_default.mat']);
 defmachine=defmachine.machine;
 try
     copyfile([home,'.ea_prefs.m'],[ea_getearoot,uid,'.m'])

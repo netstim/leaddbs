@@ -189,7 +189,6 @@ for nativemni=nm % switch between native and mni space atlases.
                     try
                     [~,centroid]=kmeans(XYZ.mm(:,1:3),1);
                     catch
-                        keyboard
                         centroid=mean(XYZ(:,1:3),1);
                     end
                 else
@@ -241,7 +240,7 @@ for nativemni=nm % switch between native and mni space atlases.
             try
                 atlasc=squeeze(jetlist(ceil(atlases.colors(atlas)),:));  % color for toggle button icon
             catch
-                keyboard
+                ea_error('Atlas color not found.');
             end
 
             colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,atlascnt,'on'},'OffCallback',{@atlasvisible,atlascnt,'off'},'State','on');

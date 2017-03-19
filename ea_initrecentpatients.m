@@ -6,9 +6,9 @@ end
 
 earoot=ea_getearoot;
 try
-    load([earoot,'ea_recentpatients.mat']);
+    load([earoot,'common',filesep,'ea_recentpatients.mat']);
 catch
     fullrpts={['No recent ',patsub,' found']};
 end
-save([earoot,'ea_recentpatients.mat'],'fullrpts');
+save([earoot,'common',filesep,'ea_recentpatients.mat'],'fullrpts');
 ea_updaterecentpatients(handles,patsub);

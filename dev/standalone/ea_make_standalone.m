@@ -5,19 +5,24 @@ function ea_make_standalone(outdir)
 % This will generate a standalone program, which can be run
 % outside MATLAB, and therefore does not use up a MATLAB licence.
 %
-
+%% Lead part...
 close all
-
+lead % set paths
+close all
+outdir = fullfile(ea_getearoot,'../lead_standalone');
+mkdir(outdir);
 %% make a copy of required lead DBS folders:
-tof=[ea_getearoot,'standalone_export',filesep];
-if exist(tof,'dir')
-    rmdir(tof,'s');
+tof=[ea_getearoot,'standalone_export',filesep,ea_getstdaloneoname,filesep];
+
+if exist(fileparts(fileparts(tof)),'dir')
+    rmdir(fileparts(fileparts(tof)),'s');
 end
 mkdir(tof);
 from=ea_getearoot;
 copyfile([from,'*.m'],tof);
 copyfile([from,'*.fig'],tof);
-copyfile([from,'*.mat'],tof);
+movefile([tof,'lead.m'],[fileparts(fileparts(tof)),filesep,'lead.m']);
+movefile([tof,'lead.fig'],[fileparts(fileparts(tof)),filesep,'lead.fig']);
 
 % helpers
 copyfile([from,'helpers'],[tof,'helpers']);
@@ -52,14 +57,22 @@ copyfile([from,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM',fi
 copyfile([from,'templates',filesep,'electrode_contacts'],[tof,'templates',filesep,'electrode_contacts']);
 copyfile([from,'templates',filesep,'electrode_models'],[tof,'templates',filesep,'electrode_models']);
 
+delete([tof,'common',filesep,'ea_recentpatients.mat']);
+
 rmpath(genpath(from));
 addpath(genpath(tof));
 cd(tof);
 
+% for now delete some ext_libs that are not needed:
+rmdir([tof,'ext_libs',filesep,'surfice'],'s');
+rmdir([tof,'ext_libs',filesep,'dsi_studio'],'s');
 
 
 
+
+%% SPM part...
 spm fmri
+close all
 
 
 
@@ -72,7 +85,7 @@ if exist('startup','file')
         fileparts(which('startup')));
 end
 try rmdir(fullfile(ea_getearoot,'../../lead_standalone'),'s'); end
-if ~nargin, outdir = fullfile(ea_getearoot,'../../lead_standalone'); mkdir(outdir); end
+
 
 %==========================================================================
 %-Static listing of SPM toolboxes
@@ -130,7 +143,7 @@ if ~sts, warning('Copy of Contents.m failed.'); end
 %==========================================================================
 opts = {'-p',fullfile(matlabroot,'toolbox','signal')};
 mcc('-m', '-C', '-v',...
-    '-o','Lead_DBS',...
+    '-o',ea_getstdaloneoname,...
     '-d',outdir,...
     '-N',opts{:},...
     '-R','-singleCompThread',...
