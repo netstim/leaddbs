@@ -27,7 +27,7 @@ if exist('refs','var') % add refs
 end
 expstr=[expstr,'\n\n***'];
 
-fprintf(expstr);
+ea_methodsdisp({expstr});
 
 metfile=fopen([directory,'ea_methods.txt'],'a');
 

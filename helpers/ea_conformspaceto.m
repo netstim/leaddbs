@@ -13,3 +13,6 @@ else
 end
 
 spm_reslice({spacefn,toreslicefn},flags);
+nii=ea_load_nii(toreslicefn);
+delete(toreslicefn);
+ea_write_nii(nii);
