@@ -448,10 +448,10 @@ function ea_keypress(resultfig,event)
 % this is the main keypress function for the resultfigure. Add event
 % listeners here.
 if ismember('alt',event.Modifier)
-%     setappdata(resultfig,'altpressed',1);
+     setappdata(resultfig,'altpressed',1);
 %    disp('Altpressed');
 elseif ismember('shift',event.Modifier)
-%     setappdata(resultfig,'shiftpressed',1);
+     setappdata(resultfig,'shiftpressed',1);
 end
 
 try

@@ -243,7 +243,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 ea_error('Atlas color not found.');
             end
 
-            colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,atlascnt,'on'},'OffCallback',{@atlasvisible,atlascnt,'off'},'State','on');
+            colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'OnCallback',{@atlasvisible,resultfig,atlascnt,'on'},'OffCallback',{@atlasvisible,resultfig,atlascnt,'off'},'State','on');
             
             % set Tags
             set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
@@ -371,12 +371,12 @@ C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);
 
 
 
-function atlasvisible(hobj,ev,atlscnt,onoff)
-atls=getappdata(gcf,'atlassurfs');
+function atlasvisible(hobj,ev,resultfig,atlscnt,onoff)
+atls=getappdata(resultfig,'atlassurfs');
 
-if(getappdata(gcf,'altpressed'))
+if(getappdata(resultfig,'altpressed'))
     
-    cbutn=getappdata(gcf,'colorbuttons');
+    cbutn=getappdata(resultfig,'colorbuttons');
     set(cbutn,'State',onoff);
     for el=1:length(atls)
         for side=1:2
