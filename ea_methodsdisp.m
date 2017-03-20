@@ -53,7 +53,12 @@ function ea_methodsdisp_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to ea_methodsdisp (see VARARGIN)
 
 
-handles.methodstxt.String=sprintf([handles.methodstxt.String,'\n\n',varargin{1}{1}]);
+if isempty(handles.methodstxt.String)
+    handles.methodstxt.String=ea_strsplit(sprintf('%s',varargin{1}{1}(5:end)));
+else
+handles.methodstxt.String=ea_strsplit(sprintf('%s\n\n%s',handles.methodstxt.String,varargin{1}{1}));
+end
+
 set(hObject,'Name','Used Methods');
 
 
@@ -65,6 +70,17 @@ guidata(hObject, handles);
 
 % UIWAIT makes ea_methodsdisp wait for user response (see UIRESUME)
 % uiwait(handles.methodsfig);
+
+function cellstr=ea_strsplit(str)
+cnt=1;
+ns=strfind(str,'\n');
+offs=1;
+
+for n=1:length(ns)
+    cellstr{cnt}=str(offs:ns(n)-1);
+    offs=ns(n)+2;
+    cnt=cnt+1;
+end
 
 
 % --- Outputs from this function are returned to the command line.
