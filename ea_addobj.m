@@ -131,6 +131,9 @@ disp('Done.');
 
 function addroi(addobj,resultfig,addht,fina,options)
 
+% set cdata
+c=uisetcolor;
+
 % load nifti
 nii=ea_load_nii(addobj);
 if ~all(abs(nii.voxsize)<=1)
@@ -182,9 +185,6 @@ end
 
 
 
-% set cdata
-c=uisetcolor;
-
 %?atlasc=59; %rand*64;
 jetlist=jet;
 
@@ -200,11 +200,11 @@ cdat=abs(repmat(atlasc,length(fv.vertices),1) ... % C-Data for surface
 % show atlas.
 set(0,'CurrentFigure',resultfig);
 addobjr=patch(fv,'CData',cdat,'FaceColor',c,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-ea_spec_atlas(addobjr,'',jetlist,1);
+%ea_spec_atlas(addobjr,'',jetlist,1);
 
 % add toggle button:
 
-addbutn=uitoggletool(addht,'CData',ea_get_icn('atlas',ind2rgb(round(atlasc),jetlist)),'TooltipString',fina,'OnCallback',{@atlasvisible,addobjr},'OffCallback',{@atlasinvisible,addobjr},'State','on');
+addbutn=uitoggletool(addht,'CData',ea_get_icn('atlas',c),'TooltipString',fina,'OnCallback',{@atlasvisible,addobjr},'OffCallback',{@atlasinvisible,addobjr},'State','on');
 storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
 drawnow
 

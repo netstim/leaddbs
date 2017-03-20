@@ -4,7 +4,7 @@ if get(handles.recentpts,'Value')==1
     return
 end
 earoot=ea_getearoot;
-load([earoot,'ea_recentpatients.mat']);
+load([earoot,'common',filesep,'ea_recentpatients.mat']);
 if iscell(fullrpts)
 fullrpts=fullrpts(get(handles.recentpts,'Value')-1);
 end
