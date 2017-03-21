@@ -137,6 +137,14 @@ if options.autoimprove
     ea_export_templates(coords_mm{2}(1:4,:),trajectory{2},options.patientname,options,'l')
     disp('Done.');
 end
+
+%% methods dump:
+ea_methods(options,...
+            ['DBS-Electrodes were manually localized based on post-operative acquisitions using a tool specifically designed for this task (as implemented in Lead-DBS software',...
+            '; Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
+            {'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+
+
 % continue with rest of the program schedule..
 ea_write(options);
 

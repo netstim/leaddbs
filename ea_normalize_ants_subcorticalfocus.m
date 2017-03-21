@@ -48,7 +48,7 @@ if usefa && spacedef.hasfa % first put in FA since least important (if both an F
         to{cnt}=[ea_space(options),'fa.nii'];
         from{cnt}=[directory,bprfx,options.prefs.fa2anat];
         weights(cnt)=0.5;
-        metrics{cnt}='CC';
+        metrics{cnt}='MI';
         cnt=cnt+1;
     end
 end
@@ -69,7 +69,7 @@ for anatf=1:length(anatpresent)
         end
         from{cnt}=[directory,bprfx,anatpresent{anatf}];
         weights(cnt)=1.25;
-        metrics{cnt}='CC';
+        metrics{cnt}='MI';
         cnt=cnt+1;
 end
 
@@ -77,7 +77,7 @@ if includeatlas % append as last to make criterion converge on this one.
    to{cnt}=[ea_space(options),'atlas.nii'];
    from{cnt}=[directory,'anat_atlas.nii.gz'];
    weights(cnt)=1.5;
-   metrics{cnt}='CC'; % could think about changing this to CC
+   metrics{cnt}='MI'; % could think about changing this to CC
    cnt=cnt+1;
 end
 
