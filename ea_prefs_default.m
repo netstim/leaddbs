@@ -106,6 +106,8 @@ prefs.scrf.auto='off'; % can be 'off' to not perform automatic subcortical refin
 %% Atlas-Sets:
 prefs.atlases.default='STN-Subdivisions (Accolla 2014)';
 
+%% Methods popup:
+prefs.methods.show=1;
 
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.

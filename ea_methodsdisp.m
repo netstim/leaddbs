@@ -56,7 +56,11 @@ function ea_methodsdisp_OpeningFcn(hObject, eventdata, handles, varargin)
 if isempty(handles.methodstxt.String)
     handles.methodstxt.String=ea_strsplit(sprintf('%s',varargin{1}{1}(5:end)));
 else
-handles.methodstxt.String=ea_strsplit(sprintf('%s\n\n%s',handles.methodstxt.String,varargin{1}{1}));
+    try
+        handles.methodstxt.String=ea_strsplit(sprintf('%s\n\n%s',handles.methodstxt.String,varargin{1}{1}));
+    catch
+        handles.methodstxt.String=ea_strsplit(sprintf('%s',varargin{1}{1}(5:end)));
+    end
 end
 
 set(hObject,'Name','Used Methods');

@@ -7,7 +7,7 @@ try
 end
 try % finally use last patient parent dir if set.
     earoot=ea_getearoot;
-    load([earoot,'ea_recentpatients.mat']);
+    load([earoot,'common',filesep,'ea_recentpatients.mat']);
     p=fileparts(fullrpts{1});
 end
 

@@ -73,21 +73,31 @@ end
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
 
-rigidconvergence='[50x25x12x0,1e-6,10]';
-rigidshrinkfactors='12x8x4x2';
-rigidsmoothingssigmas='4x3x2x1vox';
+if any(imgsize>256)
+    rigidconvergence='[1000x500x250x0,1e-6,10]';
+    rigidshrinkfactors='12x8x4x2';
+    rigidsmoothingssigmas='4x3x2x1vox';
 
-affineconvergence='[50x25x12x0,1e-6,10]';
-affineshrinkfactors='12x8x4x2';
-affinesmoothingssigmas='4x3x2x1vox';
+    affineconvergence='[1000x500x250x0,1e-6,10]';
+    affineshrinkfactors='8x4x2x1';
+    affinesmoothingssigmas='4x3x2x1vox';
+else
+    rigidconvergence='[1000x500x250x0,1e-6,10]';
+    rigidshrinkfactors='8x4x2x1';
+    rigidsmoothingssigmas='3x2x1x0vox';
+
+    affineconvergence='[1000x500x250x0,1e-6,10]';
+    affineshrinkfactors='8x4x2x1';
+    affinesmoothingssigmas='3x2x1x0vox';
+end
 
 synconvergence='[25x12x0,1e-6,10]';
 synshrinkfactors='8x4x2';
 synsmoothingssigmas='2x1x0vox';
 
-synmaskconvergence='[7x0,1e-6,10]';
-synmaskshrinkfactors='2x1';
-synmasksmoothingssigmas='2x0vox';
+synmaskconvergence='[25x12x0,1e-6,10]';
+synmaskshrinkfactors='2x2x1';
+synmasksmoothingssigmas='2x2x2vox';
 
 
 rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1}, ',1]' ...
@@ -141,9 +151,9 @@ synstage = [' --transform SyN[0.3]'...
     ' --masks [NULL,NULL]'];
 
 synmask2stage = [' --transform SyN[0.3]'...
-    ' --convergence ', synmaskconvergence, ...
-    ' --shrink-factors ', synmaskshrinkfactors ...
-    ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
+    ' --convergence ', synconvergence, ...
+    ' --shrink-factors ', synshrinkfactors ...
+    ' --smoothing-sigmas ', synsmoothingssigmas, ...
     ' --masks [',ea_space([],'subcortical'),'secondstepmask.nii',',NULL]'];
 synmask3stage = [' --transform SyN[0.3]'...
     ' --convergence ', synconvergence, ...
@@ -174,13 +184,12 @@ end
 ea_libs_helper
 
 cmd = [ANTS, ' --verbose 1' ...
-             ' --dimensionality 3 --float 1' ...
+             ' --dimensionality 3' ...
              ' --output [',ea_path_helper(outputbase), ',', outputimage, ']' ...
              ' --interpolation Linear' ...
              ' --use-histogram-matching 1' ...
-             ' --winsorize-image-intensities [0.15,0.85]', ...
              ' --write-composite-transform 1', ...
-              rigidstage, affinestage, synstage, synmask2stage, synmask3stage];
+              rigidstage, affinestage, synstage, synmask2stage];
 
 if ~ispc
     system(['bash -c "', cmd, '"']);

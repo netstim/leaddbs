@@ -30,8 +30,11 @@ if exist('refs','var') % add refs
     end
 end
 expstr=[expstr,'\n\n***'];
-
-ea_methodsdisp({expstr});
+if options.prefs.methods.show
+    ea_methodsdisp({expstr});
+else
+    fprintf(expstr);
+end
 if exist('directory','var')
     metfile=fopen([directory,'ea_methods.txt'],'a');
     

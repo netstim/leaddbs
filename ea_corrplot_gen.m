@@ -47,7 +47,7 @@ for area=1:length(R_upd)
         try
         scatter(X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',jetlist(groups,:));
         catch
-        scatter(X(:,1),X(:,area+1),[],jetlist(groups,:));
+        scatter(X(:,1),X(:,area+1),[],jetlist(groups,:),'filled');
             
         end
         
