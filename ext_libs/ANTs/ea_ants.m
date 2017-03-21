@@ -47,7 +47,7 @@ catch
     options=struct;
 end
 
-try 
+try
     interp=varargin{8};
 catch
     interp='Linear';
@@ -149,7 +149,7 @@ elseif runs==2 % go directly to affine stage, try mattes MI
         ' --convergence ', affineconvergence, ...
         ' --shrink-factors ', affineshrinkfactors ...
         ' --smoothing-sigmas ', affinesoomthingssigmas];
-    
+
 elseif runs>=3 % go directly to affine stage, try GC again
     rigidstage = [' --transform Rigid[0.1]' ...
     ' --convergence ', rigidconvergence, ...
@@ -171,7 +171,7 @@ end
 
 if usemasks
     usereaffine=1; % additional affine step based on mask is probably too much.
-    
+
     rigidstage=[rigidstage, ... % add nonexisting mask for this stage
         ' --masks [nan,nan]'];
     affinestage=[affinestage, ... % add nonexisting mask for this stage
@@ -256,7 +256,6 @@ fprintf('\nANTs LINEAR registration done.\n');
 cits={
     'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
     };
-[~,mov]=fileparts(moving);
-[~,fix]=fileparts(fixed);
+
 ea_methods(options,[mov,' was co-registered to ',fix,' using a two-stage linear registration (rigid followed by affine) as implemented in Advanced Normlization Tools (Avants 2008; http://stnava.github.io/ANTs/)'],...
     cits);
