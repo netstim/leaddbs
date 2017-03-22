@@ -165,22 +165,13 @@ end
 
 
 %% add methods dump:
-[scit,lcit]=ea_getspacedefcit;
 cits={
-    'Ashburner, J., & Friston, K. J. (2005). Unified segmentation., 26(3), 839?851. http://doi.org/10.1016/j.neuroimage.2005.02.018'
-    'Ashburner, J., & Friston, K. J. (2011). Diffeomorphic registration using geodesic shooting and Gauss?Newton optimisation. NeuroImage, 55(3), 954?967. http://doi.org/10.1016/j.neuroimage.2010.12.049'
+    'Horn, A., Ostwald, D., Reisert, M., & Blankenburg, F. (2014). The structural-functional connectome and the default mode network of the human brain. NeuroImage, 102 Pt 1, 142?151. http://doi.org/10.1016/j.neuroimage.2013.09.069'
     'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
+    'Horn, A., & Blankenburg, F. (2016). Toward a standardized structural-functional group connectome in MNI space. NeuroImage, 124(Pt A), 310?322. http://doi.org/10.1016/j.neuroimage.2015.08.048'
     };
-if ~isempty(lcit)
-    cits=[cits;{lcit}];
-end
-[~,anatpresent]=ea_assignpretra(options);
-
-ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using a'...
-    ' diffeomorphic registration algorithm using geodesic shooting and Gauss-Neuwton optimisation (SHOOT) as implemented in ',spm('ver'),' (Ashburner 2011; www.fil.ion.ucl.ac.uk/spm/software/).',...
-    ' SHOOT registration was performed by directly registering tissue segmentations of preoperative acquisitions (obtained using the unified Segmentation approach as implemented in ',spm('ver'),' (Ashburner 2005)',...
-    ' to a SHOOT template created from tissue priors defined by the MNI (ICBM 152 Nonlinear asymmetric 2009b atlas; http://nist.mni.mcgill.ca/?p=904)',...
-    ' supplied within Lead-DBS software (Horn 2015; www.lead-dbs.org).',...
+ea_methods(options,['The whole-brain fiber set was normalized into standard-stereotactic space following the approach described in (Horn 2014, Horn 2016) as ',...
+    ' implemented in Lead-DBS software (Horn 2015; www.lead-dbs.org).',...
     ],...
     cits);
 
