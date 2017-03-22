@@ -79,27 +79,17 @@ end
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
 
-if any(imgsize>256)
-    rigidconvergence='[1000x500x250x0,1e-6,10]';
-    rigidshrinkfactors='12x8x4x2';
-    rigidsmoothingssigmas='4x3x2x1vox';
+rigidconvergence='[1000x500x0x0,1e-6,10]';
+rigidshrinkfactors='12x8x4x2';
+rigidsmoothingssigmas='4x3x2x1vox';
 
-    affineconvergence='[1000x500x250x0,1e-6,10]';
-    affineshrinkfactors='8x4x2x1';
-    affinesmoothingssigmas='4x3x2x1vox';
-else
-    rigidconvergence='[1000x500x250x0,1e-6,10]';
-    rigidshrinkfactors='8x4x2x1';
-    rigidsmoothingssigmas='3x2x1x0vox';
+affineconvergence='[1000x500x0x0,1e-6,10]';
+affineshrinkfactors='8x4x2x1';
+affinesmoothingssigmas='4x3x2x1vox';
 
-    affineconvergence='[1000x500x250x0,1e-6,10]';
-    affineshrinkfactors='8x4x2x1';
-    affinesmoothingssigmas='3x2x1x0vox';
-end
-
-synconvergence='[25x12x0,1e-6,10]';
-synshrinkfactors='8x4x2';
-synsmoothingssigmas='2x1x0vox';
+synconvergence='[100x50x20x0,1e-6,10]';
+synshrinkfactors='8x4x2x1';
+synsmoothingssigmas='4x3x2x1vox';
 
 
 
@@ -147,7 +137,7 @@ for fi=1:length(fixedimage)
             ' --metric ','MI','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
-synstage = [' --transform SyN[0.3]'...
+synstage = [' --transform SyN[0.3,3.0,0.0]'...
     ' --convergence ', synconvergence, ...
     ' --shrink-factors ', synshrinkfactors ...
     ' --smoothing-sigmas ', synsmoothingssigmas, ...
@@ -169,69 +159,45 @@ for fi=1:length(fixedimage)
 
 end
 
-
-ea_libs_helper
-
-cmd1 = [ANTS, ' --verbose 1', ...
-    ' --dimensionality 3', ...
-    ' --output [',ea_path_helper(outputbase),'1', ',', outputimage, ']', ...
-    ' --interpolation Linear', ...
-    ' --winsorize-image-intensities [0.005,0.995]', ...
-    ' --use-histogram-matching 1', ...
-    ' --float 1',...
-    ' --write-composite-transform 1', ...
-    rigidstage, affinestage, synstage];
-
 % add masks:
 
-
-
-synmaskconvergence='[6x0,1e-6,10]';
+synmaskconvergence='[20x5,1e-6,10]';
 synmaskshrinkfactors='2x1';
 synmasksmoothingssigmas='1x0vox';
 
-masks={'secondstepmask','thirdstepmask','fourthstepmask'};
-for st=1:length(masks)
-    synmaskstage{st} = [' --initial-moving-transform ',outputbase,num2str(st),'Composite.h5' ...
-        ' --transform SyN[0.3]', ...
-        ' --convergence ', synmaskconvergence, ...
-        ' --shrink-factors ', synmaskshrinkfactors,  ...
-        ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
-        ' --masks [',ea_space([],'subcortical'),masks{st},'.nii',',NULL]'];
-    for fi=1:length(fixedimage)
-                suffx=',4,Regular,0.15';
-           
-        synmaskstage{st}=[synmaskstage{st},...
-            ' --metric ','CC','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
-    end
+
+synmaskstage = [' --transform SyN[0.2,3.0,0.0]', ...
+    ' --convergence ', synmaskconvergence, ...
+    ' --shrink-factors ', synmaskshrinkfactors,  ...
+    ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
+    ' --masks [',ea_space([],'subcortical'),'secondstepmask','.nii',',NULL]'];
+for fi=1:length(fixedimage)
+    suffx=',4';
     
-    maskcmd{st} = [ANTS, ' --verbose 1' ...
-        ' --dimensionality 3' ...
-        ' --output [',ea_path_helper(outputbase),num2str(st+1), ',', outputimage, ']' ...
-        ' --interpolation Linear' ...
-        ' --use-histogram-matching 1' ...
-        ' --winsorize-image-intensities [0.005,0.995]', ...
-        ' --float 1',...
-        ' --write-composite-transform 1', ... % this will already write out a final combined transform so no need to concatenate them.
-        synmaskstage{st}];
+    synmaskstage=[synmaskstage,...
+        ' --metric ','CC','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
+
+ea_libs_helper
+%setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS','8')
+
+cmd = [ANTS, ' --verbose 1', ...
+    ' --dimensionality 3', ...
+    ' --output [',ea_path_helper(outputbase), ',', outputimage, ']', ...
+    ' --interpolation Linear', ...
+    ' --use-histogram-matching 1', ...
+    ' --float 1',...
+    ' --write-composite-transform 1', ...
+    rigidstage, affinestage, synstage, synmaskstage];
+
+
 
 if ~ispc
-    system(['bash -c "', cmd1, '"']);
-    for st=1:length(masks)
-        %keyboard
-        system(['bash -c "', maskcmd{st}, '"']);
-    end
+    system(['bash -c "', cmd, '"']);
+
 else
-    system(cmd1);
-    for st=1:length(masks)
-        
-        system(maskcmd{st});
-        
-    end
+    system(cmd);
 end
 
-% final warp:
-movefile([ea_path_helper(outputbase),num2str(st+1),'.h5'],[ea_path_helper(outputbase),'.h5']);
 
 ea_conv_antswarps(directory);
