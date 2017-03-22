@@ -9,7 +9,7 @@ end
 
 % check for MR-files
 [~,patientname]=fileparts(uipatdir{1});
-prefs=ea_prefs('');
+prefs=ea_prefs(patientname);
 
 modality=zeros(2,1);
 % check for unnormalized images first:
@@ -23,7 +23,7 @@ try    set(handles.statusone,'String','Coregistered CT file found. Set normalize
     modality(2)=1;
 end
 % MR
-if exist([uipatdir{1},filesep,prefs.tranii_unnormalized],'file') && exist([uipatdir{1},filesep,prefs.cornii_unnormalized],'file')
+if exist([uipatdir{1},filesep,prefs.tranii_unnormalized],'file')
 try    set(handles.statusone,'String','Unnormalized MR-volumes found. Set normalize option.'); end
     modality(1)=1;
 end

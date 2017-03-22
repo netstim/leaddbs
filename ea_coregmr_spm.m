@@ -1,4 +1,4 @@
-function ea_coregmr_spm(options,doreslice,refine)
+function ea_coregmr_spm(options,doreslice)
 % this function coregisters postoperative images to preoperative images
 % using SPM.
 
@@ -6,8 +6,7 @@ directory = [options.root,options.prefs.patientdir];
 costfuns={'nmi','mi','ecc','ncc'};
 cfundo=[2,1];
 for export=1:3
-    cnt=1;
-    for costfun=cfundo
+    for costfun=1:length(cfundo)
         switch export
             case 1
                 fina=[directory,filesep,options.prefs.tranii_unnormalized,',1'];
@@ -17,15 +16,15 @@ for export=1:3
                 fina=[directory,filesep,options.prefs.sagnii_unnormalized,',1'];
         end
         if exist(fina(1:end-2),'file')
-            if cnt==length(cfundo) % only at final stage apply refining if set
+            if costfun==length(cfundo) % only at final stage apply refining if set
+                
                 ea_docoreg_spm(options,fina,[directory,filesep,options.prefs.prenii_unnormalized,',1'], ...
-                               costfuns{costfun},doreslice,{''},options.prefs.mrcoreg.writeoutcoreg,refine);
+                               costfuns{cfundo(costfun)},doreslice,{''},options.prefs.mrcoreg.writeoutcoreg);
             else % dont reslice, dont refine (not last pass).
                 ea_docoreg_spm(options,fina,[directory,filesep,options.prefs.prenii_unnormalized,',1'],...
-                               costfuns{costfun},0,{''},options.prefs.mrcoreg.writeoutcoreg,0);
+                               costfuns{cfundo(costfun)},0,{''},options.prefs.mrcoreg.writeoutcoreg);
             end
-            cnt=cnt+1;
-            disp(['*** Coregistration pass (',costfuns{costfun},') completed.']);
+            disp(['*** Coregistration pass (',costfuns{cfundo(costfun)},') completed.']);
         end
         
     end

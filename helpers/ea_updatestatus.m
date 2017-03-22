@@ -1,5 +1,5 @@
 function ea_updatestatus(handles)
-try
+
 uipatdir=getappdata(handles.leadfigure,'uipatdir');
 
 set(handles.statusone,'String','One or more MR-/CT-volumes missing.');
@@ -27,5 +27,4 @@ elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{
     set(handles.statustwo,'String','Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.');
 elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
     set(handles.statustwo,'String','No reconstruction available in folder. Set "Reconstruct" to start.');
-end
 end

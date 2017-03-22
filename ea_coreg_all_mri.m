@@ -22,9 +22,13 @@ for coregfi=2:length(presentfiles)
     V1=ea_open_vol([directory,presentfiles{1}]);
     V2=ea_open_vol([directory,presentfiles{coregfi}]);
     if ~isequal(V1.mat,V2.mat);
-        ea_conformspaceto([directory,presentfiles{1}],[directory,presentfiles{coregfi}],4);
+        ea_conformspaceto([directory,presentfiles{1}],[directory,presentfiles{coregfi}],1);
     end
-    
+    % better slab support:
+    nii=ea_load_nii('V2.fname');
+    nii.img(abs(nii.img)<0.0001)=0;
+    ea_write_nii(nii);
+
 end
 
 

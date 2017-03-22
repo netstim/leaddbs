@@ -9,14 +9,7 @@ end
 
 directory=[options.root,options.patientname,filesep];
 
-whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
-if ismember(whichnormmethod,ea_getantsnormfuns)
     doreslice=1;
-elseif ismember(whichnormmethod,ea_getfslnormfuns)
-    doreslice=1;
-else
-    doreslice=0;
-end
 
 if ~strcmp(options.coregmr.method,'Do not coregister MRIs (already coregistered)')
     % restore raw files -> postop files from prior attempts. & make backups
@@ -46,19 +39,13 @@ if ~strcmp(options.coregmr.method,'Do not coregister MRIs (already coregistered)
 
     switch options.coregmr.method
         case 'SPM' % SPM
-            ea_coregmr_spm(options,doreslice,0);
+            ea_coregmr_spm(options,doreslice);
             return   
-        case 'SPM + Subcortical Refine' % SPM
-            ea_coregmr_spm(options,doreslice,1);
-            return
         case 'FSL' % FSL
             ea_coregmr_flirt(options);
             return
         case 'ANTs' % ANTs
             ea_coregmr_ants(options,0);
-            return
-        case 'ANTs + Subcortical Refine' % ANTs
-            ea_coregmr_ants(options,1);
             return
         case 'BRAINSFIT' % BRAINSFit
             ea_coregmr_brainsfit(options);
