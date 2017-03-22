@@ -181,7 +181,7 @@ for fi=1:length(fixedimage)
     suffx=',4';
     
     synmaskstage=[synmaskstage,...
-        ' --metric ','CC','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+        ' --metric ','MI','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
 if ~usescmask % delete mask stage
