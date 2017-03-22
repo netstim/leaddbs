@@ -25,7 +25,7 @@ for coregfi=2:length(presentfiles)
         ea_conformspaceto([directory,presentfiles{1}],[directory,presentfiles{coregfi}],1);
     end
     % better slab support:
-    nii=ea_load_nii('V2.fname');
+    nii=ea_load_nii(V2.fname);
     nii.img(abs(nii.img)<0.0001)=0;
     ea_write_nii(nii);
 
