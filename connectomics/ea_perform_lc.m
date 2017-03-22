@@ -21,7 +21,6 @@ end
 
 % create structural CM
 if options.lc.struc.compute_CM
-
     if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
         mkdir([options.root,options.patientname,filesep,'connectomics']);
     end
@@ -55,7 +54,7 @@ if options.lc.func.compute_GM || options.lc.func.compute_CM
     options.prefs.n_rest = numel(restfiles);
 
     % display number of rs-fMRI files to analyze
-    disp(['*** ' num2str(options.prefs.n_rest) ' rs-fMRI files to analyze...']);
+    disp(['*** ' num2str(options.prefs.n_rest) ' rs-fMRI files to analyze...']);    
 end
 % connectivity matrix steps:
 if options.lc.func.compute_CM

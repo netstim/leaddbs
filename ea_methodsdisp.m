@@ -65,7 +65,7 @@ end
 
 set(hObject,'Name','Used Methods');
 
-
+movegui(hObject,'northeast');
 % Choose default command line output for ea_methodsdisp
 handles.output = hObject;
 
