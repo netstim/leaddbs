@@ -108,7 +108,6 @@ set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 
 % add norm methods to menu
 options.earoot=ea_getearoot;
-
 ea_addnormmethods(handles,options,mstr);
 
 % add coreg methods to menu
@@ -146,7 +145,7 @@ ea_processguiargs(handles,varargin)
 
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice'});
+ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'});
 
 
 

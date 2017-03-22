@@ -30,7 +30,7 @@ if exist('refs','var') % add refs
 end
 
 expstr=[expstr,'\n\n***'];
-if options.prefs.methods.show
+if options.prefs.machine.methods_show
     ea_methodsdisp({expstr});
 else
     fprintf(expstr);

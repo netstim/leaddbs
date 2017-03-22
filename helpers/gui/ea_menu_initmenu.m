@@ -45,6 +45,18 @@ if isempty(menuprobe)
         uimenu(d,'Label','Convert selected atlas to .STL','Callback',{@ea_exportatlas,'STL',handles});
         uimenu(d,'Label','Convert selected atlas to .PLY','Callback',{@ea_exportatlas,'PLY',handles});
     end
+    
+    if ismember('methods',cmd)
+       m=uimenu(f,'Label','Methods');
+       m_c=uimenu(m,'Label','Show methods popup on completed tasks.','Callback',{@ea_toggle_methods});
+       prefs=ea_prefs;
+       if prefs.machine.methods.show
+           m_c.Checked='on';
+       else
+           m_c.Checked='off';
+       end
+       
+    end
 
     if ismember('applynorm',cmd)
         uimenu(f,'Label','Apply Patient Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,0});
@@ -76,14 +88,27 @@ if isempty(menuprobe)
     g = uimenu('Label','Install');
     [list,commands]=ea_checkinstall('list');
     for l=1:length(list)
-        if ea_checkinstall(commands{l},1)
-           addstr='v';
+        
+       insit(l)=uimenu(g,'Label',[list{l}],'Callback',{@ea_menuinstall,commands{l}});
+       if ea_checkinstall(commands{l},1)
+           insit(l).Checked='on';
         else
-            addstr='ø';
+            insit(l).Checked='off';
         end
-       uimenu(g,'Label',[list{l},' (',addstr,')'],'Callback',{@ea_menuinstall,commands{l}});
     end
 
     % mark that menu has already been installed.
         setappdata(handles.leadfigure,'menuprobe',1);
 end
+
+
+function ea_toggle_methods(hobj,~,~)
+switch hobj.Checked
+    case 'on'
+        ea_setprefs('methods_show','off');
+        hobj.Checked='off';
+    case 'off'
+        ea_setprefs('methods_show','on');
+        hobj.Checked='on';
+end
+
