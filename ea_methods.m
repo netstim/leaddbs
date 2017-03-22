@@ -2,11 +2,11 @@ function ea_methods(options,parsestr,refs)
 % function that dumps a methods text to patient directory
 % options can either be a leadsuite options struct or a string with the
 % patient directory.
-if ~isempty(options)
-    if ~isstruct(options)
-        options=ea_getptopts(options); % direct supply of directory string, options in brackets will be just a string with the directory in this case.
-    end
+
+if ~isstruct(options)
+    options=ea_getptopts(options); % direct supply of directory string, options in brackets will be just a string with the directory in this case.
 end
+
 
 directory=[options.root,options.patientname,filesep];
 
