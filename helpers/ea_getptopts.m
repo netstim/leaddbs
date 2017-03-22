@@ -5,11 +5,13 @@ function options=ea_getptopts(directory,options)
 if isempty(directory)
     directory=pwd;
 end
+
 if strcmp(directory(end),filesep) % strip trailing filesep
     directory=directory(1:end-1);
 end
 
-    [options.root,options.patientname]=fileparts(directory);
-    options.root=[options.root,filesep];
+[options.root,options.patientname]=fileparts(directory);
+options.root=[options.root,filesep];
+
 options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);

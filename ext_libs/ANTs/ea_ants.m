@@ -24,8 +24,6 @@ else
     otherfiles = {};
 end
 
-
-
 try
     msks=varargin{6};
     if isempty(msks)
@@ -41,6 +39,7 @@ try
 catch
     usemasks=0;
 end
+
 try
     options=varargin{7};
 catch
@@ -52,7 +51,6 @@ try
 catch
     interp='Linear';
 end
-
 
 outputbase = ea_niifileparts(outputimage);
 volumedir = [fileparts(outputbase), filesep];
@@ -198,7 +196,6 @@ else
     mask2stage='';
 end
 
-
 ea_libs_helper;
 antscmd = [ANTS, ' --verbose 1' ...
     ' --dimensionality 3 --float 1' ...
@@ -207,6 +204,7 @@ antscmd = [ANTS, ' --verbose 1' ...
     ' --use-histogram-matching 1' ...
     ' --winsorize-image-intensities [0.005,0.995]', ...
     rigidstage, affinestage,mask1stage,mask2stage];
+
 if writematout % inverse only needed if matrix is written out.
     invaffinecmd = [antsApplyTransforms, ' --verbose 1' ...
         ' --dimensionality 3 --float 1' ...
@@ -214,6 +212,7 @@ if writematout % inverse only needed if matrix is written out.
         ' --transform [', ea_path_helper([outputbase, '0GenericAffine.mat']),',1]' ...
         ' --output Linear[', ea_path_helper([outputbase, 'Inverse0GenericAffine.mat']),']'];
 end
+
 if ~ispc
     system(['bash -c "', antscmd, '"']);
     if writematout
@@ -248,14 +247,13 @@ else
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
 
-
 fprintf('\nANTs LINEAR registration done.\n');
-
 
 %% add methods dump:
 cits={
     'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
     };
 
-ea_methods(options,[mov,' was co-registered to ',fix,' using a two-stage linear registration (rigid followed by affine) as implemented in Advanced Normlization Tools (Avants 2008; http://stnava.github.io/ANTs/)'],...
+ea_methods(volumedir,[mov,' was co-registered to ',fix,' using a two-stage linear registration (rigid followed by affine) as implemented in Advanced Normlization Tools (Avants 2008; http://stnava.github.io/ANTs/)'],...
     cits);
+

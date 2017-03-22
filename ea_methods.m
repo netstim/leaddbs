@@ -12,12 +12,14 @@ if ~isempty(options)
         directory=[directory,filesep];
     end
 end
+
 h=dbstack;
 try
-callingfunction=h(2).name;
+    callingfunction=h(2).name;
 catch
     callingfunction='base';
 end
+
 expstr='\n\n';
 expstr=[expstr,[datestr(datetime('now')),': ',callingfunction,'\n','--------------------------\n',...
     parsestr]];
@@ -29,12 +31,14 @@ if exist('refs','var') % add refs
         expstr=[expstr,[num2str(r),') ',refs{r},'\n']];
     end
 end
+
 expstr=[expstr,'\n\n***'];
 if options.prefs.methods.show
     ea_methodsdisp({expstr});
 else
     fprintf(expstr);
 end
+
 if exist('directory','var')
     metfile=fopen([directory,'ea_methods.txt'],'a');
     

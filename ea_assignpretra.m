@@ -11,7 +11,7 @@ prenii_order = cellfun(@(x) strrep(options.prefs.prenii_searchstring,'*',x), opt
 presentfiles = pfcell([nonzeros(idx)',setdiff(1:numel(pfcell),nonzeros(idx))]);
 
 if isempty(presentfiles)
-    warning(['No anatomy information found!\nPlease put either ', ...
+    warning(['No anatomy information found! Please put either ', ...
         prenii_order{1},', ',prenii_order{2},' or ',prenii_order{3},' into subject folder.']);
     return
 end
