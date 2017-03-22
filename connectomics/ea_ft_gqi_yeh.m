@@ -178,6 +178,17 @@ if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file');
 end
 
 
+%% add methods dump:
+cits={
+    'Yeh, F.-C., Wedeen, V. J., & Tseng, W.-Y. I. (2010). Generalized q-sampling imaging. IEEE Transactions on Medical Imaging, 29(9), 1626?1635. http://doi.org/10.1109/TMI.2010.2045126'
+    'Ashburner, J., & Friston, K. J. (2005). Unified segmentation., 26(3), 839?851. http://doi.org/10.1016/j.neuroimage.2005.02.018'
+    };
+ea_methods(options,['A whole-brain fiber-set was estimated based using the Generalized q-sampling imaging (GQI) approach (Yeh 2010) as implemented in DSI-Studio (http://dsi-studio.labsolver.org).',...
+    ' GQI is a model-free method that calculates the orientational distribution of the density of diffusing water.',...
+    ' Fibers were sampled within a white-matter mask that was estimated using the anatomical acquisition by applying the Unified Segmentation approach (Ashburner 2005) as implemented in ',spm('ver'),'. This mask was linearly co-registered to the b0-weighted series.'],cits);
+
+
+
 function res=ea_gqi_reco(filename,b_table,mean_diffusion_distance_ratio,options)
 % Direct GQI reconstruction from huge image data
 % You may need to include find_peak.m to run these codes.

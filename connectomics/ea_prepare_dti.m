@@ -5,7 +5,7 @@ if ~exist([options.root,options.patientname,filesep,options.prefs.b0],'file');
     disp('Building DTI files...');
     try %unring
         dti=ea_load_untouch_nii([options.root,options.patientname,filesep,options.prefs.dti]);
-        dti.img=ea_unring(dti.img);
+        dti.img=ea_unring(dti.img);        
         ea_save_untouch_nii(dti,[options.root,options.patientname,filesep,options.prefs.dti]);
     end
     

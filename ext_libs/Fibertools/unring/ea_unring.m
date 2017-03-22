@@ -14,3 +14,12 @@ end;
 
 v = double(v);
 v = ringRm(v,params);
+
+
+
+%% add methods dump:
+cits={
+    'Kellner, E., Dhital, B., Kiselev, V. G., & Reisert, M. (2015). Gibbs-ringing artifact removal based on local subvoxel-shifts. Magnetic Resonance in Medicine, n/a?n/a. http://doi.org/10.1002/mrm.26054'
+    };
+ea_methods(options,['Diffusion-weighted acquisitions were corrected for Gibbs'' ringing artefacts following the approach described in (Kellner 2015; https://bitbucket.org/reisert/unring).'],cits);
+    

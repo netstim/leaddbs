@@ -78,6 +78,15 @@ jobs{1}=matlabbatch;
 spm_jobman('run',jobs);
 clear matlabbatch jobs;
 
+%% add methods dump:
+cits={
+    'Reisert, M., Mader, I., Anastasopoulos, C., Weigel, M., Schnell, S., & Kiselev, V. (2011). Global fiber reconstruction becomes practical. NeuroImage, 54(2), 955?962. http://doi.org/10.1016/j.neuroimage.2010.09.016'
+    'Ashburner, J., & Friston, K. J. (2005). Unified segmentation., 26(3), 839?851. http://doi.org/10.1016/j.neuroimage.2005.02.018'
+    };
+ea_methods(options,['A whole-brain fiber-set was estimated based using the Gibbs'' tracking approach (Reisert 2011) using standard parameters.',...
+    ' This was done within a white-matter mask that was estimated on the anatomical scan using the Unified Segmentation approach (Ashburner 2005) as implemented in ',spm('ver'),' and linearly co-registered to the b0-weighted series.'],cits);
+
+
 
 %% export .trk copy for trackvis visualization
 dnii=ea_load_nii([directory,options.prefs.b0]);

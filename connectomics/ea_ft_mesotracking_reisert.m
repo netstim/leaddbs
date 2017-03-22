@@ -156,3 +156,13 @@ specs.affine=dnii.mat;
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
 ea_ftr2trk(ftrfname,directory,specs,options); % export unnormalized ftr to .trk
 disp('Done.');
+
+
+
+%% add methods dump:
+cits={
+    'Reisert, M., Kiselev, V. G., Dihtal, B., Kellner, E., & Novikov, D. S. (2014). MesoFT: Unifying Diffusion Modelling and Fiber Tracking. In Medical Image Computing and Computer-Assisted Intervention ? MICCAI 2014 (Vol. 8675, pp. 201?208). Cham: Springer International Publishing. http://doi.org/10.1007/978-3-319-10443-0_26'
+    'Ashburner, J., & Friston, K. J. (2005). Unified segmentation., 26(3), 839?851. http://doi.org/10.1016/j.neuroimage.2005.02.018'
+    };
+ea_methods(options,['A whole-brain fiber-set was estimated based using a model-free implementation of the Meso-tracking approach (Reisert 2014) using standard parameters.',...
+    ' This was done within a white-matter mask that was estimated on the anatomical scan using the Unified Segmentation approach (Ashburner 2005) as implemented in ',spm('ver'),' and linearly co-registered to the b0-weighted series.'],cits);

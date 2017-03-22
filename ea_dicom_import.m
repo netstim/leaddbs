@@ -61,3 +61,11 @@ if options.prefs.dicom.assign
         ea_imageclassifier({dcfilename});
     end
 end
+
+
+%% add methods dump:
+
+ea_methods(options,['DICOM images were converted to the NIfTI file format, cropped and reoriented to standard NIfTI orientation using dcm2niiX software (e.g. see https://www.nitrc.org/projects/dcm2nii/).']);
+
+
+
