@@ -109,6 +109,15 @@ for atlas=1:length(atlases.names)
 
 end
 
+%% methods dump:
+ea_methods(directory,...
+            ['Subcortical atlases were projected into native space using the inverse deformation field mapping from native to template space (estimated in the normalization step based on pre-operative acquisitions) ',...
+            'as implemented in Lead-DBS software',...
+            ' (Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
+            {'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+
+
+
 
 
 
