@@ -4,14 +4,11 @@ function ea_methods(options,parsestr,refs)
 % patient directory.
 if ~isempty(options)
     if ~isstruct(options)
-        directory=options; % direct supply of directory string
-    else
-        directory=[options.root,options.patientname,filesep];
-    end
-    if ~strcmp(directory(end),filesep) % make sure directory has a / in the end
-        directory=[directory,filesep];
+        options=ea_getptopts(options); % direct supply of directory string, options in brackets will be just a string with the directory in this case.
     end
 end
+
+directory=[options.root,options.patientname,filesep];
 
 h=dbstack;
 try
