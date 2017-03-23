@@ -23,15 +23,15 @@ expstr=[expstr,[datestr(datetime('now')),': ',callingfunction,'\n','------------
 
 if exist('refs','var') % add refs
     expstr=[expstr,'\n\nReferences:\n','--------------------------\n'];
-    
+
     for r=1:length(refs)
         expstr=[expstr,[num2str(r),') ',refs{r},'\n']];
     end
 end
 
 expstr=[expstr,'\n\n***'];
-if options.prefs.machine.methods_show
-try    
+if options.prefs.machine.methods.show
+try
     ea_methodsdisp({expstr});
 end
 else
@@ -40,7 +40,7 @@ end
 
 if exist('directory','var')
     metfile=fopen([directory,'ea_methods.txt'],'a');
-    
+
     fprintf(metfile,expstr);
     fclose(metfile);
 end
