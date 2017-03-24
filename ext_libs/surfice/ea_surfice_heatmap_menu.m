@@ -15,9 +15,8 @@ end
 
 if manualcontrast
     threshs=ea_sfc_getautothresh(fullfi);
+    [do,threshs]=ea_sfc_setthreshs(threshs,fis);
 end
-
-[do,threshs]=ea_sfc_setthreshs(threshs,fis);
-if strcmp(do,'proceed')
+if ~manualcontrast || strcmp(do,'proceed')
      ea_surficeoverlay_lr(fullfi,[],sides);
 end

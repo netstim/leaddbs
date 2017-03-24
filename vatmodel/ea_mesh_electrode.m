@@ -99,22 +99,40 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     %% load the nucleus surfaces
     nobj=[];
     fobj=[];
-    nseeds=[];
     ncount=length(fv);     % the number of nuclei meshes inside fv()
+    ISO2MESH_SURFBOOLEAN='cork';   % now intersect the electrode to the nucleus
 
     for i=1:ncount
         no=fv(i).vertices;
         fo=fv(i).faces;
         [no,fo]=meshresample(no,fo,nucleidecimate); % mesh is too dense, reduce the density by 80%
         [no,fo]=meshcheckrepair(no,fo,'meshfix');  % clean topological defects
-        fobj=[fobj;fo+size(nobj,1)];
-        nobj=[nobj;no];
-        nseeds=[nseeds; mean(no)];
+        
+        %% merge all nuclei
+        
+        if isempty(nobj)
+            nobj=no;
+            fobj=fo;
+        else
+        [nobj,fobj]=surfboolean(no,fo,'union',nobj,fobj);
+        end
+%         fobj=[fobj;fo+size(nobj,1)];
+%         nobj=[nobj;no];
     end
     
+    
+    if vizz
+        figure
+        patch('Vertices',nobj,'Faces',fobj,'FaceColor','none');
+        patch('Vertices',node,'Faces',face(:,1:3),'FaceColor','blue');
+
+    end
+    
+    
     %% merge the electrode mesh with the nucleus mesh
-    ISO2MESH_SURFBOOLEAN='cork';   % now intersect the electrode to the nucleus
-    [nboth,fboth]=surfboolean(node,face(:,[1 3 2]),'resolve',nobj,fobj);
+
+    
+    [nboth,fboth]=surfboolean(node,face(:,1:3),'resolve',nobj,fobj);
 
         
     clear ISO2MESH_SURFBOOLEAN;

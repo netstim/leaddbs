@@ -2047,28 +2047,41 @@ end
 function S=ea_redistribute_voltage(S,changedobj)
 Rconts={'k0','k1','k2','k3','k4','k5','k6','k7'};
 Lconts={'k8','k9','k10','k11','k12','k13','k14','k15'};
+LcontsCase=[Lconts,{'case'}];
+RcontsCase=[Rconts,{'case'}];
 if ischar(changedobj) % different polarity on the block
     switch changedobj
         case Rconts;
             conts=Rconts;
+            contsCase=RcontsCase;
             sidec='R';
             side=1;
         case Lconts;
             conts=Lconts;
+            contsCase=LcontsCase;
             sidec='L';
             side=2;
         case 'Rcase'
             conts=Rconts;
             changedobj='case';
+            contsCase=RcontsCase;
+            
             side=1;
             sidec='R';
         case 'Lcase'
             conts=Lconts;
+            contsCase=LcontsCase;
+            
             changedobj='case';
             side=2;
             sidec='L';
     end
 
+
+
+
+% check polarity of changed object:
+    polchanged=eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol']);
 
 
     % check for monopolar models:
@@ -2081,11 +2094,26 @@ if ischar(changedobj) % different polarity on the block
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
 
         return
+        
+    else
+        if S.([sidec,'s',num2str(S.active(side))]).va==2 % ampere only allows one anode and one cathode
+            for c=1:length(contsCase);
+                
+                if S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol==polchanged % same polarity as changed object
+                    S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=ea_swappol(polchanged);
+                    S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=100;
+                else
+                    S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=0;
+                    S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=0;
+                end
+            end
+            S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol=1;
+            S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=100;
+        end
+        
     end
 
-    % check polarity of changed object:
-    polchanged=eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol']);
-
+    
     if polchanged==0
         % set changed contacts percentage to zero:
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=0;']);
@@ -2261,7 +2289,6 @@ else % voltage percentage changed
 end
 
 
-
 function opol=ea_polminus(pol)
 if pol==1
     opol=0;
@@ -2271,6 +2298,14 @@ elseif pol==0
     opol=2;
 end
 
+function opol=ea_swappol(pol)
+if pol==1
+    opol=2;
+elseif pol==2
+    opol=1;
+else
+    opol=0;
+end
 
 function ea_inc_polarity(h,h2,handles,options,ID)
 
