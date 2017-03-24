@@ -588,23 +588,16 @@ center_id = elec(elec_id);
 
 function [stiff,rhs] = ea_dbs(stiff,rhs,dirinodes,dirival)
 
-dia = diag(stiff);
-stiff = stiff - diag(dia);
-[indexi,indexj,s] = find(stiff);
-clear stiff;
-dind = dirinodes;
-indi = find(ismember(indexi,dind));
-indj = find(~ismember(indexj,dind));
-indij = intersect(indi,indj);
-rhs(indexj(indij)) = rhs(indexj(indij)) - dirival(indexi(indij)).*s(indij);
-s(indi) = 0;
-dia(dirinodes) = 1; %hier auch, s.u.
-rhs(dirinodes) = dirival(dirinodes); %hier den zugriff geaendert
-indij = find(ismember(indexj,dind)&~ismember(indexi,dind));
-rhs(indexi(indij)) = rhs(indexi(indij)) - dirival(indexj(indij)).*s(indij);
-s(indij) = 0;
-stiff = sparse(indexi,indexj,s,length(dia),length(dia));
-stiff = stiff + diag(dia);
+diagonal = diag(stiff);
+stiff = stiff + stiff';
+rhs = rhs - stiff*dirival;
+stiff(dirinodes,:) = 0.0;
+stiff(:,dirinodes) = 0.0;
+diagonal = -diagonal;
+%diagonal(:) = 0;
+diagonal(dirinodes) = 1.0;
+stiff = stiff + spdiags(diagonal(:),0,length(diagonal),length(diagonal));
+rhs(dirinodes) = dirival(dirinodes);
 
 
 
@@ -821,58 +814,9 @@ function x = ea_sb_solve(sysmat,vecb)
 % SB_SOLVE
 %
 % $Id: sb_solve.m 8776 2013-11-14 09:04:48Z roboos $
-
+L = ichol(sysmat);
 %scalen
-%disp('Scaling stiffness matrix...')
-dkond = 1./(sqrt(diag(sysmat)));
-vecb = vecb.*dkond;
-[indexi, indexj, s] = find(sysmat);
-sys_size = size(sysmat,1);
-clear sysmat;
-s = (s.*dkond(indexi)).*dkond(indexj);
-s(1) = 1;
-%disp('Preconditioning...')
-L = sparse(indexi,indexj,s,sys_size,sys_size,length(s));
-%partch
-try
-    L = ichol(L);
-catch
-    disp('Could not compute incomplete Cholesky-decompositon. Rescaling stiffness matrix...')
-    alpha = 0.5d-6;
-    alpha = alpha*8.d0;
-    alpha = 1 / (alpha + 1);
-    s = alpha*s;
-    dia = find(indexi == indexj);
-    s(dia) = (1./alpha)*s(dia);
-    s(dia) = sqrt(s(dia));
-    s(1) = 1;
-    L = sparse(indexi,indexj,s,sys_size,sys_size,length(s));
-    clear dia;
-    try
-    L = ichol(L);
-    catch % fix by AH 11/7/2016
-        nalpha = max(sum(abs(L),2)./diag(L))-2;
-        L = ichol(L, struct('type','ict','droptol',1e-3,'diagcomp',nalpha));
-    end
-end
-%startvektor
-%disp('Finding startvector...')
-vecb_ = L \ (-vecb);
-vecx = L' \ vecb_;
-clear vecb_;
-%sonstiges
-sysmat = sparse(indexi,indexj,s,sys_size,sys_size,length(s));
-sysmat = sysmat + sysmat' - sparse(1:sys_size,1:sys_size,diag(sysmat),sys_size,sys_size,sys_size);
-clear indexi indexj s;
-%dprod = sysmat * vecx;
-%loesen
-%disp('Solving equation system...')
-[~,x]=evalc('pcg(sysmat,vecb,10e-9,5000,L,L'',vecx)');
-%fl
-%rr
-%it
-%rescal
-x = x.*dkond;
+[~,x]=evalc('pcg(sysmat,vecb,10e-10,5000,L,L'',vecb)');
 
 function [type] = ea_ft_voltype(vol, desired)
 
