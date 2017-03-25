@@ -231,6 +231,11 @@ for source=S.sources
         end
         ix=[];
         voltix=[];
+                constvol=stimsource.va==1; % constvol is 1 for constant voltage and 0 for constant current.
+
+        if ~isequal(length(U(Acnt)),length(unique(U(Acnt)))) && ~constvol
+            U(Acnt)=U(Acnt)+randn(1,length(U(Acnt)))*0.00001; % add small jitter to avoid same const amps in multiple contacts
+        end
         for ac=Acnt
             ix=[ix;activeidx(source).con(ac).ix];
             voltix=[voltix;repmat(U(ac),length(activeidx(source).con(ac).ix),1)];
@@ -238,7 +243,6 @@ for source=S.sources
 
 
 
-        constvol=stimsource.va==1; % constvol is 1 for constant voltage and 0 for constant current.
 
 
         if ~constvol
@@ -568,14 +572,14 @@ else
     if unipolar
         elec_center_id = ea_find_elec_center(elec,vol.pos);
         rhs(elec_center_id) = val(1);
-    else        
-        elec_center_id_pos = ea_find_elec_center(elec(val>0),vol.pos);
-        elec_center_id_neg = ea_find_elec_center(elec(val<0),vol.pos);
-        rhs(elec_center_id_pos) = max(val);
-        rhs(elec_center_id_neg) = min(val);
-         
+    else
+        uvals=unique(val);
+        for v=1:length(uvals)
+        elec_center_id = ea_find_elec_center(elec(val==uvals(v)),vol.pos);
+        rhs(elec_center_id) = uvals(v);
+        end 
         
-        warning('Bipolar constant current stimulation currently not implemented!');
+        %warning('Bipolar constant current stimulation currently not implemented!');
     end
 end
 
