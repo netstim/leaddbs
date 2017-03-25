@@ -114,11 +114,12 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
             nobj=no;
             fobj=fo;
         else
-        [nobj,fobj]=surfboolean(no,fo,'union',nobj,fobj);
+        [nobj,fobj]=surfboolean(no,fo,'resolve',nobj,fobj);
         end
 %         fobj=[fobj;fo+size(nobj,1)];
 %         nobj=[nobj;no];
     end
+    
     
     
     if vizz
@@ -157,15 +158,16 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     %% cut the electrode+nucleus mesh by the bounding cylinder
     ISO2MESH_SURFBOOLEAN='cork';
     
-    [nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'resolve',nboth,fboth);
+    %[nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'resolve',nboth,fboth);
         
 
-%    [nbothbc,fbothbc]=surfboolean(nboth2,fboth2,'and',nbcyl,fbcyl);
+    [nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'first',nboth,fboth);
 
     
     clear ISO2MESH_SURFBOOLEAN;
     if vizz
         figure('name','nboth2');
+        %patch('vertices',nbothbc,'faces',fbothbc,'FaceColor','none')
         fvv.faces=fboth2(:,1:3);
         fvv.vertices=nboth2;
         patch(fvv,'edgecolor','green','facecolor','none');
@@ -175,7 +177,7 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     
     %% remove duplicated nodes in the surface
     [nboth3,fboth3]=meshcheckrepair(nboth2,fboth2,'dup');
-    %[nboth4,fboth4]=meshcheckrepair(nboth3,fboth3,'deep');
+    [nboth3,fboth3]=meshcheckrepair(nboth3,fboth3,'deep');
     
     
     

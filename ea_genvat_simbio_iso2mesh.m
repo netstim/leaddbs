@@ -568,7 +568,13 @@ else
     if unipolar
         elec_center_id = ea_find_elec_center(elec,vol.pos);
         rhs(elec_center_id) = val(1);
-    else
+    else        
+        elec_center_id_pos = ea_find_elec_center(elec(val>0),vol.pos);
+        elec_center_id_neg = ea_find_elec_center(elec(val<0),vol.pos);
+        rhs(elec_center_id_pos) = max(val);
+        rhs(elec_center_id_neg) = min(val);
+         
+        
         warning('Bipolar constant current stimulation currently not implemented!');
     end
 end
