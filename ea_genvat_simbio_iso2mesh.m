@@ -232,13 +232,14 @@ for source=S.sources
         ix=[];
         voltix=[];
                 constvol=stimsource.va==1; % constvol is 1 for constant voltage and 0 for constant current.
-
-        if ~isequal(length(U(Acnt)),length(unique(U(Acnt)))) && ~constvol
-            U(Acnt)=U(Acnt)+randn(1,length(U(Acnt)))*0.00001; % add small jitter to avoid same const amps in multiple contacts
-        end
+    
+        cnt=1;
         for ac=Acnt
             ix=[ix;activeidx(source).con(ac).ix];
-            voltix=[voltix;repmat(U(ac),length(activeidx(source).con(ac).ix),1)];
+            voltix=[voltix;repmat(U(ac),length(activeidx(source).con(ac).ix),1),...
+                repmat(cnt,length(activeidx(source).con(ac).ix),1)];
+            cnt=cnt+1;
+       
         end
 
 
@@ -246,13 +247,13 @@ for source=S.sources
 
 
         if ~constvol
-            voltix=voltix/1000; % from mA to A
+            voltix(:,1)=voltix(:,1)/1000; % from mA to A
             %voltix=voltix;
         end
 
         potential = ea_apply_dbs(vol,ix,voltix,unipolar,constvol,wmboundary); % output in V. 4 indexes insulating material.
            %      save('results','mesh','vol','ix','voltix','unipolar','constvol','wmboundary','potential3v','potential3ma','gradient3v','gradient3ma');
-
+voltix=voltix(:,1); % get rid of index column
 if vizz
 figure
 hold on
@@ -452,7 +453,7 @@ vatfv.vertices=[vatfv.vertices;caps.vertices];
 
 
 try
-    vatfv=ea_smoothpatch(vatfv,1,100);
+    vatfv=ea_smoothpatch(vatfv,1,35);
 catch
     try
         cd([ea_getearoot,'ext_libs',filesep,'smoothpatch']);
@@ -485,6 +486,7 @@ end
 r=maedler12_eq3(vmax,1000);
 r=r*1.5;
 mp=dpvx;
+
 D=pointcloud-repmat(mp,size(pointcloud,1),1);
 S=[r,r,r];%std(D,[],1); % fixed 50 cm
 outliers=D>repmat(S,size(D,1),1);
@@ -558,7 +560,7 @@ if constvol
 
     rhs = zeros(length(vol.pos),1);
     dirival = zeros(size(vol.pos,1),1);
-    dirival(elec) = val;
+    dirival(elec) = val(:,1);
 else
     if unipolar
         dirinodes = boundarynodes;
@@ -571,12 +573,13 @@ else
 
     if unipolar
         elec_center_id = ea_find_elec_center(elec,vol.pos);
-        rhs(elec_center_id) = val(1);
+        rhs(elec_center_id) = val(1,1);
     else
-        uvals=unique(val);
+        uvals=unique(val(:,2));
         for v=1:length(uvals)
-        elec_center_id = ea_find_elec_center(elec(val==uvals(v)),vol.pos);
-        rhs(elec_center_id) = uvals(v);
+        elec_center_id = ea_find_elec_center(elec(val(:,2)==uvals(v)),vol.pos);
+        thesevals=val(val(:,2)==uvals(v),1);
+        rhs(elec_center_id) = thesevals(1);
         end 
         
         %warning('Bipolar constant current stimulation currently not implemented!');
