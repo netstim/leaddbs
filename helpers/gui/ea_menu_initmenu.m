@@ -105,10 +105,10 @@ end
 function ea_toggle_methods(hobj,~,~)
 switch hobj.Checked
     case 'on'
-        ea_setprefs('methods_show','off');
+        ea_setprefs('methods_show',0);
         hobj.Checked='off';
     case 'off'
-        ea_setprefs('methods_show','on');
+        ea_setprefs('methods_show',1);
         hobj.Checked='on';
 end
 
