@@ -8,12 +8,10 @@ if iscell(sfile) % already supplied in cell format
         [pth,fn,ext]=fileparts(sfile{1});
         if strcmp(ext,'.txt')
             roilist=1;
-            
             sfile=ea_getrois(sfile{1});
         else
             roilist=0;
-                sfile=sfile';
-
+            sfile=sfile';
         end
     end
 else

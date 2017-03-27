@@ -383,10 +383,12 @@ eg=eg>thresh;
 neeg=eeg;
 neeg(~eg)=nan;
 
-
-neeg(neeg>0)=ea_normal(neeg(neeg>0));%
-%neeg(neeg>0)=zscore(neeg(neeg>0));
-
+if sum(neeg(:)>0)>50000
+    warning('Exporting z-scores instead of van Albada method converted VTA model for reasons of computational cost .');
+    neeg(neeg>0)=zscore(neeg(neeg>0));
+else
+    neeg(neeg>0)=ea_normal(neeg(neeg>0));%
+end
 % normalized e-field (zscored).
 neeg(~isnan(neeg))=neeg(~isnan(neeg))-min(neeg(~isnan(neeg)));
 neeg(~isnan(neeg))=neeg(~isnan(neeg))/sum(neeg(~isnan(neeg))); % 0-1 distributed.

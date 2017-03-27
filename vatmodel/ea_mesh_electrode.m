@@ -16,21 +16,26 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
         
     end
     if max(S.amplitude{side})>4
-        stretchfactor=0.75; %(max(S.amplitude{side})/10);
+        stretchfactor=0.75*(max(S.amplitude{side})/3);
     else
         stretchfactor=0.5;
     end
         
     orig=electrode.tail_position-3*stretchfactor*(electrode.head_position-electrode.tail_position);
     etop=electrode.head_position-3*stretchfactor*(electrode.tail_position-electrode.head_position);
-    
+
+
+el_o_orig=[0,0,15+(10*stretchfactor)];
+el_o_etop=[0,0,-10*stretchfactor];
+
+
     nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
     
     bcyltrisize=0.3;       % the maximum triangle size of the bounding cyl
     
     cylz0=-30;     % define the upper end of the bounding cylinder
     cylz1=30;     % define the lowe end of the bounding cylinder
-    cylradius=25*stretchfactor; % define the radius of the bounding cylinder
+    cylradius=10*stretchfactor; % define the radius of the bounding cylinder
 
     ndiv=50;      % division of circle for the bounding cylinder
     electrodelen=norm(etop-orig); % length of the electrode
@@ -68,17 +73,28 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
     
     c0bbc=c0+cylz0*v;
     c1bbc=c0+cylz1*v;
-    [nbcyl,fbcyl]=meshacylinder(c0bbc, c1bbc,cylradius,bcyltrisize,10,ndiv);
-    
-    nbcyl=rotatevec3d(nbcyl,v0,v);
-    nbcyl=nbcyl+repmat(orig,size(nbcyl,1),1);
-    if vizz
-        figure
-        fva.faces=fbcyl(:,1:3);
-        fva.vertices=nbcyl;
-        patch(fva,'edgecolor','m','facecolor','none');
+%     [nbcyl,fbcyl]=meshacylinder(c0bbc, c1bbc,cylradius,bcyltrisize,10,ndiv); 
+%     nbcyl=rotatevec3d(nbcyl,v0,v);
+%     nbcyl=nbcyl+(repmat(orig,size(nbcyl,1),1)/stretchfactor);
+
+[nbcyl,fbcyl]=meshacylinder(el_o_etop,el_o_orig,cylradius,bcyltrisize,10,ndiv); 
+nbcyl=transformmatrix*[nbcyl,ones(length(nbcyl),1)]';
+nbcyl=nbcyl(1:3,:)';
+
+if vizz
+    figure
+    fva.faces=fbcyl(:,1:3);
+    fva.vertices=nbcyl;
+    patch(fva,'edgecolor','m','facecolor','none');
+    hold on
+    plot3(orig(1),orig(2),orig(3),'r*');
+    plot3(etop(1),etop(2),etop(3),'g*');
+    plot3(electrode.tail_position(1),electrode.tail_position(2),electrode.tail_position(3),'k*');
+    plot3(electrode.head_position(1),electrode.head_position(2),electrode.head_position(3),'b*');
         axis equal
-    end
+
+    
+end
     
     if isempty(fv) % use TPM
         c1=ea_load_nii([ea_space(options),'TPM.nii,1']);

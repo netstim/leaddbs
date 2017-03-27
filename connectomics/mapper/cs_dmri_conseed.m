@@ -22,6 +22,9 @@ switch cmd
             if exist([cfile,filesep,'data.mat'],'file') % regular mat file
                 if ~exist('fibers','var')
                     load([cfile,filesep,'data.mat'],'fibers');
+                    if ~exist('fibers','var')
+                        ea_error('Structural connectome file supplied in wrong format.');
+                    end
                 end
                 
                 redotree=0;
