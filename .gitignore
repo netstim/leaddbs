@@ -40,3 +40,5 @@ Thumbs.db
 !ea_logo.png
 !segjob*.mat
 !ea_prefs_default.mat
+!ext_libs/support/libstdc++.so.6
+

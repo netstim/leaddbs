@@ -1,7 +1,7 @@
 function base=ea_getconnectomebase(cmd)
 
 prefs=ea_prefs('');
-if isfield(prefs.lc,'datadir');
+if isfield(prefs.lc,'datadir')
     base=prefs.lc.datadir;
 else
     base=[ea_getearoot,'connectomes',filesep];
