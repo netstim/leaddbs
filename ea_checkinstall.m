@@ -10,7 +10,7 @@ end
 switch cmd
     case 'list' % simply return list of installable datasets
         success={'Redownload Data files','Apply Hotfix','Big Brain 100um subcortical (Amunts 2013)','Structural group connectome (Horn 2013)'};
-        commands={'leaddata','hotfix','bigbrain','macaque','groupconnectome2013'};
+        commands={'leaddata','hotfix','bigbrain','groupconnectome2013'};
     case 'leaddata'
         checkf=[ea_space,'bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
@@ -87,6 +87,9 @@ else
     downloadurl = 'http://www.lead-dbs.org/release/download.php';
     success=1;
     disp(['Downloading ',assetname,'...'])
+    if ~exist(fileparts(destination), 'dir')
+        mkdir(fileparts(destination));
+    end
     try
         webopts=weboptions('Timeout',5);
         websave(destination,downloadurl,'id',id,webopts);
