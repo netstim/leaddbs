@@ -16,7 +16,10 @@ updurl = 'http://www.lead-dbs.org/release/download.php';
 if hotfix
     try
         disp('*** Updating LEAD. Please do not quit MATLAB.');
-        mkdir([earoot,'tmp'])
+        ea_delete([earoot,'tmp',filesep,'hotfix']);
+        if ~exist([earoot,'tmp'] ,'dir')
+            mkdir([earoot,'tmp']);
+        end
         disp('Downloading hotfix...');
         try
             webopts=weboptions('Timeout',5);
