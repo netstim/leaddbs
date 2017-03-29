@@ -16,7 +16,7 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
         
     end
     if max(S.amplitude{side})>4
-        stretchfactor=0.75*(max(S.amplitude{side})/3);
+        stretchfactor=0.75*(max(S.amplitude{side})/2.5);
     else
         stretchfactor=0.5;
     end
@@ -174,11 +174,11 @@ end
     %% cut the electrode+nucleus mesh by the bounding cylinder
     ISO2MESH_SURFBOOLEAN='cork';
     
-    %[nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'resolve',nboth,fboth);
-        
+    [nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'resolve',nboth,fboth);
+    %[nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'first',nboth2,fboth2);
 
-    [nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'first',nboth,fboth);
 
+    
     
     clear ISO2MESH_SURFBOOLEAN;
     if vizz
