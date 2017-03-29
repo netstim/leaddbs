@@ -8,11 +8,11 @@ if ~exist('mute','var')
 else
     answ='Sure';
 end
-if strcmp(answ,'Sure')    
+if strcmp(answ,'Sure')
     ea_storemachineprefs('space',spacename);
     if ~exist('mute','var')
         disp('Restarting Lead Neuroimaging Suite...');
-        close all
+        close all force
         lead;
     end
 end

@@ -90,6 +90,7 @@ if update
         disp('Done.');
 
         disp('Restarting LEAD.');
+        close all force
         lead;
         disp('*** Update finished.');
 

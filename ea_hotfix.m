@@ -61,12 +61,12 @@ if hotfix
 
         disp('Copying new code...');
         copyfile([earoot,'tmp',filesep,'hotfix',filesep,'*'],earoot,'f');
-        copyfile([earoot,'tmp',filesep,'hotfix',filesep,'.version.txt'],earoot,'f');
         disp('Cleaning up...');
         rmdir([earoot,'tmp'],'s')
         disp('Done.');
 
         disp('Restarting LEAD.');
+        close all force
         lead;
         success=1;
         disp('*** Update finished.');

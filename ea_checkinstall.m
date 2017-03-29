@@ -71,7 +71,7 @@ switch cmd
         end
     case 'hotfix'
         if ~checkonly
-        success=ea_hotfix;
+            success=ea_hotfix;
         end
     otherwise
         success=0;
