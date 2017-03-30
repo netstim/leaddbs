@@ -1,4 +1,4 @@
-function ea_ants_nonlinear_subcortical(varargin)
+function ea_ants_nonlinear(varargin)
 % Wrapper for ANTs nonlinear registration
 
 fixedimage=varargin{1};
