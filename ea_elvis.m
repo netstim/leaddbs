@@ -193,7 +193,7 @@ end
 slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
 
 % Initialize MER-Button
-% merbutton=uipushtool(ht,'CData',ea_get_icn('mer',options),'TooltipString','MER Control Figure','ClickedCallback',{@openmerviewer,resultfig,options});
+merbutton=uipushtool(ht,'CData',ea_get_icn('mer',options),'TooltipString','MER Control Figure','ClickedCallback',{@openmerviewer,resultfig,options});
 
 % Initialize Convis-Button
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome',options),'TooltipString','Connectivity Visualization','ClickedCallback',{@openconnectomeviewer,resultfig,options});
@@ -346,9 +346,8 @@ setappdata(resultfig,'merwin',merwin);
 try WinOnTop(merwin,true); end
 
 function opencortexviewer(hobj,ev,resultfig,options)
-showcortex=ea_showcortex(resultfig,options);
-setappdata(resultfig,'showcortex',showcortex);
-try WinOnTop(showcortex,true); end
+cortex=ea_showcortex(resultfig,options);
+setappdata(resultfig,'cortex',cortex);
 % reload slice viewer to update opacity control
 awin=ea_anatomycontrol(resultfig,options);
 setappdata(resultfig,'awin',awin);

@@ -1,4 +1,4 @@
-function [showcortex,cortex] = ea_showcortex(varargin)
+function [cortexH,cortex] = ea_showcortex(varargin)
 % This function shows a cortical reconstruction in the 3D-Scene viewer. It
 % reads in cortex.mat found in the eAuto_root/templates/cortex folder, or 
 % in the patientdirectory on button press (Cortical Reconstruction
@@ -19,19 +19,19 @@ end
 
 resultfig=varargin{1};
 set(0, 'currentfigure', resultfig);  % for figures
-showcortex=getappdata(resultfig,'showcortex');
-try delete(showcortex); end
+cortexH=getappdata(resultfig,'cortex');
+try delete(cortexH{1}); end
+try delete(cortexH{2}); end
 
 % Initial Opening
-if ~isfield(getappdata(resultfig),'cortex')
+if isfield(getappdata(resultfig),'cortex')
     color = options.prefs.d3.cortexcolor; % default color is gray
     alpha = options.prefs.d3.cortexalpha; % default alph is 0.333
-else
-    
+else 
     color = options.prefs.d3.cortexcolor;
-    appdata = getappdata(resultfig);
-    appdata = getappdata(appdata.awin);
-    alpha = str2double(appdata.UsedByGUIData_m.cortexalpha.String);
+    awin = getappdata(resultfig,'awin');
+    appdata = getappdata(awin,'UsedByGUIData_m');
+    alpha = str2double(appdata.cortexalpha.String);
     clear appdata
 end
 
@@ -93,15 +93,15 @@ if size(files,2)>=2
     file = char(files(listdlg('PromptString',str,'Name',options.patientname,...
         'SelectionMode','single','ListString',files,...
         'ListSize',[250 150])));
-    cortex = load([adir,file],'Vertices','Faces');
+    cortex = load([adir,file],'Vertices_rh','Faces_rh','Vertices_lh','Faces_lh');
 elseif ~isempty(files)
     file = files{1};
-    cortex = load([adir,file],'Vertices','Faces');
+    cortex = load([adir,file],'Vertices_rh','Faces_rh','Vertices_lh','Faces_lh');
 else
     fprintf('No Cortex found in patient directory. \nRunning Import FS...\n')
     ea_importfs(options)
     try
-        load([adir,'CortexHiRes.mat','Vertices','Faces']);
+        cortex = load([adir,'CortexHiRes.mat'],'Vertices_rh','Faces_rh','Vertices_lh','Faces_lh');
     catch
     end
 end
@@ -110,10 +110,33 @@ end
 % % for now always use template cortex in mni space
 % if strcmp(reslice,'yes'); end
 
+try 
+    load([adir,'/annot_',options.prefs.d3.corticalatlas,'.mat'])
+end
+
 % Show cortex
+tagstr = {'RH','LH'};
 set(0, 'currentfigure', resultfig); hold on
-showcortex = patch('vertices',cortex.Vertices,'faces',cortex.Faces(:,[1 3 2]),...
-    'facecolor',color,'edgecolor','none','FaceAlpha',alpha,...
-    'facelighting', 'gouraud', 'specularstrength', .25);
-setappdata(resultfig,'showcortex',showcortex);
+cortexH{1} = patch('vertices',cortex.Vertices_rh,'faces',cortex.Faces_rh(:,[1 3 2]),...
+    'FaceVertexCData',repmat([0.65 0.65 0.65],[size(cortex.Vertices_rh,1),1]),...
+    'edgecolor','none','FaceAlpha',alpha,'FaceColor','interp',...
+    'facelighting', 'gouraud', 'specularstrength', .25,'Tag',tagstr{1});
+
+cortexH{2} = patch('vertices',cortex.Vertices_lh,'faces',cortex.Faces_lh(:,[1 3 2]),...
+    'FaceVertexCData',repmat([0.65 0.65 0.65],[size(cortex.Vertices_lh,1),1]),...
+    'edgecolor','none','FaceAlpha',alpha,'FaceColor','interp',...
+    'facelighting', 'gouraud', 'specularstrength', .25,'Tag',tagstr{2});
+
+if exist('annot','var')
+    for side = 1:2
+        annot(side).cdat = get(cortexH{side},'FaceVertexCData');
+        for i = 1:length(annot(side).colortable.table)
+            index = find(annot(side).label==annot(side).colortable.table(i,5));
+            annot(side).cdat(index,:) = repmat(annot(side).colortable.table(i,1:3)/256,[length(index),1]);
+        end
+        set(cortexH{side},'FaceVertexCData',annot(side).cdat)
+    end
+end
+
+setappdata(resultfig,'cortex',cortexH);
 % camlight('headlight','infinite'); axis equal;

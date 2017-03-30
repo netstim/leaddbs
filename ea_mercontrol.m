@@ -934,6 +934,7 @@ resultfig = getappdata(handles.mercontrolfig,'resultfig');
 options = getappdata(handles.mercontrolfig,'options');
 clearmertrajectories(handles,resultfig,options)
 clearmermarkers(handles,resultfig,options)
+set(hObject,'Value',0)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -946,7 +947,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 root = fileparts(which('ea_coregmr.m'));
 background = imread([root,'/icons/delete.png']);
-set(hObject,'CData',background)
+set(hObject,'CData',background,'Value',0)
 
 
 % --- Executes on button press in setdefault.
@@ -961,6 +962,7 @@ options = getappdata(handles.mercontrolfig,'options');
 merstruct = getappdata(resultfig,'merstruct');
 setdefaultmer(handles,resultfig,merstruct,options)
 getsettogglestates(handles);
+set(hObject,'Value',0)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -973,7 +975,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 root = fileparts(which('ea_coregmr.m'));
 background = imread([root,'/icons/checkmark.png']);
-set(hObject,'CData',background)
+set(hObject,'CData',background,'Value',0)
 
 
 % --- Executes on button press in undomarker.
@@ -1006,6 +1008,7 @@ if n~=0
     set(handles.popupmermarkers_left,'Visible','on','String',markerstring.left,'Value',1)
 
 end
+set(hObject,'Value',0)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1018,7 +1021,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 root = fileparts(which('ea_coregmr.m'));
 background = imread([root,'/icons/undo.png']);
-set(hObject,'CData',background)
+set(hObject,'CData',background,'Value',0)
 
 
 % --- Executes on button press in redomarker.
@@ -1064,6 +1067,7 @@ if ~isempty(tmpmer)
     set(handles.popupmermarkers_left,'Visible','on','String',markerstring.left,'Value',1)
 
 end
+set(hObject,'Value',0)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1076,7 +1080,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 root = fileparts(which('ea_coregmr.m'));
 background = imread([root,'/icons/redo.png']);
-set(hObject,'CData',background)
+set(hObject,'CData',background,'Value',0)
 
 
 
@@ -1113,7 +1117,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 root = fileparts(which('ea_coregmr.m'));
 background = imread([root,'/icons/text.png']);
-set(hObject,'CData',background)
+set(hObject,'CData',background,'Value',0)
 
 
 % --- Executes on button press in importmarkers.
@@ -1143,6 +1147,7 @@ ea_updatemermarkers(mermarkers,handles,resultfig,options)
 else
     fprintf(2,'Error using importmarkers_Callback: \nNo MER trajectories available\n\n')
 end
+set(hObject,'Value',0)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1155,7 +1160,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 root = fileparts(which('ea_coregmr.m'));
 background = imread([root,'/icons/import.png']);
-set(hObject,'CData',background)
+set(hObject,'CData',background,'Value',0)
 
 
 % --- Executes on button press in exportmarkers.
@@ -1177,6 +1182,8 @@ if ~exist([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],'file') || strcmp(o
     save([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],'mermarkers','mertoggles')
     disp('DONE')
 end    
+set(hObject,'Value',0)
+
 
 % --- Executes during object creation, after setting all properties.
 function exportmarkers_CreateFcn(hObject, eventdata, handles)
@@ -1188,7 +1195,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 root = fileparts(which('ea_coregmr.m'));
 background = imread([root,'/icons/export.png']);
-set(hObject,'CData',background)
+set(hObject,'CData',background,'Value',0)
 
 
 

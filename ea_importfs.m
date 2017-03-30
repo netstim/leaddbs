@@ -36,6 +36,7 @@ end
 
 %% Handle File Options
 % Check if CortexHiRes.mat and CortexLowRes_*.mat already exists
+startdir = ptdir;
 files = dir([ptdir '/cortex']); files = files(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {files.name}));
 files = files(~[files.isdir]); files = {files(~cellfun(@isempty , strfind({files.name},'Cortex'))).name};
 overwrite = ~cellfun(@isempty,strfind(files,'CortexHiRes.mat'));
@@ -57,7 +58,7 @@ if overwrite
     if strcmp(response,'Cancel')
         disp(['No cortex created in Patient Directory: ' ptdir '/cortex'])
         return
-    elseif strcmp(response,'No') || strcmp(response,'Cancel')
+    elseif strcmp(response,'No')
         disp(['No cortex created in Patient Directory: ' ptdir '/cortex'])
         if ~exist([ptdir 'cortex/CortElecs.mat'],'file')
             qst = {'Do you have subdural electrode coordinates'; 'that you would like to import now?'};
@@ -65,6 +66,7 @@ if overwrite
             if strcmp(ImportElecsOption,'Yes')
                 vars = {'patientname','ptdir','fsdir'};
                 info = load([ptdir '/cortex/CortexHiRes.mat'],vars{:});
+                info.uipatdirs = info.ptdir;
                 CortElecs = ea_importcorticalels(info);
                 if exist('CortElecs','var')
                     disp(['Saving to ' ptdir '/cortex/CortElecs.mat'])
@@ -75,18 +77,31 @@ if overwrite
             end
         end
         return
+    elseif strcmp(response,'Yes')
+        load([ptdir,'/cortex/CortexHiRes.mat'],'fsdir');
+        FsDir = fsdir;
+    else
+        % Choose Freesurfer Directory
+        FsDir = ea_uigetdir(startdir,['Choose Freesurfer Folder for ' patientname]);
     end
 end
 
-% Choose Freesurfer Directory
-FsDir = ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname]);
+if ~exist('FsDir','var')
+     FsDir = ea_uigetdir(startdir,['Choose Freesurfer Folder for ' patientname]);
+end
 if iscell(FsDir) && length(FsDir)==1
     FsDir = char(FsDir);
 elseif isempty(FsDir)
     disp('No files saved')
     return
+elseif ischar(FsDir)
+    %nothing
 else
     ea_error('Please choose one FS folder at a time')
+end
+
+if ~exist([ptdir,'/cortex'],'dir')
+    mkdir([ptdir,'/cortex'])
 end
 
 %% Parse Freesurfer Folder
@@ -120,10 +135,7 @@ end
 MriFile  = [FsDir '/mri/T1.mgz'];
 LhPial   = [FsDir '/surf/lh.pial'];
 RhPial   = [FsDir '/surf/rh.pial'];
-% AsegFile = [FsDir '/mri/aseg.mgz'];
-% AnnotLH  = [FsDir '/label/lh.aparc.a2009s.annot'];
-% AnnotRH  = [FsDir '/label/rh.aparc.a2009s.annot'];
-% sAtlas.Name = 'Destrieux';
+AsegFile = [FsDir '/mri/aseg.mgz'];
 
 % Convert T1.mgz to T1.nii (Freesurfer Dependent)
 % if ~exist([FsDir '/mri/T1.nii'],'file')
@@ -132,17 +144,31 @@ RhPial   = [FsDir '/surf/rh.pial'];
     % Notes: need to add PC functionality
     % Notes: need to add ea_libs_helper for Freesurfer compatibility
 
+annot_DKT(1).atlas = 'Desikan-Killiany';
+annot_DKT(2).atlas = 'Desikan-Killiany';
+annot_DKT(1).filename  = 'label/rh.aparc.annot';
+annot_DKT(2).filename  = 'label/lh.aparc.annot';
+annot_DKTaseg(1).atlas = 'Desikan-Killiany + Aseg';
+annot_DKTaseg(2).atlas = 'Desikan-Killiany + Aseg';
+annot_DKTaseg(1).filename  = 'label/rh.aparc.DKTatlas40.annot';
+annot_DKTaseg(2).filename  = 'label/lh.aparc.DKTatlas40.annot';
+annot_a2009(1).atlas = 'Destrieux';
+annot_a2009(2).atlas = 'Destrieux';
+annot_a2009(1).filename  = 'label/rh.aparc.a2009s.annot';
+annot_a2009(2).filename  = 'label/lh.aparc.a2009s.annot';
+
 % Read Annotation Files
 % external/freesurfer/read_annotation.m
-%  [vertices.lh, label.lh, colortable.lh] = read_annotation(AnnotLH);
-%  [vertices.rh, label.rh, colortable.rh] = read_annotation(AnnotRH);
-    
-%     AnnotLhFiles = {file_find(FsDir, 'lh.pRF.annot', 2), file_find(FsDir, 'lh.aparc.a2009s.annot', 2), file_find(FsDir, 'lh.aparc.annot', 2), file_find(FsDir, 'lh.BA.annot', 2), file_find(FsDir, 'lh.BA.thresh.annot', 2), file_find(FsDir, 'lh.aparc.DKTatlas40.annot', 2), ...
-%                 file_find(FsDir, 'lh.PALS_B12_Brodmann.annot', 2), file_find(FsDir, 'lh.PALS_B12_Lobes.annot', 2), file_find(FsDir, 'lh.PALS_B12_OrbitoFrontal.annot', 2), file_find(FsDir, 'lh.PALS_B12_Visuotopic.annot', 2), file_find(FsDir, 'lh.Yeo2011_7Networks_N1000.annot', 2), file_find(FsDir, 'lh.Yeo2011_17Networks_N1000.annot', 2)};
-% AnnotRhFiles = {file_find(FsDir, 'rh.pRF.annot', 2), file_find(FsDir, 'rh.aparc.a2009s.annot', 2), file_find(FsDir, 'rh.aparc.annot', 2), file_find(FsDir, 'rh.BA.annot', 2), file_find(FsDir, 'rh.BA.thresh.annot', 2), file_find(FsDir, 'rh.aparc.DKTatlas40.annot', 2), ...
-%                 file_find(FsDir, 'rh.PALS_B12_Brodmann.annot', 2), file_find(FsDir, 'rh.PALS_B12_Lobes.annot', 2), file_find(FsDir, 'rh.PALS_B12_OrbitoFrontal.annot', 2), file_find(FsDir, 'rh.PALS_B12_Visuotopic.annot', 2), file_find(FsDir, 'rh.Yeo2011_7Networks_N1000.annot', 2), file_find(FsDir, 'rh.Yeo2011_17Networks_N1000.annot', 2)};
-% AnnotLhFiles(cellfun(@isempty, AnnotLhFiles)) = [];
-% AnnotRhFiles(cellfun(@isempty, AnnotRhFiles)) = [];
+for iSide = 1:2
+    [annot_DKT(iSide).vert, annot_DKT(iSide).label, annot_DKT(iSide).colortable] = read_annotation([FsDir,filesep,annot_DKT(iSide).filename]);
+    [annot_DKTaseg(iSide).vert, annot_DKTaseg(iSide).label, annot_DKTaseg(iSide).colortable] = read_annotation([FsDir,filesep,annot_DKTaseg(iSide).filename]);
+    [annot_a2009(iSide).vert, annot_a2009(iSide).label, annot_a2009(iSide).colortable] = read_annotation([FsDir,filesep,annot_a2009(iSide).filename]);
+end
+
+save([ptdir '/cortex/annot_DKT.mat'],'annot_DKT')
+save([ptdir '/cortex/annot_DKTaseg.mat'],'annot_DKTaseg')
+save([ptdir '/cortex/annot_a2009.mat'],'annot_a2009')
+
 
 %% Create Hi Resolution Cortex
 CortexHiRes.patientname = patientname;
@@ -161,11 +187,15 @@ CortexHiRes.raw.Faces = [CortexHiRes.raw.Faces_lh; (CortexHiRes.raw.Faces_rh + l
 % Reading in MRI parameters
 T1nii=MRIread(MriFile);
 
-% Translating into the appropriate space
-disp('Translating into native space...')
+%% Translating into the appropriate space
+% FS to MRI
+CortexHiRes.raw.nativespace = ea_popupquest('In what space was your freesurfer brain reconstructed?',...
+    '','Preop','Postop');
+disp(['Translating into native ' CortexHiRes.raw.nativespace ' space...'])
 aff = T1nii.vox2ras/T1nii.tkrvox2ras;
 aff([4,8,12])=aff([13:15]); aff([13:15])=0;
 tform = affine3d(aff); CortexHiRes.raw.tform = tform;
+
 CortexHiRes.Vertices_lh = transformPointsForward(tform,CortexHiRes.raw.Vertices_lh);
 CortexHiRes.Vertices_rh = transformPointsForward(tform,CortexHiRes.raw.Vertices_rh);
 CortexHiRes.Vertices = transformPointsForward(tform,CortexHiRes.raw.Vertices);
@@ -175,6 +205,33 @@ CortexHiRes.Faces_lh=CortexHiRes.raw.Faces_lh+1;
 CortexHiRes.Faces_rh=CortexHiRes.raw.Faces_rh+1;
 CortexHiRes.Faces=CortexHiRes.raw.Faces+1;
 
+% Postop to preop
+switch CortexHiRes.raw.nativespace
+    case 'Postop'
+    coregfile = fdir(ptdir,'GenericAffine'); %fdir(ptdir,'2postop');
+    % %     ONLY SUPPORTS ANTS COREGISTRATION
+    if ~isempty(coregfile) && length(coregfile)==1 && ~isempty(regexp(coregfile,'\wants','match'))
+        load([ptdir,filesep,cell2mat(coregfile)])
+        try 
+            aff = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+        catch
+            aff = ea_antsmat2mat(AffineTransform_double_3_3,fixed);
+        end
+        aff([4,8,12])=aff([13:15]); aff([13:15])=0;
+        tform = affine3d(aff);
+        CortexHiRes.raw.coregistration = tform;
+        CortexHiRes.Vertices_lh = transformPointsInverse(tform, CortexHiRes.Vertices_lh);
+        CortexHiRes.Vertices_rh = transformPointsInverse(tform, CortexHiRes.Vertices_rh);
+        CortexHiRes.Vertices = transformPointsInverse(tform, CortexHiRes.Vertices);
+        
+        [CortexHiRes.Vert_mm,CortexHiRes.Vert_vox] = ea_map_coords(CortexHiRes.Vertices','raw_postop_tra.nii',fullfile(ptdir,cell2mat(coregfile)),'anat_t1.nii','ANTS');
+    else 
+        ea_warning('cannot find corgeistration matrix')
+    end
+    otherwise
+end
+
+
 %% Save Output to PatientDirectory/cortex/
 if ~exist(fullfile(ptdir,'cortex'),'dir')
     mkdir(fullfile(ptdir,'cortex'))
@@ -182,6 +239,21 @@ end
     disp(['Saving to ' fullfile(ptdir,'cortex/CortexHiRes.mat') '...'])
     save(fullfile(ptdir,'cortex/CortexHiRes.mat'),'-struct','CortexHiRes')
 
+%     return
+%% Get Hull
+cmd = '/Applications/freesurfer/bin:/Applications/freesurfer/fsfast/bin:/Applications/freesurfer/mni/bin:/Applications/freesurfer/tktools';
+ea_libs_helper(cmd,'PATH')
+
+grayfilename = [FsDir '/mri/ribbon.nii'];
+% if ~exist(grayfilename,'file') && exist([FsDir,'/mri/ribbon.mgz'],'file')
+%     cmd = sprintf('mri_convert -i %s/mri/ribbon.mgz -o %s/mri/ribbon.nii -it mgz -ot nii',FsDir,FsDir);
+%     system(cmd)
+% else ~exist(grayfilename,'file') && ~exist([FsDir,'/mri/ribbon.mgz'],'file')
+%     ea_warning('Cannot Find mri/ribbon.mgz')
+% end    
+    %disp('running dbs_gethull.......')
+    %[mask_matrix,mask_indices] = ea_gethull(grayfilename,3,21,.3);
+    save([ptdir '/cortex/hull.mat'],'mask_matrix','mask_indices')
 %% Option to Downsample CortexHiRes
 % newNbVertices = '15000';
 qst = {'Would you like to downsample the high '; sprintf('resolution cortex with %d vertices?',size(CortexHiRes.Vertices,1))};
@@ -231,6 +303,10 @@ if strcmp(DownsampleOption,'Yes')
     disp(['Saving to ' fullfile(ptdir,['cortex/CortexLowRes_' num2str(newNbVertices) 'V.mat']) '...'])
     save(fullfile(ptdir,['cortex/CortexLowRes_' num2str(newNbVertices) 'V.mat']),'-struct','CortexLowRes')
     end
+    
+elseif strcmp(DownsampleOption,'Cancel')
+    return
+
 end
 
 %% Import Cortical Electrodes
@@ -253,3 +329,19 @@ end
 
 %%
 disp('Done')
+
+
+function files = fdir(Path,exp)
+% Returns contents of path as cell of filenames
+
+if isempty(Path) || ~exist('Path','var')
+    Path = pwd;
+end
+    
+contents = dir(Path);
+contents = contents(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {contents.name}));
+files = {contents(~[contents.isdir]).name};
+
+if nargin==2
+    files = files(~cellfun(@(x) isempty(regexp(x, ['\w' exp],'match')), files));
+end
