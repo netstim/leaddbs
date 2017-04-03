@@ -128,7 +128,7 @@ for fi=1:length(fixedimage)
         case 'MI'
             suffx=',32,Regular,0.25';
         case 'CC'
-            suffx=',4,Regular,0.25';
+            suffx=',4';
         case 'GC'
             suffx=',15,Random,0.05';
     end
@@ -152,7 +152,7 @@ for fi=1:length(fixedimage)
         case 'MI'
             suffx=',32,Regular,0.25';
         case 'CC'
-            suffx=',4,Regular,0.25';
+            suffx=',4';
         case 'GC'
             suffx=',15,Random,0.05';
 	end
@@ -172,7 +172,7 @@ for fi=1:length(fixedimage)
         case 'MI'
             suffx=',32,Regular,0.25';
         case 'CC'
-            suffx=',4,Regular,0.25';
+            suffx=',4';
         case 'GC'
             suffx=',15,Random,0.05';
     end
@@ -195,10 +195,16 @@ synmaskstage = [' --transform SyN[0.2,3.0,0.0]', ...
     ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
     ' --masks [',ea_space([],'subcortical'),'secondstepmask','.nii',',NULL]'];
 for fi=1:length(fixedimage)
-    suffx=',4';
-    
+    switch metrics{fi}
+        case 'MI'
+            suffx=',32,Regular,0.25';
+        case 'CC'
+            suffx=',4';
+        case 'GC'
+            suffx=',15,Random,0.05';
+    end    
     synmaskstage=[synmaskstage,...
-        ' --metric ','CC','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
 ea_libs_helper
