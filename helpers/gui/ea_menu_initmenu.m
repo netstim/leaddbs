@@ -50,7 +50,7 @@ if isempty(menuprobe)
        m=uimenu(f,'Label','Methods');
        m_c=uimenu(m,'Label','Show methods popup on completed tasks.','Callback',{@ea_toggle_methods});
        prefs=ea_prefs;
-       if prefs.machine.methods.show
+       if prefs.machine.methods_show
            m_c.Checked='on';
        else
            m_c.Checked='off';

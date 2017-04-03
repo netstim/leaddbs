@@ -32,9 +32,9 @@ end
 expstr=[expstr,'\n\n***'];
 
 if options.prefs.machine.methods_show
-try
-    ea_methodsdisp({expstr});
-end
+    try
+        ea_methodsdisp({expstr});
+    end
 else
     fprintf(expstr);
 end
