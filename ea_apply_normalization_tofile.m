@@ -9,7 +9,7 @@ end
 
 switch ea_whichnormmethod(directory)
     case ea_getantsnormfuns % ANTs part here
-        keyboard
+        
         ea_ants_applytransforms(options,from,to,useinverse,'','',interp);
         
     case ea_getfslnormfuns % FSL part here
