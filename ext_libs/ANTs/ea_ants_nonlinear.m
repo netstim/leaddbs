@@ -1,9 +1,15 @@
-function ea_ants_nonlinear(varargin)
+function ea_ants_nonlinear_subcortical(varargin)
 % Wrapper for ANTs nonlinear registration
 
 fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
+try
+subcorticalrefine=varargin{7};
+catch
+    subcorticalrefine=0;
+end
+usetempmasks=0; % models implicit masks at non-zero intensities. Not yet implemented.
 
 
 [outputdir, outputname, ~] = fileparts(outputimage);
@@ -19,6 +25,23 @@ elseif ~iscell(fixedimage)
 	ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 
+if usetempmasks
+    tmaskdir=fullfile(tempdir,'lead');
+    if ~exist(tmaskdir,'dir')
+        mkdir(tmaskdir);
+    end
+    for mov=1:length(movingimage)
+        impmasks{mov}=[tmaskdir,filesep,'mask',num2str(mov),'.nii'];
+        nii=ea_load_nii(movingimage{mov});
+        nii.img=~(nii.img==0);
+        nii.dt=[4,0];
+        nii.fname=impmasks{mov};
+        ea_write_nii(nii);
+    end
+    
+else
+   impmasks=repmat({'nan'},length(movingimage),1); 
+end
 
 
 if nargin>3
@@ -28,12 +51,6 @@ if nargin>3
 else
     weights=ones(length(fixedimage),1);
     metrics=repmat({'MI'},length(fixedimage),1);
-end
-
-try 
-    usescmask=varargin{7};
-catch
-    usescmask=0;
 end
 
 if ischar(movingimage)
@@ -85,15 +102,15 @@ end
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
 
-rigidconvergence='[1000x500x0x0,1e-6,10]';
+rigidconvergence='[1000x500x250x0,1e-6,10]';
 rigidshrinkfactors='12x8x4x2';
 rigidsmoothingssigmas='4x3x2x1vox';
 
-affineconvergence='[1000x500x0x0,1e-6,10]';
-affineshrinkfactors='8x4x2x1';
+affineconvergence='[1000x500x250x0,1e-6,10]';
+affineshrinkfactors='12x8x4x2';
 affinesmoothingssigmas='4x3x2x1vox';
 
-synconvergence='[100x50x20x0,1e-6,10]';
+synconvergence='[1000x500x250x0,1e-6,10]';
 synshrinkfactors='8x4x2x1';
 synsmoothingssigmas='4x3x2x1vox';
 
@@ -181,13 +198,8 @@ for fi=1:length(fixedimage)
     suffx=',4';
     
     synmaskstage=[synmaskstage,...
-        ' --metric ','MI','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+        ' --metric ','CC','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
-
-if ~usescmask % delete mask stage
-    synmaskstage='';
-end
-
 
 ea_libs_helper
 %setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS','8')
@@ -199,8 +211,11 @@ cmd = [ANTS, ' --verbose 1', ...
     ' --use-histogram-matching 1', ...
     ' --float 1',...
     ' --write-composite-transform 1', ...
-    rigidstage, affinestage, synstage, synmaskstage];
+    rigidstage, affinestage, synstage];
 
+if subcorticalrefine
+    cmd=[cmd,synmaskstage];
+end
 
 
 if ~ispc

@@ -33,8 +33,11 @@ if nargin >= 7
                 interp='NearestNeighbor';
             case 1
                 interp='Linear';
+            case -1
+                interp='GenericLabel';
             otherwise
                 interp='BSpline';
+                
         end
     end
 else

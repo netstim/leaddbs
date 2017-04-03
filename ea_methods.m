@@ -40,9 +40,11 @@ else
 end
 
 if exist('directory','var')
+    try
     metfile=fopen([directory,'ea_methods.txt'],'a');
 
     fprintf(metfile,expstr);
     fclose(metfile);
+    end
 end
 
