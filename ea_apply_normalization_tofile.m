@@ -1,4 +1,4 @@
-function ea_apply_normalization_tofile(options,from,to,directory,useinverse,interp)
+function ea_apply_normalization_tofile(options,from,to,directory,useinverse,interp,refim)
 % this function applies lead-dbs normalizations to nifti files.
 % currently just used to generate patient specific atlases,i.e., from MNI
 % space to native space
@@ -7,10 +7,13 @@ if ~exist('interp','var')
     interp=4;
 end
 
+if ~exist('refim','var')
+    refim='';
+end
 switch ea_whichnormmethod(directory)
     case ea_getantsnormfuns % ANTs part here
         
-        ea_ants_applytransforms(options,from,to,useinverse,'','',interp);
+        ea_ants_applytransforms(options,from,to,useinverse,refim,'',interp);
         
     case ea_getfslnormfuns % FSL part here
         
