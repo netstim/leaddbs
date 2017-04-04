@@ -17,10 +17,11 @@ if isempty(menuprobe)
         uimenu(cr,'Label','Aggregate all checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'allcheckreg'});
         uimenu(cr,'Label','Aggregate most recent normalization checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'normcheckreg'});
     end
-   if ismember('acpc',cmd)
+    if ismember('acpc',cmd)
         uimenu(f,'Label','Convert ACPC/MNI coordinates (Horn 2017)','Callback',{@ea_acpcquery,handles.leadfigure});
     end
     
+    uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles});
     
     
     if ismember('dbs',cmd)

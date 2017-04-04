@@ -36,27 +36,22 @@ if ~strcmp(options.coregmr.method,'Do not coregister MRIs (already coregistered)
         end
     end
 
-
+    
     switch options.coregmr.method
         case 'SPM' % SPM
             ea_coregmr_spm(options,doreslice);
-            return   
         case 'FSL' % FSL
             ea_coregmr_flirt(options);
-            return
         case 'ANTs' % ANTs
             ea_coregmr_ants(options,0);
-            return
         case 'BRAINSFIT' % BRAINSFit
             ea_coregmr_brainsfit(options);
-            return
         case 'Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
             ea_coregmr_spm(options,0,0); % dont use doreslice here to refrain for doing two interpolations.
             ea_coregmr_ants(options);
         case 'Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
             ea_coregmr_spm(options,0,0); % dont use doreslice here to refrain for doing two interpolations.
-            ea_coregmr_brainsfit(options);
-            
+            ea_coregmr_brainsfit(options);     
     end
     ea_dumpnormmethod(options,options.coregmr.method,'coregmrmethod');
 end

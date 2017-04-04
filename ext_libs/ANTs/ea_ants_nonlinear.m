@@ -62,6 +62,7 @@ if slabsupport
             mnii.img=AllMX;
             mnii.fname=[tmaskdir,filesep,'slabmask.nii'];
             ea_write_nii(mnii);
+            keyboard
             disp('Slabs found. Separating slabs to form an additional SyN stage.');
         else
             disp('No slabs found.');
