@@ -476,10 +476,10 @@ if ~isempty(merwin) && isvalid(merwin)
     
     if isempty(keymer)
         return
-    else
+    elseif sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
         trajectory = [get(merhandles.(keymer(4:end)),'XData')',get(merhandles.(keymer(4:end)),'YData')',get(merhandles.(keymer(4:end)),'ZData')'];
         if n>0 && isequal(trajectory(1,:),mermarkers(n).coords_mm) && ~strcmp(event.Key,'s') && ~strcmp(event.Key,'n')
-            fprintf('Location along %s %s tract already marked: [%f,%f,%f].\n',keymer(strfind(keymer,'_')+1:end),keymer(4:strfind(keymer,'_')-1),trajectory(1,:))
+            fprintf('Location along %s %s track already marked: [%f,%f,%f].\n',keymer(strfind(keymer,'_')+1:end),keymer(4:strfind(keymer,'_')-1),trajectory(1,:))
             return
         end
     end   
@@ -489,11 +489,11 @@ if ~isempty(merwin) && isvalid(merwin)
         sphere.y = sphere.y*sSize+trajectory(1,2);
         sphere.z = sphere.z*sSize+trajectory(1,3);
         mermarkers(n+1).side = keymer(regexp(keymer,'_')+1:end);
-        mermarkers(n+1).tract = keymer(4:regexp(keymer,'_')-1);
+        mermarkers(n+1).track = keymer(4:regexp(keymer,'_')-1);
         mermarkers(n+1).depth = str2double(getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['pos' keymer(4:end)]),'String'));
         mermarkers(n+1).coords_mm = trajectory(1,:);
-        mermarkers(n+1).dat.implantedtract = getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtract' keymer(regexp(keymer,'_'):end)]),'String');
-        mermarkers(n+1).dat.implantedtract = mermarkers(n+1).dat.implantedtract{getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtract' keymer(regexp(keymer,'_'):end)]),'Value')};
+        mermarkers(n+1).dat.implantedtrack = getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtrack' keymer(regexp(keymer,'_'):end)]),'String');
+        mermarkers(n+1).dat.implantedtrack = mermarkers(n+1).dat.implantedtrack{getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtrack' keymer(regexp(keymer,'_'):end)]),'Value')};
         mermarkers(n+1).dat.leaddepth = str2double(getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['editimplanteddepth' keymer(regexp(keymer,'_'):end)]),'String'));
         mermarkers(n+1).dat.offset = event.Key;
         mermarkers(n+1).dat.key = event.Key;
@@ -501,10 +501,11 @@ if ~isempty(merwin) && isvalid(merwin)
         mermarkers(n+1).tag.visible = options.prefs.mer.tag.visible;
         [mermarkers(n+1).tag.handle,mermarkers(n+1).tag.string] = ea_setmertag(mermarkers(n+1).tag,keymer,trajectory(1,:));
 
-        % 'm' = MER; 'l' = LFP; 't' = Top; 'b' = Bottom
+        % Reserved keys: {'space','m','l','t','b','s','n'}
+        % 'space' = Generic; 'm' = MER; 'l' = LFP; 't' = Top; 'b' = Bottom
         switch lower(commnd)
             case 'space'
-                mermarkers(n+1).notes
+                mermarkers(n+1).notes;
                 mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
                     'FaceColor',[0.5 0.5 0],'EdgeColor','none',...
                     'FaceAlpha',0.7,'tag','Generic');
@@ -545,7 +546,7 @@ if ~isempty(merwin) && isvalid(merwin)
             case {'uparrow','leftarrow'}
             if isempty(keymer); return
             else
-              trajectory = [getfield(getappdata(resultfig,['mer' keymer(4:end)]),'XData')',getfield(getappdata(resultfig,['mer' keymer(4:end)]),'YData')',getfield(getappdata(resultfig,['mer' keymer(4:end)]),'ZData')'];            
+              trajectory = [merhandles.(keymer(4:end)).XData',merhandles.(keymer(4:end)).YData',merhandles.(keymer(4:end)).ZData'];            
             end
             if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
                 d=0.25; % step size
@@ -555,11 +556,11 @@ if ~isempty(merwin) && isvalid(merwin)
                 d=0.05;    % small step size
             end
             newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
-            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,['mer' keymer(4:end)])
+            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer(4:end))
         case {'downarrow','rightarrow'}
             if isempty(keymer); return
             else
-              trajectory = [getfield(getappdata(resultfig,['mer' keymer(4:end)]),'XData')',getfield(getappdata(resultfig,['mer' keymer(4:end)]),'YData')',getfield(getappdata(resultfig,['mer' keymer(4:end)]),'ZData')'];            
+              trajectory = [merhandles.(keymer(4:end)).XData',merhandles.(keymer(4:end)).YData',merhandles.(keymer(4:end)).ZData'];
             end
             if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
                 d=-0.25; % movement distance
@@ -569,7 +570,7 @@ if ~isempty(merwin) && isvalid(merwin)
                 d=-0.05;
             end
             newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
-            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,['mer' keymer(4:end)])
+            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer(4:end))
         end
     end
 end
@@ -985,12 +986,12 @@ resultfig=getappdata(handles.mercontrolfig,'resultfig');
 % XData = get(getappdata(resultfig,tag),'XData');
 % YData = get(getappdata(resultfig,tag),'YData');
 % ZData = get(getappdata(resultfig,tag),'ZData');
-h = getappdata(resultfig,tag);
+h = getfield(getappdata(resultfig,'merhandles'),tag);
 set(h,'XData',trajectory(:,1)')
 set(h,'YData',trajectory(:,2)')
 set(h,'ZData',trajectory(:,3)')
 setappdata(resultfig,tag,h)
-set(handles.(['key' tag(4:end)]),'Value',1)
-setappdata(resultfig,'keymer',['key' tag(4:end)])
-newdiststr = num2str(str2double(get(handles.(['pos' tag(4:end)]),'String'))+dist);
-set(handles.(['pos' tag(4:end)]),'String',newdiststr)
+set(handles.(['key',tag]),'Value',1)
+setappdata(resultfig,'keymer',['key',tag])
+newdiststr = num2str(str2double(get(handles.(['pos',tag]),'String'))+dist);
+set(handles.(['pos',tag]),'String',newdiststr)

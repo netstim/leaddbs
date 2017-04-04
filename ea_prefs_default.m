@@ -136,9 +136,9 @@ prefs.video.opts.Duration=30;
 prefs.video.opts.Periodic=true;
 
 %% MER-Visualization:
-prefs.mer.offset=2; % default distance between mer tracts is 2mm
+prefs.mer.offset=2; % default distance between mer tracks is 2mm
 prefs.mer.length=24; % default mer length for visualization is 24mm
-prefs.mer.defaulttract=2; % default tract is Central(2). Set to 3(Posterior) or 4(Medial)
+prefs.mer.defaulttrack=1; % default track is Central(1). Set to 2=Anterior,3=Posterior,4=Lateral, or 5=Medial
 prefs.mer.tag.visible='off'; 
 
 %% Cortex-Visualization:

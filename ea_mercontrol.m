@@ -22,7 +22,7 @@ function varargout = ea_mercontrol(varargin)
 
 % Edit the above text to modify the response to help ea_mercontrol
 
-% Last Modified by GUIDE v2.5 16-Feb-2017 21:10:59
+% Last Modified by GUIDE v2.5 03-Apr-2017 20:39:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -73,18 +73,18 @@ clearmertrajectories(handles,resultfig,options)
 [~,trajectory,markers]=ea_load_reconstruction(options);
 coords_mm=ea_resolvecoords(markers,options);
 merstruct.length = options.prefs.mer.length; %default is 24mm
-merstruct.offset = options.prefs.mer.offset; % default distance between mer tracts is 2mm
+merstruct.offset = options.prefs.mer.offset; % default distance between mer tracks is 2mm
 merstruct.colormap = [0.5,0,0;0.5,0.5,0;0,0.5,0;0.5,0,0.5;0,0.5,0.5;0,0,0.5]; %Maroon,Olive,Green,Purple,Teal,Navy
 
 % Set mermarkers
 mermarkers = getappdata(resultfig,'mermarkers');
 if isempty(mermarkers)
-    mermarkers = struct('side',{},'tract',{},'depth',{},'markertype',{},'session',{},'dat',{},'tag',{},'handle',{},'notes',{});
+    mermarkers = struct('side',{},'track',{},'depth',{},'markertype',{},'session',{},'dat',{},'tag',{},'handle',{},'notes',{});
     setappdata(resultfig,'mermarkers',mermarkers)
 end
-% Set default implanted tract
-set(handles.popupimplantedtract_left,'Value',options.prefs.mer.defaulttract)
-set(handles.popupimplantedtract_right,'Value',options.prefs.mer.defaulttract)
+% Set default implanted track
+set(handles.popupimplantedtrack_left,'Value',options.prefs.mer.defaulttrack+1)
+set(handles.popupimplantedtrack_right,'Value',options.prefs.mer.defaulttrack+1)
 set(handles.editimplanteddepth_left,'String','0')
 set(handles.editimplanteddepth_right,'String','0')
 
@@ -716,22 +716,22 @@ end
 
 
 
-% --- Executes on selection change in popupimplantedtract_left.
-function popupimplantedtract_left_Callback(hObject, eventdata, handles)
-% hObject    handle to popupimplantedtract_left (see GCBO)
+% --- Executes on selection change in popupimplantedtrack_left.
+function popupimplantedtrack_left_Callback(hObject, eventdata, handles)
+% hObject    handle to popupimplantedtrack_left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupimplantedtract_left contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupimplantedtract_left
+% Hints: contents = cellstr(get(hObject,'String')) returns popupimplantedtrack_left contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupimplantedtrack_left
 resultfig=getappdata(handles.mercontrolfig,'resultfig');
 merstruct=getappdata(resultfig,'merstruct');
 
 side=2; %left
-tractstring=lower(get(handles.popupimplantedtract_left,'String'));
-tracttag=tractstring{handles.popupimplantedtract_left.Value};
+trackstring=lower(get(handles.popupimplantedtrack_left,'String'));
+tracktag=trackstring{handles.popupimplantedtrack_left.Value};
 
-merstruct = ea_updatetracts(merstruct,side,tracttag,resultfig,handles);
+merstruct = ea_updatetracks(merstruct,side,tracktag,resultfig,handles);
 ea_updatemertrajectory(handles,merstruct.currentmer.central.trajectory{side},'central_left')
 ea_updatemertrajectory(handles,merstruct.currentmer.anterior.trajectory{side},'anterior_left')
 ea_updatemertrajectory(handles,merstruct.currentmer.posterior.trajectory{side},'posterior_left')
@@ -741,8 +741,8 @@ setappdata(resultfig,'merstruct',merstruct);
 
 
 % --- Executes during object creation, after setting all properties.
-function popupimplantedtract_left_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupimplantedtract_left (see GCBO)
+function popupimplantedtrack_left_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupimplantedtrack_left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -753,22 +753,22 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupimplantedtract_right.
-function popupimplantedtract_right_Callback(hObject, eventdata, handles)
-% hObject    handle to popupimplantedtract_right (see GCBO)
+% --- Executes on selection change in popupimplantedtrack_right.
+function popupimplantedtrack_right_Callback(hObject, eventdata, handles)
+% hObject    handle to popupimplantedtrack_right (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupimplantedtract_right contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupimplantedtract_right
+% Hints: contents = cellstr(get(hObject,'String')) returns popupimplantedtrack_right contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupimplantedtrack_right
 resultfig=getappdata(handles.mercontrolfig,'resultfig');
 merstruct=getappdata(resultfig,'merstruct');
 
 side=1; %left
-tractstring=lower(get(handles.popupimplantedtract_right,'String'));
-tracttag=tractstring{handles.popupimplantedtract_right.Value};
+trackstring=lower(get(handles.popupimplantedtrack_right,'String'));
+tracktag=trackstring{handles.popupimplantedtrack_right.Value};
 
-merstruct = ea_updatetracts(merstruct,side,tracttag,resultfig,handles);
+merstruct = ea_updatetracks(merstruct,side,tracktag,resultfig,handles);
 ea_updatemertrajectory(handles,merstruct.currentmer.central.trajectory{side},'central_right')
 ea_updatemertrajectory(handles,merstruct.currentmer.anterior.trajectory{side},'anterior_right')
 ea_updatemertrajectory(handles,merstruct.currentmer.posterior.trajectory{side},'posterior_right')
@@ -778,8 +778,8 @@ setappdata(resultfig,'merstruct',merstruct);
 
 
 % --- Executes during object creation, after setting all properties.
-function popupimplantedtract_right_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupimplantedtract_right (see GCBO)
+function popupimplantedtrack_right_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupimplantedtrack_right (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1232,10 +1232,10 @@ for i = 1:length(mermarkers)
 try delete(mermarkers(i).handle); end
 try delete(mermarkers(i).tag.handle); end
 end
-mermarkers = struct('side',{},'tract',{},'depth',{},'markertype',{},'session',{},'dat',{},'tag',{},'handle',{},'notes',{});
+mermarkers = struct('side',{},'track',{},'depth',{},'markertype',{},'session',{},'dat',{},'tag',{},'handle',{},'notes',{});
 setappdata(resultfig,'mermarkers',mermarkers)
-set(handles.popupimplantedtract_left,'Value',options.prefs.mer.defaulttract);
-set(handles.popupimplantedtract_right,'Value',options.prefs.mer.defaulttract);
+set(handles.popupimplantedtrack_left,'Value',options.prefs.mer.defaulttrack+1);
+set(handles.popupimplantedtrack_right,'Value',options.prefs.mer.defaulttrack+1);
 set(handles.editimplanteddepth_left,'String','0');
 set(handles.editimplanteddepth_right,'String','0');
 set(handles.popupmermarkers_left,'Visible','off','String','','Value',1)
@@ -1338,17 +1338,17 @@ for n = 1:length(mermarkers)
     
 end
 
-% set implanted tract data
+% set implanted track data
 try
     Lidx = find(~cellfun(@isempty,strfind({mermarkers.side},'left'))==1);
-    set(handles.popupimplantedtract_left,'Value',find(~cellfun(@isempty,strfind(handles.popupimplantedtract_left.String,mermarkers(Lidx(1)).dat.implantedtract))==1))
+    set(handles.popupimplantedtrack_left,'Value',find(~cellfun(@isempty,strfind(handles.popupimplantedtrack_left.String,mermarkers(Lidx(1)).dat.implantedtrack))==1))
     set(handles.editimplanteddepth_left,'String',num2str(mermarkers(Lidx(1)).dat.leaddepth))
     getsettogglestates(handles,2,mermarkers(Lidx(1)).dat.leaddepth);
 end
 
 try
     Ridx = ~cellfun(@isempty,strfind({mermarkers.side},'right'));
-    set(handles.popupimplantedtract_right,'Value',find(~cellfun(@isempty,strfind(handles.popupimplantedtract_left.String,mermarkers(Ridx(1)).dat.implantedtract))==1))
+    set(handles.popupimplantedtrack_right,'Value',find(~cellfun(@isempty,strfind(handles.popupimplantedtrack_left.String,mermarkers(Ridx(1)).dat.implantedtrack))==1))
     set(handles.editimplanteddepth_left,'String',num2str(mermarkers(Ridx(1)).dat.leaddepth))
     getsettogglestates(handles,1,mermarkers(Ridx(1)).dat.leaddepth);
 end
@@ -1501,7 +1501,7 @@ outputtrajectory(:,2) = linspace(startpoint(1,2),startpoint(1,2)+slope(2)*length
 outputtrajectory(:,3) = linspace(startpoint(1,3),startpoint(1,3)+slope(3)*length,n);
 
 
-function merstruct = ea_updatetracts(merstruct,side,tracttag,resultfig,handles)
+function merstruct = ea_updatetracks(merstruct,side,tracktag,resultfig,handles)
         
 offset = getfield(getappdata(resultfig,'merstruct'),'offset');
 % elstruct = 
@@ -1510,7 +1510,7 @@ offset = getfield(getappdata(resultfig,'merstruct'),'offset');
 % z-axis --> negative = inferior, positive = superior
 coords_mm = merstruct.defaultmer.central.coords_mm{side};
 trajectory = merstruct.defaultmer.central.trajectory{side};
-switch tracttag 
+switch tracktag 
     case 'central'
         merstruct.currentmer.central.coords_mm{side} = coords_mm;
         merstruct.currentmer.central.trajectory{side} = trajectory;
@@ -1529,6 +1529,24 @@ switch tracttag
             merstruct.currentmer.medial.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2),coords_mm(:,3)]; %2mm medial (left is negative)
             merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2),trajectory(:,3)]; %2mm medial (left is negative)
         end
+    case 'anterior'
+        merstruct.currentmer.anterior.coords_mm{side} = coords_mm;
+        merstruct.currentmer.anterior.trajectory{side} = trajectory;
+        merstruct.currentmer.central.coords_mm{side} = [coords_mm(:,1),coords_mm(:,2)-offset,coords_mm(:,3)]; %2mm anterior
+        merstruct.currentmer.central.trajectory{side} = [trajectory(:,1),trajectory(:,2)-offset,trajectory(:,3)]; %2mm anterior
+        merstruct.currentmer.posterior.coords_mm{side} = [coords_mm(:,1),coords_mm(:,2)-offset*2,coords_mm(:,3)]; %4mm anterior
+        merstruct.currentmer.posterior.trajectory{side} = [trajectory(:,1),trajectory(:,2)-offset*2,trajectory(:,3)]; %4mm anterior
+         if side==1 %right
+            merstruct.currentmer.lateral.coords_mm{side} =  [coords_mm(:,1)+offset,coords_mm(:,2)-offset,coords_mm(:,3)]; %2mm medial (right is positive)
+            merstruct.currentmer.lateral.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)-offset,trajectory(:,3)]; %2mm medial (right is positive)
+            merstruct.currentmer.medial.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)-offset,coords_mm(:,3)]; %2mm medial (right is positive)
+            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)-offset,trajectory(:,3)]; %2mm medial (right is positive)
+        elseif side==2 %left
+            merstruct.currentmer.lateral.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)-offset,coords_mm(:,3)]; %2mm medial (left is negative)
+            merstruct.currentmer.lateral.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)-offset,trajectory(:,3)]; %2mm medial (left is negative)
+            merstruct.currentmer.medial.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2)-offset,coords_mm(:,3)]; %2mm medial (left is negative)
+            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)-offset,trajectory(:,3)]; %2mm medial (left is negative)
+         end
     case 'posterior'
         merstruct.currentmer.posterior.coords_mm{side} = coords_mm;
         merstruct.currentmer.posterior.trajectory{side} = trajectory;
@@ -1547,6 +1565,28 @@ switch tracttag
             merstruct.currentmer.medial.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2)+offset,coords_mm(:,3)]; %2mm medial (left is negative)
             merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)+offset,trajectory(:,3)]; %2mm medial (left is negative)
          end
+    case 'lateral'
+        merstruct.currentmer.lateral.coords_mm{side} = coords_mm;
+        merstruct.currentmer.lateral.trajectory{side} = trajectory;
+        if side==1 %right
+            merstruct.currentmer.central.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2),coords_mm(:,3)];
+            merstruct.currentmer.central.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2),trajectory(:,3)];
+            merstruct.currentmer.anterior.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)+offset,coords_mm(:,3)];
+            merstruct.currentmer.anterior.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)+offset,trajectory(:,3)];
+            merstruct.currentmer.posterior.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)-offset,coords_mm(:,3)];
+            merstruct.currentmer.posterior.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)-offset,trajectory(:,3)];
+            merstruct.currentmer.medial.coords_mm{side} =  [coords_mm(:,1)-offset*2,coords_mm(:,2),coords_mm(:,3)]; %2mm medial (right is positive)
+            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)-offset*2,trajectory(:,2),trajectory(:,3)]; %2mm medial (right is positive)
+        elseif side==2 %left
+            merstruct.currentmer.central.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2),coords_mm(:,3)];
+            merstruct.currentmer.central.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2),trajectory(:,3)];
+            merstruct.currentmer.anterior.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2)+offset,coords_mm(:,3)];
+            merstruct.currentmer.anterior.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)+offset,trajectory(:,3)];
+            merstruct.currentmer.posterior.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2)-offset,coords_mm(:,3)];
+            merstruct.currentmer.posterior.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)-offset,trajectory(:,3)];
+            merstruct.currentmer.medial.coords_mm{side} =  [coords_mm(:,1)+offset*2,coords_mm(:,2),coords_mm(:,3)]; %2mm medial (right is positive)
+            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)+offset*2,trajectory(:,2),trajectory(:,3)]; %2mm medial (right is positive)
+        end
     case 'medial'
         merstruct.currentmer.medial.coords_mm{side} = coords_mm;
         merstruct.currentmer.medial.trajectory{side} = trajectory;
