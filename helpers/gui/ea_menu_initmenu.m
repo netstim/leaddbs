@@ -8,7 +8,16 @@ if isempty(menuprobe)
     f = uimenu('Label','Tools');
     uimenu(f,'Label','Edit Preferences File...','Callback',{@ea_editprefs});
     uimenu(f,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
-    if ismember('acpc',cmd)
+    
+    if ismember('checkregfigs',cmd)
+        
+        cr=uimenu(f,'Label','Checkreg');
+        uimenu(cr,'Label','Generate Checkreg figures','Callback',{@ea_gencheckreg,handles});
+        
+        uimenu(cr,'Label','Aggregate all checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'allcheckreg'});
+        uimenu(cr,'Label','Aggregate most recent normalization checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'normcheckreg'});
+    end
+   if ismember('acpc',cmd)
         uimenu(f,'Label','Convert ACPC/MNI coordinates (Horn 2017)','Callback',{@ea_acpcquery,handles.leadfigure});
     end
     
@@ -72,9 +81,7 @@ if isempty(menuprobe)
         ea_menu_addspace(handles);
     end
 
-    if ismember('checkregfigs',cmd)
-       uimenu(f,'Label','Generate Checkreg figures','Callback',{@ea_gencheckreg,handles});
-    end
+
 
     if ismember('transfer',cmd)
        ea_menu_addtransfer(handles,callingfunction);

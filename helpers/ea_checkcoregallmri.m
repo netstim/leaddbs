@@ -12,7 +12,6 @@ if ~ea_seemscoregistered(options) % check headers of files to see if already cor
     end
     ea_coreg_all_mri(options,usebrainmask)
 end
-
 if usefa
     ea_coreg_fa(options,usebrainmask);
 end
