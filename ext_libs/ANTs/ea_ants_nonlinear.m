@@ -1,16 +1,21 @@
-function ea_ants_nonlinear_subcortical(varargin)
+function ea_ants_nonlinear(varargin)
 % Wrapper for ANTs nonlinear registration
 
 fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
+
+if ischar(movingimage)
+    movingimage={movingimage};
+elseif ~iscell(movingimage)
+    ea_error('Please supply variable fixedimage as either char or cellstring');
+end
 try
 subcorticalrefine=varargin{7};
 catch
     subcorticalrefine=0;
 end
-usetempmasks=0; % models implicit masks at non-zero intensities. Not yet implemented.
-
+slabsupport=1; % check for slabs in anat files and treat slabs differently (add additional SyN stage only in which slabs are being used).
 
 [outputdir, outputname, ~] = fileparts(outputimage);
 if outputdir
@@ -25,18 +30,42 @@ elseif ~iscell(fixedimage)
 	ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 
-if usetempmasks
+if slabsupport
+    disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},'is a whole-brain acquisition)...']);
     tmaskdir=fullfile(tempdir,'lead');
     if ~exist(tmaskdir,'dir')
         mkdir(tmaskdir);
     end
     for mov=1:length(movingimage)
-        impmasks{mov}=[tmaskdir,filesep,'mask',num2str(mov),'.nii'];
-        nii=ea_load_nii(movingimage{mov});
-        nii.img=~(nii.img==0);
-        nii.dt=[4,0];
-        nii.fname=impmasks{mov};
-        ea_write_nii(nii);
+        mnii=ea_load_nii(movingimage{mov});
+        mnii.img=~(mnii.img==0);
+        if ~exist('AllMX','var')
+            AllMX=mnii.img;
+        else
+            AllMX=AllMX.*mnii.img;
+        end
+        sums(mov)=sum(mnii.img(:));
+    end
+    slabspresent=0; % default no slabs present.
+    
+    if length(sums)>1 % multispectral warp
+        slabs=sums(1:end-1)<sums(end)/0.7;
+        if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
+            slabmovingimage=movingimage(slabs); % move slabs to new cell slabimage
+            slabfixedimage=fixedimage(slabs);
+            movingimage(slabs)=[]; % remove slabs from movingimage
+            fixedimage(slabs)=[]; % remove slabs from movingimage
+
+            % write out slab mask
+            slabspresent=1;
+            mnii.dt=[4,0];
+            mnii.img=AllMX;
+            mnii.fname=[tmaskdir,filesep,'slabmask.nii'];
+            ea_write_nii(mnii);
+            disp('Slabs found. Separating slabs to form an additional SyN stage.');
+        else
+            disp('No slabs found.');
+        end
     end
     
 else
@@ -53,11 +82,6 @@ else
     metrics=repmat({'MI'},length(fixedimage),1);
 end
 
-if ischar(movingimage)
-    movingimage={movingimage};
-elseif ~iscell(movingimage)
-    ea_error('Please supply variable fixedimage as either char or cellstring');
-end
 
 directory=fileparts(movingimage{1});
 directory=[directory,filesep];
@@ -178,37 +202,80 @@ for fi=1:length(fixedimage)
     end
     synstage=[synstage,...
         ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
-    
-
 end
 
-% add masks:
-
-synmaskconvergence='[20x5,1e-6,10]';
-synmaskshrinkfactors='2x1';
-synmasksmoothingssigmas='1x0vox';
 
 
-synmaskstage = [' --transform SyN[0.2,3.0,0.0]', ...
-    ' --convergence ', synmaskconvergence, ...
-    ' --shrink-factors ', synmaskshrinkfactors,  ...
-    ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
-    ' --masks [',ea_space([],'subcortical'),'secondstepmask','.nii',',NULL]'];
-for fi=1:length(fixedimage)
-    switch metrics{fi}
-        case 'MI'
-            suffx=',32,Regular,0.25';
-        case 'CC'
-            suffx=',4';
-        case 'GC'
-            suffx=',15,Random,0.05';
-    end    
-    synmaskstage=[synmaskstage,...
-        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+
+% add slab stage
+
+
+if slabspresent
+    slabstage=[' --transform SyN[0.3,3.0,0.0]'...
+        ' --convergence ', synconvergence, ...
+        ' --shrink-factors ', synshrinkfactors ...
+        ' --smoothing-sigmas ', synsmoothingssigmas, ...
+        ' --masks [NULL,',[tmaskdir,filesep,'slabmask.nii'],']'];
+    fixedimage=[fixedimage,slabfixedimage];
+    movingimage=[movingimage,slabmovingimage];
+    
+    for fi=1:length(fixedimage)
+        switch metrics{fi}
+            case 'MI'
+                suffx=',32,Regular,0.25';
+            case 'CC'
+                suffx=',4';
+            case 'GC'
+                suffx=',15,Random,0.05';
+        end
+        slabstage=[slabstage,...
+            ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+    end
+    
+else
+    slabstage='';
+end
+
+
+
+
+% add subcortical refine stage:
+if subcorticalrefine
+    synmaskconvergence='[20x5,1e-6,10]';
+    synmaskshrinkfactors='2x1';
+    synmasksmoothingssigmas='1x0vox';
+    
+    if slabspresent
+        movingmask=[tmaskdir,filesep,'slabmask.nii'];
+    else
+        movingmask='NULL';
+    end
+    synmaskstage = [' --transform SyN[0.2,3.0,0.0]', ...
+        ' --convergence ', synmaskconvergence, ...
+        ' --shrink-factors ', synmaskshrinkfactors,  ...
+        ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
+        ' --masks [',ea_space([],'subcortical'),'secondstepmask','.nii',',',movingmask,']'];
+    for fi=1:length(fixedimage)
+        switch metrics{fi}
+            case 'MI'
+                suffx=',32,Regular,0.25';
+            case 'CC'
+                suffx=',4';
+            case 'GC'
+                suffx=',15,Random,0.05';
+        end
+        synmaskstage=[synmaskstage,...
+            ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+    end
+else
+    synmaskstage=''; 
 end
 
 ea_libs_helper
 %setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS','8')
+
+
+
 
 cmd = [ANTS, ' --verbose 1', ...
     ' --dimensionality 3', ...
@@ -217,11 +284,7 @@ cmd = [ANTS, ' --verbose 1', ...
     ' --use-histogram-matching 1', ...
     ' --float 1',...
     ' --write-composite-transform 1', ...
-    rigidstage, affinestage, synstage];
-
-if subcorticalrefine
-    cmd=[cmd,synmaskstage];
-end
+    rigidstage, affinestage, synstage, slabstage, synmaskstage];
 
 
 if ~ispc
