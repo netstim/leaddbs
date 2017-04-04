@@ -89,7 +89,7 @@ switch options.prefs.scrf.auto
             ea_compute_scrf(handles)
         %end
 end
-        
+
 
 % Choose default command line output for ea_subcorticalrefine
 handles.output = hObject;
@@ -131,7 +131,7 @@ switch refine
         refstr='standard';
 end
 
-ea_createrefineslice(directory,options,refine); 
+ea_createrefineslice(directory,options,refine);
 try
 slice=imread([directory,'scrf',filesep,refstr,'.png']);
 catch
@@ -171,10 +171,10 @@ if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
     end
     to{1}=[directory,'scrf',filesep,'bb.nii'];
     from{1}=[ea_space,'bb.nii'];
-    
+
     ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],1);
     ea_crop_nii([directory,'scrf',filesep,'bb.nii']);
-    
+
     % do put in primary anat file ? needs to be done only once.
     fis={options.prefs.prenii_unnormalized};
     copyfile([directory,fis{1}],[directory,'scrf',filesep,fis{1}])
@@ -184,7 +184,7 @@ if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
 end
 % apply tonemapping if needed
 if ~exist([directory,'tp_',options.prefs.ctnii_coregistered],'file') && exist([directory,options.prefs.ctnii_coregistered],'file')
-   ea_tonemapct_file(options,'native'); 
+   ea_tonemapct_file(options,'native');
 end
 fis={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,['tp_',options.prefs.ctnii_coregistered]};
 for fi=1:length(fis)
@@ -195,7 +195,7 @@ for fi=1:length(fis)
 end
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_subcorticalrefine_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_subcorticalrefine_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -271,7 +271,7 @@ end
 otherfiles={};
 
 if handles.mask1.Value
-   msks=msks(1); % only use first mask. 
+   msks=msks(1); % only use first mask.
 end
 if ~exist('msks','var')
     msks={};
@@ -316,7 +316,7 @@ switch options.modality
         nii.fname=[directory,'scrf',filesep,'movim.nii'];
         nii.img(isnan(nii.img))=0;
         %nii.img(~(nii.img==0))=zscore(nii.img(~(nii.img==0)));
-        
+
         ea_write_nii(nii);
     case 2
         otherfiles={[directory,'scrf',filesep,'tp_',options.prefs.ctnii_coregistered]};
@@ -330,7 +330,7 @@ function savebutn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 directory=getappdata(handles.scrf,'directory');
 if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
-   msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".'); 
+   msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
 else
 copyfile([directory,'scrf',filesep,'scrf_instore.mat'],[directory,'scrf',filesep,'scrf.mat']);
 
@@ -338,7 +338,7 @@ ea_methods(directory,...
             ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
             'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
             ' (Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
-            {'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+            {'Horn, A., & KÃ¼hn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
 closescrf(handles);
 end

@@ -325,14 +325,14 @@ end
 meanmni=mean(mnipoints,1);
 set(handles.xmni,'String',sprintf('%0.2f',meanmni(1))); set(handles.ymni,'String',sprintf('%0.2f',meanmni(2))); set(handles.zmni,'String',sprintf('%0.2f',meanmni(3)));
 stdmni=std(mnipoints,0,1);
-set(handles.xstdmni,'String',['± ',sprintf('%.2f', stdmni(1)),' mm']); set(handles.ystdmni,'String',['± ',sprintf('%.2f', stdmni(2)),' mm']); set(handles.zstdmni,'String',['± ',sprintf('%.2f', stdmni(3)),' mm']);
+set(handles.xstdmni,'String',['Â± ',sprintf('%.2f', stdmni(1)),' mm']); set(handles.ystdmni,'String',['Â± ',sprintf('%.2f', stdmni(2)),' mm']); set(handles.zstdmni,'String',['Â± ',sprintf('%.2f', stdmni(3)),' mm']);
 
 ea_busyaction('off',handles.acpcfig,'acpc');
 
 %% add methods dump:
 cits={
-    'Horn, A., Kühn, A. A., Merkl, A., Shih, L., Alterman, R., & Fox, M. (2017). Probabilistic conversion of neurosurgical DBS electrode coordinates into MNI space. NeuroImage. http://doi.org/10.1016/j.neuroimage.2017.02.004'
-    'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
+    'Horn, A., KÃ¼hn, A. A., Merkl, A., Shih, L., Alterman, R., & Fox, M. (2017). Probabilistic conversion of neurosurgical DBS electrode coordinates into MNI space. NeuroImage. http://doi.org/10.1016/j.neuroimage.2017.02.004'
+    'Horn, A., & KÃ¼hn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
     };
 ea_methods([],['AC/PC coordinates were mapped into ',ea_getspace,' space based on ',num2str(pt),' subject''s nonlinear deformation fields in a probabilistic fashion following the approach ',...
     ' of Horn 2017 as implemented in Lead-DBS software (Horn 2015; www.lead-dbs.org).'],...
@@ -490,14 +490,14 @@ if get(handles.zflip,'Value')==1
 end
 
 set(handles.xmm,'String',sprintf('%0.2f',(meanacpc(1)))); set(handles.ymm,'String',sprintf('%0.2f',meanacpc(2))); set(handles.zmm,'String',sprintf('%0.2f',meanacpc(3)));
-set(handles.xstdacpc,'String',['± ',sprintf('%.2f', stdacpc(1)),' mm']); set(handles.ystdacpc,'String',['± ',sprintf('%.2f', stdacpc(2)),' mm']); set(handles.zstdacpc,'String',['± ',sprintf('%.2f', stdacpc(3)),' mm']);
+set(handles.xstdacpc,'String',['Â± ',sprintf('%.2f', stdacpc(1)),' mm']); set(handles.ystdacpc,'String',['Â± ',sprintf('%.2f', stdacpc(2)),' mm']); set(handles.zstdacpc,'String',['Â± ',sprintf('%.2f', stdacpc(3)),' mm']);
 
 ea_busyaction('off',handles.acpcfig,'acpc');
 
 %% add methods dump:
 cits={
-    'Horn, A., Kühn, A. A., Merkl, A., Shih, L., Alterman, R., & Fox, M. (2017). Probabilistic conversion of neurosurgical DBS electrode coordinates into MNI space. NeuroImage. http://doi.org/10.1016/j.neuroimage.2017.02.004'
-    'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
+    'Horn, A., KÃ¼hn, A. A., Merkl, A., Shih, L., Alterman, R., & Fox, M. (2017). Probabilistic conversion of neurosurgical DBS electrode coordinates into MNI space. NeuroImage. http://doi.org/10.1016/j.neuroimage.2017.02.004'
+    'Horn, A., & KÃ¼hn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
     };
 ea_methods([],['Standardized x-/y-/z-coordinates defined in ',ea_getspace,' space were transformed into AC/PC-coordinates in a probabilistic fashion based on ',num2str(pt),' subject''s nonlinear deformation fields following the approach ',...
     ' of Horn 2017 as implemented in Lead-DBS software (Horn 2015; www.lead-dbs.org).'],...

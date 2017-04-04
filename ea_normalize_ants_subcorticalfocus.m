@@ -31,7 +31,7 @@ if ~exist('includeatlas','var')
 end
 
 if ~includeatlas % second run from maget-brain segment
-ea_checkcoregallmri(options,usebrainmask)
+    ea_checkcoregallmri(options,usebrainmask)
 end
 
 directory=[options.root,options.patientname,filesep];
@@ -88,7 +88,7 @@ ea_apply_normalization(options);
 [scit,lcit]=ea_getspacedefcit;
 cits={
     'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
-    'Schönecker, T., Kupsch, A., Kühn, A. A., Schneider, G.-H., & Hoffmann, K. T. (2009). Automated Optimization of Subcortical Cerebral MR Imaging-Atlas Coregistration for Improved Postoperative Electrode Localization in Deep Brain Stimulation. AJNR Am J Neuroradiol, 30(10), 1914?1921. http://doi.org/10.3174/ajnr.A1741'
+    'SchÃ¶necker, T., Kupsch, A., KÃ¼hn, A. A., Schneider, G.-H., & Hoffmann, K. T. (2009). Automated Optimization of Subcortical Cerebral MR Imaging-Atlas Coregistration for Improved Postoperative Electrode Localization in Deep Brain Stimulation. AJNR Am J Neuroradiol, 30(10), 1914?1921. http://doi.org/10.3174/ajnr.A1741'
     };
 if ~isempty(lcit)
     cits=[cits;{lcit}];
@@ -98,7 +98,7 @@ ea_methods(options,['Pre- (and post-) operative acquisitions were spatially norm
     ' SyN registration approach as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/).',...
     ' Nonlinear deformation into template space was achieved in five stages: After two linear (rigid followed by affine) steps, ',...
     ' A nonlinear (whole brain) SyN-registration stage was followed by two nonlinear SyN-registrations that consecutively focused on the area of interest ',...
-    ' as defined by subcortical masks in Schönecker 2008.'],...
+    ' as defined by subcortical masks in SchÃ¶necker 2008.'],...
     cits);
 
 

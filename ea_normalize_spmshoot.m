@@ -89,7 +89,7 @@ matlabbatch{1}.spm.tools.shoot.warp1.templates = {[ea_space(options,'dartel'),'s
     [ea_space(options,'dartel'),'shootmni_4.nii']
     [ea_space(options,'dartel'),'shootmni_5.nii']
     [ea_space(options,'dartel'),'shootmni_6.nii']};
-  jobs{1}=matlabbatch;                                            
+  jobs{1}=matlabbatch;
 
 
 spm_jobman('run',jobs);
@@ -117,7 +117,7 @@ clear matlabbatch jobs;
 %         matlabbatch{1}.spm.util.defs.out{1}.savedef.savedir.saveusr = {directory};
 % end
 % jobs{1}=matlabbatch;
-% 
+%
 % spm_jobman('run',jobs);
 % disp('*** Exported normalization parameters to y_ea_normparams.nii');
 % clear matlabbatch jobs;
@@ -143,7 +143,7 @@ ea_apply_normalization(options)
 cits={
     'Ashburner, J., & Friston, K. J. (2005). Unified segmentation., 26(3), 839?851. http://doi.org/10.1016/j.neuroimage.2005.02.018'
     'Ashburner, J., & Friston, K. J. (2011). Diffeomorphic registration using geodesic shooting and Gauss?Newton optimisation. NeuroImage, 55(3), 954?967. http://doi.org/10.1016/j.neuroimage.2010.12.049'
-    'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
+    'Horn, A., & KÃ¼hn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
     };
 if ~isempty(lcit)
     cits=[cits;{lcit}];

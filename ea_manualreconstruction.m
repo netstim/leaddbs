@@ -142,7 +142,7 @@ end
 ea_methods(options,...
             ['DBS-Electrodes were manually localized based on post-operative acquisitions using a tool specifically designed for this task (as implemented in Lead-DBS software',...
             '; Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
-            {'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+            {'Horn, A., & KÃ¼hn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
 
 % continue with rest of the program schedule..
@@ -672,7 +672,7 @@ catch
     mks=Vtra.mat\[mks,ones(size(mks,1),1)]';
     mks=mks(1:3,:)';
 end
-    
+
 %title(['Electrode ',num2str(el-1),', transversal view.']);
 wsize=10;
 cmap=[1,4,5,8];

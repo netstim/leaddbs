@@ -178,7 +178,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         ea_methods(options,...
             ['DBS-Electrodes were automatically pre-localized in template space using Lead-DBS software',...
             ' (Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
-            {'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+            {'Horn, A., & KÃ¼hn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
     end
 
     if options.manualheightcorrection
@@ -198,7 +198,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     else
         ea_write(options)
     end
-    
+
 else
     ea_write(options)
 end

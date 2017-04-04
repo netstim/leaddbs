@@ -317,7 +317,7 @@ end
 cits={
     'Horn, A., Ostwald, D., Reisert, M., & Blankenburg, F. (2014). The structural-functional connectome and the default mode network of the human brain. NeuroImage, 102 Pt 1, 142?151. http://doi.org/10.1016/j.neuroimage.2013.09.069'
     'Weissenbacher, A., Kasess, C., Gerstl, F., Lanzenberger, R., Moser, E., & Windischberger, C. (2009). Correlations and anticorrelations in resting-state functional connectivity MRI: a quantitative comparison of preprocessing strategies., 47(4), 1408?1416. http://doi.org/10.1016/j.neuroimage.2009.05.005'
-    'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
+    'Horn, A., & KÃ¼hn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
     };
 ea_methods(options,['Resting-state fMRI data was preprocessed following the pipeline described in (Horn 2014) as implemented in Lead-DBS software (Horn 2015; www.lead-dbs.org). Pre-processing steps broadly follow the suggestions made in ',...
     ' (Weissenbacher 2009). This involved realignment of data, regression of movement-parameters, a WM-, CSF- as well as global signal and band-pass filtering (',num2str(options.prefs.lc.func.bphighcutoff),'-',...
