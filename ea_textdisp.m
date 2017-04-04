@@ -58,7 +58,7 @@ function ea_textdisp_OpeningFcn(hObject, eventdata, handles, varargin)
 
 set(hObject,'Name','Processing Report');
 
-movegui(hObject,'northeast');
+movegui(hObject,'northwest');
 % Choose default command line output for ea_textdisp
 handles.output = hObject;
 

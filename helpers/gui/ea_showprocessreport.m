@@ -36,6 +36,5 @@ for pt=1:length(uipatdir)
     ea_dispercent(pt/length(uipatdir));
 end
 ea_dispercent(1,'end');
-keyboard
 ea_textdisp({exptxt});
 
