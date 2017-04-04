@@ -479,7 +479,7 @@ if ~isempty(merwin) && isvalid(merwin)
     elseif sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
         trajectory = [get(merhandles.(keymer(4:end)),'XData')',get(merhandles.(keymer(4:end)),'YData')',get(merhandles.(keymer(4:end)),'ZData')'];
         if n>0 && isequal(trajectory(1,:),mermarkers(n).coords_mm) && ~strcmp(event.Key,'s') && ~strcmp(event.Key,'n')
-            fprintf('Location along %s %s track already marked: [%f,%f,%f].\n',keymer(strfind(keymer,'_')+1:end),keymer(4:strfind(keymer,'_')-1),trajectory(1,:))
+            fprintf('Location along %s %s tract already marked: [%f,%f,%f].\n',keymer(strfind(keymer,'_')+1:end),keymer(4:strfind(keymer,'_')-1),trajectory(1,:))
             return
         end
     end   
@@ -489,11 +489,11 @@ if ~isempty(merwin) && isvalid(merwin)
         sphere.y = sphere.y*sSize+trajectory(1,2);
         sphere.z = sphere.z*sSize+trajectory(1,3);
         mermarkers(n+1).side = keymer(regexp(keymer,'_')+1:end);
-        mermarkers(n+1).track = keymer(4:regexp(keymer,'_')-1);
+        mermarkers(n+1).tract = keymer(4:regexp(keymer,'_')-1);
         mermarkers(n+1).depth = str2double(getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['pos' keymer(4:end)]),'String'));
         mermarkers(n+1).coords_mm = trajectory(1,:);
-        mermarkers(n+1).dat.implantedtrack = getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtrack' keymer(regexp(keymer,'_'):end)]),'String');
-        mermarkers(n+1).dat.implantedtrack = mermarkers(n+1).dat.implantedtrack{getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtrack' keymer(regexp(keymer,'_'):end)]),'Value')};
+        mermarkers(n+1).dat.implantedtract = getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtract' keymer(regexp(keymer,'_'):end)]),'String');
+        mermarkers(n+1).dat.implantedtract = mermarkers(n+1).dat.implantedtract{getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtract' keymer(regexp(keymer,'_'):end)]),'Value')};
         mermarkers(n+1).dat.leaddepth = str2double(getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['editimplanteddepth' keymer(regexp(keymer,'_'):end)]),'String'));
         mermarkers(n+1).dat.offset = event.Key;
         mermarkers(n+1).dat.key = event.Key;
