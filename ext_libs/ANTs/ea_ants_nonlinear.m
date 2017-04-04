@@ -49,7 +49,7 @@ if slabsupport
     slabspresent=0; % default no slabs present.
     
     if length(sums)>1 % multispectral warp
-        slabs=sums(1:end-1)<sums(end)/0.7;
+        slabs=sums(1:end-1)<(sums(end)*0.7);
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
             slabmovingimage=movingimage(slabs); % move slabs to new cell slabimage
             slabfixedimage=fixedimage(slabs);
@@ -62,7 +62,6 @@ if slabsupport
             mnii.img=AllMX;
             mnii.fname=[tmaskdir,filesep,'slabmask.nii'];
             ea_write_nii(mnii);
-            keyboard
             disp('Slabs found. Separating slabs to form an additional SyN stage.');
         else
             disp('No slabs found.');
