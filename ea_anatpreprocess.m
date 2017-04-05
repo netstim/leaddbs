@@ -2,5 +2,11 @@ function ea_anatpreprocess(fpth)
 % Preprocess of anat image
 % Currently includes: reorientation & cropping and bias field correction
 
+% Cropping and reorientation
 %ea_rocrop(fpth);
-ea_bias_field_correction(fpth)
+
+% Bias field correction
+ea_bias_field_correction(fpth);
+
+% Reslice(interpolate) image if needed
+try ea_resliceanat(options); end

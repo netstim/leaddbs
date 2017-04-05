@@ -4,24 +4,21 @@ function ea_coreg_all_mri(options,usebrainmask)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-
-
 if ~exist('usefa','var')
     usefa=1;
 end
-
 
 [options,presentfiles]=ea_assignpretra(options);
 directory=[options.root,options.patientname,filesep];
 
 for coregfi=2:length(presentfiles)
-    
+
     ea_coreg2images(options,[directory,presentfiles{coregfi}],[directory,presentfiles{1}],[directory,presentfiles{coregfi}]);
-   
+
     % reslice images if needed
     V1=ea_open_vol([directory,presentfiles{1}]);
     V2=ea_open_vol([directory,presentfiles{coregfi}]);
-    if ~isequal(V1.mat,V2.mat);
+    if ~isequal(V1.mat,V2.mat)
         ea_conformspaceto([directory,presentfiles{1}],[directory,presentfiles{coregfi}],1);
     end
     % better slab support:
@@ -30,9 +27,6 @@ for coregfi=2:length(presentfiles)
     ea_write_nii(nii);
 
 end
-
-
-
 
 
 function masks=segmentall(from,options)
@@ -51,7 +45,7 @@ for fr=1:length(from)
             end
             masks{fr,1}=[ea_space(options),'c2mask.nii'];
             masks{fr,2}=[directory,'tc2',options.prefs.prenii_unnormalized];
-            
+
         otherwise
             if ~exist([directory,'tc1',options.prefs.prenii_unnormalized],'file')
                 ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);

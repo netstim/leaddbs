@@ -3,9 +3,6 @@ function ea_coregmr_ants(options,refine)
 if ~exist('refine','var')
     refine=0;
 end
-fprintf('\nInterpolating preoperative anatomical image\n')
-ea_normalize_reslicepretra(options);
-disp('Done.');
 
 if exist([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized],'file')
     disp('Coregistering postop MR tra to preop MRI...');

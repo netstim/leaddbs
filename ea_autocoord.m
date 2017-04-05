@@ -35,11 +35,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     [options,presentfiles]=ea_assignpretra(options);
 
     % generate grid file
-
     if ~exist(ea_niigz([directory,'grid.nii']),'file')
-    try
-        ea_gengrid(options);
-    end
+        try
+            ea_gengrid(options);
+        end
     end
 
     % anat preprocess, only do once.
@@ -55,9 +54,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
             fclose(fs);
         end
     end
-
-    % reslice anatomical images
-    try ea_resliceanat(options); end
 
     if options.modality==2 % CT support
         options.prefs.tranii=options.prefs.ctnii;

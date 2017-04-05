@@ -1,10 +1,6 @@
 function ea_coregmr_flirt(options)
 % uses FLIRT instead of SPM to coregister MRIs.
 
-fprintf('\nInterpolating preoperative anatomical image\n')
-ea_normalize_reslicepretra(options);
-disp('Done.');
-
 if exist([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized],'file')
     disp('Coregistering postop MR tra to preop MRI...');
     ea_flirt([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...

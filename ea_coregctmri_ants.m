@@ -10,9 +10,7 @@ if ischar(options) % return name of method.
     varargout{3}=['nan']; % suggestion for alpha-parameter.
     return
 end
-fprintf('\nInterpolating preoperative anatomical image\n')
-ea_normalize_reslicepretra(options);
-disp('Done.');
+
 disp('Coregistering postop CT to preop MRI...');
 ea_ants([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...
           [options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],...

@@ -116,11 +116,9 @@ mults(whichinpresent)=[];
 if isempty(mults)
     ea_error('Please place additional MR modality acquisitions into patient folder (called multi1.nii, multi2.nii and so on.');
 end
-ea_normalize_reslicepretra(options);
 
-whichnormmethod=ea_whichnormmethod(directory);
 % warp bb into folder.
-
+whichnormmethod=ea_whichnormmethod(directory);
 switch whichnormmethod
     case ea_getantsnormfuns
         ea_ants_applytransforms(options,{[ea_space,'bb.nii']},{[directory,'wbb.nii']},1);
