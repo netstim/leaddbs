@@ -47,10 +47,10 @@ if ~strcmp(options.coregmr.method,'Do not coregister MRIs (already coregistered)
         case 'BRAINSFIT' % BRAINSFit
             ea_coregmr_brainsfit(options);
         case 'Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
-            ea_coregmr_spm(options,0,0); % dont use doreslice here to refrain for doing two interpolations.
+            ea_coregmr_spm(options,0); % dont use doreslice here to refrain for doing two interpolations.
             ea_coregmr_ants(options);
         case 'Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
-            ea_coregmr_spm(options,0,0); % dont use doreslice here to refrain for doing two interpolations.
+            ea_coregmr_spm(options,0); % dont use doreslice here to refrain for doing two interpolations.
             ea_coregmr_brainsfit(options);     
     end
     ea_dumpnormmethod(options,options.coregmr.method,'coregmrmethod');
