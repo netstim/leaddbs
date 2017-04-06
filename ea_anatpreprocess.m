@@ -7,3 +7,4 @@ function ea_anatpreprocess(fpth)
 
 % Bias field correction
 ea_bias_field_correction(fpth);
+

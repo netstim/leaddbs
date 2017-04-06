@@ -47,6 +47,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         % apply reorientation/cropping and biasfieldcorrection
         for fi=1:length(presentfiles)
             ea_anatpreprocess([directory,presentfiles{fi}]);
+            if fi==1 % "dominant" anatomy file.
+                % Reslice(interpolate) image if needed
+                ea_resliceanat(options);
+            end
         end
         
         % Reslice(interpolate) preoperative anatomical image if needed
