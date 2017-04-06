@@ -7,6 +7,3 @@ function ea_anatpreprocess(fpth)
 
 % Bias field correction
 ea_bias_field_correction(fpth);
-
-% Reslice(interpolate) image if needed
-try ea_resliceanat(options); end

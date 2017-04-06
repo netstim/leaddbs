@@ -44,10 +44,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     % anat preprocess, only do once.
     % a small hidden file '.pp' inside patient folder will show this has been done before.
     if ~exist([directory,'.pp'],'file') && ~exist([directory,'ea_normmethod_applied.mat'],'file')
+        % apply reorientation/cropping and biasfieldcorrection
         for fi=1:length(presentfiles)
-            % apply reorient/crop and biasfieldcorrection
             ea_anatpreprocess([directory,presentfiles{fi}]);
         end
+        
+        % Reslice(interpolate) preoperative anatomical image if needed
+        ea_resliceanat(options);
+        
         try
             fs = fopen([directory,'.pp'],'w');
             fprintf(fs,'%s','anat preprocess done');

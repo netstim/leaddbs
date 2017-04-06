@@ -25,12 +25,13 @@ while tempfsize < 10
     cnt=cnt+1;
     if cnt>10
         failed=1;
-        warning('Giving up. Please check input files, manually. Attempting to continue.');
-       break 
+        warning('Giving up. Please check input files, manually.');
+        break 
     end
 end
+
 if ~failed
-movefile([pth,filesep,'temp.nii'],inputimage);
+    movefile([pth,filesep,'temp.nii'],inputimage);
 else
     delete([pth,filesep,'temp.nii']);
 end
