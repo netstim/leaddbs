@@ -330,7 +330,7 @@ function savebutn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 directory=getappdata(handles.scrf,'directory');
 if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
-   msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
+	msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
 else
 copyfile([directory,'scrf',filesep,'scrf_instore.mat'],[directory,'scrf',filesep,'scrf.mat']);
 
