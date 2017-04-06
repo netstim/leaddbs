@@ -15,7 +15,8 @@ if ischar(from) % assume nifti file path
 else % assume coordinate list
     spacedef=ea_getspacedef;
     % To map the 'mm' coords in src to the 'vox' coords in src:
-    [~, XYZ_vox] = ea_map_coords([from,1]', [ea_space,spacedef.templates{1},'.nii']);
+    [~, XYZ_vox] = ea_map_coords([from,ones(size(from,1),1)]', [ea_space,spacedef.templates{1},'.nii']);
     XYZ = ea_map_coords(XYZ_vox, [ea_space,spacedef.templates{1},'.nii'], [directory,'y_ea_inv_normparams.nii'], '');
     XYZ(1)=-XYZ(1);
+    XYZ=XYZ';
 end

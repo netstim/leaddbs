@@ -69,7 +69,7 @@ end
 
 % Process input : color string
 if(length(varargin)>4), 
-    try
+    if ischar(varargin{5})
         switch(varargin{5})
             case {'r'}, icolor=[1 0 0];
             case {'g'}, icolor=[0 1 0];
@@ -80,7 +80,7 @@ if(length(varargin)>4),
             case {'k'}, icolor=[0 0 0];
             case {'w'}, icolor=[1 1 1];
         end
-    catch
+    else
         icolor=varargin{5};
     end
 else
@@ -254,7 +254,7 @@ end
 
 % Display the polygon patch
 if varargin{7}
-hiso=patch(fv,'FaceVertexCData',cdat,'Facecolor', 'interp', 'EdgeColor', 'none');
+    hiso=patch(fv,'FaceVertexCData',cdat,'Facecolor', 'interp', 'EdgeColor', 'none');
 else
     hiso=nan;
 end

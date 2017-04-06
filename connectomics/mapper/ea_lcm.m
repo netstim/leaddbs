@@ -116,7 +116,7 @@ for suffix=dowhich
                     if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                         copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
                         tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
-                        tnii.dt=[64,0];
+                        tnii.dt=[16,0];
                         ea_write_nii(tnii);
                         cname=options.lcm.func.connectome;
                         if ismember('>',cname)
@@ -128,7 +128,7 @@ for suffix=dowhich
                         d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
                         d.dataset.vol.space.dt=[16,0];
                         ea_write_nii(d.dataset.vol.space);
-                        ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],6);
+                        ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],1);
                         
                         nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                         nii(cnt).img(isnan(nii(cnt).img))=0;

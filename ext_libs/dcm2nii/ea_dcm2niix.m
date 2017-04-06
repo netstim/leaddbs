@@ -25,7 +25,7 @@ end
 if strcmp(dicomdir(end),filesep)
     dicomdir = dicomdir(1:end-1);
 end
-cmd=[dcm2niix, ' -z n -x y -m y', ' -o ', ea_path_helper(outdir), ' ', ea_path_helper(dicomdir)];
+cmd=[dcm2niix, ' -z n -x y', ' -o ', ea_path_helper(outdir), ' ', ea_path_helper(dicomdir)];
 
 if ~ispc
     system(['bash -c "', cmd, '"']);
