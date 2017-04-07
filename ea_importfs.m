@@ -164,10 +164,12 @@ for iSide = 1:2
     [annot_DKTaseg(iSide).vert, annot_DKTaseg(iSide).label, annot_DKTaseg(iSide).colortable] = read_annotation([FsDir,filesep,annot_DKTaseg(iSide).filename]);
     [annot_a2009(iSide).vert, annot_a2009(iSide).label, annot_a2009(iSide).colortable] = read_annotation([FsDir,filesep,annot_a2009(iSide).filename]);
 end
-
-save([ptdir '/cortex/annot_DKT.mat'],'annot_DKT')
-save([ptdir '/cortex/annot_DKTaseg.mat'],'annot_DKTaseg')
-save([ptdir '/cortex/annot_a2009.mat'],'annot_a2009')
+annot = annot_DKT;
+save([ptdir '/cortex/annot_DKT.mat'],'annot'); clear annot;
+annot = annot_DKTaseg;
+save([ptdir '/cortex/annot_DKTaseg.mat'],'annot'); clear annot
+annot = annot_a2009;
+save([ptdir '/cortex/annot_a2009.mat'],'annot'); clear annot
 
 
 %% Create Hi Resolution Cortex

@@ -101,7 +101,7 @@ set(handles.templatepopup,'String',list);
 appdata = getappdata(resultfig);
 if ~isfield(appdata,'showcortex')
     set(handles.cortexalpha,'Visible','off')
-elseif isfield(getappdata(resultfig),'showcortex')
+elseif isfield(getappdata(resultfig),'cortex')
     set(handles.cortexalpha,'Visible','on')
     set(handles.cortexalpha,'String',num2str(appdata.showcortex.FaceAlpha))
 end

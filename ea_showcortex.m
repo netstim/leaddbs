@@ -24,16 +24,16 @@ try delete(cortexH{1}); end
 try delete(cortexH{2}); end
 
 % Initial Opening
-if isfield(getappdata(resultfig),'cortex')
+% if ~isfield(getappdata(resultfig),'cortex')
     color = options.prefs.d3.cortexcolor; % default color is gray
     alpha = options.prefs.d3.cortexalpha; % default alph is 0.333
-else 
-    color = options.prefs.d3.cortexcolor;
-    awin = getappdata(resultfig,'awin');
-    appdata = getappdata(awin,'UsedByGUIData_m');
-    alpha = str2double(appdata.cortexalpha.String);
-    clear appdata
-end
+% else 
+%     color = options.prefs.d3.cortexcolor;
+%     awin = getappdata(resultfig,'awin');
+%     appdata = getappdata(awin,'UsedByGUIData_m');
+%     alpha = str2double(appdata.cortexalpha.String);
+%     clear appdata
+% end
 
     
 nm=[0:2]; % native and mni
