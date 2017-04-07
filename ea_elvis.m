@@ -67,7 +67,7 @@ set(gcf,'Name',[figtitle,'...building...']);
 axis equal
 axis fill
 
-
+colormap('gray')
 
 
 

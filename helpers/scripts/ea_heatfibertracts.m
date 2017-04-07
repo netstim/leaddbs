@@ -1,4 +1,4 @@
-function fibsin=ea_heatfibertracts(cfile,roilist,vals)
+function fibsin=ea_heatfibertracts(cfile,roilist,vals,thresh)
 % function extracts fibers from a connectome connected to ROIs in the
 % roilist and assigns them correlative values based on vals. Vals needs to be of
 % same length as roilist, assigning a value for each ROI.
@@ -8,11 +8,15 @@ disp('ROI fiber analysis');
 
 [fibers,idx,voxmm,mat]=ea_loadfibertracts(cfile);
 
+
 %tree=KDTreeSearcher(fibers(:,1:3));
 % load in all ROI
 ea_dispercent(0,'Aggregating ROI');
 for roi=1:length(roilist);
     nii{roi}=ea_load_nii(roilist{roi});
+    if exist('thresh','var')
+        nii{roi}.img=double(nii{roi}.img>thresh);
+    end
     [xx,yy,zz]=ind2sub(size(nii{roi}.img),find(nii{roi}.img));
     XYZvx=[xx,yy,zz,ones(length(xx),1)]';
     XYZmm{roi}=nii{roi}.mat*XYZvx;
@@ -53,8 +57,8 @@ ea_dispt('Correlating fibers with values');
 
 %R=corr(fibsval',vals,'type','spearman');
 repvals=repmat(vals',size(fibsval,1),1);
-nfibsval=fibsval; nfibsval(fibsval==0)=nan; posvals=repvals.*nfibsval;
-nfibsval=double(~fibsval); nfibsval(fibsval==0)=nan; negvals=repvals.*nfibsval;
+nfibsval=fibsval; nfibsval(nfibsval==0)=nan; posvals=repvals.*nfibsval;
+nfibsval=double(~fibsval); nfibsval(nfibsval==0)=nan; negvals=repvals.*nfibsval;
 
 [h,p,ci,stats]=ttest2(posvals',negvals');
 
