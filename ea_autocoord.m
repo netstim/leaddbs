@@ -50,7 +50,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         end
 
         % Reslice(interpolate) preoperative anatomical image if needed
-        ea_resliceanat(options);
+try        ea_resliceanat(options); end
 
         try
             fs = fopen([directory,'.pp'],'w');

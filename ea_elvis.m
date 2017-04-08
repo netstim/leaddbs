@@ -192,9 +192,10 @@ end
 
 slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
 
+if options.prefs.env.dev;
 % Initialize MER-Button
 merbutton=uipushtool(ht,'CData',ea_get_icn('mer',options),'TooltipString','MER Control Figure','ClickedCallback',{@openmerviewer,resultfig,options});
-
+end
 % Initialize Convis-Button
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome',options),'TooltipString','Connectivity Visualization','ClickedCallback',{@openconnectomeviewer,resultfig,options});
 
