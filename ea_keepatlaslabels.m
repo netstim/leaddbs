@@ -11,9 +11,20 @@ function [atlassurfs] = ea_keepatlaslabels(varargin)
 %
 % Ari Kappel
 
+try isvalid(varagin{1})
+    if ~isvalid(varargin{1})
+        ea_warning('Figure handle not valid')
+    end
+catch
+    H = findall(0,'type','figure');
+    resultfig = H(~cellfun(@isempty,strfind({H(:).Name},{'Electrode-Scene'})));
+end
 
-H = findall(0,'type','figure');
-resultfig = H(~cellfun(@isempty,strfind({H(:).Name},{'Electrode-Scene'})));
+if isempty(varargin) || isempty(varargin{1}) || ( length(varargin)==2 && isempty(varargin{2}) )
+    varargin{1}='right';
+    varargin{2}='left';
+end
+
 atlassurfs = getappdata(resultfig,'atlassurfs');
 colorbuttons = getappdata(resultfig,'colorbuttons');
 set(0,'CurrentFigure',resultfig)
