@@ -4,6 +4,9 @@ function [atlassurfs] = ea_keepatlaslabels(varargin)
 %
 % Example:
 %
+%   ea_keepatlaslabels('on');
+%   ea_keepatlaslabels('off')
+%
 %   ea_keepatlaslabels('STN','RN','GPi','GPe')
 %   atlassurfs = ea_keepatlaslabels('STN','RN','GP')
 % __________________________________________________________________________________
@@ -20,7 +23,8 @@ catch
     resultfig = H(~cellfun(@isempty,strfind({H(:).Name},{'Electrode-Scene'})));
 end
 
-if isempty(varargin) || isempty(varargin{1}) || ( length(varargin)==2 && isempty(varargin{2}) )
+if isempty(varargin) || isempty(varargin{1}) || strcmpi(varargin{1},'on') || ...
+        ( length(varargin)==2 && isempty(varargin{2}) )
     varargin{1}='right';
     varargin{2}='left';
 end
