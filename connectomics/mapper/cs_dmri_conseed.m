@@ -21,7 +21,7 @@ switch cmd
             
             if exist([cfile,filesep,'data.mat'],'file') % regular mat file
                 if ~exist('fibers','var')
-                    load([cfile,filesep,'data.mat'],'fibers');
+                    [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile,filesep,'data.mat']);
                     if ~exist('fibers','var')
                         ea_error('Structural connectome file supplied in wrong format.');
                     end
@@ -44,11 +44,11 @@ switch cmd
             mapsz=size(map.img);
             
             seedfiles=sfile;
-
+            
             map.img(:)=0;
             Vseed=ea_load_nii(seedfiles{s});
             
-            maxdist=abs(Vseed.mat(1))/2;
+            maxdist=mean(abs(Vseed.voxsize))/2;
             
             Vseed.img(isnan(Vseed.img))=0;
             
@@ -77,15 +77,15 @@ switch cmd
                 % select fibers for each ix
                 ea_dispercent(0,'Iterating voxels');
                 ixdim=length(ixvals);
-                fiberstrength=zeros(size(fibers,1),1); % in this var we will store a mean value for each fiber traversing through seed
-                fiberstrengthn=zeros(size(fibers,1),1); % counting variable to average strengths
-                for ix=1:ixdim
+                fiberstrength=zeros(size(fidx,1),1); % in this var we will store a mean value for each fiber (not fiber segment) traversing through seed
+                fiberstrengthn=zeros(size(fidx,1),1); % counting variable to average strengths
+                for ix=1:find(cellfun(@length,ids))
                     % assign fibers on map with this weighted value.
-                    if ~isempty(ids{ix})
+                    %if ~isempty(ids{ix})
                         fibnos=unique(fibers(ids{ix},4)); % these fiber ids go through this particular voxel.
                         fiberstrength(fibnos)=fiberstrength(fibnos)+ixvals(ix);
                         fiberstrengthn(fibnos)=fiberstrengthn(fibnos)+1;
-                    end
+                    %end
                     ea_dispercent(ix/ixdim);
                     
                 end
@@ -99,7 +99,7 @@ switch cmd
                 fcnt=1;
                 for f=cfibers' % iterate through fibers that have assigned a nonzero value and paint to map.
                     allfibcs=fibers(fibers(:,4)==f,1:3);
-               
+                    
                     allfibcs=round(map.mat\[allfibcs,ones(size(allfibcs,1),1)]');
                     allfibcs(:,logical(sum(allfibcs<1,1)))=[];
                     topaint=sub2ind(mapsz,allfibcs(1,:),allfibcs(2,:),allfibcs(3,:));
@@ -124,8 +124,108 @@ switch cmd
             spm_write_vol(map,map.img);
             
         end
+        
+    case {'matrix','pmatrix'}
+        
+        for s=1:length(sfile)
+            cfile=[dfold,'dMRI',filesep,cname];
+            
+            if exist([cfile,filesep,'data.mat'],'file') % regular mat file
+                if ~exist('fibers','var')
+                    [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile,filesep,'data.mat']);
+                    if ~exist('fibers','var')
+                        ea_error('Structural connectome file supplied in wrong format.');
+                    end
+                end
+                
+                redotree=0;
+                ctype='mat';
+            elseif exist([cfile,filesep,'data.fib.gz'],'file') % regular .fib.gz file
+                
+                ftr=track_seed_gqi([cfile,filesep,'data.fib.gz'],sfile{s});
+                fibers=ftr.fibers;
+                redotree=1;
+                ctype='fibgz';
+                
+            else % connectome type not supported
+                ea_error('Connectome file vanished or not supported!');
+            end
+            
+            
+            
+            seedfiles=sfile;
+            
+            Vseed{s}=ea_load_nii(seedfiles{s});
+            
+            maxdist{s}=mean(abs(Vseed{s}.voxsize))/2;
+            
+            Vseed{s}.img(isnan(Vseed{s}.img))=0;
+            
+            ixs{s}=find(Vseed{s}.img);
+            % subtract nan values from these
+            
+            ixvals{s}=Vseed{s}.img(ixs{s});
+            if sum(abs(ixvals{s}-double(logical(ixvals{s}))))<0.0001
+                allbinary{s}=1;
+            else
+                allbinary{s}=0;
+            end
+            
+            
+            % now have all seeds and connectome ? for each seed find fibers
+            % connected to it:
+            
+            [xx,yy,zz]=ind2sub(size(Vseed{s}.img),ixs{s});
+            XYZvx=[xx,yy,zz,ones(length(xx),1)]';
+            XYZmm{s}=Vseed{s}.mat*XYZvx;
+            XYZmm{s}=XYZmm{s}(1:3,:)';
+            if ~exist('tree','var') || redotree % only compute for first seed.
+                tree=KDTreeSearcher(fibers(:,1:3));
+            end
+            ids{s}=rangesearch(tree,XYZmm{s},maxdist{s},'distance','chebychev');
+            
+            % select fibers for each ix
+            ea_dispercent(0,'Iterating voxels');
+            ixdim=length(ixvals{s});
+            fiberstrength{s}=zeros(size(fidx,1),1); % in this var we will store a mean value for each fiber (not fiber segment) traversing through seed
+            fiberstrengthn{s}=zeros(size(fidx,1),1); % counting variable to average strengths
+            for ix=1:find(cellfun(@length,ids{s})) % iterate through voxels that found something
+                % assign fibers on map with this weighted value.
+                fibnos=unique(fibers(ids{s}{ix},4)); % these fiber ids go through this particular voxel.
+                fiberstrength{s}(fibnos)=fiberstrength{s}(fibnos)+ixvals{s}(ix);
+                fiberstrengthn{s}(fibnos)=fiberstrengthn{s}(fibnos)+1;
+                ea_dispercent(ix/ixdim);
+            end
+            nzz=~(fiberstrength{s}==0);
+            fiberstrength{s}(nzz)=fiberstrength{s}(nzz)./fiberstrengthn{s}(nzz); % now each fiber has a strength mediated by the seed.
+            ea_dispercent(1,'end');
+
+        end
+        fiberstrength=cell2mat(fiberstrength);
+        mat=zeros(length(sfile));
+        for sxx=1:length(sfile)
+            for syy=1:length(sfile)
+                if sxx>syy
+                    switch cmd
+                        case 'matrix'
+                            mask=fiberstrength(:,sxx)>0.*fiberstrength(:,syy)>0;
+                        case 'pmatrix'
+                            oix=1:length(sfile);
+                            oix([sxx,syy])=[];
+                            mask=fiberstrength(:,sxx)>0.*fiberstrength(:,syy)>0.*~(fiberstrength(:,oix)>0);
+                    end
+                    mat(sxx,syy)=sum(fiberstrength(mask,sxx)+fiberstrength(mask,syy));
+                elseif sxx==syy % also fill diagonal
+                    mat(sxx,syy)=sum(fiberstrength(:,sxx));
+                end
+            end
+        end
+        mat=mat+mat'; % symmetrize matrix
+        mat(logical(eye(length(sfile))))=mat(logical(eye(length(sfile))))/2;
+        [~,fn]=fileparts(seedfiles{1});
+        save(fullfile(outputfolder,[fn,'_struc_',cmd,'.mat']),'mat');
     otherwise
-        warning('Structural connectivity only supported for seeds');
+        warning('Structural connectivity only supported for seed / matrix / pmatrix commands.');
 end
 
 
@@ -140,9 +240,9 @@ function C = countmember(A,B)
 %   A and B should be of the same type, and can be cell array of strings.
 %
 %   Examples:
-%     countmember([1 2 1 3],[1 2 2 2 2]) 
+%     countmember([1 2 1 3],[1 2 2 2 2])
 %        -> 1     4     1     0
-%     countmember({'a','b','c'},{'a','x','a'}) 
+%     countmember({'a','b','c'},{'a','x','a'})
 %        -> 2     0     0
 %
 %   See also ISMEMBER, UNIQUE, HISTC
@@ -172,15 +272,15 @@ elseif isempty(A),
     return
 end
 
-% which elements are unique in A, 
+% which elements are unique in A,
 % also store the position to re-order later on
-[AU,j,j] = unique(A(:)) ; 
+[AU,j,j] = unique(A(:)) ;
 % assign each element in B a number corresponding to the element of A
-[L, L] = ismember(B,AU) ; 
+[L, L] = ismember(B,AU) ;
 % count these numbers
 N = histc(L(:),1:length(AU)) ;
 % re-order according to A, and reshape
-C = reshape(N(j),size(A)) ;   
+C = reshape(N(j),size(A)) ;
 
 function ftr=track_seed_gqi(cfile,seedfile)
 
