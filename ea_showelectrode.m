@@ -22,7 +22,11 @@ if ~isfield(elstruct,'activecontacts')
     elstruct.activecontacts{1}=zeros(elspec.numel,1);
     elstruct.activecontacts{2}=zeros(elspec.numel,1);
 end
-jetlist=parula;
+if ~isfield(options.d3,'pntcmap')
+    jetlist=parula;
+else
+    jetlist=options.d3.pntcmap;
+end
 %   jetlist=jet;
 
 

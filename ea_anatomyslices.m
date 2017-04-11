@@ -98,8 +98,8 @@ end
 if ~inverted==togglestates.tinvert
     inverted=togglestates.tinvert;    
 end
-    
-slicestr = get(controlhandles.slicepopup,'String');
+
+try
 if get(controlhandles.slicepopup,'Value')==1
 
     togglestates.xyzmm=[togglestates.xyzmm';1];
@@ -119,7 +119,9 @@ elseif get(controlhandles.slicepopup,'Value')==2
     % xyzv= V{1}.mat * togglestates.xyzmm;
 
 end
-
+catch % direct call from script.
+        xyzv= V{1}.mat \ [togglestates.xyzmm,1]';
+end
 % balance the contrast
 % if togglestates.refreshcuts
 % [balanced,colormap] = ea_autocontrast(double(V{1}.private.dat),2.5);
