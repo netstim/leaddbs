@@ -82,7 +82,7 @@ for side=1:length(options.sides)
         setappdata(resultfig,'elstruct',elstruct);
         setappdata(resultfig,'elspec',elspec);
         
-        X=mldivide(A,B); % use mldivide here (adk)
+        X=ea_linsolve(A,B); % Need to fix issue with mldivide/linsolve v. ea_linsolve here (adk)
         X=X';
         
         if options.d3.elrendering==2 % show a transparent electrode.
