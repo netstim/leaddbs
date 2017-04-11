@@ -110,9 +110,9 @@ end
 % % for now always use template cortex in mni space
 % if strcmp(reslice,'yes'); end
 
-try 
-    load([adir,'/annot_',options.prefs.d3.corticalatlas,'.mat'])
-end
+% try 
+%     load([adir,'/annot_',options.prefs.d3.corticalatlas,'.mat'])
+% end
 
 % Show cortex
 tagstr = {'RH','LH'};

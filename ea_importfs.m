@@ -242,20 +242,20 @@ end
     save(fullfile(ptdir,'cortex/CortexHiRes.mat'),'-struct','CortexHiRes')
 
 %     return
-%% Get Hull
-cmd = '/Applications/freesurfer/bin:/Applications/freesurfer/fsfast/bin:/Applications/freesurfer/mni/bin:/Applications/freesurfer/tktools';
-ea_libs_helper(cmd,'PATH')
-
-grayfilename = [FsDir '/mri/ribbon.nii'];
-% if ~exist(grayfilename,'file') && exist([FsDir,'/mri/ribbon.mgz'],'file')
-%     cmd = sprintf('mri_convert -i %s/mri/ribbon.mgz -o %s/mri/ribbon.nii -it mgz -ot nii',FsDir,FsDir);
-%     system(cmd)
-% else ~exist(grayfilename,'file') && ~exist([FsDir,'/mri/ribbon.mgz'],'file')
-%     ea_warning('Cannot Find mri/ribbon.mgz')
-% end    
-    %disp('running dbs_gethull.......')
-    %[mask_matrix,mask_indices] = ea_gethull(grayfilename,3,21,.3);
-    save([ptdir '/cortex/hull.mat'],'mask_matrix','mask_indices')
+    %% Get Hull under dev
+%     cmd = '/Applications/freesurfer/bin:/Applications/freesurfer/fsfast/bin:/Applications/freesurfer/mni/bin:/Applications/freesurfer/tktools';
+%     ea_libs_helper(cmd,'PATH')
+% 
+%     grayfilename = [FsDir '/mri/ribbon.nii'];
+%     % if ~exist(grayfilename,'file') && exist([FsDir,'/mri/ribbon.mgz'],'file')
+%     %     cmd = sprintf('mri_convert -i %s/mri/ribbon.mgz -o %s/mri/ribbon.nii -it mgz -ot nii',FsDir,FsDir);
+%     %     system(cmd)
+%     % else ~exist(grayfilename,'file') && ~exist([FsDir,'/mri/ribbon.mgz'],'file')
+%     %     ea_warning('Cannot Find mri/ribbon.mgz')
+%     % end    
+%         %disp('running dbs_gethull.......')
+%         %[mask_matrix,mask_indices] = ea_gethull(grayfilename,3,21,.3);
+%         save([ptdir '/cortex/hull.mat'],'mask_matrix','mask_indices')
 %% Option to Downsample CortexHiRes
 % newNbVertices = '15000';
 qst = {'Would you like to downsample the high '; sprintf('resolution cortex with %d vertices?',size(CortexHiRes.Vertices,1))};
