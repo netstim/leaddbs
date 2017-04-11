@@ -17,15 +17,17 @@ printf "%15s\n\t -r | --roi <roi.nii.gz, roi.nii or roilist.txt>"
 printf "\t Define the regions that will be used as ROIs. To run multiple regions, supply a textfile"
 printf "%15s\n\t -f | --fMRI"
 printf "\t Calculate connectivity using fMRI. If neither -f nor -d are supplied, connectivity will be done for both fMRI and dMRI."
+printf "%15s\n\t -fc | --fMRIconnectome <'GSP 1000 (Yeo 2011)' / 'GSP 1000 Groupmatrix (Yeo 2011)' / 'PPMI 90'>"
+printf "\t Specify the name of the rs-fcMRI connectome you want to use (default: ['GSP 1000 (Yeo 2011)'])"
 printf "%15s\n\t -d | --dMRI"
 printf "\t Calculate connectivity using dMRI. If neither -f nor -d are supplied, connectivity will be done for both fMRI and dMRI."
+printf "%15s\n\t -dc | --dMRIconnectome <'HCP_MGH_30fold_groupconnectome (Horn 2017)' / 'PPMI_90 (Ewert 2017)' / 'Groupconnectome (Horn 2013)' / 'Gibbsconnectome_169 (Horn 2016)'>"
+printf "\t Specify the name of the DWI/dMRI connectome you want to use (default: ['HCP_MGH_30fold_groupconnectome (Horn 2017)'])"
 printf "%15s\n\t -c | --command <seed/pseed/matrix/pmatrix/seedvox_noram/seedvox_ram>"
 printf "%15s\n\t Define what to do with the ROI(s). Defaults to seed which will run connectivity from that seed to the rest of the brain."
 printf "%15s\n\t pseed runs connectivity from first seed but partialing out all other seeds (.txt file needed in -r)"
 printf "%15s\n\t matrix exports a connectivity matrix between all seeds supplied (.txt file needed in -r)"
 printf "%15s\n\t pmatrix exports a partial connectivity matrix between all seeds supplied (.txt file needed in -r)"
-printf "%15s\n\t seedvox_noram exports weighted averaged connectivity seeding from each nonzero voxel of the seed. This takes a long time. Use extended queue."
-printf "%15s\n\t seedvox_ram exports weighted averaged connectivity seeding from each nonzero voxel of the seed but inverts the whole brain matrix in RAM. Supply max RAM available and use small ROIs."
 printf "%15s\n\t -s | --writesinglefiles"
 printf "\t (Only) when supplied, single subject output is written, too."
 printf "%15s\n\t -o | --outputfolder </path/to/folder/>"
@@ -38,6 +40,10 @@ printf "\t Define voxel resolution of dMRI output. Defaults to 2 mm. 555 stands 
 printf "\v\t EXAMPLE : ./connectome.sh -r /autofs/cluster/nimlab/rois/testroi.nii.gz -o /autofs/cluster/nimlab/output/ -f -d -c seed"
 printf "\n\t will run fMRI/dMRI based connectivity seeding from the testroi.nii.gz seed and output will be placed in the output directory \n\n"
 
+printf "\v\t EXAMPLE : ./connectome.sh -r /autofs/cluster/nimlab/rois/roilist.txt -f -d -c matrix -fc 'PPMI_90' -dc 'PPMI_90 (Ewert 2017)'"
+printf "\n\t will run fMRI/dMRI based roi2roi connectivity from the all ROI in the roilist.txt (defined with absolute paths) \n"
+printf "\n\t and output will be placed in the same directory as roilist.txt. Uses specified connectomes to do so. \n\n"
+
 }
 
 # define defaults here
@@ -49,6 +55,8 @@ doboth=1
 dodMRI="0"
 dofMRI="0"
 dmriresolution="222"
+fcname="'GSP 1000 (Yeo 2011)'"
+dcname="'HCP_MGH_30fold_groupconnectome (Horn 2017)'"
 
 [[ "$1" == "" ]] && usage && exit
 while [ "$1" != "" ]; do
@@ -77,8 +85,15 @@ while [ "$1" != "" ]; do
         -f | --fMRI )           dofMRI="1" 
                                 doboth=0
                                 ;;
+        -fc | --fMRIconnectome ) shift
+                                fcname=$1 
+                                ;;
         -d | --dMRI )           dodMRI="1" 
                                 doboth=0
+                                ;;
+        -dc | --dMRIconnectome ) shift
+                                dcname=$1 
+                                ;;
     esac
     shift
 done
@@ -106,7 +121,7 @@ if [ -z $filename ]
             doboth=1
         fi
         # setup command here:
-        cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 $dofMRI $dodMRI /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname $dmriresolution"
+        cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 $dofMRI $dodMRI /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname"
 
     # check if we are on launchpad:
 
@@ -119,14 +134,14 @@ if [ -z $filename ]
             while IFS='' read -r line || [[ -n "$line" ]]; do
                 if [ $doboth == 1 ]
                     then # split jobs for fMRI and dMRI
-                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution"
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname"
                     echo $cmd
                     pbsubmit -q highio -l vmem=30gb -c "$cmd"
-                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution"
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname"
                     echo $cmd
                     pbsubmit -q highio -l vmem=30gb -c "$cmd"
                 else
-                cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 $dofMRI $dodMRI /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution"
+                cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 $dofMRI $dodMRI /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname"
                 echo $cmd
                 pbsubmit -q highio -l vmem=30gb highio -c "$cmd"
                 fi
@@ -134,10 +149,10 @@ if [ -z $filename ]
         else
             if [ $doboth == 1 ]
                 then # split jobs for fMRI and dMRI
-                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname $dmriresolution"
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname"
                     echo $cmd
                     pbsubmit -q highio -l vmem=30gb -c "$cmd"
-                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname $dmriresolution"
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname"
                     echo $cmd
                     pbsubmit -q highio -l vmem=30gb -c "$cmd"
             else

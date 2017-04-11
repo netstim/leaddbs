@@ -12,7 +12,7 @@ if isdeployed
 else
     cbase=ea_getconnectomebase;
 end
-
+disp(['Command: ',cmd]);
 switch cmd
     case 'seed'
         for s=1:length(sfile)
@@ -79,7 +79,7 @@ switch cmd
                 ixdim=length(ixvals);
                 fiberstrength=zeros(size(fidx,1),1); % in this var we will store a mean value for each fiber (not fiber segment) traversing through seed
                 fiberstrengthn=zeros(size(fidx,1),1); % counting variable to average strengths
-                for ix=1:find(cellfun(@length,ids))
+                for ix=find(cellfun(@length,ids))'
                     % assign fibers on map with this weighted value.
                     %if ~isempty(ids{ix})
                         fibnos=unique(fibers(ids{ix},4)); % these fiber ids go through this particular voxel.
@@ -172,7 +172,7 @@ switch cmd
             end
             
             
-            % now have all seeds and connectome ? for each seed find fibers
+            % now have all seeds and connectome - for each seed find fibers
             % connected to it:
             
             [xx,yy,zz]=ind2sub(size(Vseed{s}.img),ixs{s});
@@ -189,7 +189,7 @@ switch cmd
             ixdim=length(ixvals{s});
             fiberstrength{s}=zeros(size(fidx,1),1); % in this var we will store a mean value for each fiber (not fiber segment) traversing through seed
             fiberstrengthn{s}=zeros(size(fidx,1),1); % counting variable to average strengths
-            for ix=1:find(cellfun(@length,ids{s})) % iterate through voxels that found something
+            for ix=find(cellfun(@length,ids{s}))' % iterate through voxels that found something
                 % assign fibers on map with this weighted value.
                 fibnos=unique(fibers(ids{s}{ix},4)); % these fiber ids go through this particular voxel.
                 fiberstrength{s}(fibnos)=fiberstrength{s}(fibnos)+ixvals{s}(ix);
@@ -199,22 +199,26 @@ switch cmd
             nzz=~(fiberstrength{s}==0);
             fiberstrength{s}(nzz)=fiberstrength{s}(nzz)./fiberstrengthn{s}(nzz); % now each fiber has a strength mediated by the seed.
             ea_dispercent(1,'end');
-
         end
+        
         fiberstrength=cell2mat(fiberstrength);
         mat=zeros(length(sfile));
+        
         for sxx=1:length(sfile)
             for syy=1:length(sfile)
                 if sxx>syy
                     switch cmd
                         case 'matrix'
-                            mask=fiberstrength(:,sxx)>0.*fiberstrength(:,syy)>0;
+                            mask=logical((fiberstrength(:,sxx)>0).*(fiberstrength(:,syy)>0));
                         case 'pmatrix'
                             oix=1:length(sfile);
                             oix([sxx,syy])=[];
                             mask=fiberstrength(:,sxx)>0.*fiberstrength(:,syy)>0.*~(fiberstrength(:,oix)>0);
                     end
-                    mat(sxx,syy)=sum(fiberstrength(mask,sxx)+fiberstrength(mask,syy));
+                    mat(sxx,syy)=sum(fiberstrength(mask,sxx)+fiberstrength(mask,syy))/2;
+                    if ~isequal(mat(sxx,syy),round(mat(sxx,syy)))
+                        keyboard
+                    end
                 elseif sxx==syy % also fill diagonal
                     mat(sxx,syy)=sum(fiberstrength(:,sxx));
                 end

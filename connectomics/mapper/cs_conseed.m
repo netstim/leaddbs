@@ -1,4 +1,4 @@
-function cs_conseed(dofMRI,dodMRI,dfold,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,dmrispace)
+function cs_conseed(dofMRI,dodMRI,dfold,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,dmrispace,fcname,dcname)
 % wrapper for both dmri and fmri to generate seed2map files
 
 if strcmp(outputmask,'.')
@@ -13,6 +13,26 @@ if ~isdeployed
     addpath(genpath('/home/agh14/lead_dbs'));
     addpath('/home/agh14/spm12');
 end
+
+fcdefault='GSP 1000 (Yeo 2011)';
+dcdefault='HCP_MGH_30fold_groupconnectome (Horn 2017)';
+
+if ~exist('fcname','var')
+    fcname=fcdefault;
+else
+    if isempty(fcname)
+        fcname=fcdefault;
+    end
+end
+
+if ~exist('dcname','var')
+    dcname=dcdefault;
+else
+    if isempty(dcname)
+        dcname=dcdefault;
+    end
+end
+
 
 if ~strcmp(outputfolder(end),filesep)
    outputfolder=[outputfolder,filesep]; 
@@ -31,12 +51,12 @@ end
 
 if dofMRI
     ndfold=[dfold,filesep];
-    cs_fmri_conseed(dfold,'yeo1000',sfile,cmd,writeoutsinglefiles,outputfolder,outputmask);
+    cs_fmri_conseed(dfold,fcname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask);
 end
 
 if dodMRI
     ndfold=[dfold,filesep];
-    cs_dmri_conseed(dfold,'HCP_MGH_30fold_groupconnectome_gqi_lite.mat',sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,dmrispace);
+    cs_dmri_conseed(dfold,dcname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,dmrispace);
 end
 
 exit
