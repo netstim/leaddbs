@@ -67,7 +67,6 @@ elseif isfield(fibinfo,'curveSegCell') % original Freiburg format
 elseif isfield(fibinfo,'fibs') % original Freiburg format
     fibers=fibinfo.fibs;
     voxmm='mm';
-    freiburgconvert=0;
 else
     fibers=eval(['fibinfo.',fn{1},';']);
     voxmm='mm';

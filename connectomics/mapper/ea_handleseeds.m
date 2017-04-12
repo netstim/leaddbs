@@ -26,7 +26,9 @@ else
     end
 end
 
-
+if size(sfile,1)<size(sfile,2)
+    sfile=sfile';
+end
 
 for s=1:length(sfile)
     

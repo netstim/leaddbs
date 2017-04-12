@@ -117,7 +117,7 @@ for s=1:length(sfile)
         sweights=double(sweights);
         % assure sum of sweights is 1
         %sweights(logical(sweights))=sweights(logical(sweights))/abs(sum(sweights(logical(sweights))));
-        sweightmx=repmat(sweights,1,120);
+        sweightmx=repmat(sweights,1,1);
         
         sweightidx{s,lr}=find(sweights);
         sweightidxmx{s,lr}=double(sweightmx(sweightidx{s,lr},:));
@@ -218,10 +218,12 @@ for mcfi=usesubjects % iterate across subjects
                                 case 'seed'
                                     if size(sfile(s,:),2)>1 % dealing with surface seed
                                         ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
-                                        stc=mean([ls.gmtc(sweightidx{s,1},:).*sweightidxmx{s,1};...
-                                            rs.gmtc(sweightidx{s,2},:).*sweightidxmx{s,2}],1); % seed time course
+                                        stc=mean([ls.gmtc(sweightidx{s,1},:).*repmat(sweightidxmx{s,1},1,size(ls.gmtc,2));...
+                                            rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(ls.gmtc,2))],1); % seed time course
                                     else % volume seed
-                                        stc=mean(gmtc(sweightidx{s},:).*sweightidxmx{s},1); % seed time course
+
+                                        stc=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
+
                                     end
                                     
                                     
@@ -230,10 +232,10 @@ for mcfi=usesubjects % iterate across subjects
                                     for subseed=1:numseed
                                         if size(sfile(subseed,:),2)>1 % dealing with surface seed
                                             ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
-                                            stc(:,subseed)=mean([ls.gmtc(sweightidx{subseed,1},:).*sweightidxmx{subseed,1};...
-                                                rs.gmtc(sweightidx{subseed,2},:).*sweightidxmx{subseed,2}],1); % seed time course
+                                            stc(:,subseed)=mean([ls.gmtc(sweightidx{subseed,1},:).*repmat(sweightidxmx{subseed,1},1,size(ls.gmtc,2));...
+                                                rs.gmtc(sweightidx{subseed,2},:).*repmat(sweightidxmx{subseed,2},1,size(rs.gmtc,2))],1); % seed time course
                                         else % volume seed
-                                            stc(:,subseed)=mean(gmtc(sweightidx{subseed},:).*sweightidxmx{subseed},1); % seed time course
+                                            stc(:,subseed)=mean(gmtc(sweightidx{subseed},:).*repmat(sweightidxmx{subseed},1,size(gmtc,2)),1); % seed time course
                                         end
                                     end
                                     os=1:numseed; os(s)=[]; % remaining seeds
@@ -288,7 +290,7 @@ for mcfi=usesubjects % iterate across subjects
                         case 'fMRI_timecourses'
                             load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
                             gmtc=single(gmtc);
-                            stc(:,s-1)=mean(gmtc(sweightidx{s},:).*sweightidxmx{s});
+                            stc(:,s-1)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)));
                     end
                 end
                 % now we have all seeds, need to iterate across voxels of
@@ -332,10 +334,10 @@ for mcfi=usesubjects % iterate across subjects
                 end
                 for s=1:numseed
                     if size(sfile(s,:),2)>1 % dealing with surface seed
-                        stc(s,:)=mean([ls.gmtc(sweightidx{s,1},:).*sweightidxmx{s,1};...
-                            rs.gmtc(sweightidx{s,2},:).*sweightidxmx{s,2}],1); % seed time course
+                        stc(s,:)=mean([ls.gmtc(sweightidx{s,1},:).*repmat(sweightidxmx{s,1},1,size(ls.gmtc,2));...
+                            rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(rs.gmtc,2))],1); % seed time course
                     else % volume seed
-                        stc(s,:)=mean(gmtc(sweightidx{s},:).*sweightidxmx{s},1); % seed time course
+                        stc(s,:)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
                     end
                 end
                 

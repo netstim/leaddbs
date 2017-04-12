@@ -40,9 +40,9 @@ printf "\t Define voxel resolution of dMRI output. Defaults to 2 mm. 555 stands 
 printf "\v\t EXAMPLE : ./connectome.sh -r /autofs/cluster/nimlab/rois/testroi.nii.gz -o /autofs/cluster/nimlab/output/ -f -d -c seed"
 printf "\n\t will run fMRI/dMRI based connectivity seeding from the testroi.nii.gz seed and output will be placed in the output directory \n\n"
 
-printf "\v\t EXAMPLE : ./connectome.sh -r /autofs/cluster/nimlab/rois/roilist.txt -f -d -c matrix -fc 'PPMI_90' -dc 'PPMI_90 (Ewert 2017)'"
+printf "\v\t EXAMPLE : ./connectome.sh -r /autofs/cluster/nimlab/rois/roilist.txt -f -d -c matrix -fc 'PPMI_74_15>Patients' -dc 'PPMI_90 (Ewert 2017)'"
 printf "\n\t will run fMRI/dMRI based roi2roi connectivity from the all ROI in the roilist.txt (defined with absolute paths) \n"
-printf "\n\t and output will be placed in the same directory as roilist.txt. Uses specified connectomes to do so. \n\n"
+printf "\n\t and output will be placed in the same directory as roilist.txt. Uses 'Patients' subset from 'PPMI_74_15' dataset to do so. \n\n"
 
 }
 
@@ -55,8 +55,8 @@ doboth=1
 dodMRI="0"
 dofMRI="0"
 dmriresolution="222"
-fcname="'GSP 1000 (Yeo 2011)'"
-dcname="'HCP_MGH_30fold_groupconnectome (Horn 2017)'"
+fcname="GSP_1000_Yeo_2011"
+dcname="Groupconnectome_Horn_2013"
 
 [[ "$1" == "" ]] && usage && exit
 while [ "$1" != "" ]; do
@@ -134,14 +134,14 @@ if [ -z $filename ]
             while IFS='' read -r line || [[ -n "$line" ]]; do
                 if [ $doboth == 1 ]
                     then # split jobs for fMRI and dMRI
-                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname"
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname'"
                     echo $cmd
                     pbsubmit -q highio -l vmem=30gb -c "$cmd"
-                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname"
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname'"
                     echo $cmd
                     pbsubmit -q highio -l vmem=30gb -c "$cmd"
                 else
-                cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 $dofMRI $dodMRI /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname"
+                cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 $dofMRI $dodMRI /autofs/cluster/nimlab/connectomes/ $line $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname'"
                 echo $cmd
                 pbsubmit -q highio -l vmem=30gb highio -c "$cmd"
                 fi
@@ -149,10 +149,10 @@ if [ -z $filename ]
         else
             if [ $doboth == 1 ]
                 then # split jobs for fMRI and dMRI
-                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname"
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 1 0 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname'"
                     echo $cmd
                     pbsubmit -q highio -l vmem=30gb -c "$cmd"
-                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname"
+                    cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_cs_conseed.sh /usr/pubsw/common/matlab/8.6 0 1 /autofs/cluster/nimlab/connectomes/ $filename $command $writesingle $outputfolder $maskname $dmriresolution $fcname $dcname'"
                     echo $cmd
                     pbsubmit -q highio -l vmem=30gb -c "$cmd"
             else
