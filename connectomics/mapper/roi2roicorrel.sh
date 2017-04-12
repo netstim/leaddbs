@@ -35,6 +35,9 @@ while [ "$1" != "" ]; do
         -r | --roilist )        shift
                                 roilistname=$1
                                 ;;
+        -o | --outfile )        shift
+                                outfilename=$1
+                                ;;
         -s | --sublist )        shift
                                 sublistname=$1
                                 ;;
@@ -44,7 +47,7 @@ done
 
 
         # setup command here:
-        cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_roi2roicorrel.sh /usr/pubsw/common/matlab/8.6 $sublistname $roilistname"
+        cmd="/autofs/cluster/nimlab/connectomes/software/lead_dbs/connectomics/mapper/run_roi2roi_correl.sh /usr/pubsw/common/matlab/8.6 $sublistname $roilistname $outfilename"
 
     # check if we are on launchpad:
 
