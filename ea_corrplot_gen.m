@@ -55,7 +55,7 @@ for area=1:length(R_upd)
     
     h=lsline;
     set(h,'color','k');
-    axis square
+    %axis square
     
     ax=gca;
 % ax.YTick=[-20:20:90];
