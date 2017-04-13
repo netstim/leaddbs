@@ -358,7 +358,7 @@ try
     end
 end
 options.groupmode=1;
-
+options.patient_list=M.patient.list;
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 
 ea_busyaction('off',handles.leadfigure,'group');
