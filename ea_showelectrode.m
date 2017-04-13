@@ -50,46 +50,31 @@ for side=1:length(options.sides)
         
         
         % draw trajectory
-        
-        
         cnt=1;
-        load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
-        A=[electrode.head_position,1;
-            electrode.tail_position,1
-            electrode.x_position,1
-            electrode.y_position,1]; % points in model
-        redomarkers=0;
-        if ~isfield(elstruct,'markers') % backward compatibility to old electrode format
-            redomarkers=1;
-            
-        else
-            if isempty(elstruct.markers)
-                
-                redomarkers=1;
+        
+        err=1;
+        for tries=1:2
+            [X,electrode,err]=ea_mapelmodel2reco(options,elspec,elstruct,side,resultfig);
+            if ~err
+                break
+            else
+                try
+                if ~isfield(options,'patient_list') % single subject mode
+                    [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.root,options.patientname]);
+                else
+                    [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.patient_list{pt},filesep]);
+                end
+                elstruct.markers=markers;
+                elstruct.coords_mm=coords_mm;
+                elstruct.trajectory=trajectory;
+                catch
+                    warning(['There seems to be some inconsistency with the reconstruction of ',options.patientname,' that could not be automatically resolved. Please check data of this patient.']);
+                end
             end
         end
-        if redomarkers
-            for iside=options.sides
-                elstruct.markers(iside).head=elstruct.coords_mm{iside}(1,:);
-                elstruct.markers(iside).tail=elstruct.coords_mm{iside}(4,:);
-                
-                normtrajvector=(elstruct.markers(iside).tail-elstruct.markers(iside).head)./norm(elstruct.markers(iside).tail-elstruct.markers(iside).head);
-                orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-                elstruct.markers(iside).x=elstruct.coords_mm{iside}(1,:)+orth(:,1)';
-                elstruct.markers(iside).y=elstruct.coords_mm{iside}(1,:)+orth(:,2)'; % corresponding points in reality
-            end
+        if err
+            warning(['There seems to be some inconsistency with the reconstruction of ',options.patientname,' that could not be automatically resolved. Please check data of this patient.']);
         end
-        
-        B=[elstruct.markers(side).head,1;
-            elstruct.markers(side).tail,1;
-            elstruct.markers(side).x,1;
-            elstruct.markers(side).y,1];
-        setappdata(resultfig,'elstruct',elstruct);
-        setappdata(resultfig,'elspec',elspec);
-        
-        X=ea_linsolve(A,B); % Need to fix issue with mldivide/linsolve v. ea_linsolve here (adk)
-        X=X';
-        
         if options.d3.elrendering==2 % show a transparent electrode.
             aData=0.1;
         elseif options.d3.elrendering==1 % show a solid electrode.
@@ -244,6 +229,8 @@ end
 if ~exist('elrender','var')
     elrender=nan;
 end
+
+
 
 
 function m=maxiso(cellinp) % simply returns the highest entry of matrices in a cell.

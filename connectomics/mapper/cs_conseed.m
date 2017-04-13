@@ -33,8 +33,6 @@ else
     end
 end
 
-   fcname=fcname(2:end-1);
-   fcname=strrep(fcname,'&&','>');
 
 if ~strcmp(outputfolder(end),filesep)
    outputfolder=[outputfolder,filesep]; 

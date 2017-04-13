@@ -363,6 +363,7 @@ try
         M.elstruct(pt).activecontacts=M.S(pt).activecontacts;
     end
 end
+<<<<<<< HEAD
 
 % mer development
 vizstruct.elstruct=M.elstruct(ptidx);
@@ -421,6 +422,11 @@ try
 catch
     resultfig=ea_elvis(options,M.elstruct(ptidx));
 end
+=======
+options.groupmode=1;
+options.patient_list=M.patient.list;
+resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
+>>>>>>> master
 
 ea_busyaction('off',handles.leadfigure,'group');
 

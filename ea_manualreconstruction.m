@@ -122,6 +122,7 @@ options=getappdata(mcfig,'origoptions');
 ea_busyaction('off',mcfig,'reco');
 close(mcfig)
 
+
 % save results
 
 %coords_mm=ea_resolvecoords(markers,options);

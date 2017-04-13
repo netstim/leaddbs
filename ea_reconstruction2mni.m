@@ -36,10 +36,12 @@ for side=1:length(options.sides)
     reco.mni.markers(side).tail=ea_warpcoord(reco.(usenative).markers(side).tail,nii,options);
     reco.mni.trajectory{side}=ea_warpcoord(reco.(usenative).trajectory{side},nii,options);
     
-    normtrajvector{side}=mean(diff(reco.mni.trajectory{side}))/norm(mean(diff(reco.mni.trajectory{side})));
-    
+    normtrajvector{side}=diff([reco.mni.markers(side).head;...
+        reco.mni.markers(side).tail])/...
+        norm(diff([reco.mni.markers(side).head;...
+        reco.mni.markers(side).tail]));    
     orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
-     
+    
     reco.mni.markers(side).x=reco.mni.markers(side).head+orth(:,1)';
     reco.mni.markers(side).y=reco.mni.markers(side).head+orth(:,2)'; % corresponding points in reality    
 end
