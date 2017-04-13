@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 21-Dec-2016 16:19:08
+% Last Modified by GUIDE v2.5 13-Apr-2017 11:59:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -173,6 +173,10 @@ set(handles.vilist,'Max',100,'Min',0);
 set(handles.fclist,'Max',100,'Min',0);
 set(handles.clinicallist,'Max',100,'Min',0);
 
+if options.prefs.env.dev
+    disp('Running in Developer Mode...')
+    set(handles.mercheck,'Visible','on')
+end
 
 
 
@@ -350,16 +354,73 @@ end
 if options.expstatvat.do % export to nifti volume
     ea_exportvatmapping(M,options,handles);
 end
+options.groupmode=1;
 
 % overwrite active contacts information with new one from S (if present).
+ptidx=get(handles.patientlist,'Value');
 try
     for pt=1:length(M.elstruct)
         M.elstruct(pt).activecontacts=M.S(pt).activecontacts;
     end
 end
-options.groupmode=1;
 
-resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
+% mer development
+vizstruct.elstruct=M.elstruct(ptidx);
+uipatdirs=handles.patientlist.String(ptidx);
+npts=length(uipatdirs);
+if options.prefs.env.dev && get(handles.mercheck,'Value')
+    filename=fullfile(options.root,options.patientname,'ea_groupvisdata.mat');
+    if exist(filename,'file')
+       choice = ea_questdlg(sprintf('Group Data Found. Would you like to load %s now?',filename),...
+           'Yes','No');
+    end
+    
+    % Get vizstruct
+    if ~exist('choice','var') || strcmpi(choice,'No')
+        
+        for pt=1:length(M.elstruct)
+            options.uipatdirs{1}=uipatdirs{pt};
+            M.merstruct(pt)=ea_getmerstruct(options);
+        end
+        
+        for pt=1:length(M.elstruct)
+            ea_progress(pt/npts, 'Loading microelectrode recordings from patient %d of %d\n', pt, npts);
+            M.merstruct(pt).group=handles.grouplist.String(pt);
+            [M.merstruct(pt).root,M.merstruct(pt).name]=fileparts(uipatdirs{pt});
+            M.merstruct(pt).root(end+1)=filesep;
+            M.merstruct(pt).ptdir=uipatdirs{pt};
+            mua=load(fullfile(uipatdirs{pt},'ea_recordings.mat'));
+            
+            try
+                mua.right=rmfield(mua.right,'CSPK');
+                mua.left=rmfield(mua.left,'CSPK');
+            catch
+                mua.right=rmfield(mua.right,'CElectrode');
+                mua.left=rmfield(mua.left,'CElectrode');
+            end
+            
+            M.merstruct(pt).mua=mua;
+        end
+        disp('**Done loading')
+        options = rmfield(options,'uipatdirs');
+        vizstruct.merstruct=M.merstruct(ptidx);
+        
+        save(fullfile(options.root,options.patientname,'ea_groupelvisdata.mat'),...
+            'options','vizstruct');
+       
+    elseif strcmpi(choice,'Yes')
+        
+        load(filename,'vizstruct')
+        
+    end
+    
+end
+
+try
+    resultfig=ea_elvis(options,vizstruct);
+catch
+    resultfig=ea_elvis(options,M.elstruct(ptidx));
+end
 
 ea_busyaction('off',handles.leadfigure,'group');
 
@@ -1315,6 +1376,7 @@ function groupdir_choosebox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% nudir=ea_uigetdir(ea_startpath,'Choose Group Directory');
 nudir=[uigetdir];
 
 if ~nudir % user pressed cancel
@@ -1562,6 +1624,18 @@ setappdata(gcf,'M',M);
 
 
 
+% --- Executes on button press in mercheck.
+function mercheck_Callback(hObject, eventdata, handles)
+% hObject    handle to mercheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of mercheck
+
+M=getappdata(gcf,'M');
+
+M.ui.mer=get(handles.mercheck,'Value');
+setappdata(gcf,'M',M);
 
 
 

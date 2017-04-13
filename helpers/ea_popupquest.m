@@ -1,4 +1,4 @@
-function choice = ea_popupquest(prompt,varargin)
+function [choice,index] = ea_popupquest(prompt,varargin)
 
 % SYNTAX:
 %   ea_popupquest(prompt,varargin)
@@ -11,6 +11,7 @@ function choice = ea_popupquest(prompt,varargin)
 % EXAMPLE: 
 %   ea_popupquest('In what space were your electrode locations determined?',...
 %         'Preop','Postop')
+
 % __________________________________________________________________________________
 % Copyright (C) 2017 University of Pittsburgh (UPMC), Brain Modulation Lab
 % Ari Kappel
@@ -38,13 +39,13 @@ function choice = ea_popupquest(prompt,varargin)
     uiwait(d);
    
        function popup_callback(popup,callbackdata)
-          idx = popup.Value;
+          index = popup.Value;
           popup_items = popup.String;
           % This code uses dot notation to get properties.
           % Dot notation runs in R2014b and later.
           % For R2014a and earlier:
           % idx = get(popup,'Value');
           % popup_items = get(popup,'String');
-          choice = char(popup_items(idx,:));
+          choice = char(popup_items(index,:));
        end
 end

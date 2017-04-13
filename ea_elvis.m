@@ -67,7 +67,7 @@ set(gcf,'Name',[figtitle,'...building...']);
 axis equal
 axis fill
 
-colormap('gray')
+% colormap('gray')
 
 
 
@@ -76,7 +76,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
     if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') || nargin>1;
         if nargin>1
             multiplemode=1;
-            elstruct=varargin{2};
+            
+            % mer development
+            if isstruct(varargin{2})
+                elstruct=varargin{2}.elstruct;
+                merstruct=varargin{2}.merstruct;
+            else
+                elstruct=varargin{2};
+            end
             
             if options.d3.mirrorsides
                elstruct=ea_mirrorsides(elstruct); 
@@ -96,8 +103,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             clear coords_mm trajectory
         end
 
-        % show electrodes..
         for pt=1:length(elstruct)
+            % show electrodes..
             try
                 [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
             catch
@@ -130,8 +137,21 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     end
                 end
             end
+            
+           % show microelectrode recording data
+           if exist('merstruct','var')
+               try
+                   [mer(pt).render,merlabel(:,pt)]=ea_showmer(resultfig,merstruct(pt),pt,options);
+               catch
+                   ea_error(['Couldn''''t visualize electrode from patient ',num2str(pt),'.']);
+               end
+               
+               setappdata(resultfig,'merstruct',merstruct);
+           end
+           
         end
 
+        setappdata(resultfig,'elstruct',elstruct);
         setappdata(resultfig,'el_render',el_render);
         % add handles to buttons. Can't be combined with the above loop since all
         % handles need to be set for the buttons to work properly (if alt is

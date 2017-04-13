@@ -1,4 +1,4 @@
-function [atlassurfs] = ea_keepatlaslabels(varargin)
+function [atlassurfs] = ea_keepelectrodes(varargin)
 %
 % Small function to keep atlas labels given string
 %
@@ -22,6 +22,12 @@ try isvalid(varagin{1})
 catch
     H = findall(0,'type','figure');
     resultfig = H(~cellfun(@isempty,strfind({H(:).Name},{'Electrode-Scene'})));
+end
+
+if length(resultfig)>1
+    [~,idx]=ea_popupquest('Mutliple Lead-Scenes found. Choose one',...
+        resultfig(:).Name);
+    resultfig=resultfig(idx);
 end
 
 if isempty(varargin) || isempty(varargin{1}) || strcmpi(varargin{1},'on') || ...

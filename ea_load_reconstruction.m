@@ -1,28 +1,39 @@
 function  [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(varargin)
 
+% [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(varargin)
+
+% __________________________________________________________________________________
+% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
+%
+% Andreas Horn
+%
+% Modified for groupmode 04/2017 by Ari Kappel
+
 options=varargin{1};
 
 try
-    load([options.root,options.patientname,filesep,'ea_reconstruction']);
+    % Load Reconstruction
+    load([options.uipatdirs{1},filesep,'ea_reconstruction.mat']);
+    
 catch
-	try
-        coords_mm=ea_read_fiducials([options.root,options.patientname,filesep,'ea_coords.fcsv'],options);
+    try
+        coords_mm=ea_read_fiducials(fullfile(options.uipatdirs{1},'ea_coords.fcsv'),options);
     catch
         warning(['Please localize electrodes of ',options.patientname,' first.']);
-	end
+    end
 end
 
 if exist('reco','var')
-
-	if ~isfield(reco,'native') && isfield(reco,'mni') && options.native
+    
+    if ~isfield(reco,'native') && isfield(reco,'mni') && options.native
         ea_reconstruction2native(options);
-        load([options.root,options.patientname,filesep,'ea_reconstruction']);
-	elseif isfield(reco,'native') && ~isfield(reco,'mni') && ~options.native
+        load(fullfile(options.uipatdirs{1},'ea_reconstruction.mat'));
+    elseif isfield(reco,'native') && ~isfield(reco,'mni') && ~options.native
         ea_reconstruction2mni(options);
-        load([options.root,options.patientname,filesep,'ea_reconstruction']);
+        load(fullfile(options.uipatdirs{1},'ea_reconstruction.mat'));
     end
-
-	if options.native
+    
+    if options.native
         coords_mm=reco.native.coords_mm;
         trajectory=reco.native.trajectory;
         markers=reco.native.markers;
@@ -40,10 +51,10 @@ if exist('reco','var')
     
     manually_corrected=reco.props.manually_corrected;
     elmodel=reco.props.elmodel;
-
+    
 else % legacy format
     
-	if ~exist('markers','var') % backward compatibility to old recon format
+    if ~exist('markers','var') % backward compatibility to old recon format
         for side=1:length(options.sides)
             markers(side).head=coords_mm{side}(1,:);
             markers(side).tail=coords_mm{side}(4,:);
@@ -57,14 +68,14 @@ else % legacy format
         % this is still legacy format but has markers variable in it now.
         save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','markers','elmodel');
     end
-
+    
     try
         load([options.root,options.patientname,filesep,'ea_reconstruction.mat']);
     catch % generate trajectory from coordinates.
         trajectory{1}=ea_fit_line(coords_mm(1:4,:));
         trajectory{2}=ea_fit_line(coords_mm(options.elspec.numel+1:options.elspec.numel+4,:));
     end
-
+    
     % we have all variables now but need to put them into reco format and
     % they are in MNI.
     options.native=0;
@@ -76,11 +87,11 @@ else % legacy format
         [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
     end
 end
-  
+
 if ~exist('manually_corrected','var')
-	manually_corrected=0;
+    manually_corrected=0;
 end
 
 if ~exist('elmodel','var')
-	elmodel=[];
+    elmodel=[];
 end
