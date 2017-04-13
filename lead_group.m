@@ -242,7 +242,7 @@ function addptbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(handles.leadfigure,'M');
 
-folders=ea_uigetdir('/','Select Patient folders..');
+folders=ea_uigetdir(ea_startpath,'Select Patient folders..');
 M.patient.list=[M.patient.list;folders'];
 M.patient.group=[M.patient.group;ones(length(folders),1)];
 
@@ -600,7 +600,7 @@ function [pathname] = ea_uigetdir(start_path, dialog_title)
 
 import javax.swing.JFileChooser;
 
-if nargin == 0 || strcmp(start_path,'') || start_path == 0 % Allow a null argument.
+if nargin == 0 || strcmp(start_path,'') % || start_path == 0 % Allow a null argument.
     start_path = pwd;
 end
 
