@@ -251,7 +251,8 @@ try
     if iscell(options.lcm.struc.connectome)
     options.lcm.struc.connectome=options.lcm.struc.connectome{get(handles.fiberspopup,'Value')};
     end
-    options.lcm.func.connectome=get(handles.fmripopup,'String');
+    options.lcm.func.connectome=strrep(get(handles.fmripopup,'String'),' > ','>');
+    
     if iscell(options.lcm.func.connectome)
     options.lcm.func.connectome=options.lcm.func.connectome{get(handles.fmripopup,'Value')};
     end

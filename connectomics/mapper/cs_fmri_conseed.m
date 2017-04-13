@@ -24,10 +24,12 @@ else
     end
 end
 
+disp(['Connectome dataset: ',cname,'.']);
+
 if ismember('>',cname)
     delim=strfind(cname,'>');
-    subset=cname(delim+2:end);
-    cname=cname(1:delim-2);
+    subset=cname(delim+1:end);
+    cname=cname(1:delim-1);
 end
 
 
@@ -125,6 +127,7 @@ for s=1:length(sfile)
 end
 
 numseed=s;
+disp([num2str(numseed),' seeds, command = ',cmd,'.']);
 
 
 pixdim=length(dataset.vol.outidx);
@@ -156,7 +159,6 @@ switch cmd
 end
 
 
-disp([num2str(numseed),' seeds, command = ',cmd,'.']);
 
 ea_dispercent(0,'Iterating through subjects');
 
@@ -322,6 +324,7 @@ for mcfi=usesubjects % iterate across subjects
             
             
         otherwise
+            clear stc
             for run=1:howmanyruns
                 load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
                 gmtc=single(gmtc);
@@ -337,7 +340,11 @@ for mcfi=usesubjects % iterate across subjects
                         stc(s,:)=mean([ls.gmtc(sweightidx{s,1},:).*repmat(sweightidxmx{s,1},1,size(ls.gmtc,2));...
                             rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(rs.gmtc,2))],1); % seed time course
                     else % volume seed
+                        try
                         stc(s,:)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
+                        catch
+                            keyboard
+                        end
                     end
                 end
                 

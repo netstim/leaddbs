@@ -9,14 +9,21 @@ if nargin>3
     handles=varargin{4};
 end
 if nargin>4
+    if ~isempty(varargin{5})
     if ischar(varargin{5}) || isequal([1 3],size(varargin{5}))
         color=varargin{5};
     else
         groups=varargin{5};
     end
+    else
+            groups=ones(length(X),1);
+    end
 else
     groups=ones(length(X),1);
 end
+
+corrtype='Pearson';
+try corrtype=varargin{6}; end
 
 dim=size(X,2);
 
@@ -27,9 +34,20 @@ nnans=isnan(sum(X,2));
 X(nnans,:)=[];
 try groups(nnans)=[]; end
 
-[R,p]=corr(X,'rows','pairwise','type','Pearson');
+switch corrtype
+    case {'permutation_spearman','permutation'}
+        [R,p]=ea_permcorr(X(:,1),X(:,2),'spearman');
+        R_upd=R; p_upd=p;
+    case 'permutation_pearson'
+        [R,p]=ea_permcorr(X(:,1),X(:,2),'pearson');
+        R_upd=R; p_upd=p;
+    otherwise
+[R,p]=corr(X,'rows','pairwise','type',corrtype);
 R_upd=R(2:end,1);
 p_upd=p(2:end,1);
+end
+
+
 % support for nans
 
 
@@ -72,7 +90,7 @@ for area=1:length(R_upd)
  %   spacing=mean([nanvar(X(:,1)),nanvar(X(:,area+1))]);
  %   xlim([nanmin(X(:,1))-spacing,nanmax(X(:,2))+spacing]);
  %   ylim([nanmin(X(:,area+1))-spacing,nanmax(X(:,area+1))+spacing]);
-    if nargin==4
+    if nargin>3
         if ~isempty(varargin{4})
         odir=get(handles.groupdir_choosebox,'String');
         ofname=[odir,description,'_',fn,'_',labels{1},'.png'];
