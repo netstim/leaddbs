@@ -9,6 +9,7 @@ function [atlassurfs] = ea_keepatlaslabels(varargin)
 %
 %   ea_keepatlaslabels('STN','RN','GPi','GPe')
 %   atlassurfs = ea_keepatlaslabels('STN','RN','GP')
+
 % __________________________________________________________________________________
 % Copyright (C) 2017 University of Pittsburgh, Brain Modulation Lab
 %
