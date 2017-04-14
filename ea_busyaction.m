@@ -113,6 +113,8 @@ switch onoff
         
         
         disp('** Process done.');
+        
+        
     case 'del'
         
         if ~exist('offfigtit','var')

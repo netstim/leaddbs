@@ -6,8 +6,26 @@ menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
     % tools menu  & edit prefs present in all apps.
     f = uimenu('Label','Tools');
-    uimenu(f,'Label','Edit Preferences File...','Callback',{@ea_editprefs},'Accelerator','P');
-    uimenu(f,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
+    pp= uimenu('Label','Preferences');
+    uimenu(pp,'Label','Edit Preferences File...','Callback',{@ea_editprefs},'Accelerator','P');
+    uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
+    
+    p_c=uimenu(pp,'Label','Play sound on completed tasks.','Callback',{@ea_toggle_chirp});
+    prefs=ea_prefs;
+    if prefs.machine.chirp
+        p_c.Checked='on';
+    else
+        p_c.Checked='off';
+    end
+    
+    m_c=uimenu(pp,'Label','Show methods popup on completed tasks.','Callback',{@ea_toggle_methods});
+    prefs=ea_prefs;
+    if prefs.machine.methods_show
+        m_c.Checked='on';
+    else
+        m_c.Checked='off';
+    end
+    
     
     if ismember('checkregfigs',cmd)
         
@@ -55,18 +73,7 @@ if isempty(menuprobe)
         uimenu(d,'Label','Convert selected atlas to .STL','Callback',{@ea_exportatlas,'STL',handles});
         uimenu(d,'Label','Convert selected atlas to .PLY','Callback',{@ea_exportatlas,'PLY',handles});
     end
-    
-    if ismember('methods',cmd)
-       m=uimenu(f,'Label','Methods');
-       m_c=uimenu(m,'Label','Show methods popup on completed tasks.','Callback',{@ea_toggle_methods});
-       prefs=ea_prefs;
-       if prefs.machine.methods_show
-           m_c.Checked='on';
-       else
-           m_c.Checked='off';
-       end
-       
-    end
+
 
     if ismember('applynorm',cmd)
         uimenu(f,'Label','Apply Patient Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,0},'Accelerator','N');
@@ -120,3 +127,12 @@ switch hobj.Checked
         hobj.Checked='on';
 end
 
+function ea_toggle_chirp(hobj,~,~)
+switch hobj.Checked
+    case 'on'
+        ea_setprefs('chirp',0);
+        hobj.Checked='off';
+    case 'off'
+        ea_setprefs('chirp',1);
+        hobj.Checked='on';
+end
