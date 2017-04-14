@@ -20,6 +20,7 @@ function varargout=ea_normalize_ants(options,includeatlas)
 if ischar(options) % return name of method.
     varargout{1}='Advanced Normalization Tools (ANTs) SyN (Avants 2008)';
     varargout{2}=1;
+    varargout{3}=1; % hassettings.
     return
 end
 

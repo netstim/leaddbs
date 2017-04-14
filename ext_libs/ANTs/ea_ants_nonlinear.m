@@ -5,6 +5,8 @@ fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
+
+
 if ischar(movingimage)
     movingimage={movingimage};
 elseif ~iscell(movingimage)
@@ -76,11 +78,12 @@ end
 if nargin>3
     weights=varargin{4};
     metrics=varargin{5};
-%     options=varargin{6};
+    options=varargin{6};
 else
     weights=ones(length(fixedimage),1);
     metrics=repmat({'MI'},length(fixedimage),1);
 end
+useSyN=options.normalize.settings.synmode;
 
 
 directory=fileparts(movingimage{1});
@@ -131,7 +134,7 @@ rigidshrinkfactors='12x8x4x2';
 rigidsmoothingssigmas='4x3x2x1vox';
 
 affineconvergence='[1000x500x250x0,1e-6,10]';
-affineshrinkfactors='12x8x4x2';
+affineshrinkfactors='8x4x2x1';
 affinesmoothingssigmas='4x3x2x1vox';
 
 synconvergence='[1000x500x250x0,1e-6,10]';
@@ -184,7 +187,7 @@ for fi=1:length(fixedimage)
             ' --metric ','MI','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
-synstage = [' --transform SyN[0.3,3.0,0.0]'...
+synstage = [' --transform ',useSyN,'[0.3,3.0,0.0]'...
     ' --convergence ', synconvergence, ...
     ' --shrink-factors ', synshrinkfactors ...
     ' --smoothing-sigmas ', synsmoothingssigmas, ...
@@ -211,7 +214,7 @@ end
 
 
 if slabspresent
-    slabstage=[' --transform SyN[0.3,3.0,0.0]'...
+    slabstage=[' --transform ',useSyN,'[0.3,3.0,0.0]'...
         ' --convergence ', synconvergence, ...
         ' --shrink-factors ', synshrinkfactors ...
         ' --smoothing-sigmas ', synsmoothingssigmas, ...
@@ -250,7 +253,7 @@ if subcorticalrefine
     else
         movingmask='NULL';
     end
-    synmaskstage = [' --transform SyN[0.2,3.0,0.0]', ...
+    synmaskstage = [' --transform ',useSyN,'[0.2,3.0,0.0]', ...
         ' --convergence ', synmaskconvergence, ...
         ' --shrink-factors ', synmaskshrinkfactors,  ...
         ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
