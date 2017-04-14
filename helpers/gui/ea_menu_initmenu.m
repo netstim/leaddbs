@@ -6,7 +6,7 @@ menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
     % tools menu  & edit prefs present in all apps.
     f = uimenu('Label','Tools');
-    uimenu(f,'Label','Edit Preferences File...','Callback',{@ea_editprefs});
+    uimenu(f,'Label','Edit Preferences File...','Callback',{@ea_editprefs},'Accelerator','P');
     uimenu(f,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
     
     if ismember('checkregfigs',cmd)
@@ -21,7 +21,7 @@ if isempty(menuprobe)
         uimenu(f,'Label','Convert ACPC/MNI coordinates (Horn 2017)','Callback',{@ea_acpcquery,handles.leadfigure});
     end
     
-    uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles});
+    uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles},'Accelerator','R');
     
     
     if ismember('dbs',cmd)
@@ -31,7 +31,7 @@ if isempty(menuprobe)
 
     if ismember('surfice',cmd)
        si=uimenu(f,'Label','Surfice'); 
-        uimenu(si,'Label','Visualize DBS-scene in Surfice (template space)','Callback',{@ea_elvis_surfice,handles,0});
+        uimenu(si,'Label','Visualize DBS-scene in Surfice (template space)','Callback',{@ea_elvis_surfice,handles,0},'Accelerator','V');
         uimenu(si,'Label','Visualize Atlas set in Surfice (template space)','Callback',{@ea_atlvis_surfice,handles,0});
         %uimenu(si,'Label','Visualize DBS-scene in Surfice (native space)','Callback',{@ea_elvis_surfice,handles,1});
         sini=uimenu(si,'Label','Export heatmaps from nifti file(s)');
@@ -47,7 +47,7 @@ if isempty(menuprobe)
     
     if ismember('export',cmd)
         e = uimenu(f,'Label','Export');
-        uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles});
+        uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles},'Accelerator','E');
         uimenu(e,'Label','Export .STL files for selected patient(s)','Callback',{@ea_exportpat,'STL',handles});
         uimenu(e,'Label','Export .PLY files for selected patient(s)','Callback',{@ea_exportpat,'PLY',handles});
 
@@ -69,8 +69,8 @@ if isempty(menuprobe)
     end
 
     if ismember('applynorm',cmd)
-        uimenu(f,'Label','Apply Patient Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,0});
-        uimenu(f,'Label','Apply Patient Inverse Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,1});
+        uimenu(f,'Label','Apply Patient Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,0},'Accelerator','N');
+        uimenu(f,'Label','Apply Patient Inverse Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,1},'Accelerator','Y');
 
     end
     
