@@ -16,7 +16,7 @@ if nargin>4
         groups=varargin{5};
     end
     else
-            groups=ones(length(X),1);
+       groups=ones(length(X),1);
     end
 else
     groups=ones(length(X),1);

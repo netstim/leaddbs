@@ -1,58 +1,80 @@
-function ypred=ea_lo_prediction(X,y,modix,predix,analys,corrtype)
+function [ypredR,ypredW,ypredC]=ea_bootstrap_prediction(X,y,modix,predix,corrtype,regtype)
 
 if ~exist('corrtype','var')
-corrtype='Spearman';
+    corrtype='Spearman';
 end
-if ~exist('analys','var')
-    analys={'R','W','C'}; % do all three types
+if ~exist('regtype','var')
+    regtype='nonparametric';
 end
 
 N=length(y);
 
 
 % build model on modix
-if ismember('R',analys) || ismember('C',analys)
-    R=corr(X(modix,:),y(modix),'rows','pairwise','type',corrtype)'; % R-Map
-end
-if ismember('W',analys) || ismember('C',analys)
+R=corr(X(modix,:),y(modix),'rows','pairwise','type',corrtype)'; % R-Map
+if nargout>1
     sX=nansum(X(modix,:).*repmat(y(modix),1,size(X,2),1)); % Weighted average Map
 end
-if ismember('C',analys)
+if nargout>2
     CsX=sX;
-    for ix=1:size(X,2)
-        if (CsX(ix)>0 && R(ix)<0) || (CsX(ix)<0 && R(ix)>0)
-            CsX(ix)=nan;
+    CsX((CsX.*R)<0)=nan;
+end
+
+% fit model to predict improvs based on model patients:
+Rr=corr(X',R','rows','pairwise','type',corrtype);
+switch lower(regtype)
+    case 'parametric'
+        bR=glmfit(Rr(modix),y(modix));
+    case 'nonparametric'
+        ksrR=ea_ksr(Rr(modix),y(modix));
+end
+if nargout>1
+    WavgRr=corr(X',sX','rows','pairwise','type',corrtype);
+    switch lower(regtype)
+        case 'parametric'
+            bW=glmfit(WavgRr(modix),y(modix));
+        case 'nonparametric'
+            ksrW=ea_ksr(WavgRr(modix),y(modix));
+    end
+end
+if nargout>2
+    CsXr=corr(X',CsX','rows','pairwise','type',corrtype);
+    switch lower(regtype)
+        case 'parametric'
+            bC=glmfit(CsXr(modix),y(modix));
+        case 'nonparametric'
+            ksrC=ea_ksr(CsXr(modix),y(modix));
+    end
+end
+
+
+%cnt=1;
+switch lower(regtype)
+    case 'parametric'
+        ypredR=ea_addone(Rr(predix))*bR;
+        
+        if nargout>1
+            ypredW=ea_addone(WavgRr(predix))*bW;
         end
-    end
+        if nargout>2
+            ypredC=ea_addone(CsXr(predix))*bC;
+        end
+    case 'nonparametric'
+        ypredR=interp1(ksrR.x,ksrR.f,Rr(predix));
+        
+        if nargout>1
+            ypredW=interp1(ksrW.x,ksrW.f,WavgRr(predix));
+        end
+        if nargout>2
+            ypredC=interp1(ksrC.x,ksrC.f,CsXr(predix));
+        end
 end
 
 
-for leo=predix    
-    iterpt=1:N;
-    iterpt(leo)=[];
-    for pt=1:N % iterate through all here.
-        Rr(pt)=corr(X(pt,:),R(:),'rows','pairwise','type',corrtype);
-        WavgRr(pt)=corr(nii.img(:),sX(:),'rows','pairwise','type',corrtype);
-        CsXr(pt)=corr(nii.img(:),CsX(:),'rows','pairwise','type',corrtype);
-    end
-    
-    % fit model to predict improvs based on other patients:
-    if ismember('R',analys)
-        b=glmfit(Rr(iterpt),y(iterpt));
-        ypred.R(leo)=ea_addone(Rr(leo))*b;
-    end
-    if ismember('W',analys)
-        b=glmfit(WavgRr(iterpt),y(iterpt));
-        ypred.W(leo)=ea_addone(WavgRr(leo))*b;
-    end
-    if ismember('C',analys)
-        b=glmfit(CsXr(iterpt),y(iterpt));
-        ypred.C(leo)=ea_addone(CsXr(leo))*b;
-    end
-end
+%RRR=corr([y(predix),ypredR,ypredW,ypredC]);
+%disp(['Bootstrap prediction yields R = ',num2str(RRR(1,2)),' (R-maps), ',num2str(RRR(1,3)),' (Weighted average maps), ',num2str(RRR(1,4)),' (Combined maps).']);
 
 
 
 
 
-    
