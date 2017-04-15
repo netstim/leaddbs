@@ -12,8 +12,6 @@ end
 if hassettings
     set(handles.normsettings,'enable','on');
     setappdata(handles.normsettings,'currentNormMethod',currentNormMethod);
-    setname=['ea_normsettings_',currentNormMethod(14:end)];
-    feval(setname,handles,'defaults');
 else
     set(handles.normsettings,'enable','off');
 end

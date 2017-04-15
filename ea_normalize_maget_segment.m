@@ -11,7 +11,7 @@ if ischar(options) % return name of method.
 end
 
 reforce=0;
-atlastouse=options.normalize.settings.atlasset; % for now, only the distal atlas is supported!
+atlastouse=options.prefs.machine.normsettings.maget_atlasset; % for now, only the distal atlas is supported!
 
 peerfolders=ea_getmagetpeers(options);
 

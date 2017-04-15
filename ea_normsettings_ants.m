@@ -59,23 +59,12 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 set(handles.setfig,'Name','Normalization Settings');
-set(handles.titletext,'String','MAGeT Normalization');
+set(handles.titletext,'String','ANTs Defaults');
 
-% store mother handles in setfig
-setappdata(handles.setfig,'motherhandles',varargin{1});
+prefs=ea_prefs('');
+[~,ix]=ismember(prefs.machine.normsettings.ants_synmode,get(handles.pcpopup,'String'));
+set(handles.pcpopup,'Value',ix);
 
-
-if nargin>4
-    switch varargin{2}
-        case 'defaults'
-            normsettings.peerset='IXI-Dataset';
-            normsettings.peersetcell={};
-            motherhandles = getappdata(handles.setfig,'motherhandles');
-            setappdata(motherhandles.normsettings,'settings',normsettings);
-            delete(handles.setfig);
-            return
-    end
-end
 
 
 % UIWAIT makes ea_normsettings_ants wait for user response (see UIRESUME)
@@ -124,14 +113,11 @@ function savebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to savebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-normsettings.synmode=get(handles.pcpopup,'String');
-normsettings.synmode=normsettings.synmode{get(handles.pcpopup,'Value')};
+prefs=ea_prefs('');
+normsettings=prefs.machine.normsettings;
+normsettings.ants_synmode=get(handles.pcpopup,'String');
+normsettings.ants_synmode=normsettings.ants_synmode{get(handles.pcpopup,'Value')};
 
-
-
-
-motherhandles = getappdata(handles.setfig,'motherhandles');
-
-setappdata(motherhandles.normsettings,'settings',normsettings);
+ea_setprefs('normsettings',normsettings);
 
 delete(handles.setfig);

@@ -83,7 +83,7 @@ else
     weights=ones(length(fixedimage),1);
     metrics=repmat({'MI'},length(fixedimage),1);
 end
-useSyN=options.normalize.settings.synmode;
+useSyN=options.prefs.machine.normsettings.ants_synmode;
 
 
 directory=fileparts(movingimage{1});
