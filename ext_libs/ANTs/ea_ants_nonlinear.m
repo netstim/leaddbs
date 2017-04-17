@@ -129,17 +129,17 @@ end
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
 
-rigidconvergence='[1000x500x250x0,1e-6,10]';
-rigidshrinkfactors='12x8x4x2';
-rigidsmoothingssigmas='4x3x2x1vox';
+rigidconvergence='[1000x500x250x100,1e-6,10]';
+rigidshrinkfactors='8x4x2x1';
+rigidsmoothingssigmas='3x2x1x0';
 
-affineconvergence='[1000x500x250x0,1e-6,10]';
+affineconvergence='[1000x500x250x100,1e-6,10]';
 affineshrinkfactors='8x4x2x1';
-affinesmoothingssigmas='4x3x2x1vox';
+affinesmoothingssigmas='3x2x1x0';
 
-synconvergence='[1000x500x250x0,1e-6,10]';
-synshrinkfactors='8x4x2x1';
-synsmoothingssigmas='4x3x2x1vox';
+synconvergence='[100x70x50x20,1e-6,10]';
+synshrinkfactors='6x4x2x1';
+synsmoothingssigmas='3x2x1x0';
 
 
 
@@ -187,7 +187,17 @@ for fi=1:length(fixedimage)
             ' --metric ','MI','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
-synstage = [' --transform ',useSyN,'[0.3,3.0,0.0]'...
+switch useSyN
+    case 'SyN'
+        tsuffix='[0.1,3.0,0.0]';
+    case 'BSplineSyN'
+        tsuffix='[0.1,26,0,3]'; % as in example script in Tustison 2013
+    otherwise
+        tsuffix='[0.1,26,0,3]'; % need to find proper values.       
+end
+
+
+synstage = [' --transform ',useSyN,tsuffix...
     ' --convergence ', synconvergence, ...
     ' --shrink-factors ', synshrinkfactors ...
     ' --smoothing-sigmas ', synsmoothingssigmas, ...
