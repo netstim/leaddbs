@@ -361,7 +361,7 @@ for side=1:length(options.sides)
                 hold off
             end
             
-            
+            axis equal
             % Save results
             if strcmp(figvisible,'on')
                 set(cuts,'visible','on');
