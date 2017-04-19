@@ -278,6 +278,10 @@ dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth',options),'TooltipStr
 videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video',options),'TooltipString','Save video','ClickedCallback',{@export_video,options});
 
 
+% Init hard_electrode_view button
+if options.modality==2
+electrodesegmentbutton=uitoggletool(ht,'CData',ea_get_icn('electrode_segment',options),'TooltipString','Auto-Segment electrode from postoperative acquisition','OnCallback',{@ea_segment_electrode,options,resultfig,'on'},'OffCallback',{@ea_segment_electrode,options,resultfig,'off'},'State','off');
+end
 % Initialize Export to Lead-Server button
 
 lsbutton=uipushtool(ht,'CData',ea_get_icn('server',options),'TooltipString','Export to Server','ClickedCallback',{@ea_export_server,options});

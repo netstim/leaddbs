@@ -23,9 +23,15 @@ if exist('reco','var')
     end
 
 	if options.native
-        coords_mm=reco.native.coords_mm;
-        trajectory=reco.native.trajectory;
-        markers=reco.native.markers;
+        if isfield(reco,'scrf')
+            coords_mm=reco.scrf.coords_mm;
+            trajectory=reco.scrf.trajectory;
+            markers=reco.scrf.markers;
+        else
+            coords_mm=reco.native.coords_mm;
+            trajectory=reco.native.trajectory;
+            markers=reco.native.markers;
+        end
     else
         coords_mm=reco.mni.coords_mm;
         trajectory=reco.mni.trajectory;

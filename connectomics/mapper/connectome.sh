@@ -40,7 +40,7 @@ printf "\t Define voxel resolution of dMRI output. Defaults to 2 mm. 555 stands 
 printf "\v\t EXAMPLE : ./connectome.sh -r /autofs/cluster/nimlab/rois/testroi.nii.gz -o /autofs/cluster/nimlab/output/ -f -d -c seed"
 printf "\n\t will run fMRI/dMRI based connectivity seeding from the testroi.nii.gz seed and output will be placed in the output directory \n\n"
 
-printf "\v\t EXAMPLE : ./connectome.sh -r /autofs/cluster/nimlab/rois/roilist.txt -f -d -c matrix -fc PPMI_74_15\>Patients -dc PPMI_90_Ewert_2016"
+printf "\v\t EXAMPLE : ./connectome.sh -r /autofs/cluster/nimlab/rois/roilist.txt -f -d -c matrix -fc PPMI_74_15:Patients -dc PPMI_90_Ewert_2016"
 printf "\n\t will run fMRI/dMRI based roi2roi connectivity from the all ROI in the roilist.txt (defined with absolute paths) \n"
 printf "\n\t and output will be placed in the same directory as roilist.txt. Uses 'Patients' subset from 'PPMI_74_15' dataset to do so. \n\n"
 
