@@ -44,14 +44,32 @@ X=mldivide(A,B);
 % First we will make sure that the projection from A to B (Ab)
 % results in something very similar to B.
 Ab=A*X;
-vizprec=0.0001;
-if sum(abs(Ab(:)-B(:)))>vizprec % visualization precision.
+vizprec=0.001;
+if sum(abs(Ab(:)-B(:)))>vizprec % visualization precision in sums of millimeters.
     err=1;
 end
 
-% Secons we will make sure that projected markers structure is
+% Second we will make sure that projected markers structure is
 % still close to orthogonal:
-if dot(Ab(1,1:3)-Ab(2,1:3),Ab(1,1:3)-Ab(3,1:3))+dot(Ab(1,1:3)-Ab(2,1:3),Ab(1,1:3)-Ab(4,1:3)) > vizprec
+% figure, plot3(Ab(1,1),Ab(1,2),Ab(1,3),'r*');
+% hold on
+% plot3(Ab(2,1),Ab(2,2),Ab(2,3),'b*');
+% plot3(Ab(3,1),Ab(3,2),Ab(3,3),'k*');
+% plot3(Ab(4,1),Ab(4,2),Ab(4,3),'g*');
+% axis square
+angvizprec=0.5; % angular visualization precision tolerance in sums of degrees
+if 90-radtodeg(acos(dot(...
+        (Ab(1,1:3)-Ab(2,1:3))/...
+        norm(Ab(1,1:3)-Ab(2,1:3)),...
+        (Ab(1,1:3)-Ab(3,1:3))/...
+        norm((Ab(1,1:3)-Ab(3,1:3)))...
+        )+...
+        dot(...
+        (Ab(1,1:3)-Ab(2,1:3))/...
+        norm(Ab(1,1:3)-Ab(2,1:3)),...
+        (Ab(1,1:3)-Ab(4,1:3))/...
+        norm(Ab(1,1:3)-Ab(4,1:3))) ...
+        )) > angvizprec
     err=1;
 end
 
