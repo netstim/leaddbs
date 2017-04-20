@@ -85,7 +85,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             
         else
             multiplemode=0;
-
+            options.loadrecoforviz=1; % add flag to load scrf entry if in native mode.
             [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 
             elstruct(1).coords_mm=coords_mm;

@@ -21,8 +21,8 @@ if exist('reco','var')
         ea_reconstruction2mni(options);
         load([options.root,options.patientname,filesep,'ea_reconstruction']);
     end
-
-	if options.native
+    
+    if options.native && isfield(options,'loadrecoforviz') % if loading reco for visualization, should return scrf.
         if isfield(reco,'scrf')
             coords_mm=reco.scrf.coords_mm;
             trajectory=reco.scrf.trajectory;
@@ -32,6 +32,10 @@ if exist('reco','var')
             trajectory=reco.native.trajectory;
             markers=reco.native.markers;
         end
+    elseif options.native && ~isfield(options,'loadrecoforviz')
+        coords_mm=reco.native.coords_mm;
+        trajectory=reco.native.trajectory;
+        markers=reco.native.markers;
     else
         coords_mm=reco.mni.coords_mm;
         trajectory=reco.mni.trajectory;
