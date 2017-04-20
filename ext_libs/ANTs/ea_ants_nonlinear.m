@@ -71,6 +71,7 @@ if slabsupport
     end
     
 else
+   slabspresent=0;
    impmasks=repmat({'nan'},length(movingimage),1); 
 end
 
@@ -299,6 +300,10 @@ cmd = [ANTS, ' --verbose 1', ...
     ' --write-composite-transform 1', ...
     rigidstage, affinestage, synstage, slabstage, synmaskstage];
 
+display(cmd)
+fid=fopen([directory,'ea_ants_command.txt'],'a');
+fprintf(fid,[datestr(datetime('now')),':\n',cmd,'\n\n']);
+fclose(fid);
 
 if ~ispc
     system(['bash -c "', cmd, '"']);

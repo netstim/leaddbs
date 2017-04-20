@@ -96,6 +96,7 @@ ea_methods(options,['Pre- (and post-) operative acquisitions were spatially norm
     cits);
 
 
+
 function masks=segmentall(from,options)
 directory=[fileparts(from{1}),filesep];
 for fr=1:length(from)
