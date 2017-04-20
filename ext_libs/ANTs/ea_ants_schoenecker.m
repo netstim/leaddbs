@@ -129,7 +129,7 @@ end
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
 % Rigid stage
-rigidconvergence='[1000x500x250x100,1e-6,10]';
+rigidconvergence='[100x50x25x10,1e-6,10]';
 rigidshrinkfactors='8x4x2x1';
 rigidsmoothingssigmas='3x2x1x0';
 
@@ -207,15 +207,15 @@ if slabsupport && slabspresent
 end
 
 affinestage_mask1 = [' --transform Affine[0.1]'...
-    ' --convergence ', affineconvergence, ...
-    ' --shrink-factors ', affineshrinkfactors ...
-    ' --smoothing-sigmas ', affinesmoothingssigmas, ...
+    ' --convergence ', affinemask1convergence, ...
+    ' --shrink-factors ', affinemask1shrinkfactors ...
+    ' --smoothing-sigmas ', affinemask1smoothingssigmas, ...
     ' --masks [',ea_space([],'subcortical'),'secondstepmask.nii',',NULL]'];
 
 for fi=1:length(fixedimage)
     switch metrics{fi}
         case 'MI'
-            suffx=',32,Regular,0.25';
+            suffx=',32,Regular,0.5';
         case 'CC'
             suffx=',4';
         case 'GC'
@@ -229,15 +229,15 @@ end
 % 2. Mask stage
 
 affinestage_mask2 = [' --transform Affine[0.1]'...
-    ' --convergence ', affineconvergence, ...
-    ' --shrink-factors ', affineshrinkfactors ...
-    ' --smoothing-sigmas ', affinesmoothingssigmas, ...
+    ' --convergence ', affinemask2convergence, ...
+    ' --shrink-factors ', affinemask2shrinkfactors ...
+    ' --smoothing-sigmas ', affinemask2smoothingssigmas, ...
     ' --masks [',ea_space([],'subcortical'),'thirdstepmask.nii',',NULL]'];
 
 for fi=1:length(fixedimage)
     switch metrics{fi}
         case 'MI'
-            suffx=',32,Regular,0.25';
+            suffx=',32,Regular,1';
         case 'CC'
             suffx=',4';
         case 'GC'
