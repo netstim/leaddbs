@@ -18,7 +18,7 @@ function varargout=ea_normalize_schoenecker(options,includeatlas)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Three-step affine normalization (ANTs; Schoenecker 2008)';
+    varargout{1}='Three-step affine normalization (ANTs; Schonecker 2009)';
     varargout{2}=1;
     varargout{3}=1; % hassettings.
     return
@@ -84,18 +84,17 @@ ea_apply_normalization(options);
 %% add methods dump:
 [scit,lcit]=ea_getspacedefcit;
 cits={
-    'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
+    'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004',...
+    'Schonecker, T., Kupsch, A., Kuhn, A. A., Schneider, G. H., & Hoffmann, K. T. (2009). Automated optimization of subcortical cerebral MR imaging-atlas coregistration for improved postoperative electrode localization in deep brain stimulation. AJNR American Journal of Neuroradiology, 30(10), 1914?1921. http://doi.org/10.3174/ajnr.A1741' 
     };
 if ~isempty(lcit)
     cits=[cits;{lcit}];
 end
 ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using the'...
-    ' SyN registration approach as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/).',...
-    ' Nonlinear deformation into template space was achieved in three stages: After two linear (rigid followed by affine) steps, ',...
-    ' a nonlinear (whole brain) SyN registration stage was added.'],...
+    ' ANTs affine registration approach as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/) and following the three step approach described in Schonecker et al. 2009.',...
+    ' Linear deformation into template space was achieved in four stages: 1a. Whole brain rigid 1b. Whole brain affine 2. Subcortical mask affine',...
+    ' 3. Subcortical basal ganglia mask affine (see Schonecker 2009 for more information and validation).'],...
     cits);
-
-
 
 function masks=segmentall(from,options)
 directory=[fileparts(from{1}),filesep];
