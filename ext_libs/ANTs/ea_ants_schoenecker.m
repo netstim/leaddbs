@@ -139,14 +139,14 @@ affineshrinkfactors='8x4x2x1';
 affinesmoothingssigmas='3x2x1x0';
 
 % 1. Mask stage
-affinemask1convergence='[1000x500x250x100,1e-6,10]';
-affinemask1shrinkfactors='8x4x2x1';
-affinemask1smoothingssigmas='3x2x1x0';
+affinemask1convergence='[500x250x100,1e-6,10]';
+affinemask1shrinkfactors='4x2x1';
+affinemask1smoothingssigmas='2x1x0';
 
 % 2. Mask stage
-affinemask2convergence='[1000x500x250x100,1e-6,10]';
-affinemask2shrinkfactors='8x4x2x1';
-affinemask2smoothingssigmas='3x2x1x0';
+affinemask2convergence='[250x100,1e-6,10]';
+affinemask2shrinkfactors='2x1';
+affinemask2smoothingssigmas='1x0';
 
 
 % Rigid stage
