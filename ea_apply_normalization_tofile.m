@@ -16,13 +16,36 @@ switch ea_whichnormmethod(directory)
         ea_ants_applytransforms(options,from,to,useinverse,refim,'',interp);
         
     case ea_getfslnormfuns % FSL part here
-        
+        if useinverse
+            for fi=1:length(from) % assume from and to have same length (must have for this to work)
+                if strcmp(from{fi}(end-2:end),'.gz') % .gz support
+                    gunzip(from{fi});
+                    delete(from{fi});
+                    from{fi}=from{fi}(1:end-3);
+                end
+                [dn,fn]=fileparts(from{fi});
+                matlabbatch{1}.spm.util.imcalc.input = {
+                                                        [ea_space(options),options.primarytemplate,'.nii,1']
+                                                        [from{fi},',1']
+                                                        };
+                matlabbatch{1}.spm.util.imcalc.output = fn;
+                matlabbatch{1}.spm.util.imcalc.outdir = {dn};
+                matlabbatch{1}.spm.util.imcalc.expression = 'i2';
+                matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+                matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+                matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+                matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+                matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+                spm_jobman('run',{matlabbatch});
+                clear matlabbatch
+            end
+        end
         ea_fsl_applytransforms(options,from,to,useinverse);
         
     otherwise % SPM part here
         for fi=1:length(from) % assume from and to have same length (must have for this to work)
             if strcmp(from{fi}(end-2:end),'.gz') % .gz support
-                [pth,fn,ext]=fileparts(from{fi});
+                [~,fn]=fileparts(from{fi});
                 copyfile(from{fi},[tempdir,fn,'.gz']);
                 gunzip([tempdir,fn,'.gz']);
                 from{fi}=[tempdir,fn];
@@ -30,27 +53,16 @@ switch ea_whichnormmethod(directory)
             else
                 wasgz=0;
             end
+            
             if useinverse
                
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
-                
                 matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
                 matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
                 matlabbatch{1}.spm.util.defs.out{1}.pull.interp = interp;
                 matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
                 matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
                 matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
-                
-                
-                
-                
-                             
-                
-                
-                
-                
-                
-                
                 
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
