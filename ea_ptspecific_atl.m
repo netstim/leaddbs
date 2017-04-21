@@ -75,6 +75,7 @@ mkdir([proot,'atlases',filesep,'native']);
 if exist([proot,'atlases',filesep,options.atlasset],'file')
     return
 end
+
 mkdir([proot,'atlases',filesep,options.atlasset]);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'lh']);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'rh']);
@@ -130,24 +131,25 @@ for atlas=1:length(atlases.names)
                     tpmf=ltpmf;
             end
         end
-            % gzip support
-            if strcmp(atlases.names{atlas}(end-2:end),'.gz')
-                gunzip([atlf,atlases.names{atlas}]);
-                atln=atlases.names{atlas}(1:end-3);
-                wasgz(cnt)=1;
-            else
-                atln=atlases.names{atlas};
-                wasgz(cnt)=0;
-            end
+        
+        % gzip support
+        if strcmp(atlases.names{atlas}(end-2:end),'.gz')
+            gunzip([atlf,atlases.names{atlas}]);
+            atln=atlases.names{atlas}(1:end-3);
+            wasgz(cnt)=1;
+        else
+            atln=atlases.names{atlas};
+            wasgz(cnt)=0;
+        end
 
-            if options.prefs.normalize.inverse.customtpm
-                nii=ea_load_nii([atlf,atln]);
-                nii.img=double(nii.img);
-                nii.img=nii.img/max(nii.img(:)); % max 1
-                nii.fname=[atlf,'t',atln];
-                spm_write_vol(nii,nii.img);
-                clear nii
-            end
+        if options.prefs.normalize.inverse.customtpm
+            nii=ea_load_nii([atlf,atln]);
+            nii.img=double(nii.img);
+            nii.img=nii.img/max(nii.img(:)); % max 1
+            nii.fname=[atlf,'t',atln];
+            spm_write_vol(nii,nii.img);
+            clear nii
+        end
 
         atlasfile{cnt}=[atlf,'t',atln,',1'];
         oatlasfile{cnt}=[atlf,atln];
@@ -158,9 +160,6 @@ for atlas=1:length(atlases.names)
         atlfname{cnt}=atln;
         atlaspath{cnt}=patlf;
         cnt=cnt+1;
-
-
-
     end
 end % collecting files loop
 
@@ -302,5 +301,4 @@ switch opt
         sides=1:2;
     case 5
         sides=1; % midline
-
 end
