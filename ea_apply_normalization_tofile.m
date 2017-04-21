@@ -54,17 +54,13 @@ switch ea_whichnormmethod(directory)
     otherwise % SPM part here
         for fi=1:length(from) % assume from and to have same length (must have for this to work)
             if strcmp(from{fi}(end-2:end),'.gz') % .gz support
-                [~,fn]=fileparts(from{fi});
+                [~,fn] = fileparts(from{fi});
                 copyfile(from{fi},[tempdir,fn,'.gz']);
                 gunzip([tempdir,fn,'.gz']);
-                from{fi}=[tempdir,fn];
-                wasgz=1;
-            else
-                wasgz=0;
+                from{fi} = [tempdir,fn];
             end
             
             if useinverse
-               
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
                 matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
                 matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
@@ -75,13 +71,7 @@ switch ea_whichnormmethod(directory)
                 
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
-                [pth]=fileparts(to{fi});
-                [~,fn,ext]=fileparts(from{fi});
-                try % fails if to is a w prefixed file already
-                    movefile(fullfile(pth,['w',fn,ext]),to{fi});
-                end
             else
-                
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']}; 
                 matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
                 matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
@@ -90,18 +80,27 @@ switch ea_whichnormmethod(directory)
                 matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
                 matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
                 
- 
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
-                [pth]=fileparts(to{fi});
-                [~,fn,ext]=fileparts(from{fi});
-                try % fails if to is a w prefixed file already
-                    movefile(fullfile(pth,['w',fn,ext]),to{fi});
-                end
             end
-            if wasgz
-               gzip(to{fi});
-               delete(to{fi});
+            
+            pth = fileparts(to{fi});
+            [~, fn, ext] = fileparts(from{fi});
+            
+            if strcmp(to{fi}(end-2:end),'.gz')
+                to{fi} = to{fi}(1:end-3);
+                gzip_output = 1;
+            else
+                gzip_output = 0;
+            end
+            
+            try % fails if to is a w prefixed file already
+                movefile(fullfile(pth,['w', fn, ext]),to{fi});
+            end
+            
+            if gzip_output
+                gzip(to{fi});
+                delete(to{fi});
             end
         end       
 end

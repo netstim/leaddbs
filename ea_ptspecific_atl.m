@@ -81,8 +81,6 @@ mkdir([proot,'atlases',filesep,options.atlasset,filesep,'rh']);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'mixed']);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'midline']);
 
-
-
 if ~exist([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat'],'file')
     atlases=ea_genatlastable([],root,options);
 else
