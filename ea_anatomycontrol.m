@@ -73,22 +73,22 @@ set(handles.acontrolfig,'Visible',options.d3.verbose);
 
 ht=getappdata(handles.acontrolfig,'toolbar');
 if isempty(ht)
-ht=uitoolbar(handles.acontrolfig);
-c_step=2;
-minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus',options),'TooltipString','Decrease Contrast','ClickedCallback',{@setslidecontrast,'c',-0.1,resultfig,handles});
-pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus',options),'TooltipString','Increase Contrast','ClickedCallback',{@setslidecontrast,'c',0.1,resultfig,handles});
-minusoffset=uipushtool(ht,'CData',ea_get_icn('extleft',options),'TooltipString','Decrease Offset','ClickedCallback',{@setslidecontrast,'o',-0.1,resultfig,handles});
-plusoffset=uipushtool(ht,'CData',ea_get_icn('extright',options),'TooltipString','Increase Offset','ClickedCallback',{@setslidecontrast,'o',0.1,resultfig,handles});
-setappdata(handles.acontrolfig,'toolbar',ht);
+    ht=uitoolbar(handles.acontrolfig);
+    c_step=2;
+    minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus',options),'TooltipString','Decrease Contrast','ClickedCallback',{@setslidecontrast,'c',-0.1,resultfig,handles});
+    pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus',options),'TooltipString','Increase Contrast','ClickedCallback',{@setslidecontrast,'c',0.1,resultfig,handles});
+    minusoffset=uipushtool(ht,'CData',ea_get_icn('extleft',options),'TooltipString','Decrease Offset','ClickedCallback',{@setslidecontrast,'o',-0.1,resultfig,handles});
+    plusoffset=uipushtool(ht,'CData',ea_get_icn('extright',options),'TooltipString','Increase Offset','ClickedCallback',{@setslidecontrast,'o',0.1,resultfig,handles});
+    setappdata(handles.acontrolfig,'toolbar',ht);
 end
 
 
 
 spacedef=ea_getspacedef;
 if isfield(spacedef,'guidef')
-set(handles.xval,'String',num2str(spacedef.guidef.xyzdef(1)));
-set(handles.yval,'String',num2str(spacedef.guidef.xyzdef(2)));
-set(handles.zval,'String',num2str(spacedef.guidef.xyzdef(3)));
+    set(handles.xval,'String',num2str(spacedef.guidef.xyzdef(1)));
+    set(handles.yval,'String',num2str(spacedef.guidef.xyzdef(2)));
+    set(handles.zval,'String',num2str(spacedef.guidef.xyzdef(3)));
 end
 
 if ~isfield(options,'native')
@@ -148,8 +148,6 @@ set(hObject,'position',[0,0,pos(3),pos(4)]);
 refreshresultfig(handles)
 view(142,13.6)
 set(handles.acontrolfig,'Visible',options.d3.verbose);
-
-
 
 
 
