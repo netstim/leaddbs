@@ -1,17 +1,26 @@
 function ea_crop_nii(varargin)
 % This function crops bounding-box of niftis to non-zeros or non-nan values.
-% usage: ea_crop_nii(filename, [prefix (default: overwrite, threshstring -
-% can be 'nn' for non-Nan or 'nz' for non-zero (default)]). Note that
-% outputs will not contain nan values anymore.
+% usage: ea_crop_nii(filename, [prefix (default: overwrite), threshstring -
+% can be 'nn' for non-Nan or 'nz' for non-zero (default), cleannan]). 
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
 filename=varargin{1};
+
+if strcmp(filename(end-2:end), '.gz')
+    wasgz = 1;
+    gunzip(filename);
+    delete(filename);
+    filename = filename(1:end-3);
+else
+    wasgz = 0;
+end
+
 if nargin>1
     prefix=varargin{2};
 else
-    prefix='w';
+    prefix='';
 end
 
 if nargin>2 % exclude nans/zeros
@@ -19,15 +28,17 @@ if nargin>2 % exclude nans/zeros
 else
     nstring='nz';
 end
+
 if nargin>3
     cleannan=varargin{4};
 else
     cleannan=0;
 end
+
 if nargin>4
     interp=varargin{5};
 else
-   interp=0; 
+    interp=0; 
 end
 
 V=spm_vol(filename);
@@ -70,25 +81,26 @@ if all(dist)
         spm_jobman('initcfg');
         spm_write_sn([filename,',1'], sn,ropts);
     end
-    if nargin<2
-        [pth,fname,ext]=fileparts(filename);
-        
-        movefile(fullfile(pth,['w',fname,ext]),fullfile(pth,[fname,ext]));
-    else
-        if strcmp(prefix,'w')
-            [pth,fname,ext]=fileparts(filename);
-            
-            movefile(fullfile(pth,['w',fname,ext]),fullfile(pth,[fname,ext]));
-            
-        end
-    end
-    
 end
+
+[pth, fname, ext] = fileparts(filename);
+output = fullfile(pth,[prefix, fname, ext]);
+
 if cleannan
-nii=ea_load_nii(fullfile(pth,[fname,ext]));
-nii.img(abs(nii.img)<0.01)=nan; % reduce noise in originally zero compartments.
-ea_write_nii(nii);
+    nii=ea_load_nii(output);
+    nii.img(abs(nii.img)<0.01)=nan; % reduce noise in originally zero compartments.
+    ea_write_nii(nii);
 end
+
+if wasgz
+    gzip(output);
+    delete(output);
+    if ~isempty(prefix)
+        gzip(filename);
+        delete(filename);
+    end
+end
+
 
 function [BB,vx] = ea_spm_get_bbox(V, thr, premul)
 % Compute volume's bounding box, for full field of view or object bounds
@@ -208,7 +220,6 @@ end
 
 
 function bb=increasebb(bb)
-
 
 for dim=1:3
     dbb=bb(:,dim);
