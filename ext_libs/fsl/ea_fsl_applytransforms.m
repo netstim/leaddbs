@@ -88,7 +88,7 @@ else
 end
 
 [~,warpprefix] = fileparts(options.prefs.gprenii); % Prefix of the FNIRT warp field file
-setenv('FSLOUTPUTTYPE','NIFTI');
+
 for fi = 1:length(fis)
     if ~exist(fis{fi}, 'file')   % skip if unnormalized file doesn't exist
         fprintf('%s not found. Skip normalization...\n',fis{fi});
@@ -133,7 +133,13 @@ for fi = 1:length(fis)
     if ~isempty(interp)
         cmd = [cmd, ' --interp=', interp];
     end
-
+    
+    if strcmp(ofis{fi}(end-2:end),'.gz')
+        setenv('FSLOUTPUTTYPE','NIFTI_GZ');
+    else
+        setenv('FSLOUTPUTTYPE','NIFTI');
+    end
+    
     if ~ispc
         system(['bash -c "', cmd, '"']);
     else

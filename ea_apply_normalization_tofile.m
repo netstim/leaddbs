@@ -19,9 +19,12 @@ switch ea_whichnormmethod(directory)
         if useinverse
             for fi=1:length(from) % assume from and to have same length (must have for this to work)
                 if strcmp(from{fi}(end-2:end),'.gz') % .gz support
+                    wasgz = 1;
                     gunzip(from{fi});
                     delete(from{fi});
-                    from{fi}=from{fi}(1:end-3);
+                    from{fi} = from{fi}(1:end-3);
+                else
+                    wasgz = 0;
                 end
                 [dn,fn]=fileparts(from{fi});
                 matlabbatch{1}.spm.util.imcalc.input = {
@@ -38,6 +41,12 @@ switch ea_whichnormmethod(directory)
                 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
+                
+                if wasgz
+                    gzip(from{fi});
+                    delete(from{fi});
+                    from{fi} = [from{fi}, '.gz'];
+                end
             end
         end
         ea_fsl_applytransforms(options,from,to,useinverse);
