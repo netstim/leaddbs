@@ -23,6 +23,10 @@ else
     prefix='';
 end
 
+if isempty(prefix)
+    prefix = 'tmp';
+end
+
 if nargin>2 % exclude nans/zeros
     nstring=varargin{3};
 else
@@ -56,7 +60,6 @@ if any(vox<0) || any(diagentries<0)
     bb=increasebb(bb);
 end
 
-
 dist=diff(bb); % check for weird zero bbs in small files.
 
 if all(dist)
@@ -85,6 +88,10 @@ end
 
 [pth, fname, ext] = fileparts(filename);
 output = fullfile(pth,[prefix, fname, ext]);
+if strcmp(prefix, 'tmp')
+    movefile(output, filename);
+    output = filename;
+end
 
 if cleannan
     nii=ea_load_nii(output);
@@ -95,7 +102,7 @@ end
 if wasgz
     gzip(output);
     delete(output);
-    if ~isempty(prefix)
+    if ~strcmp(prefix, 'tmp')
         gzip(filename);
         delete(filename);
     end
