@@ -25,6 +25,15 @@ end
 
 if nargin >= 7
     interp=varargin{7};
+    if ~ischar(interp)
+        switch interp
+            case 0
+                interp='nn';
+            otherwise
+                interp='trilinear';
+
+        end
+    end
 else
     % nn, trilinear, sinc, spline
     interp='trilinear';

@@ -49,7 +49,7 @@ switch ea_whichnormmethod(directory)
                 end
             end
         end
-        ea_fsl_applytransforms(options,from,to,useinverse);
+        ea_fsl_applytransforms(options,from,to,useinverse,refim,'',interp);
         
     otherwise % SPM part here
         for fi=1:length(from) % assume from and to have same length (must have for this to work)
