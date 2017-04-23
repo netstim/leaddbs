@@ -88,7 +88,7 @@ cits={
 if ~isempty(lcit)
     cits=[cits;{lcit}];
 end
-switch options.prefs.normsettings.schoenecker_movim
+switch options.prefs.machine.normsettings.schoenecker_movim
     case 1 % preoperative image was used
         addprepoststr=' Unlike in the original publication, the three-step registration was estimated based on the preoperative acquisition and applied to the (co-registered) postoperative acquisition.';
     case 2 % postoperative image was used
