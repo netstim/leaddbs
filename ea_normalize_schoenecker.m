@@ -1,4 +1,4 @@
-function varargout=ea_normalize_schoenecker(options,includeatlas)
+function varargout=ea_normalize_schoenecker(options)
 % This is a function that normalizes both a copy of transversal and coronar
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
@@ -27,13 +27,7 @@ end
 usefa=1;
 usebrainmask=0;
 
-if ~exist('includeatlas','var')
-    includeatlas=0;
-end
-
-if ~includeatlas % second run from maget-brain segment
 ea_checkcoregallmri(options,usebrainmask)
-end
 
 directory=[options.root,options.patientname,filesep];
 cnt=1;
@@ -56,6 +50,17 @@ end
 
 [~,anatpresent]=ea_assignpretra(options);
 anatpresent=flip(anatpresent); % reverse order since most important transform should be put in last.
+
+if options.prefs.machine.normsettings.schoenecker_movim==2 % base transform on postoperative acquisition
+    switch options.modality
+        case 1 % MRI
+            anatpresent={options.prefs.tranii_unnormalized};
+        case 2 % CT
+            anatpresent={options.prefs.ctnii_coregistered};
+    end
+end
+
+
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 for anatf=1:length(anatpresent)
     disp(['Including ',anatpresent{anatf},' data for (grey-matter) normalization']);
@@ -70,13 +75,6 @@ for anatf=1:length(anatpresent)
         cnt=cnt+1;
 end
 
-if includeatlas % append as last to make criterion converge on this one.
-   to{cnt}=[ea_space(options),'atlas.nii'];
-   from{cnt}=[directory,'anat_atlas.nii.gz'];
-   weights(cnt)=1.5;
-   metrics{cnt}='MI'; % could think about changing this to CC
-   cnt=cnt+1;
-end
 
 ea_ants_schoenecker(to,from,[directory,options.prefs.gprenii],weights,metrics,options,0);
 ea_apply_normalization(options);
@@ -84,16 +82,25 @@ ea_apply_normalization(options);
 %% add methods dump:
 [scit,lcit]=ea_getspacedefcit;
 cits={
-    'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004',...
+    'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
     'Schonecker, T., Kupsch, A., Kuhn, A. A., Schneider, G. H., & Hoffmann, K. T. (2009). Automated optimization of subcortical cerebral MR imaging-atlas coregistration for improved postoperative electrode localization in deep brain stimulation. AJNR American Journal of Neuroradiology, 30(10), 1914?1921. http://doi.org/10.3174/ajnr.A1741' 
     };
 if ~isempty(lcit)
     cits=[cits;{lcit}];
 end
-ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using the'...
-    ' ANTs affine registration approach as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/) and following the three step approach described in Schonecker et al. 2009.',...
-    ' Linear deformation into template space was achieved in four stages: 1a. Whole brain rigid 1b. Whole brain affine 2. Subcortical mask affine',...
-    ' 3. Subcortical basal ganglia mask affine (see Schonecker 2009 for more information and validation).'],...
+switch options.prefs.normsettings.schoenecker_movim
+    case 1 % preoperative image was used
+        addprepoststr=' Unlike in the original publication, the three-step registration was estimated based on the preoperative acquisition and applied to the (co-registered) postoperative acquisition.';
+    case 2 % postoperative image was used
+        addprepoststr='';
+        
+end
+ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using a',...
+    ' three-step linear affine registration as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/). This linear registration protocol follows the approach described in Schonecker et al. 2009.',...
+    ' After a brief rigid-body transform, linear deformation into template space was achieved in three stages: 1. Whole brain affine registration 2. Affine registration that solved the cost-function inside a subcortical mask only and',...
+    ' 3. Affine registration that focused on a region defined by a small basal ganglia mask. In the original publication, this approach was validated for use in DBS and yielded a',...
+    ' RMS error of 1.29 mm.',...
+    addprepoststr],...
     cits);
 
 function masks=segmentall(from,options)

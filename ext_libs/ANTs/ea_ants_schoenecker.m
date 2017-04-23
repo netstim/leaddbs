@@ -1,4 +1,4 @@
-function [cmd]=ea_ants_nonlinear(varargin)
+function [cmd]=ea_ants_schoenecker(varargin)
 % Wrapper for ANTs nonlinear registration
 
 fixedimage=varargin{1};
@@ -144,9 +144,9 @@ affinemask1shrinkfactors='4x2x1';
 affinemask1smoothingssigmas='2x1x0';
 
 % 2. Mask stage
-affinemask2convergence='[250x100,1e-6,10]';
-affinemask2shrinkfactors='2x1';
-affinemask2smoothingssigmas='1x0';
+affinemask2convergence='[100,1e-6,10]';
+affinemask2shrinkfactors='1';
+affinemask2smoothingssigmas='0';
 
 
 % Rigid stage
