@@ -37,7 +37,11 @@ switch ea_whichnormmethod(directory)
                 matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
                 matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
                 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-                matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+                if ismember(options.prefs.dev.profile,{'se'})
+                    matlabbatch{1}.spm.util.imcalc.options.interp=0;
+                else
+                    matlabbatch{1}.spm.util.imcalc.options.interp=1;
+                end
                 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
