@@ -80,9 +80,9 @@ end
 if ~exist('usespm','var')
 usespm=1;
 end
+
+
 if usespm
-
-
 V = spm_vol(old_fn);
 for i=1:numel(V)
    bb        = spm_get_bbox(V(i));
