@@ -53,7 +53,7 @@ bb=increasebb(bb);
 
 diagentries=V.mat(logical(eye(4)));
 
-if any(vox<0) || any(diagentries<0)
+if any(vox<0) || any(diagentries<0) %Seems to be true for FSL but not other norm. methods: vox = -0.7 0.7 0.7
     ea_reslice_nii(filename,filename,abs(vox),0,[],2,[],[],0); % last zero is to not use SPM. this has shown to not work when voxel sizes are negative
     V=spm_vol(filename);
     [bb,vox] = ea_spm_get_bbox(V, nstring);
