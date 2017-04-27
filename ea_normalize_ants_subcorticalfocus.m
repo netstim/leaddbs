@@ -18,7 +18,7 @@ function varargout=ea_normalize_ants_subcorticalfocus(options,includeatlas)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Advanced Normalization Tools (ANTs) SyN - subcortical refine (Avants 2008)';
+    varargout{1}='ANTs SyN - subcortical refine (Advanced Normalization Tools, Avants 2008)';
     varargout{2}=1;
     varargout{3}=1; % hassettings.
     return
