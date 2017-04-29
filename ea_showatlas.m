@@ -356,6 +356,11 @@ for nativemni=nm % switch between native and mni space atlases.
 end
 
 
+% open up atlas control viewer
+
+ea_atlasselect(colorbuttons,atlassurfs,atlases,options);
+
+
 
 function setlabelcolor(hobj,ev,robject)
 

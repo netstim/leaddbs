@@ -9,6 +9,7 @@ pfcell = {presfiles.name}';
 prenii_order = cellfun(@(x) strrep(options.prefs.prenii_searchstring,'*',x), options.prefs.prenii_order, 'UniformOutput', 0);
 [~,idx] = ismember(prenii_order, pfcell);
 presentfiles = pfcell([nonzeros(idx)',setdiff(1:numel(pfcell),nonzeros(idx))]);
+    options.primarytemplate = 't2'; % default T2.
 
 if isempty(presentfiles)
     warning(['No anatomy information found! Please put either ', ...
@@ -22,6 +23,4 @@ options.prefs.prenii_unnormalized = presentfiles{1};
 % determine primary template
 if any(idx)
     options.primarytemplate = options.prefs.prenii_order{find(idx,1)};
-else % could happen if neither T2, T1 or PD is present but only custom sequences are being used
-    options.primarytemplate = 't2'; % default T2.
 end

@@ -81,9 +81,11 @@ for area=1:length(R_upd)
 % ax.XTick=[-20:10:90];
 % ax.XLim=[25,65];
 [~,fn]=fileparts(labels{area+1});
+if length(fn)>4
     if strcmp(fn(end-3:end),'.nii')
         [~,fn]=fileparts(fn);
     end
+end
     title([description,' (R=',sprintf('%.3f',R_upd(area)),', p=',sprintf('%.3f',p_upd(area)),').'],'FontSize',16,'FontName','Helvetica');
     xlabel(sub2space(labels{1}),'FontSize',16,'FontName','Helvetica');
     ylabel(labels{2},'FontSize',16,'FontName','Helvetica');

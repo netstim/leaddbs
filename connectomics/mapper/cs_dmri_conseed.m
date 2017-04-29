@@ -216,9 +216,7 @@ switch cmd
                             mask=fiberstrength(:,sxx)>0.*fiberstrength(:,syy)>0.*~(fiberstrength(:,oix)>0);
                     end
                     mat(sxx,syy)=sum(fiberstrength(mask,sxx)+fiberstrength(mask,syy))/2;
-                    if ~isequal(mat(sxx,syy),round(mat(sxx,syy)))
-                        keyboard
-                    end
+
                 elseif sxx==syy % also fill diagonal
                     mat(sxx,syy)=sum(fiberstrength(:,sxx));
                 end
