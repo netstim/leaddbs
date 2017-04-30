@@ -376,11 +376,11 @@ save([ea_gethome,'.ea_prefs.mat'],'machine');
 % refresh content menu.
 ea_createpcmenu(handles)
 % restart
-atlassurfs=getappdata(handles.atlasselect,'atlassurfs');
-colorbuttons=getappdata(handles.atlasselect,'colorbuttons');
-options=getappdata(handles.atlasselect,'options');
-atlases=getappdata(handles.atlasselect,'atlases');
-ea_atlasselect(colorbuttons,atlassurfs,atlases,options);
+% atlassurfs=getappdata(handles.atlasselect,'atlassurfs');
+% colorbuttons=getappdata(handles.atlasselect,'colorbuttons');
+% options=getappdata(handles.atlasselect,'options');
+% atlases=getappdata(handles.atlasselect,'atlases');
+%ea_atlasselect(colorbuttons,atlassurfs,atlases,options);
 ea_busyaction('off',handles.atlasselect,'atlcontrol');
 
 
