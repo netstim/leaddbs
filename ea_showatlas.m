@@ -1,4 +1,4 @@
-function atlases=ea_showatlas(varargin)
+function [atlases,colorbuttons,atlassurfs]=ea_showatlas(varargin)
 % This function shows atlas data in the 3D-Scene viewer. It
 % reads in all atlases found in the eAuto_root/atlases folder, calculates a
 % convex hull around the nonzero area and renders this area as 3D surfaces.
@@ -95,7 +95,8 @@ for nativemni=nm % switch between native and mni space atlases.
     setinterpol=1;
     
     ht=uitoolbar(resultfig);
-    
+    atlcntbutton=uipushtool(ht,'CData',ea_get_icn('atlases',options),'TooltipString','Atlas Control Figure','ClickedCallback',{@ea_openatlascontrol,atlases,resultfig,options});
+
     % prepare stats fields
     if options.writeoutstats
         
@@ -358,7 +359,6 @@ end
 
 % open up atlas control viewer
 
-ea_atlasselect(colorbuttons,atlassurfs,atlases,options);
 
 
 

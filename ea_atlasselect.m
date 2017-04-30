@@ -65,6 +65,7 @@ atlases=varargin{3};
 setappdata(handles.atlasselect,'atlases',atlases);
 options=varargin{4};
 setappdata(handles.atlasselect,'options',options);
+movegui(hObject,'northeast');
 
 axis off
 setuptree([{handles},varargin])
@@ -288,10 +289,11 @@ uimenu(pcmenu, 'Label',def.presets(ps).label,'Callback',{@ea_makeselection,handl
 end
 
 % add from atlas index:
-for ps=1:length(atlases.presets)
-uimenu(pcmenu, 'Label',atlases.presets(ps).label,'Callback',{@ea_makeselection,handles,atlases.presets(ps)});
+if isfield(atlases,'presets')
+    for ps=1:length(atlases.presets)
+        uimenu(pcmenu, 'Label',atlases.presets(ps).label,'Callback',{@ea_makeselection,handles,atlases.presets(ps)});
+    end
 end
-
 % add from prefs:
 prefs=ea_prefs;
 options=getappdata(handles.atlasselect,'options');
@@ -377,6 +379,8 @@ function str=getridofspaces(str)
 str=strrep(str,'(','');
 str=strrep(str,')','');
 str=strrep(str,' ','');
+str=strrep(str,'-','');
+
 
 function ea_makeselection(~,~,handles,preset)
 

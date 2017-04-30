@@ -207,7 +207,10 @@ corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex',options),'TooltipString
 
 % Show atlas data
 if options.d3.writeatlases
-    atlases=ea_showatlas(resultfig,elstruct,options);
+    [atlases,colorbuttons,atlassurfs]=ea_showatlas(resultfig,elstruct,options);
+    
+    ea_openatlascontrol([],[],atlases,resultfig,options);
+
     if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
         try % see if electrode has been defined.
         cnt=length(vizstruct);
@@ -315,7 +318,6 @@ view(142,13.6)
 zoom(1.5)
 %set(resultfig,'visible','on');
 opensliceviewer([],[],resultfig,options);
-
 if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
     try
         % store json in figure file
@@ -333,11 +335,10 @@ awin=ea_anatomycontrol(resultfig,options);
 setappdata(resultfig,'awin',awin);
 try WinOnTop(awin,true); end
 
-
 function openconnectomeviewer(hobj,ev,resultfig,options)
-awin=ea_convis(gcf,options);
-setappdata(resultfig,'awin',awin);
-try WinOnTop(awin,true); end
+conwin=ea_convis(gcf,options);
+setappdata(resultfig,'conwin',conwin);
+try WinOnTop(conwin,true); end
 
 
 function openstimviewer(hobj,ev,elstruct,resultfig,options)
@@ -368,6 +369,14 @@ end
 awin=getappdata(gcf,'awin');
 try
     close(awin)
+end
+aswin=getappdata(gcf,'aswin');
+try
+    close(aswin)
+end
+conwin=getappdata(gcf,'conwin');
+try
+    close(conwin)
 end
 merwin=getappdata(gcf,'merwin');
 try
