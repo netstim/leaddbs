@@ -1,12 +1,11 @@
 function gii = ea_nii_plot_surf(nii, giithresh, maxdistance)
 % Plot a colored surface base on NIfTI file (heatmap, activition map...)
 % The color is coded by the intensity in NIfTI file.
-% 'spm_surf' is used to extract the surface.
+% 'spm_surf' will be used to extract the surface when needed.
 % MATLAB GIfTI toobox is used for rendering.
 %
 % The second parameter 'giithresh' can either be the threshold used to
 % extract the surface or the name of an already extracted GIfTI file.
-
 
 if nargin < 2
     giithresh = 0.5;
