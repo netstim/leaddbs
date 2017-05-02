@@ -9,7 +9,7 @@ if nargin < 3
     mask = 0;	% do not mask the image (remove background) by default
 end
 
-[bbox, BW] = ea_auto_bbox(image);
+[bbox, BW] = ea_autobbox(image);
 
 if mask
     nii = load_nii(image);
