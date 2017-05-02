@@ -8,7 +8,7 @@ end
 nii = load_nii(image);
 img = uint8(nii.img);
 
-th = otsuthresh(img);
+th = ea_otsuthresh(img);
 
 BW = img > max(img(:)) * th;
 
