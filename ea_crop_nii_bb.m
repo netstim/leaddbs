@@ -1,61 +1,83 @@
 function ea_crop_nii_bb(varargin)
 % This function crops nifti to a bounding-box.
-% usage: ea_crop_nii_bb(filename, [prefix (default: overwrite, boundbox]). Note that
-% outputs will not contain nan values anymore.
+% usage: ea_crop_nii_bb(filename, [prefix (default: overwrite, boundbox), interp]).
+% Note that outputs will not contain nan values anymore.
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-filename=varargin{1};
-if nargin>1
-    prefix=varargin{2};
+filename = varargin{1};
+
+if strcmp(filename(end-2:end), '.gz')
+    wasgz = 1;
+    gunzip(filename);
+    filename = filename(1:end-3);
 else
-    prefix='w';
+    wasgz = 0;
 end
 
-    bb=varargin{3};
+if nargin > 1
+    prefix = varargin{2};
+else
+    prefix = '';
+end
 
+if isempty(prefix)
+    prefix = 'tmp';
+end
 
-V=spm_vol(filename);
+if nargin > 2
+    bb = varargin{3};
+else
+    error('Please specify the bounding box!');
+end
 
+if nargin > 3
+    interp = varargin{4};
+else
+    interp = 0;
+end
+
+V = spm_vol(filename);
 
 [~,vox] = ea_spm_get_bbox(V, 'nz');
 
 if any(vox<0)
    ea_reslice_nii(filename,filename,abs(vox),0); 
-   V=spm_vol(filename);
+   V = spm_vol(filename);
    [~,vox] = ea_spm_get_bbox(V, 0);
 end
 
-
-
-
 % create sn structure:
-sn.VG=V;
-sn.VF=V;
-sn.Affine=eye(4);
-sn.Tr=[];
-sn.flags=[];
+sn.VG = V;
+sn.VF = V;
+sn.Affine = eye(4);
+sn.Tr = [];
+sn.flags = [];
 
 % create ropts structure:
-ropts.preserve=0;
-ropts.bb=bb;
-ropts.vox=vox;
-ropts.interp=1;
-ropts.wrap=[0,0,0];
-ropts.prefix=prefix;
+ropts.preserve = 0;
+ropts.bb = bb;
+ropts.vox = vox;
+ropts.interp = interp;
+ropts.wrap = [0,0,0];
+ropts.prefix = prefix;
 spm_write_sn([filename,',1'], sn,ropts);
 
-if nargin<2
-    [pth,fname,ext]=fileparts(filename);
-    movefile([pth,filesep,'w',fname,ext],[pth,filesep,fname,ext]);
+[pth, fname, ext] = fileparts(filename);
+output = fullfile(pth,[prefix, fname, ext]);
+if strcmp(prefix, 'tmp')
+    movefile(output, filename);
+    output = filename;
 end
 
-
-
-
-
-
+if wasgz
+    gzip(output);
+    delete(output);
+    if ~strcmp(prefix, 'tmp') % delete unzipped file in non-overwrite mode
+        delete(filename);
+    end
+end
 
 
 function [BB,vx] = ea_spm_get_bbox(V, thr, premul)

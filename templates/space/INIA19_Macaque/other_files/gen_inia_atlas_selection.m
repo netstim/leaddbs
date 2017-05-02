@@ -8,8 +8,6 @@ mkdir('../atlases/INIA19 (Rohlfing 2012)/rh');
 atl=ea_load_nii('inia19-NeuroMaps.nii');
 atl.img=round(atl.img);
 
-
-
 % symmetrize hemispheres
 todelete=[];
 for reg=1:length(atlas_lgnd{1})
@@ -38,7 +36,7 @@ for reg=1:length(atlas_lgnd{1})
 
         snii.fname=[odir,filesep,atlas_lgnd{2}{reg}(3:end),'.nii'];
         spm_write_vol(snii,snii.img);
-         [pth,fn,ext]=fileparts(snii.fname);
+        [pth,fn,ext]=fileparts(snii.fname);
 
         % warp to MNI:
         matlabbatch{1}.spm.util.defs.comp{1}.sn2def.matname = {'inia19_to_mni_hires_sn.mat'};

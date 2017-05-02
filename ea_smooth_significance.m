@@ -19,7 +19,7 @@ bb=[min(XYZmm(:,1)-5),min(XYZmm(:,2)-5),min(XYZmm(:,3)-5);
 Vol.fname=[odir,'empty','.nii'];
 spm_write_vol(Vol,niic);
 ea_reslice_nii([odir,'empty','.nii'],[odir,'rempty','.nii'],[1,1,1]);
-ea_crop_nii_bb([odir,'rempty','.nii'],'w',bb);
+ea_crop_nii_bb([odir,'rempty','.nii'],'',bb);
 %delete([odir,'empty','.nii']);
 
 V=spm_vol([odir,'wrempty','.nii']);
