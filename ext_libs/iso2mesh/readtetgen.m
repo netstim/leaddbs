@@ -24,7 +24,6 @@ if(fp==0)
 	error('node file is missing!'); 
 end
 [dim,count] = fscanf(fp,'%d',4);
-
 if(count<4) error('wrong node file'); end
 node=fscanf(fp,'%f',[4,dim(1)]);
 idx=node(1,:);

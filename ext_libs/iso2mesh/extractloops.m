@@ -29,11 +29,7 @@ loopend=edges(1,end);
 edges(1,:)=[];
 
 while(~isempty(edges))
-try
     idx=[find(edges(:,1)==loopend)',find(edges(:,2)==loopend)'];
-catch
-    keyboard
-end
     if(length(idx)>1) % when a node with multiple connection found
         idx=idx(1);   % take the first connection and continue
     end
