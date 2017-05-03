@@ -167,7 +167,7 @@ ea_busyaction('del',handles.atlasselect,'atlcontrol');
 %handles.atlasselect.Position(2)=handles.atlasselect.Position(2)-(450);
 handles.atlasselect.Position(4)=(450-(360-height));
 
-handles.atlstructxt.Position(2)=handles.atlasselect.Position(4)-20;
+handles.atlstructxt.Position(2)=handles.atlasselect.Position(4)-25;
 handles.atlassetpopup.Position(2)=handles.atlasselect.Position(4)-55;
 handles.presets.Position(2)=handles.atlasselect.Position(4)-80;
 set(0,'CurrentFigure',handles.atlasselect);
