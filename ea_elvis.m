@@ -328,6 +328,7 @@ if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file 
         ea_export_server([],[],options);
     end
 end
+setappdata(resultfig,'elstruct',elstruct);
 
 
 function opensliceviewer(hobj,ev,resultfig,options)

@@ -22,16 +22,16 @@ function varargout = ea_atlasselect(varargin)
 
 % Edit the above text to modify the response to help ea_atlasselect
 
-% Last Modified by GUIDE v2.5 27-Apr-2017 21:06:00
+% Last Modified by GUIDE v2.5 02-May-2017 19:08:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @ea_atlasselect_OpeningFcn, ...
-                   'gui_OutputFcn',  @ea_atlasselect_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @ea_atlasselect_OpeningFcn, ...
+    'gui_OutputFcn',  @ea_atlasselect_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -65,7 +65,11 @@ atlases=varargin{3};
 setappdata(handles.atlasselect,'atlases',atlases);
 options=varargin{4};
 setappdata(handles.atlasselect,'options',options);
+setappdata(handles.atlasselect,'resultfig',varargin{5});
 movegui(hObject,'northeast');
+
+ea_listatlassets(options,handles,options.native);
+
 
 axis off
 setuptree([{handles},varargin])
@@ -76,56 +80,61 @@ function setuptree(varargin)
 
 
 handles=varargin{1}{1};
+
 ea_busyaction('on',handles.atlasselect,'atlcontrol');
 
 togglebuttons=varargin{1}{2};
 atlassurfs=varargin{1}{3};
 atlases=varargin{1}{4};
-if ~isfield(atlases,'subgroups')
-   atlases.subgroups(1).label='Structures';
-   atlases.subgroups(1).entries=1:length(atlases.names);
+try
+    if ~isfield(atlases,'subgroups')
+        atlases.subgroups(1).label='Structures';
+        atlases.subgroups(1).entries=1:length(atlases.names);
+    end
+catch
+    keyboard
 end
 atlchecks=cell(length(atlases.names),1);
 import com.mathworks.mwswing.checkboxtree.*
 for subgroup=1:length(atlases.subgroups)
-   h.sg{subgroup} = DefaultCheckBoxNode(atlases.subgroups(subgroup).label);
-   for node=1:length(atlases.subgroups(subgroup).entries)
-       [~,thisatlname]=fileparts(atlases.names{atlases.subgroups(subgroup).entries(node)});
-       
-       try % gzip support
-           if strcmp(thisatlname(end-3:end),'.nii')
-               [~,thisatlname]=fileparts(thisatlname);
-           end
-       end
-       h.sgsub{subgroup}{node}=DefaultCheckBoxNode(thisatlname,true);
-       
-
-       h.sg{subgroup}.add(h.sgsub{subgroup}{node});
-       
-       if (atlases.types(atlases.subgroups(subgroup).entries(node))==3) || (atlases.types(atlases.subgroups(subgroup).entries(node))==4) % need lh and rh entries
-           h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('RH',true);
-           h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-           h.sgsubside{subgroup}{node}{2}=DefaultCheckBoxNode('LH',true);
-           h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{2});
-       elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==1) % RH only
-           h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('RH',true);
-           h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-       elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==2) % LH only
-           h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('LH',true);
-           h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});   
-       elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==5) % Midline
-           h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('Midline',true);
-           h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});    
-       end
-           atlchecks{atlases.subgroups(subgroup).entries(node)}=...
-       [atlchecks{atlases.subgroups(subgroup).entries(node)},h.sgsub{subgroup}{node}];
-       
-   end
+    h.sg{subgroup} = DefaultCheckBoxNode(atlases.subgroups(subgroup).label);
+    for node=1:length(atlases.subgroups(subgroup).entries)
+        [~,thisatlname]=fileparts(atlases.names{atlases.subgroups(subgroup).entries(node)});
+        
+        try % gzip support
+            if strcmp(thisatlname(end-3:end),'.nii')
+                [~,thisatlname]=fileparts(thisatlname);
+            end
+        end
+        h.sgsub{subgroup}{node}=DefaultCheckBoxNode(thisatlname,true);
+        
+        
+        h.sg{subgroup}.add(h.sgsub{subgroup}{node});
+        
+        if (atlases.types(atlases.subgroups(subgroup).entries(node))==3) || (atlases.types(atlases.subgroups(subgroup).entries(node))==4) % need lh and rh entries
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('RH',true);
+            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+            h.sgsubside{subgroup}{node}{2}=DefaultCheckBoxNode('LH',true);
+            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{2});
+        elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==1) % RH only
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('RH',true);
+            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+        elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==2) % LH only
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('LH',true);
+            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+        elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==5) % Midline
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('Midline',true);
+            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+        end
+        atlchecks{atlases.subgroups(subgroup).entries(node)}=...
+            [atlchecks{atlases.subgroups(subgroup).entries(node)},h.sgsub{subgroup}{node}];
+        
+    end
 end
 
 % Create a standard MJTree:
 jTree = com.mathworks.mwswing.MJTree(h.sg{1});
- 
+
 % Now present the CheckBoxTree:
 jCheckBoxTree = CheckBoxTree(jTree.getModel);
 
@@ -139,8 +148,31 @@ jCheckBoxTree = CheckBoxTree(jTree.getModel);
 %jTreeCR.setLeafIcon(icon);
 
 jScrollPane = com.mathworks.mwswing.MJScrollPane(jCheckBoxTree);
-[jComp,hc] = javacomponent(jScrollPane,[10,10,320,370],handles.atlasselect);
 
+atlN=length(atlases.names);
+height=(atlN+1.5)*18;
+norm=360; % max height if full size figure shown.
+if height>360;
+    height=360;
+end
+jComp=getappdata(handles.atlasselect,'uitree');
+if ~isempty(jComp)
+    delete(jComp);
+end
+
+[jComp,hc] = javacomponent(jScrollPane,[10,10,280,height],handles.atlasselect);
+setappdata(handles.atlasselect,'uitree',jComp);
+ea_busyaction('del',handles.atlasselect,'atlcontrol');
+
+%handles.atlasselect.Position(2)=handles.atlasselect.Position(2)-(450);
+handles.atlasselect.Position(4)=(450-(360-height));
+
+handles.atlstructxt.Position(2)=handles.atlasselect.Position(4)-20;
+handles.atlassetpopup.Position(2)=handles.atlasselect.Position(4)-55;
+handles.presets.Position(2)=handles.atlasselect.Position(4)-80;
+
+axis off
+movegui(handles.atlasselect,'northeast');
 
 h.togglebuttons=togglebuttons;
 h.atlassurfs=atlassurfs;
@@ -151,7 +183,6 @@ setappdata(handles.atlasselect,'h',h);
 setappdata(handles.atlasselect,'jtree',jCheckBoxTree);
 sels=storeupdatemodel(jCheckBoxTree,h);
 
-ea_busyaction('off',handles.atlasselect,'atlcontrol');
 
 
 function sels=storeupdatemodel(jtree,h)
@@ -159,12 +190,12 @@ function sels=storeupdatemodel(jtree,h)
 
 for branch=1:length(h.sg)
     sels.branches{branch}=h.sg{branch}.getSelectionState;
-        for leaf=1:length(h.sgsub{branch})
-            sels.leaves{branch}{leaf}=h.sgsub{branch}{leaf}.getSelectionState;
-            for side=1:length(h.sgsubside{branch}{leaf})
-                sels.sides{branch}{leaf}{side}=h.sgsubside{branch}{leaf}{side}.getSelectionState;
-            end
+    for leaf=1:length(h.sgsub{branch})
+        sels.leaves{branch}{leaf}=h.sgsub{branch}{leaf}.getSelectionState;
+        for side=1:length(h.sgsubside{branch}{leaf})
+            sels.sides{branch}{leaf}{side}=h.sgsubside{branch}{leaf}{side}.getSelectionState;
         end
+    end
 end
 
 setappdata(jtree,'selectionstate',sels);
@@ -180,7 +211,7 @@ for branch=1:length(sels.branches)
                 sidec=getsidec(length(sels.sides{branch}{leaf}),side);
                 
                 [ixs,ixt]=getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
-                if strcmp(sels.sides{branch}{leaf}{side},'selected') 
+                if strcmp(sels.sides{branch}{leaf}{side},'selected')
                     if ~strcmp(h.atlassurfs(ixs).Visible,'on')
                         h.atlassurfs(ixs).Visible='on';
                         h.togglebuttons(ixt).State='on';
@@ -230,7 +261,7 @@ end
 
 
 
-  % Set the mouse-press callback
+% Set the mouse-press callback
 function mouseReleasedCallback(jtree, eventData,h)
 
 clickX = eventData.getX;
@@ -246,9 +277,9 @@ end
 
 
 
-    
+
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_atlasselect_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_atlasselect_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -267,13 +298,15 @@ function presets_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns presets contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from presets
 
-pcmenu=getappdata(handles.presets,'uimenu');
+%pcmenu=getappdata(handles.presets,'uimenu');
 
-showcontextmenu(hObject,pcmenu);
+%showcontextmenu(hObject,pcmenu);
+
+presetactions=getappdata(handles.presets,'presetactions');
+ea_makeselection([],[],handles,presetactions{handles.presets.Value});
 
 function ea_createpcmenu(handles)
 atlases=getappdata(handles.atlasselect,'atlases');
-pcmenu = uicontextmenu;
 
 def.presets(1).label='Show all structures';
 def.presets(1).show=1:length(atlases.names);
@@ -283,15 +316,22 @@ def.presets(2).label='Hide all structures';
 def.presets(2).show=[];
 def.presets(2).hide=1:length(atlases.names);
 def.presets(2).default='absolute';
+prescell=cell(0);
+presetactions=cell(0);
 % add defaults:
 for ps=1:length(def.presets)
-uimenu(pcmenu, 'Label',def.presets(ps).label,'Callback',{@ea_makeselection,handles,def.presets(ps)});
+    prescell{end+1}=def.presets(ps).label;
+    presetactions{end+1}=def.presets(ps);
+    %    uimenu(pcmenu, 'Label',,'Callback',{@ea_makeselection,handles,def.presets(ps)});
 end
 
 % add from atlas index:
 if isfield(atlases,'presets')
     for ps=1:length(atlases.presets)
-        uimenu(pcmenu, 'Label',atlases.presets(ps).label,'Callback',{@ea_makeselection,handles,atlases.presets(ps)});
+        prescell{end+1}=atlases.presets(ps).label;
+        presetactions{end+1}=atlases.presets(ps);
+        
+        %        uimenu(pcmenu, 'Label',atlases.presets(ps).label,'Callback',{@ea_makeselection,handles,atlases.presets(ps)});
     end
 end
 % add from prefs:
@@ -300,7 +340,10 @@ options=getappdata(handles.atlasselect,'options');
 if isfield(prefs.machine.atlaspresets,getridofspaces(options.atlasset))
     for ps=1:length(prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets)
         try
-        uimenu(pcmenu, 'Label',prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}.label,'Callback',{@ea_makeselection,handles,prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}});
+            prescell{end+1}=prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}.label;
+            presetactions{end+1}=prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps};
+            
+            %        uimenu(pcmenu, 'Label',prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}.label,'Callback',{@ea_makeselection,handles,prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}});
         catch
             keyboard
         end
@@ -308,9 +351,11 @@ if isfield(prefs.machine.atlaspresets,getridofspaces(options.atlasset))
 end
 
 % add save prefs:
-uimenu(pcmenu,'Label','Save current selection as preset...','Callback',{@ea_saveselection,handles,options});
-
-setappdata(handles.presets,'uimenu',pcmenu);
+%uimenu(pcmenu,'Label','Save current selection as preset...','Callback',{@ea_saveselection,handles,options});
+handles.presets.String=prescell;
+setappdata(handles.presets,'presetactions',presetactions);
+handles.presets.Value=1;
+%setappdata(handles.presets,'uimenu',pcmenu);
 
 function ea_saveselection(~,~,handles,options)
 ea_busyaction('on',handles.atlasselect,'atlcontrol');
@@ -327,22 +372,22 @@ pres.hide=[];
 
 for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
-            for side=1:length(sels.sides{branch}{leaf})
+        for side=1:length(sels.sides{branch}{leaf})
+            
+            sidec=getsidec(length(sels.sides{branch}{leaf}),side);
+            
+            %[ixs,ixt]=getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
+            
+            [~,ix]=ismember(char(h.sgsub{branch}{leaf}),atlases.names);
+            if strcmp(sels.sides{branch}{leaf}{side},'selected')
+                pres.show=[pres.show,ix];
                 
-                sidec=getsidec(length(sels.sides{branch}{leaf}),side);
                 
-                %[ixs,ixt]=getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
-                
-                [~,ix]=ismember(char(h.sgsub{branch}{leaf}),atlases.names);
-                if strcmp(sels.sides{branch}{leaf}{side},'selected') 
-                                    pres.show=[pres.show,ix];
-
-
-                elseif strcmp(sels.sides{branch}{leaf}{side},'not selected')
-                                    pres.hide=[pres.hide,ix];
-                end
+            elseif strcmp(sels.sides{branch}{leaf}{side},'not selected')
+                pres.hide=[pres.hide,ix];
             end
-
+        end
+        
     end
 end
 
@@ -361,7 +406,7 @@ if ~isfield(machine.atlaspresets,getridofspaces(options.atlasset))
     machine.atlaspresets.(getridofspaces(options.atlasset)).presets{1}.show=pres.show;
     machine.atlaspresets.(getridofspaces(options.atlasset)).presets{1}.hide=pres.hide;
     machine.atlaspresets.(getridofspaces(options.atlasset)).presets{1}.label=pres.label;
-
+    
 else
     
     clen=length(machine.atlaspresets.(getridofspaces(options.atlasset)).presets);
@@ -413,7 +458,7 @@ for branch=1:length(sels.branches)
         for side=1:length(sels.sides{branch}{leaf})
             sidec=getsidec(length(sels.sides{branch}{leaf}),side);
             [ixs,ixt]=getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
-
+            
             if ismember(char(h.sgsub{branch}{leaf}),onatlasnames)
                 h.atlassurfs(ixs).Visible='on';
                 h.togglebuttons(ixt).State='on';
@@ -440,7 +485,7 @@ ea_synctree(handles)
 function ea_synctree(handles)
 ea_busyaction('on',handles.atlasselect,'atlcontrol');
 
-import com.mathworks.mwswing.checkboxtree.* 
+import com.mathworks.mwswing.checkboxtree.*
 
 h=getappdata(handles.atlasselect,'h');
 jtree=getappdata(handles.atlasselect,'jtree');
@@ -465,7 +510,7 @@ for branch=1:length(sels.branches)
                 case 'off'
                     set(h.sgsubside{branch}{leaf}{side},'SelectionState',SelectionState.NOT_SELECTED)
                     set(h.sgsub{branch}{leaf},'SelectionState',SelectionState.NOT_SELECTED)
-
+                    
                     if ~strcmp(h.atlassurfs(ixs).Visible,'off'); % also make sure surface is right
                         h.atlassurfs(ixs).Visible='off';
                     end
@@ -486,6 +531,56 @@ ea_busyaction('off',handles.atlasselect,'atlcontrol');
 % --- Executes during object creation, after setting all properties.
 function presets_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to presets (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in atlassetpopup.
+function atlassetpopup_Callback(hObject, eventdata, handles)
+% hObject    handle to atlassetpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns atlassetpopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from atlassetpopup
+
+
+ea_busyaction('on',handles.atlasselect,'atlcontrol');
+
+% retrieve necessary info from atlasselect figure:
+resultfig=getappdata(handles.atlasselect,'resultfig');
+options=getappdata(handles.atlasselect,'options');
+% delete atlases shown so far, toolbar:
+% ht=getappdata(resultfig,'atlht');
+% delete(ht);
+% surfaces
+atlassurfs=getappdata(resultfig,'atlassurfs');
+for atl=1:numel(atlassurfs)
+    delete(atlassurfs(atl))
+end
+elstruct=getappdata(resultfig,'elstruct');
+options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
+options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
+options.atlassetn=get(handles.atlassetpopup,'Value');
+
+[atlases,colorbuttons,atlassurfs]=ea_showatlas(resultfig,elstruct,options);
+setappdata(handles.atlasselect,'atlases',atlases);
+%ea_openatlascontrol([],[],atlases,resultfig,options);
+setuptree({handles,colorbuttons,atlassurfs,atlases});
+ea_createpcmenu(handles);
+ea_busyaction('off',handles.atlasselect,'atlcontrol');
+
+
+
+% --- Executes during object creation, after setting all properties.
+function atlassetpopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to atlassetpopup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

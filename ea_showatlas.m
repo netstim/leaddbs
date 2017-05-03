@@ -94,7 +94,12 @@ for nativemni=nm % switch between native and mni space atlases.
     
     setinterpol=1;
     
-    ht=uitoolbar(resultfig);
+   ht=getappdata(resultfig,'atlht');
+   if ~isempty(ht) % sweep nonempty atlases toolbar
+       delete(ht.Children(:));
+   else
+       ht=uitoolbar(resultfig);
+   end
     atlcntbutton=uipushtool(ht,'CData',ea_get_icn('atlases',options),'TooltipString','Atlas Control Figure','ClickedCallback',{@ea_openatlascontrol,atlases,resultfig,options});
 
     % prepare stats fields
@@ -306,7 +311,7 @@ for nativemni=nm % switch between native and mni space atlases.
     
     setappdata(resultfig,'atlassurfs',atlassurfs);
     setappdata(resultfig,'colorbuttons',colorbuttons);
-    
+    setappdata(resultfig,'atlht',ht);
     % configure label button to work properly and hide labels as default.
     
     atlabelsvisible([],[],atlaslabels(:),'off');

@@ -73,7 +73,8 @@ switch onoff
         end
         
         spinner=getappdata(fighandle,'spinner');
-        %%if isempty(spinner)
+        
+        if isempty(spinner)
             try
                 % R2010a and newer
                 iconsClassName = 'com.mathworks.widgets.BusyAffordance$AffordanceSize';
@@ -89,7 +90,7 @@ switch onoff
             spinner.getComponent.setBackground(java.awt.Color(1, 1, 1)); 
             spinner.setPaintsWhenStopped(true);  % default = false
             spinner.useWhiteDots(false);         % default = false (true is good for dark backgrounds)
-        %end
+        end
         javacomponent(spinner.getComponent, pos, fighandle);
         spinner.start;
         
@@ -136,7 +137,7 @@ switch onoff
         [hjObj, hContainer] = javacomponent(spinner.getComponent, pos, fighandle);
         delete(hContainer);
         spinner.getComponent.setVisible(false)
-        
+        setappdata(fighandle,'spinner',[]);
         % change mousewheel, too:
         set(fighandle, 'pointer', 'arrow');
               disp('** Process done.');
