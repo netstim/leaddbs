@@ -160,7 +160,7 @@ if ~isempty(jComp)
     delete(jComp);
 end
 
-[jComp,hc] = javacomponent(jScrollPane,[10,10,280,height],handles.atlasselect);
+[jComp,hc] = javacomponent(jScrollPane,[10,5,285,height],handles.atlasselect);
 setappdata(handles.atlasselect,'uitree',jComp);
 ea_busyaction('del',handles.atlasselect,'atlcontrol');
 
@@ -168,8 +168,8 @@ ea_busyaction('del',handles.atlasselect,'atlcontrol');
 handles.atlasselect.Position(4)=(450-(360-height));
 
 handles.atlstructxt.Position(2)=handles.atlasselect.Position(4)-25;
-handles.atlassetpopup.Position(2)=handles.atlasselect.Position(4)-55;
-handles.presets.Position(2)=handles.atlasselect.Position(4)-80;
+handles.atlassetpopup.Position(2)=handles.atlasselect.Position(4)-56;
+handles.presets.Position(2)=handles.atlasselect.Position(4)-84;
 set(0,'CurrentFigure',handles.atlasselect);
 axis off
 movegui(handles.atlasselect,'northeast');
