@@ -170,7 +170,7 @@ handles.atlasselect.Position(4)=(450-(360-height));
 handles.atlstructxt.Position(2)=handles.atlasselect.Position(4)-20;
 handles.atlassetpopup.Position(2)=handles.atlasselect.Position(4)-55;
 handles.presets.Position(2)=handles.atlasselect.Position(4)-80;
-
+set(0,'CurrentFigure',handles.atlasselect);
 axis off
 movegui(handles.atlasselect,'northeast');
 
