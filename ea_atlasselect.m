@@ -22,7 +22,7 @@ function varargout = ea_atlasselect(varargin)
 
 % Edit the above text to modify the response to help ea_atlasselect
 
-% Last Modified by GUIDE v2.5 02-May-2017 19:08:46
+% Last Modified by GUIDE v2.5 04-May-2017 19:22:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -171,12 +171,15 @@ end
 setappdata(handles.atlasselect,'uitree',jComp);
 ea_busyaction('del',handles.atlasselect,'atlcontrol');
 
+handles.namingscheme.String={'Show NIfTI filenames'};
+
 %handles.atlasselect.Position(2)=handles.atlasselect.Position(2)-(450);
-handles.atlasselect.Position(4)=(450-(360-height));
+handles.atlasselect.Position(4)=(480-(360-height));
 
 handles.atlstructxt.Position(2)=handles.atlasselect.Position(4)-25;
 handles.atlassetpopup.Position(2)=handles.atlasselect.Position(4)-56;
 handles.presets.Position(2)=handles.atlasselect.Position(4)-84;
+handles.namingscheme.Position(2)=handles.atlasselect.Position(4)-112;
 set(0,'CurrentFigure',handles.atlasselect);
 axis off
 movegui(handles.atlasselect,'northeast');
@@ -520,6 +523,29 @@ ea_busyaction('off',handles.atlasselect,'atlcontrol');
 % --- Executes during object creation, after setting all properties.
 function atlassetpopup_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to atlassetpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in namingscheme.
+function namingscheme_Callback(hObject, eventdata, handles)
+% hObject    handle to namingscheme (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns namingscheme contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from namingscheme
+
+
+% --- Executes during object creation, after setting all properties.
+function namingscheme_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to namingscheme (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

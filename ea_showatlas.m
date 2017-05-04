@@ -303,7 +303,9 @@ for nativemni=nm % switch between native and mni space atlases.
             % set(gcf,'color','w');
             axis equal
             
-            drawnow
+            if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
+                drawnow
+            end
             
             
         end
