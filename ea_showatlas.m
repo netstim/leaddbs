@@ -407,6 +407,26 @@ else
     end
 end
 
+
+
+% check if new atlas select window is open:
+figHandles = findobj('Type','figure');
+atlspres=0;
+for f=1:length(figHandles)
+    if strcmp(figHandles(f).Tag,'atlasselect')
+        atlspres=1;
+        break
+    end
+end
+if atlspres
+   atfig=figHandles(f);
+   clear figHandles
+    handles=getappdata(atfig,'handles');
+    ea_synctree(handles)
+end
+
+
+
 function atlabelsvisible(hobj,ev,obj,onoff)
 for el=1:numel(obj)
     try

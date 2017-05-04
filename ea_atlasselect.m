@@ -63,6 +63,7 @@ guidata(hObject, handles);
 
 atlases=varargin{3};
 setappdata(handles.atlasselect,'atlases',atlases);
+setappdata(handles.atlasselect,'handles',handles);
 options=varargin{4};
 setappdata(handles.atlasselect,'options',options);
 setappdata(handles.atlasselect,'resultfig',varargin{5});
@@ -158,6 +159,9 @@ norm=360; % max height if full size figure shown.
 if height>360;
     height=360;
 end
+if height<100
+    height=100;
+end
 jComp=getappdata(handles.atlasselect,'uitree');
 if ~isempty(jComp)
     delete(jComp);
@@ -184,28 +188,15 @@ h.atlchecks=atlchecks;
 set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback,h})
 setappdata(handles.atlasselect,'h',h);
 setappdata(handles.atlasselect,'jtree',jCheckBoxTree);
-sels=storeupdatemodel(jCheckBoxTree,h);
+sels=ea_storeupdatemodel(jCheckBoxTree,h);
 
 
 
-function sels=storeupdatemodel(jtree,h)
 
-
-for branch=1:length(h.sg)
-    sels.branches{branch}=h.sg{branch}.getSelectionState;
-    for leaf=1:length(h.sgsub{branch})
-        sels.leaves{branch}{leaf}=h.sgsub{branch}{leaf}.getSelectionState;
-        for side=1:length(h.sgsubside{branch}{leaf})
-            sels.sides{branch}{leaf}{side}=h.sgsubside{branch}{leaf}{side}.getSelectionState;
-        end
-    end
-end
-
-setappdata(jtree,'selectionstate',sels);
 
 function ea_showhideatlases(jtree,h)
 
-sels=storeupdatemodel(jtree,h);
+sels=ea_storeupdatemodel(jtree,h);
 for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
         if ~isempty(sels.sides{branch}{leaf}) % has side children
@@ -213,7 +204,7 @@ for branch=1:length(sels.branches)
                 
                 sidec=getsidec(length(sels.sides{branch}{leaf}),side);
                 
-                [ixs,ixt]=getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
+                [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
                 if strcmp(sels.sides{branch}{leaf}{side},'selected')
                     if ~strcmp(h.atlassurfs(ixs).Visible,'on')
                         h.atlassurfs(ixs).Visible='on';
@@ -245,21 +236,7 @@ elseif sel==1
     sidec='_midline';
 end
 
-function [ixs,ixt]=getsubindex(sel,sidec,surfs,togglebuttons)
 
-for p=1:length(surfs)
-    if strcmp(surfs(p).Tag,[char(sel),sidec])
-        ixs=p;
-        break
-    end
-end
-
-for p=1:length(surfs)
-    if strcmp(togglebuttons(p).Tag,[char(sel),sidec])
-        ixt=p;
-        break
-    end
-end
 
 
 
@@ -272,7 +249,7 @@ clickY = eventData.getY;
 treePath = jtree.getPathForLocation(clickX, clickY);
 
 oldselstate=getappdata(jtree,'selectionstate');
-newselstate=storeupdatemodel(jtree,h);
+newselstate=ea_storeupdatemodel(jtree,h);
 if ~isequal(oldselstate,newselstate)
     ea_showhideatlases(jtree,h);
 end
@@ -365,7 +342,7 @@ ea_busyaction('on',handles.atlasselect,'atlcontrol');
 
 jtree=getappdata(handles.atlasselect,'jtree');
 h=getappdata(handles.atlasselect,'h');
-sels=storeupdatemodel(jtree,h);
+sels=ea_storeupdatemodel(jtree,h);
 atlases=getappdata(handles.atlasselect,'atlases');
 pres.default='absolute';
 pres.show=[];
@@ -455,12 +432,12 @@ offatlasnames=atlases.names(preset.hide);
 [~,offatlasnames]=cellfun(@fileparts,offatlasnames,'Uniformoutput',0);
 
 % iterate through jTree to set selection according to preset:
-sels=storeupdatemodel(jtree,h);
+sels=ea_storeupdatemodel(jtree,h);
 for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
             sidec=getsidec(length(sels.sides{branch}{leaf}),side);
-            [ixs,ixt]=getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
+            [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
             
             if ismember(char(h.sgsub{branch}{leaf}),onatlasnames)
                 h.atlassurfs(ixs).Visible='on';
@@ -484,47 +461,6 @@ end
 ea_busyaction('off',handles.atlasselect,'atlcontrol');
 
 ea_synctree(handles)
-
-function ea_synctree(handles)
-ea_busyaction('on',handles.atlasselect,'atlcontrol');
-
-import com.mathworks.mwswing.checkboxtree.*
-
-h=getappdata(handles.atlasselect,'h');
-jtree=getappdata(handles.atlasselect,'jtree');
-% will sync tree and surfaces based on toggle buttons
-sels=storeupdatemodel(jtree,h);
-for branch=1:length(sels.branches)
-    for leaf=1:length(sels.leaves{branch})
-        for side=1:length(sels.sides{branch}{leaf})
-            sidec=getsidec(length(sels.sides{branch}{leaf}),side);
-            [ixs,ixt]=getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
-            switch h.togglebuttons(ixt).State
-                
-                case 'on'
-                    
-                    set(h.sgsubside{branch}{leaf}{side},'SelectionState',SelectionState.SELECTED)
-                    set(h.sgsub{branch}{leaf},'SelectionState',SelectionState.SELECTED)
-                    
-                    if ~strcmp(h.atlassurfs(ixs).Visible,'on'); % also make sure surface is right
-                        h.atlassurfs(ixs).Visible='on';
-                    end
-                    
-                case 'off'
-                    set(h.sgsubside{branch}{leaf}{side},'SelectionState',SelectionState.NOT_SELECTED)
-                    set(h.sgsub{branch}{leaf},'SelectionState',SelectionState.NOT_SELECTED)
-                    
-                    if ~strcmp(h.atlassurfs(ixs).Visible,'off'); % also make sure surface is right
-                        h.atlassurfs(ixs).Visible='off';
-                    end
-            end
-            
-        end
-        
-    end
-end
-jtree.updateUI
-ea_busyaction('off',handles.atlasselect,'atlcontrol');
 
 
 

@@ -129,19 +129,23 @@ end
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
-
+if any(imgsize>256)
+    rigidshrinkfactors='12x8x4x2';
+    affineshrinkfactors='12x8x4x2';
+    synshrinkfactors='12x8x4x2';
+else
+    rigidshrinkfactors='8x4x2x1';
+    affineshrinkfactors='8x4x2x1';
+    synshrinkfactors='6x4x2x1';
+end
 rigidconvergence='[1000x500x250x100,1e-6,10]';
-rigidshrinkfactors='8x4x2x1';
 rigidsmoothingssigmas='3x2x1x0';
 
 affineconvergence='[1000x500x250x100,1e-6,10]';
-affineshrinkfactors='8x4x2x1';
 affinesmoothingssigmas='3x2x1x0';
 
 synconvergence='[100x70x50x20,1e-6,10]';
-synshrinkfactors='6x4x2x1';
 synsmoothingssigmas='3x2x1x0';
-
 
 
 rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1}, ',1]' ...
