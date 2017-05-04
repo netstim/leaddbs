@@ -68,6 +68,9 @@ setappdata(handles.atlasselect,'options',options);
 setappdata(handles.atlasselect,'resultfig',varargin{5});
 movegui(hObject,'northeast');
 
+if ~isfield(options,'native')
+    options.native=0;
+end
 ea_listatlassets(options,handles,options.native);
 
 
