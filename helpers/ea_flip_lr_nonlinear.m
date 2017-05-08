@@ -11,6 +11,7 @@ if ischar(from) % assume nifti file path
     options=ea_getptopts(directory);
     ea_apply_normalization_tofile(options,{from},{to},directory,0,interp,from);
     ea_flip_lr(to,to);
+    ea_reslice_nii(to,to,[],[],[],[],[],[],0);
     
 else % assume coordinate list
     spacedef=ea_getspacedef;

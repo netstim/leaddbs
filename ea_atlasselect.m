@@ -220,11 +220,14 @@ for branch=1:length(sels.branches)
                     end
                 end
             end
+            
         else
             keyboard
         end
     end
+    
 end
+
 
 function sidec=getsidec(sel,side)
 
