@@ -74,6 +74,8 @@ if ~isfield(options,'native')
 end
 ea_listatlassets(options,handles,options.native);
 
+[~,handles.atlassetpopup.Value]=ismember(options.atlasset,handles.atlassetpopup.String);
+
 
 axis off
 setuptree([{handles},varargin])

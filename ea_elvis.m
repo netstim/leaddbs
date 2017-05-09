@@ -209,7 +209,9 @@ corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex',options),'TooltipString
 if options.d3.writeatlases
     [atlases,colorbuttons,atlassurfs]=ea_showatlas(resultfig,elstruct,options);
     
+    if length(atlases.names)>6 % only open up for long atlas lists by default.
     ea_openatlascontrol([],[],atlases,resultfig,options);
+    end
 
     if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
         try % see if electrode has been defined.
