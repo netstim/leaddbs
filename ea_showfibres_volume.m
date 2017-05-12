@@ -158,19 +158,27 @@ for side=1:length(options.sides)
 
 
                 load([options.root,options.patientname,filesep,'ea_stats']);
+                
+                ea_stats.stimulation(thisstim).vat(side,vat).amp=S.amplitude{side};
+                ea_stats.stimulation(thisstim).vat(side,vat).label=S.label;
+                ea_stats.stimulation(thisstim).vat(side,vat).contact=vat;
+                ea_stats.stimulation(thisstim).vat(side,vat).side=side;
+                
+                vatfv.faces=K(side).K{vat}; vatfv.vertices=VAT{side}.VAT{vat};
+                vatfv=reducepatch(vatfv,0.05);
+                                        Vcent=mean(vatfv.vertices);
 
-                                ea_stats.stimulation(thisstim).vat(side,vat).amp=S.amplitude{side};
-                                ea_stats.stimulation(thisstim).vat(side,vat).label=S.label;
-                                ea_stats.stimulation(thisstim).vat(side,vat).contact=vat;
-                                ea_stats.stimulation(thisstim).vat(side,vat).side=side;
-
-
-
+                % figure
+                % patch('faces',vatfv.faces,'vertices',vatfv.vertices,'FaceColor','none','EdgeColor','g');
+                % patch('faces',nfv.faces,'vertices',nfv.vertices,'FaceColor','none','EdgeColor','r');
+                
+                
                 for atlas=1:size(atlases.XYZ,1)
-
+                    
                     if stimparams(side).volume(vat)>0 % stimulation on in this VAT,
                         clear thisatl
 
+                        
                         if isempty(atlases.XYZ{atlas,side}) % for midline or combined atlases, only the right side atlas is used.
                             thisatl=atlases.XYZ{atlas,1}.mm;
                             tpd=atlases.pixdim{atlas,1};
@@ -178,15 +186,28 @@ for side=1:length(options.sides)
                             thisatl=atlases.XYZ{atlas,side}.mm;
                             tpd=atlases.pixdim{atlas,side};
                         end
-                        tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
-
-                        ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(VAT{side}.VAT{vat},K(side).K{vat},thisatl))*tpv;
-                        ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
-
-                    else % simply set vi to zero.
+                        
+                        %% this search strategy commented out for now ? would fail in case of a very large atlas structure with VAT in center of it touching no border.
+%                         % roughly check if this nucleus could be close to
+%                         % VTA centroid:
+%                         [~,D]=knnsearch(Vcent,thisatl);
+%                         if any(D<(1.5*maedler12_eq3(max(S.amplitude{side}),1000))) % VAT is close to nucleus, should check volume of intersection.
+%                             
+                            tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
+                            
+                            
+                            ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(vatfv.vertices,vatfv.faces,thisatl))*tpv;
+                            
+                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
+%                         else % all points too far from VTA center - simply set vi to zero.
+%                             ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
+%                             ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
+%                             
+%                         end
+                    else % no voltage on this vat, simply set vi to zero.
                         ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
                         ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
-
+                        
                     end
                 end
 
@@ -263,6 +284,22 @@ setappdata(resultfig,what,tvalue);
 %disp([atls,'visible clicked']);
 
 
+
+function r=maedler12_eq3(U,Im)
+% This function radius of Volume of Activated Tissue for stimulation settings U and Ohm. See Maedler 2012 for details.
+% Clinical measurements of DBS electrode impedance typically range from
+% 500?1500 Ohm (Butson 2006).
+r=0; %
+if U %(U>0)
+
+    k1=-1.0473;
+    k3=0.2786;
+    k4=0.0009856;
+
+    r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)...
+        /...
+        (2*k3);
+end
 
 
 function C=rgb(C) % returns rgb values for the colors.
