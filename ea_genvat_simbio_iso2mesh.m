@@ -52,6 +52,7 @@ end
 
 resultfig=getappdata(lgfigure,'resultfig');
 elstruct=getappdata(resultfig,'elstruct');
+options=getappdata(resultfig,'options'); % selected atlas could have refreshed.
 elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};

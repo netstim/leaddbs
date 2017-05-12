@@ -29,6 +29,7 @@ end
 % Initialize figure
 
 resultfig=figure('name',[options.patientname,': Electrode-Scene'],'color','k','numbertitle','off','CloseRequestFcn',@closesattelites,'visible',options.d3.verbose,'KeyPressFcn',@ea_keypress,'KeyReleaseFcn',@ea_keyrelease);
+setappdata(resultfig,'options',options);
 set(resultfig,'toolbar','none');
 ssz=get(0,'Screensize');
 ssz(1:2)=ssz(1:2)+50;

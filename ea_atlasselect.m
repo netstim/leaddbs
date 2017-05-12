@@ -515,7 +515,7 @@ elstruct=getappdata(resultfig,'elstruct');
 options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
 options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
 options.atlassetn=get(handles.atlassetpopup,'Value');
-
+setappdata(resultfig,'options',options); % update options in resultfig for VAT model
 [atlases,colorbuttons,atlassurfs]=ea_showatlas(resultfig,elstruct,options);
 setappdata(handles.atlasselect,'atlases',atlases);
 %ea_openatlascontrol([],[],atlases,resultfig,options);
