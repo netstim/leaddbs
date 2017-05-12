@@ -6,7 +6,7 @@ try
         case 0 % template space
             nii=ea_load_nii([ea_space(options,'atlases'),options.atlasset,filesep,'gm_mask.nii']);
         case 1 % native space
-            nii=ea_load_nii([options.root,options.patientname,filesep,'atlases',filesep,'native',filesep,options.atlasset,filesep,'gm_mask.nii']);
+            nii=ea_load_nii([options.root,options.patientname,filesep,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
     end
 catch
     ea_error('The selected atlas set seems incompatible with this approach.');
