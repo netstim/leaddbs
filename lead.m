@@ -66,7 +66,7 @@ if isdeployed
 fprintf(1, '%s', ctfroot);
 end
 
-    ea_compat_data; 
+    ea_compat_data;
 earoot=ea_getearoot;
 
 ea_checkbuildspace;
@@ -102,10 +102,6 @@ if nargin>3
             lead_anatomy;
             delete(handles.leadfigure)
             return
-        case 'macaque';
-            lead_dbs macaque;
-            delete(handles.leadfigure)
-            return
         case 'version'
             disp(ea_getvsn('local'));
             delete(handles.leadfigure)
@@ -119,7 +115,7 @@ if nargin>3
             delete(handles.leadfigure)
             return
     end
-    
+
 end
 
 
@@ -186,15 +182,6 @@ function startgroup_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 lead group
-
-% --- Executes on button press in startmacaque.
-function startmacaque_Callback(hObject, eventdata, handles)
-% hObject    handle to startmacaque (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-lead macaque
-
 
 % --- Executes on button press in startanatomy.
 function startanatomy_Callback(hObject, eventdata, handles)
