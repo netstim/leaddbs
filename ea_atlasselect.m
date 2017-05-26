@@ -67,6 +67,8 @@ setappdata(handles.atlasselect,'handles',handles);
 options=varargin{4};
 setappdata(handles.atlasselect,'options',options);
 setappdata(handles.atlasselect,'resultfig',varargin{5});
+    
+
 movegui(hObject,'northeast');
 
 if ~isfield(options,'native')
@@ -78,13 +80,14 @@ ea_listatlassets(options,handles,options.native);
 
 
 axis off
-setuptree([{handles},varargin])
 ea_createpcmenu(handles);
+setappdata(handles.atlasselect,'treeinit',1);
+setuptree([{handles},varargin])
 
 
 function setuptree(varargin)
 
-
+% IO handling
 handles=varargin{1}{1};
 
 ea_busyaction('on',handles.atlasselect,'atlcontrol');
@@ -92,6 +95,17 @@ ea_busyaction('on',handles.atlasselect,'atlcontrol');
 togglebuttons=varargin{1}{2};
 atlassurfs=varargin{1}{3};
 atlases=varargin{1}{4};
+setappdata(handles.atlasselect,'colorbuttons',togglebuttons);
+setappdata(handles.atlasselect,'atlassurfs',atlassurfs);
+setappdata(handles.atlasselect,'atlases',atlases);
+
+% check if other labelsets are available
+if isfield(atlases,'labelnames')
+    handles.namingscheme.String=[atlases.labelnames,{'NIfTI filenames'}];
+else
+    handles.namingscheme.String={'NIfTI filenames'};
+end
+
 try
     if ~isfield(atlases,'subgroups')
         atlases.subgroups(1).label='Structures';
@@ -100,12 +114,38 @@ try
 catch
     keyboard
 end
+
+for tb=1:length(togglebuttons)
+   tbcell{tb}=togglebuttons(tb).Tag; 
+end
+
 atlchecks=cell(length(atlases.names),1);
 import com.mathworks.mwswing.checkboxtree.*
+if handles.namingscheme.Value>length(handles.namingscheme.String)
+    handles.namingscheme.Value=1;
+end
+
+if handles.presets.Value>length(handles.presets.String)
+    handles.presets.Value=1;
+end
+
 for subgroup=1:length(atlases.subgroups)
     h.sg{subgroup} = DefaultCheckBoxNode(atlases.subgroups(subgroup).label);
     for node=1:length(atlases.subgroups(subgroup).entries)
-        [~,thisatlname]=fileparts(atlases.names{atlases.subgroups(subgroup).entries(node)});
+        [~,thisatlfname]=fileparts(atlases.names{atlases.subgroups(subgroup).entries(node)});
+        [~,thisatlfname]=fileparts(thisatlfname);
+
+        switch handles.namingscheme.String{handles.namingscheme.Value}
+            
+            case 'NIfTI filenames'
+                thisatlname=thisatlfname;
+            otherwise
+                [~,nsel]=ismember(handles.namingscheme.String{handles.namingscheme.Value},atlases.labelnames);
+                if nsel==0
+                    nsel=1;
+                end
+                thisatlname=atlases.labels{nsel}{node};
+        end
         
         try % gzip support
             if strcmp(thisatlname(end-3:end),'.nii')
@@ -118,25 +158,42 @@ for subgroup=1:length(atlases.subgroups)
         h.sg{subgroup}.add(h.sgsub{subgroup}{node});
         
         if (atlases.types(atlases.subgroups(subgroup).entries(node))==3) || (atlases.types(atlases.subgroups(subgroup).entries(node))==4) % need lh and rh entries
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('RH',true);
+            [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
+            checked=onoff2bool(togglebuttons(thistb).State);
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('RH',checked);
             h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-            h.sgsubside{subgroup}{node}{2}=DefaultCheckBoxNode('LH',true);
+            h.sgsubfi{subgroup}{node}=thisatlfname;
+            [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
+            checked=onoff2bool(togglebuttons(thistb).State);
+            h.sgsubside{subgroup}{node}{2}=DefaultCheckBoxNode('LH',checked);
             h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{2});
         elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==1) % RH only
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('RH',true);
+            [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
+            checked=onoff2bool(togglebuttons(thistb).State);
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('RH',checked);
             h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+            h.sgsubfi{subgroup}{node}=thisatlfname;
         elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==2) % LH only
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('LH',true);
+            [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
+            checked=onoff2bool(togglebuttons(thistb).State);
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('LH',checked);
             h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+            h.sgsubfi{subgroup}{node}=thisatlfname;
         elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==5) % Midline
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('Midline',true);
+            [~,thistb]=ismember([thisatlfname,'_midline'],tbcell);
+            checked=onoff2bool(togglebuttons(thistb).State);
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('Midline',checked);
             h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+            h.sgsubfi{subgroup}{node}=thisatlfname;
         end
         atlchecks{atlases.subgroups(subgroup).entries(node)}=...
             [atlchecks{atlases.subgroups(subgroup).entries(node)},h.sgsub{subgroup}{node}];
         
     end
 end
+
+ea_cleanpriortree(handles);
+
 
 % Create a standard MJTree:
 jTree = com.mathworks.mwswing.MJTree(h.sg{1});
@@ -154,6 +211,8 @@ jCheckBoxTree = CheckBoxTree(jTree.getModel);
 %jTreeCR.setLeafIcon(icon);
 
 jScrollPane = com.mathworks.mwswing.MJScrollPane(jCheckBoxTree);
+treeinit=getappdata(handles.atlasselect,'treeinit');
+setappdata(handles.atlasselect,'treeinit',0);
 
 atlN=length(atlases.names);
 height=(atlN+1.5)*18;
@@ -164,39 +223,78 @@ end
 if height<100
     height=100;
 end
+
+
+[jComp,hc] = javacomponent(jScrollPane,[10,5,285,height],handles.atlasselect);
+setappdata(handles.atlasselect,'uitree',jComp);
+
+ea_busyaction('del',handles.atlasselect,'atlcontrol');
+
+
+
+
+    h.togglebuttons=togglebuttons;
+    h.atlassurfs=atlassurfs;
+    h.atlases=atlases;
+    h.atlchecks=atlchecks;
+    set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback,h})
+    setappdata(handles.atlasselect,'h',h);
+    setappdata(handles.atlasselect,'jtree',jCheckBoxTree);
+    sels=ea_storeupdatemodel(jCheckBoxTree,h);
+if treeinit
+    
+    if handles.namingscheme.Value>length(handles.namingscheme.String)
+        handles.namingscheme.Value=1;
+    end
+    if handles.presets.Value>length(handles.presets.String)
+        handles.presets.Value=1;
+    end
+    %handles.atlasselect.Position(2)=handles.atlasselect.Position(2)-(450);
+    handles.atlasselect.Position(4)=(527-(360-height));
+    
+    handles.atlstructxt.Position(2)=handles.atlasselect.Position(4)-25;
+
+    handles.atlassetpopup.Position(2)=handles.atlasselect.Position(4)-72;
+    handles.atlassetstatic.Position(2)=handles.atlassetpopup.Position(2)+33;
+
+    handles.presets.Position(2)=handles.atlasselect.Position(4)-114;
+    handles.presetsstatic.Position(2)=handles.presets.Position(2)+33;
+
+    handles.namingscheme.Position(2)=handles.atlasselect.Position(4)-157;
+    handles.namingstatic.Position(2)=handles.namingscheme.Position(2)+33;
+
+    set(0,'CurrentFigure',handles.atlasselect);
+    axis off
+    movegui(handles.atlasselect,'northeast');
+end
+
+
+
+function ea_cleanpriortree(handles)
+
 jComp=getappdata(handles.atlasselect,'uitree');
 if ~isempty(jComp)
     delete(jComp);
 end
 
-[jComp,hc] = javacomponent(jScrollPane,[10,5,285,height],handles.atlasselect);
-setappdata(handles.atlasselect,'uitree',jComp);
-ea_busyaction('del',handles.atlasselect,'atlcontrol');
-
-handles.namingscheme.String={'Show NIfTI filenames'};
-
-%handles.atlasselect.Position(2)=handles.atlasselect.Position(2)-(450);
-handles.atlasselect.Position(4)=(480-(360-height));
-
-handles.atlstructxt.Position(2)=handles.atlasselect.Position(4)-25;
-handles.atlassetpopup.Position(2)=handles.atlasselect.Position(4)-56;
-handles.presets.Position(2)=handles.atlasselect.Position(4)-84;
-handles.namingscheme.Position(2)=handles.atlasselect.Position(4)-112;
-set(0,'CurrentFigure',handles.atlasselect);
-axis off
-movegui(handles.atlasselect,'northeast');
-
-h.togglebuttons=togglebuttons;
-h.atlassurfs=atlassurfs;
-h.atlases=atlases;
-h.atlchecks=atlchecks;
-set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback,h})
-setappdata(handles.atlasselect,'h',h);
-setappdata(handles.atlasselect,'jtree',jCheckBoxTree);
-sels=ea_storeupdatemodel(jCheckBoxTree,h);
 
 
 
+
+function tf=bin2bool(t)
+if t
+    tf=true;
+else
+    tf=false;
+end
+
+function tf=onoff2bool(t)
+switch t
+    case 'on'
+        tf=true;
+    case 'off'
+        tf=false;
+end
 
 
 function ea_showhideatlases(jtree,h)
@@ -341,8 +439,14 @@ end
 % add save prefs:
 %uimenu(pcmenu,'Label','Save current selection as preset...','Callback',{@ea_saveselection,handles,options});
 handles.presets.String=prescell;
-setappdata(handles.presets,'presetactions',presetactions);
 handles.presets.Value=1;
+
+if isfield(atlases,'defaultset')
+    if length(handles.presets.String)>2 % custom sets available
+   handles.presets.Value=atlases.defaultset+2;
+    end
+end
+setappdata(handles.presets,'presetactions',presetactions);
 %setappdata(handles.presets,'uimenu',pcmenu);
 
 function ea_saveselection(~,~,handles,options)
@@ -445,12 +549,12 @@ for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
             sidec=getsidec(length(sels.sides{branch}{leaf}),side);
-            [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
+            [ixs,ixt]=ea_getsubindex(h.sgsubfi{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
             
-            if ismember(char(h.sgsub{branch}{leaf}),onatlasnames)
+            if ismember(char(h.sgsubfi{branch}{leaf}),onatlasnames)
                 h.atlassurfs(ixs).Visible='on';
                 h.togglebuttons(ixt).State='on';
-            elseif ismember(char(h.sgsub{branch}{leaf}),offatlasnames)
+            elseif ismember(char(h.sgsubfi{branch}{leaf}),offatlasnames)
                 h.atlassurfs(ixs).Visible='off';
                 h.togglebuttons(ixt).State='off';
             else % not explicitly mentioned
@@ -519,6 +623,8 @@ setappdata(resultfig,'options',options); % update options in resultfig for VAT m
 [atlases,colorbuttons,atlassurfs]=ea_showatlas(resultfig,elstruct,options);
 setappdata(handles.atlasselect,'atlases',atlases);
 %ea_openatlascontrol([],[],atlases,resultfig,options);
+setappdata(handles.atlasselect,'treeinit',1);
+
 setuptree({handles,colorbuttons,atlassurfs,atlases});
 ea_createpcmenu(handles);
 ea_busyaction('off',handles.atlasselect,'atlcontrol');
@@ -546,6 +652,15 @@ function namingscheme_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns namingscheme contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from namingscheme
+
+
+colorbuttons=getappdata(handles.atlasselect,'colorbuttons');
+atlassurfs=getappdata(handles.atlasselect,'atlassurfs');
+atlases=getappdata(handles.atlasselect,'atlases');
+
+setuptree({handles,colorbuttons,atlassurfs,atlases});
+
+
 
 
 % --- Executes during object creation, after setting all properties.

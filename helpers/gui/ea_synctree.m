@@ -8,15 +8,15 @@ jtree=getappdata(handles.atlasselect,'jtree');
 % will sync tree and surfaces based on toggle buttons
 sels=ea_storeupdatemodel(jtree,h);
 for branch=1:length(sels.branches)
+branchsel=[];
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
             sidec=getsidec(length(sels.sides{branch}{leaf}),side);
-            [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
+            [ixs,ixt]=ea_getsubindex(h.sgsubfi{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
             switch h.togglebuttons(ixt).State
-                
                 case 'on'
-                    
                     set(h.sgsubside{branch}{leaf}{side},'SelectionState',SelectionState.SELECTED)
+                                            branchsel(end+1)=1;
                     % check if siblings are also selected
                     mixed=0;
                     for chil=1:length(h.sgsubside{branch}{leaf})
@@ -37,6 +37,7 @@ for branch=1:length(sels.branches)
                     
                 case 'off'
                     set(h.sgsubside{branch}{leaf}{side},'SelectionState',SelectionState.NOT_SELECTED)
+                                                                branchsel(end+1)=0;
                     % check if siblings are also selected
                     mixed=0;
                     for chil=1:length(h.sgsubside{branch}{leaf})
@@ -57,11 +58,23 @@ for branch=1:length(sels.branches)
                     if ~strcmp(h.atlassurfs(ixs).Visible,'off'); % also make sure surface is right
                         h.atlassurfs(ixs).Visible='off';
                     end
+                    
             end
             
         end
         
+        
     end
+    
+    % set master set checkbox:
+        if (any(branchsel<0)) || (any(branchsel>0) && ~(all(branchsel>0))) % mixed
+            set(h.sg{branch},'SelectionState',SelectionState.MIXED)
+        elseif all(branchsel>0) % all on
+            set(h.sg{branch},'SelectionState',SelectionState.SELECTED)
+            
+        elseif all(branchsel==0) % all off
+            set(h.sg{branch},'SelectionState',SelectionState.NOT_SELECTED) 
+        end
 end
 jtree.updateUI
 ea_busyaction('off',handles.atlasselect,'atlcontrol');

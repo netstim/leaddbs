@@ -20,11 +20,6 @@ options=varargin{1};
 manualtracor=0;
 svfig=1;
 figvisible='on';
-
-if ~isfield(options,'shifthalfup')
-    options.shifthalfup=0;
-end
-
 if nargin==1
     % load prior results
     coords_mm=ea_load_reconstruction(options);
@@ -51,7 +46,7 @@ if nargin>5 % also has flags to hide and not to save the result (as it will be u
     figvisible=varargin{5};
     svfig=varargin{6};
     try
-        atlases=varargin{7};
+    atlases=varargin{7};
     end
 end
 
@@ -59,7 +54,13 @@ if svfig
     disp('Exporting 2D slice output...');
 end
 
+if ~isfield(options,'shifthalfup')
+    options.shifthalfup=0;
+end
+
+
 scrsz = get(0,'ScreenSize');
+
 
 cuts=figure('name',[options.patientname,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible);
 axis off
@@ -73,6 +74,8 @@ else
     tracorpresent(manualtracor)=1; % only export specified orientation.
 end
 
+
+
 if isstruct(elstruct)
     for side=1:length(ave_coords_mm)
         coords{side}=Vtra.mat\[ave_coords_mm{side},ones(size(ave_coords_mm{side},1),1)]';
@@ -80,16 +83,16 @@ if isstruct(elstruct)
     end
     
 else
-    elstruct=[repmat(elstruct,3,1);1];
+    elstruct=[elstruct,1]';
     coordsmm=elstruct;
     elstruct=manualV.mat\elstruct;
     planedim=getdims(manualtracor,1);
-    elstruct=elstruct(planedim);
+    %elstruct=elstruct(planedim);
 end
 %XYZ_src_vx = src.mat \ XYZ_mm;
 
 fid=fopen([options.root,options.patientname,filesep,'cuts_export_coordinates.txt'],'w');
-for side=1:length(options.sides)
+for side=1:options.sides
     %% write out axial images
     for tracor=find(tracorpresent)'
         
@@ -97,7 +100,7 @@ for side=1:length(options.sides)
             
             
             if ~isstruct(elstruct)
-                coords={elstruct};
+                coords={elstruct(1:3)'};
             end
             el=elcnt+options.elspec.numel*(side-1);
             %subplot(2,2,el);
@@ -241,9 +244,10 @@ for side=1:length(options.sides)
                     set(statcontour,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
                     set(statcontour,'Color','w');
                     warning('on')
-                end      
+                end
+                
             end
-
+            
             % Plot L, R and sizelegend
             %text(addsubsigned(min(boundboxmm{onedim}),2,plusminusl),mean(boundboxmm{secdim}),Ltxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
             %text(addsubsigned(max(boundboxmm{onedim}),2,plusminusr),mean(boundboxmm{secdim}),Rtxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
@@ -267,7 +271,7 @@ for side=1:length(options.sides)
                 else
                     cmap=[0.9,0.9,0.9];
                 end
-                
+            end
                 % 1. Plot stars
                 
                 for c=1:length(elstruct)
@@ -283,7 +287,7 @@ for side=1:length(options.sides)
                     
                     elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
                     
-                    if (elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts)
+                    if ~isstruct(elstruct) || ((elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts))
                         
                         wstr='w';
                         if options.d3.hlactivecontacts
@@ -294,9 +298,20 @@ for side=1:length(options.sides)
                                 
                             end
                         end
+
                         warnStruct = warning('off','MATLAB:hg:willberemoved');
                         elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
                         warning(warnStruct);
+
+                        if options.d2.fid_overlay
+                            if isstruct(elstruct)
+                                elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4);
+                            else
+                                pelstruct=manualV.mat*elstruct;
+                                elplt(c)=plot(pelstruct(onedim,elcnt),pelstruct(secdim,elcnt),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4);
+                            end
+                        end
+
                     end
                     
                 end
@@ -338,7 +353,7 @@ for side=1:length(options.sides)
                 
                 
                 hold off
-            end
+            %end
             
             axis equal
             % Save results
@@ -629,7 +644,9 @@ end
 
 
 function elstruct=testifactivecontacts(elstruct,elspec,c)
-
+if ~isstruct(elstruct)
+    return
+end
 if ~isfield(elstruct(c),'activecontacts')
     elstruct(c).activecontacts{1}=zeros(elspec.numel,1);
     elstruct(c).activecontacts{2}=zeros(elspec.numel,1);

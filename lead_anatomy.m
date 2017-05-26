@@ -22,7 +22,7 @@ function varargout = lead_anatomy(varargin)
 
 % Edit the above text to modify the response to help lead_anatomy
 
-% Last Modified by GUIDE v2.5 17-Aug-2016 15:18:12
+% Last Modified by GUIDE v2.5 18-May-2017 13:06:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -73,14 +73,6 @@ end
 
 set(handles.vizspacepopup,'enable','off');
 
-% add backdrops
-backdrops=ea_assignbackdrop('list');
-
-set(handles.tdbackdrop,'String',backdrops);
-if get(handles.tdbackdrop,'Value')>length(backdrops)
-    set(handles.tdbackdrop,'Value',1);
-end
-
 options.prefs=ea_prefs('');
 
 % load atlassets
@@ -114,12 +106,6 @@ ea_init_coregmrpopup(handles);
 
 ea_addnormmethods(handles,options,'');
 
-% load 2d settings
-try % if user had called it before, 2D-options will be stored here:
-    d2=options.prefs.machine.d2;
-    ea_options2tdhandles(handles,d2);
-end
-
 ea_processguiargs(handles,varargin)
 
 
@@ -129,6 +115,7 @@ ea_processguiargs(handles,varargin)
 
 handles.prod='anatomy';
 ea_firstrun(handles,options);
+
 
 
 
@@ -286,18 +273,18 @@ end
 
 
 
-function depth_Callback(hObject, eventdata, handles)
-% hObject    handle to depth (see GCBO)
+function xdepth_Callback(hObject, eventdata, handles)
+% hObject    handle to xdepth (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of depth as text
-%        str2double(get(hObject,'String')) returns contents of depth as a double
+% Hints: get(hObject,'String') returns contents of xdepth as text
+%        str2double(get(hObject,'String')) returns contents of xdepth as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function depth_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to depth (see GCBO)
+function xdepth_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to xdepth (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -319,10 +306,10 @@ ea_busyaction('on',leadfig,'anatomy');
 options=ea_handles2options(handles);
 options.macaquemodus=0;
 
-d2=ea_tdhandles2options(handles);
+% d2=ea_tdhandles2options(handles);
+% 
+% ea_storemachineprefs('d2',d2);
 
-ea_storemachineprefs('d2',d2);
-options.d2=ea_tdhandles2options(handles,options.d2);
 
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
@@ -335,10 +322,19 @@ for pt=1:length(options.uipatdirs)
 options.root=[pth,filesep];
 options.patientname=ptname;
 options.prefs=ea_prefs(options.patientname);
-
+options.d2=options.prefs.machine.d2;
+options.d2.writeatlases=1;
+options.d2.atlasopacity=0.2;
+options.d2.tracor=get(handles.tracor,'Value');
+options.d2.depth=[str2double(get(handles.xdepth,'String')),...
+    str2double(get(handles.ydepth,'String')),...
+    str2double(get(handles.zdepth,'String'))];
+options.d2.showlegend=0;
 [Vtra,Vcor,Vsag]=ea_assignbackdrop(options.d2.backdrop,options,'Patient');
 Vs={Vtra,Vcor,Vsag};
-ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'on',2)
+options.sides=1;
+h=ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'on',2);
+set(h,'Position',[0,0,800,800]);
 end
 
 ea_busyaction('off',leadfig,'anatomy');
@@ -523,3 +519,71 @@ function coregmrpopup_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in tdfidcheck.
+function tdfidcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to tdfidcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of tdfidcheck
+
+
+
+function ydepth_Callback(hObject, eventdata, handles)
+% hObject    handle to ydepth (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ydepth as text
+%        str2double(get(hObject,'String')) returns contents of ydepth as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function ydepth_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ydepth (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function zdepth_Callback(hObject, eventdata, handles)
+% hObject    handle to zdepth (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of zdepth as text
+%        str2double(get(hObject,'String')) returns contents of zdepth as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function zdepth_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to zdepth (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in specify2dwrite.
+function specify2dwrite_Callback(hObject, eventdata, handles)
+% hObject    handle to specify2dwrite (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+options.native=get(handles.vizspacepopup,'Value')==2;
+[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
+    options.root=[options.root,filesep];
+    options.modality=get(handles.MRCT,'Value');
+    options.prefs=ea_prefs(options.patientname);
+ea_spec2dwrite(options);
