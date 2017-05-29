@@ -14,14 +14,17 @@ function [cuts,expslice]=ea_writeplanes(varargin)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-
-
 options=varargin{1};
 % defaults:
 %elstruct=0;
 manualtracor=0;
 svfig=1;
 figvisible='on';
+
+if ~isfield(options,'shifthalfup')
+    options.shifthalfup=0;
+end
+
 if nargin==1
     % load prior results
     coords_mm=ea_load_reconstruction(options);
@@ -48,7 +51,7 @@ if nargin>5 % also has flags to hide and not to save the result (as it will be u
     figvisible=varargin{5};
     svfig=varargin{6};
     try
-    atlases=varargin{7};
+        atlases=varargin{7};
     end
 end
 
@@ -56,13 +59,7 @@ if svfig
     disp('Exporting 2D slice output...');
 end
 
-if ~isfield(options,'shifthalfup')
-    options.shifthalfup=0;
-end
-
-
 scrsz = get(0,'ScreenSize');
-
 
 cuts=figure('name',[options.patientname,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible);
 axis off
@@ -75,8 +72,6 @@ if ~manualtracor
 else
     tracorpresent(manualtracor)=1; % only export specified orientation.
 end
-
-
 
 if isstruct(elstruct)
     for side=1:length(ave_coords_mm)
@@ -136,16 +131,9 @@ for side=1:length(options.sides)
             
             
             [planedim,onedim, secdim , dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=getdims(tracor,side);
-            
-            
-            
+   
             %title(['Electrode ',num2str(el-1),', transversal view.']);
-            
-            
-
-
-            
-            
+ 
             [slice,~,boundboxmm,sampleheight]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
             slice=ea_contrast(slice,1,1);
             disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
@@ -176,11 +164,8 @@ for side=1:length(options.sides)
                 try options.atlases=atlases; end
                 cuts=ea_add_overlay(boundboxmm,cuts,tracor,options);
             end
-            
-            
-            
+  
             % Show isovolume
-            
             if options.d3.showisovolume
                 Visoraw=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
                 Viso=spm_vol([options.root,options.patientname,filesep,options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
@@ -256,13 +241,9 @@ for side=1:length(options.sides)
                     set(statcontour,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
                     set(statcontour,'Color','w');
                     warning('on')
-                end
-                
+                end      
             end
-            
-            
-            
-            
+
             % Plot L, R and sizelegend
             %text(addsubsigned(min(boundboxmm{onedim}),2,plusminusl),mean(boundboxmm{secdim}),Ltxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
             %text(addsubsigned(max(boundboxmm{onedim}),2,plusminusr),mean(boundboxmm{secdim}),Rtxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
@@ -319,10 +300,6 @@ for side=1:length(options.sides)
                     end
                     
                 end
-                
-                
-                
-                
                 
                 % 2. Plot legend
                 if exist('elplt','var') % if no stars have been plottet, no legend is needed.
@@ -383,9 +360,7 @@ for side=1:length(options.sides)
             expslice=(expslice-min(expslice(:)))/(max(expslice(:))-min(expslice(:))); % set 0 to 1
 
             expslice=crop_img(expslice);
-            
-            
-            
+
             if svfig==1 % only export if figure needs to be saved.
                 if options.d3.showisovolume
                     isofnadd=['_',options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb];
@@ -626,7 +601,6 @@ for side=1:length(coords_mm)
     end
 end
 if options.shifthalfup
-    
     for side=1:length(coords_mm)
         for c=1:length(coords_mm{side})-1
            scoords_mm{side}(c,:)=mean([coords_mm{side}(c,:);coords_mm{side}(c+1,:)],1);
