@@ -701,8 +701,10 @@ for subpl=1:4
             fc='g';
         end
     end
-
+    
+    warnStruct = warning('off','MATLAB:hg:willberemoved');
     plot((wsize+1)*2,(wsize+1)*2,'*','MarkerSize',15,'MarkerEdgeColor',fc,'LineWidth',2,'LineSmoothing','on');
+    warning(warnStruct);
     hold off
     axis square
     axis off
