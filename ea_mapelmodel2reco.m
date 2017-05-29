@@ -1,6 +1,5 @@
-function [X,electrode,err]=ea_mapelmodel2reco(options,elspec,elstruct,side,resultfig)        
+function [X,electrode,err]=ea_mapelmodel2reco(options,elspec,elstruct,side,resultfig)
 err=0;
-
 
 load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
 A=[electrode.head_position,1;
@@ -10,10 +9,10 @@ A=[electrode.head_position,1;
 redomarkers=0;
 if ~isfield(elstruct,'markers') % backward compatibility to old electrode format
     redomarkers=1;
-    
+
 else
     if isempty(elstruct.markers)
-        
+
         redomarkers=1;
     end
 end
@@ -21,7 +20,7 @@ if redomarkers
     for iside=options.sides
         elstruct.markers(iside).head=elstruct.coords_mm{iside}(1,:);
         elstruct.markers(iside).tail=elstruct.coords_mm{iside}(4,:);
-        
+
         normtrajvector=(elstruct.markers(iside).tail-elstruct.markers(iside).head)./norm(elstruct.markers(iside).tail-elstruct.markers(iside).head);
         orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
         elstruct.markers(iside).x=elstruct.coords_mm{iside}(1,:)+orth(:,1)';
@@ -77,3 +76,7 @@ end
 
 X=X';
 
+
+function degree = rad2deg(radian)
+
+degree = 180 * radian / pi;
