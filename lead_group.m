@@ -358,6 +358,7 @@ try
     end
 end
 options.groupmode=1;
+options.modality=3; % use template image
 options.patient_list=M.patient.list;
 resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
 
