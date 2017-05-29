@@ -1326,7 +1326,6 @@ ea_busyaction('on',handles.leadfigure,'group');
 nudir=[nudir,filesep];
 M=ea_initializeM;
 
-
 set(handles.groupdir_choosebox,'String',nudir);
 
 try % if file already exists, load it (and overwrite M).
