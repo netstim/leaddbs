@@ -44,57 +44,39 @@ else
     interp = 0;
 end
 
-V = spm_vol(filename);
 
-[bb,vox] = ea_spm_get_bbox(V, nstring);
+% load nifti
 
-bb = increasebb(bb);
+nii=ea_load_nii(filename);
 
-if any(vox<0) || any(V.mat(logical(eye(4)))<0) %Seems to be true for FSL but not other norm. methods: vox = -0.7 0.7 0.7
-    ea_reslice_nii(filename,filename,abs(vox),0,[],2,[],[],0); % last zero is to not use SPM. this has shown to not work when voxel sizes are negative
-    V = spm_vol(filename);
-    [bb, vox] = ea_spm_get_bbox(V, nstring);
-    bb = increasebb(bb);
+switch nstring
+    case 'nz'
+        comp=0;
+    case 'nn'
+        comp=nan;
 end
+[xx,yy,zz]=ind2sub(size(nii.img),find(nii.img~=comp));
 
-dist = diff(bb); % check for weird zero bbs in small files.
-
-if all(dist)
-    
-    % create sn structure:
-    sn.VG = V;
-    sn.VF = V;
-    sn.Affine = eye(4);
-    sn.Tr = [];
-    sn.flags = [];
-    
-    % create ropts structure:
-    ropts.preserve = 0;
-    ropts.bb = bb;
-    ropts.vox = vox;
-    ropts.interp = interp;
-    ropts.wrap = [0,0,0];
-    ropts.prefix = prefix;
-    try
-        spm_write_sn([filename,',1'], sn,ropts);
-    catch % init SPM first
-        spm_jobman('initcfg');
-        spm_write_sn([filename,',1'], sn,ropts);
+bb=[min(xx)-10,max(xx)+10
+    min(yy)-10,max(yy)+10
+    min(zz)-10,max(zz)+10];
+  
+% make sure we don't go out of bounds.
+bb(bb<1)=1;
+for dim=1:3
+    if bb(dim,2)>size(nii.img,dim)
+        bb(dim,2)=size(nii.img,dim);
     end
 end
 
-[pth, fname, ext] = fileparts(filename);
-output = fullfile(pth,[prefix, fname, ext]);
-if strcmp(prefix, 'tmp')
-    movefile(output, filename);
-    output = filename;
-end
+tmat=eye(4);
+tmat(1:3,4)=bb(:,1)-1;
 
-if cleannan
-    nii = ea_load_nii(output);
-    nii.img(abs(nii.img)<0.01) = nan; % reduce noise in originally zero compartments.
-    ea_write_nii(nii);
-end
+nii.mat=nii.mat*tmat;
+nii.img=nii.img(bb(1,1):bb(1,2),bb(2,1):bb(2,2),bb(3,1):bb(3,2));
+nii.dim=size(nii.img);
+delete(filename);
+ea_write_nii(nii);
 
 if wasgz
     gzip(output);
