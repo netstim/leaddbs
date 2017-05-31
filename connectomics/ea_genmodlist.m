@@ -15,7 +15,7 @@ if exist('directory','var')
         sf(cnt)=1;
         cnt=cnt+1;
     end
-    
+
     % fMRI:
     % check if _tc are present:
     if exist([directory,'connectomics',filesep,selectedparc,filesep,'rest_tc.mat'],'file');
@@ -27,7 +27,7 @@ end
 
 
 % check for canonical fiber sets
-fdfibs=dir([ea_getconnectomebase('dmri'),filesep]);
+fdfibs=dir(ea_getconnectomebase('dmri'));
 for fdf=1:length(fdfibs)
     if fdfibs(fdf).isdir && ~strcmp(fdfibs(fdf).name(1),'.')
         [~,fn]=fileparts(fdfibs(fdf).name);
@@ -37,11 +37,11 @@ for fdf=1:length(fdfibs)
     end
 end
 
-fc=dir([ea_getconnectomebase('fmri'),filesep,'']);
+fc=dir(ea_getconnectomebase('fmri'));
 for fdf=1:length(fc)
     if fc(fdf).isdir && ~strcmp(fc(fdf).name(1),'.')
-        
-        d=load([ea_getconnectomebase('fmri'),filesep,fc(fdf).name,filesep,'dataset_info.mat']);
+
+        d=load([ea_getconnectomebase('fmri'),fc(fdf).name,filesep,'dataset_info.mat']);
         [~,fn]=fileparts(fc(fdf).name);
         for ds=1:length(d.dataset.subsets)
             modlist{cnt}=[fn,' > ',d.dataset.subsets(ds).name];
@@ -53,11 +53,11 @@ end
 
 if vat
    resdir=dir([directory,options.prefs.rest_prefix]);
-   
+
    for rd=1:length(resdir)
        [~,fn,ext]=fileparts(resdir(rd).name);
        modlist{cnt}=[fn,'_tc'];
        cnt=cnt+1;
    end
-    
+
 end
