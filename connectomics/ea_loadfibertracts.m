@@ -16,8 +16,12 @@ idx=fibinfo.idx;
 if nargout>2
     try
         voxmm=fibinfo.voxmm;
-    catch % assume voxel
-        voxmm='vox';
+    catch 
+        if any(min(fibers)<0)
+            voxmm='mm';
+        else % assume voxel
+            voxmm = 'vox';
+        end
     end
     try
         mat=fibinfo.mat;
