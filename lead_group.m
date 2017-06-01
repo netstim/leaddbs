@@ -273,7 +273,9 @@ try M.elstruct(deleteentry)=[]; end
 try M.stimparams(deleteentry)=[]; end
 
 for cvar=1:length(M.clinical.vars)
-    M.clinical.vars{cvar}(deleteentry,:)=[];
+    try
+        M.clinical.vars{cvar}(deleteentry,:)=[];
+    end
 end
 
 try
