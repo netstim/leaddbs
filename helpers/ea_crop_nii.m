@@ -46,7 +46,6 @@ end
 
 
 % load nifti
-
 nii=ea_load_nii(filename);
 
 switch nstring
@@ -56,24 +55,28 @@ switch nstring
         comp=nan;
 end
 [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img~=comp));
-
-bb=[min(xx)-10,max(xx)+10
-    min(yy)-10,max(yy)+10
-    min(zz)-10,max(zz)+10];
+rim=10;
+bbim=[min(xx),max(xx)
+    min(yy),max(yy)
+    min(zz),max(zz)];
+offset=[min(xx)-rim-1
+    min(yy)-rim-1
+    min(zz)-rim-1];
   
-% make sure we don't go out of bounds.
-bb(bb<1)=1;
-for dim=1:3
-    if bb(dim,2)>size(nii.img,dim)
-        bb(dim,2)=size(nii.img,dim);
-    end
+switch nstring
+    case 'nz'
+        X=zeros((bbim(1,2)-bbim(1,1))+1+2*rim,(bbim(2,2)-bbim(2,1))+1+2*rim,(bbim(3,2)-bbim(3,1))+1+2*rim);
+    case 'nn'
+        X=nan((bbim(1,2)-bbim(1,1))+1+2*rim,(bbim(2,2)-bbim(2,1))+1+2*rim,(bbim(3,2)-bbim(3,1))+1+2*rim);
 end
 
 tmat=eye(4);
-tmat(1:3,4)=bb(:,1)-1;
+tmat(1:3,4)=offset(:,1);
 
+
+X(11:end-10,11:end-10,11:end-10)=nii.img(bbim(1,1):bbim(1,2),bbim(2,1):bbim(2,2),bbim(3,1):bbim(3,2));
 nii.mat=nii.mat*tmat;
-nii.img=nii.img(bb(1,1):bb(1,2),bb(2,1):bb(2,2),bb(3,1):bb(3,2));
+nii.img=X;
 nii.dim=size(nii.img);
 delete(filename);
 ea_write_nii(nii);
