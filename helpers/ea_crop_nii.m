@@ -55,7 +55,7 @@ switch nstring
         comp=nan;
 end
 [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img~=comp));
-rim=round(3/mean(nii.voxsize)); % go to 3 mm, assuming isotropic image. No worries if not isotropic though, then rim will be a bit asymmetrical.
+rim=round(5/mean(nii.voxsize)); % go to 3 mm, assuming isotropic image. No worries if not isotropic though, then rim will be a bit asymmetrical.
 bbim=[min(xx),max(xx)
     min(yy),max(yy)
     min(zz),max(zz)];
@@ -74,7 +74,9 @@ tmat=eye(4);
 tmat(1:3,4)=offset(:,1);
 
 
-X(11:end-10,11:end-10,11:end-10)=nii.img(bbim(1,1):bbim(1,2),bbim(2,1):bbim(2,2),bbim(3,1):bbim(3,2));
+
+X((rim+1):end-rim,(rim+1):end-rim,(rim+1):end-rim)=nii.img(bbim(1,1):bbim(1,2),bbim(2,1):bbim(2,2),bbim(3,1):bbim(3,2));
+
 nii.mat=nii.mat*tmat;
 nii.img=X;
 nii.dim=size(nii.img);
