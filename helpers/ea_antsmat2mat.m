@@ -5,18 +5,27 @@ function mat=ea_antsmat2mat(afftransform,fixed)
 
 offset=zeros(3,1);
 translation=afftransform(end-2:end);
+
 mat=reshape(afftransform,[3,4]);
+
 for i=1:3
     offset(i)=translation(i)+fixed(i);
     for j=1:3
        offset(i)=offset(i)-(mat(j,i) * fixed(j)); 
     end
 end
-offset(1:2)=-offset(1:2); % convert RAS to LPS (ITK uses RAS)
+ % convert RAS to LPS (ITK uses RAS)
+offset(3)=-offset(3);
 mat(:,4)=offset;
+
 mat=[mat;[0,0,0,1]];
 
-
+ % convert RAS to LPS (ITK uses RAS)
+mat=mat.*...
+    [1 1 -1 1
+    1 1 -1 1
+    -1 -1 1 1
+    1 1 1 1];
     %% original code in itkMatrixOffsetTransformBase
 % {
 %   const MatrixType & matrix = this->GetMatrix();

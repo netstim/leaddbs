@@ -35,7 +35,7 @@ if isempty(data)
 end
 if nargin<2 || isempty(dim)
     % make sure that the dimensinon is correct if there's a vector
-    if any(size(data)==1) && ndims(data)==2
+    if isvector(data) && numel(data) > 1
         dim = find(size(data)>1);
     else
         dim = 1;

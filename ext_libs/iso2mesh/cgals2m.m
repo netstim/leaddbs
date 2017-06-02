@@ -15,8 +15,8 @@ function [node,elem,face]=cgals2m(v,f,opt,maxvol,varargin)
 %	 opt: parameters for CGAL mesher, if opt is a structure, then
 %	     opt.radbound: defines the maximum surface element size
 %	     opt.angbound: defines the miminum angle of a surface triangle
-%	     opt.distbound: defines the maximum distance between the 
-%		 center of the surface bounding circle and center of the 
+%	     opt.distbound: defines the maximum distance between the
+%		 center of the surface bounding circle and center of the
 %		 element bounding sphere
 %	     opt.reratio:  maximum radius-edge ratio
 %	     if opt is a scalar, it only specifies radbound.
@@ -24,7 +24,7 @@ function [node,elem,face]=cgals2m(v,f,opt,maxvol,varargin)
 %
 % output:
 %	 node: output, node coordinates of the tetrahedral mesh
-%	 elem: output, element list of the tetrahedral mesh, the last 
+%	 elem: output, element list of the tetrahedral mesh, the last
 %	      column is the region id
 %	 face: output, mesh surface element list of the tetrahedral mesh
 %	      the last column denotes the boundary ID
@@ -34,7 +34,7 @@ function [node,elem,face]=cgals2m(v,f,opt,maxvol,varargin)
 
 fprintf(1,'creating surface and tetrahedral mesh from a polyhedral surface ...\n');
 
-exesuff=fallbackexeext(getexeext,'cgalpoly');
+exesuff=getexeext;
 
 ang=30;
 ssize=6;

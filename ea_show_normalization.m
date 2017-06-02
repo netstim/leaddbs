@@ -16,7 +16,9 @@ else
         expdo=[1,2,4];
     end
 end
+
 disp('Preparing images to show Normalization...');
+
 
 for export=expdo % if CT, only do 1, if MR, do 1:3.
 %     if strcmp(options.prefs.dev.profile,'se') 
@@ -173,7 +175,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
 %       if strcmp(options.prefs.dev.profile,'se') 
 %         ;
 %       else
-        catch
+    catch
         fprintf('Skip showing normalization of %s\n', checkf);
     end
 

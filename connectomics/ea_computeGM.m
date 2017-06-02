@@ -1,7 +1,6 @@
 function ea_computeGM(options,modes,finas,threshs,fs)
 expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep];
 
-
 for mode=1:length(modes)
     load([expfolder,finas{mode},'_CM.mat']);
     X=eval([modes{mode},'_CM']);
@@ -32,20 +31,17 @@ end
 
 
 if options.lc.graph.struc_func_sim
-
-    for mode=find(fs==1)
-        dtimode=find(fs==2);
-
-
-    load([expfolder,finas{mode},'_CM.mat']);
-    X=fMRI_CM;
     load([expfolder,'DTI_CM.mat']);
     Y=DTI_CM;
-    disp(['Calculating structure-function similarity ...'])
-    C=ea_sfs(X,Y);
+    for mode = find(fs==1)
+        load([expfolder,finas{mode},'_CM.mat']);
+        X=fMRI_CM;
 
-    ea_export_cmeasure(C,'sfs',['DTI_',finas{mode}],options);
-    disp('Done.');
+        disp('Calculating structure-function similarity ...')
+        C=ea_sfs(X,Y);
+
+        ea_export_cmeasure(C,'sfs',['DTI_',finas{mode}],options);
+        disp('Done.');
     end
 end
 
@@ -54,17 +50,19 @@ end
 function C=ea_deg(X)
 C=nanmean(X);
 
+
 function C=ea_eig(X)
 X=X+min(X(:));
 X(isnan(X))=0;
 [C,~]=eigs(sparse(X));
 C=abs(C(:,1));
-C=reshape(C,length(C),1);
+C=C/sum(C);
+
 
 function C=ea_eff(X)
 X(isnan(X))=0;
 
-% based on BCT (c) M. Rubinov (see below
+% based on BCT (c) M. Rubinov (see below)
 
 if islogical(X)
     % based on
@@ -94,8 +92,6 @@ if islogical(X)
             C(u)=numer/denom;               %local efficiency
         end
     end
-
-
 else
 
     % based on
@@ -128,21 +124,20 @@ else
     end
 end
 
-function C=ea_sfs(X,Y)
-X=atanh(X); % Fisher transform fucntional tc.
-C=nan(size(X,1),1);
-for n=1:size(X,1)
-    % mask nan and inf values for both variables equally.
-    nanix=isnan(X(:,n)); nanix=nanix+isnan(Y(:,n)); nanix=nanix+isinf(X(:,n)); nanix=nanix+isinf(Y(:,n));
-    try
-   C(n)=corr(X(~nanix,n),Y(~nanix,n),'rows','pairwise');
-    catch
 
+function C=ea_sfs(X,Y)
+X=atanh(X); % Fisher transform fucntional CM.
+C=nan(size(X,1),1);
+for n=1:size(X,2)
+    % mask nan and inf values for both variables equally.
+    nanix = isnan(X(:,n)) + isnan(Y(:,n)) + isinf(X(:,n)) + isinf(Y(:,n));
+    if ~isempty(X(~nanix,n)) && ~isempty(Y(~nanix,n))
+        C(n) = corr(X(~nanix,n),Y(~nanix,n));
     end
 end
 
-function ea_export_cmeasure(C,exstr,mode,options)
 
+function ea_export_cmeasure(C,exstr,mode,options)
 V=spm_vol([ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']);
 X=spm_read_vols(V);
 X=round(X);
@@ -154,18 +149,18 @@ Y(:)=nan;
 for node=1:d
     Y(X==node)=C(node);
 end
+
 expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,options.lc.general.parcellation,filesep,'graph',filesep];
 if ~exist(expfolder,'dir')
     mkdir(expfolder);
 end
+
 V.fname=[expfolder,exstr,'_',mode,'.nii'];
 V.dt=[64,1];
 spm_write_vol(V,Y);
 
 % also write out .MAT file with values:
 save([expfolder,exstr,'_',mode,'.mat'],'C');
-
-
 
 
 function D=distance_inv(A_)
@@ -186,9 +181,7 @@ D(~D | eye(n_))=inf;                        %assign inf to disconnected nodes an
 D=1./D;                                     %invert distance
 
 
-
 function D=distance_inv_wei(W_)
-
 n_=length(W_);
 D=inf(n_);                                      %distance matrix
 D(1:n_+1:end)=0;

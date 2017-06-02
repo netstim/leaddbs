@@ -25,6 +25,8 @@ else
     end
 end
 
+fcname=strrep(fcname,':','>');
+
 if ~exist('dcname','var')
     dcname=dcdefault;
 else
@@ -32,7 +34,7 @@ else
         dcname=dcdefault;
     end
 end
-
+dcname=strrep(dcname,':','>');
 
 if ~strcmp(outputfolder(end),filesep)
    outputfolder=[outputfolder,filesep]; 

@@ -68,7 +68,7 @@ switch bdstring
         varargout{1}=Vtra;
         varargout{2}=Vcor;
         varargout{3}=Vsag;
-    case [subpat, ' Post-OP'];
+    case [subpat, ' Post-OP']
         [Vtra,Vcor,Vsag]=assignpatspecific(options);
         varargout{1}=Vtra;
         varargout{2}=Vcor;

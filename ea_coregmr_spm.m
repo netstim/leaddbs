@@ -2,7 +2,14 @@ function ea_coregmr_spm(options,doreslice)
 % this function coregisters postoperative images to preoperative images
 % using SPM.
 
+
 directory = [options.root,options.prefs.patientdir];
+
+if ~exist([directory,filesep,options.prefs.prenii_unnormalized],'file')
+    warning('No preoperative acquisition found. Coregistration not possible.');
+    return
+end
+
 costfuns={'nmi','mi','ecc','ncc'};
 cfundo=[2,1];
 for export=1:3

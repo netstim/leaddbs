@@ -1,19 +1,24 @@
 function ea_openin(hobj,~,appname,handles)
 
-
 callingfig=hobj.Parent.Parent.Name;
-if strcmp(callingfig,'Lead-Group Analysis');
+if strcmp(callingfig,'Lead-Group Analysis')
    M=getappdata(handles.leadfigure,'M'); 
     uipatdir=M.patient.list;
     if ~iscell(uipatdir)
-        uipatdirc={uipatdir};
-        uipatdir=uipatdirc;
+        uipatdir={uipatdir};
     end
-    uipatdir=uipatdir{get(handles.patientlist,'Value')};
+    if ~isempty(uipatdir)
+        uipatdir=uipatdir{get(handles.patientlist,'Value')};
+    else
+        uipatdir=[];
+    end
 else
-    
     uipatdir=getappdata(handles.leadfigure,'uipatdir');
 end
 
-feval(appname,'loadsubs',uipatdir);
+if ~isempty(uipatdir)
+    feval(appname,'loadsubs',uipatdir);
+else
+    feval(appname);
+end
 

@@ -52,6 +52,7 @@ end
 
 resultfig=getappdata(lgfigure,'resultfig');
 elstruct=getappdata(resultfig,'elstruct');
+options=getappdata(resultfig,'options'); % selected atlas could have refreshed.
 elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
@@ -89,7 +90,26 @@ setappdata(resultfig,'elstruct',elstruct);
                     cnt=cnt+1;
                 end
             case 'tpm'
-               fv=[];
+                c1=ea_load_nii([ea_space(options),'TPM.nii,1']);
+%                 voxnbcyl=c1.mat\[nbcyl,ones(length(nbcyl),1)]';
+%                 voxnbcyl=voxnbcyl(1:3,:)';
+%                 cyl=surf2vol(voxnbcyl,fbcyl,1:size(c1.img,2),1:size(c1.img,1),1:size(c1.img,3));
+%                 cyl=imfill(cyl,'holes');
+%                 
+%                 cyl=double(smooth3(cyl,'gaussian',[3 3 3]));
+%                 c1.img=c1.img.*permute(cyl,[2,1,3]);
+                fv=isosurface(c1.img,0.5,'noshare');
+                fv.vertices=c1.mat*[fv.vertices,ones(length(fv.vertices),1)]';
+                fv.vertices=fv.vertices(1:3,:)';
+            case 'mask'
+                
+                
+                
+                fv=ea_fem_getmask(options);
+                
+                
+                
+                
         end
         
         [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);

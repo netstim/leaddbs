@@ -82,7 +82,8 @@ try
     results.fit=ea_nanmean(results.distances);
     
 end
-
+% chirp on completed task.
+ea_chirp(options);
 
 function y = ea_nanmean(varargin)
 if nargin==2

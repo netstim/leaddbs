@@ -80,9 +80,9 @@ end
 if ~exist('usespm','var')
 usespm=1;
 end
+
+
 if usespm
-
-
 V = spm_vol(old_fn);
 for i=1:numel(V)
    bb        = spm_get_bbox(V(i));
@@ -99,53 +99,53 @@ movefile(fullfile(pth,['r',fn,ext]),new_fn);
 
 
 else
-
-
-
-   nii = load_nii_no_xform(old_fn, img_idx, 0, preferredForm);
-
-   if ~ismember(nii.hdr.dime.datatype, [2,4,8,16,64,256,512,768])
-      error('Transform of this NIFTI data is not supported by the program.');
-   end
-
-   if ~exist('voxel_size','var') | isempty(voxel_size)
-      voxel_size = abs(min(nii.hdr.dime.pixdim(2:4)))*ones(1,3);
-   elseif length(voxel_size) < 3
-      voxel_size = abs(voxel_size(1))*ones(1,3);
-   end
-
-   if ~exist('bg','var') | isempty(bg)
-      bg = mean([nii.img(1) nii.img(end)]);
-   end
-
-   old_M = nii.hdr.hist.old_affine;
-
-   if nii.hdr.dime.dim(5) > 1
-      for i = 1:nii.hdr.dime.dim(5)
-         [img(:,:,:,i) M] = ea_affine(nii.img(:,:,:,i), old_M, voxel_size, verbose, bg, method);
-      end
-   else
-      [img M] = ea_affine(nii.img, old_M, voxel_size, verbose, bg, method);
-   end
-
-   new_dim = size(img);
-   nii.img = img;
-   nii.hdr.dime.dim(2:4) = new_dim(1:3);
-   nii.hdr.dime.datatype = 16;
-   nii.hdr.dime.bitpix = 32;
-   nii.hdr.dime.pixdim(2:4) = voxel_size(:)';
-   nii.hdr.dime.glmax = max(img(:));
-   nii.hdr.dime.glmin = min(img(:));
-   nii.hdr.hist.qform_code = 0;
-   nii.hdr.hist.sform_code = 1;
-   nii.hdr.hist.srow_x = M(1,:);
-   nii.hdr.hist.srow_y = M(2,:);
-   nii.hdr.hist.srow_z = M(3,:);
-   nii.hdr.hist.new_affine = M;
-
-   save_nii(nii, new_fn);
-
-   return;					% reslice_nii
+    
+    
+    
+    nii = load_nii_no_xform(old_fn, img_idx, 0, preferredForm);
+    
+    if ~ismember(nii.hdr.dime.datatype, [2,4,8,16,64,256,512,768])
+        error('Transform of this NIFTI data is not supported by the program.');
+    end
+    
+    if ~exist('voxel_size','var') | isempty(voxel_size)
+        voxel_size = abs(min(nii.hdr.dime.pixdim(2:4)))*ones(1,3);
+    elseif length(voxel_size) < 3
+        voxel_size = abs(voxel_size(1))*ones(1,3);
+    end
+    
+    if ~exist('bg','var') | isempty(bg)
+        bg = mean([nii.img(1) nii.img(end)]);
+    end
+    
+    old_M = nii.hdr.hist.old_affine;
+    
+    if nii.hdr.dime.dim(5) > 1
+        for i = 1:nii.hdr.dime.dim(5)
+            [img(:,:,:,i) M] = ea_affine(nii.img(:,:,:,i), old_M, voxel_size, verbose, bg, method);
+        end
+    else
+        [img M] = ea_affine(nii.img, old_M, voxel_size, verbose, bg, method);
+    end
+    
+    new_dim = size(img);
+    nii.img = img;
+    nii.hdr.dime.dim(2:4) = new_dim(1:3);
+    nii.hdr.dime.datatype = 16;
+    nii.hdr.dime.bitpix = 32;
+    nii.hdr.dime.pixdim(2:4) = voxel_size(:)';
+    nii.hdr.dime.glmax = max(img(:));
+    nii.hdr.dime.glmin = min(img(:));
+    nii.hdr.hist.qform_code = 0;
+    nii.hdr.hist.sform_code = 1;
+    nii.hdr.hist.srow_x = M(1,:);
+    nii.hdr.hist.srow_y = M(2,:);
+    nii.hdr.hist.srow_z = M(3,:);
+    nii.hdr.hist.new_affine = M;
+    
+    save_nii(nii, new_fn);
+    
+    return;					% reslice_nii
 end
 
 %--------------------------------------------------------------------

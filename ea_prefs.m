@@ -27,9 +27,7 @@ try
     copyfile([home,'.ea_prefs.m'],[ea_getearoot,uid,'.m'])
     uprefs=feval(uid,patientname);
     delete([ea_getearoot,uid,'.m']);
-
     load([home,'.ea_prefs.mat']);
-    
 catch
    warning('User preferences file could not be read. Please set write permissions to Lead-DBS install directory accordingly.');
    return

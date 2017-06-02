@@ -61,22 +61,19 @@ guidata(hObject, handles);
 set(handles.setfig,'Name','Normalization Settings');
 set(handles.titletext,'String','MAGeT Normalization');
 
-% store mother handles in setfig
-setappdata(handles.setfig,'motherhandles',varargin{1});
 
+prefs=ea_prefs('');
+[~,ix]=ismember(prefs.machine.normsettings.maget_peerset,get(handles.pcpopup,'String'));
+set(handles.pcpopup,'Value',ix);
 
-if nargin>4
-    switch varargin{2}
-        case 'defaults'
-            normsettings.peerset='IXI-Dataset';
-            normsettings.peersetcell={};
-            normsettings.atlasset='DISTAL (Ewert 2016)';
-            motherhandles = getappdata(handles.setfig,'motherhandles');
-            setappdata(motherhandles.normsettings,'settings',normsettings);
-            delete(handles.setfig);
-            return
-    end
+atlcells=get(handles.atlaspopup,'String');
+if ~iscell(atlcells)
+    atlcells={atlcells};
 end
+[~,ix]=ismember(prefs.machine.normsettings.maget_atlasset,atlcells);
+set(handles.atlaspopup,'Value',ix);
+
+
 
 
 % UIWAIT makes ea_normsettings_maget_segment wait for user response (see UIRESUME)
@@ -125,21 +122,18 @@ function savebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to savebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-normsettings.peerset=get(handles.pcpopup,'String');
-normsettings.peerset=normsettings.peerset{get(handles.pcpopup,'Value')};
-normsettings.peersetcell=getappdata(handles.pcpopup,'peersetcell');
-normsettings.atlasset=get(handles.atlaspopup,'String');
+prefs=ea_prefs('');
+normsettings=prefs.machine.normsettings;
+normsettings.maget_peerset=get(handles.pcpopup,'String');
+normsettings.maget_peerset=normsettings.maget_peerset{get(handles.pcpopup,'Value')};
+normsettings.maget_peersetcell=getappdata(handles.pcpopup,'peersetcell');
+normsettings.maget_atlasset=get(handles.atlaspopup,'String');
 
-if iscell(normsettings.atlasset)
-normsettings.atlasset=normsettings.atlasset{get(handles.atlaspopup,'Value')};
+if iscell(normsettings.maget_atlasset)
+normsettings.maget_atlasset=normsettings.maget_atlasset{get(handles.atlaspopup,'Value')};
 end
 
-
-
-motherhandles = getappdata(handles.setfig,'motherhandles');
-
-setappdata(motherhandles.normsettings,'settings',normsettings);
-
+ea_setprefs('normsettings',normsettings);
 delete(handles.setfig);
 
 

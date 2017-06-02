@@ -41,7 +41,7 @@ d=load([dfold,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
 dataset=d.dataset;
 clear d;
 if exist('outputmask','var')
-    if ~isempty(outputmask)
+    if ~isempty(outputmask) 
         omask=ea_load_nii(outputmask);
         omaskidx=find(omask.img(:));
         [~,maskuseidx]=ismember(omaskidx,dataset.vol.outidx);
@@ -53,6 +53,7 @@ else
     omaskidx=dataset.vol.outidx; % use all.
     maskuseidx=1:length(dataset.vol.outidx);
 end
+
 
 [sfile,roilist]=ea_handleseeds(sfile);
 
@@ -89,6 +90,9 @@ for s=1:length(sfile)
         if exist(ea_niigz(sfile{s,lr}),'file')
             seed{s,lr}=ea_load_nii(ea_niigz(sfile{s,lr}));
         else
+            if size(sfile(s,:),2)==1
+                ea_error(['File ',ea_niigz(sfile{s,lr}),' does not exist.']);
+            end
             switch lr
                 case 1
                     sidec='l';
@@ -101,8 +105,12 @@ for s=1:length(sfile)
         end
         if ~isequal(seed{s,lr}.mat,dataset.vol.space.mat) && (~dealingwithsurface)
             oseedfname=seed{s,lr}.fname;
-            
+
+            try
             seed{s,lr}=ea_conformseedtofmri(dataset,seed{s,lr});
+            catch
+                keyboard
+            end
             seed{s,lr}.fname=oseedfname; % restore original filename if even unneccessary at present.
         end
         
@@ -612,6 +620,7 @@ dataset.vol.space.fname=[td,'tmpspace.nii'];
 ea_write_nii(dataset.vol.space);
 s.fname=[td,'tmpseed.nii'];
 ea_write_nii(s);
+
 ea_conformspaceto([td,'tmpspace.nii'],[td,'tmpseed.nii']);
 s=ea_load_nii(s.fname);
 

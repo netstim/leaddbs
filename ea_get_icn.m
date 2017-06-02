@@ -13,18 +13,22 @@ switch varargin{1}
         icn_color=repmat(icn_color,[1,1,3]);
         
     case 'regions'
-        icn_color=rand(16,16,3);
-        
-        
+        if nargin < 2
+            icn_color=rand(16,16,3);
+        else
+            icn_color=rand(varargin{2},varargin{2},3);
+        end
+            
     case 'atlas'
-        
-        icn_color=zeros(16,16,3);
+        if nargin < 3
+            icn_color=zeros(16,16,3);
+        else
+            icn_color=zeros(varargin{3},varargin{3},3);
+        end
         icn_color(:,:,1)=varargin{2}(1);
         icn_color(:,:,2)=varargin{2}(2);
         icn_color(:,:,3)=varargin{2}(3);
         
-              
     otherwise
-        icn_color = imread(fullfile(...
-            varargin{2}.earoot,'icons',[varargin{1},'.png']));
+        icn_color = imread(fullfile(ea_getearoot,'icons',[varargin{1},'.png']));
 end

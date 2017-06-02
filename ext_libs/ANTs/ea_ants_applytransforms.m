@@ -22,7 +22,7 @@ end
 if nargin >= 6
     transformfile = varargin{6};
 else
-    transformfile = '';
+    transformfile = ''; % use defaults
 end
 
 if nargin >= 7

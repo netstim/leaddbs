@@ -96,5 +96,5 @@ specs.dim=niisize;
 specs.affine=dnii.mat;
 
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
-ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
+ea_ftr2trk(ftrfname,directory,specs); % export normalized ftr to .trk
 disp('Done.');

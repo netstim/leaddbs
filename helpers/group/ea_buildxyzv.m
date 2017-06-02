@@ -55,5 +55,20 @@ else
                     end
                 end
             end
+        case 1 % patient
+           
+            for pt=1:length(M.patient.list)
+ 
+                    xyzv(pt,:)=[mean([M.elstruct(pt).coords_mm{1}(find(M.S(pt).activecontacts{1}),:);... % right coordinate
+                        ea_flip_lr_nonlinear(M.elstruct(pt).coords_mm{2}(find(M.S(pt).activecontacts{2}),:))],1),... % nonlinearly flipped left coordinate
+                        M.clinical.vars{varnum}(pt)]; % value
+            end
+        case 2 % hemisphere
+            cnt=1;
+            for pt=1:length(M.patient.list)
+                    xyzv(cnt,:)=[M.elstruct(pt).coords_mm{1}(find(M.S(pt).activecontacts{1}),:),M.clinical.vars{varnum}(pt,1)]; % right hem
+                    xyzv(cnt+1,:)=[ea_flip_lr_nonlinear(M.elstruct(pt).coords_mm{2}(find(M.S(pt).activecontacts{2}),:)),M.clinical.vars{varnum}(pt,2)]; % nonlinearly flipped left coordinate
+                    cnt=cnt+2;
+            end
     end
 end

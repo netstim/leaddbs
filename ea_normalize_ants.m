@@ -18,8 +18,9 @@ function varargout=ea_normalize_ants(options,includeatlas)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Advanced Normalization Tools (ANTs) SyN (Avants 2008)';
+    varargout{1}='ANTs SyN (Advanced Normalization Tools, Avants 2008)';
     varargout{2}=1;
+    varargout{3}=1; % hassettings.
     return
 end
 
@@ -93,6 +94,7 @@ ea_methods(options,['Pre- (and post-) operative acquisitions were spatially norm
     ' Nonlinear deformation into template space was achieved in three stages: After two linear (rigid followed by affine) steps, ',...
     ' a nonlinear (whole brain) SyN registration stage was added.'],...
     cits);
+
 
 
 function masks=segmentall(from,options)

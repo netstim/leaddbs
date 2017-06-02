@@ -39,7 +39,6 @@ end
 % function to perform the actual resampling
 function [node,elem]=domeshsimplify(v,f,keepratio)
   exesuff=getexeext;
-  exesuff=fallbackexeext(exesuff,'cgalsimp2');
 
   saveoff(v,f,mwpath('pre_remesh.off'));
   deletemeshfile(mwpath('post_remesh.off'));

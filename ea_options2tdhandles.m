@@ -19,4 +19,8 @@ end
     set(tdhandles.tracor,'Value',d2.tracor);
     set(tdhandles.depth,'String',num2str(d2.depth));
     end
+    try % fiducials check
+    set(tdhandles.tdfidcheck,'Value',d2.fid_overlay);
+    end
+    
 end

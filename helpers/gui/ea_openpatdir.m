@@ -2,7 +2,7 @@ function ea_openpatdir(handles)
 
 outfolder=get(handles.patdir_choosebox,'String');
 
-if strcmp(outfolder,'No Patient Selected')
+if ismember(outfolder,{'No Patient Selected','Choose Patient Directory'})
     msgbox('Please set the working directory first!', 'Error','error');
     return;
 end

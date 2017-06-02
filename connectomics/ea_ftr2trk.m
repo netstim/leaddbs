@@ -10,6 +10,14 @@ else % direct ftr import
     ftrfilename{1}=[];
 end
 
+if ~exist('specs','var')
+    dnii=ea_load_nii([ea_space,'t1.nii']);
+    specs.origin=[0,0,0];
+    specs.dim=size(dnii.img);
+    specs.vox=dnii.voxsize;
+    specs.affine=dnii.mat;
+end
+
 %% set header
 [header, ~]=ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
 if strcmp(voxmm,'vox')

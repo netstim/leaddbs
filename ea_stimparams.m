@@ -1869,11 +1869,11 @@ set(handles.LCu,'String',num2str(eval(['S.Ls',num2str(source),'.case.perc'])));
 %% model to handles: Axes objects:
 for k=0:7
     if eval(['S.Rs',num2str(Ractive),'.k',num2str(k),'.pol==0']); % off
-        im=ea_get_icn(['empty',num2str(Ractive)],options);
+        im=ea_get_icn(['empty',num2str(Ractive)]);
     elseif eval(['S.Rs',num2str(Ractive),'.k',num2str(k),'.pol==1']); % negative S1
-        im=ea_get_icn(['minus',num2str(Ractive)],options);
+        im=ea_get_icn(['minus',num2str(Ractive)]);
     elseif eval(['S.Rs',num2str(Ractive),'.k',num2str(k),'.pol==2']); % positive S1
-        im=ea_get_icn(['plus',num2str(Ractive)],options);
+        im=ea_get_icn(['plus',num2str(Ractive)]);
     end
     set(0,'CurrentFigure',handles.stimfig);
     set(handles.stimfig,'CurrentAxes',eval(['handles.k',num2str(k),'ax']));
@@ -1884,11 +1884,11 @@ for k=0:7
 end
 for k=8:15
     if eval(['S.Ls',num2str(Lactive),'.k',num2str(k),'.pol==0']); % off
-        im=ea_get_icn(['empty',num2str(Lactive)],options);
+        im=ea_get_icn(['empty',num2str(Lactive)]);
     elseif eval(['S.Ls',num2str(Lactive),'.k',num2str(k),'.pol==1']); % negative S1
-        im=ea_get_icn(['minus',num2str(Lactive)],options);
+        im=ea_get_icn(['minus',num2str(Lactive)]);
     elseif eval(['S.Ls',num2str(Lactive),'.k',num2str(k),'.pol==2']); % positive S1
-        im=ea_get_icn(['plus',num2str(Lactive)],options);
+        im=ea_get_icn(['plus',num2str(Lactive)]);
     end
     set(0,'CurrentFigure',handles.stimfig);
     set(handles.stimfig,'CurrentAxes',eval(['handles.k',num2str(k),'ax']));
@@ -1901,11 +1901,11 @@ end
 
 % right case:
 if eval(['S.Rs',num2str(Ractive),'.case.pol==0']); % off
-    im=ea_get_icn(['empty',num2str(Ractive)],options);
+    im=ea_get_icn(['empty',num2str(Ractive)]);
 elseif eval(['S.Rs',num2str(Ractive),'.case.pol==1']); % negative
-    im=ea_get_icn(['minus',num2str(Ractive)],options);
+    im=ea_get_icn(['minus',num2str(Ractive)]);
 elseif eval(['S.Rs',num2str(Ractive),'.case.pol==2']); % positive
-    im=ea_get_icn(['plus',num2str(Ractive)],options);
+    im=ea_get_icn(['plus',num2str(Ractive)]);
 end
 set(0,'CurrentFigure',handles.stimfig);
 set(handles.stimfig,'CurrentAxes',handles.RCax);
@@ -1917,11 +1917,11 @@ axis equal;
 
 % left case:
 if eval(['S.Ls',num2str(Lactive),'.case.pol==0']); % off
-    im=ea_get_icn(['empty',num2str(Lactive)],options);
+    im=ea_get_icn(['empty',num2str(Lactive)]);
 elseif eval(['S.Ls',num2str(Lactive),'.case.pol==1']); % negative
-    im=ea_get_icn(['minus',num2str(Lactive)],options);
+    im=ea_get_icn(['minus',num2str(Lactive)]);
 elseif eval(['S.Ls',num2str(Lactive),'.case.pol==2']); % positive
-    im=ea_get_icn(['plus',num2str(Lactive)],options);
+    im=ea_get_icn(['plus',num2str(Lactive)]);
 end
 set(0,'CurrentFigure',handles.stimfig);
 set(handles.stimfig,'CurrentAxes',handles.LCax);
@@ -2065,13 +2065,13 @@ if ischar(changedobj) % different polarity on the block
             conts=Rconts;
             changedobj='case';
             contsCase=RcontsCase;
-            
+
             side=1;
             sidec='R';
         case 'Lcase'
             conts=Lconts;
             contsCase=LcontsCase;
-            
+
             changedobj='case';
             side=2;
             sidec='L';
@@ -2094,11 +2094,11 @@ if ischar(changedobj) % different polarity on the block
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
 
         return
-        
+
     else
 %         if S.([sidec,'s',num2str(S.active(side))]).va==2 % ampere only allows one anode and one cathode
 %             for c=1:length(contsCase);
-%                 
+%
 %                 if S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol==polchanged % same polarity as changed object
 %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=ea_swappol(polchanged);
 %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=100;
@@ -2110,10 +2110,10 @@ if ischar(changedobj) % different polarity on the block
 %             S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol=1;
 %             S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=100;
 %         end
-        
+
     end
 
-    
+
     if polchanged==0
         % set changed contacts percentage to zero:
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=0;']);

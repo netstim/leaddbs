@@ -1,7 +1,7 @@
 function [node,elem]=meshcheckrepair(node,elem,opt,varargin)
 %
 % [node,elem]=meshcheckrepair(node,elem,opt)
-% 
+%
 % check and repair a surface mesh
 %
 % author: Qianqian Fang, <q.fang at neu.edu>
@@ -49,21 +49,20 @@ end
 
 if(nargin==3 && strcmp(opt,'open'))
     eg=surfedge(elem);
-    if(~isempty(eg)) 
+    if(~isempty(eg))
         error('open surface found, you need to enclose it by padding zeros around the volume');
     end
 end
 
+exesuff=getexeext;
+
 if(nargin<3 || strcmp(opt,'deep'))
-    exesuff=getexeext;
-    exesuff=fallbackexeext(exesuff,'jmeshlib');
     deletemeshfile(mwpath('post_sclean.off'));
     saveoff(node(:,1:3),elem(:,1:3),mwpath('pre_sclean.off'));
     system([' "' mcpath('jmeshlib') exesuff '" "' mwpath('pre_sclean.off') '" "' mwpath('post_sclean.off') '"']);
     [node,elem]=readoff(mwpath('post_sclean.off'));
 end
 
-exesuff=fallbackexeext(getexeext,'meshfix');
 moreopt=' -q -a 0.01 ';
 if(isstruct(extra) && isfield(extra,'MeshfixParam'))
     moreopt=extra.MeshfixParam;

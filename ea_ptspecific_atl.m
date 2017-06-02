@@ -20,62 +20,55 @@ end
 
 function ea_warp_atlas_to_native(troot,aroot,proot,force,options)
 
+if ~exist([aroot,'atlas_index.mat'],'file')
+    ea_error('Please visualize this atlas in MNI space once before visualizing the atlas in native space.');
+else
+    load([aroot,'atlas_index.mat']);
+end
+
+if ~exist([proot,'atlases'], 'dir')
+    mkdir([proot,'atlases']);
+end
+copyfile(aroot, [proot,'atlases',filesep,options.atlasset]);
+p=load([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
+p.atlases.rebuild=1;
+save([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'-struct','p');
+delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
+
 if ismember(options.prefs.dev.profile,{'se'})
     interp=0;
 else
     interp=1;
 end
-warning('off');
-mkdir([proot,'atlases',filesep,options.atlasset]);
-mkdir([proot,'atlases',filesep,options.atlasset,filesep,'lh']);
-mkdir([proot,'atlases',filesep,options.atlasset,filesep,'rh']);
-mkdir([proot,'atlases',filesep,options.atlasset,filesep,'mixed']);
-mkdir([proot,'atlases',filesep,options.atlasset,filesep,'midline']);
-warning('on');
-
-if ~exist([ea_space(options,'atlases',0),options.atlasset,filesep,'atlas_index.mat'],'file')
-ea_error('Please visualize this atlas in MNI space once before visualizing the atlas in native space.');
-else
-    load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
-end
-
-cnt=1;
 
 for atlas=1:length(atlases.names)
     switch atlases.types(atlas)
         case 1 % left hemispheric atlas.
-            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'lh',filesep];
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
         case 2 % right hemispheric atlas.
-            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'rh',filesep];
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
         case 3 % both-sides atlas composed of 2 files.
-            ratlf=[ea_space(options,'atlases'),options.atlasset,filesep,'rh',filesep];
             pratlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
 
-            latlf=[ea_space(options,'atlases'),options.atlasset,filesep,'lh',filesep];
             platlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
         case 4 % mixed atlas (one file with both sides information.
-            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'mixed',filesep];
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep];
         case 5 % midline atlas (one file with both sides information.
-            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'midline',filesep];
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
     end
     
     
     if atlases.types(atlas)==3
-
-        ea_apply_normalization_tofile(options,{ea_niigz([ratlf,atlases.names{atlas}])},{ea_niigz([pratlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
-        ea_apply_normalization_tofile(options,{ea_niigz([latlf,atlases.names{atlas}])},{ea_niigz([platlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
+        ea_apply_normalization_tofile(options,{ea_niigz([pratlf,atlases.names{atlas}])},{ea_niigz([pratlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
+        ea_apply_normalization_tofile(options,{ea_niigz([platlf,atlases.names{atlas}])},{ea_niigz([platlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
         
+        ea_crop_nii(ea_niigz([pratlf,atlases.names{atlas}]));
+        ea_crop_nii(ea_niigz([platlf,atlases.names{atlas}]));
     else
-        ea_apply_normalization_tofile(options,{ea_niigz([atlf,atlases.names{atlas}])},{ea_niigz([patlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
+        ea_apply_normalization_tofile(options,{ea_niigz([patlf,atlases.names{atlas}])},{ea_niigz([patlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
+        ea_crop_nii(ea_niigz([patlf,atlases.names{atlas}]));
     end
-    
-    
 end
-
 
 
 function generate_local_tpm(troot,aroot,proot,force,options)
@@ -86,13 +79,12 @@ mkdir([proot,'atlases',filesep,'native']);
 if exist([proot,'atlases',filesep,options.atlasset],'file')
     return
 end
+
 mkdir([proot,'atlases',filesep,options.atlasset]);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'lh']);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'rh']);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'mixed']);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'midline']);
-
-
 
 if ~exist([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat'],'file')
     atlases=ea_genatlastable([],root,options);
@@ -143,24 +135,25 @@ for atlas=1:length(atlases.names)
                     tpmf=ltpmf;
             end
         end
-            % gzip support
-            if strcmp(atlases.names{atlas}(end-2:end),'.gz')
-                gunzip([atlf,atlases.names{atlas}]);
-                atln=atlases.names{atlas}(1:end-3);
-                wasgz(cnt)=1;
-            else
-                atln=atlases.names{atlas};
-                wasgz(cnt)=0;
-            end
+        
+        % gzip support
+        if strcmp(atlases.names{atlas}(end-2:end),'.gz')
+            gunzip([atlf,atlases.names{atlas}]);
+            atln=atlases.names{atlas}(1:end-3);
+            wasgz(cnt)=1;
+        else
+            atln=atlases.names{atlas};
+            wasgz(cnt)=0;
+        end
 
-            if options.prefs.normalize.inverse.customtpm
-                nii=ea_load_nii([atlf,atln]);
-                nii.img=double(nii.img);
-                nii.img=nii.img/max(nii.img(:)); % max 1
-                nii.fname=[atlf,'t',atln];
-                spm_write_vol(nii,nii.img);
-                clear nii
-            end
+        if options.prefs.normalize.inverse.customtpm
+            nii=ea_load_nii([atlf,atln]);
+            nii.img=double(nii.img);
+            nii.img=nii.img/max(nii.img(:)); % max 1
+            nii.fname=[atlf,'t',atln];
+            spm_write_vol(nii,nii.img);
+            clear nii
+        end
 
         atlasfile{cnt}=[atlf,'t',atln,',1'];
         oatlasfile{cnt}=[atlf,atln];
@@ -171,26 +164,19 @@ for atlas=1:length(atlases.names)
         atlfname{cnt}=atln;
         atlaspath{cnt}=patlf;
         cnt=cnt+1;
-
-
-
     end
 end % collecting files loop
 
 
 %% generate TPM
 if options.prefs.normalize.inverse.customtpm
-
+    
     if ~exist([aroot,'TPM_Lorio_Draganski.nii'],'file') || ~exist([aroot,'TPM_Lorio_Draganski.nii.gz'],'file') || force % check for pre-built TPM
 
-
-
-
-        matlabbatch{1}.spm.util.imcalc.input = [{
-            [troot,'TPM_Lorio_Draganski.nii,1'];
-            }
-            atlasfile'];
-        matlabbatch{1}.spm.util.imcalc.output = ['TPM_Lorio_Draganski.nii'];
+        matlabbatch{1}.spm.util.imcalc.input = [
+                                                {[troot,'TPM_Lorio_Draganski.nii,1'];}
+                                                atlasfile'];
+        matlabbatch{1}.spm.util.imcalc.output = 'TPM_Lorio_Draganski.nii';
         matlabbatch{1}.spm.util.imcalc.outdir = {aroot};
         matlabbatch{1}.spm.util.imcalc.expression = 'sum(X)';
         matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
@@ -198,14 +184,10 @@ if options.prefs.normalize.inverse.customtpm
         matlabbatch{1}.spm.util.imcalc.options.interp = -4;
         matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
 
-
         jobs{1}=matlabbatch;
 
         spm_jobman('run',jobs);
         clear jobs matlabbatch
-
-
-
 
         tnii=ea_load_untouch_nii([troot,'TPM_Lorio_Draganski.nii']);
         anii=ea_load_untouch_nii([aroot,'TPM_Lorio_Draganski.nii']);
@@ -219,53 +201,50 @@ if options.prefs.normalize.inverse.customtpm
 
     end
 
-
-
     %% apply deformation fields:
-
     if exist([aroot,'TPM_Lorio_Draganski.nii.gz'],'file')
         gunzip([aroot,'TPM_Lorio_Draganski.nii.gz']);
     end
 
     tpmroot=aroot;
 
-
-matlabbatch{1}.spm.tools.preproc8.channel.vols = {[proot,options.prefs.prenii_unnormalized,',1']};
-matlabbatch{1}.spm.tools.preproc8.channel.biasreg = 0.0001;
-matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm = 60;
-matlabbatch{1}.spm.tools.preproc8.channel.write = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(1).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,1']};
-matlabbatch{1}.spm.tools.preproc8.tissue(1).ngaus = 2;
-matlabbatch{1}.spm.tools.preproc8.tissue(1).native = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(1).warped = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(2).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,2']};
-matlabbatch{1}.spm.tools.preproc8.tissue(2).ngaus = 2;
-matlabbatch{1}.spm.tools.preproc8.tissue(2).native = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(2).warped = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(3).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,3']};
-matlabbatch{1}.spm.tools.preproc8.tissue(3).ngaus = 2;
-matlabbatch{1}.spm.tools.preproc8.tissue(3).native = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(3).warped = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(4).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,4']};
-matlabbatch{1}.spm.tools.preproc8.tissue(4).ngaus = 2;
-matlabbatch{1}.spm.tools.preproc8.tissue(4).native = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(4).warped = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(5).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,5']};
-matlabbatch{1}.spm.tools.preproc8.tissue(5).ngaus = 2;
-matlabbatch{1}.spm.tools.preproc8.tissue(5).native = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(5).warped = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(6).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,6']};
-matlabbatch{1}.spm.tools.preproc8.tissue(6).ngaus = 2;
-matlabbatch{1}.spm.tools.preproc8.tissue(6).native = [0 0];
-matlabbatch{1}.spm.tools.preproc8.tissue(6).warped = [0 0];
-matlabbatch{1}.spm.tools.preproc8.warp.mrf = 0;
-matlabbatch{1}.spm.tools.preproc8.warp.reg = 4;
-matlabbatch{1}.spm.tools.preproc8.warp.affreg = 'mni';
-matlabbatch{1}.spm.tools.preproc8.warp.samp = 3;
-matlabbatch{1}.spm.tools.preproc8.warp.write = [1 1];
-jobs{1}=matlabbatch;
-spm_jobman('run',jobs);
-clear matlabbatch jobs
+    matlabbatch{1}.spm.tools.preproc8.channel.vols = {[proot,options.prefs.prenii_unnormalized,',1']};
+    matlabbatch{1}.spm.tools.preproc8.channel.biasreg = 0.0001;
+    matlabbatch{1}.spm.tools.preproc8.channel.biasfwhm = 60;
+    matlabbatch{1}.spm.tools.preproc8.channel.write = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(1).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,1']};
+    matlabbatch{1}.spm.tools.preproc8.tissue(1).ngaus = 2;
+    matlabbatch{1}.spm.tools.preproc8.tissue(1).native = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(1).warped = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(2).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,2']};
+    matlabbatch{1}.spm.tools.preproc8.tissue(2).ngaus = 2;
+    matlabbatch{1}.spm.tools.preproc8.tissue(2).native = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(2).warped = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(3).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,3']};
+    matlabbatch{1}.spm.tools.preproc8.tissue(3).ngaus = 2;
+    matlabbatch{1}.spm.tools.preproc8.tissue(3).native = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(3).warped = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(4).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,4']};
+    matlabbatch{1}.spm.tools.preproc8.tissue(4).ngaus = 2;
+    matlabbatch{1}.spm.tools.preproc8.tissue(4).native = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(4).warped = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(5).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,5']};
+    matlabbatch{1}.spm.tools.preproc8.tissue(5).ngaus = 2;
+    matlabbatch{1}.spm.tools.preproc8.tissue(5).native = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(5).warped = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(6).tpm = {[tpmroot,'TPM_Lorio_Draganski.nii,6']};
+    matlabbatch{1}.spm.tools.preproc8.tissue(6).ngaus = 2;
+    matlabbatch{1}.spm.tools.preproc8.tissue(6).native = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.tissue(6).warped = [0 0];
+    matlabbatch{1}.spm.tools.preproc8.warp.mrf = 0;
+    matlabbatch{1}.spm.tools.preproc8.warp.reg = 4;
+    matlabbatch{1}.spm.tools.preproc8.warp.affreg = 'mni';
+    matlabbatch{1}.spm.tools.preproc8.warp.samp = 3;
+    matlabbatch{1}.spm.tools.preproc8.warp.write = [1 1];
+    jobs{1}=matlabbatch;
+    spm_jobman('run',jobs);
+    clear matlabbatch jobs
+    
     gzip([aroot,'TPM_Lorio_Draganski.nii']);
     delete([aroot,'TPM_Lorio_Draganski.nii']);
     movefile([proot,'iy_',options.prefs.prenii_unnormalized],[proot,'atlases',filesep,options.atlasset,filesep,'iy_warp.nii'])
@@ -280,9 +259,9 @@ end
 Vinv=spm_vol(warpfile);
 Vanat=spm_vol([proot,options.prefs.prenii_unnormalized]);
 
-    if ~isequal(Vinv.dim,Vanat.dim)
-                ea_redo_inv(proot,options);
-    end
+if ~isequal(Vinv.dim,Vanat.dim)
+    ea_redo_inv(proot,options);
+end
 
 %apply deformation fields to respective atlas.
 
@@ -301,9 +280,7 @@ for fi=1:length(oatlasfile)
     ea_crop_nii([atlaspath{fi},atlfname{fi}]);
 end
 
-
 % cleanup loop
-
 for fi=1:length(atlasfile)
     if wasgz(fi)
         gzip(rawatlasfile{fi});
@@ -313,8 +290,6 @@ for fi=1:length(atlasfile)
         delete(tatlasfile{fi});
     end
 end
-
-
 
 
 function sides=detsides(opt)
@@ -330,5 +305,4 @@ switch opt
         sides=1:2;
     case 5
         sides=1; % midline
-
 end
