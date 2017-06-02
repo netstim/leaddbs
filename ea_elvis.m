@@ -485,9 +485,13 @@ catch
 end
 if ~isempty(merwin) && isvalid(merwin)
     commnd=event.Key; % event.Character;
-    sphere = load([options.earoot,'helpers',filesep,'sphere.mat']);
+    [shape.x,shape.y,shape.z]=sphere(20);
     n = length(mermarkers);
-    sSize = 0.5;
+    try
+        sSize = options.prefs.mer.markersize;
+    catch % legacy, can be removed
+        sSize = 0.25; %default 0.25mm
+    end
     % CData = parula; CData = repmat(CData(1:length(sphere.x),:),[1 size(sphere.x,2)/3]);
     % colormap = repmat([1 1 0],[size(sphere.x,1) size(sphere.x,2)/3]);
     % tmp = parula;
@@ -505,9 +509,9 @@ if ~isempty(merwin) && isvalid(merwin)
     end
 
     if sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
-        sphere.x = sphere.x*sSize+trajectory(1,1);
-        sphere.y = sphere.y*sSize+trajectory(1,2);
-        sphere.z = sphere.z*sSize+trajectory(1,3);
+        shape.x = shape.x*sSize+trajectory(1,1);
+        shape.y = shape.y*sSize+trajectory(1,2);
+        shape.z = shape.z*sSize+trajectory(1,3);
         mermarkers(n+1).side = keymer(regexp(keymer,'_')+1:end);
         mermarkers(n+1).tract = keymer(4:regexp(keymer,'_')-1);
         mermarkers(n+1).depth = str2double(getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['pos' keymer(4:end)]),'String'));
@@ -526,29 +530,29 @@ if ~isempty(merwin) && isvalid(merwin)
         switch lower(commnd)
             case 'space'
                 mermarkers(n+1).notes;
-                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
                     'FaceColor',[0.5 0.5 0],'EdgeColor','none',...
                     'FaceAlpha',0.7,'tag','Generic');
                 mermarkers(n+1).markertype = 'Generic';
             case 'm'
-                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
                     'FaceColor',[0.5 0 0],'EdgeColor','none',...
                     'FaceAlpha',0.7,'tag','MER');
                 mermarkers(n+1).markertype = 'MER recording';
                 mermarkers(n+1).session = char(inputdlg('Enter Session'));
             case 'l'
-                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
                     'FaceColor',[0 0.5 0],'EdgeColor','none',...
                     'FaceAlpha',0.7,'tag','LFP');
                 mermarkers(n+1).markertype = 'LFP recording';
                 mermarkers(n+1).session = char(inputdlg('Enter Session'));
             case 't'
-                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
                     'FaceColor',[0 0 0.5],'EdgeColor','none',...
                     'FaceAlpha',0.7,'tag','Top');
                 mermarkers(n+1).markertype = 'Top border';
             case 'b'
-                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
                     'FaceColor',[0 0 0.5],'EdgeColor','none',...
                     'FaceAlpha',0.7,'tag','Bottom');
                 mermarkers(n+1).markertype = 'Bottom border';
