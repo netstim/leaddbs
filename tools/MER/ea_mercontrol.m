@@ -22,7 +22,12 @@ function varargout = ea_mercontrol(varargin)
 
 % Edit the above text to modify the response to help ea_mercontrol
 
-% Last Modified by GUIDE v2.5 04-Apr-2017 12:39:19
+% Last Modified by GUIDE v2.5 08-Apr-2017 18:27:26
+
+% __________________________________________________________________________________
+% Copyright (C) 2017 University of Pittsburgh, Brain Modulation Lab
+%
+% Ari Kappel
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -103,26 +108,32 @@ for side = options.sides
     merstruct.defaultmer.lateral.trajectory{side} = ea_getmertrajectory(merstruct.defaultmer.lateral.coords_mm{side},0,merstruct.length,50);
     merstruct.defaultmer.medial.trajectory{side} = ea_getmertrajectory(merstruct.defaultmer.medial.coords_mm{side},0,merstruct.length,50);
     
-    if side==1 % right = 1 
-        merhandles.central_right = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
-        merhandles.anterior_right = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
-        merhandles.posterior_right = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
-        merhandles.lateral_right = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
-        merhandles.medial_right = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);
-    elseif side==2 % left = 2
-        merhandles.central_left = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
-        merhandles.anterior_left = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
-        merhandles.posterior_left = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
-        merhandles.lateral_left = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
-        merhandles.medial_left = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);    
-    end
+    merhandles.central{side} = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
+    merhandles.anterior{side} = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
+    merhandles.posterior{side} = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
+    merhandles.lateral{side} = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
+    merhandles.medial{side} = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);
+     
+    %     if side==1 % right = 1 
+    %         merhandles.central_right = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
+    %         merhandles.anterior_right = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
+    %         merhandles.posterior_right = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
+    %         merhandles.lateral_right = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
+    %         merhandles.medial_right = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);
+    %     elseif side==2 % left = 2
+    %         merhandles.central_left = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
+    %         merhandles.anterior_left = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
+    %         merhandles.posterior_left = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
+    %         merhandles.lateral_left = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
+    %         merhandles.medial_left = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);    
+    %     end
     
 end
 
 merstruct.currentmer=merstruct.defaultmer;
 setappdata(resultfig,'merstruct',merstruct)
 setappdata(resultfig,'merhandles',merhandles)
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 
 
 
@@ -144,7 +155,7 @@ function togglecentral_left_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of togglecentral_left
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 
 
 % --- Executes on button press in toggleanterior_left.
@@ -154,7 +165,7 @@ function toggleanterior_left_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of toggleanterior_left
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 
 
 % --- Executes on button press in toggleposterior_left.
@@ -164,7 +175,7 @@ function toggleposterior_left_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of toggleposterior_left
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 
 
 % --- Executes on button press in togglelateral_left.
@@ -174,7 +185,7 @@ function togglelateral_left_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of togglelateral_left
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 
 % --- Executes on button press in togglemedial_left.
 function togglemedial_left_Callback(hObject, eventdata, handles)
@@ -183,7 +194,7 @@ function togglemedial_left_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of togglemedial_left
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 
 
 function posmedial_left_Callback(hObject, eventdata, handles)
@@ -250,7 +261,7 @@ function togglecentral_right_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of togglecentral_right
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 
 
 % --- Executes on button press in toggleposterior_right.
@@ -260,7 +271,7 @@ function toggleposterior_right_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of toggleposterior_right
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 
 
 % --- Executes on button press in toggleanterior_right.
@@ -270,7 +281,7 @@ function toggleanterior_right_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of toggleanterior_right
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 
 
 % --- Executes on button press in togglelateral_right.
@@ -280,7 +291,7 @@ function togglelateral_right_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of togglelateral_right
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 
 
 % --- Executes on button press in togglemedial_right.
@@ -290,7 +301,7 @@ function togglemedial_right_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of togglemedial_right
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 
 
 
@@ -577,19 +588,23 @@ function keymedial_right_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of keymedial_right
 
 
-% --- Executes on selection change in popupcentral_left.
-function popupcentral_left_Callback(hObject, eventdata, handles)
-% hObject    handle to popupcentral_left (see GCBO)
+% --- Executes on selection change in pushtrackmer_left.
+function pushtrackmer_left_Callback(hObject, eventdata, handles)
+% hObject    handle to pushtrackmer_left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupcentral_left contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupcentral_left
+% Hints: contents = cellstr(get(hObject,'String')) returns pushtrackmer_left contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from pushtrackmer_left
+sidestr='left';
+resultfig=getappdata(handles.mercontrolfig,'resultfig');
+options=getappdata(handles.mercontrolfig,'options');
+ea_trackmer(sidestr,resultfig,options)
 
 
 % --- Executes during object creation, after setting all properties.
-function popupcentral_left_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupcentral_left (see GCBO)
+function pushtrackmer_left_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pushtrackmer_left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -600,19 +615,28 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupposterior_left.
-function popupposterior_left_Callback(hObject, eventdata, handles)
-% hObject    handle to popupposterior_left (see GCBO)
+% --- Executes on selection change in pushimportrec_left.
+function pushimportrec_left_Callback(hObject, eventdata, handles)
+% hObject    handle to pushimportrec_left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupposterior_left contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupposterior_left
+% Hints: contents = cellstr(get(hObject,'String')) returns pushimportrec_left contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from pushimportrec_left
+sidestr='left'; side=2;
+resultfig=getappdata(handles.mercontrolfig,'resultfig');
+options=getappdata(handles.mercontrolfig,'options');
+[Depth,Thresh,Tracts] = ea_readmer(fullfile(options.uipatdirs{1},['Rec_',sidestr,'.mat']));
+merlfp.(sidestr).Depth = Depth;
+merlfp.(sidestr).Tracts = Tracts;
+merlfp.(sidestr).Thresh = Thresh;
 
+save(fullfile(options.uipatdirs{1},'ea_recordings.mat'),'merlfp')
+disp('Process DONE')
 
 % --- Executes during object creation, after setting all properties.
-function popupposterior_left_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupposterior_left (see GCBO)
+function pushimportrec_left_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pushimportrec_left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -646,19 +670,19 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupcentral_right.
-function popupcentral_right_Callback(hObject, eventdata, handles)
-% hObject    handle to popupcentral_right (see GCBO)
+% --- Executes on selection change in pushtrackmer_right.
+function pushtrackmer_right_Callback(hObject, eventdata, handles)
+% hObject    handle to pushtrackmer_right (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupcentral_right contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupcentral_right
+% Hints: contents = cellstr(get(hObject,'String')) returns pushtrackmer_right contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from pushtrackmer_right
 
 
 % --- Executes during object creation, after setting all properties.
-function popupcentral_right_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupcentral_right (see GCBO)
+function pushtrackmer_right_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pushtrackmer_right (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -669,19 +693,19 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupposterior_right.
-function popupposterior_right_Callback(hObject, eventdata, handles)
-% hObject    handle to popupposterior_right (see GCBO)
+% --- Executes on selection change in pushimportrec_right.
+function pushimportrec_right_Callback(hObject, eventdata, handles)
+% hObject    handle to pushimportrec_right (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupposterior_right contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupposterior_right
+% Hints: contents = cellstr(get(hObject,'String')) returns pushimportrec_right contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from pushimportrec_right
 
 
 % --- Executes during object creation, after setting all properties.
-function popupposterior_right_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupposterior_right (see GCBO)
+function pushimportrec_right_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pushimportrec_right (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -806,7 +830,7 @@ merhandles = getappdata(resultfig,'merhandles');
 refreshresultfig(handles,resultfig,options,side)
 
 set(handles.editimplanteddepth_left,'String',num2str(dist));
-getsettogglestates(handles,side,dist);
+ea_getsettogglestates(handles,side,dist);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -837,7 +861,7 @@ options=getappdata(handles.mercontrolfig,'options');
 refreshresultfig(handles,resultfig,options,side)
 
 set(handles.editimplanteddepth_right,'String',num2str(dist));
-getsettogglestates(handles,side,dist);
+ea_getsettogglestates(handles,side,dist);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -961,7 +985,7 @@ resultfig = getappdata(handles.mercontrolfig,'resultfig');
 options = getappdata(handles.mercontrolfig,'options');
 merstruct = getappdata(resultfig,'merstruct');
 setdefaultmer(handles,resultfig,merstruct,options)
-getsettogglestates(handles);
+ea_getsettogglestates(handles);
 set(hObject,'Value',0)
 
 
@@ -1130,7 +1154,8 @@ function importmarkers_Callback(hObject, eventdata, handles)
 resultfig = getappdata(handles.mercontrolfig,'resultfig');
 options = getappdata(handles.mercontrolfig,'options');
 merhandles = getappdata(resultfig,'merhandles');
-if isvalid(merhandles.central_right)
+side=1;
+if isvalid(merhandles.central{side})
 try 
     load([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],'mermarkers','mertoggles');
 catch
@@ -1139,10 +1164,10 @@ catch
         %[s,b] = listdlg('PromptString','Select a file:','SelectionMode','single',...
         %   'ListString',{files(~cellfun(@isempty,strfind({files(:).name},'ea_mermarkers'))).name})
     end
-    error('could not find ea_mermarkers.mat')
+    ea_error(['could not find ea_mermarkers.mat for ', options.patientname])
 end
 %assignin(workspace,'mermarkers',mermarkers)
-getsettogglestates(handles,mertoggles);
+ea_getsettogglestates(handles,mertoggles);
 ea_updatemermarkers(mermarkers,handles,resultfig,options)
 else
     fprintf(2,'Error using importmarkers_Callback: \nNo MER trajectories available\n\n')
@@ -1173,7 +1198,7 @@ function exportmarkers_Callback(hObject, eventdata, handles)
 resultfig = getappdata(handles.mercontrolfig,'resultfig');
 options = getappdata(handles.mercontrolfig,'options');
 mermarkers = getappdata(resultfig,'mermarkers');
-mertoggles = getsettogglestates(handles);
+mertoggles = ea_getsettogglestates(handles);
 if exist([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],'file')
     overwrite = ea_questdlg({['ea_mermarkers.mat found in ' options.patientname ' directory.'];'Would you like to overwrite this file?'},options.patientname);
 end
@@ -1201,28 +1226,48 @@ set(hObject,'CData',background,'Value',0)
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-function setdefaultmer(handles,resultfig,merstruct,options)
-clearmertrajectories(handles,resultfig,options)
+function setdefaultmer(handles,resultfig,merstruct,options,varargin)
+if isempty(varargin) && isequal(options.sides,1:2)
+    sidestr='both';
+elseif length(varargin)==1
+    sidestr=varargin{1};
+elseif length(varargin)==2
+    sidestr=varargin{1};
+    implanteddepth=varargin{2};
+end
+clearmertrajectories(handles,resultfig,options,sidestr)
+merhandles=getappdata(resultfig,'merhandles');
 color=merstruct.colormap;
 set(0,'CurrentFigure',resultfig)
-for side = options.sides
-    if side==1
-        merhandles.central_right = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
-        merhandles.anterior_right = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
-        merhandles.posterior_right = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
-        merhandles.lateral_right = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
-        merhandles.medial_right = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);
-        setappdata(resultfig,'merhandles',merhandles)
 
-    elseif side==2
-        merhandles.central_left = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
-        merhandles.anterior_left = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
-        merhandles.posterior_left = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
-        merhandles.lateral_left = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
-        merhandles.medial_left = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);    
-        setappdata(resultfig,'merhandles',merhandles)
-    end
+switch lower(sidestr)
+    case {'right'};
+        side=1;
+        merhandles.central{side} = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
+        merhandles.anterior{side} = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
+        merhandles.posterior{side} = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
+        merhandles.lateral{side} = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
+        merhandles.medial{side} = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);
+
+    case {'left'}
+        side=2;
+        merhandles.central{side} = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
+        merhandles.anterior{side} = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
+        merhandles.posterior{side} = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
+        merhandles.lateral{side} = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
+        merhandles.medial{side} = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);    
+        
+    case {'both','bilateral'}
+        for side=1:2;
+        merhandles.central{side} = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
+        merhandles.anterior{side} = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
+        merhandles.posterior{side} = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
+        merhandles.lateral{side} = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
+        merhandles.medial{side} = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);
+        end
+        
 end
+        setappdata(resultfig,'merhandles',merhandles)
 
 
 function clearmermarkers(handles,resultfig,options)
@@ -1242,38 +1287,87 @@ set(handles.popupmermarkers_left,'Visible','off','String','','Value',1)
 set(handles.popupmermarkers_right,'Visible','off','String','','Value',1)
 
 
-function clearmertrajectories(handles,resultfig,options,side)
-if nargin<4
-    side=[1 2];
+function clearmertrajectories(handles,resultfig,options,sidestr)
+
+merhandles = getappdata(resultfig,'merhandles');
+if isempty(merhandles)
+    return
+end
+if ~exist('sidestr','var') && isequal(options.sides,1:2)
+    sidestr='both';    
+% Legacy
+elseif isnumeric(sidestr)
+    if sidestr==1
+        sidestr = 'right';
+    elseif sidestr==2
+        sidestr = 'left';
+    elseif isequal(sidestr,1:2)
+        sidestr = 'both';
+    end
+else
+    sidestr=lower(sidestr);
 end
 
 merhandles = getappdata(resultfig,'merhandles');
-for i = side
-    if i==1
-    try; delete(merhandles.central_right); end
-    try; delete(merhandles.anterior_right); end
-    try; delete(merhandles.posterior_right); end
-    try; delete(merhandles.lateral_right); end
-    try; delete(merhandles.medial_right); end
-    
-    poscentral_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poscentral_right');
-    posanterior_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posanterior_right');
-    posposterior_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posposterior_right');
-    poslateral_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poslateral_right');
-    posmedial_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posmedial_right');
-    
-    set(poscentral_right,'String','0');
-    set(posanterior_right,'String','0');
-    set(posposterior_right,'String','0');
-    set(poslateral_right,'String','0');
-    set(posmedial_right,'String','0');
+switch sidestr
+    case {'right'}
+        side=1;
+        try; delete(merhandles.central{side}); end
+        try; delete(merhandles.anterior{side}); end
+        try; delete(merhandles.posterior{side}); end
+        try; delete(merhandles.lateral{side}); end
+        try; delete(merhandles.medial{side}); end
+        
+        poscentral_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),['poscentral_',sidestr]);
+        posanterior_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),['posanterior_',sidestr]);
+        posposterior_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),['posposterior_',sidestr]);
+        poslateral_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),['poslateral_',sidestr]);
+        posmedial_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),['posmedial_',sidestr]);
+        
+        set(poscentral_right,'String','0');
+        set(posanterior_right,'String','0');
+        set(posposterior_right,'String','0');
+        set(poslateral_right,'String','0');
+        set(posmedial_right,'String','0');
+        
+    case {'left'}
+        side=2;
+        try; delete(merhandles.central{side}); end
+        try; delete(merhandles.anterior{side}); end
+        try; delete(merhandles.posterior{side}); end
+        try; delete(merhandles.lateral{side}); end
+        try; delete(merhandles.medial{side}); end
+        
+        poscentral_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poscentral_left');
+        posanterior_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posanterior_left');
+        posposterior_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posposterior_left');
+        poslateral_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poslateral_left');
+        posmedial_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posmedial_left');
+        set(poscentral_left,'String','0');
+        set(posanterior_left,'String','0');
+        set(posposterior_left,'String','0');
+        set(poslateral_left,'String','0');
+        set(posmedial_left,'String','0');
+        
+    case {'both','bilateral'}
+        for side=1:2;
+        try; delete(merhandles.central{side}); end
+        try; delete(merhandles.anterior{side}); end
+        try; delete(merhandles.posterior{side}); end
+        try; delete(merhandles.lateral{side}); end
+        try; delete(merhandles.medial{side}); end
+        end
 
-    elseif i==2
-        try; delete(merhandles.central_left); end
-        try; delete(merhandles.anterior_left); end
-        try; delete(merhandles.posterior_left); end
-        try; delete(merhandles.lateral_left); end
-        try; delete(merhandles.medial_left); end
+        poscentral_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poscentral_right');
+        posanterior_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posanterior_right');
+        posposterior_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posposterior_right');
+        poslateral_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poslateral_right');
+        posmedial_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posmedial_right');
+        set(poscentral_right,'String','0');
+        set(posanterior_right,'String','0');
+        set(posposterior_right,'String','0');
+        set(poslateral_right,'String','0');
+        set(posmedial_right,'String','0');
 
         poscentral_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poscentral_left');
         posanterior_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posanterior_left');
@@ -1285,9 +1379,10 @@ for i = side
         set(posposterior_left,'String','0');
         set(poslateral_left,'String','0');
         set(posmedial_left,'String','0');
-    end
 end
-    setappdata(resultfig,'merhandles',merhandles)
+set(handles.editimplanteddepth_left,'String','0');
+set(handles.editimplanteddepth_right,'String','0');
+setappdata(resultfig,'merhandles',merhandles)
 
 
 function closefunciton(hObject,event)
@@ -1299,22 +1394,6 @@ clearmertrajectories(handles,resultfig,options)
 clearmermarkers(handles,resultfig,options)
 end
 delete(hObject)
-
-
-function ea_updatemertrajectory(handles,trajectory,tag)
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-% Update position in resultfig
-% XData = get(getappdata(resultfig,tag),'XData');
-% YData = get(getappdata(resultfig,tag),'YData');
-% ZData = get(getappdata(resultfig,tag),'ZData');
-h = getfield(getappdata(resultfig,'merhandles'),tag);
-set(h,'XData',trajectory(:,1)')
-set(h,'YData',trajectory(:,2)')
-set(h,'ZData',trajectory(:,3)')
-setappdata(resultfig,tag,h)
-set(handles.(['key' tag]),'Value',1)
-setappdata(resultfig,'keymer',['key' tag])
-
 
 function ea_updatemermarkers(mermarkers,handles,resultfig,options)
 clearmermarkers(handles,resultfig,options)
@@ -1343,14 +1422,14 @@ try
     Lidx = find(~cellfun(@isempty,strfind({mermarkers.side},'left'))==1);
     set(handles.popupimplantedtract_left,'Value',find(~cellfun(@isempty,strfind(handles.popupimplantedtract_left.String,mermarkers(Lidx(1)).dat.implantedtract))==1))
     set(handles.editimplanteddepth_left,'String',num2str(mermarkers(Lidx(1)).dat.leaddepth))
-    getsettogglestates(handles,2,mermarkers(Lidx(1)).dat.leaddepth);
+    ea_getsettogglestates(handles,2,mermarkers(Lidx(1)).dat.leaddepth);
 end
 
 try
     Ridx = ~cellfun(@isempty,strfind({mermarkers.side},'right'));
     set(handles.popupimplantedtract_right,'Value',find(~cellfun(@isempty,strfind(handles.popupimplantedtract_left.String,mermarkers(Ridx(1)).dat.implantedtract))==1))
     set(handles.editimplanteddepth_left,'String',num2str(mermarkers(Ridx(1)).dat.leaddepth))
-    getsettogglestates(handles,1,mermarkers(Ridx(1)).dat.leaddepth);
+    ea_getsettogglestates(handles,1,mermarkers(Ridx(1)).dat.leaddepth);
 end
 
 setappdata(resultfig,'mermarkers',mermarkers)
@@ -1360,7 +1439,13 @@ setappdata(resultfig,'markerstring',markerstring)
 set(handles.togglemarkertags,'Visible','on','Value',0)
 
 
-function mertoggles = getsettogglestates(handles,varargin)
+function mertoggles = ea_getsettogglestates(handles,varargin)
+% Example type A: 
+%   varargin{1}=mertoggles;
+%
+% Example type B: ea_getsettogglestates(handles,1,mermarkers(Ridx(1)).dat.leaddepth);
+%   varargin{1}=side;
+%   varargin{2}=dist;
 
 if size(varargin,2)==1
     mertoggles = varargin{1};
@@ -1374,6 +1459,7 @@ merhandles = getappdata(resultfig,'merhandles');
 
 % reset states based on gui:
 if ~exist('mertoggles','var')
+
 mertoggles.keycontrol=[get(handles.keycentral_left,'Value'),get(handles.keyanterior_left,'Value'),...
     get(handles.keyposterior_left,'Value'),get(handles.keylateral_left,'Value'),get(handles.keymedial_left,'Value');...
     get(handles.keycentral_right,'Value'),get(handles.keyanterior_right,'Value'),get(handles.keyposterior_right,'Value'),...
@@ -1382,123 +1468,112 @@ mertoggles.togglestates=[get(handles.togglecentral_left,'Value'),get(handles.tog
     get(handles.toggleposterior_left,'Value'),get(handles.togglelateral_left,'Value'),get(handles.togglemedial_left,'Value');...
     get(handles.togglecentral_right,'Value'),get(handles.toggleanterior_right,'Value'),get(handles.toggleposterior_right,'Value'),...
     get(handles.togglelateral_right,'Value'),get(handles.togglemedial_right,'Value')];
+
 else
-set(handles.keycentral_left,'Value',mertoggles.keycontrol(1,1))
-    set(handles.keyanterior_left,'Value',mertoggles.keycontrol(1,2))
-    set(handles.keyposterior_left,'Value',mertoggles.keycontrol(1,3))
-    set(handles.keylateral_left,'Value',mertoggles.keycontrol(1,4))
-    set(handles.keymedial_left,'Value',mertoggles.keycontrol(1,5))
-set(handles.keycentral_right,'Value',mertoggles.keycontrol(2,1))
-    set(handles.keyanterior_right,'Value',mertoggles.keycontrol(2,2))
-    set(handles.keyposterior_right,'Value',mertoggles.keycontrol(2,3))
-    set(handles.keylateral_right,'Value',mertoggles.keycontrol(2,4))
-    set(handles.keymedial_right,'Value',mertoggles.keycontrol(2,5))
     
-set(handles.togglecentral_left,'Value',mertoggles.togglestates(1,1))
-    set(handles.toggleanterior_left,'Value',mertoggles.togglestates(1,2))
-    set(handles.toggleposterior_left,'Value',mertoggles.togglestates(1,3))
-    set(handles.togglelateral_left,'Value',mertoggles.togglestates(1,4))
-    set(handles.togglemedial_left,'Value',mertoggles.togglestates(1,5))
-set(handles.togglecentral_right,'Value',mertoggles.togglestates(2,1))
-    set(handles.toggleanterior_right,'Value',mertoggles.togglestates(2,2))
-    set(handles.toggleposterior_right,'Value',mertoggles.togglestates(2,3))
-    set(handles.togglelateral_right,'Value',mertoggles.togglestates(2,4))
-    set(handles.togglemedial_right,'Value',mertoggles.togglestates(2,5))
+side=1; sidestr='right';
+set(handles.(['keycentral_',sidestr]),'Value',mertoggles.keycontrol(side,1))
+    set(handles.(['keyanterior_',sidestr]),'Value',mertoggles.keycontrol(side,2))
+    set(handles.(['keyposterior_',sidestr]),'Value',mertoggles.keycontrol(side,3))
+    set(handles.(['keylateral_',sidestr]),'Value',mertoggles.keycontrol(side,4))
+    set(handles.(['keymedial_',sidestr]),'Value',mertoggles.keycontrol(side,5))
+set(handles.(['togglecentral_',sidestr]),'Value',mertoggles.togglestates(side,1))
+    set(handles.(['toggleanterior_',sidestr]),'Value',mertoggles.togglestates(side,2))
+    set(handles.(['toggleposterior_',sidestr]),'Value',mertoggles.togglestates(side,3))
+    set(handles.(['togglelateral_',sidestr]),'Value',mertoggles.togglestates(side,4))
+    set(handles.(['togglemedial_',sidestr]),'Value',mertoggles.togglestates(side,5))
+
+side=2; sidestr='left';
+set(handles.(['keycentral_',sidestr]),'Value',mertoggles.keycontrol(side,1))
+    set(handles.(['keyanterior_',sidestr]),'Value',mertoggles.keycontrol(side,2))
+    set(handles.(['keyposterior_',sidestr]),'Value',mertoggles.keycontrol(side,3))
+    set(handles.(['keylateral_',sidestr]),'Value',mertoggles.keycontrol(side,4))
+    set(handles.(['keymedial_',sidestr]),'Value',mertoggles.keycontrol(side,5))
+set(handles.(['togglecentral_',sidestr]),'Value',mertoggles.togglestates(side,1))
+    set(handles.(['toggleanterior_',sidestr]),'Value',mertoggles.togglestates(side,2))
+    set(handles.(['toggleposterior_',sidestr]),'Value',mertoggles.togglestates(side,3))
+    set(handles.(['togglelateral_',sidestr]),'Value',mertoggles.togglestates(side,4))
+    set(handles.(['togglemedial_',sidestr]),'Value',mertoggles.togglestates(side,5))
 
 end
 setappdata(getappdata(handles.mercontrolfig,'resultfig'),'mertoggles',mertoggles); % also store toggle data in resultfig.
 
 % set togglestates 
 % toggles right
-if get(handles.togglecentral_right,'Value')
-    set(merhandles.central_right,'Visible','on')
-elseif ~get(handles.togglecentral_right,'Value')
-    set(merhandles.central_right,'Visible','off')
+side=1;
+if get(handles.togglecentral_right,'Value') && isvalid(merhandles.central{side})
+    set(merhandles.central{side},'Visible','on')
+elseif ~get(handles.togglecentral_right,'Value') && isvalid(merhandles.central{side})
+    set(merhandles.central{side},'Visible','off')
 end
-if get(handles.toggleanterior_right,'Value')
-    set(merhandles.anterior_right,'Visible','on')
-elseif ~get(handles.toggleanterior_right,'Value')
-    set(merhandles.anterior_right,'Visible','off')
+if get(handles.toggleanterior_right,'Value') && isvalid(merhandles.anterior{side})
+    set(merhandles.anterior{side},'Visible','on')
+elseif ~get(handles.toggleanterior_right,'Value') && isvalid(merhandles.anterior{side})
+    set(merhandles.anterior{side},'Visible','off')
 end
-if get(handles.toggleposterior_right,'Value')
-    set(merhandles.posterior_right,'Visible','on')
-elseif ~get(handles.toggleposterior_right,'Value')
-    set(merhandles.posterior_right,'Visible','off')
+if get(handles.toggleposterior_right,'Value') && isvalid(merhandles.posterior{side})
+    set(merhandles.posterior{side},'Visible','on')
+elseif ~get(handles.toggleposterior_right,'Value') && isvalid(merhandles.posterior{side})
+    set(merhandles.posterior{side},'Visible','off')
 end
-if get(handles.togglelateral_right,'Value')
-    set(merhandles.lateral_right,'Visible','on')
-elseif ~get(handles.togglelateral_right,'Value')
-    set(merhandles.lateral_right,'Visible','off')
+if get(handles.togglelateral_right,'Value') && isvalid(merhandles.lateral{side})
+    set(merhandles.lateral{side},'Visible','on')
+elseif ~get(handles.togglelateral_right,'Value') && isvalid(merhandles.lateral{side})
+    set(merhandles.lateral{side},'Visible','off')
 end
-if get(handles.togglemedial_right,'Value')
-    set(merhandles.medial_right,'Visible','on')
-elseif ~get(handles.togglemedial_right,'Value')
-    set(merhandles.medial_right,'Visible','off')
+if get(handles.togglemedial_right,'Value') && isvalid(merhandles.medial{side})
+    set(merhandles.medial{side},'Visible','on')
+elseif ~get(handles.togglemedial_right,'Value') && isvalid(merhandles.medial{side})
+    set(merhandles.medial{side},'Visible','off')
 end
 % toggles left
-if get(handles.togglecentral_left,'Value')
-    set(merhandles.central_left,'Visible','on')
-elseif ~get(handles.togglecentral_left,'Value')
-    set(merhandles.central_left,'Visible','off')
+side=2;
+sidestr='left';
+if get(handles.(['togglecentral_',sidestr]),'Value') && isvalid(merhandles.central{side})
+    set(merhandles.central{side},'Visible','on')
+elseif ~get(handles.(['togglecentral_',sidestr]),'Value') && isvalid(merhandles.central{side})
+    set(merhandles.central{side},'Visible','off')
 end
-if get(handles.toggleanterior_left,'Value')
-    set(merhandles.anterior_left,'Visible','on')
-elseif ~get(handles.toggleanterior_left,'Value')
-    set(merhandles.anterior_left,'Visible','off')
+if get(handles.(['toggleanterior_',sidestr]),'Value') && isvalid(merhandles.anterior{side})
+    set(merhandles.anterior{side},'Visible','on')
+elseif ~get(handles.(['toggleanterior_',sidestr]),'Value') && isvalid(merhandles.anterior{side})
+    set(merhandles.anterior{side},'Visible','off')
 end
-if get(handles.toggleposterior_left,'Value')
-    set(merhandles.posterior_left,'Visible','on')
-elseif ~get(handles.toggleposterior_left,'Value')
-    set(merhandles.posterior_left,'Visible','off')
+if get(handles.(['toggleposterior_',sidestr]),'Value') && isvalid(merhandles.posterior{side})
+    set(merhandles.posterior{side},'Visible','on')
+elseif ~get(handles.(['toggleposterior_',sidestr]),'Value') && isvalid(merhandles.posterior{side})
+    set(merhandles.posterior{side},'Visible','off')
 end
-if get(handles.togglelateral_left,'Value')
-    set(merhandles.lateral_left,'Visible','on')
-elseif ~get(handles.togglelateral_left,'Value')
-    set(merhandles.lateral_left,'Visible','off')
+if get(handles.(['togglelateral_',sidestr]),'Value') && isvalid(merhandles.lateral{side})
+    set(merhandles.lateral{side},'Visible','on')
+elseif ~get(handles.(['togglelateral_',sidestr]),'Value') && isvalid(merhandles.lateral{side})
+    set(merhandles.lateral{side},'Visible','off')
 end
-if get(handles.togglemedial_left,'Value')
-    set(merhandles.medial_left,'Visible','on')
-elseif ~get(handles.togglemedial_left,'Value')
-    set(merhandles.medial_left,'Visible','off')
+if get(handles.(['togglemedial_',sidestr]),'Value') && isvalid(merhandles.medial{side})
+    set(merhandles.medial{side},'Visible','on')
+elseif ~get(handles.(['togglemedial_',sidestr]),'Value') && isvalid(merhandles.medial{side})
+    set(merhandles.medial{side},'Visible','off')
 end
 
 % set pos handles
 if exist('dist','var')
     if side==2
-    set(handles.poscentral_left,'String',num2str(dist));
-    set(handles.posanterior_left,'String',num2str(dist));
-    set(handles.posposterior_left,'String',num2str(dist));
-    set(handles.poslateral_left,'String',num2str(dist));
-    set(handles.posmedial_left,'String',num2str(dist));
+    sidestr='left';
+    set(handles.(['poscentral_',sidestr]),'String',num2str(dist));
+    set(handles.(['posanterior_',sidestr]),'String',num2str(dist));
+    set(handles.(['posposterior_',sidestr]),'String',num2str(dist));
+    set(handles.(['poslateral_',sidestr]),'String',num2str(dist));
+    set(handles.(['posmedial_',sidestr]),'String',num2str(dist));
     elseif side==1
-    set(handles.poscentral_right,'String',num2str(dist));
-    set(handles.posanterior_right,'String',num2str(dist));
-    set(handles.posposterior_right,'String',num2str(dist));
-    set(handles.poslateral_right,'String',num2str(dist));
-    set(handles.posmedial_right,'String',num2str(dist));
+    sidestr='right';
+    set(handles.(['poscentral_',sidestr]),'String',num2str(dist));
+    set(handles.(['posanterior_',sidestr]),'String',num2str(dist));
+    set(handles.(['posposterior_',sidestr]),'String',num2str(dist));
+    set(handles.(['poslateral_',sidestr]),'String',num2str(dist));
+    set(handles.(['posmedial_',sidestr]),'String',num2str(dist));
     end
 end
 setappdata(resultfig,'merhandles',merhandles)
-
-
-
-function outputtrajectory = ea_getmertrajectory(coords_mm,dist,length,n)
-if size(coords_mm,1)<2
-    error('Must input a vector')
-end
-dxyz = sqrt((diff(coords_mm(1:2,1))^2)+(diff(coords_mm(1:2,2))^2)+diff(coords_mm(1:2,3))^2);
-slope = mean(diff(coords_mm))/dxyz;
-startpoint = coords_mm(1,:)+slope.*dist;
-%     normtrajvector=slope/norm(slope);
-%     orth=null(normtrajvector);
-%
-%     startpoint.x = trajin(1,:)+orth(:,1)';
-%     startpoint.y = trajin(1,:)+orth(:,2)';
-%     startpoint=slope(1,:)-(2*(trajin(1,:)-slope(1,:)))
-
-outputtrajectory(:,1) = linspace(startpoint(1,1),startpoint(1,1)+slope(1)*length,n);
-outputtrajectory(:,2) = linspace(startpoint(1,2),startpoint(1,2)+slope(2)*length,n);
-outputtrajectory(:,3) = linspace(startpoint(1,3),startpoint(1,3)+slope(3)*length,n);
 
 
 function merstruct = ea_updatetracts(merstruct,side,tracttag,resultfig,handles)
@@ -1680,19 +1755,21 @@ set(0,'CurrentFigure',resultfig); hold on;
 for iSide = side
     
     if iSide==1 % right = 1 
-        merhandles.central_right = plot3(merstruct.currentmer.central.trajectory{side}(:,1),merstruct.currentmer.central.trajectory{side}(:,2),merstruct.currentmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5,'tag','central_right');
-        merhandles.anterior_right = plot3(merstruct.currentmer.anterior.trajectory{side}(:,1),merstruct.currentmer.anterior.trajectory{side}(:,2),merstruct.currentmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5,'tag','anterior_right');
-        merhandles.posterior_right = plot3(merstruct.currentmer.posterior.trajectory{side}(:,1),merstruct.currentmer.posterior.trajectory{side}(:,2),merstruct.currentmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5,'tag','posterior_right');
-        merhandles.lateral_right = plot3(merstruct.currentmer.lateral.trajectory{side}(:,1),merstruct.currentmer.lateral.trajectory{side}(:,2),merstruct.currentmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5,'tag','lateral_right');
-        merhandles.medial_right = plot3(merstruct.currentmer.medial.trajectory{side}(:,1),merstruct.currentmer.medial.trajectory{side}(:,2),merstruct.currentmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5,'tag','medial_right');
+        sidestr=lower('right');
+        merhandles.central{side} = plot3(merstruct.currentmer.central.trajectory{side}(:,1),merstruct.currentmer.central.trajectory{side}(:,2),merstruct.currentmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5,'tag',['central_',sidestr]);
+        merhandles.anterior{side} = plot3(merstruct.currentmer.anterior.trajectory{side}(:,1),merstruct.currentmer.anterior.trajectory{side}(:,2),merstruct.currentmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5,'tag',['anterior_',sidestr]);
+        merhandles.posterior{side} = plot3(merstruct.currentmer.posterior.trajectory{side}(:,1),merstruct.currentmer.posterior.trajectory{side}(:,2),merstruct.currentmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5,'tag',['posterior_',sidestr]);
+        merhandles.lateral{side} = plot3(merstruct.currentmer.lateral.trajectory{side}(:,1),merstruct.currentmer.lateral.trajectory{side}(:,2),merstruct.currentmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5,'tag',['lateral_',sidestr]);
+        merhandles.medial{side} = plot3(merstruct.currentmer.medial.trajectory{side}(:,1),merstruct.currentmer.medial.trajectory{side}(:,2),merstruct.currentmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5,'tag',['medial_',sidestr]);
         set(handles.editimplanteddepth_right,'String','0')
         
     elseif iSide==2 % left = 2
-        merhandles.central_left = plot3(merstruct.currentmer.central.trajectory{side}(:,1),merstruct.currentmer.central.trajectory{side}(:,2),merstruct.currentmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5,'tag','central_left');
-        merhandles.anterior_left = plot3(merstruct.currentmer.anterior.trajectory{side}(:,1),merstruct.currentmer.anterior.trajectory{side}(:,2),merstruct.currentmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5,'tag','anterior_left');
-        merhandles.posterior_left = plot3(merstruct.currentmer.posterior.trajectory{side}(:,1),merstruct.currentmer.posterior.trajectory{side}(:,2),merstruct.currentmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5,'tag','posterior_left');
-        merhandles.lateral_left = plot3(merstruct.currentmer.lateral.trajectory{side}(:,1),merstruct.currentmer.lateral.trajectory{side}(:,2),merstruct.currentmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5,'tag','lateral_left');
-        merhandles.medial_left = plot3(merstruct.currentmer.medial.trajectory{side}(:,1),merstruct.currentmer.medial.trajectory{side}(:,2),merstruct.currentmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5,'tag','medial_left');    
+        sidestr=lower('left');
+        merhandles.central{side} = plot3(merstruct.currentmer.central.trajectory{side}(:,1),merstruct.currentmer.central.trajectory{side}(:,2),merstruct.currentmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5,'tag',['central_',sidestr]);
+        merhandles.anterior{side} = plot3(merstruct.currentmer.anterior.trajectory{side}(:,1),merstruct.currentmer.anterior.trajectory{side}(:,2),merstruct.currentmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5,'tag',['anterior_',sidestr]);
+        merhandles.posterior{side} = plot3(merstruct.currentmer.posterior.trajectory{side}(:,1),merstruct.currentmer.posterior.trajectory{side}(:,2),merstruct.currentmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5,'tag',['posterior_',sidestr]);
+        merhandles.lateral{side} = plot3(merstruct.currentmer.lateral.trajectory{side}(:,1),merstruct.currentmer.lateral.trajectory{side}(:,2),merstruct.currentmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5,'tag',['lateral_',sidestr]);
+        merhandles.medial{side} = plot3(merstruct.currentmer.medial.trajectory{side}(:,1),merstruct.currentmer.medial.trajectory{side}(:,2),merstruct.currentmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5,'tag',['medial_',sidestr]); 
         set(handles.editimplanteddepth_left,'String','0')
     end    
 end
