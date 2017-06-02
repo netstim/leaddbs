@@ -31,6 +31,7 @@ for tracor=1:length(vfi)
         end
     catch
         if tracor==1
+            
             ea_error('Please put a suitable postoperative anatomy file inside patient folder and normalize it first.');
         end
         %warning([fn,' not present']);

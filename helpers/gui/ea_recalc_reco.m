@@ -12,7 +12,7 @@ options.sides=1:2;
 for pt=1:length(uipatdirs)
     options=ea_getptopts(uipatdirs{pt},options);
     disp(['Re-propagating reconstruction from native (postop) -> native (preop) -> template space: ', options.patientname]); 
-    [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+    [~,~,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
     options.elmodel=elmodel;
     options=ea_resolve_elspec(options);
     [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options);

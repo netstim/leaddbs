@@ -9,5 +9,5 @@ jobID=ea_generate_guid;
 options.spmdir=spm('dir');
 save([options.root,options.patientname,filesep,'job_',jobID],'options')
 setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS','1')
-cmdstring=['cd ',options.earoot,' && bsub -q long -R "rusage[mem=20000]" -W 168:0 -o ',[options.root,options.patientname,filesep,'job_',jobID],'.out -e ',[options.root,options.patientname,filesep,'job_',jobID],'.err matlab -singleCompThread -nodisplay -r "ea_run runcluster ',[options.root,options.patientname,filesep,'job_',jobID],'"'];
+cmdstring=['cd ',options.earoot,' && bsub -q long -R "rusage[mem=40000]" -W 168:0 -o ',[options.root,options.patientname,filesep,'job_',jobID],'.out -e ',[options.root,options.patientname,filesep,'job_',jobID],'.err matlab -singleCompThread -nodisplay -r "ea_run runcluster ',[options.root,options.patientname,filesep,'job_',jobID],'"'];
 system(cmdstring);

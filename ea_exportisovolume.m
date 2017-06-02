@@ -99,7 +99,7 @@ for side=1:length(options.sides)
 
 
 
-    if side==2; % write out combined volume with separate interpolations for each side.
+    if side==2 % write out combined volume with separate interpolations for each side.
         %% old part
         Vol.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'];
         niic=ea_nanmean(cat(4,nii{1},nii{2}),4);
@@ -261,9 +261,9 @@ for side=1:length(options.sides)
             end
         end
 
-        ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'],'w','nz',1,1);
-        ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_lr.nii'],'w','nz',1,1);
-        ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'],'w','nz',1,1);
+        ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_lr.nii'],'','nz',1,1);
+        ea_crop_nii([options.root,options.patientname,filesep,'s',options.d3.isomatrix_name,'_lr.nii'],'','nz',1,1);
+        ea_crop_nii([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii'],'','nz',1,1);
 
         
         matlabbatch{1}.spm.spatial.smooth.data = {[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_combined.nii,1']};

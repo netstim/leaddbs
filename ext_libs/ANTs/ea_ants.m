@@ -79,7 +79,7 @@ if any(imgsize>256)
     rigidsoomthingssigmas='4x3x2x1vox';
 
     affineconvergence='[1000x500x250x0,1e-6,10]';
-    affineshrinkfactors='8x4x2x1';
+    affineshrinkfactors='8x4x2x2';
     affinesoomthingssigmas='4x3x2x1vox';
 else
     rigidconvergence='[1000x500x250x0,1e-6,10]';

@@ -1,13 +1,24 @@
 ixiids=ea_getIXI_IDs(564);
-setenv('FSLDIR','/usr/local/fsl')
-!/usr/local/fsl/etc/fslconf/fsl.sh
 
+fsldir = [ea_getearoot, filesep, 'ext_libs', filesep, 'fsl', filesep];
+if ispc
+    SLICER = [fsldir, 'slicer.exe'];
+else 
+    SLICER = [fsldir, 'slicer.', computer('arch')];    
+end
 
-    % set FSL environment
-setenv('FSLDIR','/usr/local/fsl');  % this to tell where FSL folder is
-setenv('FSLOUTPUTTYPE', 'NIFTI_GZ'); % this to tell what the output type would be
+setenv('FSLOUTPUTTYPE','NIFTI');
 
 for ixi=1:length(ixiids)
-[pth,ixibase]=fileparts(ixiids{ixi});
-system(['/usr/local/fsl/bin/slicer ',ixiids{ixi},filesep,'glanat.nii.gz /PA/Neuro/_projects/lead/lead_dbs/templates/mni_hires_t2.nii -a mono',ixibase,'.png']);
+    [pth, ixibase] = fileparts(ixiids{ixi});
+    cmd = [SLICER, ...
+           ' ', ixiids{ixi}, filesep, 'glanat.nii.gz' ...
+           ' ', ea_space, 't2.nii' ...
+           ' -a', ' mono', ixibase, '.png'];
+    
+    if ~ispc
+        system(['bash -c "', cmd, '"']);
+    else
+        system(cmd);    
+    end
 end

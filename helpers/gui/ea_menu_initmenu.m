@@ -6,8 +6,26 @@ menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
     % tools menu  & edit prefs present in all apps.
     f = uimenu('Label','Tools');
-    uimenu(f,'Label','Edit Preferences File...','Callback',{@ea_editprefs});
-    uimenu(f,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
+    pp= uimenu('Label','Preferences');
+    uimenu(pp,'Label','Edit Preferences File...','Callback',{@ea_editprefs},'Accelerator','P');
+    uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
+    
+    p_c=uimenu(pp,'Label','Play sound on completed tasks.','Callback',{@ea_toggle_chirp});
+    prefs=ea_prefs;
+    if prefs.machine.chirp
+        p_c.Checked='on';
+    else
+        p_c.Checked='off';
+    end
+    
+    m_c=uimenu(pp,'Label','Show methods popup on completed tasks.','Callback',{@ea_toggle_methods});
+    prefs=ea_prefs;
+    if prefs.machine.methods_show
+        m_c.Checked='on';
+    else
+        m_c.Checked='off';
+    end
+    
     
     if ismember('checkregfigs',cmd)
         
@@ -21,7 +39,7 @@ if isempty(menuprobe)
         uimenu(f,'Label','Convert ACPC/MNI coordinates (Horn 2017)','Callback',{@ea_acpcquery,handles.leadfigure});
     end
     
-    uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles});
+    uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles},'Accelerator','R');
     
     
     if ismember('dbs',cmd)
@@ -31,7 +49,7 @@ if isempty(menuprobe)
 
     if ismember('surfice',cmd)
        si=uimenu(f,'Label','Surfice'); 
-        uimenu(si,'Label','Visualize DBS-scene in Surfice (template space)','Callback',{@ea_elvis_surfice,handles,0});
+        uimenu(si,'Label','Visualize DBS-scene in Surfice (template space)','Callback',{@ea_elvis_surfice,handles,0},'Accelerator','V');
         uimenu(si,'Label','Visualize Atlas set in Surfice (template space)','Callback',{@ea_atlvis_surfice,handles,0});
         %uimenu(si,'Label','Visualize DBS-scene in Surfice (native space)','Callback',{@ea_elvis_surfice,handles,1});
         sini=uimenu(si,'Label','Export heatmaps from nifti file(s)');
@@ -47,7 +65,7 @@ if isempty(menuprobe)
     
     if ismember('export',cmd)
         e = uimenu(f,'Label','Export');
-        uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles});
+        uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles},'Accelerator','E');
         uimenu(e,'Label','Export .STL files for selected patient(s)','Callback',{@ea_exportpat,'STL',handles});
         uimenu(e,'Label','Export .PLY files for selected patient(s)','Callback',{@ea_exportpat,'PLY',handles});
 
@@ -55,22 +73,11 @@ if isempty(menuprobe)
         uimenu(d,'Label','Convert selected atlas to .STL','Callback',{@ea_exportatlas,'STL',handles});
         uimenu(d,'Label','Convert selected atlas to .PLY','Callback',{@ea_exportatlas,'PLY',handles});
     end
-    
-    if ismember('methods',cmd)
-       m=uimenu(f,'Label','Methods');
-       m_c=uimenu(m,'Label','Show methods popup on completed tasks.','Callback',{@ea_toggle_methods});
-       prefs=ea_prefs;
-       if prefs.machine.methods_show
-           m_c.Checked='on';
-       else
-           m_c.Checked='off';
-       end
-       
-    end
+
 
     if ismember('applynorm',cmd)
-        uimenu(f,'Label','Apply Patient Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,0});
-        uimenu(f,'Label','Apply Patient Inverse Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,1});
+        uimenu(f,'Label','Apply Patient Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,0},'Accelerator','N');
+        uimenu(f,'Label','Apply Patient Inverse Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,1},'Accelerator','Y');
 
     end
     
@@ -120,3 +127,12 @@ switch hobj.Checked
         hobj.Checked='on';
 end
 
+function ea_toggle_chirp(hobj,~,~)
+switch hobj.Checked
+    case 'on'
+        ea_setprefs('chirp',0);
+        hobj.Checked='off';
+    case 'off'
+        ea_setprefs('chirp',1);
+        hobj.Checked='on';
+end

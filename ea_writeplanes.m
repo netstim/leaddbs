@@ -14,8 +14,6 @@ function [cuts,expslice]=ea_writeplanes(varargin)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-
-
 options=varargin{1};
 % defaults:
 %elstruct=0;
@@ -85,16 +83,16 @@ if isstruct(elstruct)
     end
     
 else
-    elstruct=[repmat(elstruct,3,1);1];
+    elstruct=[elstruct,1]';
     coordsmm=elstruct;
     elstruct=manualV.mat\elstruct;
     planedim=getdims(manualtracor,1);
-    elstruct=elstruct(planedim);
+    %elstruct=elstruct(planedim);
 end
 %XYZ_src_vx = src.mat \ XYZ_mm;
 
 fid=fopen([options.root,options.patientname,filesep,'cuts_export_coordinates.txt'],'w');
-for side=1:length(options.sides)
+for side=1:options.sides
     %% write out axial images
     for tracor=find(tracorpresent)'
         
@@ -102,7 +100,7 @@ for side=1:length(options.sides)
             
             
             if ~isstruct(elstruct)
-                coords={elstruct};
+                coords={elstruct(1:3)'};
             end
             el=elcnt+options.elspec.numel*(side-1);
             %subplot(2,2,el);
@@ -136,16 +134,9 @@ for side=1:length(options.sides)
             
             
             [planedim,onedim, secdim , dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=getdims(tracor,side);
-            
-            
-            
+   
             %title(['Electrode ',num2str(el-1),', transversal view.']);
-            
-            
-
-
-            
-            
+ 
             [slice,~,boundboxmm,sampleheight]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
             slice=ea_contrast(slice,1,1);
             disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
@@ -176,11 +167,8 @@ for side=1:length(options.sides)
                 try options.atlases=atlases; end
                 cuts=ea_add_overlay(boundboxmm,cuts,tracor,options);
             end
-            
-            
-            
+  
             % Show isovolume
-            
             if options.d3.showisovolume
                 Visoraw=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
                 Viso=spm_vol([options.root,options.patientname,filesep,options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
@@ -260,9 +248,6 @@ for side=1:length(options.sides)
                 
             end
             
-            
-            
-            
             % Plot L, R and sizelegend
             %text(addsubsigned(min(boundboxmm{onedim}),2,plusminusl),mean(boundboxmm{secdim}),Ltxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
             %text(addsubsigned(max(boundboxmm{onedim}),2,plusminusr),mean(boundboxmm{secdim}),Rtxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
@@ -286,7 +271,7 @@ for side=1:length(options.sides)
                 else
                     cmap=[0.9,0.9,0.9];
                 end
-                
+            end
                 % 1. Plot stars
                 
                 for c=1:length(elstruct)
@@ -302,7 +287,7 @@ for side=1:length(options.sides)
                     
                     elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
                     
-                    if (elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts)
+                    if ~isstruct(elstruct) || ((elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts))
                         
                         wstr='w';
                         if options.d3.hlactivecontacts
@@ -313,14 +298,23 @@ for side=1:length(options.sides)
                                 
                             end
                         end
-                       elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
+
+                        warnStruct = warning('off','MATLAB:hg:willberemoved');
+                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
+                        warning(warnStruct);
+
+                        if options.d2.fid_overlay
+                            if isstruct(elstruct)
+                                elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4);
+                            else
+                                pelstruct=manualV.mat*elstruct;
+                                elplt(c)=plot(pelstruct(onedim,elcnt),pelstruct(secdim,elcnt),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4);
+                            end
+                        end
+
                     end
                     
                 end
-                
-                
-                
-                
                 
                 % 2. Plot legend
                 if exist('elplt','var') % if no stars have been plottet, no legend is needed.
@@ -359,9 +353,9 @@ for side=1:length(options.sides)
                 
                 
                 hold off
-            end
+            %end
             
-            
+            axis equal
             % Save results
             if strcmp(figvisible,'on')
                 set(cuts,'visible','on');
@@ -381,9 +375,7 @@ for side=1:length(options.sides)
             expslice=(expslice-min(expslice(:)))/(max(expslice(:))-min(expslice(:))); % set 0 to 1
 
             expslice=crop_img(expslice);
-            
-            
-            
+
             if svfig==1 % only export if figure needs to be saved.
                 if options.d3.showisovolume
                     isofnadd=['_',options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb];
@@ -624,7 +616,6 @@ for side=1:length(coords_mm)
     end
 end
 if options.shifthalfup
-    
     for side=1:length(coords_mm)
         for c=1:length(coords_mm{side})-1
            scoords_mm{side}(c,:)=mean([coords_mm{side}(c,:);coords_mm{side}(c+1,:)],1);
@@ -653,7 +644,9 @@ end
 
 
 function elstruct=testifactivecontacts(elstruct,elspec,c)
-
+if ~isstruct(elstruct)
+    return
+end
 if ~isfield(elstruct(c),'activecontacts')
     elstruct(c).activecontacts{1}=zeros(elspec.numel,1);
     elstruct(c).activecontacts{2}=zeros(elspec.numel,1);

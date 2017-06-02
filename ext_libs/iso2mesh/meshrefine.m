@@ -12,7 +12,7 @@ function [newnode,newelem,newface]=meshrefine(node,elem,varargin)
 %      face: (optional) existing tetrahedral mesh surface triangle list
 %      opt:  options for mesh refinement:
 %        if opt is a Nx3 array, opt is treated as a list of new nodes to
-%          be inserted into the mesh. the new nodes must be located on the 
+%          be inserted into the mesh. the new nodes must be located on the
 %          surface or inside the original mesh. external nodes are
 %          discarded, unless the opt.extcmdopt is specified.
 %        if opt is a vector with a length that equals to that of node,
@@ -26,29 +26,29 @@ function [newnode,newelem,newface]=meshrefine(node,elem,varargin)
 %          opt.reratio: radius-edge ratio, by default, iso2mesh uses 1.414
 %          opt.maxvol: maximum element volume
 %          opt.sizefield: a vector specifying either the desired edge-length
-%              at each node, or the maximum volume constraint within each 
+%              at each node, or the maximum volume constraint within each
 %              tetrahedron, see above for details.
 %          opt.extcmdopt: by default, meshrefine can only insert nodes
 %              that are inside the original mesh. if one prefers to insert
 %              nodes that are outside of the original mesh, one can define
 %              this parameter to specify the meshing option (for tetgen)
-%              for the extended domain, i.e. the convex hull including 
-%              both the original and the external nodes. If not defined, 
+%              for the extended domain, i.e. the convex hull including
+%              both the original and the external nodes. If not defined,
 %              '-Y' option is used by default (prevent tetgen from
 %              inserting new nodes on the surface).
 %          opt.extlabel: when external nodes are inserted, the new elements
 %              will be assigned with an element label to group them
 %              together, by default, this label is 0, unless opt.extlabel
 %              is given
-%          opt.extcorelabel: when external nodes are inserted, par of the 
+%          opt.extcorelabel: when external nodes are inserted, par of the
 %              new elements share the polyhedra between the inserted nodes,
-%              these special elements will be marked by opt.extcorelabel, 
-%              otherwise the label will be set to -1 
+%              these special elements will be marked by opt.extcorelabel,
+%              otherwise the label will be set to -1
 %
 % outputs:
 %      newnode: node coordinates of the tetrahedral mesh
 %      newelem: element list of the tetrahedral mesh
-%      newface: mesh surface element list of the tetrahedral mesh 
+%      newface: mesh surface element list of the tetrahedral mesh
 %             the last column denotes the boundary ID
 %
 % examples:
@@ -72,7 +72,6 @@ function [newnode,newelem,newface]=meshrefine(node,elem,varargin)
 %
 
 exesuff=getexeext;
-exesuff=fallbackexeext(exesuff,'tetgen');
 
 newpt=[];
 sizefield=[];
@@ -163,7 +162,6 @@ if(size(elem,2)==3 && setquality==0)
         error('inserting new point can not be used for surfaces');
     end
     nedge=savegts(node, elem,mwpath('pre_refine.gts'));
-    exesuff=fallbackexeext(getexeext,'gtsrefine');
 elseif(size(elem,2)==3)
     savesurfpoly(node,elem,[],[],[],[],mwpath('pre_refine.poly'));
 else

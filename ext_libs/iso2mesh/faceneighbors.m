@@ -10,7 +10,9 @@ function facenb=faceneighbors(t,opt)
 %     t: tetrahedron element list, 4 columns of integers
 %     opt: if opt='surface', return boundary triangle list 
 %          (should be the same as the face output from v2m)
-%
+%          if opt='rowmajor', same as 'surface', except the 
+%          order of the triangles are in the row-major order
+%%
 %          otherwise, return the element list for each element:
 %          each row contains 4 numbers, representing the element
 %          indices sharing triangular faces [1 2 3],[1 2 4],[1 3 4]
@@ -28,6 +30,7 @@ faces=[t(:,[1,2,3]);
        t(:,[1,2,4]);
        t(:,[1,3,4]);
        t(:,[2,3,4])];
+
 faces=sort(faces,2);
 [foo,ix,jx]=unique(faces,'rows');
 if(isoctavemesh)
@@ -83,6 +86,11 @@ end
 if(nargin==2)
   if(strcmp(opt,'surface'))
 	facenb=faces(find(facenb==0),:);
+  elseif(strcmp(opt,'rowmajor'))
+	index=[1:length(faces)];
+	index=(reshape(index,[],4))';
+	faces=faces(index(:),:);
+	facenb=faces(find(facenb'==0),:);
   else
         error(['supplied option "' opt '" is not supported.']);
   end

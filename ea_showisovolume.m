@@ -40,32 +40,32 @@ for side=1:length(options.sides)
                     Z{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,3),elstruct(sub).coords_mm{side}(cont+1,3)]);
                 end
                 V{side}(cnt)=options.d3.isomatrix{side}(sub,cont);
-                
+
                 cnt=cnt+1;
             end
         end
     end
-    
+
     X{side}=X{side}(:);        Y{side}=Y{side}(:);        Z{side}=Z{side}(:); V{side}=V{side}(:);
     %assignin('base','X',X);
     %assignin('base','Y',Y);
     %assignin('base','Z',Z);
-    
-    
+
+
     bb(1,:)=[min(X{side}),max(X{side})];
     bb(2,:)=[min(Y{side}),max(Y{side})];
     bb(3,:)=[min(Z{side}),max(Z{side})];
     [XI,YI,ZI]=meshgrid(linspace(bb(1,1),bb(1,2),100),linspace(bb(2,1),bb(2,2),100),linspace(bb(3,1),bb(3,2),100));
-    
+
     F = scatteredInterpolant(X{side},Y{side},Z{side},double(V{side}));
     F.ExtrapolationMethod='none';
     VI{side}=F(XI,YI,ZI);
-    
-    
-    
+
+
+
     if options.d3.isovscloud==1 % show interpolated point mesh
-        
-        
+
+
         ipcnt=1;
         for xx=1:10:size(VI{side},1)
             for yy=1:10:size(VI{side},2)
@@ -104,15 +104,15 @@ try        fv{side}=ea_smoothpatch(fv{side},1,100); end
         nc=isocolors(XI,YI,ZI,C,fv{side}.vertices);
         nc=squeeze(ind2rgb(round(nc),jet));
         isopatch(side,1)=patch(fv{side},'FaceVertexCData',nc,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
-        
+
         jetlist=jet;
         ea_spec_atlas(isopatch(side,1),'isovolume',jet,1);
-        
+
     end
-    
-       %ea_exportisovolume(elstruct,options);    
-    patchbutton(side)=uitoggletool(isobar,'CData',ea_get_icn('isovolume',options),'TooltipString',options.d3.isomatrix_name,'OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
-    
+
+       %ea_exportisovolume(elstruct,options);
+    patchbutton(side)=uitoggletool(isobar,'CData',ea_get_icn('isovolume'),'TooltipString',options.d3.isomatrix_name,'OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
+
 end
 
 

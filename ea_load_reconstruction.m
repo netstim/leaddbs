@@ -33,7 +33,17 @@ if exist('reco','var')
         load(fullfile(options.uipatdirs{1},'ea_reconstruction.mat'));
     end
     
-    if options.native
+    if options.native && isfield(options,'loadrecoforviz') % if loading reco for visualization, should return scrf.
+        if isfield(reco,'scrf')
+            coords_mm=reco.scrf.coords_mm;
+            trajectory=reco.scrf.trajectory;
+            markers=reco.scrf.markers;
+        else
+            coords_mm=reco.native.coords_mm;
+            trajectory=reco.native.trajectory;
+            markers=reco.native.markers;
+        end
+    elseif options.native && ~isfield(options,'loadrecoforviz')
         coords_mm=reco.native.coords_mm;
         trajectory=reco.native.trajectory;
         markers=reco.native.markers;

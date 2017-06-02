@@ -1,0 +1,16 @@
+1 Left_red_nucleus
+3 Left_substantia_nigra
+5 Left_subthalamic_nucleus
+7 Left_caudate
+9 Left_putamen
+11 Left_globus_pallidus_externa_
+13 Left_globus_pallidus_interna_
+15 Left_thalamus
+2 Right_red_nucleus
+4 Right_Substantia_nigra
+6 Right_subthalamic_nucleus
+8 Right_caudate
+10 Right_putamen
+12 Right_globus_pallidus_externa_
+14 Right_globus_pallidus_interna_
+16 Right_thalamus

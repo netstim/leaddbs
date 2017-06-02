@@ -5,6 +5,8 @@ fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
+
+
 if ischar(movingimage)
     movingimage={movingimage};
 elseif ~iscell(movingimage)
@@ -69,6 +71,7 @@ if slabsupport
     end
     
 else
+   slabspresent=0;
    impmasks=repmat({'nan'},length(movingimage),1); 
 end
 
@@ -76,11 +79,12 @@ end
 if nargin>3
     weights=varargin{4};
     metrics=varargin{5};
-%     options=varargin{6};
+    options=varargin{6};
 else
     weights=ones(length(fixedimage),1);
     metrics=repmat({'MI'},length(fixedimage),1);
 end
+useSyN=options.prefs.machine.normsettings.ants_synmode;
 
 
 directory=fileparts(movingimage{1});
@@ -125,19 +129,23 @@ end
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
+if any(imgsize>256)
+    rigidshrinkfactors='12x8x4x2';
+    affineshrinkfactors='12x8x4x2';
+    synshrinkfactors='12x8x4x2';
+else
+    rigidshrinkfactors='8x4x2x1';
+    affineshrinkfactors='8x4x2x1';
+    synshrinkfactors='6x4x2x1';
+end
+rigidconvergence='[1000x500x250x100,1e-6,10]';
+rigidsmoothingssigmas='3x2x1x0';
 
-rigidconvergence='[1000x500x250x0,1e-6,10]';
-rigidshrinkfactors='12x8x4x2';
-rigidsmoothingssigmas='4x3x2x1vox';
+affineconvergence='[1000x500x250x100,1e-6,10]';
+affinesmoothingssigmas='3x2x1x0';
 
-affineconvergence='[1000x500x250x0,1e-6,10]';
-affineshrinkfactors='12x8x4x2';
-affinesmoothingssigmas='4x3x2x1vox';
-
-synconvergence='[1000x500x250x0,1e-6,10]';
-synshrinkfactors='8x4x2x1';
-synsmoothingssigmas='4x3x2x1vox';
-
+synconvergence='[100x70x50x20,1e-6,10]';
+synsmoothingssigmas='3x2x1x0';
 
 
 rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1}, ',1]' ...
@@ -184,7 +192,17 @@ for fi=1:length(fixedimage)
             ' --metric ','MI','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
-synstage = [' --transform SyN[0.3,3.0,0.0]'...
+switch useSyN
+    case 'SyN'
+        tsuffix='[0.1,3.0,0.0]';
+    case 'BSplineSyN'
+        tsuffix='[0.1,26,0,3]'; % as in example script in Tustison 2013
+    otherwise
+        tsuffix='[0.1,26,0,3]'; % need to find proper values.       
+end
+
+
+synstage = [' --transform ',useSyN,tsuffix...
     ' --convergence ', synconvergence, ...
     ' --shrink-factors ', synshrinkfactors ...
     ' --smoothing-sigmas ', synsmoothingssigmas, ...
@@ -211,7 +229,7 @@ end
 
 
 if slabspresent
-    slabstage=[' --transform SyN[0.3,3.0,0.0]'...
+    slabstage=[' --transform ',useSyN,'[0.3,3.0,0.0]'...
         ' --convergence ', synconvergence, ...
         ' --shrink-factors ', synshrinkfactors ...
         ' --smoothing-sigmas ', synsmoothingssigmas, ...
@@ -250,7 +268,7 @@ if subcorticalrefine
     else
         movingmask='NULL';
     end
-    synmaskstage = [' --transform SyN[0.2,3.0,0.0]', ...
+    synmaskstage = [' --transform ',useSyN,'[0.2,3.0,0.0]', ...
         ' --convergence ', synmaskconvergence, ...
         ' --shrink-factors ', synmaskshrinkfactors,  ...
         ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
@@ -286,6 +304,10 @@ cmd = [ANTS, ' --verbose 1', ...
     ' --write-composite-transform 1', ...
     rigidstage, affinestage, synstage, slabstage, synmaskstage];
 
+display(cmd)
+fid=fopen([directory,'ea_ants_command.txt'],'a');
+fprintf(fid,[datestr(datetime('now')),':\n',cmd,'\n\n']);
+fclose(fid);
 
 if ~ispc
     system(['bash -c "', cmd, '"']);

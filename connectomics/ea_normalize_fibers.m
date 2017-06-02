@@ -17,7 +17,7 @@ try
         specs.vox=dnii.voxsize;
         specs.affine=dnii.mat;
 
-        ea_ftr2trk(ftrfname,directory,specs,options); % export normalized ftr to .trk
+        ea_ftr2trk(ftrfname,directory,specs); % export normalized ftr to .trk
         disp('Done.');
 	end
 end
@@ -157,7 +157,7 @@ try
     specs.affine=dnii.mat;
 
     [~,ftrfname]=fileparts(options.prefs.FTR_normalized);
-    ea_ftr2trk(ftrfname,[directory,'connectomes',filesep,'dMRI',filesep],specs,options); % export normalized ftr to .trk
+    ea_ftr2trk(ftrfname,[directory,'connectomes',filesep,'dMRI',filesep],specs); % export normalized ftr to .trk
     disp('Done.');
 end
 

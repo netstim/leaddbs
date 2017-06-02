@@ -277,7 +277,9 @@ try M.elstruct(deleteentry)=[]; end
 try M.stimparams(deleteentry)=[]; end
 
 for cvar=1:length(M.clinical.vars)
-    M.clinical.vars{cvar}(deleteentry,:)=[];
+    try
+        M.clinical.vars{cvar}(deleteentry,:)=[];
+    end
 end
 
 try
@@ -363,7 +365,9 @@ try
         M.elstruct(pt).activecontacts=M.S(pt).activecontacts;
     end
 end
-<<<<<<< HEAD
+options.groupmode=1;
+options.modality=3; % use template image
+options.patient_list=M.patient.list;
 
 % mer development
 vizstruct.elstruct=M.elstruct(ptidx);
@@ -422,11 +426,6 @@ try
 catch
     resultfig=ea_elvis(options,M.elstruct(ptidx));
 end
-=======
-options.groupmode=1;
-options.patient_list=M.patient.list;
-resultfig=ea_elvis(options,M.elstruct(get(handles.patientlist,'Value')));
->>>>>>> master
 
 ea_busyaction('off',handles.leadfigure,'group');
 
@@ -1393,7 +1392,6 @@ ea_busyaction('on',handles.leadfigure,'group');
 nudir=[nudir,filesep];
 M=ea_initializeM;
 
-
 set(handles.groupdir_choosebox,'String',nudir);
 
 try % if file already exists, load it (and overwrite M).
@@ -1861,10 +1859,11 @@ if options.d3.showisovolume || options.expstatvat.do % regressors be used ? iter
         M.isomatrix=allisomatrices{reg};
         M.isomatrix_name=allisonames{reg};
         options.shifthalfup=0;
-        try options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options);
-        if size(options.d3.isomatrix{1},2)==3 % pairs
-        options.shifthalfup=1;
-        end
+        try
+            options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options);
+            if size(options.d3.isomatrix{1},2)==3 % pairs
+                options.shifthalfup=1;
+            end
         end
 
         if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen

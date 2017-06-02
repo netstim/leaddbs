@@ -54,7 +54,7 @@ if ~isfield(options.prefs,'firstrun') % first run.
         'Any suggestions are more than welcome (andreas.horn@charite.de). \n'
         ]);
 
-    copyfile([ea_getearoot,'ea_prefs_default.m'],[ea_gethome,'.ea_prefs.m']);
+    copyfile([ea_getearoot,'common',filesep,'ea_prefs_default.m'],[ea_gethome,'.ea_prefs.m']);
     fid = fopen([ea_gethome,'.ea_prefs.m'],'a');
     fprintf(fid, '\n\nprefs.firstrun=''off'';\n');
     fclose(fid);

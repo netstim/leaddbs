@@ -1,6 +1,6 @@
 function peerfolders=ea_getmagetpeers(options)
 
-switch options.normalize.settings.peerset
+switch options.prefs.machine.normsettings.maget_peerset
     case 'Peers from selected cohort'
         if length(options.uipatdirs)<3
             ea_error('Please select more than 1 subject/patient when selecting "Peers from selected cohort" in the MAGeT Normalization settings.');

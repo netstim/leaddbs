@@ -42,8 +42,5 @@ function d2=ea_tdhandles2options(tdhandles,fd2)
  try   d2.bbsize=str2double(get(tdhandles.bbsize,'String')); end
 
 
+ try d2.fid_overlay=get(tdhandles.tdfidcheck,'Value'); end
  
- try % additional values when called from lead_anatomy
-     d2.tracor=get(tdhandles.tracor,'Value');
-     d2.depth=str2double(get(tdhandles.depth,'String'));
- end

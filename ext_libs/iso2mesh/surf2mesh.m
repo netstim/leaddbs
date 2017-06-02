@@ -22,7 +22,7 @@ function [node,elem,face,success]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,h
 % outputs:
 %      node: output, node coordinates of the tetrahedral mesh
 %      elem: output, element list of the tetrahedral mesh
-%      face: output, mesh surface element list of the tetrahedral mesh 
+%      face: output, mesh surface element list of the tetrahedral mesh
 %             the last column denotes the boundary ID
 %
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
@@ -31,7 +31,6 @@ function [node,elem,face,success]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,h
 fprintf(1,'generating tetrahedral mesh from closed surfaces ...\n');
 
 exesuff=getexeext;
-exesuff=fallbackexeext(exesuff,'tetgen');
 
 if(keepratio>1 | keepratio<0)
    warn(['The "keepratio" parameter is required to be between 0 and 1. '...
@@ -105,37 +104,25 @@ catch
     end
 end
 
-
-
-
 if(isempty(cmdopt))
-
-  system([' "' mcpath('tetgen_latest') exesuff '" -A -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+  system([' "' mcpath('tetgen') exesuff '" -A -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 else
   system([' "' mcpath('tetgen') exesuff '" ' cmdopt ' "' mwpath('post_vmesh.poly') '"']);
 end
- % system([' "' mcpath('tetgen') exesuff '' mwpath('post_vmesh.poly') '"']);
 
 % read in the generated mesh
 success=1;
 try
     [node,elem,face]=readtetgen(mwpath('post_vmesh.1'));
     fprintf(1,'volume mesh generation is complete\n');
-    
 catch
-    
-      system([' "' mcpath('tetgen_latest') exesuff '" -A -T1e-10 -Y -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
-
-    
-    system([' "' mcpath('tetgen_latest') exesuff '" -A -d -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
-    
-    system([' "' mcpath('tetgen_latest') exesuff '" -A -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' ' mwpath('post_vmesh.1.face'),' ',mwpath('post_vmesh.1.node') '']);
+	system([' "' mcpath('tetgen') exesuff '" -A -T1e-10 -Y -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+    system([' "' mcpath('tetgen') exesuff '" -A -d -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+    system([' "' mcpath('tetgen') exesuff '" -A -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' ' mwpath('post_vmesh.1.face'),' ',mwpath('post_vmesh.1.node') '']);
     try
-        
         [node,elem,face]=readtetgen(mwpath('post_vmesh.2'));
         fprintf(1,'volume mesh generation is complete\n');
     catch
-        
         node=[];
         elem=[];
         face=[];

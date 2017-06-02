@@ -112,14 +112,16 @@ for atlas=1:length(atlases.names)
                 end
                 jetlist=jet;
                 atlases.colormap=jetlist;
-                
+                if round(atlases.colors(atlas))==0 % rounding error for large atlases.
+                    atlases.colors(atlas)=1;
+                end
                 try % see if there is explicit color information for this atlas
                     
                     atlasc=squeeze(jetlist(round(atlases.colors(atlas)),:)); % color for toggle button icon
                 catch
                     atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
                     atlasc=squeeze(jetlist(round(atlases.colors(atlas)),:)); % color for toggle button icon
-                    
+             
                 end
                 
                 colorf=zeros(size(slice,1),size(slice,2),3);

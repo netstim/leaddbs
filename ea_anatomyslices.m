@@ -16,51 +16,56 @@ zsliceplot=getappdata(resultfig,'zsliceplot');
 
 %% Parse togglestates
 if ~isempty(xsliceplot) && ~togglestates.refreshcuts
-switch togglestates.cutview
-    case 'xcut'
-        set(xsliceplot,'Visible','on')
-        set(ysliceplot,'Visible','off')
-        set(zsliceplot,'Visible','off')
-        ea_settransparency(resultfig,togglestates)
-        setappdata(resultfig,'xsliceplot',xsliceplot);
-        setappdata(resultfig,'ysliceplot',ysliceplot);
-        setappdata(resultfig,'zsliceplot',zsliceplot);
-    case 'ycut'
-        set(xsliceplot,'Visible','off')
-        set(ysliceplot,'Visible','on')
-        set(zsliceplot,'Visible','off')
-        ea_settransparency(resultfig,togglestates)
-        setappdata(resultfig,'xsliceplot',xsliceplot);
-        setappdata(resultfig,'ysliceplot',ysliceplot);
-        setappdata(resultfig,'zsliceplot',zsliceplot);
-    case 'zcut'
-        set(xsliceplot,'Visible','off')
-        set(ysliceplot,'Visible','off')
-        set(zsliceplot,'Visible','on')
-        ea_settransparency(resultfig,togglestates)
-        setappdata(resultfig,'xsliceplot',xsliceplot);
-        setappdata(resultfig,'ysliceplot',ysliceplot);
-        setappdata(resultfig,'zsliceplot',zsliceplot);
-    case '3d'
-        set(xsliceplot,'Visible','on')
-        set(ysliceplot,'Visible','on')
-        set(zsliceplot,'Visible','on')
-        ea_settransparency(resultfig,togglestates)
-        setappdata(resultfig,'xsliceplot',xsliceplot);
-        setappdata(resultfig,'ysliceplot',ysliceplot);
-        setappdata(resultfig,'zsliceplot',zsliceplot);
-end
+    switch togglestates.cutview
+        case 'xcut'
+            set(xsliceplot,'Visible','on')
+            set(ysliceplot,'Visible','off')
+            set(zsliceplot,'Visible','off')
+            ea_settransparency(resultfig,togglestates)
+            setappdata(resultfig,'xsliceplot',xsliceplot);
+            setappdata(resultfig,'ysliceplot',ysliceplot);
+            setappdata(resultfig,'zsliceplot',zsliceplot);
+        case 'ycut'
+            set(xsliceplot,'Visible','off')
+            set(ysliceplot,'Visible','on')
+            set(zsliceplot,'Visible','off')
+            ea_settransparency(resultfig,togglestates)
+            setappdata(resultfig,'xsliceplot',xsliceplot);
+            setappdata(resultfig,'ysliceplot',ysliceplot);
+            setappdata(resultfig,'zsliceplot',zsliceplot);
+        case 'zcut'
+            set(xsliceplot,'Visible','off')
+            set(ysliceplot,'Visible','off')
+            set(zsliceplot,'Visible','on')
+            ea_settransparency(resultfig,togglestates)
+            setappdata(resultfig,'xsliceplot',xsliceplot);
+            setappdata(resultfig,'ysliceplot',ysliceplot);
+            setappdata(resultfig,'zsliceplot',zsliceplot);
+        case '3d'
+            set(xsliceplot,'Visible','on')
+            set(ysliceplot,'Visible','on')
+            set(zsliceplot,'Visible','on')
+            ea_settransparency(resultfig,togglestates)
+            setappdata(resultfig,'xsliceplot',xsliceplot);
+            setappdata(resultfig,'ysliceplot',ysliceplot);
+            setappdata(resultfig,'zsliceplot',zsliceplot);
+    end
 end
 
 if ~isempty(xsliceplot) && ~isequal(togglestates.xyztoggles,[1 1 1]) && strcmp(togglestates.cutview,'3d')
     if togglestates.xyztoggles(1)
-        set(xsliceplot,'Visible','on'); else
-        set(xsliceplot,'Visible','off'); end
+        set(xsliceplot,'Visible','on');
+    else
+        set(xsliceplot,'Visible','off');
+    end
     if togglestates.xyztoggles(2)
-        set(ysliceplot,'Visible','on'); else
-        set(ysliceplot,'Visible','off'); end
+        set(ysliceplot,'Visible','on');
+    else
+        set(ysliceplot,'Visible','off');
+    end
     if togglestates.xyztoggles(3)
-        set(zsliceplot,'Visible','on'); else
+        set(zsliceplot,'Visible','on');
+    else
         set(zsliceplot,'Visible','off');
     end    
     ea_settransparency(resultfig,togglestates)
@@ -72,16 +77,15 @@ end
 if (~togglestates.refreshcuts) && (~togglestates.refreshview)
     return
 end
-%% Render slices
 
+
+%% Render slices
 V=getappdata(resultfig,'V');
 inverted=getappdata(resultfig,'inverted');
 if isempty(inverted)
     inverted=0;
 end
 options.d2.writeatlases=1;
-
-
 
 if ~isfield(options,'native')
     options.native=0;
@@ -90,7 +94,6 @@ end
 if togglestates.refreshcuts % reload image(s)
     clear V
     [V1,V2,V3]=ea_assignbackdrop(togglestates.template,options,'Patient',options.native);
-
     V{1}=V1; V{2}=V2; V{3}=V3;
     setappdata(resultfig,'templateused',togglestates.template); % refresh used template.
 end
@@ -100,28 +103,29 @@ if ~inverted==togglestates.tinvert
 end
 
 try
-if get(controlhandles.slicepopup,'Value')==1
+    if get(controlhandles.slicepopup,'Value')==1
 
-    togglestates.xyzmm=[togglestates.xyzmm';1];
+        togglestates.xyzmm=[togglestates.xyzmm';1];
 
-    try
-        xyzv= V{1}.mat \ togglestates.xyzmm;
-    catch
-        keyboard
+        try
+            xyzv= V{1}.mat \ togglestates.xyzmm;
+        catch
+            keyboard
+        end
+
+        xyzv=round(xyzv(1:3)); % now in voxel coordinates.
+        %keyboard
+
+    elseif get(controlhandles.slicepopup,'Value')==2
+
+        xyzv = togglestates.xyzmm;
+        % xyzv= V{1}.mat * togglestates.xyzmm;
+
     end
-    
-    xyzv=round(xyzv(1:3)); % now in voxel coordinates.
-    %keyboard
-    
-elseif get(controlhandles.slicepopup,'Value')==2
-
-    xyzv= togglestates.xyzmm;
-    % xyzv= V{1}.mat * togglestates.xyzmm;
-
-end
 catch % direct call from script.
-        xyzv= V{1}.mat \ [togglestates.xyzmm,1]';
+    xyzv = V{1}.mat \ [togglestates.xyzmm,1]';
 end
+
 % balance the contrast
 % if togglestates.refreshcuts
 % [balanced,colormap] = ea_autocontrast(double(V{1}.private.dat),2.5);
@@ -139,9 +143,7 @@ if togglestates.xyztoggles(2)
 end
 
 if togglestates.xyztoggles(3)
-     
-    zsliceplot=slice3i(resultfig,V{1}.private.dat,V{1}.mat,3,xyzv(3),controlhandles);    
-    
+	zsliceplot=slice3i(resultfig,V{1}.private.dat,V{1}.mat,3,xyzv(3),controlhandles);
 end
 
 %colormap(cmap);
@@ -157,7 +159,7 @@ setappdata(resultfig,'inverted',inverted);
 
 function slice=ea_invert(slice,flag)
 if flag
-slice=slice*-1+max(slice(:));
+    slice=slice*-1+max(slice(:));
 end
 
 
@@ -170,4 +172,3 @@ slice=(slice/(maxv-minv))*255; % 255 highest number.
 imin=repmat(uint8((((slice)))),[1,1,4]);
 imin(:,:,4)=uint8(togglestates.xyztransparencies(dim));
 
-    

@@ -1,0 +1,2 @@
+The atlas was smoothed using an isotropic Gaussian kernel with FWHM of 3x3x3 mm.
+Moreover, it was resliced to 0.4 mm isotropic.

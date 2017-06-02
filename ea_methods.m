@@ -29,6 +29,7 @@ if exist('refs','var') % add refs
     end
 end
 
+
 expstr=[expstr,'\n***\n\n'];
 
 if options.prefs.machine.methods_show
