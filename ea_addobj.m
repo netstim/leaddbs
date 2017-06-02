@@ -22,16 +22,16 @@ switch type
             end
             addfibertract([pana,fina],resultfig,addht,fina,[],0,options);
         end
-        
+
     case 'roi' % atlas
-        
+
         % open dialog
         [fina,pana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-        
-      
-        
+
+
+
         if iscell(fina) % multiple files
-            
+
             for fi=1:length(fina)
                 addroi([pana,fina{fi}],resultfig,addht,fina{fi},options);
             end
@@ -41,14 +41,14 @@ switch type
             end
             addroi([pana,fina],resultfig,addht,fina,options);
         end
-        
-        
+
+
     case 'tractmap'
         [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
         [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
         addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,tfina,rfina,options)
-        
-        
+
+
 end
 
 axis fill
@@ -91,9 +91,9 @@ for ftract=1:fibno
     idcnt=idcnt+idx(ftract);
     ftdists=d(thisfibentries);
     [mindist,mindistix]=min(ftdists);
-    
+
     smallftdists=ftdists<2;
-    
+
     if any(smallftdists)
         minidentifier=thisfibentries(smallftdists);
         weights=weights(ix(minidentifier));
@@ -121,7 +121,7 @@ addobjr=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.3);
 
 % add toggle button:
 
-addbutn=uitoggletool(addht,'CData',ea_get_icn('fiber',options),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@atlasvisible,addobjr},'OffCallback',{@atlasinvisible,addobjr},'State','on');
+addbutn=uitoggletool(addht,'CData',ea_get_icn('fiber'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@atlasvisible,addobjr},'OffCallback',{@atlasinvisible,addobjr},'State','on');
 %storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
 drawnow
 
@@ -167,14 +167,14 @@ fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
 fv.vertices=[fv.vertices;fvc.vertices];
 
 if ischar(options.prefs.hullsimplify)
-    
+
     % get to 700 faces
     simplify=700/length(fv.faces);
     fv=reducepatch(fv,simplify);
-    
+
 else
     if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-        
+
         fv=reducepatch(fv,options.prefs.hullsimplify);
     elseif options.prefs.hullsimplify>1
         simplify=options.prefs.hullsimplify/length(fv.faces);
@@ -219,28 +219,28 @@ end
 
 fib_copy.fibs=thisset; % backup of whole original fiberset will be stored in figure.
 fib_copy.idx=fibidx;
-    
+
 
 
 if ~isempty(connect) % select fibers based on connecting roi info (i.e. delete all other fibers).
-    
-    
+
+
     for roi=1:length(connect.rois) % check connectivities..
-        
-        
+
+
         in=inhull(thisset,connect.xyz{roi})';
-        
+
         selectedfibs{roi}=unique(idxv(in));
-        
+
     end
-    
+
     selectedfibs=unique(cell2mat(selectedfibs(:)));
-    
+
     thisset=mat2cell(thisset,fibidx,3)';
     thisset=thisset(selectedfibs); % choose selected fibers.
-    
-    
-    
+
+
+
 end
 
 dispercent(0,'Plotting fibers');
@@ -250,7 +250,7 @@ fibmax=length(thisset);
 keyboard
 for fib=1:fibmax
     dispercent(fib/fibmax);
-    
+
     if size(thisset{fib},1)~=3
         thisset{fib}=thisset{fib}';
     end
@@ -267,7 +267,7 @@ for fib=1:fibmax
         [thisfib(3,:);thisfib(3,:)],...
         [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
     clear thisfib
-    
+
 end
 dispercent(100,'end');
 
@@ -277,7 +277,7 @@ set(addobjr(:),'EdgeAlpha',0.05);
 
 axis fill
 
-addbutn=uitoggletool(addht,'CData',ea_get_icn('fibers',options),'TooltipString',fina,'OnCallback',{@atlasvisible,addobjr},'OffCallback',{@atlasinvisible,addobjr},'State','on');
+addbutn=uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',fina,'OnCallback',{@atlasvisible,addobjr},'OffCallback',{@atlasinvisible,addobjr},'State','on');
 storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'tract',fib_copy,ft,options); % store rendering in figure.
 
 
@@ -327,7 +327,7 @@ switch type
             AL.GUI.FTS(length(AL.FTS)).ROI(roi)=0;
         end
         AL.FTSDATA{end+1}=data;
-            
+
         end
     case 'roi'
         AL.ROI{end+1}=obj;
@@ -335,7 +335,7 @@ switch type
         AL.ROIFILES{end+1}=path;
         AL.ROIDATA{end+1}=data;
         for ft=1:length(AL.FTS) % add connectivity data
-           AL.GUI.FTS(ft).ROI(end+1)=0; 
+           AL.GUI.FTS(ft).ROI(end+1)=0;
         end
 end
 
@@ -350,9 +350,9 @@ if ~isempty(AL.FTS) % only build fibertracking menu if there is at least one fib
         AL.MENU.FTMENU(ft) = uimenu(AL.MENU.MAINMENU,'Label',AL.FTSNAMES{ft});
         for roi=1:length(AL.ROI)
             AL.MENU.ROIMENU(ft,roi)=uimenu(AL.MENU.FTMENU(ft),'Label',AL.ROINAMES{roi},'Callback',{@dotracking,ft,roi,resultfig,addht,options});
-         
+
             set(AL.MENU.ROIMENU(ft,roi),'Checked',binary2onoff(AL.GUI.FTS(ft).ROI(roi))) % set checks on menu.
-        
+
         end
     end
 end
@@ -416,7 +416,7 @@ coords=V.mat*XYZ;
 coords=coords(1:3,:)';
 
 function indcol=detcolor(mat) % determine color based on traversing direction.
-    
+
 xyz=abs(diff(mat,1,2));
 rgb=xyz/max(xyz(:));
 
@@ -434,13 +434,13 @@ if nargin==2
     if strcmp(varargin{2},'end')
         fprintf('\n')
         fprintf('\n')
-        
+
         fprintf('\n')
-        
+
     else
         fprintf(1,[varargin{2},':     ']);
-        
-        
+
+
     end
 else
     fprintf(1,[repmat('\b',1,(length(num2str(percent))+1)),'%d','%%'],percent);
@@ -564,14 +564,14 @@ switch p
     case 2
         % really simple for 2-d
         nrmls = (xyz(tess(:,1),:) - xyz(tess(:,2),:)) * [0 1;-1 0];
-        
+
         % Any degenerate edges?
         del = sqrt(sum(nrmls.^2,2));
         degenflag = (del<(max(del)*10*eps));
         if sum(degenflag)>0
             warning('inhull:degeneracy',[num2str(sum(degenflag)), ...
                 ' degenerate edges identified in the convex hull'])
-            
+
             % we need to delete those degenerate normal vectors
             nrmls(degenflag,:) = [];
             nt = size(nrmls,1);
@@ -603,7 +603,7 @@ switch p
         if sum(degenflag)>0
             warning('inhull:degeneracy',[num2str(sum(degenflag)), ...
                 ' degenerate simplexes identified in the convex hull'])
-            
+
             % we need to delete those degenerate normal vectors
             nrmls(degenflag,:) = [];
             nt = size(nrmls,1);

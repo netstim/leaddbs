@@ -40,10 +40,10 @@ set(resultfig, 'Position', ssz); % Maximize figure.
 ht=uitoolbar(resultfig);
 
 % add custom rotator:
-uibjs.rotate3dtog=uitoggletool(ht,'CData',ea_get_icn('rotate',options),'TooltipString','Rotate 3D','OnCallback',{@ea_rotate,'on'},'OffCallback',{@ea_rotate,'off'},'State','off');
-uibjs.magnifyplus=uitoggletool(ht,'CData',ea_get_icn('magnplus',options),'TooltipString','Zoom In','OnCallback',{@ea_zoomin,'on'},'OffCallback',{@ea_zoomin,'off'},'State','off');
-uibjs.magnifyminus=uitoggletool(ht,'CData',ea_get_icn('magnminus',options),'TooltipString','Zoom Out','OnCallback',{@ea_zoomout,'on'},'OffCallback',{@ea_zoomout,'off'},'State','off');
-uibjs.handtog=uitoggletool(ht,'CData',ea_get_icn('hand',options),'TooltipString','Pan Scene','OnCallback',{@ea_pan,'on'},'OffCallback',{@ea_pan,'off'},'State','off');
+uibjs.rotate3dtog=uitoggletool(ht,'CData',ea_get_icn('rotate'),'TooltipString','Rotate 3D','OnCallback',{@ea_rotate,'on'},'OffCallback',{@ea_rotate,'off'},'State','off');
+uibjs.magnifyplus=uitoggletool(ht,'CData',ea_get_icn('magnplus'),'TooltipString','Zoom In','OnCallback',{@ea_zoomin,'on'},'OffCallback',{@ea_zoomin,'off'},'State','off');
+uibjs.magnifyminus=uitoggletool(ht,'CData',ea_get_icn('magnminus'),'TooltipString','Zoom Out','OnCallback',{@ea_zoomout,'on'},'OffCallback',{@ea_zoomout,'off'},'State','off');
+uibjs.handtog=uitoggletool(ht,'CData',ea_get_icn('hand'),'TooltipString','Pan Scene','OnCallback',{@ea_pan,'on'},'OffCallback',{@ea_pan,'off'},'State','off');
 setappdata(resultfig,'uibjs',uibjs);
 
 
@@ -78,12 +78,12 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         if nargin>1
             multiplemode=1;
             elstruct=varargin{2};
-            
+
             if options.d3.mirrorsides
-               elstruct=ea_mirrorsides(elstruct); 
+               elstruct=ea_mirrorsides(elstruct);
                options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix);
             end
-            
+
         else
             multiplemode=0;
             options.loadrecoforviz=1; % add flag to load scrf entry if in native mode.
@@ -141,7 +141,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         try
             set(el_label,'Visible','off');
-            ellabeltog=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Electrode labels','OnCallback',{@objvisible,el_label},'OffCallback',{@objinvisible,el_label},'State','off');
+            ellabeltog=uitoggletool(ht,'CData',ea_get_icn('labels'),'TooltipString','Electrode labels','OnCallback',{@objvisible,el_label},'OffCallback',{@objinvisible,el_label},'State','off');
         end
 
         cnt=1;
@@ -152,18 +152,18 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     else
                         caption{1}='Electrode_Left'; caption{2}='Electrode_Right';
                     end
-                    eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
-                    eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode',options),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
-                    
+                    eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
+                    eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
+
                     if exist([options.uipatdirs{pt} '/cortex/CortElecs.mat'],'file')
                     vars = whos('-file',[options.uipatdirs{pt} '/cortex/CortElecs.mat']);
-                    CortElecs = load([options.uipatdirs{pt} '/cortex/CortElecs.mat']);    
+                    CortElecs = load([options.uipatdirs{pt} '/cortex/CortElecs.mat']);
                         if ismember('Left',{vars.name})
                             hold on; plot3(CortElecs.Left(:,1),CortElecs.Left(:,2),CortElecs.Left(:,3),'.','color','r','markersize',10)
-                            ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip',options),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
+                            ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
                         end
                         if ismember('Right',{vars.name})
-                            ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip',options),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
+                            ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
                         end
                     end
                     cnt=cnt+2;
@@ -175,13 +175,13 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         % Initialize Stimulation-Button
 
-        stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation',options),'TooltipString','Stimulation Control Figure','ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
+        stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation'),'TooltipString','Stimulation Control Figure','ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
 
     else
         options.writeoutstats=0; % if no electrodes are there, stats can't be written.
         elstruct=struct;
     end
-    
+
 else
     options.writeoutstats=0; % if no electrodes are there, stats can't be written.
     elstruct=struct;
@@ -191,25 +191,25 @@ end
 
 % Initialize Sliceview-Button
 
-slicebutton=uipushtool(ht,'CData',ea_get_icn('slices',options),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
+slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
 
 if options.prefs.env.dev;
 % Initialize MER-Button
-merbutton=uipushtool(ht,'CData',ea_get_icn('mer',options),'TooltipString','MER Control Figure','ClickedCallback',{@openmerviewer,resultfig,options});
+merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),'TooltipString','MER Control Figure','ClickedCallback',{@openmerviewer,resultfig,options});
 end
 % Initialize Convis-Button
-convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome',options),'TooltipString','Connectivity Visualization','ClickedCallback',{@openconnectomeviewer,resultfig,options});
+convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),'TooltipString','Connectivity Visualization','ClickedCallback',{@openconnectomeviewer,resultfig,options});
 
 % Initialize FS Cortex-Button
-corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex',options),'TooltipString','Cortical Reconstruction Visualization','ClickedCallback',{@opencortexviewer,resultfig,options});
+corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),'TooltipString','Cortical Reconstruction Visualization','ClickedCallback',{@opencortexviewer,resultfig,options});
 
 % Initialize Cortical Strip-Button
-% cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip',options),'TooltipString','Cortical Reconstruction Visualization','ClickedCallback',{@opencortelsviewer,resultfig,options});
+% cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString','Cortical Reconstruction Visualization','ClickedCallback',{@opencortelsviewer,resultfig,options});
 
 % Show atlas data
 if options.d3.writeatlases
     [atlases,colorbuttons,atlassurfs]=ea_showatlas(resultfig,elstruct,options);
-    
+
     %if length(atlases.names)>6 % only open up for long atlas lists by default.
     ea_openatlascontrol([],[],atlases,resultfig,options);
     %end
@@ -246,7 +246,7 @@ if options.d3.showisovolume
     for reg=1:length(allisomatrices)
         options.d3.isomatrix=allisomatrices{reg};
         options.d3.isomatrix_name=allisonames{reg};
-        
+
 
         ea_showisovolume(resultfig,elstruct,options);
     end
@@ -267,32 +267,32 @@ hold on
 ea_show_light(resultfig,1);
 % set(lightbulb, 'Visible', 'off');
 
-lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'cam_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'cam_lamp')},'State','on');
-clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'ceiling_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'ceiling_lamp')},'State','on');
-llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'left_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'left_lamp')},'State','on');
-rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb',options),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'right_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
+lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb'),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'cam_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'cam_lamp')},'State','on');
+clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb'),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'ceiling_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'ceiling_lamp')},'State','on');
+llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb'),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'left_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'left_lamp')},'State','on');
+rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb'),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'right_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
 
 
 % Initialize HD-Export button
 
-hdsavebutton=uipushtool(ht,'CData',ea_get_icn('save',options),'TooltipString','Save Scene','ClickedCallback',@export_hd);
-dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth',options),'TooltipString','Save Scene with depth of field','ClickedCallback',{@ea_export_depth_of_field,resultfig});
+hdsavebutton=uipushtool(ht,'CData',ea_get_icn('save'),'TooltipString','Save Scene','ClickedCallback',@export_hd);
+dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth'),'TooltipString','Save Scene with depth of field','ClickedCallback',{@ea_export_depth_of_field,resultfig});
 
 
 % Initialize Video-Export button
 
-videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video',options),'TooltipString','Save video','ClickedCallback',{@export_video,options});
+videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video'),'TooltipString','Save video','ClickedCallback',{@export_video,options});
 
 
 % Init hard_electrode_view button
 if isfield(options,'modality')
 if options.modality==2
-    electrodesegmentbutton=uitoggletool(ht,'CData',ea_get_icn('electrode_segment',options),'TooltipString','Auto-Segment electrode from postoperative acquisition','OnCallback',{@ea_segment_electrode,options,resultfig,'on'},'OffCallback',{@ea_segment_electrode,options,resultfig,'off'},'State','off');
+    electrodesegmentbutton=uitoggletool(ht,'CData',ea_get_icn('electrode_segment'),'TooltipString','Auto-Segment electrode from postoperative acquisition','OnCallback',{@ea_segment_electrode,options,resultfig,'on'},'OffCallback',{@ea_segment_electrode,options,resultfig,'off'},'State','off');
 end
 end
 % Initialize Export to Lead-Server button
 
-lsbutton=uipushtool(ht,'CData',ea_get_icn('server',options),'TooltipString','Export to Server','ClickedCallback',{@ea_export_server,options});
+lsbutton=uipushtool(ht,'CData',ea_get_icn('server'),'TooltipString','Export to Server','ClickedCallback',{@ea_export_server,options});
 
 hold off
 
@@ -493,7 +493,7 @@ if ~isempty(merwin) && isvalid(merwin)
     % tmp = parula;
     % colormap = repmat(tmp(end:-2:1,:),[4 1]); clear tmp
     %colormap = [1 1 0; 0 0 1];
-    
+
     if isempty(keymer)
         return
     elseif sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
@@ -502,8 +502,8 @@ if ~isempty(merwin) && isvalid(merwin)
             fprintf('Location along %s %s tract already marked: [%f,%f,%f].\n',keymer(strfind(keymer,'_')+1:end),keymer(4:strfind(keymer,'_')-1),trajectory(1,:))
             return
         end
-    end   
-    
+    end
+
     if sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
         sphere.x = sphere.x*sSize+trajectory(1,1);
         sphere.y = sphere.y*sSize+trajectory(1,2);
@@ -560,13 +560,13 @@ if ~isempty(merwin) && isvalid(merwin)
 
         setappdata(resultfig,'mermarkers',mermarkers);
         ea_updatemercontrol(keymer,getappdata(merwin,'UsedByGUIData_m'),mermarkers,resultfig,options)
-   
+
     else
         switch commnd
             case {'uparrow','leftarrow'}
             if isempty(keymer); return
             else
-              trajectory = [merhandles.(keymer(4:end)).XData',merhandles.(keymer(4:end)).YData',merhandles.(keymer(4:end)).ZData'];            
+              trajectory = [merhandles.(keymer(4:end)).XData',merhandles.(keymer(4:end)).YData',merhandles.(keymer(4:end)).ZData'];
             end
             if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
                 d=0.25; % step size
@@ -1000,7 +1000,7 @@ outputtrajectory(:,2) = linspace(startpoint(1,2),startpoint(1,2)+slope(2)*length
 outputtrajectory(:,3) = linspace(startpoint(1,3),startpoint(1,3)+slope(3)*length,n);
 
 
-function ea_updatemertrajectory(handles,trajectory,dist,tag) 
+function ea_updatemertrajectory(handles,trajectory,dist,tag)
 resultfig=getappdata(handles.mercontrolfig,'resultfig');
 % Update position in resultfig
 % XData = get(getappdata(resultfig,tag),'XData');

@@ -158,12 +158,12 @@ for side=1:length(options.sides)
 
 
                 load([options.root,options.patientname,filesep,'ea_stats']);
-                
+
                 ea_stats.stimulation(thisstim).vat(side,vat).amp=S.amplitude{side};
                 ea_stats.stimulation(thisstim).vat(side,vat).label=S.label;
                 ea_stats.stimulation(thisstim).vat(side,vat).contact=vat;
                 ea_stats.stimulation(thisstim).vat(side,vat).side=side;
-                
+
                 vatfv.faces=K(side).K{vat}; vatfv.vertices=VAT{side}.VAT{vat};
                 vatfv=reducepatch(vatfv,0.05);
                                         Vcent=mean(vatfv.vertices);
@@ -171,14 +171,14 @@ for side=1:length(options.sides)
                 % figure
                 % patch('faces',vatfv.faces,'vertices',vatfv.vertices,'FaceColor','none','EdgeColor','g');
                 % patch('faces',nfv.faces,'vertices',nfv.vertices,'FaceColor','none','EdgeColor','r');
-                
-                
+
+
                 for atlas=1:size(atlases.XYZ,1)
-                    
+
                     if stimparams(side).volume(vat)>0 % stimulation on in this VAT,
                         clear thisatl
 
-                        
+
                         if isempty(atlases.XYZ{atlas,side}) % for midline or combined atlases, only the right side atlas is used.
                             thisatl=atlases.XYZ{atlas,1}.mm;
                             tpd=atlases.pixdim{atlas,1};
@@ -186,28 +186,28 @@ for side=1:length(options.sides)
                             thisatl=atlases.XYZ{atlas,side}.mm;
                             tpd=atlases.pixdim{atlas,side};
                         end
-                        
+
                         %% this search strategy commented out for now ? would fail in case of a very large atlas structure with VAT in center of it touching no border.
 %                         % roughly check if this nucleus could be close to
 %                         % VTA centroid:
 %                         [~,D]=knnsearch(Vcent,thisatl);
 %                         if any(D<(1.5*maedler12_eq3(max(S.amplitude{side}),1000))) % VAT is close to nucleus, should check volume of intersection.
-%                             
+%
                             tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
-                            
-                            
+
+
                             ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(vatfv.vertices,vatfv.faces,thisatl))*tpv;
-                            
+
                             ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
 %                         else % all points too far from VTA center - simply set vi to zero.
 %                             ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
 %                             ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
-%                             
+%
 %                         end
                     else % no voltage on this vat, simply set vi to zero.
                         ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
                         ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
-                        
+
                     end
                 end
 
@@ -221,8 +221,8 @@ for side=1:length(options.sides)
 
 
     try
-        vatbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('vat',options),'TooltipString','Volume of activated tissue','OnCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,1},'OffCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,0},'State',getstate(vaton(side)));
-        quivbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('quiver',options),'TooltipString','E-field','OnCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,1},'OffCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,0},'State',getstate(quivon(side)));
+        vatbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('vat'),'TooltipString','Volume of activated tissue','OnCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,1},'OffCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,0},'State',getstate(vaton(side)));
+        quivbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('quiver'),'TooltipString','E-field','OnCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,1},'OffCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,0},'State',getstate(quivon(side)));
     end
 
 end

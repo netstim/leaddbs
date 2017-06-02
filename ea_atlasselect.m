@@ -217,7 +217,7 @@ setappdata(handles.atlasselect,'treeinit',0);
 atlN=length(atlases.names);
 height=(atlN+1.5)*18;
 norm=360; % max height if full size figure shown.
-if height>360;
+if height>360
     height=360;
 end
 if height<100
@@ -230,19 +230,16 @@ setappdata(handles.atlasselect,'uitree',jComp);
 
 ea_busyaction('del',handles.atlasselect,'atlcontrol');
 
+h.togglebuttons=togglebuttons;
+h.atlassurfs=atlassurfs;
+h.atlases=atlases;
+h.atlchecks=atlchecks;
+set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback,h})
+setappdata(handles.atlasselect,'h',h);
+setappdata(handles.atlasselect,'jtree',jCheckBoxTree);
+sels=ea_storeupdatemodel(jCheckBoxTree,h);
 
-
-
-    h.togglebuttons=togglebuttons;
-    h.atlassurfs=atlassurfs;
-    h.atlases=atlases;
-    h.atlchecks=atlchecks;
-    set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback,h})
-    setappdata(handles.atlasselect,'h',h);
-    setappdata(handles.atlasselect,'jtree',jCheckBoxTree);
-    sels=ea_storeupdatemodel(jCheckBoxTree,h);
 if treeinit
-    
     if handles.namingscheme.Value>length(handles.namingscheme.String)
         handles.namingscheme.Value=1;
     end

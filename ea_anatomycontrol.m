@@ -75,10 +75,10 @@ ht=getappdata(handles.acontrolfig,'toolbar');
 if isempty(ht)
     ht=uitoolbar(handles.acontrolfig);
     c_step=2;
-    minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus',options),'TooltipString','Decrease Contrast','ClickedCallback',{@setslidecontrast,'c',-0.1,resultfig,handles});
-    pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus',options),'TooltipString','Increase Contrast','ClickedCallback',{@setslidecontrast,'c',0.1,resultfig,handles});
-    minusoffset=uipushtool(ht,'CData',ea_get_icn('extleft',options),'TooltipString','Decrease Offset','ClickedCallback',{@setslidecontrast,'o',-0.1,resultfig,handles});
-    plusoffset=uipushtool(ht,'CData',ea_get_icn('extright',options),'TooltipString','Increase Offset','ClickedCallback',{@setslidecontrast,'o',0.1,resultfig,handles});
+    minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus'),'TooltipString','Decrease Contrast','ClickedCallback',{@setslidecontrast,'c',-0.1,resultfig,handles});
+    pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus'),'TooltipString','Increase Contrast','ClickedCallback',{@setslidecontrast,'c',0.1,resultfig,handles});
+    minusoffset=uipushtool(ht,'CData',ea_get_icn('extleft'),'TooltipString','Decrease Offset','ClickedCallback',{@setslidecontrast,'o',-0.1,resultfig,handles});
+    plusoffset=uipushtool(ht,'CData',ea_get_icn('extright'),'TooltipString','Increase Offset','ClickedCallback',{@setslidecontrast,'o',0.1,resultfig,handles});
     setappdata(handles.acontrolfig,'toolbar',ht);
 end
 
@@ -152,7 +152,7 @@ set(handles.acontrolfig,'Visible',options.d3.verbose);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_anatomycontrol_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_anatomycontrol_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -392,7 +392,7 @@ end
 
 if exist('refresh','var')
     togglestates.refreshview=refresh;
-elseif isfield(togglestates,'refreshview')    
+elseif isfield(togglestates,'refreshview')
 else
     togglestates.refreshview=0;
 end
@@ -480,7 +480,7 @@ function slicebuttongroup_ResizeFcn(hObject, eventdata, handles)
 
 % --- Executes when selected object is changed in slicebuttongroup.
 function slicebuttongroup_SelectionChangeFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in slicebuttongroup 
+% hObject    handle to the selected object in slicebuttongroup
 % eventdata  structure with the following fields (see UIBUTTONGROUP)
 %	EventName: string 'SelectionChanged' (read only)
 %	OldValue: handle of the previously selected object or empty if none was selected
@@ -496,20 +496,20 @@ switch eventdata.NewValue
     case handles.xcutradio
         togglestates.cutview='xcut';
         if eventdata.OldValue==handles.threedradio; end %togglestates.refreshcuts=1; end
-            
+
     case handles.ycutradio
         togglestates.cutview='ycut';
         if eventdata.OldValue==handles.threedradio; end %togglestates.refreshcuts=1; end
-        
+
     case handles.zcutradio
         togglestates.cutview='zcut';
         if eventdata.OldValue==handles.threedradio; end %togglestates.refreshcuts=1; end
-        
+
     case handles.threedradio
-        
+
         togglestates.cutview='3d';
         % togglestates.refreshcuts=1;
-        
+
 end
 setappdata(getappdata(gcf,'resultfig'),'togglestates',togglestates);
 
@@ -533,7 +533,7 @@ function cortexalpha_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
-% Notes: Error when moving too fast with buttons. resultfig is empty   
+% Notes: Error when moving too fast with buttons. resultfig is empty
 % ea_busyaction('on',gcf,'anatomy')
 if isempty(getappdata(gcf,'resultfig'))
     ea_error('Figure handle is empty. Please, try again.')
@@ -583,14 +583,14 @@ if get(hObject,'Value')==1 && strcmp(eventdata.EventName,'Action')
     set(handles.xval,'String',num2str(xyzmm(1)))
     set(handles.yval,'String',num2str(xyzmm(2)))
     set(handles.zval,'String',num2str(xyzmm(3)))
-    
+
 elseif get(handles.slicepopup,'Value')==2 && strcmp(eventdata.EventName,'Action')
     % switch from mm to index
     xyzmm=V{1}.mat \ [xyzmm';1];
     set(handles.xval,'String',num2str(xyzmm(1)))
     set(handles.yval,'String',num2str(xyzmm(2)))
     set(handles.zval,'String',num2str(xyzmm(3)))
-    
+
 end
 refreshresultfig(handles,1)
 

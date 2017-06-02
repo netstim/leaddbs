@@ -50,7 +50,7 @@ if strcmp(thresh,'auto')
         case 'vat'
     thresh=round(numtotalfibs/20000);
         case 'mat'
-         thresh=round(numtotalfibs/5000);       
+         thresh=round(numtotalfibs/5000);
     end
 else
     thresh=round(str2double(thresh));
@@ -93,7 +93,7 @@ origtargets=targets; % original targets map.
 %% prepare fibers
 % dispercent(0,'Preparing fibers');
 % [idx,~]=cellfun(@size,fibers);
-% 
+%
 % fibers=cell2mat(fibers');
 % idxv=zeros(size(fibers,1),1);
 % lid=1; cnt=1;
@@ -131,7 +131,7 @@ fibers=mat2cell(fibers,fibersidx,3)';
 disp('Done.');
 for side=1:length(seed)
     try      sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
-    
+
     try      connectingfibs{side}=fibers(sideselectedfibs{side}); end
 end
 
@@ -147,42 +147,42 @@ doubleconnectingfibs=cell(2,1);
 
 la=1;
 for side=1:length(seed)
-    
+
     todelete{side}=[];
-    
+
     cnt=1; % reset cnt.
-    
+
     %% extract areas connected by fibres.
-    
+
     if options.writeoutpm && ~exist('pm','var')
         pm=targets;
         pm.img(:)=0;
     end
-    
+
     [~,labelname]=fileparts(targets.fname);
     aID = fopen(fullfile(ea_space([],'labeling'),[labelname,'.txt']));
     atlas_lgnd=textscan(aID,'%d %s');
     allcareas=[];
-    
+
     fibmax=length(connectingfibs{side});
     dispercent(0,'Gathering region information');
     for fib=1:fibmax
         dispercent(fib/fibmax);
-        
+
         thisfibendpoints=[connectingfibs{side}{fib}(1,1:3);connectingfibs{side}{fib}(end,1:3)];
         thisfibendpoints=targets.mat\[thisfibendpoints,ones(2,1)]'; % mm 2 vox
         thisfibendpoints=double(thisfibendpoints(1:3,:));
-        
+
         conareas=spm_sample_vol(targets,thisfibendpoints(1,:),thisfibendpoints(2,:),thisfibendpoints(3,:),0);
         if any(conareas)
             doubleconnectingfibs{side}{la,cnt}=connectingfibs{side}{fib};
             todelete{side}=[todelete{side},fib];
             cnt=cnt+1;
         end
-        
+
         if options.writeoutpm
             try
-                
+
                 pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))=...
                     pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))+1;
                 pm.img(round(thisfibendpoints(1,2)),round(thisfibendpoints(2,2)),round(thisfibendpoints(3,2)))=...
@@ -193,11 +193,11 @@ for side=1:length(seed)
     end
     allcareas=round(allcareas);
     dispercent(100,'end');
-    
+
     atlength=length(atlas_lgnd{1});
     howmanyfibs{side}=zeros(atlength,1);
     tareas{side}=[];
-    
+
     tcnt=1;
     for reg=1:atlength
         howmanyfibs{side}(reg)=sum(allcareas==reg); % how many fibers connect VAT and anat. region.
@@ -207,8 +207,8 @@ for side=1:length(seed)
         end
     end
     tareas{side}=unique(tareas{side});
-    
-    
+
+
     % Write out connectivity stats
     if options.writeoutstats
         load([options.root,options.patientname,filesep,'ea_stats']);
@@ -220,25 +220,25 @@ catch
 end
         [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,stimparams);
         ea_stats.stimulation(thisstim).ft(side).fibercounts{la}=howmanyfibs{side}/numtotalfibs;
-        
+
         ea_stats.stimulation(thisstim).ft(side).nfibercounts{la}=ea_stats.stimulation(thisstim).ft(side).fibercounts{la}/volume{side};
         ea_stats.stimulation(thisstim).ft(side).labels{la}=atlas_lgnd{2};
         save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
     end
-    
-    
-    
-    
-    
+
+
+
+
+
     contargets=round(targets.img);
     otargets=contargets;
     contargets(:)=0;
     for target=1:atlength
-       contargets(otargets==target)=howmanyfibs{side}(target);         
+       contargets(otargets==target)=howmanyfibs{side}(target);
     end
     %targets.img(targets.img<thresh)=0;
-    
-    
+
+
     % always show seed patch (i.e. VAT)
     PL.matseedsurf{side}=ea_showseedpatch(resultfig,seed{side},seed{side}.img,options);
 
@@ -250,40 +250,40 @@ end
 %     %tareas=1:4;
 %     if ~isempty(tareas{side})
 %         for anatarea=1:length(tareas{side})
-%             
+%
 %             [xx,yy,zz]=ind2sub(size(targets.img),find(targets.img==tareas{side}(anatarea)));
 %             XYZ=[xx,yy,zz];
-%             
+%
 %             XYZ=map_coords_proxy(XYZ,targets);
 %             %XYZ=XYZ';
 %             if options.prefs.lhullmethod==0
 %                 k=convhulln(XYZ);
 %             elseif options.prefs.lhullmethod==1
 %                 k=ea_concavehull(XYZ,1.5);
-%                 
+%
 %             end
-%             
+%
 %             if size(XYZ,1)>1
 %                 [~,centroid]=kmeans(XYZ,1);
 %                 centroid=centroid(1,:);
 %             else
 %                 centroid=XYZ; % only one entry coordinate.
 %             end
-%             
-%             
+%
+%
 %             %%
-%             
+%
 %             if options.prefs.lhullmethod==2 % use isosurface
-%                 
+%
 %                 bb=[0,0,0;size(targets.img)];
-%                 
+%
 %                 bb=map_coords_proxy(bb,targets);
 %                 gv=cell(3,1);
 %                 for dim=1:3
 %                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(targets.img,dim));
 %                 end
 %                 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-%                 
+%
 %                 thisatlas=round(targets.img);
 %                 thisatlas(thisatlas~=tareas{side}(anatarea))=0;
 %                 thisatlas(thisatlas==tareas{side}(anatarea))=1;
@@ -292,66 +292,66 @@ end
 %                 end
 %                 fv=isosurface(X,Y,Z,permute(thisatlas,[2,1,3]),0.3);
 %                 if ischar(options.prefs.lhullsimplify)
-%                     
+%
 %                     % get to 300 faces
 %                     simplify=300/length(fv.faces);
 %                     fv=reducepatch(fv,simplify);
-%                     
+%
 %                 else
 %                     if options.prefs.lhullsimplify<1 && options.prefs.lhullsimplify>0
 %                         fv=reducepatch(fv,options.prefs.lhullsimplify);
 %                     end
 %                 end
 %                 % set cdata
-%                 
-%                 
-%                 
-%                 
+%
+%
+%
+%
 %                 if ~isfield(stimparams,'group')
 %                     cdat=abs(repmat(anatarea*(64/length(tareas{side})),length(fv.vertices),1)... % C-Data for surface
 %                         +randn(length(fv.vertices),1)*2)';
 %                 else % if more than one group is analyzed, coloring info will be off the group color.
 %                     RGB=zeros(1,1,3);
-%                     
+%
 %                     RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
 %                     RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
 %                     RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
-%                     
+%
 %                     Rind=double(rgb2ind(RGB,jet));
 %                     cdat=abs(repmat(Rind,length(fv.vertices),1)... % C-Data for surface
 %                         +randn(length(fv.vertices),1)*2)';
 %                 end
-%                 
+%
 %                 PL.regionsurfs(la,side,anatarea)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-%                 
+%
 %             else
-%                 
-%                 
+%
+%
 %                 PL.regionsurfs(la,side,anatarea)=trisurf(k,XYZ(:,1),XYZ(:,2),XYZ(:,3),...
 %                     abs(repmat(anatarea*(64/length(tareas{side})),length(XYZ),1)...
 %                     +randn(length(XYZ),1)*0.1*length(tareas{side}))');
 %             end
-%             
-%             
-%             
-%             
-%             
+%
+%
+%
+%
+%
 %             %%
-%             
-%             
-%             
-%             
+%
+%
+%
+%
 %             %% shading etc.
 %             colorc=colornames(anatarea);
 %             colorc=rgb(colorc);
 %             ea_spec_atlas(PL.regionsurfs(la,side,anatarea),'labeling',jet,1);
-%             
-%             
+%
+%
 %             %% put a label to it
 %             thislabel=sub2space(atlas_lgnd{2}{atlas_lgnd{1}==tareas{side}(anatarea)});
 %             PL.conlabels(la,side,anatarea)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline');
 %         end
-%         
+%
 %     end
 end
 clear tareas
@@ -362,34 +362,34 @@ clear tareas
 
 % Write out probability map of fiber terminals
 if options.writeoutpm
-    
+
     pm.dt=[16,0];
     pm.fname=[options.root,options.patientname,filesep,'ea_pm','.nii'];
     spm_write_vol(pm,pm.img);
-    
+
 end
 
 
 
 
 % plot fibers that do connect to seed:
-for side=1:length(options.sides)    
+for side=1:length(options.sides)
     if ~isempty(connectingfibs{side})
         fibmax=length(connectingfibs{side});
-        
+
         if fibmax>options.prefs.d3.maxfibers % if too many fibers are selected, reduce amount of them.
             connectingfibs{side}=connectingfibs{side}(round(linspace(1,length(connectingfibs{side}),options.prefs.d3.maxfibers)));
             fibmax=options.prefs.d3.maxfibers;
         end
-        
+
         dispercent(0,'Plotting fibers that connect to seed');
-        
+
         for fib=1:fibmax
             dispercent(fib/fibmax);
             %for segment=1:length(connectingfibs{fib})-1;
             connectingfibs{side}{la,fib}=connectingfibs{side}{la,fib}';
-            
-            
+
+
             if ~isfield(stimparams,'group')
                 connectingfibs{side}{la,fib}(4,:)=detcolor(connectingfibs{side}{la,fib}); % add coloring information to the 4th column.
             else % if more than one group is analyzed, coloring info will be off the group color.
@@ -397,39 +397,39 @@ for side=1:length(options.sides)
                 RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
                 RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
                 RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
-                
+
                 connectingfibs{side}{la,fib}(4,:)=rgb2ind(RGB,jet);
             end
-            
-            
-            
-            
+
+
+
+
             for dim=1:4
                 thisfib(dim,:)=double(interp1q([1:size(connectingfibs{side}{fib},2)]',connectingfibs{side}{fib}(dim,:)',[1:0.1:size(connectingfibs{side}{fib},2)]')');
             end
             % plot fibers
            [PL.fib_plots.fibs(side,fib),fv(fib)]=ea_plot_fiber(thisfib,6,0,options);
 
-            
-             
+
+
             % store for webexport
-            
+
             jetlist=jet;
-            
+
             try
                 PL.bbfibfv(fib).vertices=thisfib(1:3,:)';
                 PL.bbfibfv(fib).faces=[1:size(thisfib,2)-1;2:size(thisfib,2)]';
                 PL.bbfibfv(fib).normals=zeros(size(PL.bbfibfv(fib).vertices,1),3);
                 PL.bbfibfv(fib).colors=[squeeze(ind2rgb(round(thisfib(4,:)),jetlist)),repmat(0.7,size(thisfib,2),1)];
             end
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
             clear thisfib
-            
+
         end
         if strcmp(options.prefs.d3.fiberstyle,'tube')
             fv=ea_concatfv(fv);
@@ -438,16 +438,16 @@ for side=1:length(options.sides)
             set(PL.fib_plots.fibs(side,1),'FaceVertexCData',squeeze(ind2rgb(get(PL.fib_plots.fibs(side,1),'FaceVertexCData'),jet)));
             PL.fib_plots.fibs(:,2:end)=[];
         end
-        
-        
-        
-        
+
+
+
+
         dispercent(100,'end');
-        
+
         if strcmp(options.prefs.d3.fiberstyle,'line');
                     fibInd = ishandle(PL.fib_plots.fibs(side,:));
             if verLessThan('matlab','8.4') % ML <2014b support
-                
+
                 set(PL.fib_plots.fibs(side,logical(PL.fib_plots.fibs(side,fibInd))),'EdgeAlpha',0.05);
             else
                 try
@@ -460,12 +460,12 @@ for side=1:length(options.sides)
                     set(PL.fib_plots.fibs(side,fibInd), 'SpecularStrength', 0.5)
                     set(PL.fib_plots.fibs(side,fibInd),'FaceAlpha',0);
                     set(PL.fib_plots.fibs(side,fibInd),'Tag',sprintf('Fiber%d',side));
-                    
+
                 end
             end
         end
         try
-            fiberbutton=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_vat',options),'TooltipString','Fibers (Electrode only)','OnCallback',{@objvisible,PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,1},'OffCallback',{@objvisible,PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,0},'State',getstate(fibson(side)));
+            fiberbutton=uitoggletool(PL.ht,'CData',ea_get_icn('fibers_vat'),'TooltipString','Fibers (Electrode only)','OnCallback',{@objvisible,PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,1},'OffCallback',{@objvisible,PL.fib_plots.fibs(side,:),resultfig,'fibson',[],side,0},'State',getstate(fibson(side)));
         end
     end
 end
@@ -510,7 +510,7 @@ setappdata(resultfig,[mode,'PL'],PL);
 function [fv,volume]=ea_fvseeds(seed,options)
 
 for s=1:length(seed)
-    volume{s}=sum(seed{s}.img(:))*seed{s}.mat(1)*seed{s}.mat(6)*seed{s}.mat(11);   
+    volume{s}=sum(seed{s}.img(:))*seed{s}.mat(1)*seed{s}.mat(6)*seed{s}.mat(11);
     fv{s}=isosurface(permute(seed{s}.img,[2,1,3]),0.3);
     fv{s}.vertices=[fv{s}.vertices,ones(size(fv{s}.vertices,1),1)]';
     fv{s}.vertices=seed{s}.mat*fv{s}.vertices;
@@ -683,14 +683,14 @@ switch p
     case 2
         % really simple for 2-d
         nrmls = (xyz(tess(:,1),:) - xyz(tess(:,2),:)) * [0 1;-1 0];
-        
+
         % Any degenerate edges?
         del = sqrt(sum(nrmls.^2,2));
         degenflag = (del<(max(del)*10*eps));
         if sum(degenflag)>0
             warning('inhull:degeneracy',[num2str(sum(degenflag)), ...
                 ' degenerate edges identified in the convex hull'])
-            
+
             % we need to delete those degenerate normal vectors
             nrmls(degenflag,:) = [];
             nt = size(nrmls,1);
@@ -722,7 +722,7 @@ switch p
         if sum(degenflag)>0
             warning('inhull:degeneracy',[num2str(sum(degenflag)), ...
                 ' degenerate simplexes identified in the convex hull'])
-            
+
             % we need to delete those degenerate normal vectors
             nrmls(degenflag,:) = [];
             nt = size(nrmls,1);
@@ -778,13 +778,13 @@ if nargin==2
     if strcmp(varargin{2},'end')
         fprintf('\n')
         fprintf('\n')
-        
+
         fprintf('\n')
-        
+
     else
         fprintf(1,[varargin{2},':     ']);
-        
-        
+
+
     end
 else
     fprintf(1,[repmat('\b',1,(length(num2str(percent))+1)),'%d','%%'],percent);
@@ -1599,7 +1599,7 @@ else
     elseif findstr(s,'*'), ls='*'; s=strrep(s,'*','');
     else ls='-';
     end
-    
+
     % identify linewidth
     tmp=double(s);
     tmp=find(tmp>45 & tmp<58);
@@ -1608,7 +1608,7 @@ else
         s(tmp)='';
     else lw=0.5;
     end
-    
+
     % identify color
     if length(s), s=lower(s);
         if length(s)>1, c=s(1:2);

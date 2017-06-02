@@ -49,32 +49,32 @@ updatescene([],[],mcfig);
 ht=uitoolbar(mcfig);
 captions=getappdata(mcfig,'captions');
 c_step=2;
-minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus',options),'TooltipString','Decrease Contrast [C]','ClickedCallback',{@setcontrast,'c',nan,mcfig});
-pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus',options),'TooltipString','Increase Contrast [V]','ClickedCallback',{@setcontrast,'v',nan,mcfig});
-minusoffset=uipushtool(ht,'CData',ea_get_icn('extleft',options),'TooltipString','Increase Offset [B]','ClickedCallback',{@setcontrast,'b',nan,mcfig});
-plusoffset=uipushtool(ht,'CData',ea_get_icn('extright',options),'TooltipString','Decrease Offset [N]','ClickedCallback',{@setcontrast,'n',nan,mcfig});
+minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus'),'TooltipString','Decrease Contrast [C]','ClickedCallback',{@setcontrast,'c',nan,mcfig});
+pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus'),'TooltipString','Increase Contrast [V]','ClickedCallback',{@setcontrast,'v',nan,mcfig});
+minusoffset=uipushtool(ht,'CData',ea_get_icn('extleft'),'TooltipString','Increase Offset [B]','ClickedCallback',{@setcontrast,'b',nan,mcfig});
+plusoffset=uipushtool(ht,'CData',ea_get_icn('extright'),'TooltipString','Decrease Offset [N]','ClickedCallback',{@setcontrast,'n',nan,mcfig});
 
-eltog(1)=uitoggletool(ht,'CData',ea_get_icn('el0',options),'TooltipString','Select Electrode 0 [0]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
-eltog(2)=uitoggletool(ht,'CData',ea_get_icn('el3',options),'TooltipString','Select Electrode 3 [3]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
-eltog(3)=uitoggletool(ht,'CData',ea_get_icn('el4',options),'TooltipString','Select Electrode 4 [4]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
-eltog(4)=uitoggletool(ht,'CData',ea_get_icn('el7',options),'TooltipString','Select Electrode 7 [7]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
+eltog(1)=uitoggletool(ht,'CData',ea_get_icn('el0'),'TooltipString','Select Electrode 0 [0]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
+eltog(2)=uitoggletool(ht,'CData',ea_get_icn('el3'),'TooltipString','Select Electrode 3 [3]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
+eltog(3)=uitoggletool(ht,'CData',ea_get_icn('el4'),'TooltipString','Select Electrode 4 [4]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
+eltog(4)=uitoggletool(ht,'CData',ea_get_icn('el7'),'TooltipString','Select Electrode 7 [7]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
 
-rightview=uipushtool(ht,'CData',ea_get_icn('elR',options),'TooltipString','Set view from Right [R]','ClickedCallback',{@ea_view,'r'});
-leftview=uipushtool(ht,'CData',ea_get_icn('elL',options),'TooltipString','Set view from Left [L]','ClickedCallback',{@ea_view,'l'});
-antview=uipushtool(ht,'CData',ea_get_icn('elA',options),'TooltipString','Set view from Anterior [A]','ClickedCallback',{@ea_view,'a'});
-postview=uipushtool(ht,'CData',ea_get_icn('elP',options),'TooltipString','Set view from Posterior [P]','ClickedCallback',{@ea_view,'p'});
+rightview=uipushtool(ht,'CData',ea_get_icn('elR'),'TooltipString','Set view from Right [R]','ClickedCallback',{@ea_view,'r'});
+leftview=uipushtool(ht,'CData',ea_get_icn('elL'),'TooltipString','Set view from Left [L]','ClickedCallback',{@ea_view,'l'});
+antview=uipushtool(ht,'CData',ea_get_icn('elA'),'TooltipString','Set view from Anterior [A]','ClickedCallback',{@ea_view,'a'});
+postview=uipushtool(ht,'CData',ea_get_icn('elP'),'TooltipString','Set view from Posterior [P]','ClickedCallback',{@ea_view,'p'});
 
-%xview=uipushtool(ht,'CData',ea_get_icn('elX',options),'TooltipString','Set view from X-Direction [X]','ClickedCallback',{@ea_view,'x'});
-%yview=uipushtool(ht,'CData',ea_get_icn('elY',options),'TooltipString','Set view from Y-Direction [Y]','ClickedCallback',{@ea_view,'y'});
+%xview=uipushtool(ht,'CData',ea_get_icn('elX'),'TooltipString','Set view from X-Direction [X]','ClickedCallback',{@ea_view,'x'});
+%yview=uipushtool(ht,'CData',ea_get_icn('elY'),'TooltipString','Set view from Y-Direction [Y]','ClickedCallback',{@ea_view,'y'});
 
-rotleft=uipushtool(ht,'CData',ea_get_icn('rotleft',options),'TooltipString','Rotate Electrode counter-clockwise','ClickedCallback',{@ea_rotate,'cc',mcfig});
-rotright=uipushtool(ht,'CData',ea_get_icn('rotright',options),'TooltipString','Rotate Electrode clockwise','ClickedCallback',{@ea_rotate,'c',mcfig});
+rotleft=uipushtool(ht,'CData',ea_get_icn('rotleft'),'TooltipString','Rotate Electrode counter-clockwise','ClickedCallback',{@ea_rotate,'cc',mcfig});
+rotright=uipushtool(ht,'CData',ea_get_icn('rotright'),'TooltipString','Rotate Electrode clockwise','ClickedCallback',{@ea_rotate,'c',mcfig});
 
-mni=uitoggletool(ht,'CData',ea_get_icn('mninative',options),'TooltipString','Toggle MNI vs. Native space','State','off','OnCallback',{@updatescene,mcfig,'mni'},'OffCallback',{@updatescene,mcfig,'native'});
+mni=uitoggletool(ht,'CData',ea_get_icn('mninative'),'TooltipString','Toggle MNI vs. Native space','State','off','OnCallback',{@updatescene,mcfig,'mni'},'OffCallback',{@updatescene,mcfig,'native'});
 
-finish_mc=uipushtool(ht,'CData',ea_get_icn('done',options),'TooltipString','Finish manual corrections [space]','ClickedCallback',{@robotSpace});
+finish_mc=uipushtool(ht,'CData',ea_get_icn('done'),'TooltipString','Finish manual corrections [space]','ClickedCallback',{@robotSpace});
 
-captoggle=uitoggletool(ht,'CData',ea_get_icn('labels',options),'TooltipString','Orientation','OnCallback',{@objvisible,captions},'OffCallback',{@objinvisible,captions},'State','on');
+captoggle=uitoggletool(ht,'CData',ea_get_icn('labels'),'TooltipString','Orientation','OnCallback',{@objvisible,captions},'OffCallback',{@objinvisible,captions},'State','on');
 
 
 
@@ -701,7 +701,7 @@ for subpl=1:4
             fc='g';
         end
     end
-    
+
     warnStruct = warning('off','MATLAB:hg:willberemoved');
     plot((wsize+1)*2,(wsize+1)*2,'*','MarkerSize',15,'MarkerEdgeColor',fc,'LineWidth',2,'LineSmoothing','on');
     warning(warnStruct);
