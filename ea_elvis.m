@@ -505,9 +505,9 @@ catch
 end
 if ~isempty(merwin) && isvalid(merwin)
     commnd=event.Key; % event.Character;
-    sphere = load([options.earoot,'helpers',filesep,'sphere.mat']);
+    [shape.x,shape.y,shape.z]=sphere(20);
     n = length(mermarkers);
-    sSize = 0.5;
+    sSize = options.prefs.mer.markersize;
     % CData = parula; CData = repmat(CData(1:length(sphere.x),:),[1 size(sphere.x,2)/3]);
     % colormap = repmat([1 1 0],[size(sphere.x,1) size(sphere.x,2)/3]);
     % tmp = parula;
@@ -517,7 +517,8 @@ if ~isempty(merwin) && isvalid(merwin)
     if isempty(keymer)
         return
     elseif sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
-        trajectory = [get(merhandles.(keymer(4:end)),'XData')',get(merhandles.(keymer(4:end)),'YData')',get(merhandles.(keymer(4:end)),'ZData')'];
+        [~,side,track]=ea_detsidestr(keymer);
+        trajectory = [get(merhandles.(track){side},'XData')',get(merhandles.(track){side},'YData')',get(merhandles.(track){side},'ZData')'];
         if n>0 && isequal(trajectory(1,:),mermarkers(n).coords_mm) && ~strcmp(event.Key,'s') && ~strcmp(event.Key,'n')
             fprintf('Location along %s %s tract already marked: [%f,%f,%f].\n',keymer(strfind(keymer,'_')+1:end),keymer(4:strfind(keymer,'_')-1),trajectory(1,:))
             return
@@ -525,9 +526,9 @@ if ~isempty(merwin) && isvalid(merwin)
     end
 
     if sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
-        sphere.x = sphere.x*sSize+trajectory(1,1);
-        sphere.y = sphere.y*sSize+trajectory(1,2);
-        sphere.z = sphere.z*sSize+trajectory(1,3);
+        shape.x = shape.x*sSize+trajectory(1,1);
+        shape.y = shape.y*sSize+trajectory(1,2);
+        shape.z = shape.z*sSize+trajectory(1,3);
         mermarkers(n+1).side = keymer(regexp(keymer,'_')+1:end);
         mermarkers(n+1).tract = keymer(4:regexp(keymer,'_')-1);
         mermarkers(n+1).depth = str2double(getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['pos' keymer(4:end)]),'String'));
@@ -546,29 +547,29 @@ if ~isempty(merwin) && isvalid(merwin)
         switch lower(commnd)
             case 'space'
                 mermarkers(n+1).notes;
-                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
                     'FaceColor',[0.5 0.5 0],'EdgeColor','none',...
                     'FaceAlpha',0.7,'tag','Generic');
                 mermarkers(n+1).markertype = 'Generic';
             case 'm'
-                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
                     'FaceColor',[0.5 0 0],'EdgeColor','none',...
                     'FaceAlpha',0.7,'tag','MER');
                 mermarkers(n+1).markertype = 'MER recording';
                 mermarkers(n+1).session = char(inputdlg('Enter Session'));
             case 'l'
-                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
                     'FaceColor',[0 0.5 0],'EdgeColor','none',...
                     'FaceAlpha',0.7,'tag','LFP');
                 mermarkers(n+1).markertype = 'LFP recording';
                 mermarkers(n+1).session = char(inputdlg('Enter Session'));
             case 't'
-                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
                     'FaceColor',[0 0 0.5],'EdgeColor','none',...
                     'FaceAlpha',0.7,'tag','Top');
                 mermarkers(n+1).markertype = 'Top border';
             case 'b'
-                mermarkers(n+1).handle = surf(sphere.x,sphere.y,sphere.z,...
+                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
                     'FaceColor',[0 0 0.5],'EdgeColor','none',...
                     'FaceAlpha',0.7,'tag','Bottom');
                 mermarkers(n+1).markertype = 'Bottom border';
@@ -586,7 +587,8 @@ if ~isempty(merwin) && isvalid(merwin)
             case {'uparrow','leftarrow'}
             if isempty(keymer); return
             else
-              trajectory = [merhandles.(keymer(4:end)).XData',merhandles.(keymer(4:end)).YData',merhandles.(keymer(4:end)).ZData'];
+              [~,side,track]=ea_detsidestr(keymer);
+              trajectory = [merhandles.(track){side}.XData',merhandles.(track){side}.YData',merhandles.(track){side}.ZData'];
             end
             if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
                 d=0.25; % step size
@@ -596,12 +598,12 @@ if ~isempty(merwin) && isvalid(merwin)
                 d=0.05;    % small step size
             end
             newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
-            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer(4:end))
+            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer)
         case {'downarrow','rightarrow'}
             if isempty(keymer); return
             else
-              trajectory = [merhandles.(keymer(4:end)).XData',merhandles.(keymer(4:end)).YData',merhandles.(keymer(4:end)).ZData'];
-            end
+                [~,side,track]=ea_detsidestr(keymer);
+                trajectory = [merhandles.(track){side}.XData',merhandles.(track){side}.YData',merhandles.(track){side}.ZData'];            end
             if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
                 d=-0.25; % movement distance
             elseif ismember(event.Modifier,'shift')
@@ -610,7 +612,7 @@ if ~isempty(merwin) && isvalid(merwin)
                 d=-0.05;
             end
             newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
-            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer(4:end))
+            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer)
         end
     end
 end
@@ -1026,12 +1028,14 @@ resultfig=getappdata(handles.mercontrolfig,'resultfig');
 % XData = get(getappdata(resultfig,tag),'XData');
 % YData = get(getappdata(resultfig,tag),'YData');
 % ZData = get(getappdata(resultfig,tag),'ZData');
-h = getfield(getappdata(resultfig,'merhandles'),tag);
+[~,side,track]=ea_detsidestr(tag);
+h = getfield(getappdata(resultfig,'merhandles'),track);
+h = h{side};
 set(h,'XData',trajectory(:,1)')
 set(h,'YData',trajectory(:,2)')
 set(h,'ZData',trajectory(:,3)')
 setappdata(resultfig,tag,h)
-set(handles.(['key',tag]),'Value',1)
-setappdata(resultfig,'keymer',['key',tag])
-newdiststr = num2str(str2double(get(handles.(['pos',tag]),'String'))+dist);
-set(handles.(['pos',tag]),'String',newdiststr)
+set(handles.(tag),'Value',1)
+setappdata(resultfig,'keymer',tag)
+newdiststr = num2str(str2double(get(handles.(['pos',tag(4:end)]),'String'))+dist);
+set(handles.(['pos',tag(4:end)]),'String',newdiststr)
