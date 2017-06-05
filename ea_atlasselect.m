@@ -129,29 +129,30 @@ if handles.presets.Value>length(handles.presets.String)
     handles.presets.Value=1;
 end
 
+switch handles.namingscheme.String{handles.namingscheme.Value}
+    case 'NIfTI filenames'  % use atlases.names
+        uselabelname = 0;   
+    otherwise  % use atlases.labels
+        [~,uselabelname] = ismember(handles.namingscheme.String{handles.namingscheme.Value},atlases.labelnames);
+        if uselabelname == 0
+            uselabelname = 1;
+        end
+end
+
 for subgroup=1:length(atlases.subgroups)
     h.sg{subgroup} = DefaultCheckBoxNode(atlases.subgroups(subgroup).label);
     for node=1:length(atlases.subgroups(subgroup).entries)
         [~,thisatlfname]=fileparts(atlases.names{atlases.subgroups(subgroup).entries(node)});
         [~,thisatlfname]=fileparts(thisatlfname);
-
-        switch handles.namingscheme.String{handles.namingscheme.Value}
-            
-            case 'NIfTI filenames'
-                thisatlname=thisatlfname;
-            otherwise
-                [~,nsel]=ismember(handles.namingscheme.String{handles.namingscheme.Value},atlases.labelnames);
-                if nsel==0
-                    nsel=1;
-                end
-                thisatlname=atlases.labels{nsel}{node};
+    
+        if uselabelname == 0
+            thisatlname = thisatlfname;
+        else
+            thisatlname=atlases.labels{uselabelname}{node};
         end
         
-        try % gzip support
-            if strcmp(thisatlname(end-3:end),'.nii')
-                [~,thisatlname]=fileparts(thisatlname);
-            end
-        end
+        % gzip support
+        [~,thisatlname]=ea_niifileparts(thisatlname);
         
         color = round(squeeze(atlases.colormap(ceil(atlases.colors(node)),:))*256);
         color = sprintf('rgb(%d,%d,%d)', color(1),color(2),color(3));
@@ -221,7 +222,6 @@ end
 
 ea_cleanpriortree(handles);
 
-
 % Create a standard MJTree:
 jTree = com.mathworks.mwswing.MJTree(h.sg{1});
 
@@ -251,7 +251,8 @@ h.togglebuttons=togglebuttons;
 h.atlassurfs=atlassurfs;
 h.atlases=atlases;
 h.atlchecks=atlchecks;
-set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback,h})
+h.uselabelname = uselabelname;
+set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback, h})
 setappdata(handles.atlasselect,'h',h);
 setappdata(handles.atlasselect,'jtree',jCheckBoxTree);
 sels=ea_storeupdatemodel(jCheckBoxTree,h);
@@ -283,16 +284,12 @@ if treeinit
 end
 
 
-
 function ea_cleanpriortree(handles)
 
 jComp=getappdata(handles.atlasselect,'uitree');
 if ~isempty(jComp)
     delete(jComp);
 end
-
-
-
 
 
 function tf=bin2bool(t)
@@ -321,7 +318,7 @@ for branch=1:length(sels.branches)
                 
                 sidec=getsidec(length(sels.sides{branch}{leaf}),side);
                 
-                [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
+                [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons, h.uselabelname,h.atlases);
                 if strcmp(sels.sides{branch}{leaf}{side},'selected')
                     if ~strcmp(h.atlassurfs(ixs).Visible,'on')
                         h.atlassurfs(ixs).Visible='on';
@@ -362,7 +359,7 @@ end
 
 
 % Set the mouse-press callback
-function mouseReleasedCallback(jtree, eventData,h)
+function mouseReleasedCallback(jtree, eventData, h)
 
 clickX = eventData.getX;
 clickY = eventData.getY;
