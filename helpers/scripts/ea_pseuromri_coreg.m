@@ -61,7 +61,7 @@ for iter=1:20
     labelf.img(isnan(labelf.img))=0;
 
     for temp=1:length(templatecell)
-        if ~exist(['r',templatecell{temp},'.nii'],'file');
+        if ~exist(['r',templatecell{temp}],'file');
             copyfile(['cropped_templates',filesep,templatecell{temp}],['r',templatecell{temp}]);            
             ea_conformspaceto(labelfile,['r',templatecell{temp}],1);
         end
@@ -95,6 +95,7 @@ for iter=1:20
     ea_ants_nonlinear_local(cellfun(@horzcat,repmat({['r']},size(templatecell),1),templatecell,'Uniformoutput',0),labelcell,'warped.nii',[1,1,1,2],repmat({'GC'},length(templatecell),1),'MultiLabel');
     % dump output
     copyfile([labelfile],fullfile(pth,[fname,'_label_iter',num2str(iter-1),ext]));
+    keyboard
     ea_ants_applytransforms(opts,{labelfile},{labelfile},0,labelcell{1},fullfile(pth,'warpedComposite.h5'),'MultiLabel');
 
 end
