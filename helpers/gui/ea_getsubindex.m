@@ -3,7 +3,7 @@ function [ixs,ixt]=ea_getsubindex(sel,sidec,surfs,togglebuttons)
 sel = char(sel);
 
 if regexp(sel, '<HTML><BODY>')
-    [sel ~] = regexp(sel,'(?:&nbsp;)+(\S*)</FONT></BODY></HTML>','tokens','match');
+    [sel ~] = regexp(sel,'(?:&nbsp;)+(.*)</FONT></BODY></HTML>','tokens','match');
     sel = sel{1}{1};
 end
 
