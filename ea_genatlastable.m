@@ -91,7 +91,9 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
 end
 
 mcr='';
-
+if ~isfield(atlases,'tissuetypes');
+   atlases.tissuetypes=ones(1,length(atlases.names)); 
+end
 if checkrebuild(atlases,options,root,mifix)
 
     %% build iXYZ tables:
@@ -347,12 +349,14 @@ if checkrebuild(atlases,options,root,mifix)
             X(X<1.5)=0;
             X(X>1.5)=1;
 
-            V.dt=[4,0];
-
+            V.dt=[2,0];
+            delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             spm_write_vol(V,X);
 
             clear X V
             ea_crop_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            gzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         end
 
         % save table information that has been generated from nii files (on first run with this atlas set).
@@ -491,7 +495,7 @@ for atl=1:length(atlnames)
     if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file') % first atlas, generate empty hdtemplate in atlas dir...
         if ~options.native
             load([ea_space,'ea_space_def.mat'])
-            copyfile([ea_space(options),spacedef.templates{1},'.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            copyfile([ea_space,'bb.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         else
             copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         end
@@ -504,6 +508,15 @@ for atl=1:length(atlnames)
 
 
     % add atlas file to hdtemplate in atlas dir
+    if (~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file'))
+            if       (~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz'],'file'))
+            copyfile([ea_space,'bb.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            else
+                gunzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz']);
+                delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz']);
+            end
+    end
+      
     matlabbatch{1}.spm.util.imcalc.input = {
         [root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii,1'];
         [atlname,',1']
@@ -516,8 +529,11 @@ for atl=1:length(atlnames)
     matlabbatch{1}.spm.util.imcalc.options.mask = 0;
     matlabbatch{1}.spm.util.imcalc.options.interp = 1;
     matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+    if atlases.tissuetypes(atlas)==1
     spm_jobman('run',{matlabbatch});
+    end
     clear matlabbatch
+    
 
     if wasgzip
         gzip(atlname); % since gunzip makes a copy of the zipped file.

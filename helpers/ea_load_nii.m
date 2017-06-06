@@ -32,5 +32,5 @@ nii.img=img; % set image data
 nii.voxsize=ea_detvoxsize(nii(1).mat); % set voxsize
 
 if wasgzip
-    delete(ea_niifileparts(fname)); % since gunzip makes a copy of the zipped file.
+    delete(fname); % since gunzip makes a copy of the zipped file.
 end
