@@ -129,60 +129,88 @@ if handles.presets.Value>length(handles.presets.String)
     handles.presets.Value=1;
 end
 
+switch handles.namingscheme.String{handles.namingscheme.Value}
+    case 'NIfTI filenames'  % use atlases.names
+        uselabelname = 0;   
+    otherwise  % use atlases.labels
+        [~,uselabelname] = ismember(handles.namingscheme.String{handles.namingscheme.Value},atlases.labelnames);
+        if uselabelname == 0
+            uselabelname = 1;
+        end
+end
+
 for subgroup=1:length(atlases.subgroups)
     h.sg{subgroup} = DefaultCheckBoxNode(atlases.subgroups(subgroup).label);
     for node=1:length(atlases.subgroups(subgroup).entries)
         [~,thisatlfname]=fileparts(atlases.names{atlases.subgroups(subgroup).entries(node)});
         [~,thisatlfname]=fileparts(thisatlfname);
-
-        switch handles.namingscheme.String{handles.namingscheme.Value}
-            
-            case 'NIfTI filenames'
-                thisatlname=thisatlfname;
-            otherwise
-                [~,nsel]=ismember(handles.namingscheme.String{handles.namingscheme.Value},atlases.labelnames);
-                if nsel==0
-                    nsel=1;
-                end
-                thisatlname=atlases.labels{nsel}{node};
+    
+        if uselabelname == 0
+            thisatlname = thisatlfname;
+        else
+            thisatlname=atlases.labels{uselabelname}{node};
         end
         
-        try % gzip support
-            if strcmp(thisatlname(end-3:end),'.nii')
-                [~,thisatlname]=fileparts(thisatlname);
-            end
-        end
-        h.sgsub{subgroup}{node}=DefaultCheckBoxNode(thisatlname,true);
+        % gzip support
+        [~,thisatlname]=ea_niifileparts(thisatlname);
         
+        color = round(squeeze(atlases.colormap(ceil(atlases.colors(node)),:))*256);
+        color = sprintf('rgb(%d,%d,%d)', color(1),color(2),color(3));
         
+        atlaslabel = ['<HTML><BODY>' ...
+                      '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                      '<FONT color="black">&nbsp;&nbsp;',thisatlname,'</FONT>' ...
+                      '</BODY></HTML>'];
+        h.sgsub{subgroup}{node}=DefaultCheckBoxNode(atlaslabel,true);    
         h.sg{subgroup}.add(h.sgsub{subgroup}{node});
         
         if (atlases.types(atlases.subgroups(subgroup).entries(node))==3) || (atlases.types(atlases.subgroups(subgroup).entries(node))==4) % need lh and rh entries
             [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
             checked=onoff2bool(togglebuttons(thistb).State);
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('RH',checked);
+            lrlabel = ['<HTML><BODY>' ...
+                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                       '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
+                       '</BODY></HTML>'];
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
             h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
             h.sgsubfi{subgroup}{node}=thisatlfname;
+            
             [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
             checked=onoff2bool(togglebuttons(thistb).State);
-            h.sgsubside{subgroup}{node}{2}=DefaultCheckBoxNode('LH',checked);
+            lrlabel = ['<HTML><BODY>' ...
+                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                       '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
+                       '</BODY></HTML>'];
+            h.sgsubside{subgroup}{node}{2}=DefaultCheckBoxNode(lrlabel,checked);
             h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{2});
         elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==1) % RH only
             [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
             checked=onoff2bool(togglebuttons(thistb).State);
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('RH',checked);
+            lrlabel = ['<HTML><BODY>' ...
+                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                       '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
+                       '</BODY></HTML>'];
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
             h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
             h.sgsubfi{subgroup}{node}=thisatlfname;
         elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==2) % LH only
             [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
             checked=onoff2bool(togglebuttons(thistb).State);
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('LH',checked);
+            lrlabel = ['<HTML><BODY>' ...
+                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                       '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
+                       '</BODY></HTML>'];
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
             h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
             h.sgsubfi{subgroup}{node}=thisatlfname;
         elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==5) % Midline
             [~,thistb]=ismember([thisatlfname,'_midline'],tbcell);
             checked=onoff2bool(togglebuttons(thistb).State);
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode('Midline',checked);
+            lrlabel = ['<HTML><BODY>' ...
+                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                       '<FONT color="black">&nbsp;&nbsp;Midline</FONT>' ...
+                       '</BODY></HTML>'];
+            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
             h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
             h.sgsubfi{subgroup}{node}=thisatlfname;
         end
@@ -194,21 +222,11 @@ end
 
 ea_cleanpriortree(handles);
 
-
 % Create a standard MJTree:
 jTree = com.mathworks.mwswing.MJTree(h.sg{1});
 
 % Now present the CheckBoxTree:
 jCheckBoxTree = CheckBoxTree(jTree.getModel);
-
-
-% Attempt to set icons to colors:
-%       jTreeCR = jCheckBoxTree.getCellRenderer;
-%       icon = javax.swing.ImageIcon([ea_getearoot,'icons',filesep,'text.png']);
-%
-%        %icon = ea_get_icn('atlas',[0.2,0.5,0.6]);
-%keyboard
-%jTreeCR.setLeafIcon(icon);
 
 jScrollPane = com.mathworks.mwswing.MJScrollPane(jCheckBoxTree);
 treeinit=getappdata(handles.atlasselect,'treeinit');
@@ -224,7 +242,6 @@ if height<100
     height=100;
 end
 
-
 [jComp,hc] = javacomponent(jScrollPane,[10,5,285,height],handles.atlasselect);
 setappdata(handles.atlasselect,'uitree',jComp);
 
@@ -234,7 +251,8 @@ h.togglebuttons=togglebuttons;
 h.atlassurfs=atlassurfs;
 h.atlases=atlases;
 h.atlchecks=atlchecks;
-set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback,h})
+h.uselabelname = uselabelname;
+set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback, h})
 setappdata(handles.atlasselect,'h',h);
 setappdata(handles.atlasselect,'jtree',jCheckBoxTree);
 sels=ea_storeupdatemodel(jCheckBoxTree,h);
@@ -247,24 +265,23 @@ if treeinit
         handles.presets.Value=1;
     end
     %handles.atlasselect.Position(2)=handles.atlasselect.Position(2)-(450);
-    handles.atlasselect.Position(4)=(527-(360-height));
+    handles.atlasselect.Position(4)=(534-(360-height));
     
     handles.atlstructxt.Position(2)=handles.atlasselect.Position(4)-25;
 
-    handles.atlassetpopup.Position(2)=handles.atlasselect.Position(4)-72;
-    handles.atlassetstatic.Position(2)=handles.atlassetpopup.Position(2)+33;
+    handles.atlassetpopup.Position(2)=handles.atlasselect.Position(4)-75;
+    handles.atlassetstatic.Position(2)=handles.atlassetpopup.Position(2)+28;
 
-    handles.presets.Position(2)=handles.atlasselect.Position(4)-114;
-    handles.presetsstatic.Position(2)=handles.presets.Position(2)+33;
+    handles.presets.Position(2)=handles.atlasselect.Position(4)-120;
+    handles.presetsstatic.Position(2)=handles.presets.Position(2)+28;
 
-    handles.namingscheme.Position(2)=handles.atlasselect.Position(4)-157;
-    handles.namingstatic.Position(2)=handles.namingscheme.Position(2)+33;
+    handles.namingscheme.Position(2)=handles.atlasselect.Position(4)-165;
+    handles.namingstatic.Position(2)=handles.namingscheme.Position(2)+28;
 
     set(0,'CurrentFigure',handles.atlasselect);
     axis off
     movegui(handles.atlasselect,'northeast');
 end
-
 
 
 function ea_cleanpriortree(handles)
@@ -273,9 +290,6 @@ jComp=getappdata(handles.atlasselect,'uitree');
 if ~isempty(jComp)
     delete(jComp);
 end
-
-
-
 
 
 function tf=bin2bool(t)
@@ -304,7 +318,7 @@ for branch=1:length(sels.branches)
                 
                 sidec=getsidec(length(sels.sides{branch}{leaf}),side);
                 
-                [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
+                [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons, h.uselabelname,h.atlases);
                 if strcmp(sels.sides{branch}{leaf}{side},'selected')
                     if ~strcmp(h.atlassurfs(ixs).Visible,'on')
                         h.atlassurfs(ixs).Visible='on';
@@ -345,7 +359,7 @@ end
 
 
 % Set the mouse-press callback
-function mouseReleasedCallback(jtree, eventData,h)
+function mouseReleasedCallback(jtree, eventData, h)
 
 clickX = eventData.getX;
 clickY = eventData.getY;

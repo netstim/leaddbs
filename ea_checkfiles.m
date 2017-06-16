@@ -4,7 +4,6 @@ if strcmp(options.prefs.patientdir,'Choose Patient Directory')
     ea_error('Please choose patient directory first');
 end
 
-
 vfi={'tra','cor','sag'};
 bb=spm_vol([ea_space(options),'bb.nii']);
 for tracor=1:length(vfi)
@@ -31,14 +30,9 @@ for tracor=1:length(vfi)
         end
     catch
         if tracor==1
-            
             ea_error('Please put a suitable postoperative anatomy file inside patient folder and normalize it first.');
         end
         %warning([fn,' not present']);
     end
 
 end
-
-
-
-
