@@ -22,7 +22,7 @@ function varargout = ea_mercontrol(varargin)
 
 % Edit the above text to modify the response to help ea_mercontrol
 
-% Last Modified by GUIDE v2.5 08-Apr-2017 18:27:26
+% Last Modified by GUIDE v2.5 19-Jun-2017 16:39:43
 
 % __________________________________________________________________________________
 % Copyright (C) 2017 University of Pittsburgh, Brain Modulation Lab
@@ -72,19 +72,85 @@ resultfig=varargin{1};
 options=varargin{2};
 setappdata(hObject,'resultfig',resultfig);
 setappdata(hObject,'options',options);
-clearkeyboardcontrolgroup(handles,hObject,resultfig,options)
 
-clearmertrajectories(handles,resultfig,options)
+merstruct = options.prefs.mer;  %.length [24 mm]; .offset [2 mm]; .tract_info
+setappdata(resultfig,'merstruct',merstruct)
+
+% Generate UI elements in mainuipanel for each merstruct.tract_info
+width = handles.mainuipanel.InnerPosition(3);
+popup_string = cat(2, 'Set implanted...', {merstruct.tract_info.label});
+for side_str = {'left', 'right'}
+    % Add options to popupimplantedtract_left _right
+    set(handles.(['popupimplantedtract_' side_str{:}]),...
+        'String', popup_string);
+    
+    % Add togglebuttons next to texttoggle_left and _right (with callbacks)
+    anchor_pos = get(handles.(['texttoggle_' side_str{:}]), 'Position');
+    w_per = (width - anchor_pos(3) - anchor_pos(1)) / length(merstruct.tract_info);
+    for tract_ix = 1:length(merstruct.tract_info)
+        pos_str = merstruct.tract_info(tract_ix).label;
+        new_pos = anchor_pos;
+        new_pos(1) = anchor_pos(1) + anchor_pos(3) + (tract_ix-1)*w_per;
+        new_pos(3) = w_per;
+        htoggle = uicontrol(handles.mainuipanel,...
+            'Style', 'togglebutton',...
+            'Tag', ['toggle' pos_str '_' side_str{:}],...
+            'Value', 1,...
+            'String', pos_str,...
+            'Position', new_pos,...
+            'Units', 'pixels',...
+            'BackgroundColor', [1 1 1],...
+            'Value', 0,...
+            'Callback', @ea_updatetogglestate);
+    end
+    
+    % Add edit boxes next to textpos_left and _right (with callbacks)
+    anchor_pos = get(handles.(['textpos_' side_str{:}]), 'Position');
+    w_per = (width - anchor_pos(3) - anchor_pos(1)) / length(merstruct.tract_info);
+    for tract_ix = 1:length(merstruct.tract_info)
+        pos_str = merstruct.tract_info(tract_ix).label;
+        new_pos = anchor_pos;
+        new_pos(1) = anchor_pos(1) + anchor_pos(3) + (tract_ix-1)*w_per;
+        new_pos(3) = w_per;
+        hedit = uicontrol(handles.mainuipanel,...
+            'Style', 'edit',...
+            'Tag', ['pos' pos_str '_' side_str{:}],...
+            'String', '0',...
+            'Position', new_pos,...
+            'Units', 'pixels',...
+            'BackgroundColor', [1 1 1],...
+            'Callback', @ea_updatepostext);
+    end
+    
+    % In keyboardcontrolgroup, add radiobuttons next to keytext_left and _right inside
+    anchor_pos = get(handles.(['textkey_' side_str{:}]), 'Position');
+    w_per = (width - anchor_pos(3) - anchor_pos(1)) / length(merstruct.tract_info);
+    for tract_ix = 1:length(merstruct.tract_info)
+        pos_str = merstruct.tract_info(tract_ix).label;
+        new_pos = anchor_pos;
+        new_pos(1) = anchor_pos(1) + anchor_pos(3) + (tract_ix-1)*w_per;
+        new_pos(3) = w_per;
+        hcheck = uicontrol(handles.keyboardcontrolgroup,...
+            'Style', 'checkbox',...
+            'Tag', ['keycheck' pos_str '_' side_str{:}],...
+            'String', pos_str,...
+            'Position', new_pos,...
+            'Units', 'pixels',...
+            'BackgroundColor', [1 1 1],...
+            'Callback', @ea_keycheck);
+    end
+end
+clearkeyboardcontrolgroup(handles);
+clearmertrajectories(handles,resultfig,options);
+
 [~,trajectory,markers]=ea_load_reconstruction(options);
 coords_mm=ea_resolvecoords(markers,options);
-merstruct.length = options.prefs.mer.length; %default is 24mm
-merstruct.offset = options.prefs.mer.offset; % default distance between mer tracts is 2mm
-merstruct.colormap = [0.5,0,0;0.5,0.5,0;0,0.5,0;0.5,0,0.5;0,0.5,0.5;0,0,0.5]; %Maroon,Olive,Green,Purple,Teal,Navy
 
 % Set mermarkers
 mermarkers = getappdata(resultfig,'mermarkers');
 if isempty(mermarkers)
-    mermarkers = struct('side',{},'tract',{},'depth',{},'markertype',{},'session',{},'dat',{},'tag',{},'handle',{},'notes',{});
+    mermarkers = struct('side',{},'tract',{},'depth',{},'markertype',{},...
+        'session',{},'dat',{},'tag',{},'handle',{},'notes',{});
     setappdata(resultfig,'mermarkers',mermarkers)
 end
 % Set default implanted tract
@@ -93,48 +159,26 @@ set(handles.popupimplantedtract_right,'Value',options.prefs.mer.defaulttract+1)
 set(handles.editimplanteddepth_left,'String','0')
 set(handles.editimplanteddepth_right,'String','0')
 
-setappdata(resultfig,'merstruct',merstruct)
 merstruct.defaultmer = ea_coords2mer(coords_mm,trajectory,resultfig,options);
 clear coords_mm trajectory markers
 
 set(0,'CurrentFigure',resultfig); hold on;
-color=merstruct.colormap;
 for side = options.sides
     % contact_spacing = getfield(getappdata(resultfig,'elspec'),'contact_spacing');
-    
-    merstruct.defaultmer.central.trajectory{side} = ea_getmertrajectory(merstruct.defaultmer.central.coords_mm{side},0,merstruct.length,50);
-    merstruct.defaultmer.anterior.trajectory{side} = ea_getmertrajectory(merstruct.defaultmer.anterior.coords_mm{side},0,merstruct.length,50);
-    merstruct.defaultmer.posterior.trajectory{side} = ea_getmertrajectory(merstruct.defaultmer.posterior.coords_mm{side},0,merstruct.length,50);
-    merstruct.defaultmer.lateral.trajectory{side} = ea_getmertrajectory(merstruct.defaultmer.lateral.coords_mm{side},0,merstruct.length,50);
-    merstruct.defaultmer.medial.trajectory{side} = ea_getmertrajectory(merstruct.defaultmer.medial.coords_mm{side},0,merstruct.length,50);
-    
-    merhandles.central{side} = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
-    merhandles.anterior{side} = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
-    merhandles.posterior{side} = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
-    merhandles.lateral{side} = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
-    merhandles.medial{side} = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);
-     
-    %     if side==1 % right = 1 
-    %         merhandles.central_right = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
-    %         merhandles.anterior_right = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
-    %         merhandles.posterior_right = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
-    %         merhandles.lateral_right = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
-    %         merhandles.medial_right = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);
-    %     elseif side==2 % left = 2
-    %         merhandles.central_left = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
-    %         merhandles.anterior_left = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
-    %         merhandles.posterior_left = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
-    %         merhandles.lateral_left = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
-    %         merhandles.medial_left = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);    
-    %     end
-    
+    for pos_ix = 1:length(merstruct.tract_info)
+        pos_str = merstruct.tract_info(pos_ix).label;
+        merstruct.defaultmer.(pos_str).trajectory{side} = ...
+            ea_getmertrajectory(merstruct.defaultmer.(pos_str).coords_mm{side}, 0, merstruct.length, 50);
+        traj = merstruct.defaultmer.(pos_str).trajectory{side};
+        merhandles.(pos_str){side} = plot3(traj(:,1), traj(:,2), traj(:,3),...
+            'color',merstruct.tract_info(pos_ix).color, 'linew',5);
+    end
 end
 
 merstruct.currentmer=merstruct.defaultmer;
 setappdata(resultfig,'merstruct',merstruct)
 setappdata(resultfig,'merhandles',merhandles)
-ea_getsettogglestates(handles);
-
+ea_readtogglestates(handles);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -146,446 +190,6 @@ function varargout = ea_mercontrol_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
-
-
-% --- Executes on button press in togglecentral_left.
-function togglecentral_left_Callback(hObject, eventdata, handles)
-% hObject    handle to togglecentral_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of togglecentral_left
-ea_getsettogglestates(handles);
-
-
-% --- Executes on button press in toggleanterior_left.
-function toggleanterior_left_Callback(hObject, eventdata, handles)
-% hObject    handle to toggleanterior_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of toggleanterior_left
-ea_getsettogglestates(handles);
-
-
-% --- Executes on button press in toggleposterior_left.
-function toggleposterior_left_Callback(hObject, eventdata, handles)
-% hObject    handle to toggleposterior_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of toggleposterior_left
-ea_getsettogglestates(handles);
-
-
-% --- Executes on button press in togglelateral_left.
-function togglelateral_left_Callback(hObject, eventdata, handles)
-% hObject    handle to togglelateral_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of togglelateral_left
-ea_getsettogglestates(handles);
-
-% --- Executes on button press in togglemedial_left.
-function togglemedial_left_Callback(hObject, eventdata, handles)
-% hObject    handle to togglemedial_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of togglemedial_left
-ea_getsettogglestates(handles);
-
-
-function posmedial_left_Callback(hObject, eventdata, handles)
-% hObject    handle to posmedial_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of posmedial_left as text
-%        str2double(get(hObject,'String')) returns contents of posmedial_left as a double
-side = 2; %left
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-dist = str2double(get(hObject,'String'))-str2double(get(handles.editimplanteddepth_left,'String'));
-trajectory = ea_getmertrajectory(merstruct.currentmer.medial.coords_mm{side},dist,merstruct.length,50);
-ea_updatemertrajectory(handles,trajectory,'medial_left')
-
-
-% --- Executes during object creation, after setting all properties.
-function posmedial_left_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to posmedial_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function posposterior_right_Callback(hObject, eventdata, handles)
-% hObject    handle to posposterior_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of posposterior_right as text
-%        str2double(get(hObject,'String')) returns contents of posposterior_right as a double
-side = 1; %right
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-dist = str2double(get(hObject,'String'))-str2double(get(handles.editimplanteddepth_right,'String'));
-trajectory = ea_getmertrajectory(merstruct.currentmer.posterior.coords_mm{side},dist,merstruct.length,50);
-ea_updatemertrajectory(handles,trajectory,'posterior_right')
-
-
-% --- Executes during object creation, after setting all properties.
-function posposterior_right_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to posposterior_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in togglecentral_right.
-function togglecentral_right_Callback(hObject, eventdata, handles)
-% hObject    handle to togglecentral_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of togglecentral_right
-ea_getsettogglestates(handles);
-
-
-% --- Executes on button press in toggleposterior_right.
-function toggleposterior_right_Callback(hObject, eventdata, handles)
-% hObject    handle to toggleposterior_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of toggleposterior_right
-ea_getsettogglestates(handles);
-
-
-% --- Executes on button press in toggleanterior_right.
-function toggleanterior_right_Callback(hObject, eventdata, handles)
-% hObject    handle to toggleanterior_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of toggleanterior_right
-ea_getsettogglestates(handles);
-
-
-% --- Executes on button press in togglelateral_right.
-function togglelateral_right_Callback(hObject, eventdata, handles)
-% hObject    handle to togglelateral_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of togglelateral_right
-ea_getsettogglestates(handles);
-
-
-% --- Executes on button press in togglemedial_right.
-function togglemedial_right_Callback(hObject, eventdata, handles)
-% hObject    handle to togglemedial_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of togglemedial_right
-ea_getsettogglestates(handles);
-
-
-
-function poscentral_left_Callback(hObject, eventdata, handles)
-% hObject    handle to poscentral_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of poscentral_left as text
-%        str2double(get(hObject,'String')) returns contents of poscentral_left as a double
-side = 2; %left
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-dist = str2double(get(hObject,'String'))-str2double(get(handles.editimplanteddepth_left,'String'));
-trajectory = ea_getmertrajectory(merstruct.currentmer.central.coords_mm{side},dist,merstruct.length,50);
-ea_updatemertrajectory(handles,trajectory,'central_left')
-
-
-% --- Executes during object creation, after setting all properties.
-function poscentral_left_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to poscentral_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function posanterior_left_Callback(hObject, eventdata, handles)
-% hObject    handle to posanterior_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of posanterior_left as text
-%        str2double(get(hObject,'String')) returns contents of posanterior_left as a double
-side = 2; %left
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-dist = str2double(get(hObject,'String'))-str2double(get(handles.editimplanteddepth_left,'String'));
-trajectory = ea_getmertrajectory(merstruct.currentmer.anterior.coords_mm{side},dist,merstruct.length,50);
-ea_updatemertrajectory(handles,trajectory,'anterior_left')
-
-
-% --- Executes during object creation, after setting all properties.
-function posanterior_left_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to posanterior_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function posposterior_left_Callback(hObject, eventdata, handles)
-% hObject    handle to posposterior_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of posposterior_left as text
-%        str2double(get(hObject,'String')) returns contents of posposterior_left as a double
-side = 2; %left
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-dist = str2double(get(hObject,'String'))-str2double(get(handles.editimplanteddepth_left,'String'));
-trajectory = ea_getmertrajectory(merstruct.currentmer.posterior.coords_mm{side},dist,merstruct.length,50);
-ea_updatemertrajectory(handles,trajectory,'posterior_left')
-
-
-% --- Executes during object creation, after setting all properties.
-function posposterior_left_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to posposterior_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function poslateral_left_Callback(hObject, eventdata, handles)
-% hObject    handle to poslateral_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of poslateral_left as text
-%        str2double(get(hObject,'String')) returns contents of poslateral_left as a double
-side = 2; %left
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-dist = str2double(get(hObject,'String'))-str2double(get(handles.editimplanteddepth_left,'String'));
-trajectory = ea_getmertrajectory(merstruct.currentmer.lateral.coords_mm{side},dist,merstruct.length,50);
-ea_updatemertrajectory(handles,trajectory,'lateral_left')
-
-
-% --- Executes during object creation, after setting all properties.
-function poslateral_left_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to poslateral_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in keycentral_left.
-function keycentral_left_Callback(hObject, eventdata, handles)
-% hObject    handle to keycentral_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of keycentral_left
-
-
-% --- Executes on button press in keyposterior_left.
-function keyposterior_left_Callback(hObject, eventdata, handles)
-% hObject    handle to keyposterior_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of keyposterior_left
-
-
-% --- Executes on button press in keymedial_left.
-function keymedial_left_Callback(hObject, eventdata, handles)
-% hObject    handle to keymedial_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of keymedial_left
-
-
-% --- Executes on button press in keycentral_right.
-function keycentral_right_Callback(hObject, eventdata, handles)
-% hObject    handle to keycentral_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of keycentral_right
-
-
-function poscentral_right_Callback(hObject, eventdata, handles)
-% hObject    handle to poscentral_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of poscentral_right as text
-%        str2double(get(hObject,'String')) returns contents of poscentral_right as a double
-side = 1; %right
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-dist = str2double(get(hObject,'String'))-str2double(get(handles.editimplanteddepth_right,'String'));
-trajectory = ea_getmertrajectory(merstruct.currentmer.central.coords_mm{side},dist,merstruct.length,50);
-ea_updatemertrajectory(handles,trajectory,'central_right')
-
-
-% --- Executes during object creation, after setting all properties.
-function poscentral_right_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to poscentral_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function posanterior_right_Callback(hObject, eventdata, handles)
-% hObject    handle to posanterior_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of posanterior_right as text
-%        str2double(get(hObject,'String')) returns contents of posanterior_right as a double
-side = 1; %right
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-dist = str2double(get(hObject,'String'))-str2double(get(handles.editimplanteddepth_right,'String'));
-trajectory = ea_getmertrajectory(merstruct.currentmer.anterior.coords_mm{side},dist,merstruct.length,50);
-ea_updatemertrajectory(handles,trajectory,'anterior_right')
-
-
-% --- Executes during object creation, after setting all properties.
-function posanterior_right_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to posanterior_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-function posmedial_right_Callback(hObject, eventdata, handles)
-% hObject    handle to posmedial_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of posmedial_right as text
-%        str2double(get(hObject,'String')) returns contents of posmedial_right as a double
-side = 1; %right
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-dist = str2double(get(hObject,'String'))-str2double(get(handles.editimplanteddepth_right,'String'));
-trajectory = ea_getmertrajectory(merstruct.currentmer.medial.coords_mm{side},dist,merstruct.length,50);
-ea_updatemertrajectory(handles,trajectory,'medial_right')
-
-
-% --- Executes during object creation, after setting all properties.
-function posmedial_right_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to posmedial_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function poslateral_right_Callback(hObject, eventdata, handles)
-% hObject    handle to poslateral_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of poslateral_right as text
-%        str2double(get(hObject,'String')) returns contents of poslateral_right as a double
-side = 1; %right
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-dist = str2double(get(hObject,'String'))-str2double(get(handles.editimplanteddepth_right,'String'));
-trajectory = ea_getmertrajectory(merstruct.currentmer.lateral.coords_mm{side},dist,merstruct.length,50);
-ea_updatemertrajectory(handles,trajectory,'lateral_right')
-
-
-% --- Executes during object creation, after setting all properties.
-function poslateral_right_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to poslateral_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in keyposterior_right.
-function keyposterior_right_Callback(hObject, eventdata, handles)
-% hObject    handle to keyposterior_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of keyposterior_right
-
-
-% --- Executes on button press in keymedial_right.
-function keymedial_right_Callback(hObject, eventdata, handles)
-% hObject    handle to keymedial_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of keymedial_right
 
 
 % --- Executes on selection change in pushtrackmer_left.
@@ -748,20 +352,7 @@ function popupimplantedtract_left_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns popupimplantedtract_left contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupimplantedtract_left
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-
-side=2; %left
-tractstring=lower(get(handles.popupimplantedtract_left,'String'));
-tracttag=tractstring{handles.popupimplantedtract_left.Value};
-
-merstruct = ea_updatetracts(merstruct,side,tracttag,resultfig,handles);
-ea_updatemertrajectory(handles,merstruct.currentmer.central.trajectory{side},'central_left')
-ea_updatemertrajectory(handles,merstruct.currentmer.anterior.trajectory{side},'anterior_left')
-ea_updatemertrajectory(handles,merstruct.currentmer.posterior.trajectory{side},'posterior_left')
-ea_updatemertrajectory(handles,merstruct.currentmer.lateral.trajectory{side},'lateral_left')
-ea_updatemertrajectory(handles,merstruct.currentmer.medial.trajectory{side},'medial_left')
-setappdata(resultfig,'merstruct',merstruct);
+ea_set_implanted_helper(handles, 2);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -785,20 +376,7 @@ function popupimplantedtract_right_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns popupimplantedtract_right contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupimplantedtract_right
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-
-side=1; %left
-tractstring=lower(get(handles.popupimplantedtract_right,'String'));
-tracttag=tractstring{handles.popupimplantedtract_right.Value};
-
-merstruct = ea_updatetracts(merstruct,side,tracttag,resultfig,handles);
-ea_updatemertrajectory(handles,merstruct.currentmer.central.trajectory{side},'central_right')
-ea_updatemertrajectory(handles,merstruct.currentmer.anterior.trajectory{side},'anterior_right')
-ea_updatemertrajectory(handles,merstruct.currentmer.posterior.trajectory{side},'posterior_right')
-ea_updatemertrajectory(handles,merstruct.currentmer.lateral.trajectory{side},'lateral_right')
-ea_updatemertrajectory(handles,merstruct.currentmer.medial.trajectory{side},'medial_right')
-setappdata(resultfig,'merstruct',merstruct);
+ea_set_implanted_helper(handles, 1);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -830,7 +408,7 @@ merhandles = getappdata(resultfig,'merhandles');
 refreshresultfig(handles,resultfig,options,side)
 
 set(handles.editimplanteddepth_left,'String',num2str(dist));
-ea_getsettogglestates(handles,side,dist);
+% ea_getsettogglestates(handles,side,dist);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -861,7 +439,7 @@ options=getappdata(handles.mercontrolfig,'options');
 refreshresultfig(handles,resultfig,options,side)
 
 set(handles.editimplanteddepth_right,'String',num2str(dist));
-ea_getsettogglestates(handles,side,dist);
+% ea_getsettogglestates(handles,side,dist);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -875,6 +453,25 @@ function editimplanteddepth_right_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+function ea_keycheck(hObject, eventdata)
+handles = guidata(hObject);
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+merstruct = getappdata(resultfig, 'merstruct');
+mertoggles = getappdata(resultfig, 'mertoggles');
+
+% Determine which button called this
+str_parts = split(hObject.Tag(9:end), '_');
+tract_ix = find(strcmpi({merstruct.tract_info.label}, str_parts{1}));
+side_ix = 1;
+if strcmpi(str_parts{2}, 'left')
+    side_ix = 2;
+end
+
+% Update the value
+mertoggles.keycontrol(side_ix, tract_ix) = get(hObject,'Value') == get(hObject,'Max');
+setappdata(resultfig, 'mertoggles', mertoggles);
 
 
 % --- Executes when selected object is changed in keyboardcontrolgroup.
@@ -985,7 +582,7 @@ resultfig = getappdata(handles.mercontrolfig,'resultfig');
 options = getappdata(handles.mercontrolfig,'options');
 merstruct = getappdata(resultfig,'merstruct');
 setdefaultmer(handles,resultfig,merstruct,options)
-ea_getsettogglestates(handles);
+ea_getsettogglestates(hObject, eventdata, handles);
 set(hObject,'Value',0)
 
 
@@ -1067,13 +664,13 @@ if ~isempty(tmpmer)
     % display marker
     tmp = tmpmer.handle;
     mermarkers(n+1).handle  = surf(tmp.XData,tmp.YData,tmp.ZData,'FaceLighting','gouraud',...
-    'FaceColor',tmp.FaceColor,'EdgeColor',tmp.EdgeColor,'FaceAlpha',tmp.FaceAlpha,'Visible','on');
+        'FaceColor',tmp.FaceColor,'EdgeColor',tmp.EdgeColor,'FaceAlpha',tmp.FaceAlpha,'Visible','on');
     clear tmp
     
     % display tag
     tmp = tmpmer.tag.handle;
     mermarkers(n+1).tag.handle = text(tmp.Position(1),tmp.Position(2),tmp.Position(3),...
-    tmp.String,'Color',tmp.Color,'HorizontalAlignment',tmp.HorizontalAlignment,'Visible','on');
+        tmp.String,'Color',tmp.Color,'HorizontalAlignment',tmp.HorizontalAlignment,'Visible','on');
     clear tmp
     
     keymer = tmpmer.name;
@@ -1167,7 +764,7 @@ catch
     ea_error(['could not find ea_mermarkers.mat for ', options.patientname])
 end
 %assignin(workspace,'mermarkers',mermarkers)
-ea_getsettogglestates(handles,mertoggles);
+ea_getsettogglestates(hObject, [], handles, mertoggles);
 ea_updatemermarkers(mermarkers,handles,resultfig,options)
 else
     fprintf(2,'Error using importmarkers_Callback: \nNo MER trajectories available\n\n')
@@ -1198,9 +795,10 @@ function exportmarkers_Callback(hObject, eventdata, handles)
 resultfig = getappdata(handles.mercontrolfig,'resultfig');
 options = getappdata(handles.mercontrolfig,'options');
 mermarkers = getappdata(resultfig,'mermarkers');
-mertoggles = ea_getsettogglestates(handles);
+mertoggles = ea_getsettogglestates(hObject, [], handles);
 if exist([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],'file')
-    overwrite = ea_questdlg({['ea_mermarkers.mat found in ' options.patientname ' directory.'];'Would you like to overwrite this file?'},options.patientname);
+    overwrite = ea_questdlg({['ea_mermarkers.mat found in ' options.patientname ' directory.'];...
+        'Would you like to overwrite this file?'},options.patientname);
 end
 if ~exist([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],'file') || strcmp(overwrite,'Yes')
     disp(['Saving: ' options.uipatdirs{1},filesep,'ea_mermarkers.mat'])
@@ -1229,45 +827,33 @@ set(hObject,'CData',background,'Value',0)
 function setdefaultmer(handles,resultfig,merstruct,options,varargin)
 if isempty(varargin) && isequal(options.sides,1:2)
     sidestr='both';
-elseif length(varargin)==1
+elseif ~isempty(varargin)
     sidestr=varargin{1};
-elseif length(varargin)==2
-    sidestr=varargin{1};
+end
+if strcmpi(sidestr, 'both')
+    clear_sides = 1:2;
+elseif strcmpi(sidestr, 'right')
+    clear_sides = 1;
+else
+    clear_sides = 2;  % left
+end
+if length(varargin) > 1
     implanteddepth=varargin{2};
 end
 clearmertrajectories(handles,resultfig,options,sidestr)
 merhandles=getappdata(resultfig,'merhandles');
-color=merstruct.colormap;
 set(0,'CurrentFigure',resultfig)
 
-switch lower(sidestr)
-    case {'right'};
-        side=1;
-        merhandles.central{side} = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
-        merhandles.anterior{side} = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
-        merhandles.posterior{side} = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
-        merhandles.lateral{side} = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
-        merhandles.medial{side} = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);
-
-    case {'left'}
-        side=2;
-        merhandles.central{side} = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
-        merhandles.anterior{side} = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
-        merhandles.posterior{side} = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
-        merhandles.lateral{side} = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
-        merhandles.medial{side} = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);    
-        
-    case {'both','bilateral'}
-        for side=1:2;
-        merhandles.central{side} = plot3(merstruct.defaultmer.central.trajectory{side}(:,1),merstruct.defaultmer.central.trajectory{side}(:,2),merstruct.defaultmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5);
-        merhandles.anterior{side} = plot3(merstruct.defaultmer.anterior.trajectory{side}(:,1),merstruct.defaultmer.anterior.trajectory{side}(:,2),merstruct.defaultmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5);
-        merhandles.posterior{side} = plot3(merstruct.defaultmer.posterior.trajectory{side}(:,1),merstruct.defaultmer.posterior.trajectory{side}(:,2),merstruct.defaultmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5);
-        merhandles.lateral{side} = plot3(merstruct.defaultmer.lateral.trajectory{side}(:,1),merstruct.defaultmer.lateral.trajectory{side}(:,2),merstruct.defaultmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5);
-        merhandles.medial{side} = plot3(merstruct.defaultmer.medial.trajectory{side}(:,1),merstruct.defaultmer.medial.trajectory{side}(:,2),merstruct.defaultmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5);
-        end
-        
+for side = clear_sides
+    for pos_ix = 1:length(merstruct.tract_labels)
+        pos_str = merstruct.tract_labels{pos_ix};
+        traj = merstruct.defaultmer.(pos_str).trajectory{side};
+        merhandles.(pos_str){side} = plot3(traj(:,1), traj(:,2), traj(:,3),...
+            'color',merstruct.colormap(pos_ix,:), 'linew',5);
+    end
 end
-        setappdata(resultfig,'merhandles',merhandles)
+
+setappdata(resultfig,'merhandles',merhandles)
 
 
 function clearmermarkers(handles,resultfig,options)
@@ -1294,91 +880,34 @@ if isempty(merhandles)
     return
 end
 if ~exist('sidestr','var') && isequal(options.sides,1:2)
-    sidestr='both';    
+    clear_sides = 1:2;
 % Legacy
 elseif isnumeric(sidestr)
-    if sidestr==1
-        sidestr = 'right';
-    elseif sidestr==2
-        sidestr = 'left';
-    elseif isequal(sidestr,1:2)
-        sidestr = 'both';
-    end
+    clear_sides = sidestr;
 else
-    sidestr=lower(sidestr);
+    if strcmpi(sidestr, 'both')
+        clear_sides = 1:2;
+    elseif strcmpi(sidestr, 'right')
+        clear_sides = 1;
+    elseif strcmpi(sidestr, 'left')
+        clear_sides = 2;
+    end
 end
 
-merhandles = getappdata(resultfig,'merhandles');
-switch sidestr
-    case {'right'}
-        side=1;
-        try; delete(merhandles.central{side}); end
-        try; delete(merhandles.anterior{side}); end
-        try; delete(merhandles.posterior{side}); end
-        try; delete(merhandles.lateral{side}); end
-        try; delete(merhandles.medial{side}); end
-        
-        poscentral_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),['poscentral_',sidestr]);
-        posanterior_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),['posanterior_',sidestr]);
-        posposterior_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),['posposterior_',sidestr]);
-        poslateral_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),['poslateral_',sidestr]);
-        posmedial_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),['posmedial_',sidestr]);
-        
-        set(poscentral_right,'String','0');
-        set(posanterior_right,'String','0');
-        set(posposterior_right,'String','0');
-        set(poslateral_right,'String','0');
-        set(posmedial_right,'String','0');
-        
-    case {'left'}
-        side=2;
-        try; delete(merhandles.central{side}); end
-        try; delete(merhandles.anterior{side}); end
-        try; delete(merhandles.posterior{side}); end
-        try; delete(merhandles.lateral{side}); end
-        try; delete(merhandles.medial{side}); end
-        
-        poscentral_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poscentral_left');
-        posanterior_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posanterior_left');
-        posposterior_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posposterior_left');
-        poslateral_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poslateral_left');
-        posmedial_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posmedial_left');
-        set(poscentral_left,'String','0');
-        set(posanterior_left,'String','0');
-        set(posposterior_left,'String','0');
-        set(poslateral_left,'String','0');
-        set(posmedial_left,'String','0');
-        
-    case {'both','bilateral'}
-        for side=1:2;
-        try; delete(merhandles.central{side}); end
-        try; delete(merhandles.anterior{side}); end
-        try; delete(merhandles.posterior{side}); end
-        try; delete(merhandles.lateral{side}); end
-        try; delete(merhandles.medial{side}); end
-        end
-
-        poscentral_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poscentral_right');
-        posanterior_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posanterior_right');
-        posposterior_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posposterior_right');
-        poslateral_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poslateral_right');
-        posmedial_right = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posmedial_right');
-        set(poscentral_right,'String','0');
-        set(posanterior_right,'String','0');
-        set(posposterior_right,'String','0');
-        set(poslateral_right,'String','0');
-        set(posmedial_right,'String','0');
-
-        poscentral_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poscentral_left');
-        posanterior_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posanterior_left');
-        posposterior_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posposterior_left');
-        poslateral_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'poslateral_left');
-        posmedial_left = getfield(getappdata(handles.mercontrolfig,'UsedByGUIData_m'),'posmedial_left');
-        set(poscentral_left,'String','0');
-        set(posanterior_left,'String','0');
-        set(posposterior_left,'String','0');
-        set(poslateral_left,'String','0');
-        set(posmedial_left,'String','0');
+merstruct = getappdata(resultfig,'merstruct');
+ui_tags = {handles.mainuipanel.Children.Tag};
+for side = clear_sides
+    if side == 1
+        sidestr = 'right';
+    elseif side == 2
+        sidestr = 'left';
+    end
+    for pos_ix = 1:length(merstruct.tract_info)
+        pos_str = merstruct.tract_info(pos_ix).label;
+        try; delete(merhandles.(pos_str){side}); end
+        edit_handle = handles.mainuipanel.Children(strcmpi(ui_tags, ['pos' pos_str '_' sidestr]));
+        set(edit_handle, 'String', '0');
+    end
 end
 set(handles.editimplanteddepth_left,'String','0');
 set(handles.editimplanteddepth_right,'String','0');
@@ -1409,27 +938,24 @@ for n = 1:length(mermarkers)
     mermarkers(n).tag.handle = text(tmp.Position(1),tmp.Position(2),tmp.Position(3),...
         tmp.String,'Color',tmp.Color,'HorizontalAlignment',tmp.HorizontalAlignment,'Visible','off');
 
-    if strcmp(mermarkers(n).side,'right')
-        markerstring.right{end+1} = sprintf('%0.0f. %s',n,mermarkers(n).tag.string);
-    elseif strcmp(mermarkers(n).side,'left')
-        markerstring.left{end+1} = sprintf('%0.0f. %s',n,mermarkers(n).tag.string);
-    end
-    
+    markerstring.(mermarkers(n).side){end+1} = sprintf('%0.0f. %s',n,mermarkers(n).tag.string);    
 end
 
 % set implanted tract data
 try
     Lidx = find(~cellfun(@isempty,strfind({mermarkers.side},'left'))==1);
-    set(handles.popupimplantedtract_left,'Value',find(~cellfun(@isempty,strfind(handles.popupimplantedtract_left.String,mermarkers(Lidx(1)).dat.implantedtract))==1))
+    set(handles.popupimplantedtract_left,'Value',...
+        find(~cellfun(@isempty,strfind(handles.popupimplantedtract_left.String,mermarkers(Lidx(1)).dat.implantedtract))==1))
     set(handles.editimplanteddepth_left,'String',num2str(mermarkers(Lidx(1)).dat.leaddepth))
-    ea_getsettogglestates(handles,2,mermarkers(Lidx(1)).dat.leaddepth);
+    ea_getsettogglestates(hObject, [], handles, 2, mermarkers(Lidx(1)).dat.leaddepth);
 end
 
 try
     Ridx = ~cellfun(@isempty,strfind({mermarkers.side},'right'));
-    set(handles.popupimplantedtract_right,'Value',find(~cellfun(@isempty,strfind(handles.popupimplantedtract_left.String,mermarkers(Ridx(1)).dat.implantedtract))==1))
+    set(handles.popupimplantedtract_right,'Value',...
+        find(~cellfun(@isempty,strfind(handles.popupimplantedtract_left.String,mermarkers(Ridx(1)).dat.implantedtract))==1))
     set(handles.editimplanteddepth_left,'String',num2str(mermarkers(Ridx(1)).dat.leaddepth))
-    ea_getsettogglestates(handles,1,mermarkers(Ridx(1)).dat.leaddepth);
+    ea_getsettogglestates(hObject, [], handles, 1, mermarkers(Ridx(1)).dat.leaddepth);
 end
 
 setappdata(resultfig,'mermarkers',mermarkers)
@@ -1439,7 +965,79 @@ setappdata(resultfig,'markerstring',markerstring)
 set(handles.togglemarkertags,'Visible','on','Value',0)
 
 
-function mertoggles = ea_getsettogglestates(handles,varargin)
+function ea_updatepostext(hObject, eventData)
+% Called when one of the position text boxes is edited.
+handles = guidata(hObject);
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+merstruct = getappdata(resultfig, 'merstruct');
+
+% Determine which text element called this
+str_parts = split(hObject.Tag(4:end), '_');
+% tract_ix = find(strcmpi({merstruct.tract_info.label}, str_parts{1}));
+side_ix = 1;
+if strcmpi(str_parts{2}, 'left')
+    side_ix = 2;
+end
+
+input = str2double(get(hObject,'String'));
+implant_depth = str2double(get(handles.(['editimplanteddepth_' str_parts{2}]),'String'));
+dist = input - implant_depth;
+trajectory = ea_getmertrajectory(merstruct.currentmer.(str_parts{1}).coords_mm{side_ix},...
+    dist, merstruct.length, 50);
+ea_updatemertrajectory(handles,...
+    trajectory, 0, hObject.Tag);
+
+
+
+function mertoggles = ea_updatetogglestate(hObject, eventdata)
+% Called when one of the tract toggle buttons is pressed.
+handles = guidata(hObject);
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+merstruct = getappdata(resultfig, 'merstruct');
+mertoggles = getappdata(resultfig, 'mertoggles');
+
+% Determine which button called this
+str_parts = split(hObject.Tag(7:end), '_');
+tract_ix = find(strcmpi({merstruct.tract_info.label}, str_parts{1}));
+side_ix = 1;
+if strcmpi(str_parts{2}, 'left')
+    side_ix = 2;
+end
+
+% Update the value in mertoggles
+mertoggles.togglestates(side_ix, tract_ix) = hObject.Value;
+setappdata(resultfig,'mertoggles',mertoggles);
+
+% Update the visual presentation
+merhandles = getappdata(resultfig,'merhandles');
+if isvalid(merhandles.(str_parts{1}){side_ix})
+    if hObject.Value
+        set(merhandles.(str_parts{1}){side_ix}, 'Visible', 'on');
+    else
+        set(merhandles.(str_parts{1}){side_ix}, 'Visible', 'off');
+    end
+end
+
+
+function mertoggles = ea_readtogglestates(handles)
+% Scans the toggle button values and stores them in appdata
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+merstruct = getappdata(resultfig, 'merstruct');
+ui_tags = {handles.mainuipanel.Children.Tag};
+side_strs = {'right', 'left'};
+mertoggles.togglestates = nan(2, length(merstruct.tract_info));
+for side_ix = 1:length(side_strs)
+    for pos_ix = 1:length(merstruct.tract_info)
+        search_str = ['toggle' merstruct.tract_info(pos_ix).label '_' side_strs{side_ix}];
+        mertoggles.togglestates(side_ix, pos_ix) = handles.mainuipanel.Children(strcmp(ui_tags, search_str)).Value;
+        
+        % TODO: keycheck
+    end
+end
+setappdata(resultfig,'mertoggles',mertoggles);
+
+
+function mertoggles = ea_getsettogglestates(hObject, eventdata, handles, varargin)
 % Example type A: 
 %   varargin{1}=mertoggles;
 %
@@ -1456,123 +1054,44 @@ end
 
 resultfig=getappdata(handles.mercontrolfig,'resultfig');
 merhandles = getappdata(resultfig,'merhandles');
+options = getappdata(handles.mercontrolfig,'options');
+merstruct = getappdata(resultfig, 'merstruct');
+
+if ~exist('mertoggles', 'var')
+    mertoggles.keycontrol = nan(2, length(merstruct.tract_info));
+    mertoggles.togglestates = nan(2, length(merstruct.tract_info));
+end
 
 % reset states based on gui:
-if ~exist('mertoggles','var')
-
-mertoggles.keycontrol=[get(handles.keycentral_left,'Value'),get(handles.keyanterior_left,'Value'),...
-    get(handles.keyposterior_left,'Value'),get(handles.keylateral_left,'Value'),get(handles.keymedial_left,'Value');...
-    get(handles.keycentral_right,'Value'),get(handles.keyanterior_right,'Value'),get(handles.keyposterior_right,'Value'),...
-    get(handles.keylateral_right,'Value'),get(handles.keymedial_right,'Value')];
-mertoggles.togglestates=[get(handles.togglecentral_left,'Value'),get(handles.toggleanterior_left,'Value'),...
-    get(handles.toggleposterior_left,'Value'),get(handles.togglelateral_left,'Value'),get(handles.togglemedial_left,'Value');...
-    get(handles.togglecentral_right,'Value'),get(handles.toggleanterior_right,'Value'),get(handles.toggleposterior_right,'Value'),...
-    get(handles.togglelateral_right,'Value'),get(handles.togglemedial_right,'Value')];
-
-else
-    
-side=1; sidestr='right';
-set(handles.(['keycentral_',sidestr]),'Value',mertoggles.keycontrol(side,1))
-    set(handles.(['keyanterior_',sidestr]),'Value',mertoggles.keycontrol(side,2))
-    set(handles.(['keyposterior_',sidestr]),'Value',mertoggles.keycontrol(side,3))
-    set(handles.(['keylateral_',sidestr]),'Value',mertoggles.keycontrol(side,4))
-    set(handles.(['keymedial_',sidestr]),'Value',mertoggles.keycontrol(side,5))
-set(handles.(['togglecentral_',sidestr]),'Value',mertoggles.togglestates(side,1))
-    set(handles.(['toggleanterior_',sidestr]),'Value',mertoggles.togglestates(side,2))
-    set(handles.(['toggleposterior_',sidestr]),'Value',mertoggles.togglestates(side,3))
-    set(handles.(['togglelateral_',sidestr]),'Value',mertoggles.togglestates(side,4))
-    set(handles.(['togglemedial_',sidestr]),'Value',mertoggles.togglestates(side,5))
-
-side=2; sidestr='left';
-set(handles.(['keycentral_',sidestr]),'Value',mertoggles.keycontrol(side,1))
-    set(handles.(['keyanterior_',sidestr]),'Value',mertoggles.keycontrol(side,2))
-    set(handles.(['keyposterior_',sidestr]),'Value',mertoggles.keycontrol(side,3))
-    set(handles.(['keylateral_',sidestr]),'Value',mertoggles.keycontrol(side,4))
-    set(handles.(['keymedial_',sidestr]),'Value',mertoggles.keycontrol(side,5))
-set(handles.(['togglecentral_',sidestr]),'Value',mertoggles.togglestates(side,1))
-    set(handles.(['toggleanterior_',sidestr]),'Value',mertoggles.togglestates(side,2))
-    set(handles.(['toggleposterior_',sidestr]),'Value',mertoggles.togglestates(side,3))
-    set(handles.(['togglelateral_',sidestr]),'Value',mertoggles.togglestates(side,4))
-    set(handles.(['togglemedial_',sidestr]),'Value',mertoggles.togglestates(side,5))
-
-end
-setappdata(getappdata(handles.mercontrolfig,'resultfig'),'mertoggles',mertoggles); % also store toggle data in resultfig.
-
-% set togglestates 
-% toggles right
-side=1;
-if get(handles.togglecentral_right,'Value') && isvalid(merhandles.central{side})
-    set(merhandles.central{side},'Visible','on')
-elseif ~get(handles.togglecentral_right,'Value') && isvalid(merhandles.central{side})
-    set(merhandles.central{side},'Visible','off')
-end
-if get(handles.toggleanterior_right,'Value') && isvalid(merhandles.anterior{side})
-    set(merhandles.anterior{side},'Visible','on')
-elseif ~get(handles.toggleanterior_right,'Value') && isvalid(merhandles.anterior{side})
-    set(merhandles.anterior{side},'Visible','off')
-end
-if get(handles.toggleposterior_right,'Value') && isvalid(merhandles.posterior{side})
-    set(merhandles.posterior{side},'Visible','on')
-elseif ~get(handles.toggleposterior_right,'Value') && isvalid(merhandles.posterior{side})
-    set(merhandles.posterior{side},'Visible','off')
-end
-if get(handles.togglelateral_right,'Value') && isvalid(merhandles.lateral{side})
-    set(merhandles.lateral{side},'Visible','on')
-elseif ~get(handles.togglelateral_right,'Value') && isvalid(merhandles.lateral{side})
-    set(merhandles.lateral{side},'Visible','off')
-end
-if get(handles.togglemedial_right,'Value') && isvalid(merhandles.medial{side})
-    set(merhandles.medial{side},'Visible','on')
-elseif ~get(handles.togglemedial_right,'Value') && isvalid(merhandles.medial{side})
-    set(merhandles.medial{side},'Visible','off')
-end
-% toggles left
-side=2;
-sidestr='left';
-if get(handles.(['togglecentral_',sidestr]),'Value') && isvalid(merhandles.central{side})
-    set(merhandles.central{side},'Visible','on')
-elseif ~get(handles.(['togglecentral_',sidestr]),'Value') && isvalid(merhandles.central{side})
-    set(merhandles.central{side},'Visible','off')
-end
-if get(handles.(['toggleanterior_',sidestr]),'Value') && isvalid(merhandles.anterior{side})
-    set(merhandles.anterior{side},'Visible','on')
-elseif ~get(handles.(['toggleanterior_',sidestr]),'Value') && isvalid(merhandles.anterior{side})
-    set(merhandles.anterior{side},'Visible','off')
-end
-if get(handles.(['toggleposterior_',sidestr]),'Value') && isvalid(merhandles.posterior{side})
-    set(merhandles.posterior{side},'Visible','on')
-elseif ~get(handles.(['toggleposterior_',sidestr]),'Value') && isvalid(merhandles.posterior{side})
-    set(merhandles.posterior{side},'Visible','off')
-end
-if get(handles.(['togglelateral_',sidestr]),'Value') && isvalid(merhandles.lateral{side})
-    set(merhandles.lateral{side},'Visible','on')
-elseif ~get(handles.(['togglelateral_',sidestr]),'Value') && isvalid(merhandles.lateral{side})
-    set(merhandles.lateral{side},'Visible','off')
-end
-if get(handles.(['togglemedial_',sidestr]),'Value') && isvalid(merhandles.medial{side})
-    set(merhandles.medial{side},'Visible','on')
-elseif ~get(handles.(['togglemedial_',sidestr]),'Value') && isvalid(merhandles.medial{side})
-    set(merhandles.medial{side},'Visible','off')
-end
-
-% set pos handles
-if exist('dist','var')
-    if side==2
-    sidestr='left';
-    set(handles.(['poscentral_',sidestr]),'String',num2str(dist));
-    set(handles.(['posanterior_',sidestr]),'String',num2str(dist));
-    set(handles.(['posposterior_',sidestr]),'String',num2str(dist));
-    set(handles.(['poslateral_',sidestr]),'String',num2str(dist));
-    set(handles.(['posmedial_',sidestr]),'String',num2str(dist));
-    elseif side==1
-    sidestr='right';
-    set(handles.(['poscentral_',sidestr]),'String',num2str(dist));
-    set(handles.(['posanterior_',sidestr]),'String',num2str(dist));
-    set(handles.(['posposterior_',sidestr]),'String',num2str(dist));
-    set(handles.(['poslateral_',sidestr]),'String',num2str(dist));
-    set(handles.(['posmedial_',sidestr]),'String',num2str(dist));
+for side = 1:2
+    if side == 1
+        side_str = 'right';
+    else
+        side_str = 'left';
+    end
+    for pos_ix = 1:length(merstruct.tract_info)
+        pos_str = merstruct.tract_info(pos_ix).label;
+        this_substr = [pos_str '_' side_str];
+        if isnan(mertoggles.keycontrol(side, pos_ix))
+            mertoggles.keycontrol(side, pos_ix) = get(handles.(['key' this_substr]),'Value');
+            mertoggles.togglestates(side, pos_ix) = get(handles.(['toggle' this_substr]),'Value');
+        else
+            set(handles.(['key' this_substr]),'Value',mertoggles.keycontrol(side, pos_ix));
+            set(handles.(['toggle' this_substr]),'Value', mertoggles.togglestates(side, pos_ix));
+        end
+        % set togglestates 
+        if get(handles.(['toggle' this_substr]),'Value') && isvalid(merhandles.(pos_str){side})
+            set(merhandles.(pos_str){side},'Visible','on')
+        elseif ~get(handles.(['toggle' this_substr]),'Value') && isvalid(merhandles.(pos_str){side})
+            set(merhandles.(pos_str){side},'Visible','off')
+        end
+        % set pos handles
+        if exist('dist', 'var')
+            set(handles.(['pos' this_substr]),'String',num2str(dist));
+        end
     end
 end
+setappdata(getappdata(handles.mercontrolfig,'resultfig'),'mertoggles',mertoggles); % also store toggle data in resultfig.
 setappdata(resultfig,'merhandles',merhandles)
 
 
@@ -1583,6 +1102,8 @@ offset = getfield(getappdata(resultfig,'merstruct'),'offset');
 % x-axis --> negative = medial, positive = lateral
 % y-axis --> negative = posterior, positive = anterior
 % z-axis --> negative = inferior, positive = superior
+
+% defaultmer coords assumes central is implant site
 coords_mm = merstruct.defaultmer.central.coords_mm{side};
 trajectory = merstruct.defaultmer.central.trajectory{side};
 switch tracttag 
@@ -1749,48 +1270,26 @@ clearmertrajectories(handles,resultfig,options,side)
 merstruct=getappdata(resultfig,'merstruct');
 merhandles=getappdata(resultfig,'merhandles');
 mermarkers=getappdata(resultfig,'mermarkers');
-color=merstruct.colormap;
+
 % Draw default trajectories
 set(0,'CurrentFigure',resultfig); hold on;
 for iSide = side
-    
     if iSide==1 % right = 1 
         sidestr=lower('right');
-        merhandles.central{side} = plot3(merstruct.currentmer.central.trajectory{side}(:,1),merstruct.currentmer.central.trajectory{side}(:,2),merstruct.currentmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5,'tag',['central_',sidestr]);
-        merhandles.anterior{side} = plot3(merstruct.currentmer.anterior.trajectory{side}(:,1),merstruct.currentmer.anterior.trajectory{side}(:,2),merstruct.currentmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5,'tag',['anterior_',sidestr]);
-        merhandles.posterior{side} = plot3(merstruct.currentmer.posterior.trajectory{side}(:,1),merstruct.currentmer.posterior.trajectory{side}(:,2),merstruct.currentmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5,'tag',['posterior_',sidestr]);
-        merhandles.lateral{side} = plot3(merstruct.currentmer.lateral.trajectory{side}(:,1),merstruct.currentmer.lateral.trajectory{side}(:,2),merstruct.currentmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5,'tag',['lateral_',sidestr]);
-        merhandles.medial{side} = plot3(merstruct.currentmer.medial.trajectory{side}(:,1),merstruct.currentmer.medial.trajectory{side}(:,2),merstruct.currentmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5,'tag',['medial_',sidestr]);
-        set(handles.editimplanteddepth_right,'String','0')
-        
     elseif iSide==2 % left = 2
         sidestr=lower('left');
-        merhandles.central{side} = plot3(merstruct.currentmer.central.trajectory{side}(:,1),merstruct.currentmer.central.trajectory{side}(:,2),merstruct.currentmer.central.trajectory{side}(:,3),'color',color(1,:),'linew',5,'tag',['central_',sidestr]);
-        merhandles.anterior{side} = plot3(merstruct.currentmer.anterior.trajectory{side}(:,1),merstruct.currentmer.anterior.trajectory{side}(:,2),merstruct.currentmer.anterior.trajectory{side}(:,3),'color',color(2,:),'linew',5,'tag',['anterior_',sidestr]);
-        merhandles.posterior{side} = plot3(merstruct.currentmer.posterior.trajectory{side}(:,1),merstruct.currentmer.posterior.trajectory{side}(:,2),merstruct.currentmer.posterior.trajectory{side}(:,3),'color',color(3,:),'linew',5,'tag',['posterior_',sidestr]);
-        merhandles.lateral{side} = plot3(merstruct.currentmer.lateral.trajectory{side}(:,1),merstruct.currentmer.lateral.trajectory{side}(:,2),merstruct.currentmer.lateral.trajectory{side}(:,3),'color',color(4,:),'linew',5,'tag',['lateral_',sidestr]);
-        merhandles.medial{side} = plot3(merstruct.currentmer.medial.trajectory{side}(:,1),merstruct.currentmer.medial.trajectory{side}(:,2),merstruct.currentmer.medial.trajectory{side}(:,3),'color',color(5,:),'linew',5,'tag',['medial_',sidestr]); 
-        set(handles.editimplanteddepth_left,'String','0')
-    end    
+    end
+    for pos_ix = 1:length(merstruct.tract_labels)
+        pos = merstruct.tract_labels{pos_ix};
+        traj = merstruct.currentmer.(pos).trajectory{side};
+        merhandles.(pos){side} = plot3(traj(:,1), traj(:,2), traj(:,3),...
+            'color',merstruct.colormap(pos_ix,:), 'linew',5, 'tag',[pos '_' sidestr]);
+    end
+    set(handles.editimplanteddepth_left,'String','0');
 end
 
 setappdata(resultfig,'merhandles',merhandles)
 
-
-function clearkeyboardcontrolgroup(handles,mercontrolfig,resultfig,options)
-set(handles.keycentral_left,'Value',0)
-set(handles.keyanterior_left,'Value',0)
-set(handles.keyposterior_left,'Value',0)
-set(handles.keylateral_left,'Value',0)
-set(handles.keymedial_left,'Value',0)
-
-set(handles.keycentral_right,'Value',0)
-set(handles.keyanterior_right,'Value',0)
-set(handles.keyposterior_right,'Value',0)
-set(handles.keycentral_right,'Value',0)
-set(handles.keymedial_right,'Value',0)
-
-setappdata(resultfig,'keymer',[])
 
 function [files,subs] = fdir(Path,ext)
 % Returns contents of path as struct
@@ -1817,7 +1316,7 @@ if ~isempty({contents([contents.isdir]).name})
 end
 
 if nargin==2
-    files = files(~cellfun(@isempty , strfind({files.name},ext)));
+    files = files(~cellfun(@isempty, strfind({files.name},ext)));
 end
 
 
@@ -1827,3 +1326,55 @@ function ea_keypress(handles,event)
 
 if ismember('shift',event.Modifier)
 end
+
+
+function ea_update_trajectory_helper(hObject, handles, side, pos_str)
+if side==1
+    side_str = 'right';
+else
+    side_str = 'left';
+end
+resultfig=getappdata(handles.mercontrolfig,'resultfig');
+merstruct=getappdata(resultfig,'merstruct');
+dist = str2double(get(hObject,'String'))-str2double(get(handles.(['editimplanteddepth_' side_str]),'String'));
+trajectory = ea_getmertrajectory(merstruct.currentmer.(pos_str).coords_mm{side},dist,merstruct.length,50);
+ea_updatemertrajectory(handles,trajectory,0,['pos' pos_str '_' side_str]);
+
+
+function ea_set_implanted_helper(handles, side)
+if side == 1
+    side_str = 'right';
+else
+    side_str = 'left';
+end
+resultfig=getappdata(handles.mercontrolfig,'resultfig');
+merstruct=getappdata(resultfig,'merstruct');
+options=getappdata(handles.mercontrolfig,'options');
+tractstring=lower(get(handles.(['popupimplantedtract_' side_str]),'String'));
+tracttag=tractstring{handles.(['popupimplantedtract_' side_str]).Value};
+merstruct = ea_updatetracts(merstruct,side,tracttag,resultfig,handles);
+for pos_str = merstruct.tract_labels
+    ea_updatemertrajectory(handles,...
+        merstruct.currentmer.(pos_str{:}).trajectory{side},...
+        [pos_str{:} '_' side_str]);
+end
+setappdata(resultfig,'merstruct',merstruct);
+
+
+% --- Executes on button press in pushbutton_clear_checks.
+function pushbutton_clear_checks_Callback(hObject, eventdata, handles)
+clearkeyboardcontrolgroup(handles);
+
+
+function clearkeyboardcontrolgroup(handles)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+merstruct = getappdata(resultfig,'merstruct');
+ui_tags = {handles.keyboardcontrolgroup.Children.Tag};
+for side_str = {'left', 'right'}
+    for tract_info = merstruct.tract_info
+        set(handles.keyboardcontrolgroup.Children(strcmpi(ui_tags,...
+                    ['keycheck' tract_info.label '_' side_str{:}])),...
+            'Value', 0);
+    end
+end
+setappdata(resultfig,'keymer',[])

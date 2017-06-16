@@ -487,10 +487,10 @@ function ea_keypress(resultfig,event)
 % this is the main keypress function for the resultfigure. Add event
 % listeners here.
 if ismember('alt',event.Modifier)
-     setappdata(resultfig,'altpressed',1);
-%    disp('Altpressed');
+    setappdata(resultfig,'altpressed',1);
+    %    disp('Altpressed');
 elseif ismember('shift',event.Modifier)
-     setappdata(resultfig,'shiftpressed',1);
+    setappdata(resultfig,'shiftpressed',1);
 end
 
 try
@@ -513,19 +513,23 @@ if ~isempty(merwin) && isvalid(merwin)
     % tmp = parula;
     % colormap = repmat(tmp(end:-2:1,:),[4 1]); clear tmp
     %colormap = [1 1 0; 0 0 1];
-
-    if isempty(keymer)
+    
+    if ~any(keymer)
         return
-    elseif sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
+    end
+    
+    if any(strcmp(event.Key, {'space','m','l','t','b','s','n'}))
+        % Reserved keys: {'space','m','l','t','b','s','n'}
+        % 'space' = Generic; 'm' = MER; 'l' = LFP; 't' = Top; 'b' = Bottom
+        
         [~,side,track]=ea_detsidestr(keymer);
         trajectory = [get(merhandles.(track){side},'XData')',get(merhandles.(track){side},'YData')',get(merhandles.(track){side},'ZData')'];
         if n>0 && isequal(trajectory(1,:),mermarkers(n).coords_mm) && ~strcmp(event.Key,'s') && ~strcmp(event.Key,'n')
-            fprintf('Location along %s %s tract already marked: [%f,%f,%f].\n',keymer(strfind(keymer,'_')+1:end),keymer(4:strfind(keymer,'_')-1),trajectory(1,:))
+            fprintf('Location along %s %s tract already marked: [%f,%f,%f].\n',...
+                keymer(strfind(keymer,'_')+1:end),keymer(4:strfind(keymer,'_')-1),trajectory(1,:))
             return
         end
-    end
-
-    if sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
+        
         shape.x = shape.x*sSize+trajectory(1,1);
         shape.y = shape.y*sSize+trajectory(1,2);
         shape.z = shape.z*sSize+trajectory(1,3);
@@ -541,9 +545,7 @@ if ~isempty(merwin) && isvalid(merwin)
         mermarkers(n+1).tag.depth = getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['pos' keymer(4:end)]),'String');
         mermarkers(n+1).tag.visible = options.prefs.mer.tag.visible;
         [mermarkers(n+1).tag.handle,mermarkers(n+1).tag.string] = ea_setmertag(mermarkers(n+1).tag,keymer,trajectory(1,:));
-
-        % Reserved keys: {'space','m','l','t','b','s','n'}
-        % 'space' = Generic; 'm' = MER; 'l' = LFP; 't' = Top; 'b' = Bottom
+        
         switch lower(commnd)
             case 'space'
                 mermarkers(n+1).notes;
@@ -578,44 +580,34 @@ if ~isempty(merwin) && isvalid(merwin)
             case 'n'
                 mermarkers(n).notes = char(inputdlg('Enter Notes'));
         end
-
+        
         setappdata(resultfig,'mermarkers',mermarkers);
         ea_updatemercontrol(keymer,getappdata(merwin,'UsedByGUIData_m'),mermarkers,resultfig,options)
-
+        
     else
+        if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
+            d=0.25; % step size
+        elseif ismember(event.Modifier,'shift')
+            d=0.75;    % large step
+        elseif ismember(event.Modifier,'alt')
+            d=0.05;    % small step size
+        end
+                
         switch commnd
             case {'uparrow','leftarrow'}
-            if isempty(keymer); return
-            else
-              [~,side,track]=ea_detsidestr(keymer);
-              trajectory = [merhandles.(track){side}.XData',merhandles.(track){side}.YData',merhandles.(track){side}.ZData'];
-            end
-            if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
-                d=0.25; % step size
-            elseif ismember(event.Modifier,'shift')
-                d=0.75;    % large step
-            elseif ismember(event.Modifier,'alt')
-                d=0.05;    % small step size
-            end
-            newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
-            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer)
-        case {'downarrow','rightarrow'}
-            if isempty(keymer); return
-            else
                 [~,side,track]=ea_detsidestr(keymer);
-                trajectory = [merhandles.(track){side}.XData',merhandles.(track){side}.YData',merhandles.(track){side}.ZData'];            end
-            if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
-                d=-0.25; % movement distance
-            elseif ismember(event.Modifier,'shift')
-                d=-0.75; % large step
-            elseif ismember(event.Modifier,'alt')
-                d=-0.05;
-            end
-            newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
-            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer)
+                trajectory = [merhandles.(track){side}.XData',merhandles.(track){side}.YData',merhandles.(track){side}.ZData'];
+                newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
+                ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer)
+            
+            case {'downarrow','rightarrow'}
+                [~,side,track]=ea_detsidestr(keymer);
+                trajectory = [merhandles.(track){side}.XData',merhandles.(track){side}.YData',merhandles.(track){side}.ZData'];
+                d = d * -1;
+                newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
+                ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer)
         end
     end
-end
 % commnd=event.Character;
 % switch lower(commnd)
 %     case ' '
@@ -624,6 +616,7 @@ end
 %     case {'c','v','b','n'}
 %     otherwise % arrow keys, plus, minus
 % end
+end
 
 
 function ea_keyrelease(resultfig,event)
@@ -1008,34 +1001,3 @@ setappdata(resultfig,'markerstring',markerstring)
 set(handles.popupmermarkers_right,'Visible','off','String',markerstring.right,'Value',1)
 set(handles.popupmermarkers_left,'Visible','off','String',markerstring.left,'Value',1)
 % set(handles.togglemarkertags,'Visible','on','Value',1)
-
-function outputtrajectory = ea_getmertrajectory(trajectory,dist,length,n)
-if size(trajectory,1)<2
-    error('Must input a vector')
-end
-dxyz = sqrt((diff(trajectory(1:2,1))^2)+(diff(trajectory(1:2,2))^2)+diff(trajectory(1:2,3))^2);
-slope = mean(diff(trajectory))/dxyz;
-startpoint = trajectory(1,:)+slope.*dist;
-
-outputtrajectory(:,1) = linspace(startpoint(1,1),startpoint(1,1)+slope(1)*length,n);
-outputtrajectory(:,2) = linspace(startpoint(1,2),startpoint(1,2)+slope(2)*length,n);
-outputtrajectory(:,3) = linspace(startpoint(1,3),startpoint(1,3)+slope(3)*length,n);
-
-
-function ea_updatemertrajectory(handles,trajectory,dist,tag)
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-% Update position in resultfig
-% XData = get(getappdata(resultfig,tag),'XData');
-% YData = get(getappdata(resultfig,tag),'YData');
-% ZData = get(getappdata(resultfig,tag),'ZData');
-[~,side,track]=ea_detsidestr(tag);
-h = getfield(getappdata(resultfig,'merhandles'),track);
-h = h{side};
-set(h,'XData',trajectory(:,1)')
-set(h,'YData',trajectory(:,2)')
-set(h,'ZData',trajectory(:,3)')
-setappdata(resultfig,tag,h)
-set(handles.(tag),'Value',1)
-setappdata(resultfig,'keymer',tag)
-newdiststr = num2str(str2double(get(handles.(['pos',tag(4:end)]),'String'))+dist);
-set(handles.(['pos',tag(4:end)]),'String',newdiststr)
