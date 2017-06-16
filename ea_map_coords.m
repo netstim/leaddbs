@@ -14,12 +14,12 @@ function [XYZ_dest_mm, XYZ_dest_vx] = ea_map_coords(varargin)
 %     transformmethod: the transformation method used, case insensitive, optional
 %
 %     useinverse: use the inverse of the transformation or not, only needed
-%                 by ANTs in the manual mode (calling outside LEAD with 
+%                 by ANTs in the manual mode (calling outside LEAD with
 %                 explicitly specified transformation file), optional
 %
 % Output:
 %     XYZ_dest_mm: mm coordinates in dest image. size: 3*N
-%     XYZ_dest_vx: vox coordinates in dest image. size: 3*N 
+%     XYZ_dest_vx: vox coordinates in dest image. size: 3*N
 %
 % To map the 'vox' coords in src to the 'mm' coords in src:
 %     XYZ_mm = ea_map_coords(XYZ_vx, src);
@@ -60,9 +60,9 @@ function [XYZ_dest_mm, XYZ_dest_vx] = ea_map_coords(varargin)
 %
 %     old '*_sn.mat' file from SPM (DCT structure)
 %
-%     'y_ea_normparams.nii' or 'y_ea_inv_normparams.nii' file form LEAD.In 
+%     'y_ea_normparams.nii' or 'y_ea_inv_normparams.nii' file form LEAD.In
 %     this case, real transformation file for SPM, ANTs or FSL will be
-%     automatically dected (in the subject's folder), i.e., even if the 
+%     automatically dected (in the subject's folder), i.e., even if the
 %     registration was dne with ANTs, you can still specify the transform
 %     as one of these two, the code will handle it acordingly. Thus you can
 %     use an unified calling to do the mapping, no need to check the
@@ -79,18 +79,18 @@ function [XYZ_dest_mm, XYZ_dest_vx] = ea_map_coords(varargin)
 %
 % For SPM and ANTs, to map the coords in src image to the coords in dest
 % image (the registration was done using src image as moving image and dest
-% image as fixed image), the INVERSE version of the transformation should 
+% image as fixed image), the INVERSE version of the transformation should
 % be used.
 %
 % For FSL, to map the coords in src image to the coords in dest image
 % (still, the registration was done using src image as moving image and
 % dest image as fixed image), the direct warp field is used as in the
 % official document. But this way has severe performance issue since it
-% internally inverts the warp field for each point in each iteration. To 
+% internally inverts the warp field for each point in each iteration. To
 % solve this problem, here we make a modified version of 'img2imgcoord',
 % which can also use the inverse version of the warp filed. Thus the coords
 % mapping is extremely speeded up. So it is recommended here to use the
-% inverse version of the warp field if you want to do the coords mapping 
+% inverse version of the warp field if you want to do the coords mapping
 % manually.
 %
 % If the registration was done by ANTs, and you want to manually do the
@@ -126,7 +126,7 @@ elseif size(XYZ_src_vx, 1) ~= 4
 end
 
 % srcvx to/from srcmm only
-if nargin == 2 
+if nargin == 2
     if nargout == 1
         XYZ_dest_mm = spm_get_space(src) * XYZ_src_vx;
     elseif nargout == 2
@@ -143,53 +143,53 @@ end
 
 % transformation specified
 if ~isempty(transform)
-    
+
     % transformation is a variable, LINEAR case
     if ~ischar(transform)
-        
+
         if isequal(size(transform),[4 4]) % 4*4 affine matrix supplied
             XYZ_dest_mm = transform * XYZ_src_vx;
-            
+
         elseif size(transform,1) == 1 % 1*N return value from spm_coreg(dest, src) suppplied
             XYZ_dest_mm = spm_matrix(transform(:)')\spm_get_space(src)*XYZ_src_vx;
-            
+
         else
             error('Improper or unsuported transform specified!');
         end
-    
+
     % DCT structure from old SPM code, NON-LINEAR case
     elseif ~isempty(regexp(transform, 'sn\.mat$', 'once'))
-        
+
         % DCT sn structure
         XYZ_dest_mm = srcvx2destmm_sn(XYZ_src_vx, transform);
-   
+
     % mat file supplied, LINEAR case
     elseif ~isempty(regexp(transform, '\.mat$', 'once'))
-        
+
         % Need to differentiate  the transformation type
         if nargin >= 5
             transformmethod = varargin{5};
         else
             transformmethod = 'FALLBACK';
         end
-        
+
         transformmethod = strsplit(transformmethod, ' '); % compatible with 'options.coregmr.method'
         transformmethod = upper(transformmethod{end});
-        
+
         switch transformmethod
-            
+
             case {'AFFINE'} % file is  4*4 affine matrix
                 transform = load(transform);
                 varname = fieldnames(transform);
                 transform = transform.(varname{1});
                 XYZ_dest_mm = transform * XYZ_src_vx;
-            
+
             case {'COREG'} % file is 1*N spm_coreg return value
                 transform = load(transform);
                 varname = fieldnames(transform);
                 transform = transform.(varname{1});
                 XYZ_dest_mm = spm_matrix(transform(:)')\spm_get_space(src)*XYZ_src_vx;
-                
+
             case {'SPM'} % Registration done by SPM (ea_docoreg_spm)
                 % fuzzy match, transform can be specified as XX2XX_spm.mat
                 % or simply XX2XX.mat
@@ -199,13 +199,13 @@ if ~isempty(transform)
                 transform = load(transform, 'spmaffine');
                 transform = transform.spmaffine;
                 XYZ_dest_mm = transform * XYZ_src_vx;
-                
+
             case {'ANTS'} % Registration done by ANTs (ea_ants)
                 directory = fileparts(transform);
                 if isempty(directory)
                     directory = '.';
                 end
-                
+
                 % fuzzy match, transform can be specified as
                 % XX2XX_antsX.mat, XX2XX_ants.mat or simply XX2XX.mat
                 if regexp(transform,'_ants\d*\.mat$', 'once')
@@ -213,7 +213,7 @@ if ~isempty(transform)
                 else
                     transform = transform(1:end-4);
                 end
-                
+
                 % check transformation file
                 match = dir([transform, '_ants*.mat']);
                 if ~isempty(match) % src2dest.mat exists
@@ -227,31 +227,31 @@ if ~isempty(transform)
                     transform = [directory, filesep, match(end).name];
                     useinverse = 0; % Registration was done from dest to src, no inverse needed
                 end
-                
+
                 % vox to mm, ANTs takes mm coords as input
                 XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
-            
+
                 % RAS to LPS, ANTs (ITK) use LPS coords
                 XYZ_src_mm(1,:)=-XYZ_src_mm(1,:);
                 XYZ_src_mm(2,:)=-XYZ_src_mm(2,:);
-                
+
                 % apply transform, need transpose becuase ANTs prefer N*3
                 % like row vector
                 XYZ_dest_mm = ea_ants_applytransforms_to_points(directory, XYZ_src_mm(1:3,:)', useinverse, transform)';
-                
+
                 % LPS to RAS, restore to RAS coords
                 XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
                 XYZ_dest_mm(2,:)=-XYZ_dest_mm(2,:);
-                
+
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
-                
+
             case {'FSL', 'FLIRT'} % Registration done by FSL (ea_flirt)
                 directory = fileparts(transform);
                 if isempty(directory)
                     directory = '.';
                 end
-                
+
                 % fuzzy match, transform can be specified as
                 % XX2XX_flirtX.mat, XX2XX_flirt.mat or simply XX2XX.mat
                 if regexp(transform,'_flirt\d*\.mat$', 'once')
@@ -261,18 +261,18 @@ if ~isempty(transform)
                 end
                 match = dir([transform, '_flirt*.mat']);
                 transform = [directory, filesep, match(end).name];
-                
+
                 % vox to mm, use img2imgcoord to do mm coords
                 % transformation
                 XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
-                
+
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
                 XYZ_dest_mm = ea_img2imgcoord(XYZ_src_mm(1:3,:)', src, dest, transform, 'l')';
-                
+
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
-                
+
             otherwise % atual FALLBACK
                 % If no transformmethod is supplied, do a just-in-time
                 % spm_coreg here as fallback, since linear transformation
@@ -281,7 +281,7 @@ if ~isempty(transform)
                 fprintf('\nTransformation method not found!\nFallback to spm_coreg...\n');
                 x = spm_coreg(dest, src);
                 XYZ_dest_mm = spm_matrix(x(:)')\spm_get_space(src)*XYZ_src_vx;
-                
+
                 directory = fileparts(src);
                 if isempty(directory)
                     directory = '.';
@@ -290,24 +290,24 @@ if ~isempty(transform)
                 [~, fix] = ea_niifileparts(dest);
                 save([directory, filesep, mov, '2', fix, '.mat'], 'x');
         end
-    
+
    	% 'y_ea_normparams.nii' or 'y_ea_inv_normparams.nii' supplied, LEAD's
-   	% non-linear case, proper tranformation files will be automatically 
+   	% non-linear case, proper tranformation files will be automatically
     % detected for ANTs and FSL. 'y_ea_inv_normparams.nii' should be used
     % if you want to map src coords to dest coords (internally, for SPM,
-    % ANTs and FSL, the inverse of the deformation field is used for the 
+    % ANTs and FSL, the inverse of the deformation field is used for the
     % mapping). NOLINEAR case.
     elseif ~isempty(regexp(transform, 'y_ea_.*normparams\.nii$', 'once'))
-        
+
         % check which normalization method has been used
     	directory = fileparts(transform);
         if isempty(directory)
             directory = '.';
-        end        
+        end
         transformmethod=ea_whichnormmethod(directory);
-        
+
         switch transformmethod
-            
+
             case ea_getantsnormfuns % ANTs (ea_ants_nolinear) used in LEAD
                 if ~isempty(strfind(transform, 'y_ea_inv_normparams.nii'))
                     useinverse = 1;
@@ -329,13 +329,13 @@ if ~isempty(transform)
                 % LPS to RAS, restore to RAS coords
                 XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
                 XYZ_dest_mm(2,:)=-XYZ_dest_mm(2,:);
-                
+
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
-                
+
             case ea_getfslnormfuns % FSL (ea_fnirt) used in lead
                 % if 'y_ea_inv_normparams.nii' is specified, it means
-                % mapping from src coords to dest coords, i.e., NOT the 
+                % mapping from src coords to dest coords, i.e., NOT the
                 % inverse mapping (from dest coords to src coords).
                 if ~isempty(strfind(transform, 'y_ea_inv_normparams.nii'))
                     inversemap = 0;
@@ -350,26 +350,26 @@ if ~isempty(transform)
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
                 XYZ_dest_mm = ea_fsl_applytransforms_to_points(directory,XYZ_src_mm(1:3,:)',inversemap)';
-                
+
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
-            
-            % Default use SPM to do the mapping, 'y_ea_normparams.nii' or 
-            % 'y_ea_inv_normparams.nii' file really exists (was generated 
+
+            % Default use SPM to do the mapping, 'y_ea_normparams.nii' or
+            % 'y_ea_inv_normparams.nii' file really exists (was generated
             % by SPM)
             otherwise
                 XYZ_dest_mm = srcvx2destmm_deform(XYZ_src_vx, transform);
         end
-    
+
     % 'y_*.nii' or 'iy_*.nii' from SPM supplied, NOLINEAR case
     elseif ~isempty(regexp(transform, 'y_.*\.nii$', 'once'))
         XYZ_dest_mm = srcvx2destmm_deform(XYZ_src_vx, transform);
-            
+
     % '*.nii', '*.nii.gz' or '*.h5' files (from ANTs or FSL) supplied, NOLINEAR case
     elseif ~isempty(regexp(transform, '\.nii$', 'once')) || ... % ANTs or FSL naming
            ~isempty(regexp(transform, '\.nii.gz$', 'once')) || ... % ANTs or FSL naming
            ~isempty(regexp(transform, '\.h5$', 'once')) % ANTs naming
-       
+
         % Need to specify the transformation type
         if nargin >= 5
             transformmethod = varargin{5};
@@ -377,7 +377,7 @@ if ~isempty(transform)
         else
             error('Please specify the transformation type');
         end
-       
+
         switch transformmethod
 
             case {'ANTS'} % ANTs used
@@ -386,12 +386,12 @@ if ~isempty(transform)
                 else
                     useinverse = 0; % suppose proper deformation field specified, no need to invert
                 end
-                
+
                 directory = fileparts(transform);
                 if isempty(directory)
                     directory = '.';
-                end   
-        
+                end
+
                 % vox to mm, ANTs takes mm coords as input
                 XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
 
@@ -406,10 +406,10 @@ if ~isempty(transform)
                 % LPS to RAS, restore to RAS coords
                 XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
                 XYZ_dest_mm(2,:)=-XYZ_dest_mm(2,:);
-                
+
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
-                
+
             case {'FSL', 'FNIRT'} % FSL (ea_fnirt) used
                 % vox to mm, use img2imgcoord to do mm coords
                 % transformation
@@ -418,35 +418,35 @@ if ~isempty(transform)
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
                 XYZ_dest_mm = ea_img2imgcoord(XYZ_src_mm(1:3,:)', src, dest, transform, 'n')';
-                
+
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
-                
+
             otherwise
                 error(['Unsupported transformation type: ', transformmethod])
         end
-        
+
     else
         error(['Unsupported transformation file:\n', transform])
     end
-    
+
     % Optional output from dest vx coords
     if nargout == 2
         if nargin >= 4 % dest image specified
             XYZ_dest_vx = spm_get_space(dest) \ XYZ_dest_mm;
-            
+
         elseif ~isempty(regexp(transform, 'sn\.mat$', 'once')) % transform is SPM DCT file
             sn = load(transform, 'VF');
             XYZ_dest_vx = sn.VF.mat \ XYZ_dest_mm;
-            
+
         elseif ~isempty(regexp(transform, '_spm\.mat$', 'once')) % transform is from ea_docoreg_spm
             affine = load(transform, 'fixed');
             XYZ_dest_vx = affine.fixed \ XYZ_dest_mm;
-        end 
-        
+        end
+
         XYZ_dest_vx=XYZ_dest_vx(1:3,:);
     end
-    
+
     XYZ_dest_mm=XYZ_dest_mm(1:3,:);
 end
 
@@ -498,4 +498,4 @@ if size(src_vx,1) == 4
     dest_mm = [dest_mm; src_vx(4,:)];
 end
 
-    
+

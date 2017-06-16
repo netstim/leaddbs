@@ -7,7 +7,7 @@ if nargin < 2
 end
 
 % overwrite the input image
-if ~exist('outputimage','var') 
+if ~exist('outputimage','var')
     outputimage = inputimage;
 else
     if isempty(outputimage)
@@ -21,7 +21,7 @@ if nargin < 4
     fraintthreshold = 0.5;
 end
 
-fprintf(['\n\nRunning FSL BET2: ', inputimage, '\n\n']);
+fprintf('\n\nRunning FSL BET2: %s\n\n', inputimage);
 
 inputimage = ea_path_helper(ea_niigz(inputimage));
 outputimage = ea_path_helper(ea_niigz(outputimage));
@@ -32,8 +32,8 @@ outputimage = ea_niifileparts(outputimage);
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     BET = [basedir, 'bet2.exe'];
-else 
-    BET = [basedir, 'bet2.', computer('arch')];    
+else
+    BET = [basedir, 'bet2.', computer('arch')];
 end
 
 cmd = [BET, ...
@@ -51,7 +51,7 @@ setenv('FSLOUTPUTTYPE','NIFTI');
 if ~ispc
     system(['bash -c "', cmd, '"']);
 else
-    system(cmd);    
+    system(cmd);
 end
 
 fprintf('\nFSL BET2 finished\n');
