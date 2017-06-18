@@ -171,11 +171,14 @@ if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
     end
     to{1}=[directory,'scrf',filesep,'bb.nii'];
     from{1}=[ea_space,'bb.nii'];
-
+try
     ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],1);
+catch
+   ea_error('Please perform normalization first.'); 
+end
     ea_crop_nii([directory,'scrf',filesep,'bb.nii']);
-
-    % do put in primary anat file ? needs to be done only once.
+    ea_reslice_nii([directory,'scrf',filesep,'bb.nii'],[directory,'scrf',filesep,'bb.nii'],[0.4,0.4,0.4]);
+    % do put in primary anat file - needs to be done only once.
     fis={options.prefs.prenii_unnormalized};
     copyfile([directory,fis{1}],[directory,'scrf',filesep,fis{1}])
     ea_conformspaceto([directory,'scrf',filesep,'bb.nii'],[directory,'scrf',filesep,fis{1}]);

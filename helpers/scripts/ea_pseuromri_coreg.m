@@ -49,6 +49,8 @@ opts=ea_getptopts(pth);
 olabelf=ea_load_nii('labels.nii');
 d=figure('Name','Progress');
 for iter=1:20
+    copyfile([labelfile],fullfile(pth,[fname,'_label_iter',num2str(iter-1),ext]));
+
     % build pseudoMRIs:
     labelf=ea_load_nii(labelfile);
     
@@ -92,10 +94,9 @@ for iter=1:20
     
     
     
-    ea_ants_nonlinear_local(cellfun(@horzcat,repmat({['r']},size(templatecell),1),templatecell,'Uniformoutput',0),labelcell,'warped.nii',[1,1,1,2],repmat({'GC'},length(templatecell),1),'MultiLabel');
+    ea_ants_nonlinear_local(cellfun(@horzcat,repmat({['r']},size(templatecell),1),templatecell,'Uniformoutput',0),labelcell,'warped.nii',[1,1,1,2],repmat({'CC'},length(templatecell),1),'MultiLabel');
     % dump output
-    copyfile([labelfile],fullfile(pth,[fname,'_label_iter',num2str(iter-1),ext]));
-    keyboard
+    
     ea_ants_applytransforms(opts,{labelfile},{labelfile},0,labelcell{1},fullfile(pth,'warpedComposite.h5'),'MultiLabel');
 
 end

@@ -493,29 +493,28 @@ for atl=1:length(atlnames)
     end
 
     if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file') % first atlas, generate empty hdtemplate in atlas dir...
-        if ~options.native
-            load([ea_space,'ea_space_def.mat'])
-            copyfile([ea_space,'bb.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+        if (~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz'],'file'))
+            if ~options.native
+                load([ea_space,'ea_space_def.mat'])
+                copyfile([ea_space,spacedef.templates{1},'.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+                ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],...
+                    [0.3,0.3,0.3]);
+            else
+                copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            end
+            V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            X=spm_read_vols(V);
+            X(:)=0;
+            spm_write_vol(V,X);
+            clear V X
         else
-            copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            gunzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz']);
+            delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz']);
         end
-        V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
-        X=spm_read_vols(V);
-        X(:)=0;
-        spm_write_vol(V,X);
-        clear V X
     end
 
 
     % add atlas file to hdtemplate in atlas dir
-    if (~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file'))
-            if       (~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz'],'file'))
-            copyfile([ea_space,'bb.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
-            else
-                gunzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz']);
-                delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz']);
-            end
-    end
       
     matlabbatch{1}.spm.util.imcalc.input = {
         [root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii,1'];
