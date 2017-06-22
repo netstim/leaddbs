@@ -139,12 +139,14 @@ prefs.video.opts.Periodic=true;
 prefs.vat.gm='mask'; % set to 'atlas' to use current atlas single structures, 'mask' to use 'gm_mask.nii', set to 'tpm' to use c1 portion of tpm.
 
 %% MER-Visualization:
-prefs.mer.rejwin=[1 60];
-prefs.mer.offset=2; % default distance between mer tracts is 2mm
-prefs.mer.length=24; % default mer length for visualization is 24mm
-prefs.mer.markersize=0.5; % default mer marker size 0.25mm
-prefs.mer.defaulttract=1; % default tract is Central(1). Set to 2=Anterior,3=Posterior,4=Lateral, or 5=Medial
-prefs.mer.tag.visible='off'; 
+prefs.mer.rejwin = [1 60];
+prefs.mer.offset = 2; % default distance between mer tracts is 2mm
+prefs.mer.length = 24; % default mer length for visualization is 24mm
+prefs.mer.markersize = 0.5; % default mer marker size 0.25mm
+prefs.mer.defaulttract = 1; % default tract is Central(1). Set to 2=Anterior,3=Posterior,4=Lateral, or 5=Medial
+prefs.mer.n_pnts = 50;
+prefs.mer.tag.visible = 'off';
+prefs.mer.step_size = [0.25 0.75 0.05];
 prefs.mer.tract_info = struct(...
     'label', {'central', 'anterior', 'posterior', 'lateral', 'medial'},...
     'color', {  [0.5,0,0],...       Maroon
@@ -152,11 +154,11 @@ prefs.mer.tract_info = struct(...
                 [0,0.5,0],...       Green
                 [0.5,0,0.5],...     Purple
                 [0,0.5,0.5]},...    Teal; 0,0,0.5 Navy
-    'transform', {  [0, 0],...
-                    [0, 1],...
-                    [0, -1],...
-                    [1, 0],...
-                    [-1, 0]});
+    'transform', {  [ 0,  0, 0],...
+                    [ 0,  1, 0],...
+                    [ 0, -1, 0],...
+                    [ 1,  0, 0],...
+                    [-1,  0, 0]});
 
 %% Cortex-Visualization:
 prefs.d3.cortexcolor=[0.65 0.65 0.65]; % default color is gray

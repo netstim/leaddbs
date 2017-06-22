@@ -22,7 +22,7 @@ function varargout = ea_mercontrol(varargin)
 
 % Edit the above text to modify the response to help ea_mercontrol
 
-% Last Modified by GUIDE v2.5 19-Jun-2017 16:39:43
+% Last Modified by GUIDE v2.5 28-Jun-2017 09:16:19
 
 % __________________________________________________________________________________
 % Copyright (C) 2017 University of Pittsburgh, Brain Modulation Lab
@@ -49,6 +49,8 @@ end
 % End initialization code - DO NOT EDIT
 
 
+%% GUIDE-generated functions
+
 % --- Executes just before ea_mercontrol is made visible.
 function ea_mercontrol_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -58,7 +60,8 @@ function ea_mercontrol_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   unrecognized PropertyName/PropertyValue pairs from the
 %            command line (see VARARGIN)
 clc
-set(hObject,'Name','MER Control','CloseRequestFcn',@closefunciton,'KeyPressFcn',@ea_keypress)
+set(hObject, 'Name', 'MER Control',...
+    'CloseRequestFcn', @closefunction, 'KeyPressFcn', @ea_keypress)
 % Choose default command line output for ea_mercontrol
 handles.output = hObject;
 
@@ -70,115 +73,16 @@ guidata(hObject, handles);
 
 resultfig=varargin{1};
 options=varargin{2};
-setappdata(hObject,'resultfig',resultfig);
-setappdata(hObject,'options',options);
+setappdata(hObject, 'resultfig', resultfig);
+setappdata(hObject, 'options', options);  % Keep a copy of options
+setappdata(resultfig, 'merstruct', options.prefs.mer);  %.length [24 mm]; .offset [2 mm]; .tract_info
 
-merstruct = options.prefs.mer;  %.length [24 mm]; .offset [2 mm]; .tract_info
-setappdata(resultfig,'merstruct',merstruct)
-
-% Generate UI elements in mainuipanel for each merstruct.tract_info
-width = handles.mainuipanel.InnerPosition(3);
-popup_string = cat(2, 'Set implanted...', {merstruct.tract_info.label});
-for side_str = {'left', 'right'}
-    % Add options to popupimplantedtract_left _right
-    set(handles.(['popupimplantedtract_' side_str{:}]),...
-        'String', popup_string);
-    
-    % Add togglebuttons next to texttoggle_left and _right (with callbacks)
-    anchor_pos = get(handles.(['texttoggle_' side_str{:}]), 'Position');
-    w_per = (width - anchor_pos(3) - anchor_pos(1)) / length(merstruct.tract_info);
-    for tract_ix = 1:length(merstruct.tract_info)
-        pos_str = merstruct.tract_info(tract_ix).label;
-        new_pos = anchor_pos;
-        new_pos(1) = anchor_pos(1) + anchor_pos(3) + (tract_ix-1)*w_per;
-        new_pos(3) = w_per;
-        htoggle = uicontrol(handles.mainuipanel,...
-            'Style', 'togglebutton',...
-            'Tag', ['toggle' pos_str '_' side_str{:}],...
-            'Value', 1,...
-            'String', pos_str,...
-            'Position', new_pos,...
-            'Units', 'pixels',...
-            'BackgroundColor', [1 1 1],...
-            'Value', 0,...
-            'Callback', @ea_updatetogglestate);
-    end
-    
-    % Add edit boxes next to textpos_left and _right (with callbacks)
-    anchor_pos = get(handles.(['textpos_' side_str{:}]), 'Position');
-    w_per = (width - anchor_pos(3) - anchor_pos(1)) / length(merstruct.tract_info);
-    for tract_ix = 1:length(merstruct.tract_info)
-        pos_str = merstruct.tract_info(tract_ix).label;
-        new_pos = anchor_pos;
-        new_pos(1) = anchor_pos(1) + anchor_pos(3) + (tract_ix-1)*w_per;
-        new_pos(3) = w_per;
-        hedit = uicontrol(handles.mainuipanel,...
-            'Style', 'edit',...
-            'Tag', ['pos' pos_str '_' side_str{:}],...
-            'String', '0',...
-            'Position', new_pos,...
-            'Units', 'pixels',...
-            'BackgroundColor', [1 1 1],...
-            'Callback', @ea_updatepostext);
-    end
-    
-    % In keyboardcontrolgroup, add radiobuttons next to keytext_left and _right inside
-    anchor_pos = get(handles.(['textkey_' side_str{:}]), 'Position');
-    w_per = (width - anchor_pos(3) - anchor_pos(1)) / length(merstruct.tract_info);
-    for tract_ix = 1:length(merstruct.tract_info)
-        pos_str = merstruct.tract_info(tract_ix).label;
-        new_pos = anchor_pos;
-        new_pos(1) = anchor_pos(1) + anchor_pos(3) + (tract_ix-1)*w_per;
-        new_pos(3) = w_per;
-        hcheck = uicontrol(handles.keyboardcontrolgroup,...
-            'Style', 'checkbox',...
-            'Tag', ['keycheck' pos_str '_' side_str{:}],...
-            'String', pos_str,...
-            'Position', new_pos,...
-            'Units', 'pixels',...
-            'BackgroundColor', [1 1 1],...
-            'Callback', @ea_keycheck);
-    end
-end
-clearkeyboardcontrolgroup(handles);
-clearmertrajectories(handles,resultfig,options);
-
-[~,trajectory,markers]=ea_load_reconstruction(options);
-coords_mm=ea_resolvecoords(markers,options);
-
-% Set mermarkers
-mermarkers = getappdata(resultfig,'mermarkers');
-if isempty(mermarkers)
-    mermarkers = struct('side',{},'tract',{},'depth',{},'markertype',{},...
-        'session',{},'dat',{},'tag',{},'handle',{},'notes',{});
-    setappdata(resultfig,'mermarkers',mermarkers)
-end
-% Set default implanted tract
-set(handles.popupimplantedtract_left,'Value',options.prefs.mer.defaulttract+1)
-set(handles.popupimplantedtract_right,'Value',options.prefs.mer.defaulttract+1)
-set(handles.editimplanteddepth_left,'String','0')
-set(handles.editimplanteddepth_right,'String','0')
-
-merstruct.defaultmer = ea_coords2mer(coords_mm,trajectory,resultfig,options);
-clear coords_mm trajectory markers
-
-set(0,'CurrentFigure',resultfig); hold on;
-for side = options.sides
-    % contact_spacing = getfield(getappdata(resultfig,'elspec'),'contact_spacing');
-    for pos_ix = 1:length(merstruct.tract_info)
-        pos_str = merstruct.tract_info(pos_ix).label;
-        merstruct.defaultmer.(pos_str).trajectory{side} = ...
-            ea_getmertrajectory(merstruct.defaultmer.(pos_str).coords_mm{side}, 0, merstruct.length, 50);
-        traj = merstruct.defaultmer.(pos_str).trajectory{side};
-        merhandles.(pos_str){side} = plot3(traj(:,1), traj(:,2), traj(:,3),...
-            'color',merstruct.tract_info(pos_ix).color, 'linew',5);
-    end
-end
-
-merstruct.currentmer=merstruct.defaultmer;
-setappdata(resultfig,'merstruct',merstruct)
-setappdata(resultfig,'merhandles',merhandles)
-ea_readtogglestates(handles);
+ea_gui_generate(handles);  % Generate UI elements for each tract.
+ea_resultfig_clear(handles);  % Delete markers and mer trajectories.
+ea_data_clear(handles);  % Clears trajectories, depths, etc in merstruct.
+ea_data_setdefault(handles);  % Sets merstruct to default values (including markers and trajs).
+ea_resultfig_update(handles);  % Plot markers and trajs from data.
+ea_gui_update_all(handles);  % Set GUI from data.
 
 
 % --- Outputs from this function are returned to the command line.
@@ -346,13 +250,7 @@ end
 
 % --- Executes on selection change in popupimplantedtract_left.
 function popupimplantedtract_left_Callback(hObject, eventdata, handles)
-% hObject    handle to popupimplantedtract_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupimplantedtract_left contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupimplantedtract_left
-ea_set_implanted_helper(handles, 2);
+popupimplantedtract_helper(hObject, eventdata, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -370,13 +268,7 @@ end
 
 % --- Executes on selection change in popupimplantedtract_right.
 function popupimplantedtract_right_Callback(hObject, eventdata, handles)
-% hObject    handle to popupimplantedtract_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupimplantedtract_right contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupimplantedtract_right
-ea_set_implanted_helper(handles, 1);
+popupimplantedtract_helper(hObject, eventdata, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -392,23 +284,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function editimplanteddepth_left_Callback(hObject, eventdata, handles)
-% hObject    handle to editimplanteddepth_left (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of editimplanteddepth_left as text
-%        str2double(get(hObject,'String')) returns contents of editimplanteddepth_left as a double
-side = 2; %left
-dist = str2double(get(hObject,'String'));
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-options=getappdata(handles.mercontrolfig,'options');
-merhandles = getappdata(resultfig,'merhandles');
-refreshresultfig(handles,resultfig,options,side)
-
-set(handles.editimplanteddepth_left,'String',num2str(dist));
-% ea_getsettogglestates(handles,side,dist);
+editimplanteddepth_helper(hObject, eventdata, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -424,22 +301,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function editimplanteddepth_right_Callback(hObject, eventdata, handles)
-% hObject    handle to editimplanteddepth_right (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of editimplanteddepth_right as text
-%        str2double(get(hObject,'String')) returns contents of editimplanteddepth_right as a double
-side = 1; %right
-dist = str2double(get(hObject,'String'));
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-options=getappdata(handles.mercontrolfig,'options');
-refreshresultfig(handles,resultfig,options,side)
-
-set(handles.editimplanteddepth_right,'String',num2str(dist));
-% ea_getsettogglestates(handles,side,dist);
+editimplanteddepth_helper(hObject, eventdata, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -453,49 +316,6 @@ function editimplanteddepth_right_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-function ea_keycheck(hObject, eventdata)
-handles = guidata(hObject);
-resultfig = getappdata(handles.mercontrolfig, 'resultfig');
-merstruct = getappdata(resultfig, 'merstruct');
-mertoggles = getappdata(resultfig, 'mertoggles');
-
-% Determine which button called this
-str_parts = split(hObject.Tag(9:end), '_');
-tract_ix = find(strcmpi({merstruct.tract_info.label}, str_parts{1}));
-side_ix = 1;
-if strcmpi(str_parts{2}, 'left')
-    side_ix = 2;
-end
-
-% Update the value
-mertoggles.keycontrol(side_ix, tract_ix) = get(hObject,'Value') == get(hObject,'Max');
-setappdata(resultfig, 'mertoggles', mertoggles);
-
-
-% --- Executes when selected object is changed in keyboardcontrolgroup.
-function keyboardcontrolgroup_SelectionChangedFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in keyboardcontrolgroup 
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% mertoggles=getappdata(getappdata(gcf,'resultfig'),'mertoggles');
-keymer = get(eventdata.NewValue,'tag');
-% switch get(eventdata.NewValue,'tag')
-%     case 'keycentral_left'
-%            
-%     case 'keyposterior_left'
-%         
-%     case 'keymedial_left'
-%         
-%     case 'keycentral_right'
-% 
-%     case 'keyposterior_right'
-%         
-%     case 'keymedial_right'
-%         
-% end
-setappdata(getappdata(gcf,'resultfig'),'keymer',keymer);
 
 
 % --- Executes on selection change in popupmermarkers_right.
@@ -549,13 +369,13 @@ function clearall_Callback(hObject, eventdata, handles)
 % hObject    handle to clearall (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of clearall
 resultfig = getappdata(handles.mercontrolfig,'resultfig');
-options = getappdata(handles.mercontrolfig,'options');
-clearmertrajectories(handles,resultfig,options)
-clearmermarkers(handles,resultfig,options)
-set(hObject,'Value',0)
+options = getappdata(resultfig,'options');
+clearmertrajectories(handles,resultfig,options);
+clearmermarkers(handles,resultfig,options);
+resetmainui(handles);  % Also updates mertoggles
+clearkeyboardcontrolgroup(handles);  % Also updates mertoggles
+% TODO: ea_readtogglestates(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -568,7 +388,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 root = fileparts(which('ea_coregmr.m'));
 background = imread([root,'/icons/delete.png']);
-set(hObject,'CData',background,'Value',0)
+set(hObject,'CData',background);
 
 
 % --- Executes on button press in setdefault.
@@ -576,14 +396,27 @@ function setdefault_Callback(hObject, eventdata, handles)
 % hObject    handle to setdefault (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+options = getappdata(resultfig, 'options');
+merstruct = getappdata(resultfig, 'merstruct');
+mermarkers = getappdata(resultfig, 'mermarkers');
 
-% Hint: get(hObject,'Value') returns toggle state of setdefault
-resultfig = getappdata(handles.mercontrolfig,'resultfig');
-options = getappdata(handles.mercontrolfig,'options');
-merstruct = getappdata(resultfig,'merstruct');
-setdefaultmer(handles,resultfig,merstruct,options)
-ea_getsettogglestates(hObject, eventdata, handles);
-set(hObject,'Value',0)
+% Load default MER
+[~, ~, markers] = ea_load_reconstruction(options);  % coords_mm returned here is slightly wrong.
+coords_mm = ea_resolvecoords(markers, options);
+merstruct.defaultmer = ea_coords2mer(coords_mm, resultfig, options);
+merstruct.currentmer = merstruct.defaultmer;
+setappdata(resultfig, 'merstruct', merstruct);
+
+% Set mermarkers
+if isempty(mermarkers)
+    % TODO: Does setdefault want to keep mermarkers?
+    mermarkers = struct('side',{},'tract',{},'depth',{},'markertype',{},...
+        'session',{},'dat',{},'tag',{},'handle',{},'notes',{});
+    setappdata(resultfig,'mermarkers',mermarkers)
+end
+
+refreshresultfig(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -596,7 +429,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 root = fileparts(which('ea_coregmr.m'));
 background = imread([root,'/icons/checkmark.png']);
-set(hObject,'CData',background,'Value',0)
+set(hObject,'CData',background)
 
 
 % --- Executes on button press in undomarker.
@@ -702,7 +535,6 @@ end
 root = fileparts(which('ea_coregmr.m'));
 background = imread([root,'/icons/redo.png']);
 set(hObject,'CData',background,'Value',0)
-
 
 
 % --- Executes on button press in togglemarkertags.
@@ -821,108 +653,271 @@ background = imread([root,'/icons/export.png']);
 set(hObject,'CData',background,'Value',0)
 
 
+% --- Executes on button press in pushbutton_clear_checks.
+function pushbutton_clear_checks_Callback(hObject, eventdata, handles)
+mertoggles = getappdata(handles.mercontrolfig, 'mertoggles');
+mertoggles.keycontrol = zeros(2, length(merstruct.tract_info));
+setappdata(handles.mercontrolfig, 'mertoggles', mertoggles);
+ea_gui_update_toggles(handles);
 
 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-function setdefaultmer(handles,resultfig,merstruct,options,varargin)
-if isempty(varargin) && isequal(options.sides,1:2)
-    sidestr='both';
-elseif ~isempty(varargin)
-    sidestr=varargin{1};
-end
-if strcmpi(sidestr, 'both')
-    clear_sides = 1:2;
-elseif strcmpi(sidestr, 'right')
-    clear_sides = 1;
-else
-    clear_sides = 2;  % left
-end
-if length(varargin) > 1
-    implanteddepth=varargin{2};
-end
-clearmertrajectories(handles,resultfig,options,sidestr)
-merhandles=getappdata(resultfig,'merhandles');
-set(0,'CurrentFigure',resultfig)
+%% Custom functions
 
-for side = clear_sides
-    for pos_ix = 1:length(merstruct.tract_labels)
-        pos_str = merstruct.tract_labels{pos_ix};
-        traj = merstruct.defaultmer.(pos_str).trajectory{side};
-        merhandles.(pos_str){side} = plot3(traj(:,1), traj(:,2), traj(:,3),...
-            'color',merstruct.colormap(pos_ix,:), 'linew',5);
+function ea_keypress(handles, event)
+% this is the main keypress function for the mercontrolfig.
+% Add event listeners here.
+if ismember('shift', event.Modifier)
+end
+fprintf('Keypress ignored. Click on resultfig first.\n')
+
+
+function closefunction(hObject,event)
+handles = getappdata(hObject,'UsedByGUIData_m');
+ea_data_clear(handles);
+ea_resultfig_clear(handles);
+delete(hObject)
+
+function ea_gui_generate(handles)
+% ea_gui_generate(handles)
+% For each side, for each tract_inf, generates
+% -display toggle button
+% -position/depth edit box
+% -keyboard control toggle
+
+merstruct = getappdata(getappdata(handles.mercontrolfig, 'resultfig'), 'merstruct');
+% Generate UI elements
+width = handles.mainuipanel.InnerPosition(3);
+popup_string = cat(2, 'Set implanted...', {merstruct.tract_info.label});
+for side_str = {'left', 'right'}
+    % In mainuipanel...
+    
+    % ...Add options to popupimplantedtract_left _right
+    set(handles.(['popupimplantedtract_' side_str{:}]),...
+        'String', popup_string);
+    
+    % ...Add togglebuttons next to texttoggle_left and _right (with callbacks)
+    anchor_pos = get(handles.(['texttoggle_' side_str{:}]), 'Position');
+    w_per = (width - anchor_pos(3) - anchor_pos(1)) / length(merstruct.tract_info);
+    for tract_ix = 1:length(merstruct.tract_info)
+        pos_str = merstruct.tract_info(tract_ix).label;
+        new_pos = [anchor_pos(1) + anchor_pos(3) + (tract_ix-1)*w_per...
+            anchor_pos(2)-5 w_per 26];
+        uicontrol(handles.mainuipanel,...
+            'Style', 'togglebutton',...
+            'Tag', ['toggle' pos_str '_' side_str{:}],...
+            'Value', 1,...
+            'String', pos_str,...
+            'Position', new_pos,...
+            'Units', 'pixels',...
+            'BackgroundColor', [1 1 1],...
+            'Value', 1,...
+            'Callback', @ea_updatetogglestate);
+    end
+    
+    % ...Add edit boxes next to textpos_left and _right (with callbacks)
+    anchor_pos = get(handles.(['textpos_' side_str{:}]), 'Position');
+    w_per = (width - anchor_pos(3) - anchor_pos(1)) / length(merstruct.tract_info);
+    for tract_ix = 1:length(merstruct.tract_info)
+        pos_str = merstruct.tract_info(tract_ix).label;
+        new_pos = [anchor_pos(1) + anchor_pos(3) + (tract_ix-1)*w_per...
+            anchor_pos(2)-5 w_per 26];
+        uicontrol(handles.mainuipanel,...
+            'Style', 'edit',...
+            'Tag', ['pos' pos_str '_' side_str{:}],...
+            'String', '0',...
+            'Position', new_pos,...
+            'Units', 'pixels',...
+            'BackgroundColor', [1 1 1],...
+            'Callback', @ea_updatepostext);
+    end
+    
+    % In keyboardcontrolgroup...
+    % ...Add radiobuttons next to keytext_left and _right inside
+    anchor_pos = get(handles.(['textkey_' side_str{:}]), 'Position');
+    w_per = (width - anchor_pos(3) - anchor_pos(1)) / length(merstruct.tract_info);
+    for tract_ix = 1:length(merstruct.tract_info)
+        pos_str = merstruct.tract_info(tract_ix).label;
+        new_pos = [anchor_pos(1) + anchor_pos(3) + (tract_ix-1)*w_per...
+            anchor_pos(2) w_per anchor_pos(4)];
+        uicontrol(handles.keyboardcontrolgroup,...
+            'Style', 'checkbox',...
+            'Tag', ['keycheck' pos_str '_' side_str{:}],...
+            'String', pos_str,...
+            'Position', new_pos,...
+            'Units', 'pixels',...
+            'BackgroundColor', [1 1 1],...
+            'Callback', @ea_keycheck);
     end
 end
 
-setappdata(resultfig,'merhandles',merhandles)
+
+function ea_keycheck(hObject, eventdata)
+[~, sid, track] = ea_detsidestr(hObject.Tag);
+% Update the value
+handles = guidata(hObject);
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+merstruct = getappdata(resultfig, 'merstruct');
+bTrack = strcmpi({merstruct.tract_info.label}, track);
+mertoggles = getappdata(handles.mercontrolfig, 'mertoggles');
+mertoggles.keycontrol(sid, bTrack) = get(hObject,'Value') == get(hObject,'Max');
+setappdata(handles.mercontrolfig, 'mertoggles', mertoggles);
 
 
-function clearmermarkers(handles,resultfig,options)
-% clear mermarkers and reset structure
-mermarkers = getappdata(resultfig,'mermarkers');
-for i = 1:length(mermarkers)
-try delete(mermarkers(i).handle); end
-try delete(mermarkers(i).tag.handle); end
+function ea_data_clear(handles, varargin)
+% ea_clear_data(handles)
+% Resets trajectories, depths, etc.
+ea_data_clear_traj(handles, varargin{:});
+ea_data_clear_markers(handles);
+
+
+function ea_data_clear_traj(handles, sidestr)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+merstruct = getappdata(resultfig, 'merstruct');
+% TODO: Clear only one side?
+% if ~exist('sidestr','var')
+%     sidestr = 'both';
+% end
+% [side_strs, clear_sides, ~] = ea_detsidestr(sidestr);
+if isfield(merstruct, 'currentmer')
+    merstruct = rmfield(merstruct, 'currentmer');
 end
-mermarkers = struct('side',{},'tract',{},'depth',{},'markertype',{},'session',{},'dat',{},'tag',{},'handle',{},'notes',{});
-setappdata(resultfig,'mermarkers',mermarkers)
-set(handles.popupimplantedtract_left,'Value',options.prefs.mer.defaulttract+1);
-set(handles.popupimplantedtract_right,'Value',options.prefs.mer.defaulttract+1);
-set(handles.editimplanteddepth_left,'String','0');
-set(handles.editimplanteddepth_right,'String','0');
-set(handles.popupmermarkers_left,'Visible','off','String','','Value',1)
-set(handles.popupmermarkers_right,'Visible','off','String','','Value',1)
+setappdata(resultfig, 'merstruct', merstruct);
 
 
-function clearmertrajectories(handles,resultfig,options,sidestr)
+function ea_data_clear_markers(handles)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+mermarkers = struct('side', {}, 'tract', {}, 'depth', {},...
+    'markertype', {}, 'session', {}, 'dat', {}, 'tag', {},...
+    'handle', {}, 'notes', {});
+setappdata(resultfig, 'mermarkers', mermarkers);
+
+
+function ea_resultfig_clear(handles, sidestr)
+% ea_resultfig_clear(handles)
+% Delete markers and plot empty 3dplot trajs.
+if ~exist('sidestr','var')
+    sidestr = 'both';
+end
+ea_resultfig_clear_traj(handles, sidestr);
+ea_resultfig_clear_markers(handles, sidestr);
+
+
+function ea_resultfig_clear_traj(handles, sidestr)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+if ~exist('sidestr','var')
+    sidestr = 'both';
+end
+[side_strs, clear_sides, ~] = ea_detsidestr(sidestr);
+
+% Get a list of tags for all the plotted items in resultfig.
+curr_fig_items = resultfig.CurrentAxes.Children;
+tag_array = cell(1, length(curr_fig_items));
+for cfi = 1:length(curr_fig_items)
+    tag_array{cfi} = curr_fig_items(cfi).Tag;
+end
 
 merhandles = getappdata(resultfig,'merhandles');
-if isempty(merhandles)
-    return
-end
-if ~exist('sidestr','var') && isequal(options.sides,1:2)
-    clear_sides = 1:2;
-% Legacy
-elseif isnumeric(sidestr)
-    clear_sides = sidestr;
-else
-    if strcmpi(sidestr, 'both')
-        clear_sides = 1:2;
-    elseif strcmpi(sidestr, 'right')
-        clear_sides = 1;
-    elseif strcmpi(sidestr, 'left')
-        clear_sides = 2;
-    end
-end
-
 merstruct = getappdata(resultfig,'merstruct');
-ui_tags = {handles.mainuipanel.Children.Tag};
-for side = clear_sides
-    if side == 1
-        sidestr = 'right';
-    elseif side == 2
-        sidestr = 'left';
-    end
+set(0, 'CurrentFigure', resultfig); hold on;
+for sid = clear_sides
+    sidestr = side_strs{sid};
     for pos_ix = 1:length(merstruct.tract_info)
         pos_str = merstruct.tract_info(pos_ix).label;
-        try; delete(merhandles.(pos_str){side}); end
-        edit_handle = handles.mainuipanel.Children(strcmpi(ui_tags, ['pos' pos_str '_' sidestr]));
-        set(edit_handle, 'String', '0');
+        try
+            if isstruct(merhandles) && isfield(merhandles, pos_str) &&...
+                    length(merhandles.(pos_str)) >= sid &&...
+                    ~isempty(merhandles.(pos_str){sid})
+                delete(merhandles.(pos_str){sid})
+            end
+            resid_items = curr_fig_items(strcmpi(tag_array, [pos_str '_' sidestr]));
+            if ~isempty(resid_items)
+                delete(resid_items);
+            end
+        catch
+            fprintf('TODO: Warning message about deleting handles.\n')
+        end
+        % Populate merhandles. Because we aren't plotting anything, the
+        % object handle will remain empty. color and tag are ignored.
+        merhandles.(pos_str){sid} = plot3([], [], [],...
+            'color', merstruct.tract_info(pos_ix).color, 'linew', 5,...
+            'tag', [pos_str '_' sidestr]);
     end
 end
-set(handles.editimplanteddepth_left,'String','0');
-set(handles.editimplanteddepth_right,'String','0');
-setappdata(resultfig,'merhandles',merhandles)
+setappdata(resultfig, 'merhandles', merhandles);
 
 
-function closefunciton(hObject,event)
-try
-resultfig = getappdata(hObject,'resultfig');
-options = getappdata(hObject,'options');
-handles = getappdata(hObject,'UsedByGUIData_m');
-clearmertrajectories(handles,resultfig,options)
-clearmermarkers(handles,resultfig,options)
+function ea_resultfig_clear_markers(handles, sidestr)
+% ea_resultfig_clear_markers(handles, sidestr)
+
+% TODO: Clear for only one side
+% if exist('sidestr','var')
+%     [sidestr, clear_sides, track] = ea_detsidestr(sidestr);
+% else
+%     [sidestr, clear_sides, track] = ea_detsidestr('both');
+% end
+
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+mermarkers = getappdata(resultfig,'mermarkers');
+for i = 1:length(mermarkers)
+    try delete(mermarkers(i).handle); end
+    try delete(mermarkers(i).tag.handle); end
 end
-delete(hObject)
+setappdata(resultfig,'mermarkers',mermarkers)
+
+
+function ea_data_setdefault(handles)
+% ea_data_setdefault(handles)
+% Sets data model to default values.
+ea_data_setdefault_trajs(handles);
+ea_data_setdefault_markers(handles);
+ea_data_setdefault_mertoggles(handles);
+
+
+function ea_data_setdefault_trajs(handles)
+% ea_data_setdefault_trajs(handles)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+options = getappdata(handles.mercontrolfig, 'options');
+merstruct = getappdata(resultfig, 'merstruct');
+[~, ~, dbs_contacts] = ea_load_reconstruction(options);
+merstruct.dbs_contacts_mm = ea_resolvecoords(dbs_contacts, options);
+merstruct.implant_depth = [0 0];
+merstruct.implant_idx = merstruct.defaulttract * [1 1];
+[~, side_ids, ~] = ea_detsidestr('both');
+for sid = side_ids
+    for pos_ix = 1:length(merstruct.tract_info)
+        pos_str = merstruct.tract_info(pos_ix).label;
+        merstruct.currentmer.(pos_str).dist(sid) = 0;
+    end
+end
+setappdata(resultfig, 'merstruct', merstruct);
+ea_updatemertrajectory(handles);  % Update the trajectories stored in merstruct.
+
+
+function ea_data_setdefault_markers(handles)
+% ea_data_setdefault_markers(handles)
+% Simply clears markers. See ea_data_clear_markers.
+ea_data_clear_markers(handles);
+
+
+function ea_data_setdefault_mertoggles(handles)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+merstruct = getappdata(resultfig, 'merstruct');
+mertoggles.keycontrol = zeros(2, length(merstruct.tract_info));
+mertoggles.togglestates = ones(2, length(merstruct.tract_info));
+setappdata(handles.mercontrolfig, 'mertoggles', mertoggles);
+
+
+function ea_resultfig_update(handles)
+% ea_resultfig_update(handles)
+% Updates trajectory plot and markers plot from data.
+ea_resultfig_update_trajectories(handles);
+ea_resultfig_update_markers(handles);
+
+
+function ea_resultfig_update_markers(handles)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+%TODO: Update markers. See below function.
+
 
 function ea_updatemermarkers(mermarkers,handles,resultfig,options)
 clearmermarkers(handles,resultfig,options)
@@ -965,330 +960,92 @@ setappdata(resultfig,'markerstring',markerstring)
 set(handles.togglemarkertags,'Visible','on','Value',0)
 
 
+function ea_gui_update_all(handles)
+% ea_gui_update_all(handles)
+% TODO: Update GUI elements from data structs.
+ea_mergui_update_implanted(handles);
+ea_gui_update_toggles(handles);
+
+
+function ea_gui_update_toggles(handles, side_str)
+if ~exist('side_str', 'var')
+    side_str = 'both';
+end
+[side_strs, side_ids, ~] = ea_detsidestr(side_str);
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+mertoggles = getappdata(handles.mercontrolfig, 'mertoggles');
+merstruct = getappdata(resultfig, 'merstruct');
+ui_tags = {handles.mainuipanel.Children.Tag};
+kcg_tags = {handles.keyboardcontrolgroup.Children.Tag};
+for sid = side_ids
+    side_str = side_strs{sid};
+    for tract_ix = 1:length(merstruct.tract_info)
+        tract_info = merstruct.tract_info(tract_ix);
+        val = mertoggles.togglestates(sid, tract_ix);
+        set(handles.mainuipanel.Children(strcmpi(ui_tags,...
+            ['toggle' tract_info.label '_' side_str])),...
+            'Value', val);
+        kh = handles.keyboardcontrolgroup.Children(...
+            strcmpi(kcg_tags, ['keycheck' tract_info.label '_' side_str]));
+        set(kh, 'Value', mertoggles.keycontrol(sid, tract_ix));
+    end
+end
+
+
+function editimplanteddepth_helper(hObject, eventdata, handles)
+dist = str2double(get(hObject, 'String'));
+str_parts = strsplit(eventdata.Source.Tag, '_');
+[sidestr, side_ix, ~] = ea_detsidestr(str_parts{2});
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+merstruct = getappdata(resultfig, 'merstruct');
+merstruct.implant_depth(side_ix) = dist;
+for tract_ix = 1:length(merstruct.tract_info)
+    pos_str = merstruct.tract_info(tract_ix).label;
+    merstruct.currentmer.(pos_str).dist(side_ix) = dist;
+end
+setappdata(resultfig, 'merstruct', merstruct);
+ea_mergui_update_implanted(handles, sidestr);
+ea_resultfig_update_trajectories(handles, sidestr);
+
+
+function popupimplantedtract_helper(hObject, eventdata, handles)
+tract_ix = get(hObject, 'Value') - 1;
+str_parts = strsplit(hObject.Tag, '_');
+[~, sid, ~] = ea_detsidestr(str_parts{2});
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+merstruct = getappdata(resultfig, 'merstruct');
+merstruct.implant_idx(sid) = tract_ix;
+setappdata(resultfig, 'merstruct', merstruct);
+%TODO: I don't think the knowing the implanted trajectory actually matters.
+% If it does, then...
+% ea_updatemertrajectory(handles, side_strs{sid});
+% ea_resultfig_update_trajectories();
+
+
 function ea_updatepostext(hObject, eventData)
 % Called when one of the position text boxes is edited.
 handles = guidata(hObject);
 resultfig = getappdata(handles.mercontrolfig, 'resultfig');
 merstruct = getappdata(resultfig, 'merstruct');
-
-% Determine which text element called this
-str_parts = split(hObject.Tag(4:end), '_');
-% tract_ix = find(strcmpi({merstruct.tract_info.label}, str_parts{1}));
-side_ix = 1;
-if strcmpi(str_parts{2}, 'left')
-    side_ix = 2;
-end
-
-input = str2double(get(hObject,'String'));
-implant_depth = str2double(get(handles.(['editimplanteddepth_' str_parts{2}]),'String'));
-dist = input - implant_depth;
-trajectory = ea_getmertrajectory(merstruct.currentmer.(str_parts{1}).coords_mm{side_ix},...
-    dist, merstruct.length, 50);
-ea_updatemertrajectory(handles,...
-    trajectory, 0, hObject.Tag);
-
+[side_strs, sid, track] = ea_detsidestr(hObject.Tag);
+merstruct.currentmer.(track).dist(sid) = str2double(get(hObject, 'String'));
+setappdata(resultfig, 'merstruct', merstruct);
+ea_updatemertrajectory(handles, side_strs{sid});
+ea_resultfig_update_trajectories(handles);
 
 
 function mertoggles = ea_updatetogglestate(hObject, eventdata)
 % Called when one of the tract toggle buttons is pressed.
+[~, sid, track] = ea_detsidestr(hObject.Tag);
 handles = guidata(hObject);
-resultfig = getappdata(handles.mercontrolfig, 'resultfig');
-merstruct = getappdata(resultfig, 'merstruct');
-mertoggles = getappdata(resultfig, 'mertoggles');
-
-% Determine which button called this
-str_parts = split(hObject.Tag(7:end), '_');
-tract_ix = find(strcmpi({merstruct.tract_info.label}, str_parts{1}));
-side_ix = 1;
-if strcmpi(str_parts{2}, 'left')
-    side_ix = 2;
-end
-
+merstruct = getappdata(getappdata(handles.mercontrolfig, 'resultfig'), 'merstruct');
+bTrack = strcmpi({merstruct.tract_info.label}, track);
 % Update the value in mertoggles
-mertoggles.togglestates(side_ix, tract_ix) = hObject.Value;
-setappdata(resultfig,'mertoggles',mertoggles);
-
+mertoggles = getappdata(handles.mercontrolfig, 'mertoggles');
+mertoggles.togglestates(sid, bTrack) = hObject.Value;
+setappdata(handles.mercontrolfig, 'mertoggles', mertoggles);
 % Update the visual presentation
-merhandles = getappdata(resultfig,'merhandles');
-if isvalid(merhandles.(str_parts{1}){side_ix})
-    if hObject.Value
-        set(merhandles.(str_parts{1}){side_ix}, 'Visible', 'on');
-    else
-        set(merhandles.(str_parts{1}){side_ix}, 'Visible', 'off');
-    end
-end
-
-
-function mertoggles = ea_readtogglestates(handles)
-% Scans the toggle button values and stores them in appdata
-resultfig = getappdata(handles.mercontrolfig, 'resultfig');
-merstruct = getappdata(resultfig, 'merstruct');
-ui_tags = {handles.mainuipanel.Children.Tag};
-side_strs = {'right', 'left'};
-mertoggles.togglestates = nan(2, length(merstruct.tract_info));
-for side_ix = 1:length(side_strs)
-    for pos_ix = 1:length(merstruct.tract_info)
-        search_str = ['toggle' merstruct.tract_info(pos_ix).label '_' side_strs{side_ix}];
-        mertoggles.togglestates(side_ix, pos_ix) = handles.mainuipanel.Children(strcmp(ui_tags, search_str)).Value;
-        
-        % TODO: keycheck
-    end
-end
-setappdata(resultfig,'mertoggles',mertoggles);
-
-
-function mertoggles = ea_getsettogglestates(hObject, eventdata, handles, varargin)
-% Example type A: 
-%   varargin{1}=mertoggles;
-%
-% Example type B: ea_getsettogglestates(handles,1,mermarkers(Ridx(1)).dat.leaddepth);
-%   varargin{1}=side;
-%   varargin{2}=dist;
-
-if size(varargin,2)==1
-    mertoggles = varargin{1};
-elseif size(varargin,2)==2
-    side = varargin{1};
-    dist = varargin{2};
-end
-
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merhandles = getappdata(resultfig,'merhandles');
-options = getappdata(handles.mercontrolfig,'options');
-merstruct = getappdata(resultfig, 'merstruct');
-
-if ~exist('mertoggles', 'var')
-    mertoggles.keycontrol = nan(2, length(merstruct.tract_info));
-    mertoggles.togglestates = nan(2, length(merstruct.tract_info));
-end
-
-% reset states based on gui:
-for side = 1:2
-    if side == 1
-        side_str = 'right';
-    else
-        side_str = 'left';
-    end
-    for pos_ix = 1:length(merstruct.tract_info)
-        pos_str = merstruct.tract_info(pos_ix).label;
-        this_substr = [pos_str '_' side_str];
-        if isnan(mertoggles.keycontrol(side, pos_ix))
-            mertoggles.keycontrol(side, pos_ix) = get(handles.(['key' this_substr]),'Value');
-            mertoggles.togglestates(side, pos_ix) = get(handles.(['toggle' this_substr]),'Value');
-        else
-            set(handles.(['key' this_substr]),'Value',mertoggles.keycontrol(side, pos_ix));
-            set(handles.(['toggle' this_substr]),'Value', mertoggles.togglestates(side, pos_ix));
-        end
-        % set togglestates 
-        if get(handles.(['toggle' this_substr]),'Value') && isvalid(merhandles.(pos_str){side})
-            set(merhandles.(pos_str){side},'Visible','on')
-        elseif ~get(handles.(['toggle' this_substr]),'Value') && isvalid(merhandles.(pos_str){side})
-            set(merhandles.(pos_str){side},'Visible','off')
-        end
-        % set pos handles
-        if exist('dist', 'var')
-            set(handles.(['pos' this_substr]),'String',num2str(dist));
-        end
-    end
-end
-setappdata(getappdata(handles.mercontrolfig,'resultfig'),'mertoggles',mertoggles); % also store toggle data in resultfig.
-setappdata(resultfig,'merhandles',merhandles)
-
-
-function merstruct = ea_updatetracts(merstruct,side,tracttag,resultfig,handles)
-        
-offset = getfield(getappdata(resultfig,'merstruct'),'offset');
-% elstruct = 
-% x-axis --> negative = medial, positive = lateral
-% y-axis --> negative = posterior, positive = anterior
-% z-axis --> negative = inferior, positive = superior
-
-% defaultmer coords assumes central is implant site
-coords_mm = merstruct.defaultmer.central.coords_mm{side};
-trajectory = merstruct.defaultmer.central.trajectory{side};
-switch tracttag 
-    case 'central'
-        merstruct.currentmer.central.coords_mm{side} = coords_mm;
-        merstruct.currentmer.central.trajectory{side} = trajectory;
-        merstruct.currentmer.anterior.trajectory{side} = [coords_mm(:,1),coords_mm(:,2)+offset,coords_mm(:,3)]; %2mm anterior
-        merstruct.currentmer.anterior.trajectory{side} = [trajectory(:,1),trajectory(:,2)+offset,trajectory(:,3)]; %2mm anterior
-        merstruct.currentmer.posterior.coords_mm{side} = [coords_mm(:,1),coords_mm(:,2)-offset,coords_mm(:,3)]; %2mm posterior
-        merstruct.currentmer.posterior.trajectory{side} = [trajectory(:,1),trajectory(:,2)-offset,trajectory(:,3)]; %2mm posterior
-        if side==1 %right
-            merstruct.currentmer.lateral.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2),coords_mm(:,3)]; %2mm lateral (right is positive)
-            merstruct.currentmer.lateral.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2),trajectory(:,3)]; %2mm lateral (right is positive)
-            merstruct.currentmer.medial.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2),coords_mm(:,3)]; %2mm medial (right is positive)
-            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2),trajectory(:,3)]; %2mm medial (right is positive)
-        elseif side==2 %left
-            merstruct.currentmer.lateral.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2),coords_mm(:,3)]; %2mm medial (left is negative)
-            merstruct.currentmer.lateral.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2),trajectory(:,3)]; %2mm medial (left is negative)
-            merstruct.currentmer.medial.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2),coords_mm(:,3)]; %2mm medial (left is negative)
-            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2),trajectory(:,3)]; %2mm medial (left is negative)
-        end
-    case 'anterior'
-        merstruct.currentmer.anterior.coords_mm{side} = coords_mm;
-        merstruct.currentmer.anterior.trajectory{side} = trajectory;
-        merstruct.currentmer.central.coords_mm{side} = [coords_mm(:,1),coords_mm(:,2)-offset,coords_mm(:,3)]; %2mm anterior
-        merstruct.currentmer.central.trajectory{side} = [trajectory(:,1),trajectory(:,2)-offset,trajectory(:,3)]; %2mm anterior
-        merstruct.currentmer.posterior.coords_mm{side} = [coords_mm(:,1),coords_mm(:,2)-offset*2,coords_mm(:,3)]; %4mm anterior
-        merstruct.currentmer.posterior.trajectory{side} = [trajectory(:,1),trajectory(:,2)-offset*2,trajectory(:,3)]; %4mm anterior
-         if side==1 %right
-            merstruct.currentmer.lateral.coords_mm{side} =  [coords_mm(:,1)+offset,coords_mm(:,2)-offset,coords_mm(:,3)]; %2mm medial (right is positive)
-            merstruct.currentmer.lateral.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)-offset,trajectory(:,3)]; %2mm medial (right is positive)
-            merstruct.currentmer.medial.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)-offset,coords_mm(:,3)]; %2mm medial (right is positive)
-            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)-offset,trajectory(:,3)]; %2mm medial (right is positive)
-        elseif side==2 %left
-            merstruct.currentmer.lateral.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)-offset,coords_mm(:,3)]; %2mm medial (left is negative)
-            merstruct.currentmer.lateral.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)-offset,trajectory(:,3)]; %2mm medial (left is negative)
-            merstruct.currentmer.medial.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2)-offset,coords_mm(:,3)]; %2mm medial (left is negative)
-            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)-offset,trajectory(:,3)]; %2mm medial (left is negative)
-         end
-    case 'posterior'
-        merstruct.currentmer.posterior.coords_mm{side} = coords_mm;
-        merstruct.currentmer.posterior.trajectory{side} = trajectory;
-        merstruct.currentmer.central.coords_mm{side} = [coords_mm(:,1),coords_mm(:,2)+offset,coords_mm(:,3)]; %2mm anterior
-        merstruct.currentmer.central.trajectory{side} = [trajectory(:,1),trajectory(:,2)+offset,trajectory(:,3)]; %2mm anterior
-        merstruct.currentmer.anterior.coords_mm{side} = [coords_mm(:,1),coords_mm(:,2)+offset*2,coords_mm(:,3)]; %4mm anterior
-        merstruct.currentmer.anterior.trajectory{side} = [trajectory(:,1),trajectory(:,2)+offset*2,trajectory(:,3)]; %4mm anterior
-         if side==1 %right
-            merstruct.currentmer.lateral.coords_mm{side} =  [coords_mm(:,1)+offset,coords_mm(:,2)+offset,coords_mm(:,3)]; %2mm medial (right is positive)
-            merstruct.currentmer.lateral.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)+offset,trajectory(:,3)]; %2mm medial (right is positive)
-            merstruct.currentmer.medial.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)+offset,coords_mm(:,3)]; %2mm medial (right is positive)
-            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)+offset,trajectory(:,3)]; %2mm medial (right is positive)
-        elseif side==2 %left
-            merstruct.currentmer.lateral.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)+offset,coords_mm(:,3)]; %2mm medial (left is negative)
-            merstruct.currentmer.lateral.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)+offset,trajectory(:,3)]; %2mm medial (left is negative)
-            merstruct.currentmer.medial.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2)+offset,coords_mm(:,3)]; %2mm medial (left is negative)
-            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)+offset,trajectory(:,3)]; %2mm medial (left is negative)
-         end
-    case 'lateral'
-        merstruct.currentmer.lateral.coords_mm{side} = coords_mm;
-        merstruct.currentmer.lateral.trajectory{side} = trajectory;
-        if side==1 %right
-            merstruct.currentmer.central.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2),coords_mm(:,3)];
-            merstruct.currentmer.central.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2),trajectory(:,3)];
-            merstruct.currentmer.anterior.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)+offset,coords_mm(:,3)];
-            merstruct.currentmer.anterior.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)+offset,trajectory(:,3)];
-            merstruct.currentmer.posterior.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)-offset,coords_mm(:,3)];
-            merstruct.currentmer.posterior.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)-offset,trajectory(:,3)];
-            merstruct.currentmer.medial.coords_mm{side} =  [coords_mm(:,1)-offset*2,coords_mm(:,2),coords_mm(:,3)]; %2mm medial (right is positive)
-            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)-offset*2,trajectory(:,2),trajectory(:,3)]; %2mm medial (right is positive)
-        elseif side==2 %left
-            merstruct.currentmer.central.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2),coords_mm(:,3)];
-            merstruct.currentmer.central.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2),trajectory(:,3)];
-            merstruct.currentmer.anterior.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2)+offset,coords_mm(:,3)];
-            merstruct.currentmer.anterior.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)+offset,trajectory(:,3)];
-            merstruct.currentmer.posterior.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2)-offset,coords_mm(:,3)];
-            merstruct.currentmer.posterior.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)-offset,trajectory(:,3)];
-            merstruct.currentmer.medial.coords_mm{side} =  [coords_mm(:,1)+offset*2,coords_mm(:,2),coords_mm(:,3)]; %2mm medial (right is positive)
-            merstruct.currentmer.medial.trajectory{side} = [trajectory(:,1)+offset*2,trajectory(:,2),trajectory(:,3)]; %2mm medial (right is positive)
-        end
-    case 'medial'
-        merstruct.currentmer.medial.coords_mm{side} = coords_mm;
-        merstruct.currentmer.medial.trajectory{side} = trajectory;
-        if side==1 %right
-            merstruct.currentmer.central.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2),coords_mm(:,3)];
-            merstruct.currentmer.central.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2),trajectory(:,3)];
-            merstruct.currentmer.anterior.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2)+offset,coords_mm(:,3)];
-            merstruct.currentmer.anterior.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)+offset,trajectory(:,3)];
-            merstruct.currentmer.posterior.coords_mm{side} = [coords_mm(:,1)+offset,coords_mm(:,2)-offset,coords_mm(:,3)];
-            merstruct.currentmer.posterior.trajectory{side} = [trajectory(:,1)+offset,trajectory(:,2)-offset,trajectory(:,3)];
-            merstruct.currentmer.lateral.coords_mm{side} =  [coords_mm(:,1)+offset*2,coords_mm(:,2),coords_mm(:,3)]; %2mm medial (right is positive)
-            merstruct.currentmer.lateral.trajectory{side} = [trajectory(:,1)+offset*2,trajectory(:,2),trajectory(:,3)]; %2mm medial (right is positive)
-        elseif side==2 %left
-            merstruct.currentmer.central.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2),coords_mm(:,3)];
-            merstruct.currentmer.central.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2),trajectory(:,3)];
-            merstruct.currentmer.anterior.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)+offset,coords_mm(:,3)];
-            merstruct.currentmer.anterior.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)+offset,trajectory(:,3)];
-            merstruct.currentmer.posterior.coords_mm{side} = [coords_mm(:,1)-offset,coords_mm(:,2)-offset,coords_mm(:,3)];
-            merstruct.currentmer.posterior.trajectory{side} = [trajectory(:,1)-offset,trajectory(:,2)-offset,trajectory(:,3)];
-            merstruct.currentmer.lateral.coords_mm{side} =  [coords_mm(:,1)-offset*2,coords_mm(:,2),coords_mm(:,3)]; %2mm medial (right is positive)
-            merstruct.currentmer.lateral.trajectory{side} = [trajectory(:,1)-offset*2,trajectory(:,2),trajectory(:,3)]; %2mm medial (right is positive)
-        end
-end
-
-
-function mer = ea_coords2mer(coords_mm,trajectory,resultfig,options)
-        
-offset = getfield(getappdata(resultfig,'merstruct'),'offset');
-contact_length = getfield(getappdata(resultfig,'elspec'),'contact_length');
-
-% x-axis --> negative = medial, positive = lateral
-% y-axis --> negative = posterior, positive = anterior
-% z-axis --> negative = inferior, positive = superior
-for side=1:length(options.sides)
-    dxyz = sqrt((diff(coords_mm{side}(1:2,1))^2)+(diff(coords_mm{side}(1:2,2))^2)+diff(coords_mm{side}(1:2,3))^2);
-    slope = mean(diff(coords_mm{side}))/dxyz; %mean(diff(coords_mm{side}))/norm(mean(diff(coords_mm{side})))
-    coords_mm{side} = coords_mm{side}-repmat(slope*contact_length/2,length(coords_mm{side}),1);
-    trajectory{side} = trajectory{side}-repmat(slope*contact_length/2,length(trajectory{side}),1);
-    if ea_getnativemni==1
-        mer.central.coords_mm{side} = coords_mm{side};
-        mer.central.trajectory{side} = trajectory{side};
-        mer.anterior.coords_mm{side} = [coords_mm{side}(:,1),coords_mm{side}(:,2)+offset,coords_mm{side}(:,3)]; %2mm anterior
-        mer.anterior.trajectory{side} = [trajectory{side}(:,1),trajectory{side}(:,2)+offset,trajectory{side}(:,3)]; %2mm anterior
-        mer.posterior.coords_mm{side} = [coords_mm{side}(:,1),coords_mm{side}(:,2)-offset,coords_mm{side}(:,3)]; %2mm posterior
-        mer.posterior.trajectory{side} = [trajectory{side}(:,1),trajectory{side}(:,2)-offset,trajectory{side}(:,3)]; %2mm posterior
-        if side==1 %right
-            mer.lateral.coords_mm{side} = [coords_mm{side}(:,1)+offset,coords_mm{side}(:,2),coords_mm{side}(:,3)]; %2mm lateral (right is positive)
-            mer.lateral.trajectory{side} = [trajectory{side}(:,1)+offset,trajectory{side}(:,2),trajectory{side}(:,3)]; %2mm lateral (right is positive)
-            mer.medial.coords_mm{side} = [coords_mm{side}(:,1)-offset,coords_mm{side}(:,2),coords_mm{side}(:,3)]; %2mm medial (right is positive)
-            mer.medial.trajectory{side} = [trajectory{side}(:,1)-offset,trajectory{side}(:,2),trajectory{side}(:,3)]; %2mm medial (right is positive)
-        elseif side==2 %left
-            mer.lateral.coords_mm{side} = [coords_mm{side}(:,1)-offset,coords_mm{side}(:,2),coords_mm{side}(:,3)]; %2mm lateral (left is negative)
-            mer.lateral.trajectory{side} = [trajectory{side}(:,1)-offset,trajectory{side}(:,2),trajectory{side}(:,3)]; %2mm lateral (left is negative)
-            mer.medial.coords_mm{side} = [coords_mm{side}(:,1)+offset,coords_mm{side}(:,2),coords_mm{side}(:,3)]; %2mm medial (left is negative)
-            mer.medial.trajectory{side} = [trajectory{side}(:,1)+offset,trajectory{side}(:,2),trajectory{side}(:,3)]; %2mm medial (left is negative)
-        end
-    end
-    
-    if ea_getnativemni==2
-        mer.central.coords_mm{side} = coords_mm{side};
-        mer.central.trajectory{side} = trajectory{side};
-        mer.anterior.coords_mm{side} = [coords_mm{side}(:,1),coords_mm{side}(:,2)+offset,coords_mm{side}(:,3)]; %2mm anterior
-        mer.anterior.trajectory{side} = [trajectory{side}(:,1),trajectory{side}(:,2)+offset,trajectory{side}(:,3)]; %2mm anterior
-        mer.posterior.coords_mm{side} = [coords_mm{side}(:,1),coords_mm{side}(:,2)-offset,coords_mm{side}(:,3)]; %2mm posterior
-        mer.posterior.trajectory{side} = [trajectory{side}(:,1),trajectory{side}(:,2)-offset,trajectory{side}(:,3)]; %2mm posterior
-        if side==1 %right
-            mer.lateral.coords_mm{side} = [coords_mm{side}(:,1)+offset,coords_mm{side}(:,2),coords_mm{side}(:,3)]; %2mm lateral (right is positive)
-            mer.lateral.trajectory{side} = [trajectory{side}(:,1)+offset,trajectory{side}(:,2),trajectory{side}(:,3)]; %2mm lateral (right is positive)
-            mer.medial.coords_mm{side} = [coords_mm{side}(:,1)-offset,coords_mm{side}(:,2),coords_mm{side}(:,3)]; %2mm medial (right is positive)
-            mer.medial.trajectory{side} = [trajectory{side}(:,1)-offset,trajectory{side}(:,2),trajectory{side}(:,3)]; %2mm medial (right is positive)
-        elseif side==2 %left
-            mer.lateral.coords_mm{side} = [coords_mm{side}(:,1)-offset,coords_mm{side}(:,2),coords_mm{side}(:,3)]; %2mm lateral (left is negative)
-            mer.lateral.trajectory{side} = [trajectory{side}(:,1)-offset,trajectory{side}(:,2),trajectory{side}(:,3)]; %2mm lateral (left is negative)
-            mer.medial.coords_mm{side} = [coords_mm{side}(:,1)+offset,coords_mm{side}(:,2),coords_mm{side}(:,3)]; %2mm medial (left is negative)
-            mer.medial.trajectory{side} = [trajectory{side}(:,1)+offset,trajectory{side}(:,2),trajectory{side}(:,3)]; %2mm medial (left is negative)
-        end
-    end
-end
-    
-
-
-function refreshresultfig(handles,resultfig,options,side)
-% this part makes changes of the figure active:
-clearmertrajectories(handles,resultfig,options,side)
-merstruct=getappdata(resultfig,'merstruct');
-merhandles=getappdata(resultfig,'merhandles');
-mermarkers=getappdata(resultfig,'mermarkers');
-
-% Draw default trajectories
-set(0,'CurrentFigure',resultfig); hold on;
-for iSide = side
-    if iSide==1 % right = 1 
-        sidestr=lower('right');
-    elseif iSide==2 % left = 2
-        sidestr=lower('left');
-    end
-    for pos_ix = 1:length(merstruct.tract_labels)
-        pos = merstruct.tract_labels{pos_ix};
-        traj = merstruct.currentmer.(pos).trajectory{side};
-        merhandles.(pos){side} = plot3(traj(:,1), traj(:,2), traj(:,3),...
-            'color',merstruct.colormap(pos_ix,:), 'linew',5, 'tag',[pos '_' sidestr]);
-    end
-    set(handles.editimplanteddepth_left,'String','0');
-end
-
-setappdata(resultfig,'merhandles',merhandles)
+ea_resultfig_update_trajectories(handles);
 
 
 function [files,subs] = fdir(Path,ext)
@@ -1318,63 +1075,3 @@ end
 if nargin==2
     files = files(~cellfun(@isempty, strfind({files.name},ext)));
 end
-
-
-function ea_keypress(handles,event)
-% this is the main keypress function for the resultfigure. Add event
-% listeners here.
-
-if ismember('shift',event.Modifier)
-end
-
-
-function ea_update_trajectory_helper(hObject, handles, side, pos_str)
-if side==1
-    side_str = 'right';
-else
-    side_str = 'left';
-end
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-dist = str2double(get(hObject,'String'))-str2double(get(handles.(['editimplanteddepth_' side_str]),'String'));
-trajectory = ea_getmertrajectory(merstruct.currentmer.(pos_str).coords_mm{side},dist,merstruct.length,50);
-ea_updatemertrajectory(handles,trajectory,0,['pos' pos_str '_' side_str]);
-
-
-function ea_set_implanted_helper(handles, side)
-if side == 1
-    side_str = 'right';
-else
-    side_str = 'left';
-end
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-merstruct=getappdata(resultfig,'merstruct');
-options=getappdata(handles.mercontrolfig,'options');
-tractstring=lower(get(handles.(['popupimplantedtract_' side_str]),'String'));
-tracttag=tractstring{handles.(['popupimplantedtract_' side_str]).Value};
-merstruct = ea_updatetracts(merstruct,side,tracttag,resultfig,handles);
-for pos_str = merstruct.tract_labels
-    ea_updatemertrajectory(handles,...
-        merstruct.currentmer.(pos_str{:}).trajectory{side},...
-        [pos_str{:} '_' side_str]);
-end
-setappdata(resultfig,'merstruct',merstruct);
-
-
-% --- Executes on button press in pushbutton_clear_checks.
-function pushbutton_clear_checks_Callback(hObject, eventdata, handles)
-clearkeyboardcontrolgroup(handles);
-
-
-function clearkeyboardcontrolgroup(handles)
-resultfig = getappdata(handles.mercontrolfig, 'resultfig');
-merstruct = getappdata(resultfig,'merstruct');
-ui_tags = {handles.keyboardcontrolgroup.Children.Tag};
-for side_str = {'left', 'right'}
-    for tract_info = merstruct.tract_info
-        set(handles.keyboardcontrolgroup.Children(strcmpi(ui_tags,...
-                    ['keycheck' tract_info.label '_' side_str{:}])),...
-            'Value', 0);
-    end
-end
-setappdata(resultfig,'keymer',[])
