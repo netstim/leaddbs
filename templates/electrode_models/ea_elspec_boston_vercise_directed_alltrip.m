@@ -77,6 +77,7 @@ for side=1:length(options.sides)
     %[cX,cY,cZ] = ea_singlecylinder((diams),N);
     [cX,cY,cZ] = cylinder((diams),(2*N-1));
     
+    
     cZ=cZ.*(startpoint(3)-lowerpoint(3)); % scale to fit tip-diameter
     cZ=cZ+lowerpoint(3);
     a=surf2patch(surf(cX,cY,cZ));
@@ -86,13 +87,20 @@ for side=1:length(options.sides)
     meshel.ins{1}.vertices=a.vertices;
     ndiv=length(meshel.ins{1}.vertices)/2;
     meshel.ins{1}.endplates=[1:ndiv;ndiv+1:2*ndiv];
-
+numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)];
+    numeshel(ncnt).vertices=[a.vertices];
+    
     % nbefore we had two endplates for each, now only top:
 %    numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)];
+    [no,fc,seeds] = ea_segmented_cylinder_qq_ah(60,1,0.75,1,3,0.8);
+    no(:,1)=no(:,1).*(elspec.contact_diameter/2);
+    no(:,2)=no(:,2).*(elspec.contact_diameter/2);
+    no(:,3)=no(:,3).*(startpoint(3)-lowerpoint(3)); % scale to fit tip-diameter
+    no(:,3)=no(:,3)+lowerpoint(3);
     
+    numeshel(ncnt).faces=fc;
+    numeshel(ncnt).vertices=no;
     
-    numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)];
-    numeshel(ncnt).vertices=[a.vertices];
 
  
     ncnt=ncnt+1;
@@ -168,6 +176,17 @@ for side=1:length(options.sides)
 %             keyboard
             numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([find(a.vertices(:,3)==max(a.vertices(:,3)))'],2)];
             numeshel(ncnt).vertices=a.vertices;
+            
+            
+            [no,fc,seeds] = ea_segmented_cylinder_qq_ah(60,1,0.75,1,3,0.8);
+                        no(:,1)=no(:,1).*(elspec.contact_diameter/2);
+            no(:,2)=no(:,2).*(elspec.contact_diameter/2);
+            no(:,3)=no(:,3).*(elspec.tip_length); % scale to fit tip-diameter
+            
+            numeshel(ncnt).faces=fc;
+            numeshel(ncnt).vertices=no;
+
+
                         
 %             figure
 %             hold on
@@ -382,10 +401,24 @@ for side=1:length(options.sides)
 
             meshel.con{end}.endplates=[1:ndiv;ndiv+1:2*ndiv];
 
-
+            
             
             numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)];
             numeshel(ncnt).vertices=a.vertices;
+            
+            
+            
+            [no,fc,seeds] = ea_segmented_cylinder_qq_ah(60,1,0.75,1,3,0.8);
+                        no(:,1)=no(:,1).*(elspec.contact_diameter/2);
+            no(:,2)=no(:,2).*(elspec.contact_diameter/2);
+            no(:,3)=no(:,3).*(elspec.contact_length); % scale to fit tip-diameter
+            no(:,3)=no(:,3)-htd;
+            no(:,3)=no(:,3)+coords_mm{side}(cntct,3);
+            
+            numeshel(ncnt).faces=fc;
+            numeshel(ncnt).vertices=no;
+            
+
             
 %             figure
 %             hold on
@@ -459,6 +492,17 @@ for side=1:length(options.sides)
         %end
         numeshel(ncnt).vertices=a.vertices;
         
+        
+        
+        [no,fc,seeds] = ea_segmented_cylinder_qq_ah(60,1,0.75,1,3,0.8);
+                    no(:,1)=no(:,1).*(elspec.contact_diameter/2);
+            no(:,2)=no(:,2).*(elspec.contact_diameter/2);
+        no(:,3)=no(:,3).*(elspec.contact_spacing); % scale to fit tip-diameter
+        no(:,3)=no(:,3)-htd;
+        no(:,3)=no(:,3)+hait;
+        
+        numeshel(ncnt).faces=fc;
+        numeshel(ncnt).vertices=no;
         
 %         figure
 %             hold on

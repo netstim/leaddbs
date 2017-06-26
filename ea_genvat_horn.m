@@ -1,12 +1,7 @@
-function varargout=ea_genvat_simbio_iso2mesh(varargin)
+function varargout=ea_genvat_horn(varargin)
 % This function generates a volume of activated tissue around for each
-% electrode.
-% Usage: VAT=ea_genvat(coords_mm,stimparams,options).
-% ? stimparams is a struct variable with fields U (8*1 with voltage
-% entries) and Im (8*1 with Impedance measurements).
-%
-% This function only touches the .VAT entry of stimparams struct of the
-% given side.
+% electrode based on the methodology described in Horn 2017 AoN.
+
 useSI=1;
 vizz=0;
 if nargin==5

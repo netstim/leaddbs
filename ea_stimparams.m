@@ -1946,11 +1946,7 @@ model=models{get(handles.modelselect,'Value')};
 
 
 switch model
-    case 'SimBio/FieldTrip'
-        ea_hide_impedance(handles);
-        S.monopolarmodel=0;
-        ea_enable_vas(handles,options);
-    case 'SimBio/Iso2Mesh'
+    case 'Horn 2017'
         ea_hide_impedance(handles);
         S.monopolarmodel=0;
         ea_enable_vas(handles,options);

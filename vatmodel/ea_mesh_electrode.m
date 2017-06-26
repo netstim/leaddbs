@@ -2,7 +2,7 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
 % meshing an electrode and tissue structures bounded by a cylinder
 %% load the nucleus data
 ea_dispt('Generating tetraedrical mesh...');
-meshel=electrode.meshel;
+%meshel=electrode.meshel;
 vizz=0;
 stlexport=1;
 if vizz
