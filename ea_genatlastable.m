@@ -498,7 +498,7 @@ for atl=1:length(atlnames)
                 load([ea_space,'ea_space_def.mat'])
                 copyfile([ea_space,spacedef.templates{1},'.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
                 ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],...
-                    [0.3,0.3,0.3]);
+                    [0.2,0.2,0.2]);
             else
                 copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             end
