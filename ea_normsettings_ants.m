@@ -22,7 +22,7 @@ function varargout = ea_normsettings_ants(varargin)
 
 % Edit the above text to modify the response to help ea_normsettings_ants
 
-% Last Modified by GUIDE v2.5 14-Apr-2017 19:07:39
+% Last Modified by GUIDE v2.5 27-Jun-2017 01:02:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,11 +61,47 @@ guidata(hObject, handles);
 set(handles.setfig,'Name','Normalization Settings');
 set(handles.titletext,'String','ANTs Defaults');
 
+
+
+
+% list presets
+
+earoot=ea_getearoot;
+presf=[earoot,'ext_libs',filesep,'ANTs',filesep,'presets',filesep];
+ndir=dir([presf,'ea_antspreset_*.m']);
+for n=1:length(ndir)
+    [~,funame]=fileparts(ndir(n).name);
+    namecell{n}=eval([funame,'(''query'')']);
+    funcell{n}=ndir(n).name;
+end
+setappdata(handles.pcpopup,'funcell',funcell);
+set(handles.pcpopup,'String',namecell);
+
+% select last selection
 prefs=ea_prefs('');
-[~,ix]=ismember(prefs.machine.normsettings.ants_synmode,get(handles.pcpopup,'String'));
+[~,ix]=ismember(prefs.machine.normsettings.ants_preset,getappdata(handles.pcpopup,'funcell'));
+if ix % if has prior selection
 set(handles.pcpopup,'Value',ix);
+end
+[~,ix]=ismember(prefs.machine.normsettings.ants_metric,get(handles.metric,'String'));
+if ix % if has prior selection
+set(handles.metric,'Value',ix);
+end
+[~,ix]=ismember(prefs.machine.normsettings.ants_strategy,get(handles.strategy,'String'));
+if ix % if has prior selection
+set(handles.strategy,'Value',ix);
+end
 
 
+if ischar(prefs.machine.normsettings.ants_numcores)
+    set(handles.restrcores,'Value',1);
+    set(handles.numcores,'String',prefs.machine.normsettings.ants_numcores)
+else
+    set(handles.restrcores,'Value',0);
+    set(handles.numcores,'enable','off');
+end
+
+set(handles.scrf,'Value',prefs.machine.normsettings.ants_scrf);
 
 % UIWAIT makes ea_normsettings_ants wait for user response (see UIRESUME)
 
@@ -115,9 +151,113 @@ function savebutn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 prefs=ea_prefs('');
 normsettings=prefs.machine.normsettings;
-normsettings.ants_synmode=get(handles.pcpopup,'String');
-normsettings.ants_synmode=normsettings.ants_synmode{get(handles.pcpopup,'Value')};
+normsettings.ants_preset=getappdata(handles.pcpopup,'funcell');
+normsettings.ants_preset=normsettings.ants_preset{get(handles.pcpopup,'Value')};
+normsettings.ants_scrf=get(handles.scrf,'Value');
+normsettings.ants_metric=get(handles.metric,'String');
+normsettings.ants_metric=normsettings.ants_metric{get(handles.metric,'Value')};
+
+normsettings.ants_strategy=get(handles.strategy,'String');
+normsettings.ants_strategy=normsettings.ants_strategy{get(handles.strategy,'Value')};
+
+if get(handles.restrcores,'Value')
+    normsettings.ants_numcores=get(handles.numcores,'String');
+else
+    normsettings.ants_numcores=0;
+end
 
 ea_setprefs('normsettings',normsettings);
 
 delete(handles.setfig);
+
+
+% --- Executes on button press in scrf.
+function scrf_Callback(hObject, eventdata, handles)
+% hObject    handle to scrf (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of scrf
+
+
+% --- Executes on selection change in metric.
+function metric_Callback(hObject, eventdata, handles)
+% hObject    handle to metric (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns metric contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from metric
+
+
+% --- Executes during object creation, after setting all properties.
+function metric_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to metric (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in strategy.
+function strategy_Callback(hObject, eventdata, handles)
+% hObject    handle to strategy (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns strategy contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from strategy
+
+
+% --- Executes during object creation, after setting all properties.
+function strategy_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to strategy (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function numcores_Callback(hObject, eventdata, handles)
+% hObject    handle to numcores (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of numcores as text
+%        str2double(get(hObject,'String')) returns contents of numcores as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function numcores_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to numcores (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in restrcores.
+function restrcores_Callback(hObject, eventdata, handles)
+% hObject    handle to restrcores (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of restrcores
+if get(handles.restrcores,'Value')
+    set(handles.numcores,'enable','on');
+else
+    set(handles.numcores,'enable','off');
+end
