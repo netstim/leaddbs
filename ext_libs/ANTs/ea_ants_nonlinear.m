@@ -248,7 +248,6 @@ fclose(fid);
 
 if ~ispc
     system(['bash -c "', cmd, '"']);
-    
 else
     system(cmd);
 end
