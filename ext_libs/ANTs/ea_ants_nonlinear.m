@@ -79,11 +79,9 @@ else
     weights=ones(length(fixedimage),1);
 end
 
-
-
+% Load preset parameter set
 [~,funname]=fileparts(options.prefs.machine.normsettings.ants_preset);
 apref=eval(funname);
-% read out params file:
 
 directory=fileparts(movingimage{1});
 directory=[directory,filesep];

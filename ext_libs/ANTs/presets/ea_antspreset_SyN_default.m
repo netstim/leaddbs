@@ -18,7 +18,7 @@ switch prefs.machine.normsettings.ants_metric
 end
 
 switch prefs.machine.normsettings.ants_strategy
-    case 'SyN';
+    case 'SyN'
         apref.antsmode='SyN';
         apref.antsmode_suffix='[0.1,3,0]';
     case 'BSplineSyN'
@@ -65,4 +65,3 @@ apref.smoothingsigmas.affine.small='3x2x1x0vox'; % Affine Smoothing sigmas for s
 apref.smoothingsigmas.syn.small='3x2x1x0vox'; % SyN Smoothing sigmas for small volumes
 
 apref.smoothingsigmas.scrf='1x0vox'; % SyN subcortical focus stage smoothing sigmas
-
