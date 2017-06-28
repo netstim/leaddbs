@@ -34,12 +34,12 @@ end
 
 apref.small_large_dissociation=256; % Value from which imgsize is treated as "large" or "small", see below.
 % Convergence
-apref.convergence.rigid.large='[1000x500x250x100,1e-6,10]'; % Rigid convergence params for large volumes
-apref.convergence.affine.large='[1000x500x250x100,1e-6,10]'; % Affine convergence params for large volumes
+apref.convergence.rigid.large='[1000x500x250x0,1e-6,10]'; % Rigid convergence params for large volumes
+apref.convergence.affine.large='[1000x500x250x0,1e-6,10]'; % Affine convergence params for large volumes
 apref.convergence.syn.large='[100x100x70x50x0,1e-6,10]'; % SyN convergence params for large volumes
 
-apref.convergence.rigid.small='[1000x500x250x100,1e-6,10]'; % Rigid convergence params for small volumes
-apref.convergence.affine.small='[1000x500x250x100,1e-6,10]'; % Affine convergence params for small volumes
+apref.convergence.rigid.small='[1000x500x250x0,1e-6,10]'; % Rigid convergence params for small volumes
+apref.convergence.affine.small='[1000x500x250x0,1e-6,10]'; % Affine convergence params for small volumes
 apref.convergence.syn.small='[100x70x50x0,1e-6,10]'; % SyN convergence params for small volumes
 
 apref.convergence.scrf='[20x5,1e-6,10]'; % SyN subcortical focus stage convergence params
