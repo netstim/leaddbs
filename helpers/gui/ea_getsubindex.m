@@ -6,7 +6,6 @@ if regexp(sel, '<HTML><BODY>')
     [sel ~] = regexp(sel,'(?:&nbsp;)+(.*)</FONT></BODY></HTML>','tokens','match');
     sel = sel{1}{1};
 end
-
 if uselabelname ~= 0
     [~, nsel] = ismember(sel,atlases.labels{uselabelname});
     [~, sel] = ea_niifileparts(atlases.names{nsel});
