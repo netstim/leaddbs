@@ -29,9 +29,9 @@ el_o_orig=[0,0,15+(10*stretchfactor)];
 el_o_etop=[0,0,-10*stretchfactor];
 
 
-nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
+nucleidecimate=0.5;    % downsample the nucleius mesh to 20%
 
-bcyltrisize=0.3;       % the maximum triangle size of the bounding cyl
+bcyltrisize=0.01;       % the maximum triangle size of the bounding cyl
 
 cylz0=-30;     % define the upper end of the bounding cylinder
 cylz1=30;     % define the lowe end of the bounding cylinder
