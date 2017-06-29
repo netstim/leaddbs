@@ -29,7 +29,7 @@ el_o_orig=[0,0,15+(10*stretchfactor)];
 el_o_etop=[0,0,-10*stretchfactor];
 
 
-nucleidecimate=0.5;    % downsample the nucleius mesh to 20%
+nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
 
 bcyltrisize=0.01;       % the maximum triangle size of the bounding cyl
 

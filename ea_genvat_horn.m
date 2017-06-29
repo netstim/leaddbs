@@ -844,7 +844,13 @@ function x = ea_sb_solve(sysmat,vecb)
 % SB_SOLVE
 %
 % $Id: sb_solve.m 8776 2013-11-14 09:04:48Z roboos $
-L = ichol(sysmat);
+try
+    L = ichol(sysmat);
+catch
+    alpha = max(sum(abs(sysmat),2)./diag(sysmat))-2;
+    L = ichol(sysmat, struct('type','ict','droptol',1e-3,'diagcomp',alpha));
+end
+
 %scalen
 [~,x]=evalc('pcg(sysmat,vecb,10e-10,5000,L,L'',vecb)');
 

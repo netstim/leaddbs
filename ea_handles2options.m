@@ -201,6 +201,9 @@ try
     end
 end
 
+try
+    options.reconmethod=get(handles.reconmethod,'Value');
+end
 
 options.expstatvat.do=0;
 
