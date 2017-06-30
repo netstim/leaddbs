@@ -110,6 +110,8 @@ catch
     end
 end
 
+
+
 %keyboard
 %  system([' "' mcpath('tetgen') exesuff '" ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 
@@ -120,7 +122,7 @@ else
 end
 
 % read in the generated mesh
- success=1;
+success=1;
 % try
      [node,elem,face]=readtetgen(mwpath('post_vmesh.1'));
 %     fprintf(1,'volume mesh generation is complete\n');
@@ -138,10 +140,3 @@ end
 %         success=0;
 %     end
 % end
-
-function sweeptempdir
-file=mwpath('post_vmesh.poly');
-pth=fileparts(file);
-warning('off');
-delete([pth,filesep,'*']);
-warning('on');

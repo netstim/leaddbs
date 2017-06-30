@@ -98,12 +98,15 @@ allface=nuallface; clear nuallface
 %% convert to obtain the electrode surface mesh model
 
  
-h=figure;
+%h=figure;
       %plotmesh(uniquenode,uniqueface,'linestyle','-','facealpha',0.1);
-      plotmesh(allnode,allface,'linestyle','-','facealpha',0.1);
+%      plotmesh(allnode,allface,'linestyle','-','facealpha',0.1);
 
       % zlim([0,10])
 
+      [allnode,allface]=removedupnodes(allnode,allface,1e-6); % <- this compresses the node list
+
+      
 [node,~,face]=s2m(allnode,{allface{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
 
 

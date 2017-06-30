@@ -31,6 +31,9 @@ if(nargin<=6)
     holes=[];
 end
 
+%[v,f]=removedupnodes(v,f,1e-6); % <- remove duplicate nodes that are extremely closeby due to precision errors.
+
+
 [node,elem,face,success]=surf2mesh(v,f,min(v,[],1),max(v,[],1),keepratio,maxvol,regions,holes);
 
 % if ~success % try with gmsh next

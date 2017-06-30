@@ -93,8 +93,8 @@ for side=1:length(options.sides)
     
     numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)];
     numeshel(ncnt).vertices=[a.vertices];
+    eltype(ncnt)=2; % ins
 
- 
     ncnt=ncnt+1;
     
     
@@ -144,7 +144,7 @@ for side=1:length(options.sides)
             % add meshing-version to it
 
             %[cX,cY,cZ] = ea_singlecylinder((tipdiams),N);
-    [cX,cY,cZ] = cylinder((tipdiams),(2*N-1));
+            [cX,cY,cZ] = cylinder((tipdiams),(2*N-1));
 
             cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
 
@@ -168,7 +168,7 @@ for side=1:length(options.sides)
 %             keyboard
             numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([find(a.vertices(:,3)==max(a.vertices(:,3)))'],2)];
             numeshel(ncnt).vertices=a.vertices;
-                        
+                            eltype(ncnt)=1; % con
 %             figure
 %             hold on
 %             for c=1:length(numeshel(ncnt).faces)
@@ -214,6 +214,7 @@ for side=1:length(options.sides)
 
 
             
+            
 % shape up:
 
 
@@ -235,7 +236,7 @@ for side=1:length(options.sides)
             
             numeshel(ncnt).faces=fc;
             numeshel(ncnt).vertices=[no];
-            
+            eltype(ncnt)=3; % mixed.
 %             figure
 %             hold on
 %             for c=1:length(numeshel(ncnt).faces)
@@ -276,7 +277,7 @@ for side=1:length(options.sides)
                 
                 meshel.con{end+1}.faces=elrender{side}(cnt).Faces;
                 meshel.con{end}.vertices=elrender{side}(cnt).Vertices;
-                
+
      
                 
                 if vizz
@@ -386,7 +387,7 @@ for side=1:length(options.sides)
             
             numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)];
             numeshel(ncnt).vertices=a.vertices;
-            
+                eltype(ncnt)=1; % con
 %             figure
 %             hold on
 %             for c=1:length(numeshel(ncnt).faces)
@@ -458,7 +459,7 @@ for side=1:length(options.sides)
         %    numeshel(ncnt).faces=[num2cell(a.faces,2)];
         %end
         numeshel(ncnt).vertices=a.vertices;
-        
+            eltype(ncnt)=2; % ins
         
 %         figure
 %             hold on
@@ -506,18 +507,6 @@ cntcnt=1; inscnt=1;
 
 
 
-if vizz
-%     figure
-%     hold on
-% 
-%     for c=1:length(meshel.con)
-%         plotmesh(meshel.con{c}.vertices,meshel.con{c}.faces)
-%     end
-%     for c=1:length(meshel.ins)
-%         plotmesh(meshel.ins{c}.vertices,meshel.ins{c}.faces)
-%     end
-end
-
 % export vol version:
 
 ea_genvol_bscdirected(numeshel,elspec,1);
@@ -526,169 +515,26 @@ ea_genvol_bscdirected(numeshel,elspec,1);
 % more stuff for the visualization version (electrode.contacts &
 % electrodes.insulation)
 
-%% order of components:
-% 1-3: shaft (insulation)
-% 4: tip (=contact1)
-% 5: contact2
-% 6: contact3
-% 7: contact4
-% 8-11: spacings
-% 12: contact5
-% 13: contact6
-% 14: contact7
-% 15-18: spacings
-% 19-21: contact8
-% 22-30: spacings
-return
-for comp=[1,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,22,25,28]
-    if comp==1 % shaft
-        cyl=elrender{side}(comp); top=elrender{side}(comp+1); bottom=elrender{side}(comp+2);
-        try
-            cyl = surf2patch(cyl,'triangles');
-        catch
+concnt=1;
+inscnt=1;
+for comp=1:length(meshel)
+    keyboard
+    switch eltype(comp)
+        case 1 % pure con
+            electrode.contacts(concnt)=numeshel(comp);
+            concnt=concnt+1;            
+        case 2 % pure ins
+            electrode.insulation(inscnt)=numeshel(comp);
+            inscnt=inscnt+1;
+        case 3 % mixed / segmented contact
             keyboard
-        end
-        cyl.faces=[cyl.faces;top.Faces+length(cyl.vertices);bottom.Faces+length(cyl.vertices)+length(top.Vertices)];
-        cyl.vertices=[cyl.vertices;top.Vertices;bottom.Vertices];
-        electrode.insulation(inscnt)=cyl;
-        inscnt=inscnt+1;
-
-
-
-    elseif ismember(comp,4:7) % first 4 contacts
-        cyl=elrender{side}(comp);
-
-        try % if not already a patch..
-            cyl = surf2patch(cyl,'triangles');
-        end
-
-        if comp==4 % tip
-            % close lid (add endplate)
-
-            % find all vertices at Z=3mm
-            z3=cyl.vertices(cyl.vertices(:,3)==3,:);
-            z3ix=find(cyl.vertices(:,3)==3);
-
-            % add 0,0,3 (lid midpoint)
-            cyl.vertices=[cyl.vertices;0,0,3];
-
-            midpointix=length(cyl.vertices);
-
-            for face=1:length(z3ix)
-                try
-                    cyl.faces=[cyl.faces;z3ix(face),z3ix(face+1),midpointix];
-                catch
-                    cyl.faces=[cyl.faces;z3ix(face),z3ix(1),midpointix];
-                end
-            end
-
-            %
-            %
-            %             z3ix=z3ix';
-            %             keyboard
-            %             vtc=nan(length(cyl.faces)+1,21);
-            %             vtc(1:length(cyl.faces),1:3)=cell2mat([num2cell(cyl.faces,2)]);
-            %             vtc(end,:)=z3ix;
-            % %
-            if vizz
-                figure
-                h=patch('vertices',cyl.vertices,'faces',cyl.faces,'facecolor','r','edgecolor','k');
-            end
-            [ncyl.vertices,ncyl.faces]=meshcheckrepair(cyl.vertices,cyl.faces,'meshfix');
-            if vizz
-                figure, patch('vertices',ncyl.vertices,'faces',ncyl.faces,'facecolor','r');
-            end
-            [ncyl.vertices,~,ncyl.faces]=s2m(ncyl.vertices,ncyl.faces,1,1,'tetgen');
-            figure, patch('vertices',ncyl.vertices,'faces',ncyl.faces(:,1:3),'facecolor','r');
-
-            ncyl.facevertexcdata=repmat(cyl.facevertexcdata(1,:),size(ncyl.vertices,1),1);
-            %cyl=ncyl;
-            %cyl.faces=cyl.faces(:,1:3);
-
-            %             meshresample(h.Vertices,h.Faces,1);
-            %           [nodecon,~,facecon]=s2m(cyl.vertices,[num2cell(cyl.faces,2);{flip(z3ix,2)}],0.2,1,'tetgen'); % generate a tetrahedral mesh of the cylinders
-
-            %figure, patch(cyl,'facecolor','r')
-        end
-
-        try
-            electrode.contacts(cntcnt).faces=cyl.Faces;
-            electrode.contacts(cntcnt).vertices=cyl.Vertices;
-            electrode.contacts(cntcnt).facevertexcdata=cyl.FaceVertexCData;
-        catch
-            electrode.contacts(cntcnt).faces=cyl.faces;
-            electrode.contacts(cntcnt).vertices=cyl.vertices;
-            electrode.contacts(cntcnt).facevertexcdata=cyl.facevertexcdata;
-        end
-
-
-
-
-        cntcnt=cntcnt+1;
-    elseif ismember(comp,8:11) % insulation
-        cyl=elrender{side}(comp);
-        try % if not already a patch..
-            cyl = surf2patch(cyl,'triangles');
-        end
-
-        try
-            electrode.insulation(inscnt).faces=cyl.Faces;
-            electrode.insulation(inscnt).vertices=nudgetomean(cyl.Vertices);
-            electrode.insulation(inscnt).facevertexcdata=cyl.FaceVertexCData;
-        catch
-            electrode.insulation(inscnt).faces=cyl.faces;
-            electrode.insulation(inscnt).vertices=nudgetomean(cyl.vertices);
-            electrode.insulation(inscnt).facevertexcdata=cyl.facevertexcdata;
-        end
-
-        inscnt=inscnt+1;
-    elseif ismember(comp,12:14) % contacts
-        cyl=elrender{side}(comp);
-        try % if not already a patch..
-            cyl = surf2patch(cyl,'triangles');
-        end
-        try
-            electrode.contacts(cntcnt).faces=cyl.Faces;
-            electrode.contacts(cntcnt).vertices=cyl.Vertices;
-            electrode.contacts(cntcnt).facevertexcdata=cyl.FaceVertexCData;
-        catch
-            electrode.contacts(cntcnt).faces=cyl.faces;
-            electrode.contacts(cntcnt).vertices=cyl.vertices;
-            electrode.contacts(cntcnt).facevertexcdata=cyl.facevertexcdata;
-        end
-        cntcnt=cntcnt+1;
-    elseif ismember(comp,15:18) % insulation
-        cyl=elrender{side}(comp);
-        try % if not already a patch..
-            cyl = surf2patch(cyl,'triangles');
-        end
-        try
-            electrode.insulation(inscnt).faces=cyl.Faces;
-            electrode.insulation(inscnt).vertices=nudgetomean(cyl.Vertices);
-            electrode.insulation(inscnt).facevertexcdata=cyl.FaceVertexCData;
-        catch
-            electrode.insulation(inscnt).faces=cyl.faces;
-            electrode.insulation(inscnt).vertices=nudgetomean(cyl.vertices);
-            electrode.insulation(inscnt).facevertexcdata=cyl.facevertexcdata;
-        end
-        inscnt=inscnt+1;
-    elseif comp==19 % contact 8
-        cyl=elrender{side}(comp); top=elrender{side}(comp+1); bottom=elrender{side}(comp+2);
-        cyl = surf2patch(cyl,'triangles');
-        cyl.faces=[cyl.faces;top.Faces+length(cyl.vertices);bottom.Faces+length(cyl.vertices)+length(top.Vertices)];
-        cyl.vertices=[cyl.vertices;top.Vertices;bottom.Vertices];
-        electrode.contacts(cntcnt)=cyl;
-        cntcnt=cntcnt+1;
-    elseif ismember(comp,[22,25,28]) % insulation
-        cyl=elrender{side}(comp); top=elrender{side}(comp+1); bottom=elrender{side}(comp+2);
-        cyl = surf2patch(cyl,'triangles');
-        cyl.faces=[cyl.faces;top.Faces+length(cyl.vertices);bottom.Faces+length(cyl.vertices)+length(top.Vertices)];
-        cyl.vertices=[cyl.vertices;top.Vertices;bottom.Vertices];
-        electrode.insulation(inscnt)=cyl;
-        inscnt=inscnt+1;
+            
     end
-
+    
+    
 end
+
+
 
 electrode.electrode_model=elstruct.name;
 electrode.head_position=[0,0,options.elspec.tip_length+0.5*options.elspec.contact_length];
