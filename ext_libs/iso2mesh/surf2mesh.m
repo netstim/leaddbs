@@ -82,7 +82,7 @@ end
 
 deletemeshfile(mwpath('post_vmesh.mtr'));
 
-sweeptempdir;
+%sweeptempdir;
 
 savesurfpoly(no,el,holes,regions,p0,p1,mwpath('post_vmesh.poly'),dobbx);
 
