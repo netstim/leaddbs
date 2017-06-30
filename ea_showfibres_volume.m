@@ -144,7 +144,7 @@ for side=1:length(options.sides)
                 %                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)]);
                 try % only one hemisphere could be defined.
                     if stimparams(side).volume
-                        reduc=ceil(length(vatgrad(side).x)/5000);
+                        reduc=ceil(length(vatgrad(side).x)/10000);
                         
                         PL.quiv(side)=quiver3(vatgrad(side).x(1:reduc:end),vatgrad(side).y(1:reduc:end),vatgrad(side).z(1:reduc:end),vatgrad(side).qx(1:reduc:end),vatgrad(side).qy(1:reduc:end),vatgrad(side).qz(1:reduc:end),0,'w-','LineWidth',1);
                     end
@@ -155,10 +155,7 @@ for side=1:length(options.sides)
 
             if options.writeoutstats
                 ea_dispt('Writing out stats...');
-
-
                 load([options.root,options.patientname,filesep,'ea_stats']);
-
                 ea_stats.stimulation(thisstim).vat(side,vat).amp=S.amplitude{side};
                 ea_stats.stimulation(thisstim).vat(side,vat).label=S.label;
                 ea_stats.stimulation(thisstim).vat(side,vat).contact=vat;
