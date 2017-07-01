@@ -16,7 +16,7 @@ end
 options.elmodel='Boston Scientific Vercise Directed';
 
 pt=1;
-
+electrodetrisize=0.1;
 options.sides=1;
 elstruct.name=options.elmodel;
 options=ea_resolve_elspec(options);
@@ -24,6 +24,8 @@ elspec=options.elspec;
 resultfig=figure('visible','off');
 
 ncnt=1; % count for numeshel
+concnt=1;
+inscnt=1;
 jetlist=jet;
 %   jetlist=jet;
 N=60; % resolution of electrode points
@@ -38,41 +40,41 @@ elspec.contact_spacing=elspec.contact_spacing*scf;
 elspec.lead_diameter=elspec.lead_diameter*scf;
 elspec.tip_diameter=elspec.tip_diameter*scf;
 elspec.tip_length=elspec.tip_length*scf;
- 
+
 for side=1:length(options.sides)
     %% nullmodel:
     coords_mm{side}=[0,0,0+0.75;0,0,0+0.75+1*2;0,0,0+0.75+2*2;0,0,0+0.75+3*2];
-
+    
     trajectory{side}=[zeros(30,2),linspace(30,0,30)'];
     %%
     trajvector=mean(diff(trajectory{side}));
     trajvector=trajvector/norm(trajvector);
-
-
+    
+    
     startpoint=trajectory{side}(1,:)-(1.5*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
     set(0,'CurrentFigure',resultfig);
-
+    
     % draw patientname
     lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
     ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
-
-
+    
+    
     % draw trajectory
     lowerpoint=coords_mm{side}(4,:)-trajvector*(elspec.contact_length/2);
     set(0,'CurrentFigure',resultfig);
     diams=repmat(elspec.lead_diameter/2,1,2);
     [cX,cY,cZ] = ea_singlecylinder((diams),N);
     %[cX,cY,cZ] = cylinder((diams),(2*N-1));
-
-
-%figure, plot3(cX,cY,cZ,'r.')
-
+    
+    
+    %figure, plot3(cX,cY,cZ,'r.')
+    
     cZ=cZ.*(startpoint(3)-lowerpoint(3)); % scale to fit tip-diameter
     cZ=cZ+lowerpoint(3);
-
+    
     p=surf2patch(surf(cX,cY,cZ),'triangles');
-
-
+    
+    
     % add meshing-version to shaft
     %[cX,cY,cZ] = ea_singlecylinder((diams),N);
     [cX,cY,cZ] = cylinder((diams),(2*N-1));
@@ -86,15 +88,21 @@ for side=1:length(options.sides)
     meshel.ins{1}.vertices=a.vertices;
     ndiv=length(meshel.ins{1}.vertices)/2;
     meshel.ins{1}.endplates=[1:ndiv;ndiv+1:2*ndiv];
-
+    
     % nbefore we had two endplates for each, now only top:
-%    numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)];
+    %    numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)];
     
     
     numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)];
     numeshel(ncnt).vertices=[a.vertices];
     eltype(ncnt)=2; % ins
-
+    
+    [electrode.insulation{inscnt}.vertices,~,electrode.insulation{inscnt}.faces]=s2m(numeshel(ncnt).vertices,{numeshel(ncnt).faces{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
+    electrode.insulation{inscnt}.faces=electrode.insulation{inscnt}.faces(:,1:3);
+    inscnt=inscnt+1;
+    
+    
+    
     ncnt=ncnt+1;
     
     
@@ -108,117 +116,122 @@ for side=1:length(options.sides)
     for pt=1:2:(N-1)*2
         p.faces=[p.faces;pt,pt+2,length(p.vertices)];
     end
-
-
-
+    
+    
+    
     % draw contacts
     for cntct=1:4 % first contact is the tip (see below).
-
+        
         set(0,'CurrentFigure',resultfig);
-
+        
         if cntct==1 % tip!
-
+            
             % draw tip
-
-
+            
+            
             usecolor=elspec.tip_color;
             set(0,'CurrentFigure',resultfig);
-
+            
             tipdiams=repmat(elspec.tip_diameter/2,1,19)-([10:-0.5:1].^10/10^10)*(elspec.tip_diameter/2);
             tipdiams(end+1)=elspec.tip_diameter/2;
             [cX,cY,cZ] = ea_singlecylinder((tipdiams),N);
-
+            
             cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
-
+            
             % define two points to define cylinder.
             X2=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
             X1=X2-trajvector*elspec.tip_length;
-
-
+            
+            
             cX=cX+X1(1);
             cY=cY+X1(2);
             cZ=cZ-(2*elspec.tip_length)/2+X1(3);
-
+            
             p=surf2patch(surf(cX,cY,cZ),'triangles');
-
+            
             % add meshing-version to it
-
+            
             %[cX,cY,cZ] = ea_singlecylinder((tipdiams),N);
             [cX,cY,cZ] = cylinder((tipdiams),(2*N-1));
-
+            
             cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
-
-
-
+            
+            
+            
             cX=cX+X1(1);
             cY=cY+X1(2);
             cZ=cZ-(2*elspec.tip_length)/2+X1(3);
             a=surf2patch(surf(cX,cY,cZ));
-
+            
             a=ea_reordercylinder(a,2);
             meshel.con{1}.faces=a.faces;
             meshel.con{1}.vertices=a.vertices;
             ndiv=length(meshel.con{1}.vertices)/12;
             meshel.con{1}.endplates=[find(a.vertices(:,3)==max(a.vertices(:,3)))'];
-
-%             figure
-%             patch(a,'FaceColor','none');
-%             hold on
-%             patch('vertices',a.vertices,'faces',find(a.vertices(:,3)==max(a.vertices(:,3)))','facecolor','r')
-%             keyboard
+            
+            %             figure
+            %             patch(a,'FaceColor','none');
+            %             hold on
+            %             patch('vertices',a.vertices,'faces',find(a.vertices(:,3)==max(a.vertices(:,3)))','facecolor','r')
+            %             keyboard
             numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([find(a.vertices(:,3)==max(a.vertices(:,3)))'],2)];
             numeshel(ncnt).vertices=a.vertices;
-                            eltype(ncnt)=1; % con
-%             figure
-%             hold on
-%             for c=1:length(numeshel(ncnt).faces)
-%             patch('vertices',numeshel(ncnt).vertices,'faces',numeshel(ncnt).faces{c},'facecolor',rand(3,1),'facealpha',0.3);
-%             end
-%         
-                         ncnt=ncnt+1;
-
-
+            eltype(ncnt)=1; % con
+            
+            [electrode.contacts{concnt}.vertices,~,electrode.contacts{concnt}.faces]=s2m(numeshel(ncnt).vertices,{numeshel(ncnt).faces{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
+            electrode.contacts{concnt}.faces=electrode.contacts{concnt}.faces(:,1:3);
+            concnt=concnt+1;
+            
+            %             figure
+            %             hold on
+            %             for c=1:length(numeshel(ncnt).faces)
+            %             patch('vertices',numeshel(ncnt).vertices,'faces',numeshel(ncnt).faces{c},'facecolor',rand(3,1),'facealpha',0.3);
+            %             end
+            %
+            ncnt=ncnt+1;
+            
+            
             % add endplate:
             p.vertices=[p.vertices;...
                 [0,0,elspec.tip_length]];
-
+            
             for pt=20:20:(length(p.vertices)-20)
                 p.faces=[p.faces;pt,pt+20,length(p.vertices)];
             end
-
-
-
+            
+            
+            
             elrender{side}(cnt)=patch(p);
-
+            
             % Calulating the angle between the x direction and the required direction
             % of cylinder through dot product
             angle_X1X2=acos( dot( [0 0 -1],(X2-X1) )/( norm([0 0 -1])*norm(X2-X1)) )*180/pi;
-
+            
             % Finding the axis of rotation (single rotation) to roate the cylinder in
             % X-direction to the required arbitrary direction through cross product
             axis_rot=cross([0 0 -1],(X2-X1) );
-
+            
             if any(axis_rot) || angle_X1X2
                 %       rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
             end
             specsurf(elrender{side}(cnt),usecolor,aData);
-
-
+            
+            
         elseif cntct==2 || cntct==3 % segmented cylinders
             % define two points to define cylinder.
             X1=coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2);
             [no,fc,seeds] = ea_segmented_cylinder_qq_ah(60,1,0.75,1,3,0.8);
             
-            
             [vnode,velem,vface]=s2m(no,fc,1,3);
-
-
             
             
-% shape up:
-
-
-% %% VARIANT B: Use cell format and use non-voled version first
+            
+            
+            
+            % shape up:
+            
+            
+            % %% VARIANT B: Use cell format and use non-voled version first
             no(:,1)=no(:,1).*(elspec.contact_diameter/2);
             no(:,2)=no(:,2).*(elspec.contact_diameter/2);
             no(:,3)=no(:,3).*(elspec.contact_length);
@@ -227,9 +240,25 @@ for side=1:length(options.sides)
             no(:,2)=no(:,2)+X1(2);
             no(:,3)=no(:,3)+X1(3);
             
+            [volnode,volelem,volface]=s2m(no,fc,1,3);
+%             figure
+%             subplot(121);
+%             plotmesh(volnode,volelem);
             
+            keyboard
+            contactface=volelem(ismember(volelem(:,end),[2,3,4]),1:4);
+            insulatorface=volelem(ismember(volelem(:,end),[5,7,6,1]),1:4);
             
-           
+            [contno,contfc]=removeisolatednode(volnode,contactface);
+            [insuno,insufc]=removeisolatednode(volnode,insulatorface);
+            figure
+            subplot(121);
+            plotmesh(contno,contfc);
+            subplot(122);
+            plotmesh(insuno,insufc);
+            
+            keyboard
+            
             % Here we feed the whole segmented cylinder - including
             % insulation - to the .con element of meshel since division is
             % not needed at this point.
@@ -237,137 +266,141 @@ for side=1:length(options.sides)
             numeshel(ncnt).faces=fc;
             numeshel(ncnt).vertices=[no];
             eltype(ncnt)=3; % mixed.
-%             figure
-%             hold on
-%             for c=1:length(numeshel(ncnt).faces)
-%             patch('vertices',numeshel(ncnt).vertices,'faces',numeshel(ncnt).faces{c},'facecolor',rand(3,1),'facealpha',0.3);
-%             end
-%         
+            %             figure
+            %             hold on
+            %             for c=1:length(numeshel(ncnt).faces)
+            %             patch('vertices',numeshel(ncnt).vertices,'faces',numeshel(ncnt).faces{c},'facecolor',rand(3,1),'facealpha',0.3);
+            %             end
+            %
             
             ncnt=ncnt+1;
-%             
-%     figure, 
-%     plot3(numeshel(ncnt).vertices(:,1),numeshel(ncnt).vertices(:,2),numeshel(ncnt).vertices(:,3),'r.')
-%    
-%     hold on
-%     ncnt=3;
-%     plot3(numeshel(ncnt).vertices(:,1),numeshel(ncnt).vertices(:,2),numeshel(ncnt).vertices(:,3),'r.')
-   
-                        vcnt=1;
+            %
+            %     figure,
+            %     plot3(numeshel(ncnt).vertices(:,1),numeshel(ncnt).vertices(:,2),numeshel(ncnt).vertices(:,3),'r.')
+            %
+            %     hold on
+            %     ncnt=3;
+            %     plot3(numeshel(ncnt).vertices(:,1),numeshel(ncnt).vertices(:,2),numeshel(ncnt).vertices(:,3),'r.')
+            
+            vcnt=1;
             for contact=1:3 % ring segment
                 usecolor=elspec.contact_color;
                 thisface=volface(velem(velem(:,end)==vcnt,1:4));
                 [thisno,thisfc]=removeisolatednode(vnode,thisface);
                 elrender{side}(cnt)=patch('Vertices',thisno,'Faces',thisfc);
-
-
+                
+                
                 % scale size:
                 elrender{side}(cnt).Vertices(:,1)=elrender{side}(cnt).Vertices(:,1).*(elspec.contact_diameter/2); % scale to fit tip-diameter
                 elrender{side}(cnt).Vertices(:,2)=elrender{side}(cnt).Vertices(:,2).*(elspec.contact_diameter/2); % scale to fit tip-diameter
                 elrender{side}(cnt).Vertices(:,3)=elrender{side}(cnt).Vertices(:,3).*(elspec.contact_length); % scale to fit tip-diameter
-
-
-
+                
+                
+                
                 elrender{side}(cnt).Vertices(:,1)=elrender{side}(cnt).Vertices(:,1)+X1(1);
                 elrender{side}(cnt).Vertices(:,2)=elrender{side}(cnt).Vertices(:,2)+X1(2);
                 elrender{side}(cnt).Vertices(:,3)=elrender{side}(cnt).Vertices(:,3)+X1(3);
                 specsurf(elrender{side}(cnt),usecolor,1);
-
+                
                 % meshing version, here just a duplicate
                 
                 meshel.con{end+1}.faces=elrender{side}(cnt).Faces;
                 meshel.con{end}.vertices=elrender{side}(cnt).Vertices;
-
-     
+                
+                fvseg(contact).faces=elrender{side}(cnt).Faces;
+                fvseg(contact).vertices=elrender{side}(cnt).Vertices;
                 
                 if vizz
                     %figure
                     %hold on
                     %plotmesh(meshel.con{end}.vertices,meshel.con{end}.faces)
                 end
-
+                
                 log(cnt)=1; % contact
                 cnt=cnt+1;
                 vcnt=vcnt+1;
             end
-
-
-
+           
             for ins=1:4
                 usecolor=elspec.lead_color;
-
+                
                 thisface=volface(velem(velem(:,end)==vcnt,1:4));
                 [thisno,thisfc]=removeisolatednode(vnode,thisface);
                 elrender{side}(cnt)=patch('Vertices',thisno,'Faces',thisfc);
+                patch('Vertices',thisno,'Faces',thisfc,'FaceColor','none','EdgeColor',rand(3,1));
                 % scale size:
                 elrender{side}(cnt).Vertices(:,1)=elrender{side}(cnt).Vertices(:,1).*(elspec.contact_diameter/2); % scale to fit tip-diameter
                 elrender{side}(cnt).Vertices(:,2)=elrender{side}(cnt).Vertices(:,2).*(elspec.contact_diameter/2); % scale to fit tip-diameter
                 elrender{side}(cnt).Vertices(:,3)=elrender{side}(cnt).Vertices(:,3).*(elspec.contact_length); % scale to fit tip-diameter
-
+                
                 % define two points to define cylinder.
                 X1=coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2);
-
-
+                
+                
                 elrender{side}(cnt).Vertices(:,1)=elrender{side}(cnt).Vertices(:,1)+X1(1);
                 elrender{side}(cnt).Vertices(:,2)=elrender{side}(cnt).Vertices(:,2)+X1(2);
                 elrender{side}(cnt).Vertices(:,3)=elrender{side}(cnt).Vertices(:,3)+X1(3);
                 specsurf(elrender{side}(cnt),usecolor,1);
-
+                
                 % meshing version, these contacts are added to meshel.con
                 % including their insulating space since doesn't matter.
                 
-                    meshel.ins{end+1}.faces=elrender{side}(cnt).Faces;
-                    meshel.ins{end}.vertices=elrender{side}(cnt).Vertices;
+                meshel.ins{end+1}.faces=elrender{side}(cnt).Faces;
+                meshel.ins{end}.vertices=elrender{side}(cnt).Vertices;
+                
+                fvseg(ins).faces=elrender{side}(cnt).Faces;
+                fvseg(ins).vertices=elrender{side}(cnt).Vertices;
+                %figure, patch('vertices',fvseg(ins).vertices,'faces',fvseg(ins).faces,'facecolor','none');
 
-
-
+                
                 log(cnt)=0; % insulation
-
+                
                 cnt=cnt+1;
                 vcnt=vcnt+1;
-
+                
             end
-
-
-
-%             plotmesh(contno,contfc);
-%             subplot(122);
-%             plotmesh(insuno,insufc);
-%             
-%             figure
-%             plotmesh(vnode,vface)
-
-
-
-
-
-
+            
+            
+            
+            
+            %             plotmesh(contno,contfc);
+            %             subplot(122);
+            %             plotmesh(insuno,insufc);
+            %
+            %             figure
+            %             plotmesh(vnode,vface)
+            
+            
+            
+            
+            
+            
         elseif cntct==4 % the only regular contact
-
+            
             set(0,'CurrentFigure',resultfig);
             diams=repmat(elspec.contact_diameter/2,1,2);
             [cX,cY,cZ] = ea_singlecylinder((diams),N);
-
+            
             cZ=cZ.*(elspec.contact_length); % scale to fit tip-diameter
             htd=(max(cZ(:))/2);
             cZ=cZ-htd;
             cZ=cZ+coords_mm{side}(cntct,3);
-
+            
             p=surf2patch(surf(cX,cY,cZ),'triangles');
-
-
-
-
+            
+            
+            
+            
             % add meshing-version to it
             %[cX,cY,cZ] = ea_singlecylinder((diams),N);
-    [cX,cY,cZ] = cylinder((diams),(2*N-1));
-
+            [cX,cY,cZ] = cylinder((diams),(2*N-1));
+            
             cZ=cZ.*(elspec.contact_length); % scale to fit tip-diameter
             htd=(max(cZ(:))/2);
             cZ=cZ-htd;
             cZ=cZ+coords_mm{side}(cntct,3);
             a=surf2patch(surf(cX,cY,cZ));
-
+            
             
             
             
@@ -375,25 +408,25 @@ for side=1:length(options.sides)
             meshel.con{end+1}.faces=a.faces;
             meshel.con{end}.vertices=a.vertices;
             ndiv=length(meshel.con{end}.vertices)/2;
-%             figure
-%             patch(a,'FaceColor','none')
-%             hold on
-%             patch('vertices',a.vertices,'faces',1:ndiv,'facecolor','r');
-%             patch('vertices',a.vertices,'faces',ndiv+1:2*ndiv,'facecolor','b');
-
+            %             figure
+            %             patch(a,'FaceColor','none')
+            %             hold on
+            %             patch('vertices',a.vertices,'faces',1:ndiv,'facecolor','r');
+            %             patch('vertices',a.vertices,'faces',ndiv+1:2*ndiv,'facecolor','b');
+            
             meshel.con{end}.endplates=[1:ndiv;ndiv+1:2*ndiv];
-
-
+            
+            
             
             numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)];
             numeshel(ncnt).vertices=a.vertices;
-                eltype(ncnt)=1; % con
-%             figure
-%             hold on
-%             for c=1:length(numeshel(ncnt).faces)
-%             patch('vertices',numeshel(ncnt).vertices,'faces',numeshel(ncnt).faces{c},'facecolor',rand(3,1));
-%             end
-             ncnt=ncnt+1;
+            eltype(ncnt)=1; % con
+            %             figure
+            %             hold on
+            %             for c=1:length(numeshel(ncnt).faces)
+            %             patch('vertices',numeshel(ncnt).vertices,'faces',numeshel(ncnt).faces{c},'facecolor',rand(3,1));
+            %             end
+            ncnt=ncnt+1;
             
             
             % add endplates:
@@ -406,69 +439,69 @@ for side=1:length(options.sides)
             for pt=1:2:(N-1)*2
                 p.faces=[p.faces;pt,pt+2,length(p.vertices)];
             end
-
+            
             elrender{side}(cnt)=patch(p);
             cnt=cnt+1;
-
+            
         end
-
-
-
+        
+        
+        
     end
-
-
+    
+    
     % draw trajectory between contacts
-
+    
     for cntct=1:3
-
+        
         set(0,'CurrentFigure',resultfig);
         diams=repmat(elspec.lead_diameter/2,1,2);
         [cX,cY,cZ] = ea_singlecylinder((diams),N);
-
+        
         cZ=cZ.*(elspec.contact_spacing); % scale to fit tip-diameter
         htd=(max(cZ(:))/2);
         cZ=cZ-htd;
         hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing/2;
         cZ=cZ+hait;
-
+        
         p=surf2patch(surf(cX,cY,cZ),'triangles');
-
-
+        
+        
         % add meshing-version to it
         %[cX,cY,cZ] = ea_singlecylinder((diams),N);
-    [cX,cY,cZ] = cylinder((diams),(2*N-1));
-
+        [cX,cY,cZ] = cylinder((diams),(2*N-1));
+        
         cZ=cZ.*(elspec.contact_spacing); % scale to fit tip-diameter
         htd=(max(cZ(:))/2);
         cZ=cZ-htd;
         hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing/2;
         cZ=cZ+hait;
-
+        
         a=surf2patch(surf(cX,cY,cZ));
         
         a=ea_reordercylinder(a,2);
-
+        
         meshel.ins{end+1}.faces=a.faces;
         meshel.ins{end}.vertices=a.vertices;
         ndiv=length(meshel.ins{end}.vertices)/2;
         meshel.ins{end}.endplates=[1:ndiv;ndiv+1:2*ndiv];
         
         %if cntct==3
-            numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)]; % only need an top endplate in case of last isolating segment
+        numeshel(ncnt).faces=[num2cell(a.faces,2);num2cell([1:ndiv;ndiv+1:2*ndiv],2)]; % only need an top endplate in case of last isolating segment
         %else
         %    numeshel(ncnt).faces=[num2cell(a.faces,2)];
         %end
         numeshel(ncnt).vertices=a.vertices;
-            eltype(ncnt)=2; % ins
+        eltype(ncnt)=2; % ins
         
-%         figure
-%             hold on
-%             for c=1:length(numeshel(ncnt).faces)
-%             patch('vertices',numeshel(ncnt).vertices,'faces',numeshel(ncnt).faces{c},'facecolor',rand(3,1));
-%             end
-%         keyboard
+        %         figure
+        %             hold on
+        %             for c=1:length(numeshel(ncnt).faces)
+        %             patch('vertices',numeshel(ncnt).vertices,'faces',numeshel(ncnt).faces{c},'facecolor',rand(3,1));
+        %             end
+        %         keyboard
         ncnt=ncnt+1;
-
+        
         % add endplates:
         p.vertices=[p.vertices;...
             [0,0,hait+htd];...
@@ -479,16 +512,16 @@ for side=1:length(options.sides)
         for pt=1:2:(N-1)*2
             p.faces=[p.faces;pt,pt+2,length(p.vertices)];
         end
-
+        
         elrender{side}(cnt)=patch(p);
         cnt=cnt+1;
     end
-
-
-
-
-
-
+    
+    
+    
+    
+    
+    
 end
 
 
@@ -522,7 +555,7 @@ for comp=1:length(meshel)
     switch eltype(comp)
         case 1 % pure con
             electrode.contacts(concnt)=numeshel(comp);
-            concnt=concnt+1;            
+            concnt=concnt+1;
         case 2 % pure ins
             electrode.insulation(inscnt)=numeshel(comp);
             inscnt=inscnt+1;
@@ -585,15 +618,15 @@ if vizz
         electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
         electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
         elrender{side}(cnt)=patch(electrode.contacts(con));
-
+        
         specsurf(elrender{side}(cnt),elspec.contact_color,aData);
         fv(cnt).vertices=electrode.contacts(con).vertices;
         fv(cnt).faces=electrode.contacts(con).faces;
-
+        
         cnt=cnt+1;
-
+        
     end
-
+    
     axis equal
     view(0,0);
 end
@@ -646,7 +679,7 @@ nudge=0;
 
 
 if nudge
-
+    
     centroid=mean(node,1);
     tos=repmat(centroid,size(node,1),1)-node;
     tos=tos*0.01;
