@@ -1942,8 +1942,13 @@ set(handles.stimlabel,'String',S.label);
 
 
 models=get(handles.modelselect,'String');
+try
 model=models{get(handles.modelselect,'Value')};
+catch
+    set(handles.modelselect,'Value',1);
+    model=models{1};
 
+end
 
 switch model
     case 'Horn 2017'

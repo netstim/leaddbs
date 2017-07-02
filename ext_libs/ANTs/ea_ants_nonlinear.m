@@ -117,31 +117,17 @@ end
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
-if any(imgsize>apref.small_large_dissociation)
-    rigidconvergence=apref.convergence.rigid.small;
-    rigidshrinkfactors=apref.shrinkfactors.rigid.large;
-    rigidsmoothingssigmas=apref.smoothingsigmas.rigid.large;
+    rigidconvergence=apref.convergence.rigid;
+    rigidshrinkfactors=apref.shrinkfactors.rigid;
+    rigidsmoothingssigmas=apref.smoothingsigmas.rigid;
     
-    affineconvergence=apref.convergence.affine.small;
-    affineshrinkfactors=apref.shrinkfactors.rigid.large;
-    affinesmoothingssigmas=apref.smoothingsigmas.affine.large;
+    affineconvergence=apref.convergence.affine;
+    affineshrinkfactors=apref.shrinkfactors.rigid;
+    affinesmoothingssigmas=apref.smoothingsigmas.affine;
     
-    synconvergence=apref.convergence.syn.large;
-    synshrinkfactors=apref.shrinkfactors.syn.large;
-    synsmoothingssigmas=apref.smoothingsigmas.syn.large;
-else
-    rigidconvergence=apref.convergence.rigid.large;
-    rigidshrinkfactors=apref.shrinkfactors.rigid.small;
-    rigidsmoothingssigmas=apref.smoothingsigmas.rigid.small;
-    
-    affineconvergence=apref.convergence.affine.large;
-    affineshrinkfactors=apref.shrinkfactors.affine.small;
-    affinesmoothingssigmas=apref.smoothingsigmas.affine.small;
-    
-    synconvergence=apref.convergence.syn.small;
-    synshrinkfactors=apref.shrinkfactors.syn.small;
-    synsmoothingssigmas=apref.smoothingsigmas.syn.small;
-end
+    synconvergence=apref.convergence.syn;
+    synshrinkfactors=apref.shrinkfactors.syn;
+    synsmoothingssigmas=apref.smoothingsigmas.syn;
 
 rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1}, ',1]' ...
     ' --transform Rigid[0.1]' ...
@@ -190,6 +176,7 @@ if slabspresent
         ' --convergence ', synconvergence, ...
         ' --shrink-factors ', synshrinkfactors ...
         ' --smoothing-sigmas ', synsmoothingssigmas, ...
+        ' --use-estimate-learning-rate-once ', ...
         ' --masks [NULL,',[tmaskdir,filesep,'slabmask.nii'],']'];
     fixedimage=[fixedimage,slabfixedimage];
     movingimage=[movingimage,slabmovingimage];
@@ -217,6 +204,7 @@ if subcorticalrefine
         ' --convergence ', synmaskconvergence, ...
         ' --shrink-factors ', synmaskshrinkfactors,  ...
         ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
+        ' --use-estimate-learning-rate-once ', ...
         ' --masks [',ea_space([],'subcortical'),'secondstepmask','.nii',',',movingmask,']'];
     for fi=1:length(fixedimage)
         synmaskstage=[synmaskstage,...
