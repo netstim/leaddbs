@@ -1,6 +1,6 @@
-function apref=ea_antspreset_SyN_fine(list)
+function apref=ea_antspreset_fine(list)
 if nargin % return name of preset
-    apref='SyN Fine';
+    apref='Fine';
     return
 end
 
