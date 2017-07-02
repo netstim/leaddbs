@@ -27,19 +27,19 @@ switch prefs.machine.normsettings.ants_strategy
 end
 
 % Convergence
-apref.convergence.rigid='[250x120x0,1e-6,10]'; % Rigid convergence params
+apref.convergence.rigid='[120x0,1e-6,10]'; % Rigid convergence params
 apref.convergence.affine='[250x120x0,1e-6,10]'; % Affine convergence params
 apref.convergence.syn='[50x25x0,1e-6,10]'; % SyN convergence params
 apref.convergence.scrf='[50x25x0,1e-6,10]'; % SyN subcortical focus stage convergence params
 
 % Affine Convergence
-apref.shrinkfactors.rigid='8x4x1'; % Rigid shrink factors
+apref.shrinkfactors.rigid='8x1'; % Rigid shrink factors
 apref.shrinkfactors.affine='8x4x1'; % Affine shrink factors
 apref.shrinkfactors.syn='4x2x1'; % SyN shrink factors
 apref.shrinkfactors.scrf='4x2x1'; % SyN subcortical focus stage shrink factors
 
 % Smoothing Sigmas
-apref.smoothingsigmas.rigid='3x2x1vox'; % Rigid Smoothing sigmas
+apref.smoothingsigmas.rigid='3x1vox'; % Rigid Smoothing sigmas
 apref.smoothingsigmas.affine='3x2x1vox'; % Affine Smoothing sigmas
 apref.smoothingsigmas.syn='2x1x1vox'; % SyN Smoothing sigmas
 apref.smoothingsigmas.scrf='1x0x0vox'; % SyN subcortical focus stage smoothing sigmas

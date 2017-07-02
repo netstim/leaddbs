@@ -122,7 +122,7 @@ imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
     rigidsmoothingssigmas=apref.smoothingsigmas.rigid;
     
     affineconvergence=apref.convergence.affine;
-    affineshrinkfactors=apref.shrinkfactors.rigid;
+    affineshrinkfactors=apref.shrinkfactors.affine;
     affinesmoothingssigmas=apref.smoothingsigmas.affine;
     
     synconvergence=apref.convergence.syn;
