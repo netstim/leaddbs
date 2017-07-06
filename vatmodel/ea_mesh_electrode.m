@@ -2,7 +2,7 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
 % meshing an electrode and tissue structures bounded by a cylinder
 %% load the nucleus data
 ea_dispt('Generating tetraedrical mesh...');
-meshel=electrode.meshel;
+%meshel=electrode.meshel;
 vizz=0;
 stlexport=1;
 if vizz
@@ -31,7 +31,7 @@ el_o_etop=[0,0,-10*stretchfactor];
 
 nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
 
-bcyltrisize=0.3;       % the maximum triangle size of the bounding cyl
+bcyltrisize=0.01;       % the maximum triangle size of the bounding cyl
 
 cylz0=-30;     % define the upper end of the bounding cylinder
 cylz1=30;     % define the lowe end of the bounding cylinder
@@ -58,11 +58,14 @@ node=node(1:3,:)';
 
 % - this is the node / elem / face made by tetgen of the electrode only.
 if vizz
+    figure
     fvv.faces=face(:,1:3);
     fvv.vertices=node;
     patch(fvv,'edgecolor','b','facecolor','none');
+    axis equal
 end
 
+keyboard
 %plotmesh(node,elem) % plot the electrode mesh for now
 
 

@@ -78,9 +78,9 @@ end
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
 
-    convergence='[500x250x100x50,1e-7,10]';
+    convergence='[50x25x10x5,1e-7,10]';
     shrinkfactors='12x8x4x1';
-    smoothingssigmas='2x1x0.5x0.25mm';
+    smoothingssigmas='4x4x2x1vox';
 
 
 
@@ -99,7 +99,7 @@ synstage = [' --transform BSplineSyN[0.1,26,0,3]'...
 
         for fi=1:length(fixedimage)
             
-            suffx=',15,Random,0.5';
+            suffx=',4,Random,0.5';
             synstage=[synstage,...
                 ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
         end

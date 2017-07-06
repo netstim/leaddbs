@@ -24,7 +24,7 @@ earoot=ea_getearoot;
 
 for peer=1:length(peerfolders)
 
-    clear spfroms sptos weights metrics
+    clear spfroms sptos weights
     peerdirec=[peerfolders{peer},filesep];
     poptions=options;
     [poptions.root,poptions.patientname]=fileparts(peerfolders{peer});
@@ -49,11 +49,10 @@ for peer=1:length(peerfolders)
             presentfiles=subpresentfiles;
             clear subpresentfiles peerpresentfiles
         end
-        clear sptos spfroms metrics weights
+        clear sptos spfroms weights
         for anatfi=1:length(presentfiles)
             spfroms{anatfi}=ea_niigz([subdirec,presentfiles{anatfi}]);
             sptos{anatfi}=ea_niigz([peerdirec,presentfiles{anatfi}]);
-            metrics{anatfi}='MI';
         end
         weights=repmat(1.5,length(presentfiles),1);
 
@@ -64,7 +63,6 @@ for peer=1:length(peerfolders)
             sptos=[{ea_niigz([peerdirec,options.prefs.fa2anat])},sptos];
 
             weights=[0.5;weights];
-            metrics=[{'MI'},metrics];
 
         end
 
@@ -74,7 +72,7 @@ for peer=1:length(peerfolders)
         end
 
         try
-            ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],weights,metrics,options);
+            ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],weights,options);
         catch
             ea_error(['Something went wrong - could not generate a nonlinear warp from ',subdirec,' to ',peerdirec,'.']);
         end

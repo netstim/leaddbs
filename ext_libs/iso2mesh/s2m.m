@@ -31,16 +31,19 @@ if(nargin<=6)
     holes=[];
 end
 
+%[v,f]=removedupnodes(v,f,1e-6); % <- remove duplicate nodes that are extremely closeby due to precision errors.
+
+
 [node,elem,face,success]=surf2mesh(v,f,min(v,[],1),max(v,[],1),keepratio,maxvol,regions,holes);
 
-if ~success % try with gmsh next
-    error('Something went wrong / probably self-intersecting faces.');
-    %     verts=v;
-    %     faces=zeros(length(f),4);
-    facc=cell2mat(f);
-    fv.vertices=v;
-    fv.faces=f;
-    faaa=patch('faces',f,'vertices',v);
-    % convert to .gmsh
-    gmsh_mesh3d_write(mwpath('post_vmesh.geo'),3,size(verts,1),verts',4,size(faces,1),faces');
-end
+% if ~success % try with gmsh next
+%     error('Something went wrong / probably self-intersecting faces.');
+%     %     verts=v;
+%     %     faces=zeros(length(f),4);
+%     facc=cell2mat(f);
+%     fv.vertices=v;
+%     fv.faces=f;
+%     faaa=patch('faces',f,'vertices',v);
+%     % convert to .gmsh
+%     gmsh_mesh3d_write(mwpath('post_vmesh.geo'),3,size(verts,1),verts',4,size(faces,1),faces');
+% end

@@ -12,7 +12,7 @@ branchsel=[];
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
             sidec=getsidec(length(sels.sides{branch}{leaf}),side);
-            [ixs,ixt]=ea_getsubindex(h.sgsubfi{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
+            [ixs,ixt]=ea_getsubindex(h.sgsubfi{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons,0);
             switch h.togglebuttons(ixt).State
                 case 'on'
                     set(h.sgsubside{branch}{leaf}{side},'SelectionState',SelectionState.SELECTED)

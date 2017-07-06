@@ -1,4 +1,24 @@
-function ea_genvol_medtronic(meshel,elspec,vizz)
+function ea_genvol_bscdirected(meshel,elspec,vizz)
+
+load bsci_data.mat;
+%h=figure;
+%plotmesh(allnode,allface,'linestyle','-','facealpha',0.1);
+[newnode,newelem]=removedupnodes(allnode,allface,1e-6); % <- this compresses the node list
+
+[node,~,face]=s2m(newnode,{newelem{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
+
+%plotmesh([node(:,1:2) node(:,3)/10],face,'x>0','edgealpha',0.1)
+save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');
+
+return
+
+
+% old code that will generate data.
+
+
+
+
+
 
 electrodetrisize=0.1;  % the maximum triangle size of the electrode mesh
 
@@ -6,72 +26,97 @@ electrodetrisize=0.1;  % the maximum triangle size of the electrode mesh
 
 
 
-
-
-
-
-%% loading the electrode surface model
-
-ncyl=[];
-fcyl=[];
-scyl=[];
-seeds=[];
-
-for i=1:length(meshel.ins)
-    fcyl=[fcyl; meshel.ins{i}.faces(:,1:3)+size(ncyl,1)];
-    try
-        if(i<length(meshel.ins))
-            scyl=[scyl; meshel.ins{i}.endplates+size(ncyl,1)]; % had to rebuild the endplates
+%% concat meshel to one 
+allface={};
+allnode=[];
+% nms=figure;
+% hold on
+for c=1:8
+    for cel=1:length(meshel(c).faces)
+        allface=[allface;{meshel(c).faces{cel}+length(allnode)}];
+        
+        if any(meshel(c).faces{cel}(:)>length(meshel(c).vertices))
+            keyboard
         end
+         
     end
-    ncyl=[ncyl; meshel.ins{i}.vertices];
-    seeds=[seeds; mean(meshel.ins{i}.vertices)];
+    
+    allnode=[allnode;meshel(c).vertices];
+    
+  
+  end  
+    
+% 
+% 
+%             %axis equal
+%             %zlim([0,10])
+% 
+            %% check for dups in verts:
+
+
+[uniquenode,ac,cc]=unique(allnode,'rows');
+for facec=1:length(allface)
+   uniqueface{facec}=cc(allface{facec})';
 end
-for i=1:length(meshel.con)
-    fcyl=[fcyl; meshel.con{i}.faces(:,1:3)+size(ncyl,1)];
-    try
-        scyl=[scyl; meshel.con{i}.endplates+size(ncyl,1)];
-    end
-    ncyl=[ncyl; meshel.con{i}.vertices];
-    seeds=[seeds; mean(meshel.con{i}.vertices)];
-end
+uniqueface=uniqueface';
+
+allface=uniqueface;
+allnode=uniquenode;
+      
+
+% 
+% %% check for dups in cell:
+% alllengths=cellfun(@length,allface);
+% nuallface={};
+% for lens=unique(alllengths)'
+%     ids=alllengths==lens;
+%     thisface=allface(ids);
+%     
+%     thisfmat=cell2mat(thisface);
+%     
+%     [~,c]=unique(sort(thisfmat,2),'rows');
+%     ufmat=thisfmat(c,:);
+%     
+%     rcnt=1; todel=[];
+%     rem={};
+%     for row=1:size(ufmat,1)
+%         if ~isequal(sum(ufmat(row,:)),sum(unique(ufmat(row,:))))
+%             if lens>10
+%                 %keyboard
+%             end
+%             % rm dups but retain order:
+%             [~, I]=unique(ufmat(row,:),'first');
+%             rem{rcnt}=ufmat(row,sort(I));
+%             rcnt=rcnt+1;
+%             todel=[todel,row];
+%         end
+%     end
+%     ufmat(todel,:)=[];
+%     
+%     nuallface=[nuallface;num2cell(ufmat,2);rem'];
+% end
+% allface=nuallface; clear nuallface
 
 
 
-
-[unique_ncyl, I, J]=unique(ncyl, 'rows');
-unique_fcyl=unique(round(J(fcyl)),'rows');
-unique_scyl=unique(round(J(scyl)),'rows');
-if vizz
-    figure
-    patch('faces',fcyl,'vertices',ncyl,'edgecolor','k','facecolor','none');
-
-    figure
-    patch('faces',unique_fcyl,'vertices',unique_ncyl,'edgecolor','b','facecolor','none');
-end
-fcyl=num2cell(unique_fcyl,2);
-scyl=num2cell(unique_scyl,2);
-
-% clean from duplicate indices:
-
-for ff=1:length(fcyl)
-    [has,which]=ea_hasduplicates(fcyl{ff});
-    if has
-        doubles=find(fcyl{ff}==which);
-        fcyl{ff}(doubles(2:end))=[];
-    end
-end
-
-for ff=1:length(scyl)
-    [has,which]=ea_hasduplicates(scyl{ff});
-    if has
-        doubles=find(scyl{ff}==which);
-        scyl{ff}(doubles(2:end))=[];
-    end
-end
 
 
 %% convert to obtain the electrode surface mesh model
 
-[node,~,face]=s2m(unique_ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
+ 
+%h=figure;
+      %plotmesh(uniquenode,uniqueface,'linestyle','-','facealpha',0.1);
+%      plotmesh(allnode,allface,'linestyle','-','facealpha',0.1);
+
+      % zlim([0,10])
+      [allnode,allface]=removedupnodes(allnode,allface,1e-6); % <- this compresses the node list
+
+      keyboard
+[node,~,face]=s2m(allnode,{allface{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
+
+
+
+
+
+
 save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');
