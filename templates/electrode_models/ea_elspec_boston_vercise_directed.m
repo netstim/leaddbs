@@ -97,8 +97,8 @@ for side=1:length(options.sides)
     numeshel(ncnt).vertices=[a.vertices];
     eltype(ncnt)=2; % ins
     
-    [electrode.insulation{inscnt}.vertices,~,electrode.insulation{inscnt}.faces]=s2m(numeshel(ncnt).vertices,{numeshel(ncnt).faces{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
-    electrode.insulation{inscnt}.faces=electrode.insulation{inscnt}.faces(:,1:3);
+    [electrode.insulation(inscnt).vertices,~,electrode.insulation(inscnt).faces]=s2m(numeshel(ncnt).vertices,{numeshel(ncnt).faces{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
+    electrode.insulation(inscnt).faces=electrode.insulation(inscnt).faces(:,1:3);
     inscnt=inscnt+1;
     
     
@@ -178,8 +178,8 @@ for side=1:length(options.sides)
             numeshel(ncnt).vertices=a.vertices;
             eltype(ncnt)=1; % con
             
-            [electrode.contacts{concnt}.vertices,~,electrode.contacts{concnt}.faces]=s2m(numeshel(ncnt).vertices,{numeshel(ncnt).faces{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
-            electrode.contacts{concnt}.faces=electrode.contacts{concnt}.faces(:,1:3);
+            [electrode.contacts(concnt).vertices,~,electrode.contacts(concnt).faces]=s2m(numeshel(ncnt).vertices,{numeshel(ncnt).faces{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
+            electrode.contacts(concnt).faces=electrode.contacts(concnt).faces(:,1:3);
             concnt=concnt+1;
             
             %             figure
@@ -220,12 +220,18 @@ for side=1:length(options.sides)
         elseif cntct==2 || cntct==3 % segmented cylinders
             % define two points to define cylinder.
             X1=coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2);
-            [no,fc,seeds] = ea_segmented_cylinder_qq_ah(60,1,0.75,1,3,0.8);
+            [no,fc,seeds,fcc,fci] = ea_segmented_cylinder_qq_ah(60,1,0.75,1,3,0.8);
             
             [vnode,velem,vface]=s2m(no,fc,1,3);
             
             
+            [electrode.contacts(concnt).vertices,~,electrode.contacts(concnt).faces]=s2m(no,{fcc{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
+            electrode.contacts(concnt).faces=electrode.contacts(concnt).faces(:,1:3);
+            concnt=concnt+1;
             
+            [electrode.insulation(inscnt).vertices,~,electrode.insulation(inscnt).faces]=s2m(no,{fci{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
+            electrode.insulation(inscnt).faces=electrode.insulation(inscnt).faces(:,1:3);
+            inscnt=inscnt+1;
             
             
             % shape up:
@@ -245,20 +251,9 @@ for side=1:length(options.sides)
 %             subplot(121);
 %             plotmesh(volnode,volelem);
             
-            keyboard
-            contactface=volelem(ismember(volelem(:,end),[2,3,4]),1:4);
-            insulatorface=volelem(ismember(volelem(:,end),[5,7,6,1]),1:4);
-            
-            [contno,contfc]=removeisolatednode(volnode,contactface);
-            [insuno,insufc]=removeisolatednode(volnode,insulatorface);
-            figure
-            subplot(121);
-            plotmesh(contno,contfc);
-            subplot(122);
-            plotmesh(insuno,insufc);
-            
-            keyboard
-            
+
+
+
             % Here we feed the whole segmented cylinder - including
             % insulation - to the .con element of meshel since division is
             % not needed at this point.
@@ -426,6 +421,11 @@ for side=1:length(options.sides)
             %             for c=1:length(numeshel(ncnt).faces)
             %             patch('vertices',numeshel(ncnt).vertices,'faces',numeshel(ncnt).faces{c},'facecolor',rand(3,1));
             %             end
+            
+            [electrode.contacts(concnt).vertices,~,electrode.contacts(concnt).faces]=s2m(numeshel(ncnt).vertices,{numeshel(ncnt).faces{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
+            electrode.contacts(concnt).faces=electrode.contacts(concnt).faces(:,1:3);
+            concnt=concnt+1;
+            
             ncnt=ncnt+1;
             
             
@@ -494,6 +494,10 @@ for side=1:length(options.sides)
         numeshel(ncnt).vertices=a.vertices;
         eltype(ncnt)=2; % ins
         
+        [electrode.insulation(inscnt).vertices,~,electrode.insulation(inscnt).faces]=s2m(numeshel(ncnt).vertices,{numeshel(ncnt).faces{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
+        electrode.insulation(inscnt).faces=electrode.insulation(inscnt).faces(:,1:3);
+        inscnt=inscnt+1;
+        
         %         figure
         %             hold on
         %             for c=1:length(numeshel(ncnt).faces)
@@ -548,33 +552,13 @@ ea_genvol_bscdirected(numeshel,elspec,1);
 % more stuff for the visualization version (electrode.contacts &
 % electrodes.insulation)
 
-concnt=1;
-inscnt=1;
-for comp=1:length(meshel)
-    keyboard
-    switch eltype(comp)
-        case 1 % pure con
-            electrode.contacts(concnt)=numeshel(comp);
-            concnt=concnt+1;
-        case 2 % pure ins
-            electrode.insulation(inscnt)=numeshel(comp);
-            inscnt=inscnt+1;
-        case 3 % mixed / segmented contact
-            keyboard
-            
-    end
-    
-    
-end
-
-
 
 electrode.electrode_model=elstruct.name;
-electrode.head_position=[0,0,options.elspec.tip_length+0.5*options.elspec.contact_length];
-electrode.tail_position=[0,0,options.elspec.tip_length+options.elspec.numel*options.elspec.contact_length+(options.elspec.numel-1)*options.elspec.contact_spacing-0.5*options.elspec.contact_length];
+electrode.head_position=[0,0,0.5*options.elspec.contact_length];
+electrode.tail_position=[0,0,4*options.elspec.contact_length+(4-1)*options.elspec.contact_spacing-0.5*options.elspec.contact_length];
 
-electrode.x_position=[options.elspec.lead_diameter/2,0,options.elspec.tip_length+0.5*options.elspec.contact_length];
-electrode.y_position=[0,options.elspec.lead_diameter/2,options.elspec.tip_length+0.5*options.elspec.contact_length];
+electrode.x_position=[options.elspec.lead_diameter/2,0,0.5*options.elspec.contact_length];
+electrode.y_position=[0,options.elspec.lead_diameter/2,0.5*options.elspec.contact_length];
 
 electrode.numel=8;
 electrode.contact_color=options.elspec.contact_color;
@@ -643,8 +627,8 @@ fv=ea_concatfv(fv,0);
 fv.faces=fv.faces(:,[3,2,1]);
 ea_stlwrite(['bsc_vercise_directed.stl'],fv);
 
-figure
-plotmesh(fv.vertices,fv.faces)
+%figure
+%plotmesh(fv.vertices,fv.faces)
 
 
 

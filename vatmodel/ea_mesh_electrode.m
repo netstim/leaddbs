@@ -58,11 +58,14 @@ node=node(1:3,:)';
 
 % - this is the node / elem / face made by tetgen of the electrode only.
 if vizz
+    figure
     fvv.faces=face(:,1:3);
     fvv.vertices=node;
     patch(fvv,'edgecolor','b','facecolor','none');
+    axis equal
 end
 
+keyboard
 %plotmesh(node,elem) % plot the electrode mesh for now
 
 
