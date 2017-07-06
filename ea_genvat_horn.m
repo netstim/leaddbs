@@ -1,12 +1,7 @@
-function varargout=ea_genvat_simbio_iso2mesh(varargin)
+function varargout=ea_genvat_horn(varargin)
 % This function generates a volume of activated tissue around for each
-% electrode.
-% Usage: VAT=ea_genvat(coords_mm,stimparams,options).
-% ? stimparams is a struct variable with fields U (8*1 with voltage
-% entries) and Im (8*1 with Impedance measurements).
-%
-% This function only touches the .VAT entry of stimparams struct of the
-% given side.
+% electrode based on the methodology described in Horn 2017 AoN.
+
 useSI=1;
 vizz=0;
 if nargin==5
@@ -27,7 +22,7 @@ elseif nargin==7
     lgfigure=varargin{7};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
-        varargout{1}='SimBio/Iso2Mesh';
+        varargout{1}='Horn 2017';
         return
     end
 end
@@ -849,7 +844,13 @@ function x = ea_sb_solve(sysmat,vecb)
 % SB_SOLVE
 %
 % $Id: sb_solve.m 8776 2013-11-14 09:04:48Z roboos $
-L = ichol(sysmat);
+try
+    L = ichol(sysmat);
+catch
+    alpha = max(sum(abs(sysmat),2)./diag(sysmat))-2;
+    L = ichol(sysmat, struct('type','ict','droptol',1e-3,'diagcomp',alpha));
+end
+
 %scalen
 [~,x]=evalc('pcg(sysmat,vecb,10e-10,5000,L,L'',vecb)');
 

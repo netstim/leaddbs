@@ -27,4 +27,5 @@ if exist('handles','var')
         
         ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
     end
+   
 end

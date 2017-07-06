@@ -18,7 +18,7 @@ function varargout=ea_normalize_ants(options,includeatlas)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='ANTs SyN (Advanced Normalization Tools, Avants 2008)';
+    varargout{1}='Advanced Normalization Tools (Avants 2008)';
     varargout{2}=1;
     varargout{3}=1; % hassettings.
     return
@@ -49,10 +49,10 @@ if usefa && spacedef.hasfa % first put in FA since least important (if both an F
         to{cnt}=[ea_space(options),'fa.nii'];
         from{cnt}=[directory,bprfx,options.prefs.fa2anat];
         weights(cnt)=0.5;
-        metrics{cnt}='MI';
         cnt=cnt+1;
     end
 end
+
 
 [~,anatpresent]=ea_assignpretra(options);
 anatpresent=flip(anatpresent); % reverse order since most important transform should be put in last.
@@ -66,7 +66,6 @@ for anatf=1:length(anatpresent)
         end
         from{cnt}=[directory,bprfx,anatpresent{anatf}];
         weights(cnt)=1.25;
-        metrics{cnt}='MI';
         cnt=cnt+1;
 end
 
@@ -74,28 +73,47 @@ if includeatlas % append as last to make criterion converge on this one.
    to{cnt}=[ea_space(options),'atlas.nii'];
    from{cnt}=[directory,'anat_atlas.nii.gz'];
    weights(cnt)=1.5;
-   metrics{cnt}='MI'; % could think about changing this to CC
    cnt=cnt+1;
 end
 
-ea_ants_nonlinear(to,from,[directory,options.prefs.gprenii],weights,metrics,options,0);
+ea_ants_nonlinear(to,from,[directory,options.prefs.gprenii],weights,options,options.prefs.machine.normsettings.ants_scrf);
 ea_apply_normalization(options);
 
 %% add methods dump:
-[scit,lcit]=ea_getspacedefcit;
-cits={
-    'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
-    };
-if ~isempty(lcit)
-    cits=[cits;{lcit}];
+
+if options.prefs.machine.normsettings.ants_scrf
+    
+    [scit,lcit]=ea_getspacedefcit;
+    cits={
+        'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
+        'Schoenecker, T., Kupsch, A., Kuehn, A. A., Schneider, G.-H., & Hoffmann, K. T. (2009). Automated Optimization of Subcortical Cerebral MR Imaging-Atlas Coregistration for Improved Postoperative Electrode Localization in Deep Brain Stimulation. AJNR Am J Neuroradiol, 30(10), 1914?1921. http://doi.org/10.3174/ajnr.A1741'
+        };
+    if ~isempty(lcit)
+        cits=[cits;{lcit}];
+    end
+    
+    ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,'based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using the'...
+        ' SyN registration approach as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/).',...
+        ' Nonlinear deformation into template space was achieved in five stages: After two linear (rigid followed by affine) steps, ',...
+        ' A nonlinear (whole brain) SyN-registration stage was followed by two nonlinear SyN-registrations that consecutively focused on the area of interest ',...
+        ' as defined by subcortical masks in Schoenecker 2008.'],...
+        cits);
+    
+else
+    [scit,lcit]=ea_getspacedefcit;
+    cits={
+        'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
+        };
+    if ~isempty(lcit)
+        cits=[cits;{lcit}];
+    end
+    ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using the'...
+        ' SyN registration approach as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/).',...
+        ' Nonlinear deformation into template space was achieved in three stages: After two linear (rigid followed by affine) steps, ',...
+        ' a nonlinear (whole brain) SyN registration stage was added.'],...
+        cits);
+    
 end
-ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using the'...
-    ' SyN registration approach as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/).',...
-    ' Nonlinear deformation into template space was achieved in three stages: After two linear (rigid followed by affine) steps, ',...
-    ' a nonlinear (whole brain) SyN registration stage was added.'],...
-    cits);
-
-
 
 function masks=segmentall(from,options)
 directory=[fileparts(from{1}),filesep];

@@ -112,11 +112,10 @@ for peer=1:length(peerfolders)
         if isempty(presentfiles)
             ea_error(['Please supply a peer/subject with valid anatomy files: ',poptions.patientname,'/',options.patientname,'.']);
         end
-        clear sptos spfroms metrics weights %clear all variables, if not, the last image file will be transferred onto the next peer
+        clear sptos spfroms weights %clear all variables, if not, the last image file will be transferred onto the next peer
         for anatfi=1:length(presentfiles)
             spfroms{anatfi}=[peerdirec,presentfiles{anatfi}];
             sptos{anatfi}=[subdirec,presentfiles{anatfi}];
-            metrics{anatfi}='MI';
         end
         weights=repmat(1.5,length(presentfiles),1);
 
@@ -127,7 +126,6 @@ for peer=1:length(peerfolders)
             sptos=[{[subdirec,options.prefs.fa2anat]},sptos];
 
             weights=[0.5;weights];
-            metrics=[{'MI'},metrics];
 
         end
 
@@ -138,7 +136,7 @@ for peer=1:length(peerfolders)
 
 
 
-        ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,metrics,options);
+        ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'],weights,options);
         delete(ea_niigz([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'])); % we only need the warp
         delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
 

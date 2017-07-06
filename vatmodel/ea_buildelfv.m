@@ -21,7 +21,7 @@ load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfnam
     electrode.head_position=B(1,1:3);
     electrode.tail_position=B(2,1:3);
     % add contacts to mesh
-    for con=1:length(electrode.meshel.con)
+    for con=1:length(electrode.contacts)
         % do not rotate electrode for now.
         %electrode.meshel.con{con}.vertices=X*[electrode.meshel.con{con}.vertices,ones(size(electrode.meshel.con{con}.vertices,1),1)]';
         %electrode.meshel.con{con}.vertices=electrode.meshel.con{con}.vertices(1:3,:)';
@@ -39,7 +39,7 @@ load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfnam
 
 
     % add insulation to mesh
-    for ins=1:length(electrode.meshel.ins)
+    for ins=1:length(electrode.insulation)
         % do not rotate insulation for now
         %electrode.meshel.ins{ins}.vertices=X*[electrode.meshel.ins{ins}.vertices,ones(size(electrode.meshel.ins{ins}.vertices,1),1)]';
         %electrode.meshel.ins{ins}.vertices=electrode.meshel.ins{ins}.vertices(1:3,:)';

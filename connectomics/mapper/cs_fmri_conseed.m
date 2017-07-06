@@ -80,7 +80,7 @@ else
     usegzip=0;
 end
 
-for s=1:length(sfile)
+for s=1:size(sfile,1)
     if size(sfile(s,:),2)>1
         dealingwithsurface=1;
     else

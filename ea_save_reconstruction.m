@@ -3,7 +3,6 @@ function ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_co
 reco.props.elmodel=elmodel;
 reco.props.manually_corrected=manually_corrected;
 
-
 if options.native
     reco.native.coords_mm=coords_mm;
     reco.native.trajectory=trajectory;
@@ -12,13 +11,13 @@ if options.native
     if isfield(options,'hybridsave');
         ea_reconstruction2mni(options);
         ea_reconstruction2acpc(options);
+        ea_checkswap_lr(options);
     end
 else
     reco.mni.coords_mm=coords_mm;
     reco.mni.trajectory=trajectory;
     reco.mni.markers=markers;
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
-    
     
     if isfield(options,'hybridsave');
         try
@@ -29,8 +28,16 @@ else
 end
 
 
+function ea_checkswap_lr(options)
 
+[coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
-
+if mean(coords_mm{1}(:,1))<mean(coords_mm{2}(:,1)) % RL swapped
+    % swap RL:
+    ncoords_mm{1}=coords_mm{2};    ncoords_mm{2}=coords_mm{1};
+    ntrajectory{1}=trajectory{2};    ntrajectory{2}=trajectory{1};
+    nmarkers(1)=markers(2); nmarkers(2)=markers(1);
     
+    ea_save_reconstruction(ncoords_mm,ntrajectory,nmarkers,elmodel,manually_corrected,options);
+end
 

@@ -92,7 +92,7 @@ end
 %XYZ_src_vx = src.mat \ XYZ_mm;
 
 fid=fopen([options.root,options.patientname,filesep,'cuts_export_coordinates.txt'],'w');
-for side=1:options.sides
+for side=1:length(options.sides)
     %% write out axial images
     for tracor=find(tracorpresent)'
         

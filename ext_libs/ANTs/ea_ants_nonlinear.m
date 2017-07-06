@@ -11,7 +11,7 @@ elseif ~iscell(movingimage)
     ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 try
-subcorticalrefine=varargin{7};
+    subcorticalrefine=varargin{6};
 catch
     subcorticalrefine=0;
 end
@@ -27,7 +27,7 @@ end
 if ischar(fixedimage)
     fixedimage={fixedimage};
 elseif ~iscell(fixedimage)
-	ea_error('Please supply variable fixedimage as either char or cellstring');
+    ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 
 if slabsupport
@@ -47,7 +47,7 @@ if slabsupport
         sums(mov)=sum(mnii.img(:));
     end
     slabspresent=0; % default no slabs present.
-
+    
     if length(sums)>1 % multispectral warp
         slabs=sums(1:end-1)<(sums(end)*0.7);
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
@@ -55,7 +55,7 @@ if slabsupport
             slabfixedimage=fixedimage(slabs);
             movingimage(slabs)=[]; % remove slabs from movingimage
             fixedimage(slabs)=[]; % remove slabs from movingimage
-
+            
             % write out slab mask
             slabspresent=1;
             mnii.dt=[4,0];
@@ -68,20 +68,20 @@ if slabsupport
         end
     end
 else
-   slabspresent=0;
-   impmasks=repmat({'nan'},length(movingimage),1);
+    slabspresent=0;
+    impmasks=repmat({'nan'},length(movingimage),1);
 end
 
 if nargin>3
     weights=varargin{4};
-    metrics=varargin{5};
-    options=varargin{6};
+    options=varargin{5};
 else
     weights=ones(length(fixedimage),1);
-    metrics=repmat({'MI'},length(fixedimage),1);
 end
 
-useSyN=options.prefs.machine.normsettings.ants_synmode;
+% Load preset parameter set
+[~,funname]=fileparts(options.prefs.machine.normsettings.ants_preset);
+apref=eval(funname);
 
 directory=fileparts(movingimage{1});
 directory=[directory,filesep];
@@ -117,86 +117,48 @@ end
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
-if any(imgsize>256)
-    rigidconvergence='[1000x500x250x100,1e-6,10]';
-    rigidshrinkfactors='12x8x4x2';
-    rigidsmoothingssigmas='4x3x2x1vox';
-
-    affineconvergence='[1000x500x250x100,1e-6,10]';
-    affineshrinkfactors='12x8x4x2';
-    affinesmoothingssigmas='4x3x2x1vox';
-
-    synconvergence='[100x100x70x50x20,1e-6,10]';
-    synshrinkfactors='10x6x4x2x1';
-    synsmoothingssigmas='5x3x2x1x0vox';
-else
-    rigidconvergence='[1000x500x250x100,1e-6,10]';
-    rigidshrinkfactors='8x4x2x1';
-    rigidsmoothingssigmas='3x2x1x0vox';
-
-    affineconvergence='[1000x500x250x100,1e-6,10]';
-    affineshrinkfactors='8x4x2x1';
-    affinesmoothingssigmas='3x2x1x0vox';
-
-    synconvergence='[100x70x50x20,1e-6,10]';
-    synshrinkfactors='8x4x2x1';
-    synsmoothingssigmas='3x2x1x0vox';
-end
+    rigidconvergence=apref.convergence.rigid;
+    rigidshrinkfactors=apref.shrinkfactors.rigid;
+    rigidsmoothingssigmas=apref.smoothingsigmas.rigid;
+    
+    affineconvergence=apref.convergence.affine;
+    affineshrinkfactors=apref.shrinkfactors.affine;
+    affinesmoothingssigmas=apref.smoothingsigmas.affine;
+    
+    synconvergence=apref.convergence.syn;
+    synshrinkfactors=apref.shrinkfactors.syn;
+    synsmoothingssigmas=apref.smoothingsigmas.syn;
 
 rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1}, ',1]' ...
-              ' --transform Rigid[0.1]' ...
-              ' --convergence ', rigidconvergence, ...
-              ' --shrink-factors ', rigidshrinkfactors, ...
-              ' --smoothing-sigmas ', rigidsmoothingssigmas, ...
-              ' --masks [NULL,NULL]'];
+    ' --transform Rigid[0.1]' ...
+    ' --convergence ', rigidconvergence, ...
+    ' --shrink-factors ', rigidshrinkfactors, ...
+    ' --smoothing-sigmas ', rigidsmoothingssigmas, ...
+    ' --masks [NULL,NULL]'];
 
 for fi=1:length(fixedimage)
-    switch metrics{fi}
-        case 'MI'
-            suffx=',32,Regular,0.25';
-        case 'CC'
-            suffx=',4';
-        case 'GC'
-            suffx=',15,Random,0.05';
-    end
-
     try
         rigidstage=[rigidstage,...
-        ' --metric ','MI','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+            ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
     catch
         keyboard
     end
 end
 
 affinestage = [' --transform Affine[0.1]'...
-               ' --convergence ', affineconvergence, ...
-               ' --shrink-factors ', affineshrinkfactors ...
-               ' --smoothing-sigmas ', affinesmoothingssigmas, ...
-               ' --masks [NULL,NULL]'];
+    ' --convergence ', affineconvergence, ...
+    ' --shrink-factors ', affineshrinkfactors ...
+    ' --smoothing-sigmas ', affinesmoothingssigmas, ...
+    ' --masks [NULL,NULL]'];
 
 for fi=1:length(fixedimage)
-	switch metrics{fi}
-        case 'MI'
-            suffx=',32,Regular,0.25';
-        case 'CC'
-            suffx=',4';
-        case 'GC'
-            suffx=',15,Random,0.05';
-	end
     affinestage=[affinestage,...
-            ' --metric ','MI','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+        ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
 end
 
-switch useSyN
-    case 'SyN'
-        tsuffix='[0.1,3,0]';
-    case 'BSplineSyN'
-        tsuffix='[0.1,26,0,3]'; % as in example script in Tustison 2013
-    otherwise
-        tsuffix='[0.1,26,0,3]'; % need to find proper values.
-end
 
-synstage = [' --transform ',useSyN,tsuffix...
+
+synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
     ' --convergence ', synconvergence, ...
     ' --shrink-factors ', synshrinkfactors ...
     ' --smoothing-sigmas ', synsmoothingssigmas, ...
@@ -204,79 +166,59 @@ synstage = [' --transform ',useSyN,tsuffix...
 
 
 for fi=1:length(fixedimage)
-    switch metrics{fi}
-        case 'MI'
-            suffx=',32,Regular,0.25';
-        case 'CC'
-            suffx=',4';
-        case 'GC'
-            suffx=',15,Random,0.05';
-    end
     synstage=[synstage,...
-        ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+        ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
 end
 
 % add slab stage
 if slabspresent
-    slabstage=[' --transform ',useSyN,'[0.3,3,0]'...
+    slabstage=[' --transform ',apref.antsmode,apref.antsmode_suffix...
         ' --convergence ', synconvergence, ...
         ' --shrink-factors ', synshrinkfactors ...
         ' --smoothing-sigmas ', synsmoothingssigmas, ...
+        ' --use-estimate-learning-rate-once ', ...
         ' --masks [NULL,',[tmaskdir,filesep,'slabmask.nii'],']'];
     fixedimage=[fixedimage,slabfixedimage];
     movingimage=[movingimage,slabmovingimage];
-
+    
     for fi=1:length(fixedimage)
-        switch metrics{fi}
-            case 'MI'
-                suffx=',32,Regular,0.25';
-            case 'CC'
-                suffx=',4';
-            case 'GC'
-                suffx=',15,Random,0.05';
-        end
         slabstage=[slabstage,...
-            ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+            ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
     end
-
 else
     slabstage='';
 end
 
 % add subcortical refine stage:
 if subcorticalrefine
-    synmaskconvergence='[20x5,1e-6,10]';
-    synmaskshrinkfactors='2x1';
-    synmasksmoothingssigmas='1x0vox';
-
+    synmaskconvergence=apref.convergence.scrf;
+    synmaskshrinkfactors=apref.shrinkfactors.scrf;
+    synmasksmoothingssigmas=apref.smoothingsigmas.scrf;
+    
     if slabspresent
         movingmask=[tmaskdir,filesep,'slabmask.nii'];
     else
         movingmask='NULL';
     end
-    synmaskstage = [' --transform ',useSyN,'[0.2,3,0]', ...
+    synmaskstage = [' --transform ',apref.antsmode,apref.antsmode_suffix, ...
         ' --convergence ', synmaskconvergence, ...
         ' --shrink-factors ', synmaskshrinkfactors,  ...
         ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
+        ' --use-estimate-learning-rate-once ', ...
         ' --masks [',ea_space([],'subcortical'),'secondstepmask','.nii',',',movingmask,']'];
     for fi=1:length(fixedimage)
-        switch metrics{fi}
-            case 'MI'
-                suffx=',32,Regular,0.25';
-            case 'CC'
-                suffx=',4';
-            case 'GC'
-                suffx=',15,Random,0.05';
-        end
         synmaskstage=[synmaskstage,...
-            ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
+            ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
     end
 else
     synmaskstage='';
 end
 
 ea_libs_helper
-%setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS','8')
+if options.prefs.machine.normsettings.ants_numcores
+    setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',prefs.machine.normsettings.ants_numcores) % no num2str needed since stored as string.
+end
+
 
 cmd = [ANTS, ' --verbose 1', ...
     ' --dimensionality 3', ...
@@ -294,7 +236,6 @@ fclose(fid);
 
 if ~ispc
     system(['bash -c "', cmd, '"']);
-
 else
     system(cmd);
 end

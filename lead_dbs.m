@@ -22,16 +22,16 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 04-Mar-2017 11:43:18
+% Last Modified by GUIDE v2.5 29-Jun-2017 11:46:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @lead_dbs_OpeningFcn, ...
-                   'gui_OutputFcn',  @lead_dbs_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @lead_dbs_OpeningFcn, ...
+    'gui_OutputFcn',  @lead_dbs_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
@@ -80,6 +80,17 @@ end
 
 options.prefs=ea_prefs('');
 
+
+%% can rm if statement once released.
+% hide Reconmethod for now:
+
+if ~options.prefs.env.dev
+    
+    set(handles.reconmethod,'Visible','off');
+    set(handles.reconmethodtxt,'Visible','off');
+    
+end
+
 ea_init_coregmrpopup(handles,1);
 
 % load atlassets
@@ -97,7 +108,7 @@ set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 %set(0,'gca',handles.logoaxes);
 set(0,'CurrentFigure',handles.leadfigure);
-    im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
+im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
 
 image(im);
 axis off;
@@ -118,21 +129,21 @@ for nd=length(ndir):-1:1
     try
         [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
         if ismember(spm('ver'),spmvers)
-        cdc{cnt}=thisndc;
-        coregctmethod{cnt}=methodf;
-        if strcmp(cdc{cnt},eval([options.prefs.ctcoreg.default,'(','''prompt''',')']))
-         defentry=cnt;
-        end
-        cnt=cnt+1;
+            cdc{cnt}=thisndc;
+            coregctmethod{cnt}=methodf;
+            if strcmp(cdc{cnt},eval([options.prefs.ctcoreg.default,'(','''prompt''',')']))
+                defentry=cnt;
+            end
+            cnt=cnt+1;
         end
     end
 end
 try
-setappdata(handles.leadfigure,'coregctmethod',coregctmethod);
-set(handles.coregctmethod,'String',cdc);
+    setappdata(handles.leadfigure,'coregctmethod',coregctmethod);
+    set(handles.coregctmethod,'String',cdc);
 catch
     if isempty(which('spm'))
-    ea_error('Please install SPM12 for Lead-DBS to work properly.');
+        ea_error('Please install SPM12 for Lead-DBS to work properly.');
     end
 end
 try % set selection of ctcoregmethod to default entry (specified in ea_prefs).
@@ -170,7 +181,7 @@ function varargout = lead_dbs_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 try
-varargout{1} = handles.output;
+    varargout{1} = handles.output;
 end
 
 % --- Executes on button press in run_button.
@@ -588,8 +599,13 @@ function doreconstruction_checkbox_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of doreconstruction_checkbox
 
-   set(handles.maskwindow_txt,'Enable','on');
-       set(handles.targetpopup,'Enable','on');
+if get(handles.reconmethod,'Value')==1 && get(hObject,'Value')==1
+    set(handles.maskwindow_txt,'Enable','on');
+    set(handles.targetpopup,'Enable','on');
+else
+    set(handles.maskwindow_txt,'Enable','off');
+    set(handles.targetpopup,'Enable','off');
+end
 
 
 
@@ -608,8 +624,22 @@ function MRCT_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from MRCT
 
 ea_switchctmr(handles,get(hObject,'Value'));
-
-
+if get(hObject,'Value')==1
+    set(handles.reconmethod,'enable','off');
+    set(handles.reconmethod,'Value',1); % set to TRAC/CORE algorithm.
+    set(handles.targetpopup,'enable','on');
+    set(handles.maskwindow_txt,'enable','on');
+else
+    set(handles.reconmethod,'enable','on');
+    set(handles.reconmethod,'Value',2); % set to PaCER algorithm.
+    %% can rm if statement once released.
+    prefs=ea_prefs;
+    if prefs.env.dev
+        set(handles.targetpopup,'enable','off');
+        set(handles.maskwindow_txt,'enable','off');
+    end
+    %%
+end
 ea_storeui(handles);
 
 
@@ -1029,9 +1059,9 @@ function specify2dwrite_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 options.native=get(handles.vizspacepopup,'Value')==2;
 [options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
-    options.root=[options.root,filesep];
-    options.modality=get(handles.MRCT,'Value');
-    options.prefs=ea_prefs(options.patientname);
+options.root=[options.root,filesep];
+options.modality=get(handles.MRCT,'Value');
+options.prefs=ea_prefs(options.patientname);
 ea_spec2dwrite(options);
 
 
@@ -1474,3 +1504,37 @@ function scrf_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of scrf
+
+
+% --- Executes on selection change in reconmethod.
+function reconmethod_Callback(hObject, eventdata, handles)
+% hObject    handle to reconmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns reconmethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from reconmethod
+if get(hObject,'Value')==1 % TRAC/CORE
+    set(handles.targetpopup,'enable','on');
+    set(handles.maskwindow_txt,'enable','on');
+else % PACER
+    %% can rm if statement once released.
+    prefs=ea_prefs;
+    if prefs.env.dev
+        set(handles.targetpopup,'enable','off');
+        set(handles.maskwindow_txt,'enable','off');
+    end
+    %%
+end
+
+% --- Executes during object creation, after setting all properties.
+function reconmethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to reconmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

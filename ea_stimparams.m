@@ -1942,15 +1942,16 @@ set(handles.stimlabel,'String',S.label);
 
 
 models=get(handles.modelselect,'String');
+try
 model=models{get(handles.modelselect,'Value')};
+catch
+    set(handles.modelselect,'Value',1);
+    model=models{1};
 
+end
 
 switch model
-    case 'SimBio/FieldTrip'
-        ea_hide_impedance(handles);
-        S.monopolarmodel=0;
-        ea_enable_vas(handles,options);
-    case 'SimBio/Iso2Mesh'
+    case 'Horn 2017'
         ea_hide_impedance(handles);
         S.monopolarmodel=0;
         ea_enable_vas(handles,options);

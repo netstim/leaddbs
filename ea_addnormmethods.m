@@ -28,18 +28,20 @@ end
 
 
 try
-setappdata(handles.leadfigure,'normmethod',normmethod);
-set(handles.normmethod,'String',ndc);
+    setappdata(handles.leadfigure,'normmethod',normmethod);
+    set(handles.normmethod,'String',ndc);
 catch
     if isempty(which('spm'))
     warning('It seems that SPM is not installed.');
     end
 end
+
 try % set selection of normmethod to default entry (specified in ea_prefs).
     if defentry<=length(get(handles.normmethod,'String'))
         set(handles.normmethod,'Value',defentry);
     end
 end
+
 clear defentry
 
 ea_switchnormmethod(handles);
