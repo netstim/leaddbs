@@ -11,11 +11,11 @@ track = '';
 str_parts = split(str, '_');
 if length(str_parts) == 2
     str = str_parts{2};
-    if strcmpi(str_parts{1}(1:8), 'keycheck')
+    if (length(str_parts{1}) > 8) && strcmpi(str_parts{1}(1:8), 'keycheck')
         track = str_parts{1}(9:end);
-    elseif strcmpi(str_parts{1}(1:6), 'toggle')
+    elseif (length(str_parts{1}) > 6) && strcmpi(str_parts{1}(1:6), 'toggle')
         track = str_parts{1}(7:end);
-    elseif any(strcmpi(str_parts{1}(1:3), {'key', 'pos'}))
+    elseif (length(str_parts{1}) > 3) && any(strcmpi(str_parts{1}(1:3), {'key', 'pos'}))
         track = str_parts{1}(4:end);
     end
 end

@@ -1,4 +1,4 @@
-function ea_updatemertrajectory(handles, side_str)
+function ea_mercontrol_updatetrajectories(handles, side_str)
 if ~exist('side_str', 'var')
     side_str = 'both';
 end
@@ -27,13 +27,12 @@ for sid = side_ids
     
     for pos_ix = 1:length(merstruct.tract_info)
         pos = merstruct.tract_info(pos_ix).label;
-        offset_implant_mm = bsxfun(@plus, im_mm, side_offs(pos_ix, :));
         curr_dist = merstruct.currentmer.(pos).dist(sid) - im_depth;
-        startpoint = offset_implant_mm(1,:) + slope .* curr_dist;
+        startpoint = im_mm(1, :) + side_offs(pos_ix, :) + (slope .* curr_dist);
         endpoint = startpoint + slope * merstruct.length;
-        stepsize = (endpoint - startpoint) / merstruct.n_pnts;
+        stepsize = (endpoint - startpoint) / (merstruct.n_pnts - 1);
         merstruct.currentmer.(pos).trajectory{sid} = bsxfun(@plus,...
-            (1:merstruct.n_pnts)' * stepsize, startpoint);
+            (0:merstruct.n_pnts-1)' * stepsize, startpoint);
     end
     
 end

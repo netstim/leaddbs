@@ -1,4 +1,4 @@
-function ea_resultfig_update_trajectories(handles, side_str)
+function ea_resultfig_updatetrajectories(handles, side_str)
 % ea_resultfig_update_trajectories(handles, side_str)
 if ~exist('side_str', 'var')
     side_str = 'both';

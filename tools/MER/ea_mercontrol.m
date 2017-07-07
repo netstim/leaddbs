@@ -22,7 +22,7 @@ function varargout = ea_mercontrol(varargin)
 
 % Edit the above text to modify the response to help ea_mercontrol
 
-% Last Modified by GUIDE v2.5 28-Jun-2017 09:16:19
+% Last Modified by GUIDE v2.5 07-Jul-2017 14:57:26
 
 % __________________________________________________________________________________
 % Copyright (C) 2017 University of Pittsburgh, Brain Modulation Lab
@@ -49,7 +49,10 @@ end
 % End initialization code - DO NOT EDIT
 
 
-%% GUIDE-generated functions
+
+
+
+%%%%%%%%%%%%%%%%%% GUIDE-generated functions  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % --- Executes just before ea_mercontrol is made visible.
 function ea_mercontrol_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -80,9 +83,9 @@ setappdata(resultfig, 'merstruct', options.prefs.mer);  %.length [24 mm]; .offse
 ea_gui_generate(handles);  % Generate UI elements for each tract.
 ea_resultfig_clear(handles);  % Delete markers and mer trajectories.
 ea_data_clear(handles);  % Clears trajectories, depths, etc in merstruct.
-ea_data_setdefault(handles);  % Sets merstruct to default values (including markers and trajs).
+ea_data_setdefault(handles);  % Sets merstruct and mermarkers to default values.
 ea_resultfig_update(handles);  % Plot markers and trajs from data.
-ea_gui_update_all(handles);  % Set GUI from data.
+ea_mercontrol_updateall(handles);  % Set GUI from data.
 
 
 % --- Outputs from this function are returned to the command line.
@@ -369,13 +372,9 @@ function clearall_Callback(hObject, eventdata, handles)
 % hObject    handle to clearall (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-resultfig = getappdata(handles.mercontrolfig,'resultfig');
-options = getappdata(resultfig,'options');
-clearmertrajectories(handles,resultfig,options);
-clearmermarkers(handles,resultfig,options);
-resetmainui(handles);  % Also updates mertoggles
-clearkeyboardcontrolgroup(handles);  % Also updates mertoggles
-% TODO: ea_readtogglestates(handles);
+ea_resultfig_clear(handles);  % Delete markers and mer trajectories.
+ea_data_clear(handles);  % Clears trajectories, depths, etc in merstruct.
+ea_mercontrol_updateall(handles);  % Set GUI from data.
 
 
 % --- Executes during object creation, after setting all properties.
@@ -396,27 +395,11 @@ function setdefault_Callback(hObject, eventdata, handles)
 % hObject    handle to setdefault (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-resultfig = getappdata(handles.mercontrolfig, 'resultfig');
-options = getappdata(resultfig, 'options');
-merstruct = getappdata(resultfig, 'merstruct');
-mermarkers = getappdata(resultfig, 'mermarkers');
-
-% Load default MER
-[~, ~, markers] = ea_load_reconstruction(options);  % coords_mm returned here is slightly wrong.
-coords_mm = ea_resolvecoords(markers, options);
-merstruct.defaultmer = ea_coords2mer(coords_mm, resultfig, options);
-merstruct.currentmer = merstruct.defaultmer;
-setappdata(resultfig, 'merstruct', merstruct);
-
-% Set mermarkers
-if isempty(mermarkers)
-    % TODO: Does setdefault want to keep mermarkers?
-    mermarkers = struct('side',{},'tract',{},'depth',{},'markertype',{},...
-        'session',{},'dat',{},'tag',{},'handle',{},'notes',{});
-    setappdata(resultfig,'mermarkers',mermarkers)
-end
-
-refreshresultfig(handles);
+ea_resultfig_clear(handles);  % Delete markers and mer trajectories.
+ea_data_clear(handles);  % Clears trajectories, depths, etc in merstruct.
+ea_data_setdefault(handles);  % Sets merstruct and mermarkers to default values.
+ea_resultfig_update(handles);  % Plot markers and trajs from data.
+ea_mercontrol_updateall(handles);  % Set GUI from data.
 
 
 % --- Executes during object creation, after setting all properties.
@@ -437,32 +420,19 @@ function undomarker_Callback(hObject, eventdata, handles)
 % hObject    handle to undomarker (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of undomarker
-resultfig = getappdata(handles.mercontrolfig,'resultfig');
-mermarkers = getappdata(resultfig,'mermarkers');
-markerstring = getappdata(resultfig,'markerstring');
-n = length(mermarkers);
-if n~=0
-    tmpmer = mermarkers(n);
-    mermarkers(n)=[];
-    set(tmpmer.handle,'Visible','off')
-    set(tmpmer.tag.handle,'Visible','off')
-    setappdata(resultfig,'tmpmer',tmpmer);
-    
-    if strcmpi(tmpmer.side,'right')
-        markerstring.right(end) = [];
-    elseif strcmpi(tmpmer.side,'left')
-        markerstring.left(end) = [];
-    end
-    
-    setappdata(resultfig,'mermarkers',mermarkers);
-    setappdata(resultfig,'markerstring',markerstring)
-    set(handles.popupmermarkers_right,'Visible','on','String',markerstring.right,'Value',1)
-    set(handles.popupmermarkers_left,'Visible','on','String',markerstring.left,'Value',1)
-
-end
-set(hObject,'Value',0)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+mermarkers = getappdata(resultfig, 'mermarkers');
+markerhistory = getappdata(resultfig, 'markerhistory');
+markerhistory(end+1) = mermarkers(end);
+delete(markerhistory(end).handle);
+markerhistory(end).handle = [];
+delete(markerhistory(end).tag.handle);
+markerhistory(end).tag.handle = [];
+mermarkers(end) = [];
+setappdata(resultfig, 'mermarkers', mermarkers);
+setappdata(resultfig, 'markerhistory', markerhistory);
+ea_resultfig_updatemarkers(handles);
+ea_mercontrol_updatemarkers(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -483,45 +453,15 @@ function redomarker_Callback(hObject, eventdata, handles)
 % hObject    handle to redomarker (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of redomarker
-resultfig = getappdata(handles.mercontrolfig,'resultfig');
-options = getappdata(handles.mercontrolfig,'options');
-mermarkers = getappdata(resultfig,'mermarkers');
-markerstring = getappdata(resultfig,'markerstring');
-tmpmer = getappdata(resultfig,'tmpmer');
-n = length(mermarkers);
-set(0,'CurrentFigure',resultfig);
-if ~isempty(tmpmer)
-    mermarkers(n+1)=tmpmer;
-    % display marker
-    tmp = tmpmer.handle;
-    mermarkers(n+1).handle  = surf(tmp.XData,tmp.YData,tmp.ZData,'FaceLighting','gouraud',...
-        'FaceColor',tmp.FaceColor,'EdgeColor',tmp.EdgeColor,'FaceAlpha',tmp.FaceAlpha,'Visible','on');
-    clear tmp
-    
-    % display tag
-    tmp = tmpmer.tag.handle;
-    mermarkers(n+1).tag.handle = text(tmp.Position(1),tmp.Position(2),tmp.Position(3),...
-        tmp.String,'Color',tmp.Color,'HorizontalAlignment',tmp.HorizontalAlignment,'Visible','on');
-    clear tmp
-    
-    keymer = tmpmer.name;
-    if strcmp(keymer(strfind(keymer,'_')+1:end),'right')
-        markerstring.right{end+1} = sprintf('%0.0f. %s',n+1,tmpmer.tag.string);
-    elseif strcmp(keymer(strfind(keymer,'_')+1:end),'left')
-        markerstring.left{end+1} = sprintf('%0.0f. %s',n+1,tmpmer.tag.string);
-    end
-    
-    tmp = []; %rmfield(getappdata(resultfig),'tmpmer');
-    setappdata(resultfig,'tmpmer',tmp);
-    setappdata(resultfig,'mermarkers',mermarkers);
-    setappdata(resultfig,'markerstring',markerstring)
-    set(handles.popupmermarkers_right,'Visible','on','String',markerstring.right,'Value',1)
-    set(handles.popupmermarkers_left,'Visible','on','String',markerstring.left,'Value',1)
-
-end
-set(hObject,'Value',0)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+mermarkers = getappdata(resultfig, 'mermarkers');
+markerhistory = getappdata(resultfig, 'markerhistory');
+mermarkers(end + 1) = markerhistory(end);
+markerhistory(end) = [];
+setappdata(resultfig, 'mermarkers', mermarkers);
+setappdata(resultfig, 'markerhistory', markerhistory);
+ea_resultfig_updatemarkers(handles);
+ea_mercontrol_updatemarkers(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -545,19 +485,14 @@ function togglemarkertags_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of togglemarkertags
 resultfig = getappdata(handles.mercontrolfig,'resultfig');
-options = getappdata(handles.mercontrolfig,'options');
-mermarkers = getappdata(resultfig,'mermarkers');
+merstruct = getappdata(resultfig, 'merstruct');
 if get(hObject,'Value')
-    for i = 1:length(mermarkers)
-        try set(mermarkers(i).tag.handle,'Visible','on'); end
-    end
-    % set(handles.togglemarkertags,'Value',1)
+    merstruct.tag.visible = 'on';
 else
-    for i = 1:length(mermarkers)
-        try set(mermarkers(i).tag.handle,'Visible','off'); end
-    end
-    % set(handles.togglemarkertags,'Value',0)
+    merstruct.tag.visible = 'off';
 end
+setappdata(resultfig, 'merstruct', merstruct);
+ea_resultfig_updatemarkers(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -578,15 +513,12 @@ function importmarkers_Callback(hObject, eventdata, handles)
 % hObject    handle to importmarkers (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+options = getappdata(handles.mercontrolfig, 'options');
 
-% Hint: get(hObject,'Value') returns toggle state of importmarkers
-resultfig = getappdata(handles.mercontrolfig,'resultfig');
-options = getappdata(handles.mercontrolfig,'options');
-merhandles = getappdata(resultfig,'merhandles');
-side=1;
-if isvalid(merhandles.central{side})
 try 
-    load([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],'mermarkers','mertoggles');
+    load([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],...
+        'mermarkers', 'mertoggles');
 catch
     [files] = fdir(options.uipatdirs{1},'.mat');
     if ~isempty(cell2mat(strfind({files(:).name},'ea_mermarkers')))
@@ -595,13 +527,12 @@ catch
     end
     ea_error(['could not find ea_mermarkers.mat for ', options.patientname])
 end
-%assignin(workspace,'mermarkers',mermarkers)
-ea_getsettogglestates(hObject, [], handles, mertoggles);
-ea_updatemermarkers(mermarkers,handles,resultfig,options)
-else
-    fprintf(2,'Error using importmarkers_Callback: \nNo MER trajectories available\n\n')
-end
-set(hObject,'Value',0)
+ea_resultfig_clear_markers;
+setappdata(resultfig, 'mermarkers', mermarkers);
+setappdata(handles.mercontrolfig, 'mertoggles', mertoggles);
+ea_resultfig_updatemarkers(handles);
+ea_mercontrol_updatemarkers(handles);
+ea_mercontrol_updatetoggles(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -622,22 +553,29 @@ function exportmarkers_Callback(hObject, eventdata, handles)
 % hObject    handle to exportmarkers (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+resultfig = getappdata(handles.mercontrolfig, 'resultfig');
+options = getappdata(handles.mercontrolfig, 'options');
+mermarkers = getappdata(resultfig, 'mermarkers');
+mertoggles = getappdata(handles.mercontrolfig, 'mertoggles'); %#ok<NASGU>
 
-% Hint: get(hObject,'Value') returns toggle state of exportmarkers
-resultfig = getappdata(handles.mercontrolfig,'resultfig');
-options = getappdata(handles.mercontrolfig,'options');
-mermarkers = getappdata(resultfig,'mermarkers');
-mertoggles = ea_getsettogglestates(hObject, [], handles);
+for marker_ix = 1:length(mermarkers)
+    % Empty the handle to make sure it gets redrawn on import.
+    mermarkers(marker_ix).handle = [];
+    if isfield(mermarkers(marker_ix).tag, 'handle')
+        mermarkers(marker_ix).tag.handle = [];
+    end
+end
+
 if exist([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],'file')
     overwrite = ea_questdlg({['ea_mermarkers.mat found in ' options.patientname ' directory.'];...
-        'Would you like to overwrite this file?'},options.patientname);
+        'Would you like to overwrite this file?'}, options.patientname);
 end
-if ~exist([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],'file') || strcmp(overwrite,'Yes')
-    disp(['Saving: ' options.uipatdirs{1},filesep,'ea_mermarkers.mat'])
-    save([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],'mermarkers','mertoggles')
-    disp('DONE')
-end    
-set(hObject,'Value',0)
+if ~exist([options.uipatdirs{1},filesep,'ea_mermarkers.mat'],'file') || strcmpi(overwrite,'Yes')
+    disp(['Saving: ', options.uipatdirs{1}, filesep, 'ea_mermarkers.mat']);
+    save([options.uipatdirs{1}, filesep, 'ea_mermarkers.mat'],...
+        'mermarkers','mertoggles');
+    disp('DONE');
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -658,12 +596,26 @@ function pushbutton_clear_checks_Callback(hObject, eventdata, handles)
 mertoggles = getappdata(handles.mercontrolfig, 'mertoggles');
 mertoggles.keycontrol = zeros(2, length(merstruct.tract_info));
 setappdata(handles.mercontrolfig, 'mertoggles', mertoggles);
-ea_gui_update_toggles(handles);
+ea_mercontrol_updatetoggles(handles);
 
 
-%% Custom functions
 
-function ea_keypress(handles, event)
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%% Custom functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function ea_keypress(handles, event) %#ok<INUSL>
 % this is the main keypress function for the mercontrolfig.
 % Add event listeners here.
 if ismember('shift', event.Modifier)
@@ -671,11 +623,12 @@ end
 fprintf('Keypress ignored. Click on resultfig first.\n')
 
 
-function closefunction(hObject,event)
+function closefunction(hObject, event) %#ok<INUSD>
 handles = getappdata(hObject,'UsedByGUIData_m');
-ea_data_clear(handles);
 ea_resultfig_clear(handles);
+ea_data_clear(handles);
 delete(hObject)
+
 
 function ea_gui_generate(handles)
 % ea_gui_generate(handles)
@@ -751,7 +704,7 @@ for side_str = {'left', 'right'}
 end
 
 
-function ea_keycheck(hObject, eventdata)
+function ea_keycheck(hObject, eventdata) %#ok<INUSD>
 [~, sid, track] = ea_detsidestr(hObject.Tag);
 % Update the value
 handles = guidata(hObject);
@@ -773,7 +726,6 @@ ea_data_clear_markers(handles);
 function ea_data_clear_traj(handles, sidestr)
 resultfig = getappdata(handles.mercontrolfig, 'resultfig');
 merstruct = getappdata(resultfig, 'merstruct');
-% TODO: Clear only one side?
 % if ~exist('sidestr','var')
 %     sidestr = 'both';
 % end
@@ -788,8 +740,9 @@ function ea_data_clear_markers(handles)
 resultfig = getappdata(handles.mercontrolfig, 'resultfig');
 mermarkers = struct('side', {}, 'tract', {}, 'depth', {},...
     'markertype', {}, 'session', {}, 'dat', {}, 'tag', {},...
-    'handle', {}, 'notes', {});
+    'handle', {}, 'notes', {}, 'coords_mm', {});
 setappdata(resultfig, 'mermarkers', mermarkers);
+setappdata(resultfig, 'markerhistory', mermarkers);
 
 
 function ea_resultfig_clear(handles, sidestr)
@@ -848,19 +801,21 @@ setappdata(resultfig, 'merhandles', merhandles);
 
 function ea_resultfig_clear_markers(handles, sidestr)
 % ea_resultfig_clear_markers(handles, sidestr)
-
-% TODO: Clear for only one side
-% if exist('sidestr','var')
-%     [sidestr, clear_sides, track] = ea_detsidestr(sidestr);
-% else
-%     [sidestr, clear_sides, track] = ea_detsidestr('both');
-% end
-
+if ~exist('sidestr','var')
+    sidestr = 'both';
+end
+[side_strs, ~, ~] = ea_detsidestr(sidestr);
 resultfig = getappdata(handles.mercontrolfig, 'resultfig');
 mermarkers = getappdata(resultfig,'mermarkers');
-for i = 1:length(mermarkers)
-    try delete(mermarkers(i).handle); end
-    try delete(mermarkers(i).tag.handle); end
+for marker_ix = 1:length(mermarkers)
+    if any(strcmpi(mermarkers(marker_ix).side, side_strs))
+        try delete(mermarkers(marker_ix).handle); end
+        try delete(mermarkers(marker_ix).tag.handle); end
+        mermarkers(marker_ix).handle = [];
+        if isfield(mermarkers(marker_ix).tag, 'handle')
+            mermarkers(marker_ix).tag.handle = [];
+        end
+    end
 end
 setappdata(resultfig,'mermarkers',mermarkers)
 
@@ -890,7 +845,7 @@ for sid = side_ids
     end
 end
 setappdata(resultfig, 'merstruct', merstruct);
-ea_updatemertrajectory(handles);  % Update the trajectories stored in merstruct.
+ea_mercontrol_updatetrajectories(handles);  % Update the trajectories stored in merstruct.
 
 
 function ea_data_setdefault_markers(handles)
@@ -910,64 +865,19 @@ setappdata(handles.mercontrolfig, 'mertoggles', mertoggles);
 function ea_resultfig_update(handles)
 % ea_resultfig_update(handles)
 % Updates trajectory plot and markers plot from data.
-ea_resultfig_update_trajectories(handles);
-ea_resultfig_update_markers(handles);
+ea_resultfig_updatetrajectories(handles);
+ea_resultfig_updatemarkers(handles);
 
 
-function ea_resultfig_update_markers(handles)
-resultfig = getappdata(handles.mercontrolfig, 'resultfig');
-%TODO: Update markers. See below function.
+function ea_mercontrol_updateall(handles)
+% ea_mercontrol_updateall(handles)
+% Update GUI elements from data structs.
+ea_mercontrol_updateimplanted(handles);
+ea_mercontrol_updatetoggles(handles);
+ea_mercontrol_updatemarkers(handles);
 
 
-function ea_updatemermarkers(mermarkers,handles,resultfig,options)
-clearmermarkers(handles,resultfig,options)
-set(0,'CurrentFigure',resultfig)
-markerstring.right = {'none selected...'};
-markerstring.left = {'none selected...'};
-for n = 1:length(mermarkers)
-    tmp = mermarkers(n).handle;
-    mermarkers(n).handle = surf(tmp.XData,tmp.YData,tmp.ZData,...
-        'FaceColor',tmp.FaceColor,'EdgeColor',tmp.EdgeColor,'FaceAlpha',tmp.FaceAlpha); 
-    clear tmp
-    tmp = mermarkers(n).tag.handle;
-    mermarkers(n).tag.handle = text(tmp.Position(1),tmp.Position(2),tmp.Position(3),...
-        tmp.String,'Color',tmp.Color,'HorizontalAlignment',tmp.HorizontalAlignment,'Visible','off');
-
-    markerstring.(mermarkers(n).side){end+1} = sprintf('%0.0f. %s',n,mermarkers(n).tag.string);    
-end
-
-% set implanted tract data
-try
-    Lidx = find(~cellfun(@isempty,strfind({mermarkers.side},'left'))==1);
-    set(handles.popupimplantedtract_left,'Value',...
-        find(~cellfun(@isempty,strfind(handles.popupimplantedtract_left.String,mermarkers(Lidx(1)).dat.implantedtract))==1))
-    set(handles.editimplanteddepth_left,'String',num2str(mermarkers(Lidx(1)).dat.leaddepth))
-    ea_getsettogglestates(hObject, [], handles, 2, mermarkers(Lidx(1)).dat.leaddepth);
-end
-
-try
-    Ridx = ~cellfun(@isempty,strfind({mermarkers.side},'right'));
-    set(handles.popupimplantedtract_right,'Value',...
-        find(~cellfun(@isempty,strfind(handles.popupimplantedtract_left.String,mermarkers(Ridx(1)).dat.implantedtract))==1))
-    set(handles.editimplanteddepth_left,'String',num2str(mermarkers(Ridx(1)).dat.leaddepth))
-    ea_getsettogglestates(hObject, [], handles, 1, mermarkers(Ridx(1)).dat.leaddepth);
-end
-
-setappdata(resultfig,'mermarkers',mermarkers)
-setappdata(resultfig,'markerstring',markerstring)
-%set(handles.popupmermarkers_right,'Visible','on','String',markerstring.right,'Value',1)
-%set(handles.popupmermarkers_left,'Visible','on','String',markerstring.left,'Value',1)
-set(handles.togglemarkertags,'Visible','on','Value',0)
-
-
-function ea_gui_update_all(handles)
-% ea_gui_update_all(handles)
-% TODO: Update GUI elements from data structs.
-ea_mergui_update_implanted(handles);
-ea_gui_update_toggles(handles);
-
-
-function ea_gui_update_toggles(handles, side_str)
+function ea_mercontrol_updatetoggles(handles, side_str)
 if ~exist('side_str', 'var')
     side_str = 'both';
 end
@@ -1004,11 +914,11 @@ for tract_ix = 1:length(merstruct.tract_info)
     merstruct.currentmer.(pos_str).dist(side_ix) = dist;
 end
 setappdata(resultfig, 'merstruct', merstruct);
-ea_mergui_update_implanted(handles, sidestr);
-ea_resultfig_update_trajectories(handles, sidestr);
+ea_mercontrol_updateimplanted(handles, sidestr{side_ix});
+ea_resultfig_updatetrajectories(handles, sidestr{side_ix});
 
 
-function popupimplantedtract_helper(hObject, eventdata, handles)
+function popupimplantedtract_helper(hObject, eventdata, handles) %#ok<INUSL>
 tract_ix = get(hObject, 'Value') - 1;
 str_parts = strsplit(hObject.Tag, '_');
 [~, sid, ~] = ea_detsidestr(str_parts{2});
@@ -1018,11 +928,11 @@ merstruct.implant_idx(sid) = tract_ix;
 setappdata(resultfig, 'merstruct', merstruct);
 %TODO: I don't think the knowing the implanted trajectory actually matters.
 % If it does, then...
-% ea_updatemertrajectory(handles, side_strs{sid});
-% ea_resultfig_update_trajectories();
+% ea_mercontrol_updatetrajectories(handles, side_strs{sid});
+% ea_resultfig_updatetrajectories();
 
 
-function ea_updatepostext(hObject, eventData)
+function ea_updatepostext(hObject, eventData) %#ok<INUSD>
 % Called when one of the position text boxes is edited.
 handles = guidata(hObject);
 resultfig = getappdata(handles.mercontrolfig, 'resultfig');
@@ -1030,11 +940,11 @@ merstruct = getappdata(resultfig, 'merstruct');
 [side_strs, sid, track] = ea_detsidestr(hObject.Tag);
 merstruct.currentmer.(track).dist(sid) = str2double(get(hObject, 'String'));
 setappdata(resultfig, 'merstruct', merstruct);
-ea_updatemertrajectory(handles, side_strs{sid});
-ea_resultfig_update_trajectories(handles);
+ea_mercontrol_updatetrajectories(handles, side_strs{sid});
+ea_resultfig_updatetrajectories(handles);
 
 
-function mertoggles = ea_updatetogglestate(hObject, eventdata)
+function mertoggles = ea_updatetogglestate(hObject, eventdata) %#ok<INUSD>
 % Called when one of the tract toggle buttons is pressed.
 [~, sid, track] = ea_detsidestr(hObject.Tag);
 handles = guidata(hObject);
@@ -1045,7 +955,7 @@ mertoggles = getappdata(handles.mercontrolfig, 'mertoggles');
 mertoggles.togglestates(sid, bTrack) = hObject.Value;
 setappdata(handles.mercontrolfig, 'mertoggles', mertoggles);
 % Update the visual presentation
-ea_resultfig_update_trajectories(handles);
+ea_resultfig_updatetrajectories(handles);
 
 
 function [files,subs] = fdir(Path,ext)

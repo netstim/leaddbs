@@ -1,4 +1,4 @@
-function ea_mergui_update_implanted(handles, side_str)
+function ea_mercontrol_updateimplanted(handles, side_str)
 if ~exist('side_str', 'var')
     side_str = 'both';
 end
@@ -16,7 +16,11 @@ for sid = side_ids
 %             'Visible', 'off', 'String', '', 'Value', 1);
     % TODO: Recording elements handles.(['popupmedial_' side_str])
     for tract_info = merstruct.tract_info
-        val = merstruct.currentmer.(tract_info.label).dist(sid);
+        if isfield(merstruct, 'currentmer')
+            val = merstruct.currentmer.(tract_info.label).dist(sid);
+        else
+            val = 0;
+        end
         set(handles.mainuipanel.Children(strcmpi(ui_tags,...
             ['pos' tract_info.label '_' side_str])),...
             'String', num2str(val));

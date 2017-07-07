@@ -563,95 +563,79 @@ end
 mercontrolfig = getappdata(resultfig, 'mercontrolfig');
 if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
     
-    options = getappdata(mercontrolfig, 'options');
     merstruct = getappdata(resultfig, 'merstruct');
-    merhandles = getappdata(resultfig, 'merhandles');
-    mermarkers = getappdata(resultfig, 'mermarkers');
     mertoggles = getappdata(mercontrolfig, 'mertoggles');
         
     if ~any(any(mertoggles.keycontrol))
         return
-    end
+    end   
     
-    if any(strcmpi(event.Key, {'space','m','l','t','b','s','n'}))
+    if any(strcmpi(event.Key, {'space','m','l','t','b', 's', 'n'}))
         % Reserved keys:
         % 'space' = Generic; 'm' = MER; 'l' = LFP; 't' = Top; 'b' = Bottom
         % 's' = session; 'n' = notes
         
-        [shape.x,shape.y,shape.z] = sphere(20);
-        n = length(mermarkers);
-        sSize = options.prefs.mer.markersize;
-        % CData = parula; CData = repmat(CData(1:length(sphere.x),:),[1 size(sphere.x,2)/3]);
-        % colormap = repmat([1 1 0],[size(sphere.x,1) size(sphere.x,2)/3]);
-        % tmp = parula;
-        % colormap = repmat(tmp(end:-2:1,:),[4 1]); clear tmp
-        %colormap = [1 1 0; 0 0 1];
+        mermarkers = getappdata(resultfig, 'mermarkers');
         
-        [~, side, track] = ea_detsidestr(keymer);
-        trajectory = [get(merhandles.(track){side},'XData')',...
-            get(merhandles.(track){side},'YData')',...
-            get(merhandles.(track){side},'ZData')'];
-        if n>0 && isequal(trajectory(1,:),mermarkers(n).coords_mm) && ~strcmp(event.Key,'s') && ~strcmp(event.Key,'n')
-            fprintf('Location along %s %s tract already marked: [%f,%f,%f].\n',...
-                keymer(strfind(keymer,'_')+1:end),keymer(4:strfind(keymer,'_')-1),trajectory(1,:))
-            return
+        if any(strcmpi(event.Key, {'s', 'n'}))
+            % Enter session or notes for the last marker.
+            if strcmpi(event.Key, 's')
+                mermarkers(end).session = char(inputdlg('Enter Session'));
+            elseif strcmpi(event.Key, 'n')
+                mermarkers(end).notes = char(inputdlg('Enter Notes'));
+            end
+            setappdata(resultfig, 'mermarkers', mermarkers);
+            return;
         end
         
-        mer_data = getappdata(mercontrolfig,'UsedByGUIData_m');
-        shape.x = shape.x*sSize+trajectory(1,1);
-        shape.y = shape.y*sSize+trajectory(1,2);
-        shape.z = shape.z*sSize+trajectory(1,3);
-        mermarkers(n+1).side = keymer(regexp(keymer,'_')+1:end);
-        mermarkers(n+1).tract = keymer(4:regexp(keymer,'_')-1);
-        mermarkers(n+1).depth = str2double(getfield(getfield(mer_data,['pos' keymer(4:end)]),'String'));
-        mermarkers(n+1).coords_mm = trajectory(1,:);
-        mermarkers(n+1).dat.implantedtract = getfield(getfield(mer_data,['popupimplantedtract' keymer(regexp(keymer,'_'):end)]),'String');
-        mermarkers(n+1).dat.implantedtract = mermarkers(n+1).dat.implantedtract{...
-            getfield(getfield(mer_data,['popupimplantedtract' keymer(regexp(keymer,'_'):end)]),'Value')};
-        mermarkers(n+1).dat.leaddepth = str2double(getfield(getfield(mer_data,['editimplanteddepth' keymer(regexp(keymer,'_'):end)]),'String'));
-        mermarkers(n+1).dat.offset = event.Key;
-        mermarkers(n+1).dat.key = event.Key;
-        mermarkers(n+1).tag.depth = getfield(getfield(mer_data,['pos' keymer(4:end)]),'String');
-        mermarkers(n+1).tag.visible = options.prefs.mer.tag.visible;
-        [mermarkers(n+1).tag.handle,mermarkers(n+1).tag.string] = ea_setmertag(mermarkers(n+1).tag,keymer,trajectory(1,:));
-        
+        sess_text = '';
         switch lower(event.Key)
             case 'space'
-                mermarkers(n+1).notes;
-                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
-                    'FaceColor',[0.5 0.5 0],'EdgeColor','none',...
-                    'FaceAlpha',0.7,'tag','Generic');
-                mermarkers(n+1).markertype = 'Generic';
+                markertype = 'Generic';
             case 'm'
-                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
-                    'FaceColor',[0.5 0 0],'EdgeColor','none',...
-                    'FaceAlpha',0.7,'tag','MER');
-                mermarkers(n+1).markertype = 'MER recording';
-                mermarkers(n+1).session = char(inputdlg('Enter Session'));
+                markertype = 'MER recording';
+                sess_text = char(inputdlg ('Enter Session'));
             case 'l'
-                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
-                    'FaceColor',[0 0.5 0],'EdgeColor','none',...
-                    'FaceAlpha',0.7,'tag','LFP');
-                mermarkers(n+1).markertype = 'LFP recording';
-                mermarkers(n+1).session = char(inputdlg('Enter Session'));
+                markertype = 'LFP recording';
+                sess_text = char(inputdlg ('Enter Session'));
             case 't'
-                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
-                    'FaceColor',[0 0 0.5],'EdgeColor','none',...
-                    'FaceAlpha',0.7,'tag','Top');
-                mermarkers(n+1).markertype = 'Top border';
+                markertype = 'Top border';
             case 'b'
-                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
-                    'FaceColor',[0 0 0.5],'EdgeColor','none',...
-                    'FaceAlpha',0.7,'tag','Bottom');
-                mermarkers(n+1).markertype = 'Bottom border';
-            case 's'
-                mermarkers(n).session = char(inputdlg('Enter Session'));
-            case 'n'
-                mermarkers(n).notes = char(inputdlg('Enter Notes'));
+                markertype = 'Bottom border';
         end
         
-        setappdata(resultfig,'mermarkers',mermarkers);
-        ea_updatemercontrol(keymer,getappdata(mercontrolfig,'UsedByGUIData_m'),mermarkers,resultfig,options)
+        pos_labels = {merstruct.tract_info.label};
+        side_strs = {'right', 'left'};
+        [sides, positions] = find(mertoggles.keycontrol);
+        for check_ix = 1:length(sides)
+            sid = sides(check_ix);
+            side_str = side_strs{sid};
+            pos_str = pos_labels{positions(check_ix)};
+            marker_mm = merstruct.currentmer.(pos_str).trajectory{sid}(1, :);
+            if ~isempty(mermarkers) && isequal(marker_mm, mermarkers(end).coords_mm)
+                fprintf('Location along side %s - %s tract already marked: [%f,%f,%f].\n',...
+                    side_str, pos_str, marker_mm);
+            else
+                mermarkers(end+1).side = side_str;
+                mermarkers(end).tract = pos_str;
+                mermarkers(end).depth = merstruct.currentmer.(pos_str).dist(sid);
+                mermarkers(end).coords_mm = marker_mm;
+                mermarkers(end).markertype = markertype;
+                if ~isempty(sess_text)
+                    mermarkers(end).session = sess_text;
+                end
+
+                dat.implantedtract = pos_labels{merstruct.implant_idx(sid)};
+                dat.leaddepth = merstruct.implant_depth(sid);
+                dat.key = event.Key;
+                mermarkers(end).dat = dat;
+            end
+        end
+        setappdata(resultfig, 'mermarkers', mermarkers);
+        
+        handles = guidata(mercontrolfig);
+        ea_resultfig_updatemarkers(handles);
+        ea_mercontrol_updatemarkers(handles);
         
     elseif any(strcmpi(event.Key, {'uparrow','leftarrow','downarrow','rightarrow'}))
         d = merstruct.step_size(1);  % Default step size
@@ -677,9 +661,9 @@ if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
         setappdata(resultfig, 'merstruct', merstruct);
         % Update the GUI
         handles = guidata(mercontrolfig);
-        ea_updatemertrajectory(handles);
-        ea_resultfig_update_trajectories(handles);
-        ea_mergui_update_implanted(handles);
+        ea_mercontrol_updatetrajectories(handles);
+        ea_resultfig_updatetrajectories(handles);
+        ea_mercontrol_updateimplanted(handles);
     end
 % commnd=event.Character;
 % switch lower(commnd)
@@ -1043,38 +1027,3 @@ h=zoom;
 h.Enable=cmd;
 h.Motion='both';
 h.Direction='out';
-
-function [handle,string] = ea_setmertag(tag,keymer,trajectory)
-% tag.string; tag.visible; tag.color;
-d = 3.2;
-pos = [trajectory(1,1)/abs(trajectory(1,1))*d+trajectory(1,1),trajectory(1,2:3)];
-% string = sprintf('%s%s Depth: %smm',upper(keymer(4)),keymer(5:strfind(keymer,'_')-1),tag.depth);
-string = sprintf('%s%s: %smm',upper(keymer(4)),keymer(5:strfind(keymer,'_')-1),tag.depth);
-handle = text(pos(1),pos(2),pos(3),string,'Color','w','HorizontalAlignment','center','Visible',tag.visible);
-
-
-function ea_updatemercontrol(keymer,handles,mermarkers,resultfig,options)
-n=length(mermarkers);
-markerstring.right = get(handles.popupmermarkers_right,'String');
-markerstring.left = get(handles.popupmermarkers_left,'String');
-
-if isempty(markerstring.right)
-    markerstring.right = {'none selected...'};
-end
-
-if isempty(markerstring.left)
-    markerstring.left = {'none selected...'};
-end
-
-if strcmp(keymer(strfind(keymer,'_')+1:end),'right')
-    % side = 1;
-    markerstring.right{end+1} = sprintf('%0.0f. %s',n,mermarkers(n).tag.string);
-elseif strcmp(keymer(strfind(keymer,'_')+1:end),'left')
-    % side = 2;
-    markerstring.left{end+1} = sprintf('%0.0f. %s',n,mermarkers(n).tag.string);
-end
-
-setappdata(resultfig,'markerstring',markerstring)
-set(handles.popupmermarkers_right,'Visible','off','String',markerstring.right,'Value',1)
-set(handles.popupmermarkers_left,'Visible','off','String',markerstring.left,'Value',1)
-% set(handles.togglemarkertags,'Visible','on','Value',1)
