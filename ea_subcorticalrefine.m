@@ -115,13 +115,21 @@ imshow(standardslice);
 handles.scrf.CurrentAxes=handles.scfax;
 imshow(refineslice);
 
-% display matrix:
+% calculate and display transform matrix:
 if exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
-%load([directory,'scrf',filesep,'scrf_instore.mat']);
-%mat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
-mat=ea_antsmat2mat_empirical(directory);
-handles.affmatrix.String=sprintf('%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f',mat');
-save([directory,'scrf',filesep,'scrf_instore_converted.mat'],'mat');
+    load([directory,'scrf',filesep,'scrf_instore.mat']);
+    mmat=ea_antsmat2mat(AffineTransform_float_3_3,fixed); % analytical solution
+    mat=ea_antsmat2mat_empirical(directory); % do an extra empirical check
+    if sum(abs(mmat(:)-mat(:)))<1e-06 % precision
+        mat=mmat;
+    else
+        % keep empirical mat since surely correct
+        if options.prefs.env.dev==1 % debug this case.
+            keyboard
+        end
+    end
+    handles.affmatrix.String=sprintf('%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f',mat');
+    save([directory,'scrf',filesep,'scrf_instore_converted.mat'],'mat');
 end
 
 function slice=ea_loadrefineslice(directory,options,refine)

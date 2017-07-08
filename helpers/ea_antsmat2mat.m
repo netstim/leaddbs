@@ -5,7 +5,10 @@ function mat=ea_antsmat2mat(afftransform,m_Center)
 
 
 mat=[reshape(afftransform(1:9),[3,3])',afftransform(10:12)];
+
 m_Translation=mat(:,4);
+mat=[mat;[0,0,0,1]];
+
 
 for i=1:3
     m_Offset(i) = m_Translation(i) + m_Center(i);
@@ -14,16 +17,17 @@ for i=1:3
     end
 end
 
-mat(:,4)=m_Offset;
+mat(1:3,4)=m_Offset;
+mat=inv(mat);
 
-mat=[mat;[0,0,0,1]];
 
-%  % convert RAS to LPS (ITK uses LPS)
-% mat=mat.*...
-%     [1 -1 1 1
-%     -1 1 1 1
-%     1 1 1 -1
-%     1 1 1 1];
+
+ % convert RAS to LPS (ITK uses LPS)
+mat=mat.*...
+    [1  1 -1 -1
+    1   1 -1 -1
+    -1 -1 1 1
+    1   1 1 1];
 
     %% original code in itkMatrixOffsetTransformBase > ComputeOffset
 % {
