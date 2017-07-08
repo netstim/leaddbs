@@ -49,9 +49,9 @@ for side=1:length(options.sides)
 end
 
 % apply scrf to native matrix if available
-if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file')
-    load([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'])
-    mat=inv(ea_antsmat2mat(AffineTransform_float_3_3,fixed));
+if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
+    load([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'])
+    mat=inv(mat);
     reco.native=ea_applyscrfmat(mat,reco.scrf);
 else
     if isfield(reco,'scrf')

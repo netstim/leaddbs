@@ -57,9 +57,9 @@ switch onoff
             fv.vertices=fv.vertices*nii.mat';
             
             %check and apply brainshift correction:
-            if exist([directory,'scrf',filesep,'scrf.mat'],'file') && options.native
-                d=load([directory,'scrf',filesep,'scrf.mat']);
-                bsmat=ea_antsmat2mat(d.AffineTransform_float_3_3,d.fixed);
+            if exist([directory,'scrf',filesep,'scrf_converted.mat'],'file') && options.native
+                d=load([directory,'scrf',filesep,'scrf_converted.mat']);
+                bsmat=d.mat;
                 fv.vertices=fv.vertices*bsmat';
             end
             

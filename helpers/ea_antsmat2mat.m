@@ -18,12 +18,13 @@ mat(:,4)=m_Offset;
 
 mat=[mat;[0,0,0,1]];
 
- % convert RAS to LPS (ITK uses LPS)
-mat=mat.*...
-    [1 -1 1 1
-    -1 1 1 1
-    1 1 1 -1
-    1 1 1 1];
+%  % convert RAS to LPS (ITK uses LPS)
+% mat=mat.*...
+%     [1 -1 1 1
+%     -1 1 1 1
+%     1 1 1 -1
+%     1 1 1 1];
+
     %% original code in itkMatrixOffsetTransformBase > ComputeOffset
 % {
 %   const MatrixType & matrix = this->GetMatrix();

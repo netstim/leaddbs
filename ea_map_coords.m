@@ -216,16 +216,22 @@ if ~isempty(transform)
 
                 % check transformation file
                 match = dir([transform, '_ants*.mat']);
-                if ~isempty(match) % src2dest.mat exists
-                    transform = [directory, filesep, match(end).name];
-                    useinverse = 1; % Registration was done from src to dest, so we need to use inverse here
-                else % if src2dest.mat is not found, check if dest2src.mat exists
-                    [~, transformname] = fileparts(transform);
-                    imgname = strsplit(transformname, '2');
-                    transform = [directory, filesep, imgname{2}, '2', imgname{1}];
-                    match = dir([transform, '_ants*.mat']);
-                    transform = [directory, filesep, match(end).name];
-                    useinverse = 0; % Registration was done from dest to src, no inverse needed
+                matchdirect=dir([transform,'.mat']);
+                if ~isempty(matchdirect) % specific ANTs transform file has been given
+                    transform=[transform,'.mat'];
+                    useinverse=1;
+                else
+                    if ~isempty(match) % src2dest.mat exists
+                        transform = [directory, filesep, match(end).name];
+                        useinverse = 1; % Registration was done from src to dest, so we need to use inverse here
+                    else % if src2dest.mat is not found, check if dest2src.mat exists
+                        [~, transformname] = fileparts(transform);
+                        imgname = strsplit(transformname, '2');
+                        transform = [directory, filesep, imgname{2}, '2', imgname{1}];
+                        match = dir([transform, '_ants*.mat']);
+                        transform = [directory, filesep, match(end).name];
+                        useinverse = 0; % Registration was done from dest to src, no inverse needed
+                    end
                 end
 
                 % vox to mm, ANTs takes mm coords as input

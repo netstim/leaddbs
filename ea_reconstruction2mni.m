@@ -19,9 +19,8 @@ else
 end
 
 % apply native to scrf matrix if available
-if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file')
-load([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'])
-mat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
+load([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'])
 reco.scrf=ea_applyscrfmat(mat,reco.native);
 else
     if isfield(reco,'scrf')

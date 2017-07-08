@@ -117,9 +117,11 @@ imshow(refineslice);
 
 % display matrix:
 if exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
-load([directory,'scrf',filesep,'scrf_instore.mat']);
-mat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+%load([directory,'scrf',filesep,'scrf_instore.mat']);
+%mat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+mat=ea_antsmat2mat_empirical(directory);
 handles.affmatrix.String=sprintf('%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f',mat');
+save([directory,'scrf',filesep,'scrf_instore_converted.mat'],'mat');
 end
 
 function slice=ea_loadrefineslice(directory,options,refine)
@@ -335,7 +337,7 @@ directory=getappdata(handles.scrf,'directory');
 if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
 	msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
 else
-copyfile([directory,'scrf',filesep,'scrf_instore.mat'],[directory,'scrf',filesep,'scrf.mat']);
+copyfile([directory,'scrf',filesep,'scrf_instore_converted.mat'],[directory,'scrf',filesep,'scrf_converted.mat']);
 if exist([directory,'ea_reconstruction.mat'],'file')
 ea_recalc_reco([],[],directory);
 end
