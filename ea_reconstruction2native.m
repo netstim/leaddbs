@@ -55,7 +55,7 @@ if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converte
     reco.native=ea_applyscrfmat(mat,reco.scrf);
 elseif exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file') % legacy
     mat=ea_getscrfmat([options.root,options.patientname,filesep]);
-    save([directory,'scrf',filesep,'scrf_instore_converted.mat'],'mat');
+    save([directory,'scrf',filesep,'scrf_converted.mat'],'mat');
     mat=inv(mat);
     reco.native=ea_applyscrfmat(mat,reco.scrf);
 else
