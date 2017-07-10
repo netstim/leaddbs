@@ -2,12 +2,11 @@ function XYZ=ea_flip_lr_nonlinear(from,to,interp)
 % flip files / coords nonlinearly from Left to Right hemisphere based on asymmetric
 % template
 directory=[ea_space,'fliplr',filesep];
-
+ea_genflipspace; % will only perform if doesnt exist
 if ischar(from) % assume nifti file path
     if ~exist('interp','var')
         interp=4;
     end
-    ea_genflipspace; % will only perform if doesnt exist
     options=ea_getptopts(directory);
     ea_apply_normalization_tofile(options,{from},{to},directory,0,interp,from);
     ea_flip_lr(to,to);
