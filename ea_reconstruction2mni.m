@@ -19,15 +19,18 @@ else
 end
 
 % apply native to scrf matrix if available
-if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file')
-load([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'])
-mat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
-reco.scrf=ea_applyscrfmat(mat,reco.native);
+if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
+    d=load([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat']);
+    reco.scrf=ea_applyscrfmat(d.mat,reco.native); 
+elseif exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file') % legacy
+    mat=ea_getscrfmat([options.root,options.patientname,filesep]);
+    save([directory,'scrf',filesep,'scrf_converted.mat'],'mat');
+    reco.scrf=ea_applyscrfmat(mat,reco.native);
 else
     if isfield(reco,'scrf')
         reco=rmfield(reco,'scrf'); % delete subcortical transform if user apparently deleted the transform file.
     end
-end   
+end
 
 
 for side=1:length(options.sides)

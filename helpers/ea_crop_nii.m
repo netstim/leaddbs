@@ -83,13 +83,15 @@ nii.dim=size(nii.img);
 delete(filename);
 ea_write_nii(nii);
 
+
 if wasgz
-    gzip(output);
-    delete(output);
+    gzip(filename);
+    delete(filename);
     if ~strcmp(prefix, 'tmp')  % delete unzipped file in non-overwrite mode
         delete(filename);
     end
 end
+
 
 
 function [BB,vx] = ea_spm_get_bbox(V, thr, premul)

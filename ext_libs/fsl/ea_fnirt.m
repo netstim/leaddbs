@@ -17,7 +17,7 @@ movingimage_bet_mask = [fileparts(movpath), filesep, 'bet_', movname, '_mask'];
 [fixpath, fixname] = ea_niifileparts(fixedimage);
 fixedimage_bet_mask = [fileparts(fixpath), filesep, 'bet_', fixname, '_mask'];
 
-volumedir = [fileparts(ea_niifileparts(movingimage)), filesep]; 
+volumedir = [fileparts(ea_niifileparts(movingimage)), filesep];
 
 % Determine the affine matrix to be used
 if nargin >= 4
@@ -36,7 +36,7 @@ else
     end
 end
 
-fprintf(['\n\nRunning FSL FNIRT: ', movingimage, '\n\n']);
+fprintf('\n\nRunning FSL FNIRT: %s\n\n', movingimage);
 
 [~, warpprefix] = ea_niifileparts(outputimage);
 

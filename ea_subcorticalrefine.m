@@ -115,11 +115,11 @@ imshow(standardslice);
 handles.scrf.CurrentAxes=handles.scfax;
 imshow(refineslice);
 
-% display matrix:
+% calculate and display transform matrix:
 if exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
-load([directory,'scrf',filesep,'scrf_instore.mat']);
-mat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
-handles.affmatrix.String=sprintf('%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f',mat');
+    mat=ea_getscrfmat(directory);
+    handles.affmatrix.String=sprintf('% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  ',mat');
+    save([directory,'scrf',filesep,'scrf_instore_converted.mat'],'mat');
 end
 
 function slice=ea_loadrefineslice(directory,options,refine)
@@ -171,11 +171,14 @@ if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
     end
     to{1}=[directory,'scrf',filesep,'bb.nii'];
     from{1}=[ea_space,'bb.nii'];
-
+try
     ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],1);
+catch
+   ea_error('Please perform normalization first.');
+end
     ea_crop_nii([directory,'scrf',filesep,'bb.nii']);
-
-    % do put in primary anat file ? needs to be done only once.
+    ea_reslice_nii([directory,'scrf',filesep,'bb.nii'],[directory,'scrf',filesep,'bb.nii'],[0.4,0.4,0.4]);
+    % do put in primary anat file - needs to be done only once.
     fis={options.prefs.prenii_unnormalized};
     copyfile([directory,fis{1}],[directory,'scrf',filesep,fis{1}])
     ea_conformspaceto([directory,'scrf',filesep,'bb.nii'],[directory,'scrf',filesep,fis{1}]);
@@ -332,7 +335,7 @@ directory=getappdata(handles.scrf,'directory');
 if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
 	msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
 else
-copyfile([directory,'scrf',filesep,'scrf_instore.mat'],[directory,'scrf',filesep,'scrf.mat']);
+copyfile([directory,'scrf',filesep,'scrf_instore_converted.mat'],[directory,'scrf',filesep,'scrf_converted.mat']);
 if exist([directory,'ea_reconstruction.mat'],'file')
 ea_recalc_reco([],[],directory);
 end
@@ -341,7 +344,7 @@ ea_methods(directory,...
             ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
             'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
             ' (Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
-            {'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+            {'Horn, A., & KÃ¼hn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
 closescrf(handles);
 end
