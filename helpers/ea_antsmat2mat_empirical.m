@@ -1,7 +1,11 @@
 function emat=ea_antsmat2mat_empirical(directory)
 
+if directory(end) ~= filesep
+    directory = [directory, filesep];
+end
 movim=[directory,'scrf',filesep,'movim.nii'];
 [options.root,options.patientname]=fileparts(directory);
+options.root = [options.root, filesep];
 options.prefs=ea_prefs;
 [~,anatpresent]=ea_assignpretra(options);
 
