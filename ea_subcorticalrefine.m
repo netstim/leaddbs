@@ -118,7 +118,7 @@ imshow(refineslice);
 % calculate and display transform matrix:
 if exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
     mat=ea_getscrfmat(directory);
-    handles.affmatrix.String=sprintf('%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f\n%0.2f %0.2f %0.2f %0.2f',mat');
+    handles.affmatrix.String=sprintf('% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  ',mat');
     save([directory,'scrf',filesep,'scrf_instore_converted.mat'],'mat');
 end
 
@@ -174,7 +174,7 @@ if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
 try
     ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],1);
 catch
-   ea_error('Please perform normalization first.'); 
+   ea_error('Please perform normalization first.');
 end
     ea_crop_nii([directory,'scrf',filesep,'bb.nii']);
     ea_reslice_nii([directory,'scrf',filesep,'bb.nii'],[directory,'scrf',filesep,'bb.nii'],[0.4,0.4,0.4]);
@@ -344,7 +344,7 @@ ea_methods(directory,...
             ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
             'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
             ' (Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
-            {'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+            {'Horn, A., & KÃ¼hn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
 closescrf(handles);
 end

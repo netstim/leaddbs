@@ -1,5 +1,5 @@
 function ea_gencoregcheckfigs(options)
-disp(['Exporting coregistration check images to ',options.root,options.patientname,filesep,'checkreg...']);
+fprintf(['\nExporting coregistration check images to ',options.root,options.patientname,filesep,'checkreg...\n']);
 directory=[options.root,options.patientname,filesep];
 [~,filespresent]=ea_assignpretra(options);
 
@@ -9,10 +9,10 @@ setenv('FSLOUTPUTTYPE','NIFTI');
 try
     oanat=filespresent(2:end);
 catch
-	oanat={}; 
+	oanat={};
 end
 for oa=1:length(oanat)
-	oanat{oa}=[directory,oanat{oa}]; 
+	oanat{oa}=[directory,oanat{oa}];
 end
 switch options.modality
     case 1
@@ -36,7 +36,7 @@ basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
 if ispc
     SLICER = [basedir, 'slicer.exe'];
 else
-    SLICER = [basedir, 'slicer.', computer('arch')];    
+    SLICER = [basedir, 'slicer.', computer('arch')];
 end
 cnt=1;
 try
@@ -66,7 +66,7 @@ for fi=1:length(fis2anat)
             suffx=mm; % MR suffix
     end
     ofname{cnt}=[fname,'2',rfname,suffx,'.png'];
-    
+
     if exist(fis2anat{fi},'file')
         cmd{cnt}=[SLICER,' ',ea_path_helper(fis2anat{fi}),' ',ea_path_helper(primanat),' -a ',ea_path_helper([directory,'checkreg',filesep,ofname{cnt}])];
         cnt=cnt+1;
@@ -77,7 +77,7 @@ for fi=1:length(fis2mni)
     [~,rfname]=fileparts(mnihires);
     ofname{cnt}=[fname,'2',rfname,nm,'.png'];
     if exist(fis2mni{fi},'file')
-        cmd{cnt}=[SLICER,' ',ea_path_helper(fis2mni{fi}),' ',ea_path_helper(mnihires),' -a ',ea_path_helper([directory,'checkreg',filesep,ofname{cnt}])]; 
+        cmd{cnt}=[SLICER,' ',ea_path_helper(fis2mni{fi}),' ',ea_path_helper(mnihires),' -a ',ea_path_helper([directory,'checkreg',filesep,ofname{cnt}])];
         cnt=cnt+1;
     end
 end
