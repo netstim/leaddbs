@@ -1,5 +1,5 @@
-function ea_gencoregcheckfigs(directory,scrf,options)
-disp(['Exporting coregistration check images to ',directory,'checkreg/scrf...']);
+function ea_gencoregcheckfigs_scrf(directory,scrf,options)
+disp(['Exporting coregistration check images to ',directory,'scrf...']);
 [~,filespresent]=ea_assignpretra(options);
 
 primanat=[directory,'scrf',filesep,filespresent{1}];
@@ -12,7 +12,7 @@ basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
 if ispc
     SLICER = [basedir, 'slicer.exe'];
 else
-    SLICER = [basedir, 'slicer.', computer('arch')];    
+    SLICER = [basedir, 'slicer.', computer('arch')];
 end
 cnt=1;
 try
@@ -69,8 +69,6 @@ disp('Done.');
 end
 
 
-
 function name=ea_cleanmethodname(name)
 name(strfind(name,':'))=[];
 name(strfind(name,' '))='_';
-
