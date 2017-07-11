@@ -97,15 +97,13 @@ i=N;
 fc{count}=[i+N i+3*N 1+3*N 1+N]; count=count+1; % inner and outer cylinder facets
 fc{count}=[i i+2*N 1+2*N 1]; count=count+1; % inner and outer cylinder facets
 
-fci{icount}=[i+N i+3*N 1+3*N 1+N]; icount=icount+1; % inner and outer cylinder facets
-fci{icount}=[i i+2*N 1+2*N 1]; icount=icount+1; % inner and outer cylinder facets
+%fci{icount}=[i+N i+3*N 1+3*N 1+N]; icount=icount+1; % inner and outer cylinder facets
+%fci{icount}=[i i+2*N 1+2*N 1]; icount=icount+1; % inner and outer cylinder facets
 
 
 fc{count}=1:1+N-1;count=count+1;  % bottom inner circle
-fci{icount}=1:1+N-1;icount=icount+1;  % bottom inner circle
 
 fc{count}=1+N*2:1+N*3-1;count=count+1;  % top inner circle
-fci{icount}=1+N*2:1+N*3-1;icount=icount+1;  % top inner circle
 
 segseed=[];
 
@@ -129,15 +127,11 @@ for i=1:divlen:N-divlen % the insulator
     fc{count}=[i+seglen-1:i+divlen i+divlen+N:-1:i+seglen+N-1];count=count+1;
     fc{count}=[i+seglen-1:i+divlen i+divlen+N:-1:i+seglen+N-1]+2*N;count=count+1;  % top outter circle
     
-    fci{icount}=[i+seglen-1:i+divlen i+divlen+N:-1:i+seglen+N-1];icount=icount+1;
-    fci{icount}=[i+seglen-1:i+divlen i+divlen+N:-1:i+seglen+N-1]+2*N;icount=icount+1;  % top outter circle
 end
 i=i+divlen;
 fc{count}=[i+seglen-1:N 1 1+N 2*N:-1:i+seglen+N-1];count=count+1;
 fc{count}=[i+seglen-1:N 1 1+N 2*N:-1:i+seglen+N-1]+2*N;count=count+1;  % top outter circle
 
-fci{icount}=[i+seglen-1:N 1 1+N 2*N:-1:i+seglen+N-1];icount=icount+1;
-fci{icount}=[i+seglen-1:N 1 1+N 2*N:-1:i+seglen+N-1]+2*N;icount=icount+1;  % top outter circle
 
 
 %figure, plotmesh(no,fci)
@@ -152,16 +146,124 @@ seeds=segseed;
 %     figure
 %     plotmesh(node,elem,'x>0 | y>0');
 % end
- figure, plotmesh(no,fci)
+% figure, plotmesh(no,fci)
+
+
+
+% custom top/endplates for insulator
+
+% kreisdeckel
+% fci{icount}=1:1+N-1;icount=icount+1;  % bottom inner circle  <----
+% fci{icount}=1+N*2:1+N*3-1;icount=icount+1;  % top inner circle <----
+% 
+% for i=1:divlen:N-divlen % the insulator
+%     
+%     fci{icount}=[i+seglen-1:i+divlen i+divlen+N:-1:i+seglen+N-1];icount=icount+1; % <--
+%     fci{icount}=[i+seglen-1:i+divlen i+divlen+N:-1:i+seglen+N-1]+2*N;icount=icount+1;  % top outter circle <---
+% end
+
+%fci{icount}=[i+seglen-1:N 1 1+N 2*N:-1:i+seglen+N-1];icount=icount+1; % <---
+% fci{icount}=[i+seglen-1:N 1 1+N 2*N:-1:i+seglen+N-1]+2*N;icount=icount+1; % <--- top outter circle 
+
+spacelen=(divlen-seglen)+1;
+
+top=[1:seglen,... % inner 1st segment
+       (seglen:seglen+spacelen)+N,... % outer 1st segment
+    (seglen+spacelen):(2*seglen+spacelen)-1,... % inner 2nd segment
+    (2*seglen+spacelen)+N-1:(2*seglen+2*spacelen)+N-1,... % outer 2nd segment
+    (2*seglen+2*spacelen)-1:(3*seglen+2*spacelen)-2,... % inner 3rd segment
+    (3*seglen+2*spacelen)+N-2:(3*seglen+3*spacelen)+N-2]; % outer 3rd segment
+    
+O=2*N;
+bottom=[1+O:seglen+O,... % inner 1st segment
+       (seglen+O+N:seglen+spacelen+O+N),... % outer 1st segment
+    (seglen+spacelen)+O:(2*seglen+spacelen)-1+O,... % inner 2nd segment
+    (2*seglen+spacelen)+N+O-1:(2*seglen+2*spacelen)+N+O-1,... % outer 2nd segment
+    (2*seglen+2*spacelen)-1+O:(3*seglen+2*spacelen)-2+O,... % inner 3rd segment
+    (3*seglen+2*spacelen)+N+O-2:(3*seglen+3*spacelen)+N+O-3]; % outer 3rd segment
+
+
+
+
+
+fci=[fci,{top},{bottom}];
+
+figure
+            plotmesh(no,fci); %,'FaceColor','r')
+            view(135,30);
 keyboard
 
-            [vnode,velem,vface]=s2m(no,fci,1,3);
+hold on
+D=[  240   480       241    1];
+B=[239   479   480   240];
+i=1;
+plot3(no(D(i),1),no(D(i),2),no(D(i),3),'b*'); i=i+1;
+plot3(no(D(i),1),no(D(i),2),no(D(i),3),'r*'); i=i+1;
+plot3(no(D(i),1),no(D(i),2),no(D(i),3),'g*'); i=i+1;
+plot3(no(D(i),1),no(D(i),2),no(D(i),3),'m*'); i=i+1;
 
+
+i=1;
+plot3(no(B(i),1),no(B(i),2),no(B(i),3),'b*'); i=i+1;
+plot3(no(B(i),1),no(B(i),2),no(B(i),3),'r*'); i=i+1;
+plot3(no(B(i),1),no(B(i),2),no(B(i),3),'g*'); i=i+1;
+plot3(no(B(i),1),no(B(i),2),no(B(i),3),'m*'); i=i+1;
+
+
+hold on
+plot3(no(1+O:seglen+O,1),...
+    no(1+O:seglen+O,2),...
+    no(1+O:seglen+O,3),...
+    'k*');
+plot3(no((seglen+O+N:seglen+spacelen+O+N),1),...
+    no((seglen+O+N:seglen+spacelen+O+N),2),...
+    no((seglen+O+N:seglen+spacelen+O+N),3),...
+    'y*');
+plot3(no((seglen+spacelen)+O:(2*seglen+spacelen)-1+O,1),...
+    no((seglen+spacelen)+O:(2*seglen+spacelen)-1+O,2),...
+    no((seglen+spacelen)+O:(2*seglen+spacelen)-1+O,3),...
+    'b*');
+plot3(no((2*seglen+spacelen)+N+O-1:(2*seglen+2*spacelen)+N+O-1,1),...
+    no((2*seglen+spacelen)+N+O-1:(2*seglen+2*spacelen)+N+O-1,2),...
+    no((2*seglen+spacelen)+N+O-1:(2*seglen+2*spacelen)+N+O-1,3),...
+    'r*');
+plot3(no((2*seglen+2*spacelen)-1+O:(3*seglen+2*spacelen)-2+O,1),...
+    no((2*seglen+2*spacelen)-1+O:(3*seglen+2*spacelen)-2+O,2),...
+    no((2*seglen+2*spacelen)-1+O:(3*seglen+2*spacelen)-2+O,3),...
+    'g*');
+plot3(no([(3*seglen+2*spacelen)+N+O-2:(3*seglen+3*spacelen)+N+O-3],1),...
+    no([(3*seglen+2*spacelen)+N+O-2:(3*seglen+3*spacelen)+N+O-3],2),...
+    no([(3*seglen+2*spacelen)+N+O-2:(3*seglen+3*spacelen)+N+O-3],3),...
+    'm*');
+
+keyboard
+[no,fci]=removedupnodes(no,fci,1e-6);
+            [vnode,velem,vface]=s2m(no,fci,1,3);
+            
+            
 
 function fc=checkuploop(fc,no)
+
 if any(fc>size(no,1))
+
+    
+   % fc(fc>size(no,1))=[];
+%return
+   
+    
 fc(fc>size(no,1))=fc(fc>size(no,1))-size(no,1);
-fc=(fc([1,2,4,3]));
+    % keyboard
+     fc=(fc([3,4,1,2]));
+%     fc=(fc([3,4,2,1]));
+
+%  hold on
+%  i=1;
+%     plot3(no(fc(i),1),no(fc(i),2),no(fc(i),3),'g*'); i=i+1;
+%     plot3(no(fc(i),1),no(fc(i),2),no(fc(i),3),'y*'); i=i+1;
+%         plot3(no(fc(i),1),no(fc(i),2),no(fc(i),3),'b*'); i=i+1;
+%             plot3(no(fc(i),1),no(fc(i),2),no(fc(i),3),'r*'); i=i+1;
+%             
+
 end
 
 

@@ -7,6 +7,11 @@ if ismember(outfolder,{'No Patient Selected','Choose Patient Directory'})
     return;
 end
 
+if strcmp(outfolder(1:8),'Multiple')
+   msgbox('Multiple patients selected');
+   return;
+end
+
 if ismac
     system(['open ', outfolder]);
 elseif isunix

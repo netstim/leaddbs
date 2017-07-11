@@ -66,6 +66,10 @@ if isstruct(elstruct) % proper elstruct
     end
     
 else % isomatrix
+    if isempty(elstruct)
+        return
+    end
+    
     for is=1:length(elstruct)
         isom{is}=elstruct{is};
         isom{is}{1}=[elstruct{is}{1};elstruct{is}{2}];

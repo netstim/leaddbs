@@ -65,7 +65,7 @@ if vizz
     axis equal
 end
 
-keyboard
+
 %plotmesh(node,elem) % plot the electrode mesh for now
 
 

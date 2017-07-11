@@ -82,7 +82,7 @@ end
 
 deletemeshfile(mwpath('post_vmesh.mtr'));
 
-%sweeptempdir;
+sweeptempdir;
 
 savesurfpoly(no,el,holes,regions,p0,p1,mwpath('post_vmesh.poly'),dobbx);
 
@@ -112,7 +112,7 @@ end
 
 
 
-%keyboard
+
 %  system([' "' mcpath('tetgen') exesuff '" ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 
 if(isempty(cmdopt)) % default run
@@ -140,3 +140,11 @@ success=1;
 %         success=0;
 %     end
 % end
+
+function sweeptempdir
+ file=mwpath('post_vmesh.poly');
+ pth=fileparts(file);
+ warning('off');
+ delete([pth,filesep,'*']);
+ warning('on');
+ 

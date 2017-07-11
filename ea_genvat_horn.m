@@ -107,6 +107,7 @@ setappdata(resultfig,'elstruct',elstruct);
                 
         end
         
+        
         [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
         success=0;
         for attempt=1:3 % allow three attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution

@@ -87,8 +87,8 @@ r.h=h;
 
 % Gaussian kernel function
 kerf=@(z)exp(-z.*z/2)/sqrt(2*pi);
-
 r.x=linspace(min(x),max(x),N);
+
 r.f=zeros(1,N);
 for k=1:N
     z=kerf((r.x(k)-x)/h);

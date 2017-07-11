@@ -101,7 +101,7 @@ for side=1:length(options.sides)
     electrode.insulation(inscnt).faces=electrode.insulation(inscnt).faces(:,1:3);
     inscnt=inscnt+1;
     
-    
+
     
     ncnt=ncnt+1;
     
@@ -182,6 +182,7 @@ for side=1:length(options.sides)
             electrode.contacts(concnt).faces=electrode.contacts(concnt).faces(:,1:3);
             concnt=concnt+1;
             
+            
             %             figure
             %             hold on
             %             for c=1:length(numeshel(ncnt).faces)
@@ -222,19 +223,27 @@ for side=1:length(options.sides)
             X1=coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2);
             [no,fc,seeds,fcc,fci] = ea_segmented_cylinder_qq_ah(60,1,0.75,1,3,0.8);
             
-            [vnode,velem,vface]=s2m(no,fc,1,3);
+                 
+    
             
             
             [electrode.contacts(concnt).vertices,~,electrode.contacts(concnt).faces]=s2m(no,{fcc{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
             electrode.contacts(concnt).faces=electrode.contacts(concnt).faces(:,1:3);
             concnt=concnt+1;
             
+            
+                
+            
             [electrode.insulation(inscnt).vertices,~,electrode.insulation(inscnt).faces]=s2m(no,{fci{:}},electrodetrisize,100,'tetgen',[],[]); % generate a tetrahedral mesh of the cylinders
             electrode.insulation(inscnt).faces=electrode.insulation(inscnt).faces(:,1:3);
             inscnt=inscnt+1;
-            
+            keyboard
+                   figure
+    patch(electrode.insulation(inscnt-1),'faceColor','none');
+
             
             % shape up:
+            [vnode,velem,vface]=s2m(no,fc,1,3);
             
             
             % %% VARIANT B: Use cell format and use non-voled version first
