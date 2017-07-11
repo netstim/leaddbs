@@ -12,7 +12,7 @@ if ~isfield(options,'elspec')
     options=ea_resolve_elspec(options);
 end
 
-if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file')
+if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
     usenative='scrf';
 else
     usenative='native';

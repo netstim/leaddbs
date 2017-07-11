@@ -21,13 +21,11 @@ if ~ismember(whichnormmethod,ea_getantsnormfuns)
 end
 
 
-if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file')
+if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
     usenative='scrf';
 else
     usenative='native';
 end
-
-
 
 
 
@@ -41,12 +39,13 @@ for side=1:length(options.sides)
     reco.(usenative).trajectory{side}=ea_warpcoord(reco.mni.trajectory{side},nii,options);
     
     normtrajvector{side}=mean(diff(reco.(usenative).trajectory{side}))/norm(mean(diff(reco.(usenative).trajectory{side})));
-    orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
+    orth=null(normtrajvector{side})*(1.27/2);
     
     reco.(usenative).markers(side).x=reco.(usenative).markers(side).head+orth(:,1)';
     reco.(usenative).markers(side).y=reco.(usenative).markers(side).head+orth(:,2)'; % corresponding points in reality
     
 end
+
 
 % apply scrf to native matrix if available
 if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
