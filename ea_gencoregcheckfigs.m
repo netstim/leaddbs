@@ -1,5 +1,5 @@
 function ea_gencoregcheckfigs(options)
-fprintf(['\nExporting coregistration check images to ',options.root,options.patientname,filesep,'checkreg...\n']);
+fprintf('\nExporting coregistration check images to %scheckreg...\n', [options.root,options.patientname,filesep]);
 directory=[options.root,options.patientname,filesep];
 [~,filespresent]=ea_assignpretra(options);
 

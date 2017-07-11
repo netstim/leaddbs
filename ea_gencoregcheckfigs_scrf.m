@@ -1,5 +1,5 @@
 function ea_gencoregcheckfigs_scrf(directory,scrf,options)
-fprintf(['\nExporting coregistration check images to ',directory,'scrf...\n']);
+fprintf('\nExporting coregistration check images to %sscrf...\n', directory);
 [~,filespresent]=ea_assignpretra(options);
 
 primanat=[directory,'scrf',filesep,filespresent{1}];
