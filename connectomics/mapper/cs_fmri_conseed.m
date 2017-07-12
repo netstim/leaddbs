@@ -407,7 +407,7 @@ switch dataset.type
     case 'fMRI_timecourses'
         switch cmd
             case {'seed','pmap','pseed'}
-                for s=1:length(seedfn) % subtract 1 in case of pmap command
+                for s=1:size(seedfn,1) % subtract 1 in case of pmap command
                     
                     % export mean
                     M=nanmean(fX{s}');
