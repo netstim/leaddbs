@@ -67,6 +67,7 @@ if exist([uipatdir{1},filesep,prefs.tranii],'file') && exist([uipatdir{1},filese
     status = 'Normalized MR- and CT-volumes found.';
     modality(1:2)=1;
 end
-
+try % not available when calling from group
 set(handles.statusone,'String',status);
 set(handles.statusone,'TooltipString',status);
+end
