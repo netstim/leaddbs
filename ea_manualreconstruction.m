@@ -35,6 +35,12 @@ setappdata(mcfig,'origoptions',options); % store original options for further pr
 options.native=1;
 setappdata(mcfig,'options',options);
 
+if ~exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+    close(mcfig);
+    msgbox('Please run pre-Reconstruct module first.');
+    return
+end
+
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
 setappdata(mcfig,'origtrajectory',trajectory);
@@ -164,6 +170,10 @@ elplot=getappdata(mcfig,'elplot');
 mplot=getappdata(mcfig,'mplot');
 options=getappdata(mcfig,'options');
 
+if ~exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+    close(mcfig);
+    return
+end
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
 

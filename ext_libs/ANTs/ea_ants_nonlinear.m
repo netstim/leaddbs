@@ -172,12 +172,13 @@ end
 
 % add slab stage
 if slabspresent
+    slabID=ea_generate_guid;
     slabstage=[' --transform ',apref.antsmode,apref.antsmode_suffix...
         ' --convergence ', synconvergence, ...
         ' --shrink-factors ', synshrinkfactors ...
         ' --smoothing-sigmas ', synsmoothingssigmas, ...
         ' --use-estimate-learning-rate-once ', ...
-        ' --masks [NULL,',[tmaskdir,filesep,'slabmask.nii'],']'];
+        ' --masks [NULL,',[tmaskdir,filesep,'slabmask',slabID,'.nii'],']'];
     fixedimage=[fixedimage,slabfixedimage];
     movingimage=[movingimage,slabmovingimage];
     
@@ -196,7 +197,7 @@ if subcorticalrefine
     synmasksmoothingssigmas=apref.smoothingsigmas.scrf;
     
     if slabspresent
-        movingmask=[tmaskdir,filesep,'slabmask.nii'];
+        movingmask=[tmaskdir,filesep,'slabmask',slabID,'.nii'];
     else
         movingmask='NULL';
     end
