@@ -117,17 +117,17 @@ end
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
-rigidconvergence=apref.convergence.rigid;
-rigidshrinkfactors=apref.shrinkfactors.rigid;
-rigidsmoothingssigmas=apref.smoothingsigmas.rigid;
-
-affineconvergence=apref.convergence.affine;
-affineshrinkfactors=apref.shrinkfactors.affine;
-affinesmoothingssigmas=apref.smoothingsigmas.affine;
-
-synconvergence=apref.convergence.syn;
-synshrinkfactors=apref.shrinkfactors.syn;
-synsmoothingssigmas=apref.smoothingsigmas.syn;
+    rigidconvergence=apref.convergence.rigid;
+    rigidshrinkfactors=apref.shrinkfactors.rigid;
+    rigidsmoothingssigmas=apref.smoothingsigmas.rigid;
+    
+    affineconvergence=apref.convergence.affine;
+    affineshrinkfactors=apref.shrinkfactors.affine;
+    affinesmoothingssigmas=apref.smoothingsigmas.affine;
+    
+    synconvergence=apref.convergence.syn;
+    synshrinkfactors=apref.shrinkfactors.syn;
+    synsmoothingssigmas=apref.smoothingsigmas.syn;
 
 rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1}, ',1]' ...
     ' --transform Rigid[0.1]' ...
@@ -220,15 +220,5 @@ if options.prefs.machine.normsettings.ants_numcores
     setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',prefs.machine.normsettings.ants_numcores) % no num2str needed since stored as string.
 end
 
-props.outputbase=outputbase;
-props.ANTS=ANTS;
-props.outputimage=outputimage;
-props.rigidstage=rigidstage;
-props.affinestage=affinestage;
-props.synstage=synstage;
-props.slabstage=synstage;
-props.synmaskstage=synmaskstage;
-props.directory=directory;
-props.stagesep=options.prefs.machine.normsettings.ants_stagesep;
 
-ea_submit_ants_nonlinear(props);
+

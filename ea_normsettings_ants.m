@@ -22,7 +22,7 @@ function varargout = ea_normsettings_ants(varargin)
 
 % Edit the above text to modify the response to help ea_normsettings_ants
 
-% Last Modified by GUIDE v2.5 27-Jun-2017 01:02:15
+% Last Modified by GUIDE v2.5 13-Jul-2017 21:37:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -102,6 +102,7 @@ else
 end
 
 set(handles.scrf,'Value',prefs.machine.normsettings.ants_scrf);
+set(handles.stagesep,'Value',prefs.machine.normsettings.ants_stagesep);
 
 % UIWAIT makes ea_normsettings_ants wait for user response (see UIRESUME)
 
@@ -154,11 +155,14 @@ normsettings=prefs.machine.normsettings;
 normsettings.ants_preset=getappdata(handles.pcpopup,'funcell');
 normsettings.ants_preset=normsettings.ants_preset{get(handles.pcpopup,'Value')};
 normsettings.ants_scrf=get(handles.scrf,'Value');
+normsettings.ants_stagesep=get(handles.stagesep,'Value');
+
 normsettings.ants_metric=get(handles.metric,'String');
 normsettings.ants_metric=normsettings.ants_metric{get(handles.metric,'Value')};
 
 normsettings.ants_strategy=get(handles.strategy,'String');
 normsettings.ants_strategy=normsettings.ants_strategy{get(handles.strategy,'Value')};
+
 
 if get(handles.restrcores,'Value')
     normsettings.ants_numcores=get(handles.numcores,'String');
@@ -261,3 +265,12 @@ if get(handles.restrcores,'Value')
 else
     set(handles.numcores,'enable','off');
 end
+
+
+% --- Executes on button press in stagesep.
+function stagesep_Callback(hObject, eventdata, handles)
+% hObject    handle to stagesep (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of stagesep

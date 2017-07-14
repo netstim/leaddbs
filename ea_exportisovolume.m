@@ -128,11 +128,19 @@ for side=1:length(options.sides)
         niic.img(:)=nan;
         niicsig=niic.img;
         for inside=1:2
+            
             switch inside
                 case 1 % flip infos from right to left
-                    XYZ=[[-X{1};X{2}],[Y{1};Y{2}],[Z{1};Z{2}],ones(length([X{1};X{2}]),1)]';
+                    
+                    XYZtf=[X{1},Y{1},Z{1}];
+                    XYZflip=ea_flip_lr_nonlinear(XYZtf);
+                    
+                    XYZ=[[XYZflip(:,1);X{2}],[Y{1};Y{2}],[Z{1};Z{2}],ones(length([X{1};X{2}]),1)]';
                 case 2 % flip infos from left to right
-                    XYZ=[[X{1};-X{2}],[Y{1};Y{2}],[Z{1};Z{2}],ones(length([X{1};X{2}]),1)]';
+                    XYZtf=[X{2},Y{2},Z{2}];
+                    XYZflip=ea_flip_lr_nonlinear(XYZtf);
+                    
+                    XYZ=[[X{1};XYZflip(:,1)],[Y{1};Y{2}],[Z{1};Z{2}],ones(length([X{1};X{2}]),1)]';
             end
             XYZ=niic.mat\XYZ; % to voxel space.
             XYZ=(XYZ(1:3,:)');

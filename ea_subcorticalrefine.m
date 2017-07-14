@@ -314,6 +314,9 @@ switch options.modality
                 cnt=cnt+1;
             end
         end
+        if ~exist('AllX','var')
+        ea_error('Something went wrong. Please make sure that you chose the right modality (MR vs. CT) and there are pre- and postoperative acquisitions in the patient directory.');
+        end 
         nii.img=ea_nanmean(AllX,4);
         clear AllX
         nii.fname=[directory,'scrf',filesep,'movim.nii'];
@@ -344,7 +347,7 @@ ea_methods(directory,...
             ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
             'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
             ' (Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
-            {'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+            {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
 closescrf(handles);
 end
