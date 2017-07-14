@@ -136,6 +136,7 @@ c=uisetcolor;
 
 % load nifti
 nii=ea_load_nii(addobj);
+nii.img(isnan(nii.img))=0;
 if ~all(abs(nii.voxsize)<=1)
     ea_reslice_nii(addobj,addobj,[0.5,0.5,0.5],0,[],3);
     nii=ea_load_nii(addobj);
@@ -161,6 +162,7 @@ end
 if options.prefs.hullsmooth
     nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
 end
+
 fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
 fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
 fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
