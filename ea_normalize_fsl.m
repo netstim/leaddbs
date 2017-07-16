@@ -20,6 +20,7 @@ function varargout=ea_normalize_fsl(options)
 if ischar(options) % return name of method.
     varargout{1}='FSL FNIRT (Andersson 2010)';
     varargout{2}=1;
+    varargout{3}=1; % hassettings.
     return
 end
 

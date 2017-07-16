@@ -9,6 +9,13 @@ outputimage = varargin{3};
 [movpath, movname] = ea_niifileparts(movingimage);
 movingimage_flirt = [fileparts(movpath), filesep, 'flirt_', movname];
 
+prefs=ea_prefs;
+if prefs.machine.normsettings.fsl_skullstrip % do parts if skullstripping is on
+    
+else % do pipeline without skullstripping
+    
+end
+
 if isempty(dir([movingimage_flirt,'.nii*']))
     ea_flirt(fixedimage, movingimage, movingimage_flirt, 1);
 end
