@@ -47,7 +47,7 @@ else
     if useinverse
         interp = 'GenericLabel';
     else
-        interp = 'BSpline';
+        interp = 'LanczosWindowedSinc';
     end
 end
 
