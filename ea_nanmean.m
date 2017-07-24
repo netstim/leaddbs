@@ -8,4 +8,4 @@ elseif nargin==1
 end
 
 N = sum(~isnan(x), dim);
-y = nansum(x, dim) ./ N;
+y = ea_nansum(x, dim) ./ N;

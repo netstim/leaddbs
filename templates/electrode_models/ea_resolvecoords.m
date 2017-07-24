@@ -23,8 +23,8 @@ for side=1:length(markers)
     if resize
        can_dist=ea_pdist([electrode.head_position;electrode.tail_position]);
        %emp_dist=ea_pdist([markers(side).head;markers(side).tail]);
-
-           A=squareform(ea_pdist(electrode.coords_mm));
+           %A=squareform(pdist(electrode.coords_mm));
+           A=sqrt(ea_sqdist(electrode.coords_mm',electrode.coords_mm'));
            can_eldist=sum(sum(tril(triu(A,1),1)))/(options.elspec.numel-1);
 
        vec=(markers(side).tail-markers(side).head)/norm(markers(side).tail-markers(side).head);
@@ -43,9 +43,6 @@ X=mldivide(E,M);
 coords_mm=[electrode.coords_mm,ones(size(electrode.coords_mm,1),1)];
 coords{side}=X'*coords_mm';
 coords{side}=coords{side}(1:3,:)';
-
-
-
 
 
 

@@ -442,7 +442,7 @@ delete(captions);
 %emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
 clear emp_eldist
 for side=1:length(options.sides)
-    A{side}=squareform(ea_pdist(coords_mm{side}));
+    A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
     emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
 end
 memp_eldist=mean([emp_eldist{:}]);
@@ -1125,7 +1125,7 @@ x=varargin{1};
 end
 
 N = sum(~isnan(x), dim);
-y = nansum(x, dim) ./ N;
+y = ea_nansum(x, dim) ./ N;
 
 
 function trajectory=ea_prolong_traj(trajectory)
