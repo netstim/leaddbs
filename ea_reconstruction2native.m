@@ -27,8 +27,6 @@ else
     usenative='native';
 end
 
-
-
 towarp=cell(0);
 for side=1:length(options.sides)
 towarp{end+1}=reco.mni.coords_mm{side};
