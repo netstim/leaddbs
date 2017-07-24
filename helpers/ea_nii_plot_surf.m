@@ -34,7 +34,7 @@ mm = single(ea_vox2mm(vox, vol.mat));
 
 v.cdata = zeros(size(surf.vertices,1),1);
 for i=1:size(surf.vertices,1)
-    dist = pdist2(mm, surf.vertices(i,:));
+    dist = ea_pdist2(mm, surf.vertices(i,:));
     nearest = find(dist==min(dist),1);
 
     if min(dist) <= maxdistance
