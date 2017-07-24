@@ -9,20 +9,20 @@ outputimage = varargin{3};
 [movpath, movname] = ea_niifileparts(movingimage);
 movingimage_flirt = [fileparts(movpath), filesep, 'flirt_', movname];
 
-prefs=ea_prefs;
-if prefs.machine.normsettings.fsl_skullstrip % do parts if skullstripping is on
-    
-else % do pipeline without skullstripping
-    
-end
-
 if isempty(dir([movingimage_flirt,'.nii*']))
     ea_flirt(fixedimage, movingimage, movingimage_flirt, 1);
 end
 
-movingimage_bet_mask = [fileparts(movpath), filesep, 'bet_', movname, '_mask'];
-[fixpath, fixname] = ea_niifileparts(fixedimage);
-fixedimage_bet_mask = [fileparts(fixpath), filesep, 'bet_', fixname, '_mask'];
+prefs=ea_prefs;
+if prefs.machine.normsettings.fsl_skullstrip % skullstripping is on
+    movingimage_bet_mask = [fileparts(movpath), filesep, 'bet_', movname, '_mask'];
+    [fixpath, fixname] = ea_niifileparts(fixedimage);
+    fixedimage_bet_mask = [fileparts(fixpath), filesep, 'bet_', fixname, '_mask'];
+    mask_params = [' --refmask=', ea_path_helper(fixedimage_bet_mask), ...
+                  ' --inmask=', ea_path_helper(movingimage_bet_mask)];
+else % skullstripping is off
+    mask_params = '';
+end
 
 volumedir = [fileparts(ea_niifileparts(movingimage)), filesep];
 
@@ -68,8 +68,7 @@ fprintf('\n\nRunning FSL FNIRT: %s\n\n', movingimage);
 
 fnirtstage = [' --ref=', ea_path_helper(fixedimage), ...
               ' --in=', ea_path_helper(movingimage), ...
-              ' --refmask=', ea_path_helper(fixedimage_bet_mask), ...
-              ' --inmask=', ea_path_helper(movingimage_bet_mask), ...
+              mask_params, ...
               ' --aff=', ea_path_helper(affine), ...
               ' --iout=', ea_path_helper(outputimage), ...
               ' --cout=', ea_path_helper([volumedir, warpprefix, 'WarpCoef.nii']), ...
