@@ -339,7 +339,7 @@ options.normregressor=M.ui.normregpopup;
 % says so:
 
 for reg=1:length(options.d3.isomatrix)
-try options.d3.isomatrix{reg}=ea_reformat_isomatrix(options.d3.isomatrix{reg},M,options); end
+    try options.d3.isomatrix{reg}=ea_reformat_isomatrix(options.d3.isomatrix{reg},M,options); end
 end
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
@@ -1774,7 +1774,7 @@ end
 % says so:
 
 
-if options.d3.showisovolume || options.expstatvat.do % regressors be used ? iterate through all
+if options.d3.showisovolume || options.expstatvat.do % regressors be used - iterate through all
     allisomatrices=options.d3.isomatrix;
     allisonames=options.d3.isomatrix_name;
     for reg=1:length(allisomatrices)

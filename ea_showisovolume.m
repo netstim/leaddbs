@@ -57,7 +57,7 @@ for side=1:length(options.sides)
     bb(3,:)=[min(Z{side}),max(Z{side})];
     [XI,YI,ZI]=meshgrid(linspace(bb(1,1),bb(1,2),100),linspace(bb(2,1),bb(2,2),100),linspace(bb(3,1),bb(3,2),100));
 
-    F = scatteredInterpolant(X{side},Y{side},Z{side},double(V{side}));
+    F = scatteredInterpolant(X{side},Y{side},Z{side},double(V{side}),'natural');
     F.ExtrapolationMethod='none';
     VI{side}=F(XI,YI,ZI);
 
@@ -86,7 +86,7 @@ for side=1:length(options.sides)
         thresh=nanmin(VI{side}(:));
         Vol=VI{side};
         Vol(isnan(Vol))=0;
-        fv{side}=isosurface(XI,YI,ZI,Vol,thresh);
+        fv{side}=isosurface(XI,YI,ZI,Vol,0); % could use thresh instead of 0
 try        fv{side}=ea_smoothpatch(fv{side},1,100); end
         C=VI{side};
         C(C<thresh)=nan;

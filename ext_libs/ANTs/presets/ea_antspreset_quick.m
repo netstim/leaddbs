@@ -1,6 +1,6 @@
 function apref=ea_antspreset_quick(list)
 if nargin % return name of preset
-    apref='Quick';
+    apref='Legacy: "Quick"';
     return
 end
 

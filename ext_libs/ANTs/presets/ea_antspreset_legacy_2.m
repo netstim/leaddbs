@@ -1,6 +1,6 @@
-function apref=ea_antspreset_fine(list)
+function apref=ea_antspreset_test1(list)
 if nargin % return name of preset
-    apref='Legacy: "Fine"';
+    apref='Legacy: Original Lead-DBS preset 2';
     return
 end
 
@@ -20,26 +20,26 @@ end
 switch prefs.machine.normsettings.ants_strategy
     case 'SyN'
         apref.antsmode='SyN';
-        apref.antsmode_suffix='[0.1,3,0]';
+        apref.antsmode_suffix='[0.3,3,0]';
     case 'BSplineSyN'
         apref.antsmode='BSplineSyN';
         apref.antsmode_suffix='[0.1,26,0,3]'; % as in example script in Tustison 2013
 end
 
 % Convergence
-apref.convergence.rigid='[1000x500x250x100,1e-6,10]'; % Rigid convergence params
-apref.convergence.affine='[1000x500x250x100,1e-6,10]'; % Affine convergence params
-apref.convergence.syn='[100x100x70x50,1e-6,10]'; % SyN convergence params
+apref.convergence.rigid='[1000x500x0x0,1e-6,10]'; % Rigid convergence params
+apref.convergence.affine='[1000x500x0x0,1e-6,10]'; % Affine convergence params
+apref.convergence.syn='[100x50x20x0,1e-6,10]'; % SyN convergence params
 apref.convergence.scrf='[200x50x10,1e-6,10]'; % SyN subcortical focus stage convergence params
 
 % Affine Convergence
 apref.shrinkfactors.rigid='12x8x4x2'; % Rigid shrink factors
-apref.shrinkfactors.affine='12x8x4x2'; % Affine shrink factors
-apref.shrinkfactors.syn='10x6x4x1'; % SyN shrink factors
+apref.shrinkfactors.affine='8x4x2x1'; % Affine shrink factors
+apref.shrinkfactors.syn='8x4x2x1'; % SyN shrink factors
 apref.shrinkfactors.scrf='4x2x1'; % SyN subcortical focus stage shrink factors
 
 % Smoothing Sigmas
 apref.smoothingsigmas.rigid='4x3x2x1vox'; % Rigid Smoothing sigmas
 apref.smoothingsigmas.affine='4x3x2x1vox'; % Affine Smoothing sigmas
-apref.smoothingsigmas.syn='5x3x2x0vox'; % SyN Smoothing sigmas
+apref.smoothingsigmas.syn='4x3x2x1vox'; % SyN Smoothing sigmas
 apref.smoothingsigmas.scrf='2x1x0vox'; % SyN subcortical focus stage smoothing sigmas

@@ -1,6 +1,6 @@
 function apref=ea_antspreset_default(list)
 if nargin % return name of preset
-    apref='Default';
+    apref='Legacy: "Default"';
     return
 end
 

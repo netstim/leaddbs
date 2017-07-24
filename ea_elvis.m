@@ -154,21 +154,23 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     end
                     eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
                     eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
-
-                    if exist([options.uipatdirs{pt} '/cortex/CortElecs.mat'],'file')
-                    vars = whos('-file',[options.uipatdirs{pt} '/cortex/CortElecs.mat']);
-                    CortElecs = load([options.uipatdirs{pt} '/cortex/CortElecs.mat']);
-                        if ismember('Left',{vars.name})
-                            hold on; plot3(CortElecs.Left(:,1),CortElecs.Left(:,2),CortElecs.Left(:,3),'.','color','r','markersize',10)
-                            ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
-                        end
-                        if ismember('Right',{vars.name})
-                            ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
+                    if isfield(options,'uipatdirs')
+                        if exist([options.uipatdirs{pt} '/cortex/CortElecs.mat'],'file')
+                            vars = whos('-file',[options.uipatdirs{pt} '/cortex/CortElecs.mat']);
+                            CortElecs = load([options.uipatdirs{pt} '/cortex/CortElecs.mat']);
+                            if ismember('Left',{vars.name})
+                                hold on; plot3(CortElecs.Left(:,1),CortElecs.Left(:,2),CortElecs.Left(:,3),'.','color','r','markersize',10)
+                                ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
+                            end
+                            if ismember('Right',{vars.name})
+                                ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
+                            end
                         end
                     end
                     cnt=cnt+2;
                 end
         end
+        
         setappdata(resultfig,'eltog',eltog);
 
         clear cnt
@@ -241,6 +243,8 @@ end
 % Show isomatrix data
 
 if options.d3.showisovolume
+    
+    
     allisomatrices=options.d3.isomatrix;
     allisonames=options.d3.isomatrix_name;
     for reg=1:length(allisomatrices)
@@ -421,9 +425,9 @@ set(atls, 'Visible', 'off');
 
 function elvisible(hobj,ev,atls,pt,side,onoff,options)
 
-if(getappdata(gcf,'altpressed'))
+if(getappdata(hobj.Parent.Parent,'altpressed'))
 
-    eltog=getappdata(gcf,'eltog');
+    eltog=getappdata(hobj.Parent.Parent,'eltog');
     set(eltog,'State',onoff);
     for el=1:length(atls)
         for side=1:length(options.sides)
@@ -440,7 +444,7 @@ function ctxelvisible(hobj,ev,atls,pt,side,onoff,options)
 
 if(getappdata(gcf,'altpressed'))
 
-    eltog=getappdata(gcf,'eltog');
+    eltog=getappdata(hobj.Parent.Parent,'eltog');
     set(eltog,'State',onoff);
     for el=1:length(atls)
         for side=1:length(options.sides)
