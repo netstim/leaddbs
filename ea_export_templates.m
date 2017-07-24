@@ -22,7 +22,7 @@ trajectory_vox=trajectory_vox';
 % interpolate to include all z-heights:
 [coords,coords_vox]=ea_map_coords(coords',niifn);
 coords=coords'; coords_vox=coords_vox';
-reldist=pdist(coords_vox(2:3,:)); % real measured distance between electrodes in voxels.
+reldist=ea_pdist(coords_vox(2:3,:)); % real measured distance between electrodes in voxels.
 
 xversatz=mean(diff(trajectory_vox(1:end,1))); %wmean(diff(centerline(1:end,1)),gaussweights,1);
 yversatz=mean(diff(trajectory_vox(1:end,2)));%wmean(diff(centerline(1:end,2)),gaussweights,1);

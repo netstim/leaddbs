@@ -20,7 +20,7 @@ for iter=1:maxiter
 % generate predicted copy of empirical/shuffled dat pdat:
 pdat=zeros(dimen,1);
 
-        D=squareform(pdist(dat(:,1:3))); % distance matrix between datapoints
+        D=squareform(ea_pdist(dat(:,1:3))); % distance matrix between datapoints
 
         for entry=1:dimen
             
@@ -33,7 +33,7 @@ pdat=zeros(dimen,1);
             meanave=odat(:,1:3).*repmat(dweights,1,3);
             meanave=sum(meanave);
             
-            pdat(entry)=-pdist([meanave;dat(entry,1:3)]);
+            pdat(entry)=-ea_pdist([meanave;dat(entry,1:3)]);
             
         end
         

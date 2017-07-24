@@ -413,7 +413,7 @@ neeg(~isnan(neeg))=neeg(~isnan(neeg))/sum(neeg(~isnan(neeg))); % 0-1 distributed
 
 XYZmax=[max(yg(eg>0)),max(xg(eg>0)),max(zg(eg>0))]; % x and y need to be permuted here (should be correct but wouldnt matter anyways since only serves to calc radius)
 try
-    radius=pdist([XYZmax;dpvx]);
+    radius=ea_pdist([XYZmax;dpvx]);
 catch
     keyboard
 end

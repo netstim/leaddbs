@@ -7,8 +7,8 @@ for iter=1:2
         dat(:,4)=dat(randperm(length(dat)),4);
     end
 
-Peuc=squareform(pdist(dat(:,1:3))); % distance matrix
-Pval=squareform(pdist(dat(:,4))); % distance matrix
+Peuc=squareform(ea_pdist(dat(:,1:3))); % distance matrix
+Pval=squareform(ea_pdist(dat(:,4))); % distance matrix
 
 % exp
 Peuc(logical(eye(size(Peuc,1))))=1./exp(Peuc(logical(eye(size(Peuc,1)))));

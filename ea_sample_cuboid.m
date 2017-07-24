@@ -69,8 +69,8 @@ top_mm=top_mm(1:3,:)';
 %     trajectory_vx=trajectory_vx(1:3,:)';
 %     trajectory_mm=trajectory_mm(:,1:3);
 
-dvox=pdist(top_vx);
-dmm=pdist(top_mm);
+dvox=ea_pdist(top_vx);
+dmm=ea_pdist(top_mm);
 mm2vx=dmm/dvox; % -> 1 mm equals mm2vx voxels.
 %[trajectory,trajectory]=ea_map_coords(trajectory',traniifn);
 %trajectory=trajectory';

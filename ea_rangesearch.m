@@ -11,7 +11,7 @@ function [idx,dist]=rangesearch(c,r,X,mode)
 %    index: indices of points in the range.
 % distance: distances between the reference point and points in the range.
 %
-% See Also: pdist, kdtree, knnsearch
+% See Also: ea_pdist, kdtree, knnsearch
 
 % Version 2.0 by Yi Cao at Cranfield University on 6th April 2008
 %

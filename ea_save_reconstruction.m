@@ -4,7 +4,6 @@ reco.props.elmodel=elmodel;
 reco.props.manually_corrected=manually_corrected;
 
 if options.native
-    ea_dispt('Saving fiducials in native space');
     reco.native.coords_mm=coords_mm;
     reco.native.trajectory=trajectory;
     reco.native.markers=markers;
@@ -17,7 +16,6 @@ if options.native
         ea_checkswap_lr(options);
     end
 else
-    ea_dispt('Saving fiducials in MNI space');
     reco.mni.coords_mm=coords_mm;
     reco.mni.trajectory=trajectory;
     reco.mni.markers=markers;

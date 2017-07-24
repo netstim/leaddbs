@@ -77,7 +77,7 @@ contact_length = options.elspec.contact_length;
 % y-axis --> negative = posterior, positive = anterior
 % z-axis --> negative = inferior, positive = superior
 for side=options.sides
-    dxyz = pdist(coords_mm{side}(1:2,:),'euclidean');   %dxyz = sqrt((diff(coords_mm{side}(1:2,1))^2)+(diff(coords_mm{side}(1:2,2))^2)+diff(coords_mm{side}(1:2,3))^2);
+    dxyz = ea_pdist(coords_mm{side}(1:2,:),'euclidean');   %dxyz = sqrt((diff(coords_mm{side}(1:2,1))^2)+(diff(coords_mm{side}(1:2,2))^2)+diff(coords_mm{side}(1:2,3))^2);
     slope = mean(diff(coords_mm{side}))/dxyz;           %mean(diff(coords_mm{side}))/norm(mean(diff(coords_mm{side})))
     coords_mm{side} = coords_mm{side}-repmat(slope*contact_length/2,length(coords_mm{side}),1);
     trajectory{side} = trajectory{side}-repmat(slope*contact_length/2,length(trajectory{side}),1);

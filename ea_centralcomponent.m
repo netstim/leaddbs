@@ -15,7 +15,7 @@ if stats.NumObjects>1
         sliceobj(:)=0;
         sliceobj(stats.PixelIdxList{i})=1;
         cen=ea_centroid(sliceobj);
-        dist=pdist([cen.Centroid;maskcenter]);
+        dist=ea_pdist([cen.Centroid;maskcenter]);
         ea_showdis(['Obj number ',num2str(i),', distance: ',num2str(dist),'.'],options.verbose);
         if dist<maxdist
         maxdist=dist;

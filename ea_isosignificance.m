@@ -12,9 +12,9 @@ catch
     thresh=1.5;
 end
 try
-    mdist=mean(pdist(XYZV(:,1:3)))*varargin{3}; % maximum distance to belong to a cluster
+    mdist=mean(ea_pdist(XYZV(:,1:3)))*varargin{3}; % maximum distance to belong to a cluster
 catch
-    mdist=(mean(pdist(XYZV(:,1:3)))/2); % maximum distance to belong to a cluster
+    mdist=(mean(ea_pdist(XYZV(:,1:3)))/2); % maximum distance to belong to a cluster
 end
 
 %for pfit=-10:10
@@ -30,7 +30,7 @@ for iter=1:50000
         dat(:,4)=dat(randperm(length(dat)),4);
     end
     tdat=dat(dat(:,4)>thresh,:);
-    distances=squareform(pdist(tdat(:,1:3)));
+    distances=squareform(ea_pdist(tdat(:,1:3)));
     tdistances=triu(distances<mdist,1); % number of 1 in this matrix is size of cluster.
     csize(iter)=sum(tdistances(:));
     if iter==1

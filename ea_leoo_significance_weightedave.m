@@ -20,7 +20,7 @@ for iter=1:maxiter
 % generate predicted copy of empirical/shuffled dat pdat:
 pdat=zeros(dimen,1);
 
-        D=squareform(pdist(dat(:,1:3))); % distance matrix between datapoints
+        D=squareform(ea_pdist(dat(:,1:3))); % distance matrix between datapoints
 
         for entry=1:dimen
             

@@ -157,10 +157,10 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
             break
         end
         
-        if pdist([estpoint;[numidpoint,imgsliceno]])<15-maxthree(refine)
+        if ea_pdist([estpoint;[numidpoint,imgsliceno]])<15-maxthree(refine)
             centerline(sliceno,:)=[numidpoint,imgsliceno];
             %ea_showdis(['Empirical Midpoint seems to be ',num2str([numidpoint,imgsliceno]),'.'],options.verbose);
-            %ea_showdis(['New Midpoint found. Distance is ',num2str(pdist([estpoint;[numidpoint,imgsliceno]])),'.'],options.verbose);
+            %ea_showdis(['New Midpoint found. Distance is ',num2str(ea_pdist([estpoint;[numidpoint,imgsliceno]])),'.'],options.verbose);
         else
             endcount=endcount+1;
             if endcount==options.endtolerance
@@ -168,7 +168,7 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
                 break
             end
             centerline(sliceno,:)=estpoint;
-            %ea_showdis(['No new Midpoint found. Distance is ',num2str(pdist([estpoint;[numidpoint,imgsliceno]])),'. Interpolating.'],options.verbose);
+            %ea_showdis(['No new Midpoint found. Distance is ',num2str(ea_pdist([estpoint;[numidpoint,imgsliceno]])),'. Interpolating.'],options.verbose);
         end
     else
         ea_showdis('Estimated point not yet defined. Using second empirical point.',options.verbose);

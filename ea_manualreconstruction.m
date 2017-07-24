@@ -439,10 +439,10 @@ captions=getappdata(mcfig,'captions');
 delete(captions);
 
 % Plot spacing distance info text and correct inhomogeneous spacings.
-%emp_eldist(1)=mean([pdist([markers(1).head;markers(1).tail]),pdist([markers(2).head;markers(2).tail])])/3;
+%emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
 clear emp_eldist
 for side=1:length(options.sides)
-    A{side}=squareform(pdist(coords_mm{side}));
+    A{side}=squareform(ea_pdist(coords_mm{side}));
     emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
 end
 memp_eldist=mean([emp_eldist{:}]);
@@ -897,7 +897,7 @@ nutrajectory=trajectory;
 switch movel
 
     case 1 % lower right
-        olddist=abs(pdist([markers(1).head;markers(1).tail]));
+        olddist=abs(ea_pdist([markers(1).head;markers(1).tail]));
         refel=4;
         changecoord=1:3;
         cchangecoord=1;
@@ -909,7 +909,7 @@ switch movel
         move='head';
 
     case 3 % lower left
-        olddist=abs(pdist([markers(2).head;markers(2).tail]));
+        olddist=abs(ea_pdist([markers(2).head;markers(2).tail]));
         refel=4;
         changecoord=1:3;
         cchangecoord=2;
@@ -921,7 +921,7 @@ switch movel
         move='head';
 
     case 2 % upper right
-        olddist=abs(pdist([markers(1).head;markers(1).tail]));
+        olddist=abs(ea_pdist([markers(1).head;markers(1).tail]));
         refel=1;
         changecoord=2:4;
         cchangecoord=1;
@@ -933,7 +933,7 @@ switch movel
         move='tail';
 
     case 4 % upper left
-        olddist=abs(pdist([markers(2).head;markers(2).tail]));
+        olddist=abs(ea_pdist([markers(2).head;markers(2).tail]));
         refel=1;
         changecoord=2:4;
         cchangecoord=2;
@@ -949,8 +949,8 @@ end
 
 
 helppt=[movedpt(1:2),refpt(3)]; % this point is constructed as a projection of the movedpoint to the z-axis at height of refpt.
-zdistfromhelppt=sqrt(abs((olddist)^2-(pdist([helppt;refpt]))^2)); % use Pythagorean theorem to calculate distance on z-axis.
-% here, 3*olddist is the hypotenuse, pdist between the helper point and the
+zdistfromhelppt=sqrt(abs((olddist)^2-(ea_pdist([helppt;refpt]))^2)); % use Pythagorean theorem to calculate distance on z-axis.
+% here, 3*olddist is the hypotenuse, ea_pdist between the helper point and the
 % reference point is one leg of the triangle, zdistfromhelppt is the
 % leg that is calculated (the distance from the helper point to the new
 % moved point (fulfilling the prerequisite that new moved point is at the

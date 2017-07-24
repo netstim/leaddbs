@@ -127,7 +127,7 @@ if ~ischar(pts)
             assignvalue=vals(2:end,:);
             % end normalize
             for a=1:s
-                sim=1/exp(0.05*pdist([meanvalue;assignvalue(a,:)]));
+                sim=1/exp(0.05*ea_pdist([meanvalue;assignvalue(a,:)]));
                 avals(a)=sim;
             end
 

@@ -494,7 +494,7 @@ eg(eg>0)=1;
 
 XYZmax=[max(xg(eg>0)),max(yg(eg>0)),max(zg(eg>0))];
 try
-radius=pdist([XYZmax;dpvx]);
+radius=ea_pdist([XYZmax;dpvx]);
 catch
     keyboard
 end

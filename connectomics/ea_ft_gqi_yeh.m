@@ -214,7 +214,7 @@ for d=1:3
     m1=nii(1).mat*ptm';
     ptm(d)=2;
     m2=nii(1).mat*ptm';
-    res.voxel_size(d) = pdist([m1,m2]');
+    res.voxel_size(d) = ea_pdist([m1,m2]');
 end
 
 fa0 = zeros(dim);

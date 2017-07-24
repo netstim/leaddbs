@@ -17,8 +17,8 @@ for iter=1:maxiter
         dat(:,4)=dat(randperm(length(dat)),4);
     end
     
-Peuc=squareform(pdist(dat(:,1:3))); % distance matrix
-Pval=squareform(pdist(dat(:,4))); % distance matrix
+Peuc=squareform(ea_pdist(dat(:,1:3))); % distance matrix
+Pval=squareform(ea_pdist(dat(:,4))); % distance matrix
 
 % exp
 zexp=2; % 1=zscore, 2=exp

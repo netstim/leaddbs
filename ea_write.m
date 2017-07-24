@@ -77,7 +77,7 @@ try
     results.realcoords=realcoords;
     
     for electrode=1:length(coords_mm)
-        results.distances(electrode)=pdist([coords_mm(electrode,:);realcoords(electrode,:)]);
+        results.distances(electrode)=ea_pdist([coords_mm(electrode,:);realcoords(electrode,:)]);
     end
     results.fit=ea_nanmean(results.distances);
     
