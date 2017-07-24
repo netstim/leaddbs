@@ -94,7 +94,6 @@ switch automan
             cnt=cnt+1;
         end
         
-        
         fpinsub_mm(1,:)=fid(pt).AC;
         fpinsub_mm(2,:)=fid(pt).PC;
         fpinsub_mm(3,:)=fid(pt).MSP;

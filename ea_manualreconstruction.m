@@ -122,6 +122,7 @@ function ea_endfcn(mcfig)
 options=getappdata(mcfig,'origoptions');
 
     options.hybridsave=1;
+    options.native=1;
     [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
     options=rmfield(options,'hybridsave');

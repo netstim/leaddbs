@@ -33,11 +33,28 @@ else
 end
 
 
+towarp=cell(0);
 for side=1:length(options.sides)
-    reco.mni.coords_mm{side}=ea_warpcoord(reco.(usenative).coords_mm{side},nii,options);
-    reco.mni.markers(side).head=ea_warpcoord(reco.(usenative).markers(side).head,nii,options);
-    reco.mni.markers(side).tail=ea_warpcoord(reco.(usenative).markers(side).tail,nii,options);
-    reco.mni.trajectory{side}=ea_warpcoord(reco.(usenative).trajectory{side},nii,options);
+towarp{end+1}=reco.(usenative).coords_mm{side};
+towarp{end+1}=reco.(usenative).markers(side).head;
+towarp{end+1}=reco.(usenative).markers(side).tail;
+towarp{end+1}=reco.(usenative).trajectory{side};
+end
+towarp=cell2mat(towarp');
+warpedcoord=ea_warpcoord(towarp,nii,options);
+cnt=1;
+for side=1:length(options.sides)
+    offset=size(reco.(usenative).coords_mm{side},1);
+    reco.mni.coords_mm{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
+
+    offset=size(reco.(usenative).markers(side).head,1);
+    reco.mni.markers(side).head=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
+
+    offset=size(reco.(usenative).markers(side).tail,1);
+    reco.mni.markers(side).tail=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
+    
+    offset=size(reco.(usenative).trajectory{side},1);
+    reco.mni.trajectory{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
     
     normtrajvector{side}=diff([reco.mni.markers(side).head;...
         reco.mni.markers(side).tail])/...

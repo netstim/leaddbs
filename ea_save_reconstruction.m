@@ -4,16 +4,20 @@ reco.props.elmodel=elmodel;
 reco.props.manually_corrected=manually_corrected;
 
 if options.native
+    ea_dispt('Saving fiducials in native space');
     reco.native.coords_mm=coords_mm;
     reco.native.trajectory=trajectory;
     reco.native.markers=markers;
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
     if isfield(options,'hybridsave');
+        ea_dispt('Warping fiducials to template space');
         ea_reconstruction2mni(options);
+        ea_dispt('Mapping fiducials to AC/PC space');
         ea_reconstruction2acpc(options);
         ea_checkswap_lr(options);
     end
 else
+    ea_dispt('Saving fiducials in MNI space');
     reco.mni.coords_mm=coords_mm;
     reco.mni.trajectory=trajectory;
     reco.mni.markers=markers;
@@ -21,7 +25,9 @@ else
     
     if isfield(options,'hybridsave');
         try
+            ea_dispt('Warping fiducials to native space');
             ea_reconstruction2native(options);
+            ea_dispt('Mapping fiducials to AC/PC space');
             ea_reconstruction2acpc(options);
         end
     end
