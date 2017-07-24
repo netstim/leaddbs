@@ -11,18 +11,18 @@ earoot=ea_getearoot;
 ndir=dir([earoot,mstr,'ea_normalize_*.m']);
 
 for nd=length(ndir):-1:1
-    [~,methodf]=fileparts(ndir(nd).name);
-    try
+    [~,methodf]=fileparts(ndir(nd).name);    
         [thisndc,compat]=eval([methodf,'(','''prompt''',')']);
         if compat
             ndc{cnt}=thisndc;
             normmethod{cnt}=methodf;
-            if strcmp(ndc{cnt},eval([options.prefs.normalize.default,'(','''prompt''',')']))
-                defentry=cnt;
+            try % default function could be something nonexistent
+                if strcmp(ndc{cnt},eval([options.prefs.normalize.default,'(','''prompt''',')']))
+                    defentry=cnt;
+                end
             end
-            cnt=cnt+1;
+                cnt=cnt+1;
         end
-    end
 end
 
 
