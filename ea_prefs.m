@@ -47,30 +47,24 @@ str(str=='-')='_';
 
 function prefs=combinestructs(prefs,uprefs)
 
+ufn = fieldnames(uprefs);
 
-ufn=fieldnames(uprefs);
-
-for uf=1:length(ufn) % compare user preferences with defaults and overwrite defaults where present.
-    if isstruct(uprefs.(ufn{uf}))
-        ufn2=fieldnames(uprefs.(ufn{uf}));
-        for uf2=1:length(ufn2)
-            if isstruct(uprefs.(ufn{uf}).(ufn2{uf2}))
-                ufn3=fieldnames(uprefs.(ufn{uf}).(ufn2{uf2}));
-                for uf3=1:length(ufn3)
-                    if isstruct(uprefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3}));
-                        ufn4=fieldnames(uprefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3}));
-                        for uf4=1:length(ufn4) % add fourth level entries
-                            prefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3}).(ufn4{uf4})=uprefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3}).(ufn4{uf4});
-                        end
-                    else % add third level entries
-                        prefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3})=uprefs.(ufn{uf}).(ufn2{uf2}).(ufn3{uf3});
-                    end
-                end
-            else % add second level entries
-                prefs.(ufn{uf}).(ufn2{uf2})=uprefs.(ufn{uf}).(ufn2{uf2});
+% Handle struct arrays of different sizes
+if length(uprefs) > length(prefs)
+    prefs = cat(prefs, uprefs(length(prefs)+1:end));
+end
+% Iterate through struct array. Most prefs are a single struct, not an array.
+for sa_ix = 1:length(uprefs)
+    for fn_ix = 1:length(ufn)
+        fn = ufn{fn_ix};
+        try
+            if isstruct(uprefs(sa_ix).(fn))     
+                prefs(sa_ix).(fn) = combinestructs(prefs(sa_ix).(fn), uprefs(sa_ix).(fn));
+            else
+                prefs(sa_ix).(fn) = uprefs(sa_ix).(fn);
             end
+        catch ME
+            rethrow(ME);  % Use as a breakpoint for debugging recursive func.
         end
-    else % add first level entries
-        prefs.(ufn{uf})=uprefs.(ufn{uf});
     end
 end
