@@ -2,8 +2,8 @@ function mat=ea_getscrfmat(directory)
 
 load([directory,'scrf',filesep,'scrf_instore.mat']);
 mmat=ea_antsmat2mat(AffineTransform_float_3_3,fixed); % analytical solution
-
-if options.prefs.env.dev==1 % perform additional check    
+prefs=ea_prefs;
+if prefs.env.dev==1 % perform additional check    
     mat=ea_antsmat2mat_empirical(directory); % do an extra empirical check
     if sum(abs(mmat(:)-mat(:)))<1e-06 % precision
         mat=mmat;
