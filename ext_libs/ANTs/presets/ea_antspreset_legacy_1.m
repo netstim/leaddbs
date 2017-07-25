@@ -1,6 +1,6 @@
-function apref=ea_antspreset_test2(list)
+function apref=ea_antspreset_test1(list)
 if nargin % return name of preset
-    apref='Legacy: Original Lead-DBS preset 2';
+    apref='Legacy: Original Lead-DBS preset 1';
     return
 end
 
