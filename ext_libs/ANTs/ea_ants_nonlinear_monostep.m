@@ -1,4 +1,4 @@
-function ea_ants_nonlinear(varargin)
+function ea_ants_nonlinear_monostep(varargin)
 % Wrapper for ANTs nonlinear registration
 
 fixedimage=varargin{1};
@@ -58,9 +58,10 @@ if slabsupport
             
             % write out slab mask
             slabspresent=1;
+            slabID=ea_generate_guid;
             mnii.dt=[4,0];
             mnii.img=AllMX;
-            mnii.fname=[tmaskdir,filesep,'slabmask.nii'];
+            mnii.fname=[tmaskdir,filesep,'slabmask_',slabID,'.nii'];
             ea_write_nii(mnii);
             disp('Slabs found. Separating slabs to form an additional SyN stage.');
         else
@@ -172,13 +173,12 @@ end
 
 % add slab stage
 if slabspresent
-    slabID=ea_generate_guid;
     slabstage=[' --transform ',apref.antsmode,apref.antsmode_suffix...
         ' --convergence ', synconvergence, ...
         ' --shrink-factors ', synshrinkfactors ...
         ' --smoothing-sigmas ', synsmoothingssigmas, ...
         ' --use-estimate-learning-rate-once ', ...
-        ' --masks [NULL,',[tmaskdir,filesep,'slabmask',slabID,'.nii'],']'];
+        ' --masks [NULL,',[tmaskdir,filesep,'slabmask_',slabID,'.nii'],']'];
     fixedimage=[fixedimage,slabfixedimage];
     movingimage=[movingimage,slabmovingimage];
     
@@ -197,7 +197,7 @@ if subcorticalrefine
     synmasksmoothingssigmas=apref.smoothingsigmas.scrf;
     
     if slabspresent
-        movingmask=[tmaskdir,filesep,'slabmask',slabID,'.nii'];
+        movingmask=[tmaskdir,filesep,'slabmask_',slabID,'.nii'];
     else
         movingmask='NULL';
     end

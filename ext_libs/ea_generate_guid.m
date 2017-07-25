@@ -1,4 +1,4 @@
-function uid = generate_guid
+function uid = ea_generate_guid
 %GENERATE_GUID  Generate a globally unique ID.
 %   UID = GENERATE_GUID creates a universally unique identifier (UUID). 
 %   A UUID represents a 128-bit value. For more information including 
