@@ -45,6 +45,15 @@ if options.d3.write
     
     resultfig=ea_elvis(options);
     
+    
+    set(0,'CurrentFigure',resultfig);
+    zoom(3);
+    try
+        set(gca,'cameraviewanglemode','manual');
+    end
+    set(gca,'clipping','off');
+    axis('off');
+    
     % save scene as matlab figure
 %     try % if path is not defined, don't save.
 %         savefig(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig'],'compact');
