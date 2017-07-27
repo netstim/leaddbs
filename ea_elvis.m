@@ -28,7 +28,10 @@ end
 
 % Initialize figure
 
-resultfig=figure('name',[options.patientname,': Electrode-Scene'],'color','k','numbertitle','off','CloseRequestFcn',@closesattelites,'visible',options.d3.verbose,'KeyPressFcn',@ea_keypress,'KeyReleaseFcn',@ea_keyrelease);
+resultfig=figure('name', [options.patientname,': Electrode-Scene'],...
+    'color', 'k', 'numbertitle', 'off',...
+    'CloseRequestFcn', @closesattelites, 'visible', options.d3.verbose,...
+    'KeyPressFcn', @ea_keypress, 'KeyReleaseFcn', @ea_keyrelease);
 setappdata(resultfig,'options',options);
 set(resultfig,'toolbar','none');
 ssz=get(0,'Screensize');
@@ -40,17 +43,28 @@ set(resultfig, 'Position', ssz); % Maximize figure.
 ht=uitoolbar(resultfig);
 
 % add custom rotator:
-uibjs.rotate3dtog=uitoggletool(ht,'CData',ea_get_icn('rotate'),'TooltipString','Rotate 3D','OnCallback',{@ea_rotate,'on'},'OffCallback',{@ea_rotate,'off'},'State','off');
-uibjs.magnifyplus=uitoggletool(ht,'CData',ea_get_icn('magnplus'),'TooltipString','Zoom In','OnCallback',{@ea_zoomin,'on'},'OffCallback',{@ea_zoomin,'off'},'State','off');
-uibjs.magnifyminus=uitoggletool(ht,'CData',ea_get_icn('magnminus'),'TooltipString','Zoom Out','OnCallback',{@ea_zoomout,'on'},'OffCallback',{@ea_zoomout,'off'},'State','off');
-uibjs.handtog=uitoggletool(ht,'CData',ea_get_icn('hand'),'TooltipString','Pan Scene','OnCallback',{@ea_pan,'on'},'OffCallback',{@ea_pan,'off'},'State','off');
+uibjs.rotate3dtog=uitoggletool(ht, 'CData', ea_get_icn('rotate'),...
+    'TooltipString', 'Rotate 3D', 'OnCallback', {@ea_rotate,'on'},...
+    'OffCallback', {@ea_rotate,'off'}, 'State', 'off');
+uibjs.magnifyplus=uitoggletool(ht,'CData',ea_get_icn('magnplus'),...
+    'TooltipString', 'Zoom In', 'OnCallback', {@ea_zoomin,'on'},...
+    'OffCallback', {@ea_zoomin,'off'}, 'State', 'off');
+uibjs.magnifyminus=uitoggletool(ht, 'CData', ea_get_icn('magnminus'),...
+    'TooltipString', 'Zoom Out', 'OnCallback', {@ea_zoomout,'on'},...
+    'OffCallback', {@ea_zoomout,'off'}, 'State', 'off');
+uibjs.handtog=uitoggletool(ht, 'CData', ea_get_icn('hand'),...
+    'TooltipString', 'Pan Scene', 'OnCallback', {@ea_pan,'on'},...
+    'OffCallback', {@ea_pan,'off'}, 'State', 'off');
 setappdata(resultfig,'uibjs',uibjs);
 
 
 mh = uimenu(resultfig,'Label','Add Objects');
-fh1 = uimenu(mh,'Label','Open Tract','Callback',{@ea_addobj,resultfig,'tract',options});
-fh2 = uimenu(mh,'Label','Open ROI','Callback',{@ea_addobj,resultfig,'roi',options});
-fh3 = uimenu(mh,'Label','Show tracts weighted by activation map','Callback',{@ea_addobj,resultfig,'tractmap',options});
+fh1 = uimenu(mh,'Label','Open Tract',...
+    'Callback',{@ea_addobj,resultfig,'tract',options});
+fh2 = uimenu(mh,'Label','Open ROI',...
+    'Callback',{@ea_addobj,resultfig,'roi',options});
+fh3 = uimenu(mh,'Label','Show tracts weighted by activation map',...
+    'Callback',{@ea_addobj,resultfig,'tractmap',options});
 
 % Set some visualization parameters
 set(resultfig,'Renderer','opengl')
@@ -68,17 +82,24 @@ set(gcf,'Name',[figtitle,'...building...']);
 axis equal
 axis fill
 
-colormap('gray')
+% colormap('gray')
 
 
 
 %% Patient specific part (skipped if no patient is selected or no reco available):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
-    if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') || nargin>1;
+    if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') || nargin>1
         if nargin>1
             multiplemode=1;
-            elstruct=varargin{2};
-
+            
+            % mer development
+            if isstruct(varargin{2})
+                elstruct=varargin{2}.elstruct;
+                merstruct=varargin{2}.merstruct;
+            else
+                elstruct=varargin{2};
+            end
+            
             if options.d3.mirrorsides
                elstruct=ea_mirrorsides(elstruct);
                options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix);
@@ -97,8 +118,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             clear coords_mm trajectory
         end
 
-        % show electrodes..
         for pt=1:length(elstruct)
+            % show electrodes..
             try
                 [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
             catch
@@ -115,7 +136,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                         tp=el_render(pt).el_render{side}(ex);
 
                         try % works only in ML 2015
-                            tr=triangulation(get(el_render(pt).el_render{side}(ex),'Faces'),get(el_render(pt).el_render{side}(ex),'Vertices'));
+                            tr=triangulation(get(el_render(pt).el_render{side}(ex),'Faces'),...
+                                get(el_render(pt).el_render{side}(ex),'Vertices'));
                             vizstruct(cnt).normals = vertexNormal(tr);
                         catch % workaround for older versions..
                             vizstruct(cnt).normals=get(tp,'VertexNormals')*-1;
@@ -131,8 +153,21 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     end
                 end
             end
+            
+           % show microelectrode recording data
+           if exist('merstruct','var')
+               try
+                   [mer(pt).render,merlabel(:,pt)]=ea_showmer(resultfig,merstruct(pt),pt,options);
+               catch
+                   ea_error(['Couldn''''t visualize electrode from patient ',num2str(pt),'.']);
+               end
+               
+               setappdata(resultfig,'merstruct',merstruct);
+           end
+           
         end
 
+        setappdata(resultfig,'elstruct',elstruct);
         setappdata(resultfig,'el_render',el_render);
         % add handles to buttons. Can't be combined with the above loop since all
         % handles need to be set for the buttons to work properly (if alt is
@@ -141,16 +176,21 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         try
             set(el_label,'Visible','off');
-            ellabeltog=uitoggletool(ht,'CData',ea_get_icn('labels'),'TooltipString','Electrode labels','OnCallback',{@objvisible,el_label},'OffCallback',{@objinvisible,el_label},'State','off');
+            ellabeltog = uitoggletool(ht, 'CData', ea_get_icn('labels'),...
+                'TooltipString', 'Electrode labels',...
+                'OnCallback', {@objvisible,el_label},...
+                'OffCallback', {@objinvisible,el_label}, 'State','off');
         end
 
         cnt=1;
         for pt=1:length(elstruct)
                 try
                     if multiplemode
-                        caption{1}=[elstruct(pt).name,'_Left'];         caption{2}=[elstruct(pt).name,'_Right'];
+                        caption{1}=[elstruct(pt).name,'_Left'];
+                        caption{2}=[elstruct(pt).name,'_Right'];
                     else
-                        caption{1}='Electrode_Left'; caption{2}='Electrode_Right';
+                        caption{1}='Electrode_Left';
+                        caption{2}='Electrode_Right';
                     end
                     eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
                     eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
@@ -177,7 +217,9 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         % Initialize Stimulation-Button
 
-        stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation'),'TooltipString','Stimulation Control Figure','ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
+        stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation'),...
+            'TooltipString','Stimulation Control Figure',...
+            'ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
 
     else
         options.writeoutstats=0; % if no electrodes are there, stats can't be written.
@@ -193,20 +235,30 @@ end
 
 % Initialize Sliceview-Button
 
-slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),'TooltipString','Slice Control Figure','ClickedCallback',{@opensliceviewer,resultfig,options});
+slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
+    'TooltipString','Slice Control Figure',...
+    'ClickedCallback',{@opensliceviewer,resultfig,options});
 
-if options.prefs.env.dev;
+if options.prefs.env.dev
 % Initialize MER-Button
-merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),'TooltipString','MER Control Figure','ClickedCallback',{@openmerviewer,resultfig,options});
+merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
+    'TooltipString','MER Control Figure',...
+    'ClickedCallback',{@openmerviewer,resultfig,options});
 end
 % Initialize Convis-Button
-convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),'TooltipString','Connectivity Visualization','ClickedCallback',{@openconnectomeviewer,resultfig,options});
+convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
+    'TooltipString','Connectivity Visualization',...
+    'ClickedCallback',{@openconnectomeviewer,resultfig,options});
 
 % Initialize FS Cortex-Button
-corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),'TooltipString','Cortical Reconstruction Visualization','ClickedCallback',{@opencortexviewer,resultfig,options});
+corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
+    'TooltipString','Cortical Reconstruction Visualization',...
+    'ClickedCallback',{@opencortexviewer,resultfig,options});
 
 % Initialize Cortical Strip-Button
-% cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString','Cortical Reconstruction Visualization','ClickedCallback',{@opencortelsviewer,resultfig,options});
+% cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip'),...
+%     'TooltipString','Cortical Reconstruction Visualization',...
+%     'ClickedCallback',{@opencortelsviewer,resultfig,options});
 
 % Show atlas data
 if options.d3.writeatlases
@@ -231,7 +283,9 @@ if options.d3.writeatlases
                         vizstruct(cnt+1).faces=atlases.fv{atl,side}.faces;
                         vizstruct(cnt+1).vertices=atlases.fv{atl,side}.vertices;
                         vizstruct(cnt+1).normals=atlases.normals{atl,side};
-                        vizstruct(cnt+1).colors=[squeeze(ind2rgb(round(atlases.cdat{atl,side}),atlases.colormap)),repmat(0.7,size(atlases.normals{atl,side},1),1)];
+                        vizstruct(cnt+1).colors=[...
+                            squeeze(ind2rgb(round(atlases.cdat{atl,side}),atlases.colormap)),...
+                            repmat(0.7,size(atlases.normals{atl,side},1),1)];
                         cnt=cnt+1;
                     end
                 end
@@ -250,13 +304,11 @@ if options.d3.showisovolume
     for reg=1:length(allisomatrices)
         options.d3.isomatrix=allisomatrices{reg};
         options.d3.isomatrix_name=allisonames{reg};
-
-
         ea_showisovolume(resultfig,elstruct,options);
     end
 end
 
-if isfield(options.d3,'expdf');
+if isfield(options.d3,'expdf')
     if options.d3.expdf
         %cd([options.root,options.patientname]);
         fig2pdf3d(gca,[options.root,options.patientname,filesep,'Lead-DBS_Electrode_Localization'],options);
@@ -271,32 +323,51 @@ hold on
 ea_show_light(resultfig,1);
 % set(lightbulb, 'Visible', 'off');
 
-lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb'),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'cam_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'cam_lamp')},'State','on');
-clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb'),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'ceiling_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'ceiling_lamp')},'State','on');
-llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb'),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'left_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'left_lamp')},'State','on');
-rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb'),'TooltipString','Lightbulb','OnCallback',{@objvisible,getappdata(resultfig,'right_lamp')},'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
+lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb'),...
+    'TooltipString','Lightbulb',...
+    'OnCallback',{@objvisible,getappdata(resultfig,'cam_lamp')},...
+    'OffCallback',{@objinvisible,getappdata(resultfig,'cam_lamp')},'State','on');
+clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb'),...
+    'TooltipString','Lightbulb',...
+    'OnCallback',{@objvisible,getappdata(resultfig,'ceiling_lamp')},...
+    'OffCallback',{@objinvisible,getappdata(resultfig,'ceiling_lamp')},'State','on');
+llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb'),...
+    'TooltipString','Lightbulb',...
+    'OnCallback',{@objvisible,getappdata(resultfig,'left_lamp')},...
+    'OffCallback',{@objinvisible,getappdata(resultfig,'left_lamp')},'State','on');
+rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb'),...
+    'TooltipString','Lightbulb',...
+    'OnCallback',{@objvisible,getappdata(resultfig,'right_lamp')},...
+    'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
 
 
 % Initialize HD-Export button
 
-hdsavebutton=uipushtool(ht,'CData',ea_get_icn('save'),'TooltipString','Save Scene','ClickedCallback',@export_hd);
-dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth'),'TooltipString','Save Scene with depth of field','ClickedCallback',{@ea_export_depth_of_field,resultfig});
+hdsavebutton=uipushtool(ht,'CData',ea_get_icn('save'),...
+    'TooltipString','Save Scene','ClickedCallback',@export_hd);
+dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth'),...
+    'TooltipString','Save Scene with depth of field',...
+    'ClickedCallback',{@ea_export_depth_of_field,resultfig});
 
 
 % Initialize Video-Export button
 
-videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video'),'TooltipString','Save video','ClickedCallback',{@export_video,options});
+videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video'),...
+    'TooltipString','Save video','ClickedCallback',{@export_video,options});
 
 
 % Init hard_electrode_view button
-if isfield(options,'modality')
-if options.modality==2
-    electrodesegmentbutton=uitoggletool(ht,'CData',ea_get_icn('electrode_segment'),'TooltipString','Auto-Segment electrode from postoperative acquisition','OnCallback',{@ea_segment_electrode,options,resultfig,'on'},'OffCallback',{@ea_segment_electrode,options,resultfig,'off'},'State','off');
-end
+if isfield(options,'modality') && options.modality==2
+    electrodesegmentbutton=uitoggletool(ht,'CData',ea_get_icn('electrode_segment'),...
+        'TooltipString','Auto-Segment electrode from postoperative acquisition',...
+        'OnCallback',{@ea_segment_electrode,options,resultfig,'on'},...
+        'OffCallback',{@ea_segment_electrode,options,resultfig,'off'},'State','off');
 end
 % Initialize Export to Lead-Server button
 
-lsbutton=uipushtool(ht,'CData',ea_get_icn('server'),'TooltipString','Export to Server','ClickedCallback',{@ea_export_server,options});
+lsbutton=uipushtool(ht,'CData',ea_get_icn('server'),...
+    'TooltipString','Export to Server',...
+    'ClickedCallback',{@ea_export_server,options});
 
 hold off
 
@@ -337,6 +408,7 @@ if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file 
         ea_export_server([],[],options);
     end
 end
+setappdata(resultfig, 'options', options);
 setappdata(resultfig,'elstruct',elstruct);
 
 
@@ -357,9 +429,9 @@ setappdata(resultfig,'stimwin',stimwin);
 try WinOnTop(stimwin,true); end
 
 function openmerviewer(hobj,ev,resultfig,options)
-merwin=ea_mercontrol(resultfig,options);
-setappdata(resultfig,'merwin',merwin);
-try WinOnTop(merwin,true); end
+mercontrolfig = ea_mercontrol(resultfig, options);
+setappdata(resultfig, 'mercontrolfig', mercontrolfig);
+try WinOnTop(mercontrolfig, true); end
 
 function opencortexviewer(hobj,ev,resultfig,options)
 cortex=ea_showcortex(resultfig,options);
@@ -388,9 +460,9 @@ conwin=getappdata(gcf,'conwin');
 try
     close(conwin)
 end
-merwin=getappdata(gcf,'merwin');
+mercontrolfig = getappdata(gcf, 'mercontrolfig');
 try
-    close(merwin)
+    close(mercontrolfig)
 end
 delete(gcf)
 
@@ -467,139 +539,122 @@ if ~isempty(condition)
 end
 
 
-function ea_keypress(resultfig,event)
+function ea_keypress(resultfig, event)
 % this is the main keypress function for the resultfigure. Add event
 % listeners here.
-if ismember('alt',event.Modifier)
-     setappdata(resultfig,'altpressed',1);
-%    disp('Altpressed');
-elseif ismember('shift',event.Modifier)
-     setappdata(resultfig,'shiftpressed',1);
+if ismember('alt', event.Modifier)
+    setappdata(resultfig, 'altpressed', 1);
+    %    disp('Altpressed');
+elseif ismember('shift', event.Modifier)
+    setappdata(resultfig, 'shiftpressed', 1);
 end
 
-try
-    merwin = getappdata(resultfig,'merwin');
-    options = getappdata(merwin,'options');
-    %merstruct = getappdata(resultfig,'merstruct');
-    merhandles = getappdata(resultfig,'merhandles');
-    mermarkers = getappdata(resultfig,'mermarkers');
-    keymer = getappdata(resultfig,'keymer');
-catch
-    merwin=[];
-end
-if ~isempty(merwin) && isvalid(merwin)
-    commnd=event.Key; % event.Character;
-    [shape.x,shape.y,shape.z]=sphere(20);
-    n = length(mermarkers);
-    sSize = options.prefs.mer.markersize;
-    % CData = parula; CData = repmat(CData(1:length(sphere.x),:),[1 size(sphere.x,2)/3]);
-    % colormap = repmat([1 1 0],[size(sphere.x,1) size(sphere.x,2)/3]);
-    % tmp = parula;
-    % colormap = repmat(tmp(end:-2:1,:),[4 1]); clear tmp
-    %colormap = [1 1 0; 0 0 1];
-
-    if isempty(keymer)
+% If the MER Control window is open
+mercontrolfig = getappdata(resultfig, 'mercontrolfig');
+if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
+    
+    merstruct = getappdata(resultfig, 'merstruct');
+    mertoggles = getappdata(mercontrolfig, 'mertoggles');
+        
+    if ~any(any(mertoggles.keycontrol))
         return
-    elseif sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
-        [~,side,track]=ea_detsidestr(keymer);
-        trajectory = [get(merhandles.(track){side},'XData')',get(merhandles.(track){side},'YData')',get(merhandles.(track){side},'ZData')'];
-        if n>0 && isequal(trajectory(1,:),mermarkers(n).coords_mm) && ~strcmp(event.Key,'s') && ~strcmp(event.Key,'n')
-            fprintf('Location along %s %s tract already marked: [%f,%f,%f].\n',keymer(strfind(keymer,'_')+1:end),keymer(4:strfind(keymer,'_')-1),trajectory(1,:))
-            return
-        end
-    end
-
-    if sum(double(~cellfun(@isempty,strfind({'space','m','l','t','b','s','n'},event.Key))))>0
-        shape.x = shape.x*sSize+trajectory(1,1);
-        shape.y = shape.y*sSize+trajectory(1,2);
-        shape.z = shape.z*sSize+trajectory(1,3);
-        mermarkers(n+1).side = keymer(regexp(keymer,'_')+1:end);
-        mermarkers(n+1).tract = keymer(4:regexp(keymer,'_')-1);
-        mermarkers(n+1).depth = str2double(getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['pos' keymer(4:end)]),'String'));
-        mermarkers(n+1).coords_mm = trajectory(1,:);
-        mermarkers(n+1).dat.implantedtract = getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtract' keymer(regexp(keymer,'_'):end)]),'String');
-        mermarkers(n+1).dat.implantedtract = mermarkers(n+1).dat.implantedtract{getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['popupimplantedtract' keymer(regexp(keymer,'_'):end)]),'Value')};
-        mermarkers(n+1).dat.leaddepth = str2double(getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['editimplanteddepth' keymer(regexp(keymer,'_'):end)]),'String'));
-        mermarkers(n+1).dat.offset = event.Key;
-        mermarkers(n+1).dat.key = event.Key;
-        mermarkers(n+1).tag.depth = getfield(getfield(getappdata(merwin,'UsedByGUIData_m'),['pos' keymer(4:end)]),'String');
-        mermarkers(n+1).tag.visible = options.prefs.mer.tag.visible;
-        [mermarkers(n+1).tag.handle,mermarkers(n+1).tag.string] = ea_setmertag(mermarkers(n+1).tag,keymer,trajectory(1,:));
-
-        % Reserved keys: {'space','m','l','t','b','s','n'}
+    end   
+    
+    if any(strcmpi(event.Key, {'space','m','l','t','b', 's', 'n'}))
+        % Reserved keys:
         % 'space' = Generic; 'm' = MER; 'l' = LFP; 't' = Top; 'b' = Bottom
-        switch lower(commnd)
+        % 's' = session; 'n' = notes
+        
+        mermarkers = getappdata(resultfig, 'mermarkers');
+        
+        if any(strcmpi(event.Key, {'s', 'n'}))
+            % Enter session or notes for the last marker.
+            if strcmpi(event.Key, 's')
+                mermarkers(end).session = char(inputdlg('Enter Session'));
+            elseif strcmpi(event.Key, 'n')
+                mermarkers(end).notes = char(inputdlg('Enter Notes'));
+            end
+            setappdata(resultfig, 'mermarkers', mermarkers);
+            return;
+        end
+        
+        sess_text = '';
+        switch lower(event.Key)
             case 'space'
-                mermarkers(n+1).notes;
-                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
-                    'FaceColor',[0.5 0.5 0],'EdgeColor','none',...
-                    'FaceAlpha',0.7,'tag','Generic');
-                mermarkers(n+1).markertype = 'Generic';
+                markertype = 'Generic';
             case 'm'
-                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
-                    'FaceColor',[0.5 0 0],'EdgeColor','none',...
-                    'FaceAlpha',0.7,'tag','MER');
-                mermarkers(n+1).markertype = 'MER recording';
-                mermarkers(n+1).session = char(inputdlg('Enter Session'));
+                markertype = 'MER recording';
+                sess_text = char(inputdlg ('Enter Session'));
             case 'l'
-                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
-                    'FaceColor',[0 0.5 0],'EdgeColor','none',...
-                    'FaceAlpha',0.7,'tag','LFP');
-                mermarkers(n+1).markertype = 'LFP recording';
-                mermarkers(n+1).session = char(inputdlg('Enter Session'));
+                markertype = 'LFP recording';
+                sess_text = char(inputdlg ('Enter Session'));
             case 't'
-                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
-                    'FaceColor',[0 0 0.5],'EdgeColor','none',...
-                    'FaceAlpha',0.7,'tag','Top');
-                mermarkers(n+1).markertype = 'Top border';
+                markertype = 'Top border';
             case 'b'
-                mermarkers(n+1).handle = surf(shape.x,shape.y,shape.z,...
-                    'FaceColor',[0 0 0.5],'EdgeColor','none',...
-                    'FaceAlpha',0.7,'tag','Bottom');
-                mermarkers(n+1).markertype = 'Bottom border';
-            case 's'
-                mermarkers(n).session = char(inputdlg('Enter Session'));
-            case 'n'
-                mermarkers(n).notes = char(inputdlg('Enter Notes'));
+                markertype = 'Bottom border';
         end
-
-        setappdata(resultfig,'mermarkers',mermarkers);
-        ea_updatemercontrol(keymer,getappdata(merwin,'UsedByGUIData_m'),mermarkers,resultfig,options)
-
-    else
-        switch commnd
-            case {'uparrow','leftarrow'}
-            if isempty(keymer); return
+        
+        pos_labels = {merstruct.tract_info.label};
+        side_strs = {'right', 'left'};
+        [sides, positions] = find(mertoggles.keycontrol);
+        for check_ix = 1:length(sides)
+            sid = sides(check_ix);
+            side_str = side_strs{sid};
+            pos_str = pos_labels{positions(check_ix)};
+            marker_mm = merstruct.currentmer.(pos_str).trajectory{sid}(1, :);
+            if ~isempty(mermarkers) && isequal(marker_mm, mermarkers(end).coords_mm)
+                fprintf('Location along side %s - %s tract already marked: [%f,%f,%f].\n',...
+                    side_str, pos_str, marker_mm);
             else
-              [~,side,track]=ea_detsidestr(keymer);
-              trajectory = [merhandles.(track){side}.XData',merhandles.(track){side}.YData',merhandles.(track){side}.ZData'];
+                mermarkers(end+1).side = side_str;
+                mermarkers(end).tract = pos_str;
+                mermarkers(end).depth = merstruct.currentmer.(pos_str).dist(sid);
+                mermarkers(end).coords_mm = marker_mm;
+                mermarkers(end).markertype = markertype;
+                if ~isempty(sess_text)
+                    mermarkers(end).session = sess_text;
+                end
+
+                dat.implantedtract = pos_labels{merstruct.implant_idx(sid)};
+                dat.leaddepth = merstruct.implant_depth(sid);
+                dat.key = event.Key;
+                mermarkers(end).dat = dat;
             end
-            if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
-                d=0.25; % step size
-            elseif ismember(event.Modifier,'shift')
-                d=0.75;    % large step
-            elseif ismember(event.Modifier,'alt')
-                d=0.05;    % small step size
-            end
-            newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
-            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer)
-        case {'downarrow','rightarrow'}
-            if isempty(keymer); return
-            else
-                [~,side,track]=ea_detsidestr(keymer);
-                trajectory = [merhandles.(track){side}.XData',merhandles.(track){side}.YData',merhandles.(track){side}.ZData'];            end
-            if isempty(event.Modifier) || ~ismember(event.Modifier,{'shift','alt'})
-                d=-0.25; % movement distance
-            elseif ismember(event.Modifier,'shift')
-                d=-0.75; % large step
-            elseif ismember(event.Modifier,'alt')
-                d=-0.05;
-            end
-            newtrajectory = ea_getmertrajectory(trajectory,d,options.prefs.mer.length,50);
-            ea_updatemertrajectory(getappdata(merwin,'UsedByGUIData_m'),newtrajectory,d,keymer)
         end
+        setappdata(resultfig, 'mermarkers', mermarkers);
+        
+        handles = guidata(mercontrolfig);
+        ea_resultfig_updatemarkers(handles);
+        ea_mercontrol_updatemarkers(handles);
+        
+    elseif any(strcmpi(event.Key, {'uparrow','leftarrow','downarrow','rightarrow'}))
+        d = merstruct.step_size(1);  % Default step size
+        if ~isempty(event.Modifier)
+            if ismember(event.Modifier, 'shift')
+                d = merstruct.step_size(2);  % Large step size
+            elseif ismember(event.Modifier, 'alt')
+                d = merstruct.step_size(3);  % Small step size
+            end
+        end
+        
+        if any(strcmpi(event.Key, {'downarrow','rightarrow'}))
+            d = -d;
+        end
+        % For each checked track, modify its distance by d
+        pos_labels = {merstruct.tract_info.label};
+        [sides, positions] = find(mertoggles.keycontrol);
+        for check_ix = 1:length(sides)
+            pos = pos_labels{positions(check_ix)};
+            old_dist = merstruct.currentmer.(pos).dist(sides(check_ix));
+            merstruct.currentmer.(pos).dist(sides(check_ix)) = old_dist + d;
+        end
+        setappdata(resultfig, 'merstruct', merstruct);
+        % Update the GUI
+        handles = guidata(mercontrolfig);
+        ea_mercontrol_updatetrajectories(handles);
+        ea_resultfig_updatetrajectories(handles);
+        ea_mercontrol_updateimplanted(handles);
     end
-end
 % commnd=event.Character;
 % switch lower(commnd)
 %     case ' '
@@ -608,6 +663,7 @@ end
 %     case {'c','v','b','n'}
 %     otherwise % arrow keys, plus, minus
 % end
+end
 
 
 function ea_keyrelease(resultfig,event)
@@ -735,7 +791,8 @@ if ~strcmp(self.figmode,'lazyupdate');
     current_inverthardcopy = get(self.source_fig,'InvertHardcopy');
     set(self.source_fig,'PaperPositionMode','auto');
     set(self.source_fig,'InvertHardcopy','off');
-    print(self.source_fig,['-r',num2str(1.5*screen_DPI*self.K(1))], '-dpng', tempfile); % change 1.5 to e.g. 2 to get even higher resolution image out.
+    print(self.source_fig,['-r',num2str(1.5*screen_DPI*self.K(1))], '-dpng', tempfile);
+    % change 1.5 to e.g. 2 to get even higher resolution image out.
     set(self.source_fig,'InvertHardcopy',current_inverthardcopy);
     set(self.source_fig,'PaperPositionMode',current_paperpositionmode);
     self.raw_hires = imread(tempfile);
@@ -754,7 +811,10 @@ if strcmp(self.aamethod,'standard') || strcmp(self.aamethod,'noshrink')
     a3 = max(min(myconv(single(self.raw_hires(:,:,3))/(256),kk,'same'),1),0)./mm;
     if strcmp(self.aamethod,'standard')
         if abs(1-self.K(2)) > 0.001
-            raw_lowres = double(cat(3,a1(2:self.K(2):end,2:self.K(2):end),a2(2:self.K(2):end,2:self.K(2):end),a3(2:self.K(2):end,2:self.K(2):end)));
+            raw_lowres = double(cat(3,...
+                a1(2:self.K(2):end,2:self.K(2):end),...
+                a2(2:self.K(2):end,2:self.K(2):end),...
+                a3(2:self.K(2):end,2:self.K(2):end)));
         else
             raw_lowres = self.raw_hires;
         end
@@ -768,7 +828,7 @@ end
 warning(w);
 
 %% Place the anti-aliased image in some image on the screen ...
-if strcmp(self.figmode,'figure');
+if strcmp(self.figmode,'figure')
     % Create a new figure at the same place as the previous
     % The content of this new image is just a bitmap...
     oldpos = get(gcf,'Position');
@@ -785,7 +845,7 @@ if strcmp(self.figmode,'figure');
     set(ax,'Units','pixels');
     set(ax,'Position',[1 1 sz(2) sz(1)]);
     axis off;
-elseif strcmp(self.figmode,'publish');
+elseif strcmp(self.figmode,'publish')
     % Create a new figure at the same place as the previous
     % The content of this new image is just a bitmap...
     self.myaa_figure = figure('Name','Export','Visible','off');
@@ -801,7 +861,7 @@ elseif strcmp(self.figmode,'publish');
     set(ax,'Position',[0 0 1 1]);
     axis off;
     close(self.source_fig);
-elseif strcmp(self.figmode,'update');
+elseif strcmp(self.figmode,'update')
     fig = self.myaa_figure;
     figure(fig);
     clf;
@@ -817,7 +877,7 @@ elseif strcmp(self.figmode,'update');
     set(ax,'Units','pixels');
     set(ax,'Position',[1 1 sz(2) sz(1)]);
     axis off;
-elseif strcmp(self.figmode,'lazyupdate');
+elseif strcmp(self.figmode,'lazyupdate')
     clf;
     fig = self.myaa_figure;
     sz = size(raw_lowres);
@@ -957,69 +1017,3 @@ h=zoom;
 h.Enable=cmd;
 h.Motion='both';
 h.Direction='out';
-
-function [handle,string] = ea_setmertag(tag,keymer,trajectory)
-% tag.string; tag.visible; tag.color;
-d = 3.2;
-pos = [trajectory(1,1)/abs(trajectory(1,1))*d+trajectory(1,1),trajectory(1,2:3)];
-% string = sprintf('%s%s Depth: %smm',upper(keymer(4)),keymer(5:strfind(keymer,'_')-1),tag.depth);
-string = sprintf('%s%s: %smm',upper(keymer(4)),keymer(5:strfind(keymer,'_')-1),tag.depth);
-handle = text(pos(1),pos(2),pos(3),string,'Color','w','HorizontalAlignment','center','Visible',tag.visible);
-
-
-function ea_updatemercontrol(keymer,handles,mermarkers,resultfig,options)
-n=length(mermarkers);
-markerstring.right = get(handles.popupmermarkers_right,'String');
-markerstring.left = get(handles.popupmermarkers_left,'String');
-
-if isempty(markerstring.right)
-    markerstring.right = {'none selected...'};
-end
-
-if isempty(markerstring.left)
-    markerstring.left = {'none selected...'};
-end
-
-if strcmp(keymer(strfind(keymer,'_')+1:end),'right')
-    % side = 1;
-    markerstring.right{end+1} = sprintf('%0.0f. %s',n,mermarkers(n).tag.string);
-elseif strcmp(keymer(strfind(keymer,'_')+1:end),'left')
-    % side = 2;
-    markerstring.left{end+1} = sprintf('%0.0f. %s',n,mermarkers(n).tag.string);
-end
-
-setappdata(resultfig,'markerstring',markerstring)
-set(handles.popupmermarkers_right,'Visible','off','String',markerstring.right,'Value',1)
-set(handles.popupmermarkers_left,'Visible','off','String',markerstring.left,'Value',1)
-% set(handles.togglemarkertags,'Visible','on','Value',1)
-
-function outputtrajectory = ea_getmertrajectory(trajectory,dist,length,n)
-if size(trajectory,1)<2
-    error('Must input a vector')
-end
-dxyz = sqrt((diff(trajectory(1:2,1))^2)+(diff(trajectory(1:2,2))^2)+diff(trajectory(1:2,3))^2);
-slope = mean(diff(trajectory))/dxyz;
-startpoint = trajectory(1,:)+slope.*dist;
-
-outputtrajectory(:,1) = linspace(startpoint(1,1),startpoint(1,1)+slope(1)*length,n);
-outputtrajectory(:,2) = linspace(startpoint(1,2),startpoint(1,2)+slope(2)*length,n);
-outputtrajectory(:,3) = linspace(startpoint(1,3),startpoint(1,3)+slope(3)*length,n);
-
-
-function ea_updatemertrajectory(handles,trajectory,dist,tag)
-resultfig=getappdata(handles.mercontrolfig,'resultfig');
-% Update position in resultfig
-% XData = get(getappdata(resultfig,tag),'XData');
-% YData = get(getappdata(resultfig,tag),'YData');
-% ZData = get(getappdata(resultfig,tag),'ZData');
-[~,side,track]=ea_detsidestr(tag);
-h = getfield(getappdata(resultfig,'merhandles'),track);
-h = h{side};
-set(h,'XData',trajectory(:,1)')
-set(h,'YData',trajectory(:,2)')
-set(h,'ZData',trajectory(:,3)')
-setappdata(resultfig,tag,h)
-set(handles.(tag),'Value',1)
-setappdata(resultfig,'keymer',tag)
-newdiststr = num2str(str2double(get(handles.(['pos',tag(4:end)]),'String'))+dist);
-set(handles.(['pos',tag(4:end)]),'String',newdiststr)
