@@ -3,40 +3,51 @@ function ea_resultfig_updatetrajectories(handles, side_str)
 if ~exist('side_str', 'var')
     side_str = 'both';
 end
-[side_strs, side_ids, ~] = ea_detsidestr(side_str);
+[side_strs, ~, ~] = ea_detsidestr(side_str);
 
 resultfig = getappdata(handles.mercontrolfig, 'resultfig');
-merstruct = getappdata(resultfig, 'merstruct');
-merhandles = getappdata(resultfig, 'merhandles');
-mertoggles = getappdata(handles.mercontrolfig, 'mertoggles');
+options = getappdata(handles.mercontrolfig, 'options');
+merstruct = getappdata(handles.mercontrolfig, 'merstruct');
+merhandles = getappdata(handles.mercontrolfig, 'merhandles');
 
-curr_fig_items = resultfig.CurrentAxes.Children;
-tag_array = cell(1, length(curr_fig_items));
-for cfi = 1:length(curr_fig_items)
-    tag_array{cfi} = curr_fig_items(cfi).Tag;
+spc = 'mni';
+if options.native
+    spc = 'native';
 end
 
+uqlabels = unique({merstruct.MERTrajectories.label}, 'stable');
+
 set(0, 'CurrentFigure', resultfig); hold on;
-for sid = side_ids
-    for pos_ix = 1:length(merstruct.tract_info)
-        pos_str = merstruct.tract_info(pos_ix).label;
-        trajectory = merstruct.currentmer.(pos_str).trajectory{sid};
-        h = merhandles.(pos_str){sid};
-        if ~isempty(h)
-            set(h, 'XData', trajectory(:,1)');
-            set(h, 'YData', trajectory(:,2)');
-            set(h, 'ZData', trajectory(:,3)');
+for traj_ix = 1:length(merstruct.MERTrajectories)
+    mertraj = merstruct.MERTrajectories(traj_ix);
+    if any(strcmpi(side_strs, mertraj.side))
+        bH = strcmpi({merhandles.traj.side}, mertraj.side) ...
+            & strcmpi({merhandles.traj.label}, mertraj.label);
+        h = [merhandles.traj(bH).h];
+        if length(h) == 1
+            set(h, 'XData', mertraj.coords.(spc)(:, 1)');
+            set(h, 'YData', mertraj.coords.(spc)(:, 2)');
+            set(h, 'ZData', mertraj.coords.(spc)(:, 3)');
         else
-            merhandles.(pos_str){sid} = plot3(...
-                trajectory(:,1), trajectory(:,2), trajectory(:,3),...
-                'color', merstruct.tract_info(pos_ix).color, 'linew', 5,...
-                'tag', [pos_str '_' side_strs{sid}]);
+            delete(h);
+            merhandles.traj(bH) = [];
+            
+            this_color = merhandles.color_list(strcmpi(uqlabels, mertraj.label), :);
+            merhandles.traj(end + 1) = struct('side', mertraj.side,...
+                'label', mertraj.label,...
+                'h', plot3(mertraj.coords.(spc)(:, 1),...
+                mertraj.coords.(spc)(:, 2), mertraj.coords.(spc)(:, 3),...
+                'color', this_color, 'linew', 5,...
+                'tag', [mertraj.label '_' mertraj.side]));
+            bH = false(size(merhandles.traj)); bH(end) = true;
         end
-        if mertoggles.togglestates(sid, pos_ix)
-            set(merhandles.(pos_str){sid}, 'Visible', 'on');
+        bToggle = strcmpi({merstruct.Toggles.togglestates.side}, mertraj.side) ...
+            & strcmpi({merstruct.Toggles.togglestates.label}, mertraj.label);
+        if merstruct.Toggles.togglestates(bToggle).value
+            set(merhandles.traj(bH).h, 'Visible', 'on');
         else
-            set(merhandles.(pos_str){sid}, 'Visible', 'off');
+            set(merhandles.traj(bH).h, 'Visible', 'off');
         end
     end
 end
-setappdata(resultfig, 'merhandles', merhandles);
+setappdata(handles.mercontrolfig, 'merhandles', merhandles);
