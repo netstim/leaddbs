@@ -43,6 +43,9 @@ set(resultfig, 'Position', ssz); % Maximize figure.
 ht=uitoolbar(resultfig);
 
 % add custom rotator:
+uibjs.slide3dtog=uitoggletool(ht, 'CData', ea_get_icn('quiver'),...
+    'TooltipString', 'Slide Slices', 'OnCallback', {@ea_slideslices,'on'},...
+    'OffCallback', {@ea_slideslices,'off'}, 'State', 'on');
 uibjs.rotate3dtog=uitoggletool(ht, 'CData', ea_get_icn('rotate'),...
     'TooltipString', 'Rotate 3D', 'OnCallback', {@ea_rotate,'on'},...
     'OffCallback', {@ea_rotate,'off'}, 'State', 'off');
@@ -952,68 +955,14 @@ elseif find('123456789' == evnt.Character)
 end
 
 
-function ea_distogrotate
-uibjs=getappdata(gcf,'uibjs');
-set(uibjs.rotate3dtog,'State','off');
 
 
-function ea_distogzoomin
-uibjs=getappdata(gcf,'uibjs');
-set(uibjs.magnifyplus,'State','off');
 
 
-function ea_distogzoomout
-uibjs=getappdata(gcf,'uibjs');
-set(uibjs.magnifyminus,'State','off');
 
 
-function ea_distogpan
-uibjs=getappdata(gcf,'uibjs');
-set(uibjs.handtog,'State','off');
 
 
-function ea_rotate(h,~,cmd)
-
-h = rotate3d;
-h.RotateStyle = 'orbit';
-h.Enable = cmd;
-if strcmp(cmd,'on')
-    ea_distogzoomin;
-    ea_distogzoomout;
-    ea_distogpan;
-end
-
-function ea_pan(h,~,cmd)
-
-pan(cmd);
-if strcmp(cmd,'on')
-    ea_distogzoomin;
-    ea_distogzoomout;
-    ea_distogrotate;
-end
 
 
-function ea_zoomin(h,~,cmd)
 
-if strcmp(cmd,'on')
-    ea_distogpan;
-    ea_distogrotate;
-    ea_distogzoomout;
-end
-h=zoom;
-h.Enable=cmd;
-h.Motion='both';
-h.Direction='in';
-
-
-function ea_zoomout(h,~,cmd)
-
-if strcmp(cmd,'on')
-    ea_distogpan;
-    ea_distogrotate;
-    ea_distogzoomin;
-end
-h=zoom;
-h.Enable=cmd;
-h.Motion='both';
-h.Direction='out';

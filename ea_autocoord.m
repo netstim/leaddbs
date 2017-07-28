@@ -16,9 +16,32 @@ options.prefs=ea_prefs(options.patientname);
 
 directory = [options.root,options.patientname,filesep];
 
-if options.dicomimp % do DICOM-Import.
-    ea_dicom_import(options);
-    return
+if options.dicomimp || options.assignnii % do DICOM-Import.
+    if options.dicomimp
+        ea_dicom_import(options);
+    end
+    if options.assignnii
+        outdir = [options.root, options.patientname, filesep];
+        % assign image type here
+        di = dir([outdir,'*.nii']);
+        di = ea_sortbytes(di);
+        for d=1:length(di)
+            dcfilename=[outdir,di(d).name];
+            ea_imageclassifier({dcfilename});
+        end
+        figs=allchild(0);
+        ids={figs.Tag};
+        [~,imclassfids]=ismember(ids,'imclassf');
+        if ~any(imclassfids)
+            msgbox('All NIfTI files have been assigned already.');
+        else
+            set(figs(logical(imclassfids)),'Visible','on');
+        end
+        if isempty(di)
+            msgbox('Could not find any NIfTI files to rename/assign.');
+        end
+    end
+        return % For now we recommend to do import & processing in separate run calls.
 end
 
 % check connectome-mapper tags
@@ -233,7 +256,15 @@ else
     ea_write(options)
 end
 
-
+function di=ea_sortbytes(di)
+if isempty(di)
+    return
+end
+for d=1:length(di)
+    bytesc(d)=di(d).bytes;
+end
+[~,order]=sort(bytesc,'ascend');
+di=di(order);
 
 function model=ea_mod2pacermod(model)
 % current dictionary to translate between Lead-DBS and PaCER nomenclature.

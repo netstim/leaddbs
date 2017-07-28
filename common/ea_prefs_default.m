@@ -167,7 +167,6 @@ prefs.d3.corticalatlas='DKT'; % Currently supports 'DKT','DKT_aseg','a2009'
 
 %% DICOM files:
 prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 0: Leave DICOMs at pt/DICOM folder after conversion.
-prefs.dicom.assign=1; % also assign DICOM files (ea_imageclassifier).
 
 %% fibers:
 

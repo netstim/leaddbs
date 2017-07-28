@@ -53,7 +53,7 @@ function ea_stimparams_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to ea_stimparams (see VARARGIN)
 
 % Change name
-set(gcf,'Name','Stimulation Parameters');
+set(handles.stimfig,'Name','Stimulation Parameters');
 
 % store input arguments in figure to make it available to subroutines.
 elstruct=varargin{1};
@@ -1589,9 +1589,10 @@ S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options')
 
 
 label=get(handles.stimlabel,'String');
+set(handles.stimlabel,'String',label);
+label=label{get(handles.stimlabel,'Value')};
 label(strfind(label,' '))='';
 S.label=label;
-set(handles.stimlabel,'String',label);
 
 
 setappdata(handles.stimfig,'S',S);
@@ -1709,11 +1710,12 @@ end
 stimlabel=getappdata(handles.stimfig,'stimlabel');
 
 if isempty(S)
-    S=initializeS(stimlabel);
+    S=initializeS(stimlabel,options,handles);
+
     setappdata(handles.stimfig,'stimlabel',S.label);
 else
    if isempty(S.Rs1)
-       S=initializeS(stimlabel);
+       S=initializeS(stimlabel,options,handles);
        setappdata(handles.stimfig,'stimlabel',S.label);
    end
 end
@@ -1934,7 +1936,7 @@ axis equal;
 
 %% add label
 
-set(handles.stimlabel,'String',S.label);
+%set(handles.stimlabel,'String',S.label);
 
 
 
@@ -2381,6 +2383,10 @@ ea_refreshguisp(handles,options,ID);
 
 function S=initializeS(varargin)
 
+if nargin>1
+    options=varargin{2};
+    handles=varargin{3};
+end
 % right sources
 for source=1:4
     for k=0:7
@@ -2410,13 +2416,15 @@ end
 S.active=[1,1];
 if nargin
     if isempty(varargin{1})
-        S.label=ea_detstimname;
+        labels=ea_detstimname(options,handles);
+        set(handles.stimlabel,'String',labels);
     else
-        S.label=varargin{1};
+        labels=varargin{1};
     end
 else
-    S.label=ea_detstimname;
+    labels=ea_detstimname(options,handles);
 end
+S.label=labels{get(handles.stimlabel,'Value')};
 
 
 function Ls3am_Callback(hObject, eventdata, handles)
