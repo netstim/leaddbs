@@ -318,7 +318,7 @@ for branch=1:length(sels.branches)
                 
                 sidec=getsidec(length(sels.sides{branch}{leaf}),side);
                 
-                [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons, h.uselabelname,h.atlases);
+                [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons, h.uselabelname,h.atlases);
                 if strcmp(sels.sides{branch}{leaf}{side},'selected')
                     if ~strcmp(h.atlassurfs(ixs).Visible,'on')
                         h.atlassurfs(ixs).Visible='on';
@@ -560,8 +560,8 @@ for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
             sidec=getsidec(length(sels.sides{branch}{leaf}),side);
-            [ixs,ixt]=ea_getsubindex(h.sgsubfi{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
-            
+            [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons,h.uselabelname,h.atlases);
+           
             if ismember(char(h.sgsubfi{branch}{leaf}),onatlasnames)
                 h.atlassurfs(ixs).Visible='on';
                 h.togglebuttons(ixt).State='on';

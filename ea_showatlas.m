@@ -77,7 +77,7 @@ for nativemni=nm % switch between native and mni space atlases.
             jetlist=atlases.colormap;
 
         end
-        colormap(atlases.colormap);
+        %colormap(atlases.colormap);
 
 
 
