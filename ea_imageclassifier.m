@@ -363,7 +363,7 @@ end
 
 function name=ea_getaltanatname
 name=inputdlg('Please enter a name for this acquisition (matching the anat_*.nii pattern)','Please enter name for alternative preoperative acquisition',1,{'anat_*.nii'});
-
+name=name{1};
 function finishandclose(handles,current_imclass)
 if ~isempty(current_imclass)
     [~,current_imclass]=fileparts(current_imclass); % remove potential file extension
