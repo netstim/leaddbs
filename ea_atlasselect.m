@@ -151,8 +151,10 @@ for subgroup=1:length(atlases.subgroups)
             thisatlname=atlases.labels{uselabelname}{node};
         end
         
-        % gzip support
-        [~,thisatlname]=ea_niifileparts(thisatlname);
+        % nii(.gz) support
+        if regexp(thisatlname, '\.nii(\.gz)?$')
+            [~,thisatlname]=ea_niifileparts(thisatlname);
+        end
         
         color = round(squeeze(atlases.colormap(ceil(atlases.colors(node)),:))*256);
         color = sprintf('rgb(%d,%d,%d)', color(1),color(2),color(3));
