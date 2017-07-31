@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 07-Dec-2016 15:43:00
+% Last Modified by GUIDE v2.5 31-Jul-2017 14:50:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -155,10 +155,11 @@ function ea_makehidelcindep(handles)
 
 set(handles.importpanel,'visible','off');
 set(handles.runsavebutn,'String','Save and close');
+set(handles.runsavebutn,'Position',[218,6,154,41]);
 set(handles.exportcode,'visible','off');
 
 set(handles.openpatientdir,'visible','off');
-moveup=165;
+moveup=190;
 
 pos=get(handles.logoaxes,'Position');
 pos(2)=pos(2)-moveup;
@@ -659,3 +660,13 @@ function openpatientdir_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_openpatdir(handles);
+
+
+% --- Executes on button press in assignnii.
+function assignnii_Callback(hObject, eventdata, handles)
+% hObject    handle to assignnii (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of assignnii
+ea_deselectall_dicom(handles);
