@@ -185,24 +185,29 @@ axis equal
 axis off
 
 set(handles.imghdrinfo,'String',hdrtext);
-set(handles.xres,'String',[num2str(nii.voxsize(1))]);
+set(handles.imghdrinfo,'TooltipString',nii.fname);
+set(handles.xres,'String',num2str(nii.voxsize(1)));
 set(handles.xres,'ForegroundColor',res2col(nii.voxsize(1)));
-set(handles.yres,'String',[num2str(nii.voxsize(2))]);
+set(handles.yres,'String',num2str(nii.voxsize(2)));
 set(handles.yres,'ForegroundColor',res2col(nii.voxsize(2)));
-set(handles.zres,'String',[num2str(nii.voxsize(3))]);
+set(handles.zres,'String',num2str(nii.voxsize(3)));
 set(handles.zres,'ForegroundColor',res2col(nii.voxsize(3)));
 
 if max(nii.voxsize)>4
-    set(handles.recommendation,'String',['This volume seems not ideally suited for Lead-DBS  (=> Consider clicking "Ignore").']);
+    set(handles.recommendation,'String','This volume seems not ideally suited for Lead-DBS  (=> Consider clicking "Ignore").');
+    set(handles.recommendation,'TooltipString','This volume seems not ideally suited for Lead-DBS  (=> Consider clicking "Ignore").');
     set(handles.recommendation,'ForegroundColor',res2col(max(nii.voxsize)));
 elseif max(nii.voxsize)>2
-    set(handles.recommendation,'String',['This volume seems borderline suited for Lead-DBS (=> Consider ignoring if better acquisitions are available).']);
+    set(handles.recommendation,'String','This volume seems borderline suited for Lead-DBS (=> Consider ignoring if better acquisitions are available).');
+    set(handles.recommendation,'TooltipString','This volume seems borderline suited for Lead-DBS (=> Consider ignoring if better acquisitions are available).');
     set(handles.recommendation,'ForegroundColor',res2col(max(nii.voxsize)));
 elseif max(nii.voxsize)>1
-    set(handles.recommendation,'String',['This volume seems suited for Lead-DBS (=> Please assign the type of acquisition using the buttons below).']);
+    set(handles.recommendation,'String','This volume seems suited for Lead-DBS (=> Please assign the type of acquisition using the buttons below).');
+    set(handles.recommendation,'TooltipString','This volume seems suited for Lead-DBS (=> Please assign the type of acquisition using the buttons below).');
     set(handles.recommendation,'ForegroundColor',res2col(max(nii.voxsize)));
 else
-    set(handles.recommendation,'String',['This volume seems ideally suited for Lead-DBS (=> Please assign the type of acquisition using the buttons below).']);
+    set(handles.recommendation,'String','This volume seems ideally suited for Lead-DBS (=> Please assign the type of acquisition using the buttons below).');
+    set(handles.recommendation,'TooltipString','This volume seems ideally suited for Lead-DBS (=> Please assign the type of acquisition using the buttons below).');
     set(handles.recommendation,'ForegroundColor',res2col(max(nii.voxsize)));
 end
 % UIWAIT makes ea_imageclassifier wait for user response (see UIRESUME)
@@ -296,10 +301,10 @@ finishandclose(handles,'ignore');
 
 function ea_keystr(icfig,event,handles)
 % pause
-%commnd=get (handles.imclassf, 'CurrentKey');
+% commnd=get (handles.imclassf, 'CurrentKey');
 
 % global current_imclass
-%% get vars
+% get vars
 eltog=getappdata(handles.imclassf,'eltog');
 elplot=getappdata(handles.imclassf,'elplot');
 coords_mm=getappdata(handles.imclassf,'coords_mm');
@@ -361,9 +366,12 @@ switch commnd
         return
 end
 
+
 function name=ea_getaltanatname
 name=inputdlg('Please enter a name for this acquisition (matching the anat_*.nii pattern)','Please enter name for alternative preoperative acquisition',1,{'anat_*.nii'});
 name=name{1};
+
+
 function finishandclose(handles,current_imclass)
 if ~isempty(current_imclass)
     [~,current_imclass]=fileparts(current_imclass); % remove potential file extension
@@ -446,11 +454,12 @@ hdrtxt = sprintf('%s----------------------------------\n', hdrtxt);
 hdrtxt = sprintf('%sDimension: %d x %d x %d\n', hdrtxt, nii.dim(1),nii.dim(2),nii.dim(3));
 hdrtxt = sprintf('%sIntensity Range: %d - %d\n', hdrtxt, ea_nanmin(nii.img(:)),ea_nanmax(nii.img(:)));
 hdrtxt = sprintf('%sNumber of Components: %d\n', hdrtxt, size(nii.img,4));
+hdrtxt = sprintf('%s----------------------------------\n', hdrtxt);
 hdrtxt = sprintf('%sVox2mm:\n', hdrtxt);
-hdrtxt = sprintf('%s %.2f %.2f %.2f %.2f\n', hdrtxt,nii.mat(1,1),nii.mat(1,2),nii.mat(1,3),nii.mat(1,4));
-hdrtxt = sprintf('%s %.2f %.2f %.2f %.2f\n', hdrtxt,nii.mat(2,1),nii.mat(2,2),nii.mat(2,3),nii.mat(2,4));
-hdrtxt = sprintf('%s %.2f %.2f %.2f %.2f\n', hdrtxt,nii.mat(3,1),nii.mat(3,2),nii.mat(3,3),nii.mat(3,4));
-hdrtxt = sprintf('%s %.2f %.2f %.2f %.2f\n', hdrtxt,nii.mat(4,1),nii.mat(4,2),nii.mat(4,3),nii.mat(4,4));
+hdrtxt = sprintf('%s %.2f  %.2f  %.2f  %.2f\n', hdrtxt,nii.mat(1,1),nii.mat(1,2),nii.mat(1,3),nii.mat(1,4));
+hdrtxt = sprintf('%s %.2f  %.2f  %.2f  %.2f\n', hdrtxt,nii.mat(2,1),nii.mat(2,2),nii.mat(2,3),nii.mat(2,4));
+hdrtxt = sprintf('%s %.2f  %.2f  %.2f  %.2f\n', hdrtxt,nii.mat(3,1),nii.mat(3,2),nii.mat(3,3),nii.mat(3,4));
+hdrtxt = sprintf('%s %.2f  %.2f  %.2f  %.2f\n', hdrtxt,nii.mat(4,1),nii.mat(4,2),nii.mat(4,3),nii.mat(4,4));
 
 
 % --- Executes on button press in pretrat1push.
