@@ -59,7 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 set(handles.setfig,'Name','Normalization Settings');
-set(handles.titletext,'String','ANTs Defaults');
+set(handles.titletext,'String','FSL Defaults');
 
 
 
@@ -76,7 +76,7 @@ set(handles.skullstrip,'Value',prefs.machine.normsettings.fsl_skullstrip);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_normsettings_fsl_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_normsettings_fsl_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
