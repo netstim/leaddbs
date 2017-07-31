@@ -54,6 +54,7 @@ fixedmat = spm_get_space(fixed);
         matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
         spm_jobman('run',{matlabbatch});
         [pth,movingstem,ext]=fileparts(strrep(moving,',1',''));
+        movefile([pth,filesep,'r',movingstem,ext],[pth,filesep,movingstem,ext]);
 
     else
         matlabbatch{1}.spm.spatial.coreg.estimate.ref = {fixed};
