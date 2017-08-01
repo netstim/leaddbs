@@ -15,9 +15,7 @@ if ischar(files)
     files={files};
 end
 
-if ea_checktpmresolution
-    ea_create_tpm_darteltemplate;
-end
+ea_create_tpm_darteltemplate; % function will check if needs to run (again).
 
 if (~dartel && exist([directory, 'c1', files{1}], 'file') || dartel && exist([directory, 'rc1', files{1}], 'file')) && (~force)
     disp('Segmentation already done!');

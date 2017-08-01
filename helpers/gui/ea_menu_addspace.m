@@ -50,3 +50,15 @@ for space=1:length(spaces)
         c=uimenu(k3,'Label',sspacename,'Callback',{@ea_importspaceassets,spacename,'both'});
     end
 end
+
+k3 = uimenu(g,'Label','Import custom .nii file from...');
+for space=1:length(spaces)
+    if ~strcmp(spaces(space).name(1),'.')
+        spacename=spaces(space).name;
+        if strcmp(spacename,ea_getspace)
+            continue
+        end
+        sspacename=ea_sub2space(spacename);
+        c=uimenu(k3,'Label',sspacename,'Callback',{@ea_importspaceassets,spacename,'custom'});
+    end
+end

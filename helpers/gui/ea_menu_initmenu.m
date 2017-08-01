@@ -41,6 +41,8 @@ if isempty(menuprobe)
     
     uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles},'Accelerator','R');
     
+    uimenu(f,'Label','Fuse volumes','Callback',{@ea_waveletfusion,handles});
+
     
     if ismember('dbs',cmd)
         dbs=uimenu(f,'Label','DBS');
