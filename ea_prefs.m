@@ -53,18 +53,15 @@ ufn = fieldnames(uprefs);
 if length(uprefs) > length(prefs)
     prefs = cat(prefs, uprefs(length(prefs)+1:end));
 end
+
 % Iterate through struct array. Most prefs are a single struct, not an array.
 for sa_ix = 1:length(uprefs)
     for fn_ix = 1:length(ufn)
         fn = ufn{fn_ix};
-        try
-            if isstruct(uprefs(sa_ix).(fn))     
-                prefs(sa_ix).(fn) = combinestructs(prefs(sa_ix).(fn), uprefs(sa_ix).(fn));
-            else
-                prefs(sa_ix).(fn) = uprefs(sa_ix).(fn);
-            end
-        catch ME
-            rethrow(ME);  % Use as a breakpoint for debugging recursive func.
+        if isstruct(uprefs(sa_ix).(fn)) && isfield(prefs(sa_ix),fn)
+            prefs(sa_ix).(fn) = combinestructs(prefs(sa_ix).(fn), uprefs(sa_ix).(fn));
+        else
+            prefs(sa_ix).(fn) = uprefs(sa_ix).(fn);
         end
     end
 end
