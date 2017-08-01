@@ -491,7 +491,7 @@ function pretraswipush_Callback(hObject, eventdata, handles)
 % hObject    handle to pretraswipush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-        finishandclose(handles,'anat_swi.nii');
+finishandclose(handles,'anat_swi.nii');
 
 
 % --- Executes on button press in pretraflairpush.
@@ -499,7 +499,7 @@ function pretraflairpush_Callback(hObject, eventdata, handles)
 % hObject    handle to pretraflairpush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-        finishandclose(handles,'anat_flair.nii');
+finishandclose(handles,'anat_flair.nii');
 
 
 % --- Executes on button press in pretrat2starpush.
@@ -507,7 +507,7 @@ function pretrat2starpush_Callback(hObject, eventdata, handles)
 % hObject    handle to pretrat2starpush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-        finishandclose(handles,'anat_t2star.nii');
+finishandclose(handles,'anat_t2star.nii');
 
 
 % --- Executes on button press in pretraotherpush.
@@ -515,4 +515,4 @@ function pretraotherpush_Callback(hObject, eventdata, handles)
 % hObject    handle to pretraotherpush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-        finishandclose(handles,ea_getaltanatname);
+finishandclose(handles,ea_getaltanatname);

@@ -18,30 +18,40 @@ directory = [options.root,options.patientname,filesep];
 
 if options.dicomimp || options.assignnii % do DICOM-Import.
     if options.dicomimp
-        ea_dicom_import(options);
-    end
-    if options.assignnii
-        outdir = [options.root, options.patientname, filesep];
-        % assign image type here
-        di = dir([outdir,'*.nii']);
-        di = ea_sortbytes(di);
-        for d=1:length(di)
-            dcfilename=[outdir,di(d).name];
-            ea_imageclassifier({dcfilename});
-        end
-        figs=allchild(0);
-        ids={figs.Tag};
-        [~,imclassfids]=ismember(ids,'imclassf');
-        if ~any(imclassfids)
-            msgbox('All NIfTI files have been assigned already.');
+        if strcmp(options.patientname, 'No Patient Selected')
+            msgbox('Please choose patient directory first!','Error','error');
         else
-            set(figs(logical(imclassfids)),'Visible','on');
-        end
-        if isempty(di)
-            msgbox('Could not find any NIfTI files to rename/assign.');
+            ea_dicom_import(options);
         end
     end
-        return % For now we recommend to do import & processing in separate run calls.
+    
+    if options.assignnii
+        if strcmp(options.patientname, 'No Patient Selected')
+            msgbox('Please choose patient directory first!','Error','error');
+        else
+            outdir = [options.root, options.patientname, filesep];
+            % assign image type here
+            di = dir([outdir,'*.nii']);
+            di = ea_sortbytes(di);
+            for d=1:length(di)
+                dcfilename=[outdir,di(d).name];
+                ea_imageclassifier({dcfilename});
+            end
+            figs=allchild(0);
+            ids={figs.Tag};
+            [~,imclassfids]=ismember(ids,'imclassf');
+            if ~any(imclassfids)
+                msgbox('All NIfTI files have been assigned already.');
+            else
+                set(figs(logical(imclassfids)),'Visible','on');
+            end
+            if isempty(di)
+                msgbox('Could not find any NIfTI files to rename/assign.');
+            end
+        end
+    end
+    
+    return % For now we recommend to do import & processing in separate run calls.
 end
 
 % check connectome-mapper tags

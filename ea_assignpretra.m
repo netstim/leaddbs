@@ -9,7 +9,8 @@ pfcell = {presfiles.name}';
 prenii_order = cellfun(@(x) strrep(options.prefs.prenii_searchstring,'*',x), options.prefs.prenii_order, 'UniformOutput', 0);
 [~,idx] = ismember(prenii_order, pfcell);
 presentfiles = pfcell([nonzeros(idx)',setdiff(1:numel(pfcell),nonzeros(idx))]);
-    options.primarytemplate = 't2'; % default T2.
+
+options.primarytemplate = 't2'; % default T2.
 
 if isempty(presentfiles)
     warning(['No anatomy information found! Please put either ', ...
