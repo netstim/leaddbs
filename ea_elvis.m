@@ -99,13 +99,13 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             multiplemode=1;
             
             % mer development
-            if isstruct(varargin{2})
-                elstruct=varargin{2}.elstruct;
-                merstruct=varargin{2}.merstruct;
-            else
+%             if isstruct(varargin{2})
+%                 elstruct=varargin{2}.elstruct;
+%                 merstruct=varargin{2}.merstruct;
+%             else
                 elstruct=varargin{2};
-            end
-            
+%             end
+
             if options.d3.mirrorsides
                elstruct=ea_mirrorsides(elstruct);
                options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix);
