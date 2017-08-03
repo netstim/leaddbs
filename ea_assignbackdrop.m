@@ -54,11 +54,13 @@ switch bdstring
             postop = {[subpat,' Post-OP']};
             if native
                 varargout{1}=[preop(logical(haspreop)),...
-                    postop(logical(haspostop))];
+                    postop(logical(haspostop)),...
+                    {'Choose...'}];
             else
                 varargout{1}=[ea_standardspacelist,...
                     preop(logical(haspreop)),...
-                    postop(logical(haspostop))];
+                    postop(logical(haspostop)),...
+                    {'Choose...'}];
             end
         end
 
@@ -82,12 +84,16 @@ switch bdstring
         varargout{1}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
         varargout{2}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
         varargout{3}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
-
+        
     otherwise
-        template=lower(strrep(bdstring,[ea_getspace,' '],''));
-        varargout{1}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
-        varargout{2}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
-        varargout{3}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
+        if regexp(bdstring, ['^',ea_getspace,' '])    % template has the pattern of "MNI_ICBM_2009b_NLIN_ASYM *"
+            template=lower(strrep(bdstring,[ea_getspace,' '],''));
+            varargout{1}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
+        else    % custom backdrop file
+            varargout{1}=spm_vol(bdstring);
+        end
+        varargout{2}=varargout{1};
+        varargout{3}=varargout{1};
 end
 
 
