@@ -181,7 +181,7 @@ else
     if strcmpi(preniis{1}(6:7),whichpreop)
         gfi=['glanat','.nii'];
     else
-        gfi=['wanat_',whichpreop,'.nii'];
+        gfi=['glanat_',whichpreop,'.nii'];
     end
     options.prefs.gtranii=gfi;
     options.prefs.gcornii=gfi;

@@ -17,7 +17,7 @@ if ischar(fis)
 end
 
 for fi=1:length(fis) 
-   to{fi}=[path,'w',fis{fi}];
+   to{fi}=[path,'gl',fis{fi}];
    from{fi}=[path,fis{fi}];
 end
 

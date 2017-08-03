@@ -594,7 +594,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             end
         else
             directory=[options.root,options.patientname,filesep];
-            toload=[directory,'w',presentfiles{str2double(tempstr)}];
+            toload=[directory,'gl',presentfiles{str2double(tempstr)}];
             if ~exist(toload,'file')
                 to{1}=toload;
                 from{1}=[directory,presentfiles{str2double(tempstr)}];
