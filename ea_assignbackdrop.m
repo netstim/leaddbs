@@ -12,8 +12,18 @@ if ~exist('native','var')
     end
 end
 
+whichpreop='';
+if length(bdstring)>length([subpat,' Pre-OP']) && strcmp(bdstring(1:length([subpat,' Pre-OP'])),[subpat,' Pre-OP'])
+    whichpreop=bdstring(length([subpat,' Pre-OP'])+1:end);
+    whichpreop=upper(strrep(whichpreop,'(',''));
+    whichpreop=strrep(whichpreop,')','');
+    whichpreop=strrep(whichpreop,' ','');
+    bdstring=[subpat,' Pre-OP'];
+end
+
 switch bdstring
     case 'list'
+        
         % determine whether we are in No patient mode (could be called from
         % lead group or called from an empty patient viewer / lead anatomy
         if ~exist('options','var')
@@ -31,26 +41,32 @@ switch bdstring
         end
         
         haspostop=0; haspreop=0;
-        try        
+        if ~isempty(dir([options.root,options.patientname,filesep,'anat_*.nii']));
+            haspreop=1;
+        end
+        try
             assignpatspecific(options, native); % use this as a probe to see if patient is defined.
             haspostop=1;
-            options=ea_tempswitchoptstopre(options, native);
-            assignpatspecific(options, native); % use this as a probe to see if patient is defined.
-            haspreop=1;
-        catch
-            try
-                options=ea_tempswitchoptstopre(options, native);
-                assignpatspecific(options, native); % use this as a probe to see if patient is defined.
-                haspreop=1;
-            catch
-                nopatientmode=1;
-            end
+        end
+        
+        if ~haspostop && ~haspreop
+            nopatientmode=1;
         end
         
         if nopatientmode
             varargout{1}=ea_standardspacelist;
         else
-            preop = {[subpat,' Pre-OP']};
+            if haspreop
+                [options,preopfiles]=ea_assignpretra(options);
+                preopfiles=cellfun(@(x) strrep(x,'anat_',''),preopfiles,'Un',0);
+                preopfiles=cellfun(@(x) strrep(x,'.nii',''),preopfiles,'Un',0);
+                preopfiles=cellfun(@upper,preopfiles,'Un',0);
+                
+                preop=cellfun(@(x) horzcat(subpat,' Pre-OP (',x,')'),preopfiles,'Un',0);
+                %preop = {[subpat,' Pre-OP']};
+            else
+                preop={''};
+            end
             postop = {[subpat,' Post-OP']};
             if native
                 varargout{1}=[preop(logical(haspreop)),...
@@ -58,14 +74,15 @@ switch bdstring
                     {'Choose...'}];
             else
                 varargout{1}=[ea_standardspacelist,...
-                    preop(logical(haspreop)),...
+                    preop',...
                     postop(logical(haspostop)),...
                     {'Choose...'}];
             end
+            
         end
 
     case [subpat,' Pre-OP']
-        options=ea_tempswitchoptstopre(options, native);
+        options=ea_tempswitchoptstopre(options, native, whichpreop);
         [Vtra,Vcor,Vsag]=assignpatspecific(options, native);
         varargout{1}=Vtra;
         varargout{2}=Vcor;
@@ -150,20 +167,31 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
 end
 
 
-function options=ea_tempswitchoptstopre(options, native)
+function options=ea_tempswitchoptstopre(options, native, whichpreop,list)
 % this generates a very temporary fake options struct that points to preop
 % data instead of postop data.
+
 if native
-    options.prefs.tranii_unnormalized=options.prefs.prenii_unnormalized;
-    options.prefs.cornii_unnormalized=options.prefs.prenii_unnormalized;
-    options.prefs.sagnii_unnormalized=options.prefs.prenii_unnormalized;
-    options.prefs.tp_ctnii_coregistered=options.prefs.prenii_unnormalized;
+    options.prefs.tranii_unnormalized=['anat_',whichpreop,'.nii'];
+    options.prefs.cornii_unnormalized=['anat_',whichpreop,'.nii'];
+    options.prefs.sagnii_unnormalized=['anat_',whichpreop,'.nii'];
+    options.prefs.tp_ctnii_coregistered=['anat_',whichpreop,'.nii'];
 else
-    options.prefs.gtranii=options.prefs.gprenii;
-    options.prefs.gcornii=options.prefs.gprenii;
-    options.prefs.gsagnii=options.prefs.gprenii;
-    options.prefs.tranii=options.prefs.prenii;
-    options.prefs.cornii=options.prefs.prenii;
-    options.prefs.sagnii=options.prefs.prenii;
-    options.prefs.tp_gctnii=options.prefs.gprenii;
+    [options,preniis]=ea_assignpretra(options);
+    if strcmpi(preniis{1}(6:7),whichpreop)
+        gfi=['glanat','.nii'];
+    else
+        gfi=['wanat_',whichpreop,'.nii'];
+    end
+    options.prefs.gtranii=gfi;
+    options.prefs.gcornii=gfi;
+    options.prefs.gsagnii=gfi;
+    options.prefs.tp_gctnii=gfi;
+    if ~exist('list','var')
+        if ~exist([options.root,options.patientname,filesep,gfi],'file')
+            to{1}=[options.root,options.patientname,filesep,gfi];
+            from{1}=[options.root,options.patientname,filesep,['anat_',lower(whichpreop),'.nii']];
+            ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],0);
+        end
+    end
 end
