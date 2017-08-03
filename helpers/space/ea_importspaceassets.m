@@ -71,8 +71,10 @@ function ea_warpfilefromspace(fromspace,infname)
 
 [pth,inf,ext]=fileparts(infname);
 outfname=fullfile(pth,['w',inf,ext]);
-options.prefs=ea_prefs('');
+
 directory=[ea_space,fromspace,filesep];
+options=ea_getptopts(directory);
+options.prefs=ea_prefs('');
 ea_apply_normalization_tofile(options,{infname},{outfname},directory,0,1,infname);
 
 
@@ -81,7 +83,8 @@ ea_apply_normalization_tofile(options,{infname},{outfname},directory,0,1,infname
 
 
 function ea_warpatlasassets(fromspace)
-
+directory=[ea_space,fromspace,filesep];
+options=ea_getptopts(directory);
 options.prefs=ea_prefs('');
 % list atlases:
 as=dir([ea_getearoot,'templates',filesep,'space',filesep,fromspace,filesep,'atlases']);
