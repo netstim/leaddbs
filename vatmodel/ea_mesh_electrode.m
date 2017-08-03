@@ -145,7 +145,6 @@ if vizz
     figure
     patch('Vertices',nobj,'Faces',fobj,'FaceColor','none');
     patch('Vertices',node,'Faces',face(:,1:3),'FaceColor','blue');
-    
 end
 
 
@@ -218,6 +217,8 @@ end
 
 %% create tetrahedral mesh of the final combined mesh (seeds are ignored, tetgen 1.5 automatically find regions)
 % - this is the part where we have all 4 element types combined already.
+
+
 [nmesh,emesh,fmesh]=s2m(nboth3,fboth3,1,3);
 if vizz
     figure('name','Final mesh');

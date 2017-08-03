@@ -160,7 +160,7 @@ ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','v
 
 
 
-
+%ea_setup_dragndrop(handles);
 
 
 handles.prod='dbs';

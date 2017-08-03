@@ -187,12 +187,16 @@ bottom=top+2*N;
 
 fci=[fci,{top},{bottom}];
 
+keyboard
+figure, plotmesh(no,fci)
+[noi,velem,fci]=s2m(no,fci,1,3);
 
-%[no,fci]=removedupnodes(no,fci,1e-6);
+%[noi,fci]=removedupnodes(no,fci,1e-6);
 
-%keyboard
 
-[noi,fci]=removeisolatednode(no,fci);
+%
+
+%[noi,fci]=removeisolatednode(no,fci);
 
 [noi,velem,fci]=s2m(noi,fci,1,3);
 
