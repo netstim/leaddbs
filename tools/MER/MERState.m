@@ -9,10 +9,10 @@ classdef MERState
         Toggles
     end
     methods
-        function obj = MERState(options)
-            obj = obj.setOptions(options);
-            obj = obj.clearData();
-        end
+%         function obj = MERState(options)
+%             obj = obj.setOptions(options);
+%             obj = obj.clearData();
+%         end
         function obj = setOptions(obj, options)
             % Take in options struct and keep only necessary parts in
             % obj.Config

@@ -164,11 +164,13 @@ for side_ix = 1:length(uq_sides)
         lms(row_ix).label = lm_strs{row_id};
         lms(row_ix).coords.native = coords(row_id, :);
     end
-    merstruct.updateFrame(sstr, lms);
+    merstruct = merstruct.updateFrame(sstr, lms);
 end
 merstruct = merstruct.calculateMERTranslations().calculateMERTrajectories();
 setappdata(mercontrolfig, 'merstruct', merstruct);
-ea_resultfig_updatetrajectories(struct('mercontrolfig', mercontrolfig));
+fake_handles = struct('mercontrolfig', mercontrolfig);
+ea_resultfig_updatetrajectories(fake_handles);
+% ea_resultfig_updatemarkers(fake_handles);
 delete(handles.figure1);
 
 

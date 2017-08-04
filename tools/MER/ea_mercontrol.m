@@ -79,7 +79,7 @@ options=varargin{2};
 setappdata(hObject, 'resultfig', resultfig);
 setappdata(hObject, 'options', options);  % Keep a copy of options
 % Get the MER State, set it to defaults, and store it in appdata.
-merstruct = MERState(options).setDataToDefaults();
+merstruct = MERState().setOptions(options).clearData().setDataToDefaults();
 setappdata(hObject, 'merstruct', merstruct);
 % merhandles is a struct array, each element has .side and .label (strings)
 % for indexing, and .h (plotted object handle)
@@ -561,9 +561,6 @@ function nexframeadj_Callback(hObject, eventdata, handles)
 
 % Modal window for nexdrive rotation.
 ea_nexframegui(handles.mercontrolfig);
-ea_merstruct_updatetranslations(handles);
-ea_merstruct_updatetrajectories(handles);
-ea_resultfig_updatetrajectories(handles);
 
 
 
@@ -795,15 +792,13 @@ ea_resultfig_updatetrajectories(handles, sidestr{side_ix});
 
 
 function popupimplantedtract_helper(hObject, eventdata, handles) %#ok<INUSL>
-tract_ix = get(hObject, 'Value') - 1;
 str_parts = strsplit(hObject.Tag, '_');
 [sidestr, side_ix, ~] = ea_detsidestr(str_parts{2});
-resultfig = getappdata(handles.mercontrolfig, 'resultfig');
-merstruct = getappdata(resultfig, 'merstruct');
-merstruct.implant_idx(side_ix) = tract_ix;
-setappdata(resultfig, 'merstruct', merstruct);
-ea_merstruct_updatetranslations(handles, sidestr{side_ix});
-ea_merstruct_updatetrajectories(handles, sidestr{side_ix})
+merstruct = getappdata(handles.mercontrolfig, 'merstruct');
+bSide = strcmpi({merstruct.DBSImplants.side}, sidestr{side_ix});
+merstruct.DBSImplants(bSide).implanted_tract_label = hObject.String{hObject.Value};
+merstruct = merstruct.calculateMERTranslations();
+setappdata(handles.mercontrolfig, 'merstruct', merstruct);
 ea_resultfig_updatetrajectories(handles, sidestr{side_ix});
 
 
