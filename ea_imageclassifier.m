@@ -22,7 +22,7 @@ function varargout = ea_imageclassifier(varargin)
 
 % Edit the above text to modify the response to help ea_imageclassifier
 
-% Last Modified by GUIDE v2.5 28-Jul-2017 11:05:06
+% Last Modified by GUIDE v2.5 04-Aug-2017 18:53:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -32,7 +32,7 @@ gui_State = struct('gui_Name',       mfilename, ...
                    'gui_OutputFcn',  @ea_imageclassifier_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
-               
+
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -61,55 +61,36 @@ guidata(hObject, handles);
 
 set(hObject,'name','Please specify image type');
 
-
+% output in the same directory by default
 tmpoutdir=fileparts(varargin{1}{:});
 
 setappdata(hObject,'dcfilename',varargin{1}{:});
 setappdata(hObject,'tmpoutdir',tmpoutdir);
 
-[~,dcfn]=fileparts(getappdata(handles.imclassf,'dcfilename'));
-% check for already classified images:
-for append=[0,2:15] % check for duplicates, too.
-    [base_lead_fis,all_lead_fis]=ea_getbasefilenames('',append);
-    % Check if file is an already sorted file:
-    if ismember([dcfn,'.nii'],base_lead_fis)
-        finishandclose(handles,'');
-        return
-    end
-    
-    if ismember([dcfn,'.nii'],all_lead_fis)
-        finishandclose(handles,'');
-        return
-    end
-    
-    [pth,fi,ext]=fileparts([dcfn,'.nii']);
-    if strcmp(fi(1:5),'anat_') && strcmp(ext,'.nii')
-        finishandclose(handles,'');
-        return
-    end
+[~, dcfn]=ea_niifileparts(getappdata(handles.imclassf,'dcfilename'));
 
-    if append
-        append=num2str(append);
-    else
-        append='';
-    end
-    
-    if strcmp([dcfn,'.nii'],['ignore',append,'.nii'])
-        finishandclose(handles,'');
-        return
-    end
-    
-    if strcmp([dcfn,'.nii'],['corrupt_data',append,'.nii'])
-        finishandclose(handles,'');
-        return
-    end
-    
-    if strcmp([dcfn,'.nii'],['auto_ignore',append,'.nii'])
-        finishandclose(handles,'');
-        return
-    end
+% check for already classified images
+
+% skip: file already included in leadfiles list
+leadfiles = ea_getbasefilenames('');
+if any(cellfun(@(x) ~isempty(regexp(dcfn,['^', x,'([2-9]|1[0-5])?$'],'once')), leadfiles))
+    finishandclose(handles,'');
+    return
 end
 
+% skip: file not included in leadfiles list but its name has the pattern of 'anat_*'
+if regexp(dcfn, '^anat_.*$','once')
+    finishandclose(handles,'');
+    return
+end
+
+% skip: ignored, corrupted or auto ignored (any(nii.dim)<25) files detected
+if regexp(dcfn,'^(ignore|corrupt_data|auto_ignore)([2-9]|1[0-5])?$','once')
+    finishandclose(handles,'');
+    return
+end
+
+% "corrupt_data": check if the file is corrupted
 try
     nii=ea_load_nii(getappdata(handles.imclassf,'dcfilename'));
 catch
@@ -117,6 +98,7 @@ catch
     return
 end
 
+% "auto_ignore": ignore the file is any of the 3 dimension smaller than 25
 if any(nii.dim<25)
     finishandclose(handles,'auto_ignore');
     return
@@ -131,21 +113,14 @@ catch
     keyboard
 end
 
-%try
-%     x=slice(double(squeeze(nii.img(:,:,:,1))),round(size(nii.img,1)/2),...
-%     round(size(nii.img,2)/2),...
-%     round(size(nii.img,3)/2));
-    xsliceplot=slice3i(hObject,nii.img,nii.mat,1,round(size(nii.img,1)/2));
-    ysliceplot=slice3i(hObject,nii.img,nii.mat,2,round(size(nii.img,2)/2));
-    zsliceplot=slice3i(hObject,nii.img,nii.mat,3,round(size(nii.img,3)/2));
-    
+xsliceplot=slice3i(hObject,nii.img,nii.mat,1,round(size(nii.img,1)/2));
+ysliceplot=slice3i(hObject,nii.img,nii.mat,2,round(size(nii.img,2)/2));
+zsliceplot=slice3i(hObject,nii.img,nii.mat,3,round(size(nii.img,3)/2));
+
 setappdata(hObject,'xsliceplot',xsliceplot);
 setappdata(hObject,'ysliceplot',ysliceplot);
 setappdata(hObject,'zsliceplot',zsliceplot);
 
-%     set(xsliceplot,'FaceColor','interp',...
-%         'EdgeColor','none',...
-%         'DiffuseStrength',.8)
 ht=uitoolbar(hObject);
 
 
@@ -211,7 +186,7 @@ else
     set(handles.recommendation,'ForegroundColor',res2col(max(nii.voxsize)));
 end
 % UIWAIT makes ea_imageclassifier wait for user response (see UIRESUME)
-%uiwait(handles.imclassf);
+% uiwait(handles.imclassf);
 
 function col=res2col(res)
 if res>4
@@ -225,7 +200,7 @@ else
 end
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_imageclassifier_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_imageclassifier_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -374,50 +349,50 @@ name=name{1};
 
 function finishandclose(handles,current_imclass)
 if ~isempty(current_imclass)
-    [~,current_imclass]=fileparts(current_imclass); % remove potential file extension
+    [~,current_imclass]=ea_niifileparts(current_imclass); % remove potential file extension
     tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
-    
+
     [~,pt]=fileparts(tmpoutdir);
     prefs=ea_prefs(pt);
-    
-    append='';
-    while exist([tmpoutdir,filesep,current_imclass,append,'.nii'],'file')
-        if isempty(append)
-            append='2';
-        else
-            app=str2double(append);
-            append=num2str(app+1);
+
+    % check present files, pattern: basename[2-15].nii[.gz]
+    presentfile = cellfun(@ea_niifileparts, ea_regexpdir(tmpoutdir, ['^', current_imclass,'([2-9]|1[0-5])?\.nii(\.gz)?$'], 0), 'UniformOutput',0);
+    if ~isempty(presentfile)    % image with the same basename (of the same type) already exists
+        append = cellfun(@(x) regexp(x,['(?<=',current_imclass,')(\d+)$'],'match','once'), presentfile, 'UniformOutput', 0);
+        append(strcmp(append,'')) = {'1'};  % no appending number indicates the 1st image of the type
+        append = min(setdiff(1:15, cellfun(@str2num, append))); % get proper appending number for renaming
+        if append ~= 1  % warning when it's not the 1st image of the type
+            % skip warning when ignored, corrupted, auto ignored or rest* images detected
+            if isempty(regexp(current_imclass,'^(ignore|corrupt_data|auto_ignore|rest)$','once'))
+                warndlg(sprintf(['You have selected an image type ("',current_imclass,'") that has already been assigned for this patient. This is not recommended and for now, Lead-DBS will store this file ',...
+                   'under the name "',current_imclass,num2str(append),'.nii".\nPlease manually revise the files in the patient folder and decide which of the competing files is most suited. ',...
+                   'Then rename the best one of them to "',current_imclass,'.nii" and delete other files. Hint: The file with the largest file-size often has the best resolution.']));
+            end
+            current_imclass = [current_imclass, num2str(append)];
         end
     end
-    if ~isempty(append) && ~strcmp(current_imclass,'ignore') && ~strcmp(current_imclass,'auto_ignore');
-       warndlg(['You have selected an image type that has already been assigned for this patient. This is not recommended and for now, Lead-DBS will store this file ',...
-           'under the name "',current_imclass,append,'.nii". Please manually revise the files in the patient folder and decide which of the competing files is most suited. ',...
-           'Then rename the best one of them to ',...
-           '"',current_imclass,'.nii". Hint: The file with the largest file-size often has the best resolution.']);
-    end
-    movefile(getappdata(handles.imclassf,'dcfilename'),[getappdata(handles.imclassf,'tmpoutdir'),filesep,current_imclass,append,'.nii']);
-    
+
+    movefile(getappdata(handles.imclassf,'dcfilename'),[tmpoutdir,filesep,current_imclass,'.nii']);
+
     [~,dti]=fileparts(prefs.dti);
-    if strcmp(dti,current_imclass)
-        
-        fufn=getappdata(handles.imclassf,'dcfilename');
-        [pth,fn,ext]=fileparts(fufn);
+    % handle .bval .bvec files when dti image detected.
+    if regexp(current_imclass,['^',dti,'([2-9]|1[0-5])?$'],'once')
+        [pth,fn]=fileparts(getappdata(handles.imclassf,'dcfilename'));
         if exist([pth,filesep,fn,'.bval'],'file')
-            movefile([pth,filesep,fn,'.bval'],[pth,filesep,prefs.bval]);
+            movefile([pth,filesep,fn,'.bval'],[pth,filesep,current_imclass,'.bval']);
         else
             warning('No .bval file found for dMRI image.');
         end
-        
         if exist([pth,filesep,fn,'.bvec'],'file')
-            movefile([pth,filesep,fn,'.bvec'],[pth,filesep,prefs.bvec]);
+            movefile([pth,filesep,fn,'.bvec'],[pth,filesep,current_imclass,'.bvec']);
         else
             warning('No .bvec file found for dMRI image.');
-        end   
-    end 
+        end
+    end
 end
 
 close(handles.imclassf)
-        
+
 
 % --- Executes on button press in restpush.
 function restpush_Callback(hObject, eventdata, handles)
@@ -516,3 +491,15 @@ function pretraotherpush_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 finishandclose(handles,ea_getaltanatname);
+
+
+% --- Executes on button press in custompush.
+function custompush_Callback(hObject, eventdata, handles)
+% hObject    handle to custompush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)'
+customname = inputdlg(sprintf('Input custom image name:\n(Use "anat_*" only if you want to use it as preoperative image.)'),'Custom');
+if ~isempty(customname)
+    customname = customname{1};
+end
+finishandclose(handles,customname);
