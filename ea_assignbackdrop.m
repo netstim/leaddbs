@@ -12,105 +12,95 @@ if ~exist('native','var')
     end
 end
 
-whichpreop='';
-if length(bdstring)>length([subpat,' Pre-OP']) && strcmp(bdstring(1:length([subpat,' Pre-OP'])),[subpat,' Pre-OP'])
-    whichpreop=bdstring(length([subpat,' Pre-OP'])+1:end);
-    whichpreop=upper(strrep(whichpreop,'(',''));
-    whichpreop=strrep(whichpreop,')','');
-    whichpreop=strrep(whichpreop,' ','');
-    bdstring=[subpat,' Pre-OP'];
-end
+if strcmp(bdstring, 'list')
+    % determine whether we are in No patient mode (could be called from
+    % lead group or called from an empty patient viewer / lead anatomy
+    if ~exist('options','var')
+        options.patientname='';
+    end
 
-switch bdstring
-    case 'list'
-        
-        % determine whether we are in No patient mode (could be called from
-        % lead group or called from an empty patient viewer / lead anatomy
-        if ~exist('options','var')
-            options.patientname='';
-        end
-        
-        if isfield(options,'groupmode')
-            nopatientmode=options.groupmode;
-        else
-            if strcmp(options.patientname,'No Patient Selected')
-                nopatientmode=1;
-            else
-                nopatientmode=0;
-            end
-        end
-        
-        haspostop=0; haspreop=0;
-        if ~isempty(dir([options.root,options.patientname,filesep,'anat_*.nii']));
-            haspreop=1;
-        end
-        try
-            assignpatspecific(options, native); % use this as a probe to see if patient is defined.
-            haspostop=1;
-        end
-        
-        if ~haspostop && ~haspreop
+    if isfield(options,'groupmode')
+        nopatientmode=options.groupmode;
+    else
+        if strcmp(options.patientname,'No Patient Selected')
             nopatientmode=1;
-        end
-        
-        if nopatientmode
-            varargout{1}=ea_standardspacelist;
         else
-            if haspreop
-                [options,preopfiles]=ea_assignpretra(options);
-                preopfiles=cellfun(@(x) strrep(x,'anat_',''),preopfiles,'Un',0);
-                preopfiles=cellfun(@(x) strrep(x,'.nii',''),preopfiles,'Un',0);
-                preopfiles=cellfun(@upper,preopfiles,'Un',0);
-                
-                preop=cellfun(@(x) horzcat(subpat,' Pre-OP (',x,')'),preopfiles,'Un',0);
-                %preop = {[subpat,' Pre-OP']};
-            else
-                preop={''};
-            end
-            postop = {[subpat,' Post-OP']};
-            if native
-                varargout{1}=[preop(logical(haspreop)),...
-                    postop(logical(haspostop)),...
-                    {'Choose...'}];
-            else
-                varargout{1}=[ea_standardspacelist,...
-                    preop',...
-                    postop(logical(haspostop)),...
-                    {'Choose...'}];
-            end
-            
+            nopatientmode=0;
+        end
+    end
+
+    if ~isempty(dir([options.root,options.patientname,filesep,'anat_*.nii']))
+        haspreop=1;
+    else
+        haspreop=0;
+    end
+
+    try
+        assignpatspecific(options, native); % use this as a probe to see if patient is defined.
+        haspostop=1;
+    catch
+        haspostop=0;
+    end
+
+    if ~haspostop && ~haspreop
+        nopatientmode=1;
+    end
+
+    if nopatientmode
+        varargout{1}=ea_standardspacelist;
+    else
+        if haspreop
+            [~, preopfiles]=ea_assignpretra(options);
+            preop=cellfun(@(x) [subpat, ' Pre-OP (',upper(regexp(x, '(?<=anat_)(.*)(?=\.nii)', 'match', 'once')), ')'], preopfiles, 'Uniform', 0)';
+        else
+            preop={''};
+        end
+        postop = {[subpat,' Post-OP']};
+        if native
+            varargout{1}=[preop,...
+                postop(logical(haspostop)),...
+                {'Choose...'}];
+        else
+            varargout{1}=[ea_standardspacelist,...
+                preop,...
+                postop(logical(haspostop)),...
+                {'Choose...'}];
         end
 
-    case [subpat,' Pre-OP']
-        options=ea_tempswitchoptstopre(options, native, whichpreop);
-        [Vtra,Vcor,Vsag]=assignpatspecific(options, native);
-        varargout{1}=Vtra;
-        varargout{2}=Vcor;
-        varargout{3}=Vsag;
-        
-    case [subpat, ' Post-OP']
-        [Vtra,Vcor,Vsag]=assignpatspecific(options, native);
-        varargout{1}=Vtra;
-        varargout{2}=Vcor;
-        varargout{3}=Vsag;
-        
-    case 'BigBrain 100 um ICBM 152 2009b Sym'
-        if ~ea_checkinstall('bigbrain',0,1)
-            ea_error('BigBrain is not installed and could not be installed automatically. Please make sure that Matlab is connected to the internet.');
-        end
-        varargout{1}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
-        varargout{2}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
-        varargout{3}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
-        
-    otherwise
-        if regexp(bdstring, ['^',ea_getspace,' '])    % template has the pattern of "MNI_ICBM_2009b_NLIN_ASYM *"
-            template=lower(strrep(bdstring,[ea_getspace,' '],''));
-            varargout{1}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
-        else    % custom backdrop file
-            varargout{1}=spm_vol(bdstring);
-        end
-        varargout{2}=varargout{1};
-        varargout{3}=varargout{1};
+    end
+
+elseif regexp(bdstring, ['^', subpat,' Pre-OP \(.*\)$'])    % pattern: "Patient Pre-OP (*)"
+    whichpreop=lower(regexp(bdstring, ['(?<=^', subpat,' Pre-OP \()(.*)(?=\))'],'match','once'));
+    options=ea_tempswitchoptstopre(options, native, whichpreop);
+    [Vtra,Vcor,Vsag]=assignpatspecific(options, native);
+    varargout{1}=Vtra;
+    varargout{2}=Vcor;
+    varargout{3}=Vsag;
+
+elseif strcmp(bdstring, [subpat, ' Post-OP'])
+    [Vtra,Vcor,Vsag]=assignpatspecific(options, native);
+    varargout{1}=Vtra;
+    varargout{2}=Vcor;
+    varargout{3}=Vsag;
+
+elseif strcmp(bdstring, 'BigBrain 100 um ICBM 152 2009b Sym')
+    if ~ea_checkinstall('bigbrain',0,1)
+        ea_error('BigBrain is not installed and could not be installed automatically. Please make sure that Matlab is connected to the internet.');
+    end
+    varargout{1}=spm_vol(fullfile(ea_space(options),'bigbrain_2015_100um_bb.nii'));
+    varargout{2}=varargout{1};
+    varargout{3}=varargout{1};
+
+elseif regexp(bdstring, ['^',ea_getspace,' '])    % pattern: "MNI_ICBM_2009b_NLIN_ASYM *"
+    template=lower(strrep(bdstring,[ea_getspace,' '],''));
+    varargout{1}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
+    varargout{2}=varargout{1};
+    varargout{3}=varargout{1};
+
+else    % custom backdrop file
+    varargout{1}=spm_vol(bdstring);
+    varargout{2}=varargout{1};
+    varargout{3}=varargout{1};
 end
 
 
@@ -167,7 +157,7 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
 end
 
 
-function options=ea_tempswitchoptstopre(options, native, whichpreop,list)
+function options=ea_tempswitchoptstopre(options, native, whichpreop)
 % this generates a very temporary fake options struct that points to preop
 % data instead of postop data.
 
@@ -178,20 +168,20 @@ if native
     options.prefs.tp_ctnii_coregistered=['anat_',whichpreop,'.nii'];
 else
     [options,preniis]=ea_assignpretra(options);
-    if strcmpi(preniis{1}(6:7),whichpreop)
+    if strcmp(['anat_',whichpreop,'.nii'], preniis{1})  % whichpreop: "t1", preniis{1}: "anat_t1.nii"
         gfi=['glanat','.nii'];
     else
         gfi=['glanat_',whichpreop,'.nii'];
     end
+
     options.prefs.gtranii=gfi;
     options.prefs.gcornii=gfi;
     options.prefs.gsagnii=gfi;
     options.prefs.tp_gctnii=gfi;
-    if ~exist('list','var')
-        if ~exist([options.root,options.patientname,filesep,gfi],'file')
-            to{1}=[options.root,options.patientname,filesep,gfi];
-            from{1}=[options.root,options.patientname,filesep,['anat_',lower(whichpreop),'.nii']];
-            ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],0);
-        end
+
+    if ~exist([options.root,options.patientname,filesep,gfi],'file')
+        to{1}=[options.root,options.patientname,filesep,gfi];
+        from{1}=[options.root,options.patientname,filesep,['anat_',whichpreop,'.nii']];
+        ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],0);
     end
 end
