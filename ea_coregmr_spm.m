@@ -24,10 +24,10 @@ for export=1:3
         end
         if exist(fina(1:end-2),'file')
             if costfun==length(cfundo) % only at final stage apply refining if set
-                
                 ea_docoreg_spm(options,fina,[directory,filesep,options.prefs.prenii_unnormalized,',1'], ...
                                costfuns{cfundo(costfun)},doreslice,{''},options.prefs.mrcoreg.writeoutcoreg);
             else % dont reslice, dont refine (not last pass).
+                
                 ea_docoreg_spm(options,fina,[directory,filesep,options.prefs.prenii_unnormalized,',1'],...
                                costfuns{cfundo(costfun)},0,{''},options.prefs.mrcoreg.writeoutcoreg);
             end

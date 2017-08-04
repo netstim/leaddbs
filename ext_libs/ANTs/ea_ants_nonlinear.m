@@ -32,7 +32,7 @@ end
 
 if slabsupport
     disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
-    tmaskdir=fullfile(tempdir,'lead');
+    tmaskdir=fullfile(outputdir,'tmp');
     if ~exist(tmaskdir,'dir')
         mkdir(tmaskdir);
     end
@@ -58,10 +58,9 @@ if slabsupport
             
             % write out slab mask
             slabspresent=1;
-            slabID=ea_generate_guid;
             mnii.dt=[4,0];
             mnii.img=AllMX;
-            mnii.fname=[tmaskdir,filesep,'slabmask_',slabID,'.nii'];
+            mnii.fname=[tmaskdir,filesep,'slabmask.nii'];
             ea_write_nii(mnii);
             disp('Slabs found. Separating slabs to form an additional SyN stage.');
         else
@@ -178,7 +177,7 @@ if slabspresent
         ' --shrink-factors ', synshrinkfactors ...
         ' --smoothing-sigmas ', synsmoothingssigmas, ...
         ' --use-estimate-learning-rate-once ', ...
-        ' --masks [NULL,',[tmaskdir,filesep,'slabmask_',slabID,'.nii'],']'];
+        ' --masks [NULL,',[tmaskdir,filesep,'slabmask.nii'],']'];
     fixedimage=[fixedimage,slabfixedimage];
     movingimage=[movingimage,slabmovingimage];
     
@@ -197,7 +196,7 @@ if subcorticalrefine
     synmasksmoothingssigmas=apref.smoothingsigmas.scrf;
     
     if slabspresent
-        movingmask=[tmaskdir,filesep,'slabmask_',slabID,'.nii'];
+        movingmask=[tmaskdir,filesep,'slabmask.nii'];
     else
         movingmask='NULL';
     end

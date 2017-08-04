@@ -49,19 +49,10 @@ end
 % remove uncropped and untilted versions
 fclean = ea_regexpdir(outdir, '(_Crop_1|_Tilt_1)\.nii$', 0);
 fclean = unique(regexprep(fclean, '(_Crop_1|_Tilt_1)', ''));
+
 for f=1:length(fclean)
     ea_delete(fclean{f});
 end
-
-if options.prefs.dicom.assign
-    % assign image type here
-    di = dir([outdir,'*.nii']);
-    for d=1:length(di)
-        dcfilename=[outdir,di(d).name];
-        ea_imageclassifier({dcfilename});
-    end
-end
-
 
 %% add methods dump:
 

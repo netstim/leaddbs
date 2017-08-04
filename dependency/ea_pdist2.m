@@ -10,8 +10,8 @@ function D = ea_pdist2( X, Y, metric )
 %
 % The metric can be one of the following:
 %
-% 'euclidean' / 'sqeuclidean':
-%   Euclidean / SQUARED Euclidean distance.  Note that 'sqeuclidean'
+% 'euclidean' / 'seuclidean':
+%   Euclidean / SQUARED Euclidean distance.  Note that 'seuclidean'
 %   is significantly faster.
 %
 % 'chisq'
@@ -39,14 +39,14 @@ function D = ea_pdist2( X, Y, metric )
 % INPUTS
 %  X        - [m x p] matrix of m p-dimensional vectors
 %  Y        - [n x p] matrix of n p-dimensional vectors
-%  metric   - ['sqeuclidean'], 'chisq', 'cosine', 'emd', 'euclidean', 'L1'
+%  metric   - ['euclidean'], 'chisq', 'cosine', 'emd', 'seuclidean', 'L1'
 %
 % OUTPUTS
 %  D        - [m x n] distance matrix
 %
 % EXAMPLE
 %  [X,IDX] = demoGenData(100,0,5,4,10,2,0);
-%  D = pdist2( X, X, 'sqeuclidean' );
+%  D = pdist2( X, X, 'euclidean' );
 %  distMatrixShow( D, IDX );
 %
 % See also PDIST, DISTMATRIXSHOW
@@ -55,13 +55,15 @@ function D = ea_pdist2( X, Y, metric )
 % Copyright 2009 Piotr Dollar.  [pdollar-at-caltech.edu]
 % Please email me if you find bugs, or have suggestions or questions!
 
-if( nargin<3 || isempty(metric) ); metric=0; end;
+if( nargin<3 || isempty(metric) )
+    metric=0; 
+end
 
 switch metric
-  case {0,'sqeuclidean'}
-    D = distEucSq( X, Y );
-  case 'euclidean'
+  case {0,'euclidean'}
     D = sqrt(distEucSq( X, Y ));
+  case 'seuclidean'
+    D = distEucSq( X, Y );
   case 'L1'
     D = distL1( X, Y );
   case 'cosine'

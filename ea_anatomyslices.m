@@ -93,6 +93,9 @@ end
 
 if togglestates.refreshcuts % reload image(s)
     clear V
+    if strcmp(togglestates.template, 'Choose...')
+        togglestates.template = togglestates.customfile;
+    end
     [V1,V2,V3]=ea_assignbackdrop(togglestates.template,options,'Patient',options.native);
     V{1}=V1; V{2}=V2; V{3}=V3;
     setappdata(resultfig,'templateused',togglestates.template); % refresh used template.

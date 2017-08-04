@@ -180,7 +180,7 @@ setappdata(resultfig,'togglestates',togglestates);
 
 popvals=get(hObject,'String');
 if strcmp(popvals{get(hObject,'Value')},'Choose...')
-    [FileName,PathName,FilterIndex] = uigetfile('*.nii','Choose anatomical image...');
+    [FileName,PathName] = uigetfile('*.nii','Choose anatomical image...');
     setappdata(gcf,'customfile',[PathName,FileName]);
 end
 refreshresultfig(handles)

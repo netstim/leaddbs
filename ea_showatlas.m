@@ -77,7 +77,7 @@ for nativemni=nm % switch between native and mni space atlases.
             jetlist=atlases.colormap;
 
         end
-        colormap(atlases.colormap);
+        %colormap(atlases.colormap);
 
 
 
@@ -201,7 +201,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 try
                     [~,centroid]=kmeans(XYZ.mm(:,1:3),1);
                 catch
-                    centroid=mean(XYZ(:,1:3),1);
+                    centroid=mean(XYZ.mm(:,1:3),1);
                 end
             else
 

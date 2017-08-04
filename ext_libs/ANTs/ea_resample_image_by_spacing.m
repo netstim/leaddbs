@@ -1,0 +1,61 @@
+function ea_resample_image_by_spacing(inputimage, spacing, dosmooth, addvox, nninterp, outputimage, dimension)
+% Resample image by spacing
+%
+%	spacing: output image spacing, 1*3 vector
+%   dosmooth: smoooth output image, default = 1
+%   addvox: pad each dimension by addvox, default = 0
+%   nn-interp: use NearestNeighbor interpolation or not, default = 0 (Linear interpolation)
+%   dimension: image dimension, default=3
+
+if ~exist('dosmooth', 'var')
+    dosmooth = 1;
+end
+
+if ~exist('addvox', 'var')
+    addvox = 0;
+end
+
+if ~exist('nn-interp', 'var')
+    nninterp = 0;
+end
+
+if ~exist('outputimage', 'var')
+    outputimage = inputimage;
+end
+
+if ~exist('dimension', 'var')
+    dimension = 3;
+end
+
+dosmooth = num2str(dosmooth);
+addvox = num2str(addvox);
+nninterp = num2str(nninterp);
+dimension = num2str(dimension);
+
+spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3))];
+
+basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
+if ispc
+    ResampleImageBySpacing = [basedir, 'ResampleImageBySpacing.exe'];
+else
+    ResampleImageBySpacing = [basedir, 'ResampleImageBySpacing.', computer('arch')];
+end
+
+cmd = [ResampleImageBySpacing,' ',dimension, ...
+                              ' ',ea_path_helper(inputimage), ...
+                              ' ',ea_path_helper(outputimage), ...
+                              ' ',spacing, ...
+                              ' ',dosmooth, ...
+                              ' ',addvox, ...
+                              ' ',nninterp];
+
+ea_libs_helper;
+
+fprintf('\nResampling image spacing to [%s]: %s\n\n', spacing, inputimage);
+if ~ispc
+    system(['bash -c "', cmd, '"']);
+else
+    system(cmd);
+end
+fprintf('\n');
+

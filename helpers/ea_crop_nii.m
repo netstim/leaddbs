@@ -55,7 +55,7 @@ switch nstring
         comp=nan;
 end
 [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img~=comp));
-rim=round(5/mean(nii.voxsize)); % go to 3 mm, assuming isotropic image. No worries if not isotropic though, then rim will be a bit asymmetrical.
+rim=round(2/mean(nii.voxsize)); % go to 3 mm, assuming isotropic image. No worries if not isotropic though, then rim will be a bit asymmetrical.
 bbim=[min(xx),max(xx)
     min(yy),max(yy)
     min(zz),max(zz)];

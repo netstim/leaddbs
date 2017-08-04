@@ -1,7 +1,13 @@
 function ea_importspaceassets(~,~,fromspace,what,infname,outfname)
 
+
+if strcmp(what,'custom')
+    [infi,inpth]=uigetfile('*.nii','Choose file to warp...');
+    infname=fullfile(inpth,infi);   
+end
+
 ea_genwarp2space(fromspace);
-norm_method_applied{1}='ea_normalize_spmdartel';
+norm_method_applied{1}='ea_normalize_ants';
 save([ea_space,fromspace,filesep,'ea_normmethod_applied.mat'],'norm_method_applied');
 
 switch what
@@ -15,7 +21,7 @@ switch what
         ea_warplabelassets(fromspace);
         
     case 'custom'
-        ea_warpfilefromspace(fromspace,infname,outfname);
+        ea_warpfilefromspace(fromspace,infname);
 
 end
 if ~strcmp(what,'custom')
@@ -61,12 +67,15 @@ for p=1:length(parcellation)
 end
 
 
-function ea_warpfilefromspace(fromspace,infname,outfname)
+function ea_warpfilefromspace(fromspace,infname)
 
+[pth,inf,ext]=fileparts(infname);
+outfname=fullfile(pth,['w',inf,ext]);
 
-options.prefs=ea_prefs('');
 directory=[ea_space,fromspace,filesep];
-ea_apply_normalization_tofile(options,{infname},{outfname},directory,0,0);
+options=ea_getptopts(directory);
+options.prefs=ea_prefs('');
+ea_apply_normalization_tofile(options,{infname},{outfname},directory,0,1,infname);
 
 
 
@@ -74,7 +83,8 @@ ea_apply_normalization_tofile(options,{infname},{outfname},directory,0,0);
 
 
 function ea_warpatlasassets(fromspace)
-
+directory=[ea_space,fromspace,filesep];
+options=ea_getptopts(directory);
 options.prefs=ea_prefs('');
 % list atlases:
 as=dir([ea_getearoot,'templates',filesep,'space',filesep,fromspace,filesep,'atlases']);

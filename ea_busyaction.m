@@ -60,6 +60,14 @@ if ischar(pos)
             pos=[sz(3)-50-2 sz(4)-50-2 50 50];
             onfigtit='Stimulation Parameters (busy...)';
             offfigtit='Stimulation Parameters';
+        case 'wavelet'
+            sz=get(fighandle,'Position');
+            pos=[sz(3)-50-2 sz(4)-50-2 50 50]; 
+            onfigtit='Wavelet-Based Image Fusion (busy...)';
+            offfigtit='Wavelet-Based Image Fusion';
+        case 'normcheck'
+            sz=get(fighandle,'Position');
+            pos=[sz(3)-50-2 sz(4)-50-2 50 50];
     end
 end
 

@@ -39,7 +39,9 @@ switch slicedim
         h=getappdata(resultfig,'zsliceplot');
         
 end
-
+if ~exist('controlhandles','var')
+    controlhandles='';
+end
     h = update_slice(vol, I2X, slicedim, sliceidx, h,controlhandles,resultfig);
     
 % set up gui

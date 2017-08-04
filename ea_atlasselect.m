@@ -151,8 +151,10 @@ for subgroup=1:length(atlases.subgroups)
             thisatlname=atlases.labels{uselabelname}{node};
         end
         
-        % gzip support
-        [~,thisatlname]=ea_niifileparts(thisatlname);
+        % nii(.gz) support
+        if regexp(thisatlname, '\.nii(\.gz)?$')
+            [~,thisatlname]=ea_niifileparts(thisatlname);
+        end
         
         color = round(squeeze(atlases.colormap(ceil(atlases.colors(node)),:))*256);
         color = sprintf('rgb(%d,%d,%d)', color(1),color(2),color(3));
@@ -318,7 +320,7 @@ for branch=1:length(sels.branches)
                 
                 sidec=getsidec(length(sels.sides{branch}{leaf}),side);
                 
-                [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons, h.uselabelname,h.atlases);
+                [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons, h.uselabelname,h.atlases);
                 if strcmp(sels.sides{branch}{leaf}{side},'selected')
                     if ~strcmp(h.atlassurfs(ixs).Visible,'on')
                         h.atlassurfs(ixs).Visible='on';
@@ -560,8 +562,8 @@ for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
             sidec=getsidec(length(sels.sides{branch}{leaf}),side);
-            [ixs,ixt]=ea_getsubindex(h.sgsubfi{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
-            
+            [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons,h.uselabelname,h.atlases);
+           
             if ismember(char(h.sgsubfi{branch}{leaf}),onatlasnames)
                 h.atlassurfs(ixs).Visible='on';
                 h.togglebuttons(ixt).State='on';

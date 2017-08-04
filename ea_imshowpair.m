@@ -35,6 +35,8 @@ sno_c = sno(1);  % number of coronal slices
 S_c = round(sno_c/2);
 S = S_a;
 sno = sno_a;
+PostOpView=0;
+PostOpLoaded={''};
 
 global InitialCoord;
 
@@ -144,7 +146,7 @@ YImage=1:size(Img,2);
         catch
             ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         end;
-        showhelptext;
+        showhelptext(callingfunction);
 
 FigPos = get(gcf,'Position');
 S_Pos = [50 20 uint16(FigPos(3)-150)+1 20];
@@ -383,6 +385,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             end
             set(a2,'UserData',a2_param);
         end
+        [k,numstatus]=str2num(eventdata.Character);
         if (strcmp(eventdata.Key,'leftarrow') | strcmp(eventdata.Key,'downarrow'))
             ev = []; ev.VerticalScrollCount = -1;
             mouseScroll (gcf, ev);
@@ -395,6 +398,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             AxialView([]);
         elseif (strcmpi(eventdata.Key,'s'))
             SagittalView([]);
+        elseif (strcmpi(eventdata.Key,'P'))
+            SwitchPostop
+        elseif (numstatus) && ~isempty(k)            
+            SwitchModality(eventdata.Key,eventdata.Modifier)
         elseif (strcmpi(eventdata.Key,'x'))
             if MainImage(1)==1
                 MainImage=wiresIX;
@@ -429,6 +436,202 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         ButtonMotionCallback(gcf);
     end
 
+    function SwitchModality(tempstr,Mod)
+        if ~strcmp(callingfunction,'normalization') % this on
+            return
+        end
+        %[options] = ea_assignpretra(options);
+        ea_busyaction('on',gcf,'normcheck');
+        PostOpView=0;
+        PostOpLoaded={''};
+        if strcmp(Mod,'command') % load templates
+            SwitchTemplateMod(tempstr,Mod)
+        elseif isempty(Mod)
+            anchor=SwitchPatientMod(tempstr,Mod);
+            SwitchTemplateMod(anchor,Mod)
+
+        end
+        ea_busyaction('off',gcf,'normcheck');
+    end
+
+    function SwitchPostop(update)  
+        if ~strcmp(callingfunction,'normalization') % this on
+            return
+        end
+        
+        if exist('update','var')
+            if ismember(View,PostOpLoaded) % update only, check if Post-OP acquisition is already loaded.
+                return
+            end
+        end
+        
+        ea_busyaction('on',gcf,'normcheck');
+        
+        switch options.modality
+            case 1 % MR
+                try
+                    switch View
+                        case 'A'
+                            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gtranii]);
+                            PostOpLoaded={'A'};
+                        case 'C'
+                            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gcornii]);
+                            PostOpLoaded={'C'};
+                        case 'S'
+                            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gsagnii]);
+                            PostOpLoaded={'S'};
+                    end
+                catch % fallback to transversal acquisition
+                    try
+                        pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gtranii]);
+                        PostOpLoaded={'A','C','S'};
+                    catch
+                        ea_error('No normalized postoperative acquisition seems available.');
+                    end
+                end
+            case 2 % CT
+                try
+                    pt=ea_load_nii([options.root,options.patientname,filesep,'tp_',options.prefs.gctnii]);
+                    PostOpLoaded={'A','C','S'};
+                catch
+                    ea_tonemapct_file(options,'mni');
+                    try
+                        pt=ea_load_nii([options.root,options.patientname,filesep,'tp_',options.prefs.gctnii]);
+                    catch
+                        ea_error('No normalized postoperative acquisition seems available.');
+                    end
+                end
+        end
+        if options.modality==2 % only do windowing for MR
+            pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
+            pt.img(pt.img>0.5) = 0.5;
+            pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
+        end
+        ImgO(:,:,:,1)=pt.img;
+        
+        w=load([ea_space(options),'wires.mat']);
+        w.wires=single(w.wires);
+        w.wires=w.wires/255;
+        w.wires=w.wires.*0.2;
+        w.wires=w.wires+0.8;
+        
+        pt.img=pt.img.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
+        ImgO(:,:,:,3)=pt.img;
+        
+        switch View
+            case 'S'
+                Img = flip(permute(ImgO, [3 2 1 4]),1);   % Sagittal view image;
+            case 'C'
+                Img = flip(permute(ImgO, [3 1 2 4]),1);   % Coronal view image;
+            case 'A'
+                Img = ImgO;
+        end
+        PostOpView=1;
+        if ~MainImage==wiresIX;
+            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+        else
+            try
+            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+            catch
+                keyboard
+            end
+        end
+        SwitchTemplateMod('2') % set to T2 if available.
+        ea_busyaction('off',gcf,'normcheck');
+
+    end
+
+
+
+
+    function SwitchTemplateMod(tempstr,Mod)
+        options.sd=load([ea_space,'ea_space_def.mat'],'spacedef');
+        if str2double(tempstr)>length(options.sd.spacedef.templates)
+            ea_busyaction('off',gcf,'normcheck');
+            return
+        end
+        if str2double(tempstr)==0
+            if options.sd.spacedef.hasfa
+                whichtemplate='fa.nii';
+            else
+                ea_busyaction('off',gcf,'normcheck');
+                return
+            end
+        else
+            whichtemplate=options.sd.spacedef.templates{str2double(tempstr)};
+        end
+        tnii=ea_load_nii([ea_space,whichtemplate]);
+        tnii.img(:)=zscore(tnii.img(:));
+        tnii.img=(tnii.img-min(tnii.img(:)))/(max(tnii.img(:))-min(tnii.img(:)));
+        ImgO(:,:,:,2)=tnii.img;
+        switch View
+            case 'S'
+                Img = flip(permute(ImgO, [3 2 1 4]),1);   % Sagittal view image;
+            case 'C'
+                Img = flip(permute(ImgO, [3 1 2 4]),1);   % Coronal view image;
+            case 'A'
+                Img = ImgO;
+        end
+    end
+
+    function anchor=SwitchPatientMod(tempstr,Mod)
+        anchor=tempstr; % just pass on tempstr as default.
+        [options,presentfiles] = ea_assignpretra(options);
+        if str2double(tempstr)==1
+            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gprenii]);
+            sd=load([ea_space,'ea_space_def.mat']);
+            [~,anchor]=ismember(options.primarytemplate,sd.spacedef.templates); % in this case, "1" could e.g. be the T2 as well, so pass on the T2 in this case to also load the correct template.
+            anchor=num2str(anchor);
+        elseif str2double(tempstr)>length(presentfiles)
+            ea_busyaction('off',gcf,'normcheck');
+            return
+        elseif str2double(tempstr)==0
+            if exist([options.root,options.patientname,filesep,'gl',options.prefs.fa2anat],'file')
+                pt=ea_load_nii([options.root,options.patientname,filesep,'gl',options.prefs.fa2anat]);
+            else
+                ea_busyaction('off',gcf,'normcheck');
+                return
+            end
+        else
+            directory=[options.root,options.patientname,filesep];
+            toload=[directory,'gl',presentfiles{str2double(tempstr)}];
+            if ~exist(toload,'file')
+                to{1}=toload;
+                from{1}=[directory,presentfiles{str2double(tempstr)}];
+                ea_apply_normalization_tofile(options,from,to,directory,0);
+            end
+            pt=ea_load_nii(toload);
+        end
+        
+        pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
+        pt.img(pt.img>0.5) = 0.5;
+        pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
+        ImgO(:,:,:,1)=pt.img;
+        
+        w=load([ea_space(options),'wires.mat']);
+        w.wires=single(w.wires);
+        w.wires=w.wires/255;
+        w.wires=w.wires.*0.2;
+        w.wires=w.wires+0.8;
+        
+        pt.img=pt.img.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
+        ImgO(:,:,:,3)=pt.img;
+        
+        switch View
+            case 'S'
+                Img = flip(permute(ImgO, [3 2 1 4]),1);   % Sagittal view image;
+            case 'C'
+                Img = flip(permute(ImgO, [3 1 2 4]),1);   % Coronal view image;
+            case 'A'
+                Img = ImgO;
+        end
+        
+        if ~MainImage==wiresIX;
+            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+        else
+            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+        end
+    end
 
 % -=< Axial view callback function >=-
     function AxialView(object,eventdata)
@@ -438,7 +641,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             S_c = S;
         end
         View = 'A';
-
         Img = ImgO;
         S = S_a;
         sno = sno_a;
@@ -461,7 +663,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         catch
             ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         end;
-        showhelptext;
+        showhelptext(callingfunction);
 
 
         if sno > 1
@@ -477,8 +679,13 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         else
             %set(stxthand, 'String', '2D image');
         end
-
-        set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+        if PostOpView && options.modality==1
+            SwitchPostop('update');
+        else
+            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+            
+        end
+        
         set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
@@ -511,7 +718,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         catch
             ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         end;
-        showhelptext;
+        showhelptext(callingfunction);
 
 
 
@@ -528,8 +735,11 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         else
 %            set(stxthand, 'String', '2D image');
         end
-
+        if PostOpView && options.modality==1
+            SwitchPostop('update');
+        else
         set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
+        end
         set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
 
@@ -543,6 +753,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             S_s = S;
         end
         View = 'C';
+
 
         if ~ImgZ
             XImage=ImgZcr{1};
@@ -563,7 +774,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         catch
             ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         end;
-        showhelptext;
+        showhelptext(callingfunction);
 
         if sno > 1
           %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
@@ -574,19 +785,31 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
         caxis([Rmin Rmax])
 
-        set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+        if PostOpView && options.modality==1
+            SwitchPostop('update');
+        else
+            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+        end
         set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
 
 end
 
-function showhelptext
+function showhelptext(callingfunction)
 
 hold on
-helptext=text(5,5,{'Controls:','Click to show reference image','Use </> to increase box size while clicking',...
-    'Z: Zoom in/out','X: Hybrid view on/off','Arrow keys / Mouse wheel: Scroll through image','A: Axial view',...
-    'C: Coronar view','S: Saggital view'},'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
+if strcmp(callingfunction,'normalization')
+    helptext=text(5,5,{'Controls:','Click to show reference image','Use </> to increase box size while clicking',...
+        'Z: Zoom in/out','X: Hybrid view on/off','Arrow keys / Mouse wheel: Scroll through image','A: Axial view',...
+        'C: Coronar view','S: Saggital view','P: Show postoperative acquisitions', '1,2,...: Show preoperative modalities [FA=0]','[cmd] + 1,2,...: Switch available templates [FA=0]'},...
+        'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
+else
+    helptext=text(5,5,{'Controls:','Click to show reference image','Use </> to increase box size while clicking',...
+        'Z: Zoom in/out','X: Hybrid view on/off','Arrow keys / Mouse wheel: Scroll through image','A: Axial view',...
+        'C: Coronar view','S: Saggital view'},...
+        'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
+end
 end
 
 % Included for completeness (usually in own file)

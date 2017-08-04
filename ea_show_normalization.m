@@ -4,47 +4,42 @@ function ea_show_normalization(options)
 % Andreas Horn
 
 if options.modality==1
-    expdo=1:3;
+    expdo=1;
     subdir=[options.root,options.patientname,filesep];
-    if exist([subdir,'gl',options.prefs.fa2anat],'file');
-        expdo=1:4;
-    end
+    
 else
-    expdo=1:2;
-        subdir=[options.root,options.patientname,filesep];
-    if exist([subdir,'gl',options.prefs.fa2anat],'file');
-        expdo=[1,2,4];
-    end
+    expdo=1;
+    subdir=[options.root,options.patientname,filesep];
 end
 
 disp('Preparing images to show Normalization...');
 
 
 for export=expdo % if CT, only do 1, if MR, do 1:3.
-%     if strcmp(options.prefs.dev.profile,'se') 
-%         ;
-%     else
+
     try
-%     end
         switch export
             case 1
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
                 checkfn=options.prefs.gprenii;
                 outf=['check_',options.prefs.prenii];
+                
                 addstr='MNI space (wireframes) & Preoperative MRI';
                 suff='_pre_tra';
             case 2
                 if options.modality==1
                     checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gtranii,',1'];
                     checkfn=options.prefs.gtranii;
-                                    suff='_tra';
+                    suff='_tra';
+                    addstr='MNI space (wireframes) & Postoperative axial MRI';
+                    
                 elseif options.modality==2
                     checkf=[options.root,options.prefs.patientdir,filesep,'tp_',options.prefs.gctnii,',1'];
                     checkfn=['tp_',options.prefs.gctnii];
-                                    suff='_ct';
+                    suff='_ct';
+                    addstr='MNI space (wireframes) & Postoperative (tonemapped) CT';
                 end
                 outf=['check_',options.prefs.tranii];
-                addstr='MNI space (wireframes) & Postoperative axial MRI';
             case 3
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gcornii,',1'];
                 checkfn=options.prefs.gcornii;
@@ -154,8 +149,8 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 end
             end
             
-            % 'glgrid.mat' does exist, append the grid image in wim
-            try
+            
+            if exist(gridf, 'file') % 'glgrid.mat' does exist, append the grid image in wim
                 g=load(gridf);  
                 grid=single(g.grid);
                 grid=grid-min(grid(:));
@@ -167,7 +162,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 grid_im=grid_im-min(grid_im(:));
                 grid_im=grid_im./max(grid_im(:));
                 wim = cat(4,pt.img,mni_img.img,joint_im,grid_im);
-            catch
+            else
                 wim = cat(4,pt.img,mni_img.img,joint_im);                    
             end
             

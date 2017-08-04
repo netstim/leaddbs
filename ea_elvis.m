@@ -45,7 +45,10 @@ ht=uitoolbar(resultfig);
 % add custom rotator:
 uibjs.rotate3dtog=uitoggletool(ht, 'CData', ea_get_icn('rotate'),...
     'TooltipString', 'Rotate 3D', 'OnCallback', {@ea_rotate,'on'},...
-    'OffCallback', {@ea_rotate,'off'}, 'State', 'off');
+    'OffCallback', {@ea_rotate,'off'}, 'State', 'on');
+uibjs.slide3dtog=uitoggletool(ht, 'CData', ea_get_icn('quiver'),...
+    'TooltipString', 'Slide Slices', 'OnCallback', {@ea_slideslices,'on'},...
+    'OffCallback', {@ea_slideslices,'off'}, 'State', 'off');
 uibjs.magnifyplus=uitoggletool(ht,'CData',ea_get_icn('magnplus'),...
     'TooltipString', 'Zoom In', 'OnCallback', {@ea_zoomin,'on'},...
     'OffCallback', {@ea_zoomin,'off'}, 'State', 'off');
@@ -57,6 +60,9 @@ uibjs.handtog=uitoggletool(ht, 'CData', ea_get_icn('hand'),...
     'OffCallback', {@ea_pan,'off'}, 'State', 'off');
 setappdata(resultfig,'uibjs',uibjs);
 
+h = rotate3d;
+h.RotateStyle = 'orbit';
+h.Enable = 'on';
 
 mh = uimenu(resultfig,'Label','Add Objects');
 fh1 = uimenu(mh,'Label','Open Tract',...
@@ -93,13 +99,13 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             multiplemode=1;
             
             % mer development
-            if isstruct(varargin{2})
-                elstruct=varargin{2}.elstruct;
-                merstruct=varargin{2}.merstruct;
-            else
+%             if isstruct(varargin{2})
+%                 elstruct=varargin{2}.elstruct;
+%                 merstruct=varargin{2}.merstruct;
+%             else
                 elstruct=varargin{2};
-            end
-            
+%             end
+
             if options.d3.mirrorsides
                elstruct=ea_mirrorsides(elstruct);
                options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix);
@@ -920,68 +926,14 @@ elseif find('123456789' == evnt.Character)
 end
 
 
-function ea_distogrotate
-uibjs=getappdata(gcf,'uibjs');
-set(uibjs.rotate3dtog,'State','off');
 
 
-function ea_distogzoomin
-uibjs=getappdata(gcf,'uibjs');
-set(uibjs.magnifyplus,'State','off');
 
 
-function ea_distogzoomout
-uibjs=getappdata(gcf,'uibjs');
-set(uibjs.magnifyminus,'State','off');
 
 
-function ea_distogpan
-uibjs=getappdata(gcf,'uibjs');
-set(uibjs.handtog,'State','off');
 
 
-function ea_rotate(h,~,cmd)
-
-h = rotate3d;
-h.RotateStyle = 'orbit';
-h.Enable = cmd;
-if strcmp(cmd,'on')
-    ea_distogzoomin;
-    ea_distogzoomout;
-    ea_distogpan;
-end
-
-function ea_pan(h,~,cmd)
-
-pan(cmd);
-if strcmp(cmd,'on')
-    ea_distogzoomin;
-    ea_distogzoomout;
-    ea_distogrotate;
-end
 
 
-function ea_zoomin(h,~,cmd)
 
-if strcmp(cmd,'on')
-    ea_distogpan;
-    ea_distogrotate;
-    ea_distogzoomout;
-end
-h=zoom;
-h.Enable=cmd;
-h.Motion='both';
-h.Direction='in';
-
-
-function ea_zoomout(h,~,cmd)
-
-if strcmp(cmd,'on')
-    ea_distogpan;
-    ea_distogrotate;
-    ea_distogzoomin;
-end
-h=zoom;
-h.Enable=cmd;
-h.Motion='both';
-h.Direction='out';

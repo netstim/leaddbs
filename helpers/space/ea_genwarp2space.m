@@ -27,9 +27,10 @@ options.modality=1;
 % temporarily switch back to from space to get warps
 [options,presentfiles]=ea_assignpretra(options);
 
-% perform three runs to refine ? this needs to be really precise and is worth the additional time!
-ea_normalize_spmdartel(options);
-ea_normalize_spmdartel(options);
-ea_normalize_spmdartel(options);
+% % perform three runs to refine ? this needs to be really precise and is worth the additional time!
+% ea_normalize_spmdartel(options);
+% ea_normalize_spmdartel(options);
+% ea_normalize_spmdartel(options);
+ea_normalize_ants(options);
 
 
