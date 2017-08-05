@@ -75,7 +75,7 @@ set(handles.leadfigure,'name','Welcome to LEAD-DBS');
 spacedef=ea_getspacedef;
 if isfield(spacedef,'guidef')
     set(handles.targetpopup,'String',[spacedef.guidef.entrypoints,{'Manual'}]);
-    
+
 end
 
 options.prefs=ea_prefs('');
@@ -85,10 +85,10 @@ options.prefs=ea_prefs('');
 % hide Reconmethod for now:
 
 if ~options.prefs.env.dev
-    
+
     set(handles.reconmethod,'Visible','off');
     set(handles.reconmethodtxt,'Visible','off');
-    
+
 end
 
 ea_init_coregmrpopup(handles,1);
@@ -158,10 +158,9 @@ ea_processguiargs(handles,varargin)
 %% add tools menu
 ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'});
 
-
-
-%ea_setup_dragndrop(handles);
-
+ea_bind_dragndrop(handles.leadfigure, ...
+    @(obj,evt) DropFcn(obj,evt,handles), ...
+    @(obj,evt) DropFcn(obj,evt,handles));
 
 handles.prod='dbs';
 ea_firstrun(handles,options);
@@ -170,6 +169,36 @@ ea_getui(handles);
 
 % UIWAIT makes lead_dbs wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
+
+
+% --- Drag and drop callback to load patdir.
+function DropFcn(~, event, handles)
+
+switch event.DropType
+    case 'file'
+        patdir = event.Data;
+    case 'string'
+        patdir = {event.Data};
+end
+
+nonexist = cellfun(@(x) ~exist(x, 'dir'), patdir);
+if any(nonexist)
+    fprintf('\nExcluded non-existent/invalid folder:\n');
+    cellfun(@disp, patdir(nonexist));
+    fprintf('\n');
+    patdir(nonexist) = [];
+end
+
+if ~isempty(patdir)
+    ea_load_pts(handles, patdir);
+
+    if isfield(handles,'atlassetpopup') % not present in connectome mapper
+        atlasset=get(handles.atlassetpopup,'String');
+        atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+        options.prefs=ea_prefs('');
+        ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+    end
+end
 
 
 % --- Outputs from this function are returned to the command line.
@@ -201,8 +230,6 @@ options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 ea_run('run',options);
 
 ea_busyaction('off',leadfigure,'dbs');
-
-
 
 
 function edit1_Callback(hObject, eventdata, handles)
@@ -239,7 +266,6 @@ function electrode_model_popup_Callback(hObject, eventdata, handles)
 ea_storeui(handles);
 
 
-
 % --- Executes during object creation, after setting all properties.
 function electrode_model_popup_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to electrode_model_popup (see GCBO)
@@ -251,9 +277,6 @@ function electrode_model_popup_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-
 
 
 function endtol_txt_Callback(hObject, eventdata, handles)
@@ -500,10 +523,6 @@ options.prefs=ea_prefs('');
 ea_getpatients(options,handles);
 
 ea_busyaction('off',handles.leadfigure,'dbs');
-
-
-
-
 
 
 % --- Executes on button press in left_checkbox.
