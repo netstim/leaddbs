@@ -597,13 +597,9 @@ if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
         end
         
         % For each checked box, add a marker.
-        togs = merstruct.Toggles.keycontrol(bChecked);
-        for tog_ix = 1:length(togs)
-            tog = togs(tog_ix);
-            merstruct = merstruct.addMarker(tog.side, tog.label, markertype, sess_text);
-        end
+        merstruct = merstruct.addMarkersAtTrajs(merstruct.Toggles.keycontrol(bChecked),...
+            markertype, sess_text);
         setappdata(mercontrolfig, 'merstruct', merstruct);
-        
         handles = guidata(mercontrolfig);
         ea_resultfig_updatemarkers(handles);
         ea_mercontrol_updatemarkers(handles);

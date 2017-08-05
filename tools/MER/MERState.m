@@ -245,7 +245,6 @@ classdef MERState
                         transl_mni(traj_ix, :);
                 end
             end
-            
             % Everytime the translation is updated, the trajectories need
             % to be udpated too.
             obj = obj.calculateMERTrajectories();
@@ -257,15 +256,11 @@ classdef MERState
             else
                 spc = 'mni';
             end
-            % DBS coordinates and unit vector for each hemisphere
-            side_strs = {obj.DBSImplants.side};
-            im_depths = [obj.DBSImplants.depth];
-            
             % Calculate trajectory as translation from DBS electrode.
             for traj_ix = 1:length(obj.MERTrajectories)
                 traj = obj.MERTrajectories(traj_ix);
-                bSid = strcmpi(side_strs, traj.side);
-                curr_dist = traj.depth - im_depths(bSid);
+                bSid = strcmpi({obj.DBSImplants.side}, traj.side);
+                curr_dist = traj.depth - obj.DBSImplants(bSid).depth;
                 im_mm = obj.DBSImplants(bSid).coords_top.(spc)(1, :);
                 elec_uv = obj.DBSImplants(bSid).elec_uv.(spc);
                 startpoint = im_mm + traj.translation.(spc) + (elec_uv .* curr_dist);
@@ -275,32 +270,55 @@ classdef MERState
                     bsxfun(@plus, (0:obj.Config.MERPnts - 1)' * stepsize, startpoint);
             end
         end
-        function obj = addMarker(obj, side, label, type, sess_notes)
-            bTraj = strcmpi({obj.MERTrajectories.side}, side) ...
-                & strcmpi({obj.MERTrajectories.label}, label);
-            if any(bTraj)
-                traj = obj.MERTrajectories(bTraj);
-                bMarkers = strcmpi({obj.Markers.side}, side)...
-                    & strcmpi({obj.Markers.tract_label}, label)...
-                    & ([obj.Markers.depth] == traj.depth);
-                if any(bMarkers)
-                    fprintf('Location along %s - %s at depth %f is already marked as type %s.\n',...
-                            side, label, traj.depth, obj.Markers(bMarkers).type);
-                else
-                    %side, tract_label, depth, session, type, notes,
-                    %coords.native/coords.mni
-                    obj.Markers(end + 1).side = side;
-                    obj.Markers(end).tract_label = label;
-                    obj.Markers(end).depth = traj.depth;
-                    obj.Markers(end).type = type;
-                    obj.Markers(end).session = sess_notes;
-                    for fn_cell = fieldnames(traj.coords)
-                        fn = fn_cell{:};
-                        obj.Markers(end).coords.(fn) = traj.coords.(fn)(1, :);
-                    end
-                end
+        function obj = addMarkerAtDepth(obj, side, label, type, sess_notes, depth)
+            bMarkers = strcmpi({obj.Markers.side}, side)...
+                & strcmpi({obj.Markers.tract_label}, label)...
+                & ([obj.Markers.depth] == depth);
+            if any(bMarkers)
+                fprintf('Location along %s - %s at depth %f is already marked as type %s.\n',...
+                    side, label, depth, obj.Markers(bMarkers).type);
             else
-                fprintf('No MER trajectory found for marker %s - %s.\n', side, label);
+                %side, tract_label, depth, session, type, notes,
+                obj.Markers(end + 1).side = side;
+                obj.Markers(end).tract_label = label;
+                obj.Markers(end).depth = depth;
+                obj.Markers(end).type = type;
+                obj.Markers(end).session = sess_notes;
+                % Calculate coords.native/coords.mni
+                bTraj = strcmpi({obj.MERTrajectories.side}, side)...
+                    & strcmpi({obj.MERTrajectories.label}, label);
+                if any(bTraj)
+                    % Calculate coordinate as translation from DBS electrode.
+                    bSid = strcmpi({obj.DBSImplants.side}, side);
+                    curr_dist = depth - obj.DBSImplants(bSid).depth;
+                    traj = obj.MERTrajectories(bTraj);
+                    for fn_cell = fieldnames(traj.translation)'
+                        spc = fn_cell{:};
+                        im_mm = obj.DBSImplants(bSid).coords_top.(spc)(1, :);
+                        elec_uv = obj.DBSImplants(bSid).elec_uv.(spc);
+                        % TODO: curr_dist is always native. We need to only
+                        % calculate in native then use affine transform to
+                        % get mni.
+                        obj.Markers(end).coords.(spc) = im_mm + traj.translation.(spc) + (elec_uv .* curr_dist);
+                    end
+                else
+                    fprintf('No MER trajectory found for marker %s - %s.\n', side, label);
+                    fprintf('Try obj.setMERTrajectoriesToDefaults()\n');
+                end
+            end
+        end
+        function obj = addMarkersAtTrajs(obj, tstruct, type, sess_notes)
+            for traj_ix = 1:length(tstruct)
+                ts = tstruct(traj_ix);
+                bTraj = strcmpi({obj.MERTrajectories.side}, ts.side) ...
+                    & strcmpi({obj.MERTrajectories.label}, ts.label);
+                if any(bTraj)
+                    traj = obj.MERTrajectories(bTraj);
+                    obj = obj.addMarkerAtDepth(ts.side, ts.label, type, sess_notes, traj.depth);
+                else
+                    fprintf('No MER trajectory found for marker %s - %s.\n', side, label);
+                    fprintf('Try obj.setMERTrajectoriesToDefaults()\n');
+                end
             end
         end
         function obj = undoMarker(obj)
