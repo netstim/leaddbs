@@ -7,6 +7,7 @@ function  ea_imshowpair(Img, options, addstring, callingfunction)
 if ~exist('callingfunction','var')
    callingfunction='normalization';
 end
+
 switch callingfunction
     case 'ctcoregistration'
         wiresIX=3:5;
@@ -23,7 +24,12 @@ elseif nargin == 2
 elseif nargin >= 3
     figtit = [options.patientname,', ',addstring];
 end
+
 isp=figure('color','k','Name',figtit,'NumberTitle','off','MenuBar','none','DockControls','off','ToolBar','none');
+
+% bind drag-drop event
+dndobj = ea_bind_dragndrop(isp, @DropFcn, @DropFcn);
+
 ea_maximize(isp);
 Img=single(Img);
 sno = size(Img);  % image size
@@ -121,7 +127,6 @@ ImgZsg{2}=1:size(ImgO,2); % saggital zoomed out boundingboxes
 ImgZsg{3}=round(size(ImgO,3)/4):round((size(ImgO,3)/4)*3); % saggital zoomed boundingboxes
 ImgZsg{4}=round(size(ImgO,2)/4):round((size(ImgO,2)/4)*3); % saggital zoomed boundingboxes
 
-
 View = 'A';
 
 SFntSz = 9;
@@ -141,12 +146,12 @@ MainImage = 1;
 XImage=1:size(Img,1);
 YImage=1:size(Img,2);
 
-        try % image toolbox
-            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
-        catch
-            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
-        end;
-        showhelptext(callingfunction);
+try % image toolbox
+    ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
+catch
+    ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
+end
+showhelptext(callingfunction);
 
 FigPos = get(gcf,'Position');
 S_Pos = [50 20 uint16(FigPos(3)-150)+1 20];
@@ -250,75 +255,75 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
 % -=< Mouse button released callback function >=-
     function mouseRelease (object,eventdata)
-            set(gcbf, 'WindowButtonMotionFcn', '')
-            H = get(object,'UserData');
-            if (isempty(H)) % presumed RIGHT CLICK
-                % do nothing
-            else % presumed LEFT CLICK
-                f1 = H(1); a1 = H(2); a2 = H(3);
-                set(a1, 'Color',get(a2,'Color'));
-                set(f1, ...
-                    'UserData',[], ...
-                    'Pointer','arrow', ...
-                    'CurrentAxes',a1);
-                if ~strcmp(get(f1,'SelectionType'),'alt'),
-                    delete(a2);
-                end;
-            end
+        set(gcbf, 'WindowButtonMotionFcn', '')
+        H = get(object,'UserData');
+        if (isempty(H)) % presumed RIGHT CLICK
+            % do nothing
+        else % presumed LEFT CLICK
+            f1 = H(1); a1 = H(2); a2 = H(3);
+            set(a1, 'Color',get(a2,'Color'));
+            set(f1, ...
+                'UserData',[], ...
+                'Pointer','arrow', ...
+                'CurrentAxes',a1);
+            if ~strcmp(get(f1,'SelectionType'),'alt'),
+                delete(a2);
+            end;
+        end
     end
 
 % -=< Mouse click callback function >=-
     function mouseClick (object, eventdata)
-            MouseStat = get(gcbf, 'SelectionType');
-            if (MouseStat(1) == 'a')        %   RIGHT CLICK
-                InitialCoord = get(0,'PointerLocation');
-                %             set(gcf, 'WindowButtonMotionFcn', @WinLevAdj);
-            else    % assumed LEFT CLICK
-                i1 = object;
-                a1 = get(i1,'Parent');
-                f1 = get(a1,'Parent');
+        MouseStat = get(gcbf, 'SelectionType');
+        if (MouseStat(1) == 'a')        %   RIGHT CLICK
+            InitialCoord = get(0,'PointerLocation');
+            %             set(gcf, 'WindowButtonMotionFcn', @WinLevAdj);
+        else    % assumed LEFT CLICK
+            i1 = object;
+            a1 = get(i1,'Parent');
+            f1 = get(a1,'Parent');
 
-                a2 = copyobj(a1,f1, 'legacy');
+            a2 = copyobj(a1,f1, 'legacy');
 
-                i2 = get(a2,'Children');
-                i2=i2(2);
+            i2 = get(a2,'Children');
+            i2=i2(2);
 
-                set(f1, ...
-                    'UserData',[f1,a1,a2], ...
-                    'Pointer','crosshair', ...
-                    'CurrentAxes',a2);
-                set(a2, ...
-                    'UserData',[1,0.1], ...  %magnification, frame size
-                    'Color',get(a1,'Color'), ...
-                    'Box','on');
-                set(i2,'CData',Img(XImage,YImage,S,2));
-                xlabel(''); ylabel(''); zlabel(''); title('');
-                set(a1, ...
-                    'Color',get(a1,'Color')*0.95);
-                set(f1, ...
-                    'CurrentAxes',a1);
-                set(f1,'WindowButtonMotionFcn', @ButtonMotionCallback)
-                ButtonMotionCallback(f1);
+            set(f1, ...
+                'UserData',[f1,a1,a2], ...
+                'Pointer','crosshair', ...
+                'CurrentAxes',a2);
+            set(a2, ...
+                'UserData',[1,0.1], ...  %magnification, frame size
+                'Color',get(a1,'Color'), ...
+                'Box','on');
+            set(i2,'CData',Img(XImage,YImage,S,2));
+            xlabel(''); ylabel(''); zlabel(''); title('');
+            set(a1, ...
+                'Color',get(a1,'Color')*0.95);
+            set(f1, ...
+                'CurrentAxes',a1);
+            set(f1,'WindowButtonMotionFcn', @ButtonMotionCallback)
+            ButtonMotionCallback(f1);
 
-            end
+        end
     end
 
     function ButtonMotionCallback(object,eventdata)
         H = get(object,'UserData');
-       if ~isempty(H)
-          f1 = H(1); a1 = H(2); a2 = H(3);
-          a2_param = get(a2,'UserData');
-          f_pos = get(f1,'Position');
-          a1_pos = get(a1,'Position');
+        if ~isempty(H)
+            f1 = H(1); a1 = H(2); a2 = H(3);
+            a2_param = get(a2,'UserData');
+            f_pos = get(f1,'Position');
+            a1_pos = get(a1,'Position');
 
-          [f_cp, a1_cp] = pointer2d(f1,a1);
+            [f_cp, a1_cp] = pointer2d(f1,a1);
 
-          set(a2,'Position',[(f_cp./f_pos(3:4)) 0 0]+a2_param(2)*a1_pos(3)*[-1 -1 2 2]);
-          a2_pos = get(a2,'Position');
+            set(a2,'Position',[(f_cp./f_pos(3:4)) 0 0]+a2_param(2)*a1_pos(3)*[-1 -1 2 2]);
+            a2_pos = get(a2,'Position');
 
-        set(a2,'XLim',a1_cp(1)+(1/a2_param(1))*(a2_pos(3)/a1_pos(3))*diff(get(a1,'XLim'))*[-0.5 0.5]);
-        set(a2,'YLim',a1_cp(2)+(1/a2_param(1))*(a2_pos(4)/a1_pos(4))*diff(get(a1,'YLim'))*[-0.5 0.5]);
-       end;
+            set(a2,'XLim',a1_cp(1)+(1/a2_param(1))*(a2_pos(3)/a1_pos(3))*diff(get(a1,'XLim'))*[-0.5 0.5]);
+            set(a2,'YLim',a1_cp(2)+(1/a2_param(1))*(a2_pos(4)/a1_pos(4))*diff(get(a1,'YLim'))*[-0.5 0.5]);
+        end;
     end
 
 % -=< Window and level mouse adjustment >=-
@@ -340,7 +345,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
 % -=< Window and level text adjustment >=-
     function WinLevChanged(varargin)
-
         LevV = str2double(get(lvalhand, 'string'));
         Win = str2double(get(wvalhand, 'string'));
         if (Win < 1)
@@ -349,7 +353,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
         [Rmin, Rmax] = WL2R(Win,LevV);
         caxis([Rmin, Rmax])
-
     end
 
 % -=< Window and level to range conversion >=-
@@ -400,7 +403,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             SagittalView([]);
         elseif (strcmpi(eventdata.Key,'P'))
             SwitchPostop
-        elseif (numstatus) && ~isempty(k)            
+        elseif (numstatus) && ~isempty(k)
             SwitchModality(eventdata.Key,eventdata.Modifier)
         elseif (strcmpi(eventdata.Key,'x'))
             if MainImage(1)==1
@@ -444,29 +447,28 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         ea_busyaction('on',gcf,'normcheck');
         PostOpView=0;
         PostOpLoaded={''};
-        if strcmp(Mod,'command') % load templates
+        if strcmp(Mod,'alt') % load templates
             SwitchTemplateMod(tempstr,Mod)
         elseif isempty(Mod)
-            anchor=SwitchPatientMod(tempstr,Mod);
+            anchor=SwitchPatientMod(tempstr);
             SwitchTemplateMod(anchor,Mod)
-
         end
         ea_busyaction('off',gcf,'normcheck');
     end
 
-    function SwitchPostop(update)  
+    function SwitchPostop(update)
         if ~strcmp(callingfunction,'normalization') % this on
             return
         end
-        
+
         if exist('update','var')
             if ismember(View,PostOpLoaded) % update only, check if Post-OP acquisition is already loaded.
                 return
             end
         end
-        
+
         ea_busyaction('on',gcf,'normcheck');
-        
+
         switch options.modality
             case 1 % MR
                 try
@@ -508,16 +510,16 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
         end
         ImgO(:,:,:,1)=pt.img;
-        
+
         w=load([ea_space(options),'wires.mat']);
         w.wires=single(w.wires);
         w.wires=w.wires/255;
         w.wires=w.wires.*0.2;
         w.wires=w.wires+0.8;
-        
+
         pt.img=pt.img.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
         ImgO(:,:,:,3)=pt.img;
-        
+
         switch View
             case 'S'
                 Img = flip(permute(ImgO, [3 2 1 4]),1);   % Sagittal view image;
@@ -538,11 +540,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
         SwitchTemplateMod('2') % set to T2 if available.
         ea_busyaction('off',gcf,'normcheck');
-
     end
-
-
-
 
     function SwitchTemplateMod(tempstr,Mod)
         options.sd=load([ea_space,'ea_space_def.mat'],'spacedef');
@@ -574,8 +572,16 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
     end
 
-    function anchor=SwitchPatientMod(tempstr,Mod)
+    function anchor=SwitchPatientMod(tempstr)
         anchor=tempstr; % just pass on tempstr as default.
+
+        % load wires first
+        w=load([ea_space(options),'wires.mat']);
+        w.wires=single(w.wires);
+        w.wires=w.wires/255;
+        w.wires=w.wires.*0.2;
+        w.wires=w.wires+0.8;
+
         [options,presentfiles] = ea_assignpretra(options);
         if str2double(tempstr)==1
             pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gprenii]);
@@ -592,31 +598,35 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 ea_busyaction('off',gcf,'normcheck');
                 return
             end
-        else
+        elseif ~isnan(str2double(tempstr))  % tempstr is the index of the image in presentfiles cell
             directory=[options.root,options.patientname,filesep];
             toload=[directory,'gl',presentfiles{str2double(tempstr)}];
             if ~exist(toload,'file')
-                to{1}=toload;
                 from{1}=[directory,presentfiles{str2double(tempstr)}];
+                to{1}=toload;
                 ea_apply_normalization_tofile(options,from,to,directory,0);
             end
             pt=ea_load_nii(toload);
+        else    % tempstr is the full path of the image (used by dragndrop)
+            pt=ea_load_nii(tempstr);
+            if any(pt.dim~=size(w.wires))
+                msgbox(sprintf('The file you selected seems unnormalized!\nWill try to apply the normalization now.'),'Warning','warn');
+                [fpath, fname, fext] = ea_niifileparts(tempstr);
+                from{1}=tempstr;
+                to{1}=[fileparts(fpath), filesep, 'gl', fname, fext];
+                ea_apply_normalization_tofile(options,from,to,fileparts(fpath),0);
+                pt=ea_load_nii(to{1});
+            end
         end
-        
+
         pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
         pt.img(pt.img>0.5) = 0.5;
         pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
         ImgO(:,:,:,1)=pt.img;
-        
-        w=load([ea_space(options),'wires.mat']);
-        w.wires=single(w.wires);
-        w.wires=w.wires/255;
-        w.wires=w.wires.*0.2;
-        w.wires=w.wires+0.8;
-        
-        pt.img=pt.img.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
+
+        pt.img=pt.img.*w.wires; % shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
         ImgO(:,:,:,3)=pt.img;
-        
+
         switch View
             case 'S'
                 Img = flip(permute(ImgO, [3 2 1 4]),1);   % Sagittal view image;
@@ -625,11 +635,25 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             case 'A'
                 Img = ImgO;
         end
-        
-        if ~MainImage==wiresIX;
+
+        if ~MainImage==wiresIX
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+        end
+    end
+
+    % DragnDrop callback function
+    function DropFcn(~, eventdata)
+        switch eventdata.DropType
+            case 'file' % drag file into imshowpair window
+                SwitchPatientMod(eventdata.Data{1});
+            case 'string'   % % drag string (full path of the file) into imshowpair window
+                [fpath, fname] = ea_niifileparts(eventdata.Data);
+                fullpath = ea_regexpdir(fileparts(fpath), ['^',fname,'(\.nii|\.nii\.gz)?$'],0);
+                if ~isempty(fullpath)
+                    SwitchPatientMod(eventdata.Data);
+                end
         end
     end
 
@@ -655,16 +679,12 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             YImage=ImgZax{4};
         end
 
-
-
-
         try % image toolbox
             ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         catch
             ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
         end;
         showhelptext(callingfunction);
-
 
         if sno > 1
         %    shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
@@ -683,9 +703,8 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             SwitchPostop('update');
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
-            
         end
-        
+
         set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
@@ -720,8 +739,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end;
         showhelptext(callingfunction);
 
-
-
         if sno > 1
           %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
             %stxthand = uicontrol('Style', 'text','Position', Stxt_Pos,'String',sprintf('Slice# %d / %d',S, sno), 'BackgroundColor', [0.8 0.8 0.8], 'FontSize', SFntSz);
@@ -742,7 +759,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
         set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
-
     end
 
 % -=< Coronal view callback function >=-
@@ -793,23 +809,20 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
-
 end
 
 function showhelptext(callingfunction)
-
-hold on
-if strcmp(callingfunction,'normalization')
-    helptext=text(5,5,{'Controls:','Click to show reference image','Use </> to increase box size while clicking',...
-        'Z: Zoom in/out','X: Hybrid view on/off','Arrow keys / Mouse wheel: Scroll through image','A: Axial view',...
-        'C: Coronar view','S: Saggital view','P: Show postoperative acquisitions', '1,2,...: Show preoperative modalities [FA=0]','[cmd] + 1,2,...: Switch available templates [FA=0]'},...
-        'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
-else
-    helptext=text(5,5,{'Controls:','Click to show reference image','Use </> to increase box size while clicking',...
-        'Z: Zoom in/out','X: Hybrid view on/off','Arrow keys / Mouse wheel: Scroll through image','A: Axial view',...
-        'C: Coronar view','S: Saggital view'},...
-        'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
-end
+    hold on
+    if strcmp(callingfunction,'normalization')
+        helptext=text(5,5,{'Click to show reference image','Use </> to decrease/increase box size while clicking','Arrow keys / Mouse wheel: Scroll through image','',...
+            '1,2,...: Show preoperative acquisitions [FA=0]','Alt+1,2,...: Switch between available templates [FA=0]','P: Show postoperative acquisitions','',...
+            'Z: Zoom in/out','X: Hybrid view on/off','A: Axial view','C: Coronar view','S: Saggital view',},...
+            'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
+    else
+        helptext=text(5,5,{'Click to show reference image','Use </> to decrease/increase box size while clicking','Arrow keys / Mouse wheel: Scroll through image','',...
+            'Z: Zoom in/out','X: Hybrid view on/off','A: Axial view','C: Coronar view','S: Saggital view'},...
+            'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
+    end
 end
 
 % Included for completeness (usually in own file)
@@ -848,9 +861,9 @@ function [fig_pointer_pos, axes_pointer_val] = pointer2d(fig_hndl,axes_hndl)
     fig_pointer_pos = pointer_pos - fig_pos([1,2]);
     set(fig_hndl,'CurrentPoint',fig_pointer_pos);
 
-    if (isempty(axes_hndl)),
+    if (isempty(axes_hndl))
         axes_pointer_val = [];
-    elseif (nargout == 2),
+    elseif (nargout == 2)
         axes_pointer_line = get(axes_hndl,'CurrentPoint');
         axes_pointer_val = sum(axes_pointer_line)/2;
     end;
