@@ -154,17 +154,16 @@ end
 
 ea_processguiargs(handles,varargin)
 
-
 %% add tools menu
 ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'});
-
-ea_bind_dragndrop(handles.leadfigure, ...
-    @(obj,evt) DropFcn(obj,evt,handles), ...
-    @(obj,evt) DropFcn(obj,evt,handles));
 
 handles.prod='dbs';
 ea_firstrun(handles,options);
 ea_getui(handles);
+
+ea_bind_dragndrop(handles.leadfigure, ...
+    @(obj,evt) DropFcn(obj,evt,handles), ...
+    @(obj,evt) DropFcn(obj,evt,handles));
 
 % UIWAIT makes lead_dbs wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
@@ -192,7 +191,7 @@ ea_busyaction('on',handles.leadfigure,'dbs');
 if ~isempty(patdir)
     ea_load_pts(handles, patdir);
 
-    if isfield(handles,'atlassetpopup') % not present in connectome mapper
+    if isfield(handles,'atlassetpopup')
         atlasset=get(handles.atlassetpopup,'String');
         atlasset=atlasset{get(handles.atlassetpopup,'Value')};
         options.prefs=ea_prefs('');
@@ -224,7 +223,7 @@ leadfigure=handles.leadfigure;
 ea_busyaction('on',leadfigure,'dbs');
 
 options=ea_handles2options(handles);
-options.leadid = 'dbs';
+options.leadprod = 'dbs';
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 

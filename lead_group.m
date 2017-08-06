@@ -392,15 +392,15 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
        choice = ea_questdlg(sprintf('Group Data Found. Would you like to load %s now?',filename),...
            'Yes','No');
     end
-    
+
     % Get vizstruct
     if ~exist('choice','var') || strcmpi(choice,'No')
-        
+
         for pt=1:length(M.elstruct)
             options.uipatdirs{1}=uipatdirs{pt};
             M.merstruct(pt)=ea_getmerstruct(options);
         end
-        
+
         for pt=1:length(M.elstruct)
             ea_progress(pt/npts, 'Loading microelectrode recordings from patient %d of %d\n', pt, npts);
             M.merstruct(pt).group=handles.grouplist.String(pt);
@@ -408,7 +408,7 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
             M.merstruct(pt).root(end+1)=filesep;
             M.merstruct(pt).ptdir=uipatdirs{pt};
             mua=load(fullfile(uipatdirs{pt},'ea_recordings.mat'));
-            
+
             try
                 mua.right=rmfield(mua.right,'CSPK');
                 mua.left=rmfield(mua.left,'CSPK');
@@ -416,22 +416,22 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
                 mua.right=rmfield(mua.right,'CElectrode');
                 mua.left=rmfield(mua.left,'CElectrode');
             end
-            
+
             M.merstruct(pt).mua=mua;
         end
         disp('**Done loading')
         options = rmfield(options,'uipatdirs');
         vizstruct.merstruct=M.merstruct(ptidx);
-        
+
         save(fullfile(options.root,options.patientname,'ea_groupelvisdata.mat'),...
             'options','vizstruct');
-       
+
     elseif strcmpi(choice,'Yes')
-        
+
         load(filename,'vizstruct')
-        
+
     end
-    
+
 end
 
 try

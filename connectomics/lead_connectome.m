@@ -72,7 +72,6 @@ set(handles.parcellation,'String',parcellation);
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
-
 % add ft methods to menu
 cnt=1;
 ndir=dir([earoot,'connectomics',filesep,'ea_ft_*.m']);
@@ -132,8 +131,12 @@ if isindependent
     ea_processguiargs(handles,varargin)
 
     ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space','methods'});
-    
+
 end
+
+ea_bind_dragndrop(handles.leadfigure, ...
+    @(obj,evt) DropFcn(obj,evt,handles), ...
+    @(obj,evt) DropFcn(obj,evt,handles));
 
 ea_firstrun(handles,options);
 
@@ -142,10 +145,6 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
-
-ea_bind_dragndrop(handles.leadfigure, ...
-    @(obj,evt) DropFcn(obj,evt,handles), ...
-    @(obj,evt) DropFcn(obj,evt,handles));
 
 % UIWAIT makes leadfigure wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
@@ -173,7 +172,7 @@ ea_busyaction('on',handles.leadfigure,'connectome');
 if ~isempty(patdir)
     ea_load_pts(handles, patdir);
 
-    if isfield(handles,'atlassetpopup') % not present in connectome mapper
+    if isfield(handles,'atlassetpopup')
         atlasset=get(handles.atlassetpopup,'String');
         atlasset=atlasset{get(handles.atlassetpopup,'Value')};
         options.prefs=ea_prefs('');
@@ -308,7 +307,7 @@ function runsavebutn_Callback(hObject, eventdata, handles)
 
 cfig=handles.leadfigure;
 options=ea_handles2options(handles);
-options.leadid = 'connectome';
+options.leadprod = 'connectome';
 isindependent=getappdata(handles.leadfigure,'isindependent');
 options.uipatdirs=getappdata(cfig,'uipatdir');
 ea_savelcopts(handles)

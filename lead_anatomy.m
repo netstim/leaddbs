@@ -68,7 +68,6 @@ if ~isdeployed
 end
 
 % for now disable space dropdown
-
 set(handles.vizspacepopup,'enable','off');
 
 options.prefs=ea_prefs('');
@@ -115,8 +114,54 @@ ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'});
 handles.prod='anatomy';
 ea_firstrun(handles,options);
 
+ea_bind_dragndrop(handles.leadfigure, ...
+    @(obj,evt) DropFcn(obj,evt,handles), ...
+    @(obj,evt) DropFcn(obj,evt,handles));
+
 % UIWAIT makes lead_anatomy wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
+
+
+% --- Drag and drop callback to load patdir.
+function DropFcn(~, event, handles)
+
+switch event.DropType
+    case 'file'
+        patdir = event.Data;
+    case 'string'
+        patdir = {event.Data};
+end
+
+nonexist = cellfun(@(x) ~exist(x, 'dir'), patdir);
+if any(nonexist)
+    fprintf('\nExcluded non-existent/invalid folder:\n');
+    cellfun(@disp, patdir(nonexist));
+    fprintf('\n');
+    patdir(nonexist) = [];
+end
+
+ea_busyaction('on',handles.leadfigure,'anatomy');
+if ~isempty(patdir)
+    ea_load_pts(handles, patdir);
+
+    % refresh backdrop list if only one patient dragged in (use standard list for mutiple patients)
+    if length(patdir) == 1
+        options.prefs=ea_prefs('');
+        [options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
+        options.root=[options.root,filesep];
+        list=ea_assignbackdrop('list',options,'Patient');
+        set(handles.tdbackdrop,'String',list);
+    end
+
+    % disable atlas list refreshing for now
+%     if isfield(handles,'atlassetpopup')
+%         atlasset=get(handles.atlassetpopup,'String');
+%         atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+%         options.prefs=ea_prefs('');
+%         ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+%     end
+end
+ea_busyaction('off',handles.leadfigure,'anatomy');
 
 
 % --- Outputs from this function are returned to the command line.

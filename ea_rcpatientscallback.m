@@ -3,15 +3,14 @@ function ea_rcpatientscallback(handles)
 if get(handles.recentpts,'Value')==1
     return
 end
-earoot=ea_getearoot;
-load([earoot,'common',filesep,'ea_recentpatients.mat']);
+
+load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
 if iscell(fullrpts)
-fullrpts=fullrpts(get(handles.recentpts,'Value')-1);
+    fullrpts=fullrpts(get(handles.recentpts,'Value')-1);
 end
 
 if strcmp('No recent patients found',fullrpts)
-   return 
+   return
 end
-
 
 ea_load_pts(handles,fullrpts);

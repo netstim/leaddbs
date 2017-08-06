@@ -2,16 +2,16 @@ function ea_show_normalization(options)
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
-if ~isfield(options, 'leadid')
+if ~isfield(options, 'leadprod')
     callingfunction='normalization dbs';
 else
-    callingfunction=['normalization ', options.leadid];
+    callingfunction=['normalization ', options.leadprod];
 end
 
 if options.modality==1
     expdo=1;
     subdir=[options.root,options.patientname,filesep];
-    
+
 else
     expdo=1;
     subdir=[options.root,options.patientname,filesep];
@@ -27,7 +27,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 checkf=[options.root,options.prefs.patientdir,filesep,options.prefs.gprenii,',1'];
                 checkfn=options.prefs.gprenii;
                 outf=['check_',options.prefs.prenii];
-                
+
                 addstr='MNI space (wireframes) & Preoperative MRI';
                 suff='_pre_tra';
             case 2
@@ -36,7 +36,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                     checkfn=options.prefs.gtranii;
                     suff='_tra';
                     addstr='MNI space (wireframes) & Postoperative axial MRI';
-                    
+
                 elseif options.modality==2
                     checkf=[options.root,options.prefs.patientdir,filesep,'tp_',options.prefs.gctnii,',1'];
                     checkfn=['tp_',options.prefs.gctnii];
@@ -59,10 +59,10 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
         end
 
 
-                
+
             w=load([ea_space(options),'wires.mat']);
             pt=ea_load_nii(checkf);
-            
+
             if ~isequal(size(w.wires),size(pt.img))
                 matlabbatch{1}.spm.util.imcalc.input = {[ea_space(options),options.primarytemplate,'.nii'];
                                                          checkf};
@@ -79,7 +79,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 pt=ea_load_nii(checkf);
             end
             %mni.img(:)=zscore(mni.img(:));
-            
+
             w.wires=single(w.wires);
             w.wires=w.wires/255;
             w.wires=w.wires.*0.2;
@@ -113,16 +113,16 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             %joint_im=repmat(joint_im,1,1,1,3);
             %jim=cat(4,mni.img,pt.img,mean(cat(4,mni.img,pt.img),4));
             %ea_imshowpair(jim,options,addstr);
-            
+
             % ----------------------------------------------------------
             % edited by TH 2016-02-17 to add windowed normalization check
             % ----------------------------------------------------------
             pt.img=single(pt.img);
             mni_img.img=single(mni_img.img);
             joint_im=single(joint_im);
-            
+
             gridf = [options.root,options.patientname,filesep,'glgrid.mat'];
-            
+
             if ~exist(gridf, 'file') % 'glgrid.mat' doesn't exist, try to generat it here and then delete the glgrid.nii file
                 if exist([options.root,options.patientname,filesep,'glgrid.nii'],'file')
                     gridnii=ea_load_nii([options.root,options.patientname,filesep,'glgrid.nii,1']);
@@ -140,7 +140,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                         spm_jobman('run',jobs);
                         clear matlabbatch jobs;
                         gridnii=ea_load_nii([options.root,options.patientname,filesep,'glgrid.nii,1']);
-                    end            
+                    end
                     gridnii.img=gridnii.img/max(gridnii.img(:));
                     gridnii.img=gridnii.img.*255;
                     grid=uint8(gridnii.img);
@@ -152,10 +152,10 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                     %fprintf('No glgrid.nii file found!\n');
                 end
             end
-            
-            
+
+
             if exist(gridf, 'file') % 'glgrid.mat' does exist, append the grid image in wim
-                g=load(gridf);  
+                g=load(gridf);
                 grid=single(g.grid);
                 grid=grid-min(grid(:));
                 grid=grid./max(grid(:));
@@ -167,13 +167,13 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 grid_im=grid_im./max(grid_im(:));
                 wim = cat(4,pt.img,mni_img.img,joint_im,grid_im);
             else
-                wim = cat(4,pt.img,mni_img.img,joint_im);                    
+                wim = cat(4,pt.img,mni_img.img,joint_im);
             end
-            
+
             clear joint_im pt grid_im
             ea_imshowpair(wim,options,addstr,callingfunction);
-     
-%       if strcmp(options.prefs.dev.profile,'se') 
+
+%       if strcmp(options.prefs.dev.profile,'se')
 %         ;
 %       else
     catch
