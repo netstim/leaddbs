@@ -26,15 +26,13 @@ if nargin==1
     ave_coords_mm=coords_mm;
     clear coords_mm
     elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
-    
+
 elseif nargin>1 % elstruct has been supplied, this is a group visualization
     if isstruct(varargin{2})
         elstruct=varargin{2};
         % average coords_mm for image slicing
         ave_coords_mm=ea_ave_elstruct(elstruct,options);
-        
     else % concrete height is being supplied (without electrode star plotting).
-        
         elstruct=varargin{2};
         options.elspec.numel=1; % only iterate once below.
     end
@@ -46,7 +44,7 @@ if nargin>5 % also has flags to hide and not to save the result (as it will be u
     figvisible=varargin{5};
     svfig=varargin{6};
     try
-    atlases=varargin{7};
+        atlases=varargin{7};
     end
 end
 
@@ -58,9 +56,7 @@ if ~isfield(options,'shifthalfup')
     options.shifthalfup=0;
 end
 
-
 scrsz = get(0,'ScreenSize');
-
 
 cuts=figure('name',[options.patientname,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible);
 axis off
@@ -74,14 +70,11 @@ else
     tracorpresent(manualtracor)=1; % only export specified orientation.
 end
 
-
-
 if isstruct(elstruct)
     for side=1:length(ave_coords_mm)
         coords{side}=Vtra.mat\[ave_coords_mm{side},ones(size(ave_coords_mm{side},1),1)]';
         coords{side}=coords{side}(1:3,:)';
     end
-    
 else
     elstruct=[elstruct,1]';
     coordsmm=elstruct;
@@ -95,23 +88,19 @@ fid=fopen([options.root,options.patientname,filesep,'cuts_export_coordinates.txt
 for side=1:length(options.sides)
     %% write out axial images
     for tracor=find(tracorpresent)'
-        
         for elcnt=1:(options.elspec.numel-options.shifthalfup)
-            
-            
             if ~isstruct(elstruct)
                 coords={elstruct(1:3)'};
             end
             el=elcnt+options.elspec.numel*(side-1);
             %subplot(2,2,el);
-            
+
             % Show MR-volume
             set(0,'CurrentFigure',cuts)
             colormap gray
-            
-            
+
             switch tracor
-                
+
                 case 1 % transversal images
                     if manualtracor
                         V=manualV;
@@ -131,12 +120,11 @@ for side=1:length(options.sides)
                         V=Vsag;
                     end
             end
-            
-            
+
             [planedim,onedim, secdim , dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=getdims(tracor,side);
-   
+
             %title(['Electrode ',num2str(el-1),', transversal view.']);
- 
+
             [slice,~,boundboxmm,sampleheight]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
             slice=ea_contrast(slice,1,1);
             disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
@@ -149,16 +137,16 @@ for side=1:length(options.sides)
 %                     [ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
 %             catch
                 hi=imagesc(slice);
-                
+
           %  end
             set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
             axis([min(boundboxmm{onedim}),max(boundboxmm{onedim}),min(boundboxmm{secdim}),max(boundboxmm{secdim})])
-            
+
             %axis equal
             hold on
-            
+
             if manualtracor
-            aspectratio=V.dim(onedim)/V.dim(secdim);
+                aspectratio=V.dim(onedim)/V.dim(secdim);
             else
                 aspectratio=1;
             end
@@ -167,66 +155,64 @@ for side=1:length(options.sides)
                 try options.atlases=atlases; end
                 cuts=ea_add_overlay(boundboxmm,cuts,tracor,options);
             end
-  
+
             % Show isovolume
             if options.d3.showisovolume
                 Visoraw=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
                 Viso=spm_vol([options.root,options.patientname,filesep,options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
                 try
-                Visostat=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'_p05.nii']); 
+                Visostat=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'_p05.nii']);
                 end
-                if exist('ave_coords_mm','var')
+                if isstruct(elstruct)
                     for siso=1:length(ave_coords_mm)
                         coordsi{siso}=Viso.mat\[ave_coords_mm{siso},ones(size(ave_coords_mm{siso},1),1)]';
                         coordsi{siso}=coordsi{siso}(1:3,:)';
                     end
-                    
+
                     [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
-                    
+
                     try [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el); end
-                    
                 else
                     coordsi{side}=Viso.mat\[coordsmm(1);coordsmm(1);coordsmm(1);1];
                     coordsi{side}=coordsi{side}(1:3,:)';
                     [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
                     try [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el); end
-                    
                 end
                 slice(slice==0)=nan;
                 rwholemap=spm_read_vols(Visoraw);
                 swholemap=spm_read_vols(Viso);
                 wholemap=rwholemap;
                 wholemap(~isnan(rwholemap))=swholemap(~isnan(rwholemap));
-                
+
                 %wholemap(~logical(wholemap))=nan;
                 maxval=nanmax(wholemap(:));
                 minval=nanmin(wholemap(:));
-                
+
                 % define an alpha mask
                 alpha=slice;
                 alpha(~isnan(alpha))=1;%0.8;
                 alpha(isnan(alpha))=0;
                 % convert slice to rgb format
                 %slicergb=nan([size(slice),3]);
-                
+
                 jetlist=eval(options.prefs.d2.isovolcolormap);
                 %jetlist=summer;
                 slice=(slice-minval)/(maxval-minval); % set min max to boundaries 0-1.
-                
+
                 % ##
                 % add some "contrast" ? remove this part for linear
                 % colormapping
-                
+
                 slice=slice-0.5;
                 slice(slice<0)=0;
                 slice=slice*2;
                 slice(slice>1)=1;
-                
+
                 % ##
-                
+
                 slice=round(slice.*63)+1; % set min max to boundaries 1-64.
                 slice(slice<1)=1; slice(slice>64)=64;
-                
+
                 slicer=slice; sliceg=slice; sliceb=slice;
                 slicer(~isnan(slicer))=jetlist(slicer(~isnan(slicer)),1);
                 sliceg(~isnan(sliceg))=jetlist(sliceg(~isnan(sliceg)),2);
@@ -235,7 +221,7 @@ for side=1:length(options.sides)
                 isv=imagesc(slicergb);
                 set(isv,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
                 set(isv,'AlphaData',alpha);
-                
+
                 % draw significance countour if available:
                 try
                     slicestat(isnan(slicestat))=0;
@@ -245,17 +231,17 @@ for side=1:length(options.sides)
                     set(statcontour,'Color','w');
                     warning('on')
                 end
-                
+
             end
-            
+
             % Plot L, R and sizelegend
             %text(addsubsigned(min(boundboxmm{onedim}),2,plusminusl),mean(boundboxmm{secdim}),Ltxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
             %text(addsubsigned(max(boundboxmm{onedim}),2,plusminusr),mean(boundboxmm{secdim}),Rtxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
-            
+
             %plot([addsubsigned(mean(boundboxmm{onedim}),2.5,'minus'),addsubsigned(mean(boundboxmm{onedim}),2.5,'plus')],[addsubsigned(min(boundboxmm{secdim}),1,'minus'),addsubsigned(min(boundboxmm{secdim}),1,'minus')],'-w','LineWidth',2.5);
-            
+
             %text(mean(boundboxmm{onedim}),addsubsigned(min(boundboxmm{secdim}),2,'minus'),'5 mm','color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
-            
+
             % Plot slice depth legend
             %text(mean(boundboxmm{onedim}),addsubsigned(max(boundboxmm{secdim}),2,'minus'),[lstring,sprintf('%.2f',mean(boundboxmm{planedim})),' mm'],'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
             %text(mean(boundboxmm{onedim}),addsubsigned(max(boundboxmm{secdim}),2,plusminusc),[lstring,sprintf('%.2f',mean(boundboxmm{planedim})),' mm'],'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
@@ -272,89 +258,76 @@ for side=1:length(options.sides)
                     cmap=[0.9,0.9,0.9];
                 end
             end
-                % 1. Plot stars
-                
-                for c=1:length(elstruct)
-                    
-                    
-                    % prepare active/passive contacts
-                    if ~isfield(elstruct(c),'elmodel') % usually, elspec is defined by the GUI. In case of group analyses, for each patient, a different electrode model can be selected for rendering.
-                        elspec=options.elspec;
-                    else % if elspec is defined for each electrode, overwrite options-struct settings here.
-                        o=ea_resolve_elspec(elstruct(c));
-                        elspec=o.elspec; clear o
-                    end
-                    
-                    elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
-                    
-                    if ~isstruct(elstruct) || ((elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts))
-                        
-                        wstr='w';
-                        if options.d3.hlactivecontacts
-                            
-                            
-                            if elstruct(c).activecontacts{side}(elcnt)
-                                wstr='r';
-                                
-                            end
+
+            % 1. Plot stars
+            for c=1:length(elstruct)
+                % prepare active/passive contacts
+                if ~isfield(elstruct(c),'elmodel') % usually, elspec is defined by the GUI. In case of group analyses, for each patient, a different electrode model can be selected for rendering.
+                    elspec=options.elspec;
+                else % if elspec is defined for each electrode, overwrite options-struct settings here.
+                    o=ea_resolve_elspec(elstruct(c));
+                    elspec=o.elspec; clear o
+                end
+
+                elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
+
+                if isstruct(elstruct) && ((elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts))
+                    wstr='w';
+                    if options.d3.hlactivecontacts
+                        if elstruct(c).activecontacts{side}(elcnt)
+                            wstr='r';
                         end
+                    end
 
-                        warnStruct = warning('off','MATLAB:hg:willberemoved');
-                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
-                        warning(warnStruct);
+                    warnStruct = warning('off','MATLAB:hg:willberemoved');
+                    elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
+                    warning(warnStruct);
 
-                        if options.d2.fid_overlay
-                            if isstruct(elstruct)
-                                elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4);
+                    if options.d2.fid_overlay
+                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4);
+                    end
+                end
+            end
+
+            % 2. Plot legend
+            if exist('elplt','var') % if no stars have been plottet, no legend is needed.
+                if numel(elplt)>1
+                    if options.d2.showlegend
+                        if exist('ptnames','var')
+                            if numel(elplt)>50
+                                cols=round(sqrt(numel(elplt(:))));
+                                if cols>6; cols=6; end
+                                ea_columnlegend(cols,elplt,ptnames,'Location','Middle');
                             else
-                                pelstruct=manualV.mat*elstruct;
-                                elplt(c)=plot(pelstruct(onedim,elcnt),pelstruct(secdim,elcnt),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4);
+                                legend(elplt,ptnames,'Location','southoutside','Orientation','Horizontal','FontSize',9,'FontWeight','bold');
+                                legend('boxoff');
                             end
                         end
+                    end
+                end
+            end
+            axis xy
+            axis off
+            drawnow % this is needed here to set alpha below.
 
-                    end
-                    
-                end
-                
-                % 2. Plot legend
-                if exist('elplt','var') % if no stars have been plottet, no legend is needed.
-                    if numel(elplt)>1
-                        if options.d2.showlegend
-                            if exist('ptnames','var')
-                                if numel(elplt)>50
-                                    cols=round(sqrt(numel(elplt(:))));
-                                    if cols>6; cols=6; end
-                                    ea_columnlegend(cols,elplt,ptnames,'Location','Middle');
-                                else
-                                    legend(elplt,ptnames,'Location','southoutside','Orientation','Horizontal','FontSize',9,'FontWeight','bold');
-                                    legend('boxoff');
-                                end
-                            end
-                        end
-                    end
-                end
-                axis xy
-                axis off
-                drawnow % this is needed here to set alpha below.
-                
-                % 3. Dampen alpha by distance (this *has* to be performed
-                % last, if not, info is erased by legend again).
-                %                 try % not sure if this is supported by earlier ML versions.
-                %                     for c=1:length(elstruct)
-                %
-                %                         dist=abs(diff([elstruct(c).coords_mm{side}(elcnt,planedim),ave_coords_mm{side}(elcnt,planedim)]));
-                %                         % dampen alpha by distance
-                %                         alp=2*1/exp(dist);
-                %                         hMarker = elplt(c).MarkerHandle;
-                %                         hMarker.EdgeColorData=uint8(255*[cmap(c,:)';alp]);
-                %                     end
-                %                 end
-                
-                
-                
-                hold off
+            % 3. Dampen alpha by distance (this *has* to be performed
+            % last, if not, info is erased by legend again).
+            %                 try % not sure if this is supported by earlier ML versions.
+            %                     for c=1:length(elstruct)
+            %
+            %                         dist=abs(diff([elstruct(c).coords_mm{side}(elcnt,planedim),ave_coords_mm{side}(elcnt,planedim)]));
+            %                         % dampen alpha by distance
+            %                         alp=2*1/exp(dist);
+            %                         hMarker = elplt(c).MarkerHandle;
+            %                         hMarker.EdgeColorData=uint8(255*[cmap(c,:)';alp]);
+            %                     end
+            %                 end
+
+
+
+            hold off
             %end
-            
+
             axis equal
             % Save results
             if strcmp(figvisible,'on')
@@ -370,7 +343,7 @@ for side=1:length(options.sides)
 %            set(gca, 'LooseInset', [0,0,0,0]);
 %            axis equal
             set(gca,'position',[0,0,1,1],'units','normalized'); % fullscreen plot.
-            
+
             expslice=double(frame2im(getframe(cuts))); % export plot.
             expslice=(expslice-min(expslice(:)))/(max(expslice(:))-min(expslice(:))); % set 0 to 1
 
@@ -392,16 +365,15 @@ for side=1:length(options.sides)
                         ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_sagittal',isofnadd,'.png']);
                 end
             end
-            
+
             axis xy
-            
+
         end
     end
 end
 if fid>0
 fclose(fid);
 end
-
 
 if svfig<2
 close(cuts)
@@ -424,34 +396,34 @@ N = sum(~isnan(x), dim);
 y = nansum(x, dim) ./ N;
 
 function img2 = crop_img(img,border)
-% 
+%
 % Crop image by removing edges with homogeneous intensity
-% 
-% 
+%
+%
 %USAGE
 %-----
 % img2 = crop_img(img)
 % img2 = crop_img(img,border)
-% 
-% 
+%
+%
 %INPUT
 %-----
 % - IMG: MxNxC matrix, where MxN is the size of the image and C is the
 %   number of color layers
 % - BORDER: maximum number of pixels at the borders (default: 0)
-% 
-% 
+%
+%
 %OUPUT
 %-----
 % - IMG2: cropped image
-% 
-% 
+%
+%
 %EXAMPLE
 %-------
 % >> img  = imread('my_pic.png');
 % >> img2 = crop_img(img,0);
 % >> imwrite(img2,'my_cropped_pic.png')
-% 
+%
 
 % Guilherme Coco Beltramini (guicoco@gmail.com)
 % 2013-May-29, 12:29 pm
@@ -474,15 +446,15 @@ edge_row   = edge_col;    % image edges (rows)
 % Find the edges
 %==========================================================================
 for cc=1:CC % loop for the colors
-    
-    
+
+
     % Top left corner
     %================
-    
+
     % Find the background
     %--------------------
     img_bg = img(:,:,cc) == img(1,1,cc);
-    
+
     % Columns
     %--------
     cols = sum(img_bg,1);
@@ -496,7 +468,7 @@ for cc=1:CC % loop for the colors
     else % no background
         edge_col(1,cc) = 1;
     end
-    
+
     % Rows
     %-----
     rows = sum(img_bg,2);
@@ -510,15 +482,15 @@ for cc=1:CC % loop for the colors
     else % no background
         edge_row(1,cc) = 1;
     end
-    
-    
+
+
     % Bottom right corner
     %====================
-    
+
     % Find the background
     %--------------------
     img_bg = img(:,:,cc) == img(MM,NN,cc);
-    
+
     % Columns
     %--------
     cols = sum(img_bg,1);
@@ -532,7 +504,7 @@ for cc=1:CC % loop for the colors
     else % no background
         edge_col(2,cc) = NN;
     end
-    
+
     % Rows
     %-----
     rows = sum(img_bg,2);
@@ -546,8 +518,8 @@ for cc=1:CC % loop for the colors
     else % no background
         edge_row(2,cc) = MM;
     end
-    
-    
+
+
     % Identify homogeneous color layers
     %==================================
     if edge_col(1,cc)==1 && edge_col(2,cc)==NN && ...
@@ -556,8 +528,8 @@ for cc=1:CC % loop for the colors
         edge_col(:,cc) = [NN;1];
         edge_row(:,cc) = [MM;1]; % => ignore layer
     end
-    
-    
+
+
 end
 
 
@@ -601,7 +573,7 @@ function coords_mm=ea_ave_elstruct(elstruct,options)
 % simply averages coordinates of a group to one coords_mm 1x2 cell
 coords_mm=elstruct(1).coords_mm; % initialize mean variable
 for side=1:length(coords_mm)
-    
+
     for xx=1:size(coords_mm{side},1)
         for yy=1:size(coords_mm{side},2)
             vals=zeros(length(elstruct),1);
@@ -611,7 +583,7 @@ for side=1:length(coords_mm)
                 end
             end
             coords_mm{side}(xx,yy)=ea_robustmean(vals);
-            
+
         end
     end
 end
@@ -619,7 +591,7 @@ if options.shifthalfup
     for side=1:length(coords_mm)
         for c=1:length(coords_mm{side})-1
            scoords_mm{side}(c,:)=mean([coords_mm{side}(c,:);coords_mm{side}(c+1,:)],1);
-            
+
         end
     end
     coords_mm=scoords_mm;
@@ -665,7 +637,7 @@ str(str=='_')=' ';
 function [planedim,onedim, secdim, dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=getdims(tracor,side)
 
 switch tracor
-    
+
     case 1 % transversal images
         onedim=1;
         secdim=2;
@@ -692,7 +664,7 @@ switch tracor
         Ltxt='M';
         Rtxt='L';
         plusminusc='minus';
-        
+
         switch side
             case 1
                 plusminusr='minus';
@@ -718,7 +690,7 @@ switch tracor
                 plusminusr='plus';
                 plusminusl='minus';
         end
-        
+
 end
 
 

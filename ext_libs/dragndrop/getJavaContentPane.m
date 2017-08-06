@@ -3,5 +3,5 @@ function [jContentPane, jFrame] = getJavaContentPane(hFig)
 
 wrn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jFrame = get(hFig,'JavaFrame');
-jContentPane = jFrame.fHG2Client().getContentPane();
+jContentPane = jFrame.fHG2Client(1).getContentPane();
 warning(wrn);

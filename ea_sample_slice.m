@@ -13,7 +13,7 @@ function [slice,boundbox,boundboxmm,sampleheight]=ea_sample_slice(vol,tracor,wsi
 
 interpfactor=2;
 
-if strcmp(voxmm,'mm');
+if strcmp(voxmm,'mm')
 % calculate distance in millimeters (wsize) back to voxels:
 probe=[0,0,0,1;wsize,0,0,1]';
 probe=vol.mat\probe;
@@ -31,7 +31,7 @@ coords=allc;
 end
 
 if length(coords)==1 % scalar input, only a height is defined. convert to mm space.
-   getfullframe=1; 
+    getfullframe=1;
 else
     getfullframe=0;
 end
@@ -51,11 +51,11 @@ switch tracor
         sampleheight=[1,1,boundbox{3}(1),1]';
         sampleheight=vol.mat*sampleheight;
         sampleheight=sampleheight(3);
-        
-        
+
+
         ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
-        
+
         %slice=fliplr(slice);
     case 'cor'
         if getfullframe
@@ -72,7 +72,7 @@ switch tracor
         sampleheight=[1,boundbox{2}(1),1,1]';
         sampleheight=vol.mat*sampleheight;
         sampleheight=sampleheight(2);
-        
+
             ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
         %slice=fliplr(slice);
@@ -88,11 +88,11 @@ switch tracor
         end
         [cmesh.Y,cmesh.Z]=meshgrid(boundbox{2},boundbox{3});
         cmesh.X=repmat(boundbox{1}(1),numel(cmesh.Y),1);
-        
+
         sampleheight=[boundbox{1}(1),1,1,1]';
         sampleheight=vol.mat*sampleheight;
         sampleheight=sampleheight(1);
-        
+
             ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
         %slice=fliplr(slice);
@@ -101,11 +101,11 @@ end
 
 
 
-   boundboxmm{1}=vol.mat*[boundbox{1};ones(3,length(boundbox{1}))]; 
+   boundboxmm{1}=vol.mat*[boundbox{1};ones(3,length(boundbox{1}))];
    boundboxmm{1}=boundboxmm{1}(1,:);
-   boundboxmm{2}=vol.mat*[ones(1,length(boundbox{1}));boundbox{2};ones(2,length(boundbox{2}))]; 
-   boundboxmm{2}=boundboxmm{2}(2,:);   
-   boundboxmm{3}=vol.mat*[ones(2,length(boundbox{1}));boundbox{3};ones(1,length(boundbox{3}))]; 
+   boundboxmm{2}=vol.mat*[ones(1,length(boundbox{1}));boundbox{2};ones(2,length(boundbox{2}))];
+   boundboxmm{2}=boundboxmm{2}(2,:);
+   boundboxmm{3}=vol.mat*[ones(2,length(boundbox{1}));boundbox{3};ones(1,length(boundbox{3}))];
    boundboxmm{3}=boundboxmm{3}(3,:);
-   
-   
+
+

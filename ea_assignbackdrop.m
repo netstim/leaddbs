@@ -18,28 +18,32 @@ if strcmp(bdstring, 'list')
     if ~exist('options','var')
         options.patientname='';
     end
-
+    
+    % by default assuming patient mode, preop and postop images exist.
+    nopatientmode=0;
+    haspreop=1;
+    haspostop=1;
+    
+    % check patient mode
     if isfield(options,'groupmode')
         nopatientmode=options.groupmode;
-    else
-        if strcmp(options.patientname,'No Patient Selected')
-            nopatientmode=1;
-        else
-            nopatientmode=0;
+    elseif ~isfield(options,'patientname')
+        nopatientmode=1;
+    elseif strcmp(options.patientname,'No Patient Selected')
+        nopatientmode=1;
+    end
+    
+    % check if preop and postop images exist
+    if ~nopatientmode
+        if isempty(dir([options.root,options.patientname,filesep,'anat_*.nii']))
+            haspreop=0;
         end
-    end
-
-    if ~isempty(dir([options.root,options.patientname,filesep,'anat_*.nii']))
-        haspreop=1;
-    else
-        haspreop=0;
-    end
-
-    try
-        assignpatspecific(options, native); % use this as a probe to see if patient is defined.
-        haspostop=1;
-    catch
-        haspostop=0;
+        try
+            % use this as a probe to see if required patient postop images exist.
+            assignpatspecific(options, native);
+        catch
+            haspostop=0;
+        end
     end
 
     if ~haspostop && ~haspreop

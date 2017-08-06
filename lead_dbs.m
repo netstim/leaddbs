@@ -166,7 +166,6 @@ handles.prod='dbs';
 ea_firstrun(handles,options);
 ea_getui(handles);
 
-
 % UIWAIT makes lead_dbs wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 
