@@ -19,7 +19,7 @@ switch chooseboxname
 end
 
 try % only works when calling from core lead (not lead_connectome)
-    updatestatus(handles);
+    ea_updatestatus(handles);
 end
 options=ea_handles2options(handles);
 try
