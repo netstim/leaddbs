@@ -74,8 +74,8 @@ try
     switch onoff
         case 'on'
             if ~exist('onfigtit','var')
-            figtit=get(fighandle,'Name');
-            set(fighandle,'name',[figtit,' (busy...)']);
+                figtit=get(fighandle,'Name');
+                set(fighandle,'name',[figtit,' (busy...)']);
             else
                 set(fighandle,'name',onfigtit);
             end
@@ -112,7 +112,7 @@ try
         case 'off'
             if ~exist('offfigtit','var')
                 figtit=get(fighandle,'Name');
-                set(fighandle,'name',figtit(1:end-10));
+                set(fighandle,'name',strrep(figtit,' (busy...)', ''));
             else
                 set(fighandle,'name',offfigtit);
             end
@@ -131,7 +131,7 @@ try
         case 'del'
             if ~exist('offfigtit','var')
                 figtit=get(fighandle,'Name');
-                set(fighandle,'name',figtit(1:end-10));
+                set(fighandle,'name',strrep(figtit,' (busy...)', ''));
             else
                 set(fighandle,'name',offfigtit);
             end

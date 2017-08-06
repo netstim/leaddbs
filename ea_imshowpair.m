@@ -389,7 +389,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             end
             set(a2,'UserData',a2_param);
         end
-        [k,numstatus]=str2num(eventdata.Character);
+
         if (strcmp(eventdata.Key,'leftarrow') || strcmp(eventdata.Key,'downarrow'))
             ev = []; ev.VerticalScrollCount = -1;
             mouseScroll (gcf, ev);
@@ -403,8 +403,8 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         elseif (strcmpi(eventdata.Key,'s'))
             SagittalView([]);
         elseif (strcmpi(eventdata.Key,'P') && strcmp(callingfunction,'normalization dbs'))
-            SwitchPostop
-        elseif (numstatus) && ~isempty(k)
+            SwitchPostop;
+        elseif ~isnan(str2double(eventdata.Character))
             SwitchModality(eventdata.Key,eventdata.Modifier)
         elseif (strcmpi(eventdata.Key,'x'))
             if MainImage(1)==1
@@ -440,7 +440,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         ButtonMotionCallback(gcf);
     end
 
-    function SwitchModality(tempstr,Mod)
+    function SwitchModality(numkey,Mod)
         if ~strfind(callingfunction,'normalization') % this on
             return
         end
@@ -449,10 +449,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         PostOpView=0;
         PostOpLoaded={''};
         if strcmp(Mod,'alt') % load templates
-            SwitchTemplateMod(tempstr,Mod)
+            SwitchTemplateMod(numkey)
         elseif isempty(Mod)
-            anchor=SwitchPatientMod(tempstr);
-            SwitchTemplateMod(anchor,Mod)
+            anchor=SwitchPatientMod(numkey);
+            SwitchTemplateMod(anchor)
         end
         ea_busyaction('off',gcf,'normcheck');
     end
@@ -531,25 +531,38 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
         PostOpView=1;
         if ~MainImage==wiresIX
-            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+            set(1,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         else
             try
-            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+                set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
             catch
                 keyboard
             end
         end
         SwitchTemplateMod('2') % set to T2 if available.
+
+        [~, fname] = ea_niifileparts(pt.fname);
+        switch options.modality
+            case 1
+                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Postoperative MRI (',fname,')']));
+            case 2
+                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Postoperative CT (',fname,')']));
+        end
+
         ea_busyaction('off',gcf,'normcheck');
     end
 
-    function SwitchTemplateMod(tempstr,Mod)
+    function SwitchTemplateMod(numkey)
+        if isempty(numkey)
+            return
+        end
+
         options.sd=load([ea_space,'ea_space_def.mat'],'spacedef');
-        if str2double(tempstr)>length(options.sd.spacedef.templates)
+        if str2double(numkey)>length(options.sd.spacedef.templates)
             ea_busyaction('off',gcf,'normcheck');
             return
         end
-        if str2double(tempstr)==0
+        if str2double(numkey)==0
             if options.sd.spacedef.hasfa
                 whichtemplate='fa.nii';
             else
@@ -557,7 +570,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 return
             end
         else
-            whichtemplate=options.sd.spacedef.templates{str2double(tempstr)};
+            whichtemplate=options.sd.spacedef.templates{str2double(numkey)};
         end
         tnii=ea_load_nii([ea_space,whichtemplate]);
         tnii.img(:)=zscore(tnii.img(:));
@@ -571,10 +584,12 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             case 'A'
                 Img = ImgO;
         end
+        [~, fname] = fileparts(whichtemplate);
+        set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=MNI )\w+', upper(fname)));
     end
 
-    function anchor=SwitchPatientMod(tempstr)
-        anchor=tempstr; % just pass on tempstr as default.
+    function anchor=SwitchPatientMod(numkey)
+        anchor=numkey; % just pass on numkey as default.
 
         % load wires first
         w=load([ea_space(options),'wires.mat']);
@@ -584,36 +599,37 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         w.wires=w.wires+0.8;
 
         [options,presentfiles] = ea_assignpretra(options);
-        if str2double(tempstr)==1
+        if str2double(numkey)==1
             pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gprenii]);
             sd=load([ea_space,'ea_space_def.mat']);
             [~,anchor]=ismember(options.primarytemplate,sd.spacedef.templates); % in this case, "1" could e.g. be the T2 as well, so pass on the T2 in this case to also load the correct template.
             anchor=num2str(anchor);
-        elseif str2double(tempstr)>length(presentfiles)
+        elseif str2double(numkey)>length(presentfiles)
             ea_busyaction('off',gcf,'normcheck');
+            anchor = [];
             return
-        elseif str2double(tempstr)==0
+        elseif str2double(numkey)==0
             if exist([options.root,options.patientname,filesep,'gl',options.prefs.fa2anat],'file')
                 pt=ea_load_nii([options.root,options.patientname,filesep,'gl',options.prefs.fa2anat]);
             else
                 ea_busyaction('off',gcf,'normcheck');
                 return
             end
-        elseif ~isnan(str2double(tempstr))  % tempstr is the index of the image in presentfiles cell
+        elseif ~isnan(str2double(numkey))  % numkey is the index of the image in presentfiles cell
             directory=[options.root,options.patientname,filesep];
-            toload=[directory,'gl',presentfiles{str2double(tempstr)}];
+            toload=[directory,'gl',presentfiles{str2double(numkey)}];
             if ~exist(toload,'file')
-                from{1}=[directory,presentfiles{str2double(tempstr)}];
+                from{1}=[directory,presentfiles{str2double(numkey)}];
                 to{1}=toload;
                 ea_apply_normalization_tofile(options,from,to,directory,0);
             end
             pt=ea_load_nii(toload);
-        else    % tempstr is the full path of the image (used by dragndrop)
-            pt=ea_load_nii(tempstr);
+        else    % numkey is actually the full path of the image (used by dragndrop)
+            pt=ea_load_nii(numkey);
             if any(pt.dim~=size(w.wires))
                 msgbox(sprintf('The file you selected seems unnormalized!\nWill try to apply the normalization now.'),'Warning','warn');
-                [fpath, fname, fext] = ea_niifileparts(tempstr);
-                from{1}=tempstr;
+                [fpath, fname, fext] = ea_niifileparts(numkey);
+                from{1}=numkey;
                 to{1}=[fileparts(fpath), filesep, 'gl', fname, fext];
                 ea_apply_normalization_tofile(options,from,to,fileparts(fpath),0);
                 pt=ea_load_nii(to{1});
@@ -642,6 +658,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         end
+
+        [~, fname] = ea_niifileparts(pt.fname);
+        set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Preoperative MRI (',fname,')']));
     end
 
     % DragnDrop callback function
@@ -756,7 +775,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         if PostOpView && options.modality==1
             SwitchPostop('update');
         else
-        set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
+            set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
         end
         set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
