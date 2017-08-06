@@ -189,6 +189,7 @@ if any(nonexist)
     patdir(nonexist) = [];
 end
 
+ea_busyaction('on',handles.leadfigure,'dbs');
 if ~isempty(patdir)
     ea_load_pts(handles, patdir);
 
@@ -199,6 +200,7 @@ if ~isempty(patdir)
         ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
     end
 end
+ea_busyaction('off',handles.leadfigure,'dbs');
 
 
 % --- Outputs from this function are returned to the command line.
@@ -300,8 +302,6 @@ function endtol_txt_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 
 function distance_txt_Callback(hObject, eventdata, handles)
@@ -521,7 +521,6 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 ea_busyaction('on',handles.leadfigure,'dbs');
 options.prefs=ea_prefs('');
 ea_getpatients(options,handles);
-
 ea_busyaction('off',handles.leadfigure,'dbs');
 
 

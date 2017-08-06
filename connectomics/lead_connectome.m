@@ -92,15 +92,12 @@ end
 setappdata(gcf,'ftmethod',ftmethod);
 set(handles.ftmethod,'String',fdc);
 
-
 % add normmethods to menu
 options.prefs=ea_prefs('');
 ea_addnormmethods(handles,options,'');
 
 % add recent patients...
 ea_initrecentpatients(handles,'subjects');
-
-
 
 % update UI:
 try
@@ -144,12 +141,47 @@ ea_firstrun(handles,options);
 handles.output = hObject;
 
 % Update handles structure
-
 guidata(hObject, handles);
 
-% UIWAIT makes leadfigure wait for user response (see UIRESUME)
+ea_bind_dragndrop(handles.leadfigure, ...
+    @(obj,evt) DropFcn(obj,evt,handles), ...
+    @(obj,evt) DropFcn(obj,evt,handles));
 
-%uiwait(handles.leadfigure);
+% UIWAIT makes leadfigure wait for user response (see UIRESUME)
+% uiwait(handles.leadfigure);
+
+
+% --- Drag and drop callback to load patdir.
+function DropFcn(~, event, handles)
+
+switch event.DropType
+    case 'file'
+        patdir = event.Data;
+    case 'string'
+        patdir = {event.Data};
+end
+
+nonexist = cellfun(@(x) ~exist(x, 'dir'), patdir);
+if any(nonexist)
+    fprintf('\nExcluded non-existent/invalid folder:\n');
+    cellfun(@disp, patdir(nonexist));
+    fprintf('\n');
+    patdir(nonexist) = [];
+end
+
+ea_busyaction('on',handles.leadfigure,'connectome');
+if ~isempty(patdir)
+    ea_load_pts(handles, patdir);
+
+    if isfield(handles,'atlassetpopup') % not present in connectome mapper
+        atlasset=get(handles.atlassetpopup,'String');
+        atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+        options.prefs=ea_prefs('');
+        ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+    end
+end
+ea_busyaction('off',handles.leadfigure,'connectome');
+
 
 function ea_makehidelcindep(handles)
 
@@ -346,8 +378,6 @@ function compute_GM_struc_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of compute_GM_struc
 
 
-
-
 function handles=lc2handles(lc,handles)
 
 % General settings
@@ -391,7 +421,6 @@ function normalize_fibers_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of normalize_fibers
 
 
-
 function TR_Callback(hObject, eventdata, handles)
 % hObject    handle to TR (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -412,7 +441,6 @@ function TR_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function edit3_Callback(hObject, eventdata, handles)
@@ -437,7 +465,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function sthresh_Callback(hObject, eventdata, handles)
 % hObject    handle to sthresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -458,7 +485,6 @@ function sthresh_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function fthresh_Callback(hObject, eventdata, handles)
