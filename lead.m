@@ -66,18 +66,15 @@ if isdeployed
 fprintf(1, '%s', ctfroot);
 end
 
-    ea_compat_data;
+ea_compat_data;
 earoot=ea_getearoot;
 
 ea_checkbuildspace;
 
-
 ea_checkspm;
 
 % check existence of directories
-
 ea_checkleaddirs;
-
 
 % check for commands first
 if nargin>3
@@ -86,19 +83,19 @@ if nargin>3
             lead_dbs;
             delete(handles.leadfigure)
             return
-        case 'group';
+        case 'group'
             lead_group;
             delete(handles.leadfigure)
             return
-        case 'connectome';
+        case 'connectome'
             lead_connectome;
             delete(handles.leadfigure)
             return
-        case {'mapper'};
+        case {'mapper'}
             lead_mapper;
             delete(handles.leadfigure)
             return
-        case 'anatomy';
+        case 'anatomy'
             lead_anatomy;
             delete(handles.leadfigure)
             return
@@ -118,9 +115,7 @@ if nargin>3
 
 end
 
-
 set(handles.leadfigure,'name','Welcome to the Lead Neuroimaging Suite');
-
 
 set(0,'CurrentFigure',handles.leadfigure);
 im=imread([earoot,'icons',filesep,'logo_lead.png']);
@@ -129,15 +124,11 @@ axis off;
 axis equal;
 
 % add logos
-
 ea_setbuttonbackdrop(handles.startdbs,[earoot,'icons',filesep,'logo_lead_dbs_small.png']);
 ea_setbuttonbackdrop(handles.startconnectome,[earoot,'icons',filesep,'logo_lead_connectome_small.png']);
 ea_setbuttonbackdrop(handles.startgroup,[earoot,'icons',filesep,'logo_lead_group_small.png']);
 ea_setbuttonbackdrop(handles.startanatomy,[earoot,'icons',filesep,'logo_lead_anatomy_small.png']);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
-
-
-
 
 % UIWAIT makes lead wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);

@@ -308,18 +308,16 @@ function runsavebutn_Callback(hObject, eventdata, handles)
 
 cfig=handles.leadfigure;
 options=ea_handles2options(handles);
+options.leadid = 'connectome';
 isindependent=getappdata(handles.leadfigure,'isindependent');
 options.uipatdirs=getappdata(cfig,'uipatdir');
 ea_savelcopts(handles)
 
 % run execution:
-
 ea_busyaction('on',cfig,'connectome');
 
-
-
 if isindependent
-ea_run('run',options);
+    ea_run('run',options);
 end
 ea_busyaction('off',cfig,'connectome');
 

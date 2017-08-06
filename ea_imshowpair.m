@@ -5,14 +5,14 @@ function  ea_imshowpair(Img, options, addstring, callingfunction)
 % Todd Herrington, 2016-03-16
 
 if ~exist('callingfunction','var')
-   callingfunction='normalization';
+   callingfunction='normalization dbs';
 end
 
 switch callingfunction
     case 'ctcoregistration'
         wiresIX=3:5;
         gridIX=nan;
-    case 'normalization'
+    case {'normalization dbs', 'normalization connectome'}
         wiresIX=3;
         gridIX=4;
 end
@@ -151,6 +151,7 @@ try % image toolbox
 catch
     ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
 end
+
 showhelptext(callingfunction);
 
 FigPos = get(gcf,'Position');
@@ -389,10 +390,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             set(a2,'UserData',a2_param);
         end
         [k,numstatus]=str2num(eventdata.Character);
-        if (strcmp(eventdata.Key,'leftarrow') | strcmp(eventdata.Key,'downarrow'))
+        if (strcmp(eventdata.Key,'leftarrow') || strcmp(eventdata.Key,'downarrow'))
             ev = []; ev.VerticalScrollCount = -1;
             mouseScroll (gcf, ev);
-        elseif (strcmp(eventdata.Key,'rightarrow') | strcmp(eventdata.Key,'uparrow'))
+        elseif (strcmp(eventdata.Key,'rightarrow') || strcmp(eventdata.Key,'uparrow'))
             ev = []; ev.VerticalScrollCount = 1;
             mouseScroll (gcf, ev);
         elseif (strcmpi(eventdata.Key,'c'))
@@ -401,7 +402,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             AxialView([]);
         elseif (strcmpi(eventdata.Key,'s'))
             SagittalView([]);
-        elseif (strcmpi(eventdata.Key,'P'))
+        elseif (strcmpi(eventdata.Key,'P') && strcmp(callingfunction,'normalization dbs'))
             SwitchPostop
         elseif (numstatus) && ~isempty(k)
             SwitchModality(eventdata.Key,eventdata.Modifier)
@@ -415,7 +416,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             end
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
         elseif (strcmpi(eventdata.Key,'g'))
-            if size(Img,4)==4 && strcmp(callingfunction,'normalization') % only do if grid is available.
+            if size(Img,4)==4 && strfind(callingfunction,'normalization') % only do if grid is available.
                 if MainImage(1)==1
                     MainImage=gridIX;
                 elseif MainImage(1)==gridIX
@@ -440,7 +441,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
     end
 
     function SwitchModality(tempstr,Mod)
-        if ~strcmp(callingfunction,'normalization') % this on
+        if ~strfind(callingfunction,'normalization') % this on
             return
         end
         %[options] = ea_assignpretra(options);
@@ -457,7 +458,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
     end
 
     function SwitchPostop(update)
-        if ~strcmp(callingfunction,'normalization') % this on
+        if ~strfind(callingfunction,'normalization') % this on
             return
         end
 
@@ -529,7 +530,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 Img = ImgO;
         end
         PostOpView=1;
-        if ~MainImage==wiresIX;
+        if ~MainImage==wiresIX
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         else
             try
@@ -813,9 +814,14 @@ end
 
 function showhelptext(callingfunction)
     hold on
-    if strcmp(callingfunction,'normalization')
+    if strcmp(callingfunction,'normalization dbs')
         helptext=text(5,5,{'Click to show reference image','Use </> to decrease/increase box size while clicking','Arrow keys / Mouse wheel: Scroll through image','',...
             '1,2,...: Show preoperative acquisitions [FA=0]','Alt+1,2,...: Switch between available templates [FA=0]','P: Show postoperative acquisitions','',...
+            'Z: Zoom in/out','X: Hybrid view on/off','A: Axial view','C: Coronar view','S: Saggital view',},...
+            'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
+    elseif strcmp(callingfunction,'normalization connectome')
+        helptext=text(5,5,{'Click to show reference image','Use </> to decrease/increase box size while clicking','Arrow keys / Mouse wheel: Scroll through image','',...
+            '1,2,...: Show preoperative acquisitions [FA=0]','Alt+1,2,...: Switch between available templates [FA=0]','',...
             'Z: Zoom in/out','X: Hybrid view on/off','A: Axial view','C: Coronar view','S: Saggital view',},...
             'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
     else

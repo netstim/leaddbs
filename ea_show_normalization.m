@@ -2,6 +2,11 @@ function ea_show_normalization(options)
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
+if ~isfield(options, 'leadid')
+    callingfunction='normalization dbs';
+else
+    callingfunction=['normalization ', options.leadid];
+end
 
 if options.modality==1
     expdo=1;
@@ -13,7 +18,6 @@ else
 end
 
 disp('Preparing images to show Normalization...');
-
 
 for export=expdo % if CT, only do 1, if MR, do 1:3.
 
@@ -167,7 +171,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
             end
             
             clear joint_im pt grid_im
-            ea_imshowpair(wim,options,addstr,'normalization');
+            ea_imshowpair(wim,options,addstr,callingfunction);
      
 %       if strcmp(options.prefs.dev.profile,'se') 
 %         ;

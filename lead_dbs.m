@@ -224,8 +224,8 @@ function run_button_Callback(hObject, eventdata, handles)
 leadfigure=handles.leadfigure;
 ea_busyaction('on',leadfigure,'dbs');
 
-
 options=ea_handles2options(handles);
+options.leadid = 'dbs';
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
