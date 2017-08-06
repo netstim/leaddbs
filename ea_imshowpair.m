@@ -546,7 +546,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             case 1
                 set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Postoperative MRI (',fname,')']));
             case 2
-                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Postoperative CT (',fname,')']));
+                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Postoperative (tonemapped) CT (',fname,')']));
         end
 
         ea_busyaction('off',gcf,'normcheck');
