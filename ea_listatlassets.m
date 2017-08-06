@@ -4,11 +4,10 @@ function ea_listatlassets(options,handles,mninative,oldatlas)
 if ~exist('oldatlas','var')
     oldatlas='';
 end
-atlases=struct2cell(dir(ea_space(options,'atlases')));
 
-atlases=atlases(1,:);
-dotix=cellfun(@(x) strcmp(x(1),'.'),atlases);
-atlases(dotix)=[];
+atlases=struct2cell(dir(ea_space(options,'atlases')));  % dir 'atlases' folder
+atlases=atlases(1,cell2mat(atlases(5,:)));  % only keep folders, the 5th row of the struct2cell result is 'isdir'
+atlases=atlases(cellfun(@(x) ~strcmp(x(1),'.'),atlases)); % remove '.', '..' and '.*' folders from dir results
 
 if options.prefs.env.dev
     atlases{end+1}='Segment patient anatomy';
@@ -21,8 +20,9 @@ if mninative==2
     if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
         % sweep pt dir for atlases
         natlases=struct2cell(dir([get(handles.patdir_choosebox,'String'),filesep,'atlases',filesep]));
-        natlases=natlases(1,cell2mat(natlases(5,1:end)));
-        natlases=natlases(3:end);
+        natlases=natlases(1,cell2mat(natlases(5,:)));
+        natlases=natlases(cellfun(@(x) ~strcmp(x(1),'.'),natlases));
+        natlases=cellfun(@(x) ['Local atlas: ', x],natlases,'Uniform',0);
     end
 end
 
