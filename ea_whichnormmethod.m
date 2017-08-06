@@ -3,6 +3,7 @@ function [whichnormmethod,template]=ea_whichnormmethod(directory,whatmethod)
 if ~strcmp(directory(end),filesep)
    directory=[directory,filesep];
 end
+
 whichnormmethod=''; % default exit empty.
 if ~exist('whatmethod','var')
     whatmethod='normmethod';

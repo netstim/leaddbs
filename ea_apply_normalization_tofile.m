@@ -2,6 +2,9 @@ function ea_apply_normalization_tofile(options,from,to,directory,useinverse,inte
 % this function applies lead-dbs normalizations to nifti files.
 % currently just used to generate patient specific atlases,i.e., from MNI
 % space to native space
+if ~strcmp(directory(end),filesep)
+   directory=[directory,filesep];
+end
 
 if ~exist('interp','var')
     interp=4;
@@ -61,6 +64,9 @@ switch ea_whichnormmethod(directory)
             end
             
             if useinverse
+                if isempty(refim)
+                    refim = [directory,options.prefs.prenii_unnormalized];
+                end
                 % pullback:
                 %                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
                 %                 matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
@@ -81,6 +87,10 @@ switch ea_whichnormmethod(directory)
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
             else
+                if isempty(refim)
+                    spacedef=ea_getspacedef;
+                    refim = [ea_space,spacedef.templates{1},'.nii'];
+                end
                 % pullback:
                 %                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
                 %                 matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
