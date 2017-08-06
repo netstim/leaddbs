@@ -4,10 +4,11 @@ function ea_listatlassets(options,handles,mninative,oldatlas)
 if ~exist('oldatlas','var')
     oldatlas='';
 end
-
 atlases=struct2cell(dir(ea_space(options,'atlases')));
-atlases=atlases(1,cell2mat(atlases(5,1:end)));
-atlases=atlases(3:end);
+
+atlases=atlases(1,:);
+dotix=cellfun(@(x) strcmp(x(1),'.'),atlases);
+atlases(dotix)=[];
 
 if options.prefs.env.dev
     atlases{end+1}='Segment patient anatomy';
