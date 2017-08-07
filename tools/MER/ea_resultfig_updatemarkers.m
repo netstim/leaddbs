@@ -77,7 +77,8 @@ for m_ix = 1:length(ia)
     new_hmark = struct('side', marker.side, 'label', marker.tract_label,...
         'depth', marker.depth, 'h', [], 'tag', []);
     % Create text item
-    textpos = marker.coords.(space_type);
+    marker_coords = merstruct.getMarkerPosition(marker, space_type);
+    textpos = marker_coords;
     textpos(1) = 3.2 * textpos(1) / abs(textpos(1)) + textpos(1);
     tag_string = sprintf('%s.%s.%s: %.2fmm',...
         marker.side(1), marker.tract_label(1:3), htag(1:3), marker.depth);
@@ -88,9 +89,9 @@ for m_ix = 1:length(ia)
     new_hmark.tag = tag_handle;
 
     % Create sphere item
-    marker_shape.x = shape.x*merstruct.Config.vis.markersize + marker.coords.(space_type)(1);
-    marker_shape.y = shape.y*merstruct.Config.vis.markersize + marker.coords.(space_type)(2);
-    marker_shape.z = shape.z*merstruct.Config.vis.markersize + marker.coords.(space_type)(3);
+    marker_shape.x = shape.x*merstruct.Config.vis.markersize + marker_coords(1);
+    marker_shape.y = shape.y*merstruct.Config.vis.markersize + marker_coords(2);
+    marker_shape.z = shape.z*merstruct.Config.vis.markersize + marker_coords(3);
     new_hmark.h = surf(marker_shape.x, marker_shape.y, marker_shape.z,...
         'FaceColor', fcolor, 'EdgeColor', 'none',...
         'FaceAlpha', 0.7, 'tag', htag);

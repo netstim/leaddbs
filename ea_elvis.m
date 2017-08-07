@@ -583,23 +583,22 @@ if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
         sess_text = '';
         switch lower(event.Key)
             case 'space'
-                markertype = 'Generic';
+                markertype = MERState.MarkerTypes.Generic;
             case 'm'
-                markertype = 'MER recording';
+                markertype = MERState.MarkerTypes.MER;
                 sess_text = char(inputdlg ('Enter Session'));
             case 'l'
-                markertype = 'LFP recording';
+                markertype = MERState.MarkerTypes.LFP;
                 sess_text = char(inputdlg ('Enter Session'));
             case 't'
-                markertype = 'Top border';
+                markertype = MERState.MarkerTypes.Top;
             case 'b'
-                markertype = 'Bottom border';
+                markertype = MERState.MarkerTypes.Bottom;
         end
         
         % For each checked box, add a marker.
-        merstruct = merstruct.addMarkersAtTrajs(merstruct.Toggles.keycontrol(bChecked),...
+        merstruct.addMarkersAtTrajs(merstruct.Toggles.keycontrol(bChecked),...
             markertype, sess_text);
-        setappdata(mercontrolfig, 'merstruct', merstruct);
         handles = guidata(mercontrolfig);
         ea_resultfig_updatemarkers(handles);
         ea_mercontrol_updatemarkers(handles);
@@ -616,8 +615,7 @@ if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
         if any(strcmpi(event.Key, {'downarrow','rightarrow'}))
             d = -d;
         end
-        merstruct = merstruct.translateTrajectories(d);
-        setappdata(mercontrolfig, 'merstruct', merstruct);
+        merstruct.translateToggledTrajectories(d);
         
         % Update the GUI
         handles = guidata(mercontrolfig);

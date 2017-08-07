@@ -85,7 +85,7 @@ for side_ix = 1:length(merstruct.Frame)
         row_ix = row_ix + 1;
         side_vals(row_ix) = sid;
         marker_vals(row_ix) = find(strcmpi(marker_strings, landmarks(landmark_ix).label));
-        dim_vals(row_ix, :) = landmarks(landmark_ix).coords.native;
+        dim_vals(row_ix, :) = landmarks(landmark_ix).coords;
     end
 end
     
@@ -162,15 +162,12 @@ for side_ix = 1:length(uq_sides)
     for row_ix = 1:length(row_ids)
         row_id = row_ids(row_ix);
         lms(row_ix).label = lm_strs{row_id};
-        lms(row_ix).coords.native = coords(row_id, :);
+        lms(row_ix).coords = coords(row_id, :);
     end
-    merstruct = merstruct.updateFrame(sstr, lms);
+    merstruct.updateFrame(sstr, lms);
 end
-merstruct = merstruct.calculateMERTranslations().calculateMERTrajectories();
-setappdata(mercontrolfig, 'merstruct', merstruct);
 fake_handles = struct('mercontrolfig', mercontrolfig);
 ea_resultfig_updatetrajectories(fake_handles);
-% ea_resultfig_updatemarkers(fake_handles);
 delete(handles.figure1);
 
 

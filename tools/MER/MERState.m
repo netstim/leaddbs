@@ -1,4 +1,4 @@
-classdef MERState
+classdef MERState < handle
     properties
         Config
         DBSImplants
@@ -7,13 +7,18 @@ classdef MERState
         Markers
         MarkersHistory
         Toggles
+        Cache
+    end
+    properties (Constant)
+        MarkerTypes = struct(...
+            'Generic', 'Generic',...
+            'MER', 'MER recording',...
+            'LFP', 'LFP recording',...
+            'Top', 'Top border',...
+            'Bottom', 'Bottom border');
     end
     methods
-%         function obj = MERState(options)
-%             obj = obj.setOptions(options);
-%             obj = obj.clearData();
-%         end
-        function obj = setOptions(obj, options)
+        function setOptions(obj, options)
             % Take in options struct and keep only necessary parts in
             % obj.Config
             positions = cat(1, options.prefs.mer.tract_info.position);
@@ -52,31 +57,31 @@ classdef MERState
             obj.Config.prefs.prenii_order = options.prefs.prenii_order;
             obj.Config.prefs.prenii_unnormalized = options.prefs.prenii_unnormalized;
             obj.Config.elmodel = options.elmodel;
-            obj.Config.elspec = options.elspec;            
+            obj.Config.elspec = options.elspec;
         end
-        function obj = clearData(obj)
+        function clearData(obj)
+            obj.Cache = struct('prenii_mat', [], 'native2mni_emp_mat', []);
             obj.DBSImplants = struct(...
                 'side', {}, 'depth', {},...
                 'implanted_tract_label', {},...
-                'coords', struct('native', [], 'mni', []));
-            obj.Frame = struct('side', {}, 'yaw_rad', {},...
-                'landmarks', {struct('label', {}, 'coords', struct('native', []))});
+                'coords', {}, 'coords_top', {}, 'elec_uv', {});
+            obj.Frame = struct('side', {'right', 'left'}, 'yaw_rad', 0,...
+                'landmarks', {struct('label', {}, 'coords', {})});
             obj.MERTrajectories = struct('side', {},...
-                'coords', struct('native', [], 'mni', []),...
                 'label', {}, 'depth', {}, 'translation', {});
             obj.Toggles = struct(...
                 'keycontrol', struct('side', {}, 'label', {}, 'value', {}),...
                 'togglestates', struct('side', {}, 'label', {}, 'value', {}));
-            obj = obj.setMarkersToDefaults();  % Defaults same as clearing.
+            obj.setMarkersToDefaults();  % Defaults same as clearing.
         end
-        function obj = setDataToDefaults(obj)
-            obj = obj.setDBSImplantsToDefaults();
-            obj = obj.setFrameToDefaults();
-            obj = obj.setMERTrajectoriesToDefaults();
-            obj = obj.setTogglesToDefaults();
-            obj = obj.setMarkersToDefaults();
+        function setDataToDefaults(obj)
+            obj.setDBSImplantsToDefaults();
+            obj.setMERTrajectoriesToDefaults();
+            obj.setFrameToDefaults();
+            obj.setTogglesToDefaults();
+            obj.setMarkersToDefaults();
         end
-        function obj = setDBSImplantsToDefaults(obj)
+        function setDBSImplantsToDefaults(obj)
             [side_strs, side_ids] = ea_detsidestr('both');
             for side_ix = 1:length(side_ids)
                 sstr = side_strs{side_ids(side_ix)};
@@ -84,38 +89,35 @@ classdef MERState
                 obj.DBSImplants(side_ix).depth = 0;
                 obj.DBSImplants(side_ix).implanted_tract_label = obj.Config.ImplantLabel;
             end
-            obj = obj.loadDBSReconstruction();
+            obj.loadDBSReconstruction();
         end
-        function obj = setFrameToDefaults(obj)
+        function setFrameToDefaults(obj)
             [side_strs, ~] = ea_detsidestr('both');
             def_frame_landmarks = {'A', 'E', 'Entry'};
             def_frame_coords = [0, 0.5, 0; 0, -0.5, 0; 0, 0, -1];
-            landmarks = struct('label', def_frame_landmarks);
-            for lm_ix = 1:length(def_frame_landmarks)
-                landmarks(lm_ix).coords.native = def_frame_coords(lm_ix, :);
-            end
-            % Both sides initialized with same default coordinates/labels.
+            landmarks = struct('label', def_frame_landmarks,...
+                'coords', mat2cell(def_frame_coords, [1 1 1], 3)');
+            % Both sides initialized with same default landmarks.
             for side_ix = 1:length(side_strs)
-                obj = obj.updateFrame(side_strs{side_ix}, landmarks);
+                obj.updateFrame(side_strs{side_ix}, landmarks);
             end
         end
-        function obj = setMarkersToDefaults(obj)
+        function setMarkersToDefaults(obj)
             % No defaults, just clear.
             obj.Markers = struct('side', {}, 'tract_label', {},...
-                'depth', {}, 'session', {}, 'type', {}, 'notes', {},...
-                'coords', struct('native', [], 'mni', []));
+                'depth', {}, 'session', {}, 'type', {}, 'notes', {});
             obj.MarkersHistory = obj.Markers;
         end
-        function obj = setMERTrajectoriesToDefaults(obj)
+        function setMERTrajectoriesToDefaults(obj)
             for traj_ix = 1:length(obj.Config.MERTrajectory)
                 obj.MERTrajectories(traj_ix).side = obj.Config.MERTrajectory(traj_ix).side;
                 obj.MERTrajectories(traj_ix).label = obj.Config.MERTrajectory(traj_ix).label;
                 obj.MERTrajectories(traj_ix).depth = 0;
             end
-            % Calc .translation and .coords
-            obj = obj.calculateMERTranslations();
+            % Calc .translation
+            obj.calculateMERTranslations();
         end
-        function obj = setTogglesToDefaults(obj)
+        function setTogglesToDefaults(obj)
             for traj_ix = 1:length(obj.Config.MERTrajectory)
                 obj.Toggles.keycontrol(traj_ix).side = obj.Config.MERTrajectory(traj_ix).side;
                 obj.Toggles.keycontrol(traj_ix).label = obj.Config.MERTrajectory(traj_ix).label;
@@ -126,7 +128,41 @@ classdef MERState
                 obj.Toggles.togglestates(traj_ix).value = 1;
             end
         end
-        function obj = updateFrame(obj, side, landmarks)
+        function loadDBSReconstruction(obj)
+            opt_native_backup = obj.Config.native;
+            obj.Config.native = 1;
+            [~, ~, dbs_contacts, obj.Config.elmodel] = ea_load_reconstruction(obj.Config);
+            obj.Config = ea_resolve_elspec(obj.Config);
+            dbs_contacts = ea_resolvecoords(dbs_contacts, obj.Config);
+            for side_ix = 1:length(dbs_contacts)
+                if ~isempty(dbs_contacts{side_ix})
+                    coords = dbs_contacts{side_ix};
+                    % Average 3-D distance through electrode contacts.
+                    elec_diff = mean(diff(coords));
+                    % unit vector through contacts from lowest (?) contact
+                    elec_uv = elec_diff / norm(elec_diff);
+                    % shift coordinates to top of lowest contact.
+                    coords_top = bsxfun(@minus, coords,...
+                        elec_uv * obj.Config.elspec.contact_length / 2);
+                    obj.DBSImplants(side_ix).coords = coords;
+                    obj.DBSImplants(side_ix).coords_top = coords_top;
+                    obj.DBSImplants(side_ix).elec_uv = elec_uv;
+                end
+            end
+            obj.Config.native = opt_native_backup;
+        end
+        function updateDBSImplantTrack(obj, side, label)
+            bSide = strcmpi({obj.DBSImplants.side}, side);
+            bTraj = strcmpi({obj.MERTrajectories.side}, side) ...
+                & strcmpi({obj.MERTrajectories.label}, label);
+            if any(bSide) && any(bTraj)
+                obj.DBSImplants(bSide).implanted_tract_label = label;
+                obj.calculateMERTranslations();
+            else
+                warning('DBS implanted_tract_label not updated because matching MER track not found.');
+            end
+        end
+        function updateFrame(obj, side, landmarks)
             bSide = strcmpi({obj.Frame.side}, side);
             if ~any(bSide)
                 obj.Frame(end + 1).side = side;
@@ -136,12 +172,8 @@ classdef MERState
             
             % Caclulate frame rotation. Currently only A/E/Entry works.
             % TODO: Support other configurations than requiring A, E, and Entry.
-            AEP_str = {'A', 'E', 'Entry'};
-            AEP = nan(3, 3);
-            for aep_ix = 1:3
-                b_row = strcmpi({landmarks.label}, AEP_str{aep_ix});
-                AEP(aep_ix, :) = landmarks(b_row).coords.native;
-            end
+            [~, ~, ib] = intersect({'A', 'E', 'Entry'}, {landmarks.label}, 'stable');
+            AEP = cat(1, landmarks(ib).coords);
             m = (AEP(1, :) + AEP(2, :)) / 2;  %midpoint between A and E becomes origin.
             y = AEP(1, :) - m;  % Vector from frame origin to frame +y in scrf space
             z = m - AEP(3, :);  % '' for +z
@@ -155,23 +187,9 @@ classdef MERState
             % However, DBS lead localization constrains pitch and roll,
             % so we only need yaw. Save yaw in merframe
             obj.Frame(bSide).yaw_rad = atan2(xform(2, 1), xform(1, 1));
+            obj.calculateMERTranslations();
         end
-        function obj = loadDBSReconstruction(obj)
-            opt_native_backup = obj.Config.native;
-            obj.Config.native = 1;
-            [~, ~, dbs_contacts, obj.Config.elmodel] = ea_load_reconstruction(obj.Config);
-            obj.Config = ea_resolve_elspec(obj.Config);
-            dbs_contacts = ea_resolvecoords(dbs_contacts, obj.Config);
-            obj = obj.populateImplantCoords(dbs_contacts, 'native');
-            if ~opt_native_backup
-                obj.Config.native = 0;
-                dbs_contacts_mni = ea_load_reconstruction(obj.Config);
-                % TODO: Why no ea_resolvecoords for mni space?
-                obj = obj.populateImplantCoords(dbs_contacts_mni, 'mni');
-            end
-            obj.Config.native = opt_native_backup;
-        end
-        function obj = calculateMERTranslations(obj)
+        function calculateMERTranslations(obj)
             uqsides = unique({obj.Config.MERTrajectory.side}, 'stable');
             for side_ix = 1:length(uqsides)
                 side_str = uqsides{side_ix};
@@ -190,138 +208,106 @@ classdef MERState
                 yaw_xform = [cos(yaw_rad) -sin(yaw_rad) 0; sin(yaw_rad) cos(yaw_rad) 0; 0 0 1];
                 side_transl = side_transl * yaw_xform;
                 % Align to DBS electrode for pitch & roll
-                elec_uv = obj.DBSImplants(b_side_impl).elec_uv.native;
+                elec_uv = obj.DBSImplants(b_side_impl).elec_uv;
                 if ~isequal(elec_uv, [0 0 1])
                     % Find the transform that aligns [0 0 1] with the electrode unit
                     % vector, then apply that transform to each of the MER offsets.
                     U = MERState.align_vectors([0 0 1], elec_uv);
                     side_transl = (U*side_transl')';  % pitch & roll
                 end
-                % Asign side_transl back into obj.MERTrajectories.translation
+                % Assign side_transl back into obj.MERTrajectories.translation
                 b_side_traj = strcmpi({obj.MERTrajectories.side}, side_str);
                 traj_labels = {obj.MERTrajectories.label};
                 for traj_ix = 1:length(cfg_traj)
                     b_label = strcmpi(traj_labels, cfg_traj(traj_ix).label);
-                    obj.MERTrajectories(b_side_traj & b_label).translation.native = side_transl(traj_ix, :);
+                    obj.MERTrajectories(b_side_traj & b_label).translation = side_transl(traj_ix, :);
                 end
-            end
-            
-            if ~obj.Config.native
-                transl_native = arrayfun(@(x) x.translation.native, obj.MERTrajectories, 'UniformOutput', false);
-                transl_native = cat(1, transl_native{:});
-                startpoint_native = nan(size(transl_native));
-                for side_ix = 1:length(obj.DBSImplants)
-                    b_traj = strcmpi({obj.MERTrajectories.side}, obj.DBSImplants(side_ix).side);
-                    startpoint_native(b_traj, :) = bsxfun(@plus, transl_native(b_traj, :),...
-                        obj.DBSImplants(side_ix).coords_top.native(1, :));
-                end
-                
-                ptdir = fullfile(obj.Config.root, obj.Config.patientname);
-                options = ea_assignpretra(obj.Config);
-                prenii_fname = fullfile(ptdir, options.prefs.prenii_unnormalized);
-                nii = ea_load_nii(prenii_fname);
-                
-                c = [startpoint_native, ones(size(startpoint_native, 1), 1)]';
-                c = nii(1).mat \ c;
-                %         try
-                %             whichnormmethod = ea_whichnormmethod(ptdir);
-                %             if ~ismember(whichnormmethod, ea_getantsnormfuns)
-                %                 V = spm_vol(fullfile(ptdir, 'y_ea_inv_normparams.nii'));
-                %                 if ~isequal(V.dim, nii.dim)
-                %                     ea_redo_inv(ptdir, options);
-                %                 end
-                %             end
-                %         end
-                startpoint_mni = ea_map_coords(c(1:3, :), prenii_fname, ...
-                    fullfile(ptdir, 'y_ea_inv_normparams.nii'), '')';
-                transl_mni = nan(size(startpoint_mni));
-                for side_ix = 1:length(obj.DBSImplants)
-                    b_traj = strcmpi({obj.MERTrajectories.side}, obj.DBSImplants(side_ix).side);
-                    transl_mni(b_traj, :) = bsxfun(@minus, startpoint_mni(b_traj, :),...
-                        obj.DBSImplants(side_ix).coords_top.mni(1, :));
-                end
-                for traj_ix = 1:length(obj.MERTrajectories)
-                    obj.MERTrajectories(traj_ix).translation.mni = ...
-                        transl_mni(traj_ix, :);
-                end
-            end
-            % Everytime the translation is updated, the trajectories need
-            % to be udpated too.
-            obj = obj.calculateMERTrajectories();
-        end
-        function obj = calculateMERTrajectories(obj)
-            % Collect common values used for each trajectory
-            if obj.Config.native
-                spc = 'native';
-            else
-                spc = 'mni';
-            end
-            % Calculate trajectory as translation from DBS electrode.
-            for traj_ix = 1:length(obj.MERTrajectories)
-                traj = obj.MERTrajectories(traj_ix);
-                bSid = strcmpi({obj.DBSImplants.side}, traj.side);
-                curr_dist = traj.depth - obj.DBSImplants(bSid).depth;
-                im_mm = obj.DBSImplants(bSid).coords_top.(spc)(1, :);
-                elec_uv = obj.DBSImplants(bSid).elec_uv.(spc);
-                startpoint = im_mm + traj.translation.(spc) + (elec_uv .* curr_dist);
-                endpoint = startpoint + elec_uv * obj.Config.MERLength;
-                stepsize = (endpoint - startpoint) / (obj.Config.MERPnts - 1);
-                obj.MERTrajectories(traj_ix).coords.(spc) = ...
-                    bsxfun(@plus, (0:obj.Config.MERPnts - 1)' * stepsize, startpoint);
             end
         end
-        function obj = addMarkerAtDepth(obj, side, label, type, sess_notes, depth)
+        function updateTrajDepth(obj, side, track, depth)
+            bTraj = strcmpi({obj.MERTrajectories.side}, side) ...
+                & strcmpi({obj.MERTrajectories.label}, track);
+            obj.MERTrajectories(bTraj).depth = depth;
+        end
+        function coords = getMERTrajectory(obj, traj, spc)
+            bSid = strcmpi({obj.DBSImplants.side}, traj.side);
+            curr_dist = traj.depth - obj.DBSImplants(bSid).depth;
+            im_mm = obj.DBSImplants(bSid).coords_top(1, :);
+            elec_uv = obj.DBSImplants(bSid).elec_uv;
+            startpoint = im_mm + traj.translation + (elec_uv .* curr_dist);
+            endpoint = startpoint + elec_uv * obj.Config.MERLength;
+            stepsize = (endpoint - startpoint) / (obj.Config.MERPnts - 1);
+            coords = bsxfun(@plus, (0:obj.Config.MERPnts - 1)' * stepsize, startpoint);
+            if strcmpi(spc, 'mni')
+                coords = obj.native2mni_fast(coords);
+            end
+        end
+        function addMarkerAtDepth(obj, side, label, type, sess_notes, depth)
             bMarkers = strcmpi({obj.Markers.side}, side)...
                 & strcmpi({obj.Markers.tract_label}, label)...
                 & ([obj.Markers.depth] == depth);
             if any(bMarkers)
-                fprintf('Location along %s - %s at depth %f is already marked as type %s.\n',...
+                warning('Location along %s - %s at depth %f is already marked as type %s.',...
                     side, label, depth, obj.Markers(bMarkers).type);
             else
-                %side, tract_label, depth, session, type, notes,
                 obj.Markers(end + 1).side = side;
                 obj.Markers(end).tract_label = label;
                 obj.Markers(end).depth = depth;
                 obj.Markers(end).type = type;
                 obj.Markers(end).session = sess_notes;
-                % Calculate coords.native/coords.mni
-                bTraj = strcmpi({obj.MERTrajectories.side}, side)...
-                    & strcmpi({obj.MERTrajectories.label}, label);
-                if any(bTraj)
-                    % Calculate coordinate as translation from DBS electrode.
-                    bSid = strcmpi({obj.DBSImplants.side}, side);
-                    curr_dist = depth - obj.DBSImplants(bSid).depth;
-                    traj = obj.MERTrajectories(bTraj);
-                    for fn_cell = fieldnames(traj.translation)'
-                        spc = fn_cell{:};
-                        im_mm = obj.DBSImplants(bSid).coords_top.(spc)(1, :);
-                        elec_uv = obj.DBSImplants(bSid).elec_uv.(spc);
-                        % TODO: curr_dist is always native. We need to only
-                        % calculate in native then use affine transform to
-                        % get mni.
-                        obj.Markers(end).coords.(spc) = im_mm + traj.translation.(spc) + (elec_uv .* curr_dist);
-                    end
-                else
-                    fprintf('No MER trajectory found for marker %s - %s.\n', side, label);
-                    fprintf('Try obj.setMERTrajectoriesToDefaults()\n');
-                end
             end
         end
-        function obj = addMarkersAtTrajs(obj, tstruct, type, sess_notes)
+        function addMarkersAtTrajs(obj, tstruct, type, sess_notes)
             for traj_ix = 1:length(tstruct)
                 ts = tstruct(traj_ix);
                 bTraj = strcmpi({obj.MERTrajectories.side}, ts.side) ...
                     & strcmpi({obj.MERTrajectories.label}, ts.label);
                 if any(bTraj)
                     traj = obj.MERTrajectories(bTraj);
-                    obj = obj.addMarkerAtDepth(ts.side, ts.label, type, sess_notes, traj.depth);
+                    obj.addMarkerAtDepth(ts.side, ts.label, type, sess_notes, traj.depth);
                 else
                     fprintf('No MER trajectory found for marker %s - %s.\n', side, label);
-                    fprintf('Try obj.setMERTrajectoriesToDefaults()\n');
+                    fprintf('Try running obj.setMERTrajectoriesToDefaults() first.\n');
                 end
             end
         end
-        function obj = undoMarker(obj)
+        function marker_table = exportMarkers(obj)
+            col_headers = {'Patient', 'Side', 'Tract', 'Type',...
+                'Native_X', 'Native_Y', 'Native_Z',...
+                'MNI_X', 'MNI_Y', 'MNI_Z'};
+            pts = repmat({obj.Config.patientname}, length(obj.Markers), 1);
+            coords_native = nan(length(obj.Markers), 3);
+            for m_ix = 1:length(obj.Markers)
+                coords_native(m_ix, :) = obj.getMarkerPosition(obj.Markers(m_ix), 'native');
+            end
+            coords_mni = obj.native2mni_slow(coords_native);
+            marker_table = table(...
+                pts, {obj.Markers.side}', {obj.Markers.tract_label}', {obj.Markers.type}',...
+                coords_native(:, 1), coords_native(:, 2), coords_native(:, 3),...
+                coords_mni(:, 1), coords_mni(:, 2), coords_mni(:, 3),...
+                'VariableNames', col_headers);
+        end
+        function coords = getMarkerPosition(obj, marker, spc)
+            bTraj = strcmpi({obj.MERTrajectories.side}, marker.side)...
+                & strcmpi({obj.MERTrajectories.label}, marker.tract_label);
+            if any(bTraj)
+                % Calculate coordinate as translation from DBS electrode.
+                bSid = strcmpi({obj.DBSImplants.side}, marker.side);
+                curr_dist = marker.depth - obj.DBSImplants(bSid).depth;
+                traj = obj.MERTrajectories(bTraj);
+                im_mm = obj.DBSImplants(bSid).coords_top(1, :);
+                elec_uv = obj.DBSImplants(bSid).elec_uv;
+                coords = im_mm + traj.translation + (elec_uv .* curr_dist);
+                if strcmpi(spc, 'mni')
+                    coords = obj.native2mni_fast(coords);
+                end
+            else
+                warning('No MER trajectory found for marker %s - %s.', marker.side, marker.label);
+                fprintf('Try running obj.setMERTrajectoriesToDefaults() first.\n');
+                coords = nan(1, 3);
+            end
+        end
+        function undoMarker(obj)
             old = obj.Markers(end);
             obj.MarkersHistory(end+1) = old;
             obj.Markers(end) = [];
@@ -330,7 +316,9 @@ classdef MERState
             obj.Markers(end + 1) = obj.MarkersHistory(end);
             obj.MarkersHistory(end) = [];
         end
-        function obj = translateTrajectories(obj, d)
+        function translateToggledTrajectories(obj, d)
+            %obj = translateToggledTrajectories(obj, d)
+            %moves toggled trajectories along their lengths by (+/-) d mm.
             d = sign(d) * obj.Config.vis.step_size(abs(d));
             tog_ids = find([obj.Toggles.keycontrol.value] == 1);
             for tog_ix = 1:length(tog_ids)
@@ -342,66 +330,97 @@ classdef MERState
                     obj.MERTrajectories(mid).depth = obj.MERTrajectories(mid).depth + d;
                 end
             end
-            obj = obj.calculateMERTrajectories();
         end
-        function save(obj)
+        function save(obj, varargin)
             fpath = fullfile(obj.Config.uipatdirs{1}, 'ea_merstate.mat');
             save_ok = true;
-            if exist(fpath, 'file')
-                overwrite = ea_questdlg({['ea_merstate.mat found in ' obj.Config.patientname ' directory.'];...
+            if exist(fpath, 'file') && ...
+                    ((nargin < 2) || varargin{1}(1)~='y')
+                overwrite = ea_questdlg({...
+                    ['ea_merstate.mat found in ' obj.Config.patientname ' directory.'];...
                     'Would you like to overwrite this file?'}, obj.Config.patientname);
                 save_ok = strcmpi(overwrite,'Yes');
             end
-            config = obj.Config;
-            dbsimplants = obj.DBSImplants;
-            frame = obj.Frame;
-            markers = obj.Markers;
-            toggles = obj.Toggles;
+            config = obj.Config; %#ok<NASGU>
+            dbsimplants = obj.DBSImplants; %#ok<NASGU>
+            frame = obj.Frame; %#ok<NASGU>
+            markers = obj.Markers; %#ok<NASGU>
+            toggles = obj.Toggles; %#ok<NASGU>
             if save_ok
                 disp(['Saving: ', fpath]);
                 save(fpath, 'config', 'dbsimplants', 'frame', 'markers', 'toggles');
                 disp('DONE');
             end
         end
-        function obj = load(obj)
+        function load(obj)
             fpath = fullfile(obj.Config.uipatdirs{1}, 'ea_merstate.mat');
             if exist(fpath, 'file')
                 temp = load(fpath);
-                obj = obj.clearData();
+                obj.clearData();
                 obj.Config = temp.config;
                 obj.DBSImplants = temp.dbsimplants;
                 obj.Frame = temp.frame;
                 obj.Markers = temp.markers;
                 obj.Toggles = temp.toggles;
-                obj = obj.loadDBSReconstruction();  % In case lead reconstruction changed since we last saved.
-                obj = obj.setMERTrajectoriesToDefaults();
+                obj.loadDBSReconstruction();  % In case reco changed since last save.
+                obj.setMERTrajectoriesToDefaults();
             else
                 disp(['File not found: ' fpath]);
             end
         end
     end
     methods(Access = private)
-        function obj = populateImplantCoords(obj, dbs_contacts, spc)
-            % populateImplantCoords(dbs_contacts, spc)
-            % dbs_contacts is a cell array, each with a 4x3 mat
-            % spc is a string, either 'native' or 'mni'
-            for side_ix = 1:length(dbs_contacts)
-                if ~isempty(dbs_contacts{side_ix})
-                    coords = dbs_contacts{side_ix};
-                    
-                    % Average 3-D distance through electrode contacts.
-                    elec_diff = mean(diff(coords));
-                    % unit vector through contacts from lowest (?) contact
-                    elec_uv = elec_diff / norm(elec_diff);
-                    % shift coordinates to top of lowest contact.
-                    coords_top = bsxfun(@minus, coords,...
-                        elec_uv * obj.Config.elspec.contact_length / 2);
-                    
-                    obj.DBSImplants(side_ix).coords.(spc) = coords;
-                    obj.DBSImplants(side_ix).coords_top.(spc) = coords_top;
-                    obj.DBSImplants(side_ix).elec_uv.(spc) = elec_uv;
-                end
+        function coords_mni = native2mni_fast(obj, coords_native)
+            % Use native2mni_fast for visualization, native2mni_slow for
+            % reporting values accurately.
+            if ~isfield(obj.Cache, 'prenii_mat')...
+                    || isempty(obj.Cache.prenii_mat)
+                options = ea_assignpretra(obj.Config);
+                ptdir = fullfile(obj.Config.root, obj.Config.patientname);
+                prenii_fname = fullfile(ptdir, options.prefs.prenii_unnormalized);
+                nii = ea_load_nii(prenii_fname);
+                obj.Cache.prenii_mat = nii(1).mat;
             end
+            if ~isfield(obj.Cache, 'native2mni_emp_mat')...
+                    || isempty(obj.Cache.native2mni_emp_mat)
+                options = ea_assignpretra(obj.Config);
+                ptdir = fullfile(obj.Config.root, obj.Config.patientname);
+                prenii_fname = fullfile(ptdir, options.prefs.prenii_unnormalized);
+                % Generate an array of 4-D coordinates spanning the native
+                % space.
+                dbs_coords = arrayfun(@(x)x.coords, obj.DBSImplants, 'UniformOutput', false);
+                dbs_coords = cat(1, dbs_coords{:});
+                dimvec = cell(1, 3);
+                for dim_ix = 1:3
+                    dimvec{dim_ix} = linspace(min(dbs_coords(:, dim_ix)), max(dbs_coords(:, dim_ix)), 20);
+                end
+                [X, Y, Z] = meshgrid(dimvec{:});
+                XYZ_nii_mm = [X(:)'; Y(:)'; Z(:)'; ones(1, numel(X))];
+                XYZ_nii_vx = obj.Cache.prenii_mat \ XYZ_nii_mm;
+                XYZ_mni_mm = ea_map_coords(XYZ_nii_vx(1:3,:), prenii_fname, ...
+                    fullfile(ptdir, 'y_ea_inv_normparams.nii'), '');  %slow, just once
+                voxnii2mmnorm = (XYZ_nii_vx(1:4, :)' \ [XYZ_mni_mm; ones(1, size(XYZ_mni_mm, 2))]')';
+                obj.Cache.native2mni_emp_mat = voxnii2mmnorm / obj.Cache.prenii_mat; % combine mats
+            end
+            coords_native = [coords_native, ones(size(coords_native, 1), 1)]';
+            coords_mni = (obj.Cache.native2mni_emp_mat * coords_native)';
+            coords_mni = coords_mni(:, 1:3);
+        end
+        function coords_mni = native2mni_slow(obj, coords_native)
+            % Use native2mni_fast for visualization, native2mni_slow for
+            % reporting values accurately.
+            options = ea_assignpretra(obj.Config);
+            ptdir = fullfile(obj.Config.root, obj.Config.patientname);
+            prenii_fname = fullfile(ptdir, options.prefs.prenii_unnormalized);
+            if ~isfield(obj.Cache, 'prenii_mat')...
+                    || isempty(obj.Cache.prenii_mat)
+                nii = ea_load_nii(prenii_fname);
+                obj.Cache.prenii_mat = nii(1).mat;
+            end
+            cmm = [coords_native, ones(size(coords_native, 1), 1)]';
+            cvx = obj.Cache.prenii_mat \ cmm;  % mm2vx
+            coords_mni = ea_map_coords(cvx(1:3, :), prenii_fname, ...
+                fullfile(ptdir, 'y_ea_inv_normparams.nii'), '')';
         end
     end
     methods(Static = true)

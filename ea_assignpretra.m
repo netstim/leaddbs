@@ -1,8 +1,8 @@
 function [options, presentfiles] = ea_assignpretra(options)
 
-directory = [options.root,options.patientname,filesep];
+directory = fullfile(options.root, options.patientname);
 
-presfiles=dir([directory,options.prefs.prenii_searchstring]);
+presfiles = dir(fullfile(directory, options.prefs.prenii_searchstring));
 pfcell = {presfiles.name}';
 
 % order the anatomical images in accordance with 'prefs.prenii_order'

@@ -79,7 +79,10 @@ options=varargin{2};
 setappdata(hObject, 'resultfig', resultfig);
 setappdata(hObject, 'options', options);  % Keep a copy of options
 % Get the MER State, set it to defaults, and store it in appdata.
-merstruct = MERState().setOptions(options).clearData().setDataToDefaults();
+merstruct = MERState();
+merstruct.setOptions(options);
+merstruct.clearData();
+merstruct.setDataToDefaults();
 setappdata(hObject, 'merstruct', merstruct);
 % merhandles is a struct array, each element has .side and .label (strings)
 % for indexing, and .h (plotted object handle)
@@ -403,7 +406,7 @@ function setdefault_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ea_resultfig_clear(handles);  % Delete markers and mer trajectories visualizations.
 merstruct = getappdata(handles.mercontrolfig, 'merstruct');
-setappdata(handles.mercontrolfig, 'merstruct', merstruct.setDataToDefaults());
+merstruct.setDataToDefaults();
 ea_resultfig_update(handles);  % Plot markers and trajs from data.
 ea_mercontrol_updateall(handles);  % Set GUI from data.
 
@@ -427,7 +430,7 @@ function undomarker_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 merstruct = getappdata(handles.mercontrolfig, 'merstruct');
-setappdata(handles.mercontrolfig, 'merstruct', merstruct.undoMarker());
+merstruct.undoMarker();
 ea_resultfig_updatemarkers(handles);  % Sync handles to match markers.
 ea_mercontrol_updatemarkers(handles); % Enable/Disable marker gui elements.
 
@@ -451,7 +454,7 @@ function redomarker_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 merstruct = getappdata(handles.mercontrolfig, 'merstruct');
-setappdata(handles.mercontrolfig, 'merstruct', merstruct.redoMarker());
+merstruct.redoMarker();
 ea_resultfig_updatemarkers(handles);  % Sync handles to match markers.
 ea_mercontrol_updatemarkers(handles); % Enable/Disable marker gui elements.
 
@@ -482,7 +485,6 @@ if get(hObject,'Value')
 else
     merstruct.Config.vis.tag_visible = 'off';
 end
-setappdata(handles.mercontrolfig, 'merstruct', merstruct);
 ea_resultfig_updatemarkers(handles);
 
 
@@ -505,8 +507,7 @@ function loadstate_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 merstruct = getappdata(handles.mercontrolfig, 'merstruct');
-merstruct = merstruct.load();
-setappdata(handles.mercontrolfig, 'merstruct', merstruct);
+merstruct.load();
 ea_resultfig_update(handles);
 ea_mercontrol_updateall(handles);
 
@@ -549,7 +550,7 @@ set(hObject,'CData',background,'Value',0)
 % --- Executes on button press in pushbutton_clear_checks.
 function pushbutton_clear_checks_Callback(hObject, eventdata, handles)
 merstruct = getappdata(handles.mercontrolfig, 'merstruct');
-setappdata(handles.mercontrolfig, 'merstruct', merstruct.setTogglesToDefaults());
+merstruct.setTogglesToDefaults();
 ea_mercontrol_updatetoggles(handles);
 
 
@@ -678,15 +679,13 @@ merstruct = getappdata(handles.mercontrolfig, 'merstruct');
 bSide = strcmpi({merstruct.Toggles.keycontrol.side}, side_strs{sid});
 bLabel = strcmpi({merstruct.Toggles.keycontrol.label}, track);
 merstruct.Toggles.keycontrol(bSide & bLabel).value = get(hObject,'Value') == get(hObject,'Max');
-setappdata(handles.mercontrolfig, 'merstruct', merstruct);
 
 
 function ea_data_clear(handles, varargin)
 % ea_clear_data(handles)
 % Resets trajectories, depths, etc.
 merstruct = getappdata(handles.mercontrolfig, 'merstruct');
-merstruct = merstruct.setDataToDefaults();
-setappdata(handles.mercontrolfig, 'merstruct', merstruct);
+merstruct.setDataToDefaults();
 
 
 function ea_resultfig_clear(handles)
@@ -784,9 +783,6 @@ bTraj = strcmpi({merstruct.MERTrajectories.side}, sidestr{side_ix});
 for traj_ix = find(bTraj)
     merstruct.MERTrajectories(traj_ix).depth = dist;
 end
-%.depth was reset so recalc traj
-merstruct = merstruct.calculateMERTrajectories();
-setappdata(handles.mercontrolfig, 'merstruct', merstruct);
 ea_mercontrol_updateimplanted(handles, sidestr{side_ix});
 ea_resultfig_updatetrajectories(handles, sidestr{side_ix});
 
@@ -795,23 +791,16 @@ function popupimplantedtract_helper(hObject, eventdata, handles) %#ok<INUSL>
 str_parts = strsplit(hObject.Tag, '_');
 [sidestr, side_ix, ~] = ea_detsidestr(str_parts{2});
 merstruct = getappdata(handles.mercontrolfig, 'merstruct');
-bSide = strcmpi({merstruct.DBSImplants.side}, sidestr{side_ix});
-merstruct.DBSImplants(bSide).implanted_tract_label = hObject.String{hObject.Value};
-merstruct = merstruct.calculateMERTranslations();
-setappdata(handles.mercontrolfig, 'merstruct', merstruct);
+merstruct.updateDBSImplantTrack(sidestr{side_ix}, hObject.String{hObject.Value});
 ea_resultfig_updatetrajectories(handles, sidestr{side_ix});
 
 
 function ea_updatepostext(hObject, eventData) %#ok<INUSD>
 % Called when one of the position text boxes is edited.
 handles = guidata(hObject);
-merstruct = getappdata(handles.mercontrolfig, 'merstruct');
 [side_strs, sid, track] = ea_detsidestr(hObject.Tag);
-bTraj = strcmpi({merstruct.MERTrajectories.side}, side_strs{sid}) ...
-    & strcmpi({merstruct.MERTrajectories.label}, track);
-merstruct.MERTrajectories(bTraj).depth = str2double(get(hObject, 'String'));
-merstruct = merstruct.calculateMERTrajectories();
-setappdata(handles.mercontrolfig, 'merstruct', merstruct);
+merstruct = getappdata(handles.mercontrolfig, 'merstruct');
+merstruct.updateTrajDepth(side_strs{sid}, track, str2double(get(hObject, 'String')));
 ea_resultfig_updatetrajectories(handles);
 
 
@@ -823,7 +812,6 @@ merstruct = getappdata(handles.mercontrolfig, 'merstruct');
 bToggle = strcmpi({merstruct.Toggles.togglestates.side}, side_strs{sid}) ...
     & strcmpi({merstruct.Toggles.togglestates.label}, track);
 merstruct.Toggles.togglestates(bToggle).value = hObject.Value;
-setappdata(handles.mercontrolfig, 'merstruct', merstruct);
 % Update the visual presentation
 ea_resultfig_updatetrajectories(handles);
 

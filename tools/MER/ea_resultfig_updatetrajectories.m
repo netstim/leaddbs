@@ -24,10 +24,11 @@ for traj_ix = 1:length(merstruct.MERTrajectories)
         bH = strcmpi({merhandles.traj.side}, mertraj.side) ...
             & strcmpi({merhandles.traj.label}, mertraj.label);
         h = [merhandles.traj(bH).h];
+        coords = merstruct.getMERTrajectory(mertraj, spc);
         if length(h) == 1
-            set(h, 'XData', mertraj.coords.(spc)(:, 1)');
-            set(h, 'YData', mertraj.coords.(spc)(:, 2)');
-            set(h, 'ZData', mertraj.coords.(spc)(:, 3)');
+            set(h, 'XData', coords(:, 1)');
+            set(h, 'YData', coords(:, 2)');
+            set(h, 'ZData', coords(:, 3)');
         else
             delete(h);
             merhandles.traj(bH) = [];
@@ -35,8 +36,7 @@ for traj_ix = 1:length(merstruct.MERTrajectories)
             this_color = merhandles.color_list(strcmpi(uqlabels, mertraj.label), :);
             merhandles.traj(end + 1) = struct('side', mertraj.side,...
                 'label', mertraj.label,...
-                'h', plot3(mertraj.coords.(spc)(:, 1),...
-                mertraj.coords.(spc)(:, 2), mertraj.coords.(spc)(:, 3),...
+                'h', plot3(coords(:, 1), coords(:, 2), coords(:, 3),...
                 'color', this_color, 'linew', 5,...
                 'tag', [mertraj.label '_' mertraj.side]));
             bH = false(size(merhandles.traj)); bH(end) = true;
