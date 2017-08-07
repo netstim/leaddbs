@@ -107,15 +107,11 @@ end
 hdrtext=genhdrtext(nii);
 
 nii.img=double(nii.img)/double(max(nii.img(:)));
-try
     set(0,'CurrentFigure',handles.imclassf);
-catch
-    keyboard
-end
 
-xsliceplot=slice3i(hObject,nii.img,nii.mat,1,round(size(nii.img,1)/2));
-ysliceplot=slice3i(hObject,nii.img,nii.mat,2,round(size(nii.img,2)/2));
-zsliceplot=slice3i(hObject,nii.img,nii.mat,3,round(size(nii.img,3)/2));
+xsliceplot=slice3i(hObject,nii.img(:,:,:,1),nii.mat,1,round(size(nii.img,1)/2));
+ysliceplot=slice3i(hObject,nii.img(:,:,:,1),nii.mat,2,round(size(nii.img,2)/2));
+zsliceplot=slice3i(hObject,nii.img(:,:,:,1),nii.mat,3,round(size(nii.img,3)/2));
 
 setappdata(hObject,'xsliceplot',xsliceplot);
 setappdata(hObject,'ysliceplot',ysliceplot);
