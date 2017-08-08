@@ -58,7 +58,7 @@ classdef (CaseInsensitiveProperties) dndcontrol < handle
         %INITJAVA Initializes the required Java class.
         
             %Add java folder to javaclasspath if necessary
-            if ~dndcontrol.isInitialized();
+            if ~dndcontrol.isInitialized()
                 classpath = fileparts(mfilename('fullpath'));                
                 javaclasspath(classpath);                
             end 
@@ -68,7 +68,7 @@ classdef (CaseInsensitiveProperties) dndcontrol < handle
         %ISINITIALIZED Returns true if the Java class is initialized.
         
             TF = (exist('MLDropTarget','class') == 8);
-        end                           
+        end
     end
     
     methods
@@ -155,9 +155,13 @@ classdef (CaseInsensitiveProperties) dndcontrol < handle
                 end                              
                 
             elseif jEvent.isa('java.awt.dnd.DropTargetDragEvent')
-                 % Drag event                               
-                 action = java.awt.dnd.DnDConstants.ACTION_COPY;
-                 jEvent.acceptDrag(action);
+                 % Drag event
+                 try
+                     action = java.awt.dnd.DnDConstants.ACTION_COPY;
+                     jEvent.acceptDrag(action);
+                 catch % ME
+                     % rethrow(ME);
+                 end
             end            
         end
     end

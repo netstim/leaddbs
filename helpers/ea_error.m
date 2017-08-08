@@ -1,5 +1,7 @@
 function ea_error(msg, title, backtrace)
 % The general error message function.
+% 
+% set backtrace to 'dbstack' if needed.
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn

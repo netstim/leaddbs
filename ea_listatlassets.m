@@ -1,53 +1,46 @@
 function ea_listatlassets(options,handles,mninative,oldatlas)
 % mninative==1: MNI space, ==2: native space
+
 if ~exist('oldatlas','var')
     oldatlas='';
 end
 
-as=dir(ea_space(options,'atlases'));
+% dir 'atlases' folder
+atlases=dir(ea_space(options,'atlases'));
+atlases = {atlases(cell2mat({atlases.isdir})).name};    % only keep folders
+atlases = atlases(cellfun(@(x) ~strcmp(x(1),'.'), atlases));  % also remove '.', '..' and '.*' folders from dir results
 
-asc=cell(0);
-cnt=1;
-for i=1:length(as)
-    if as(i).isdir && ~strcmp(as(i).name(1),'.')
-        asc{cnt}=as(i).name;
-        cnt=cnt+1;
-    end
-end
 if options.prefs.env.dev
-    asc{end+1}='Segment patient anatomy';
+    atlases{end+1}='Segment patient anatomy';
 end
-asc{end+1}='Use none';
-nasc=cell(0);
-if mninative==2
-    
-    if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
-       
-        % sweep pt dir for atlases
-        nas=dir([get(handles.patdir_choosebox,'String'),filesep,'atlases',filesep]);
-        cnt=1;
-        for i=1:length(nas)
-            if nas(i).isdir && ~strcmp(nas(i).name(1),'.')
-                nasc{cnt}=['Local atlas: ',nas(i).name];
-                cnt=cnt+1;
-            end
-        end
 
+atlases{end+1}='Use none';
+
+natlases=cell(0);
+if mninative==2
+    if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
+        % sweep pt dir for atlases
+        natlases=dir([get(handles.patdir_choosebox,'String'),filesep,'atlases',filesep]);
+        natlases = {natlases(cell2mat({natlases.isdir})).name};
+        natlases = natlases(cellfun(@(x) ~strcmp(x(1),'.'), natlases)); 
+        natlases = cellfun(@(x) {['Local atlas: ', x]}, natlases);
     end
-    
 end
+
 try
-set(handles.atlassetpopup,'String',[asc,nasc]);
+    set(handles.atlassetpopup,'String',[atlases,natlases]);
 catch
     keyboard
 end
-[~,defix]=ismember(options.prefs.atlases.default,[asc,nasc]);
+
+[~,defix]=ismember(options.prefs.atlases.default,[atlases,natlases]);
 if defix
     set(handles.atlassetpopup,'Value',defix);
 end
+
 if ~isempty(oldatlas)
-    [~,oldix]=ismember(oldatlas,[asc,nasc]);
+    [~,oldix]=ismember(oldatlas,[atlases,natlases]);
     if oldix
-    set(handles.atlassetpopup,'Value',oldix);
+        set(handles.atlassetpopup,'Value',oldix);
     end
 end

@@ -58,8 +58,6 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-
-
 % add recent patients...
 ea_initrecentpatients(handles);
 earoot=ea_getearoot;
@@ -70,7 +68,6 @@ if ~isdeployed
 end
 
 % for now disable space dropdown
-
 set(handles.vizspacepopup,'enable','off');
 
 options.prefs=ea_prefs('');
@@ -89,6 +86,10 @@ end
 % load atlassets
 ea_listatlassets(options,handles,1);
 
+% list templates
+list=ea_assignbackdrop('list',options,'Patient');
+set(handles.tdbackdrop,'String',list);
+
 set(hObject,'Color',[1 1 1]);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
@@ -103,24 +104,64 @@ set(handles.leadfigure,'name','Lead-Anatomy','color','w');
 ea_init_coregmrpopup(handles);
 
 % add norm methods to menu
-
 ea_addnormmethods(handles,options,'');
 
 ea_processguiargs(handles,varargin)
 
-
-    %% add tools menu
-    ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'});
-
+% add tools menu
+ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'});
 
 handles.prod='anatomy';
 ea_firstrun(handles,options);
 
-
-
+ea_bind_dragndrop(handles.leadfigure, ...
+    @(obj,evt) DropFcn(obj,evt,handles), ...
+    @(obj,evt) DropFcn(obj,evt,handles));
 
 % UIWAIT makes lead_anatomy wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
+
+
+% --- Drag and drop callback to load patdir.
+function DropFcn(~, event, handles)
+
+switch event.DropType
+    case 'file'
+        patdir = event.Data;
+    case 'string'
+        patdir = {event.Data};
+end
+
+nonexist = cellfun(@(x) ~exist(x, 'dir'), patdir);
+if any(nonexist)
+    fprintf('\nExcluded non-existent/invalid folder:\n');
+    cellfun(@disp, patdir(nonexist));
+    fprintf('\n');
+    patdir(nonexist) = [];
+end
+
+ea_busyaction('on',handles.leadfigure,'anatomy');
+if ~isempty(patdir)
+    ea_load_pts(handles, patdir);
+
+    % refresh backdrop list if only one patient dragged in (use standard list for mutiple patients)
+    if length(patdir) == 1
+        options.prefs=ea_prefs('');
+        [options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
+        options.root=[options.root,filesep];
+        list=ea_assignbackdrop('list',options,'Patient');
+        set(handles.tdbackdrop,'String',list);
+    end
+
+    % disable atlas list refreshing for now
+%     if isfield(handles,'atlassetpopup')
+%         atlasset=get(handles.atlassetpopup,'String');
+%         atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+%         options.prefs=ea_prefs('');
+%         ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+%     end
+end
+ea_busyaction('off',handles.leadfigure,'anatomy');
 
 
 % --- Outputs from this function are returned to the command line.
@@ -143,7 +184,6 @@ function viz3d_Callback(hObject, eventdata, handles)
 leadfig=handles.leadfigure;
 ea_busyaction('on',leadfig,'anatomy');
 
-
 options=ea_handles2options(handles);
 options.macaquemodus=0;
 
@@ -154,6 +194,7 @@ options.d3.write=1;
 ea_run('run',options);
 
 ea_busyaction('off',leadfig,'anatomy');
+
 
 % --- Executes on selection change in atlassetpopup.
 function atlassetpopup_Callback(hObject, eventdata, handles)
@@ -208,6 +249,10 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 options.prefs=ea_prefs('');
 ea_getpatients(options,handles);
+[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
+options.root=[options.root,filesep];
+list=ea_assignbackdrop('list',options,'Patient');
+set(handles.tdbackdrop,'String',list);
 
 
 % --- Executes on selection change in recentpts.
@@ -218,8 +263,12 @@ function recentpts_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
-
 ea_rcpatientscallback(handles);
+options.prefs=ea_prefs('');
+[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
+options.root=[options.root,filesep];
+list=ea_assignbackdrop('list',options,'Patient');
+set(handles.tdbackdrop,'String',list);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -252,11 +301,11 @@ function tracor_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from tracor
 switch get(hObject,'Value')
     case 1
-set(handles.xyzslice,'String','z = ');
+        set(handles.xyzslice,'String','z = ');
     case 2
-set(handles.xyzslice,'String','y = ');
+        set(handles.xyzslice,'String','y = ');
     case 3
-set(handles.xyzslice,'String','x = ');
+        set(handles.xyzslice,'String','x = ');
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -273,7 +322,7 @@ end
 
 
 
-function xdepth_Callback(hObject, eventdata, handles)
+function depth_Callback(hObject, eventdata, handles)
 % hObject    handle to xdepth (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -283,7 +332,7 @@ function xdepth_Callback(hObject, eventdata, handles)
 
 
 % --- Executes during object creation, after setting all properties.
-function xdepth_CreateFcn(hObject, eventdata, handles)
+function depth_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to xdepth (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -306,35 +355,37 @@ ea_busyaction('on',leadfig,'anatomy');
 options=ea_handles2options(handles);
 options.macaquemodus=0;
 
-% d2=ea_tdhandles2options(handles);
-% 
+options.d2=ea_tdhandles2options(handles);
+
 % ea_storemachineprefs('d2',d2);
-
-
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 if isempty(options.uipatdirs)
     options.uipatdirs={''};
 end
 
+if strcmp(options.d2.backdrop, 'Choose...')
+    options.d2.backdrop = getappdata(gcf,'customfile');
+end
+
 for pt=1:length(options.uipatdirs)
-[pth,ptname]=fileparts(options.uipatdirs{pt});
-options.root=[pth,filesep];
-options.patientname=ptname;
-options.prefs=ea_prefs(options.patientname);
-options.d2=options.prefs.machine.d2;
-options.d2.writeatlases=1;
-options.d2.atlasopacity=0.2;
-options.d2.tracor=get(handles.tracor,'Value');
-options.d2.depth=[str2double(get(handles.xdepth,'String')),...
-    str2double(get(handles.ydepth,'String')),...
-    str2double(get(handles.zdepth,'String'))];
-options.d2.showlegend=0;
-[Vtra,Vcor,Vsag]=ea_assignbackdrop(options.d2.backdrop,options,'Patient');
-Vs={Vtra,Vcor,Vsag};
-options.sides=1;
-h=ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'on',2);
-set(h,'Position',[0,0,800,800]);
+    [pth,ptname]=fileparts(options.uipatdirs{pt});
+    options.root=[pth,filesep];
+    options.patientname=ptname;
+    options.prefs=ea_prefs(options.patientname);
+%     options.d2=options.prefs.machine.d2;
+    options.d2.writeatlases=1;
+    options.d2.atlasopacity=0.2;
+    options.d2.tracor=get(handles.tracor,'Value');
+    options.d2.depth=[str2double(get(handles.depth,'String')),...
+        str2double(get(handles.depth,'String')),...
+        str2double(get(handles.depth,'String'))];
+    options.d2.showlegend=0;
+    [Vtra,Vcor,Vsag]=ea_assignbackdrop(options.d2.backdrop,options,'Patient');
+    Vs={Vtra,Vcor,Vsag};
+    options.sides=1;
+    h=ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'on',2);
+    set(h,'Position',[0,0,800,800]);
 end
 
 ea_busyaction('off',leadfig,'anatomy');
@@ -348,6 +399,15 @@ function tdbackdrop_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns tdbackdrop contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from tdbackdrop
+popvals=get(hObject,'String');
+if strcmp(popvals{get(hObject,'Value')},'Choose...')
+    [FileName,PathName] = uigetfile('*.nii','Choose anatomical image...');
+    if all([PathName,FileName])
+        setappdata(gcf,'customfile',[PathName,FileName]);
+    else
+        set(hObject,'Value',1);
+    end
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -444,8 +504,9 @@ function leadfigure_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
-d2=ea_tdhandles2options(handles);
-ea_storemachineprefs('d2',d2);
+
+% d2=ea_tdhandles2options(handles);
+% ea_storemachineprefs('d2',d2);
 
 delete(hObject);
 
@@ -530,52 +591,6 @@ function tdfidcheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of tdfidcheck
 
 
-
-function ydepth_Callback(hObject, eventdata, handles)
-% hObject    handle to ydepth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of ydepth as text
-%        str2double(get(hObject,'String')) returns contents of ydepth as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function ydepth_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ydepth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function zdepth_Callback(hObject, eventdata, handles)
-% hObject    handle to zdepth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of zdepth as text
-%        str2double(get(hObject,'String')) returns contents of zdepth as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function zdepth_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to zdepth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on button press in specify2dwrite.
 function specify2dwrite_Callback(hObject, eventdata, handles)
 % hObject    handle to specify2dwrite (see GCBO)
@@ -583,7 +598,7 @@ function specify2dwrite_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 options.native=get(handles.vizspacepopup,'Value')==2;
 [options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
-    options.root=[options.root,filesep];
-    options.modality=get(handles.MRCT,'Value');
-    options.prefs=ea_prefs(options.patientname);
+options.root=[options.root,filesep];
+options.modality=get(handles.MRCT,'Value');
+options.prefs=ea_prefs(options.patientname);
 ea_spec2dwrite(options);

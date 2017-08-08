@@ -42,10 +42,9 @@ if ~iscell(uipatdirs)
    uipatdirs={uipatdirs}; 
 end
 
-prefs=ea_prefs('');
-if length(uipatdirs)>1 && ~isempty(which('parpool')) && prefs.pp.do && ~strcmp(cmd,'export') % do parallel processing if available and set in ea_prefs.
+if length(uipatdirs)>1 && ~isempty(which('parpool')) && options.prefs.pp.do && ~strcmp(cmd,'export') % do parallel processing if available and set in ea_prefs.
     try delete(gcp); end
-    pp=parpool(prefs.pp.profile,prefs.pp.csize);
+    pp=parpool(options.prefs.pp.profile,options.prefs.pp.csize);
     
     for pat=1:length(uipatdirs)
         % set patient specific options

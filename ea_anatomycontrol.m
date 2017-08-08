@@ -181,7 +181,11 @@ setappdata(resultfig,'togglestates',togglestates);
 popvals=get(hObject,'String');
 if strcmp(popvals{get(hObject,'Value')},'Choose...')
     [FileName,PathName] = uigetfile('*.nii','Choose anatomical image...');
-    setappdata(gcf,'customfile',[PathName,FileName]);
+    if all([FileName,PathName])
+        setappdata(gcf,'customfile',[PathName,FileName]);
+    else
+        set(hObject,'Value',1);
+    end
 end
 refreshresultfig(handles)
 
@@ -377,7 +381,6 @@ refreshresultfig(handles)
 
 function refreshresultfig(handles,refresh)
 % this part makes changes of the figure active:
-
 
 resultfig=getappdata(handles.acontrolfig,'resultfig');
 try

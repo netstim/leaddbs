@@ -60,7 +60,7 @@ axes(handles.logoaxes);
 axis off;
 axis equal;
 set(handles.leadfigure,'name','Lead-Connectome Mapper','color','w');
-homedir=ea_gethome;
+% homedir=ea_gethome;
 %setappdata(handles.leadfigure,'uipatdir',{homedir(1:end-1)});
 
 % add recent patients...
@@ -74,8 +74,11 @@ ea_menu_initmenu(handles,{'cluster','prefs','transfer','vats'});
 [mdl,sf]=ea_genmodlist;
 ea_updatemodpopups(mdl,sf,handles)
 
-
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
+
+ea_bind_dragndrop(handles.leadfigure, ...
+    @(obj,evt) DropFcn(obj,evt,handles), ...
+    @(obj,evt) DropFcn(obj,evt,handles));
 
 % Choose default command line output for lead_mapper
 handles.output = hObject;
@@ -87,8 +90,33 @@ guidata(hObject, handles);
 % uiwait(handles.leadfigure);
 
 
+% --- Drag and drop callback to load patdir.
+function DropFcn(~, event, handles)
+
+switch event.DropType
+    case 'file'
+        patdir = event.Data;
+    case 'string'
+        patdir = {event.Data};
+end
+
+nonexist = cellfun(@(x) ~exist(x, 'dir'), patdir);
+if any(nonexist)
+    fprintf('\nExcluded non-existent/invalid folder:\n');
+    cellfun(@disp, patdir(nonexist));
+    fprintf('\n');
+    patdir(nonexist) = [];
+end
+
+ea_busyaction('on',handles.leadfigure,'mapper');
+if ~isempty(patdir)
+    ea_load_pts(handles, patdir);
+end
+ea_busyaction('off',handles.leadfigure,'mapper');
+
+
 % --- Outputs from this function are returned to the command line.
-function varargout = lead_mapper_OutputFcn(hObject, eventdata, handles) 
+function varargout = lead_mapper_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -170,12 +198,12 @@ function seedbutton_Callback(hObject, eventdata, handles)
 
 p='/'; % default use root
 try
-p=pwd; % if possible use pwd instead (could not work if deployed)
+    p=pwd; % if possible use pwd instead (could not work if deployed)
 end
 try % finally use last patient parent dir if set.
-earoot=ea_getearoot;
-load([earoot,'ea_recentpatients.mat']);
-p=fileparts(fullrpts{1});
+    earoot=ea_getearoot;
+    load([earoot,'ea_recentpatients.mat']);
+    p=fileparts(fullrpts{1});
 end
 
 [seeds,path]=uigetfile({'*.nii','NIfTI';'*.txt','Text';'*.nii.gz','NIfTI'},'Please choose seed definition(s)...','MultiSelect','on');
@@ -188,13 +216,10 @@ else
 end
 
 for s=1:length(seeds)
-   seeds{s}=fullfile(path,seeds{s}); 
+   seeds{s}=fullfile(path,seeds{s});
 end
 
 setappdata(hObject,'seeds',seeds);
-
-
-
 
 
 % --- Executes on button press in run_button.
@@ -293,7 +318,7 @@ function odirbutton_Callback(hObject, eventdata, handles)
 
 seeds=getappdata(handles.seedbutton,'seeds');
 if ~isempty(seeds) % seeds defined already
-   seedbase=fileparts(seeds{1}); 
+   seedbase=fileparts(seeds{1});
 else
     seedbase='';
 end
@@ -344,7 +369,6 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 ea_busyaction('on',handles.leadfigure,'mapper');
 options.prefs=ea_prefs('');
 ea_getpatients(options,handles);
-
 ea_busyaction('off',handles.leadfigure,'mapper');
 
 % --- Executes on selection change in recentpts.

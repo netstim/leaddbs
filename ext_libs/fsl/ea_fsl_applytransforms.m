@@ -125,7 +125,8 @@ for fi = 1:length(fis)
         end
     else
         if isempty(refim)
-           refim = [ea_space,'t2.nii'];
+            spacedef=ea_getspacedef;
+            refim = [ea_space,spacedef.templates{1},'.nii'];
         end
 
         if isempty(transformfile)

@@ -61,7 +61,6 @@ guidata(hObject, handles);
 % UIWAIT makes lead_group wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 
-
 % Build popup tables:
 
 % atlassets:
@@ -87,10 +86,7 @@ set(handles.atlassetpopup,'String',asc);
 [~,defix]=ismember(options.prefs.atlases.default,asc);
 set(handles.atlassetpopup,'Value',defix);
 
-
-
 % setup vat functions
-
 cnt=1;
 earoot=[ea_getearoot];
 ndir=dir([earoot,'ea_genvat_*.m']);
@@ -107,9 +103,6 @@ end
 setappdata(handles.leadfigure,'genvatfunctions',genvatfunctions);
 setappdata(handles.leadfigure,'vatfunctionnames',ndc);
 
-
-
-
 % get electrode model specs and place in popup
 set(handles.elmodelselect,'String',[{'Patient specified'},ea_resolve_elspec]);
 
@@ -120,13 +113,9 @@ image(im);
 axis off;
 axis equal;
 
-
-
-
 try
     priorselection=find(ismember(fiberscell,stimparams.usefiberset)); % retrieve prior selection of fiberset.
     set(handles.fiberspopup,'Value',priorselection);
-
 catch    % reinitialize using third entry.
     set(handles.fiberspopup,'Value',1);
 end
@@ -136,8 +125,6 @@ if get(handles.fiberspopup,'Value')>length(get(handles.fiberspopup,'String'))
 end
 
 % Labels:
-
-
 ll=dir([ea_space(options,'labeling'),'*.nii']);
 for lab=1:length(ll)
     [~,n]=fileparts(ll(lab).name);
@@ -152,21 +139,15 @@ try
         set(handles.labelpopup,'Value',priorselection); % set to prior selection
     else % if priorselection was a cell array with more than one entry, set to use all
         set(handles.labelpopup,'Value',lab+1); % set to use all
-
     end
 catch    % reinitialize using third entry.
     set(handles.labelpopup,'Value',1);
-
-
 end
-
 
 % set version text:
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
-
 % make listboxes multiselectable:
-
 set(handles.patientlist,'Max',100,'Min',0);
 set(handles.grouplist,'Max',100,'Min',0);
 set(handles.vilist,'Max',100,'Min',0);
@@ -177,9 +158,6 @@ if options.prefs.env.dev
     disp('Running in Developer Mode...')
     set(handles.mercheck,'Visible','on')
 end
-
-
-
 
 M=getappdata(gcf,'M');
 if isempty(M)
@@ -196,6 +174,45 @@ ea_menu_initmenu(handles,{'prefs','transfer'});
 
 ea_processguiargs(handles,varargin)
 
+ea_bind_dragndrop(handles.leadfigure, ...
+    @(obj,evt) DropFcn(obj,evt,handles), ...
+    @(obj,evt) DropFcn(obj,evt,handles));
+
+
+% --- Drag and drop callback to load patdirs.
+function DropFcn(~, event, handles)
+
+if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
+    ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+end
+
+switch event.DropType
+    case 'file'
+        folders = event.Data;
+    case 'string'
+        folders = {event.Data};
+end
+
+nonexist = cellfun(@(x) ~exist(x, 'dir'), folders);
+if any(nonexist)
+    fprintf('\nExcluded non-existent/invalid folder:\n');
+    cellfun(@disp, folders(nonexist));
+    fprintf('\n');
+    folders(nonexist) = [];
+end
+
+if ~isempty(folders)
+    M=getappdata(handles.leadfigure,'M');
+
+    M.patient.list=[M.patient.list;folders];
+    M.patient.group=[M.patient.group;ones(length(folders),1)];
+
+    setappdata(handles.leadfigure,'M',M);
+    ea_refresh_lg(handles);
+    % save M
+    M=getappdata(handles.leadfigure,'M');
+    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = lead_group_OutputFcn(hObject, eventdata, handles)
@@ -244,6 +261,10 @@ function addptbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to addptbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
+    ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+end
+
 M=getappdata(handles.leadfigure,'M');
 
 folders=ea_uigetdir(ea_startpath,'Select Patient folders..');
@@ -255,9 +276,6 @@ ea_refresh_lg(handles);
 % save M
 M=getappdata(handles.leadfigure,'M');
 save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
-
-
-
 
 
 % --- Executes on button press in removeptbutton.
@@ -286,11 +304,8 @@ try
     M.stats(deleteentry)=[];
 end
 
-
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
-
-
 
 
 % --- Executes on button press in vizbutton.
@@ -306,7 +321,6 @@ options=ea_setopts_local(handles);
 % set pt specific options
 options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),filesep];
 [~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
-
 
 options.expstatvat.do=M.ui.statvat;
 
@@ -327,7 +341,6 @@ options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
 options.d3.mirrorsides=get(handles.mirrorsides,'Value');
 try options.d3.isomatrix=M.isomatrix; end
 try options.d3.isomatrix_name=M.isomatrix_name; end
-
 
 options.d2.write=0;
 
@@ -379,15 +392,15 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
        choice = ea_questdlg(sprintf('Group Data Found. Would you like to load %s now?',filename),...
            'Yes','No');
     end
-    
+
     % Get vizstruct
     if ~exist('choice','var') || strcmpi(choice,'No')
-        
+
         for pt=1:length(M.elstruct)
             options.uipatdirs{1}=uipatdirs{pt};
             M.merstruct(pt)=ea_getmerstruct(options);
         end
-        
+
         for pt=1:length(M.elstruct)
             ea_progress(pt/npts, 'Loading microelectrode recordings from patient %d of %d\n', pt, npts);
             M.merstruct(pt).group=handles.grouplist.String(pt);
@@ -395,7 +408,7 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
             M.merstruct(pt).root(end+1)=filesep;
             M.merstruct(pt).ptdir=uipatdirs{pt};
             mua=load(fullfile(uipatdirs{pt},'ea_recordings.mat'));
-            
+
             try
                 mua.right=rmfield(mua.right,'CSPK');
                 mua.left=rmfield(mua.left,'CSPK');
@@ -403,22 +416,22 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
                 mua.right=rmfield(mua.right,'CElectrode');
                 mua.left=rmfield(mua.left,'CElectrode');
             end
-            
+
             M.merstruct(pt).mua=mua;
         end
         disp('**Done loading')
         options = rmfield(options,'uipatdirs');
         vizstruct.merstruct=M.merstruct(ptidx);
-        
+
         save(fullfile(options.root,options.patientname,'ea_groupelvisdata.mat'),...
             'options','vizstruct');
-       
+
     elseif strcmpi(choice,'Yes')
-        
+
         load(filename,'vizstruct')
-        
+
     end
-    
+
 end
 
 try
