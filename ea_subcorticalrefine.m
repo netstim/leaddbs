@@ -172,7 +172,7 @@ if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
     to{1}=[directory,'scrf',filesep,'bb.nii'];
     from{1}=[ea_space,'bb.nii'];
 try
-    ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],1,1,[directory,options.prefs.prenii]);
+    ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],1,1);
 catch
    ea_error('Please perform normalization first.');
 end
