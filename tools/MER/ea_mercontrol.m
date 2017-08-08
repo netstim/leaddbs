@@ -774,15 +774,11 @@ end
 
 
 function editimplanteddepth_helper(hObject, eventdata, handles)
-dist = str2double(get(hObject, 'String'));
+depth = str2double(get(hObject, 'String'));
 str_parts = strsplit(eventdata.Source.Tag, '_');
 [sidestr, side_ix, ~] = ea_detsidestr(str_parts{2});
 merstruct = getappdata(handles.mercontrolfig, 'merstruct');
-merstruct.DBSImplants(strcmpi({merstruct.DBSImplants.side}, sidestr{side_ix})).depth = dist;
-bTraj = strcmpi({merstruct.MERTrajectories.side}, sidestr{side_ix});
-for traj_ix = find(bTraj)
-    merstruct.MERTrajectories(traj_ix).depth = dist;
-end
+merstruct.updateDBSDepth(sidestr{side_ix}, depth);
 ea_mercontrol_updateimplanted(handles, sidestr{side_ix});
 ea_resultfig_updatetrajectories(handles, sidestr{side_ix});
 

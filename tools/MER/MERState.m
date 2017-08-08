@@ -162,6 +162,11 @@ classdef MERState < handle
                 warning('DBS implanted_tract_label not updated because matching MER track not found.');
             end
         end
+        function updateDBSDepth(obj, side, depth)
+            obj.DBSImplants(strcmpi({obj.DBSImplants.side}, side)).depth = depth;
+            bTraj = strcmpi({obj.MERTrajectories.side}, side);
+            [obj.MERTrajectories(bTraj).depth] = deal(depth);
+        end
         function updateFrame(obj, side, landmarks)
             bSide = strcmpi({obj.Frame.side}, side);
             if ~any(bSide)
