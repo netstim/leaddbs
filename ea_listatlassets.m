@@ -5,9 +5,10 @@ if ~exist('oldatlas','var')
     oldatlas='';
 end
 
-atlases=struct2cell(dir(ea_space(options,'atlases')));  % dir 'atlases' folder
-atlases=atlases(1, cellfun(@isdir, atlases(1,:)));  % only keep folders
-atlases=atlases(cellfun(@(x) ~strcmp(x(1),'.'),atlases)); % remove '.', '..' and '.*' folders from dir results
+% dir 'atlases' folder
+atlases=dir(ea_space(options,'atlases'));
+% only keep folders, also remove '.', '..' and '.*' folders from dir results
+atlases=atlases(cellfun(@(x) ~strcmp(x(1),'.'), {atlases(cell2mat({atlases.isdir})).name}));
 
 if options.prefs.env.dev
     atlases{end+1}='Segment patient anatomy';
@@ -19,9 +20,8 @@ natlases=cell(0);
 if mninative==2
     if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
         % sweep pt dir for atlases
-        natlases=struct2cell(dir([get(handles.patdir_choosebox,'String'),filesep,'atlases',filesep]));
-        natlases=natlases(1, cellfun(@isdir, natlases(1,:)));
-        natlases=natlases(cellfun(@(x) ~strcmp(x(1),'.'),natlases));
+        natlases=dir([get(handles.patdir_choosebox,'String'),filesep,'atlases',filesep]);
+        natlases=natlases(cellfun(@(x) ~strcmp(x(1),'.'), {natlases(cell2mat({natlases.isdir})).name}));
         natlases=cellfun(@(x) ['Local atlas: ', x],natlases,'Uniform',0);
     end
 end
