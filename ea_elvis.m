@@ -432,7 +432,7 @@ try WinOnTop(conwin,true); end
 function openstimviewer(hobj,ev,elstruct,resultfig,options)
 stimwin=ea_stimparams(elstruct,gcf,options);
 setappdata(resultfig,'stimwin',stimwin);
-try WinOnTop(stimwin,true); end
+%try WinOnTop(stimwin,true); end
 
 function openmerviewer(hobj,ev,resultfig,options)
 mercontrolfig = ea_mercontrol(resultfig, options);

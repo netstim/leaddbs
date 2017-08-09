@@ -440,15 +440,17 @@ switch side
         Vvate=Vvat; Vvatne=Vvat;
         Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_right.nii'];
         Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_gauss_right.nii'];
-        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_right.mat'];
+        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters.mat'];
     case 2
         Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
         Vvate=Vvat; Vvatne=Vvat;
         Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_left.nii'];
         Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_gauss_left.nii'];
-        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_left.mat'];
+        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters.mat'];
 end
-save(stimfile,'S');
+%save(stimfile,'S');
+ea_savestimulation(S,options);
+
 %spm_write_vol(Vvat,flipdim(eg,3));
 
 Vvate.img=eeg; %permute(eeg,[2,1,3]);

@@ -120,7 +120,7 @@ elseif options.sides(side) == 2
     Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
     stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_left.mat'];
 end
-save(stimfile,'S');
+ea_savestimulation(S,options);
 spm_write_vol(Vvat,voxspace);
 
 

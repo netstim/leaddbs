@@ -891,6 +891,13 @@ end
 
 
 options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+models=get(handles.modelselect,'String');
+model=models{get(handles.modelselect,'Value')};
+S.model=model;
+
+ea_savestimulation(S,options);
+setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 S=getappdata(handles.stimfig,'S');
 for a=1:4
@@ -1586,17 +1593,78 @@ function stimlabel_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of stimlabel as text
 %        str2double(get(hObject,'String')) returns contents of stimlabel as a double
 S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+sel=get(handles.stimlabel,'String');
+sel=sel{get(handles.stimlabel,'Value')};
+if length(sel)>4 && strcmp(sel(1:4),' => '); % command, not entry
+    
+    switch sel(5:end)
+        case 'New stimulation'
+            
+            ea_savestimulation(S,options);
+            S=[]; % this will create the prompt to generate a new S.
+            options.gen_newstim=1;
+            setappdata(handles.stimfig,'options',options);
+            setappdata(handles.stimfig,'S',S);
+            ea_refreshguisp(handles,options);
+            S=getappdata(handles.stimfig,'S');
+            ea_savestimulation(S,options);
+            options.gen_newstim=0; % reset new stim flag
+            setappdata(handles.stimfig,'options',options);
+        case 'Rename stimulation'
+            stimlabel=getappdata(handles.stimfig,'stimlabel');
+            
+            [~,ix]=ismember(stimlabel,get(handles.stimlabel,'String'));
+            set(handles.stimlabel,'Value',ix);
+            stimc = inputdlg('Please enter a label for this stimulation','Stimulation Label',1,{stimlabel});
+            
+            movefile([options.root,options.patientname,filesep,'stimulations',filesep,stimlabel],[options.root,options.patientname,filesep,'stimulations',filesep,stimc{1}]);
+            slabelc=get(handles.stimlabel,'String');
+            slabelc{ix}=stimc{1};
+            set(handles.stimlabel,'String',slabelc);
+            S.label=stimc{1};
+            setappdata(handles.stimfig,'S',S);
+            setappdata(handles.stimfig,'stimlabel',S.label);
+            ea_refreshguisp(handles,options);
+            ea_savestimulation(S,options);
+        case 'Delete stimulation'
+            
+            ans=questdlg(['Are you sure you wish to delete the stimulation parameters for ',...
+                S.label,'?'],'Delete stimulation parameters','Sure','No','No');
+            if strcmp(ans,'No')
+                set(handles.stimlabel,'Value',1);
+            else % truly delete Stimulation parameters
+                rmdir([options.root,options.patientname,filesep,'stimulations',filesep,S.label],'s');
+                S=[]; % this will create the prompt to generate a new S.
+                setappdata(handles.stimfig,'S',S);
+                set(handles.stimlabel,'Value',1);
+                setappdata(handles.stimfig,'stimlabel','');
+                options.gen_newstim=0;
+                setappdata(handles.stimfig,'S',S);
+                ea_refreshguisp(handles,options);
+                S=getappdata(handles.stimfig,'S');
+                ea_savestimulation(S,options);
+            end
+            
+    end
+    
+else
+    
+    labels=get(handles.stimlabel,'String');
+    label=labels{get(handles.stimlabel,'Value')};
+    label(strfind(label,' '))='';
+    S=ea_loadstimulation(label,options);
+    S.label=label;
+    setappdata(handles.stimfig,'S',S);
+    setappdata(handles.stimfig,'stimlabel',S.label);
+%    set(handles.stimlabel,'String',label);
+    
+    setappdata(handles.stimfig,'S',S);
+    ea_refreshguisp(handles,options);
+end
 
 
-label=get(handles.stimlabel,'String');
-set(handles.stimlabel,'String',label);
-label=label{get(handles.stimlabel,'Value')};
-label(strfind(label,' '))='';
-S.label=label;
 
 
-setappdata(handles.stimfig,'S',S);
-ea_refreshguisp(handles,options);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1626,22 +1694,22 @@ if isempty(actpt) || length(actpt)>1
     actpt=1;
 end
 if groupmode
-        grouploaded=getappdata(handles.stimfig,'grouploaded');
-
+    grouploaded=getappdata(handles.stimfig,'grouploaded');
+    
     if isempty(grouploaded) % this is done only once and gets the selection info from lead_group initially (which patient shown).
         lgfig=getappdata(handles.stimfig,'resultfig');
         M=getappdata(lgfig,'M');
         actpt=M.ui.listselect;
-
+        
         if length(actpt)>1 % more than one entry selected
             actpt=1;
         end
         setappdata(handles.stimfig,'actpt',actpt);
         % set grouploaded true is being done below.
     end
-
+    
     elstruct=getappdata(handles.stimfig,'elstruct');
-
+    
     set(handles.headertxt,'String',['Stimulation parameters: ',elstruct(actpt).name]);
     gSv=getappdata(handles.stimfig,'gSv');
     if isfield(gSv,'vatmodel');
@@ -1653,7 +1721,7 @@ if groupmode
                 keyboard
             end
             setappdata(handles.stimfig,'gSv',gSv);
-
+            
         else
             [~,ind]=ismember(gSv.vatmodel,get(handles.modelselect,'String'));
             set(handles.modelselect,'Value',ind);
@@ -1670,15 +1738,15 @@ if groupmode
     % load gS - updated with each refresh:
     gS=getappdata(handles.stimfig,'gS');
     if isempty(grouploaded)
-
-
-
-
+        
+        
+        
+        
         if ~isempty(gS)
-
-
-
-
+            
+            
+            
+            
             % determine stimlabel from priorly set gS:
             for sub=1:length(gS)
                 stimlabel='gs';
@@ -1687,7 +1755,7 @@ if groupmode
                 end
             end
             setappdata(handles.stimfig,'stimlabel',stimlabel);
-
+            
             % if gS is defined but group has just now been loaded
             try
                 if ~isempty(gS(actpt).Rs1) % current patient is defined -> set S to gS of this patient.
@@ -1698,14 +1766,22 @@ if groupmode
         % now tell everyone that the figure has been opened for a while
         % already:
         setappdata(handles.stimfig,'grouploaded',1);
-
-
+        
+        
     end
 end
 
 
-
-
+if ~isempty(S) % initialization
+    if ~isempty(S.model) % call from lead group
+        [~,ix]=ismember(S.model,get(handles.modelselect,'String'));
+        if ~ix
+            ea_error('The model of the selected stimulation is not available.');
+        else
+            set(handles.modelselect,'Value',ix);
+        end
+    end
+end
 
 stimlabel=getappdata(handles.stimfig,'stimlabel');
 
@@ -1991,6 +2067,8 @@ switch options.elspec.numel
 end
 
 setappdata(handles.stimfig,'S',S);
+
+ea_savestimulation(S,options);
 
 
 function ea_viz_eight(handles,cmd)
@@ -2418,14 +2496,27 @@ if nargin
     if isempty(varargin{1})
         labels=ea_detstimname(options,handles);
         set(handles.stimlabel,'String',labels);
+    elseif (isfield(options,'gen_newstim') && options.gen_newstim==1)
+        labels=ea_detstimname(options,handles);
+        set(handles.stimlabel,'String',labels);
+        options.gen_newstim=0;
+
     else
         labels=varargin{1};
     end
 else
     labels=ea_detstimname(options,handles);
 end
-S.label=labels{get(handles.stimlabel,'Value')};
 
+if ~iscell(labels)
+    labels={labels};
+end
+
+try
+S.label=labels{get(handles.stimlabel,'Value')};
+catch
+    keyboard
+end
 
 function Ls3am_Callback(hObject, eventdata, handles)
 % hObject    handle to Ls3am (see GCBO)
