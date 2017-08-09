@@ -28,7 +28,9 @@ else
             ea_dispt('Warping fiducials to native space');
             ea_reconstruction2native(options);
             ea_dispt('Mapping fiducials to AC/PC space');
-            ea_reconstruction2acpc(options);
+            if options.prefs.reco.saveACPC
+                ea_reconstruction2acpc(options);
+            end
         end
     end
 end
