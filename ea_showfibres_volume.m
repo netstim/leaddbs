@@ -208,7 +208,7 @@ for side=1:length(options.sides)
                     end
                 end
 
-                           save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
+                           save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats','-v7.3');
 
             end
         end
