@@ -12,7 +12,9 @@ if options.native
         ea_dispt('Warping fiducials to template space');
         ea_reconstruction2mni(options);
         ea_dispt('Mapping fiducials to AC/PC space');
-        ea_reconstruction2acpc(options);
+        if options.prefs.reco.saveACPC
+            ea_reconstruction2acpc(options);
+        end
         ea_checkswap_lr(options);
     end
 else
