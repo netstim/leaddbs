@@ -20,6 +20,11 @@ end
 % store patient directories in figure
 setappdata(handles.leadfigure,'uipatdir',uipatdir);
 try
+    if length(uipatdir) > 1 % if multiple patients are chosen, enable CT coregistration setting by default
+        set(handles.MRCT,'Enable', 'off');
+    else
+        set(handles.MRCT,'Enable', 'on');
+    end
     ea_switchctmr(handles);
 end
 

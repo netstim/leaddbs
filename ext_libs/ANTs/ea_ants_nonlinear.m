@@ -47,7 +47,7 @@ if slabsupport
         sums(mov)=sum(mnii.img(:));
     end
     slabspresent=0; % default no slabs present.
-    
+
     if length(sums)>1 % multispectral warp
         slabs=sums(1:end-1)<(sums(end)*0.7);
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
@@ -55,7 +55,7 @@ if slabsupport
             slabfixedimage=fixedimage(slabs);
             movingimage(slabs)=[]; % remove slabs from movingimage
             fixedimage(slabs)=[]; % remove slabs from movingimage
-            
+
             % write out slab mask
             slabspresent=1;
             mnii.dt=[4,0];
@@ -180,7 +180,7 @@ if slabspresent
         ' --masks [NULL,',[tmaskdir,filesep,'slabmask.nii'],']'];
     fixedimage=[fixedimage,slabfixedimage];
     movingimage=[movingimage,slabmovingimage];
-    
+
     for fi=1:length(fixedimage)
         slabstage=[slabstage,...
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
@@ -194,7 +194,7 @@ if subcorticalrefine
     synmaskconvergence=apref.convergence.scrf;
     synmaskshrinkfactors=apref.shrinkfactors.scrf;
     synmasksmoothingssigmas=apref.smoothingsigmas.scrf;
-    
+
     if slabspresent
         movingmask=[tmaskdir,filesep,'slabmask.nii'];
     else

@@ -18,6 +18,7 @@ if strcmp(cmd,'runcluster')
 else
     needtoexit=0;
 end
+
 options.prefs=ea_prefs('');
 options=ea_amendtoolboxoptions(options);
 
@@ -76,15 +77,14 @@ else
                 options.root=[fileparts(uipatdirs{pat}),filesep];
                 [~,thispatdir]=fileparts(uipatdirs{pat});
                 options.patientname=thispatdir;
-                % run main function
                 
+                % run main function
                 if length(uipatdirs)>1 % multi mode. Dont stop at errors.
                     try
                         % autoadjust MRCT modality for this patient:
                         try
                             modality=ea_checkctmrpresent([options.root,options.patientname,filesep]);
-                            modality=find(modality);
-                            options.modality=modality(1);
+                            options.modality=find(modality,1);  % prefer MR rather than CT if both are present
                         end
                         ea_autocoord(options);
                     catch

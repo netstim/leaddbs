@@ -59,7 +59,7 @@ anatpresent=flip(anatpresent); % reverse order since most important transform sh
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 for anatf=1:length(anatpresent)
     disp(['Including ',anatpresent{anatf},' data for (grey-matter) normalization']);
-    
+
     to{cnt}=[ea_space(options),ea_det_to(anatpresent{anatf},spacedef),'.nii'];
         if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
         ea_maskimg(options,[directory,anatpresent{anatf}],bprfx);
@@ -82,7 +82,7 @@ ea_apply_normalization(options);
 %% add methods dump:
 
 if options.prefs.machine.normsettings.ants_scrf
-    
+
     [scit,lcit]=ea_getspacedefcit;
     cits={
         'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
@@ -91,14 +91,14 @@ if options.prefs.machine.normsettings.ants_scrf
     if ~isempty(lcit)
         cits=[cits;{lcit}];
     end
-    
+
     ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,'based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using the'...
         ' SyN registration approach as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/).',...
         ' Nonlinear deformation into template space was achieved in five stages: After two linear (rigid followed by affine) steps, ',...
         ' A nonlinear (whole brain) SyN-registration stage was followed by two nonlinear SyN-registrations that consecutively focused on the area of interest ',...
         ' as defined by subcortical masks in Schoenecker 2008.'],...
         cits);
-    
+
 else
     [scit,lcit]=ea_getspacedefcit;
     cits={
@@ -112,7 +112,7 @@ else
         ' Nonlinear deformation into template space was achieved in three stages: After two linear (rigid followed by affine) steps, ',...
         ' a nonlinear (whole brain) SyN registration stage was added.'],...
         cits);
-    
+
 end
 
 function masks=segmentall(from,options)
