@@ -22,8 +22,10 @@ setappdata(handles.leadfigure,'uipatdir',uipatdir);
 try
     if length(uipatdir) > 1 % if multiple patients are chosen, enable CT coregistration setting by default
         set(handles.MRCT,'Enable', 'off');
+        set(handles.MRCT, 'TooltipString', '<html>Multiple patients are chosen.<br>CT/MR modality will be automatically detected.');
     else
         set(handles.MRCT,'Enable', 'on');
+        set(handles.MRCT, 'TooltipString', '<html>Choose whether you want to process patients that <br>underwent MR or CT imaging post-operatively.');
     end
     ea_switchctmr(handles);
 end
