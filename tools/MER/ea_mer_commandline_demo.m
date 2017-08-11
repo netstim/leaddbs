@@ -1,6 +1,6 @@
 %% Working with new data and you do not want to use the GUI
 % Setup the options struct.
-options.root = fullfile(pwd, 'Imaging');
+options.root = fullfile(pwd);
 options.patientname = 'P008';
 options.uipatdirs = {fullfile(options.root, options.patientname)};
 options.native = true;
@@ -28,6 +28,7 @@ temp1.updateFrame('left', nex_adj_left);
 temp1.updateFrame('right', nex_adj_right);
 
 % Update into which MER track the DBS was implanted.
+temp1.updateDBSDepth('left', 0.3);
 temp1.updateDBSImplantTrack('left', 'medial');
 
 % Add some markers.
@@ -37,10 +38,10 @@ temp1.addMarkerAtDepth('left', 'medial', MERState.MarkerTypes.Top, '', 6.5);
 temp1.addMarkerAtDepth('left', 'medial', MERState.MarkerTypes.Bottom, '', 0.4);
 
 % Save for later.
-temp1.save('y');  % Pass 'y' to overwrite file if it exists. Pass anything else (or nothing) to be prompted.
+temp1.save('y');  % Pass 'y' to overwrite file if it exists. Omit to be prompted.
 
 %% Working with data that were already saved (commandline or GUI)
 temp2 = MERState();
-temp2.Config.uipatdirs = {fullfile(pwd, 'Imaging', 'P008')};
+temp2.Config.uipatdirs = {fullfile(pwd, 'P008')};
 temp2.load();
 markers = temp2.exportMarkers()
