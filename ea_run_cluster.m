@@ -16,7 +16,6 @@ uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 switch cmd 
     case 'run'
-        
         for pat=1:length(uipatdirs)
             % set patient specific options
             options.root=[fileparts(uipatdirs{pat}),filesep];
@@ -32,6 +31,5 @@ switch cmd
         options=ea_amendtoolboxoptions(options);
         ea_export(options,clusterfunctionname);
 end
-
 
 ea_busyaction('off',leadfig,'lead');

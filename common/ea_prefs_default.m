@@ -93,6 +93,9 @@ prefs.normalize.createwarpgrids=0; % set to 1 to create grid files that show def
 prefs.normalize.fsl.warpres=8; % Defines the warp resolution in FSL warps.
 prefs.normalize.spm.resolution=1; % Defines resolution in mm when using SPM normalization routines (New Segment, DARTEL, SHOOT).
 
+%% Reconstruction
+prefs.reco.saveACPC=1; % also save reconstructions in AC/PC space
+
 %% Coregistration (CT/MR):
 prefs.ctcoreg.default='ea_coregctmri_ants';
 
