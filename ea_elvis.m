@@ -167,8 +167,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                catch
                    ea_error(['Couldn''''t visualize electrode from patient ',num2str(pt),'.']);
                end
-               
-               setappdata(resultfig,'merstruct',merstruct);
            end
            
         end
@@ -559,10 +557,10 @@ end
 mercontrolfig = getappdata(resultfig, 'mercontrolfig');
 if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
     
-    merstruct = getappdata(resultfig, 'merstruct');
-    mertoggles = getappdata(mercontrolfig, 'mertoggles');
-        
-    if ~any(any(mertoggles.keycontrol))
+    merstruct = getappdata(mercontrolfig, 'merstruct');
+    
+    bChecked = logical([merstruct.Toggles.keycontrol.value]);
+    if ~any(bChecked)
         return
     end   
     
@@ -571,95 +569,59 @@ if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
         % 'space' = Generic; 'm' = MER; 'l' = LFP; 't' = Top; 'b' = Bottom
         % 's' = session; 'n' = notes
         
-        mermarkers = getappdata(resultfig, 'mermarkers');
-        
         if any(strcmpi(event.Key, {'s', 'n'}))
             % Enter session or notes for the last marker.
             if strcmpi(event.Key, 's')
-                mermarkers(end).session = char(inputdlg('Enter Session'));
+                merstruct.markers(end).session = char(inputdlg('Enter Session'));
             elseif strcmpi(event.Key, 'n')
-                mermarkers(end).notes = char(inputdlg('Enter Notes'));
+                merstruct.markers(end).notes = char(inputdlg('Enter Notes'));
             end
-            setappdata(resultfig, 'mermarkers', mermarkers);
+            setappdata(resultfig, 'mermarkers', merstruct.markers);
             return;
         end
         
         sess_text = '';
         switch lower(event.Key)
             case 'space'
-                markertype = 'Generic';
+                markertype = MERState.MarkerTypes.Generic;
             case 'm'
-                markertype = 'MER recording';
+                markertype = MERState.MarkerTypes.MER;
                 sess_text = char(inputdlg ('Enter Session'));
             case 'l'
-                markertype = 'LFP recording';
+                markertype = MERState.MarkerTypes.LFP;
                 sess_text = char(inputdlg ('Enter Session'));
             case 't'
-                markertype = 'Top border';
+                markertype = MERState.MarkerTypes.Top;
             case 'b'
-                markertype = 'Bottom border';
+                markertype = MERState.MarkerTypes.Bottom;
         end
         
-        pos_labels = {merstruct.tract_info.label};
-        side_strs = {'right', 'left'};
-        [sides, positions] = find(mertoggles.keycontrol);
-        for check_ix = 1:length(sides)
-            sid = sides(check_ix);
-            side_str = side_strs{sid};
-            pos_str = pos_labels{positions(check_ix)};
-            marker_mm = merstruct.currentmer.(pos_str).trajectory{sid}(1, :);
-            if ~isempty(mermarkers) && isequal(marker_mm, mermarkers(end).coords_mm)
-                fprintf('Location along side %s - %s tract already marked: [%f,%f,%f].\n',...
-                    side_str, pos_str, marker_mm);
-            else
-                mermarkers(end+1).side = side_str;
-                mermarkers(end).tract = pos_str;
-                mermarkers(end).depth = merstruct.currentmer.(pos_str).dist(sid);
-                mermarkers(end).coords_mm = marker_mm;
-                mermarkers(end).markertype = markertype;
-                if ~isempty(sess_text)
-                    mermarkers(end).session = sess_text;
-                end
-
-                dat.implantedtract = pos_labels{merstruct.implant_idx(sid)};
-                dat.leaddepth = merstruct.implant_depth(sid);
-                dat.key = event.Key;
-                mermarkers(end).dat = dat;
-            end
-        end
-        setappdata(resultfig, 'mermarkers', mermarkers);
-        
+        % For each checked box, add a marker.
+        merstruct.addMarkersAtTrajs(merstruct.Toggles.keycontrol(bChecked),...
+            markertype, sess_text);
         handles = guidata(mercontrolfig);
         ea_resultfig_updatemarkers(handles);
         ea_mercontrol_updatemarkers(handles);
         
     elseif any(strcmpi(event.Key, {'uparrow','leftarrow','downarrow','rightarrow'}))
-        d = merstruct.step_size(1);  % Default step size
+        d = 1;  % Default step size
         if ~isempty(event.Modifier)
             if ismember(event.Modifier, 'shift')
-                d = merstruct.step_size(2);  % Large step size
+                d = 2;  % Large step size
             elseif ismember(event.Modifier, 'alt')
-                d = merstruct.step_size(3);  % Small step size
+                d = 3;  % Small step size
             end
         end
-        
         if any(strcmpi(event.Key, {'downarrow','rightarrow'}))
             d = -d;
         end
-        % For each checked track, modify its distance by d
-        pos_labels = {merstruct.tract_info.label};
-        [sides, positions] = find(mertoggles.keycontrol);
-        for check_ix = 1:length(sides)
-            pos = pos_labels{positions(check_ix)};
-            old_dist = merstruct.currentmer.(pos).dist(sides(check_ix));
-            merstruct.currentmer.(pos).dist(sides(check_ix)) = old_dist + d;
-        end
-        setappdata(resultfig, 'merstruct', merstruct);
+        merstruct.translateToggledTrajectories(d);
+        
         % Update the GUI
         handles = guidata(mercontrolfig);
-        ea_mercontrol_updatetrajectories(handles);
         ea_resultfig_updatetrajectories(handles);
         ea_mercontrol_updateimplanted(handles);
+        
     end
 % commnd=event.Character;
 % switch lower(commnd)
