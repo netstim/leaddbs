@@ -19,14 +19,14 @@ set(0, 'CurrentFigure', resultfig); hold on;
 [s_keys, h_keys] = get_keys_for_markers_handles(merstruct.Markers, merhandles.markers);
 if ~isempty(h_keys)
     if isempty(s_keys)
-        ia = 1:length(h_keys);
+        ia = intersect(1:size(merhandles.markers,2),1:length(h_keys));
     else
         [~, ia] = setdiff(h_keys, s_keys, 'rows');
     end
     for h_ix = 1:length(ia)
         h_id = ia(h_ix);
-        delete(merhandles.markers(h_id).h);
-        delete(merhandles.markers(h_id).tag);
+        try delete(merhandles.markers(h_id).h); end
+        try delete(merhandles.markers(h_id).tag); end
     end
     merhandles.markers(ia) = [];
 end
