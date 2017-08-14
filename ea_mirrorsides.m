@@ -41,13 +41,7 @@ if isstruct(elstruct) % proper elstruct
     % structured exactly as the one above!
     cnt=1;
     for el=1:dim
-        for side=1:2
-            switch side
-                case 1
-                    oside=2;
-                case 2
-                    oside=1;
-            end
+        for side=2:-1:1
             elstruct(el+dim).markers(side).head=towarp(cnt,:); cnt=cnt+1;
             elstruct(el+dim).markers(side).tail=towarp(cnt,:); cnt=cnt+1;
             elstruct(el+dim).markers(side).x=towarp(cnt,:); cnt=cnt+1;
@@ -69,13 +63,13 @@ else % isomatrix
     if isempty(elstruct)
         return
     end
-    
+   
     for is=1:length(elstruct)
-        isom{is}=elstruct{is};
+        isom{is}=elstruct{is}; % elstruct variable is the isomatrix here!
         isom{is}{1}=[elstruct{is}{1};elstruct{is}{2}];
         isom{is}{2}=[elstruct{is}{2};elstruct{is}{1}];
     end
-    elstruct=isom;
+    elstruct=isom; % that's why we need to export isom as fake elstruct variable.
 end
 
 

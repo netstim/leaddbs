@@ -43,7 +43,7 @@ X=mldivide(A,B);
 % First we will make sure that the projection from A to B (Ab)
 % results in something very similar to B.
 Ab=A*X;
-vizprec=0.001;
+vizprec=0.01;
 if sum(abs(Ab(:)-B(:)))>vizprec % visualization precision in sums of millimeters.
     err=1;
 end

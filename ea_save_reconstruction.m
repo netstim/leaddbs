@@ -11,8 +11,8 @@ if options.native
     if isfield(options,'hybridsave');
         ea_dispt('Warping fiducials to template space');
         ea_reconstruction2mni(options);
-        ea_dispt('Mapping fiducials to AC/PC space');
         if options.prefs.reco.saveACPC
+            ea_dispt('Mapping fiducials to AC/PC space');
             ea_reconstruction2acpc(options);
         end
         ea_checkswap_lr(options);
@@ -27,8 +27,8 @@ else
         try
             ea_dispt('Warping fiducials to native space');
             ea_reconstruction2native(options);
-            ea_dispt('Mapping fiducials to AC/PC space');
             if options.prefs.reco.saveACPC
+                ea_dispt('Mapping fiducials to AC/PC space');
                 ea_reconstruction2acpc(options);
             end
         end

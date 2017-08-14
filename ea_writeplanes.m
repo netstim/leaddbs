@@ -97,7 +97,7 @@ for side=1:length(options.sides)
 
             % Show MR-volume
             set(0,'CurrentFigure',cuts)
-            colormap gray
+            colormap parula
 
             switch tracor
 
@@ -278,12 +278,8 @@ for side=1:length(options.sides)
                             wstr='r';
                         end
                     end
-
-                    warnStruct = warning('off','MATLAB:hg:willberemoved');
-                    elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4,'LineSmoothing','on');
-                    warning(warnStruct);
-
                     if options.d2.fid_overlay
+                        
                         elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4);
                     end
                 end

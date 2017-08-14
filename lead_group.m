@@ -434,11 +434,12 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
 
 end
 
-try
-    resultfig=ea_elvis(options,vizstruct);
-catch
-    resultfig=ea_elvis(options,M.elstruct(ptidx));
+% amend .pt to identify which patient is selected (needed for isomatrix).
+for pt=1:length(ptidx)
+    M.elstruct(ptidx(pt)).pt=ptidx(pt);
 end
+
+    resultfig=ea_elvis(options,M.elstruct(ptidx));
 
 ea_busyaction('off',handles.leadfigure,'group');
 
