@@ -45,10 +45,11 @@ if options.d3.write
     
     resultfig=ea_elvis(options);
     set(0,'CurrentFigure',resultfig);
-
+try
     ea_setaxisorigin(options,resultfig);
-    zoom(2);
-
+catch
+    zoom(3);
+end
     
     % save scene as matlab figure
 %     try % if path is not defined, don't save.
