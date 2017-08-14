@@ -44,15 +44,11 @@ if options.d3.write
     % can be called just by giving the patient directory.
     
     resultfig=ea_elvis(options);
-    
-    
     set(0,'CurrentFigure',resultfig);
+
     zoom(3);
-    try
-        set(gca,'cameraviewanglemode','manual');
-    end
-    set(gca,'clipping','off');
-    axis('off');
+    ea_setaxisorigin(options,resultfig);
+
     
     % save scene as matlab figure
 %     try % if path is not defined, don't save.

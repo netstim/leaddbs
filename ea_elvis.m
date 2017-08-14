@@ -385,23 +385,20 @@ axis vis3d
 axis equal
 set(resultfig,'Name',figtitle);
 set(0,'CurrentFigure',resultfig);
-ax=resultfig.CurrentAxes;
-set(ax,'XLimMode','auto');
-set(ax,'YLimMode','auto');
-set(ax,'ZLimMode','auto');
-
-% set(ax,'XLim',[-140 140]);
-% set(ax,'YLim',[-140 140]);
-% set(ax,'ZLim',[-140 140]);
-% zoom(3)
-% ax=gca;
-% set(ax,'XLim',[-140 140]);
-% set(ax,'YLim',[-140 140]);
-% set(ax,'ZLim',[-140 140]);
 view(142,13.6)
-zoom(1.5)
+try
+    set(gca,'cameraviewanglemode','manual');
+end
+set(gca,'clipping','off');
+
+
+
+
+
+
 %set(resultfig,'visible','on');
 opensliceviewer([],[],resultfig,options);
+
 if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
     try
         % store json in figure file
@@ -414,6 +411,7 @@ if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file 
 end
 setappdata(resultfig, 'options', options);
 setappdata(resultfig,'elstruct',elstruct);
+
 
 
 function opensliceviewer(hobj,ev,resultfig,options)

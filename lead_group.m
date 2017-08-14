@@ -440,7 +440,7 @@ for pt=1:length(ptidx)
 end
 
     resultfig=ea_elvis(options,M.elstruct(ptidx));
-
+    zoom(3);
 ea_busyaction('off',handles.leadfigure,'group');
 
 
