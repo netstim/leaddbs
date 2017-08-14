@@ -46,8 +46,8 @@ if options.d3.write
     resultfig=ea_elvis(options);
     set(0,'CurrentFigure',resultfig);
 
-    zoom(3);
     ea_setaxisorigin(options,resultfig);
+    zoom(2);
 
     
     % save scene as matlab figure
