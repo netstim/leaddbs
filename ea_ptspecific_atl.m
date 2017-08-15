@@ -34,6 +34,7 @@ p=load([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
 p.atlases.rebuild=1;
 save([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'-struct','p');
 delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
+delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz']);
 
 if ismember(options.prefs.dev.profile,{'se'})
     interp=0;

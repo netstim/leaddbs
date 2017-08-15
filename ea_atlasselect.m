@@ -561,6 +561,7 @@ sels=ea_storeupdatemodel(jtree,h);
 for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
+            
             sidec=getsidec(length(sels.sides{branch}{leaf}),side);
             [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons,h.uselabelname,h.atlases);
            

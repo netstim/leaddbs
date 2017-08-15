@@ -515,7 +515,6 @@ for atl=1:length(atlnames)
 
 
     % add atlas file to hdtemplate in atlas dir
-      
     matlabbatch{1}.spm.util.imcalc.input = {
         [root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii,1'];
         [atlname,',1']
