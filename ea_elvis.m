@@ -131,7 +131,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             catch
                 ea_error(['Couldn''t visualize electrode from patient ',num2str(pt),'.']);
             end
-            if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
+            if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
                % this part for brainbrowser support.
                vizstruct=struct('faces',[],'vertices',[],'colors',[]);
 
@@ -272,7 +272,7 @@ if options.d3.writeatlases
     ea_openatlascontrol([],[],atlases,resultfig,options);
     %end
 
-    if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
+    if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
         try % see if electrode has been defined.
         cnt=length(vizstruct);
         catch
@@ -399,7 +399,7 @@ set(gca,'clipping','off');
 %set(resultfig,'visible','on');
 opensliceviewer([],[],resultfig,options);
 
-if options.d3.elrendering==1 % export vizstruct for lateron export to JSON file / Brainbrowser.
+if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
     try
         % store json in figure file
         bbstruct=ea_viz2brainbrowser(vizstruct);

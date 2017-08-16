@@ -166,7 +166,8 @@ end
 
 options.d3.prolong_electrode=2;
 options.d3.verbose='on';
-options.d3.elrendering=0;
+options.d3.elrendering=1;
+options.d3.exportBB=0; % don't export brainbrowser struct by default
 options.d3.hlactivecontacts=0;
 options.d3.showactivecontacts=1;
 options.d3.showpassivecontacts=1;
