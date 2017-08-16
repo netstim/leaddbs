@@ -8,7 +8,7 @@ function [sidestr, side_ix, track] = ea_detsidestr(str)
 
 track = '';
 
-str_parts = split(str, '_');
+str_parts = ea_strsplit(str, '_');
 if length(str_parts) == 2
     str = str_parts{2};
     if (length(str_parts{1}) > 8) && strcmpi(str_parts{1}(1:8), 'keycheck')
