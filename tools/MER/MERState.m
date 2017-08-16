@@ -64,7 +64,7 @@ classdef MERState < handle
             obj.DBSImplants = struct(...
                 'side', {}, 'depth', {},...
                 'implanted_tract_label', {},...
-                'coords', {}, 'coords_top', {}, 'elec_uv', {});
+                'coords', {}, 'coords_bottom', {}, 'elec_uv', {});
             obj.Frame = struct('side', {'right', 'left'}, 'yaw_rad', 0,...
                 'landmarks', {struct('label', {}, 'coords', {})});
             obj.MERTrajectories = struct('side', {},...
@@ -134,6 +134,10 @@ classdef MERState < handle
             [~, ~, dbs_contacts, obj.Config.elmodel] = ea_load_reconstruction(obj.Config);
             obj.Config = ea_resolve_elspec(obj.Config);
             dbs_contacts = ea_resolvecoords(dbs_contacts, obj.Config);
+            % Get template space
+            obj.Config.native = 0;
+            [~, ~, dbs_markers_mni] = ea_load_reconstruction(obj.Config);
+            [dbs_contacts_mni, ~, ~] = ea_resolvecoords(dbs_markers_mni, obj.Config);
             for side_ix = 1:length(dbs_contacts)
                 if ~isempty(dbs_contacts{side_ix})
                     coords = dbs_contacts{side_ix};
@@ -141,12 +145,19 @@ classdef MERState < handle
                     elec_diff = mean(diff(coords));
                     % unit vector through contacts from lowest (?) contact
                     elec_uv = elec_diff / norm(elec_diff);
-                    % shift coordinates to top of lowest contact.
-                    coords_top = bsxfun(@minus, coords,...
+                    % shift coordinates to bottom of lowest contact.
+                    coords_bottom = bsxfun(@minus, coords,...
                         elec_uv * obj.Config.elspec.contact_length / 2);
                     obj.DBSImplants(side_ix).coords = coords;
-                    obj.DBSImplants(side_ix).coords_top = coords_top;
+                    obj.DBSImplants(side_ix).coords_bottom = coords_bottom;
                     obj.DBSImplants(side_ix).elec_uv = elec_uv;
+                end
+                if ~isempty(dbs_contacts_mni{side_ix})
+                    coords = dbs_contacts_mni{side_ix};
+                    elec_diff = mean(diff(coords));
+                    elec_uv = elec_diff / norm(elec_diff);
+                    obj.DBSImplants(side_ix).coords_mni = coords;
+                    obj.DBSImplants(side_ix).elec_uv_mni = elec_uv;
                 end
             end
             obj.Config.native = opt_native_backup;
@@ -237,15 +248,17 @@ classdef MERState < handle
         function coords = getMERTrajectory(obj, traj, spc)
             bSid = strcmpi({obj.DBSImplants.side}, traj.side);
             curr_dist = traj.depth - obj.DBSImplants(bSid).depth;
-            im_mm = obj.DBSImplants(bSid).coords_top(1, :);
+            im_mm = obj.DBSImplants(bSid).coords_bottom(1, :);
             elec_uv = obj.DBSImplants(bSid).elec_uv;
             startpoint = im_mm + traj.translation + (elec_uv .* curr_dist);
-            endpoint = startpoint + elec_uv * obj.Config.MERLength;
+            if strcmpi(spc, 'mni')
+                startpoint = obj.native2mni_fast(startpoint, traj.side);
+                endpoint = startpoint + obj.DBSImplants(bSid).elec_uv_mni * obj.Config.MERLength;
+            else
+                endpoint = startpoint + elec_uv * obj.Config.MERLength;
+            end
             stepsize = (endpoint - startpoint) / (obj.Config.MERPnts - 1);
             coords = bsxfun(@plus, (0:obj.Config.MERPnts - 1)' * stepsize, startpoint);
-            if strcmpi(spc, 'mni')
-                coords = obj.native2mni_fast(coords);
-            end
         end
         function addMarkerAtDepth(obj, side, label, type, sess_notes, depth)
             bMarkers = strcmpi({obj.Markers.side}, side)...
@@ -300,11 +313,11 @@ classdef MERState < handle
                 bSid = strcmpi({obj.DBSImplants.side}, marker.side);
                 curr_dist = marker.depth - obj.DBSImplants(bSid).depth;
                 traj = obj.MERTrajectories(bTraj);
-                im_mm = obj.DBSImplants(bSid).coords_top(1, :);
+                im_mm = obj.DBSImplants(bSid).coords_bottom(1, :);
                 elec_uv = obj.DBSImplants(bSid).elec_uv;
                 coords = im_mm + traj.translation + (elec_uv .* curr_dist);
                 if strcmpi(spc, 'mni')
-                    coords = obj.native2mni_fast(coords);
+                    coords = obj.native2mni_fast(coords, marker.side);
                 end
             else
                 warning('No MER trajectory found for marker %s - %s.', marker.side, marker.label);
@@ -375,7 +388,7 @@ classdef MERState < handle
         end
     end
     methods(Access = private)
-        function coords_mni = native2mni_fast(obj, coords_native)
+        function coords_mni = native2mni_fast(obj, coords_native, side)
             % Use native2mni_fast for visualization, native2mni_slow for
             % reporting values accurately.
             if ~isfield(obj.Cache, 'prenii_mat')...
@@ -391,24 +404,51 @@ classdef MERState < handle
                 options = ea_assignpretra(obj.Config);
                 ptdir = fullfile(obj.Config.root, obj.Config.patientname);
                 prenii_fname = fullfile(ptdir, options.prefs.prenii_unnormalized);
-                % Generate an array of 4-D coordinates spanning the native
-                % space.
+                vx_native = cell(1, length(obj.DBSImplants));
+                mm_mni = cell(1, length(obj.DBSImplants));
                 dbs_coords = arrayfun(@(x)x.coords, obj.DBSImplants, 'UniformOutput', false);
-                dbs_coords = cat(1, dbs_coords{:});
-                dimvec = cell(1, 3);
-                for dim_ix = 1:3
-                    dimvec{dim_ix} = linspace(min(dbs_coords(:, dim_ix)), max(dbs_coords(:, dim_ix)), 20);
+                for sid = 1:length(obj.DBSImplants)
+                    % Generate an array of native coordinates spanning the
+                    % DBS lead extents
+                    dimvec = cell(1, 3);
+                    for dim_ix = 1:3
+                        this_coords = dbs_coords{sid}(:, dim_ix);
+                        this_lims = [min(this_coords), max(this_coords)];
+                        this_span = abs(diff(this_lims));
+                        this_lims = [this_lims(1)-0.1*this_span this_lims(2)+0.1*this_span];
+                        dimvec{dim_ix} = this_lims(1):0.2:this_lims(end);
+                        if length(dimvec{dim_ix}) < 10
+                            dimvec{dim_ix} = linspace(this_lims(1), this_lims(2), 10);
+                        end
+                    end
+                    [X, Y, Z] = meshgrid(dimvec{:});
+                    XYZ_nii_mm = [X(:)'; Y(:)'; Z(:)'; ones(1, numel(X))];
+                    % Convert to voxels (voxels are assumed by ea_map_coords)
+                    XYZ_nii_vx = obj.Cache.prenii_mat \ XYZ_nii_mm;
+                    % Map to template space. Slow, but only once per side.
+                    XYZ_mni_mm = ea_map_coords(XYZ_nii_vx(1:3,:), prenii_fname, ...
+                        fullfile(ptdir, 'y_ea_inv_normparams.nii'), '');  
+                    % Save some values for later.
+                    vx_native{sid} = XYZ_nii_vx;
+                    mm_mni{sid} = XYZ_mni_mm;
+                    % Calculate emperical transform
+                    voxnii2mmnorm = (XYZ_nii_vx(1:4, :)' \ [XYZ_mni_mm; ones(1, size(XYZ_mni_mm, 2))]')';
+                    % Combine with mm2vx so now it is mm_native_2_mm_mni
+                    obj.Cache.native2mni_emp_mat.(obj.DBSImplants(sid).side) = ...
+                        voxnii2mmnorm / obj.Cache.prenii_mat; % combine mats
                 end
-                [X, Y, Z] = meshgrid(dimvec{:});
-                XYZ_nii_mm = [X(:)'; Y(:)'; Z(:)'; ones(1, numel(X))];
-                XYZ_nii_vx = obj.Cache.prenii_mat \ XYZ_nii_mm;
-                XYZ_mni_mm = ea_map_coords(XYZ_nii_vx(1:3,:), prenii_fname, ...
-                    fullfile(ptdir, 'y_ea_inv_normparams.nii'), '');  %slow, just once
+                % Calculate combined transform for when side is unknown.
+                XYZ_nii_vx = cat(2, vx_native{:});
+                XYZ_mni_mm = cat(2, mm_mni{:});
                 voxnii2mmnorm = (XYZ_nii_vx(1:4, :)' \ [XYZ_mni_mm; ones(1, size(XYZ_mni_mm, 2))]')';
-                obj.Cache.native2mni_emp_mat = voxnii2mmnorm / obj.Cache.prenii_mat; % combine mats
+                obj.Cache.native2mni_emp_mat.both = ...
+                        voxnii2mmnorm / obj.Cache.prenii_mat;
             end
             coords_native = [coords_native, ones(size(coords_native, 1), 1)]';
-            coords_mni = (obj.Cache.native2mni_emp_mat * coords_native)';
+            if ~exist('side','var')
+                side = 'both';
+            end
+            coords_mni = (obj.Cache.native2mni_emp_mat.(side) * coords_native)';
             coords_mni = coords_mni(:, 1:3);
         end
         function coords_mni = native2mni_slow(obj, coords_native)
