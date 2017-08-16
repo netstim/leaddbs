@@ -601,7 +601,8 @@ function ea_gui_generate(handles)
 
 merstruct = getappdata(handles.mercontrolfig, 'merstruct');
 % Generate UI elements
-width = handles.mainuipanel.InnerPosition(3);
+
+width = handles.mainuipanel.Position(3)-5;
 
 for side_str = {'left', 'right'}
     bSide = strcmpi({merstruct.Config.MERTrajectory.side}, side_str);
