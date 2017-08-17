@@ -14,11 +14,10 @@ end
 disp('Refreshing group list...');
 % refresh group list
 set(handles.grouplist,'String',M.patient.group);
-if length(M.patient.group) < M.ui.listselect
+if length(M.patient.group) < max(M.ui.listselect)
     M.ui.listselect = length(M.patient.group);
 end
-try set(handles.grouplist,'Value',M.ui.listselect);  end
-
+try set(handles.grouplist,'Value',M.ui.listselect); end
 
 disp('Refreshing patient list...');
 % refresh patient list
