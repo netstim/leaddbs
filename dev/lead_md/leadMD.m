@@ -66,30 +66,23 @@ set(handles.vistab,'visible','off');
 options.prefs=ea_prefs('');
 
 % load atlassets
-as = dir(ea_space(options,'atlases'));
-asc=cell(0);
-cnt=1;
-for i=1:length(as)
-    if as(i).isdir
-        asc{cnt}=as(i).name;
-        cnt=cnt+1;
-    end
-end
+atlases = dir(ea_space(options,'atlases'));
+atlases = {atlases(cell2mat({atlases.isdir})).name};
+atlases = atlases(cellfun(@(x) ~strcmp(x(1),'.'), atlases));
 
-excludes={'.','..'};
-asc(ismember(asc,excludes))=[];
 if options.prefs.env.dev
-    asc{end+1}='Segment patient anatomy';
+    atlases{end+1} = 'Segment patient anatomy';
 end
-asc{end+1}='Use none';
 
-set(handles.atlassetpopup,'String',asc);
+atlases{end+1} = 'Use none';
 
-set(handles.atlassetpopup,'String',asc);
-[~,defix]=ismember(options.prefs.atlases.default,asc);
-set(handles.atlassetpopup,'Value',defix);
+set(handles.atlassetpopup, 'String', atlases);
 
-set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
+set(handles.atlassetpopup, 'String', atlases);
+[~,defix]=ismember(options.prefs.atlases.default, atlases);
+set(handles.atlassetpopup, 'Value', defix);
+
+set(handles.versiontxt, 'String', ['v', ea_getvsn('local')]);
 
 
 % get electrode model specs and place in popup
@@ -101,8 +94,6 @@ im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
 image(im);
 axis off;
 axis equal;
-
-
 
 % UIWAIT makes leadMD wait for user response (see UIRESUME)
 % uiwait(handles.figure1);

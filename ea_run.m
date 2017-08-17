@@ -1,26 +1,26 @@
-function ea_run(cmd,options)
+function ea_run(cmd, options)
 % This function is the main execution function of Lead-DBS. It is
 % distributed within Lead-DBS toolbox (www.lead-dbs.org)
 % __________________________________________________________________________________
 % Copyright (C) 2016 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-if strcmp(cmd,'runcluster')
-    opath=options;
-    load(opath); % options will be provided as a .mat file.
-%    delete(opath);
-    cmd='run';
+if strcmp(cmd, 'runcluster')
+    load(options);  % 'options' is the job .mat file in the case
+    cmd = 'run';    % rewrite 'cmd' to 'run'
     if ~isdeployed
-        ea_setpath;
-        addpath(genpath(options.spmdir));
+        ea_setpath; % set path (LEAD and SPM) if needed
     end
-    needtoexit=1;
+    needtoexit = 1; % on a cluster, need to close Matlab properly after job is done.
 else
-    needtoexit=0;
+    needtoexit = 0;
 end
 
-options.prefs=ea_prefs('');
-options=ea_amendtoolboxoptions(options);
+% handle 'prefs', 'lc' and 'd2' options if it's not cluster/exported job
+if ~isfield(options, 'exportedJob')
+    options.prefs = ea_prefs('');
+    options = ea_amendtoolboxoptions(options);
+end
 
 if options.d3.autoserver && options.d3.write
     choice = questdlg('Are you sure you want to export results to the server automatically?', ...
@@ -34,57 +34,61 @@ if options.d3.autoserver && options.d3.write
 end
 
 clc
-uipatdirs=options.uipatdirs;
+uipatdirs = options.uipatdirs;
 
 if isempty(uipatdirs)
-    uipatdirs={'No Patient Selected'};
-end
-if ~iscell(uipatdirs)
-   uipatdirs={uipatdirs}; 
+    uipatdirs = {'No Patient Selected'};
 end
 
-if length(uipatdirs)>1 && ~isempty(which('parpool')) && options.prefs.pp.do && ~strcmp(cmd,'export') % do parallel processing if available and set in ea_prefs.
-    try delete(gcp); end
-    pp=parpool(options.prefs.pp.profile,options.prefs.pp.csize);
-    
-    for pat=1:length(uipatdirs)
-        % set patient specific options
-        opts{pat}=options;
-        opts{pat}.root=[fileparts(uipatdirs{pat}),filesep];
-        [~,thispatdir]=fileparts(uipatdirs{pat});
-        opts{pat}.patientname=thispatdir;
+if ischar(uipatdirs)
+   uipatdirs = {uipatdirs};
+end
+
+% do parallel processing if available and set in ea_prefs.
+if length(uipatdirs)>1 && ~isempty(which('parpool')) && options.prefs.pp.do && ~strcmp(cmd,'export')
+    try
+        delete(gcp('nocreate'));
     end
-    
-    parfor pat=1:length(uipatdirs)
+
+    pp = parpool(options.prefs.pp.profile, options.prefs.pp.csize);
+
+    opts = cell(1, length(uipatdirs));
+    for pat = 1:length(opts)
+        % set patient specific options
+        opts{pat} = options;
+        opts{pat}.root = [fileparts(uipatdirs{pat}),filesep];
+        [~, opts{pat}.patientname] = fileparts(uipatdirs{pat});
+    end
+
+    parfor pat = 1:length(uipatdirs)
         % run main function
         try
-            switch cmd
-                case 'run'
-                    ea_autocoord(opts{pat});
-            end
+            ea_autocoord(opts{pat});
         catch
-            warning([opts{pat}.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
-        end      
+            warning([opts{pat}.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.']);
+        end
     end
+
     delete(pp);
 else
     switch cmd
         case 'export'
-            ea_export(options); 
+            % mark the lead task as exported job
+            options.exportedJob = 1;
+            ea_export(options);
         case 'run'
-            for pat=1:length(uipatdirs)
+            for pat = 1:length(uipatdirs)
                 % set patient specific options
-                options.root=[fileparts(uipatdirs{pat}),filesep];
-                [~,thispatdir]=fileparts(uipatdirs{pat});
-                options.patientname=thispatdir;
-                
+                options.root = [fileparts(uipatdirs{pat}),filesep];
+                [~, options.patientname] = fileparts(uipatdirs{pat});
+
                 % run main function
-                if length(uipatdirs)>1 % multi mode. Dont stop at errors.
+                if length(uipatdirs) > 1 % multi mode. Dont stop at errors.
                     try
                         % autoadjust MRCT modality for this patient:
                         try
-                            modality=ea_checkctmrpresent([options.root,options.patientname,filesep]);
-                            options.modality=find(modality,1);  % prefer MR rather than CT if both are present
+                            modality = ea_checkctmrpresent([options.root,options.patientname,filesep]);
+                            options.modality = find(modality,1);  % prefer MR rather than CT if both are present
                         end
                         ea_autocoord(options);
                     catch
@@ -97,6 +101,6 @@ else
     end
 end
 
-if needtoexit % on a cluster, need to close Matlab properly after job is done.
+if needtoexit % close Matlab after job is done.
     exit
 end

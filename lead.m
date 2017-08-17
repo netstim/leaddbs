@@ -52,18 +52,17 @@ function lead_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead (see VARARGIN)
 
-%#ea_prefs_default.mat
-%#ea_prefs_default.m
-
-
 % Choose default command line output for lead
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
-ea_setpath;
-if isdeployed
-fprintf(1, '%s', ctfroot);
+
+% set lead path
+if ~isdeployed
+    ea_setpath;
+else
+    fprintf(1, '%s\n', ctfroot);
 end
 
 ea_compat_data;

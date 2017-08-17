@@ -64,7 +64,7 @@ end
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 for anatf=1:length(anatpresent)
     disp(['Including ',anatpresent{anatf},' data for (grey-matter) normalization']);
-    
+
     to{cnt}=[ea_space(options),ea_det_to(anatpresent{anatf},spacedef),'.nii'];
         if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
         ea_maskimg(options,[directory,anatpresent{anatf}],bprfx);
@@ -76,14 +76,14 @@ for anatf=1:length(anatpresent)
 end
 
 
-ea_ants_schoenecker(to,from,[directory,options.prefs.gprenii],weights,metrics,options,0);
+ea_ants_schoenecker(to,from,[directory,options.prefs.gprenii],weights,metrics);
 ea_apply_normalization(options);
 
 %% add methods dump:
 [scit,lcit]=ea_getspacedefcit;
 cits={
     'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
-    'Schonecker, T., Kupsch, A., Kuhn, A. A., Schneider, G. H., & Hoffmann, K. T. (2009). Automated optimization of subcortical cerebral MR imaging-atlas coregistration for improved postoperative electrode localization in deep brain stimulation. AJNR American Journal of Neuroradiology, 30(10), 1914?1921. http://doi.org/10.3174/ajnr.A1741' 
+    'Schonecker, T., Kupsch, A., Kuhn, A. A., Schneider, G. H., & Hoffmann, K. T. (2009). Automated optimization of subcortical cerebral MR imaging-atlas coregistration for improved postoperative electrode localization in deep brain stimulation. AJNR American Journal of Neuroradiology, 30(10), 1914?1921. http://doi.org/10.3174/ajnr.A1741'
     };
 if ~isempty(lcit)
     cits=[cits;{lcit}];
@@ -93,7 +93,7 @@ switch options.prefs.machine.normsettings.schoenecker_movim
         addprepoststr=' Unlike in the original publication, the three-step registration was estimated based on the preoperative acquisition and applied to the (co-registered) postoperative acquisition.';
     case 2 % postoperative image was used
         addprepoststr='';
-        
+
 end
 ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using a',...
     ' three-step linear affine registration as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/). This linear registration protocol follows the approach described in Schonecker et al. 2009.',...

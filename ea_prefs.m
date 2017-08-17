@@ -1,51 +1,61 @@
-function prefs=ea_prefs(patientname)
-%#ea_prefs_default
-if ~exist('patientname','var')
-    patientname='';
+function prefs = ea_prefs(patientname, context)
+
+if ~exist('patientname', 'var')
+    patientname = '';
+end
+
+% 'normal' context by default. If context is not 'normal' (cluster run or
+% exported job case), 'machine' settings will not be added to 'prefs' here.
+% The value will be read from options.prefs.machines.
+if ~exist('context', 'var')
+    context = 'normal';
 end
 
 % get default prefs
-prefs=ea_prefs_default(patientname);
-% now overwrite with user prefs stored in /home
-home=ea_gethome;
-uid=['ea_prefs_',dash2sub(ea_generate_guid)];
+dprefs = ea_prefs_default(patientname);
+dmachine = load([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat']);
+
+% check user prefs
+home = ea_gethome;
+
 if isdeployed
-    disp(['Running Lead-DBS in compiled mode, CTFROOT=',ea_getearoot,'; HOME=',home,'.']);
+    disp(['Running Lead-DBS in compiled mode, CTFROOT=', ea_getearoot, '; HOME=', home, '.']);
 end
 
-if ~exist([home,'.ea_prefs.m'],'file')
-    copyfile([ea_getearoot,'common',filesep,'ea_prefs_default.m'],[home,'.ea_prefs.m']);
-end
-if ~exist([home,'.ea_prefs.mat'],'file')
-    copyfile([ea_getearoot,'common',filesep,'ea_prefs_default.mat'],[home,'.ea_prefs.mat']);
+if ~exist([home, '.ea_prefs.m'], 'file')
+    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default.m'], [home, '.ea_prefs.m']);
 end
 
+if ~exist([home, '.ea_prefs.mat'], 'file')
+    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat'], [home, '.ea_prefs.mat']);
+end
 
-defmachine=load([ea_getearoot,'common',filesep,'ea_prefs_default.mat']);
-defmachine=defmachine.machine;
+% load user prefs
 try
-    copyfile([home,'.ea_prefs.m'],[ea_getearoot,uid,'.m'])
-    uprefs=feval(uid,patientname);
-    delete([ea_getearoot,uid,'.m']);
-    load([home,'.ea_prefs.mat']);
+    % file name starting with '.' is not a valid function/script name, so
+    % copy it to a temp file and then run it.
+    tempPrefs = ['ea_prefs_', strrep(ea_generate_guid, '-', '_')];
+    copyfile([home, '.ea_prefs.m'], [ea_getearoot, tempPrefs, '.m'])
+    uprefs = feval(tempPrefs, patientname);
+    delete([ea_getearoot, tempPrefs, '.m']);
+    umachine = load([home, '.ea_prefs.mat']);
 catch
-   warning('User preferences file could not be read. Please set write permissions to Lead-DBS install directory accordingly.');
-   return
+    warning('User preferences file could not be read. Please set write permissions to Lead-DBS install directory accordingly.');
+    return
 end
 
-prefs=combinestructs(prefs,uprefs);
+% combine default prefs and user prefs
+prefs = combinestructs(dprefs, uprefs);
 
-machine=combinestructs(defmachine,machine);
-
-prefs.machine=machine;
-
-
-
-function str=dash2sub(str) % replaces subscores with spaces
-str(str=='-')='_';
+% add machine prefs only when lead task is not running on a cluster or with
+% exported job file. In both cases, machine prefs will be defined in
+% options.prefs.machine.
+if strcmp(context, 'normal')
+    prefs.machine = combinestructs(dmachine.machine, umachine.machine);
+end
 
 
-function prefs=combinestructs(prefs,uprefs)
+function prefs = combinestructs(prefs, uprefs)
 
 ufn = fieldnames(uprefs);
 
@@ -58,7 +68,7 @@ end
 for sa_ix = 1:length(uprefs)
     for fn_ix = 1:length(ufn)
         fn = ufn{fn_ix};
-        if isstruct(uprefs(sa_ix).(fn)) && isfield(prefs(sa_ix),fn)
+        if isstruct(uprefs(sa_ix).(fn)) && isfield(prefs(sa_ix), fn)
             prefs(sa_ix).(fn) = combinestructs(prefs(sa_ix).(fn), uprefs(sa_ix).(fn));
         else
             prefs(sa_ix).(fn) = uprefs(sa_ix).(fn);

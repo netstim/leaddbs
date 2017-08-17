@@ -5,29 +5,10 @@ fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
-
-[outputdir, outputname, ~] = fileparts(outputimage);
-if outputdir
-    outputbase = [outputdir, filesep, outputname];
-else
-    outputbase = ['.', filesep, outputname];
-end
-
 if ischar(fixedimage)
     fixedimage={fixedimage};
 elseif ~iscell(fixedimage)
-	ea_error('Please supply variable fixedimage as either char or cellstring');
-end
-
-
-
-if nargin>3
-    weights=varargin{4};
-    metrics=varargin{5};
-%     options=varargin{6};
-else
-    weights=ones(length(fixedimage),1);
-    metrics=repmat({'MI'},length(fixedimage),1);
+    ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 
 if ischar(movingimage)
@@ -36,10 +17,27 @@ elseif ~iscell(movingimage)
     ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 
+if nargin >= 4
+    weights = varargin{4};
+else
+    weights = ones(length(fixedimage),1);
+end
+
+if nargin >= 5
+    metrics = varargin{5};
+else
+    metrics = repmat({'MI'},length(fixedimage),1);
+end
+
+[outputdir, outputname, ~] = fileparts(outputimage);
+if outputdir
+    outputbase = [outputdir, filesep, outputname];
+else
+    outputbase = ['.', filesep, outputname];
+end
+
 directory=fileparts(movingimage{1});
 directory=[directory,filesep];
-
-
 
 for fi=1:length(fixedimage)
     fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
@@ -105,13 +103,13 @@ for fi=1:length(fixedimage)
         case 'GC'
             suffx=',15,Random,0.05';
     end
-    
+
     try
         rigidstage=[rigidstage,...
         ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
     catch
         keyboard
-    end    
+    end
 end
 
 affinestage = [' --transform Affine[0.1]'...

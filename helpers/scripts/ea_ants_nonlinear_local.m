@@ -1,38 +1,14 @@
-function ea_ants_nonlinear(varargin)
+function ea_ants_nonlinear_local(varargin)
 % Wrapper for ANTs nonlinear registration
 
 fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
-
-[outputdir, outputname, ~] = fileparts(outputimage);
-if outputdir
-    outputbase = [outputdir, filesep, outputname];
-else
-    outputbase = ['.', filesep, outputname];
-end
-
 if ischar(fixedimage)
     fixedimage={fixedimage};
 elseif ~iscell(fixedimage)
-	ea_error('Please supply variable fixedimage as either char or cellstring');
-end
-
-
-
-if nargin>3
-    weights=varargin{4};
-    metrics=varargin{5};
-%     options=varargin{6};
-else
-    weights=ones(length(fixedimage),1);
-    metrics=repmat({'MI'},length(fixedimage),1);
-end
-try
-    interp=varargin{7};
-catch
-    interp='Linear';
+    ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 
 if ischar(movingimage)
@@ -41,10 +17,33 @@ elseif ~iscell(movingimage)
     ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 
+if nargin >= 4
+    weights = varargin{4};
+else
+    weights = ones(length(fixedimage),1);
+end
+
+if nargin >= 5
+    metrics = varargin{5};
+else
+    metrics = repmat({'MI'},length(fixedimage),1);
+end
+
+if nargin >= 6
+    interp = varargin{6};
+else
+    interp = 'Linear';
+end
+
+[outputdir, outputname, ~] = fileparts(outputimage);
+if outputdir
+    outputbase = [outputdir, filesep, outputname];
+else
+    outputbase = ['.', filesep, outputname];
+end
+
 directory=fileparts(movingimage{1});
 directory=[directory,filesep];
-
-
 
 for fi=1:length(fixedimage)
     fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
@@ -77,13 +76,9 @@ end
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
-
-    convergence='[50x25x10x5,1e-7,10]';
-    shrinkfactors='12x8x4x1';
-    smoothingssigmas='4x4x2x1vox';
-
-
-
+convergence='[50x25x10x5,1e-7,10]';
+shrinkfactors='12x8x4x1';
+smoothingssigmas='4x4x2x1vox';
 
 mask=ea_load_nii(movingimage{1});
 mask.img=mask.img~=0;
@@ -98,7 +93,7 @@ synstage = [' --transform BSplineSyN[0.1,26,0,3]'...
             ' --masks [NULL,',mask.fname,']'];
 
         for fi=1:length(fixedimage)
-            
+
             suffx=',4,Random,0.5';
             synstage=[synstage,...
                 ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];

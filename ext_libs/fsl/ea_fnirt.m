@@ -13,8 +13,9 @@ if isempty(dir([movingimage_flirt,'.nii*']))
     ea_flirt(fixedimage, movingimage, movingimage_flirt, 1);
 end
 
-prefs=ea_prefs;
-if prefs.machine.normsettings.fsl_skullstrip % skullstripping is on
+umachine = load([ea_gethome, '.ea_prefs.mat']);
+normsettings = umachine.machine.normsettings;
+if normsettings.fsl_skullstrip % skullstripping is on
     movingimage_bet_mask = [fileparts(movpath), filesep, 'bet_', movname, '_mask'];
     [fixpath, fixname] = ea_niifileparts(fixedimage);
     fixedimage_bet_mask = [fileparts(fixpath), filesep, 'bet_', fixname, '_mask'];
@@ -64,7 +65,6 @@ fprintf('\n\nRunning FSL FNIRT: %s\n\n', movingimage);
 %               ' --refderiv=0' ...
 %               ' --applyrefmask=1,1,1,1,1,1' ...
 %               ' --applyinmask=1'];
-
 
 fnirtstage = [' --ref=', ea_path_helper(fixedimage), ...
               ' --in=', ea_path_helper(movingimage), ...

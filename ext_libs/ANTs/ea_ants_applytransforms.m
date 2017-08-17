@@ -7,6 +7,7 @@ ea_libs_helper;
 options = varargin{1};
 
 useinverse = 0;
+
 if nargin > 1 % manual application
     fis = varargin{2};
     ofis = varargin{3};

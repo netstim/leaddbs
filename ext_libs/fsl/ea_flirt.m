@@ -25,8 +25,9 @@ end
 
 fprintf('\n\nRunning FSL FLIRT: %s\n\n', movingimage);
 
-prefs=ea_prefs;
-if prefs.machine.normsettings.fsl_skullstrip % skullstripping is on
+umachine = load([ea_gethome, '.ea_prefs.mat']);
+normsettings = umachine.machine.normsettings;
+if normsettings.fsl_skullstrip % skullstripping is on
     fprintf('\nStart skullstripping...\n\n');
     % Prepare bet image for flirt, generate the brain masks '*_bet_mask.nii'
     [movpath, movname] = ea_niifileparts(movingimage);

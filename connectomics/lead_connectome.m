@@ -305,20 +305,19 @@ function runsavebutn_Callback(hObject, eventdata, handles)
 
 % check wether this is run or save (independent or dependent mode)
 
-cfig=handles.leadfigure;
 options=ea_handles2options(handles);
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 options.leadprod = 'connectome';
-isindependent=getappdata(handles.leadfigure,'isindependent');
-options.uipatdirs=getappdata(cfig,'uipatdir');
 ea_savelcopts(handles)
 
 % run execution:
-ea_busyaction('on',cfig,'connectome');
+ea_busyaction('on', handles.leadfigure, 'connectome');
 
-if isindependent
+if getappdata(handles.leadfigure,'isindependent')
     ea_run('run',options);
 end
-ea_busyaction('off',cfig,'connectome');
+
+ea_busyaction('off', handles.leadfigure, 'connectome');
 
 
 % --- Executes on button press in degree_centrality.

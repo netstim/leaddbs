@@ -10,9 +10,11 @@ function ea_autocoord(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
+% set patientdir
+options.prefs.patientdir = options.patientname;
+
 % get accurate electrode specifications and save it in options.
 options=ea_resolve_elspec(options);
-options.prefs=ea_prefs(options.patientname);
 
 directory = [options.root,options.patientname,filesep];
 
@@ -83,7 +85,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         end
 
         % Reslice(interpolate) preoperative anatomical image if needed
-        try        ea_resliceanat(options); end
+        try ea_resliceanat(options); end
 
         try
             fs = fopen([directory,'.pp'],'w');
@@ -113,14 +115,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         % 1. coreg all available preop MRI
         ea_checkcoregallmri(options,0,1); % check and coregister all preoperative MRIs here.
 
-        % 2. then coreg post to pre MRI:
-        %try % fix me - can we get rid of this try/catch here?
+        % 2. then coreg postop MRI to preop MRI
         ea_coregmr(options);
 
-        %end
-
-        % 3. finally perform normalization based on dominant or all preop
-        % MRIs:
+        % 3. finally perform normalization based on dominant or all preop MRIs
         ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
         eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
 
@@ -156,8 +154,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
     if options.doreconstruction
         ea_checkfiles(options);
-        prefs=ea_prefs;
-        if ~prefs.env.dev % hard set to TRAC/CORE if not in dev mode.
+        if ~options.prefs.env.dev % hard set to TRAC/CORE if not in dev mode.
             options.reconmethod=1;
         end
 

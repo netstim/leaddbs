@@ -76,7 +76,7 @@ if includeatlas % append as last to make criterion converge on this one.
    cnt=cnt+1;
 end
 
-ea_ants_nonlinear(to,from,[directory,options.prefs.gprenii],weights,options,options.prefs.machine.normsettings.ants_scrf);
+ea_ants_nonlinear(to,from,[directory,options.prefs.gprenii],weights,options);
 ea_apply_normalization(options);
 
 %% add methods dump:

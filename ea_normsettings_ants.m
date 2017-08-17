@@ -61,11 +61,7 @@ guidata(hObject, handles);
 set(handles.setfig,'Name','Normalization Settings');
 set(handles.titletext,'String','ANTs Defaults');
 
-
-
-
 % list presets
-
 earoot=ea_getearoot;
 presf=[earoot,'ext_libs',filesep,'ANTs',filesep,'presets',filesep];
 ndir=dir([presf,'ea_antspreset_*.m']);
@@ -81,15 +77,17 @@ set(handles.pcpopup,'String',namecell);
 prefs=ea_prefs('');
 [~,ix]=ismember(prefs.machine.normsettings.ants_preset,getappdata(handles.pcpopup,'funcell'));
 if ix % if has prior selection
-set(handles.pcpopup,'Value',ix);
+    set(handles.pcpopup,'Value',ix);
 end
+
 [~,ix]=ismember(prefs.machine.normsettings.ants_metric,get(handles.metric,'String'));
 if ix % if has prior selection
-set(handles.metric,'Value',ix);
+    set(handles.metric,'Value',ix);
 end
+
 [~,ix]=ismember(prefs.machine.normsettings.ants_strategy,get(handles.strategy,'String'));
 if ix % if has prior selection
-set(handles.strategy,'Value',ix);
+    set(handles.strategy,'Value',ix);
 end
 
 
@@ -108,7 +106,7 @@ set(handles.stagesep,'Value',prefs.machine.normsettings.ants_stagesep);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_normsettings_ants_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_normsettings_ants_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB

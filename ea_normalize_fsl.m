@@ -24,8 +24,7 @@ if ischar(options) % return name of method.
     return
 end
 
-
-% ANTs nolinear registration
+% FSL FNIRT nonlinear registration
 directory=[options.root,options.patientname,filesep];
 ea_fnirt([ea_space(options),options.primarytemplate,'.nii'],...
          [directory,options.prefs.prenii_unnormalized],...

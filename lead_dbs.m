@@ -219,17 +219,16 @@ function run_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-leadfigure=handles.leadfigure;
-ea_busyaction('on',leadfigure,'dbs');
+ea_busyaction('on', handles.leadfigure, 'dbs');
 
-options=ea_handles2options(handles);
+options = ea_handles2options(handles);
+options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
+
 options.leadprod = 'dbs';
-
-options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 ea_run('run',options);
 
-ea_busyaction('off',leadfigure,'dbs');
+ea_busyaction('off', handles.leadfigure, 'dbs');
 
 
 function edit1_Callback(hObject, eventdata, handles)
@@ -1176,16 +1175,16 @@ function exportcode_Callback(hObject, eventdata, handles)
 % hObject    handle to exportcode (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-leadfigure=handles.leadfigure;
-ea_busyaction('on',leadfigure,'dbs');
+ea_busyaction('on', handles.leadfigure, 'dbs');
 
-options=ea_handles2options(handles);
+options = ea_handles2options(handles);
+options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 
-options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+options.leadprod = 'dbs';
 
 ea_run('export',options);
 
-ea_busyaction('off',leadfigure,'dbs');
+ea_busyaction('off', handles.leadfigure, 'dbs');
 
 
 % --- Executes during object creation, after setting all properties.

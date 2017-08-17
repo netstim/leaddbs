@@ -70,21 +70,10 @@ end
 % for now disable space dropdown
 set(handles.vizspacepopup,'enable','off');
 
-options.prefs=ea_prefs('');
+options.prefs = ea_prefs('');
 
 % load atlassets
-as=dir(ea_space(options,'atlases'));
-asc=cell(0);
-cnt=1;
-for i=1:length(as)
-    if as(i).isdir
-    asc{cnt}=as(i).name;
-    cnt=cnt+1;
-    end
-end
-
-% load atlassets
-ea_listatlassets(options,handles,1);
+ea_listatlassets(options, handles, 1);
 
 % list templates
 list=ea_assignbackdrop('list',options,'Patient');

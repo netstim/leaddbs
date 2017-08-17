@@ -1,11 +1,12 @@
-function apref=ea_antspreset_effective_lowvariance(list)
-if nargin % return name of preset
-    apref='Effective (Low Variance)';
+function apref = ea_antspreset_effective_lowvariance(cmd)
+
+if ischar(cmd) % 'query' mode, return the name of the preset
+    apref = 'Effective (Low Variance)';
     return
 end
 
-prefs=ea_prefs;
-switch prefs.machine.normsettings.ants_metric
+normsettings = cmd; % cmd is the 'normsettings' struct
+switch normsettings.ants_metric
     case 'Mutual Information'
         apref.metric='MI';
         apref.metricsuffix=',32,Random,0.25';
@@ -17,7 +18,7 @@ switch prefs.machine.normsettings.ants_metric
         apref.metricsuffix=',15,Random,0.05';
 end
 
-switch prefs.machine.normsettings.ants_strategy
+switch normsettings.ants_strategy
     case 'SyN'
         apref.antsmode='SyN';
         apref.antsmode_suffix='[0.3,4,3]';

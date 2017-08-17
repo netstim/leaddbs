@@ -1,4 +1,4 @@
-function prefs=ea_prefs(patientname)
+function prefs = ea_prefs(patientname)
 
 % determine preferences here. For filenames, the variable 'patientname' can
 % be used in string-handling. This variable will be a string with the same name as the patient
@@ -7,7 +7,7 @@ function prefs=ea_prefs(patientname)
 % load loaded prefs (-> prefs.lp)
 try
     load([ea_getearoot,'ea_prefs']);
-    prefs.lp=lp;
+    prefs.lp = lp;
 end
 
 %% adjust to user
@@ -46,9 +46,6 @@ prefs.gsagnii='glpostop_sag.nii';
 prefs.gctnii='glpostop_ct.nii';
 prefs.tp_gctnii=['tp_',prefs.gctnii];
 
-
-
-
 %% connectome files:
 prefs.rest_prefix='res*.nii'; % raw resting state fMRI data search string
 prefs.rest_default='rest.nii'; % default for dcm2nii export.
@@ -80,7 +77,6 @@ prefs.dti='dti.nii';
 prefs.bval='dti.bval';
 prefs.bvec='dti.bvec';
 prefs.sampledtidicom='sample_dti_dicom.dcm'; % sample DICOM file of DTI image (used for trackvis export).
-
 
 prefs.normmatrix='lmat.txt';
 
@@ -179,7 +175,6 @@ prefs.addfibers={}; % additional fibers to show.
 prefs.native.warp='inverse'; % set to 'tpm' in case you wish to create a atlas-specific tpm to warp atlases, set to 'inverse' to apply the inverse transform of your normalization.
 
 %% lead server:
-
 prefs.ls.autosave=0;
 
 %% environment
@@ -188,8 +183,6 @@ prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in 
 
 %% xelatex executable path:
 prefs.ltx.pdfconverter=''; % set path to xelatex here (for PDF export)
-
-
 
 prefs.ls.dir=''; % set path to lead server here (for web export)
 prefs.ixi.dir=''; % set path to ixi database here

@@ -61,35 +61,25 @@ guidata(hObject, handles);
 % UIWAIT makes lead_group wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 
+options.earoot = ea_getearoot;
+options.prefs = ea_prefs('');
+setappdata(handles.leadfigure,'earoot',options.earoot);
+
 % Build popup tables:
 
 % atlassets:
-options.earoot=ea_getearoot;
-options.prefs=ea_prefs('');
-setappdata(handles.leadfigure,'earoot',options.earoot);
-as=dir([ea_space(options,'atlases')]);
-asc=cell(0);
-cnt=1;
-for i=1:length(as)
-    if as(i).isdir
-        asc{cnt}=as(i).name;
-        cnt=cnt+1;
-    end
-end
-excludes={'.','..'};
-asc(ismember(asc,excludes))=[];
+atlases = dir(ea_space(options,'atlases'));
+atlases = {atlases(cell2mat({atlases.isdir})).name};
+atlases = atlases(cellfun(@(x) ~strcmp(x(1),'.'), atlases));
+atlases{end+1} = 'Use none';
 
-asc{end+1}='Use none';
-
-set(handles.atlassetpopup,'String',asc);
-set(handles.atlassetpopup,'String',asc);
-[~,defix]=ismember(options.prefs.atlases.default,asc);
+set(handles.atlassetpopup,'String', atlases);
+[~, defix]=ismember(options.prefs.atlases.default, atlases);
 set(handles.atlassetpopup,'Value',defix);
 
 % setup vat functions
 cnt=1;
-earoot=[ea_getearoot];
-ndir=dir([earoot,'ea_genvat_*.m']);
+ndir=dir([options.earoot,'ea_genvat_*.m']);
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);
     try
@@ -108,7 +98,7 @@ set(handles.elmodelselect,'String',[{'Patient specified'},ea_resolve_elspec]);
 
 % set background image
 set(gcf,'color','w');
-im=imread([earoot,'icons',filesep,'logo_lead_group.png']);
+im=imread([options.earoot,'icons',filesep,'logo_lead_group.png']);
 image(im);
 axis off;
 axis equal;
@@ -125,17 +115,14 @@ if get(handles.fiberspopup,'Value')>length(get(handles.fiberspopup,'String'))
 end
 
 % Labels:
-ll=dir([ea_space(options,'labeling'),'*.nii']);
-for lab=1:length(ll)
-    [~,n]=fileparts(ll(lab).name);
-    labelcell{lab}=n;
-end
+labeling = dir([ea_space(options,'labeling'),'*.nii']);
+labeling = cellfun(@(x) {regexprep(x, '\.nii(\.gz)?', '')}, {labeling.name});
 
-set(handles.labelpopup,'String',labelcell);
+set(handles.labelpopup,'String', labeling);
 
 try
-    priorselection=find(ismember(labelcell,stimparams.labelatlas)); % retrieve prior selection of fiberset.
-    if length(priorselection)==1
+    priorselection = find(ismember(labeling, stimparams.labelatlas)); % retrieve prior selection of fiberset.
+    if length(priorselection) == 1
         set(handles.labelpopup,'Value',priorselection); % set to prior selection
     else % if priorselection was a cell array with more than one entry, set to use all
         set(handles.labelpopup,'Value',lab+1); % set to use all
@@ -1365,7 +1352,7 @@ end
 
 function options=ea_setopts_local(handles)
 
-options.earoot=[ea_getearoot];
+options.earoot=ea_getearoot;
 options.verbose=3;
 options.sides=1:2; % re-check this later..
 options.atlasset=get(handles.atlassetpopup,'String');

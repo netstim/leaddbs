@@ -1,21 +1,36 @@
 function ea_ants_nonlinear(varargin)
 % Wrapper for ANTs nonlinear registration
 
-fixedimage=varargin{1};
-movingimage=varargin{2};
-outputimage=varargin{3};
+fixedimage = varargin{1};
+movingimage = varargin{2};
+outputimage = varargin{3};
+
+if ischar(fixedimage)
+    fixedimage = {fixedimage};
+elseif ~iscell(fixedimage)
+    ea_error('Please supply variable fixedimage as either char or cellstring');
+end
 
 if ischar(movingimage)
-    movingimage={movingimage};
+    movingimage = {movingimage};
 elseif ~iscell(movingimage)
     ea_error('Please supply variable fixedimage as either char or cellstring');
 end
-try
-    subcorticalrefine=varargin{6};
-catch
-    subcorticalrefine=0;
+
+if nargin >= 4
+    weights = varargin{4};
+else
+    weights = ones(length(fixedimage),1);
 end
-slabsupport=1; % check for slabs in anat files and treat slabs differently (add additional SyN stage only in which slabs are being used).
+
+if nargin >= 5
+    options = varargin{5};
+else
+    umachine = load([ea_gethome, '.ea_prefs.mat']);
+    options.prefs.machine.normsettings = umachine.machine.normsettings;
+end
+
+slabsupport = 1; % check for slabs in anat files and treat slabs differently (add additional SyN stage only in which slabs are being used).
 
 [outputdir, outputname, ~] = fileparts(outputimage);
 if outputdir
@@ -24,43 +39,37 @@ else
     outputbase = ['.', filesep, outputname];
 end
 
-if ischar(fixedimage)
-    fixedimage={fixedimage};
-elseif ~iscell(fixedimage)
-    ea_error('Please supply variable fixedimage as either char or cellstring');
-end
-
 if slabsupport
     disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
-    tmaskdir=fullfile(outputdir,'tmp');
+    tmaskdir = fullfile(outputdir,'tmp');
     if ~exist(tmaskdir,'dir')
         mkdir(tmaskdir);
     end
-    for mov=1:length(movingimage)
-        mnii=ea_load_nii(movingimage{mov});
-        mnii.img=~(mnii.img==0);
+    for mov = 1:length(movingimage)
+        mnii = ea_load_nii(movingimage{mov});
+        mnii.img = ~(mnii.img==0);
         if ~exist('AllMX','var')
-            AllMX=mnii.img;
+            AllMX = mnii.img;
         else
-            AllMX=AllMX.*mnii.img;
+            AllMX = AllMX.*mnii.img;
         end
-        sums(mov)=sum(mnii.img(:));
+        sums(mov) = sum(mnii.img(:));
     end
-    slabspresent=0; % default no slabs present.
+    slabspresent = 0; % default no slabs present.
 
     if length(sums)>1 % multispectral warp
-        slabs=sums(1:end-1)<(sums(end)*0.7);
+        slabs = sums(1:end-1) < (sums(end)*0.7);
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
-            slabmovingimage=movingimage(slabs); % move slabs to new cell slabimage
-            slabfixedimage=fixedimage(slabs);
-            movingimage(slabs)=[]; % remove slabs from movingimage
-            fixedimage(slabs)=[]; % remove slabs from movingimage
+            slabmovingimage = movingimage(slabs); % move slabs to new cell slabimage
+            slabfixedimage = fixedimage(slabs);
+            movingimage(slabs) = []; % remove slabs from movingimage
+            fixedimage(slabs) = []; % remove slabs from movingimage
 
             % write out slab mask
-            slabspresent=1;
-            mnii.dt=[4,0];
-            mnii.img=AllMX;
-            mnii.fname=[tmaskdir,filesep,'slabmask.nii'];
+            slabspresent = 1;
+            mnii.dt = [4,0];
+            mnii.img = AllMX;
+            mnii.fname = [tmaskdir,filesep,'slabmask.nii'];
             ea_write_nii(mnii);
             disp('Slabs found. Separating slabs to form an additional SyN stage.');
         else
@@ -68,32 +77,25 @@ if slabsupport
         end
     end
 else
-    slabspresent=0;
-    impmasks=repmat({'nan'},length(movingimage),1);
-end
-
-if nargin>3
-    weights=varargin{4};
-    options=varargin{5};
-else
-    weights=ones(length(fixedimage),1);
+    slabspresent = 0;
+    impmasks = repmat({'nan'},length(movingimage),1);
 end
 
 % Load preset parameter set
-[~,funname]=fileparts(options.prefs.machine.normsettings.ants_preset);
-apref=eval(funname);
+[~, funname] = fileparts(options.prefs.machine.normsettings.ants_preset);
+apref = feval(eval(['@', funname]), options.prefs.machine.normsettings);
 
-directory=fileparts(movingimage{1});
-directory=[directory,filesep];
+directory = fileparts(movingimage{1});
+directory = [directory,filesep];
 
-for fi=1:length(fixedimage)
+for fi = 1:length(fixedimage)
     fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
 end
-for fi=1:length(movingimage)
+for fi = 1:length(movingimage)
     movingimage{fi} = ea_path_helper(ea_niigz(movingimage{fi}));
 end
 
-if length(fixedimage)~=length(movingimage)
+if length(fixedimage) ~= length(movingimage)
     ea_error('Please supply pairs of moving and fixed images (can be repetitive).');
 end
 
@@ -117,17 +119,17 @@ end
 
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
-rigidconvergence=apref.convergence.rigid;
-rigidshrinkfactors=apref.shrinkfactors.rigid;
-rigidsmoothingssigmas=apref.smoothingsigmas.rigid;
+rigidconvergence = apref.convergence.rigid;
+rigidshrinkfactors = apref.shrinkfactors.rigid;
+rigidsmoothingssigmas = apref.smoothingsigmas.rigid;
 
-affineconvergence=apref.convergence.affine;
-affineshrinkfactors=apref.shrinkfactors.affine;
-affinesmoothingssigmas=apref.smoothingsigmas.affine;
+affineconvergence = apref.convergence.affine;
+affineshrinkfactors = apref.shrinkfactors.affine;
+affinesmoothingssigmas = apref.smoothingsigmas.affine;
 
-synconvergence=apref.convergence.syn;
-synshrinkfactors=apref.shrinkfactors.syn;
-synsmoothingssigmas=apref.smoothingsigmas.syn;
+synconvergence = apref.convergence.syn;
+synshrinkfactors = apref.shrinkfactors.syn;
+synsmoothingssigmas = apref.smoothingsigmas.syn;
 
 rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1}, ',1]' ...
     ' --transform Rigid[0.25]' ... % bit faster gradient step (see https://github.com/stnava/ANTs/wiki/Anatomy-of-an-antsRegistration-call)
@@ -136,9 +138,9 @@ rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1
     ' --smoothing-sigmas ', rigidsmoothingssigmas, ...
     ' --masks [NULL,NULL]'];
 
-for fi=1:length(fixedimage)
+for fi = 1:length(fixedimage)
     try
-        rigidstage=[rigidstage,...
+        rigidstage = [rigidstage,...
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
     catch
         keyboard
@@ -151,12 +153,10 @@ affinestage = [' --transform Affine[0.15]'... % bit faster gradient step (see ht
     ' --smoothing-sigmas ', affinesmoothingssigmas, ...
     ' --masks [NULL,NULL]'];
 
-for fi=1:length(fixedimage)
-    affinestage=[affinestage,...
+for fi = 1:length(fixedimage)
+    affinestage = [affinestage,...
         ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
 end
-
-
 
 synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
     ' --convergence ', synconvergence, ...
@@ -165,40 +165,40 @@ synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
     ' --masks [NULL,NULL]'];
 
 
-for fi=1:length(fixedimage)
-    synstage=[synstage,...
+for fi = 1:length(fixedimage)
+    synstage = [synstage,...
         ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
 end
 
 % add slab stage
 if slabspresent
-    slabstage=[' --transform ',apref.antsmode,apref.antsmode_suffix...
+    slabstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
         ' --convergence ', synconvergence, ...
         ' --shrink-factors ', synshrinkfactors ...
         ' --smoothing-sigmas ', synsmoothingssigmas, ...
         ' --use-estimate-learning-rate-once ', ...
         ' --masks [NULL,',[tmaskdir,filesep,'slabmask.nii'],']'];
-    fixedimage=[fixedimage,slabfixedimage];
-    movingimage=[movingimage,slabmovingimage];
+    fixedimage = [fixedimage,slabfixedimage];
+    movingimage = [movingimage,slabmovingimage];
 
-    for fi=1:length(fixedimage)
-        slabstage=[slabstage,...
+    for fi = 1:length(fixedimage)
+        slabstage = [slabstage,...
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
     end
 else
-    slabstage='';
+    slabstage = '';
 end
 
 % add subcortical refine stage:
-if subcorticalrefine
-    synmaskconvergence=apref.convergence.scrf;
-    synmaskshrinkfactors=apref.shrinkfactors.scrf;
-    synmasksmoothingssigmas=apref.smoothingsigmas.scrf;
+if  options.prefs.machine.normsettings.ants_scrf
+    synmaskconvergence = apref.convergence.scrf;
+    synmaskshrinkfactors = apref.shrinkfactors.scrf;
+    synmasksmoothingssigmas = apref.smoothingsigmas.scrf;
 
     if slabspresent
-        movingmask=[tmaskdir,filesep,'slabmask.nii'];
+        movingmask = [tmaskdir,filesep,'slabmask.nii'];
     else
-        movingmask='NULL';
+        movingmask = 'NULL';
     end
     synmaskstage = [' --transform ',apref.antsmode,apref.antsmode_suffix, ...
         ' --convergence ', synmaskconvergence, ...
@@ -206,12 +206,12 @@ if subcorticalrefine
         ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
         ' --use-estimate-learning-rate-once ', ...
         ' --masks [',ea_space([],'subcortical'),'secondstepmask','.nii',',',movingmask,']'];
-    for fi=1:length(fixedimage)
-        synmaskstage=[synmaskstage,...
+    for fi = 1:length(fixedimage)
+        synmaskstage = [synmaskstage,...
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
     end
 else
-    synmaskstage='';
+    synmaskstage = '';
 end
 
 ea_libs_helper
@@ -219,15 +219,15 @@ if options.prefs.machine.normsettings.ants_numcores
     setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',prefs.machine.normsettings.ants_numcores) % no num2str needed since stored as string.
 end
 
-props.outputbase=outputbase;
-props.ANTS=ANTS;
-props.outputimage=outputimage;
-props.rigidstage=rigidstage;
-props.affinestage=affinestage;
-props.synstage=synstage;
-props.slabstage=slabstage;
-props.synmaskstage=synmaskstage;
-props.directory=directory;
-props.stagesep=options.prefs.machine.normsettings.ants_stagesep;
+props.outputbase = outputbase;
+props.ANTS = ANTS;
+props.outputimage = outputimage;
+props.rigidstage = rigidstage;
+props.affinestage = affinestage;
+props.synstage = synstage;
+props.slabstage = slabstage;
+props.synmaskstage = synmaskstage;
+props.directory = directory;
+props.stagesep = options.prefs.machine.normsettings.ants_stagesep;
 
 ea_submit_ants_nonlinear(props);

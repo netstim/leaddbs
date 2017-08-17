@@ -1,22 +1,34 @@
-function [cmd]=ea_ants_schoenecker(varargin)
+function cmd =ea_ants_schoenecker(varargin)
 % Wrapper for ANTs nonlinear registration
 
 fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
-
+if ischar(fixedimage)
+    fixedimage={fixedimage};
+elseif ~iscell(fixedimage)
+    ea_error('Please supply variable fixedimage as either char or cellstring');
+end
 
 if ischar(movingimage)
     movingimage={movingimage};
 elseif ~iscell(movingimage)
     ea_error('Please supply variable fixedimage as either char or cellstring');
 end
-try
-    subcorticalrefine=varargin{7};
-catch
-    subcorticalrefine=0;
+
+if nargin >= 4
+    weights = varargin{4};
+else
+    weights = ones(length(fixedimage),1);
 end
+
+if nargin >= 5
+    metrics = varargin{5};
+else
+    metrics = repmat({'MI'},length(fixedimage),1);
+end
+
 slabsupport=1; % check for slabs in anat files and treat slabs differently (add additional SyN stage only in which slabs are being used).
 
 [outputdir, outputname, ~] = fileparts(outputimage);
@@ -24,12 +36,6 @@ if outputdir
     outputbase = [outputdir, filesep, outputname];
 else
     outputbase = ['.', filesep, outputname];
-end
-
-if ischar(fixedimage)
-    fixedimage={fixedimage};
-elseif ~iscell(fixedimage)
-    ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 
 if slabsupport
@@ -75,21 +81,8 @@ else
     impmasks=repmat({'nan'},length(movingimage),1);
 end
 
-
-if nargin>3
-    weights=varargin{4};
-    metrics=varargin{5};
-    options=varargin{6};
-else
-    weights=ones(length(fixedimage),1);
-    metrics=repmat({'MI'},length(fixedimage),1);
-end
-
-
 directory=fileparts(movingimage{1});
 directory=[directory,filesep];
-
-
 
 for fi=1:length(fixedimage)
     fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
@@ -117,8 +110,6 @@ else
     applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
     
 end
-
-
 
 if ~ispc
     [~, imgsize] = system(['bash -c "', HEADER, ' ',fixedimage{1}, ' 2"']);
@@ -150,7 +141,6 @@ affinemask2smoothingssigmas='0';
 
 
 % Rigid stage
-
 rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1}, ',1]' ...
     ' --transform Rigid[0.1]' ...
     ' --convergence ', rigidconvergence, ...
@@ -177,7 +167,6 @@ for fi=1:length(fixedimage)
 end
 
 % Affine stage
-
 affinestage = [' --transform Affine[0.1]'...
     ' --convergence ', affineconvergence, ...
     ' --shrink-factors ', affineshrinkfactors ...
@@ -198,7 +187,6 @@ for fi=1:length(fixedimage)
 end
 
 % 1. Mask stage
-
 if slabsupport && slabspresent
     % re-add slabs to the masked stages:
     
@@ -225,9 +213,7 @@ for fi=1:length(fixedimage)
         ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
-
 % 2. Mask stage
-
 affinestage_mask2 = [' --transform Affine[0.1]'...
     ' --convergence ', affinemask2convergence, ...
     ' --shrink-factors ', affinemask2shrinkfactors ...
@@ -247,16 +233,9 @@ for fi=1:length(fixedimage)
         ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
 end
 
-
-
-
-
-
 ea_libs_helper
+
 %setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS','8')
-
-
-
 
 cmd = [ANTS, ' --verbose 1', ...
     ' --dimensionality 3', ...
@@ -278,6 +257,5 @@ if ~ispc
 else
     system(cmd);
 end
-
 
 ea_conv_antswarps(directory);

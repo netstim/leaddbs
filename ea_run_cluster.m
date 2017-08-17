@@ -1,10 +1,17 @@
-function ea_run_cluster(~,~,clusterfunctionname,handles,cmd)
+function ea_run_cluster(~, ~, clusterfunctionname, handles, cmd)
 
-leadfig=handles.leadfigure;
-ea_busyaction('on',leadfig,'lead');
-cd(ea_getearoot);
-options=ea_handles2options(handles);
-options.macaquemodus=getappdata(handles.leadfigure,'macaquemodus');
+ea_busyaction('on', handles.leadfigure, 'lead');
+
+options = ea_handles2options(handles);
+options.macaquemodus = getappdata(handles.leadfigure,'macaquemodus');
+
+% handle 'prefs', 'lc' and 'd2' options
+options.prefs = ea_prefs('');
+options = ea_amendtoolboxoptions(options);
+
+% mark the lead task as exported job (cluster run is also marked as
+% exported job here)
+options.exportedJob = 1;
 
 if isfield(handles,'prod')
     if strcmp(handles.prod,'connectome')
@@ -12,24 +19,22 @@ if isfield(handles,'prod')
     end
 end
 
-uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 
-switch cmd 
+switch cmd
     case 'run'
-        for pat=1:length(uipatdirs)
+        for pat = 1:length(uipatdirs)   % submit the job one by one
             % set patient specific options
-            options.root=[fileparts(uipatdirs{pat}),filesep];
-            [~,thispatdir]=fileparts(uipatdirs{pat});
-            options.patientname=thispatdir;
-            options.uipatdirs=uipatdirs(pat); % only process one patient at a time on a cluster (all is submitted).
+            options.root = [fileparts(uipatdirs{pat}),filesep];
+            [~, options.patientname] = fileparts(uipatdirs{pat});
+            options.uipatdirs = uipatdirs(pat);
             % run main function
             feval(eval(['@',clusterfunctionname]),options);
         end
-        
+
     case 'export'
-        options.uipatdirs=uipatdirs;
-        options=ea_amendtoolboxoptions(options);
+        options.uipatdirs = uipatdirs;
         ea_export(options,clusterfunctionname);
 end
 
-ea_busyaction('off',leadfig,'lead');
+ea_busyaction('off', handles.leadfigure, 'lead');

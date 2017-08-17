@@ -15,7 +15,7 @@ options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower th
 %% set options
 %uipatdir=get(handles.patdir_choosebox,'String');
 
-options.earoot=[ea_getearoot];
+options.earoot = ea_getearoot;
 try % not working when calling from lead_anatomy
     options.dicomimp=get(handles.dicomcheck,'Value');
     options.assignnii=get(handles.assignnii,'Value');

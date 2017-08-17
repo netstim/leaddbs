@@ -5,16 +5,31 @@ fixedimage=varargin{1};
 movingimage=varargin{2};
 outputimage=varargin{3};
 
+if ischar(fixedimage)
+    fixedimage={fixedimage};
+elseif ~iscell(fixedimage)
+    ea_error('Please supply variable fixedimage as either char or cellstring');
+end
+
 if ischar(movingimage)
     movingimage={movingimage};
 elseif ~iscell(movingimage)
     ea_error('Please supply variable fixedimage as either char or cellstring');
 end
-try
-    subcorticalrefine=varargin{6};
-catch
-    subcorticalrefine=0;
+
+if nargin >= 4
+    weights = varargin{4};
+else
+    weights = ones(length(fixedimage),1);
 end
+
+if nargin >= 5
+    options = varargin{5};
+else
+    umachine = load([ea_gethome, '.ea_prefs.mat']);
+    options.prefs.machine.normsettings = umachine.machine.normsettings;
+end
+
 slabsupport=1; % check for slabs in anat files and treat slabs differently (add additional SyN stage only in which slabs are being used).
 
 [outputdir, outputname, ~] = fileparts(outputimage);
@@ -22,12 +37,6 @@ if outputdir
     outputbase = [outputdir, filesep, outputname];
 else
     outputbase = ['.', filesep, outputname];
-end
-
-if ischar(fixedimage)
-    fixedimage={fixedimage};
-elseif ~iscell(fixedimage)
-    ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 
 if slabsupport
@@ -47,7 +56,7 @@ if slabsupport
         sums(mov)=sum(mnii.img(:));
     end
     slabspresent=0; % default no slabs present.
-    
+
     if length(sums)>1 % multispectral warp
         slabs=sums(1:end-1)<(sums(end)*0.7);
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
@@ -55,7 +64,7 @@ if slabsupport
             slabfixedimage=fixedimage(slabs);
             movingimage(slabs)=[]; % remove slabs from movingimage
             fixedimage(slabs)=[]; % remove slabs from movingimage
-            
+
             % write out slab mask
             slabspresent=1;
             slabID=ea_generate_guid;
@@ -73,16 +82,9 @@ else
     impmasks=repmat({'nan'},length(movingimage),1);
 end
 
-if nargin>3
-    weights=varargin{4};
-    options=varargin{5};
-else
-    weights=ones(length(fixedimage),1);
-end
-
 % Load preset parameter set
-[~,funname]=fileparts(options.prefs.machine.normsettings.ants_preset);
-apref=eval(funname);
+[~, funname] = fileparts(options.prefs.machine.normsettings.ants_preset);
+apref = feval(eval(['@', funname]), options.prefs.machine.normsettings);
 
 directory=fileparts(movingimage{1});
 directory=[directory,filesep];
@@ -121,11 +123,11 @@ imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
     rigidconvergence=apref.convergence.rigid;
     rigidshrinkfactors=apref.shrinkfactors.rigid;
     rigidsmoothingssigmas=apref.smoothingsigmas.rigid;
-    
+
     affineconvergence=apref.convergence.affine;
     affineshrinkfactors=apref.shrinkfactors.affine;
     affinesmoothingssigmas=apref.smoothingsigmas.affine;
-    
+
     synconvergence=apref.convergence.syn;
     synshrinkfactors=apref.shrinkfactors.syn;
     synsmoothingssigmas=apref.smoothingsigmas.syn;
@@ -181,7 +183,7 @@ if slabspresent
         ' --masks [NULL,',[tmaskdir,filesep,'slabmask_',slabID,'.nii'],']'];
     fixedimage=[fixedimage,slabfixedimage];
     movingimage=[movingimage,slabmovingimage];
-    
+
     for fi=1:length(fixedimage)
         slabstage=[slabstage,...
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
@@ -191,11 +193,11 @@ else
 end
 
 % add subcortical refine stage:
-if subcorticalrefine
+if options.prefs.machine.normsettings.ants_scrf
     synmaskconvergence=apref.convergence.scrf;
     synmaskshrinkfactors=apref.shrinkfactors.scrf;
     synmasksmoothingssigmas=apref.smoothingsigmas.scrf;
-    
+
     if slabspresent
         movingmask=[tmaskdir,filesep,'slabmask_',slabID,'.nii'];
     else
@@ -219,6 +221,3 @@ ea_libs_helper
 if options.prefs.machine.normsettings.ants_numcores
     setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',prefs.machine.normsettings.ants_numcores) % no num2str needed since stored as string.
 end
-
-
-
