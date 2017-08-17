@@ -101,7 +101,7 @@ for side=1:length(options.sides)
     electrode.insulation(inscnt).faces=electrode.insulation(inscnt).faces(:,1:3);
     inscnt=inscnt+1;
     
-
+    
     
     ncnt=ncnt+1;
     
@@ -222,41 +222,41 @@ for side=1:length(options.sides)
             % define two points to define cylinder.
             X1=coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2);
             [no,fc,seeds,fcc,noc,fci,noi] = ea_segmented_cylinder_qq_ah(60,1,0.75,1,3,0.8);
-            
+            keyboard
             %     figure, plotmesh(no,fcc);
             %     figure, plotmesh(no,fci);
-    
+            
             %[ino,fci]=removedupnodes(ino,fci,1e-6);
             %[cno,fci]=removedupnodes(cno,fcc,1e-6);
-%            [cno,fci]=removeisolatednode(no,fcc);
-
- noc(:,1)=noc(:,1).*(elspec.contact_diameter/2);
+            %            [cno,fci]=removeisolatednode(no,fcc);
+            
+            noc(:,1)=noc(:,1).*(elspec.contact_diameter/2);
             noc(:,2)=noc(:,2).*(elspec.contact_diameter/2);
             noc(:,3)=noc(:,3).*(elspec.contact_length);
             
             noc(:,1)=noc(:,1)+X1(1);
             noc(:,2)=noc(:,2)+X1(2);
             noc(:,3)=noc(:,3)+X1(3);
-
-
- noi(:,1)=noi(:,1).*(elspec.contact_diameter/2);
+            
+            
+            noi(:,1)=noi(:,1).*(elspec.contact_diameter/2);
             noi(:,2)=noi(:,2).*(elspec.contact_diameter/2);
             noi(:,3)=noi(:,3).*(elspec.contact_length);
             
             noi(:,1)=noi(:,1)+X1(1);
             noi(:,2)=noi(:,2)+X1(2);
             noi(:,3)=noi(:,3)+X1(3);
-
-electrode.contacts(concnt).vertices=noc;
-electrode.contacts(concnt).faces=fcc(:,1:3);
+            
+            electrode.contacts(concnt).vertices=noc;
+            electrode.contacts(concnt).faces=fcc(:,1:3);
             concnt=concnt+1;
             
-electrode.insulation(inscnt).vertices=noi;
-electrode.insulation(inscnt).faces=fci(:,1:3);
+            electrode.insulation(inscnt).vertices=noi;
+            electrode.insulation(inscnt).faces=fci(:,1:3);
             inscnt=inscnt+1;
             
-                
-              
+            
+            
             
             % shape up:
             [vnode,velem,vface]=s2m(no,fc,1,3);
@@ -272,13 +272,13 @@ electrode.insulation(inscnt).faces=fci(:,1:3);
             no(:,3)=no(:,3)+X1(3);
             
             [volnode,volelem,volface]=s2m(no,fc,1,3);
-%             figure
-%             subplot(121);
-%             plotmesh(volnode,volelem);
+            %             figure
+            %             subplot(121);
+            %             plotmesh(volnode,volelem);
             
-
-
-
+            
+            
+            
             % Here we feed the whole segmented cylinder - including
             % insulation - to the .con element of meshel since division is
             % not needed at this point.
@@ -340,7 +340,7 @@ electrode.insulation(inscnt).faces=fci(:,1:3);
                 cnt=cnt+1;
                 vcnt=vcnt+1;
             end
-           
+            
             for ins=1:4
                 usecolor=elspec.lead_color;
                 
@@ -371,7 +371,7 @@ electrode.insulation(inscnt).faces=fci(:,1:3);
                 fvseg(ins).faces=elrender{side}(cnt).Faces;
                 fvseg(ins).vertices=elrender{side}(cnt).Vertices;
                 %figure, patch('vertices',fvseg(ins).vertices,'faces',fvseg(ins).faces,'facecolor','none');
-
+                
                 
                 log(cnt)=0; % insulation
                 
