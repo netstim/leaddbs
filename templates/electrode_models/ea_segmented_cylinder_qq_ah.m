@@ -188,8 +188,12 @@ bottom=top+2*N;
 fci=[fci,{top},{bottom}];
 
 keyboard
-figure, plotmesh(no,fci)
-[noi,velem,fci]=s2m(no,fci,1,3);
+% figure, plotmesh(no,fci,'EdgeColor','g','FaceColor','none')
+% hold on
+% plotmesh(no,fcc,'EdgeColor','r','FaceColor','none')
+% 
+% plotmesh(no,fc,'EdgeColor','b','FaceColor','none')
+
 
 %[noi,fci]=removedupnodes(no,fci,1e-6);
 
