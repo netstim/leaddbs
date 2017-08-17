@@ -1712,7 +1712,7 @@ if groupmode
     
     set(handles.headertxt,'String',['Stimulation parameters: ',elstruct(actpt).name]);
     gSv=getappdata(handles.stimfig,'gSv');
-    if isfield(gSv,'vatmodel');
+    if isfield(gSv,'vatmodel')
         if isempty(gSv.vatmodel)
             nms=get(handles.modelselect,'String');
             try
@@ -1738,15 +1738,7 @@ if groupmode
     % load gS - updated with each refresh:
     gS=getappdata(handles.stimfig,'gS');
     if isempty(grouploaded)
-        
-        
-        
-        
         if ~isempty(gS)
-            
-            
-            
-            
             % determine stimlabel from priorly set gS:
             for sub=1:length(gS)
                 stimlabel='gs';
@@ -1766,11 +1758,8 @@ if groupmode
         % now tell everyone that the figure has been opened for a while
         % already:
         setappdata(handles.stimfig,'grouploaded',1);
-        
-        
     end
 end
-
 
 if ~isempty(S) % initialization
     if ~isempty(S.model) % call from lead group
@@ -1852,8 +1841,6 @@ if nargin==3
 end
 
 setappdata(handles.stimfig,'S',S);
-
-
 
 % set stim amplitudes
 for source=1:4
@@ -2758,6 +2745,7 @@ gS=getappdata(handles.stimfig,'gS');
 actpt=getappdata(handles.stimfig,'actpt');
 elstruct=getappdata(handles.stimfig,'elstruct');
 options=getappdata(handles.stimfig,'options');
+
 if isempty(gS)
     clear gS
 end
@@ -2796,7 +2784,7 @@ if isempty(gS)
     clear gS
 end
 
-    S=ea_activecontacts(S);
+S=ea_activecontacts(S);
 gS(actpt)=S;
 setappdata(handles.stimfig,'gS',gS);
 
@@ -2805,6 +2793,7 @@ if (actpt-1)<1
 else
     setto=actpt-1;
 end
+
 try
     setappdata(handles.stimfig,'S',gS(setto));
 catch
