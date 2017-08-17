@@ -2378,7 +2378,7 @@ for pt=1:length(M.patient.list)
         end
 
         X=X.(fn{1});
-        switch get(handles.normregpopup,'Value');
+        switch get(handles.normregpopup,'Value')
             case 2
                 X(:)=ea_nanzscore(X(:));
             case 3
