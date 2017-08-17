@@ -16,10 +16,15 @@ function [cuts,expslice]=ea_writeplanes(varargin)
 
 options=varargin{1};
 % defaults:
-%elstruct=0;
+% elstruct=0;
 manualtracor=0;
 svfig=1;
 figvisible='on';
+
+if ~isfield(options,'shifthalfup')
+    options.shifthalfup=0;
+end
+
 if nargin==1
     % load prior results
     coords_mm=ea_load_reconstruction(options);
@@ -50,10 +55,6 @@ end
 
 if svfig
     disp('Exporting 2D slice output...');
-end
-
-if ~isfield(options,'shifthalfup')
-    options.shifthalfup=0;
 end
 
 scrsz = get(0,'ScreenSize');

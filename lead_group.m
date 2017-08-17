@@ -350,6 +350,8 @@ options.d3.isovscloud=M.ui.isovscloudpopup;
 options.d3.showisovolume=M.ui.showisovolumecheck;
 
 options.d3.colorpointcloud=M.ui.colorpointcloudcheck;
+options.d3.exportBB=0;	% don't export brainbrowser struct by default
+
 options.normregressor=M.ui.normregpopup;
 
 % Prepare isomatrix (includes a normalization step if M.ui.normregpopup
@@ -439,8 +441,9 @@ for pt=1:length(ptidx)
     M.elstruct(ptidx(pt)).pt=ptidx(pt);
 end
 
-    resultfig=ea_elvis(options,M.elstruct(ptidx));
-    zoom(3);
+resultfig=ea_elvis(options,M.elstruct(ptidx));
+zoom(3);
+
 ea_busyaction('off',handles.leadfigure,'group');
 
 
@@ -1073,7 +1076,7 @@ for pt=selection
     options=ea_resolve_elspec(options);
     options.prefs=ea_prefs(options.patientname);
     options.d3.verbose='off';
-    options.d3.elrendering=1; % hard code to viz electrodes in this setting.
+    options.d3.elrendering=1;	% hard code to viz electrodes in this setting.
     options.d3.colorpointcloud=0;
     options.native=0;
 
@@ -1851,7 +1854,7 @@ options.groupmode=1;
 options.modality=3; % use template image
 options=ea_amendtoolboxoptions(options);
 
-if strcmp(options.atlasset,'Use none');
+if strcmp(options.atlasset,'Use none')
     options.d2.writeatlases=1;
 else
     options.d2.writeatlases=1;
