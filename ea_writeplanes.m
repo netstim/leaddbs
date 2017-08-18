@@ -98,7 +98,7 @@ for side=1:length(options.sides)
 
             % Show MR-volume
             set(0,'CurrentFigure',cuts)
-            colormap parula
+            colormap gray
 
             switch tracor
 
