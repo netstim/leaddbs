@@ -1175,6 +1175,7 @@ function exportcode_Callback(hObject, eventdata, handles)
 % hObject    handle to exportcode (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 ea_busyaction('on', handles.leadfigure, 'dbs');
 
 options = ea_handles2options(handles);

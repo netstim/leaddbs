@@ -303,17 +303,18 @@ function runsavebutn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% check wether this is run or save (independent or dependent mode)
+ea_busyaction('on', handles.leadfigure, 'connectome');
 
-options=ea_handles2options(handles);
-options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+options = ea_handles2options(handles);
+options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
+
 options.leadprod = 'connectome';
+
+isindependent = getappdata(handles.leadfigure,'isindependent');
 ea_savelcopts(handles)
 
 % run execution:
-ea_busyaction('on', handles.leadfigure, 'connectome');
-
-if getappdata(handles.leadfigure,'isindependent')
+if isindependent
     ea_run('run',options);
 end
 
@@ -557,29 +558,25 @@ function dicomcheck_Callback(hObject, eventdata, handles)
 ea_storeui(handles);
 ea_deselectall_dicom(handles);
 
+
 % --- Executes on button press in exportcode.
 function exportcode_Callback(hObject, eventdata, handles)
 % hObject    handle to exportcode (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+ea_busyaction('on', handles.leadfigure, 'connectome');
 
 ea_savelcopts(handles);
 
-
-% run execution:
-
-cfig=handles.leadfigure;
-ea_busyaction('on',cfig,'connectome');
-
-
-options=ea_handles2options(handles);
-options.macaquemodus=0;
-options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+options = ea_handles2options(handles);
+options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
+options.macaquemodus = 0;
 
 ea_run('export',options);
 
-ea_busyaction('off',cfig,'connectome');
+ea_busyaction('off', handles.leadfigure, 'connectome');
+
 
 % --- Executes on button press in patdir_choosebox.
 function patdir_choosebox_Callback(hObject, eventdata, handles)

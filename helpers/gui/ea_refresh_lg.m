@@ -1,6 +1,5 @@
 function ea_refresh_lg(handles)
 
-
 ea_busyaction('on',handles.leadfigure,'group');
 % get model data
 disp('Getting model data...');
@@ -47,8 +46,9 @@ end
 disp('Refreshing selections on VI / FC Lists...');
 % refresh selections on VI and FC Lists:
 try
-
-    if max(M.ui.volumeintersections)>length(get(handles.vilist,'String'))
+    vlist = get(handles.vilist,'String');
+    if max(M.ui.volumeintersections) > length(vlist) || ...
+        (ischar(vlist) && strcmp(vlist, 'subcortical_regions'))
         set(handles.vilist,'Value',1);
     else
         set(handles.vilist,'Value',M.ui.volumeintersections);
@@ -56,7 +56,9 @@ try
 end
 
 try
-    if M.ui.fibercounts>length(get(handles.fclist,'String'))
+    fclist = get(handles.fclist,'String');
+    if M.ui.fibercounts > length(fclist) || ...
+        (ischar(fclist) && strcmp(fclist, 'whole-brain_regions'))
         set(handles.fclist,'Value',1);
     else
         set(handles.fclist,'Value',M.ui.fibercounts);
@@ -66,7 +68,6 @@ end
 M.groups.group=unique(M.patient.group); % STN, GPi, Thalamus, cZi
 %groupcolors=squeeze(ind2rgb(round([1:9]*(64/9)),jet));
 
-
 if ~isfield(M.groups,'color')
     M.groups.color=repmat(0.2,length(M.groups.group),3);
 end
@@ -75,10 +76,10 @@ if ~isequal(size(M.groups.color),[length(M.groups.group),3])
     M.groups.color=repmat(0.2,length(M.groups.group),3);
 end
 
+try set(handles.labelpopup,'Value',M.ui.labelpopup); end
+
 disp('Adding graph metrics to connectome popup...');
 % add graph metrics to connectome graph-metrics popup:
-
-
 thisparc=get(handles.labelpopup,'String');
 
 if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'))
@@ -86,42 +87,41 @@ if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'))
 else
     useparc=get(handles.labelpopup,'Value');
 end
+
 thisparc=thisparc{useparc};
 try
-    gmdir=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
+    gms = dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
+    gms = cellfun(@(x) {strrep(x, '.nii', '')}, {gms.name});
 
-    gms{1}='';
-    for gm=1:length(gmdir)
-        gms{gm}=gmdir(gm).name;
+    if ~isempty(gms)
+        set(handles.lc_graphmetric, 'String', gms);
+    else
+        set(handles.lc_graphmetric, 'Value', 1);
+        set(handles.lc_graphmetric, 'String', 'No graphic metric found');
     end
-    set(handles.lc_graphmetric,'String',gms);
 end
-
-
-
 
 %% modalities for VAT metrics:
 
 % dMRI:
 cnt=1;
 options.prefs=ea_prefs('');
-options.earoot=[ea_getearoot];
+options.earoot=ea_getearoot;
 try
     directory=[M.patient.list{1},filesep];
     modlist=ea_genmodlist(directory,thisparc,options);
-    modlist{end+1}='Patient-specific fiber tracts';
+    if ~ismember('Patient-specific fiber tracts' ,modlist)
+        modlist{end+1}='Patient-specific fiber tracts';
+    end
     modlist{end+1}='Do not calculate connectivity stats';
     set(handles.fiberspopup,'String',modlist);
-    if get(handles.fiberspopup,'Value')>length(modlist);
+    if get(handles.fiberspopup,'Value') > length(modlist)
         set(handles.fiberspopup,'Value',1);
     end
 end
 
-
 % update UI
 disp('Updating UI...');
-
-
 
 % % make setstimparams button green if set.
 % if isfield(M,'stimparams')
@@ -133,6 +133,7 @@ disp('Updating UI...');
 % else
 %     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 % end
+
 disp('Getting stimulation parameters...');
 S=getappdata(handles.leadfigure,'S');
 
@@ -146,7 +147,6 @@ else
     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 end
 
-
 % make choosecolors button green if chosen.
 if isfield(M.groups,'colorschosen')
     set(handles.choosegroupcolors,'BackgroundColor',[0.1;0.8;0.1]);
@@ -155,7 +155,6 @@ else
 end
 
 % update checkboxes:
-
 try set(handles.showactivecontcheck,'Value',M.ui.showactivecontcheck); end
 try set(handles.showpassivecontcheck,'Value',M.ui.showpassivecontcheck); end
 try set(handles.highlightactivecontcheck,'Value',M.ui.hlactivecontcheck); end
@@ -165,8 +164,6 @@ try set(handles.colorpointcloudcheck,'Value',M.ui.colorpointcloudcheck); end
 try set(handles.lc_smooth,'Value',M.ui.lc.smooth); end
 try set(handles.mirrorsides,'Value',M.ui.lc.mirrorsides); end
 
-
-
 % update selectboxes:
 try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
 try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
@@ -174,12 +171,20 @@ if M.ui.atlassetpopup>length(get(handles.atlassetpopup,'String'))
     M.ui.atlassetpopup=length(get(handles.atlassetpopup,'String'));
     set(handles.atlassetpopup,'Value',length(get(handles.atlassetpopup,'String')));
 end
-try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
-try set(handles.labelpopup,'Value',M.ui.labelpopup); end
+
+fiberspopup = get(handles.fiberspopup,'String');
+if ~(ischar(fiberspopup) && strcmp(fiberspopup, 'Fibers'))
+    try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
+end
+
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
 try set(handles.lc_normalization,'Value',M.ui.lc.normalization); end
-try set(handles.lc_graphmetric,'Value',M.ui.lc.graphmetric); end
+
+lc_graphmetric = get(handles.lc_graphmetric,'String');
+if ~(ischar(lc_graphmetric) && strcmp(lc_graphmetric, 'No graphic metric found'))
+    try set(handles.lc_graphmetric,'Value',M.ui.lc.graphmetric); end
+end
 
 % update enable-disable-dependencies:
 try
@@ -200,13 +205,13 @@ end
 if ~isempty(M.patient.list)
 
     % add modalities to NBS stats metric popup:
-disp('Adding modalities to NBS popup...');
+    disp('Adding modalities to NBS popup...');
 
     tryparcs=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'*_CM.mat']);
     if isempty(tryparcs)
-        set(handles.lc_metric,'String','No data found.');
+        set(handles.lc_metric, 'Value', 1);
+        set(handles.lc_metric, 'String', 'No data found');
     else
-
         avparcs=ones(length(tryparcs),1);
         for sub=1:length(M.patient.list)
             for parc=1:length(tryparcs)
@@ -238,12 +243,10 @@ disp('Adding modalities to NBS popup...');
         set(handles.lc_metric,'String',pcell);
     end
 
-disp('Loading localizations...');
+    disp('Loading localizations...');
     for pt=1:length(M.patient.list)
         % set stimparams based on values provided by user
-
         for side=1:2
-
             M.stimparams(pt,side).usefiberset=get(handles.fiberspopup,'String');
             try
                 M.stimparams(pt,side).usefiberset=M.stimparams(pt,side).usefiberset{M.ui.fiberspopup};
@@ -262,9 +265,8 @@ disp('Loading localizations...');
 
             M.stimparams(pt,side).showconnectivities=1;
         end
+
         % load localization
-
-
         [~,pats{pt}]=fileparts(M.patient.list{pt});
 
         M.elstruct(pt).group=M.patient.group(pt);
@@ -274,12 +276,11 @@ disp('Loading localizations...');
         options.sides=1:2;
         options.native=0;
         try
-
             [options.root,options.patientname]=fileparts(M.patient.list{pt});
             options.root=[options.root,filesep];
 
             [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
-            
+
             if M.ui.elmodelselect==1 % use patient specific elmodel
                 if exist('elmodel','var')
                     M.elstruct(pt).elmodel=elmodel;
@@ -308,7 +309,6 @@ disp('Loading localizations...');
                 end
             end
             M.elstruct(pt).markers=markers;
-
         catch
             if pt>1 % first patient has worked but some other patient seems not to have worked.
                 try
@@ -317,16 +317,11 @@ disp('Loading localizations...');
                 end
             end
         end
-
     end
 
-
-
     % load stats for group
-disp('Loading stats for group...');
+    disp('Loading stats for group...');
     for pt=1:length(M.patient.list)
-
-
         % (re-)load stats
         try
             load([M.patient.list{pt},filesep,'ea_stats']);
@@ -350,7 +345,7 @@ disp('Loading stats for group...');
                 M.vilist={};
             end
         end
-        
+
         %disp('Comparing stats with prior atlas intersection list...');
         % check and compare with prior atlas intersection list.
 
@@ -358,8 +353,6 @@ disp('Loading stats for group...');
 
             warning('Patient stats are inhomogeneous. Please re-run group analysis (Section Prepare DBS stats).');
         end
-
-
 
         priorfclist=M.fclist;
         try % try using stats from patient folder.
@@ -376,13 +369,10 @@ disp('Loading stats for group...');
         end
 
         % check and compare with prior fibertracking list.
-
         if fcdone
-
             if ~isempty(priorfclist) && ~isequal(priorfclist,M.fclist)
                 warning('Trying to analyse inhomogeneous patient group. Please re-run single subject lead analysis with patients using always the same labeling atlas.');
             end
-
         end
     end
 
@@ -394,18 +384,20 @@ else
     M.fclist={};
 end
 
-
 % store everything in Model
 disp('Storing everything in model...');
 
 setappdata(handles.leadfigure,'M',M);
 
 % refresh UI
+if ~isempty(M.vilist)
+    set(handles.vilist,'String',M.vilist);
+end
 
-set(handles.vilist,'String',M.vilist);
-set(handles.fclist,'String',M.fclist);
+if ~isempty(M.fclist)
+    set(handles.fclist,'String',M.fclist);
+end
 
 disp('Done.');
-
 
 ea_busyaction('off',handles.leadfigure,'group');

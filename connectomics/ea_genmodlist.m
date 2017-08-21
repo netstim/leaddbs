@@ -1,30 +1,11 @@
-function [modlist,sf]=ea_genmodlist(directory,selectedparc,options,vat)
+function [modlist, sf] = ea_genmodlist(directory,selectedparc,options,vat)
 cnt=1;
 modlist=cell(0);
 sf=[];
-% patientspecific part
 
 if ~exist('vat','var')
     vat=0;
 end
-
-if exist('directory','var')
-    % check if pat-specific fibertracts are present:
-    if exist([directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],'file');
-        modlist{cnt}='Patient-specific fiber tracts';
-        sf(cnt)=1;
-        cnt=cnt+1;
-    end
-
-    % fMRI:
-    % check if _tc are present:
-    if exist([directory,'connectomics',filesep,selectedparc,filesep,'rest_tc.mat'],'file');
-        modlist{cnt}='rest_tc';
-        sf(cnt)=2;
-        cnt=cnt+1;
-    end
-end
-
 
 % check for canonical fiber sets
 fdfibs=dir(ea_getconnectomebase('dmri'));
@@ -48,6 +29,24 @@ for fdf=1:length(fc)
             sf(cnt)=2;
             cnt=cnt+1;
         end
+    end
+end
+
+% patientspecific part
+if exist('directory','var')
+    % check if pat-specific fibertracts are present:
+    if exist([directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],'file')
+        modlist{cnt}='Patient-specific fiber tracts';
+        sf(cnt)=1;
+        cnt=cnt+1;
+    end
+
+    % fMRI:
+    % check if _tc are present:
+    if exist([directory,'connectomics',filesep,selectedparc,filesep,'rest_tc.mat'],'file')
+        modlist{cnt}='rest_tc';
+        sf(cnt)=2;
+        cnt=cnt+1;
     end
 end
 

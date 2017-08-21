@@ -116,7 +116,7 @@ end
 
 % Labels:
 labeling = dir([ea_space(options,'labeling'),'*.nii']);
-labeling = cellfun(@(x) {regexprep(x, '\.nii(\.gz)?', '')}, {labeling.name});
+labeling = cellfun(@(x) {strrep(x, '.nii', '')}, {labeling.name});
 
 set(handles.labelpopup,'String', labeling);
 
@@ -611,13 +611,11 @@ function vilist_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from vilist
 M=getappdata(gcf,'M');
 
-
 M.ui.volumeintersections=get(handles.vilist,'Value');
 
 % store model and refresh UI
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
-
 
 
 % --- Executes during object creation, after setting all properties.
@@ -880,14 +878,11 @@ for fc=get(handles.fclist,'Value') % get volume interactions for each patient fr
         fccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).fibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).fibercounts{1}(fc);
         nfccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).nfibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).nfibercounts{1}(fc);
         ptcnt=ptcnt+1;
-
     end
     ptcnt=1;
     fccnt=fccnt+1;
     fc_labels{end+1}=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).labels{1}{fc};
-
 end
-
 
 % prepare outputs:
 
@@ -919,13 +914,6 @@ stats.vicorr=vicorr;
 stats.fccorr=fccorr;
 stats.vc_labels=vc_labels;
 stats.fc_labels=fc_labels;
-
-
-
-
-
-
-
 
 
 % --- Executes on button press in reviewvarbutton.
@@ -1047,7 +1035,6 @@ for pt=selection
     if ~isempty(slashes)
         options.patientname=M.patient.list{pt}(slashes(end)+1:end);
         options.root=M.patient.list{pt}(1:slashes(end));
-
     else
         options.patientname=M.patient.list{pt};
         options.root='';
@@ -1064,6 +1051,7 @@ for pt=selection
     options.prefs=ea_prefs(options.patientname);
     options.d3.verbose='off';
     options.d3.elrendering=1;	% hard code to viz electrodes in this setting.
+    options.d3.exportBB=0;	% don't export brainbrowser struct by default
     options.d3.colorpointcloud=0;
     options.native=0;
 
@@ -1117,12 +1105,11 @@ for pt=selection
         save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
     end
 
-
     %delete([options.root,options.patientname,filesep,'ea_stats.mat']);
 
     % Step 1: Re-calculate closeness to subcortical atlases.
-
     resultfig=ea_elvis(options);
+
     % save scene as matlab figure
 
 
@@ -1137,9 +1124,6 @@ for pt=selection
             warning(['No MR or CT volumes found in ',M.patient.list{pt},'.']);
         end
     end
-
-
-
 
     % Step 2: Re-calculate VAT
     if isfield(M,'S')
@@ -1179,10 +1163,6 @@ for pt=selection
     if ~strcmp(mod,'Do not calculate connectivity stats')
 
         % Convis part:
-
-
-
-
         parcs=get(handles.labelpopup,'String');
         selectedparc=parcs{get(handles.labelpopup,'Value')};
         directory=[options.root,options.patientname,filesep];
@@ -1694,12 +1674,11 @@ switch choice
 
         for pt=1:length(M.patient.list)
 
-            slashes=findstr('/',M.patient.list{pt});
+            slashes=strfind(M.patient.list{pt},'/');
             if isempty(slashes)
-                slashes=findstr('\',M.patient.list{pt});
+                slashes=strfind(M.patient.list{pt},'\');
             end
             ptname=M.patient.list{pt}(max(slashes)+1:end);
-
 
             M.patient.list{pt}=ptname;
 
@@ -1913,42 +1892,38 @@ function lc_SPM_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(handles.leadfigure,'M');
 
-gecs=get(handles.lc_graphmetric,'String');
-[~,gecs]=fileparts(gecs{M.ui.lc.graphmetric});
-parc=get(handles.labelpopup,'String');
-parc=parc{get(handles.labelpopup,'Value')};
+gecs = get(handles.lc_graphmetric,'String');
+gecs = gecs{M.ui.lc.graphmetric};
+parc = get(handles.labelpopup,'String');
+parc = parc{get(handles.labelpopup,'Value')};
 
-spmdir=[M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,filesep,'SPM'];
-try
-rmdir(spmdir,'s');
+spmdir = [M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,filesep,'SPM'];
+if exist(spmdir, 'dir')
+    rmdir(spmdir,'s');
 end
-mkdir([M.ui.groupdir,'connectomics']);
-mkdir([M.ui.groupdir,'connectomics',filesep,parc]);
-mkdir([M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph']);
-
-mkdir([M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,gecs]);
 mkdir(spmdir);
 
-
 for sub=1:length(M.patient.list)
-    if M.ui.lc.normalization==1;
-        zzz='';
-    elseif M.ui.lc.normalization==2;
-        zzz='z';
-        ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,'.nii,1'],2);
-    elseif M.ui.lc.normalization==3;
-        zzz='k';
-        ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,'.nii,1'],3);
-    end
-    if M.ui.lc.smooth
-        sss='s';
-        ea_smooth([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,zzz,gecs,'.nii,1']);
+    if M.ui.lc.normalization == 1 % no normalization
+        normflag = '';
     else
-        sss='';
+        if M.ui.lc.normalization == 2 % z-Score
+            normflag = 'z';
+        elseif M.ui.lc.normalization == 3 % Albada 2008
+            normflag = 'k';
+        end
+        ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,'.nii'], normflag);
     end
-    fis{sub}=[M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,sss,zzz,gecs,'.nii,1'];
-end
 
+    if M.ui.lc.smooth
+        smoothflag = 's';
+        ea_smooth([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,'.nii']);
+    else
+        smoothflag = '';
+    end
+
+    fis{sub} = [M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,smoothflag,normflag,gecs,'.nii'];
+end
 
 %% model specification:
 matlabbatch{1}.spm.stats.factorial_design.dir = {spmdir};
@@ -1965,14 +1940,14 @@ spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 %% model estimation:
-matlabbatch{1}.spm.stats.fmri_est.spmmat = {spmdir};
+matlabbatch{1}.spm.stats.fmri_est.spmmat = {[spmdir, filesep, 'SPM.mat']};
 matlabbatch{1}.spm.stats.fmri_est.write_residuals = 0;
 matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1;
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 %% contrast manager:
-matlabbatch{1}.spm.stats.con.spmmat = {spmdir};
+matlabbatch{1}.spm.stats.con.spmmat = {[spmdir, filesep, 'SPM.mat']};
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'main effect';
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = 1;
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
@@ -2031,9 +2006,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
-
-
 % --- Executes on button press in lc_smooth.
 function lc_smooth_Callback(hObject, eventdata, handles)
 % hObject    handle to lc_smooth (see GCBO)
@@ -2046,33 +2018,29 @@ M.ui.lc.smooth=get(handles.lc_smooth,'Value');
 setappdata(gcf,'M',M);
 
 
-
-function ea_histnormalize(fname,zzz)
+function ea_histnormalize(fname, normflag)
 nii=ea_load_nii(fname);
 [pth,fn,ext]=fileparts(fname);
 
-msk=isnan(nii.img);
-msk=msk+(nii.img==0);
-vals=nii.img(~msk);
-ext=ext(1:end-2);
-switch zzz
-    case 2 % zscore
+msk = isnan(nii.img) | (nii.img == 0);
+vals = nii.img(~msk);
+
+switch normflag
+    case 'z' % zscore
         nii.fname=[pth,filesep,'z',fn,ext];
         vals=zscore(vals(:));
-    case 3 % albada
+    case 'k' % albada
         nii.fname=[pth,filesep,'k',fn,ext];
         vals=ea_normal(vals(:));
 end
+
 nii.img(~msk)=vals;
 spm_write_vol(nii,nii.img);
 
+
 function ea_smooth(fname)
 [pth,fn,ext]=fileparts(fname);
-
-spm_smooth(fname,[pth,fn,'s',ext],[8 8 8]);
-
-
-
+spm_smooth(fname,[pth,filesep,'s',fn,ext],[8 8 8]);
 
 
 % --- Executes on button press in specify2doptions.
@@ -2112,6 +2080,9 @@ for sub=1:length(M.patient.list)
     maxfibno=max(normalized_fibers_mm(:,4));
 end
 ea_dispercent(1,'end');
+if ~exist([M.ui.groupdir,'connectomes',filesep,'dMRI'], 'dir')
+    mkdir([M.ui.groupdir,'connectomes',filesep,'dMRI'])
+end
 ea_savefibertracts([M.ui.groupdir,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],normalized_fibers_mm,allidx,'mm');
 
 
@@ -2412,7 +2383,6 @@ function mirrorsides_Callback(hObject, eventdata, handles)
 
 M=getappdata(gcf,'M');
 M.ui.mirrorsides=get(handles.mirrorsides,'Value');
-
 
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);

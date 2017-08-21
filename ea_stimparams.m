@@ -64,10 +64,10 @@ if length(elstruct)>1
    groupmode=1;
    M=getappdata(resultfig,'M');
    try % priorly loaded stim params.
-   gS=M.S;
-   setappdata(handles.stimfig,'gS',gS);
-   gSv.vatmodel=M.vatmodel;
-   setappdata(handles.stimfig,'gSv',gSv);
+       gS=M.S;
+       setappdata(handles.stimfig,'gS',gS);
+       gSv.vatmodel=M.vatmodel;
+       setappdata(handles.stimfig,'gSv',gSv);
    end
    set(handles.prevpt,'visible','on');
    set(handles.nextpt,'visible','on');
@@ -1596,10 +1596,10 @@ S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options')
 sel=get(handles.stimlabel,'String');
 sel=sel{get(handles.stimlabel,'Value')};
 if length(sel)>4 && strcmp(sel(1:4),' => '); % command, not entry
-    
+
     switch sel(5:end)
         case 'New stimulation'
-            
+
             ea_savestimulation(S,options);
             S=[]; % this will create the prompt to generate a new S.
             options.gen_newstim=1;
@@ -1612,11 +1612,11 @@ if length(sel)>4 && strcmp(sel(1:4),' => '); % command, not entry
             setappdata(handles.stimfig,'options',options);
         case 'Rename stimulation'
             stimlabel=getappdata(handles.stimfig,'stimlabel');
-            
+
             [~,ix]=ismember(stimlabel,get(handles.stimlabel,'String'));
             set(handles.stimlabel,'Value',ix);
             stimc = inputdlg('Please enter a label for this stimulation','Stimulation Label',1,{stimlabel});
-            
+
             movefile([options.root,options.patientname,filesep,'stimulations',filesep,stimlabel],[options.root,options.patientname,filesep,'stimulations',filesep,stimc{1}]);
             slabelc=get(handles.stimlabel,'String');
             slabelc{ix}=stimc{1};
@@ -1627,7 +1627,7 @@ if length(sel)>4 && strcmp(sel(1:4),' => '); % command, not entry
             ea_refreshguisp(handles,options);
             ea_savestimulation(S,options);
         case 'Delete stimulation'
-            
+
             ans=questdlg(['Are you sure you wish to delete the stimulation parameters for ',...
                 S.label,'?'],'Delete stimulation parameters','Sure','No','No');
             if strcmp(ans,'No')
@@ -1644,11 +1644,11 @@ if length(sel)>4 && strcmp(sel(1:4),' => '); % command, not entry
                 S=getappdata(handles.stimfig,'S');
                 ea_savestimulation(S,options);
             end
-            
+
     end
-    
+
 else
-    
+
     labels=get(handles.stimlabel,'String');
     label=labels{get(handles.stimlabel,'Value')};
     label(strfind(label,' '))='';
@@ -1657,7 +1657,7 @@ else
     setappdata(handles.stimfig,'S',S);
     setappdata(handles.stimfig,'stimlabel',S.label);
 %    set(handles.stimlabel,'String',label);
-    
+
     setappdata(handles.stimfig,'S',S);
     ea_refreshguisp(handles,options);
 end
@@ -1695,21 +1695,21 @@ if isempty(actpt) || length(actpt)>1
 end
 if groupmode
     grouploaded=getappdata(handles.stimfig,'grouploaded');
-    
+
     if isempty(grouploaded) % this is done only once and gets the selection info from lead_group initially (which patient shown).
         lgfig=getappdata(handles.stimfig,'resultfig');
         M=getappdata(lgfig,'M');
         actpt=M.ui.listselect;
-        
+
         if length(actpt)>1 % more than one entry selected
             actpt=1;
         end
         setappdata(handles.stimfig,'actpt',actpt);
         % set grouploaded true is being done below.
     end
-    
+
     elstruct=getappdata(handles.stimfig,'elstruct');
-    
+
     set(handles.headertxt,'String',['Stimulation parameters: ',elstruct(actpt).name]);
     gSv=getappdata(handles.stimfig,'gSv');
     if isfield(gSv,'vatmodel')
@@ -1721,7 +1721,7 @@ if groupmode
                 keyboard
             end
             setappdata(handles.stimfig,'gSv',gSv);
-            
+
         else
             [~,ind]=ismember(gSv.vatmodel,get(handles.modelselect,'String'));
             set(handles.modelselect,'Value',ind);
@@ -1747,7 +1747,7 @@ if groupmode
                 end
             end
             setappdata(handles.stimfig,'stimlabel',stimlabel);
-            
+
             % if gS is defined but group has just now been loaded
             try
                 if ~isempty(gS(actpt).Rs1) % current patient is defined -> set S to gS of this patient.

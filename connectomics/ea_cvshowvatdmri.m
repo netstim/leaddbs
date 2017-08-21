@@ -17,56 +17,50 @@ elseif iscell(handles) % called from lead_group
     sides=[1,2];
 end
 
+% fibers filename
+if isstruct(vatmodality)
+    fibersfile=vatmodality;
 
+else
+    switch vatmodality
+        case 'Patient-specific fiber tracts'
+            fibersfile=[directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized];
+        otherwise
+            fibersfile=[ea_getconnectomebase('dmri'),vatmodality,filesep,'data.mat'];
+    end
+end
 
-        % fibers filename
-        if isstruct(vatmodality)
-            fibersfile=vatmodality;
+% seed filename
+seedfile={};
+for v=1:length(usevat)
+    seedfile{v}=[directory,'stimulations',filesep,vsname,filesep,'vat_',usevat{options.sides(v)},'.nii'];
+end
+for side=1:length(usevat)
+    try
+        load([directory,'stimulations',filesep,vsname,filesep,'stimparameters_',usevat{options.sides(side)},'.mat']);
+    catch
+        keyboard
+    end
+end
 
-        else
-            switch vatmodality
-                case 'Patient-specific fiber tracts'
-                    fibersfile=[directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized];
-                otherwise
-                    fibersfile=[ea_getconnectomebase('dmri'),vatmodality,filesep,'data.mat'];
-            end
+targetsfile=[ea_space(options,'labeling'),selectedparc,'.nii'];
+
+options.writeoutstats=1;
+options.writeoutpm=1;
+
+[changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seedfile,targetsfile,thresh,'vat');
+
+if ~ret % something has changed since last time.
+    ea_deletePL(resultfig,'PL','vat');
+    if dimensionality % one of the vat checkboxes is active
+        if isstruct(handles) % call from GUI
+            [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,S,changedstates,'vat',get(handles.vizvat_regs,'Value'),get(handles.vizvat_labs,'Value')); % 'vat' only used for storage of changes.
+        elseif iscell(handles) % call from Lead Group
+            [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,S,changedstates,'vat',0,0); % 'vat' only used for storage of changes.
         end
-
-        % seed filename
-
-        seedfile={};
-
-        for v=1:length(usevat)
-
-            seedfile{v}=[directory,'stimulations',filesep,vsname,filesep,'vat_',usevat{options.sides(v)},'.nii'];
+        if isstruct(handles)
+            set(handles.vatthreshis,'String',num2str(thresh));
         end
-        for side=1:length(usevat)
-            try
-                load([directory,'stimulations',filesep,vsname,filesep,'stimparameters_',usevat{options.sides(side)},'.mat']);
-            catch
-                keyboard
-            end
-        end
+    end
 
-        targetsfile=[ea_space(options,'labeling'),selectedparc,'.nii'];
-
-        options.writeoutstats=1;
-        options.writeoutpm=1;
-
-
-        [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seedfile,targetsfile,thresh,'vat');
-
-        if ~ret % something has changed since last time.
-            ea_deletePL(resultfig,'PL','vat');
-            if dimensionality % one of the vat checkboxes is active
-                if isstruct(handles) % call from GUI
-                    [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,S,changedstates,'vat',get(handles.vizvat_regs,'Value'),get(handles.vizvat_labs,'Value')); % 'vat' only used for storage of changes.
-                elseif iscell(handles) % call from Lead Group
-                    [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,targetsfile,thresh,sides,options,S,changedstates,'vat',0,0); % 'vat' only used for storage of changes.
-                end
-                if isstruct(handles)
-                    set(handles.vatthreshis,'String',num2str(thresh));
-                end
-            end
-
-        end
+end
