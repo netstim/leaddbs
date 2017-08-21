@@ -1328,8 +1328,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
-
 function options=ea_setopts_local(handles)
 
 options.earoot=ea_getearoot;

@@ -10,13 +10,14 @@ function  [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=
 % Modified for groupmode 04/2017 by Ari Kappel
 
 options=varargin{1};
+
 if ~isfield(options, 'uipatdirs')
     options.uipatdirs = {fullfile(options.root, options.patientname)};
 end
+
 try
     % Load Reconstruction
     load([options.uipatdirs{1},filesep,'ea_reconstruction.mat']);
-    
 catch
     try
         coords_mm=ea_read_fiducials(fullfile(options.uipatdirs{1},'ea_coords.fcsv'),options);
@@ -26,7 +27,6 @@ catch
 end
 
 if exist('reco','var')
-    
     if ~isfield(reco,'native') && isfield(reco,'mni') && options.native
         ea_reconstruction2native(options);
         load(fullfile(options.uipatdirs{1},'ea_reconstruction.mat'));
@@ -34,7 +34,7 @@ if exist('reco','var')
         ea_reconstruction2mni(options);
         load(fullfile(options.uipatdirs{1},'ea_reconstruction.mat'));
     end
-    
+
     if options.native
         if isfield(options, 'loadrecoforviz') && isfield(reco, 'scrf')
             % if loading reco for visualization, should return scrf.
@@ -48,18 +48,18 @@ if exist('reco','var')
     coords_mm = reco.(space_type).coords_mm;
     trajectory = reco.(space_type).trajectory;
     markers = reco.(space_type).markers;
-    
+
     try
         coords_acpc=reco.acpc.coords_mm;
     catch
         coords_acpc=nan;
     end
-    
+
     manually_corrected=reco.props.manually_corrected;
     elmodel=reco.props.elmodel;
-    
+
 else % legacy format
-    
+
     if ~exist('markers','var') % backward compatibility to old recon format
         for side=1:length(options.sides)
             markers(side).head=coords_mm{side}(1,:);
@@ -69,24 +69,24 @@ else % legacy format
             markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
             markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
         end
-        
+
         elmodel=options.elmodel;
         % this is still legacy format but has markers variable in it now.
         save([options.root,options.patientname,filesep,'ea_reconstruction'],'trajectory','coords_mm','markers','elmodel');
     end
-    
+
     try
         load([options.root,options.patientname,filesep,'ea_reconstruction.mat']);
     catch % generate trajectory from coordinates.
         trajectory{1}=ea_fit_line(coords_mm(1:4,:));
         trajectory{2}=ea_fit_line(coords_mm(options.elspec.numel+1:options.elspec.numel+4,:));
     end
-    
+
     % we have all variables now but need to put them into reco format and
     % they are in MNI.
     options.native=0;
     options.hybridsave=1;
-    
+
     try
         ea_save_reconstruction(coords_mm,trajectory,markers,'Medtronic 3389',0,options);
         options.native=1;
