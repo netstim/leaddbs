@@ -975,7 +975,7 @@ for group=flix
     setappdata(resultfig,'stimparams',stimparams(group,:));
     setappdata(resultfig,'S',S(group))
     ea_showfibres_volume(resultfig,options);
-    copyfile([options.root,options.patientname,filesep,'ea_stats.mat'],[options.root,options.patientname,filesep,'ea_stats_group_',num2str(group),'.mat']);
+    %copyfile([options.root,options.patientname,filesep,'ea_stats.mat'],[options.root,options.patientname,filesep,'ea_stats_group_',num2str(group),'.mat']);
     try
         copyfile([options.root,options.patientname,filesep,'ea_pm.nii'],[options.root,options.patientname,filesep,'ea_pm_group_',num2str(group),'.nii']);
     end
@@ -1741,7 +1741,7 @@ if groupmode
         if ~isempty(gS)
             % determine stimlabel from priorly set gS:
             for sub=1:length(gS)
-                stimlabel='gs';
+                stimlabel=['gs_',M.guid];
                 if ~isempty(stimlabel)
                     break
                 end
@@ -2452,6 +2452,38 @@ if nargin>1
     options=varargin{2};
     handles=varargin{3};
 end
+
+if nargin
+    if isempty(varargin{1})
+        [labels,preexist]=ea_detstimname(options,handles);
+        set(handles.stimlabel,'String',labels);
+    elseif (isfield(options,'gen_newstim') && options.gen_newstim==1)
+        [labels,preexist]=ea_detstimname(options,handles);
+        set(handles.stimlabel,'String',labels);
+        options.gen_newstim=0;
+
+    else
+        labels=varargin{1};
+    end
+else
+    [labels,preexist]=ea_detstimname(options,handles);
+end
+
+if ~iscell(labels)
+    labels={labels};
+end
+
+try
+S.label=labels{get(handles.stimlabel,'Value')};
+catch
+    keyboard
+end
+
+if preexist
+   load([options.root,options.patientname,filesep,'stimulations',filesep,S.label,filesep,'stimparameters.mat']);
+   return
+end
+
 % right sources
 for source=1:4
     for k=0:7
@@ -2479,31 +2511,7 @@ for source=1:4
 end
 
 S.active=[1,1];
-if nargin
-    if isempty(varargin{1})
-        labels=ea_detstimname(options,handles);
-        set(handles.stimlabel,'String',labels);
-    elseif (isfield(options,'gen_newstim') && options.gen_newstim==1)
-        labels=ea_detstimname(options,handles);
-        set(handles.stimlabel,'String',labels);
-        options.gen_newstim=0;
 
-    else
-        labels=varargin{1};
-    end
-else
-    labels=ea_detstimname(options,handles);
-end
-
-if ~iscell(labels)
-    labels={labels};
-end
-
-try
-S.label=labels{get(handles.stimlabel,'Value')};
-catch
-    keyboard
-end
 
 function Ls3am_Callback(hObject, eventdata, handles)
 % hObject    handle to Ls3am (see GCBO)

@@ -30,6 +30,7 @@ if useSI
     thresh=thresh.*(10^3);
 end
 S=ea_activecontacts(S);
+
 if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     ofv.vertices=[0,0,0
         0,0,0
@@ -257,7 +258,9 @@ for source=S.sources
             cnt=cnt+1;
        
         end
-
+if isempty(ix)
+   ea_error('Something went wrong. Active vertex index not found.'); 
+end
 
 
 
@@ -368,6 +371,7 @@ try
         spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
     end
 catch
+    
 varargout{1}=nan;
 varargout{2}=nan;
 varargout{3}=nan;
@@ -8020,6 +8024,7 @@ end
 if length(conductivity) >= length(unique(vol.tissue))
     vol.cond = conductivity;
 else
+    keyboard
     error('Wrong conductivity information!')
 end
 

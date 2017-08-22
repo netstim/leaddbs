@@ -65,6 +65,8 @@ guidata(hObject, handles);
 % uiwait(handles.acontrolfig);
 resultfig=varargin{1};
 options=varargin{2};
+
+
 setappdata(hObject,'resultfig',resultfig);
 setappdata(hObject,'options',options);
 togglestates=getappdata(resultfig,'togglestates'); % get info from resultfig.
@@ -147,7 +149,7 @@ pos=get(hObject,'position');
 set(hObject,'position',[0,0,pos(3),pos(4)]);
 refreshresultfig(handles)
 view(142,13.6)
-set(handles.acontrolfig,'Visible',options.d3.verbose);
+set(handles.acontrolfig,'Visible',options.d3.verbose); % set invisible if called from lead group
 
 
 

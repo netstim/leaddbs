@@ -211,13 +211,14 @@ for side=1:length(seed)
 
     % Write out connectivity stats
     if options.writeoutstats
+        
         load([options.root,options.patientname,filesep,'ea_stats']);
         % assign the place where to write stim stats into struct
-try
-        stimparams.label='gs';
-catch
-    keyboard
-end
+        if isfield(options,'groupmode')
+            if options.groupmode
+                stimparams.label=['gs_',options.groupid];
+            end
+        end
         [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,stimparams);
         ea_stats.stimulation(thisstim).ft(side).fibercounts{la}=howmanyfibs{side}/numtotalfibs;
 

@@ -9,7 +9,9 @@ if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % n
     ea_busyaction('off',handles.leadfigure,'group');
     return
 end
-
+if ~isfield(M,'guid') % only done once, legacy support.
+    M.guid=ea_generate_guid;
+end
 disp('Refreshing group list...');
 % refresh group list
 set(handles.grouplist,'String',M.patient.group);
@@ -325,6 +327,7 @@ if ~isempty(M.patient.list)
         % (re-)load stats
         try
             load([M.patient.list{pt},filesep,'ea_stats']);
+            ea_stats=ea_rmssstimulations(ea_stats,M); % only preserve stimulations with label 'gs_groupid'.
             M.stats(pt).ea_stats=ea_stats;
         end
 
@@ -401,3 +404,15 @@ end
 disp('Done.');
 
 ea_busyaction('off',handles.leadfigure,'group');
+
+
+function ea_stats=ea_rmssstimulations(ea_stats,M)
+% function that will remove all stimulations not labeled 'gs'
+todel=[];
+for s=1:length(ea_stats.stimulation)
+   if ~strcmp(ea_stats.stimulation(s).label,['gs_',M.guid]) 
+    
+       todel=[todel,s];
+   end
+end
+ea_stats.stimulation(todel)=[];

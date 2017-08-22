@@ -61,13 +61,15 @@ guidata(hObject, handles);
 % UIWAIT makes ea_atlasselect wait for user response (see UIRESUME)
 % uiwait(handles.atlasselect);
 
+
 atlases=varargin{3};
 setappdata(handles.atlasselect,'atlases',atlases);
 setappdata(handles.atlasselect,'handles',handles);
 options=varargin{4};
 setappdata(handles.atlasselect,'options',options);
 setappdata(handles.atlasselect,'resultfig',varargin{5});
-    
+
+set(handles.atlasselect,'Visible',options.d3.verbose); % set invisible if called from lead group
 
 movegui(hObject,'northeast');
 

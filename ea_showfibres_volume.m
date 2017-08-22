@@ -72,13 +72,19 @@ catch
 end
 
 % assign the place where to write stim stats into struct
-S.label='gs'; % hard reset label to group stim label
+
+if isfield(options,'groupmode')
+    if options.groupmode
+        S.label=['gs_',options.groupid]; % hard reset label to group stim label
+    end
+end
+
 [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,S);
 
 
 
 
-if isstruct(VAT{1}.VAT) % e.g. simbio model used
+if isstruct(VAT{1}.VAT) || isstruct(VAT{2}.VAT) % e.g. simbio model used
     vat=1;
     for side=1:length(options.sides)
         try
@@ -103,6 +109,7 @@ for side=1:length(options.sides)
             try
                 K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
             catch
+                keyboard
                 if isnan(VAT{side}.VAT) % empty VTA
                     continue
                 end
@@ -160,10 +167,11 @@ for side=1:length(options.sides)
                 ea_stats.stimulation(thisstim).vat(side,vat).label=S.label;
                 ea_stats.stimulation(thisstim).vat(side,vat).contact=vat;
                 ea_stats.stimulation(thisstim).vat(side,vat).side=side;
-
+                ea_stats.stimulation(thisstim).label=S.label;
+                
                 vatfv.faces=K(side).K{vat}; vatfv.vertices=VAT{side}.VAT{vat};
                 vatfv=reducepatch(vatfv,0.05);
-                                        Vcent=mean(vatfv.vertices);
+                Vcent=mean(vatfv.vertices);
 
                 % figure
                 % patch('faces',vatfv.faces,'vertices',vatfv.vertices,'FaceColor','none','EdgeColor','g');

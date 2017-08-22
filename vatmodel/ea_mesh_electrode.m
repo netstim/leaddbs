@@ -457,6 +457,10 @@ for tt=1:4
     tissuetype(ismember(emesh(:,5),tl))=tt;
     disp([num2str(length(tl)),' components with ',num2str(sum(tissuetype==tt)),' tetraeders total assigned to tissue type ',num2str(tt),'.']);
 end
+
+if ~all(tissuetype)
+    tissuetype(tissuetype==0)=2; % assign misfit tetraeders to white matter.
+end
 oemesh=emesh;
 emesh(:,5)=tissuetype;
 

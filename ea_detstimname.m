@@ -1,21 +1,25 @@
-function stimname=ea_detstimname(options,handles)
-
+function [stimname,preexist]=ea_detstimname(options,handles)
+preexist=0;
 % check if previous stimulations have been stored
 if ~isfield(options,'root') % called from lead group
-   stimname='gs'; 
-   return
+    stimname=['gs_',options.groupname];
+    return
 end
 directory=[options.root,options.patientname,filesep];
 stimname=cell(0);
 if exist([directory,'stimulations'],'dir')
     sd=dir([directory,'stimulations']);
     for s=1:length(sd)
-       if sd(s).isdir && ~strcmp(sd(s).name(1),'.')
-           stimname{end+1}=sd(s).name;
-       end
+        
+        if sd(s).isdir && ~strcmp(sd(s).name(1),'.') && (length(sd(s).name)<3 || ~strcmp(sd(s).name(1:3),'gs_'))
+            stimname{end+1}=sd(s).name;
+        end
         
     end
     
+end
+if ~isempty(stimname)
+    preexist=1;
 end
 
 
@@ -39,6 +43,16 @@ catch
     
     uid = char(UUID.randomUUID());
 end
-
-stimc = inputdlg('Please enter a label for this stimulation','Stimulation Label',1,{stimname});
+while 1
+    stimc = inputdlg('Please enter a label for this stimulation','Stimulation Label',1,{stimname});
+    if length(stimc{1})<3
+        break
+    else
+        if strcmp(stimc{1}(1:3),'gs_')
+            msgbox('Please do not choose a stimulation label that starts with "gs_". These are reserved letters used in stimulations programmed inside Lead Group.')
+        else
+            break
+        end
+    end
+end
 stimname=stimc{1};
