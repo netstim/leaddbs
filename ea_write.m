@@ -44,7 +44,11 @@ if options.d3.write
     % zoom out contacts when patient is selected and electroddes are reconstructed
     if ~strcmp(options.patientname, 'No Patient Selected')
         try
-            ea_setaxisorigin(options,resultfig);
+            % calculate the center of the contacts
+            coords = ea_load_reconstruction(options);
+            center = mean(cell2mat(cellfun(@mean, coords, 'Uniformoutput',0)'), 1);
+            % zoom on the center of the contacts
+            ea_zoomcenter(resultfig.CurrentAxes, center, 3);
         catch
             zoom(3);
         end
