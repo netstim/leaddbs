@@ -89,7 +89,7 @@ else
                     if ~isempty(find(modality,1))
                         options.modality = find(modality,1);  % prefer MR rather than CT if both are present
                     else
-                        options.modality = 0;
+                        options.modality = 1;    % FIX ME, if no postop image present, set to MR to work it around
                     end
                 end
 

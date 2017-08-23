@@ -31,7 +31,7 @@ end
 [postops,gfis]=ea_appendgrid(options,postops,gfis,0);
 
 if usesuit
-postops=ea_cropsuit(postops,directory);
+    postops=ea_cropsuit(postops,directory);
 end
 % export glfiles (a bit more coarse resolution, full brain bounding box).
 for pos=1:length(gfis)
