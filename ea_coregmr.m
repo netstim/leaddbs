@@ -3,7 +3,7 @@ function ea_coregmr(options)
 
 % in CT imaging, coregistration is done elsewhere.
 % also ignore when there is no tra/cor/sag existing (normal conn study)
-if options.modality==2 || ~isfield(options.prefs,'tranii_unnormalized')
+if options.modality == 2 || ~isfield(options.prefs,'tranii_unnormalized')
     return
 end
 

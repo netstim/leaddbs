@@ -8,7 +8,7 @@ else % call from lead directly:
 end
 
 if length(uipatdir) > 1 % to enable CT registration setting by default when multiple patients chose
-    modality = [0, 1];
+    modality = [0; 1];
     status = 'Multiple patients are chosen, CT/MR modality will be automatically detected.';
 else
     % check for MR-files

@@ -86,7 +86,11 @@ else
                 % autoadjust MRCT modality for this patient: FIX ME
                 try
                     modality = ea_checkctmrpresent([options.root,options.patientname,filesep]);
-                    options.modality = find(modality,1);  % prefer MR rather than CT if both are present
+                    if ~isempty(find(modality,1))
+                        options.modality = find(modality,1);  % prefer MR rather than CT if both are present
+                    else
+                        options.modality = 0;
+                    end
                 end
 
                 % run main function
