@@ -10,6 +10,7 @@ if strcmp(cmd, 'runcluster')
     cmd = 'run';    % rewrite 'cmd' to 'run'
     if ~isdeployed
         ea_setpath; % set path (LEAD and SPM) if needed
+        addpath(genpath(options.spmdir));
     end
     needtoexit = 1; % on a cluster, need to close Matlab properly after job is done.
 else

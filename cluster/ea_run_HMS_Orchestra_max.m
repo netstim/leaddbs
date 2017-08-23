@@ -5,6 +5,7 @@ function ea_run_HMS_Orchestra_max(options)
 % Lead-DBS and simply change the command ea_run to ea_run_cluster.
 
 jobFile = [options.root, options.patientname, filesep, 'job_', ea_generate_guid];
+options.spmdir = spm('dir');
 save(jobFile, 'options');
 
 setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS', '1');
