@@ -14,7 +14,7 @@ function ea_autocoord(options)
 options.prefs.patientdir = options.patientname;
 
 % get accurate electrode specifications and save it in options.
-options=ea_resolve_elspec(options);
+options = ea_resolve_elspec(options);
 
 directory = [options.root,options.patientname,filesep];
 
@@ -94,7 +94,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         end
     end
 
-    if options.modality==2 % CT support
+    if options.modality == 2 % CT support
         options.prefs.tranii=options.prefs.ctnii;
         options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
 
@@ -122,7 +122,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
         eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
 
-        if options.modality==2 % (Re-) compute tonemapped (normalized) CT
+        if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
             ea_tonemapct_file(options,'mni');
         end
         % 4. generate coreg-check figs (all to all).

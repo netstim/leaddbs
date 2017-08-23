@@ -37,18 +37,18 @@ end
 
 fprintf(fID, '%s\n','options = getoptslocal;');
 if ~isempty(options.uipatdirs)
-    fprintf(fID, '%s\n','patdirs = options.uipatdirs;');
-    fprintf(fID, '%s\n','for pat = 1:length(patdirs)');
-    fprintf(fID, '    %s\n','options.uipatdirs = patdirs{pat};');
-    fprintf(fID, '    %s\n','options.root = [fileparts(patdirs{pat}), filesep];');
-    fprintf(fID, '    %s\n','[~, options.patientname] = fileparts(patdirs{pat});');
     if exist('clusterfunctionname', 'var') % submit to cluster instead of directly running
-        fprintf(fID, '    %s\n', ['clusterfunctionname = ''', clusterfunctionname, ''';']);
+        fprintf(fID, '%s\n','patdirs = options.uipatdirs;');
+        fprintf(fID, '%s\n', ['clusterfunctionname = ''', clusterfunctionname, ''';']);
+        fprintf(fID, '%s\n','for pat = 1:length(patdirs)');
+        fprintf(fID, '    %s\n','options.uipatdirs = patdirs{pat};');
+        fprintf(fID, '    %s\n','options.root = [fileparts(patdirs{pat}), filesep];');
+        fprintf(fID, '    %s\n','[~, options.patientname] = fileparts(patdirs{pat});');
         fprintf(fID, '    %s\n', 'feval(eval([''@'', clusterfunctionname]), options)');
+        fprintf(fID, '%s\n', 'end');
     else
-        fprintf(fID, '    %s\n', 'ea_run(''run'', options);');
+        fprintf(fID, '%s\n', 'ea_run(''run'', options);');
     end
-    fprintf(fID, '%s\n', 'end');
 else % no patient mode (also e.g. connectome mapper)
     if exist('clusterfunctionname', 'var') % submit to cluster instead of directly running
         fprintf(fID, '%s\n', ['clusterfunctionname = ''', clusterfunctionname, ''';']);

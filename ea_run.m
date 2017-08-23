@@ -82,14 +82,15 @@ else
                 options.root = [fileparts(uipatdirs{pat}),filesep];
                 [~, options.patientname] = fileparts(uipatdirs{pat});
 
+                % autoadjust MRCT modality for this patient: FIX ME
+                try
+                    modality = ea_checkctmrpresent([options.root,options.patientname,filesep]);
+                    options.modality = find(modality,1);  % prefer MR rather than CT if both are present
+                end
+
                 % run main function
                 if length(uipatdirs) > 1 % multi mode. Dont stop at errors.
                     try
-                        % autoadjust MRCT modality for this patient:
-                        try
-                            modality = ea_checkctmrpresent([options.root,options.patientname,filesep]);
-                            options.modality = find(modality,1);  % prefer MR rather than CT if both are present
-                        end
                         ea_autocoord(options);
                     catch
                         warning([options.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.' ]);
