@@ -156,6 +156,8 @@ for side=1:length(options.sides)
                 try options.atlases=atlases; end
                 cuts=ea_add_overlay(boundboxmm,cuts,tracor,options);
             end
+      set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
+            axis([min(boundboxmm{onedim}),max(boundboxmm{onedim}),min(boundboxmm{secdim}),max(boundboxmm{secdim})])
 
             % Show isovolume
             if options.d3.showisovolume
@@ -326,6 +328,9 @@ for side=1:length(options.sides)
             %end
 
             axis equal
+                  set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
+            axis([min(boundboxmm{onedim}),max(boundboxmm{onedim}),min(boundboxmm{secdim}),max(boundboxmm{secdim})])
+
             % Save results
             if strcmp(figvisible,'on')
                 set(cuts,'visible','on');
@@ -339,8 +344,11 @@ for side=1:length(options.sides)
             set(0,'CurrentFigure',cuts)
 %            set(gca, 'LooseInset', [0,0,0,0]);
 %            axis equal
+drawnow
             set(gca,'position',[0,0,1,1],'units','normalized'); % fullscreen plot.
-
+      set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
+            axis([min(boundboxmm{onedim}),max(boundboxmm{onedim}),min(boundboxmm{secdim}),max(boundboxmm{secdim})])
+drawnow
             expslice=double(frame2im(getframe(cuts))); % export plot.
             expslice=(expslice-min(expslice(:)))/(max(expslice(:))-min(expslice(:))); % set 0 to 1
 
