@@ -57,10 +57,6 @@ classdef ea_roi < handle
             obj.nii.img(obj.nii.img==0)=nan;
             obj.nii.img=obj.nii.img-nanmin(obj.nii.img(:)); % set min to zero
             obj.nii.img(isnan(obj.nii.img))=0;
-            if ~all(abs(obj.nii.voxsize)<=1)
-                ea_reslice_nii(obj.niftiFilename,obj.niftiFilename,[0.5,0.5,0.5],0,[],3);
-                obj.nii=ea_load_nii(obj.niftiFilename);
-            end
             options.prefs=ea_prefs;
             obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));
             obj.min=ea_nanmin(obj.nii.img(~(obj.nii.img==0)));
