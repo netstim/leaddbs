@@ -3,9 +3,14 @@ function ea_exportvatmapping(M,options,handles)
 selectedregressor=M.clinical.vars{get(handles.clinicallist,'Value')};
 zselectedregressor=zscore(selectedregressor);
     mkdir([options.root,options.patientname,filesep,'statvat_results']);
-allV{1}=[ea_space(options),'bb.nii'];
-zallV{1}=[ea_space(options),'bb.nii'];
-tempzallV{1}=[ea_space(options),'bb.nii'];
+    copyfile([ea_space(options),'bb.nii'],[ea_space(options),'bb_nan.nii']);
+    nii=ea_load_nii([ea_space(options),'bb_nan.nii']);
+    nii.dt=[16,1];
+    nii.img(:)=nan;
+    ea_write_nii(nii);
+allV{1}=[ea_space(options),'bb_nan.nii'];
+zallV{1}=[ea_space(options),'bb_nan.nii'];
+tempzallV{1}=[ea_space(options),'bb_nan.nii'];
 
 if size(selectedregressor,2)==1;
     bihemispheric=0;
@@ -97,88 +102,89 @@ for z=0:1
     matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
 
     spm_jobman('run',{matlabbatch});
-            ea_crop_nii([options.root,options.patientname,filesep,'statvat_results',filesep,matlabbatch{1}.spm.util.imcalc.output]);
+            ea_crop_nii([options.root,options.patientname,filesep,'statvat_results',filesep,matlabbatch{1}.spm.util.imcalc.output],'','nn');
 
     clear matlabbatch
 
 
 
 end
-
 
 allV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'];
 zallV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'];
-tempzallV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'];
 
-
-for pt=1:length(tempzallV)-1
-
-    matlabbatch{1}.spm.util.imcalc.input = zallV;
-    matlabbatch{1}.spm.util.imcalc.output = tempzallV{pt+1};
-    matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname,filesep,'statvat_results',filesep]};
-    matlabbatch{1}.spm.util.imcalc.expression = ['i',num2str(pt+1)];
-    matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
-    matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-    matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
-    spm_jobman('run',{matlabbatch});
-    clear matlabbatch
-
-end
 
 dostats=0;
 if dostats
-
-
-% spm factorial:
-try
-    rmdir([options.root,options.patientname,filesep,'statvat_results',filesep,'SPM'],'s');
-end
-mkdir([options.root,options.patientname,filesep,'statvat_results',filesep,'SPM']);
-matlabbatch{1}.spm.stats.factorial_design.dir = {'/PA/Neuro/_projects/LEAD_pilot/lg/statvat_results/spm'};
-%%
-matlabbatch{1}.spm.stats.factorial_design.des.t1.scans = tempzallV(2:end)';
-%%
-matlabbatch{1}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
-matlabbatch{1}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
-matlabbatch{1}.spm.stats.factorial_design.masking.tm.tm_none = 1;
-matlabbatch{1}.spm.stats.factorial_design.masking.im = 1;
-matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
-matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
-matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
-matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
+    tempzallV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'];
+    
+    for pt=1:length(tempzallV)-1
+        
+        matlabbatch{1}.spm.util.imcalc.input = zallV';
+        matlabbatch{1}.spm.util.imcalc.output = tempzallV{pt+1};
+        matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname,filesep,'statvat_results',filesep]};
+        matlabbatch{1}.spm.util.imcalc.expression = ['i',num2str(pt+1)];
+        matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+        matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+        matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+        matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+        matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
+        spm_jobman('run',{matlabbatch});
+        clear matlabbatch
+        
+    end
+    
+    
+    
+    % spm factorial:
+    try
+        rmdir([options.root,options.patientname,filesep,'statvat_results',filesep,'SPM'],'s');
+    end
+    mkdir([options.root,options.patientname,filesep,'statvat_results',filesep,'SPM']);
+    matlabbatch{1}.spm.stats.factorial_design.dir = {'/PA/Neuro/_projects/LEAD_pilot/lg/statvat_results/spm'};
+    %%
+    matlabbatch{1}.spm.stats.factorial_design.des.t1.scans = tempzallV(2:end)';
+    %%
+    matlabbatch{1}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+    matlabbatch{1}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+    matlabbatch{1}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+    matlabbatch{1}.spm.stats.factorial_design.masking.im = 1;
+    matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
+    matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
+    matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+    matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
-
+    
     matlabbatch{1}.spm.stats.fmri_est.spmmat = {[options.root,options.patientname,filesep,'statvat_results',filesep,'SPM',filesep,'SPM.mat']};
-matlabbatch{1}.spm.stats.fmri_est.write_residuals = 0;
-matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1;
+    matlabbatch{1}.spm.stats.fmri_est.write_residuals = 0;
+    matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1;
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
-
+    
     matlabbatch{1}.spm.stats.con.spmmat = {[options.root,options.patientname,filesep,'statvat_results',filesep,'SPM',filesep,'SPM.mat']};
-matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'mainFX';
-matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = 1;
-matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
-matlabbatch{1}.spm.stats.con.delete = 0;
+    matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'mainFX';
+    matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = 1;
+    matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+    matlabbatch{1}.spm.stats.con.delete = 0;
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
-
+    
     matlabbatch{1}.spm.stats.results.spmmat = {[options.root,options.patientname,filesep,'statvat_results',filesep,'SPM',filesep,'SPM.mat']};
-matlabbatch{1}.spm.stats.results.conspec.titlestr = '';
-matlabbatch{1}.spm.stats.results.conspec.contrasts = 1;
-matlabbatch{1}.spm.stats.results.conspec.threshdesc = 'FWE';
-matlabbatch{1}.spm.stats.results.conspec.thresh = 0.05;
-matlabbatch{1}.spm.stats.results.conspec.extent = 0;
-matlabbatch{1}.spm.stats.results.conspec.mask.none = 1;
-matlabbatch{1}.spm.stats.results.units = 1;
-matlabbatch{1}.spm.stats.results.print = false;
-matlabbatch{1}.spm.stats.results.write.tspm.basename = 'spm_result.nii';
+    matlabbatch{1}.spm.stats.results.conspec.titlestr = '';
+    matlabbatch{1}.spm.stats.results.conspec.contrasts = 1;
+    matlabbatch{1}.spm.stats.results.conspec.threshdesc = 'FWE';
+    matlabbatch{1}.spm.stats.results.conspec.thresh = 0.05;
+    matlabbatch{1}.spm.stats.results.conspec.extent = 0;
+    matlabbatch{1}.spm.stats.results.conspec.mask.none = 1;
+    matlabbatch{1}.spm.stats.results.units = 1;
+    matlabbatch{1}.spm.stats.results.print = false;
+    matlabbatch{1}.spm.stats.results.write.tspm.basename = 'spm_result.nii';
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
-
+    
     % cleanup
     delete([options.root,options.patientname,filesep,'statvat_results',filesep,'*_temp.nii']);
 end
 
+delete([ea_space(options),'bb_nan.nii']);
