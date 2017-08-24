@@ -1,35 +1,35 @@
-function varargout = lead_group(varargin)
-% LEAD_GROUP MATLAB code for lead_group.fig
-%      LEAD_GROUP, by itself, creates a new LEAD_GROUP or raises the existing
+function varargout = lead_group_connectome(varargin)
+% LEAD_GROUP_CONNECTOME MATLAB code for lead_group_connectome.fig
+%      LEAD_GROUP_CONNECTOME, by itself, creates a new LEAD_GROUP_CONNECTOME or raises the existing
 %      singleton*.
 %
-%      H = LEAD_GROUP returns the handle to a new LEAD_GROUP or the handle to
+%      H = LEAD_GROUP_CONNECTOME returns the handle to a new LEAD_GROUP_CONNECTOME or the handle to
 %      the existing singleton*.
 %
-%      LEAD_GROUP('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in LEAD_GROUP.M with the given input arguments.
+%      LEAD_GROUP_CONNECTOME('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in LEAD_GROUP_CONNECTOME.M with the given input arguments.
 %
-%      LEAD_GROUP('Property','Value',...) creates a new LEAD_GROUP or raises the
+%      LEAD_GROUP_CONNECTOME('Property','Value',...) creates a new LEAD_GROUP_CONNECTOME or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before lead_group_OpeningFcn gets called.  An
+%      applied to the GUI before lead_group_connectome_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to lead_group_OpeningFcn via varargin.
+%      stop.  All inputs are passed to lead_group_connectome_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help lead_group
+% Edit the above text to modify the response to help lead_group_connectome
 
-% Last Modified by GUIDE v2.5 22-Aug-2017 20:41:39
+% Last Modified by GUIDE v2.5 24-Aug-2017 09:44:13
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
     'gui_Singleton',  gui_Singleton, ...
-    'gui_OpeningFcn', @lead_group_OpeningFcn, ...
-    'gui_OutputFcn',  @lead_group_OutputFcn, ...
+    'gui_OpeningFcn', @lead_group_connectome_OpeningFcn, ...
+    'gui_OutputFcn',  @lead_group_connectome_OutputFcn, ...
     'gui_LayoutFcn',  [] , ...
     'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,21 +44,21 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before lead_group is made visible.
-function lead_group_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before lead_group_connectome is made visible.
+function lead_group_connectome_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to lead_group (see VARARGIN)
+% varargin   command line arguments to lead_group_connectome (see VARARGIN)
 
-% Choose default command line output for lead_group
+% Choose default command line output for lead_group_connectome
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes lead_group wait for user response (see UIRESUME)
+% UIWAIT makes lead_group_connectome wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 
 options.earoot = ea_getearoot;
@@ -202,7 +202,7 @@ if ~isempty(folders)
 end
 
 % --- Outputs from this function are returned to the command line.
-function varargout = lead_group_OutputFcn(hObject, eventdata, handles)
+function varargout = lead_group_connectome_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1813,12 +1813,137 @@ end
 cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));
 
 
+% --- Executes on button press in lc_SPM.
+function lc_SPM_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_SPM (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+M=getappdata(handles.leadfigure,'M');
+
+gecs = get(handles.lc_graphmetric,'String');
+gecs = gecs{M.ui.lc.graphmetric};
+parc = get(handles.labelpopup,'String');
+parc = parc{get(handles.labelpopup,'Value')};
+
+spmdir = [M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,filesep,'SPM'];
+if exist(spmdir, 'dir')
+    rmdir(spmdir,'s');
+end
+mkdir(spmdir);
+
+for sub=1:length(M.patient.list)
+    if M.ui.lc.normalization == 1 % no normalization
+        normflag = '';
+    else
+        if M.ui.lc.normalization == 2 % z-Score
+            normflag = 'z';
+        elseif M.ui.lc.normalization == 3 % Albada 2008
+            normflag = 'k';
+        end
+        ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,'.nii'], normflag);
+    end
+
+    if M.ui.lc.smooth
+        smoothflag = 's';
+        ea_smooth([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,'.nii']);
+    else
+        smoothflag = '';
+    end
+
+    fis{sub} = [M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,smoothflag,normflag,gecs,'.nii'];
+end
+
+%% model specification:
+matlabbatch{1}.spm.stats.factorial_design.dir = {spmdir};
+matlabbatch{1}.spm.stats.factorial_design.des.t1.scans = fis';
+matlabbatch{1}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{1}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{1}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+matlabbatch{1}.spm.stats.factorial_design.masking.im = 1;
+matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
+matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
+matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
+spm_jobman('run',{matlabbatch});
+clear matlabbatch
+
+%% model estimation:
+matlabbatch{1}.spm.stats.fmri_est.spmmat = {[spmdir, filesep, 'SPM.mat']};
+matlabbatch{1}.spm.stats.fmri_est.write_residuals = 0;
+matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1;
+spm_jobman('run',{matlabbatch});
+clear matlabbatch
+
+%% contrast manager:
+matlabbatch{1}.spm.stats.con.spmmat = {[spmdir, filesep, 'SPM.mat']};
+matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'main effect';
+matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = 1;
+matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+matlabbatch{1}.spm.stats.con.delete = 1;
+spm_jobman('run',{matlabbatch});
+clear matlabbatch
 
 
+% --- Executes on selection change in lc_normalization.
+function lc_normalization_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_normalization (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns lc_normalization contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from lc_normalization
+M=getappdata(gcf,'M');
+M.ui.lc.normalization=get(handles.lc_normalization,'Value');
+setappdata(gcf,'M',M);
+
+% --- Executes during object creation, after setting all properties.
+function lc_normalization_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_normalization (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 
+% --- Executes on selection change in lc_graphmetric.
+function lc_graphmetric_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_graphmetric (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns lc_graphmetric contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from lc_graphmetric
+M=getappdata(gcf,'M');
+M.ui.lc.graphmetric=get(handles.lc_graphmetric,'Value');
+setappdata(gcf,'M',M);
+
+% --- Executes during object creation, after setting all properties.
+function lc_graphmetric_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_graphmetric (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 
+% --- Executes on button press in lc_smooth.
+function lc_smooth_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_smooth (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of lc_smooth
+M=getappdata(gcf,'M');
+M.ui.lc.smooth=get(handles.lc_smooth,'Value');
+setappdata(gcf,'M',M);
 
 
 function ea_histnormalize(fname, normflag)
@@ -1857,11 +1982,323 @@ options.native=0;
 ea_spec2dwrite(options);
 
 
+% --- Executes on button press in calcgroupconnectome.
+function calcgroupconnectome_Callback(hObject, eventdata, handles)
+% hObject    handle to calcgroupconnectome (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+options.prefs=ea_prefs('tmp');
+M=getappdata(gcf,'M');
+
+normalized_fibers_mm=[]; % combined connectome
+allidx=[];
+ea_dispercent(0,'Concatenating connectome');
+maxfibno=0;
+for sub=1:length(M.patient.list)
+    ea_dispercent(sub/length(M.patient.list));
+
+    [nfibs,idx]=ea_loadfibertracts([M.patient.list{sub},filesep,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized]);
+    idx=idx(1:20000); % only use first 20k fibers of each subject.
+    sumidx=sum(idx);
+    nfibs=nfibs(1:sumidx,:);
+    nfibs(:,4)=nfibs(:,4)+maxfibno; % add offset
+    normalized_fibers_mm=[normalized_fibers_mm;nfibs];
+    allidx=[allidx;idx];
+    maxfibno=max(normalized_fibers_mm(:,4));
+end
+ea_dispercent(1,'end');
+if ~exist([M.ui.groupdir,'connectomes',filesep,'dMRI'], 'dir')
+    mkdir([M.ui.groupdir,'connectomes',filesep,'dMRI'])
+end
+ea_savefibertracts([M.ui.groupdir,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],normalized_fibers_mm,allidx,'mm');
 
 
 
 
+function lc_contrast_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_contrast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
+% Hints: get(hObject,'String') returns contents of lc_contrast as text
+%        str2double(get(hObject,'String')) returns contents of lc_contrast as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function lc_contrast_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_contrast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in lc_stattest.
+function lc_stattest_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_stattest (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns lc_stattest contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from lc_stattest
+
+
+% --- Executes during object creation, after setting all properties.
+function lc_stattest_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_stattest (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in lc_metric.
+function lc_metric_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_metric (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns lc_metric contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from lc_metric
+
+
+% --- Executes during object creation, after setting all properties.
+function lc_metric_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_metric (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function lc_threshold_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_threshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of lc_threshold as text
+%        str2double(get(hObject,'String')) returns contents of lc_threshold as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function lc_threshold_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lc_threshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+
+% --- Executes on button press in lc_nbs.
+function lc_nbs_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_nbs (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+clearvars -global nbs
+global nbs
+
+earoot=getappdata(handles.leadfigure,'earoot');
+UI.method.ui = 'Run NBS';
+UI.test.ui = get(handles.lc_stattest,'String');
+UI.test.ui=UI.test.ui{get(handles.lc_stattest,'Value')};
+UI.thresh.ui = get(handles.lc_threshold,'String');
+UI.contrast.ui = get(handles.lc_contrast,'String');
+ea_preparenbs(handles)
+root=get(handles.groupdir_choosebox,'String');
+UI.design.ui = [root,'NBSdesignMatrix.mat'];
+UI.matrices.ui = [root,'NBSdataMatrix.mat'];
+UI.node_coor.ui = '';
+UI.node_label.ui = '';
+
+% get advanced options:
+try
+    lc=load([earoot,'connectomics',filesep,'lc_options.mat']);
+catch
+    lc=ea_initlcopts([]);
+end
+if ~isfield(lc,'nbs') % compatibility with older stored userdata (<v1.4.9)
+    lc=ea_initlcopts([],lc); % will merely add the nbs stuff
+end
+save([earoot,'connectomics',filesep,'lc_options.mat'],'-struct','lc');
+switch lc.nbs.adv.compsize
+    case 1
+        UI.size.ui = 'Extent';
+    case 2
+        UI.size.ui = 'Intensity';
+end
+
+UI.perms.ui = num2str(lc.nbs.adv.perm);
+UI.alpha.ui = num2str(lc.nbs.adv.alpha);
+UI.exchange.ui = lc.nbs.adv.exch;
+
+ea_NBSrun(UI,[]);
+
+load([root,'NBSdataMatrix.mat']);
+load([root,'NBSdesignMatrix.mat']);
+
+switch UI.test.ui
+    case 't-test'
+        c=eval(UI.contrast.ui);
+        if length(c)>2
+            ea_error('Only two-sample t-tests are fully supported at present.');
+        end
+
+        [~,~,~,tstat]=ttest2(permute(allX(:,:,logical(mX(:,find(c==1)))),[3,1,2]),...
+            permute(allX(:,:,logical(mX(:,find(c==-1)))),[3,1,2]));
+
+        T=squeeze(tstat.tstat);
+        uT=T;
+        clear tstat
+        clear pmask
+        pmask=zeros([nbs.NBS.n,size(T)]);
+        for network=1:nbs.NBS.n;
+            X=full(nbs.NBS.con_mat{network});
+            X=X+X';
+            pmask(network,:,:)=X;
+            save([root,'sig_',num2str(network)],'X');
+        end
+
+        if network
+        pmask=squeeze(sum(pmask,1));
+        end
+        T(~pmask)=nan;
+    otherwise
+
+        for network=1:nbs.NBS.n;
+            X=full(nbs.NBS.con_mat{network});
+            X=X+X';
+            save([root,'sig_',num2str(network)],'X');
+        end
+        ea_error('Only t-test fully supported at present. Please process results manually for other tests.');
+end
+
+thisparc=get(handles.labelpopup,'String');
+thisparc=thisparc{get(handles.labelpopup,'Value')};
+thismetr=get(handles.lc_metric,'String');
+thismetr=thismetr{get(handles.lc_metric,'Value')};
+
+if ismember('&',thismetr) % clean from & for variable
+    [~,ix]=ismember('&',thismetr);
+    thismetr(ix)='';
+end
+eval([thismetr,'=T;']);
+expfn=[root,thisparc,'_',thismetr,'T_p<',UI.alpha.ui,'.mat'];
+save(expfn,thismetr);
+eval([thismetr,'=uT;']);
+expfn=[root,thisparc,'_',thismetr,'T_unthresholded.mat'];
+save(expfn,thismetr);
+
+disp('** NBS done.');
+if network
+    disp('NBS found at least one significant network.');
+    disp(['It has been stored in: ',expfn,'.']);
+
+    disp(['To display the network(s), please load this file in the 3D viewer''s "Connectivity Visualization" under the "Matrix Level" panel.']);
+else
+    disp('NBS found no significant networks.');
+end
+
+
+function ea_preparenbs(handles)
+
+% prepare designmatrix:
+
+gstr=(get(handles.grouplist,'String'));
+
+for pt=1:length(gstr);
+    gv(pt)=str2double(gstr(pt));
+end
+mX=zeros(length(gv),max(gv));
+for g=1:max(gv)
+    mX(:,g)=gv==g;
+end
+save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
+
+% prepare data matrix:
+
+M=getappdata(handles.leadfigure,'M');
+thisparc=get(handles.labelpopup,'String');
+thisparc=thisparc{get(handles.labelpopup,'Value')};
+
+thismetr=get(handles.lc_metric,'String');
+thismetr=thismetr{get(handles.lc_metric,'Value')};
+
+if ismember('&',thismetr)
+    % e.g. ON vs OFF metric - need to load two matrices per subject!
+    [~,plusix]=ismember('&',thismetr);
+    [scix]=strfind(thismetr,'_');
+    suffx1=thismetr(scix(1)+1:plusix-1);
+    suffx2=thismetr(plusix+1:scix(2)-1);
+    base=thismetr(1:scix(1)-1);
+    cap=thismetr(scix(2)+1:end);
+    clear thismetr
+    metrix{1}=[base,'_',suffx1,'_',cap];
+    metrix{2}=[base,'_',suffx2,'_',cap];
+
+    % inflate design matrix
+    if ~all(mX==1)
+        ea_error('Multi subject measurements only supported for a single cohort. All group values must be 1.');
+    end
+
+    mX=repmat(eye(2),length(mX),1);
+    save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
+else
+ metrix{1}=thismetr;
+end
+
+Xcnt=1;
+for pt=1:length(M.patient.list)
+    for metr=1:length(metrix)
+        X=load([M.patient.list{pt},filesep,'connectomics',filesep,thisparc,filesep,metrix{metr},'.mat']);
+        fn=fieldnames(X);
+        if ~exist('allX','var')
+            allX=nan([size(X.(fn{1})),length(M.patient.list)]);
+        end
+
+        X=X.(fn{1});
+        switch get(handles.normregpopup,'Value')
+            case 2
+                X(:)=ea_nanzscore(X(:));
+            case 3
+                X(:)=ea_normal(X(:));
+        end
+
+        allX(:,:,Xcnt)=X;
+        Xcnt=Xcnt+1;
+    end
+end
+save([get(handles.groupdir_choosebox,'String'),'NBSdataMatrix'],'allX','-v7.3');
+
+
+
+% --- Executes on button press in lc_nbsadvanced.
+function lc_nbsadvanced_Callback(hObject, eventdata, handles)
+% hObject    handle to lc_nbsadvanced (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+ea_nbs_advanced;
 
 
 % --- Executes on button press in mirrorsides.

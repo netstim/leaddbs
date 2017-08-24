@@ -259,7 +259,6 @@ for nativemni=nm % switch between native and mni space atlases.
             catch
                 ea_error('Atlas color not found.');
             end
-
             colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
 
             % set Tags

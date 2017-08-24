@@ -91,6 +91,17 @@ else
 end
 
 thisparc=thisparc{useparc};
+try
+    gms = dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
+    gms = cellfun(@(x) {strrep(x, '.nii', '')}, {gms.name});
+
+    if ~isempty(gms)
+        set(handles.lc_graphmetric, 'String', gms);
+    else
+        set(handles.lc_graphmetric, 'Value', 1);
+        set(handles.lc_graphmetric, 'String', 'No graphic metric found');
+    end
+end
 
 %% modalities for VAT metrics:
 
@@ -152,6 +163,7 @@ try set(handles.highlightactivecontcheck,'Value',M.ui.hlactivecontcheck); end
 try set(handles.showisovolumecheck,'Value',M.ui.showisovolumecheck); end
 try set(handles.statvatcheck,'Value',M.ui.statvat); end
 try set(handles.colorpointcloudcheck,'Value',M.ui.colorpointcloudcheck); end
+try set(handles.lc_smooth,'Value',M.ui.lc.smooth); end
 try set(handles.mirrorsides,'Value',M.ui.lc.mirrorsides); end
 
 % update selectboxes:
@@ -169,7 +181,12 @@ end
 
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
+try set(handles.lc_normalization,'Value',M.ui.lc.normalization); end
 
+lc_graphmetric = get(handles.lc_graphmetric,'String');
+if ~(ischar(lc_graphmetric) && strcmp(lc_graphmetric, 'No graphic metric found'))
+    try set(handles.lc_graphmetric,'Value',M.ui.lc.graphmetric); end
+end
 
 % update enable-disable-dependencies:
 try
@@ -189,8 +206,44 @@ end
 %% patient specific part:
 if ~isempty(M.patient.list)
 
+    % add modalities to NBS stats metric popup:
+    disp('Adding modalities to NBS popup...');
 
-    
+    tryparcs=dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'*_CM.mat']);
+    if isempty(tryparcs)
+        set(handles.lc_metric, 'Value', 1);
+        set(handles.lc_metric, 'String', 'No data found');
+    else
+        avparcs=ones(length(tryparcs),1);
+        for sub=1:length(M.patient.list)
+            for parc=1:length(tryparcs)
+                if ~exist([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,tryparcs(parc).name],'file');
+                    avparcs(parc)=0;
+                end
+            end
+        end
+
+        tryparcs=tryparcs(logical(avparcs));
+        pcell=cell(length(tryparcs),1);
+        restcnt=1;
+        restcell=cell(0);
+        for p=1:length(pcell)
+            [~,pcell{p}]=fileparts(tryparcs(p).name);
+            if strcmp(pcell{p}(1:4),'rest')
+                ix=strfind(pcell{p},'_');
+               restcell{restcnt}=pcell{p}(ix(1)+1:ix(2)-1);
+               restcnt=restcnt+1;
+            end
+        end
+        for restii=1:length(restcell)
+            for restjj=1:length(restcell)
+                if restii>restjj
+                   pcell{end+1}=['rest_',restcell{restii},'&',restcell{restjj},'_fMRI_CM'];
+                end
+            end
+        end
+        set(handles.lc_metric,'String',pcell);
+    end
 
     disp('Loading localizations...');
     for pt=1:length(M.patient.list)

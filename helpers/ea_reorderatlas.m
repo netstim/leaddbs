@@ -11,11 +11,14 @@ atlases.pixdim=atlases.pixdim(order,:);
 atlases.colorc=atlases.colorc(order,:);
 atlases.normals=atlases.normals(order,:);
 
-
+try
 for p=1:length(atlases.presets)
     atlases.presets(p).show=find(ismember(order,atlases.presets(p).show));
     atlases.presets(p).hide=find(ismember(order,atlases.presets(p).hide));
 end
+end
+try
 for l=1:length(atlases.labels)
 atlases.labels{l}=atlases.labels{l}(order);
+end
 end
