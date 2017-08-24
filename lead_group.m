@@ -1809,31 +1809,6 @@ end
 cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));
 
 
-function ea_histnormalize(fname, normflag)
-nii=ea_load_nii(fname);
-[pth,fn,ext]=fileparts(fname);
-
-msk = isnan(nii.img) | (nii.img == 0);
-vals = nii.img(~msk);
-
-switch normflag
-    case 'z' % zscore
-        nii.fname=[pth,filesep,'z',fn,ext];
-        vals=zscore(vals(:));
-    case 'k' % albada
-        nii.fname=[pth,filesep,'k',fn,ext];
-        vals=ea_normal(vals(:));
-end
-
-nii.img(~msk)=vals;
-spm_write_vol(nii,nii.img);
-
-
-function ea_smooth(fname)
-[pth,fn,ext]=fileparts(fname);
-spm_smooth(fname,[pth,filesep,'s',fn,ext],[8 8 8]);
-
-
 % --- Executes on button press in specify2doptions.
 function specify2doptions_Callback(hObject, eventdata, handles)
 % hObject    handle to specify2doptions (see GCBO)

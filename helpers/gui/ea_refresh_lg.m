@@ -174,7 +174,6 @@ end
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
 
-
 % update enable-disable-dependencies:
 try
     if M.ui.elrendering==3
@@ -183,6 +182,7 @@ try
         try set(handles.colorpointcloudcheck,'Enable','off'); end
     end
 end
+
 % hide detachbutton if already detached:
 try
     if M.ui.detached

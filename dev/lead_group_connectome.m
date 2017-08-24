@@ -65,23 +65,6 @@ options.earoot = ea_getearoot;
 options.prefs = ea_prefs('');
 setappdata(handles.leadfigure,'earoot',options.earoot);
 
-% setup vat functions
-cnt=1;
-ndir=dir([options.earoot,'ea_genvat_*.m']);
-for nd=length(ndir):-1:1
-    [~,methodf]=fileparts(ndir(nd).name);
-    try
-        [thisndc]=eval([methodf,'(','''prompt''',')']);
-        ndc{cnt}=thisndc;
-        genvatfunctions{cnt}=methodf;
-        cnt=cnt+1;
-    end
-end
-
-setappdata(handles.leadfigure,'genvatfunctions',genvatfunctions);
-setappdata(handles.leadfigure,'vatfunctionnames',ndc);
-
-
 % set background image
 set(gcf,'color','w');
 im=imread([options.earoot,'icons',filesep,'logo_lead_group.png']);
@@ -127,11 +110,11 @@ set(handles.clinicallist,'Max',100,'Min',0);
 
 M=getappdata(gcf,'M');
 if isempty(M)
-    % initialize Model variable M
-    M=ea_initializeM;
+    % initialize variable M
+    M=ea_initializeM_connectome;
 end
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
 
 handles.prod='group';
 ea_firstrun(handles,options);
@@ -174,11 +157,12 @@ if ~isempty(folders)
     M.patient.group=[M.patient.group;ones(length(folders),1)];
 
     setappdata(handles.leadfigure,'M',M);
-    ea_refresh_lg(handles);
+    ea_refresh_lg_connectome(handles);
     % save M
     M=getappdata(handles.leadfigure,'M');
-    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+    save([get(handles.groupdir_choosebox,'String'),'LEAD_GroupConnectome.mat'],'M','-v7.3');
 end
+
 
 % --- Outputs from this function are returned to the command line.
 function varargout = lead_group_connectome_OutputFcn(hObject, eventdata, handles)
@@ -205,8 +189,7 @@ M.ui.listselect=get(handles.patientlist,'Value');
 set(handles.grouplist,'Value',M.ui.listselect);
 
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
+ea_refresh_lg_connectome(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -238,10 +221,10 @@ M.patient.list=[M.patient.list;folders'];
 M.patient.group=[M.patient.group;ones(length(folders),1)];
 
 setappdata(handles.leadfigure,'M',M);
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
 % save M
 M=getappdata(handles.leadfigure,'M');
-save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+save([get(handles.groupdir_choosebox,'String'),'LEAD_GroupConnectome.mat'],'M','-v7.3');
 
 
 % --- Executes on button press in removeptbutton.
@@ -257,172 +240,14 @@ M.patient.list(deleteentry)=[];
 
 M.patient.group(deleteentry)=[];
 
-try M.elstruct(deleteentry)=[]; end
-try M.stimparams(deleteentry)=[]; end
-
 for cvar=1:length(M.clinical.vars)
     try
         M.clinical.vars{cvar}(deleteentry,:)=[];
     end
 end
 
-try
-    M.stats(deleteentry)=[];
-end
-
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-% --- Executes on button press in vizbutton.
-function vizbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to vizbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-clc;
-M=getappdata(gcf,'M');
-ea_busyaction('on',handles.leadfigure,'group');
-% set options
-options=ea_setopts_local(handles);
-options.leadprod = 'group';
-% set pt specific options
-options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),filesep];
-[~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
-
-options.expstatvat.do=M.ui.statvat;
-
-try
-    options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
-catch
-    warning('Localizations seem not properly defined.');
-end
-options.elmodel=M.elstruct(1).elmodel;
-options=ea_resolve_elspec(options);
-options.prefs=ea_prefs(options.patientname);
-options.d3.verbose='on';
-
-options.d3.elrendering=M.ui.elrendering;
-options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
-options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
-options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
-options.d3.mirrorsides=get(handles.mirrorsides,'Value');
-try options.d3.isomatrix=M.isomatrix; end
-try options.d3.isomatrix_name=M.isomatrix_name; end
-
-options.d2.write=0;
-
-options.d2.atlasopacity=0.15;
-
-options.d3.isovscloud=M.ui.isovscloudpopup;
-options.d3.showisovolume=M.ui.showisovolumecheck;
-
-options.d3.colorpointcloud=M.ui.colorpointcloudcheck;
-options.d3.exportBB=0;	% don't export brainbrowser struct by default
-
-options.normregressor=M.ui.normregpopup;
-
-% Prepare isomatrix (includes a normalization step if M.ui.normregpopup
-% says so:
-
-for reg=1:length(options.d3.isomatrix)
-    try options.d3.isomatrix{reg}=ea_reformat_isomatrix(options.d3.isomatrix{reg},M,options); end
-end
-if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
-    disp('Saving data...');
-    % save M
-    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
-    disp('Done.');
-end
-
-% export VAT-mapping
-if options.expstatvat.do % export to nifti volume
-    ea_exportvatmapping(M,options,handles);
-end
-options.groupmode=1;
-
-% overwrite active contacts information with new one from S (if present).
-ptidx=get(handles.patientlist,'Value');
-try
-    for pt=1:length(M.elstruct)
-        M.elstruct(pt).activecontacts=M.S(pt).activecontacts;
-    end
-end
-options.groupmode=1;
-options.modality=3; % use template image
-options.patient_list=M.patient.list;
-
-% mer development
-vizstruct.elstruct=M.elstruct(ptidx);
-uipatdirs=handles.patientlist.String(ptidx);
-npts=length(uipatdirs);
-
-% amend .pt to identify which patient is selected (needed for isomatrix).
-for pt=1:length(ptidx)
-    M.elstruct(ptidx(pt)).pt=ptidx(pt);
-end
-
-resultfig=ea_elvis(options,M.elstruct(ptidx));
-zoom(3);
-
-ea_busyaction('off',handles.leadfigure,'group');
-
-
-% --- Executes on button press in corrbutton_vta.
-function corrbutton_vta_Callback(hObject, eventdata, handles)
-% hObject    handle to corrbutton_vta (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-ea_busyaction('on',gcf,'group');
-
-stats=preparedataanalysis(handles);
-
-
-assignin('base','stats',stats);
-
-
-% perform correlations:
-
-
-if size(stats.corrcl,2)==1 % one value per patient
-    try stats.vicorr.nboth=(stats.vicorr.nboth/2)*100; end
-    try stats.vicorr.nright=(stats.vicorr.nright/2)*100; end
-    try stats.vicorr.nleft=(stats.vicorr.nleft/2)*100; end
-
-    if ~isempty(stats.vicorr.both)
-        %ea_corrplot([stats.corrcl,stats.vicorr.both],'Volume Intersections, both hemispheres',stats.vc_labels);
-        ea_corrplot([stats.corrcl,stats.vicorr.nboth],'VI_BH',stats.vc_labels,handles);
-    end
-    %     if ~isempty(stats.vicorr.right)
-    %         %ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
-    %         ea_corrplot([stats.corrcl,stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
-    %     end
-    %     if ~isempty(stats.vicorr.left)
-    %         %ea_corrplot([stats.corrcl,stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
-    %         ea_corrplot([stats.corrcl,stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
-    %     end
-
-elseif size(stats.corrcl,2)==2 % one value per hemisphere
-    try stats.vicorr.nboth=(stats.vicorr.nboth)*100; end
-    try stats.vicorr.nright=(stats.vicorr.nright)*100; end
-    try stats.vicorr.nleft=(stats.vicorr.nleft)*100; end
-    if ~isempty(stats.vicorr.both)
-
-        %ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],'Volume Intersections, both hemispheres',stats.vc_labels);
-        ea_corrplot([stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft]],'VI_BH',stats.vc_labels,handles);
-    end
-    %     if ~isempty(stats.vicorr.right)
-    %         %ea_corrplot([stats.corrcl(:,1),stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
-    %         ea_corrplot([stats.corrcl(:,1),stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
-    %     end
-    %     if ~isempty(stats.vicorr.left)
-    %         %ea_corrplot([stats.corrcl(:,2),stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
-    %         ea_corrplot([stats.corrcl(:,2),stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
-    %     end
-else
-    ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
-end
-ea_busyaction('off',gcf,'group');
-
+ea_refresh_lg_connectome(handles);
 
 
 % --- Executes on selection change in clinicallist.
@@ -437,7 +262,8 @@ M=getappdata(gcf,'M');
 
 M.ui.clinicallist=get(handles.clinicallist,'Value');
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function clinicallist_CreateFcn(hObject, eventdata, handles)
@@ -465,10 +291,10 @@ if ~isempty(numat) % user did not press cancel
     M.clinical.labels{end+1}=nuvar;
 end
 set(handles.clinicallist,'Value',M.ui.clinicallist);
-% store model and refresh UI
+% store and refresh UI
 setappdata(gcf,'M',M);
 
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
 
 
 function [mat,matname]=ea_get_clinical(M)
@@ -489,6 +315,7 @@ if ~isempty(numat) % user did not press cancel
     matname=nuname;
 end
 
+
 % --- Executes on button press in removevarbutton.
 function removevarbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to removevarbutton (see GCBO)
@@ -500,30 +327,9 @@ M=getappdata(gcf,'M');
 M.clinical.vars(get(handles.clinicallist,'Value'))=[];
 M.clinical.labels(get(handles.clinicallist,'Value'))=[];
 
-% store model and refresh UI
+% store and refresh UI
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-
-
-
-
-% --- Executes on selection change in vilist.
-function vilist_Callback(hObject, eventdata, handles)
-% hObject    handle to vilist (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns vilist contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from vilist
-M=getappdata(gcf,'M');
-
-M.ui.volumeintersections=get(handles.vilist,'Value');
-
-% store model and refresh UI
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
 
 
 function [pathname] = ea_uigetdir(start_path, dialog_title)
@@ -560,10 +366,6 @@ else
 end
 
 
-
-
-
-
 % --- Executes on selection change in grouplist.
 function grouplist_Callback(hObject, eventdata, handles)
 % hObject    handle to grouplist (see GCBO)
@@ -579,9 +381,7 @@ M.ui.listselect=get(handles.grouplist,'Value');
 set(handles.patientlist,'Value',M.ui.listselect);
 
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
+ea_refresh_lg_connectome(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -605,8 +405,7 @@ function plusgroupbutton_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 M.patient.group(get(handles.patientlist,'Value'))=M.patient.group(get(handles.patientlist,'Value'))+1;
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
+ea_refresh_lg_connectome(handles);
 
 
 % --- Executes on button press in minusgroupbutton.
@@ -619,151 +418,7 @@ if M.patient.group(get(handles.patientlist,'Value'))>1
     M.patient.group(get(handles.patientlist,'Value'))=M.patient.group(get(handles.patientlist,'Value'))-1;
 end
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-% --- Executes on button press in ttestbutton_vta.
-function ttestbutton_vta_Callback(hObject, eventdata, handles)
-% hObject    handle to ttestbutton_vta (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-stats=preparedataanalysis(handles);
-
-assignin('base','stats',stats);
-
-% perform t-tests:
-
-if ~isempty(stats.vicorr.both)
-    ea_ttest(stats.vicorr.both(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),stats.vicorr.both(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),'Volume Intersections, both hemispheres',stats.vc_labels);
-end
-if ~isempty(stats.vicorr.right)
-    ea_ttest(stats.vicorr.right(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),stats.vicorr.right(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),'Volume Intersections, right hemisphere',stats.vc_labels);
-end
-if ~isempty(stats.vicorr.left)
-    ea_ttest(stats.vicorr.left(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),stats.vicorr.left(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),'Volume Intersections, left hemisphere',stats.vc_labels);
-end
-
-
-if ~isempty(stats.vicorr.nboth)
-    ea_ttest(stats.vicorr.nboth(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),stats.vicorr.both(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),'Normalized Volume Intersections, both hemispheres',stats.vc_labels);
-end
-if ~isempty(stats.vicorr.nright)
-    ea_ttest(stats.vicorr.nright(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),stats.vicorr.right(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),'Normalized Volume Intersections, right hemisphere',stats.vc_labels);
-end
-if ~isempty(stats.vicorr.nleft)
-    ea_ttest(stats.vicorr.nleft(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),stats.vicorr.left(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),'Normalized Volume Intersections, left hemisphere',stats.vc_labels);
-end
-
-
-
-function [stats]=preparedataanalysis(handles)
-
-M=getappdata(gcf,'M');
-
-% Get volume intersections:
-vicnt=1; ptcnt=1;
-
-howmanyvis=length(get(handles.vilist,'Value'));
-howmanypts=length(get(handles.patientlist,'Value'));
-
-vicorr_right=zeros(howmanypts,howmanyvis); vicorr_left=zeros(howmanypts,howmanyvis); vicorr_both=zeros(howmanypts,howmanyvis);
-nvicorr_right=zeros(howmanypts,howmanyvis); nvicorr_left=zeros(howmanypts,howmanyvis); nvicorr_both=zeros(howmanypts,howmanyvis);
-vc_labels={};
-
-for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
-    for pt=get(handles.patientlist,'Value')
-        S.label=['gs_',M.guid];
-        [ea_stats,usewhichstim]=ea_assignstimcnt(M.stats(pt).ea_stats,S);
-        for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).ft,2)
-            for vat=1
-                if side==1 % right hemisphere
-                    vicorr_right(ptcnt,vicnt)=vicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
-                    nvicorr_right(ptcnt,vicnt)=nvicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
-
-                    elseif side==2 % left hemisphere
-                    vicorr_left(ptcnt,vicnt)=vicorr_left(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
-                    nvicorr_left(ptcnt,vicnt)=nvicorr_left(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
-                end
-                vicorr_both(ptcnt,vicnt)=vicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
-                nvicorr_both(ptcnt,vicnt)=nvicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
-
-            end
-        end
-
-
-        % check if all three values have been served. if not, set to zero
-        % (e.g. if there was no stimulation at all on one hemisphere, this
-        % could happen.
-
-        ptcnt=ptcnt+1;
-
-    end
-    vc_labels{end+1}=M.stats(pt).ea_stats.atlases.names{vi};
-
-    ptcnt=1;
-    vicnt=vicnt+1;
-end
-
-
-% Get fibercounts (here first ft is always right hemispheric, second always left hemispheric). There will always be two fts used.:
-howmanyfcs=length(get(handles.fclist,'Value'));
-
-fccnt=1; ptcnt=1;
-fccorr_right=zeros(howmanypts,howmanyfcs);
-nfccorr_right=zeros(howmanypts,howmanyfcs);
-fccorr_left=zeros(howmanypts,howmanyfcs);
-nfccorr_left=zeros(howmanypts,howmanyfcs);
-fccorr_both=zeros(howmanypts,howmanyfcs);
-nfccorr_both=zeros(howmanypts,howmanyfcs);
-fc_labels={};
-for fc=get(handles.fclist,'Value') % get volume interactions for each patient from stats
-    for pt=get(handles.patientlist,'Value')
-        usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis!
-        fccorr_right(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).fibercounts{1}(fc);
-        nfccorr_right(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).nfibercounts{1}(fc);
-        fccorr_left(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).fibercounts{1}(fc);
-        nfccorr_left(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).nfibercounts{1}(fc);
-        fccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).fibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).fibercounts{1}(fc);
-        nfccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).nfibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).nfibercounts{1}(fc);
-        ptcnt=ptcnt+1;
-    end
-    ptcnt=1;
-    fccnt=fccnt+1;
-    fc_labels{end+1}=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).labels{1}{fc};
-end
-
-% prepare outputs:
-
-vicorr.both=vicorr_both;
-vicorr.left=vicorr_left;
-vicorr.right=vicorr_right;
-vicorr.nboth=nvicorr_both;
-vicorr.nleft=nvicorr_left;
-vicorr.nright=nvicorr_right;
-fccorr.both=fccorr_both;
-fccorr.nboth=nfccorr_both;
-fccorr.right=fccorr_right;
-fccorr.nright=nfccorr_right;
-fccorr.left=fccorr_left;
-fccorr.nleft=nfccorr_left;
-
-% clinical vector:
-corrcl=M.clinical.vars{get(handles.clinicallist,'Value')};
-
-corrcl=corrcl(get(handles.patientlist,'Value'),:);
-
-clinstrs=get(handles.clinicallist,'String');
-vc_labels=[clinstrs(get(handles.clinicallist,'Value')),vc_labels]; % add name of clinical vector to labels
-fc_labels=[clinstrs(get(handles.clinicallist,'Value')),fc_labels]; % add name of clinical vector to labels
-
-
-stats.corrcl=corrcl;
-stats.vicorr=vicorr;
-stats.fccorr=fccorr;
-stats.vc_labels=vc_labels;
-stats.fc_labels=fc_labels;
+ea_refresh_lg_connectome(handles);
 
 
 % --- Executes on button press in reviewvarbutton.
@@ -773,16 +428,15 @@ function reviewvarbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 
-% store in model as variables
-
+% store variables
 %M.clinical.vars{get(handles.clinicallist,'Value')}(isnan(M.clinical.vars{get(handles.clinicallist,'Value')}))=0;
 [M.clinical.vars{get(handles.clinicallist,'Value')},M.clinical.labels{get(handles.clinicallist,'Value')}]=ea_get_clinical(M);
 
 
-% store model and refresh UI
+% store and refresh UI
 setappdata(gcf,'M',M);
 
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
 
 
 % --- Executes on button press in moveptdownbutton.
@@ -802,16 +456,11 @@ ix(whichmoved-1)=ix(whichmoved-1)+1;
 
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
-try
-    M=rmfield(M,'stats');
-end
-try
-    M=rmfield(M,'elstruct');
-end
 setappdata(gcf,'M',M);
 set(handles.patientlist,'Value',whichmoved-1);
 
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
+
 
 % --- Executes on button press in moveptupbutton.
 function moveptupbutton_Callback(hObject, eventdata, handles)
@@ -831,230 +480,10 @@ ix(whichmoved+1)=ix(whichmoved+1)-1;
 
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
-try
-    M=rmfield(M,'stats');
-end
-try
-    M=rmfield(M,'elstruct');
-end
 setappdata(gcf,'M',M);
 set(handles.patientlist,'Value',whichmoved+1);
 
-ea_refresh_lg(handles);
-
-% --- Executes on button press in calculatebutton.
-function calculatebutton_Callback(hObject, eventdata, handles)
-% hObject    handle to calculatebutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-ea_refresh_lg(handles);
-
-M=getappdata(gcf,'M');
-
-% set options
-options=ea_setopts_local(handles);
-%stimname=ea_detstimname();
-
-options.groupmode=1;
-options.groupid=M.guid;
-
-% determine if fMRI or dMRI
-mods=get(handles.fiberspopup,'String');
-mod=mods{get(handles.fiberspopup,'Value')};
-switch mod
-    case {'Patient-specific fiber tracts','rest_tc'}
-        fibersfile=mod;
-    case 'Do not calculate connectivity stats'
-    otherwise % load fibertracts once and for all subs here.
-        [fibersfile.fibers,fibersfile.fibersidx]=ea_loadfibertracts([ea_getconnectomebase('dmri'),mod,filesep,'data.mat']);
-end
-
-[selection]=ea_groupselectorwholelist(M.ui.listselect,M.patient.list);
-
-for pt=selection
-
-    % set pt specific options
-
-    % own fileparts to support windows/mac/linux slashes even if they come
-    % from a different OS.
-    if isempty(strfind(M.patient.list{pt},'/'))
-        lookfor='\';
-    else
-        lookfor='/';
-    end
-
-    slashes=strfind(M.patient.list{pt},lookfor);
-    if ~isempty(slashes)
-        options.patientname=M.patient.list{pt}(slashes(end)+1:end);
-        options.root=M.patient.list{pt}(1:slashes(end));
-    else
-        options.patientname=M.patient.list{pt};
-        options.root='';
-    end
-
-    disp(['Processing ',options.patientname,'.']);
-    try
-        options.numcontacts=size(M.elstruct(pt).coords_mm{1},1);
-    catch % no localization present or in wrong format.
-        ea_error(['Please localize ',options.patientname,' first.']);
-    end
-    options.elmodel=M.elstruct(pt).elmodel;
-    options=ea_resolve_elspec(options);
-    options.prefs=ea_prefs(options.patientname);
-    options.d3.verbose='off';
-    options.d3.elrendering=1;	% hard code to viz electrodes in this setting.
-    options.d3.exportBB=0;	% don't export brainbrowser struct by default
-    options.d3.colorpointcloud=0;
-    options.native=0;
-
-    options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
-    options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
-    options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
-    try
-        options.d3.isomatrix=M.isomatrix;
-    catch
-        options.d3.isomatrix={};
-    end
-
-    options.d3.isovscloud=M.ui.isovscloudpopup;
-    options.d3.showisovolume=M.ui.showisovolumecheck;
-    options.d3.exportBB=0;
-    options.expstatvat.do=0;
-    try
-        options.expstatvat.vars=M.clinical.vars(M.ui.clinicallist);
-        options.expstatvat.labels=M.clinical.labels(M.ui.clinicallist);
-        options.expstatvat.pt=pt;
-    end
-    options.expstatvat.dir=M.ui.groupdir;
-    processlocal=0;
-
-    if M.ui.detached
-        processlocal=1;
-        mkdir([M.ui.groupdir,options.patientname]);
-        options.root=M.ui.groupdir;
-        %    options.patientname='tmp';
-
-        ea_stats=M.stats(pt).ea_stats;
-        coords_mm=M.elstruct(pt).coords_mm;
-        trajectory=M.elstruct(pt).trajectory;
-        save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
-        save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
-    end
-
-    if ~exist(options.root,'file') % data is not there. Act as if detached. Process in tmp-dir.
-        processlocal=1;
-        warning('on');
-        warning('Data has been detached from group-directory. Will process locally. Please be aware that you might loose this newly-processed data once you re-attach the single-patient data to the analysis!');
-        warning('off');
-        mkdir([M.ui.groupdir,options.patientname]);
-        options.root=M.ui.groupdir;
-        % options.patientname='tmp';
-
-        ea_stats=M.stats(pt).ea_stats;
-        coords_mm=M.elstruct(pt).coords_mm;
-        trajectory=M.elstruct(pt).trajectory;
-        save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
-        save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
-    end
-
-    %delete([options.root,options.patientname,filesep,'ea_stats.mat']);
-
-    % Step 1: Re-calculate closeness to subcortical atlases.
-    options.leadprod = 'group';
-    resultfig=ea_elvis(options);
-
-    % save scene as matlab figure
-
-
-    options.modality=ea_checkctmrpresent(M.patient.list{pt});
-    if options.modality(1) % prefer MR
-        options.modality=1;
-    else
-        if options.modality(2)
-            options.modality=2;
-        else
-            options.modality=1;
-            warning(['No MR or CT volumes found in ',M.patient.list{pt},'.']);
-        end
-    end
-
-    % Step 2: Re-calculate VAT
-    if isfield(M,'S')
-        try
-            setappdata(resultfig,'S',M.S(pt));
-        catch
-            ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
-        end
-        vfnames=getappdata(handles.leadfigure,'vatfunctionnames');
-
-        [~,ix]=ismember(M.vatmodel,vfnames);
-        vfs=getappdata(handles.leadfigure,'genvatfunctions');
-        try
-            ea_genvat=eval(['@',vfs{ix}]);
-        catch
-            keyboard
-        end
-        setappdata(handles.leadfigure,'resultfig',resultfig);
-        for side=1:2
-            setappdata(resultfig,'elstruct',M.elstruct(pt));
-            setappdata(resultfig,'elspec',options.elspec);
-%            try
-                [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,['gs_',M.guid],0.2,handles.leadfigure);
-%            catch
-%                ea_error(['Error while creating VTA of ',M.patient.list{pt},'.']);
-%            end
-            stimparams(1,side).volume=volume;
-        end
-
-        setappdata(resultfig,'stimparams',stimparams(1,:));
-    end
-    % this will add the volume stats (atlasIntersections) to stats file:
-    ea_showfibres_volume(resultfig,options);
-
-
-    % Step 3: Re-calculate connectivity from VAT to rest of the brain.
-    if ~strcmp(mod,'Do not calculate connectivity stats')
-
-        % Convis part:
-        parcs=get(handles.labelpopup,'String');
-        selectedparc=parcs{get(handles.labelpopup,'Value')};
-        directory=[options.root,options.patientname,filesep];
-        if ischar(fibersfile)
-            switch mod
-                case 'rest_tc'
-                    ea_error('Group statistics for fMRI are not yet supported. Sorry, check back later!');
-                    pV=spm_vol([ea_space(options,'labeling'),selectedparc,'.nii']);
-                    pX=spm_read_vols(pV);
-                    ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
-                otherwise
-                    ea_cvshowvatdmri(resultfig,directory,{mod,'gs'},selectedparc,options);
-            end
-        else
-            ea_cvshowvatdmri(resultfig,directory,{fibersfile,'gs'},selectedparc,options);
-        end
-    end
-    close(resultfig);
-
-    if processlocal % gather stats and recos to M
-        load([M.ui.groupdir,options.patientname,filesep,'ea_stats']);
-        load([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction']);
-
-        M.stats(pt).ea_stats=ea_stats;
-        M.elstruct(pt).coords_mm=coords_mm;
-        M.elstruct(pt).trajectory=trajectory;
-        setappdata(gcf,'M',M);
-
-        save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M','-v7.3');
-        try      movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']); end
-        %rmdir([M.ui.groupdir,'tmp'],'s');
-
-
-    end
-end
-%% processing done here.
-
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
 
 
 % --- Executes on selection change in fiberspopup.
@@ -1068,7 +497,7 @@ function fiberspopup_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 M.ui.fiberspopup=get(handles.fiberspopup,'Value');
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1095,7 +524,7 @@ function labelpopup_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 M.ui.labelpopup=get(handles.labelpopup,'Value');
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1111,29 +540,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-function options=ea_setopts_local(handles)
-
-options.earoot=ea_getearoot;
-options.verbose=3;
-options.sides=1:2; % re-check this later..
-
-options.fiberthresh=1;
-options.writeoutstats=1;
-options.labelatlas=get(handles.labelpopup,'String');
-try
-    options.labelatlas=options.labelatlas{get(handles.labelpopup,'Value')};
-catch % too many entries..
-    set(handles.labelpopup,'Value',1);
-    options.labelatlas=1;
-end
-options.writeoutpm=1;
-options.colormap=jet;
-options.d3.write=1;
-options.d3.prolong_electrode=2;
-options.d3.writeatlases=1;
-options.macaquemodus=0;
-
-
 % --- Executes on button press in groupdir_choosebox.
 function groupdir_choosebox_Callback(hObject, eventdata, handles)
 % hObject    handle to groupdir_choosebox (see GCBO)
@@ -1141,7 +547,7 @@ function groupdir_choosebox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % nudir=ea_uigetdir(ea_startpath,'Choose Group Directory');
-nudir=[uigetdir];
+nudir = uigetdir;
 
 if ~nudir % user pressed cancel
     return
@@ -1149,26 +555,22 @@ end
 ea_busyaction('on',handles.leadfigure,'group');
 
 nudir=[nudir,filesep];
-M=ea_initializeM;
+M=ea_initializeM_connectome;
 
 set(handles.groupdir_choosebox,'String',nudir);
 
 try % if file already exists, load it (and overwrite M).
-    load([nudir,'LEAD_groupanalysis.mat']);
+    load([nudir,'LEAD_GroupConnectome.mat']);
 catch % if not, store it saving M.
-    save([nudir,'LEAD_groupanalysis.mat'],'M','-v7.3');
+    save([nudir,'LEAD_GroupConnectome.mat'],'M','-v7.3');
 end
 
 M.ui.groupdir=nudir;
 setappdata(handles.leadfigure,'M',M);
-try
-    setappdata(handles.leadfigure,'S',M.S);
-    setappdata(handles.leadfigure,'vatmodel',M.S(1).model);
-end
 
 ea_busyaction('off',handles.leadfigure,'group');
 
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
 
 
 % --- Executes on button press in opensubgui.
@@ -1182,225 +584,6 @@ M=getappdata(gcf,'M');
 lead_dbs('loadsubs',M.patient.list(selection));
 
 
-% --- Executes on button press in choosegroupcolors.
-function choosegroupcolors_Callback(hObject, eventdata, handles)
-% hObject    handle to choosegroupcolors (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-M=getappdata(gcf,'M');
-
-for g=unique(M.patient.group)'
-    M.groups.color(ismember(M.groups.group,g),:)=...
-        uisetcolor(M.groups.color(ismember(M.groups.group,g),:),['Group ',num2str(g),':']);
-end
-M.groups.colorschosen=1;
-
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-% --- Executes on button press in setstimparamsbutton.
-function setstimparamsbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to setstimparamsbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-M=getappdata(gcf,'M');
-
-% try
-%     uicell=inputdlg('Enter Variable name for Voltage-Parameters','Enter Stimulation Settings...',1);
-%     uidata.U=evalin('base',uicell{1});
-% catch
-%     warning('Stim-Params could not be evaluated. Please Try again.');
-%     return
-% end
-% try
-%     uicell=inputdlg('Enter Variable name for Impedance-Parameters','Enter Stimulation Settings...',1);
-%     uidata.Im=evalin('base',uicell{1});
-% catch
-%     warning('Stim-Params could not be evaluated. Please Try again.');
-%     return
-% end
-
-options = ea_setopts_local(handles);
-options.leadprod = 'group';
-options.groupid = M.guid;
-
-ea_refresh_lg(handles);
-
-ea_stimparams(M.elstruct, handles.leadfigure, options);
-
-
-% --- Executes on button press in highlightactivecontcheck.
-function highlightactivecontcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to highlightactivecontcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of highlightactivecontcheck
-M=getappdata(gcf,'M');
-M.ui.hlactivecontcheck=get(handles.highlightactivecontcheck,'Value');
-
-
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-% --- Executes on button press in showpassivecontcheck.
-function showpassivecontcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to showpassivecontcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showpassivecontcheck
-
-M=getappdata(gcf,'M');
-M.ui.showpassivecontcheck=get(handles.showpassivecontcheck,'Value');
-
-
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-% --- Executes on button press in showactivecontcheck.
-function showactivecontcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to showactivecontcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showactivecontcheck
-
-M=getappdata(gcf,'M');
-M.ui.showactivecontcheck=get(handles.showactivecontcheck,'Value');
-
-
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-% --- Executes on button press in showisovolumecheck.
-function showisovolumecheck_Callback(hObject, eventdata, handles)
-% hObject    handle to showisovolumecheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showisovolumecheck
-M=getappdata(gcf,'M');
-M.ui.showisovolumecheck=get(handles.showisovolumecheck,'Value');
-
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-
-
-% --- Executes on selection change in isovscloudpopup.
-function isovscloudpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to isovscloudpopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns isovscloudpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from isovscloudpopup
-M=getappdata(gcf,'M');
-M.ui.isovscloudpopup=get(handles.isovscloudpopup,'Value');
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-% --- Executes during object creation, after setting all properties.
-function isovscloudpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to isovscloudpopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function [pU,pIm]=getstimparams(M)
-try
-    for pt=1:length(M.patient.list)
-        for side=1:2
-            pU{side}(pt,:)=M.stimparams(pt,side).U;
-            pIm{side}(pt,:)=M.stimparams(pt,side).Im;
-        end
-    end
-catch
-    pU{1}=zeros(length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
-    pIm{1}=repmat(1000,length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
-    pU{2}=zeros(length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
-    pIm{2}=repmat(1000,length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
-end
-
-
-
-
-
-% --- Executes on button press in statvatcheck.
-function statvatcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to statvatcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of statvatcheck
-M=getappdata(gcf,'M');
-
-M.ui.statvat=get(handles.statvatcheck,'Value');
-setappdata(gcf,'M',M);
-
-
-% --- Executes on button press in detachbutton.
-function detachbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to detachbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-choice = questdlg('Would you really like to detach the group data from the single-patient data? This means that changes to single-patient reconstructions will not be updated into the group analysis anymore. This should only be done once all patients have been finally localized and an analysis needs to be fixed (e.g. after publication or when working in collaborations). Please be aware that this step cannot be undone!', ...
-    'Detach Group data from single patient data...', ...
-    'No, abort.','Yes, sure!','No, abort.');
-% Handle response
-switch choice
-    case 'No, abort.'
-        return
-    case 'Yes, sure!'
-
-
-        M=getappdata(gcf,'M');
-
-        for pt=1:length(M.patient.list)
-
-            slashes=strfind(M.patient.list{pt},'/');
-            if isempty(slashes)
-                slashes=strfind(M.patient.list{pt},'\');
-            end
-            ptname=M.patient.list{pt}(max(slashes)+1:end);
-
-            M.patient.list{pt}=ptname;
-
-        end
-        M.ui.detached=1;
-
-end
-
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-% --- Executes on button press in colorpointcloudcheck.
-function colorpointcloudcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to colorpointcloudcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of colorpointcloudcheck
-M=getappdata(gcf,'M');
-M.ui.colorpointcloudcheck=get(handles.colorpointcloudcheck,'Value');
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
 % --- Executes on selection change in normregpopup.
 function normregpopup_Callback(hObject, eventdata, handles)
 % hObject    handle to normregpopup (see GCBO)
@@ -1412,7 +595,8 @@ function normregpopup_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 M.ui.normregpopup=get(handles.normregpopup,'Value');
 setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
+ea_refresh_lg_connectome(handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function normregpopup_CreateFcn(hObject, eventdata, handles)
@@ -1439,11 +623,10 @@ ea_busyaction('on',gcf,'group');
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
-    ea_refresh_lg(handles);
+    ea_refresh_lg_connectome(handles);
     M=getappdata(hObject,'M');
-    disp('Saving data to disk...');
     try
-        save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+        save([get(handles.groupdir_choosebox,'String'),'LEAD_GroupConnectome.mat'],'M','-v7.3');
     catch
         warning('Data could not be saved.');
         keyboard
@@ -1453,135 +636,6 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
 end
 ea_busyaction('off',gcf,'group');
 delete(hObject);
-
-
-% --- Executes on button press in targetreport.
-function targetreport_Callback(hObject, eventdata, handles)
-% hObject    handle to targetreport (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-ea_refresh_lg(handles);
-M=getappdata(gcf,'M');
-ea_gentargetreport(M);
-
-
-% --- Executes on button press in viz2dbutton.
-function viz2dbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to viz2dbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-clc;
-M=getappdata(gcf,'M');
-
-
-ea_busyaction('on',gcf,'group');
-% set options
-options=ea_setopts_local(handles);
-% set pt specific options
-options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),filesep];
-[~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
-
-
-options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
-options.elmodel=M.elstruct(1).elmodel;
-options=ea_resolve_elspec(options);
-options.prefs=ea_prefs(options.patientname);
-options.d3.verbose='on';
-
-options.d3.elrendering=M.ui.elrendering;
-options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
-options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
-options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
-try options.d3.isomatrix=M.isomatrix;
-catch
-    options.d3.isomatrix={};
-end
-try options.d3.isomatrix_name=M.isomatrix_name;
-catch
-    options.d3.isomatrix_name={};
-end
-
-options.expstatvat.do=M.ui.statvat;
-
-options.d2.showlegend=0;
-
-
-options.d3.isovscloud=M.ui.isovscloudpopup;
-options.d3.showisovolume=M.ui.showisovolumecheck;
-options.d3.colorpointcloud=M.ui.colorpointcloudcheck;
-options.normregressor=M.ui.normregpopup;
-
-options.d2.write=1;
-
-options.d2.atlasopacity=0.15;
-options.groupmode=1;
-options.groupid=M.guid;
-options.modality=3; % use template image
-options=ea_amendtoolboxoptions(options);
-
-if strcmp(options.atlasset,'Use none')
-    options.d2.writeatlases=1;
-else
-    options.d2.writeatlases=1;
-end
-
-% Prior Results are loaded here inside the function (this way, function
-% can be called just by giving the patient directory.
-
-% Prepare isomatrix (includes a normalization step if M.ui.normregpopup
-% says so:
-
-
-if options.d3.showisovolume || options.expstatvat.do % regressors be used - iterate through all
-    allisomatrices=options.d3.isomatrix;
-    allisonames=options.d3.isomatrix_name;
-    for reg=1:length(allisomatrices)
-        options.d3.isomatrix=allisomatrices{reg};
-        options.d3.isomatrix_name=allisonames{reg};
-        M.isomatrix=allisomatrices{reg};
-        M.isomatrix_name=allisonames{reg};
-        options.shifthalfup=0;
-        try
-            options.d3.isomatrix=ea_reformat_isomatrix(options.d3.isomatrix,M,options);
-            if size(options.d3.isomatrix{1},2)==3 % pairs
-                options.shifthalfup=1;
-            end
-        end
-
-        if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
-            ea_refresh_lg(handles);
-            disp('Saving data...');
-            % save M
-            save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
-            disp('Done.');
-        end
-
-        % export coordinate-mapping
-        if options.d3.showisovolume % export to nifti volume
-            ea_exportisovolume(M.elstruct(get(handles.patientlist,'Value')),options);
-        end
-        % export VAT-mapping
-        if options.expstatvat.do % export to nifti volume
-            ea_exportvatmapping(M,options,handles);
-        end
-
-        ea_out2d(M,options,handles);
-    end
-else
-    ea_out2d(M,options,handles);
-end
-ea_busyaction('off',gcf,'group');
-
-function ea_out2d(M,options,handles)
-
-for pt=1:length(M.patient.list)
-    for side=1:2
-        try
-            M.elstruct(pt).activecontacts{side}=M.S(pt).activecontacts{side};
-        end
-    end
-end
-cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));
 
 
 % --- Executes on button press in lc_SPM.
@@ -1742,17 +796,6 @@ function ea_smooth(fname)
 spm_smooth(fname,[pth,filesep,'s',fn,ext],[8 8 8]);
 
 
-% --- Executes on button press in specify2doptions.
-function specify2doptions_Callback(hObject, eventdata, handles)
-% hObject    handle to specify2doptions (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-options.prefs=ea_prefs('');
-options.groupmode=1;
-options.native=0;
-ea_spec2dwrite(options);
-
-
 % --- Executes on button press in calcgroupconnectome.
 function calcgroupconnectome_Callback(hObject, eventdata, handles)
 % hObject    handle to calcgroupconnectome (see GCBO)
@@ -1783,8 +826,6 @@ if ~exist([M.ui.groupdir,'connectomes',filesep,'dMRI'], 'dir')
     mkdir([M.ui.groupdir,'connectomes',filesep,'dMRI'])
 end
 ea_savefibertracts([M.ui.groupdir,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],normalized_fibers_mm,allidx,'mm');
-
-
 
 
 function lc_contrast_Callback(hObject, eventdata, handles)
@@ -1949,7 +990,7 @@ switch UI.test.ui
         end
 
         if network
-        pmask=squeeze(sum(pmask,1));
+            pmask=squeeze(sum(pmask,1));
         end
         T(~pmask)=nan;
     otherwise
@@ -2067,89 +1108,3 @@ function lc_nbsadvanced_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 ea_nbs_advanced;
-
-
-% --- Executes on button press in mirrorsides.
-function mirrorsides_Callback(hObject, eventdata, handles)
-% hObject    handle to mirrorsides (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of mirrorsides
-
-M=getappdata(gcf,'M');
-M.ui.mirrorsides=get(handles.mirrorsides,'Value');
-
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-% --- Executes on button press in ttestbutton_ft.
-function ttestbutton_ft_Callback(hObject, eventdata, handles)
-% hObject    handle to ttestbutton_ft (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-stats=preparedataanalysis(handles);
-
-assignin('base','stats',stats);
-
-% perform t-tests:
-
-if ~isempty(stats.fc.fccorr)
-    ea_ttest(stats.fc.fccorr(repmat(logical(stats.corrcl),1,size(stats.fc.fccorr,2))),stats.fc.fccorr(~repmat(logical(stats.corrcl),1,size(stats.fc.fccorr,2))),'Fibercounts',stats.vc_labels);
-end
-
-if ~isempty(stats.fc.nfccorr)
-    ea_ttest(stats.fc.nfccorr(repmat(logical(stats.corrcl),1,size(stats.fc.nfccorr,2))),stats.fc.nfccorr(~repmat(logical(stats.corrcl),1,size(stats.fc.nfccorr,2))),'Normalized Fibercounts',stats.vc_labels);
-end
-
-
-
-% --- Executes on button press in corrbutton_ft.
-function corrbutton_ft_Callback(hObject, eventdata, handles)
-% hObject    handle to corrbutton_ft (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-ea_busyaction('on',gcf,'group');
-stats=preparedataanalysis(handles);
-assignin('base','stats',stats);
-
-
-% perform correlations:
-
-
-if size(stats.corrcl,2)==1 % one value per patient
-
-        if ~isempty(stats.fccorr.both)
-            %ea_corrplot([stats.corrcl,stats.fccorr.both],'Fibercounts, both hemispheres',stats.fc_labels);
-            ea_corrplot([stats.corrcl,stats.fccorr.nboth],'FC_BH',stats.fc_labels,handles);
-        end
-%         if ~isempty(stats.fccorr.right)
-%             %ea_corrplot([stats.corrcl,stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
-%             ea_corrplot([stats.corrcl,stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
-%         end
-%         if ~isempty(stats.fccorr.left)
-%             %ea_corrplot([stats.corrcl,stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
-%             ea_corrplot([stats.corrcl,stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
-%         end
-
-elseif size(stats.corrcl,2)==2 % one value per hemisphere
-
-        if ~isempty(stats.fccorr.both)
-            %ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'Fibercounts, both hemispheres',stats.fc_labels);
-            ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'FC_BH',stats.fc_labels,handles);
-        end
-    %     if ~isempty(stats.fccorr.right)
-    %         %ea_corrplot([stats.corrcl(:,1),stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
-    %         ea_corrplot([stats.corrcl(:,1),stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
-    %     end
-    %     if ~isempty(stats.fccorr.left)
-    %         %ea_corrplot([stats.corrcl(:,2),stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
-    %         ea_corrplot([stats.corrcl(:,2),stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
-    %     end
-    %
-else
-    ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
-end
-ea_busyaction('off',gcf,'group');
