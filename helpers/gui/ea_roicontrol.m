@@ -99,7 +99,7 @@ set(hjSlider{2}, 'StateChangedCallback', {@slideralphachange,obj});  %alternativ
 % smooth
 jSlider{3} = javax.swing.JSlider(0,100);
 javacomponent(jSlider{3},[0,0,200,45]);
-set(jSlider{3}, 'Value', round(obj.smooth*4), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
+set(jSlider{3}, 'Value', round(obj.smooth*2), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
 hjSlider{3} = handle(jSlider{3}, 'CallbackProperties');
 
 set(hjSlider{3}, 'MouseReleasedCallback', {@slidersmoothchange,obj});  %alternative
@@ -133,7 +133,7 @@ function slidersmoothchange(varargin)
 slide=varargin{1};
 
 obj=varargin{3};
-obj.smooth=makeuneven(round(slide.Value/4));
+obj.smooth=makeuneven(round(slide.Value/2));
 
 function val=makeuneven(val)
 if val<1

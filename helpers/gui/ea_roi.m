@@ -7,6 +7,7 @@ classdef ea_roi < handle
         color % color of patch
         alpha=0.7 % alpha of patch
         fv % faces and vertices of patch
+        sfv % smoothed version
         visible='on' % turn on/off
         smooth % smooth by FWHM
         hullsimplify % simplify hull
@@ -20,9 +21,6 @@ classdef ea_roi < handle
     end
     methods
         function obj=ea_roi(niftiFilename,pobj) % generator function
-            if isempty(obj)
-                clear obj
-            end
             if exist('niftiFilename','var') && ~isempty(niftiFilename)
                 obj.niftiFilename=niftiFilename;
             end
@@ -41,6 +39,7 @@ classdef ea_roi < handle
                 setappdata(obj.plotFigureH,'addht',obj.htH);
             end
             
+           set(0,'CurrentFigure',obj.plotFigureH); 
             % set cdata
             if exist('pobj','var') && ~isempty(pobj)
                 try
@@ -51,6 +50,7 @@ classdef ea_roi < handle
             else
                 obj.color=uisetcolor;
             end
+            
             
             % load nifti
             obj.nii=ea_load_nii(obj.niftiFilename);
@@ -71,6 +71,7 @@ classdef ea_roi < handle
             obj.threshold=obj.max-0.5*maxmindiff;
             obj.smooth=options.prefs.hullsmooth;
             obj.hullsimplify=options.prefs.hullsimplify;
+            set(0,'CurrentFigure',obj.plotFigureH);
             obj.patchH=patch;
                         
             %menu=uicontextmenu;
@@ -98,6 +99,11 @@ classdef ea_roi < handle
                 @ea_roi.changeevent);
             addlistener(obj,'alpha','PostSet',...
                 @ea_roi.changeevent);
+            
+            if exist('pobj','var') && isfield(pobj,'openedit') && pobj.openedit
+                    ea_editroi([],[],obj)
+            end
+            
         end
         
         function changeevent(~,event)
@@ -121,28 +127,36 @@ classdef ea_roi < handle
                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(obj.nii.img,dim));
                 end
                 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-                if obj.smooth
-                    obj.nii.img = smooth3(obj.nii.img,'gaussian',obj.smooth);
-                end
-                % define threshold
+                %if obj.smooth
+                %    obj.nii.simg = smooth3(obj.nii.img,'gaussian',obj.smooth);
+                %else
+                %    obj.nii.simg=obj.nii.img;
+                %end
+                
                 obj.fv=isosurface(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 fvc=isocaps(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 obj.fv.faces=[obj.fv.faces;fvc.faces+size(obj.fv.vertices,1)];
                 obj.fv.vertices=[obj.fv.vertices;fvc.vertices];
                 
+                if obj.smooth
+                    obj.sfv=ea_smoothpatch(obj.fv,1,obj.smooth);
+                else
+                    obj.sfv=obj.fv;
+                end
+                
                 if ischar(obj.hullsimplify)
                     
                     % get to 700 faces
-                    simplify=700/length(obj.fv.faces);
-                    obj.fv=reducepatch(obj.fv,simplify);
+                    simplify=700/length(obj.sfv.faces);
+                    obj.sfv=reducepatch(obj.sfv,simplify);
                     
                 else
                     if obj.hullsimplify<1 && obj.hullsimplify>0
                         
-                        obj.fv=reducepatch(obj.fv,obj.hullsimplify);
+                        obj.sfv=reducepatch(obj.sfv,obj.hullsimplify);
                     elseif obj.hullsimplify>1
                         simplify=obj.hullsimplify/length(obj.fv.faces);
-                        obj.fv=reducepatch(obj.fv,simplify);
+                        obj.sfv=reducepatch(obj.sfv,simplify);
                     end
                 end
             end
@@ -154,14 +168,14 @@ classdef ea_roi < handle
             co(1,1,:)=obj.color;
             atlasc=double(rgb2ind(co,jetlist));
             
-            cdat=abs(repmat(atlasc,length(obj.fv.vertices),1) ... % C-Data for surface
-                +randn(length(obj.fv.vertices),1)*2)';
+            cdat=abs(repmat(atlasc,length(obj.sfv.vertices),1) ... % C-Data for surface
+                +randn(length(obj.sfv.vertices),1)*2)';
             
             % show atlas.
             set(0,'CurrentFigure',obj.plotFigureH);
             set(obj.patchH,...
                 {'Faces','Vertices','CData','FaceColor','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
-                {obj.fv.faces,obj.fv.vertices,cdat,obj.color,obj.alpha,'none','phong',obj.visible});
+                {obj.sfv.faces,obj.sfv.vertices,cdat,obj.color,obj.alpha,'none','phong',obj.visible});
             
             % add toggle button:
             set(obj.toggleH,...

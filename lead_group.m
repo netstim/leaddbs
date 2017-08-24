@@ -432,6 +432,16 @@ end
 resultfig=ea_elvis(options,M.elstruct(ptidx));
 zoom(3);
 
+% show VAT-mapping
+if options.expstatvat.do % export to nifti volume
+    pobj.plotFigureH=resultfig;
+    pobj.color=[0.9,0.2,0.3];
+
+    pobj.openedit=1;
+    
+    ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'zstatvat_mean.nii'],pobj);
+end
+
 ea_busyaction('off',handles.leadfigure,'group');
 
 
