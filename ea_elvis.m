@@ -91,13 +91,12 @@ axis fill
 % colormap('gray')
 
 
-
 %% Patient specific part (skipped if no patient is selected or no reco available):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
     if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') || nargin>1
         if nargin>1
             multiplemode=1;
-            
+
             % mer development
 %             if isstruct(varargin{2})
 %                 elstruct=varargin{2}.elstruct;
@@ -159,7 +158,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     end
                 end
             end
-            
+
            % show microelectrode recording data
            if exist('merstruct','var')
                try
@@ -168,7 +167,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                    ea_error(['Couldn''''t visualize electrode from patient ',num2str(pt),'.']);
                end
            end
-           
+
         end
 
         setappdata(resultfig,'elstruct',elstruct);
@@ -214,16 +213,17 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     cnt=cnt+2;
                 end
         end
-        
+
         setappdata(resultfig,'eltog',eltog);
 
         clear cnt
 
         % Initialize Stimulation-Button
-
-        stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation'),...
-            'TooltipString','Stimulation Control Figure',...
-            'ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
+        if ~strcmp(options.leadprod, 'group')
+            stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation'),...
+                'TooltipString','Stimulation Control Figure',...
+                'ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
+        end
 
     else
         options.writeoutstats=0; % if no electrodes are there, stats can't be written.
@@ -235,19 +235,18 @@ else
     elstruct=struct;
 end
 
-
-
 % Initialize Sliceview-Button
-
 slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
     'TooltipString','Slice Control Figure',...
     'ClickedCallback',{@opensliceviewer,resultfig,options});
 
 if options.prefs.env.dev
-% Initialize MER-Button
-merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
-    'TooltipString','MER Control Figure',...
-    'ClickedCallback',{@openmerviewer,resultfig,options});
+    % Initialize MER-Button
+    if ~strcmp(options.leadprod, 'group')
+        merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
+            'TooltipString','MER Control Figure',...
+            'ClickedCallback',{@openmerviewer,resultfig,options});
+    end
 end
 % Initialize Convis-Button
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
@@ -301,8 +300,8 @@ end
 % Show isomatrix data
 
 if options.d3.showisovolume
-    
-    
+
+
     allisomatrices=options.d3.isomatrix;
     allisonames=options.d3.isomatrix_name;
     for reg=1:length(allisomatrices)
@@ -390,11 +389,6 @@ try
     set(gca,'cameraviewanglemode','manual');
 end
 set(gca,'clipping','off');
-
-
-
-
-
 
 %set(resultfig,'visible','on');
 if ~strcmp(options.d3.verbose,'off')
@@ -555,19 +549,19 @@ end
 % If the MER Control window is open
 mercontrolfig = getappdata(resultfig, 'mercontrolfig');
 if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
-    
+
     merstruct = getappdata(mercontrolfig, 'merstruct');
-    
+
     bChecked = logical([merstruct.Toggles.keycontrol.value]);
     if ~any(bChecked)
         return
-    end   
-    
+    end
+
     if any(strcmpi(event.Key, {'space','m','l','t','b', 's', 'n'}))
         % Reserved keys:
         % 'space' = Generic; 'm' = MER; 'l' = LFP; 't' = Top; 'b' = Bottom
         % 's' = session; 'n' = notes
-        
+
         if any(strcmpi(event.Key, {'s', 'n'}))
             % Enter session or notes for the last marker.
             if strcmpi(event.Key, 's')
@@ -578,7 +572,7 @@ if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
             setappdata(resultfig, 'mermarkers', merstruct.markers);
             return;
         end
-        
+
         sess_text = '';
         switch lower(event.Key)
             case 'space'
@@ -594,14 +588,14 @@ if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
             case 'b'
                 markertype = MERState.MarkerTypes.Bottom;
         end
-        
+
         % For each checked box, add a marker.
         merstruct.addMarkersAtTrajs(merstruct.Toggles.keycontrol(bChecked),...
             markertype, sess_text);
         handles = guidata(mercontrolfig);
         ea_resultfig_updatemarkers(handles);
         ea_mercontrol_updatemarkers(handles);
-        
+
     elseif any(strcmpi(event.Key, {'uparrow','leftarrow','downarrow','rightarrow'}))
         d = 1;  % Default step size
         if ~isempty(event.Modifier)
@@ -615,12 +609,12 @@ if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
             d = -d;
         end
         merstruct.translateToggledTrajectories(d);
-        
+
         % Update the GUI
         handles = guidata(mercontrolfig);
         ea_resultfig_updatetrajectories(handles);
         ea_mercontrol_updateimplanted(handles);
-        
+
     end
 % commnd=event.Character;
 % switch lower(commnd)

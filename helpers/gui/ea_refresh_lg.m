@@ -128,21 +128,25 @@ disp('Updating UI...');
 disp('Getting stimulation parameters...');
 S=getappdata(handles.leadfigure,'S');
 
-if ~isempty(S)
-    set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
-    M.S=S;
-    M.S=ea_activecontacts(M.S);
+try
+    if ~isempty(S)
+        set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
+        M.S=S;
+        M.S=ea_activecontacts(M.S);
 
-    M.vatmodel=getappdata(handles.leadfigure,'vatmodel');
-else
-    set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
+        M.vatmodel=getappdata(handles.leadfigure,'vatmodel');
+    else
+        set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
+    end
 end
 
 % make choosecolors button green if chosen.
-if isfield(M.groups,'colorschosen')
-    set(handles.choosegroupcolors,'BackgroundColor',[0.1;0.8;0.1]);
-else
-    set(handles.choosegroupcolors,'BackgroundColor',[0.93,0.93,0.93]);
+try
+    if isfield(M.groups,'colorschosen')
+        set(handles.choosegroupcolors,'BackgroundColor',[0.1;0.8;0.1]);
+    else
+        set(handles.choosegroupcolors,'BackgroundColor',[0.93,0.93,0.93]);
+    end
 end
 
 % update checkboxes:
@@ -157,14 +161,20 @@ try set(handles.mirrorsides,'Value',M.ui.lc.mirrorsides); end
 % update selectboxes:
 try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
 try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
-if M.ui.atlassetpopup>length(get(handles.atlassetpopup,'String'))
-    M.ui.atlassetpopup=length(get(handles.atlassetpopup,'String'));
-    set(handles.atlassetpopup,'Value',length(get(handles.atlassetpopup,'String')));
+try
+    if M.ui.atlassetpopup>length(get(handles.atlassetpopup,'String'))
+        M.ui.atlassetpopup=length(get(handles.atlassetpopup,'String'));
+        set(handles.atlassetpopup,'Value',length(get(handles.atlassetpopup,'String')));
+    end
 end
 
 fiberspopup = get(handles.fiberspopup,'String');
 if ~(ischar(fiberspopup) && strcmp(fiberspopup, 'Fibers'))
-    try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
+    if M.ui.fiberspopup > length(fiberspopup)
+        try set(handles.fiberspopup,'Value',length(fiberspopup)); end
+    else
+        try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
+    end
 end
 
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
@@ -188,10 +198,6 @@ end
 
 %% patient specific part:
 if ~isempty(M.patient.list)
-
-
-    
-
     disp('Loading localizations...');
     for pt=1:length(M.patient.list)
         % set stimparams based on values provided by user
@@ -340,12 +346,16 @@ disp('Storing everything in model...');
 setappdata(handles.leadfigure,'M',M);
 
 % refresh UI
-if ~isempty(M.vilist)
-    set(handles.vilist,'String',M.vilist);
+try
+    if ~isempty(M.vilist)
+        set(handles.vilist,'String',M.vilist);
+    end
 end
 
-if ~isempty(M.fclist)
-    set(handles.fclist,'String',M.fclist);
+try
+    if ~isempty(M.fclist)
+        set(handles.fclist,'String',M.fclist);
+    end
 end
 
 disp('Done.');
@@ -357,8 +367,8 @@ function ea_stats=ea_rmssstimulations(ea_stats,M)
 % function that will remove all stimulations not labeled 'gs'
 todel=[];
 for s=1:length(ea_stats.stimulation)
-   if ~strcmp(ea_stats.stimulation(s).label,['gs_',M.guid]) 
-    
+   if ~strcmp(ea_stats.stimulation(s).label,['gs_',M.guid])
+
        todel=[todel,s];
    end
 end

@@ -305,6 +305,7 @@ M=getappdata(gcf,'M');
 ea_busyaction('on',handles.leadfigure,'group');
 % set options
 options=ea_setopts_local(handles);
+options.leadprod = 'group';
 % set pt specific options
 options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),filesep];
 [~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
@@ -485,7 +486,7 @@ elseif size(stats.corrcl,2)==2 % one value per hemisphere
     %         %ea_corrplot([stats.corrcl(:,2),stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
     %         ea_corrplot([stats.corrcl(:,2),stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
     %     end
-   
+
 else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
@@ -552,7 +553,7 @@ catch
 end
 [numat,nuname]=ea_edit_regressor(M);
 
-if ~isempty(numat); % user did not press cancel
+if ~isempty(numat) % user did not press cancel
     mat=numat;
     matname=nuname;
 end
@@ -793,7 +794,7 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
         S.label=['gs_',M.guid];
         [ea_stats,usewhichstim]=ea_assignstimcnt(M.stats(pt).ea_stats,S);
         for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).ft,2)
-            for vat=1;
+            for vat=1
                 if side==1 % right hemisphere
                     vicorr_right(ptcnt,vicnt)=vicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
                     nvicorr_right(ptcnt,vicnt)=nvicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
@@ -972,8 +973,8 @@ M=getappdata(gcf,'M');
 options=ea_setopts_local(handles);
 %stimname=ea_detstimname();
 
-options.groupmode=1;
-options.groupid=M.guid;
+options.groupmode = 1;
+options.groupid = M.guid;
 
 % determine if fMRI or dMRI
 mods=get(handles.fiberspopup,'String');
@@ -989,7 +990,6 @@ end
 [selection]=ea_groupselectorwholelist(M.ui.listselect,M.patient.list);
 
 for pt=selection
-
     % set pt specific options
 
     % own fileparts to support windows/mac/linux slashes even if they come
@@ -1009,7 +1009,7 @@ for pt=selection
         options.root='';
     end
 
-    disp(['Processing ',options.patientname,'.']);
+    fprintf('\nProcessing %s...\n\n', options.patientname);
     try
         options.numcontacts=size(M.elstruct(pt).coords_mm{1},1);
     catch % no localization present or in wrong format.
@@ -1035,7 +1035,7 @@ for pt=selection
 
     options.d3.isovscloud=M.ui.isovscloudpopup;
     options.d3.showisovolume=M.ui.showisovolumecheck;
-options.d3.exportBB=0;
+    options.d3.exportBB=0;
     options.expstatvat.do=0;
     try
         options.expstatvat.vars=M.clinical.vars(M.ui.clinicallist);
@@ -1077,6 +1077,7 @@ options.d3.exportBB=0;
     %delete([options.root,options.patientname,filesep,'ea_stats.mat']);
 
     % Step 1: Re-calculate closeness to subcortical atlases.
+    options.leadprod = 'group';
     resultfig=ea_elvis(options);
 
     % save scene as matlab figure
@@ -1115,8 +1116,8 @@ options.d3.exportBB=0;
             setappdata(resultfig,'elstruct',M.elstruct(pt));
             setappdata(resultfig,'elspec',options.elspec);
  %           try
- 
- 
+
+
                 [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,['gs_',M.guid],0.2,handles.leadfigure);
 %            catch
 %                ea_error(['Error while creating VTA of ',M.patient.list{pt},'.']);
@@ -1153,7 +1154,6 @@ options.d3.exportBB=0;
     end
     close(resultfig);
 
-
     if processlocal % gather stats and recos to M
         load([M.ui.groupdir,options.patientname,filesep,'ea_stats']);
         load([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction']);
@@ -1172,11 +1172,7 @@ options.d3.exportBB=0;
 end
 %% processing done here.
 
-
 ea_refresh_lg(handles);
-
-
-
 
 
 % --- Executes on selection change in fiberspopup.
@@ -1191,6 +1187,7 @@ M=getappdata(gcf,'M');
 M.ui.fiberspopup=get(handles.fiberspopup,'Value');
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function fiberspopup_CreateFcn(hObject, eventdata, handles)
@@ -1218,6 +1215,7 @@ M.ui.labelpopup=get(handles.labelpopup,'Value');
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
+
 % --- Executes during object creation, after setting all properties.
 function labelpopup_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to labelpopup (see GCBO)
@@ -1243,6 +1241,7 @@ M=getappdata(gcf,'M');
 M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function atlassetpopup_CreateFcn(hObject, eventdata, handles)
@@ -1323,7 +1322,6 @@ ea_busyaction('off',handles.leadfigure,'group');
 ea_refresh_lg(handles);
 
 
-
 % --- Executes on button press in opensubgui.
 function opensubgui_Callback(hObject, eventdata, handles)
 % hObject    handle to opensubgui (see GCBO)
@@ -1341,7 +1339,6 @@ function choosegroupcolors_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
 M=getappdata(gcf,'M');
 
 for g=unique(M.patient.group)'
@@ -1354,8 +1351,6 @@ setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
 
-
-
 % --- Executes on button press in setstimparamsbutton.
 function setstimparamsbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to setstimparamsbutton (see GCBO)
@@ -1365,24 +1360,26 @@ M=getappdata(gcf,'M');
 
 % try
 %     uicell=inputdlg('Enter Variable name for Voltage-Parameters','Enter Stimulation Settings...',1);
-% uidata.U=evalin('base',uicell{1});
+%     uidata.U=evalin('base',uicell{1});
 % catch
 %     warning('Stim-Params could not be evaluated. Please Try again.');
 %     return
 % end
 % try
-%         uicell=inputdlg('Enter Variable name for Impedance-Parameters','Enter Stimulation Settings...',1);
-% uidata.Im=evalin('base',uicell{1});
+%     uicell=inputdlg('Enter Variable name for Impedance-Parameters','Enter Stimulation Settings...',1);
+%     uidata.Im=evalin('base',uicell{1});
 % catch
 %     warning('Stim-Params could not be evaluated. Please Try again.');
 %     return
 % end
 
-options=ea_setopts_local(handles);
+options = ea_setopts_local(handles);
+options.leadprod = 'group';
+options.groupid = M.guid;
+
 ea_refresh_lg(handles);
 
-ea_stimparams(M.elstruct,handles.leadfigure,options);
-
+ea_stimparams(M.elstruct, handles.leadfigure, options);
 
 
 % --- Executes on button press in highlightactivecontcheck.
@@ -1394,7 +1391,6 @@ function highlightactivecontcheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of highlightactivecontcheck
 M=getappdata(gcf,'M');
 M.ui.hlactivecontcheck=get(handles.highlightactivecontcheck,'Value');
-
 
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
@@ -1760,7 +1756,6 @@ end
 % Prepare isomatrix (includes a normalization step if M.ui.normregpopup
 % says so:
 
-
 if options.d3.showisovolume || options.expstatvat.do % regressors be used - iterate through all
     allisomatrices=options.d3.isomatrix;
     allisonames=options.d3.isomatrix_name;
@@ -1801,6 +1796,7 @@ else
 end
 ea_busyaction('off',gcf,'group');
 
+
 function ea_out2d(M,options,handles)
 
 for pt=1:length(M.patient.list)
@@ -1811,14 +1807,6 @@ for pt=1:length(M.patient.list)
     end
 end
 cuts=ea_writeplanes(options,M.elstruct(get(handles.patientlist,'Value')));
-
-
-
-
-
-
-
-
 
 
 function ea_histnormalize(fname, normflag)
@@ -1855,13 +1843,6 @@ options.prefs=ea_prefs('');
 options.groupmode=1;
 options.native=0;
 ea_spec2dwrite(options);
-
-
-
-
-
-
-
 
 
 % --- Executes on button press in mirrorsides.
@@ -1915,7 +1896,7 @@ assignin('base','stats',stats);
 
 
 if size(stats.corrcl,2)==1 % one value per patient
-    
+
         if ~isempty(stats.fccorr.both)
             %ea_corrplot([stats.corrcl,stats.fccorr.both],'Fibercounts, both hemispheres',stats.fc_labels);
             ea_corrplot([stats.corrcl,stats.fccorr.nboth],'FC_BH',stats.fc_labels,handles);

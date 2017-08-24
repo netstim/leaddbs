@@ -111,7 +111,7 @@ vmc=get(handles.vatmodality,'String');
 vomc=get(handles.voxmodality,'String');
 
 if isempty(mmc)
-   cv_disabletime(handles); 
+   cv_disabletime(handles);
 else
 if isempty(strfind(mmc{get(handles.matmodality,'Value')},'_tc')) && ...
         isempty(strfind(vmc{get(handles.vatmodality,'Value')},'_tc')) && ...
@@ -352,7 +352,6 @@ function [directory,pdirectory,selectedparc]=ea_cvinitgui(handles,options)
 
 % parcellation popup:
 
-
 pdirs=dir([ea_space(options,'labeling'),'*.nii']);
 cnt=1;
 
@@ -368,7 +367,6 @@ end
 
 selectedparc=parcs{get(handles.labelpopup,'Value')};
 pdirectory=[options.root,options.patientname,filesep,'connectomics',filesep,selectedparc,filesep];
-
 
 % check if selected parcellation exists for patient data as well:
 directory=[options.root,options.patientname,filesep];
@@ -392,7 +390,6 @@ if ~ismember({selectedparc},parcs)
 end
 
 
-
 function ea_initseedlevel(handles,directory,pdirectory,selectedparc,options)
 
 %% init matrix level controls:
@@ -404,7 +401,7 @@ modlist=ea_genmodlist(directory,selectedparc,options);
 %     modlist{cnt}='Patient-specific fiber tracts';
 %     cnt=cnt+1;
 % end
-% 
+%
 % % check for canonical fiber sets
 % fdfibs=dir([ea_getconnectomebase('dmri'),'*.mat']);
 % for fdf=1:length(fdfibs)
@@ -412,16 +409,16 @@ modlist=ea_genmodlist(directory,selectedparc,options);
 %     modlist{cnt}=fn;
 %     cnt=cnt+1;
 % end
-% 
-% 
+%
+%
 % pmdirs=dir([pdirectory,'*_CM.mat']);
-% 
+%
 % for pmdir=1:length(pmdirs)
 %     [~,modlist{end+1}]=fileparts(pmdirs(pmdir).name);
 % end
-% 
+%
 % tcdirs=dir([pdirectory,'*_tc.mat']);
-% 
+%
 % for tcdir=1:length(tcdirs)
 %     [~,modlist{end+1}]=fileparts(tcdirs(tcdir).name);
 % end

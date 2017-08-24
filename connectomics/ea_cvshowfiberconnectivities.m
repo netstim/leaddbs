@@ -7,19 +7,12 @@ function [PL,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seedfile,
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-
-
-
 set(0,'CurrentFigure',resultfig)
 colornames='rbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywk';
 
-disp('Calculating Fibers/Connectivity...');
+fprintf('\nCalculating Fibers/Connectivity...\n\n\n');
 
 hold on
-
-
-
-
 
 %% load fibers (either from file or from figure and store in figure for next time).
 % get app data
@@ -55,7 +48,7 @@ if strcmp(thresh,'auto')
 else
     thresh=round(str2double(thresh));
 end
-disp('Done.');
+fprintf('Done.\n\n\n');
 
 %% load seed definition
 
@@ -89,7 +82,6 @@ else % load data
 end
 origtargets=targets; % original targets map.
 
-
 %% prepare fibers
 % dispercent(0,'Preparing fibers');
 % [idx,~]=cellfun(@size,fibers);
@@ -105,7 +97,6 @@ origtargets=targets; % original targets map.
 % end
 % dispercent(1,'end');
 
-
 %% select fibers that traverse through seed voxels
 [seed_fv,volume]=ea_fvseeds(seed,options);
 
@@ -120,27 +111,17 @@ for side=1:length(seed)
 end
 
 dispercent(1,'end');
-
-
-
 connectingfibs=cell(2,1);
 
 %% reformat fibers
 disp('Reformating fibers...');
 fibers=mat2cell(fibers,fibersidx,3)';
-disp('Done.');
+fprintf('Done.\n\n\n');
 for side=1:length(seed)
     try      sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side))); end
 
     try      connectingfibs{side}=fibers(sideselectedfibs{side}); end
 end
-
-
-
-
-
-
-
 
 %% check which areas are connected to VAT by fibers:
 doubleconnectingfibs=cell(2,1);
@@ -211,7 +192,7 @@ for side=1:length(seed)
 
     % Write out connectivity stats
     if options.writeoutstats
-        
+
         load([options.root,options.patientname,filesep,'ea_stats']);
         % assign the place where to write stim stats into struct
         if isfield(options,'groupmode')
@@ -479,35 +460,6 @@ end
 setappdata(resultfig,[mode,'PL'],PL);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function [fv,volume]=ea_fvseeds(seed,options)
 
 for s=1:length(seed)
@@ -517,7 +469,6 @@ for s=1:length(seed)
     fv{s}.vertices=seed{s}.mat*fv{s}.vertices;
     fv{s}.vertices=fv{s}.vertices(1:3,:)';
 end
-
 
 
 function indcol=detcolor(mat) % determine color based on traversing direction.
@@ -534,6 +485,7 @@ catch
     keyboard
 end
 
+
 function objvisible(hobj,ev,atls,resultfig,what,la,side,onoff)
 % set visibility
 try
@@ -543,7 +495,6 @@ catch
 end
 % log visibility
 tvalue=getappdata(resultfig,what);
-
 
 if isempty(la)
     tvalue(side)=onoff;
@@ -555,8 +506,6 @@ setappdata(resultfig,what,tvalue);
 %disp([atls,'visible clicked']);
 
 
-
-
 function C=rgb(C) % returns rgb values for the colors.
 
 C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);
@@ -564,7 +513,6 @@ C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);
 
 function str=sub2space(str) % replaces subscores with spaces
 str(str=='_')=' ';
-
 
 
 function in = inhull(testpts,xyz,tess,tol)

@@ -10,7 +10,7 @@ if isstruct(handles) % called from GUI
     thresh=get(handles.vatthresh,'String');
 elseif iscell(handles) % called from lead_group
     vatmodality=handles{1};
-    vsname=handles{2};
+    vsname=[handles{2},'_',options.groupid];
     thresh='auto';
     usevat={'right','left'};
     dimensionality=2; % how many ROI.
@@ -20,7 +20,6 @@ end
 % fibers filename
 if isstruct(vatmodality)
     fibersfile=vatmodality;
-
 else
     switch vatmodality
         case 'Patient-specific fiber tracts'
@@ -35,11 +34,12 @@ seedfile={};
 for v=1:length(usevat)
     seedfile{v}=[directory,'stimulations',filesep,vsname,filesep,'vat_',usevat{options.sides(v)},'.nii'];
 end
+
 for side=1:length(usevat)
     try
         load([directory,'stimulations',filesep,vsname,filesep,'stimparameters.mat']);
     catch
-        ea_error(['Could not find stimulation parameters for ',directory,filesep,vsname,'.']);
+        ea_error(['Could not find stimulation parameters for ',directory,vsname,'.']);
     end
 end
 

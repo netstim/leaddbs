@@ -1,8 +1,8 @@
-function [stimname,preexist]=ea_detstimname(options,handles)
+function [stimname,preexist]=ea_detstimname(options, handles)
 preexist=0;
 % check if previous stimulations have been stored
 if ~isfield(options,'root') % called from lead group
-    stimname=['gs_',options.groupname];
+    stimname=['gs_',options.groupid];
     return
 end
 directory=[options.root,options.patientname,filesep];
@@ -10,13 +10,10 @@ stimname=cell(0);
 if exist([directory,'stimulations'],'dir')
     sd=dir([directory,'stimulations']);
     for s=1:length(sd)
-        
         if sd(s).isdir && ~strcmp(sd(s).name(1),'.') && (length(sd(s).name)<3 || ~strcmp(sd(s).name(1:3),'gs_'))
             stimname{end+1}=sd(s).name;
         end
-        
     end
-    
 end
 if ~isempty(stimname)
     preexist=1;
@@ -40,7 +37,7 @@ try
     stimname=datestr(datevec(now), 'yyyymmddHHMMSS' );
 catch
     import java.util.UUID;
-    
+
     uid = char(UUID.randomUUID());
 end
 while 1
