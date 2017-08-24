@@ -27,18 +27,7 @@ classdef ea_roi < handle
                 obj.niftiFilename=niftiFilename;
             end
             
-            addlistener(obj,'visible','PostSet',...
-                @ea_roi.changeevent);
-            addlistener(obj,'color','PostSet',...
-                @ea_roi.changeevent);
-            addlistener(obj,'threshold','PostSet',...
-                @ea_roi.changeevent);
-            addlistener(obj,'smooth','PostSet',...
-                @ea_roi.changeevent);
-            addlistener(obj,'hullsimplify','PostSet',...
-                @ea_roi.changeevent);
-            addlistener(obj,'alpha','PostSet',...
-                @ea_roi.changeevent);
+           
             obj.plotFigureH=gcf;
             
             if exist('pobj','var') && ~isempty(pobj)
@@ -46,7 +35,7 @@ classdef ea_roi < handle
                     obj.plotFigureH=pobj.plotFigureH;
                 end
             end
-            obj.htH=getappdata(obj.plotFigureH,'atlht');
+            obj.htH=getappdata(obj.plotFigureH,'addht');
             if isempty(obj.htH) % first ROI
                 obj.htH=uitoolbar(obj.plotFigureH);
                 setappdata(obj.plotFigureH,'addht',obj.htH);
@@ -65,6 +54,8 @@ classdef ea_roi < handle
             
             % load nifti
             obj.nii=ea_load_nii(obj.niftiFilename);
+            obj.nii.img(obj.nii.img==0)=nan;
+            obj.nii.img=obj.nii.img-nanmin(obj.nii.img(:)); % set min to zero
             obj.nii.img(isnan(obj.nii.img))=0;
             if ~all(abs(obj.nii.voxsize)<=1)
                 ea_reslice_nii(obj.niftiFilename,obj.niftiFilename,[0.5,0.5,0.5],0,[],3);
@@ -76,6 +67,7 @@ classdef ea_roi < handle
             maxmindiff=obj.max-obj.min;
             obj.max=obj.max-0.1*maxmindiff;
             obj.min=obj.min+0.1*maxmindiff;
+            
             obj.threshold=obj.max-0.5*maxmindiff;
             obj.smooth=options.prefs.hullsmooth;
             obj.hullsimplify=options.prefs.hullsimplify;
@@ -94,6 +86,18 @@ classdef ea_roi < handle
             
             set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})            
             update_roi(obj);
+            addlistener(obj,'visible','PostSet',...
+                @ea_roi.changeevent);
+            addlistener(obj,'color','PostSet',...
+                @ea_roi.changeevent);
+            addlistener(obj,'threshold','PostSet',...
+                @ea_roi.changeevent);
+            addlistener(obj,'smooth','PostSet',...
+                @ea_roi.changeevent);
+            addlistener(obj,'hullsimplify','PostSet',...
+                @ea_roi.changeevent);
+            addlistener(obj,'alpha','PostSet',...
+                @ea_roi.changeevent);
         end
         
         function changeevent(~,event)
