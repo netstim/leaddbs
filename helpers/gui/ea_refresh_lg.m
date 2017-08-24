@@ -10,7 +10,7 @@ if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % n
     return
 end
 if ~isfield(M,'guid') % only done once, legacy support.
-    M.guid=ea_generate_guid;
+    M.guid=datestr(datevec(now), 'yyyymmddHHMMSS' );
 end
 disp('Refreshing group list...');
 % refresh group list
@@ -128,25 +128,21 @@ disp('Updating UI...');
 disp('Getting stimulation parameters...');
 S=getappdata(handles.leadfigure,'S');
 
-try
-    if ~isempty(S)
-        set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
-        M.S=S;
-        M.S=ea_activecontacts(M.S);
+if ~isempty(S)
+    set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
+    M.S=S;
+    M.S=ea_activecontacts(M.S);
 
-        M.vatmodel=getappdata(handles.leadfigure,'vatmodel');
-    else
-        set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
-    end
+    M.vatmodel=getappdata(handles.leadfigure,'vatmodel');
+else
+    set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 end
 
 % make choosecolors button green if chosen.
-try
-    if isfield(M.groups,'colorschosen')
-        set(handles.choosegroupcolors,'BackgroundColor',[0.1;0.8;0.1]);
-    else
-        set(handles.choosegroupcolors,'BackgroundColor',[0.93,0.93,0.93]);
-    end
+if isfield(M.groups,'colorschosen')
+    set(handles.choosegroupcolors,'BackgroundColor',[0.1;0.8;0.1]);
+else
+    set(handles.choosegroupcolors,'BackgroundColor',[0.93,0.93,0.93]);
 end
 
 % update checkboxes:
@@ -161,11 +157,9 @@ try set(handles.mirrorsides,'Value',M.ui.lc.mirrorsides); end
 % update selectboxes:
 try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
 try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
-try
-    if M.ui.atlassetpopup>length(get(handles.atlassetpopup,'String'))
-        M.ui.atlassetpopup=length(get(handles.atlassetpopup,'String'));
-        set(handles.atlassetpopup,'Value',length(get(handles.atlassetpopup,'String')));
-    end
+if M.ui.atlassetpopup>length(get(handles.atlassetpopup,'String'))
+    M.ui.atlassetpopup=length(get(handles.atlassetpopup,'String'));
+    set(handles.atlassetpopup,'Value',length(get(handles.atlassetpopup,'String')));
 end
 
 fiberspopup = get(handles.fiberspopup,'String');
@@ -346,16 +340,12 @@ disp('Storing everything in model...');
 setappdata(handles.leadfigure,'M',M);
 
 % refresh UI
-try
-    if ~isempty(M.vilist)
-        set(handles.vilist,'String',M.vilist);
-    end
+if ~isempty(M.vilist)
+    set(handles.vilist,'String',M.vilist);
 end
 
-try
-    if ~isempty(M.fclist)
-        set(handles.fclist,'String',M.fclist);
-    end
+if ~isempty(M.fclist)
+    set(handles.fclist,'String',M.fclist);
 end
 
 disp('Done.');
@@ -367,9 +357,8 @@ function ea_stats=ea_rmssstimulations(ea_stats,M)
 % function that will remove all stimulations not labeled 'gs'
 todel=[];
 for s=1:length(ea_stats.stimulation)
-   if ~strcmp(ea_stats.stimulation(s).label,['gs_',M.guid])
-
-       todel=[todel,s];
-   end
+    if ~strcmp(ea_stats.stimulation(s).label,['gs_',M.guid])
+        todel=[todel,s];
+    end
 end
 ea_stats.stimulation(todel)=[];

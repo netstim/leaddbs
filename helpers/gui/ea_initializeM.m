@@ -3,7 +3,7 @@ M=struct;
 M.patient.list={};
 M.patient.group=[];
 
-M.guid=ea_generate_guid; % each lead groupanalysis needs a unique ID for VTA handling / identification.
+M.guid=datestr(datevec(now), 'yyyymmddHHMMSS' ); % each lead groupanalysis needs a unique ID for VTA handling / identification.
 M.clinical.vars={};
 M.clinical.labels={};
 M.vilist={};

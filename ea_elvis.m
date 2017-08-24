@@ -268,7 +268,7 @@ if options.d3.writeatlases
     [atlases,colorbuttons,atlassurfs]=ea_showatlas(resultfig,elstruct,options);
 
     if ~strcmp(options.d3.verbose,'off')
-    ea_openatlascontrol([],[],atlases,resultfig,options);
+        ea_openatlascontrol([],[],atlases,resultfig,options);
     end
 
     if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
