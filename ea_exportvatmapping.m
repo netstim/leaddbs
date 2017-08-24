@@ -82,10 +82,10 @@ end
 for z=0:1
     switch z
         case 0
-            matlabbatch{1}.spm.util.imcalc.input = allV;
+            matlabbatch{1}.spm.util.imcalc.input = allV';
             matlabbatch{1}.spm.util.imcalc.output = 'statvat_mean.nii';
         case 1
-            matlabbatch{1}.spm.util.imcalc.input = zallV;
+            matlabbatch{1}.spm.util.imcalc.input = zallV';
             matlabbatch{1}.spm.util.imcalc.output = 'zstatvat_mean.nii';
     end
     matlabbatch{1}.spm.util.imcalc.outdir = {[options.root,options.patientname,filesep,'statvat_results',filesep]};
