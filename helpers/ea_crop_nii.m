@@ -50,11 +50,11 @@ nii=ea_load_nii(filename);
 
 switch nstring
     case 'nz'
-        comp=0;
+        [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img~=0));
     case 'nn'
-        comp=nan;
+        [xx,yy,zz]=ind2sub(size(nii.img),find(~isnan(nii.img)));
 end
-[xx,yy,zz]=ind2sub(size(nii.img),find(nii.img~=comp));
+
 rim=round(2/mean(nii.voxsize)); % go to 3 mm, assuming isotropic image. No worries if not isotropic though, then rim will be a bit asymmetrical.
 bbim=[min(xx),max(xx)
     min(yy),max(yy)
