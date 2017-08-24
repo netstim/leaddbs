@@ -1,0 +1,167 @@
+function varargout = ea_roicontrol(varargin)
+% EA_ROICONTROL MATLAB code for ea_roicontrol.fig
+%      EA_ROICONTROL, by itself, creates a new EA_ROICONTROL or raises the existing
+%      singleton*.
+%
+%      H = EA_ROICONTROL returns the handle to a new EA_ROICONTROL or the handle to
+%      the existing singleton*.
+%
+%      EA_ROICONTROL('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in EA_ROICONTROL.M with the given input arguments.
+%
+%      EA_ROICONTROL('Property','Value',...) creates a new EA_ROICONTROL or raises the
+%      existing singleton*.  Starting from the left, property value pairs are
+%      applied to the GUI before ea_roicontrol_OpeningFcn gets called.  An
+%      unrecognized property name or invalid value makes property application
+%      stop.  All inputs are passed to ea_roicontrol_OpeningFcn via varargin.
+%
+%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      instance to run (singleton)".
+%
+% See also: GUIDE, GUIDATA, GUIHANDLES
+
+% Edit the above text to modify the response to help ea_roicontrol
+
+% Last Modified by GUIDE v2.5 24-Aug-2017 17:31:20
+
+% Begin initialization code - DO NOT EDIT
+gui_Singleton = 1;
+gui_State = struct('gui_Name',       mfilename, ...
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @ea_roicontrol_OpeningFcn, ...
+    'gui_OutputFcn',  @ea_roicontrol_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
+if nargin && ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+end
+
+if nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+else
+    gui_mainfcn(gui_State, varargin{:});
+end
+% End initialization code - DO NOT EDIT
+
+
+% --- Executes just before ea_roicontrol is made visible.
+function ea_roicontrol_OpeningFcn(hObject, eventdata, handles, varargin)
+% This function has no output args, see OutputFcn.
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% varargin   command line arguments to ea_roicontrol (see VARARGIN)
+
+% Choose default command line output for ea_roicontrol
+handles.output = hObject;
+
+% Update handles structure
+guidata(hObject, handles);
+
+% UIWAIT makes ea_roicontrol wait for user response (see UIRESUME)
+% uiwait(handles.roicontrol);
+setappdata(handles.roicontrol,'chandles',handles);
+obj=varargin{1};
+setappdata(handles.roicontrol,'obj',obj);
+nzeros=obj.nii.img(:);
+nzeros(nzeros==0)=[];
+nzeros(isnan(nzeros))=[];
+set(0,'CurrentFigure',handles.roicontrol);
+set(handles.roicontrol,'CurrentAxes',handles.histax);
+hist(nzeros);
+h=findobj(handles.histax,'Type','patch');
+set(h,'FaceColor',[0,0.5 0.5],'EdgeColor','none');
+axis off
+
+set(handles.roicontrol,'Name',obj.niftiFilename);
+handles.histax.XAxis.Limits=[min(nzeros),max(nzeros)];
+
+
+% button
+set(handles.colorchange,'BackgroundColor',obj.color);
+
+%% sliders:
+
+% threshold
+jSlider{1} = javax.swing.JSlider(0,100);
+javacomponent(jSlider{1},[0,130,200,45]);
+set(jSlider{1}, 'Value', getmaxminthresh(obj), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
+hjSlider{1} = handle(jSlider{1}, 'CallbackProperties');
+set(hjSlider{1}, 'MouseReleasedCallback', {@sliderthresholdchange,obj});  %alternative
+
+% alpha
+jSlider{2} = javax.swing.JSlider(0,100);
+javacomponent(jSlider{2},[0,65,200,45]);
+set(jSlider{2}, 'Value', obj.alpha*100, 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
+hjSlider{2} = handle(jSlider{2}, 'CallbackProperties');
+set(hjSlider{2}, 'StateChangedCallback', {@slideralphachange,obj});  %alternative
+
+% smooth
+jSlider{3} = javax.swing.JSlider(0,100);
+javacomponent(jSlider{3},[0,0,200,45]);
+set(jSlider{3}, 'Value', round(obj.smooth*4), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
+hjSlider{3} = handle(jSlider{3}, 'CallbackProperties');
+
+set(hjSlider{3}, 'MouseReleasedCallback', {@slidersmoothchange,obj});  %alternative
+
+setappdata(handles.roicontrol,'csliders',jSlider);
+
+function thresh=getmaxminthresh(obj)
+
+thresh=obj.threshold-obj.min;
+thresh=thresh/obj.max;
+thresh=round(thresh*100); % slider only supports integers
+
+function slideralphachange(varargin)
+slide=varargin{1};
+obj=varargin{3};
+obj.alpha=slide.Value/100;
+
+function sliderthresholdchange(varargin)
+
+slide=varargin{1};
+
+obj=varargin{3};
+    
+tval=slide.Value;
+tval=tval/100;
+tval=tval*obj.max;
+obj.threshold=tval+obj.min;
+
+
+function slidersmoothchange(varargin)
+slide=varargin{1};
+
+obj=varargin{3};
+obj.smooth=makeuneven(round(slide.Value/4));
+
+function val=makeuneven(val)
+if val<1
+    val=0; % zero is allowed.
+    return
+end
+if mod(val,2)==0
+    val=val-1; % needs to be -1 since want it to be 0 as well.
+end
+
+
+
+% --- Outputs from this function are returned to the command line.
+function varargout = ea_roicontrol_OutputFcn(hObject, eventdata, handles)
+% varargout  cell array for returning output args (see VARARGOUT);
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get default command line output from handles structure
+varargout{1} = handles.output;
+
+
+% --- Executes on button press in colorchange.
+function colorchange_Callback(hObject, eventdata, handles)
+% hObject    handle to colorchange (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+obj=getappdata(handles.roicontrol,'obj');
+obj.color=uisetcolor;
+set(handles.colorchange,'BackgroundColor',obj.color);

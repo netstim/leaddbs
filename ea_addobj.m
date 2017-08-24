@@ -3,6 +3,7 @@ function ea_addobj(ht,obj,resultfig,type,options)
 addht=getappdata(resultfig,'addht');
 if isempty(addht)
     addht=uitoolbar(resultfig);
+    setappdata(resultfig,'addht',addht);
 end
 
 switch type
@@ -54,7 +55,6 @@ end
 axis fill
 
 
-setappdata(resultfig,'addht',addht);
 
 
 function addtractweighted(tract,weight,resultfig,addht,tfina,rfina,options)
@@ -121,7 +121,7 @@ addobjr=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.3);
 
 % add toggle button:
 
-addbutn=uitoggletool(addht,'CData',ea_get_icn('fiber'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@atlasvisible,addobjr},'OffCallback',{@atlasinvisible,addobjr},'State','on');
+addbutn=uitoggletool(addht,'CData',ea_get_icn('fiber'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
 %storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
 drawnow
 
@@ -206,7 +206,7 @@ addobjr=patch(fv,'CData',cdat,'FaceColor',c,'facealpha',0.7,'EdgeColor','none','
 
 % add toggle button:
 
-addbutn=uitoggletool(addht,'CData',ea_get_icn('atlas',c),'TooltipString',fina,'OnCallback',{@atlasvisible,addobjr},'OffCallback',{@atlasinvisible,addobjr},'State','on');
+addbutn=uitoggletool(addht,'CData',ea_get_icn('atlas',c),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
 storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
 drawnow
 
@@ -279,7 +279,7 @@ set(addobjr(:),'EdgeAlpha',0.05);
 
 axis fill
 
-addbutn=uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',fina,'OnCallback',{@atlasvisible,addobjr},'OffCallback',{@atlasinvisible,addobjr},'State','on');
+addbutn=uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
 storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'tract',fib_copy,ft,options); % store rendering in figure.
 
 
@@ -400,13 +400,7 @@ end
 
 
 
-function atlasvisible(hobj,ev,atls)
-set(atls, 'Visible', 'on');
-%disp([atls,'visible clicked']);
 
-function atlasinvisible(hobj,ev,atls)
-set(atls, 'Visible', 'off');
-%disp([atls,'invisible clicked']);
 
 
 
