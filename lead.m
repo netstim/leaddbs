@@ -78,33 +78,37 @@ ea_checkleaddirs;
 % check for commands first
 if nargin>3
     switch varargin{1}
-        case 'dbs'
+        case {'dbs', '-d', 'd'}
             lead_dbs;
             delete(handles.leadfigure)
             return
-        case 'group'
+        case {'group', '-g', 'g'}
             lead_group;
             delete(handles.leadfigure)
             return
-        case 'connectome'
+        case {'groupconnectome', '-gc', 'gc'}
+            lead_group_connectome;
+            delete(handles.leadfigure)
+            return
+        case {'connectome', '-c', 'c'}
             lead_connectome;
             delete(handles.leadfigure)
             return
-        case {'mapper'}
+        case {'mapper', '-m', 'm'}
             lead_mapper;
             delete(handles.leadfigure)
             return
-        case 'anatomy'
+        case {'anatomy', '-a', 'a'}
             lead_anatomy;
             delete(handles.leadfigure)
             return
-        case 'version'
+        case {'version', '-v', 'v'}
             disp(ea_getvsn('local'));
             delete(handles.leadfigure)
             return
         case 'dir'
             cd(ea_getearoot);
-             delete(handles.leadfigure)
+            delete(handles.leadfigure)
             return
         case 'speak'
             fprintf('\n \n \n \n %s \n \n','L337-D8Z: "H3LLo 7o joO MY Phr13nd. l1V3 Lon9 4nd pRO5P3r."'); % yes, this indeed is an easter-egg.
