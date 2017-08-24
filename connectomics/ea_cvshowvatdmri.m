@@ -37,9 +37,9 @@ for v=1:length(usevat)
 end
 for side=1:length(usevat)
     try
-        load([directory,'stimulations',filesep,vsname,filesep,'stimparameters_',usevat{options.sides(side)},'.mat']);
+        load([directory,'stimulations',filesep,vsname,filesep,'stimparameters.mat']);
     catch
-        keyboard
+        ea_error(['Could not find stimulation parameters for ',directory,filesep,vsname,'.']);
     end
 end
 
