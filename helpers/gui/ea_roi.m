@@ -1,5 +1,9 @@
 classdef ea_roi < handle
     % ROI class to plot niftis on lead dbs resultfig / 3D Matlab figures
+    % example: 
+    % figure; pobj.openedit=1; ea_roi([spm('dir'),filesep,'toolbox',filesep,'OldSeg',filesep,'grey.nii'],pobj); a=light; axis('off','equal')
+    % A. Horn
+    
     properties (SetObservable)
         niftiFilename % original nifti filename
         nii % nifti loaded
@@ -19,6 +23,7 @@ classdef ea_roi < handle
         toggleH % toggle handle
         htH % handle for toggle toolbar
     end
+    
     methods
         function obj=ea_roi(niftiFilename,pobj) % generator function
             if exist('niftiFilename','var') && ~isempty(niftiFilename)
@@ -50,8 +55,7 @@ classdef ea_roi < handle
             else
                 obj.color=uisetcolor;
             end
-            
-            
+
             % load nifti
             obj.nii=ea_load_nii(obj.niftiFilename);
             obj.nii.img(obj.nii.img==0)=nan;
@@ -69,18 +73,13 @@ classdef ea_roi < handle
             obj.hullsimplify=options.prefs.hullsimplify;
             set(0,'CurrentFigure',obj.plotFigureH);
             obj.patchH=patch;
-                        
-            %menu=uicontextmenu;
-            %entry1=uimenu(menu,'Label','ROI properties...','Callback',{@ea_editroi,obj});
+
             obj.toggleH=uitoggletool;
             
-
             % Get the underlying java object using findobj
             jtoggle = findjobj(obj.toggleH);
             
-            % Specify a callback to be triggered on any mouse release event
-            %set(jtoggle, 'MouseReleasedCallback', @(s,e)rightcallback(h,e))
-            
+            % Specify a callback to be triggered on any mouse release event   
             set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})            
             update_roi(obj);
             addlistener(obj,'visible','PostSet',...
@@ -111,11 +110,6 @@ classdef ea_roi < handle
                 evtnm='all';
             end
             if ismember(evtnm,{'all','threshold','smooth','hullsimplify'}) % need to recalc fv here:
-                [xx,yy,zz]=ind2sub(size(obj.nii.img),find(obj.nii.img>0)); %(mean(obj.nii.img(obj.nii.img~=0))/3))); % find 3D-points that have correct value.
-                if ~isempty(xx)
-                    XYZ=[xx,yy,zz]; % concatenate points to one matrix.
-                    XYZ=map_coords_proxy(XYZ,obj.nii); % map to mm-space
-                end
                 bb=[0,0,0;size(obj.nii.img)];
                 bb=map_coords_proxy(bb,obj.nii);
                 gv=cell(3,1);
@@ -123,12 +117,7 @@ classdef ea_roi < handle
                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(obj.nii.img,dim));
                 end
                 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-                %if obj.smooth
-                %    obj.nii.simg = smooth3(obj.nii.img,'gaussian',obj.smooth);
-                %else
-                %    obj.nii.simg=obj.nii.img;
-                %end
-                
+
                 obj.fv=isosurface(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 fvc=isocaps(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 obj.fv.faces=[obj.fv.faces;fvc.faces+size(obj.fv.vertices,1)];
@@ -141,7 +130,6 @@ classdef ea_roi < handle
                 end
                 
                 if ischar(obj.hullsimplify)
-                    
                     % get to 700 faces
                     simplify=700/length(obj.sfv.faces);
                     obj.sfv=reducepatch(obj.sfv,simplify);
@@ -156,8 +144,7 @@ classdef ea_roi < handle
                     end
                 end
             end
-            
-            %?atlasc=59; %rand*64;
+
             jetlist=jet;
             
             co=ones(1,1,3);
@@ -196,10 +183,7 @@ function ea_editroi(Hobj,evt,obj)
 end
 
 function ea_roivisible(Hobj,evt,onoff,obj)
-
-%try % if not yet initialized wont work
     obj.visible=onoff;
-%end
 end
 function coords=map_coords_proxy(XYZ,V)
 

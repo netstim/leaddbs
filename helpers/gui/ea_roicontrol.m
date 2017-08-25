@@ -22,7 +22,7 @@ function varargout = ea_roicontrol(varargin)
 
 % Edit the above text to modify the response to help ea_roicontrol
 
-% Last Modified by GUIDE v2.5 24-Aug-2017 17:31:20
+% Last Modified by GUIDE v2.5 25-Aug-2017 08:02:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -87,24 +87,24 @@ jSlider{1} = javax.swing.JSlider(0,100);
 javacomponent(jSlider{1},[0,130,200,45]);
 set(jSlider{1}, 'Value', getmaxminthresh(obj), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
 hjSlider{1} = handle(jSlider{1}, 'CallbackProperties');
-set(hjSlider{1}, 'MouseReleasedCallback', {@sliderthresholdchange,obj});  %alternative
+set(hjSlider{1}, 'MouseReleasedCallback', {@sliderthresholdchange,obj,handles});  %alternative
+set(hjSlider{1}, 'StateChangedCallback', {@sliderthresholdchangetxt,obj,handles});  %alternative
 
 % alpha
 jSlider{2} = javax.swing.JSlider(0,100);
 javacomponent(jSlider{2},[0,65,200,45]);
 set(jSlider{2}, 'Value', obj.alpha*100, 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
 hjSlider{2} = handle(jSlider{2}, 'CallbackProperties');
-set(hjSlider{2}, 'StateChangedCallback', {@slideralphachange,obj});  %alternative
+set(hjSlider{2}, 'StateChangedCallback', {@slideralphachange,obj,handles});  %alternative
 
 % smooth
 jSlider{3} = javax.swing.JSlider(0,100);
 javacomponent(jSlider{3},[0,0,200,45]);
 set(jSlider{3}, 'Value', round(obj.smooth*2), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
 hjSlider{3} = handle(jSlider{3}, 'CallbackProperties');
+set(hjSlider{3}, 'StateChangedCallback', {@slidersmoothchangetxt,obj,handles});  %alternative
+set(hjSlider{3}, 'MouseReleasedCallback', {@slidersmoothchange,obj,handles});  %alternative
 
-set(hjSlider{3}, 'MouseReleasedCallback', {@slidersmoothchange,obj});  %alternative
-
-setappdata(handles.roicontrol,'csliders',jSlider);
 
 function thresh=getmaxminthresh(obj)
 
@@ -115,35 +115,39 @@ thresh=round(thresh*100); % slider only supports integers
 function slideralphachange(varargin)
 slide=varargin{1};
 obj=varargin{3};
+handles=varargin{4};
 obj.alpha=slide.Value/100;
+set(handles.alphatxt,'String',num2str(obj.alpha));
 
 function sliderthresholdchange(varargin)
-
 slide=varargin{1};
-
 obj=varargin{3};
-    
 tval=slide.Value;
 tval=tval/100;
 tval=tval*obj.max;
 obj.threshold=tval+obj.min;
 
+function sliderthresholdchangetxt(varargin)
+slide=varargin{1};
+obj=varargin{3};
+   handles=varargin{4}; 
+tval=slide.Value;
+tval=tval/100;
+tval=tval*obj.max;
+tval=tval+obj.min;
+set(handles.theshtxt,'String',sprintf('%0.2f',tval));
 
 function slidersmoothchange(varargin)
 slide=varargin{1};
 
 obj=varargin{3};
-obj.smooth=makeuneven(round(slide.Value/2));
+obj.smooth=(round(slide.Value/2));
 
-function val=makeuneven(val)
-if val<1
-    val=0; % zero is allowed.
-    return
-end
-if mod(val,2)==0
-    val=val-1; % needs to be -1 since want it to be 0 as well.
-end
-
+function slidersmoothchangetxt(varargin)
+slide=varargin{1};
+handles=varargin{4};
+smooth=(round(slide.Value/2));
+set(handles.smoothtxt,'String',[num2str(smooth),' Its.']);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -165,3 +169,19 @@ function colorchange_Callback(hObject, eventdata, handles)
 obj=getappdata(handles.roicontrol,'obj');
 obj.color=uisetcolor;
 set(handles.colorchange,'BackgroundColor',obj.color);
+
+
+% --- Executes on button press in showhide.
+function showhide_Callback(hObject, eventdata, handles)
+% hObject    handle to showhide (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of showhide
+obj=getappdata(handles.roicontrol,'obj');
+switch get(hObject,'Value')
+    case 1
+obj.visible='on';
+    case 0
+   obj.visible='off';
+end
