@@ -10,6 +10,7 @@ if options.native
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
     if isfield(options,'hybridsave');
         ea_dispt('Warping fiducials to template space');
+        
         ea_reconstruction2mni(options);
         if options.prefs.reco.saveACPC
             ea_dispt('Mapping fiducials to AC/PC space');

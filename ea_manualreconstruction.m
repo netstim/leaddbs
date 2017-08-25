@@ -245,6 +245,9 @@ switch lower(commnd)
 
 
             markers=ea_correctcoords(markers,trajectory,event);
+            if isfield(options,'hybridsave')
+                options=rmfield(options,'hybridsave');
+            end
             ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
             %            setappdata(mcfig,'markers',markers);
@@ -791,6 +794,10 @@ setappdata(mcfig,'planes',planes);
 setappdata(mcfig,'elplot',elplot);
 setappdata(mcfig,'mplot',mplot);
 setappdata(mcfig,'movedel',movedel);
+
+if isfield(options,'hybridsave')
+    options=rmfield(options,'hybridsave');
+end
 
     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
