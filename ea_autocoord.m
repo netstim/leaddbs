@@ -240,6 +240,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         if isfield(options,'hybridsave')
             options=rmfield(options,'hybridsave');
         end
+ 
     end
 
     if options.manualheightcorrection
@@ -251,7 +252,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         % end
         % ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
         mcfig=figure('name',[options.patientname,': Manual Height Correction'],'numbertitle','off');
-        warning('off');
+        %warning('off');
         try
             ea_maximize(mcfig);
         end

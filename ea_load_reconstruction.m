@@ -8,31 +8,26 @@ function  [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=
 % Andreas Horn
 %
 % Modified for groupmode 04/2017 by Ari Kappel
+% Manually reversed uipatdirs changes 08/26/17 Andy Horn
+% Please do not use uipatdirs to determine patient directory, this will
+% confuse calls with multiple patients selected.
 
 options=varargin{1};
 
-if ~isfield(options, 'uipatdirs')
-    options.uipatdirs = {fullfile(options.root, options.patientname)};
-end
 
+directory=[options.root,options.patientname,filesep];
 try
     % Load Reconstruction
-    load([options.uipatdirs{1},filesep,'ea_reconstruction.mat']);
-catch
-    try
-        coords_mm=ea_read_fiducials(fullfile(options.uipatdirs{1},'ea_coords.fcsv'),options);
-    catch
-        warning(['Please localize electrodes of ',options.patientname,' first.']);
-    end
+    load([directory,'ea_reconstruction.mat']);
 end
 
 if exist('reco','var')
     if ~isfield(reco,'native') && isfield(reco,'mni') && options.native
         ea_reconstruction2native(options);
-        load(fullfile(options.uipatdirs{1},'ea_reconstruction.mat'));
+        load(fullfile(directory,'ea_reconstruction.mat'));
     elseif isfield(reco,'native') && ~isfield(reco,'mni') && ~options.native
         ea_reconstruction2mni(options);
-        load(fullfile(options.uipatdirs{1},'ea_reconstruction.mat'));
+        load(fullfile(directory,'ea_reconstruction.mat'));
     end
 
     if options.native
@@ -46,6 +41,7 @@ if exist('reco','var')
         space_type = 'mni';
     end
     coords_mm = reco.(space_type).coords_mm;
+
     trajectory = reco.(space_type).trajectory;
     markers = reco.(space_type).markers;
 

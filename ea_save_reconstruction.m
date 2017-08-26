@@ -16,7 +16,7 @@ if options.native
             ea_dispt('Mapping fiducials to AC/PC space');
             ea_reconstruction2acpc(options);
         end
-        ea_checkswap_lr(options);
+        ea_checkswap_lr(options); % PaCER support, right could be left and vice versa.
     end
 else
     reco.mni.coords_mm=coords_mm;
@@ -38,11 +38,15 @@ end
 
 
 function ea_checkswap_lr(options)
-
+options.native=0; % this can only be done in MNI space.
+try
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
+catch
+    keyboard
+end
 if mean(coords_mm{1}(:,1))<mean(coords_mm{2}(:,1)) % RL swapped
     % swap RL:
+    options.hybridsave=1;
     ncoords_mm{1}=coords_mm{2};    ncoords_mm{2}=coords_mm{1};
     ntrajectory{1}=trajectory{2};    ntrajectory{2}=trajectory{1};
     nmarkers(1)=markers(2); nmarkers(2)=markers(1);

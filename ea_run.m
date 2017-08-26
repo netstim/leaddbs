@@ -55,6 +55,7 @@ if length(uipatdirs)>1 && ~isempty(which('parpool')) && options.prefs.pp.do && ~
 
     opts = cell(1, length(uipatdirs));
     for pat = 1:length(opts)
+        
         % set patient specific options
         opts{pat} = options;
         opts{pat}.root = [fileparts(uipatdirs{pat}),filesep];
@@ -79,6 +80,7 @@ else
             ea_export(options);
         case 'run'
             for pat = 1:length(uipatdirs)
+                
                 % set patient specific options
                 options.root = [fileparts(uipatdirs{pat}),filesep];
                 [~, options.patientname] = fileparts(uipatdirs{pat});
