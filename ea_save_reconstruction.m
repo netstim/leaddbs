@@ -39,11 +39,8 @@ end
 
 function ea_checkswap_lr(options)
 options.native=0; % this can only be done in MNI space.
-try
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-catch
-    keyboard
-end
+
 if mean(coords_mm{1}(:,1))<mean(coords_mm{2}(:,1)) % RL swapped
     % swap RL:
     options.hybridsave=1;
