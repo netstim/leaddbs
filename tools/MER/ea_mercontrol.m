@@ -146,12 +146,12 @@ function pushimportrec_left_Callback(hObject, eventdata, handles)
 sidestr='left'; side=2;
 resultfig=getappdata(handles.mercontrolfig,'resultfig');
 options=getappdata(handles.mercontrolfig,'options');
-[Depth,Thresh,Tracts] = ea_readmer(fullfile(options.uipatdirs{1},['Rec_',sidestr,'.mat']));
+[Depth,Thresh,Tracts] = ea_readmer(fullfile(options.root,options.patientname,['Rec_',sidestr,'.mat']));
 merlfp.(sidestr).Depth = Depth;
 merlfp.(sidestr).Tracts = Tracts;
 merlfp.(sidestr).Thresh = Thresh;
 
-save(fullfile(options.uipatdirs{1},'ea_recordings.mat'),'merlfp')
+save(fullfile(options.root,options.patientname,'ea_recordings.mat'),'merlfp')
 disp('Process DONE')
 
 % --- Executes during object creation, after setting all properties.

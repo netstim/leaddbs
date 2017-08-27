@@ -350,7 +350,7 @@ classdef MERState < handle
             end
         end
         function save(obj, varargin)
-            fpath = fullfile(obj.Config.uipatdirs{1}, 'ea_merstate.mat');
+            fpath = fullfile(obj.Config.root, obj.Config.patientname, 'ea_merstate.mat');
             save_ok = true;
             if exist(fpath, 'file') && ...
                     ((nargin < 2) || varargin{1}(1)~='y')
@@ -371,7 +371,7 @@ classdef MERState < handle
             end
         end
         function load(obj)
-            fpath = fullfile(obj.Config.uipatdirs{1}, 'ea_merstate.mat');
+            fpath = fullfile(obj.Config.root, obj.Config.patientname, 'ea_merstate.mat');
             if exist(fpath, 'file')
                 temp = load(fpath);
                 obj.clearData();

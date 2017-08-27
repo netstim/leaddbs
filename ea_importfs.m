@@ -29,7 +29,7 @@ elseif isfield(varargin{1},'uipatdirs')
     
     options = varargin{1};
     
-    ptdir = options.uipatdirs{1};
+    ptdir = fullfile(options.root,options.patientname);
     patientname = options.patientname;
 
 end
