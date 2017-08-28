@@ -161,12 +161,17 @@ switch stripex(currvol)
                     method='';
                 else
                     method=load([directory,'ea_coregmrmethod_applied.mat']);
+                    if isfield(method,stripex(currvol)) % specific method used for this modality
+                        method=method.(stripex(currvol));
+                    else
+                        if isfield(method,'coregmr_method_applied')
+                        method=method.coregmr_method_applied{end};
+                        else
+                            method='';
+                        end
+                    end
                 end
-                if isfield(method,stripex(currvol)) % specific method used for this modality
-                    method=method.(stripex(currvol));
-                else
-                    method=method.coregmr_method_applied{end};
-                end
+               
         end
         
         set(handles.normsettings,'Visible','off');
@@ -366,7 +371,9 @@ switch stripex(currvol)
     case stripex(['tp_',options.prefs.ctnii_coregistered])
     otherwise % make sure method gets logged for specific volume.
         method=getappdata(handles.leadfigure,'method');
+        if exist([directory,'ea_coregmrmethod_applied.mat'],'file')
         m=load([directory,'ea_coregmrmethod_applied.mat']);
+        end
         m.(stripex(currvol))=method;
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 end
