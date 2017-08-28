@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 31-Jul-2017 14:50:58
+% Last Modified by GUIDE v2.5 28-Aug-2017 17:07:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -623,13 +623,14 @@ function include_lead_connectome_subroutine_Callback(hObject, eventdata, handles
 % Hint: get(hObject,'Value') returns toggle state of include_lead_connectome_subroutine
 
 
-% --- Executes on button press in coregmr_checkbox.
-function coregmr_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to coregmr_checkbox (see GCBO)
+% --- Executes on button press in coreg_checkbox.
+function coreg_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to coreg_checkbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of coregmr_checkbox
+% Hint: get(hObject,'Value') returns toggle state of coreg_checkbox
+ea_storeui(handles);
 
 
 % --- Executes on selection change in coregmrpopup.
@@ -689,3 +690,23 @@ function assignnii_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of assignnii
 ea_deselectall_dicom(handles);
+
+
+% --- Executes on button press in coregmrcheck.
+function coregmrcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to coregmrcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of coregmrcheck
+ea_storeui(handles);
+
+
+% --- Executes on button press in overwriteapproved.
+function overwriteapproved_Callback(hObject, eventdata, handles)
+% hObject    handle to overwriteapproved (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of overwriteapproved
+ea_storeui(handles);

@@ -39,25 +39,34 @@ catch
     options.normalize.check=0;
 end
 
+try % not working when calling from lead_anatomy
+    options.coregmr.check=(get(handles.coregmrcheck,'Value') == get(handles.coregmrcheck,'Max'));
+catch
+    options.coregmr.check=0;
+end
+
+try
+   options.overwriteapproved=get(handles.overwriteapproved,'Value'); 
+end
+
 try
     options.coregmr.method=get(handles.coregmrpopup,'String');
     options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
+    options.coregmr.do=get(handles.coreg_checkbox,'Value');
 catch
+    options.coregmr.do=0;
     options.coregmr.method='';
 end
 
 try % not working when calling from lead_connectome
     % coreg CT
-    options.coregct.do=(get(handles.coregct_checkbox,'Value') == get(handles.coregct_checkbox,'Max'));
+    options.coregct.do=(get(handles.coreg_checkbox,'Value') == get(handles.coreg_checkbox,'Max'));
     options.coregct.method=getappdata(handles.leadfigure,'coregctmethod');
     options.coregct.method=options.coregct.method{get(handles.coregctmethod,'Value')};
     options.coregct.methodn=get(handles.coregctmethod,'Value');
-    options.coregct.coregthreshs= eval( [ '[', get(handles.coregthreshs,'String'), ']' ] );
 
-    options.coregctcheck=get(handles.coregctcheck,'Value');
 catch
     options.coregct.do=0;
-    options.coregctcheck=0;
 end
 
 try

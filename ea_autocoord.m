@@ -98,35 +98,39 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         options.prefs.tranii=options.prefs.ctnii;
         options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
 
-        if options.coregct.do
+        if options.coregct.do && ~ea_coreglocked(options,['tp_',options.prefs.ctnii_coregistered]);
             eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
             ea_dumpnormmethod(options,options.coregct.method,'coregctmethod');
             ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
             ea_gencoregcheckfigs(options); % generate checkreg figures
         end
 
-        if options.coregctcheck
-            % export "control" niftis with wireframe of normal anatomy..
-            ea_show_ctcoregistration(options);
-        end
     end
 
-    if options.normalize.do
+    if options.coregmr.do
         % 1. coreg all available preop MRI
         ea_checkcoregallmri(options,0,1); % check and coregister all preoperative MRIs here.
-
         % 2. then coreg postop MRI to preop MRI
         ea_coregmr(options);
-
-        % 3. finally perform normalization based on dominant or all preop MRIs
-        ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
-        eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
-
-        if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
-            ea_tonemapct_file(options,'mni');
+    end
+    
+    if options.coregmr.check
+        options.normcoreg='coreg';
+        ea_checkcoreg(options);
+    end
+    
+    if options.normalize.do
+        if ~ea_coreglocked(options,'glanat')
+            % 3. finally perform normalization based on dominant or all preop MRIs
+            ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
+            eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
+            
+            if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
+                ea_tonemapct_file(options,'mni');
+            end
+            % 4. generate coreg-check figs (all to all).
+            ea_gencoregcheckfigs(options); % generate checkreg figures
         end
-        % 4. generate coreg-check figs (all to all).
-        ea_gencoregcheckfigs(options); % generate checkreg figures
     end
 
     if isfield(options,'gencheckreg') % this case is an exception when calling from the Tools menu.
@@ -149,7 +153,9 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
     if options.normalize.check
         % export "control" niftis with wireframe of normal anatomy..
-        ea_show_normalization(options);
+        options.normcoreg='normalize';
+        ea_checkcoreg(options);
+        
     end
 
     if options.doreconstruction

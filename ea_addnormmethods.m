@@ -1,14 +1,16 @@
-function ea_addnormmethods(handles,options,mstr)
+function ea_addnormmethods(handles,options,handlestring)
 
-if ~exist('mstr','var')
-    mstr=''; % no macaque mode
+if ~exist('handlestring','var')
+    handlestring='normmethod';
 end
+
+
 
 % add normalization methods to menu
 cnt=1;
 
 earoot=ea_getearoot;
-ndir=dir([earoot,mstr,'ea_normalize_*.m']);
+ndir=dir([earoot,'ea_normalize_*.m']);
 
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);    
@@ -29,7 +31,7 @@ end
 
 try
     setappdata(handles.leadfigure,'normmethod',normmethod);
-    set(handles.normmethod,'String',ndc);
+    set(handles.(handlestring),'String',ndc);
 catch
     if isempty(which('spm'))
     warning('It seems that SPM is not installed.');
@@ -37,11 +39,11 @@ catch
 end
 
 try % set selection of normmethod to default entry (specified in ea_prefs).
-    if defentry<=length(get(handles.normmethod,'String'))
-        set(handles.normmethod,'Value',defentry);
+    if defentry<=length(get(handles.(handlestring),'String'))
+        set(handles.(handlestring),'Value',defentry);
     end
 end
 
 clear defentry
 
-ea_switchnormmethod(handles);
+ea_switchnormmethod(handles,handlestring);

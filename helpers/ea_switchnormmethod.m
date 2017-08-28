@@ -1,9 +1,13 @@
-function ea_switchnormmethod(handles)
+function ea_switchnormmethod(handles,handlestring)
+
+if ~exist('handlestring','var')
+    handlestring='normmethod';
+end
 
 normmethod=getappdata(handles.leadfigure,'normmethod');
-ndc=get(handles.normmethod,'String');
+ndc=get(handles.(handlestring),'String');
 
-currentNormMethod=normmethod{get(handles.normmethod,'Value')};
+currentNormMethod=normmethod{get(handles.(handlestring),'Value')};
 try
 [~,~,hassettings]=feval(currentNormMethod,'prompt');
 catch % legacy support

@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 28-Jul-2017 11:40:03
+% Last Modified by GUIDE v2.5 28-Aug-2017 16:53:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -92,6 +92,7 @@ if ~options.prefs.env.dev
 end
 
 ea_init_coregmrpopup(handles,1);
+ea_init_coregctpopup(handles,options);
 
 % load atlassets
 ea_listatlassets(options,handles,1);
@@ -119,38 +120,9 @@ set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 
 % add norm methods to menu
 options.earoot=ea_getearoot;
-ea_addnormmethods(handles,options,mstr);
+ea_addnormmethods(handles,options);
 
-% add coreg methods to menu
-cnt=1;
-ndir=dir([earoot,'ea_coregctmri_*.m']);
-for nd=length(ndir):-1:1
-    [~,methodf]=fileparts(ndir(nd).name);
-    try
-        [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
-        if ismember(spm('ver'),spmvers)
-            cdc{cnt}=thisndc;
-            coregctmethod{cnt}=methodf;
-            if strcmp(cdc{cnt},eval([options.prefs.ctcoreg.default,'(','''prompt''',')']))
-                defentry=cnt;
-            end
-            cnt=cnt+1;
-        end
-    end
-end
-try
-    setappdata(handles.leadfigure,'coregctmethod',coregctmethod);
-    set(handles.coregctmethod,'String',cdc);
-catch
-    if isempty(which('spm'))
-        ea_error('Please install SPM12 for Lead-DBS to work properly.');
-    end
-end
-try % set selection of ctcoregmethod to default entry (specified in ea_prefs).
-    if defentry<=length(get(handles.coregctmethod,'String'))
-        set(handles.coregctmethod,'Value',defentry);
-    end
-end
+
 
 ea_processguiargs(handles,varargin)
 
@@ -1564,3 +1536,34 @@ function assignnii_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of assignnii
 ea_deselectall_dicom(handles);
+
+
+% --- Executes on button press in coreg_checkbox.
+function coreg_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to coreg_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of coreg_checkbox
+
+ea_storeui(handles);
+
+
+% --- Executes on button press in coregmrcheck.
+function coregmrcheck_Callback(hObject, eventdata, handles)
+% hObject    handle to coregmrcheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of coregmrcheck
+ea_storeui(handles);
+
+
+% --- Executes on button press in overwriteapproved.
+function overwriteapproved_Callback(hObject, eventdata, handles)
+% hObject    handle to overwriteapproved (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of overwriteapproved
+ea_storeui(handles);

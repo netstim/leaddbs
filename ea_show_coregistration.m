@@ -1,20 +1,18 @@
-function ea_show_ctcoregistration(options)
+function ea_show_coregistration(options)
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
-disp('Preparing images to show CT-/MR Coregistration...');
-if ~exist([options.root,options.patientname,filesep,'tp_',options.prefs.ctnii_coregistered],'file')
-    ea_tonemapct_file(options);
-end
-    ctfile=[options.root,options.patientname,filesep,'tp_',options.prefs.ctnii_coregistered];
+disp('Preparing images to show Coregistration...');
 
-    ct=ea_open_vol(ctfile);
-    mr=ea_open_vol([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
+    movingfile=[options.moving];
+
+    moving=ea_open_vol(movingfile);
+    fixed=ea_open_vol([options.fixed]);
    
-    if ~ea_hdr_iscoreg(mr,ct)
-        [pctfile,fctfile,ectfile]=fileparts(ctfile);
+    if ~ea_hdr_iscoreg(fixed,moving)
+        [pctfile,fctfile,ectfile]=fileparts(movingfile);
         matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized];
-            ctfile};
+            movingfile};
         matlabbatch{1}.spm.util.imcalc.output = [fctfile,ectfile];
         matlabbatch{1}.spm.util.imcalc.outdir = {[pctfile,filesep]};
         matlabbatch{1}.spm.util.imcalc.expression = ['i2'];
@@ -26,28 +24,28 @@ end
         spm_jobman('run',jobs);
         clear matlabbatch jobs;
     end
-    ct=ea_load_nii(ctfile);
-    mr=ea_load_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
+    moving=ea_load_nii(movingfile);
+    fixed=ea_load_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
 
-    ct.img(:)=ea_nanzscore(ct.img(:)); %     ct.img(:)=ea_nanzscore(ct.img(:),'robust');
-    ct.img=(ct.img+2.5)/5; % set max/min to -/+ 2.5 standard deviations
-    ct.img(ct.img<0)=0; ct.img(ct.img>1)=1;
-    mr.img(:)=ea_nanzscore(mr.img(:)); %     ct.img(:)=ea_nanzscore(ct.img(:),'robust');
-    mr.img=(mr.img+2.5)/5; % set max/min to -/+ 2.5 standard deviations
-    mr.img(mr.img<0)=0; mr.img(mr.img>1)=1;
+    moving.img(:)=ea_nanzscore(moving.img(:)); %     ct.img(:)=ea_nanzscore(ct.img(:),'robust');
+    moving.img=(moving.img+2.5)/5; % set max/min to -/+ 2.5 standard deviations
+    moving.img(moving.img<0)=0; moving.img(moving.img>1)=1;
+    fixed.img(:)=ea_nanzscore(fixed.img(:)); %     ct.img(:)=ea_nanzscore(ct.img(:),'robust');
+    fixed.img=(fixed.img+2.5)/5; % set max/min to -/+ 2.5 standard deviations
+    fixed.img(fixed.img<0)=0; fixed.img(fixed.img>1)=1;
 
     %jim=cat(4,mr.img,mean(cat(4,mr.img,ct.img),4),ct.img);
     %jim=cat(4,mr.img,(mr.img-ct.img)/2,ct.img);
 
-    jim=cat(4,0.1*mr.img+0.9*ct.img,0.4*mr.img+0.6*ct.img,0.9*mr.img+0.1*ct.img);
+    jim=cat(4,0.1*fixed.img+0.9*moving.img,0.4*fixed.img+0.6*moving.img,0.9*fixed.img+0.1*moving.img);
 
     %ea_imshowpair(jim,options,'Preoperative MRI (cyan) & Postoperative CT (orange)');
 
     % ----------------------------------------------------------
     % edited by TH 2016-02-17 to add windowed coregistration view
     % ----------------------------------------------------------
-    wim = cat(4,mr.img,ct.img,jim);
-    ea_imshowpair(wim,options,'Preoperative MRI & Postoperative CT','ctcoregistration');
+    wim = cat(4,fixed.img,moving.img,jim);
+    ea_imshowpair(wim,options,options.tag,'coregistration');
     % ----------------------------------------------------------
 disp('Done.');
 

@@ -12,9 +12,9 @@ end
 directory=[options.root,options.patientname,filesep];
 
 for coregfi=2:length(presentfiles)
-
+if ~ea_coreglocked(options,presentfiles{coregfi}) % file has already been locked and approved by used
     ea_coreg2images(options,[directory,presentfiles{coregfi}],[directory,presentfiles{1}],[directory,presentfiles{coregfi}]);
-
+    
     % reslice images if needed
     V1=ea_open_vol([directory,presentfiles{1}]);
     V2=ea_open_vol([directory,presentfiles{coregfi}]);
@@ -25,7 +25,7 @@ for coregfi=2:length(presentfiles)
     nii=ea_load_nii(V2.fname);
     nii.img(abs(nii.img)<0.0001)=0;
     ea_write_nii(nii);
-
+end
 end
 
 

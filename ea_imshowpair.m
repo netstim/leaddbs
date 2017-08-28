@@ -9,7 +9,7 @@ if ~exist('callingfunction','var')
 end
 
 switch callingfunction
-    case 'ctcoregistration'
+    case 'coregistration'
         wiresIX=3:5;
         gridIX=nan;
     case {'normalization dbs', 'normalization connectome'}

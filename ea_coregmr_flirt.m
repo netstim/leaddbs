@@ -1,7 +1,8 @@
 function ea_coregmr_flirt(options)
 % uses FLIRT instead of SPM to coregister MRIs.
 
-if exist([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized],'file')
+if exist([options.root,options.patientname,filesep,options.prefs.tranii_unnormalized],'file') &&...
+        ~ea_coreglocked(options,[options.root,options.patientname,filesep,options.prefs.tranii_unnormalized]) % file has already been locked and approved by used
     disp('Coregistering postop MR tra to preop MRI...');
     ea_flirt([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...
             [options.root,options.patientname,filesep,options.prefs.tranii_unnormalized],...
@@ -10,7 +11,8 @@ if exist([options.root,options.patientname,filesep,options.prefs.tranii_unnormal
     disp('Coregistration done.');
 end
 
-if exist([options.root,options.patientname,filesep,options.prefs.cornii_unnormalized],'file')
+if exist([options.root,options.patientname,filesep,options.prefs.cornii_unnormalized],'file') &&...
+        ~ea_coreglocked(options,[options.root,options.patientname,filesep,options.prefs.cornii_unnormalized]) % file has already been locked and approved by used
     disp('Coregistering postop MR cor to preop MRI...');
     ea_flirt([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...
             [options.root,options.patientname,filesep,options.prefs.cornii_unnormalized],...
@@ -19,7 +21,8 @@ if exist([options.root,options.patientname,filesep,options.prefs.cornii_unnormal
     disp('Coregistration done.');
 end
 
-if exist([options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized],'file')
+if exist([options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized],'file') &&...
+        ~ea_coreglocked(options,[options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized]) % file has already been locked and approved by used
     disp('Coregistering postop MR sag to preop MRI...');
     ea_flirt([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...
             [options.root,options.patientname,filesep,options.prefs.sagnii_unnormalized],...
