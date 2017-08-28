@@ -70,14 +70,16 @@ set(handles.leadfigure,'name',['MR-Coregistration: ',patientname]);
 presentfiles=ea_getall_coregcheck(options);
 anchor=presentfiles{1};
 presentfiles(1)=[];
-if isempty(presentfiles)
-    ea_error('There is nothing to coregister.');
-end
+
 set(handles.normsettings,'Visible','off');
-if exist([directory,options.prefs.gprenii],'file')
+if exist([directory,options.prefs.gprenii],'file') && ~ea_coreglocked(options,options.prefs.gprenii)
     presentfiles=[presentfiles;{[directory,options.prefs.gprenii]}];
 end
 
+if isempty(presentfiles)
+    close(handles.leadfigure)
+   return 
+end
 %set(handles.previous,'visible','off'); set(handles.next,'visible','off');
 
 
@@ -232,6 +234,16 @@ end
 if exist([directory,options.prefs.fa2anat],'file')
     presentfiles=[presentfiles;options.prefs.fa2anat];
 end
+
+% now check if those are already approved (then don't show again):
+
+todel=[];
+for pf=1:length(presentfiles)
+    if ea_coreglocked(options,presentfiles{pf})
+        todel=[todel,pf];
+    end
+end
+presentfiles(todel)=[];
 
 
 
