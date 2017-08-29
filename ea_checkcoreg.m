@@ -198,6 +198,7 @@ setappdata(handles.leadfigure,'method',method);
 
 % show result:
 checkfig=[directory,'checkreg',filesep,stripex(currvol),'2',stripex(anchor),'_',method,'.png'];
+set(handles.imgfn,'String',checkfig);
 switch stripex(currvol)
     case stripex(options.prefs.gprenii)
         options=ea_assignpretra(options);
@@ -210,6 +211,7 @@ if ~exist(checkfig,'file')
     ea_gencheckregpair([directory,stripex(currvol)],anchorpath,checkfig);
     if ~exist(checkfig,'file')
         checkfig=fullfile(ea_getearoot,'helpers','gui','coreg_msg.png');
+        set(handles.imgfn,'String','');
     end
 end
 

@@ -131,6 +131,9 @@ S=getappdata(handles.leadfigure,'S');
 if ~isempty(S)
     set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
     M.S=S;
+    for sp=1:length(M.S) % make sure stimlabel is gs_guid.
+       M.S(sp).label=['gs_',M.guid];
+    end
     M.S=ea_activecontacts(M.S);
 
     M.vatmodel=getappdata(handles.leadfigure,'vatmodel');
