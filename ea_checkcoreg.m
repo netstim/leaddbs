@@ -154,7 +154,6 @@ switch stripex(currvol)
                 else
                     method=load([directory,'ea_coregctmethod_applied.mat']);
                     method=method.coregct_method_applied;
- 
                 end
             otherwise % MR
                 ea_init_coregmrpopup(handles,1);
@@ -299,7 +298,7 @@ function recomputebutn_Callback(hObject, eventdata, handles)
 ea_busyaction('on',handles.leadfigure,'coreg');
 
 options=getappdata(handles.leadfigure,'options');
-
+options.overwriteapproved=1;
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
@@ -320,7 +319,8 @@ switch stripex(currvol)
             ea_tonemapct_file(options,'mni');
         end
         
-    case ['tp_',options.prefs.ctnii_coregistered] % CT
+    case stripex(['tp_',options.prefs.ctnii_coregistered]) % CT
+        
         options.coregct.method=getappdata(handles.leadfigure,'coregctmethod');
         options.coregct.method=options.coregct.method{get(handles.coregmrpopup,'Value')};
         options.coregct.methodn=get(handles.coregmrpopup,'Value');
