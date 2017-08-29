@@ -107,7 +107,6 @@ function ea_mrcview(handles)
 options=getappdata(handles.leadfigure,'options');
 
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
-anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=[options.root,options.patientname,filesep];
 
@@ -142,6 +141,7 @@ switch stripex(currvol)
         set(handles.coregresultstxt,'String','Normalization results:');
         set(handles.normsettings,'Visible','on');
     otherwise
+        anchor=getappdata(handles.leadfigure,'anchor');
         set(handles.anchortxt,'String','Anchor modality (red wires):');
         set(handles.coregresultstxt,'String','Coregistration results:');
         set(handles.leadfigure,'Name',[options.patientname, ': Check Coregistration']);
@@ -176,6 +176,8 @@ switch stripex(currvol)
         
         set(handles.normsettings,'Visible','off');
 end
+
+set(handles.anchormod,'String',stripex(anchor));
 if ~exist([directory,'ea_coreg_approved.mat'],'file') % init
     for vol=1:length(presentfiles)
         approved.(stripex(presentfiles{vol}))=0;
