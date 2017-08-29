@@ -393,11 +393,11 @@ if strcmp(stripex(currvol),stripex(options.prefs.gprenii))
     if allcoreg
         approved.(stripex(currvol))=2; % set to permanent approved =2 normalization. This will not be overriden no matter what (as long is override flag is not set).
     else
-                    ea_warning('You approved normalization before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+        ea_warning('You approved normalization before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
     end
 else
     if isfield(approved,stripex(options.prefs.gprenii))
-        if approved.stripex(options.prefs.gprenii)
+        if approved.(stripex(options.prefs.gprenii))==2
             % now in this situation we had the normalization approved before
             % all coregistrations were approved. This could lead to suboptimal
             % normalizations *only* if a multispectral protocol is used. Thus
