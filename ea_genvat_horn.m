@@ -10,7 +10,7 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=0.2;
+    thresh=0.2; %0.765; %0.2;
 
 elseif nargin==7
     acoords=varargin{1};
@@ -167,7 +167,7 @@ setappdata(resultfig,'elstruct',elstruct);
             mesh.pnt=mesh.pnt/1000; % in meter
             mesh.unit='m';
         end
-        
+     %   plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'c.');
         %% calculate volume conductor
         ea_dispt('Creating volume conductor...');
         
@@ -339,6 +339,7 @@ setappdata(resultfig,'vatgrad',vatgrad);
 % mesh-connection and setting difference of voltage to these points.
 
 vat.pos=midpts;
+%plot3(midpts(:,1),midpts(:,2),midpts(:,3),'g.');
 
 ngrad=sqrt(sum(gradient'.^2,1));
 vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.
@@ -393,6 +394,10 @@ end
 ea_dispt('Filling data with values from interpolant...');
 eeg = F(gv);
 eeg(isnan(eeg))=0;
+
+%figure, plot3(F.Points(:,1),F.Points(:,2),F.Points(:,3),'r.')
+%hold on
+%plot3(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),'b.')
 % e-field in matrix form.
 
 ea_dispt('Calculating output file data...');
@@ -444,13 +449,11 @@ switch side
         Vvate=Vvat; Vvatne=Vvat;
         Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_right.nii'];
         Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_gauss_right.nii'];
-        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters.mat'];
-    case 2
+case 2
         Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
         Vvate=Vvat; Vvatne=Vvat;
         Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_left.nii'];
         Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_gauss_left.nii'];
-        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters.mat'];
 end
 %save(stimfile,'S');
 ea_savestimulation(S,options);
