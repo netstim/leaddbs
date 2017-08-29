@@ -153,7 +153,8 @@ switch stripex(currvol)
                     method='';
                 else
                     method=load([directory,'ea_coregctmethod_applied.mat']);
-                    method=method.coregct_method_applied{end};
+                    method=method.coregct_method_applied;
+ 
                 end
             otherwise % MR
                 ea_init_coregmrpopup(handles,1);
