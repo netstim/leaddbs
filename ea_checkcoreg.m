@@ -22,7 +22,7 @@ function varargout = ea_checkcoreg(varargin)
 
 % Edit the above text to modify the response to help ea_checkcoreg
 
-% Last Modified by GUIDE v2.5 28-Aug-2017 17:55:02
+% Last Modified by GUIDE v2.5 29-Aug-2017 10:04:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -190,19 +190,20 @@ setappdata(handles.leadfigure,'method',method);
 
 % show result:
 checkfig=[directory,'checkreg',filesep,stripex(currvol),'2',stripex(anchor),'_',method,'.png'];
+switch stripex(currvol)
+    case stripex(options.prefs.gprenii)
+        options=ea_assignpretra(options);
+        anchorpath=[ea_space,options.primarytemplate];
+    otherwise
+        anchorpath=[directory,stripex(anchor)];
+end
 if ~exist(checkfig,'file')
-    switch stripex(currvol)
-        case stripex(options.prefs.gprenii)
-            options=ea_assignpretra(options);
-            anchorpath=[ea_space,options.primarytemplate];
-        otherwise
-            anchorpath=[directory,stripex(anchor)];
-    end
     ea_gencheckregpair([directory,stripex(currvol)],anchorpath,checkfig);
     if ~exist(checkfig,'file')
         checkfig=fullfile(ea_getearoot,'helpers','gui','coreg_msg.png');
     end
 end
+setappdata(handles.leadfigure,'anchorpath',anchorpath);
 im=imread(checkfig);
 set(0,'CurrentFigure',handles.leadfigure);
 set(handles.leadfigure,'CurrentAxes',handles.standardax);
@@ -575,4 +576,33 @@ else
 end
 setappdata(handles.leadfigure,'activevolume',activevolume);
 ea_mrcview(handles);
+ea_busyaction('off',handles.leadfigure,'coreg');
+
+
+% --- Executes on button press in refreshview.
+function refreshview_Callback(hObject, eventdata, handles)
+% hObject    handle to refreshview (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+ea_busyaction('on',handles.leadfigure,'coreg');
+
+options=getappdata(handles.leadfigure,'options');
+presentfiles=getappdata(handles.leadfigure,'presentfiles');
+activevolume=getappdata(handles.leadfigure,'activevolume');
+directory=[options.root,options.patientname,filesep];
+currvol=presentfiles{activevolume};
+anchorpath=getappdata(handles.leadfigure,'anchorpath');
+method=getappdata(handles.leadfigure,'method');
+
+switch stripex(currvol)
+    case stripex(options.prefs.gprenii)
+        options=ea_assignpretra(options);
+        anchor=[ea_space,options.primarytemplate,'.nii'];
+    otherwise
+        anchor=getappdata(handles.leadfigure,'anchor');
+end
+checkfig=[directory,'checkreg',filesep,stripex(currvol),'2',stripex(anchor),'_',method,'.png'];
+ea_gencheckregpair([directory,stripex(currvol)],anchorpath,checkfig);
+ea_mrcview(handles); % refresh
 ea_busyaction('off',handles.leadfigure,'coreg');
