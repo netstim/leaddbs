@@ -53,13 +53,6 @@ function lead_dbs_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead_dbs (see VARARGIN)
 
-% Choose default command line output for lead_dbs
-handles.output = hObject;
-
-% Update handles structure
-guidata(hObject, handles);
-
-
 earoot=ea_getearoot;
 
 % add recent patients...
@@ -75,7 +68,6 @@ set(handles.leadfigure,'name','Welcome to LEAD-DBS');
 spacedef=ea_getspacedef;
 if isfield(spacedef,'guidef')
     set(handles.targetpopup,'String',[spacedef.guidef.entrypoints,{'Manual'}]);
-
 end
 
 options.prefs=ea_prefs('');
@@ -122,8 +114,6 @@ set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 options.earoot=ea_getearoot;
 ea_addnormmethods(handles,options);
 
-
-
 ea_processguiargs(handles,varargin)
 
 %% add tools menu
@@ -136,6 +126,12 @@ ea_getui(handles);
 ea_bind_dragndrop(handles.leadfigure, ...
     @(obj,evt) DropFcn(obj,evt,handles), ...
     @(obj,evt) DropFcn(obj,evt,handles));
+
+% Choose default command line output for lead_dbs
+handles.output = hObject;
+
+% Update handles structure
+guidata(hObject, handles);
 
 % UIWAIT makes lead_dbs wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);

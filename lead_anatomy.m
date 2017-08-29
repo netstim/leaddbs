@@ -52,12 +52,6 @@ function lead_anatomy_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead_anatomy (see VARARGIN)
 
-% Choose default command line output for lead_anatomy
-handles.output = hObject;
-
-% Update handles structure
-guidata(hObject, handles);
-
 % add recent patients...
 ea_initrecentpatients(handles);
 earoot=ea_getearoot;
@@ -93,7 +87,7 @@ set(handles.leadfigure,'name','Lead-Anatomy','color','w');
 ea_init_coregmrpopup(handles);
 
 % add norm methods to menu
-ea_addnormmethods(handles,options,'');
+ea_addnormmethods(handles,options,'normmethod');
 
 ea_processguiargs(handles,varargin)
 
@@ -106,6 +100,12 @@ ea_firstrun(handles,options);
 ea_bind_dragndrop(handles.leadfigure, ...
     @(obj,evt) DropFcn(obj,evt,handles), ...
     @(obj,evt) DropFcn(obj,evt,handles));
+
+% Choose default command line output for lead_anatomy
+handles.output = hObject;
+
+% Update handles structure
+guidata(hObject, handles);
 
 % UIWAIT makes lead_anatomy wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);

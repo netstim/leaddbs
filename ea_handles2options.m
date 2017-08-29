@@ -4,8 +4,6 @@ function options=ea_handles2options(handles)
 % ea_autocoord & ea_write (i.e. the main lead batch functions).
 
 %% some manual options that can be set:
-
-
 options.endtolerance=10; % how many slices to use with zero signal until end of electrode estimate.
 options.sprungwert=4; % how far electrode centroid may be (in xy axis) from last to current slice.
 options.refinesteps=0; % how often to re-iterate to reconstruct trajectory. More than 2 should usually not be beneficial. Use 0 to use the direct measurement.
@@ -46,7 +44,7 @@ catch
 end
 
 try
-   options.overwriteapproved=get(handles.overwriteapproved,'Value'); 
+   options.overwriteapproved=get(handles.overwriteapproved,'Value');
 end
 
 try
@@ -64,7 +62,6 @@ try % not working when calling from lead_connectome
     options.coregct.method=getappdata(handles.leadfigure,'coregctmethod');
     options.coregct.method=options.coregct.method{get(handles.coregctmethod,'Value')};
     options.coregct.methodn=get(handles.coregctmethod,'Value');
-
 catch
     options.coregct.do=0;
 end
