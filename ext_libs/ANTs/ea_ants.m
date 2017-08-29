@@ -73,21 +73,21 @@ end
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
 if any(imgsize>256)
-    rigidconvergence='[1000x500x250x100,1e-6,10]';
-    rigidshrinkfactors='12x8x4x2';
-    rigidsoomthingssigmas='4x3x2x1vox';
+    rigidconvergence='[1000x500x250x100x0,1e-6,10]';
+    rigidshrinkfactors='12x8x4x2x1';
+    rigidsoomthingssigmas='4x3x2x1x1vox';
 
-    affineconvergence='[1000x500x250x100,1e-6,10]';
-    affineshrinkfactors='12x8x4x2';
-    affinesoomthingssigmas='4x3x2x1vox';
+    affineconvergence='[1000x500x250x100x0,1e-6,10]';
+    affineshrinkfactors='12x8x4x2x1';
+    affinesoomthingssigmas='4x3x2x1x1vox';
 else
-    rigidconvergence='[1000x500x250x100,1e-6,10]';
-    rigidshrinkfactors='8x4x2x1';
-    rigidsoomthingssigmas='3x2x1x0vox';
+    rigidconvergence='[1000x500x250x100x0,1e-6,10]';
+    rigidshrinkfactors='8x4x2x2x1';
+    rigidsoomthingssigmas='3x2x1x0x0vox';
 
-    affineconvergence='[1000x500x250x100,1e-6,10]';
-    affineshrinkfactors='8x4x2x1';
-    affinesoomthingssigmas='3x2x1x0vox';
+    affineconvergence='[1000x500x250x100x0,1e-6,10]';
+    affineshrinkfactors='8x4x2x2x1';
+    affinesoomthingssigmas='3x2x1x0x0vox';
 end
 
 % name of the output transformation

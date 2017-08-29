@@ -120,16 +120,24 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     end
     
     if options.normalize.do
-        if ~ea_coreglocked(options,'glanat')
-            % 3. finally perform normalization based on dominant or all preop MRIs
-            ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
-            eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
-            
-            if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
-                ea_tonemapct_file(options,'mni');
+        if ~(ea_coreglocked(options,'glanat')==2) % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
+            if ea_coreglocked(options,'glanat')==1 % in this case, only perform normalization if using a multispectral approach now.
+                [~,~,~,doit]=eval([options.normalize.method,'(''prompt'')']);
+            else
+                doit=1;
             end
-            % 4. generate coreg-check figs (all to all).
-            ea_gencoregcheckfigs(options); % generate checkreg figures
+            if doit
+                clear doit
+                % 3. finally perform normalization based on dominant or all preop MRIs
+                ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
+                eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
+                
+                if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
+                    ea_tonemapct_file(options,'mni');
+                end
+                % 4. generate coreg-check figs (all to all).
+                ea_gencoregcheckfigs(options); % generate checkreg figures
+            end
         end
     end
 

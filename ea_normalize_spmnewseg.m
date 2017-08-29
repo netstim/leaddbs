@@ -23,6 +23,8 @@ if ischar(options) % return name of method.
     switch spm('ver')
         case 'SPM12'
             varargout{2}=1; % compatible
+            varargout{3}=0; % hassettings.
+            varargout{4}=1; % is multispectral
         otherwise
             varargout{2}=0; % not compatible
     end

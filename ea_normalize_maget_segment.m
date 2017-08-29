@@ -6,6 +6,7 @@ if ischar(options) % return name of method.
             varargout{1}='MAGeT Brain-like Segmentation/Normalization DISTAL atlas (Chakravarty 2013, Ewert 2016)';
             varargout{2}=1; % is compatible
             varargout{3}=1; % hassettings.
+            varargout{4}=1; % is multispectral
             return
     end
 end

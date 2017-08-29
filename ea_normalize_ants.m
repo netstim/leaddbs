@@ -21,6 +21,7 @@ if ischar(options) % return name of method.
     varargout{1}='Advanced Normalization Tools (Avants 2008)';
     varargout{2}=1;
     varargout{3}=1; % hassettings.
+    varargout{4}=1; % is multispectral
     return
 end
 

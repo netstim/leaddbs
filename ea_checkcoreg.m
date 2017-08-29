@@ -124,7 +124,7 @@ end
 currvol=presentfiles{activevolume};
 
 switch stripex(currvol)
-    case 'glanat'
+    case stripex(options.prefs.gprenii)
         [options] = ea_assignpretra(options);
         anchor=[ea_space,options.primarytemplate,'.nii'];
         set(handles.leadfigure,'Name',[options.patientname, ': Check Normalization']);
@@ -190,7 +190,7 @@ setappdata(handles.leadfigure,'method',method);
 checkfig=[directory,'checkreg',filesep,stripex(currvol),'2',stripex(anchor),'_',method,'.png'];
 if ~exist(checkfig,'file')
     switch stripex(currvol)
-        case 'glanat'
+        case stripex(options.prefs.gprenii)
             options=ea_assignpretra(options);
             anchorpath=[ea_space,options.primarytemplate];
         otherwise
@@ -305,7 +305,7 @@ currvol=presentfiles{activevolume};
 
 
 switch stripex(currvol)
-    case 'glanat'
+    case stripex(options.prefs.gprenii)
         options.normalize.method=getappdata(handles.leadfigure,'normmethod');
         options.normalize.method=options.normalize.method{get(handles.coregmrpopup,'Value')};
         options.normalize.methodn=get(handles.coregmrpopup,'Value');
@@ -367,7 +367,7 @@ currvol=presentfiles{activevolume};
 
 
 switch stripex(currvol)
-    case 'glanat'
+    case stripex(options.prefs.gprenii)
     case stripex(['tp_',options.prefs.ctnii_coregistered])
     otherwise % make sure method gets logged for specific volume.
         method=getappdata(handles.leadfigure,'method');
@@ -382,6 +382,34 @@ end
 approved=load([directory,'ea_coreg_approved.mat']);
 
 approved.(stripex(currvol))=1;
+if strcmp(stripex(currvol),stripex(options.prefs.gprenii))
+    [options,preniis]=ea_assignpretra(options); % get all preop versions
+    allcoreg=1; % check if all preniis are already approved
+    for pn=2:length(preniis)
+        if ~approved.(stripex(preniis{pn}))
+            allcoreg=0;
+        end
+    end
+    if allcoreg
+        approved.(stripex(currvol))=2; % set to permanent approved =2 normalization. This will not be overriden no matter what (as long is override flag is not set).
+    else
+                    ea_warning('You approved normalization before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+    end
+else
+    if isfield(approved,stripex(options.prefs.gprenii))
+        if approved.stripex(options.prefs.gprenii)
+            % now in this situation we had the normalization approved before
+            % all coregistrations were approved. This could lead to suboptimal
+            % normalizations *only* if a multispectral protocol is used. Thus
+            % we set the normalization approval rate to 1. This way, it will
+            % still be overriden in case of running a multispectral
+            % normalization.
+            ea_warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+            approved.stripex(options.prefs.gprenii)=1; % this will be overriden when using a multispectral normalization.
+        end
+    end
+end
+
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
 
@@ -447,7 +475,7 @@ presentfiles=getappdata(handles.leadfigure,'presentfiles');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 currvol=presentfiles{activevolume};
 switch stripex(currvol)
-    case 'glanat'
+    case stripex(options.prefs.gprenii)
         ea_show_normalization(options);
     otherwise
         presentfiles=getappdata(handles.leadfigure,'presentfiles');
@@ -499,7 +527,7 @@ save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
 
 switch stripex(currvol)
-    case 'glanat'
+    case stripex(options.prefs.gprenii)
     case stripex(['tp_',options.prefs.ctnii_coregistered])
     otherwise % make sure method gets unlogged for specific volume.
         method=getappdata(handles.leadfigure,'method');

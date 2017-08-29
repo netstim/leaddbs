@@ -10,7 +10,7 @@ else
     approved=load([directory,'ea_coreg_approved.mat']);
     if isfield(approved,striponeex(moving))
         if approved.(striponeex(moving))
-            locked=1;
+            locked=approved.(striponeex(moving));
         end
     end 
 end

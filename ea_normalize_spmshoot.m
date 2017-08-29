@@ -34,6 +34,8 @@ if ischar(options) % return name of method.
     varargout{1}='SPM12 SHOOT nonlinear (Ashburner 2011)';
     if strcmp(spm('ver'),'SPM12')
         varargout{2}=1; % compatible
+        varargout{3}=0; % hassettings.
+        varargout{4}=1; % is multispectral
     else
         varargout{2}=0; % not compatible
     end
