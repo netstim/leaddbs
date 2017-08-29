@@ -153,7 +153,11 @@ switch stripex(currvol)
                     method='';
                 else
                     method=load([directory,'ea_coregctmethod_applied.mat']);
-                    method=method.coregct_method_applied;
+                    if iscell(method.coregct_method_applied)
+                        method=method.coregct_method_applied{end};
+                    else
+                        method=method.coregct_method_applied;
+                    end
                 end
             otherwise % MR
                 ea_init_coregmrpopup(handles,1);
@@ -165,7 +169,11 @@ switch stripex(currvol)
                         method=method.(stripex(currvol));
                     else
                         if isfield(method,'coregmr_method_applied')
-                        method=method.coregmr_method_applied{end};
+                            if iscell(method.coregmr_method_applied)
+                                method=method.coregmr_method_applied{end};
+                            else
+                                method=method.coregmr_method_applied;
+                            end
                         else
                             method='';
                         end
@@ -197,12 +205,14 @@ switch stripex(currvol)
     otherwise
         anchorpath=[directory,stripex(anchor)];
 end
+
 if ~exist(checkfig,'file')
     ea_gencheckregpair([directory,stripex(currvol)],anchorpath,checkfig);
     if ~exist(checkfig,'file')
         checkfig=fullfile(ea_getearoot,'helpers','gui','coreg_msg.png');
     end
 end
+
 setappdata(handles.leadfigure,'anchorpath',anchorpath);
 im=imread(checkfig);
 set(0,'CurrentFigure',handles.leadfigure);
