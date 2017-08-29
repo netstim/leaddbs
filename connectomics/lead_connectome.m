@@ -93,7 +93,7 @@ set(handles.ftmethod,'String',fdc);
 
 % add normmethods to menu
 options.prefs=ea_prefs('');
-ea_addnormmethods(handles,options,'');
+ea_addnormmethods(handles,options,'normmethod');
 
 % add recent patients...
 ea_initrecentpatients(handles,'subjects');
