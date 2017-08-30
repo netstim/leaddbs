@@ -61,11 +61,10 @@ directory=[options.root,options.patientname,filesep];
 setappdata(handles.leadfigure,'options',options);
 setappdata(handles.leadfigure,'directory',directory);
 
-[pth,patientname]=fileparts(fileparts(directory));
+[~, patientname]=fileparts(fileparts(directory));
 handles.patientname.String=patientname;
 
-set(handles.leadfigure,'name',['MR-Coregistration: ',patientname]);
-
+set(handles.leadfigure,'Name',[patientname, ': MR-Coregistration']);
 
 presentfiles=ea_getall_coregcheck(options);
 anchor=presentfiles{1};
@@ -78,20 +77,15 @@ end
 
 if isempty(presentfiles)
     close(handles.leadfigure)
-   return 
+   return
 end
 %set(handles.previous,'visible','off'); set(handles.next,'visible','off');
-
-
-
 setappdata(handles.leadfigure,'presentfiles',presentfiles)
 setappdata(handles.leadfigure,'anchor',anchor)
 setappdata(handles.leadfigure,'activevolume',1);
 setappdata(handles.leadfigure,'options',options);
 
 ea_mrcview(handles);
-
-
 
 % Choose default command line output for ea_checkcoreg
 handles.output = hObject;
@@ -113,11 +107,9 @@ directory=[options.root,options.patientname,filesep];
 if activevolume==length(presentfiles)
     set(handles.disapprovebutn,'String','Disapprove & Close');
     set(handles.approvebutn,'String','Approve & Close');
-    
 else
     set(handles.approvebutn,'String','Approve & Next >>');
     set(handles.disapprovebutn,'String','Disapprove & Next >>');
-    
 end
 
 currvol=presentfiles{activevolume};
@@ -127,25 +119,27 @@ switch stripex(currvol)
         [options] = ea_assignpretra(options);
         anchor=[ea_space,options.primarytemplate,'.nii'];
         set(handles.leadfigure,'Name',[options.patientname, ': Check Normalization']);
-        
+
         ea_addnormmethods(handles,options,'coregmrpopup');
-        
+
         if ~exist([directory,'ea_normmethod_applied.mat'],'file')
             method='';
         else
             method=load([directory,'ea_normmethod_applied.mat']);
             method=method.norm_method_applied{end};
         end
-        
+
         set(handles.anchortxt,'String','Template (red wires):');
-        set(handles.coregresultstxt,'String','Normalization results:');
+        set(handles.coregresultstxt,'String','Normalization results');
         set(handles.normsettings,'Visible','on');
+        set(handles.leadfigure,'Name',[options.patientname, ': Check Normalization']);
+        set(gcf,'Name',[options.patientname, ': Check Normalization']);
     otherwise
         anchor=getappdata(handles.leadfigure,'anchor');
         set(handles.anchortxt,'String','Anchor modality (red wires):');
-        set(handles.coregresultstxt,'String','Coregistration results:');
+        set(handles.coregresultstxt,'String','Coregistration results');
         set(handles.leadfigure,'Name',[options.patientname, ': Check Coregistration']);
-        
+
         switch currvol
             case ['tp_',options.prefs.ctnii_coregistered] % CT
                 ea_init_coregctpopup(handles,options,'coregmrpopup');
@@ -179,9 +173,8 @@ switch stripex(currvol)
                         end
                     end
                 end
-               
+
         end
-        
         set(handles.normsettings,'Visible','off');
 end
 
@@ -198,7 +191,9 @@ setappdata(handles.leadfigure,'method',method);
 
 % show result:
 checkfig=[directory,'checkreg',filesep,stripex(currvol),'2',stripex(anchor),'_',method,'.png'];
+set(handles.imgfn,'Visible','on');
 set(handles.imgfn,'String',checkfig);
+set(handles.imgfn,'TooltipString',checkfig);
 switch stripex(currvol)
     case stripex(options.prefs.gprenii)
         options=ea_assignpretra(options);
@@ -212,6 +207,7 @@ if ~exist(checkfig,'file')
     if ~exist(checkfig,'file')
         checkfig=fullfile(ea_getearoot,'helpers','gui','coreg_msg.png');
         set(handles.imgfn,'String','');
+        set(handles.imgfn,'Visible','off');
     end
 end
 
@@ -225,11 +221,12 @@ axis off
 axis equal
 
 % textfields:
-
 set(handles.depvolume,'String',[stripex(currvol),'.nii']);
+
 
 function fn=stripex(fn)
 [~,fn]=fileparts(fn);
+
 
 function presentfiles=ea_getall_coregcheck(options)
 directory=[options.root,options.patientname,filesep];
@@ -264,8 +261,6 @@ for pf=1:length(presentfiles)
     end
 end
 presentfiles(todel)=[];
-
-
 
 
 % --- Outputs from this function are returned to the command line.
@@ -318,7 +313,6 @@ directory=[options.root,options.patientname,filesep];
 
 currvol=presentfiles{activevolume};
 
-
 switch stripex(currvol)
     case stripex(options.prefs.gprenii)
         options.normalize.method=getappdata(handles.leadfigure,'normmethod');
@@ -326,22 +320,22 @@ switch stripex(currvol)
         options.normalize.methodn=get(handles.coregmrpopup,'Value');
         ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
         eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
-        
+
         if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
             ea_tonemapct_file(options,'mni');
         end
-        
+
     case stripex(['tp_',options.prefs.ctnii_coregistered]) % CT
-        
+
         options.coregct.method=getappdata(handles.leadfigure,'coregctmethod');
         options.coregct.method=options.coregct.method{get(handles.coregmrpopup,'Value')};
         options.coregct.methodn=get(handles.coregmrpopup,'Value');
-        
+
         eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
         ea_dumpnormmethod(options,options.coregct.method,'coregctmethod');
         ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
         ea_gencoregcheckfigs(options); % generate checkreg figures
-        
+
     otherwise % MR
         options.coregmr.method=get(handles.coregmrpopup,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
@@ -350,7 +344,9 @@ switch stripex(currvol)
 end
 
 ea_mrcview(handles)
+title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
+set(handles.leadfigure, 'Name', title);
 
 
 function ea_dumpspecificmethod(handles,method)
@@ -366,8 +362,6 @@ m.(stripex(presentfiles{activevolume}))=method;
 save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 
 
-
-
 % --- Executes on button press in approvebutn.
 function approvebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to approvebutn (see GCBO)
@@ -381,7 +375,6 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=[options.root,options.patientname,filesep];
 currvol=presentfiles{activevolume};
 
-
 switch stripex(currvol)
     case stripex(options.prefs.gprenii)
     case stripex(['tp_',options.prefs.ctnii_coregistered])
@@ -393,7 +386,6 @@ switch stripex(currvol)
         m.(stripex(currvol))=method;
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 end
-
 
 approved=load([directory,'ea_coreg_approved.mat']);
 
@@ -428,10 +420,6 @@ end
 
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
-
-
-
-
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
@@ -444,7 +432,9 @@ else
 end
 setappdata(handles.leadfigure,'activevolume',activevolume);
 ea_mrcview(handles);
+title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
+set(handles.leadfigure, 'Name', title);
 
 
 % --- Executes on selection change in coregmrpopup.
@@ -463,7 +453,7 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 currvol=presentfiles{activevolume};
 % init retry popup:
 if strcmp(currvol,'glanat.nii')
-    
+
     ea_switchnormmethod(handles,'coregmrpopup');
 end
 
@@ -497,15 +487,15 @@ switch stripex(currvol)
         presentfiles=getappdata(handles.leadfigure,'presentfiles');
         anchor=getappdata(handles.leadfigure,'anchor');
         activevolume=getappdata(handles.leadfigure,'activevolume');
-        
+
         directory=[options.root,options.patientname,filesep];
-        
+
         options.moving=[directory,presentfiles{activevolume}];
         options.fixed=[directory,anchor];
         options.tag=[presentfiles{activevolume},' & ',anchor];
-        
+
         ea_show_coregistration(options);
-        
+
 end
 
 
@@ -534,13 +524,10 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=[options.root,options.patientname,filesep];
 currvol=presentfiles{activevolume};
 
-
-
 approved=load([directory,'ea_coreg_approved.mat']);
 
 approved.(stripex(currvol))=0;
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
-
 
 switch stripex(currvol)
     case stripex(options.prefs.gprenii)
@@ -554,7 +541,6 @@ switch stripex(currvol)
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 end
 
-
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
@@ -567,7 +553,9 @@ else
 end
 setappdata(handles.leadfigure,'activevolume',activevolume);
 ea_mrcview(handles);
+title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
+set(handles.leadfigure, 'Name', title);
 
 
 % --- Executes on button press in back.
@@ -589,7 +577,9 @@ else
 end
 setappdata(handles.leadfigure,'activevolume',activevolume);
 ea_mrcview(handles);
+title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
+set(handles.leadfigure, 'Name', title);
 
 
 % --- Executes on button press in refreshview.
@@ -618,4 +608,6 @@ end
 checkfig=[directory,'checkreg',filesep,stripex(currvol),'2',stripex(anchor),'_',method,'.png'];
 ea_gencheckregpair([directory,stripex(currvol)],anchorpath,checkfig);
 ea_mrcview(handles); % refresh
+title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
+set(handles.leadfigure, 'Name', title);

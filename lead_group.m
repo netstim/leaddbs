@@ -438,7 +438,7 @@ if options.expstatvat.do % export to nifti volume
     pobj.color=[0.9,0.2,0.3];
 
     pobj.openedit=1;
-    
+
     ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'zstatvat_mean.nii'],pobj);
 end
 
@@ -582,10 +582,6 @@ M.clinical.labels(get(handles.clinicallist,'Value'))=[];
 % store model and refresh UI
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
-
-
-
-
 
 
 % --- Executes on selection change in vilist.
@@ -1464,7 +1460,6 @@ function showactivecontcheck_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 M.ui.showactivecontcheck=get(handles.showactivecontcheck,'Value');
 
-
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
@@ -1481,8 +1476,6 @@ M.ui.showisovolumecheck=get(handles.showisovolumecheck,'Value');
 
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
-
-
 
 
 % --- Executes on selection change in isovscloudpopup.
@@ -1511,7 +1504,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function [pU,pIm]=getstimparams(M)
 try
     for pt=1:length(M.patient.list)
@@ -1528,9 +1520,6 @@ catch
 end
 
 
-
-
-
 % --- Executes on button press in statvatcheck.
 function statvatcheck_Callback(hObject, eventdata, handles)
 % hObject    handle to statvatcheck (see GCBO)
@@ -1542,7 +1531,6 @@ M=getappdata(gcf,'M');
 
 M.ui.statvat=get(handles.statvatcheck,'Value');
 setappdata(gcf,'M',M);
-
 
 
 % --- Executes on button press in mercheck.
@@ -1557,9 +1545,6 @@ M=getappdata(gcf,'M');
 
 M.ui.mer=get(handles.mercheck,'Value');
 setappdata(gcf,'M',M);
-
-
-
 
 
 % --- Executes on selection change in elmodelselect.
@@ -1708,14 +1693,12 @@ function viz2dbutton_Callback(hObject, eventdata, handles)
 clc;
 M=getappdata(gcf,'M');
 
-
 ea_busyaction('on',gcf,'group');
 % set options
 options=ea_setopts_local(handles);
 % set pt specific options
 options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),filesep];
 [~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
-
 
 options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 options.elmodel=M.elstruct(1).elmodel;
@@ -1727,11 +1710,13 @@ options.d3.elrendering=M.ui.elrendering;
 options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
 options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
 options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
-try options.d3.isomatrix=M.isomatrix;
+try
+    options.d3.isomatrix=M.isomatrix;
 catch
     options.d3.isomatrix={};
 end
-try options.d3.isomatrix_name=M.isomatrix_name;
+try
+    options.d3.isomatrix_name=M.isomatrix_name;
 catch
     options.d3.isomatrix_name={};
 end
@@ -1739,7 +1724,6 @@ end
 options.expstatvat.do=M.ui.statvat;
 
 options.d2.showlegend=0;
-
 
 options.d3.isovscloud=M.ui.isovscloudpopup;
 options.d3.showisovolume=M.ui.showisovolumecheck;
@@ -1866,7 +1850,6 @@ if ~isempty(stats.fc.nfccorr)
 end
 
 
-
 % --- Executes on button press in corrbutton_ft.
 function corrbutton_ft_Callback(hObject, eventdata, handles)
 % hObject    handle to corrbutton_ft (see GCBO)
@@ -1876,10 +1859,7 @@ ea_busyaction('on',gcf,'group');
 stats=preparedataanalysis(handles);
 assignin('base','stats',stats);
 
-
 % perform correlations:
-
-
 if size(stats.corrcl,2)==1 % one value per patient
 
         if ~isempty(stats.fccorr.both)
