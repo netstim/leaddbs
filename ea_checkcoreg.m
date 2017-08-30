@@ -132,6 +132,8 @@ switch stripex(currvol)
         set(handles.anchortxt,'String','Template (red wires):');
         set(handles.coregresultstxt,'String','Normalization results');
         set(handles.normsettings,'Visible','on');
+        set(handles.recomputebutn,'String','(Re-) compute normalization using...');
+        set(handles.coregmrpopup,'TooltipString','Choose a normalization method');
         set(handles.leadfigure,'Name',[options.patientname, ': Check Normalization']);
         set(gcf,'Name',[options.patientname, ': Check Normalization']);
     otherwise
@@ -173,9 +175,10 @@ switch stripex(currvol)
                         end
                     end
                 end
-
         end
         set(handles.normsettings,'Visible','off');
+        set(handles.recomputebutn,'String','(Re-) compute coregistration using...');
+        set(handles.coregmrpopup,'TooltipString','Choose a coregistration method');
 end
 
 set(handles.anchormod,'String',stripex(anchor));
@@ -342,6 +345,7 @@ switch stripex(currvol)
         ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
         ea_dumpspecificmethod(handles,options.coregmr.method)
 end
+
 % regenerate checkfig.
 anchorpath=getappdata(handles.leadfigure,'anchorpath');
 
@@ -353,6 +357,7 @@ ea_gencheckregpair([directory,stripex(currvol)],anchorpath,checkfig);
 approved=load([directory,'ea_coreg_approved.mat']);
 approved.(stripex(currvol))=0;
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
+
 ea_mrcview(handles)
 title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
@@ -394,7 +399,7 @@ switch stripex(currvol)
     otherwise % make sure method gets logged for specific volume.
         method=getappdata(handles.leadfigure,'method');
         if exist([directory,'ea_coregmrmethod_applied.mat'],'file')
-        m=load([directory,'ea_coregmrmethod_applied.mat']);
+            m=load([directory,'ea_coregmrmethod_applied.mat']);
         end
         m.(stripex(currvol))=method;
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');

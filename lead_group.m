@@ -1075,7 +1075,6 @@ for pt=selection
         mkdir([M.ui.groupdir,options.patientname]);
         options.root=M.ui.groupdir;
         % options.patientname='tmp';
-        
         try
             ea_stats=M.stats(pt).ea_stats;
         catch
