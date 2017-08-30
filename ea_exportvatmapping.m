@@ -21,27 +21,12 @@ else
 end
 cnt=2;
 for pt=1:length(M.patient.list)
-    pdate=0;
-    stims=dir([M.patient.list{pt},filesep,'stimulations']);
-    for stim=1:length(stims)
-        if ~strcmp(stims(stim).name(1),'.')
-            if stims(stim).datenum>pdate
-
-
-                pdate=stims(stim).datenum;
-
-                mostrecentstim=stim;
-            end
-        end
-    end
-
-    try
-    Vvatr=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,stims(mostrecentstim).name,filesep,'vat_right.nii']);
-    Vvatl=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,stims(mostrecentstim).name,filesep,'vat_left.nii']);
-    catch
-
-       keyboard
-
+    if M.ui.detached % process locally in lead group directory
+        Vvatr=ea_load_nii([options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii']);
+        Vvatl=ea_load_nii([options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii']);
+    else
+        Vvatr=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii']);
+        Vvatl=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii']);
     end
     Vvatr.img(Vvatr.img==0)=nan;     Vvatl.img(Vvatl.img==0)=nan;
     zVvatr=Vvatr; zVvatl=Vvatl;

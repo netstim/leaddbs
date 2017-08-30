@@ -439,7 +439,7 @@ if options.expstatvat.do % export to nifti volume
 
     pobj.openedit=1;
 
-    ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'zstatvat_mean.nii'],pobj);
+    ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'],pobj);
 end
 
 ea_busyaction('off',handles.leadfigure,'group');
