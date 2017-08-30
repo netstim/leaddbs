@@ -342,7 +342,17 @@ switch stripex(currvol)
         ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
         ea_dumpspecificmethod(handles,options.coregmr.method)
 end
+% regenerate checkfig.
+anchorpath=getappdata(handles.leadfigure,'anchorpath');
 
+method=getappdata(handles.leadfigure,'method');
+checkfig=[directory,'checkreg',filesep,stripex(currvol),'2',stripex(anchor),'_',method,'.png'];
+
+ea_gencheckregpair([directory,stripex(currvol)],anchorpath,checkfig);
+% now disapprove again since this new computation hasn't been approved yet.
+approved=load([directory,'ea_coreg_approved.mat']);
+approved.(stripex(currvol))=0;
+save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 ea_mrcview(handles)
 title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
