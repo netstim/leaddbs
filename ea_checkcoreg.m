@@ -356,8 +356,11 @@ presentfiles=getappdata(handles.leadfigure,'presentfiles');
 anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=[options.root,options.patientname,filesep];
-
-m=load([directory,'ea_coregmrmethod_applied.mat']);
+try
+    m=load([directory,'ea_coregmrmethod_applied.mat']);
+catch
+    m=struct;
+end
 m.(stripex(presentfiles{activevolume}))=method;
 save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 
