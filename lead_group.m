@@ -1056,8 +1056,11 @@ for pt=selection
         mkdir([M.ui.groupdir,options.patientname]);
         options.root=M.ui.groupdir;
         %    options.patientname='tmp';
-
-        ea_stats=M.stats(pt).ea_stats;
+        try
+            ea_stats=M.stats(pt).ea_stats;
+        catch
+            ea_stats=struct;
+        end
         coords_mm=M.elstruct(pt).coords_mm;
         trajectory=M.elstruct(pt).trajectory;
         save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
@@ -1072,8 +1075,12 @@ for pt=selection
         mkdir([M.ui.groupdir,options.patientname]);
         options.root=M.ui.groupdir;
         % options.patientname='tmp';
-
-        ea_stats=M.stats(pt).ea_stats;
+        
+        try
+            ea_stats=M.stats(pt).ea_stats;
+        catch
+            ea_stats=struct;
+        end
         coords_mm=M.elstruct(pt).coords_mm;
         trajectory=M.elstruct(pt).trajectory;
         save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');

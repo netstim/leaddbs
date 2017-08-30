@@ -25,8 +25,8 @@ orig=electrode.tail_position-3*stretchfactor*(electrode.head_position-electrode.
 etop=electrode.head_position-3*stretchfactor*(electrode.tail_position-electrode.head_position);
 
 
-el_o_orig=[0,0,15+(10*stretchfactor)];
-el_o_etop=[0,0,-10*stretchfactor];
+el_o_orig=[0,0,15+(20*stretchfactor)];
+el_o_etop=[0,0,-20*stretchfactor];
 
 
 nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
@@ -35,7 +35,7 @@ bcyltrisize=0.01;       % the maximum triangle size of the bounding cyl
 
 cylz0=-30;     % define the upper end of the bounding cylinder
 cylz1=30;     % define the lowe end of the bounding cylinder
-cylradius=25*stretchfactor; % define the radius of the bounding cylinder
+cylradius=30*stretchfactor; % define the radius of the bounding cylinder
 
 ndiv=50;      % division of circle for the bounding cylinder
 electrodelen=norm(etop-orig); % length of the electrode
