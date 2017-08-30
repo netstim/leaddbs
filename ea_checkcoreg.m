@@ -419,6 +419,10 @@ else
 end
 
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
+if strcmp(computer('arch'),'maci64')
+    system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ',directory,stripex(currvol),'.nii']);
+end
+
 
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 anchor=getappdata(handles.leadfigure,'anchor');
@@ -528,7 +532,9 @@ approved=load([directory,'ea_coreg_approved.mat']);
 
 approved.(stripex(currvol))=0;
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
-
+if strcmp(computer('arch'),'maci64')
+    system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',directory,stripex(currvol),'.nii']);
+end
 switch stripex(currvol)
     case stripex(options.prefs.gprenii)
     case stripex(['tp_',options.prefs.ctnii_coregistered])
