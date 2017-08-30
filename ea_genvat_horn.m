@@ -10,7 +10,7 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=0.2; %0.765; %0.2;
+    thresh=0.2; %0.2;
 
 elseif nargin==7
     acoords=varargin{1};
@@ -26,6 +26,7 @@ elseif nargin==1
         return
     end
 end
+
 if useSI
     thresh=thresh.*(10^3);
 end
@@ -190,7 +191,9 @@ setappdata(resultfig,'elstruct',elstruct);
             mesh.pnt=mesh.pnt*1000; % in meter
             mesh.unit='mm';
         end
-        
+        if ~exist([options.root,options.patientname,filesep,'headmodel',filesep],'dir')
+           mkdir([options.root,options.patientname,filesep,'headmodel',filesep]); 
+        end
         save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
         ea_save_hmprotocol(options,side,elstruct,1);
         
