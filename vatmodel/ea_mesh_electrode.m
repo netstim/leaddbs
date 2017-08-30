@@ -471,8 +471,8 @@ if vizz
     plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.2)
 end
 
-ea_dispt('Exporting STL files');
 if stlexport
+    ea_dispt('Exporting STL files');
     tissuelabels={'grey','white','contacts','insulation'};
     if ~exist([options.root,options.patientname,filesep,'headmodel',filesep],'file')
         mkdir([options.root,options.patientname,filesep,'headmodel',filesep]);
