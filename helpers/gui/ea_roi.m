@@ -14,6 +14,7 @@ classdef ea_roi < handle
         sfv % smoothed version
         visible='on' % turn on/off
         smooth % smooth by FWHM
+        binary % is binary ROI
         hullsimplify % simplify hull
         max % maxvalue in nifti - 0.1 of the way
         min % minvalue in nifti + 0.1 of the way
@@ -57,9 +58,14 @@ classdef ea_roi < handle
             end
 
             % load nifti
+            
             obj.nii=ea_load_nii(obj.niftiFilename);
-            obj.nii.img(obj.nii.img==0)=nan;
-            obj.nii.img=obj.nii.img-nanmin(obj.nii.img(:)); % set min to zero
+            if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
+                obj.binary=1;
+            else
+                obj.nii.img(obj.nii.img==0)=nan;
+                obj.nii.img=obj.nii.img-nanmin(obj.nii.img(:)); % set min to zero
+            end
             obj.nii.img(isnan(obj.nii.img))=0;
             options.prefs=ea_prefs;
             obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));
@@ -67,8 +73,12 @@ classdef ea_roi < handle
             maxmindiff=obj.max-obj.min;
             obj.max=obj.max-0.1*maxmindiff;
             obj.min=obj.min+0.1*maxmindiff;
+            if obj.binary
+                obj.threshold=obj.max/2;
+            else
+                obj.threshold=obj.max-0.5*maxmindiff;
+            end
             
-            obj.threshold=obj.max-0.5*maxmindiff;
             obj.smooth=options.prefs.hullsmooth;
             obj.hullsimplify=options.prefs.hullsimplify;
             set(0,'CurrentFigure',obj.plotFigureH);
