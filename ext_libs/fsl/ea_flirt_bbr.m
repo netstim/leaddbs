@@ -32,10 +32,10 @@ xfm = [movname, '2', fixname, '_flirtbbr'];
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
-    FAST = [basedir, 'fast.exe'];
-    FSLMATHS = [basedir, 'fslmaths.exe'];
-    FLIRT = [basedir, 'flirt.exe'];
-    COVERT_XFM = [basedir, 'convert_xfm.exe'];
+    FAST = ea_path_helper([basedir, 'fast.exe']);
+    FSLMATHS = ea_path_helper([basedir, 'fslmaths.exe']);
+    FLIRT = ea_path_helper([basedir, 'flirt.exe']);
+    COVERT_XFM = ea_path_helper([basedir, 'convert_xfm.exe']);
 else
     FAST = [basedir, 'fast.', computer('arch')];
     FSLMATHS = [basedir, 'fslmaths.', computer('arch')];

@@ -31,7 +31,7 @@ outputimage = ea_niifileparts(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
-    BET = [basedir, 'bet2.exe'];
+    BET = ea_path_helper([basedir, 'bet2.exe']);
 else
     BET = [basedir, 'bet2.', computer('arch')];
 end

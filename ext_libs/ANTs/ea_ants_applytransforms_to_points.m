@@ -59,7 +59,7 @@ ea_libs_helper;
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
-    applyTransformsToPoints = [basedir, 'antsApplyTransformsToPoints.exe'];
+    applyTransformsToPoints = ea_path_helper([basedir, 'antsApplyTransformsToPoints.exe']);
 else
     applyTransformsToPoints = [basedir, 'antsApplyTransformsToPoints.', computer('arch')];
 end

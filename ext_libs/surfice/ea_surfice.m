@@ -11,7 +11,7 @@ elseif isunix
     ea_libs_helper([basedir, 'linux']);
     surfice = [basedir, 'linux',filesep,'surfice'];
 elseif ispc
-    surfice = [basedir, 'win',filesep,'surfice.exe'];
+    surfice = ea_path_helper([basedir, 'win',filesep,'surfice.exe']);
 end
 cmd=[surfice,' -S "',script,'"'];
 if ~hold

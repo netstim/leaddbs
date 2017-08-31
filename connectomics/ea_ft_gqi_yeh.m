@@ -41,9 +41,9 @@ if ismac
     dsistudio = [basedir,'mac',filesep, 'dsi_studio.app',filesep,'Contents',filesep,'MacOS',filesep,'dsi_studio'];
 elseif isunix
     ea_libs_helper([basedir, 'linux']);
-    dsistudio = [basedir, 'linux',filesep,'dsi_studio'];
+    dsistudio = [basedir, 'linux', filesep, 'dsi_studio'];
 elseif ispc
-    dsistudio = [basedir, 'win',filesep,'dsi_studio.exe'];
+    dsistudio = ea_path_helper([basedir, 'win', filesep, 'dsi_studio.exe']);
 end
 
 % build .fib.gz file

@@ -6,7 +6,7 @@ ea_libs_helper;
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
-    N4BiasFieldCorrection = [basedir, 'N4BiasFieldCorrection.exe'];
+    N4BiasFieldCorrection = ea_path_helper([basedir, 'N4BiasFieldCorrection.exe']);
 else
     N4BiasFieldCorrection = [basedir, 'N4BiasFieldCorrection.', computer('arch')];
 end

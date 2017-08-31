@@ -56,9 +56,9 @@ volumedir = [fileparts(outputbase), filesep];
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
-    HEADER = [basedir, 'PrintHeader.exe'];
-    ANTS = [basedir, 'antsRegistration.exe'];
-    antsApplyTransforms = [basedir, 'antsApplyTransforms.exe'];
+    HEADER = ea_path_helper([basedir, 'PrintHeader.exe']);
+    ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
+    antsApplyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
 else
     HEADER = [basedir, 'PrintHeader.', computer('arch')];
     ANTS = [basedir, 'antsRegistration.', computer('arch')];

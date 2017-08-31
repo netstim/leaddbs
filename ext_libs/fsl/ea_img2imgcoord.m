@@ -29,7 +29,7 @@ end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
-    IMG2IMGCOORD = [basedir, 'img2imgcoord.exe'];
+    IMG2IMGCOORD = ea_path_helper([basedir, 'img2imgcoord.exe']);
 else
     IMG2IMGCOORD = [basedir, 'img2imgcoord.', computer('arch')];
 end
@@ -50,7 +50,7 @@ if ~isempty(premat)
 end
 
 % Input coords is var rather than a file
-if ~ischar(incoords)  
+if ~ischar(incoords)
     % convert column vector to make it of the size N*3
     if size(incoords, 2) ~= 3
         incoords = incoords';

@@ -25,7 +25,7 @@ end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
-    FLIRT = [basedir, 'flirt.exe'];
+    FLIRT = ea_path_helper([basedir, 'flirt.exe']);
 else
     FLIRT = [basedir, 'flirt.', computer('arch')];
 end

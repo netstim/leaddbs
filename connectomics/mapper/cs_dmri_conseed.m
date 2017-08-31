@@ -18,7 +18,7 @@ switch cmd
         for s=1:length(sfile)
             map=ea_load_nii([cbase,'spacedefinitions',filesep,space]);
             cfile=[dfold,'dMRI',filesep,cname];
-            
+
             if exist([cfile,filesep,'data.mat'],'file') % regular mat file
                 if ~exist('fibers','var')
                     [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile,filesep,'data.mat']);
@@ -26,44 +26,44 @@ switch cmd
                         ea_error('Structural connectome file supplied in wrong format.');
                     end
                 end
-                
+
                 redotree=0;
                 ctype='mat';
             elseif exist([cfile,filesep,'data.fib.gz'],'file') % regular .fib.gz file
-                
+
                 ftr=track_seed_gqi([cfile,filesep,'data.fib.gz'],sfile{s});
                 fibers=ftr.fibers;
                 redotree=1;
                 ctype='fibgz';
-                
+
             else % connectome type not supported
                 ea_error('Connectome file vanished or not supported!');
             end
-            
-            
+
+
             mapsz=size(map.img);
-            
+
             seedfiles=sfile;
-            
+
             map.img(:)=0;
             Vseed=ea_load_nii(seedfiles{s});
-            
+
             maxdist=mean(abs(Vseed.voxsize))/2;
-            
+
             Vseed.img(isnan(Vseed.img))=0;
-            
+
             ixs=find(Vseed.img);
             % subtract nan values from these
-            
+
             ixvals=Vseed.img(ixs);
             if sum(abs(ixvals-double(logical(ixvals))))<0.0001
                 allbinary=1;
             else
                 allbinary=0;
             end
-            
+
             if ~allbinary || strcmp(ctype,'mat')
-                
+
                 [xx,yy,zz]=ind2sub(size(Vseed.img),ixs);
                 XYZvx=[xx,yy,zz,ones(length(xx),1)]';
                 clear ixs
@@ -87,19 +87,19 @@ switch cmd
                         fiberstrengthn(fibnos)=fiberstrengthn(fibnos)+1;
                     %end
                     ea_dispercent(ix/ixdim);
-                    
+
                 end
                 nzz=~(fiberstrength==0);
                 fiberstrength(nzz)=fiberstrength(nzz)./fiberstrengthn(nzz); % now each fiber has a strength mediated by the seed.
                 ea_dispercent(1,'end');
-                
+
                 ea_dispercent(0,'Iterating fibers');
                 cfibers=find(fiberstrength);
                 cfibdim=length(cfibers);
                 fcnt=1;
                 for f=cfibers' % iterate through fibers that have assigned a nonzero value and paint to map.
                     allfibcs=fibers(fibers(:,4)==f,1:3);
-                    
+
                     allfibcs=round(map.mat\[allfibcs,ones(size(allfibcs,1),1)]');
                     allfibcs(:,logical(sum(allfibcs<1,1)))=[];
                     topaint=sub2ind(mapsz,allfibcs(1,:),allfibcs(2,:),allfibcs(3,:));
@@ -116,20 +116,20 @@ switch cmd
                 c=countmember(utopaint,topaint);
                 map.img(utopaint)=c;
             end
-            
+
             [~,fn]=fileparts(seedfiles{s});
-            
+
             map.fname=fullfile(outputfolder,[fn,'_struc_',cmd,'.nii']);
             map.dt=[16,0];
             spm_write_vol(map,map.img);
-            
+
         end
-        
+
     case {'matrix','pmatrix'}
-        
+
         for s=1:length(sfile)
             cfile=[dfold,'dMRI',filesep,cname];
-            
+
             if exist([cfile,filesep,'data.mat'],'file') % regular mat file
                 if ~exist('fibers','var')
                     [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile,filesep,'data.mat']);
@@ -137,44 +137,44 @@ switch cmd
                         ea_error('Structural connectome file supplied in wrong format.');
                     end
                 end
-                
+
                 redotree=0;
                 ctype='mat';
             elseif exist([cfile,filesep,'data.fib.gz'],'file') % regular .fib.gz file
-                
+
                 ftr=track_seed_gqi([cfile,filesep,'data.fib.gz'],sfile{s});
                 fibers=ftr.fibers;
                 redotree=1;
                 ctype='fibgz';
-                
+
             else % connectome type not supported
                 ea_error('Connectome file vanished or not supported!');
             end
-            
-            
-            
+
+
+
             seedfiles=sfile;
-            
+
             Vseed{s}=ea_load_nii(seedfiles{s});
-            
+
             maxdist{s}=mean(abs(Vseed{s}.voxsize))/2;
-            
+
             Vseed{s}.img(isnan(Vseed{s}.img))=0;
-            
+
             ixs{s}=find(Vseed{s}.img);
             % subtract nan values from these
-            
+
             ixvals{s}=Vseed{s}.img(ixs{s});
             if sum(abs(ixvals{s}-double(logical(ixvals{s}))))<0.0001
                 allbinary{s}=1;
             else
                 allbinary{s}=0;
             end
-            
-            
+
+
             % now have all seeds and connectome - for each seed find fibers
             % connected to it:
-            
+
             [xx,yy,zz]=ind2sub(size(Vseed{s}.img),ixs{s});
             XYZvx=[xx,yy,zz,ones(length(xx),1)]';
             XYZmm{s}=Vseed{s}.mat*XYZvx;
@@ -183,7 +183,7 @@ switch cmd
                 tree=KDTreeSearcher(fibers(:,1:3));
             end
             ids{s}=rangesearch(tree,XYZmm{s},maxdist{s},'distance','chebychev');
-            
+
             % select fibers for each ix
             ea_dispercent(0,'Iterating voxels');
             ixdim=length(ixvals{s});
@@ -200,10 +200,10 @@ switch cmd
             fiberstrength{s}(nzz)=fiberstrength{s}(nzz)./fiberstrengthn{s}(nzz); % now each fiber has a strength mediated by the seed.
             ea_dispercent(1,'end');
         end
-        
+
         fiberstrength=cell2mat(fiberstrength);
         mat=zeros(length(sfile));
-        
+
         for sxx=1:length(sfile)
             for syy=1:length(sfile)
                 if sxx>syy
@@ -294,7 +294,7 @@ elseif isunix
     ea_libs_helper([basedir, 'linux']);
     dsistudio = [basedir, 'linux',filesep,'dsi_studio'];
 elseif ispc
-    dsistudio = [basedir, 'win',filesep,'dsi_studio.exe'];
+    dsistudio = ea_path_helper([basedir, 'win',filesep,'dsi_studio.exe']);
 end
 
 

@@ -38,7 +38,7 @@ if nargin >= 7
                 interp='GenericLabel';
             otherwise
                 interp='BSpline';
-                
+
         end
     end
 else
@@ -107,7 +107,7 @@ end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
-    applyTransforms = [basedir, 'antsApplyTransforms.exe'];
+    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
 else
     applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end

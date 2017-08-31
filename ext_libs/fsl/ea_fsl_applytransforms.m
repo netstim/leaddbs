@@ -91,7 +91,7 @@ end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
-    APPLYWARP = [basedir, 'applywarp.exe'];
+    APPLYWARP = ea_path_helper([basedir, 'applywarp.exe']);
 else
     APPLYWARP = [basedir, 'applywarp.', computer('arch')];
 end
@@ -143,13 +143,13 @@ for fi = 1:length(fis)
     if ~isempty(interp)
         cmd = [cmd, ' --interp=', interp];
     end
-    
+
     if strcmp(ofis{fi}(end-2:end),'.gz')
         setenv('FSLOUTPUTTYPE','NIFTI_GZ');
     else
         setenv('FSLOUTPUTTYPE','NIFTI');
     end
-    
+
     if ~ispc
         system(['bash -c "', cmd, '"']);
     else

@@ -15,7 +15,7 @@ ea_libs_helper;
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
-    dcm2nii = [basedir, 'dcm2nii.exe'];
+    dcm2nii = ea_path_helper([basedir, 'dcm2nii.exe']);
 else
     dcm2nii = [basedir, 'dcm2nii.', computer('arch')];
 end

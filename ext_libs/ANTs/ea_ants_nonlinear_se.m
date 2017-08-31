@@ -55,8 +55,8 @@ outputimage = ea_path_helper(ea_niigz(outputimage));
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
-    HEADER = [basedir, 'PrintHeader.exe'];
-    ANTS = [basedir, 'antsRegistration.exe'];
+    HEADER = ea_path_helper([basedir, 'PrintHeader.exe']);
+    ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
 else
     HEADER = [basedir, 'PrintHeader.', computer('arch')];
     ANTS = [basedir, 'antsRegistration.', computer('arch')];

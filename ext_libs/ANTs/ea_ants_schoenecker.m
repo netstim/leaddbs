@@ -100,9 +100,9 @@ outputimage = ea_path_helper(ea_niigz(outputimage));
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
-    HEADER = [basedir, 'PrintHeader.exe'];
-    ANTS = [basedir, 'antsRegistration.exe'];
-    applyTransforms = [basedir, 'antsApplyTransforms.exe'];
+    HEADER = ea_path_helper([basedir, 'PrintHeader.exe']);
+    ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
+    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
 
 else
     HEADER = [basedir, 'PrintHeader.', computer('arch')];

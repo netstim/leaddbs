@@ -77,8 +77,8 @@ end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
-    FLIRT = [basedir, 'flirt.exe'];
-    COVERT_XFM = [basedir, 'convert_xfm.exe'];
+    FLIRT = ea_path_helper([basedir, 'flirt.exe']);
+    COVERT_XFM = ea_path_helper([basedir, 'convert_xfm.exe']);
 else
     FLIRT = [basedir, 'flirt.', computer('arch')];
     COVERT_XFM = [basedir, 'convert_xfm.', computer('arch')];

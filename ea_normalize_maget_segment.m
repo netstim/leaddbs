@@ -255,7 +255,7 @@ end
 function ea_writecompositewarp(transforms)
 basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
 if ispc
-    applyTransforms = [basedir, 'antsApplyTransforms.exe'];
+    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
 else
     applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end

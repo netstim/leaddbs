@@ -36,7 +36,7 @@ spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3
 
 basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
 if ispc
-    ResampleImageBySpacing = [basedir, 'ResampleImageBySpacing.exe'];
+    ResampleImageBySpacing = ea_path_helper([basedir, 'ResampleImageBySpacing.exe']);
 else
     ResampleImageBySpacing = [basedir, 'ResampleImageBySpacing.', computer('arch')];
 end

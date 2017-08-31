@@ -10,7 +10,7 @@ fis2anat={[directory,'scrf',filesep,scrf,'movim.nii']};
 
 basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
 if ispc
-    SLICER = [basedir, 'slicer.exe'];
+    SLICER = ea_path_helper([basedir, 'slicer.exe']);
 else
     SLICER = [basedir, 'slicer.', computer('arch')];
 end
