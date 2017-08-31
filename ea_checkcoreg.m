@@ -407,6 +407,7 @@ end
 
 approved=load([directory,'ea_coreg_approved.mat']);
 
+    wasapprovedalready=approved.(stripex(currvol));
 approved.(stripex(currvol))=1;
 if strcmp(stripex(currvol),stripex(options.prefs.gprenii))
     [options,preniis]=ea_assignpretra(options); % get all preop versions
@@ -432,8 +433,10 @@ else
                 % we set the normalization approval rate to 1. This way, it will
                 % still be overriden in case of running a multispectral
                 % normalization.
+                if ~wasapprovedalready
                 ea_warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
                 approved.stripex(options.prefs.gprenii)=1; % this will be overriden when using a multispectral normalization.
+                end
             end
         end
     end
@@ -633,6 +636,7 @@ switch stripex(currvol)
         anchor=getappdata(handles.leadfigure,'anchor');
 end
 checkfig=[directory,'checkreg',filesep,stripex(currvol),'2',stripex(anchor),'_',method,'.png'];
+ea_delete([directory,'checkreg',filesep,stripex(currvol),'2',stripex(anchor),'_',method,'.png']);
 ea_gencheckregpair([directory,stripex(currvol)],anchorpath,checkfig);
 ea_mrcview(handles); % refresh
 title = get(handles.leadfigure, 'Name');    % Fix title

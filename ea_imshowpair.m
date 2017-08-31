@@ -287,8 +287,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             a2 = copyobj(a1,f1, 'legacy');
 
             i2 = get(a2,'Children');
+            try
             i2=i2(2);
-
+            end
             set(f1, ...
                 'UserData',[f1,a1,a2], ...
                 'Pointer','crosshair', ...
