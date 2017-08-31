@@ -55,7 +55,7 @@ if slabsupport
         sums(mov)=sum(mnii.img(:));
     end
     slabspresent=0; % default no slabs present.
-    
+
     if length(sums)>1 % multispectral warp
         slabs=sums(1:end-1)<(sums(end)*0.7);
         if any(slabs) % one image is smaller than 70% of last (dominant) image, a slab is prevalent.
@@ -63,7 +63,7 @@ if slabsupport
             slabfixedimage=fixedimage(slabs);
             movingimage(slabs)=[]; % remove slabs from movingimage
             fixedimage(slabs)=[]; % remove slabs from fixedimage
-            
+
             % write out slab mask
             slabspresent=1;
             mnii.dt=[4,0];
@@ -75,7 +75,7 @@ if slabsupport
             disp('No slabs found.');
         end
     end
-    
+
 else
     slabspresent=0;
     impmasks=repmat({'nan'},length(movingimage),1);
@@ -103,12 +103,12 @@ if ispc
     HEADER = [basedir, 'PrintHeader.exe'];
     ANTS = [basedir, 'antsRegistration.exe'];
     applyTransforms = [basedir, 'antsApplyTransforms.exe'];
-    
+
 else
     HEADER = [basedir, 'PrintHeader.', computer('arch')];
     ANTS = [basedir, 'antsRegistration.', computer('arch')];
     applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
-    
+
 end
 
 if ~ispc
@@ -157,7 +157,7 @@ for fi=1:length(fixedimage)
         case 'GC'
             suffx=',15,Random,0.05';
     end
-    
+
     try
         rigidstage=[rigidstage,...
             ' --metric ','MI','[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
@@ -189,7 +189,7 @@ end
 % 1. Mask stage
 if slabsupport && slabspresent
     % re-add slabs to the masked stages:
-    
+
     fixedimage=[fixedimage,slabfixedimage];
     movingimage=[movingimage,slabmovingimage];
 end
@@ -249,7 +249,7 @@ cmd = [ANTS, ' --verbose 1', ...
 display(cmd)
 
 fid=fopen([directory,'ea_ants_command.txt'],'a');
-fprintf(fid,[datestr(datetime('now')),':\n',cmd,'\n\n']);
+fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
 fclose(fid);
 
 if ~ispc

@@ -20,7 +20,7 @@ cmd = [props.ANTS, ' --verbose 1', ...
     props.rigidstage, props.affinestage, props.synstage, props.slabstage, props.synmaskstage];
 
 fid = fopen([props.directory,'ea_ants_command.txt'],'a');
-fprintf(fid,[datestr(datetime('now')),':\n',cmd,'\n\n']);
+fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
 fclose(fid);
 
 if ~ispc
@@ -46,7 +46,7 @@ cmd = [props.ANTS, ' --verbose 1', ...
     props.rigidstage, props.affinestage];
 
 fid = fopen([props.directory,'ea_ants_command.txt'],'a');
-fprintf(fid,[datestr(datetime('now')),':\n',cmd,'\n\n']);
+fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
 fclose(fid);
 
 if ~ispc
@@ -72,7 +72,7 @@ cmd = [props.ANTS, ' --verbose 1', ...
 
 display(cmd)
 fid = fopen([props.directory,'ea_ants_command.txt'],'a');
-fprintf(fid,[datestr(datetime('now')),':\n',cmd,'\n\n']);
+fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
 fclose(fid);
 
 if ~ispc
@@ -100,12 +100,12 @@ if ~isempty(props.slabstage)
         ' --winsorize-image-intensities[0.005,0.995]', ...
         ' --float 1',...
         props.slabstage];
-    
+
     display(cmd)
     fid = fopen([props.directory,'ea_ants_command.txt'],'a');
-    fprintf(fid,[datestr(datetime('now')),':\n',cmd,'\n\n']);
+    fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
     fclose(fid);
-    
+
     if ~ispc
         system(['bash -c "', cmd, '"']);
     else
@@ -133,12 +133,12 @@ if ~isempty(props.synmaskstage)
         ' --winsorize-image-intensities[0.005,0.995]', ...
         ' --float 1',...
         props.synmaskstage];
-    
+
     display(cmd)
     fid = fopen([props.directory,'ea_ants_command.txt'],'a');
-    fprintf(fid,[datestr(datetime('now')),':\n',cmd,'\n\n']);
+    fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
     fclose(fid);
-    
+
     if ~ispc
         system(['bash -c "', cmd, '"']);
     else
