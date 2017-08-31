@@ -18,7 +18,6 @@ if nargin<6
     refine=0;
 end
 
-
 % Write out the transform from moving image vox to fixed image mm (also
 % from fixed image vox to moving image mm)
 if nargin < 6
@@ -33,42 +32,35 @@ end
 % Read the original affine matrix from the moving image (the header will be
 % overwritten after spm coregistration.
 movingmat = spm_get_space(moving);
-
 fixedmat = spm_get_space(fixed);
 
+if doreslice
+    matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {fixed};
+    matlabbatch{1}.spm.spatial.coreg.estwrite.source = {moving};
+    matlabbatch{1}.spm.spatial.coreg.estwrite.other = otherfiles;
+    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = cfun;
+    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [8 4 2]; %[4 2];
+    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
+    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [7 7];
+    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 4;
+    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
+    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
+    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
+    spm_jobman('run',{matlabbatch});
+    [pth,movingstem,ext]=fileparts(strrep(moving,',1',''));
+    movefile([pth,filesep,'r',movingstem,ext],[pth,filesep,movingstem,ext]);
 
+else
+    matlabbatch{1}.spm.spatial.coreg.estimate.ref = {fixed};
+    matlabbatch{1}.spm.spatial.coreg.estimate.source = {moving};
+    matlabbatch{1}.spm.spatial.coreg.estimate.other = otherfiles;
+    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = cfun;
+    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [12 10 8 6 4 2];
+    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
+    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
+    spm_jobman('run',{matlabbatch});
 
-
-
-    if doreslice
-        matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {fixed};
-        matlabbatch{1}.spm.spatial.coreg.estwrite.source = {moving};
-        matlabbatch{1}.spm.spatial.coreg.estwrite.other = otherfiles;
-        matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = cfun;
-        matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [8 4 2]; %[4 2];
-        matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
-        matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [7 7];
-        matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 4;
-        matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
-        matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
-        matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
-        spm_jobman('run',{matlabbatch});
-        [pth,movingstem,ext]=fileparts(strrep(moving,',1',''));
-        movefile([pth,filesep,'r',movingstem,ext],[pth,filesep,movingstem,ext]);
-
-    else
-        matlabbatch{1}.spm.spatial.coreg.estimate.ref = {fixed};
-        matlabbatch{1}.spm.spatial.coreg.estimate.source = {moving};
-        matlabbatch{1}.spm.spatial.coreg.estimate.other = otherfiles;
-        matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = cfun;
-        matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [12 10 8 6 4 2];
-        matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
-        matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
-        spm_jobman('run',{matlabbatch});
-
-    end
-
-
+end
 
 [~, mov] = ea_niifileparts(moving);
 [~, fix] = ea_niifileparts(fixed);
@@ -88,8 +80,6 @@ if writeoutmat
     affinefile = {[fileparts(ea_niifileparts(moving)), filesep, mov, '2', fix, '_spm.mat'], ...
         [fileparts(ea_niifileparts(moving)), filesep, fix, '2', mov, '_spm.mat']};
 end
-
-
 
 %% add methods dump:
 cits={

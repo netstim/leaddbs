@@ -1,4 +1,4 @@
-function [success,commands]=ea_checkinstall(cmd,checkonly,robot)
+function [success, commands] = ea_checkinstall(cmd,checkonly,robot)
 success=1;
 if ~exist('checkonly','var')
     checkonly=0;
