@@ -6,7 +6,6 @@ function ea_error(msg, title, backtrace)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-msg = sprintf(msg);
 if ~exist('title', 'var') || isempty(title)
     title = '';
 end
