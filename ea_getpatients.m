@@ -10,7 +10,6 @@ try % finally use last patient parent dir if set.
 end
 
 uipatdir=ea_uigetdir(p,'Please choose patient folder(s)...');
-
 if isempty(uipatdir)
     return
 end

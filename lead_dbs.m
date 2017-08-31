@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 28-Aug-2017 16:53:03
+% Last Modified by GUIDE v2.5 31-Aug-2017 09:32:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1563,3 +1563,88 @@ function overwriteapproved_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of overwriteapproved
 ea_storeui(handles);
+
+
+% --- Executes on button press in previouspatient.
+function previouspatient_Callback(hObject, eventdata, handles)
+% hObject    handle to previouspatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Select previous patient in same root folder
+uipatdir=getappdata(handles.leadfigure,'uipatdir');
+if length(uipatdir)>1
+   ea_error('Selecting the previous patient in folder only works if a single patient was selected.');
+elseif isempty(uipatdir)
+   ea_error('Selecting the previous patient in folder only works if a patient was selected before.'); 
+end
+
+[pth,fn]=fileparts(uipatdir{1});
+
+opts=dir(pth);
+pts={opts.name};
+pts=pts((cell2mat({opts.isdir})));
+todel=[];
+for pt=1:length(pts)
+   if strcmp(pts{pt}(1),'.')
+       todel=[todel,pt];
+   end
+end
+pts(todel)=[];
+[~,ix]=ismember(fn,pts);
+if ix>1
+    nuix=ix-1;
+else
+    nuix=ix;
+end
+
+ea_load_pts(handles,{[pth,filesep,pts{nuix}]});
+if isfield(handles,'atlassetpopup') % not present in connectome mapper
+    options.prefs=ea_prefs;
+    atlasset=get(handles.atlassetpopup,'String');
+    atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+    
+    ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+end
+
+% --- Executes on button press in nextpatient.
+function nextpatient_Callback(hObject, eventdata, handles)
+% hObject    handle to nextpatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Select next patient in same root folder
+uipatdir=getappdata(handles.leadfigure,'uipatdir');
+if length(uipatdir)>1
+   ea_error('Selecting the next patient in folder only works if a single patient was selected.');
+elseif isempty(uipatdir)
+   ea_error('Selecting the next patient in folder only works if a patient was selected before.'); 
+end
+
+[pth,fn]=fileparts(uipatdir{1});
+
+opts=dir(pth);
+pts={opts.name};
+pts=pts((cell2mat({opts.isdir})));
+todel=[];
+for pt=1:length(pts)
+   if strcmp(pts{pt}(1),'.')
+       todel=[todel,pt];
+   end
+end
+pts(todel)=[];
+[~,ix]=ismember(fn,pts);
+
+if length(pts)>ix
+    nuix=ix+1;
+else
+    nuix=ix;
+end
+ea_load_pts(handles,{[pth,filesep,pts{nuix}]});
+if isfield(handles,'atlassetpopup') % not present in connectome mapper
+    options.prefs=ea_prefs;
+    atlasset=get(handles.atlassetpopup,'String');
+    atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+    
+    ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+end

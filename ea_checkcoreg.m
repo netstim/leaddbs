@@ -423,15 +423,18 @@ if strcmp(stripex(currvol),stripex(options.prefs.gprenii))
     end
 else
     if isfield(approved,stripex(options.prefs.gprenii))
-        if approved.(stripex(options.prefs.gprenii))==2
-            % now in this situation we had the normalization approved before
-            % all coregistrations were approved. This could lead to suboptimal
-            % normalizations *only* if a multispectral protocol is used. Thus
-            % we set the normalization approval rate to 1. This way, it will
-            % still be overriden in case of running a multispectral
-            % normalization.
-            ea_warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
-            approved.stripex(options.prefs.gprenii)=1; % this will be overriden when using a multispectral normalization.
+        [~,preopfiles]=ea_assignpretra(options);
+        if ismember([stripex(currvol),'.nii'],preopfiles)
+            if approved.(stripex(options.prefs.gprenii))==2
+                % now in this situation we had the normalization approved before
+                % all coregistrations were approved. This could lead to suboptimal
+                % normalizations *only* if a multispectral protocol is used. Thus
+                % we set the normalization approval rate to 1. This way, it will
+                % still be overriden in case of running a multispectral
+                % normalization.
+                ea_warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+                approved.stripex(options.prefs.gprenii)=1; % this will be overriden when using a multispectral normalization.
+            end
         end
     end
 end
