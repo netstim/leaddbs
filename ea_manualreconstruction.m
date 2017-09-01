@@ -322,8 +322,11 @@ hobj=varargin{1};
 ev=varargin{2};
 mcfig=varargin{3};
 firstrun=getappdata(mcfig,'firstrun');
-
-
+contrast=getappdata(mcfig,'contrast');
+offset=getappdata(mcfig,'offset');
+if isempty(contrast), contrast=0.8; end
+if isempty(offset), offset=0.3; end
+setappdata(mcfig,'offset',offset); setappdata(mcfig,'contrast',contrast);
 %% inputs:
 options=getappdata(mcfig,'options');
 
@@ -520,7 +523,7 @@ for side=1:length(options.sides)
 
         if ~isempty(trajectory{side})
 
-            if options.verbose>1; trajectory_plot(side)=plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'color',[0.5,0.5,0.5],'linew',1.5); end
+            if options.verbose>1; trajectory_plot(side)=plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'color',[0.3,0.5,0.9],'linew',1.5); end
 
         end
     end
@@ -605,11 +608,13 @@ for doxx=0:1
 
 
                 end
-                caxis(c_lims);
+                %caxis(c_lims);
+                caxis([0,1]);
                 setappdata(mcfig,'c_lims',c_lims);
                 setappdata(mcfig,'planecset',1);
             end
 
+imat=ea_contrast(imat,contrast,offset);
 
             planes(planecnt)=surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'alphadata',alphamap,'FaceAlpha', 'texturemap','FaceColor','texturemap','EdgeColor','none','alphadatamapping','none');
 
@@ -669,8 +674,8 @@ captions(4)=text(midpt(1)+10,... % x
         %end
     end
 end
-caxis([c_lims(1) c_lims(2)]);
-
+%caxis([c_lims(1) c_lims(2)]);
+caxis([0,1]);
 
 
 
@@ -695,6 +700,7 @@ for subpl=1:4
     subplot(4,5,subpl*5)
 
     slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
+    slice=ea_contrast(slice,contrast,offset);
     try
         imagesc(slice,[ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
     catch
@@ -722,8 +728,8 @@ for subpl=1:4
     hold off
     axis square
     axis off
-    caxis([c_lims(1) c_lims(2)]);
-
+    %caxis([c_lims(1) c_lims(2)]);
+caxis([0,1]);
 end
 
 
@@ -1047,18 +1053,44 @@ setappdata(gcf,'rotation',rotation);
 updatescene([],[],mcfig);
 
 function setcontrast(hobj,ev,key,modifier,mcfig)
-c_lims=getappdata(gcf,'c_lims');
-comms={'v','c','b','n'}; % key commands
-perfs=[1 -1 % actions to perform on key commands
-      -1 1
-       1 1
-      -1 -1];
-kern=(c_lims(2)-c_lims(1))/20; % gain to correct contrast
+% c_lims=getappdata(gcf,'c_lims');
+% comms={'v','c','b','n'}; % key commands
+% perfs=[1 -1 % actions to perform on key commands
+%       -1 1
+%        1 1
+%       -1 -1];
+% kern=(c_lims(2)-c_lims(1))/20; % gain to correct contrast
+% 
+ doshift=any(ismember('shift',modifier));
+ 
+% 
+% c_lims=c_lims+(perfs(ismember(comms,lower(key)),:)*(kern*(doshift+1)));
+% setappdata(gcf,'c_lims',c_lims);
+doshift=1+doshift*4;
+% new code:
+contrast=getappdata(mcfig,'contrast');
+offset=getappdata(mcfig,'offset');
+grain=0.1;
 
-doshift=any(ismember('shift',modifier));
-
-c_lims=c_lims+(perfs(ismember(comms,lower(key)),:)*(kern*(doshift+1)));
-setappdata(gcf,'c_lims',c_lims);
+switch lower(key)
+    case 'v'
+        contrast=contrast+grain*doshift;
+    case 'c'
+        contrast=contrast-grain*doshift;
+    case 'b'
+        offset=offset-grain*doshift*2;
+    case 'n'
+        offset=offset+grain*doshift*2;
+end
+% if offset<=0
+%     offset=0;
+% end
+if contrast<0.1;
+    contrast=0.1;
+end
+setappdata(mcfig,'contrast',contrast);
+setappdata(mcfig,'offset',offset);
+%disp(['Contrast: ',num2str(contrast),', Offset: ',num2str(offset),'.']);
 updatescene([],[],mcfig);
 
 

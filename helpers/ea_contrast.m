@@ -6,11 +6,14 @@ if ~exist('offset','var')
     offset=0;
 end
 %disp([num2str(contrast),',',num2str(offset)]);
+
 slice(slice(:)~=0)=contrast*zscore(slice(slice(:)~=0));
 slice=slice+offset;
 slice(slice>3)=3; % cut at 3 std devs if above
 slice(slice<-3)=-3; % cut at -3 std devs if above
 slice=ea_minmax(slice);
+slice=slice+offset;
+slice=slice.*contrast;
 
 
 
