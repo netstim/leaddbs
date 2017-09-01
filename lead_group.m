@@ -169,8 +169,12 @@ ea_bind_dragndrop(handles.leadfigure, ...
 % --- Drag and drop callback to load patdirs.
 function DropFcn(~, event, handles)
 
-if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
-    ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+% check if dropping area is in patient listbox
+if event.Location.getX < 325+5 && event.Location.getX > 24-5 && ...
+   event.Location.getY < 322+5 && event.Location.getX > 137-5
+	target = 'patientList';
+else
+    target = 'groupDir';
 end
 
 switch event.DropType
@@ -180,26 +184,61 @@ switch event.DropType
         folders = {event.Data};
 end
 
-nonexist = cellfun(@(x) ~exist(x, 'dir'), folders);
-if any(nonexist)
-    fprintf('\nExcluded non-existent/invalid folder:\n');
-    cellfun(@disp, folders(nonexist));
-    fprintf('\n');
-    folders(nonexist) = [];
-end
+if strcmp(target, 'groupDir')
+    if length(folders) > 1 || ~exist(folders{1}, 'dir')
+        ea_error('To choose the group analysis directory, please drag a single folder to Lead Group ');
+    end
 
-if ~isempty(folders)
-    M=getappdata(handles.leadfigure,'M');
+    groupdir = [folders{1}, filesep];
+    set(handles.groupdir_choosebox, 'String', groupdir);
+    set(handles.groupdir_choosebox, 'TooltipString', groupdir);
 
-    M.patient.list=[M.patient.list;folders];
-    M.patient.group=[M.patient.group;ones(length(folders),1)];
+    ea_busyaction('on',handles.leadfigure,'group');
+
+    M=ea_initializeM;
+    M.ui.groupdir = groupdir;
+
+    try % if file already exists, load it (and overwrite M).
+        load([groupdir, 'LEAD_groupanalysis.mat']);
+    catch % if not, store it saving M.
+        save([groupdir, 'LEAD_groupanalysis.mat'],'M','-v7.3');
+    end
 
     setappdata(handles.leadfigure,'M',M);
+    try
+        setappdata(handles.leadfigure,'S',M.S);
+        setappdata(handles.leadfigure,'vatmodel',M.S(1).model);
+    end
+
+    ea_busyaction('off',handles.leadfigure,'group');
     ea_refresh_lg(handles);
-    % save M
-    M=getappdata(handles.leadfigure,'M');
-    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+else
+    if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
+        ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+    end
+
+    nonexist = cellfun(@(x) ~exist(x, 'dir'), folders);
+    if any(nonexist)
+        fprintf('\nExcluded non-existent/invalid folder:\n');
+        cellfun(@disp, folders(nonexist));
+        fprintf('\n');
+        folders(nonexist) = [];
+    end
+
+    if ~isempty(folders)
+        M=getappdata(handles.leadfigure,'M');
+
+        M.patient.list=[M.patient.list; folders];
+        M.patient.group=[M.patient.group; ones(length(folders),1)];
+
+        setappdata(handles.leadfigure, 'M', M);
+        ea_refresh_lg(handles);
+        % save M
+        M=getappdata(handles.leadfigure,'M');
+        save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+    end
 end
+
 
 % --- Outputs from this function are returned to the command line.
 function varargout = lead_group_OutputFcn(hObject, eventdata, handles)
@@ -1304,32 +1343,34 @@ function groupdir_choosebox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % nudir=ea_uigetdir(ea_startpath,'Choose Group Directory');
-nudir=[uigetdir];
+groupdir = uigetdir;
 
-if ~nudir % user pressed cancel
+if ~groupdir % user pressed cancel
     return
 end
+
 ea_busyaction('on',handles.leadfigure,'group');
 
-nudir=[nudir,filesep];
-M=ea_initializeM;
+groupdir = [groupdir, filesep];
+M = ea_initializeM;
+M.ui.groupdir = groupdir;
 
-set(handles.groupdir_choosebox,'String',nudir);
+set(handles.groupdir_choosebox, 'String', groupdir);
+set(handles.groupdir_choosebox, 'TooltipString', groupdir);
 
 try % if file already exists, load it (and overwrite M).
-    load([nudir,'LEAD_groupanalysis.mat']);
+    load([groupdir, 'LEAD_groupanalysis.mat']);
 catch % if not, store it saving M.
-    save([nudir,'LEAD_groupanalysis.mat'],'M','-v7.3');
+    save([groupdir, 'LEAD_groupanalysis.mat'], 'M', '-v7.3');
 end
 
-M.ui.groupdir=nudir;
-setappdata(handles.leadfigure,'M',M);
+setappdata(handles.leadfigure, 'M', M);
 try
-    setappdata(handles.leadfigure,'S',M.S);
-    setappdata(handles.leadfigure,'vatmodel',M.S(1).model);
+    setappdata(handles.leadfigure, 'S', M.S);
+    setappdata(handles.leadfigure, 'vatmodel', M.S(1).model);
 end
 
-ea_busyaction('off',handles.leadfigure,'group');
+ea_busyaction('off', handles.leadfigure, 'group');
 
 ea_refresh_lg(handles);
 
@@ -1592,7 +1633,6 @@ switch choice
     case 'No, abort.'
         return
     case 'Yes, sure!'
-
 
         M=getappdata(gcf,'M');
 
