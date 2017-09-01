@@ -186,7 +186,7 @@ end
 
 if strcmp(target, 'groupDir')
     if length(folders) > 1 || ~exist(folders{1}, 'dir')
-        ea_error('To choose the group analysis directory, please drag a single folder to Lead Group ');
+        ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', 'Error', dbstack);
     end
 
     groupdir = [folders{1}, filesep];
