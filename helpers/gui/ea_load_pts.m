@@ -32,7 +32,7 @@ end
 
 ea_getui(handles); % update ui from patient
 ea_storeui(handles); % save in pt folder
-ea_addrecentpatient(handles,uipatdir,['Recent ',patsub,':'],patsub);
+ea_addrecentpatient(handles,uipatdir,[patsub],patsub);
 
 % add VATs to seeds for connectome mapper case
 if isfield(handles,'seeddefpopup')
