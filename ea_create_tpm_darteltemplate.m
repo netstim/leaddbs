@@ -261,7 +261,9 @@ ea_save_untouch_nii(nii,[ea_space,'TPM.nii']);
 
 delete([ea_space,'*PM_0*.nii']);
 delete([ea_space,'TPM.mat']);
-
+try
+delete([ea_space,'catlas.nii']);
+end
 
 % set marker that last gen TPM has been set.
 fid=fopen([ea_space,'.aug_tpm'],'w');
