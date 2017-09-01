@@ -406,8 +406,11 @@ switch stripex(currvol)
 end
 
 approved=load([directory,'ea_coreg_approved.mat']);
-
+try
     wasapprovedalready=approved.(stripex(currvol));
+catch
+    wasapprovedalready=0;
+end
 approved.(stripex(currvol))=1;
 if strcmp(stripex(currvol),stripex(options.prefs.gprenii))
     [options,preniis]=ea_assignpretra(options); % get all preop versions

@@ -120,13 +120,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     end
     
     if options.normalize.do
-        if ~(ea_coreglocked(options,'glanat')==2) % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
-            if ea_coreglocked(options,'glanat')==1 % in this case, only perform normalization if using a multispectral approach now.
+        
+        if ~(ea_coreglocked(options,'glanat')==2) || strcmp(options.normalize.method,'ea_normalize_apply_normalization') % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
+            if ea_coreglocked(options,'glanat')==1 && ~strcmp(options.normalize.method,'ea_normalize_apply_normalization') % in this case, only perform normalization if using a multispectral approach now.
                 [~,~,~,doit]=eval([options.normalize.method,'(''prompt'')']);
             else
                 doit=1;
             end
-            if doit
+            if doit || strcmp(options.normalize.method,'ea_normalize_apply_normalization')
                 clear doit
                 % 3. finally perform normalization based on dominant or all preop MRIs
                 ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
