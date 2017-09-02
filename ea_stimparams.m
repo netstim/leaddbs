@@ -2373,7 +2373,7 @@ ea_refreshguisp(handles,options,ID);
 
 
 function S = initializeS(varargin)
-
+preexist=0;
 if nargin>1
     options=varargin{2};
     handles=varargin{3};
