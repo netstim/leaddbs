@@ -3,7 +3,7 @@ function dndobj = ea_bind_dragndrop(target, DropFileFcn, DropStringFcn)
 
 % check if target is a whole figure
 if isa(target,'matlab.ui.Figure')
-    target = getJavaContentPane(target);
+    target = ea_getJavaContentPane(target);
 end
 
 % initialize the dndcontrol class

@@ -1,4 +1,4 @@
-function [jContentPane, jFrame] = getJavaContentPane(hFig)
+function [jContentPane, jFrame] = ea_getJavaContentPane(hFig)
 % Get javaContentPane and javaFrame from hFig
 
 wrn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');

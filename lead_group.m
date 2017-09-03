@@ -170,8 +170,8 @@ ea_bind_dragndrop(handles.leadfigure, ...
 function DropFcn(~, event, handles)
 
 % check if dropping area is in patient listbox
-if event.Location.getX < 325+5 && event.Location.getX > 24-5 && ...
-   event.Location.getY < 322+5 && event.Location.getX > 137-5
+if event.Location.getX < 325 && event.Location.getX > 24 && ...
+   event.Location.getY < 322 && event.Location.getX > 137
 	target = 'patientList';
 else
     target = 'groupDir';
@@ -1342,7 +1342,7 @@ function groupdir_choosebox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% nudir=ea_uigetdir(ea_startpath,'Choose Group Directory');
+% groupdir=ea_uigetdir(ea_startpath,'Choose Group Directory');
 groupdir = uigetdir;
 
 if ~groupdir % user pressed cancel

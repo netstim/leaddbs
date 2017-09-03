@@ -131,8 +131,12 @@ ea_bind_dragndrop(handles.leadfigure, ...
 % --- Drag and drop callback to load patdirs.
 function DropFcn(~, event, handles)
 
-if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
-    ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+% check if dropping area is in patient listbox
+if event.Location.getX < 325 && event.Location.getX > 24 && ...
+   event.Location.getY < 322 && event.Location.getX > 137
+	target = 'patientList';
+else
+    target = 'groupDir';
 end
 
 switch event.DropType
@@ -142,25 +146,56 @@ switch event.DropType
         folders = {event.Data};
 end
 
-nonexist = cellfun(@(x) ~exist(x, 'dir'), folders);
-if any(nonexist)
-    fprintf('\nExcluded non-existent/invalid folder:\n');
-    cellfun(@disp, folders(nonexist));
-    fprintf('\n');
-    folders(nonexist) = [];
-end
+if strcmp(target, 'groupDir')
+    if length(folders) > 1 || ~exist(folders{1}, 'dir')
+        ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', 'Error', dbstack);
+    end
 
-if ~isempty(folders)
-    M=getappdata(handles.leadfigure,'M');
+    groupdir = [folders{1}, filesep];
+    set(handles.groupdir_choosebox, 'String', groupdir);
+    set(handles.groupdir_choosebox, 'TooltipString', groupdir);
 
-    M.patient.list=[M.patient.list;folders];
-    M.patient.group=[M.patient.group;ones(length(folders),1)];
+    ea_busyaction('on',handles.leadfigure,'group');
+
+    M = ea_initializeM_connectome;
+    M.ui.groupdir = groupdir;
+
+    try % if file already exists, load it (and overwrite M).
+        load([groupdir,'GroupConnectomeAnalysis.mat']);
+    catch % if not, store it saving M.
+        save([groupdir,'GroupConnectomeAnalysis.mat'],'M','-v7.3');
+    end
 
     setappdata(handles.leadfigure,'M',M);
+
+    ea_busyaction('off',handles.leadfigure,'group');
+
     ea_refresh_lg_connectome(handles);
-    % save M
-    M=getappdata(handles.leadfigure,'M');
-    save([get(handles.groupdir_choosebox,'String'),'LEAD_GroupConnectome.mat'],'M','-v7.3');
+else
+    if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
+        ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+    end
+
+    nonexist = cellfun(@(x) ~exist(x, 'dir'), folders);
+    if any(nonexist)
+        fprintf('\nExcluded non-existent/invalid folder:\n');
+        cellfun(@disp, folders(nonexist));
+        fprintf('\n');
+        folders(nonexist) = [];
+    end
+
+    if ~isempty(folders)
+        M=getappdata(handles.leadfigure, 'M');
+
+        M.patient.list=[M.patient.list; folders];
+        M.patient.group=[M.patient.group; ones(length(folders),1)];
+
+        setappdata(handles.leadfigure, 'M', M);
+        ea_refresh_lg_connectome(handles);
+        % save M
+        M=getappdata(handles.leadfigure, 'M');
+        save([get(handles.groupdir_choosebox,'String'), 'GroupConnectomeAnalysis.mat'], 'M', '-v7.3');
+    end
 end
 
 
@@ -224,7 +259,7 @@ setappdata(handles.leadfigure,'M',M);
 ea_refresh_lg_connectome(handles);
 % save M
 M=getappdata(handles.leadfigure,'M');
-save([get(handles.groupdir_choosebox,'String'),'LEAD_GroupConnectome.mat'],'M','-v7.3');
+save([get(handles.groupdir_choosebox,'String'),'GroupConnectomeAnalysis.mat'],'M','-v7.3');
 
 
 % --- Executes on button press in removeptbutton.
@@ -546,26 +581,27 @@ function groupdir_choosebox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% nudir=ea_uigetdir(ea_startpath,'Choose Group Directory');
-nudir = uigetdir;
+% groupdir=ea_uigetdir(ea_startpath,'Choose Group Directory');
+groupdir = uigetdir;
 
-if ~nudir % user pressed cancel
+if ~groupdir % user pressed cancel
     return
 end
+
 ea_busyaction('on',handles.leadfigure,'group');
 
-nudir=[nudir,filesep];
+groupdir=[groupdir,filesep];
 M=ea_initializeM_connectome;
 
-set(handles.groupdir_choosebox,'String',nudir);
+set(handles.groupdir_choosebox,'String',groupdir);
 
 try % if file already exists, load it (and overwrite M).
-    load([nudir,'LEAD_GroupConnectome.mat']);
+    load([groupdir,'GroupConnectomeAnalysis.mat']);
 catch % if not, store it saving M.
-    save([nudir,'LEAD_GroupConnectome.mat'],'M','-v7.3');
+    save([groupdir,'GroupConnectomeAnalysis.mat'],'M','-v7.3');
 end
 
-M.ui.groupdir=nudir;
+M.ui.groupdir=groupdir;
 setappdata(handles.leadfigure,'M',M);
 
 ea_busyaction('off',handles.leadfigure,'group');
@@ -626,7 +662,7 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
     ea_refresh_lg_connectome(handles);
     M=getappdata(hObject,'M');
     try
-        save([get(handles.groupdir_choosebox,'String'),'LEAD_GroupConnectome.mat'],'M','-v7.3');
+        save([get(handles.groupdir_choosebox,'String'),'GroupConnectomeAnalysis.mat'],'M','-v7.3');
     catch
         warning('Data could not be saved.');
         keyboard
