@@ -185,8 +185,18 @@ switch event.DropType
 end
 
 if strcmp(target, 'groupDir')
-    if length(folders) > 1 || ~exist(folders{1}, 'dir')
+    if length(folders) > 1
         ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', 'Error', dbstack);
+    end
+    if ~exist(folders{1}, 'dir')
+        [pth,fn,ext]=fileparts(folders{1});
+        
+        if strcmp(fn,'LEAD_groupanalysis') && strcmp(ext,'.mat') && exist(pth, 'dir')
+            folders{1}=pth;
+        else
+            ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', 'Error', dbstack);
+            
+        end
     end
 
     groupdir = [folders{1}, filesep];

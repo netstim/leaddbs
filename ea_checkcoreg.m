@@ -360,6 +360,7 @@ save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
 ea_mrcview(handles)
 title = get(handles.leadfigure, 'Name');    % Fix title
+ea_chirp(options);
 ea_busyaction('off',handles.leadfigure,'coreg');
 set(handles.leadfigure, 'Name', title);
 
