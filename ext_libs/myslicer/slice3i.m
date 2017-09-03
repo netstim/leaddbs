@@ -162,7 +162,7 @@ elseif slicedim == 1 % i
 else
     error('Slicedim should be 1, 2 or 3')
 end
-c=0.5; o=0.5;
+c=1; o=0;
 sc=getappdata(resultfig,'slidecontrast');
 
 if ~isempty(sc) % add contrast from user GUI

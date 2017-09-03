@@ -9,6 +9,7 @@ if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % n
     ea_busyaction('off',handles.leadfigure,'group');
     return
 end
+M.root=get(handles.groupdir_choosebox,'String');
 if ~isfield(M,'guid') % only done once, legacy support.
     M.guid=datestr(datevec(now), 'yyyymmddHHMMSS' );
 end
