@@ -65,29 +65,32 @@ setappdata(handles.scrf,'directory',directory);
 handles.patientname.String=patientname;
 
 set(handles.scrf,'name',['Brainshift Correction: ',patientname]);
-ea_refreshscrf(options,handles,directory);
-switch options.prefs.scrf.auto
-    case 'nomask'
-        handles.mask0.Value=1;
-        handles.mask1.Value=0;
-        handles.mask2.Value=0;
-        %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
+options.init=1;
+ispresent=ea_refreshscrf(options,handles,directory);
+if ~ispresent
+    switch options.prefs.scrf.auto
+        case 'nomask'
+            handles.mask0.Value=1;
+            handles.mask1.Value=0;
+            handles.mask2.Value=0;
+            %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
-        %end
-    case 'mask1'
-        handles.mask0.Value=0;
-        handles.mask1.Value=1;
-        handles.mask2.Value=0;
-        %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
+            %end
+        case 'mask1'
+            handles.mask0.Value=0;
+            handles.mask1.Value=1;
+            handles.mask2.Value=0;
+            %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
-        %end
-    case 'mask2'
-        handles.mask0.Value=0;
-        handles.mask1.Value=0;
-        handles.mask2.Value=1;
-        %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
+            %end
+        case 'mask2'
+            handles.mask0.Value=0;
+            handles.mask1.Value=0;
+            handles.mask2.Value=1;
+            %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
-        %end
+            %end
+    end
 end
 
 
@@ -103,10 +106,10 @@ if options.d2.write || options.d3.write
 uiwait(handles.scrf);
 end
 
-function ea_refreshscrf(options,handles,directory)
+function ispresent=ea_refreshscrf(options,handles,directory)
 
 standardslice=ea_loadrefineslice(directory,options,0);
-refineslice=ea_loadrefineslice(directory,options,1);
+[refineslice,ispresent]=ea_loadrefineslice(directory,options,1);
 set(0,'CurrentFigure',handles.scrf);
 
 
@@ -122,7 +125,7 @@ if exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
     save([directory,'scrf',filesep,'scrf_instore_converted.mat'],'mat');
 end
 
-function slice=ea_loadrefineslice(directory,options,refine)
+function [slice,ispresent]=ea_loadrefineslice(directory,options,refine)
 
 switch refine
     case 1
@@ -130,12 +133,19 @@ switch refine
     case 0
         refstr='standard';
 end
-
+if isfield(options,'init') && options.init
+    if ~exist([directory,'scrf',filesep,refstr,'.png'],'file')
+        ea_createrefineslice(directory,options,refine);
+    end
+else
 ea_createrefineslice(directory,options,refine);
+end
 try
 slice=imread([directory,'scrf',filesep,refstr,'.png']);
+ispresent=1;
 catch
     slice=imread([ea_getearoot,'helpers',filesep,'gui',filesep,'scrf_msg.png']);
+    ispresent=0;
 end
 
 
