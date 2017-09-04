@@ -262,7 +262,7 @@ switch lower(commnd)
             [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
             movedcoords=moveonecoord(markers,selectrode,event); % move the correct coord to the correct direction.
 
-            for side=1:length(markers)
+            for side=options.sides
                     set(mplot(1,side),'XData',movedcoords(side).head(1),'YData',movedcoords(side).head(2),'ZData',movedcoords(side).head(3))
                     set(mplot(2,side),'XData',movedcoords(side).tail(1),'YData',movedcoords(side).tail(2),'ZData',movedcoords(side).tail(3))
             end
@@ -286,7 +286,7 @@ options=getappdata(mcfig,'options');
 coords_mm=ea_resolvecoords(markers,options);
            % [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
-for side=1:length(markers)
+for side=options.sides
     set(mplot(1,side),'XData',markers(side).head(1),'YData',markers(side).head(2),'ZData',markers(side).head(3));
     set(mplot(2,side),'XData',markers(side).tail(1),'YData',markers(side).tail(2),'ZData',markers(side).tail(3));
     for el=1:length(elplot)/2
@@ -372,7 +372,7 @@ end
 
 % for now, rotation will always be constant. This will be the place to
 % insert rotation functions..
-for side=1:length(options.sides)
+for side=options.sides
     normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
     orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
     markers(side).x=markers(side).head+orth(:,1)';
@@ -406,13 +406,36 @@ end
 
 
 
+movedmarkers=nan(4,3);
+try
+    movedmarkers(1,:)=[get(mplot(1),'xdata'),...
+        get(mplot(1),'ydata'),...
+        get(mplot(1),'zdata')];
+end
+try
+    movedmarkers(2,:)=[get(mplot(2),'xdata'),...
+        get(mplot(2),'ydata'),...
+        get(mplot(2),'zdata')];
+end
+try
+    movedmarkers(3,:)=[get(mplot(3),'xdata'),...
+        get(mplot(3),'ydata'),...
+        get(mplot(3),'zdata')];
+end
+try
+    movedmarkers(4,:)=[get(mplot(4),'xdata'),...
+        get(mplot(4),'ydata'),...
+        get(mplot(4),'zdata')];
+end
 
-xdata = cell2mat(get(mplot,'xdata'));
-ydata = cell2mat(get(mplot,'ydata'));
-zdata = cell2mat(get(mplot,'zdata'));
+% xdata = cell2mat(get(mplot,'xdata'));
+% ydata = cell2mat(get(mplot,'ydata'));
+% zdata = cell2mat(get(mplot,'zdata'));
+% movedmarkers=[xdata,ydata,zdata];
 
 if selectrode
-    [markers]=update_coords(coordhandle,markers,trajectory,[xdata,ydata,zdata]);
+    
+    [markers]=update_coords(coordhandle,markers,trajectory,movedmarkers,options);
 end
 
 
@@ -447,16 +470,15 @@ delete(captions);
 % Plot spacing distance info text and correct inhomogeneous spacings.
 %emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
 clear emp_eldist
-for side=1:length(options.sides)
+for side=options.sides
     A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
     emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
 end
 memp_eldist=mean([emp_eldist{:}]);
-if length(emp_eldist)>1 && abs(diff([emp_eldist{:}]))>0.005 && options.native % check if spacings on both sides are the same.
+
     [~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
-elseif length(emp_eldist{1})<2 && abs(emp_eldist{1})>0.005 && options.native % check if spacings on both sides are the same.
-    [~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
-end
+
+
 %% plot coords
 hold on
 
@@ -465,7 +487,7 @@ hold on
 if isempty(elplot) % first time plot electrode contacts
 cnt=1;
 
-    for side=1:length(markers)
+    for side=options.sides
         mplot(1,side)=plot3(markers(side).head(1),markers(side).head(2),markers(side).head(3),'*','MarkerEdgeColor',[0.9 0.2 0.2],'MarkerFaceColor','none','MarkerSize',25);
         mplot(2,side)=plot3(markers(side).tail(1),markers(side).tail(2),markers(side).tail(3),'*','MarkerEdgeColor',[0.2 0.9 0.2],'MarkerFaceColor','none','MarkerSize',25);
         for el=1:size(coords_mm{side},1)
@@ -473,13 +495,14 @@ cnt=1;
             cnt=cnt+1;
         end
     end
+    
    setappdata(mcfig,'elplot',elplot);
    setappdata(mcfig,'mplot',mplot);
 
 else % update coordinates in elplot & mplot:
     cnt=1;
 
-    for side=1:length(markers)
+    for side=options.sides
 
         set(mplot(1,side),'XData',markers(side).head(1));
         set(mplot(1,side),'YData',markers(side).head(2));
@@ -505,9 +528,9 @@ end
 
 
 try
-    midpt=mean([markers(1).head;markers(2).head]);
+    midpt=mean([markers(1).head;markers(2).head],1);
 catch
-    midpt=mean([markers(1).head;0 0 0]);
+    midpt=[0 0 0];
 end
 
 
@@ -536,7 +559,7 @@ planecnt=1;
 %% plot slices in x and y planes
 
 for doxx=0:1
-    for side=1:length(options.sides)
+    for side=options.sides
         %try
             sample_width=20-doxx*5; % a bit smaller sample size in x direction to avoid overlap.
             meantrajectory=genhd_inside(trajectory{side});
@@ -683,26 +706,29 @@ caxis([0,1]);
 
 
 Vtra=getV(mcfig,'Vtra',options);
-try
-    mks=[markers(1).head;markers(1).tail;markers(2).head;markers(2).tail];
+
+mks=nan(4,3); % always assign 4 markers, no matter if only right or left electrode selected. fill with nans
+try mks(1,:)=markers(1).head; end
+try mks(2,:)=markers(1).tail; end
+try mks(3,:)=markers(2).head; end
+try mks(4,:)=markers(2).tail; end
+
         mks=Vtra.mat\[mks,ones(size(mks,1),1)]';
         mks=mks(1:3,:)';
-catch
-    mks=[markers(1).head;markers(1).tail;0 0 0;0 0 0];
-    mks=Vtra.mat\[mks,ones(size(mks,1),1)]';
-    mks=mks(1:3,:)';
-end
+
 
 %title(['Electrode ',num2str(el-1),', transversal view.']);
 wsize=10;
 cmap=[1,4,5,8];
-for subpl=1:4
+
+for subpl=getsuplots(options.sides)
+    
     subplot(4,5,subpl*5)
 
     slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
     slice=ea_contrast(slice,contrast,offset);
     try
-        imagesc(slice,[ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
+        imagesc(slice,[ea_nanmean(slice(slice>0))-3*ea_nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*ea_nanstd(slice(slice>0))]);
     catch
         imagesc(slice);
     end
@@ -816,7 +842,14 @@ setappdata(mcfig,'trajectory_plot',trajectory_plot);
 setappdata(mcfig,'planes',planes);
 %setappdata(mcfig,'trajectory',trajectory);
 
-
+function sp=getsuplots(sides)
+if isequal(sides,[1:2])
+    sp=1:4;
+elseif isequal(sides,1)
+    sp=1:2;
+elseif isequal(sides,2)
+    sp=3:4;
+end
 
 function V=getV(mcfig,ID,options)
 if options.native
@@ -894,7 +927,7 @@ for side=1:2
     end
 end
 
-function   [numarkers,nutrajectory]=update_coords(coordhandle,markers,trajectory,movedmarkers)
+function   [numarkers,nutrajectory]=update_coords(coordhandle,markers,trajectory,movedmarkers,options)
 
 % movedcoords are NOT in cell format!
 
@@ -910,6 +943,8 @@ nutrajectory=trajectory;
 switch movel
 
     case 1 % lower right
+        if ismember(1,options.sides)
+            side=1;
         olddist=abs(ea_pdist([markers(1).head;markers(1).tail]));
         refel=4;
         changecoord=1:3;
@@ -920,8 +955,10 @@ switch movel
         refpt=markers(1).tail;
         movedpt=movedmarkers(1,:);
         move='head';
-
+        end
     case 3 % lower left
+        if ismember(2,options.sides)
+            side=2;
         olddist=abs(ea_pdist([markers(2).head;markers(2).tail]));
         refel=4;
         changecoord=1:3;
@@ -930,22 +967,30 @@ switch movel
         spin=-1;
 
         refpt=markers(2).tail;
+        try
         movedpt=movedmarkers(3,:);
+        catch
+            keyboard
+        end
         move='head';
-
+        end
     case 2 % upper right
-        olddist=abs(ea_pdist([markers(1).head;markers(1).tail]));
-        refel=1;
-        changecoord=2:4;
-        cchangecoord=1;
-        usefit=1;
-        spin=1;
-
-        refpt=markers(1).head;
-        movedpt=movedmarkers(2,:);
-        move='tail';
-
+        if ismember(1,options.sides)
+            side=1;
+            olddist=abs(ea_pdist([markers(1).head;markers(1).tail]));
+            refel=1;
+            changecoord=2:4;
+            cchangecoord=1;
+            usefit=1;
+            spin=1;
+            
+            refpt=markers(1).head;
+            movedpt=movedmarkers(2,:);
+            move='tail';
+        end
     case 4 % upper left
+        if ismember(2,options.sides)
+            side=2;
         olddist=abs(ea_pdist([markers(2).head;markers(2).tail]));
         refel=1;
         changecoord=2:4;
@@ -957,7 +1002,7 @@ switch movel
         refpt=markers(2).head;
         movedpt=movedmarkers(4,:);
          move='tail';
-
+        end
 end
 
 
@@ -979,13 +1024,15 @@ nutraj=nutraj/norm(nutraj);
 % generate new coords
 
 
-
+try
 xc=refpt+(nutraj*(olddist));
 numarkers(cchangecoord)=setfield(numarkers(cchangecoord),move,xc);
-    set(mplot(cchangecoord,1),'xdata',xc(1));
-    set(mplot(cchangecoord,1),'ydata',xc(2));
-    set(mplot(cchangecoord,1),'zdata',xc(3));
-
+    set(mplot(cchangecoord,side),'xdata',xc(1));
+    set(mplot(cchangecoord,side),'ydata',xc(2));
+    set(mplot(cchangecoord,side),'zdata',xc(3));
+catch
+    keyboard
+end
 
 % generate new trajectory
 nutrajectory{usefit}=[];
@@ -1102,18 +1149,23 @@ warning ('off','all');
 eltog=getappdata(gcf,'eltog');
 elplot=getappdata(gcf,'elplot');
 mplot=getappdata(gcf,'mplot');
-    set(mplot(1,:),'MarkerEdgeColor','r');
-    set(mplot(2,:),'MarkerEdgeColor','g');
+options=getappdata(gcf,'options');
+    set(mplot(1,options.sides),'MarkerEdgeColor','r');
+    set(mplot(2,options.sides),'MarkerEdgeColor','g');
 
-for i=1:4
+for i=getsuplots(options.sides)
     set(eltog(i),'State','off');
     if eltog(i)==hobj;
         selectrode=i;
     end
 end
+if ~exist('selectrode','var')
+    return
+end
 
 % set the clicked toggletool again.
 set(eltog(selectrode),'State','on');
+
 set(mplot(selectrode),'MarkerEdgeColor','y');
 
 % store selected electrode in appdata.
@@ -1126,8 +1178,9 @@ warning ('off','all');
 function deselectelectrode(hobj,ev)
 % reset all toggletools
 mplot=getappdata(gcf,'mplot');
-    set(mplot(1,:),'MarkerEdgeColor','r');
-    set(mplot(2,:),'MarkerEdgeColor','g');
+options=getappdata(gcf,'options');
+    set(mplot(1,options.sides),'MarkerEdgeColor','r');
+    set(mplot(2,options.sides),'MarkerEdgeColor','g');
 
 setappdata(gcf,'selectrode',0);
 

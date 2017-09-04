@@ -17,7 +17,7 @@ if nargin==4
 end
 
 load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname]);
-for side=1:length(markers)
+for side=options.sides
 
 
     if resize

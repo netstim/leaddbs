@@ -479,8 +479,15 @@ for pt=1:length(ptidx)
 end
 
 resultfig=ea_elvis(options,M.elstruct(ptidx));
-zoom(3);
-
+try % zoom on coordinates.
+    coords={M.elstruct(:).coords_mm};
+    for c=1:length(coords)
+        call(c,:)=mean([coords{c}{1};coords{c}{2}]);
+    end
+    ea_zoomcenter(resultfig.CurrentAxes, mean(call), 3);
+catch
+    zoom(3);
+end
 % show VAT-mapping
 if options.expstatvat.do % export to nifti volume
     pobj.plotFigureH=resultfig;

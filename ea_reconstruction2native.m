@@ -28,7 +28,7 @@ else
 end
 
 towarp=cell(0);
-for side=1:length(options.sides)
+for side=options.sides
 towarp{end+1}=reco.mni.coords_mm{side};
 towarp{end+1}=reco.mni.markers(side).head;
 towarp{end+1}=reco.mni.markers(side).tail;
@@ -38,7 +38,7 @@ towarp=cell2mat(towarp');
 warpedcoord=ea_warpcoord(towarp,nii,options);
 
 cnt=1;
-for side=1:length(options.sides)
+for side=options.sides
     offset=size(reco.mni.coords_mm{side},1);
     reco.(usenative).coords_mm{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
     

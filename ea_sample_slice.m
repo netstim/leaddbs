@@ -14,13 +14,12 @@ function [slice,boundbox,boundboxmm,sampleheight]=ea_sample_slice(vol,tracor,wsi
 interpfactor=2;
 
 if strcmp(voxmm,'mm')
-% calculate distance in millimeters (wsize) back to voxels:
-probe=[0,0,0,1;wsize,0,0,1]';
-probe=vol.mat\probe;
-wsize=abs(round(probe(1,1)-probe(1,2)));
-clear probe
-%
-
+    % calculate distance in millimeters (wsize) back to voxels:
+    probe=[0,0,0,1;wsize,0,0,1]';
+    probe=vol.mat\probe;
+    wsize=abs(round(probe(1,1)-probe(1,2)));
+    clear probe
+    %
 end
 if iscell(coords)
 allc=[];

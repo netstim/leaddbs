@@ -86,7 +86,7 @@ try
         case 2
             options.sides=1;
         case 3
-            options.sides=1;
+            options.sides=2;
     end
 catch
     options.sides=1:2;

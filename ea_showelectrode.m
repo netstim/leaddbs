@@ -27,6 +27,9 @@ if ~isfield(options.d3,'pntcmap')
 else
     jetlist=options.d3.pntcmap;
 end
+try
+    jetlist=evalin('base','custom_cmap');
+end
 %   jetlist=jet;
 
 

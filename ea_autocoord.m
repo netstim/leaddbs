@@ -175,10 +175,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
         switch options.reconmethod
             case 1 % TRAC/CORE
-                for side=1:length(options.sides)
+                for side=options.sides
+                    
                     %try
                     % call main routine reconstructing trajectory for one side.
-                    [coords,trajvector{side},trajectory{side},tramat]=ea_reconstruct(options.patientname,options,options.sides(side));
+                    [coords,trajvector{side},trajectory{side},tramat]=ea_reconstruct(options.patientname,options,side);
 
                     % refit electrodes starting from first electrode (this is redundant at this point).
                     coords_mm{side} = ea_map_coords(coords', [directory,options.prefs.tranii])';
@@ -201,7 +202,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
                     markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
                     markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
-
+                    
                     coords_mm=ea_resolvecoords(markers,options);
                 end
 
@@ -222,7 +223,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                     {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
             case 2 % PaCER
-                options.prefs.ctnii_coregistered
 
                 elecmodels=PaCER([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],'finalDegree',1,'electrodeType',ea_mod2pacermod(options.elmodel));
 

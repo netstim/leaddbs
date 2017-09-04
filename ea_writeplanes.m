@@ -99,7 +99,10 @@ for side=1:length(options.sides)
             % Show MR-volume
             set(0,'CurrentFigure',cuts)
             colormap gray
-
+            try
+                custom_cmap=evalin('base','custom_cmap');
+                colormap(custom_cmap);
+            end
             switch tracor
 
                 case 1 % transversal images
