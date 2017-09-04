@@ -2378,10 +2378,10 @@ end
 
 if nargin
     if isempty(varargin{1})
-        [labels, preexist] = ea_detstimname(options, handles);
+        [labels, preexist] = ea_detstimname(options);
         set(handles.stimlabel, 'String', labels);
     elseif (isfield(options, 'gen_newstim') && options.gen_newstim==1)
-        labels = ea_detstimname(options, handles);
+        labels = ea_detstimname(options);
         preexist = 0;
         options.gen_newstim = 0;
         set(handles.stimlabel, 'String', labels);
@@ -2390,7 +2390,7 @@ if nargin
         preexist = 0;
     end
 else
-    [labels, preexist] = ea_detstimname(options, handles);
+    [labels, preexist] = ea_detstimname(options);
 end
 
 if ~iscell(labels)

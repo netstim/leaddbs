@@ -190,12 +190,12 @@ if strcmp(target, 'groupDir')
     end
     if ~exist(folders{1}, 'dir')
         [pth,fn,ext]=fileparts(folders{1});
-        
+
         if strcmp(fn,'LEAD_groupanalysis') && strcmp(ext,'.mat') && exist(pth, 'dir')
             folders{1}=pth;
         else
             ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', 'Error', dbstack);
-            
+
         end
     end
 
@@ -1026,7 +1026,7 @@ M=getappdata(gcf,'M');
 
 % set options
 options=ea_setopts_local(handles);
-%stimname=ea_detstimname();
+%stimname=ea_detstimname(options);
 
 options.groupmode = 1;
 options.groupid = M.guid;

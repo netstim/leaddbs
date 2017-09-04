@@ -1,37 +1,33 @@
-function [stimname,preexist]=ea_detstimname(options, handles)
-preexist=0;
+function [stimname,preexist]=ea_detstimname(options)
+preexist = 0;
 
 % check if previous stimulations have been stored
 if ~isfield(options,'root') % called from lead group
-    stimname=['gs_',options.groupid];
+    stimname = ['gs_',options.groupid];
     return
 end
 
-directory=[options.root,options.patientname,filesep];
-stimname=cell(0);
+directory = [options.root,options.patientname,filesep];
+stimname = cell(0);
 if exist([directory,'stimulations'],'dir')
-    sd=dir([directory,'stimulations']);
-    for s=1:length(sd)
-        if sd(s).isdir && ~strcmp(sd(s).name(1),'.') && (length(sd(s).name)<3 || ~strcmp(sd(s).name(1:3),'gs_'))
-            stimname{end+1}=sd(s).name;
-        end
-    end
+    stimdir = dir([directory,'stimulations']);
+    stimname = {stimdir(cell2mat({stimdir.isdir})).name};
+    stimname = stimname(cellfun(@(x) ~strncmp(x,'.',1) && ~strncmp(x,'gs_',3), stimname));
 end
 
 if ~isempty(stimname)
     preexist = 1;
 end
 
-if isempty(stimname) || (isfield(options,'gen_newstim') && options.gen_newstim==1)
-    stimname{end+1}=ea_getnewstimname;
+if isempty(stimname) || (isfield(options, 'gen_newstim') && options.gen_newstim==1)
+    stimname{end+1} = ea_getnewstimname;
 end
 
 % add commands
-stimname{end+1}=' => New stimulation';
-stimname{end+1}=' => Rename stimulation';
-stimname{end+1}=' => Delete stimulation';
-stimname=stimname';
-
+stimname{end+1} = ' => New stimulation';
+stimname{end+1} = ' => Rename stimulation';
+stimname{end+1} = ' => Delete stimulation';
+stimname = stimname';
 
 
 function stimname=ea_getnewstimname
