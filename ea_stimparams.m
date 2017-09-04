@@ -1589,9 +1589,9 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             ea_refreshguisp(handles,options);
             ea_savestimulation(S,options);
         case 'Delete stimulation'
-            ans=questdlg(['Are you sure you wish to delete the stimulation parameters for ',...
+            answ=questdlg(['Are you sure you wish to delete the stimulation parameters for ',...
                 S.label,'?'],'Delete stimulation parameters','Sure','No','No');
-            if strcmp(ans,'No')
+            if strcmp(answ,'No')
                 set(handles.stimlabel,'Value',1);
             else % truly delete Stimulation parameters
                 rmdir([options.root,options.patientname,filesep,'stimulations',filesep,S.label],'s');
@@ -1614,8 +1614,6 @@ else
     S.label=label;
     setappdata(handles.stimfig,'S',S);
     setappdata(handles.stimfig,'stimlabel',S.label);
-%    set(handles.stimlabel,'String',label);
-
     setappdata(handles.stimfig,'S',S);
     ea_refreshguisp(handles,options);
 end
@@ -1731,7 +1729,6 @@ stimlabel=getappdata(handles.stimfig,'stimlabel');
 
 if isempty(S)
     S=initializeS(stimlabel,options,handles);
-
     setappdata(handles.stimfig,'stimlabel',S.label);
 else
    if isempty(S.Rs1)
@@ -2373,7 +2370,7 @@ ea_refreshguisp(handles,options,ID);
 
 
 function S = initializeS(varargin)
-preexist=0;
+
 if nargin>1
     options=varargin{2};
     handles=varargin{3};
@@ -2381,18 +2378,19 @@ end
 
 if nargin
     if isempty(varargin{1})
-        [labels,preexist]=ea_detstimname(options,handles);
-        set(handles.stimlabel,'String',labels);
-    elseif (isfield(options,'gen_newstim') && options.gen_newstim==1)
-        [labels,preexist]=ea_detstimname(options,handles);
-        set(handles.stimlabel,'String',labels);
-        options.gen_newstim=0;
-
+        [labels, preexist] = ea_detstimname(options, handles);
+        set(handles.stimlabel, 'String', labels);
+    elseif (isfield(options, 'gen_newstim') && options.gen_newstim==1)
+        labels = ea_detstimname(options, handles);
+        preexist = 0;
+        options.gen_newstim = 0;
+        set(handles.stimlabel, 'String', labels);
     else
-        labels=varargin{1};
+        labels = varargin{1};
+        preexist = 0;
     end
 else
-    [labels,preexist]=ea_detstimname(options,handles);
+    [labels, preexist] = ea_detstimname(options, handles);
 end
 
 if ~iscell(labels)
@@ -2400,7 +2398,7 @@ if ~iscell(labels)
 end
 
 try
-    S.label=labels{get(handles.stimlabel,'Value')};
+    S.label = labels{get(handles.stimlabel,'Value')};
 catch
     keyboard
 end

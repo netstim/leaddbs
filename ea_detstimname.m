@@ -1,10 +1,12 @@
 function [stimname,preexist]=ea_detstimname(options, handles)
 preexist=0;
+
 % check if previous stimulations have been stored
 if ~isfield(options,'root') % called from lead group
     stimname=['gs_',options.groupid];
     return
 end
+
 directory=[options.root,options.patientname,filesep];
 stimname=cell(0);
 if exist([directory,'stimulations'],'dir')
@@ -15,10 +17,10 @@ if exist([directory,'stimulations'],'dir')
         end
     end
 end
-if ~isempty(stimname)
-    preexist=1;
-end
 
+if ~isempty(stimname)
+    preexist = 1;
+end
 
 if isempty(stimname) || (isfield(options,'gen_newstim') && options.gen_newstim==1)
     stimname{end+1}=ea_getnewstimname;
