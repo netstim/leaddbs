@@ -17,8 +17,7 @@ if nargin==4
 end
 
 load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname]);
-for side=options.sides
-
+for side=1:length(markers) % leave as is
 
     if resize
        can_dist=ea_pdist([electrode.head_position;electrode.tail_position]);
@@ -36,22 +35,21 @@ for side=options.sides
 
        markers(side).tail=markers(side).head+vec*stretch;
     end
-
-M=[markers(side).head,1;markers(side).tail,1;markers(side).x,1;markers(side).y,1];
-E=[electrode.head_position,1;electrode.tail_position,1;electrode.x_position,1;electrode.y_position,1];
-X=mldivide(E,M);
-coords_mm=[electrode.coords_mm,ones(size(electrode.coords_mm,1),1)];
-coords{side}=X'*coords_mm';
-coords{side}=coords{side}(1:3,:)';
-
-
-
-trajvector{side}=(markers(side).tail-markers(side).head)/norm(markers(side).tail-markers(side).head);
-trajectory{side}=[markers(side).head-trajvector{side}*5;markers(side).head+trajvector{side}*25];
-trajectory{side}=[linspace(trajectory{side}(1,1),trajectory{side}(2,1),50)',...
-    linspace(trajectory{side}(1,2),trajectory{side}(2,2),50)',...
-    linspace(trajectory{side}(1,3),trajectory{side}(2,3),50)'];
-
+    
+    if ~isempty(markers(side).head)
+        M=[markers(side).head,1;markers(side).tail,1;markers(side).x,1;markers(side).y,1];
+        E=[electrode.head_position,1;electrode.tail_position,1;electrode.x_position,1;electrode.y_position,1];
+        X=mldivide(E,M);
+        coords_mm=[electrode.coords_mm,ones(size(electrode.coords_mm,1),1)];
+        coords{side}=X'*coords_mm';
+        coords{side}=coords{side}(1:3,:)';
+        
+        trajvector{side}=(markers(side).tail-markers(side).head)/norm(markers(side).tail-markers(side).head);
+        trajectory{side}=[markers(side).head-trajvector{side}*5;markers(side).head+trajvector{side}*25];
+        trajectory{side}=[linspace(trajectory{side}(1,1),trajectory{side}(2,1),50)',...
+            linspace(trajectory{side}(1,2),trajectory{side}(2,2),50)',...
+            linspace(trajectory{side}(1,3),trajectory{side}(2,3),50)'];
+    end
 end
 
 

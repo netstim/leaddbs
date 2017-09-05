@@ -208,7 +208,7 @@ for side=1:length(options.sides)
                 % ##
                 % add some "contrast" ? remove this part for linear
                 % colormapping
-
+% 
                 slice=slice-0.5;
                 slice(slice<0)=0;
                 slice=slice*2;

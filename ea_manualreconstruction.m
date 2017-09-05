@@ -546,7 +546,9 @@ for side=1:length(options.sides)
 
         if ~isempty(trajectory{side})
 
-            if options.verbose>1; trajectory_plot(side)=plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'color',[0.3,0.5,0.9],'linew',1.5); end
+            if options.verbose>1; 
+                trajectory_plot(side)=plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'color',[0.3,0.5,0.9],'linew',1.5); 
+            end
 
         end
     end

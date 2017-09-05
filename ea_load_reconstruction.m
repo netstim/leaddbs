@@ -40,6 +40,7 @@ if exist('reco','var')
     else
         space_type = 'mni';
     end
+    
     coords_mm = reco.(space_type).coords_mm;
 
     trajectory = reco.(space_type).trajectory;
@@ -57,7 +58,7 @@ if exist('reco','var')
 else % legacy format
 
     if ~exist('markers','var') % backward compatibility to old recon format
-        for side=1:length(options.sides)
+        for side=1:options.sides
             markers(side).head=coords_mm{side}(1,:);
             markers(side).tail=coords_mm{side}(4,:);
             normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);

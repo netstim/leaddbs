@@ -20,7 +20,7 @@ else
 end
 
 fovimg=ea_load_nii(fovimg);
-
+distimg=fovimg;
 for side=sides
     switch side
         case 1
@@ -34,7 +34,8 @@ for side=sides
     end
     
     fovimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'.nii'];
-    
+        distimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'_distance.nii'];
+
     [xx,yy,zz]=ind2sub(size(fovimg.img),1:numel(fovimg.img));
     XYZ=[xx;yy;zz;ones(1,length(xx))];
     XYZ=fovimg.mat*XYZ;
@@ -66,21 +67,25 @@ for side=sides
         %D=squareform(pdist([XYZ(vx,:);acs]));
         D=-(pdist([XYZ(vx,:);acs]));
         D=D(1:N)';
-        %fovimg.img(vx)=corr(D,I,'rows','pairwise','type','Pearson');
-        b=glmfit(D,I);
-        if isnan(b)
-            keyboard
-        end
-        
-        fovimg.img(vx)=b(2)/overone(abs(b(1)));
-        
+        fovimg.img(vx)=corr(D,I,'rows','pairwise','type','Spearman');
+
+        distimg.img(vx)=nansum(D);
+       
+%         b=glmfit(D,I);
+%         if isnan(b)
+%             keyboard
+%         end
+%         
+%         fovimg.img(vx)=b(2)/overone(abs(b(1)));
         ea_dispercent(vx/dimen);
     end
     ea_dispercent(1,'end');
     
     
-    fovimg.dt=[16,0];
+    fovimg.dt=[64,0];
+    distimg.dt=[64,0];
     ea_write_nii(fovimg);
+    ea_write_nii(distimg);
 end
 
 function val=overone(val)
