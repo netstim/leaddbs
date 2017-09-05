@@ -33,10 +33,15 @@ switch cmd
 
                 ftr=track_seed_gqi([cfile,filesep,'data.fib.gz'],sfile{s});
                 fibers=ftr.fibers;
-                redotree=1;
+                redotree=0;
                 ctype='fibgz';
-
+            elseif exist(cfile,'file') % patient specific fibertracts
+                [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile]);
+                redotree=1;
+                ctype='mat';
+                
             else % connectome type not supported
+                
                 ea_error('Connectome file vanished or not supported!');
             end
 

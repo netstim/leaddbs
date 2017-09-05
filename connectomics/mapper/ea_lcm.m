@@ -86,6 +86,7 @@ for suffix=dowhich
                         cnt=cnt+1;
                     end
                 end
+                
                 Cnii=nii(1);
                 for n=2:length(nii)
                     Cnii.img=Cnii.img+nii(n).img;
