@@ -1,4 +1,4 @@
-function [atlases,colorbuttons,atlassurfs]=ea_showatlas(varargin)
+function [atlases,colorbuttons,atlassurfs,atlaslabels] = ea_showatlas(varargin)
 % This function shows atlas data in the 3D-Scene viewer. It
 % reads in all atlases found in the eAuto_root/atlases folder, calculates a
 % convex hull around the nonzero area and renders this area as 3D surfaces.
@@ -9,7 +9,6 @@ function [atlases,colorbuttons,atlassurfs]=ea_showatlas(varargin)
 % Andreas Horn
 
 maxcolor=64; % change to 45 to avoid red / 64 to use all colors
-
 
 resultfig=varargin{1};
 if nargin==2
@@ -321,18 +320,16 @@ for nativemni=nm % switch between native and mni space atlases.
         end
     end
 
-    setappdata(resultfig,'atlassurfs',atlassurfs);
-    setappdata(resultfig,'colorbuttons',colorbuttons);
-    setappdata(resultfig,'atlht',ht);
     % configure label button to work properly and hide labels as default.
-
     atlabelsvisible([],[],atlaslabels(:),'off');
     set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(:),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(:),'off'},'State','off');
     set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
 
-
-
-
+    setappdata(resultfig,'atlassurfs',atlassurfs);
+    setappdata(resultfig,'colorbuttons',colorbuttons);
+    setappdata(resultfig,'atlht',ht);
+    setappdata(resultfig,'labelbutton',labelbutton);
+    setappdata(resultfig,'atlaslabels',atlaslabels);
     %     % save table information that has been generated from nii files (on first run with this atlas set).
     %     try
     %         atlases.fv=ifv;
@@ -342,7 +339,6 @@ for nativemni=nm % switch between native and mni space atlases.
     %         atlases.colorc=icolorc;
     %         atlases.normals=normals;
     %     end
-
 
     try
         setappdata(gcf,'atlases',atlases);
@@ -374,10 +370,6 @@ end
 
 
 % open up atlas control viewer
-
-
-
-
 function setlabelcolor(hobj,ev,robject)
 
 co=uisetcolor;
@@ -441,7 +433,6 @@ if atlspres
 end
 
 
-
 function atlabelsvisible(hobj,ev,obj,onoff)
 for el=1:numel(obj)
     try
@@ -449,13 +440,6 @@ for el=1:numel(obj)
     end
 end
 
-
-function oldatlasvisible(hobj,ev,atls)
-set(atls, 'Visible', 'on');
-%disp([atls,'visible clicked']);
-function atlasinvisible(hobj,ev,atls)
-set(atls, 'Visible', 'off');
-%disp([atls,'invisible clicked']);
 
 function [sides,sidestr]=detsides(opt)
 

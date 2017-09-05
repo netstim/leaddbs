@@ -265,7 +265,7 @@ corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
 
 % Show atlas data
 if options.d3.writeatlases
-    [atlases,colorbuttons,atlassurfs]=ea_showatlas(resultfig,elstruct,options);
+    atlases = ea_showatlas(resultfig,elstruct,options);
 
     if ~strcmp(options.d3.verbose,'off')
         ea_openatlascontrol([],[],atlases,resultfig,options);
@@ -298,10 +298,7 @@ if options.d3.writeatlases
 end
 
 % Show isomatrix data
-
 if options.d3.showisovolume
-
-
     allisomatrices=options.d3.isomatrix;
     allisonames=options.d3.isomatrix_name;
     for reg=1:length(allisomatrices)
