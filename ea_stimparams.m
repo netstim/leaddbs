@@ -1949,6 +1949,15 @@ axis equal;
 %set(handles.stimlabel,'String',S.label);
 
 %% check consistency with chosen VAT model.
+%% check consistency with chosen electrode model.
+if ~isfield(options,'elspec')
+toptions=ea_resolve_elspec(elstruct(actpt));
+try
+options.elspec=toptions.elspec;
+catch
+    keyboard
+end
+end
 models=get(handles.modelselect,'String');
 try
 model=models{get(handles.modelselect,'Value')};
@@ -1990,15 +1999,7 @@ S.model=model;
 
 
 
-%% check consistency with chosen electrode model.
-if ~isfield(options,'elspec')
-toptions=ea_resolve_elspec(elstruct(actpt));
-try
-options.elspec=toptions.elspec;
-catch
-    keyboard
-end
-end
+
 
 
 

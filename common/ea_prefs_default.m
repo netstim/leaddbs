@@ -103,7 +103,7 @@ prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregis
 prefs.scrf.auto='mask1'; % can be 'off' to not perform automatic subcortical refine, 'nomask' to just use cropped image, 'mask1' to use Schoenecker mask 1 or 'mask2' to use both Schoenecker masks.
 
 %% Atlas-Sets:
-prefs.atlases.default='STN-Subdivisions (Accolla 2014)';
+prefs.atlases.default='DISTAL Minimal (Ewert 2017)';
 
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.

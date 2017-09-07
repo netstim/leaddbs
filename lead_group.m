@@ -319,7 +319,7 @@ function removeptbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to removeptbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-M=getappdata(gcf,'M');
+M=getappdata(handles.leadfigure,'M');
 
 deleteentry=get(handles.patientlist,'Value');
 
@@ -338,13 +338,13 @@ end
 
 if isfield(M,'S')
     M.S(deleteentry)=[];
+    setappdata(handles.leadfigure, 'S', M.S);
 end
 
 try
     M.stats(deleteentry)=[];
 end
-
-setappdata(gcf,'M',M);
+setappdata(handles.leadfigure,'M',M);
 ea_refresh_lg(handles);
 
 
