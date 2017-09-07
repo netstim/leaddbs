@@ -3,6 +3,7 @@ scrf=native;
 
 
 bs=1:2;
+
 for side=bs([~isempty(native.markers(1).head),~isempty(native.markers(2).head)])
     % coords
     scrf.coords_mm{side}=mat*[native.coords_mm{side},ones(size(native.coords_mm{side},1),1)]';

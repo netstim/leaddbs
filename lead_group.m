@@ -336,6 +336,10 @@ for cvar=1:length(M.clinical.vars)
     end
 end
 
+if isfield(M,'S')
+    M.S(deleteentry)=[];
+end
+
 try
     M.stats(deleteentry)=[];
 end

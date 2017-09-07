@@ -67,31 +67,37 @@ handles.patientname.String=patientname;
 set(handles.scrf,'name',['Brainshift Correction: ',patientname]);
 options.init=1;
 ispresent=ea_refreshscrf(options,handles,directory);
-if ~ispresent
+
     switch options.prefs.scrf.auto
         case 'nomask'
             handles.mask0.Value=1;
             handles.mask1.Value=0;
             handles.mask2.Value=0;
+            if ~ispresent
             %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
             %end
+            end
         case 'mask1'
             handles.mask0.Value=0;
             handles.mask1.Value=1;
             handles.mask2.Value=0;
+            if ~ispresent
             %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
             %end
+            end
         case 'mask2'
             handles.mask0.Value=0;
             handles.mask1.Value=0;
             handles.mask2.Value=1;
+            if ~ispresent
             %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
             %end
+            end
     end
-end
+
 
 
 % Choose default command line output for ea_subcorticalrefine

@@ -7,7 +7,7 @@ if ~exist('offset','var')
 end
 %disp([num2str(contrast),',',num2str(offset)]);
 
-slice(slice(:)~=0)=contrast*zscore(slice(slice(:)~=0));
+slice(slice(:)~=0)=contrast*ea_nanzscore(slice(slice(:)~=0));
 slice=slice+offset;
 slice(slice>3)=3; % cut at 3 std devs if above
 slice(slice<-3)=-3; % cut at -3 std devs if above

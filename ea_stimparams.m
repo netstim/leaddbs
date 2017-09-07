@@ -866,7 +866,7 @@ if groupmode
         'Yes, sure','No','No');
 
     switch choice
-        case 'No'
+        case 'No' 
             gSv=getappdata(handles.stimfig,'gSv');
             ochoice=ismember(get(hObject,'String'),gSv.vatmodel);
             setappdata(hObject,'Value',ochoice);
@@ -1957,9 +1957,20 @@ catch
     model=models{1};
 
 end
+switch options.elspec.numel
+    case 4
+        ea_viz_eight(handles,'off');
+    case 8
+        ea_viz_eight(handles,'on');
+    otherwise
+        warning('Only electrode models with 4 or 8 contacts are fully supported.');
+end
+if strcmp(options.elspec.matfname,'boston_vercise_directed')
+    ea_error('VTA modeling for directed leads is not yet supported.');
+end
 
 switch model
-    case 'Horn 2017'
+    case 'SimBio/FieldTrip (see Horn 2017)'
         ea_hide_impedance(handles);
         S.monopolarmodel=0;
         ea_enable_vas(handles,options);
@@ -1975,6 +1986,10 @@ end
 
 S.model=model;
 
+
+
+
+
 %% check consistency with chosen electrode model.
 if ~isfield(options,'elspec')
 toptions=ea_resolve_elspec(elstruct(actpt));
@@ -1985,18 +2000,49 @@ catch
 end
 end
 
-switch options.elspec.numel
-    case 4
-        ea_viz_eight(handles,'off');
-    case 8
-        ea_viz_eight(handles,'on');
-    otherwise
-        warning('Only electrode models with 4 or 8 contacts are fully supported.');
+
+
+if get(handles.(['Rs',num2str(Ractive),'va']),'Value')==1 % Volt
+    ea_show_percent(handles,options,1,'off'); % right hemisphere
+else % Ampere
+        ea_show_percent(handles,options,1,'on'); % right hemisphere
+end
+if get(handles.(['Ls',num2str(Ractive),'va']),'Value')==1 % Volt
+    ea_show_percent(handles,options,2,'off'); % left hemisphere
+else % Ampere
+    ea_show_percent(handles,options,2,'on'); % left hemisphere
 end
 
 setappdata(handles.stimfig,'S',S);
 
 ea_savestimulation(S,options);
+
+function ea_show_percent(handles,options,side,onoff)
+
+switch side
+    case 1
+        sel=0:7;
+        sidestr='R';
+        ptval=1;
+    case 2
+        sel=8:15;
+        sidestr='L';
+        ptval=3;
+end
+
+sel=sel(1:options.elspec.numel);
+for k=sel
+    set(handles.(['k',num2str(k),'u']),'visible',onoff);
+end
+
+set(handles.([sidestr,'Cu']),'visible',onoff);
+
+set(handles.(['perctext',num2str(ptval)]),'visible',onoff);
+if options.elspec.numel>4
+    set(handles.(['perctext',num2str(ptval+1)]),'visible',onoff);
+end
+
+
 
 
 function ea_viz_eight(handles,cmd)

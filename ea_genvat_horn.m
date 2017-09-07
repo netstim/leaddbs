@@ -218,8 +218,14 @@ if ~isfield(S, 'sources')
 end
 for source=S.sources
     stimsource=S.([sidec,'s',num2str(source)]);
+    constvol=stimsource.va==1; % constvol is 1 for constant voltage and 0 for constant current.
+
     for cnt=1:length(cnts)
-        U(cnt)=(stimsource.(cnts{cnt}).perc/100)*stimsource.amp;
+        if constvol
+            U(cnt)=(logical(stimsource.(cnts{cnt}).perc))*stimsource.amp; % do not split amplitude in constant voltage setting.
+        else
+            U(cnt)=(stimsource.(cnts{cnt}).perc/100)*stimsource.amp;
+        end
         if stimsource.(cnts{cnt}).pol==1
             U(cnt)=U(cnt)*-1;
         end
@@ -251,7 +257,6 @@ for source=S.sources
         end
         ix=[];
         voltix=[];
-                constvol=stimsource.va==1; % constvol is 1 for constant voltage and 0 for constant current.
     
         cnt=1;
         for ac=Acnt
