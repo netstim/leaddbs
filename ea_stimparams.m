@@ -1740,6 +1740,12 @@ else
        setappdata(handles.stimfig,'stimlabel',S.label);
    end
 end
+
+
+[~,ix]=ismember(S.model,get(handles.modelselect,'String'));
+set(handles.modelselect,'Value',ix);
+
+
 Ractive=S.active(1);
 Lactive=S.active(2);
 
