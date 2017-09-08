@@ -169,10 +169,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
     if options.doreconstruction
         ea_checkfiles(options);
-        if ~options.prefs.env.dev % hard set to TRAC/CORE if not in dev mode.
-            options.reconmethod=1;
-        end
-
         switch options.reconmethod
             case 1 % TRAC/CORE
                 for side=options.sides
