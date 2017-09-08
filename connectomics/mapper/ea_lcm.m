@@ -120,10 +120,11 @@ for suffix=dowhich
                         tnii.dt=[16,0];
                         ea_write_nii(tnii);
                         cname=options.lcm.func.connectome;
+                        
                         if ismember('>',cname)
                             delim=strfind(cname,'>');
-                            subset=cname(delim+2:end);
-                            cname=cname(1:delim-2);
+                            subset=cname(delim+1:end);
+                            cname=cname(1:delim-1);
                         end
                         d=load([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat']);
                         d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
