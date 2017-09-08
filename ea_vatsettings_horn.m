@@ -58,6 +58,7 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+set(handles.setfig,'name','FEM-based VAT model setting');
 
 prefs=ea_prefs('');
 
