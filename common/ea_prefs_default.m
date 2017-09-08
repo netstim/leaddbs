@@ -32,6 +32,8 @@ prefs.rawctnii_unnormalized='postop_ct.nii';
 prefs.ctnii_coregistered='rpostop_ct.nii';
 prefs.tp_ctnii_coregistered=['tp_',prefs.ctnii_coregistered];
 
+prefs.preferMRCT = 1; % preference of MR or CT modality for post-op image: 1 for MR, 2 for CT.
+
 prefs.patientdir=patientname;
 prefs.prenii='lanat.nii';
 prefs.tranii='lpostop_tra.nii';

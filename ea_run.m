@@ -55,7 +55,7 @@ if length(uipatdirs)>1 && ~isempty(which('parpool')) && options.prefs.pp.do && ~
 
     opts = cell(1, length(uipatdirs));
     for pat = 1:length(opts)
-        
+
         % set patient specific options
         opts{pat} = options;
         opts{pat}.root = [fileparts(uipatdirs{pat}),filesep];
@@ -80,18 +80,21 @@ else
             ea_export(options);
         case 'run'
             for pat = 1:length(uipatdirs)
-                
+
                 % set patient specific options
                 options.root = [fileparts(uipatdirs{pat}),filesep];
                 [~, options.patientname] = fileparts(uipatdirs{pat});
 
-                % autoadjust MRCT modality for this patient: FIX ME
+                % NEED FURTHER TUNE: auto detection of MRCT modality for the patient
                 try
                     modality = ea_checkctmrpresent([options.root,options.patientname,filesep]);
-                    if ~isempty(find(modality,1))
-                        options.modality = find(modality,1);  % prefer MR rather than CT if both are present
-                    else
-                        options.modality = 1;    % FIX ME, if no postop image present, set to MR to work it around
+                    modality = find(modality);
+                    if isempty(modality)    % no postop image present
+                        options.modality = 1;    % set to MR to work it around
+                    elseif length(modality) == 2    % both MR and CT image present
+                        options.modality = options.prefs.preferMRCT;  % set the modality according to 'prefs.preferMRCT'
+                    else    % only one modality present
+                        options.modality = modality;
                     end
                 end
 
