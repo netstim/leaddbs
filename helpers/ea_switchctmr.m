@@ -39,10 +39,8 @@ if ~(sum(switchto>0)>1) && ~isempty(switchto) % e.g. MR and CT present
                 set(handles.reconmethod,'Value',2); % set to PaCER algorithm.
                 %% can rm if statement once released.
                 prefs=ea_prefs;
-                if prefs.env.dev
                     set(handles.targetpopup,'enable','off');
                     set(handles.maskwindow_txt,'enable','off');
-                end
     end
 end
 

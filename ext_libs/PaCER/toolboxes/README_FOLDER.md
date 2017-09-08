@@ -1,0 +1,2 @@
+** FOLDER toolboxes/ **
+This folder contains software provided by developers not necessarily in any relation to the authors of PaCER. They where packaged with PaCER for convenience. Please refer to the respective LICENCE files for respective copyright information. 

@@ -1,0 +1,40 @@
+################################################
+# ITK-SnAP Label Description File
+# File format: 
+# IDX   -R-  -G-  -B-  -A--  VIS MSH  LABEL
+# Fields: 
+#    IDX:   Zero-based index 
+#    -R-:   Red color component (0..255)
+#    -G-:   Green color component (0..255)
+#    -B-:   Blue color component (0..255)
+#    -A-:   Label transparency (0.00 .. 1.00)
+#    VIS:   Label visibility (0 or 1)
+#    IDX:   Label mesh visibility (0 or 1)
+#  LABEL:   Label description 
+################################################
+    0     0    0    0        0  0  0    "Clear Label"
+    1     5  255    0        1  1  1    "SNr+STN_L"
+    2     0    0  255        1  1  1    "SNr+STN_R"
+    3   255   21    0        1  1  1    "NR_L"
+    4     0  255  255        1  1  1    "NR_R"
+    5   255  255    0        1  1  1    "AC"
+    6   255    0  255        1  1  1    "SNr_L"
+    7   255  239  213        1  1  1    "SNr_R"
+    8     0    0  205        1  1  1    "STN_L"
+    9   205  133   63        1  1  1    "STN_R"
+   10   210  180  140        1  1  1    "SNr+STN_LR"
+   11   205  173    0        1  1  1    "MRI_Electrode_Artifact_L"
+   12     0    0  128        1  1  1    "MRI_Electrode_Artifact_R"
+   13   255   19    0        1  1  1    "Artierial System"
+   14    46  139   87        1  1  1    "GPi_L"
+   15   255  228  225        1  1  1    "GPi_R"
+   16   106   90  205        1  1  1    "GPe_L"
+   17   221  160  221        1  1  1    "GPe_R"
+   18   233  150  122        1  1  1    "GP_L"
+   19   165   42   42        1  1  1    "GP_R"
+   20   255  250  250        1  1  1    "Th_L"
+   21   147  112  219        1  1  1    "Th_R"
+   22   218  112  214        1  1  1    "Acc_L"
+   23    75    0  130        1  1  1    "Acc_R"
+   24   255  182  193        1  1  1    "Put+GP_L"
+   25    60  179  113        1  1  1    "Put+GP_R"

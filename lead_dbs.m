@@ -615,13 +615,9 @@ if get(hObject,'Value')==1
 else
     set(handles.reconmethod,'enable','on');
     set(handles.reconmethod,'Value',2); % set to PaCER algorithm.
-    %% can rm if statement once released.
     prefs=ea_prefs;
-    if prefs.env.dev
         set(handles.targetpopup,'enable','off');
         set(handles.maskwindow_txt,'enable','off');
-    end
-    %%
 end
 ea_storeui(handles);
 
@@ -1502,13 +1498,9 @@ if get(hObject,'Value')==1 % TRAC/CORE
     set(handles.targetpopup,'enable','on');
     set(handles.maskwindow_txt,'enable','on');
 else % PACER
-    %% can rm if statement once released.
     prefs=ea_prefs;
-    if prefs.env.dev
         set(handles.targetpopup,'enable','off');
         set(handles.maskwindow_txt,'enable','off');
-    end
-    %%
 end
 
 % --- Executes during object creation, after setting all properties.
