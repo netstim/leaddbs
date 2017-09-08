@@ -32,6 +32,7 @@ setappdata(mcfig,'patientname',patientname);
 
 setappdata(mcfig,'origoptions',options); % store original options for further processing.
 
+
 options.native=1;
 setappdata(mcfig,'options',options);
 
@@ -119,13 +120,14 @@ function ea_endfcn(mcfig)
     ea_busyaction('on',mcfig,'reco');
 %markers=getappdata(gcf,'markers');
 %trajectory=getappdata(gcf,'trajectory');
-options=getappdata(mcfig,'origoptions');
+    options=getappdata(mcfig,'origoptions');
 
     options.hybridsave=1;
     options.native=1;
     [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
-    options=rmfield(options,'hybridsave');
+    options=getappdata(mcfig,'origoptions');
+    try options=rmfield(options,'hybridsave'); end
 ea_busyaction('off',mcfig,'reco');
 close(mcfig)
 
@@ -154,6 +156,7 @@ ea_methods(options,...
 
 
 % continue with rest of the program schedule..
+
 ea_write(options);
 
 
