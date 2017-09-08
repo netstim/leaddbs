@@ -866,7 +866,7 @@ if groupmode
         'Yes, sure','No','No');
 
     switch choice
-        case 'No'
+        case 'No' 
             gSv=getappdata(handles.stimfig,'gSv');
             ochoice=ismember(get(hObject,'String'),gSv.vatmodel);
             setappdata(hObject,'Value',ochoice);
@@ -1951,23 +1951,21 @@ axis equal;
 %% check consistency with chosen VAT model.
 %% check consistency with chosen electrode model.
 if ~isfield(options,'elspec')
-    toptions=ea_resolve_elspec(elstruct(actpt));
-    try
-        options.elspec=toptions.elspec;
-    catch
-        keyboard
-    end
+toptions=ea_resolve_elspec(elstruct(actpt));
+try
+options.elspec=toptions.elspec;
+catch
+    keyboard
 end
-
+end
 models=get(handles.modelselect,'String');
 try
-    model=models{get(handles.modelselect,'Value')};
+model=models{get(handles.modelselect,'Value')};
 catch
     set(handles.modelselect,'Value',1);
     model=models{1};
 
 end
-
 switch options.elspec.numel
     case 4
         ea_viz_eight(handles,'off');
@@ -1976,7 +1974,6 @@ switch options.elspec.numel
     otherwise
         warning('Only electrode models with 4 or 8 contacts are fully supported.');
 end
-
 if strcmp(options.elspec.matfname,'boston_vercise_directed')
     ea_error('VTA modeling for directed leads is not yet supported.');
 end
@@ -1997,6 +1994,14 @@ switch model
 end
 
 S.model=model;
+
+
+
+
+
+
+
+
 
 if get(handles.(['Rs',num2str(Ractive),'va']),'Value')==1 % Volt
     ea_show_percent(handles,options,1,'off'); % right hemisphere
@@ -2037,6 +2042,8 @@ set(handles.(['perctext',num2str(ptval)]),'visible',onoff);
 if options.elspec.numel>4
     set(handles.(['perctext',num2str(ptval+1)]),'visible',onoff);
 end
+
+
 
 
 function ea_viz_eight(handles,cmd)
