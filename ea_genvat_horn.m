@@ -10,7 +10,7 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=0.2; %0.2;
+    thresh=options.prefs.machine.vatsettings.horn_ethresh; %0.2;
 
 elseif nargin==7
     acoords=varargin{1};
@@ -171,9 +171,7 @@ setappdata(resultfig,'elstruct',elstruct);
      %   plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'c.');
         %% calculate volume conductor
         ea_dispt('Creating volume conductor...');
-        
-        %vol=ea_ft_headmodel_simbio(mesh,'conductivity',[0.33 0.14 1/(10^(-8)) 1/(10^16)]);
-        
+                
         if useSI
             SIfx=1;
         else
@@ -181,12 +179,12 @@ setappdata(resultfig,'elstruct',elstruct);
         end
         
         try
-            vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.33 0.14 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+            vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[options.prefs.machine.vatsettings.horn_cgm options.prefs.machine.vatsettings.horn_cwm 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
             %vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         catch % reorder elements so not to be degenerated.
             tmesh=mesh;
             tmesh.tet=tmesh.tet(:,[1 2 4 3]);
-            vol=ea_ft_headmodel_simbio(tmesh,'conductivity',SIfx*[0.33 0.14 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+            vol=ea_ft_headmodel_simbio(tmesh,'conductivity',SIfx*[options.prefs.machine.vatsettings.horn_cgm options.prefs.machine.vatsettings.horn_cwm 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
         end
         if useSI % convert back before saving headmodel
             mesh.pnt=mesh.pnt*1000; % in meter
@@ -562,7 +560,8 @@ protocol.elmodel=options.elmodel;
 protocol.elstruct=elstruct;
 protocol.usediffusion=options.usediffusion;
 protocol.atlas=options.atlasset;
-protocol.version=1.0;
+protocol.version=1.1;
+protocol.vatsettings=options.prefs.machine.vatsettings;
 
 if sv % save protocol to disk
     save([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat'],'protocol');

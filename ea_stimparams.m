@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 20-Feb-2017 13:44:25
+% Last Modified by GUIDE v2.5 08-Sep-2017 11:01:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -924,6 +924,10 @@ ea_busyaction('on',handles.stimfig,'stim');
 elstruct=getappdata(handles.stimfig,'elstruct');
 resultfig=getappdata(handles.stimfig,'resultfig');
 options=getappdata(handles.stimfig,'options');
+% refresh prefs:
+options.prefs=ea_prefs;
+setappdata(resultfig,'options',options);
+setappdata(handles.stimfig,'options',options);
 S=getappdata(handles.stimfig,'S');
 if isfield(elstruct,'group')
     gcnt=ones(length(elstruct(1).groups),1);
@@ -940,7 +944,7 @@ for el=1:length(elstruct)
         if isfield(elstruct,'group') % group analysis, more than one electrode set
             keyboard
         else % single patient
-            [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,S,side,options,stimname,0.2,handles.stimfig);
+            [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,S,side,options,stimname,options.prefs.machine.vatsettings.horn_ethresh,handles.stimfig);
             stimparams(1,side).volume=volume;
             flix=1;
         end
@@ -1983,14 +1987,20 @@ switch model
         ea_hide_impedance(handles);
         S.monopolarmodel=0;
         ea_enable_vas(handles,options);
+        set(handles.betawarning,'visible','on');
+        set(handles.settings,'visible','on');
     case 'Maedler 2012'
         ea_show_impedance(handles);
         S.monopolarmodel=1;
         ea_disable_vas(handles,options);
+        set(handles.betawarning,'visible','off');
+        set(handles.settings,'visible','off');
     case 'Kuncel 2008'
         ea_hide_impedance(handles);
         S.monopolarmodel=1;
         ea_disable_vas(handles,options);
+        set(handles.betawarning,'visible','off');
+        set(handles.settings,'visible','off');
 end
 
 S.model=model;
@@ -3053,3 +3063,11 @@ function predictstim_Callback(hObject, eventdata, handles)
 % hObject    handle to predictstim (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in settings.
+function settings_Callback(hObject, eventdata, handles)
+% hObject    handle to settings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_vatsettings_horn;
