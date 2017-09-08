@@ -19,7 +19,6 @@ if nargin>2
     options=varargin{3};
 end
 
-
 nm=[1:2]; % native and mni
 try
     nmind=[options.atl.can,options.atl.ptnative]; % which shall be performed?
@@ -41,7 +40,6 @@ for nativemni=nm % switch between native and mni space atlases.
             mifix='';
     end
 
-
     atlascnt=1;
     set(0,'CurrentFigure',resultfig)
 
@@ -52,7 +50,6 @@ for nativemni=nm % switch between native and mni space atlases.
         atlases=ea_genatlastable(atlases,fileparts(adir),options,mifix);
     end
 
-
     if options.writeoutstats
         try
             load([options.root,options.patientname,filesep,'ea_stats']);
@@ -60,14 +57,11 @@ for nativemni=nm % switch between native and mni space atlases.
         end
     end
 
-
-    if ~isfield(atlases,'defaultset');
+    if ~isfield(atlases,'defaultset')
         atlases.defaultset=1; % show all structures.
     end
 
-
-    if isfield(atlases,'colormap');
-
+    if isfield(atlases,'colormap')
         try
             jetlist=eval(atlases.colormap);
 
@@ -76,9 +70,6 @@ for nativemni=nm % switch between native and mni space atlases.
 
         end
         %colormap(atlases.colormap);
-
-
-
     else
         try
             jetlist=options.colormap;
@@ -89,9 +80,6 @@ for nativemni=nm % switch between native and mni space atlases.
             jetlist=jet;
         end
     end
-
-
-
 
     setinterpol=1;
 
@@ -122,7 +110,7 @@ for nativemni=nm % switch between native and mni space atlases.
     for atlas=1:length(atlases.names)
 
         [~,sidestr]=detsides(atlases.types(atlas));
-        for side=detsides(atlases.types(atlas));
+        for side=detsides(atlases.types(atlas))
 
             %             if ischar(atlases.pixdim{atlas,side}) % we are dealing with fibers
             %
@@ -134,7 +122,6 @@ for nativemni=nm % switch between native and mni space atlases.
             %
             %
             %             else
-
 
             fv=atlases.fv{atlas,side};
 
@@ -189,10 +176,6 @@ for nativemni=nm % switch between native and mni space atlases.
             pixdim=atlases.pixdim{atlas,side};
             colorc=nan;
 
-            %
-            %             end
-
-
             % show atlas label
 
             if size(XYZ.mm,1)>1 % exception for single-coordinate atlases...
@@ -216,18 +199,15 @@ for nativemni=nm % switch between native and mni space atlases.
                 break
             end
 
-
             set(0,'CurrentFigure',resultfig);
 
             visible='on';
             if isfield(atlases,'presets')
-            if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
-                visible='off';
-            end
+                if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
+                    visible='off';
+                end
             end
             atlassurfs(atlascnt,1)=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
-
-            % end
 
             % export label and labelbutton
 
@@ -240,15 +220,12 @@ for nativemni=nm % switch between native and mni space atlases.
             end
             atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
 
-
             if ~exist('labelbutton','var')
                 labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'TooltipString','Labels');
                 labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'TooltipString','Label Color');
             end
 
             % make fv compatible for stats
-
-
 
             caxis([1 64]);
 
@@ -268,10 +245,8 @@ for nativemni=nm % switch between native and mni space atlases.
             % gather contact statistics
             if options.writeoutstats
                 try
-
                     if isfield(atlases.XYZ{atlas,side},'val') % volumetric atlas
                         thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
-
                         atsearch=KDTreeSearcher(XYZ.mm(XYZ.val>thresh,:));
                     else % fibertract
                         atsearch=KDTreeSearcher(XYZ.mm(:,1:3));
@@ -287,15 +262,11 @@ for nativemni=nm % switch between native and mni space atlases.
                         try
                             in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
                             Dh(in)=0;
-
                         end
                         ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
 
                         D(D<mean(pixdim))=0; % using mean here but assuming isotropic atlases in general..
                         ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
-
-
-
                     end
                 catch
                     warning('Statistics for tract atlas parts are not implemented yet.');
@@ -315,14 +286,17 @@ for nativemni=nm % switch between native and mni space atlases.
             if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
                 drawnow
             end
-
-
         end
     end
 
     % configure label button to work properly and hide labels as default.
     atlabelsvisible([],[],atlaslabels(:),'off');
-    set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(:),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(:),'off'},'State','off');
+    if ~isfield(atlases,'presets')
+        set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(:),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(:),'off'},'State','off');
+    else
+        presetShow = atlases.presets(atlases.defaultset).show;
+        set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(presetShow),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(presetShow),'off'},'State','off');
+    end
     set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
 
     setappdata(resultfig,'atlassurfs',atlassurfs);
@@ -679,6 +653,3 @@ for i = 1:blocks
     end
     in(j) = all((nrmls*testpts(j,:)' - aNr) >= -tol,1)';
 end
-
-
-

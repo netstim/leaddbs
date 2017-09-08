@@ -27,7 +27,7 @@ try
                 offfigtit='Check Coregistration';
             case 'atlcontrol'
                 sz=get(fighandle,'Position');
-                pos=[sz(3)-50-2 sz(4)-50-2 50 50];
+                pos=[sz(3)-50+4 sz(4)-50+8 50 50];
                 onfigtit='Atlas Control (busy...)';
                 offfigtit='Atlas Control';
             case 'anatomy'
