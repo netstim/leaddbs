@@ -1741,10 +1741,12 @@ else
    end
 end
 
-
-[~,ix]=ismember(S.model,get(handles.modelselect,'String'));
-set(handles.modelselect,'Value',ix);
-
+if isfield(S, 'model')
+    [~,ix]=ismember(S.model,get(handles.modelselect,'String'));
+    set(handles.modelselect,'Value',ix);
+else
+    set(handles.modelselect,'Value',1);
+end
 
 Ractive=S.active(1);
 Lactive=S.active(2);
