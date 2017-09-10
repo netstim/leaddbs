@@ -75,7 +75,9 @@ atlases{end+1} = 'Use none';
 
 set(handles.atlassetpopup,'String', atlases);
 [~, defix]=ismember(options.prefs.atlases.default, atlases);
+if defix
 set(handles.atlassetpopup,'Value',defix);
+end
 
 % setup vat functions
 cnt=1;

@@ -161,6 +161,9 @@ try set(handles.mirrorsides,'Value',M.ui.lc.mirrorsides); end
 % update selectboxes:
 try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
 try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
+if ~isfield(M.ui,'atlassetpopup')
+    M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
+end
 if M.ui.atlassetpopup>length(get(handles.atlassetpopup,'String'))
     M.ui.atlassetpopup=length(get(handles.atlassetpopup,'String'));
     set(handles.atlassetpopup,'Value',length(get(handles.atlassetpopup,'String')));
