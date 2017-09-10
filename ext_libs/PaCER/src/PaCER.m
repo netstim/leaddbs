@@ -37,11 +37,11 @@ if(~isa(niiCT, 'NiftiMod'))
     niiCT = NiftiMod(niiCT);
 end
 
-if(max(niiCT.voxsize) > 1.5)
-    warning('Slice thickness is greater than 1.5 mm! Independent contact detection is most likly not possible. Forcing contactAreaCenter based method.');
+if(max(niiCT.voxsize) > 1)
+    warning('Slice thickness is greater than 1 mm! Independent contact detection is most likly not possible. Forcing contactAreaCenter based method.');
     args.contactDetectionMethod = 'contactAreaCenter';
-elseif(max(niiCT.voxsize) > 1)
-    warning('Slice thickness is greater than 1 mm! Independet contact detection might not work reliable in this case. However, for certain electrode types with large contacts spacings you might be lucky.');
+elseif(max(niiCT.voxsize) > 0.7)
+    warning('Slice thickness is greater than 0.7 mm! Independet contact detection might not work reliable in this case. However, for certain electrode types with large contacts spacings you might be lucky.');
 end
 
 %% Run Algorithm

@@ -1,0 +1,7 @@
+*.asv
+*.m~
+*.mex*
+.DS_Store
+!*.png
+!*.mat
+
