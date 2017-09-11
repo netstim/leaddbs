@@ -339,7 +339,9 @@ for cvar=1:length(M.clinical.vars)
 end
 
 if isfield(M,'S')
+    try
     M.S(deleteentry)=[];
+    end
     setappdata(handles.leadfigure, 'S', M.S);
 end
 
@@ -372,6 +374,7 @@ try
 catch
     warning('Localizations seem not properly defined.');
 end
+ 
 options.elmodel=M.elstruct(1).elmodel;
 options=ea_resolve_elspec(options);
 options.prefs=ea_prefs(options.patientname);

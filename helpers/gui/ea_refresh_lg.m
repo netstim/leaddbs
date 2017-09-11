@@ -350,11 +350,12 @@ end
 
 % store everything in Model
 disp('Storing everything in model...');
+if ~isempty(M.patient.list)
 t=datetime('now');
 t.Format='uuuMMddHHmmss';
 M.ui.lastupdated=str2double(char(t));
 setappdata(handles.leadfigure,'M',M);
-
+end
 % refresh UI
 if ~isempty(M.vilist)
     set(handles.vilist,'String',M.vilist);
