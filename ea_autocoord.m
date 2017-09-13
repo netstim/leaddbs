@@ -299,5 +299,5 @@ switch model
     case 'Boston Scientific Vercise Directed'
         model='Boston Vercise Directional';
     otherwise
-        model='Unkown Electrode Type';
+        model=''; % 'Unkown Electrode Type'
 end
