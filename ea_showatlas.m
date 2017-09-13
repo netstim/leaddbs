@@ -102,7 +102,8 @@ for nativemni=nm % switch between native and mni space atlases.
                 ea_stats.patname{el,side}=elstruct(el).name;
             end
         end
-        ea_stats.atlases=atlases;
+        ea_stats.atlases.names=atlases.names; % only save basic atlases information.
+        ea_stats.atlases.types=atlases.types; % only save basic atlases information.
         ea_stats.electrodes=elstruct;
     end
 

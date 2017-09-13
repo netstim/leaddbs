@@ -265,8 +265,7 @@ for mcfi=usesubjects % iterate across subjects
                             end
                     end
                 end
-                
-                fX{s}(:,1)=fX{s}(:,1)+mean(thiscorr,2);
+                fX{s}(:,mcfi)=mean(thiscorr,2);
                 if isfield(dataset,'surf')
                     lh.fX{s}(:,mcfi)=mean(ls.thiscorr,2);
                     rh.fX{s}(:,mcfi)=mean(rs.thiscorr,2);
@@ -413,12 +412,10 @@ switch dataset.type
                 for s=1:size(seedfn,1) % subtract 1 in case of pmap command
                     
                    if owasempty
-                       keyboard
-                       outputfolder=ea_getoutputfolder(sfile{s});
+                       outputfolder=ea_getoutputfolder({sfile{s}});
                    end
-                    
                     % export mean
-                    M=nanmean(fX{s}');
+                    M=ea_nanmean(fX{s}',1);
                     mmap=dataset.vol.space;
                     mmap.dt=[16,0];
                     mmap.img(:)=0;
@@ -433,7 +430,7 @@ switch dataset.type
                     end
                     
                     % export variance
-                    M=nanvar(fX{s}');
+                    M=ea_nanvar(fX{s}');
                     mmap=dataset.vol.space;
                     mmap.dt=[16,0];
                     mmap.img(:)=0;
@@ -449,7 +446,7 @@ switch dataset.type
                     
                     if ~ispmap && isfield(dataset,'surf')
                         % lh surf
-                        lM=nanmean(lh.fX{s}');
+                        lM=ea_nanmean(lh.fX{s}');
                         lmmap=dataset.surf.l.space;
                         lmmap.dt=[16,0];
                         lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
@@ -463,7 +460,7 @@ switch dataset.type
                         end
                         
                         % rh surf
-                        rM=nanmean(rh.fX{s}');
+                        rM=ea_nanmean(rh.fX{s}');
                         rmmap=dataset.surf.r.space;
                         rmmap.dt=[16,0];
                         rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);

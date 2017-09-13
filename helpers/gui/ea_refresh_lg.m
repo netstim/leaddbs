@@ -289,6 +289,16 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                 load([M.patient.list{pt},filesep,'ea_stats']);
                 ea_stats=ea_rmssstimulations(ea_stats,M); % only preserve stimulations with label 'gs_groupid'.
                 M.stats(pt).ea_stats=ea_stats;
+                if isfield(M.stats(pt).ea_stats.atlases,'rebuild') % old stats format with complete atlas table - delete, will lead to large M file
+                   M.stats(pt).ea_stats=rmfield(M.stats(pt).ea_stats,'atlases');
+                   M.stats(pt).ea_stats.atlases.names=ea_stats.atlases.names;
+                   M.stats(pt).ea_stats.atlases.types=ea_stats.atlases.types;
+                   
+                   % also correct single subject file:
+                   load([M.patient.list{pt},filesep,'ea_stats']);
+                   ea_stats.atlases=M.stats(pt).ea_stats.atlases;
+                   save([M.patient.list{pt},filesep,'ea_stats'],'ea_stats','-v7.3');
+                end
             end
             
             if ~isfield(M,'stats')
