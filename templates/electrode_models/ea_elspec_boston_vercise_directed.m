@@ -46,6 +46,12 @@ electrode.coords_mm(7,:)=[0 0 4.75]+[0.33,-0.66,0];
 electrode.coords_mm(8,:)=[0 0 6.75];
 
 
-
+%% saving electrode struct
 save('boston_vercise_directed.mat','electrode');
+
+%% create and save _vol file
+filename = ['.\Boston_Vercise_Directed_Components\final.1'];
+[node,~,face]=readtetgen(filename);
+save('boston_vercise_directed_vol.mat','face','node')
+clear node face
 end
