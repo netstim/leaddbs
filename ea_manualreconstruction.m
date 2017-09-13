@@ -126,11 +126,8 @@ function ea_endfcn(mcfig)
     options.hybridsave=1;
     options.native=1;
     [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
-    manually_corrected=getappdata(mcfig,'manually_corrected'); % could be 2 which means lr flip and rotations have been adapted already.
-    if ~manually_corrected
-        manually_corrected=1;
-    end
-    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_corrected,options);
+
+    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
     options=getappdata(mcfig,'origoptions');
     try options=rmfield(options,'hybridsave'); end
 ea_busyaction('off',mcfig,'reco');

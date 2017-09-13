@@ -212,6 +212,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
                     end
                 end
+                options.hybridsave=1;
+
                 % save reconstruction results
                 ea_methods(options,...
                     ['DBS-Electrodes were automatically pre-localized in native & template space using Lead-DBS software',...
