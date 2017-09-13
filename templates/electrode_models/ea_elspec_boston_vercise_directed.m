@@ -9,7 +9,7 @@ function electrode=ea_elspec_boston_vercise_directed(varargin)
 % Andreas Horn
 
 %% import insulations and contacts from subfolder
-for k = 1:14
+for k = 1:16
     filename = ['.\Boston_Vercise_Directed_Components\Insulations\' 'ins' num2str(k) '.1'];
     [node,~,face]=readtetgen(filename);
     electrode.insulation(k).vertices = node;
@@ -17,7 +17,7 @@ for k = 1:14
     clear face node filename
 end
 
-for k = 1:8
+for k = 1:9
     filename = ['.\Boston_Vercise_Directed_Components\Contacts\' 'con' num2str(k) '.1'];
     [node,~,face]=readtetgen(filename);
     electrode.contacts(k).vertices = node;
@@ -36,14 +36,14 @@ electrode.numel = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
 
-electrode.coords_mm(1,:)=coords_mm{side}(1,:);
-electrode.coords_mm(2,:)=coords_mm{side}(2,:)+[-0.66,0,0];
-electrode.coords_mm(3,:)=coords_mm{side}(2,:)+[0.33,0.66,0];
-electrode.coords_mm(4,:)=coords_mm{side}(2,:)+[0.33,-0.66,0];
-electrode.coords_mm(5,:)=coords_mm{side}(3,:)+[-0.66,0,0];
-electrode.coords_mm(6,:)=coords_mm{side}(3,:)+[0.33,0.66,0];
-electrode.coords_mm(7,:)=coords_mm{side}(3,:)+[0.33,-0.66,0];
-electrode.coords_mm(8,:)=coords_mm{side}(4,:);
+electrode.coords_mm(1,:)=[0 0 0.75];
+electrode.coords_mm(2,:)=[0 0 2.75]+[-0.66,0,0];
+electrode.coords_mm(3,:)=[0 0 2.75]+[0.33,0.66,0];
+electrode.coords_mm(4,:)=[0 0 2.75]+[0.33,-0.66,0];
+electrode.coords_mm(5,:)=[0 0 4.75]+[-0.66,0,0];
+electrode.coords_mm(6,:)=[0 0 4.75]+[0.33,0.66,0];
+electrode.coords_mm(7,:)=[0 0 4.75]+[0.33,-0.66,0];
+electrode.coords_mm(8,:)=[0 0 6.75];
 
 
 
