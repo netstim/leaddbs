@@ -28,7 +28,7 @@ else
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
     
     if isfield(options,'hybridsave');
-        try
+        
             ea_dispt('Warping fiducials to native space');
             ea_reconstruction2native(options);
             if options.prefs.reco.saveACPC
@@ -37,7 +37,7 @@ else
             end
             load([options.root,options.patientname,filesep,'ea_reconstruction']);
             reco=ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
-        end
+        
         save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
     end
     
@@ -64,7 +64,7 @@ end
 if ~reco.props.manually_corrected
     options.hybridsave=1;
     for side=options.sides
-        if ~reco.mni.markers(side).head(2)>reco.mni.markers(side).y(2) % FIX ME need to check whether > or < is correct here.
+        if ~reco.mni.markers(side).head(2)<reco.mni.markers(side).y(2) % FIX ME need to check whether > or < is correct here.
             reco.mni.markers(side).y=reco.mni.markers(side).head+2*(reco.mni.markers(side).head-reco.mni.markers(side).y); % 180 deg flip
         end
         if ~reco.mni.markers(side).head(1)>reco.mni.markers(side).x(1) % FIX ME need to check whether > or < is correct here.
