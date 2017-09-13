@@ -61,6 +61,13 @@ guidata(hObject, handles);
 % set lead path
 if ~isdeployed
     ea_setpath;
+    if nargin>3
+        switch varargin{1}
+            case 'path'
+                delete(hObject)
+                return
+        end
+    end
 else
     fprintf(1, '%s\n', ctfroot);
 end

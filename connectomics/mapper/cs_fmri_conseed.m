@@ -182,10 +182,11 @@ else
             break
         end
     end
+    numsub=length(usesubjects);
 end
 
 
-
+scnt=1;
 for mcfi=usesubjects % iterate across subjects
     howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
     switch cmd
@@ -265,10 +266,10 @@ for mcfi=usesubjects % iterate across subjects
                             end
                     end
                 end
-                fX{s}(:,mcfi)=mean(thiscorr,2);
+                fX{s}(:,scnt)=mean(thiscorr,2);
                 if isfield(dataset,'surf')
-                    lh.fX{s}(:,mcfi)=mean(ls.thiscorr,2);
-                    rh.fX{s}(:,mcfi)=mean(rs.thiscorr,2);
+                    lh.fX{s}(:,scnt)=mean(ls.thiscorr,2);
+                    rh.fX{s}(:,scnt)=mean(rs.thiscorr,2);
                 end
                 
                 if writeoutsinglefiles && (~strcmp(dataset.type,'fMRI_matrix'))
@@ -321,13 +322,13 @@ for mcfi=usesubjects % iterate across subjects
             
             
             for s=1:size(stc,2)
-                fX{s}(:,mcfi)=mean(thiscorr{s},2);
+                fX{s}(:,scnt)=mean(thiscorr{s},2);
                 if writeoutsinglefiles
                     ccmap=dataset.vol.space;
                     ccmap.dt=[16 0];
                     ccmap.img=single(ccmap.img);
                     ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_pmap.nii'];
-                    ccmap.img(omaskidx)=fX{s}(:,mcfi);
+                    ccmap.img(omaskidx)=fX{s}(:,scnt);
                     spm_write_vol(ccmap,ccmap.img);
                 end
             end
@@ -370,13 +371,14 @@ for mcfi=usesubjects % iterate across subjects
             end
             thiscorr=mean(thiscorr,2);
             X(:)=thiscorr;
-            fX(:,mcfi)=X(logical(triu(ones(numseed),1)));
+            fX(:,scnt)=X(logical(triu(ones(numseed),1)));
             
             if writeoutsinglefiles
                 save([outputfolder,addp,'corrMx_',dataset.vol.subIDs{mcfi}{1},'.mat'],'X','-v7.3');
             end
     end
-        ea_dispercent(mcfi/numsub);
+        ea_dispercent(scnt/numsub);
+        scnt=scnt+1;
 end
 ea_dispercent(1,'end');
 ispmap=strcmp(cmd,'pmap');
