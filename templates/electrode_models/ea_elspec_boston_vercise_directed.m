@@ -9,7 +9,7 @@ function electrode=ea_elspec_boston_vercise_directed(varargin)
 % Andreas Horn
 
 %% import insulations and contacts from subfolder
-for k = 1:16
+for k = 1:14
     filename = ['.\Boston_Vercise_Directed_Components\Insulations\' 'ins' num2str(k) '.1'];
     [node,~,face]=readtetgen(filename);
     electrode.insulation(k).vertices = node;
@@ -17,7 +17,7 @@ for k = 1:16
     clear face node filename
 end
 
-for k = 1:9
+for k = 1:8
     filename = ['.\Boston_Vercise_Directed_Components\Contacts\' 'con' num2str(k) '.1'];
     [node,~,face]=readtetgen(filename);
     electrode.contacts(k).vertices = node;
@@ -50,7 +50,7 @@ electrode.coords_mm(8,:)=[0 0 6.75];
 save('boston_vercise_directed.mat','electrode');
 
 %% create and save _vol file
-filename = ['.\Boston_Vercise_Directed_Components\final.1'];
+filename = ['.\Boston_Vercise_Directed_Components\final_cylinder'];
 [node,~,face]=readtetgen(filename);
 save('boston_vercise_directed_vol.mat','face','node')
 clear node face
