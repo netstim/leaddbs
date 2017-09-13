@@ -233,7 +233,8 @@ ea_busyaction('on',leadfigure,'mapper');
 
 
 options=ea_handles2options(handles);
-options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+options.uivatdirs=getappdata(handles.leadfigure,'uipatdir');
+options.uipatdirs={''};
 ea_run('run',options);
 
 ea_busyaction('off',leadfigure,'mapper');
@@ -249,7 +250,8 @@ leadfigure=handles.leadfigure;
 ea_busyaction('on',leadfigure,'mapper');
 
 options=ea_handles2options(handles);
-options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+options.uivatdirs=getappdata(handles.leadfigure,'uipatdir');
+options.uipatdirs={''};
 ea_run('export',options);
 
 ea_busyaction('off',leadfigure,'mapper');

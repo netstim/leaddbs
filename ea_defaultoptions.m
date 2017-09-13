@@ -38,7 +38,7 @@ if ~isfield(options,'verbose')
 end
 
 if ~isfield(options,'sides')
-    options.sides=[1:2]; %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
+    options.sides=[1:2]; %side=1 -> right electrode, side=2 -> left electrode. both: [1:2]
 end
 
 if ~isfield(options,'maskwindow')

@@ -1989,9 +1989,9 @@ switch options.elspec.numel
         warning('Only electrode models with 4 or 8 contacts are fully supported.');
 end
 
-if strcmp(options.elspec.matfname,'boston_vercise_directed')
-    ea_error('VTA modeling for directed leads is not yet supported.');
-end
+%if strcmp(options.elspec.matfname,'boston_vercise_directed')
+%    ea_error('VTA modeling for directed leads is not yet supported.');
+%end
 
 switch model
     case 'SimBio/FieldTrip (see Horn 2017)'

@@ -22,7 +22,7 @@ if options.lcm.func.do
             options.lcm.seeds=originalseeds;
         end
         options.lcm.seeds=ea_resolvevatseeds(options,'fMRI');
-        if isempty(options.lcm.odir)
+        if isempty(options.lcm.odir) && ~strcmp(options.lcm.seeddef,'vats')
             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
         end
     end
@@ -42,7 +42,6 @@ end
 
 function seeds=ea_resolvevatseeds(options,modality)
 disp('Preparing VATs as seedfiles...');
-vatdir=[options.root,options.patientname,filesep,'stimulations',filesep,options.lcm.seeds,filesep];
 
 suffices={'binary','efield','efield_gauss'};
 
@@ -69,6 +68,10 @@ for suffix=dowhich
     % prepare for dMRI
     switch modality
         case 'dMRI'
+            seeds=cell(0);
+            for pt=1:length(options.uivatdirs)
+                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
+
             %if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file');
                 cnt=1;
                 for side=1:2
@@ -78,7 +81,7 @@ for suffix=dowhich
                         case 2
                             sidec='left';
                     end
-
+                    
                     if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                         copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
                         ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],dinterp);
@@ -95,16 +98,21 @@ for suffix=dowhich
                 ea_write_nii(Cnii);
                 ea_crop_nii(Cnii.fname);
                 delete([vatdir,'tmp_*']);
-
+                
                 ea_split_nii_lr(Cnii.fname);
                 disp('Done.');
-            %end
-            if keepthisone
-                seeds{1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
+                %end
+                if keepthisone
+                    seeds{end+1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
+                end
             end
         case 'fMRI'
             % prepare for fMRI
             %if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file');
+            seeds=cell(0);
+            for pt=1:length(options.uivatdirs)
+                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
+
                 cnt=1;
                 for side=1:2
                     switch side
@@ -113,7 +121,7 @@ for suffix=dowhich
                         case 2
                             sidec='left';
                     end
-
+                    
                     if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                         copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
                         tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
@@ -131,7 +139,7 @@ for suffix=dowhich
                         d.dataset.vol.space.dt=[16,0];
                         ea_write_nii(d.dataset.vol.space);
                         ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],1);
-
+                        
                         nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                         nii(cnt).img(isnan(nii(cnt).img))=0;
                         if ~any(nii(cnt).img(:))
@@ -139,7 +147,7 @@ for suffix=dowhich
                         end
                         cnt=cnt+1;
                     end
-
+                    
                 end
                 Cnii=nii(1);
                 for n=2:length(nii)
@@ -148,12 +156,13 @@ for suffix=dowhich
                 Cnii.fname=[vatdir,'vat_seed_compound_fMRI',addstr,'.nii'];
                 ea_write_nii(Cnii);
                 delete([vatdir,'tmp_*']);
-
+                
                 ea_split_nii_lr(Cnii.fname);
                 disp('Done.');
-            %end
-            if keepthisone
-                seeds{1}=[vatdir,'vat_seed_compound_fMRI',addstr,'.nii'];
+                %end
+                if keepthisone
+                    seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,'.nii'];
+                end
             end
     end
 end

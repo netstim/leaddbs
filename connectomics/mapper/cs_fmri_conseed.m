@@ -58,12 +58,14 @@ end
 [sfile,roilist]=ea_handleseeds(sfile);
 
 
-
+owasempty=0;
 if ~exist('outputfolder','var')
-    ea_getoutputfolder(sfile)
+    outputfolder=ea_getoutputfolder(sfile);
+    owasempty=1;
 else
     if isempty(outputfolder) % from shell wrapper.
-        ea_getoutputfolder(sfile)
+        outputfolder=ea_getoutputfolder(sfile);
+        owasempty=1;
     end
     if ~strcmp(outputfolder(end),filesep)
         outputfolder=[outputfolder,filesep];
@@ -142,6 +144,7 @@ pixdim=length(dataset.vol.outidx);
 
 numsub=length(dataset.vol.subIDs);
 % init vars:
+
 switch cmd
     case {'seed','pseed'}
         for s=1:numseed
@@ -263,7 +266,7 @@ for mcfi=usesubjects % iterate across subjects
                     end
                 end
                 
-                fX{s}(:,mcfi)=mean(thiscorr,2);
+                fX{s}(:,1)=fX{s}(:,1)+mean(thiscorr,2);
                 if isfield(dataset,'surf')
                     lh.fX{s}(:,mcfi)=mean(ls.thiscorr,2);
                     rh.fX{s}(:,mcfi)=mean(rs.thiscorr,2);
@@ -273,7 +276,7 @@ for mcfi=usesubjects % iterate across subjects
                     ccmap=dataset.vol.space;
                     ccmap.img=single(ccmap.img);
                     ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr.nii'];
-                    ccmap.img(omaskidx)=fX{s}(:,mcfi);
+                    ccmap.img(omaskidx)=mean(thiscorr,2);
                     ccmap.dt=[16,0];
                     spm_write_vol(ccmap,ccmap.img);
                 end
@@ -408,6 +411,11 @@ switch dataset.type
         switch cmd
             case {'seed','pmap','pseed'}
                 for s=1:size(seedfn,1) % subtract 1 in case of pmap command
+                    
+                   if owasempty
+                       keyboard
+                       outputfolder=ea_getoutputfolder(sfile{s});
+                   end
                     
                     % export mean
                     M=nanmean(fX{s}');
