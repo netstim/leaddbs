@@ -60,9 +60,8 @@ for side=sides
     ea_dispercent(0,'Iterating voxels');
     dimen=length(XYZ);
     N=length(M.patient.list(pts));
-    
     I=M.clinical.vars{regno}(pts,side);
-    
+
     for vx=1:dimen
         %D=squareform(pdist([XYZ(vx,:);acs]));
         D=-(pdist([XYZ(vx,:);acs]));

@@ -143,6 +143,20 @@ disp([num2str(numseed),' seeds, command = ',cmd,'.']);
 pixdim=length(dataset.vol.outidx);
 
 numsub=length(dataset.vol.subIDs);
+
+if ~exist('subset','var') % use all subjects
+    usesubjects=1:numsub;
+else
+    for ds=1:length(dataset.subsets)
+        if strcmp(subset,dataset.subsets(ds).name)
+            usesubjects=dataset.subsets(ds).subs;
+            break
+        end
+    end
+    numsub=length(usesubjects);
+end
+
+
 % init vars:
 
 switch cmd
@@ -173,17 +187,6 @@ end
 
 ea_dispercent(0,'Iterating through subjects');
 
-if ~exist('subset','var') % use all subjects
-    usesubjects=1:numsub;
-else
-    for ds=1:length(dataset.subsets)
-        if strcmp(subset,dataset.subsets(ds).name)
-            usesubjects=dataset.subsets(ds).subs;
-            break
-        end
-    end
-    numsub=length(usesubjects);
-end
 
 
 scnt=1;
