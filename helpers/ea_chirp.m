@@ -4,7 +4,7 @@ if ~exist('options','var')
 end
 try
     if options.prefs.machine.chirp
-        load chirp
+        load(fullfile(matlabroot, 'toolbox/matlab/audiovideo/chirp.mat'));
         sound(y(1:1000),Fs/2);
     end
 end
