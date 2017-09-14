@@ -9,7 +9,7 @@ directory=[options.root,options.patientname,filesep];
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
 try
 	if ~exist([directory,ftrfname,'.trk'],'file')
-        display(sprintf('\nExporting unnormalized fibers to TrackVis...'));
+        fprintf('\nExporting unnormalized fibers to TrackVis...\n');
         dnii=ea_load_nii([directory,options.prefs.b0]);
 
         specs.origin=[0,0,0];
@@ -72,12 +72,12 @@ if vizz
     plot3(thisfib(:,1),thisfib(:,2),thisfib(:,3),'.','color',[0.1707    0.2919    0.7792]);
 end
 
-display(sprintf('\nNormalizing fibers...'));
+fprintf('\nNormalizing fibers...\n');
 
 %% Normalize fibers
 
 %% map from b0 voxel space to anat mm and voxel space
-display(sprintf('\nMapping from b0 to anat...'));
+fprintf('\nMapping from b0 to anat...\n');
 ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
 [~, mov] = fileparts(options.prefs.b0);
 [~, fix] = fileparts(options.prefs.prenii_unnormalized);
@@ -100,7 +100,7 @@ if vizz
 end
 
 %% map from anat voxel space to mni mm and voxel space
-display(sprintf('\nMapping from anat to mni...'));
+fprintf('\nMapping from anat to mni...\n');
 [wfibsmm_mni, wfibsvox_mni] = ea_map_coords(wfibsvox_anat', ...
                                             refanat, ...
                                             [directory,'y_ea_inv_normparams.nii'], ...
@@ -111,7 +111,7 @@ wfibsvox_mni = wfibsvox_mni';
 
 mniaffine=spm_get_space(refnorm);
 
-display(sprintf('\nNormalization done.'));
+fprintf('\nNormalization done.\n');
 
 %% cleansing fibers..
 if cleanse_fibers % delete anything too far from wm.
@@ -148,7 +148,7 @@ ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'_vox
 
 %% create normalized trackvis version
 try
-    display(sprintf('\nExporting normalized fibers to TrackVis...'));
+    fprintf('\nExporting normalized fibers to TrackVis...\n');
     dnii=ea_load_nii(refnorm);
 
     specs.origin=[0,0,0];
