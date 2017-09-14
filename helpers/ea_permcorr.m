@@ -1,4 +1,4 @@
-function [r,p,pr,pl]=mypermCorr(x,y,type,ni)
+function [r,p,pr,pl]=ea_permcorr(x,y,type,ni)
 
 % [r,p]=permCorr(x,y,type,ni)
 % data x subjects
@@ -80,7 +80,7 @@ end
 % % Phase 2: Linear Search
 % % Remember Bineary search could not find the value in x
 % % Therefore from > to. Search range is to:from
-y=x(to:from);             %vector to be serach for closest value
+y=x(to:from);             %vector to be search for closest value
 [ignore,mini]=min(abs(y-v));
 cv=y(mini);
 % % cv: closest value

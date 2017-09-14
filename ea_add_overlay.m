@@ -60,7 +60,7 @@ for atlas=1:length(atlases.names)
         planehts=planemm(:,ea_intersecdim(tracor));
         dists=abs(atlhts-planehts(1));
         try
-            dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*1;
+            dists=dists<abs(atlases.XYZ{atlas,side}.dims(ea_intersecdim(tracor)))*2;
         catch % fibertracts
             dists=dists<1*1;
         end

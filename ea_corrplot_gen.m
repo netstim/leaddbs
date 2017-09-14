@@ -10,13 +10,13 @@ if nargin>3
 end
 if nargin>4
     if ~isempty(varargin{5})
-    if ischar(varargin{5}) || isequal([1 3],size(varargin{5}))
-        color=varargin{5};
+        if ischar(varargin{5}) || isequal([1 3],size(varargin{5}))
+            color=varargin{5};
+        else
+            groups=varargin{5};
+        end
     else
-        groups=varargin{5};
-    end
-    else
-       groups=ones(length(X),1);
+        groups=ones(length(X),1);
     end
 else
     groups=ones(length(X),1);
