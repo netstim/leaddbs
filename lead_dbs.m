@@ -72,16 +72,8 @@ end
 
 options.prefs=ea_prefs('');
 
-
-%% can rm if statement once released.
-% hide Reconmethod for now:
-
-if ~options.prefs.env.dev
-
     set(handles.reconmethod,'Visible','off');
     set(handles.reconmethodtxt,'Visible','off');
-
-end
 
 ea_init_coregmrpopup(handles,1);
 ea_init_coregctpopup(handles,options);
