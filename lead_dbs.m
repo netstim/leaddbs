@@ -72,8 +72,6 @@ end
 
 options.prefs=ea_prefs('');
 
-    set(handles.reconmethod,'Visible','off');
-    set(handles.reconmethodtxt,'Visible','off');
 
 ea_init_coregmrpopup(handles,1);
 ea_init_coregctpopup(handles,options);
