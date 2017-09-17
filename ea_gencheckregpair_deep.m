@@ -1,4 +1,4 @@
-function ea_gencheckregpair(moving,fixed,outfn)
+function ea_gencheckregpair_deep(moving,fixed,outfn)
 % function that uses FSLs SLICER tool to create a checkreg figure.
 
 basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
