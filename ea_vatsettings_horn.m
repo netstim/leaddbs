@@ -79,6 +79,7 @@ setappdata(handles.condpresets,'data',condv);
 
 
 etv={'E-Field Threshold Presets:',nan
+    'General Heuristic (e.g. Hemm 2005. Vasques 2009, Astrom 2009, Horn 2017)',0.2
     'Heuristic GPI (e.g. Hemm 2005, Vasques 2009)',0.2
     'Heuristic STN (Maedler 2012, Astrom 2014)',0.19
     'Heuristic VIM (Kuncel 2008, Astrom 2014)',0.165
