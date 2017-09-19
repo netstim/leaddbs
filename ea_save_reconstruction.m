@@ -36,18 +36,22 @@ else
                 ea_reconstruction2acpc(options);
             end
             load([options.root,options.patientname,filesep,'ea_reconstruction']);
-            reco=ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
+            [reco,corrected]=ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
         
         save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
+        if corrected
+            options.hybridsave=1;
+            ea_save_reconstruction(reco.mni.coords_mm,reco.mni.trajectory,reco.mni.markers,elmodel,manually_corrected,options)
+        end
     end
     
 end
 
 
-function reco=ea_checkswap_lr(reco,options)
+function [reco,corrected]=ea_checkswap_lr(reco,options)
 options.native=0; % this can only be done in MNI space.
 %[coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
+corrected=0;
 if mean(reco.mni.coords_mm{1}(:,1))<mean(reco.mni.coords_mm{2}(:,1)) % RL swapped
     % swap RL:
     options.hybridsave=1;
@@ -58,18 +62,40 @@ if mean(reco.mni.coords_mm{1}(:,1))<mean(reco.mni.coords_mm{2}(:,1)) % RL swappe
     reco.mni.coords_mm=ncoords_mm;
     reco.mni.trajectory=ntrajectory;
     reco.mni.markers=nmarkers;
+    corrected=1;
 end
+
+vizz=0;
 
 % check that markers are correct (important for directional leads):
 if ~reco.props.manually_corrected
     options.hybridsave=1;
+    
     for side=options.sides
-        if ~reco.mni.markers(side).head(2)<reco.mni.markers(side).y(2) % FIX ME need to check whether > or < is correct here.
-            reco.mni.markers(side).y=reco.mni.markers(side).head+2*(reco.mni.markers(side).head-reco.mni.markers(side).y); % 180 deg flip
+        if vizz
+        figure
+        hold on
+        plot3(reco.mni.trajectory{side}(:,1),reco.mni.trajectory{side}(:,2),reco.mni.trajectory{side}(:,3),'r-');
+        plot3(reco.mni.markers(side).head(:,1),reco.mni.markers(side).head(:,2),reco.mni.markers(side).head(:,3),'y*');
+        plot3(reco.mni.markers(side).tail(:,1),reco.mni.markers(side).tail(:,2),reco.mni.markers(side).tail(:,3),'m*');
+        plot3(reco.mni.markers(side).x(:,1),reco.mni.markers(side).x(:,2),reco.mni.markers(side).x(:,3),'k*');
+        plot3(reco.mni.markers(side).y(:,1),reco.mni.markers(side).y(:,2),reco.mni.markers(side).y(:,3),'g*');
         end
-        if ~reco.mni.markers(side).head(1)>reco.mni.markers(side).x(1) % FIX ME need to check whether > or < is correct here.
-            reco.mni.markers(side).x=reco.mni.markers(side).head+2*(reco.mni.markers(side).head-reco.mni.markers(side).x);
+        if reco.mni.markers(side).head(2)<reco.mni.markers(side).y(2) % FIX ME need to check whether > or < is correct here.
+            reco.mni.markers(side).y=reco.mni.markers(side).head+(reco.mni.markers(side).head-reco.mni.markers(side).y); % 180 deg flip
+        corrected=1;
         end
+        if reco.mni.markers(side).head(1)>reco.mni.markers(side).x(1) % FIX ME need to check whether > or < is correct here.
+            reco.mni.markers(side).x=reco.mni.markers(side).head+(reco.mni.markers(side).head-reco.mni.markers(side).x);
+        corrected=1;
+        end
+        if vizz
+            plot3(reco.mni.markers(side).x(:,1),reco.mni.markers(side).x(:,2),reco.mni.markers(side).x(:,3),'ko');
+            plot3(reco.mni.markers(side).y(:,1),reco.mni.markers(side).y(:,2),reco.mni.markers(side).y(:,3),'go');
+            axis equal
+            keyboard
+        end
+        
     end
     reco.mni.coords_mm=ea_resolvecoords(reco.mni.markers,options);
 end
