@@ -1,6 +1,6 @@
 function ea_deselectall_dicom(handles)
 if get(handles.dicomcheck,'Value') || get(handles.assignnii,'Value')
-    
+
     % DBS:
     try set(handles.coregct_checkbox,'Enable','off'); end
     try set(handles.coregctcheck,'Enable','off'); end
@@ -38,9 +38,9 @@ else
     try set(handles.writeout2d_checkbox,'Enable','on'); end
     try set(handles.render_checkbox,'Enable','on'); end
     try set(handles.scrf,'Enable','on'); end
-    try    ea_switchctmr(handles,get(handles.MRCT,'Value')); end
+    try ea_switchctmr(handles,get(handles.MRCT,'Value')); end
 
-    
+
     % Connectome:
     try set(handles.perf_ft,'Enable','on'); end
     try set(handles.normalize_fibers,'Enable','on'); end
@@ -52,7 +52,7 @@ else
     try set(handles.struc_func_sim,'Enable','on'); end
     try set(handles.eigenvector_centrality,'Enable','on'); end
     try set(handles.nodal_efficiency,'Enable','on'); end
-    
-    
+
+
 end
 

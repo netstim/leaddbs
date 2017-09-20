@@ -9,10 +9,10 @@ end
 % determine if patientfolder is set
 switch chooseboxname
     case 'Choose Patient Directory'
-        outdir=[ea_getearoot];
+        outdir=ea_getearoot;
     otherwise
         if strcmp(chooseboxname(1:8),'Multiple')
-        	outdir=[ea_getearoot];
+        	outdir=ea_getearoot;
         else
             outdir=[get(handles.patdir_choosebox,'String'),filesep];
         end
@@ -21,6 +21,7 @@ end
 try % only works when calling from core lead (not lead_connectome)
     ea_updatestatus(handles);
 end
+
 options=ea_handles2options(handles);
 try
     save([outdir,'ea_ui'],'-struct','options');
