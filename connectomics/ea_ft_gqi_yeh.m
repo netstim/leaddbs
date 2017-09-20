@@ -33,7 +33,7 @@ btable=[bvals;bvecs];
 % build white matter mask
 
 if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file');
-ea_gentrackingmask(options,1)
+    ea_gentrackingmask(options,1)
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];

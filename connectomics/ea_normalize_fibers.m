@@ -78,9 +78,11 @@ fprintf('\nNormalizing fibers...\n');
 
 %% map from b0 voxel space to anat mm and voxel space
 fprintf('\nMapping from b0 to anat...\n');
-ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
 [~, mov] = fileparts(options.prefs.b0);
 [~, fix] = fileparts(options.prefs.prenii_unnormalized);
+if isempty(dir([directory, mov, '2', fix, '_*.mat']))
+    ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
+end
 [~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
                                    refb0, ...
                                    [directory, mov, '2', fix, '.mat'], ...
@@ -160,9 +162,6 @@ try
     ea_ftr2trk(ftrfname,[directory,'connectomes',filesep,'dMRI',filesep],specs); % export normalized ftr to .trk
     disp('Done.');
 end
-
-
-
 
 %% add methods dump:
 cits={

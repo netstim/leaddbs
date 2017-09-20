@@ -18,7 +18,6 @@ if options.lc.struc.ft.normalize % normalize fibertracts ? for now these should 
     ea_normalize_fibers(options);
 end
 
-
 % create structural CM
 if options.lc.struc.compute_CM
     if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
@@ -79,7 +78,7 @@ if options.lc.func.compute_CM
         % create connectivity matrix for each rs-fMRI file
         if ~exist([expfolder,name,'_fMRI_CM.mat'],'file')
             disp(['Creating connectivity matrix for rs-fMRI file #',num2str(irest),': ',options.prefs.rest]);
-            [fMRI_CM,gmtc]=ea_createCM_fmri(options);
+            [fMRI_CM, gmtc]=ea_createCM_fmri(options);
             cm=ea_export_CM_png(fMRI_CM,['fMRI Connectivity matrix for ',name],options);
             save([expfolder,options.prefs.gmtc],'gmtc');
             save([expfolder,name,'_fMRI_CM.mat'],'fMRI_CM','-v7.3');

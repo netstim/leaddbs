@@ -69,8 +69,7 @@ switch options.coregmr.method
             moving,...
             ofile,writeoutmat,otherfiles);
 end
-ea_conformspaceto(fixed,moving); % fix qform/sform issues.
-
+ea_conformspaceto(fixed, ofile); % fix qform/sform issues.
 
 
 function otherfiles=prepforspm(otherfiles)

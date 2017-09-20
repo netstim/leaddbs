@@ -8,16 +8,11 @@ expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,optio
         disp('Done preprocessing fMRI data.');
     end
 
-if ~exist([expfolder,options.prefs.gmtc],'file');
+if ~exist([expfolder,options.prefs.gmtc],'file')
     disp('No timecourses found, processing...');
-    
     gmtc=ea_extract_timecourses(options);
 else
     load([expfolder,options.prefs.gmtc]);
 end
 
 fMRI_CM=corrcoef(gmtc);
-
-
-
-
