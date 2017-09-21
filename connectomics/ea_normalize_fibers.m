@@ -35,6 +35,7 @@ if vizz
     [xx,yy,zz]=ind2sub(size(b0.img),find(b0.img>max(b0.img(:))/7));
     plot3(xx(1:10:end),yy(1:10:end),zz(1:10:end),'.','color',[0.9598    0.9218    0.0948]);
     axis vis3d off tight equal;
+    title("b0 space")
     hold on
 
     % plot anat, voxel space
@@ -44,6 +45,7 @@ if vizz
     [xx,yy,zz]=ind2sub(size(anat.img),find(anat.img>max(anat.img(:))/3));
     plot3(xx(1:1000:end),yy(1:1000:end),zz(1:1000:end),'.','color',[0.9598    0.9218    0.0948]);
     axis vis3d off tight equal;
+    title("anat space")
     hold on
 
     % plot MNI, world space
@@ -54,6 +56,7 @@ if vizz
     XYZ_mm=[xx,yy,zz,ones(length(xx),1)]*mni.mat';
     plot3(XYZ_mm(1:10000:end,1),XYZ_mm(1:10000:end,2),XYZ_mm(1:10000:end,3),'.','color',[0.9598    0.9218    0.0948]);
     axis vis3d off tight equal;
+    title("MNI space")
     hold on
 end
 
