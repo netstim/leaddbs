@@ -426,6 +426,12 @@ try
         M.elstruct(pt).activecontacts=M.S(pt).activecontacts;
     end
 end
+
+try
+    for pt=1:length(M.elstruct)
+        M.elstruct(pt).groupcolors=M.groups.color(M.patient.group(pt),:);
+    end
+end
 options.groupmode=1;
 options.modality=3; % use template image
 options.patient_list=M.patient.list;
