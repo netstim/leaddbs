@@ -91,7 +91,11 @@ for side=1:length(options.sides)
             elrender{side}(cnt)=patch(electrode.insulation(ins));
             
             if isfield(elstruct,'group')
+                try
                 usecolor=elstruct.groupcolors(elstruct.group,:);
+                catch
+                    keyboard
+                end
             else
                 usecolor=elspec.lead_color;
             end

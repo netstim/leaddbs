@@ -429,7 +429,7 @@ end
 
 try
     for pt=1:length(M.elstruct)
-        M.elstruct(pt).groupcolors=M.groups.color(M.patient.group(pt),:);
+        M.elstruct(pt).groupcolors=M.groups.color;
     end
 end
 options.groupmode=1;

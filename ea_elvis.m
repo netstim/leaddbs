@@ -126,6 +126,7 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
         for pt=1:length(elstruct)
             % show electrodes..
             try
+                
                 [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
             catch
                 ea_error(['Couldn''t visualize electrode from patient ',num2str(pt),'.']);
