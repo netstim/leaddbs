@@ -14,9 +14,6 @@ elseif isempty(otherfiles)  % [] or {} or ''
 elseif ischar(otherfiles) % single file, make it to cell string
     otherfiles = {otherfiles};
 end
-if nargin<6
-    refine=0;
-end
 
 % Write out the transform from moving image vox to fixed image mm (also
 % from fixed image vox to moving image mm)
@@ -47,9 +44,6 @@ if doreslice
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
     spm_jobman('run',{matlabbatch});
-    [pth,movingstem,ext]=fileparts(strrep(moving,',1',''));
-    movefile([pth,filesep,'r',movingstem,ext],[pth,filesep,movingstem,ext]);
-
 else
     matlabbatch{1}.spm.spatial.coreg.estimate.ref = {fixed};
     matlabbatch{1}.spm.spatial.coreg.estimate.source = {moving};
@@ -59,7 +53,6 @@ else
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
     spm_jobman('run',{matlabbatch});
-
 end
 
 [~, mov] = ea_niifileparts(moving);

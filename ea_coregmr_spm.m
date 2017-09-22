@@ -32,7 +32,7 @@ for export=1:3
             end
             disp(['*** Coregistration pass (',costfuns{cfundo(costfun)},') completed.']);
         end
-        
+
     end
 end
 
