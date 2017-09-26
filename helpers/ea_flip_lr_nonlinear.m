@@ -1,6 +1,7 @@
 function XYZ=ea_flip_lr_nonlinear(from,to,interp)
 % flip files / coords nonlinearly from Left to Right hemisphere based on asymmetric
 % template
+
 directory=[ea_space,'fliplr',filesep];
 ea_genflipspace; % will only perform if doesnt exist
 if ischar(from) % assume nifti file path

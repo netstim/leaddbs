@@ -25,9 +25,9 @@ if isstruct(elstruct) % proper elstruct
             towarp(cnt,:)=elstruct(el+dim).markers(side).tail; cnt=cnt+1;
             towarp(cnt,:)=elstruct(el+dim).markers(side).x; cnt=cnt+1;
             towarp(cnt,:)=elstruct(el+dim).markers(side).y; cnt=cnt+1;
-            elstruct(el+dim).name=[elstruct(el+dim).name,'_mirrored'];
+            
         end
-        
+        elstruct(el+dim).name=[elstruct(el+dim).name,'_mirrored'];
     end
     
     % do warp:
@@ -41,7 +41,7 @@ if isstruct(elstruct) % proper elstruct
     % structured exactly as the one above!
     cnt=1;
     for el=1:dim
-        for side=2:-1:1
+        for side=1:2
             elstruct(el+dim).markers(side).head=towarp(cnt,:); cnt=cnt+1;
             elstruct(el+dim).markers(side).tail=towarp(cnt,:); cnt=cnt+1;
             elstruct(el+dim).markers(side).x=towarp(cnt,:); cnt=cnt+1;
@@ -63,7 +63,6 @@ else % isomatrix
     if isempty(elstruct)
         return
     end
-   
     for is=1:length(elstruct)
         isom{is}=elstruct{is}; % elstruct variable is the isomatrix here!
         isom{is}{1}=[elstruct{is}{1};elstruct{is}{2}];

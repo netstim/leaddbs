@@ -50,9 +50,13 @@ for side=sides
                     acs(pt,:)=mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1);
             end
         else % average points
+try
             acs(pt,:)=mean([mean(M.elstruct(pts(pt)).coords_mm{1}(logical(M.S(pts(pt)).activecontacts{1}(1:4)),:),1);...
                 ea_flip_lr_nonlinear(mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1))]);
-        end
+catch
+    keyboard
+end
+end
     end
     
     % figure, plot3(acs(:,1),acs(:,2),acs(:,3),'r*');
