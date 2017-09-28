@@ -35,7 +35,7 @@ bcyltrisize=0.01;       % the maximum triangle size of the bounding cyl
 
 cylz0=-30;     % define the upper end of the bounding cylinder
 cylz1=30;     % define the lowe end of the bounding cylinder
-cylradius=30*stretchfactor; % define the radius of the bounding cylinder
+cylradius=40*stretchfactor; % define the radius of the bounding cylinder
 
 ndiv=50;      % division of circle for the bounding cylinder
 electrodelen=norm(etop-orig); % length of the electrode

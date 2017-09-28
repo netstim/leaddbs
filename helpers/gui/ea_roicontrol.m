@@ -22,7 +22,7 @@ function varargout = ea_roicontrol(varargin)
 
 % Edit the above text to modify the response to help ea_roicontrol
 
-% Last Modified by GUIDE v2.5 25-Aug-2017 08:02:49
+% Last Modified by GUIDE v2.5 26-Sep-2017 17:22:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -70,14 +70,17 @@ set(0,'CurrentFigure',handles.roicontrol);
 set(handles.roicontrol,'CurrentAxes',handles.histax);
 axis off
 
+if isempty(obj.binary)
+obj.binary=0;
+end
 if ~obj.binary
-hist(nzeros);
-h=findobj(handles.histax,'Type','patch');
-set(h,'FaceColor',[0,0.5 0.5],'EdgeColor','none');
-axis off
-
-set(handles.roicontrol,'Name',obj.niftiFilename);
-handles.histax.XAxis.Limits=[min(nzeros),max(nzeros)];
+    hist(nzeros);
+    h=findobj(handles.histax,'Type','patch');
+    set(h,'FaceColor',[0,0.5 0.5],'EdgeColor','none');
+    axis off
+    
+    set(handles.roicontrol,'Name',obj.niftiFilename);
+    handles.histax.XAxis.Limits=[min(nzeros),max(nzeros)];
 else
     set(handles.threshtxt,'Visible','off');
 end

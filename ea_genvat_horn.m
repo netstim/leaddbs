@@ -518,7 +518,7 @@ if ~constvol
    vmax=vmax*1000;
 end
 r=maedler12_eq3(vmax,1000);
-r=r*3.5;
+r=r*4.5;
 mp=dpvx;
 
 D=pointcloud-repmat(mp,size(pointcloud,1),1);
