@@ -68,8 +68,9 @@ end
 
     for vx=1:dimen
         %D=squareform(pdist([XYZ(vx,:);acs]));
-        D=-(pdist([XYZ(vx,:);acs]));
-        D=D(1:N)';
+        %D=-(pdist([XYZ(vx,:);acs]));
+        D=pdist([XYZ(vx,:);acs]);
+        D=1./exp(D(1:N)');
         fovimg.img(vx)=corr(D,I,'rows','pairwise','type','Spearman');
 
         distimg.img(vx)=nansum(D);

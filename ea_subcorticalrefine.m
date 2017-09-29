@@ -181,17 +181,18 @@ options.root=[options.root,filesep];
 options.earoot=ea_getearoot;
 options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);
+
 if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
     if ~exist([directory,'scrf'],'dir')
         mkdir([directory,'scrf']);
     end
     to{1}=[directory,'scrf',filesep,'bb.nii'];
     from{1}=[ea_space,'bb.nii'];
-try
-    ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],1,1);
-catch
-   ea_error('Please perform normalization first.');
-end
+    try
+        ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],1,1);
+    catch
+        ea_error('Please perform normalization first.');
+    end
     ea_crop_nii([directory,'scrf',filesep,'bb.nii']);
     ea_reslice_nii([directory,'scrf',filesep,'bb.nii'],[directory,'scrf',filesep,'bb.nii'],[0.4,0.4,0.4]);
     % do put in primary anat file - needs to be done only once.
@@ -203,13 +204,13 @@ end
 end
 % apply tonemapping if needed
 if ~exist([directory,'tp_',options.prefs.ctnii_coregistered],'file') && exist([directory,options.prefs.ctnii_coregistered],'file')
-   ea_tonemapct_file(options,'native');
+    ea_tonemapct_file(options,'native');
 end
 fis={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,['tp_',options.prefs.ctnii_coregistered]};
 for fi=1:length(fis)
     if exist([directory,fis{fi}],'file')
         copyfile([directory,fis{fi}],[directory,'scrf',filesep,fis{fi}])
-        ea_conformspaceto([directory,'scrf',filesep,options.prefs.prenii_unnormalized],[directory,'scrf',filesep,fis{fi}]);
+        ea_conformspaceto([directory,'scrf',filesep,options.prefs.prenii_unnormalized],[directory,'scrf',filesep,fis{fi}],1);
     end
 end
 
@@ -310,7 +311,6 @@ ea_refreshscrf(options,handles,directory);
 
 
 function otherfiles=ea_createmovim(directory,options)
-
 switch options.modality
     case 1
         otherfiles={[directory,'scrf',filesep,options.prefs.tranii_unnormalized],...

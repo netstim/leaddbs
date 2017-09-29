@@ -24,5 +24,7 @@ end
 % make sure headers of images are exactly identical (also corrects for qform/sform issues).
 sp=ea_load_untouch_nii(spacefn);
 tr=ea_load_untouch_nii(toreslicefn);
-sp.img=tr.img;
+sp.img=eval([class(tr.img),'(tr.img);']); % make sure to save data in same class as used before
+sp.hdr.dime.bitpix=tr.hdr.dime.bitpix;
+sp.hdr.dime.datatype=tr.hdr.dime.datatype; % keep datatype of original image.
 ea_save_untouch_nii(sp,toreslicefn);

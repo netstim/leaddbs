@@ -375,6 +375,9 @@ res=100;
 gv=cell(3,1); spacing=zeros(3,1);
 try
     for dim=1:3
+%         maxdist=max([dpvx(dim)-(min(round(vat.tpos(:,dim)))-3);...
+%             (max(round(vat.tpos(:,dim)))+3)-dpvx(dim)]);
+% %        gv{dim}=linspace(dpvx(dim)-maxdist,dpvx(dim)+maxdist,res);
         gv{dim}=linspace(min(round(vat.tpos(:,dim)))-3,max(round(vat.tpos(:,dim)))+3,res);
         spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
     end
