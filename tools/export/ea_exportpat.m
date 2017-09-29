@@ -1,4 +1,4 @@
-function ea_exportpat(hObj,~,exptype,handles)
+function ea_exportpat(hObj, ~, exptype, handles)
 
 uipatdir=getappdata(handles.leadfigure,'uipatdir');
 if strcmp(uipatdir{1},'No Patient Selected')
@@ -8,18 +8,15 @@ end
 
 
 for pt=1:length(uipatdir)
-    if ~exist([uipatdir{pt},filesep,'export'],'dir')
-    mkdir([uipatdir{pt},filesep,'export']);
+    if ~exist([uipatdir{pt}, filesep, 'export', filesep, lower(exptype)],'dir')
+        mkdir([uipatdir{pt}, filesep, 'export', filesep, lower(exptype)]);
     end
     switch exptype
         case 'PDF'
-            mkdir([uipatdir{pt},filesep,'export',filesep,'pdf']);
             ea_pat2pdf(uipatdir{pt},handles);
         case 'STL'
-            mkdir([uipatdir{pt},filesep,'export',filesep,'stl']);
             ea_pat2stl(uipatdir{pt},handles);
          case 'PLY'
-            mkdir([uipatdir{pt},filesep,'export',filesep,'ply']);
             ea_pat2ply(uipatdir{pt},handles);
     end
     
