@@ -42,6 +42,7 @@ temp1.save('y');  % Pass 'y' to overwrite file if it exists. Omit to be prompted
 
 %% Working with data that were already saved (commandline or GUI)
 temp2 = MERState();
-temp2.Config.uipatdirs = {fullfile(pwd, 'P008')};
+temp2.Config.root = fullfile(pwd);
+temp2.Config.patientname = 'P008';
 temp2.load();
 markers = temp2.exportMarkers()
