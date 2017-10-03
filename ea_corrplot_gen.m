@@ -1,6 +1,6 @@
 function [R_upd,p_upd,R,p,f]=ea_corrplot(varargin)
 % this simple function is a small wrapper for a corrplot figure.
-
+% [R_upd,p_upd,R,p,f]=ea_corrplot(X,description,labels,handles,color/groups,corrtype)
 
 X=varargin{1};
 description=varargin{2};

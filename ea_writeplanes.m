@@ -207,16 +207,19 @@ for side=1:length(options.sides)
 
                 jetlist=eval(options.prefs.d2.isovolcolormap);
                 %jetlist=summer;
-                slice=(slice-minval)/(maxval-minval); % set min max to boundaries 0-1.
+                %slice=(slice-minval)/(maxval-minval); % set min max to boundaries 0-1.
+                
+            slice(~isnan(slice))=ea_contrast(slice(~isnan(slice)),cont,1);
+            slice=slice-1;
 
                 % ##
                 % add some "contrast" ? remove this part for linear
                 % colormapping
 % 
-                slice=slice-0.5;
-                slice(slice<0)=0;
-                slice=slice*2;
-                slice(slice>1)=1;
+%                 slice=slice-0.5;
+%                 slice(slice<0)=0;
+%                 slice=slice*2;
+%                 slice(slice>1)=1;
 
                 % ##
 

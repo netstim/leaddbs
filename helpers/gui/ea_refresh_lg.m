@@ -202,7 +202,7 @@ t.Format='uuuMMddHHmmss';
 t=str2double(char(t));
 
 
-if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
+if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
     %% patient specific part:
     if ~isempty(M.patient.list)
         disp('Loading localizations...');
@@ -240,7 +240,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
             try
                 [options.root,options.patientname]=fileparts(M.patient.list{pt});
                 options.root=[options.root,filesep];
-                
+
                 [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
                 
                 if M.ui.elmodelselect==1 % use patient specific elmodel

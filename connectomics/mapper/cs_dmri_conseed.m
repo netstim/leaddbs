@@ -1,4 +1,4 @@
-function cs_dmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,space)
+function cs_dmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,space,options)
 %# ea_load_nii
 
 
@@ -40,9 +40,16 @@ switch cmd
                 redotree=1;
                 ctype='mat';
                 
-            else % connectome type not supported
-                
+            else 
+                [~,fn]=fileparts(cfile);
+                if strcmp('wFTR',fn) % patient specific fibertracts
+                cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
+                [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile]);
+                redotree=1;
+                ctype='mat';
+                else % connectome type not supported
                 ea_error('Connectome file vanished or not supported!');
+                end
             end
 
 
