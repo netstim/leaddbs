@@ -10,23 +10,7 @@ end
 %Vtra=spm_vol([options.root,patientname,filesep,patientname,'_tra_brain_A3_final.nii']);
 slice=zeros(size(tra_nii.img,1),size(tra_nii.img,2));
 masknii=tra_nii;
-if side==1
-    if options.verbose>1
-        progressfig=figure('name','Finding right electrode','NumberTitle','off','Menubar','none','ToolBar','none');
-        set(gcf,'color','w');
-        axis off;
-    end
-elseif side==2
-    if options.verbose>1
-        progressfig=figure('name','Finding left electrode','NumberTitle','off','Menubar','none','ToolBar','none');
-        set(gcf,'color','w');
-        axis off;
-    end
-end
 
-set(progressfig,'KeyPressFcn',@ea_keystr);
-
-%maximize(progressfig)
 if options.verbose>1
     colormap gray;
 end
@@ -57,19 +41,23 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
             %slice=fliplr(slice);
             slice(slice==0)=nan;
-            mn=figure('color','w','ToolBar','none','NumberTitle','off','Menubar','none','name','Please specify manual starting point.');
+            mn = figure('color','w','ToolBar','none','NumberTitle','off','Menubar','none','name','Please specify manual starting point.');
+            ax = axes;
+            WinOnTop(mn, true); % bring window to top
+            set(0, 'CurrentFigure', mn);    % set current figure explicitly
+            set(mn, 'CurrentAxes', ax);    % set current axes explicitly
             imagesc(slice);
             colormap gray;
             hold on
-            cof=imshow(colormask);
-            set(cof, 'AlphaData', mask*0.3)
-            [X,Y]=ginput(1);
+            cof = imshow(colormask);
+            set(cof, 'AlphaData', mask*0.3);
+            hold off
+            [X, Y] = ginput(1);
             close(mn);
             % reset mask from mouse input
             mask=zeros(size(slice,1),size(slice,2));
             mask(round(Y-10:Y+10),round(X-10:X+10))=1;
         otherwise
-
             mask(masksz(1):masksz(2),masksz(3):masksz(4))=1;
             if side==flipside
                 mask=fliplr(mask);
@@ -99,6 +87,22 @@ end
 
 Vmat=nii2Vmat(tra_nii);
 zfifteen=Vmat\[0;0;endslice;1];
+
+if side==1
+    if options.verbose>1
+        progressfig=figure('name','Finding right electrode','NumberTitle','off','Menubar','none','ToolBar','none');
+        set(gcf,'color','w');
+        axis off;
+    end
+elseif side==2
+    if options.verbose>1
+        progressfig=figure('name','Finding left electrode','NumberTitle','off','Menubar','none','ToolBar','none');
+        set(gcf,'color','w');
+        axis off;
+    end
+end
+
+set(progressfig,'KeyPressFcn',@ea_keystr);
 
 %% starting slice 2:end
 for sliceno=2:startslice % sliceno is the counter (how many slices have been processed).
