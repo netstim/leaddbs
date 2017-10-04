@@ -85,19 +85,6 @@ else
                 options.root = [fileparts(uipatdirs{pat}),filesep];
                 [~, options.patientname] = fileparts(uipatdirs{pat});
 
-                % NEED FURTHER TUNE: auto detection of MRCT modality for the patient
-                try
-                    modality = ea_checkctmrpresent([options.root,options.patientname,filesep]);
-                    modality = find(modality);
-                    if isempty(modality)    % no postop image present
-                        options.modality = 1;    % set to MR to work it around
-                    elseif length(modality) == 2    % both MR and CT image present
-                        options.modality = options.prefs.preferMRCT;  % set the modality according to 'prefs.preferMRCT'
-                    else    % only one modality present
-                        options.modality = modality;
-                    end
-                end
-
                 % run main function
                 if length(uipatdirs) > 1 % multi mode. Dont stop at errors.
                     try

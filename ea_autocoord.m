@@ -94,6 +94,19 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         end
     end
 
+    % NEED FURTHER TUNE: auto detection of MRCT modality for the patient
+    try
+        modality = ea_checkctmrpresent([options.root,options.patientname,filesep]);
+        modality = find(modality);
+        if isempty(modality)    % no postop image present
+            options.modality = 1;    % set to MR to work it around
+        elseif length(modality) == 2    % both MR and CT image present
+            options.modality = options.prefs.preferMRCT;  % set the modality according to 'prefs.preferMRCT'
+        else    % only one modality present
+            options.modality = modality;
+        end
+    end
+
     if options.modality == 2 % CT support
         options.prefs.tranii=options.prefs.ctnii;
         options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
@@ -113,14 +126,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         % 2. then coreg postop MRI to preop MRI
         ea_coregmr(options);
     end
-    
+
     if options.coregmr.check
         options.normcoreg='coreg';
         ea_checkcoreg(options);
     end
-    
+
     if options.normalize.do
-        
+
         if ~(ea_coreglocked(options,'glanat')==2) || strcmp(options.normalize.method,'ea_normalize_apply_normalization') % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
             if ea_coreglocked(options,'glanat')==1 && ~strcmp(options.normalize.method,'ea_normalize_apply_normalization') % in this case, only perform normalization if using a multispectral approach now.
                 [~,~,~,doit]=eval([options.normalize.method,'(''prompt'')']);
@@ -132,7 +145,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                 % 3. finally perform normalization based on dominant or all preop MRIs
                 ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
                 eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
-                
+
                 if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
                     ea_tonemapct_file(options,'mni');
                 end
@@ -164,7 +177,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         % export "control" niftis with wireframe of normal anatomy..
         options.normcoreg='normalize';
         ea_checkcoreg(options);
-        
+
     end
 
     if options.doreconstruction
@@ -172,7 +185,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         switch options.reconmethod
             case 1 % TRAC/CORE
                 for side=options.sides
-                    
+
                     %try
                     % call main routine reconstructing trajectory for one side.
                     [coords,trajvector{side},trajectory{side},tramat]=ea_reconstruct(options.patientname,options,side);
@@ -198,7 +211,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
                     markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
                     markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
-                    
+
                     coords_mm=ea_resolvecoords(markers,options);
                 end
 
@@ -253,7 +266,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         if isfield(options,'hybridsave')
             options=rmfield(options,'hybridsave');
         end
- 
+
     end
 
     if options.manualheightcorrection
