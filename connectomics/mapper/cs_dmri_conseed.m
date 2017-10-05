@@ -43,7 +43,7 @@ switch cmd
             else 
                 [~,fn]=fileparts(cfile);
                 if strcmp('wFTR',fn) % patient specific fibertracts
-                cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
+                cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR_vox.mat'];
                 [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile]);
                 redotree=1;
                 ctype='mat';
