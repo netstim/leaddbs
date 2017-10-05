@@ -219,7 +219,7 @@ end
 
 ea_libs_helper
 if options.prefs.machine.normsettings.ants_numcores
-    setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',prefs.machine.normsettings.ants_numcores) % no num2str needed since stored as string.
+    setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',options.prefs.machine.normsettings.ants_numcores) % no num2str needed since stored as string.
 end
 
 props.outputbase = outputbase;

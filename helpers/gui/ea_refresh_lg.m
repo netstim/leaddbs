@@ -240,7 +240,13 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
             try
                 [options.root,options.patientname]=fileparts(M.patient.list{pt});
                 options.root=[options.root,filesep];
-
+                % make sure coords_mm is congruent to coded electrode
+                % model:
+                poptions=options;
+                poptions.native=0;
+                poptions.elmodel=M.elstruct(pt).elmodel;
+                poptions=ea_resolve_elspec(poptions);
+                ea_recode_coords(poptions);
                 [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
                 
                 if M.ui.elmodelselect==1 % use patient specific elmodel
@@ -254,6 +260,10 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                     M.elstruct(pt).elmodel=elmodels{get(handles.elmodelselect,'Value')};
                     
                 end
+                
+               
+                
+
                 M.elstruct(pt).coords_mm=coords_mm;
                 M.elstruct(pt).coords_acpc=coords_acpc;
                 M.elstruct(pt).trajectory=trajectory;

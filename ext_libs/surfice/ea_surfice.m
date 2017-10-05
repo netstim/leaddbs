@@ -13,7 +13,7 @@ if numel(openglVer) == 2
 end
 openglVer = str2double(openglVer);
 
-if openglVer == 330
+if openglVer == 330 || ismac
     surfice_exe = 'surfice';
 elseif openglVer >= 210
     surfice_exe = 'surficeOld';
