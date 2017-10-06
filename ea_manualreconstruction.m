@@ -75,8 +75,13 @@ postview=uipushtool(ht,'CData',ea_get_icn('elP'),'TooltipString','Set view from 
 %xview=uipushtool(ht,'CData',ea_get_icn('elX'),'TooltipString','Set view from X-Direction [X]','ClickedCallback',{@ea_view,'x'});
 %yview=uipushtool(ht,'CData',ea_get_icn('elY'),'TooltipString','Set view from Y-Direction [Y]','ClickedCallback',{@ea_view,'y'});
 
-rotleft=uipushtool(ht,'CData',ea_get_icn('rotleft'),'TooltipString','Rotate Electrode counter-clockwise','ClickedCallback',{@ea_rotate,'cc',mcfig});
-rotright=uipushtool(ht,'CData',ea_get_icn('rotright'),'TooltipString','Rotate Electrode clockwise','ClickedCallback',{@ea_rotate,'c',mcfig});
+% rotleft=uipushtool(ht,'CData',ea_get_icn('rotleft'),'TooltipString','Rotate Electrode counter-clockwise','ClickedCallback',{@ea_rotate,'cc',mcfig});
+% rotright=uipushtool(ht,'CData',ea_get_icn('rotright'),'TooltipString','Rotate Electrode clockwise','ClickedCallback',{@ea_rotate,'c',mcfig});
+
+rotleftcw=uipushtool(ht,'CData',ea_get_icn('rotleftcw'),'TooltipString','Rotate left electrode clockwise','ClickedCallback',{@ea_rotate,'lc',mcfig});
+rotleftccw=uipushtool(ht,'CData',ea_get_icn('rotleftccw'),'TooltipString','Rotate left electrode counterclockwise','ClickedCallback',{@ea_rotate,'lcc',mcfig});
+rotrightcw=uipushtool(ht,'CData',ea_get_icn('rotrightcw'),'TooltipString','Rotate right electrode clockwise','ClickedCallback',{@ea_rotate,'rc',mcfig});
+rotrightccw=uipushtool(ht,'CData',ea_get_icn('rotrightccw'),'TooltipString','Rotate right electrode counterclockwise','ClickedCallback',{@ea_rotate,'rcc',mcfig});
 
 mni=uitoggletool(ht,'CData',ea_get_icn('mninative'),'TooltipString','Toggle MNI vs. Native space','State','off','OnCallback',{@updatescene,mcfig,'mni'},'OffCallback',{@updatescene,mcfig,'native'});
 
@@ -377,13 +382,30 @@ end
 
 % for now, rotation will always be constant. This will be the place to
 % insert rotation functions..
-for side=options.sides
-    normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-    orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-    markers(side).x=markers(side).head+orth(:,1)';
-    markers(side).y=markers(side).head+orth(:,2)'; % corresponding points in reality
-end
 
+% for side=options.sides
+%     normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
+%     orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
+%     markers(side).x=markers(side).head+orth(:,1)';
+%     markers(side).y=markers(side).head+orth(:,2)'; % corresponding points in reality
+% end
+for side=options.sides
+    rotation=getappdata(gcf,'rotation');
+    if isempty(rotation)
+        rotation{1} = 0;
+        rotation{2} = 0;
+    end
+    normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
+    
+    y(1) = -cos(0) * sin(deg2rad(rotation{side}));
+    y(2) = (cos(0) * cos(deg2rad(rotation{side}))) + (sin(0) * sin(deg2rad(rotation{side})) * sin(0));
+    y(3) = (-sin(0) * cos(deg2rad(rotation{side}))) + (cos(0) * sin(deg2rad(rotation{side})) * sin(0));
+    y = y - (dot(y,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;
+    x = cross(y,normtrajvector);
+    
+    markers(side).x=markers(side).head+x;
+    markers(side).y=markers(side).head+y; % corresponding points in reality
+end
 
 
 
@@ -517,9 +539,7 @@ else % update coordinates in elplot & mplot:
         set(mplot(2,side),'YData',markers(side).tail(2));
         set(mplot(2,side),'ZData',markers(side).tail(3));
 
-
         for el=1:size(coords_mm{side},1)
-
             set(elplot(cnt),'XData',coords_mm{side}(el,1));
             set(elplot(cnt),'YData',coords_mm{side}(el,2));
             set(elplot(cnt),'ZData',coords_mm{side}(el,3));
@@ -539,7 +559,7 @@ catch
 end
 
 
-spacetext=text(midpt(1),midpt(2),midpt(3)-1,['Electrode Spacing: ',num2str(memp_eldist),' mm.'],'Color','w','BackgroundColor','k','HorizontalAlignment','center');
+spacetext=text(midpt(1),midpt(2),midpt(3)-1,sprintf(['Electrode Spacing: ',num2str(memp_eldist),' mm\nRight Rotation: ',num2str(rotation{1}),' °\nLeft Rotation: ',num2str(rotation{2}),' °']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');
 set(mcfig,'name',[options.patientname,', Electrode Spacing: ',num2str(memp_eldist),' mm.']);
 setappdata(mcfig,'spacetext',spacetext);
 
@@ -1097,11 +1117,19 @@ set(atls, 'Visible', 'off');
 
 function ea_rotate(hobj,ev,ccw,mcfig)
 rotation=getappdata(gcf,'rotation'); % rotation angle in degrees
+if isempty(rotation)
+    rotation{1} = 0;
+    rotation{2} = 0;
+end
 switch ccw
-    case 'c'
-        rotation=rotation+1;
-    case 'cc'
-        rotation=rotation-1;
+    case 'rc'
+        rotation{1}=rotation{1}-15;
+    case 'rcc'
+        rotation{1}=rotation{1}+15;
+    case 'lc'
+        rotation{2}=rotation{2}-15;
+    case 'lcc'
+        rotation{2}=rotation{2}+15;        
 end
 setappdata(gcf,'rotation',rotation);
 updatescene([],[],mcfig);
