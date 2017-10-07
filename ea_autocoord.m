@@ -64,7 +64,7 @@ end
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
 
     % move files for compatibility
-    try  ea_compat_patfolder(options); end
+    try ea_compat_patfolder(options); end
 
     % assign/order anatomical images
     [options,presentfiles]=ea_assignpretra(options);
@@ -96,7 +96,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
     % NEED FURTHER TUNE: auto detection of MRCT modality for the patient
     try
-        modality = ea_checkctmrpresent([options.root,options.patientname,filesep]);
+        modality = ea_checkctmrpresent(directory);
         modality = find(modality);
         if isempty(modality)    % no postop image present
             options.modality = 1;    % set to MR to work it around
@@ -111,20 +111,25 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         options.prefs.tranii=options.prefs.ctnii;
         options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
 
-        if options.coregct.do && ~ea_coreglocked(options,['tp_',options.prefs.ctnii_coregistered]);
+        if options.coregct.do && ~ea_coreglocked(options,['tp_',options.prefs.ctnii_coregistered])
+            diary([directory, 'coregCT_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
             eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
             ea_dumpnormmethod(options,options.coregct.method,'coregctmethod');
             ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
             ea_gencoregcheckfigs(options); % generate checkreg figures
+            diary off
         end
 
     end
 
     if options.coregmr.do
+        diary([directory, 'coregMR_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
         % 1. coreg all available preop MRI
         ea_checkcoregallmri(options,0,1); % check and coregister all preoperative MRIs here.
+
         % 2. then coreg postop MRI to preop MRI
         ea_coregmr(options);
+        diary off
     end
 
     if options.coregmr.check
@@ -133,7 +138,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     end
 
     if options.normalize.do
-
+        diary([directory, 'normalize_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
         if ~(ea_coreglocked(options,'glanat')==2) || strcmp(options.normalize.method,'ea_normalize_apply_normalization') % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
             if ea_coreglocked(options,'glanat')==1 && ~strcmp(options.normalize.method,'ea_normalize_apply_normalization') % in this case, only perform normalization if using a multispectral approach now.
                 [~,~,~,doit]=eval([options.normalize.method,'(''prompt'')']);
@@ -153,6 +158,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                 ea_gencoregcheckfigs(options); % generate checkreg figures
             end
         end
+        diary off
     end
 
     if isfield(options,'gencheckreg') % this case is an exception when calling from the Tools menu.
