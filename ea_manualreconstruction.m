@@ -166,9 +166,69 @@ ea_methods(options,...
 
 ea_write(options);
 
+% Callback invoked when user presses the 'Update all' button in the 'Manual electrodes head / tail setting' figure.
+function manualMarkerSettingUpdateAllCb(source,event)
+    manualMarkerSettingCbImpl(source,'all');
+% Callback invoked when user presses the 'Cancel' button in the 'Manual electrodes head / tail setting' figure.
+function manualMarkerSettingCancelCb(source,event)
+    closereq();
+% Callbacks invoked when user presses 'Update R0/R3/L3/L0' buttons in the 'Manual electrodes head / tail setting' figure.
+function manualMarkerSettingUpdateR0Cb(source,event)
+    manualMarkerSettingCbImpl(source,'R0');
+function manualMarkerSettingUpdateR3Cb(source,event)
+    manualMarkerSettingCbImpl(source,'R3');
+function manualMarkerSettingUpdateL0Cb(source,event)
+    manualMarkerSettingCbImpl(source,'L0');
+function manualMarkerSettingUpdateL3Cb(source,event)
+    manualMarkerSettingCbImpl(source,'L3');
 
+function manualMarkerSettingCbImpl(source,action)
+    userData=get(get(source,'parent'),'UserData');
+    mcfig=userData.mcfig;
+    options=getappdata(mcfig,'options');
+    elplot=getappdata(mcfig,'elplot');
+    mplot=getappdata(mcfig,'mplot');
 
+    % load the current parameters
+    [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+    % update markers according to manually specified positions
+    mRH=str2num(get(userData.tvRH,'String'));
+    mRT=str2num(get(userData.tvRT,'String'));
+    mLH=str2num(get(userData.tvLH,'String'));
+    mLT=str2num(get(userData.tvLT,'String'));
+    switch action
+        case 'all'
+            markers(1).head=mRH;
+            markers(1).tail=mRT;
+            markers(2).head=mLH;
+            markers(2).tail=mLT;
+        case 'R0'
+            markers(1).tail=markers(1).tail+(mRH-markers(1).head);
+            markers(1).head=mRH;
+        case 'R3'
+            markers(1).head=markers(1).head+(mRT-markers(1).tail);
+            markers(1).tail=mRT;
+        case 'L0'
+            markers(2).tail=markers(2).tail+(mLH-markers(2).head);
+            markers(2).head=mLH;
+        case 'L3'
+            markers(2).head=markers(2).head+(mLT-markers(2).tail);
+            markers(2).tail=mLT;
+        otherwise
+            error(['unknown action "' action '"']);
+    end
 
+    % close the 'Manual electrodes head / tail setting' figure
+    closereq();
+
+    % save the parameters
+    if isfield(options,'hybridsave')
+        options=rmfield(options,'hybridsave');
+    end
+    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
+
+    % the rest will be done by the code that created the 'Manual electrodes head / tail setting'
+    % figure in the 'ea_keystr' function
 
 function ea_keystr(mcfig,event)
 %    pause
@@ -243,6 +303,81 @@ switch lower(commnd)
 
     case {'s','d'}
 
+    case 'm' % manual electrodes head / tail setting
+        % get screen size
+        scrSize=get(0,'ScreenSize');
+        % create a small figure in the bottom part of the screen
+        FIG_WIDTH=.4;
+        f=figure('Name','Manual electrodes head / tail setting','Numbertitle','off',...
+            'MenuBar','none',...
+            'Position',[scrSize(1)+scrSize(3)*(.5-FIG_WIDTH/2) scrSize(2) scrSize(3)*FIG_WIDTH scrSize(4)/5]);
+        B=.05; % elementary border
+        H=.18-B; % height of each element
+        % TI = text infos
+        XTI=B;
+        WTI=.15; % width
+        % TV = (editable) text values
+        WTV=.35;
+        XTV=XTI+WTI+B;
+        % BT = buttons on the right side
+        WBT=1-WTI-WTV-4*B;
+        XBT=XTV+WTV+B;
+        %
+        YRH=1-.2-B;
+        YRT=YRH-H-B;
+        YLH=YRT-H-B;
+        YLT=YLH-H-B;
+        YBT_ALL=YLT-H-B;
+        if ismember(1,options.sides)
+            % right side
+            tiRH=uicontrol('Style','text','String','R0 (Head):','HorizontalAlignment','right',...
+                'Units','normalized','Position',[XTI YRH WTI H]);
+            tvRH=uicontrol('Style','edit','String',num2str(markers(1).head,'%.4f '),...
+                'HorizontalAlignment','center',...
+                'Units','normalized','Position',[XTV YRH WTV H]);
+            moveR0=uicontrol('Style','pushbutton','String','Update R0, Move R3 accordingly',...
+                'Units','normalized','Position',[XBT YRH WBT H],'Callback',@manualMarkerSettingUpdateR0Cb);
+            tiRT=uicontrol('Style','text','String','R3 (Tail):','HorizontalAlignment','right',...
+                'Units','normalized','Position',[XTI YRT WTI H]);
+            tvRT=uicontrol('Style','edit','String',num2str(markers(1).tail,'%.4f '),...
+                'HorizontalAlignment','center',...
+                'Units','normalized','Position',[XTV YRT WTV H]);
+            moveR3=uicontrol('Style','pushbutton','String','Update R3, Move R0 accordingly',...
+                'Units','normalized','Position',[XBT YRT WBT H],'Callback',@manualMarkerSettingUpdateR3Cb);
+        end
+        if ismember(2,options.sides)
+            % left side
+            tiLH=uicontrol('Style','text','String','L0 (Head):','HorizontalAlignment','right',...
+                'Units','normalized','Position',[XTI YLH WTI H]);
+            tvLH=uicontrol('Style','edit','String',num2str(markers(2).head,'%.4f '),...
+                'HorizontalAlignment','center',...
+                'Units','normalized','Position',[XTV YLH WTV H]);
+            moveL0=uicontrol('Style','pushbutton','String','Update L0, Move L3 accordingly',...
+                'Units','normalized','Position',[XBT YLH WBT H],'Callback',@manualMarkerSettingUpdateL0Cb);
+            tiLT=uicontrol('Style','text','String','L3 (Tail):','HorizontalAlignment','right',...
+                'Units','normalized','Position',[XTI YLT WTI H]);
+            tvLT=uicontrol('Style','edit','String',num2str(markers(2).tail,'%.4f '),...
+                'HorizontalAlignment','center',...
+                'Units','normalized','Position',[XTV YLT WTV H]);
+            moveL3=uicontrol('Style','pushbutton','String','Update L3, Move L0 accordingly',...
+                'Units','normalized','Position',[XBT YLT WBT H],'Callback',@manualMarkerSettingUpdateL3Cb);
+        end
+        updateButton=uicontrol('Style','pushbutton','String','Update all',...
+            'Units','normalized','Position',[XTV+B YBT_ALL WTV-2*B H],'Callback',@manualMarkerSettingUpdateAllCb);
+        cancelButton=uicontrol('Style','pushbutton','String','Cancel',...
+            'Units','normalized','Position',[XBT+B YBT_ALL WBT-2*B H],'Callback',@manualMarkerSettingCancelCb);
+        % store the UI elements in user data property of the new figure
+        userData=struct('tvRH',tvRH,'tvRT',tvRT,'tvLH',tvLH,'tvLT',tvLT,'mcfig',mcfig);
+        set(f,'UserData',userData);
+
+        % wait for the figure closing (either by pressing the bu button, or by closing it)
+        waitfor(f)
+
+        % update the scene
+        updatescene([],[],mcfig);
+
+        % reload the parameters
+        [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
     otherwise % arrow keys, plus, minus
 
