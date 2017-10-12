@@ -18,22 +18,32 @@ end
 
 load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname]);
 for side=1:length(markers) % leave as is
-
+    
     if resize
-       can_dist=ea_pdist([electrode.head_position;electrode.tail_position]);
-       %emp_dist=ea_pdist([markers(side).head;markers(side).tail]);
-           %A=squareform(pdist(electrode.coords_mm));
-           A=sqrt(ea_sqdist(electrode.coords_mm',electrode.coords_mm'));
-           can_eldist=sum(sum(tril(triu(A,1),1)))/(options.elspec.numel-1);
-
-       vec=(markers(side).tail-markers(side).head)/norm(markers(side).tail-markers(side).head);
-       if nargin>3
-          stretch=can_dist*(rszfactor/can_eldist);
-       else
-          stretch=can_dist;
-       end
-
-       markers(side).tail=markers(side).head+vec*stretch;
+        can_dist=ea_pdist([electrode.head_position;electrode.tail_position]);
+        %emp_dist=ea_pdist([markers(side).head;markers(side).tail]);
+        %A=squareform(pdist(electrode.coords_mm));
+        if strcmp(options.elmodel,'Boston Scientific Vercise Directed')            
+            coords_temp(1,:) = electrode.coords_mm(1,:);
+            coords_temp(2,:) = mean(electrode.coords_mm(2:4,:));
+            coords_temp(3,:) = mean(electrode.coords_mm(5:7,:));
+            coords_temp(4,:) = electrode.coords_mm(8,:);
+            A=sqrt(ea_sqdist(coords_temp',coords_temp'));
+            can_eldist=sum(sum(tril(triu(A,1),1)))/(3);
+            clear coords_temp
+        else
+            
+            A=sqrt(ea_sqdist(electrode.coords_mm',electrode.coords_mm'));
+            can_eldist=sum(sum(tril(triu(A,1),1)))/(options.elspec.numel-1);
+        end
+        vec=(markers(side).tail-markers(side).head)/norm(markers(side).tail-markers(side).head);
+        if nargin>3
+            stretch=can_dist*(rszfactor/can_eldist);
+        else
+            stretch=can_dist;
+        end
+        
+        markers(side).tail=markers(side).head+vec*stretch;
     end
     
     if ~isempty(markers(side).head)
