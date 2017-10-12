@@ -11,7 +11,7 @@ switch chooseboxname
     case 'Choose Patient Directory'
         outdir=ea_getearoot;
     otherwise
-        if strcmp(chooseboxname(1:8),'Multiple')
+        if length(chooseboxname)>=8 && strcmp(chooseboxname(1:8),'Multiple')
         	outdir=ea_getearoot;
         else
             outdir=[get(handles.patdir_choosebox,'String'),filesep];
