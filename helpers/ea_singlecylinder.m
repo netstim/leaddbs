@@ -1,4 +1,4 @@
-function [xx,yy,zz] = cylinder(varargin)
+function [xx,yy,zz] = ea_singlecylinder(varargin)
 %CYLINDER Generate cylinder.
 %   [X,Y,Z] = CYLINDER(R,N) forms the unit cylinder based on the generator
 %   curve in the vector R. Vector R contains the radius at equally
@@ -30,20 +30,14 @@ if nargs > 1, n = args{2}; end
 r = r(:); % Make sure r is a vector.
 m = length(r); if m==1, r = [r;r]; m = 2; end
 
-
-%theta=linspace(0,2*pi,n);
-dt=pi/n;
-theta=0:dt:2*pi-dt;
-%theta = (0:n)/n*2*pi;
+theta=linspace(0,2*pi,n);
 
 sintheta = sin(theta); sintheta(n) = 0;
-
-
 
 x = r * cos(theta);
 y = r * sintheta;
 
-z = (0:m-1)'/(m-1) * ones(1,2*n);
+z = (0:m-1)'/(m-1) * ones(1,n);
 
 if nargout == 0
     cax = newplot(cax);

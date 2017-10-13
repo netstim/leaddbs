@@ -86,15 +86,12 @@ sweeptempdir;
 
 savesurfpoly(no,el,holes,regions,p0,p1,mwpath('post_vmesh.poly'),dobbx);
 
-
 % h=figure;
-%      plotmesh(no,el,'linestyle','none','facealpha',0.1);
-
-
+% plotmesh(no,el,'linestyle','none','facealpha',0.1);
 
 moreopt='';
 if(size(no,2)==4)
-   moreopt=[moreopt ' -m '];
+	moreopt=[moreopt ' -m '];
 end
 % call tetgen to create volumetric mesh
 deletemeshfile(mwpath('post_vmesh.1.*'));
@@ -110,26 +107,22 @@ catch
     end
 end
 
-
-
-
 %  system([' "' mcpath('tetgen') exesuff '" ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 
 if(isempty(cmdopt)) % default run
-      system([' "' mcpath('tetgen') exesuff '" -A -q1.414a' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
-
-%  system([' "' mcpath('tetgen') exesuff '" -A -T1e-20 -pq1/0 -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+    system([' "' mcpath('tetgen') exesuff '" -A -q1.414a' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+    % system([' "' mcpath('tetgen') exesuff '" -A -T1e-20 -pq1/0 -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 else
-  system([' "' mcpath('tetgen') exesuff '"  -A -T1e-10 -q4 -a -Y ' cmdopt ' "' mwpath('post_vmesh.poly') '"']);
+	system([' "' mcpath('tetgen') exesuff '"  -A -T1e-10 -q4 -a -Y ' cmdopt ' "' mwpath('post_vmesh.poly') '"']);
 end
 
 % read in the generated mesh
 success=1;
 % try
-     [node,elem,face]=readtetgen(mwpath('post_vmesh.1'));
-%     fprintf(1,'volume mesh generation is complete\n');
+    [node,elem,face]=readtetgen(mwpath('post_vmesh.1'));
+% 	fprintf(1,'volume mesh generation is complete\n');
 % catch
-% 	system([' "' mcpath('tetgen') exesuff '" -A -T1e-10 -Y -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
+%     system([' "' mcpath('tetgen') exesuff '" -A -T1e-10 -Y -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 %     system([' "' mcpath('tetgen') exesuff '" -A -d -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 %     system([' "' mcpath('tetgen') exesuff '" -A -T1e-10 -q2 -a ' num2str(maxvol) ' ' moreopt ' ' mwpath('post_vmesh.1.face'),' ',mwpath('post_vmesh.1.node') '']);
 %     try
@@ -149,4 +142,4 @@ function sweeptempdir
  warning('off');
  delete([pth,filesep,'*']);
  warning('on');
- 
+

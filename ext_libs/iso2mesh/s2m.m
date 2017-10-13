@@ -9,7 +9,7 @@ function [node,elem,face]=s2m(v,f,keepratio,maxvol,method,regions,holes)
 %
 % inputs and outputs are similar to those defined in surf2mesh
 %
-% if method='cgalpoly', s2m will call cgals2m and keepratio should be a 
+% if method='cgalpoly', s2m will call cgals2m and keepratio should be a
 % structure (as the 'opt' input in cgals2m)
 %
 % input default values:
@@ -32,7 +32,6 @@ if(nargin<=6)
 end
 
 %[v,f]=removedupnodes(v,f,1e-6); % <- remove duplicate nodes that are extremely closeby due to precision errors.
-
 
 [node,elem,face,success]=surf2mesh(v,f,min(v,[],1),max(v,[],1),keepratio,maxvol,regions,holes);
 
