@@ -86,14 +86,14 @@ for comp=1:options.elspec.numel*2+1
     % this following method takes quite some time... even more importantly,
     % the info will be transfered from mesh to volume and lateron back to
     % mesh again. For now, this is still the most convenient method.
-in=ea_intriangulation(cyl.vertices,cyl.faces,XYZmm(1:3,:)');
-Xt=nii.img;
-Xt(:)=0; Xt(in)=1;
-if comp>1 && comp<options.elspec.numel+2 % these are the CONTACTS
-Xcon=Xcon+Xt;
-else % these are the insulated shaft, tip and spacings..
-    Xins=Xins+Xt;
-end
+    in=ea_intriangulation(cyl.vertices,cyl.faces,XYZmm(1:3,:)');
+    Xt=nii.img;
+    Xt(:)=0; Xt(in)=1;
+    if comp>1 && comp<options.elspec.numel+2 % these are the CONTACTS
+        Xcon=Xcon+Xt;
+    else % these are the insulated shaft, tip and spacings..
+        Xins=Xins+Xt;
+    end
 end
 
 ea_dispercent(1,'end');

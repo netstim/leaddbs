@@ -323,6 +323,8 @@ for comp=1:elspec.numel*2+1
     end
 end
 
+ea_dispercent(1,'end');
+
 electrode.electrode_model=elstruct.name;
 electrode.head_position=[0,0,elspec.tip_length+0.5*elspec.contact_length];
 electrode.tail_position=[0,0,elspec.tip_length+elspec.numel*elspec.contact_length+(elspec.numel-1)*elspec.contact_spacing-0.5*elspec.contact_length];

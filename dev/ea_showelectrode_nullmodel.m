@@ -19,10 +19,6 @@ options=ea_resolve_elspec(options);
 elspec=options.elspec;
 resultfig=figure;
 
-
-
-
-
 jetlist=othercolor('BuOr_12');
 %   jetlist=jet;
 
@@ -34,105 +30,98 @@ for side=1:length(options.sides)
     %%
     trajvector=mean(diff(trajectory{side}));
     trajvector=trajvector/norm(trajvector);
-    
+
 
         startpoint=trajectory{side}(1,:);
     set(0,'CurrentFigure',resultfig);
-    
+
     % draw patientname
     lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
     ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
-    
-    
+
+
     % draw trajectory
     [elrender{side}(1),elrender{side}(2),elrender{side}(3)]=ea_cylinder(startpoint,coords_mm{side}(elspec.numel,:)-trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-    
-    
-    
+
+
+
     if isfield(elstruct,'group')
         usecolor=elstruct.groupcolors(elstruct.group,:);
     else
         usecolor=elspec.lead_color;
     end
-    
-    
+
+
         aData=1;
-    
-    
+
+
     specsurf(elrender{side}(1),usecolor,aData); specsurf(elrender{side}(2),usecolor,aData); specsurf(elrender{side}(3),usecolor,aData);
-    
+
     cnt=4;
-    
+
     % draw contacts
     for cntct=1:elspec.numel
-        
+
         set(0,'CurrentFigure',resultfig);
-        
-        
+
+
         [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct,:)+trajvector*(elspec.contact_length/2),elspec.contact_diameter/2,100,repmat(elspec.contact_color,1,3),1,0);
-        
+
         specsurf(elrender{side}(cnt),elspec.contact_color,aData); specsurf(elrender{side}(cnt+1),elspec.contact_color,aData); specsurf(elrender{side}(cnt+2),elspec.contact_color,aData);
         cnt=cnt+3;
     end
-    
+
     % draw trajectory between contacts
     for cntct=1:elspec.numel-1
         set(0,'CurrentFigure',resultfig);
-        
+
         [elrender{side}(cnt),elrender{side}(cnt+1),elrender{side}(cnt+2)]=ea_cylinder(coords_mm{side}(cntct,:)-trajvector*(elspec.contact_length/2),coords_mm{side}(cntct+1,:)+trajvector*(elspec.contact_length/2),elspec.lead_diameter/2,100,repmat(elspec.lead_color,1,3),1,0);
-        
+
         specsurf(elrender{side}(cnt),usecolor,aData); specsurf(elrender{side}(cnt+1),usecolor,aData); specsurf(elrender{side}(cnt+2),usecolor,aData);
         cnt=cnt+3;
     end
-    
-    
-    
-    
-    
-    
-    
-    
+
     % draw tip
-    
+
     if isfield(elstruct,'group')
         usecolor=elstruct.groupcolors(elstruct.group,:);
     else
         usecolor=elspec.tip_color;
     end
     set(0,'CurrentFigure',resultfig);
-    
+
     [cX,cY,cZ] = cylinder((repmat(elspec.tip_diameter/2,1,10)-([10:-1:1].^10/10^10)*(elspec.tip_diameter/2)));
-    
+
     cZ=cZ.*(elspec.tip_length); % scale to fit tip-diameter
-    
+
     % define two points to define cylinder.
     X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
     X2=X1+trajvector*elspec.tip_length;
-    
-    
+
+
     cX=cX+X1(1);
     cY=cY+X1(2);
     cZ=cZ-(2*elspec.tip_length)/2+X1(3);
-    
-    
-    
+
+
+
     elrender{side}(cnt)=surf(cX,cY,cZ);
-    
+
     % Calulating the angle between the x direction and the required direction
     % of cylinder through dot product
     angle_X1X2=acos( dot( [0 0 -1],(X2-X1) )/( norm([0 0 -1])*norm(X2-X1)) )*180/pi;
-    
+
     % Finding the axis of rotation (single rotation) to roate the cylinder in
     % X-direction to the required arbitrary direction through cross product
     axis_rot=cross([0 0 -1],(X2-X1) );
-    
+
     if any(axis_rot) || angle_X1X2
         rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
     end
     specsurf(elrender{side}(cnt),usecolor,aData);
-    
-    
-    
+
+
+
 end
 
 
@@ -141,8 +130,6 @@ if ~exist('elrender','var')
 end
 axis equal
 view(0,0);
-
-
 
 
 %% build model spec:
@@ -160,7 +147,7 @@ for comp=1:options.elspec.numel*2+1
         cnt=cnt+3;
     catch % tip of the electrode, here only one surface component..
         cyl=elrender{side}(cnt);
-        cyl = surf2patch(cyl,'triangles'); 
+        cyl = surf2patch(cyl,'triangles');
     end
     % this following method takes quite some time... even more importantly,
     % the info will be transfered from mesh to volume and lateron back to
@@ -173,6 +160,8 @@ for comp=1:options.elspec.numel*2+1
         inscnt=inscnt+1;
     end
 end
+
+ea_dispercent(1,'end');
 
 electrode.electrode_model=elstruct.name;
 electrode.head_position=[0,0,options.elspec.tip_length+options.elspec.numel*options.elspec.contact_length+(options.elspec.numel-1)*options.elspec.contact_spacing];
