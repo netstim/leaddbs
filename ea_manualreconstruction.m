@@ -705,14 +705,20 @@ catch
     midpt=[0 0 0];
 end
 
-[az]=view;
+[az,el]=view; % need to have 2 outputs here given response is different if varargout==1
 if az>90
-    yoffs=3;
+    yoffs=10;
 else
-    yoffs=-3;
+    yoffs=-10;
 end
-spacetext=text(midpt(1),midpt(2)+yoffs,midpt(3)-1,sprintf(['Electrode Spacing: ',num2str(memp_eldist),' mm\nRight Rotation: ',num2str(rotation{1}),' deg\nLeft Rotation: ',num2str(rotation{2}),' deg']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');
-set(mcfig,'name',[options.patientname,', Electrode Spacing: ',num2str(memp_eldist),' mm.']);
+if az>180
+    xoffs=-25;
+else
+    xoffs=25;
+end
+
+spacetext=text(midpt(1)+xoffs,midpt(2)+yoffs,midpt(3)-3,sprintf(['Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm\nRight Rotation: ',num2str(rotation{1}),' deg\nLeft Rotation: ',num2str(rotation{2}),' deg']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');
+set(mcfig,'name',[options.patientname,', Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm.']);
 setappdata(mcfig,'spacetext',spacetext);
 
 % %% plot trajectory lines
@@ -1382,7 +1388,7 @@ switch commnd
     case 'l'
         view(270,0);
 end
-%updatescene([],[],gcf);
+updatescene([],[],gcf);
 
 
 function ea_finish(hobj,ev)
