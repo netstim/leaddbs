@@ -331,7 +331,7 @@ ea_dispercent(1,'end');
 
 electrode.electrode_model=elstruct.name;
 electrode.head_position=[0,0,elspec.tip_length+0.5*elspec.contact_length];
-electrode.tail_position=[0,0,elspec.tip_length+elspec.numel*elspec.contact_length+(elspec.numel-1)*elspec.contact_spacing-0.5*elspec.contact_length];
+electrode.tail_position=[0,0,elspec.tip_length+4*elspec.contact_length+(4-1)*elspec.contact_spacing-0.5*elspec.contact_length];
 
 electrode.x_position=[elspec.lead_diameter/2,0,elspec.tip_length+0.5*elspec.contact_length];
 electrode.y_position=[0,elspec.lead_diameter/2,elspec.tip_length+0.5*elspec.contact_length];
