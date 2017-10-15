@@ -67,8 +67,8 @@ end
 
 if get(handles.wmatedges,'Value')
     % draw edges:
-    stemfactor=0.1;
-    tipfactor=0.1;
+    stemfactor=0.5;
+    tipfactor=0.7;
 
     pcnt=1;
     ncnt=1;
