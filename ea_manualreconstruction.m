@@ -705,8 +705,13 @@ catch
     midpt=[0 0 0];
 end
 
-
-spacetext=text(midpt(1),midpt(2),midpt(3)-1,sprintf(['Electrode Spacing: ',num2str(memp_eldist),' mm\nRight Rotation: ',num2str(rotation{1}),' °\nLeft Rotation: ',num2str(rotation{2}),' °']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');
+[az]=view;
+if az>90
+    yoffs=3;
+else
+    yoffs=-3;
+end
+spacetext=text(midpt(1),midpt(2)+yoffs,midpt(3)-1,sprintf(['Electrode Spacing: ',num2str(memp_eldist),' mm\nRight Rotation: ',num2str(rotation{1}),' deg\nLeft Rotation: ',num2str(rotation{2}),' deg']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');
 set(mcfig,'name',[options.patientname,', Electrode Spacing: ',num2str(memp_eldist),' mm.']);
 setappdata(mcfig,'spacetext',spacetext);
 
@@ -1377,6 +1382,8 @@ switch commnd
     case 'l'
         view(270,0);
 end
+%updatescene([],[],gcf);
+
 
 function ea_finish(hobj,ev)
 disp('Manual correction done.');
