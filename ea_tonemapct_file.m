@@ -10,23 +10,23 @@ end
 switch nativemni
     case 'native'
         directory=[options.root,options.patientname,filesep];
-        if exist([directory,options.prefs.ctnii_coregistered],'file');
+        if exist([directory,options.prefs.ctnii_coregistered],'file')
             ct=ea_load_nii([directory,options.prefs.ctnii_coregistered]);
             ct.fname=[directory,'tp_',options.prefs.ctnii_coregistered];
             ct.img=ea_tonemap_ct(ct.img);
             ea_write_nii(ct);
         else
-            warning('CT file not present. Skipping tonemapping.');
+            fprintf('%s not present. Skipping tonemapping.\n', options.prefs.ctnii_coregistered);
         end
     case 'mni'
         directory=[options.root,options.patientname,filesep];
-        if exist([directory,options.prefs.gctnii],'file');
+        if exist([directory,options.prefs.gctnii],'file')
             ct=ea_load_nii([directory,options.prefs.gctnii]);
             ct.fname=[directory,'tp_',options.prefs.gctnii];
             ct.img=ea_tonemap_ct(ct.img);
             ea_write_nii(ct);
         else
-            warning('CT file not present. Skipping tonemapping.');
+            fprintf('%s not present. Skipping tonemapping.\n', options.prefs.gctnii);
         end
 end
 
