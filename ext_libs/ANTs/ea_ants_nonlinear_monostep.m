@@ -83,8 +83,7 @@ else
 end
 
 % Load preset parameter set
-[~, funname] = fileparts(options.prefs.machine.normsettings.ants_preset);
-apref = feval(eval(['@', funname]), options.prefs.machine.normsettings);
+apref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), options.prefs.machine.normsettings);
 
 directory=fileparts(movingimage{1});
 directory=[directory,filesep];

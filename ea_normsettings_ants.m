@@ -66,30 +66,33 @@ earoot=ea_getearoot;
 presf=[earoot,'ext_libs',filesep,'ANTs',filesep,'presets',filesep];
 ndir=dir([presf,'ea_antspreset_*.m']);
 for n=1:length(ndir)
-    [~,funame]=fileparts(ndir(n).name);
+    [~,funame,~]=fileparts(ndir(n).name);
     namecell{n}=eval([funame,'(''query'')']);
-    funcell{n}=ndir(n).name;
+    funcell{n}=funame;
 end
 setappdata(handles.pcpopup,'funcell',funcell);
 set(handles.pcpopup,'String',namecell);
 
 % select last selection
 prefs=ea_prefs('');
+
+% preset
 [~,ix]=ismember(prefs.machine.normsettings.ants_preset,getappdata(handles.pcpopup,'funcell'));
 if ix % if has prior selection
     set(handles.pcpopup,'Value',ix);
 end
 
+% metric
 [~,ix]=ismember(prefs.machine.normsettings.ants_metric,get(handles.metric,'String'));
 if ix % if has prior selection
     set(handles.metric,'Value',ix);
 end
 
+% strategy
 [~,ix]=ismember(prefs.machine.normsettings.ants_strategy,get(handles.strategy,'String'));
 if ix % if has prior selection
     set(handles.strategy,'Value',ix);
 end
-
 
 if ischar(prefs.machine.normsettings.ants_numcores)
     set(handles.restrcores,'Value',1);
