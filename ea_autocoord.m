@@ -83,9 +83,12 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         for fi=1:length(presentfiles)
             ea_anatpreprocess([directory,presentfiles{fi}]);
         end
-
+        
+        
         % Reslice(interpolate) preoperative anatomical image if needed
         try ea_resliceanat(options); end
+        
+        ea_precoreg([directory,presentfiles{1}],options.primarytemplate);
 
         try
             fs = fopen([directory,'.pp'],'w');

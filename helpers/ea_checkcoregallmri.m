@@ -6,9 +6,9 @@ if ~exist('usefa','var')
     usefa=1; % by default use it.
 end
 
-%if ~ea_seemscoregistered(options) % check headers of files to see if already coregistered.
+if ~ea_seemscoregistered(options) % check headers of files to see if already coregistered.
     ea_coreg_all_mri(options,usebrainmask)
-%end
+end
 
 if usefa
     ea_coreg_fa(options,usebrainmask);
