@@ -1,5 +1,5 @@
 function ea_genflipspace
-if ~exist([ea_space,'fliplr']);
+if ~exist([ea_space,'fliplr',filesep,'glanatComposite.h5'],'file');
     ea_dispt('Generating nonlinear warp between hemispheres');
     mkdir([ea_space,'fliplr']);
     spacedef=ea_getspacedef;

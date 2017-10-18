@@ -12,7 +12,7 @@ function ea_corrnifti(fis,regressor,output)
        end
     end
 
-    R=corr(regressor,X','type','Spearman');
+    R=corr(regressor,X','type','Spearman','rows','pairwise');
 
 n.img(:)=R;
 n.fname=output;
