@@ -40,10 +40,7 @@ end
 
 if slabsupport
     disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},'is a whole-brain acquisition)...']);
-    tmaskdir=fullfile(tempdir,'lead');
-    if ~exist(tmaskdir,'dir')
-        mkdir(tmaskdir);
-    end
+
     for mov=1:length(movingimage)
         mnii=ea_load_nii(movingimage{mov});
         mnii.img=~(mnii.img==0);
@@ -68,6 +65,12 @@ if slabsupport
             slabspresent=1;
             mnii.dt=[4,0];
             mnii.img=AllMX;
+
+            tmaskdir = fullfile(outputdir, 'tmp');
+            if ~exist(tmaskdir, 'dir')
+                mkdir(tmaskdir);
+            end
+
             mnii.fname=[tmaskdir,filesep,'slabmask.nii'];
             ea_write_nii(mnii);
             disp('Slabs found. Separating slabs to form an additional SyN stage.');
@@ -257,5 +260,7 @@ if ~ispc
 else
     system(cmd);
 end
+
+ea_delete(tmaskdir);
 
 ea_conv_antswarps(directory);

@@ -15,9 +15,9 @@ if ~exist('refim','var')
 end
 switch ea_whichnormmethod(directory)
     case ea_getantsnormfuns % ANTs part here
-        
+
         ea_ants_applytransforms(options,from,to,useinverse,refim,'',interp);
-        
+
     case ea_getfslnormfuns % FSL part here
         if useinverse
             for fi=1:length(from) % assume from and to have same length (must have for this to work)
@@ -44,7 +44,7 @@ switch ea_whichnormmethod(directory)
                 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
-                
+
                 if wasgz
                     gzip(from{fi});
                     delete(from{fi});
@@ -53,29 +53,24 @@ switch ea_whichnormmethod(directory)
             end
         end
         ea_fsl_applytransforms(options,from,to,useinverse,refim,'',interp);
-        
+
     otherwise % SPM part here
         for fi=1:length(from) % assume from and to have same length (must have for this to work)
             if strcmp(from{fi}(end-2:end),'.gz') % .gz support
+                wasgz = 1;
                 [~,fn] = fileparts(from{fi});
                 copyfile(from{fi},[tempdir,fn,'.gz']);
                 gunzip([tempdir,fn,'.gz']);
                 from{fi} = [tempdir,fn];
+            else
+                wasgz = 0;
             end
-            
+
             if useinverse
                 if isempty(refim)
                     refim = [directory,options.prefs.prenii_unnormalized];
                 end
-                % pullback:
-                %                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.interp = interp;
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
-                %
+
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
                 matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
                 matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
@@ -91,15 +86,7 @@ switch ea_whichnormmethod(directory)
                     spacedef=ea_getspacedef;
                     refim = [ea_space,spacedef.templates{1},'.nii'];
                 end
-                % pullback:
-                %                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.interp = interp;
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
-                %                 matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
-                  
+
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
                 matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
                 matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
@@ -111,24 +98,29 @@ switch ea_whichnormmethod(directory)
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
             end
-            
+
             pth = fileparts(to{fi});
             [~, fn, ext] = fileparts(from{fi});
-            
+
             if strcmp(to{fi}(end-2:end),'.gz')
                 to{fi} = to{fi}(1:end-3);
                 gzip_output = 1;
             else
                 gzip_output = 0;
             end
-            
+
             try % fails if to is a w prefixed file already
                 movefile(fullfile(pth,['w', fn, ext]),to{fi});
             end
-            
+
             if gzip_output
                 gzip(to{fi});
                 delete(to{fi});
+            end
+
+            if wasgz
+                ea_delete([tempdir,fn,'.gz']);
+                ea_delete([tempdir,fn]);
             end
         end
 end

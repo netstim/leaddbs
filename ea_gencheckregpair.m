@@ -33,4 +33,4 @@ else
     system(cmd);
 end
 
-
+ea_delete([tempdir,'lead_temp',uid,'.nii']);

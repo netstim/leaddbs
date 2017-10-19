@@ -325,9 +325,10 @@ movefile([directory,'import.nii'],opath);
 nii=nifti(opath);
 img=squeeze(nii.dat(round(size(nii.dat,1)/2),:,:));
 
-
 img=(img-min(img(:)))/(max(img(:))-min(img(:)));
 img=repmat(img,1,1,3);
+
+rmdir(directory, 's');
 
 
 function options=ea_step1options(handles)

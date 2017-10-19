@@ -233,3 +233,5 @@ props.directory = directory;
 props.stagesep = options.prefs.machine.normsettings.ants_stagesep;
 
 ea_submit_ants_nonlinear(props);
+
+ea_delete(tmaskdir);
