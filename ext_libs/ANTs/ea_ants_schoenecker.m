@@ -261,6 +261,8 @@ else
     system(cmd);
 end
 
-ea_delete(tmaskdir);
+if exist(tmaskdir, 'var')
+    ea_delete(tmaskdir);
+end
 
 ea_conv_antswarps(directory);
