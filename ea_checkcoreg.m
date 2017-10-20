@@ -339,6 +339,11 @@ switch stripex(currvol)
         ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
         ea_gencoregcheckfigs(options); % generate checkreg figures
 
+    case stripex(options.prefs.fa2anat) % FA
+        options.coregmr.method=get(handles.coregmrpopup,'String');
+        options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
+        ea_coreg2images(options,[directory,options.prefs.fa],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
+        ea_dumpspecificmethod(handles,options.coregmr.method)
     otherwise % MR
         options.coregmr.method=get(handles.coregmrpopup,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
