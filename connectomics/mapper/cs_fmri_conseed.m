@@ -282,6 +282,23 @@ for mcfi=usesubjects % iterate across subjects
                     ccmap.img(omaskidx)=mean(thiscorr,2);
                     ccmap.dt=[16,0];
                     spm_write_vol(ccmap,ccmap.img);
+                    
+                    % surfs, too:
+                    
+                    ccmap=dataset.surf.l.space;
+                    ccmap.img=single(ccmap.img);
+                    ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr_surf_lh.nii'];
+                    ccmap.img(:)=mean(ls.thiscorr,2);
+                    ccmap.dt=[16,0];
+                    spm_write_vol(ccmap,ccmap.img);
+                    
+                    ccmap=dataset.surf.r.space;
+                    ccmap.img=single(ccmap.img);
+                    ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr_surf_rh.nii'];
+                    ccmap.img(:)=mean(rs.thiscorr,2);
+                    ccmap.dt=[16,0];
+                    spm_write_vol(ccmap,ccmap.img);
+                    
                 end
             end
 
