@@ -261,7 +261,7 @@ else
     system(cmd);
 end
 
-if exist(tmaskdir, 'var')
+if exist('tmaskdir', 'var')
     ea_delete(tmaskdir);
 end
 
