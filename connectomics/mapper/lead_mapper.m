@@ -54,7 +54,7 @@ function lead_mapper_OpeningFcn(hObject, eventdata, handles, varargin)
 
 
 earoot=ea_getearoot;
-im=imread([earoot,'icons',filesep,'logo_lead_connectome.png']);
+im=imread([earoot,'icons',filesep,'logo_lead_connectome_mapper.png']);
 image(im);
 axes(handles.logoaxes);
 axis off;
