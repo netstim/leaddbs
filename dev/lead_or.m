@@ -88,7 +88,7 @@ set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 %set(0,'gca',handles.logoaxes);
 set(0,'CurrentFigure',handles.leadfigure);
-im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
+im=imread([earoot,'icons',filesep,'logo_lead_or.png']);
 
 image(im);
 axis off;
