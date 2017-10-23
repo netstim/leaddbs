@@ -83,11 +83,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         for fi=1:length(presentfiles)
             ea_anatpreprocess([directory,presentfiles{fi}]);
         end
-        
-        
+
         % Reslice(interpolate) preoperative anatomical image if needed
         try ea_resliceanat(options); end
-        
+
         ea_precoreg([directory,presentfiles{1}],options.primarytemplate);
 
         try
@@ -224,7 +223,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                     coords_mm=ea_resolvecoords(markers,options);
                 end
 
-
                 % transform trajectory to mm space:
                 for side=1:length(options.sides)
                     try
@@ -243,32 +241,82 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                     {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
             case 2 % PaCER
+                try
+                    elecmodels=PaCER([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],'finalDegree',1,'electrodeType',ea_mod2pacermod(options.elmodel));
 
-                elecmodels=PaCER([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],'finalDegree',1,'electrodeType',ea_mod2pacermod(options.elmodel));
+                    for side=options.sides
+                        coords_mm{side}=elecmodels{side}.getContactPositions3D;
+                        for dim=1:3
+                            trajectory{side}(:,dim)=linspace(coords_mm{side}(1,dim),coords_mm{side}(1,dim)+10*(coords_mm{side}(1,dim)-coords_mm{side}(end,dim)),20);
+                        end
 
-                for side=options.sides
-                    coords_mm{side}=elecmodels{side}.getContactPositions3D;
-                    for dim=1:3
-                        trajectory{side}(:,dim)=linspace(coords_mm{side}(1,dim),coords_mm{side}(1,dim)+10*(coords_mm{side}(1,dim)-coords_mm{side}(end,dim)),20);
+                        markers(side).head=coords_mm{side}(1,:);
+                        markers(side).tail=coords_mm{side}(4,:);
+                        normtrajvector{side}=(coords_mm{side}(1,:)-coords_mm{side}(end,:))/...
+                            norm((coords_mm{side}(1,:)-coords_mm{side}(end,:)));
+                        orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
+
+                        markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
+                        markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+
                     end
 
-                    markers(side).head=coords_mm{side}(1,:);
-                    markers(side).tail=coords_mm{side}(4,:);
-                    normtrajvector{side}=(coords_mm{side}(1,:)-coords_mm{side}(end,:))/...
-                    norm((coords_mm{side}(1,:)-coords_mm{side}(end,:)));
-                    orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
+                    options.native=1;
+                    options.hybridsave=1;
+                    ea_methods(options,...
+                        ['DBS-Electrodes were automatically pre-localized in native & template space using the PaCER algorithm',...
+                        ' (Husch to appear; http://adhusch.github.io/PaCER/).'],...
+                        {'Husch (to appear). PaCER - A fully automated method for electrode trajectory and contact reconstruction in deep brain stimulation.'});
+                catch % revert to TRAC/CORE
 
-                    markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
-                    markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+                    for side=options.sides
 
+                        %try
+                        % call main routine reconstructing trajectory for one side.
+                        [coords,trajvector{side},trajectory{side},tramat]=ea_reconstruct(options.patientname,options,side);
+
+                        % refit electrodes starting from first electrode (this is redundant at this point).
+                        coords_mm{side} = ea_map_coords(coords', [directory,options.prefs.tranii])';
+
+                        [~,distmm]=ea_calc_distance(options.elspec.eldist,trajvector{side},tramat(1:3,1:3),[directory,options.prefs.tranii]);
+
+                        comp = ea_map_coords([0,0,0;trajvector{side}]', [directory,options.prefs.tranii])'; % (XYZ_mm unaltered)
+
+                        trajvector{side}=diff(comp);
+
+                        normtrajvector{side}=trajvector{side}./norm(trajvector{side});
+
+                        for electrode=2:4
+                            coords_mm{side}(electrode,:)=coords_mm{side}(1,:)-normtrajvector{side}.*((electrode-1)*distmm);
+                        end
+                        markers(side).head=coords_mm{side}(1,:);
+                        markers(side).tail=coords_mm{side}(4,:);
+
+                        orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
+
+                        markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
+                        markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+
+                        coords_mm=ea_resolvecoords(markers,options);
+                    end
+
+                    % transform trajectory to mm space:
+                    for side=1:length(options.sides)
+                        try
+                            if ~isempty(trajectory{side})
+                                trajectory{side}=ea_map_coords(trajectory{side}', [directory,options.prefs.tranii])';
+                            end
+
+                        end
+                    end
+                    options.hybridsave=1;
+
+                    % save reconstruction results
+                    ea_methods(options,...
+                        ['DBS-Electrodes were automatically pre-localized in native & template space using Lead-DBS software',...
+                        ' (Horn & Kuehn 2015; SCR_002915; http://www.lead-dbs.org).'],...
+                        {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
                 end
-
-                options.native=1;
-                options.hybridsave=1;
-                ea_methods(options,...
-                    ['DBS-Electrodes were automatically pre-localized in native & template space using the PaCER algorithm',...
-                    ' (Husch to appear; http://adhusch.github.io/PaCER/).'],...
-                    {'Husch (to appear). PaCER - A fully automated method for electrode trajectory and contact reconstruction in deep brain stimulation.'});
         end
         elmodel=options.elmodel;
         ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
@@ -300,6 +348,7 @@ else
     ea_write(options)
 end
 
+
 function di=ea_sortbytes(di)
 if isempty(di)
     return
@@ -310,14 +359,15 @@ end
 [~,order]=sort(bytesc,'ascend');
 di=di(order);
 
+
 function model=ea_mod2pacermod(model)
 % current dictionary to translate between Lead-DBS and PaCER nomenclature.
 % Hoping to standardize this in the future.
 switch model
     case 'Medtronic 3389'
-       % pass through (same nomenclature)
+        % pass through (same nomenclature)
     case 'Medtronic 3387'
-       % pass through (same nomenclature)
+        % pass through (same nomenclature)
     case 'Boston Scientific Vercise Directed'
         model='Boston Vercise Directional';
     otherwise

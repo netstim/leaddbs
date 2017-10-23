@@ -10,25 +10,26 @@ if options.native
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
     if isfield(options,'hybridsave');
         ea_dispt('Warping fiducials to template space');
-        
+
         ea_reconstruction2mni(options);
         if options.prefs.reco.saveACPC
             ea_dispt('Mapping fiducials to AC/PC space');
             ea_reconstruction2acpc(options);
         end
         load([options.root,options.patientname,filesep,'ea_reconstruction']);
-        ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
+        [reco,corrected]=ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
+
         save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
-        
+
     end
 else
     reco.mni.coords_mm=coords_mm;
     reco.mni.trajectory=trajectory;
     reco.mni.markers=markers;
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
-    
+
     if isfield(options,'hybridsave');
-        
+
             ea_dispt('Warping fiducials to native space');
             ea_reconstruction2native(options);
             if options.prefs.reco.saveACPC
@@ -37,14 +38,14 @@ else
             end
             load([options.root,options.patientname,filesep,'ea_reconstruction']);
             [reco,corrected]=ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
-        
+
         save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
         if corrected
             options.hybridsave=1;
             ea_save_reconstruction(reco.mni.coords_mm,reco.mni.trajectory,reco.mni.markers,elmodel,manually_corrected,options)
         end
     end
-    
+
 end
 
 
@@ -62,6 +63,16 @@ if mean(reco.mni.coords_mm{1}(:,1))<mean(reco.mni.coords_mm{2}(:,1)) % RL swappe
     reco.mni.coords_mm=ncoords_mm;
     reco.mni.trajectory=ntrajectory;
     reco.mni.markers=nmarkers;
+
+
+    ncoords_mm{1}=reco.native.coords_mm{2};    ncoords_mm{2}=reco.native.coords_mm{1};
+    ntrajectory{1}=reco.native.trajectory{2};    ntrajectory{2}=reco.native.trajectory{1};
+    nmarkers(1)=reco.native.markers(2); nmarkers(2)=reco.native.markers(1);
+
+    reco.native.coords_mm=ncoords_mm;
+    reco.native.trajectory=ntrajectory;
+    reco.native.markers=nmarkers;
+
     corrected=1;
 end
 
@@ -70,7 +81,7 @@ vizz=0;
 % check that markers are correct (important for directional leads):
 if ~reco.props.manually_corrected
     options.hybridsave=1;
-    
+
     for side=options.sides
         if vizz
         figure
@@ -95,9 +106,7 @@ if ~reco.props.manually_corrected
             axis equal
             keyboard
         end
-        
+
     end
     reco.mni.coords_mm=ea_resolvecoords(reco.mni.markers,options);
 end
-
-
