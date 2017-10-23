@@ -1668,6 +1668,7 @@ if groupmode
     elstruct=getappdata(handles.stimfig,'elstruct');
 
     set(handles.headertxt,'String',['Patient (',num2str(actpt),'/', num2str(length(elstruct)),'): ',elstruct(actpt).name]);
+    
     gSv=getappdata(handles.stimfig,'gSv');
     if isfield(gSv,'vatmodel')
         if isempty(gSv.vatmodel)
@@ -1732,20 +1733,23 @@ end
 stimlabel=getappdata(handles.stimfig,'stimlabel');
 
 if isempty(S)
+    wasempty=1;
     S=initializeS(stimlabel,options,handles);
     setappdata(handles.stimfig,'stimlabel',S.label);
 else
+    wasempty=0;
    if isempty(S.Rs1)
        S=initializeS(stimlabel,options,handles);
        setappdata(handles.stimfig,'stimlabel',S.label);
    end
 end
-
-if isfield(S, 'model')
-    [~,ix]=ismember(S.model,get(handles.modelselect,'String'));
-    set(handles.modelselect,'Value',ix);
-else
-    set(handles.modelselect,'Value',1);
+if ~wasempty
+    if isfield(S, 'model')
+        [~,ix]=ismember(S.model,get(handles.modelselect,'String'));
+        set(handles.modelselect,'Value',ix);
+    else
+        set(handles.modelselect,'Value',1);
+    end
 end
 
 Ractive=S.active(1);
@@ -2733,6 +2737,9 @@ function nextpt_Callback(hObject, eventdata, handles)
 
 S=getappdata(handles.stimfig,'S');
 gS=getappdata(handles.stimfig,'gS');
+
+gSv=getappdata(handles.stimfig,'gSv');
+
 actpt=getappdata(handles.stimfig,'actpt');
 elstruct=getappdata(handles.stimfig,'elstruct');
 options=getappdata(handles.stimfig,'options');
