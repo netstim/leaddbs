@@ -18,8 +18,8 @@ try
             case 'dbs'
                 sz=get(fighandle,'Position');
                 pos=[sz(3)-50-2 sz(4)-50-2 50 50];
-                onfigtit='Lead-DBS (busy...)';
-                offfigtit='Lead-DBS';
+                onfigtit='Lead DBS (busy...)';
+                offfigtit='Lead DBS';
             case 'coreg'
                 sz=get(fighandle,'Position');
                 pos=[sz(3)-50-2 sz(4)-50-2 50 50];
@@ -33,18 +33,28 @@ try
             case 'anatomy'
                 sz=get(fighandle,'Position');
                 pos=[sz(3)-50-2 sz(4)-50-2 50 50];
-                onfigtit='Lead-Anatomy (busy...)';
-                offfigtit='Lead-Anatomy';
+                onfigtit='Lead Anatomy (busy...)';
+                offfigtit='Lead Anatomy';
             case 'mapper'
                 sz=get(fighandle,'Position');
                 pos=[sz(3)-50-2 sz(4)-50-2 50 50];
-                onfigtit='Lead-Connectome Mapper (busy...)';
-                offfigtit='Lead-Connectome Mapper';
+                onfigtit='Lead Connectome Mapper (busy...)';
+                offfigtit='Lead Connectome Mapper';
             case 'connectome'
                 sz=get(fighandle,'Position');
                 pos=[sz(3)-50-2 sz(4)-50-2 50 50];
-                onfigtit='Lead-Connectome (busy...)';
-                offfigtit='Lead-Connectome';
+                onfigtit='Lead Connectome (busy...)';
+                offfigtit='Lead Connectome';
+            case 'predict'
+                sz=get(fighandle,'Position');
+                pos=[sz(3)-50-2 sz(4)-50-2 50 50];
+                onfigtit='Lead Predict (busy...)';
+                offfigtit='Lead Predict';
+            case 'or'
+                sz=get(fighandle,'Position');
+                pos=[sz(3)-50-2 sz(4)-50-2 50 50];
+                onfigtit='Lead OR (busy...)';
+                offfigtit='Lead OR';
             case 'acpc'
                 sz=get(fighandle,'Position');
                 pos=[sz(3)-50-2 sz(4)-50-2 50 50];
@@ -53,8 +63,8 @@ try
             case 'group'
                 sz=get(fighandle,'Position');
                 pos=[sz(3)-50-5 sz(4)-50 50 50];
-                onfigtit='Lead-Group Analysis (busy...)';
-                offfigtit='Lead-Group Analysis';
+                onfigtit='Lead Group Analysis (busy...)';
+                offfigtit='Lead Group Analysis';
             case 'reco'
                 sz=get(fighandle,'Position');
                 pos=[sz(3)-50-2 sz(4)-50-2 50 50];

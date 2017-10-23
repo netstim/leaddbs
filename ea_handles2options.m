@@ -245,7 +245,11 @@ try
             options.lcm.seeds=stimname;
             options.lcm.seeddef='vats';
     end
-    options.lcm.odir=getappdata(handles.odirbutton,'odir');
+    try
+        options.lcm.odir=getappdata(handles.odirbutton,'odir');
+    catch % called from predict module.
+        options=rmfield(options,'lcm');
+    end
     if isempty(options.lcm.odir)
         if ~strcmp(options.lcm.seeddef,'vats')
             try
@@ -270,3 +274,60 @@ try
     end
     options.lcm.struc.espace=get(handles.strucexportspace,'Value');
 end
+
+% lead predict options:
+
+try
+    includes={'Coords','VTA','dMRI','fMRI'};
+    todel=[];
+    if ~strcmp(handles.inccoordinate.Enable,'on') || ~handles.inccoordinate.Value
+        todel=[todel,1];
+    end
+    if ~strcmp(handles.incvta.Enable,'on') || ~handles.incvta.Value
+        todel=[todel,2];
+    end
+    if ~strcmp(handles.incstructural.Enable,'on') || ~handles.incstructural.Value
+        todel=[todel,3];
+    end
+    if ~strcmp(handles.incfunctional.Enable,'on') || ~handles.incfunctional.Value
+        todel=[todel,4];
+    end
+    includes(todel)=[];    
+   options.predict.includes=includes;
+   % dMRI connectome
+   if ~iscell(handles.fiberspopup.String)
+       options.predict.dMRIcon{1}=handles.fiberspopup.String;
+   else
+       options.predict.dMRIcon=handles.fiberspopup.String;
+   end
+   options.predict.dMRIcon=options.predict.dMRIcon{handles.fiberspopup.Value};
+   
+   %fMRI connectome
+   if ~iscell(handles.fmripopup.String)
+       options.predict.fMRIcon{1}=handles.fmripopup.String;
+   else
+       options.predict.fMRIcon=handles.fmripopup.String;
+   end
+   options.predict.fMRIcon=options.predict.fMRIcon{handles.fmripopup.Value};
+   
+   % Chosen prediction model
+   mfiles=getappdata(handles.predictionmodel,'mfiles');
+   if ~iscell(handles.predictionmodel.String)
+       options.predict.model{1}=handles.predictionmodel.String;
+   else
+              options.predict.model=handles.predictionmodel.String;
+   end
+   options.predict.model=options.predict.model{handles.predictionmodel.Value};
+   options.predict.model_mfile=mfiles{handles.predictionmodel.Value};
+   
+   % chosen stimulation name
+   if ~iscell(handles.seeddefpopup.String)
+       options.predict.stimulation{1}=handles.seeddefpopup.String;
+   else
+       options.predict.stimulation=handles.seeddefpopup.String;
+   end
+   options.predict.stimulation=options.predict.stimulation{handles.seeddefpopup.Value};
+   options.predict.usepresentmaps=handles.usepresentmaps.Value;
+
+end
+

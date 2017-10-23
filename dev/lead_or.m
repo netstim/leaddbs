@@ -101,7 +101,7 @@ ea_addnormmethods(handles,options);
 ea_processguiargs(handles,varargin)
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'});
+ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'});
 
 handles.prod='dbs';
 ea_firstrun(handles,options);
@@ -139,7 +139,7 @@ if any(nonexist)
     patdir(nonexist) = [];
 end
 
-ea_busyaction('on',handles.leadfigure,'dbs');
+ea_busyaction('on',handles.leadfigure,'or');
 if ~isempty(patdir)
     ea_load_pts(handles, patdir);
 
@@ -150,7 +150,7 @@ if ~isempty(patdir)
         ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
     end
 end
-ea_busyaction('off',handles.leadfigure,'dbs');
+ea_busyaction('off',handles.leadfigure,'or');
 
 
 % --- Outputs from this function are returned to the command line.
@@ -171,16 +171,16 @@ function run_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-ea_busyaction('on', handles.leadfigure, 'dbs');
+ea_busyaction('on', handles.leadfigure, 'or');
 
 options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 
-options.leadprod = 'dbs';
+options.leadprod = 'or';
 
 ea_run('run',options);
 
-ea_busyaction('off', handles.leadfigure, 'dbs');
+ea_busyaction('off', handles.leadfigure, 'or');
 
 
 function edit1_Callback(hObject, eventdata, handles)
@@ -467,10 +467,10 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % hObject    handle to patdir_choosebox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_busyaction('on',handles.leadfigure,'dbs');
+ea_busyaction('on',handles.leadfigure,'or');
 options.prefs=ea_prefs('');
 ea_getpatients(options,handles);
-ea_busyaction('off',handles.leadfigure,'dbs');
+ea_busyaction('off',handles.leadfigure,'or');
 
 
 % --- Executes on button press in left_checkbox.
@@ -1124,16 +1124,16 @@ function exportcode_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-ea_busyaction('on', handles.leadfigure, 'dbs');
+ea_busyaction('on', handles.leadfigure, 'or');
 
 options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 
-options.leadprod = 'dbs';
+options.leadprod = 'or';
 
 ea_run('export',options);
 
-ea_busyaction('off', handles.leadfigure, 'dbs');
+ea_busyaction('off', handles.leadfigure, 'or');
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1155,9 +1155,9 @@ function recentpts_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
-ea_busyaction('on',handles.leadfigure,'dbs');
+ea_busyaction('on',handles.leadfigure,'or');
 ea_rcpatientscallback(handles);
-ea_busyaction('off',handles.leadfigure,'dbs');
+ea_busyaction('off',handles.leadfigure,'or');
 
 % --- Executes during object creation, after setting all properties.
 function recentpts_CreateFcn(hObject, eventdata, handles)

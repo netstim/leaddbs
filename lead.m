@@ -113,6 +113,10 @@ if nargin>3
             lead_anatomy;
             delete(handles.leadfigure)
             return
+        case {'predict', '-p', 'p'}
+            lead_predict;
+            delete(handles.leadfigure)
+            return
         case {'version', '-v', 'v'}
             disp(ea_getvsn('local'));
             delete(handles.leadfigure)

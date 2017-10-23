@@ -61,6 +61,10 @@ if isfield(options,'lcm')
     ea_lcm(options);
 end
 
+if isfield(options,'predict')
+   ea_predict(options); 
+end
+
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
 
     % move files for compatibility

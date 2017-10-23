@@ -34,7 +34,7 @@ ea_getui(handles); % update ui from patient
 ea_storeui(handles); % save in pt folder
 ea_addrecentpatient(handles,uipatdir,[patsub],patsub);
 
-% add VATs to seeds for connectome mapper case
+% add VATs to seeds for connectome mapper or predict case
 if isfield(handles,'seeddefpopup')
     for pt=1:length(uipatdir)
     direc=[uipatdir{pt},filesep];
@@ -52,8 +52,14 @@ if isfield(handles,'seeddefpopup')
     end
     end
     % for now only check first subject for pt. specific fibers..
-    remstims=ea_prependvat(remstims);
-    set(handles.seeddefpopup,'String',[{'Manually choose seeds'},remstims]);
+    callers=dbstack; % find out whether mapper or predict were calling
+    switch callers(5).name
+        case 'lead_predict'
+            set(handles.seeddefpopup,'String',[remstims]);
+        case 'lead_mapper'
+                remstims=ea_prependvat(remstims);
+            set(handles.seeddefpopup,'String',[{'Manually choose seeds'},remstims]);
+    end
     ea_resetpopup(handles.seeddefpopup);
 
     % update cons
