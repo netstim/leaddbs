@@ -55,7 +55,6 @@ else
 end
 
 
-[sfile,roilist]=ea_handleseeds(sfile);
 
 
 owasempty=0;
@@ -432,7 +431,6 @@ switch dataset.type
         switch cmd
             case {'seed','pmap','pseed'}
                 for s=1:size(seedfn,1) % subtract 1 in case of pmap command
-
                    if owasempty
                        outputfolder=ea_getoutputfolder({sfile{s}});
                    end
