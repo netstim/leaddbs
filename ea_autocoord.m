@@ -193,7 +193,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     end
 
     if options.doreconstruction
-        ea_checkfiles(options);
         switch options.reconmethod
             case 1 % TRAC/CORE
                 [coords_mm,trajectory,markers]=ea_runtraccore(options);

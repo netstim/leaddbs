@@ -28,7 +28,8 @@ maskslice=reshape(maskslice,sqrt(length(maskslice)),sqrt(length(maskslice)));
 threshold=mean(maskslice(:))-(options.tra_stdfactor+add_to_tra_stdfactor)*std(maskslice(:)); % =80.
 
 %% make binary thresholded copies of slice.
-slicebw=zeros(length(slice));
+slicebw=slice;
+slicebw(:)=0;
 slicebw(slice<threshold)=1;
 slicebw(~mask)=0;
 

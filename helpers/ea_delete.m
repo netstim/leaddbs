@@ -3,6 +3,7 @@ function ea_delete(object, warn)
 
 if nargin < 2
     warn = 0;
+    warning('off');
 end
 
 if ~iscell(object)
@@ -15,6 +16,7 @@ for i=1:numel(object)
     elseif exist(object{i}, 'dir') == 7
         rmdir(object{i},'s');
     elseif warn
-        warning([object{i}, ' not exists!'])
+        warning([object{i}, ' does not exist!'])
     end
 end
+warning('on');

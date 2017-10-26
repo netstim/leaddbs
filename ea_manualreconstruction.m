@@ -903,7 +903,7 @@ try mks(4,:)=markers(2).tail; end
 
 
 %title(['Electrode ',num2str(el-1),', transversal view.']);
-wsize=10;
+wsize=7;
 cmap=[1,4,5,8];
 
 for subpl=getsuplots(options.sides)

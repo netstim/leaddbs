@@ -55,6 +55,15 @@ if strcmp(context, 'normal')
 end
 
 
+
+% legacy code support for gl/l normalized file differentiation:
+prefs.prenii=prefs.gprenii;
+prefs.tranii=prefs.gtranii;
+prefs.cornii=prefs.gcornii;
+prefs.sagnii=prefs.gsagnii;
+prefs.ctnii=prefs.gctnii;
+
+
 function prefs = combinestructs(prefs, uprefs)
 
 ufn = fieldnames(uprefs);

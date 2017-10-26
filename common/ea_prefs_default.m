@@ -35,17 +35,14 @@ prefs.tp_ctnii_coregistered=['tp_',prefs.ctnii_coregistered];
 prefs.preferMRCT = 1; % preference of MR or CT modality for post-op image: 1 for MR, 2 for CT.
 
 prefs.patientdir=patientname;
-prefs.prenii='lanat.nii';
-prefs.tranii='lpostop_tra.nii';
-prefs.cornii='lpostop_cor.nii';
-prefs.sagnii='lpostop_sag.nii';
-prefs.ctnii='lpostop_ct.nii';
 
 prefs.gprenii='glanat.nii';
 prefs.gtranii='glpostop_tra.nii';
 prefs.gcornii='glpostop_cor.nii';
 prefs.gsagnii='glpostop_sag.nii';
 prefs.gctnii='glpostop_ct.nii';
+
+
 prefs.tp_gctnii=['tp_',prefs.gctnii];
 
 %% connectome files:

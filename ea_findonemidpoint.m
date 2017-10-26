@@ -63,7 +63,7 @@ if options.automask % if maskwindow size is set to 'auto'
             options.maskwindow=options.maskwindow-2;
         end
     else
-        if length(CC.PixelIdxList)/((2*options.maskwindow+1)^2)>0.001 % if the object found does fill out more than 0.001 of pixel-space, increase mask.
+        if length(CC.PixelIdxList)/((2*options.maskwindow+1)^2)>0.0015 % if the object found does fill out more than 0.001 of pixel-space, increase mask.
                 options.maskwindow=options.maskwindow+1;
         else
             if options.maskwindow>4

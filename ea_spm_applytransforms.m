@@ -16,17 +16,13 @@ switch options.modality
         gfis{2}=options.prefs.gtranii;
         gfis{3}=options.prefs.gcornii;
         gfis{4}=options.prefs.gsagnii;
-        lfis{1}=options.prefs.prenii;
-        lfis{2}=options.prefs.tranii;
-        lfis{3}=options.prefs.cornii;
-        lfis{4}=options.prefs.sagnii;
+        
     case 2 % CT
         postops{1}=options.prefs.prenii_unnormalized;
         postops{2}=options.prefs.ctnii_coregistered;
         gfis{1}=options.prefs.gprenii;
         gfis{2}=options.prefs.gctnii;
-        lfis{1}=options.prefs.prenii;
-        lfis{2}=options.prefs.ctnii;
+       
 end
 [postops,gfis]=ea_appendgrid(options,postops,gfis,0);
 
@@ -59,33 +55,6 @@ for pos=1:length(gfis)
     end
 end
 
-% export lfiles (fine resolution, small bounding box).
-try
-    for pos=1:length(lfis)
-        if exist([directory,postops{pos}],'file')
-            nii=ea_load_nii([directory,postops{pos}]);
-            gaussdim=abs(nii.voxsize);
-            %gaussdim=abs(gaussdim(1:3)).*2;
-            if mean(gaussdim>1)
-                resize_img([directory,postops{pos}],gaussdim./2,nan(2,3),0);
-            else
-                copyfile([directory,postops{pos}],[directory,'r',postops{pos}]);
-            end
-            
-            matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
-            matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1}=[directory,'r',postops{pos},''];
-            matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
-            matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {directory};
-            matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {[ea_space(options),'bb.nii']};
-            matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
-            matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = gaussdim;
-            jobs{1}=matlabbatch;
-            spm_jobman('run',jobs);
-            clear matlabbatch jobs;
-        end
-        try movefile([directory,'swr',postops{pos}],[directory,lfis{pos}]); end
-    end
-end
 
 ea_delete([directory,'rgrid.nii']);
 switch options.modality

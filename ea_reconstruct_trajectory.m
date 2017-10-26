@@ -8,7 +8,7 @@ if options.modality==2 % CT support
 end
 
 %Vtra=spm_vol([options.root,patientname,filesep,patientname,'_tra_brain_A3_final.nii']);
-slice=zeros(size(tra_nii.img,1),size(tra_nii.img,2));
+slice=zeros(size(tra_nii.img,2),size(tra_nii.img,1));
 masknii=tra_nii;
 
 if options.verbose>1
@@ -24,7 +24,8 @@ mmvx=tra_nii.mat\mmpt;
 startslice=round(mmvx(3));
 clear mmpt mmvx
 
-flipside=1+(tra_nii.mat(1)<0);
+flipside=2; %1+(tra_nii.mat(1)<0);
+
 
 if ~refine % if this is not a refine-run but an initial run, mask of first slice has to be defined heuristically.
     % define initial mask
@@ -36,8 +37,9 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             mask(masksz(1):masksz(2),masksz(3):masksz(4))=1;
 
             if side==flipside
-                mask=fliplr(mask);
+                mask=flip(mask,2);
             end
+            
             slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
             %slice=fliplr(slice);
             slice(slice==0)=nan;
@@ -67,8 +69,14 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
     % initialize slice. mean average for entrypoint over the first 4 slices.
     slice=zeros(size(mask,1),size(mask,2),4);
     slicebw=zeros(size(mask,1),size(mask,2),4);
+
+   
     for i=10:14
+        try
         [slice(:,:,i),slicebw(:,:,i)]=ea_prepare_slice(tra_nii,mask,1,startslice-(i-1),options);
+        catch
+            keyboard
+        end
     end
     slice=mean(slice,3);
     slicebw=logical(mean(slicebw,3));
@@ -306,6 +314,7 @@ end
 
 function [startslice,endslice,masksz]=ea_getstartslice(options) % get reconstruction default dimensions for current space
 spacedef=ea_getspacedef;
+standardspacedef=load([ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM',filesep,'ea_space_def.mat']);
 if isfield(spacedef,'guidef')
     whichentry=ismember(options.entrypoint,spacedef.guidef.entrypoints);
     masksz=spacedef.guidef.masks(whichentry,:);
@@ -317,16 +326,16 @@ else % use MNI defaults
     endslice=-15.5;
     switch options.entrypoint
         case 'STN, GPi or ViM'
-            masksz=[200,350,70,220];
+            masksz=standardspacedef.spacedef.guidef.masks(1,:);
         case 'Cg25'
-            masksz=[390,490,270,370];
+            masksz=standardspacedef.spacedef.guidef.masks(2,:);
     end
 end
 if strcmp(options.entrypoint,'Manual')
     try
         masksz=spacedef.guidef.masks(1,:);
     catch
-        masksz=[200,350,70,220]; % use STN default
+        masksz=standardspacedef.spacedef.guidef.masks(1,:); % use STN default
 
     end
 end
@@ -335,7 +344,7 @@ if ~exist('masksz','var') % e.g. in case manual set
     try
         masksz=spacedef.guidef.masks(1,:); % use first entry if defined
     catch
-        masksz=[200,350,70,220]; % use STN default
+        masksz=standardspacedef.spacedef.guidef.masks(1,:); % use STN default
     end
 end
 

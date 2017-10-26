@@ -5,7 +5,7 @@ function [coords,trajvector,trajectory,tramat]=ea_reconstruct(patientname,option
 % line in 3D-space that best describes the electrode trajectory.
 % __________________________________________________________________________________
 %
-% Inputs:   patientname     – String of folder and root of filenames. Files
+% Inputs:   patientname     ??? String of folder and root of filenames. Files
 %                             should be called e.g.
 %                             'MustermannMax/MustermannMax_tra_brain_A3_final.nii'
 %                             and
@@ -14,20 +14,20 @@ function [coords,trajvector,trajectory,tramat]=ea_reconstruct(patientname,option
 %                             options.root. Note that an exact
 %                             normalization into MNI-space is crucial for
 %                             Lead to work correctly.
-%           options         – Struct containing various options, see e.g.
+%           options         ??? Struct containing various options, see e.g.
 %                             ea_defaultoptions.m
-%           side            – which side of the brain shall be
+%           side            ??? which side of the brain shall be
 %                             reconstructed. 1 > right hemisphere, 2 > left hemisphere. 
 % ----------------------------------------------------------------------------------
 % 
-% Outputs:  coords          – 8x3 vector of electrode coordinates in
+% Outputs:  coords          ??? 8x3 vector of electrode coordinates in
 %                             mm-representations within MNI-space (if
 %                             MR-images have been normalized correctly).
-%           trajvector      – 3 element vector describing the traversing
+%           trajvector      ??? 3 element vector describing the traversing
 %                             direction of the lead trajectory.
-%           trajectory         – nx3 vector describing the fitted line of the
+%           trajectory         ??? nx3 vector describing the fitted line of the
 %                             trajectory.
-%           tramat          – 4x4 matrix describing the normalization of
+%           tramat          ??? 4x4 matrix describing the normalization of
 %                             MR-images. This is used to reconstruct the
 %                             distances of the electrode contacts in
 %                             MNI-space (since the distance has changed
@@ -83,26 +83,8 @@ if options.verbose>2; close(di); end
 
 % first, calculate distance between contacts.
 % rename matfile to text
-try
-tramat=load([options.root,patientname,filesep,'ea_normparams']);
-tramat=tramat.M;
-catch
-    try
-    movefile([options.root,patientname,filesep,patientname,'_tra_brain_A3_mo_final.mat'],[options.root,patientname,filesep,patientname,'_tra_brain_A3_mo_final.txt']);
-% load matrices
-tramat=load([options.root,patientname,filesep,patientname,'_tra_brain_A3_mo_final.txt']);
-% rename the file to .mat again
-movefile([options.root,patientname,filesep,patientname,'_tra_brain_A3_mo_final.txt'],[options.root,patientname,filesep,patientname,'_tra_brain_A3_mo_final.mat']);
-    catch
-    try
-        
-       tramat=load([options.root,patientname,filesep,patientname,'mmflirt_transform.txt']);
- 
-    catch
+
     tramat=eye(4);
-    end
-    end
-end
 
 
 

@@ -28,7 +28,6 @@ if isempty(menuprobe)
     
     
     if ismember('checkregfigs',cmd)
-        
         cr=uimenu(f,'Label','Checkreg');
         uimenu(cr,'Label','Generate Checkreg figures','Callback',{@ea_gencheckreg,handles});
         
@@ -43,6 +42,7 @@ if isempty(menuprobe)
     
     uimenu(f,'Label','Fuse volumes','Callback',{@ea_waveletfusion,handles});
 
+    uimenu(f,'Label','Clean folders from unnecessary/legacy files','Callback',{@ea_cleanlegacy,handles});
     
     if ismember('dbs',cmd)
         dbs=uimenu(f,'Label','DBS');
