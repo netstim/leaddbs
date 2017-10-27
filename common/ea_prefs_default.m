@@ -45,6 +45,9 @@ prefs.gctnii='glpostop_ct.nii';
 
 prefs.tp_gctnii=['tp_',prefs.gctnii];
 
+%% Misc:
+prefs.tonemap='heuristic'; % set to 'albada' to change to datadriven mode
+
 %% connectome files:
 prefs.rest_prefix='res*.nii'; % raw resting state fMRI data search string
 prefs.rest_default='rest.nii'; % default for dcm2nii export.
