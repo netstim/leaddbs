@@ -24,7 +24,7 @@ mmvx=tra_nii.mat\mmpt;
 startslice=round(mmvx(3));
 clear mmpt mmvx
 
-flipside=2; %1+(tra_nii.mat(1)<0);
+flipside=1+(tra_nii.mat(1)<0);
 
 
 if ~refine % if this is not a refine-run but an initial run, mask of first slice has to be defined heuristically.
@@ -204,6 +204,7 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
     %-------------------------------------------------------------------------------------------------%
     % this function estimates a fitted line and the following point based on the last points.
     [trajectory,trajvector,estpoint]=ea_fit_line(centerline);
+
     % ea_showdis(['Next point was estimated to be ',num2str(estpoint),'.'],options.verbose);
     % update mask
     mask=zeros(size(slice,1),size(slice,2));
@@ -222,10 +223,8 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
         return
         %pause
     end
-
     mask(round(estpoint(2)-options.maskwindow : estpoint(2)+options.maskwindow), ...
         round(estpoint(1)-options.maskwindow : estpoint(1)+options.maskwindow))=1;
-
     %% part 4: visualization...
     %-------------------------------------------------------------------%
     if options.verbose>1

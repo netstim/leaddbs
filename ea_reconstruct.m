@@ -1,4 +1,4 @@
-function [coords,trajvector,trajectory,tramat]=ea_reconstruct(patientname,options,side)
+function [coords,trajvector,trajectory,tramat]=ea_reconstruct(patientname,options,side,lnii)
 % This function is the heart of Lead-DBS, reconstructing the electrode
 % lead trajectory for one side (left/right) of the MR-data. It reads two MR
 % images from a folder called 'patientname' and iteratively reconstructs a
@@ -38,27 +38,15 @@ function [coords,trajvector,trajectory,tramat]=ea_reconstruct(patientname,option
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-
-tra_nii=ea_load_untouch_nii([options.root,options.prefs.patientdir,filesep,options.prefs.tranii]);
-try
-cor_nii=ea_load_untouch_nii([options.root,options.prefs.patientdir,filesep,options.prefs.cornii]);
-end
-
-imat=zeros([size(tra_nii.img,1),size(tra_nii.img,2),size(tra_nii.img,3),2]);
-imat(:,:,:,1)=tra_nii.img;
-try
-imat(:,:,:,2)=cor_nii.img;
-catch
-    options.axiscontrast=3; % use tra only.
-end
+options.axiscontrast=3;
+imat(:,:,:,1)=lnii.img;
 
 ea_showdis('Preparing contrasted volume...',options.verbose);
-
-tra_nii.img=ea_gencontrastimage(imat,options.axiscontrast);
+lnii.img=ea_gencontrastimage(imat,options.axiscontrast);
 
 trajectory=[]; % empty initialization.
 for refine=0:options.refinesteps
-    [trajectory,trajvector]=ea_reconstruct_trajectory(trajectory,tra_nii,side,refine,options);
+    [trajectory,trajvector]=ea_reconstruct_trajectory(trajectory,lnii,side,refine,options);
 end
 
 
@@ -88,7 +76,7 @@ if options.verbose>2; close(di); end
 
 
 
-[~,~,dist]=ea_calc_distance(options.elspec.eldist,trajvector,tramat(1:3,1:3),[options.root,patientname,filesep,options.prefs.tranii]);
+[~,~,dist]=ea_calc_distance(options.elspec.eldist,trajvector,tramat(1:3,1:3),[options.root,patientname,filesep,'lpost.nii']);
 % zdist is the distance between electrodes in z-direction.
 zdist=dist/norm(trajvector);
 

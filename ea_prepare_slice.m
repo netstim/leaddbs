@@ -6,7 +6,7 @@ function [slice,slicebw,maskslice,maskslicebw]=ea_prepare_slice(nii,mask,sliceno
 % if it doesn't seem to be properly set for the image.
 
 slice=double(nii.img(:,:,imgsliceno))'; % extract the correct slice.
-
+%slice=ea_smooth2(slice,5,5);
 for lower=1:20
     if ~any(slice(:))
         slice=double(nii.img(:,:,imgsliceno-lower))';
@@ -24,7 +24,13 @@ else
 end
 
 maskslice=slice(logical(mask));
+
+
 maskslice=reshape(maskslice,sqrt(length(maskslice)),sqrt(length(maskslice)));
+maskslice=ea_smooth2(maskslice,3,3);
+
+%figure, imagesc(maskslice)
+
 threshold=mean(maskslice(:))-(options.tra_stdfactor+add_to_tra_stdfactor)*std(maskslice(:)); % =80.
 
 %% make binary thresholded copies of slice.
