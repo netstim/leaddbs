@@ -23,7 +23,6 @@ end
 
 if CC.NumObjects>1
     
-    %ea_showdis(['Number of objects: ',num2str(CC.NumObjects),'.'],options.verbose);
     for obj=1:CC.NumObjects
 
         slicebwobj=slicebw;
@@ -32,8 +31,6 @@ if CC.NumObjects>1
         
         stats=ea_centroid(slicebwobj);
         objdistance=ea_pdist([estpoint;stats.Centroid]);
-        
-        %ea_showdis(['Distance to object ',num2str(obj),': ',num2str(objdistance),'.'],options.verbose);
         
         if objdistance<distance % if isolated object performs better
             %ea_showdis(['This is better. Using this object.'],options.verbose);
@@ -56,27 +53,23 @@ end
 
 
 if ~isnan(estpoint)
-if options.automask % if maskwindow size is set to 'auto'
-    
-    if CC.NumObjects>1
-        if options.maskwindow>6 % if more than two objects present and size not too small already, decrease by two.
-            
-            options.maskwindow=options.maskwindow-2;
-        end
-    else
-        if length(CC.PixelIdxList)/((2*options.maskwindow+1)^2)>0.001 % if the object found does fill out more than 0.001 of pixel-space, increase mask.
-                options.maskwindow=options.maskwindow+1;
-        else
-            if options.maskwindow>4
+    if options.automask % if maskwindow size is set to 'auto'
+        
+        if CC.NumObjects>1
+            if options.maskwindow>6 % if more than two objects present and size not too small already, decrease by two.
                 
-                options.maskwindow=options.maskwindow-1;
+                options.maskwindow=options.maskwindow-2;
+            end
+        else
+            if length(CC.PixelIdxList)/((2*options.maskwindow+1)^2)>0.001 % if the object found does fill out more than 0.001 of pixel-space, increase mask.
+                options.maskwindow=options.maskwindow+1;
+            else
+                if options.maskwindow>6
+                    
+                    options.maskwindow=options.maskwindow-1;
+                end
             end
         end
     end
-    
-    
-end
-    
-    
 end
 

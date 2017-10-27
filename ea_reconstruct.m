@@ -39,10 +39,6 @@ function [coords,trajvector,trajectory,tramat]=ea_reconstruct(patientname,option
 % Andreas Horn
 
 options.axiscontrast=3;
-imat(:,:,:,1)=lnii.img;
-
-ea_showdis('Preparing contrasted volume...',options.verbose);
-lnii.img=ea_gencontrastimage(imat,options.axiscontrast);
 
 trajectory=[]; % empty initialization.
 for refine=0:options.refinesteps
@@ -55,8 +51,6 @@ end
 
 
 %% determine height of last electrode
-
-%detdiams=detrend(diams);
 
 
 if options.verbose>1; di=figure('name','Finding local maxima in diameters...','numbertitle','off'); end
