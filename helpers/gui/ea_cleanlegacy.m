@@ -41,9 +41,23 @@ end
 disp('Deleted all unnecessary files.');
 
 function ea_cleanantswarps(dir,prefs)
-ea_delete([dir,filesep,'gl*.h5']);
+
+ea_delete([dir,filesep,'glanatComposite.h5']);
+ea_delete([dir,filesep,'glanatInverseComposite.h5']);
+ea_delete([dir,filesep,'glanatComposite.nii.gz']);
+ea_delete([dir,filesep,'glanatInverseComposite.nii.gz']);
+ea_delete([dir,filesep,'lanatComposite.h5']);
+ea_delete([dir,filesep,'lanatInverseComposite.h5']);
+ea_delete([dir,filesep,'glanat1Warp.nii.gz']);
+ea_delete([dir,filesep,'glanat1InverseWarp.nii.gz']);
+ea_delete([dir,filesep,'glanat0GenericAffine.mat']);
 
 function ea_cleanfslwarps(dir,prefs)
+
+ea_delete([dir,filesep,'glanatInverseWarpField.nii']);
+ea_delete([dir,filesep,'glanatWarpField.nii']);
+ea_delete([dir,filesep,'glanatWarpCoef.nii']);
+
 
 function ea_cleanspmwarps(dir,prefs)
 ea_delete([dir,filesep,'y_*.nii']);
