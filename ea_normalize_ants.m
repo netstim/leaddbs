@@ -33,7 +33,7 @@ if ~exist('includeatlas','var')
 end
 
 if ~includeatlas % second run from maget-brain segment
-ea_checkcoregallmri(options,usebrainmask)
+    ea_checkcoregallmri(options,usebrainmask)
 end
 
 directory=[options.root,options.patientname,filesep];
@@ -43,6 +43,7 @@ if usebrainmask
 else
     bprfx='';
 end
+
 spacedef=ea_getspacedef; % get definition of current space we are working in
 if usefa && spacedef.hasfa % first put in FA since least important (if both an FA template and an fa2anat file is available)
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
@@ -54,7 +55,6 @@ if usefa && spacedef.hasfa % first put in FA since least important (if both an F
     end
 end
 
-
 [~,anatpresent]=ea_assignpretra(options);
 anatpresent=flip(anatpresent); % reverse order since most important transform should be put in last.
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
@@ -62,28 +62,26 @@ for anatf=1:length(anatpresent)
     disp(['Including ',anatpresent{anatf},' data for (grey-matter) normalization']);
 
     to{cnt}=[ea_space(options),ea_det_to(anatpresent{anatf},spacedef),'.nii'];
-        if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
+    if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
         ea_maskimg(options,[directory,anatpresent{anatf}],bprfx);
-        end
-        from{cnt}=[directory,bprfx,anatpresent{anatf}];
-        weights(cnt)=1.25;
-        cnt=cnt+1;
+    end
+    from{cnt}=[directory,bprfx,anatpresent{anatf}];
+    weights(cnt)=1.25;
+    cnt=cnt+1;
 end
 
 if includeatlas % append as last to make criterion converge on this one.
-   to{cnt}=[ea_space(options),'atlas.nii'];
-   from{cnt}=[directory,'anat_atlas.nii.gz'];
-   weights(cnt)=1.5;
-   cnt=cnt+1;
+    to{cnt}=[ea_space(options),'atlas.nii'];
+    from{cnt}=[directory,'anat_atlas.nii.gz'];
+    weights(cnt)=1.5;
+    cnt=cnt+1;
 end
 
 ea_ants_nonlinear(to,from,[directory,options.prefs.gprenii],weights,options);
 ea_apply_normalization(options);
 
 %% add methods dump:
-
 if options.prefs.machine.normsettings.ants_scrf
-
     [scit,lcit]=ea_getspacedefcit;
     cits={
         'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
@@ -99,7 +97,6 @@ if options.prefs.machine.normsettings.ants_scrf
         ' A nonlinear (whole brain) SyN-registration stage was followed by two nonlinear SyN-registrations that consecutively focused on the area of interest ',...
         ' as defined by subcortical masks in Schoenecker 2008.'],...
         cits);
-
 else
     [scit,lcit]=ea_getspacedefcit;
     cits={
@@ -113,8 +110,8 @@ else
         ' Nonlinear deformation into template space was achieved in three stages: After two linear (rigid followed by affine) steps, ',...
         ' a nonlinear (whole brain) SyN registration stage was added.'],...
         cits);
-
 end
+
 
 function masks=segmentall(from,options)
 directory=[fileparts(from{1}),filesep];
@@ -195,10 +192,10 @@ for avtpl=1:length(spacedef.templates)
         return
     end
 end
+
 % template still hasn't been assigned, use misfit template if not empty:
 if ~isempty(spacedef.misfit_template)
     template2use=spacedef.misfit_template;
 else
     template2use='';
 end
-
