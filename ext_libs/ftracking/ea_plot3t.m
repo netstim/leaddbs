@@ -87,6 +87,8 @@ else
     icolor=[0 0 1];
 end
 
+
+
 % Process input : number of circle coordinates
 % if(length(varargin)>5),
     vertex_num=varargin{6};
@@ -102,25 +104,24 @@ bufdist=max(radius);
 linel=sqrt((line(2:end,1)-line(1:end-1,1)).^2+(line(2:end,2)-line(1:end-1,2)).^2+(line(2:end,3)-line(1:end-1,3)).^2);
 if((min(linel)/2.2)<bufdist), bufdist=min(linel)/2.2; end
 
-% % Check if the plotted line is closed - should never be closed in our
-% cases.
-% lclosed=line(1,1)==line(end,1)&&line(1,2)==line(end,2)&&line(1,3)==line(end,3);
+% % Check if the plotted line is closed 
+lclosed=line(1,1)==line(end,1)&&line(1,2)==line(end,2)&&line(1,3)==line(end,3);
 % 
 % % Calculate normal vectors on every line point
-% if(lclosed)
-%     try
-%         normal=[line(2:end,:)-line(1:end-1,:);line(2,:)-line(1,:)];
-%     catch
-%         keyboard
-%     end
-% else
+if(lclosed)
+    try
+        normal=[line(2:end,:)-line(1:end-1,:);line(2,:)-line(1,:)];
+    catch
+        keyboard
+    end
+else
     normal=[line(2:end,:)-line(1:end-1,:);line(end,:)-line(end-1,:)];
-% end
+end
 normal=normal./(sqrt(normal(:,1).^2+normal(:,2).^2+normal(:,3).^2)*ones(1,3));
 
 % Create a list to store vertex points
 fv.vertices=zeros((9+(length(linex)-1)*3)*vertex_num,3);
-cdat=zeros((9+(length(linex)-1)*3)*vertex_num,1);
+cdat=zeros((9+(length(linex)-1)*3)*vertex_num,3);
 
 % In plane rotation of 2d circle coordinates
 jm=0;
@@ -133,22 +134,27 @@ n_cylinders=0;
 circm=normal_circle(angles,jm,a,b);
 
 % If not a closed line, add a half sphere made by 5 cylinders add the line start.
-% if(~lclosed)
-%     for j=5:-0.5:1
-%         % Translate the circle on it's position on the line
-%         r=sqrt(1-(j/5)^2); 
-%         circmp=r*radius(1)*circm+ones(vertex_num,1)*(line(1,:)-(j/5)*bufdist*normal(1,:));
-%         % Create vertex list
-%         n_cylinders=n_cylinders+1;
-%         fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
-%         cdat(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num))=icolor(1);
-%     end
-% end
+if(~lclosed)
+    for j=5:-0.5:1
+        % Translate the circle on it's position on the line
+        r=sqrt(1-(j/5)^2); 
+        circmp=r*radius(1)*circm+ones(vertex_num,1)*(line(1,:)-(j/5)*bufdist*normal(1,:));
+        % Create vertex list
+        n_cylinders=n_cylinders+1;
+        fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
+        ixs=((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num);
+        cdat(ixs,:)=repmat(icolor(1,:),length(ixs),1);
+    end
+end
 
 % Make a 3 point circle for rotation alignment with the next circle
 circmo=normal_circle([0 120 240],0,a,b);  
 
 % Loop through all line pieces.
+
+if size(icolor,1)==1
+   icolor=repmat(icolor,length(linex)-1,1); 
+end
 
 for i=1:length(linex)-1,
 % Create main cylinder between two line points which consists of two connect
@@ -165,8 +171,9 @@ for i=1:length(linex)-1,
 
     % Create vertex list
     n_cylinders=n_cylinders+1;
-    fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
-    %cdat(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num))=icolor(i);
+    ixs=((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num);
+    fv.vertices(ixs,:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
+    cdat(ixs,:)=repmat(icolor(i,:),length(ixs),1);
 
     pnormal2=normal(i+1,:); pline2=line(i+1,:);
        
@@ -175,8 +182,9 @@ for i=1:length(linex)-1,
 
     % Create vertex list
     n_cylinders=n_cylinders+1;
-    fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
-
+    ixs=((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num);
+    fv.vertices(ixs,:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
+    cdat(ixs,:)=repmat(icolor(i,:),length(ixs),1);
 % Create in between circle to smoothly connect line pieces.
 
     pnormal12=pnormal1+pnormal2; pnormal12=pnormal12./sqrt(sum(pnormal12.^2));
@@ -199,8 +207,9 @@ for i=1:length(linex)-1,
 
     % Create vertex list
     n_cylinders=n_cylinders+1;
-    fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
-
+    ixs=((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num);
+    fv.vertices(ixs,:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
+    cdat(ixs,:)=repmat(icolor(i,:),length(ixs),1);
     % Rotate circle coordinates in plane to align with the previous circle
     % by minimizing distance between the coordinates of two circles with 3 coordinates.
     [a,b]=getab(pnormal2);
@@ -211,35 +220,36 @@ for i=1:length(linex)-1,
     
 end
 
-cdat(:)=icolor(1);
+%cdat(:)=icolor(1);
 
 % If not a closed line, add a half sphere made by 5 cylinders add the
 % line end. Otherwise add the starting circle to the line end.
-% if(~lclosed)
-% for j=1:0.5:5
-%     % Translate the circle on it's position on the line
-%     r=sqrt(1-(j/5)^2);
-%     circmp=r*radius(i+1)*circm+ones(vertex_num,1)*(line(i+1,:)+(j/5)*bufdist*normal(i+1,:));
-%     % Create vertex list
-%     n_cylinders=n_cylinders+1;
-%     fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
-%     cdat(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num))=icolor(end);
-% end
-% else
-%     i=i+1;
-%     pnormal1=normal(i,:); pline1=line(i,:);
-%     
-%     % Calculate the 3D circle coordinates
-%     [a,b]=getab(pnormal1);
-%     circm=normal_circle(angles,jm,a,b);
-%     
-%     % Translate the circle on it's position on the line
-%     circmp=circm*radius(1)+ones(vertex_num,1)*(pline1+bufdist*pnormal1);
-% 
-%     % Create vertex list
-%     n_cylinders=n_cylinders+1;
-%     fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];   
-% end
+if(~lclosed)
+for j=1:0.5:5
+    % Translate the circle on it's position on the line
+    r=sqrt(1-(j/5)^2);
+    circmp=r*radius(i+1)*circm+ones(vertex_num,1)*(line(i+1,:)+(j/5)*bufdist*normal(i+1,:));
+    % Create vertex list
+    n_cylinders=n_cylinders+1;
+    fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];
+    ixs=((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num);
+    cdat(ixs,:)=repmat(icolor(end,:),length(ixs),1);
+end
+else
+    i=i+1;
+    pnormal1=normal(i,:); pline1=line(i,:);
+    
+    % Calculate the 3D circle coordinates
+    [a,b]=getab(pnormal1);
+    circm=normal_circle(angles,jm,a,b);
+    
+    % Translate the circle on it's position on the line
+    circmp=circm*radius(1)+ones(vertex_num,1)*(pline1+bufdist*pnormal1);
+
+    % Create vertex list
+    n_cylinders=n_cylinders+1;
+    fv.vertices(((n_cylinders-1)*vertex_num+1):(n_cylinders*vertex_num),:)=[circmp(:,1) circmp(:,2) circmp(:,3)];   
+end
 
 
 % Faces of one meshed line-part (cylinder)

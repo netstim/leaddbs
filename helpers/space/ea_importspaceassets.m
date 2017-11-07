@@ -7,8 +7,7 @@ if strcmp(what,'custom')
 end
 
 ea_genwarp2space(fromspace);
-norm_method_applied{1}='ea_normalize_ants';
-save([ea_space,fromspace,filesep,'ea_normmethod_applied.mat'],'norm_method_applied');
+
 
 switch what
     case 'both'
@@ -75,7 +74,8 @@ outfname=fullfile(pth,['w',inf,ext]);
 directory=[ea_space,fromspace,filesep];
 options=ea_getptopts(directory);
 options.prefs=ea_prefs('');
-ea_apply_normalization_tofile(options,{infname},{outfname},directory,0,1,infname);
+options=ea_assignpretra(options);
+ea_apply_normalization_tofile(options,{infname},{outfname},directory,0,1,[ea_space,options.primarytemplate,'.nii']);
 
 
 
