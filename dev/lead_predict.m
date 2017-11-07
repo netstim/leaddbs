@@ -127,12 +127,7 @@ set(handles.incstructural,'value',(ismember('dMRI',specs.feats)));
 
 set(handles.predictmetric,'String',specs.metrics);
 
-function onoff=ea_bool2onoff(b)
-if b
-    onoff='on';
-else
-    onoff='off';
-end
+
 
 % --- Drag and drop callback to load patdir.
 function DropFcn(~, event, handles)
