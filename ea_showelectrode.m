@@ -33,7 +33,7 @@ end
 %   jetlist=jet;
 
 
-for side=1:length(options.sides)
+for side=options.sides
     trajvector=mean(diff(trajectory{side}));
     
     trajvector=trajvector/norm(trajvector);
@@ -48,7 +48,7 @@ for side=1:length(options.sides)
         
         % draw patientname
         lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
-        ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
+        ellabel(1)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
         
         
         % draw trajectory
@@ -88,7 +88,7 @@ for side=1:length(options.sides)
         for ins=1:length(electrode.insulation)
             electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
             electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
-            elrender{side}(cnt)=patch(electrode.insulation(ins));
+            elrender{1}(cnt)=patch(electrode.insulation(ins));
             
             if isfield(elstruct,'group')
                 usecolor=elstruct.groupcolors(elstruct.group,:);
@@ -96,18 +96,18 @@ for side=1:length(options.sides)
             else
                 usecolor=elspec.lead_color;
             end
-            specsurf(elrender{side}(cnt),usecolor,aData);
+            specsurf(elrender{1}(cnt),usecolor,aData);
             cnt=cnt+1;
         end
         for con=1:length(electrode.contacts)
             electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
-            elrender{side}(cnt)=patch(electrode.contacts(con));
+            elrender{1}(cnt)=patch(electrode.contacts(con));
             
             if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{side})) % make active red contact without transparency
-                specsurf(elrender{side}(cnt),[0.8,0.2,0.2],1);
+                specsurf(elrender{1}(cnt),[0.8,0.2,0.2],1);
             else
-                specsurf(elrender{side}(cnt),elspec.contact_color,aData);
+                specsurf(elrender{1}(cnt),elspec.contact_color,aData);
             end
             
             cnt=cnt+1;
@@ -205,11 +205,11 @@ for side=1:length(options.sides)
                 if ~isnan(usefacecolor)
                     set(0,'CurrentFigure',resultfig);
                     if ~shifthalfup
-                        elrender{side}(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                        elrender{1}(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
                         pcnt=pcnt+1;
                     else
                         
-                        elrender{side}(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
+                        elrender{1}(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
                             mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
                             mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
                             'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);

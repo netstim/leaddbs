@@ -6,11 +6,11 @@ spaces=dir([ea_getearoot,'templates',filesep,'space',filesep]);
 for space=1:length(spaces)
     if ~strcmp(spaces(space).name(1),'.')
         spacename=spaces(space).name;
-        if strcmp(spacename,ea_getspace)
-            spacename=['-> ',spacename];
-        end
         sspacename=ea_sub2space(spacename);
         c=uimenu(s,'Label',sspacename,'Callback',{@ea_switchspace,spacename});
+        if strcmp(spacename,ea_getspace)
+            c.Checked='on';
+        end
     end
 end
 j = uimenu(g,'Label','(Re-)generate aux files for current space, using selected atlas','Callback',{@ea_genauxspace,handles});

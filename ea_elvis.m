@@ -41,6 +41,7 @@ set(resultfig, 'Position', ssz); % Maximize figure.
 
 % initialize some ui elements
 ht=uitoolbar(resultfig);
+setappdata(resultfig,'ht',ht);
 
 % add custom rotator:
 uibjs.rotate3dtog=uitoggletool(ht, 'CData', ea_get_icn('rotate'),...
@@ -126,8 +127,29 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
         for pt=1:length(elstruct)
             % show electrodes..
             try
-
-                [el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
+                for side=options.sides
+                    
+                        popts=options;
+                    if strcmp(options.leadprod,'group')
+                        directory=[options.patient_list{pt},filesep];
+                        [popts.root,popts.patientname]=fileparts(directory);
+                        popts.root=[popts.root,filesep];
+                    else
+                        directory=[options.root,options.patientname,filesep];
+                    end
+                    try
+                    pobj=ea_load_trajectory(directory,side);
+                    pobj.hasPlanning=1;
+                    pobj.showPlanning=strcmp(options.leadprod,'or');
+                    end
+                    pobj.options=popts;
+                    pobj.elstruct=elstruct(pt);
+                    pobj.showMacro=1;
+                    pobj.site=side;
+                el_render=ea_trajectory(pobj);
+                
+                end
+                %[el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
             catch
                 ea_error(['Couldn''t visualize electrode from patient ',num2str(pt),'.']);
             end
@@ -196,8 +218,8 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
                         caption{1}='Electrode_Left';
                         caption{2}='Electrode_Right';
                     end
-                    eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
-                    eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
+                    %eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
+                    %eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
                     if isfield(options,'uipatdirs')
                         if exist([options.uipatdirs{pt} '/cortex/CortElecs.mat'],'file')
                             vars = whos('-file',[options.uipatdirs{pt} '/cortex/CortElecs.mat']);
@@ -215,7 +237,7 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
                 end
         end
 
-        setappdata(resultfig,'eltog',eltog);
+%        setappdata(resultfig,'eltog',eltog);
 
         clear cnt
 
@@ -457,14 +479,18 @@ mercontrolfig = getappdata(gcf, 'mercontrolfig');
 try
     close(mercontrolfig)
 end
+trajcontrolfig=getappdata(gcf,'trajcontrolfig');
+try
+    close(trajcontrolfig)
+end
 delete(gcf)
 
 
 function export_video(hobj,ev,options)
 
 %% Set up recording parameters (optional), and record
-[FileName,PathName] = uiputfile('LEAD_Scene', 'Save file name for video');
-ea_CaptureFigVid(options.prefs.video.path, [PathName, FileName], options.prefs.video.opts);
+[FileName,PathName] = uiputfile('LEAD_Scene.mp4','Save file name for video');
+ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName],options.prefs.video.opts);
 
 
 function export_hd(hobj,ev)
@@ -487,22 +513,7 @@ function objinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
 
 
-function elvisible(hobj,ev,atls,pt,side,onoff,options)
 
-if(getappdata(hobj.Parent.Parent,'altpressed'))
-
-    eltog=getappdata(hobj.Parent.Parent,'eltog');
-    set(eltog,'State',onoff);
-    for el=1:length(atls)
-        for side=1:length(options.sides)
-           try
-               set(atls(el).el_render{side}, 'Visible', onoff);
-           end
-        end
-    end
-else
-set(atls(pt).el_render{side}, 'Visible', onoff);
-end
 
 function ctxelvisible(hobj,ev,atls,pt,side,onoff,options)
 

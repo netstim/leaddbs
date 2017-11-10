@@ -22,7 +22,7 @@ function varargout = ea_trajectorycontrol(varargin)
 
 % Edit the above text to modify the response to help ea_trajectorycontrol
 
-% Last Modified by GUIDE v2.5 05-Nov-2017 13:39:06
+% Last Modified by GUIDE v2.5 07-Nov-2017 19:33:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,19 +60,24 @@ guidata(hObject, handles);
 
 % UIWAIT makes ea_trajectorycontrol wait for user response (see UIRESUME)
 % uiwait(handles.trajectorycontrol);
+movegui(hObject,'northwest');
+
 
 setappdata(handles.trajectorycontrol,'chandles',handles);
 obj=varargin{1};
+setappdata(obj.plotFigureH,'trajcontrolfig',handles.trajectorycontrol);
 setappdata(handles.trajectorycontrol,'obj',obj);
+set(handles.trajectorycontrol,'name','Edit Trajectory');
 ea_synctrajectoryhandles(handles,obj)
 
 function ea_synctrajectoryhandles(handles,obj)
 % set handles to match obj
 
 % set coordinates
+if obj.hasPlanning
 set(handles.targetX,'String',num2str(obj.target.target(1))); set(handles.targetY,'String',num2str(obj.target.target(2))); set(handles.targetZ,'String',num2str(obj.target.target(3)));
 set(handles.entryX,'String',num2str(obj.target.entry(1))); set(handles.entryY,'String',num2str(obj.target.entry(2))); set(handles.entryZ,'String',num2str(obj.target.entry(3)));
-
+end
 % set space
 set(handles.space,'Value',obj.planRelative(5));
 
@@ -106,8 +111,61 @@ end
 
 % set color backgroundcolor
 set(handles.color,'BackgroundColor',obj.color);
-% set showplanning.
+
+%% set showplanning.
 set(handles.showPlanning,'Value',obj.showPlanning);
+set(handles.showPlanning,'enable',ea_bool2onoff(obj.hasPlanning));
+% subordinate enables
+if ~get(handles.showPlanning,'Value') || ~ea_bool2onoff(get(handles.showPlanning,'enable'))
+    onoff='off';
+else
+    onoff='on';
+end
+set(handles.targetX,'enable',onoff); set(handles.targetY,'enable',onoff); set(handles.targetZ,'enable',onoff);
+set(handles.entryX,'enable',onoff); set(handles.entryY,'enable',onoff); set(handles.entryZ,'enable',onoff);
+set(handles.space,'enable',onoff);
+set(handles.color,'enable',onoff);
+
+if ~(get(handles.showPlanning,'Value')) || ~ea_bool2onoff(get(handles.showPlanning,'enable')) || get(handles.space,'Value')>1
+    onoff='off';
+else
+    onoff='on';
+end
+set(handles.right,'enable',onoff);
+set(handles.left,'enable',onoff);
+set(handles.anterior,'enable',onoff);
+set(handles.posterior,'enable',onoff);
+set(handles.ventral,'enable',onoff);
+set(handles.dorsal,'enable',onoff);
+set(handles.AC,'enable',onoff);
+set(handles.PC,'enable',onoff);
+set(handles.MCP,'enable',onoff);
+
+%% macro/DBS electrode
+set(handles.showMacro,'Value',obj.showMacro);
+set(handles.showMacro,'enable',ea_bool2onoff(obj.hasMacro));
+set(handles.electrode_model_popup,'String',ea_resolve_elspec);
+% subordinate enables
+if ~(get(handles.showMacro,'Value')) || ~ea_bool2onoff(get(handles.showMacro,'enable'))
+    onoff='off';
+else
+    onoff='on';
+end
+set(handles.electrode_model_popup,'enable',onoff);
+
+
+%% micro/MER
+set(handles.showMicro,'Value',obj.showMicro);
+set(handles.relateMicro,'String',{'Base location on Macroelectrode','Base location on Microelectrode'});
+switch obj.relateMicro
+    case 'macro'
+        set(handles.relateMicro,'Value',1);
+    case 'planning'
+        set(handles.relateMicro,'Value',2);        
+end
+% subordinate enables
+set(handles.relateMicro,'enable',ea_bool2onoff(get(handles.showMicro,'Value')));
+set(handles.openmer,'enable',ea_bool2onoff(get(handles.showMicro,'Value')));
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_trajectorycontrol_OutputFcn(hObject, eventdata, handles) 
@@ -129,7 +187,8 @@ function showPlanning_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of showPlanning
 obj=getappdata(handles.trajectorycontrol,'obj');
 obj.showPlanning=get(handles.showPlanning,'Value');
-
+obj.togglestates(1)=get(handles.showPlanning,'Value');
+ea_synctrajectoryhandles(handles,obj);
 
 function targetX_Callback(hObject, eventdata, handles)
 % hObject    handle to targetX (see GCBO)
@@ -284,7 +343,7 @@ c=uisetcolor;
 if any(c)
 obj=getappdata(handles.trajectorycontrol,'obj');
 obj.color=c;
-set(handles.color,'BackgroundColor',c);
+ea_synctrajectoryhandles(handles,obj);
 end
 
 % --- Executes on button press in AC.
@@ -299,6 +358,8 @@ if get(hObject,'Value')
     set(handles.PC,'Value',0);
     obj=getappdata(handles.trajectorycontrol,'obj');
     obj.planRelative(1)=1;
+else
+    set(hObject,'Value',1);
 end
 
 % --- Executes on button press in MCP.
@@ -313,6 +374,8 @@ if get(hObject,'Value')
     set(handles.PC,'Value',0);
     obj=getappdata(handles.trajectorycontrol,'obj');
     obj.planRelative(1)=2;
+else
+    set(hObject,'Value',1);
 end
 
 % --- Executes on button press in PC.
@@ -327,6 +390,8 @@ if get(hObject,'Value')
     set(handles.AC,'Value',0);
     obj=getappdata(handles.trajectorycontrol,'obj');
     obj.planRelative(1)=3;
+else
+    set(hObject,'Value',1);
 end
 
 % --- Executes on selection change in space.
@@ -337,9 +402,10 @@ function space_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns space contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from space
-
+    
     obj=getappdata(handles.trajectorycontrol,'obj');
     obj.planRelative(5)=get(handles.space,'Value');
+
 
 % --- Executes during object creation, after setting all properties.
 function space_CreateFcn(hObject, eventdata, handles)
@@ -365,6 +431,8 @@ if get(hObject,'Value')
     set(handles.left,'Value',0);
     obj=getappdata(handles.trajectorycontrol,'obj');
     obj.planRelative(2)=1;
+else
+    set(hObject,'Value',1);
 end
 
 % --- Executes on button press in left.
@@ -378,6 +446,8 @@ if get(hObject,'Value')
     set(handles.right,'Value',0);
     obj=getappdata(handles.trajectorycontrol,'obj');
     obj.planRelative(2)=2;
+    else
+    set(hObject,'Value',1);
 end
 
 % --- Executes on button press in anterior.
@@ -391,6 +461,8 @@ if get(hObject,'Value')
     set(handles.posterior,'Value',0);
     obj=getappdata(handles.trajectorycontrol,'obj');
     obj.planRelative(3)=1;
+    else
+    set(hObject,'Value',1);
 end
 
 % --- Executes on button press in posterior.
@@ -404,6 +476,8 @@ if get(hObject,'Value')
     set(handles.anterior,'Value',0);
     obj=getappdata(handles.trajectorycontrol,'obj');
     obj.planRelative(3)=2;
+    else
+    set(hObject,'Value',1);
 end
 
 % --- Executes on button press in ventral.
@@ -417,6 +491,8 @@ if get(hObject,'Value')
     set(handles.dorsal,'Value',0);
     obj=getappdata(handles.trajectorycontrol,'obj');
     obj.planRelative(4)=1;
+    else
+    set(hObject,'Value',1);
 end
 
 % --- Executes on button press in dorsal.
@@ -430,6 +506,8 @@ if get(hObject,'Value')
     set(handles.ventral,'Value',0);
     obj=getappdata(handles.trajectorycontrol,'obj');
     obj.planRelative(4)=2;
+    else
+    set(hObject,'Value',1);
 end
 
 
@@ -444,3 +522,119 @@ function targetY_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in showMacro.
+function showMacro_Callback(hObject, eventdata, handles)
+% hObject    handle to showMacro (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of showMacro
+obj=getappdata(handles.trajectorycontrol,'obj');
+obj.showMacro=get(hObject,'Value');
+obj.togglestates(2)=get(handles.showMacro,'Value');
+ea_synctrajectoryhandles(handles,obj);
+
+% --- Executes on selection change in electrode_model_popup.
+function electrode_model_popup_Callback(hObject, eventdata, handles)
+% hObject    handle to electrode_model_popup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns electrode_model_popup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from electrode_model_popup
+obj=getappdata(handles.trajectorycontrol,'obj');
+    options.elmodeln = get(handles.electrode_model_popup,'Value');
+    string_list = get(handles.electrode_model_popup,'String');
+    obj.elmodel=string_list{options.elmodeln};
+ea_synctrajectoryhandles(handles,obj);
+
+
+% --- Executes during object creation, after setting all properties.
+function electrode_model_popup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to electrode_model_popup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in showMicro.
+function showMicro_Callback(hObject, eventdata, handles)
+% hObject    handle to showMicro (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of showMicro
+obj=getappdata(handles.trajectorycontrol,'obj');
+obj.showMicro=get(hObject,'Value');
+obj.togglestates(3)=get(handles.showMicro,'Value');
+ea_synctrajectoryhandles(handles,obj);
+
+% --- Executes on button press in openmer.
+function openmer_Callback(hObject, eventdata, handles)
+% hObject    handle to openmer (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on selection change in relateMicro.
+function relateMicro_Callback(hObject, eventdata, handles)
+% hObject    handle to relateMicro (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns relateMicro contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from relateMicro
+
+
+% --- Executes during object creation, after setting all properties.
+function relateMicro_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to relateMicro (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in addtraj.
+function addtraj_Callback(hObject, eventdata, handles)
+% hObject    handle to addtraj (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+obj=getappdata(handles.trajectorycontrol,'obj');
+if obj.hasPlanning % -> This will add a new trajectory unrelated to the present one
+    
+    
+else
+    
+    obj.target=ea_getstandardtarget(obj.site);
+    obj.showPlanning=1;
+    obj.hasPlanning=1;
+    obj.showPlanning=1;
+    ea_synctrajectoryhandles(handles,obj);
+
+end
+
+
+% --- Executes when user attempts to close trajectorycontrol.
+function trajectorycontrol_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to trajectorycontrol (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+obj=getappdata(handles.trajectorycontrol,'obj');
+delete(hObject);
+
+ea_save_trajectory(obj);
+    

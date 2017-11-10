@@ -3,7 +3,8 @@ function ea_genwarp2space(fromwhich)
 if strcmp(ea_getspace,fromwhich)
     return
 end
-if exist([ea_getspace,filesep,fromwhich],'dir') % warp exists
+
+if exist([ea_space,fromwhich],'dir') && exist([ea_space,fromwhich,filesep,'glanatComposite.h5'],'file') % warp exists
     return
 end
 

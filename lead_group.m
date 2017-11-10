@@ -368,7 +368,7 @@ options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),fil
 [~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
 
 options.expstatvat.do=M.ui.statvat;
-
+options.native=0;
 try
     options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 catch
@@ -493,12 +493,13 @@ for pt=1:length(ptidx)
 end
 
 resultfig=ea_elvis(options,M.elstruct(ptidx));
+
 try % zoom on coordinates.
     coords={M.elstruct(:).coords_mm};
     for c=1:length(coords)
         call(c,:)=mean([coords{c}{1};coords{c}{2}]);
     end
-    ea_zoomcenter(resultfig.CurrentAxes, mean(call), 3);
+    ea_zoomcenter(resultfig.CurrentAxes, mean(call), 5);
 catch
     zoom(3);
 end

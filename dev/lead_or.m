@@ -103,7 +103,7 @@ ea_processguiargs(handles,varargin)
 %% add tools menu
 ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'});
 
-handles.prod='dbs';
+handles.prod='or';
 ea_firstrun(handles,options);
 ea_getui(handles);
 

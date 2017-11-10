@@ -5,9 +5,7 @@ function fid=ea_acpc2mni(varargin)
 % Copyright (C) 2016 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-% fidpoints_mm=[-0.4,1.53,-2.553       % AC
-%     -0.24,-26.314,-4.393            % PC
-%     -0.4,1.53,20];              % Midsag
+
 fidpoints_mm=[ 0.25,   1.298,   -5.003    % AC
               -0.188, -24.756,  -2.376    % PC
                0.25,   1.298,    55];     % Midsag
@@ -32,11 +30,7 @@ if cfg.mapmethod
     end
 end
 
-if nargin>5
-    automan=varargin{6};
-else
-    automan='auto';
-end
+
 
 if isempty(uidir)
     ea_error('Please choose and normalize patients first.');
@@ -45,9 +39,18 @@ end
 %disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
 %ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
+    
  %   ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
-
+    if nargin>5 % determine whether to use manually or automatically defined AC/PC
+        automan=varargin{6};
+    else
+        if exist([directory,'ACPC.fcsv'],'file') % manual AC/PC definition present
+            automan='manual';
+        else
+            automan='auto';
+        end
+    end
 
     if nargin>2
         whichnormmethod=varargin{3};
@@ -65,27 +68,34 @@ for pt=1:length(uidir)
 
     switch automan
         case 'auto' % auto AC/PC detection
-
-            % warp into patient space:
-
-            %     try
-            [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
-            %     catch
-            %         ea_error(['Please check deformation field in ',directory,'.']);
-            %     end
-
-            fpinsub_mm=fpinsub_mm';
-
-            try
-                fid(pt).AC=fpinsub_mm(1,:);
-            catch
-                keyboard
+            if ~exist([directory,'ACPC_autodetect.mat'],'file')
+                % warp into patient space:
+                
+                %     try
+                [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
+                %     catch
+                %         ea_error(['Please check deformation field in ',directory,'.']);
+                %     end
+                
+                fpinsub_mm=fpinsub_mm';
+                
+                
+                try
+                    fid(pt).AC=fpinsub_mm(1,:);
+                catch
+                    keyboard
+                end
+                fid(pt).PC=fpinsub_mm(2,:);
+                fid(pt).MSP=fpinsub_mm(3,:);
+                acpc_fiducials=fid(pt); % save for later use
+                save([directory,'ACPC_autodetect.mat'],'-struct','acpc_fiducials'); clear acpc_fiducials
+            else
+                fid(pt)=load([directory,'ACPC_autodetect.mat']);
             end
-            fid(pt).PC=fpinsub_mm(2,:);
-            fid(pt).MSP=fpinsub_mm(3,:);
+            
         case {'manual'} % manual AC/PC definition, assume F.fcsv file inside pt folder
-            copyfile([directory,'F.fcsv'],[directory,'F.dat'])
-            Ct=readtable([directory,'F.dat']);
+            copyfile([directory,'ACPC.fcsv'],[directory,'ACPC.dat'])
+            Ct=readtable([directory,'ACPC.dat']);
 
             % AC
             cnt=1;
@@ -165,19 +175,25 @@ for pt=1:length(uidir)
     end
 
     % re-warp into MNI:
-    switch automan
-        case 'mnidirect'
-            fid(pt).WarpedPointMNI=warpcoord_mm(1:3)';
-        otherwise
-            [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], template,whichnormmethod);
-            try
-                warppts(pt,:)=warpinmni_mm';
-            catch
-                keyboard
-            end
-            fid(pt).WarpedPointMNI=warppts(pt,:);
+    
+    if ~isfield(cfg,'native') || ~cfg.native % when working in native space, no need to warp acpc back to mni at all.
+        switch automan
+            case 'mnidirect'
+                fid(pt).WarpedPointMNI=warpcoord_mm(1:3)';
+            otherwise
+                [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], template,whichnormmethod);
+                try
+                    warppts(pt,:)=warpinmni_mm';
+                catch
+                    keyboard
+                end
+                fid(pt).WarpedPointMNI=warppts(pt,:);
+        end
     end
 
+
+    
+    
     if cfg.mapmethod==2
         anat.img(:)=0;
         anat.img(round(warpcoord_vox(1)),round(warpcoord_vox(2)),round(warpcoord_vox(3)))=1;

@@ -1,0 +1,17 @@
+function ea_elvisible(hobj,ev,atls,pt,side,onoff,options)
+
+% if(getappdata(hobj.Parent.Parent,'altpressed'))
+% 
+%     eltog=getappdata(hobj.Parent.Parent,'eltog');
+%     set(eltog,'State',onoff);
+%     for el=1:length(atls)
+%         for side=1:length(options.sides)
+%            try
+%                set(atls(el).el_render{side}, 'Visible', onoff);
+%            end
+%         end
+%     end
+% else
+
+set(atls{1}{1}, 'Visible', onoff);
+%end

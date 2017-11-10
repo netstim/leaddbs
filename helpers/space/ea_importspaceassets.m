@@ -23,9 +23,9 @@ switch what
         ea_warpfilefromspace(fromspace,infname);
 
 end
-if ~strcmp(what,'custom')
-rmdir([ea_space,fromspace],'s'); % cleanup all.
-end
+% if ~strcmp(what,'custom')
+% rmdir([ea_space,fromspace],'s'); % cleanup all.
+% end
 
 function ea_warplabelassets(fromspace)
 labelinginotherspace=[ea_getearoot,'templates',filesep,'space',filesep,fromspace,filesep,'labeling',filesep];
@@ -75,7 +75,7 @@ directory=[ea_space,fromspace,filesep];
 options=ea_getptopts(directory);
 options.prefs=ea_prefs('');
 options=ea_assignpretra(options);
-ea_apply_normalization_tofile(options,{infname},{outfname},directory,0,1,[ea_space,options.primarytemplate,'.nii']);
+ea_apply_normalization_tofile(options,{infname},{outfname},directory,0,4,[ea_space,options.primarytemplate,'.nii']);
 
 
 
