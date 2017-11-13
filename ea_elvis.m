@@ -236,7 +236,7 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
                     cnt=cnt+2;
                 end
         end
-
+eladd=uipushtool(ht,'CData',ea_get_icn('addelectrode'),'TooltipString','Add Trajectory...','ClickedCallback',@ea_add_trajectory);
 %        setappdata(resultfig,'eltog',eltog);
 
         clear cnt
@@ -267,7 +267,7 @@ slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
     if ~strcmp(options.leadprod, 'group')
         merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
             'TooltipString','MER Control Figure',...
-            'ClickedCallback',{@openmerviewer,resultfig,options});
+            'ClickedCallback',{@ea_openmerviewer,resultfig,options});
     end
 % Initialize Convis-Button
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
@@ -443,10 +443,7 @@ stimwin=ea_stimparams(elstruct,gcf,options);
 setappdata(resultfig,'stimwin',stimwin);
 %try WinOnTop(stimwin,true); end
 
-function openmerviewer(hobj,ev,resultfig,options)
-mercontrolfig = ea_mercontrol(resultfig, options);
-setappdata(resultfig, 'mercontrolfig', mercontrolfig);
-try WinOnTop(mercontrolfig, true); end
+
 
 function opencortexviewer(hobj,ev,resultfig,options)
 cortex=ea_showcortex(resultfig,options);

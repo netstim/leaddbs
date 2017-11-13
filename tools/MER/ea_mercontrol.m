@@ -74,16 +74,33 @@ guidata(hObject, handles);
 % UIWAIT makes ea_mercontrol wait for user response (see UIRESUME)
 % uiwait(handles.mercontrolfig);
 
-resultfig=varargin{1};
-options=varargin{2};
+if nargin==4 % trajectory object supplied
+    trajectory=varargin{1};
+    resultfig=trajectory.plotFigureH;
+    options=trajectory.options;
+    setappdata(hObject,'trajectory',trajectory);
+else % classical way of opening MER control figure
+    resultfig=varargin{1};
+    options=varargin{2};
+end
 setappdata(hObject, 'resultfig', resultfig);
 setappdata(hObject, 'options', options);  % Keep a copy of options
-% Get the MER State, set it to defaults, and store it in appdata.
-merstruct = MERState();
-merstruct.setOptions(options);
-merstruct.clearData();
-merstruct.setDataToDefaults();
+
+% Get the MER State, set it to defaults if not supplied, and store it in appdata.
+if exist('trajectory','var') && ~isempty(trajectory.merstruct)
+    merstruct=trajectory.merstruct;
+else
+    merstruct = MERState();
+    merstruct.setOptions(options);
+    merstruct.clearData();
+    if exist('trajectory','var')
+        merstruct.Trajectory=trajectory;
+    end
+    merstruct.setDataToDefaults();
+end
+
 setappdata(hObject, 'merstruct', merstruct);
+
 % merhandles is a struct array, each element has .side and .label (strings)
 % for indexing, and .h (plotted object handle)
 merhandles = struct('color_list', cat(1, options.prefs.mer.tract_info.color),...

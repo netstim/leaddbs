@@ -22,7 +22,7 @@ function varargout = ea_trajectorycontrol(varargin)
 
 % Edit the above text to modify the response to help ea_trajectorycontrol
 
-% Last Modified by GUIDE v2.5 07-Nov-2017 19:33:14
+% Last Modified by GUIDE v2.5 12-Nov-2017 17:50:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -165,7 +165,6 @@ switch obj.relateMicro
 end
 % subordinate enables
 set(handles.relateMicro,'enable',ea_bool2onoff(get(handles.showMicro,'Value')));
-set(handles.openmer,'enable',ea_bool2onoff(get(handles.showMicro,'Value')));
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_trajectorycontrol_OutputFcn(hObject, eventdata, handles) 
@@ -576,12 +575,6 @@ obj.showMicro=get(hObject,'Value');
 obj.togglestates(3)=get(handles.showMicro,'Value');
 ea_synctrajectoryhandles(handles,obj);
 
-% --- Executes on button press in openmer.
-function openmer_Callback(hObject, eventdata, handles)
-% hObject    handle to openmer (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes on selection change in relateMicro.
 function relateMicro_Callback(hObject, eventdata, handles)
@@ -591,6 +584,14 @@ function relateMicro_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns relateMicro contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from relateMicro
+obj=getappdata(handles.trajectorycontrol,'obj');
+switch get(hObject,'Value')
+    case 1
+        obj.relateMicro='macro';
+    case 2
+        obj.relateMicro='planning';
+end
+ea_synctrajectoryhandles(handles,obj);
 
 
 % --- Executes during object creation, after setting all properties.

@@ -9,6 +9,9 @@ classdef MERState < handle
         Toggles
         Cache
     end
+    properties (SetObservable)
+        Trajectory % handle to parent ea_trajectory class
+    end
     properties (Constant)
         MarkerTypes = struct(...
             'Generic', 'Generic',...
@@ -131,7 +134,35 @@ classdef MERState < handle
         function loadDBSReconstruction(obj)
             opt_native_backup = obj.Config.native;
             obj.Config.native = 1;
-            [~, ~, dbs_contacts, obj.Config.elmodel] = ea_load_reconstruction(obj.Config);
+            if isempty(obj.Trajectory) % load reconstruction data from patient folder and configure
+                [~, ~, dbs_contacts, obj.Config.elmodel] = ea_load_reconstruction(obj.Config);
+            else % trajectory object supplied - will relate MER trajectories to information of the object
+                obj.Config.elmodel=obj.Trajectory.elmodel;
+                
+                switch obj.Trajectory.relateMicro
+                    case 'macro' % relate MER fiducials to DBS electrode reconstructed from postoperative data
+                        dbs_contacts=obj.Trajectory.elstruct.markers;
+                    case 'planning' % relate MER fiducials to planning trajectory
+                        % build markers struct from planning fiducial line:
+                        dbs_contacts(1).head=obj.Trajectory.target.target;
+                        dbs_contacts(1).tail=obj.Trajectory.target.entry;
+                        opts.elmodel=obj.Trajectory.elmodel;
+                        opts=ea_resolve_elspec(opts);
+                        el=load([ea_getearoot,'templates',filesep,'electrode_models',filesep,opts.elspec.matfname,'.mat']);
+                        hdist=pdist([el.electrode.head_position;el.electrode.tail_position]);
+                        dbs_contacts(1).tail=dbs_contacts(1).head+...
+                            ((dbs_contacts(1).tail-dbs_contacts(1).head)/...
+                            norm(dbs_contacts(1).tail-dbs_contacts(1).head))*...
+                            hdist;
+                        normtrajvector=(dbs_contacts(1).tail-dbs_contacts(1).head)/...
+                            norm((dbs_contacts(1).tail-dbs_contacts(1).head));
+                        orth=null(normtrajvector)*(1.27/2);
+                        dbs_contacts(1).x=dbs_contacts(1).head+orth(:,1)';
+                        dbs_contacts(1).y=dbs_contacts(1).head+orth(:,2)'; % corresponding points in reality
+                        % end build markers struct from planning fiducial line. 
+                end
+            end
+            
             obj.Config = ea_resolve_elspec(obj.Config);
             dbs_contacts = ea_resolvecoords(dbs_contacts, obj.Config);
             % Get template space

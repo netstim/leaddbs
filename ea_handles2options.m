@@ -198,6 +198,9 @@ try
     options.elmodeln = get(handles.electrode_model_popup,'Value');
     string_list = get(handles.electrode_model_popup,'String');
     options.elmodel=string_list{options.elmodeln};
+catch
+    elms=ea_resolve_elspec;
+    options.elmodel=elms{1};
 end
 try
     options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}

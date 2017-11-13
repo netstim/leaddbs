@@ -20,6 +20,7 @@ classdef ea_trajectory < handle
         showPlanning=1 % show planning fiducial
         showMacro=0 % show definitive DBS / macro electrode
         showMicro=0 % show microelectrodes
+        merstruct % MERstate object of mer-fiducials
         controlH % handle to trajectory control figure
         plotFigureH % handle of figure on which to plot
         patchMacro % handle of macroelectrode patch
@@ -128,7 +129,12 @@ classdef ea_trajectory < handle
                     obj.toggledefault='planning';
             end
             if isempty(obj.elmodel)
+                try
                 obj.elmodel=obj.options.elmodel;
+                catch
+                    elms=ea_resolve_elspec;
+                    obj.elmodel=elms{1};
+                end
             end
             
             if isempty(obj.options)
@@ -152,6 +158,8 @@ classdef ea_trajectory < handle
             addlistener(obj,'showMacro','PostSet',...
                 @ea_trajectory.changeevent);
             addlistener(obj,'showMicro','PostSet',...
+                @ea_trajectory.changeevent);
+            addlistener(obj,'relateMicro','PostSet',...
                 @ea_trajectory.changeevent);
             addlistener(obj,'color','PostSet',...
                 @ea_trajectory.changeevent);
@@ -181,7 +189,7 @@ classdef ea_trajectory < handle
                 evtnm='all';
             end
             set(0,'CurrentFigure',obj.plotFigureH);
-            if ismember(evtnm,{'all','target','reco','planRelative','hasPlanning'}) && obj.hasPlanning % need to redraw planning fiducials:
+            if ismember(evtnm,{'all','target','reco','planRelative','hasPlanning','showMicro','relateMicro'}) % need to redraw planning fiducials:
                 % planning fiducial
                 if obj.hasPlanning
                     coords=ea_convertfiducials(obj,[obj.target.target;obj.target.entry]);
@@ -192,7 +200,20 @@ classdef ea_trajectory < handle
                     delete(obj.patchPlanning);
                     obj.patchPlanning=ea_plot3t(traj(:,1),traj(:,2),traj(:,3),obj.radius,obj.color,12,1);
                 end
+                
+                if obj.showMicro
+                    merviewer=ea_openmerviewer([],[],obj);
+                    setappdata(obj.plotFigureH,'merviewer',merviewer);
+                    obj.merstruct=getappdata(merviewer, 'merstruct'); % bind MERstate object to trajectory object.
+                else
+                    try % close potentially existing MER viewer figure.
+                        close(getappdata(obj.plotFigureH,'merviewer'));
+                    end
+                end
+                
             end
+            
+            
             if ismember(evtnm,{'color'}) % simply change color of patch
                 obj.patchPlanning.FaceVertexCData=repmat(obj.color,size(obj.patchPlanning.FaceVertexCData,1),1);
             end
@@ -269,10 +290,12 @@ classdef ea_trajectory < handle
                                     [obj.options.root,obj.options.patientname,filesep,'y_ea_normparams.nii'], ...
                                     [obj.options.root,obj.options.patientname,filesep,obj.options.prefs.prenii_unnormalized])';
                             case 0 % leave coords as they are
+                                
                                 ccoords(coord,:)=coords(coord,:);
                         end
                         
                 end
+                
             end
         end
         
