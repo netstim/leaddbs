@@ -15,7 +15,6 @@ else
 end
 
 
-
 if ~exist('dfold','var')
     dfold=''; % assume all data needed is stored here.
 else
@@ -287,12 +286,14 @@ for mcfi=usesubjects % iterate across subjects
                     ccmap=dataset.surf.l.space;
                     ccmap.img=single(ccmap.img);
                     ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr_surf_lh.nii'];
+                    ccmap.img(:,:,:,2:end)=[];
                     ccmap.img(:)=mean(ls.thiscorr,2);
                     ccmap.dt=[16,0];
                     spm_write_vol(ccmap,ccmap.img);
                     
                     ccmap=dataset.surf.r.space;
                     ccmap.img=single(ccmap.img);
+                    ccmap.img(:,:,:,2:end)=[];
                     ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr_surf_rh.nii'];
                     ccmap.img(:)=mean(rs.thiscorr,2);
                     ccmap.dt=[16,0];
