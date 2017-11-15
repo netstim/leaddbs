@@ -146,9 +146,9 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
                     pobj.elstruct=elstruct(pt);
                     pobj.showMacro=1;
                     pobj.site=side;
-                    try
+                    if exist('el_render','var')
                         el_render(end+1)=ea_trajectory(pobj);
-                    catch % first one
+                    else                        
                         el_render(1)=ea_trajectory(pobj);
                     end
                 end

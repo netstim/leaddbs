@@ -240,9 +240,10 @@ classdef ea_trajectory < handle
             end
             
             % add toggle button:
+            [~,ptname]=fileparts(fileparts(obj.options.root));
             set(obj.toggleH,...
                 {'Parent','CData','TooltipString','OnCallback','OffCallback','State'},...
-                {obj.htH,ea_get_icn('electrode'),'Trajectory',{@ea_trajvisible,'on',obj},{@ea_trajvisible,'off',obj},ea_bool2onoff(any([obj.showPlanning,obj.showMacro,obj.showMicro]))});        
+                {obj.htH,ea_get_icn('electrode'),[ptname,' (',num2str(obj.site),')'],{@ea_trajvisible,'on',obj},{@ea_trajvisible,'off',obj},ea_bool2onoff(any([obj.showPlanning,obj.showMacro,obj.showMicro]))});        
         
         end
         
