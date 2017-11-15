@@ -232,6 +232,7 @@ classdef ea_trajectory < handle
                     poptions.sides=obj.site;
                     
                     [obj.elpatch{1},obj.ellabel(1)]=ea_showelectrode(obj.plotFigureH,obj.elstruct,1,poptions);
+                    set(obj.ellabel(1),'Visible','off');
                 end
             end
             if ismember(evtnm,{'showMacro'})
@@ -333,36 +334,51 @@ obj.controlH=ea_trajectorycontrol(obj);
 end
 
 function ea_trajvisible(~,~,onoff,obj)
-if strcmp(onoff,'off') || isempty(obj.togglestates)
-    obj.togglestates=[obj.showPlanning,obj.showMacro,obj.showMicro];
-end
 
-switch onoff
-    case 'on'
-        if obj.togglestates(1) % had been on before
-            obj.showPlanning=1;
-        end
-        if obj.togglestates(2) % had been on before
-            obj.showMacro=1;
-        end
-        if obj.togglestates(3) % had been on before
-            obj.showMicro=1;
-        end
-        
-        if ~any([obj.showPlanning,obj.showMacro,obj.showMicro]) % if none is visible, show the default.
-            switch obj.toggledefault
-                case 'macro' % will be the case when called from lead_dbs
-                    obj.showMacro=1;
-                case 'planning' % will be the case when called from lead_or
-                    obj.showPlanning=1;
+
+if getappdata(obj.plotFigureH,'altpressed'); % hide all
+            el_render=getappdata(obj.plotFigureH,'el_render');
+            
+            for el=1:length(el_render)
+                el_render(el).showPlanning=ea_bool2onoff('off');
+                el_render(el).showMacro=ea_bool2onoff(onoff);
+                el_render(el).showMicro=ea_bool2onoff('off');
             end
-        end
-        
-        
-    case 'off'
-        obj.showMacro=0;
-        obj.showMicro=0;
-        obj.showPlanning=0;
-end
 
+    
+else
+    
+    
+    if strcmp(onoff,'off') || isempty(obj.togglestates)
+        obj.togglestates=[obj.showPlanning,obj.showMacro,obj.showMicro];
+    end
+    
+    switch onoff
+        case 'on'
+            if obj.togglestates(1) % had been on before
+                obj.showPlanning=1;
+            end
+            if obj.togglestates(2) % had been on before
+                obj.showMacro=1;
+            end
+            if obj.togglestates(3) % had been on before
+                obj.showMicro=1;
+            end
+            
+            if ~any([obj.showPlanning,obj.showMacro,obj.showMicro]) % if none is visible, show the default.
+                switch obj.toggledefault
+                    case 'macro' % will be the case when called from lead_dbs
+                        obj.showMacro=1;
+                    case 'planning' % will be the case when called from lead_or
+                        obj.showPlanning=1;
+                end
+            end
+            
+            
+        case 'off'
+            obj.showMacro=0;
+            obj.showMicro=0;
+            obj.showPlanning=0;
+    end
+end
 end

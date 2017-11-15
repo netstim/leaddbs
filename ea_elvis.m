@@ -146,8 +146,11 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
                     pobj.elstruct=elstruct(pt);
                     pobj.showMacro=1;
                     pobj.site=side;
-                el_render=ea_trajectory(pobj);
-                
+                    try
+                        el_render(end+1)=ea_trajectory(pobj);
+                    catch % first one
+                        el_render(1)=ea_trajectory(pobj);
+                    end
                 end
                 %[el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
             catch
