@@ -72,11 +72,11 @@ M.groups.group=unique(M.patient.group); % STN, GPi, Thalamus, cZi
 %groupcolors=squeeze(ind2rgb(round([1:9]*(64/9)),jet));
 
 if ~isfield(M.groups,'color')
-    M.groups.color=repmat(0.2,length(M.groups.group),3);
+    M.groups.color=repmat(0.7,length(M.groups.group),3);
 end
 
 if ~isequal(size(M.groups.color),[length(M.groups.group),3])
-    M.groups.color=repmat(0.2,length(M.groups.group),3);
+    M.groups.color=repmat(0.7,length(M.groups.group),3);
 end
 
 try set(handles.labelpopup,'Value',M.ui.labelpopup); end

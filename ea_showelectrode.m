@@ -91,6 +91,7 @@ for side=options.sides
             elrender{1}(cnt)=patch(electrode.insulation(ins));
             
             if isfield(elstruct,'group')
+     
                 usecolor=elstruct.groupcolors(elstruct.group,:);
 
             else
