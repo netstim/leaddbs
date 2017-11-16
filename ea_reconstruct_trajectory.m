@@ -165,8 +165,9 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
         % estimated one.
         [numidpoint,greymaskslicebw,options]=ea_findonemidpoint(slicebw,estpoint(1:2),mask,options);
         if isnan(numidpoint)
-            ea_showdis('Midpoint is nan. Stopping.', options.verbose);
-            break
+%            ea_showdis('Midpoint is nan. Stopping.', options.verbose);
+%            break
+numidpoint=estpoint;
         end
 
         if ea_pdist([estpoint;[numidpoint,imgsliceno]])<15-maxthree(refine)
