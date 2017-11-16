@@ -167,7 +167,7 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
         if isnan(numidpoint)
 %            ea_showdis('Midpoint is nan. Stopping.', options.verbose);
 %            break
-numidpoint=estpoint;
+numidpoint=estpoint(1:2);
         end
 
         if ea_pdist([estpoint;[numidpoint,imgsliceno]])<15-maxthree(refine)
