@@ -21,8 +21,7 @@ for side=options.sides
     
 end
 
-options.native=1;
-options.hybridsave=1;
+
 ea_methods(options,...
     ['DBS-Electrodes were automatically pre-localized in native & template space using the PaCER algorithm',...
     ' (Husch et al., 2017; http://adhusch.github.io/PaCER/).'],...

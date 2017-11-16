@@ -203,6 +203,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                     [coords_mm,trajectory,markers]=ea_runtraccore(options);
                 end
         end
+        options.native=1;
+        options.hybridsave=1;
         elmodel=options.elmodel;
         ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
         if isfield(options,'hybridsave')

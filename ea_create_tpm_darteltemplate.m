@@ -1,6 +1,6 @@
 function ea_create_tpm_darteltemplate(mute)
 
-if exist([ea_space,'TPM.nii'],'file') && ~ea_checktpmresolution && exist([ea_space,'.aug_tpm'],'file')
+if exist([ea_space,'TPM.nii'],'file') && ~ea_checktpmresolution && exist([ea_space,'.tpm'],'file')
     return
 end
 if ~exist('mute','var')
@@ -203,70 +203,70 @@ disp('Done.');
 ea_addshoot;
 
 
-%Finalize TPM
-% Split TPM:
-        matlabbatch{1}.spm.util.split.vol = {[ea_space,'TPM.nii,1']};
-        matlabbatch{1}.spm.util.split.outdir = {ea_space};
-        spm_jobman('run',{matlabbatch});
-        clear matlabbatch
-        
-        copyfile([ea_space,'atlas.nii'],[ea_space,'catlas.nii']);
-        ea_conformspaceto([ea_space,'TPM_',sprintf('%05d',1),'.nii'],[ea_space,'catlas.nii'],1);
-        
-        c1=ea_load_nii([ea_space,'TPM_',sprintf('%05d',1),'.nii']);
-        if exist([ea_space,'atlas.nii'],'file') % add atlas.
-            
-            atlas=ea_load_nii([ea_space,'catlas.nii']);
-            c1.img(atlas.img>0.1)=atlas.img(atlas.img>0.1);
-            ea_write_nii(c1);
-            c2=ea_load_nii([ea_space,'TPM_',sprintf('%05d',2),'.nii']);
-            c2.img(atlas.img>0.1)=0;
-            ea_write_nii(c2);
-            c3=ea_load_nii([ea_space,'TPM_',sprintf('%05d',3),'.nii']);
-            c3.img(atlas.img>0.1)=0;
-            ea_write_nii(c3);
-            
-        end
-    
-        matlabbatch{1}.spm.spatial.smooth.data = {
-            [ea_space,'TPM_00001.nii,1']
-            [ea_space,'TPM_00002.nii,1']
-            [ea_space,'TPM_00003.nii,1']
-            [ea_space,'TPM_00004.nii,1']
-            [ea_space,'TPM_00005.nii,1']
-            [ea_space,'TPM_00006.nii,1']
-            };
-        matlabbatch{1}.spm.spatial.smooth.fwhm = [3 3 3];
-        matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-        matlabbatch{1}.spm.spatial.smooth.im = 0;
-        matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-        spm_jobman('run',{matlabbatch}); clear matlabbatch
-        
-        matlabbatch{1}.spm.util.cat.vols = {
-            [ea_space,'sTPM_00001.nii,1']
-            [ea_space,'sTPM_00002.nii,1']
-            [ea_space,'sTPM_00003.nii,1']
-            [ea_space,'sTPM_00004.nii,1']
-            [ea_space,'sTPM_00005.nii,1']
-            [ea_space,'sTPM_00006.nii,1']
-            };
-        matlabbatch{1}.spm.util.cat.name = [ea_space,'TPM.nii'];
-        matlabbatch{1}.spm.util.cat.dtype = 16;
-    spm_jobman('run',{matlabbatch}); clear matlabbatch
-% make sure TPM sums to 1 everywhere
-
-nii=ea_load_untouch_nii([ea_space,'TPM.nii']);
-nii.img=nii.img./repmat(sum(nii.img,4),1,1,1,6);
-ea_save_untouch_nii(nii,[ea_space,'TPM.nii']);
-
-delete([ea_space,'*PM_0*.nii']);
-delete([ea_space,'TPM.mat']);
-try
-delete([ea_space,'catlas.nii']);
-end
+% %Finalize TPM
+% % Split TPM:
+%         matlabbatch{1}.spm.util.split.vol = {[ea_space,'TPM.nii,1']};
+%         matlabbatch{1}.spm.util.split.outdir = {ea_space};
+%         spm_jobman('run',{matlabbatch});
+%         clear matlabbatch
+%         
+%         copyfile([ea_space,'atlas.nii'],[ea_space,'catlas.nii']);
+%         ea_conformspaceto([ea_space,'TPM_',sprintf('%05d',1),'.nii'],[ea_space,'catlas.nii'],1);
+%         
+%         c1=ea_load_nii([ea_space,'TPM_',sprintf('%05d',1),'.nii']);
+%         if exist([ea_space,'atlas.nii'],'file') % add atlas.
+%             
+%             atlas=ea_load_nii([ea_space,'catlas.nii']);
+%             c1.img(atlas.img>0.1)=atlas.img(atlas.img>0.1);
+%             ea_write_nii(c1);
+%             c2=ea_load_nii([ea_space,'TPM_',sprintf('%05d',2),'.nii']);
+%             c2.img(atlas.img>0.1)=0;
+%             ea_write_nii(c2);
+%             c3=ea_load_nii([ea_space,'TPM_',sprintf('%05d',3),'.nii']);
+%             c3.img(atlas.img>0.1)=0;
+%             ea_write_nii(c3);
+%             
+%         end
+%     
+%         matlabbatch{1}.spm.spatial.smooth.data = {
+%             [ea_space,'TPM_00001.nii,1']
+%             [ea_space,'TPM_00002.nii,1']
+%             [ea_space,'TPM_00003.nii,1']
+%             [ea_space,'TPM_00004.nii,1']
+%             [ea_space,'TPM_00005.nii,1']
+%             [ea_space,'TPM_00006.nii,1']
+%             };
+%         matlabbatch{1}.spm.spatial.smooth.fwhm = [3 3 3];
+%         matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+%         matlabbatch{1}.spm.spatial.smooth.im = 0;
+%         matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+%         spm_jobman('run',{matlabbatch}); clear matlabbatch
+%         
+%         matlabbatch{1}.spm.util.cat.vols = {
+%             [ea_space,'sTPM_00001.nii,1']
+%             [ea_space,'sTPM_00002.nii,1']
+%             [ea_space,'sTPM_00003.nii,1']
+%             [ea_space,'sTPM_00004.nii,1']
+%             [ea_space,'sTPM_00005.nii,1']
+%             [ea_space,'sTPM_00006.nii,1']
+%             };
+%         matlabbatch{1}.spm.util.cat.name = [ea_space,'TPM.nii'];
+%         matlabbatch{1}.spm.util.cat.dtype = 16;
+%     spm_jobman('run',{matlabbatch}); clear matlabbatch
+% % make sure TPM sums to 1 everywhere
+% 
+% nii=ea_load_untouch_nii([ea_space,'TPM.nii']);
+% nii.img=nii.img./repmat(sum(nii.img,4),1,1,1,6);
+% ea_save_untouch_nii(nii,[ea_space,'TPM.nii']);
+% 
+% delete([ea_space,'*PM_0*.nii']);
+% delete([ea_space,'TPM.mat']);
+% try
+% delete([ea_space,'catlas.nii']);
+% end
 
 % set marker that last gen TPM has been set.
-fid=fopen([ea_space,'.aug_tpm'],'w');
+fid=fopen([ea_space,'.tpm'],'w');
 fprintf(fid,'%s','Novel TPM generated by Lead Neuroimaging Suite.');
 fclose(fid);
 
