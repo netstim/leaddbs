@@ -26,7 +26,6 @@ clear mmpt mmvx
 
 flipside=1+(tra_nii.mat(1)<0);
 
-
 if ~refine % if this is not a refine-run but an initial run, mask of first slice has to be defined heuristically.
     % define initial mask
     mask=zeros(size(slice,1),size(slice,2));
@@ -70,7 +69,6 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
     slice=zeros(size(mask,1),size(mask,2),4);
     slicebw=zeros(size(mask,1),size(mask,2),4);
 
-   
     for i=10:14
         try
         [slice(:,:,i),slicebw(:,:,i)]=ea_prepare_slice(tra_nii,mask,1,startslice-(i-1),options);
@@ -141,6 +139,7 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
     % slice.
     [slice,slicebw,maskslice,maskslicebw]=ea_prepare_slice(tra_nii,mask,sliceno,imgsliceno,options);
     if isempty(find(slicebw, 1)) % -> slice is not empty
+        % HANDLE EMPTY SLICE
     end
 
     % slice is always the raw current slice.
@@ -167,7 +166,7 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
         if isnan(numidpoint)
 %            ea_showdis('Midpoint is nan. Stopping.', options.verbose);
 %            break
-numidpoint=estpoint(1:2);
+            numidpoint=estpoint(1:2);
         end
 
         if ea_pdist([estpoint;[numidpoint,imgsliceno]])<15-maxthree(refine)
@@ -289,6 +288,7 @@ catch
     ea_error('Please do not close the progress figure during reconstruction.')
 end
 
+
 function ea_keystr(progressfig,event)
 commnd=event.Character;
 switch lower(commnd)
@@ -320,7 +320,6 @@ if isfield(spacedef,'guidef')
     masksz=spacedef.guidef.masks(whichentry,:);
     startslice=spacedef.guidef.startslice;
     endslice=spacedef.guidef.endslice;
-
 else % use MNI defaults
     startslice=8.7; % default height at where to start auto reconstruction
     endslice=-15.5;
@@ -331,12 +330,12 @@ else % use MNI defaults
             masksz=standardspacedef.spacedef.guidef.masks(2,:);
     end
 end
+
 if strcmp(options.entrypoint,'Manual')
     try
         masksz=spacedef.guidef.masks(1,:);
     catch
         masksz=standardspacedef.spacedef.guidef.masks(1,:); % use STN default
-
     end
 end
 
@@ -347,5 +346,3 @@ if ~exist('masksz','var') % e.g. in case manual set
         masksz=standardspacedef.spacedef.guidef.masks(1,:); % use STN default
     end
 end
-
-

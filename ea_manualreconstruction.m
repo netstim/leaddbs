@@ -22,16 +22,9 @@ setappdata(mcfig,'planecset',0);
 
 set(mcfig,'KeyPressFcn',@ea_keystr);
 set(mcfig, 'BusyAction','cancel', 'Interruptible','off');
-
-
-
-
 setappdata(mcfig,'patientname',patientname);
-
 %setappdata(mcfig,'trajectory',trajectory);
-
 setappdata(mcfig,'origoptions',options); % store original options for further processing.
-
 
 options.native=1;
 setappdata(mcfig,'options',options);
@@ -49,9 +42,6 @@ setappdata(mcfig,'manually_corrected',manually_corrected);
 
 % initialize scene
 updatescene([],[],mcfig);
-
-
-
 
 % initialize toolbar
 ht=uitoolbar(mcfig);
@@ -89,10 +79,7 @@ finish_mc=uipushtool(ht,'CData',ea_get_icn('done'),'TooltipString','Finish manua
 
 captoggle=uitoggletool(ht,'CData',ea_get_icn('labels'),'TooltipString','Orientation','OnCallback',{@objvisible,captions},'OffCallback',{@objinvisible,captions},'State','on');
 
-
-
 setappdata(mcfig,'eltog',eltog);
-
 
 elplot=getappdata(mcfig,'elplot');
 
@@ -101,7 +88,6 @@ try
 end
 trajectory_plot=getappdata(mcfig,'trajectory_plot');
 planes=getappdata(mcfig,'planes');
-
 
 
 %% Manual height correction here:
@@ -117,34 +103,30 @@ setappdata(mcfig,'eltog',eltog);
 setappdata(mcfig,'markers',markers);
 
 
-
 function ea_endfcn(mcfig)
 % This subfunction terminates the process of manual correction and saves
 % results.
-    disp('Saving results.');
+disp('Saving results.');
 
-    ea_busyaction('on',mcfig,'reco');
-%markers=getappdata(gcf,'markers');
-%trajectory=getappdata(gcf,'trajectory');
-    options=getappdata(mcfig,'origoptions');
+ea_busyaction('on',mcfig,'reco');
+% markers=getappdata(gcf,'markers');
+% trajectory=getappdata(gcf,'trajectory');
+options=getappdata(mcfig,'origoptions');
 
-    options.hybridsave=1;
-    options.native=1;
-    [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
+options.hybridsave=1;
+options.native=1;
+[coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
 
-    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
-    options=getappdata(mcfig,'origoptions');
-    try options=rmfield(options,'hybridsave'); end
+ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
+options=getappdata(mcfig,'origoptions');
+try options=rmfield(options,'hybridsave'); end
 ea_busyaction('off',mcfig,'reco');
 close(mcfig)
 
-
 % save results
-
 %coords_mm=ea_resolvecoords(markers,options);
 %elmodel=options.elmodel;
-
-%    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
+% ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
 %disp('Done.');
 
@@ -161,81 +143,92 @@ ea_methods(options,...
             '; Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
             {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
-
 % continue with rest of the program schedule..
 
 ea_write(options);
 
+
 % Callback invoked when user presses the 'Update all' button in the 'Manual electrodes head / tail setting' figure.
 function manualMarkerSettingUpdateAllCb(source,event)
-    manualMarkerSettingCbImpl(source,'all');
+manualMarkerSettingCbImpl(source,'all');
+    
+    
 % Callback invoked when user presses the 'Cancel' button in the 'Manual electrodes head / tail setting' figure.
 function manualMarkerSettingCancelCb(source,event)
-    closereq();
+closereq();
+
+
 % Callbacks invoked when user presses 'Update R0/R3/L3/L0' buttons in the 'Manual electrodes head / tail setting' figure.
 function manualMarkerSettingUpdateR0Cb(source,event)
-    manualMarkerSettingCbImpl(source,'R0');
+manualMarkerSettingCbImpl(source,'R0');
+
+
 function manualMarkerSettingUpdateR3Cb(source,event)
-    manualMarkerSettingCbImpl(source,'R3');
+manualMarkerSettingCbImpl(source,'R3');
+
+
 function manualMarkerSettingUpdateL0Cb(source,event)
-    manualMarkerSettingCbImpl(source,'L0');
+manualMarkerSettingCbImpl(source,'L0');
+
+
 function manualMarkerSettingUpdateL3Cb(source,event)
-    manualMarkerSettingCbImpl(source,'L3');
+manualMarkerSettingCbImpl(source,'L3');
+
 
 function manualMarkerSettingCbImpl(source,action)
-    userData=get(get(source,'parent'),'UserData');
-    mcfig=userData.mcfig;
-    options=getappdata(mcfig,'options');
-    elplot=getappdata(mcfig,'elplot');
-    mplot=getappdata(mcfig,'mplot');
+userData=get(get(source,'parent'),'UserData');
+mcfig=userData.mcfig;
+options=getappdata(mcfig,'options');
+elplot=getappdata(mcfig,'elplot');
+mplot=getappdata(mcfig,'mplot');
 
-    % load the current parameters
-    [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-    % update markers according to manually specified positions
-    mRH=str2num(get(userData.tvRH,'String'));
-    mRT=str2num(get(userData.tvRT,'String'));
-    mLH=str2num(get(userData.tvLH,'String'));
-    mLT=str2num(get(userData.tvLT,'String'));
-    switch action
-        case 'all'
-            markers(1).head=mRH;
-            markers(1).tail=mRT;
-            markers(2).head=mLH;
-            markers(2).tail=mLT;
-        case 'R0'
-            markers(1).tail=markers(1).tail+(mRH-markers(1).head);
-            markers(1).head=mRH;
-        case 'R3'
-            markers(1).head=markers(1).head+(mRT-markers(1).tail);
-            markers(1).tail=mRT;
-        case 'L0'
-            markers(2).tail=markers(2).tail+(mLH-markers(2).head);
-            markers(2).head=mLH;
-        case 'L3'
-            markers(2).head=markers(2).head+(mLT-markers(2).tail);
-            markers(2).tail=mLT;
-        otherwise
-            error(['unknown action "' action '"']);
-    end
+% load the current parameters
+[coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+% update markers according to manually specified positions
+mRH=str2num(get(userData.tvRH,'String'));
+mRT=str2num(get(userData.tvRT,'String'));
+mLH=str2num(get(userData.tvLH,'String'));
+mLT=str2num(get(userData.tvLT,'String'));
+switch action
+    case 'all'
+        markers(1).head=mRH;
+        markers(1).tail=mRT;
+        markers(2).head=mLH;
+        markers(2).tail=mLT;
+    case 'R0'
+        markers(1).tail=markers(1).tail+(mRH-markers(1).head);
+        markers(1).head=mRH;
+    case 'R3'
+        markers(1).head=markers(1).head+(mRT-markers(1).tail);
+        markers(1).tail=mRT;
+    case 'L0'
+        markers(2).tail=markers(2).tail+(mLH-markers(2).head);
+        markers(2).head=mLH;
+    case 'L3'
+        markers(2).head=markers(2).head+(mLT-markers(2).tail);
+        markers(2).tail=mLT;
+    otherwise
+        error(['unknown action "' action '"']);
+end
 
-    % close the 'Manual electrodes head / tail setting' figure
-    closereq();
+% close the 'Manual electrodes head / tail setting' figure
+closereq();
 
-    % save the parameters
-    if isfield(options,'hybridsave')
-        options=rmfield(options,'hybridsave');
-    end
-    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
+% save the parameters
+if isfield(options,'hybridsave')
+    options=rmfield(options,'hybridsave');
+end
+ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
-    % the rest will be done by the code that created the 'Manual electrodes head / tail setting'
-    % figure in the 'ea_keystr' function
+% the rest will be done by the code that created the 'Manual electrodes head / tail setting'
+% figure in the 'ea_keystr' function
+
 
 function ea_keystr(mcfig,event)
-%    pause
-%commnd=get (gcf, 'CurrentKey');
+% pause
+% commnd=get (gcf, 'CurrentKey');
 
-
-%% get vars
+% get vars
 eltog=getappdata(mcfig,'eltog');
 elplot=getappdata(mcfig,'elplot');
 mplot=getappdata(mcfig,'mplot');
@@ -247,8 +240,6 @@ if ~exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'fi
 end
 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
-
-
 commnd=event.Character;
 switch lower(commnd)
     case ' '
@@ -258,7 +249,6 @@ switch lower(commnd)
     case {'x','a','p','y','l','r'} % view angles.
         %markers=getappdata(mcfig,'markers');
         ea_view(nan,nan,commnd);
-
     case {'0','3','4','7'}
         switch lower(commnd)
             case '0'
@@ -383,53 +373,52 @@ switch lower(commnd)
 
         if ismember(event.Key,{'rightarrow','leftarrow','uparrow','downarrow'}) || ismember(event.Character,{'+','-','*','_'})
         selectrode=getappdata(mcfig,'selectrode');
-        if ~selectrode % no electrode is highlighted, move electrodes alongside trajectory or increase/decrease spacing.
-            %markers=getappdata(mcfig,'markers');
-            %trajectory=getappdata(mcfig,'trajectory');
-            [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+            if ~selectrode % no electrode is highlighted, move electrodes alongside trajectory or increase/decrease spacing.
+                %markers=getappdata(mcfig,'markers');
+                %trajectory=getappdata(mcfig,'trajectory');
+                [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
+                markers=ea_correctcoords(markers,trajectory,event);
+                if isfield(options,'hybridsave')
+                    options=rmfield(options,'hybridsave');
+                end
+                ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
-            markers=ea_correctcoords(markers,trajectory,event);
-            if isfield(options,'hybridsave')
-                options=rmfield(options,'hybridsave');
+                % setappdata(mcfig,'markers',markers);
+                updatescene([],[],mcfig);
+                [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+
+                % markers=getappdata(mcfig,'markers');
+            else % electrode is highlighted. Move in xy dirs.
+
+    %             markers=getappdata(mcfig,'markers');
+    %             trajectory=getappdata(mcfig,'trajectory');
+                [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+                movedcoords=moveonecoord(markers,selectrode,event); % move the correct coord to the correct direction.
+
+                for side=options.sides
+                        set(mplot(1,side),'XData',movedcoords(side).head(1),'YData',movedcoords(side).head(2),'ZData',movedcoords(side).head(3))
+                        set(mplot(2,side),'XData',movedcoords(side).tail(1),'YData',movedcoords(side).tail(2),'ZData',movedcoords(side).tail(3))
+                end
+    %            setappdata(mcfig,'markers',markers);
+                ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
+
+                updatescene([],[],mcfig);
+                %markers=getappdata(mcfig,'markers');
+                [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+
+                %update_coords(elplot(selectrode),markers,trajectory,movedcoords); % refresh scene view (including update for all other electrodes).
+                %setappdata(gcf,'markers',markers);
+                %setappdata(mcfig,'trajectory',trajectory);
+
             end
-            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
-
-            %            setappdata(mcfig,'markers',markers);
-            updatescene([],[],mcfig);
-            [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
-            %           markers=getappdata(mcfig,'markers');
-        else % electrode is highlighted. Move in xy dirs.
-
-%             markers=getappdata(mcfig,'markers');
-%             trajectory=getappdata(mcfig,'trajectory');
-            [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-            movedcoords=moveonecoord(markers,selectrode,event); % move the correct coord to the correct direction.
-
-            for side=options.sides
-                    set(mplot(1,side),'XData',movedcoords(side).head(1),'YData',movedcoords(side).head(2),'ZData',movedcoords(side).head(3))
-                    set(mplot(2,side),'XData',movedcoords(side).tail(1),'YData',movedcoords(side).tail(2),'ZData',movedcoords(side).tail(3))
-            end
-%            setappdata(mcfig,'markers',markers);
-            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
-
-            updatescene([],[],mcfig);
-            %markers=getappdata(mcfig,'markers');
-            [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
-            %update_coords(elplot(selectrode),markers,trajectory,movedcoords); % refresh scene view (including update for all other electrodes).
-            %setappdata(gcf,'markers',markers);
-            %setappdata(mcfig,'trajectory',trajectory);
-
-        end
         end
 end
-%end
+
 cnt=1;
 options=getappdata(mcfig,'options');
 coords_mm=ea_resolvecoords(markers,options);
-           % [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+% [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
 for side=options.sides
     set(mplot(1,side),'XData',markers(side).head(1),'YData',markers(side).head(2),'ZData',markers(side).head(3));
@@ -443,14 +432,6 @@ refreshdata(elplot,'caller')
 drawnow
 
 
-
-
-
-
-
-
-
-
 function hdtrajectory=genhd_inside(trajectory)
 
 resolution=20;
@@ -458,7 +439,6 @@ resolution=20;
 hdtrajectory(:,1)=interp1q([1:length(trajectory)]',trajectory(:,1),[1:1/resolution:length(trajectory)]');
 hdtrajectory(:,2)=interp1q([1:length(trajectory)]',trajectory(:,2),[1:1/resolution:length(trajectory)]');
 hdtrajectory(:,3)=interp1q([1:length(trajectory)]',trajectory(:,3),[1:1/resolution:length(trajectory)]');
-
 
 
 function updatescene(varargin)
@@ -479,15 +459,13 @@ patientname=getappdata(mcfig,'patientname');
 %markers=getappdata(mcfig,'markers');
 
 if nargin==4
-        ea_busyaction('on',gcf,'reco');
-
+    ea_busyaction('on',gcf,'reco');
     options.hybridsave=1;
     [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
     options=rmfield(options,'hybridsave');
     space=varargin{4};
-        ea_busyaction('del',gcf,'reco');
-
+    ea_busyaction('del',gcf,'reco');
 else
     space=getappdata(mcfig,'space');
     if isempty(space)
@@ -503,10 +481,7 @@ switch space
 end
 setappdata(mcfig,'options',options);
 
-
 [~,~,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
-
 
 if isempty(firstrun) && ~manually_corrected % resize electrode to default spacing.
     [~,trajectory,markers]=ea_resolvecoords(markers,options,1);
@@ -542,9 +517,7 @@ for side=options.sides
     markers(side).y=markers(side).head+y; % corresponding points in reality
 end
 
-
-
-%            [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+% [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
 
 
@@ -565,29 +538,18 @@ if ~isempty(selectrode) && selectrode>0
     coordhandle=mplot(selectrode);
 end
 
-
-
-
 movedmarkers=nan(4,3);
 try
-    movedmarkers(1,:)=[get(mplot(1),'xdata'),...
-        get(mplot(1),'ydata'),...
-        get(mplot(1),'zdata')];
+    movedmarkers(1,:)=[get(mplot(1),'xdata'),get(mplot(1),'ydata'),get(mplot(1),'zdata')];
 end
 try
-    movedmarkers(2,:)=[get(mplot(2),'xdata'),...
-        get(mplot(2),'ydata'),...
-        get(mplot(2),'zdata')];
+    movedmarkers(2,:)=[get(mplot(2),'xdata'),get(mplot(2),'ydata'),get(mplot(2),'zdata')];
 end
 try
-    movedmarkers(3,:)=[get(mplot(3),'xdata'),...
-        get(mplot(3),'ydata'),...
-        get(mplot(3),'zdata')];
+    movedmarkers(3,:)=[get(mplot(3),'xdata'),get(mplot(3),'ydata'),get(mplot(3),'zdata')];
 end
 try
-    movedmarkers(4,:)=[get(mplot(4),'xdata'),...
-        get(mplot(4),'ydata'),...
-        get(mplot(4),'zdata')];
+    movedmarkers(4,:)=[get(mplot(4),'xdata'),get(mplot(4),'ydata'),get(mplot(4),'zdata')];
 end
 
 % xdata = cell2mat(get(mplot,'xdata'));
@@ -596,22 +558,14 @@ end
 % movedmarkers=[xdata,ydata,zdata];
 
 if selectrode
-    
     [markers]=update_coords(coordhandle,markers,trajectory,movedmarkers,options);
 end
 
-
 [coords_mm,trajectory]=ea_resolvecoords(markers,options);
 
-
-
-
 %% plot main figure
-
 delete(trajectory_plot);
 delete(spacetext);
-
-
 
 mainax=subplot(4,5,[2:4,7:9,12:14,17:19]); % main plot
 set(gca, 'LooseInset', [0,0,0,0]);
@@ -621,7 +575,6 @@ if isempty(init)
     axis off
     setappdata(mcfig,'init',1)
 end
-
 
 % delete prior captions
 spacetext=getappdata(mcfig,'spacetext');
@@ -641,13 +594,11 @@ if strcmp(options.elmodel,'Boston Scientific Vercise Directed')
         A{side}=sqrt(ea_sqdist(coords_temp{side}',coords_temp{side}'));
         emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
     end
-    
 else
     for side=options.sides
         A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
         emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
     end
-    
 end
     memp_eldist=mean([emp_eldist{:}]);
     [~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
@@ -656,11 +607,8 @@ clear coords_temp
 %% plot coords
 hold on
 
-
-
 if isempty(elplot) % first time plot electrode contacts
-cnt=1;
-
+    cnt=1;
     for side=options.sides
         mplot(1,side)=plot3(markers(side).head(1),markers(side).head(2),markers(side).head(3),'*','MarkerEdgeColor',[0.9 0.2 0.2],'MarkerFaceColor','none','MarkerSize',25);
         mplot(2,side)=plot3(markers(side).tail(1),markers(side).tail(2),markers(side).tail(3),'*','MarkerEdgeColor',[0.2 0.9 0.2],'MarkerFaceColor','none','MarkerSize',25);
@@ -672,12 +620,9 @@ cnt=1;
     
    setappdata(mcfig,'elplot',elplot);
    setappdata(mcfig,'mplot',mplot);
-
 else % update coordinates in elplot & mplot:
     cnt=1;
-
     for side=options.sides
-
         set(mplot(1,side),'XData',markers(side).head(1));
         set(mplot(1,side),'YData',markers(side).head(2));
         set(mplot(1,side),'ZData',markers(side).head(3));
@@ -696,8 +641,6 @@ else % update coordinates in elplot & mplot:
     setappdata(mcfig,'elplot',elplot);
     setappdata(mcfig,'mplot',mplot);
 end
-
-
 
 try
     midpt=mean([markers(1).head;markers(2).head],1);
@@ -721,116 +664,104 @@ spacetext=text(midpt(1)+xoffs,midpt(2)+yoffs,midpt(3)-3,sprintf(['Electrode Spac
 set(mcfig,'name',[options.patientname,', Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm.']);
 setappdata(mcfig,'spacetext',spacetext);
 
-% %% plot trajectory lines
-
+%% plot trajectory lines
 for side=1:length(options.sides)
-
     try
-
         if ~isempty(trajectory{side})
-
-            if options.verbose>1; 
+            if options.verbose>1
                 trajectory_plot(side)=plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'color',[0.3,0.5,0.9],'linew',1.5); 
             end
-
         end
     end
 end
 
-
 delete(planes);
 clear planes
 planecnt=1;
-%% plot slices in x and y planes
 
+%% plot slices in x and y planes
 for doxx=0:1
     for side=options.sides
-        %try
-            sample_width=20-doxx*5; % a bit smaller sample size in x direction to avoid overlap.
-            meantrajectory=genhd_inside(trajectory{side});
-            clear imat
-            %% sample plane left and right from meantrajectory
+        sample_width=20-doxx*5; % a bit smaller sample size in x direction to avoid overlap.
+        meantrajectory=genhd_inside(trajectory{side});
+        clear imat
+        % sample plane left and right from meantrajectory
 
-            if doxx
-                Vcor=getV(mcfig,'Vcor',options);
-                imat=ea_resample_planes(Vcor,meantrajectory',sample_width,doxx,0.2);
+        if doxx
+            Vcor=getV(mcfig,'Vcor',options);
+            imat=ea_resample_planes(Vcor,meantrajectory',sample_width,doxx,0.2);
 
-            else
-                Vsag=getV(mcfig,'Vsag',options);
-                imat=ea_resample_planes(Vsag,meantrajectory',sample_width,doxx,0.2);
+        else
+            Vsag=getV(mcfig,'Vsag',options);
+            imat=ea_resample_planes(Vsag,meantrajectory',sample_width,doxx,0.2);
 
-            end
+        end
 
+        colormap gray
 
-            colormap gray
+        if doxx % span surface in x direction
+            spanvector=[sample_width,0,0];
+        else % span surface in y direction
+            spanvector=[0,sample_width,0];
+        end
 
-
-            if doxx % span surface in x direction
-                spanvector=[sample_width,0,0];
-            else % span surface in y direction
-                spanvector=[0,sample_width,0];
-            end
-
-            boundingbox=[meantrajectory(1,:)-spanvector;...
-                meantrajectory(1,:)+spanvector;...
-                meantrajectory(end,:)-spanvector;...
-                meantrajectory(end,:)+spanvector];
+        boundingbox=[meantrajectory(1,:)-spanvector;...
+            meantrajectory(1,:)+spanvector;...
+            meantrajectory(end,:)-spanvector;...
+            meantrajectory(end,:)+spanvector];
 
 
-            xx=[boundingbox(1,1),boundingbox(2,1);boundingbox(3,1),boundingbox(4,1)];
-            yy=[boundingbox(1,2),boundingbox(2,2);boundingbox(3,2),boundingbox(4,2)];
-            zz=[boundingbox(1,3),boundingbox(2,3);boundingbox(3,3),boundingbox(4,3)];
+        xx=[boundingbox(1,1),boundingbox(2,1);boundingbox(3,1),boundingbox(4,1)];
+        yy=[boundingbox(1,2),boundingbox(2,2);boundingbox(3,2),boundingbox(4,2)];
+        zz=[boundingbox(1,3),boundingbox(2,3);boundingbox(3,3),boundingbox(4,3)];
 
+        alphamap=imat;
+        alphamap(:)=0.9;
 
-            alphamap=imat;
-            alphamap(:)=0.9;
+        if ~getappdata(mcfig,'planecset') % initially and once set contrast based on image data.
 
-            if ~getappdata(mcfig,'planecset') % initially and once set contrast based on image data.
+            if options.modality==1 % MR
+                c_lims=[ea_nanmean(imat(:))-ea_nanstd(imat(:))-3*ea_nanstd(imat(:)),ea_nanmean(imat(:))-ea_nanstd(imat(:))+3*ea_nanstd(imat(:))];
+            elseif options.modality==2 % CT
 
-                if options.modality==1 % MR
-                    c_lims=[ea_nanmean(imat(:))-ea_nanstd(imat(:))-3*ea_nanstd(imat(:)),ea_nanmean(imat(:))-ea_nanstd(imat(:))+3*ea_nanstd(imat(:))];
-                elseif options.modality==2 % CT
+                lthresh=800; % initial guesses for CT
+                uthresh=2800;
+                try % try estimating a better guess..
+                    for tries=1:5
+                        timat=imat;
+                        timat(timat<lthresh)=0;
+                        timat(timat>uthresh)=0;
 
-                    lthresh=800; % initial guesses for CT
-                    uthresh=2800;
-                    try % try estimating a better guess..
-                        for tries=1:5
-                            timat=imat;
-                            timat(timat<lthresh)=0;
-                            timat(timat>uthresh)=0;
-
-                            nomi=ea_nmi(round(imat),round(timat));
-                            if nomi>0.9
-                                break
-                            else
-                                lthresh=lthresh+randn(1)*200;
-                                uthresh=uthresh+randn(1)*200;
-                                if lthresh>=uthresh
-                                    lthresh=uthresh-500;
-                                end
+                        nomi=ea_nmi(round(imat),round(timat));
+                        if nomi>0.9
+                            break
+                        else
+                            lthresh=lthresh+randn(1)*200;
+                            uthresh=uthresh+randn(1)*200;
+                            if lthresh>=uthresh
+                                lthresh=uthresh-500;
                             end
                         end
                     end
-                   % disp(['Lthresh: ',num2str(lthresh),'; Uthresh: ',num2str(uthresh),'.']);
-                    c_lims=[lthresh,uthresh]; % Initial guess, CT
-
-
                 end
-                %caxis(c_lims);
-                caxis([0,1]);
-                setappdata(mcfig,'c_lims',c_lims);
-                setappdata(mcfig,'planecset',1);
+               % disp(['Lthresh: ',num2str(lthresh),'; Uthresh: ',num2str(uthresh),'.']);
+                c_lims=[lthresh,uthresh]; % Initial guess, CT
+
+
             end
+            %caxis(c_lims);
+            caxis([0,1]);
+            setappdata(mcfig,'c_lims',c_lims);
+            setappdata(mcfig,'planecset',1);
+        end
 
-imat=ea_contrast(imat,contrast,offset);
+        imat=ea_contrast(imat,contrast,offset);
 
-            planes(planecnt)=surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'alphadata',alphamap,'FaceAlpha', 'texturemap','FaceColor','texturemap','EdgeColor','none','alphadatamapping','none');
+        planes(planecnt)=surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'alphadata',alphamap,'FaceAlpha', 'texturemap','FaceColor','texturemap','EdgeColor','none','alphadatamapping','none');
 
-            planecnt=planecnt+1;
-            if ~doxx
-
-                if side==1
-
+        planecnt=planecnt+1;
+        if ~doxx
+            if side==1
 %                     captions(1)=text(0,... % x
 %                         ((min(boundingbox(:,2))+max(boundingbox(:,2)))/2)+20,... % y
 %                         0,... % z
@@ -841,55 +772,41 @@ imat=ea_contrast(imat,contrast,offset);
 %                         'P','Color','w','BackgroundColor','k');
 %                     % captions(1)=text(0,0,0,... % z
 %                     %  'C','Color','w');
-%
 %                     captions(3)=text(40,... % x
 %                         0,... % y
 %                         0,... % z
 %                         'R','Color','w','BackgroundColor','k');
-%
 %                     captions(4)=text(-40,... % x
 %                         0,... % y
 %                         0,... % z
 %                         'L','Color','w','BackgroundColor','k');
-%
-
-
-captions(1)=text(midpt(1),... % x
-    midpt(2)+10,... % y
-    midpt(3)+10,... % z
-    'A','Color','w','BackgroundColor','k');
-captions(2)=text(midpt(1),... % x
-    midpt(2)-10,... % y
-    midpt(3)+10,... % z
-    'P','Color','w','BackgroundColor','k');
-captions(3)=text(midpt(1)-10,... % x
-    midpt(2),... % y
-    midpt(3)+10,... % z
-    'L','Color','w','BackgroundColor','k');
-captions(4)=text(midpt(1)+10,... % x
-    midpt(2),... % y
-    midpt(3)+10,... % z
-    'R','Color','w','BackgroundColor','k');
-
-
-
-                    setappdata(mcfig,'captions',captions);
-
-                end
-            else
-
+                captions(1)=text(midpt(1),... % x
+                    midpt(2)+10,... % y
+                    midpt(3)+10,... % z
+                    'A','Color','w','BackgroundColor','k');
+                captions(2)=text(midpt(1),... % x
+                    midpt(2)-10,... % y
+                    midpt(3)+10,... % z
+                    'P','Color','w','BackgroundColor','k');
+                captions(3)=text(midpt(1)-10,... % x
+                    midpt(2),... % y
+                    midpt(3)+10,... % z
+                    'L','Color','w','BackgroundColor','k');
+                captions(4)=text(midpt(1)+10,... % x
+                    midpt(2),... % y
+                    midpt(3)+10,... % z
+                    'R','Color','w','BackgroundColor','k');
+                setappdata(mcfig,'captions',captions);
             end
-        %end
+        else
+
+        end
     end
 end
 %caxis([c_lims(1) c_lims(2)]);
 caxis([0,1]);
 
-
-
 %% plot axial planes on the right hand side of the figure
-
-
 Vtra=getV(mcfig,'Vtra',options);
 
 mks=nan(4,3); % always assign 4 markers, no matter if only right or left electrode selected. fill with nans
@@ -898,16 +815,14 @@ try mks(2,:)=markers(1).tail; end
 try mks(3,:)=markers(2).head; end
 try mks(4,:)=markers(2).tail; end
 
-        mks=Vtra.mat\[mks,ones(size(mks,1),1)]';
-        mks=mks(1:3,:)';
-
+mks=Vtra.mat\[mks,ones(size(mks,1),1)]';
+mks=mks(1:3,:)';
 
 %title(['Electrode ',num2str(el-1),', transversal view.']);
 wsize=10;
 cmap=[1,4,5,8];
 
 for subpl=getsuplots(options.sides)
-    
     subplot(4,5,subpl*5)
 
     slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
@@ -920,14 +835,11 @@ for subpl=getsuplots(options.sides)
 
     hold on
 
-
-
     if selectrode && subpl==selectrode
-
         fc='y';
     else
         if ismember(subpl,[1,3])
-        fc='r';
+            fc='r';
         else
             fc='g';
         end
@@ -940,56 +852,47 @@ for subpl=getsuplots(options.sides)
     axis square
     axis off
     %caxis([c_lims(1) c_lims(2)]);
-caxis([0,1]);
+    caxis([0,1]);
 end
-
-
 
 %% plot electrode model to the left side (static)
 legplot=getappdata(mcfig,'legplot');
 if isempty(legplot)
-elax=subplot(4,5,[1,6,11,16]); % left electrode plot
-axis off
-load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname])
+    elax=subplot(4,5,[1,6,11,16]); % left electrode plot
+    axis off
+    load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname])
 
-% visualize
-cnt=1;
-X=eye(4);
-hold on
-for ins=1:length(electrode.insulation)
-    electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
-    electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
-    elrender{side}(cnt)=patch(electrode.insulation(ins));
-    ea_specsurf(elrender{side}(cnt),options.elspec.lead_color,0.5);
-    cnt=cnt+1;
+    % visualize
+    cnt=1;
+    X=eye(4);
+    hold on
+    for ins=1:length(electrode.insulation)
+        electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
+        electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
+        elrender{side}(cnt)=patch(electrode.insulation(ins));
+        ea_specsurf(elrender{side}(cnt),options.elspec.lead_color,0.5);
+        cnt=cnt+1;
+    end
+    for con=1:length(electrode.contacts)
+        electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
+        electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
+        elrender{side}(cnt)=patch(electrode.contacts(con));
+        ea_specsurf(elrender{side}(cnt),options.elspec.contact_color,0.5);
+        cnt=cnt+1;
+    end
+
+    plot3(electrode.head_position(1),electrode.head_position(2),electrode.head_position(3),'*r','MarkerSize',15)
+    plot3(electrode.tail_position(1),electrode.tail_position(2),electrode.tail_position(3),'*g','MarkerSize',15)
+    axis([-2,2,-2,2,0,16])
+    set(elax,'XLimMode','manual'),set(elax,'YLimMode','manual'),set(elax,'ZLimMode','manual')
+    axis manual
+    axis equal
+    view(0,0);
+
+    %light('Position',[0 -5 10]);
+    text(0,0,14,options.elmodel,'color','w');
+    setappdata(mcfig,'legplot',1);
 end
-for con=1:length(electrode.contacts)
-    electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
-    electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
-    elrender{side}(cnt)=patch(electrode.contacts(con));
-
-    ea_specsurf(elrender{side}(cnt),options.elspec.contact_color,0.5);
-
-    cnt=cnt+1;
-end
-
-plot3(electrode.head_position(1),electrode.head_position(2),electrode.head_position(3),'*r','MarkerSize',15)
-plot3(electrode.tail_position(1),electrode.tail_position(2),electrode.tail_position(3),'*g','MarkerSize',15)
-axis([-2,2,-2,2,0,16])
-set(elax,'XLimMode','manual'),set(elax,'YLimMode','manual'),set(elax,'ZLimMode','manual')
-axis manual
-axis equal
-view(0,0);
-
-%light('Position',[0 -5 10]);
-
-text(0,0,14,options.elmodel,'color','w');
-
-
-setappdata(mcfig,'legplot',1);
-
-end
-
 
 %% outputs
 
@@ -1000,14 +903,7 @@ end
 set(mcfig,'CurrentAxes',mainax);
 setappdata(mcfig,'planes',planes);
 
-
-
-
-
-
-
 %% outputs
-
 setappdata(mcfig,'elplot',elplot);
 setappdata(mcfig,'mplot',mplot);
 setappdata(mcfig,'movedel',movedel);
@@ -1016,8 +912,7 @@ if isfield(options,'hybridsave')
     options=rmfield(options,'hybridsave');
 end
 
-    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
-
+ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
 %setappdata(mcfig,'markers',markers);
 % try
@@ -1026,6 +921,7 @@ end
 setappdata(mcfig,'trajectory_plot',trajectory_plot);
 setappdata(mcfig,'planes',planes);
 %setappdata(mcfig,'trajectory',trajectory);
+
 
 function sp=getsuplots(sides)
 if isequal(sides,[1:2])
@@ -1045,41 +941,35 @@ end
 
 switch options.modality
     case 1 % MR
-V=getappdata(mcfig,[ID,addon]);
+        V=getappdata(mcfig,[ID,addon]);
 
-if isempty(V)
-%     flags.interp=4;
-%     flags.wrap=[0,0,0];
-%         d       = [flags.interp*[1 1 1]' flags.wrap(:)];
-     switch ID
-        case 'Vcor'
-            try
-                V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['cornii',addon])]);
-            catch
-                V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
-            end
-        case 'Vtra'
-
-            V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
-
-        case 'Vsag'
-            try
-                V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['sagnii',addon])]);
-
-
-            catch
-                try
-                    V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['cornii',addon])]);
-                catch
+        if isempty(V)
+            flags.interp=4;
+            flags.wrap=[0,0,0];
+            d = [flags.interp*[1 1 1]' flags.wrap(:)];
+            switch ID
+                case 'Vcor'
+                    try
+                        V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['cornii',addon])]);
+                    catch
+                        V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
+                    end
+                case 'Vtra'
                     V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
-                end
+                case 'Vsag'
+                    try
+                        V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['sagnii',addon])]);
+                    catch
+                        try
+                            V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['cornii',addon])]);
+                        catch
+                            V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
+                        end
+                    end
             end
-    end
-
- %   C=spm_bsplinc(V,d);
-end
-setappdata(mcfig,[ID,addon],V);
-
+%             C=spm_bsplinc(V,d);
+        end
+        setappdata(mcfig,[ID,addon],V);
     case 2 % CT - ignore wishes, always feed out V as CT.
         if options.native
             V=getappdata(mcfig,'VCTnative');
@@ -1098,66 +988,58 @@ end
 %setappdata(mcfig,['C',ID,addon],C);
 
 
-
 function movedel=whichelmoved(coordhandle)
 
 mplot = getappdata(gcf,'mplot');
 for side=1:2
-    for el=1:2;
-
+    for el=1:2
         if coordhandle==mplot(el,side)
             movedel=sub2ind([2,2],el,side);
         end
-
     end
 end
 
-function   [numarkers,nutrajectory]=update_coords(coordhandle,markers,trajectory,movedmarkers,options)
+function [numarkers,nutrajectory]=update_coords(coordhandle,markers,trajectory,movedmarkers,options)
 
 % movedcoords are NOT in cell format!
-
 movel=whichelmoved(coordhandle);
-
 mplot=getappdata(gcf,'mplot');
 origtrajectory=getappdata(gcf,'origtrajectory');
 %whichonemoved=1;
-
 numarkers=markers;
 nutrajectory=trajectory;
 
 switch movel
-
     case 1 % lower right
         if ismember(1,options.sides)
             side=1;
-        olddist=abs(ea_pdist([markers(1).head;markers(1).tail]));
-        refel=4;
-        changecoord=1:3;
-        cchangecoord=1;
-        usefit=1;
-        spin=-1;
+            olddist=abs(ea_pdist([markers(1).head;markers(1).tail]));
+            refel=4;
+            changecoord=1:3;
+            cchangecoord=1;
+            usefit=1;
+            spin=-1;
 
-        refpt=markers(1).tail;
-        movedpt=movedmarkers(1,:);
-        move='head';
+            refpt=markers(1).tail;
+            movedpt=movedmarkers(1,:);
+            move='head';
         end
     case 3 % lower left
         if ismember(2,options.sides)
             side=2;
-        olddist=abs(ea_pdist([markers(2).head;markers(2).tail]));
-        refel=4;
-        changecoord=1:3;
-        cchangecoord=2;
-        usefit=2;
-        spin=-1;
-
-        refpt=markers(2).tail;
-        try
-        movedpt=movedmarkers(3,:);
-        catch
-            keyboard
-        end
-        move='head';
+            olddist=abs(ea_pdist([markers(2).head;markers(2).tail]));
+            refel=4;
+            changecoord=1:3;
+            cchangecoord=2;
+            usefit=2;
+            spin=-1;
+            refpt=markers(2).tail;
+            try
+                movedpt=movedmarkers(3,:);
+            catch
+                keyboard
+            end
+            move='head';
         end
     case 2 % upper right
         if ismember(1,options.sides)
@@ -1176,20 +1058,17 @@ switch movel
     case 4 % upper left
         if ismember(2,options.sides)
             side=2;
-        olddist=abs(ea_pdist([markers(2).head;markers(2).tail]));
-        refel=1;
-        changecoord=2:4;
-        cchangecoord=2;
-
-        usefit=2;
-        spin=1;
-
-        refpt=markers(2).head;
-        movedpt=movedmarkers(4,:);
-         move='tail';
+            olddist=abs(ea_pdist([markers(2).head;markers(2).tail]));
+            refel=1;
+            changecoord=2:4;
+            cchangecoord=2;
+            usefit=2;
+            spin=1;
+            refpt=markers(2).head;
+            movedpt=movedmarkers(4,:);
+            move='tail';
         end
 end
-
 
 helppt=[movedpt(1:2),refpt(3)]; % this point is constructed as a projection of the movedpoint to the z-axis at height of refpt.
 zdistfromhelppt=sqrt(abs((olddist)^2-(ea_pdist([helppt;refpt]))^2)); % use Pythagorean theorem to calculate distance on z-axis.
@@ -1199,22 +1078,18 @@ zdistfromhelppt=sqrt(abs((olddist)^2-(ea_pdist([helppt;refpt]))^2)); % use Pytha
 % moved point (fulfilling the prerequisite that new moved point is at the
 % same distance than the old point).
 movedpt=helppt+spin*[0 0 zdistfromhelppt]; % set movedpt to be equidistant.
-
 trajpts=[refpt;movedpt];
-
 nutraj=diff(trajpts);
 nutraj=nutraj/norm(nutraj);
 %disp(num2str(nutraj));
-
 % generate new coords
 
-
 try
-xc=refpt+(nutraj*(olddist));
-numarkers(cchangecoord)=setfield(numarkers(cchangecoord),move,xc);
-    set(mplot(cchangecoord,side),'xdata',xc(1));
-    set(mplot(cchangecoord,side),'ydata',xc(2));
-    set(mplot(cchangecoord,side),'zdata',xc(3));
+    xc=refpt+(nutraj*(olddist));
+    numarkers(cchangecoord)=setfield(numarkers(cchangecoord),move,xc);
+        set(mplot(cchangecoord,side),'xdata',xc(1));
+        set(mplot(cchangecoord,side),'ydata',xc(2));
+        set(mplot(cchangecoord,side),'zdata',xc(3));
 catch
     keyboard
 end
@@ -1224,19 +1099,13 @@ nutrajectory{usefit}=[];
 cnt=1;
 
 for ix=-50:0.5:50
-
     thispoint=refpt+(nutraj*ix);
     if thispoint(3)<max(origtrajectory{usefit}(:,3)) && thispoint(3)>min(origtrajectory{usefit}(:,3))
         nutrajectory{usefit}(cnt,:)=thispoint;
         cnt=cnt+1;
     end
-
-
 end
 nutrajectory{usefit}=sortrows(nutrajectory{usefit},-3); % Make sure that trajectory is always listed in correct order.
-
-
-
 
 
 function markers=moveonecoord(markers,selectrode,command)
@@ -1252,12 +1121,8 @@ switch command.Key
         movedcoords(selectrode,1)=movedcoords(selectrode,1)+grone(1+ismember('shift',command.Modifier));
     case 'uparrow'
         movedcoords(selectrode,2)=movedcoords(selectrode,2)+grone(1+ismember('shift',command.Modifier));
-
     case 'downarrow'
         movedcoords(selectrode,2)=movedcoords(selectrode,2)-grone(1+ismember('shift',command.Modifier));
-
-
-
 end
 markers(1).head=movedcoords(1,:);
 markers(1).tail=movedcoords(2,:);
@@ -1269,9 +1134,11 @@ function objvisible(hobj,ev,atls)
 set(atls, 'Visible', 'on');
 %disp([atls,'visible clicked']);
 
+
 function objinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
 %disp([atls,'invisible clicked']);
+
 
 function ea_rotate(hobj,ev,ccw,mcfig)
 rotation=getappdata(gcf,'rotation'); % rotation angle in degrees
@@ -1292,6 +1159,7 @@ end
 setappdata(gcf,'rotation',rotation);
 updatescene([],[],mcfig);
 
+
 function setcontrast(hobj,ev,key,modifier,mcfig)
 % c_lims=getappdata(gcf,'c_lims');
 % comms={'v','c','b','n'}; % key commands
@@ -1301,9 +1169,7 @@ function setcontrast(hobj,ev,key,modifier,mcfig)
 %       -1 -1];
 % kern=(c_lims(2)-c_lims(1))/20; % gain to correct contrast
 % 
- doshift=any(ismember('shift',modifier));
- 
-% 
+doshift=any(ismember('shift',modifier));
 % c_lims=c_lims+(perfs(ismember(comms,lower(key)),:)*(kern*(doshift+1)));
 % setappdata(gcf,'c_lims',c_lims);
 doshift=1+doshift*4;
@@ -1336,9 +1202,7 @@ updatescene([],[],mcfig);
 
 function selectelectrode(hobj,ev)
 % reset all toggletools
-
 warning ('off','all');
-
 eltog=getappdata(gcf,'eltog');
 elplot=getappdata(gcf,'elplot');
 mplot=getappdata(gcf,'mplot');
@@ -1366,8 +1230,6 @@ setappdata(gcf,'selectrode',selectrode);
 warning ('off','all');
 
 
-
-
 function deselectelectrode(hobj,ev)
 % reset all toggletools
 mplot=getappdata(gcf,'mplot');
@@ -1376,6 +1238,7 @@ options=getappdata(gcf,'options');
     set(mplot(2,options.sides),'MarkerEdgeColor','g');
 
 setappdata(gcf,'selectrode',0);
+
 
 function ea_view(hobj,ev,commnd)
 switch commnd
@@ -1402,12 +1265,13 @@ SimKey=Robot;
 SimKey.keyPress(KeyEvent.VK_SPACE)
 SimKey.keyRelease(KeyEvent.VK_SPACE)
 
+
 function y = ea_nanmean(varargin)
 if nargin==2
     x=varargin{1};
     dim=varargin{2};
 elseif nargin==1
-x=varargin{1};
+    x=varargin{1};
     dim=1;
 end
 

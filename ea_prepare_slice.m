@@ -25,7 +25,6 @@ end
 
 maskslice=slice(logical(mask));
 
-
 maskslice=reshape(maskslice,sqrt(length(maskslice)),sqrt(length(maskslice)));
 maskslice=ea_smooth2(maskslice,3,3);
 

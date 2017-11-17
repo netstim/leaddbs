@@ -4,31 +4,27 @@ function [numidpoint,greyobj,options]=ea_findonemidpoint(slicebw,estpoint,mask,o
 % Andreas Horn
 
 try
-stats=ea_centroid(slicebw);
+    stats=ea_centroid(slicebw);
 catch
     keyboard
 end
 
 CC=ea_conncomp(slicebw);
 
-
 if CC.NumObjects==0
     numidpoint=[nan,nan];
 else
     numidpoint=stats.Centroid;
     numidpoint=estpoint+(numidpoint-estpoint)*0.8;
-        distance=ea_pdist([estpoint;numidpoint]);
+    distance=ea_pdist([estpoint;numidpoint]);
 end
 
-
 if CC.NumObjects>1
-    
     for obj=1:CC.NumObjects
-
         slicebwobj=slicebw;
         slicebwobj(:)=0;
         slicebwobj(CC.PixelIdxList{obj})=1; % isolate object
-        
+
         stats=ea_centroid(slicebwobj);
         objdistance=ea_pdist([estpoint;stats.Centroid]);
         
@@ -40,24 +36,18 @@ if CC.NumObjects>1
 
             numidpoint=stats.Centroid;
             distance=objdistance;
-        end
-        
-        
+        end 
     end
-    
 end
 
 if ~exist('greyobj','var')
     greyobj=nan;
 end
 
-
 if ~isnan(estpoint)
     if options.automask % if maskwindow size is set to 'auto'
-        
         if CC.NumObjects>1
             if options.maskwindow>6 % if more than two objects present and size not too small already, decrease by two.
-                
                 options.maskwindow=options.maskwindow-2;
             end
         else
@@ -65,11 +55,9 @@ if ~isnan(estpoint)
                 options.maskwindow=options.maskwindow+1;
             else
                 if options.maskwindow>6
-                    
                     options.maskwindow=options.maskwindow-1;
                 end
             end
         end
     end
 end
-
