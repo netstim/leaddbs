@@ -57,6 +57,17 @@ eltog(2)=uitoggletool(ht,'CData',ea_get_icn('el3'),'TooltipString','Select Elect
 eltog(3)=uitoggletool(ht,'CData',ea_get_icn('el4'),'TooltipString','Select Electrode 4 [4]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
 eltog(4)=uitoggletool(ht,'CData',ea_get_icn('el7'),'TooltipString','Select Electrode 7 [7]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
 
+if numel(options.sides) == 1    % only one hemisphere
+    switch options.sides
+        case 1  % right hemisphere, disable '4' and '7' buttons
+            set(eltog(3), 'Enable', 'off');
+            set(eltog(4), 'Enable', 'off')
+        case 2  % left hemisphere, disable '0' and '3' buttons
+            set(eltog(1), 'Enable', 'off')
+            set(eltog(2), 'Enable', 'off')
+    end
+end
+
 rightview=uipushtool(ht,'CData',ea_get_icn('elR'),'TooltipString','Set view from Right [R]','ClickedCallback',{@ea_view,'r'});
 leftview=uipushtool(ht,'CData',ea_get_icn('elL'),'TooltipString','Set view from Left [L]','ClickedCallback',{@ea_view,'l'});
 antview=uipushtool(ht,'CData',ea_get_icn('elA'),'TooltipString','Set view from Anterior [A]','ClickedCallback',{@ea_view,'a'});
@@ -260,6 +271,20 @@ switch lower(commnd)
             case '7'
                 selectrode=4;
         end
+        
+        if numel(options.sides) == 1	% only one hemisphere
+            switch options.sides
+                case 1	% right hemisphere, return if '4' or '7' is pressed
+                    if selectrode == 3 || selectrode == 4	% 
+                        return;
+                    end
+                case 2	% left hemisphere, return if '0' or '3' is pressed
+                    if selectrode == 1 || selectrode == 2
+                        return;
+                    end
+            end
+        end
+        
         oselectrode=getappdata(mcfig,'selectrode');
         if selectrode==oselectrode % toggle had already been clicked -> deselect all.
             % reset all toggletools
@@ -368,9 +393,7 @@ switch lower(commnd)
 
         % reload the parameters
         [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
     otherwise % arrow keys, plus, minus
-
         if ismember(event.Key,{'rightarrow','leftarrow','uparrow','downarrow'}) || ismember(event.Character,{'+','-','*','_'})
         selectrode=getappdata(mcfig,'selectrode');
             if ~selectrode % no electrode is highlighted, move electrodes alongside trajectory or increase/decrease spacing.
@@ -410,7 +433,6 @@ switch lower(commnd)
                 %update_coords(elplot(selectrode),markers,trajectory,movedcoords); % refresh scene view (including update for all other electrodes).
                 %setappdata(gcf,'markers',markers);
                 %setappdata(mcfig,'trajectory',trajectory);
-
             end
         end
 end
@@ -449,12 +471,16 @@ mcfig=varargin{3};
 firstrun=getappdata(mcfig,'firstrun');
 contrast=getappdata(mcfig,'contrast');
 offset=getappdata(mcfig,'offset');
-if isempty(contrast), contrast=0.8; end
-if isempty(offset), offset=0.3; end
+if isempty(contrast)
+    contrast=0.8;
+end
+if isempty(offset)
+    offset=0.3;
+end
 setappdata(mcfig,'offset',offset); setappdata(mcfig,'contrast',contrast);
+
 %% inputs:
 options=getappdata(mcfig,'options');
-
 patientname=getappdata(mcfig,'patientname');
 %markers=getappdata(mcfig,'markers');
 
@@ -472,6 +498,7 @@ else
         space='native';
     end
 end
+
 setappdata(mcfig,'space',space);
 switch space
     case 'mni'
@@ -479,8 +506,8 @@ switch space
     case 'native'
         options.native=1;
 end
-setappdata(mcfig,'options',options);
 
+setappdata(mcfig,'options',options);
 [~,~,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
 if isempty(firstrun) && ~manually_corrected % resize electrode to default spacing.
@@ -499,6 +526,7 @@ end
 %     markers(side).x=markers(side).head+orth(:,1)';
 %     markers(side).y=markers(side).head+orth(:,2)'; % corresponding points in reality
 % end
+
 for side=options.sides
     rotation=getappdata(gcf,'rotation');
     if isempty(rotation)
@@ -518,8 +546,6 @@ for side=options.sides
 end
 
 % [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
-
 
 %trajectory=getappdata(mcfig,'trajectory');
 options=getappdata(mcfig,'options');
@@ -991,7 +1017,8 @@ end
 function movedel=whichelmoved(coordhandle)
 
 mplot = getappdata(gcf,'mplot');
-for side=1:2
+options = getappdata(gcf,'options');
+for side=options.sides
     for el=1:2
         if coordhandle==mplot(el,side)
             movedel=sub2ind([2,2],el,side);
@@ -1212,7 +1239,7 @@ options=getappdata(gcf,'options');
 
 for i=getsuplots(options.sides)
     set(eltog(i),'State','off');
-    if eltog(i)==hobj;
+    if eltog(i)==hobj
         selectrode=i;
     end
 end
