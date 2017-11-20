@@ -35,7 +35,7 @@ if vizz
     [xx,yy,zz]=ind2sub(size(b0.img),find(b0.img>max(b0.img(:))/7));
     plot3(xx(1:10:end),yy(1:10:end),zz(1:10:end),'.','color',[0.9598    0.9218    0.0948]);
     axis vis3d off tight equal;
-    title("b0 space")
+    title('b0 space');
     hold on
 
     % plot anat, voxel space
@@ -45,7 +45,7 @@ if vizz
     [xx,yy,zz]=ind2sub(size(anat.img),find(anat.img>max(anat.img(:))/3));
     plot3(xx(1:1000:end),yy(1:1000:end),zz(1:1000:end),'.','color',[0.9598    0.9218    0.0948]);
     axis vis3d off tight equal;
-    title("anat space")
+    title('anat space');
     hold on
 
     % plot MNI, world space
@@ -56,7 +56,7 @@ if vizz
     XYZ_mm=[xx,yy,zz,ones(length(xx),1)]*mni.mat';
     plot3(XYZ_mm(1:10000:end,1),XYZ_mm(1:10000:end,2),XYZ_mm(1:10000:end,3),'.','color',[0.9598    0.9218    0.0948]);
     axis vis3d off tight equal;
-    title("MNI space")
+    title('MNI space');
     hold on
 end
 
@@ -169,7 +169,7 @@ end
 %% add methods dump:
 cits={
     'Horn, A., Ostwald, D., Reisert, M., & Blankenburg, F. (2014). The structural-functional connectome and the default mode network of the human brain. NeuroImage, 102 Pt 1, 142?151. http://doi.org/10.1016/j.neuroimage.2013.09.069'
-    'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
+    'Horn, A., & K??hn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
     'Horn, A., & Blankenburg, F. (2016). Toward a standardized structural-functional group connectome in MNI space. NeuroImage, 124(Pt A), 310?322. http://doi.org/10.1016/j.neuroimage.2015.08.048'
     };
 ea_methods(options,['The whole-brain fiber set was normalized into standard-stereotactic space following the approach described in (Horn 2014, Horn 2016) as ',...
