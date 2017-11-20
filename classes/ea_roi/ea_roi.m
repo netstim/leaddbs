@@ -12,7 +12,9 @@ classdef ea_roi < handle
         alpha=0.7 % alpha of patch
         fv % faces and vertices of patch
         sfv % smoothed version
+        cdat % color data of patch
         visible='on' % turn on/off
+        name % name to be shown
         smooth % smooth by FWHM
         binary % is binary ROI
         hullsimplify % simplify hull
@@ -31,7 +33,14 @@ classdef ea_roi < handle
                 obj.niftiFilename=niftiFilename;
             end
             
+            
            
+            try
+                obj.name=pobj.name;
+            catch
+                [~,obj.name]=fileparts(obj.niftiFilename);
+            end
+            
             obj.plotFigureH=gcf;
             
             if exist('pobj','var') && ~isempty(pobj)
@@ -39,7 +48,11 @@ classdef ea_roi < handle
                     obj.plotFigureH=pobj.plotFigureH;
                 end
             end
-            obj.htH=getappdata(obj.plotFigureH,'addht');
+            try
+                obj.htH=pobj.htH;
+            catch
+                obj.htH=getappdata(obj.plotFigureH,'addht');
+            end
             if isempty(obj.htH) % first ROI
                 obj.htH=uitoolbar(obj.plotFigureH);
                 setappdata(obj.plotFigureH,'addht',obj.htH);
@@ -65,6 +78,7 @@ classdef ea_roi < handle
             else
                 obj.nii.img(obj.nii.img==0)=nan;
                 obj.nii.img=obj.nii.img-nanmin(obj.nii.img(:)); % set min to zero
+                obj.binary=0;
             end
             obj.nii.img(isnan(obj.nii.img))=0;
             options.prefs=ea_prefs;
@@ -73,10 +87,14 @@ classdef ea_roi < handle
             maxmindiff=obj.max-obj.min;
             obj.max=obj.max-0.1*maxmindiff;
             obj.min=obj.min+0.1*maxmindiff;
+            try 
+                obj.threshold=pobj.threshold;
+            catch
             if obj.binary
                 obj.threshold=obj.max/2;
             else
                 obj.threshold=obj.max-0.5*maxmindiff;
+            end
             end
             
             obj.smooth=options.prefs.hullsmooth;
@@ -153,6 +171,14 @@ classdef ea_roi < handle
                         obj.sfv=reducepatch(obj.sfv,simplify);
                     end
                 end
+                if obj.binary
+                    obj.cdat=abs(repmat(atlasc,length(obj.sfv.vertices),1) ... % C-Data for surface
+                        +randn(length(obj.sfv.vertices),1)*2)';
+                else
+                    obj.cdat=isocolors(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.sfv.vertices);
+                end
+                
+                
             end
 
             jetlist=jet;
@@ -161,15 +187,12 @@ classdef ea_roi < handle
             co(1,1,:)=obj.color;
             atlasc=double(rgb2ind(co,jetlist));
             
-            cdat=abs(repmat(atlasc,length(obj.sfv.vertices),1) ... % C-Data for surface
-                +randn(length(obj.sfv.vertices),1)*2)';
-            
             % show atlas.
-            set(0,'CurrentFigure',obj.plotFigureH);
-            set(obj.patchH,...
-                {'Faces','Vertices','CData','FaceColor','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
-                {obj.sfv.faces,obj.sfv.vertices,cdat,obj.color,obj.alpha,'none','phong',obj.visible});
-            
+                set(0,'CurrentFigure',obj.plotFigureH);
+                set(obj.patchH,...
+                    {'Faces','Vertices','CData','FaceColor','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
+                    {obj.sfv.faces,obj.sfv.vertices,obj.cdat,obj.color,obj.alpha,'none','phong',obj.visible});
+                
             % add toggle button:
             set(obj.toggleH,...
                 {'Parent','CData','TooltipString','OnCallback','OffCallback','State'},...

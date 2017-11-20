@@ -70,9 +70,6 @@ set(0,'CurrentFigure',handles.roicontrol);
 set(handles.roicontrol,'CurrentAxes',handles.histax);
 axis off
 
-if isempty(obj.binary)
-obj.binary=0;
-end
 if ~obj.binary
     hist(nzeros);
     h=findobj(handles.histax,'Type','patch');
@@ -84,11 +81,10 @@ if ~obj.binary
 else
     set(handles.threshtxt,'Visible','off');
 end
-
 % button
 set(handles.colorchange,'BackgroundColor',obj.color);
 set(0,'CurrentFigure',handles.roicontrol);
-
+set(handles.roicontrol,'name',obj.name);
 %% sliders:
 if ~obj.binary
 % threshold
@@ -118,6 +114,7 @@ set(jSlider{3}, 'Value', round(obj.smooth*2), 'MajorTickSpacing',0.1, 'PaintLabe
 hjSlider{3} = handle(jSlider{3}, 'CallbackProperties');
 set(hjSlider{3}, 'StateChangedCallback', {@slidersmoothchangetxt,obj,handles});  %alternative
 set(hjSlider{3}, 'MouseReleasedCallback', {@slidersmoothchange,obj,handles});  %alternative
+set(0,'CurrentFigure',obj.plotFigureH);
 
 
 function thresh=getmaxminthresh(obj)

@@ -208,8 +208,9 @@ for nativemni=nm % switch between native and mni space atlases.
                     visible='off';
                 end
             end
+            if ~(atlases.types(atlas)>5)
             atlassurfs(atlascnt,1)=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
-
+            end
             % export label and labelbutton
 
             [~,thislabel]=fileparts(atlases.names{atlas});
@@ -219,13 +220,12 @@ for nativemni=nm % switch between native and mni space atlases.
                     [~,thislabel]=fileparts(thislabel);
                 end
             end
-            atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
-
-            if ~exist('labelbutton','var')
-                labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'TooltipString','Labels');
-                labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'TooltipString','Label Color');
-            end
-
+                atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
+                
+                if ~exist('labelbutton','var')
+                    labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'TooltipString','Labels');
+                    labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'TooltipString','Label Color');
+                end
             % make fv compatible for stats
 
             caxis([1 64]);
@@ -236,13 +236,11 @@ for nativemni=nm % switch between native and mni space atlases.
             catch
                 ea_error('Atlas color not found.');
             end
-            colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
-
-            % set Tags
-            set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
-            set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',sidestr{side}])
-            set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlas,side))
-
+            if ~(atlases.types(atlas)>5)
+                
+                colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
+                
+                end
             % gather contact statistics
             if options.writeoutstats
                 try
@@ -275,8 +273,28 @@ for nativemni=nm % switch between native and mni space atlases.
             end
 
             %normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
-
-            ea_spec_atlas(atlassurfs(atlascnt,1),atlases.names{atlas},atlases.colormap,setinterpol);
+            if ~(atlases.types(atlas)>5)
+                
+                ea_spec_atlas(atlassurfs(atlascnt,1),atlases.names{atlas},atlases.colormap,setinterpol);
+            else
+                pobj.plotFigureH=resultfig;
+                pobj.color=atlasc;
+                pobj.threshold=0.55;
+                pobj.openedit=1;
+                pobj.htH=ht;
+                obj=ea_roi([ea_space([],'atlases'),options.atlasset,filesep,getsidec(side),filesep,atlases.names{atlas}],pobj);
+                atlassurfs(atlascnt,1)=obj.patchH;
+                colorbuttons(atlascnt)=obj.toggleH;
+            end
+            
+            % set Tags
+try
+            set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
+            set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',sidestr{side}])
+            set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlas,side))
+catch
+    keyboard
+end
             atlascnt=atlascnt+1;
 
             set(gcf,'Renderer','OpenGL')
@@ -287,6 +305,7 @@ for nativemni=nm % switch between native and mni space atlases.
             if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
                 drawnow
             end
+            
         end
     end
 
@@ -434,7 +453,9 @@ switch opt
     case 5
         sides=1; % midline
         sidestr={'midline'};
-
+    case 6 % probabilistic
+        sides=1:2;
+        sidestr={'right','left'};
 end
 
 
@@ -653,4 +674,12 @@ for i = 1:blocks
         aNr = repmat(aN,1,length(j));
     end
     in(j) = all((nrmls*testpts(j,:)' - aNr) >= -tol,1)';
+end
+
+function sidec=getsidec(side)
+switch side
+    case 1
+        sidec='rh';
+    case 2
+        sidec='lh';
 end

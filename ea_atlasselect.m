@@ -176,7 +176,7 @@ for subgroup=1:length(atlases.subgroups)
         h.sgsub{subgroup}{node}=DefaultCheckBoxNode(atlaslabel,true);
         h.sg{subgroup}.add(h.sgsub{subgroup}{node});
 
-        if (atlases.types(atlases.subgroups(subgroup).entries(node))==3) || (atlases.types(atlases.subgroups(subgroup).entries(node))==4) % need lh and rh entries
+        if (atlases.types(atlases.subgroups(subgroup).entries(node))==3) || (atlases.types(atlases.subgroups(subgroup).entries(node))==4) || (atlases.types(atlases.subgroups(subgroup).entries(node))==6) % need lh and rh entries
             [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
             checked=onoff2bool(togglebuttons(thistb).State);
             lrlabel = ['<HTML><BODY>' ...
