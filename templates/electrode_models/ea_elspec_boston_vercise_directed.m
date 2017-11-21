@@ -8,6 +8,8 @@ function electrode=ea_elspec_boston_vercise_directed(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
+electrodeorder = [1 2 4 3 5 7 6 8 9]; % 211117 - small change so that order of the directional electrodes is clockwise seen from the tip
+
 %% import insulations and contacts from subfolder
 for k = 1:16
     filename = ['.\Boston_Vercise_Directed_Components\Insulations\' 'ins' num2str(k) '.1'];
@@ -18,7 +20,8 @@ for k = 1:16
 end
 
 for k = 1:9
-    filename = ['.\Boston_Vercise_Directed_Components\Contacts\' 'con' num2str(k) '.1'];
+%     filename = ['.\Boston_Vercise_Directed_Components\Contacts\' 'con' num2str(k) '.1'];
+    filename = ['.\Boston_Vercise_Directed_Components\Contacts\' 'con' num2str(electrodeorder(k)) '.1'];
     [node,~,face]=readtetgen(filename);
     electrode.contacts(k).vertices = node;
     electrode.contacts(k).faces = face(:,1:3);
