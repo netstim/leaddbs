@@ -65,7 +65,7 @@ switch cmd
         if ~exist(checkf,'file') || force
             success=ea_downloadasset('structural group connectome (Horn 2013)',...
                 [ea_getconnectomebase('dmri'),'groupconnectome2013.zip'],...
-                'group');
+                'group2013');
         else
             disp('Group Connectome (Horn 2013) is installed.')
         end
