@@ -193,6 +193,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     end
 
     if options.doreconstruction
+        wasnative=options.native;
         switch options.reconmethod
             case 1 % TRAC/CORE
                 [coords_mm,trajectory,markers]=ea_runtraccore(options);
@@ -204,6 +205,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                             options.native=1;
 
                 catch % revert to TRAC/CORE
+                    disp('PaCER failed ? reverting to TRAC/CORE algorithm...');
                     [coords_mm,trajectory,markers]=ea_runtraccore(options);
                             options.native=0;
 
@@ -215,7 +217,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         if isfield(options,'hybridsave')
             options=rmfield(options,'hybridsave');
         end
-
+        options.native=wasnative; % restore original setting.
     end
 
     if options.manualheightcorrection
