@@ -168,9 +168,9 @@ end
 
 %% add methods dump:
 cits={
-    'Horn, A., Ostwald, D., Reisert, M., & Blankenburg, F. (2014). The structural-functional connectome and the default mode network of the human brain. NeuroImage, 102 Pt 1, 142?151. http://doi.org/10.1016/j.neuroimage.2013.09.069'
-    'Horn, A., & K??hn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
-    'Horn, A., & Blankenburg, F. (2016). Toward a standardized structural-functional group connectome in MNI space. NeuroImage, 124(Pt A), 310?322. http://doi.org/10.1016/j.neuroimage.2015.08.048'
+    'Horn, A., Ostwald, D., Reisert, M., & Blankenburg, F. (2014). The structural-functional connectome and the default mode network of the human brain. NeuroImage, 102 Pt 1, 142-151. http://doi.org/10.1016/j.neuroimage.2013.09.069'
+    'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127-135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
+    'Horn, A., & Blankenburg, F. (2016). Toward a standardized structural-functional group connectome in MNI space. NeuroImage, 124(Pt A), 310-322. http://doi.org/10.1016/j.neuroimage.2015.08.048'
     };
 ea_methods(options,['The whole-brain fiber set was normalized into standard-stereotactic space following the approach described in (Horn 2014, Horn 2016) as ',...
     ' implemented in Lead-DBS software (Horn 2015; www.lead-dbs.org).'],...
