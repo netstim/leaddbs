@@ -143,12 +143,13 @@ classdef ea_trajectory < handle
             obj.toggleH=uitoggletool;
             
             
+            
+            update_trajectory(obj);
             % Get the underlying java object using findobj
             jtoggle = findjobj(obj.toggleH);
             
             % Specify a callback to be triggered on any mouse release event
             set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
-            update_trajectory(obj);
             addlistener(obj,'showPlanning','PostSet',...
                 @ea_trajectory.changeevent);
             addlistener(obj,'hasPlanning','PostSet',...
@@ -217,6 +218,7 @@ classdef ea_trajectory < handle
             if ismember(evtnm,{'color'}) % simply change color of patch
                 obj.patchPlanning.FaceVertexCData=repmat(obj.color,size(obj.patchPlanning.FaceVertexCData,1),1);
             end
+            
             if ismember(evtnm,{'showPlanning'}) && obj.hasPlanning
                                 obj.patchPlanning.Visible=ea_bool2onoff(obj.showPlanning);
             end
@@ -235,7 +237,7 @@ classdef ea_trajectory < handle
                     set(obj.ellabel(1),'Visible','off');
                 end
             end
-            if ismember(evtnm,{'showMacro'})
+            if ismember(evtnm,{'showMacro'}) && obj.hasMacro
                 ea_elvisible([],[],obj.elpatch,1,obj.site,ea_bool2onoff(obj.showMacro),obj.options);
             end
             
@@ -324,6 +326,7 @@ classdef ea_trajectory < handle
 end
 
 function rightcallback(src, evnt,obj)
+
 if evnt.getButton() == 3
     ea_editfiducial(src,evnt,obj)
 end
@@ -331,55 +334,39 @@ end
 
 function ea_editfiducial(Hobj,evt,obj)
 obj.controlH=ea_trajectorycontrol(obj);
-
 end
 
 function ea_trajvisible(~,~,onoff,obj)
 
 
 if getappdata(obj.plotFigureH,'altpressed'); % hide all
-            el_render=getappdata(obj.plotFigureH,'el_render');
-            
-            for el=1:length(el_render)
-                el_render(el).showPlanning=ea_bool2onoff('off');
-                el_render(el).showMacro=ea_bool2onoff(onoff);
-                el_render(el).showMicro=ea_bool2onoff('off');
-            end
-
+    el_render=getappdata(obj.plotFigureH,'el_render');
+    
+    for el=1:length(el_render)
+        el_render(el).showPlanning=ea_bool2onoff('off');
+        el_render(el).showMacro=ea_bool2onoff(onoff);
+        el_render(el).showMicro=ea_bool2onoff('off');
+    end
+    
     
 else
     
-    
-    if strcmp(onoff,'off') || isempty(obj.togglestates)
-        obj.togglestates=[obj.showPlanning,obj.showMacro,obj.showMicro];
-    end
-    
-    switch onoff
-        case 'on'
-            if obj.togglestates(1) % had been on before
-                obj.showPlanning=1;
-            end
-            if obj.togglestates(2) % had been on before
+    if isvalid(obj.controlH) % control figure exists
+        chandles=getappdata(obj.controlH,'chandles');
+        obj.showPlanning=get(chandles.showPlanning,'Value');
+        obj.showMacro=get(chandles.showMacro,'Value');        
+    else
+        
+        switch onoff
+            case 'off'
+                obj.showPlanning=0;
+                obj.showMacro=0;
+                obj.showMicro=0;
+            case 'on'
                 obj.showMacro=1;
-            end
-            if obj.togglestates(3) % had been on before
-                obj.showMicro=1;
-            end
-            
-            if ~any([obj.showPlanning,obj.showMacro,obj.showMicro]) % if none is visible, show the default.
-                switch obj.toggledefault
-                    case 'macro' % will be the case when called from lead_dbs
-                        obj.showMacro=1;
-                    case 'planning' % will be the case when called from lead_or
-                        obj.showPlanning=1;
-                end
-            end
-            
-            
-        case 'off'
-            obj.showMacro=0;
-            obj.showMicro=0;
-            obj.showPlanning=0;
+        end
     end
 end
+
+
 end
