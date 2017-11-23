@@ -162,3 +162,14 @@ end
 
 setappdata(resultfig,'cortex',cortexH);
 % camlight('headlight','infinite'); axis equal;
+
+% function ea_opencortcontrol(hobj, ev, cortex, resultfig, options)
+% all available atlases
+files = dir(adir); atlases = {files(~cellfun(@(x) isempty(regexp(x, 'annot', 'once')), {files.name})).name};
+atlases=strrep(atlases,'.mat','');
+% current atlas:
+atlas=strrep(atlas,'.mat','');
+cswin = ea_cortexselect(cortex, annot, atlas, colorindex, struct_names, options, resultfig);
+set(cswin, 'visible', options.d3.verbose);
+
+setappdata(resultfig, 'aswin', cswin);
