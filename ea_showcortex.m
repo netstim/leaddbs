@@ -1,8 +1,8 @@
 function [cortexH,cortex] = ea_showcortex(varargin)
 % This function shows a cortical reconstruction in the 3D-Scene viewer. It
-% reads in cortex.mat found in the eAuto_root/templates/cortex folder, or 
+% reads in cortex.mat found in the eAuto_root/templates/cortex folder, or
 % in the patientdirectory on button press (Cortical Reconstruction
-% Visualization) in the Lead-Anatomy scene. To view patient specific 
+% Visualization) in the Lead-Anatomy scene. To view patient specific
 % cortical reconstructions, load them to the patient directory using
 % ea_importfs via the "Import FS" button in the main Lead DBS GUI.
 % __________________________________________________________________________________
@@ -25,9 +25,9 @@ try delete(cortexH{2}); end
 
 % Initial Opening
 % if ~isfield(getappdata(resultfig),'cortex')
-    color = options.prefs.d3.cortexcolor; % default color is gray
-    alpha = options.prefs.d3.cortexalpha; % default alph is 0.333
-% else 
+color = options.prefs.d3.cortexcolor; % default color is gray
+alpha = options.prefs.d3.cortexalpha; % default alph is 0.333
+% else
 %     color = options.prefs.d3.cortexcolor;
 %     awin = getappdata(resultfig,'awin');
 %     appdata = getappdata(awin,'UsedByGUIData_m');
@@ -35,7 +35,7 @@ try delete(cortexH{2}); end
 %     clear appdata
 % end
 
-    
+
 nm=[0:2]; % native and mni
 try
     nmind=[options.atl.pt,options.atl.can,options.atl.ptnative]; % which shall be performed?
@@ -110,7 +110,7 @@ end
 % % for now always use template cortex in mni space
 % if strcmp(reslice,'yes'); end
 
-% try 
+% try
 %     load([adir,'/annot_',options.prefs.d3.corticalatlas,'.mat'])
 % end
 
@@ -127,12 +127,34 @@ cortexH{2} = patch('vertices',cortex.Vertices_lh,'faces',cortex.Faces_lh(:,[1 3 
     'edgecolor','none','FaceAlpha',alpha,'FaceColor','interp',...
     'facelighting', 'gouraud', 'specularstrength', .25,'Tag',tagstr{2});
 
-if exist('annot','var')
+% Load annotation file
+files = dir(adir); files = {files(~cellfun(@(x) isempty(regexp(x, 'annot', 'once')), {files.name})).name};
+atlas = files{~cellfun(@(x) isempty(regexp(x, ['annot_',options.prefs.d3.cortex_defaultatlas,'.mat'], 'match')), files)};
+if ~isempty(files) && ~isempty(atlas)
+    load(fullfile(adir,atlas));
+    
     for side = 1:2
+        % Choose gyri
+        structures{side}={};
+        struct_names=annot(side).colortable.struct_names;
+        labelidx=cell(length(structures{side}),1);
+        if ~isempty(labelidx)
+            for i=1:length(structures{side})
+                labelidx{i} =  find(~cellfun(@isempty,strfind(struct_names,structures{side}{i})));
+            end
+        else
+            labelidx=mat2cell([1:size(struct_names,1)]',ones(size(struct_names)));
+        end
         annot(side).cdat = get(cortexH{side},'FaceVertexCData');
-        for i = 1:length(annot(side).colortable.table)
-            index = find(annot(side).label==annot(side).colortable.table(i,5));
-            annot(side).cdat(index,:) = repmat(annot(side).colortable.table(i,1:3)/256,[length(index),1]);
+        structidx = arrayfun(@(x) find(annot(side).label==annot(side).colortable.table(x,5)),[labelidx{:}],'uni',0);
+        labels = cell2mat(arrayfun(@(x) find(x==annot(side).label),annot(side).colortable.table(:,5),'uni',0));
+        
+        for i = 1:size(annot(side).colortable.table,1)
+            colorindex = structidx{i};
+            visindex=setdiff(labels,colorindex);
+            %         invisindex=[invisindex;setdiff(labels,colorindex)];
+            annot(side).cdat(colorindex,:) = repmat(annot(side).colortable.table(i,1:3)/256,[length(colorindex),1]);
+            annot(side).adat(colorindex,:) = ones(length(colorindex),1) * alpha;
         end
         set(cortexH{side},'FaceVertexCData',annot(side).cdat)
     end

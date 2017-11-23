@@ -35,8 +35,15 @@ elseif isfield(varargin{1},'uipatdirs')
 end
 
 %% Handle File Options
+% Check for previously saved fs directory
+ea_ui=load([ptdir,'/ea_ui.mat']);
+if isfield(ea_ui,'fsdir')
+	startdir = fileparts(ea_ui.fsdir);
+else
+    startdir = fileparts(ptdir);
+end
+
 % Check if CortexHiRes.mat and CortexLowRes_*.mat already exists
-startdir = ptdir;
 files = dir([ptdir '/cortex']); files = files(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {files.name}));
 files = files(~[files.isdir]); files = {files(~cellfun(@isempty , strfind({files.name},'Cortex'))).name};
 overwrite = ~cellfun(@isempty,strfind(files,'CortexHiRes.mat'));
@@ -78,23 +85,22 @@ if overwrite
         end
         return
     elseif strcmp(response,'Yes')
-        load([ptdir,'/cortex/CortexHiRes.mat'],'fsdir');
-        FsDir = fsdir;
+        load([ptdir,'/ea_ui.mat'],'fsdir');        
     else
         % Choose Freesurfer Directory
-        FsDir = ea_uigetdir(startdir,['Choose Freesurfer Folder for ' patientname]);
+        fsdir = ea_uigetdir(startdir,['Choose Freesurfer Folder for ' patientname]);
     end
 end
 
-if ~exist('FsDir','var')
-     FsDir = ea_uigetdir(startdir,['Choose Freesurfer Folder for ' patientname]);
+if ~exist('fsdir','var')
+     fsdir = ea_uigetdir(startdir,['Choose Freesurfer Folder for ' patientname]);
 end
-if iscell(FsDir) && length(FsDir)==1
-    FsDir = char(FsDir);
-elseif isempty(FsDir)
+if iscell(fsdir) && length(fsdir)==1
+    fsdir = char(fsdir);
+elseif isempty(fsdir)
     disp('No files saved')
     return
-elseif ischar(FsDir)
+elseif ischar(fsdir)
     %nothing
 else
     ea_error('Please choose one FS folder at a time')
@@ -106,40 +112,42 @@ end
 
 %% Parse Freesurfer Folder
 
-if ~exist([FsDir '/mri/T1.mgz'],'file')
-    msg = ['Missing: ' FsDir '/mri/T1.mgz'];
+if ~exist([fsdir '/mri/T1.mgz'],'file')
+    msg = ['Missing: ' fsdir '/mri/T1.mgz'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
-elseif ~exist([FsDir '/mri/aseg.mgz'],'file')
-    msg = ['Missing: ' FsDir '/mri/aseg.mgz'];
+    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+elseif ~exist([fsdir '/mri/aseg.mgz'],'file')
+    msg = ['Missing: ' fsdir '/mri/aseg.mgz'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
-elseif ~exist([FsDir '/surf/lh.pial'],'file')
-    msg = ['Missing: ' FsDir '/mri/lh.pial'];
+    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+elseif ~exist([fsdir '/surf/lh.pial'],'file')
+    msg = ['Missing: ' fsdir '/mri/lh.pial'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
-elseif ~exist([FsDir '/surf/rh.pial'],'file')
-    msg = ['Missing: ' FsDir '/mri/rh.pial'];
+    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+elseif ~exist([fsdir '/surf/rh.pial'],'file')
+    msg = ['Missing: ' fsdir '/mri/rh.pial'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
-elseif ~exist([FsDir '/label/lh.aparc.a2009s.annot'],'file')
-    msg = ['Missing: ' FsDir '/mri/lh.aparc.a2009s.annot'];
+    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+elseif ~exist([fsdir '/label/lh.aparc.a2009s.annot'],'file')
+    msg = ['Missing: ' fsdir '/mri/lh.aparc.a2009s.annot'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
-elseif ~exist([FsDir '/label/rh.aparc.a2009s.annot'],'file')
-    msg = ['Missing: ' FsDir '/mri/lh.aparc.a2009s.annot'];
+    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+elseif ~exist([fsdir '/label/rh.aparc.a2009s.annot'],'file')
+    msg = ['Missing: ' fsdir '/mri/lh.aparc.a2009s.annot'];
     w = warndlg(['Warning: This may not be a freesurfer folder. ' msg],patientname); waitfor(w);
-    FsDir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
+    fsdir = char(ea_uigetdir(ptdir,['Choose Freesurfer Folder for ' patientname ' (' msg ')']));
 end
 
-MriFile  = [FsDir '/mri/T1.mgz'];
-LhPial   = [FsDir '/surf/lh.pial'];
-RhPial   = [FsDir '/surf/rh.pial'];
-AsegFile = [FsDir '/mri/aseg.mgz'];
+save([ptdir,filesep,'ea_ui.mat'],'fsdir','-append')
+
+MriFile  = [fsdir '/mri/T1.mgz'];
+LhPial   = [fsdir '/surf/lh.pial'];
+RhPial   = [fsdir '/surf/rh.pial'];
+AsegFile = [fsdir '/mri/aseg.mgz'];
 
 % Convert T1.mgz to T1.nii (Freesurfer Dependent)
-% if ~exist([FsDir '/mri/T1.nii'],'file')
-%     system(['mri_convert -i ' FsDir '/mri/T1.mgz ' -o ' FsDir '/mri/T1.nii -it mgz -ot nii'])
+% if ~exist([fsdir '/mri/T1.nii'],'file')
+%     system(['mri_convert -i ' fsdir '/mri/T1.mgz ' -o ' fsdir '/mri/T1.nii -it mgz -ot nii'])
 % end
     % Notes: need to add PC functionality
     % Notes: need to add ea_libs_helper for Freesurfer compatibility
@@ -150,8 +158,8 @@ annot_DKT(1).filename  = 'label/rh.aparc.annot';
 annot_DKT(2).filename  = 'label/lh.aparc.annot';
 annot_DKTaseg(1).atlas = 'Desikan-Killiany + Aseg';
 annot_DKTaseg(2).atlas = 'Desikan-Killiany + Aseg';
-annot_DKTaseg(1).filename  = 'label/rh.aparc.DKTatlas40.annot';
-annot_DKTaseg(2).filename  = 'label/lh.aparc.DKTatlas40.annot';
+annot_DKTaseg(1).filename  = 'label/rh.aparc.DKTatlas.annot';
+annot_DKTaseg(2).filename  = 'label/lh.aparc.DKTatlas.annot';
 annot_a2009(1).atlas = 'Destrieux';
 annot_a2009(2).atlas = 'Destrieux';
 annot_a2009(1).filename  = 'label/rh.aparc.a2009s.annot';
@@ -160,9 +168,9 @@ annot_a2009(2).filename  = 'label/lh.aparc.a2009s.annot';
 % Read Annotation Files
 % external/freesurfer/read_annotation.m
 for iSide = 1:2
-    [annot_DKT(iSide).vert, annot_DKT(iSide).label, annot_DKT(iSide).colortable] = read_annotation([FsDir,filesep,annot_DKT(iSide).filename]);
-    [annot_DKTaseg(iSide).vert, annot_DKTaseg(iSide).label, annot_DKTaseg(iSide).colortable] = read_annotation([FsDir,filesep,annot_DKTaseg(iSide).filename]);
-    [annot_a2009(iSide).vert, annot_a2009(iSide).label, annot_a2009(iSide).colortable] = read_annotation([FsDir,filesep,annot_a2009(iSide).filename]);
+    [annot_DKT(iSide).vert, annot_DKT(iSide).label, annot_DKT(iSide).colortable] = read_annotation([fsdir,filesep,annot_DKT(iSide).filename]);
+    [annot_DKTaseg(iSide).vert, annot_DKTaseg(iSide).label, annot_DKTaseg(iSide).colortable] = read_annotation([fsdir,filesep,annot_DKTaseg(iSide).filename]);
+    [annot_a2009(iSide).vert, annot_a2009(iSide).label, annot_a2009(iSide).colortable] = read_annotation([fsdir,filesep,annot_a2009(iSide).filename]);
 end
 annot = annot_DKT;
 save([ptdir '/cortex/annot_DKT.mat'],'annot'); clear annot;
@@ -175,7 +183,7 @@ save([ptdir '/cortex/annot_a2009.mat'],'annot'); clear annot
 %% Create Hi Resolution Cortex
 CortexHiRes.patientname = patientname;
 CortexHiRes.ptdir = ptdir;
-CortexHiRes.fsdir = FsDir;
+CortexHiRes.fsdir = fsdir;
    
 disp('Loading reconstruction...')
 % Read surface files
@@ -246,11 +254,11 @@ end
 %     cmd = '/Applications/freesurfer/bin:/Applications/freesurfer/fsfast/bin:/Applications/freesurfer/mni/bin:/Applications/freesurfer/tktools';
 %     ea_libs_helper(cmd,'PATH')
 % 
-%     grayfilename = [FsDir '/mri/ribbon.nii'];
-%     % if ~exist(grayfilename,'file') && exist([FsDir,'/mri/ribbon.mgz'],'file')
-%     %     cmd = sprintf('mri_convert -i %s/mri/ribbon.mgz -o %s/mri/ribbon.nii -it mgz -ot nii',FsDir,FsDir);
+%     grayfilename = [fsdir '/mri/ribbon.nii'];
+%     % if ~exist(grayfilename,'file') && exist([fsdir,'/mri/ribbon.mgz'],'file')
+%     %     cmd = sprintf('mri_convert -i %s/mri/ribbon.mgz -o %s/mri/ribbon.nii -it mgz -ot nii',fsdir,fsdir);
 %     %     system(cmd)
-%     % else ~exist(grayfilename,'file') && ~exist([FsDir,'/mri/ribbon.mgz'],'file')
+%     % else ~exist(grayfilename,'file') && ~exist([fsdir,'/mri/ribbon.mgz'],'file')
 %     %     ea_warning('Cannot Find mri/ribbon.mgz')
 %     % end    
 %         %disp('running dbs_gethull.......')
@@ -315,7 +323,7 @@ end
 % Guarantee Options
 options.patientname = patientname;
 options.uipatdirs = ptdir;
-options.fsdir = FsDir;
+options.fsdir = fsdir;
 
 qst = {'Do you have subdural electrode coordinates'; 'that you would like to import now?'};
 ImportElecsOption = questdlg(qst,'Import FS'); clear qst
