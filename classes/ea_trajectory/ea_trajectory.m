@@ -351,7 +351,7 @@ if getappdata(obj.plotFigureH,'altpressed'); % hide all
     
 else
     
-    if isvalid(obj.controlH) % control figure exists
+    if ishandle(obj.controlH) % control figure exists
         chandles=getappdata(obj.controlH,'chandles');
         obj.showPlanning=get(chandles.showPlanning,'Value');
         obj.showMacro=get(chandles.showMacro,'Value');        
