@@ -39,7 +39,15 @@ else % DICOM folder under subject folder
     indir = dcmname;
 end
 
-ea_dcm2niix(indir, outdir);
+switch(options.prefs.dicom.tool)
+    case 'dcm2niix'
+        ea_dcm2niix(indir, outdir);
+        
+    case 'dicm2nii'
+        ea_dicm2nii(indir,outdir);
+        
+end
+
 
 % delete DICOM folder
 if options.prefs.dicom.dicomfiles
