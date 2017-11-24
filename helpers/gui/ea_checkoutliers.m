@@ -3,7 +3,6 @@ function ea_checkoutliers(~,~,handles);
 
 answ=inputdlg('Detect electrodes how many standard-deviations distant from robust average coordinate?','Set Threshold',1,{'2.5'});
 sfact=str2double(answ);
-
 M=getappdata(handles.leadfigure,'M');
 ptidx=get(handles.patientlist,'Value');
 
