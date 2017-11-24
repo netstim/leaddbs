@@ -131,7 +131,7 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
                     
                         popts=options;
                     if strcmp(options.leadprod,'group')
-                        directory=[options.patient_list{elstruct(pt).pt},filesep];
+                        directory=[options.patient_list{pt},filesep];
                         [popts.root,popts.patientname]=fileparts(directory);
                         popts.root=[popts.root,filesep];
                     else
