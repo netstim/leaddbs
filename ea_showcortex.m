@@ -157,10 +157,12 @@ if ~isempty(files) && ~isempty(atlas)
             annot(side).adat(colorindex,:) = ones(length(colorindex),1) * alpha;
         end
         set(cortexH{side},'FaceVertexCData',annot(side).cdat)
+        set(cortexH{side},'FaceVertexAlphaData',annot(side).adat,'FaceAlpha','interp')
     end
 end
 
 setappdata(resultfig,'cortex',cortexH);
+setappdata(resultfig,'annot',annot);
 % camlight('headlight','infinite'); axis equal;
 
 % function ea_opencortcontrol(hobj, ev, cortex, resultfig, options)

@@ -201,6 +201,12 @@ end
     ea_busyaction('del',handles.cortexselect,'atlcontrol');
     
     h.uselabelname = uselabelname;
+    h.cortex = cortex;
+    h.annot = annot;
+    h.struct_names = struct_names;
+    h.colorindex = colorindex;
+    h.options = options;
+    h.resultfig = resultfig;
     set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback, h})
     setappdata(handles.cortexselect,'h',h);
     setappdata(handles.cortexselect,'jtree',jCheckBoxTree);
@@ -260,40 +266,24 @@ end
 function ea_showhideatlases(jtree,h)
 
 sels=ea_storeupdatemodel(jtree,h);
-for branch=1:length(sels.branches)
-    for leaf=1:length(sels.leaves{branch})
-        if ~isempty(sels.sides{branch}{leaf}) % has side children
-            for side=1:length(sels.sides{branch}{leaf})
-
-                sidec=getsidec(length(sels.sides{branch}{leaf}),side);
-
-                [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons,h.uselabelname,h.atlases);
-                if strcmp(sels.sides{branch}{leaf}{side},'selected')
-                    if ~strcmp(h.atlassurfs(ixs).Visible,'on')
-                        h.atlassurfs(ixs).Visible='on';
-                        h.togglebuttons(ixt).State='on';
-                    end
-
-                    if strcmp(h.labelbutton.State, 'on')
-                        h.atlaslabels(ixs).Visible='on';
-                    end
-                elseif strcmp(sels.sides{branch}{leaf}{side},'not selected')
-                    if ~strcmp(h.atlassurfs(ixs).Visible,'off')
-                        h.atlassurfs(ixs).Visible='off';
-                        h.togglebuttons(ixt).State='off';
-                    end
-
-                    if strcmp(h.labelbutton.State, 'on')
-                        h.atlaslabels(ixs).Visible='off';
-                    end
-                end
-            end
-
-        else
-            keyboard
+for branch=1:length(sels.branches) % Hemisphere
+    for leaf=1:length(sels.leaves{branch}) % Label
+        
+        % Turn Visibility On
+        if strcmp(sels.branches{branch},'mixed') | strcmp(sels.branches{branch},'selected') && strcmp(sels.leaves{branch}{leaf},'selected')
+            updatematrix(leaf) = 1; 
+            
+        % Turn Visibility Off
+        elseif strcmp(sels.branches{branch},'mixed') | strcmp(sels.branches{branch},'selected') && strcmp(sels.leaves{branch}{leaf},'not selected')
+            updatematrix(leaf) = 0;
         end
+        
     end
-
+    X = mat2cell([1:length(updatematrix)]',ones(length(updatematrix),1));
+    labelidx = X(logical(updatematrix));
+    structures{branch} = h.struct_names(logical(updatematrix));
+    ea_updatecortex(h.options,h.resultfig,branch,structures,labelidx);
+    
 end
 
 
