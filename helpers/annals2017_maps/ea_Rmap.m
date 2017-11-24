@@ -10,9 +10,7 @@ function ea_Rmap(varargin)
     output=varargin{3};
     
     [X,n]=ea_genX(varargin{:}); % accumulates all images into image matrix X.
-    
     R=corr(regressor,X','type','Spearman','rows','pairwise');
-    
     ea_exportmap(n,R,varargin{:});
 
     
