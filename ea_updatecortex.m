@@ -7,12 +7,18 @@ if ~exist('alpha','var')
     alpha = options.prefs.d3.cortexalpha;
 end
 
+if iscell(labelidx{1}) % both sides
+   labelstruct = labelidx; 
+end
 for s = sides
+    if exist('labelstruct','var')
+        labelidx = labelstruct{s};
+    end
     vertices=cortex{s}.Vertices;
     annot(s).adat=ones(size(vertices,1),1)*alpha;
     
     % Choose gyri
-    labels = cell2mat(arrayfun(@(x) find(x==annot(s).label),annot(s).colortable.table(:,5),'uni',0));    
+    % labels = cell2mat(arrayfun(@(x) find(x==annot(s).label),annot(s).colortable.table(:,5),'uni',0));    
     structidx = arrayfun(@(x) find(annot(s).label==annot(s).colortable.table(x,5)),[labelidx{:}],'uni',0);
     for i=1:length(structidx)
         colorindex = structidx{i};

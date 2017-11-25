@@ -264,8 +264,9 @@ end
 %         %disp('running dbs_gethull.......')
 %         %[mask_matrix,mask_indices] = ea_gethull(grayfilename,3,21,.3);
 %         save([ptdir '/cortex/hull.mat'],'mask_matrix','mask_indices')
-%% Option to Downsample CortexHiRes
+%% Option to Downsample CortexHiRes - Dev
 % newNbVertices = '15000';
+if options.prefs.env.dev
 qst = {'Would you like to downsample the high '; sprintf('resolution cortex with %d vertices?',size(CortexHiRes.Vertices,1))};
 DownsampleOption = questdlg(qst,'Import FreeSurfer');
 
@@ -318,9 +319,11 @@ elseif strcmp(DownsampleOption,'Cancel')
     return
 
 end
+end
 
 %% Import Cortical Electrodes
 % Guarantee Options
+if options.prefs.env.dev
 options.patientname = patientname;
 options.uipatdirs = ptdir;
 options.fsdir = fsdir;
@@ -336,7 +339,7 @@ if exist('CortElecs','var')
 disp(['Saving to ' ptdir '/cortex/CortElecs.mat'])
     save([ptdir '/cortex/CortElecs.mat'],'-struct','CortElecs')
 end
-
+end
 %%
 disp('Done')
 

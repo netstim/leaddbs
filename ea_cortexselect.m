@@ -22,7 +22,7 @@ function varargout = ea_cortexselect(varargin)
 
 % Edit the above text to modify the response to help ea_cortexselect
 
-% Last Modified by GUIDE v2.5 23-Nov-2017 12:59:37
+% Last Modified by GUIDE v2.5 25-Nov-2017 08:08:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -79,10 +79,12 @@ set(handles.cortexselect,'Visible',options.d3.verbose); % set invisible if calle
 
 movegui(hObject,'southeast');
 
-% ea_listcortatlas(options,handles,options.native);
+% available atlases
  set(handles.atlaspopup,'String',atlases);
 
-% [~,handles.atlaspopup.Value]=ismember(options.atlasset,handles.atlaspopup.String);
+ % opacity
+set(handles.alphaslider,'Value',options.prefs.d3.cortexalpha);
+set(handles.alphaedit,'String',num2str(options.prefs.d3.cortexalpha));
 
 setappdata(handles.cortexselect,'handles',handles);
 setappdata(handles.cortexselect,'atlases',atlases);
@@ -91,9 +93,14 @@ setappdata(handles.cortexselect,'struct_names',struct_names);
 setappdata(handles.cortexselect,'options',options);
 setappdata(handles.cortexselect,'resultfig',resultfig);
 
+setappdata(handles.alphaslider,'annot',annot);
+setappdata(handles.alphaslider,'struct_names',struct_names);
+setappdata(handles.alphaslider,'options',options);
+setappdata(handles.alphaslider,'resultfig',resultfig);
+
+
 axis off
 ea_createpcmenu(handles);
-set(handles.structpopup,'String',struct_names);
 setappdata(handles.cortexselect,'treeinit',1);
 setuptree([{handles}, varargin])
 
@@ -118,35 +125,9 @@ setappdata(handles.cortexselect,'atlases',atlases);
 setappdata(handles.cortexselect,'colorindex',colorindex);
 setappdata(handles.cortexselect,'struct_names',struct_names);
 
-% try
-%     if ~isfield(annot,'subgroups')
-%         annot.subgroups(1).label='Structures';
-%         annot.subgroups(1).entries=1:length(atlases.names);
-%     end
-% catch
-%     keyboard
-% end
-
 cortchecks=cell(length(struct_names),1);
 import com.mathworks.mwswing.checkboxtree.*
-if handles.structpopup.Value>length(handles.structpopup.String)
-    handles.structpopup.Value=1;
-end
-
-if handles.togglepopup.Value>length(handles.togglepopup.String)
-    handles.togglepopup.Value=1;
-end
-
-switch handles.structpopup.String{handles.structpopup.Value}
-    case 'NIfTI filenames'  % use atlases.names
-        uselabelname = 0;
-    otherwise  % use atlases.labels
-        [~,uselabelname] = ismember(handles.structpopup.String{handles.structpopup.Value},struct_names);
-        if uselabelname == 0
-            uselabelname = 1;
-        end
-end
-
+uselabelname = 1;
 
 for s = 1:2  % side 1=Right, 2=Left
     if s==1
@@ -213,8 +194,8 @@ end
     %sels=ea_storeupdatemodel(jCheckBoxTree,h);
     
     if treeinit
-        if handles.structpopup.Value>length(handles.structpopup.String)
-            handles.structpopup.Value=1;
+        if handles.alphaslider.Value>length(handles.alphaslider.String)
+            handles.alphaslider.Value=1;
         end
         if handles.togglepopup.Value>length(handles.togglepopup.String)
             handles.togglepopup.Value=1;
@@ -230,8 +211,9 @@ end
         handles.togglepopup.Position(2)=handles.cortexselect.Position(4)-120;
         handles.togglestatic.Position(2)=handles.togglepopup.Position(2)+28;
         
-        handles.structpopup.Position(2)=handles.cortexselect.Position(4)-165;
-        handles.cortexstatic.Position(2)=handles.structpopup.Position(2)+28;
+        handles.alphaslider.Position(2)=handles.cortexselect.Position(4)-165;
+        handles.alphastatic.Position(2)=handles.alphaslider.Position(2)+28;
+        handles.alphaedit.Position(2)=handles.alphastatic.Position(2);
         
         set(0,'CurrentFigure',handles.cortexselect);
         axis off
@@ -247,23 +229,18 @@ if ~isempty(jComp)
 end
 
 
-function tf=bin2bool(t)
-if t
-    tf=true;
-else
-    tf=false;
-end
-
-function tf=onoff2bool(t)
-switch t
-    case 'on'
-        tf=true;
-    case 'off'
-        tf=false;
-end
-
-
 function ea_showhideatlases(jtree,h)
+
+updatematrix = ea_updatematrix(jtree,h);
+for s = 1:size(updatematrix,2)
+    X{s} = mat2cell([1:length(updatematrix{s})]',ones(length(updatematrix{s}),1));
+    labelidx{s} = X{s}(logical(updatematrix{s}));
+    structures{s} = h.struct_names(logical(updatematrix{s}));
+end
+ea_updatecortex(h.options,h.resultfig,1:2,structures,labelidx);
+    
+
+function updatematrix = ea_updatematrix(jtree,h)
 
 sels=ea_storeupdatemodel(jtree,h);
 for branch=1:length(sels.branches) % Hemisphere
@@ -271,19 +248,17 @@ for branch=1:length(sels.branches) % Hemisphere
         
         % Turn Visibility On
         if strcmp(sels.branches{branch},'mixed') | strcmp(sels.branches{branch},'selected') && strcmp(sels.leaves{branch}{leaf},'selected')
-            updatematrix(leaf) = 1; 
+            updatematrix{branch}(leaf) = 1;
             
         % Turn Visibility Off
         elseif strcmp(sels.branches{branch},'mixed') | strcmp(sels.branches{branch},'selected') && strcmp(sels.leaves{branch}{leaf},'not selected')
-            updatematrix(leaf) = 0;
+            updatematrix{branch}(leaf) = 0;
+            
+        elseif strcmp(sels.branches{branch},'not selected')
+            updatematrix{branch}(leaf) = 0;
         end
         
     end
-    X = mat2cell([1:length(updatematrix)]',ones(length(updatematrix),1));
-    labelidx = X(logical(updatematrix));
-    structures{branch} = h.struct_names(logical(updatematrix));
-    ea_updatecortex(h.options,h.resultfig,branch,structures,labelidx);
-    
 end
 
 
@@ -598,32 +573,59 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in structpopup.
-function structpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to structpopup (see GCBO)
+% --- Executes on selection change in alphaslider.
+function alphaslider_Callback(hObject, eventdata, handles)
+% hObject    handle to alphaslider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns structpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from structpopup
+% Hints: contents = cellstr(get(hObject,'String')) returns alphaslider contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from alphaslider
 
-
-colorbuttons=getappdata(handles.cortexselect,'colorbuttons');
-atlassurfs=getappdata(handles.cortexselect,'atlassurfs');
-atlases=getappdata(handles.cortexselect,'atlases');
-labelbutton=getappdata(handles.cortexselect,'labelbutton');
-atlaslabels=getappdata(handles.cortexselect,'atlaslabels');
-
-setuptree({handles,colorbuttons,atlassurfs,atlases,labelbutton,atlaslabels});
+% ea_updatecortex(options,resultfig,sides,structures,labelidx,alpha)
+alpha = handles.alphaslider.Value;
+resultfig = getappdata(hObject,'resultfig');
+options = getappdata(hObject,'options');
+annot = getappdata(hObject,'annot');
+cortex = getappdata(resultfig,'cortex');
+struct_names = annot(1).colortable.struct_names;
+n = length(struct_names); % size(annot(1).colortable.table,1);
+labelidx = {mat2cell([1:n]',ones(n,1)),mat2cell([1:n]',ones(n,1))};
+ea_updatecortex(options,resultfig,1:2,struct_names,labelidx,alpha);
+set(handles.alphaedit,'String',num2str(alpha));
+% setuptree({handles,colorbuttons,atlassurfs,atlases,labelbutton,atlaslabels});
 
 
 % --- Executes during object creation, after setting all properties.
-function structpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to structpopup (see GCBO)
+function alphaslider_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to alphaslider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function alphaedit_Callback(hObject, eventdata, handles)
+% hObject    handle to alphaedit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of alphaedit as text
+%        str2double(get(hObject,'String')) returns contents of alphaedit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function alphaedit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to alphaedit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
