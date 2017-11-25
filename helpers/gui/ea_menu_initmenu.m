@@ -34,11 +34,6 @@ if isempty(menuprobe)
         uimenu(cr,'Label','Aggregate all checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'allcheckreg'});
         uimenu(cr,'Label','Aggregate most recent normalization checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'normcheckreg'});
     end
-    if ismember('group',cmd)
-       cr=uimenu(f,'Label','Group Tools');
-       uimenu(cr,'Label','Check for outliers in localizations','Callback',{@ea_checkoutliers,handles});
-    end
-    
     if ismember('acpc',cmd)
         uimenu(f,'Label','Convert ACPC/MNI coordinates (Horn 2017)','Callback',{@ea_acpcquery,handles.leadfigure});
     end
