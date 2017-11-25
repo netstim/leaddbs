@@ -1,4 +1,4 @@
-function ea_checkoutliers(~,~,handles)
+function ea_checkoutliers(~,~,handles);
 
 
 answ=inputdlg('Detect electrodes how many standard-deviations distant from robust average coordinate?','Set Threshold',1,{'2.5'});
