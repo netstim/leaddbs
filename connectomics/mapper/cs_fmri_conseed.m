@@ -24,7 +24,7 @@ else
 end
 
 disp(['Connectome dataset: ',cname,'.']);
-
+    ocname=cname;
 if ismember('>',cname)
     delim=strfind(cname,'>');
     subset=cname(delim+1:end);
@@ -58,11 +58,11 @@ end
 
 owasempty=0;
 if ~exist('outputfolder','var')
-    outputfolder=ea_getoutputfolder(sfile);
+    outputfolder=ea_getoutputfolder(sfile,ocname);
     owasempty=1;
 else
     if isempty(outputfolder) % from shell wrapper.
-        outputfolder=ea_getoutputfolder(sfile);
+        outputfolder=ea_getoutputfolder(sfile,ocname);
         owasempty=1;
     end
     if ~strcmp(outputfolder(end),filesep)
@@ -433,7 +433,7 @@ switch dataset.type
             case {'seed','pmap','pseed'}
                 for s=1:size(seedfn,1) % subtract 1 in case of pmap command
                    if owasempty
-                       outputfolder=ea_getoutputfolder({sfile{s}});
+                       outputfolder=ea_getoutputfolder({sfile{s}},ocname);
                    end
                     % export mean
                     M=ea_nanmean(fX{s}',1);
@@ -675,7 +675,10 @@ end
 load([datadir,num2str(rightmat),'.mat']);
 loaded=rightmat;
 
-function outputfolder=ea_getoutputfolder(sfile)
+function outputfolder=ea_getoutputfolder(sfile,con)
 file=sfile{1};
 [pth,fn,ext]=fileparts(file); % exit to same folder as seed.
-outputfolder=[pth,filesep];
+outputfolder=[pth,filesep,con,filesep];
+if ~exist(outputfolder,'dir')
+    mkdir(outputfolder);
+end
