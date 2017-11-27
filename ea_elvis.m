@@ -154,6 +154,7 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
                 end
                 %[el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
             catch
+ 
                 ea_error(['Couldn''t visualize electrode from patient ',num2str(pt),'.']);
             end
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.

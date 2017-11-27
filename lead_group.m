@@ -1161,6 +1161,8 @@ for pt=selection
 
     % Step 1: Re-calculate closeness to subcortical atlases.
     options.leadprod = 'group';
+    options.patient_list=M.patient.list;
+
     resultfig=ea_elvis(options);
 
     % save scene as matlab figure
