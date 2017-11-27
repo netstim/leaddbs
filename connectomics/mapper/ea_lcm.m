@@ -10,6 +10,9 @@ if options.lcm.struc.do
         options.lcm.seeds=ea_resolvevatseeds(options,'dMRI');
         if isempty(options.lcm.odir)
             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep,options.lcm.struc.connectome,filesep];
+            if ~exist(options.lcm.odir,'dir')
+                mkdir(options.lcm.odir);
+            end
         end
     end
 
@@ -24,6 +27,9 @@ if options.lcm.func.do
         options.lcm.seeds=ea_resolvevatseeds(options,'fMRI');
         if isempty(options.lcm.odir) && ~strcmp(options.lcm.seeddef,'vats')
             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep,options.lcm.func.connectome,filesep];
+            if ~exist(options.lcm.odir,'dir')
+                mkdir(options.lcm.odir);
+            end
         end
     end
 
