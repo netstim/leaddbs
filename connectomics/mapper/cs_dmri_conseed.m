@@ -6,6 +6,25 @@ function cs_dmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,
 
 [sfile,roilist]=ea_handleseeds(sfile);
 
+if isfield(options,'uivatdirs')
+    if ~isempty(options.uivatdirs)
+        outputfolder=[];
+    end
+end
+
+owasempty=0;
+if ~exist('outputfolder','var')
+    outputfolder=ea_getoutputfolder(sfile,ocname);
+    owasempty=1;
+else
+    if isempty(outputfolder) % from shell wrapper.
+        outputfolder=ea_getoutputfolder(sfile,cname);
+        owasempty=1;
+    end
+    if ~strcmp(outputfolder(end),filesep)
+        outputfolder=[outputfolder,filesep];
+    end
+end
 
 if isdeployed
     cbase=dfold;
@@ -130,7 +149,9 @@ switch cmd
             end
 
             [~,fn]=fileparts(seedfiles{s});
-
+            if owasempty
+                outputfolder=ea_getoutputfolder({sfile{s}},cname);
+            end
             map.fname=fullfile(outputfolder,[fn,'_struc_',cmd,'.nii']);
             map.dt=[16,0];
             spm_write_vol(map,map.img);

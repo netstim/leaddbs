@@ -28,7 +28,12 @@ for run=1:chunk:length(sfile)
     catch
         tsfile=sfile(run:end);
     end
-    
+    if isfield(options,'uivatdirs')
+        if ~isempty(options.uivatdirs)
+            options.lcm.odir=[];
+        end
+    end
+
     
     cs_fmri_conseed(ea_getconnectomebase,options.lcm.func.connectome,...
         tsfile,...
