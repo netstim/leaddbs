@@ -52,13 +52,13 @@ if isfield(handles,'seeddefpopup')
     end
     end
     % for now only check first subject for pt. specific fibers..
-    callers=dbstack; % find out whether mapper or predict were calling
-    switch callers(5).name
-        case 'lead_predict'
-            set(handles.seeddefpopup,'String',[remstims]);
-        case 'lead_mapper'
-                remstims=ea_prependvat(remstims);
+    % find out whether mapper or predict were calling
+    switch handles.leadfigure.Name(1:20)
+        case 'Lead Connectome Mapp'
+            remstims=ea_prependvat(remstims);
             set(handles.seeddefpopup,'String',[{'Manually choose seeds'},remstims]);
+        otherwise
+            set(handles.seeddefpopup,'String',[remstims]);
     end
     ea_resetpopup(handles.seeddefpopup);
 
