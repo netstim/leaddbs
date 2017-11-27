@@ -140,12 +140,15 @@ for suffix=dowhich
                             subset=cname(delim+1:end);
                             cname=cname(1:delim-1);
                         end
-                        d=load([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat']);
-                        d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
-                        d.dataset.vol.space.dt=[16,0];
-                        ea_write_nii(d.dataset.vol.space);
-                        ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],1);
-                        
+                        if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
+                            ea_warp_vat2rest(cname,vatdir,sidec,options);
+                        else
+                            d=load([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat']);
+                            d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
+                            d.dataset.vol.space.dt=[16,0];
+                            ea_write_nii(d.dataset.vol.space);
+                            ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],1);
+                        end
                         nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                         nii(cnt).img(isnan(nii(cnt).img))=0;
                         if ~any(nii(cnt).img(:))
@@ -172,3 +175,14 @@ for suffix=dowhich
             end
     end
 end
+function ea_warp_vat2rest(cname,vatdir,sidec,options)
+directory=[fileparts(fileparts(fileparts(vatdir))),filesep];
+options=ea_getptopts(directory,options);
+options.coregmr.method='SPM'; % hard code for now.
+% warp VTA to native subject space (anchor modality):
+ea_apply_normalization_tofile(options,{[vatdir,'tmp_',sidec,'.nii']},{[vatdir,'wtmp_',sidec,'.nii']},directory,1,0);
+% coreg from anchor modality to rest file:
+copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized])
+ea_coreg2images(options,[directory,'c',options.prefs.prenii_unnormalized],[directory,cname,'.nii'],[directory,'c',options.prefs.prenii_unnormalized],{[vatdir,'wtmp_',sidec,'.nii']},[],[],0);
+delete([directory,'c',options.prefs.prenii_unnormalized]);
+movefile([vatdir,'wtmp_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);

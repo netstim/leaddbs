@@ -1,6 +1,6 @@
-function affinefile = ea_coreg2images(options,moving,fixed,ofile,otherfiles,writeoutmat,msks)
+function affinefile = ea_coreg2images(options,moving,fixed,ofile,otherfiles,writeoutmat,msks,interp)
 
-if nargin < 5
+if ~exist('otherfiles','var')
     otherfiles = {};
 elseif isempty(otherfiles) % [] or {} or ''
     otherfiles = {};
@@ -8,11 +8,13 @@ elseif ischar(otherfiles) % single file, make it to cell string
     otherfiles = {otherfiles};
 end
 
-if nargin < 6
+if ~exist('writeoutmat','var') || isempty(writeoutmat)
     writeoutmat = 0;
+end
+if ~exist('affinefile','var') || isempty(affinefile)
     affinefile = {};
 end
-if ~exist('msks','var')
+if ~exist('msks','var') || isempty(msks)
     msks={};
 end
 [directory,mfilen,ext]=fileparts(moving);
@@ -24,12 +26,15 @@ if exist([directory,'raw_',mfilen],'file')
 else
     copyfile([directory,mfilen],[directory,'raw_',mfilen]);
 end
+if ~exist('interp','var') || isempty(interp)
+    interp=4;
+end
 
 switch options.coregmr.method
     case 'SPM' % SPM
         commaoneotherfiles=prepforspm(otherfiles);
 
-        affinefile = ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat);
+        affinefile = ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat,interp);
         try % will fail if ofile is same string as r mfilen..
             movefile([directory,'r',mfilen],ofile);
         end

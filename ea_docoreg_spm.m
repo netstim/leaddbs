@@ -1,18 +1,21 @@
-function affinefile = ea_docoreg_spm(options,moving,fixed,cfun,doreslice,otherfiles,writeoutmat)
+function affinefile = ea_docoreg_spm(options,moving,fixed,cfun,doreslice,otherfiles,writeoutmat,interp)
 % Wrapper for SPM coregistration
 % note: if refine is set, will always reslice.
-if nargin < 3
+if ~exist('cfun','var')
     cfun = 'nmi';
 end
-if nargin < 4
+if ~exist('doreslice','var')
     doreslice = 1;
 end
-if nargin < 5
+if ~exist('otherfiles','var')
     otherfiles = {''};
 elseif isempty(otherfiles)  % [] or {} or ''
     otherfiles = {''};
 elseif ischar(otherfiles) % single file, make it to cell string
     otherfiles = {otherfiles};
+end
+if ~exist('interp','var')
+    interp=4;
 end
 
 % Write out the transform from moving image vox to fixed image mm (also
@@ -39,7 +42,7 @@ if doreslice
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [8 4 2]; %[4 2];
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [7 7];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 4;
+    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = interp;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';

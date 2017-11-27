@@ -41,13 +41,22 @@ if exist('directory','var')
         cnt=cnt+1;
     end
 
-    % fMRI:
+    % fMRI - parcellations:
     % check if _tc are present:
     if exist([directory,'connectomics',filesep,selectedparc,filesep,'rest_tc.mat'],'file')
         modlist{cnt}='rest_tc';
         sf(cnt)=2;
         cnt=cnt+1;
     end
+    
+    % fMRI - raw files:
+    ffis=dir([directory,'rest_*.nii']);
+    for ff=1:length(ffis);
+        [~,modlist{cnt}]=fileparts(ffis(ff).name);
+        sf(cnt)=2;
+        cnt=cnt+1;
+    end
+    
 end
 
 if vat
@@ -56,6 +65,7 @@ if vat
    for rd=1:length(resdir)
        [~,fn,ext]=fileparts(resdir(rd).name);
        modlist{cnt}=[fn,'_tc'];
+        sf(cnt)=2;
        cnt=cnt+1;
    end
 
