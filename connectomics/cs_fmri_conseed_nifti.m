@@ -26,7 +26,6 @@ function gmtc=cs_fmri_conseed_nifti(restfilename,seedfile,options)
 
 %% set some initial parameters here:
 
-TR=options.lc.func.prefs.TR; % fix me
 
 rest=ea_load_nii(restfilename);
 signallength=size(rest.img,4);
@@ -39,6 +38,7 @@ end
 alltc=spm_read_vols(spm_vol(restfilename));
 
 directory=[fileparts(restfilename),filesep];
+load([directory,'TR.mat']);
 %% Data corrections steps
 
 
@@ -66,34 +66,34 @@ end
 disp('Done. Regressing out nuisance variables...');
 
 
-    X(:,1)=ones(signallength,1);
-    X(:,2)=WMTimecourse;
-    X(:,3)=CSFTimecourse;
 
-%% actual regression:
-for voxx=1:size(interpol_tc,1)
 
-    beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
-    if ~isnan(beta_hat)
-    interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
-    else
-        warning('Regression of WM-/CSF-Signals could not be performed.');
-    end
-end
-
-clear X
+% %% actual regression:
+% for voxx=1:size(interpol_tc,1)
+% 
+%     beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
+%     if ~isnan(beta_hat)
+%     interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
+%     else
+%         warning('Regression of WM-/CSF-Signals could not be performed.');
+%     end
+% end
+% 
+% clear X
 
 %% regress out movement parameters
 
 load([directory,'rp_',rf,'.txt']); % rigid body motion parameters.
 rp_rest=eval(['rp_',rf]);
 X(:,1)=ones(signallength,1);
-X(:,2)=rp_rest(1:signallength,1);
-X(:,3)=rp_rest(1:signallength,2);
-X(:,4)=rp_rest(1:signallength,3);
-X(:,5)=rp_rest(1:signallength,4);
-X(:,6)=rp_rest(1:signallength,5);
-X(:,7)=rp_rest(1:signallength,6);
+X(:,2)=WMTimecourse;
+X(:,3)=CSFTimecourse;
+X(:,4)=rp_rest(1:signallength,1);
+X(:,5)=rp_rest(1:signallength,2);
+X(:,6)=rp_rest(1:signallength,3);
+X(:,7)=rp_rest(1:signallength,4);
+X(:,8)=rp_rest(1:signallength,5);
+X(:,9)=rp_rest(1:signallength,6);
 
 for voxx=1:size(interpol_tc,1)
 
