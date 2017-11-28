@@ -152,7 +152,7 @@ for suffix=dowhich
                         nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                         nii(cnt).img(isnan(nii(cnt).img))=0;
                         if ~any(nii(cnt).img(:))
-                            msgbox(['Created empty VTA for ',options.patientname,', ',sidec,' hemisphere.']);
+                            msgbox(['Created empty VTA for ',options.patientname,'(',options.uivatdirs{pt},'), ',sidec,' hemisphere.']);
                         end
                         cnt=cnt+1;
                     end
@@ -180,9 +180,37 @@ directory=[fileparts(fileparts(fileparts(vatdir))),filesep];
 options=ea_getptopts(directory,options);
 options.coregmr.method='SPM'; % hard code for now.
 % warp VTA to native subject space (anchor modality):
-ea_apply_normalization_tofile(options,{[vatdir,'tmp_',sidec,'.nii']},{[vatdir,'wtmp_',sidec,'.nii']},directory,1,0);
+ea_apply_normalization_tofile(options,{[vatdir,'tmp_',sidec,'.nii']},{[vatdir,'wtmp_',sidec,'.nii']},directory,1,1);
+% get peak coordinate for if empty image results when downsampling to
+% resting state file:
+anat_vat=ea_load_nii([vatdir,'wtmp_',sidec,'.nii']);
+[~,ix]=max(anat_vat.img(:));
+[xx,yy,zz]=ind2sub(size(anat_vat.img),ix);
+voxc=[xx;yy;zz;1];
+mmc=anat_vat.mat*voxc;
 % coreg from anchor modality to rest file:
 copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized])
-ea_coreg2images(options,[directory,'c',options.prefs.prenii_unnormalized],[directory,cname,'.nii'],[directory,'c',options.prefs.prenii_unnormalized],{[vatdir,'wtmp_',sidec,'.nii']},[],[],0);
+ea_coreg2images(options,[directory,'c',options.prefs.prenii_unnormalized],[directory,cname,'.nii'],[directory,'c',options.prefs.prenii_unnormalized],{[vatdir,'wtmp_',sidec,'.nii']},1,[],1);
+
+matlabbatch{1}.spm.util.checkreg.data = {
+                                         [directory,'c',options.prefs.prenii_unnormalized]
+                                         [directory,cname,'.nii']
+                                         };
+                                     spm_jobman('run',{matlabbatch}); clear matlabbatch
 delete([directory,'c',options.prefs.prenii_unnormalized]);
 movefile([vatdir,'wtmp_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
+rest_vat=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
+if ~any(rest_vat.img(:)) % image empty, at least set original peak to 1.
+    warning('Image empty (potentially due to poor resolution and interpolation), trying to set peak manually');
+    [~,pn]=fileparts(options.prefs.prenii_unnormalized);
+    load([directory,'c',pn,'2',cname,'_spm.mat']);
+    mmc_inrest=spmaffine*voxc;
+    voxc_inrest=round(fixedmat\mmc_inrest);
+    try
+        rest_vat.img(voxc_inrest(1),voxc_inrest(2),voxc_inrest(3))=1;
+        ea_write_nii(rest_vat);
+    catch
+        msgbox(['Attempted to manually set peak voxel true (',rest_vat.fname,') but it seems to reside out of bounds.']);
+    end
+end
+

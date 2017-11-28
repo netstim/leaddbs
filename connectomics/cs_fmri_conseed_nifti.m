@@ -3,13 +3,14 @@ function gmtc=cs_fmri_conseed_nifti(restfilename,seedfile,options)
 
 
 directory=[fileparts(restfilename),filesep];
-[pth,rf,ext]=fileparts(restfilename);
+[pth,ref,ext]=fileparts(restfilename);
 options=ea_getptopts(directory,options);
 options=ea_assignpretra(options);
 [~,anat]=fileparts(options.prefs.prenii_unnormalized);
 
-if ~exist([directory,'sr',rf,ext],'file') || ~exist([directory,'rr',rf,'c1',anat,'.nii'],'file') % preproecessing needs to be performed
+if ~exist([directory,'sr',ref,ext],'file') || ~exist([directory,'rr',ref,'c1',anat,'.nii'],'file') % preproecessing needs to be performed
     disp('No preprocessed fMRI-images found, processing...');
+    options.prefs.rest=restfilename;
     ea_preprocess_fmri(options);
     disp('Done preprocessing fMRI data.');
 end
@@ -21,7 +22,7 @@ if usesmooth
 else
     spfx='';
 end
-rest=ea_load_nii(fullfile(pth,[spfx,rf,ext]));
+rest=ea_load_nii(fullfile(pth,[spfx,ref,ext]));
 signallength=size(rest.img,4);
 interpol_tc=nan(numel(rest.img(:,:,:,1)),size(rest.img,4));
 for tmpt = 1:signallength
@@ -38,9 +39,9 @@ load([directory,'TR.mat']);
 disp('Calculating C2 and CSF-signals for signal regression...');
 
 % regression steps
-[~,rf]=fileparts(restfilename);
-c2=ea_load_nii([directory,'rr',rf,'c2',options.prefs.prenii_unnormalized]);
-c3=ea_load_nii([directory,'rr',rf,'c3',options.prefs.prenii_unnormalized]);
+[~,ref]=fileparts(restfilename);
+c2=ea_load_nii([directory,'rr',ref,'c2',options.prefs.prenii_unnormalized]);
+c3=ea_load_nii([directory,'rr',ref,'c3',options.prefs.prenii_unnormalized]);
 
 ec2map=c2.img(:); ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
 ec3map=c3.img(:); ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
@@ -75,8 +76,8 @@ disp('Done. Regressing out nuisance variables...');
 
 %% regress out movement parameters
 
-load([directory,'rp_',rf,'.txt']); % rigid body motion parameters.
-rp_rest=eval(['rp_',rf]);
+load([directory,'rp_',ref,'.txt']); % rigid body motion parameters.
+rp_rest=eval(['rp_',ref]);
 X(:,1)=ones(signallength,1);
 X(:,2)=WMTimecourse;
 X(:,3)=CSFTimecourse;
