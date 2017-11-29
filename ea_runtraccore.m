@@ -20,12 +20,12 @@ end
 matlabbatch{1}.spm.util.imcalc.input = fis;
 matlabbatch{1}.spm.util.imcalc.output = [directory,'lpost.nii'];
 matlabbatch{1}.spm.util.imcalc.outdir = {directory};
-matlabbatch{1}.spm.util.imcalc.expression = 'sum(X)';
+matlabbatch{1}.spm.util.imcalc.expression = 'sum(X(2:end,:),1)';
 matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
 matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
 matlabbatch{1}.spm.util.imcalc.options.mask = -1;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
 lnii=ea_load_untouch_nii([directory,'lpost.nii']);

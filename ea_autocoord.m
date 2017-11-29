@@ -205,7 +205,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                             options.native=1;
 
                 catch % revert to TRAC/CORE
-                    disp('PaCER failed ? reverting to TRAC/CORE algorithm...');
+                    disp('PaCER failed - reverting to TRAC/CORE algorithm...');
                     [coords_mm,trajectory,markers]=ea_runtraccore(options);
                             options.native=0;
 
