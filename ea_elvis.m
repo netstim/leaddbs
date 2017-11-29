@@ -107,8 +107,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 %             end
 
             if options.d3.mirrorsides
-               elstruct=ea_mirrorsides(elstruct);
-try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
+                elstruct=ea_mirrorsides(elstruct);
+                try options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
             end
 
         else
@@ -128,8 +128,7 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
             % show electrodes..
             try
                 for side=options.sides
-                    
-                        popts=options;
+                    popts=options;
                     if strcmp(options.leadprod,'group')
                         directory=[options.patient_list{elstruct(pt).pt},filesep];
                         [popts.root,popts.patientname]=fileparts(directory);
@@ -137,10 +136,11 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
                     else
                         directory=[options.root,options.patientname,filesep];
                     end
+
                     try
-                    pobj=ea_load_trajectory(directory,side);
-                    pobj.hasPlanning=1;
-                    pobj.showPlanning=strcmp(options.leadprod,'or');
+                        pobj=ea_load_trajectory(directory,side);
+                        pobj.hasPlanning=1;
+                        pobj.showPlanning=strcmp(options.leadprod,'or');
                     end
                     pobj.options=popts;
                     pobj.elstruct=elstruct(pt);
@@ -148,13 +148,12 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
                     pobj.site=side;
                     if exist('el_render','var')
                         el_render(end+1)=ea_trajectory(pobj);
-                    else                        
+                    else
                         el_render(1)=ea_trajectory(pobj);
                     end
                 end
                 %[el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
             catch
- 
                 ea_error(['Couldn''t visualize electrode from patient ',num2str(pt),'.']);
             end
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
@@ -240,7 +239,7 @@ try               options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
                     cnt=cnt+2;
                 end
         end
-eladd=uipushtool(ht,'CData',ea_get_icn('addelectrode'),'TooltipString','Add Trajectory...','ClickedCallback',@ea_add_trajectory);
+        eladd=uipushtool(ht,'CData',ea_get_icn('addelectrode'),'TooltipString','Add Trajectory...','ClickedCallback',@ea_add_trajectory);
 %        setappdata(resultfig,'eltog',eltog);
 
         clear cnt
