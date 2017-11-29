@@ -339,7 +339,7 @@ end
 function ea_trajvisible(~,~,onoff,obj)
 
 
-if getappdata(obj.plotFigureH,'altpressed'); % hide all
+if getappdata(obj.plotFigureH,'altpressed') % hide all
     el_render=getappdata(obj.plotFigureH,'el_render');
     
     for el=1:length(el_render)
