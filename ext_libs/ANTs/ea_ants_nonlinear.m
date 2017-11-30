@@ -57,8 +57,8 @@ if slabsupport
     if length(sums)>1 % multispectral warp
         slabs = sums(1:end-1) < (sums(end)*0.7);
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
-            slabmovingimage = movingimage(slabs); % move slabs to new cell slabimage
-            slabfixedimage = fixedimage(slabs);
+            slabmovingimage = ea_path_helper(movingimage{slabs}); % move slabs to new cell slabimage
+            slabfixedimage = ea_path_helper(fixedimage{slabs});
             movingimage(slabs) = []; % remove slabs from movingimage
             fixedimage(slabs) = []; % remove slabs from movingimage
 
@@ -179,7 +179,7 @@ if slabspresent
         ' --shrink-factors ', synshrinkfactors ...
         ' --smoothing-sigmas ', synsmoothingssigmas, ...
         ' --use-estimate-learning-rate-once ', ...
-        ' --masks [NULL,',[tmaskdir,filesep,'slabmask.nii'],']'];
+        ' --masks [NULL,',ea_path_helper([tmaskdir,filesep,'slabmask.nii']),']'];
     fixedimage = [fixedimage,slabfixedimage];
     movingimage = [movingimage,slabmovingimage];
 
@@ -198,7 +198,7 @@ if  options.prefs.machine.normsettings.ants_scrf
     synmasksmoothingssigmas = apref.smoothingsigmas.scrf;
 
     if slabspresent
-        movingmask = [tmaskdir,filesep,'slabmask.nii'];
+        movingmask = ea_path_helper([tmaskdir,filesep,'slabmask.nii']);
     else
         movingmask = 'NULL';
     end
@@ -207,7 +207,7 @@ if  options.prefs.machine.normsettings.ants_scrf
         ' --shrink-factors ', synmaskshrinkfactors,  ...
         ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
         ' --use-estimate-learning-rate-once ', ...
-        ' --masks [',ea_space([],'subcortical'),'secondstepmask','.nii',',',movingmask,']'];
+        ' --masks [',ea_path_helper([ea_space([],'subcortical'),'secondstepmask','.nii']),',',movingmask,']'];
     for fi = 1:length(fixedimage)
         synmaskstage = [synmaskstage,...
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
