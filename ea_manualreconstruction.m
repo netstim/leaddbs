@@ -535,9 +535,9 @@ for side=options.sides
     end
     normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
     
-    y(1) = -cos(0) * sin(deg2rad(rotation{side}));
-    y(2) = (cos(0) * cos(deg2rad(rotation{side}))) + (sin(0) * sin(deg2rad(rotation{side})) * sin(0));
-    y(3) = (-sin(0) * cos(deg2rad(rotation{side}))) + (cos(0) * sin(deg2rad(rotation{side})) * sin(0));
+    y(1) = -cos(0) * sin(ea_deg2rad(rotation{side}));
+    y(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0));
+    y(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0));
     y = y - (dot(y,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;
     x = cross(y,normtrajvector);
     
