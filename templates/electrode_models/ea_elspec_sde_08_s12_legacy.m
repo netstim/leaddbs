@@ -326,7 +326,7 @@ for comp=1:elspec.numel*2+1
     else % these are the insulated shaft, tip and spacings..
         electrode.insulation(inscnt).vertices=cyl.Vertices;
         electrode.insulation(inscnt).faces=cyl.Faces;
-        electrode.insulation(cntcnt).facevertexcdata=cyl.FaceVertexCData;
+        electrode.insulation(inscnt).facevertexcdata=cyl.FaceVertexCData;
         inscnt=inscnt+1;
     end
 end
