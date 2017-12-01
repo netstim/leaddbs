@@ -6,19 +6,21 @@ function varargout=ea_resolve_elspec(varargin)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-
 varargout{1}={'Medtronic 3389', 'Medtronic 3387', 'Medtronic 3391', ...
               'Boston Scientific Vercise', 'Boston Scientific Vercise Directed', ...
               'St. Jude ActiveTip (6146-6149)','St. Jude ActiveTip (6142-6145)' ...
-              'PINS L301', 'PINS L302' 'PINS L303'};
+              'PINS L301', 'PINS L302', 'PINS L303', ...
+              'SDE-08 S8 Legacy', 'SDE-08 S10 Legacy', 'SDE-08 S12 Legacy', 'SDE-08 S16 Legacy'};
 varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', ...
               'boston_vercise', 'boston_vercise_directed', ...
               'stjude_activetip_2mm','stjude_activetip_3mm' ...
-              'pins_l301', 'pins_l302', 'pins_l303'};
+              'pins_l301', 'pins_l302', 'pins_l303', ...
+              'sde_08_s8_legacy', 'sde_08_s10_legacy', 'sde_08_s12_legacy', 'sde_08_s16_legacy'};
+
 if ~nargin
-    return
+	return
 else
-   options=varargin{1};
+	options=varargin{1};
 end
 
 try
@@ -79,6 +81,20 @@ try
             elspec.numel=8;
             elspec.tipiscontact=0;
             elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15'};
+        case 'Boston Scientific Vercise Directed'
+            elspec.matfname='boston_vercise_directed';
+            elspec.lead_diameter=1.3;
+            elspec.lead_color=0.7;
+            elspec.contact_length=1.5;
+            elspec.contact_diameter=1.3;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=1.3;
+            elspec.tip_color=0.3;
+            elspec.tip_length=1.5;
+            elspec.contact_spacing=0.5;
+            elspec.numel=8; % correct here since the directional leads will be inflated lateron.
+            elspec.tipiscontact=1;
+            elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
         case 'St. Jude ActiveTip (6146-6149)'
             elspec.matfname='stjude_activetip_2mm';
             elspec.lead_diameter=1.27;
@@ -105,20 +121,6 @@ try
             elspec.tip_length=1.5;
             elspec.contact_spacing=1.5;
             elspec.numel=4;
-            elspec.tipiscontact=1;
-            elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
-        case 'Boston Scientific Vercise Directed'
-            elspec.matfname='boston_vercise_directed';
-            elspec.lead_diameter=1.3;
-            elspec.lead_color=0.7;
-            elspec.contact_length=1.5;
-            elspec.contact_diameter=1.3;
-            elspec.contact_color=0.3;
-            elspec.tip_diameter=1.3;
-            elspec.tip_color=0.3;
-            elspec.tip_length=1.5;
-            elspec.contact_spacing=0.5;
-            elspec.numel=8; % correct here since the directional leads will be inflated lateron.
             elspec.tipiscontact=1;
             elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
         case 'PINS L301'
@@ -163,6 +165,66 @@ try
             elspec.numel=4;
             elspec.tipiscontact=0;
             elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
+        case 'SDE-08 S8 Legacy'
+            elspec.matfname='sde_08_s8_legacy';
+            elspec.lead_diameter=0.8;
+            elspec.lead_color=0.7;
+            elspec.contact_length=2;
+            elspec.contact_diameter=0.8;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=0.8;
+            elspec.tip_color=0.7;
+            elspec.tip_length=1.5;
+            elspec.contact_spacing=1.5;
+            elspec.numel=8;
+            elspec.tipiscontact=0;
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7',...
+                                 'K8','K9','K10','K11','K12','K13','K14','K15'};
+        case 'SDE-08 S10 Legacy'
+            elspec.matfname='sde_08_s10_legacy';
+            elspec.lead_diameter=0.8;
+            elspec.lead_color=0.7;
+            elspec.contact_length=2;
+            elspec.contact_diameter=0.8;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=0.8;
+            elspec.tip_color=0.7;
+            elspec.tip_length=1.5;
+            elspec.contact_spacing=1.5;
+            elspec.numel=10;
+            elspec.tipiscontact=0;
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9',...
+                                 'K10','K11','K12','K13','K14','K15','K16','K17','K18','K19'};
+        case 'SDE-08 S12 Legacy'
+            elspec.matfname='sde_08_s12_legacy';
+            elspec.lead_diameter=0.8;
+            elspec.lead_color=0.7;
+            elspec.contact_length=2;
+            elspec.contact_diameter=0.8;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=0.8;
+            elspec.tip_color=0.7;
+            elspec.tip_length=1.5;
+            elspec.contact_spacing=1.5;
+            elspec.numel=12;
+            elspec.tipiscontact=0;
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11',...
+                                 'K12','K13','K14','K15','K16','K17','K18','K19','K20','K21','K22','K23'};
+        case 'SDE-08 S16 Legacy'
+            elspec.matfname='sde_08_s16_legacy';
+            elspec.lead_diameter=0.8;
+            elspec.lead_color=0.7;
+            elspec.contact_length=2;
+            elspec.contact_diameter=0.8;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=0.8;
+            elspec.tip_color=0.7;
+            elspec.tip_length=1.5;
+            elspec.contact_spacing=1.5;
+            elspec.numel=16;
+            elspec.tipiscontact=0;
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15',...
+                                 'K16','K17','K18','K19','K20','K21','K22','K23','K24','K25','K26','K27','K28','K29','K30','K31'};
     end
 catch
 %    warning('No electrode model specified. Using Medtronic 3389.');
