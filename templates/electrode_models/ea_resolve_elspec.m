@@ -10,12 +10,14 @@ varargout{1}={'Medtronic 3389', 'Medtronic 3387', 'Medtronic 3391', ...
               'Boston Scientific Vercise', 'Boston Scientific Vercise Directed', ...
               'St. Jude ActiveTip (6146-6149)','St. Jude ActiveTip (6142-6145)' ...
               'PINS L301', 'PINS L302', 'PINS L303', ...
-              'SDE-08 S8 Legacy', 'SDE-08 S10 Legacy', 'SDE-08 S12 Legacy', 'SDE-08 S16 Legacy'};
+              'SDE-08 S8 Legacy', 'SDE-08 S10 Legacy', 'SDE-08 S12 Legacy', 'SDE-08 S16 Legacy', ...
+              'SDE-08 S8', 'SDE-08 S10', 'SDE-08 S12', 'SDE-08 S16'};
 varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', ...
               'boston_vercise', 'boston_vercise_directed', ...
               'stjude_activetip_2mm','stjude_activetip_3mm' ...
               'pins_l301', 'pins_l302', 'pins_l303', ...
-              'sde_08_s8_legacy', 'sde_08_s10_legacy', 'sde_08_s12_legacy', 'sde_08_s16_legacy'};
+              'sde_08_s8_legacy', 'sde_08_s10_legacy', 'sde_08_s12_legacy', 'sde_08_s16_legacy',...
+              'sde_08_s8', 'sde_08_s10', 'sde_08_s12', 'sde_08_s16'};
 
 if ~nargin
 	return
@@ -223,6 +225,66 @@ try
             elspec.contact_spacing=1.5;
             elspec.numel=16;
             elspec.tipiscontact=0;
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15',...
+                                 'K16','K17','K18','K19','K20','K21','K22','K23','K24','K25','K26','K27','K28','K29','K30','K31'};
+        case 'SDE-08 S8'
+            elspec.matfname='sde_08_s8';
+            elspec.lead_diameter=0.8;
+            elspec.lead_color=0.7;
+            elspec.contact_length=2;
+            elspec.contact_diameter=0.8;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=0.8;
+            elspec.tip_color=0.3;
+            elspec.tip_length=2;
+            elspec.contact_spacing=1.5;
+            elspec.numel=8;
+            elspec.tipiscontact=1;
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7',...
+                                 'K8','K9','K10','K11','K12','K13','K14','K15'};
+        case 'SDE-08 S10'
+            elspec.matfname='sde_08_s10';
+            elspec.lead_diameter=0.8;
+            elspec.lead_color=0.7;
+            elspec.contact_length=2;
+            elspec.contact_diameter=0.8;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=0.8;
+            elspec.tip_color=0.3;
+            elspec.tip_length=2;
+            elspec.contact_spacing=1.5;
+            elspec.numel=10;
+            elspec.tipiscontact=1;
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9',...
+                                 'K10','K11','K12','K13','K14','K15','K16','K17','K18','K19'};
+        case 'SDE-08 S12'
+            elspec.matfname='sde_08_s12';
+            elspec.lead_diameter=0.8;
+            elspec.lead_color=0.7;
+            elspec.contact_length=2;
+            elspec.contact_diameter=0.8;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=0.8;
+            elspec.tip_color=0.3;
+            elspec.tip_length=2;
+            elspec.contact_spacing=1.5;
+            elspec.numel=12;
+            elspec.tipiscontact=1;
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11',...
+                                 'K12','K13','K14','K15','K16','K17','K18','K19','K20','K21','K22','K23'};
+        case 'SDE-08 S16'
+            elspec.matfname='sde_08_s16';
+            elspec.lead_diameter=0.8;
+            elspec.lead_color=0.7;
+            elspec.contact_length=2;
+            elspec.contact_diameter=0.8;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=0.8;
+            elspec.tip_color=0.3;
+            elspec.tip_length=2;
+            elspec.contact_spacing=1.5;
+            elspec.numel=16;
+            elspec.tipiscontact=1;
             elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15',...
                                  'K16','K17','K18','K19','K20','K21','K22','K23','K24','K25','K26','K27','K28','K29','K30','K31'};
     end

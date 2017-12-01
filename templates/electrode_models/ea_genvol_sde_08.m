@@ -1,4 +1,4 @@
-function ea_genvol_sde_08_legacy(meshel,elspec,vizz)
+function ea_genvol_sde_08(meshel,elspec,vizz)
 
 electrodetrisize=0.1;  % the maximum triangle size of the electrode mesh
 
@@ -20,15 +20,15 @@ seeds=[];
 for i=1:length(meshel.ins)
     fcyl=[fcyl; meshel.ins{i}.faces+size(ncyl,1)];
 
-    if(i<length(meshel.ins))
         scyl=[scyl; meshel.ins{i}.endplates+size(ncyl,1)]; % had to rebuild the endplates
-    end
     ncyl=[ncyl; meshel.ins{i}.vertices];
     seeds=[seeds; mean(meshel.ins{i}.vertices)];
 end
 for i=1:length(meshel.con)
     fcyl=[fcyl; meshel.con{i}.faces+size(ncyl,1)];
-    scyl=[scyl; meshel.con{i}.endplates+size(ncyl,1)];
+    if i>1 % not for active tip
+        scyl=[scyl; meshel.con{i}.endplates+size(ncyl,1)];
+    end
     ncyl=[ncyl; meshel.con{i}.vertices];
     seeds=[seeds; mean(meshel.con{i}.vertices)];
 end
