@@ -87,6 +87,7 @@ if strcmp(options.leadprod, 'group')
     Yshift = 24;
     set(handles.stimfig, 'Position', handles.stimfig.Position - [0 0 0 Yshift]);
     set(handles.headertxt, 'Position', handles.headertxt.Position - [0 Yshift 0 0]);
+    set(handles.settings, 'Position', handles.settings.Position - [0 Yshift+2 0 0]);
 else
     groupmode=0;
 
