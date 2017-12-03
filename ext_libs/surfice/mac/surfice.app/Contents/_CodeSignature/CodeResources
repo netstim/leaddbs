@@ -24,57 +24,9 @@
 		<data>
 		0hMgEDvl2bcd3T3V5wBTueYplbY=
 		</data>
-		<key>Resources/lut/Montserrat.json</key>
-		<data>
-		y0ppx3r4824JPhFiXky/yE2FYk4=
-		</data>
-		<key>Resources/lut/Montserrat.png</key>
-		<data>
-		q4pZlS9352pZYUQ6bROuQsbYq/o=
-		</data>
-		<key>Resources/lut/OpenSans.json</key>
-		<data>
-		ObdS84yaSA5ZlKVakha/aDKjNyU=
-		</data>
-		<key>Resources/lut/OpenSans.png</key>
-		<data>
-		XLa3OnZ3OyYaQVTIIWMU/p9rCrU=
-		</data>
-		<key>Resources/lut/Oswald.json</key>
-		<data>
-		sSkyk6eo7HX0Mibg+85Tjgj0FRo=
-		</data>
-		<key>Resources/lut/Oswald.png</key>
-		<data>
-		9EMXFfg5Uy1fqETv6DJgj/gU4P0=
-		</data>
-		<key>Resources/lut/Oxygen.json</key>
-		<data>
-		zZkfj4wpv4Mt9H3jEF6NOxbcq+8=
-		</data>
-		<key>Resources/lut/Oxygen.png</key>
-		<data>
-		/YnGZtkGMcL8U3IwZbNQWwrBeug=
-		</data>
-		<key>Resources/lut/Roboto.json</key>
-		<data>
-		q2OI1Y7AJIkdfPaGiPDu7ETYxR8=
-		</data>
-		<key>Resources/lut/Roboto.png</key>
-		<data>
-		Sh8rvTRDID47thLmt4RT5mo2/70=
-		</data>
 		<key>Resources/lut/Surface.clut</key>
 		<data>
 		0e9o8O7afIiYPlOcX7KLzmjYdO8=
-		</data>
-		<key>Resources/lut/Ubuntu.json</key>
-		<data>
-		VOqjqb6sNFTV6fPxU2ofUBLFGf0=
-		</data>
-		<key>Resources/lut/Ubuntu.png</key>
-		<data>
-		1e50G4tJYWYCNC5OqsvGg2n5os8=
 		</data>
 		<key>Resources/lut/unused/cw_psych.clut</key>
 		<data>
@@ -132,33 +84,33 @@
 		<data>
 		5Mv2X4xDNLjq7jGlYN0Ah5zxWHA=
 		</data>
-		<key>Resources/script/basic_paint_surface.gls</key>
+		<key>Resources/script/basic.gls</key>
 		<data>
-		CG1NSmVOfILZQPpYzUAGmjiIPfo=
+		wrQXM1EIu+C48w687KnDdsvsAyQ=
 		</data>
 		<key>Resources/script/fmri_mesh.gls</key>
 		<data>
 		UOM3pGMiCmsq6zg3qYatiHTpWKw=
 		</data>
+		<key>Resources/script/fmri_paint_surface.gls</key>
+		<data>
+		CG1NSmVOfILZQPpYzUAGmjiIPfo=
+		</data>
 		<key>Resources/script/forever.gls</key>
 		<data>
 		6aqUBnj8bkDCIUpfaaGmXsSYRA0=
 		</data>
-		<key>Resources/script/mesh.gls</key>
-		<data>
-		wrQXM1EIu+C48w687KnDdsvsAyQ=
-		</data>
 		<key>Resources/script/new_2017.gls</key>
 		<data>
-		Ji8cCHPBrIoN84WkOw7/iS2BfQ8=
-		</data>
-		<key>Resources/script/newer_2017.gls</key>
-		<data>
-		979NrFANk+3JmYP+oTwMoYO3464=
+		uh12N0e9hf6+6EOqIg/gDam9drY=
 		</data>
 		<key>Resources/script/node.gls</key>
 		<data>
 		1KJSX6HE5biqjdvn9+S7CH8mGuY=
+		</data>
+		<key>Resources/script/scalp.gls</key>
+		<data>
+		8VkfouxlYDXlNWgmj3UaYuWmFQM=
 		</data>
 		<key>Resources/script/shaders.gls</key>
 		<data>
@@ -330,116 +282,6 @@
 			D0lDgz0jVgqxIvactMkrUJ3loIg2m2brxLAWDGJHEEk=
 			</data>
 		</dict>
-		<key>Resources/lut/Montserrat.json</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			y0ppx3r4824JPhFiXky/yE2FYk4=
-			</data>
-			<key>hash2</key>
-			<data>
-			q7RkfCz49+1645hJamMWssbCFgTmFFM1r2/y+MknhsM=
-			</data>
-		</dict>
-		<key>Resources/lut/Montserrat.png</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			q4pZlS9352pZYUQ6bROuQsbYq/o=
-			</data>
-			<key>hash2</key>
-			<data>
-			jgEYJNsyx5XSnHZ4VqmzOH+JE5PRxFk2M3gna0vjxLI=
-			</data>
-		</dict>
-		<key>Resources/lut/OpenSans.json</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			ObdS84yaSA5ZlKVakha/aDKjNyU=
-			</data>
-			<key>hash2</key>
-			<data>
-			kKbdEYuwMmZvFxdI0JKhzbexCyssT4HKpMoH1LY+pAs=
-			</data>
-		</dict>
-		<key>Resources/lut/OpenSans.png</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			XLa3OnZ3OyYaQVTIIWMU/p9rCrU=
-			</data>
-			<key>hash2</key>
-			<data>
-			Y08CSFqziFjZ4tM0uI44cEIHk+g4TikMmT0J8SDQXgk=
-			</data>
-		</dict>
-		<key>Resources/lut/Oswald.json</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			sSkyk6eo7HX0Mibg+85Tjgj0FRo=
-			</data>
-			<key>hash2</key>
-			<data>
-			QDys4xQ07OBf+c4XwwREVavExnY7iptfE+ueWN/wpbM=
-			</data>
-		</dict>
-		<key>Resources/lut/Oswald.png</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			9EMXFfg5Uy1fqETv6DJgj/gU4P0=
-			</data>
-			<key>hash2</key>
-			<data>
-			Tek77FRoya9IdBKzmTPlNIsVKO4EOlCgNoVH8R4g4xA=
-			</data>
-		</dict>
-		<key>Resources/lut/Oxygen.json</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			zZkfj4wpv4Mt9H3jEF6NOxbcq+8=
-			</data>
-			<key>hash2</key>
-			<data>
-			pHZb9ojsh3XLMMxNeP236vJ6MaC9gE+dn3I5zaY/M9g=
-			</data>
-		</dict>
-		<key>Resources/lut/Oxygen.png</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			/YnGZtkGMcL8U3IwZbNQWwrBeug=
-			</data>
-			<key>hash2</key>
-			<data>
-			F69hw1q9gLkbjvssY7vkdLpyHxhBpO/H08n7N1u04Ns=
-			</data>
-		</dict>
-		<key>Resources/lut/Roboto.json</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			q2OI1Y7AJIkdfPaGiPDu7ETYxR8=
-			</data>
-			<key>hash2</key>
-			<data>
-			xE/zq5B5dey5+1XmHMRlxveUztFqJvTN2CsKKgttzBs=
-			</data>
-		</dict>
-		<key>Resources/lut/Roboto.png</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			Sh8rvTRDID47thLmt4RT5mo2/70=
-			</data>
-			<key>hash2</key>
-			<data>
-			/vV9aQ9IEsjrjSF9d+I0tyTvNnKst5UXAvjyHX5Jju8=
-			</data>
-		</dict>
 		<key>Resources/lut/Surface.clut</key>
 		<dict>
 			<key>hash</key>
@@ -449,28 +291,6 @@
 			<key>hash2</key>
 			<data>
 			NyL4yJ9nBeXCQi7liEVYyJxWozg6YEKEWkvyJxFJ5rA=
-			</data>
-		</dict>
-		<key>Resources/lut/Ubuntu.json</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			VOqjqb6sNFTV6fPxU2ofUBLFGf0=
-			</data>
-			<key>hash2</key>
-			<data>
-			4ppkFyzhu513+ovMCCM1LHDVvrBVC63VdJCwwPpdJAQ=
-			</data>
-		</dict>
-		<key>Resources/lut/Ubuntu.png</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			1e50G4tJYWYCNC5OqsvGg2n5os8=
-			</data>
-			<key>hash2</key>
-			<data>
-			tM3lJdo/ampcSMPTuydJJc48wL1gczsSx7P59hAk6wo=
 			</data>
 		</dict>
 		<key>Resources/lut/unused/cw_psych.clut</key>
@@ -627,15 +447,15 @@
 			ny9+sJgAEZb/6+cklBJySHGCEnfK9DF+2usYKmpwawo=
 			</data>
 		</dict>
-		<key>Resources/script/basic_paint_surface.gls</key>
+		<key>Resources/script/basic.gls</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			CG1NSmVOfILZQPpYzUAGmjiIPfo=
+			wrQXM1EIu+C48w687KnDdsvsAyQ=
 			</data>
 			<key>hash2</key>
 			<data>
-			j21Zy+meGyZ1hobMT94PfgnUC2Izjhwc1Rt7LfwYSD8=
+			nTS8B7KlTxTH1y4FDcnDlt4NgrVjjZJbJfcxGQx4B7E=
 			</data>
 		</dict>
 		<key>Resources/script/fmri_mesh.gls</key>
@@ -649,6 +469,17 @@
 			A7hsFz99oDRyaweQ+chg2mbt+P1x3tIyTnxNr1zJTPQ=
 			</data>
 		</dict>
+		<key>Resources/script/fmri_paint_surface.gls</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			CG1NSmVOfILZQPpYzUAGmjiIPfo=
+			</data>
+			<key>hash2</key>
+			<data>
+			j21Zy+meGyZ1hobMT94PfgnUC2Izjhwc1Rt7LfwYSD8=
+			</data>
+		</dict>
 		<key>Resources/script/forever.gls</key>
 		<dict>
 			<key>hash</key>
@@ -660,37 +491,15 @@
 			pHIYP8lq9FQw9r44mmYNTxOB14o6C+hSxl6qh3ACZPw=
 			</data>
 		</dict>
-		<key>Resources/script/mesh.gls</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			wrQXM1EIu+C48w687KnDdsvsAyQ=
-			</data>
-			<key>hash2</key>
-			<data>
-			nTS8B7KlTxTH1y4FDcnDlt4NgrVjjZJbJfcxGQx4B7E=
-			</data>
-		</dict>
 		<key>Resources/script/new_2017.gls</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			Ji8cCHPBrIoN84WkOw7/iS2BfQ8=
+			uh12N0e9hf6+6EOqIg/gDam9drY=
 			</data>
 			<key>hash2</key>
 			<data>
-			u9wHytXN+BGLXD9B1dEvJXxSzFmEZF4oHlaqknY9FnA=
-			</data>
-		</dict>
-		<key>Resources/script/newer_2017.gls</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			979NrFANk+3JmYP+oTwMoYO3464=
-			</data>
-			<key>hash2</key>
-			<data>
-			5sMr1lg2A9ypX1GNQCS9B6JPSlLc1aCw4qsg1Sf/qPA=
+			WbVSDG7G4zfO/+nsS56TvnwWN8edpS7RjBIb7iBuVeQ=
 			</data>
 		</dict>
 		<key>Resources/script/node.gls</key>
@@ -702,6 +511,17 @@
 			<key>hash2</key>
 			<data>
 			/6m5k1RaGzDagu92zVsLISww8mTVAsIOCidVc5j0tIE=
+			</data>
+		</dict>
+		<key>Resources/script/scalp.gls</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			8VkfouxlYDXlNWgmj3UaYuWmFQM=
+			</data>
+			<key>hash2</key>
+			<data>
+			4Wi9qrjpk6RUV0HukzC+52OjAtPa88U0Jh6vFmg6O0U=
 			</data>
 		</dict>
 		<key>Resources/script/shaders.gls</key>
