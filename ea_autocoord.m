@@ -210,6 +210,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                             options.native=0;
 
                 end
+                
+            case 3 % Manual
+                 [coords_mm,trajectory,markers]=ea_runmanual(options);
+                            options.native=1;
+                
         end
         options.hybridsave=1;
         elmodel=options.elmodel;
