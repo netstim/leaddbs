@@ -43,6 +43,16 @@ if exist('reco','var')
     
 
     markers = reco.(space_type).markers;
+    if ~isfield(markers,'x')
+        for side=1:2
+        normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
+        orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
+        markers(side).x=markers(side).head+orth(:,1)';
+        markers(side).y=markers(side).head+orth(:,2)'; % corresponding points in reality
+        end
+    end
+   
+    
     if isfield(reco.(space_type),'coords_mm')
         coords_mm = reco.(space_type).coords_mm;
     else
