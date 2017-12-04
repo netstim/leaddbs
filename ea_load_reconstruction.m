@@ -41,11 +41,18 @@ if exist('reco','var')
         space_type = 'mni';
     end
     
-    coords_mm = reco.(space_type).coords_mm;
 
-    trajectory = reco.(space_type).trajectory;
     markers = reco.(space_type).markers;
-
+    if isfield(reco.(space_type),'coords_mm')
+        coords_mm = reco.(space_type).coords_mm;
+    else
+        [coords_mm]=ea_resolvecoords(markers,options,0);
+    end
+    if isfield(reco.(space_type),'trajectory')
+        trajectory = reco.(space_type).trajectory;
+    else
+        [~,trajectory,markers]=ea_resolvecoords(markers,options,0);
+    end
     try
         coords_acpc=reco.acpc.coords_mm;
     catch
