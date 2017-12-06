@@ -59,6 +59,28 @@ if exist('directory','var')
     
 end
 
+% check for already processed maps in case of predict module
+if exist('options','var')
+    if isfield(options,'predict')
+        stimdir=[directory,'stimulations',filesep,options.predict.stimulation,filesep];
+        dfo=dir(stimdir);
+        for fo=1:length(dfo)
+            if dfo(fo).isdir && ~strcmp(dfo(fo).name(1),'.')
+                if ~isempty(dir([stimdir,dfo(fo).name,filesep,'vat_seed_*func_seed_AvgR.nii']))
+                    sf(cnt)=2; % fMRI result
+                    modlist{cnt}=['Precomputed: ',dfo(fo).name];
+                    cnt=cnt+1;
+                elseif ~isempty(dir([stimdir,dfo(fo).name,filesep,'vat_seed_*struc_seed.nii']))
+                    sf(cnt)=1; % dMRI result
+                    modlist{cnt}=['Precomputed: ',dfo(fo).name];
+                    cnt=cnt+1;
+                end
+            end
+        end
+    end
+end
+
+
 if vat
    resdir=dir([directory,options.prefs.rest_prefix]);
 

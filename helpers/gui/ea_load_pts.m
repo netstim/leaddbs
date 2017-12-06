@@ -66,8 +66,9 @@ if isfield(handles,'seeddefpopup')
     if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
         directory=uipatdir{1};
         [~,ptname]=fileparts(directory);
-        selectedparc='nan';
-        options.prefs=ea_prefs(ptname);
+        selectedparc='nan';        
+        options=ea_handles2options(handles);
+        options.prefs=ea_prefs;
         [mdl,sf]=ea_genmodlist([directory,filesep],selectedparc,options);
         ea_updatemodpopups(mdl,sf,handles);
     end

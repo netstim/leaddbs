@@ -147,11 +147,11 @@ if any(nonexist)
     patdir(nonexist) = [];
 end
 
-ea_busyaction('on',handles.leadfigure,'mapper');
+ea_busyaction('on',handles.leadfigure,'predict');
 if ~isempty(patdir)
     ea_load_pts(handles, patdir);
 end
-ea_busyaction('off',handles.leadfigure,'mapper');
+ea_busyaction('off',handles.leadfigure,'predict');
 
 
 % --- Outputs from this function are returned to the predictmetric line.
@@ -268,7 +268,7 @@ function run_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 leadfigure=handles.leadfigure;
-ea_busyaction('on',leadfigure,'mapper');
+ea_busyaction('on',leadfigure,'predict');
 
 
 options=ea_handles2options(handles);
@@ -278,7 +278,7 @@ options.leadprod = 'predict';
 
 ea_run('run',options);
 
-ea_busyaction('off',leadfigure,'mapper');
+ea_busyaction('off',leadfigure,'predict');
 
 
 % --- Executes on button press in exportcode.
@@ -288,7 +288,7 @@ function exportcode_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 leadfigure=handles.leadfigure;
-ea_busyaction('on',leadfigure,'mapper');
+ea_busyaction('on',leadfigure,'predict');
 
 options=ea_handles2options(handles);
 options.uivatdirs=getappdata(handles.leadfigure,'uipatdir');
@@ -297,7 +297,7 @@ options.leadprod = 'predict';
 
 ea_run('export',options);
 
-ea_busyaction('off',leadfigure,'mapper');
+ea_busyaction('off',leadfigure,'predict');
 
 
 % --- Executes on selection change in predictmetric.
@@ -411,10 +411,10 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % hObject    handle to patdir_choosebox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_busyaction('on',handles.leadfigure,'mapper');
+ea_busyaction('on',handles.leadfigure,'predict');
 options.prefs=ea_prefs('');
 ea_getpatients(options,handles);
-ea_busyaction('off',handles.leadfigure,'mapper');
+ea_busyaction('off',handles.leadfigure,'predict');
 
 % --- Executes on selection change in recentpts.
 function recentpts_Callback(hObject, eventdata, handles)
@@ -424,9 +424,9 @@ function recentpts_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
-ea_busyaction('on',handles.leadfigure,'mapper');
+ea_busyaction('on',handles.leadfigure,'predict');
 ea_rcpatientscallback(handles);
-ea_busyaction('off',handles.leadfigure,'mapper');
+ea_busyaction('off',handles.leadfigure,'predict');
 
 
 % --- Executes during object creation, after setting all properties.
@@ -455,6 +455,14 @@ str=get(hObject,'String');
 if iscell(str)
     str=str{get(hObject,'Value')};
 end
+
+uipatdir=getappdata(handles.leadfigure,'uipatdir');
+directory=[uipatdir{1},filesep];
+options=ea_handles2options(handles);
+options.prefs=ea_prefs;
+[mdl,sf]=ea_genmodlist(directory,'nan',options);
+ea_updatemodpopups(mdl,sf,handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function seeddefpopup_CreateFcn(hObject, eventdata, handles)
