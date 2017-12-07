@@ -15,6 +15,7 @@ function  [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=
 options=varargin{1};
 
 
+
 directory=[options.root,options.patientname,filesep];
 try
     % Load Reconstruction
