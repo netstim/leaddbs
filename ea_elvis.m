@@ -130,9 +130,13 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 for side=options.sides
                     popts=options;
                     if strcmp(options.leadprod,'group')
-                        directory=[options.patient_list{elstruct(pt).pt},filesep];
-                        [popts.root,popts.patientname]=fileparts(directory);
-                        popts.root=[popts.root,filesep];
+                        try
+                            directory=[options.patient_list{elstruct(pt).pt},filesep];
+                            [popts.root,popts.patientname]=fileparts(directory);
+                            popts.root=[popts.root,filesep];
+                        catch
+                            directory=[options.root,options.patientname,filesep];
+                        end
                     else
                         directory=[options.root,options.patientname,filesep];
                     end
