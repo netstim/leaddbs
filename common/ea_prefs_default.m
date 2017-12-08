@@ -83,7 +83,6 @@ prefs.sampledtidicom='sample_dti_dicom.dcm'; % sample DICOM file of DTI image (u
 
 prefs.normmatrix='lmat.txt';
 
-
 %% Normalization:
 % prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
 prefs.normalize.default='ea_normalize_ants';
@@ -168,7 +167,7 @@ prefs.d3.cortexcolor=[0.65 0.65 0.65]; % default color is gray
 prefs.d3.cortexalpha=0.5; % default alpha is 0.5
 prefs.d3.cortex_defaultatlas='DKT'; % Currently supports 'DKT','DKT_aseg','a2009'
 
-%% DICOM import:
+%% DICOM files:
 prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 0: Leave DICOMs at pt/DICOM folder after conversion.
 prefs.dicom.tool='dcm2niix'; % switch to 'dicm2nii' to use the Matlab based converter.
 
@@ -192,3 +191,7 @@ prefs.ltx.pdfconverter=''; % set path to xelatex here (for PDF export)
 prefs.ls.dir=''; % set path to lead server here (for web export)
 prefs.ixi.dir=''; % set path to ixi database here
 prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in folder.
+
+%% Slicer 3D executable path:
+prefs.slicer.dir=''; % add path to executable Slicer app
+

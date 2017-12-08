@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 31-Aug-2017 10:08:34
+% Last Modified by GUIDE v2.5 08-Dec-2017 01:33:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1653,3 +1653,35 @@ if isfield(handles,'atlassetpopup') % not present in connectome mapper
     
     ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
 end
+
+% --- Executes on button press in runslicer_unnormalised.
+function runslicer_unnormalised_Callback(hObject, eventdata, handles)
+% hObject    handle to runslicer_unnormalised (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+options = ea_handles2options(handles);
+options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
+options.leadprod = 'dbs';
+ea_runslicer(options, 1);
+
+
+% --- Executes on button press in slicer_coregistered.
+function slicer_coregistered_Callback(hObject, eventdata, handles)
+% hObject    handle to slicer_coregistered (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+options = ea_handles2options(handles);
+options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
+options.leadprod = 'dbs';
+ea_runslicer(options, 2);
+
+
+% --- Executes on button press in slicer_normalised.
+function slicer_normalised_Callback(hObject, eventdata, handles)
+% hObject    handle to slicer_normalised (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+options = ea_handles2options(handles);
+options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
+options.leadprod = 'dbs';
+ea_runslicer(options, 3);
