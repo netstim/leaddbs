@@ -16,10 +16,14 @@
 function ea_runslicer(options, task)
     options.prefs = ea_prefs('');
     slicer_path = options.prefs.slicer.dir;
+    [pth,fn,ext]=fileparts(slicer_path);
+    if strcmp(ext,'.app') && ismac
+        slicer_path=fullfile(slicer_path,'Contents','MacOS','Slicer');
+    end
     lead_path = options.earoot;
     slicer_mrml = "none";
     
-    if (exist(slicer_path, 'file') ~= 2)
+    if (~exist(slicer_path, 'file'))
         warning('Path to Slicer executable not found');
         return;
     end
@@ -122,7 +126,7 @@ function ea_runslicer(options, task)
     fid = fopen(script_path,'w'); % write temp python script to load volumes
     fprintf(fid, ['slicer.util.loadScene("', strrep(scene_path, '\', '\\'), '")\r\n']); 
     fclose(fid);
- 
+    disp('Loading up 3D Slicer...');
     system(['"', slicer_path, '" --no-splash --python-script "', script_path, '" &']); 
     % the trailing '&' returns control back to matlab without waiting for slicer to close
 end
