@@ -676,14 +676,14 @@ end
 
 [az,el]=view; % need to have 2 outputs here given response is different if varargout==1
 if az>90
-    yoffs=10;
+    yoffs=20;
 else
-    yoffs=-10;
+    yoffs=-20;
 end
 if az>180
-    xoffs=-25;
+    xoffs=-35;
 else
-    xoffs=25;
+    xoffs=35;
 end
 
 spacetext=text(midpt(1)+xoffs,midpt(2)+yoffs,midpt(3)-3,sprintf(['Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm\nRight Rotation: ',num2str(rotation{1}),' deg\nLeft Rotation: ',num2str(rotation{2}),' deg']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');

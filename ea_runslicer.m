@@ -21,7 +21,7 @@ function ea_runslicer(options, task)
         slicer_path=fullfile(slicer_path,'Contents','MacOS','Slicer');
     end
     lead_path = options.earoot;
-    slicer_mrml = "none";
+    slicer_mrml = 'none';
     
     if (~exist(slicer_path, 'file'))
         warning('Path to Slicer executable not found');
