@@ -42,3 +42,4 @@ Thumbs.db
 !ea_prefs_default.mat
 !ext_libs/support/libstdc++.so.6
 
+/slicer.py
