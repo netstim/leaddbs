@@ -16,11 +16,15 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
     whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
     switch whichnormmethod
         case ea_getantsnormfuns
-
+            useinterp='GenericLabel';
+            parc=ea_load_nii([ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']);
+            if length(unique(parc.img(:)))>500
+                useinterp='NearestNeighbor'; % both GenericLabel and MultiLabel take ages on high dimensional parcellations.
+            end
             ea_ants_applytransforms(options, ...
                 {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']}, ...
                 {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},...
-                1,'','','GenericLabel');
+                1,'','',useinterp);
 
         case ea_getfslnormfuns
 
