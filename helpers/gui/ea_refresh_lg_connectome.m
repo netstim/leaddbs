@@ -55,6 +55,7 @@ try
     gms = cellfun(@(x) {strrep(x, '.nii', '')}, {gms.name});
 
     if ~isempty(gms)
+        gms=ea_appendpairs(gms);
         set(handles.lc_graphmetric, 'String', gms);
     else
         set(handles.lc_graphmetric, 'Value', 1);
@@ -149,3 +150,26 @@ setappdata(handles.leadfigure,'M',M);
 disp('Done.');
 
 ea_busyaction('off',handles.leadfigure,'group');
+
+
+function gms=ea_appendpairs(gms)
+cnt=1;
+for g=1:length(gms)
+    pfxs=strfind(gms{g},'_');
+    pfx=gms{g}(1:pfxs(1));
+    others=1:length(gms);
+    others(g)=[];
+    for h=others
+        if strcmp(gms{h}(1:length(pfx)),pfx)
+          toappend{cnt}=[gms{g},'>',gms{h}];
+          toappend{cnt+1}=[gms{h},'>',gms{g}];
+          cnt=cnt+2;
+        end
+    end
+    
+end
+
+gms=[gms,toappend];
+
+
+

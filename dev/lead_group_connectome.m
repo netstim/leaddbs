@@ -685,13 +685,21 @@ gecs = get(handles.lc_graphmetric,'String');
 gecs = gecs{M.ui.lc.graphmetric};
 parc = get(handles.labelpopup,'String');
 parc = parc{get(handles.labelpopup,'Value')};
-
-spmdir = [M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,filesep,'SPM'];
+if M.ui.lc.smooth
+    smoothsuffix='_smoothed';
+else
+    smoothsuffix='';
+end
+spmdir = [M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,smoothsuffix,filesep,'SPM'];
 if exist(spmdir, 'dir')
     rmdir(spmdir,'s');
 end
 mkdir(spmdir);
 
+twosample=any(ismember(gecs,'>'));
+if twosample
+    cpair=ea_strsplit(gecs,'>');
+end
 for sub=1:length(M.patient.list)
     if M.ui.lc.normalization == 1 % no normalization
         normflag = '';
@@ -706,27 +714,54 @@ for sub=1:length(M.patient.list)
 
     if M.ui.lc.smooth
         smoothflag = 's';
-        ea_smooth([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,'.nii']);
+        if twosample
+            ea_smooth([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,cpair{1},'.nii']);
+            ea_smooth([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,cpair{2},'.nii']);
+        else
+            ea_smooth([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,'.nii']);
+        end
     else
         smoothflag = '';
     end
-
+if twosample
+    fis{sub,1} = [M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,smoothflag,normflag,cpair{1},'.nii'];
+    fis{sub,2} = [M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,smoothflag,normflag,cpair{2},'.nii'];
+else
     fis{sub} = [M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,smoothflag,normflag,gecs,'.nii'];
+end
+    
 end
 
 %% model specification:
-matlabbatch{1}.spm.stats.factorial_design.dir = {spmdir};
-matlabbatch{1}.spm.stats.factorial_design.des.t1.scans = fis';
-matlabbatch{1}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
-matlabbatch{1}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
-matlabbatch{1}.spm.stats.factorial_design.masking.tm.tm_none = 1;
-matlabbatch{1}.spm.stats.factorial_design.masking.im = 1;
-matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
-matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
-matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
-matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
-spm_jobman('run',{matlabbatch});
-clear matlabbatch
+if twosample
+    matlabbatch{1}.spm.stats.factorial_design.dir = {spmdir};
+    for p=1:size(fis,1)
+        matlabbatch{1}.spm.stats.factorial_design.des.pt.pair(p).scans = fis(p,:)';
+    end
+    matlabbatch{1}.spm.stats.factorial_design.des.pt.gmsca = 0;
+    matlabbatch{1}.spm.stats.factorial_design.des.pt.ancova = 0;
+    matlabbatch{1}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+    matlabbatch{1}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+    matlabbatch{1}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+    matlabbatch{1}.spm.stats.factorial_design.masking.im = 0;
+    matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
+    matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
+    matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+    matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
+else
+    matlabbatch{1}.spm.stats.factorial_design.dir = {spmdir};
+    matlabbatch{1}.spm.stats.factorial_design.des.t1.scans = fis';
+    matlabbatch{1}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+    matlabbatch{1}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+    matlabbatch{1}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+    matlabbatch{1}.spm.stats.factorial_design.masking.im = 0;
+    matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
+    matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
+    matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+    matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
+end
+    spm_jobman('run',{matlabbatch});
+    clear matlabbatch
 
 %% model estimation:
 matlabbatch{1}.spm.stats.fmri_est.spmmat = {[spmdir, filesep, 'SPM.mat']};
@@ -736,11 +771,22 @@ spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
 %% contrast manager:
-matlabbatch{1}.spm.stats.con.spmmat = {[spmdir, filesep, 'SPM.mat']};
-matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'main effect';
-matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = 1;
-matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
-matlabbatch{1}.spm.stats.con.delete = 1;
+if twosample
+    matlabbatch{1}.spm.stats.con.spmmat = {[spmdir, filesep, 'SPM.mat']};
+    matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = gecs;
+    matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = [1 -1];
+    matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+    matlabbatch{1}.spm.stats.con.consess{2}.tcon.name = strrep(gecs,'>','<');
+    matlabbatch{1}.spm.stats.con.consess{2}.tcon.weights = [-1 1];
+    matlabbatch{1}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
+    matlabbatch{1}.spm.stats.con.delete = 1;
+else
+    matlabbatch{1}.spm.stats.con.spmmat = {[spmdir, filesep, 'SPM.mat']};
+    matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'main effect';
+    matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = 1;
+    matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+    matlabbatch{1}.spm.stats.con.delete = 1;
+end
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
