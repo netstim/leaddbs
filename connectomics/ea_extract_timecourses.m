@@ -24,9 +24,13 @@ voxelmask.locsmm=voxelmask.locsmm(:,1:3);
 voxelmask.vals=round(vv);
 
 %% set some initial parameters here:
-TR=options.lc.func.prefs.TR;
-directory=[options.root,options.patientname,filesep];
-save([directory,'TR.mat'],'TR');
+if exist([directory,'TR.mat'],'file')
+    load([directory,'TR.mat']);
+else
+    TR=options.lc.func.prefs.TR;
+    directory=[options.root,options.patientname,filesep];
+    save([directory,'TR.mat'],'TR');
+end
 restfilename=options.prefs.pprest;
 signallength=ea_detsiglength([directory,restfilename]);
 stringnum=cell(signallength,1);
