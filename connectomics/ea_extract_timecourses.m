@@ -8,7 +8,8 @@ vizz=0;
 
 %% create voxelmask
 disp('Extracting time courses...');
-Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'rrestw',options.lc.general.parcellation,'.nii,1']);
+[~,rrf]=fileparts(options.prefs.rest);
+Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'rsr',rrf,'w',options.lc.general.parcellation,'.nii,1']);
 Xatl=spm_read_vols(Vatl);
 
 nonzeros=find(Xatl(:));

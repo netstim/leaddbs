@@ -63,6 +63,7 @@ end
 
 if ~exist([directory,'templates',filesep,'labeling',filesep,'r',b0rest,'w',options.lc.general.parcellation,'.nii'],'file')
     %% coreg atlas into b0-space:
+    [~,reffn]=fileparts(ref_filename);
     copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[options.root,options.patientname,filesep,ref_filename,',1']};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized,',1']};
@@ -74,10 +75,10 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'r',b0rest,'w',optio
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = ['r',b0rest];
+    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = ['r',reffn];
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
 
     delete([options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
-    delete([options.root,options.patientname,filesep,'r',b0rest,'c',options.prefs.prenii_unnormalized]);
+    delete([options.root,options.patientname,filesep,'r',reffn,'c',options.prefs.prenii_unnormalized]);
 end
