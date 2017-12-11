@@ -330,7 +330,6 @@ try
        options.predict.stimulation=handles.seeddefpopup.String;
    end
    options.predict.stimulation=options.predict.stimulation{handles.seeddefpopup.Value};
-   options.predict.usepresentmaps=handles.usepresentmaps.Value;
-
+   
 end
 
