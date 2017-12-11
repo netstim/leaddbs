@@ -12,7 +12,7 @@ function [X,n]=ea_genX(fis,regressor,output,mask,sk)
             case 's'
                 dos=1; dok=0;
             case 'sk'
-                dos=1; dok=0;
+                dos=1; dok=1;
         end
     else
         dos=0;
@@ -38,6 +38,7 @@ function [X,n]=ea_genX(fis,regressor,output,mask,sk)
                 mask=1:numel(nii.img);
                 warning('If using k option should apply a mask');
             end
+            nii.img(~mask)=nan;
             nii.img(mask)=ea_normal(nii.img(mask));
             ea_write_nii(nii);
             matlabbatch{1}.spm.spatial.smooth.data = {[tmpd,guid,'.nii,1']};
