@@ -22,7 +22,7 @@ function varargout = lead_mapper(varargin)
 
 % Edit the above text to modify the response to help lead_mapper
 
-% Last Modified by GUIDE v2.5 28-Oct-2016 09:59:23
+% Last Modified by GUIDE v2.5 11-Dec-2017 14:53:40
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -430,3 +430,11 @@ function seeddefpopup_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in openpatientdir.
+function openpatientdir_Callback(hObject, eventdata, handles)
+% hObject    handle to openpatientdir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_openpatdir(handles);

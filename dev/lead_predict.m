@@ -22,7 +22,7 @@ function varargout = lead_predict(varargin)
 
 % Edit the above text to modify the response to help lead_predict
 
-% Last Modified by GUIDE v2.5 21-Oct-2017 19:11:59
+% Last Modified by GUIDE v2.5 11-Dec-2017 14:51:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -525,3 +525,11 @@ function usepresentmaps_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of usepresentmaps
+
+
+% --- Executes on button press in openpatientdir.
+function openpatientdir_Callback(hObject, eventdata, handles)
+% hObject    handle to openpatientdir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_openpatdir(handles);
