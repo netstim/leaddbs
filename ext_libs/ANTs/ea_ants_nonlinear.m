@@ -88,7 +88,11 @@ end
 apref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), options.prefs.machine.normsettings);
 
 directory = fileparts(movingimage{1});
-directory = [directory,filesep];
+if isempty(directory)
+    directory = ['.', filesep];
+else
+    directory = [directory, filesep];
+end
 
 for fi = 1:length(fixedimage)
     fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
