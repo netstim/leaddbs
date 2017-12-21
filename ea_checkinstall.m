@@ -80,7 +80,7 @@ switch cmd
             success=-1;
             return;
         end
-        
+
         if ~exist(checkf,'file') || force
             success=ea_downloadasset('structural group connectome (Horn 2016)',...
                 [ea_getconnectomebase('dmri'),'groupconnectome2016.zip'],...
@@ -99,7 +99,7 @@ switch cmd
             success=-1;
             return;
         end
-        
+
         if ~exist(checkf,'file') || force
             success=ea_downloadasset('structural group connectome (Horn 2017)',...
                 [ea_getconnectomebase('dmri'),'groupconnectome2017.zip'],...
@@ -118,7 +118,7 @@ switch cmd
             success=-1;
             return;
         end
-        
+
         if ~exist(checkf,'file') || force
             success=ea_downloadasset('structural group connectome (Ewert 2017)',...
                 [ea_getconnectomebase('dmri'),'groupconnectome_ppmi2017.zip'],...
@@ -137,7 +137,7 @@ switch cmd
             success=-1;
             return;
         end
-        
+
         if ~exist(checkf,'file') || force
             success=ea_downloadasset('functional group connectome (Horn 2017)',...
                 [ea_getconnectomebase('fmri'),'fgroupconnectome_ppmi2017.zip'],...
@@ -178,6 +178,7 @@ else
     end
 
     if success
+        disp(['Extracting ',assetname,'...'])
         [loc,~,ext] = fileparts(destination);
         if strcmp(ext,'.gz')
             gunzip(destination, loc);
