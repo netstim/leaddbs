@@ -18,6 +18,7 @@ fibers/
 release/
 tmp/
 lead_standalone/
+connectomes/
 
 # dev only
 ea_make_release.m
