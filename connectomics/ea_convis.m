@@ -208,6 +208,7 @@ end
 mods=get(handles.wmatmodality,'String');
 if ~strcmp('Choose...',mods{get(handles.wmatmodality,'Value')});
     set(handles.chosenwmatstr,'String','');
+    set(handles.chosenwmatstr,'TooltipString','');
 end
 
 
@@ -1232,9 +1233,11 @@ if strcmp('Choose...',chosenmod{get(hObject,'Value')})
     [fn,pth]=uigetfile('*.mat','Choose connectivity matrix...');
     if fn
         set(handles.chosenwmatstr,'String',[pth,filesep,fn]);
+        set(handles.chosenwmatstr,'TooltipString',[pth,filesep,fn]);
     end
 else
     set(handles.chosenwmatstr,'String','');
+    set(handles.chosenwmatstr,'TooltipString','');
 end
 
 
