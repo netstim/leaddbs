@@ -29,8 +29,10 @@ if ismember('dMRI',options.predict.includes)
         % -> run connectome mapper on patient
         run_mapper_vat_local(uivatdirs{pt},stimname,0,options.predict.dMRIcon,1,options.predict.fMRIcon)
     end
-    dMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'vat_seed_compound_dMRI_struc_seed.nii']);
-    dMRImap.img(modeldata.mask)=ea_normal(dMRImap.img(modeldata.mask));
+    if ~exist([options.uivatdirs{pt},filesep,'stimulations',filesep,stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'skvat_seed_compound_dMRI_struc_seed.nii'],'file')
+        ea_dosk([options.uivatdirs{pt},filesep,'stimulations',filesep,stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'vat_seed_compound_dMRI_struc_seed.nii'],modeldata.mask)
+    end
+    dMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'skvat_seed_compound_dMRI_struc_seed.nii']);
 end
 
 if ismember('fMRI',options.predict.includes)
@@ -44,13 +46,16 @@ if ismember('fMRI',options.predict.includes)
     fMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,stimname,filesep,strrep(options.predict.fMRIcon,'>','_'),filesep,'vat_seed_compound_fMRI_func_seed_AvgR_Fz.nii']);
 end
 % model
-if ~exist(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','dMRI',options.predict.dMRIcon),'dir')
+warn=0;
+if ~exist(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','dMRI',options.predict.dMRIcon),'dir') && feats(1)
     dMRIcon=specs.default.dMRIcon;
+    warn=1;
 else
     dMRIcon=options.predict.dMRIcon;
 end
-if ~exist(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','fMRI',options.predict.fMRIcon),'dir')
+if ~exist(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','fMRI',options.predict.fMRIcon),'dir') && feats(2)
     fMRIcon=specs.default.fMRIcon;
+    warn=1;
 else
     fMRIcon=options.predict.fMRIcon;
 end
@@ -72,14 +77,31 @@ if feats(2)
 end
 
 % solve regression model
-if isfield(modeldata.connectomes,rmbracketspace(dMRIcon)) && isfield(modeldata.connectomes,rmbracketspace(fMRIcon))
-    X=[modeldata.connectomes.(rmbracketspace(dMRIcon)).dMRIsims,modeldata.connectomes.(rmbracketspace(fMRIcon)).fMRIsims];
+X=[modeldata.connectomes.(rmbracketspace(specs.default.dMRIcon)).dMRIsims',modeldata.connectomes.(rmbracketspace(specs.default.fMRIcon)).fMRIsims'];
+if isfield(modeldata.connectomes,rmbracketspace(dMRIcon))
+    X(:,1)=modeldata.connectomes.(rmbracketspace(dMRIcon)).dMRIsims';
 else
+    if feats(1)
+        warn=1;
+    end
+end
+if isfield(modeldata.connectomes,rmbracketspace(fMRIcon))
+    X(:,2)=modeldata.connectomes.(rmbracketspace(fMRIcon)).fMRIsims';
+else
+    if feats(2)
+        warn=1;
+    end
+end
+if warn
     ea_warning('Please note that this prediction module is not validated for use with the selected connectome (or patient-specific data). You may proceed but the results may not be meaningful.');
-    X=[modeldata.connectomes.(rmbracketspace(specs.default.dMRIcon)).dMRIsims,modeldata.connectomes.(rmbracketspace(specs.default.fMRIcon)).fMRIsims];
 end
 X=X(:,logical(feats));
 [beta,dev,stats]=glmfit(X,modeldata.updrs3percimprov);
+
+UpdrsHat=ea_addone(X)*beta;
+
+avgerror=mean(abs(UpdrsHat-modeldata.updrs3percimprov));
+%R=corr(UpdrsHat,modeldata.updrs3percimprov)
 
 Xpt=[0,0];
 if feats(1)
@@ -100,6 +122,7 @@ if ~exist([directory,'predictions'],'dir')
     mkdir([directory,'predictions']);
 end
 mkdir([directory,'predictions',filesep,specs.modelshortname]);
+hasdMRI=0; hasfMRI=0;
 if ismember('dMRI',options.predict.includes)
     hasdMRI=1;
 end
@@ -112,11 +135,11 @@ if hasfMRI
     cfg.fMRI.vta=ea_getsurficeplots(fMRImap.fname,[0.01,0.1,-0.01,-0.1]);
 end
 if hasdMRI
-    cfg.dMRI.model=ea_getsurficeplots(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','dMRI',dMRIcon,'dMRI_optimal.nii'),[1,2.5,nan,nan]);
-    cfg.dMRI.vta=ea_getsurficeplots(dMRImap.fname,[1,2.5,nan,nan]);
+    cfg.dMRI.model=ea_getsurficeplots(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','dMRI',dMRIcon,'dMRI_optimal.nii'),[-1,0.6,nan,nan]);
+    cfg.dMRI.vta=ea_getsurficeplots(dMRImap.fname,[-1,0.6,nan,nan]);
 end
 cfg.res.updrs3imp=updrshat;
-cfg.res.updrs3err=15;
+cfg.res.updrs3err=avgerror;
 load([directory,'stimulations',filesep,stimname,filesep,'stimparameters.mat'])
 cfg.stim=ea_activecontacts(S);
 [~,cfg.stim.patientname]=fileparts(fileparts(directory));
@@ -128,7 +151,7 @@ ea_presults_horn2017(cfg);
 function [im]=ea_getsurficeplots(niftiname,threshs)
 % perform in tempdir given path handling issues in surfice
 [pth,fn,ext]=fileparts(niftiname);
-if ~exist(fullfile(pth,[fn,'_l_lat.png']),'file') || ~exist(fullfile(pth,[fn,'_l_med.png']),'file')
+if 1% ~exist(fullfile(pth,[fn,'_l_lat.png']),'file') || ~exist(fullfile(pth,[fn,'_l_med.png']),'file')
     tempdir=ea_getleadtempdir;
     uid=ea_generate_guid;
     tniftiname=[tempdir,uid,'.nii'];

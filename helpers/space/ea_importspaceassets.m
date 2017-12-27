@@ -140,7 +140,11 @@ for atlasset=1:length(asc)
         
         for n=1:length(nii)
             if wasgzip
-                gunzip(nii{n});
+                if ~strcmp(nii{n}(end-2:end),'.gz')
+                    gunzip([nii{n},'.gz']);
+                else
+                    gunzip([nii{n}]);
+                end
                 nii{n}=strrep(nii{n},'.gz','');
             end
             from{1}=nii{n}; to{1}=nii{n};

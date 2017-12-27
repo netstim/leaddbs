@@ -13,6 +13,8 @@ function [X,n]=ea_genX(fis,regressor,output,mask,sk)
                 dos=1; dok=0;
             case 'sk'
                 dos=1; dok=1;
+            otherwise
+                dos=0; dok=0;
         end
     else
         dos=0;

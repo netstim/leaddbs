@@ -137,10 +137,10 @@ c=uisetcolor;
 % load nifti
 nii=ea_load_nii(addobj);
 nii.img(isnan(nii.img))=0;
-if ~all(abs(nii.voxsize)<=1)
-    ea_reslice_nii(addobj,addobj,[0.5,0.5,0.5],0,[],3);
-    nii=ea_load_nii(addobj);
-end
+% if ~all(abs(nii.voxsize)<=1)
+%     ea_reslice_nii(addobj,addobj,[0.5,0.5,0.5],0,[],3);
+%     nii=ea_load_nii(addobj);
+% end
 %nii.img=round(nii.img);
 
 [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); %(mean(nii.img(nii.img~=0))/3))); % find 3D-points that have correct value.

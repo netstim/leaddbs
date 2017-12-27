@@ -60,22 +60,27 @@ guidata(hObject, handles);
 
 cfg=varargin{1};
 set(0,'CurrentFigure',handles.predfigure);
+set(handles.predfigure,'CurrentAxes',handles.fMRImodel);
 if isfield(cfg,'fMRI')
-    set(handles.predfigure,'CurrentAxes',handles.fMRImodel);
     imshow(cfg.fMRI.model);
-    axis off
-    set(handles.predfigure,'CurrentAxes',handles.fMRIpat);
+end
+axis off
+set(handles.predfigure,'CurrentAxes',handles.fMRIpat);
+if isfield(cfg,'fMRI')
     imshow(cfg.fMRI.vta);
-    axis off
 end
+axis off
+set(handles.predfigure,'CurrentAxes',handles.dMRImodel);
 if isfield(cfg,'dMRI')
-    set(handles.predfigure,'CurrentAxes',handles.dMRImodel);
     imshow(cfg.dMRI.model);
-    axis off
-    set(handles.predfigure,'CurrentAxes',handles.dMRIpat);
-    imshow(cfg.dMRI.vta);
-    axis off
 end
+axis off
+set(handles.predfigure,'CurrentAxes',handles.dMRIpat);
+if isfield(cfg,'dMRI')
+    imshow(cfg.dMRI.vta);
+end
+axis off
+
 
 set(handles.stimlabel,'String',cfg.stim.label);
 set(handles.patname,'String',cfg.stim.patientname);
@@ -86,8 +91,8 @@ set(handles.actCL,'String',num2str(find(cfg.stim.activecontacts{2})));
 set(handles.ampsR,'String',num2str((cfg.stim.amplitude{1}(logical(cfg.stim.amplitude{1})))));
 set(handles.ampsL,'String',num2str((cfg.stim.amplitude{2}(logical(cfg.stim.amplitude{2})))));
 
-set(handles.averror,'String',[sprintf('%.02f',cfg.res.updrs3err),' %']);
-set(handles.updrs3hat,'String',['+/- ',sprintf('%.02f',cfg.res.updrs3imp),' %']);
+set(handles.averror,'String',['+/- ',sprintf('%.02f',cfg.res.updrs3err),' %']);
+set(handles.updrs3hat,'String',[sprintf('%.02f',cfg.res.updrs3imp),' %']);
 
 set(handles.predfigure,'Name',['Predictions for ',cfg.stim.patientname,' (stimulation: ',cfg.stim.label,')']);
 

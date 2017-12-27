@@ -65,20 +65,29 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'r',b0rest,'w',optio
     %% coreg atlas into b0-space:
     [~,reffn]=fileparts(ref_filename);
     copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
-    matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[options.root,options.patientname,filesep,ref_filename,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized,',1']};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii,1']};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [7 7];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 0;
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
-    matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = ['r',reffn];
-    spm_jobman('run',{matlabbatch});
-    clear matlabbatch
+    copyfile([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],...
+        [directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii']);
+    
+    ea_coreg2images(options,[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized],...
+        [options.root,options.patientname,filesep,ref_filename],...
+        [options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized],...
+        {[directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii']},0,[],0);
+    
+% %     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[options.root,options.patientname,filesep,ref_filename,',1']};
+% %     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized,',1']};
+% %     matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii,1']};
+% %     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
+% %     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
+% %     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
+% %     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [7 7];
+% %     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.interp = 0;
+% %     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.wrap = [0 0 0];
+% %     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
+% %     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = ['r',reffn];
+% %     spm_jobman('run',{matlabbatch});
+% %     clear matlabbatch
 
+ea_gencheckregpair([directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation],[options.root,options.patientname,filesep,reffn],[options.root,options.patientname,filesep,'checkreg',filesep,options.lc.general.parcellation,'2',reffn,'.png'])
     delete([options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
     delete([options.root,options.patientname,filesep,'r',reffn,'c',options.prefs.prenii_unnormalized]);
 end

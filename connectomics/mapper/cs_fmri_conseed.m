@@ -2,10 +2,10 @@ function cs_fmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,
 tic
 
 
-if ~isdeployed
-    addpath(genpath('/autofs/cluster/nimlab/connectomes/software/lead_dbs'));
-    addpath('/autofs/cluster/nimlab/connectomes/software/spm12');
-end
+% if ~isdeployed
+%     addpath(genpath('/autofs/cluster/nimlab/connectomes/software/lead_dbs'));
+%     addpath('/autofs/cluster/nimlab/connectomes/software/spm12');
+% end
 if ~exist('writeoutsinglefiles','var')
     writeoutsinglefiles=0;
 else

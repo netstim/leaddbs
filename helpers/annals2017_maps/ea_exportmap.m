@@ -18,6 +18,8 @@ if exist('sk','var')
             dos=1; dok=0;
         case 'sk'
             dos=1; dok=0;
+        otherwise
+            dos=0; dok=0;
     end
 else
     dos=0;
