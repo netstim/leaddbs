@@ -69,9 +69,13 @@ if exist('reco','var')
     catch
         coords_acpc=nan;
     end
-
-    manually_corrected=reco.props.manually_corrected;
-    elmodel=reco.props.elmodel;
+    try
+        manually_corrected=reco.props(options.elside).manually_corrected;
+        elmodel=reco.props(options.elside).elmodel;
+    catch % legacy
+        manually_corrected=reco.props(1).manually_corrected;
+        elmodel=reco.props(1).elmodel;
+    end
 
 else % legacy format
 

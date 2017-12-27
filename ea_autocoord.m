@@ -194,51 +194,51 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
 
     if options.doreconstruction
         wasnative=options.native;
-        switch options.reconmethod
-            case 1 % TRAC/CORE
-                [coords_mm,trajectory,markers]=ea_runtraccore(options);
+        poptions=ea_checkmanapproved(options);
+        if ~isempty(poptions.sides)
+            switch options.reconmethod
+                case 'TRAC/CORE (Horn 2015)' % TRAC/CORE
+                    [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
+                    options.native=0;
+                    
+                case 'PaCER (Husch 2017)' % PaCER
+                    try
+                        [coords_mm,trajectory,markers]=ea_runpacer(poptions);
+                        options.native=1;
+                        
+                    catch % revert to TRAC/CORE
+                        disp('PaCER failed - reverting to TRAC/CORE algorithm...');
+                        [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
                         options.native=0;
-
-            case 2 % PaCER
-                try
-                    [coords_mm,trajectory,markers]=ea_runpacer(options);
-                            options.native=1;
-
-                catch % revert to TRAC/CORE
-                    disp('PaCER failed - reverting to TRAC/CORE algorithm...');
-                    [coords_mm,trajectory,markers]=ea_runtraccore(options);
-                            options.native=0;
-
-                end
-                
-            case 3 % Manual
-                 [coords_mm,trajectory,markers]=ea_runmanual(options);
-                            options.native=1;
-                
-        end
-        options.hybridsave=1;
-        elmodel=options.elmodel;
-        ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
-        if isfield(options,'hybridsave')
-            options=rmfield(options,'hybridsave');
+                        
+                    end
+                    
+                case 'Manual' % Manual
+                    [coords_mm,trajectory,markers]=ea_runmanual(poptions);
+                    options.native=1;
+                    
+            end
+            options.hybridsave=1;
+            elmodel=options.elmodel;
+            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+            if isfield(options,'hybridsave')
+                options=rmfield(options,'hybridsave');
+            end
         end
         options.native=wasnative; % restore original setting.
     end
 
     if options.manualheightcorrection
-        % load reconstruction results
-        % try
-        %     [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-        % catch
-        %     ea_error([patientname,': No reconstruction information found. Please run reconstruction first.']);
-        % end
-        % ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
-        mcfig=figure('name',[options.patientname,': Manual Height Correction'],'numbertitle','off');
-        %warning('off');
-        try
-            ea_maximize(mcfig);
+        poptions=ea_checkmanapproved(options);
+        if ~isempty(poptions.sides)
+            mcfig=figure('name',[options.patientname,': Electrode Reconstruction'],'numbertitle','off');
+            %warning('off');
+            try
+                ea_maximize(mcfig);
+            end
+            options.elside=options.sides(1);
+            ea_manualreconstruction(mcfig,options.patientname,options);
         end
-        ea_manualreconstruction(mcfig,options.patientname,options);
     else
         ea_write(options)
     end
@@ -247,6 +247,20 @@ else
     ea_write(options)
 end
 
+function poptions=ea_checkmanapproved(options)
+poptions=options;
+if ~options.overwriteapproved && exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') % only re-open not manually approved reconstructions.
+    load([options.root,options.patientname,filesep,'ea_reconstruction.mat']);
+    todel=[]; cnt=1;
+    for side=options.sides
+        try % index may exceed entries in legacy saves
+            if reco.props(side).manually_corrected
+                todel(cnt)=side; cnt=cnt+1;
+            end
+        end
+    end
+    poptions.sides(todel)=[]; % do not re-reconstruct the ones already approved.
+end
 
 function di=ea_sortbytes(di)
 if isempty(di)

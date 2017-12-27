@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 09-Dec-2017 00:00:36
+% Last Modified by GUIDE v2.5 27-Dec-2017 17:00:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1685,3 +1685,110 @@ options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 options.leadprod = 'dbs';
 ea_runslicer(options, 3);
+
+
+% --- Executes on button press in side1.
+function side1_Callback(hObject, eventdata, handles)
+% hObject    handle to side1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side1
+
+
+% --- Executes on button press in side2.
+function side2_Callback(hObject, eventdata, handles)
+% hObject    handle to side2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side2
+
+
+% --- Executes on button press in side3.
+function side3_Callback(hObject, eventdata, handles)
+% hObject    handle to side3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side3
+ea_checktargetentry(handles);
+
+% --- Executes on button press in side4.
+function side4_Callback(hObject, eventdata, handles)
+% hObject    handle to side4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side4
+ea_checktargetentry(handles);
+
+% --- Executes on button press in side5.
+function side5_Callback(hObject, eventdata, handles)
+% hObject    handle to side5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side5
+ea_checktargetentry(handles);
+
+% --- Executes on button press in side6.
+function side6_Callback(hObject, eventdata, handles)
+% hObject    handle to side6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side6
+ea_checktargetentry(handles);
+
+% --- Executes on button press in side7.
+function side7_Callback(hObject, eventdata, handles)
+% hObject    handle to side7 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side7
+ea_checktargetentry(handles);
+
+% --- Executes on button press in side8.
+function side8_Callback(hObject, eventdata, handles)
+% hObject    handle to side8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side8
+ea_checktargetentry(handles);
+
+% --- Executes on button press in side9.
+function side9_Callback(hObject, eventdata, handles)
+% hObject    handle to side9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side9
+ea_checktargetentry(handles);
+
+% --- Executes on button press in side10.
+function side10_Callback(hObject, eventdata, handles)
+% hObject    handle to side10 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side10
+ea_checktargetentry(handles);
+
+function ea_checktargetentry(handles)
+higherelchosen=0;
+for el=3:10
+    if get(handles.(['side',num2str(el)]),'Value')
+        higherelchosen=1;
+    end
+end
+if higherelchosen
+    set(handles.targetpopup,'Value',3);
+    set(handles.targetpopup,'Enable','off');
+else
+    if get(handles.reconmethod,'Value')==1
+        set(handles.targetpopup,'Enable','on');
+    end
+end

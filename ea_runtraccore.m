@@ -1,6 +1,12 @@
 function [coords_mm,trajectory,markers]=ea_runtraccore(options)
 directory = [options.root,options.patientname,filesep];
 
+if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+   [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
+end
+if isempty(options.sides)
+    return
+end
 % build lfile
 
 fis={[ea_space,'bb.nii']};

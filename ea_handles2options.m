@@ -79,18 +79,7 @@ options.verbose=3; % 4: Show figures but close them 3: Show all but close all fi
 %sidepos=[1,2];
 
 %options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
-try
-    switch get(handles.sidespopup,'Value')
-        case 1
-            options.sides=1:2;
-        case 2
-            options.sides=1;
-        case 3
-            options.sides=2;
-    end
-catch
-    options.sides=1:2;
-end
+options.sides=ea_assignsides(handles);
 
 try
     options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
@@ -218,7 +207,8 @@ try
 end
 
 try
-    options.reconmethod=get(handles.reconmethod,'Value');
+    options.reconmethod=get(handles.reconmethod,'String');
+    options.reconmethod=options.reconmethod{get(handles.reconmethod,'Value')};
 end
 
 options.expstatvat.do=0;
@@ -333,3 +323,11 @@ try
    
 end
 
+function sides=ea_assignsides(handles)
+cnt=1;
+for el=1:10
+    if get(handles.(['side',num2str(el)]),'Value')
+       sides(cnt)=el;
+       cnt=cnt+1;
+    end
+end
