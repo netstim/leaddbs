@@ -618,7 +618,7 @@ if obj.hasPlanning % -> This will add a new trajectory unrelated to the present 
     
 else
     
-    obj.target=ea_getstandardtarget(obj.site);
+    obj.target=ea_getstandardtarget(obj.side);
     obj.showPlanning=1;
     obj.hasPlanning=1;
     obj.showPlanning=1;

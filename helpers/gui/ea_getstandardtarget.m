@@ -1,6 +1,6 @@
-function target=ea_getstandardtarget(site)
+function target=ea_getstandardtarget(side)
 
-switch site
+switch side
     case 1
         target.entry=[36,39,-50];
         target.target=[12.02,-1.53,1.91];

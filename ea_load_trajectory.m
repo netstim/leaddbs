@@ -1,11 +1,11 @@
-function pobj=ea_load_trajectory(directory,site)
+function pobj=ea_load_trajectory(directory,side)
 
     load([directory,'ea_trajectories.mat']);
 
-pobj.elmodel=trajectories(site).dbs.elmodel;
+pobj.elmodel=trajectories(side).dbs.elmodel;
 %%%
-pobj.color=trajectories(site).planning.color;
-pobj.planRelative=trajectories(site).planning.planRelative;
-pobj.target=trajectories(site).planning.target;
-pobj.relateMicro=trajectories(site).micro.relateMicro;
+pobj.color=trajectories(side).planning.color;
+pobj.planRelative=trajectories(side).planning.planRelative;
+pobj.target=trajectories(side).planning.target;
+pobj.relateMicro=trajectories(side).micro.relateMicro;
 

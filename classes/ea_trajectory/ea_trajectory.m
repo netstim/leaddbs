@@ -7,7 +7,7 @@ classdef ea_trajectory < handle
         elpatch % handle to macroelectrode patch
         ellabel % handle to electrode label
         elmodel % elmodel to display
-        site % right hemisphere=1, left=2, further sites planned to be possible in the future
+        side % right hemisphere=1, left=2, further sites planned to be possible in the future
         target % target and entrypoints as used in surgical planning
         alpha=0.7 % alpha of Planning patch
         radius=0.2 % radius of Planning line
@@ -71,9 +71,9 @@ classdef ea_trajectory < handle
             end
 
             try
-                obj.site=pobj.site;
+                obj.side=pobj.side;
             catch
-                obj.site=1;
+                obj.side=1;
             end
 
             %% initialize further content fields based on given struct if given or else empty / random vars
@@ -222,7 +222,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             poptions=obj.options;
             poptions.elmodel=obj.elmodel;
             obj.elstruct.elmodel=obj.elmodel;
-            poptions.sides=obj.site;
+            poptions.sides=obj.side;
 
             [obj.elpatch{1},obj.ellabel(1)]=ea_showelectrode(obj.plotFigureH,obj.elstruct,1,poptions);
             set(obj.ellabel(1),'Visible','off');
@@ -230,13 +230,13 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     end
 
     if ismember(evtnm,{'showMacro'}) && obj.hasMacro
-        ea_elvisible([],[],obj.elpatch,1,obj.site,ea_bool2onoff(obj.showMacro),obj.options);
+        ea_elvisible([],[],obj.elpatch,1,obj.side,ea_bool2onoff(obj.showMacro),obj.options);
     end
 
     % add toggle button:
     [~,ptname]=fileparts(fileparts(obj.options.root));
     set(obj.toggleH, {'Parent','CData','TooltipString','OnCallback','OffCallback','State'},...
-        {obj.htH,ea_get_icn('electrode'), [ptname,' (',num2str(obj.site),')'], ...
+        {obj.htH,ea_get_icn('electrode'), [ptname,' (',num2str(obj.side),')'], ...
         {@ea_trajvisible,'on',obj}, {@ea_trajvisible,'off',obj}, ...
         ea_bool2onoff(any([obj.showPlanning,obj.showMacro,obj.showMicro]))});
 end
