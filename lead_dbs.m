@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 27-Dec-2017 17:00:07
+% Last Modified by GUIDE v2.5 28-Dec-2017 08:46:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1562,11 +1562,11 @@ elseif isempty(uipatdir)
     if iscell(fullrpts)
         fullrpts=fullrpts(1);
     end
-    
+
     if strcmp('No recent patients found',fullrpts)
         return
     end
-    
+
     ea_load_pts(handles,fullrpts);
     return
 end
@@ -1595,7 +1595,7 @@ if isfield(handles,'atlassetpopup') % not present in connectome mapper
     options.prefs=ea_prefs;
     atlasset=get(handles.atlassetpopup,'String');
     atlasset=atlasset{get(handles.atlassetpopup,'Value')};
-    
+
     ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
 end
 
@@ -1611,16 +1611,16 @@ if length(uipatdir)>1 % still works
     %  ea_error('Selecting the next patient in folder only works if a single patient was selected.');
 elseif isempty(uipatdir)
     % load recent patient then.
-    
+
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
     if iscell(fullrpts)
         fullrpts=fullrpts(1);
     end
-    
+
     if strcmp('No recent patients found',fullrpts)
         return
     end
-    
+
     ea_load_pts(handles,fullrpts);
     return
     %   ea_error('Selecting the next patient in folder only works if a patient was selected before.');
@@ -1650,7 +1650,7 @@ if isfield(handles,'atlassetpopup') % not present in connectome mapper
     options.prefs=ea_prefs;
     atlasset=get(handles.atlassetpopup,'String');
     atlasset=atlasset{get(handles.atlassetpopup,'Value')};
-    
+
     ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
 end
 
