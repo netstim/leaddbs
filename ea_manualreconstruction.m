@@ -49,8 +49,8 @@ captions=getappdata(mcfig,'captions');
 c_step=2;
 minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus'),'TooltipString','Decrease Contrast [C]','ClickedCallback',{@setcontrast,'c',nan,mcfig});
 pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus'),'TooltipString','Increase Contrast [V]','ClickedCallback',{@setcontrast,'v',nan,mcfig});
-minusoffset=uipushtool(ht,'CData',ea_get_icn('extleft'),'TooltipString','Increase Offset [B]','ClickedCallback',{@setcontrast,'b',nan,mcfig});
-plusoffset=uipushtool(ht,'CData',ea_get_icn('extright'),'TooltipString','Decrease Offset [N]','ClickedCallback',{@setcontrast,'n',nan,mcfig});
+minusbrightness=uipushtool(ht,'CData',ea_get_icn('brightnessminus'),'TooltipString','Decrease Brightness [B]','ClickedCallback',{@setcontrast,'b',nan,mcfig});
+plusbrightness=uipushtool(ht,'CData',ea_get_icn('brightnessplus'),'TooltipString','Increase Brightness [N]','ClickedCallback',{@setcontrast,'n',nan,mcfig});
 
 eltog(1)=uitoggletool(ht,'CData',ea_get_icn('el0'),'TooltipString','Select distal contact [0]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
 eltog(2)=uitoggletool(ht,'CData',ea_get_icn('el3'),'TooltipString','Select proximal contact [3]','State','off','OnCallback',{@selectelectrode},'OffCallback',{@deselectelectrode});
@@ -162,8 +162,8 @@ ea_write(options);
 % Callback invoked when user presses the 'Update all' button in the 'Manual electrodes head / tail setting' figure.
 function manualMarkerSettingUpdateAllCb(source,event)
 manualMarkerSettingCbImpl(source,'all');
-    
-    
+
+
 % Callback invoked when user presses the 'Cancel' button in the 'Manual electrodes head / tail setting' figure.
 function manualMarkerSettingCancelCb(source,event)
 closereq();
@@ -270,11 +270,11 @@ switch lower(commnd)
     case '.' % center selected electrode - this doesn't seem to work yet.
         selectrode=getappdata(mcfig,'selectrode');
         if selectrode
-            
+
             optoffsets=getappdata(mcfig,'optoffsets');
             [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
             movedcoords=moveonecoord(markers,selectrode,optoffsets(selectrode,:),options); % move the correct coord to the correct direction.
-        
+
             set(mplot(1,1),'XData',movedcoords(options.elside).head(1),'YData',movedcoords(options.elside).head(2),'ZData',movedcoords(options.elside).head(3))
             set(mplot(2,1),'XData',movedcoords(options.elside).tail(1),'YData',movedcoords(options.elside).tail(2),'ZData',movedcoords(options.elside).tail(3))
             %            setappdata(mcfig,'markers',markers);
@@ -311,11 +311,11 @@ switch lower(commnd)
             case {'3','7'}
                 selectrode=2;
         end
-        
+
         if numel(options.sides) == 1	% only one hemisphere
             switch options.sides
                 case 1	% right hemisphere, return if '4' or '7' is pressed
-                    if selectrode == 3 || selectrode == 4	% 
+                    if selectrode == 3 || selectrode == 4	%
                         return;
                     end
                 case 2	% left hemisphere, return if '0' or '3' is pressed
@@ -324,7 +324,7 @@ switch lower(commnd)
                     end
             end
         end
-        
+
         oselectrode=getappdata(mcfig,'selectrode');
         if selectrode==oselectrode % toggle had already been clicked -> deselect all.
             % reset all toggletools
@@ -558,7 +558,7 @@ switch ccw
     case 'lc'
         rotation{2}=rotation{2}-15;
     case 'lcc'
-        rotation{2}=rotation{2}+15;        
+        rotation{2}=rotation{2}+15;
 end
 setappdata(gcf,'rotation',rotation);
 ea_mancor_updatescene([],[],mcfig);
@@ -572,7 +572,7 @@ function setcontrast(hobj,ev,key,modifier,mcfig)
 %        1 1
 %       -1 -1];
 % kern=(c_lims(2)-c_lims(1))/20; % gain to correct contrast
-% 
+%
 doshift=any(ismember('shift',modifier));
 % c_lims=c_lims+(perfs(ismember(comms,lower(key)),:)*(kern*(doshift+1)));
 % setappdata(gcf,'c_lims',c_lims);

@@ -79,8 +79,8 @@ if isempty(ht)
     c_step=2;
     minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus'),'TooltipString','Decrease Contrast','ClickedCallback',{@setslidecontrast,'c',-0.1,resultfig,handles});
     pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus'),'TooltipString','Increase Contrast','ClickedCallback',{@setslidecontrast,'c',0.1,resultfig,handles});
-    minusoffset=uipushtool(ht,'CData',ea_get_icn('extleft'),'TooltipString','Decrease Offset','ClickedCallback',{@setslidecontrast,'o',-0.1,resultfig,handles});
-    plusoffset=uipushtool(ht,'CData',ea_get_icn('extright'),'TooltipString','Increase Offset','ClickedCallback',{@setslidecontrast,'o',0.1,resultfig,handles});
+    minusbrightness=uipushtool(ht,'CData',ea_get_icn('brightnessminus'),'TooltipString','Decrease Brightness','ClickedCallback',{@setslidecontrast,'o',-0.1,resultfig,handles});
+    plusbrightnesst=uipushtool(ht,'CData',ea_get_icn('brightnessplus'),'TooltipString','Increase Brightness','ClickedCallback',{@setslidecontrast,'o',0.1,resultfig,handles});
     setappdata(handles.acontrolfig,'toolbar',ht);
 end
 
