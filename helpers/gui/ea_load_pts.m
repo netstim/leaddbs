@@ -36,6 +36,7 @@ ea_addrecentpatient(handles,uipatdir,[patsub],patsub);
 
 
 % check if reconstruction is present and assign side-toggles accordingly:
+try
 if exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
    load([uipatdir{1},filesep,'ea_reconstruction.mat']);
    for el=1:10
@@ -47,7 +48,7 @@ if exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
       end
    end
 end
-
+end
 % add VATs to seeds for connectome mapper or predict case
 if isfield(handles,'seeddefpopup')
     for pt=1:length(uipatdir)
