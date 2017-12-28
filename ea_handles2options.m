@@ -79,8 +79,11 @@ options.verbose=3; % 4: Show figures but close them 3: Show all but close all fi
 %sidepos=[1,2];
 
 %options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
+try
 options.sides=ea_assignsides(handles);
-
+catch
+   options.sides=1:2; 
+end
 try
     options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
     if strcmp(get(handles.maskwindow_txt,'String'),'auto')
