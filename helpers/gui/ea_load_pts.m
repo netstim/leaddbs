@@ -39,11 +39,11 @@ ea_addrecentpatient(handles,uipatdir,[patsub],patsub);
 if exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
    load([uipatdir{1},filesep,'ea_reconstruction.mat']);
    for el=1:10
-      set(handles.(['side',num2str(el)]),'Value',0); 
+      try set(handles.(['side',num2str(el)]),'Value',0); end
    end
    for el=1:length(reco.native.coords_mm)
       if ~isempty(reco.native.coords_mm(el))
-         set(handles.(['side',num2str(el)]),'Value',1);
+         try set(handles.(['side',num2str(el)]),'Value',1); end
       end
    end
 end
