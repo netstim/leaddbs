@@ -330,7 +330,6 @@ M.patient.list(deleteentry)=[];
 M.patient.group(deleteentry)=[];
 
 try M.elstruct(deleteentry)=[]; end
-try M.stimparams(deleteentry)=[]; end
 
 for cvar=1:length(M.clinical.vars)
     try
@@ -1583,20 +1582,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-function [pU,pIm]=getstimparams(M)
-try
-    for pt=1:length(M.patient.list)
-        for side=1:2
-            pU{side}(pt,:)=M.stimparams(pt,side).U;
-            pIm{side}(pt,:)=M.stimparams(pt,side).Im;
-        end
-    end
-catch
-    pU{1}=zeros(length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
-    pIm{1}=repmat(1000,length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
-    pU{2}=zeros(length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
-    pIm{2}=repmat(1000,length(M.patient.list),size(M.elstruct(1).coords_mm{1},1));
-end
 
 
 % --- Executes on button press in statvatcheck.

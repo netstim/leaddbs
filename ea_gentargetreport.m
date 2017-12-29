@@ -46,7 +46,6 @@ for thr=0:1
                   con=xx+(1-side)*size(R{target,thr+1},1)/2;
                   cstring='FFFFFF';
                   try
-                      % if logical(M.stimparams(yy,side).U(con)) && M.ui.hlactivecontcheck
                       if logical(M.S(yy).activecontacts{side}(con)) && M.ui.hlactivecontcheck
                           cstring='FF9999';
                       end

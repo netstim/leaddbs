@@ -115,16 +115,6 @@ end
 % update UI
 disp('Updating UI...');
 
-% % make setstimparams button green if set.
-% if isfield(M,'stimparams')
-%     if isfield(M.stimparams,'U')
-%         set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
-%     else
-%         set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
-%     end
-% else
-%     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
-% end
 
 disp('Getting stimulation parameters...');
 S=getappdata(handles.leadfigure,'S');
@@ -209,25 +199,14 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
         for pt=1:length(M.patient.list)
             % set stimparams based on values provided by user
             for side=1:2
-                M.stimparams(pt,side).usefiberset=get(handles.fiberspopup,'String');
-                try
-                    M.stimparams(pt,side).usefiberset=M.stimparams(pt,side).usefiberset{M.ui.fiberspopup};
-                catch
-                    M.stimparams(pt,side).usefiberset=length(get(handles.fiberspopup,'String'));
-                    M.ui.fiberspopup=length(get(handles.fiberspopup,'String'));
-                end
-                M.stimparams(pt,side).labelatlas=get(handles.labelpopup,'String');
                 
                 if M.ui.labelpopup>length(get(handles.labelpopup,'String'))
                     M.ui.labelpopup=length(get(handles.labelpopup,'String'));
                 end
-                M.stimparams(pt,side).labelatlas=M.stimparams(pt,side).labelatlas(M.ui.labelpopup);
-                M.stimparams(pt,side).showfibers=1;
-                M.stimparams(pt,side).fiberthresh=1;
-                
-                M.stimparams(pt,side).showconnectivities=1;
             end
-            
+            if isfield(M,'stimparams') % deprecated.
+                M=rmfield(M,'stimparams');
+            end
             % load localization
             [~,pats{pt}]=fileparts(M.patient.list{pt});
             
