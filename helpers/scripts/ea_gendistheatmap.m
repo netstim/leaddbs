@@ -70,12 +70,12 @@ end
         %D=squareform(pdist([XYZ(vx,:);acs]));
         %D=-(pdist([XYZ(vx,:);acs]));
         D=pdist([XYZ(vx,:);acs]);
-        D=-D(1:N)';
-        %D=1./exp(D(1:N)');
+        %D=-D(1:N)';
+        D=1./exp(D(1:N)');
         fovimg.img(vx)=corr(D,I,'rows','pairwise','type','Spearman');
 
 %        distimg.img(vx)=nansum(D);
- distimg.img(vx)=nanmax(D);      
+ distimg.img(vx)=nanmax(D);
 %         b=glmfit(D,I);
 %         if isnan(b)
 %             keyboard

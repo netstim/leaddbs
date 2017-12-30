@@ -126,7 +126,6 @@ if ~isempty(S)
        M.S(sp).label=['gs_',M.guid];
     end
     M.S=ea_activecontacts(M.S);
-
     M.vatmodel=getappdata(handles.leadfigure,'vatmodel');
 else
     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);

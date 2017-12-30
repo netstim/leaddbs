@@ -172,12 +172,14 @@ if native
     options.prefs.tp_ctnii_coregistered=['anat_',whichpreop,'.nii'];
 else
     [options,preniis]=ea_assignpretra(options);
-    if strcmp(['anat_',whichpreop,'.nii'], preniis{1})  % whichpreop: "t1", preniis{1}: "anat_t1.nii"
-        gfi=['glanat','.nii'];
-    else
-        gfi=['glanat_',whichpreop,'.nii'];
+    gfi=['glanat','.nii']; % default use the file available.
+    try
+        if strcmp(['anat_',whichpreop,'.nii'], preniis{1})  % whichpreop: "t1", preniis{1}: "anat_t1.nii"
+            gfi=['glanat','.nii'];
+        else
+            gfi=['glanat_',whichpreop,'.nii'];
+        end
     end
-
     options.prefs.gtranii=gfi;
     options.prefs.gcornii=gfi;
     options.prefs.gsagnii=gfi;

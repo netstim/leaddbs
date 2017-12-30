@@ -133,8 +133,10 @@ for side=1:length(options.sides)
             
             cont=1;
             try                cont=evalin('base','custom_cont'); end
-            
-            slice=ea_contrast(slice,cont,1);
+            offs=1;
+            try                offs=evalin('base','custom_offs'); end
+
+            slice=ea_contrast(slice,cont,offs);
             disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
             if fid>0 % only if file exists (does sometimes not exist if called from lead anatomy or the slice-cuts feature of elvis)
                 fprintf(fid,'%s\n',['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
