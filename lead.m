@@ -97,7 +97,7 @@ if nargin>3
             lead_group_connectome;
             delete(handles.leadfigure)
             return
-        case {'connectome', '-c', 'c'}
+        case {'connectome', 'conn', '-c', 'c'}
             lead_connectome;
             delete(handles.leadfigure)
             return

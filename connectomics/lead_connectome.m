@@ -186,11 +186,11 @@ function ea_makehidelcindep(handles)
 
 set(handles.importpanel,'visible','off');
 set(handles.runsavebutn,'String','Save and close');
-set(handles.runsavebutn,'Position',[218,6,154,41]);
+set(handles.runsavebutn,'Position',[218,8,154,41]);
 set(handles.exportcode,'visible','off');
 
 set(handles.openpatientdir,'visible','off');
-moveup=190;
+moveup=215;
 
 pos=get(handles.logoaxes,'Position');
 pos(2)=pos(2)-moveup;
