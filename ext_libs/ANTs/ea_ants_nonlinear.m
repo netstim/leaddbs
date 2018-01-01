@@ -57,8 +57,8 @@ if slabsupport
     if length(sums)>1 % multispectral warp
         slabs = sums(1:end-1) < (sums(end)*0.7);
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
-            slabmovingimage = ea_path_helper(movingimage{slabs}); % move slabs to new cell slabimage
-            slabfixedimage = ea_path_helper(fixedimage{slabs});
+            slabmovingimage = ea_path_helper(movingimage(slabs)); % move slabs to new cell slabimage
+            slabfixedimage = ea_path_helper(fixedimage(slabs));
             movingimage(slabs) = []; % remove slabs from movingimage
             fixedimage(slabs) = []; % remove slabs from movingimage
 
