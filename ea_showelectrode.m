@@ -40,7 +40,7 @@ for side=options.sides
     try
         startpoint=trajectory{side}(1,:)-(2*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
     catch
-        
+        keyboard
     end
     if options.d3.elrendering<3
         

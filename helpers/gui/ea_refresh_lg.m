@@ -263,8 +263,10 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
             catch
                 if pt>1 % first patient has worked but some other patient seems not to have worked.
                     try
+                        if ~M.ui.detached
                         M.elstruct(1).coords_mm; % probe if error happens in pt. 1 ? if not show warning
                         warning(['No reconstruction present for ',pats{pt},'. Please check.']);
+                        end
                     end
                 end
             end
