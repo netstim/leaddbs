@@ -151,7 +151,7 @@ ea_presults_horn2017(cfg);
 function [im]=ea_getsurficeplots(niftiname,threshs)
 % perform in tempdir given path handling issues in surfice
 [pth,fn,ext]=fileparts(niftiname);
-if 1% ~exist(fullfile(pth,[fn,'_l_lat.png']),'file') || ~exist(fullfile(pth,[fn,'_l_med.png']),'file')
+if ~exist(fullfile(pth,[fn,'_l_lat.png']),'file') || ~exist(fullfile(pth,[fn,'_l_med.png']),'file')
     tempdir=ea_getleadtempdir;
     uid=ea_generate_guid;
     tniftiname=[tempdir,uid,'.nii'];
