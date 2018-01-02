@@ -81,7 +81,7 @@ end
 vizz=0;
 
 % check that markers are correct (important for directional leads):
-if ~reco.props(options.elside).manually_corrected
+if ~reco.props(options.sides(1)).manually_corrected
     options.hybridsave=1;
 
     for side=options.sides
