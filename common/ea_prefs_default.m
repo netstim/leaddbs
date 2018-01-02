@@ -183,6 +183,7 @@ prefs.ls.autosave=0;
 
 %% environment
 prefs.env.dev=0;
+prefs.env.logtime=0;
 prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in folder.
 
 %% xelatex executable path:

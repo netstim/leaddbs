@@ -9,6 +9,7 @@ function ea_autocoord(options)
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
+options.tic=tic;
 
 % set patientdir
 options.prefs.patientdir = options.patientname;
@@ -17,7 +18,6 @@ options.prefs.patientdir = options.patientname;
 options = ea_resolve_elspec(options);
 
 directory = [options.root,options.patientname,filesep];
-
 if options.dicomimp || options.assignnii % do DICOM-Import.
     if options.dicomimp
         if strcmp(options.patientname, 'No Patient Selected')
