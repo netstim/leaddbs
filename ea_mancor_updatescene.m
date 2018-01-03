@@ -66,19 +66,43 @@ end
 %     markers(side).y=markers(side).head+orth(:,2)'; % corresponding points in reality
 % end
 
+rotation=getappdata(gcf,'rotation');
+
+if manually_corrected == 1 && isempty(rotation)
+    for side=options.sides
+        tempvec = markers(side).y - markers(side).head;
+        tempvec(3) = 0;
+        tempvec = tempvec ./ norm(tempvec);
+        initialrotation = rad2deg(atan2(norm(cross([0 1 0],tempvec)),dot([0 1 0],tempvec)));
+        
+        if markers(side).y(1) > markers(side).head(1) % negative 90 points to right, positive 90 points to left
+            initialrotation = - initialrotation;
+        end
+                        
+        rotation{side} = initialrotation;
+        setappdata(gcf,'rotation',rotation);
+    end
+elseif manually_corrected == 0 && isempty(rotation)
+    for side=options.sides
+        rotation{side} = 0;
+        setappdata(gcf,'rotation',rotation);
+    end
+end
+
 for side=options.elside
     rotation=getappdata(gcf,'rotation');
-    if isempty(rotation)
-        rotation{1} = 0;
-        rotation{2} = 0;
-    end
     normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
+    normtrajvector2 = normtrajvector;  
+      
+    y(1) = -cos(0) * sin(ea_deg2rad(rotation{side})); % [0 1 0] rotated by rotation
+    y(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
+    y(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
     
-    y(1) = -cos(0) * sin(ea_deg2rad(rotation{side}));
-    y(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0));
-    y(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0));
-    y = y - (dot(y,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;
-    x = cross(y,normtrajvector);
+    x = cross(y,[0 0 1]); % [1 0 0] rotated by rotation
+    
+    x = x - (dot(x,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;     % x is projected down the trajectory
+    x = x ./ norm(x);
+    y = -cross(x,normtrajvector);
     
     markers(side).x=markers(side).head+x;
     markers(side).y=markers(side).head+y; % corresponding points in reality

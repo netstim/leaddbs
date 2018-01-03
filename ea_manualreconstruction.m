@@ -79,10 +79,10 @@ postview=uipushtool(ht,'CData',ea_get_icn('elP'),'TooltipString','Set view from 
 % rotleft=uipushtool(ht,'CData',ea_get_icn('rotleft'),'TooltipString','Rotate Electrode counter-clockwise','ClickedCallback',{@ea_rotate,'cc',mcfig});
 % rotright=uipushtool(ht,'CData',ea_get_icn('rotright'),'TooltipString','Rotate Electrode clockwise','ClickedCallback',{@ea_rotate,'c',mcfig});
 
-rotleftcw=uipushtool(ht,'CData',ea_get_icn('rotleftcw'),'TooltipString','Rotate left electrode clockwise','ClickedCallback',{@ea_rotate,'lc',mcfig});
-rotleftccw=uipushtool(ht,'CData',ea_get_icn('rotleftccw'),'TooltipString','Rotate left electrode counterclockwise','ClickedCallback',{@ea_rotate,'lcc',mcfig});
-rotrightcw=uipushtool(ht,'CData',ea_get_icn('rotrightcw'),'TooltipString','Rotate right electrode clockwise','ClickedCallback',{@ea_rotate,'rc',mcfig});
-rotrightccw=uipushtool(ht,'CData',ea_get_icn('rotrightccw'),'TooltipString','Rotate right electrode counterclockwise','ClickedCallback',{@ea_rotate,'rcc',mcfig});
+% rotleftcw=uipushtool(ht,'CData',ea_get_icn('rotleftcw'),'TooltipString','Rotate left lead clockwise','ClickedCallback',{@ea_rotate,'lc',mcfig});
+% rotleftccw=uipushtool(ht,'CData',ea_get_icn('rotleftccw'),'TooltipString','Rotate left lead counterclockwise','ClickedCallback',{@ea_rotate,'lcc',mcfig});
+rotationcw=uipushtool(ht,'CData',ea_get_icn('cw'),'TooltipString','Rotate lead clockwise','ClickedCallback',{@ea_rotate,'clockwise',mcfig});
+rotationccw=uipushtool(ht,'CData',ea_get_icn('ccw'),'TooltipString','Rotate lead counterclockwise','ClickedCallback',{@ea_rotate,'counterclockwise',mcfig});
 
 mni=uitoggletool(ht,'CData',ea_get_icn('mninative'),'TooltipString','Toggle MNI vs. Native space','State','off','OnCallback',{@ea_mancor_updatescene,mcfig,'mni'},'OffCallback',{@ea_mancor_updatescene,mcfig,'native'});
 
@@ -547,19 +547,17 @@ set(atls, 'Visible', 'off');
 
 function ea_rotate(hobj,ev,ccw,mcfig)
 rotation=getappdata(gcf,'rotation'); % rotation angle in degrees
+options = getappdata(gcf,'options');
 if isempty(rotation)
     rotation{1} = 0;
     rotation{2} = 0;
 end
+sideact = options.elside;
 switch ccw
-    case 'rc'
-        rotation{1}=rotation{1}-15;
-    case 'rcc'
-        rotation{1}=rotation{1}+15;
-    case 'lc'
-        rotation{2}=rotation{2}-15;
-    case 'lcc'
-        rotation{2}=rotation{2}+15;
+    case 'clockwise'
+        rotation{sideact} = rotation{sideact} + 15;
+    case 'counterclockwise'
+        rotation{sideact} = rotation{sideact} - 15;
 end
 setappdata(gcf,'rotation',rotation);
 ea_mancor_updatescene([],[],mcfig);
