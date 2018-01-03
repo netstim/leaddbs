@@ -261,6 +261,7 @@ switch lower(commnd)
             ea_endfcn(mcfig);
             return
         else % move to next electrode in batch
+            set(0,'CurrentFigure',mcfig);
             setappdata(mcfig,'selectrode',0);
             [~,ix]=ismember(options.elside,options.sides);
             options.elside=options.sides(ix+1);
