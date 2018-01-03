@@ -101,7 +101,7 @@ X=X(:,logical(feats));
 UpdrsHat=ea_addone(X)*beta;
 
 avgerror=mean(abs(UpdrsHat-modeldata.updrs3percimprov));
-%R=corr(UpdrsHat,modeldata.updrs3percimprov)
+% %R=corr(UpdrsHat,modeldata.updrs3percimprov)
 
 Xpt=[0,0];
 if feats(1)
