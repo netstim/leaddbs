@@ -893,10 +893,6 @@ function coregctmethod_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns coregctmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from coregctmethod
 methods=getappdata(handles.leadfigure,'coregctmethod');
-wm=get(handles.coregctmethod,'Value');
-
-[~,~,alphasug]=eval([methods{wm},'(''probe'')']);
-set(handles.coregthreshs,'String',alphasug);
 ea_storeui(handles);
 
 
@@ -907,30 +903,6 @@ function coregctmethod_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-ea_storeui(handles);
-
-
-function coregthreshs_Callback(hObject, eventdata, handles)
-% hObject    handle to coregthreshs (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of coregthreshs as text
-%        str2double(get(hObject,'String')) returns contents of coregthreshs as a double
-ea_storeui(handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function coregthreshs_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to coregthreshs (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -1348,15 +1320,6 @@ ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 % --- Otherwise, executes on mouse press in 5 pixel border or over coregctmethod.
 function coregctmethod_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to coregctmethod (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
-
-
-% --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over coregthreshs.
-function coregthreshs_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to coregthreshs (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);

@@ -887,10 +887,6 @@ function coregctmethod_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns coregctmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from coregctmethod
 methods=getappdata(handles.leadfigure,'coregctmethod');
-wm=get(handles.coregctmethod,'Value');
-
-[~,~,alphasug]=eval([methods{wm},'(''probe'')']);
-set(handles.coregthreshs,'String',alphasug);
 ea_storeui(handles);
 
 
@@ -901,30 +897,6 @@ function coregctmethod_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-ea_storeui(handles);
-
-
-function coregthreshs_Callback(hObject, eventdata, handles)
-% hObject    handle to coregthreshs (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of coregthreshs as text
-%        str2double(get(hObject,'String')) returns contents of coregthreshs as a double
-ea_storeui(handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function coregthreshs_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to coregthreshs (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -1348,15 +1320,6 @@ ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over coregthreshs.
-function coregthreshs_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to coregthreshs (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
-
-
-% --- If Enable == 'on', executes on mouse press in 5 pixel border.
 % --- Otherwise, executes on mouse press in 5 pixel border or over atlassetpopup.
 function atlassetpopup_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to atlassetpopup (see GCBO)
@@ -1556,11 +1519,11 @@ elseif isempty(uipatdir)
     if iscell(fullrpts)
         fullrpts=fullrpts(1);
     end
-    
+
     if strcmp('No recent patients found',fullrpts)
         return
     end
-    
+
     ea_load_pts(handles,fullrpts);
     return
 end
@@ -1589,7 +1552,7 @@ if isfield(handles,'atlassetpopup') % not present in connectome mapper
     options.prefs=ea_prefs;
     atlasset=get(handles.atlassetpopup,'String');
     atlasset=atlasset{get(handles.atlassetpopup,'Value')};
-    
+
     ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
 end
 
@@ -1605,16 +1568,16 @@ if length(uipatdir)>1 % still works
     %  ea_error('Selecting the next patient in folder only works if a single patient was selected.');
 elseif isempty(uipatdir)
     % load recent patient then.
-    
+
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
     if iscell(fullrpts)
         fullrpts=fullrpts(1);
     end
-    
+
     if strcmp('No recent patients found',fullrpts)
         return
     end
-    
+
     ea_load_pts(handles,fullrpts);
     return
     %   ea_error('Selecting the next patient in folder only works if a patient was selected before.');
@@ -1644,6 +1607,6 @@ if isfield(handles,'atlassetpopup') % not present in connectome mapper
     options.prefs=ea_prefs;
     atlasset=get(handles.atlassetpopup,'String');
     atlasset=atlasset{get(handles.atlassetpopup,'Value')};
-    
+
     ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
 end

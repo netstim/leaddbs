@@ -14,15 +14,11 @@ set(handles.normcheck,'Value',options.normalize.check);
 % CT coregistration
 set(handles.coregct_checkbox,'Value',options.coregct.do);
 if options.coregct.methodn>length(handles.coregctmethod,'String')
-set(handles.coregctmethod,'Value',1);
+    set(handles.coregctmethod,'Value',1);
 else
-set(handles.coregctmethod,'Value',options.coregct.methodn);
+    set(handles.coregctmethod,'Value',options.coregct.methodn);
 end
-set(handles.coregthreshs,'String',options.coregct.coregthreshs);
-
 set(handles.coregctcheck,'Value',options.coregctcheck);
-
-
 
 set(handles.MRCT,'Value',options.modality);
 
