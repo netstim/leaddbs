@@ -81,6 +81,8 @@ postview=uipushtool(ht,'CData',ea_get_icn('elP'),'TooltipString','Set view from 
 
 % rotleftcw=uipushtool(ht,'CData',ea_get_icn('rotleftcw'),'TooltipString','Rotate left lead clockwise','ClickedCallback',{@ea_rotate,'lc',mcfig});
 % rotleftccw=uipushtool(ht,'CData',ea_get_icn('rotleftccw'),'TooltipString','Rotate left lead counterclockwise','ClickedCallback',{@ea_rotate,'lcc',mcfig});
+
+autorotation=uipushtool(ht,'CData',ea_get_icn('autorot'),'TooltipString','Detect directional leads','ClickedCallback',{@ea_autorotate,'clockwise',mcfig});
 rotationcw=uipushtool(ht,'CData',ea_get_icn('cw'),'TooltipString','Rotate lead clockwise','ClickedCallback',{@ea_rotate,'clockwise',mcfig});
 rotationccw=uipushtool(ht,'CData',ea_get_icn('ccw'),'TooltipString','Rotate lead counterclockwise','ClickedCallback',{@ea_rotate,'counterclockwise',mcfig});
 
@@ -561,6 +563,20 @@ switch ccw
 end
 setappdata(gcf,'rotation',rotation);
 ea_mancor_updatescene([],[],mcfig);
+
+function ea_autorotate(hobj,ev,ccw,mcfig)
+options = getappdata(gcf,'options');
+rotation=getappdata(gcf,'rotation'); % rotation angle in degrees
+orientation = ea_orient_main(options,0);
+rotation{options.elside} = [];
+% [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+% if ~isempty(orientation)
+%     rotation{options.elside} = rad2deg(orientation);
+% end
+figure(mcfig)
+setappdata(gcf,'rotation',rotation);
+ea_mancor_updatescene([],[],mcfig);
+
 
 
 function setcontrast(hobj,ev,key,modifier,mcfig)

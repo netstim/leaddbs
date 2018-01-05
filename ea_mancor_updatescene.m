@@ -56,34 +56,25 @@ else
     [~,trajectory,markers]=ea_resolvecoords(markers,options,0);
 end
 
-% for now, rotation will always be constant. This will be the place to
-% insert rotation functions..
-
-% for side=options.sides
-%     normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-%     orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-%     markers(side).x=markers(side).head+orth(:,1)';
-%     markers(side).y=markers(side).head+orth(:,2)'; % corresponding points in reality
-% end
+%% rotation functionality
+% rotation is measured with respect to the y-axis ([0 1 0]) of native space
 
 rotation=getappdata(gcf,'rotation');
-
-if manually_corrected == 1 && isempty(rotation)
-    for side=options.sides
+if isempty(rotation)
+    rotation = cell(length(options.sides),1);
+end
+for side=options.sides
+    if manually_corrected == 1 && isempty(rotation{side}) % rotation angles are determined from y-marker
         tempvec = markers(side).y - markers(side).head;
         tempvec(3) = 0;
         tempvec = tempvec ./ norm(tempvec);
-        initialrotation = rad2deg(atan2(norm(cross([0 1 0],tempvec)),dot([0 1 0],tempvec)));
-        
-        if markers(side).y(1) > markers(side).head(1) % negative 90 points to right, positive 90 points to left
+        initialrotation = rad2deg(atan2(norm(cross([0 1 0],tempvec)),dot([0 1 0],tempvec)));        
+        if markers(side).y(1) > markers(side).head(1)
             initialrotation = - initialrotation;
-        end
-                        
+        end        
         rotation{side} = initialrotation;
-        setappdata(gcf,'rotation',rotation);
-    end
-elseif manually_corrected == 0 && isempty(rotation)
-    for side=options.sides
+        setappdata(gcf,'rotation',rotation);        
+    elseif manually_corrected == 0 && isempty(rotation{side})        
         rotation{side} = 0;
         setappdata(gcf,'rotation',rotation);
     end
@@ -92,8 +83,8 @@ end
 for side=options.elside
     rotation=getappdata(gcf,'rotation');
     normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-    normtrajvector2 = normtrajvector;  
-      
+    normtrajvector2 = normtrajvector;
+    
     y(1) = -cos(0) * sin(ea_deg2rad(rotation{side})); % [0 1 0] rotated by rotation
     y(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
     y(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
@@ -104,8 +95,8 @@ for side=options.elside
     x = x ./ norm(x);
     y = -cross(x,normtrajvector);
     
-    markers(side).x=markers(side).head+x;
-    markers(side).y=markers(side).head+y; % corresponding points in reality
+    markers(side).x = markers(side).head + x;
+    markers(side).y = markers(side).head + y;
 end
 
 % [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
@@ -237,7 +228,7 @@ end
 c=campos;
 midpt=midpt+(c-midpt)/50;
 
-spacetext=text(midpt(1),midpt(2),midpt(3)+20,sprintf(['Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm\nElectrode ',num2str(options.elside),'/',num2str(length(options.sides)),'\nRight Rotation: ',num2str(rotation{1}),' deg\nLeft Rotation: ',num2str(rotation{2}),' deg']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');
+spacetext=text(midpt(1),midpt(2),midpt(3)+20,sprintf(['Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm\nElectrode ',num2str(options.elside),'/',num2str(length(options.sides)),'\nRotation: ',num2str(rotation{options.elside}),' deg']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');
 set(spacetext,'visible',ea_bool2onoff(options.visible));
 set(mcfig,'name',[options.patientname,', Electrode ',num2str(options.elside),'/',num2str(length(options.sides)),', Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm.']);
 setappdata(mcfig,'spacetext',spacetext);
@@ -387,10 +378,10 @@ for subpl=getsuplots(1)
         case 2 % CT
             [~,minix]=max(slice(:));
     end
-           [optxx,optyy]=ind2sub(size(slice),minix); 
-           offsxx=round(size(slice,1)/2)-optxx; offsyy=round(size(slice,2)/2)-optyy;
-           vsize=ea_detvoxsize(Vtra.mat);
-           optoffsets(subpl,:)=[offsxx,offsyy].*vsize(1:2);
+    [optxx,optyy]=ind2sub(size(slice),minix);
+    offsxx=round(size(slice,1)/2)-optxx; offsyy=round(size(slice,2)/2)-optyy;
+    vsize=ea_detvoxsize(Vtra.mat);
+    optoffsets(subpl,:)=[offsxx,offsyy].*vsize(1:2);
     try
         imagesc(slice,[ea_nanmean(slice(slice>0))-3*ea_nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*ea_nanstd(slice(slice>0))]);
     catch
