@@ -19,14 +19,20 @@ end
 
 % store patient directories in figure
 setappdata(handles.leadfigure,'uipatdir',uipatdir);
-try
-    if length(uipatdir) > 1 % if multiple patients are chosen, enable CT coregistration setting by default
+
+if length(uipatdir) > 1 % if multiple patients are chosen, enable CT coregistration setting by default
+    try
         % set(handles.MRCT,'Enable', 'off');
         set(handles.MRCT, 'TooltipString', '<html>Multiple patients are selected.<br>Enable CT to MRI coregistration setting by default.<br>The actual modality will be automatically detected.');
-    else
+    end
+else
+    try
         % set(handles.MRCT,'Enable', 'on');
         set(handles.MRCT, 'TooltipString', '<html>Post-operative image modality (MR/CT) will be automatically detected.<br>In case both MR and CT images are present, MR will be chosen by default.<br>You can change this in your preference file by setting ''prefs.preferMRCT'' (1 for MR and 2 for CT).');
     end
+end
+
+try
     ea_switchctmr(handles);
 end
 
@@ -81,7 +87,7 @@ if isfield(handles,'seeddefpopup')
     if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
         directory=uipatdir{1};
         [~,ptname]=fileparts(directory);
-        selectedparc='nan';        
+        selectedparc='nan';
         options=ea_handles2options(handles);
         options.prefs=ea_prefs;
         [mdl,sf]=ea_genmodlist([directory,filesep],selectedparc,options);
