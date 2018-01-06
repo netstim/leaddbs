@@ -412,7 +412,7 @@ else
                 suggestion = 'Peak 2';
             end
             
-            msg = sprintf(['Two possible marker directions have been identified:\nPeak 1 = ' num2str(rad2deg(angle(peak(1)))) ' ? (magenta) \nPeak 2 = ' num2str(rad2deg(angle(peak(2)))) ' ? (cyan)\nAutomatic determination suggests ' suggestion '. Please select most likely direction.']);
+            msg = sprintf(['Two possible marker directions have been identified:\nPeak 1 = ' num2str(rad2deg(angle(peak(1)))) ' deg (magenta) \nPeak 2 = ' num2str(rad2deg(angle(peak(2)))) ' deg (cyan)\nAutomatic determination suggests ' suggestion '. Please select most likely direction.']);
             choice = questdlg(msg,'Specify marker direction','Peak 1','Peak 2',suggestion);
             switch choice
                 case 'Peak 1'
@@ -428,10 +428,10 @@ else
         pitch = asin(unitvector_mm(2)/cos(yaw));
         
         if rad2deg(abs(pitch)) > 40
-            disp(['Warning: Pitch > 40? - Determining orientation might be inaccurate!'])
+            disp(['Warning: Pitch > 40 deg - Determining orientation might be inaccurate!'])
         end
         if rad2deg(abs(yaw)) > 40
-            disp(['Warning: Yaw > 40? - Determining orientation might be inaccurate!'])
+            disp(['Warning: Yaw > 40 deg - Determining orientation might be inaccurate!'])
         end
         
         %% correction for yaw and pitch to get rollangle for [0 0 1] lead 
@@ -486,18 +486,18 @@ else
         end
         fig(side).txt1 = uicontrol('style','text','units','pixels','Background','w',...
             'position',[650,650,150,75],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Artifact angle:\n' num2str(rad2deg(tempangle)) ' ?\nPrimary roll angle:\n' num2str(rad2deg(roll)) ' ?']));
+            'string',sprintf(['Artifact angle:\n' num2str(rad2deg(tempangle)) ' deg\nPrimary roll angle:\n' num2str(rad2deg(roll)) ' deg']));
         clear tempangle
         fig(side).txt2 = uicontrol('style','text','units','pixels','Background','w',...
             'position',[650,450,150,50],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Corrected roll angle:\n' num2str(rad2deg(roll1)) ' ?']));
+            'string',sprintf(['Corrected roll angle:\n' num2str(rad2deg(roll1)) ' deg']));
         
         fig(side).chk1 = uicontrol('style','checkbox','units','pixels',...
             'position',[650,425,150,25],'string','Accept','FontSize',12,'Background','w');
         
         fig(side).txt3 = uicontrol('style','text','units','pixels','Background','w',...
             'position',[650,225,150,50],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Corrected roll angle:\n' num2str(rad2deg(roll2)) ' ?']));
+            'string',sprintf(['Corrected roll angle:\n' num2str(rad2deg(roll2)) ' deg']));
         
         fig(side).chk2 = uicontrol('style','checkbox','units','pixels',...
             'position',[650,200,150,25],'string','Accept','FontSize',12,'Background','w');
@@ -633,16 +633,16 @@ else
             
             if ~checkbox1 && ~checkbox2
                 roll_y = roll;
-                disp(['Using roll angle defined by stereotactic marker: ' num2str(rad2deg(roll)) ' ?'])
+                disp(['Using roll angle defined by stereotactic marker: ' num2str(rad2deg(roll)) ' deg'])
             elseif checkbox1 && ~checkbox2
                 roll_y = roll1;
-                disp(['Using corrected roll angle defined by directional level 1: ' num2str(rad2deg(roll1)) ' ?'])
+                disp(['Using corrected roll angle defined by directional level 1: ' num2str(rad2deg(roll1)) ' deg'])
             elseif ~checkbox1 && checkbox2
                 roll_y = roll2;
-                disp(['Using corrected roll angle defined by directional level 2: ' num2str(rad2deg(roll2)) ' ?'])
+                disp(['Using corrected roll angle defined by directional level 2: ' num2str(rad2deg(roll2)) ' deg'])
             elseif checkbox1 && checkbox2
                 roll_y = mean([roll1 roll2]);
-                disp(['Using mean corrected roll angle defined by both directional levels: ' num2str(rad2deg(mean([roll1 roll2]))) ' ?'])
+                disp(['Using mean corrected roll angle defined by both directional levels: ' num2str(rad2deg(mean([roll1 roll2]))) ' deg'])
             end
             
             %% calculate y
@@ -691,7 +691,7 @@ else
             if markers(side).y(1) > markers(side).head(1) % negative 90 points to right, positive 90 points to left
                 roll_out = - roll_out;
             end
-            disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' ?, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])
+            disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' deg, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])
             %% methods dump:
 ea_methods(options,...
             ['Rotation of directional DBS leads was determined using the algorithm published by Sitz et al. 2017 as implemented in Lead-DBS software.'],...
