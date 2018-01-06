@@ -94,7 +94,7 @@ else
         tail_native = [reco.native.markers(side).tail 1]';
         CTname = find(ct.fname==filesep);
         CTname = ct.fname(CTname(end):end);
-        if strcmp(CTname,[filesep,options.prefs.rawctnii_unnormalized]) || strcmp(CTname,filesep,'postop_ct_resliced.nii')
+        if strcmp(CTname,[filesep,options.prefs.rawctnii_unnormalized]) || strcmp(CTname,[filesep,'postop_ct_resliced.nii'])
             % transform rpostop_ct -> postop_ct
             head_mm = (tmat_reg2org) * head_native;
             tail_mm = (tmat_reg2org) * tail_native;
