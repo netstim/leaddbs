@@ -3,6 +3,7 @@ function ea_mancor_updatescene(varargin)
 hobj=varargin{1};
 ev=varargin{2};
 mcfig=varargin{3};
+
 firstrun=getappdata(mcfig,'firstrun');
 contrast=getappdata(mcfig,'contrast');
 offset=getappdata(mcfig,'offset');
@@ -138,11 +139,18 @@ end
 [coords_mm,trajectory]=ea_resolvecoords(markers,options);
 
 %% plot main figure
+viewtext=getappdata(mcfig,'viewtext');
+delete(viewtext);
 delete(trajectory_plot);
 delete(spacetext);
 
-mainax=subplot(4,5,[2:4,7:9,12:14,17:19]); % main plot
-set(gca, 'LooseInset', [0,0,0,0]);
+mainax1=subplot(3,6,[2:3,8:9,14:15]); % main plot x
+%set(mainax1,'position',get(mainax1,'outerposition'));
+
+mainax2=subplot(3,6,[4:5,10:11,16:17]); % main plot y
+%set(mainax2,'position',get(mainax2,'outerposition'));
+
+set(mcfig,'CurrentAxes',mainax1);
 init=getappdata(mcfig,'init');
 if isempty(init)
     view(0,0);
@@ -154,7 +162,7 @@ end
 spacetext=getappdata(mcfig,'spacetext');
 delete(spacetext);
 captions=getappdata(mcfig,'captions');
-delete(captions);
+try delete(captions); end
 
 % Plot spacing distance info text and correct inhomogeneous spacings.
 %emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
@@ -227,9 +235,16 @@ end
 
 c=campos;
 midpt=midpt+(c-midpt)/50;
-
-spacetext=text(midpt(1),midpt(2),midpt(3)+20,sprintf(['Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm\nElectrode ',num2str(options.elside),'/',num2str(length(options.sides)),'\nRotation: ',num2str(rotation{options.elside}),' deg']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');
+ca=mcfig.CurrentAxes;
+f=subplot(3,6,18);
+axis off
+[~,elnum]=ismember(options.elside,options.sides);
+spacetext=text(0.5,0.5,0.5,{['Electrode ',num2str(elnum),' of ',num2str(length(options.sides))],...
+    ['Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm'],...
+    ['Electrode ',num2str(options.elside),'/',num2str(length(options.sides))],...
+    ['Rotation: ',num2str(rotation{options.elside}),' deg']},'Color','w','BackgroundColor','k','HorizontalAlignment','center','VerticalAlignment','middle');
 set(spacetext,'visible',ea_bool2onoff(options.visible));
+set(mcfig,'CurrentAxes',ca);
 set(mcfig,'name',[options.patientname,', Electrode ',num2str(options.elside),'/',num2str(length(options.sides)),', Electrode Spacing: ',sprintf('%.2f',memp_eldist),' mm.']);
 setappdata(mcfig,'spacetext',spacetext);
 
@@ -248,7 +263,7 @@ planecnt=1;
 
 %% plot slices in x and y planes
 for doxx=0:1
-    sample_width=20-doxx*5; % a bit smaller sample size in x direction to avoid overlap.
+    sample_width=10; % a bit smaller sample size in x direction to avoid overlap.
     meantrajectory=genhd_inside(trajectory{options.elside});
     clear imat
     % sample plane left and right from meantrajectory
@@ -368,8 +383,9 @@ wsize=10;
 cmap=[1,4,5,8];
 
 for subpl=getsuplots(1)
-    subplot(4,5,subpl*5)
-    
+    ca=subplot(3,6,subpl*6);
+    %set(ca,'position',get(ca,'outerposition'));
+
     slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
     slice=ea_contrast(slice,contrast,offset);
     switch options.modality
@@ -407,15 +423,17 @@ for subpl=getsuplots(1)
     hold off
     axis square
     axis off
+
     %caxis([c_lims(1) c_lims(2)]);
     caxis([0,1]);
+
 end
 setappdata(mcfig,'optoffsets',optoffsets);
 
 %% plot electrode model to the left side (static)
 legplot=getappdata(mcfig,'legplot');
 if isempty(legplot)
-    elax=subplot(4,5,[1,6,11,16]); % left electrode plot
+    elax=subplot(3,6,[1,7,13]); % left electrode plot
     axis off
     load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname])
     
@@ -456,14 +474,32 @@ end
 % try
 %     setappdata(resultfig,'realcoords_plot',realcoords_plot);
 % end
+set(mcfig,'CurrentAxes',mainax1);
+  %  axis equal
 
-set(mcfig,'CurrentAxes',mainax);
+        ea_view(nan,nan,'a');
+set(mcfig,'CurrentAxes',mainax2);
+axis off
+
+  %  axis equal
+
+        ea_view(nan,nan,'l');
+%mainax2=subplot(4,6,[4:5,10:11,16:17,22:23]); % main plot y
+delete(allchild(mainax2));
+copyobj(allchild(mainax1),mainax2);
 setappdata(mcfig,'planes',planes);
-
+set(mcfig,'CurrentAxes',mainax1);
+%viewtext(1)=text(midpt(1),midpt(2),midpt(3)+20,sprintf(['ANTERIOR VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');
+viewtext(1)=text(0.5,0.95,0.5,sprintf(['ANTERIOR VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center','Units','Normalized');
+set(mcfig,'CurrentAxes',mainax2);
+viewtext(2)=text(0.5,0.95,0.5,sprintf(['LEFT VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center','Units','Normalized');
+setappdata(mcfig,'viewtext',viewtext);
 %% outputs
 setappdata(mcfig,'elplot',elplot);
 setappdata(mcfig,'mplot',mplot);
 setappdata(mcfig,'movedel',movedel);
+      %  set(mainax1, 'LooseInset', [0,0,0,0]);
+      %  set(mainax2, 'LooseInset', [0,0,0,0]);
 
 if isfield(options,'hybridsave')
     options=rmfield(options,'hybridsave');
@@ -477,6 +513,7 @@ ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 % end
 setappdata(mcfig,'trajectory_plot',trajectory_plot);
 setappdata(mcfig,'planes',planes);
+%ea_tightfig(mcfig);
 
 function sp=getsuplots(sides)
 if isequal(sides,[1:2])
@@ -567,3 +604,15 @@ linecols=rgb2hsv(linecols);
 linecols(:,3)=linecols(:,3)/3;
 linecols=hsv2rgb(linecols);
 col=linecols(options.elside,:);
+
+function ea_view(hobj,ev,commnd)
+switch commnd
+    case 'p'
+        view(0,0);
+    case {'x','a'}
+        view(180,0);
+    case {'y','r'}
+        view(90,0);
+    case 'l'
+        view(270,0);
+end

@@ -47,6 +47,14 @@ ea_mancor_updatescene([],[],mcfig);
 ht=uitoolbar(mcfig);
 captions=getappdata(mcfig,'captions');
 c_step=2;
+
+prevlead=uipushtool(ht,'CData',ea_get_icn('prevlead'),'TooltipString','Next Electrode [>]','ClickedCallback',{@sequenceelectrode,mcfig,'prev'});
+nextlead=uipushtool(ht,'CData',ea_get_icn('nextlead'),'TooltipString','Previous Electrode [<]','ClickedCallback',{@sequenceelectrode,mcfig,'next'});
+
+
+hf=uitoggletool(ht,'CData',ea_get_icn('hidefid'),'TooltipString','Previous Electrode [<]','State','off','OnCallback',{@hidefid,mcfig},'OffCallback',{@showfid,mcfig});
+setappdata(mcfig,'hf',hf);
+
 minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus'),'TooltipString','Decrease Contrast [C]','ClickedCallback',{@setcontrast,'c',nan,mcfig});
 pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus'),'TooltipString','Increase Contrast [V]','ClickedCallback',{@setcontrast,'v',nan,mcfig});
 minusbrightness=uipushtool(ht,'CData',ea_get_icn('brightnessminus'),'TooltipString','Decrease Brightness [B]','ClickedCallback',{@setcontrast,'b',nan,mcfig});
@@ -68,11 +76,6 @@ eltog(2)=uitoggletool(ht,'CData',ea_get_icn('el3'),'TooltipString','Select proxi
 %     end
 % end
 
-rightview=uipushtool(ht,'CData',ea_get_icn('elR'),'TooltipString','Set view from Right [R]','ClickedCallback',{@ea_view,'r'});
-leftview=uipushtool(ht,'CData',ea_get_icn('elL'),'TooltipString','Set view from Left [L]','ClickedCallback',{@ea_view,'l'});
-antview=uipushtool(ht,'CData',ea_get_icn('elA'),'TooltipString','Set view from Anterior [A]','ClickedCallback',{@ea_view,'a'});
-postview=uipushtool(ht,'CData',ea_get_icn('elP'),'TooltipString','Set view from Posterior [P]','ClickedCallback',{@ea_view,'p'});
-
 %xview=uipushtool(ht,'CData',ea_get_icn('elX'),'TooltipString','Set view from X-Direction [X]','ClickedCallback',{@ea_view,'x'});
 %yview=uipushtool(ht,'CData',ea_get_icn('elY'),'TooltipString','Set view from Y-Direction [Y]','ClickedCallback',{@ea_view,'y'});
 
@@ -86,7 +89,7 @@ autorotation=uipushtool(ht,'CData',ea_get_icn('autorot'),'TooltipString','Detect
 rotationcw=uipushtool(ht,'CData',ea_get_icn('cw'),'TooltipString','Rotate lead clockwise','ClickedCallback',{@ea_rotate,'clockwise',mcfig});
 rotationccw=uipushtool(ht,'CData',ea_get_icn('ccw'),'TooltipString','Rotate lead counterclockwise','ClickedCallback',{@ea_rotate,'counterclockwise',mcfig});
 
-mni=uitoggletool(ht,'CData',ea_get_icn('mninative'),'TooltipString','Toggle MNI vs. Native space','State','off','OnCallback',{@ea_mancor_updatescene,mcfig,'mni'},'OffCallback',{@ea_mancor_updatescene,mcfig,'native'});
+%mni=uitoggletool(ht,'CData',ea_get_icn('mninative'),'TooltipString','Toggle MNI vs. Native space','State','off','OnCallback',{@ea_mancor_updatescene,mcfig,'mni'},'OffCallback',{@ea_mancor_updatescene,mcfig,'native'});
 
 finish_mc=uipushtool(ht,'CData',ea_get_icn('done'),'TooltipString','Finish manual corrections [space]','ClickedCallback',{@robotSpace});
 
@@ -285,28 +288,14 @@ switch lower(commnd)
             ea_mancor_updatescene([],[],mcfig);
         end
     case '<' % move to previous electrode in batch
-        [~,ix]=ismember(options.elside,options.sides);
-        if ix>1
-            setappdata(mcfig,'selectrode',0);
-            options.elside=options.sides(ix-1);
-            setappdata(mcfig,'options',options);
-            ea_mancor_updatescene([],[],mcfig);
-        end
+        sequenceelectrode([],[],mcfig,'prev');
     case '>' % move to next electrode in batch
-        [~,ix]=ismember(options.elside,options.sides);
-        if ix<length(options.sides)
-            setappdata(mcfig,'selectrode',0);
-            options.elside=options.sides(ix+1);
-            setappdata(mcfig,'options',options);
-            ea_mancor_updatescene([],[],mcfig);
-        end
-    case {'x','a','p','y','l','r'} % view angles.
-        %markers=getappdata(mcfig,'markers');
-        ea_view(nan,nan,commnd);
+        sequenceelectrode([],[],mcfig,'next')
+%     case {'x','a','p','y','l','r'} % view angles.
+%         %markers=getappdata(mcfig,'markers');
+%         ea_view(nan,nan,commnd);
     case 'h'
-        options.visible=~options.visible;
-        setappdata(mcfig,'options',options);
-        ea_mancor_updatescene([],[],mcfig);
+        showhidefid([],[],mcfig);
     case {'0','3','4','7'}
         switch lower(commnd)
             case {'0','4'}
@@ -492,7 +481,50 @@ coords_mm=ea_resolvecoords(markers,options);
 refreshdata(elplot,'caller')
 drawnow
 
+function showhidefid(m,n,mcfig)
+options=getappdata(mcfig,'options');
+if options.visible
+    hidefid([],[],mcfig);
+else
+    showfid([],[],mcfig);
+end
 
+function hidefid(m,n,mcfig)
+options=getappdata(mcfig,'options');
+options.visible=0;
+hf=getappdata(mcfig,'hf');
+setappdata(mcfig,'options',options);
+ea_mancor_updatescene([],[],mcfig);
+set(hf,'State','on');
+
+function showfid(m,n,mcfig)
+options=getappdata(mcfig,'options');
+options.visible=1;
+hf=getappdata(mcfig,'hf');
+setappdata(mcfig,'options',options);
+ea_mancor_updatescene([],[],mcfig);
+set(hf,'State','off');
+
+function sequenceelectrode(m,n,mcfig,what)
+options=getappdata(mcfig,'options');
+switch what
+    case 'next'
+        [~,ix]=ismember(options.elside,options.sides);
+        if ix<length(options.sides)
+            setappdata(mcfig,'selectrode',0);
+            options.elside=options.sides(ix+1);
+            setappdata(mcfig,'options',options);
+            ea_mancor_updatescene([],[],mcfig);
+        end
+    case 'prev'
+        [~,ix]=ismember(options.elside,options.sides);
+        if ix>1
+            setappdata(mcfig,'selectrode',0);
+            options.elside=options.sides(ix-1);
+            setappdata(mcfig,'options',options);
+            ea_mancor_updatescene([],[],mcfig);
+        end
+end
 
 %setappdata(mcfig,'trajectory',trajectory);
 
