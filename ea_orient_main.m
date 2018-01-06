@@ -2,7 +2,7 @@ function roll_out = ea_orient_main(options,supervised)
 %% Determine Orientation for BSCI directed leads from postoperative CT
 % has an unsupervised and a supervised version
 
-folder = [options.root options.patientname '\'];
+folder = [options.root options.patientname filesep];
 
 if ~strcmp(options.elmodel,'Boston Scientific Vercise Directed') || options.modality == 1 % check for electrode type and postoperative imaging
     msg = sprintf(['Automatic rotation detection works only for Boston Scientific Vercise Directed leads and postoperative CT images.']);
@@ -10,14 +10,14 @@ if ~strcmp(options.elmodel,'Boston Scientific Vercise Directed') || options.moda
     roll_out = [];
 else
     %% import CTs and choose which CT to use
-    if exist([folder 'rpostop_ct.nii']) == 2
-        ct_reg = ea_load_nii([folder 'rpostop_ct.nii']);
+    if exist([folder options.prefs.ctnii_coregistered]) == 2
+        ct_reg = ea_load_nii([folder options.prefs.ctnii_coregistered]);
         tmat_reg = ct_reg.mat;
     else
-        error(['No rpostop_ct.nii found in folder: ' folder])
+        error(['No coregistered CT (',options.prefs.ctnii_coregistered,') found in folder: ' folder])
     end
     
-    if exist([folder 'postop_ct.nii']) == 2
+    if exist([folder options.prefs.rawctnii_unnormalized]) == 2
         ct_org = ea_load_nii([folder 'postop_ct.nii']);
         tmat_org = ct_org.mat;
         % use postop_ct as default but rpostop_ct if postop_ct has shearing
@@ -28,7 +28,7 @@ else
                 case 'Reslice'
                     if ~exist([folder 'postop_ct_resliced.nii'])
                         disp(['Reslicing postop_ct:'])
-                        reslice_nii([folder 'postop_ct.nii'],[folder 'postop_ct_resliced.nii'])
+                        ea_reslice_nii([folder 'postop_ct.nii'],[folder 'postop_ct_resliced.nii'],[],1,0,1,[],[],0)
                     end
                     ct_org = ea_load_nii([folder 'postop_ct_resliced.nii']);
                     tmat_org = ct_org.mat;
@@ -92,9 +92,9 @@ else
         %% transform head/tail coordinates from native to image coordinates
         head_native = [reco.native.markers(side).head 1]';
         tail_native = [reco.native.markers(side).tail 1]';
-        CTname = find(ct.fname=='\');
+        CTname = find(ct.fname==filesep);
         CTname = ct.fname(CTname(end):end);
-        if strcmp(CTname,'\postop_ct.nii') || strcmp(CTname,'\postop_ct_resliced.nii')
+        if strcmp(CTname,[filesep,options.prefs.rawctnii_unnormalized]) || strcmp(CTname,filesep,'postop_ct_resliced.nii')
             % transform rpostop_ct -> postop_ct
             head_mm = (tmat_reg2org) * head_native;
             tail_mm = (tmat_reg2org) * tail_native;
@@ -102,7 +102,7 @@ else
             head_vx = inv(tmat_org) * head_mm;
             tail_vx = inv(tmat_org) * tail_mm;
             tmat_vx2mm = tmat_org;
-        elseif strcmp(CTname,'\rpostop_ct.nii')
+        elseif strcmp(CTname,filesep,prefs.ctnii_coregistered)
             head_mm = head_native;
             tail_mm = tail_native;
             % transfrom rpostop_ct mm -> voxel
@@ -412,7 +412,7 @@ else
                 suggestion = 'Peak 2';
             end
             
-            msg = sprintf(['Two possible marker directions have been identified:\nPeak 1 = ' num2str(rad2deg(angle(peak(1)))) ' ° (magenta) \nPeak 2 = ' num2str(rad2deg(angle(peak(2)))) ' ° (cyan)\nAutomatic determination suggests ' suggestion '. Please select most likely direction.']);
+            msg = sprintf(['Two possible marker directions have been identified:\nPeak 1 = ' num2str(rad2deg(angle(peak(1)))) ' ? (magenta) \nPeak 2 = ' num2str(rad2deg(angle(peak(2)))) ' ? (cyan)\nAutomatic determination suggests ' suggestion '. Please select most likely direction.']);
             choice = questdlg(msg,'Specify marker direction','Peak 1','Peak 2',suggestion);
             switch choice
                 case 'Peak 1'
@@ -428,10 +428,10 @@ else
         pitch = asin(unitvector_mm(2)/cos(yaw));
         
         if rad2deg(abs(pitch)) > 40
-            disp(['Warning: Pitch > 40° - Determining orientation might be inaccurate!'])
+            disp(['Warning: Pitch > 40? - Determining orientation might be inaccurate!'])
         end
         if rad2deg(abs(yaw)) > 40
-            disp(['Warning: Yaw > 40° - Determining orientation might be inaccurate!'])
+            disp(['Warning: Yaw > 40? - Determining orientation might be inaccurate!'])
         end
         
         %% correction for yaw and pitch to get rollangle for [0 0 1] lead 
@@ -486,18 +486,18 @@ else
         end
         fig(side).txt1 = uicontrol('style','text','units','pixels','Background','w',...
             'position',[650,650,150,75],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Artifact angle:\n' num2str(rad2deg(tempangle)) ' °\nPrimary roll angle:\n' num2str(rad2deg(roll)) ' °']));
+            'string',sprintf(['Artifact angle:\n' num2str(rad2deg(tempangle)) ' ?\nPrimary roll angle:\n' num2str(rad2deg(roll)) ' ?']));
         clear tempangle
         fig(side).txt2 = uicontrol('style','text','units','pixels','Background','w',...
             'position',[650,450,150,50],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Corrected roll angle:\n' num2str(rad2deg(roll1)) ' °']));
+            'string',sprintf(['Corrected roll angle:\n' num2str(rad2deg(roll1)) ' ?']));
         
         fig(side).chk1 = uicontrol('style','checkbox','units','pixels',...
             'position',[650,425,150,25],'string','Accept','FontSize',12,'Background','w');
         
         fig(side).txt3 = uicontrol('style','text','units','pixels','Background','w',...
             'position',[650,225,150,50],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Corrected roll angle:\n' num2str(rad2deg(roll2)) ' °']));
+            'string',sprintf(['Corrected roll angle:\n' num2str(rad2deg(roll2)) ' ?']));
         
         fig(side).chk2 = uicontrol('style','checkbox','units','pixels',...
             'position',[650,200,150,25],'string','Accept','FontSize',12,'Background','w');
@@ -633,16 +633,16 @@ else
             
             if ~checkbox1 && ~checkbox2
                 roll_y = roll;
-                disp(['Using roll angle defined by stereotactic marker: ' num2str(rad2deg(roll)) ' °'])
+                disp(['Using roll angle defined by stereotactic marker: ' num2str(rad2deg(roll)) ' ?'])
             elseif checkbox1 && ~checkbox2
                 roll_y = roll1;
-                disp(['Using corrected roll angle defined by directional level 1: ' num2str(rad2deg(roll1)) ' °'])
+                disp(['Using corrected roll angle defined by directional level 1: ' num2str(rad2deg(roll1)) ' ?'])
             elseif ~checkbox1 && checkbox2
                 roll_y = roll2;
-                disp(['Using corrected roll angle defined by directional level 2: ' num2str(rad2deg(roll2)) ' °'])
+                disp(['Using corrected roll angle defined by directional level 2: ' num2str(rad2deg(roll2)) ' ?'])
             elseif checkbox1 && checkbox2
                 roll_y = mean([roll1 roll2]);
-                disp(['Using mean corrected roll angle defined by both directional levels: ' num2str(rad2deg(mean([roll1 roll2]))) ' °'])
+                disp(['Using mean corrected roll angle defined by both directional levels: ' num2str(rad2deg(mean([roll1 roll2]))) ' ?'])
             end
             
             %% calculate y
@@ -691,7 +691,7 @@ else
             if markers(side).y(1) > markers(side).head(1) % negative 90 points to right, positive 90 points to left
                 roll_out = - roll_out;
             end
-            disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' °, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])
+            disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' ?, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])
             %% methods dump:
 ea_methods(options,...
             ['Rotation of directional DBS leads was determined using the algorithm published by Sitz et al. 2017 as implemented in LEAD-DBS software.'],...
