@@ -1,7 +1,6 @@
 function ea_warp_parcellation(ref_filename,b0rest,options)
 directory=[options.root,options.patientname,filesep];
 
-
 if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],'file')
     %% warp atlas into pre_tra-space:
     if ~exist([directory,'templates'],'dir')
@@ -10,8 +9,6 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
     if ~exist([directory,'templates',filesep,'labeling'],'dir')
         mkdir([directory,'templates',filesep,'labeling']);
     end
-
-
 
     whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
     switch whichnormmethod
@@ -67,12 +64,12 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'r',b0rest,'w',optio
     copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
     copyfile([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],...
         [directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii']);
-    
+
     ea_coreg2images(options,[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized],...
         [options.root,options.patientname,filesep,ref_filename],...
         [options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized],...
         {[directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii']},0,[],0);
-    
+
 % %     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[options.root,options.patientname,filesep,ref_filename,',1']};
 % %     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized,',1']};
 % %     matlabbatch{1}.spm.spatial.coreg.estwrite.other = {[directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii,1']};
@@ -87,7 +84,10 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'r',b0rest,'w',optio
 % %     spm_jobman('run',{matlabbatch});
 % %     clear matlabbatch
 
-ea_gencheckregpair([directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation],[options.root,options.patientname,filesep,reffn],[options.root,options.patientname,filesep,'checkreg',filesep,options.lc.general.parcellation,'2',reffn,'.png'])
-    delete([options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
-    delete([options.root,options.patientname,filesep,'r',reffn,'c',options.prefs.prenii_unnormalized]);
+    ea_gencheckregpair([directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation],...
+        [options.root,options.patientname,filesep,reffn],...
+        [options.root,options.patientname,filesep,'checkreg',filesep,options.lc.general.parcellation,'2',reffn,'.png']);
+
+    ea_delete([options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
+    ea_delete([options.root,options.patientname,filesep,'r',reffn,'c',options.prefs.prenii_unnormalized]);
 end

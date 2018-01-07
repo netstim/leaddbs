@@ -18,7 +18,7 @@ disp('Loading FTR-File.');
 [fibs,idx]=ea_loadfibertracts([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized]);
 
 %% create CM
-display('Initializing structural CM.');
+disp('Initializing structural CM.');
 
 aID = fopen([ea_space(options,'labeling'),options.lc.general.parcellation,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
@@ -51,7 +51,7 @@ for fiber=1:fibercount
         % locate the regions in the connectivity matrix (diagonal values are also set)
         conmesh=meshgrid(thisfibconnects,thisfibconnects);
         matindices=sub2ind(size(DTI_CM),conmesh,conmesh');
-        
+
         DTI_CM(matindices)=DTI_CM(matindices)+1;
         cnt=cnt+idx(fiber);
         ea_dispercent(fiber/fibercount);
