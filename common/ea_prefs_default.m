@@ -93,6 +93,7 @@ prefs.normalize.fsl.warpres=8; % Defines the warp resolution in FSL warps.
 prefs.normalize.spm.resolution=1; % Defines resolution in mm when using SPM normalization routines (New Segment, DARTEL, SHOOT).
 
 %% Reconstruction
+prefs.reco.mancoruse='rpostop'; % switch to 'postop' to use unresliced CT.
 prefs.reco.saveACPC=0; % also save reconstructions in AC/PC space
 
 %% Coregistration (CT/MR):

@@ -576,7 +576,7 @@ switch options.modality
             V=getappdata(mcfig,'VCTnative');
             if isempty(V)
                 options=ea_assignpretra(options);
-                if exist([options.root,options.patientname,filesep,stripext(options.prefs.rawctnii_unnormalized),'2',stripext(options.prefs.prenii_unnormalized),'_ants1.mat'],'file'); % use unresliced version and apply matrix in RAM
+                if strcmp(options.prefs.reco.mancoruse,'postop') && exist([options.root,options.patientname,filesep,stripext(options.prefs.rawctnii_unnormalized),'2',stripext(options.prefs.prenii_unnormalized),'_ants1.mat'],'file'); % use unresliced version and apply matrix in RAM
                     V=spm_vol([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized]);
                     load([options.root,options.patientname,filesep,stripext(options.prefs.rawctnii_unnormalized),'2',stripext(options.prefs.prenii_unnormalized),'_ants1.mat'])
                     mat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
