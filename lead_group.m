@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 22-Aug-2017 20:41:39
+% Last Modified by GUIDE v2.5 08-Jan-2018 17:03:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -868,8 +868,12 @@ vc_labels={};
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
         S.label=['gs_',M.guid];
+        try
         [ea_stats,usewhichstim]=ea_assignstimcnt(M.stats(pt).ea_stats,S);
-        for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).ft,2)
+        catch
+            ea_error(['DBS stats for patient ',M.patient.list{pt},' need to be calculated.']);
+        end
+        for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,1)
             for vat=1
                 if side==1 % right hemisphere
                     vicorr_right(ptcnt,vicnt)=vicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
@@ -1199,11 +1203,11 @@ for pt=selection
         for side=1:2
             setappdata(resultfig,'elstruct',M.elstruct(pt));
             setappdata(resultfig,'elspec',options.elspec);
- %           try 
+            try 
                 [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
-%            catch
-%                ea_error(['Error while creating VTA of ',M.patient.list{pt},'.']);
-%            end
+            catch
+                ea_error(['Error while creating VTA of ',M.patient.list{pt},'.']);
+            end
             stimparams(1,side).volume=volume;
         end
 
@@ -1957,3 +1961,4 @@ else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
 ea_busyaction('off',gcf,'group');
+
