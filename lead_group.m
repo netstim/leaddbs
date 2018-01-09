@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 08-Jan-2018 17:03:17
+% Last Modified by GUIDE v2.5 09-Jan-2018 11:23:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -522,7 +522,7 @@ function corrbutton_vta_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',gcf,'group');
 
-stats=preparedataanalysis(handles);
+stats=preparedataanalysis_vta(handles);
 
 
 assignin('base','stats',stats);
@@ -819,7 +819,7 @@ function ttestbutton_vta_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-stats=preparedataanalysis(handles);
+stats=preparedataanalysis_vta(handles);
 
 assignin('base','stats',stats);
 
@@ -848,7 +848,69 @@ end
 
 
 
-function [stats]=preparedataanalysis(handles)
+function [stats]=preparedataanalysis_ft(handles)
+
+M=getappdata(gcf,'M');
+
+
+%M.stats(get(handles.vilist,'Value'))
+
+% Get volume intersections:
+vicnt=1; ptcnt=1;
+
+howmanypts=length(get(handles.patientlist,'Value'));
+
+
+
+% Get fibercounts (here first ft is always right hemispheric, second always left hemispheric). There will always be two fts used.:
+howmanyfcs=length(get(handles.fclist,'Value'));
+
+fccnt=1; ptcnt=1;
+fccorr_right=zeros(howmanypts,howmanyfcs);
+nfccorr_right=zeros(howmanypts,howmanyfcs);
+fccorr_left=zeros(howmanypts,howmanyfcs);
+nfccorr_left=zeros(howmanypts,howmanyfcs);
+fccorr_both=zeros(howmanypts,howmanyfcs);
+nfccorr_both=zeros(howmanypts,howmanyfcs);
+fc_labels={};
+for fc=get(handles.fclist,'Value') % get volume interactions for each patient from stats
+    for pt=get(handles.patientlist,'Value')
+        usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis!
+        fccorr_right(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).fibercounts{1}(fc);
+        nfccorr_right(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).nfibercounts{1}(fc);
+        fccorr_left(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).fibercounts{1}(fc);
+        nfccorr_left(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).nfibercounts{1}(fc);
+        fccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).fibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).fibercounts{1}(fc);
+        nfccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).nfibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).nfibercounts{1}(fc);
+        ptcnt=ptcnt+1;
+    end
+    ptcnt=1;
+    fccnt=fccnt+1;
+    fc_labels{end+1}=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).labels{1}{fc};
+end
+
+% prepare outputs:
+
+fccorr.both=fccorr_both;
+fccorr.nboth=nfccorr_both;
+fccorr.right=fccorr_right;
+fccorr.nright=nfccorr_right;
+fccorr.left=fccorr_left;
+fccorr.nleft=nfccorr_left;
+
+% clinical vector:
+corrcl=M.clinical.vars{get(handles.clinicallist,'Value')};
+
+corrcl=corrcl(get(handles.patientlist,'Value'),:);
+
+clinstrs=get(handles.clinicallist,'String');
+fc_labels=[clinstrs(get(handles.clinicallist,'Value')),fc_labels]; % add name of clinical vector to labels
+
+
+stats.corrcl=corrcl;
+stats.fccorr=fccorr;
+stats.fc_labels=fc_labels;
+function [stats]=preparedataanalysis_vta(handles)
 
 M=getappdata(gcf,'M');
 
@@ -904,33 +966,6 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
 end
 
 
-% Get fibercounts (here first ft is always right hemispheric, second always left hemispheric). There will always be two fts used.:
-howmanyfcs=length(get(handles.fclist,'Value'));
-
-fccnt=1; ptcnt=1;
-fccorr_right=zeros(howmanypts,howmanyfcs);
-nfccorr_right=zeros(howmanypts,howmanyfcs);
-fccorr_left=zeros(howmanypts,howmanyfcs);
-nfccorr_left=zeros(howmanypts,howmanyfcs);
-fccorr_both=zeros(howmanypts,howmanyfcs);
-nfccorr_both=zeros(howmanypts,howmanyfcs);
-fc_labels={};
-for fc=get(handles.fclist,'Value') % get volume interactions for each patient from stats
-    for pt=get(handles.patientlist,'Value')
-        usewhichstim=length(M.stats(pt).ea_stats.stimulation); % always use last analysis!
-        fccorr_right(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).fibercounts{1}(fc);
-        nfccorr_right(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).nfibercounts{1}(fc);
-        fccorr_left(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).fibercounts{1}(fc);
-        nfccorr_left(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).nfibercounts{1}(fc);
-        fccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).fibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).fibercounts{1}(fc);
-        nfccorr_both(ptcnt,fccnt)=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).nfibercounts{1}(fc)+M.stats(pt).ea_stats.stimulation(usewhichstim).ft(2).nfibercounts{1}(fc);
-        ptcnt=ptcnt+1;
-    end
-    ptcnt=1;
-    fccnt=fccnt+1;
-    fc_labels{end+1}=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).labels{1}{fc};
-end
-
 % prepare outputs:
 
 vicorr.both=vicorr_both;
@@ -939,12 +974,6 @@ vicorr.right=vicorr_right;
 vicorr.nboth=nvicorr_both;
 vicorr.nleft=nvicorr_left;
 vicorr.nright=nvicorr_right;
-fccorr.both=fccorr_both;
-fccorr.nboth=nfccorr_both;
-fccorr.right=fccorr_right;
-fccorr.nright=nfccorr_right;
-fccorr.left=fccorr_left;
-fccorr.nleft=nfccorr_left;
 
 % clinical vector:
 corrcl=M.clinical.vars{get(handles.clinicallist,'Value')};
@@ -953,14 +982,10 @@ corrcl=corrcl(get(handles.patientlist,'Value'),:);
 
 clinstrs=get(handles.clinicallist,'String');
 vc_labels=[clinstrs(get(handles.clinicallist,'Value')),vc_labels]; % add name of clinical vector to labels
-fc_labels=[clinstrs(get(handles.clinicallist,'Value')),fc_labels]; % add name of clinical vector to labels
-
 
 stats.corrcl=corrcl;
 stats.vicorr=vicorr;
-stats.fccorr=fccorr;
 stats.vc_labels=vc_labels;
-stats.fc_labels=fc_labels;
 
 
 % --- Executes on button press in reviewvarbutton.
@@ -1902,7 +1927,7 @@ function ttestbutton_ft_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-stats=preparedataanalysis(handles);
+stats=preparedataanalysis_ft(handles);
 
 assignin('base','stats',stats);
 
@@ -1923,7 +1948,7 @@ function corrbutton_ft_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',gcf,'group');
-stats=preparedataanalysis(handles);
+stats=preparedataanalysis_ft(handles);
 assignin('base','stats',stats);
 
 % perform correlations:
@@ -1961,4 +1986,5 @@ else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
 ea_busyaction('off',gcf,'group');
+
 
