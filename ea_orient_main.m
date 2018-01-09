@@ -65,8 +65,8 @@ else
         if strcmp(coregct_method_applied{1},'ea_coregctmri_ants') || strcmp(coregct_method_applied{1},'ea_coregctmri_ants_refine')
             reg2org = load([folder 'anat_t12postop_ct_ants1.mat']);
         elseif strcmp(coregct_method_applied{1},'ea_coregctmri_brainsfit')
-            reg2org.fixed = h5read([folder 'postop_ct2anat_t1_brainsfit_Inverse.h5','/TransformGroup/0/TranformFixedParameters']);
-            reg2org.AffineTransform_float_3_3 = h5read([folder 'postop_ct2anat_t1_brainsfit_Inverse.h5','/TransformGroup/0/TranformParameters']);
+            reg2org.fixed = h5read([folder 'postop_ct2anat_t1_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformFixedParameters');
+            reg2org.AffineTransform_float_3_3 = h5read([folder 'postop_ct2anat_t1_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformParameters');
         end
         tmat_reg2org =ea_antsmat2mat(reg2org.AffineTransform_float_3_3,reg2org.fixed);
     catch

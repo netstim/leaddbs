@@ -48,11 +48,11 @@ ht=uitoolbar(mcfig);
 captions=getappdata(mcfig,'captions');
 c_step=2;
 
-prevlead=uipushtool(ht,'CData',ea_get_icn('prevlead'),'TooltipString','Next Electrode [>]','ClickedCallback',{@sequenceelectrode,mcfig,'prev'});
-nextlead=uipushtool(ht,'CData',ea_get_icn('nextlead'),'TooltipString','Previous Electrode [<]','ClickedCallback',{@sequenceelectrode,mcfig,'next'});
+prevlead=uipushtool(ht,'CData',ea_get_icn('prevlead'),'TooltipString','Previous Electrode [<]','ClickedCallback',{@sequenceelectrode,mcfig,'prev'});
+nextlead=uipushtool(ht,'CData',ea_get_icn('nextlead'),'TooltipString','Next Electrode [>]','ClickedCallback',{@sequenceelectrode,mcfig,'next'});
 
 
-hf=uitoggletool(ht,'CData',ea_get_icn('hidefid'),'TooltipString','Previous Electrode [<]','State','off','OnCallback',{@hidefid,mcfig},'OffCallback',{@showfid,mcfig});
+hf=uitoggletool(ht,'CData',ea_get_icn('hidefid'),'TooltipString','Show/Hide Fiducials','State','off','OnCallback',{@hidefid,mcfig},'OffCallback',{@showfid,mcfig});
 setappdata(mcfig,'hf',hf);
 
 minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus'),'TooltipString','Decrease Contrast [C]','ClickedCallback',{@setcontrast,'c',nan,mcfig});
