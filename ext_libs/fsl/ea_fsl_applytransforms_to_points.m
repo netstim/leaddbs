@@ -26,13 +26,13 @@ if inversemap
     src = [ea_space,'t2.nii'];
     dest = [directory, options.prefs.prenii_unnormalized];
     if isempty(transform)
-        transform = [directory, warpprefix, 'WarpFiled.nii'];
+        transform = [directory, warpprefix, 'WarpField.nii'];
     end
 else
     src = [directory, options.prefs.prenii_unnormalized];
     dest = [ea_space,'t2.nii'];
     if isempty(transform)
-        transform = [directory, warpprefix, 'InverseWarpFiled.nii'];
+        transform = [directory, warpprefix, 'InverseWarpField.nii'];
     end
 end
 
