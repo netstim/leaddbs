@@ -194,6 +194,5 @@ prefs.ls.dir=''; % set path to lead server here (for web export)
 prefs.ixi.dir=''; % set path to ixi database here
 prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in folder.
 
-%% Slicer 3D executable path:
-prefs.slicer.dir=''; % add path to executable Slicer app
-
+%% 3D Slicer executable path:
+prefs.slicer.dir='';

@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 28-Dec-2017 08:46:14
+% Last Modified by GUIDE v2.5 10-Jan-2018 21:09:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1617,9 +1617,9 @@ if isfield(handles,'atlassetpopup') % not present in connectome mapper
     ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
 end
 
-% --- Executes on button press in runslicer_unnormalised.
-function runslicer_unnormalised_Callback(hObject, eventdata, handles)
-% hObject    handle to runslicer_unnormalised (see GCBO)
+% --- Executes on button press in runslicer_original.
+function runslicer_original_Callback(hObject, eventdata, handles)
+% hObject    handle to runslicer_original (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options = ea_handles2options(handles);
@@ -1639,9 +1639,9 @@ options.leadprod = 'dbs';
 ea_runslicer(options, 2);
 
 
-% --- Executes on button press in slicer_normalised.
-function slicer_normalised_Callback(hObject, eventdata, handles)
-% hObject    handle to slicer_normalised (see GCBO)
+% --- Executes on button press in slicer_normalized.
+function slicer_normalized_Callback(hObject, eventdata, handles)
+% hObject    handle to slicer_normalized (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options = ea_handles2options(handles);

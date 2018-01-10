@@ -1,9 +1,9 @@
 %% Function to launch slicer and load *.nii files
-%  Last Revision: 7/12/2017 
+%  Last Revision: 7/12/2017
 %  Thushara Perera (c) 2017 Bionics Institute
 %  Input:
 %   - lead dbs options struct
-%   - task integer ID to tell function which files to open 
+%   - task integer ID to tell function which files to open
 %     (see inline comments for more detail)
 %  Output:
 %   - relevant slicer scene (mrml) file will be saved in patient folder
@@ -11,34 +11,62 @@
 %
 %  Things to note: user must set the path of the slicer executable. It would
 %  be nice if there was an easy method to determine the path automatically.
-%  
-%% 
+%
+%%
 function ea_runslicer(options, task)
     options.prefs = ea_prefs('');
-    slicer_path = options.prefs.slicer.dir;
-    [pth,fn,ext]=fileparts(slicer_path);
-    if strcmp(ext,'.app') && ismac
-        slicer_path=fullfile(slicer_path,'Contents','MacOS','Slicer');
+
+    if ~isfield(options.prefs, 'slicer')
+        warning(sprintf('3D Slicer path not set!\nPlease set ''prefs.slicer.dir'' in your preference file.'))
     end
+
+    slicer_path = options.prefs.slicer.dir;
+
+    % 'prefs.slicer.dir' can be either the folder containing Slicer executable or
+    % the full path to the excutable itself
+    if ismac
+        if exist(slicer_path) == 7 && regexp(slicer_path, 'Slicer\.app/?$')
+            SLICER = fullfile(slicer_path,'Contents','MacOS','Slicer');
+        elseif exist(slicer_path) == 2 && regexp(slicer_path, 'Slicer$')
+            SLICER = slicer_path;
+        else
+            warning('Slicer executable not found!');
+            return;
+        end
+    elseif isunix
+        if exist(slicer_path) == 7 && exist(fullfile(slicer_path, 'Slicer')) == 2
+            SLICER = fullfile(slicer_path, 'Slicer');
+        elseif exist(slicer_path) == 2 && regexp(slicer_path, 'Slicer$')
+            SLICER = slicer_path;
+        else
+            warning('Slicer executable not found!');
+            return;
+        end
+    elseif ispc
+        if exist(slicer_path) == 7 && exist(fullfile(slicer_path, 'Slicer.exe')) == 2
+            SLICER = fullfile(slicer_path, 'Slicer.exe');
+        elseif exist(slicer_path) == 2 && regexp(slicer_path, 'Slicer\.exe$')
+            SLICER = slicer_path;
+        else
+            warning('Slicer executable not found!');
+            return;
+        end
+    end
+
     lead_path = options.earoot;
     slicer_mrml = 'none';
-    
-    if (~exist(slicer_path, 'file'))
-        warning('Path to Slicer executable not found');
-        return;
-    end
-    
+
     if (isempty(options.uipatdirs))
-        warning('No patient selected');
+        warning('No patient selected!');
         return;
     else
         patient_path = options.uipatdirs{1};
     end
-    
+
     switch task
-        case 1 % show unnormalised
+        case 1 % show original volumes
             nfiles = 0;
-            slicer_mrml = 'Slicer_unnormalised.mrml';
+            slicer_mrml = 'Slicer_original.mrml';
             allfiles = {options.prefs.tranii_unnormalized
                 options.prefs.sagnii_unnormalized
                 options.prefs.cornii_unnormalized
@@ -46,7 +74,7 @@ function ea_runslicer(options, task)
                 options.prefs.prenii_unnormalized
                 options.prefs.prenii_unnormalized_t1
                 options.prefs.prenii_unnormalized_pd};
-            
+
             for i=1:length(allfiles)
                 if (exist([patient_path, filesep, allfiles{i}], 'file') == 2)
                     nfiles = nfiles + 1;
@@ -54,7 +82,7 @@ function ea_runslicer(options, task)
                     filepaths{nfiles} = [patient_path, filesep, allfiles{i}];
                 end
             end
-            
+
         case 2 % show data after co-registration
             nfiles = 0;
             slicer_mrml = 'Slicer_coregistered.mrml';
@@ -66,7 +94,7 @@ function ea_runslicer(options, task)
                 options.prefs.prenii_unnormalized_t1
                 options.prefs.prenii_unnormalized_pd
                 };
-            
+
             for i=1:length(allfiles)
                 if (exist([patient_path, filesep, allfiles{i}], 'file') == 2)
                     nfiles = nfiles + 1;
@@ -74,10 +102,10 @@ function ea_runslicer(options, task)
                     filepaths{nfiles} = [patient_path, filesep, allfiles{i}];
                 end
             end
-            
-        case 3 % show data after normalisation
+
+        case 3 % show data after normalization
             nfiles = 0;
-            slicer_mrml = 'Slicer_normalised.mrml';
+            slicer_mrml = 'Slicer_normalized.mrml';
             allfiles = {
                 't2.nii'
                 'glanat_t2.nii'   % could not find pref for this in options.prefs.gctnii
@@ -87,14 +115,14 @@ function ea_runslicer(options, task)
                 options.prefs.gcornii
                 options.prefs.gsagnii
                 };
-            
+
             if (exist(allfiles{1}, 'file') == 2) %special case for template
                 nfiles = nfiles + 1;
                 filenames{nfiles} = allfiles{1};
                  % is there a better way to get the MNI template?
                 filepaths{nfiles} = [lead_path, 'templates', filesep, 'space', filesep, 'MNI_ICBM_2009b_NLIN_ASYM', filesep, allfiles{1}];
             end
-            
+
             for i=2:length(allfiles)
                 if (exist([patient_path, filesep, allfiles{i}], 'file') == 2)
                     nfiles = nfiles + 1;
@@ -102,7 +130,7 @@ function ea_runslicer(options, task)
                     filepaths{nfiles} = [patient_path, filesep, allfiles{i}];
                 end
             end
-            
+
         otherwise
             warning('Task ID not recognised');
             return;
@@ -114,7 +142,7 @@ function ea_runslicer(options, task)
         warning('Need at least one volume image to load into slicer');
         return;
     end
-    
+
     fid = fopen(scene_path, 'w');
     fprintf(fid, [GetBeginning(), '\r\n\r\n']);
     for i=1:nfiles
@@ -122,12 +150,12 @@ function ea_runslicer(options, task)
     end
     fprintf(fid, GetEnding());
     fclose(fid);
-    
+
     fid = fopen(script_path,'w'); % write temp python script to load volumes
-    fprintf(fid, ['slicer.util.loadScene("', strrep(scene_path, '\', '\\'), '")\r\n']); 
+    fprintf(fid, ['slicer.util.loadScene("', strrep(scene_path, '\', '\\'), '")\r\n']);
     fclose(fid);
     disp('Loading up 3D Slicer...');
-    system(['"', slicer_path, '" --no-splash --python-script "', script_path, '" &']); 
+    system(['"', SLICER, '" --no-splash --python-script "', script_path, '" &']);
     % the trailing '&' returns control back to matlab without waiting for slicer to close
 end
 
@@ -157,7 +185,7 @@ function txt = GetFileXML(index, filepath, name)
         'userTags="" ></Volume>'];
 
     txt = [vdisplay, vstorage, volume];
- 
+
 end
 
 function txt = GetBeginning()
