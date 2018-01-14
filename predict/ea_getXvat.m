@@ -24,12 +24,11 @@ for pt=1:length(M.patient.list)
     if bihemispheric
         nii=ea_load_nii([options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_rh.nii']);
         XR(cnt,:)=nii.img(:);
-        XR(cnt,:)=double(logical(XR(cnt,:)));
+        XR(cnt,:)=logical(XR(cnt,:));
     else
         nii=ea_load_nii([options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_rh_flipped.nii']);
         X(cnt,:)=X(cnt,:)+nii.img(:)';
     end
-    X(cnt,:)=double(logical(X(cnt,:)));
-    
+    X(cnt,:)=logical(X(cnt,:));    
     cnt=cnt+1;
 end
