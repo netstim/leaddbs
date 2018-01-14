@@ -2,7 +2,6 @@ function [X,XR]=ea_getXvat(M,options)
 XR=nan;
 
 selectedregressor=M.clinical.vars{M.ui.clinicallist};
-selectedregressor=selectedregressor(M.ui.listselect,:);
 if size(selectedregressor,2)==1
     bihemispheric=0;
 elseif size(selectedregressor,2)==2
@@ -13,10 +12,10 @@ end
 
 cnt=1;
 
-for pt=M.ui.listselect
+for pt=1:length(M.patient.list)
     nii=ea_load_nii([options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_lh.nii']);
     if ~exist('X','var')
-        X=nan(length(M.ui.listselect),numel(nii.img));
+        X=nan(length(M.patient.list),numel(nii.img));
         if bihemispheric
             XR=X;
         end
