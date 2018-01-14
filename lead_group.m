@@ -932,9 +932,7 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
         S.label=['gs_',M.guid];
         try
         [ea_stats,usewhichstim]=ea_assignstimcnt(M.stats(pt).ea_stats,S);
-        catch
-            ea_error(['DBS stats for patient ',M.patient.list{pt},' need to be calculated.']);
-        end
+       
         for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,1)
             for vat=1
                 if side==1 % right hemisphere
@@ -950,7 +948,9 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
 
             end
         end
-
+        catch
+            ea_error(['DBS stats for patient ',M.patient.list{pt},' need to be calculated.']);
+        end
 
         % check if all three values have been served. if not, set to zero
         % (e.g. if there was no stimulation at all on one hemisphere, this

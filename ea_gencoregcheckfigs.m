@@ -38,12 +38,7 @@ switch options.modality
 end
 fis2anat=[fis2anat,oanat'];
 
-basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
-if ispc
-    SLICER = ea_path_helper([basedir, 'slicer.exe']);
-else
-    SLICER = [basedir, 'slicer.', computer('arch')];
-end
+
 cnt=1;
 try
     nm=ea_cleanmethodname(['_',ea_whichnormmethod(directory)]);
