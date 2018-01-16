@@ -24,6 +24,10 @@ mmvx=tra_nii.mat\mmpt;
 startslice=round(mmvx(3));
 clear mmpt mmvx
 
+if side>2 % always go for manual entrypoint in case of >second electrode.
+    options.entrypoint='Manual';
+end
+
 flipside=1+(tra_nii.mat(1)<0);
 
 if ~refine % if this is not a refine-run but an initial run, mask of first slice has to be defined heuristically.
@@ -103,6 +107,12 @@ if side==1
 elseif side==2
     if options.verbose>1
         progressfig=figure('name','Finding left electrode','NumberTitle','off','Menubar','none','ToolBar','none');
+        set(gcf,'color','w');
+        axis off;
+    end
+else
+    if options.verbose>1
+        progressfig=figure('name',['Finding electrode number ',num2str(side)],'NumberTitle','off','Menubar','none','ToolBar','none');
         set(gcf,'color','w');
         axis off;
     end
