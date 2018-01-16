@@ -3,9 +3,9 @@ function ea_exportvatmapping(M,options,handles)
 selectedregressor=M.clinical.vars{M.ui.clinicallist};
 selectedregressor=selectedregressor(M.ui.listselect,:);
 if size(selectedregressor,2)==1
-    bh='lateralized';
-elseif size(selectedregressor,2)==2
     bh='global';
+elseif size(selectedregressor,2)==2
+    bh='lateralized';
 else
     ea_error('Please select a regressor with entries for each hemisphere or each patient to perform this action.');
 end
@@ -19,14 +19,15 @@ hshid=ea_datahash(M.ui.listselect);
 
 if ~exist([options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_',M.clinical.labels{M.ui.clinicallist},'_mean_',hshid,'.nii'],'file') % file already generated
     if ~exist([options.root,options.patientname,filesep,'statvat_results',filesep,'X_',bh,'.mat'],'file')
-        [X,XR]=ea_getXvat(M,options);
-        keyboard
-        save([options.root,options.patientname,filesep,'statvat_results',filesep,'X_',bh,'.mat'],'X','XR');
+        [X,XR,nii]=ea_getXvat(M,options);
+        
+        save([options.root,options.patientname,filesep,'statvat_results',filesep,'X_',bh,'.mat'],'X','XR','nii','-v7.3');
     else
         load([options.root,options.patientname,filesep,'statvat_results',filesep,'X_',bh,'.mat']);
     end
     
-    [T,Mn,Medn,N,nii]=ea_getMvat(M,{X,XR});
+    [T,Mn,Medn,N]=ea_getMvat(M,{X,XR});
+    
     % write out results
     ea_writeMvat(M,nii,options,{T,Mn,Medn,N},{'T','mean','median','N'}); 
 end

@@ -1,4 +1,4 @@
-function [X,XR]=ea_getXvat(M,options)
+function [X,XR,nii]=ea_getXvat(M,options)
 XR=nan;
 
 selectedregressor=M.clinical.vars{M.ui.clinicallist};
@@ -32,3 +32,4 @@ for pt=1:length(M.patient.list)
     X(cnt,:)=logical(X(cnt,:));    
     cnt=cnt+1;
 end
+nii.dt=[8,0];
