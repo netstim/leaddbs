@@ -203,10 +203,12 @@ if ~exist([directory,'scrf',filesep,options.prefs.prenii_unnormalized],'file')
     delete([directory,'scrf',filesep,'bb.nii']);
 end
 % apply tonemapping if needed
-if ~exist([directory,'tp_',options.prefs.ctnii_coregistered],'file') && exist([directory,options.prefs.ctnii_coregistered],'file')
-    ea_tonemapct_file(options,'native');
+if strcmp(options.prefs.scrf.tonemap,'tp_')
+    if ~exist([directory,options.prefs.scrf.tonemap,options.prefs.ctnii_coregistered],'file') && exist([directory,options.prefs.ctnii_coregistered],'file')
+        ea_tonemapct_file(options,'native');
+    end
 end
-fis={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,['tp_',options.prefs.ctnii_coregistered]};
+fis={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,[options.prefs.scrf.tonemap,options.prefs.ctnii_coregistered]};
 for fi=1:length(fis)
     if exist([directory,fis{fi}],'file')
         copyfile([directory,fis{fi}],[directory,'scrf',filesep,fis{fi}])
@@ -341,8 +343,8 @@ switch options.modality
 
         ea_write_nii(nii);
     case 2
-        otherfiles={[directory,'scrf',filesep,'tp_',options.prefs.ctnii_coregistered]};
-        copyfile([directory,'scrf',filesep,'tp_',options.prefs.ctnii_coregistered],[directory,'scrf',filesep,'movim.nii']);
+        otherfiles={[directory,'scrf',filesep,options.prefs.scrf.tonemap,options.prefs.ctnii_coregistered]};
+        copyfile([directory,'scrf',filesep,options.prefs.scrf.tonemap,options.prefs.ctnii_coregistered],[directory,'scrf',filesep,'movim.nii']);
 end
 
 % --- Executes on button press in savebutn.

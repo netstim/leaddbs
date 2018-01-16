@@ -105,6 +105,7 @@ prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregis
 
 %% Subcortical refine (Post to Pre):
 prefs.scrf.auto='mask1'; % can be 'off' to not perform automatic subcortical refine, 'nomask' to just use cropped image, 'mask1' to use Schoenecker mask 1 or 'mask2' to use both Schoenecker masks.
+prefs.scrf.tonemap='tp_'; % can set to '' if want to use non-tonemapped CTs for brainshift correction (default = 'tp_'). 
 
 %% Atlas-Sets:
 prefs.atlases.default='DISTAL Minimal (Ewert 2017)';

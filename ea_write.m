@@ -1,11 +1,5 @@
 function ea_write(options)
 
-if options.scrf
-    if ~exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file') || options.overwriteapproved
-        ea_subcorticalrefine(options);
-    end
-end
-
 try
     ea_updatemodel(options);
 end

@@ -191,7 +191,13 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         ea_checkcoreg(options);
 
     end
-
+    
+    if options.scrf
+        if ~exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file') || options.overwriteapproved
+            ea_subcorticalrefine(options);
+        end
+    end
+    
     if options.doreconstruction
         wasnative=options.native;
         poptions=ea_checkmanapproved(options);

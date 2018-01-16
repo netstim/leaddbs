@@ -93,7 +93,7 @@ for atlas=1:length(atlases.names)
 
                 maxcolor=64;
                 try
-                    jetlist=options.colormap;
+                    jetlist=atlases.colormap;
                 catch
                     try
                         jetlist=atlases.colormap;
@@ -105,7 +105,7 @@ for atlas=1:length(atlases.names)
                         end
                     end
                 end
-                jetlist=jet;
+                %jetlist=jet;
                 atlases.colormap=jetlist;
                 if round(atlases.colors(atlas))==0 % rounding error for large atlases.
                     atlases.colors(atlas)=1;
