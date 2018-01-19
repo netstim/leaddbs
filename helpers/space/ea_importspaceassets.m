@@ -3,7 +3,7 @@ function ea_importspaceassets(~,~,fromspace,what,infname,outfname)
 
 if strcmp(what,'custom')
     [infi,inpth]=uigetfile('*.nii','Choose file to warp...');
-    infname=fullfile(inpth,infi);   
+    infname=fullfile(inpth,infi);
 end
 
 ea_genwarp2space(fromspace);
@@ -15,10 +15,10 @@ switch what
         ea_warpatlasassets(fromspace);
     case 'atlases'
         ea_warpatlasassets(fromspace);
-        
+
     case 'labeling'
         ea_warplabelassets(fromspace);
-        
+
     case 'custom'
         ea_warpfilefromspace(fromspace,infname);
 
@@ -30,7 +30,7 @@ end
 function ea_warplabelassets(fromspace)
 labelinginotherspace=[ea_getearoot,'templates',filesep,'space',filesep,fromspace,filesep,'labeling',filesep];
 if exist(labelinginotherspace,'dir')
-   copyfile(fileparts(labelinginotherspace),[ea_space,fromspace,filesep,'labeling']); 
+   copyfile(fileparts(labelinginotherspace),[ea_space,fromspace,filesep,'labeling']);
 else
     disp('No whole-brain parcellations found.')
     return
@@ -62,7 +62,7 @@ for p=1:length(parcellation)
        end
     movefile([wlabeling,parcellation{p},'.txt'],[ea_space([],'labeling'),parcellation{p},' [imported from ',fromspace,']','.txt']);
 
-    
+
 end
 
 
@@ -111,9 +111,9 @@ for atlasset=1:length(asc)
         rmdir([ea_space,fromspace,filesep,asc{atlasset}],'s');
         continue
     end
-    
+
     atlroot=[ea_space,fromspace,filesep,asc{atlasset},filesep];
-    
+
     load([atlroot,'atlas_index.mat'])
     for atlas=1:length(atlases.names)
         [~,~,ext]=fileparts(atlases.names{atlas});
@@ -122,7 +122,7 @@ for atlasset=1:length(asc)
         else
             wasgzip=0;
         end
-        
+
         switch atlases.types(atlas)
             case 1 % right hemispheric atlas.
                 nii{1}=[atlroot,'rh',filesep,atlases.names{atlas}];
@@ -133,11 +133,11 @@ for atlasset=1:length(asc)
                 nii{2}=[atlroot,'rh',filesep,atlases.names{atlas}];
             case 4 % mixed atlas (one file with both sides information).
                 nii{1}=[atlroot,'mixed',filesep,atlases.names{atlas}];
-                
+
             case 5 % midline atlas (one file with both sides information.
                 nii{1}=[atlroot,'midline',filesep,atlases.names{atlas}];
         end
-        
+
         for n=1:length(nii)
             if wasgzip
                 if ~strcmp(nii{n}(end-2:end),'.gz')
@@ -161,10 +161,10 @@ for atlasset=1:length(asc)
     % finally rebuild index:
     % and move to atlases dir
     delete([atlroot,'atlas_index.mat']);
-    
+
     movefile(atlroot,[ea_space([],'atlases'),asc{atlasset},' [imported from ',fromspace,']']);
     options.atlasset=[asc{atlasset},' [imported from ',fromspace,']'];
-    ea_genatlastable([],fileparts([ea_space([],'atlases')]),options);
-    
-    
+    ea_genatlastable([],ea_space([],'atlases'),options);
+
+
 end

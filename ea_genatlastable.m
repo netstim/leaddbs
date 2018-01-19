@@ -16,6 +16,9 @@ function atlases=ea_genatlastable(varargin)
 
 atlases=varargin{1};
 root=varargin{2};
+if strcmp(root(end), filesep)
+    root = fileparts(root);
+end
 
 options=varargin{3};
 if nargin==4

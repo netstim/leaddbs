@@ -44,10 +44,10 @@ for nativemni=nm % switch between native and mni space atlases.
     set(0,'CurrentFigure',resultfig)
 
     if ~exist([adir,'atlas_index.mat'],'file')
-        atlases=ea_genatlastable([],fileparts(fileparts(adir)),options,mifix);
+        atlases=ea_genatlastable([],ea_space(options,'atlases'),options,mifix);
     else
         load([adir,'atlas_index.mat']);
-        atlases=ea_genatlastable(atlases,fileparts(adir),options,mifix);
+        atlases=ea_genatlastable(atlases,ea_space(options,'atlases'),options,mifix);
     end
 
     if options.writeoutstats
@@ -221,7 +221,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 end
             end
                 atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
-                
+
                 if ~exist('labelbutton','var')
                     labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'TooltipString','Labels');
                     labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'TooltipString','Label Color');
@@ -237,9 +237,9 @@ for nativemni=nm % switch between native and mni space atlases.
                 ea_error('Atlas color not found.');
             end
             if ~(atlases.types(atlas)>5)
-                
+
                 colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
-                
+
                 end
             % gather contact statistics
             if options.writeoutstats
@@ -274,7 +274,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
             %normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
             if ~(atlases.types(atlas)>5)
-                
+
                 ea_spec_atlas(atlassurfs(atlascnt,1),atlases.names{atlas},atlases.colormap,setinterpol);
             else
                 pobj.plotFigureH=resultfig;
@@ -286,7 +286,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 atlassurfs(atlascnt,1)=obj.patchH;
                 colorbuttons(atlascnt)=obj.toggleH;
             end
-            
+
             % set Tags
 try
             set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
@@ -305,7 +305,7 @@ end
             if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
                 drawnow
             end
-            
+
         end
     end
 

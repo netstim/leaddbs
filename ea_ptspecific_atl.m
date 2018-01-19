@@ -33,8 +33,8 @@ copyfile(aroot, [proot,'atlases',filesep,options.atlasset]);
 p=load([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
 p.atlases.rebuild=1;
 save([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'-struct','p');
-delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
-delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz']);
+ea_delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
+ea_delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz']);
 
 if ismember(options.prefs.dev.profile,{'se'})
     interp=0;
@@ -57,12 +57,12 @@ for atlas=1:length(atlases.names)
         case 5 % midline atlas (one file with both sides information.
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
     end
-    
-    
+
+
     if atlases.types(atlas)==3
         ea_apply_normalization_tofile(options,{ea_niigz([pratlf,atlases.names{atlas}])},{ea_niigz([pratlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
         ea_apply_normalization_tofile(options,{ea_niigz([platlf,atlases.names{atlas}])},{ea_niigz([platlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
-        
+
         ea_crop_nii(ea_niigz([pratlf,atlases.names{atlas}]));
         ea_crop_nii(ea_niigz([platlf,atlases.names{atlas}]));
     else
@@ -87,10 +87,10 @@ mkdir([proot,'atlases',filesep,options.atlasset,filesep,'rh']);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'mixed']);
 mkdir([proot,'atlases',filesep,options.atlasset,filesep,'midline']);
 
-if ~exist([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat'],'file')
-    atlases=ea_genatlastable([],root,options);
+if ~exist([aroot,'atlas_index.mat'],'file')
+    atlases=ea_genatlastable([],ea_space(options,'atlases'),options);
 else
-    load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
+    load([aroot,'atlas_index.mat']);
 end
 
 cnt=1;
@@ -98,29 +98,29 @@ cnt=1;
 for atlas=1:length(atlases.names)
     switch atlases.types(atlas)
         case 1 % left hemispheric atlas.
-            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'lh',filesep];
+            atlf=[aroot,'lh',filesep];
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
-            tpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'lh',filesep];
+            tpmf=[aroot,'tpm',filesep,'lh',filesep];
         case 2 % right hemispheric atlas.
-            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'rh',filesep];
+            atlf=[aroot,'rh',filesep];
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
-            tpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'rh',filesep];
+            tpmf=[aroot,'tpm',filesep,'rh',filesep];
         case 3 % both-sides atlas composed of 2 files.
-            ratlf=[ea_space(options,'atlases'),options.atlasset,filesep,'rh',filesep];
+            ratlf=[aroot,'rh',filesep];
             pratlf=[proot,'atlases',filesep,options.atlasset,filesep,'rh',filesep];
 
-            latlf=[ea_space(options,'atlases'),options.atlasset,filesep,'lh',filesep];
+            latlf=[aroot,'lh',filesep];
             platlf=[proot,'atlases',filesep,options.atlasset,filesep,'lh',filesep];
-            rtpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'rh',filesep];
-            ltpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'lh',filesep];
+            rtpmf=[aroot,'tpm',filesep,'rh',filesep];
+            ltpmf=[aroot,'tpm',filesep,'lh',filesep];
         case 4 % mixed atlas (one file with both sides information.
-            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'mixed',filesep];
+            atlf=[aroot,'mixed',filesep];
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'mixed',filesep];
-            tpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'mixed',filesep];
+            tpmf=[aroot,'tpm',filesep,'mixed',filesep];
         case 5 % midline atlas (one file with both sides information.
-            atlf=[ea_space(options,'atlases'),options.atlasset,filesep,'midline',filesep];
+            atlf=[aroot,'midline',filesep];
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
-            tpmf=[ea_space(options,'atlases'),options.atlasset,filesep,'tpm',filesep,'midline',filesep];
+            tpmf=[aroot,'tpm',filesep,'midline',filesep];
     end
 
     for side=detsides(atlases.types(atlas))
@@ -136,7 +136,7 @@ for atlas=1:length(atlases.names)
                     tpmf=ltpmf;
             end
         end
-        
+
         % gzip support
         if strcmp(atlases.names{atlas}(end-2:end),'.gz')
             gunzip([atlf,atlases.names{atlas}]);
@@ -171,7 +171,7 @@ end % collecting files loop
 
 %% generate TPM
 if options.prefs.normalize.inverse.customtpm
-    
+
     if ~exist([aroot,'TPM_Lorio_Draganski.nii'],'file') || ~exist([aroot,'TPM_Lorio_Draganski.nii.gz'],'file') || force % check for pre-built TPM
 
         matlabbatch{1}.spm.util.imcalc.input = [
@@ -245,9 +245,9 @@ if options.prefs.normalize.inverse.customtpm
     jobs{1}=matlabbatch;
     spm_jobman('run',jobs);
     clear matlabbatch jobs
-    
+
     gzip([aroot,'TPM_Lorio_Draganski.nii']);
-    delete([aroot,'TPM_Lorio_Draganski.nii']);
+    ea_delete([aroot,'TPM_Lorio_Draganski.nii']);
     movefile([proot,'iy_',options.prefs.prenii_unnormalized],[proot,'atlases',filesep,options.atlasset,filesep,'iy_warp.nii'])
     movefile([proot,'y_',options.prefs.prenii_unnormalized],[proot,'atlases',filesep,options.atlasset,filesep,'y_warp.nii'])
     warpfile=[proot,'atlases',filesep,options.atlasset,filesep,'iy_warp.nii'];
@@ -285,10 +285,10 @@ end
 for fi=1:length(atlasfile)
     if wasgz(fi)
         gzip(rawatlasfile{fi});
-        delete(rawatlasfile{fi});
+        ea_delete(rawatlasfile{fi});
     end
     if options.prefs.normalize.inverse.customtpm
-        delete(tatlasfile{fi});
+        ea_delete(tatlasfile{fi});
     end
 end
 

@@ -20,12 +20,12 @@ mkdir([proot,'atlases',filesep,'mni',filesep,options.atlasset,filesep,'mixed']);
 mkdir([proot,'atlases',filesep,'mni',filesep,options.atlasset,filesep,'midline']);
 
 
-    if ~exist([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat'],'file')
-        atlases=ea_genatlastable([],ea_space('atlases'),options);
-    else
-        load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
-        atlases=ea_genatlastable(atlases,ea_space('atlases'),options);
-    end
+if ~exist([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat'],'file')
+    atlases=ea_genatlastable([],ea_space(options,'atlases'),options);
+else
+    load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
+    atlases=ea_genatlastable(atlases,ea_space(options,'atlases'),options);
+end
 
 for atlas=1:length(atlases.names)
     switch atlases.types(atlas)
