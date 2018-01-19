@@ -19,7 +19,11 @@ end
 try
 fullrpts=[uipatdir';fullrpts];
 catch % calls from lead_group could end up transposed
+    try
 fullrpts=[uipatdir;fullrpts];    
+    catch
+fullrpts=[uipatdir;fullrpts'];            
+    end
 end
 
 [fullrpts]=unique(fullrpts,'stable');
