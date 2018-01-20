@@ -59,7 +59,7 @@ end
 
 scrsz = get(0,'ScreenSize');
 
-cuts=figure('name',[options.patientname,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible);
+cuts=figure('name',[options.patientname,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible,'MenuBar', 'none', 'ToolBar', 'none');
 axis off
 set(cuts,'position',[100, 100, 800 ,800]);
 set(cuts,'color','w');

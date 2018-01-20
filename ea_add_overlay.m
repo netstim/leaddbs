@@ -31,8 +31,12 @@ if ~isfield(options,'atlases') % atlases structure can be handed down directly w
 else
     atlases=options.atlases;
 end
+showidx=1:length(atlases.names);
+if isfield(options.d2,'showstructures')
+    [~,showidx]=ismember(options.d2.showstructures,ea_rmext(atlases.names));
+end
 
-for atlas=1:length(atlases.names)
+for atlas=showidx
     for side=detsides(atlases.types(atlas))
         planemm=[boundboxmm{1}(:),boundboxmm{2}(:),boundboxmm{3}(:)];
         %planemm=round(planemm);

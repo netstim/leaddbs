@@ -22,7 +22,7 @@ function varargout = ea_checkcoreg(varargin)
 
 % Edit the above text to modify the response to help ea_checkcoreg
 
-% Last Modified by GUIDE v2.5 29-Aug-2017 10:04:22
+% Last Modified by GUIDE v2.5 20-Jan-2018 14:43:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -85,6 +85,54 @@ setappdata(handles.leadfigure,'anchor',anchor)
 setappdata(handles.leadfigure,'activevolume',1);
 setappdata(handles.leadfigure,'options',options);
 
+
+
+
+
+
+% add atlases contextmenu
+set(handles.checkatl,'Visible','off');
+options=getappdata(handles.leadfigure,'options');
+[~,presentfiles]=ea_assignpretra(options);
+
+
+c = uicontextmenu;
+handles.checkatl.UIContextMenu = c;
+atlases=dir(ea_space(options,'atlases'));
+atlases = {atlases(cell2mat({atlases.isdir})).name};    % only keep folders
+atlases = atlases(cellfun(@(x) ~strcmp(x(1),'.'), atlases));  % also remove '.', '..' and '.*' folders from dir results
+topmenu=cell(length(presentfiles),1);
+atlmenu=cell(length(presentfiles),length(atlases));
+warning('off');
+
+for p=1:length(presentfiles)
+    topmenu{p}=uimenu('Parent',c,'Label',rmanat(ea_rmext(presentfiles{p})));
+    for atl=1:length(atlases)
+        atlmenu{p,atl}=uimenu('Parent',topmenu{p},'Label',atlases{atl});
+        clear a
+        a=load([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'structures');
+        if isempty(fieldnames(a)) % old format
+            a=load([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat']);
+            a.structures=a.atlases.names;
+            save([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'-struct','a','-v7.3');
+        end
+        a.structures=ea_rmext(a.structures);
+        try
+            for strct=1:length(a.structures)
+                structmenu{p,atl,strct}=uimenu('Parent',atlmenu{p,atl},'Label',a.structures{strct},'Callback',{@ea_createatlascheck,options});
+            end
+        catch
+            keyboard
+        end
+    end
+end
+warning('on');
+
+
+
+
+
+
 ea_mrcview(handles);
 
 % Choose default command line output for ea_checkcoreg
@@ -116,6 +164,7 @@ currvol=presentfiles{activevolume};
 
 switch ea_stripex(currvol)
     case ea_stripex(options.prefs.gprenii)
+        handles.checkatl.Visible='on';
         [options] = ea_assignpretra(options);
         anchor=[ea_space,options.primarytemplate,'.nii'];
         set(handles.leadfigure,'Name',[options.patientname, ': Check Normalization']);
@@ -137,6 +186,7 @@ switch ea_stripex(currvol)
         set(handles.leadfigure,'Name',[options.patientname, ': Check Normalization']);
         set(gcf,'Name',[options.patientname, ': Check Normalization']);
     otherwise
+        handles.checkatl.Visible='off';
         anchor=getappdata(handles.leadfigure,'anchor');
         set(handles.anchortxt,'String','Anchor modality (red wires):');
         set(handles.coregresultstxt,'String','Coregistration results');
@@ -650,3 +700,17 @@ ea_mrcview(handles); % refresh
 title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
 set(handles.leadfigure, 'Name', title);
+
+
+% --- Executes on button press in checkatl.
+function checkatl_Callback(hObject, eventdata, handles)
+% hObject    handle to checkatl (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+
+
+function str=rmanat(str)
+str=upper(str(6:end));
