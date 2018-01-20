@@ -418,12 +418,7 @@ eg=eg>thresh;
 neeg=eeg;
 neeg(~eg)=nan;
 
-if sum(neeg(:)>0)>50000
-    warning('Exporting z-scores instead of van Albada method converted VTA model for reasons of computational cost .');
-    neeg(neeg>0)=zscore(neeg(neeg>0));
-else
-    neeg(neeg>0)=ea_normal(neeg(neeg>0));%
-end
+    neeg(neeg>0)=ea_normal(neeg(neeg>0),1,0,' ',0,1,'TRUE');%
 % normalized e-field (zscored).
 neeg(~isnan(neeg))=neeg(~isnan(neeg))-min(neeg(~isnan(neeg)));
 neeg(~isnan(neeg))=neeg(~isnan(neeg))/sum(neeg(~isnan(neeg))); % 0-1 distributed.
@@ -600,6 +595,7 @@ if constvol
     dirival = zeros(size(vol.pos,1),1);
     dirival(elec) = val(:,1);
 else
+    
     if unipolar
         dirinodes = boundarynodes;
     else
@@ -608,12 +604,12 @@ else
     dirival = zeros(size(vol.pos,1),1);
 
     rhs = zeros(size(vol.pos,1),1);
-
-    if unipolar
+uvals=unique(val(:,2));
+    if unipolar && length(uvals)==1
         elec_center_id = ea_find_elec_center(elec,vol.pos);
         rhs(elec_center_id) = val(1,1);
     else
-        uvals=unique(val(:,2));
+        
         for v=1:length(uvals)
         elec_center_id = ea_find_elec_center(elec(val(:,2)==uvals(v)),vol.pos);
         thesevals=val(val(:,2)==uvals(v),1);
