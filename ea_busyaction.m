@@ -22,7 +22,7 @@ try
                 offfigtit='Lead DBS';
             case 'coreg'
                 sz=get(fighandle,'Position');
-                pos=[sz(3)-50-2 sz(4)-50-2 50 50];
+                pos=[sz(3)-50-2 sz(4)-42-2 50 50];
                 onfigtit='Check Coregistration (busy...)';
                 offfigtit='Check Coregistration';
             case 'atlcontrol'

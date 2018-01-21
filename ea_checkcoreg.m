@@ -22,7 +22,7 @@ function varargout = ea_checkcoreg(varargin)
 
 % Edit the above text to modify the response to help ea_checkcoreg
 
-% Last Modified by GUIDE v2.5 20-Jan-2018 14:43:24
+% Last Modified by GUIDE v2.5 21-Jan-2018 14:47:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -85,16 +85,10 @@ setappdata(handles.leadfigure,'anchor',anchor)
 setappdata(handles.leadfigure,'activevolume',1);
 setappdata(handles.leadfigure,'options',options);
 
-
-
-
-
-
 % add atlases contextmenu
 set(handles.checkatl,'Visible','off');
 options=getappdata(handles.leadfigure,'options');
 [~,presentfiles]=ea_assignpretra(options);
-
 
 c = uicontextmenu;
 handles.checkatl.UIContextMenu = c;
@@ -106,7 +100,7 @@ atlmenu=cell(length(presentfiles),length(atlases));
 warning('off');
 
 for p=1:length(presentfiles)
-    topmenu{p}=uimenu('Parent',c,'Label',rmanat(ea_rmext(presentfiles{p})));
+    topmenu{p}=uimenu('Parent', c, 'Label', upper(regexp(presentfiles{p}, '(?<=anat_)(.*)(?=\.nii(\.gz)?)', 'match', 'once')));
     for atl=1:length(atlases)
         atlmenu{p,atl}=uimenu('Parent',topmenu{p},'Label',atlases{atl});
         clear a
@@ -127,11 +121,6 @@ for p=1:length(presentfiles)
     end
 end
 warning('on');
-
-
-
-
-
 
 ea_mrcview(handles);
 
@@ -275,9 +264,6 @@ axis equal
 
 % textfields:
 set(handles.depvolume,'String',[ea_stripex(currvol),'.nii']);
-
-
-
 
 
 function presentfiles=ea_getall_coregcheck(options)
@@ -707,10 +693,7 @@ function checkatl_Callback(hObject, eventdata, handles)
 % hObject    handle to checkatl (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
-
-
-
-function str=rmanat(str)
-str=upper(str(6:end));
+CurPos = get(0, 'PointerLocation');
+figPos = get(gcf,'Position');
+handles.checkatl.UIContextMenu.Position = CurPos - figPos(1:2);
+handles.checkatl.UIContextMenu.Visible='on';
