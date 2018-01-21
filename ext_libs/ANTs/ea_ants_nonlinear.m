@@ -44,7 +44,7 @@ if slabsupport
 
     for mov = 1:length(movingimage)
         mnii = ea_load_nii(movingimage{mov});
-        mnii.img = ~(mnii.img==0);
+        mnii.img = ~(mnii.img==0) + ~isnan(mnii.img);
         if ~exist('AllMX','var')
             AllMX = mnii.img;
         else
