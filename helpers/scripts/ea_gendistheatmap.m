@@ -73,14 +73,14 @@ for side=sides
         end
         %D=squareform(pdist([XYZ(vx,:);acs]));
         %D=-(pdist([XYZ(vx,:);acs]));
-        D=pdist2(acs,XYZ(vx:vx+(chunk-1),:));
+        Dall=pdist2(acs,XYZ(vx:vx+(chunk-1),:));
         %D=-D(1:N)';
         %D=1./exp(D);
-        fovimg.img(vx:(vx+chunk-1))=corr(D,I,'rows','pairwise','type','Pearson');
+        fovimg.img(vx:(vx+chunk-1))=corr(Dall,I,'rows','pairwise','type','Pearson');
         %        distimg.img(vx)=nansum(D);
         %distimg.img(vx:(vx+chunk-1))=nanmean(D);
                 D=pdist2(mean(acs,1),XYZ(vx:vx+(chunk-1),:));
-        distimg.img(vx:(vx+chunk-1))=D;
+        distimg.img(vx:(vx+chunk-1))=1./exp(D);
         %         b=glmfit(D,I);
         %         if isnan(b)
         %             keyboard

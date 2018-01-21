@@ -108,7 +108,6 @@ movedel=getappdata(mcfig,'movedel');
 trajectory_plot=getappdata(mcfig,'trajectory_plot');
 spacetext=getappdata(mcfig,'spacetext');
 planes=getappdata(mcfig,'planes');
-c_lims=getappdata(mcfig,'c_lims');
 
 elplot = getappdata(mcfig,'elplot');
 mplot = getappdata(mcfig,'mplot');
@@ -302,7 +301,6 @@ for doxx=0:1
     if ~getappdata(mcfig,'planecset') % initially and once set contrast based on image data.
         
         if options.modality==1 % MR
-            c_lims=[ea_nanmean(imat(:))-ea_nanstd(imat(:))-3*ea_nanstd(imat(:)),ea_nanmean(imat(:))-ea_nanstd(imat(:))+3*ea_nanstd(imat(:))];
         elseif options.modality==2 % CT
             lthresh=800; % initial guesses for CT
             uthresh=2800;
@@ -325,13 +323,10 @@ for doxx=0:1
                 end
             end
             % disp(['Lthresh: ',num2str(lthresh),'; Uthresh: ',num2str(uthresh),'.']);
-            c_lims=[lthresh,uthresh]; % Initial guess, CT
             
             
         end
-        %caxis(c_lims);
         caxis([0,1]);
-        setappdata(mcfig,'c_lims',c_lims);
         setappdata(mcfig,'planecset',1);
     end
     
@@ -365,8 +360,6 @@ for doxx=0:1
         
     end
 end
-%caxis([c_lims(1) c_lims(2)]);
-caxis([0,1]);
 
 %% plot axial planes on the right hand side of the figure
 Vtra=getV(mcfig,'Vtra',options);
@@ -423,10 +416,7 @@ for subpl=getsuplots(1)
     hold off
     axis square
     axis off
-
-    %caxis([c_lims(1) c_lims(2)]);
     caxis([0,1]);
-
 end
 setappdata(mcfig,'optoffsets',optoffsets);
 
@@ -475,23 +465,25 @@ end
 %     setappdata(resultfig,'realcoords_plot',realcoords_plot);
 % end
 set(mcfig,'CurrentAxes',mainax1);
-  %  axis equal
+%  axis equal
 
-        ea_view(nan,nan,'a');
+ea_view(nan,nan,'a');
 set(mcfig,'CurrentAxes',mainax2);
 axis off
 
-  %  axis equal
+%  axis equal
 
-        ea_view(nan,nan,'l');
+ea_view(nan,nan,'l');
 %mainax2=subplot(4,6,[4:5,10:11,16:17,22:23]); % main plot y
 delete(allchild(mainax2));
 copyobj(allchild(mainax1),mainax2);
 setappdata(mcfig,'planes',planes);
 set(mcfig,'CurrentAxes',mainax1);
+caxis([0,1]);
 %viewtext(1)=text(midpt(1),midpt(2),midpt(3)+20,sprintf(['ANTERIOR VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');
 viewtext(1)=text(0.5,0.95,0.5,sprintf(['ANTERIOR VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center','Units','Normalized');
 set(mcfig,'CurrentAxes',mainax2);
+caxis([0,1]);
 viewtext(2)=text(0.5,0.95,0.5,sprintf(['LEFT VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center','Units','Normalized');
 setappdata(mcfig,'viewtext',viewtext);
 %% outputs
