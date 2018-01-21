@@ -4,7 +4,7 @@ function [cuts,expslice]=ea_writeplanes(varargin)
 % priorly. Images are written as .png image files. Bot transversal and
 % coronar views are being exported. Additionally, overlays from atlas-data
 % can be visualized via the function ea_add_overlay which uses all atlas
-% files that are found in the lead_dbs/atlases directory.
+% files that are found in the lead_dbs atlas directory.
 % inputs: options (struct using standard lead-dbs fields), optional:
 % elstruct (for group visualization).
 
@@ -130,7 +130,7 @@ for side=1:length(options.sides)
             %title(['Electrode ',num2str(el-1),', transversal view.']);
 
             [slice,~,boundboxmm,sampleheight]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
-            
+
             cont=1;
             try                cont=evalin('base','custom_cont'); end
             offs=1;
@@ -162,10 +162,12 @@ for side=1:length(options.sides)
             end
             % Show overlays
             if options.d2.writeatlases
-                try options.atlases=atlases; end
-                cuts=ea_add_overlay(boundboxmm,cuts,tracor,options);
+                if exist('atlases', 'var')
+                    options.atlases = atlases;
+                    cuts = ea_add_overlay(boundboxmm, cuts, tracor, options);
+                end
             end
-      set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
+            set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
             axis([min(boundboxmm{onedim}),max(boundboxmm{onedim}),min(boundboxmm{secdim}),max(boundboxmm{secdim})])
 
             % Show isovolume
@@ -210,14 +212,14 @@ for side=1:length(options.sides)
                 jetlist=eval(options.prefs.d2.isovolcolormap);
                 %jetlist=summer;
                 %slice=(slice-minval)/(maxval-minval); % set min max to boundaries 0-1.
-                
+
             slice(~isnan(slice))=ea_contrast(slice(~isnan(slice)),cont,1);
             slice=slice-1;
 
                 % ##
                 % add some "contrast" ? remove this part for linear
                 % colormapping
-% 
+%
 %                 slice=slice-0.5;
 %                 slice(slice<0)=0;
 %                 slice=slice*2;
@@ -252,11 +254,11 @@ for side=1:length(options.sides)
 %             % Plot L, R and sizelegend
 %             text(addsubsigned(min(boundboxmm{onedim}),2,plusminusl),mean(boundboxmm{secdim}),Ltxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
 %             text(addsubsigned(max(boundboxmm{onedim}),2,plusminusr),mean(boundboxmm{secdim}),Rtxt,'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
-% 
+%
 %             plot([addsubsigned(mean(boundboxmm{onedim}),2.5,'minus'),addsubsigned(mean(boundboxmm{onedim}),2.5,'plus')],[addsubsigned(min(boundboxmm{secdim}),1,'minus'),addsubsigned(min(boundboxmm{secdim}),1,'minus')],'-w','LineWidth',2.5);
-% 
+%
 %             text(mean(boundboxmm{onedim}),addsubsigned(min(boundboxmm{secdim}),2,'minus'),'5 mm','color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
-% 
+%
 %             % Plot slice depth legend
 %             text(mean(boundboxmm{onedim}),addsubsigned(max(boundboxmm{secdim}),2,'minus'),[lstring,sprintf('%.2f',mean(boundboxmm{planedim})),' mm'],'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
 %             text(mean(boundboxmm{onedim}),addsubsigned(max(boundboxmm{secdim}),2,plusminusc),[lstring,sprintf('%.2f',mean(boundboxmm{planedim})),' mm'],'color','w','HorizontalAlignment','center','VerticalAlignment','middle','FontSize',40,'FontWeight','bold');
@@ -294,7 +296,7 @@ for side=1:length(options.sides)
                         end
                     end
                     if options.d2.fid_overlay
-                        
+
                         elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4);
                     end
                 end
