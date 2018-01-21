@@ -43,8 +43,6 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
 end
 
 
-
-
 %% get electrodes handles // initial parameters:
 
 resultfig=getappdata(lgfigure,'resultfig');
@@ -57,7 +55,7 @@ setappdata(resultfig,'elstruct',elstruct);
 % Add stretchfactor to elstruct simply for purpose of checking if headmodel
 % changed. Larger stim amplitudes need larger bounding boxes so
 % stretchfactor must be incorporated here.
-    if max(S.amplitude{side})>4 
+    if max(S.amplitude{side})>4
         elstruct.stretchfactor=0.75; %(max(S.amplitude{side})/10);
     else
         elstruct.stretchfactor=0.5;
@@ -65,9 +63,9 @@ setappdata(resultfig,'elstruct',elstruct);
 
     if ea_headmodel_changed(options,side,elstruct)
         ea_dispt('Headmodel needs to be re-calculated. This may take a while...');
-        
+
         load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
-        
+
         cnt=1;
         mesh.tet=[];
         mesh.pnt=[];
@@ -81,7 +79,7 @@ setappdata(resultfig,'elstruct',elstruct);
                         continue
                     end
                     fv(cnt)=atlases.fv{atlas};
-                    
+
                     ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
                     %tissuetype(cnt)=1;
                     cnt=cnt+1;
@@ -92,24 +90,17 @@ setappdata(resultfig,'elstruct',elstruct);
 %                 voxnbcyl=voxnbcyl(1:3,:)';
 %                 cyl=surf2vol(voxnbcyl,fbcyl,1:size(c1.img,2),1:size(c1.img,1),1:size(c1.img,3));
 %                 cyl=imfill(cyl,'holes');
-%                 
+%
 %                 cyl=double(smooth3(cyl,'gaussian',[3 3 3]));
 %                 c1.img=c1.img.*permute(cyl,[2,1,3]);
                 fv=isosurface(c1.img,0.5,'noshare');
                 fv.vertices=c1.mat*[fv.vertices,ones(length(fv.vertices),1)]';
                 fv.vertices=fv.vertices(1:3,:)';
             case 'mask'
-                
-                
-                
                 fv=ea_fem_getmask(options);
-                
-                
-                
-                
         end
-        
-        
+
+
         [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
         success=0;
         for attempt=1:3 % allow three attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
@@ -121,49 +112,41 @@ setappdata(resultfig,'elstruct',elstruct);
                 Y=Y+randn(4)/1000; % very small jitter on transformation which will be used on electrode.
             end
         end
-        
+
         % replace wmboundary:
         tess = mesh.tet(:,1:4);
         tess = sort(tess,2);
-        
+
         % all faces
         faces=[tess(:,[1 2 3]);tess(:,[1 2 4]); ...
             tess(:,[1 3 4]);tess(:,[2 3 4])];
-        
+
         % find replicate faces
         faces = sortrows(faces);
         k = find(all(diff(faces)==0,2));
-        
+
         % delete the internal (shared) faces
         faces([k;k+1],:) = [];
-        
+
         wmboundary = unique(faces(:))';
         % end replace.
 
-        
-        
+
         if vizz
             figure
             hold on
             plot3(mesh.pnt(wmboundary,1),mesh.pnt(wmboundary,2),mesh.pnt(wmboundary,3),'r*');
             plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'b.');
         end
-        
-        
-        
-        
-        
-        
-        
-        
+
         if ~success
             ea_error('Lead-DBS could not solve the current estimation.');
         end
-        
+
         mesh.tissue=tissuetype;
         meshregions=mesh.tet(:,5);
         mesh.tet=mesh.tet(:,1:4);
-        
+
         if useSI
             mesh.pnt=mesh.pnt/1000; % in meter
             mesh.unit='m';
@@ -171,13 +154,13 @@ setappdata(resultfig,'elstruct',elstruct);
      %   plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'c.');
         %% calculate volume conductor
         ea_dispt('Creating volume conductor...');
-                
+
         if useSI
             SIfx=1;
         else
             SIfx=1000;
         end
-        
+
         try
             vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[options.prefs.machine.vatsettings.horn_cgm options.prefs.machine.vatsettings.horn_cwm 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
             %vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
@@ -191,17 +174,17 @@ setappdata(resultfig,'elstruct',elstruct);
             mesh.unit='mm';
         end
         if ~exist([options.root,options.patientname,filesep,'headmodel',filesep],'dir')
-           mkdir([options.root,options.patientname,filesep,'headmodel',filesep]); 
+           mkdir([options.root,options.patientname,filesep,'headmodel',filesep]);
         end
         save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
         ea_save_hmprotocol(options,side,elstruct,1);
-        
+
     else
         % simply load vol.
         ea_dispt('Loading headmodel...');
         load([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat']);
         activeidx=ea_getactiveidx(S,side,centroids,mesh,elfv,elspec,meshregions);
-        
+
     end
 
 switch side
@@ -212,9 +195,11 @@ switch side
         sidec='L';
         cnts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 end
+
 if ~isfield(S, 'sources')
     S.sources=1:4;
 end
+
 for source=S.sources
     stimsource=S.([sidec,'s',num2str(source)]);
     constvol=stimsource.va==1; % constvol is 1 for constant voltage and 0 for constant current.
@@ -256,21 +241,19 @@ for source=S.sources
         end
         ix=[];
         voltix=[];
-    
+
         cnt=1;
         for ac=Acnt
             ix=[ix;activeidx(source).con(ac).ix];
             voltix=[voltix;repmat(U(ac),length(activeidx(source).con(ac).ix),1),...
                 repmat(cnt,length(activeidx(source).con(ac).ix),1)];
             cnt=cnt+1;
-       
+
         end
-if isempty(ix)
-   ea_error('Something went wrong. Active vertex index not found.'); 
-end
 
-
-
+        if isempty(ix)
+           ea_error('Something went wrong. Active vertex index not found.');
+        end
 
         if ~constvol
             voltix(:,1)=voltix(:,1)/1000; % from mA to A
@@ -278,15 +261,15 @@ end
         end
 
         potential = ea_apply_dbs(vol,ix,voltix,unipolar,constvol,wmboundary); % output in V. 4 indexes insulating material.
-           %      save('results','mesh','vol','ix','voltix','unipolar','constvol','wmboundary','potential3v','potential3ma','gradient3v','gradient3ma');
-voltix=voltix(:,1); % get rid of index column
-if vizz
-figure
-hold on
-plot3(mesh.pnt(wmboundary,1),mesh.pnt(wmboundary,2),mesh.pnt(wmboundary,3),'r*');
-plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'b.');
+        %      save('results','mesh','vol','ix','voltix','unipolar','constvol','wmboundary','potential3v','potential3ma','gradient3v','gradient3ma');
 
-end
+        voltix=voltix(:,1); % get rid of index column
+        if vizz
+            figure
+            hold on
+            plot3(mesh.pnt(wmboundary,1),mesh.pnt(wmboundary,2),mesh.pnt(wmboundary,3),'r*');
+            plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'b.');
+        end
 
         ea_dispt('Calculating E-Field...');
         gradient{source} = ea_calc_gradient(vol,potential); % output in V/m.
@@ -304,7 +287,9 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
 midpts=mean(cat(3,vol.pos(vol.tet(:,1),:),vol.pos(vol.tet(:,2),:),vol.pos(vol.tet(:,3),:),vol.pos(vol.tet(:,4),:)),3);
 
 vatgrad=getappdata(resultfig,'vatgrad');
-if isempty(vatgrad); clear('vatgrad'); end
+if isempty(vatgrad)
+    clear('vatgrad');
+end
 reduc=10;
 
 
@@ -351,9 +336,6 @@ vat.pos=midpts;
 ngrad=sqrt(sum(gradient'.^2,1));
 vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.
 
-
-
-
 ea_dispt('Preparing VAT...');
 
 vat.tET=vat.ET>thresh;
@@ -362,7 +344,7 @@ outliers=ea_removeoutliers(vat.tpos,mean(dpvx,1),voltix,constvol);
 vat.tpos(outliers,:)=[];
 
 if vizz
-figure, plot3(vat.tpos(:,1),vat.tpos(:,2),vat.tpos(:,3),'r.');
+    figure, plot3(vat.tpos(:,1),vat.tpos(:,2),vat.tpos(:,3),'r.');
 end
 
 % the following will be used for volume 2 isosurf creation as well as
@@ -376,17 +358,16 @@ gv=cell(3,1); spacing=zeros(3,1);
 try
     for dim=1:3
 %         maxdist=max([dpvx(dim)-(min(round(vat.tpos(:,dim)))-3);...
-%             (max(round(vat.tpos(:,dim)))+3)-dpvx(dim)]);
-% %        gv{dim}=linspace(dpvx(dim)-maxdist,dpvx(dim)+maxdist,res);
+%         (max(round(vat.tpos(:,dim)))+3)-dpvx(dim)]);
+%         gv{dim}=linspace(dpvx(dim)-maxdist,dpvx(dim)+maxdist,res);
         gv{dim}=linspace(min(round(vat.tpos(:,dim)))-5,max(round(vat.tpos(:,dim)))+5,res);
         spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
     end
 catch
-    
-varargout{1}=nan;
-varargout{2}=nan;
-varargout{3}=nan;
-return
+    varargout{1}=nan;
+    varargout{2}=nan;
+    varargout{3}=nan;
+    return
 end
 
 ea_dispt('Creating nifti header for export...');
@@ -418,7 +399,7 @@ eg=eg>thresh;
 neeg=eeg;
 neeg(~eg)=nan;
 
-    neeg(neeg>0)=ea_normal(neeg(neeg>0),1,0,' ',0,1,'TRUE');%
+neeg(neeg>0)=ea_normal(neeg(neeg>0),1,0,' ',0,1,'TRUE');%
 % normalized e-field (zscored).
 neeg(~isnan(neeg))=neeg(~isnan(neeg))-min(neeg(~isnan(neeg)));
 neeg(~isnan(neeg))=neeg(~isnan(neeg))/sum(neeg(~isnan(neeg))); % 0-1 distributed.
@@ -444,8 +425,8 @@ S.volume(side)=vatvolume;
 ea_dispt('Writing files...');
 
 % determine stimulation name:
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,stimname],'file');
-mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
+if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,stimname],'file')
+    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
 end
 
 switch side
@@ -454,7 +435,7 @@ switch side
         Vvate=Vvat; Vvatne=Vvat;
         Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_right.nii'];
         Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_gauss_right.nii'];
-case 2
+    case 2
         Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
         Vvate=Vvat; Vvatne=Vvat;
         Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_left.nii'];
@@ -524,6 +505,7 @@ S=[r,r,r];%std(D,[],1); % fixed 50 cm
 outliers=D>repmat(S,size(D,1),1);
 outliers=any(outliers,2);
 
+
 function r=maedler12_eq3(U,Im)
 % This function radius of Volume of Activated Tissue for stimulation settings U and Ohm. See Maedler 2012 for details.
 % Clinical measurements of DBS electrode impedance typically range from
@@ -535,9 +517,7 @@ if U %(U>0)
     k3=0.2786;
     k4=0.0009856;
 
-    r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)...
-        /...
-        (2*k3);
+    r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)/(2*k3);
 end
 
 
@@ -550,6 +530,7 @@ changed=1; % in doubt always reconstruct headmodel
 if isequal(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,elstruct,0))
     changed=0;
 end
+
 
 function protocol=ea_save_hmprotocol(options,side,elstruct,sv)
 % function to construct and/or save protocol.
@@ -565,12 +546,14 @@ if sv % save protocol to disk
     save([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat'],'protocol');
 end
 
+
 function protocol=ea_load_hmprotocol(options,side)
 % function that loads protocol
 protocol=struct; % default for errors or if not present
 try
     load([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat']);
 end
+
 
 %% begin FieldTrip/SimBio functions:
 function gradient = ea_calc_gradient(vol,potential)
@@ -582,6 +565,7 @@ normal = cross(vol.pos(vol.tet(:,2),:)-vol.pos(vol.tet(:,1),:),vol.pos(vol.tet(:
 gradient = gradient + repmat(potential(vol.tet(:,3))./sum(normal.*(vol.pos(vol.tet(:,3),:)-(vol.pos(vol.tet(:,4),:)+vol.pos(vol.tet(:,1),:)+vol.pos(vol.tet(:,2),:))/3),2),1,3).*normal;
 normal = cross(vol.pos(vol.tet(:,3),:)-vol.pos(vol.tet(:,2),:),vol.pos(vol.tet(:,2),:)-vol.pos(vol.tet(:,1),:));
 gradient = gradient + repmat(potential(vol.tet(:,4))./sum(normal.*(vol.pos(vol.tet(:,4),:)-(vol.pos(vol.tet(:,1),:)+vol.pos(vol.tet(:,2),:)+vol.pos(vol.tet(:,3),:))/3),2),1,3).*normal;
+
 
 function potential = ea_apply_dbs(vol,elec,val,unipolar,constvol,boundarynodes)
 if constvol
@@ -595,7 +579,7 @@ if constvol
     dirival = zeros(size(vol.pos,1),1);
     dirival(elec) = val(:,1);
 else
-    
+
     if unipolar
         dirinodes = boundarynodes;
     else
@@ -604,18 +588,18 @@ else
     dirival = zeros(size(vol.pos,1),1);
 
     rhs = zeros(size(vol.pos,1),1);
-uvals=unique(val(:,2));
+    uvals=unique(val(:,2));
     if unipolar && length(uvals)==1
         elec_center_id = ea_find_elec_center(elec,vol.pos);
         rhs(elec_center_id) = val(1,1);
     else
-        
+
         for v=1:length(uvals)
         elec_center_id = ea_find_elec_center(elec(val(:,2)==uvals(v)),vol.pos);
         thesevals=val(val(:,2)==uvals(v),1);
         rhs(elec_center_id) = thesevals(1);
-        end 
-        
+        end
+
         %warning('Bipolar constant current stimulation currently not implemented!');
     end
 end
@@ -623,9 +607,10 @@ end
 [stiff, rhs] = ea_dbs(vol.stiff,rhs,dirinodes,dirival);
 
 potential = ea_sb_solve(stiff,rhs);
-                     
+
+
 function center_id = ea_find_elec_center(elec, pos)
-                     
+
 center = mean(pos(elec,:));
 
 dist_center = sqrt(sum((pos(elec,:)-repmat(center,length(elec),1)).^2,2));
@@ -645,7 +630,6 @@ diagonal = -diagonal;
 diagonal(dirinodes) = 1.0;
 stiff = stiff + spdiags(diagonal(:),0,length(diagonal),length(diagonal));
 rhs(dirinodes) = dirival(dirinodes);
-
 
 
 function [warped] = ea_ft_warp_apply(M, input, method, tol)
@@ -854,8 +838,6 @@ if ~isempty(tol)
 end
 
 
-
-
 function x = ea_sb_solve(sysmat,vecb)
 
 % SB_SOLVE
@@ -870,6 +852,7 @@ end
 
 %scalen
 [~,x]=evalc('pcg(sysmat,vecb,10e-10,5000,L,L'',vecb)');
+
 
 function [type] = ea_ft_voltype(vol, desired)
 
@@ -1020,7 +1003,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
     fnames = setdiff(fieldnames(sens.balance), 'current');
     indx   = find(ismember(fnames, sens.balance.current));
 
-    if length(indx)==1,
+    if length(indx)==1
         % undo the synthetic gradient balancing
         fprintf('undoing the %s balancing for the gradiometer definition\n', sens.balance.current);
 
@@ -1630,13 +1613,13 @@ if ea_istrue(hascoordsys) && ~isfield(data, 'coordsys')
     data = ft_determine_coordsys(data);
 end
 
-if issource || isvolume,
+if issource || isvolume
     % the following section is to make a dimord-consistent representation of
     % volume and source data, taking trials, time and frequency into account
     if isequal(hasdimord, 'yes') && (~isfield(data, 'dimord') || ~strcmp(data.dimord,sourcedimord))
 
         % determine the size of the data
-        if isfield(data, 'dimord'),
+        if isfield(data, 'dimord')
             dimtok = tokenize(data.dimord, '_');
             if ~isempty(strmatch('time', dimtok)), Ntime = length(data.time); else Ntime = 1; end
             if ~isempty(strmatch('freq', dimtok)), Nfreq = length(data.freq); else Nfreq = 1; end
@@ -1646,7 +1629,7 @@ if issource || isvolume,
         end
 
         %convert old style source representation into new style
-        if isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpt_pos'),
+        if isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpt_pos')
             %frequency domain source representation convert to single trial power
             Npos   = size(data.pos,1);
             Nrpt   = size(data.cumtapcnt,1);
@@ -1660,30 +1643,30 @@ if issource || isvolume,
             end
             data.pow = tmppow';
             data     = rmfield(data, 'avg');
-            if strcmp(inside, 'logical'),
+            if strcmp(inside, 'logical')
                 data     = fixinside(data, 'logical');
                 data.inside = repmat(data.inside(:)',[Nrpt 1]);
             end
-        elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpttap_pos'),
+        elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && (isfield(data, 'freq') || isfield(data, 'frequency')) && strcmp(sourcedimord, 'rpttap_pos')
             %frequency domain source representation convert to single taper fourier coefficients
             Npos   = size(data.pos,1);
             Nrpt   = sum(data.cumtapcnt);
             data.fourierspctrm = complex(zeros(Nrpt, Npos), zeros(Nrpt, Npos));
             data.fourierspctrm(:, data.inside) = transpose(cat(1, data.avg.mom{data.inside}));
             data   = rmfield(data, 'avg');
-        elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && isfield(data, 'time') && strcmp(sourcedimord, 'pos_time'),
+        elseif isfield(data, 'avg') && isfield(data.avg, 'mom') && isfield(data, 'time') && strcmp(sourcedimord, 'pos_time')
             Npos   = size(data.pos,1);
             Nrpt   = 1;
             tmpmom = zeros(Npos, size(data.avg.mom{data.inside(1)},2));
             tmpmom(data.inside,:) = cat(1,data.avg.mom{data.inside});
             data.mom = tmpmom;
-            if isfield(data.avg, 'noise'),
+            if isfield(data.avg, 'noise')
                 tmpnoise = data.avg.noise(:);
                 data.noise = tmpnoise(:,ones(1,size(tmpmom,2)));
             end
             data = rmfield(data, 'avg');
             Ntime = length(data.time);
-        elseif isfield(data, 'trial') && isfield(data.trial(1), 'mom') && isfield(data, 'time') && strcmp(sourcedimord, 'rpt_pos_time'),
+        elseif isfield(data, 'trial') && isfield(data.trial(1), 'mom') && isfield(data, 'time') && strcmp(sourcedimord, 'rpt_pos_time')
             Npos   = size(data.pos,1);
             Nrpt   = length(data.trial);
             Ntime  = length(data.time);
@@ -1721,10 +1704,10 @@ if issource || isvolume,
             data.dimord = [data.dimord '_time'];
             data.dim    = [data.dim     Ntime];
         end
-        if Nrpt>1 && strcmp(sourcedimord, 'rpt_pos'),
+        if Nrpt>1 && strcmp(sourcedimord, 'rpt_pos')
             data.dimord = ['rpt_' data.dimord];
             data.dim    = [Nrpt   data.dim ];
-        elseif Nrpt>1 && strcmp(sourcedimord, 'rpttap_pos'),
+        elseif Nrpt>1 && strcmp(sourcedimord, 'rpttap_pos')
             data.dimord = ['rpttap_' data.dimord];
             data.dim    = [Nrpt   data.dim ];
         end
@@ -1755,11 +1738,11 @@ if issource || isvolume,
         dim = [prod(data.dim) 1];
         %elseif issource && any(~cellfun('isempty',strfind(fieldnames(data), 'dimord')))
         %  dim = [size(data.pos,1) 1]; %sparsely represented source structure new style
-    elseif isfield(data, 'dim'),
+    elseif isfield(data, 'dim')
         dim = [data.dim 1];
     elseif issource && ~isfield(data, 'dimord')
         dim = [size(data.pos,1) 1];
-    elseif isfield(data, 'dimord'),
+    elseif isfield(data, 'dimord')
         %HACK
         dimtok = tokenize(data.dimord, '_');
         for i=1:length(dimtok)
@@ -1969,7 +1952,7 @@ for i=1:length(param)
             select{end+1} = param{i};
         elseif isfield(data, 'pos') && (prod(dim)==size(data.pos, 1) || dim(1)==size(data.pos,1))
             select{end+1} = param{i};
-        elseif isfield(data, 'dimord') && (isfield(data, 'pos') || isfield(data, 'transform')),
+        elseif isfield(data, 'dimord') && (isfield(data, 'pos') || isfield(data, 'transform'))
             dimtok = tokenize(data.dimord, '_');
             nels   = 1;
             for k=1:numel(dimtok)
@@ -1983,7 +1966,7 @@ for i=1:length(param)
                     nels = nels*numel(getfield(data, dimtok{k}));
                 end
             end
-            if nels==prod(dim),
+            if nels==prod(dim)
                 select{end+1} = param{i};
             end
         end
@@ -2135,7 +2118,7 @@ if isequal(current, desired)
 
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     dimtok = tokenize(data.dimord, '_');
-    if ~isempty(strmatch('rpttap',   dimtok)),
+    if ~isempty(strmatch('rpttap',   dimtok))
         nrpt = size(data.cumtapcnt,1);
         flag = 0;
     else
@@ -2169,14 +2152,14 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     end
 
     %create cross-spectra
-    if ~isempty(channelcmb),
+    if ~isempty(channelcmb)
         ncmb      = size(channelcmb,1);
         cmbindx   = zeros(ncmb,2);
         labelcmb  = cell(ncmb,2);
         for k = 1:ncmb
             ch1 = find(strcmp(data.label, channelcmb(k,1)));
             ch2 = find(strcmp(data.label, channelcmb(k,2)));
-            if ~isempty(ch1) && ~isempty(ch2),
+            if ~isempty(ch1) && ~isempty(ch2)
                 cmbindx(k,:)  = [ch1 ch2];
                 labelcmb(k,:) = data.label([ch1 ch2])';
             end
@@ -2203,13 +2186,13 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     end
     data.powspctrm = powspctrm;
     data           = rmfield(data, 'fourierspctrm');
-    if ntim>1,
+    if ntim>1
         data.dimord = 'chan_freq_time';
     else
         data.dimord = 'chan_freq';
     end
 
-    if nrpt>1,
+    if nrpt>1
         data.dimord = ['rpt_',data.dimord];
     end
 
@@ -2218,7 +2201,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
 
     if isempty(channelcmb), error('no channel combinations are specified'); end
     dimtok = tokenize(data.dimord, '_');
-    if ~isempty(strmatch('rpttap',   dimtok)),
+    if ~isempty(strmatch('rpttap',   dimtok))
         nrpt = size(data.cumtapcnt,1);
         flag = 0;
     else
@@ -2234,7 +2217,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
     for k = 1:ncmb
         ch1 = find(strcmp(data.label, channelcmb(k,1)));
         ch2 = find(strcmp(data.label, channelcmb(k,2)));
-        if ~isempty(ch1) && ~isempty(ch2),
+        if ~isempty(ch1) && ~isempty(ch2)
             cmbindx(k,:)  = [ch1 ch2];
             labelcmb(k,:) = data.label([ch1 ch2])';
         end
@@ -2283,13 +2266,13 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
     data.labelcmb  = labelcmb;
     data           = rmfield(data, 'fourierspctrm');
     data           = rmfield(data, 'label');
-    if ntim>1,
+    if ntim>1
         data.dimord = 'chancmb_freq_time';
     else
         data.dimord = 'chancmb_freq';
     end
 
-    if nrpt>1,
+    if nrpt>1
         data.dimord = ['rpt_',data.dimord];
     end
 
@@ -2298,7 +2281,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
 
     % this is how it is currently and the desired functionality of prepare_freq_matrices
     dimtok = tokenize(data.dimord, '_');
-    if ~isempty(strmatch('rpttap',   dimtok)),
+    if ~isempty(strmatch('rpttap',   dimtok))
         nrpt = size(data.cumtapcnt, 1);
         flag = 0;
     else
@@ -2326,20 +2309,20 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
     data.crsspctrm = crsspctrm;
     data           = rmfield(data, 'fourierspctrm');
 
-    if ntim>1,
+    if ntim>1
         data.dimord = 'chan_chan_freq_time';
     else
         data.dimord = 'chan_chan_freq';
     end
 
-    if nrpt>1,
+    if nrpt>1
         data.dimord = ['rpt_',data.dimord];
     end
 
     % remove first singleton dimension
     if flag || nrpt==1, siz = size(data.crsspctrm); data.crsspctrm = reshape(data.crsspctrm, siz(2:end)); end
 
-elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
+elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast')
 
     dimtok = tokenize(data.dimord, '_');
     nrpt = size(data.fourierspctrm, 1);
@@ -2357,7 +2340,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
     end
     data           = rmfield(data, 'fourierspctrm');
     data.crsspctrm = reshape(crsspctrm, [nchn nchn nfrq ntim]);
-    if isfield(data, 'time'),
+    if isfield(data, 'time')
         data.dimord = 'chan_chan_freq_time';
     else
         data.dimord = 'chan_chan_freq';
@@ -2427,7 +2410,7 @@ elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
     fn = fieldnames(data);
     for ii=1:numel(fn)
         if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
-            if nrpt>1,
+            if nrpt>1
                 data.(fn{ii}) = reshape(data.(fn{ii}), nrpt, ncmb, nfrq, ntim);
             else
                 data.(fn{ii}) = reshape(data.(fn{ii}), ncmb, nfrq, ntim);
@@ -2439,19 +2422,19 @@ elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
     try data      = rmfield(data, 'dof'); end
     % replace updated fields
     data.labelcmb  = labelcmb;
-    if ntim>1,
+    if ntim>1
         data.dimord = 'chancmb_freq_time';
     else
         data.dimord = 'chancmb_freq';
     end
 
-    if nrpt>1,
+    if nrpt>1
         data.dimord = ['rpt_',data.dimord];
     end
 
 elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
     % this representation for sparse data contains autospectra as e.g. {'A' 'A'} in labelcmb
-    if isfield(data, 'crsspctrm'),
+    if isfield(data, 'crsspctrm')
         dimtok         = tokenize(data.dimord, '_');
         catdim         = match_str(dimtok, {'chan' 'chancmb'});
         data.crsspctrm = cat(catdim, data.powspctrm, data.crsspctrm);
@@ -2488,7 +2471,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
     for k = 1:size(data.labelcmb,1)
         ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
         ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
-        if ~isempty(ch1) && ~isempty(ch2),
+        if ~isempty(ch1) && ~isempty(ch2)
             cmbindx(ch1,ch2) = k;
         end
     end
@@ -2497,8 +2480,8 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
 
     fn = fieldnames(data);
     for ii=1:numel(fn)
-        if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
-            if nrpt==1,
+        if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim
+            if nrpt==1
                 data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
             end
 
@@ -2522,7 +2505,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
             end % for j
 
             % replace the data in the old representation with the new representation
-            if nrpt>1,
+            if nrpt>1
                 data.(fn{ii}) = tmpall;
             else
                 data.(fn{ii}) = reshape(tmpall, [nchan nchan nfrq ntim]);
@@ -2535,13 +2518,13 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
     try data      = rmfield(data, 'labelcmb');   end
     try data      = rmfield(data, 'dof');        end
 
-    if ntim>1,
+    if ntim>1
         data.dimord = 'chan_chan_freq_time';
     else
         data.dimord = 'chan_chan_freq';
     end
 
-    if nrpt>1,
+    if nrpt>1
         data.dimord = ['rpt_',data.dimord];
     end
 
@@ -2562,7 +2545,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
     for k = 1:size(data.labelcmb,1)
         ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
         ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
-        if ~isempty(ch1) && ~isempty(ch2),
+        if ~isempty(ch1) && ~isempty(ch2)
             cmbindx(ch1,ch2) = k;
         end
     end
@@ -2571,8 +2554,8 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
 
     fn = fieldnames(data);
     for ii=1:numel(fn)
-        if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
-            if nrpt==1,
+        if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim
+            if nrpt==1
                 data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
             end
 
@@ -2594,7 +2577,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
             end % for k
 
             % replace the data in the old representation with the new representation
-            if nrpt>1,
+            if nrpt>1
                 data.(fn{ii}) = tmpall;
             else
                 data.(fn{ii}) = reshape(tmpall, [nchan nchan nfrq ntim]);
@@ -2607,7 +2590,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
     try data      = rmfield(data, 'labelcmb');   end
     try data      = rmfield(data, 'dof');        end
 
-    if ntim>1,
+    if ntim>1
         data.dimord = 'chan_chan_freq_time';
     else
         data.dimord = 'chan_chan_freq';
@@ -2682,7 +2665,7 @@ if isfield(data, 'dimord')
     %an ordered way which allows for the extraction of a transformation matrix
     %i.e. slice by slice
     try
-        if isfield(data, 'dim'),
+        if isfield(data, 'dim')
             data.dim = pos2dim(data.pos, data.dim);
         else
             data.dim = pos2dim(data);
@@ -2691,7 +2674,7 @@ if isfield(data, 'dimord')
     end
 end
 
-if isfield(data, 'dim') && length(data.dim)>=3,
+if isfield(data, 'dim') && length(data.dim)>=3
     data.transform = pos2transform(data.pos, data.dim);
 end
 
@@ -2740,7 +2723,7 @@ end
 for i=1:nrpt
     data.time{i}  = freq.time;
     data.trial{i} = reshape(dat(i,:,:,:), nchan*nfreq, ntime);
-    if any(isnan(data.trial{i}(1,:))),
+    if any(isnan(data.trial{i}(1,:)))
         tmp = data.trial{i}(1,:);
         begsmp = find(isfinite(tmp),1, 'first');
         endsmp = find(isfinite(tmp),1, 'last' );
@@ -2749,7 +2732,9 @@ for i=1:nrpt
     end
 end
 
-if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
+if isfield(freq, 'trialinfo')
+    data.trialinfo = freq.trialinfo;
+end
 
 
 
@@ -3196,6 +3181,7 @@ end
 
 % the segmentation is a speciat type of volume structure, so ensure that it also fulfills the requirements for that
 segmentation = ea_ft_datatype_volume(segmentation, 'version', volversion);
+
 
 function volume = ea_ft_datatype_volume(volume, varargin)
 
@@ -3751,10 +3737,12 @@ end
 output = input;
 return;
 
+
 function [new] = ea_apply(transform, old)
 old(:,4) = 1;
 new = old * transform';
 new = new(:,1:3);
+
 
 function [type] = ea_ft_senstype(input, desired)
 
@@ -8053,7 +8041,6 @@ vol.stiff = ea_sb_calc_stiff(vol);
 vol.type = 'simbio';
 
 
-
 function parcellation = ea_ft_datatype_parcellation(parcellation, varargin)
 
 % FT_DATATYPE_PARCELLATION describes the FieldTrip MATLAB structure for parcellated
@@ -8233,6 +8220,7 @@ end
 % the parcellation is a speciat type of volume structure, so ensure that it also fulfills the requirements for that
 parcellation = ea_ft_datatype_source(parcellation, 'version', sourceversion);
 
+
 function source = ea_ft_datatype_source(source, varargin)
 
 % FT_DATATYPE_SOURCE describes the FieldTrip MATLAB structure for data that is
@@ -8329,11 +8317,11 @@ end
 % old data structures may use latency/frequency instead of time/freq. It is
 % unclear when these were introduced and removed again, but they were never
 % used by any fieldtrip function itself
-if isfield(source, 'frequency'),
+if isfield(source, 'frequency')
     source.freq = source.frequency;
     source      = rmfield(source, 'frequency');
 end
-if isfield(source, 'latency'),
+if isfield(source, 'latency')
     source.time = source.latency;
     source      = rmfield(source, 'latency');
 end
@@ -8582,6 +8570,7 @@ dimsiz = ea_cellmatsize(data.(field));
 
 % add nrpt in case of source.trial
 dimsiz = [prefix dimsiz];
+
 
 function siz = ea_cellmatsize(x)
 if iscell(x)
@@ -9097,10 +9086,12 @@ function pos = ea_grid2pos(xgrid, ygrid, zgrid)
 [X, Y, Z] = ndgrid(xgrid, ygrid, zgrid);
 pos = [X(:) Y(:) Z(:)];
 
+
 function pos = ea_dim2pos(dim, transform)
 [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
 pos = [X(:) Y(:) Z(:)];
 pos = ea_ft_warp_apply(transform, pos, 'homogenous');
+
 
 function [indexed, probabilistic] = ea_determine_segmentationstyle(segmentation, fn, dim)
 
@@ -9159,6 +9150,7 @@ rows(diinsy) = 1;
 rows = [1;rows];
 rows = cumsum(rows);
 rows = rows(1:end-1);
+
 
 function [stiff, diinsy, cols, sysmat] = ea_sb_calc_stiff(vol)
 
@@ -9258,6 +9250,7 @@ diinsy = double(diinsy);
 cols = double(cols);
 rows = ea_sb_sparse_to_mat(diinsy);
 stiff = sparse(rows,cols,sysmat,npnt,npnt,length(sysmat));
+
 
 function err = ea_sb_test_ori(pnt,elem)
 err = 1;

@@ -17,18 +17,18 @@ if ~exist('chosenix','var')
 end
 
 try
-fullrpts=[uipatdir';fullrpts];
+    fullrpts=[uipatdir';fullrpts];
 catch % calls from lead_group could end up transposed
     try
-fullrpts=[uipatdir;fullrpts];    
+        fullrpts=[uipatdir;fullrpts];
     catch
-fullrpts=[uipatdir;fullrpts'];            
+        fullrpts=[uipatdir;fullrpts'];
     end
 end
 
 [fullrpts]=unique(fullrpts,'stable');
 if length(fullrpts)>10
-    
+
    fullrpts=fullrpts(1:10);
 end
 [~,nuchosenix]=ismember(chosenix,fullrpts);
