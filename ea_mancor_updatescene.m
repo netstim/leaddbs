@@ -377,6 +377,7 @@ cmap=[1,4,5,8];
 
 for subpl=getsuplots(1)
     ca=subplot(3,6,subpl*6);
+
     %set(ca,'position',get(ca,'outerposition'));
 
     slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
@@ -398,7 +399,9 @@ for subpl=getsuplots(1)
     end
     
     hold on
-    
+    if subpl==1
+        viewtext(1)=text(0.5,1.05,sprintf(['DORSAL VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center','Units','Normalized');
+    end
     if selectrode && subpl==selectrode
         fc='y';
     else
@@ -481,10 +484,10 @@ setappdata(mcfig,'planes',planes);
 set(mcfig,'CurrentAxes',mainax1);
 caxis([0,1]);
 %viewtext(1)=text(midpt(1),midpt(2),midpt(3)+20,sprintf(['ANTERIOR VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center');
-viewtext(1)=text(0.5,0.95,0.5,sprintf(['ANTERIOR VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center','Units','Normalized');
+viewtext(1)=text(0.2,1,0.5,sprintf(['ANTERIOR VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center','Units','Normalized');
 set(mcfig,'CurrentAxes',mainax2);
 caxis([0,1]);
-viewtext(2)=text(0.5,0.95,0.5,sprintf(['LEFT VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center','Units','Normalized');
+viewtext(2)=text(0.2,1,0.5,sprintf(['LEFT VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center','Units','Normalized');
 setappdata(mcfig,'viewtext',viewtext);
 %% outputs
 setappdata(mcfig,'elplot',elplot);
