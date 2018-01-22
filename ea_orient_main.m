@@ -439,8 +439,11 @@ else
         peakangle_corr(side) = (sin(peakangle(side)) * cos(pitch)) / ((cos(peakangle(side)) * cos(yaw)) - (sin(peakangle(side)) * sin(yaw) * sin(pitch)));  % see Sitz et al. 2017           
         peakangle_corr(side) = atan(peakangle_corr(side));
         
-        if peakangle(side) > pi && peakangle(side) < 2 * pi && peakangle_corr(side) > 0
-            peakangle_corr(side) = -peakangle_corr(side);
+        if peakangle(side) < pi && peakangle_corr(side) < 0 && peakangle(side) - peakangle_corr(side) > pi/2
+            peakangle_corr(side) = peakangle_corr(side) + pi;
+        end
+        if peakangle(side) > pi && peakangle_corr(side) > 0 && peakangle(side) - peakangle_corr(side) > pi/2
+            peakangle_corr(side) = peakangle_corr(side) - pi;
         end
         
         roll = peakangle_corr(side);

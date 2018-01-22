@@ -42,12 +42,21 @@ dir_vec3 = (dir_180 - dir_300)  / norm(dir_180 - dir_300);
 
 %% calculate the angles of the dark lines with respect to the y-axis
 dir_angles(1) = atan2(norm(cross(dir_vec1,[0 1 0])),dot(dir_vec1,[0 1 0]));
+if dir_vec1(1) < 0
+    dir_angles(1) = -dir_angles(1);
+end    
 dir_angles(2) = atan2(norm(cross(dir_vec2,[0 1 0])),dot(dir_vec2,[0 1 0]));
+if dir_vec2(1) < 0
+    dir_angles(2) = -dir_angles(2);
+end
 dir_angles(3) = atan2(norm(cross(dir_vec3,[0 1 0])),dot(dir_vec3,[0 1 0]));
-
+if dir_vec3(1) < 0
+    dir_angles(3) = -dir_angles(3);
+end
 
 dir_angles = [dir_angles (dir_angles + pi)];
-dir_angles(find(dir_angles>2*pi)) = dir_angles(find(dir_angles>2*pi)) - 2* pi;
+dir_angles(find(dir_angles>2*pi)) = dir_angles(find(dir_angles>2*pi)) - (2* pi);
+dir_angles(find(dir_angles<0)) = dir_angles(find(dir_angles<0)) + (2* pi);
 dir_angles = (2 *pi) -dir_angles;
 dir_angles = sort(dir_angles);
 
