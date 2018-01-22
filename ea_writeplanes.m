@@ -164,8 +164,9 @@ for side=1:length(options.sides)
             if options.d2.writeatlases
                 if exist('atlases', 'var')
                     options.atlases = atlases;
-                    cuts = ea_add_overlay(boundboxmm, cuts, tracor, options);
                 end
+                                    cuts = ea_add_overlay(boundboxmm, cuts, tracor, options);
+
             end
             set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
             axis([min(boundboxmm{onedim}),max(boundboxmm{onedim}),min(boundboxmm{secdim}),max(boundboxmm{secdim})])
