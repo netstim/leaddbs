@@ -138,17 +138,18 @@ for side=1:length(options.sides)
 
             slice=ea_contrast(slice,cont,offs);
             level='';
-                        try                level=evalin('base','level_offset'); end
-                        if ~isempty(level)
-                            
-                            ms=ea_robustmean(slice(:));
-                            maxmin=[max(slice(:)),min(slice(:))];
-                            mm=min(abs(maxmin));
-                            slice=slice-ms;
-                            slice(slice>mm)=mm;
-                            slice(slice<-mm)=-mm;
-                        end
-            
+
+            try                level=evalin('base','level_offset'); end
+            if ~isempty(level)
+
+                ms=ea_robustmean(slice(:));
+                maxmin=[max(slice(:)),min(slice(:))];
+                mm=min(abs(maxmin));
+                slice=slice-ms;
+                slice(slice>mm)=mm;
+                slice(slice<-mm)=-mm;
+            end
+
             disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
             if fid>0 % only if file exists (does sometimes not exist if called from lead anatomy or the slice-cuts feature of elvis)
                 fprintf(fid,'%s\n',['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
@@ -158,7 +159,7 @@ for side=1:length(options.sides)
 %                 hi=imagesc(slice,...
 %                     [ea_nanmean(slice(slice>0))-3*nanstd(slice(slice>0)) ea_nanmean(slice(slice>0))+3*nanstd(slice(slice>0))]);
 %             catch
-                hi=imagesc(slice);
+            hi=imagesc(slice);
 
           %  end
             set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
@@ -177,7 +178,7 @@ for side=1:length(options.sides)
                 if exist('atlases', 'var')
                     options.atlases = atlases;
                 end
-                if ~strcmp(options.atlasset, 'Use none')
+                if isfield(options, 'atlases') || ~strcmp(options.atlasset, 'Use none')
                     cuts = ea_add_overlay(boundboxmm, cuts, tracor, options);
                 end
             end
@@ -189,7 +190,7 @@ for side=1:length(options.sides)
                 Visoraw=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
                 Viso=spm_vol([options.root,options.patientname,filesep,options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'.nii']);
                 try
-                Visostat=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'_p05.nii']);
+                    Visostat=spm_vol([options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb,'_p05.nii']);
                 end
                 if isstruct(elstruct)
                     for siso=1:length(ave_coords_mm)
