@@ -165,8 +165,9 @@ for side=1:length(options.sides)
                 if exist('atlases', 'var')
                     options.atlases = atlases;
                 end
-                                    cuts = ea_add_overlay(boundboxmm, cuts, tracor, options);
-
+                if ~strcmp(options.atlasset, 'Use none')
+                    cuts = ea_add_overlay(boundboxmm, cuts, tracor, options);
+                end
             end
             set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
             axis([min(boundboxmm{onedim}),max(boundboxmm{onedim}),min(boundboxmm{secdim}),max(boundboxmm{secdim})])
