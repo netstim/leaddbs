@@ -137,6 +137,18 @@ for side=1:length(options.sides)
             try                offs=evalin('base','custom_offs'); end
 
             slice=ea_contrast(slice,cont,offs);
+            level='';
+                        try                level=evalin('base','level_offset'); end
+                        if ~isempty(level)
+                            
+                            ms=ea_robustmean(slice(:));
+                            maxmin=[max(slice(:)),min(slice(:))];
+                            mm=min(abs(maxmin));
+                            slice=slice-ms;
+                            slice(slice>mm)=mm;
+                            slice(slice<-mm)=-mm;
+                        end
+            
             disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
             if fid>0 % only if file exists (does sometimes not exist if called from lead anatomy or the slice-cuts feature of elvis)
                 fprintf(fid,'%s\n',['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
