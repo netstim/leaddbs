@@ -106,6 +106,7 @@ for p=1:length(presentfiles)
         clear a
         a=load([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'structures');
         if isempty(fieldnames(a)) % old format
+            disp(['Re-indexing ',atlases{atl},'...']);
             a=load([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat']);
             a.structures=a.atlases.names;
             save([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'-struct','a','-v7.3');
