@@ -102,8 +102,12 @@ warning('off');
 for p=1:length(presentfiles)
     topmenu{p}=uimenu('Parent', c, 'Label', upper(regexp(presentfiles{p}, '(?<=anat_)(.*)(?=\.nii(\.gz)?)', 'match', 'once')));
     for atl=1:length(atlases)
+        if ~exist([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'file')
+            continue
+        end
         atlmenu{p,atl}=uimenu('Parent',topmenu{p},'Label',atlases{atl});
         clear a
+
         a=load([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'structures');
         if isempty(fieldnames(a)) % old format
             disp(['Re-indexing ',atlases{atl},'...']);
