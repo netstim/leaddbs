@@ -84,8 +84,9 @@ eltog(2)=uitoggletool(ht,'CData',ea_get_icn('el3'),'TooltipString','Select proxi
 
 % rotleftcw=uipushtool(ht,'CData',ea_get_icn('rotleftcw'),'TooltipString','Rotate left lead clockwise','ClickedCallback',{@ea_rotate,'lc',mcfig});
 % rotleftccw=uipushtool(ht,'CData',ea_get_icn('rotleftccw'),'TooltipString','Rotate left lead counterclockwise','ClickedCallback',{@ea_rotate,'lcc',mcfig});
-
+if options.prefs.env.dev
 autorotation=uipushtool(ht,'CData',ea_get_icn('autorot'),'TooltipString','Detect directional leads','ClickedCallback',{@ea_autorotate,'clockwise',mcfig});
+end
 rotationcw=uipushtool(ht,'CData',ea_get_icn('cw'),'TooltipString','Rotate lead clockwise','ClickedCallback',{@ea_rotate,'clockwise',mcfig});
 rotationccw=uipushtool(ht,'CData',ea_get_icn('ccw'),'TooltipString','Rotate lead counterclockwise','ClickedCallback',{@ea_rotate,'counterclockwise',mcfig});
 
