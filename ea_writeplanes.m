@@ -143,22 +143,16 @@ for side=1:length(options.sides)
             if ~isempty(level)
 
                 ms=ea_robustmean(slice(:));
-                maxmin=[max(slice(:)),min(slice(:))];
-                mm=min(abs(maxmin));
                 slice=slice-ms;
+                maxmin=[max(slice(:)),min(slice(:))];
+                mm=max((maxmin));
                 slice(slice>mm)=mm;
                 slice(slice<-mm)=-mm;
+                slice(slice<0)=0;
             end
 
             try                level=evalin('base','level_offset'); end
-            if ~isempty(level)
-                
-                ms=ea_robustmean(slice(:));
-                
-                slice=slice-(ms);
-                maxmin=[max(slice(:)),min(slice(:))];
-                mm=max((maxmin));
-            end
+    
             
             disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
             if fid>0 % only if file exists (does sometimes not exist if called from lead anatomy or the slice-cuts feature of elvis)

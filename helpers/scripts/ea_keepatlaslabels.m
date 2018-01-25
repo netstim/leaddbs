@@ -35,7 +35,8 @@ colorbuttons = getappdata(resultfig,'colorbuttons');
 set(0,'CurrentFigure',resultfig)
 idx=zeros(length(atlassurfs),1);
 for i = 1:length(varargin)
-    idx = idx+~cellfun(@isempty,strfind(get(atlassurfs(:),'Tag'),varargin{i}));
+    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_left']);
+    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_right']);
 end
     set(colorbuttons(idx==0),'State','off')
     set(atlassurfs(idx==0),'Visible','off')
