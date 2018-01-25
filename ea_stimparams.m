@@ -74,7 +74,7 @@ if strcmp(options.leadprod, 'group')
     set(handles.prevpt,'visible','on');
     set(handles.nextpt,'visible','on');
     set(handles.saveparams,'visible','on');
-
+    
     set(handles.stimlabel,'visible','off');
     set(handles.stimlab,'visible','off');
     set(handles.stimulate,'visible','off');
@@ -82,7 +82,7 @@ if strcmp(options.leadprod, 'group')
         set(handles.prevpt,'enable','off');
         set(handles.nextpt,'enable','off');
     end
-
+    
     % UI adaption
     Yshift = 24;
     set(handles.stimfig, 'Position', handles.stimfig.Position - [0 0 0 Yshift]);
@@ -90,13 +90,13 @@ if strcmp(options.leadprod, 'group')
     set(handles.settings, 'Position', handles.settings.Position - [0 Yshift+2 0 0]);
 else
     groupmode=0;
-
+    
     set(handles.headertxt, 'String', ['Patient: ', elstruct(1).name]);
-
+    
     set(handles.prevpt,'visible','off');
     set(handles.nextpt,'visible','off');
     set(handles.saveparams,'visible','off');
-
+    
     set(handles.stimlabel,'visible','on');
     set(handles.stimlab,'visible','on');
     set(handles.stimulate,'visible','on');
@@ -861,24 +861,24 @@ function modelselect_Callback(hObject, eventdata, handles)
 
 groupmode=getappdata(handles.stimfig,'groupmode');
 if groupmode
-
+    
     choice = questdlg('Changing VAT model will delete stimulation parameters of all patients! Continue?', ...
         'Warning', ...
         'Yes, sure','No','No');
-
+    
     switch choice
-        case 'No' 
+        case 'No'
             gSv=getappdata(handles.stimfig,'gSv');
             ochoice=ismember(get(hObject,'String'),gSv.vatmodel);
             setappdata(hObject,'Value',ochoice);
             return
         case 'Yes, sure'
             setappdata(handles.stimfig,'gS',[]);
-
+            
             nms=get(hObject,'String');
             nms=nms{get(hObject,'Value')};
             gSv.vatmodel=nms;
-
+            
             setappdata(handles.stimfig,'gSv',gSv);
     end
 end
@@ -989,7 +989,7 @@ if verLessThan('matlab','8.5') % ML <2014a support
             if isfield(PL(p).fib_plots,'fibs')
                 delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs)));
             end
-
+            
             if isfield(PL(p).fib_plots,'dcfibs')
                 todelete=PL(p).fib_plots.dcfibs((PL(p).fib_plots.dcfibs(:)>0));
                 delete(todelete(:));
@@ -1019,7 +1019,7 @@ else
             if isfield(PL(p).fib_plots,'fibs')
                 delete(PL(p).fib_plots.fibs);
             end
-
+            
             if isfield(PL(p).fib_plots,'dcfibs')
                 delete(PL(p).fib_plots.dcfibs);
             end
@@ -1579,11 +1579,11 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             setappdata(handles.stimfig,'options',options);
         case 'Rename stimulation'
             stimlabel=getappdata(handles.stimfig,'stimlabel');
-
+            
             [~,ix]=ismember(stimlabel,get(handles.stimlabel,'String'));
             set(handles.stimlabel,'Value',ix);
             stimc = inputdlg('Please enter a label for this stimulation','Stimulation Label',1,{stimlabel});
-
+            
             movefile([options.root,options.patientname,filesep,'stimulations',filesep,stimlabel],[options.root,options.patientname,filesep,'stimulations',filesep,stimc{1}]);
             slabelc=get(handles.stimlabel,'String');
             slabelc{ix}=stimc{1};
@@ -1619,8 +1619,78 @@ else
     S.label=label;
     setappdata(handles.stimfig,'S',S);
     setappdata(handles.stimfig,'stimlabel',S.label);
-    setappdata(handles.stimfig,'S',S);
+    setappdata(handles.stimfig,'S',S);    
     ea_refreshguisp(handles,options);
+    
+    %% stuff by Till for visualizing VATs by selecting them from the stimlabel list
+    % tries to load .mat-files which are now created by ea_genvat_horn.m
+    % and contain the VAT as well as the quiver. In case no .mat-files are
+    % available the vat_xxx.nii is loaded and visualized
+    
+    visualizeVAT = 1;
+    if exist([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_right.mat']) == 2 && exist([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_left.mat']) == 2
+        load([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_right.mat']);
+        stimparams(1,1).VAT.VAT = vatfv;
+        stimparams(1,1).volume = vatvolume;
+        vatgradtemp(1) = vatgrad;
+        load([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_left.mat']);
+        stimparams(1,2).VAT.VAT = vatfv;
+        stimparams(1,2).volume = vatvolume;
+        vatgradtemp(2) = vatgrad;
+        vatgrad = vatgradtemp;
+    elseif  exist([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_right.mat']) == 2
+        load([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_right.mat']);
+        stimparams(1,1).VAT.VAT = vatfv;
+        stimparams(1,1).volume = vatvolume;
+    elseif  exist([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_left.mat']) == 2
+        load([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_left.mat']);
+        stimparams(1,1).VAT.VAT = vatfv;
+        stimparams(1,1).volume = vatvolume;
+    else
+        if exist([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_right.nii']) == 2 && exist([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_left.nii']) == 2
+            nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_right.nii']);
+            vatfv = ea_niiVAT2fvVAT(nii);
+%             vatfv = ea_smoothpatch(vatfv,1,35);
+            stimparams(1,1).VAT.VAT = vatfv;
+            nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_left.nii']);
+            vatfv = ea_niiVAT2fvVAT(nii);
+%             vatfv = ea_smoothpatch(vatfv,1,35);
+            stimparams(1,2).VAT.VAT = vatfv;
+        elseif exist([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_right.nii']) == 2
+            nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_right.nii']);
+            vatfv = ea_niiVAT2fvVAT(nii);
+%             vatfv = ea_smoothpatch(vatfv,1,35);
+            stimparams(1,1).VAT.VAT = vatfv;
+        elseif exist([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_left.nii']) == 2
+            nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,label,filesep,'vat_left.nii']);
+            vatfv = ea_niiVAT2fvVAT(nii);
+%             vatfv = ea_smoothpatch(vatfv,1,35);
+            stimparams(1,1).VAT.VAT = vatfv;
+        else
+            visualizeVAT = 0;
+        end
+        
+    end
+    
+    if visualizeVAT
+        setappdata(handles.stimfig,'stimparams',stimparams);
+        resultfig = getappdata(handles.stimfig,'resultfig');
+        PL=getappdata(resultfig,'PL');
+        for group=1:length(PL)
+            deletePL(PL(group));
+        end
+        clear PL
+        if exist('vatgrad')
+            setappdata(resultfig,'vatgrad',vatgrad);
+        end 
+        setappdata(resultfig,'stimparams',stimparams(1,:));
+        setappdata(resultfig,'S',S(1))
+        options.writeoutstats = 0;
+        ea_showfibres_volume(resultfig,options);
+    else
+        disp('VAT, cannot be visualized please recalculate')
+    end  
+    
 end
 
 
@@ -1653,21 +1723,21 @@ end
 
 if groupmode
     grouploaded=getappdata(handles.stimfig,'grouploaded');
-
+    
     if isempty(grouploaded) % this is done only once and gets the selection info from lead_group initially (which patient shown).
         lgfig=getappdata(handles.stimfig,'resultfig');
         M=getappdata(lgfig,'M');
         actpt=M.ui.listselect;
-
+        
         if length(actpt)>1 % more than one entry selected
             actpt=1;
         end
         setappdata(handles.stimfig,'actpt',actpt);
         % set grouploaded true is being done below.
     end
-
+    
     elstruct=getappdata(handles.stimfig,'elstruct');
-
+    
     set(handles.headertxt,'String',['Patient (',num2str(actpt),'/', num2str(length(elstruct)),'): ',elstruct(actpt).name]);
     
     gSv=getappdata(handles.stimfig,'gSv');
@@ -1680,7 +1750,7 @@ if groupmode
                 keyboard
             end
             setappdata(handles.stimfig,'gSv',gSv);
-
+            
         else
             [~,ind]=ismember(gSv.vatmodel,get(handles.modelselect,'String'));
             set(handles.modelselect,'Value',ind);
@@ -1706,7 +1776,7 @@ if groupmode
                 end
             end
             setappdata(handles.stimfig,'stimlabel',stimlabel);
-
+            
             % if gS is defined but group has just now been loaded
             try
                 if ~isempty(gS(actpt).Rs1) % current patient is defined -> set S to gS of this patient.
@@ -1739,10 +1809,10 @@ if isempty(S)
     setappdata(handles.stimfig,'stimlabel',S.label);
 else
     wasempty=0;
-   if isempty(S.Rs1)
-       S=initializeS(stimlabel,options,handles);
-       setappdata(handles.stimfig,'stimlabel',S.label);
-   end
+    if isempty(S.Rs1)
+        S=initializeS(stimlabel,options,handles);
+        setappdata(handles.stimfig,'stimlabel',S.label);
+    end
 end
 if ~wasempty
     if isfield(S, 'model')
@@ -1764,11 +1834,11 @@ if nargin==3
                 sidec='R'; side=1;
                 S=ea_redistribute_voltage(S,varargin{3});
                 if S.(['Rs',num2str(Ractive)]).case.pol==1
-
+                    
                     S.(['Rs',num2str(Ractive)]).case.pol=2;
                     S=ea_redistribute_voltage(S,varargin{3});
                     for k=0:7
-
+                        
                         if  S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
                             S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
                             S=ea_redistribute_voltage(S,['k',num2str(k)]);
@@ -1791,7 +1861,7 @@ if nargin==3
                 end
             otherwise
                 S=ea_redistribute_voltage(S,varargin{3});
-
+                
                 switch varargin{3}
                     case {'k0','k1','k2','k3','k4','k5','k6','k7'}
                         sidec='R'; side=1;
@@ -1802,10 +1872,10 @@ if nargin==3
                     S.([sidec,'s',num2str(S.active(side))]).case.pol=0;
                     S=ea_redistribute_voltage(S,[sidec,'case']);
                 end
-
+                
         end
     else
-       S=ea_redistribute_voltage(S,varargin{3});
+        S=ea_redistribute_voltage(S,varargin{3});
     end
 end
 
@@ -1814,12 +1884,12 @@ setappdata(handles.stimfig,'S',S);
 % set stim amplitudes
 for source=1:4
     S.amplitude{1}(source)=S.(['Rs',num2str(source)]).amp;
-
+    
     set(eval(['handles.Rs',num2str(source),'am']),'String',num2str(S.amplitude{1}(source)));
     set(eval(['handles.Rs',num2str(source),'va']),'Value',eval(['S.Rs',num2str(source),'.va']));
-
-
-%if eval(['S.Rs',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
+    
+    
+    %if eval(['S.Rs',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
     anycontactpositive=0; anycontactnegative=0;
     for k=0:7
         if eval(['S.Rs',num2str(source),'.k',num2str(k),'.pol==1'])
@@ -1828,45 +1898,45 @@ for source=1:4
             anycontactpositive=2;
         end
     end
-
+    
     if ~anycontactnegative
         eval(['S.Rs',num2str(source),'.k1.pol=1;']);
         eval(['S.Rs',num2str(source),'.k1.perc=100;']);
     end
-
+    
     if ~anycontactpositive
         eval(['S.Rs',num2str(source),'.case.pol=2;']);
         eval(['S.Rs',num2str(source),'.case.perc=100;']);
     end
-%end
-
+    %end
+    
 end
 
 for source=1:4
     S.amplitude{2}(source)=S.(['Ls',num2str(source)]).amp;
-
+    
     set(eval(['handles.Ls',num2str(source),'am']),'String',num2str(S.amplitude{2}(source)));
     set(eval(['handles.Ls',num2str(source),'va']),'Value',eval(['S.Ls',num2str(source),'.va']));
-
- %   if eval(['S.Ls',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
-        anycontactpositive=0; anycontactnegative=0;
-        for k=8:15
-            if eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol==1'])
-                anycontactnegative=1;
-            elseif eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol==2'])
-                anycontactpositive=1;
-            end
+    
+    %   if eval(['S.Ls',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
+    anycontactpositive=0; anycontactnegative=0;
+    for k=8:15
+        if eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol==1'])
+            anycontactnegative=1;
+        elseif eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol==2'])
+            anycontactpositive=1;
         end
-
-        if ~anycontactnegative
-            eval(['S.Ls',num2str(source),'.k9.pol=1;']);
-            eval(['S.Ls',num2str(source),'.k9.perc=100;']);
-        end
-        if ~anycontactpositive
-            eval(['S.Ls',num2str(source),'.case.pol=2;']);
-            eval(['S.Ls',num2str(source),'.case.perc=100;']);
-        end
- %   end
+    end
+    
+    if ~anycontactnegative
+        eval(['S.Ls',num2str(source),'.k9.pol=1;']);
+        eval(['S.Ls',num2str(source),'.k9.perc=100;']);
+    end
+    if ~anycontactpositive
+        eval(['S.Ls',num2str(source),'.case.pol=2;']);
+        eval(['S.Ls',num2str(source),'.case.perc=100;']);
+    end
+    %   end
 end
 
 %% model to handles: all GUI elements.
@@ -1875,7 +1945,7 @@ source=Ractive;
 for k=0:7
     val=eval(['S.Rs',num2str(source),'.k',num2str(k),'.perc']);
     set(eval(['handles.k',num2str(k),'u']),'String',num2str(val));
-
+    
     val=eval(['S.Rs',num2str(source),'.k',num2str(k),'.imp']);
     set(eval(['handles.k',num2str(k),'im']),'String',num2str(val));
 end
@@ -1887,7 +1957,7 @@ source=Lactive;
 for k=8:15
     val=eval(['S.Ls',num2str(source),'.k',num2str(k),'.perc']);
     set(eval(['handles.k',num2str(k),'u']),'String',num2str(val));
-
+    
     val=eval(['S.Ls',num2str(source),'.k',num2str(k),'.imp']);
     set(eval(['handles.k',num2str(k),'im']),'String',num2str(val));
 end
@@ -1982,7 +2052,7 @@ try
 catch
     set(handles.modelselect,'Value',1);
     model=models{1};
-
+    
 end
 
 switch options.elspec.numel
@@ -2025,7 +2095,7 @@ S.model=model;
 if get(handles.(['Rs',num2str(Ractive),'va']),'Value')==1 % Volt
     ea_show_percent(handles,options,1,'off'); % right hemisphere
 else % Ampere
-        ea_show_percent(handles,options,1,'on'); % right hemisphere
+    ea_show_percent(handles,options,1,'on'); % right hemisphere
 end
 if get(handles.(['Ls',num2str(Ractive),'va']),'Value')==1 % Volt
     ea_show_percent(handles,options,2,'off'); % left hemisphere
@@ -2107,18 +2177,18 @@ for k=0:15
 end
 
 for ohm=1:4
-	eval(['set(handles.kohmtext',num2str(ohm),',''visible'',''off'');']);
+    eval(['set(handles.kohmtext',num2str(ohm),',''visible'',''off'');']);
 end
 
 
 function ea_show_impedance(handles)
 
 for k=0:15
-	eval(['set(handles.k',num2str(k),'im,''visible'',''on'');']);
+    eval(['set(handles.k',num2str(k),'im,''visible'',''on'');']);
 end
 
 for ohm=1:4
-	eval(['set(handles.kohmtext',num2str(ohm),',''visible'',''on'');']);
+    eval(['set(handles.kohmtext',num2str(ohm),',''visible'',''on'');']);
 end
 
 
@@ -2143,21 +2213,21 @@ if ischar(changedobj) % different polarity on the block
             conts=Rconts;
             changedobj='case';
             contsCase=RcontsCase;
-
+            
             side=1;
             sidec='R';
         case 'Lcase'
             conts=Lconts;
             contsCase=LcontsCase;
-
+            
             changedobj='case';
             side=2;
             sidec='L';
     end
-
+    
     % check polarity of changed object:
     polchanged=eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol']);
-
+    
     % check for monopolar models:
     if S.monopolarmodel % these allow only 1 active anode contact per model.
         for c=1:length(conts)
@@ -2166,26 +2236,26 @@ if ischar(changedobj) % different polarity on the block
         end
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol=1;']);
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
-
+        
         return
-
+        
     else
-%         if S.([sidec,'s',num2str(S.active(side))]).va==2 % ampere only allows one anode and one cathode
-%             for c=1:length(contsCase)
-%
-%                 if S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol==polchanged % same polarity as changed object
-%                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=ea_swappol(polchanged);
-%                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=100;
-%                 else
-%                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=0;
-%                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=0;
-%                 end
-%             end
-%             S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol=1;
-%             S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=100;
-%         end
+        %         if S.([sidec,'s',num2str(S.active(side))]).va==2 % ampere only allows one anode and one cathode
+        %             for c=1:length(contsCase)
+        %
+        %                 if S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol==polchanged % same polarity as changed object
+        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=ea_swappol(polchanged);
+        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=100;
+        %                 else
+        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=0;
+        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=0;
+        %                 end
+        %             end
+        %             S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol=1;
+        %             S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=100;
+        %         end
     end
-
+    
     if polchanged==0
         % set changed contacts percentage to zero:
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=0;']);
@@ -2202,7 +2272,7 @@ if ischar(changedobj) % different polarity on the block
                 end
             end
         end
-
+        
         if eval(['S.',sidec,'s',num2str(S.active(side)),'.case.pol==polchanged'])
             if ~strcmp(changedobj,'case')
                 contacts{divby}='case';
@@ -2210,24 +2280,24 @@ if ischar(changedobj) % different polarity on the block
             end
         end
         % add case to calculation.
-
+        
         % set changed contacts percentage:
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100/divby;']);
-
+        
         % reduce all other contacts percentages:
-
+        
         try divby=divby/length(contacts); end
         for c=1:length(contacts)
             eval(['S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc=',...
                 'S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc/divby;']);
         end
     end
-
+    
     % now clean up mess from polarity that the contact used to have..
-
+    
     polchanged=ea_polminus(polchanged);
     sumpercs=0;
-
+    
     if polchanged % polarization has changed from negative to positive. clean up negatives. or changed from positive to off. clean up positives.
         contacts={};
         cnt=0;
@@ -2235,7 +2305,7 @@ if ischar(changedobj) % different polarity on the block
             if eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.pol==polchanged'])
                 if ~strcmp(conts{con},changedobj)
                     %voltages{divby}=eval(['S.Rs',num2str(S.active(side)),'.',Rconts{con},'.perc']);
-
+                    
                     cnt=cnt+1;
                     contacts{cnt}=conts{con};
                     sumpercs=sumpercs+eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.perc']);
@@ -2250,7 +2320,7 @@ if ischar(changedobj) % different polarity on the block
                 sumpercs=sumpercs+eval(['S.',sidec,'s',num2str(S.active(side)),'.case.perc']);
             end
         end
-
+        
         multby=(100/sumpercs);
         if cnt
             for c=1:length(contacts)
@@ -2259,12 +2329,12 @@ if ischar(changedobj) % different polarity on the block
             end
         end
     end
-
+    
 else % voltage percentage changed
     changedobj=get(changedobj,'Tag');
     changedobj=changedobj(1:end-1);
-
-     switch changedobj
+    
+    switch changedobj
         case Rconts
             conts=Rconts;
             sidec='R';
@@ -2283,32 +2353,32 @@ else % voltage percentage changed
             changedobj='case';
             side=2;
             sidec='L';
-     end
-
-     % check for monopolar models:
-     if S.monopolarmodel % these allow only 1 active anode contact per model.
-         for c=1:length(conts)
-             eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.pol=0;']);
-             eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.perc=0;']);
-         end
-         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol=1;']);
-         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
-
-         return
-     end
-
+    end
+    
+    % check for monopolar models:
+    if S.monopolarmodel % these allow only 1 active anode contact per model.
+        for c=1:length(conts)
+            eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.pol=0;']);
+            eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.perc=0;']);
+        end
+        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol=1;']);
+        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
+        
+        return
+    end
+    
     % check polarity of changed object:
     try
         polchanged=eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol']);
     catch
         keyboard
     end
-
+    
     if polchanged==0 % set changed contacts polarity to negative
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol=1;']);
         polchanged=1;
     end
-
+    
     % determine how many other nodes with this polarity exist:
     divby=1;
     contacts={};
@@ -2322,7 +2392,7 @@ else % voltage percentage changed
             end
         end
     end
-
+    
     % add case to calculation.
     if eval(['S.',sidec,'s',num2str(S.active(side)),'.case.pol==polchanged'])
         if ~strcmp(changedobj,'case')
@@ -2330,19 +2400,19 @@ else % voltage percentage changed
             divby=divby+1;
         end
     end
-
+    
     if divby==1 % only one contact -> set to 100 percent.
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
     end
-
+    
     % reduce all other contacts percentages:
     divby=sumpercent/(100-eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc']));
-
+    
     for c=1:length(contacts)
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc=',...
             'S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc/divby;']);
     end
-
+    
 end
 
 
@@ -2469,8 +2539,8 @@ catch
 end
 
 if preexist
-   load([options.root,options.patientname,filesep,'stimulations',filesep,S.label,filesep,'stimparameters.mat']);
-   return
+    load([options.root,options.patientname,filesep,'stimulations',filesep,S.label,filesep,'stimparameters.mat']);
+    return
 end
 
 % right sources
@@ -2754,7 +2824,7 @@ gS(actpt)=S;
 setappdata(handles.stimfig,'gS',gS);
 
 if (actpt+1)>length(elstruct)
-   setto=1;
+    setto=1;
 else
     setto=actpt+1;
 end
@@ -2788,7 +2858,7 @@ gS(actpt)=S;
 setappdata(handles.stimfig,'gS',gS);
 
 if (actpt-1)<1
-   setto=length(elstruct);
+    setto=length(elstruct);
 else
     setto=actpt-1;
 end

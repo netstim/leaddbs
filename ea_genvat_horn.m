@@ -482,6 +482,17 @@ Vvat.img=surf2vol(vatfv.vertices,vatfv.faces,gv{1},gv{2},gv{3});
 Vvat.img=imfill(Vvat.img,'holes');
 ea_write_nii(Vvat);
 
+% new save by Till to save VAT and quiver in seperate .mat-file for quick
+% visualization
+switch side
+    case 1
+        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.mat'];
+    case 2
+        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.mat'];
+end
+vatgrad = vatgrad(side);
+save(vatfvname,'vatfv','vatgrad','vatvolume');
+
 % define function outputs
 varargout{1}=vatfv;
 varargout{2}=vatvolume;
