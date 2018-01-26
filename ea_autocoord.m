@@ -194,7 +194,9 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
     
     if options.scrf
         if ~exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file') || options.overwriteapproved
+            options.autobrainshift=1;
             ea_subcorticalrefine(options);
+            options=rmfield(options,'autobrainshift');
         end
     end
     

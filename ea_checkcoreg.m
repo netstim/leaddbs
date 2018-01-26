@@ -75,6 +75,12 @@ if exist([directory,options.prefs.gprenii],'file') && ~ea_coreglocked(options,op
     presentfiles=[presentfiles;{[directory,options.prefs.gprenii]}];
 end
 
+if exist([directory,'scrf',filesep,'scrf_instore_converted.mat'],'file')
+    if ~ea_coreglocked(options,'brainshift')
+        presentfiles=[presentfiles;{'brainshift'}];
+    end
+end
+
 if isempty(presentfiles)
     close(handles.leadfigure)
    return
@@ -155,7 +161,11 @@ else
 end
 
 currvol=presentfiles{activevolume};
-
+if strcmp(currvol,'brainshift')
+    ea_subcorticalrefine(options);
+    close(handles.leadfigure);
+    return
+end
 switch ea_stripex(currvol)
     case ea_stripex(options.prefs.gprenii)
         handles.checkatl.Visible='on';
@@ -504,10 +514,15 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 if activevolume==length(presentfiles)
     close(handles.leadfigure); % make an exit
     return
+elseif (activevolume==length(presentfiles)-1 && strcmp(presentfiles{end},'brainshift'))
+    close(handles.leadfigure); % make an exit
+        ea_subcorticalrefine(options);
+    return
 else
     activevolume=activevolume+1;
 end
 setappdata(handles.leadfigure,'activevolume',activevolume);
+
 ea_mrcview(handles);
 title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
