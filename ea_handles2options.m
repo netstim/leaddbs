@@ -151,9 +151,13 @@ catch
 end
 
 try
-    options.scrf=get(handles.scrf,'Value');
+    options.scrf.do=get(handles.scrf,'Value');
 catch
-    options.scrf=0;
+    options.scrf.do=0;
+end
+
+try
+    options.scrf.mask=get(handles.scrfmask,'Value');
 end
 
 try

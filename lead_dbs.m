@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 10-Jan-2018 21:09:14
+% Last Modified by GUIDE v2.5 26-Jan-2018 09:48:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1754,4 +1754,27 @@ else
     if get(handles.reconmethod,'Value')==1
         set(handles.targetpopup,'Enable','on');
     end
+end
+
+
+% --- Executes on selection change in scrfmask.
+function scrfmask_Callback(hObject, eventdata, handles)
+% hObject    handle to scrfmask (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns scrfmask contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from scrfmask
+
+
+% --- Executes during object creation, after setting all properties.
+function scrfmask_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to scrfmask (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end

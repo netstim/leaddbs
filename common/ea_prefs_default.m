@@ -1,4 +1,4 @@
-function prefs = ea_prefs(patientname)
+function prefs = ea_prefs_default(patientname)
 
 % determine preferences here. For filenames, the variable 'patientname' can
 % be used in string-handling. This variable will be a string with the same name as the patient
@@ -104,7 +104,6 @@ prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
 prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregistration transformation
 
 %% Subcortical refine (Post to Pre):
-prefs.scrf.auto='mask1'; % can be 'off' to not perform automatic subcortical refine, 'nomask' to just use cropped image, 'mask1' to use Schoenecker mask 1 or 'mask2' to use both Schoenecker masks.
 prefs.scrf.tonemap='tp_'; % can set to '' if want to use non-tonemapped CTs for brainshift correction (default = 'tp_'). 
 
 %% Atlas-Sets:
