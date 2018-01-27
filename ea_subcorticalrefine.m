@@ -114,7 +114,7 @@ if options.d2.write || options.d3.write
 uiwait(handles.scrf);
 end
 if isfield(options,'autobrainshift') && options.autobrainshift
-savebutn_Callback([], [], handles);
+approvebutn_Callback([], [], handles);
 end
 
 
