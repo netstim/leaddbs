@@ -138,10 +138,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         diary off
     end
 
-    if options.coregmr.check
-        options.normcoreg='coreg';
-        ea_checkcoreg(options);
-    end
 
     if options.normalize.do
         diary([directory, 'normalize_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
@@ -185,12 +181,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         ea_norm_ptspecific_atl(options)
     end
 
-    if options.normalize.check
-        % export "control" niftis with wireframe of normal anatomy..
-        options.normcoreg='normalize';
-        ea_checkcoreg(options);
 
-    end
     
     if options.scrf.do
         if ~ea_coreglocked(options,'brainshift') || options.overwriteapproved
@@ -198,6 +189,13 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
             ea_subcorticalrefine(options);
             options=rmfield(options,'autobrainshift');
         end
+    end
+    
+    if options.normalize.check
+        % export "control" niftis with wireframe of normal anatomy..
+        options.normcoreg='normalize';
+        ea_checkcoreg(options);
+        
     end
     
     if options.doreconstruction
