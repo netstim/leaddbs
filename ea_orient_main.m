@@ -21,28 +21,28 @@ else
         ct_org = ea_load_nii([folder 'postop_ct.nii']);
         tmat_org = ct_org.mat;
         % use postop_ct as default but rpostop_ct if postop_ct has shearing
-        if  ct_org.mat(2,3) ~= 0 || ct_org.mat(3,2) ~= 0 || ct_org.mat(1,1) < 0
-            msg = sprintf(['Non-orthogonal rotation or shearing found inside the affine matrix of postop_ct.nii. You can either attempt:\n 1. Reslicing the postop_ct, which will be stored as postop_ct_resliced. \n 2. Use the rpostop_ct.nii instead (not recommended). \n 3. Abort and reslice the CT before coregistering and normalizing.']);
-            choice = questdlg(msg,'Warning!','Reslice','rPostOpCT','Abort','Reslice');
-            switch choice
-                case 'Reslice'
-                    if ~exist([folder 'postop_ct_resliced.nii'])
-                        disp(['Reslicing postop_ct:'])
-                        ea_reslice_nii([folder 'postop_ct.nii'],[folder 'postop_ct_resliced.nii'],[],1,0,1,[],[],0)
-                    end
-                    ct_org = ea_load_nii([folder 'postop_ct_resliced.nii']);
-                    tmat_org = ct_org.mat;
-                    ct = ct_org;
-                case 'rPostOpCT'
-                    disp(['Using rpostop_ct.nii as reference image.'])
-                    ct = ct_reg;
-                case 'Abort'
-                    error('Aborted due to non-orthogonal rotation or shearing found inside the affine matrix of postop_ct.nii')
-            end
-        else
-            disp(['Using postop_ct.nii as reference image.'])
+%         if  ct_org.mat(2,3) ~= 0 || ct_org.mat(3,2) ~= 0 || ct_org.mat(1,1) < 0
+%             msg = sprintf(['Non-orthogonal rotation or shearing found inside the affine matrix of postop_ct.nii. You can either attempt:\n 1. Reslicing the postop_ct, which will be stored as postop_ct_resliced. \n 2. Use the rpostop_ct.nii instead (not recommended). \n 3. Abort and reslice the CT before coregistering and normalizing.']);
+%             choice = questdlg(msg,'Warning!','Reslice','rPostOpCT','Abort','Reslice');
+%             switch choice
+%                 case 'Reslice'
+%                     if ~exist([folder 'postop_ct_resliced.nii'])
+%                         disp(['Reslicing postop_ct:'])
+%                         ea_reslice_nii([folder 'postop_ct.nii'],[folder 'postop_ct_resliced.nii'],[],1,0,1,[],[],0)
+%                     end
+%                     ct_org = ea_load_nii([folder 'postop_ct_resliced.nii']);
+%                     tmat_org = ct_org.mat;
+%                     ct = ct_org;
+%                 case 'rPostOpCT'
+%                     disp(['Using rpostop_ct.nii as reference image.'])
+%                     ct = ct_reg;
+%                 case 'Abort'
+%                     ea_error('Aborted due to non-orthogonal rotation or shearing found inside the affine matrix of postop_ct.nii')
+%             end
+%         else
+%             disp(['Using postop_ct.nii as reference image.'])
             ct = ct_org;
-        end
+%         end
         
     else
         msg = sprintf(['No postop_ct.nii found in folder: ' folder '\nScript will run using coregistered rpostop_ct.nii which may lead to inaccurate results.']);
@@ -119,15 +119,19 @@ else
         dirlevel2_mm = round(head_mm + (4 .* unitvector_mm));
         
         % transform to vx
-        marker_vx = round(inv(tmat_vx2mm) * marker_mm);
-        dirlevel1_vx = round(inv(tmat_vx2mm) * dirlevel1_mm);
-        dirlevel2_vx = round(inv(tmat_vx2mm) * dirlevel2_mm);        
+        marker_vx = round(tmat_vx2mm\marker_mm);
+        dirlevel1_vx = round(tmat_vx2mm\dirlevel1_mm);
+        dirlevel2_vx = round(tmat_vx2mm\dirlevel2_mm);        
                 
         %% extract axial slices at the level of marker and directional electrodes
         if ~supervised
-            artifact_marker = ct.img(marker_vx(1)-extractradius:marker_vx(1)+extractradius,marker_vx(2)-extractradius:marker_vx(2)+extractradius, marker_vx(3));
-            artifact_dir1 = ct.img(dirlevel1_vx(1)-extractradius:dirlevel1_vx(1)+extractradius,dirlevel1_vx(2)-extractradius:dirlevel1_vx(2)+extractradius, dirlevel1_vx(3));
-            artifact_dir2 = ct.img(dirlevel2_vx(1)-extractradius:dirlevel2_vx(1)+extractradius,dirlevel2_vx(2)-extractradius:dirlevel2_vx(2)+extractradius, dirlevel2_vx(3));
+            artifact_marker=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)'},1);
+            %artifact_marker = ct.img(marker_vx(1)-extractradius:marker_vx(1)+extractradius,marker_vx(2)-extractradius:marker_vx(2)+extractradius, marker_vx(3));
+            artifact_dir1=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel1_vx(1:3)'},1);
+            artifact_dir2=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel2_vx(1:3)'},1);
+
+            %artifact_dir1 = ct.img(dirlevel1_vx(1)-extractradius:dirlevel1_vx(1)+extractradius,dirlevel1_vx(2)-extractradius:dirlevel1_vx(2)+extractradius, dirlevel1_vx(3));
+            %artifact_dir2 = ct.img(dirlevel2_vx(1)-extractradius:dirlevel2_vx(1)+extractradius,dirlevel2_vx(2)-extractradius:dirlevel2_vx(2)+extractradius, dirlevel2_vx(3));
         elseif supervised
             %% Identify plane with optimal marker artifact
             tmp{1} = ct.img(marker_vx(1)-extractradius:marker_vx(1)+extractradius,marker_vx(2)-extractradius:marker_vx(2)+extractradius, marker_vx(3)-1);
