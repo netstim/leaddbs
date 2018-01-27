@@ -10,7 +10,7 @@
 classdef NiftiMod <  id & configurable
     properties (Access = protected) %references to data objects    
         header = [];         % the nifti header (real data) 
-        data = [];      % raw nifti data isLoaded in ram as matlab matrix�
+        data = [];      % raw nifti data isLoaded in ram as matlab matrix???
         filepathSuffix = [];
     end   
     properties (SetAccess = protected, GetAccess = public) %references to data objects
@@ -48,21 +48,18 @@ classdef NiftiMod <  id & configurable
             this = this@id();                     % call superclass constructor to get an ID 
             
             this.isLoaded = false;
-            lhdr = load_untouch_header_only(niftiFilepathObject.filepath); % make sure to load header on object conostruction
-            this.voxdim = lhdr.dime.dim(2:4)';
-            this.voxsize= lhdr.dime.pixdim(2:4)';
-            this.transformationMatrix = [lhdr.hist.srow_x;...
-                lhdr.hist.srow_y;...
-                lhdr.hist.srow_z;...
-                [0 0 0 1]];
-            if(trace(this.transformationMatrix(1:3,1:3)) == 0) % workaround defective nifti headers
-                this.transformationMatrix(1,1) = lhdr.dime.pixdim(2);
-                this.transformationMatrix(2,2) = lhdr.dime.pixdim(3);
-                this.transformationMatrix(3,3) = lhdr.dime.pixdim(4);       
-                this.transformationMatrix(1,4) = lhdr.hist.qoffset_x; 
-                this.transformationMatrix(2,4) = lhdr.hist.qoffset_y;
-                this.transformationMatrix(3,4) = lhdr.hist.qoffset_z;
-            end
+            lhdr = ea_open_vol(niftiFilepathObject.filepath); % make sure to load header on object conostruction
+            this.voxdim = lhdr.dim';
+            this.voxsize= lhdr.voxsize';
+            this.transformationMatrix = lhdr.mat;
+%             if(trace(this.transformationMatrix(1:3,1:3)) == 0) % workaround defective nifti headers
+%                 this.transformationMatrix(1,1) = lhdr.dime.pixdim(2);
+%                 this.transformationMatrix(2,2) = lhdr.dime.pixdim(3);
+%                 this.transformationMatrix(3,3) = lhdr.dime.pixdim(4);       
+%                 this.transformationMatrix(1,4) = lhdr.hist.qoffset_x; 
+%                 this.transformationMatrix(2,4) = lhdr.hist.qoffset_y;
+%                 this.transformationMatrix(3,4) = lhdr.hist.qoffset_z;
+%             end
             this.data = [];
             this.niftiFilepathObject = niftiFilepathObject;
             this.argParser = inputParser();
@@ -84,36 +81,36 @@ classdef NiftiMod <  id & configurable
         
         function [image, header] = load(this)
             if( ~this.isLoaded && ~strcmp(this.filepath,'')) % it is not already isLoaded and we were not called with empty string (by Matlab callingn our get functions without command after initiating!)
-                 disp(['Loading ' this.filepath ' from disk...']);
-                nifti = load_nii(this.filepath, [], [], [], [], [], 0.1, []); % load with 0.1 tolerance
                 
-                this.voxdim = nifti.hdr.dime.dim(2:4)';
-                this.voxsize= nifti.hdr.dime.pixdim(2:4)';
-                this.header = nifti.hdr; % header should maybe kept all the time ..
-                this.transformationMatrix = [nifti.hdr.hist.srow_x;...
-                    nifti.hdr.hist.srow_y;...
-                    nifti.hdr.hist.srow_z;...
-                    [0 0 0 1]];
-                if(trace(this.transformationMatrix(1:3,1:3)) == 0) % workaround defective nifti headers
-                    this.transformationMatrix(1,1) = nifti.hdr.dime.pixdim(2);
-                    this.transformationMatrix(2,2) = nifti.hdr.dime.pixdim(3);
-                    this.transformationMatrix(3,3) = nifti.hdr.dime.pixdim(4);
-                    this.transformationMatrix(1,4) = nifti.hdr.hist.qoffset_x; %
-                    this.transformationMatrix(2,4) = nifti.hdr.hist.qoffset_y;
-                    this.transformationMatrix(3,4) = nifti.hdr.hist.qoffset_z;
-                end
+                disp(['Loading ' this.filepath ' from disk...']);
+                %nifti = ea_load_untouch_nii(this.filepath);
+                
+                eanifti = ea_load_nii(this.filepath);
+                
+                this.voxdim = eanifti.dim';
+                this.voxsize= eanifti.voxsize';
+                this.header = eanifti; % header should maybe kept all the time ..
+                this.transformationMatrix = eanifti.mat;
+%                 if(trace(this.transformationMatrix(1:3,1:3)) == 0) % workaround defective nifti headers
+%                     this.transformationMatrix(1,1) = nifti.hdr.dime.pixdim(2);
+%                     this.transformationMatrix(2,2) = nifti.hdr.dime.pixdim(3);
+%                     this.transformationMatrix(3,3) = nifti.hdr.dime.pixdim(4);
+%                     this.transformationMatrix(1,4) = nifti.hdr.hist.qoffset_x; %
+%                     this.transformationMatrix(2,4) = nifti.hdr.hist.qoffset_y;
+%                     this.transformationMatrix(3,4) = nifti.hdr.hist.qoffset_z;
+%                 end
                 if(this.isToBeCached) % keep data in attributes if caching is enabled
                     disp('Caching is enabeld.');
                     
-                    this.data = nifti.img;
+                    this.data = eanifti.img;
                     this.isLoaded = true;
                 else
                     disp('Caching is disabled. NOT keeping original volume in memory! Set this.isToBeCached = true to change this behaviour.');
                     this.data = [];
                     this.isLoaded = false;
                 end
-                header = nifti.hdr; % return data all the time
-                image = single(nifti.img);
+                header = eanifti; % return data all the time
+                image = single(eanifti.img);
             end
         end
         
@@ -209,45 +206,46 @@ classdef NiftiMod <  id & configurable
              % this.hdr has been changed during load_nii call (in contrast to
             % load_untouch_nii function). however, here we need exactly the
             % original header, therefore it is loaded again
-            nii.hdr = load_untouch_header_only(this.niftiFilepathObject.filepath);
+            nii = ea_load_nii(this.niftiFilepathObject.filepath);
             
             if ( exist('isSegmentation','var') && isSegmentation )
-                nii.hdr.dime.datatype = 2; % uint8 is sufficient for segmentation
+                nii.dt(1) = 2; % uint8 is sufficient for segmentation
             end
             if ( exist('forceFloat','var') && forceFloat )
-                nii.hdr.dime.datatype = 16;
+                nii.dt(1) = 16;
             end
             
-            % nii.hdr = this.hdr;
-            if ( this.hdr.dime.pixdim(1) ~= nii.hdr.dime.pixdim(1) )
-                warning('niftiModality:swapLR', 'Swapping left and right because original and touched header do not agree, make sure to check if the nifti file is as expected!');
-                nii.img = newImg(end:-1:1,:,:);
-            else
-                nii.img = newImg;
-            end
-            nii.untouch = 1;
-            
-            disp(['Saving new image data in ' newFilepath ' to disk...']);
-            
-            [pathstr,filename,ext] = fileparts(newFilepath);
-            if(isequal(ext,''))
-                newFilepath = [newFilepath, '.nii'];
-            elseif(isequal(ext,'.gz'))
-                newFilepath = [pathstr filesep filename];
-            elseif(~isequal(ext,'.nii'))
-                 error('NiftiModality:save:WrongFileending','Current Fileending is unkown');
-            end
-            
-            save_untouch_nii(nii, newFilepath); 
-            
-
-            % save zipped file
-            gzip(newFilepath); %TODO make this configurable
-            delete(newFilepath);
-%             this.filepath = newFilepath;
-%             newFilepath = [newFilepath, '.gz'];
-%             this.niftiFilepathObject = NiftiFilepath(newFilepath);
-
+%             %% we won't need below part due to using SPM for loading
+%             % nii.hdr = this.hdr;
+%             if ( this.dim(1) ~= nii.dim(1) )
+%                 warning('niftiModality:swapLR', 'Swapping left and right because original and touched header do not agree, make sure to check if the nifti file is as expected!');
+%                 nii.img = newImg(end:-1:1,:,:);
+%             else
+%                 nii.img = newImg;
+%             end
+%             nii.untouch = 1;
+%             
+%             disp(['Saving new image data in ' newFilepath ' to disk...']);
+%             
+%             [pathstr,filename,ext] = fileparts(newFilepath);
+%             if(isequal(ext,''))
+%                 newFilepath = [newFilepath, '.nii'];
+%             elseif(isequal(ext,'.gz'))
+%                 newFilepath = [pathstr filesep filename];
+%             elseif(~isequal(ext,'.nii'))
+%                  error('NiftiModality:save:WrongFileending','Current Fileending is unkown');
+%             end
+%             
+%             save_untouch_nii(nii, newFilepath); 
+%             
+% 
+%             % save zipped file
+%             gzip(newFilepath); %TODO make this configurable
+%             delete(newFilepath);
+% %             this.filepath = newFilepath;
+% %             newFilepath = [newFilepath, '.gz'];
+% %             this.niftiFilepathObject = NiftiFilepath(newFilepath);
+% %%
         end
         
         function header = get.hdr(this)

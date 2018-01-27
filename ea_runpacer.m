@@ -2,10 +2,12 @@ function [coords_mm,trajectory,markers]=ea_runpacer(options)
 
 directory = [options.root,options.patientname,filesep];
 ctnii=options.prefs.ctnii_coregistered; tmat=eye(4);
-if exist([options.root,options.patientname,filesep,stripext(options.prefs.rawctnii_unnormalized),'2',stripext(options.prefs.prenii_unnormalized),'_ants1.mat'],'file'); % use unresliced version and apply matrix in RAM
-    load([options.root,options.patientname,filesep,stripext(options.prefs.rawctnii_unnormalized),'2',stripext(options.prefs.prenii_unnormalized),'_ants1.mat'])
-    tmat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
-    ctnii=options.prefs.rawctnii_unnormalized;
+if strcmp(options.prefs.reco.mancoruse,'postop')
+    if exist([options.root,options.patientname,filesep,stripext(options.prefs.rawctnii_unnormalized),'2',stripext(options.prefs.prenii_unnormalized),'_ants1.mat'],'file'); % use unresliced version and apply matrix in RAM
+        load([options.root,options.patientname,filesep,stripext(options.prefs.rawctnii_unnormalized),'2',stripext(options.prefs.prenii_unnormalized),'_ants1.mat'])
+        tmat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+        ctnii=options.prefs.rawctnii_unnormalized;
+    end
 end
 elecmodels=PaCER([options.root,options.patientname,filesep,ctnii],'finalDegree',1,'electrodeType',ea_mod2pacermod(options.elmodel));
 

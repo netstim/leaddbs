@@ -8,3 +8,6 @@ if strcmp(fname(end-2:end),'.gz')
     fname=fname(1:end-3);
 end
 V=spm_vol(fname);
+
+V.voxsize=ea_detvoxsize(V(1).mat); % set voxsize
+
