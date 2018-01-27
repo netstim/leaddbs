@@ -186,7 +186,9 @@ ea_recalc_reco([],[],directory);
 end
 
 % add to protocol:
+if exist([directory,'ea_coreg_approved.mat'],'file')
 approved=load([directory,'ea_coreg_approved.mat']);
+end
 approved.brainshift=1;
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
