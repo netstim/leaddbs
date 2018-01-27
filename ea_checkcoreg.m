@@ -82,6 +82,7 @@ if exist([directory,'scrf',filesep,'scrf_instore_converted.mat'],'file')
 end
 
 if isempty(presentfiles)
+evalin('base','checkregempty=1;');
     close(handles.leadfigure)
    return
 end
@@ -96,7 +97,7 @@ set(handles.checkatl,'Visible','off');
 options=getappdata(handles.leadfigure,'options');
 [~,presentfiles]=ea_assignpretra(options);
 
-c = uicontextmenu;
+c = uicontextmenu(handles.leadfigure);
 handles.checkatl.UIContextMenu = c;
 atlases=dir(ea_space(options,'atlases'));
 atlases = {atlases(cell2mat({atlases.isdir})).name};    % only keep folders
