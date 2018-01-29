@@ -20,29 +20,7 @@ else
     if exist([folder options.prefs.rawctnii_unnormalized]) == 2
         ct_org = ea_load_nii([folder 'postop_ct.nii']);
         tmat_org = ct_org.mat;
-        % use postop_ct as default but rpostop_ct if postop_ct has shearing
-%         if  ct_org.mat(2,3) ~= 0 || ct_org.mat(3,2) ~= 0 || ct_org.mat(1,1) < 0
-%             msg = sprintf(['Non-orthogonal rotation or shearing found inside the affine matrix of postop_ct.nii. You can either attempt:\n 1. Reslicing the postop_ct, which will be stored as postop_ct_resliced. \n 2. Use the rpostop_ct.nii instead (not recommended). \n 3. Abort and reslice the CT before coregistering and normalizing.']);
-%             choice = questdlg(msg,'Warning!','Reslice','rPostOpCT','Abort','Reslice');
-%             switch choice
-%                 case 'Reslice'
-%                     if ~exist([folder 'postop_ct_resliced.nii'])
-%                         disp(['Reslicing postop_ct:'])
-%                         ea_reslice_nii([folder 'postop_ct.nii'],[folder 'postop_ct_resliced.nii'],[],1,0,1,[],[],0)
-%                     end
-%                     ct_org = ea_load_nii([folder 'postop_ct_resliced.nii']);
-%                     tmat_org = ct_org.mat;
-%                     ct = ct_org;
-%                 case 'rPostOpCT'
-%                     disp(['Using rpostop_ct.nii as reference image.'])
-%                     ct = ct_reg;
-%                 case 'Abort'
-%                     ea_error('Aborted due to non-orthogonal rotation or shearing found inside the affine matrix of postop_ct.nii')
-%             end
-%         else
-%             disp(['Using postop_ct.nii as reference image.'])
-            ct = ct_org;
-%         end
+        ct = ct_org;
         
     else
         msg = sprintf(['No postop_ct.nii found in folder: ' folder '\nScript will run using coregistered rpostop_ct.nii which may lead to inaccurate results.']);
@@ -121,22 +99,49 @@ else
         % transform to vx
         marker_vx = round(tmat_vx2mm\marker_mm);
         dirlevel1_vx = round(tmat_vx2mm\dirlevel1_mm);
-        dirlevel2_vx = round(tmat_vx2mm\dirlevel2_mm);        
-                
+        dirlevel2_vx = round(tmat_vx2mm\dirlevel2_mm);
+        
         %% extract axial slices at the level of marker and directional electrodes
         if ~supervised
-            artifact_marker=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)'},1);
-            %artifact_marker = ct.img(marker_vx(1)-extractradius:marker_vx(1)+extractradius,marker_vx(2)-extractradius:marker_vx(2)+extractradius, marker_vx(3));
-            artifact_dir1=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel1_vx(1:3)'},1);
-            artifact_dir2=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel2_vx(1:3)'},1);
-
-            %artifact_dir1 = ct.img(dirlevel1_vx(1)-extractradius:dirlevel1_vx(1)+extractradius,dirlevel1_vx(2)-extractradius:dirlevel1_vx(2)+extractradius, dirlevel1_vx(3));
-            %artifact_dir2 = ct.img(dirlevel2_vx(1)-extractradius:dirlevel2_vx(1)+extractradius,dirlevel2_vx(2)-extractradius:dirlevel2_vx(2)+extractradius, dirlevel2_vx(3));
+            artifact_marker=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)'},1)';
+            if ct.mat(1,1) < 0
+                artifact_marker = flip(artifact_marker,1);
+            end
+            if ct.mat(2,2) < 0
+                artifact_marker = flip(artifact_marker,2);
+            end
+            
+            artifact_dir1=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel1_vx(1:3)'},1)';
+            if ct.mat(1,1) < 0
+                artifact_dir1 = flip(artifact_dir1,1);
+            end
+            if ct.mat(2,2) < 0
+                artifact_dir1 = flip(artifact_dir1,2);
+            end
+            
+            artifact_dir2=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel2_vx(1:3)'},1)';
+            if ct.mat(1,1) < 0
+                artifact_dir2 = flip(artifact_dir2,1);
+            end
+            if ct.mat(2,2) < 0
+                artifact_dir2 = flip(artifact_dir2,2);
+            end
         elseif supervised
             %% Identify plane with optimal marker artifact
-            tmp{1} = ct.img(marker_vx(1)-extractradius:marker_vx(1)+extractradius,marker_vx(2)-extractradius:marker_vx(2)+extractradius, marker_vx(3)-1);
-            tmp{2} = ct.img(marker_vx(1)-extractradius:marker_vx(1)+extractradius,marker_vx(2)-extractradius:marker_vx(2)+extractradius, marker_vx(3));
-            tmp{3} = ct.img(marker_vx(1)-extractradius:marker_vx(1)+extractradius,marker_vx(2)-extractradius:marker_vx(2)+extractradius, marker_vx(3)+1);
+            tmp{1}=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)' - [0 0 1]},1)';
+            tmp{2}=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)'},1)';
+            tmp{3}=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)' + [0 0 1]},1)';
+            
+            if ct.mat(1,1) < 0
+                tmp{1} = flip(tmp{1},1);
+                tmp{2} = flip(tmp{2},1);
+                tmp{3} = flip(tmp{3},1);
+            end
+            if ct.mat(2,2) < 0
+                tmp{1} = flip(tmp{1},2);
+                tmp{2} = flip(tmp{2},2);
+                tmp{3} = flip(tmp{3},2);
+            end
             
             h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
             
@@ -190,9 +195,20 @@ else
             clear tmp answer
             
             %% Identify plane with optimal dir level 1 artifact
-            tmp{1} = ct.img(dirlevel1_vx(1)-extractradius:dirlevel1_vx(1)+extractradius,dirlevel1_vx(2)-extractradius:dirlevel1_vx(2)+extractradius, dirlevel1_vx(3)-1);
-            tmp{2} = ct.img(dirlevel1_vx(1)-extractradius:dirlevel1_vx(1)+extractradius,dirlevel1_vx(2)-extractradius:dirlevel1_vx(2)+extractradius, dirlevel1_vx(3));
-            tmp{3} = ct.img(dirlevel1_vx(1)-extractradius:dirlevel1_vx(1)+extractradius,dirlevel1_vx(2)-extractradius:dirlevel1_vx(2)+extractradius, dirlevel1_vx(3)+1);
+            tmp{1}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel1_vx(1:3)' - [0 0 1]},1)';
+            tmp{2}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel1_vx(1:3)'},1)';
+            tmp{3}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel1_vx(1:3)' + [0 0 1]},1)';
+            
+            if ct.mat(1,1) < 0
+                tmp{1} = flip(tmp{1},1);
+                tmp{2} = flip(tmp{2},1);
+                tmp{3} = flip(tmp{3},1);
+            end
+            if ct.mat(2,2) < 0
+                tmp{1} = flip(tmp{1},2);
+                tmp{2} = flip(tmp{2},2);
+                tmp{3} = flip(tmp{3},2);
+            end
             
             subplot(3,1,1)
             imagesc(tmp{1}')
@@ -241,9 +257,20 @@ else
             clear tmp answer
             
             %% Identify plane with optimal dir level 2 artifact
-            tmp{1} = ct.img(dirlevel2_vx(1)-extractradius:dirlevel2_vx(1)+extractradius,dirlevel2_vx(2)-extractradius:dirlevel2_vx(2)+extractradius, dirlevel2_vx(3)-1);
-            tmp{2} = ct.img(dirlevel2_vx(1)-extractradius:dirlevel2_vx(1)+extractradius,dirlevel2_vx(2)-extractradius:dirlevel2_vx(2)+extractradius, dirlevel2_vx(3));
-            tmp{3} = ct.img(dirlevel2_vx(1)-extractradius:dirlevel2_vx(1)+extractradius,dirlevel2_vx(2)-extractradius:dirlevel2_vx(2)+extractradius, dirlevel2_vx(3)+1);
+            tmp{1}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel2_vx(1:3)' - [0 0 1]},1)';
+            tmp{2}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel2_vx(1:3)'},1)';
+            tmp{3}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel2_vx(1:3)' + [0 0 1]},1)';
+            
+            if ct.mat(1,1) < 0
+                tmp{1} = flip(tmp{1},1);
+                tmp{2} = flip(tmp{2},1);
+                tmp{3} = flip(tmp{3},1);
+            end
+            if ct.mat(2,2) < 0
+                tmp{1} = flip(tmp{1},2);
+                tmp{2} = flip(tmp{2},2);
+                tmp{3} = flip(tmp{3},2);
+            end
             
             subplot(3,1,1)
             imagesc(tmp{1}')
@@ -319,7 +346,7 @@ else
             marker_mm = tmat_vx2mm * marker_vx;
             clear a b
             close(h)
-
+            
             h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
             imagesc(artifact_dir1')
             axis equal
@@ -338,7 +365,7 @@ else
             dirlevel1_mm = tmat_vx2mm * dirlevel1_vx;
             clear a b
             close(h)
-
+            
             h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
             imagesc(artifact_dir2')
             view(-180,90)
@@ -359,9 +386,12 @@ else
             close(h)
         end
         %% get intensity profiles at radius around the centers of marker and directional levels
-        radius = 3;
+        radius = 4;        
+        radius = radius *2;        
         [angle, intensity,vector] = ea_orient_intensityprofile(artifact_marker,center_marker,pixdim,radius);
+        
         radius = 8;
+        radius = radius *2;
         [angle1, intensity1,vector1] = ea_orient_intensityprofile(artifact_dir1,center_dir1,pixdim,radius);
         [angle2, intensity2,vector2] = ea_orient_intensityprofile(artifact_dir2,center_dir2,pixdim,radius);
         
@@ -402,8 +432,6 @@ else
             view(-180,-90)
             axis equal
             axis off
-            xlim([0 2*extractradius])
-            ylim([0 2*extractradius])
             colormap gray
             caxis manual
             caxis(cscale)
@@ -438,9 +466,9 @@ else
             disp(['Warning: Yaw > 40 deg - Determining orientation might be inaccurate!'])
         end
         
-        %% correction for yaw and pitch to get rollangle for [0 0 1] lead 
-        peakangle(side) = angle(finalpeak(side));        
-        peakangle_corr(side) = (sin(peakangle(side)) * cos(pitch)) / ((cos(peakangle(side)) * cos(yaw)) - (sin(peakangle(side)) * sin(yaw) * sin(pitch)));  % see Sitz et al. 2017           
+        %% correction for yaw and pitch to get rollangle for [0 0 1] lead
+        peakangle(side) = angle(finalpeak(side));
+        peakangle_corr(side) = (sin(peakangle(side)) * cos(pitch)) / ((cos(peakangle(side)) * cos(yaw)) - (sin(peakangle(side)) * sin(yaw) * sin(pitch)));  % see Sitz et al. 2017
         peakangle_corr(side) = atan(peakangle_corr(side));
         
         if peakangle(side) < pi && peakangle_corr(side) < 0 && peakangle(side) - peakangle_corr(side) > pi/2
@@ -700,9 +728,9 @@ else
             end
             disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' deg, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])
             %% methods dump:
-ea_methods(options,...
-            ['Rotation of directional DBS leads was determined using the algorithm published by Sitz et al. 2017 as implemented in Lead-DBS software.'],...
-            {'Sitz, A., Hoevels, M., Hellerbach, A., Gierich, A., Luyken, K., Dembek, T.A., Klehr, M., Wirths, J., Visser-Vandewalle, V., & Treuer, H. (2017). Determining the orientation angle of directional leads for deep brain stimulation using computed tomography and digital x-ray imaging: A phantom study. Medical Physics, 44(9):4463-4473. http://dx.doi.org/10.1002/mp.12424'});
+            ea_methods(options,...
+                ['Rotation of directional DBS leads was determined using the algorithm published by Sitz et al. 2017 as implemented in Lead-DBS software.'],...
+                {'Sitz, A., Hoevels, M., Hellerbach, A., Gierich, A., Luyken, K., Dembek, T.A., Klehr, M., Wirths, J., Visser-Vandewalle, V., & Treuer, H. (2017). Determining the orientation angle of directional leads for deep brain stimulation using computed tomography and digital x-ray imaging: A phantom study. Medical Physics, 44(9):4463-4473. http://dx.doi.org/10.1002/mp.12424'});
         elseif retrystate == 0
             disp(['Changes to rotation not saved'])
             roll_out = [];
