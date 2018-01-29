@@ -6,9 +6,9 @@ disp('Preparing images to show Coregistration...');
 
     movingfile=[options.moving];
 
-    moving=ea_open_vol(movingfile);
-    fixed=ea_open_vol([options.fixed]);
-   
+    moving = ea_open_vol(movingfile);
+    fixed = ea_open_vol([options.fixed]);
+
     if ~ea_hdr_iscoreg(fixed,moving)
         [pctfile,fctfile,ectfile]=fileparts(movingfile);
         matlabbatch{1}.spm.util.imcalc.input = {[options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized];

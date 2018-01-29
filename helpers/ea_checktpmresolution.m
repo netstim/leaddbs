@@ -15,8 +15,7 @@ if isfield(spacedef,'tpm')
 end
 
 % check resolution of TPM
-V=ea_open_vol([ea_space,'TPM.nii']);
-vox=ea_detvoxsize(V(1).mat);
-if vox(1)==options.prefs.normalize.spm.resolution
+V = ea_open_vol([ea_space,'TPM.nii']);
+if V.voxsize(1) == options.prefs.normalize.spm.resolution
     needstobebuilt=0;
 end

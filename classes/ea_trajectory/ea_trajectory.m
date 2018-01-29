@@ -267,7 +267,7 @@ function ccoords=ea_convertfiducials(obj,coords)
                     case 1 % leave coords as they are
                         ccoords(coord,:)=coords(coord,:);
                     case 0 % need to convert from native to MNI
-                        V=ea_open_vol([obj.options.root,obj.options.patientname,filesep,obj.options.prefs.prenii_unnormalized]);
+                        V = ea_open_vol([obj.options.root,obj.options.patientname,filesep,obj.options.prefs.prenii_unnormalized]);
                         thiscoordvox=V.mat\[thiscoord,1]';
                         ccoords(coord,:)=ea_map_coords(thiscoordvox,...
                             [obj.options.root,obj.options.patientname,filesep,obj.options.prefs.prenii_unnormalized],...
@@ -278,7 +278,7 @@ function ccoords=ea_convertfiducials(obj,coords)
                 switch obj.options.native
                     case 1 % need to convert from MNI to native
                         % from MNI mm to MNI vox:
-                        V=ea_open_vol([ea_space,obj.options.primarytemplate,'.nii']);
+                        V = ea_open_vol([ea_space,obj.options.primarytemplate,'.nii']);
                         thiscoordvox=V.mat\[thiscoord,1]';
                         ccoords(coord,:)=ea_map_coords(thiscoordvox,...
                             [ea_space,obj.options.primarytemplate,'.nii'],...

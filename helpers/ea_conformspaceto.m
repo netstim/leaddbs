@@ -1,9 +1,9 @@
 function ea_conformspaceto(spacefn,toreslicefn,interp,mask,newfn)
 
-sphdr=ea_open_vol(spacefn);
-tohdr=ea_open_vol(toreslicefn);
+sphdr = ea_open_vol(spacefn);
+tohdr = ea_open_vol(toreslicefn);
 if ~isequal(sphdr.mat,tohdr.mat) % volumes have different dimensions & hdr matrices.
-    
+
     flags.mean=0;
     flags.which=1;
     if exist('newfn','var')
@@ -19,7 +19,7 @@ if ~isequal(sphdr.mat,tohdr.mat) % volumes have different dimensions & hdr matri
     else
         flags.mask=0;
     end
-    
+
     spm_reslice({spacefn,toreslicefn},flags);
     if exist('newfn','var')
     [pth,fn,ext]=fileparts(toreslicefn);

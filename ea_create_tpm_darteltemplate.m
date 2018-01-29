@@ -19,7 +19,7 @@ end
 tpmfile=[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii'];
 rebuildtpm=1;
 if isfield(spacedef,'tpm')
-    
+
     switch spacedef.tpm
         case 'custom_fixed'
             tpmfile=[ea_space,'TPM.nii'];
@@ -34,7 +34,8 @@ if isfield(spacedef,'tpm')
             end
     end
 end
-tpn=ea_open_vol(tpmfile);
+tpmHdr = ea_open_vol(tpmfile);
+tpn = tpmHdr.volnum;
 
 if rebuildtpm
     for t=1:length(spacedef.templates)
@@ -56,37 +57,37 @@ if rebuildtpm
     matlabbatch{1}.spm.spatial.preproc.warp.fwhm = 0;
     matlabbatch{1}.spm.spatial.preproc.warp.samp = 3;
     matlabbatch{1}.spm.spatial.preproc.warp.write = [0 0];
-    
+
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
-    
+
     delete([ea_space,spacedef.templates{1},'_seg8.mat']);
-    
+
 else
     % split TPM
     matlabbatch{1}.spm.util.split.vol = {[ea_space,'TPM.nii,1']};
     matlabbatch{1}.spm.util.split.outdir = {ea_space};
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
-    
+
     for t=1:length(tpn)
-       movefile([ea_space,'TPM_',sprintf('%05.f',t),'.nii'],[ea_space,'c',num2str(t),spacedef.templates{1},'.nii']); 
+       movefile([ea_space,'TPM_',sprintf('%05.f',t),'.nii'],[ea_space,'c',num2str(t),spacedef.templates{1},'.nii']);
     end
 end
 for c=1:length(tpn)
     if c<3
        copyfile([ea_space,'c',num2str(c),spacedef.templates{1},'.nii'],[ea_space,'c',num2str(c),'mask.nii']);
     end
-    movefile([ea_space,'c',num2str(c),spacedef.templates{1},'.nii'],[ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']); 
+    movefile([ea_space,'c',num2str(c),spacedef.templates{1},'.nii'],[ea_space([],'dartel'),filesep,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
 end
 
 
 
 prefs=ea_prefs('');
 if ~strcmp(spacedef.tpm(1:6),'custom')
-    
+
     for c=1:length(tpn)
-        
+
         fina=[ea_space([],'dartel'),'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
         nii=ea_load_nii(fina); % change datatype to something high for reslicing and smoothing.
         nii.dt=[16,0];
@@ -104,17 +105,17 @@ if ~strcmp(spacedef.tpm(1:6),'custom')
         clear job
         [pth,fn,ext]=fileparts(fina);
         movefile(fullfile(pth,['s',fn,ext]),fullfile(pth,[fn,ext]));
-        
+
         nii=ea_load_nii(fina); % change datatype back to uint8
         nii.dt=[2,0];
         delete(fina);
         ea_write_nii(nii);
-        
+
         matlabbatch{1}.spm.util.cat.vols{c} = fina;
     end
-    
+
     matlabbatch{1}.spm.util.cat.vols = matlabbatch{1}.spm.util.cat.vols';
-    
+
     matlabbatch{1}.spm.util.cat.name = [ea_space,'TPM.nii'];
     matlabbatch{1}.spm.util.cat.dtype = 16;
     spm_jobman('run',{matlabbatch});
@@ -209,13 +210,13 @@ ea_addshoot;
 %         matlabbatch{1}.spm.util.split.outdir = {ea_space};
 %         spm_jobman('run',{matlabbatch});
 %         clear matlabbatch
-%         
+%
 %         copyfile([ea_space,'atlas.nii'],[ea_space,'catlas.nii']);
 %         ea_conformspaceto([ea_space,'TPM_',sprintf('%05d',1),'.nii'],[ea_space,'catlas.nii'],1);
-%         
+%
 %         c1=ea_load_nii([ea_space,'TPM_',sprintf('%05d',1),'.nii']);
 %         if exist([ea_space,'atlas.nii'],'file') % add atlas.
-%             
+%
 %             atlas=ea_load_nii([ea_space,'catlas.nii']);
 %             c1.img(atlas.img>0.1)=atlas.img(atlas.img>0.1);
 %             ea_write_nii(c1);
@@ -225,9 +226,9 @@ ea_addshoot;
 %             c3=ea_load_nii([ea_space,'TPM_',sprintf('%05d',3),'.nii']);
 %             c3.img(atlas.img>0.1)=0;
 %             ea_write_nii(c3);
-%             
+%
 %         end
-%     
+%
 %         matlabbatch{1}.spm.spatial.smooth.data = {
 %             [ea_space,'TPM_00001.nii,1']
 %             [ea_space,'TPM_00002.nii,1']
@@ -241,7 +242,7 @@ ea_addshoot;
 %         matlabbatch{1}.spm.spatial.smooth.im = 0;
 %         matlabbatch{1}.spm.spatial.smooth.prefix = 's';
 %         spm_jobman('run',{matlabbatch}); clear matlabbatch
-%         
+%
 %         matlabbatch{1}.spm.util.cat.vols = {
 %             [ea_space,'sTPM_00001.nii,1']
 %             [ea_space,'sTPM_00002.nii,1']
@@ -254,11 +255,11 @@ ea_addshoot;
 %         matlabbatch{1}.spm.util.cat.dtype = 16;
 %     spm_jobman('run',{matlabbatch}); clear matlabbatch
 % % make sure TPM sums to 1 everywhere
-% 
+%
 % nii=ea_load_untouch_nii([ea_space,'TPM.nii']);
 % nii.img=nii.img./repmat(sum(nii.img,4),1,1,1,6);
 % ea_save_untouch_nii(nii,[ea_space,'TPM.nii']);
-% 
+%
 % delete([ea_space,'*PM_0*.nii']);
 % delete([ea_space,'TPM.mat']);
 % try

@@ -17,8 +17,8 @@ if isempty(presentfiles)
     iscoreg=0;
     return
 end
-Vref=ea_open_vol([directory,presentfiles{1}]);
-for comp=2:length(presentfiles)
-    Vcomp=ea_open_vol([directory,presentfiles{comp}]);
-    iscoreg=ea_hdr_iscoreg(Vcomp,Vref);
+Vref = ea_open_vol([directory, presentfiles{1}]);
+for comp = 2:length(presentfiles)
+    Vcomp = ea_open_vol([directory, presentfiles{comp}]);
+    iscoreg = ea_hdr_iscoreg(Vcomp, Vref);
 end

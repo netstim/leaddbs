@@ -63,7 +63,7 @@ disp('Done. Regressing out nuisance variables...');
 
 % %% actual regression:
 % for voxx=1:size(interpol_tc,1)
-% 
+%
 %     beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
 %     if ~isnan(beta_hat)
 %     interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
@@ -71,7 +71,7 @@ disp('Done. Regressing out nuisance variables...');
 %         warning('Regression of WM-/CSF-Signals could not be performed.');
 %     end
 % end
-% 
+%
 % clear X
 
 %% regress out movement parameters
@@ -197,9 +197,7 @@ movefile(fullfile(pth,ref,['s',sf,'_AvgR_Fz_native_unsmoothed.nii']),fullfile(pt
 
 % warp back to MNI:
 % STILL NEED TO WRITE THIS:
-V=ea_open_vol([directory,ref,'.nii,1']);
-V=V(1);
-V.img=spm_read_vols(V);
+V = ea_load_nii([directory,ref,'.nii,1']);
 V.fname=[directory,ref,'_first_TR.nii'];
 ea_write_nii(V);
 options.coregmr.method='SPM'; % hard code for now

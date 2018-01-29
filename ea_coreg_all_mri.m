@@ -16,8 +16,8 @@ for coregfi=2:length(presentfiles)
         ea_coreg2images(options,[directory,presentfiles{coregfi}],[directory,presentfiles{1}],[directory,presentfiles{coregfi}]);
 
         % reslice images if needed
-        V1=ea_open_vol([directory,presentfiles{1}]);
-        V2=ea_open_vol([directory,presentfiles{coregfi}]);
+        V1 = ea_open_vol([directory,presentfiles{1}]);
+        V2 = ea_open_vol([directory,presentfiles{coregfi}]);
         if ~isequal(V1.mat,V2.mat)
             ea_conformspaceto([directory,presentfiles{1}],[directory,presentfiles{coregfi}],1);
         end
