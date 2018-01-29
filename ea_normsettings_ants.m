@@ -65,11 +65,15 @@ set(handles.titletext,'String','ANTs Defaults');
 earoot=ea_getearoot;
 presf=[earoot,'ext_libs',filesep,'ANTs',filesep,'presets',filesep];
 ndir=dir([presf,'ea_antspreset_*.m']);
+namecell = cell(size(ndir));
+funcell = cell(size(ndir));
 for n=1:length(ndir)
     [~,funame,~]=fileparts(ndir(n).name);
     namecell{n}=eval([funame,'(''query'')']);
     funcell{n}=funame;
 end
+[namecell, sortix]=sort(namecell);
+funcell = funcell(sortix);
 setappdata(handles.pcpopup,'funcell',funcell);
 set(handles.pcpopup,'String',namecell);
 

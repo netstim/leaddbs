@@ -1,7 +1,7 @@
-function apref = ea_antspreset_effective_lowvariance(cmd)
+function apref = ea_antspreset_effective_lowvar_default(cmd)
 
 if ischar(cmd) % 'query' mode, return the name of the preset
-    apref = 'Effective (Low Variance)';
+    apref = 'Effective: Low Variance, Default';
     return
 end
 
@@ -28,8 +28,8 @@ switch normsettings.ants_strategy
 end
 
 % Convergence
-apref.convergence.rigid='[1000x500x250x0,1e-6,10]'; % Rigid convergence params
-apref.convergence.affine='[1000x500x250x0,1e-6,10]'; % Affine convergence params
+apref.convergence.rigid='[1000x500x250x0,1e-7,10]'; % Rigid convergence params
+apref.convergence.affine='[1000x500x250x0,1e-7,10]'; % Affine convergence params
 apref.convergence.syn='[1000x500x250x0,1e-6,7]'; % SyN convergence params
 apref.convergence.scrf='[200x50x10x0,1e-6,7]'; % SyN subcortical focus stage convergence params
 
@@ -38,12 +38,12 @@ apref.convergence.scrf='[200x50x10x0,1e-6,7]'; % SyN subcortical focus stage con
 % resliced to 0.7 mm. Thus should consider not going down to shrink factor
 % of 1 at all.
 apref.shrinkfactors.rigid='12x8x4x1'; % Rigid shrink factors
-apref.shrinkfactors.affine='8x4x2x1'; % Affine shrink factors
+apref.shrinkfactors.affine='12x8x4x1'; % Affine shrink factors
 apref.shrinkfactors.syn='8x4x4x1'; % SyN shrink factors
 apref.shrinkfactors.scrf='4x4x2x1'; % SyN subcortical focus stage shrink factors
 
 % Smoothing Sigmas
-apref.smoothingsigmas.rigid='4x3x2x1vox'; % Rigid Smoothing sigmas
-apref.smoothingsigmas.affine='4x3x2x1vox'; % Affine Smoothing sigmas
+apref.smoothingsigmas.rigid='5x4x3x1vox'; % Rigid Smoothing sigmas
+apref.smoothingsigmas.affine='5x4x3x1vox'; % Affine Smoothing sigmas
 apref.smoothingsigmas.syn='4x3x1x1vox'; % SyN Smoothing sigmas
 apref.smoothingsigmas.scrf='2x2x1x1vox'; % SyN subcortical focus stage smoothing sigmas

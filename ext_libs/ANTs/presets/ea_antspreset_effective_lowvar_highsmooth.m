@@ -1,7 +1,7 @@
-function apref = ea_antspreset_effective_default_high_smooth(cmd)
+function apref = ea_antspreset_effective_lowvar_highsmooth(cmd)
 
 if ischar(cmd) % 'query' mode, return the name of the preset
-    apref = 'Effective (Default / High Smoothing)';
+    apref = 'Effective: Low Variance, High Smoothing';
     return
 end
 

@@ -1,7 +1,7 @@
-function apref = ea_antspreset_effective(cmd)
+function apref = ea_antspreset_effective_highvar(cmd)
 
 if ischar(cmd) % 'query' mode, return the name of the preset
-    apref = 'Effective (High Variance)';
+    apref = 'Effective: High Variance';
     return
 end
 

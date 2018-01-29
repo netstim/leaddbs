@@ -1,7 +1,7 @@
-function apref = ea_antspreset_effective(cmd)
+function apref = ea_antspreset_legacy_lowvar(cmd)
 
 if ischar(cmd) % 'query' mode, return the name of the preset
-    apref = 'Effective (Mid Variance)';
+    apref = 'Legacy: Low Variance';
     return
 end
 
@@ -21,10 +21,10 @@ end
 switch normsettings.ants_strategy
     case 'SyN'
         apref.antsmode='SyN';
-        apref.antsmode_suffix='[0.3,3,0]';
+        apref.antsmode_suffix='[0.3,4,3]';
     case 'BSplineSyN'
         apref.antsmode='BSplineSyN';
-        apref.antsmode_suffix='[0.1,26,0,3]'; % as in example script in Tustison 2013
+        apref.antsmode_suffix='[0.1,26,2,4]'; % as in example script in Tustison 2013
 end
 
 % Convergence
