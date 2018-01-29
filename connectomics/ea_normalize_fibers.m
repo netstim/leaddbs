@@ -85,6 +85,7 @@ fprintf('\nMapping from b0 to anat...\n');
 [~, fix] = fileparts(options.prefs.prenii_unnormalized);
 if isempty(dir([directory, mov, '2', fix, '_*.mat']))
     ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
+    ea_delete([options.root,options.patientname,filesep,'tmp.nii']);
 end
 [~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
                                    refb0, ...
