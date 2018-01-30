@@ -11,11 +11,12 @@ end
 uid=ea_generate_guid;
 
 mov=ea_load_untouch_nii([moving,'.nii']);
+mov.img=double(mov.img);
 mov.img(isnan(mov.img))=0;
 SIX=sort(mov.img(mov.img(:)~=0),'descend');
-Ubound=SIX(round(length(SIX)*5/100));
+Ubound=SIX(round(length(SIX)*0.2/100));
 mov.img(mov.img>Ubound)=Ubound;
-Lbound=SIX(round(length(SIX)*95/100));
+Lbound=SIX(round(length(SIX)*99.7/100));
 mov.img(mov.img<Lbound)=Lbound;
 
 %mov.img(mov.img(:)~=0)=ea_contrast(mov.img(mov.img(:)~=0),2,0);
