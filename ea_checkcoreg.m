@@ -652,9 +652,11 @@ else
 end
 setappdata(handles.leadfigure,'activevolume',activevolume);
 ea_mrcview(handles);
+try
 title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
 set(handles.leadfigure, 'Name', title);
+end
 
 
 % --- Executes on button press in back.
