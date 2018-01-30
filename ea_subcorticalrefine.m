@@ -114,7 +114,7 @@ if options.d2.write || options.d3.write
 uiwait(handles.scrf);
 end
 if isfield(options,'autobrainshift') && options.autobrainshift
-approvebutn_Callback([], [], handles);
+saveandclose([], [], handles); % close figure again.
 end
 
 
@@ -191,6 +191,29 @@ approved=load([directory,'ea_coreg_approved.mat']);
 end
 approved.brainshift=1;
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
+
+ea_methods(directory,...
+            ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
+            'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
+            ' (Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
+            {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+
+closescrf(handles);
+end
+
+
+function saveandclose(hObject, eventdata, handles)
+% hObject    handle to approvebutn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+directory=getappdata(handles.scrf,'directory');
+if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
+	msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
+else
+copyfile([directory,'scrf',filesep,'scrf_instore_converted.mat'],[directory,'scrf',filesep,'scrf_converted.mat']);
+if exist([directory,'ea_reconstruction.mat'],'file')
+ea_recalc_reco([],[],directory);
+end
 
 ea_methods(directory,...
             ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...

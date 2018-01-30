@@ -47,7 +47,7 @@ for side=sides
                 case 1
                     acs(pt,:)=mean(M.elstruct(pts(pt)).coords_mm{1}(logical(M.S(pts(pt)).activecontacts{1}(1:4)),:),1);
                 case 2
-                    acs(pt,:)=mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1);
+                    acs(pt,:)=ea_flip_lr_nonlinear(mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1));
             end
         else % average points
             try
