@@ -629,7 +629,11 @@ switch ea_stripex(currvol)
     case ea_stripex(['tp_',options.prefs.ctnii_coregistered])
     otherwise % make sure method gets unlogged for specific volume.
         method=getappdata(handles.leadfigure,'method');
+        if exist([directory,'ea_coregmrmethod_applied.mat'],'file')
         m=load([directory,'ea_coregmrmethod_applied.mat']);
+        else
+            m=struct;
+        end
         if isfield(m,ea_stripex(currvol))
             m=rmfield(m,ea_stripex(currvol));
         end
