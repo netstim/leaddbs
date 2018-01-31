@@ -353,21 +353,27 @@ for side=1:length(options.sides)
             connectingfibs{side}{la,fib}=connectingfibs{side}{la,fib}';
 
             if ~isfield(stimparams,'group')
-                connectingfibs{side}{la,fib}(4,:)=detcolor(connectingfibs{side}{la,fib}); % add coloring information to the 4th column.
+                connectingfibs{side}{la,fib}(4:6,:)=detcolor(connectingfibs{side}{la,fib}); % add coloring information to the 4th column.
             else % if more than one group is analyzed, coloring info will be off the group color.
-                RGB=zeros(1,1,3);
-                RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
-                RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
-                RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
+%                 RGB=zeros(1,1,3);
+%                 RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
+%                 RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
+%                 RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
+%
+%                 connectingfibs{side}{la,fib}(4,:)=rgb2ind(RGB,jet);
 
-                connectingfibs{side}{la,fib}(4,:)=rgb2ind(RGB,jet);
+                RGB=zeros(1,3);
+                RGB(:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
+                RGB(:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
+                RGB(:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
+                connectingfibs{side}{la,fib}(4:6,:) = repmat(RGB, size(connectingfibs{side}{fib},2), 1)';
             end
 
-            for dim=1:4
-                thisfib(dim,:)=double(interp1q([1:size(connectingfibs{side}{fib},2)]',connectingfibs{side}{fib}(dim,:)',[1:0.1:size(connectingfibs{side}{fib},2)]')');
+            for dim=1:size(connectingfibs{side}{fib},1)
+                thisfib(dim,:)=double(interp1q((1:size(connectingfibs{side}{fib},2))',connectingfibs{side}{fib}(dim,:)',(1:0.1:size(connectingfibs{side}{fib},2))')');
             end
             % plot fibers
-           [PL.fib_plots.fibs(side,fib),fv(fib)]=ea_plot_fiber(thisfib,6,0,options);
+            [PL.fib_plots.fibs(side,fib),fv(fib)]=ea_plot_fiber(thisfib,6,0,options);
 
             % store for webexport
             jetlist=jet;
@@ -384,8 +390,7 @@ for side=1:length(options.sides)
             fv=ea_concatfv(fv);
             set(0,'CurrentFigure',resultfig);
             PL.fib_plots.fibs(side,1)=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.2);
-            set(PL.fib_plots.fibs(side,1),'FaceVertexCData',squeeze(ind2rgb(get(PL.fib_plots.fibs(side,1),'FaceVertexCData'),jet)));
-            % set(PL.fib_plots.fibs(side,1),'FaceVertexCData', get(PL.fib_plots.fibs(side,1),'FaceVertexCData'));
+            set(PL.fib_plots.fibs(side,1),'FaceVertexCData', get(PL.fib_plots.fibs(side,1),'FaceVertexCData'));
             PL.fib_plots.fibs(:,2:end)=[];
         end
 
@@ -444,7 +449,8 @@ rgb=[rgb,rgb(:,end)];
 rgbim=zeros(1,size(rgb,2),3);
 rgbim(1,:,:)=rgb';
 try
-    indcol=double(rgb2ind(rgbim,jet));
+    indcol=rgb2ind(rgbim,jet);
+    indcol=squeeze(ind2rgb(indcol,jet))';
 catch
     keyboard
 end

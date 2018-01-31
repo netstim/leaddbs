@@ -95,7 +95,6 @@ if length(varargin)>4
         end
     else
         icolor=varargin{5};
-        % icolor=squeeze(ind2rgb(round(icolor),jet));
     end
 else
     icolor=[0 0 1];
