@@ -932,7 +932,7 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
         S.label=['gs_',M.guid];
         try
         [ea_stats,usewhichstim]=ea_assignstimcnt(M.stats(pt).ea_stats,S);
-       
+
         for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,1)
             for vat=1
                 if side==1 % right hemisphere
@@ -1228,7 +1228,7 @@ for pt=selection
         for side=1:2
             setappdata(resultfig,'elstruct',M.elstruct(pt));
             setappdata(resultfig,'elspec',options.elspec);
-            try 
+            try
                 [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
             catch
                 msgbox(['Error while creating VTA of ',M.patient.list{pt},'.']);
@@ -1456,7 +1456,7 @@ M=getappdata(gcf,'M');
 
 for g=unique(M.patient.group)'
     M.groups.color(ismember(M.groups.group,g),:)=...
-        uisetcolor(M.groups.color(ismember(M.groups.group,g),:),['Group ',num2str(g),':']);
+        ea_uisetcolor(M.groups.color(ismember(M.groups.group,g),:),['Group ',num2str(g),':']);
 end
 M.groups.colorschosen=1;
 

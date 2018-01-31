@@ -161,13 +161,13 @@ switch obj.relateMicro
     case 'macro'
         set(handles.relateMicro,'Value',1);
     case 'planning'
-        set(handles.relateMicro,'Value',2);        
+        set(handles.relateMicro,'Value',2);
 end
 % subordinate enables
 set(handles.relateMicro,'enable',ea_bool2onoff(get(handles.showMicro,'Value')));
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_trajectorycontrol_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_trajectorycontrol_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -338,7 +338,7 @@ function color_Callback(hObject, eventdata, handles)
 % hObject    handle to color (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-c=uisetcolor;
+c = ea_uisetcolor;
 if any(c)
 obj=getappdata(handles.trajectorycontrol,'obj');
 obj.color=c;
@@ -401,7 +401,7 @@ function space_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns space contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from space
-    
+
     obj=getappdata(handles.trajectorycontrol,'obj');
     obj.planRelative(5)=get(handles.space,'Value');
 
@@ -614,10 +614,10 @@ function addtraj_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 obj=getappdata(handles.trajectorycontrol,'obj');
 if obj.hasPlanning % -> This will add a new trajectory unrelated to the present one
-    
-    
+
+
 else
-    
+
     obj.target=ea_getstandardtarget(obj.side);
     obj.showPlanning=1;
     obj.hasPlanning=1;
@@ -638,4 +638,4 @@ obj=getappdata(handles.trajectorycontrol,'obj');
 delete(hObject);
 
 ea_save_trajectory(obj);
-    
+

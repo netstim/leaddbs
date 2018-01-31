@@ -75,7 +75,7 @@ if ~obj.binary
     h=findobj(handles.histax,'Type','patch');
     set(h,'FaceColor',[0,0.5 0.5],'EdgeColor','none');
     axis off
-    
+
     set(handles.roicontrol,'Name',obj.niftiFilename);
     handles.histax.XAxis.Limits=[min(nzeros),max(nzeros)];
 else
@@ -95,7 +95,7 @@ hjSlider{1} = handle(jSlider{1}, 'CallbackProperties');
 set(hjSlider{1}, 'MouseReleasedCallback', {@sliderthresholdchange,obj,handles});  %alternative
 set(hjSlider{1}, 'StateChangedCallback', {@sliderthresholdchangetxt,obj,handles});  %alternative
 else
-   obj.threshold=obj.max/2; 
+   obj.threshold=obj.max/2;
 end
 
 % alpha
@@ -141,7 +141,7 @@ obj.threshold=tval+obj.min;
 function sliderthresholdchangetxt(varargin)
 slide=varargin{1};
 obj=varargin{3};
-   handles=varargin{4}; 
+   handles=varargin{4};
 tval=slide.Value;
 tval=tval/100;
 tval=tval*obj.max;
@@ -178,7 +178,7 @@ function colorchange_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 obj=getappdata(handles.roicontrol,'obj');
-obj.color=uisetcolor;
+obj.color = ea_uisetcolor;
 set(handles.colorchange,'BackgroundColor',obj.color);
 
 

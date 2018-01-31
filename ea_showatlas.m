@@ -366,7 +366,7 @@ end
 % open up atlas control viewer
 function setlabelcolor(hobj,ev,robject)
 
-co=uisetcolor;
+co = ea_uisetcolor;
 set(robject,'Color',co);
 
 

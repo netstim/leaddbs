@@ -1,4 +1,4 @@
-%  VIEW_NII: Create or update a 3-View (Front, Top, Side) of the 
+%  VIEW_NII: Create or update a 3-View (Front, Top, Side) of the
 %	brain data that is specified by nii structure
 %
 %  Usage:  	status = view_nii([h], nii, [option])	or
@@ -44,7 +44,7 @@
 %		init: If option.command='init', the program will display
 %			a 3-View plot on the figure specified by figure h
 %			or on a new figure. If there is already a 3-View
-%			plot on the figure, please use option.command = 
+%			plot on the figure, please use option.command =
 %			'updatenii' (see detail below); otherwise, the
 %			new 3-View plot will superimpose on the old one.
 %			If there is no option provided, the program will
@@ -55,7 +55,7 @@
 %		update: If there is no command specified, and a figure
 %			handle of the existing 3-View plot is provided,
 %			the program will choose option.command='update'
-%			to update the 3-View plot with some new option 
+%			to update the 3-View plot with some new option
 %			items.
 %
 %		clearnii: Clear 3-View plot on specific figure
@@ -90,7 +90,7 @@
 %
 %	5. usestretch: If specified and usestretch=0, the 3 slices will
 %		not be stretched, and will be displayed according to
-%		the actual voxel size; otherwise, the 3 slices will be 
+%		the actual voxel size; otherwise, the 3 slices will be
 %		stretched to the edge.
 %
 %	6. useimagesc: If specified and useimagesc=0, images data will
@@ -105,7 +105,7 @@
 %		is set.
 %
 %
-%	8. setarea: 3-View plot will be displayed on this specific 
+%	8. setarea: 3-View plot will be displayed on this specific
 %		region. If it is not specified, program will set the
 %		plot area to [0.05 0.05 0.9 0.9].
 %
@@ -146,7 +146,7 @@
 %		colormap, and allocate sethighcolor (an Mx3 matrix)
 %		to high-end portion of the colormap. The sum of M and
 %		setcolorlevel should be less than 256. If setcolormap
-%		option is used, sethighcolor will be inserted on top 
+%		option is used, sethighcolor will be inserted on top
 %		of the setcolormap, and the setcolorlevel option will
 %		be disabled automatically.
 %
@@ -156,7 +156,7 @@
 %
 %	18. setvalue: If specified, setvalue.val (with the same size as
 %		the source data on solution points) in the source area
-%		setvalue.idx will be superimposed on the current nii 
+%		setvalue.idx will be superimposed on the current nii
 %		image. So, the size of setvalue.val should be equal to
 %		the size of setvalue.idx. To use this feature, it needs
 %		single or double nii structure for background image.
@@ -580,7 +580,7 @@ function status = view_nii(varargin)
       buttonmotion = strrep(buttonmotion, mymotion, '');
       set(fig, 'windowbuttonmotion', buttonmotion);
 
-   case {'axial_image','coronal_image','sagittal_image'}    
+   case {'axial_image','coronal_image','sagittal_image'}
 
       switch command
          case 'axial_image',    view = 'axi'; axi = 0; cor = 1; sag = 1;
@@ -674,9 +674,9 @@ function status = view_nii(varargin)
       if ~isempty(nii_view.buttondown)
          eval(nii_view.buttondown);
       end
-    
+
    case {'axial_slider','coronal_slider','sagittal_slider'},
-    
+
       switch command
          case 'axial_slider',    view = 'axi'; axi = 1; cor = 0; sag = 0;
          case 'coronal_slider',  view = 'cor'; axi = 0; cor = 1; sag = 0;
@@ -737,7 +737,7 @@ function status = view_nii(varargin)
             slider_val = nii_view.dims(2) - nii_view.slices.cor + 1;
             set(nii_view.handles.coronal_slider,'Value',slider_val);
          end
-      end    
+      end
 
       if sag,
          if isfield(nii_view.handles,'sagittal_bg') & ~isempty(nii_view.handles.sagittal_bg) & nii_view.useinterp
@@ -918,7 +918,7 @@ function status = view_nii(varargin)
    case 'xhair_color',
 
       old_color = get(gcbo,'user');
-      new_color = uisetcolor(old_color);
+      new_color = ea_uisetcolor(old_color);
       update_crosshaircolor(fig, new_color);
 
    case {'color','contrast_def'}
@@ -1212,7 +1212,7 @@ function fig = init(nii, fig, area, setunit, setviewpoint, setscanid, buttondown
    origin = abs(nii.hdr.hist.originator(1:3));
 
    if isempty(origin) | all(origin == 0)		% according to SPM
-      origin = (dims+1)/2;   
+      origin = (dims+1)/2;
    end;
 
    origin = round(origin);
@@ -1680,7 +1680,7 @@ end
 
    pos = [x,  y+inputline_space*0.9,  w,  h];
 
-   handles.hist_frame = uicontrol('Parent',fig, ...	
+   handles.hist_frame = uicontrol('Parent',fig, ...
    	'Units','normal', ...
    	'BackgroundColor',[0.8 0.8 0.8], ...
    	'Position',pos, ...
@@ -1691,7 +1691,7 @@ end
 %      set(handles.hist_frame, 'visible', 'on');
    end
 
-   handles.coord_frame = uicontrol('Parent',fig, ...	
+   handles.coord_frame = uicontrol('Parent',fig, ...
    	'Units','normal', ...
    	'BackgroundColor',[0.8 0.8 0.8], ...
    	'Position',pos, ...
@@ -1708,7 +1708,7 @@ end
 
    pos = [x,  y+inputline_space*0.9,  w,  h];
 
-   handles.color_frame = uicontrol('Parent',fig, ...	
+   handles.color_frame = uicontrol('Parent',fig, ...
    	'Units','normal', ...
    	'BackgroundColor',[0.8 0.8 0.8], ...
    	'Position',pos, ...
@@ -1883,7 +1883,7 @@ end
 
    pos = [x,  y+inputline_space*0.8,  w,  h];
 
-   handles.contrast_frame = uicontrol('Parent',fig, ...	
+   handles.contrast_frame = uicontrol('Parent',fig, ...
    	'Units','normal', ...
    	'BackgroundColor',[0.8 0.8 0.8], ...
    	'Position',pos, ...
@@ -1905,7 +1905,7 @@ end
 
    pos = [x,  y+inputline_space*0.8,  w,  h];
 
-   handles.brightness_frame = uicontrol('Parent',fig, ...	
+   handles.brightness_frame = uicontrol('Parent',fig, ...
    	'Units','normal', ...
    	'BackgroundColor',[0.8 0.8 0.8], ...
    	'Position',pos, ...
@@ -2354,7 +2354,7 @@ function fig = update_img(img, fig, opt)
    nii_menu = getappdata(fig,'nii_menu');
 
    if ~isempty(nii_menu)
-      set(nii_menu.Mzoom,'Userdata',1,'Label','Zoom on');   
+      set(nii_menu.Mzoom,'Userdata',1,'Label','Zoom on');
       set(fig,'pointer','arrow');
       zoom off;
    end
@@ -2814,7 +2814,7 @@ function h1 = plot_cbar(fig, cbar_axes, cbarminmax_axes, cbarminmax, ...
 
    cbar_image = [1:level]';
 
-   %  In a uint8 or uint16 indexed image, 0 points to the first row 
+   %  In a uint8 or uint16 indexed image, 0 points to the first row
    %  in the colormap
    %
    if 0 % strcmpi(niiclass,'uint8') | strcmpi(niiclass,'uint16')
@@ -2875,7 +2875,7 @@ function set_coordinates(nii_view,useinterp)
     imgPlim.vox = nii_view.dims;
     imgNlim.vox = [1 1 1];
 
-    if useinterp    
+    if useinterp
        xdata_ax = [imgNlim.vox(1) imgPlim.vox(1)];
        ydata_ax = [imgNlim.vox(2) imgPlim.vox(2)];
        zdata_ax = [imgNlim.vox(3) imgPlim.vox(3)];
@@ -2911,7 +2911,7 @@ function set_image_value(nii_view),
     axi = round(nii_view.slices.axi);
 
     if 0 % isfield(nii_view, 'disp')
-       img = nii_view.disp;    
+       img = nii_view.disp;
     else
        img = nii_view.nii.img;
     end
@@ -2972,7 +2972,7 @@ function set_image_value(nii_view),
         string = sprintf('%7.1f %7.1f %7.1f',sag,cor,axi);
         org_str = sprintf('%7.1f %7.1f %7.1f', org(1), org(2), org(3));
     end;
-    
+
     set(nii_view.handles.impos,'String',string);
     set(nii_view.handles.origin, 'string', org_str);
 
@@ -2985,7 +2985,7 @@ function nii_view = get_slice_position(nii_view,view),
     %  obtain slices that is in correct unit, then update slices
     %
     slices = nii_view.slices;
-	
+
     switch view,
     case 'sag',
         currentpoint = get(nii_view.handles.sagittal_axes,'CurrentPoint');
@@ -3002,7 +3002,7 @@ function nii_view = get_slice_position(nii_view,view),
     end
 
     %  update nii_view.slices with the updated slices
-    %    
+    %
     nii_view.slices.axi = round(slices.axi);
     nii_view.slices.cor = round(slices.cor);
     nii_view.slices.sag = round(slices.sag);
@@ -3014,14 +3014,14 @@ function nii_view = get_slice_position(nii_view,view),
 function nii_view = get_slider_position(nii_view),
 
     [nii_view.slices.sag,nii_view.slices.cor,nii_view.slices.axi] = deal(0);
-    
+
     if isfield(nii_view.handles,'sagittal_slider'),
         if ishandle(nii_view.handles.sagittal_slider),
             nii_view.slices.sag = ...
 		round(get(nii_view.handles.sagittal_slider,'Value'));
         end
     end
-    
+
     if isfield(nii_view.handles,'coronal_slider'),
         if ishandle(nii_view.handles.coronal_slider),
             nii_view.slices.cor = ...
@@ -3029,7 +3029,7 @@ function nii_view = get_slider_position(nii_view),
 		get(nii_view.handles.coronal_slider,'Value') + 1);
         end
     end
-    
+
     if isfield(nii_view.handles,'axial_slider'),
         if ishandle(nii_view.handles.axial_slider),
             nii_view.slices.axi = ...
@@ -3100,7 +3100,7 @@ function nii_view = convert2voxel(nii_view,slices),
 function nii_view = check_slices(nii_view),
 
     img = nii_view.nii.img;
-    
+
     [ SagSize, CorSize, AxiSize, TimeSize ] = size(img);
     if nii_view.slices.sag > SagSize, nii_view.slices.sag = SagSize; end;
     if nii_view.slices.sag < 1, nii_view.slices.sag = 1; end;
@@ -3110,7 +3110,7 @@ function nii_view = check_slices(nii_view),
     if nii_view.slices.axi < 1, nii_view.slices.axi = 1; end;
     if nii_view.scanid > TimeSize, nii_view.scanid = TimeSize; end;
     if nii_view.scanid < 1, nii_view.scanid = 1; end;
-    
+
     return						% check_slices
 
 
@@ -3152,7 +3152,7 @@ function hist_plot(fig)
    nii_view = getappdata(fig,'nii_view');
 
    if isfield(nii_view, 'disp')
-      img = nii_view.disp;    
+      img = nii_view.disp;
    else
       img = nii_view.nii.img;
    end
@@ -4634,7 +4634,7 @@ function [custom_color_map, colorindex] ...
       if p==0
          colorindex = nii_view.colorindex;
          set(nii_view.handles.colorindex,'value',colorindex);
-         return; 
+         return;
       end;
 
       try
@@ -4645,13 +4645,13 @@ function [custom_color_map, colorindex] ...
       end
 
       if loadfail | isempty(custom_color_map) | size(custom_color_map,2)~=3 ...
-	| min(custom_color_map(:)) < 0 | max(custom_color_map(:)) > 1 
+	| min(custom_color_map(:)) < 0 | max(custom_color_map(:)) > 1
 
          msg = 'Colormap should be a Mx3 matrix with value between 0 and 1';
          msgbox(msg,'Error in colormap file');
          colorindex = nii_view.colorindex;
          set(nii_view.handles.colorindex,'value',colorindex);
-         return;         
+         return;
       end
 
       color_map = custom_color_map;
@@ -4773,7 +4773,7 @@ function move_cursor(fig)
     end
 
     if 0 % isfield(nii_view, 'disp')
-       img = nii_view.disp;    
+       img = nii_view.disp;
     else
        img = nii_view.nii.img;
     end
@@ -4825,7 +4825,7 @@ function move_cursor(fig)
     else
         string = sprintf('%7.1f %7.1f %7.1f',sag,cor,axi);
     end;
-    
+
     set(nii_view.handles.imposcur,'String',string);
 
     return;					% move_cursor

@@ -132,7 +132,7 @@ disp('Done.');
 function addroi(addobj,resultfig,addht,fina,options)
 
 % set cdata
-c=uisetcolor;
+c = ea_uisetcolor;
 
 % load nifti
 nii=ea_load_nii(addobj);
