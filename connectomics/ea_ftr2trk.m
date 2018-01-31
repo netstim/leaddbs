@@ -62,6 +62,7 @@ header.version=2;
 header.hdr_size=1000;
 
 %% convert data
+disp('Constructing data...');
 tracks=struct('nPoints',nan,'matrix',nan);
 offset=1;
 for track_number=1:length(idx)
@@ -92,6 +93,8 @@ if ischar(ftrfilename)
 else
     ea_trk_write(header,tracks,[directory,ftrfilename{2},'.trk']);
 end
+
+disp('Conversion finished.');
 
 
 function [header,tracks] = ea_trk_read(filePath)
