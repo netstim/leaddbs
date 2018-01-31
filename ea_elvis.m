@@ -431,7 +431,7 @@ if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for later
 end
 setappdata(resultfig, 'options', options);
 setappdata(resultfig,'elstruct',elstruct);
-
+ea_figmenu(resultfig,'add')
 
 
 function opensliceviewer(hobj,ev,resultfig,options)
