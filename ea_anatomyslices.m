@@ -96,8 +96,10 @@ if togglestates.refreshcuts % reload image(s)
     if strcmp(togglestates.template, 'Choose...')
         togglestates.template = togglestates.customfile;
     end
-    [V1,V2,V3]=ea_assignbackdrop(togglestates.template,options,'Patient',options.native);
-    V{1}=V1; V{2}=V2; V{3}=V3;
+    [V1, V2, V3] = ea_assignbackdrop(togglestates.template,options,'Patient',options.native);
+    V{1} = nifti(V1.fname);
+    V{2} = nifti(V2.fname);
+    V{3} = nifti(V3.fname);
     setappdata(resultfig,'templateused',togglestates.template); % refresh used template.
 end
 
@@ -131,22 +133,22 @@ end
 
 % balance the contrast
 % if togglestates.refreshcuts
-% [balanced,colormap] = ea_autocontrast(double(V{1}.private.dat),2.5);
+% [balanced,colormap] = ea_autocontrast(double(V{1}.dat),2.5);
 % end
 
 if togglestates.xyztoggles(1)
     usesag=(length(V)>2)*2; % check if explicit saggital volume is available    
-    xsliceplot=slice3i(resultfig,V{1+usesag}.private.dat,V{1+usesag}.mat,1,xyzv(1),controlhandles);
+    xsliceplot=slice3i(resultfig,V{1+usesag}.dat,V{1+usesag}.mat,1,xyzv(1),controlhandles);
 end
 
 if togglestates.xyztoggles(2)
     % check whether second nii is being used:
     usecor=length(V)>1; % check if explicit coronal volume is available    
-    ysliceplot=slice3i(resultfig,V{1+usecor}.private.dat,V{1+usecor}.mat,2,xyzv(2),controlhandles);
+    ysliceplot=slice3i(resultfig,V{1+usecor}.dat,V{1+usecor}.mat,2,xyzv(2),controlhandles);
 end
 
 if togglestates.xyztoggles(3)
-	zsliceplot=slice3i(resultfig,V{1}.private.dat,V{1}.mat,3,xyzv(3),controlhandles);
+	zsliceplot=slice3i(resultfig,V{1}.dat,V{1}.mat,3,xyzv(3),controlhandles);
 end
 
 %colormap(cmap);
