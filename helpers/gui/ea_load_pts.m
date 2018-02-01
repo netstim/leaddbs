@@ -53,6 +53,11 @@ if exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
          try set(handles.(['side',num2str(el)]),'Value',1); end
       end
    end
+   try 
+       [~,locb] = ismember({reco.props(1).elmodel},handles.electrode_model_popup.String);
+       set(handles.electrode_model_popup,'Value',locb);
+       clear locb
+   end
 end
 end
 % add VATs to seeds for connectome mapper or predict case
