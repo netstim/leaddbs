@@ -18,7 +18,6 @@ if nargin>=3
     label=varargin{2};
     srcs=varargin{3};
     directory=varargin{4};
-
 else
 %     srcs={'bbt2sinc.nii','bbt1sinc.nii','bbpdsinc.nii','bbrlxsinc.nii'};
 %
@@ -34,12 +33,7 @@ for src=1:length(srcs)
        catch
            keyboard
        end
-
 end
-
-
-
-
 
 %% part one: generate multiple points for estimation of mahalanobis-distribution based on this single point:
 
@@ -106,7 +100,6 @@ if ~ischar(pts)
                 end
             end
 
-
             %% calculate values of toassigned voxel
             assignvalue=zeros(size(toassign,1),length(srcs));
             for src=1:length(srcs)
@@ -114,8 +107,6 @@ if ~ischar(pts)
             end
 
             %% calculate and assign similarity:
-
-
             s=size(assignvalue,1);
             avals=zeros(1,s);
             % normalize data values:
@@ -129,8 +120,6 @@ if ~ischar(pts)
                 sim=1/exp(0.05*ea_pdist([meanvalue;assignvalue(a,:)]));
                 avals(a)=sim;
             end
-
-
 
             [mv,ix]=max(avals);
             if length(assigned)<2000
@@ -148,7 +137,6 @@ if ~ischar(pts)
             if ~sum(toadd)<mildnessfactor
                 in(toassign(toadd))=avals(toadd);
             else
-
                 [~,toadd]=sort(avals);
                 try
                     in(toassign(toadd(end-mildnessfactor:end)))=avals(toadd(end-mildnessfactor:end));
@@ -160,8 +148,6 @@ if ~ischar(pts)
             disp(['Threshold is ',num2str(thresh),', voxels included: ',num2str(sum(toadd)),'.']);
 
             %ea_dispercent(maxrun/mrun);
-
-
         end
 
         W=in(assigned);
@@ -210,99 +196,89 @@ end
 voxcnt=length(pts);
 disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
 
+%% determine covariance structure of given pointset
+ixes=sub2ind(size(S{src}.img),pts(:,1),pts(:,2),pts(:,3));
+for src=1:length(srcs)
+        Xprob{src}=nan([size(S{1}.img)]);
+    profile(:,src)=S{src}.img(ixes);
+end
+up=mean(profile,1);
+stp=std(profile,1);
+
+% detemine V2. Delete if ~needed.
+mask=S{1}.img;
+mask(:)=0;
+mask(ixes)=1;
+mask=logical(mask);
+unprofile=zeros(sum(~mask(:)),length(srcs));
+for src=1:length(srcs)
+    unprofile(:,src)=S{src}.img(~mask);
+    vtwo(src)=mahal(up(src),unprofile(:,src));
+end
+%end delete.
+vtwo=vtwo/mean(vtwo);
 
 
-    %% determine covariance structure of given pointset
-    ixes=sub2ind(size(S{src}.img),pts(:,1),pts(:,2),pts(:,3));
+
+disp(['Mean values of profile for ',label,':']);
+disp(num2str(up));
+disp('Standard deviations:');
+disp(num2str(stp));
+
+
+
+vone=(stp./up).^-1; % how constant are values in different acquisitions in the same tissue?
+vone=vone./mean(vone);
+
+v=vone.*vtwo;
+v=v./(length(v)*mean(v));
+
+metrics=[voxcnt,up,stp,vone,vtwo,v];
+save(['Metrics_',label],'metrics');
+
+for src=1:length(srcs);
+    profile(:,src)=(profile(:,src)-up(src))/stp(src);
+end
+
+ea_dispercent(0,'Iterating voxels');
+dimens=numel(Xprob{src}(:));
+chunk=5000000;
+for ind=1:chunk:dimens
+
+    if ind+chunk-1>dimens
+       chunk=dimens-ind+1;
+    end
+    thisindprofile=zeros(chunk,length(srcs));
     for src=1:length(srcs)
-            Xprob{src}=nan([size(S{1}.img)]);
-        profile(:,src)=S{src}.img(ixes);
+        thisindprofile(:,src)=S{src}.img(ind:ind+chunk-1);
     end
-    up=mean(profile,1);
-    stp=std(profile,1);
 
-    % detemine V2. Delete if ~needed.
-    mask=S{1}.img;
-    mask(:)=0;
-    mask(ixes)=1;
-    mask=logical(mask);
-    unprofile=zeros(sum(~mask(:)),length(srcs));
-    for src=1:length(srcs)
-        unprofile(:,src)=S{src}.img(~mask);
-        vtwo(src)=mahal(up(src),unprofile(:,src));
-    end
-    %end delete.
-    vtwo=vtwo/mean(vtwo);
+    ea_dispercent(ind/dimens);
 
-
-
-    disp(['Mean values of profile for ',label,':']);
-    disp(num2str(up));
-    disp('Standard deviations:');
-    disp(num2str(stp));
-
-
-
-    vone=(stp./up).^-1; % how constant are values in different acquisitions in the same tissue?
-    vone=vone./mean(vone);
-
-    v=vone.*vtwo;
-    v=v./(length(v)*mean(v));
-
-    metrics=[voxcnt,up,stp,vone,vtwo,v];
-    save(['Metrics_',label],'metrics');
-
+    %Xprob(ind:ind+slab-1)=1/exp(mahal(thisindprofile,profile));
     for src=1:length(srcs);
-        profile(:,src)=(profile(:,src)-up(src))/stp(src);
+        thisindprofile(:,src)=((thisindprofile(:,src)-up(src)))/stp(src);
+        Xprob{src}(ind:ind+chunk-1)=mahal(thisindprofile(:,src),profile(:,src));
     end
+end
 
-    ea_dispercent(0,'Iterating voxels');
-    dimens=numel(Xprob{src}(:));
-    chunk=5000000;
-    for ind=1:chunk:dimens
+Aprob=zeros(size(Xprob{1}));
+for src=1:length(srcs);
 
-        if ind+chunk-1>dimens
-           chunk=dimens-ind+1;
-        end
-        thisindprofile=zeros(chunk,length(srcs));
-        for src=1:length(srcs)
-            thisindprofile(:,src)=S{src}.img(ind:ind+chunk-1);
-        end
+Aprob=Aprob+Xprob{src}*v(src);
+end
 
-        ea_dispercent(ind/dimens);
-
-        %Xprob(ind:ind+slab-1)=1/exp(mahal(thisindprofile,profile));
-        for src=1:length(srcs);
-            thisindprofile(:,src)=((thisindprofile(:,src)-up(src)))/stp(src);
-            Xprob{src}(ind:ind+chunk-1)=mahal(thisindprofile(:,src),profile(:,src));
-
-        end
-
-
-
-    end
-
-    Aprob=zeros(size(Xprob{1}));
-    for src=1:length(srcs);
-
-    Aprob=Aprob+Xprob{src}*v(src);
-    end
-
-
-    labout=S{1};
-    labout.img=1/exp(0.1*Aprob);
-    labout.dt=[16,1];
-    labout.fname=[directory,label,'_secondlevel.nii'];
-    spm_write_vol(labout,labout.img);
-    matlabbatch{1}.spm.spatial.smooth.data = {labout.fname};
-    matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
-    matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-    matlabbatch{1}.spm.spatial.smooth.im = 0;
-    matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-    spm_jobman('run',{matlabbatch});
-
-
-
+labout=S{1};
+labout.img=1/exp(0.1*Aprob);
+labout.dt=[16,1];
+labout.fname=[directory,label,'_secondlevel.nii'];
+spm_write_vol(labout,labout.img);
+matlabbatch{1}.spm.spatial.smooth.data = {labout.fname};
+matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
+matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+matlabbatch{1}.spm.spatial.smooth.im = 0;
+matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+spm_jobman('run',{matlabbatch});
 
 
 %% part three: export hard parcellation.
@@ -322,8 +298,6 @@ disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
 %    cnt=cnt+1;
 %    spm_write_vol(labout,iout);
 % end
-
-
 
 
 function c=ea_readcsv(pth)

@@ -39,9 +39,6 @@ for src=1:length(srcs)
 end
 
 
-
-
-
 %% part one: generate multiple points for estimation of mahalanobis-distribution based on this single point:
 
 if ~ischar(pts)
@@ -131,8 +128,6 @@ if ~ischar(pts)
                 avals(a)=sim;
             end
 
-
-
             [mv,ix]=max(avals);
             if length(assigned)<2000
             thresh=mean(in(assigned))-1*std(in(assigned));
@@ -161,8 +156,6 @@ if ~ischar(pts)
             disp(['Threshold is ',num2str(thresh),', voxels included: ',num2str(sum(toadd)),'.']);
 
             %ea_dispercent(maxrun/mrun);
-
-
         end
 
         W=in(assigned);
@@ -184,7 +177,6 @@ if ~ischar(pts)
     labout.dt=[16,1];
     labout.fname=[directory,label,'_firstlevel.nii'];
     spm_write_vol(labout,labout.img);
-
 
     % generate seed points for next part:
     [xx,yy,zz]=ind2sub(size(in),find(in>(ea_nanmean(in(:))+2*ea_nanstd(in(:)))));
@@ -210,127 +202,104 @@ end
 %% part two: iterate the whole brain by samples from this first estimate.
 voxcnt=length(pts);
 disp(['Included ',num2str(voxcnt),' to the ',label,'.']);
-    Xprob=zeros([size(S{1}.img)]);
+Xprob=zeros([size(S{1}.img)]);
 
-
-
-
-
-    %% determine covariance structure of given pointset
-    ixes=sub2ind(size(S{src}.img),pts(:,1),pts(:,2),pts(:,3));
-    for src=1:length(srcs)
-        if useweights
-            Aprob{src}=nan([size(S{1}.img)]);
-        end
-        profile(:,src)=S{src}.img(ixes);
+%% determine covariance structure of given pointset
+ixes=sub2ind(size(S{src}.img),pts(:,1),pts(:,2),pts(:,3));
+for src=1:length(srcs)
+    if useweights
+        Aprob{src}=nan([size(S{1}.img)]);
     end
-    up=mean(profile,1);
-    stp=std(profile,1);
+    profile(:,src)=S{src}.img(ixes);
+end
+up=mean(profile,1);
+stp=std(profile,1);
 
-    % detemine V2. Delete if ~needed.
-    mask=S{1}.img;
-    mask(:)=0;
-    mask(ixes)=1;
-    mask=logical(mask);
-    unprofile=zeros(sum(~mask(:)),length(srcs));
+% detemine V2. Delete if ~needed.
+mask=S{1}.img;
+mask(:)=0;
+mask(ixes)=1;
+mask=logical(mask);
+unprofile=zeros(sum(~mask(:)),length(srcs));
 
+for src=1:length(srcs)
+    allup=mean(S{src}.img(:));
+    allstd=std(S{src}.img(:));
+    unprofile(:,src)=S{src}.img(~mask);
+    vtwo(src)=mahal((up(src)-allup)/allstd,(unprofile(:,src)-allup)/allstd);
+    vone(src)=(stp(src)/up(src)); % how constant are values in different acquisitions in the same tissue?
+end
+%end delete.
+vtwo=vtwo./sum(vtwo);
+vone=vone./sum(vone);
+v=vone.*vtwo;
+v=v./sum(v);
 
+% equalize v
+v=v.^(1/6);
+v=v./sum(v); % sum of v is 1.
 
-    for src=1:length(srcs)
-        allup=mean(S{src}.img(:));
-        allstd=std(S{src}.img(:));
-        unprofile(:,src)=S{src}.img(~mask);
-        vtwo(src)=mahal((up(src)-allup)/allstd,(unprofile(:,src)-allup)/allstd);
-        vone(src)=(stp(src)/up(src)); % how constant are values in different acquisitions in the same tissue?
+disp(['Mean values of profile for ',label,':']);
+disp(num2str(up));
+disp('Standard deviations:');
+disp(num2str(stp));
+
+metrics=[voxcnt,up,stp,vone,vtwo];
+save([directory,'Metrics_',label,num2str(length(srcs))],'metrics');
+
+for src=1:length(srcs);
+    profile(:,src)=(profile(:,src)-up(src))/stp(src);
+end
+
+ea_dispercent(0,'Iterating voxels');
+dimens=numel(Xprob(:));
+chunk=5000000;
+for ind=1:chunk:dimens
+
+    if ind+chunk-1>dimens
+       chunk=dimens-ind+1;
     end
-    %end delete.
-    vtwo=vtwo./sum(vtwo);
-    vone=vone./sum(vone);
-    v=vone.*vtwo;
-    v=v./sum(v);
+    thisindprofile=zeros(chunk,length(srcs));
+    for src=1:length(srcs)
 
-    % equalize v
-    v=v.^(1/6);
-    v=v./sum(v); % sum of v is 1.
+        thisindprofile(:,src)=S{src}.img(ind:ind+chunk-1);
+    end
 
-    disp(['Mean values of profile for ',label,':']);
-    disp(num2str(up));
-    disp('Standard deviations:');
-    disp(num2str(stp));
+    ea_dispercent(ind/dimens);
 
-
-
-
-
-    metrics=[voxcnt,up,stp,vone,vtwo];
-    save([directory,'Metrics_',label,num2str(length(srcs))],'metrics');
-
+    %Xprob(ind:ind+slab-1)=1/exp(mahal(thisindprofile,profile));
     for src=1:length(srcs);
-        profile(:,src)=(profile(:,src)-up(src))/stp(src);
+        thisindprofile(:,src)=(thisindprofile(:,src)-up(src))/stp(src);
+        if useweights
+            Aprob{src}(ind:ind+chunk-1)=mahal(thisindprofile(:,src),profile(:,src));
+        end
+
     end
-
-    ea_dispercent(0,'Iterating voxels');
-    dimens=numel(Xprob(:));
-    chunk=5000000;
-    for ind=1:chunk:dimens
-
-        if ind+chunk-1>dimens
-           chunk=dimens-ind+1;
-        end
-        thisindprofile=zeros(chunk,length(srcs));
-        for src=1:length(srcs)
-
-            thisindprofile(:,src)=S{src}.img(ind:ind+chunk-1);
-        end
-
-        ea_dispercent(ind/dimens);
-
-        %Xprob(ind:ind+slab-1)=1/exp(mahal(thisindprofile,profile));
-        for src=1:length(srcs);
-            thisindprofile(:,src)=(thisindprofile(:,src)-up(src))/stp(src);
-            if useweights
-                Aprob{src}(ind:ind+chunk-1)=mahal(thisindprofile(:,src),profile(:,src));
-            end
-
-        end
-        if ~useweights
-
-            Xprob(ind:ind+chunk-1)=mahal(thisindprofile,profile);
-
-        end
-    end
-
-
-
-
-
-
-    labout=S{1};
     if ~useweights
-        labout.img=1/exp(0.01*Xprob);
-    else
-        labout.img(:)=0;
-        for src=1:length(srcs);
-            labout.img=labout.img+((1/exp(0.1*Aprob{src}))*v(src));
-        end
+
+        Xprob(ind:ind+chunk-1)=mahal(thisindprofile,profile);
 
     end
-    labout.dt=[16,1];
-    labout.fname=[directory,label,'_secondlevel.nii'];
-    spm_write_vol(labout,labout.img);
-    matlabbatch{1}.spm.spatial.smooth.data = {labout.fname};
-    matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
-    matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-    matlabbatch{1}.spm.spatial.smooth.im = 0;
-    matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-    spm_jobman('run',{matlabbatch});
+end
 
-
-
-
-
-
-
+labout=S{1};
+if ~useweights
+    labout.img=1/exp(0.01*Xprob);
+else
+    labout.img(:)=0;
+    for src=1:length(srcs);
+        labout.img=labout.img+((1/exp(0.1*Aprob{src}))*v(src));
+    end
+end
+labout.dt=[16,1];
+labout.fname=[directory,label,'_secondlevel.nii'];
+spm_write_vol(labout,labout.img);
+matlabbatch{1}.spm.spatial.smooth.data = {labout.fname};
+matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
+matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+matlabbatch{1}.spm.spatial.smooth.im = 0;
+matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+spm_jobman('run',{matlabbatch});
 
 
 function c=ea_readcsv(pth)

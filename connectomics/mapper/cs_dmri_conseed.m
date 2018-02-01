@@ -1,8 +1,4 @@
 function cs_dmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,space,options)
-%# ea_load_nii
-
-
-
 
 [sfile,roilist]=ea_handleseeds(sfile);
 
@@ -31,9 +27,11 @@ if isdeployed
 else
     cbase=ea_getconnectomebase;
 end
+
 disp(['Command: ',cmd]);
 switch cmd
     case 'seed'
+
         for s=1:length(sfile)
             map=ea_load_nii([cbase,'spacedefinitions',filesep,space]);
             cfile=[dfold,'dMRI',filesep,cname];
@@ -49,7 +47,6 @@ switch cmd
                 redotree=0;
                 ctype='mat';
             elseif exist([cfile,filesep,'data.fib.gz'],'file') % regular .fib.gz file
-
                 ftr=track_seed_gqi([cfile,filesep,'data.fib.gz'],sfile{s});
                 fibers=ftr.fibers;
                 redotree=0;
@@ -58,26 +55,22 @@ switch cmd
                 [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile]);
                 redotree=1;
                 ctype='mat';
-                
-            else 
+            else
                 [~,fn]=fileparts(cfile);
                 if strcmp('wFTR',fn) % patient specific fibertracts
-                cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
-                [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile]);
-                redotree=1;
-                ctype='mat';
+                    cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
+                    [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile]);
+                    redotree=1;
+                    ctype='mat';
                 else % connectome type not supported
-                ea_error('Connectome file vanished or not supported!');
+                    ea_error('Connectome file vanished or not supported!');
                 end
             end
 
-
             mapsz=size(map.img);
 
-            seedfiles=sfile;
-
             map.img(:)=0;
-            Vseed=ea_load_nii(seedfiles{s});
+            Vseed=ea_load_nii(sfile{s});
 
             maxdist=mean(abs(Vseed.voxsize))/2;
 
@@ -106,7 +99,7 @@ switch cmd
                 end
                 ids=rangesearch(tree,XYZmm,maxdist,'distance','chebychev');
                 % select fibers for each ix
-                ea_dispercent(0,'Iterating voxels');
+                ea_dispercent(0, ['Iterating voxels (', num2str(s), '/', num2str(length(sfile)), ')']);
                 ixdim=length(ixvals);
                 fiberstrength=zeros(size(fidx,1),1); % in this var we will store a mean value for each fiber (not fiber segment) traversing through seed
                 fiberstrengthn=zeros(size(fidx,1),1); % counting variable to average strengths
@@ -124,7 +117,7 @@ switch cmd
                 fiberstrength(nzz)=fiberstrength(nzz)./fiberstrengthn(nzz); % now each fiber has a strength mediated by the seed.
                 ea_dispercent(1,'end');
 
-                ea_dispercent(0,'Iterating fibers');
+                ea_dispercent(0, ['Iterating fibers (', num2str(s), '/', num2str(length(sfile)), ')']);
                 cfibers=find(fiberstrength);
                 cfibdim=length(cfibers);
                 fcnt=1;
@@ -148,7 +141,7 @@ switch cmd
                 map.img(utopaint)=c;
             end
 
-            [~,fn]=fileparts(seedfiles{s});
+            [~,fn]=fileparts(sfile{s});
             if owasempty
                 outputfolder=ea_getoutputfolder({sfile{s}},cname);
             end
@@ -158,7 +151,7 @@ switch cmd
 
         end
 
-    case {'matrix','pmatrix'}
+    case {'matrix', 'pmatrix'}
 
         for s=1:length(sfile)
             cfile=[dfold,'dMRI',filesep,cname];
@@ -188,11 +181,7 @@ switch cmd
                 ea_error('Connectome file vanished or not supported!');
             end
 
-
-
-            seedfiles=sfile;
-
-            Vseed{s}=ea_load_nii(seedfiles{s});
+            Vseed{s}=ea_load_nii(sfile{s});
 
             maxdist{s}=mean(abs(Vseed{s}.voxsize))/2;
 
@@ -208,7 +197,6 @@ switch cmd
                 allbinary{s}=0;
             end
 
-
             % now have all seeds and connectome - for each seed find fibers
             % connected to it:
 
@@ -222,7 +210,7 @@ switch cmd
             ids{s}=rangesearch(tree,XYZmm{s},maxdist{s},'distance','chebychev');
 
             % select fibers for each ix
-            ea_dispercent(0,'Iterating voxels');
+            ea_dispercent(0, ['Iterating voxels (', num2str(s), '/', num2str(length(sfile)), ')']);
             ixdim=length(ixvals{s});
             fiberstrength{s}=zeros(size(fidx,1),1); % in this var we will store a mean value for each fiber (not fiber segment) traversing through seed
             fiberstrengthn{s}=zeros(size(fidx,1),1); % counting variable to average strengths
@@ -261,13 +249,11 @@ switch cmd
         end
         mat=mat+mat'; % symmetrize matrix
         mat(logical(eye(length(sfile))))=mat(logical(eye(length(sfile))))/2;
-        [~,fn]=fileparts(seedfiles{1});
+        [~,fn]=fileparts(sfile{1});
         save(fullfile(outputfolder,[fn,'_struc_',cmd,'.mat']),'mat');
     otherwise
         warning('Structural connectivity only supported for seed / matrix / pmatrix commands.');
 end
-
-
 
 
 function C = countmember(A,B)
@@ -321,8 +307,8 @@ N = histc(L(:),1:length(AU)) ;
 % re-order according to A, and reshape
 C = reshape(N(j),size(A)) ;
 
-function ftr=track_seed_gqi(cfile,seedfile)
 
+function ftr=track_seed_gqi(cfile,seedfile)
 
 basedir = [ea_getearoot, 'ext_libs',filesep,'dsi_studio',filesep];
 if ismac
@@ -333,7 +319,6 @@ elseif isunix
 elseif ispc
     dsistudio = ea_path_helper([basedir, 'win',filesep,'dsi_studio.exe']);
 end
-
 
 [pth,fn]=fileparts(seedfile);
 
@@ -357,7 +342,6 @@ idx=fibinfo.length';
 clear fibinfo
 fibers=fibers';
 
-
 fibers(:,1)=78.0-fibers(:,1);
 fibers(:,2)=76.0-fibers(:,2);
 fibers(:,3)=-50.0+fibers(:,3);
@@ -373,8 +357,6 @@ for id=idx'
 end
 ea_dispercent(1,'end');
 
-
-
 fibers=[fibers,idxv];
 
 ftr.fourindex=1;
@@ -382,4 +364,3 @@ ftr.ea_fibformat='1.0';
 ftr.fibers=fibers;
 ftr.idx=idx;
 delete([pth,filesep,'temp.mat']);
-

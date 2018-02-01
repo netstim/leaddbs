@@ -1,11 +1,12 @@
 function cs_fmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
-tic
 
+tic
 
 % if ~isdeployed
 %     addpath(genpath('/autofs/cluster/nimlab/connectomes/software/lead_dbs'));
 %     addpath('/autofs/cluster/nimlab/connectomes/software/spm12');
 % end
+
 if ~exist('writeoutsinglefiles','var')
     writeoutsinglefiles=0;
 else
@@ -181,11 +182,7 @@ switch cmd
         addp='p';
 end
 
-
-
 ea_dispercent(0,'Iterating through subjects');
-
-
 
 scnt=1;
 for mcfi=usesubjects % iterate across subjects
@@ -210,7 +207,6 @@ for mcfi=usesubjects % iterate across subjects
                             if ~exist('db','var')
                                 db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
                             end
-
 
                             cnt=1;
                             for ix=sweightidx{s}'
@@ -240,7 +236,6 @@ for mcfi=usesubjects % iterate across subjects
                                         stc=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
 
                                     end
-
 
                                 case 'pseed'
                                     clear stc
@@ -280,9 +275,9 @@ for mcfi=usesubjects % iterate across subjects
                     ccmap.img(omaskidx)=mean(thiscorr,2);
                     ccmap.dt=[16,0];
                     spm_write_vol(ccmap,ccmap.img);
-                    
+
                     % surfs, too:
-                    
+
                     ccmap=dataset.surf.l.space;
                     ccmap.img=single(ccmap.img);
                     ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr_surf_lh.nii'];
@@ -290,7 +285,7 @@ for mcfi=usesubjects % iterate across subjects
                     ccmap.img(:)=mean(ls.thiscorr,2);
                     ccmap.dt=[16,0];
                     spm_write_vol(ccmap,ccmap.img);
-                    
+
                     ccmap=dataset.surf.r.space;
                     ccmap.img=single(ccmap.img);
                     ccmap.img(:,:,:,2:end)=[];
@@ -298,14 +293,11 @@ for mcfi=usesubjects % iterate across subjects
                     ccmap.img(:)=mean(rs.thiscorr,2);
                     ccmap.dt=[16,0];
                     spm_write_vol(ccmap,ccmap.img);
-                    
+
                 end
             end
 
-
-
         case 'pmap'
-
 
             targetix=sweightidx{1};
             clear stc
@@ -353,7 +345,6 @@ for mcfi=usesubjects % iterate across subjects
                 end
             end
 
-
         otherwise
             clear stc
             for run=1:howmanyruns
@@ -397,8 +388,8 @@ for mcfi=usesubjects % iterate across subjects
                 save([outputfolder,addp,'corrMx_',dataset.vol.subIDs{mcfi}{1},'.mat'],'X','-v7.3');
             end
     end
-        ea_dispercent(scnt/numsub);
-        scnt=scnt+1;
+    ea_dispercent(scnt/numsub);
+    scnt=scnt+1;
 end
 ea_dispercent(1,'end');
 ispmap=strcmp(cmd,'pmap');
@@ -421,8 +412,6 @@ switch dataset.type
                     gzip(mmap.fname);
                     delete(mmap.fname);
                 end
-
-
 
             otherwise
                 ea_error(['Command ',cmd,' in combination with an fMRI-matrix not (yet) supported.']);
@@ -495,7 +484,6 @@ switch dataset.type
                         end
                     end
 
-
                     % fisher-transform:
                     fX{s}=atanh(fX{s});
                     if ~ispmap && isfield(dataset,'surf')
@@ -562,10 +550,6 @@ switch dataset.type
                         gzip(tmap.fname);
                         delete(tmap.fname);
                     end
-
-
-
-
 
                     if ~ispmap && isfield(dataset,'surf')
                         % lh surf
@@ -635,7 +619,6 @@ switch dataset.type
 
         end
 end
-
 
 toc
 

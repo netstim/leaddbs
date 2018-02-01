@@ -50,7 +50,7 @@ for roi=1:length(roilist);
     in=D<mean(nii{end}.voxsize);
     fibsval(ismember(fibsin(:,4),unique(fibsin(in,4))),roi)=1;
     ea_dispercent(roi/length(roilist));
-    
+
 end
 ea_dispercent(1,'end');
 ea_dispt('Correlating fibers with values');
@@ -67,6 +67,3 @@ fibsin=[fibsin,stats.tstat'];
 fibsin(isnan(fibsin(:,5)),:)=[];
 
 ea_dispt('');
-
-
-

@@ -28,19 +28,19 @@ cnt=1;
 
 for p=A{1}'
     ea_dispercent(cnt/length(A{1}));
-    
+
     thisp=parc.img;
     thisp(~(thisp==p))=0;
     thisp(thisp==p)=1;
-    
+
     % determine whether left, right, mixed of midline
-    
+
     [xx,yy,zz]=ind2sub(size(thisp),find(thisp));
     XYZ=[xx,yy,zz,ones(length(xx),1)]';
     XYZ=parc.mat*XYZ;
     hasleft=any(XYZ(1,:)<0);
     hasright=any(XYZ(1,:)>0);
-    
+
     if hasleft && ~hasright % left only
         thisodir=[odir,filesep,'lh'];
     elseif ~hasleft && hasright % left only
@@ -53,7 +53,7 @@ for p=A{1}'
             thisodir=[odir,filesep,'midline'];
         end
     end
-    
+
     thisparcnii=parc;
     thisparcnii.img=thisp;
     thisparcnii.fname=[thisodir,filesep,A{2}{cnt}(1:end-suppress_suff),'.nii'];
@@ -61,12 +61,3 @@ for p=A{1}'
     ea_write_nii(thisparcnii);
 end
 ea_dispercent(1,'end');
-
-
-
-
-
-
-
-
-

@@ -1,6 +1,5 @@
 function ea_lcm_struc(options)
 
-
 if strcmp(options.lcm.struc.connectome,'No structural connectome found.')
     return
 end
@@ -15,7 +14,6 @@ end
 if strcmp(options.lcm.struc.connectome,'Patient-specific fiber tracts')
     options.lcm.struc.connectome=options.prefs.FTR_normalized;
 end
-
 
 cs_dmri_conseed(base,options.lcm.struc.connectome,...
     options.lcm.seeds',...
@@ -37,4 +35,3 @@ switch sp
     case 3
         fi=['555.nii'];
 end
-
