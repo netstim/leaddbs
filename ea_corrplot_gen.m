@@ -59,13 +59,14 @@ jetlist=lines;
 for area=1:length(R_upd)
     %% plot areas:
     f=figure('color','w','name',description);
+    g=gca;
     if exist('color','var')
-        scatter(X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',color);
+        scatter(a,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',color);
     else
         try
-        scatter(X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',jetlist(groups,:));
+        scatter(g,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',jetlist(groups,:));
         catch
-        scatter(X(:,1),X(:,area+1),[],jetlist(groups,:),'filled');
+        scatter(g,X(:,1),X(:,area+1),[],jetlist(groups,:),'filled');
             
         end
         

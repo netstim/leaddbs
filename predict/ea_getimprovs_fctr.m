@@ -26,5 +26,6 @@ switch cmd
         improvs=factors.improvement(:,fctr);
         I=improvs(pts);
     case 'baseline'
-        I=BL;
+        improvs=factors.baseline(:,fctr);
+        I=improvs(pts);
 end
