@@ -156,7 +156,6 @@ if checkrebuild(atlases,options,root,mifix)
                 if isfield(nii,'img') % volumetric atlas
                     if options.prefs.hullsmooth
                         nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
-                  
                     end
                     
                     [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); % find 3D-points that have correct value.
@@ -249,8 +248,10 @@ if checkrebuild(atlases,options,root,mifix)
                     fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),thresh);
                     fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
                     fv.vertices=[fv.vertices;fvc.vertices];
-
-                    try % works only in ML 2015:
+                    if options.prefs.hullsmooth
+                        fv=ea_smoothpatch(fv,[],ceil(options.prefs.hullsmooth/2));
+                    end
+                    try % works > ML 2015:
                         tr=triangulation(fv.faces,fv.vertices);
                         normals{atlas,side} = vertexNormal(tr);
                     catch % workaround for older versions:
