@@ -87,23 +87,37 @@ end
 files = dir(adir); files = files(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {files.name}));
 files = files(~[files.isdir]); files = {files(~cellfun(@isempty , strfind({files.name},'Cortex'))).name};
 
-if size(files,2)>=2
-    str = [{['More than one Cortex found in the ' casestr ' folder.']},...
-        {'Please, select which Cortex you would like to view.'}];
-    file = char(files(listdlg('PromptString',str,'Name',options.patientname,...
-        'SelectionMode','single','ListString',files,...
-        'ListSize',[250 150])));
-    cortex = load([adir,file],'Vertices_rh','Faces_rh','Vertices_lh','Faces_lh');
-elseif ~isempty(files)
-    file = files{1};
-    cortex = load([adir,file],'Vertices_rh','Faces_rh','Vertices_lh','Faces_lh');
-else
-    fprintf('No Cortex found in patient directory. \nRunning Import FS...\n')
-    ea_importfs(options)
+    % % Use this to choose which file to load:
+    % if size(files,2)>=2
+    %     str = [{['More than one Cortex found in the ' casestr ' folder.']},...
+    %         {'Please, select which Cortex you would like to view.'}];
+    %     file = char(files(listdlg('PromptString',str,'Name',options.patientname,...
+    %         'SelectionMode','single','ListString',files,...
+    %         'ListSize',[250 150])));
+    %     cortex = load([adir,file],'Vertices_rh','Faces_rh','Vertices_lh','Faces_lh');
+    % elseif ~isempty(files)
+    %     file = files{1};
+    %     cortex = load([adir,file],'Vertices_rh','Faces_rh','Vertices_lh','Faces_lh');
+    % else
+    %     fprintf('No Cortex found in patient directory. \nRunning Import FS...\n')
+    %     ea_importfs(options)
+    %     try
+    %         cortex = load([adir,'CortexHiRes.mat'],'Vertices_rh','Faces_rh','Vertices_lh','Faces_lh');
+    %     catch
+    %     end
+    % end
+% Only option is CortexHiRes.mat - can resample annot file for low res in
+% future release
+str = 'Select Cortex';
+file = listdlg('PromptString',str,'SelectionMode','single',...
+    'ListString','Cortex','ListSize',[250,150]);
+if ~isempty(file)
     try
         cortex = load([adir,'CortexHiRes.mat'],'Vertices_rh','Faces_rh','Vertices_lh','Faces_lh');
     catch
     end
+else
+    return
 end
 
 % % reslice patient cortex to mni space in future release

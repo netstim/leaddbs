@@ -129,12 +129,42 @@ cortchecks=cell(length(struct_names),1);
 import com.mathworks.mwswing.checkboxtree.*
 uselabelname = 1;
 
+% for s = 1:2  % side 1=Right, 2=Left
+%     if s==1
+%         h.sg{s} = DefaultCheckBoxNode('Right');
+%     elseif s==2
+%         h.sg{s} = DefaultCheckBoxNode('Left');
+%     end
+%     for node=1:length(struct_names)
+%         thisstruct=struct_names{node};
+%         
+%         color = annot(s).colortable.table(node,1:3);
+%         color = sprintf('rgb(%d,%d,%d)', color(1),color(2),color(3));
+%         
+%         structlabel = ['<HTML><BODY>' ...
+%             '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+%             '<FONT color="black">&nbsp;&nbsp;',thisstruct,'</FONT>' ...
+%             '</BODY></HTML>'];
+%         h.sgsub{s}{node}=DefaultCheckBoxNode(structlabel,true);
+%         h.sg{s}.add(h.sgsub{s}{node});
+%        
+%          cortchecks{node}=...
+%             [cortchecks{node},h.sgsub{s}{node}];
+% 
+%     end
+% end
+h.sg{1} = DefaultCheckBoxNode('Hemisphere',true);
 for s = 1:2  % side 1=Right, 2=Left
     if s==1
-        h.sg{s} = DefaultCheckBoxNode('Right');
+        h.sgsub{s} = DefaultCheckBoxNode('Right',true);
+        h.sg{1}.add(h.sgsub{s});
     elseif s==2
-        h.sg{s} = DefaultCheckBoxNode('Left');
+        h.sgsub{s} = DefaultCheckBoxNode('Left',true);
+        h.sg{1}.add(h.sgsub{s});
     end
+end
+
+for s=1:2
     for node=1:length(struct_names)
         thisstruct=struct_names{node};
         
@@ -145,11 +175,8 @@ for s = 1:2  % side 1=Right, 2=Left
             '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
             '<FONT color="black">&nbsp;&nbsp;',thisstruct,'</FONT>' ...
             '</BODY></HTML>'];
-        h.sgsub{s}{node}=DefaultCheckBoxNode(structlabel,true);
-        h.sg{s}.add(h.sgsub{s}{node});
-       
-         cortchecks{node}=...
-            [cortchecks{node},h.sgsub{s}{node}];
+        h.sgsubfi{node}=DefaultCheckBoxNode(structlabel,true);
+        h.sgsub{s}.add(h.sgsubfi{node});
 
     end
 end
@@ -191,7 +218,7 @@ end
     set(jCheckBoxTree, 'MouseReleasedCallback', {@mouseReleasedCallback, h})
     setappdata(handles.cortexselect,'h',h);
     setappdata(handles.cortexselect,'jtree',jCheckBoxTree);
-    %sels=ea_storeupdatemodel(jCheckBoxTree,h);
+    %sels=ea_storeupdatecortex(jCheckBoxTree,h);
     
     if treeinit
         if handles.alphaslider.Value>length(handles.alphaslider.String)
@@ -242,7 +269,7 @@ ea_updatecortex(h.options,h.resultfig,1:2,structures,labelidx);
 
 function updatematrix = ea_updatematrix(jtree,h)
 
-sels=ea_storeupdatemodel(jtree,h);
+sels=ea_storeupdatecortex(jtree,h);
 for branch=1:length(sels.branches) % Hemisphere
     for leaf=1:length(sels.leaves{branch}) % Label
         
@@ -284,7 +311,7 @@ clickY = eventData.getY;
 treePath = jtree.getPathForLocation(clickX, clickY);
 
 oldselstate=getappdata(jtree,'selectionstate');
-newselstate=ea_storeupdatemodel(jtree,h);
+newselstate=ea_storeupdatecortex(jtree,h);
 if ~isequal(oldselstate,newselstate)
     ea_showhideatlases(jtree,h);
 end
@@ -382,7 +409,7 @@ ea_busyaction('on',handles.cortexselect,'atlcontrol');
 
 jtree=getappdata(handles.cortexselect,'jtree');
 h=getappdata(handles.cortexselect,'h');
-sels=ea_storeupdatemodel(jtree,h);
+sels=ea_storeupdatecortex(jtree,h);
 atlases=getappdata(handles.cortexselect,'atlases');
 pres.default='absolute';
 pres.show=[];
@@ -467,7 +494,7 @@ offatlasnames=atlases.names(preset.hide);
 [~,offatlasnames]=cellfun(@fileparts,offatlasnames,'Uniformoutput',0);
 
 % iterate through jTree to set selection according to preset:
-sels=ea_storeupdatemodel(jtree,h);
+sels=ea_storeupdatecortex(jtree,h);
 for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
