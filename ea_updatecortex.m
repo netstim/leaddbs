@@ -28,6 +28,11 @@ for s = sides
     
     labelsoff = setdiff(1:length(annot(s).colortable.table),cell2mat(labelidx));
     invisidx = arrayfun(@(x) find(annot(s).label==annot(s).colortable.table(x,5)),labelsoff,'uni',0);
+    
+    % remove unlabeled
+    unl = annot(s).cdat==0.65;
+    invisidx{1} = find(unl(:,1));
+    
     for i=1:length(invisidx)
         %annot(s).cdat(invisidx{i},:) = repmat(annot(s).colortable.table(i,1:3)/256,[length(colorindex),1]);
         annot(s).adat(invisidx{i},:) = 0;

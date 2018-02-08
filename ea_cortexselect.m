@@ -175,8 +175,8 @@ for s=1:2
             '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
             '<FONT color="black">&nbsp;&nbsp;',thisstruct,'</FONT>' ...
             '</BODY></HTML>'];
-        h.sgsubfi{node}=DefaultCheckBoxNode(structlabel,true);
-        h.sgsub{s}.add(h.sgsubfi{node});
+        h.sgsubfi{s}{node}=DefaultCheckBoxNode(structlabel,true);
+        h.sgsub{s}.add(h.sgsubfi{s}{node});
 
     end
 end
@@ -274,11 +274,14 @@ for branch=1:length(sels.branches) % Hemisphere
     for leaf=1:length(sels.leaves{branch}) % Label
         
         % Turn Visibility On
-        if strcmp(sels.branches{branch},'mixed') | strcmp(sels.branches{branch},'selected') && strcmp(sels.leaves{branch}{leaf},'selected')
+        if strcmp(sels.branches{branch},'mixed') && strcmp(sels.leaves{branch}{leaf},'selected')
+            updatematrix{branch}(leaf) = 1;
+            
+        elseif strcmp(sels.branches{branch},'selected') && strcmp(sels.leaves{branch}{leaf},'selected')
             updatematrix{branch}(leaf) = 1;
             
         % Turn Visibility Off
-        elseif strcmp(sels.branches{branch},'mixed') | strcmp(sels.branches{branch},'selected') && strcmp(sels.leaves{branch}{leaf},'not selected')
+        elseif strcmp(sels.branches{branch},'mixed') && strcmp(sels.leaves{branch}{leaf},'not selected')
             updatematrix{branch}(leaf) = 0;
             
         elseif strcmp(sels.branches{branch},'not selected')
