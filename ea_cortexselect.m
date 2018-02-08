@@ -256,7 +256,7 @@ if ~isempty(jComp)
 end
 
 
-function ea_showhideatlases(jtree,h)
+function [structures,labelidx] = ea_showhideatlases(jtree,h)
 
 updatematrix = ea_updatematrix(jtree,h);
 for s = 1:size(updatematrix,2)
@@ -265,6 +265,10 @@ for s = 1:size(updatematrix,2)
     structures{s} = h.struct_names(logical(updatematrix{s}));
 end
 ea_updatecortex(h.options,h.resultfig,1:2,structures,labelidx);
+
+selstate.structures=structures;
+selstate.labelidx=labelidx;
+setappdata(h.resultfig,'cortsurfs',selstate)
     
 
 function updatematrix = ea_updatematrix(jtree,h)
@@ -617,11 +621,9 @@ alpha = handles.alphaslider.Value;
 resultfig = getappdata(hObject,'resultfig');
 options = getappdata(hObject,'options');
 annot = getappdata(hObject,'annot');
-cortex = getappdata(resultfig,'cortex');
-struct_names = annot(1).colortable.struct_names;
-n = length(struct_names); % size(annot(1).colortable.table,1);
-labelidx = {mat2cell([1:n]',ones(n,1)),mat2cell([1:n]',ones(n,1))};
-ea_updatecortex(options,resultfig,1:2,struct_names,labelidx,alpha);
+selstate = getappdata(resultfig,'cortsurfs');
+
+ea_updatecortex(options,resultfig,1:2,selstate.structures,selstate.labelidx,alpha);
 set(handles.alphaedit,'String',num2str(alpha));
 % setuptree({handles,colorbuttons,atlassurfs,atlases,labelbutton,atlaslabels});
 
