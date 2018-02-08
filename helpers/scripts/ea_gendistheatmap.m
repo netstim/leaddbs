@@ -1,6 +1,9 @@
-function ea_gendistheatmap(M,regno,pts,fovimg)
+function ea_gendistheatmap(M,regno,pts,fovimg,flipleft)
 if ~exist('fovimg','var')
     fovimg=[ea_space,'atlas.nii'];
+end
+if ~exist('flipleft','var')
+    flipleft=1;
 end
 if ~exist('regno','var') || isempty(regno)
     regno=1;
@@ -47,7 +50,11 @@ for side=sides
                 case 1
                     acs(pt,:)=mean(M.elstruct(pts(pt)).coords_mm{1}(logical(M.S(pts(pt)).activecontacts{1}(1:4)),:),1);
                 case 2
+                    if flipleft
                     acs(pt,:)=ea_flip_lr_nonlinear(mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1));
+                    else
+                    acs(pt,:)=mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1);
+                    end
             end
         else % average points
             try

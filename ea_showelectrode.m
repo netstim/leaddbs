@@ -1,4 +1,4 @@
-function [elrender,ellabel]=ea_showelectrode(resultfig,elstruct,pt,options)
+function [elrender,ellabel,eltype]=ea_showelectrode(resultfig,elstruct,pt,options)
 % This function renders the electrode as defined by options.elspec and
 % coords_mm.
 % __________________________________________________________________________________
@@ -104,11 +104,15 @@ for side=options.sides
             electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
             elrender{1}(cnt)=patch(electrode.contacts(con));
-            
-            if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{side})) % make active red contact without transparency
-                specsurf(elrender{1}(cnt),[0.8,0.2,0.2],1);
+            eltype{1}(cnt)=1;
+            if ~isempty(options.colorMacroContacts)
+                specsurf(elrender{1}(cnt),options.colorMacroContacts(con,:),1);
             else
-                specsurf(elrender{1}(cnt),elspec.contact_color,aData);
+                if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{side})) % make active red contact without transparency
+                    specsurf(elrender{1}(cnt),[0.8,0.2,0.2],1);
+                else
+                    specsurf(elrender{1}(cnt),elspec.contact_color,aData);
+                end
             end
             
             cnt=cnt+1;

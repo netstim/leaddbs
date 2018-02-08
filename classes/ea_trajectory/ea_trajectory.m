@@ -5,6 +5,7 @@ classdef ea_trajectory < handle
     properties (SetObservable)
         elstruct % reconstruction of electrodes as handled by ea_elvis
         elpatch % handle to macroelectrode patch
+        eltype % indexes 1 for electrode contacts in elpatch
         ellabel % handle to electrode label
         elmodel % elmodel to display
         side % right hemisphere=1, left=2, further sites planned to be possible in the future
@@ -12,6 +13,7 @@ classdef ea_trajectory < handle
         alpha=0.7 % alpha of Planning patch
         radius=0.2 % radius of Planning line
         color=[0.8,0.3,0.2] % color of Planning patch
+        colorMacroContacts=[] % optional coloring of macroelectrode contacts
         options % lead-dbs options struct
         planRelative=[2,1,1,1,1] % First entry: AC=1, MCP=2, PC=3; Second entry: Right=1, Left=2; Third entry: Anterior=1, Posterior=2; Fourth entry: Ventral=1; Dorsal=2; Last entry: ACPC=1, native=2, MNI/Template=3
         hasPlanning % determines if object has information to show a fiducial
@@ -163,6 +165,7 @@ classdef ea_trajectory < handle
             addlistener(obj, 'alpha', 'PostSet', @ea_trajectory.changeevent);
             addlistener(obj, 'target', 'PostSet', @ea_trajectory.changeevent);
             addlistener(obj, 'planRelative', 'PostSet', @ea_trajectory.changeevent);
+            addlistener(obj, 'colorMacroContacts', 'PostSet', @ea_trajectory.changeevent);
 
             if (exist('pobj','var') && isfield(pobj,'openedit') && pobj.openedit) || ~exist('pobj','var')
                 ea_trajectorycontrol(obj)
@@ -213,7 +216,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         obj.patchPlanning.Visible=ea_bool2onoff(obj.showPlanning);
     end
 
-    if ismember(evtnm,{'all','elmodel'})
+    if ismember(evtnm,{'all','elmodel','colorMacroContacts'})
         if obj.showMacro
             try
                 delete(obj.elpatch{1}{1});
@@ -223,8 +226,15 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             poptions.elmodel=obj.elmodel;
             obj.elstruct.elmodel=obj.elmodel;
             poptions.sides=obj.side;
-
-            [obj.elpatch{1},obj.ellabel(1)]=ea_showelectrode(obj.plotFigureH,obj.elstruct,1,poptions);
+            poptions.colorMacroContacts=obj.colorMacroContacts;
+            el_render=getappdata(obj.plotFigureH,'el_render');
+            
+            [obj.elpatch{1},obj.ellabel(1),obj.eltype]=ea_showelectrode(obj.plotFigureH,obj.elstruct,1,poptions);
+            if isempty(el_render)
+                clear el_render
+            end
+            el_render(obj.side)=obj.elpatch{1};
+            setappdata(obj.plotFigureH,'el_render',el_render);
             set(obj.ellabel(1),'Visible','off');
         end
     end
