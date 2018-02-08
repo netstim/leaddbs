@@ -4,6 +4,24 @@ try
     ea_updatemodel(options);
 end
 
+% check if sides is specified correctly for visualization:
+if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+   load([options.root,options.patientname,filesep,'ea_reconstruction.mat']);
+sides=[];
+   for el=1:length(reco.native.coords_mm)
+      if ~isempty(reco.native.coords_mm(el))
+         sides(end+1)=el;
+      end
+   end
+   
+   if ~isequal(options.sides,sides)
+   options.sides=sides;
+      warning('Autocorrected electrode sides / numbers to visualize'); 
+   end
+end
+
+
+
 if options.d2.write || options.d3.write
    if strcmp(options.atlasset,'Segment patient anatomy')
       ea_subcorticalsegmentation(options);
