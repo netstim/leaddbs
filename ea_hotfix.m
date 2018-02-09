@@ -74,13 +74,14 @@ if hotfix
         success=1;
         disp('*** Update finished.');
     catch
-        info=sprintf(['Data does not exist or failed to install nightly build!\n',...
+        info=sprintf(['Patch does not exist or failed to install development version of Lead!\n',...
                       'Please wait for the next release.']);
         disp(info);
         msgbox(info,'Update','Error');
     end
 else
-    info=sprintf('Local version is not applicable to install nightly build!');
+    info=sprintf(['Local version is not applicable to install development version of Lead.\n'...
+        'Please upgrade to the latest release (v', web,') first!']);
     disp(info);
     msgbox(info,'Update','Help');
 end
