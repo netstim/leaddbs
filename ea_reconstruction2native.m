@@ -28,6 +28,9 @@ else
 end
 
 towarp=cell(0);
+if ~isfield(options,'sides')
+    options=ea_detsides(options);
+end;
 for side=options.sides
 towarp{end+1}=reco.mni.coords_mm{side};
 towarp{end+1}=reco.mni.markers(side).head;
