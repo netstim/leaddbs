@@ -63,24 +63,23 @@ guidata(hObject, handles);
 setappdata(handles.roicontrol,'chandles',handles);
 obj=varargin{1};
 setappdata(handles.roicontrol,'obj',obj);
-nzeros=obj.nii.img(:);
-nzeros(nzeros==0)=[];
-nzeros(isnan(nzeros))=[];
+nzeronans = obj.nii.img(~isnan(obj.nii.img) & obj.nii.img~=0);
 set(0,'CurrentFigure',handles.roicontrol);
 set(handles.roicontrol,'CurrentAxes',handles.histax);
 axis off
 
 if ~obj.binary
-    hist(nzeros);
+    hist(nzeronans);
     h=findobj(handles.histax,'Type','patch');
     set(h,'FaceColor',[0,0.5 0.5],'EdgeColor','none');
     axis off
 
     set(handles.roicontrol,'Name',obj.niftiFilename);
-    handles.histax.XAxis.Limits=[min(nzeros),max(nzeros)];
+    handles.histax.XAxis.Limits=[min(nzeronans),max(nzeronans)];
 else
     set(handles.threshLabel,'Visible','off');
 end
+
 % button
 set(handles.colorchange,'BackgroundColor',obj.color);
 set(0,'CurrentFigure',handles.roicontrol);
@@ -94,6 +93,7 @@ if ~obj.binary
     set(jSlider{1}, 'Value', threshold2slider(obj),...
         'Background',java.awt.Color(1,1,1),...
         'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
+    set(handles.thresholdValue,'String',sprintf('%0.2f',obj.threshold));
     hjSlider{1} = handle(jSlider{1}, 'CallbackProperties');
     set(hjSlider{1}, 'MouseReleasedCallback', {@sliderThresholdChange,obj,handles});  %alternative
     set(hjSlider{1}, 'StateChangedCallback', {@sliderThresholdChangeTxt,obj,handles});  %alternative
@@ -109,6 +109,7 @@ javacomponent(jSlider{2},[0,alphaLabelPos(2)-45,200,45]);
 set(jSlider{2}, 'Value', obj.alpha*100,...
     'Background',java.awt.Color(1,1,1),...
     'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
+set(handles.alphaValue,'String',num2str(obj.alpha));
 hjSlider{2} = handle(jSlider{2}, 'CallbackProperties');
 set(hjSlider{2}, 'MouseReleasedCallback', {@sliderAlphaChange,obj,handles});  %alternative
 set(hjSlider{2}, 'StateChangedCallback', {@sliderAlphaChangeTxt,obj,handles});  %alternative
@@ -121,6 +122,7 @@ javacomponent(jSlider{3},[0,smoothLabelPos(2)-45,200,45]);
 set(jSlider{3}, 'Value', round(obj.smooth*2),...
     'Background',java.awt.Color(1,1,1),...
     'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
+set(handles.smoothValue,'String',[num2str(obj.smooth),' Its.']);
 hjSlider{3} = handle(jSlider{3}, 'CallbackProperties');
 set(hjSlider{3}, 'MouseReleasedCallback', {@sliderSmoothChange,obj,handles});  %alternative
 set(hjSlider{3}, 'StateChangedCallback', {@sliderSmoothChangeTxt,obj,handles});  %alternative
@@ -254,7 +256,7 @@ function colorchange_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 obj=getappdata(handles.roicontrol,'obj');
-obj.color = ea_uisetcolor;
+obj.color = ea_uisetcolor(handles.colorchange.BackgroundColor);
 set(handles.colorchange,'BackgroundColor',obj.color);
 
 

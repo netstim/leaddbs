@@ -38,8 +38,6 @@ classdef ea_sweetspot < handle
                 obj.niftiFilename=niftiFilename;
             end
 
-
-
             try
                 obj.name=pobj.name;
             catch
@@ -89,11 +87,11 @@ classdef ea_sweetspot < handle
             try
                 obj.threshold=pobj.threshold;
             catch
-            if obj.binary
-                obj.threshold=obj.max/2;
-            else
-                obj.threshold=obj.max-0.5*maxmindiff;
-            end
+                if obj.binary
+                    obj.threshold=obj.max/2;
+                else
+                    obj.threshold=obj.max-0.5*maxmindiff;
+                end
             end
 
             obj.smooth=options.prefs.hullsmooth;
@@ -110,27 +108,27 @@ classdef ea_sweetspot < handle
             set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
             update_sweetspot(obj);
             addlistener(obj,'visible','PostSet',...
-                @ea_sweetspot.changeevent);
+                @obj.changeevent);
             addlistener(obj,'color','PostSet',...
-                @ea_sweetspot.changeevent);
+                @obj.changeevent);
             addlistener(obj,'threshold','PostSet',...
-                @ea_sweetspot.changeevent);
+                @obj.changeevent);
             addlistener(obj,'smooth','PostSet',...
-                @ea_sweetspot.changeevent);
+                @obj.changeevent);
             addlistener(obj,'hullsimplify','PostSet',...
-                @ea_sweetspot.changeevent);
+                @obj.changeevent);
             addlistener(obj,'alpha','PostSet',...
-                @ea_sweetspot.changeevent);
+                @obj.changeevent);
             addlistener(obj,'fmix','PostSet',...
-                @ea_sweetspot.changeevent);
+                @obj.changeevent);
 
             if exist('pobj','var') && isfield(pobj,'openedit') && pobj.openedit
-                    ea_editroi([],[],obj)
+            	ea_editroi([],[],obj)
             end
 
         end
 
-        function changeevent(~,event)
+        function changeevent(~, ~, event)
             update_sweetspot(event.AffectedObject,event.Source.Name);
         end
 
@@ -138,9 +136,9 @@ classdef ea_sweetspot < handle
             if ~exist('evtnm','var')
                 evtnm='all';
             end
-            
+
             obj.nearelectrodes=getappdata(obj.plotFigureH,'el_render');
-            
+
             if ismember(evtnm,{'all','threshold','smooth','hullsimplify','fmix'}) % need to recalc fv here:
                 obj.nii.img(:)=sum(obj.nii.X.*repmat(obj.fmix,1,size(obj.nii.X,2)));
                 [~,idx]=ea_nanmax(obj.nii.img(:));
@@ -153,26 +151,26 @@ classdef ea_sweetspot < handle
                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(obj.nii.img,dim));
                 end
                 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-                
+
                 obj.fv=isosurface(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 fvc=isocaps(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 obj.fv.faces=[obj.fv.faces;fvc.faces+size(obj.fv.vertices,1)];
                 obj.fv.vertices=[obj.fv.vertices;fvc.vertices];
-                
+
                 if obj.smooth
                     obj.sfv=ea_smoothpatch(obj.fv,1,obj.smooth);
                 else
                     obj.sfv=obj.fv;
                 end
-                
+
                 if ischar(obj.hullsimplify)
                     % get to 700 faces
                     simplify=700/length(obj.sfv.faces);
                     obj.sfv=reducepatch(obj.sfv,simplify);
-                    
+
                 else
                     if obj.hullsimplify<1 && obj.hullsimplify>0
-                        
+
                         obj.sfv=reducepatch(obj.sfv,obj.hullsimplify);
                     elseif obj.hullsimplify>1
                         simplify=obj.hullsimplify/length(obj.fv.faces);
@@ -186,7 +184,7 @@ classdef ea_sweetspot < handle
                     obj.cdat=isocolors(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.sfv.vertices);
                 end
 
-                
+
             end
 
             jetlist=jet;
@@ -194,18 +192,16 @@ classdef ea_sweetspot < handle
             co=ones(1,1,3);
             co(1,1,:)=obj.color;
             atlasc=double(rgb2ind(co,jetlist));
-            
-            
+
             if obj.heatcontacts
                 colorconts(obj)
-                
             end
-            
+
             % show atlas.
-                set(0,'CurrentFigure',obj.plotFigureH);
-                set(obj.patchH,...
-                    {'Faces','Vertices','CData','FaceColor','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
-                    {obj.sfv.faces,obj.sfv.vertices,obj.cdat,obj.color,obj.alpha,'none','phong',obj.visible});
+            set(0,'CurrentFigure',obj.plotFigureH);
+            set(obj.patchH,...
+                {'Faces','Vertices','CData','FaceColor','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
+                {obj.sfv.faces,obj.sfv.vertices,obj.cdat,obj.color,obj.alpha,'none','phong',obj.visible});
 
             % add toggle button:
             set(obj.toggleH,...
@@ -213,67 +209,69 @@ classdef ea_sweetspot < handle
                 {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_sweetspotvisible,'on',obj},{@ea_sweetspotvisible,'off',obj},obj.visible});
         end
     end
-
 end
+
 
 function colorconts(obj)
 % now color surrounding electrodes by closeness
-if ~isempty(obj.nearelectrodes)
-    els=obj.nearelectrodes;
-    %hold on
-    %plot3(obj.peak(1),obj.peak(2),obj.peak(3),'y*');
-    elrender=getappdata(obj.plotFigureH,'el_render');
-    for el=1:length(els)
-        cpatches=elrender(el).elpatch{1}{1}(logical(els(el).eltype{1})); % patches of contacts
-        for cont=1:length(els(el).elstruct.coords_mm{els(el).side})
-            [~,D(cont)]=knnsearch(cpatches(cont).Vertices,mean(obj.fv.vertices));
-        end
-        ccol=repmat(0.3,length(els(el).elstruct.coords_mm{els(el).side}),3);
-        
-        [~,ix]=sort(D(D<5));
-        
-        if ~isempty(ix)
-            P=repmat(obj.color,length(ix),1);
-            cweights=(1./exp(D(ix))).^2;
-            cweights=(cweights/ea_nanmax(cweights))';
-            ccol(ix,:)=ccol(ix,:).*repmat(1-cweights,1,3)+...
-                P.*repmat(cweights,1,3);
-            els(el).colorMacroContacts=ccol;
-            
-            % draw line to closest contact
-            
-            delete(obj.hail);
-            Pline=[mean(obj.fv.vertices);els(el).elstruct.coords_mm{els(el).side}(ix(1),:)];
-            
-            hold on
-            obj.hail=ea_plot3t(Pline(:,1),Pline(:,2),Pline(:,3),0.05,[0.1,0.1,0.1],12,1);
+    if ~isempty(obj.nearelectrodes)
+        els=obj.nearelectrodes;
+        %hold on
+        %plot3(obj.peak(1),obj.peak(2),obj.peak(3),'y*');
+        elrender=getappdata(obj.plotFigureH,'el_render');
+        for el=1:length(els)
+            cpatches=elrender(el).elpatch{1}{1}(logical(els(el).eltype{1})); % patches of contacts
+            for cont=1:length(els(el).elstruct.coords_mm{els(el).side})
+                [~,D(cont)]=knnsearch(cpatches(cont).Vertices,mean(obj.fv.vertices));
+            end
+            ccol=repmat(0.3,length(els(el).elstruct.coords_mm{els(el).side}),3);
+
+            [~,ix]=sort(D(D<5));
+
+            if ~isempty(ix)
+                P=repmat(obj.color,length(ix),1);
+                cweights=(1./exp(D(ix))).^2;
+                cweights=(cweights/ea_nanmax(cweights))';
+                ccol(ix,:)=ccol(ix,:).*repmat(1-cweights,1,3)+...
+                    P.*repmat(cweights,1,3);
+                els(el).colorMacroContacts=ccol;
+
+                % draw line to closest contact
+
+                delete(obj.hail);
+                Pline=[mean(obj.fv.vertices);els(el).elstruct.coords_mm{els(el).side}(ix(1),:)];
+
+                hold on
+                obj.hail=ea_plot3t(Pline(:,1),Pline(:,2),Pline(:,3),0.05,[0.1,0.1,0.1],12,1);
+            end
         end
     end
-    
 end
-end
+
 function rightcallback(src, evnt,obj)
     if evnt.getButton() == 3
         ea_editroi(src,evnt,obj)
     end
 end
 
-function ea_editroi(Hobj,evt,obj)
-            obj.controlH=ea_sweetspotcontrol(obj);
 
+function ea_editroi(Hobj,evt,obj)
+    obj.controlH=ea_sweetspotcontrol(obj);
 end
+
 
 function ea_sweetspotvisible(Hobj,evt,onoff,obj)
     obj.visible=onoff;
 end
+
+
 function coords=map_coords_proxy(XYZ,V)
-
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';
+    XYZ=[XYZ';ones(1,size(XYZ,1))];
+    coords=V.mat*XYZ;
+    coords=coords(1:3,:)';
 end
 
+
 function fn=stripext(fn)
-[~,fn]=fileparts(fn);
+    [~,fn]=fileparts(fn);
 end
