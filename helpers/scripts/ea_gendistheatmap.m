@@ -82,12 +82,16 @@ for side=sides
         %D=-(pdist([XYZ(vx,:);acs]));
         Dall=pdist2(acs,XYZ(vx:vx+(chunk-1),:));
         %D=-D(1:N)';
-        Dall=1./exp(Dall);
+        %Dall=1./exp(Dall);
+        Dall=1./(Dall);
+
         fovimg.img(vx:(vx+chunk-1))=corr(Dall,I,'rows','pairwise','type','Spearman');
         %        distimg.img(vx)=nansum(D);
         %distimg.img(vx:(vx+chunk-1))=nanmean(D);
                 D=pdist2(mean(acs,1),XYZ(vx:vx+(chunk-1),:));
         distimg.img(vx:(vx+chunk-1))=1./exp(D);
+        distimg.img(vx:(vx+chunk-1))=1./(D);
+
         %         b=glmfit(D,I);
         %         if isnan(b)
         %             keyboard
