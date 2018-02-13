@@ -93,7 +93,12 @@ if ~obj.binary
     set(jSlider{1}, 'Value', threshold2slider(obj),...
         'Background',java.awt.Color(1,1,1),...
         'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
+    switch obj.nii.thresholdType
+        case 'absolute'
     set(handles.thresholdValue,'String',sprintf('%0.2f',obj.threshold));
+        case 'percent'
+    set(handles.thresholdValue,'String',sprintf('%0.2f',(100-(obj.threshold))));        
+    end
     hjSlider{1} = handle(jSlider{1}, 'CallbackProperties');
     set(hjSlider{1}, 'MouseReleasedCallback', {@sliderThresholdChange,obj,handles});  %alternative
     set(hjSlider{1}, 'StateChangedCallback', {@sliderThresholdChangeTxt,obj,handles});  %alternative
@@ -154,23 +159,42 @@ setappdata(handles.roicontrol,'FactorSlider',FactorSlider);
 
 
 function sliderValue = threshold2slider(obj)
+switch obj.nii.thresholdType
+    case 'absolute'
 threshold = (obj.threshold-obj.min)/(obj.max-obj.min);
 sliderValue = round(threshold*100); % slider only supports integers
-
+    case 'percent'
+   sliderValue=((100-obj.threshold));
+end
 
 function sliderThresholdChange(varargin)
 slide = varargin{1};
 obj = varargin{3};
+sliderThresholdChangeTxt(varargin{:});
+switch obj.nii.thresholdType
+    case 'absolute'
 obj.threshold = slide.Value / 100 * (obj.max-obj.min) + obj.min;
-
+    case 'percent'
+        obj.threshold = 100-slide.Value;
+        if obj.threshold==100
+            obj.thresold=100-eps;
+        end
+        if obj.threshold==0
+            obj.thresold=0+eps;
+        end
+end
 
 function sliderThresholdChangeTxt(varargin)
 slide=varargin{1};
 obj=varargin{3};
 handles=varargin{4};
-thresholdValue = slide.Value / 100 * (obj.max-obj.min) + obj.min;
-set(handles.thresholdValue,'String',sprintf('%0.2f',thresholdValue));
-
+switch obj.nii.thresholdType
+    case 'absolute'
+        thresholdValue = slide.Value / 100 * (obj.max-obj.min) + obj.min;
+        set(handles.thresholdValue,'String',sprintf('%0.2f',thresholdValue));
+    case 'percent'
+        set(handles.thresholdValue,'String',sprintf('%0.2f',(100-(slide.Value))));
+end
 
 function sliderAlphaChange(varargin)
 slide = varargin{1};

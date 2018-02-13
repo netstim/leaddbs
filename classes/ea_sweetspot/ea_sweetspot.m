@@ -8,6 +8,7 @@ classdef ea_sweetspot < handle
         niftiFilename % original nifti filename
         nii % nifti loaded
         threshold % threshold to visualize
+        thresholdType % what the threshold should represent
         color % color of patch
         alpha=0.7 % alpha of patch
         fv % faces and vertices of patch
@@ -76,6 +77,12 @@ classdef ea_sweetspot < handle
             % load nifti
 
             obj.nii=load(obj.niftiFilename);
+            if ~isfield(obj.nii,'thresholdType')
+                obj.nii.thresholdType='absolute';
+            end
+            if ~isfield(obj.nii,'thresholdFactor')
+                obj.nii.thresholdFactor=2;
+            end
             obj.binary=0;
             options.prefs=ea_prefs;
             obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));
@@ -87,10 +94,15 @@ classdef ea_sweetspot < handle
             try
                 obj.threshold=pobj.threshold;
             catch
-                if obj.binary
-                    obj.threshold=obj.max/2;
-                else
-                    obj.threshold=obj.max-0.5*maxmindiff;
+                switch obj.nii.thresholdType
+                    case 'absolute'
+                        if obj.binary
+                            obj.threshold=obj.max/2;
+                        else
+                            obj.threshold=obj.max-0.5*maxmindiff;
+                        end
+                    case 'percent'
+                        obj.threshold=0.95;
                 end
             end
 
@@ -151,8 +163,15 @@ classdef ea_sweetspot < handle
                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(obj.nii.img,dim));
                 end
                 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-
-                obj.fv=isosurface(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
+                
+                switch obj.nii.thresholdType
+                    case 'absolute' % threshold at absolute percentage
+                        obj.fv=isosurface(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
+                    case 'percent' % threshold by showing percent of peak voxels
+                        ints=sort(obj.nii.img(:),'descend');
+                        tthresh=ints(round((((obj.threshold)/100)/obj.nii.thresholdFactor)*length(ints)));
+                        obj.fv=isosurface(X,Y,Z,permute(obj.nii.img,[2,1,3]),tthresh);
+                end
                 fvc=isocaps(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 obj.fv.faces=[obj.fv.faces;fvc.faces+size(obj.fv.vertices,1)];
                 obj.fv.vertices=[obj.fv.vertices;fvc.vertices];
