@@ -26,8 +26,24 @@ end
 if nargin >= 5
     options = varargin{5};
 else
-    umachine = load([ea_gethome, '.ea_prefs.mat']);
+    umachine = load([ea_gethome, '.ea_prefs.mat'], 'machine');
     options.prefs.machine.normsettings = umachine.machine.normsettings;
+end
+
+if isempty(which(options.prefs.machine.normsettings.ants_preset))
+    fprintf(['\nCurrent ANTs preset "%s" is unavailable/deprecated!\n', ...
+            'Will use the default preset "Effective: LowVariance, Default" instead.\n', ...
+            'You may check your ANTs setting again later.\n\n'], ...
+            options.prefs.machine.normsettings.ants_preset);
+    % load default ANTs presets when current setting is unavailable/deprecated
+    load([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat'], 'machine');
+    ants_default_preset = machine.normsettings.ants_preset;
+    options.prefs.machine.normsettings.ants_preset = ants_default_preset;
+
+    % save default ANTs presets to user preference file
+    load([ea_gethome, '.ea_prefs.mat'], 'machine')
+    machine.normsettings.ants_preset = ants_default_preset;
+    save([ea_gethome, '.ea_prefs.mat'], 'machine', '-append');
 end
 
 slabsupport = 1; % check for slabs in anat files and treat slabs differently (add additional SyN stage only in which slabs are being used).
