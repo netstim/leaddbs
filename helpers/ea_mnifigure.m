@@ -8,7 +8,11 @@ else
     options.atlasset='';
     options.d3.writeatlases=0;
 end
+options.leadprod='dbs';
+options.d3.elrendering=1;
+options.d3.exportBB=0;
 resultfig=ea_elvis(options);
+colormap gray
 hold on
 
 
