@@ -58,8 +58,10 @@ for side=sides
             end
         else % average points
             try
+
                 acs(pt,:)=mean([mean(M.elstruct(pts(pt)).coords_mm{1}(logical(M.S(pts(pt)).activecontacts{1}(1:4)),:),1);...
                     ea_flip_lr_nonlinear(mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1))]);
+
             catch
                 keyboard
             end
@@ -73,6 +75,8 @@ for side=sides
     N=length(M.patient.list(pts));
     I=M.clinical.vars{regno}(pts,side);
     chunk=200000;
+    weights=repmat(I./ea_nansum(I),1,3);
+    peak=ea_nansum(acs.*weights,1);
     for vx=1:chunk:dimen
         
         if (vx+(chunk-1))>dimen
@@ -88,8 +92,10 @@ for side=sides
         fovimg.img(vx:(vx+chunk-1))=corr(Dall,I,'rows','pairwise','type','Spearman');
         %        distimg.img(vx)=nansum(D);
         %distimg.img(vx:(vx+chunk-1))=nanmean(D);
-                D=pdist2(mean(acs,1),XYZ(vx:vx+(chunk-1),:));
-        distimg.img(vx:(vx+chunk-1))=1./exp(D);
+        
+        
+                D=pdist2(peak,XYZ(vx:vx+(chunk-1),:));
+%        distimg.img(vx:(vx+chunk-1))=1./exp(D);
         distimg.img(vx:(vx+chunk-1))=1./(D);
 
         %         b=glmfit(D,I);
