@@ -1,4 +1,4 @@
-function [hiso,fv]=ea_plot3t(varargin)
+function varargout=ea_plot3t(varargin)
 % PLOT3T Plots a (cylindrical) 3D line with a certain thickness.
 %
 %   h = plot3t(x,y,z,r,'color',n);
@@ -282,6 +282,13 @@ else
     hiso=nan;
 end
 fv.facevertexcdata=cdat;
+
+
+if nargout==2
+    varargout={hiso,fv};
+else
+    varargout={fv.faces,fv.vertices,fv.facevertexcdata};
+end
 
 
 function [err,circm]=minimize_rot(angles,circmo,angleoffset,a,b)
