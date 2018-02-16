@@ -14,7 +14,9 @@ function ea_Amap(varargin)
     if isempty(regressor) % create simple average map without any weighting
         regressor=ones(size(X,2),1);
     end
-    nregressor=regressor./ea_nansum(regressor);
+    regressor=regressor-min(regressor); % shift up in case of negatives
+    regressor=regressor+eps; % shift up marginally so there is no zero
+    nregressor=regressor./ea_nansum(regressor); % divide by sum so sum is 1
     A=ea_nansum(X.*repmat(nregressor',size(X,1),1),2);
     
     ea_exportmap(n,A,varargin{:});

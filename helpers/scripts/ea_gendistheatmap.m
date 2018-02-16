@@ -75,7 +75,9 @@ for side=sides
     N=length(M.patient.list(pts));
     I=M.clinical.vars{regno}(pts,side);
     chunk=200000;
-    weights=repmat(I./ea_nansum(I),1,3);
+    nzI=I-min(I); % shift up in case of negatives
+    nzI=nzI+eps; % shift up marginally so there is no zero
+    weights=repmat(nzI./ea_nansum(nzI),1,3);
     peak=ea_nansum(acs.*weights,1);
     for vx=1:chunk:dimen
         
