@@ -11,8 +11,9 @@ function ea_Cmap(varargin)
     [X,n]=ea_genX(varargin{:}); % accumulates all images into image matrix X.
     
     R=corr(regressor,X','type','Spearman','rows','pairwise');
-    
-    nregressor=regressor./ea_nansum(regressor);
+    regressor=regressor-min(regressor); % shift up in case of negatives
+    regressor=regressor+eps; % shift up marginally so there is no zero
+    nregressor=regressor./ea_nansum(regressor); % divide by sum so sum is 1
     A=ea_nansum(X.*repmat(nregressor',size(X,1),1),2);
     
     bidir=(R'.*A)>0; % check for entries that are either positive or negative in both maps.
