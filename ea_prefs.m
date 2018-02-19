@@ -23,11 +23,11 @@ if isdeployed
 end
 
 if ~exist([home, '.ea_prefs.m'], 'file')
-    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default.m'], [home, '.ea_prefs.m']);
+    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default.m'], [home, '.ea_prefs.m'], 'f');
 end
 
 if ~exist([home, '.ea_prefs.mat'], 'file')
-    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat'], [home, '.ea_prefs.mat']);
+    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat'], [home, '.ea_prefs.mat'], 'f');
 end
 
 % load user prefs
