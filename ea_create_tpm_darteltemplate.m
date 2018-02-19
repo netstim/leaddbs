@@ -34,8 +34,9 @@ if isfield(spacedef,'tpm')
             end
     end
 end
+
 tpmHdr = ea_open_vol(tpmfile);
-tpn = tpmHdr.volnum;
+tpmnum = tpmHdr.volnum;
 
 if rebuildtpm
     for t=1:length(spacedef.templates)
@@ -44,7 +45,7 @@ if rebuildtpm
         matlabbatch{1}.spm.spatial.preproc.channel(t).biasfwhm = 60;
         matlabbatch{1}.spm.spatial.preproc.channel(t).write = [0 0];
     end
-    for tpspectr=1:length(tpn)
+    for tpspectr=1:tpmnum
         matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).tpm = {[tpmfile,',',num2str(tpspectr)]}; % This is correct ? TPM Lorio Draganski to be kept in /templates folder since will be used to generate TPM in each space.
         matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).ngaus = 1;
         matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).native = [1 0];
@@ -70,11 +71,11 @@ else
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
 
-    for t=1:length(tpn)
+    for t=1:tpmnum
        movefile([ea_space,'TPM_',sprintf('%05.f',t),'.nii'],[ea_space,'c',num2str(t),spacedef.templates{1},'.nii']);
     end
 end
-for c=1:length(tpn)
+for c=1:tpmnum
     if c<3
        copyfile([ea_space,'c',num2str(c),spacedef.templates{1},'.nii'],[ea_space,'c',num2str(c),'mask.nii']);
     end
@@ -86,7 +87,7 @@ end
 prefs=ea_prefs('');
 if ~strcmp(spacedef.tpm(1:6),'custom')
 
-    for c=1:length(tpn)
+    for c=1:tpmnum
 
         fina=[ea_space([],'dartel'),'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
         nii=ea_load_nii(fina); % change datatype to something high for reslicing and smoothing.
@@ -194,7 +195,7 @@ end
 
 % further cleanup
 delete([wd,'dartelmni_*.mat']);
-for c=1:length(tpn)
+for c=1:tpmnum
     delete([wd,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
 end
 %gzip([wd,'dartelmni_6_hires.nii']);
