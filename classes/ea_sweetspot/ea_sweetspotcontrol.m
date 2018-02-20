@@ -69,7 +69,7 @@ set(handles.roicontrol,'CurrentAxes',handles.histax);
 axis off
 
 if ~obj.binary
-    hist(nzeronans);
+    hist(nzeronans,100);
     h=findobj(handles.histax,'Type','patch');
     set(h,'FaceColor',[0,0.5 0.5],'EdgeColor','none');
     axis off
