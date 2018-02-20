@@ -30,7 +30,7 @@ else
         job.channel(fi).biasfwhm = 60;
         job.channel(fi).write = [0 0];
     end
-    tpmHdr = spm_vol(tpminf);
+    tpmHdr = ea_open_vol(tpminf);
     tpmnum = tpmHdr.volnum;
 
     for tpm=1:tpmnum
