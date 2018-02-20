@@ -261,7 +261,7 @@ function colorconts(obj)
                 Pline=[mean(obj.fv.vertices);els(el).elstruct.coords_mm{els(el).side}(ix(1),:)];
 
                 hold on
-                obj.hail=ea_plot3t(Pline(:,1),Pline(:,2),Pline(:,3),0.05,[0.1,0.1,0.1],12,1);
+                [obj.hail,fv]=ea_plot3t(Pline(:,1),Pline(:,2),Pline(:,3),0.05,[0.1,0.1,0.1],12,1);
             end
         end
     end
