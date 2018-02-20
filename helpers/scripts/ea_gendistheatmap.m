@@ -79,6 +79,7 @@ for side=sides
     nzI=nzI+eps; % shift up marginally so there is no zero
     weights=repmat(nzI./ea_nansum(nzI),1,3);
     peak=ea_nansum(acs.*weights,1);
+    %peak=mean(acs);
     for vx=1:chunk:dimen
         
         if (vx+(chunk-1))>dimen
@@ -97,8 +98,8 @@ for side=sides
         
         
                 D=pdist2(peak,XYZ(vx:vx+(chunk-1),:));
-%        distimg.img(vx:(vx+chunk-1))=1./exp(D);
-        distimg.img(vx:(vx+chunk-1))=1./(D);
+        distimg.img(vx:(vx+chunk-1))=1./exp(D);
+%        distimg.img(vx:(vx+chunk-1))=1./(D);
 
         %         b=glmfit(D,I);
         %         if isnan(b)
