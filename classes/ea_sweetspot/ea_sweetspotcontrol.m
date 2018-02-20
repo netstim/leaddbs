@@ -193,7 +193,7 @@ switch obj.nii.thresholdType
         thresholdValue = slide.Value / 100 * (obj.max-obj.min) + obj.min;
         set(handles.thresholdValue,'String',sprintf('%0.2f',thresholdValue));
     case 'percent'
-        set(handles.thresholdValue,'String',sprintf('%0.2f',(100-(slide.Value))));
+        set(handles.thresholdValue,'String',sprintf('%0.2f',((slide.Value))));
 end
 
 function sliderAlphaChange(varargin)

@@ -245,20 +245,21 @@ function colorconts(obj)
             end
             ccol=repmat(0.3,length(els(el).elstruct.coords_mm{els(el).side}),3);
 
+            ofix=find(D<5);
             [~,ix]=sort(D(D<5));
 
             if ~isempty(ix)
                 P=repmat(obj.color,length(ix),1);
                 cweights=(1./exp(D(ix))).^2;
                 cweights=(cweights/ea_nanmax(cweights))';
-                ccol(ix,:)=ccol(ix,:).*repmat(1-cweights,1,3)+...
+                ccol(ofix(ix),:)=ccol(ofix(ix),:).*repmat(1-cweights,1,3)+...
                     P.*repmat(cweights,1,3);
                 els(el).colorMacroContacts=ccol;
 
                 % draw line to closest contact
 
                 delete(obj.hail);
-                Pline=[mean(obj.fv.vertices);els(el).elstruct.coords_mm{els(el).side}(ix(1),:)];
+                Pline=[mean(obj.fv.vertices);els(el).elstruct.coords_mm{els(el).side}(ofix(ix(1)),:)];
 
                 hold on
                 [obj.hail,fv]=ea_plot3t(Pline(:,1),Pline(:,2),Pline(:,3),0.05,[0.1,0.1,0.1],12,1);
