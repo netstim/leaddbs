@@ -353,7 +353,7 @@ for side=1:length(options.sides)
             connectingfibs{side}{la,fib}=connectingfibs{side}{la,fib}';
 
             if ~isfield(stimparams,'group')
-                connectingfibs{side}{la,fib}(4:6,:)=detcolor(connectingfibs{side}{la,fib}); % add coloring information to the 4th column.
+                connectingfibs{side}{la,fib}(4:6,:)=detcolor(connectingfibs{side}{la,fib}); % add coloring information to the 4th-6th column.
             else % if more than one group is analyzed, coloring info will be off the group color.
 %                 RGB=zeros(1,1,3);
 %                 RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);

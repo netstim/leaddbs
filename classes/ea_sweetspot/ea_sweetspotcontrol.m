@@ -151,10 +151,10 @@ setappdata(handles.roicontrol,'FactorSlider',FactorSlider);
 function sliderValue = threshold2slider(obj)
 switch obj.nii.thresholdType
     case 'absolute'
-threshold = (obj.threshold-obj.min)/(obj.max-obj.min);
-sliderValue = round(threshold*100); % slider only supports integers
+        threshold = (obj.threshold-obj.min)/(obj.max-obj.min);
+        sliderValue = round(threshold*100); % slider only supports integers
     case 'percent'
-   sliderValue=((100-obj.threshold));
+        sliderValue=((100-obj.threshold));
 end
 
 
@@ -164,7 +164,7 @@ obj = varargin{3};
 sliderThresholdChangeTxt(varargin{:});
 switch obj.nii.thresholdType
     case 'absolute'
-obj.threshold = slide.Value / 100 * (obj.max-obj.min) + obj.min;
+        obj.threshold = slide.Value / 100 * (obj.max-obj.min) + obj.min;
     case 'percent'
         obj.threshold = 100-slide.Value;
         if obj.threshold==100

@@ -75,7 +75,6 @@ classdef ea_sweetspot < handle
             end
 
             % load nifti
-
             obj.nii=load(obj.niftiFilename);
             if ~isfield(obj.nii,'thresholdType')
                 obj.nii.thresholdType='absolute';
@@ -112,13 +111,13 @@ classdef ea_sweetspot < handle
             obj.patchH=patch;
 
             obj.toggleH=uitoggletool;
-
             % Get the underlying java object using findobj
             jtoggle = findjobj(obj.toggleH);
-
             % Specify a callback to be triggered on any mouse release event
             set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
+
             update_sweetspot(obj);
+
             addlistener(obj, 'visible', 'PostSet', @obj.changeevent);
             addlistener(obj, 'color', 'PostSet', @obj.changeevent);
             addlistener(obj, 'threshold', 'PostSet', @obj.changeevent);
@@ -180,7 +179,6 @@ classdef ea_sweetspot < handle
                     obj.sfv=reducepatch(obj.sfv,simplify);
                 else
                     if obj.hullsimplify<1 && obj.hullsimplify>0
-
                         obj.sfv=reducepatch(obj.sfv,obj.hullsimplify);
                     elseif obj.hullsimplify>1
                         simplify=obj.hullsimplify/length(obj.fv.faces);
@@ -244,6 +242,7 @@ function colorconts(obj)
                 ccol(ofix(ix),:)=ccol(ofix(ix),:).*repmat(1-cweights,1,3)+...
                     P.*repmat(cweights,1,3);
                 els(el).colorMacroContacts=ccol;
+                delete(obj.toggleH.Parent.Children(1))
 
                 % draw line to closest contact
                 delete(obj.hail);

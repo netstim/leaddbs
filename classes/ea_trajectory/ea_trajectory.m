@@ -180,6 +180,7 @@ classdef ea_trajectory < handle
     end
 end
 
+
 function obj=update_trajectory(obj,evtnm) % update ROI
     if ~exist('evtnm','var')
         evtnm='all';
@@ -228,7 +229,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             poptions.sides=obj.side;
             poptions.colorMacroContacts=obj.colorMacroContacts;
             el_render=getappdata(obj.plotFigureH,'el_render');
-            
+
             [obj.elpatch{1},obj.ellabel(1),obj.eltype]=ea_showelectrode(obj.plotFigureH,obj.elstruct,1,poptions);
             if isempty(el_render)
                 clear el_render
@@ -250,6 +251,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         {@ea_trajvisible,'on',obj}, {@ea_trajvisible,'off',obj}, ...
         ea_bool2onoff(any([obj.showPlanning,obj.showMacro,obj.showMicro]))});
 end
+
 
 function ccoords=ea_convertfiducials(obj,coords)
     for coord=1:size(coords,1)
@@ -301,9 +303,11 @@ function ccoords=ea_convertfiducials(obj,coords)
     end
 end
 
+
 function ea_roivisible(Hobj,evt,onoff,obj)
     obj.visible=onoff;
 end
+
 
 function coords=map_coords_proxy(XYZ,V)
     XYZ=[XYZ';ones(1,size(XYZ,1))];
@@ -312,9 +316,11 @@ function coords=map_coords_proxy(XYZ,V)
     coords=coords(1:3,:)';
 end
 
+
 function fn=stripext(fn)
     [~,fn]=fileparts(fn);
 end
+
 
 function rightcallback(src, evnt, obj)
     if evnt.getButton() == 3
@@ -322,9 +328,11 @@ function rightcallback(src, evnt, obj)
     end
 end
 
+
 function ea_editfiducial(Hobj, evt, obj)
     obj.controlH=ea_trajectorycontrol(obj);
 end
+
 
 function ea_trajvisible(~, ~, onoff, obj)
     if getappdata(obj.plotFigureH,'altpressed') % hide all
