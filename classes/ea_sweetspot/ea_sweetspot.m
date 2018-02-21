@@ -75,6 +75,7 @@ classdef ea_sweetspot < handle
             end
 
             % load nifti
+
             obj.nii=load(obj.niftiFilename);
             if ~isfield(obj.nii,'thresholdType')
                 obj.nii.thresholdType='absolute';
@@ -179,6 +180,7 @@ classdef ea_sweetspot < handle
                     obj.sfv=reducepatch(obj.sfv,simplify);
                 else
                     if obj.hullsimplify<1 && obj.hullsimplify>0
+
                         obj.sfv=reducepatch(obj.sfv,obj.hullsimplify);
                     elseif obj.hullsimplify>1
                         simplify=obj.hullsimplify/length(obj.fv.faces);

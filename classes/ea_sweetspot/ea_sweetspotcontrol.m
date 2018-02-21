@@ -63,19 +63,9 @@ guidata(hObject, handles);
 setappdata(handles.roicontrol,'chandles',handles);
 obj=varargin{1};
 setappdata(handles.roicontrol,'obj',obj);
-nzeronans = obj.nii.img(~isnan(obj.nii.img) & obj.nii.img~=0);
-set(0,'CurrentFigure',handles.roicontrol);
-set(handles.roicontrol,'CurrentAxes',handles.histax);
-axis off
 
 if ~obj.binary
-    hist(nzeronans,100);
-    h=findobj(handles.histax,'Type','patch');
-    set(h,'FaceColor',[0,0.5 0.5],'EdgeColor','none');
-    axis off
-
     set(handles.roicontrol,'Name',obj.niftiFilename);
-    handles.histax.XAxis.Limits=[min(nzeronans),max(nzeronans)];
 else
     set(handles.threshLabel,'Visible','off');
 end
