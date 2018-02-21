@@ -62,7 +62,7 @@ classdef ea_sweetspot < handle
                 setappdata(obj.plotFigureH,'addht',obj.htH);
             end
 
-           set(0,'CurrentFigure',obj.plotFigureH);
+            set(0,'CurrentFigure',obj.plotFigureH);
             % set cdata
             if exist('pobj','var') && ~isempty(pobj)
                 try
@@ -75,7 +75,6 @@ classdef ea_sweetspot < handle
             end
 
             % load nifti
-
             obj.nii=load(obj.niftiFilename);
             if ~isfield(obj.nii,'thresholdType')
                 obj.nii.thresholdType='absolute';
@@ -119,25 +118,17 @@ classdef ea_sweetspot < handle
             % Specify a callback to be triggered on any mouse release event
             set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
             update_sweetspot(obj);
-            addlistener(obj,'visible','PostSet',...
-                @obj.changeevent);
-            addlistener(obj,'color','PostSet',...
-                @obj.changeevent);
-            addlistener(obj,'threshold','PostSet',...
-                @obj.changeevent);
-            addlistener(obj,'smooth','PostSet',...
-                @obj.changeevent);
-            addlistener(obj,'hullsimplify','PostSet',...
-                @obj.changeevent);
-            addlistener(obj,'alpha','PostSet',...
-                @obj.changeevent);
-            addlistener(obj,'fmix','PostSet',...
-                @obj.changeevent);
+            addlistener(obj, 'visible', 'PostSet', @obj.changeevent);
+            addlistener(obj, 'color', 'PostSet', @obj.changeevent);
+            addlistener(obj, 'threshold', 'PostSet', @obj.changeevent);
+            addlistener(obj, 'smooth', 'PostSet', @obj.changeevent);
+            addlistener(obj, 'hullsimplify', 'PostSet', @obj.changeevent);
+            addlistener(obj, 'alpha', 'PostSet', @obj.changeevent);
+            addlistener(obj, 'fmix', 'PostSet', @obj.changeevent);
 
             if exist('pobj','var') && isfield(pobj,'openedit') && pobj.openedit
             	ea_editroi([],[],obj)
             end
-
         end
 
         function changeevent(~, ~, event)
@@ -163,7 +154,7 @@ classdef ea_sweetspot < handle
                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(obj.nii.img,dim));
                 end
                 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-                
+
                 switch obj.nii.thresholdType
                     case 'absolute' % threshold at absolute percentage
                         obj.fv=isosurface(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
@@ -186,10 +177,8 @@ classdef ea_sweetspot < handle
                     % get to 700 faces
                     simplify=700/length(obj.sfv.faces);
                     obj.sfv=reducepatch(obj.sfv,simplify);
-
                 else
                     if obj.hullsimplify<1 && obj.hullsimplify>0
-
                         obj.sfv=reducepatch(obj.sfv,obj.hullsimplify);
                     elseif obj.hullsimplify>1
                         simplify=obj.hullsimplify/length(obj.fv.faces);
@@ -202,8 +191,6 @@ classdef ea_sweetspot < handle
                 else
                     obj.cdat=isocolors(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.sfv.vertices);
                 end
-
-
             end
 
             jetlist=jet;
@@ -257,7 +244,6 @@ function colorconts(obj)
                 els(el).colorMacroContacts=ccol;
 
                 % draw line to closest contact
-
                 delete(obj.hail);
                 Pline=[mean(obj.fv.vertices);els(el).elstruct.coords_mm{els(el).side}(ofix(ix(1)),:)];
 
@@ -267,6 +253,7 @@ function colorconts(obj)
         end
     end
 end
+
 
 function rightcallback(src, evnt,obj)
     if evnt.getButton() == 3

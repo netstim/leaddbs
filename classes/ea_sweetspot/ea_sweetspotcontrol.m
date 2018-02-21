@@ -97,7 +97,7 @@ if ~obj.binary
         case 'absolute'
     set(handles.thresholdValue,'String',sprintf('%0.2f',obj.threshold));
         case 'percent'
-    set(handles.thresholdValue,'String',sprintf('%0.2f',(100-(obj.threshold))));        
+    set(handles.thresholdValue,'String',sprintf('%0.2f',(100-(obj.threshold))));
     end
     hjSlider{1} = handle(jSlider{1}, 'CallbackProperties');
     set(hjSlider{1}, 'MouseReleasedCallback', {@sliderThresholdChange,obj,handles});  %alternative
@@ -167,6 +167,7 @@ sliderValue = round(threshold*100); % slider only supports integers
    sliderValue=((100-obj.threshold));
 end
 
+
 function sliderThresholdChange(varargin)
 slide = varargin{1};
 obj = varargin{3};
@@ -184,6 +185,7 @@ obj.threshold = slide.Value / 100 * (obj.max-obj.min) + obj.min;
         end
 end
 
+
 function sliderThresholdChangeTxt(varargin)
 slide=varargin{1};
 obj=varargin{3};
@@ -195,6 +197,7 @@ switch obj.nii.thresholdType
     case 'percent'
         set(handles.thresholdValue,'String',sprintf('%0.2f',((slide.Value))));
 end
+
 
 function sliderAlphaChange(varargin)
 slide = varargin{1};

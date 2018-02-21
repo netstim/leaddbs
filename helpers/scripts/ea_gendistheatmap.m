@@ -35,7 +35,7 @@ for side=sides
         case 2
             sidestr='_lh';
     end
-    
+
     fovimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'.nii'];
     distimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'_distance.nii'];
 
@@ -43,7 +43,7 @@ for side=sides
     XYZ=[xx;yy;zz;ones(1,length(xx))];
     XYZ=fovimg.mat*XYZ;
     XYZ=XYZ(1:3,:)';
-    
+
     for pt=1:length(pts)
         if bilateral
             switch side
@@ -51,23 +51,21 @@ for side=sides
                     acs(pt,:)=mean(M.elstruct(pts(pt)).coords_mm{1}(logical(M.S(pts(pt)).activecontacts{1}(1:4)),:),1);
                 case 2
                     if flipleft
-                    acs(pt,:)=ea_flip_lr_nonlinear(mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1));
+                        acs(pt,:)=ea_flip_lr_nonlinear(mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1));
                     else
-                    acs(pt,:)=mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1);
+                        acs(pt,:)=mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1);
                     end
             end
         else % average points
             try
-
                 acs(pt,:)=mean([mean(M.elstruct(pts(pt)).coords_mm{1}(logical(M.S(pts(pt)).activecontacts{1}(1:4)),:),1);...
                     ea_flip_lr_nonlinear(mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1))]);
-
             catch
                 keyboard
             end
         end
     end
-    
+
     % figure, plot3(acs(:,1),acs(:,2),acs(:,3),'r*');
     % axis equal
     ea_dispercent(0,'Iterating voxels');
@@ -81,42 +79,41 @@ for side=sides
     peak=ea_nansum(acs.*weights,1);
     %peak=mean(acs);
     for vx=1:chunk:dimen
-        
+
         if (vx+(chunk-1))>dimen
             chunk=(dimen-vx)+1;
         end
-        %D=squareform(pdist([XYZ(vx,:);acs]));
-        %D=-(pdist([XYZ(vx,:);acs]));
+        % D=squareform(pdist([XYZ(vx,:);acs]));
+        % D=-(pdist([XYZ(vx,:);acs]));
         Dall=pdist2(acs,XYZ(vx:vx+(chunk-1),:));
-        %D=-D(1:N)';
-        %Dall=1./exp(Dall);
+        % D=-D(1:N)';
+        % Dall=1./exp(Dall);
         Dall=1./(Dall);
 
         fovimg.img(vx:(vx+chunk-1))=corr(Dall,I,'rows','pairwise','type','Spearman');
-        %        distimg.img(vx)=nansum(D);
-        %distimg.img(vx:(vx+chunk-1))=nanmean(D);
-        
-        
-                D=pdist2(peak,XYZ(vx:vx+(chunk-1),:));
-        distimg.img(vx:(vx+chunk-1))=1./exp(D);
-%        distimg.img(vx:(vx+chunk-1))=1./(D);
+        % distimg.img(vx)=nansum(D);
+        % distimg.img(vx:(vx+chunk-1))=nanmean(D);
 
-        %         b=glmfit(D,I);
-        %         if isnan(b)
-        %             keyboard
-        %         end
-        %
-        %         fovimg.img(vx)=b(2)/overone(abs(b(1)));
+        D=pdist2(peak,XYZ(vx:vx+(chunk-1),:));
+        distimg.img(vx:(vx+chunk-1))=1./exp(D);
+        % distimg.img(vx:(vx+chunk-1))=1./(D);
+
+        % b=glmfit(D,I);
+        % if isnan(b)
+        %     keyboard
+        % end
+
+        % fovimg.img(vx)=b(2)/overone(abs(b(1)));
         ea_dispercent(vx/dimen);
     end
     ea_dispercent(1,'end');
-    
-    
+
     fovimg.dt=[64,0];
     distimg.dt=[64,0];
     ea_write_nii(fovimg);
     ea_write_nii(distimg);
 end
+
 
 function val=overone(val)
 if val<1
