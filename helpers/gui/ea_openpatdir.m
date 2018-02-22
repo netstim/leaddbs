@@ -12,12 +12,4 @@ if strcmp(outfolder(1:8),'Multiple')
    return;
 end
 
-if ismac
-    system(['open ', outfolder]);
-elseif isunix
-    system(['xdg-open ', outfolder]);
-elseif ispc
-    system(['explorer ', outfolder]);
-end
-
-cd(outfolder);
+ea_opendir(outfolder);
