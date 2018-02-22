@@ -22,7 +22,7 @@ function varargout = ea_checkcoreg(varargin)
 
 % Edit the above text to modify the response to help ea_checkcoreg
 
-% Last Modified by GUIDE v2.5 21-Jan-2018 14:47:52
+% Last Modified by GUIDE v2.5 22-Feb-2018 13:07:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -82,7 +82,7 @@ if exist([directory,'scrf',filesep,'scrf_instore_converted.mat'],'file')
 end
 
 if isempty(presentfiles)
-evalin('base','checkregempty=1;');
+    evalin('base','checkregempty=1;');
     close(handles.leadfigure)
    return
 end
@@ -151,7 +151,7 @@ options=getappdata(handles.leadfigure,'options');
 
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=[options.root,options.patientname,filesep];
+directory=getappdata(handles.leadfigure,'directory');
 
 if activevolume==length(presentfiles)
     set(handles.disapprovebutn,'String','Disapprove & Close');
@@ -363,7 +363,7 @@ options.overwriteapproved=1;
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=[options.root,options.patientname,filesep];
+directory=getappdata(handles.leadfigure,'directory');
 
 currvol=presentfiles{activevolume};
 
@@ -380,7 +380,6 @@ switch ea_stripex(currvol)
         end
 
     case ea_stripex(['tp_',options.prefs.ctnii_coregistered]) % CT
-
         options.coregct.method=getappdata(handles.leadfigure,'coregctmethod');
         options.coregct.method=options.coregct.method{get(handles.coregmrpopup,'Value')};
         options.coregct.methodn=get(handles.coregmrpopup,'Value');
@@ -395,6 +394,7 @@ switch ea_stripex(currvol)
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
         ea_coreg2images(options,[directory,options.prefs.fa],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
         ea_dumpspecificmethod(handles,options.coregmr.method)
+
     otherwise % MR
         options.coregmr.method=get(handles.coregmrpopup,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
@@ -427,7 +427,7 @@ options=getappdata(handles.leadfigure,'options');
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=[options.root,options.patientname,filesep];
+directory=getappdata(handles.leadfigure,'directory');
 try
     m=load([directory,'ea_coregmrmethod_applied.mat']);
 catch
@@ -447,7 +447,7 @@ ea_busyaction('on',handles.leadfigure,'coreg');
 options=getappdata(handles.leadfigure,'options');
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=[options.root,options.patientname,filesep];
+directory=getappdata(handles.leadfigure,'directory');
 currvol=presentfiles{activevolume};
 
 switch ea_stripex(currvol)
@@ -494,8 +494,8 @@ else
                 % still be overriden in case of running a multispectral
                 % normalization.
                 if ~wasapprovedalready
-                ea_warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
-                approved.stripex(options.prefs.gprenii)=1; % this will be overriden when using a multispectral normalization.
+                    ea_warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+                    approved.stripex(options.prefs.gprenii)=1; % this will be overriden when using a multispectral normalization.
                 end
             end
         end
@@ -507,7 +507,6 @@ if strcmp(computer('arch'),'maci64')
     system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ',directory,ea_stripex(currvol),'.nii']);
 end
 
-
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
@@ -517,7 +516,7 @@ if activevolume==length(presentfiles)
     return
 elseif (activevolume==length(presentfiles)-1 && strcmp(presentfiles{end},'brainshift'))
     close(handles.leadfigure); % make an exit
-        ea_subcorticalrefine(options);
+    ea_subcorticalrefine(options);
     return
 else
     activevolume=activevolume+1;
@@ -546,7 +545,6 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 currvol=presentfiles{activevolume};
 % init retry popup:
 if strcmp(currvol,'glanat.nii')
-
     ea_switchnormmethod(handles,'coregmrpopup');
 end
 
@@ -580,8 +578,7 @@ switch ea_stripex(currvol)
         presentfiles=getappdata(handles.leadfigure,'presentfiles');
         anchor=getappdata(handles.leadfigure,'anchor');
         activevolume=getappdata(handles.leadfigure,'activevolume');
-
-        directory=[options.root,options.patientname,filesep];
+        directory=getappdata(handles.leadfigure,'directory');
 
         options.moving=[directory,presentfiles{activevolume}];
         options.fixed=[directory,anchor];
@@ -614,7 +611,7 @@ ea_busyaction('on',handles.leadfigure,'coreg');
 options=getappdata(handles.leadfigure,'options');
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=[options.root,options.patientname,filesep];
+directory=getappdata(handles.leadfigure,'directory');
 currvol=presentfiles{activevolume};
 
 approved=load([directory,'ea_coreg_approved.mat']);
@@ -626,11 +623,13 @@ if strcmp(computer('arch'),'maci64')
 end
 switch ea_stripex(currvol)
     case ea_stripex(options.prefs.gprenii)
+
     case ea_stripex(['tp_',options.prefs.ctnii_coregistered])
+
     otherwise % make sure method gets unlogged for specific volume.
         method=getappdata(handles.leadfigure,'method');
         if exist([directory,'ea_coregmrmethod_applied.mat'],'file')
-        m=load([directory,'ea_coregmrmethod_applied.mat']);
+            m=load([directory,'ea_coregmrmethod_applied.mat']);
         else
             m=struct;
         end
@@ -653,9 +652,9 @@ end
 setappdata(handles.leadfigure,'activevolume',activevolume);
 ea_mrcview(handles);
 try
-title = get(handles.leadfigure, 'Name');    % Fix title
-ea_busyaction('off',handles.leadfigure,'coreg');
-set(handles.leadfigure, 'Name', title);
+    title = get(handles.leadfigure, 'Name');    % Fix title
+    ea_busyaction('off',handles.leadfigure,'coreg');
+    set(handles.leadfigure, 'Name', title);
 end
 
 
@@ -694,7 +693,7 @@ ea_busyaction('on',handles.leadfigure,'coreg');
 options=getappdata(handles.leadfigure,'options');
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=[options.root,options.patientname,filesep];
+directory=getappdata(handles.leadfigure,'directory');
 currvol=presentfiles{activevolume};
 anchorpath=getappdata(handles.leadfigure,'anchorpath');
 method=getappdata(handles.leadfigure,'method');
@@ -724,3 +723,11 @@ CurPos = get(0, 'PointerLocation');
 figPos = get(gcf,'Position');
 handles.checkatl.UIContextMenu.Position = CurPos - figPos(1:2);
 handles.checkatl.UIContextMenu.Visible='on';
+
+
+% --- Executes on button press in openpatientdir.
+function openpatientdir_Callback(hObject, eventdata, handles)
+% hObject    handle to openpatientdir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_opendir(getappdata(handles.leadfigure,'directory'));

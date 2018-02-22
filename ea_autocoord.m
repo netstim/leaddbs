@@ -62,7 +62,7 @@ if isfield(options,'lcm')
 end
 
 if isfield(options,'predict')
-   ea_predict(options); 
+   ea_predict(options);
 end
 
 if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
@@ -181,8 +181,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         ea_norm_ptspecific_atl(options)
     end
 
-
-    
     if options.scrf.do
         if ~ea_coreglocked(options,'brainshift') || options.overwriteapproved
             options.autobrainshift=1;
@@ -190,7 +188,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
             options=rmfield(options,'autobrainshift');
         end
     end
-    
+
     if options.normalize.check
         % export "control" niftis with wireframe of normal anatomy..
         options.normcoreg='normalize';
@@ -202,9 +200,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                 ea_subcorticalrefine(options);
             end
         end
-        
     end
-    
+
     if options.doreconstruction
         wasnative=options.native;
         poptions=ea_checkmanapproved(options);
@@ -213,23 +210,22 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                 case 'TRAC/CORE (Horn 2015)' % TRAC/CORE
                     [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
                     options.native=0;
-                    
+
                 case 'PaCER (Husch 2017)' % PaCER
                     try
                         [coords_mm,trajectory,markers]=ea_runpacer(poptions);
                         options.native=1;
-                        
+
                     catch % revert to TRAC/CORE
                         disp('PaCER failed - reverting to TRAC/CORE algorithm...');
                         [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
                         options.native=0;
-                        
+
                     end
-                    
+
                 case 'Manual' % Manual
                     [coords_mm,trajectory,markers]=ea_runmanual(poptions);
                     options.native=1;
-                    
             end
             options.hybridsave=1;
             options.elside=options.sides(1);
@@ -261,6 +257,7 @@ else
     ea_write(options)
 end
 
+
 function poptions=ea_checkmanapproved(options)
 poptions=options;
 if ~options.overwriteapproved && exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') % only re-open not manually approved reconstructions.
@@ -276,13 +273,16 @@ if ~options.overwriteapproved && exist([options.root,options.patientname,filesep
     poptions.sides(todel)=[]; % do not re-reconstruct the ones already approved.
 end
 
+
 function di=ea_sortbytes(di)
 if isempty(di)
     return
 end
+
 for d=1:length(di)
     bytesc(d)=di(d).bytes;
 end
+
 [~,order]=sort(bytesc,'ascend');
 di=di(order);
 

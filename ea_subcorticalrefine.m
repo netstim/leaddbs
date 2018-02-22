@@ -22,7 +22,7 @@ function varargout = ea_subcorticalrefine(varargin)
 
 % Edit the above text to modify the response to help ea_subcorticalrefine
 
-% Last Modified by GUIDE v2.5 26-Jan-2018 09:42:56
+% Last Modified by GUIDE v2.5 22-Feb-2018 13:22:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,9 +51,6 @@ function ea_subcorticalrefine_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_subcorticalrefine (see VARARGIN)
-
-
-
 
 options=varargin{1};
 directory=[options.root,options.patientname,filesep];
@@ -98,10 +95,6 @@ switch options.scrf.mask
         end
 end
 
-
-
-
-
 % Choose default command line output for ea_subcorticalrefine
 handles.output = hObject;
 
@@ -111,21 +104,15 @@ guidata(hObject, handles);
 % UIWAIT makes ea_subcorticalrefine wait for user response (see UIRESUME)
 
 if options.d2.write || options.d3.write
-uiwait(handles.scrf);
+    uiwait(handles.scrf);
 end
 if isfield(options,'autobrainshift') && options.autobrainshift
-saveandclose([], [], handles); % close figure again.
+    saveandclose([], [], handles); % close figure again.
 end
-
-
-
 
 
 function fn=ea_stripex(fn)
 [~,fn]=fileparts(fn);
-
-
-
 
 
 % --- Outputs from this function are returned to the command line.
@@ -180,25 +167,25 @@ directory=getappdata(handles.scrf,'directory');
 if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
 	msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
 else
-copyfile([directory,'scrf',filesep,'scrf_instore_converted.mat'],[directory,'scrf',filesep,'scrf_converted.mat']);
-if exist([directory,'ea_reconstruction.mat'],'file')
-ea_recalc_reco([],[],directory);
-end
+    copyfile([directory,'scrf',filesep,'scrf_instore_converted.mat'],[directory,'scrf',filesep,'scrf_converted.mat']);
+    if exist([directory,'ea_reconstruction.mat'],'file')
+        ea_recalc_reco([],[],directory);
+    end
 
-% add to protocol:
-if exist([directory,'ea_coreg_approved.mat'],'file')
-approved=load([directory,'ea_coreg_approved.mat']);
-end
-approved.brainshift=1;
-save([directory,'ea_coreg_approved.mat'],'-struct','approved');
+    % add to protocol:
+    if exist([directory,'ea_coreg_approved.mat'],'file')
+        approved=load([directory,'ea_coreg_approved.mat']);
+    end
+    approved.brainshift=1;
+    save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
-ea_methods(directory,...
-            ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
-            'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
-            ' (Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
-            {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+    ea_methods(directory,...
+        ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
+        'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
+        ' (Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
+        {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
-closescrf(handles);
+    closescrf(handles);
 end
 
 
@@ -210,18 +197,18 @@ directory=getappdata(handles.scrf,'directory');
 if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
 	msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
 else
-copyfile([directory,'scrf',filesep,'scrf_instore_converted.mat'],[directory,'scrf',filesep,'scrf_converted.mat']);
-if exist([directory,'ea_reconstruction.mat'],'file')
-ea_recalc_reco([],[],directory);
-end
+    copyfile([directory,'scrf',filesep,'scrf_instore_converted.mat'],[directory,'scrf',filesep,'scrf_converted.mat']);
+    if exist([directory,'ea_reconstruction.mat'],'file')
+        ea_recalc_reco([],[],directory);
+    end
 
-ea_methods(directory,...
-            ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
-            'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
-            ' (Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
-            {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+    ea_methods(directory,...
+        ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
+        'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
+        ' (Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
+        {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
-closescrf(handles);
+    closescrf(handles);
 end
 
 % --- Executes on button press in disapprovebutn.
@@ -243,6 +230,7 @@ approved.brainshift=0;
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
 closescrf(handles);
+
 
 function closescrf(handles)
 
@@ -287,7 +275,6 @@ function mask0_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of mask0
-
 handles.mask1.Value=0;
 handles.mask2.Value=0;
 % --- Executes on button press in mask1.
@@ -302,3 +289,11 @@ options=getappdata(handles.scrf,'options');
 options.normcoreg='coreg';
 ea_checkcoreg(options);
 closescrf(handles);
+
+
+% --- Executes on button press in openpatientdir.
+function openpatientdir_Callback(hObject, eventdata, handles)
+% hObject    handle to openpatientdir (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_opendir(getappdata(handles.scrf,'directory'));
