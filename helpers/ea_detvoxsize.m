@@ -1,5 +1,6 @@
 function vsize=ea_detvoxsize(mat)
-% determine the voxel size
+% Determine the voxel size based on the affine matrix of the image
+% 'mat' can be either the affine matrix or the nifti file path
 
 vox = [1,1,1;
        1,1,1;
