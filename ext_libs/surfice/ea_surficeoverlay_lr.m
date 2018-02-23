@@ -24,11 +24,14 @@ if ~ischar(colorbar)
 end
 
 if ~exist('sides','var')
-    sides=1:2;
+    sides=2;
 end
 
 if ~iscell(heatmap)
     pth=fileparts(heatmap);
+    if isempty(pth)
+        pth=pwd;
+    end
     hms=dir(heatmap);
     for hm=1:length(hms)
         fis{hm}=fullfile(pth,hms(hm).name);
@@ -87,7 +90,7 @@ for side=sides
         ' END.'];
     
    
-    ea_surfice(script);
+    ea_surfice_script(script);
     pause(0.5);
     % crop files
     for fi=1:length(fis)
