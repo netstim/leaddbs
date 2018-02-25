@@ -146,6 +146,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                         pobj.hasPlanning=1;
                         pobj.showPlanning=strcmp(options.leadprod,'or');
                     end
+
                     pobj.options=popts;
                     pobj.elstruct=elstruct(pt);
                     pobj.showMacro=1;
@@ -271,7 +272,7 @@ slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
     'ClickedCallback',{@opensliceviewer,resultfig,options});
 
     % Initialize MER-Button
-    
+
     if ~strcmp(options.leadprod, 'group')
         merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
             'TooltipString','MER Control Figure',...
@@ -922,16 +923,3 @@ elseif find('123456789' == evnt.Character)
     set(gcf,'userdata',self);
     myaa('update');
 end
-
-
-
-
-
-
-
-
-
-
-
-
-

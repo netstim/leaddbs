@@ -236,7 +236,9 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             end
             el_render(obj.side)=obj.elpatch{1};
             setappdata(obj.plotFigureH,'el_render',el_render);
-            set(obj.ellabel(1),'Visible','off');
+            if ~isnan(obj.ellabel(1))
+                set(obj.ellabel(1),'Visible','off');
+            end
         end
     end
 
