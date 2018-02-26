@@ -138,7 +138,7 @@ for side=options.sides
         % draw patientname
         lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
 
-%         ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
+        % ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
         ellabel = nan;
         eltype = nan;
 

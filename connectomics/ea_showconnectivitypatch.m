@@ -29,7 +29,6 @@ if showregs
         fv=reducepatch(fv,simplify);
     else
         if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-            
             fv=reducepatch(fv,options.prefs.hullsimplify);
         elseif options.prefs.hullsimplify>1
             simplify=options.prefs.hullsimplify/length(fv.faces);
