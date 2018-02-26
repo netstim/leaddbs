@@ -15,7 +15,7 @@ if ~isfield(elstruct,'elmodel') % usually, elspec is defined by the GUI. In case
 else % if elspec is defined for each electrode, overwrite options-struct settings here.
     o=ea_resolve_elspec(elstruct);
     elspec=o.elspec; clear o
-
+    
 end
 
 if ~isfield(elstruct,'activecontacts')
@@ -35,7 +35,7 @@ end
 
 for side=options.sides
     trajvector=mean(diff(trajectory{side}));
-
+    
     trajvector=trajvector/norm(trajvector);
     try
         startpoint=trajectory{side}(1,:)-(2*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
@@ -43,16 +43,17 @@ for side=options.sides
         keyboard
     end
     if options.d3.elrendering<3
-
+        
         set(0,'CurrentFigure',resultfig);
-
+        
         % draw patientname
         lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
         ellabel(1)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
-
+        
+        
         % draw trajectory
         cnt=1;
-
+        
         err=1;
         for tries=1:2
             [X,electrode,err]=ea_mapelmodel2reco(options,elspec,elstruct,side,resultfig);
@@ -81,14 +82,18 @@ for side=options.sides
         elseif options.d3.elrendering==1 % show a solid electrode.
             aData=1;
         end
-
+        
+        
+        
         for ins=1:length(electrode.insulation)
             electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
             electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
             elrender{1}(cnt)=patch(electrode.insulation(ins));
-
+            
             if isfield(elstruct,'group')
+     
                 usecolor=elstruct.groupcolors(elstruct.group,:);
+
             else
                 usecolor=elspec.lead_color;
             end
@@ -111,39 +116,40 @@ for side=options.sides
             end
             cnt=cnt+1;
         end
-
+        
     else % simply draw pointcloud
-
+        
         shifthalfup=0;
         % check if isomatrix needs to be expanded from single vector by using stimparams:
-
+            
         try % sometimes isomatrix not defined.
             if size(options.d3.isomatrix{1}{1},2)==4-1 % 3 contact pairs
                 shifthalfup=1;
             elseif size(options.d3.isomatrix{1}{1},2)==4 % 4 contacts
                 shifthalfup=0;
             else
-
+                
                 ea_error('Isomatrix has wrong size. Please specify a correct matrix.')
             end
         end
-
+        
         if options.d3.prolong_electrode
+            
             startpoint=trajectory{side}(1,:)-(options.d3.prolong_electrode*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
+            
         else
             startpoint=trajectory{side}(1,:);
         end
         set(0,'CurrentFigure',resultfig);
-
+        
         % draw patientname
         lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
-
-        % ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
-        ellabel = nan;
-        eltype = nan;
-
+        
+        %ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
+        ellabel=nan;
         pcnt=1;
         % draw contacts
+        
         try
             minval=ea_nanmin(options.d3.isomatrix{1}{side}(:));
             maxval=ea_nanmax(options.d3.isomatrix{1}{side}(:));
@@ -151,7 +157,7 @@ for side=options.sides
             %maxval=1;
         end
         for cntct=1:elspec.numel-shifthalfup
-
+            
             if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,elstruct.activecontacts{side}))
                 if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
                     useedgecolor=[0.8,0.5,0.5];
@@ -164,14 +170,14 @@ for side=options.sides
                     ms=10;
                 end
                 % define color
-
+                
                 if options.d3.colorpointcloud
                     % draw contacts as colored cloud defined by isomatrix.
-
+                    
                     if ~isnan(options.d3.isomatrix{1}{side}(pt,cntct))
-
+                        
                         usefacecolor=((options.d3.isomatrix{1}{side}(pt,cntct)-minval)/(maxval-minval))*64;
-
+                        
                         %                         % ## add some contrast (remove these lines for linear
                         %                         % mapping)
                         %
@@ -182,7 +188,7 @@ for side=options.sides
                         %                         usefacecolor(usefacecolor>64)=64;
                         %
                         %                         % ##
-
+                        
                         usefacecolor=ind2rgb(round(usefacecolor),jetlist);
                     else
                         usefacecolor=nan; % won't draw the point then.
@@ -194,14 +200,14 @@ for side=options.sides
                         usefacecolor=elspec.contact_color;
                     end
                 end
-
+                
                 if ~isnan(usefacecolor)
                     set(0,'CurrentFigure',resultfig);
                     if ~shifthalfup
                         elrender{1}(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
                         pcnt=pcnt+1;
                     else
-
+                        
                         elrender{1}(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
                             mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
                             mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
@@ -210,17 +216,23 @@ for side=options.sides
                         pcnt=pcnt+1;
                     end
                 else
-
+                    
                 end
                 hold on
             end
         end
+        
+        
     end
+    
 end
+
 
 if ~exist('elrender','var')
     elrender=nan;
 end
+
+
 
 
 function m=maxiso(cellinp) % simply returns the highest entry of matrices in a cell.

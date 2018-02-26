@@ -18,6 +18,8 @@ for pt=1:length(uipatdir)
             ea_pat2stl(uipatdir{pt},handles);
          case 'PLY'
             ea_pat2ply(uipatdir{pt},handles);
+        case 'LS'
+            ea_pat2ls(uipatdir{pt},handles);
     end
     
 end

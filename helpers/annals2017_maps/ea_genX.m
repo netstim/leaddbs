@@ -41,15 +41,19 @@ function [X,n]=ea_genX(fis,regressor,output,mask,sk)
                 warning('If using k option should apply a mask');
             end
             nii.img(~mask)=nan;
-            nii.img(mask)=ea_normal(nii.img(mask));
+            if dok
+                nii.img(mask)=ea_normal(nii.img(mask));
+            end
             ea_write_nii(nii);
-            matlabbatch{1}.spm.spatial.smooth.data = {[tmpd,guid,'.nii,1']};
-            matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
-            matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-            matlabbatch{1}.spm.spatial.smooth.im = 0;
-            matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-            spm_jobman('run',{matlabbatch});
-            clear matlabbatch
+            if dos
+                matlabbatch{1}.spm.spatial.smooth.data = {[tmpd,guid,'.nii,1']};
+                matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
+                matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+                matlabbatch{1}.spm.spatial.smooth.im = 0;
+                matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+                spm_jobman('run',{matlabbatch});
+                clear matlabbatch
+            end
             fis{f}=[tmpd,'s',guid,'.nii'];
         end
         n=ea_load_nii(fis{f});

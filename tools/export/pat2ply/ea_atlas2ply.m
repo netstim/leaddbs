@@ -5,11 +5,12 @@ if ~iscell(atlasnames)
 end
 cnt=1;
 earoot=ea_getearoot;
+
 for atl=1:length(atlasnames)
 
     load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
     for side=1:2
-    for mesh=1:length(atlases.names)
+    for mesh=atlases.presets(1).show
         cfv(cnt).vertices=atlases.fv{mesh,side}.vertices;
         cfv(cnt).faces=atlases.fv{mesh,side}.faces;
         cfv(cnt).facevertexcdata=atlases.cdat{mesh,side}';
@@ -23,7 +24,10 @@ end
 
 cfv=ea_concatfv(cfv);
 
+if ~isfield(atlases,'colormap')
+    atlases.colormap=jet;
+end
 
-cfv=ea_mapcolvert2ind(cfv);
-cfv.faces=[cfv.faces(:,2),cfv.faces(:,1),cfv.faces(:,3)];
+cfv=ea_mapcolvert2ind(cfv,atlases.colormap);
+%cfv.faces=[cfv.faces(:,2),cfv.faces(:,1),cfv.faces(:,3)];
 ea_patch2ply(ofn,cfv.vertices',cfv.faces',cfv.facevertexcdata');

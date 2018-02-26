@@ -25,7 +25,6 @@ else
 
     fiberthresh=options.fiberthresh;
 end
-
 % Initialize figure
 
 resultfig=figure('name', [options.patientname,': Electrode-Scene'],...
