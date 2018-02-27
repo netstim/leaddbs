@@ -690,11 +690,7 @@ if M.ui.lc.smooth
 else
     smoothsuffix='';
 end
-spmdir = [M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,smoothsuffix,filesep,'SPM'];
-if exist(spmdir, 'dir')
-    rmdir(spmdir,'s');
-end
-mkdir(spmdir);
+
 
 twosample=any(ismember(gecs,'>'));
 if twosample
@@ -709,9 +705,30 @@ for sub=1:length(M.patient.list)
         elseif M.ui.lc.normalization == 3 % Albada 2008
             normflag = 'k';
         end
-        ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,'.nii'], normflag);
+        if twosample
+            ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,cpair{1},'.nii'], normflag);
+            ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,cpair{2},'.nii'], normflag);
+        else
+            ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,'.nii'], normflag);
+        end
     end
-
+    
+    tn=ea_load_nii([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,cpair{1},'.nii']);
+   if any(tn.voxsize>2)
+       if twosample
+           ea_reslice_nii([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,cpair{1},'.nii'],...
+               [M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,'re',normflag,cpair{1},'.nii'],[2,2,2]);
+           ea_reslice_nii([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,cpair{2},'.nii'],...
+               [M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,'re',normflag,cpair{2},'.nii'],[2,2,2]);
+       else
+           ea_reslice_nii([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,'.nii'],...
+               [M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,'re',normflag,gecs,'.nii'],[2,2,2]);
+       end
+       normflag=['re',normflag];
+   end
+    
+    
+    
     if M.ui.lc.smooth
         smoothflag = 's';
         if twosample
@@ -731,6 +748,12 @@ else
 end
     
 end
+
+spmdir = [M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,smoothsuffix,filesep,'SPM'];
+if exist(spmdir, 'dir')
+    rmdir(spmdir,'s');
+end
+mkdir(spmdir);
 
 %% model specification:
 if twosample

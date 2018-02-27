@@ -9,6 +9,9 @@ if nargin
         case 'brain'
             load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
             mask=modeldata.brainmask;
+        case 'cortex'
+            load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
+            mask=modeldata.cortexmask;
     end
 else
     load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
