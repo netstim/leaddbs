@@ -19,7 +19,7 @@ argParser.addOptional('displayMPR', false); % optional MPR plot of orthogonal ob
 argParser.addOptional('noMask', false); % for phantom studies where no brain is present in data
 argParser.addParameter('brainMask', ''); % for manually providing a brain mask (binary segmentation image file path)
 
-argParser.addOptional('reverseDir', false); % for special cases with I-S flip
+argParser.addOptional('reverseDir', 'auto'); % for special cases with I-S flip
 argParser.addOptional('contactDetectionMethod', 'contactAreaCenter', @(x)(ismember(x, {'peak', 'peakWaveCenter', 'contactAreaCenter'}))); % default contactAreaCenter, if peak, automatic fallback to contactAreaCenter for "bad quality data"
 argParser.addParameter('electrodeType', '', @(x)(ismember(x, {'', 'Medtronic 3387', 'Medtronic 3389', 'Boston Vercise Directional'}))); 
 
@@ -34,7 +34,7 @@ end
 %% Checks
 if(~isa(niiCT, 'NiftiMod'))
     disp('First parameter is not a nifti object. Intrepretating as filename and tring to load a nifti file with that name from disk...');
-    niiCT = NiftiMod(niiCT);
+    niiCT = NiftiModSPM(niiCT);
 end
 
 if(max(niiCT.voxsize) > 1)
