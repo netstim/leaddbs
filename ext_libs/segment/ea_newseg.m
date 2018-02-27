@@ -55,7 +55,7 @@ else
     [~,fn] = fileparts(files{1});
     ea_delete([directory, fn, '_seg8.mat']);
 
-    if any(ea_detvoxsize([directory, 'rc1', files{1}]) ~= tpmHdr.voxsize)
+    if dartel && any(ea_detvoxsize([directory, 'rc1', files{1}]) ~= tpmHdr.voxsize)
         %  SPM may have a bug since r7055 which makes the generated "Dartel
         %  Imported" (rc*) images always having the voxel size of 1.5 as in
         %  SPM's TPM.nii rather than the voxel size of user speficied TPM.
