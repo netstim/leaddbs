@@ -20,6 +20,16 @@ fprintf('\nCalculating Fibers/Connectivity...\n\n\n');
 
 hold on
 
+%% loadstate from file
+% set defaults
+if ~options.prefs.env.dev || ~isfield(options,'savefibers') 
+   options.savefibers.save = 0;
+   options.savefibers.load = 0;
+end
+
+if ~options.savefibers.load
+    % run as normal...
+
 %% load fibers (either from file or from figure and store in figure for next time).
 % get app data
 disp('Loading fiberset...');
@@ -227,8 +237,22 @@ for side=1:length(seed)
        contargets(otargets==target)=howmanyfibs{side}(target);
     end
     %targets.img(targets.img<thresh)=0;
+end
 
+    if options.savefibers.save && exist(options.savefibers.dir,'dir')
+        wsp = whos;
+        argin = {'resultfig','fibersfile','seedfile','targetsfile','thresh','sides','options','stimparams','changedstates','mode','showregs','showlabs'};
+        vars = strcat('''',setdiff({wsp(:).name},argin),''',');
+        vars = [vars{:}];
+        str2eval = sprintf('save([''%s'',''%s''],%s)',options.savefibers.dir,'workspace.mat',vars(1:end-1));
+        eval(str2eval)
+    end
+    
+elseif options.savefibers.load
+    load([options.savefibers.dir,'workspace.mat'])
+end
 
+for side=1:length(seed)
     % always show seed patch (i.e. VAT)
     PL.matseedsurf{side}=ea_showseedpatch(resultfig,seed{side},seed{side}.img,options);
 

@@ -25,6 +25,10 @@ end
 %-----------------------------begin changes----------------
 
   load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
+  
+  if isequal(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,getappdata(resultfig,'elstruct'),S,0))
+      options.writeoutstats=0;
+  end
 %--------------------------------end changes---------------------------------
 
 
@@ -560,6 +564,32 @@ coords=V.mat*XYZ;
 coords=coords(1:3,:)';
 
 
+function protocol=ea_save_hmprotocol(options,side,elstruct,S,sv)
+% function to construct and/or save protocol.
+protocol=struct; % default for errors
+protocol.elmodel=options.elmodel;
+protocol.elstruct=elstruct;
+protocol.usediffusion=0;
+protocol.atlas=options.atlasset;
+protocol.version=1.1;
+protocol.vatsettings=options.prefs.machine.vatsettings;
+
+if max(S.amplitude{side})>4
+    protocol.elstruct.stretchfactor=0.75; %(max(S.amplitude{side})/10);
+else
+    protocol.elstruct.stretchfactor=0.5;
+end
+
+if sv % save protocol to disk
+    save([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat'],'protocol');
+end
+
+function protocol=ea_load_hmprotocol(options,side)
+% function that loads protocol
+protocol=struct; % default for errors or if not present
+try
+    load([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat']);
+end
 
 function hn=ea_arrow3(p1,p2,s,w,h,ip,alpha,beta)
 % ARROW3 (R13)

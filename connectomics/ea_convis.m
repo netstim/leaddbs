@@ -22,7 +22,7 @@ function varargout = ea_convis(varargin)
 
 % Edit the above text to modify the response to help ea_convis
 
-% Last Modified by GUIDE v2.5 30-Sep-2016 17:26:59
+% Last Modified by GUIDE v2.5 01-Mar-2018 11:37:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -71,6 +71,15 @@ setappdata(resultfig,'convis',handles.convis);
 
 
 refreshcv(handles);
+
+% dev
+if options.prefs.env.dev
+   set(handles.savefibers,'Visible','on')
+else
+   set(handles.savefibers,'Visible','off')
+end
+
+%
 
 
 function refreshcv(varargin)
@@ -1330,4 +1339,14 @@ function wmatlabs_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of wmatlabs
+refreshcv(handles);
+
+
+% --- Executes on button press in savefibers.
+function savefibers_Callback(hObject, eventdata, handles)
+% hObject    handle to savefibers (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of savefibers
 refreshcv(handles);
