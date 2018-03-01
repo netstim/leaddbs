@@ -22,222 +22,217 @@ hold on
 
 %% loadstate from file
 % set defaults
-if ~options.prefs.env.dev || ~isfield(options,'savefibers') 
-   options.savefibers.save = 0;
-   options.savefibers.load = 0;
+if ~options.prefs.env.dev || ~isfield(options,'savefibers')
+    options.savefibers.save = 0;
+    options.savefibers.load = 0;
 end
 
 if ~options.savefibers.load
     % run as normal...
-
-%% load fibers (either from file or from figure and store in figure for next time).
-% get app data
-disp('Loading fiberset...');
-if ~changedstates(1) % fibers file already loaded
-    fibers=getappdata(resultfig,'fibers');
+    %% load fibers (either from file or from figure and store in figure for next time).
+    % get app data
+    disp('Loading fiberset...');
+    if ~changedstates(1) % fibers file already loaded
+        fibers=getappdata(resultfig,'fibers');
+            idxv=fibers(:,4);
+        fibers=fibers(:,1:3);
+        fibersidx=getappdata(resultfig,'fibersidx');
+    else % load data
+        if ischar(fibersfile)
+        [fibers,fibersidx]=ea_loadfibertracts(fibersfile);
+        else
+            fibers=fibersfile.fibers;
+            fibersidx=fibersfile.fibersidx;
+            clear fibersfile
+        end
         idxv=fibers(:,4);
-    fibers=fibers(:,1:3);
-    fibersidx=getappdata(resultfig,'fibersidx');
-else % load data
-    if ischar(fibersfile)
-    [fibers,fibersidx]=ea_loadfibertracts(fibersfile);
-    else
-        fibers=fibersfile.fibers;
-        fibersidx=fibersfile.fibersidx;
-        clear fibersfile
+        fibers=fibers(:,1:3);
+        setappdata(resultfig,'fibersidx',fibersidx);
+        setappdata(resultfig,'fibers',fibers);
+        %setappdata(resultfig,'fibersfile',fibersfile);
     end
-    idxv=fibers(:,4);
-    fibers=fibers(:,1:3);
-    setappdata(resultfig,'fibersidx',fibersidx);
-    setappdata(resultfig,'fibers',fibers);
-    %setappdata(resultfig,'fibersfile',fibersfile);
-end
-numtotalfibs=length(fibersidx);
+    numtotalfibs=length(fibersidx);
 
-if strcmp(thresh,'auto')
-    switch mode
-        case 'vat'
-    thresh=round(numtotalfibs/20000);
-        case 'mat'
-         thresh=round(numtotalfibs/5000);
-    end
-else
-    thresh=round(str2double(thresh));
-end
-fprintf('Done.\n\n\n');
-
-%% load seed definition
-
-if ~changedstates(2)
-    seed=getappdata(resultfig,'seed');
-else % load data
-    if iscell(seedfile)
-        seed = cell(1, length(seedfile));
-        for s=1:length(seedfile)
-            seed{s}=ea_load_nii(seedfile{s});
+    if strcmp(thresh,'auto')
+        switch mode
+            case 'vat'
+        thresh=round(numtotalfibs/20000);
+            case 'mat'
+             thresh=round(numtotalfibs/5000);
         end
     else
-        seed{1}=seedfile;
-        clear seedfile
+        thresh=round(str2double(thresh));
     end
-    setappdata(resultfig,'seed',seed);
-end
+    fprintf('Done.\n\n\n');
 
-%% load targets definition
-
-
-if ~changedstates(3)
-    targets=getappdata(resultfig,'targets');
-else % load data
-    if ischar(targetsfile)
-        targets=ea_load_nii(targetsfile);
-    else
-        targets=targetsfile;
-        clear targetfile
-    end
-    setappdata(resultfig,'targets',targets);
-end
-origtargets=targets; % original targets map.
-
-%% prepare fibers
-% dispercent(0,'Preparing fibers');
-% [idx,~]=cellfun(@size,fibers);
-%
-% fibers=cell2mat(fibers');
-% idxv=zeros(size(fibers,1),1);
-% lid=1; cnt=1;
-% for id=idx
-%     dispercent(cnt/length(idx));
-%     idxv(lid:lid+id-1)=cnt;
-%     lid=lid+id;
-%     cnt=cnt+1;
-% end
-% dispercent(1,'end');
-
-%% select fibers that traverse through seed voxels
-[seed_fv,volume]=ea_fvseeds(seed,options);
-
-dispercent(0,'Selecting connecting fibers...');
-cnt=1;
-selectedfibs = cell(1, length(seed));
-for side=1:length(seed)
-    in=ea_intriangulation(seed_fv{side}.vertices,seed_fv{side}.faces,fibers);
-    selectedfibs{side}=unique(idxv(in));
-    dispercent(cnt/length(sides));
-    cnt=cnt+1;
-end
-
-dispercent(1,'end');
-connectingfibs=cell(2,1);
-
-%% reformat fibers
-disp('Reformating fibers...');
-fibers=mat2cell(fibers,fibersidx,3)';
-fprintf('Done.\n\n\n');
-sideselectedfibs = cell(1, length(seed));
-for side=1:length(seed)
-    try
-        sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side)));
+    %% load seed definition
+    if ~changedstates(2)
+        seed=getappdata(resultfig,'seed');
+    else % load data
+        if iscell(seedfile)
+            seed = cell(1, length(seedfile));
+            for s=1:length(seedfile)
+                seed{s}=ea_load_nii(seedfile{s});
+            end
+        else
+            seed{1}=seedfile;
+            clear seedfile
+        end
+        setappdata(resultfig,'seed',seed);
     end
 
-    try
-        connectingfibs{side}=fibers(sideselectedfibs{side});
+    %% load targets definition
+    if ~changedstates(3)
+        targets=getappdata(resultfig,'targets');
+    else % load data
+        if ischar(targetsfile)
+            targets=ea_load_nii(targetsfile);
+        else
+            targets=targetsfile;
+            clear targetfile
+        end
+        setappdata(resultfig,'targets',targets);
     end
-end
+    origtargets=targets; % original targets map.
 
-%% check which areas are connected to VAT by fibers:
-doubleconnectingfibs=cell(2,1);
+    %% prepare fibers
+    % dispercent(0,'Preparing fibers');
+    % [idx,~]=cellfun(@size,fibers);
+    %
+    % fibers=cell2mat(fibers');
+    % idxv=zeros(size(fibers,1),1);
+    % lid=1; cnt=1;
+    % for id=idx
+    %     dispercent(cnt/length(idx));
+    %     idxv(lid:lid+id-1)=cnt;
+    %     lid=lid+id;
+    %     cnt=cnt+1;
+    % end
+    % dispercent(1,'end');
 
-la=1;
-todelete = cell(1, length(seed));
-howmanyfibs = cell(1, length(seed));
-tareas = cell(1, length(seed));
-for side=1:length(seed)
+    %% select fibers that traverse through seed voxels
+    [seed_fv,volume]=ea_fvseeds(seed,options);
 
-    todelete{side}=[];
-    cnt=1; % reset cnt.
-
-    %% extract areas connected by fibres.
-    if options.writeoutpm && ~exist('pm','var')
-        pm=targets;
-        pm.img(:)=0;
+    dispercent(0,'Selecting connecting fibers...');
+    cnt=1;
+    selectedfibs = cell(1, length(seed));
+    for side=1:length(seed)
+        in=ea_intriangulation(seed_fv{side}.vertices,seed_fv{side}.faces,fibers);
+        selectedfibs{side}=unique(idxv(in));
+        dispercent(cnt/length(sides));
+        cnt=cnt+1;
     end
 
-    [~,labelname]=fileparts(targets.fname);
-    aID = fopen(fullfile(ea_space([],'labeling'),[labelname,'.txt']));
-    atlas_lgnd=textscan(aID,'%d %s');
-    allcareas=[];
+    dispercent(1,'end');
+    connectingfibs=cell(2,1);
 
-    fibmax=length(connectingfibs{side});
-    dispercent(0,'Gathering region information');
-    for fib=1:fibmax
-        dispercent(fib/fibmax);
-
-        thisfibendpoints=[connectingfibs{side}{fib}(1,1:3);connectingfibs{side}{fib}(end,1:3)];
-        thisfibendpoints=targets.mat\[thisfibendpoints,ones(2,1)]'; % mm 2 vox
-        thisfibendpoints=double(thisfibendpoints(1:3,:));
-
-        conareas=spm_sample_vol(targets,thisfibendpoints(1,:),thisfibendpoints(2,:),thisfibendpoints(3,:),0);
-        if any(conareas)
-            doubleconnectingfibs{side}{la,cnt}=connectingfibs{side}{fib};
-            todelete{side}=[todelete{side},fib];
-            cnt=cnt+1;
+    %% reformat fibers
+    disp('Reformating fibers...');
+    fibers=mat2cell(fibers,fibersidx,3)';
+    fprintf('Done.\n\n\n');
+    sideselectedfibs = cell(1, length(seed));
+    for side=1:length(seed)
+        try
+            sideselectedfibs{side}=unique(cell2mat(selectedfibs(:,side)));
         end
 
-        if options.writeoutpm
-            try
-                pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))=...
-                    pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))+1;
-                pm.img(round(thisfibendpoints(1,2)),round(thisfibendpoints(2,2)),round(thisfibendpoints(3,2)))=...
-                    pm.img(round(thisfibendpoints(1,2)),round(thisfibendpoints(2,2)),round(thisfibendpoints(3,2)))+1;
+        try
+            connectingfibs{side}=fibers(sideselectedfibs{side});
+        end
+    end
+
+    %% check which areas are connected to VAT by fibers:
+    doubleconnectingfibs=cell(2,1);
+
+    la = 1;
+    todelete = cell(1, length(seed));
+    howmanyfibs = cell(1, length(seed));
+    tareas = cell(1, length(seed));
+    for side=1:length(seed)
+
+        todelete{side}=[];
+        cnt=1; % reset cnt.
+
+        %% extract areas connected by fibres.
+        if options.writeoutpm && ~exist('pm','var')
+            pm=targets;
+            pm.img(:)=0;
+        end
+
+        [~,labelname]=fileparts(targets.fname);
+        aID = fopen(fullfile(ea_space([],'labeling'),[labelname,'.txt']));
+        atlas_lgnd=textscan(aID,'%d %s');
+        allcareas=[];
+
+        fibmax=length(connectingfibs{side});
+        dispercent(0,'Gathering region information');
+        for fib=1:fibmax
+            dispercent(fib/fibmax);
+
+            thisfibendpoints=[connectingfibs{side}{fib}(1,1:3);connectingfibs{side}{fib}(end,1:3)];
+            thisfibendpoints=targets.mat\[thisfibendpoints,ones(2,1)]'; % mm 2 vox
+            thisfibendpoints=double(thisfibendpoints(1:3,:));
+
+            conareas=spm_sample_vol(targets,thisfibendpoints(1,:),thisfibendpoints(2,:),thisfibendpoints(3,:),0);
+            if any(conareas)
+                doubleconnectingfibs{side}{la,cnt}=connectingfibs{side}{fib};
+                todelete{side}=[todelete{side},fib];
+                cnt=cnt+1;
+            end
+
+            if options.writeoutpm
+                try
+                    pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))=...
+                        pm.img(round(thisfibendpoints(1,1)),round(thisfibendpoints(2,1)),round(thisfibendpoints(3,1)))+1;
+                    pm.img(round(thisfibendpoints(1,2)),round(thisfibendpoints(2,2)),round(thisfibendpoints(3,2)))=...
+                        pm.img(round(thisfibendpoints(1,2)),round(thisfibendpoints(2,2)),round(thisfibendpoints(3,2)))+1;
+                end
+            end
+            allcareas=[allcareas, conareas];
+        end
+        allcareas=round(allcareas);
+        dispercent(100, 'end');
+
+        atlength=length(atlas_lgnd{1});
+        howmanyfibs{side}=zeros(atlength,1);
+        tareas{side}=[];
+
+        tcnt=1;
+        for reg=1:atlength
+            howmanyfibs{side}(reg)=sum(allcareas==reg); % how many fibers connect VAT and anat. region.
+            if howmanyfibs{side}(reg)>(thresh(1))
+                tareas{side}(tcnt)=reg;
+                tcnt=tcnt+1;
             end
         end
-        allcareas=[allcareas, conareas];
-    end
-    allcareas=round(allcareas);
-    dispercent(100, 'end');
-
-    atlength=length(atlas_lgnd{1});
-    howmanyfibs{side}=zeros(atlength,1);
-    tareas{side}=[];
-
-    tcnt=1;
-    for reg=1:atlength
-        howmanyfibs{side}(reg)=sum(allcareas==reg); % how many fibers connect VAT and anat. region.
-        if howmanyfibs{side}(reg)>(thresh(1))
-            tareas{side}(tcnt)=reg;
-            tcnt=tcnt+1;
-        end
-    end
-    tareas{side}=unique(tareas{side});
+        tareas{side}=unique(tareas{side});
 
 
-    % Write out connectivity stats
-    if options.writeoutstats
-
-        load([options.root,options.patientname,filesep,'ea_stats']);
-        % assign the place where to write stim stats into struct
-        if isfield(options,'groupmode')
-            if options.groupmode
-                stimparams.label=['gs_',options.groupid];
+        % Write out connectivity stats
+        if options.writeoutstats
+            load([options.root,options.patientname,filesep,'ea_stats']);
+            % assign the place where to write stim stats into struct
+            if isfield(options,'groupmode')
+                if options.groupmode
+                    stimparams.label=['gs_',options.groupid];
+                end
             end
+            [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,stimparams);
+            ea_stats.stimulation(thisstim).ft(side).fibercounts{la}=howmanyfibs{side}/numtotalfibs;
+
+            ea_stats.stimulation(thisstim).ft(side).nfibercounts{la}=ea_stats.stimulation(thisstim).ft(side).fibercounts{la}/volume{side};
+            ea_stats.stimulation(thisstim).ft(side).labels{la}=atlas_lgnd{2};
+            save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
         end
-        [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,stimparams);
-        ea_stats.stimulation(thisstim).ft(side).fibercounts{la}=howmanyfibs{side}/numtotalfibs;
 
-        ea_stats.stimulation(thisstim).ft(side).nfibercounts{la}=ea_stats.stimulation(thisstim).ft(side).fibercounts{la}/volume{side};
-        ea_stats.stimulation(thisstim).ft(side).labels{la}=atlas_lgnd{2};
-        save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
+        contargets=round(targets.img);
+        otargets=contargets;
+        contargets(:)=0;
+        for target=1:atlength
+            contargets(otargets==target)=howmanyfibs{side}(target);
+        end
+        %targets.img(targets.img<thresh)=0;
     end
-
-    contargets=round(targets.img);
-    otargets=contargets;
-    contargets(:)=0;
-    for target=1:atlength
-       contargets(otargets==target)=howmanyfibs{side}(target);
-    end
-    %targets.img(targets.img<thresh)=0;
-end
 
     if options.savefibers.save && exist(options.savefibers.dir,'dir')
         wsp = whos;
@@ -247,7 +242,7 @@ end
         str2eval = sprintf('save([''%s'',''%s''],%s)',options.savefibers.dir,'workspace.mat',vars(1:end-1));
         eval(str2eval)
     end
-    
+
 elseif options.savefibers.load
     load([options.savefibers.dir,'workspace.mat'])
 end

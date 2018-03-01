@@ -48,8 +48,8 @@ targetsfile=[ea_space(options,'labeling'),selectedparc,'.nii'];
 options.writeoutstats=1;
 options.writeoutpm=1;
 
-try load([directory,'connvisfibers/','fiberstate.mat'])
-    
+try
+    load([directory,'connvisfibers/','fiberstate.mat'])
 end
 
 [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seedfile,targetsfile,thresh,'vat');
@@ -58,18 +58,19 @@ end
 if get(handles.savefibers,'Value')
     options.savefibers.save = 1;
     savedir = ea_getfsstatesavedir(directory,vsname,fibersfile,seedfile,targetsfile,thresh,'vat');
-  
-   if ~exist(savedir,'dir'); mkdir(savedir);   end
-   
-   % 
-   if ~exist([savedir,'workspace.mat'],'file')
-       mode = 'vat'; save([savedir,'fiberstate.mat'],'fibersfile','seedfile','targetsfile','thresh','mode')
-       options.savefibers.load=0;
-   elseif exist([savedir,'workspace.mat'],'file') && exist([savedir,'fiberstate.mat'],'file')
-       options.savefibers.load=1;
-   end
-   
-   options.savefibers.dir=savedir;
+
+    if ~exist(savedir,'dir')
+    	mkdir(savedir);
+    end
+
+    if ~exist([savedir,'workspace.mat'],'file')
+        mode = 'vat'; save([savedir,'fiberstate.mat'],'fibersfile','seedfile','targetsfile','thresh','mode')
+        options.savefibers.load=0;
+    elseif exist([savedir,'workspace.mat'],'file') && exist([savedir,'fiberstate.mat'],'file')
+        options.savefibers.load=1;
+    end
+
+    options.savefibers.dir=savedir;
 end
 
 
@@ -85,7 +86,4 @@ if ~ret % something has changed since last time.
             set(handles.vatthreshis,'String',num2str(thresh));
         end
     end
-
 end
-
-
