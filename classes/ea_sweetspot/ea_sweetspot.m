@@ -226,7 +226,7 @@ function colorconts(obj)
         %plot3(obj.peak(1),obj.peak(2),obj.peak(3),'y*');
         elrender=getappdata(obj.plotFigureH,'el_render');
         for el=1:length(els)
-            cpatches=elrender(el).elpatch{1}{1}(logical(els(el).eltype{1})); % patches of contacts
+            cpatches=elrender(el).elpatch(logical(els(el).eltype)); % patches of contacts
             for cont=1:length(els(el).elstruct.coords_mm{els(el).side})
                 [~,D(cont)]=knnsearch(cpatches(cont).Vertices,mean(obj.fv.vertices));
             end
@@ -242,7 +242,6 @@ function colorconts(obj)
                 ccol(ofix(ix),:)=ccol(ofix(ix),:).*repmat(1-cweights,1,3)+...
                     P.*repmat(cweights,1,3);
                 els(el).colorMacroContacts=ccol;
-                delete(obj.toggleH.Parent.Children(1))
 
                 % draw line to closest contact
                 delete(obj.hail);

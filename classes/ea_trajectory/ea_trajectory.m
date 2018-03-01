@@ -220,8 +220,8 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     if ismember(evtnm,{'all','elmodel','colorMacroContacts'})
         if obj.showMacro
             try
-                delete(obj.elpatch{1}{1});
-                delete(obj.ellabel(1));
+                delete(obj.elpatch);
+                delete(obj.ellabel);
             end
             poptions=obj.options;
             poptions.elmodel=obj.elmodel;
@@ -230,14 +230,14 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             poptions.colorMacroContacts=obj.colorMacroContacts;
             el_render=getappdata(obj.plotFigureH,'el_render');
 
-            [obj.elpatch{1},obj.ellabel(1),obj.eltype]=ea_showelectrode(obj.plotFigureH,obj.elstruct,1,poptions);
+            [obj.elpatch,obj.ellabel,obj.eltype]=ea_showelectrode(obj.plotFigureH,obj.elstruct,1,poptions);
             if isempty(el_render)
                 clear el_render
             end
-            el_render(obj.side)=obj.elpatch{1};
+            el_render(obj.side).elpatch=obj.elpatch;
             setappdata(obj.plotFigureH,'el_render',el_render);
-            if ~isnan(obj.ellabel(1))
-                set(obj.ellabel(1),'Visible','off');
+            if ~isempty(obj.ellabel)
+                set(obj.ellabel,'Visible','off');
             end
         end
     end
