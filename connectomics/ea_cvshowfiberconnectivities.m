@@ -241,7 +241,7 @@ end
 
     if options.savefibers.save && exist(options.savefibers.dir,'dir')
         wsp = whos;
-        argin = {'resultfig','fibersfile','seedfile','targetsfile','thresh','sides','options','stimparams','changedstates','mode','showregs','showlabs'};
+        argin = {'resultfig','fibersfile','seedfile','targetsfile','sides','options','stimparams','changedstates','mode','showregs','showlabs'};
         vars = strcat('''',setdiff({wsp(:).name},argin),''',');
         vars = [vars{:}];
         str2eval = sprintf('save([''%s'',''%s''],%s)',options.savefibers.dir,'workspace.mat',vars(1:end-1));
