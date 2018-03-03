@@ -55,7 +55,7 @@ end
 [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seedfile,targetsfile,thresh,'vat');
 
 % Option to save fibers and check for workspace to load, pass via options
-if get(handles.savefibers,'Value')
+if isstruct(handles) && get(handles.savefibers,'Value')
     options.savefibers.save = 1;
     savedir = ea_getfsstatesavedir(directory,vsname,fibersfile,seedfile,targetsfile,thresh,'vat');
 
