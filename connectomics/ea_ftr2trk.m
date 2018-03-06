@@ -1,6 +1,10 @@
 function ea_ftr2trk(ftrfilename,directory,specs)
 % export FTR matrix to TrackVis trk format
 
+if directory(end) ~= filesep
+    directory = [directory, filesep];
+end
+
 if ischar(ftrfilename)
     disp('Loading FTR-File...');
     [fibs,idx,voxmm,mat]=ea_loadfibertracts([directory,ftrfilename,'.mat']);
