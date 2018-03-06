@@ -8,16 +8,13 @@
 % 2016 - 2017
 % mail@andreashusch.de, husch.andreas@chl.lu
 function t = invPolyArcLength3(polyCoeff, arcLength)
-t = nan(size(arcLength));
+t = zeros(size(arcLength)); % default t=0 (i.e. in caes arcLength is 0)
 for i = 1:length(arcLength)
-    if(arcLength(i) == 0)
-        t(i) = 0;
+    if(arcLength(i)<0)
+        warning('invPolyArcLength3: given arcLength is negatie! Forcing t=0. This is wrong but might be approximatly okay for the use case! Check carefully!');
     else
-        if(arcLength(i)<0)
-            warning('invPolyArcLength3: given arcLength is negative! Assuming approx. symmetry and using abs(arcLength). This might be wrong!');
-            arcLength(i) = abs(arcLength(i));
-        end
         t(i) = fminsearch( @(b)(abs(arcLength(i) - polyArcLength3(polyCoeff,0,b))), 0);
     end
+    
 end
 end
