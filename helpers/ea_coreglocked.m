@@ -1,8 +1,8 @@
 function locked=ea_coreglocked(options,moving)
 locked=0;
-if options.overwriteapproved
-    return
-end
+%if options.overwriteapproved
+%return
+%end
 directory=[options.root,options.patientname,filesep];
 if ~exist([directory,'ea_coreg_approved.mat'],'file')
     return
