@@ -73,6 +73,13 @@ for f=1:length(fclean)
     ea_delete(fclean{f});
 end
 
+
+% reformat all files to "standard nifti orientation"
+di=dir([outdir,'*.nii']);
+for fi=1:length(di)
+   ea_rocrop([outdir,di(fi).name]); 
+end
+
 %% add methods dump:
 
 ea_methods(options,['DICOM images were converted to the NIfTI file format, cropped and reoriented to standard NIfTI orientation using dcm2niiX software (e.g. see https://www.nitrc.org/projects/dcm2nii/).']);
