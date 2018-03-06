@@ -206,7 +206,8 @@ try % finally use last patient parent dir if set.
     p=fileparts(fullrpts{1});
 end
 
-[seeds,path]=uigetfile({'*.nii','NIfTI';'*.txt','Text';'*.nii.gz','NIfTI'},'Please choose seed definition(s)...','MultiSelect','on');
+%[seeds,path]=uigetfile({'*.nii','NIfTI';'*.txt','Text';'*.nii.gz','NIfTI'},'Please choose seed definition(s)...','MultiSelect','on');
+[seeds,path]=uigetfile({'*'},'Please choose seed definition(s)...','MultiSelect','on');
 
 if iscell(seeds)
     set(hObject,'String',['Multiple (',num2str(length(seeds)),')']);

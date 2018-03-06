@@ -42,7 +42,7 @@ function [X,n]=ea_genX(fis,regressor,output,mask,sk)
             end
             nii.img(~mask)=nan;
             if dok
-                nii.img(mask)=ea_normal(nii.img(mask));
+                nii.img(mask)=ea_normal(nii.img(mask),1,0,' ',0,1,'TRUE');
             end
             ea_write_nii(nii);
             if dos

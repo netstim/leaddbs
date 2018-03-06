@@ -39,13 +39,24 @@ else % DICOM folder under subject folder
     indir = dcmname;
 end
 
-switch(options.prefs.dicom.tool)
-    case 'dcm2niix'
-        ea_dcm2niix(indir, outdir);
-        
-    case 'dicm2nii'
-        ea_dicm2nii(indir,outdir);
-        
+if isfield(options.dicomimp,'method')
+    switch options.dicomimp.method
+        case 1 % dcm2niix
+            ea_dcm2niix(indir, outdir);
+        case 2 % dcm2nii
+            ea_dcm2nii(indir, outdir);
+        case 3 % dicm2nii
+            ea_dicm2nii(indir, outdir);
+    end
+else % use default set in prefs
+    switch(options.prefs.dicom.tool)
+        case 'dcm2niix'
+            ea_dcm2niix(indir, outdir);  
+        case 'dcm2nii'
+            ea_dcm2nii(indir, outdir);  
+        case 'dicm2nii'
+            ea_dicm2nii(indir, outdir);  
+    end
 end
 
 
@@ -60,6 +71,13 @@ fclean = unique(regexprep(fclean, '(_Crop_1|_Tilt_1)', ''));
 
 for f=1:length(fclean)
     ea_delete(fclean{f});
+end
+
+
+% reformat all files to "standard nifti orientation"
+di=dir([outdir,'*.nii']);
+for fi=1:length(di)
+   ea_rocrop([outdir,di(fi).name]); 
 end
 
 %% add methods dump:

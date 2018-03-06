@@ -1,7 +1,7 @@
 function ea_elvisible(hobj,ev,atls,pt,side,onoff,options)
 
 % if(getappdata(hobj.Parent.Parent,'altpressed'))
-% 
+%
 %     eltog=getappdata(hobj.Parent.Parent,'eltog');
 %     set(eltog,'State',onoff);
 %     for el=1:length(atls)
@@ -13,7 +13,7 @@ function ea_elvisible(hobj,ev,atls,pt,side,onoff,options)
 %     end
 % else
 try
-set(atls{1}{1}, 'Visible', onoff);
+    set(atls, 'Visible', onoff);
 catch
     keyboard
 end

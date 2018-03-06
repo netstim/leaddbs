@@ -135,12 +135,14 @@ if apply % update elvis
     ea_deleteML(resultfig,handles,options);
     if ~hold
         [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
-        set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
+        set(handles.xmm,'String',num2str(xmm,'%.2f'));
+        set(handles.ymm,'String',num2str(ymm,'%.2f'));
+        set(handles.zmm,'String',num2str(zmm,'%.2f'));
         set(handles.matseed,'ForegroundColor',[0,0,0]);
     end
 
     %% now show results
-    if get(handles.vizvat,'Value'); % show voxel-level results
+    if get(handles.vizvat,'Value') % show voxel-level results
         ea_cvshowvatresults(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
     else
         ea_deletePL(resultfig,'PL','vat');

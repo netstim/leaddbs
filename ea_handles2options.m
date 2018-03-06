@@ -15,7 +15,7 @@ options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower th
 
 options.earoot = ea_getearoot;
 try % not working when calling from lead_anatomy
-    options.dicomimp=get(handles.dicomcheck,'Value');
+    options.dicomimp.do=get(handles.dicomcheck,'Value');
     options.assignnii=get(handles.assignnii,'Value');
     options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
     options.normalize.settings=getappdata(handles.normsettings,'settings');
@@ -100,6 +100,10 @@ end
 options.autoimprove=0; % if true, templates will be modified.
 options.axiscontrast=8; % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
+
+try
+   options.dicomimp.method=get(handles.dcm2niiselect,'Value'); 
+end
 
 try
     options.atl.genpt=get(handles.vizspacepopup,'Value')==2; % generate patient specific atlases
