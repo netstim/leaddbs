@@ -30,21 +30,18 @@ if isfield(options,'init') && options.init
         ea_createrefineslice(directory,options,refine);
     end
 else
-ea_createrefineslice(directory,options,refine);
+    ea_createrefineslice(directory,options,refine);
 end
 try
-slice=imread([directory,'scrf',filesep,refstr,'.png']);
-ispresent=1;
+    slice=imread([directory,'scrf',filesep,refstr,'.png']);
+    ispresent=1;
 catch
     slice=imread([ea_getearoot,'helpers',filesep,'gui',filesep,'scrf_msg.png']);
     ispresent=0;
 end
 
 
-
-
 function ea_createrefineslice(directory,options,refine)
-
 
 switch refine
     case 1
@@ -52,7 +49,6 @@ switch refine
     case 0
         scrf='';
 end
-
 
 ea_createbbfiles(directory); % needs to unfortunately be done each time since coregistration may have changed.
 ea_createmovim(directory,options);

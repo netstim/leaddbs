@@ -31,7 +31,6 @@ disp('Refreshing clinical list...');
 set(handles.clinicallist,'String',M.clinical.labels);
 try set(handles.clinicallist,'Value',M.ui.clinicallist); end
 
-
 if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
     set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
 end
@@ -46,9 +45,7 @@ catch
     M.isomatrix_name={};
 end
 
-
-    M.ui.groupdir = get(handles.groupdir_choosebox,'String');
-
+M.ui.groupdir = get(handles.groupdir_choosebox,'String');
 
 disp('Refreshing selections on VI / FC Lists...');
 % refresh selections on VI and FC Lists:
@@ -220,7 +217,6 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
             options.sides=1:2;
             options.native=0;
             try
-                
                 [options.root,options.patientname]=fileparts(M.patient.list{pt});
                 options.root=[options.root,filesep];
                 [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
@@ -244,8 +240,6 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                 poptions.elmodel=M.elstruct(pt).elmodel;
                 poptions=ea_resolve_elspec(poptions);
                 ea_recode_coords(poptions);
-               
-                
 
                 M.elstruct(pt).coords_mm=coords_mm;
                 M.elstruct(pt).coords_acpc=coords_acpc;
