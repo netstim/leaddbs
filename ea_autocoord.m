@@ -18,8 +18,8 @@ options.prefs.patientdir = options.patientname;
 options = ea_resolve_elspec(options);
 
 directory = [options.root,options.patientname,filesep];
-if options.dicomimp || options.assignnii % do DICOM-Import.
-    if options.dicomimp
+if options.dicomimp.do || options.assignnii % do DICOM-Import.
+    if options.dicomimp.do
         if strcmp(options.patientname, 'No Patient Selected')
             msgbox('Please choose patient directory first!','Error','error');
         else

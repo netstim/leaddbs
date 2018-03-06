@@ -39,13 +39,24 @@ else % DICOM folder under subject folder
     indir = dcmname;
 end
 
-switch(options.prefs.dicom.tool)
-    case 'dcm2niix'
-        ea_dcm2niix(indir, outdir);
-        
-    case 'dicm2nii'
-        ea_dicm2nii(indir,outdir);
-        
+if isfield(options.dicomimp,'method')
+    switch options.dicomimp.method
+        case 1 % dcm2niix
+            ea_dcm2niix(indir, outdir);
+        case 2 % dcm2nii
+            ea_dcm2nii(indir, outdir);
+        case 3 % dicm2nii
+            ea_dicm2nii(indir, outdir);
+    end
+else % use default set in prefs
+    switch(options.prefs.dicom.tool)
+        case 'dcm2niix'
+            ea_dcm2niix(indir, outdir);  
+        case 'dcm2nii'
+            ea_dcm2nii(indir, outdir);  
+        case 'dicm2nii'
+            ea_dicm2nii(indir, outdir);  
+    end
 end
 
 
