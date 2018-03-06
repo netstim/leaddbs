@@ -12,6 +12,7 @@ if ~exist([ea_space,'fliplr',filesep,'glanatComposite.h5'],'file');
     options=ea_getptopts([ea_space,'fliplr',filesep]);
     options.coregmr.method='Do not coregister MRIs (already coregistered)';
     options.modality=1;
+    options.overwriteapproved=1;
     ea_dumpnormmethod(options,'ea_normalize_ants','normmethod'); % has to come first due to applynormalization.
     ea_normalize_ants(options,0);
     

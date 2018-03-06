@@ -25,7 +25,7 @@ set(0,'CurrentFigure',resultfig);
 el_render(1)=ea_trajectory(pobj);
 
 
-elrend=el_render.elpatch{1}{1};
+elrend=el_render.elpatch;
 
 switch side
     case 1
@@ -42,6 +42,3 @@ fv=ea_concatfv(fv);
 fv=ea_mapcolvert2ind(fv);
 
 ea_patch2ply([directory,'export',filesep,'ply',filesep,sidec,'electrode.ply'],fv.vertices',fv.faces',fv.facevertexcdata');
-
-
-

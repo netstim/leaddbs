@@ -6,7 +6,6 @@ if strcmp(uipatdir{1},'No Patient Selected')
     return
 end
 
-
 for pt=1:length(uipatdir)
     if ~exist([uipatdir{pt}, filesep, 'export', filesep, lower(exptype)],'dir')
         mkdir([uipatdir{pt}, filesep, 'export', filesep, lower(exptype)]);
@@ -21,5 +20,4 @@ for pt=1:length(uipatdir)
         case 'LS'
             ea_pat2ls(uipatdir{pt},handles);
     end
-    
 end

@@ -6,6 +6,7 @@ ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
 %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
 copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
 copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]);
+ea_conformspaceto([directory,'c',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]); % make sure cc2 and anat are exactly in same space (even across software packages)
 affinefile = ea_coreg2images(options, ...
     [directory,'c',options.prefs.prenii_unnormalized], ... % moving
     [directory,options.prefs.b0], ... % fix

@@ -1,8 +1,8 @@
 function [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seedfile,targetsfile,thresh,mode)
 % small helper function that determines changes in fibertracking results.
 ret=1;
-ofibersfile=getappdata(resultfig,[mode,'fibersfile']); % mode independent
-oseedfile=getappdata(resultfig,'seedfile');
+ofibersfile=getappdata(resultfig,'fibersfile'); % mode independent
+oseedfile=getappdata(resultfig,[mode,'seedfile']);
 otargetsfile=getappdata(resultfig,[mode,'targetsfile']);
 othresh=getappdata(resultfig,[mode,'thresh']);
 

@@ -538,7 +538,17 @@ if size(stats.corrcl,2)==1 % one value per patient
 
     if ~isempty(stats.vicorr.both)
         %ea_corrplot([stats.corrcl,stats.vicorr.both],'Volume Intersections, both hemispheres',stats.vc_labels);
-        ea_corrplot([stats.corrcl,stats.vicorr.nboth],'VI_BH',stats.vc_labels,handles);
+        %ea_corrplot([stats.corrcl,stats.vicorr.nboth],'VI_BH',stats.vc_labels,handles);
+        description='VI_BH';
+        [R_upd,p_upd,R,p,f]=ea_corrplot_gen([stats.corrcl,stats.vicorr.nboth],description,stats.vc_labels,[],[],'permutation');
+        axis square
+        odir=get(handles.groupdir_choosebox,'String');
+        [~,fn]=fileparts(stats.vc_labels{1+1});
+        if strcmp(fn(end-3:end),'.nii')
+            [~,fn]=fileparts(fn);
+        end
+        ofname=[odir,description,'_',fn,'_',stats.vc_labels{1},'.png'];
+        ea_screenshot(ofname);
     end
     %     if ~isempty(stats.vicorr.right)
     %         %ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);

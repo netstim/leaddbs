@@ -22,7 +22,7 @@ function varargout = ea_convis(varargin)
 
 % Edit the above text to modify the response to help ea_convis
 
-% Last Modified by GUIDE v2.5 30-Sep-2016 17:26:59
+% Last Modified by GUIDE v2.5 01-Mar-2018 11:37:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -69,8 +69,14 @@ setappdata(handles.convis,'resultfig',resultfig);
 setappdata(handles.convis,'options',options);
 setappdata(resultfig,'convis',handles.convis);
 
-
 refreshcv(handles);
+
+% dev
+if options.prefs.env.dev
+    set(handles.savefibers,'Visible','on')
+else
+    set(handles.savefibers,'Visible','off')
+end
 
 
 function refreshcv(varargin)
@@ -83,7 +89,6 @@ end
 if nargin>2
     apply=varargin{3};
 end
-
 
 options=getappdata(handles.convis,'options');
 
@@ -113,13 +118,14 @@ vomc=get(handles.voxmodality,'String');
 if isempty(mmc)
    cv_disabletime(handles);
 else
-if isempty(strfind(mmc{get(handles.matmodality,'Value')},'_tc')) && ...
-        isempty(strfind(vmc{get(handles.vatmodality,'Value')},'_tc')) && ...
-        isempty(strfind(vomc{get(handles.voxmodality,'Value')},'_tc')) % no timeseries selected.
-    cv_disabletime(handles);
-else
-    cv_enabletime(handles);
-end
+    if isempty(strfind(mmc{get(handles.matmodality,'Value')},'_tc')) && ...
+            isempty(strfind(vmc{get(handles.vatmodality,'Value')},'_tc')) && ...
+            isempty(strfind(vomc{get(handles.voxmodality,'Value')},'_tc')) % no timeseries selected.
+
+        cv_disabletime(handles);
+    else
+        cv_enabletime(handles);
+    end
 end
 if apply % update elvis
     %% retrieve and delete prior results
@@ -145,7 +151,6 @@ if apply % update elvis
     end
 
     if get(handles.vizmat,'Value'); % show seed-based-connectivity results
-
         ea_cvshowseedbasedresults(resultfig,directory,pV,pX,selectedparc,handles,options);
     else
         ea_deletePL(resultfig,'PL','mat');
@@ -163,13 +168,14 @@ if apply % update elvis
 end
 set(convis,'name','Connectome Results');
 
+
 function     ea_deleteML(resultfig,handles,options)
 
 ML=getappdata(resultfig,'ML');
 if isempty(ML)
     return
 end
-try    delete(ML.pedges); end
+try delete(ML.pedges); end
 try delete(ML.pnodes); end
 try delete(ML.hn); end
 try delete(ML.nnodes); end
@@ -183,7 +189,6 @@ setappdata(resultfig,'ML',ML);
 
 
 function ea_initmatlevel(handles,directory,pdirectory,selectedparc,options)
-
 
 pmdirs=dir([pdirectory,'*_CM.mat']);
 cnt=1;
@@ -212,11 +217,8 @@ if ~strcmp('Choose...',mods{get(handles.wmatmodality,'Value')});
 end
 
 
-
-
-
-
 function ea_cvshowvoxresults(resultfig,directory,filesare,handles,pV,selectedparc,options)
+
 mo_ds=get(handles.voxmodality,'String');
 mo_d=mo_ds{get(handles.voxmodality,'Value')};
 gV=spm_vol([directory,'connectomics',filesep,selectedparc,filesep,'graph',filesep,filesare{get(handles.voxmetric,'Value')},mo_d,'.nii']);
@@ -232,10 +234,10 @@ graphsurf=ea_showconnectivitypatch(resultfig,gV,gX,thresh,[],[],[],1,0);
 
 setappdata(resultfig,'graphsurf',graphsurf);
 
+
 function ea_cvshowseedbasedresults(resultfig,directory,pV,pX,selectedparc,handles,options)
 %mV=pV; % duplicate labeling handle
 %mX=pX; % duplicate labeling data
-
 
 % determine if CM/TC or fiberset is selected
 matmodality=get(handles.matmodality,'String');
@@ -274,10 +276,7 @@ else % use fiberset
 
         [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seed,targetsfile,thresh,1,options,'',changedstates,'mat',get(handles.vizmat_regs,'Value'),get(handles.vizmat_labs,'Value'));
         set(handles.matthreshis,'String',num2str(thresh));
-
     end
-
-
 end
 
 
@@ -322,6 +321,7 @@ if ~isempty(strfind(mms{get(handles.matmodality,'Value')},'_tc'))
         end
     end
 end
+
 currentseed=get(handles.matseed,'Value');
 seedcon=CM(currentseed,:);
 thresh=get(handles.matthresh,'String');
@@ -347,12 +347,10 @@ setappdata(resultfig,'matsurf',matsurf);
 setappdata(resultfig,'seedsurf',seedsurf);
 
 
-
 function [directory,pdirectory,selectedparc]=ea_cvinitgui(handles,options)
 %% init/modify UI controls:
 
 % parcellation popup:
-
 pdirs=dir([ea_space(options,'labeling'),'*.nii']);
 cnt=1;
 
@@ -385,9 +383,7 @@ for pdir=1:length(pdirs)
 end
 
 if ~ismember({selectedparc},parcs)
-
     cv_enablevats(handles);
-    %
 end
 
 
@@ -432,8 +428,6 @@ else
     cv_enablemats(handles);
 end
 
-
-
 set(handles.matmodality,'String',modlist);
 
 if get(handles.matmodality,'Value')>length(get(handles.matmodality,'String'));
@@ -460,6 +454,7 @@ set(handles.matseed,'String',[atlas_lgnd{2}]);
 if get(handles.matseed,'Value')>length(get(handles.matseed,'String'));
     set(handles.matseed,'Value',length(get(handles.matseed,'String')));
 end
+
 
 function [filesare,labelsare,mods]=ea_initvoxellevel(handles,pdirectory)
 
@@ -511,10 +506,10 @@ if exist('filesare','var')
     end
 end
 
+
 function ea_initvatlevel(handles,directory,selectedparc,options)
 
 modlist=ea_genmodlist(directory,selectedparc,options,'vat');
-
 
 %% VATs:
 vdirs=dir([directory,'stimulations']);
@@ -570,6 +565,7 @@ else
         set(handles.lvatcheck,'Value', 0);
     end
 end
+
 
 function oo=ea_getonofftruefalse(tf)
 oo='off';
@@ -627,7 +623,6 @@ function cv_enablevats(handles)
 % set(handles.timeframe,'Enable','off');
 % set(handles.timecircle,'Enable','off');
 
-
 set(handles.vatmodality,'Enable','on');
 set(handles.vatseed,'Enable','on');
 set(handles.vatthresh,'Enable','on');
@@ -643,11 +638,13 @@ set(handles.voxmodality,'Enable','off');
 set(handles.voxmetric,'Enable','off');
 set(handles.voxthresh,'Enable','off');
 
+
 function cv_enablevoxs(handles)
 set(handles.vizgraph,'Enable','on');
 set(handles.voxmodality,'Enable','on');
 set(handles.voxmetric,'Enable','on');
 set(handles.voxthresh,'Enable','on');
+
 
 function cv_disablemats(handles)
 set(handles.matmodality,'Enable','off');
@@ -660,12 +657,14 @@ set(handles.timewindow,'Enable','off');
 set(handles.timeframe,'Enable','off');
 set(handles.timecircle,'Enable','off');
 
+
 function cv_disablewmats(handles)
 set(handles.vizwmat,'Enable','off');
 set(handles.wmatmodality,'Enable','off');
 set(handles.wmatnodes,'Enable','off');
 set(handles.wmatedges,'Enable','off');
 set(handles.wmatthresh,'Enable','off');
+
 
 function cv_enablewmats(handles)
 set(handles.vizwmat,'Enable','on');
@@ -674,8 +673,8 @@ set(handles.wmatnodes,'Enable','on');
 set(handles.wmatedges,'Enable','on');
 set(handles.wmatthresh,'Enable','on');
 
-function cv_enablemats(handles)
 
+function cv_enablemats(handles)
 set(handles.labelpopup,'Enable','on');
 set(handles.matmodality,'Enable','on');
 set(handles.matseed,'Enable','on');
@@ -687,17 +686,20 @@ set(handles.timewindow,'Enable','on');
 set(handles.timeframe,'Enable','on');
 set(handles.timecircle,'Enable','on');
 
+
 function cv_disabletime(handles)
 %set(handles.matthresh,'Enable','off');
 set(handles.timewindow,'Enable','off');
 set(handles.timeframe,'Enable','off');
 set(handles.timecircle,'Enable','off');
 
+
 function cv_enabletime(handles)
 %set(handles.matthresh,'Enable','on');
 set(handles.timewindow,'Enable','on');
 set(handles.timeframe,'Enable','on');
 set(handles.timecircle,'Enable','on');
+
 
 function cv_disablevats(handles)
 set(handles.vizvat,'Enable','off');
@@ -706,11 +708,6 @@ set(handles.vatseed,'Enable','off');
 set(handles.lvatcheck,'Enable','off');
 set(handles.rvatcheck,'Enable','off');
 set(handles.vatthresh,'Enable','off');
-
-
-
-
-
 
 
 % --- Outputs from this function are returned to the command line.
@@ -809,6 +806,7 @@ centrvx=[mean(XYZ,1),1];
 centrmm=pV.mat*centrvx';
 xmm=centrmm(1); ymm=centrmm(2); zmm=centrmm(3);
 
+
 function [ix,err]=setcoordinates(handles)
 % set seed selection based on manual coordinate entry.
 pV=getappdata(handles.convis,'pV');
@@ -861,6 +859,7 @@ function matmodality_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from matmodality
 refreshcv(handles);
 
+
 % --- Executes during object creation, after setting all properties.
 function matmodality_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to matmodality (see GCBO)
@@ -872,7 +871,6 @@ function matmodality_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function matthresh_Callback(hObject, eventdata, handles)
@@ -895,7 +893,6 @@ function matthresh_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 % --- Executes on button press in vizmat.
@@ -939,7 +936,6 @@ function timecircle_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of timecircle
 refreshcv(handles);
-
 
 
 function timeframe_Callback(hObject, eventdata, handles)
@@ -988,6 +984,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+
 function xmm_Callback(hObject, eventdata, handles)
 % hObject    handle to xmm (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -997,6 +994,7 @@ function xmm_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of xmm as a double
 setcoordinates(handles);
 refreshcv(handles,1);
+
 
 % --- Executes during object creation, after setting all properties.
 function xmm_CreateFcn(hObject, eventdata, handles)
@@ -1011,7 +1009,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function ymm_Callback(hObject, eventdata, handles)
 % hObject    handle to ymm (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1021,6 +1018,7 @@ function ymm_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ymm as a double
 setcoordinates(handles);
 refreshcv(handles,1);
+
 
 % --- Executes during object creation, after setting all properties.
 function ymm_CreateFcn(hObject, eventdata, handles)
@@ -1035,7 +1033,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function zmm_Callback(hObject, eventdata, handles)
 % hObject    handle to zmm (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1045,6 +1042,7 @@ function zmm_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of zmm as a double
 setcoordinates(handles);
 refreshcv(handles,1);
+
 
 % --- Executes during object creation, after setting all properties.
 function zmm_CreateFcn(hObject, eventdata, handles)
@@ -1069,6 +1067,7 @@ function labelpopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from labelpopup
 refreshcv(handles);
 
+
 % --- Executes during object creation, after setting all properties.
 function labelpopup_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to labelpopup (see GCBO)
@@ -1080,7 +1079,6 @@ function labelpopup_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 % --- Executes on selection change in vatseed.
@@ -1106,7 +1104,6 @@ function vatseed_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function vatthresh_Callback(hObject, eventdata, handles)
@@ -1166,6 +1163,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+
 % --- Executes on button press in lvatcheck.
 function lvatcheck_Callback(hObject, eventdata, handles)
 % hObject    handle to lvatcheck (see GCBO)
@@ -1191,9 +1189,6 @@ XYZ=[XYZ';ones(1,size(XYZ,1))];
 
 coords=V.mat*XYZ;
 coords=coords(1:3,:)';
-
-
-
 
 
 function wmatthresh_Callback(hObject, eventdata, handles)
@@ -1239,7 +1234,6 @@ else
     set(handles.chosenwmatstr,'String','');
     set(handles.chosenwmatstr,'TooltipString','');
 end
-
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1330,4 +1324,14 @@ function wmatlabs_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of wmatlabs
+refreshcv(handles);
+
+
+% --- Executes on button press in savefibers.
+function savefibers_Callback(hObject, eventdata, handles)
+% hObject    handle to savefibers (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of savefibers
 refreshcv(handles);
