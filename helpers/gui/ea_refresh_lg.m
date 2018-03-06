@@ -46,6 +46,10 @@ catch
     M.isomatrix_name={};
 end
 
+
+    M.ui.groupdir = get(handles.groupdir_choosebox,'String');
+
+
 disp('Refreshing selections on VI / FC Lists...');
 % refresh selections on VI and FC Lists:
 try
