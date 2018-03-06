@@ -248,8 +248,18 @@ function obj=update_trajectory(obj,evtnm) % update ROI
 
     % add toggle button:
     [~,ptname]=fileparts(fileparts(obj.options.root));
+
+    switch obj.side
+        case 1
+            elToggleLabel = 'Right';
+        case 2
+            elToggleLabel = 'Left';
+        otherwise
+            elToggleLabel = num2str(obj.side);
+    end
+
     set(obj.toggleH, {'Parent','CData','TooltipString','OnCallback','OffCallback','State'},...
-        {obj.htH,ea_get_icn('electrode'), [ptname,' (',num2str(obj.side),')'], ...
+        {obj.htH,ea_get_icn('electrode'), [ptname,' (',elToggleLabel,')'], ...
         {@ea_trajvisible,'on',obj}, {@ea_trajvisible,'off',obj}, ...
         ea_bool2onoff(any([obj.showPlanning,obj.showMacro,obj.showMicro]))});
 end
