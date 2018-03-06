@@ -1,7 +1,7 @@
 function ea_importspaceassets(~,~,fromspace,what,infname,outfname)
 
 
-if strcmp(what,'custom')
+if (strcmp(what,'custom') && isempty(infname))
     [infi,inpth]=uigetfile('*.nii','Choose file to warp...');
     infname=fullfile(inpth,infi);
 end
