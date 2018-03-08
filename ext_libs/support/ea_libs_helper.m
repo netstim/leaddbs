@@ -14,6 +14,8 @@ elseif ispc
     envname = 'PATH';
 end
 
-if isempty(strfind(getenv(envname),libpath))
-    setenv(envname, [libpath, ';', getenv(envname)]);
+env = getenv(envname);
+
+if isempty(strfind(env, libpath))
+    setenv(envname, [libpath, ';', env]);
 end

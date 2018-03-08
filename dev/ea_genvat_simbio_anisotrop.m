@@ -10364,6 +10364,7 @@ end
 try
     cond=repmat(cond,1,6);
     cond(cond(:,1)==0.0590,:)=aniso(1:end-1,:);
+    ea_fix_windows_env;
     [diinsy,cols,sysmat] = ea_calc_stiff_matrix_val(node,elem,cond,mele);
     ea_delete([pwd, filesep, 'fort.6']);
 catch err
