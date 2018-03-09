@@ -19,7 +19,7 @@ try % not working when calling from lead_anatomy
     options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
     options.normalize.settings=getappdata(handles.normsettings,'settings');
 catch
-    options.dicomimp=0;
+    options.dicomimp.do=0;
     options.assignnii=0;
     options.normalize.do=0;
 end

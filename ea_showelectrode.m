@@ -120,9 +120,9 @@ for side=options.sides
         % check if isomatrix needs to be expanded from single vector by using stimparams:
 
         try % sometimes isomatrix not defined.
-            if size(options.d3.isomatrix{1}{1},2)==4-1 % 3 contact pairs
+            if size(options.d3.isomatrix{1}{1},2)==elspec.numel-1 % 3 contact pairs
                 shifthalfup=1;
-            elseif size(options.d3.isomatrix{1}{1},2)==4 % 4 contacts
+            elseif size(options.d3.isomatrix{1}{1},2)==elspec.numel % 4 contacts
                 shifthalfup=0;
             else
 
@@ -154,7 +154,7 @@ for side=options.sides
         end
         for cntct=1:elspec.numel-shifthalfup
 
-            if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,elstruct.activecontacts{side}))
+            if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})))
                 if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
                     useedgecolor=[0.8,0.5,0.5];
                     ms=10;
@@ -190,14 +190,20 @@ for side=options.sides
                         usefacecolor=nan; % won't draw the point then.
                     end
                 else
-                    if isfield(elstruct,'group')
-                        usefacecolor=elstruct.groupcolors(elstruct.group,:);
+                    if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
+                        usefacecolor=[0.9,0.1,0.1];
                     else
-                        usefacecolor=elspec.contact_color;
+                        if isfield(elstruct,'group')
+                            usefacecolor=elstruct.groupcolors(elstruct.group,:);
+                        else
+                            
+                            usefacecolor=[1,1,1];
+                            
+                        end
                     end
                 end
 
-                if ~isnan(usefacecolor)
+                if ~any(isnan(usefacecolor))
                     set(0,'CurrentFigure',resultfig);
                     if ~shifthalfup
                         elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
