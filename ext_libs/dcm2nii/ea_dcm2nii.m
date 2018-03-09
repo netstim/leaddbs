@@ -1,12 +1,12 @@
 function [cmdout, tempf] = ea_dcm2nii(inputimage, outputimage)
-% Wrapper for dcm2nii, just used for reorientation and cropping currently
+% Wrapper for dcm2nii, only used for reorientation and cropping
+%
+% dcm2ii is not stable enough in some cases (will write out corrupted file
+% with 1KB size). Use 'ea_rocrop' instead to do reorientation and cropping.
 
-% Save the result to a new file, when the second parameter is specified.
-% Use ea_rocrop is you want to overwrite the original image, dcm2ii itself
-% is not stable enough in some cases (will output corrupted file with 1KB
-% size).
+% Save to a new file, when 'outputimage' is specified.
 if nargin == 2
-    copyfile(inputimage,outputimage)
+    copyfile(inputimage, outputimage)
     inputimage = outputimage;
 end
 

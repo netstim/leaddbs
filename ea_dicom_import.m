@@ -19,12 +19,14 @@ dcmnames = ea_regexpdir(outdir, '^dicom(DAT)?(/|\\|\.zip)$', 0);
 if isempty(dcmnames)
     % not found, suppose the subject folder is actually DICOM folder
     movefile([outdir, '*'],[outdir, 'DICOM'])
-    try    movefile([outdir, 'DICOM', filesep, 'ea_ui.mat'], outdir); end % this isn't created when selecting multiple folders.
+    try
+        % this isn't created when selecting multiple folders.
+        movefile([outdir, 'DICOM', filesep, 'ea_ui.mat'], outdir);
+    end
     dcmname = [outdir, 'DICOM', filesep];
 else % found DICOM folder/zipfile
     dcmname = dcmnames{1}; % only choose the first found one
 end
-
 
 if strcmp(dcmname(end-3:end), '.zip') % zip file under subject folder
     unzip(dcmname, [outdir, 'DICOM']);
@@ -43,22 +45,18 @@ if isfield(options.dicomimp,'method')
     switch options.dicomimp.method
         case 1 % dcm2niix
             ea_dcm2niix(indir, outdir);
-        case 2 % dcm2nii
-            ea_dcm2nii(indir, outdir);
-        case 3 % dicm2nii
+        case 2 % dicm2nii
             ea_dicm2nii(indir, outdir);
     end
 else % use default set in prefs
     switch(options.prefs.dicom.tool)
         case 'dcm2niix'
-            ea_dcm2niix(indir, outdir);  
-        case 'dcm2nii'
-            ea_dcm2nii(indir, outdir);  
+            ea_dcm2niix(indir, outdir);
         case 'dicm2nii'
-            ea_dicm2nii(indir, outdir);  
+            ea_dicm2nii(indir, outdir);
+            ea_delete([outdir, 'dcmHeaders.mat'])
     end
 end
-
 
 % delete DICOM folder
 if options.prefs.dicom.dicomfiles
@@ -73,16 +71,11 @@ for f=1:length(fclean)
     ea_delete(fclean{f});
 end
 
-
 % reformat all files to "standard nifti orientation"
 di=dir([outdir,'*.nii']);
 for fi=1:length(di)
-   ea_rocrop([outdir,di(fi).name]); 
+	ea_rocrop([outdir,di(fi).name]);
 end
 
-%% add methods dump:
-
-ea_methods(options,['DICOM images were converted to the NIfTI file format, cropped and reoriented to standard NIfTI orientation using dcm2niiX software (e.g. see https://www.nitrc.org/projects/dcm2nii/).']);
-
-
-
+% add methods dump:
+ea_methods(options, ['DICOM images were converted to the NIfTI file format, cropped and reoriented to standard NIfTI orientation using dcm2niiX software (e.g. see https://www.nitrc.org/projects/dcm2nii/).']);

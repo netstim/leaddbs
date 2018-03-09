@@ -1,5 +1,4 @@
 function options=ea_handles2options(handles)
-
 % main function converting GUI handles to options struct used in
 % ea_autocoord & ea_write (i.e. the main lead batch functions).
 
@@ -26,6 +25,10 @@ catch
 end
 
 try
+    options.dicomimp.method=get(handles.dcm2niiselect,'Value');
+end
+
+try
     options.normalize.method=getappdata(handles.leadfigure,'normmethod');
     options.normalize.method=options.normalize.method{get(handles.normmethod,'Value')};
     options.normalize.methodn=get(handles.normmethod,'Value');
@@ -44,7 +47,7 @@ catch
 end
 
 try
-   options.overwriteapproved=get(handles.overwriteapproved,'Value');
+    options.overwriteapproved=get(handles.overwriteapproved,'Value');
 end
 
 try
@@ -80,9 +83,9 @@ options.verbose=3; % 4: Show figures but close them 3: Show all but close all fi
 
 %options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
 try
-options.sides=ea_assignsides(handles);
+    options.sides=ea_assignsides(handles);
 catch
-   options.sides=1:2; 
+    options.sides=1:2;
 end
 try
     options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
@@ -100,10 +103,6 @@ end
 options.autoimprove=0; % if true, templates will be modified.
 options.axiscontrast=8; % if 8: use tra only but smooth it before. % if 9: use mean of cor and tra but smooth it. % if 10: use raw tra only.
 options.zresolution=10; % voxels are being parcellated into this amount of portions.
-
-try
-   options.dicomimp.method=get(handles.dcm2niiselect,'Value'); 
-end
 
 try
     options.atl.genpt=get(handles.vizspacepopup,'Value')==2; % generate patient specific atlases
@@ -238,7 +237,7 @@ end
 try
     sdp=get(handles.seeddefpopup,'String');
     if iscell(sdp)
-    sdp=sdp{get(handles.seeddefpopup,'Value')};
+        sdp=sdp{get(handles.seeddefpopup,'Value')};
     end
     switch sdp
         case 'Manually choose seeds'
@@ -280,7 +279,6 @@ try
 end
 
 % lead predict options:
-
 try
     includes={'Coords','VTA','dMRI','fMRI'};
     todel=[];
@@ -296,49 +294,49 @@ try
     if ~strcmp(handles.incfunctional.Enable,'on') || ~handles.incfunctional.Value
         todel=[todel,4];
     end
-    includes(todel)=[];    
-   options.predict.includes=includes;
-   % dMRI connectome
-   if ~iscell(handles.fiberspopup.String)
-       options.predict.dMRIcon{1}=handles.fiberspopup.String;
-   else
-       options.predict.dMRIcon=handles.fiberspopup.String;
-   end
-   options.predict.dMRIcon=options.predict.dMRIcon{handles.fiberspopup.Value};
-   
-   %fMRI connectome
-   if ~iscell(handles.fmripopup.String)
-       options.predict.fMRIcon{1}=handles.fmripopup.String;
-   else
-       options.predict.fMRIcon=handles.fmripopup.String;
-   end
-   options.predict.fMRIcon=options.predict.fMRIcon{handles.fmripopup.Value};
-   
-   % Chosen prediction model
-   mfiles=getappdata(handles.predictionmodel,'mfiles');
-   if ~iscell(handles.predictionmodel.String)
-       options.predict.model{1}=handles.predictionmodel.String;
-   else
-              options.predict.model=handles.predictionmodel.String;
-   end
-   options.predict.model=options.predict.model{handles.predictionmodel.Value};
-   options.predict.model_mfile=mfiles{handles.predictionmodel.Value};
-   
-   % chosen stimulation name
-   if ~iscell(handles.seeddefpopup.String)
-       options.predict.stimulation{1}=handles.seeddefpopup.String;
-   else
-       options.predict.stimulation=handles.seeddefpopup.String;
-   end
-   options.predict.stimulation=options.predict.stimulation{handles.seeddefpopup.Value};
-   
+    includes(todel)=[];
+    options.predict.includes=includes;
+    % dMRI connectome
+    if ~iscell(handles.fiberspopup.String)
+        options.predict.dMRIcon{1}=handles.fiberspopup.String;
+    else
+        options.predict.dMRIcon=handles.fiberspopup.String;
+    end
+    options.predict.dMRIcon=options.predict.dMRIcon{handles.fiberspopup.Value};
+
+    %fMRI connectome
+    if ~iscell(handles.fmripopup.String)
+        options.predict.fMRIcon{1}=handles.fmripopup.String;
+    else
+    	options.predict.fMRIcon=handles.fmripopup.String;
+    end
+    options.predict.fMRIcon=options.predict.fMRIcon{handles.fmripopup.Value};
+
+    % Chosen prediction model
+    mfiles=getappdata(handles.predictionmodel,'mfiles');
+    if ~iscell(handles.predictionmodel.String)
+    	options.predict.model{1}=handles.predictionmodel.String;
+    else
+    	options.predict.model=handles.predictionmodel.String;
+    end
+    options.predict.model=options.predict.model{handles.predictionmodel.Value};
+    options.predict.model_mfile=mfiles{handles.predictionmodel.Value};
+
+    % chosen stimulation name
+    if ~iscell(handles.seeddefpopup.String)
+    	options.predict.stimulation{1}=handles.seeddefpopup.String;
+    else
+    	options.predict.stimulation=handles.seeddefpopup.String;
+    end
+    options.predict.stimulation=options.predict.stimulation{handles.seeddefpopup.Value};
 end
+
 
 function sides=ea_assignsides(handles)
 cnt=1;
 for el=1:10
     if get(handles.(['side',num2str(el)]),'Value')
-       sides(cnt)=el;
-       cnt=cnt+1;
+        sides(cnt)=el;
+        cnt=cnt+1;
     end
 end
