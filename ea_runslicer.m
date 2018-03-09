@@ -1,3 +1,4 @@
+function ea_runslicer(options, task)
 %% Function to launch slicer and load *.nii files
 %  Last Revision: 7/12/2017
 %  Thushara Perera (c) 2017 Bionics Institute
@@ -11,16 +12,19 @@
 %
 %  Things to note: user must set the path of the slicer executable. It would
 %  be nice if there was an easy method to determine the path automatically.
-%
-%%
-function ea_runslicer(options, task)
+
     options.prefs = ea_prefs('');
 
     if ~isfield(options.prefs, 'slicer')
         warning(sprintf('3D Slicer path not set!\nPlease set ''prefs.slicer.dir'' in your preference file.'))
+        return;
     end
 
     slicer_path = options.prefs.slicer.dir;
+    if isempty(slicer_path)
+        warning(sprintf('3D Slicer path not set!\nPlease set ''prefs.slicer.dir'' in your preference file.'))
+        return;
+    end
 
     % 'prefs.slicer.dir' can be either the folder containing Slicer executable or
     % the full path to the excutable itself
@@ -159,6 +163,7 @@ function ea_runslicer(options, task)
     % the trailing '&' returns control back to matlab without waiting for slicer to close
 end
 
+
 function txt = GetFileXML(index, filepath, name)
 
     path = strrep(filepath, '\', '\\'); %avoid escape char errors
@@ -188,6 +193,7 @@ function txt = GetFileXML(index, filepath, name)
 
 end
 
+
 function txt = GetBeginning()
      txt = ['<MRML  version="Slicer4.4.0" userTags="">',...
      '<Crosshair id="vtkMRMLCrosshairNodedefault" name="Crosshair" hideFromEditors="true" selectable="true" selected="false" singletonTag="default" crosshairMode="NoCrosshair" navigation="false" crosshairBehavior="JumpSlice" crosshairThickness="Fine" crosshairRAS="0 0 0"></Crosshair>',...
@@ -212,6 +218,7 @@ function txt = GetBeginning()
      '<ScriptedModule id="vtkMRMLScriptedModuleNodeDataProbe" name="ScriptedModule" hideFromEditors="true" selectable="true" selected="false" singletonTag="DataProbe" ModuleName ="DataProbe" ></ScriptedModule>'...
      ];
 end
+
 
 function txt = GetEnding()
     txt = ['<SceneView id="vtkMRMLSceneViewNode1" name="Master Scene View" hideFromEditors="false" selectable="true" selected="false" storageNodeRef="vtkMRMLSceneViewStorageNode1" references="storage:vtkMRMLSceneViewStorageNode1;" userTags="" screenshotType="4" sceneViewDescription="Scene at MRML file save point" >  <Crosshair',...
