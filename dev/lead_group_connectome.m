@@ -133,8 +133,8 @@ function DropFcn(~, event, handles)
 
 % check if dropping area is in patient listbox
 if event.Location.getX < 325 && event.Location.getX > 24 && ...
-   event.Location.getY < 322 && event.Location.getX > 137
-	target = 'patientList';
+   event.Location.getY < 322 && event.Location.getY > 137
+    target = 'patientList';
 else
     target = 'groupDir';
 end
