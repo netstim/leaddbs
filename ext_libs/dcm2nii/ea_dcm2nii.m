@@ -32,14 +32,14 @@ end
 disp(cmdout);
 
 % Check the output files of dcm2nii
-savedf = regexp(cmdout, '(?<=Saving )\S+','match');
+savedf = regexp(cmdout, 'Saving (.*?)\x{0A}','tokens');
 
 if ~isempty(savedf)
-    movefile(savedf{end}, inputimage);
+    movefile(savedf{end}{1}, inputimage);
     if numel(savedf) == 2
-        delete(savedf{1});
+        delete(savedf{1}{1});
     end
-    tempf = savedf{end};
+    tempf = savedf{end}{1};
     disp('Reorientation and/or cropping applied.');
 else
     tempf = inputimage;

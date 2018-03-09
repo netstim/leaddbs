@@ -1,6 +1,6 @@
 function ea_rocrop(inputimage)
 % Reorient and crop nifti image
-% Workaround to fix the 1KB output file issue of dcm2nii
+% This is a workaround warpper to fix the 1KB output file issue of dcm2nii
 
 pth = fileparts(inputimage);
 if isempty(pth)
@@ -20,18 +20,18 @@ failed=0;
 while tempfsize < 10
     disp('dcm2nii returns corrupted file, retrying...')
     ea_dcm2nii(inputimage, [pth, filesep, 'temp.nii']);
-    tempf=dir([pth,filesep,'temp.nii']);
+    tempf = dir([pth,filesep,'temp.nii']);
     tempfsize = tempf.bytes/1024;
-    cnt=cnt+1;
+    cnt = cnt+1;
     if cnt>10
-        failed=1;
+        failed = 1;
         warning('Giving up. Please check input files, manually.');
-        break 
+        break
     end
 end
 
 if ~failed
-    movefile([pth,filesep,'temp.nii'],inputimage);
+    movefile([pth, filesep, 'temp.nii'], inputimage);
 else
-    delete([pth,filesep,'temp.nii']);
+    delete([pth, filesep, 'temp.nii']);
 end

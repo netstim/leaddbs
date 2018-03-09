@@ -47,6 +47,7 @@ if isfield(options.dicomimp,'method')
             ea_dcm2niix(indir, outdir);
         case 2 % dicm2nii
             ea_dicm2nii(indir, outdir);
+            ea_delete([outdir, 'dcmHeaders.mat'])
     end
 else % use default set in prefs
     switch(options.prefs.dicom.tool)
