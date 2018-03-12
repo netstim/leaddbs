@@ -7,6 +7,7 @@ specs.default.fMRIcon='GSP 1000 (Yeo 2011)>Full Set (Yeo 2011)';
 specs.feats={'dMRI','fMRI'}; % could be Coords and VTA
 specs.metrics={'% UPDRS-III Improvement'};
 specs.support={'HCP_MGH_30fold_groupconnectome (Horn 2017)','PPMI_90 (Ewert 2017)','PPMI 74_15 (Horn 2017)'};
+
 if nargin==1 && ischar(varargin{1}) && strcmp(varargin{1},'specs')
     varargout{1}=specs;
     return
@@ -45,6 +46,7 @@ if ismember('fMRI',options.predict.includes)
     end
     fMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,stimname,filesep,strrep(options.predict.fMRIcon,'>','_'),filesep,'vat_seed_compound_fMRI_func_seed_AvgR_Fz.nii']);
 end
+
 % model
 warn=0;
 if ~exist(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','dMRI',options.predict.dMRIcon),'dir') && feats(1)
@@ -53,6 +55,7 @@ if ~exist(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps
 else
     dMRIcon=options.predict.dMRIcon;
 end
+
 if ~exist(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','fMRI',options.predict.fMRIcon),'dir') && feats(2)
     fMRIcon=specs.default.fMRIcon;
     warn=1;
@@ -65,6 +68,7 @@ if feats(1)
     dMRImod=ea_load_nii(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','dMRI',dMRIcon,'dMRI_optimal.nii'));
     dMRIsim=corr(dMRImod.img(modeldata.mask),dMRImap.img(modeldata.mask),'type','spearman','rows','pairwise');
 end
+
 if feats(2)
     fMRImod=ea_load_nii(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','fMRI',strrep(fMRIcon,'>','_'),'fMRI_optimal.nii'));
     modelvals=fMRImod.img(modeldata.mask);
@@ -85,6 +89,7 @@ else
         warn=1;
     end
 end
+
 if isfield(modeldata.connectomes,rmbracketspace(fMRIcon))
     X(:,2)=modeldata.connectomes.(rmbracketspace(fMRIcon)).fMRIsims';
 else
@@ -92,9 +97,11 @@ else
         warn=1;
     end
 end
+
 if warn
     ea_warning('Please note that this prediction module is not validated for use with the selected connectome (or patient-specific data). You may proceed but the results may not be meaningful.');
 end
+
 X=X(:,logical(feats));
 [beta,dev,stats]=glmfit(X,modeldata.updrs3percimprov);
 
@@ -107,25 +114,28 @@ Xpt=[0,0];
 if feats(1)
     Xpt(1)=dMRIsim;
 end
+
 if feats(2)
     Xpt(2)=fMRIsim;
 end
+
 Xpt=Xpt(logical(feats));
 
 updrshat=ea_addone(Xpt)*beta; % percent UPDRS-III improvement prediction
-
-
 
 %% build improvement report:
 
 if ~exist([directory,'predictions'],'dir')
     mkdir([directory,'predictions']);
 end
+
 mkdir([directory,'predictions',filesep,specs.modelshortname]);
 hasdMRI=0; hasfMRI=0;
+
 if ismember('dMRI',options.predict.includes)
     hasdMRI=1;
 end
+
 if ismember('fMRI',options.predict.includes)
     hasfMRI=1;
 end
@@ -134,10 +144,12 @@ if hasfMRI
     cfg.fMRI.model=ea_getsurficeplots(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','fMRI',strrep(fMRIcon,'>','_'),'fMRI_optimal.nii'),[0.01,0.1,-0.01,-0.1]);
     cfg.fMRI.vta=ea_getsurficeplots(fMRImap.fname,[0.01,0.1,-0.01,-0.1]);
 end
+
 if hasdMRI
     cfg.dMRI.model=ea_getsurficeplots(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','dMRI',dMRIcon,'dMRI_optimal.nii'),[-1,0.6,nan,nan]);
     cfg.dMRI.vta=ea_getsurficeplots(dMRImap.fname,[-1,0.6,nan,nan]);
 end
+
 cfg.res.updrs3imp=updrshat;
 cfg.res.updrs3err=avgerror;
 load([directory,'stimulations',filesep,stimname,filesep,'stimparameters.mat'])
@@ -147,22 +159,16 @@ ea_presults_horn2017(cfg);
 %ea_screenshot([directory,'predictions',filesep,specs.modelshortname,filesep,'prediction.png']);
 
 
-
-
-
-
-
-
 function str=rmbracketspace(str)
 str=strrep(str,' ','_');
 str=strrep(str,'(','_');
 str=strrep(str,')','_');
 str=strrep(str,'>','_');
 
+
 function run_mapper_vat_local(ptdir,stimname,struc,strucc,func,funcc)
 % - Lead-DBS Job created on 21-Oct-2017 19:02:11 -
 % --------------------------------------
-
 options = getoptslocal;
 options.lcm.struc.do = struc;
 options.lcm.func.do = func;
@@ -172,6 +178,9 @@ options.lcm.struc.connectome = strucc;
 options.lcm.func.connectome = funcc;
 options.uivatdirs = {ptdir};
 options.prefs=ea_prefs;
+
+options.leadprod = 'mapper';
+
 ea_run('run', options);
 
 
@@ -259,9 +268,3 @@ options.lc.struc.ft.methodn = 1;
 options.lc.struc.ft.do = 1;
 options.lc.struc.ft.normalize = 0;
 options.exportedJob = 1;
-
-
-
-
-
-

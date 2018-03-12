@@ -72,14 +72,16 @@ options.lcm.struc.connectome = 'HCP842_1mm (Yeh 2011)';
 options.lcm.func.connectome = 'GSP 1000 Groupmatrix (Yeo 2011) > Full Set (Yeo 2011)';
 options.lcm.seeds = stimname;
 
+options.leadprod = 'mapper';
+
 allpatdirs=options.uipatdirs;
 for pat=1:length(allpatdirs)
-% set subject specific options:
-options.root=[fileparts(allpatdirs{pat}),filesep];
-[~,thispatdir]=fileparts(allpatdirs{pat});
-options.patientname=thispatdir;
-options.uipatdirs=allpatdirs{pat};
-ea_run('run',options);
+    % set subject specific options:
+    options.root=[fileparts(allpatdirs{pat}),filesep];
+    [~,thispatdir]=fileparts(allpatdirs{pat});
+    options.patientname=thispatdir;
+    options.uipatdirs=allpatdirs{pat};
+    ea_run('run',options);
 end
 
 

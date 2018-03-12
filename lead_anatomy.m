@@ -180,6 +180,8 @@ options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 
 options.d3.write=1;
 
+options.leadprod = 'anatomy';
+
 ea_run('run',options);
 
 ea_busyaction('off',leadfig,'anatomy');

@@ -12,6 +12,9 @@ options.macaquemodus=getappdata(handles.leadfigure,'macaquemodus');
 
 options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 options.gencheckreg=1;
+
+options.leadprod = 'dbs';
+
 ea_run('run',options);
 
 ea_busyaction('off',leadfigure,'dbs');

@@ -308,13 +308,12 @@ ea_busyaction('on', handles.leadfigure, 'connectome');
 options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 
-options.leadprod = 'connectome';
-
 isindependent = getappdata(handles.leadfigure,'isindependent');
 ea_savelcopts(handles)
 
 % run execution:
 if isindependent
+    options.leadprod = 'connectome';
     ea_run('run',options);
 end
 
@@ -572,6 +571,8 @@ ea_savelcopts(handles);
 options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 options.macaquemodus = 0;
+
+options.leadprod = 'connectome';
 
 ea_run('export',options);
 

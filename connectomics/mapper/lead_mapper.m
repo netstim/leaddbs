@@ -232,10 +232,12 @@ function run_button_Callback(hObject, eventdata, handles)
 leadfigure=handles.leadfigure;
 ea_busyaction('on',leadfigure,'mapper');
 
-
 options=ea_handles2options(handles);
 options.uivatdirs=getappdata(handles.leadfigure,'uipatdir');
 options.uipatdirs={''};
+
+options.leadprod = 'mapper';
+
 ea_run('run',options);
 
 ea_busyaction('off',leadfigure,'mapper');
@@ -253,6 +255,9 @@ ea_busyaction('on',leadfigure,'mapper');
 options=ea_handles2options(handles);
 options.uivatdirs=getappdata(handles.leadfigure,'uipatdir');
 options.uipatdirs={''};
+
+options.leadprod = 'mapper';
+
 ea_run('export',options);
 
 ea_busyaction('off',leadfigure,'mapper');
