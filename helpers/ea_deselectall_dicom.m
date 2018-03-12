@@ -2,8 +2,7 @@ function ea_deselectall_dicom(handles)
 if get(handles.dicomcheck,'Value') || get(handles.assignnii,'Value')
 
     % DBS:
-    try set(handles.coregct_checkbox,'Enable','off'); end
-    try set(handles.coregctcheck,'Enable','off'); end
+    try set(handles.coreg_checkbox,'Enable','off'); end
     try set(handles.normalize_checkbox,'Enable','off'); end
     try set(handles.normcheck,'Enable','off'); end
     try set(handles.doreconstruction_checkbox,'Enable','off'); end
@@ -14,6 +13,7 @@ if get(handles.dicomcheck,'Value') || get(handles.assignnii,'Value')
     try set(handles.scrf,'Enable','off'); end
 
     % Connectome:
+    try set(handles.coregmrcheck,'Enable','off'); end
     try set(handles.perf_ft,'Enable','off'); end
     try set(handles.normalize_fibers,'Enable','off'); end
     try set(handles.compute_CM_struc,'Enable','off'); end
@@ -28,8 +28,7 @@ if get(handles.dicomcheck,'Value') || get(handles.assignnii,'Value')
 
 else
     % DBS:
-    try set(handles.coregct_checkbox,'Enable','on'); end
-    try set(handles.coregctcheck,'Enable','on'); end
+    try set(handles.coreg_checkbox,'Enable','on'); end
     try set(handles.normalize_checkbox,'Enable','on'); end
     try set(handles.normcheck,'Enable','on'); end
     try set(handles.doreconstruction_checkbox,'Enable','on'); end
@@ -42,6 +41,7 @@ else
 
 
     % Connectome:
+    try set(handles.coregmrcheck,'Enable','on'); end
     try set(handles.perf_ft,'Enable','on'); end
     try set(handles.normalize_fibers,'Enable','on'); end
     try set(handles.compute_CM_struc,'Enable','on'); end
@@ -52,7 +52,6 @@ else
     try set(handles.struc_func_sim,'Enable','on'); end
     try set(handles.eigenvector_centrality,'Enable','on'); end
     try set(handles.nodal_efficiency,'Enable','on'); end
-
 
 end
 

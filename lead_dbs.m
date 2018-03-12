@@ -1006,8 +1006,6 @@ options.prefs=ea_prefs(options.patientname);
 ea_spec2dwrite(options);
 
 
-
-
 % --- Executes on button press in importfs.
 function importfs_Callback(hObject, eventdata, handles)
 % hObject    handle to importfs (see GCBO)
@@ -1016,17 +1014,12 @@ function importfs_Callback(hObject, eventdata, handles)
 ea_importfs(handles)
 
 
-
-
 % --- Executes on button press in viewmanual.
 function viewmanual_Callback(hObject, eventdata, handles)
 % hObject    handle to viewmanual (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 web('http://www.lead-dbs.org/?page_id=71', '-browser')
-
-
-
 
 
 % --- Executes on selection change in vizspacepopup.
