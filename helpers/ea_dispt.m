@@ -6,6 +6,7 @@ if ~isempty(eatimer) % timer has been set before
     fprintf(1,'\b'); % go back one line
     fprintf(1,'%s\n',[' Done. (',num2str(elapsed),' s)']);
 end
+
 if ~isempty(msg)
     disp(msg);
     % re set timer for next item.

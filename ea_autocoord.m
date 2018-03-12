@@ -67,8 +67,8 @@ if isfield(options,'predict')
    ea_predict(options);
 end
 
-if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer can be opened if no patient is selected.
-
+% only 3D-rendering viewer can be opened if no patient is selected.
+if ~strcmp(options.patientname,'No Patient Selected')
     % move files for compatibility
     try ea_compat_patfolder(options); end
 
@@ -127,7 +127,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
             ea_gencoregcheckfigs(options); % generate checkreg figures
             diary off
         end
-
     end
 
     if options.coregmr.do
@@ -140,7 +139,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
         diary off
     end
 
-
     if options.normalize.do
         diary([directory, 'normalize_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
         if ~(ea_coreglocked(options,'glanat')==2) || strcmp(options.normalize.method,'ea_normalize_apply_normalization') % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
@@ -149,6 +147,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
             else
                 doit=1;
             end
+
             if doit || strcmp(options.normalize.method,'ea_normalize_apply_normalization')
                 clear doit
                 % 3. finally perform normalization based on dominant or all preop MRIs
@@ -217,12 +216,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % only 3D-rendering viewer
                     try
                         [coords_mm,trajectory,markers]=ea_runpacer(poptions);
                         options.native=1;
-
                     catch % revert to TRAC/CORE
                         disp('PaCER failed - reverting to TRAC/CORE algorithm...');
                         [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
                         options.native=0;
-
                     end
 
                 case 'Manual' % Manual
@@ -287,5 +284,3 @@ end
 
 [~,order]=sort(bytesc,'ascend');
 di=di(order);
-
-
