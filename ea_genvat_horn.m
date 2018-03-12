@@ -9249,8 +9249,7 @@ elseif isfield(vol,'hex')
 end
 
 try
-    ea_fix_windows_env;
-    [diinsy,cols,sysmat] = ea_calc_stiff_matrix_val(node,elem,cond,mele);
+    [diinsy,cols,sysmat] = ea_calc_stiff_matrix_val_wrapper(node,elem,cond,mele);
     ea_delete([pwd, filesep, 'fort.6']);
 catch err
     if ispc && strcmp(err.identifier,'MATLAB:invalidMEXFile')

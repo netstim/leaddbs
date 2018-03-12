@@ -26,16 +26,13 @@ elseif nargin==7
     options=varargin{4};
     stimname=varargin{5};
     thresh=varargin{6};
-        lgfigure=varargin{7};
-
+    lgfigure=varargin{7};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='SimBio/FieldTrip';
         return
     end
 end
-
-
 
 S=ea_activecontacts(S);
 if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
@@ -48,18 +45,13 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     return
 end
 
-
-
 vizz=0;
 options.considerpassivecontacts=0;
-
 
 % if isempty(find(S(side).U))
 %     varargout{1}=[]; varargout{2}=[];
 %     return
 % end
-
-
 
 %% get electrodes handles // initial parameters:
 resultfig=getappdata(gcf,'resultfig');
@@ -10500,8 +10492,7 @@ elseif isfield(vol,'hex')
 end
 
 try
-    ea_fix_windows_env;
-    [diinsy,cols,sysmat] = ea_calc_stiff_matrix_val(node,elem,cond,mele);
+    [diinsy,cols,sysmat] = ea_calc_stiff_matrix_val_wrapper(node,elem,cond,mele);
     ea_delete([pwd, filesep, 'fort.6']);
 catch err
     if ispc && strcmp(err.identifier,'MATLAB:invalidMEXFile')
