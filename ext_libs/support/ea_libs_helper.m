@@ -6,12 +6,12 @@ if nargin < 1
     libpath = fileparts(mfilename('fullpath'));
 end
 
-if ismac
+if ispc
+    envname = 'PATH';
+elseif ismac
     envname = 'DYLD_LIBRARY_PATH';
 elseif isunix
     envname = 'LD_LIBRARY_PATH';
-elseif ispc
-    envname = 'PATH';
 end
 
 env = getenv(envname);
