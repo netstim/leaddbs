@@ -13,9 +13,9 @@ fidpoints_mm=[0.25,1.298,-5.003       % AC
     0.25,1.298,55];              % Midsag
 
 if iscell(leadfig)
-uidir=leadfig;
+    uidir=leadfig;
 else
-uidir=getappdata(leadfig,'uipatdir');
+    uidir=getappdata(leadfig,'uipatdir');
 end
 
 if ~exist('automan','var')
@@ -29,78 +29,72 @@ fidpoints_mm=[fidpoints_mm];
 leaddir=[ea_getearoot];
 
 if ~length(uidir)
-ea_error('Please choose and normalize patients first.');
+    ea_error('Please choose and normalize patients first.');
 end
 
 %ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
 
- %   ea_dispercent(pt/length(uidir));
+    % ea_dispercent(pt/length(uidir));
     directory=[uidir{pt},filesep];
     [~,template]=ea_whichnormmethod(directory);
 
-switch automan
-    
-    case 'auto'
-    fidpoints_vox=ea_getfidpoints(fidpoints_mm,template);
+    switch automan
 
-    [options.root,options.patientname]=fileparts(uidir{pt});
-    options.root=[options.root,filesep];
-    options.prefs=ea_prefs(options.patientname);
-    options=ea_assignpretra(options);
-    % warp into patient space:
+        case 'auto'
+        fidpoints_vox=ea_getfidpoints(fidpoints_mm,template);
 
-    [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], '');
-    V=spm_vol([directory,options.prefs.prenii_unnormalized]);
-    fpinsub_mm=fpinsub_mm';
+        [options.root,options.patientname]=fileparts(uidir{pt});
+        options.root=[options.root,filesep];
+        options.prefs=ea_prefs(options.patientname);
+        options=ea_assignpretra(options);
+        % warp into patient space:
 
-
-    fid(pt).AC=fpinsub_mm(1,:);
-    fid(pt).PC=fpinsub_mm(2,:);
-    fid(pt).MSP=fpinsub_mm(3,:);
-
-    case 'manual'
-        
-        
-        copyfile([directory,'F.fcsv'],[directory,'F.dat'])
-        Ct=readtable([directory,'F.dat']);
-        
-        
-        % AC
-        cnt=1;
-        fid(pt).AC=zeros(1,3);
-        for i=17:19
-            thisval=table2array(Ct(i,1));
-            fid(pt).AC(cnt)=str2double(thisval{1});
-            cnt=cnt+1;
-        end
-        
-        % PC
-        cnt=1;
-        fid(pt).PC=zeros(1,3);
-        for i=31:33
-            thisval=table2array(Ct(i,1));
-            fid(pt).PC(cnt)=str2double(thisval{1});
-            cnt=cnt+1;
-        end
-        
-        
-        % MSP
-        cnt=1;
-        fid(pt).MSP=zeros(1,3);
-        for i=45:47
-            thisval=table2array(Ct(i,1));
-            fid(pt).MSP(cnt)=str2double(thisval{1});
-            cnt=cnt+1;
-        end
-        
-        fpinsub_mm(1,:)=fid(pt).AC;
-        fpinsub_mm(2,:)=fid(pt).PC;
-        fpinsub_mm(3,:)=fid(pt).MSP;
-        
-end
+        [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], '');
+        V=spm_vol([directory,options.prefs.prenii_unnormalized]);
+        fpinsub_mm=fpinsub_mm';
 
 
+        fid(pt).AC=fpinsub_mm(1,:);
+        fid(pt).PC=fpinsub_mm(2,:);
+        fid(pt).MSP=fpinsub_mm(3,:);
+
+        case 'manual'
+
+            copyfile([directory,'F.fcsv'],[directory,'F.dat'])
+            Ct=readtable([directory,'F.dat']);
+
+            % AC
+            cnt=1;
+            fid(pt).AC=zeros(1,3);
+            for i=17:19
+                thisval=table2array(Ct(i,1));
+                fid(pt).AC(cnt)=str2double(thisval{1});
+                cnt=cnt+1;
+            end
+
+            % PC
+            cnt=1;
+            fid(pt).PC=zeros(1,3);
+            for i=31:33
+                thisval=table2array(Ct(i,1));
+                fid(pt).PC(cnt)=str2double(thisval{1});
+                cnt=cnt+1;
+            end
+
+            % MSP
+            cnt=1;
+            fid(pt).MSP=zeros(1,3);
+            for i=45:47
+                thisval=table2array(Ct(i,1));
+                fid(pt).MSP(cnt)=str2double(thisval{1});
+                cnt=cnt+1;
+            end
+
+            fpinsub_mm(1,:)=fid(pt).AC;
+            fpinsub_mm(2,:)=fid(pt).PC;
+            fpinsub_mm(3,:)=fid(pt).MSP;
+    end
 
     % x-dimension
     A=fpinsub_mm(3,:)-fpinsub_mm(1,:);
@@ -112,8 +106,8 @@ end
     yvec=(fpinsub_mm(2,:)-fpinsub_mm(1,:));
     yvec=yvec/norm(yvec);
     yvec=-yvec;
-    
-    
+
+
 %     switch automan
 %         case 'manual'
             zvec=cross(xvec,yvec);
@@ -124,7 +118,7 @@ end
 %             zvec=(fid(pt).MSP-fid(pt).AC);
 %             zvec=zvec/norm(zvec);
 %     end
-    
+
 %     % z-dimension (just move from ac to msag plane by z dimension):
 %     zvec=(fpinsub_mm(3,:)-fpinsub_mm(1,:));
 %     zvec=zvec/norm(zvec);
@@ -143,12 +137,7 @@ end
 end
 %ea_dispercent(1,'end');
 
-
-
 assignin('base','fid',fid);
-
-
-
 
 
 function fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile)
@@ -156,9 +145,6 @@ function fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile)
 V=spm_vol(tempfile);
 fidpoints_vox=V(1).mat\[fidpoints_mm,ones(size(fidpoints_mm,1),1)]';
 fidpoints_vox=fidpoints_vox(1:3,:)';
-
-
-
 
 
 function o=cell2acpc(acpc)
@@ -171,5 +157,5 @@ if length(acpc)~=3
     end
 end
 for dim=1:3
-o(dim,1)=str2double(acpc{dim});
+    o(dim,1)=str2double(acpc{dim});
 end
