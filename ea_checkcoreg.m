@@ -507,7 +507,7 @@ end
 
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 if strcmp(computer('arch'),'maci64')
-    system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ',directory,ea_stripex(currvol),'.nii']);
+    system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripex(currvol),'.nii'])]);
 end
 
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
@@ -622,7 +622,7 @@ approved=load([directory,'ea_coreg_approved.mat']);
 approved.(ea_stripex(currvol))=0;
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 if strcmp(computer('arch'),'maci64')
-    system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',directory,ea_stripex(currvol),'.nii']);
+    system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripex(currvol),'.nii'])]);
 end
 switch ea_stripex(currvol)
     case ea_stripex(options.prefs.gprenii)
