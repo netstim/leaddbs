@@ -42,7 +42,7 @@ if isempty(uipatdirs)
 end
 
 if ischar(uipatdirs)
-   uipatdirs = {uipatdirs};
+    uipatdirs = {uipatdirs};
 end
 
 % do parallel processing if available and set in ea_prefs.

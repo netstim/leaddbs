@@ -1,6 +1,5 @@
 function ea_lcm(options)
 
-
 % the order may be crucial since VAT-seeds are resliced in fMRI
 if options.lcm.struc.do
 
@@ -43,7 +42,6 @@ if (~options.lcm.func.do) && (~options.lcm.struc.do)
         ea_resolvevatseeds(options,'fMRI');
     end
 end
-
 
 
 function seeds=ea_resolvevatseeds(options,modality)
@@ -175,7 +173,10 @@ for suffix=dowhich
             end
     end
 end
+
+
 function ea_warp_vat2rest(cname,vatdir,sidec,options)
+
 directory=[fileparts(fileparts(fileparts(vatdir))),filesep];
 options=ea_getptopts(directory,options);
 options.coregmr.method='SPM'; % hard code for now.
@@ -190,13 +191,17 @@ voxc=[xx;yy;zz;1];
 mmc=anat_vat.mat*voxc;
 % coreg from anchor modality to rest file:
 copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized])
-ea_coreg2images(options,[directory,'c',options.prefs.prenii_unnormalized],[directory,cname,'.nii'],[directory,'c',options.prefs.prenii_unnormalized],{[vatdir,'wtmp_',sidec,'.nii']},1,[],1);
+ea_coreg2images(options,[directory,'c',options.prefs.prenii_unnormalized],...
+                        [directory,cname,'.nii'],...
+                        [directory,'c',options.prefs.prenii_unnormalized],...
+                        {[vatdir,'wtmp_',sidec,'.nii']},1,[],1);
 
 matlabbatch{1}.spm.util.checkreg.data = {
                                          [directory,'c',options.prefs.prenii_unnormalized]
                                          [directory,cname,'.nii']
                                          };
-                                     spm_jobman('run',{matlabbatch}); clear matlabbatch
+spm_jobman('run',{matlabbatch});
+clear matlabbatch
 delete([directory,'c',options.prefs.prenii_unnormalized]);
 movefile([vatdir,'wtmp_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
 rest_vat=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
@@ -213,4 +218,3 @@ if ~any(rest_vat.img(:)) % image empty, at least set original peak to 1.
         msgbox(['Attempted to manually set peak voxel true (',rest_vat.fname,') but it seems to reside out of bounds.']);
     end
 end
-
