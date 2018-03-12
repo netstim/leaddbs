@@ -77,15 +77,18 @@ end
 
 if exist([directory,'scrf',filesep,'scrf_instore_converted.mat'],'file')
     if ~ea_coreglocked(options,'brainshift')
-        presentfiles=[presentfiles;{'brainshift'}];
+        presentfiles=[presentfiles; {'brainshift'}];
     end
 end
 
 if isempty(presentfiles)
     evalin('base','checkregempty=1;');
     close(handles.leadfigure)
-   return
+    return
+else
+    evalin('base','checkregempty=0;');
 end
+
 %set(handles.previous,'visible','off'); set(handles.next,'visible','off');
 setappdata(handles.leadfigure,'presentfiles',presentfiles)
 setappdata(handles.leadfigure,'anchor',anchor)

@@ -194,12 +194,11 @@ if ~strcmp(options.patientname,'No Patient Selected')
         % export "control" niftis with wireframe of normal anatomy..
         options.normcoreg='normalize';
         ea_checkcoreg(options);
-        try
-            e=evalin('base','checkregempty');
-            evalin('base','clear checkregempty');
-            if e && ~ea_coreglocked(options,'brainshift');
-                ea_subcorticalrefine(options);
-            end
+
+        e=evalin('base', 'checkregempty');
+        evalin('base',' clear checkregempty');
+        if e && ~ea_coreglocked(options,'brainshift')
+            ea_subcorticalrefine(options);
         end
     end
 
