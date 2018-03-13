@@ -793,7 +793,9 @@ function matseed_Callback(hObject, eventdata, handles)
 pV=getappdata(handles.convis,'pV');
 pX=getappdata(handles.convis,'pX');
 [xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
-set(handles.xmm,'String',num2str(xmm)); set(handles.ymm,'String',num2str(ymm)); set(handles.zmm,'String',num2str(zmm));
+set(handles.xmm,'String',num2str(xmm,'%.2f'));
+set(handles.ymm,'String',num2str(ymm,'%.2f'));
+set(handles.zmm,'String',num2str(zmm,'%.2f'));
 set(handles.matseed,'ForegroundColor',[0,0,0]);
 refreshcv(handles);
 
@@ -806,7 +808,9 @@ end
 XYZ=[xx,yy,zz];
 centrvx=[mean(XYZ,1),1];
 centrmm=pV.mat*centrvx';
-xmm=centrmm(1); ymm=centrmm(2); zmm=centrmm(3);
+xmm=centrmm(1);
+ymm=centrmm(2);
+zmm=centrmm(3);
 
 
 function [ix,err]=setcoordinates(handles)
@@ -817,7 +821,6 @@ xmm=str2double(get(handles.xmm,'String'));
 ymm=str2double(get(handles.ymm,'String'));
 zmm=str2double(get(handles.zmm,'String'));
 
-
 err=0;
 XYZmm=[xmm,ymm,zmm,1]';
 XYZvox=pV.mat\XYZmm;
@@ -825,6 +828,7 @@ ix=0;
 try
     ix=pX(round(XYZvox(1)),round(XYZvox(2)),round(XYZvox(3)));
 end
+
 if ~ix
     ix=nan;
     err=1;
