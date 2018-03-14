@@ -1,7 +1,11 @@
-function [X,n]=ea_genX(fis,regressor,output,mask,sk)
+function [X,n]=ea_genX(fis,regressor,output,mask,sk,ctype)
 
     if ~exist('mask','var')
        mask=nan; 
+    else
+       if isempty(mask)
+           mask=nan;
+       end
     end
     
     % check wheter want to normalize or smooth data

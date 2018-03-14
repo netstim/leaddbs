@@ -2,15 +2,20 @@ function ea_Cmap(varargin)
     % creates a map both connected and correlated ("combined" map in Horn
     % 2017 AoN).
    
-    % ea_Cmap(fis,regressor,outputname,mask,sk) % sk can be 'k','s','sk'
+    % ea_Cmap(fis,regressor,outputname,mask,sk,corrtype) % sk can be 'k','s','sk'
     % for smoothing and normalization options. Mask only necessary if
     % choosing 'k' option.
     
     regressor=varargin{2};
     output=varargin{3};
     [X,n]=ea_genX(varargin{:}); % accumulates all images into image matrix X.
-    
-    R=corr(regressor,X','type','Spearman','rows','pairwise');
+        
+    if nargin<6
+        corrtype='Spearman';
+    else
+        corrtype=varargin{6};
+    end
+    R=corr(regressor,X','type',corrtype,'rows','pairwise');
     regressor=regressor-min(regressor); % shift up in case of negatives
     regressor=regressor+eps; % shift up marginally so there is no zero
     nregressor=regressor./ea_nansum(regressor); % divide by sum so sum is 1

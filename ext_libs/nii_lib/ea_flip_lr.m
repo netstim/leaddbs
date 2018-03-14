@@ -70,7 +70,7 @@ function ea_flip_lr(original_fn, flipped_fn, old_RGB, tolerance, preferredForm)
       preferredForm= 's';				% Jeff
    end
 
-   nii = load_nii(original_fn, [], [], [], [], old_RGB, tolerance, preferredForm);
+   nii = ea_ori_load_nii(original_fn, [], [], [], [], old_RGB, tolerance, preferredForm);
    M = diag(nii.hdr.dime.pixdim(2:5));
    M(1:3,4) = -M(1:3,1:3)*(nii.hdr.hist.originator(1:3)-1)';
    M(1,:) = -1*M(1,:);

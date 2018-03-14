@@ -1,4 +1,4 @@
-function ea_exportmap(n,M,fis,regressor,output,mask,sk)
+function ea_exportmap(n,M,fis,regressor,output,mask,sk,corrtype)
 
 
 n.img(:)=M;

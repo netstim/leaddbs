@@ -63,6 +63,9 @@ options.modality=3; % use template image
 options.patient_list=M.patient.list;
 
 % mer development
+if ~exist('ptidx','var')
+    ptidx=1:length(M.patient.list);
+end
 vizstruct.elstruct=M.elstruct(ptidx);
 uipatdirs=M.patient.list(ptidx);
 npts=length(uipatdirs);

@@ -28,4 +28,10 @@ switch cmd
     case 'baseline'
         improvs=factors.baseline(:,fctr);
         I=improvs(pts);
+    case 'cleaned' % cleaned from baseline by regressing out baseline.
+        factors.improvement=(factors.baseline-factors.postop); %./factors.baseline;
+        factors.improvement(isinf(factors.improvement))=nan;
+        improvs=ea_resid(factors.baseline,factors.improvement(:,fctr));     
+        I=improvs(pts);
+        
 end

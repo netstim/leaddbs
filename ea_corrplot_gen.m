@@ -54,11 +54,12 @@ end
 %labels=M.stats(1).ea_stats.atlases.names(lidx);
 
 
-jetlist=lines;
+
 %jetlist(groups,:);
 for area=1:length(R_upd)
     %% plot areas:
     f=figure('color','w','name',description);
+    jetlist=lines;
     g=gca;
     if exist('color','var')
         scatter(a,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',color);
