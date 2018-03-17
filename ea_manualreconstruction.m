@@ -27,6 +27,7 @@ setappdata(mcfig,'patientname',patientname);
 setappdata(mcfig,'origoptions',options); % store original options for further processing.
 
 options.native=1;
+options.xray=0;
 setappdata(mcfig,'options',options);
 
 if ~exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
@@ -85,7 +86,7 @@ eltog(2)=uitoggletool(ht,'CData',ea_get_icn('el3'),'TooltipString','Select proxi
 % rotleftcw=uipushtool(ht,'CData',ea_get_icn('rotleftcw'),'TooltipString','Rotate left lead clockwise','ClickedCallback',{@ea_rotate,'lc',mcfig});
 % rotleftccw=uipushtool(ht,'CData',ea_get_icn('rotleftccw'),'TooltipString','Rotate left lead counterclockwise','ClickedCallback',{@ea_rotate,'lcc',mcfig});
 if options.prefs.env.dev
-autorotation=uipushtool(ht,'CData',ea_get_icn('autorot'),'TooltipString','Detect directional leads','ClickedCallback',{@ea_autorotate,'clockwise',mcfig});
+    autorotation=uipushtool(ht,'CData',ea_get_icn('autorot'),'TooltipString','Detect directional leads','ClickedCallback',{@ea_autorotate,'clockwise',mcfig});
 end
 rotationcw=uipushtool(ht,'CData',ea_get_icn('cw'),'TooltipString','Rotate lead clockwise','ClickedCallback',{@ea_rotate,'clockwise',mcfig});
 rotationccw=uipushtool(ht,'CData',ea_get_icn('ccw'),'TooltipString','Rotate lead counterclockwise','ClickedCallback',{@ea_rotate,'counterclockwise',mcfig});
@@ -95,6 +96,9 @@ rotationccw=uipushtool(ht,'CData',ea_get_icn('ccw'),'TooltipString','Rotate lead
 finish_mc=uipushtool(ht,'CData',ea_get_icn('done'),'TooltipString','Finish manual corrections [space]','ClickedCallback',{@robotSpace});
 
 captoggle=uitoggletool(ht,'CData',ea_get_icn('labels'),'TooltipString','Orientation','OnCallback',{@objvisible,captions},'OffCallback',{@objinvisible,captions},'State','on');
+
+xt=uitoggletool(ht,'CData',ea_get_icn('xray'),'TooltipString','Toggle X-Ray Mode','State','off','OnCallback',{@xrayon,mcfig},'OffCallback',{@xrayoff,mcfig});
+setappdata(mcfig,'xt',xt);
 
 setappdata(mcfig,'eltog',eltog);
 
@@ -118,6 +122,8 @@ disp('Manual correction: Press arrows to adjust, space to end adjustment. For mo
 %% export variables to figure
 setappdata(mcfig,'eltog',eltog);
 setappdata(mcfig,'markers',markers);
+
+
 
 
 function ea_endfcn(mcfig)
@@ -156,9 +162,9 @@ end
 
 %% methods dump:
 ea_methods(options,...
-            ['DBS-Electrodes were manually localized based on post-operative acquisitions using a tool specifically designed for this task (as implemented in Lead-DBS software',...
-            '; Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
-            {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
+    ['DBS-Electrodes were manually localized based on post-operative acquisitions using a tool specifically designed for this task (as implemented in Lead-DBS software',...
+    '; Horn & Kuehn 2005; SCR_002915; http://www.lead-dbs.org).'],...
+    {'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'});
 
 % continue with rest of the program schedule..
 
@@ -218,12 +224,12 @@ switch action
     case 'R3'
         markers(1).head=markers(1).head+(mRT-markers(1).tail);
         markers(1).tail=mRT;
-%     case 'L0'
-%         markers(2).tail=markers(2).tail+(mLH-markers(2).head);
-%         markers(2).head=mLH;
-%     case 'L3'
-%         markers(2).head=markers(2).head+(mLT-markers(2).tail);
-%         markers(2).tail=mLT;
+        %     case 'L0'
+        %         markers(2).tail=markers(2).tail+(mLH-markers(2).head);
+        %         markers(2).head=mLH;
+        %     case 'L3'
+        %         markers(2).head=markers(2).head+(mLT-markers(2).tail);
+        %         markers(2).tail=mLT;
     otherwise
         error(['unknown action "' action '"']);
 end
@@ -277,11 +283,11 @@ switch lower(commnd)
     case '.' % center selected electrode - this doesn't seem to work yet.
         selectrode=getappdata(mcfig,'selectrode');
         if selectrode
-
+            
             optoffsets=getappdata(mcfig,'optoffsets');
             [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
             movedcoords=moveonecoord(markers,selectrode,optoffsets(selectrode,:),options); % move the correct coord to the correct direction.
-
+            
             set(mplot(1,1),'XData',movedcoords(options.elside).head(1),'YData',movedcoords(options.elside).head(2),'ZData',movedcoords(options.elside).head(3))
             set(mplot(2,1),'XData',movedcoords(options.elside).tail(1),'YData',movedcoords(options.elside).tail(2),'ZData',movedcoords(options.elside).tail(3))
             %            setappdata(mcfig,'markers',markers);
@@ -292,11 +298,13 @@ switch lower(commnd)
         sequenceelectrode([],[],mcfig,'prev');
     case '>' % move to next electrode in batch
         sequenceelectrode([],[],mcfig,'next')
-%     case {'x','a','p','y','l','r'} % view angles.
-%         %markers=getappdata(mcfig,'markers');
-%         ea_view(nan,nan,commnd);
+        %     case {'x','a','p','y','l','r'} % view angles.
+        %         %markers=getappdata(mcfig,'markers');
+        %         ea_view(nan,nan,commnd);
     case 'h'
         showhidefid([],[],mcfig);
+    case 'x'
+        xrayswitch([],[],mcfig);
     case {'0','3','4','7'}
         switch lower(commnd)
             case {'0','4'}
@@ -304,7 +312,7 @@ switch lower(commnd)
             case {'3','7'}
                 selectrode=2;
         end
-
+        
         if numel(options.sides) == 1	% only one hemisphere
             switch options.sides
                 case 1	% right hemisphere, return if '4' or '7' is pressed
@@ -317,7 +325,7 @@ switch lower(commnd)
                     end
             end
         end
-
+        
         oselectrode=getappdata(mcfig,'selectrode');
         if selectrode==oselectrode % toggle had already been clicked -> deselect all.
             % reset all toggletools
@@ -331,10 +339,10 @@ switch lower(commnd)
             for i=1:2
                 set(eltog(i),'State','off');
             end
-
+            
             % set the correct toggletool again.
             set(eltog(selectrode),'State','on');
-
+            
             % store selected electrode in appdata.
             setappdata(mcfig,'selectrode',selectrode);
             ea_mancor_updatescene([],[],mcfig);
@@ -342,15 +350,15 @@ switch lower(commnd)
         clear oselectrode
     case {'c','v','b','n'}
         setcontrast(nan,nan,event.Character,event.Modifier,mcfig);
-%     case 'v'
-%         increasecontrast(nan,nan,event);
-%     case 'b'
-%         increaseoffset(nan,nan,event);
-%     case 'n'
-%         decreaseoffset(nan,nan,event);
-
+        %     case 'v'
+        %         increasecontrast(nan,nan,event);
+        %     case 'b'
+        %         increaseoffset(nan,nan,event);
+        %     case 'n'
+        %         decreaseoffset(nan,nan,event);
+        
     case {'s','d'}
-
+        
     case 'm' % manual electrodes head / tail setting
         % get screen size
         scrSize=get(0,'ScreenSize');
@@ -417,50 +425,50 @@ switch lower(commnd)
         % store the UI elements in user data property of the new figure
         userData=struct('tvRH',tvRH,'tvRT',tvRT,'tvLH',tvLH,'tvLT',tvLT,'mcfig',mcfig);
         set(f,'UserData',userData);
-
+        
         % wait for the figure closing (either by pressing the bu button, or by closing it)
         waitfor(f)
-
+        
         % update the scene
         ea_mancor_updatescene([],[],mcfig);
-
+        
         % reload the parameters
         [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
     otherwise % arrow keys, plus, minus
         if ismember(event.Key,{'rightarrow','leftarrow','uparrow','downarrow'}) || ismember(event.Character,{'+','-','*','_'})
-        selectrode=getappdata(mcfig,'selectrode');
+            selectrode=getappdata(mcfig,'selectrode');
             if ~selectrode % no electrode is highlighted, move electrodes alongside trajectory or increase/decrease spacing.
                 %markers=getappdata(mcfig,'markers');
                 %trajectory=getappdata(mcfig,'trajectory');
                 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
+                
                 markers=ea_correctcoords(markers,trajectory,event,options);
                 if isfield(options,'hybridsave')
                     options=rmfield(options,'hybridsave');
                 end
                 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
-
+                
                 % setappdata(mcfig,'markers',markers);
                 ea_mancor_updatescene([],[],mcfig);
                 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
+                
                 % markers=getappdata(mcfig,'markers');
             else % electrode is highlighted. Move in xy dirs.
-
-    %             markers=getappdata(mcfig,'markers');
-    %             trajectory=getappdata(mcfig,'trajectory');
+                
+                %             markers=getappdata(mcfig,'markers');
+                %             trajectory=getappdata(mcfig,'trajectory');
                 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
                 movedcoords=moveonecoord(markers,selectrode,event,options); % move the correct coord to the correct direction.
-
-                        set(mplot(1,1),'XData',movedcoords(options.elside).head(1),'YData',movedcoords(options.elside).head(2),'ZData',movedcoords(options.elside).head(3))
-                        set(mplot(2,1),'XData',movedcoords(options.elside).tail(1),'YData',movedcoords(options.elside).tail(2),'ZData',movedcoords(options.elside).tail(3))
-    %            setappdata(mcfig,'markers',markers);
+                
+                set(mplot(1,1),'XData',movedcoords(options.elside).head(1),'YData',movedcoords(options.elside).head(2),'ZData',movedcoords(options.elside).head(3))
+                set(mplot(2,1),'XData',movedcoords(options.elside).tail(1),'YData',movedcoords(options.elside).tail(2),'ZData',movedcoords(options.elside).tail(3))
+                %            setappdata(mcfig,'markers',markers);
                 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
-
+                
                 ea_mancor_updatescene([],[],mcfig);
                 %markers=getappdata(mcfig,'markers');
                 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
+                
                 %update_coords(elplot(selectrode),markers,trajectory,movedcoords); % refresh scene view (including update for all other electrodes).
                 %setappdata(gcf,'markers',markers);
                 %setappdata(mcfig,'trajectory',trajectory);
@@ -473,12 +481,12 @@ options=getappdata(mcfig,'options');
 coords_mm=ea_resolvecoords(markers,options);
 % [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
-    set(mplot(1,1),'XData',markers(options.elside).head(1),'YData',markers(options.elside).head(2),'ZData',markers(options.elside).head(3));
-    set(mplot(2,1),'XData',markers(options.elside).tail(1),'YData',markers(options.elside).tail(2),'ZData',markers(options.elside).tail(3));
-    for el=1:length(elplot)/2
-        set(elplot(cnt),'XData',coords_mm{options.elside}(el,1),'YData',coords_mm{options.elside}(el,2),'ZData',coords_mm{options.elside}(el,3))
-        cnt=cnt+1;
-    end
+set(mplot(1,1),'XData',markers(options.elside).head(1),'YData',markers(options.elside).head(2),'ZData',markers(options.elside).head(3));
+set(mplot(2,1),'XData',markers(options.elside).tail(1),'YData',markers(options.elside).tail(2),'ZData',markers(options.elside).tail(3));
+for el=1:length(elplot)/2
+    set(elplot(cnt),'XData',coords_mm{options.elside}(el,1),'YData',coords_mm{options.elside}(el,2),'ZData',coords_mm{options.elside}(el,3))
+    cnt=cnt+1;
+end
 refreshdata(elplot,'caller')
 drawnow
 
@@ -505,6 +513,32 @@ hf=getappdata(mcfig,'hf');
 setappdata(mcfig,'options',options);
 ea_mancor_updatescene([],[],mcfig);
 set(hf,'State','off');
+
+function xrayswitch(hf,t,mcfig)
+options=getappdata(mcfig,'options');
+if options.xray
+    xrayoff(hf,t,mcfig);
+else
+    xrayon(hf,t,mcfig);
+end
+
+function xrayoff(hf,t,mcfig)
+options=getappdata(mcfig,'options');
+options.xray=0;
+xt=getappdata(mcfig,'xt');
+setappdata(mcfig,'options',options);
+ea_mancor_updatescene([],[],mcfig);
+set(xt,'State','off');
+
+function xrayon(hf,t,mcfig)
+options=getappdata(mcfig,'options');
+options.xray=1;
+xt=getappdata(mcfig,'xt');
+setappdata(mcfig,'options',options);
+ea_mancor_updatescene([],[],mcfig);
+set(xt,'State','on');
+
+
 
 function sequenceelectrode(m,n,mcfig,what)
 options=getappdata(mcfig,'options');
@@ -659,8 +693,8 @@ eltog=getappdata(gcf,'eltog');
 elplot=getappdata(gcf,'elplot');
 mplot=getappdata(gcf,'mplot');
 options=getappdata(gcf,'options');
-    set(mplot(1,1),'MarkerEdgeColor','r');
-    set(mplot(2,1),'MarkerEdgeColor','g');
+set(mplot(1,1),'MarkerEdgeColor','r');
+set(mplot(2,1),'MarkerEdgeColor','g');
 
 for i=getsuplots(1)
     set(eltog(i),'State','off');
@@ -685,8 +719,8 @@ warning ('off','all');
 function deselectelectrode(hobj,ev)
 % reset all toggletools
 mplot=getappdata(gcf,'mplot');
-    set(mplot(1,1),'MarkerEdgeColor','r');
-    set(mplot(2,1),'MarkerEdgeColor','g');
+set(mplot(1,1),'MarkerEdgeColor','r');
+set(mplot(2,1),'MarkerEdgeColor','g');
 
 setappdata(gcf,'selectrode',0);
 
@@ -695,9 +729,9 @@ function ea_view(hobj,ev,commnd)
 switch commnd
     case 'p'
         view(0,0);
-    case {'x','a'}
+    case {'a'}
         view(180,0);
-    case {'y','r'}
+    case {'r'}
         view(90,0);
     case 'l'
         view(270,0);

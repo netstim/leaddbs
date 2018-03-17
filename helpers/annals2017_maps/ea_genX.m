@@ -57,10 +57,14 @@ function [X,n]=ea_genX(fis,regressor,output,mask,sk,ctype)
                 matlabbatch{1}.spm.spatial.smooth.prefix = 's';
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
+                delete([tmpd,guid,'.nii']);
+                fis{f}=[tmpd,'s',guid,'.nii'];
             end
-            fis{f}=[tmpd,'s',guid,'.nii'];
         end
         n=ea_load_nii(fis{f});
+        if dos || dok % cleanup temp dir
+           delete(fis{f}); 
+        end
         if ~exist('X','var')
             X=n.img(:);
         else

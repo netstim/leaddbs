@@ -14,8 +14,10 @@ addvolume=repmat(xxvec,nn,1);
 fitvolume=repmat(meanfitline,[1,1,xxlength]);
 if ~doxx
 fitvolume(2,:,:)=squeeze(fitvolume(2,:,:))+addvolume;
-else
+elseif doxx==1
 fitvolume(1,:,:)=squeeze(fitvolume(1,:,:))+addvolume;
+elseif doxx==2
+    fitvolume(3,:,:)=squeeze(fitvolume(3,:,:))+addvolume;
 end
 
 fitvolume=V.mat \ reshape(fitvolume,4,xxlength*nn);

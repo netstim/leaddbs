@@ -86,20 +86,24 @@ for side=options.elside
     normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
     normtrajvector2 = normtrajvector;
     
-    y(1) = -cos(0) * sin(ea_deg2rad(rotation{side})); % [0 1 0] rotated by rotation
-    y(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
-    y(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
+    yvec(1) = -cos(0) * sin(ea_deg2rad(rotation{side})); % [0 1 0] rotated by rotation
+    yvec(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
+    yvec(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
     
-    x = cross(y,[0 0 1]); % [1 0 0] rotated by rotation
+    xvec = cross(yvec,[0 0 1]); % [1 0 0] rotated by rotation
     
-    x = x - (dot(x,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;     % x is projected down the trajectory
-    x = x ./ norm(x);
-    y = -cross(x,normtrajvector);
+    xvec = xvec - (dot(xvec,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;     % x is projected down the trajectory
+    xvec = xvec ./ norm(xvec);
+    yvec = -cross(xvec,normtrajvector);
     
-    markers(side).x = markers(side).head + x;
-    markers(side).y = markers(side).head + y;
+    markers(side).x = markers(side).head + xvec;
+    markers(side).y = markers(side).head + yvec;
 end
 
+xvec_unrot=cross(normtrajvector,[1,0,0]); % orthogonal vectors used for x-ray mode
+xvec_unrot=xvec_unrot./norm(xvec_unrot);
+yvec_unrot=cross(normtrajvector,[0,1,0]); % orthogonal vectors used for x-ray mode
+yvec_unrot=yvec_unrot./norm(yvec_unrot);
 % [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
 %trajectory=getappdata(mcfig,'trajectory');
@@ -259,7 +263,7 @@ set(trajectory_plot(1),'visible',ea_bool2onoff(options.visible));
 delete(planes);
 clear planes
 planecnt=1;
-
+options=getappdata(mcfig,'options'); slicscor=-7:7; slicssag=-3:3; slicstra=-10:1:20;
 %% plot slices in x and y planes
 for doxx=0:1
     sample_width=10; % a bit smaller sample size in x direction to avoid overlap.
@@ -269,12 +273,32 @@ for doxx=0:1
     
     if doxx
         Vcor=getV(mcfig,'Vcor',options);
-        imat=ea_resample_planes(Vcor,meantrajectory',sample_width,doxx,0.2);
-        
+        if options.xray
+            cnt=1;
+            for slic=slicscor
+                mt=meantrajectory';
+                mt=mt+repmat(xvec_unrot',1,size(mt,2))*slic;
+                Xr(:,:,cnt)=ea_resample_planes(Vcor,mt,sample_width,doxx,0.2);
+                cnt=cnt+1;
+            end
+            imat=mean(Xr,3);
+        else
+            imat=ea_resample_planes(Vcor,meantrajectory',sample_width,doxx,0.2);
+        end
     else
         Vsag=getV(mcfig,'Vsag',options);
-        imat=ea_resample_planes(Vsag,meantrajectory',sample_width,doxx,0.2);
-        
+        if options.xray
+            cnt=1;
+            for slic=slicssag
+                mt=meantrajectory';
+                mt=mt+repmat(yvec_unrot',1,size(mt,2))*slic;
+                Xr(:,:,cnt)=ea_resample_planes(Vsag,mt,sample_width,doxx,0.2);
+                cnt=cnt+1;
+            end
+            imat=mean(Xr,3);
+        else
+            imat=ea_resample_planes(Vsag,meantrajectory',sample_width,doxx,0.2);
+        end
     end
     
     colormap gray
@@ -330,7 +354,7 @@ for doxx=0:1
         setappdata(mcfig,'planecset',1);
     end
     
-    imat=ea_contrast(imat,contrast,offset);
+    imat=ea_contrast(imat,contrast+options.xray*0.2,offset-options.xray*0.1);
     
     planes(planecnt)=surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'alphadata',alphamap,'FaceAlpha', 'texturemap','FaceColor','texturemap','EdgeColor','none','alphadatamapping','none');
     
@@ -341,7 +365,6 @@ for doxx=0:1
             midpt(2)+10,... % y
             midpt(3)+10,... % z
             'A','Color','w','BackgroundColor','k');
-        
         captions(2)=text(midpt(1),... % x
             midpt(2)-10,... % y
             midpt(3)+10,... % z
@@ -379,8 +402,36 @@ for subpl=getsuplots(1)
     ca=subplot(3,6,subpl*6);
 
     %set(ca,'position',get(ca,'outerposition'));
-
-    slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
+    if options.xray
+        cnt=1;
+        clear Xr
+        for slic=slicstra
+            mrks=mks;
+            mrks(subpl,:)=mrks(subpl,:)+normtrajvector*slic;
+            otraj=zeros(41,3); icnt=1;
+            for i=-10:0.5:10
+                otraj(icnt,:)=[mrks(subpl,:)+xvec_unrot*i]';
+                icnt=icnt+1;
+            end
+            tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
+            tvecs=tvecs(1:3,:);
+            Xr(:,:,cnt)=ea_resample_planes(Vtra,tvecs,wsize,2,0.5);
+            
+            %iXr(:,:,cnt)=ea_sample_slice(Vtra,'tra',wsize,'vox',mrks,subpl);
+            cnt=cnt+1;
+        end
+        slice=mean(Xr,3);
+    else
+        otraj=zeros(41,3); icnt=1;
+        for i=-10:0.5:10
+            otraj(icnt,:)=[mks(subpl,:)+xvec_unrot*i]';
+            icnt=icnt+1;
+        end
+        tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
+        tvecs=tvecs(1:3,:);
+        slice=ea_resample_planes(Vtra,tvecs,wsize,2,0.5);
+        %islice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
+    end
     slice=ea_contrast(slice,contrast,offset);
     switch options.modality
         case 1 % MR
@@ -597,8 +648,13 @@ function col=getbgsidecol(options)
 linecols=lines;
 linecols=rgb2hsv(linecols);
 linecols(:,3)=linecols(:,3)/3;
+if options.xray
+    linecols(:,2)=linecols(:,2)/1.5;
+    linecols(:,3)=linecols(:,3)*1.5;
+end
 linecols=hsv2rgb(linecols);
 col=linecols(options.elside,:);
+ 
 
 function ea_view(hobj,ev,commnd)
 switch commnd
