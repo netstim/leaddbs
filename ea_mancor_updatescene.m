@@ -354,7 +354,7 @@ for doxx=0:1
         setappdata(mcfig,'planecset',1);
     end
     
-    imat=ea_contrast(imat,contrast+options.xray*0.2,offset-options.xray*0.1);
+    imat=ea_contrast(imat,contrast+options.xray*0.1,offset-options.xray*0.3);
     
     planes(planecnt)=surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'alphadata',alphamap,'FaceAlpha', 'texturemap','FaceColor','texturemap','EdgeColor','none','alphadatamapping','none');
     
@@ -395,7 +395,7 @@ mks=Vtra.mat\[mks,ones(size(mks,1),1)]';
 mks=mks(1:3,:)';
 
 %title(['Electrode ',num2str(el-1),', transversal view.']);
-wsize=10;
+wsize=15; res=0.5;
 cmap=[1,4,5,8];
 
 for subpl=getsuplots(1)
@@ -404,26 +404,40 @@ for subpl=getsuplots(1)
     %set(ca,'position',get(ca,'outerposition'));
     if options.xray
         cnt=1;
-        clear Xr
+        Xr=zeros(wsize*2*(1/res)+1,wsize*2*(1/res)+1,2*length(slicstra));
         for slic=slicstra
             mrks=mks;
             mrks(subpl,:)=mrks(subpl,:)+normtrajvector*slic;
-            otraj=zeros(41,3); icnt=1;
-            for i=-10:0.5:10
+            otraj=zeros(wsize*2+1,3); icnt=1;
+            for i=-wsize:res:wsize
                 otraj(icnt,:)=[mrks(subpl,:)+xvec_unrot*i]';
                 icnt=icnt+1;
             end
             tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
             tvecs=tvecs(1:3,:);
-            Xr(:,:,cnt)=ea_resample_planes(Vtra,tvecs,wsize,2,0.5);
-            
+            Xr(:,:,cnt)=ea_resample_planes(Vtra,tvecs,wsize,2,res);  
             %iXr(:,:,cnt)=ea_sample_slice(Vtra,'tra',wsize,'vox',mrks,subpl);
             cnt=cnt+1;
         end
+        for slic=slicstra
+            mrks=mks;
+            mrks(subpl,:)=mrks(subpl,:)+normtrajvector*slic;
+            otraj=zeros(wsize*2+1,3); icnt=1;
+            for i=-wsize:res:wsize
+                otraj(icnt,:)=[mrks(subpl,:)+yvec_unrot*i]';
+                icnt=icnt+1;
+            end
+            tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
+            tvecs=tvecs(1:3,:);
+            Xr(:,:,cnt)=ea_resample_planes(Vtra,tvecs,wsize,2,res);  
+            %iXr(:,:,cnt)=ea_sample_slice(Vtra,'tra',wsize,'vox',mrks,subpl);
+            cnt=cnt+1;
+        end
+        Xr=smooth3(Xr,'gaussian',[11,11,1]);
         slice=mean(Xr,3);
     else
         otraj=zeros(41,3); icnt=1;
-        for i=-10:0.5:10
+        for i=-wsize:0.5:wsize
             otraj(icnt,:)=[mks(subpl,:)+xvec_unrot*i]';
             icnt=icnt+1;
         end
