@@ -499,13 +499,18 @@ ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName],options.prefs.vid
 
 
 function export_hd(hobj,ev)
+set(gca, 'Color', 'none');
+set(gcf,'color','none');
+
 
 [FileName,PathName] = uiputfile('LEAD_Scene.png','Save file name');
 if FileName
-set(gcf, 'Color', [1,1,1]);
-[~, cdata] = ea_myaa([4, 2]);
+% set(gcf, 'Color', [1,1,1]);
+% [~, cdata] = ea_myaa([4, 2]);
+% 
+% imwrite(cdata, [PathName,FileName], 'png');
+ea_screenshot([PathName,FileName]);
 
-imwrite(cdata, [PathName,FileName], 'png');
 end
 
 

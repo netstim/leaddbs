@@ -1,9 +1,14 @@
 function ea_screenshot(outn)
 
-set(gcf, 'Color', [1,1,1]);
-[~, cdata] = myaa_hd([4, 2]);
-
-imwrite(cdata, outn, 'png');
+warning('off');
+export_fig(outn,'-png','-m2.5','-a4','-transparent');
+warning('on');
+% 
+% 
+% set(gcf, 'Color', [1,1,1]);
+% [~, cdata] = myaa_hd([4, 2]);
+% 
+% imwrite(cdata, outn, 'png');
 
 
 function res=zminus(A,B)

@@ -263,7 +263,7 @@ set(trajectory_plot(1),'visible',ea_bool2onoff(options.visible));
 delete(planes);
 clear planes
 planecnt=1;
-options=getappdata(mcfig,'options'); slicscor=-7:7; slicssag=-3:3; slicstra=-10:1:20;
+options=getappdata(mcfig,'options'); slicscor=-4:4; slicssag=-4:4; slicstra=-10:1:20;
 %% plot slices in x and y planes
 for doxx=0:1
     sample_width=10; % a bit smaller sample size in x direction to avoid overlap.
