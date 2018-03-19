@@ -444,6 +444,17 @@ for subpl=getsuplots(1)
         tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
         tvecs=tvecs(1:3,:);
         slice=ea_resample_planes(Vtra,tvecs,wsize,2,0.5);
+        
+        
+        otraj=zeros(41,3); icnt=1;
+        for i=-wsize:0.5:wsize
+            otraj(icnt,:)=[mks(subpl,:)+yvec_unrot*i]';
+            icnt=icnt+1;
+        end
+        tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
+        tvecs=tvecs(1:3,:);
+        slice=slice+ea_resample_planes(Vtra,tvecs,wsize,2,0.5);
+        
         %islice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
     end
     slice=ea_contrast(slice,contrast,offset);
