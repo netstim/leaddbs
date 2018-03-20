@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 06-Mar-2018 09:34:05
+% Last Modified by GUIDE v2.5 20-Mar-2018 09:28:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1794,3 +1794,21 @@ function dcm2niiselect_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in extractsurface.
+function extractsurface_Callback(hObject, eventdata, handles)
+% hObject    handle to extractsurface (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of extractsurface
+
+
+% --- Executes on button press in localizeecog.
+function localizeecog_Callback(hObject, eventdata, handles)
+% hObject    handle to localizeecog (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of localizeecog

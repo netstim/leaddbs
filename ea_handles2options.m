@@ -330,7 +330,10 @@ try
     end
     options.predict.stimulation=options.predict.stimulation{handles.seeddefpopup.Value};
 end
-
+try
+options.ecog.extractsurface=get(handles.extractsurface,'Value');
+options.ecog.localize=get(handles.localizeecog,'Value');
+end
 
 function sides=ea_assignsides(handles)
 cnt=1;
