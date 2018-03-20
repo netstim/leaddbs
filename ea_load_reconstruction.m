@@ -116,6 +116,9 @@ end
 if ~exist('manually_corrected','var')
     manually_corrected=0;
 end
+if isempty(manually_corrected)
+    manually_corrected=0;
+end
 
 if ~exist('elmodel','var')
     elmodel=[];
