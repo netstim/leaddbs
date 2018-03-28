@@ -1,13 +1,14 @@
 function ea_runslicer(options, task)
 %% Function to launch slicer and load *.nii files
-%  Last Revision: 7/12/2017
-%  Thushara Perera (c) 2017 Bionics Institute
+%  Last Revision: 29/03/2018
+%  Thushara Perera (c) 2018 Bionics Institute
 %  Input:
 %   - lead dbs options struct
 %   - task integer ID to tell function which files to open
 %     (see inline comments for more detail)
 %  Output:
 %   - relevant slicer scene (mrml) file will be saved in patient folder
+%   - slicer fiducial marker file (fcsv) will be saved in patient folder
 %   - temporary python script file will be written to lead_dbs root
 %
 %  Things to note: user must set the path of the slicer executable. It would
@@ -108,32 +109,24 @@ function ea_runslicer(options, task)
             end
 
         case 3 % show data after normalization
-            nfiles = 0;
             slicer_mrml = 'Slicer_normalized.mrml';
-            allfiles = {
-                't2.nii'
-                'glanat_t2.nii'   % could not find pref for this in options.prefs.gctnii
-                options.prefs.gprenii
-                options.prefs.gctnii
-                options.prefs.gtranii
-                options.prefs.gcornii
-                options.prefs.gsagnii
-                };
-
-            if (exist(allfiles{1}, 'file') == 2) %special case for template
-                nfiles = nfiles + 1;
-                filenames{nfiles} = allfiles{1};
-                 % is there a better way to get the MNI template?
-                filepaths{nfiles} = [lead_path, 'templates', filesep, 'space', filesep, 'MNI_ICBM_2009b_NLIN_ASYM', filesep, allfiles{1}];
-            end
-
-            for i=2:length(allfiles)
-                if (exist([patient_path, filesep, allfiles{i}], 'file') == 2)
-                    nfiles = nfiles + 1;
-                filenames{nfiles} = allfiles{i};
-                    filepaths{nfiles} = [patient_path, filesep, allfiles{i}];
+            [nfiles, filepaths, filenames] = GetNormalizedFiles(options, lead_path, patient_path);
+            
+        case 4 % show electrode localization
+            if exist([patient_path,filesep,'ea_reconstruction.mat'],'file')
+                if (~isfield(options, 'root'))
+                    [filepath, name, ~] = fileparts(patient_path);
+                    options.root = [filepath,filesep];
+                    options.patientname = name;
                 end
+                [coords_mm,~,~]=ea_load_reconstruction(options);
+                WriteFiducialFile(coords_mm, [patient_path, filesep, 'SlicerElectrodes.fcsv']);                
+            else
+                warning('Please run reconstruction first...');
+                return;
             end
+            slicer_mrml = 'Slicer_electrodes.mrml';
+            [nfiles, filepaths, filenames] = GetNormalizedFiles(options, lead_path, patient_path);
 
         otherwise
             warning('Task ID not recognised');
@@ -148,11 +141,19 @@ function ea_runslicer(options, task)
     end
 
     fid = fopen(scene_path, 'w');
-    fprintf(fid, [GetBeginning(), '\r\n\r\n']);
+    if (task == 4)
+        fprintf(fid, [GetFiducialBeginning(), '\r\n\r\n']);
+    else
+        fprintf(fid, [GetBeginning(), '\r\n\r\n']);
+    end
     for i=1:nfiles
         fprintf(fid, [GetFileXML(i, filepaths{i}, filenames{i}), '\r\n\r\n']);
     end
-    fprintf(fid, GetEnding());
+    if (task == 4)
+        fprintf(fid, GetFiducialEnding());
+    else
+        fprintf(fid, GetEnding());
+    end
     fclose(fid);
 
     fid = fopen(script_path,'w'); % write temp python script to load volumes
@@ -163,6 +164,50 @@ function ea_runslicer(options, task)
     % the trailing '&' returns control back to matlab without waiting for slicer to close
 end
 
+function WriteFiducialFile(coords, fiducial_path)
+    header = ['# Markups fiducial file version = 4.7\r\n',...
+              '# CoordinateSystem = 0\r\n',...
+              '# columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID\r\n'];
+    c = vertcat(coords{:});
+    fid = fopen(fiducial_path, 'w');
+    fprintf(fid, header);
+    for i = 1:length(c)
+        idx = num2str(i-1);
+        fprintf(fid, ['vtkMRMLMarkupsFiducialNode_', idx, ',',num2str(c(i,1)),',',num2str(c(i,2)),',',num2str(c(i,3)),...
+            ',0,0,0,1,1,1,0,E', idx, ',,vtkMRMLScalarVolumeNode2\r\n']);
+    end
+    fclose(fid);
+end
+
+
+function [nfiles, filepaths, filenames] = GetNormalizedFiles(options, lead_path, patient_path)
+    nfiles = 0;
+    
+    allfiles = {        
+        't2.nii'
+        options.prefs.gctnii
+        'glanat_t2.nii'   % could not find pref for this in options.prefs.gctnii
+        options.prefs.gprenii
+        options.prefs.gtranii
+        options.prefs.gcornii
+        options.prefs.gsagnii
+        };
+
+    if (exist(allfiles{1}, 'file') == 2) %special case for template
+        nfiles = nfiles + 1;
+        filenames{nfiles} = allfiles{1};
+         % is there a better way to get the MNI template?
+        filepaths{nfiles} = [lead_path, 'templates', filesep, 'space', filesep, 'MNI_ICBM_2009b_NLIN_ASYM', filesep, allfiles{1}];
+    end
+
+    for i=2:length(allfiles)
+        if (exist([patient_path, filesep, allfiles{i}], 'file') == 2)
+            nfiles = nfiles + 1;
+        filenames{nfiles} = allfiles{i};
+            filepaths{nfiles} = [patient_path, filesep, allfiles{i}];
+        end
+    end
+end
 
 function txt = GetFileXML(index, filepath, name)
 
@@ -239,6 +284,61 @@ function txt = GetEnding()
     '<ScriptedModule id="vtkMRMLScriptedModuleNodeDataProbe" name="ScriptedModule" hideFromEditors="true" selectable="true" selected="false" singletonTag="DataProbe" ModuleName ="DataProbe"  ></ScriptedModule>',...
     '</SceneView>',...
     '<SceneViewStorage id="vtkMRMLSceneViewStorageNode1" name="SceneViewStorage" hideFromEditors="true" selectable="true" selected="false" fileName="Master Scene View.png" useCompression="1" defaultWriteFileExtension="png" readState="0" writeState="4" ></SceneViewStorage>',...
+    '</MRML>'
+    ];
+end
+
+function txt = GetFiducialBeginning()
+    txt = ['<MRML  version="Slicer4.4.0" userTags="">',...
+     '<Crosshair id="vtkMRMLCrosshairNodedefault" name="Crosshair" hideFromEditors="true" selectable="true" selected="false" singletonTag="default" crosshairMode="NoCrosshair" navigation="false" crosshairBehavior="JumpSlice" crosshairThickness="Fine" crosshairRAS="0 0 0"></Crosshair>\r\n',...
+     '<Selection id="vtkMRMLSelectionNodeSingleton" name="Selection" hideFromEditors="true" selectable="true" selected="false" singletonTag="Singleton" frequencyUnitNodeRef="vtkMRMLUnitNodeApplicationFrequency" intensityUnitNodeRef="vtkMRMLUnitNodeApplicationIntensity" lengthUnitNodeRef="vtkMRMLUnitNodeApplicationLength" timeUnitNodeRef="vtkMRMLUnitNodeApplicationTime" velocityUnitNodeRef="vtkMRMLUnitNodeApplicationVelocity" references="unit/frequency:vtkMRMLUnitNodeApplicationFrequency;unit/intensity:vtkMRMLUnitNodeApplicationIntensity;unit/length:vtkMRMLUnitNodeApplicationLength;unit/time:vtkMRMLUnitNodeApplicationTime;unit/velocity:vtkMRMLUnitNodeApplicationVelocity;" activeVolumeID="vtkMRMLScalarVolumeNode2" secondaryVolumeID="NULL" activeLabelVolumeID="NULL" activeFiducialListID="NULL" activePlaceNodeID="NULL" activePlaceNodeClassName="NULL" activeROIListID="NULL" activeCameraID="NULL" activeTableID="NULL" activeViewID="NULL" activeLayoutID="NULL" ></Selection>\r\n',...
+     '<Interaction id="vtkMRMLInteractionNodeSingleton" name="Interaction" hideFromEditors="true" selectable="true" selected="false" singletonTag="Singleton" currentInteractionMode="ViewTransform" placeModePersistence="false" lastInteractionMode="ViewTransform" ></Interaction>\r\n',...
+     '<View id="vtkMRMLViewNode1" name="View1" hideFromEditors="false" selectable="true" selected="false" singletonTag="1" attributes="MappedInLayout:1" layoutLabel="1" layoutName="1" active="false" visibility="true" backgroundColor="0 0 0" backgroundColor2="0 0 0" orientationMarkerType="none" orientationMarkerSize="medium" rulerType="none" AxisLabels="L;R;P;A;I;S" fieldOfView="200" letterSize="0.05" boxVisible="true" fiducialsVisible="true" fiducialLabelsVisible="true" axisLabelsVisible="true" axisLabelsCameraDependent="true" animationMode="Off" viewAxisMode="LookFrom" spinDegrees="2" spinMs="5" spinDirection="YawLeft" rotateDegrees="5" rockLength="200" rockCount="0" stereoType="NoStereo" renderMode="Perspective" useDepthPeeling="0" ></View>\r\n',...
+     '<Slice id="vtkMRMLSliceNodeRed" name="Red" hideFromEditors="false" selectable="true" selected="false" singletonTag="Red" attributes="MappedInLayout:1" layoutLabel="R" layoutName="Red" active="false" visibility="true" backgroundColor="0 0 0" backgroundColor2="0 0 0" orientationMarkerType="none" orientationMarkerSize="medium" rulerType="none" AxisLabels="L;R;P;A;I;S" fieldOfView="318.002 259.289 0.5" dimensions="1002 817 1" xyzOrigin="0 0 0" sliceResolutionMode="1" uvwExtents="318.002 259.289 0.5" uvwDimensions="256 256 1" uvwOrigin="0 0 0" activeSlice="0" layoutGridRows="1" layoutGridColumns="1" sliceToRAS="-1 0 0 1.77324e-006 0 1 0 -1.77324e-006 0 0 1 0 0 0 0 1" orientationMatrixAxial="-1 0 0 0 1 0 0 0 1" orientationMatrixSagittal="0 0 1 -1 0 0 0 1 0" orientationMatrixCoronal="-1 0 0 0 0 1 0 1 0" layoutColor="0.952941 0.290196 0.2" orientation="Axial" orientationReference="Axial" jumpMode="1" sliceVisibility="true" widgetVisibility="false" useLabelOutline="false" sliceSpacingMode="0" prescribedSliceSpacing="1 1 1" ></Slice>\r\n',...
+     '<Slice id="vtkMRMLSliceNodeYellow" name="Yellow" hideFromEditors="false" selectable="true" selected="false" singletonTag="Yellow" attributes="MappedInLayout:1" layoutLabel="Y" layoutName="Yellow" active="false" visibility="true" backgroundColor="0 0 0" backgroundColor2="0 0 0" orientationMarkerType="none" orientationMarkerSize="medium" rulerType="none" AxisLabels="L;R;P;A;I;S" fieldOfView="264.021 215.011 0.437" dimensions="1002 816 1" xyzOrigin="0 0 0" sliceResolutionMode="1" uvwExtents="264.021 215.011 0.437" uvwDimensions="256 256 1" uvwOrigin="0 0 0" activeSlice="0" layoutGridRows="1" layoutGridColumns="1" sliceToRAS="0 0 1 0.218502 -1 0 0 -1.77324e-006 0 1 0 0 0 0 0 1" orientationMatrixAxial="-1 0 0 0 1 0 0 0 1" orientationMatrixSagittal="0 0 1 -1 0 0 0 1 0" orientationMatrixCoronal="-1 0 0 0 0 1 0 1 0" layoutColor="0.929412 0.835294 0.298039" orientation="Sagittal" orientationReference="Sagittal" jumpMode="1" sliceVisibility="true" widgetVisibility="false" useLabelOutline="false" sliceSpacingMode="0" prescribedSliceSpacing="1 1 1" ></Slice>\r\n',...
+     '<Slice id="vtkMRMLSliceNodeGreen" name="Green" hideFromEditors="false" selectable="true" selected="false" singletonTag="Green" attributes="MappedInLayout:1" layoutLabel="G" layoutName="Green" active="false" visibility="true" backgroundColor="0 0 0" backgroundColor2="0 0 0" orientationMarkerType="none" orientationMarkerSize="medium" rulerType="none" AxisLabels="L;R;P;A;I;S" fieldOfView="264.021 215.011 0.437" dimensions="1002 816 1" xyzOrigin="0 0 0" sliceResolutionMode="1" uvwExtents="264.021 215.011 0.437" uvwDimensions="256 256 1" uvwOrigin="0 0 0" activeSlice="0" layoutGridRows="1" layoutGridColumns="1" sliceToRAS="-1 0 0 1.77324e-006 0 0 1 0.218498 0 1 0 0 0 0 0 1" orientationMatrixAxial="-1 0 0 0 1 0 0 0 1" orientationMatrixSagittal="0 0 1 -1 0 0 0 1 0" orientationMatrixCoronal="-1 0 0 0 0 1 0 1 0" layoutColor="0.431373 0.690196 0.294118" orientation="Coronal" orientationReference="Coronal" jumpMode="1" sliceVisibility="true" widgetVisibility="false" useLabelOutline="false" sliceSpacingMode="0" prescribedSliceSpacing="1 1 1" ></Slice>\r\n',...
+     '<Layout id="vtkMRMLLayoutNodevtkMRMLLayoutNode" name="Layout" hideFromEditors="true" selectable="true" selected="false" singletonTag="vtkMRMLLayoutNode" currentViewArrangement="3" guiPanelVisibility="1" bottomPanelVisibility ="1" guiPanelLR="0" collapseSliceControllers="0"',...
+     ' numberOfCompareViewRows="1" numberOfCompareViewColumns="1" numberOfLightboxRows="6" numberOfLightboxColumns="6" mainPanelSize="400" secondaryPanelSize="400" ></Layout>\r\n',...
+     '<SliceComposite id="vtkMRMLSliceCompositeNodeRed" name="SliceComposite" hideFromEditors="true" selectable="true" selected="false" singletonTag="Red" backgroundVolumeID="vtkMRMLScalarVolumeNode2" foregroundVolumeID="vtkMRMLScalarVolumeNode1" labelVolumeID="" compositing="0" foregroundOpacity="0.5" labelOpacity="1" linkedControl="1" fiducialVisibility="1" fiducialLabelVisibility="1" sliceIntersectionVisibility="0" layoutName="Red" annotationSpace="IJKAndRAS" annotationMode="All" doPropagateVolumeSelection="1" ></SliceComposite>\r\n',...
+     '<SliceComposite id="vtkMRMLSliceCompositeNodeYellow" name="SliceComposite_1" hideFromEditors="true" selectable="true" selected="false" singletonTag="Yellow" backgroundVolumeID="vtkMRMLScalarVolumeNode2" foregroundVolumeID="vtkMRMLScalarVolumeNode1" labelVolumeID="" compositing="0" foregroundOpacity="0.5" labelOpacity="1" linkedControl="1" fiducialVisibility="1" fiducialLabelVisibility="1" sliceIntersectionVisibility="0" layoutName="Yellow" annotationSpace="IJKAndRAS" annotationMode="All" doPropagateVolumeSelection="1" ></SliceComposite>\r\n',...
+     '<SliceComposite id="vtkMRMLSliceCompositeNodeGreen" name="SliceComposite_2" hideFromEditors="true" selectable="true" selected="false" singletonTag="Green" backgroundVolumeID="vtkMRMLScalarVolumeNode2" foregroundVolumeID="vtkMRMLScalarVolumeNode1" labelVolumeID="" compositing="0" foregroundOpacity="0.5" labelOpacity="1" linkedControl="1" fiducialVisibility="1" fiducialLabelVisibility="1" sliceIntersectionVisibility="0" layoutName="Green" annotationSpace="IJKAndRAS" annotationMode="All" doPropagateVolumeSelection="1" ></SliceComposite>\r\n',...
+     '<Camera id="vtkMRMLCameraNode1" name="Default Scene Camera" hideFromEditors="false" selectable="true" selected="false" userTags="" position="-174.789 463.886 65.26" focalPoint="0 0 0" viewUp="0.0301267 -0.128106 0.991303" parallelProjection="false" parallelScale="1" activetag="vtkMRMLViewNode1" appliedTransform="1 0 0 0  0 1 0 0  0 0 1 0  0 0 0 1" ></Camera>\r\n',...
+     '<SubjectHierarchy id="vtkMRMLSubjectHierarchyNode1" name="SubjectHierarchy" hideFromEditors="false" selectable="true" selected="false" attributes="SubjectHierarchyVersion:2" >\r\n',...
+       '<SubjectHierarchyItem id="3" name="Scene" parent="0" type="" expanded="true" attributes="Level^Scene|">\r\n',...
+         '<SubjectHierarchyItem id="9" dataNode="vtkMRMLScalarVolumeNode1" parent="3" type="Volumes" expanded="true"></SubjectHierarchyItem>\r\n',...
+         '<SubjectHierarchyItem id="12" dataNode="vtkMRMLScalarVolumeNode2" parent="3" type="Volumes" expanded="true"></SubjectHierarchyItem>\r\n',...
+         '<SubjectHierarchyItem id="13" dataNode="vtkMRMLSceneViewNode1" parent="3" type="SceneViews" expanded="true"></SubjectHierarchyItem>\r\n',...
+         '<SubjectHierarchyItem id="15" expanded="true" type="Markups" parent="3" dataNode="vtkMRMLMarkupsFiducialNode1"></SubjectHierarchyItem></SubjectHierarchyItem></SubjectHierarchy>\r\n',...
+     '<ClipModels id="vtkMRMLClipModelsNodevtkMRMLClipModelsNode" name="ClipModels" hideFromEditors="true" selectable="true" selected="false" singletonTag="vtkMRMLClipModelsNode" clipType="0" redSliceClipState="0" yellowSliceClipState="0" greenSliceClipState="0" ></ClipModels>\r\n',...
+     '<ScriptedModule id="vtkMRMLScriptedModuleNodeDataProbe" name="ScriptedModule" hideFromEditors="true" selectable="true" selected="false" singletonTag="DataProbe" ModuleName ="DataProbe" ></ScriptedModule>\r\n'...
+     ];
+end
+
+function txt = GetFiducialEnding()
+    txt = ['<SceneView id="vtkMRMLSceneViewNode1" name="Master Scene View" hideFromEditors="false" selectable="true" selected="false" storageNodeRef="vtkMRMLSceneViewStorageNode1" references="storage:vtkMRMLSceneViewStorageNode1;" userTags="" screenshotType="4" sceneViewDescription="Scene at MRML file save point" >  <Crosshair',...
+    ' id="vtkMRMLCrosshairNodedefault" name="Crosshair" hideFromEditors="true" selectable="true" selected="false" singletonTag="default" crosshairMode="NoCrosshair" navigation="false" crosshairBehavior="JumpSlice" crosshairThickness="Fine" crosshairRAS="0 0 0"  ></Crosshair>',...
+    '<Selection id="vtkMRMLSelectionNodeSingleton" name="Selection" hideFromEditors="true" selectable="true" selected="false" singletonTag="Singleton" frequencyUnitNodeRef="vtkMRMLUnitNodeApplicationFrequency" intensityUnitNodeRef="vtkMRMLUnitNodeApplicationIntensity" lengthUnitNodeRef="vtkMRMLUnitNodeApplicationLength" timeUnitNodeRef="vtkMRMLUnitNodeApplicationTime" velocityUnitNodeRef="vtkMRMLUnitNodeApplicationVelocity" references="unit/frequency:vtkMRMLUnitNodeApplicationFrequency;unit/intensity:vtkMRMLUnitNodeApplicationIntensity;unit/length:vtkMRMLUnitNodeApplicationLength;unit/time:vtkMRMLUnitNodeApplicationTime;unit/velocity:vtkMRMLUnitNodeApplicationVelocity;" activeVolumeID="vtkMRMLScalarVolumeNode2" secondaryVolumeID="vtkMRMLScalarVolumeNode2" activeLabelVolumeID="NULL" activeFiducialListID="NULL" activePlaceNodeID="NULL" activePlaceNodeClassName="NULL" activeROIListID="NULL" activeCameraID="NULL" activeTableID="NULL" activeViewID="NULL" activeLayoutID="NULL"  ></Selection>',...
+    '<Interaction id="vtkMRMLInteractionNodeSingleton" name="Interaction" hideFromEditors="true" selectable="true" selected="false" singletonTag="Singleton" currentInteractionMode="ViewTransform" placeModePersistence="false" lastInteractionMode="ViewTransform"  ></Interaction>',...
+    '<View id="vtkMRMLViewNode1" name="View1" hideFromEditors="false" selectable="true" selected="false" singletonTag="1" attributes="MappedInLayout:1" layoutLabel="1" layoutName="1" active="false" visibility="true" backgroundColor="0 0 0" backgroundColor2="0 0 0" orientationMarkerType="none" orientationMarkerSize="medium" rulerType="none" AxisLabels="L;R;P;A;I;S" fieldOfView="200" letterSize="0.05" boxVisible="true" fiducialsVisible="true" fiducialLabelsVisible="true" axisLabelsVisible="true" axisLabelsCameraDependent="true" animationMode="Off" viewAxisMode="LookFrom" spinDegrees="2" spinMs="5" spinDirection="YawLeft" rotateDegrees="5" rockLength="200" rockCount="0" stereoType="NoStereo" renderMode="Perspective" useDepthPeeling="0"  ></View>',...
+    '<Slice id="vtkMRMLSliceNodeRed" name="Red" hideFromEditors="false" selectable="true" selected="false" singletonTag="Red" attributes="MappedInLayout:1" layoutLabel="R" layoutName="Red" active="false" visibility="true" backgroundColor="0 0 0" backgroundColor2="0 0 0" orientationMarkerType="none" orientationMarkerSize="medium" rulerType="none" AxisLabels="L;R;P;A;I;S" fieldOfView="318.002 259.289 0.5" dimensions="1002 817 1" xyzOrigin="0 0 0" sliceResolutionMode="1" uvwExtents="318.002 259.289 0.5" uvwDimensions="256 256 1" uvwOrigin="0 0 0" activeSlice="0" layoutGridRows="1" layoutGridColumns="1" sliceToRAS="-1 0 0 1.77324e-006 0 1 0 -1.77324e-006 0 0 1 0 0 0 0 1" orientationMatrixAxial="-1 0 0 0 1 0 0 0 1" orientationMatrixSagittal="0 0 1 -1 0 0 0 1 0" orientationMatrixCoronal="-1 0 0 0 0 1 0 1 0" layoutColor="0.952941 0.290196 0.2" orientation="Axial" orientationReference="Axial" jumpMode="1" sliceVisibility="true" widgetVisibility="false" useLabelOutline="false" sliceSpacingMode="0" prescribedSliceSpacing="1 1 1"  ></Slice>',...
+    '<Slice id="vtkMRMLSliceNodeYellow" name="Yellow" hideFromEditors="false" selectable="true" selected="false" singletonTag="Yellow" attributes="MappedInLayout:1" layoutLabel="Y" layoutName="Yellow" active="false" visibility="true" backgroundColor="0 0 0" backgroundColor2="0 0 0" orientationMarkerType="none" orientationMarkerSize="medium" rulerType="none" AxisLabels="L;R;P;A;I;S" fieldOfView="264.021 215.011 0.437" dimensions="1002 816 1" xyzOrigin="0 0 0" sliceResolutionMode="1" uvwExtents="264.021 215.011 0.437" uvwDimensions="256 256 1" uvwOrigin="0 0 0" activeSlice="0" layoutGridRows="1" layoutGridColumns="1" sliceToRAS="0 0 1 0.218502 -1 0 0 -1.77324e-006 0 1 0 0 0 0 0 1" orientationMatrixAxial="-1 0 0 0 1 0 0 0 1" orientationMatrixSagittal="0 0 1 -1 0 0 0 1 0" orientationMatrixCoronal="-1 0 0 0 0 1 0 1 0" layoutColor="0.929412 0.835294 0.298039" orientation="Sagittal" orientationReference="Sagittal" jumpMode="1" sliceVisibility="true" widgetVisibility="false" useLabelOutline="false" sliceSpacingMode="0" prescribedSliceSpacing="1 1 1"  ></Slice>',...
+    '<Slice id="vtkMRMLSliceNodeGreen" name="Green" hideFromEditors="false" selectable="true" selected="false" singletonTag="Green" attributes="MappedInLayout:1" layoutLabel="G" layoutName="Green" active="false" visibility="true" backgroundColor="0 0 0" backgroundColor2="0 0 0" orientationMarkerType="none" orientationMarkerSize="medium" rulerType="none" AxisLabels="L;R;P;A;I;S" fieldOfView="264.021 215.011 0.437" dimensions="1002 816 1" xyzOrigin="0 0 0" sliceResolutionMode="1" uvwExtents="264.021 215.011 0.437" uvwDimensions="256 256 1" uvwOrigin="0 0 0" activeSlice="0" layoutGridRows="1" layoutGridColumns="1" sliceToRAS="-1 0 0 1.77324e-006 0 0 1 0.218498 0 1 0 0 0 0 0 1" orientationMatrixAxial="-1 0 0 0 1 0 0 0 1" orientationMatrixSagittal="0 0 1 -1 0 0 0 1 0" orientationMatrixCoronal="-1 0 0 0 0 1 0 1 0" layoutColor="0.431373 0.690196 0.294118" orientation="Coronal" orientationReference="Coronal" jumpMode="1" sliceVisibility="true" widgetVisibility="false" useLabelOutline="false" sliceSpacingMode="0" prescribedSliceSpacing="1 1 1"  ></Slice>',...
+    '<Layout id="vtkMRMLLayoutNodevtkMRMLLayoutNode" name="Layout" hideFromEditors="true" selectable="true" selected="false" singletonTag="vtkMRMLLayoutNode" currentViewArrangement="3" guiPanelVisibility="1" bottomPanelVisibility ="1" guiPanelLR="0" collapseSliceControllers="0"',...
+    ' numberOfCompareViewRows="1" numberOfCompareViewColumns="1" numberOfLightboxRows="6" numberOfLightboxColumns="6" mainPanelSize="400" secondaryPanelSize="400"  ></Layout>',...
+    '<SliceComposite id="vtkMRMLSliceCompositeNodeRed" name="SliceComposite" hideFromEditors="true" selectable="true" selected="false" singletonTag="Red" backgroundVolumeID="vtkMRMLScalarVolumeNode2" foregroundVolumeID="vtkMRMLScalarVolumeNode1" labelVolumeID="" compositing="0" foregroundOpacity="0.5" labelOpacity="1" linkedControl="1" fiducialVisibility="1" fiducialLabelVisibility="1" sliceIntersectionVisibility="0" layoutName="Red" annotationSpace="IJKAndRAS" annotationMode="All" doPropagateVolumeSelection="1"  ></SliceComposite>',...
+    '<SliceComposite id="vtkMRMLSliceCompositeNodeYellow" name="SliceComposite_1" hideFromEditors="true" selectable="true" selected="false" singletonTag="Yellow" backgroundVolumeID="vtkMRMLScalarVolumeNode2" foregroundVolumeID="vtkMRMLScalarVolumeNode1" labelVolumeID="" compositing="0" foregroundOpacity="0.5" labelOpacity="1" linkedControl="1" fiducialVisibility="1" fiducialLabelVisibility="1" sliceIntersectionVisibility="0" layoutName="Yellow" annotationSpace="IJKAndRAS" annotationMode="All" doPropagateVolumeSelection="1"  ></SliceComposite>',...
+    '<SliceComposite id="vtkMRMLSliceCompositeNodeGreen" name="SliceComposite_2" hideFromEditors="true" selectable="true" selected="false" singletonTag="Green" backgroundVolumeID="vtkMRMLScalarVolumeNode2" foregroundVolumeID="vtkMRMLScalarVolumeNode1" labelVolumeID="" compositing="0" foregroundOpacity="0.5" labelOpacity="1" linkedControl="1" fiducialVisibility="1" fiducialLabelVisibility="1" sliceIntersectionVisibility="0" layoutName="Green" annotationSpace="IJKAndRAS" annotationMode="All" doPropagateVolumeSelection="1"  ></SliceComposite>',...
+    '<Camera id="vtkMRMLCameraNode1" name="Default Scene Camera" hideFromEditors="false" selectable="true" selected="false" userTags="" position="-174.789 463.886 65.26" focalPoint="0 0 0" viewUp="0.0301267 -0.128106 0.991303" parallelProjection="false" parallelScale="1" activetag="vtkMRMLViewNode1" appliedTransform="1 0 0 0  0 1 0 0  0 0 1 0  0 0 0 1"  ></Camera>',...
+    '<ClipModels id="vtkMRMLClipModelsNodevtkMRMLClipModelsNode" name="ClipModels" hideFromEditors="true" selectable="true" selected="false" singletonTag="vtkMRMLClipModelsNode" clipType="0" redSliceClipState="0" yellowSliceClipState="0" greenSliceClipState="0"  ></ClipModels>',...
+    '<ScriptedModule id="vtkMRMLScriptedModuleNodeDataProbe" name="ScriptedModule" hideFromEditors="true" selectable="true" selected="false" singletonTag="DataProbe" ModuleName ="DataProbe"  ></ScriptedModule>\r\n',...
+    '<MarkupsFiducialStorage selected="false" selectable="true" hideFromEditors="true" name="MarkupsFiducialStorage" id="vtkMRMLMarkupsFiducialStorageNode1" writeState="0" readState="0" defaultWriteFileExtension="fcsv" useCompression="1" fileName="SlicerElectrodes.fcsv" coordinateSystem="0"></MarkupsFiducialStorage>\r\n',...
+    '<MarkupsFiducial userTags="" selected="false" selectable="true" hideFromEditors="false" name="SlicerElectrodes" id="vtkMRMLMarkupsFiducialNode1" references="display:vtkMRMLMarkupsDisplayNode1;storage:vtkMRMLMarkupsFiducialStorageNode1;" storageNodeRef="vtkMRMLMarkupsFiducialStorageNode1" displayNodeRef="vtkMRMLMarkupsDisplayNode1" markupLabelFormat="%%N-%%d" locked="0"></MarkupsFiducial>\r\n'...
+    '<MarkupsDisplay selected="false" selectable="true" hideFromEditors="true" name="MarkupsDisplay" id="vtkMRMLMarkupsDisplayNode1" visibility="true" sliceIntersectionVisibility="false" scalarRange="0 100" scalarRangeFlag="UseData" interpolateTexture="false" tensorVisibility="false" vectorVisibility="false" scalarVisibility="false" backfaceCulling="true" frontfaceCulling="false" sliceIntersectionThickness="1" clipping="false" edgeVisibility="false" shading="true" interpolation="1" lighting="true" representation="2" lineWidth="1" pointSize="1" sliceIntersectionOpacity="1" opacity="1" power="1" specular="0" selectedSpecular="0.5" diffuse="1" ambient="0" selectedAmbient="0.4" selectedColor="1 0.500008 0.500008" edgeColor="0 0 0" color="0.4 1 1" sliceProjectionOpacity="0.6" sliceProjectionColor="1 1 1" sliceProjection="7" glyphType="13" glyphScale="1.6" textScale="1.7"></MarkupsDisplay>\r\n',...
+    '</SceneView>\r\n',...
+    '<SceneViewStorage id="vtkMRMLSceneViewStorageNode1" name="SceneViewStorage" hideFromEditors="true" selectable="true" selected="false" fileName="Master Scene View.png" useCompression="1" defaultWriteFileExtension="png" readState="0" writeState="4" ></SceneViewStorage>\r\n',...
+    '<MarkupsFiducialStorage selected="false" selectable="true" hideFromEditors="true" name="MarkupsFiducialStorage" id="vtkMRMLMarkupsFiducialStorageNode1" writeState="0" readState="0" defaultWriteFileExtension="fcsv" useCompression="1" fileName="SlicerElectrodes.fcsv" coordinateSystem="0"></MarkupsFiducialStorage>\r\n',...
+    '<MarkupsFiducial userTags="" selected="false" selectable="true" hideFromEditors="false" name="SlicerElectrodes" id="vtkMRMLMarkupsFiducialNode1" references="display:vtkMRMLMarkupsDisplayNode1;storage:vtkMRMLMarkupsFiducialStorageNode1;" storageNodeRef="vtkMRMLMarkupsFiducialStorageNode1" displayNodeRef="vtkMRMLMarkupsDisplayNode1" markupLabelFormat="%%N-%%d" locked="0"></MarkupsFiducial>\r\n',...
+    '<MarkupsDisplay selected="false" selectable="true" hideFromEditors="true" name="MarkupsDisplay" id="vtkMRMLMarkupsDisplayNode1" visibility="true" sliceIntersectionVisibility="false" scalarRange="0 100" scalarRangeFlag="UseData" interpolateTexture="false" tensorVisibility="false" vectorVisibility="false" scalarVisibility="false" backfaceCulling="true" frontfaceCulling="false" sliceIntersectionThickness="1" clipping="false" edgeVisibility="false" shading="true" interpolation="1" lighting="true" representation="2" lineWidth="1" pointSize="1" sliceIntersectionOpacity="1" opacity="1" power="1" specular="0" selectedSpecular="0.5" diffuse="1" ambient="0" selectedAmbient="0.4" selectedColor="1 0.500008 0.500008" edgeColor="0 0 0" color="0.4 1 1" sliceProjectionOpacity="0.6" sliceProjectionColor="1 1 1" sliceProjection="7" glyphType="13" glyphScale="1.6" textScale="1.7"></MarkupsDisplay>\r\n',...
     '</MRML>'
     ];
 end
