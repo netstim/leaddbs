@@ -1,15 +1,18 @@
-function ea_screenshot(outn)
-
-warning('off');
-export_fig(outn,'-png','-m2.5','-a4','-transparent');
-warning('on');
-% 
-% 
-% set(gcf, 'Color', [1,1,1]);
-% [~, cdata] = myaa_hd([4, 2]);
-% 
-% imwrite(cdata, outn, 'png');
-
+function ea_screenshot(outn,method)
+if ~exist('method','var')
+    method='exportfig';
+end
+switch method
+    case 'exportfig'
+        warning('off');
+        export_fig(outn,'-png','-m2.5','-a4','-transparent');
+        warning('on');
+    case 'myaa'
+        set(gcf, 'Color', [1,1,1]);
+        [~, cdata] = myaa_hd([4, 2]);
+        
+        imwrite(cdata, outn, 'png');
+end
 
 function res=zminus(A,B)
 res=A-B;

@@ -401,11 +401,11 @@ for side=1:length(options.sides)
                 switch tracor
                     case 1
                         %saveas(cuts,[options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial.png']);
-                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial',isofnadd,'.png']);
+                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial',isofnadd,'.png'],'myaa');
                     case 2
-                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_coronar',isofnadd,'.png']);
+                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_coronar',isofnadd,'.png'],'myaa');
                     case 3
-                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_sagittal',isofnadd,'.png']);
+                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_sagittal',isofnadd,'.png'],'myaa');
                 end
             end
             

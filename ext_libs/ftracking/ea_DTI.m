@@ -39,7 +39,7 @@ voxel0=0; voxelg=0;
 
 
 for i=1:length(DTIdata)
-    if(nnz(DTIdata(i).Gradient(:)==[0;0;0])==3) || DTIdata(i).Bvalue<10 
+    if(nnz(DTIdata(i).Gradient(:)==[0;0;0])==3) || DTIdata(i).Bvalue<101
         voxel0=voxel0+1;
         S0=S0+single(DTIdata(i).VoxelData);
     else

@@ -126,19 +126,27 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         for pt=1:length(elstruct)
             % show electrodes..
             try
-                for side=options.sides
-                    popts=options;
-                    if strcmp(options.leadprod,'group')
-                        try
-                            directory=[options.patient_list{elstruct(pt).pt},filesep];
-                            [popts.root,popts.patientname]=fileparts(directory);
-                            popts.root=[popts.root,filesep];
-                        catch
-                            directory=[options.root,options.patientname,filesep];
-                        end
-                    else
+                
+                popts=options;
+                if strcmp(options.leadprod,'group')
+                    try
+                        directory=[options.patient_list{elstruct(pt).pt},filesep];
+                        [popts.root,popts.patientname]=fileparts(directory);
+                        popts.root=[popts.root,filesep];
+                    catch
                         directory=[options.root,options.patientname,filesep];
                     end
+                    
+                    popts=ea_detsides(popts);
+                    
+                else
+                    directory=[options.root,options.patientname,filesep];
+                end
+                
+                itersides=popts.sides;
+
+                for side=itersides
+                    
 
                     try
                         pobj=ea_load_trajectory(directory,side);
@@ -146,6 +154,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                         pobj.showPlanning=strcmp(options.leadprod,'or');
                     end
 
+      
+                    
                     pobj.options=popts;
                     pobj.elstruct=elstruct(pt);
                     pobj.showMacro=1;
