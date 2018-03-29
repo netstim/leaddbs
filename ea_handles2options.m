@@ -331,8 +331,11 @@ try
     options.predict.stimulation=options.predict.stimulation{handles.seeddefpopup.Value};
 end
 try
-options.ecog.extractsurface=get(handles.extractsurface,'Value');
-options.ecog.localize=get(handles.localizeecog,'Value');
+    options.ecog.extractsurface.do=get(handles.extractsurface,'Value');
+    options.ecog.extractsurface.method=get(handles.surfacemethod,'Value');
+    %options.ecog.localize=get(handles.localizeecog,'Value');
+catch
+    options.ecog.extractsurface.do=0;
 end
 
 function sides=ea_assignsides(handles)
