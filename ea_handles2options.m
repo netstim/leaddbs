@@ -332,7 +332,7 @@ try
 end
 try
     options.ecog.extractsurface.do=get(handles.extractsurface,'Value');
-    options.ecog.extractsurface.method=get(handles.surfacemethod,'Value');
+    options.ecog.extractssurface.method=get(handles.surfacemethod,'Value');
     %options.ecog.localize=get(handles.localizeecog,'Value');
 catch
     options.ecog.extractsurface.do=0;
