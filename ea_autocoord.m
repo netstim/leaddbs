@@ -209,6 +209,7 @@ if options.ecog.extractsurface.do
            if ~hastb
                ea_error('CAT12 needs to be installed to the SPM toolbox directory');
            end
+           ea_cat_seg(options);
        case 2 % FS
            hastb=ea_hastoolbox('freesurfer');
            
