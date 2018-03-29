@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 28-Mar-2018 14:57:29
+% Last Modified by GUIDE v2.5 29-Mar-2018 08:22:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1610,9 +1610,9 @@ if isfield(handles,'atlassetpopup') % not present in connectome mapper
     ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
 end
 
-% --- Executes on button press in runslicer_original.
-function runslicer_original_Callback(hObject, eventdata, handles)
-% hObject    handle to runslicer_original (see GCBO)
+% --- Executes on button press in slicer_original.
+function slicer_original_Callback(hObject, eventdata, handles)
+% hObject    handle to slicer_original (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options = ea_handles2options(handles);
@@ -1641,6 +1641,17 @@ options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 options.leadprod = 'dbs';
 ea_runslicer(options, 3);
+
+
+% --- Executes on button press in slicer_contact.
+function slicer_contact_Callback(hObject, eventdata, handles)
+% hObject    handle to slicer_contact (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+options = ea_handles2options(handles);
+options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
+options.leadprod = 'dbs';
+ea_runslicer(options, 4);
 
 
 % --- Executes on button press in side1.
@@ -1812,14 +1823,3 @@ function localizeecog_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of localizeecog
-
-
-% --- Executes on button press in slicer_normalize.
-function slicer_normalize_Callback(hObject, eventdata, handles)
-% hObject    handle to slicer_normalize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-options = ea_handles2options(handles);
-options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
-options.leadprod = 'dbs';
-ea_runslicer(options, 4);
