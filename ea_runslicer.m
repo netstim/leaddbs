@@ -14,8 +14,9 @@ function ea_runslicer(options, task)
 %  Things to note: user must set the path of the slicer executable. It would
 %  be nice if there was an easy method to determine the path automatically.
 
-    options.prefs = ea_prefs('');
+    ea_hastoolbox('slicer');
 
+    options.prefs = ea_prefs('');
     if ~isfield(options.prefs, 'slicer')
         warning(sprintf('3D Slicer path not set!\nPlease set ''prefs.slicer.dir'' in your preference file.'))
         return;

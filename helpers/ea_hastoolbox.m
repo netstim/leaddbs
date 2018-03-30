@@ -64,6 +64,19 @@ switch cmd
         setenv('PATH', [getenv('PATH') ':',options.prefs.fsldir,'bin']);
     case 'cat'
         success=exist([spm('dir'),filesep,'toolbox',filesep,'cat12'],'dir');
+    case 'slicer'
+        options.prefs=ea_prefs;
+        while ~isfield(options.prefs,'slicer') || isempty(options.prefs.slicer.dir)
+            msgbox('3DSlicer installation not set properly, please select 3DSlicer in the next step.');
+            [fn,pth]=uigetfile('','Please select 3DSlicer application');
+            if ~ischar(fn) % user pressed cancel
+                return
+            end
+                success=1;
+                ea_injectprefstring(['prefs.slicer.dir=''',fullfile(pth,fn),''';']);
+            options.prefs=ea_prefs;
+        end
+        success=1;
 end
 
 
