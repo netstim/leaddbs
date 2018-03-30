@@ -4,7 +4,7 @@ switch cmd
     case 'freesurfer'
         
         if ispc
-           msgbox('Freesurfer is not available for Windows.'); 
+           errordlg('Freesurfer is not available for Windows.'); 
            return
         end
         
@@ -12,7 +12,8 @@ switch cmd
         
         options.prefs=ea_prefs;
         while ~isfield(options.prefs,'fspath')
-            msgbox('FreeSurfer installation not set properly, please select FreeSurfer base folder in the next step.');
+            errordlg('FreeSurfer installation not set properly, please select FreeSurfer base folder in the next step.');
+            uiwait
             pth=uigetdir('','Please select freesurfer installation folder');
             if ~ischar(pth) % user pressed cancel
                 return
@@ -37,14 +38,15 @@ switch cmd
         
     case 'fsl'
         if ispc
-            msgbox('FSL is not available for Windows.');
+            errordlg('FSL is not available for Windows.');
             return
         end
         
         
         options.prefs=ea_prefs;
         while ~isfield(options.prefs,'fsldir')
-            msgbox('FSL installation not set properly, please select FSL base folder in the next step.');
+            errordlg('FSL installation not set properly, please select FSL base folder in the next step.');
+            uiwait
             pth=uigetdir('','Please select FSL installation folder');
             if ~ischar(pth) % user pressed cancel
                 return
@@ -65,10 +67,12 @@ switch cmd
     case 'cat'
         success=exist([spm('dir'),filesep,'toolbox',filesep,'cat12'],'dir');
     case 'slicer'
+        checkslicerstandard;
         options.prefs=ea_prefs;
         while ~isfield(options.prefs,'slicer') || isempty(options.prefs.slicer.dir)
-            msgbox('3DSlicer installation not set properly, please select 3DSlicer in the next step.');
-            [fn,pth]=uigetfile('','Please select 3DSlicer application');
+            errordlg('3DSlicer installation not set properly, please select 3DSlicer in the next step.');
+            uiwait
+            [fn,pth]=uigetfile('*.*','Please select 3DSlicer application');
             if ~ischar(fn) % user pressed cancel
                 return
             end
@@ -93,8 +97,15 @@ if ismac
 end
         
         
-        
-        
+      
+
+function checkslicerstandard % check if standard installations exist.
+
+if ismac
+    if exist(fullfile('/Applications','Slicer.app'),'file')
+       ea_injectprefstring(['prefs.slicer.dir=''',fullfile('/Applications','Slicer.app'),''';']);
+    end
+end
         
         
         
