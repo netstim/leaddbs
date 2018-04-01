@@ -18,6 +18,15 @@ for pt=1:length(uipatdir)
          case 'PLY'
             ea_pat2ply(uipatdir{pt},handles);
         case 'LS'
-            ea_pat2ls(uipatdir{pt},handles);
+            ea_exportpat([],[],'ZIP',handles);
+            %ea_pat2ls(uipatdir{pt},handles);
+        case 'ZIP'
+            ea_pat2ply(uipatdir{pt},handles);
+            ea_screenshots(uipatdir{pt},handles);
+            [~,ptname]=fileparts(uipatdir{pt});
+            zip([uipatdir{pt},filesep,'export',filesep,'zip',filesep,ptname,'.zip'],...
+                {[uipatdir{pt},filesep,'export',filesep,'ply',filesep,'combined_scene.ply'],...
+                [uipatdir{pt},filesep,'export',filesep,'views']},...
+                [uipatdir{pt},filesep,'export',filesep]);
     end
 end

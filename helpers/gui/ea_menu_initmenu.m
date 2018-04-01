@@ -75,6 +75,7 @@ if isempty(menuprobe)
         uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles},'Accelerator','E');
         uimenu(e,'Label','Export .STL files for selected patient(s)','Callback',{@ea_exportpat,'STL',handles});
         uimenu(e,'Label','Export .PLY files for selected patient(s)','Callback',{@ea_exportpat,'PLY',handles});
+        uimenu(e,'Label','Export .zip files for selected patient(s)','Callback',{@ea_exportpat,'ZIP',handles});
         uimenu(e,'Label','Export Reconstruction to webserver for selected patient(s)','Callback',{@ea_exportpat,'LS',handles});
 
         d = uimenu(f,'Label','Convert');

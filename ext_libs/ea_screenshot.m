@@ -3,9 +3,17 @@ if ~exist('method','var')
     method='exportfig';
 end
 switch method
-    case 'exportfig'
+    case {'exportfig','ld','hd','transparent'}
         warning('off');
-        export_fig(outn,'-png','-m2.5','-a4','-transparent');
+        if strcmp(method,'ld')
+            export_fig(outn,'-m1','-a4');
+        else
+            if  strcmp(method,'transparent')
+                export_fig(outn,'-m2.5','-a4','-transparent');
+            else
+                export_fig(outn,'-m2.5','-a4');
+            end
+        end
         warning('on');
     case 'myaa'
         set(gcf, 'Color', [1,1,1]);

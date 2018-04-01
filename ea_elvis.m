@@ -37,7 +37,7 @@ ssz=get(0,'Screensize');
 ssz(1:2)=ssz(1:2)+50;
 ssz(3:4)=ssz(3:4)-200;
 set(resultfig, 'Position', ssz); % Maximize figure.
-
+options.d3.exportBB=0;
 % initialize some ui elements
 ht=uitoolbar(resultfig);
 setappdata(resultfig,'ht',ht);
