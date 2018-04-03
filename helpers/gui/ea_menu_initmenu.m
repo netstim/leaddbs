@@ -75,9 +75,14 @@ if isempty(menuprobe)
         uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles},'Accelerator','E');
         uimenu(e,'Label','Export .STL files for selected patient(s)','Callback',{@ea_exportpat,'STL',handles});
         uimenu(e,'Label','Export .PLY files for selected patient(s)','Callback',{@ea_exportpat,'PLY',handles});
-        uimenu(e,'Label','Export .zip files for selected patient(s)','Callback',{@ea_exportpat,'ZIP',handles});
-        uimenu(e,'Label','Export Reconstruction to webserver for selected patient(s)','Callback',{@ea_exportpat,'LS',handles});
-
+        viewsets=load([ea_getearoot,'helpers',filesep,'export',filesep,'ea_exportviews']);
+        fn=fieldnames(viewsets);
+        z=uimenu(e,'Label','Export .zip files for selected patient(s)');
+        lsm=uimenu(e,'Label','Export Reconstruction to webserver for selected patient(s)');
+        for fis=1:length(fn)
+            uimenu(z,'Label',fn{fis},'Callback',{@ea_exportpat,'ZIP',handles,fn{fis}});
+            uimenu(lsm,'Label',fn{fis},'Callback',{@ea_exportpat,'LS',handles,fn{fis}});
+        end
         d = uimenu(f,'Label','Convert');
         uimenu(d,'Label','Convert selected atlas to .STL','Callback',{@ea_exportatlas,'STL',handles});
         uimenu(d,'Label','Convert selected atlas to .PLY','Callback',{@ea_exportatlas,'PLY',handles});

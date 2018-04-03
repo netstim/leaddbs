@@ -1,4 +1,4 @@
-function ea_screenshots(uipatdir,handles)
+function ea_screenshots(uipatdir,handles,target)
 
 
 
@@ -16,14 +16,17 @@ options.d3.elrendering=1;
 options.d3.hlactivecontacts=0;
 options.d3.writeatlases=1;
 options.d3.showisovolume=0;
-options.atlasset=get(handles.atlassetpopup,'String');
-options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
+viewsets=load([ea_getearoot,'helpers',filesep,'export',filesep,'ea_exportviews']);
+options.atlasset=viewsets.(target).atlas;
+options.sidecolor=1;
 options.writeoutstats=0;
 resultfig=ea_elvis(options);
-load([ea_getearoot,'helpers',filesep,'export',filesep,'ea_exportviews']);
+
 if ~exist([options.root,options.patientname,filesep,'export',filesep,'views'],'dir')
     mkdir([options.root,options.patientname,filesep,'export',filesep,'views']);
 end
+
+views=viewsets.(target).views;
 for view=1:length(views)
     set(0,'CurrentFigure',resultfig);
     ea_keepatlaslabels( views(view).structures{:});

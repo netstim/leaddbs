@@ -10,12 +10,12 @@ trajectory=elstruct.trajectory;
 
 
 if ~isfield(elstruct,'elmodel') % usually, elspec is defined by the GUI. In case of group analyses, for each patient, a different electrode model can be selected for rendering.
-
+    
     elspec=options.elspec;
 else % if elspec is defined for each electrode, overwrite options-struct settings here.
     o=ea_resolve_elspec(elstruct);
     elspec=o.elspec; clear o
-
+    
 end
 
 if ~isfield(elstruct,'activecontacts')
@@ -35,7 +35,7 @@ end
 
 for side=options.sides
     trajvector=mean(diff(trajectory{side}));
-
+    
     trajvector=trajvector/norm(trajvector);
     try
         startpoint=trajectory{side}(1,:)-(2*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
@@ -43,16 +43,16 @@ for side=options.sides
         keyboard
     end
     if options.d3.elrendering<3
-
+        
         set(0,'CurrentFigure',resultfig);
-
+        
         % draw patientname
         lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
         ellabel=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
-
+        
         % draw trajectory
         cnt=1;
-
+        
         err=1;
         for tries=1:2
             [X,electrode,err]=ea_mapelmodel2reco(options,elspec,elstruct,side,resultfig);
@@ -60,14 +60,14 @@ for side=options.sides
                 break
             else
                 try
-                if ~isfield(options,'patient_list') % single subject mode
-                    [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.root,options.patientname],options);
-                else
-                    [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.patient_list{pt},filesep],options);
-                end
-                elstruct.markers=markers;
-                elstruct.coords_mm=coords_mm;
-                elstruct.trajectory=trajectory;
+                    if ~isfield(options,'patient_list') % single subject mode
+                        [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.root,options.patientname],options);
+                    else
+                        [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.patient_list{pt},filesep],options);
+                    end
+                    elstruct.markers=markers;
+                    elstruct.coords_mm=coords_mm;
+                    elstruct.trajectory=trajectory;
                 catch
                     warning(['There seems to be some inconsistency with the reconstruction of ',options.patientname,' that could not be automatically resolved. Please check data of this patient.']);
                 end
@@ -81,23 +81,34 @@ for side=options.sides
         elseif options.d3.elrendering==1 % show a solid electrode.
             aData=1;
         end
-
+        
         for ins=1:length(electrode.insulation)
             electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
             electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.insulation(ins));
-
-            if isfield(elstruct,'group')
-
-                usecolor=elstruct.groupcolors(elstruct.group,:);
-
+            
+            if isfield(options,'sidecolor')
+                switch side
+                    case 1
+                        usecolor=[ 0.9797    0.9831    0.5185];
+                    case 2
+                        usecolor=[ 0.4271    0.7082    0.8199];
+                    otherwise
+                        usecolor=elspec.lead_color;
+                end
             else
-                usecolor=elspec.lead_color;
+                if isfield(elstruct,'group')
+                    
+                    usecolor=elstruct.groupcolors(elstruct.group,:);
+                    
+                else
+                    usecolor=elspec.lead_color;
+                end
             end
             specsurf(elrender(cnt),usecolor,aData);
             cnt=cnt+1;
         end
-
+        
         for con=1:length(electrode.contacts)
             electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
@@ -114,37 +125,37 @@ for side=options.sides
             end
             cnt=cnt+1;
         end
-
+        
     else % simply draw pointcloud
         shifthalfup=0;
         % check if isomatrix needs to be expanded from single vector by using stimparams:
-
+        
         try % sometimes isomatrix not defined.
             if size(options.d3.isomatrix{1}{1},2)==elspec.numel-1 % 3 contact pairs
                 shifthalfup=1;
             elseif size(options.d3.isomatrix{1}{1},2)==elspec.numel % 4 contacts
                 shifthalfup=0;
             else
-
+                
                 ea_error('Isomatrix has wrong size. Please specify a correct matrix.')
             end
         end
-
+        
         if options.d3.prolong_electrode
             startpoint=trajectory{side}(1,:)-(options.d3.prolong_electrode*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
         else
             startpoint=trajectory{side}(1,:);
         end
         set(0,'CurrentFigure',resultfig);
-
+        
         % draw patientname
         % lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
         % ellabel(side)=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
-
+        
         ellabel=[];
         eltype=[];
         pcnt=1;
-
+        
         % draw contacts
         try
             minval=ea_nanmin(options.d3.isomatrix{1}{side}(:));
@@ -153,7 +164,7 @@ for side=options.sides
             %maxval=1;
         end
         for cntct=1:elspec.numel-shifthalfup
-
+            
             if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})))
                 if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
                     useedgecolor=[0.8,0.5,0.5];
@@ -166,14 +177,14 @@ for side=options.sides
                     ms=10;
                 end
                 % define color
-
+                
                 if options.d3.colorpointcloud
                     % draw contacts as colored cloud defined by isomatrix.
-
+                    
                     if ~isnan(options.d3.isomatrix{1}{side}(pt,cntct))
-
+                        
                         usefacecolor=((options.d3.isomatrix{1}{side}(pt,cntct)-minval)/(maxval-minval))*64;
-
+                        
                         %                         % ## add some contrast (remove these lines for linear
                         %                         % mapping)
                         %
@@ -184,7 +195,7 @@ for side=options.sides
                         %                         usefacecolor(usefacecolor>64)=64;
                         %
                         %                         % ##
-
+                        
                         usefacecolor=ind2rgb(round(usefacecolor),jetlist);
                     else
                         usefacecolor=nan; % won't draw the point then.
@@ -202,14 +213,14 @@ for side=options.sides
                         end
                     end
                 end
-
+                
                 if ~any(isnan(usefacecolor))
                     set(0,'CurrentFigure',resultfig);
                     if ~shifthalfup
                         elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
                         pcnt=pcnt+1;
                     else
-
+                        
                         elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
                             mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
                             mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
@@ -218,7 +229,7 @@ for side=options.sides
                         pcnt=pcnt+1;
                     end
                 else
-
+                    
                 end
                 hold on
             end
