@@ -585,7 +585,7 @@ elseif size(stats.corrcl,2)==2 % one value per hemisphere
     if ~isempty(stats.vicorr.both)
 
         %ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],'Volume Intersections, both hemispheres',stats.vc_labels);
-        ea_corrplot([stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft]],'VI_BH',stats.vc_labels,handles);
+        ea_corrplot(stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft],[{'VI_BH'},stats.vc_labels]);
     end
     %     if ~isempty(stats.vicorr.right)
     %         %ea_corrplot([stats.corrcl(:,1),stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);

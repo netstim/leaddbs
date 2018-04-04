@@ -9,7 +9,7 @@ normdist=pdist([electrode.head_position;electrode.tail_position]);
 for side=options.sides
     spm('defaults', 'fmri');
     Fgraph = spm_figure('GetWin', 'Graphics');
-    Finter = spm('FnUIsetup','Click on Tip', 0);
+    Finter = spm('FnUIsetup','Select Trajectory', 0);
     
     figure(Fgraph); clf;
     
