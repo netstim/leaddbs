@@ -158,7 +158,7 @@ function success=ea_downloadasset(assetname,destination,id)
 
 if strcmp(assetname,'Lead Datafiles')
     ea_update_data('full');
-
+    success=1;
 else
     downloadurl = 'http://www.lead-dbs.org/release/download.php';
     success=1;
