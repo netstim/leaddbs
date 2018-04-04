@@ -119,7 +119,7 @@ disp('Updating UI...');
 
 disp('Getting stimulation parameters...');
 S=getappdata(handles.leadfigure,'S');
-
+S=ea_checkS(M,S,options,handles);
 if ~isempty(S)
     set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
     M.S=S;
@@ -370,6 +370,16 @@ disp('Done.');
 
 ea_busyaction('off',handles.leadfigure,'group');
 
+function S=ea_checkS(M,S,options,handles) % helper to check that S has equally many entries as M.patient.list
+if ~(length(S)==length(M.patient.list))
+    if isempty(S)    % will init a blank S struct
+        S=ea_initializeS(['gs_',M.guid],options,handles);
+        S(1:length(M.patient.list))=S(1);
+    else
+        keyboard
+    end
+
+end
 
 function ea_stats=ea_rmssstimulations(ea_stats,M)
 % function that will remove all stimulations not labeled 'gs'
