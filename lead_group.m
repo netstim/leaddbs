@@ -242,7 +242,15 @@ else
 
         M.patient.list=[M.patient.list; folders];
         M.patient.group=[M.patient.group; ones(length(folders),1)];
+        options=ea_setopts_local(handles);
 
+        tS=ea_initializeS(['gs_',M.guid],options,handles);
+        if isempty(M.S)
+            M=rmfield(M,'S');
+            M.S(1:length(folders))=tS;
+        else
+            M.S(end+1:end+length(folders))=tS;
+        end
         setappdata(handles.leadfigure, 'M', M);
         ea_refresh_lg(handles);
         % save M
@@ -308,8 +316,19 @@ M=getappdata(handles.leadfigure,'M');
 folders=ea_uigetdir(ea_startpath,'Select Patient folders..');
 M.patient.list=[M.patient.list;folders'];
 M.patient.group=[M.patient.group;ones(length(folders),1)];
+options=ea_setopts_local(handles);
+
+tS=ea_initializeS(['gs_',M.guid],options,handles);
+
+        if isempty(M.S)
+            M=rmfield(M,'S');
+            M.S(1:length(folders))=tS;
+        else
+            M.S(end+1:end+length(folders))=tS;
+        end
 
 setappdata(handles.leadfigure,'M',M);
+setappdata(handles.leadfigure,'S',M.S);
 ea_refresh_lg(handles);
 % save M
 M=getappdata(handles.leadfigure,'M');

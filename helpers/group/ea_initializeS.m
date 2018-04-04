@@ -67,3 +67,4 @@ S.active=[1,1];
 S.model='SimBio/FieldTrip (see Horn 2017)';
 S.monopolarmodel=0;
 S.amplitude={[0,0,0,0],[0,0,0,0]};
+S=ea_activecontacts(S);

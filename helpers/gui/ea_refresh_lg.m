@@ -376,7 +376,7 @@ if ~(length(S)==length(M.patient.list))
         S=ea_initializeS(['gs_',M.guid],options,handles);
         S(1:length(M.patient.list))=S(1);
     else
-        keyboard
+        %ea_error('Stimulation parameter struct not matching patient list. Lead group file potentially corrupted.');
     end
 
 end
