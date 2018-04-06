@@ -95,6 +95,9 @@ prefs.normalize.spm.resolution=1; % Defines resolution in mm when using SPM norm
 %% Reconstruction
 prefs.reco.mancoruse='rpostop'; % switch to 'postop' to use unresliced CT.
 prefs.reco.saveACPC=0; % also save reconstructions in AC/PC space
+prefs.reco.refine=0; % experimental: refine fiducial markers using local maxima
+prefs.reco.saveimg=0; % save fiducial marker visualisation as image after refine
+prefs.reco.exportfiducials=0; % automatically export fiducials to a comma separated value file after refine. Set this to 'fcsv' for simple import into Slicer, otherwise set to 'csv' or 'txt' for import into other software.
 
 %% Coregistration (CT/MR):
 prefs.ctcoreg.default='ea_coregctmri_ants';

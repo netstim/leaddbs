@@ -263,7 +263,8 @@ end
             options.hybridsave=1;
             options.elside=options.sides(1);
             elmodel=options.elmodel;
-            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
+            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);            
+            ea_refinecoords(options); % experimental fiducial marker refine method
             if isfield(options,'hybridsave')
                 options=rmfield(options,'hybridsave');
             end

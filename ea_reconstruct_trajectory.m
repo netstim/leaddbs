@@ -233,8 +233,21 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
         return
         %pause
     end
-    mask(round(estpoint(2)-options.maskwindow : estpoint(2)+options.maskwindow), ...
-        round(estpoint(1)-options.maskwindow : estpoint(1)+options.maskwindow))=1;
+    % TP: Fixing bug. Sometimes when the trajectory is not found the index
+    % to mask is less than 1 causing Lead to crash
+    try
+        mask(round(estpoint(2)-options.maskwindow : estpoint(2)+options.maskwindow), ...
+            round(estpoint(1)-options.maskwindow : estpoint(1)+options.maskwindow))=1;
+    catch ME
+        if (strcmp(ME.identifier, 'MATLAB:badsubscript'))
+            ea_error(sprintf(['Mask index out of bounds! Must have lost trajectory...\n' ...
+            'Please try a different ''Mask window size'' or ' ...
+            'try manual mode by setting ''Entrypoint for Target'' to ''Manual''.']), ...
+            'Electrode Reconstruction Error', ...
+            dbstack);
+            return;
+        end
+    end
     %% part 4: visualization...
     %-------------------------------------------------------------------%
     if options.verbose>1
