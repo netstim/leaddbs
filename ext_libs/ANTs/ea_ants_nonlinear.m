@@ -251,7 +251,12 @@ props.slabstage = slabstage;
 props.synmaskstage = synmaskstage;
 props.directory = directory;
 props.stagesep = options.prefs.machine.normsettings.ants_stagesep;
-
+if exist([fileparts(movingimage{1}),filesep,'glanatComposite.h5'],'file')
+    % clean old deformation field. this is important for cases where ANTs
+    % crashes and the user does not get an error back. Then, preexistant old transforms
+    % will be considered as new ones.
+    delete([fileparts(movingimage{1}),filesep,'glanatComposite.h5']);
+end
 ea_submit_ants_nonlinear(props);
 
 if exist('tmaskdir','var')
