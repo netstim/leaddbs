@@ -225,29 +225,31 @@ CortexHiRes.Faces_rh=CortexHiRes.raw.Faces_rh+1;
 CortexHiRes.Faces=CortexHiRes.raw.Faces+1;
 
 % Postop to preop
-switch CortexHiRes.raw.nativespace
-    case 'Postop'
-    coregfile = fdir(ptdir,'GenericAffine'); %fdir(ptdir,'2postop');
-    % %     ONLY SUPPORTS ANTS COREGISTRATION
-    if ~isempty(coregfile) && length(coregfile)==1 && ~isempty(regexp(coregfile,'\wants','match'))
-        load([ptdir,filesep,cell2mat(coregfile)])
-        try 
-            aff = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
-        catch
-            aff = ea_antsmat2mat(AffineTransform_double_3_3,fixed);
-        end
-        aff([4,8,12])=aff([13:15]); aff([13:15])=0;
-        tform = affine3d(aff);
-        CortexHiRes.raw.coregistration = tform;
-        CortexHiRes.Vertices_lh = transformPointsInverse(tform, CortexHiRes.Vertices_lh);
-        CortexHiRes.Vertices_rh = transformPointsInverse(tform, CortexHiRes.Vertices_rh);
-        CortexHiRes.Vertices = transformPointsInverse(tform, CortexHiRes.Vertices);
-        
-        [CortexHiRes.Vert_mm,CortexHiRes.Vert_vox] = ea_map_coords(CortexHiRes.Vertices','raw_postop_tra.nii',fullfile(ptdir,cell2mat(coregfile)),'anat_t1.nii','ANTS');
-    else 
-        ea_warning('cannot find corgeistration matrix')
+if options.prefs.d3.fs.dev
+    switch CortexHiRes.raw.nativespace
+        case 'Postop'
+            coregfile = fdir(ptdir,'GenericAffine'); %fdir(ptdir,'2postop');
+            % %     ONLY SUPPORTS ANTS COREGISTRATION
+            if ~isempty(coregfile) && length(coregfile)==1 && ~isempty(regexp(coregfile,'\wants','match'))
+                load([ptdir,filesep,cell2mat(coregfile)])
+                try
+                    aff = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+                catch
+                    aff = ea_antsmat2mat(AffineTransform_double_3_3,fixed);
+                end
+                aff([4,8,12])=aff([13:15]); aff([13:15])=0;
+                tform = affine3d(aff);
+                CortexHiRes.raw.coregistration = tform;
+                CortexHiRes.Vertices_lh = transformPointsInverse(tform, CortexHiRes.Vertices_lh);
+                CortexHiRes.Vertices_rh = transformPointsInverse(tform, CortexHiRes.Vertices_rh);
+                CortexHiRes.Vertices = transformPointsInverse(tform, CortexHiRes.Vertices);
+                
+                [CortexHiRes.Vert_mm,CortexHiRes.Vert_vox] = ea_map_coords(CortexHiRes.Vertices','raw_postop_tra.nii',fullfile(ptdir,cell2mat(coregfile)),'anat_t1.nii','ANTS');
+            else
+                ea_warning('cannot find corgeistration matrix')
+            end
+        otherwise
     end
-    otherwise
 end
 
 
