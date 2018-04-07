@@ -171,6 +171,9 @@ prefs.d3.cortexcolor=[0.65 0.65 0.65]; % default color is gray
 prefs.d3.cortexalpha=0.5; % default alpha is 0.5
 prefs.d3.cortex_defaultatlas='DKT'; % Currently supports 'DKT','DKT_aseg','a2009'
 
+%% Freesurfer Preferences
+prefs.d3.fs.dev=0;
+
 %% DICOM files:
 prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 0: Leave DICOMs at pt/DICOM folder after conversion.
 prefs.dicom.tool='dcm2niix'; % switch to 'dicm2nii' to use the Matlab based converter.

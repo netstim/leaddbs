@@ -19,11 +19,14 @@ if isfield(varargin{1},'patdir_choosebox')
     if strcmp(handles.patdir_choosebox.String,'Choose Patient Directory')
         ea_error('Please Choose Patient Directory');
     else
-        ptdir = handles.patdir_choosebox.String;
+        options = ea_handles2options(handles);
+        options.patientname = get(handles.patdir_choosebox,'String');
+        options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
+        options.prefs=ea_prefs(options.patientname);
+        
+        ptdir = get(handles.patdir_choosebox,'String');
+        [~,patientname] = fileparts(get(handles.patdir_choosebox,'String'));
     end
-    
-    tmp = strsplit(handles.patdir_choosebox.String,'/');
-    patientname = tmp{end}; clear tmp
 
 elseif isfield(varargin{1},'uipatdirs')
     
@@ -84,8 +87,8 @@ if overwrite
             end
         end
         return
-    elseif strcmp(response,'Yes')
-        load([ptdir,'/ea_ui.mat'],'fsdir');        
+    elseif strcmp(response,'Yes') && options.prefs.d3.fs.dev==1
+        load([ptdir,'/ea_ui.mat'],'fsdir');
     else
         % Choose Freesurfer Directory
         fsdir = ea_uigetdir(startdir,['Choose Freesurfer Folder for ' patientname]);
@@ -152,18 +155,20 @@ AsegFile = [fsdir '/mri/aseg.mgz'];
     % Notes: need to add PC functionality
     % Notes: need to add ea_libs_helper for Freesurfer compatibility
 
+lfs = dir([fsdir,filesep,'label']); % label_files
+    
 annot_DKT(1).atlas = 'Desikan-Killiany';
 annot_DKT(2).atlas = 'Desikan-Killiany';
-annot_DKT(1).filename  = 'label/rh.aparc.annot';
-annot_DKT(2).filename  = 'label/lh.aparc.annot';
+annot_DKT(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.annot')).name]; %'label/lh.aparc.annot';     label_files(~cellfun(@isempty,strfind({label_files.name},'rh.aparc.DKT'))).name
+annot_DKT(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.annot')).name]; %'label/lh.aparc.annot';
 annot_DKTaseg(1).atlas = 'Desikan-Killiany + Aseg';
 annot_DKTaseg(2).atlas = 'Desikan-Killiany + Aseg';
-annot_DKTaseg(1).filename  = 'label/rh.aparc.DKTatlas.annot';
-annot_DKTaseg(2).filename  = 'label/lh.aparc.DKTatlas.annot';
+annot_DKTaseg(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.DKT')).name]; %'label/rh.aparc.DKTatlas.annot';
+annot_DKTaseg(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.DKT')).name]; %'label/lh.aparc.DKTatlas.annot';
 annot_a2009(1).atlas = 'Destrieux';
 annot_a2009(2).atlas = 'Destrieux';
-annot_a2009(1).filename  = 'label/rh.aparc.a2009s.annot';
-annot_a2009(2).filename  = 'label/lh.aparc.a2009s.annot';
+annot_a2009(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.a2009')).name]; %'label/rh.aparc.a2009s.annot';
+annot_a2009(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.a2009')).name]; %'label/lh.aparc.a2009s.annot';
 
 % Read Annotation Files
 % external/freesurfer/read_annotation.m
@@ -196,6 +201,10 @@ CortexHiRes.raw.Faces = [CortexHiRes.raw.Faces_lh; (CortexHiRes.raw.Faces_rh + l
 
 % Reading in MRI parameters
 T1nii=MRIread(MriFile);
+
+if isempty(T1nii)
+    ea_error('Error loading MriFile from Freesurfer.')
+end
 
 %% Translating into the appropriate space
 % FS to MRI
@@ -266,7 +275,7 @@ end
 %         save([ptdir '/cortex/hull.mat'],'mask_matrix','mask_indices')
 %% Option to Downsample CortexHiRes - Dev
 % newNbVertices = '15000';
-if options.prefs.env.dev
+if options.prefs.d3.fs.dev
 qst = {'Would you like to downsample the high '; sprintf('resolution cortex with %d vertices?',size(CortexHiRes.Vertices,1))};
 DownsampleOption = questdlg(qst,'Import FreeSurfer');
 
@@ -323,7 +332,7 @@ end
 
 %% Import Cortical Electrodes
 % Guarantee Options
-if options.prefs.env.dev
+if options.prefs.d3.fs.dev
 options.patientname = patientname;
 options.uipatdirs = ptdir;
 options.fsdir = fsdir;
