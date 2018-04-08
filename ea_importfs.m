@@ -195,10 +195,6 @@ disp('Loading reconstruction...')
 [CortexHiRes.raw.Vertices_lh,CortexHiRes.raw.Faces_lh]= read_surf(LhPial); % Reading left side pial surface
 [CortexHiRes.raw.Vertices_rh,CortexHiRes.raw.Faces_rh]= read_surf(RhPial); % Reading right side pial surface
 
-% Generate entire cortex
-CortexHiRes.raw.Vertices = [CortexHiRes.raw.Vertices_lh; CortexHiRes.raw.Vertices_rh]; % Combining both hemispheres
-CortexHiRes.raw.Faces = [CortexHiRes.raw.Faces_lh; (CortexHiRes.raw.Faces_rh + length(CortexHiRes.raw.Vertices_lh))]; % Combining Faces
-
 % Reading in MRI parameters
 T1nii=MRIread(MriFile);
 
@@ -217,15 +213,20 @@ tform = affine3d(aff); CortexHiRes.raw.tform = tform;
 
 CortexHiRes.Vertices_lh = transformPointsForward(tform,CortexHiRes.raw.Vertices_lh);
 CortexHiRes.Vertices_rh = transformPointsForward(tform,CortexHiRes.raw.Vertices_rh);
-CortexHiRes.Vertices = transformPointsForward(tform,CortexHiRes.raw.Vertices);
 
 % freesurfer starts at 0 for indexing
 CortexHiRes.Faces_lh=CortexHiRes.raw.Faces_lh+1; 
 CortexHiRes.Faces_rh=CortexHiRes.raw.Faces_rh+1;
-CortexHiRes.Faces=CortexHiRes.raw.Faces+1;
 
 % Postop to preop
 if options.prefs.d3.fs.dev
+    % Generate entire cortex
+    CortexHiRes.raw.Vertices = [CortexHiRes.raw.Vertices_lh; CortexHiRes.raw.Vertices_rh]; % Combining both hemispheres
+    CortexHiRes.raw.Faces = [CortexHiRes.raw.Faces_lh; (CortexHiRes.raw.Faces_rh + length(CortexHiRes.raw.Vertices_lh))]; % Combining Faces
+    CortexHiRes.Vertices = transformPointsForward(tform,CortexHiRes.raw.Vertices);
+    CortexHiRes.Faces=CortexHiRes.raw.Faces+1;
+
+    
     switch CortexHiRes.raw.nativespace
         case 'Postop'
             coregfile = fdir(ptdir,'GenericAffine'); %fdir(ptdir,'2postop');
@@ -251,6 +252,13 @@ if options.prefs.d3.fs.dev
         otherwise
     end
 end
+
+
+% Remove raw data from cortex
+if ~options.prefs.d3.fs.dev
+    CortexHiRes=rmfield(CortexHiRes,'raw');
+end
+%
 
 
 %% Save Output to PatientDirectory/cortex/
