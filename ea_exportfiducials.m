@@ -1,6 +1,6 @@
 function ea_exportfiducials(options, filename)
 %% Save fiducials as comma separated value file in patient folder
-%  Last Revision: 6/04/2018
+%  Last Revision: 10/04/2018
 %  Thushara Perera (c) 2018 Bionics Institute
 %  Input:
 %   - lead dbs options struct
@@ -8,7 +8,7 @@ function ea_exportfiducials(options, filename)
 %  Output:
 %   - fiducial marker file will be saved in patient folder
    
-    fiducial_path = [options.uipatdirs{1}, filesep, filename];
+    fiducial_path = [options.root, options.patientname, filesep, filename];
     [coords,~,~]=ea_load_reconstruction(options);
     header = ['# Markups fiducial file version = 4.7\r\n',...
               '# CoordinateSystem = 0\r\n',...

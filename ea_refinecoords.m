@@ -1,6 +1,6 @@
 function ea_refinecoords(options)
 %% Refine the fiducial markers following TRAC/CORE reconstruction
-%  Last Revision: 5/04/2018
+%  Last Revision: 10/04/2018
 %  Thushara Perera (c) 2018 Bionics Institute
 %  Input:
 %   - lead dbs options struct
@@ -92,7 +92,7 @@ function ea_refinecoords(options)
         
         % filter and find first peak (head fiducial marker)
         filtered_max = sgolayfilt(max(b, [], 2), 1, 21);
-        if (deltay < 0)
+        if (deltaz < 0) % sometimes the slice is upside down
             filtered_max = flipud(filtered_max);
         end
         
@@ -101,7 +101,7 @@ function ea_refinecoords(options)
             warning(['Could not find head of electrode. Check trajectory. Skipping side ', num2str(side)]);
             continue;
         end
-        if (deltay < 0)
+        if (deltaz < 0)
             idy = size(b,1) - idy;
         end
         pidy = [idy; idy-elgap*3]; % set the tail based on electrode height (FIX: for electrodes with more than 4 contacts)
@@ -153,18 +153,19 @@ function ea_refinecoords(options)
             hf = figure(20+side);
             set(gcf,'Color',[0.1,0.1,0.1]);
             clf;
+            plot3(head(1), head(2)-0.1, head(3),'.','MarkerEdgeColor','r','MarkerSize',20);
             hold on;
-            plot3(head(1), head(2), head(3)+0.1,'.','MarkerEdgeColor','r','MarkerSize',20);
-            plot3(tail(1), tail(2), tail(3)+0.1,'.','MarkerEdgeColor','g','MarkerSize',20);
+            plot3(tail(1), tail(2)-0.1, tail(3),'.','MarkerEdgeColor','g','MarkerSize',20);
             surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'FaceColor','texturemap','EdgeColor','none');
             colormap gray;
             title(['Lead-DBS Automated Reconstruction (Side: ', num2str(side), ')'], 'Color', 'w');
-            xlabel('mm'); ylabel('mm');
             hold off;
             axis tight;
-            set(gca,'Color',[0.1,0.1,0.1], 'YColor', 'w', 'XColor', 'w');
+            axis off;
+            view(0,0);
+            text(min(xx(:)), min(yy(:)), min(zz(:))*1.05, options.patientname, 'Color', 'w', 'FontSize', 12);
             set(hf,'PaperUnits','inches','PaperPosition',[0 0 4 4], 'InvertHardCopy', 'off');
-            print(hf, [options.uipatdirs{1}, filesep, 'Electrode_', num2str(side), '.jpg'], '-djpeg75', '-r300');
+            print(hf, [options.root, options.patientname, filesep, 'Electrode_', num2str(side), '.jpg'], '-djpeg75', '-r300');
             if ~is_debug
                 close(hf);
             end
