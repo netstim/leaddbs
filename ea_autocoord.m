@@ -242,6 +242,10 @@ end
         poptions=ea_checkmanapproved(options);
         if ~isempty(poptions.sides)
             switch options.reconmethod
+                case 'Refined TRAC/CORE' % refined TRAC/CORE
+                    [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
+                    ea_refinecoords(options); % experimental fiducial marker refine method
+                    options.native=0;
                 case 'TRAC/CORE (Horn 2015)' % TRAC/CORE
                     [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
                     options.native=0;
@@ -264,7 +268,6 @@ end
             options.elside=options.sides(1);
             elmodel=options.elmodel;
             ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);            
-            ea_refinecoords(options); % experimental fiducial marker refine method
             if isfield(options,'hybridsave')
                 options=rmfield(options,'hybridsave');
             end

@@ -1,4 +1,5 @@
 function [coords_mm,trajectory,markers]=ea_runtraccore(options)
+
 directory = [options.root,options.patientname,filesep];
 
 if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')

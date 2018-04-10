@@ -1440,7 +1440,7 @@ function reconmethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns reconmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from reconmethod
-if get(hObject,'Value')==1 % TRAC/CORE
+if get(hObject,'Value')<3 % TRAC/CORE
     set(handles.targetpopup,'enable','on');
     set(handles.maskwindow_txt,'enable','on');
 else % PACER
