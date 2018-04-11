@@ -1,4 +1,4 @@
-function ea_refinecoords(options)
+function [coords_mm,trajectory,markers] = ea_refinecoords(options)
 %% Refine the fiducial markers following TRAC/CORE reconstruction
 %  Last Revision: 10/04/2018
 %  Thushara Perera (c) 2018 Bionics Institute
@@ -16,28 +16,29 @@ function ea_refinecoords(options)
 %  Bits and pieces of code have been copyied from other areas of Lead-DBS. 
 %  There might be a better way to implement what I'm trying to do and 
 %  several things are yet to be implemented.
-
+    disp('Refining fiducials by shifting them to local maxima.');
+    
     is_debug = 0;
     saveimg = 0;
     can_export = 0;
     sample_width = 10;
     doxx = 1; % TODO: Try it in the other planes as well??  
     
-    options.prefs = ea_prefs('');
-    if ~isfield(options.prefs.reco, 'refine')
-        return;
-    end
-    if ~options.prefs.reco.refine
-        return;
-    end
+    options.prefs = ea_prefs('');    
     if isfield(options.prefs.reco, 'saveimg')
         saveimg = options.prefs.reco.saveimg;
     end   
     if isfield(options.prefs.reco, 'exportfiducials')
         can_export = ischar(options.prefs.reco.exportfiducials);
     end
+    if ~saveimg
+        disp('Set prefs.reco.saveimg=1 in preference file to save marker visualisation as image.');
+    end
+    if ~can_export
+        disp('Set prefs.reco.exportfiducials in preference file to export fiducial markers as CSV file.');
+    end
     
-    disp('Refining fiducials by shifting them to local maxima.');
+    
     switch options.modality
         case 1 % MR
             disp('ea_refinecoords not implemented yet for MRI. Skipping...');
@@ -86,7 +87,7 @@ function ea_refinecoords(options)
             case 'Medtronic 3389'
                 elgap = floor(2/delta);
             otherwise
-                disp(['Peak detection width not set for ', options.elmodel, '. Skipping...']);
+                disp(['Inter-electrode distance not set for ', options.elmodel, '. Skipping...']);
                 return;
         end
         
@@ -114,6 +115,8 @@ function ea_refinecoords(options)
         
         % find centre of artefact and add offset accordingly
         [cx, cy] = find_centre(b, pidx, pidy, ceil(abs(1.5/deltax)), is_debug); % 1.5mm electrode height for Medtronic
+        cx(isnan(cx)) = 0;
+        cy(isnan(cy)) = 0;
         pidx(1) = pidx(1) + cx(1); % only moving head laterally, difficult to locate centre of tail consistently
         pidy = pidy + cy;
         
@@ -132,6 +135,10 @@ function ea_refinecoords(options)
         tail(1) = pidx(end) * deltax + xx(2,1) - (xx(2,1) - xx(1,1))*(1-pidy(end)/size(b,1));
         tail(2) = pidy(end) * deltay + yy(1);
         tail(3) = pidy(end) * deltaz + zz(1);
+        
+        %% apply same offset as head to x and y        
+        markers(side).x = markers(side).x + head - markers(side).head;
+        markers(side).y = markers(side).y + head - markers(side).head;
 
         if is_debug
             figure(10+side);
@@ -188,10 +195,10 @@ function [cx, cy] = find_centre(slice, pidx, pidy, elheight, is_debug) % elheigh
         x = pidx(i);
         y = pidy(i);
         % define bounding box
-        L = x - elheight;
-        R = x + elheight;
-        U = y + elheight * 10;
-        D = y - elheight * 10;
+        L = x - elheight*2;
+        R = x + elheight*2;
+        U = y + elheight*10;
+        D = y - elheight*10;
         if (L < 1)
             L = 1;
         end

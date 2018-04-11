@@ -67,7 +67,7 @@ set(handles.leadfigure,'name','Welcome to LEAD-DBS');
 
 spacedef=ea_getspacedef;
 if isfield(spacedef,'guidef')
-    set(handles.targetpopup,'String',[spacedef.guidef.entrypoints,{'Manual'}]);
+    set(handles.targetpopup,'String',[spacedef.guidef.entrypoints,{'Manual'}, {'Auto'}]);
 end
 
 options.prefs=ea_prefs('');
@@ -1440,7 +1440,7 @@ function reconmethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns reconmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from reconmethod
-if get(hObject,'Value')<3 % TRAC/CORE
+if get(hObject,'Value')==1 % TRAC/CORE
     set(handles.targetpopup,'enable','on');
     set(handles.maskwindow_txt,'enable','on');
 else % PACER

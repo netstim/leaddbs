@@ -5,6 +5,11 @@ function [trajectory,trajvector]=ea_reconstruct_trajectory(priortrajectory,tra_n
 
 if options.modality==2 % CT support
     tra_nii.img=tra_nii.img*-1;
+else
+    if strcmp(options.entrypoint,'Auto')
+        warning('Automatic entry point detection not implemented for MRI. Setting to Manual.')
+        options.entrypoint = 'Manual';
+    end
 end
 
 %Vtra=spm_vol([options.root,patientname,filesep,patientname,'_tra_brain_A3_final.nii']);
@@ -62,6 +67,25 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             % reset mask from mouse input
             mask=zeros(size(slice,1),size(slice,2));
             mask(round(Y-10:Y+10),round(X-10:X+10))=1;
+        case 'Auto' 
+            % TP: Similar to manual, but try to detect entry-point using artefact
+            slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
+            midpt = floor(size(slice, 2)/2);
+            idx = 1:midpt;
+            if side==flipside                
+                idx = midpt:size(slice,2);
+            end
+            s = slice(:,idx);
+%             [~, minidx] = min(s(:)); % failed in some cases
+%             [Y,X] = ind2sub(size(s), minidx);
+%             X = X + idx(1)-1;
+            height = abs(min(s(:))) * 0.1;
+            [~, X] = findpeaks(-sgolayfilt(min(s,[],1), 1, 21), 'MinPeakHeight', height, 'NPeaks', 1);
+            [~, Y] = findpeaks(-sgolayfilt(min(s,[],2), 1, 21), 'MinPeakHeight', height, 'NPeaks', 1);
+            X = X + idx(1)-1;
+            
+            mask=zeros(size(slice,1),size(slice,2));
+            mask(round(Y-10:Y+10),round(X-10:X+10))=1;
         otherwise
             mask(masksz(1):masksz(2),masksz(3):masksz(4))=1;
             if side==flipside
@@ -77,7 +101,14 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
         try
         [slice(:,:,i),slicebw(:,:,i)]=ea_prepare_slice(tra_nii,mask,1,startslice-(i-1),options);
         catch
-            keyboard
+            % keyboard % TP: Requesting input here pauses tasks when batch
+            % processing. I made a work around,but not sure if it will lead
+            % to further errors.
+            if (length(options.uipatdirs) > 1)
+                warning([options.patientname, ': Could not prepare slice when reconstructing trajectory.']);
+            else
+                keyboard
+            end
         end
     end
     slice=mean(slice,3);
@@ -354,7 +385,7 @@ else % use MNI defaults
     end
 end
 
-if strcmp(options.entrypoint,'Manual')
+if strcmp(options.entrypoint,'Manual') || strcmp(options.entrypoint,'Auto')
     try
         masksz=spacedef.guidef.masks(1,:);
     catch
