@@ -69,29 +69,40 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             mask(round(Y-10:Y+10),round(X-10:X+10))=1;
         case 'Auto' 
             % TP: Similar to manual, but try to detect entry-point using artefact
+            crop_n = 100;
             slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
-            midpt = floor(size(slice, 2)/2);
+            [h,w] = size(slice);
+            crop = slice(crop_n:h-crop_n, crop_n:w-crop_n);
+            midpt = floor(size(crop,2)/2);
             idx = 1:midpt;
             if side==flipside                
-                idx = midpt:size(slice,2);
+                idx = midpt:size(crop,2);
             end
-            b = slice(:,idx);
+            b = crop(:,idx);
             s = b;
             s(s>(min(b(:))*0.2)) = 0;
             height = abs(min(s(:))) * 0.05;
             [~, xid] = findpeaks(-sgolayfilt(min(s,[],1), 1, 21), 'MinPeakHeight', height);
             [~, yid] = findpeaks(-sgolayfilt(min(s,[],2), 1, 21), 'MinPeakHeight', height);
             if (idx(1) == 1)
-                [~, id] = min(abs(xid-size(s,2)));
+                [~, id] = min(abs(xid-size(crop,2)));
             else
                 [~, id] = min(abs(xid));
             end
             X = xid(id);
-            [~, id] = min(abs(yid-size(s,1)));
-            Y = yid(id);
-            X = X + idx(1)-1;
+            [~, id] = min(abs(yid-size(crop,1)));
+            Y = yid(id) + crop_n;
+            X = X + idx(1)-1 + crop_n;
             
-            mask=zeros(size(slice,1),size(slice,2));
+            % further refine
+            crop_n = 20;
+            crop = slice(Y-crop_n:Y+crop_n, X-crop_n:X+crop_n);
+            [~, idx] = min(crop(:));
+            [Y2, X2] = ind2sub(size(crop), idx);
+            X = round(X + X2 - size(crop,2)/2);
+            Y = round(Y + Y2 - size(crop,1)/2);
+            
+            mask=zeros(h,w);
             mask(round(Y-10:Y+10),round(X-10:X+10))=1;
         otherwise
             mask(masksz(1):masksz(2),masksz(3):masksz(4))=1;
