@@ -1,6 +1,6 @@
 function ea_runslicer(options, task)
 %% Function to launch slicer and load *.nii files
-%  Last Revision: 29/03/2018
+%  Last Revision: 6/04/2018
 %  Thushara Perera (c) 2018 Bionics Institute
 %  Input:
 %   - lead dbs options struct
@@ -119,9 +119,8 @@ function ea_runslicer(options, task)
                     [filepath, name, ~] = fileparts(patient_path);
                     options.root = [filepath,filesep];
                     options.patientname = name;
-                end
-                [coords_mm,~,~]=ea_load_reconstruction(options);
-                WriteFiducialFile(coords_mm, [patient_path, filesep, 'SlicerElectrodes.fcsv']);                
+                end                
+                ea_exportfiducials(options, 'ElectrodeFiducials.fcsv');                
             else
                 warning('Please run reconstruction first...');
                 return;
@@ -164,22 +163,6 @@ function ea_runslicer(options, task)
     system(['"', SLICER, '" --no-splash --python-script "', script_path, '" &']);
     % the trailing '&' returns control back to matlab without waiting for slicer to close
 end
-
-function WriteFiducialFile(coords, fiducial_path)
-    header = ['# Markups fiducial file version = 4.7\r\n',...
-              '# CoordinateSystem = 0\r\n',...
-              '# columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID\r\n'];
-    c = vertcat(coords{:});
-    fid = fopen(fiducial_path, 'w');
-    fprintf(fid, header);
-    for i = 1:length(c)
-        idx = num2str(i-1);
-        fprintf(fid, ['vtkMRMLMarkupsFiducialNode_', idx, ',',num2str(c(i,1)),',',num2str(c(i,2)),',',num2str(c(i,3)),...
-            ',0,0,0,1,1,1,0,E', idx, ',,vtkMRMLScalarVolumeNode2\r\n']);
-    end
-    fclose(fid);
-end
-
 
 function [nfiles, filepaths, filenames] = GetNormalizedFiles(options, lead_path, patient_path)
     nfiles = 0;
@@ -332,13 +315,13 @@ function txt = GetFiducialEnding()
     '<Camera id="vtkMRMLCameraNode1" name="Default Scene Camera" hideFromEditors="false" selectable="true" selected="false" userTags="" position="-174.789 463.886 65.26" focalPoint="0 0 0" viewUp="0.0301267 -0.128106 0.991303" parallelProjection="false" parallelScale="1" activetag="vtkMRMLViewNode1" appliedTransform="1 0 0 0  0 1 0 0  0 0 1 0  0 0 0 1"  ></Camera>',...
     '<ClipModels id="vtkMRMLClipModelsNodevtkMRMLClipModelsNode" name="ClipModels" hideFromEditors="true" selectable="true" selected="false" singletonTag="vtkMRMLClipModelsNode" clipType="0" redSliceClipState="0" yellowSliceClipState="0" greenSliceClipState="0"  ></ClipModels>',...
     '<ScriptedModule id="vtkMRMLScriptedModuleNodeDataProbe" name="ScriptedModule" hideFromEditors="true" selectable="true" selected="false" singletonTag="DataProbe" ModuleName ="DataProbe"  ></ScriptedModule>\r\n',...
-    '<MarkupsFiducialStorage selected="false" selectable="true" hideFromEditors="true" name="MarkupsFiducialStorage" id="vtkMRMLMarkupsFiducialStorageNode1" writeState="0" readState="0" defaultWriteFileExtension="fcsv" useCompression="1" fileName="SlicerElectrodes.fcsv" coordinateSystem="0"></MarkupsFiducialStorage>\r\n',...
-    '<MarkupsFiducial userTags="" selected="false" selectable="true" hideFromEditors="false" name="SlicerElectrodes" id="vtkMRMLMarkupsFiducialNode1" references="display:vtkMRMLMarkupsDisplayNode1;storage:vtkMRMLMarkupsFiducialStorageNode1;" storageNodeRef="vtkMRMLMarkupsFiducialStorageNode1" displayNodeRef="vtkMRMLMarkupsDisplayNode1" markupLabelFormat="%%N-%%d" locked="0"></MarkupsFiducial>\r\n'...
+    '<MarkupsFiducialStorage selected="false" selectable="true" hideFromEditors="true" name="MarkupsFiducialStorage" id="vtkMRMLMarkupsFiducialStorageNode1" writeState="0" readState="0" defaultWriteFileExtension="fcsv" useCompression="1" fileName="ElectrodeFiducials.fcsv" coordinateSystem="0"></MarkupsFiducialStorage>\r\n',...
+    '<MarkupsFiducial userTags="" selected="false" selectable="true" hideFromEditors="false" name="ElectrodeFiducials" id="vtkMRMLMarkupsFiducialNode1" references="display:vtkMRMLMarkupsDisplayNode1;storage:vtkMRMLMarkupsFiducialStorageNode1;" storageNodeRef="vtkMRMLMarkupsFiducialStorageNode1" displayNodeRef="vtkMRMLMarkupsDisplayNode1" markupLabelFormat="%%N-%%d" locked="0"></MarkupsFiducial>\r\n'...
     '<MarkupsDisplay selected="false" selectable="true" hideFromEditors="true" name="MarkupsDisplay" id="vtkMRMLMarkupsDisplayNode1" visibility="true" sliceIntersectionVisibility="false" scalarRange="0 100" scalarRangeFlag="UseData" interpolateTexture="false" tensorVisibility="false" vectorVisibility="false" scalarVisibility="false" backfaceCulling="true" frontfaceCulling="false" sliceIntersectionThickness="1" clipping="false" edgeVisibility="false" shading="true" interpolation="1" lighting="true" representation="2" lineWidth="1" pointSize="1" sliceIntersectionOpacity="1" opacity="1" power="1" specular="0" selectedSpecular="0.5" diffuse="1" ambient="0" selectedAmbient="0.4" selectedColor="1 0.500008 0.500008" edgeColor="0 0 0" color="0.4 1 1" sliceProjectionOpacity="0.6" sliceProjectionColor="1 1 1" sliceProjection="7" glyphType="13" glyphScale="1.6" textScale="1.7"></MarkupsDisplay>\r\n',...
     '</SceneView>\r\n',...
     '<SceneViewStorage id="vtkMRMLSceneViewStorageNode1" name="SceneViewStorage" hideFromEditors="true" selectable="true" selected="false" fileName="Master Scene View.png" useCompression="1" defaultWriteFileExtension="png" readState="0" writeState="4" ></SceneViewStorage>\r\n',...
-    '<MarkupsFiducialStorage selected="false" selectable="true" hideFromEditors="true" name="MarkupsFiducialStorage" id="vtkMRMLMarkupsFiducialStorageNode1" writeState="0" readState="0" defaultWriteFileExtension="fcsv" useCompression="1" fileName="SlicerElectrodes.fcsv" coordinateSystem="0"></MarkupsFiducialStorage>\r\n',...
-    '<MarkupsFiducial userTags="" selected="false" selectable="true" hideFromEditors="false" name="SlicerElectrodes" id="vtkMRMLMarkupsFiducialNode1" references="display:vtkMRMLMarkupsDisplayNode1;storage:vtkMRMLMarkupsFiducialStorageNode1;" storageNodeRef="vtkMRMLMarkupsFiducialStorageNode1" displayNodeRef="vtkMRMLMarkupsDisplayNode1" markupLabelFormat="%%N-%%d" locked="0"></MarkupsFiducial>\r\n',...
+    '<MarkupsFiducialStorage selected="false" selectable="true" hideFromEditors="true" name="MarkupsFiducialStorage" id="vtkMRMLMarkupsFiducialStorageNode1" writeState="0" readState="0" defaultWriteFileExtension="fcsv" useCompression="1" fileName="ElectrodeFiducials.fcsv" coordinateSystem="0"></MarkupsFiducialStorage>\r\n',...
+    '<MarkupsFiducial userTags="" selected="false" selectable="true" hideFromEditors="false" name="ElectrodeFiducials" id="vtkMRMLMarkupsFiducialNode1" references="display:vtkMRMLMarkupsDisplayNode1;storage:vtkMRMLMarkupsFiducialStorageNode1;" storageNodeRef="vtkMRMLMarkupsFiducialStorageNode1" displayNodeRef="vtkMRMLMarkupsDisplayNode1" markupLabelFormat="%%N-%%d" locked="0"></MarkupsFiducial>\r\n',...
     '<MarkupsDisplay selected="false" selectable="true" hideFromEditors="true" name="MarkupsDisplay" id="vtkMRMLMarkupsDisplayNode1" visibility="true" sliceIntersectionVisibility="false" scalarRange="0 100" scalarRangeFlag="UseData" interpolateTexture="false" tensorVisibility="false" vectorVisibility="false" scalarVisibility="false" backfaceCulling="true" frontfaceCulling="false" sliceIntersectionThickness="1" clipping="false" edgeVisibility="false" shading="true" interpolation="1" lighting="true" representation="2" lineWidth="1" pointSize="1" sliceIntersectionOpacity="1" opacity="1" power="1" specular="0" selectedSpecular="0.5" diffuse="1" ambient="0" selectedAmbient="0.4" selectedColor="1 0.500008 0.500008" edgeColor="0 0 0" color="0.4 1 1" sliceProjectionOpacity="0.6" sliceProjectionColor="1 1 1" sliceProjection="7" glyphType="13" glyphScale="1.6" textScale="1.7"></MarkupsDisplay>\r\n',...
     '</MRML>'
     ];

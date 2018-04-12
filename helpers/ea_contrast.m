@@ -6,8 +6,12 @@ if ~exist('offset','var')
     offset=0;
 end
 %disp([num2str(contrast),',',num2str(offset)]);
-
+ispositive=ea_nanmin(slice(:))>=0;
 slice(slice(:)~=0)=contrast*ea_nanzscore(slice(slice(:)~=0));
+
+if ispositive; % only positive values
+slice(slice(:)==0)=ea_nanmin(slice(:));
+end
 slice=slice+offset;
 slice(slice>3)=3; % cut at 3 std devs if above
 slice(slice<-3)=-3; % cut at -3 std devs if above

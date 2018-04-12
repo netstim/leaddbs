@@ -8,13 +8,15 @@ function varargout=ea_resolve_elspec(varargin)
 
 varargout{1}={'Medtronic 3389', 'Medtronic 3387', 'Medtronic 3391', ...
               'Boston Scientific Vercise', 'Boston Scientific Vercise Directed', ...
-              'St. Jude ActiveTip (6146-6149)','St. Jude ActiveTip (6142-6145)' ...
+              'St. Jude ActiveTip (6146-6149)','St. Jude ActiveTip (6142-6145)',...
+              'St. Jude Directed 6172 (short)','St. Jude Directed 6173 (long)',...
               'PINS L301', 'PINS L302', 'PINS L303', ...
               'SDE-08 S8 Legacy', 'SDE-08 S10 Legacy', 'SDE-08 S12 Legacy', 'SDE-08 S16 Legacy', ...
               'SDE-08 S8', 'SDE-08 S10', 'SDE-08 S12', 'SDE-08 S16'};
 varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', ...
               'boston_vercise', 'boston_vercise_directed', ...
-              'stjude_activetip_2mm','stjude_activetip_3mm' ...
+              'stjude_activetip_2mm','stjude_activetip_3mm',...
+              'stjude_directed_05','stjude_directed_15',...
               'pins_l301', 'pins_l302', 'pins_l303', ...
               'sde_08_s8_legacy', 'sde_08_s10_legacy', 'sde_08_s12_legacy', 'sde_08_s16_legacy',...
               'sde_08_s8', 'sde_08_s10', 'sde_08_s12', 'sde_08_s16'};
@@ -124,6 +126,34 @@ try
             elspec.contact_spacing=1.5;
             elspec.numel=4;
             elspec.tipiscontact=1;
+            elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
+        case 'St. Jude Directed 6172 (short)'
+            elspec.matfname='stjude_directed_05';
+            elspec.lead_diameter=1.27;
+            elspec.lead_color=0.7;
+            elspec.contact_length=1.5;
+            elspec.contact_diameter=1.27;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=1.27;
+            elspec.tip_color=0.3;
+            elspec.tip_length=1;
+            elspec.contact_spacing=0.5;
+            elspec.numel=8;
+            elspec.tipiscontact=0;
+            elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
+        case 'St. Jude Directed 6173 (long)'
+            elspec.matfname='stjude_directed_15';
+            elspec.lead_diameter=1.27;
+            elspec.lead_color=0.7;
+            elspec.contact_length=1.5;
+            elspec.contact_diameter=1.27;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=1.27;
+            elspec.tip_color=0.3;
+            elspec.tip_length=1;
+            elspec.contact_spacing=1.5;
+            elspec.numel=8;
+            elspec.tipiscontact=0;
             elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
         case 'PINS L301'
             elspec.matfname='pins_l301';

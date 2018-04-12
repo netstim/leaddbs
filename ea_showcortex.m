@@ -84,8 +84,10 @@ for nativemni=nm % switch between native and mni space.
 end
 
 % Check if CortexHiRes.mat and CortexLowRes_*.mat already exists
-files = dir(adir); files = files(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {files.name}));
-files = files(~[files.isdir]); files = {files(~cellfun(@isempty , strfind({files.name},'Cortex'))).name};
+files = dir(adir); 
+files = files(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {files.name}));
+files = files(~[files.isdir]); 
+files = {files(contains({files.name},'Cortex')).name};
 
     % % Use this to choose which file to load:
     % if size(files,2)>=2

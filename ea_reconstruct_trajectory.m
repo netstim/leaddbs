@@ -5,6 +5,11 @@ function [trajectory,trajvector]=ea_reconstruct_trajectory(priortrajectory,tra_n
 
 if options.modality==2 % CT support
     tra_nii.img=tra_nii.img*-1;
+else
+    if strcmp(options.entrypoint,'Auto')
+        warning('Automatic entry point detection not implemented for MRI. Setting to Manual.')
+        options.entrypoint = 'Manual';
+    end
 end
 
 %Vtra=spm_vol([options.root,patientname,filesep,patientname,'_tra_brain_A3_final.nii']);
@@ -62,6 +67,32 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             % reset mask from mouse input
             mask=zeros(size(slice,1),size(slice,2));
             mask(round(Y-10:Y+10),round(X-10:X+10))=1;
+        case 'Auto' 
+            % TP: Similar to manual, but try to detect entry-point using artefact
+            slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
+            midpt = floor(size(slice, 2)/2);
+            idx = 1:midpt;
+            if side==flipside                
+                idx = midpt:size(slice,2);
+            end
+            b = slice(:,idx);
+            s = b;
+            s(s>(min(b(:))*0.2)) = 0;
+            height = abs(min(s(:))) * 0.05;
+            [~, xid] = findpeaks(-sgolayfilt(min(s,[],1), 1, 21), 'MinPeakHeight', height);
+            [~, yid] = findpeaks(-sgolayfilt(min(s,[],2), 1, 21), 'MinPeakHeight', height);
+            if (idx(1) == 1)
+                [~, id] = min(abs(xid-size(s,2)));
+            else
+                [~, id] = min(abs(xid));
+            end
+            X = xid(id);
+            [~, id] = min(abs(yid-size(s,1)));
+            Y = yid(id);
+            X = X + idx(1)-1;
+            
+            mask=zeros(size(slice,1),size(slice,2));
+            mask(round(Y-10:Y+10),round(X-10:X+10))=1;
         otherwise
             mask(masksz(1):masksz(2),masksz(3):masksz(4))=1;
             if side==flipside
@@ -77,7 +108,14 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
         try
         [slice(:,:,i),slicebw(:,:,i)]=ea_prepare_slice(tra_nii,mask,1,startslice-(i-1),options);
         catch
-            keyboard
+            % keyboard % TP: Requesting input here pauses tasks when batch
+            % processing. I made a work around,but not sure if it will lead
+            % to further errors.
+            if (length(options.uipatdirs) > 1)
+                warning([options.patientname, ': Could not prepare slice when reconstructing trajectory.']);
+            else
+                keyboard
+            end
         end
     end
     slice=mean(slice,3);
@@ -233,8 +271,21 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
         return
         %pause
     end
-    mask(round(estpoint(2)-options.maskwindow : estpoint(2)+options.maskwindow), ...
-        round(estpoint(1)-options.maskwindow : estpoint(1)+options.maskwindow))=1;
+    % TP: Fixing bug. Sometimes when the trajectory is not found the index
+    % to mask is less than 1 causing Lead to crash
+    try
+        mask(round(estpoint(2)-options.maskwindow : estpoint(2)+options.maskwindow), ...
+            round(estpoint(1)-options.maskwindow : estpoint(1)+options.maskwindow))=1;
+    catch ME
+        if (strcmp(ME.identifier, 'MATLAB:badsubscript'))
+            ea_error(sprintf(['Mask index out of bounds! Must have lost trajectory...\n' ...
+            'Please try a different ''Mask window size'' or ' ...
+            'try manual mode by setting ''Entrypoint for Target'' to ''Manual''.']), ...
+            'Electrode Reconstruction Error', ...
+            dbstack);
+            return;
+        end
+    end
     %% part 4: visualization...
     %-------------------------------------------------------------------%
     if options.verbose>1
@@ -341,7 +392,7 @@ else % use MNI defaults
     end
 end
 
-if strcmp(options.entrypoint,'Manual')
+if strcmp(options.entrypoint,'Manual') || strcmp(options.entrypoint,'Auto')
     try
         masksz=spacedef.guidef.masks(1,:);
     catch

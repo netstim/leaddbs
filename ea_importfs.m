@@ -19,11 +19,14 @@ if isfield(varargin{1},'patdir_choosebox')
     if strcmp(handles.patdir_choosebox.String,'Choose Patient Directory')
         ea_error('Please Choose Patient Directory');
     else
-        ptdir = handles.patdir_choosebox.String;
+        options = ea_handles2options(handles);
+        options.patientname = get(handles.patdir_choosebox,'String');
+        options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
+        options.prefs=ea_prefs(options.patientname);
+        
+        ptdir = get(handles.patdir_choosebox,'String');
+        [~,patientname] = fileparts(get(handles.patdir_choosebox,'String'));
     end
-    
-    tmp = strsplit(handles.patdir_choosebox.String,'/');
-    patientname = tmp{end}; clear tmp
 
 elseif isfield(varargin{1},'uipatdirs')
     
@@ -84,8 +87,8 @@ if overwrite
             end
         end
         return
-    elseif strcmp(response,'Yes')
-        load([ptdir,'/ea_ui.mat'],'fsdir');        
+    elseif strcmp(response,'Yes') && options.prefs.d3.fs.dev==1
+        load([ptdir,'/ea_ui.mat'],'fsdir');
     else
         % Choose Freesurfer Directory
         fsdir = ea_uigetdir(startdir,['Choose Freesurfer Folder for ' patientname]);
@@ -152,18 +155,20 @@ AsegFile = [fsdir '/mri/aseg.mgz'];
     % Notes: need to add PC functionality
     % Notes: need to add ea_libs_helper for Freesurfer compatibility
 
+lfs = dir([fsdir,filesep,'label']); % label_files
+    
 annot_DKT(1).atlas = 'Desikan-Killiany';
 annot_DKT(2).atlas = 'Desikan-Killiany';
-annot_DKT(1).filename  = 'label/rh.aparc.annot';
-annot_DKT(2).filename  = 'label/lh.aparc.annot';
+annot_DKT(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.annot')).name]; %'label/lh.aparc.annot';     label_files(~cellfun(@isempty,strfind({label_files.name},'rh.aparc.DKT'))).name
+annot_DKT(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.annot')).name]; %'label/lh.aparc.annot';
 annot_DKTaseg(1).atlas = 'Desikan-Killiany + Aseg';
 annot_DKTaseg(2).atlas = 'Desikan-Killiany + Aseg';
-annot_DKTaseg(1).filename  = 'label/rh.aparc.DKTatlas.annot';
-annot_DKTaseg(2).filename  = 'label/lh.aparc.DKTatlas.annot';
+annot_DKTaseg(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.DKT')).name]; %'label/rh.aparc.DKTatlas.annot';
+annot_DKTaseg(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.DKT')).name]; %'label/lh.aparc.DKTatlas.annot';
 annot_a2009(1).atlas = 'Destrieux';
 annot_a2009(2).atlas = 'Destrieux';
-annot_a2009(1).filename  = 'label/rh.aparc.a2009s.annot';
-annot_a2009(2).filename  = 'label/lh.aparc.a2009s.annot';
+annot_a2009(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.a2009')).name]; %'label/rh.aparc.a2009s.annot';
+annot_a2009(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.a2009')).name]; %'label/lh.aparc.a2009s.annot';
 
 % Read Annotation Files
 % external/freesurfer/read_annotation.m
@@ -190,12 +195,12 @@ disp('Loading reconstruction...')
 [CortexHiRes.raw.Vertices_lh,CortexHiRes.raw.Faces_lh]= read_surf(LhPial); % Reading left side pial surface
 [CortexHiRes.raw.Vertices_rh,CortexHiRes.raw.Faces_rh]= read_surf(RhPial); % Reading right side pial surface
 
-% Generate entire cortex
-CortexHiRes.raw.Vertices = [CortexHiRes.raw.Vertices_lh; CortexHiRes.raw.Vertices_rh]; % Combining both hemispheres
-CortexHiRes.raw.Faces = [CortexHiRes.raw.Faces_lh; (CortexHiRes.raw.Faces_rh + length(CortexHiRes.raw.Vertices_lh))]; % Combining Faces
-
 % Reading in MRI parameters
 T1nii=MRIread(MriFile);
+
+if isempty(T1nii)
+    ea_error('Error loading MriFile from Freesurfer.')
+end
 
 %% Translating into the appropriate space
 % FS to MRI
@@ -208,38 +213,52 @@ tform = affine3d(aff); CortexHiRes.raw.tform = tform;
 
 CortexHiRes.Vertices_lh = transformPointsForward(tform,CortexHiRes.raw.Vertices_lh);
 CortexHiRes.Vertices_rh = transformPointsForward(tform,CortexHiRes.raw.Vertices_rh);
-CortexHiRes.Vertices = transformPointsForward(tform,CortexHiRes.raw.Vertices);
 
 % freesurfer starts at 0 for indexing
 CortexHiRes.Faces_lh=CortexHiRes.raw.Faces_lh+1; 
 CortexHiRes.Faces_rh=CortexHiRes.raw.Faces_rh+1;
-CortexHiRes.Faces=CortexHiRes.raw.Faces+1;
 
 % Postop to preop
-switch CortexHiRes.raw.nativespace
-    case 'Postop'
-    coregfile = fdir(ptdir,'GenericAffine'); %fdir(ptdir,'2postop');
-    % %     ONLY SUPPORTS ANTS COREGISTRATION
-    if ~isempty(coregfile) && length(coregfile)==1 && ~isempty(regexp(coregfile,'\wants','match'))
-        load([ptdir,filesep,cell2mat(coregfile)])
-        try 
-            aff = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
-        catch
-            aff = ea_antsmat2mat(AffineTransform_double_3_3,fixed);
-        end
-        aff([4,8,12])=aff([13:15]); aff([13:15])=0;
-        tform = affine3d(aff);
-        CortexHiRes.raw.coregistration = tform;
-        CortexHiRes.Vertices_lh = transformPointsInverse(tform, CortexHiRes.Vertices_lh);
-        CortexHiRes.Vertices_rh = transformPointsInverse(tform, CortexHiRes.Vertices_rh);
-        CortexHiRes.Vertices = transformPointsInverse(tform, CortexHiRes.Vertices);
-        
-        [CortexHiRes.Vert_mm,CortexHiRes.Vert_vox] = ea_map_coords(CortexHiRes.Vertices','raw_postop_tra.nii',fullfile(ptdir,cell2mat(coregfile)),'anat_t1.nii','ANTS');
-    else 
-        ea_warning('cannot find corgeistration matrix')
+if options.prefs.d3.fs.dev
+    % Generate entire cortex
+    CortexHiRes.raw.Vertices = [CortexHiRes.raw.Vertices_lh; CortexHiRes.raw.Vertices_rh]; % Combining both hemispheres
+    CortexHiRes.raw.Faces = [CortexHiRes.raw.Faces_lh; (CortexHiRes.raw.Faces_rh + length(CortexHiRes.raw.Vertices_lh))]; % Combining Faces
+    CortexHiRes.Vertices = transformPointsForward(tform,CortexHiRes.raw.Vertices);
+    CortexHiRes.Faces=CortexHiRes.raw.Faces+1;
+
+    
+    switch CortexHiRes.raw.nativespace
+        case 'Postop'
+            coregfile = fdir(ptdir,'GenericAffine'); %fdir(ptdir,'2postop');
+            % %     ONLY SUPPORTS ANTS COREGISTRATION
+            if ~isempty(coregfile) && length(coregfile)==1 && ~isempty(regexp(coregfile,'\wants','match'))
+                load([ptdir,filesep,cell2mat(coregfile)])
+                try
+                    aff = ea_antsmat2mat(AffineTransform_float_3_3,fixed);
+                catch
+                    aff = ea_antsmat2mat(AffineTransform_double_3_3,fixed);
+                end
+                aff([4,8,12])=aff([13:15]); aff([13:15])=0;
+                tform = affine3d(aff);
+                CortexHiRes.raw.coregistration = tform;
+                CortexHiRes.Vertices_lh = transformPointsInverse(tform, CortexHiRes.Vertices_lh);
+                CortexHiRes.Vertices_rh = transformPointsInverse(tform, CortexHiRes.Vertices_rh);
+                CortexHiRes.Vertices = transformPointsInverse(tform, CortexHiRes.Vertices);
+                
+                [CortexHiRes.Vert_mm,CortexHiRes.Vert_vox] = ea_map_coords(CortexHiRes.Vertices','raw_postop_tra.nii',fullfile(ptdir,cell2mat(coregfile)),'anat_t1.nii','ANTS');
+            else
+                ea_warning('cannot find corgeistration matrix')
+            end
+        otherwise
     end
-    otherwise
 end
+
+
+% Remove raw data from cortex
+if ~options.prefs.d3.fs.dev
+    CortexHiRes=rmfield(CortexHiRes,'raw');
+end
+%
 
 
 %% Save Output to PatientDirectory/cortex/
@@ -266,7 +285,7 @@ end
 %         save([ptdir '/cortex/hull.mat'],'mask_matrix','mask_indices')
 %% Option to Downsample CortexHiRes - Dev
 % newNbVertices = '15000';
-if options.prefs.env.dev
+if options.prefs.d3.fs.dev
 qst = {'Would you like to downsample the high '; sprintf('resolution cortex with %d vertices?',size(CortexHiRes.Vertices,1))};
 DownsampleOption = questdlg(qst,'Import FreeSurfer');
 
@@ -323,7 +342,7 @@ end
 
 %% Import Cortical Electrodes
 % Guarantee Options
-if options.prefs.env.dev
+if options.prefs.d3.fs.dev
 options.patientname = patientname;
 options.uipatdirs = ptdir;
 options.fsdir = fsdir;

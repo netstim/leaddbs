@@ -95,6 +95,8 @@ prefs.normalize.spm.resolution=1; % Defines resolution in mm when using SPM norm
 %% Reconstruction
 prefs.reco.mancoruse='rpostop'; % switch to 'postop' to use unresliced CT.
 prefs.reco.saveACPC=0; % also save reconstructions in AC/PC space
+prefs.reco.saveimg=0; % save fiducial marker visualisation as image after "Refined TRAC/CORE"
+prefs.reco.exportfiducials=0; % automatically export fiducials to a comma separated value file after "Refined TRAC/CORE". Set this to 'fcsv' for simple import into Slicer, otherwise set to 'csv' or 'txt' for import into other software.
 
 %% Coregistration (CT/MR):
 prefs.ctcoreg.default='ea_coregctmri_ants';
@@ -167,6 +169,9 @@ prefs.mer.tract_info = struct(...
 prefs.d3.cortexcolor=[0.65 0.65 0.65]; % default color is gray
 prefs.d3.cortexalpha=0.5; % default alpha is 0.5
 prefs.d3.cortex_defaultatlas='DKT'; % Currently supports 'DKT','DKT_aseg','a2009'
+
+%% Freesurfer Preferences
+prefs.d3.fs.dev=0;
 
 %% DICOM files:
 prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 0: Leave DICOMs at pt/DICOM folder after conversion.

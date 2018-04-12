@@ -552,9 +552,9 @@ else
             'Callback', @discarddirection);
         
         %% marker
-        ax1 = subplot(3,3,1,'Position',[0.05 0.75 0.2 0.2]);
+        ax1 = subplot(3,3,1);
         hold on
-        title('Marker')
+        title(ax1,'Marker')
         imagesc(artifact_marker')
         view(-180,-90)
         axis equal
@@ -562,23 +562,34 @@ else
         colormap gray
         caxis manual
         caxis(cscale)
-        scatter(center_marker(1),center_marker(2),'o','g')
-        plot(vector(:,1),vector(:,2),'g')
-        scatter(vector(finalpeak(side),1), vector(finalpeak(side),2),'g','filled');
+        scatter(ax1,center_marker(1),center_marker(2),'o','g')
+        plot(ax1,vector(:,1),vector(:,2),'g','LineStyle',':')
+        scatter(ax1,vector(finalpeak(side),1), vector(finalpeak(side),2),'g','filled');
+        quiver(center_marker(1),center_marker(2),vector(finalpeak(side),1)-center_marker(1) ,vector(finalpeak(side),2)-center_marker(2),2,'LineWidth',1,'Color','g','MaxHeadSize',2)
+        for k = 1:length(valley)
+            plot(ax1,[center_marker(1) (center_marker(1) + 3 * (vector(valley(k),1)-center_marker(1)))],...
+                [center_marker(2) (center_marker(2) + 3 * (vector(valley(k),2)-center_marker(2)))],'r','LineStyle','--')
+        end
+        xlimit = get(ax1,'Xlim');
+        ylimit = get(ax1,'Ylim');
+        text(mean(xlimit),ylimit(2) - 0.15 * mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+        text(mean(xlimit),ylimit(1) + 0.15 * mean(ylimit),'P','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+        text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'L','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+        text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'R','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
         
-        ax2 = subplot(3,3,2,'Position',[0.3 0.75 0.2 0.2]);
+        ax2 = subplot(3,3,2);
         hold on
-        title('Intensity Profile','FontWeight','normal')
-        plot(rad2deg(angle),intensity)
-        plot(rad2deg(angle),markerfft)
-        scatter(rad2deg(angle(peak)), intensity(peak),'g');
-        scatter(rad2deg(angle(valley)), intensity(valley),'r');
+        title(ax2,'Intensity Profile','FontWeight','normal')
+        plot(ax2,rad2deg(angle),intensity)
+        plot(ax2,rad2deg(angle),markerfft)
+        scatter(ax2,rad2deg(angle(peak)), intensity(peak),'g');
+        scatter(ax2,rad2deg(angle(valley)), intensity(valley),'r');
         set(ax2,'yticklabel',{[]})
         
         %% graphics dir level one
-        ax4 = subplot(3,3,4,'Position',[0.05 0.475 0.2 0.2]);
+        ax4 = subplot(3,3,4);
         hold on
-        title('Directional Level 1')
+        title(ax4,'Directional Level 1')
         imagesc(artifact_dir1')
         view(-180,-90)
         axis equal
@@ -586,31 +597,40 @@ else
         colormap gray
         caxis manual
         caxis(cscale)
-        scatter(center_dir1(1),center_dir1(2),'o','g')
-        plot(vector1(:,1),vector1(:,2),'g')
-        scatter(vector1(dir1_valleys,1),vector1(dir1_valleys,2),'r')
+        scatter(ax4,center_dir1(1),center_dir1(2),'o','g')
+        plot(ax4,vector1(:,1),vector1(:,2),'g','LineStyle',':')        
+        scatter(ax4,vector1(dir1_valleys,1),vector1(dir1_valleys,2),'r')
+        for k = 1:length(dir1_valleys)
+            plot(ax4,[center_dir1(1) (center_dir1(1) + 1.5 * (vector1(dir1_valleys(k),1)-center_dir1(1)))],...
+                [center_dir1(2) (center_dir1(2) + 1.5 * (vector1(dir1_valleys(k),2)-center_dir1(2)))],'r','LineStyle','--')
+        end
+        xlimit = get(ax4,'Xlim');
+        ylimit = get(ax4,'Ylim');
+        text(mean(xlimit),ylimit(2) - 0.15 * mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+        text(mean(xlimit),ylimit(1) + 0.15 * mean(ylimit),'P','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+        text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'L','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+        text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'R','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
         
-        ax5 = subplot(3,3,5,'Position',[0.3 0.475 0.2 0.2]);
+        ax5 = subplot(3,3,5);
         hold on
-        title('Intensity Profile','FontWeight','normal')
-        plot(rad2deg(angle1),intensity1)
-        scatter(rad2deg(angle1(dir1_valleys)), intensity1(dir1_valleys),'r');
+        title(ax5,'Intensity Profile','FontWeight','normal')
+        plot(ax5,rad2deg(angle1),intensity1)
+        scatter(ax5,rad2deg(angle1(dir1_valleys)), intensity1(dir1_valleys),'r');
         set(ax5,'yticklabel',{[]})
         
-        ax6 = subplot(3,3,6,'Position',[0.55 0.475 0.2 0.2]);
+        ax6 = subplot(3,3,6);
         hold on
-        title('Correction','FontWeight','normal')
-        plot(rad2deg(rollangles),sumintensity1)
-        scatter(rad2deg(rollangles(rollangles == roll)), sumintensity1(rollangles == roll),'g','filled');
-        scatter(rad2deg(rollangles(rollangles == roll1)), sumintensity1(rollangles == roll1),'r');
-        text(rad2deg(rollangles(rollangles == roll1)), sumintensity1(rollangles == roll1),['\leftarrow HU = ' num2str(round(sumintensity1(rollangles == roll1)))]);
-        
+        title(ax6,'Correction','FontWeight','normal')
+        plot(ax6,rad2deg(rollangles),sumintensity1)
+        scatter(ax6,rad2deg(rollangles(rollangles == roll)), sumintensity1(rollangles == roll),'g','filled');
+        scatter(ax6,rad2deg(rollangles(rollangles == roll1)), sumintensity1(rollangles == roll1),'r');
+        text(rad2deg(rollangles(rollangles == roll1)), sumintensity1(rollangles == roll1),['\leftarrow HU = ' num2str(round(sumintensity1(rollangles == roll1)))]);        
         set(ax6,'yticklabel',{[]})
         
         %% graphics dir level two
-        ax7 = subplot(3,3,7,'Position',[0.05 0.2 0.2 0.2]);
+        ax7 = subplot(3,3,7);
         hold on
-        title('Directional Level 2')
+        title(ax7,'Directional Level 2')
         imagesc(artifact_dir2')
         view(-180,-90)
         axis equal
@@ -618,23 +638,33 @@ else
         colormap gray
         caxis manual
         caxis(cscale)
-        scatter(center_dir2(1),center_dir2(2),'o','g')
-        plot(vector2(:,1),vector2(:,2),'g')
-        scatter(vector2(dir2_valleys,1),vector2(dir2_valleys,2),'r')
+        scatter(ax7,center_dir2(1),center_dir2(2),'o','g')
+        plot(ax7,vector2(:,1),vector2(:,2),'g','LineStyle',':')
+        scatter(ax7,vector2(dir2_valleys,1),vector2(dir2_valleys,2),'r')
+        for k = 1:length(dir2_valleys)
+            plot(ax7,[center_dir2(1) (center_dir2(1) + 1.5 * (vector2(dir2_valleys(k),1)-center_dir2(1)))],...
+                [center_dir2(2) (center_dir2(2) + 1.5 * (vector2(dir2_valleys(k),2)-center_dir2(2)))],'r','LineStyle','--')
+        end
+        xlimit = get(ax7,'Xlim');
+        ylimit = get(ax7,'Ylim');
+        text(mean(xlimit),ylimit(2) - 0.15 * mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+        text(mean(xlimit),ylimit(1) + 0.15 * mean(ylimit),'P','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+        text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'L','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+        text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'R','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
         
-        ax8 = subplot(3,3,8,'Position',[0.3 0.2 0.2 0.2]);
+        ax8 = subplot(3,3,8);
         hold on
-        title('Intensity Profile','FontWeight','normal')
-        plot(rad2deg(angle2),intensity2)
-        scatter(rad2deg(angle2(dir2_valleys)), intensity2(dir2_valleys),'r');
+        title(ax8,'Intensity Profile','FontWeight','normal')
+        plot(ax8,rad2deg(angle2),intensity2)
+        scatter(ax8,rad2deg(angle2(dir2_valleys)), intensity2(dir2_valleys),'r');
         set(ax8,'yticklabel',{[]})
         
-        ax9 = subplot(3,3,9,'Position',[0.55 0.2 0.2 0.2]);
+        ax9 = subplot(3,3,9);
         hold on
-        title('Correction','FontWeight','normal')
-        plot(rad2deg(rollangles),sumintensity2)
-        scatter(rad2deg(rollangles(rollangles == roll)), sumintensity2(rollangles == roll),'g','filled');
-        scatter(rad2deg(rollangles(rollangles == roll2)), sumintensity2(rollangles == roll2),'r');
+        title(ax9,'Correction','FontWeight','normal')
+        plot(ax9,rad2deg(rollangles),sumintensity2)
+        scatter(ax9,rad2deg(rollangles(rollangles == roll)), sumintensity2(rollangles == roll),'g','filled');
+        scatter(ax9,rad2deg(rollangles(rollangles == roll2)), sumintensity2(rollangles == roll2),'r');
         text(rad2deg(rollangles(rollangles == roll2)), sumintensity2(rollangles == roll2),['\leftarrow HU = ' num2str(round(sumintensity2(rollangles == roll2)))]);
         set(ax9,'yticklabel',{[]})
         
@@ -645,6 +675,22 @@ else
         linkaxes([ax6 ax9],'xy');
         set(ax6,'Xlim',[rad2deg(rollangles(1)) rad2deg(rollangles(end))]);
         set(ax6,'Ylim',[-1000 1000]);
+        
+        set(ax1,'Position',[0.05 0.75 0.2 0.2])
+        set(ax2,'Position',[0.3 0.75 0.2 0.2])
+        set(ax4,'Position',[0.05 0.475 0.2 0.2])
+        set(ax5,'Position',[0.3 0.475 0.2 0.2])
+        set(ax6,'Position',[0.55 0.475 0.2 0.2])
+        set(ax7,'Position',[0.05 0.2 0.2 0.2])
+        set(ax8,'Position',[0.3 0.2 0.2 0.2])
+        set(ax9,'Position',[0.55 0.2 0.2 0.2])
+        
+        if round(sumintensity1(rollangles == roll1)) <= -200
+            checkbox1 = set(fig(side).chk1,'Value',1);
+        end
+        if round(sumintensity2(rollangles == roll2)) <= -200
+            checkbox1 = set(fig(side).chk2,'Value',1);
+        end        
         
         uiwait
         

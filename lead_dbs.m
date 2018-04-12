@@ -67,7 +67,7 @@ set(handles.leadfigure,'name','Welcome to LEAD-DBS');
 
 spacedef=ea_getspacedef;
 if isfield(spacedef,'guidef')
-    set(handles.targetpopup,'String',[spacedef.guidef.entrypoints,{'Manual'}]);
+    set(handles.targetpopup,'String',[spacedef.guidef.entrypoints,{'Manual'}, {'Auto'}]);
 end
 
 options.prefs=ea_prefs('');
