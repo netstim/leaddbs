@@ -75,13 +75,20 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             if side==flipside                
                 idx = midpt:size(slice,2);
             end
-            s = slice(:,idx);
-%             [~, minidx] = min(s(:)); % failed in some cases
-%             [Y,X] = ind2sub(size(s), minidx);
-%             X = X + idx(1)-1;
-            height = abs(min(s(:))) * 0.1;
-            [~, X] = findpeaks(-sgolayfilt(min(s,[],1), 1, 21), 'MinPeakHeight', height, 'NPeaks', 1);
-            [~, Y] = findpeaks(-sgolayfilt(min(s,[],2), 1, 21), 'MinPeakHeight', height, 'NPeaks', 1);
+            b = slice(:,idx);
+            s = b;
+            s(s>(min(b(:))*0.2)) = 0;
+            height = abs(min(s(:))) * 0.05;
+            [~, xid] = findpeaks(-sgolayfilt(min(s,[],1), 1, 21), 'MinPeakHeight', height);
+            [~, yid] = findpeaks(-sgolayfilt(min(s,[],2), 1, 21), 'MinPeakHeight', height);
+            if (idx(1) == 1)
+                [~, id] = min(abs(xid-size(s,2)));
+            else
+                [~, id] = min(abs(xid));
+            end
+            X = xid(id);
+            [~, id] = min(abs(yid-size(s,1)));
+            Y = yid(id);
             X = X + idx(1)-1;
             
             mask=zeros(size(slice,1),size(slice,2));

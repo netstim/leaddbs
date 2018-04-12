@@ -1,6 +1,6 @@
 function [coords_mm,trajectory,markers] = ea_refinecoords(options)
 %% Refine the fiducial markers following TRAC/CORE reconstruction
-%  Last Revision: 10/04/2018
+%  Last Revision: 12/04/2018
 %  Thushara Perera (c) 2018 Bionics Institute
 %  Input:
 %   - lead dbs options struct
@@ -125,33 +125,37 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
             warning(['Could not find one or more fiducial. Check trajectory. Skipping side ', num2str(side)]);
             continue;
         end
+        
+        % convert to mm
+        [t_head, t_tail] = convert2mm(pidx, pidy, deltax, deltay, deltaz, xx, yy, zz, b);
+        
+        % refine fiducials using axial slices
+        [ahx, ahy, head_slice, hx, hy] = refine_axial(V, t_head, is_debug); 
+        [atx, aty, tail_slice, tx, ty] = refine_axial(V, t_tail, is_debug);
+        pidx(1) = pidx(1) + ahx;
+        pidx(2) = pidx(2) + atx;
+        pidy(1) = pidy(1) + ahy;
+        pidy(2) = pidy(2) + aty;
 
         % convert to mm
-        head = ones(1,3);
-        tail = head;
-        head(1) = pidx(1) * deltax + xx(2,1) - (xx(2,1) - xx(1,1))*(1-pidy(1)/size(b,1));
-        head(2) = pidy(1) * deltay + yy(1);
-        head(3) = pidy(1) * deltaz + zz(1);
-        tail(1) = pidx(end) * deltax + xx(2,1) - (xx(2,1) - xx(1,1))*(1-pidy(end)/size(b,1));
-        tail(2) = pidy(end) * deltay + yy(1);
-        tail(3) = pidy(end) * deltaz + zz(1);
+        [head, tail] = convert2mm(pidx, pidy, deltax, deltay, deltaz, xx, yy, zz, b);
         
-        %% apply same offset as head to x and y        
+        % apply same offset as head to x and y        
         markers(side).x = markers(side).x + head - markers(side).head;
         markers(side).y = markers(side).y + head - markers(side).head;
 
-        if is_debug
-            figure(10+side);
-            clf;
-            hold on
-            plot3(markers(side).head(1),markers(side).head(2),markers(side).head(3)+0.1,'.','MarkerEdgeColor','r','MarkerSize',20);
-            plot3(markers(side).tail(1),markers(side).tail(2),markers(side).tail(3)+0.1,'.','MarkerEdgeColor','r','MarkerSize',20);
-            plot3(head(1), head(2), head(3)+0.1,'.','MarkerEdgeColor','g','MarkerSize',20);
-            plot3(tail(1), tail(2), tail(3)+0.1,'.','MarkerEdgeColor','g','MarkerSize',20);
-            surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'FaceColor','texturemap','EdgeColor','none');
-            title(['Side: ', num2str(side), '; Green = Local Maxima Refine']);
-            hold off
-        end
+%         if is_debug
+%             figure(10+side);
+%             clf;
+%             hold on
+%             plot3(markers(side).head(1),markers(side).head(2),markers(side).head(3)+0.1,'.','MarkerEdgeColor','r','MarkerSize',20);
+%             plot3(markers(side).tail(1),markers(side).tail(2),markers(side).tail(3)+0.1,'.','MarkerEdgeColor','r','MarkerSize',20);
+%             plot3(head(1), head(2), head(3)+0.1,'.','MarkerEdgeColor','g','MarkerSize',20);
+%             plot3(tail(1), tail(2), tail(3)+0.1,'.','MarkerEdgeColor','g','MarkerSize',20);
+%             surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'FaceColor','texturemap','EdgeColor','none');
+%             title(['Side: ', num2str(side), '; Green = Local Maxima Refine']);
+%             hold off
+%         end
 
         markers(side).head = head;
         markers(side).tail = tail;
@@ -159,18 +163,39 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
         if saveimg
             hf = figure(20+side);
             set(gcf,'Color',[0.1,0.1,0.1]);
-            clf;
-            plot3(head(1), head(2)-0.1, head(3),'.','MarkerEdgeColor','r','MarkerSize',20);
+            clf(hf);
+            
+            p(1) = subplot(2,2,[1,3]);
+            plot3(head(1), t_head(2)-0.01, head(3),'.','MarkerEdgeColor','r','MarkerSize',20);
             hold on;
-            plot3(tail(1), tail(2)-0.1, tail(3),'.','MarkerEdgeColor','g','MarkerSize',20);
+            plot3(tail(1), t_tail(2)-0.01, tail(3),'.','MarkerEdgeColor','g','MarkerSize',20);
             surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'FaceColor','texturemap','EdgeColor','none');
             colormap gray;
-            title(['Lead-DBS Automated Reconstruction (Side: ', num2str(side), ')'], 'Color', 'w');
             hold off;
             axis tight;
             axis off;
+            title('Lead-DBS Automated Reconstruction', 'Color', 'w');
             view(0,0);
-            text(min(xx(:)), min(yy(:)), min(zz(:))*1.05, options.patientname, 'Color', 'w', 'FontSize', 12);
+            text(min(xx(:)), min(yy(:)), min(zz(:))*1.05, [options.patientname, '; Side: ', num2str(side)], 'Color', 'w', 'FontSize', 12);
+            
+            p(2) = subplot(2,2,2);
+            imagesc(tail_slice);
+            hold on;
+            plot(tx, ty, '.','MarkerEdgeColor','g','MarkerSize',20);
+            hold off;
+            axis tight;
+            axis off;
+            colormap gray;
+            
+            p(3) = subplot(2,2,4);
+            imagesc(head_slice);
+            hold on;
+            plot(hx, hy, '.','MarkerEdgeColor','r','MarkerSize',20);
+            hold off;
+            axis tight;
+            axis off;
+            colormap gray;
+            
             set(hf,'PaperUnits','inches','PaperPosition',[0 0 4 4], 'InvertHardCopy', 'off');
             print(hf, [options.root, options.patientname, filesep, 'Electrode_', num2str(side), '.jpg'], '-djpeg75', '-r300');
             if ~is_debug
@@ -187,6 +212,78 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
     
 end
 
+function [head, tail] = convert2mm(pidx, pidy, deltax, deltay, deltaz, xx, yy, zz, b)
+    head = ones(1,3);
+    tail = head;
+    head(1) = pidx(1) * deltax + xx(2,1) - (xx(2,1) - xx(1,1))*(1-pidy(1)/size(b,1));
+    head(2) = pidy(1) * deltay + yy(1);
+    head(3) = pidy(1) * deltaz + zz(1);
+    tail(1) = pidx(end) * deltax + xx(2,1) - (xx(2,1) - xx(1,1))*(1-pidy(end)/size(b,1));
+    tail(2) = pidy(end) * deltay + yy(1);
+    tail(3) = pidy(end) * deltaz + zz(1);
+end
+
+function [ax, ay, crop_slice, cx, cy] = refine_axial(vol, fiducial, is_debug)
+        
+    scales = spm_imatrix(vol.mat);
+    xscale = scales(7)/2; % divide by 2 due to interpolation factor in ea_sample_slice()
+    yscale = scales(8)/2;
+    
+    width = ceil(6/xscale); % mm width
+    f_vox = vol.mat\[fiducial, 1]';
+    f_vox = f_vox(1:3,:)';
+    [slice,~,~,~]=ea_sample_slice(vol,'tra',width,'vox',f_vox,1);
+    b = slice;
+    b(b<(max(slice(:))*0.2)) = 0;
+    
+    
+    [ys, xs] = find(b);
+    mx = median(xs);
+    my = median(ys);
+    ax = (mx - 2*width);% * xscale;
+    ay = (my - 2*width);% * yscale;
+    
+    [h, w] = size(slice);
+    cropx = ceil(4/xscale);
+    cropy = ceil(4/yscale);
+    L = round(mx - cropx);
+    R = round(mx + cropx);
+    U = round(my + cropy);
+    D = round(my - cropy);
+    if (L < 1)
+        L = 1;
+    end
+    if (R > w)
+        R = w;
+    end
+    if (U > h)
+        U = h;
+    end
+    if (D < 1)
+        D = 1;
+    end
+    crop_slice = slice(D:U, L:R);
+    cx = mx - L + 1;
+    cy = my - D + 1;
+    
+    if is_debug
+        f = figure(40);
+        clf(f);
+        imagesc(b);
+        hold on;
+        plot(xs, ys, '.','MarkerEdgeColor','r','MarkerSize',5);
+        plot(mx, my, '.','MarkerEdgeColor','g','MarkerSize',20);
+        plot(f_vox(1), f_vox(2), '.','MarkerEdgeColor','k','MarkerSize',20);
+        hold off;
+        f = figure(41);
+        clf(f);
+        imagesc(crop_slice);
+        hold on;
+        plot(cx, cy, '.','MarkerEdgeColor','r','MarkerSize',20);
+        hold off;
+    end
+end
+
 function [cx, cy] = find_centre(slice, pidx, pidy, elheight, is_debug) % elheight in voxels
     [h, w] = size(slice);
     cx = pidx;
@@ -195,10 +292,10 @@ function [cx, cy] = find_centre(slice, pidx, pidy, elheight, is_debug) % elheigh
         x = pidx(i);
         y = pidy(i);
         % define bounding box
-        L = x - elheight*2;
-        R = x + elheight*2;
-        U = y + elheight*10;
-        D = y - elheight*10;
+        L = round(x - elheight*2);
+        R = round(x + elheight*2);
+        U = round(y + elheight*10);
+        D = round(y - elheight*10);
         if (L < 1)
             L = 1;
         end
@@ -221,7 +318,7 @@ function [cx, cy] = find_centre(slice, pidx, pidy, elheight, is_debug) % elheigh
             hold on;
             imagesc(crop);
             colormap gray;
-            plot(xs, ys, '.','MarkerEdgeColor','r','MarkerSize',10);
+            plot(xs, ys, '.','MarkerEdgeColor','r','MarkerSize',5);
             plot(mx, my, '.','MarkerEdgeColor','g','MarkerSize',30);
             hold off;
         end
