@@ -57,20 +57,31 @@ end
 
 if slabsupport
     disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
-
+    
     for mov = 1:length(movingimage)
+         [~,mvfn]=fileparts(movingimage{mov});
+        if ismember(mvfn,{'anat_STN','anat_GPi','anat_GPe','anat_RN'}) % exclude labelings from slabdetection
+            sums(mov)=nan;
+        else
         mnii = ea_load_nii(movingimage{mov});
         mnii.img = ~(mnii.img==0) + ~isnan(mnii.img);
         if ~exist('AllMX','var')
             AllMX = mnii.img;
         else
+            
             AllMX = AllMX.*mnii.img;
+
         end
         sums(mov) = sum(mnii.img(:));
+        
+        end
     end
     slabspresent = 0; % default no slabs present.
 
     if length(sums)>1 % multispectral warp
+        
+        
+        
         slabs = sums(1:end-1) < (sums(end)*0.85);
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
             slabmovingimage = ea_path_helper(movingimage(slabs)); % move slabs to new cell slabimage

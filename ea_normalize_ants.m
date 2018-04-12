@@ -33,7 +33,7 @@ if ~exist('includeatlas','var')
 end
 
 if ~includeatlas % second run from maget-brain segment
-    ea_checkcoregallmri(options,usebrainmask)
+ %   ea_checkcoregallmri(options,usebrainmask)
 end
 
 directory=[options.root,options.patientname,filesep];
