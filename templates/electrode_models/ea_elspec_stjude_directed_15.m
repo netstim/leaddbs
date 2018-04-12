@@ -11,7 +11,7 @@ function electrode=ea_elspec_stjude_directed_15(varargin)
 electrodeorder = [1 2 4 3 5 7 6 8 9]; % 211117 - small change so that order of the directional electrodes is clockwise seen from the tip
 
 %% import insulations and contacts from subfolder
-for k = 1:17
+for k = 1:18
     filename = ['.\StJude_Directed_15_Components\Insulations\' 'ins' num2str(k) '.1'];
     [node,~,face]=readtetgen(filename);
     electrode.insulation(k).vertices = node;
