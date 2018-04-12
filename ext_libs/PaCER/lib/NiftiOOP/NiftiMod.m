@@ -100,7 +100,7 @@ classdef NiftiMod <  id & configurable
 %                     this.transformationMatrix(3,4) = nifti.hdr.hist.qoffset_z;
 %                 end
                 if(this.isToBeCached) % keep data in attributes if caching is enabled
-                    disp('Caching is enabeld.');
+                    disp('Caching is enabeled.');
                     
                     this.data = eanifti.img;
                     this.isLoaded = true;

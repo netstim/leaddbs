@@ -97,7 +97,7 @@ classdef NiftiModSPM <  id & configurable
                 this.transformationMatrix = eanifti.mat;
 
                 if(this.isToBeCached) % keep data in attributes if caching is enabled
-                    disp('Caching is enabeld.');
+                    disp('Caching is enabeled.');
                     
                     this.data = eanifti.img;
                     this.isLoaded = true;
