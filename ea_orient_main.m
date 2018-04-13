@@ -9,6 +9,8 @@ if ~strcmp(options.elmodel,'Boston Scientific Vercise Directed') || options.moda
     choice = questdlg(msg,'Invalid Electrode Type!','Abort','Abort');
     roll_out = [];
 else
+    %%
+    load(options.elspec.matfname)
     %% import CTs and choose which CT to use
     if exist([folder options.prefs.ctnii_coregistered]) == 2
         ct_reg = ea_load_nii([folder options.prefs.ctnii_coregistered]);
@@ -132,63 +134,9 @@ else
             tmp{2}=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)'},1)';
             tmp{3}=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)' + [0 0 1]},1)';
             
-            if ct.mat(1,1) < 0
-                tmp{1} = flip(tmp{1},1);
-                tmp{2} = flip(tmp{2},1);
-                tmp{3} = flip(tmp{3},1);
-            end
-            if ct.mat(2,2) < 0
-                tmp{1} = flip(tmp{1},2);
-                tmp{2} = flip(tmp{2},2);
-                tmp{3} = flip(tmp{3},2);
-            end
-            
-            h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
-            
-            subplot(3,1,1)
-            imagesc(tmp{1}')
-            view(-180,90)
-            hold on
-            colormap gray
-            caxis manual
-            caxis(cscale)
-            axis equal
-            axis off
-            title('Center -1')
-            
-            subplot(3,1,2)
-            imagesc(tmp{2}')
-            view(-180,90)
-            hold on
-            colormap gray
-            caxis manual
-            caxis(cscale)
-            axis equal
-            axis off
-            title('Center')
-            
-            subplot(3,1,3)
-            imagesc(tmp{3}')
-            view(-180,90)
-            hold on
-            colormap gray
-            caxis manual
-            caxis(cscale)
-            axis equal
-            axis off
-            title('Center +1')
-            
-            msg = sprintf(['Please select the slice on which the marker artifact is most clearly defined!']);
-            choice = questdlg(msg,'Specify slices','Center -1','Center','Center +1', 'Center');
-            switch choice
-                case 'Center -1'
-                    answer = 1;
-                case 'Center'
-                    answer = 2;
-                case 'Center +1'
-                    answer = 3;
-            end
-            
+            h = figure('Name',['Respicify Slices for ' sides{side} ' Lead'],'Position',[100 100 600 800],'Color','w');
+            [tmp,answer] = ea_orient_respecifyslices(tmp,ct,cscale,electrode,9);
+                      
             artifact_marker = tmp{answer};
             marker_vx(3) = marker_vx(3) + answer - 3;
             marker_mm = tmat_vx2mm * marker_vx;
@@ -199,57 +147,7 @@ else
             tmp{2}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel1_vx(1:3)'},1)';
             tmp{3}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel1_vx(1:3)' + [0 0 1]},1)';
             
-            if ct.mat(1,1) < 0
-                tmp{1} = flip(tmp{1},1);
-                tmp{2} = flip(tmp{2},1);
-                tmp{3} = flip(tmp{3},1);
-            end
-            if ct.mat(2,2) < 0
-                tmp{1} = flip(tmp{1},2);
-                tmp{2} = flip(tmp{2},2);
-                tmp{3} = flip(tmp{3},2);
-            end
-            
-            subplot(3,1,1)
-            imagesc(tmp{1}')
-            view(-180,90)
-            hold on
-            colormap gray
-            caxis manual
-            caxis(cscale)
-            axis equal
-            title('Center -1')
-            
-            subplot(3,1,2)
-            imagesc(tmp{2}')
-            view(-180,90)
-            hold on
-            colormap gray
-            caxis manual
-            caxis(cscale)
-            axis equal
-            title('Center')
-            
-            subplot(3,1,3)
-            imagesc(tmp{3}')
-            view(-180,90)
-            hold on
-            colormap gray
-            caxis manual
-            caxis(cscale)
-            axis equal
-            title('Center +1')
-            
-            msg = sprintf(['Please select the slice on which the directional level artifact is most clearly defined!']);
-            choice = questdlg(msg,'Specify slices','Center -1','Center','Center +1', 'Center');
-            switch choice
-                case 'Center -1'
-                    answer = 1;
-                case 'Center'
-                    answer = 2;
-                case 'Center +1'
-                    answer = 3;
-            end
+            [tmp,answer] = ea_orient_respecifyslices(tmp,ct,cscale,electrode,[2 3 4]);
             
             artifact_dir1 = tmp{answer};
             dirlevel1_vx(3) = dirlevel1_vx(3) + answer - 2;
@@ -261,58 +159,7 @@ else
             tmp{2}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel2_vx(1:3)'},1)';
             tmp{3}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel2_vx(1:3)' + [0 0 1]},1)';
             
-            if ct.mat(1,1) < 0
-                tmp{1} = flip(tmp{1},1);
-                tmp{2} = flip(tmp{2},1);
-                tmp{3} = flip(tmp{3},1);
-            end
-            if ct.mat(2,2) < 0
-                tmp{1} = flip(tmp{1},2);
-                tmp{2} = flip(tmp{2},2);
-                tmp{3} = flip(tmp{3},2);
-            end
-            
-            subplot(3,1,1)
-            imagesc(tmp{1}')
-            view(-180,90)
-            hold on
-            colormap gray
-            caxis manual
-            caxis(cscale)
-            axis equal
-            title('Center -1')
-            
-            subplot(3,1,2)
-            imagesc(tmp{2}')
-            view(-180,90)
-            hold on
-            colormap gray
-            caxis manual
-            caxis(cscale)
-            axis equal
-            title('Center')
-            
-            subplot(3,1,3)
-            imagesc(tmp{3}')
-            view(-180,90)
-            hold on
-            colormap gray
-            caxis manual
-            caxis(cscale)
-            axis equal
-            
-            title('Center +1')
-            
-            msg = sprintf(['Please select the slice on which the directional level artifact is most clearly defined!']);
-            choice = questdlg(msg,'Specify slices','Center -1','Center','Center +1', 'Center');
-            switch choice
-                case 'Center -1'
-                    answer = 1;
-                case 'Center'
-                    answer = 2;
-                case 'Center +1'
-                    answer = 3;
-            end
+            [tmp,answer] = ea_orient_respecifyslices(tmp,ct,cscale,electrode,[5 6 7]);
             
             artifact_dir2 = tmp{answer};
             dirlevel2_vx(3) = dirlevel2_vx(3) + answer - 2;
@@ -386,8 +233,8 @@ else
             close(h)
         end
         %% get intensity profiles at radius around the centers of marker and directional levels
-        radius = 4;        
-        radius = radius *2;        
+        radius = 4;
+        radius = radius *2;
         [angle, intensity,vector] = ea_orient_intensityprofile(artifact_marker,center_marker,pixdim,radius);
         
         radius = 8;
@@ -598,7 +445,7 @@ else
         caxis manual
         caxis(cscale)
         scatter(ax4,center_dir1(1),center_dir1(2),'o','g')
-        plot(ax4,vector1(:,1),vector1(:,2),'g','LineStyle',':')        
+        plot(ax4,vector1(:,1),vector1(:,2),'g','LineStyle',':')
         scatter(ax4,vector1(dir1_valleys,1),vector1(dir1_valleys,2),'r')
         for k = 1:length(dir1_valleys)
             plot(ax4,[center_dir1(1) (center_dir1(1) + 1.5 * (vector1(dir1_valleys(k),1)-center_dir1(1)))],...
@@ -624,7 +471,7 @@ else
         plot(ax6,rad2deg(rollangles),sumintensity1)
         scatter(ax6,rad2deg(rollangles(rollangles == roll)), sumintensity1(rollangles == roll),'g','filled');
         scatter(ax6,rad2deg(rollangles(rollangles == roll1)), sumintensity1(rollangles == roll1),'r');
-        text(rad2deg(rollangles(rollangles == roll1)), sumintensity1(rollangles == roll1),['\leftarrow HU = ' num2str(round(sumintensity1(rollangles == roll1)))]);        
+        text(rad2deg(rollangles(rollangles == roll1)), sumintensity1(rollangles == roll1),['\leftarrow HU = ' num2str(round(sumintensity1(rollangles == roll1)))]);
         set(ax6,'yticklabel',{[]})
         
         %% graphics dir level two
@@ -690,7 +537,7 @@ else
         end
         if round(sumintensity2(rollangles == roll2)) <= -200
             checkbox1 = set(fig(side).chk2,'Value',1);
-        end        
+        end
         
         uiwait
         
