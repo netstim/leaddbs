@@ -87,7 +87,7 @@ elseif strcmp(bdstring, [subpat, ' Post-OP'])
     varargout{2}=Vcor;
     varargout{3}=Vsag;
 
-elseif strcmp(bdstring, 'BigBrain 100 um ICBM 152 2009b Sym')
+elseif strcmp(bdstring, 'BigBrain 100 um ICBM 152 2009b Sym (Amunts 2013)')
     if ~ea_checkinstall('bigbrain',0,1)
         ea_error('BigBrain is not installed and could not be installed automatically. Please make sure that Matlab is connected to the internet.');
     end
@@ -96,7 +96,9 @@ elseif strcmp(bdstring, 'BigBrain 100 um ICBM 152 2009b Sym')
     varargout{3}=varargout{1};
 
 elseif regexp(bdstring, ['^',ea_getspace,' '])    % pattern: "MNI_ICBM_2009b_NLIN_ASYM *"
-    template=lower(strrep(bdstring,[ea_getspace,' '],''));
+    spacedef=ea_getspacedef;
+    template=lower(strrep(strrep(bdstring,[ea_getspace,' '],''),[' (',spacedef.citation{1},')'],''));
+
     varargout{1}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
     varargout{2}=varargout{1};
     varargout{3}=varargout{1};
@@ -154,10 +156,10 @@ function standardlist=ea_standardspacelist
 spacedef=ea_getspacedef;
 standardlist=cell(1,length(spacedef.templates));
 for t=1:length(spacedef.templates)
-	standardlist{t}=[spacedef.name,' ',upper(spacedef.templates{t})];
+	standardlist{t}=[spacedef.name,' ',upper(spacedef.templates{t}),' (',spacedef.citation{1},')'];
 end
 if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
-	standardlist{t+1}='BigBrain 100 um ICBM 152 2009b Sym';
+	standardlist{t+1}='BigBrain 100 um ICBM 152 2009b Sym (Amunts 2013)';
 end
 
 
