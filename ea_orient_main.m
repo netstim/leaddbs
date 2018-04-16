@@ -129,16 +129,40 @@ else
                 artifact_dir2 = flip(artifact_dir2,2);
             end
         elseif supervised
+            h = figure('Name',['Respicify Slices for ' sides{side} ' Lead'],'Position',[100 100 600 800],'Color','w');
+            txt1 = uicontrol('style','text','units','pixels','Background','w',...
+            'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
+            'string',sprintf(['Please specify the slice with the most clearly defined artifact:']));
+            plusoneButton = uicontrol('Style', 'pushbutton', 'String', '+ 1 slice',...
+                'Position', [425 640 150 25],'FontSize',12,...
+                'Callback', @buttonPress);
+            centerButton = uicontrol('Style', 'pushbutton', 'String', 'Center',...
+                'Position', [425 400 150 25],'FontSize',12,...
+                'Callback', @buttonPress);
+            minusoneButton = uicontrol('Style', 'pushbutton', 'String', '- 1 slice',...
+                'Position', [425 160 150 25],'FontSize',12,...
+                'Callback', @buttonPress);
             %% Identify plane with optimal marker artifact
             tmp{1}=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)' - [0 0 1]},1)';
             tmp{2}=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)'},1)';
             tmp{3}=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)' + [0 0 1]},1)';
             
-            h = figure('Name',['Respicify Slices for ' sides{side} ' Lead'],'Position',[100 100 600 800],'Color','w');
-            [tmp,answer] = ea_orient_respecifyslices(tmp,ct,cscale,electrode,9);
-                      
+            [tmp] = ea_orient_respecifyslices(tmp,ct,cscale,electrode,9);
+            
+            uiwait
+            if plusoneButton.UserData == 1
+                answer = 3;
+                plusoneButton.UserData = 0;
+            elseif centerButton.UserData == 1
+                answer = 2;
+                centerButton.UserData = 0;
+            elseif minusoneButton.UserData == 1
+                answer = 1;
+                minusoneButton.UserData = 0;
+            end
+            
             artifact_marker = tmp{answer};
-            marker_vx(3) = marker_vx(3) + answer - 3;
+            marker_vx(3) = marker_vx(3) + answer - 2;
             marker_mm = tmat_vx2mm * marker_vx;
             clear tmp answer
             
@@ -147,7 +171,19 @@ else
             tmp{2}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel1_vx(1:3)'},1)';
             tmp{3}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel1_vx(1:3)' + [0 0 1]},1)';
             
-            [tmp,answer] = ea_orient_respecifyslices(tmp,ct,cscale,electrode,[2 3 4]);
+            [tmp] = ea_orient_respecifyslices(tmp,ct,cscale,electrode,[2 3 4]);
+            
+            uiwait
+            if plusoneButton.UserData == 1
+                answer = 3;
+                plusoneButton.UserData = 0;
+            elseif centerButton.UserData == 1
+                answer = 2;
+                centerButton.UserData = 0;
+            elseif minusoneButton.UserData == 1
+                answer = 1;
+                minusoneButton.UserData = 0;
+            end
             
             artifact_dir1 = tmp{answer};
             dirlevel1_vx(3) = dirlevel1_vx(3) + answer - 2;
@@ -159,7 +195,19 @@ else
             tmp{2}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel2_vx(1:3)'},1)';
             tmp{3}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel2_vx(1:3)' + [0 0 1]},1)';
             
-            [tmp,answer] = ea_orient_respecifyslices(tmp,ct,cscale,electrode,[5 6 7]);
+            [tmp] = ea_orient_respecifyslices(tmp,ct,cscale,electrode,[5 6 7]);
+
+            uiwait
+            if plusoneButton.UserData == 1
+                answer = 3;
+                plusoneButton.UserData = 0;
+            elseif centerButton.UserData == 1
+                answer = 2;
+                centerButton.UserData = 0;
+            elseif minusoneButton.UserData == 1
+                answer = 1;
+                minusoneButton.UserData = 0;
+            end
             
             artifact_dir2 = tmp{answer};
             dirlevel2_vx(3) = dirlevel2_vx(3) + answer - 2;
@@ -175,8 +223,11 @@ else
         
         %% allow for respecification of the artifact centers
         if supervised
-            h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
-            imagesc(artifact_marker')
+            h = figure('Name',['Respicify Artifact Centers for ' sides{side} ' Lead'],'Position',[100 100 600 800],'Color','w');            
+            txt1 = uicontrol('style','text','units','pixels','Background','w',...
+            'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
+            'string',sprintf(['Please mark the center of the artifact by doubleclicking:']));
+            imagesc(artifact_marker');            
             axis equal
             axis off
             view(-180,90)
@@ -185,16 +236,14 @@ else
             caxis manual
             caxis(cscale2)
             scatter(center_marker(1),center_marker(2),'o','r');
-            title('Please mark center of the artifact by doubleclicking')
             [a,b] = getpts;
             center_marker = [a(end) b(end)];
             marker_vx(1) = marker_vx(1)-extractradius + center_marker(1);
             marker_vx(2) = marker_vx(2)-extractradius + center_marker(2);
             marker_mm = tmat_vx2mm * marker_vx;
             clear a b
-            close(h)
             
-            h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
+            hold off
             imagesc(artifact_dir1')
             axis equal
             axis off
@@ -204,16 +253,14 @@ else
             caxis manual
             caxis(cscale2)
             scatter(center_dir1(1),center_dir1(2),'o','r');
-            title('Please mark center of the artifact by doubleclicking')
             [a,b] = getpts;
             center_dir1 = [a(end) b(end)];
             dirlevel1_vx(1) = dirlevel1_vx(1)-extractradius + center_dir1(1);
             dirlevel1_vx(2) = dirlevel1_vx(2)-extractradius + center_dir1(2);
             dirlevel1_mm = tmat_vx2mm * dirlevel1_vx;
             clear a b
-            close(h)
             
-            h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
+            hold off
             imagesc(artifact_dir2')
             view(-180,90)
             axis equal
@@ -223,7 +270,6 @@ else
             caxis manual
             caxis(cscale2)
             scatter(center_dir2(2),center_dir2(2),'o','r');
-            title('Please mark center of the artifact by doubleclicking')
             [a,b] = getpts;
             center_dir2 = [a(end) b(end)];
             dirlevel2_vx(1) = dirlevel2_vx(1)-extractradius + center_dir2(1);
@@ -272,10 +318,18 @@ else
             end
         elseif supervised
             
-            h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
-            hold on
-            title('Specify marker direction')
-            imagesc(artifact_marker')
+            h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');            
+            txt1 = uicontrol('style','text','units','pixels','Background','w',...
+            'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
+            'string',sprintf(['Please select the marker direction:']));
+            Solution1Button = uicontrol('Style', 'pushbutton', 'String', 'Solution 1 (magenta)',...
+            'Position', [100 50 175 25],'FontSize',12,...
+            'Callback', @buttonPress);
+            Solution2Button = uicontrol('Style', 'pushbutton', 'String', 'Solution 2 (cyan)',...
+            'Position', [350 50 175 25],'FontSize',12,...
+            'Callback', @buttonPress);
+            hold on             
+            ax1 = imagesc(artifact_marker');            
             view(-180,-90)
             axis equal
             axis off
@@ -285,21 +339,24 @@ else
             scatter(center_marker(1),center_marker(2),'o','g')
             scatter(vector(peak(1),1), vector(peak(1),2),50,'m','filled');
             scatter(vector(peak(2),1), vector(peak(2),2),50,'c','filled');
-            if diff1 <= diff2
-                suggestion = 'Peak 1';
-            else
-                suggestion = 'Peak 2';
-            end
+            quiver(center_marker(1),center_marker(2),vector(peak(1),1)-center_marker(1) ,vector(peak(1),2)-center_marker(2),2,'LineWidth',1,'Color','m','MaxHeadSize',2)
+            quiver(center_marker(1),center_marker(2),vector(peak(2),1)-center_marker(1) ,vector(peak(2),2)-center_marker(2),2,'LineWidth',1,'Color','c','MaxHeadSize',2)
             
-            msg = sprintf(['Two possible marker directions have been identified:\nPeak 1 = ' num2str(rad2deg(angle(peak(1)))) ' deg (magenta) \nPeak 2 = ' num2str(rad2deg(angle(peak(2)))) ' deg (cyan)\nAutomatic determination suggests ' suggestion '. Please select most likely direction.']);
-            choice = questdlg(msg,'Specify marker direction','Peak 1','Peak 2',suggestion);
-            switch choice
-                case 'Peak 1'
-                    finalpeak(side) = peak(1);
-                case 'Peak 2'
-                    finalpeak(side) = peak(2);
+            txt2 = uicontrol('style','text','units','pixels','Background','w',...
+            'position',[100,77,500,100],'FontSize',12,'HorizontalAlignment','left',...
+            'string',sprintf(['Two possible solutions have been identified:\nSolution 1 = ' num2str(rad2deg(angle(peak(1)))) ' deg (magenta) \nSolution 2 = ' num2str(rad2deg(angle(peak(2)))) ' deg (cyan)\nPlease select most likely direction.']));
+           
+            uiwait
+            
+            if Solution1Button.UserData == 1
+                answer = 1;
+                Solution1Button.UserData = 0;
+            elseif Solution2Button.UserData == 1
+                answer = 2;
+                Solution2Button.UserData = 0;
             end
-            clear diff1 diff2 peak1tmp peak2tmp
+            finalpeak(side) = peak(answer);
+            clear diff1 diff2 peak1tmp peak2tmp answer
             close(h)
         end
         %% calculate lead yaw and pitch angles for correction at the end
@@ -390,13 +447,13 @@ else
         
         SaveButton = uicontrol('Style', 'pushbutton', 'String', 'Accept & Save',...
             'Position', [150 20 150 25],'FontSize',12,...
-            'Callback', @savedirection);
+            'Callback', @buttonPress);
         ManualButton = uicontrol('Style', 'pushbutton', 'String', 'Manual Refine',...
             'Position', [325 20 150 25],'FontSize',12,...
-            'Callback', @manualretry);
+            'Callback', @buttonPress);
         DiscardButton = uicontrol('Style', 'pushbutton', 'String', 'Discard',...
             'Position', [500 20 150 25],'FontSize',12,...
-            'Callback', @discarddirection);
+            'Callback', @buttonPress);
         
         %% marker
         ax1 = subplot(3,3,1);
@@ -638,15 +695,19 @@ end
 
 end
 
-function savedirection(hObject,eventdata)
-hObject.UserData = 1;
-uiresume
-end
-function discarddirection(hObject,eventdata)
-hObject.UserData = 1;
-uiresume
-end
-function manualretry(hObject,eventdata)
+% function savedirection(hObject,eventdata)
+% hObject.UserData = 1;
+% uiresume
+% end
+% function discarddirection(hObject,eventdata)
+% hObject.UserData = 1;
+% uiresume
+% end
+% function manualretry(hObject,eventdata)
+% hObject.UserData = 1;
+% uiresume
+% end
+function buttonPress(hObject,eventdata)
 hObject.UserData = 1;
 uiresume
 end

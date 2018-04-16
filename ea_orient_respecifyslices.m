@@ -1,4 +1,4 @@
-function [tmp,answer] = ea_orient_respecifyslices(tmp,ct,cscale, electrode,activecontact)
+function [tmp] = ea_orient_respecifyslices(tmp,ct,cscale,electrode,activecontact)
 if ct.mat(1,1) < 0
     tmp{1} = flip(tmp{1},1);
     tmp{2} = flip(tmp{2},1);
@@ -62,14 +62,14 @@ zlim([0 15])
 axis equal
 axis off
 %%
-msg = sprintf(['Please select the slice on which the artifact is most clearly defined!']);
-choice = questdlg(msg,'Specify slices','Center -1','Center','Center +1', 'Center');
-switch choice
-    case 'Center -1'
-        answer = 1;
-    case 'Center'
-        answer = 2;
-    case 'Center +1'
-        answer = 3;
-end
+% msg = sprintf(['Please select the slice on which the artifact is most clearly defined!']);
+% choice = questdlg(msg,'Specify slices','Center -1','Center','Center +1', 'Center');
+% switch choice
+%     case 'Center -1'
+%         answer = 1;
+%     case 'Center'
+%         answer = 2;
+%     case 'Center +1'
+%         answer = 3;
+% end
 end
