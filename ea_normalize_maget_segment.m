@@ -162,7 +162,16 @@ for peer=1:length(peerfolders)
         end
         % can cleanup the Peer -> patient transform already.
         delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5']); % we dont need the inverse warp
+    else
+        [~,peerpresentfiles]=ea_assignpretra(poptions);
+        [~,subpresentfiles]=ea_assignpretra(options);
 
+        [~,presentinboth]=ismember(subpresentfiles,peerpresentfiles);
+        subpresentfiles=subpresentfiles(logical(presentinboth));
+        % check the other way:
+        [~,presentinboth]=ismember(peerpresentfiles,subpresentfiles);
+        presentfiles=peerpresentfiles(logical(presentinboth));
+    
     end
 
 

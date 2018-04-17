@@ -14,7 +14,7 @@ for peer=1:length(peerfolders)
     else
         % make sure peer's anatomy files have been coregistered.
         if ~ea_seemscoregistered(poptions)
-            %ea_coreg_all_mri(poptions,0);
+            ea_coreg_all_mri(poptions,0);
         end
     end
 end

@@ -38,6 +38,8 @@ end
 tpmHdr = ea_open_vol(tpmfile);
 tpmnum = tpmHdr.volnum;
 
+[~,ix]=ismember({'STN','GPi','GPe','RN'},spacedef.templates);
+spacedef.templates(ix)=[];
 if rebuildtpm
     for t=1:length(spacedef.templates)
         matlabbatch{1}.spm.spatial.preproc.channel(t).vols = {[ea_space,spacedef.templates{t},'.nii,1']};
