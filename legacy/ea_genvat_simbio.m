@@ -34,7 +34,7 @@ elseif nargin==1
     end
 end
 
-S=ea_activecontacts(S);
+% S=ea_activecontacts(S);
 if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     fv.vertices=[0,0,0
         0,0,0

@@ -30,8 +30,8 @@ end
 if useSI
     thresh=thresh.*(10^3);
 end
-S=ea_activecontacts(S);
 
+% S=ea_activecontacts(S);
 if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     ofv.vertices=[0,0,0
         0,0,0
@@ -293,7 +293,7 @@ end
 reduc=10;
 
 
-%% generate flowfield visualization:
+% generate flowfield visualization:
 % generate a jittered indices vector to be used to reduce flowfield
 % display by ~factor reduc.
 ea_dispt('Calculating quiver field of gradient for display purposes...');
@@ -327,7 +327,7 @@ setappdata(resultfig,'vatgrad',vatgrad);
 %figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))
 
 
-%% calculate electric field ET by calculating midpoints of each
+% calculate electric field ET by calculating midpoints of each
 % mesh-connection and setting difference of voltage to these points.
 
 vat.pos=midpts;
@@ -443,7 +443,7 @@ switch side
 end
 %save(stimfile,'S');
 ea_savestimulation(S,options);
-setappdata(lgfigure,'S',S)
+% setappdata(lgfigure,'curS',S);
 
 %spm_write_vol(Vvat,flipdim(eg,3));
 

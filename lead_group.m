@@ -320,12 +320,12 @@ options=ea_setopts_local(handles);
 
 tS=ea_initializeS(['gs_',M.guid],options,handles);
 
-        if isempty(M.S)
-            M=rmfield(M,'S');
-            M.S(1:length(folders))=tS;
-        else
-            M.S(end+1:end+length(folders))=tS;
-        end
+if isempty(M.S)
+    M=rmfield(M,'S');
+    M.S(1:length(folders))=tS;
+else
+    M.S(end+1:end+length(folders))=tS;
+end
 
 setappdata(handles.leadfigure,'M',M);
 setappdata(handles.leadfigure,'S',M.S);
@@ -1240,7 +1240,7 @@ for pt=selection
     % Step 2: Re-calculate VAT
     if isfield(M,'S')
         try
-            setappdata(resultfig,'S',M.S(pt));
+            setappdata(resultfig,'curS',M.S(pt));
         catch
             ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
         end

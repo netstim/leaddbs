@@ -1,5 +1,4 @@
-function     S=ea_activecontacts(S)
-
+function S = ea_activecontacts(S)
 
 for pt=1:length(S)
     for side=1:2
@@ -10,12 +9,11 @@ for pt=1:length(S)
             case 2
                 sidec='L';
                 ks=8:15;
-                
         end
         cs(ks+1)=1:8;
-        
+
         S(pt).activecontacts{side}=zeros(1,8);
-        
+
         for source=1:4
             for cnt=ks
                 try    % struct may not even be specified yet. In this case just keep marked as inactive.
@@ -25,6 +23,5 @@ for pt=1:length(S)
                 end
             end
         end
-        
     end
 end

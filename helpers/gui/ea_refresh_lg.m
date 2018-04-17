@@ -94,7 +94,7 @@ end
 
 thisparc=thisparc{useparc};
 
-%% modalities for VAT metrics:
+% modalities for VAT metrics:
 
 % dMRI:
 cnt=1;
@@ -116,7 +116,6 @@ end
 % update UI
 disp('Updating UI...');
 
-
 disp('Getting stimulation parameters...');
 S=getappdata(handles.leadfigure,'S');
 S=ea_checkS(M,S,options,handles);
@@ -126,7 +125,7 @@ if ~isempty(S)
     for sp=1:length(M.S) % make sure stimlabel is gs_guid.
        M.S(sp).label=['gs_',M.guid];
     end
-    M.S=ea_activecontacts(M.S);
+    % M.S=ea_activecontacts(M.S);
     M.vatmodel=getappdata(handles.leadfigure,'vatmodel');
 else
     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
@@ -151,9 +150,11 @@ try set(handles.mirrorsides,'Value',M.ui.lc.mirrorsides); end
 % update selectboxes:
 try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
 try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
+
 if ~isfield(M.ui,'atlassetpopup')
     M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
 end
+
 if M.ui.atlassetpopup>length(get(handles.atlassetpopup,'String'))
     M.ui.atlassetpopup=length(get(handles.atlassetpopup,'String'));
     set(handles.atlassetpopup,'Value',length(get(handles.atlassetpopup,'String')));
@@ -192,14 +193,14 @@ t.Format='uuuMMddHHmmss';
 t=str2double(char(t));
 
 
-if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
-    %% patient specific part:
+if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
+    % patient specific part:
     if ~isempty(M.patient.list)
         disp('Loading localizations...');
         for pt=1:length(M.patient.list)
             % set stimparams based on values provided by user
             for side=1:2
-                
+
                 if M.ui.labelpopup>length(get(handles.labelpopup,'String'))
                     M.ui.labelpopup=length(get(handles.labelpopup,'String'));
                 end
@@ -209,18 +210,18 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
             end
             % load localization
             [~,pats{pt}]=fileparts(M.patient.list{pt});
-            
+
             M.elstruct(pt).group=M.patient.group(pt);
             M.elstruct(pt).groupcolors=M.groups.color;
             M.elstruct(pt).groups=M.groups.group;
-            
+
             options.sides=1:2;
             options.native=0;
             try
                 [options.root,options.patientname]=fileparts(M.patient.list{pt});
                 options.root=[options.root,filesep];
                 [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
-                
+
                 if M.ui.elmodelselect==1 % use patient specific elmodel
                     if exist('elmodel','var')
                         M.elstruct(pt).elmodel=elmodel;
@@ -230,9 +231,9 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                 else
                     elmodels=get(handles.elmodelselect,'String');
                     M.elstruct(pt).elmodel=elmodels{get(handles.elmodelselect,'Value')};
-                    
+
                 end
-                
+
                 % make sure coords_mm is congruent to coded electrode
                 % model:
                 poptions=options;
@@ -244,10 +245,10 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                 M.elstruct(pt).coords_mm=coords_mm;
                 M.elstruct(pt).coords_acpc=coords_acpc;
                 M.elstruct(pt).trajectory=trajectory;
-                
+
                 M.elstruct(pt).name=[pats{pt}];
                 if ~exist('markers','var') % backward compatibility to old recon format
-                    
+
                     for side=1:2
                         markers(side).head=coords_mm{side}(1,:);
                         markers(side).tail=coords_mm{side}(4,:);
@@ -269,7 +270,7 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                 end
             end
         end
-        
+
         % load stats for group
         disp('Loading stats for group...');
         for pt=1:length(M.patient.list)
@@ -282,21 +283,21 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                    M.stats(pt).ea_stats=rmfield(M.stats(pt).ea_stats,'atlases');
                    M.stats(pt).ea_stats.atlases.names=ea_stats.atlases.names;
                    M.stats(pt).ea_stats.atlases.types=ea_stats.atlases.types;
-                   
+
                    % also correct single subject file:
                    load([M.patient.list{pt},filesep,'ea_stats']);
                    ea_stats.atlases=M.stats(pt).ea_stats.atlases;
                    save([M.patient.list{pt},filesep,'ea_stats'],'ea_stats','-v7.3');
                 end
             end
-            
+
             if ~isfield(M,'stats')
                 % if no stats  present yet, return.
                 setappdata(handles.leadfigure,'M',M);
                 set(handles.leadfigure,'name','Lead-Group Analysis');
                 break
             end
-            
+
             priorvilist=M.vilist;
             try % try using stats from patient folder.
                 M.vilist=ea_stats.atlases.names;
@@ -307,15 +308,15 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                     M.vilist={};
                 end
             end
-            
+
             %disp('Comparing stats with prior atlas intersection list...');
             % check and compare with prior atlas intersection list.
-            
+
             if ~isempty(priorvilist) && ~isequal(priorvilist,M.vilist)
-                
+
                 warning('Patient stats are inhomogeneous. Please re-run group analysis (Section Prepare DBS stats).');
             end
-            
+
             priorfclist=M.fclist;
             try % try using stats from patient folder.
                 M.fclist=ea_stats.stimulation(1).ft(1).labels{1};
@@ -329,7 +330,7 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                     fcdone=0;
                 end
             end
-            
+
             % check and compare with prior fibertracking list.
             if fcdone
                 if ~isempty(priorfclist) && ~isequal(priorfclist,M.fclist)
@@ -337,7 +338,7 @@ if 1% ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                 end
             end
         end
-        
+
         try
             setappdata(handles.leadfigure,'elstruct',elstruct);
         end
@@ -364,11 +365,10 @@ if ~isempty(M.fclist)
     set(handles.fclist,'String',M.fclist);
 end
 
-
-
 disp('Done.');
 
 ea_busyaction('off',handles.leadfigure,'group');
+
 
 function S=ea_checkS(M,S,options,handles) % helper to check that S has equally many entries as M.patient.list
 if ~(length(S)==length(M.patient.list))
@@ -378,8 +378,8 @@ if ~(length(S)==length(M.patient.list))
     else
         %ea_error('Stimulation parameter struct not matching patient list. Lead group file potentially corrupted.');
     end
-
 end
+
 
 function ea_stats=ea_rmssstimulations(ea_stats,M)
 % function that will remove all stimulations not labeled 'gs'

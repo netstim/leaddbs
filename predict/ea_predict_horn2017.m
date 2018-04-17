@@ -153,7 +153,8 @@ end
 cfg.res.updrs3imp=updrshat;
 cfg.res.updrs3err=avgerror;
 load([directory,'stimulations',filesep,stimname,filesep,'stimparameters.mat'])
-cfg.stim=ea_activecontacts(S);
+% cfg.stim=ea_activecontacts(S);
+cfg.stim=S;
 [~,cfg.stim.patientname]=fileparts(fileparts(directory));
 ea_presults_horn2017(cfg);
 %ea_screenshot([directory,'predictions',filesep,specs.modelshortname,filesep,'prediction.png']);
