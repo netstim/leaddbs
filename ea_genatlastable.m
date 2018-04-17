@@ -205,8 +205,11 @@ if checkrebuild(atlases,options,root,mifix)
                             end
                             nii.img=nii.img(gv{1}>0,:,:);
                             gv{1}=gv{1}(gv{1}>0);
-
-                            XYZ.vx=XYZ.vx(XYZ.mm(:,1)>0,:,:);
+                            try
+                                XYZ.vx=XYZ.vx(XYZ.mm(:,1)>0,:,:);
+                            catch
+                                ea_error(['Atlas is empty: ',atlases.names{atlas},'.']);
+                            end
                             XYZ.val=XYZ.val(XYZ.mm(:,1)>0,:,:);
                             XYZ.mm=XYZ.mm(XYZ.mm(:,1)>0,:,:);
 
