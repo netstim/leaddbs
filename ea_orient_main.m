@@ -638,10 +638,10 @@ else
             %% transform y to native space and back
             y = head + y;
             y(4) = 1;
-            if strcmp(CTname,'\postop_ct.nii') || strcmp(CTname,'\postop_ct_resliced.nii')
+            if strcmp(CTname,[filesep 'postop_ct.nii']) || strcmp(CTname,[filesep 'postop_ct_resliced.nii'])
                 % transform postop_ct_mm -> rpostop_ct_mm
                 y = inv(tmat_reg2org) * y;
-            elseif strcmp(CTname,'\rpostop_ct.nii')
+            elseif strcmp(CTname,[filesep 'rpostop_ct.nii'])
                 y = y;
             end
             y = y(1:3)';
