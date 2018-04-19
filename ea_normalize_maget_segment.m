@@ -188,75 +188,76 @@ end
 
 
 %% step 4: Perform majority voting on final atlas
-mkdir([subdirec,'atlases']);
-mkdir([subdirec,'atlases',filesep,'native']);
-mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse]);
-mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'lh']);
-mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'rh']);
-mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'mixed']);
-mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'midline']);
-for atlas=1:length(warpednuclei{peer})
-    for peer=1:length(peerfolders) % seek to average across peers
-        nii=ea_load_nii(warpednuclei{peer}{atlas}); % add gz support
-        if peer==1
-            X=zeros([size(nii.img),length(warpednuclei{peer})]);
+if ~exist([subdirec,'anat_atlas.nii.gz'],'file')
+    mkdir([subdirec,'atlases']);
+    mkdir([subdirec,'atlases',filesep,'native']);
+    mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse]);
+    mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'lh']);
+    mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'rh']);
+    mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'mixed']);
+    mkdir([subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,'midline']);
+    for atlas=1:length(warpednuclei{peer})
+        for peer=1:length(peerfolders) % seek to average across peers
+            nii=ea_load_nii(warpednuclei{peer}{atlas}); % add gz support
+            if peer==1
+                X=zeros([size(nii.img),length(warpednuclei{peer})]);
+            end
+            X(:,:,:,peer)=nii.img;
         end
-        X(:,:,:,peer)=nii.img;
+        % X(X<0.5)=0; % binarize each image (initial DISTAL atlas is binary, but
+        % when warping nonlinearly it can be that two former voxels which intensity value 1 and 0 form only
+        % one target voxel with intensitiy value 0.5, (or 0.333 depending on the
+        % number of voxels), so this first binarizes the files on the subject
+        % level and makes them more conservative and then fuses all images and
+        % performs again the majority voting on the overlaid images which also
+        % makes the result more conservative)
+        % X(X>0)=1;
+        X=mean(X,4);
+        
+        X=X/max(X(:));
+        % X(X<0.25)=0; %defines sensitivitiy of majority voting
+        % X(X>0)=1;
+        % save atlas
+        [pth,atlasname]=fileparts(warpednuclei{peer}{atlas});
+        
+        if length(atlasname)>3 && strcmp('.nii',atlasname(end-3:end))
+            atlasname=atlasname(1:end-4);
+        end
+        
+        [~,base]=fileparts(pth);
+        nii.fname=[subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,base,filesep,atlasname,'.nii'];
+        nii.img=X;
+        if ~exist('AllX','var')
+            AllX=X;
+        else
+            AllX=AllX+X;
+        end
+        
+        clear X
+        ea_write_nii(nii);
+        ea_crop_nii(nii.fname);
+        gzip(nii.fname);
+        delete(nii.fname);
     end
-   % X(X<0.5)=0; % binarize each image (initial DISTAL atlas is binary, but
-   % when warping nonlinearly it can be that two former voxels which intensity value 1 and 0 form only
-   % one target voxel with intensitiy value 0.5, (or 0.333 depending on the
-   % number of voxels), so this first binarizes the files on the subject
-   % level and makes them more conservative and then fuses all images and
-   % performs again the majority voting on the overlaid images which also
-   % makes the result more conservative)
-   % X(X>0)=1;
-    X=mean(X,4);
-
-    X=X/max(X(:));
-   % X(X<0.25)=0; %defines sensitivitiy of majority voting
-   % X(X>0)=1;
-    % save atlas
-    [pth,atlasname]=fileparts(warpednuclei{peer}{atlas});
     
-    if length(atlasname)>3 && strcmp('.nii',atlasname(end-3:end))
-        atlasname=atlasname(1:end-4);
-    end
     
-    [~,base]=fileparts(pth);
-    nii.fname=[subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,base,filesep,atlasname,'.nii'];
-    nii.img=X;
-    if ~exist('AllX','var')
-        AllX=X;
-    else
-        AllX=AllX+X;
-    end
-
-    clear X
+    % -> Now segmentation is done. Add normalization.
+    
+    %% step 5: Normalize using multimodal DISTAL warp
+    
+    % write out anat_distal
+    nii.fname=[subdirec,'anat_atlas.nii'];
+    AllX(AllX>1)=1;
+    AllX=smooth3(AllX,'gaussian',[5 5 5]);
+    nii.img=AllX;
     ea_write_nii(nii);
-    ea_crop_nii(nii.fname);
     gzip(nii.fname);
     delete(nii.fname);
 end
-
-
-% -> Now segmentation is done. Add normalization.
-
-%% step 5: Normalize using multimodal DISTAL warp
-
-% write out anat_distal
-nii.fname=[subdirec,'anat_atlas.nii'];
-AllX(AllX>1)=1;
-AllX=smooth3(AllX,'gaussian',[5 5 5]);
-nii.img=AllX;
-ea_write_nii(nii);
-gzip(nii.fname);
-delete(nii.fname);
-
 if strcmp(options.prefs.dev.profile,'se')
     ; % do siobhanspecific stuff (here do nothing)
 else
-    ea_normalize_ants_multimodal(options,1); % do general user specific stuff, here --> performs normalization with
+    ea_normalize_ants(options,1); % do general user specific stuff, here --> performs normalization with
 % DISTAL as anchorpoint, commented when segmentation is wanted and not
 % normalization, also some results of this normalization are off
 end
