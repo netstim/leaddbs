@@ -177,10 +177,10 @@ for peer=1:length(peerfolders)
 
     %% step 3: warp all atlas nuclei from MNI via peer to sub
 
-    %if ~exist([peerdirec,'MAGeT',filesep,'atlases',filesep,atlastouse],'file') % assume the work has been done already
-    transformfile=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz'];
-    ea_ants_applytransforms(poptions,froms,sub_tos,0,[subdirec,presentfiles{1}],transformfile);
-
+    if ~exist(sub_tos{end},'file') % assume the work has been done already
+        transformfile=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz'];
+        ea_ants_applytransforms(poptions,froms,sub_tos,0,[subdirec,presentfiles{1}],transformfile);
+    end
     % gather all files for majority voting
     warpednuclei{peer}=sub_tos;
 end
@@ -218,9 +218,11 @@ for atlas=1:length(warpednuclei{peer})
    % X(X>0)=1;
     % save atlas
     [pth,atlasname]=fileparts(warpednuclei{peer}{atlas});
-    if strcmp('.nii',atlasname(end-3:end))
+    
+    if length(atlasname)>3 && strcmp('.nii',atlasname(end-3:end))
         atlasname=atlasname(1:end-4);
     end
+    
     [~,base]=fileparts(pth);
     nii.fname=[subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,base,filesep,atlasname,'.nii'];
     nii.img=X;
