@@ -71,11 +71,12 @@ for peer=1:length(peerfolders)
         if ~exist([subdirec,'MAGeT',filesep,'warps',filesep],'file')
             mkdir([subdirec,'MAGeT',filesep,'warps',filesep]);
         end
-
-        try
-            ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],weights,options);
-        catch
-            ea_error(['Something went wrong - could not generate a nonlinear warp from ',subdirec,' to ',peerdirec,'.']);
+        if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5'],'file')
+            try
+                ea_ants_nonlinear(sptos,spfroms,[subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii'],weights,options);
+            catch
+                ea_error(['Something went wrong - could not generate a nonlinear warp from ',subdirec,' to ',peerdirec,'.']);
+            end
         end
         delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'.nii']); % we only need the warp
 
@@ -111,6 +112,10 @@ for peer=1:length(peerfolders)
             system(icmd);
         end
 
+        if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii'],'file') || ...
+                ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2sub.nii'],'file')
+            ea_error(['Something went wrong - could not generate a nonlinear warp from ',subdirec,' to ',peerdirec,'.']);
+        end
         % delete intermediary transforms
         delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'Composite.h5']);
         delete([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'InverseComposite.h5']);
