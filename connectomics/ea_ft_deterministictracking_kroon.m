@@ -55,7 +55,7 @@ end
 
 % Constants DTI
 parametersDTI=[];
-parametersDTI.BackgroundTreshold=150;
+parametersDTI.BackgroundThreshold=150;
 parametersDTI.WhiteMatterExtractionThreshold=0.10;
 parametersDTI.textdisplay=true;
 
@@ -80,7 +80,7 @@ parametersFT.FiberLengthMin=6;
 parametersFT.DeviationAngleMax=1;
 parametersFT.Step=0.4;
 parametersFT.FiberTrackingComputationTreshold=0.125;
-parametersFT.Sampling=2;
+parametersFT.Sampling=1;
 parametersFT.textdisplay=true;
 parametersFT.FAmin=0.2;
 parametersFT.FAmax=0.8;
