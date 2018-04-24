@@ -930,6 +930,8 @@ options.prefs=ea_prefs;
 setappdata(resultfig,'options',options);
 setappdata(handles.stimfig,'options',options);
 S=getappdata(handles.stimfig,'S');
+S=ea_activecontacts(S);
+setappdata(handles.stimfig,'S',S);
 if isfield(elstruct,'group')
     gcnt=ones(length(elstruct(1).groups),1);
 end
@@ -961,6 +963,7 @@ clear PL
 for group=flix
     setappdata(resultfig,'stimparams',stimparams(group,:));
     setappdata(resultfig,'S',S(group))
+    setappdata(resultfig,'curS',S(group));
     ea_showfibres_volume(resultfig,options);
     %copyfile([options.root,options.patientname,filesep,'ea_stats.mat'],[options.root,options.patientname,filesep,'ea_stats_group_',num2str(group),'.mat']);
     try

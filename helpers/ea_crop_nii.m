@@ -53,6 +53,8 @@ switch nstring
         [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img~=0));
     case 'nn'
         [xx,yy,zz]=ind2sub(size(nii.img),find(~isnan(nii.img)));
+    otherwise
+        [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img~=num2str(nstring)));
 end
 
 rim=round(2/mean(nii.voxsize)); % go to 3 mm, assuming isotropic image. No worries if not isotropic though, then rim will be a bit asymmetrical.

@@ -443,7 +443,7 @@ switch side
 end
 %save(stimfile,'S');
 ea_savestimulation(S,options);
-% setappdata(lgfigure,'curS',S);
+ setappdata(lgfigure,'curS',S);
 
 %spm_write_vol(Vvat,flipdim(eg,3));
 
