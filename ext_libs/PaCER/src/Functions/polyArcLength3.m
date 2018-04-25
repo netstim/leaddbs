@@ -16,7 +16,8 @@
 
 
 function arcLength = polyArcLength3(polyCoeff, lowerLimit, upperLimit)
-assert(all(lowerLimit(:) <= upperLimit(:)));
+epsilon = 0.001; % avoid numerical accuracy problems in assertion
+assert(all(lowerLimit(:) <= upperLimit(:) + epsilon));
 
 regX = polyCoeff(:,1);
 regY = polyCoeff(:,2);
