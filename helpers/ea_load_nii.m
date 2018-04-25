@@ -13,6 +13,13 @@ function nii = ea_load_nii(fname)
 %     'PATH/TO/image,1'
 
 % need to consider the case like: spm_vol('image.nii,1')
+[~,~,ext]=fileparts(fname);
+if strcmp(ext,'.mat')
+    nii=load(fname);
+    return
+end
+
+
 fname = [ea_niigz(fname), fname(strfind(fname, ','):end)];
 
 if regexp(fname, '\.nii.gz$', 'once') % 'image.nii.gz'
