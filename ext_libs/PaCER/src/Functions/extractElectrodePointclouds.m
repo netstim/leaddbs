@@ -8,7 +8,6 @@
 
 function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT, varargin)
     % CONSTANTS
-    METAL_THRESHOLD = 800; %[Hounsfield] note different partial voluming 
     LAMBDA_1 = 30; % 
 
     %% Optional Arguments and Default Values
@@ -18,6 +17,7 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
     argParser.addParameter('noMask', false); % for phantom studies where no brain is present in data
     argParser.addParameter('brainMask', ''); % for manually providing brain mask (binary segmentation image file path)
     argParser.addParameter('medtronicXMLPlan', '', @(x)(ischar(x)));
+    argParser.addParameter('metalThreshold', 800, @(x)(isnumeric(x)));
     
     argParser.parse(varargin{:});
     args = argParser.Results;
@@ -26,7 +26,9 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
     % assume a 1024 offset was added to make it strictly positive and
     % handle this here
     if(min(niiCT.img(:)) >= 0)
-        METAL_THRESHOLD = METAL_THRESHOLD + 1024;
+        METAL_THRESHOLD = args.metalThreshold; + 1024;
+    else
+        METAL_THRESHOLD = args.metalThreshold;
     end
     
     %% determine brainMask
@@ -80,6 +82,12 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
     end
     nElecs = length(elecIdxs);
     disp(['Guessing that ' num2str(nElecs) ' of them are Electrodes...']);
+    
+    if(nElecs==0)
+        disp('Somehing is weird with your CT data...  Trying again with lower metal threshold. ')
+        [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT, 'brainMask', args.brainMask, 'metalThreshold', METAL_THRESHOLD * 0.8, 'medtronicXMLPlan', args.medtronicXMLPlan);
+        return;
+    end
     
     %% If we didn't find an object that looks like an electrode, notify the user and quit
     if(nElecs == 0)

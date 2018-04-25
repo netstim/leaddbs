@@ -39,6 +39,13 @@ structEleSmall = sqrt(xx.^2 + yy.^2 + zz.^2) <= 1; %  CHECK THIS! (000)
 
 % morphology
 morphImg = imopen(threImg,structEle);
+morphFaction = sum(morphImg(:)) / numel(morphImg);
+if(morphFaction < 0.05 || morphFaction > 0.3)
+    warning('Uncommon fraction of CT data in threshold range (15-60 HU). Trying to compensate. Make sure to use "soft tissue" reconstruction filters for the CT (e.g. J30 kernel) if this fails. ')
+    morphImg = imclose(threImg,structEle); %maybe we have a super noise brain tissue image, thus to CLOSE instead of open first
+    morphImg = imerode(morphImg,structEle); % due to the closing all masks will enlarge, i.e. the brain mask might cover the ckull, thus we have to shrink it at the very end again
+end 
+
 clear threImg;
 
 % largest connected component is brain
