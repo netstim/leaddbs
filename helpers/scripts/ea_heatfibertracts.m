@@ -86,20 +86,25 @@ for group=1:length(roilist)
     fibsval=fibsval(fibidx,:); nfibsval=nfibsval(fibidx,:);
     
     
+    allvals=repmat(vals{1}',size(fibsval,1),1);
+    fibsimpval=allvals; nfibsimpval=allvals;
+    fibsimpval(~logical(fibsval))=nan;
+    nfibsimpval(logical(fibsval))=nan;
+    [h,p,ci,stats]=ttest2(fibsimpval',nfibsimpval');
+    fibsin=[fibsin,stats.tstat(iaix)'];
     %    f=ea_mes([ones(size(fibsval)),zeros(size(nfibsval))]',[fibsval,nfibsval]','rbcorr','missVal','pairwise');
-   A=[ones(size(fibsval)),zeros(size(nfibsval))]';
-   B=[fibsval,nfibsval]';
-  maskenoughin=sum(isnan(fibsval),2)<round(0.2*length(roilist{group}));  
-   RR=zeros(size(A,2),1);
-   for fib=1:size(A,2) 
-   RR(fib)=corr(A(:,fib),B(:,fib),'type','spearman','rows','pairwise');
-   end
-   RR(~maskenoughin)=nan; % fibers driven only by less than 30% of entries.
-    %[h,p,ci,stats]=ttest2(posvals',negvals');
-    %fibsin=[fibsin,f.rbcorr(iaix)'];
-    fibsin=[fibsin,RR(iaix)];
+%    A=[ones(size(fibsval)),zeros(size(nfibsval))]';
+%    B=[fibsval,nfibsval]';
+%   maskenoughin=sum(isnan(fibsval),2)<round(0.2*length(roilist{group}));  
+%    RR=zeros(size(A,2),1);
+%    for fib=1:size(A,2) 
+%    RR(fib)=corr(A(:,fib),B(:,fib),'type','spearman','rows','pairwise');
+%    end
+%    RR(~maskenoughin)=nan; % fibers driven only by less than 30% of entries.
+%     [h,p,ci,stats]=ttest2(posvals',negvals');
+%     %fibsin=[fibsin,f.rbcorr(iaix)'];
+%     fibsin=[fibsin,RR(iaix)];
 end
-fibsin(all(isnan(fibsin(:,5:end)),2),:)=[];
 
 
 
