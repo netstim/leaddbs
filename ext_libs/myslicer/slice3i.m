@@ -173,9 +173,14 @@ end
 %     sliceim=ea_contrast(sliceim,c,o)*64;
 % end
 resdivs=1; % could increase to 2 but would render a bit slow.
-sliceim=ea_contrast(sliceim,c,o)*64;
-sliceim=interp2(sliceim,resdivs);
-
+if length(size(sliceim))==2
+    sliceim=ea_contrast(sliceim,c,o)*64;
+end
+if size(sliceim,3)==1
+    sliceim=interp2(sliceim,resdivs);
+else
+   resdivs=0;
+end
 
 
 ij2xyz(:,1:2)=ij2xyz(:,1:2)/(2^resdivs);
