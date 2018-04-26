@@ -82,8 +82,8 @@ parametersFT.Step=0.4;
 parametersFT.FiberTrackingComputationTreshold=0.125;
 parametersFT.Sampling=1;
 parametersFT.textdisplay=true;
-parametersFT.FAmin=0.2;
-parametersFT.FAmax=0.8;
+%parametersFT.FAmin=0.2;
+%parametersFT.FAmax=0.8;
 
 % Perform FT
 fibers=ea_FT(FA,VectorF,Xmask,parametersFT);
