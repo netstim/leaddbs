@@ -48,9 +48,12 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
     disp(['Thresholding ' niiCT.filepath  ' for metal with METAL_THRESHOLD = ' num2str(METAL_THRESHOLD) '...']);
     maskedImg = niiCT.img;
 
+   %  [xx,yy,zz] = ndgrid(-10:10);
+    %structEle = sqrt(xx.^2 + yy.^2 + zz.^2) <= 2.5 / sqrt(max(niiCT.voxsize));
+    %brainMask = imerode(imerode(brainMask,structEle),structEle);
+
     maskedImg(~(brainMask)) = NaN;
     threImg = (maskedImg > METAL_THRESHOLD);
-    
     %% largest connectet components of metal inside the brain represent electrodes
     cc = bwconncomp(threImg,26);
     disp([num2str(cc.NumObjects) ' potential metal components detected within brain.']);
@@ -83,18 +86,16 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
     nElecs = length(elecIdxs);
     disp(['Guessing that ' num2str(nElecs) ' of them are Electrodes...']);
     
-    if(nElecs==0)
-        disp('Somehing is weird with your CT data...  Trying again with lower metal threshold. ')
-        [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT, 'brainMask', args.brainMask, 'metalThreshold', METAL_THRESHOLD * 0.8, 'medtronicXMLPlan', args.medtronicXMLPlan);
-        return;
-    end
-    
-    %% If we didn't find an object that looks like an electrode, notify the user and quit
     if(nElecs == 0)
-        fprintf(['NO electrode artifact found within brain mask. Did you supply a post-op brain CT image? \nTry the ''no mask'' parameter for phantom scans without brain (and thus without the potential of creating a proper brain mask ;-))\n']); %#ok<NBRAK>
-        return
+        if(METAL_THRESHOLD > 200)
+            disp('Somehing is weird with your CT data...  Trying again with lower metal threshold. ')
+            [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT, 'brainMask', args.brainMask, 'metalThreshold', METAL_THRESHOLD * 0.8, 'medtronicXMLPlan', args.medtronicXMLPlan);
+            return;
+        else
+            %% We tried hard but  didn't find an object that looks like an electrode in a reasonalbe HU range, notify the user and quit
+            error(['NO electrode artifact found within brain mask. Did you supply a post-op brain CT image? \n Try the ''no mask'' parameter in case of phantom scans without brain. \n Try providing an externally created brain mask using the "brainMask" parameter in other cases.']); %#ok<NBRAK>
+        end
     end
-    
     %% if we have an xmlElectrodeDefinition, try to find the electrodes
     % specified there
     if(exist((args.medtronicXMLPlan), 'file'))
