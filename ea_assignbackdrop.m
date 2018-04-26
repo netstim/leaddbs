@@ -182,7 +182,7 @@ for t=1:length(spacedef.templates)
 end
 
 function BDlist=getbdlist
-BDlist=[{},{}]; % empty.
+BDlist=[{[]},{[]}]; % empty.
 if exist([ea_space,'backdrops',filesep,'backdrops.txt'],'file')    
     fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt']);
     BDlist=textscan(fid,'%s %s');
