@@ -21,7 +21,18 @@ else
     
     if exist([folder options.prefs.rawctnii_unnormalized]) == 2
         ct_org = ea_load_nii([folder 'postop_ct.nii']);
-        tmat_org = ct_org.mat;
+        if isequal(ct_org.mat, ct_org.private.mat0)
+            tmat_org = ct_org.mat;
+        else
+            msg = sprintf(['Warning: Different sForm and qForm matrices in Nifti-object. Please select the matrix you want to use.']);
+            choice = questdlg(msg,'Warning!','sForm','qForm','sForm');
+            switch choice
+                case 'sForm'
+                    tmat_org = ct_org.mat;
+                case 'qForm'
+                    tmat_org = ct_org.private.mat0;
+            end
+        end
         ct = ct_org;
         
     else
@@ -131,8 +142,8 @@ else
         elseif supervised
             h = figure('Name',['Respicify Slices for ' sides{side} ' Lead'],'Position',[100 100 600 800],'Color','w');
             txt1 = uicontrol('style','text','units','pixels','Background','w',...
-            'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
-            'string',sprintf(['Please specify the slice with the most clearly defined artifact:']));
+                'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
+                'string',sprintf(['Please specify the slice with the most clearly defined artifact:']));
             plusoneButton = uicontrol('Style', 'pushbutton', 'String', '+ 1 slice',...
                 'Position', [425 640 150 25],'FontSize',12,...
                 'Callback', @buttonPress);
@@ -196,7 +207,7 @@ else
             tmp{3}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevel2_vx(1:3)' + [0 0 1]},1)';
             
             [tmp] = ea_orient_respecifyslices(tmp,ct,cscale,electrode,[5 6 7]);
-
+            
             uiwait
             if plusoneButton.UserData == 1
                 answer = 3;
@@ -223,11 +234,11 @@ else
         
         %% allow for respecification of the artifact centers
         if supervised
-            h = figure('Name',['Respicify Artifact Centers for ' sides{side} ' Lead'],'Position',[100 100 600 800],'Color','w');            
+            h = figure('Name',['Respicify Artifact Centers for ' sides{side} ' Lead'],'Position',[100 100 600 800],'Color','w');
             txt1 = uicontrol('style','text','units','pixels','Background','w',...
-            'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
-            'string',sprintf(['Please mark the center of the artifact by doubleclicking:']));
-            imagesc(artifact_marker');            
+                'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
+                'string',sprintf(['Please mark the center of the artifact by doubleclicking:']));
+            imagesc(artifact_marker');
             axis equal
             axis off
             view(-180,90)
@@ -318,18 +329,18 @@ else
             end
         elseif supervised
             
-            h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');            
+            h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
             txt1 = uicontrol('style','text','units','pixels','Background','w',...
-            'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
-            'string',sprintf(['Please select the marker direction:']));
+                'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
+                'string',sprintf(['Please select the marker direction:']));
             Solution1Button = uicontrol('Style', 'pushbutton', 'String', 'Solution 1 (magenta)',...
-            'Position', [100 50 175 25],'FontSize',12,...
-            'Callback', @buttonPress);
+                'Position', [100 50 175 25],'FontSize',12,...
+                'Callback', @buttonPress);
             Solution2Button = uicontrol('Style', 'pushbutton', 'String', 'Solution 2 (cyan)',...
-            'Position', [350 50 175 25],'FontSize',12,...
-            'Callback', @buttonPress);
-            hold on             
-            ax1 = imagesc(artifact_marker');            
+                'Position', [350 50 175 25],'FontSize',12,...
+                'Callback', @buttonPress);
+            hold on
+            ax1 = imagesc(artifact_marker');
             view(-180,-90)
             axis equal
             axis off
@@ -343,9 +354,9 @@ else
             quiver(center_marker(1),center_marker(2),vector(peak(2),1)-center_marker(1) ,vector(peak(2),2)-center_marker(2),2,'LineWidth',1,'Color','c','MaxHeadSize',2)
             
             txt2 = uicontrol('style','text','units','pixels','Background','w',...
-            'position',[100,77,500,100],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Two possible solutions have been identified:\nSolution 1 = ' num2str(rad2deg(angle(peak(1)))) ' deg (magenta) \nSolution 2 = ' num2str(rad2deg(angle(peak(2)))) ' deg (cyan)\nPlease select most likely direction.']));
-           
+                'position',[100,77,500,100],'FontSize',12,'HorizontalAlignment','left',...
+                'string',sprintf(['Two possible solutions have been identified:\nSolution 1 = ' num2str(rad2deg(angle(peak(1)))) ' deg (magenta) \nSolution 2 = ' num2str(rad2deg(angle(peak(2)))) ' deg (cyan)\nPlease select most likely direction.']));
+            
             uiwait
             
             if Solution1Button.UserData == 1
