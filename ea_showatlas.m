@@ -349,13 +349,13 @@ end
             if ~isequal(ea_stats.atlases.names,prioratlasnames)
                 warning('Other atlasset used as before. Deleting VAT and Fiberinfo. Saving backup copy.');
                 ds=load([options.root,options.patientname,filesep,'ea_stats']);
-                save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats','-v7.3');
-                save([options.root,options.patientname,filesep,'ea_stats_backup'],'-struct','ds','-v7.3');
+                save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
+                save(fullfile([options.root,options.patientname],'ea_stats_backup'),'-struct','ds','-v7.3');
             else
-                save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats','-v7.3');
+                save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
             end
         else
-            save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats','-v7.3');
+            save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
 
         end
     end
