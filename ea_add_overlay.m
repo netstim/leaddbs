@@ -172,12 +172,12 @@ for atlas=showidx
                             set(0,'CurrentFigure',cuts)
                             if isempty(ix)
                                 warning('off')
-                                plot(cscale(1,:),cscale(2,:),'color',options.d2.con_color,'LineWidth',1.5);
+                                plot(cscale(1,:),cscale(2,:),'color',options.d2.con_color,'LineWidth',2.5);
                                 warning('on')
                             else
                                 startPoint=1;
                                 for plots=1:length(ix) % this happens if contour has an "inner hole"
-                                    plot(cscale(1,startPoint:ix(plots)),cscale(2,startPoint:ix(plots)),'color',options.d2.con_color,'LineWidth',1.5);
+                                    plot(cscale(1,startPoint:ix(plots)),cscale(2,startPoint:ix(plots)),'color',options.d2.con_color,'LineWidth',2.5);
                                     startPoint=ix(plots)+1;
                                 end
                             end
