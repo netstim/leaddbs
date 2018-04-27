@@ -16,7 +16,7 @@ addpath(genpath([options.earoot,'ext_libs',filesep,'mrTools']));
 rmpath(genpath([options.earoot,'ext_libs',filesep,'mesoft']));
 
 
- load([options.root,options.patientname,filesep,options.prefs.bval]);
+load([options.root,options.patientname,filesep,options.prefs.bval]);
    [~,bvfname]=fileparts(options.prefs.bval);
    bvals=eval(bvfname);
    bval=max(bvals)/1000;
@@ -64,7 +64,7 @@ end
 %% do tracking
 matlabbatch{1}.dtijobs.tracking.GTtrack.fname.filenameHARDI = {[directory,options.prefs.HARDI]};
 matlabbatch{1}.dtijobs.tracking.GTtrack.newfile.out.dir = {directory};
-matlabbatch{1}.dtijobs.tracking.GTtrack.newfile.out.fname = options.prefs.FTR_unnormalized;
+matlabbatch{1}.dtijobs.tracking.GTtrack.newfile.out.fname = 'lowFTR.mat';
 matlabbatch{1}.dtijobs.tracking.GTtrack.trackingarea.masknii.filenameMASKnii = {[directory,'trackingmask.nii']};
 matlabbatch{1}.dtijobs.tracking.GTtrack.trackingarea.masknii.thresholdMask = 0.5;
 matlabbatch{1}.dtijobs.tracking.GTtrack.parameters = 1;
@@ -73,10 +73,23 @@ matlabbatch{1}.dtijobs.tracking.GTtrack.para_other.custom_para_other = para_othe
 matlabbatch{1}.dtijobs.tracking.GTtrack.minlen = 3;
 matlabbatch{1}.dtijobs.tracking.GTtrack.maxlen = Inf;
 
+spm_jobman('run',{matlabbatch});
+clear matlabbatch;
 
-jobs{1}=matlabbatch;
-spm_jobman('run',jobs);
-clear matlabbatch jobs;
+%% perform sampling to get larger number of tracts.
+
+matlabbatch{1}.dtijobs.tracking.GTtrack_accum.filenameFTR = {[directory,'lowFTR.mat']};
+matlabbatch{1}.dtijobs.tracking.GTtrack_accum.fname = options.prefs.FTR_unnormalized;
+matlabbatch{1}.dtijobs.tracking.GTtrack_accum.numsamps = 10;
+matlabbatch{1}.dtijobs.tracking.GTtrack_accum.numits = 1000000;
+matlabbatch{1}.dtijobs.tracking.GTtrack_accum.temp = 0.1;
+
+spm_jobman('run',{matlabbatch});
+clear matlabbatch;
+
+
+% ftr=fiberGT_tool('createEFTR',10^7,10,0.1);
+% ftrstruct_write(ftr,[directory,options.prefs.FTR_unnormalized]);
 
 %% add methods dump:
 cits={
@@ -98,3 +111,4 @@ specs.affine=dnii.mat;
 [~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
 ea_ftr2trk(ftrfname,directory,specs); % export normalized ftr to .trk
 disp('Done.');
+lead dbs
