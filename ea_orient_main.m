@@ -18,10 +18,10 @@ else
     else
         error(['No coregistered CT (',options.prefs.ctnii_coregistered,') found in folder: ' folder])
     end
-    
+    tol=0.0001; % tolerance of (rounding) difference in qform and sform matrices.
     if exist([folder options.prefs.rawctnii_unnormalized]) == 2
         ct_org = ea_load_nii([folder 'postop_ct.nii']);
-        if isequal(ct_org.mat, ct_org.private.mat0)
+        if sum(sum(ct_org.mat-ct_org.private.mat0))<tol
             tmat_org = ct_org.mat;
         else
             msg = sprintf(['Warning: Different sForm and qForm matrices in Nifti-object. Please select the matrix you want to use.']);
