@@ -25,7 +25,7 @@ if ischar(options) % return name of method.
     return
 end
 
-usefa=1;
+usefa=options.prefs.machine.normsettings.ants_usefa;
 usebrainmask=0;
 
 if ~exist('includeatlas','var')

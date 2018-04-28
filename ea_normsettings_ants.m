@@ -22,7 +22,7 @@ function varargout = ea_normsettings_ants(varargin)
 
 % Edit the above text to modify the response to help ea_normsettings_ants
 
-% Last Modified by GUIDE v2.5 13-Jul-2017 21:37:38
+% Last Modified by GUIDE v2.5 28-Apr-2018 17:30:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -98,6 +98,8 @@ if ix % if has prior selection
     set(handles.strategy,'Value',ix);
 end
 
+set(handles.includefa,'Value',prefs.machine.normsettings.ants_usefa);
+
 if ischar(prefs.machine.normsettings.ants_numcores)
     set(handles.restrcores,'Value',1);
     set(handles.numcores,'String',prefs.machine.normsettings.ants_numcores)
@@ -167,6 +169,8 @@ normsettings.ants_metric=normsettings.ants_metric{get(handles.metric,'Value')};
 
 normsettings.ants_strategy=get(handles.strategy,'String');
 normsettings.ants_strategy=normsettings.ants_strategy{get(handles.strategy,'Value')};
+
+normsettings.ants_usefa=get(handles.includefa,'Value');
 
 
 if get(handles.restrcores,'Value')
@@ -279,3 +283,12 @@ function stagesep_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of stagesep
+
+
+% --- Executes on button press in includefa.
+function includefa_Callback(hObject, eventdata, handles)
+% hObject    handle to includefa (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of includefa
