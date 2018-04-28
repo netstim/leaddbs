@@ -140,7 +140,7 @@ options.hybridsave=1;
 options.native=1;
 [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
 
-ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
+ea_save_reconstruction(coords_mm,trajectory,markers,options.elmodel,1,options);
 options=getappdata(mcfig,'origoptions');
 try options=rmfield(options,'hybridsave'); end
 ea_busyaction('off',mcfig,'reco');
