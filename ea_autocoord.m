@@ -85,11 +85,16 @@ if ~strcmp(options.patientname,'No Patient Selected')
     % anat preprocess, only do once.
     % a small hidden file '.pp' inside patient folder will show this has been done before.
     if ~exist([directory,'.pp'],'file') && ~exist([directory,'ea_normmethod_applied.mat'],'file')
+        % create untouched copy
+        if ~exist([directory,'raw_',presentfiles{1}],'file')
+            copyfile([directory,presentfiles{1}],[directory,'raw_',presentfiles{1}]);
+        end
+        
         % apply reorientation/cropping and biasfieldcorrection
         for fi=1:length(presentfiles)
             ea_anatpreprocess([directory,presentfiles{fi}]);
         end
-
+        
         % Reslice(interpolate) preoperative anatomical image if needed
         try ea_resliceanat(options); end
 

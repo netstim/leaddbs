@@ -90,9 +90,10 @@ if isempty(menuprobe)
 
 
     if ismember('applynorm',cmd)
-        uimenu(f,'Label','Apply Patient Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,0},'Accelerator','N');
-        uimenu(f,'Label','Apply Patient Inverse Normalization to file...','Callback',{@ea_applynormtofile_menu,handles,1},'Accelerator','Y');
-
+        uimenu(f,'Label','Map file from anchor space to MNI...','Callback',{@ea_applynormtofile_menu,handles,0},'Accelerator','N');
+        uimenu(f,'Label','Map file from MNI to anchor space...','Callback',{@ea_applynormtofile_menu,handles,1},'Accelerator','Y');
+        uimenu(f,'Label','Map file from untouched anchor space to MNI...','Callback',{@ea_applynormtofile_menu,handles,0,1});
+        uimenu(f,'Label','Map file from MNI to untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1});
     end
     
     if ismember('cluster',cmd)
