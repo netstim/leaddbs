@@ -61,7 +61,7 @@ anatpresent=flip(anatpresent); % reverse order since most important transform sh
 for anatf=1:length(anatpresent)
     disp(['Including ',anatpresent{anatf},' data for (grey-matter) normalization']);
 
-    to{cnt}=[ea_space(options),ea_det_to(anatpresent{anatf},spacedef),'.nii'];
+    to{cnt}=ea_niigz([ea_space(options),ea_det_to(anatpresent{anatf},spacedef)]);
     if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
         ea_maskimg(options,[directory,anatpresent{anatf}],bprfx);
     end
@@ -71,8 +71,8 @@ for anatf=1:length(anatpresent)
 end
 
 if includeatlas % append as last to make criterion converge on this one.
-    to{cnt}=[ea_space(options),'atlas.nii'];
-    from{cnt}=[directory,'anat_atlas.nii.gz'];
+    to{cnt}=ea_niigz([ea_space(options),'atlas']);
+    from{cnt}=ea_niigz([directory,'anat_atlas']);
     weights(cnt)=1.5;
     cnt=cnt+1;
 end
