@@ -6,7 +6,6 @@ if ~exist([ea_space,'fliplr',filesep,'glanatComposite.h5'],'file');
     for t=1:length(spacedef.templates)
         copyfile([ea_space,spacedef.templates{t},'.nii'],[ea_space,'fliplr',filesep,'anat_',spacedef.templates{t},'.nii']);
         ea_flip_lr([ea_space,'fliplr',filesep,'anat_',spacedef.templates{t},'.nii'],[ea_space,'fliplr',filesep,'anat_',spacedef.templates{t},'.nii']);
-        
     end
     
     options=ea_getptopts([ea_space,'fliplr',filesep]);
