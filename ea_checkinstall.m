@@ -9,8 +9,8 @@ end
 
 switch cmd
     case 'list' % simply return list of installable datasets
-        success={'Redownload data files','Install development version of Lead','Structural group connectome 20 subjects Gibbs-tracker (Horn 2013)','Structural group connectome 169 NKI subjects Gibbs-tracker (Horn 2016)','Structural group connectome 32 Adult Diffusion HCP subjects GQI (Horn 2017)','Structural group connectome 90 PPMI PD-patients GQI (Ewert 2017)','Functional group connectome 74 PPMI PD-patients, 15 controls (Horn 2017)'};
-        commands={'leaddata','hotfix','groupconnectome2013','groupconnectome2016','groupconnectome2017','groupconnectome_ppmi2017','fgroupconnectome_ppmi2017'};
+        success={'Redownload data files','Install development version of Lead','2009b Nonlinear Flip Transform','Structural group connectome 20 subjects Gibbs-tracker (Horn 2013)','Structural group connectome 169 NKI subjects Gibbs-tracker (Horn 2016)','Structural group connectome 32 Adult Diffusion HCP subjects GQI (Horn 2017)','Structural group connectome 90 PPMI PD-patients GQI (Ewert 2017)','Functional group connectome 74 PPMI PD-patients, 15 controls (Horn 2017)'};
+        commands={'leaddata','hotfix','nlinflip','groupconnectome2013','groupconnectome2016','groupconnectome2017','groupconnectome_ppmi2017','fgroupconnectome_ppmi2017'};
     case 'leaddata'
         checkf=[ea_space,'bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
@@ -30,7 +30,26 @@ switch cmd
         else
             disp('Lead datafiles is installed.')
         end
+    case 'nlinflip'
+        checkf=[ea_space,'fliplr'];
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
+        if checkonly
+            success=~force;
+            return;
+        end
+        if force==-1
+            success=-1;
+            return;
+        end
 
+        if ~exist(checkf,'file') || force
+            success=ea_downloadasset('FlipLR',...
+                [ea_space,'fliplr.zip'],...
+                'fliplr');
+        else
+            disp('2009b asym LR flip transform is installed.')
+        end
+        
     case 'bigbrain'
         checkf=[ea_space,'bigbrain_2015_100um_bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
