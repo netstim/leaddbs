@@ -9,10 +9,10 @@ if ischar(from) % assume nifti file path
         interp=4;
     end
     options=ea_getptopts(directory);
-        ea_flip_lr(to,to);
+        ea_flip_lr(from,to);
 
-    ea_apply_normalization_tofile(options,{from},{to},directory,0,interp,from);
-    tof=ea_load_nii(to);
+    ea_apply_normalization_tofile(options,{to},{to},directory,0,interp,from);
+    %?tof=ea_load_nii(to);
    % ea_reslice_nii(to,to,abs(tof.voxsize),[],[],[],[],[],0);
     
 else % assume coordinate list
