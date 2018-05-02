@@ -114,7 +114,7 @@ elseif regexp(bdstring, ['^',ea_getspace,' '])    % pattern: "MNI_ICBM_2009b_NLI
     spacedef=ea_getspacedef;
     template=lower(strrep(strrep(bdstring,[ea_getspace,' '],''),[' (',spacedef.citation{1},')'],''));
 
-    varargout{1}=spm_vol(fullfile(ea_space(options),[template,'.nii']));
+    varargout{1}=spm_vol(ea_niigz(fullfile(ea_space(options),[template])));
     varargout{2}=varargout{1};
     varargout{3}=varargout{1};
 elseif strcmp(bdstring,'Choose...')
