@@ -1,27 +1,30 @@
-function ea_conformspaceto(spacefn,toreslicefn,interp,mask,newfn)
+function ea_conformspaceto(spacefn,toreslicefn,interp,mask,newfn,headermod)
 
+if ~exist('headermod','var') && ~isempty(headermod)
+    headermod=1;
+end
 sphdr = ea_open_vol(spacefn);
 tohdr = ea_open_vol(toreslicefn);
 if ~isequal(sphdr.mat,tohdr.mat) % volumes have different dimensions & hdr matrices.
 
     flags.mean=0;
     flags.which=1;
-    if exist('newfn','var')
+    if exist('newfn','var') && ~isempty(newfn)
         flags.prefix='r';
     else
         flags.prefix='';
     end
-    if nargin>2
+    if exist('interp','var') && ~isempty(interp)
         flags.interp=interp;
     end
-    if nargin>3
+    if exist('mask','var') && ~isempty(mask)
         flags.mask=mask;
     else
         flags.mask=0;
     end
 
     spm_reslice({spacefn,toreslicefn},flags);
-    if exist('newfn','var')
+    if exist('newfn','var') && ~isempty(newfn)
     [pth,fn,ext]=fileparts(toreslicefn);
     movefile(fullfile(pth,['r',fn,ext]),newfn);
     toreslicefn=newfn;
@@ -30,6 +33,7 @@ if ~isequal(sphdr.mat,tohdr.mat) % volumes have different dimensions & hdr matri
     delete(toreslicefn);
     ea_write_nii(nii);
 end
+if headermod
 % make sure headers of images are exactly identical (also corrects for qform/sform issues).
 sp=ea_load_untouch_nii(spacefn);
 tr=ea_load_untouch_nii(toreslicefn);
@@ -37,3 +41,4 @@ sp.img=eval([class(tr.img),'(tr.img);']); % make sure to save data in same class
 sp.hdr.dime.bitpix=tr.hdr.dime.bitpix;
 sp.hdr.dime.datatype=tr.hdr.dime.datatype; % keep datatype of original image.
 ea_save_untouch_nii(sp,toreslicefn);
+end
