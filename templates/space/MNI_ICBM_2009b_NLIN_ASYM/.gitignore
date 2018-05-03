@@ -1,4 +1,6 @@
 !ea_space_def.mat
-atlases/
 /.augtpm
 /.aug_tpm
+atlases/
+CIT168/
+fliplr/
