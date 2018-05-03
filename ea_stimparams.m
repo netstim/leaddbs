@@ -2090,6 +2090,12 @@ switch model
         ea_disable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','off');
+    case 'Dembek 2017'
+        ea_show_impedance(handles);
+        S.monopolarmodel=1;
+        ea_enable_vas(handles,options);
+        set(handles.betawarning,'visible','off');
+        set(handles.settings,'visible','on');
 end
 
 S.model=model;
@@ -3093,4 +3099,17 @@ function settings_Callback(hObject, eventdata, handles)
 % hObject    handle to settings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_vatsettings_horn;
+models=get(handles.modelselect,'String');
+try
+    model=models{get(handles.modelselect,'Value')};
+catch
+    set(handles.modelselect,'Value',1);
+    model=models{1};
+end
+switch model
+    case 'SimBio/FieldTrip (see Horn 2017)'
+        ea_vatsettings_horn;
+    case 'Dembek 2017'
+        ea_vatsettings_dembek;    
+end
+% ea_vatsettings_horn;
