@@ -81,10 +81,10 @@ function ea_fillpresetpopups(handles)
 
 
 pwp={'Stimulation Pulse Width:',nan
-    '30 탎',30
-    '60 탎',60
-    '90 탎',90
-    '120 탎',120
+    '30 us',30
+    '60 us',60
+    '90 us',90
+    '120 us',120
     };
 set(handles.pwpresets,'String',pwp(:,1));
 setappdata(handles.pwpresets,'data',pwp);
