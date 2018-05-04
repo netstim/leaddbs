@@ -22,7 +22,7 @@ function varargout = ea_vatsettings_dembek(varargin)
 
 % Edit the above text to modify the response to help ea_vatsettings_horn
 
-% Last Modified by GUIDE v2.5 03-May-2018 17:34:02
+% Last Modified by GUIDE v2.5 04-May-2018 12:25:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -264,3 +264,13 @@ function savebutn_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to savebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+
+
+
+function pwtext_Callback(hObject, eventdata, handles)
+% hObject    handle to pwtext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of pwtext as text
+%        str2double(get(hObject,'String')) returns contents of pwtext as a double
