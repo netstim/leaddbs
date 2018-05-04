@@ -17,7 +17,7 @@ hold on
 % get app data
 
 stimparams=getappdata(resultfig,'stimparams');
-S=getappdata(resultfig,'S');
+S=getappdata(resultfig,'curS');
 for side=1:length(stimparams)
     VAT{side}=stimparams(side).VAT;
 end

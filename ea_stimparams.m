@@ -962,7 +962,6 @@ clear PL
 
 for group=flix
     setappdata(resultfig,'stimparams',stimparams(group,:));
-    setappdata(resultfig,'S',S(group))
     setappdata(resultfig,'curS',S(group));
     ea_showfibres_volume(resultfig,options);
     %copyfile([options.root,options.patientname,filesep,'ea_stats.mat'],[options.root,options.patientname,filesep,'ea_stats_group_',num2str(group),'.mat']);
@@ -1564,7 +1563,8 @@ function stimlabel_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of stimlabel as text
 %        str2double(get(hObject,'String')) returns contents of stimlabel as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 sel=get(handles.stimlabel,'String');
 sel=sel{get(handles.stimlabel,'Value')};
 if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
@@ -1687,7 +1687,7 @@ else
             setappdata(resultfig,'vatgrad',vatgrad);
         end
         setappdata(resultfig,'stimparams',stimparams(1,:));
-        setappdata(resultfig,'S',S(1))
+        setappdata(resultfig,'curS',S(1))
         options.writeoutstats = 0;
         ea_showfibres_volume(resultfig,options);
     else
@@ -3110,6 +3110,6 @@ switch model
     case 'SimBio/FieldTrip (see Horn 2017)'
         ea_vatsettings_horn;
     case 'Dembek 2017'
-        ea_vatsettings_dembek;    
+        ea_vatsettings_dembek;
 end
 % ea_vatsettings_horn;
