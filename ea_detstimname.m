@@ -11,6 +11,8 @@ directory = [options.root,options.patientname,filesep];
 stimname = cell(0);
 if exist([directory,'stimulations'],'dir')
     stimdir = dir([directory,'stimulations']);
+    [~, ind] = sort([stimdir(:).datenum], 'descend'); % show the latest modified first
+    stimdir = stimdir(ind);
     stimname = {stimdir(cell2mat({stimdir.isdir})).name};
     stimname = stimname(cellfun(@(x) ~strncmp(x,'.',1) && ~strncmp(x,'gs_',3), stimname));
 end
