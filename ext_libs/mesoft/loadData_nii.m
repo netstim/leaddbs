@@ -50,13 +50,6 @@ function data = loadData_nii(dwifile,gradfile,maskfile,threshold)
        
        gradf1 = importdata(gradfile{1});
        gradf2 = importdata(gradfile{2});
-       
-       % make sure bvec and bval have the size of 3xN and 1xN
-       if size(gradf1,1) == length(gradf1)
-           gradf1 = gradf1';
-           gradf2 = gradf2';
-       end
-       
        if size(gradf1,1) == 3,
            bvec = gradf1;
            bval = gradf2;
@@ -92,6 +85,38 @@ function data = loadData_nii(dwifile,gradfile,maskfile,threshold)
        data.WM = loadmask(maskfile,threshold,data.dwi(:,:,:,1),data.edges.hdr);
        data.WM.file = maskfile;
        
+%        
+%        
+%        %%%%%%%% just take data within bbox of mask
+%        szmask = size(data.WM.mask);
+%        szdwi = size(data.dwi);
+%        if all(szmask(1:3) == szdwi(1:3)),
+%            
+%        else
+%        
+%         mask = data.WM.mask;
+%         idx = find(sum(sum(mask>0,3),2));
+%         bbox_x = floor([idx(1) idx(end)]/2);
+%         idx = find(sum(sum(mask>0,1),3));
+%         bbox_y = floor([idx(1) idx(end)]/2);
+%         idx = find(sum(sum(mask>0,1),2));
+%         bbox_z = floor([idx(1) idx(end)]/2);
+%         
+%         data.WM.mask = data.WM.mask(bbox_x(1)*2-1:bbox_x(2)*2,bbox_y(1)*2-1:bbox_y(2)*2,bbox_z(1)*2-1:bbox_z(2)*2);
+%         data.dwi = data.dwi(bbox_x(1):bbox_x(2),bbox_y(1):bbox_y(2),bbox_z(1):bbox_z(2),:);
+%         
+%         edges = [data.edges.hdr.hist.srow_x ; data.edges.hdr.hist.srow_y ; data.edges.hdr.hist.srow_z ; 0 0 0 1];
+%         BBw = edges* [bbox_x(1)-1 ;bbox_y(1)-1 ;bbox_z(1)-1 ; 1];
+%         edges_n = edges;
+%         edges_n(1:3,4) =  BBw(1:3);
+%         data.edges.hdr.hist.srow_x = edges_n(1,:);
+%         data.edges.hdr.hist.srow_y = edges_n(2,:);
+%         data.edges.hdr.hist.srow_z = edges_n(3,:);
+%        end;
+%         
+       
+       
+       
        
        
       
@@ -112,7 +137,11 @@ function data = loadmask(fn,threshold,ref,edges)
                maskdata(:,:,:,2) = reslice_nifti(masknii.img,masknii.hdr,edges,2);
            else
                masknii = load_untouch_nii(fn);
-               maskdata = reslice_nifti(masknii.img,masknii.hdr,edges,2);
+               if all(edges.dime.dim(2:4) ==  masknii.hdr.dime.dim(2:4))
+                   maskdata = masknii.img;
+               else
+                   maskdata = reslice_nifti(masknii.img,masknii.hdr,edges,2);
+               end;
            end;
            for k = 1:size(maskdata,4),
                if length(threshold) < k,

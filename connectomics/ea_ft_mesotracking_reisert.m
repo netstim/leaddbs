@@ -4,7 +4,7 @@ function varargout=ea_ft_mesotracking_reisert(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='Mesoscopic Fibertracking (Reisert et al. 2014)';
+    varargout{1}='Mesoscopic Fibertracking (Konopleva et al. 2018)';
     varargout{2}={'SPM8','SPM12'};
     return
 end
@@ -136,6 +136,7 @@ ea_delete([directory,dfn,'_FTR.mat']);
 
 % mesoGT_tool('loadData','nii',[directory,options.prefs.dti],{[directory,options.prefs.bvec],[directory,options.prefs.bval],...
 %    },[directory,'trackingmask.nii'],0.5);
+init_mesoft;
 mesoGT_tool('loadData','nii',[directory,options.prefs.dti],{[directory,options.prefs.bvec],[directory,options.prefs.bval],...
      },{[directory,'gmmask.nii'],[directory,'trackingmask.nii']},[128,128]);
 
@@ -160,9 +161,8 @@ disp('Done.');
 
 
 %% add methods dump:
-cits={
-    'Reisert, M., Kiselev, V. G., Dihtal, B., Kellner, E., & Novikov, D. S. (2014). MesoFT: Unifying Diffusion Modelling and Fiber Tracking. In Medical Image Computing and Computer-Assisted Intervention ? MICCAI 2014 (Vol. 8675, pp. 201?208). Cham: Springer International Publishing. http://doi.org/10.1007/978-3-319-10443-0_26'
+cits={'Konopleva, L., Ilyasov, K. A., Skibbe, H., Kiselev, V. G., Kellner, E., Dhital, B., & Reisert, M. (2018). Modelfree global tractography. NeuroImage. http://doi.org/10.1016/j.neuroimage.2018.03.058'
     'Ashburner, J., & Friston, K. J. (2005). Unified segmentation., 26(3), 839?851. http://doi.org/10.1016/j.neuroimage.2005.02.018'
     };
-ea_methods(options,['A whole-brain fiber-set was estimated based using a model-free implementation of the Meso-tracking approach (Reisert 2014) using standard parameters.',...
+ea_methods(options,['A whole-brain fiber-set was estimated based using a model-free implementation of the Meso-tracking approach (Konopleva et al. 2018) using standard parameters.',...
     ' This was done within a white-matter mask that was estimated on the anatomical scan using the Unified Segmentation approach (Ashburner 2005) as implemented in ',spm('ver'),' and linearly co-registered to the b0-weighted series.'],cits);

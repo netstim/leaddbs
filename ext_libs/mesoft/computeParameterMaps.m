@@ -68,7 +68,7 @@ function maps = computeParameterMaps(ftr,M);
       
       
 %%      
-      if false,
+      if 0,
 
 %%          
 %           lmax_cut = min(5,lmax);
@@ -373,29 +373,44 @@ est = reshape(est,[(size(mask)) size(est_tmp,2)]);
       ep = ep ./ (acpervox+eps);
 
       %V = double(mask); V(mask>0) = Dax;
-      maps.vfi = fdsm*0; %est(:,:,:,1);%vfsm(:,:,:,1);
+      %maps.vfi = est(:,:,:,1);%vfsm(:,:,:,1);
       %V = double(mask); V(mask>0) = Drad;
-      maps.vfsw = fdsm*0; %est(:,:,:,3)+est(:,:,:,2);%$vfsm(:,:,:,2);
+      %maps.vfsw =est(:,:,:,3)+est(:,:,:,2);%$vfsm(:,:,:,2);
       %V = double(mask); V(mask>0) = Kax;
-      maps.vfe = fdsm*0; %est(:,:,:,3);%vfsm(:,:,:,3);
+      %maps.vfe = est(:,:,:,3);%vfsm(:,:,:,3);
       %V = double(mask); V(mask>0) = Krad;
-      maps.S0 = fdsm*0; % est(:,:,:,4);%vfsm(:,:,:,4);
+      maps.S0 = vfsm(:,:,:,4);
+      maps.segcount = fdsm;
+      maps.termcount = ep;
+      
+
+      
+      
+      
+      
+%      maps.S0 = est(:,:,:,4);%vfsm(:,:,:,4);
+      %V = double(mask); V(mask>0) = Drad;
+      %V = double(mask); V(mask>0) = Kax;
+      %V = double(mask); V(mask>0) = Krad;
+      maps.Din = vfsm(:,:,:,1);
+      maps.Dexax = vfsm(:,:,:,2);
+      maps.Dexrad = vfsm(:,:,:,3);
+      maps.vf = vfsm(:,:,:,4);
+      maps.vf_csf = vfsm(:,:,:,4);
+      maps.snr = vfsm(:,:,:,4);
       maps.segcount = fdsm;
       maps.termcount = ep;
       
       
-      maps.Din = fdsm*0; %est(:,:,:,1);%vfsm(:,:,:,1);
-      %V = double(mask); V(mask>0) = Drad;
-      maps.Dexax = fdsm*0; %est(:,:,:,3)+est(:,:,:,2);%$vfsm(:,:,:,2);
-      %V = double(mask); V(mask>0) = Kax;
-      maps.Dexrad = fdsm*0; %est(:,:,:,3);%vfsm(:,:,:,3);
-      %V = double(mask); V(mask>0) = Krad;
-      maps.vf = fdsm*0; %est(:,:,:,4);%vfsm(:,:,:,4);
-      maps.vf_csf =fdsm*0; % est(:,:,:,5);%vfsm(:,:,:,4);
-      maps.snr = fdsm*0; %snr;%vfsm(:,:,:,4);
-      maps.segcount = fdsm;
-      maps.termcount = ep;
-      
+%       maps.Din = est(:,:,:,1);%vfsm(:,:,:,1);
+%       maps.Dexax = est(:,:,:,3)+est(:,:,:,2);%$vfsm(:,:,:,2);
+%       maps.Dexrad = est(:,:,:,3);%vfsm(:,:,:,3);
+%       maps.vf = est(:,:,:,4);%vfsm(:,:,:,4);
+%       maps.vf_csf = est(:,:,:,5);%vfsm(:,:,:,4);
+%       maps.snr = fdsm*0; %snr;%vfsm(:,:,:,4);
+%       maps.segcount = fdsm;
+%       maps.termcount = ep;
+%       
       
 %       est(est<0) = 0;
 %      assignin('base','est',est);

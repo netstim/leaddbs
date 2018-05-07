@@ -144,13 +144,8 @@ img = ds.img;
             plot3([n(1,k) -n(1,k)]*w,[n(2,k) -n(2,k)]*w,[n(3,k) -n(3,k)]*w,'linewidth',2); hold on;
             Mten = Mten + n(:,k)*n(:,k)' *w;
         end;
-
-        
         [U D] = eigs(Mten);
-        [~,ix]=sort(D(logical(eye(length(D)))));
-        pd = U(:,ix(3));
-
-        
+        pd = U(:,1);
         plot3([pd(1) -pd(1)],[pd(2) -pd(2)],[pd(3) -pd(3)],'r');
         
         hold off;
@@ -192,13 +187,8 @@ img = ds.img;
           
       
         for k = 1:size(ds.hr.user.bTensor,3);
-
-            
             [U D] = eigs(ds.hr.user.bTensor(:,:,k));
-            [~,ix]=sort(D(logical(eye(length(D)))));
-            dirs(:,k) = U(:,ix(3));
-
-            
+            dirs(:,k) = U(:,1);
         end;
         lmax = 2;
         p1 = 0;
@@ -211,7 +201,7 @@ img = ds.img;
             SHt{k-1} = M;
             %SHidx{k-1} = idx;
         end;
-        kappa = sqrt(log(p1/p2))/8;
+        kappa = 1; %sqrt(log(p1/p2))/8;
         
         
         
@@ -223,12 +213,12 @@ img = ds.img;
          tr = squeeze(ds.hr.user.bTensor(1,1,:)+ds.hr.user.bTensor(2,2,:)+ds.hr.user.bTensor(3,3,:))/1000;
          for k = 1:length(idx),
              q2 = squeeze(cmult(n(:,k),cmult(n(:,k),ds.hr.user.bTensor,1,1),1,2))/1000;
-             Eintra = dispstick(Dpara_in(k),kappa,[],[q2(:) (tr(:)-q2(:))]');
+             Eintra = dispstick(Dpara_in(k),kappa,[],[q2(:) (tr(:)-q2(:))]','poisson');
              Eextra = exp(-q2*Dpara_ex(k)-(tr-q2)*Dorth(k)); % Eextra = Eextra - sum(W*Eextra);
              Ecsf = exp(-tr*3);
              S = S + weights(k)*(vf(k)*Eintra+ (1-vf(k)-vf_csf(k))*Eextra + vf_csf(k)*Ecsf );
          end;        
-         S = riceexp(S,1/snr(1));
+     %    S = riceexp(S,1/snr(1));
 
         S = abs(real(S));
         

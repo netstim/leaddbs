@@ -12,31 +12,33 @@ cnt = 1;
 
 Dcsf = 2;
 Dp = 0.5;
-vf = 0.7;
+vf = 0.5;
 vsw = 0.0;
 
 t = 0.1;
   
-Di = 2.4;
-Da = 1.7;
-Dp = 0.6;
+Di = 2;
+Da = 1.5;
+Dp = 0.5;
 
 
+%% circle
 P(cnt).Di = Di;
 P(cnt).Da = Da;
 P(cnt).Dp = Dp;
-P(cnt).vf = vf;
+P(cnt).vf = 0.1;
 P(cnt).vsw = vsw;
 mask{cnt} = R<n*0.4 & R >n*0.25;
 dirs{cnt} = cat(3,(Y-n/2)./(eps+R),-(X-n/2)./(eps+R));
  cnt = cnt + 1;
 
+ %% lines
 P(cnt).Di = Di;
 P(cnt).Da = Da; 
 P(cnt).Dp = Dp;
-P(cnt).vf = vf; %0.2+0.6*X/n;
+P(cnt).vf = 0.5; %vf; %0.2+0.6*X/n;
 P(cnt).vsw = vsw;
-v = [1 -0.1]; v = v/norm(v);
+v = [1 -0.0]; v = v/norm(v);
 %v = [-0.6 1]; v = v/norm(v);
 p = ((X-n/2)*v(1) + (Y-n/2)*v(2));
 mask{cnt} = p < n*t & p > -n*t;
@@ -46,7 +48,7 @@ dirs{cnt} = cat(3,-v(2)*ones(size(X)),v(1)*ones(size(X)));
 P(cnt).Di = Di;
 P(cnt).Da = Da; 
 P(cnt).Dp = Dp;
-P(cnt).vf = vf; %0.2+0.6*X/n;
+P(cnt).vf = 0.1; %0.2+0.6*X/n;
 P(cnt).vsw = vsw;
 %v = [1 -0.1]; v = v/norm(v);
 v = [-0.6 1]; v = v/norm(v);
@@ -132,11 +134,8 @@ function K = smker(ten)
 %%
 clear dir
 for k = 1:size(ten,3),
-
     [U D] = eigs(ten(:,:,k));
-    [~,ix]=sort(D(logical(eye(length(D)))));
-    dir(:,k) = U(:,ix(3));
-
+    dir(:,k) = U(:,1);
 end;
 
 dir = [dir  -dir];

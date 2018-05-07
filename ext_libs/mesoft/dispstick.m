@@ -2,11 +2,8 @@ function S = dispstick(D, a, n,sch,type)
 
 if length(size(sch)) == 3,
     for k = 1:size(sch,3),
-
         [U S] = eigs(sch(:,:,k));
-        [~,ix]=sort(S(logical(eye(length(S)))));
-        scheme(:,k) = U(:,ix(3))*sqrt(S(1,1));
-
+        scheme(:,k) = U(:,1) *sqrt(S(1,1));
     end;
 elseif size(sch,1) == 2,
     n = [1 0 0]';

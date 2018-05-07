@@ -1,4 +1,4 @@
-function ea_applynormtofile_menu(~, ~, handles, useinverse, untouchedanchor)
+function ea_applynormtofile_menu(~, ~, handles, useinverse, untouchedanchor, asoverlay,expdicom)
 if ~exist('untouchedanchor','var')
     untouchedanchor=0;
 end
@@ -7,6 +7,13 @@ if untouchedanchor
 else
     interp=4;
 end
+if ~exist('expdicom','var')
+    expdicom=0;
+end
+if ~exist('asoverlay','var')
+    asoverlay=0;
+end
+
 [options.root, options.patientname] = fileparts(get(handles.patdir_choosebox, 'String'));
 options.root = [options.root, filesep];
 options.earoot = ea_getearoot;
@@ -47,5 +54,24 @@ if untouchedanchor && useinverse % need to map from anchor to untouched (raw) an
         [options.root, options.patientname, filesep, 'raw_',presentfiles{1}],...
         [options.root, options.patientname, filesep, 'rraw_',presentfiles{1}],...
         to);
+    if asoverlay
+        keyboard
+        
+    end
+    
+    if expdicom
+        uigetfile(
+        dicom_file='/Users/leaddbs/Downloads/uw_overlay/t1_mprage_tra_p2_iso_8/IM-0004-0192.dcm';
+        merged_file='temp.img';
+        newSeriesNumber=100;
+        newSeriesDescription='Lead-DBS Plan';
+        outputDirectory='/Users/leaddbs/Downloads/uw_overlay/';
+        mergedImageVolume=1;
+        outputImagePosition=2;
+        
+        uw_overlay_convert2dicom(dicom_file, merged_file, newSeriesNumber, newSeriesDescription, outputDirectory, mergedImageVolume, outputImagePosition);
+ 
+        
+    end
 end
 

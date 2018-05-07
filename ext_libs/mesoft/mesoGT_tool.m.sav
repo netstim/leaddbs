@@ -345,12 +345,7 @@ end;
             
       elseif strcmp(varargin{k},'reactivate');           
             ready;
-      elseif strcmp(varargin{k},'doAccum');           
-            h = findobj('tag','fiberGT_accum');
-            oldv = get(h,'value');
-            set(h,'value',true);
-            startstop_Callback(gcf,[],[]);            
-            set(h,'value',oldv);
+           
       elseif strcmp(varargin{k},'setparam');
             para = varargin{k+1};
             val = varargin{k+2};
@@ -628,15 +623,6 @@ function setData(data,type)
         datastruct.edges = data.edges;
         datastruct.vox = data.vox(1:3);
         datastruct.name = data.name;
-        
-        
-        
-        
-              
-        
-        
-        
-        
         set(MainHandle,'UserData',datastruct);
         
         Pstruc = getParams;
@@ -1179,10 +1165,15 @@ function varargout = startstop_Callback(h,eventdata,handles,varargin)
 %%%%% tracking
 function datastruct = trackit(datastruct,Tstart,Tend,ni,its,info)
 
-
-
-    h = findobj('tag','fiberGT_accum');
-    doaccum = get(h,'value');
+% 
+% 
+%     h = findobj('tag','fiberGT_accum');
+%     doaccum = get(h,'value');
+% 
+%     accum_numits = 10^5;
+%     accum_numavg = 4;
+%     accum_ftrname = 'test_FTR.mat';
+% 
 
 
 
@@ -1209,12 +1200,7 @@ function datastruct = trackit(datastruct,Tstart,Tend,ni,its,info)
 
 
 
-    ftrname = getftrnameFromGUI;       
-    accum_ftrname = strrep(ftrname,'_FTR','_accum_FTR');
-    accum_numits = datastruct.params.accum_numits;
-    accum_numavg = datastruct.params.accum_numavg;
-
-    
+    ftrname = getftrnameFromGUI;
     fiblen =  info.params.fibrange;
     info = gatherFTRinfo(datastruct);
 
@@ -1247,13 +1233,12 @@ function datastruct = trackit(datastruct,Tstart,Tend,ni,its,info)
           paramStruct.GM_mask = double(size(datastruct.spatialProbabilities,4)>1);
           paramStruct.numbvals = datastruct.numbvals;
 
-          
-          if doaccum,
-               paramStruct.lam_DE = 0;
-               paramStruct.maxit = accum_numits;
-               T = datastruct.params.accum_Temp;
-          end;
-          
+%           
+%           if doaccum,
+%                paramStruct.lam_DE = 0;
+%                paramStruct.maxit = accum_numits;
+%           end;
+%           
           
           curdir = cd(thedir);
          % xx = dir([thedir '/pcRJMCMC.*']); fprintf('executable last change: %s\n',xx.date);
@@ -1278,10 +1263,6 @@ function datastruct = trackit(datastruct,Tstart,Tend,ni,its,info)
           autosave = get(findobj('tag','fiberGT_autosave'),'value');
           if ck == ni,
               autosave = true;
-          end;
-          
-          if doaccum,
-              autosave = false;
           end;
           
           [ftr lens] = saveFTR(ftrname,datastruct,fibidx,datastruct.vox,info,autosave);
@@ -1313,28 +1294,26 @@ function datastruct = trackit(datastruct,Tstart,Tend,ni,its,info)
               doexit = true;
           end;
 
-          if doexit | (ck >= ni & not(doaccum)),
+          if doexit | ck >= ni
               break;
           end;
-
-          if not(doaccum),
-            ck = ck + 1;              
-          end;
+% 
+%           if not(doaccum),
+%             ck = ck + 1;              
+%           end;
+%           
+%           if doaccum,
+%               accumftr = mergeFTR(ftr,accumftr);
+%           end
           
-          if doaccum,
-              accumftr = mergeFTR(ftr,accumftr);
-              if cnt > accum_numavg,
-                  break;
-              end;
-          end
-          
+             ck = ck + 1;              
 
     end;
 
-
-    if doaccum,
-        ftrstruct_write(accumftr,accum_ftrname);
-    end;
+% 
+%     if doaccum,
+%         ftrstruct_write(accumftr,accum_ftrname);
+%     end;
 
     if ~stopButtonPressed,
         hbut = findobj('tag','fiberGT_startstop');

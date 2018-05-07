@@ -16,7 +16,7 @@ function showTractStats(datastruct)
           
           showFibs(ftr,ssds.fibcoloring);
           
-           maps = computeParameterMaps(ftr,1);                            
+          maps = computeParameterMaps(ftr,1);                            
           sfigure(fh);
           ssds.maps = cat(4,maps.Din,maps.Dexax,maps.Dexrad,maps.vf,maps.vf_csf,maps.segcount, maps.termcount,maps.snr);
           
@@ -27,7 +27,7 @@ function showTractStats(datastruct)
           
           set(fh,'userdata',ssds);
           showMaps;
-          combobox_Callback([],[],[]) ;
+         combobox_Callback([],[],[]) ;
           drawnow;
               
     

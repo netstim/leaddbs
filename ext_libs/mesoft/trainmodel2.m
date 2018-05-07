@@ -32,8 +32,7 @@ ds = get(findobj('tag','fiberGT_main'),'userdata');
 ten = ds.original_bTensor;
 for k = 1:size(ten,3),
     [U D] = eigs(ten(:,:,k));
-    [~,ix]=sort(D(logical(eye(length(D)))));
-    scheme(:,k) = sqrt(D(1,1))*U(:,ix(3));
+    scheme(:,k) = sqrt(D(1,1))*U(:,1);
 end;
 
 pb = (n'*scheme).^2;

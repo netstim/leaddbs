@@ -43,8 +43,8 @@ if ~isempty(P)
             label(k) = P(7,i(1));
             fibpoints = P(1:3,i);
             if size(fibpoints,2) == 1,
-                ll = 1; %P(14,i)*2;
-                fibpoints = [P(1:3,i)+ll.*P(4:6,i) P(1:3,i)-ll.*P(4:6,i)];
+                ll = P(14,i)*1;
+                fibpoints = [floor(P(1:3,i)/2)*2+ll.*P(4:6,i) floor(P(1:3,i)/2)*2-ll.*P(4:6,i)];
 %                cD{cnt} = single([P(11:15,i) P(11:15,i)]);
                 cD{cnt} = single([datastruct.segparams(i,:)' datastruct.segparams(i,:)']);
             end;

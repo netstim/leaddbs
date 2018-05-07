@@ -37,7 +37,7 @@ params.prop_p_conprob = 0.2;
 
 
 % particle related parameters
-params.p_weight = 1.2; %1.2;                 % maximum weight
+params.p_weight = 1.5; %1.2;                 % maximum weight
 params.p_len = 2;                       % length of segment
 params.p_wid = 1;                       % oversampling factor
 
@@ -47,12 +47,12 @@ params.c_bound_attract = 0*0.5;            % wm/gm-boundary attracts open fiber 
 
 % diffusion model
 params.lmax = 6;
-params.maxbval = 10000;                  % all data beyond this bvalue is neglected
+params.maxbval = 4000;                  % all data beyond this bvalue is neglected
 params.b_weighting = 0.05;              % relative weighting of b0-images
 params.restrictions = 0*2^0 +0*2^1;        % if 0x01 is set D_para_ex == D_orth_ex
                                         % if 0x10 is set D_para_ex == D_para_int
-params.nonshell = false;
-params.nmax = 1;
+params.nonshell = true;
+params.nmax = 2;
 params.bfun = @(b,n) exp(-b).*b.^(n+1);
 
 
@@ -76,7 +76,7 @@ params.fibrange = [3 inf];
 params.directional_propsal_distrib = 0;
 
 % sphere discretization
-params.sphericalDiscNumber = 256; % possible values 32,48,64,128,256
+params.sphericalDiscNumber = 128; % possible values 32,48,64,128,256
         % note that, if you change this you have recompile (or just delete /tmp/mesoFT/sinterp*)
         
         

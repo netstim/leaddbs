@@ -156,13 +156,8 @@ img = ds.img;
             plot3([n(1,k) -n(1,k)]*w,[n(2,k) -n(2,k)]*w,[n(3,k) -n(3,k)]*w,'linewidth',2); hold on;
             Mten = Mten + n(:,k)*n(:,k)' *w;
         end;
-
-        
         [U D] = eigs(Mten);
-        [~,ix]=sort(D(logical(eye(length(D)))));
-        pd = U(:,ix(3));
-
-        
+        pd = U(:,1);
         plot3([pd(1) -pd(1)],[pd(2) -pd(2)],[pd(3) -pd(3)],'r');
         
         hold off;

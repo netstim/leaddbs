@@ -17,13 +17,12 @@ MTRand mtrand;
 int dbgflag;
 
 
-#ifdef _WIN64
-    #include "wintime.h"
+#ifndef LINUX_MACHINE    
+    #define INFINITY 9999999999999  // not defined on a windows pc
 #else
     #include <sys/time.h>
 #endif
 
-//     #define INFINITY 9999999999999  // not defined on a windows pc
 
 ////////// to monitor statistics
 #define ntype 100000
@@ -185,11 +184,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
      
     
     // if this matlab-handle disappears tracking is stopped
-    const mxArray *BreakHandle;
-    if (nrhs == 9)
-    {
-        BreakHandle = prhs[pcnt++];
-    }
+	double breakhandle = 0;	
+	const mxArray *BreakHandle;	
+	if (nrhs == 9)
+	{
+		BreakHandle = prhs[pcnt++];
+		breakhandle = *mxGetPr(BreakHandle);
+	}
+
 	////////////////////////////////////
             
     
@@ -206,7 +208,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
        
 	// initialize everything
 	REAL cellsize = info.particle_len*2;
-    REAL cellsize2[3] = {static_cast<float>(info.particle_width*voxsize[0]) , static_cast<float>(info.particle_width*voxsize[1]), static_cast<float>(info.particle_width*voxsize[2])};
+    REAL cellsize2[3] = {info.particle_width*voxsize[0] , info.particle_width*voxsize[1], info.particle_width*voxsize[2]};
 	
     fprintf(stderr,"setting up MH-sampler \n"); fflush(stderr);
 	RJMCMC sampler(points,numPoints, vfmap, dimg, datacombisize, voxsize, cellsize,cellsize2,info.particle_len,info.numcores);
@@ -222,7 +224,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     //----------- start tracking
     fprintf(stderr,"starting to iterate\n"); fflush(stderr);
-	sampler.iterate(BreakHandle);
+	sampler.iterate(breakhandle);
     //-------------------------
     
     
