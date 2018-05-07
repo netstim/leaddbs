@@ -840,13 +840,6 @@ ea_deselectall_dicom(handles);
 if ~isempty(getappdata(handles.leadfigure,'uipatdir')) && ~get(handles.dicomcheck,'Value')
     ea_busyaction('on', handles.leadfigure, 'dbs');
     ea_load_pts(handles,getappdata(handles.leadfigure,'uipatdir'));
-%     if isfield(handles,'atlassetpopup') % not present in connectome mapper
-%         options.prefs=ea_prefs;
-%         atlasset=get(handles.atlassetpopup,'String');
-%         atlasset=atlasset{get(handles.atlassetpopup,'Value')};
-%
-%         ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
-%     end
     ea_busyaction('off', handles.leadfigure, 'dbs');
 end
 
@@ -1476,16 +1469,9 @@ function assignnii_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of assignnii
 ea_deselectall_dicom(handles);
 
-if ~isempty(getappdata(handles.leadfigure,'uipatdir')) && ~get(handles.dicomcheck,'Value')
+if ~isempty(getappdata(handles.leadfigure,'uipatdir')) && ~get(handles.assignnii,'Value')
     ea_busyaction('on', handles.leadfigure, 'dbs');
     ea_load_pts(handles,getappdata(handles.leadfigure,'uipatdir'));
-%     if isfield(handles,'atlassetpopup') % not present in connectome mapper
-%         options.prefs=ea_prefs;
-%         atlasset=get(handles.atlassetpopup,'String');
-%         atlasset=atlasset{get(handles.atlassetpopup,'Value')};
-%
-%         ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
-%     end
     ea_busyaction('off', handles.leadfigure, 'dbs');
 end
 
