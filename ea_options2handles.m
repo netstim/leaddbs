@@ -2,7 +2,7 @@ function ea_options2handles(options,handles)
 
 
 %% set handles
-set(handles.dicomcheck,'Value',options.dicomimp);
+set(handles.dicomcheck,'Value',options.dicomimp.do);
 set(handles.normalize_checkbox,'Value',options.normalize.do);
 if options.normalize.methodn>length(handles.normmethod,'String')
 set(handles.normmethod,'Value',1);
