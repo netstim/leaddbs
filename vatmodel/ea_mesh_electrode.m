@@ -47,9 +47,11 @@ v=[0 0 1];
 elmodel_fn=[ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'];
 if ~exist(elmodel_fn,'file')
     ea_generate_electrode_specs; % regenerate all electrode specifications
-else
-    load(elmodel_fn);
 end
+
+elmodel = load(elmodel_fn);
+node = elmodel.node;
+face = elmodel.face;
 
 
 % apply transformation matrix to electrode nodes:
