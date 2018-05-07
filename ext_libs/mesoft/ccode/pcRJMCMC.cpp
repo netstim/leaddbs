@@ -17,7 +17,7 @@ MTRand mtrand;
 int dbgflag;
 
 
-#ifndef LINUX_MACHINE    
+#ifdef _WIN64
     #define INFINITY 9999999999999  // not defined on a windows pc
 #else
     #include <sys/time.h>
@@ -197,16 +197,16 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     REAL *vfmap;
     {
     mwSize vfmapsize[5] =  { int((REAL)datasize[0]/info.particle_width),
-                          int((REAL)datasize[1]/info.particle_width),
-                          int((REAL)datasize[2]/info.particle_width), 
-                          int(lmax/2+1) , int(info.numbvals+1)};
+                             int((REAL)datasize[1]/info.particle_width),
+                             int((REAL)datasize[2]/info.particle_width),
+                             int(lmax/2+1) , int(info.numbvals+1)};
     plhs[1] = mxCreateNumericArray(5,vfmapsize,mxGetClassID(Points),mxREAL);
     vfmap = (REAL*) mxGetData(plhs[1]);
     }       
        
 	// initialize everything
 	REAL cellsize = info.particle_len*2;
-    REAL cellsize2[3] = {info.particle_width*voxsize[0] , info.particle_width*voxsize[1], info.particle_width*voxsize[2]};
+    REAL cellsize2[3] = {static_cast<float>(info.particle_width*voxsize[0]) , static_cast<float>(info.particle_width*voxsize[1]), static_cast<float>(info.particle_width*voxsize[2])};
 	
     fprintf(stderr,"setting up MH-sampler \n"); fflush(stderr);
 	RJMCMC sampler(points,numPoints, vfmap, dimg, datacombisize, voxsize, cellsize,cellsize2,info.particle_len,info.numcores);

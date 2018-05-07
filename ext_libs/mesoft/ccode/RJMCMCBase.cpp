@@ -244,7 +244,7 @@ class RJMCMCBase
         omp_set_num_threads(numcores); // Use n threads for all consecutive parallel regions
         #endif
        
-        #ifdef LINUX_MACHINE        
+        #ifndef _WIN64
         static struct timeval timeS;
         #endif
         
@@ -265,7 +265,7 @@ class RJMCMCBase
             vfstats.clear();
             //fprintf(stderr,"parain\n"); fflush(stderr);
             time = 0;
-            #ifdef LINUX_MACHINE                  
+            #ifndef _WIN64
             gettimeofday( &timeS, NULL);
             time -= (timeS.tv_sec*1000000 + timeS.tv_usec);
             #endif
@@ -288,7 +288,7 @@ class RJMCMCBase
                 }
             }
             
-            #ifdef LINUX_MACHINE        
+            #ifndef _WIN64
             gettimeofday( &timeS, NULL);
             time += (timeS.tv_sec*1000000 + timeS.tv_usec);	
             #endif
