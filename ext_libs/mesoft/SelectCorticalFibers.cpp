@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 #include <string.h>
-#include <sys/time.h>
+// #include <sys/time.h>
 
 using namespace std;
 
@@ -39,7 +39,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	const mxArray *Labeling;
 	Labeling = prhs[pcnt++];       
 	REAL *labeling = (REAL*) mxGetData(Labeling);
-    const int *dims = mxGetDimensions(Labeling);
+    const mwSize *dims = mxGetDimensions(Labeling);
     
 
     REAL Nsize = REAL(*mxGetPr(prhs[pcnt++]));
@@ -55,7 +55,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     mexPrintf("total number fibers: %i \n",numConns/2);
     
-    const int dims2[] = {numConns/2,1};
+    const mwSize dims2[] = {numConns/2,1};
     plhs[0] = mxCreateNumericArray(2,dims2,mxGetClassID(Labeling),mxREAL);
 	REAL *inc = (REAL*) mxGetData(plhs[0]);	
     

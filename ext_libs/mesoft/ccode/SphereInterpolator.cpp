@@ -30,7 +30,7 @@ public:
         mxArray *NumInterpPoints = mxGetField(sinterpstruct,0,"numpoints");
         mxArray *Dirs = mxGetField(sinterpstruct,0,"bDir");	
         REAL *indimg = (REAL*) mxGetData(Indices);
-        const int *isize = mxGetDimensions(Indices);
+        const mwSize *isize = mxGetDimensions(Indices);
         int totsz = isize[0]*isize[1]*isize[2]*isize[3];
         int *indeximg = (int*) malloc(sizeof(int)*totsz);
         for (int k =0;k < totsz;k++)

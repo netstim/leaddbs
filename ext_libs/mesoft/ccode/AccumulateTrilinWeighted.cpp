@@ -29,19 +29,19 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const mxArray *Pts;
     Pts = prhs[pcnt++];       
     const int numdim = mxGetNumberOfDimensions(Pts);
-    const int *pdims = mxGetDimensions(Pts);
+    const mwSize *pdims = mxGetDimensions(Pts);
     int numPts = pdims[1];
     REAL *pts = (REAL*) mxGetData(Pts);
     
    const mxArray *Weights;
     Weights = prhs[pcnt++];       
     const int wnumdim = mxGetNumberOfDimensions(Weights);
-    const int *wpdims = mxGetDimensions(Weights);
+    const mwSize *wpdims = mxGetDimensions(Weights);
     int numW = wpdims[0];
     REAL *weights = (REAL*) mxGetData(Weights);
     
 
-    int dims[3];
+    mwSize dims[3];
     dims[0] = w;
     dims[1] = h;
     dims[2] = d;

@@ -135,25 +135,25 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	const mxArray *VFmap;
 	VFmap = prhs[pcnt++];       
 	REAL *vfmap_in = (REAL*) mxGetData(VFmap);
-    const int *vfmapsize = mxGetDimensions(VFmap);
+    const mwSize *vfmapsize = mxGetDimensions(VFmap);
     
     // the data
 	const mxArray *DataImg;
 	DataImg = prhs[pcnt++];       
 	REAL *dimg = (REAL*) mxGetData(DataImg);
-	const int *dsqsize = mxGetDimensions(DataImg);
+	const mwSize *dsqsize = mxGetDimensions(DataImg);
     
     // the WM-mask
 	const mxArray *Mask;
 	Mask = prhs[pcnt++];       
 	REAL *mask = (REAL*) mxGetData(Mask);
-    const int *dmsize = mxGetDimensions(Mask);
+    const mwSize *dmsize = mxGetDimensions(Mask);
     
     // index array where the data is located and a mean-signal map
 	const mxArray *S2andIDX;
 	S2andIDX = prhs[pcnt++];       
 	REAL *s2andidx = (REAL*) mxGetData(S2andIDX);
-    const int *datasize = mxGetDimensions(S2andIDX);
+    const mwSize *datasize = mxGetDimensions(S2andIDX);
     int mask_oversamp_mult = dmsize[0]/datasize[0];
     
     
@@ -184,12 +184,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
      
     
     // if this matlab-handle disappears tracking is stopped
-	double breakhandle = 0;	
 	const mxArray *BreakHandle;	
 	if (nrhs == 9)
 	{
 		BreakHandle = prhs[pcnt++];
-		breakhandle = *mxGetPr(BreakHandle);
 	}
 
 	////////////////////////////////////
@@ -198,7 +196,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     // either initlize vfmap or just get it from previous step
     REAL *vfmap;
     {
-    int vfmapsize[5] =  { int((REAL)datasize[0]/info.particle_width),
+    mwSize vfmapsize[5] =  { int((REAL)datasize[0]/info.particle_width),
                           int((REAL)datasize[1]/info.particle_width),
                           int((REAL)datasize[2]/info.particle_width), 
                           int(lmax/2+1) , int(info.numbvals+1)};
@@ -224,7 +222,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     //----------- start tracking
     fprintf(stderr,"starting to iterate\n"); fflush(stderr);
-	sampler.iterate(breakhandle);
+	sampler.iterate(BreakHandle);
     //-------------------------
     
     
@@ -234,7 +232,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     REAL *vf_fibs = 0;
     if (nlhs >=5)
     {
-        int vf_fibs_size[3] = {  sampler.pcontainer.pcnt,
+        mwSize vf_fibs_size[3] = {  sampler.pcontainer.pcnt,
                               int(lmax/2+1) , int(info.numbvals+1)};
         plhs[4] = mxCreateNumericArray(3,vf_fibs_size,mxGetClassID(Points),mxREAL);
         vf_fibs = (REAL*) mxGetData(plhs[4]);
@@ -265,7 +263,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
 	// write tracking state to matlab variable
 	int cnt = sampler.pcontainer.pcnt;	
-	int dims[] = {sampler.attrcnt, sampler.pcontainer.pcnt};
+	mwSize dims[] = {sampler.attrcnt, sampler.pcontainer.pcnt};
 	plhs[0] = mxCreateNumericArray(2,dims,mxGetClassID(Points),mxREAL);
 	REAL *npoints = (REAL*) mxGetData(plhs[0]);	
 	sampler.writeout(npoints);
@@ -275,7 +273,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     birthstats.compute_updownratio();
     deathstats.compute_updownratio();    
     const char *field_names[] = {"up","down","accepted","rejected","iterations","deltaE"};
-    int dim = 1;
+    mwSize dim = 1;
 	mxArray* mxStat=mxCreateStructArray(1,&dim,6,field_names);
     plhs[2] = mxStat;    
     int outcnt = 0;
