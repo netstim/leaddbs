@@ -787,14 +787,6 @@ function normcheck_Callback(hObject, eventdata, handles)
 ea_storeui(handles);
 
 
-
-
-
-
-
-
-
-
 % --- Executes on button press in cmappushbutton.
 function cmappushbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to cmappushbutton (see GCBO)
@@ -844,6 +836,19 @@ function dicomcheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of dicomcheck
 ea_storeui(handles);
 ea_deselectall_dicom(handles);
+
+if ~isempty(getappdata(handles.leadfigure,'uipatdir')) && ~get(handles.dicomcheck,'Value')
+    ea_busyaction('on', handles.leadfigure, 'dbs');
+    ea_load_pts(handles,getappdata(handles.leadfigure,'uipatdir'));
+%     if isfield(handles,'atlassetpopup') % not present in connectome mapper
+%         options.prefs=ea_prefs;
+%         atlasset=get(handles.atlassetpopup,'String');
+%         atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+%
+%         ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+%     end
+    ea_busyaction('off', handles.leadfigure, 'dbs');
+end
 
 
 % --- Executes on button press in genptatlascheck.
@@ -1445,8 +1450,8 @@ if get(hObject,'Value')==1 % TRAC/CORE
     set(handles.maskwindow_txt,'enable','on');
 else % PACER
     prefs=ea_prefs;
-        set(handles.targetpopup,'enable','off');
-        set(handles.maskwindow_txt,'enable','off');
+    set(handles.targetpopup,'enable','off');
+    set(handles.maskwindow_txt,'enable','off');
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1470,6 +1475,19 @@ function assignnii_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of assignnii
 ea_deselectall_dicom(handles);
+
+if ~isempty(getappdata(handles.leadfigure,'uipatdir')) && ~get(handles.dicomcheck,'Value')
+    ea_busyaction('on', handles.leadfigure, 'dbs');
+    ea_load_pts(handles,getappdata(handles.leadfigure,'uipatdir'));
+%     if isfield(handles,'atlassetpopup') % not present in connectome mapper
+%         options.prefs=ea_prefs;
+%         atlasset=get(handles.atlassetpopup,'String');
+%         atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+%
+%         ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+%     end
+    ea_busyaction('off', handles.leadfigure, 'dbs');
+end
 
 
 % --- Executes on button press in coreg_checkbox.
