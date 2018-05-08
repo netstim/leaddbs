@@ -4,4 +4,4 @@ mex BuildFibres.cpp
 mex pcRJMCMC.cpp
 mex printTOstderr.cpp
 mex reparametrize_arclen.cpp
-mex selectCortexFibers.cpp
+mex SelectCorticalFibers.cpp
