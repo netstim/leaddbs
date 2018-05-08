@@ -18,6 +18,7 @@ int dbgflag;
 
 
 #ifdef _WIN64
+    #include "wintime.h"
     #define INFINITY 9999999999999  // not defined on a windows pc
 #else
     #include <sys/time.h>

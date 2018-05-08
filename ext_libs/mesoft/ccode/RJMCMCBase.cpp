@@ -243,9 +243,11 @@ class RJMCMCBase
         omp_set_dynamic(0);     // Explicitly disable dynamic teams
         omp_set_num_threads(numcores); // Use n threads for all consecutive parallel regions
         #endif
-       
-        #ifndef _WIN64
-        static struct timeval timeS;
+
+        #ifdef _WIN64
+            static struct timeval2 timeS;
+        #else
+            static struct timeval timeS;
         #endif
         
         long time =0;
@@ -265,10 +267,8 @@ class RJMCMCBase
             vfstats.clear();
             //fprintf(stderr,"parain\n"); fflush(stderr);
             time = 0;
-            #ifndef _WIN64
             gettimeofday( &timeS, NULL);
             time -= (timeS.tv_sec*1000000 + timeS.tv_usec);
-            #endif
             
             #ifdef PARALLEL_OPENMP
             #pragma omp parallel for 
@@ -288,10 +288,8 @@ class RJMCMCBase
                 }
             }
             
-            #ifndef _WIN64
             gettimeofday( &timeS, NULL);
             time += (timeS.tv_sec*1000000 + timeS.tv_usec);	
-            #endif
    
             fprintf(stderr,"#freeslots: %i  pcnt:%i  #particles:%i\n",
                     (int) pcontainer.freeslots.size(),(int) pcontainer.pcnt,(int)(pcontainer.pcnt-pcontainer.freeslots.size()));
