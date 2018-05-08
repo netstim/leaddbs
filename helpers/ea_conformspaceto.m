@@ -6,10 +6,6 @@ if ~exist('headermod', 'var')
 end
 sphdr = ea_open_vol(spacefn);
 tohdr = ea_open_vol(toreslicefn);
-if ~isequal(sphdr.mat, tohdr.mat) % volumes have different dimensions & hdr matrices.
-
-    flags.mean = 0;
-    flags.which = 1;
 
 if ~isequal(sphdr.mat,tohdr.mat) % volumes have different dimensions & hdr matrices.
 
