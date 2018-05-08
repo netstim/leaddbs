@@ -128,22 +128,15 @@ end
 %% mesoft part goes here
 [~,dfn]=fileparts(options.prefs.dti);
 ea_delete([directory,dfn,'_FTR.mat']);
-% addpath(genpath('/media/Data/MATLAB/release'));
-% addpath(genpath('/media/Data/MATLAB/marco_reisert'));
-% addpath(genpath('/media/Data/MATLAB/dti_tools'));
 
-%ea_prepare_dti(options);
 
-% mesoGT_tool('loadData','nii',[directory,options.prefs.dti],{[directory,options.prefs.bvec],[directory,options.prefs.bval],...
-%    },[directory,'trackingmask.nii'],0.5);
 init_mesoft;
 mesoGT_tool('loadData','nii',[directory,options.prefs.dti],{[directory,options.prefs.bvec],[directory,options.prefs.bval],...
      },{[directory,'gmmask.nii'],[directory,'trackingmask.nii']},[128,128]);
-
 mesoGT_tool('reset');
 mesoGT_tool('start');
 
-movefile([directory,dfn,'_accum_FTR.mat'],[directory,options.prefs.FTR_unnormalized]);
+movefile([directory,dfn,'_FTR.mat'],[directory,options.prefs.FTR_unnormalized]);
 delete(findobj('tag','fiberGT_main'))
 
 

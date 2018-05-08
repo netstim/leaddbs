@@ -339,9 +339,13 @@ end;
             for k = 1:length(fields);
                 val = p.(fields{k});
                 fprintf('%s : ',fields{k});
-                fprintf('%f ',val);
+                try
+                    fprintf('%f ',val);
+                catch
+                    fprintf('%f ',func2str(val));
+                end
                 fprintf('\n');
-            end;    
+            end;
             
       elseif strcmp(varargin{k},'reactivate');           
             ready;

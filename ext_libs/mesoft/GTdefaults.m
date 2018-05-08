@@ -39,7 +39,7 @@ params.prop_p_conprob = 0.2;
 % particle related parameters
 params.p_weight = 1.5; %1.2;                 % maximum weight
 params.p_len = 2;                       % length of segment
-params.p_wid = 1;                       % oversampling factor
+params.p_wid = 3;                       % oversampling factor
 
 % connection related parameters
 params.c_kappa = 0.5;                   % trade-off between angular and distance penalty (dist 0...1 ang)
