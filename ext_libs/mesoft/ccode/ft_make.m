@@ -1,7 +1,13 @@
-mex AccumulateTrilin.cpp
-mex AccumulateTrilinWeighted.cpp
-mex BuildFibres.cpp
-mex pcRJMCMC.cpp
-mex printTOstderr.cpp
-mex reparametrize_arclen.cpp
-mex SelectCorticalFibers.cpp
+if ispc
+    compflgs = ' COMPFLAGS="$COMPFLAGS /MT"';
+else
+    compflgs = '';
+end
+
+eval(['mex' compflgs, ' AccumulateTrilin.cpp']);
+eval(['mex' compflgs, ' AccumulateTrilinWeighted.cpp']);
+eval(['mex' compflgs, ' BuildFibres.cpp']);
+eval(['mex' compflgs, ' pcRJMCMC.cpp']);
+eval(['mex' compflgs, ' printTOstderr.cpp']);
+eval(['mex' compflgs, ' reparametrize_arclen.cpp']);
+eval(['mex' compflgs, ' SelectCorticalFibers.cpp']);
