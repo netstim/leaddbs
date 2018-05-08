@@ -256,8 +256,8 @@ if cfg.mapmethod
     clear matlabbatch
 
     [pth,fn,ext]=fileparts(bb.fname);
-    ea_crop_nii([pth,fn,ext]);
-    ea_crop_nii([pth,'s',fn,ext]);
+    ea_crop_nii(fullfile(pth,[fn,ext]));
+    ea_crop_nii(fullfile(pth,['s',fn,ext]));
 end
 
 assignin('base','fid',fid);
