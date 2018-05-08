@@ -4,6 +4,7 @@ function ea_conformspaceto(spacefn,toreslicefn,interp,mask,newfn,headermod)
 if ~exist('headermod', 'var')
     headermod = 1;
 end
+
 sphdr = ea_open_vol(spacefn);
 tohdr = ea_open_vol(toreslicefn);
 
@@ -11,11 +12,7 @@ if ~isequal(sphdr.mat,tohdr.mat) % volumes have different dimensions & hdr matri
 
     flags.mean=0;
     flags.which=1;
-    if exist('newfn','var') && isempty(newfn)
-        flags.prefix='r';
-    else
-        flags.prefix='';
-    end
+
     if exist('interp','var') && ~isempty(interp)
         flags.interp = interp;
     end
