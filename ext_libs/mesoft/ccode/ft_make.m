@@ -1,5 +1,6 @@
 if ismac
     compflgs = '';
+    % compflgs = ' CXXFLAGS=''$CXXFLAGS -Wno-deprecated-register''';
 elseif isunix
     compflgs = ' COMPFLAGS=''$COMPFLAGS -static-libstdc++''';
 elseif ispc
