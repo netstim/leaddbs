@@ -1,7 +1,9 @@
-if ispc
-    compflgs = ' COMPFLAGS="$COMPFLAGS /MT"';
-else
+if ismac
     compflgs = '';
+elseif isunix
+    compflgs = ' COMPFLAGS=''$COMPFLAGS -static-libstdc++''';
+elseif ispc
+    compflgs = ' COMPFLAGS="$COMPFLAGS /MT"';
 end
 
 eval(['mex' compflgs, ' AccumulateTrilin.cpp']);
