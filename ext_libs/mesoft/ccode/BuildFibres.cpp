@@ -249,7 +249,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		}
 	}
 
-	mwSize cdims[] = {index};
+	mwSize cdims[] = {static_cast<mwSize>(index)};
 	plhs[0] = mxCreateCellArray(1,cdims);
 	
 	index = 0;

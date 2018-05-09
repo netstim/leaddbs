@@ -1,4 +1,3 @@
-
 #include <mex.h>
 #include <matrix.h>
 #include <math.h>
@@ -178,8 +177,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
    // a size vector of the full data [N_approx M_sphere w h d] (actually the data itself does not exist anymore in that way, because data it's kept sparsely)
  
    int lmax = int(info.lmax);
-    int numbshells = int(info.numbvals);
-    const int datacombisize[5] = {(lmax/2+1)*numbshells ,sinterp->nverts, datasize[0],datasize[1],datasize[2]};
+   int numbshells = int(info.numbvals);
+   const int datacombisize[5] = { (lmax/2+1)*numbshells, sinterp->nverts,
+                                  static_cast<int>(datasize[0]),
+                                  static_cast<int>(datasize[1]),
+                                  static_cast<int>(datasize[2])};
      
 //    const int datacombisize[5] = {dsqsize[0],dsqsize[1], datasize[0],datasize[1],datasize[2]};
      
@@ -197,10 +199,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     // either initlize vfmap or just get it from previous step
     REAL *vfmap;
     {
-    mwSize vfmapsize[5] =  { int((REAL)datasize[0]/info.particle_width),
-                             int((REAL)datasize[1]/info.particle_width),
-                             int((REAL)datasize[2]/info.particle_width),
-                             int(lmax/2+1) , int(info.numbvals+1)};
+    mwSize vfmapsize[5] =  { static_cast<mwSize>((REAL)datasize[0]/info.particle_width),
+                             static_cast<mwSize>((REAL)datasize[1]/info.particle_width),
+                             static_cast<mwSize>((REAL)datasize[2]/info.particle_width),
+                             static_cast<mwSize>(lmax/2+1),
+                             static_cast<mwSize>(info.numbvals+1)};
     plhs[1] = mxCreateNumericArray(5,vfmapsize,mxGetClassID(Points),mxREAL);
     vfmap = (REAL*) mxGetData(plhs[1]);
     }       
@@ -233,8 +236,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     REAL *vf_fibs = 0;
     if (nlhs >=5)
     {
-        mwSize vf_fibs_size[3] = {  sampler.pcontainer.pcnt,
-                              int(lmax/2+1) , int(info.numbvals+1)};
+        mwSize vf_fibs_size[3] = { static_cast<mwSize>(sampler.pcontainer.pcnt),
+                                   static_cast<mwSize>(lmax/2+1),
+                                   static_cast<mwSize>(info.numbvals+1)};
         plhs[4] = mxCreateNumericArray(3,vf_fibs_size,mxGetClassID(Points),mxREAL);
         vf_fibs = (REAL*) mxGetData(plhs[4]);
     }
@@ -264,7 +268,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
 	// write tracking state to matlab variable
 	int cnt = sampler.pcontainer.pcnt;	
-	mwSize dims[] = {sampler.attrcnt, sampler.pcontainer.pcnt};
+	mwSize dims[] = {static_cast<mwSize>(sampler.attrcnt), static_cast<mwSize>(sampler.pcontainer.pcnt)};
 	plhs[0] = mxCreateNumericArray(2,dims,mxGetClassID(Points),mxREAL);
 	REAL *npoints = (REAL*) mxGetData(plhs[0]);	
 	sampler.writeout(npoints);

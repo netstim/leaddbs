@@ -55,7 +55,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     mexPrintf("total number fibers: %i \n",numConns/2);
     
-    const mwSize dims2[] = {numConns/2,1};
+    const mwSize dims2[] = {static_cast<mwSize>(numConns/2),1};
     plhs[0] = mxCreateNumericArray(2,dims2,mxGetClassID(Labeling),mxREAL);
 	REAL *inc = (REAL*) mxGetData(plhs[0]);	
     
