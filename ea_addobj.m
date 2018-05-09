@@ -9,7 +9,7 @@ end
 switch type
     case 'tract'
         % open dialog
-        [fina,pana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
+        [fina,pana]=uigetfile({'*.mat;*.trk', 'Fiber Files (*.mat,*.trk)'},'Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
         if isempty(fina) % user pressed cancel.
             return
         end
@@ -23,16 +23,16 @@ switch type
             end
             addfibertract([pana,fina],resultfig,addht,fina,[],0,options);
         end
-
+        
     case 'roi' % atlas
-
+        
         % open dialog
         [fina,pana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-
-
-
+        
+        
+        
         if iscell(fina) % multiple files
-
+            
             for fi=1:length(fina)
                 addroi([pana,fina{fi}],resultfig,addht,fina{fi},options);
             end
@@ -42,14 +42,14 @@ switch type
             end
             addroi([pana,fina],resultfig,addht,fina,options);
         end
-
-
+        
+        
     case 'tractmap'
         [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
         [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
         addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,tfina,rfina,options)
-
-
+        
+        
 end
 
 axis fill
@@ -91,9 +91,9 @@ for ftract=1:fibno
     idcnt=idcnt+idx(ftract);
     ftdists=d(thisfibentries);
     [mindist,mindistix]=min(ftdists);
-
+    
     smallftdists=ftdists<2;
-
+    
     if any(smallftdists)
         minidentifier=thisfibentries(smallftdists);
         weights=weights(ix(minidentifier));
@@ -169,14 +169,14 @@ fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
 fv.vertices=[fv.vertices;fvc.vertices];
 
 if ischar(options.prefs.hullsimplify)
-
+    
     % get to 700 faces
     simplify=700/length(fv.faces);
     fv=reducepatch(fv,simplify);
-
+    
 else
     if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-
+        
         fv=reducepatch(fv,options.prefs.hullsimplify);
     elseif options.prefs.hullsimplify>1
         simplify=options.prefs.hullsimplify/length(fv.faces);
@@ -212,70 +212,104 @@ drawnow
 
 function addfibertract(addobj,resultfig,addht,fina,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
-    [thisset,fibidx]=ea_loadfibertracts(addobj);
+    if strfind(addobj,'.mat')
+        load(addobj);
+        thisset = fibers;
+        fibidx = idx;
+        clear fibers idx
+    elseif strfind(addobj,'.trk')
+        fileOut = [addobj(1:end-3) 'mat'];
+        disp(['Converting .trk to ftr.'])
+        [thisset,fibidx] = ea_trk2ftr(addobj,options);
+    else
+        error('File is neither a .mat nor .trk!')
+    end
 else % fibers are already loaded and stored in figure.
     thisset=addobj.fibs;
     fibidx=addobj.idx;
 end
 
-
 fib_copy.fibs=thisset; % backup of whole original fiberset will be stored in figure.
 fib_copy.idx=fibidx;
 
-
-
 if ~isempty(connect) % select fibers based on connecting roi info (i.e. delete all other fibers).
-
-
     for roi=1:length(connect.rois) % check connectivities..
-
-
         in=inhull(thisset,connect.xyz{roi})';
-
         selectedfibs{roi}=unique(idxv(in));
-
     end
-
     selectedfibs=unique(cell2mat(selectedfibs(:)));
-
     thisset=mat2cell(thisset,fibidx,3)';
     thisset=thisset(selectedfibs); % choose selected fibers.
-
-
-
 end
 
-dispercent(0,'Plotting fibers');
+%% OLD visualization part: 
+% fibmax=length(thisset);
+% keyboard
+% for fib=1:fibmax
+%     dispercent(fib/fibmax);
+%
+%     if size(thisset{fib},1)~=3
+%         thisset{fib}=thisset{fib}';
+%     end
+%     try
+%     thisset{fib}(4,:)=detcolor(thisset{fib}); % add coloring information to the 4th column.
+%     catch
+%         thisset{fib}(4,:)=0; % fiber has only one entry.
+%     end
+%     for dim=1:4
+%         thisfib(dim,:)=double(interp1q([1:size(thisset{fib},2)]',thisset{fib}(dim,:)',[1:0.1:size(thisset{fib},2)]')');
+%     end
+%     addobjr(fib)=surface([thisfib(1,:);thisfib(1,:)],...
+%         [thisfib(2,:);thisfib(2,:)],...
+%         [thisfib(3,:);thisfib(3,:)],...
+%         [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
+%     clear thisfib
+%
+% end
 
-% visualization part:
-fibmax=length(thisset);
-keyboard
-for fib=1:fibmax
-    dispercent(fib/fibmax);
+%% new visualization part
+fibersnew = cell(1,length(fibidx));
 
-    if size(thisset{fib},1)~=3
-        thisset{fib}=thisset{fib}';
-    end
-    try
-    thisset{fib}(4,:)=detcolor(thisset{fib}); % add coloring information to the 4th column.
-    catch
-        thisset{fib}(4,:)=0; % fiber has only one entry.
-    end
-    for dim=1:4
-        thisfib(dim,:)=double(interp1q([1:size(thisset{fib},2)]',thisset{fib}(dim,:)',[1:0.1:size(thisset{fib},2)]')');
-    end
-    addobjr(fib)=surface([thisfib(1,:);thisfib(1,:)],...
-        [thisfib(2,:);thisfib(2,:)],...
-        [thisfib(3,:);thisfib(3,:)],...
-        [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
-    clear thisfib
-
+dispercent(0,'Sorting Fibers');
+for k = 1:length(fibidx)
+        dispercent(k/length(fibidx))
+    fibersnew{k} = thisset(find(thisset(:,4) == k),1:3);
 end
 dispercent(100,'end');
 
+dispercent(0,'Determine Directions');
+k = 1;
+while k <= length(fibersnew)
+    dispercent(k/length(fibersnew))
+    if length(fibersnew{k}(:,1)) > 1
+        fibersdiff{k} = abs(diff(fibersnew{k}));
+        fibersdiff{k} = vertcat(fibersdiff{k},fibersdiff{k}(end,:));
+        for l = 1:length(fibersdiff{k}(:,1))
+            fibersdiff{k}(l,:) = fibersdiff{k}(l,:)/norm(fibersdiff{k}(l,:));
+        end
+        k = k+1;
+    else
+        fibersnew(k) = [];
+    end
+end
+dispercent(100,'end');
 
+addobjr = streamtube(fibersnew,0.25);
+set(addobjr(:),'EdgeAlpha',0)
+set(addobjr(:),'FaceAlpha',0.25)
+set(addobjr(:),'CDataMapping','direct')
 set(addobjr(:),'EdgeAlpha',0.05);
 
+dispercent(0,'Adding color information');
+for k = 1:length(addobjr)
+    dispercent(k/length(addobjr))
+    set(addobjr(k),'EdgeAlpha',0)
+    tmp = fibersdiff{k};
+    tmp2 = repmat(tmp,1,1,length(addobjr(k).ZData(1,:,1)));
+    tmp2 = permute(tmp2,[1 3 2]);
+    set(addobjr(k),'CData',tmp2)
+end
+dispercent(100,'end');
 
 axis fill
 
@@ -312,24 +346,24 @@ end
 switch type
     case 'tract'
         if replace % fibertract has been there before and has now been selected to be plotted connecting to a roi.
-        AL.FTS{replace}=obj;
-        AL.FTSNAMES{replace}=name;
-        AL.FTSFILES{replace}=path;
-        AL.FTSBUTN{replace}=addbutn;
-%         for roi=1:length(AL.ROI) % add connectivity data
-%             AL.GUI.FTS(length(AL.FTS)).ROI(roi)=0;
-%         end
-        AL.FTSDATA{replace}=data;
+            AL.FTS{replace}=obj;
+            AL.FTSNAMES{replace}=name;
+            AL.FTSFILES{replace}=path;
+            AL.FTSBUTN{replace}=addbutn;
+            %         for roi=1:length(AL.ROI) % add connectivity data
+            %             AL.GUI.FTS(length(AL.FTS)).ROI(roi)=0;
+            %         end
+            AL.FTSDATA{replace}=data;
         else
             AL.FTS{end+1}=obj;
-        AL.FTSNAMES{end+1}=name;
-        AL.FTSFILES{end+1}=path;
-        AL.FTSBUTN{end+1}=addbutn;
-        for roi=1:length(AL.ROI) % add connectivity data
-            AL.GUI.FTS(length(AL.FTS)).ROI(roi)=0;
-        end
-        AL.FTSDATA{end+1}=data;
-
+            AL.FTSNAMES{end+1}=name;
+            AL.FTSFILES{end+1}=path;
+            AL.FTSBUTN{end+1}=addbutn;
+            for roi=1:length(AL.ROI) % add connectivity data
+                AL.GUI.FTS(length(AL.FTS)).ROI(roi)=0;
+            end
+            AL.FTSDATA{end+1}=data;
+            
         end
     case 'roi'
         AL.ROI{end+1}=obj;
@@ -337,7 +371,7 @@ switch type
         AL.ROIFILES{end+1}=path;
         AL.ROIDATA{end+1}=data;
         for ft=1:length(AL.FTS) % add connectivity data
-           AL.GUI.FTS(ft).ROI(end+1)=0;
+            AL.GUI.FTS(ft).ROI(end+1)=0;
         end
 end
 
@@ -352,9 +386,9 @@ if ~isempty(AL.FTS) % only build fibertracking menu if there is at least one fib
         AL.MENU.FTMENU(ft) = uimenu(AL.MENU.MAINMENU,'Label',AL.FTSNAMES{ft});
         for roi=1:length(AL.ROI)
             AL.MENU.ROIMENU(ft,roi)=uimenu(AL.MENU.FTMENU(ft),'Label',AL.ROINAMES{roi},'Callback',{@dotracking,ft,roi,resultfig,addht,options});
-
+            
             set(AL.MENU.ROIMENU(ft,roi),'Checked',binary2onoff(AL.GUI.FTS(ft).ROI(roi))) % set checks on menu.
-
+            
         end
     end
 end
@@ -388,7 +422,7 @@ setappdata(resultfig,'AL',AL);
 if isempty(connect.rois) % don't even send connect structure since this will save time.
     addfibertract(AL.FTSDATA{ft},resultfig,addht,AL.FTSNAMES{ft},[],ft,options)
 else
-addfibertract(AL.FTSDATA{ft},resultfig,addht,AL.FTSNAMES{ft},connect,ft,options)
+    addfibertract(AL.FTSDATA{ft},resultfig,addht,AL.FTSNAMES{ft},connect,ft,options)
 end
 
 
@@ -430,13 +464,13 @@ if nargin==2
     if strcmp(varargin{2},'end')
         fprintf('\n')
         fprintf('\n')
-
+        
         fprintf('\n')
-
+        
     else
         fprintf(1,[varargin{2},':     ']);
-
-
+        
+        
     end
 else
     fprintf(1,[repmat('\b',1,(length(num2str(percent))+1)),'%d','%%'],percent);
@@ -560,14 +594,14 @@ switch p
     case 2
         % really simple for 2-d
         nrmls = (xyz(tess(:,1),:) - xyz(tess(:,2),:)) * [0 1;-1 0];
-
+        
         % Any degenerate edges?
         del = sqrt(sum(nrmls.^2,2));
         degenflag = (del<(max(del)*10*eps));
         if sum(degenflag)>0
             warning('inhull:degeneracy',[num2str(sum(degenflag)), ...
                 ' degenerate edges identified in the convex hull'])
-
+            
             % we need to delete those degenerate normal vectors
             nrmls(degenflag,:) = [];
             nt = size(nrmls,1);
@@ -599,7 +633,7 @@ switch p
         if sum(degenflag)>0
             warning('inhull:degeneracy',[num2str(sum(degenflag)), ...
                 ' degenerate simplexes identified in the convex hull'])
-
+            
             % we need to delete those degenerate normal vectors
             nrmls(degenflag,:) = [];
             nt = size(nrmls,1);
