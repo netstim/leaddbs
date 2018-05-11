@@ -4,7 +4,7 @@ if ~exist('opts','var')
     opts.usedist=1;
     opts.useexp='exp';
     opts.useregression='robust';
-    opts.useweightedmean=1;
+    opts.useweightedmean='lin';
     opts.discardnegativeweights=1;
 end
 switch cmd
@@ -33,7 +33,7 @@ N=size(XYZ,1);
 for coh=1:length(cohs)
     thiscoh=cohs{coh};
     othercohs=cohs; othercohs(coh)=[];
-    otherpts=cell2mat(othercohs);
+    otherpts=logical(sum(cell2mat(othercohs),2));
     Ihat(thiscoh)=dopredictscore(XYZ,I,otherpts,thiscoh,opts);
 end
 
@@ -53,20 +53,25 @@ end
 
 
 switch opts.useregression
-    case 'distance'
-        if opts.useweightedmean
-            weights=getweights(I,modelpts,opts);
-            
-            Center=ea_nansum(XYZ(modelpts,:).*repmat(weights,1,3));
-        else
-            Center=ea_nanmean(XYZ(modelpts,:)); 
+    case 'svm'        
+        Mdl = fitrsvm(XYZ((modelpts),:),I((modelpts),:),'Standardize',true,'KernelFunction','gaussian');
+        Ihat = predict(Mdl,(XYZ(predictpts,:)));
+    case {'distance','dist'}
+        switch opts.useweightedmean 
+            case 'off'
+                Center=ea_nanmean(XYZ(modelpts,:));
+            otherwise
+                weights=getweights(I,modelpts,opts);
+                Center=ea_nansum(XYZ(modelpts,:).*repmat(weights,1,3));
         end
         D=pdist2(XYZ(predictpts,:),Center);
-        if opts.useexp
-            Ihat=1./exp(D);
-        else
-            %Ihat=1./D;
-            Ihat=-D;
+        switch opts.useexp
+            case 'exp'
+                Ihat=1./exp(D);
+            case 'neg'
+                Ihat=-D;
+            case 'inv'
+                Ihat=1./D;
         end
     case 'regbeta'
         cnt=1; % we DO NEED to solve a GLM for each single patient!
@@ -151,11 +156,12 @@ switch opts.useregression
 
 end
 if opts.usedist && ~strcmp(opts.useregression,'distance')
-    if opts.useweightedmean
-        weights=getweights(I,modelpts,opts);
-        weights=repmat(weights,1,3);
-    else
-        weights=ones(length(I(modelpts)),3);
+    switch opts.useweightedmean
+        case 'off'
+            weights=ones(length(I(modelpts)),3);
+        otherwise
+            weights=getweights(I,modelpts,opts);
+            weights=repmat(weights,1,3);
     end
     Dtomean=pdist2(ea_nanmean(XYZ(modelpts,:).*weights),XYZ(predictpts,:))';
     %Dtomean=pdist2(ea_nanmean(acs(modelpts,:)),acs(predictpts,:))';
@@ -177,13 +183,21 @@ if opts.usedist && ~strcmp(opts.useregression,'distance')
         end
     end
 end
+
 function weights=getweights(I,modelpts,opts)
-weights=I(modelpts); 
+weights=I(modelpts);
 if opts.discardnegativeweights
     weights(weights<0)=nan;
 end
 weights=weights-ea_nanmin(weights);
+switch opts.useweightedmean
+    case 'exp'
+        weights=exp(weights);
+    case 'square'
+        weights=weights.^2;
+end
 weights=weights./ea_nansum(weights);
+
 
 function fR=myrobustcorr(X,Y)
 
