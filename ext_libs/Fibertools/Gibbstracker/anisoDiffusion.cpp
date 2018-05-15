@@ -52,7 +52,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const mxArray *Img;
     Img = prhs[pcnt++];       
     const int numdim = mxGetNumberOfDimensions(Img);
-    const int *dims = mxGetDimensions(Img);
+    const mwSize *dims = mxGetDimensions(Img);
     REAL *img = (REAL*) mxGetData(Img);
     if (numdim != 3)
     {
@@ -65,7 +65,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
     const mxArray *BG;
     BG = prhs[pcnt++];       
-    const int *dimsbg = mxGetDimensions(BG);
+    const mwSize *dimsbg = mxGetDimensions(BG);
     if (dimsbg[0] != 6)
     {
 	mexPrintf("blurrguide has to be rank 2\n");
@@ -86,7 +86,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 
 
-    int ndims[4];
+    mwSize ndims[4];
     ndims[0] = 3; ndims[1] = dims[0]; ndims[2] = dims[1]; ndims[3] = dims[2];
     const mxArray *Tmp1 = mxCreateNumericArray(4,ndims,mxGetClassID(Img),mxREAL);
     REAL *tmp1 = (REAL*) mxGetData(Tmp1);

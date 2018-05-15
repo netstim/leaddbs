@@ -343,7 +343,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		}
 	}
 
-	int cdims[] = {index};
+	mwSize cdims[] = {index};
 	plhs[0] = mxCreateCellArray(1,cdims);
 	
 	index = 0;

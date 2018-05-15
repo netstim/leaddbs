@@ -204,12 +204,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	const mxArray *DataImg;
 	DataImg = prhs[pcnt++];       
 	REAL *dimg = (REAL*) mxGetData(DataImg);
-	const int *dsize = mxGetDimensions(DataImg);
+	const mwSize *dsize = mxGetDimensions(DataImg);
     
 	const mxArray *Mask;
 	Mask = prhs[pcnt++];       
 	REAL *mask = (REAL*) mxGetData(Mask);
-    const int *dmsize = mxGetDimensions(Mask);
+    const mwSize *dmsize = mxGetDimensions(Mask);
     int mask_oversamp_mult = dmsize[0]/dsize[1];
     
     
@@ -251,7 +251,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	mxArray *NumInterpPoints = mxGetField(sinterpstruct,0,"numpoints");
 	
 	REAL *indimg = (REAL*) mxGetData(Indices);
-	const int *isize = mxGetDimensions(Indices);
+	const mwSize *isize = mxGetDimensions(Indices);
 	int totsz = isize[0]*isize[1]*isize[2]*isize[3];
 	int *indeximg = (int*) malloc(sizeof(int)*totsz);
 	for (int k =0;k < totsz;k++)
@@ -296,14 +296,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	REAL cellsize_wi = 6*particle_width;
 	
 	REAL cellsize = (cellsize_pl > cellsize_wi)?cellsize_pl:cellsize_wi;
-		
 	
 	REAL curv_hardthres = 0.7; // deactivated
 
     fprintf(stderr,"setting up MH-sampler \n"); fflush(stderr);
-	RJMCMC sampler(points,numPoints, dimg, dsize, voxsize, cellsize);
+	RJMCMC sampler(points, numPoints, dimg, (const int*)dsize, voxsize, cellsize);
     fprintf(stderr,"setting up Energy-computer \n"); fflush(stderr);
-    EnergyComputer encomp(dimg,dsize,voxsize,sinterp,&(sampler.pcontainer),mask,mask_oversamp_mult);
+    EnergyComputer encomp(dimg,(const int*)dsize,voxsize,sinterp,&(sampler.pcontainer),mask,mask_oversamp_mult);
 
     fprintf(stderr,"setting up parameters\n"); fflush(stderr);
 	sampler.setParameters(Temp,numit,conprob,particle_len,curv_hardthres,chempot_particle);
@@ -317,7 +316,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 
 	
-	int dims[] = {sampler.attrcnt, sampler.pcontainer.pcnt};
+	mwSize dims[] = {sampler.attrcnt, sampler.pcontainer.pcnt};
 	plhs[0] = mxCreateNumericArray(2,dims,mxGetClassID(Points),mxREAL);
 	REAL *npoints = (REAL*) mxGetData(plhs[0]);	
 	sampler.writeout(npoints);
@@ -329,7 +328,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     stats.compute_updownratio();
     
     const char *field_names[] = {"up","down","accepted","rejected","iterations"};
-    int dim = 1;
+    mwSize dim = 1;
 	mxArray* mxStat=mxCreateStructArray(1,&dim,5,field_names);
     plhs[1] = mxStat;
     

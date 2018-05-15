@@ -127,7 +127,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 
 
-	const int sz[] = {3, cur_i+1};
+	const mwSize sz[] = {3, cur_i+1};
 
  	plhs[0] = mxCreateNumericArray(2,sz,mxGetClassID(Points),mxREAL);
  	REAL *pk = (REAL*) mxGetData(plhs[0]);	

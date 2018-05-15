@@ -80,7 +80,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	const mxArray *Labeling;
 	Labeling = prhs[pcnt++];       
 	REAL *labeling = (REAL*) mxGetData(Labeling);
-    const int *dims = mxGetDimensions(Labeling);
+    const mwSize *dims = mxGetDimensions(Labeling);
     
 
     REAL Nsize = REAL(*mxGetPr(prhs[pcnt++]));
@@ -156,7 +156,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
     mexPrintf("maxlabel %i\n",maxlabel);
    
-    const int dims2[] = {maxlabel,maxlabel};
+    const mwSize dims2[] = {maxlabel,maxlabel};
     plhs[0] = mxCreateNumericArray(2,dims2,mxGetClassID(Labeling),mxREAL);
 	REAL *cc = (REAL*) mxGetData(plhs[0]);	
     plhs[1] = mxCreateNumericArray(2,dims2,mxGetClassID(Labeling),mxREAL);
