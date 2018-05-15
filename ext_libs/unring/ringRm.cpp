@@ -461,7 +461,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
     const mxArray *Img = prhs[pcnt++];
     const int numdim = mxGetNumberOfDimensions(Img);
-    const int *dim_sz = mxGetDimensions(Img);
+    const mwSize *dim_sz = mxGetDimensions(Img);
  	double *data = (double*) mxGetData(Img);
     double *data_i = (double*) mxGetImagData(Img);
 
@@ -499,7 +499,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
                }
         }
 
-        unring_2d(data_complex,res_complex, dim_sz,nsh,minW,maxW);
+        unring_2d(data_complex,res_complex,(const int*)dim_sz,nsh,minW,maxW);
 
         double *res =  (double*) mxGetData(plhs[0]);
         double *res_i =  (double*) mxGetImagData(plhs[0]);
@@ -554,7 +554,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         }
 
         for (int k = 0; k < prodsz; k++)
-            unring_2d(&(data_complex[k*dim_sz[0]*dim_sz[1]]),&(res_complex[k*dim_sz[0]*dim_sz[1]]), dim_sz,nsh,minW,maxW);
+            unring_2d(&(data_complex[k*dim_sz[0]*dim_sz[1]]),&(res_complex[k*dim_sz[0]*dim_sz[1]]),(const int*)dim_sz,nsh,minW,maxW);
 
         double *res =  (double*) mxGetData(plhs[0]);
         double *res_i =  (double*) mxGetImagData(plhs[0]);
