@@ -73,7 +73,7 @@ else
     % diameter of the slices shown in visualizations
     extractradius = 30;
     
-    sides = {'right','left'};
+    sides = {'right','left','3','4','5','6','7','8'};
     for side = options.elside
         disp(['Reconstructing rotation of ' sides{side} ' lead!'])
         
