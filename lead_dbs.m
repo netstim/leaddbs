@@ -1112,7 +1112,7 @@ function leadfigure_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 label='lead-dbs.org';
 url='http://www.lead-dbs.org/';
-position=[65,hObject.Position(4)-55,80,16];
+position=[65,hObject.Position(4)-60,85,16];
 ea_hyperlink_label(label, url, position);
 
 
