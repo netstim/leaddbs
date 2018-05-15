@@ -1,14 +1,22 @@
 % This script will compile all the C files of the registration methods
 cd(['functions', filesep, 'mexfunctions']);
 
-mex BarycentricCoordinatesTetrahedron.c -v                         
-mex BarycentricCoordinatesTriangle.c -v                             
-mex CheckInsideFace.c -v                            
-mex LineLineIntersect.c -v              
-mex LineTriangleIntersection.c -v  
-mex SphereFrom4Points.c -v                        
-mex TriangleTriangleIntersection.c -v
-mex CheckVolumeFaceMesh.c -v
-mex CheckVolumeTetraMesh.c -v
+if ismac
+    compflags = '';
+elseif isunix
+    compflags = ' COMPFLAGS=''$COMPFLAGS -static-libstdc++''';
+elseif ispc
+    compflags = ' COMPFLAGS="$COMPFLAGS /MT"';
+end
+
+eval(['mex' compflags, ' BarycentricCoordinatesTetrahedron.c']);
+eval(['mex' compflags, ' BarycentricCoordinatesTriangle.c']);                         
+eval(['mex' compflags, ' CheckInsideFace.c']);
+eval(['mex' compflags, ' LineLineIntersect.c']);
+eval(['mex' compflags, ' LineTriangleIntersection.c']);
+eval(['mex' compflags, ' SphereFrom4Points.c']);
+eval(['mex' compflags, ' TriangleTriangleIntersection.c']);
+eval(['mex' compflags, ' CheckVolumeFaceMesh.c']);
+eval(['mex' compflags, ' CheckVolumeTetraMesh.c']);
 
 cd(['..', filesep, '..']);
