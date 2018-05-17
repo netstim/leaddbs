@@ -1,7 +1,7 @@
 function I=ea_getimprovs_fctr(cdat,cmd,pts,fctr)
 
 % returns improvement on factor supplied by cdat struct
-
+warning off
 if ~exist('pts','var') || isempty(pts)
     pts=1:size(cdat.baseline,1); % all patients.
 end
@@ -61,3 +61,4 @@ switch cmd
         I=improvs(pts);
         
 end
+warning on

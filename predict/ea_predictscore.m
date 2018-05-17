@@ -7,6 +7,7 @@ if ~exist('opts','var')
     opts.useweightedmean='lin';
     opts.discardnegativeweights=1;
 end
+warning off    
 switch cmd
     case {'leaveOneOut','patient'}
         
@@ -18,6 +19,7 @@ switch cmd
     case {'leaveNothingOut','nothing'}
         Ihat=dopredictscore(XYZ,I,1:size(XYZ,1),1:size(XYZ,1),opts);
 end
+warning on
 
 function Ihat=ea_predictscore_leoo(XYZ,I,opts)
 Ihat=nan(size(I));
@@ -88,7 +90,7 @@ switch opts.useregression
             cnt=cnt+1;
         end
     case 'regression'
-        
+    
         [b]=glmfit(D(modelpts,modelpts),I(modelpts));
         Ihat=ea_addone(D(predictpts,modelpts))*b;
         
