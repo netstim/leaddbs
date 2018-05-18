@@ -1,6 +1,6 @@
 function [coords_mm,trajectory,markers] = ea_refinecoords(options)
 %% Refine the fiducial markers following TRAC/CORE reconstruction
-%  Last Revision: 12/04/2018
+%  Last Revision: 18/05/2018
 %  Thushara Perera (c) 2018 Bionics Institute
 %  Input:
 %   - lead dbs options struct
@@ -159,6 +159,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
 
         markers(side).head = head;
         markers(side).tail = tail;
+        [~, ~, rmarkers] = ea_resolvecoords(markers, options, 1);
 
         if saveimg
             hf = figure(20+side);
@@ -169,6 +170,10 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
             plot3(head(1), t_head(2)-0.01, head(3),'.','MarkerEdgeColor','r','MarkerSize',20);
             hold on;
             plot3(tail(1), t_tail(2)-0.01, tail(3),'.','MarkerEdgeColor','g','MarkerSize',20);
+            if is_debug % show post resolvecoords markers
+                plot3(rmarkers(side).head(1),rmarkers(side).head(2)-0.01,rmarkers(side).head(3),'^','MarkerEdgeColor','r','MarkerSize',20);
+                plot3(rmarkers(side).tail(1),rmarkers(side).tail(2)-0.01,rmarkers(side).tail(3),'^','MarkerEdgeColor','g','MarkerSize',20);
+            end
             surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'FaceColor','texturemap','EdgeColor','none');
             colormap gray;
             hold off;
@@ -202,10 +207,9 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
                 close(hf);
             end
         end
-    end % for loop side iteration
+    end % for loop side iteration    
     
-    [~, ~, markers] = ea_resolvecoords(markers, options, 1);
-    ea_save_reconstruction(coords_mm, trajectory, markers, elmodel, 0, options);
+    ea_save_reconstruction(coords_mm, trajectory, rmarkers, elmodel, 0, options);
     if can_export
         ea_exportfiducials(options,['ElectrodeFiducials' ,'.', options.prefs.reco.exportfiducials]);
     end
