@@ -33,7 +33,11 @@ for run=1:chunk:length(sfile)
             options.lcm.odir=[];
         end
     end
-    if strcmp(options.lcm.func.connectome(1:5),'rest_') % native space nifti file
+    if strcmp(options.lcm.func.connectome(1:4),'rest') % native space nifti file
+        options.root=[options.uivatdirs{1}];
+        [options.root,options.patientname]=fileparts(options.root);
+        options.root=[options.root,filesep];
+        ea_preprocess_fmri(options);
         cs_fmri_conseed_nifti([options.uivatdirs{1},filesep,options.lcm.func.connectome,'.nii'],tsfile,options)
     else
         cs_fmri_conseed(ea_getconnectomebase,options.lcm.func.connectome,...

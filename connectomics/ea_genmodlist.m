@@ -50,7 +50,7 @@ if exist('directory','var')
     end
     
     % fMRI - raw files:
-    ffis=dir([directory,'rest_*.nii']);
+    ffis=dir([directory,'res*.nii']);
     for ff=1:length(ffis);
         [~,modlist{cnt}]=fileparts(ffis(ff).name);
         sf(cnt)=2;

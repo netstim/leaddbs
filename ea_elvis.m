@@ -160,6 +160,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     pobj.elstruct=elstruct(pt);
                     pobj.showMacro=1;
                     pobj.side=side;
+                    
                     if exist('el_render','var')
                         el_render(end+1)=ea_trajectory(pobj);
                     else

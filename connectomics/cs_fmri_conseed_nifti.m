@@ -10,7 +10,7 @@ options=ea_assignpretra(options);
 
 if ~exist([directory,'sr',ref,ext],'file') || ~exist([directory,'rr',ref,'c1',anat,'.nii'],'file') % preproecessing needs to be performed
     disp('No preprocessed fMRI-images found, processing...');
-    options.prefs.rest=restfilename;
+    options.prefs.rest=[ref,ext];
     ea_preprocess_fmri(options);
     disp('Done preprocessing fMRI data.');
 end
@@ -30,7 +30,7 @@ for tmpt = 1:signallength
     interpol_tc(:,tmpt)=thisvol(:);
 end
 %% Extract timecourses of complete volume for signal regression..
-alltc=spm_read_vols(spm_vol(restfilename));
+%alltc=spm_read_vols(spm_vol(restfilename));
 
 load([directory,'TR.mat']);
 %% Data corrections steps

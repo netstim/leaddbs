@@ -135,10 +135,14 @@ classdef ea_trajectory < handle
 
             if isempty(obj.elmodel)
                 try
-                    obj.elmodel=obj.options.elmodel;
+                    obj.elmodel=obj.elstruct.elmodel;
                 catch
-                    elms=ea_resolve_elspec;
-                    obj.elmodel=elms{1};
+                    try
+                        obj.elmodel=obj.options.elmodel;
+                    catch
+                        elms=ea_resolve_elspec;
+                        obj.elmodel=elms{1};
+                    end
                 end
             end
 
