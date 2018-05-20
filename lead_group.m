@@ -510,7 +510,8 @@ for pt=1:length(ptidx)
     M.elstruct(ptidx(pt)).pt=ptidx(pt);
 end
 
-whichelmodel=get(handles.elmodelselect,'String'); whichelmodel=whichelmodel{get(handles.elmodelselect,'Value')};
+whichelmodel=get(handles.elmodelselect,'String');
+whichelmodel=whichelmodel{get(handles.elmodelselect,'Value')};
 % account for electrode model specified in lead group
 if ~strcmp(whichelmodel,'Patient specified')
     arcell=repmat({whichelmodel},length(ptidx),1);
