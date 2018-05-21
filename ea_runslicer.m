@@ -1,6 +1,6 @@
 function ea_runslicer(options, task)
 %% Function to launch slicer and load *.nii files
-%  Last Revision: 6/04/2018
+%  Last Revision: 21/05/2018
 %  Thushara Perera (c) 2018 Bionics Institute
 %  Input:
 %   - lead dbs options struct
@@ -70,6 +70,21 @@ function ea_runslicer(options, task)
     end
 
     switch task
+        case -1 % launch slicer for lead reconstruction            
+            slicer_mrml = 'Slicer_Reconstruction.mrml';
+            nfiles = 0;
+            allfiles = {options.prefs.tranii_unnormalized
+                options.prefs.ctnii_coregistered};
+
+            for i=1:length(allfiles)
+                if (exist([patient_path, filesep, allfiles{i}], 'file') == 2)
+                    nfiles = nfiles + 1;
+                    filenames{nfiles} = allfiles{i};
+                    filepaths{nfiles} = [patient_path, filesep, allfiles{i}];
+                end
+            end
+            WriteReconstructionFiducialFile(options, patient_path);
+            
         case 1 % show original volumes
             nfiles = 0;
             slicer_mrml = 'Slicer_original.mrml';
@@ -141,7 +156,7 @@ function ea_runslicer(options, task)
     end
 
     fid = fopen(scene_path, 'w');
-    if (task == 4)
+    if (task == 4 || task == -1)
         fprintf(fid, [GetFiducialBeginning(), '\r\n\r\n']);
     else
         fprintf(fid, [GetBeginning(), '\r\n\r\n']);
@@ -149,7 +164,7 @@ function ea_runslicer(options, task)
     for i=1:nfiles
         fprintf(fid, [GetFileXML(i, filepaths{i}, filenames{i}), '\r\n\r\n']);
     end
-    if (task == 4)
+    if (task == 4 || task == -1)
         fprintf(fid, GetFiducialEnding());
     else
         fprintf(fid, GetEnding());
@@ -160,8 +175,59 @@ function ea_runslicer(options, task)
     fprintf(fid, ['slicer.util.loadScene("', strrep(scene_path, '\', '\\'), '")\r\n']);
     fclose(fid);
     disp('Loading up 3D Slicer...');
-    system(['"', SLICER, '" --no-splash --python-script "', script_path, '" &']);
-    % the trailing '&' returns control back to matlab without waiting for slicer to close
+    if (task > 0)
+        system(['"', SLICER, '" --no-splash --python-script "', script_path, '" &']);
+        % the trailing '&' returns control back to matlab without waiting for slicer to close
+    else
+        system(['"', SLICER, '" --no-splash --python-script "', script_path, '"']);
+    end
+end
+
+function WriteReconstructionFiducialFile(options, patient_path)
+    if (~isfield(options, 'root'))
+        [filepath, name, ~] = fileparts(patient_path);
+        options.root = [filepath,filesep];
+        options.patientname = name;
+    end
+    fiducial_path = [options.root, options.patientname, filesep, 'ElectrodeFiducials.fcsv'];
+    header = ['# Markups fiducial file version = 4.7\r\n',...
+              '# CoordinateSystem = 0\r\n',...
+              '# columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID\r\n'];
+    fid = fopen(fiducial_path, 'w');
+    fprintf(fid, header);
+    
+    counter = 0;
+    if exist([patient_path,filesep,'ea_reconstruction.mat'],'file')
+        options.native = 1;
+        [~,~,markers] = ea_load_reconstruction(options);
+        for side = options.sides
+            h = markers(side).head;
+            t = markers(side).tail;
+            fprintf(fid, ['vtkMRMLMarkupsFiducialNode_',num2str(counter),',',num2str(h(1)),',',num2str(h(2)),',',num2str(h(3)),...
+                ',0,0,0,1,1,1,0,Head_',num2str(side),',,vtkMRMLScalarVolumeNode2\r\n']);        
+            fprintf(fid, ['vtkMRMLMarkupsFiducialNode_',num2str(counter+1),',',num2str(t(1)),',',num2str(t(2)),',',num2str(t(3)),...
+                ',0,0,0,1,1,1,0,Tail_',num2str(side),',,vtkMRMLScalarVolumeNode2\r\n']);
+            counter = counter + 2;
+        end
+    else
+        h = 14; t = 9;
+        for side = options.sides
+            fprintf(fid, ['vtkMRMLMarkupsFiducialNode_',num2str(counter),',',num2str(h),',-11,-5',...
+                ',0,0,0,1,1,1,0,Head_',num2str(side),',,vtkMRMLScalarVolumeNode2\r\n']);        
+            fprintf(fid, ['vtkMRMLMarkupsFiducialNode_',num2str(counter+1),',',num2str(t),',-15,-15',...
+                ',0,0,0,1,1,1,0,Tail_',num2str(side),',,vtkMRMLScalarVolumeNode2\r\n']);
+            counter = counter + 2;
+            if mod(side,2) == 0 % is even
+                h = h + 10;
+                t = t + 10;
+            end        
+            % flip left/right after each iteration
+            h = -h;
+            t = -t;
+        end
+    end
+   
+    fclose(fid);
 end
 
 function [nfiles, filepaths, filenames] = GetNormalizedFiles(options, lead_path, patient_path)

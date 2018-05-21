@@ -272,6 +272,10 @@ end
                 case 'Manual' % Manual
                     [coords_mm,trajectory,markers]=ea_runmanual(poptions);
                     options.native=1;
+                    
+                case 'Slicer (Manual)' % Manually mark lead head/tail in Slicer 3D
+                    [coords_mm,trajectory,markers]=ea_runmanualslicer(poptions);
+                    options.native=1;
             end
             options.hybridsave=1;
             options.elside=options.sides(1);
