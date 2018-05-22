@@ -303,32 +303,70 @@ else
         [peak,markerfft] = ea_orient_intensitypeaksFFT(intensity,2);
         valley = ea_orient_intensitypeaksFFT(-intensity,2);
         
-        [peak1,~] = ea_orient_intensitypeaksFFT(intensity1,3);
-        
-        [peak2,~] = ea_orient_intensitypeaksFFT(intensity2,3);
-        
-        %% determine which of the two peaks is the marker by comparing marker peaks to the 3 dirlevel peaks
-        % for this extent intensity from 0:360 to -360:+720 to exclude failures
-        % due to detected peaks close to 0 or 360
-        peak1tmp = [(peak1-360) peak1 (peak1+360)];
-        peak2tmp = [(peak2-360) peak2 (peak2+360)];
-        diff1 = min(abs(peak1tmp - peak(1))) + min(abs(peak2tmp - peak(1)));
-        diff2 = min(abs(peak1tmp - peak(2))) + min(abs(peak2tmp - peak(2)));
         if ~supervised
-            %% take anterior peak
-            %         if peak(1) > 90 && peak(1) < 270
-            %             finalpeak(side) = peak(2);
-            %         else
-            %             finalpeak(side) = peak(1);
-            %         end
-            %% take better peak
-            if diff1 <= diff2
-                finalpeak(side) = peak(1);
-            else
-                finalpeak(side) = peak(2);
-            end
-        elseif supervised
-            
+            %% take solution which is closer to the default direction - change defaultdirection if you do not rountinely implant in anterior direction
+            defaultdirection = 'anterior'; % also use: 'posterior', 'medial', 'lateral'
+            switch defaultdirection
+                case 'anterior'
+                    %% take anterior peak
+                    if peak(1) > 90 && peak(1) < 270
+                        finalpeak(side) = peak(2);
+                    else
+                        finalpeak(side) = peak(1);
+                    end
+                case 'posterior'
+                    %% take posterior peak
+                    if peak(1) > 90 && peak(1) < 270
+                        finalpeak(side) = peak(1);
+                    else
+                        finalpeak(side) = peak(2);
+                    end
+                case 'medial'
+                    if strcmp(sides{side},'right') % in case of more than 2 leads additional leads have to be specified here
+                        if peak(1) > 180
+                            finalpeak(side) = peak(2);
+                        else
+                            finalpeak(side) = peak(1);
+                        end
+                    elseif strcmp(sides{side},'left') % in case of more than 2 leads additional leads have to be specified here
+                        if peak(1) > 180
+                            finalpeak(side) = peak(1);
+                        else
+                            finalpeak(side) = peak(2);
+                        end
+                    end
+                case 'lateral'
+                    if strcmp(sides{side},'right')
+                        if peak(1) > 180
+                            finalpeak(side) = peak(1);
+                        else
+                            finalpeak(side) = peak(2);
+                        end
+                    elseif strcmp(sides{side},'left')
+                        if peak(1) > 180
+                            finalpeak(side) = peak(2);
+                        else
+                            finalpeak(side) = peak(1);
+                        end
+                    end
+            end            
+            %% take "better" peak (not validated) to determine which of the two peaks is the marker
+            %% by comparing marker peaks to the 3 dirlevel peaks
+            % for this extent intensity from 0:360 to -360:+720 to exclude failures
+            % due to detected peaks close to 0 or 360
+            %         [peak1,~] = ea_orient_intensitypeaksFFT(intensity1,3);
+            %         [peak2,~] = ea_orient_intensitypeaksFFT(intensity2,3);
+            %             peak1tmp = [(peak1-360) peak1 (peak1+360)];
+            %             peak2tmp = [(peak2-360) peak2 (peak2+360)];
+            %             diff1 = min(abs(peak1tmp - peak(1))) + min(abs(peak2tmp - peak(1)));
+            %             diff2 = min(abs(peak1tmp - peak(2))) + min(abs(peak2tmp - peak(2)));
+            %             if diff1 <= diff2
+            %                 finalpeak(side) = peak(1);
+            %             else
+            %                 finalpeak(side) = peak(2);
+            %             end
+            %             clear diff1 diff2 peak1tmp peak2tmp peak1 peak2
+        elseif supervised            
             h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
             txt1 = uicontrol('style','text','units','pixels','Background','w',...
                 'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
@@ -367,7 +405,7 @@ else
                 Solution2Button.UserData = 0;
             end
             finalpeak(side) = peak(answer);
-            clear diff1 diff2 peak1tmp peak2tmp answer
+            clear answer
             close(h)
         end
         %% calculate lead yaw and pitch angles for correction at the end
@@ -706,18 +744,6 @@ end
 
 end
 
-% function savedirection(hObject,eventdata)
-% hObject.UserData = 1;
-% uiresume
-% end
-% function discarddirection(hObject,eventdata)
-% hObject.UserData = 1;
-% uiresume
-% end
-% function manualretry(hObject,eventdata)
-% hObject.UserData = 1;
-% uiresume
-% end
 function buttonPress(hObject,eventdata)
 hObject.UserData = 1;
 uiresume
