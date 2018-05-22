@@ -47,7 +47,7 @@ V = spm_vol(filename);
 [~,vox] = ea_spm_get_bbox(V, 'nz');
 
 if any(vox<0)
-   ea_reslice_nii(filename,filename,abs(vox),0); 
+   ea_reslice_nii(filename,filename,abs(vox),0);
    V = spm_vol(filename);
    [~,vox] = ea_spm_get_bbox(V, 0);
 end

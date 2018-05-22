@@ -1,4 +1,4 @@
-function ea_autocrop(image, prefix, mask)
+function ea_autocrop(image, prefix, mask, margin)
 % Crop the image to its minimum bounding box
 
 if nargin < 2
@@ -9,7 +9,11 @@ if nargin < 3
     mask = 0;	% do not mask the image (remove background) by default
 end
 
-[bbox, BW] = ea_autobbox(image);
+if nargin < 4
+    margin = 5;	% add margin to the cropped image, unit in voxel
+end
+
+[bbox, BW] = ea_autobbox(image, margin);
 
 if mask
     nii = load_nii(image);
