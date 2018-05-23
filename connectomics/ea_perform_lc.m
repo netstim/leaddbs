@@ -47,7 +47,7 @@ if options.lc.func.compute_GM || options.lc.func.compute_CM
     disp(['*** Performing functional parts of LEAD-Connectome...']);
 
     % get files with rs-fMRI data
-    restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_prefix]);
+    restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_searchstring]);
 
     % get number of files with rs-fMRI data
     options.prefs.n_rest = numel(restfiles);

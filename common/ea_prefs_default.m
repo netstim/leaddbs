@@ -49,8 +49,8 @@ prefs.tp_gctnii=['tp_',prefs.gctnii];
 prefs.tonemap='heuristic'; % set to 'albada' to change to datadriven mode
 
 %% connectome files:
-prefs.rest_prefix='res*.nii'; % raw resting state fMRI data search string
-prefs.rest_default='rest.nii'; % default for dcm2nii export.
+prefs.rest_searchstring='rest*.nii'; % raw resting state fMRI data search string
+prefs.rest='rest.nii'; % default for dcm2nii export.
 
 %% connectome settings:
 prefs.lc.struc.maxdist=2; % maximal distance to form a connection (between fiber terminals and voxel centers, in mm).
@@ -106,7 +106,7 @@ prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
 prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregistration transformation
 
 %% Subcortical refine (Post to Pre):
-prefs.scrf.tonemap='tp_'; % can set to '' if want to use non-tonemapped CTs for brainshift correction (default = 'tp_'). 
+prefs.scrf.tonemap='tp_'; % can set to '' if want to use non-tonemapped CTs for brainshift correction (default = 'tp_').
 
 %% Atlas-Sets:
 prefs.atlases.default='DISTAL Minimal (Ewert 2017)';

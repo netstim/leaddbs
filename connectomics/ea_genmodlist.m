@@ -48,15 +48,15 @@ if exist('directory','var')
         sf(cnt)=2;
         cnt=cnt+1;
     end
-    
+
     % fMRI - raw files:
-    ffis=dir([directory,'res*.nii']);
+    ffis=dir([directory, options.prefs.rest_searchstring]);
     for ff=1:length(ffis);
         [~,modlist{cnt}]=fileparts(ffis(ff).name);
         sf(cnt)=2;
         cnt=cnt+1;
     end
-    
+
 end
 
 % check for already processed maps in case of predict module
@@ -82,7 +82,7 @@ end
 
 
 if vat
-   resdir=dir([directory,options.prefs.rest_prefix]);
+   resdir=dir([directory,options.prefs.rest_searchstring]);
 
    for rd=1:length(resdir)
        [~,fn,ext]=fileparts(resdir(rd).name);

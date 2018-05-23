@@ -21,7 +21,7 @@ corefiles={
     prefs.sagnii_unnormalized
     prefs.rawctnii_unnormalized
     prefs.ctnii_coregistered
-    prefs.rest_default
+    prefs.rest
     prefs.dti
 };
 

@@ -318,7 +318,7 @@ switch commnd
         tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
         [~,pt]=fileparts(tmpoutdir);
         prefs=ea_prefs(pt);
-        finishandclose(handles,prefs.rest_default);
+        finishandclose(handles,prefs.rest);
     case '1'
         finishandclose(handles,'anat_t1.nii');
     case '2'
@@ -399,7 +399,7 @@ tmpoutdir=getappdata(handles.imclassf,'tmpoutdir');
 
 [~,pt]=fileparts(tmpoutdir);
 prefs=ea_prefs(pt);
-finishandclose(handles,prefs.rest_default);
+finishandclose(handles,prefs.rest);
 
 
 % --- Executes on button press in dtipush.
