@@ -1,6 +1,4 @@
-function gmtc=cs_fmri_conseed_nifti(restfilename,seedfile,options)
-
-
+function cs_fmri_conseed_nifti(restfilename,seedfile,options)
 
 directory=[fileparts(restfilename),filesep];
 [pth,ref,ext]=fileparts(restfilename);
@@ -57,9 +55,6 @@ for tmpt = 1:signallength
 end
 
 disp('Done. Regressing out nuisance variables...');
-
-
-
 
 % %% actual regression:
 % for voxx=1:size(interpol_tc,1)
@@ -135,8 +130,7 @@ maskHighPass(:,idxCutoff2+1:paddedLength)=0;	%Low eliminate
 
 % 	%20070513	remove trend --> FFT --> filter --> inverse FFT --> retrend
 % YAN Chao-Gan, 100401. remove the mean --> FFT --> filter --> inverse FFT --> add mean back
-    fftw('dwisdom');
-
+fftw('dwisdom');
 
 theMean=mean(interpol_tc,2);
 interpol_tc=interpol_tc-repmat(theMean,[1, sampleLength]);
@@ -165,69 +159,82 @@ disp('Done.');
 
 %% export ROI map:
 for s=1:length(seedfile)
-seed{s}=ea_load_nii(seedfile{s});
-seed{s}.img(seed{s}.img==0)=nan;
-seed_tc=interpol_tc.*repmat(seed{s}.img(:),1,signallength);
-seed_tc=ea_nanmean(seed_tc,1);
-R=corr(seed_tc',interpol_tc','rows','pairwise');
+    seed{s}=ea_load_nii(seedfile{s});
+    seed{s}.img(seed{s}.img==0)=nan;
+    seed_tc=interpol_tc.*repmat(seed{s}.img(:),1,signallength);
+    seed_tc=ea_nanmean(seed_tc,1);
+    R=corr(seed_tc',interpol_tc','rows','pairwise');
 
-seed{s}.img(:)=R;
-[pth,sf,ext]=fileparts(seed{s}.fname);
-[~,ref,ext]=fileparts(restfilename);
+    seed{s}.img(:)=R;
+    [pth,sf]=fileparts(seed{s}.fname);
+    [~,restfname]=fileparts(restfilename);
+    outputfolder = options.lcm.func.connectome;
 
-seed{s}.fname=fullfile(pth,ref,[sf,'_AvgR_native_unsmoothed.nii']);
+    seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii']);
 
-if ~exist(fullfile(pth,ref),'dir')
-    mkdir(fullfile(pth,ref))
+    if ~exist(fullfile(pth,outputfolder),'dir')
+        mkdir(fullfile(pth,outputfolder))
+    end
+    ea_write_nii(seed{s});
+    seed{s}.img(:)=atanh(seed{s}.img(:));
+    seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']);
+    ea_write_nii(seed{s});
+
+    matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii'])
+        fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii'])};
+    matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];
+    matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+    matlabbatch{1}.spm.spatial.smooth.im = 0;
+    matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+    spm_jobman('run',{matlabbatch}); clear matlabbatch
+    movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_native_unsmoothed.nii']),...
+             fullfile(pth,outputfolder,[sf,'_AvgR_native.nii']));
+    movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_Fz_native_unsmoothed.nii']),...
+             fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']));
+
+    % warp back to MNI:
+    % STILL NEED TO WRITE THIS:
+    V = ea_load_nii([directory,restfname,'.nii,1']);
+    V.fname=[directory,restfname,'_first_TR.nii'];
+    ea_write_nii(V);
+    options.coregmr.method='SPM'; % hard code for now
+    %copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_native.nii']),...
+    %         fullfile(pth,outputfolder,[sf,'_AvgR.nii']));
+    copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']),...
+             fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
+    %copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii']),
+    %         fullfile(pth,outputfolder,[sf,'_AvgR_unsmoothed.nii']));
+    %copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']),
+    %         fullfile(pth,outputfolder,[sf,'_AvgR_Fz_unsmoothed.nii']));
+
+    %ea_coreg2images(options,[directory,restfname,'_first_TR.nii'],...
+    %                [directory,options.prefs.prenii_unnormalized],...
+    %                [directory,restfname,'_first_TR.nii'],...
+    %                {fullfile(pth,outputfolder,[sf,'_AvgR.nii']),...
+    %                 fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']),...
+    %                 fullfile(pth,outputfolder,[sf,'_AvgR_unsmoothed.nii']),...
+    %                 fullfile(pth,outputfolder,[sf,'_AvgR_Fz_unsmoothed.nii'])});
+    ea_coreg2images(options,[directory,restfname,'_first_TR.nii'],...
+                    [directory,options.prefs.prenii_unnormalized],...
+                    [directory,restfname,'_first_TR.nii'],...
+                    {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])});
+    delete([directory,restfname,'_first_TR.nii']);
+    delete([directory,'raw_',restfname,'_first_TR.nii']);
+
+    % ea_apply_normalization_tofile(options,{fullfile(pth,outputfolder,[sf,'_AvgR.nii']),...
+    %     fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']),...
+    %     fullfile(pth,outputfolder,[sf,'_AvgR_unsmoothed.nii']),...
+    %     fullfile(pth,outputfolder,[sf,'_AvgR_Fz_unsmoothed.nii'])},...
+    %     {fullfile(pth,outputfolder,[sf,'_AvgR.nii']),...
+    %     fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']),...
+    %     fullfile(pth,outputfolder,[sf,'_AvgR_unsmoothed.nii']),...
+    %     fullfile(pth,outputfolder,[sf,'_AvgR_Fz_unsmoothed.nii'])},...
+    %     directory,0);
+    ea_apply_normalization_tofile(options,...
+        {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
+        {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
+        directory,0);
 end
-ea_write_nii(seed{s});
-seed{s}.img(:)=atanh(seed{s}.img(:));
-seed{s}.fname=fullfile(pth,ref,[sf,'_AvgR_Fz_native_unsmoothed.nii']);
-ea_write_nii(seed{s});
-
-matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pth,ref,[sf,'_AvgR_native_unsmoothed.nii'])
-    fullfile(pth,ref,[sf,'_AvgR_Fz_native_unsmoothed.nii'])};
-matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];
-matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-matlabbatch{1}.spm.spatial.smooth.im = 0;
-matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-spm_jobman('run',{matlabbatch}); clear matlabbatch
-movefile(fullfile(pth,ref,['s',sf,'_AvgR_native_unsmoothed.nii']),fullfile(pth,ref,[sf,'_AvgR_native.nii']));
-movefile(fullfile(pth,ref,['s',sf,'_AvgR_Fz_native_unsmoothed.nii']),fullfile(pth,ref,[sf,'_AvgR_Fz_native.nii']));
-
-% warp back to MNI:
-% STILL NEED TO WRITE THIS:
-V = ea_load_nii([directory,ref,'.nii,1']);
-V.fname=[directory,ref,'_first_TR.nii'];
-ea_write_nii(V);
-options.coregmr.method='SPM'; % hard code for now
-%copyfile(fullfile(pth,ref,[sf,'_AvgR_native.nii']),fullfile(pth,ref,[sf,'_AvgR.nii']));
-copyfile(fullfile(pth,ref,[sf,'_AvgR_Fz_native.nii']),fullfile(pth,ref,[sf,'_AvgR_Fz.nii']));
-%copyfile(fullfile(pth,ref,[sf,'_AvgR_native_unsmoothed.nii']),fullfile(pth,ref,[sf,'_AvgR_unsmoothed.nii']));
-%copyfile(fullfile(pth,ref,[sf,'_AvgR_Fz_native_unsmoothed.nii']),fullfile(pth,ref,[sf,'_AvgR_Fz_unsmoothed.nii']));
-
-%ea_coreg2images(options,[directory,ref,'_first_TR.nii'],[directory,options.prefs.prenii_unnormalized],[directory,ref,'_first_TR.nii'],{fullfile(pth,ref,[sf,'_AvgR.nii']),fullfile(pth,ref,[sf,'_AvgR_Fz.nii']),fullfile(pth,ref,[sf,'_AvgR_unsmoothed.nii']),fullfile(pth,ref,[sf,'_AvgR_Fz_unsmoothed.nii'])});
-ea_coreg2images(options,[directory,ref,'_first_TR.nii'],[directory,options.prefs.prenii_unnormalized],[directory,ref,'_first_TR.nii'],{fullfile(pth,ref,[sf,'_AvgR_Fz.nii'])});
-delete([directory,ref,'_first_TR.nii']);
-delete([directory,'raw_',ref,'_first_TR.nii']);
-
-% ea_apply_normalization_tofile(options,{fullfile(pth,ref,[sf,'_AvgR.nii']),...
-%     fullfile(pth,ref,[sf,'_AvgR_Fz.nii']),...
-%     fullfile(pth,ref,[sf,'_AvgR_unsmoothed.nii']),...
-%     fullfile(pth,ref,[sf,'_AvgR_Fz_unsmoothed.nii'])},...
-%     {fullfile(pth,ref,[sf,'_AvgR.nii']),...
-%     fullfile(pth,ref,[sf,'_AvgR_Fz.nii']),...
-%     fullfile(pth,ref,[sf,'_AvgR_unsmoothed.nii']),...
-%     fullfile(pth,ref,[sf,'_AvgR_Fz_unsmoothed.nii'])},...
-%     directory,0);
-ea_apply_normalization_tofile(options,{
-    fullfile(pth,ref,[sf,'_AvgR_Fz.nii']),...
-    },...
-    {fullfile(pth,ref,[sf,'_AvgR_Fz.nii']),...
-    },...
-    directory,0);
-end
-
 
 
 function sl=ea_detsiglength(fname)

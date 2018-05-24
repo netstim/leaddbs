@@ -32,10 +32,8 @@ if ismember('>',cname)
     cname=cname(1:delim-1);
 end
 
-
 dfoldsurf=[dfold,'fMRI',filesep,cname,filesep,'surf',filesep];
 dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to /vol subdir.
-
 
 d=load([dfold,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
 dataset=d.dataset;
@@ -54,9 +52,6 @@ else
     maskuseidx=1:length(dataset.vol.outidx);
 end
 
-
-
-
 owasempty=0;
 if ~exist('outputfolder','var')
     outputfolder=ea_getoutputfolder(sfile,ocname);
@@ -70,8 +65,6 @@ else
         outputfolder=[outputfolder,filesep];
     end
 end
-
-
 
 if strcmp(sfile{1}(end-2:end),'.gz')
     %gunzip(sfile)
