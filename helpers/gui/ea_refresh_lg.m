@@ -103,6 +103,7 @@ options.earoot=ea_getearoot;
 try
     directory=[M.patient.list{1},filesep];
     modlist=ea_genmodlist(directory,thisparc,options);
+    modlist(strncmp(modlist, 'Patient-specific fMRI', 21)) = [];
     if ~ismember('Patient-specific fiber tracts' ,modlist)
         modlist{end+1}='Patient-specific fiber tracts';
     end

@@ -1123,7 +1123,7 @@ options.groupid = M.guid;
 mods=get(handles.fiberspopup,'String');
 mod=mods{get(handles.fiberspopup,'Value')};
 switch mod
-    case {'Patient-specific fiber tracts','rest_tc'}
+    case {'Patient-specific fiber tracts', 'Patient-specific fMRI time courses'}
         fibersfile=mod;
     case 'Do not calculate connectivity stats'
     otherwise % load fibertracts once and for all subs here.
@@ -1289,7 +1289,7 @@ for pt=selection
         directory=[options.root,options.patientname,filesep];
         if ischar(fibersfile)
             switch mod
-                case 'rest_tc'
+                case 'Patient-specific fMRI time courses'
                     ea_error('Group statistics for fMRI are not yet supported. Sorry, check back later!');
                     pV=spm_vol([ea_space(options,'labeling'),selectedparc,'.nii']);
                     pX=spm_read_vols(pV);
