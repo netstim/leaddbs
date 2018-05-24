@@ -85,7 +85,7 @@ for suffix=dowhich
                         case 2
                             sidec='left';
                     end
-                    
+
                     if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                         copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
                         ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],dinterp);
@@ -93,7 +93,7 @@ for suffix=dowhich
                         cnt=cnt+1;
                     end
                 end
-                
+
                 Cnii=nii(1);
                 for n=2:length(nii)
                     Cnii.img=Cnii.img+nii(n).img;
@@ -102,7 +102,7 @@ for suffix=dowhich
                 ea_write_nii(Cnii);
                 ea_crop_nii(Cnii.fname);
                 delete([vatdir,'tmp_*']);
-                
+
                 ea_split_nii_lr(Cnii.fname);
                 disp('Done.');
                 %end
@@ -125,19 +125,20 @@ for suffix=dowhich
                         case 2
                             sidec='left';
                     end
-                    
+
                     if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                         copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
                         tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                         tnii.dt=[16,0];
                         ea_write_nii(tnii);
                         cname=options.lcm.func.connectome;
-                        
+
                         if ismember('>',cname)
                             delim=strfind(cname,'>');
                             subset=cname(delim+1:end);
                             cname=cname(1:delim-1);
                         end
+
                         if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
                             ea_warp_vat2rest(cname,vatdir,sidec,options);
                         else
@@ -154,7 +155,7 @@ for suffix=dowhich
                         end
                         cnt=cnt+1;
                     end
-                    
+
                 end
                 Cnii=nii(1);
                 for n=2:length(nii)
@@ -163,7 +164,7 @@ for suffix=dowhich
                 Cnii.fname=[vatdir,'vat_seed_compound_fMRI',addstr,'.nii'];
                 ea_write_nii(Cnii);
                 delete([vatdir,'tmp_*']);
-                
+
                 ea_split_nii_lr(Cnii.fname);
                 disp('Done.');
                 %end
@@ -176,6 +177,12 @@ end
 
 
 function ea_warp_vat2rest(cname,vatdir,sidec,options)
+
+if strncmp(cname, 'Patient-specific fMRI - ', 24)
+    restfname = cname(25:end);
+else
+    restfname = cname;
+end
 
 directory=[fileparts(fileparts(fileparts(vatdir))),filesep];
 options=ea_getptopts(directory,options);
@@ -192,13 +199,13 @@ mmc=anat_vat.mat*voxc;
 % coreg from anchor modality to rest file:
 copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized])
 ea_coreg2images(options,[directory,'c',options.prefs.prenii_unnormalized],...
-                        [directory,cname,'.nii'],...
+                        [directory,restfname,'.nii'],...
                         [directory,'c',options.prefs.prenii_unnormalized],...
                         {[vatdir,'wtmp_',sidec,'.nii']},1,[],1);
 
 matlabbatch{1}.spm.util.checkreg.data = {
                                          [directory,'c',options.prefs.prenii_unnormalized]
-                                         [directory,cname,'.nii']
+                                         [directory,restfname,'.nii']
                                          };
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
@@ -208,7 +215,7 @@ rest_vat=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
 if ~any(rest_vat.img(:)) % image empty, at least set original peak to 1.
     warning('Image empty (potentially due to poor resolution and interpolation), trying to set peak manually');
     [~,pn]=fileparts(options.prefs.prenii_unnormalized);
-    load([directory,'c',pn,'2',cname,'_spm.mat']);
+    load([directory,'c',pn,'2',restfname,'_spm.mat']);
     mmc_inrest=spmaffine*voxc;
     voxc_inrest=round(fixedmat\mmc_inrest);
     try

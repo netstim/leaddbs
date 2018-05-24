@@ -9,5 +9,4 @@ if isempty(get(handles.fmripopup,'String'))
     set(handles.fmripopup,'String','No functional connectome found.');
 end
 
-
 ea_resetpopup(handles.fmripopup);
