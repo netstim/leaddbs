@@ -119,9 +119,13 @@ try
             spinner.start;
 
             setappdata(fighandle,'spinner',spinner);
-            % change mousewheel, too:
 
-            set(fighandle, 'pointer', 'watch')
+            % lock mouse pointer in non-dev environment:
+            prefs = ea_prefs;
+            if ~prefs.env.dev
+                set(fighandle, 'pointer', 'watch');
+            end
+
             drawnow;
 
         case 'off'
