@@ -77,26 +77,25 @@ if isfield(handles,'seeddefpopup')
         remstims(todel)=[];
     end
     end
+
     % for now only check first subject for pt. specific fibers..
     % find out whether mapper or predict were calling
-    switch handles.leadfigure.Name(1:20)
-        case 'Lead Connectome Mapp'
-            remstims=ea_prependvat(remstims);
-            set(handles.seeddefpopup,'String',[{'Manually choose seeds'},remstims]);
-        otherwise
-            set(handles.seeddefpopup,'String',[remstims]);
+    if strncmp(handles.leadfigure.Name, 'Lead Connectome Mapper', 22)
+        remstims = ea_prependvat(remstims);
+        set(handles.seeddefpopup, 'String', [{'Manually choose seeds'},remstims]);
+    else
+        set(handles.seeddefpopup, 'String', remstims);
     end
     ea_resetpopup(handles.seeddefpopup);
 
     % update cons
-    if ~strcmp(get(handles.patdir_choosebox,'String'),'Choose Patient Directory')
-        directory=uipatdir{1};
-        [~,ptname]=fileparts(directory);
-        selectedparc='nan';
-        options=ea_handles2options(handles);
-        options.prefs=ea_prefs;
-        [mdl,sf]=ea_genmodlist([directory,filesep],selectedparc,options);
-        ea_updatemodpopups(mdl,sf,handles);
+    if ~strcmp(get(handles.patdir_choosebox,'String'), 'Choose Patient Directory')
+        directory = [uipatdir{1}, filesep];
+        selectedparc = 'nan';
+        options = ea_handles2options(handles);
+        options.prefs = ea_prefs;
+        [mdl,sf] = ea_genmodlist(directory, selectedparc, options);
+        ea_updatemodpopups(mdl, sf, handles);
     end
 end
 
