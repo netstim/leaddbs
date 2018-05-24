@@ -86,15 +86,15 @@ if ~strcmp(options.patientname,'No Patient Selected')
     % a small hidden file '.pp' inside patient folder will show this has been done before.
     if ~exist([directory,'.pp'],'file') && ~exist([directory,'ea_normmethod_applied.mat'],'file')
         % create untouched copy
-        if ~exist([directory,'raw_',presentfiles{1}],'file')
+        if ~isempty(presentfiles) && ~exist([directory,'raw_',presentfiles{1}],'file')
             copyfile([directory,presentfiles{1}],[directory,'raw_',presentfiles{1}]);
         end
-        
+
         % apply reorientation/cropping and biasfieldcorrection
         for fi=1:length(presentfiles)
             ea_anatpreprocess([directory,presentfiles{fi}]);
         end
-        
+
         % Reslice(interpolate) preoperative anatomical image if needed
         try ea_resliceanat(options); end
 
@@ -217,7 +217,7 @@ if options.ecog.extractsurface.do
            ea_cat_seg(options);
        case 2 % FS
            hastb=ea_hastoolbox('freesurfer');
-           
+
            if ~hastb
                ea_error('Freesurfer needs to be installed and connected to Lead-DBS');
            end
@@ -225,7 +225,7 @@ if options.ecog.extractsurface.do
            if ~hastb
                ea_error('FSL needs to be installed and connected to Lead-DBS');
            end
-           
+
            options.prefs=ea_prefs;
            [options,presentfiles]=ea_assignpretra(options);
            setenv('SUBJECTS_DIR',[options.root,options.patientname,filesep]);
@@ -237,11 +237,11 @@ if options.ecog.extractsurface.do
                ' -subjid fs',...
                ' -i ',[options.root,options.patientname,filesep,presentfiles{1}],...
                ' -all']);
-               
+
    end
-    
+
 end
-    
+
     if options.doreconstruction
         wasnative=options.native;
         poptions=ea_checkmanapproved(options);
@@ -252,7 +252,7 @@ end
                     options.hybridsave=1; % save output of TRAC/CORE before progressing
                     options.elside=options.sides(1);
                     elmodel=options.elmodel;
-                    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options); 
+                    ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
                     [coords_mm,trajectory,markers] = ea_refinecoords(poptions); % experimental fiducial marker refine method
                     options.native = 1;
                 case 'TRAC/CORE (Horn 2015)' % TRAC/CORE
@@ -272,7 +272,7 @@ end
                 case 'Manual' % Manual
                     [coords_mm,trajectory,markers]=ea_runmanual(poptions);
                     options.native=1;
-                    
+
                 case 'Slicer (Manual)' % Manually mark lead head/tail in Slicer 3D
                     [coords_mm,trajectory,markers]=ea_runmanualslicer(poptions);
                     options.native=1;
@@ -280,7 +280,7 @@ end
             options.hybridsave=1;
             options.elside=options.sides(1);
             elmodel=options.elmodel;
-            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);            
+            ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
             if isfield(options,'hybridsave')
                 options=rmfield(options,'hybridsave');
             end
