@@ -42,17 +42,18 @@ if exist('directory','var')
     end
 
     % fMRI - parcellations:
-    % check if _tc are present:
+    % check if rest_tc are present:
     if exist([directory,'connectomics',filesep,selectedparc,filesep,'rest_tc.mat'],'file')
-        modlist{cnt}='rest_tc';
+        modlist{cnt}='Patient-specific fMRI time courses';
         sf(cnt)=2;
         cnt=cnt+1;
     end
 
     % fMRI - raw files:
     ffis=dir([directory, options.prefs.rest_searchstring]);
-    for ff=1:length(ffis);
-        [~,modlist{cnt}]=fileparts(ffis(ff).name);
+    for ff=1:length(ffis)
+        [~, restfname] = fileparts(ffis(ff).name);
+        modlist{cnt} = ['Patient-specific fMRI - ', restfname];
         sf(cnt)=2;
         cnt=cnt+1;
     end
