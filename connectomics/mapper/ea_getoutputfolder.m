@@ -1,8 +1,11 @@
-function outputfolder=ea_getoutputfolder(sfile,con)
-file=sfile{1};
-[pth,fn,ext]=fileparts(file); % exit to same folder as seed.
-con=strrep(con,'>','_');
-outputfolder=[pth,filesep,con,filesep];
-if ~exist(outputfolder,'dir')
+function outputfolder = ea_getoutputfolder(sfile,con)
+if strcmp(con, 'wFTR.mat')
+    con = 'Patient-specific fiber tracts';
+else
+    con = strrep(con, '>', '_');
+end
+
+outputfolder = [fileparts(sfile{1}), filesep, con, filesep];
+if ~exist(outputfolder, 'dir')
     mkdir(outputfolder);
 end

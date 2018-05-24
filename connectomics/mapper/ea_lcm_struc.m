@@ -24,6 +24,7 @@ cs_dmri_conseed(base,options.lcm.struc.connectome,...
     ea_resolve_espace(options.lcm.struc.espace),options);
 disp('Done.');
 
+
 function fi=ea_resolve_espace(sp)
 
 base=ea_getconnectomebase;
