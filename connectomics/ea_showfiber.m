@@ -45,6 +45,6 @@ delete(fibhandle);
 %dafv=reducepatch(afv,0.2,'fast');
 
 fibhandle=patch('Faces',afv.faces,'Vertices',afv.vertices,'FaceVertexCData',afv.facevertexcdata,'EdgeColor','none','FaceAlpha',0.25,'CDataMapping','direct','FaceColor','flat');
-keyboard
+
 
 ea_dispercent(1,'end');
