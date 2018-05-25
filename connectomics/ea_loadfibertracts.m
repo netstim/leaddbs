@@ -1,7 +1,9 @@
 function [fibers,idx,voxmm,mat]=ea_loadfibertracts(cfile)
 
 if ~strcmp(cfile(end-3:end),'.mat')
-    ea_trk2ftr(cfile);
+    [fibers,idx]=ea_trk2ftr(cfile);
+    [cpa,cfn]=fileparts(cfile);
+    ea_savefibertracts(fullfile(cpa,[cfn,'.mat']),fibers,idx,'vox');
     [pth,fn,~]=fileparts(cfile);
     cfile=fullfile(pth,[fn,'.mat']);
 end
@@ -31,30 +33,6 @@ if nargout>2
 end
 
 
-function ea_trk2ftr(cfile)
-
-[pth,fn,~]=fileparts(cfile);
-[hdr,trks]=ea_trk_read([cfile]);
-ftr.vox=hdr.voxel_size;
-
-%V=spm_vol([spm('dir'),filesep,'canonical',filesep,'avg152T2.nii']); % assume MNI152 official to be voxel space of tracts
-%V=spm_vol([ea_space,'t2.nii']);
-for i=1:length(trks)
-    ftr.curveSegCell{i}=[trks(i).matrix(:,1)/ftr.vox(1),trks(i).matrix(:,2)/ftr.vox(2),trks(i).matrix(:,3)/ftr.vox(3)];
-
-    %% use conversion from DSI_studio:
-    ftr.curveSegCell{i}(:,1)=78.0-ftr.curveSegCell{i}(:,1);
-    ftr.curveSegCell{i}(:,2)=76.0-ftr.curveSegCell{i}(:,2);
-    ftr.curveSegCell{i}(:,3)=-50.0+ftr.curveSegCell{i}(:,3);
-
-    %% use conversion from a file:
-%     ftr.curveSegCell{i}=[ftr.curveSegCell{i},ones(size(ftr.curveSegCell{i},1),1)]';
-%     ftr.curveSegCell{i}=V.mat*ftr.curveSegCell{i};
-%     ftr.curveSegCell{i}=ftr.curveSegCell{i}(1:3,:)';
-end
-
-save(fullfile(pth,[fn,'.mat']),'-struct','ftr','-v7.3');
-delete(cfile);
 
 function ea_convertfibs2newformat(fibinfo,cfile)
 
@@ -100,7 +78,11 @@ if exist('freiburgconvert','var')
     else
         b0fi=[pth,filesep,prefs.b0];
     end
+    try
     ver=str2double(fibinfo.version(2:end));
+    catch
+        ver=1.1;
+    end
     if ver<1.1
         display('Flip fibers...');
 

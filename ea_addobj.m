@@ -220,7 +220,7 @@ if ischar(addobj) % filename is given ? load fibertracts.
     elseif strfind(addobj,'.trk')
         fileOut = [addobj(1:end-3) 'mat'];
         disp(['Converting .trk to ftr.'])
-        [thisset,fibidx] = ea_trk2ftr(addobj,options);
+        [thisset,fibidx] = ea_trk2ftr(addobj);
     else
         error('File is neither a .mat nor .trk!')
     end
@@ -268,48 +268,7 @@ end
 % end
 
 %% new visualization part
-fibersnew = cell(1,length(fibidx));
-
-dispercent(0,'Sorting Fibers');
-for k = 1:length(fibidx)
-        dispercent(k/length(fibidx))
-    fibersnew{k} = thisset(find(thisset(:,4) == k),1:3);
-end
-dispercent(100,'end');
-
-dispercent(0,'Determine Directions');
-k = 1;
-while k <= length(fibersnew)
-    dispercent(k/length(fibersnew))
-    if length(fibersnew{k}(:,1)) > 1
-        fibersdiff{k} = abs(diff(fibersnew{k}));
-        fibersdiff{k} = vertcat(fibersdiff{k},fibersdiff{k}(end,:));
-        for l = 1:length(fibersdiff{k}(:,1))
-            fibersdiff{k}(l,:) = fibersdiff{k}(l,:)/norm(fibersdiff{k}(l,:));
-        end
-        k = k+1;
-    else
-        fibersnew(k) = [];
-    end
-end
-dispercent(100,'end');
-
-addobjr = streamtube(fibersnew,0.25);
-set(addobjr(:),'EdgeAlpha',0)
-set(addobjr(:),'FaceAlpha',0.25)
-set(addobjr(:),'CDataMapping','direct')
-set(addobjr(:),'EdgeAlpha',0.05);
-
-dispercent(0,'Adding color information');
-for k = 1:length(addobjr)
-    dispercent(k/length(addobjr))
-    set(addobjr(k),'EdgeAlpha',0)
-    tmp = fibersdiff{k};
-    tmp2 = repmat(tmp,1,1,length(addobjr(k).ZData(1,:,1)));
-    tmp2 = permute(tmp2,[1 3 2]);
-    set(addobjr(k),'CData',tmp2)
-end
-dispercent(100,'end');
+addobjr=ea_showfiber(thisset,fibidx);
 
 axis fill
 
