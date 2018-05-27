@@ -292,40 +292,12 @@ if checkrebuild(atlases,options,root,mifix)
 
                 elseif isfield(nii,'fibers') % fibertract
                     % concat fibers to one patch object
-                    [~,alnm]=fileparts(atlases.names{atlas});
+                    addobjr=ea_showfiber(nii.fibers,nii.idx,colorc);
 
-                    ea_dispercent(0,['Concatenating ',alnm]);
-                    fibmax=length(nii.idx);
-                    fcnt=1;
-
-                    for fib=1:fibmax
-                        ea_dispercent(fib/fibmax);
-                        thisfib=nii.fibers(nii.fibers(:,4)==fib,:);
-                        if size(thisfib,1)>5 % neglect very small fibertracts
-                            % set 4th dim color
-
-                            %atlassurfs(atlascnt,fib)=ea_plot3(thisfib(:,1),thisfib(:,2),thisfib(:,3),'-','color',[rr,gg,bb]);
-                            %atlassurfs(atlascnt,fcnt)=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,[rr,gg,bb],6,0);
-
-                            [~,thisfv]=ea_plot3t(thisfib(:,1),thisfib(:,2),thisfib(:,3),0.1,'r',6,0);
-                            % need to manually shuffle the results in case
-                            % of mixture fibertracking/nuclei atlases.
-                            fv(fcnt).vertices=thisfv.vertices;
-                            fv(fcnt).faces=thisfv.faces;
-                            fv(fcnt).facevertexdata=thisfv.facevertexcdata;
-
-                            fcnt=fcnt+1;
-                        end
-                    end
-
-                    ea_dispercent(1,'end');
-
-
-                    fv=ea_concatfv(fv);
-                    if length(fv.vertices)>200000
-                       simpl=200000/length(fv.vertices);
-                       fv=reducepatch(fv,simpl);
-                    end
+                    
+                    fv.vertices=addobjr.Vertices;
+                    fv.faces=addobjr.Faces;
+                    delete(addobjr);
                 
                     nii.mm=nii.fibers;
                     nii=rmfield(nii,'fibers');
@@ -410,9 +382,18 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
     end
 
 elseif strcmp(fname(end-3:end),'.trk') || strcmp(fname(end-3:end),'.mat') % tracts in mat format % tracts in trk format
-    [fibers,idx]=ea_loadfibertracts(fname);
+    [fibers,idx]=ea_loadfibertracts(fname,1);
     nii.fibers=fibers;
     nii.idx=idx;
+    
+    if wasgzip
+        if strcmp(fname(end-3:end),'.trk') % also delete converted .mat file
+            [pth,fn,ext]=fileparts(fname);
+            delete(fullfile(pth,[fn,'.mat']));
+        end
+        delete(fname); % since gunzip makes a copy of the zipped file.
+    end
+    
 end
 
 

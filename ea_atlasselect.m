@@ -178,7 +178,11 @@ for subgroup=1:length(atlases.subgroups)
 
         if (atlases.types(atlases.subgroups(subgroup).entries(node))==3) || (atlases.types(atlases.subgroups(subgroup).entries(node))==4) || (atlases.types(atlases.subgroups(subgroup).entries(node))==6) % need lh and rh entries
             [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
+            try
             checked=onoff2bool(togglebuttons(thistb).State);
+            catch
+                keyboard
+            end
             lrlabel = ['<HTML><BODY>' ...
                        '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
                        '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...

@@ -214,12 +214,12 @@ for nativemni=nm % switch between native and mni space atlases.
             % export label and labelbutton
 
             [~,thislabel]=fileparts(atlases.names{atlas});
-            try % use try here because filename might be shorter than .nii
-
-                if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
+%             try % use try here because filename might be shorter than .nii
+% 
+%                 if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
                     [~,thislabel]=fileparts(thislabel);
-                end
-            end
+%                 end
+%             end
                 atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
 
                 if ~exist('labelbutton','var')

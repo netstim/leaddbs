@@ -1,7 +1,9 @@
-function [fibers,idx,voxmm,mat]=ea_loadfibertracts(cfile)
-
+function [fibers,idx,voxmm,mat]=ea_loadfibertracts(cfile,type)
+if ~exist('type','var')
+    type=nan;
+end
 if ~strcmp(cfile(end-3:end),'.mat')
-    [fibers,idx]=ea_trk2ftr(cfile);
+    [fibers,idx]=ea_trk2ftr(cfile,type);
     [cpa,cfn]=fileparts(cfile);
     ea_savefibertracts(fullfile(cpa,[cfn,'.mat']),fibers,idx,'vox');
     [pth,fn,~]=fileparts(cfile);

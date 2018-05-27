@@ -1,7 +1,20 @@
-function [fibers,idx] = ea_trk2ftr(trk_in)
+function [fibers,idx] = ea_trk2ftr(trk_in,type)
+% type can be: 
+% 1 - 'DSI Studio / QSDR'
+% 2 - 'Normative Connectome / 2009b space'
+% 3 - 'Select .nii file'
+% or a filepath (string) pointing to the .nii file associated with the
+% tracts.
+% in case of 1 (DSI Studio / QSDR), heuristic transforms specified under
+% http://dsi-studio.labsolver.org/Manual/Reconstruction#TOC-Q-Space-Diffeomorphic-Reconstruction-QSDR-
+% are applied. In all other cases, vox2mm transform of a .nii header will
+% be applied.
+        
 % transforms .trk to fibers.
 % CAVE: fiber information in the trk needs to conform to the MNI space!
-
+if ~exist('type','var')
+    type=nan;
+end
 sd=ea_getspacedef;
 %% basis information
 template_in = ea_niigz([ea_space,sd.templates{1}]);
@@ -33,8 +46,21 @@ fibers = fibers';
 
 %% transform fibers to template origin
 %nii=ea_load_nii('/PA/Neuro/_projects/lead/lead_dbs/templates/space/MNI_ICBM_2009b_NLIN_ASYM/atlases/Macroscale Human Connectome Atlas (Yeh 2018)/FMRIB58_FA_1mm.nii.gz')
-answ=questdlg('Please select type of .trk data', 'Choose origin of .trk data', 'DSI Studio / QSDR', 'Normative Connectome / 2009b space', 'Select .nii file', 'DSI Studio / QSDR');
-
+if isnan(type)
+    answ=questdlg('Please select type of .trk data', 'Choose origin of .trk data', 'DSI Studio / QSDR', 'Normative Connectome / 2009b space', 'Select .nii file', 'DSI Studio / QSDR');
+else
+    if ischar(type)
+        answ='specified_image';
+    else
+        if type==1
+            answ='DSI Studio / QSDR';
+        elseif type==2
+            answ='Normative Connectome / 2009b space';
+        elseif type==3
+            answ='Select .nii file';
+        end
+    end
+end
 switch answ
     
     case 'DSI Studio / QSDR'
@@ -46,6 +72,8 @@ switch answ
     otherwise
         
         switch answ
+            case 'specified_image'
+                nii=ea_load_nii(type); % load in image supplied to function.
             case 'Normative Connectome / 2009b space'
                 
                 nii=ea_load_nii(template_in);
