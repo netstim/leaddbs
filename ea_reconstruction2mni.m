@@ -21,17 +21,16 @@ end
 % apply native to scrf matrix if available
 if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
     d=load([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat']);
-    reco.scrf=ea_applyscrfmat(d.mat,reco.native);
+    reco.scrf=ea_applyscrfmat(d.mat,reco.native,options.sides);
 elseif exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file') % legacy
     mat=ea_getscrfmat([options.root,options.patientname,filesep]);
     save([directory,'scrf',filesep,'scrf_converted.mat'],'mat');
-    reco.scrf=ea_applyscrfmat(mat,reco.native);
+    reco.scrf=ea_applyscrfmat(mat,reco.native,options.sides);
 else
     if isfield(reco,'scrf')
         reco=rmfield(reco,'scrf'); % delete subcortical transform if user apparently deleted the transform file.
     end
 end
-
 
 towarp=cell(0);
 for side=options.sides
@@ -44,6 +43,7 @@ for side=options.sides
 end
 towarp=cell2mat(towarp');
 warpedcoord=ea_warpcoord(towarp,nii,options);
+
 cnt=1;
 for side=options.sides
     offset=size(reco.(usenative).coords_mm{side},1);
@@ -69,10 +69,7 @@ for side=options.sides
         norm(diff([reco.mni.markers(side).head;...
         reco.mni.markers(side).tail]));
     orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
-    
-    
-    
-    
+
     if ~isempty(reco.mni.markers(side).head)
         % calculates x and y using the warped marker.y, projecting it onto
         % the perpendicular plane to normtrajvector and then finding x via

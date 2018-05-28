@@ -30,12 +30,13 @@ end
 towarp=cell(0);
 if ~isfield(options,'sides')
     options=ea_detsides(options);
-end;
+end
+
 for side=options.sides
-towarp{end+1}=reco.mni.coords_mm{side};
-towarp{end+1}=reco.mni.markers(side).head;
-towarp{end+1}=reco.mni.markers(side).tail;
-towarp{end+1}=reco.mni.trajectory{side};
+    towarp{end+1}=reco.mni.coords_mm{side};
+    towarp{end+1}=reco.mni.markers(side).head;
+    towarp{end+1}=reco.mni.markers(side).tail;
+    towarp{end+1}=reco.mni.trajectory{side};
 end
 towarp=cell2mat(towarp');
 warpedcoord=ea_warpcoord(towarp,nii,options);
@@ -67,18 +68,17 @@ end
 if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
     d=load([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat']);
     mat=inv(d.mat);
-    reco.native=ea_applyscrfmat(mat,reco.scrf);
+    reco.native=ea_applyscrfmat(mat,reco.scrf,options.sides);
 elseif exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file') % legacy
     mat=ea_getscrfmat([options.root,options.patientname,filesep]);
     save([directory,'scrf',filesep,'scrf_converted.mat'],'mat');
     mat=inv(mat);
-    reco.native=ea_applyscrfmat(mat,reco.scrf);
+    reco.native=ea_applyscrfmat(mat,reco.scrf,options.sides);
 else
     if isfield(reco,'scrf')
         reco=rmfield(reco,'scrf'); % delete subcortical transform if user apparently deleted the transform file.
     end
 end
-
 
 save([directory,filesep,'ea_reconstruction.mat'],'reco');
 

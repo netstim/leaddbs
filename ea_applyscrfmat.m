@@ -1,10 +1,8 @@
-function scrf=ea_applyscrfmat(mat,native)
+function scrf=ea_applyscrfmat(mat,native,sides)
+
 scrf=native;
 
-
-bs=1:2;
-
-for side=bs([~isempty(native.markers(1).head),~isempty(native.markers(2).head)])
+for side = sides
     % coords
     scrf.coords_mm{side}=mat*[native.coords_mm{side},ones(size(native.coords_mm{side},1),1)]';
     scrf.coords_mm{side}=scrf.coords_mm{side}(1:3,:)';

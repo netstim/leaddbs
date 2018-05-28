@@ -77,6 +77,7 @@ for side=1:length(options.sides)
         
     end
 end
+
 options.hybridsave=1;
 ea_delete([directory,'lpost.nii']);
 ea_methods(options,...
