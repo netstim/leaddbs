@@ -4,11 +4,25 @@ function roll_out = ea_orient_main(options,supervised)
 
 folder = [options.root options.patientname filesep];
 
-if ~strcmp(options.elmodel,'Boston Scientific Vercise Directed') || options.modality == 1 % check for electrode type and postoperative imaging
-    msg = sprintf(['Automatic rotation detection works only for Boston Scientific Vercise Directed leads and postoperative CT images.']);
-    choice = questdlg(msg,'Invalid Electrode Type!','Abort','Abort');
+if  options.modality == 1 % check for electrode type and postoperative imaging
+    msg = sprintf(['Automatic rotation detection works only for postoperative CT images.']);
+    choice = questdlg(msg,'No postoperative CT!','Abort','Abort');
     roll_out = [];
-else
+elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)') || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
+    if strcmp(options.elmodel,'St. Jude Directed 6172 (short)')
+        disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
+        markerposition = 9;
+        electrodespacing = 2;
+    elseif strcmp(options.elmodel,'St. Jude Directed 6173 (long)')        
+        disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
+        markerposition = 12;
+        electrodespacing = 3;
+    elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed')
+        markerposition = 10.25;
+        electrodespacing = 2;
+    else
+        keyboard
+    end
     %%
     load(options.elspec.matfname)
     %% import CTs and choose which CT to use
@@ -105,9 +119,9 @@ else
         %% determine location of the stereotactic marker and the directional
         % levels
         unitvector_mm = (tail_mm - head_mm)/norm(tail_mm - head_mm);
-        marker_mm = round(head_mm + (10.25 .* unitvector_mm));
-        dirlevel1_mm = round(head_mm + (2 .* unitvector_mm));
-        dirlevel2_mm = round(head_mm + (4 .* unitvector_mm));
+        marker_mm = round(head_mm + (markerposition .* unitvector_mm));
+        dirlevel1_mm = round(head_mm + (electrodespacing .* unitvector_mm));
+        dirlevel2_mm = round(head_mm + (2 * electrodespacing .* unitvector_mm));
         
         % transform to vx
         marker_vx = round(tmat_vx2mm\marker_mm);
@@ -740,8 +754,11 @@ else
         close(fig(side).figure)
         clear reco
     end
+else  % check for electrode type and postoperative imaging
+    msg = sprintf(['No Valid Directional Lead Selected!']);
+    choice = questdlg(msg,'No Directional Lead!','Abort','Abort');
+    roll_out = [];
 end
-
 end
 
 function buttonPress(hObject,eventdata)
