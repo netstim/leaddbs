@@ -171,7 +171,7 @@ ea_apply_normalization(options)
 cits={
     'Ashburner, J., & Friston, K. J. (2005). Unified segmentation., 26(3), 839?851. http://doi.org/10.1016/j.neuroimage.2005.02.018'
     'Ashburner, J. (2007). A fast diffeomorphic image registration algorithm, 38(1), 95?113. http://doi.org/10.1016/j.neuroimage.2007.07.007'
-    'Horn, A., & Kühn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
+    'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
     };
 if ~isempty(lcit)
     cits=[cits;{lcit}];

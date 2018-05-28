@@ -23,7 +23,7 @@ function varargout=ea_normalize_schoenecker_pre(options)
 usecombined=0; % if set, eauto will try to fuse coronar and transversal images before normalizing them.
 
 if ischar(options) % return name of method.
-    varargout{1}='Schönecker 2009 linear threestep (Include Pre-OP) [MR/CT]';
+    varargout{1}='Schoenecker 2009 linear threestep (Include Pre-OP) [MR/CT]';
     varargout{2}={'SPM8'};
     return
 end
