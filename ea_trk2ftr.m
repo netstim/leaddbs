@@ -82,15 +82,21 @@ switch answ
                 [fname,pathname]=uigetfile({'.nii','.nii.gz'},'Choose Nifti file for space definition');
                 nii=ea_load_nii(fullfile(pathname,fname));
         end
-        % nii.mat(1,1)=1;
-        % nii.mat(2,2)=1;
-        % nii.mat(3,3)=1;
-        tmat=header.vox_to_ras;
-        tmat(1:3,4)=header.dim';
+        
         tfib=[fibers(1:3,:);ones(1,size(fibers,2))];
+        
+        %% method Till
+%         nii.mat(1,1)=1;
+%         nii.mat(2,2)=1;
+%         nii.mat(3,3)=1;
+%         tfib=nii.mat*tfib;
+        
+        %% method Andreas
+        tmat=header.vox_to_ras;
+        tmat(1:3,4)=header.dim';        
         tfib=tmat*tfib;
         
-        %tfib=nii.mat*tfib;
+        %%
         fibers(1:3,:)=tfib(1:3,:);
 end
 
