@@ -214,7 +214,7 @@ function addfibertract(addobj,resultfig,addht,fina,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
     if strfind(addobj,'.mat')
         load(addobj);
-        thisset = fibers;
+        thisset = fibers';
         fibidx = idx;
         clear fibers idx
     elseif strfind(addobj,'.trk')
