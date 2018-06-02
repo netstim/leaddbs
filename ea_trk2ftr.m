@@ -20,8 +20,18 @@ sd=ea_getspacedef;
 template_in = ea_niigz([ea_space,sd.templates{1}]);
 
 %% read .trk file
-[header,tracks]=ea_trk_read(trk_in);
-
+[~,fn,ext]=fileparts(trk_in);
+if strcmp(ext,'.gz')
+    uuid=ea_generate_guid;
+    td=[ea_getleadtempdir,uuid];
+    mkdir(td);
+    gunzip(trk_in,td);
+    trk_in=fullfile(td,fn);
+    [header,tracks]=ea_trk_read(trk_in);
+    rmdir(td,'s');
+else
+    [header,tracks]=ea_trk_read(trk_in);
+end
 %% create variables needed
 ea_fibformat='1.0';
 fourindex=1;
