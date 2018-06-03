@@ -175,6 +175,8 @@ end
 resdivs=1; % could increase to 2 but would render a bit slow.
 if length(size(sliceim))==2
     sliceim=ea_contrast(sliceim,c,o)*64;
+else
+        sliceim=uint8(ea_contrast(single(sliceim),c,o)*255);
 end
 if size(sliceim,3)==1
     sliceim=interp2(sliceim,resdivs);

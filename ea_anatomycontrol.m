@@ -441,7 +441,7 @@ switch contrastoffset
     case 'c' % contrast
         sc.c=sc.c+posneg;
     case 'o' % offset
-        sc.o=sc.o+posneg;
+        sc.o=sc.o+posneg*0.2;
 end
 setappdata(resultfig,'slidecontrast',sc);
 
