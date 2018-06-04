@@ -3,6 +3,10 @@ function fibhandle=ea_showfiber(fibers,fibidx,col)
 if ~exist('col','var')
     col=nan;
 end
+
+if ~(size(fibers,1)==4)
+    fibers=fibers';
+end
 fibersnew=mat2cell(fibers(1:3,:)',fibidx);
 
 fibersnew=cellfun(@downsample,fibersnew,repmat({5},length(fibersnew),1),'UniformOutput',0);
