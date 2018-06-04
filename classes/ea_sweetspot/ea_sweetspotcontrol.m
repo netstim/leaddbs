@@ -171,7 +171,7 @@ switch obj.nii.thresholdType
             obj.thresold=100-eps;
         end
         if obj.threshold==0
-            obj.thresold=0+eps;
+            obj.threshold=0+eps;
         end
 end
 

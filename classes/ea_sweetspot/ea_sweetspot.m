@@ -222,8 +222,8 @@ function colorconts(obj)
 % now color surrounding electrodes by closeness
     if ~isempty(obj.nearelectrodes)
         els=obj.nearelectrodes;
-        %hold on
-        %plot3(obj.peak(1),obj.peak(2),obj.peak(3),'y*');
+        % hold on
+        % plot3(obj.peak(1),obj.peak(2),obj.peak(3),'y*');
         elrender=getappdata(obj.plotFigureH,'el_render');
         for el=1:length(els)
             cpatches=elrender(el).elpatch(logical(els(el).eltype)); % patches of contacts
@@ -236,26 +236,62 @@ function colorconts(obj)
             [~,ix]=sort(D(D<5));
 
             if ~isempty(ix)
-                P=repmat(obj.color,length(ix),1);
-                cweights=(1./exp(D(ix))).^2;
-                cweights=(cweights/ea_nanmax(cweights))';
-                ccol(ofix(ix),:)=ccol(ofix(ix),:).*repmat(1-cweights,1,3)+...
-                    P.*repmat(cweights,1,3);
+                SweetspotToggleTag = ['SweetspotToggleEle', num2str(el)];
+                if isempty(get(obj.toggleH.Parent.Children(1), 'Tag'))
+                    set(obj.toggleH.Parent.Children(1), 'Tag', SweetspotToggleTag);
+                end
+
+                SweetspotPatchTag = ['SweetspotPatchEle', num2str(el)];
+                if isempty(get(obj.patchH.Parent.Children(1), 'Tag'))
+                    set(obj.patchH.Parent.Children(1), 'Tag', SweetspotPatchTag);
+                end
+
+                allToggle = findobj(obj.toggleH.Parent.Children, 'Tag', SweetspotToggleTag, 'State', 'on');
+                allToggleColor = cell2mat(arrayfun(@(x) reshape(x.CData(1,1,:),1,3), allToggle, 'Uniform',0));
+                if isempty(allToggle)   % ALL sweetspot toggletools are in 'OFF' state
+                    if isempty(obj.toggleH.CData)  % initializing the 1st toggletools w.r.t. one electrode
+                        ccol = rgb2ccol(obj.color, ccol, D, ofix, ix);
+                    else  % turning OFF all sweetpot toggletools
+                        ccol = [];
+                    end
+                else    % NOT ALL sweetspot toggletools are in 'OFF' state
+                    if isempty(obj.toggleH.CData)  % initializing other sweetspots w.r.t. one electrode
+                        newColor = mean([allToggleColor; obj.color]);
+                        ccol = rgb2ccol(newColor, ccol, D, ofix, ix);
+                    elseif strcmp(get(obj.toggleH, 'State'), 'off')  % turning OFF sweetpot toggletool
+                        if length(allToggle) == 1
+                            newColor = allToggleColor;
+                        else
+                            newColor = mean(allToggleColor);
+                        end
+                        ccol = rgb2ccol(newColor, ccol, D, ofix, ix);
+                    else  % turning ON sweetpot toggletool
+                        if length(allToggle) == 1
+                            newColor = allToggleColor;
+                        else
+                            newColor = mean(allToggleColor);
+                        end
+                        ccol = rgb2ccol(newColor, ccol, D, ofix, ix);
+                    end
+                end
+
                 els(el).colorMacroContacts=ccol;
 
                 % draw line to closest contact
                 delete(obj.hail);
-                Pline=[mean(obj.fv.vertices);els(el).elstruct.coords_mm{els(el).side}(ofix(ix(1)),:)];
-
-                hold on
-                [obj.hail,fv]=ea_plot3t(Pline(:,1),Pline(:,2),Pline(:,3),0.05,[0.1,0.1,0.1],12,1);
+                if isempty(obj.toggleH.CData) || ...  % initializing sweetspot
+                   strcmp(get(obj.toggleH, 'State'), 'on') % turning on sweetspot
+                    Pline=[mean(obj.fv.vertices);els(el).elstruct.coords_mm{els(el).side}(ofix(ix(1)),:)];
+                    hold on
+                    [obj.hail,fv]=ea_plot3t(Pline(:,1),Pline(:,2),Pline(:,3),0.05,[0.1,0.1,0.1],12,1);
+                end
             end
         end
     end
 end
 
 
-function rightcallback(src, evnt,obj)
+function rightcallback(src, evnt, obj)
     if evnt.getButton() == 3
         ea_editroi(src,evnt,obj)
     end
@@ -263,22 +299,30 @@ end
 
 
 function ea_editroi(Hobj,evt,obj)
-    obj.controlH=ea_sweetspotcontrol(obj);
+    obj.controlH = ea_sweetspotcontrol(obj);
 end
 
 
 function ea_sweetspotvisible(Hobj,evt,onoff,obj)
-    obj.visible=onoff;
+    obj.visible = onoff;
 end
 
 
-function coords=map_coords_proxy(XYZ,V)
-    XYZ=[XYZ';ones(1,size(XYZ,1))];
-    coords=V.mat*XYZ;
-    coords=coords(1:3,:)';
+function coords = map_coords_proxy(XYZ,V)
+    XYZ = [XYZ';ones(1,size(XYZ,1))];
+    coords = V.mat*XYZ;
+    coords = coords(1:3,:)';
 end
 
 
-function fn=stripext(fn)
-    [~,fn]=fileparts(fn);
+function fn = stripext(fn)
+    [~,fn] = fileparts(fn);
+end
+
+
+function ccol = rgb2ccol(rgb, ccol, D, ofix, ix)
+    P = repmat(rgb,length(ix),1);
+    cweights=(1./exp(D(ix))).^2;
+    cweights=(cweights/ea_nanmax(cweights))';
+    ccol(ofix(ix),:)=ccol(ofix(ix),:).*repmat(1-cweights,1,3)+P.*repmat(cweights,1,3);
 end
