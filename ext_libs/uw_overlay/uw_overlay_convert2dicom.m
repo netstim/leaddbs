@@ -258,7 +258,7 @@ imageParamsNIfTI = struct('Orientation', [1 0 0 0 1 0], ...  % Will always be co
 
 % Load header data from DICOM and NIfTI
 imageDICOM = dicominfo(dicom_file);
-imageNIfTI = load_nii(merged_file); % load_nii, from the MATLAB NIfTI tools software
+imageNIfTI = ea_load_nii(merged_file); % load_nii, from the MATLAB NIfTI tools software
                                     % will load any ANALYZE or NIfTI image
                                     % and convert it to RAS coordinates,
                                     % preserving the origin and voxel size
@@ -429,6 +429,12 @@ end
 
 k = waitbar(0,'Writing new DICOM series...');
 
+imageDICOM.FileModDate=datestr(now);
+imageDICOM.AcquisitionDate=datestr(now,'yyyymmdd');
+imageDICOM.StudyDescription='Lead-DBS Plan';
+imageDICOM.ProtocolName='Lead-DBS Plan';
+imageDICOM.InstitutionName = 'Neuromodulation und Bewegungsstoerungen';
+    
 for j = 1:numberOfSlices
     
     %!! Extra: Get window tags off of each image
@@ -436,7 +442,7 @@ for j = 1:numberOfSlices
     WindowGet = dicominfo([dicom_file]);
     imageDICOM.WindowWidth = WindowGet.WindowWidth;
     imageDICOM.WindowCenter = WindowGet.WindowCenter;
-    
+
 	% Update the DICOM header info
     imageDICOM.InstanceNumber = j;
     if ~isfield(imageDICOM,'SpacingBetweenSlices') % assume no gap.
@@ -459,7 +465,7 @@ for j = 1:numberOfSlices
     
     % Finally, write to the DICOM
     fileName = get_filename(j);  % Generate the dicom filename
-    dicomwrite(outputReorientImageSlice, fileName, imageDICOM, 'WritePrivate', true);
+    dicomwrite(outputReorientImageSlice, fullfile(outputDirectory,fileName), imageDICOM, 'WritePrivate', true);
     % image(outputImageSlice, 'CDataMap', 'Scaled');
     
     waitbar(j/numberOfSlices);
@@ -548,14 +554,16 @@ params.Orientation = [1 0 0 0 1 0];   % For now, we will always convert NIfTI in
                                       % to allow any orientation to be specified
 
 % Grab the image and voxel size from the NIfTI header
-params.ImageDim = imageNIfTI.hdr.dime.dim(2:4);
-params.VoxelDim = imageNIfTI.hdr.dime.pixdim(2:4);
+params.ImageDim = imageNIfTI.dim;
+params.VoxelDim = imageNIfTI.voxsize;
 
 % NIfTI uses the location of the upper-left (superior-left) corner as the origin  
 % DICOM is in LPS orientation, so the x and y axes are flipped, so we need to 
 % measure the position of the lower-right corner instead, and flip the sign
 
-origin_vox = imageNIfTI.hdr.hist.originator(1:3);  % Get the location of the origin voxel
+origin=imageNIfTI.mat*[0;0;0;1];
+
+origin_vox = origin(1:3)';  % Get the location of the origin voxel
 lowerright_vox = [0 0 1];
 % Use ImageDim to get the position of LowerRight voxel
 % Measure the length from the origin to the LowerRight voxel, then multiply
@@ -599,19 +607,7 @@ disp(['Voxel Size: ' num2str(imageParamsDICOM.VoxelDim)]);
 disp(['Origin:     ' num2str(imageParamsDICOM.Origin)]);
 disp('------------------------------------------------------------------------');
 disp('NIfTI Header Information:');
-disp(['Image Description: ' imageNIfTI.hdr.hist.descrip]);
-if imageNIfTI.filetype == 0
-    % warn user about problem associated with the old ANALYZE format:
-    disp('------------------------------------------------------------------------');
-    disp('WARING: The data is the old ANALYZE format, which does not contain');
-    disp('position or orientation information. This program will assume that the');
-    disp('data is indexed in RAS neurological orientation, you may need to manually');
-    disp('re-orient the data if this is not correct');
-    disp(' ');
-    disp('Consider re-doing your analysis in the more modern NIfTI format, supported by');
-    disp('AFNI and SPM5, since this format ensures proper orientation and position of data');
-    disp('------------------------------------------------------------------------');
-end
+disp(['Image Description: LeadDBSExport']);
 % Check the qform & sform codes for the type of coordinate system used:
 
 % from http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/nifti1fields_pages/qsform.html
@@ -625,39 +621,39 @@ end
 % #define NIFTI_XFORM_MNI_152 4       /! MNI 152 normalized coordinates. /
 
 % If sform is not zero, xform_nii will reorient using the sform matrix:
-if imageNIfTI.original.hdr.hist.sform_code > 0
-    switch imageNIfTI.original.hdr.hist.sform_code
-        case 1
-            disp('Coordinate System: Scanner-based  [OK]');
-        case 2
-            disp('Coordinate System: Aligned to another file');
-            disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
-        case 3
-            disp('Coordinate System: Talairach-Tournoux Atlas WARNING');
-            disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
-        case 4
-            disp('Coordinate System: MNI 152 Normalized Coords Q');
-            disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
-    end
-% Otherwise xform_nii will reorient using the qform matrix:
-elseif imageNIfTI.original.hdr.hist.sform_code > 0
-    switch imageNIfTI.original.hdr.hist.sform_code
-        case 1
-            disp('Coordinate System: Scanner-based');
-        case 2
-            disp('Coordinate System: Aligned to another file');
-            disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
-        case 3
-            disp('Coordinate System: Talairach-Tournoux Atlas');
-            disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
-        case 4
-            disp('Coordinate System: MNI 152 Normalized Coords');
-            disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
-    end
-else
-    disp('Coordinate System: Unknown/Arbitrary');
-    disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
-end
+% if imageNIfTI.original.hdr.hist.sform_code > 0
+%     switch imageNIfTI.original.hdr.hist.sform_code
+%         case 1
+%             disp('Coordinate System: Scanner-based  [OK]');
+%         case 2
+%             disp('Coordinate System: Aligned to another file');
+%             disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
+%         case 3
+%             disp('Coordinate System: Talairach-Tournoux Atlas WARNING');
+%             disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
+%         case 4
+%             disp('Coordinate System: MNI 152 Normalized Coords Q');
+%             disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
+%     end
+% % Otherwise xform_nii will reorient using the qform matrix:
+% elseif imageNIfTI.original.hdr.hist.sform_code > 0
+%     switch imageNIfTI.original.hdr.hist.sform_code
+%         case 1
+%             disp('Coordinate System: Scanner-based');
+%         case 2
+%             disp('Coordinate System: Aligned to another file');
+%             disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
+%         case 3
+%             disp('Coordinate System: Talairach-Tournoux Atlas');
+%             disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
+%         case 4
+%             disp('Coordinate System: MNI 152 Normalized Coords');
+%             disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
+%     end
+% else
+%     disp('Coordinate System: Unknown/Arbitrary');
+%     disp('WARNING: The coordinate system may not match your original scanner image coordinates!');
+% end
 
 disp(['Orientation: [' num2str(imageParamsNIfTI.Orientation) ']']);
 disp(['Orientation: LPS, Axial Radiological Standard']);   %#ok<NBRAK> % Always converted to LPS for now, in the future this may be changed to support other orientations 

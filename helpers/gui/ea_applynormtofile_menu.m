@@ -55,17 +55,27 @@ if untouchedanchor && useinverse % need to map from anchor to untouched (raw) an
         [options.root, options.patientname, filesep, 'rraw_',presentfiles{1}],...
         to);
     if asoverlay
-        keyboard
-        
+        untouchedanchor=ea_load_nii([options.root, options.patientname, filesep, 'raw_',presentfiles{1}]);
+        overl=ea_load_nii(to{1});
+        fused=untouchedanchor;
+        fused.img(:)=zscore(fused.img(:));
+        fused.img=fused.img+overl.img;
+        fused.img=ea_minmax(fused.img);
+        fused.img=fused.img*255;
+        [natpath,natfn,natext]=fileparts(untouchedanchor.fname);
+        fused.fname=fullfile(natpath,[natfn,'_overlay',natext]);
+        ea_write_nii(fused);
     end
     
     if expdicom
-        uigetfile(
-        dicom_file='/Users/leaddbs/Downloads/uw_overlay/t1_mprage_tra_p2_iso_8/IM-0004-0192.dcm';
-        merged_file='temp.img';
+                [natpath,natfn,natext]=fileparts(untouchedanchor.fname);
+        [filename,pathname]=uigetfile('*.*','Select sample DICOM',[natpath,filesep,'DICOM']);
+        dicom_file=fullfile(pathname,filename);
+        merged_file=fused.fname;
         newSeriesNumber=100;
         newSeriesDescription='Lead-DBS Plan';
-        outputDirectory='/Users/leaddbs/Downloads/uw_overlay/';
+        mkdir(fullfile(natpath,'DICOM','LeadDBSExport'));
+        outputDirectory=fullfile(natpath,'DICOM','LeadDBSExport');
         mergedImageVolume=1;
         outputImagePosition=2;
         
