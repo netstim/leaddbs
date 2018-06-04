@@ -275,19 +275,3 @@ function colorchange_Callback(hObject, eventdata, handles)
 obj=getappdata(handles.roicontrol,'obj');
 obj.color = ea_uisetcolor(handles.colorchange.BackgroundColor);
 set(handles.colorchange,'BackgroundColor',obj.color);
-
-
-% --- Executes on button press in showhide.
-function showhide_Callback(hObject, eventdata, handles)
-% hObject    handle to showhide (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showhide
-obj=getappdata(handles.roicontrol,'obj');
-switch get(hObject,'Value')
-    case 1
-        obj.visible='on';
-    case 0
-        obj.visible='off';
-end

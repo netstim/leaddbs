@@ -203,13 +203,13 @@ classdef ea_sweetspot < handle
                 colorconts(obj)
             end
 
-            % show atlas.
+            % surface patch
             set(0,'CurrentFigure',obj.plotFigureH);
             set(obj.patchH,...
                 {'Faces','Vertices','CData','FaceColor','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
                 {obj.sfv.faces,obj.sfv.vertices,obj.cdat,obj.color,obj.alpha,'none','phong',obj.visible});
 
-            % add toggle button:
+            % toggle button
             set(obj.toggleH,...
                 {'Parent','CData','TooltipString','OnCallback','OffCallback','State'},...
                 {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_sweetspotvisible,'on',obj},{@ea_sweetspotvisible,'off',obj},obj.visible});
