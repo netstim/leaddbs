@@ -259,18 +259,10 @@ function colorconts(obj)
                         newColor = mean([allToggleColor; obj.color]);
                         ccol = rgb2ccol(newColor, ccol, D, ofix, ix);
                     elseif strcmp(get(obj.toggleH, 'State'), 'off')  % turning OFF sweetpot toggletool
-                        if length(allToggle) == 1
-                            newColor = allToggleColor;
-                        else
-                            newColor = mean(allToggleColor);
-                        end
+                        newColor = mean(allToggleColor, 1);
                         ccol = rgb2ccol(newColor, ccol, D, ofix, ix);
                     else  % turning ON sweetpot toggletool
-                        if length(allToggle) == 1
-                            newColor = allToggleColor;
-                        else
-                            newColor = mean(allToggleColor);
-                        end
+                        newColor = mean(allToggleColor, 1);
                         ccol = rgb2ccol(newColor, ccol, D, ofix, ix);
                     end
                 end
