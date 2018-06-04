@@ -62,6 +62,7 @@ if untouchedanchor && useinverse % need to map from anchor to untouched (raw) an
         fused.img=fused.img+overl.img;
         fused.img=ea_minmax(fused.img);
         fused.img=fused.img*255;
+        fused.dt=[2,0];
         [natpath,natfn,natext]=fileparts(untouchedanchor.fname);
         fused.fname=fullfile(natpath,[natfn,'_overlay',natext]);
         ea_write_nii(fused);
@@ -73,7 +74,7 @@ if untouchedanchor && useinverse % need to map from anchor to untouched (raw) an
         dicom_file=fullfile(pathname,filename);
         merged_file=fused.fname;
         newSeriesNumber=100;
-        newSeriesDescription='Lead-DBS Plan';
+        newSeriesDescription='LeadDBS Plan';
         mkdir(fullfile(natpath,'DICOM','LeadDBSExport'));
         outputDirectory=fullfile(natpath,'DICOM','LeadDBSExport');
         mergedImageVolume=1;

@@ -431,10 +431,9 @@ k = waitbar(0,'Writing new DICOM series...');
 
 imageDICOM.FileModDate=datestr(now);
 imageDICOM.AcquisitionDate=datestr(now,'yyyymmdd');
-imageDICOM.StudyDescription='Lead-DBS Plan';
-imageDICOM.ProtocolName='Lead-DBS Plan';
+imageDICOM.StudyDescription='LeadDBS Plan';
+imageDICOM.ProtocolName='LeadDBS Plan';
 imageDICOM.InstitutionName = 'Neuromodulation und Bewegungsstoerungen';
-    
 for j = 1:numberOfSlices
     
     %!! Extra: Get window tags off of each image
@@ -446,7 +445,7 @@ for j = 1:numberOfSlices
 	% Update the DICOM header info
     imageDICOM.InstanceNumber = j;
     if ~isfield(imageDICOM,'SpacingBetweenSlices') % assume no gap.
-        imageDICOM.SpacingBetweenSlices=zeros(3,1);
+        imageDICOM.SpacingBetweenSlices=0;
     end
     if j ~= 1
         imageDICOM.ImagePositionPatient(3) = imageDICOM.ImagePositionPatient(3) + imageDICOM.SpacingBetweenSlices(1);
@@ -454,9 +453,8 @@ for j = 1:numberOfSlices
     end
     % Grab the current slice of the image
     outputImageSlice = outputImageMatrix(:,:,j);
-    imageDICOM.LargestImagePixelValue  = max(max(outputImageSlice));
-    imageDICOM.SmallestImagePixelValue = min(min(outputImageSlice));
-    
+    imageDICOM.LargestImagePixelValue  = max(outputImageSlice(:));
+    imageDICOM.SmallestImagePixelValue = min(outputImageSlice(:));
     % load_nii pulls in the outputImageMatrix in RAS orientation.  Need to
     % flip the i and j axes to match the DICOM LPS orientation.
     % Also, the dicomwrite function in MATLAB seems to flip-flop the i/j
@@ -465,7 +463,7 @@ for j = 1:numberOfSlices
     
     % Finally, write to the DICOM
     fileName = get_filename(j);  % Generate the dicom filename
-    dicomwrite(outputReorientImageSlice, fullfile(outputDirectory,fileName), imageDICOM, 'WritePrivate', true);
+    dicomwrite(uint8(outputReorientImageSlice), fullfile(outputDirectory,fileName), imageDICOM, 'WritePrivate', true);
     % image(outputImageSlice, 'CDataMap', 'Scaled');
     
     waitbar(j/numberOfSlices);
