@@ -1,5 +1,5 @@
 function [fibers,idx] = ea_trk2ftr(trk_in,type)
-% type can be: 
+% type can be:
 % 1 - 'DSI Studio / QSDR'
 % 2 - 'Normative Connectome / 2009b space'
 % 3 - 'Select .nii file'
@@ -9,7 +9,7 @@ function [fibers,idx] = ea_trk2ftr(trk_in,type)
 % http://dsi-studio.labsolver.org/Manual/Reconstruction#TOC-Q-Space-Diffeomorphic-Reconstruction-QSDR-
 % are applied. In all other cases, vox2mm transform of a .nii header will
 % be applied.
-        
+
 % transforms .trk to fibers.
 % CAVE: fiber information in the trk needs to conform to the MNI space!
 if ~exist('type','var')
@@ -77,7 +77,7 @@ switch answ
         % http://dsi-studio.labsolver.org/Manual/Reconstruction#TOC-Q-Space-Diffeomorphic-Reconstruction-QSDR-
         fibers(1,:)=78.0-fibers(1,:);
         fibers(2,:)=76.0-fibers(2,:);
-        fibers(3,:)=-50.0+fibers(3,:);    
+        fibers(3,:)=-50.0+fibers(3,:);
         
     otherwise
         
@@ -95,18 +95,19 @@ switch answ
         
         tfib=[fibers(1:3,:);ones(1,size(fibers,2))];
         
-        %% method Till
-%         nii.mat(1,1)=1;
-%         nii.mat(2,2)=1;
-%         nii.mat(3,3)=1;
-%         tfib=nii.mat*tfib;
         
-        %% method Andreas
         tmat=header.vox_to_ras;
-        tmat(1:3,4)=header.dim';        
+        if isempty(find(tmat ~= 0))
+            % method Andreas (DSIStudio .trk)
+            tmat(1:3,4)=header.dim';
+        else
+            % method Till, in case vox_to_ras is null matrix (TrackVis?)
+            tmat = nii.mat;
+            tmat(1,1)=1;
+            tmat(2,2)=1;
+            tmat(3,3)=1;
+        end
         tfib=tmat*tfib;
-        
-        %%
         fibers(1:3,:)=tfib(1:3,:);
 end
 
