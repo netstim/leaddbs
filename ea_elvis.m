@@ -166,6 +166,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     else
                         el_render(1)=ea_trajectory(pobj);
                     end
+                    if ~exist('ellabel','var')
+                        ellabel=el_render(end).ellabel;
+                    else
+                        ellabel(end+1)=el_render(end).ellabel;
+                    end
                 end
                 %[el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
             catch
@@ -219,11 +224,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         drawnow
 
         try
-            set(el_label,'Visible','off');
+            set(ellabel,'Visible','off');
             ellabeltog = uitoggletool(ht, 'CData', ea_get_icn('labels'),...
                 'TooltipString', 'Electrode labels',...
-                'OnCallback', {@objvisible,el_label},...
-                'OffCallback', {@objinvisible,el_label}, 'State','off');
+                'OnCallback', {@objvisible,ellabel},...
+                'OffCallback', {@objinvisible,ellabel}, 'State','off');
         end
 
         cnt=1;

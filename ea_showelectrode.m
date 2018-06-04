@@ -48,7 +48,13 @@ for side=options.sides
         
         % draw patientname
         lstartpoint=startpoint-(0.03*(coords_mm{side}(1,:)-startpoint));
-        ellabel=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
+        %ellabel=text(lstartpoint(1),lstartpoint(2),lstartpoint(3),elstruct.name);
+        
+        lp=[trajectory{side}(end,1),trajectory{side}(end,2),trajectory{side}(end,3)];
+        ap=[trajectory{side}(1,1),trajectory{side}(1,2),trajectory{side}(1,3)];
+        lp=lp+(lp-ap);
+        
+       ellabel=text(lp(1),lp(2),lp(3),ea_sub2space(elstruct.name),'Color',[1,1,1]);
         
         % draw trajectory
         cnt=1;
