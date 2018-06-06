@@ -40,13 +40,13 @@ electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
 
 electrode.coords_mm(1,:)=[0 0 0.75];
-electrode.coords_mm(2,:)=[0 0 2.75]+[-0.66,0,0];
-electrode.coords_mm(3,:)=[0 0 2.75]+[0.33,0.66,0];
-electrode.coords_mm(4,:)=[0 0 2.75]+[0.33,-0.66,0];
-electrode.coords_mm(5,:)=[0 0 4.75]+[-0.66,0,0];
-electrode.coords_mm(6,:)=[0 0 4.75]+[0.33,0.66,0];
-electrode.coords_mm(7,:)=[0 0 4.75]+[0.33,-0.66,0];
-electrode.coords_mm(8,:)=[0 0 6.75];
+electrode.coords_mm(2,:)=[0 0 3.75]+[-0.66,0,0];
+electrode.coords_mm(3,:)=[0 0 3.75]+[0.33,0.66,0];
+electrode.coords_mm(4,:)=[0 0 3.75]+[0.33,-0.66,0];
+electrode.coords_mm(5,:)=[0 0 6.75]+[-0.66,0,0];
+electrode.coords_mm(6,:)=[0 0 6.75]+[0.33,0.66,0];
+electrode.coords_mm(7,:)=[0 0 6.75]+[0.33,-0.66,0];
+electrode.coords_mm(8,:)=[0 0 9.75];
 
 
 %% saving electrode struct

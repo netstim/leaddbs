@@ -4,9 +4,9 @@ function [coords,trajectory,markers]=ea_resolvecoords(varargin)
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
-
 markers=varargin{1};
 options=varargin{2};
+
 if nargin>2
     resize=varargin{3};
 else
@@ -23,7 +23,7 @@ for side=1:length(markers) % leave as is
         can_dist=ea_pdist([electrode.head_position;electrode.tail_position]);
         %emp_dist=ea_pdist([markers(side).head;markers(side).tail]);
         %A=squareform(pdist(electrode.coords_mm));
-        if strcmp(options.elmodel,'Boston Scientific Vercise Directed')            
+        if strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)')  || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
             coords_temp(1,:) = electrode.coords_mm(1,:);
             coords_temp(2,:) = mean(electrode.coords_mm(2:4,:));
             coords_temp(3,:) = mean(electrode.coords_mm(5:7,:));
@@ -62,6 +62,3 @@ for side=1:length(markers) % leave as is
             linspace(trajectory{side}(1,3),trajectory{side}(2,3),50)'];
     end
 end
-
-
-

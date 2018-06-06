@@ -140,7 +140,7 @@ try
             elspec.contact_spacing=0.5;
             elspec.numel=8;
             elspec.tipiscontact=0;
-            elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15'};
         case 'St. Jude Directed 6173 (long)'
             elspec.matfname='stjude_directed_15';
             elspec.lead_diameter=1.27;
@@ -154,7 +154,7 @@ try
             elspec.contact_spacing=1.5;
             elspec.numel=8;
             elspec.tipiscontact=0;
-            elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15'};
         case 'PINS L301'
             elspec.matfname='pins_l301';
             elspec.lead_diameter=1.3;

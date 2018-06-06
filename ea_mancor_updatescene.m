@@ -170,7 +170,7 @@ try delete(captions); end
 % Plot spacing distance info text and correct inhomogeneous spacings.
 %emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
 clear emp_eldist
-if strcmp(options.elmodel,'Boston Scientific Vercise Directed')
+if strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)')  || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')          
     for side=options.sides
         coords_temp{side}(1,:) = coords_mm{side}(1,:);
         coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));
