@@ -1,4 +1,4 @@
-function ea_applynormtofile_menu(~, ~, handles, useinverse, untouchedanchor, asoverlay,expdicom)
+function ea_applynormtofile_menu(~, ~, handles, useinverse, untouchedanchor, asoverlay,expdicom,fname)
 if ~exist('untouchedanchor','var')
     untouchedanchor=0;
 end
@@ -20,6 +20,7 @@ options.earoot = ea_getearoot;
 options.prefs = ea_prefs(options.patientname);
 [options,presentfiles] = ea_assignpretra(options);
 options.coregmr.method='SPM';
+if ~exist('fname','var')
 [fis, path] = uigetfile({'*.nii';'*.nii.gz'}, 'Choose files to apply deformation to...', [options.root, options.patientname], 'Multiselect', 'on');
 
 if ~ischar(fis) && ~iscell(fis)
@@ -27,6 +28,10 @@ if ~ischar(fis) && ~iscell(fis)
         return
     end
 end
+else
+   fis=fname; 
+end
+
 if ischar(fis)
     fis = {fis};
 end
@@ -49,7 +54,7 @@ end
 
 ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp);
 
-if untouchedanchor && useinverse % need to map from anchor to untouched (raw) anchor
+if untouchedanchor && useinverse % need to map from anchor to un touched (raw) anchor
     ea_coreg2images_generic(options,[options.root, options.patientname, filesep, presentfiles{1}],...
         [options.root, options.patientname, filesep, 'raw_',presentfiles{1}],...
         [options.root, options.patientname, filesep, 'rraw_',presentfiles{1}],...

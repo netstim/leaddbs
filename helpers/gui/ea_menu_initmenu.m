@@ -96,6 +96,9 @@ if isempty(menuprobe)
         uimenu(f,'Label','Map file from template to untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1});
         uimenu(f,'Label','Export NII of overlay (template space) in untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1,1,0});
         uimenu(f,'Label','Export DICOM of overlay (template space) in untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1,1,1});
+        if strcmp(prefs.env.campus,'charite')
+            uimenu(f,'Label','Export DICOM of Chariteatlas in untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1,1,1,[ea_space,'chariteatlas.nii']});
+        end
     end
     
     if ismember('cluster',cmd)
