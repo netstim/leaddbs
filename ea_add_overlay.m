@@ -34,6 +34,10 @@ end
 showidx=1:length(atlases.names);
 if isfield(options.d2,'showstructures')
     [~,showidx]=ismember(options.d2.showstructures,ea_rmext(atlases.names));
+else
+    if isfield(atlases,'presets')
+       showidx=atlases.presets(1).show;
+    end    
 end
 
 for atlas=showidx
@@ -172,13 +176,13 @@ for atlas=showidx
                             set(0,'CurrentFigure',cuts)
                             if isempty(ix)
                                 warning('off')
-                                plot(cscale(1,:),cscale(2,:),'color',options.d2.con_color);
+                                plot(cscale(1,:),cscale(2,:),'color',options.d2.con_color,'LineWidth',1.5);
                                 %plot(cscale(1,:),cscale(2,:),'color',options.d2.con_color,'LineWidth',0.5);
                                 warning('on')
                             else
                                 startPoint=1;
                                 for plots=1:length(ix) % this happens if contour has an "inner hole"
-                                    plot(cscale(1,startPoint:ix(plots)),cscale(2,startPoint:ix(plots)),'color',options.d2.con_color);
+                                    plot(cscale(1,startPoint:ix(plots)),cscale(2,startPoint:ix(plots)),'color',options.d2.con_color,'LineWidth',1.5);
 %                                    plot(cscale(1,startPoint:ix(plots)),cscale(2,startPoint:ix(plots)),'color',options.d2.con_color,'LineWidth',0.5);
                                     startPoint=ix(plots)+1;
                                 end
