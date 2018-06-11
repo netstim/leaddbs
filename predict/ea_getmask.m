@@ -18,6 +18,9 @@ if nargin
         case {'cortex','cortex_2'}
             load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
             mask=modeldata.cortexmask;
+        case {'cortexcb','cortexcb_2'}
+            load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
+            mask=modeldata.cortexcbmask;
         case {'cortex_hd','cortex_1'}
             load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
             mask=modeldata.cortexmask_hd;
