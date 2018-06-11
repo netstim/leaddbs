@@ -1,5 +1,5 @@
-function Ihat=ea_predictscore(XYZ,I,opts,cmd,cohs)
-
+function [Ihat,Center]=ea_predictscore(XYZ,I,opts,cmd,cohs)
+Center=nan; % center only returned if leave nothing out and distance as parameters.
 if ~exist('opts','var')
     opts.usedist=1;
     opts.useexp='exp';
@@ -17,7 +17,7 @@ switch cmd
         Ihat=ea_predictscore_leco(XYZ,I,opts,cohs); % leave-one-cohort-out subroutine
         
     case {'leaveNothingOut','nothing'}
-        Ihat=dopredictscore(XYZ,I,1:size(XYZ,1),1:size(XYZ,1),opts);
+        [Ihat,Center]=dopredictscore(XYZ,I,1:size(XYZ,1),1:size(XYZ,1),opts);
 end
 warning on
 
@@ -40,8 +40,8 @@ for coh=1:length(cohs)
 end
 
 
-function Ihat=dopredictscore(XYZ,I,modelpts,predictpts,opts)
-
+function [Ihat,Center]=dopredictscore(XYZ,I,modelpts,predictpts,opts)
+Center=nan;
 
 D=pdist2(XYZ,XYZ);
 switch opts.useexp

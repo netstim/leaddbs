@@ -148,7 +148,7 @@ for side=1:length(options.sides)
                 mm=max((maxmin));
                 slice(slice>mm)=mm;
                 slice(slice<-mm)=-mm;
-                slice(slice<0)=0;
+                %slice(slice<0)=0;
             end
 
             try                level=evalin('base','level_offset'); end
