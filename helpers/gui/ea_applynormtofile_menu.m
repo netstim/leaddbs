@@ -21,15 +21,17 @@ options.prefs = ea_prefs(options.patientname);
 [options,presentfiles] = ea_assignpretra(options);
 options.coregmr.method='SPM';
 if ~exist('fname','var')
-[fis, path] = uigetfile({'*.nii';'*.nii.gz'}, 'Choose files to apply deformation to...', [options.root, options.patientname], 'Multiselect', 'on');
-
-if ~ischar(fis) && ~iscell(fis)
-    if ~fis
-        return
+    [fis, path] = uigetfile({'*.nii';'*.nii.gz'}, 'Choose files to apply deformation to...', [options.root, options.patientname], 'Multiselect', 'on');
+    
+    if ~ischar(fis) && ~iscell(fis)
+        if ~fis
+            return
+        end
     end
-end
 else
-   fis=fname; 
+    [path,fis,ext]=fileparts(fname);
+    path=[path,filesep];
+    fis=[fis,ext];
 end
 
 if ischar(fis)
