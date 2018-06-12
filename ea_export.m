@@ -24,8 +24,7 @@ fprintf(fID, '%s\n',['% - Lead-DBS Job created on ', datestr(clock), ' -']);
 fprintf(fID, '%s\n','% --------------------------------------');
 fprintf(fID, '\n');
 
-fprintf(fID, '%s\n',['addpath(genpath(''', options.earoot(1:end-1), '''));']);
-fprintf(fID, '%s\n',['addpath(''', fileparts(which('spm')), ''');']);
+fprintf(fID, '%s\n',['lead path;']);
 fprintf(fID, '\n');
 
 if exist('clusterfunctionname','var') % submit to cluster instead of directly running
@@ -75,4 +74,4 @@ for e = 1:length(optionsCode)
     fprintf(fID, '%s\n', optionsCode{e});
 end
 
-edit([pth, fn]);
+edit(fullfile(pth, fn));
