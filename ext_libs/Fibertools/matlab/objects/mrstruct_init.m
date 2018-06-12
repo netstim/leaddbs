@@ -102,7 +102,7 @@ mrStruct.dim12   = 'unused'; % FT20140120
 
 mrStruct.vox    = [];       % vector: [width,height,depth]
 mrStruct.edges  = [];       % vector: [x1,y1,z1,x2,y2,z2,x3,y3,z3]
-mrStruct.orient = '';       % string: 'axial', 'coronar', 'saggital' or '' for oblique pos.
+mrStruct.orient = '';       % string: 'axial', 'coronal', 'saggital' or '' for oblique pos.
 mrStruct.method = '';       % string: name of method like 'RARE', 'MUSIC' ...
 mrStruct.te     = [];       % vector:
 mrStruct.tr     = [];       % real:

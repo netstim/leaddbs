@@ -27,7 +27,7 @@ for el=1:length(options.elspec.contactnames)
             case 1
                 ppend='_axial.png';
             case 2
-                ppend='_coronar.png';
+                ppend='_coronal.png';
             case 3
                 ppend='_sagittal.png';
         end

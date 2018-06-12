@@ -139,7 +139,7 @@ end
 
 
 mkdir([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'slices']);
-orients={'axial','coronar','saggital'};
+orients={'axial','coronal','saggital'};
 oricon=zeros(3,16); % matrix that shows which images are available
 for con=0:15
     for or=1:length(orients)

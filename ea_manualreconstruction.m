@@ -4,7 +4,7 @@ function ea_manualreconstruction(mcfig,patientname,options)
 % handle for the figure, the coordinates of the contacts in millimeter
 % notation, optionally manually measured coordinates, the fitted line in
 % form of a 1x2 cell each containing a nx3 matrix that describes the line,
-% the full path to the coronar nifti file, the name of the patient and the
+% the full path to the coronal nifti file, the name of the patient and the
 % usual options struct must be handed to the function as parameters.
 %
 % Output parameters are the figure handle and the corrected coordinates and

@@ -2,7 +2,7 @@ function [cuts,expslice]=ea_writeplanes(varargin)
 
 % This function exports slice views of all electrode contacts reconstructed
 % priorly. Images are written as .png image files. Bot transversal and
-% coronar views are being exported. Additionally, overlays from atlas-data
+% coronal views are being exported. Additionally, overlays from atlas-data
 % can be visualized via the function ea_add_overlay which uses all atlas
 % files that are found in the lead_dbs atlas directory.
 % inputs: options (struct using standard lead-dbs fields), optional:
@@ -111,7 +111,7 @@ for side=1:length(options.sides)
                     else
                         V=Vtra;
                     end
-                case 2 % coronar images
+                case 2 % coronal images
                     if manualtracor
                         V=manualV;
                     else
@@ -403,7 +403,7 @@ for side=1:length(options.sides)
                         %saveas(cuts,[options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial.png']);
                         ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial',isofnadd,'.png'],'myaa');
                     case 2
-                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_coronar',isofnadd,'.png'],'myaa');
+                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_coronal',isofnadd,'.png'],'myaa');
                     case 3
                         ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_sagittal',isofnadd,'.png'],'myaa');
                 end
@@ -698,7 +698,7 @@ switch tracor
                 plusminusr='plus';
                 plusminusl='minus';
         end
-    case 2 % coronar images
+    case 2 % coronal images
         onedim=1;
         secdim=3;
         planedim=2;

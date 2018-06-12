@@ -1,5 +1,5 @@
 function varargout=ea_normalize_spmseg_macaque(options)
-% This is a function that normalizes both a copy of transversal and coronar
+% This is a function that normalizes both a copy of transversal and coronal
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
 % be taken with much care because all reconstruction results heavily depend
@@ -28,7 +28,7 @@ if ischar(options) % return name of method.
 end
 
 warning('off');
-usecombined=0; % if set, LEAD will try to fuse coronar and transversal images before normalizing them.
+usecombined=0; % if set, LEAD will try to fuse coronal and transversal images before normalizing them.
 usesegmentnew=0;
 costfuns={'nmi','mi','ecc','ncc'};
 

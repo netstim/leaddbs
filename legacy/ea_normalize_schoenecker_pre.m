@@ -1,5 +1,5 @@
 function varargout=ea_normalize_schoenecker_pre(options)
-% This is a function that normalizes both a copy of transversal and coronar
+% This is a function that normalizes both a copy of transversal and coronal
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
 % be taken with much care because all reconstruction results heavily depend
@@ -10,7 +10,7 @@ function varargout=ea_normalize_schoenecker_pre(options)
 % might be best archieved with other tools that have specialized on
 % normalization of such image data.
 %
-% The procedure used here follows the approach of Schönecker 2008 which was
+% The procedure used here follows the approach of Schoenecker 2008 which was
 % originally programmed for use with FSL. To be able to combine both
 % normalization and reconstruction steps, the principle approach was
 % programmed once more using SPM.
@@ -20,7 +20,7 @@ function varargout=ea_normalize_schoenecker_pre(options)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-usecombined=0; % if set, eauto will try to fuse coronar and transversal images before normalizing them.
+usecombined=0; % if set, eauto will try to fuse coronal and transversal images before normalizing them.
 
 if ischar(options) % return name of method.
     varargout{1}='Schoenecker 2009 linear threestep (Include Pre-OP) [MR/CT]';
@@ -99,7 +99,7 @@ clear matlabbatch jobs;
 
 
 
-% first step, coregistration between transversal and coronar versions. on full brain
+% first step, coregistration between transversal and coronal versions. on full brain
 
 
 normlog=zeros(4,1); % log success of processing steps. 4 steps: 1. coreg tra and cor, 2. grand mean normalization 3. subcortical normalization 4. subcortical fine normalization that spares the ventricles.
@@ -120,9 +120,9 @@ jobs{1}=matlabbatch;
 try
 spm_jobman('run',jobs);
 normlog(1)=1;
-disp('*** Coregistration between transversal and coronar versions worked.');
+disp('*** Coregistration between transversal and coronal versions worked.');
 catch
-disp('*** Coregistration between transversal and coronar versions failed.');
+disp('*** Coregistration between transversal and coronal versions failed.');
 end
 clear matlabbatch jobs;
 
@@ -409,7 +409,7 @@ end
 if ~strcmp(options.prefs.tranii,['w',options.prefs.tranii_unnormalized])
     ea_delete([options.root,options.prefs.patientdir,filesep,'w',options.prefs.tranii_unnormalized]);
 end
-% coronar images
+% coronal images
 if ~strcmp(options.prefs.cornii,['w',options.prefs.cornii_unnormalized])
     ea_delete([options.root,options.prefs.patientdir,filesep,'w',options.prefs.cornii_unnormalized]);
 end

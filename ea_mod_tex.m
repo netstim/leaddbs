@@ -53,7 +53,7 @@ for side=1:2
                 case 1
                     views='Axial';
                 case 2
-                    views='Coronar';
+                    views='Coronal';
                 case 3
                     views='Sagittal';
             end
