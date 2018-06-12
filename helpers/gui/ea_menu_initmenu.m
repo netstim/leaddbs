@@ -90,8 +90,14 @@ if isempty(menuprobe)
 
 
     if ismember('applynorm',cmd)
-        uimenu(f,'Label','Map file from anchor space to template...','Callback',{@ea_applynormtofile_menu,handles,0},'Accelerator','N');
-        uimenu(f,'Label','Map file from template to anchor space...','Callback',{@ea_applynormtofile_menu,handles,1},'Accelerator','Y');
+        forwd=uimenu(f,'Label','Map file from anchor space to template...');
+                uimenu(forwd,'Label','Run...','Callback',{@ea_applynormtofile_menu,handles,0,0,0,0},'Accelerator','N');
+                uimenu(forwd,'Label','Export Code...','Callback',{@ea_gencode_applynormtofile_menu,handles,0,0,0,0});
+        
+        backwd=uimenu(f,'Label','Map file from template to anchor space...');
+                uimenu(backwd,'Label','Run...','Callback',{@ea_applynormtofile_menu,handles,1,0,0,0},'Accelerator','Y');
+                uimenu(backwd,'Label','Export Code...','Callback',{@ea_applynormtofile_menu,handles,1,0,0,0},'Accelerator','Y');
+
         uimenu(f,'Label','Map file from untouched anchor space to template...','Callback',{@ea_applynormtofile_menu,handles,0,1});
         uimenu(f,'Label','Map file from template to untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1});
         uimenu(f,'Label','Export NII of overlay (template space) in untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1,1,0});

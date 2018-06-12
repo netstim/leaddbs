@@ -31,6 +31,7 @@ end
 
 fovimg=ea_load_nii(fovimg);
 distimg=fovimg;
+sigimg=fovimg;
 for side=sides
     switch side
         case 1
@@ -45,6 +46,8 @@ for side=sides
     
     fovimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'.nii'];
     distimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'_distance.nii'];
+    sigimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'_p.nii'];
+
     
     [xx,yy,zz]=ind2sub(size(fovimg.img),1:numel(fovimg.img));
     XYZ=[xx;yy;zz;ones(1,length(xx))];
@@ -73,8 +76,8 @@ for side=sides
                 end
             else % average points
                 try
-                    acs(pt,:)=mean([mean(M.elstruct(pts(pt)).coords_mm{1}(logical(M.S(pts(pt)).activecontacts{1}(1:4)),:),1);...
-                        ea_flip_lr_nonlinear(mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1))]);
+                    acs(pt,:)=mean([ea_flip_lr_nonlinear(mean(M.elstruct(pts(pt)).coords_mm{1}(logical(M.S(pts(pt)).activecontacts{1}(1:4)),:),1));...
+                        (mean(M.elstruct(pts(pt)).coords_mm{2}(logical(M.S(pts(pt)).activecontacts{2}(1:4)),:),1))]);
                 catch
                     keyboard
                 end
@@ -96,6 +99,11 @@ for side=sides
     dimen=length(XYZ);
     N=length(M.patient.list(pts));
     I=M.clinical.vars{regno}(pts,side);
+    permnum=1000;
+    Iperms=repmat(I,1,permnum);
+    for i=1:permnum
+        Iperms(:,i)=Iperms(randperm(size(Iperms,1)),i);
+    end
     chunk=200000;
     
     weights=getweights(I,1:length(I),opts);
@@ -115,7 +123,14 @@ for side=sides
         
 %        Dall=1./(Dall);
         
-        fovimg.img(vx:(vx+chunk-1))=corr(Dall,I,'rows','pairwise','type','Pearson');
+        realvals=corr(Dall,I,'rows','pairwise','type','Spearman');
+        fovimg.img(vx:(vx+chunk-1))=realvals; % write to image
+        
+                permvals=corr(Dall,Iperms,'rows','pairwise','type','Spearman');
+
+                permvals=sort(permvals,2,'descend');
+                permvals=(sum(permvals>repmat(realvals,1,permnum),2)/permnum);
+                sigimg.img(vx:(vx+chunk-1))=permvals;
         % distimg.img(vx)=nansum(D);
         % distimg.img(vx:(vx+chunk-1))=nanmean(D);
         
@@ -135,8 +150,10 @@ for side=sides
     
     fovimg.dt=[64,0];
     distimg.dt=[64,0];
+    sigimg.dt=[64,0];
     ea_write_nii(fovimg);
     ea_write_nii(distimg);
+    ea_write_nii(sigimg);
 end
 
 function weights=getweights(I,modelpts,opts)
