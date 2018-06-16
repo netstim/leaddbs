@@ -138,22 +138,24 @@ for suffix=dowhich
                             subset=cname(delim+1:end);
                             cname=cname(1:delim-1);
                         end
-
-                        if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
-                            ea_warp_vat2rest(cname,vatdir,sidec,options);
-                        else
-                            d=load([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat']);
-                            d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
-                            d.dataset.vol.space.dt=[16,0];
-                            ea_write_nii(d.dataset.vol.space);
-                            ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],1);
-                        end
-                        nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
-                        nii(cnt).img(isnan(nii(cnt).img))=0;
-                        if ~any(nii(cnt).img(:))
-                            msgbox(['Created empty VTA for ',options.patientname,'(',options.uivatdirs{pt},'), ',sidec,' hemisphere.']);
+                        if ~strcmp(cname,'No functional connectome found.')
+                            if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
+                                ea_warp_vat2rest(cname,vatdir,sidec,options);
+                            else
+                                d=load([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat']);
+                                d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
+                                d.dataset.vol.space.dt=[16,0];
+                                ea_write_nii(d.dataset.vol.space);
+                                ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],1);
+                            end
+                            nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
+                            nii(cnt).img(isnan(nii(cnt).img))=0;
+                            if ~any(nii(cnt).img(:))
+                                msgbox(['Created empty VTA for ',options.patientname,'(',options.uivatdirs{pt},'), ',sidec,' hemisphere.']);
+                            end
                         end
                         cnt=cnt+1;
+
                     end
 
                 end

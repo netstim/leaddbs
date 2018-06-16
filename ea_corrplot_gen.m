@@ -62,7 +62,7 @@ for area=1:length(R_upd)
     jetlist=lines;
     g=gca;
     if exist('color','var')
-        scatter(a,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',color);
+        scatter(g,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',color);
     else
         try
         scatter(g,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',jetlist(groups,:));
