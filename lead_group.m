@@ -1198,10 +1198,13 @@ for pt=selection
         catch
             ea_stats=struct;
         end
-        coords_mm=M.elstruct(pt).coords_mm;
-        trajectory=M.elstruct(pt).trajectory;
+        reco.mni.coords_mm=M.elstruct(pt).coords_mm;
+        reco.mni.trajectory=M.elstruct(pt).trajectory;
+        reco.mni.markers=M.elstruct(pt).markers;
+        reco.props.elmodel=M.elstruct(pt).elmodel;
+        reco.props.manually_corrected=1;
         save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
-        save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
+        save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'reco');
     end
 
     if ~exist(options.root,'file') % data is not there. Act as if detached. Process in tmp-dir.
@@ -1217,10 +1220,13 @@ for pt=selection
         catch
             ea_stats=struct;
         end
-        coords_mm=M.elstruct(pt).coords_mm;
-        trajectory=M.elstruct(pt).trajectory;
+        reco.mni.coords_mm=M.elstruct(pt).coords_mm;
+        reco.mni.trajectory=M.elstruct(pt).trajectory;
+        reco.mni.markers=M.elstruct(pt).markers;
+        reco.props.elmodel=M.elstruct(pt).elmodel;
+        reco.props.manually_corrected=1;
         save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
-        save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'coords_mm','trajectory');
+        save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'reco');
     end
 
     %delete([options.root,options.patientname,filesep,'ea_stats.mat']);
@@ -1308,8 +1314,8 @@ for pt=selection
         load([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction']);
 
         M.stats(pt).ea_stats=ea_stats;
-        M.elstruct(pt).coords_mm=coords_mm;
-        M.elstruct(pt).trajectory=trajectory;
+        M.elstruct(pt).coords_mm=reco.mni.coords_mm;
+        M.elstruct(pt).trajectory=reco.mni.trajectory;
         setappdata(gcf,'M',M);
 
         save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M','-v7.3');
