@@ -268,7 +268,11 @@ end
 % end
 
 %% new visualization part
-addobjr=ea_showfiber(thisset,fibidx);
+c = ea_uisetcolor;
+if c == 0;
+    c=NaN;
+end
+addobjr=ea_showfiber(thisset,fibidx,c);
 
 axis fill
 
