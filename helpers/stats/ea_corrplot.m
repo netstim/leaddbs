@@ -27,9 +27,9 @@ g.geom_point();
 g.stat_glm();
 %g.geom_abline();
 %g.stat_cornerhist('edges',[ea_nanmean(X)-1*ea_nanstd(X):0.2:ea_nanmean(X)+1*ea_nanstd(X)],'aspect',0.6,'location',max(X));
-g.set_title([labels{1},' [R = ',sprintf('%.2f',R),'; p = ',sprintf('%.2f',p),']'],'FontSize',20);
+g.set_title([labels{1},' [R = ',sprintf('%.2f',R),'; p = ',sprintf('%.3f',p),']'],'FontSize',20);
 g.set_names('x',labels{2},'y',labels{3});
-g.set_text_options('base_size',16)
+g.set_text_options('base_size',22)
 g.no_legend();
 h=figure('Position',[100 100 550 550]);
 g.draw();
