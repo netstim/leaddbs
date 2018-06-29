@@ -701,12 +701,13 @@ currvol=presentfiles{activevolume};
 anchorpath=getappdata(handles.leadfigure,'anchorpath');
 method=getappdata(handles.leadfigure,'method');
 
+anchor=getappdata(handles.leadfigure,'anchor');
 switch ea_stripex(currvol)
     case ea_stripex(options.prefs.gprenii)
         options=ea_assignpretra(options);
         anchor=[ea_space,options.primarytemplate,'.nii'];
-    otherwise
-        anchor=getappdata(handles.leadfigure,'anchor');
+    case ea_stripex(['tp_',options.prefs.ctnii_coregistered]) % make sure tp matches rpostop_ct.
+        ea_tonemapct_file(options,'native');
 end
 checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(anchor),'_',method,'.png'];
 ea_delete([directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(anchor),'_',method,'.png']);

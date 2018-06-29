@@ -28,7 +28,7 @@ if isempty(uidir)
     ea_error('Please choose and normalize patients first.');
 end
 
-disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
+disp('*** Converting MNI-coordinates to ACPC based on normalizations in selected patients.');
 %ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
  %   ea_dispercent(pt/length(uidir));

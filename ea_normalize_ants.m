@@ -45,17 +45,25 @@ else
 end
 
 spacedef=ea_getspacedef; % get definition of current space we are working in
+[~,anatpresent]=ea_assignpretra(options);
 if usefa && spacedef.hasfa % first put in FA since least important (if both an FA template and an fa2anat file is available)
+    
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
         disp('Including FA information for white-matter normalization.');
         to{cnt}=[ea_space(options),'fa.nii'];
         from{cnt}=[directory,bprfx,options.prefs.fa2anat];
         weights(cnt)=0.5;
         cnt=cnt+1;
+    elseif exist([directory,options.prefs.fa],'file') % recheck if now is present.
+            disp('Including FA information for white-matter normalization.');
+            ea_coreg2images_generic(options,[directory,bprfx,options.prefs.fa],[directory,anatpresent{1}],[directory,bprfx,options.prefs.fa2anat],{},0,[],1);
+            to{cnt}=[ea_space(options),'fa.nii'];
+            from{cnt}=[directory,bprfx,options.prefs.fa2anat];
+            weights(cnt)=0.5;
+            cnt=cnt+1;
     end
 end
 
-[~,anatpresent]=ea_assignpretra(options);
 anatpresent=flip(anatpresent); % reverse order since most important transform should be put in last.
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 for anatf=1:length(anatpresent)
