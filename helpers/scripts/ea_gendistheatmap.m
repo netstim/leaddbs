@@ -99,10 +99,14 @@ for side=sides
     dimen=length(XYZ);
     N=length(M.patient.list(pts));
     I=M.clinical.vars{regno}(pts,side);
-    permnum=1000;
-    Iperms=repmat(I,1,permnum);
-    for i=1:permnum
-        Iperms(:,i)=Iperms(randperm(size(Iperms,1)),i);
+    
+    permute=0;
+    if permute
+        permnum=1000;
+        Iperms=repmat(I,1,permnum);
+        for i=1:permnum
+            Iperms(:,i)=Iperms(randperm(size(Iperms,1)),i);
+        end
     end
     chunk=200000;
     
@@ -125,12 +129,13 @@ for side=sides
         
         realvals=corr(Dall,I,'rows','pairwise','type','Spearman');
         fovimg.img(vx:(vx+chunk-1))=realvals; % write to image
-        
+        if permute
                 permvals=corr(Dall,Iperms,'rows','pairwise','type','Spearman');
 
                 permvals=sort(permvals,2,'descend');
                 permvals=(sum(permvals>repmat(realvals,1,permnum),2)/permnum);
                 sigimg.img(vx:(vx+chunk-1))=permvals;
+        end
         % distimg.img(vx)=nansum(D);
         % distimg.img(vx:(vx+chunk-1))=nanmean(D);
         
@@ -150,10 +155,12 @@ for side=sides
     
     fovimg.dt=[64,0];
     distimg.dt=[64,0];
-    sigimg.dt=[64,0];
     ea_write_nii(fovimg);
     ea_write_nii(distimg);
-    ea_write_nii(sigimg);
+    if permute
+        sigimg.dt=[64,0];
+        ea_write_nii(sigimg);
+    end
 end
 
 function weights=getweights(I,modelpts,opts)
