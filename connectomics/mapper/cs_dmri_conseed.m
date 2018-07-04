@@ -110,7 +110,7 @@ switch cmd
                         fiberstrength(fibnos)=fiberstrength(fibnos)+ixvals(ix);
                         fiberstrengthn(fibnos)=fiberstrengthn(fibnos)+1;
                     %end
-                    ea_dispercent(ix/ixdim);
+                    % ea_dispercent(ix/ixdim);
 
                 end
                 nzz=~(fiberstrength==0);
