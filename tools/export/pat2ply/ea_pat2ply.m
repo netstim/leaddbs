@@ -14,6 +14,7 @@ try % this is DBS specific.
     cnt=1;
     for side=options.sides
         cfv(1+cnt)=ea_electrode2ply([uipatdir,filesep],side,handles);
+        cnt=cnt+1;
     end
     cfvel=ea_concatfv(cfv(2:end));
     plywrite([uipatdir,filesep,'export',filesep,'ply',filesep,'combined_electrodes.ply'],cfvel.faces,cfvel.vertices,cfvel.facevertexcdata,repmat(100,size(cfvel.facevertexcdata,1),1));
