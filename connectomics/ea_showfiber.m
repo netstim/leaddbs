@@ -1,8 +1,13 @@
-function fibhandle=ea_showfiber(fibers,fibidx,col)
+function fibhandle=ea_showfiber(fibers,fibidx,col,fiberalpha)
 
 if ~exist('col','var')
     col=nan;
 end
+
+if ~exist('fiberalpha','var')
+    fiberalpha=0.2;
+end
+
 
 if ~(size(fibers,1)==4)
     fibers=fibers';
@@ -32,14 +37,7 @@ if isnan(col)
     ea_dispercent(1,'end');
 end
 fibhandle = streamtube(fibersnew,0.25);
-set(fibhandle(:),'EdgeAlpha',0)
-set(fibhandle(:),'FaceAlpha',0.25)
-% if isnan(col)
-    set(fibhandle(:),'CDataMapping','direct')
-% else
-%     set(fibhandle(:),'FaceColor',col)
-% end
-set(fibhandle(:),'EdgeAlpha',0);
+set(fibhandle(:),'CDataMapping','direct')
 
 if isnan(col)    
     ea_dispercent(0,'Adding color information');
@@ -70,6 +68,6 @@ delete(fibhandle);
 
 %dafv=reducepatch(afv,0.2,'fast');
 
-fibhandle=patch('Faces',afv.faces,'Vertices',afv.vertices,'FaceVertexCData',afv.facevertexcdata,'EdgeColor','none','FaceAlpha',0.25,'CDataMapping','direct','FaceColor','flat');
+fibhandle=patch('Faces',afv.faces,'Vertices',afv.vertices,'FaceVertexCData',afv.facevertexcdata,'EdgeColor','none','FaceAlpha',fiberalpha,'CDataMapping','direct','FaceColor','flat');
 
 ea_dispercent(1,'end');
