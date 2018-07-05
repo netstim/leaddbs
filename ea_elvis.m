@@ -387,6 +387,8 @@ rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb'),...
 
 
 % Initialize HD-Export button
+dumpscreenshotbutton=uipushtool(ht,'CData',ea_get_icn('dump'),...
+    'TooltipString','Dump Screenshot','ClickedCallback',{@dump_screenshot,resultfig,options});
 
 hdsavebutton=uipushtool(ht,'CData',ea_get_icn('save'),...
     'TooltipString','Save Scene','ClickedCallback',@export_hd);
@@ -528,6 +530,25 @@ if FileName
 ea_screenshot([PathName,FileName]);
 
 end
+
+function dump_screenshot(hobj,ev,resultfig,options)
+
+
+set(0,'CurrentFigure',resultfig);
+if ~exist([options.root,options.patientname,filesep,'export',filesep,'views'],'dir')
+    mkdir([options.root,options.patientname,filesep,'export',filesep,'views']);
+end
+
+views=dir([options.root,options.patientname,filesep,'export',filesep,'views',filesep,'view_u*.png']);
+next=1;
+while ismember(['view_u',sprintf('%03.0f',next),'.png'],{views.name})
+    next=next+1;
+end
+
+ea_screenshot([options.root,options.patientname,filesep,'export',filesep,'views',filesep,'view_u',sprintf('%03.0f',next),'.png'],'ld');
+
+
+
 
 
 function objvisible(hobj,ev,atls)

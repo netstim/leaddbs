@@ -22,6 +22,25 @@ for atl=1:length(atlasnames)
     end
 end
 
+if any(size(cfv(1).facevertexcdata)==1) % convert from indexed to rgb colors.
+    try
+        jetlist=atlases.colormap;
+    catch
+        jetlist=parula;
+    end
+    for entry=1:length(cfv)
+        if size(cfv(entry).facevertexcdata,1)==1
+            cfv(entry).facevertexcdata=cfv(entry).facevertexcdata';
+        end
+        cfv(entry).facevertexcdata=jetlist(cfv(entry).facevertexcdata,:);
+    end
+    %fv(f).facevertexcdata=
+    
+end
+
+
+
+
 cfv=ea_concatfv(cfv);
 
 if ~isfield(atlases,'colormap')
@@ -31,4 +50,8 @@ end
 cfv=ea_mapcolvert2ind(cfv,atlases.colormap);
 cfv.faces=[cfv.faces(:,2),cfv.faces(:,1),cfv.faces(:,3)];
 %ea_patch2ply(ofn,cfv.vertices',cfv.faces',cfv.facevertexcdata');
+[pth]=fileparts(ofn);
+if ~exist(pth,'dir')
+    mkdir(pth);
+end
 plywrite(ofn,cfv.faces,cfv.vertices,cfv.facevertexcdata)

@@ -60,8 +60,11 @@ if ~usecork
                 afv.facevertexcdata=zeros(sum(facecollen),3);
             end
             fcsize=size(fv(f).facevertexcdata,1);
+            
+
             afv.facevertexcdata(fcoffset:fcoffset+fcsize-1,:)=...
                 fv(f).facevertexcdata;
+   
             fcoffset=fcoffset+fcsize;
         end
         ea_dispercent(f/length(fv));
