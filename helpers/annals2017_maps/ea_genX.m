@@ -26,6 +26,22 @@ function [X,n]=ea_genX(fis,regressor,output,mask,sk,ctype)
     end
    
     tmpd=ea_getleadtempdir;
+    
+    if size(fis,2)==2 % left and right separate
+        origfis=fis;
+        clear fis
+        for f=1:size(origfis,1)
+            rnii=ea_load_nii(origfis{f,1});
+            lnii=ea_load_nii(origfis{f,2});
+            cnii=rnii;
+            cnii.img=ea_nanmean(cat(4,rnii.img,lnii.img),4);
+            guid=ea_generate_guid;
+            cnii.fname=[tmpd,guid,'.nii'];
+            ea_write_nii(cnii);
+            fis{f}=cnii.fname;
+        end
+    end
+    
     for f=1:length(fis)
         if dok || dos
             guid=ea_generate_guid;
