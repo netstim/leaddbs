@@ -27,14 +27,31 @@ allroilist=cat(2,roilist{:});
 % load in all ROI
 ea_dispercent(0,'Aggregating ROI');
 for roi=1:length(allroilist);
-    nii{roi}=ea_load_nii(allroilist{roi});
-    if exist('thresh','var')
-        nii{roi}.img=double(nii{roi}.img>thresh);
+    if size(allroilist,2)==2 % left and right entered separately, combine.
+        nii{roi,1}=ea_load_nii(allroilist{roi,1});
+        [xx,yy,zz]=ind2sub(size(nii{roi,1}.img),find(nii{roi,1}.img));
+        XYZvx=[xx,yy,zz,ones(length(xx),1)]';
+        XY=nii{roi,1}.mat*XYZvx;
+        XYZmm{roi}=XY(1:3,:)';
+        
+        nii{roi,2}=ea_load_nii(allroilist{roi,2});
+        [xx,yy,zz]=ind2sub(size(nii{roi,2}.img),find(nii{roi,2}.img));
+        XYZvx=[xx,yy,zz,ones(length(xx),1)]';
+        XY=nii{roi,2}.mat*XYZvx;
+        XYZmm{roi}=[XYZmm{roi};XY(1:3,:)'];
+    else
+        nii{roi}=ea_load_nii(allroilist{roi});
+        
+        if exist('thresh','var')
+            nii{roi}.img=double(nii{roi}.img>thresh);
+        end
+        keyboard
+        [xx,yy,zz]=ind2sub(size(nii{roi}.img),find(nii{roi}.img));
+        XYZvx=[xx,yy,zz,ones(length(xx),1)]';
+        XYZmm{roi}=nii{roi}.mat*XYZvx;
+        XYZmm{roi}=XYZmm{roi}(1:3,:)';
     end
-    [xx,yy,zz]=ind2sub(size(nii{roi}.img),find(nii{roi}.img));
-    XYZvx=[xx,yy,zz,ones(length(xx),1)]';
-    XYZmm{roi}=nii{roi}.mat*XYZvx;
-    XYZmm{roi}=XYZmm{roi}(1:3,:)';
+    
     if ~exist('AllXYZ','var')
         AllXYZ=XYZmm{roi};
     else

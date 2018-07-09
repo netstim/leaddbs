@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 09-Jan-2018 11:23:49
+% Last Modified by GUIDE v2.5 09-Jul-2018 16:18:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -539,6 +539,25 @@ if options.expstatvat.do % export to nifti volume
 
     ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'],pobj);
 end
+
+
+
+if get(handles.showdiscfibers,'Value') % show discriminative fibers
+    
+    
+    
+    
+    
+    M.ui.connectomename=get(handles.fiberspopup,'String');
+    M.ui.connectomename=M.ui.connectomename{get(handles.fiberspopup,'Value')};
+    
+    answ=inputdlg('Please set minimum discriminative percent value.','Enter minimum discriminative value (percent)',1,{'0.2'});
+    
+    ea_showdiscfibers(M,num2str(answ{1}),resultfig);
+    
+    
+end
+
 
 ea_busyaction('off',handles.leadfigure,'group');
 
@@ -2041,3 +2060,10 @@ end
 ea_busyaction('off',gcf,'group');
 
 
+% --- Executes on button press in showdiscfibers.
+function showdiscfibers_Callback(hObject, eventdata, handles)
+% hObject    handle to showdiscfibers (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of showdiscfibers
