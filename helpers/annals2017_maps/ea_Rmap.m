@@ -33,7 +33,7 @@ function [R,Rperm]=ea_Rmap(varargin)
     R=corr(regressor,X,'type',corrtype,'rows','pairwise');
     ea_exportmap(n,R,varargin{1:6});
     
-    if exist('Rd','var') % permutation test
+    if exist('Rperm','var') % permutation test
         sRd=sort(Rperm,1,'descend');
         delp=R<sRd(round((pthresh/2)*itercount),:);
         deln=R>sRd(round((1-(pthresh/2))*itercount),:);
