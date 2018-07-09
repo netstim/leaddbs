@@ -1,4 +1,4 @@
-function fibsin=ea_heatfibertracts(cfile,roilist,vals,thresh)
+function fibsin=ea_heatfibertracts(cfile,roilist,vals,thresh,minpercent)
 % function extracts fibers from a connectome connected to ROIs in the
 % roilist and assigns them correlative values based on vals. Vals needs to be of
 % same length as roilist, assigning a value for each ROI.
@@ -18,6 +18,9 @@ if ~iscell(roilist)
     vals={vals};
 end
 
+if ~exist('minpercent','var') % minimum of percentage fibers that need to be connected to a VTA.
+    minpercent=0.2;
+end
 
 allroilist=cat(2,roilist{:});
 %tree=KDTreeSearcher(fibers(:,1:3));
@@ -84,7 +87,13 @@ for group=1:length(roilist)
     
     [~,fibidx,iaix]=unique(fibsin(:,4));
     fibsval=fibsval(fibidx,:); nfibsval=nfibsval(fibidx,:);
+    iaix(exclude)=[];
     
+    sumfibsval=sum(fibsval,2);
+    exclude=sumfibsval<size(fibsval,2)*minpercent; % discard fibers with less than 20% connections.
+    exclude=exclude+sumfibsval>size(fibsval,2)*(1-minpercent); % discard fibers with more than 80% connections.
+    fibsval(exclude,:)=[];
+    fibsin(exclude,:)=[];
     
     allvals=repmat(vals{1}',size(fibsval,1),1);
     fibsimpval=allvals; nfibsimpval=allvals;
