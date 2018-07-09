@@ -225,7 +225,7 @@ switch cmd
                 fibnos=unique(fibers(ids{s}{ix},4)); % these fiber ids go through this particular voxel.
                 fiberstrength{s}(fibnos)=fiberstrength{s}(fibnos)+ixvals{s}(ix);
                 fiberstrengthn{s}(fibnos)=fiberstrengthn{s}(fibnos)+1;
-                ea_dispercent(ix/ixdim);
+                % ea_dispercent(ix/ixdim);
             end
             nzz=~(fiberstrength{s}==0);
             fiberstrength{s}(nzz)=fiberstrength{s}(nzz)./fiberstrengthn{s}(nzz); % now each fiber has a strength mediated by the seed.
