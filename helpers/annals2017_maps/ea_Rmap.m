@@ -1,4 +1,4 @@
-function [R,Rperm]=ea_Rmap(varargin)
+function [R,Rperm,Rnaned,Rpermnaned]=ea_Rmap(varargin)
     % creates a correlation nifti file given a set of images and a
     % regressor ("R map" in Horn 2017 AoN)
    
@@ -34,15 +34,22 @@ function [R,Rperm]=ea_Rmap(varargin)
     ea_exportmap(n,R,varargin{1:6});
     
     if exist('Rperm','var') % permutation test
-        sRd=sort(Rperm,1,'descend');
-        delp=R<sRd(round((pthresh/2)*itercount),:);
-        deln=R>sRd(round((1-(pthresh/2))*itercount),:);
+        Rpermnaned=[R;Rperm]; % for now, first entry is the unpermuted one.
+        sRd=sort([R;Rperm],1,'descend');
+        % delete values from Rpermnaned that are not significant (uncorrected):
+        delp=Rpermnaned<...
+            repmat(sRd(round((pthresh/2)*itercount),:),itercount+1,1);
+        deln=Rpermnaned>...
+            repmat(sRd(round((1-(pthresh/2))*itercount),:),itercount+1,1);
         del=logical(delp.*deln);
-        R(del)=nan;
+        Rpermnaned(del)=nan;
+        
+        Rnaned=Rpermnaned(1,:);
+        Rpermnaned=Rpermnaned(2:end,:);
         
         [pth,fn,ext]=fileparts(varargin{3});
         varargin{3}=fullfile(pth,[fn,'_sig',ext]);
-        ea_exportmap(n,R,varargin{1:6});
+        ea_exportmap(n,Rnaned,varargin{1:6});
     end
 
     
