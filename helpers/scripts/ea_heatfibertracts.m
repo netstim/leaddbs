@@ -1,4 +1,4 @@
-function fibsin=ea_heatfibertracts(cfile,roilist,vals,thresh,minpercent)
+function [fibsweighted,fibsin]=ea_heatfibertracts(cfile,roilist,vals,thresh,minpercent)
 % function extracts fibers from a connectome connected to ROIs in the
 % roilist and assigns them correlative values based on vals. Vals needs to be of
 % same length as roilist, assigning a value for each ROI.
@@ -87,20 +87,21 @@ for group=1:length(roilist)
     
     [~,fibidx,iaix]=unique(fibsin(:,4));
     fibsval=fibsval(fibidx,:); nfibsval=nfibsval(fibidx,:);
-    iaix(exclude)=[];
     
     sumfibsval=sum(fibsval,2);
     exclude=sumfibsval<size(fibsval,2)*minpercent; % discard fibers with less than 20% connections.
     exclude=exclude+sumfibsval>size(fibsval,2)*(1-minpercent); % discard fibers with more than 80% connections.
     fibsval(exclude,:)=[];
-    fibsin(exclude,:)=[];
-    
+    fibsweighted=fibsin;
+    fibsweighted(exclude,:)=[];
+    iaix(exclude)=[];
+
     allvals=repmat(vals{1}',size(fibsval,1),1);
     fibsimpval=allvals; nfibsimpval=allvals;
     fibsimpval(~logical(fibsval))=nan;
     nfibsimpval(logical(fibsval))=nan;
     [h,p,ci,stats]=ttest2(fibsimpval',nfibsimpval');
-    fibsin=[fibsin,stats.tstat(iaix)'];
+    fibsweighted=[fibsweighted,stats.tstat(iaix)'];
     %    f=ea_mes([ones(size(fibsval)),zeros(size(nfibsval))]',[fibsval,nfibsval]','rbcorr','missVal','pairwise');
 %    A=[ones(size(fibsval)),zeros(size(nfibsval))]';
 %    B=[fibsval,nfibsval]';
