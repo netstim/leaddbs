@@ -8,7 +8,6 @@ N=length(patlist);
 thresh=0.5; 
 tic
 reforce=0;
-percent=0.2; % how many fibers at least need to be connected for fiber to be taken into account.
 if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'.mat'],'file')
     for sub=1:length(patlist)
         roilist{sub,1}=[patlist{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii'];
@@ -29,7 +28,7 @@ end
 % visualize:
 
 
-if reforce || ~exist(['correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat'],'file')
+if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat'],'file')
     fibidx=unique(fibsweighted(:,4));
     fibcell=cell(length(fibidx),1);
     valcell=fibcell;
@@ -43,9 +42,9 @@ if reforce || ~exist(['correlative_fibertracts_',pointtodash(num2str(percent)),'
         ea_dispercent(cnt/length(fibidx));
     end
     ea_dispercent(1,'end');
-    save(['correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat'],'fibcell','vals','-v7.3');
+    save([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat'],'fibcell','vals','-v7.3');
 else
-    load(['correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat']);
+    load([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat']);
 end
 
 
