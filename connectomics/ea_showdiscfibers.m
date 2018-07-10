@@ -20,7 +20,7 @@ if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2s
         cfile=[M.ui.groupdir,'connected_fibers.mat'];
     end
     [fibsweighted,fibsin]=ea_heatfibertracts(cfile,{roilist},{I},thresh,percent);
-    save([M.ui.groupdir,'connected_fibers.mat'],'fibsin');
+    save([M.ui.groupdir,'connected_fibers.mat'],'fibsin','-v7.3');
     save([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'.mat'],'fibsweighted','-v7.3');
 else
     load([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent))]);
