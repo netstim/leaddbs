@@ -15,7 +15,7 @@ if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2s
         roilist{sub,2}=[patlist{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii'];
     end
     if ~exist([M.ui.groupdir,'connected_fibers.mat'],'file')
-        cfile=[ea_getconnectomebase('dMRI'),M.ui.connectomename];
+        cfile=[ea_getconnectomebase('dMRI'),M.ui.connectomename,filesep,'data.mat'];
     else
         cfile=[M.ui.groupdir,'connected_fibers.mat'];
     end
