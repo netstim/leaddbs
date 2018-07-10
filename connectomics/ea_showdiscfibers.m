@@ -9,7 +9,7 @@ thresh=0.5;
 tic
 reforce=0;
 percent=0.2; % how many fibers at least need to be connected for fiber to be taken into account.
-if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',num2str(percent),'.mat'],'file')
+if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'.mat'],'file')
     for sub=1:length(patlist)
         roilist{sub,1}=[patlist{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii'];
         roilist{sub,2}=[patlist{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii'];
@@ -21,31 +21,31 @@ if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',num2str(percent),
     end
     [fibsweighted,fibsin]=ea_heatfibertracts(cfile,{roilist},{I},thresh,percent);
     save([M.ui.groupdir,'connected_fibers.mat'],'fibsweighted');
-    save([M.ui.groupdir,'correlative_fibertracts_',num2str(percent),'.mat'],'fibsin','-v7.3');
+    save([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'.mat'],'fibsin','-v7.3');
 else
-    load([M.ui.groupdir,'correlative_fibertracts_',num2str(percent)]);
+    load([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent))]);
 end
 
 % visualize:
 
 
-if reforce || ~exist(['correlative_fibertracts_',num2str(thresh),'_',num2str(percent),'_reformatted.mat'],'file')
-    fibidx=unique(fibsin(:,4));
+if reforce || ~exist(['correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat'],'file')
+    fibidx=unique(fibsweighted(:,4));
     fibcell=cell(length(fibidx),1);
     valcell=fibcell;
     vals=zeros(length(fibidx),1);
     cnt=1;
     ea_dispercent(0,'reformatting fibers');
     for fib=fibidx';
-        fibcell{cnt}=fibsin(fibsin(:,4)==fib,1:3);
-        vals(cnt)=mean(fibsin(fibsin(:,4)==fib,5));
+        fibcell{cnt}=fibsweighted(fibsweighted(:,4)==fib,1:3);
+        vals(cnt)=mean(fibsweighted(fibsweighted(:,4)==fib,5));
         cnt=cnt+1;
         ea_dispercent(cnt/length(fibidx));
     end
     ea_dispercent(1,'end');
-    save(['correlative_fibertracts_',num2str(thresh),'_',num2str(percent),'_reformatted.mat'],'fibcell','vals','-v7.3');
+    save(['correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat'],'fibcell','vals','-v7.3');
 else
-    load(['correlative_fibertracts_',num2str(thresh),'_',num2str(percent),'_reformatted.mat']);
+    load(['correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat']);
 end
 
 
@@ -67,8 +67,12 @@ posits=sort(posits,'descend');
 negits=sort(negits,'ascend');
 % posthresh=posits(round(length(posits)*0.05));
 % negthresh=negits(round(length(negits)*0.05));
-posthresh=posits(500);
-negthresh=negits(500);
+cutoff=500;
+if (length(posits) < cutoff) || (length(negits) < cutoff)
+    cutoff=min([length(posits),length(negits)]);
+end
+posthresh=posits(cutoff);
+negthresh=negits(cutoff);
 disp(['Fiber colors: Positive (T = ',num2str(posthresh),' - ',num2str(max(posits)),'); Negative (T = ',num2str(negthresh),' - ',num2str(min(negits)),').']);
 
 remove=logical(logical(cvals<posthresh) .* logical(cvals>negthresh));
@@ -87,7 +91,7 @@ cvals=rb(round(cvals),:);
 % cvals=cvals*63;
 % cvals=cvals+1;
 % cvals=rb(round(cvals),:);
-h=streamtube(fibcell,0.1);
+h=streamtube(fibcell,0.2);
 cv=mat2cell(cvals,ones(size(cvals,1),1));
 
 % transform alphas to a logistic curve to highlight more predictive and
@@ -107,3 +111,6 @@ calph=mat2cell(alphas,ones(size(cvals,1),1));
 
 nones=repmat({'none'},size(cvals,1),1);
 [h.EdgeColor]=nones{:};
+
+function str=pointtodash(str)
+str=strrep(str,'.','-');

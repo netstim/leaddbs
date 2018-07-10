@@ -107,11 +107,13 @@ for group=1:length(roilist)
     
     sumfibsval=sum(fibsval,2);
     exclude=sumfibsval<size(fibsval,2)*minpercent; % discard fibers with less than 20% connections.
-    exclude=exclude+sumfibsval>size(fibsval,2)*(1-minpercent); % discard fibers with more than 80% connections.
+    exclude=logical(exclude+(sumfibsval>size(fibsval,2)*(1-minpercent))); % discard fibers with more than 80% connections.
     fibsval(exclude,:)=[];
     fibsweighted=fibsin;
-    fibsweighted(exclude,:)=[];
-    iaix(exclude)=[];
+    fibsweighted((exclude(iaix)),:)=[];
+    %iaix(exclude(iaix))=[];
+    %fibidx(exclude)=[];
+    [~,fibidx,iaix]=unique(fibsweighted(:,4));
 
     allvals=repmat(vals{1}',size(fibsval,1),1);
     fibsimpval=allvals; nfibsimpval=allvals;
