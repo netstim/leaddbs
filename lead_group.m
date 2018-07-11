@@ -518,7 +518,6 @@ if ~strcmp(whichelmodel,'Patient specified')
    [M.elstruct(ptidx).elmodel]=arcell{:};
 end
 
-
 resultfig=ea_elvis(options,M.elstruct(ptidx));
 
 try % zoom on coordinates.
@@ -540,24 +539,14 @@ if options.expstatvat.do % export to nifti volume
     ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_mean.nii'],pobj);
 end
 
-
-
 if get(handles.showdiscfibers,'Value') % show discriminative fibers
-    
-    
-    
-    
-    
     M.ui.connectomename=get(handles.fiberspopup,'String');
     M.ui.connectomename=M.ui.connectomename{get(handles.fiberspopup,'Value')};
-    
-    answ=inputdlg('Please set minimum discriminative percent value.','Enter minimum discriminative value (percent)',1,{'0.2'});
-    
-    ea_showdiscfibers(M,num2str(answ{1}),resultfig);
-    
-    
-end
 
+    answ=inputdlg('Please set minimum discriminative percent value.','Enter minimum discriminative value (percent)',1,{'0.2'});
+
+    ea_showdiscfibers(M,str2double(answ{1}),resultfig);
+end
 
 ea_busyaction('off',handles.leadfigure,'group');
 
@@ -1295,7 +1284,7 @@ for pt=selection
                 [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
             catch
                 try
-                    
+
                     Modcoords=M.elstruct(pt).coords_mm;
                     for side=1:length(Modcoords)
                         Modcoords{side}=Modcoords{side}+randn(4,3)*0.001;
