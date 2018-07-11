@@ -8,7 +8,7 @@ N=length(patlist);
 thresh=0.5; 
 tic
 reforce=0;
-if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'.mat'],'file')
+if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_',stripblanks(M.ui.connectomename),'.mat'],'file')
     for sub=1:length(patlist)
         roilist{sub,1}=[patlist{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii'];
         roilist{sub,2}=[patlist{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii'];
@@ -20,15 +20,15 @@ if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2s
     end
     [fibsweighted,fibsin]=ea_heatfibertracts(cfile,{roilist},{I},thresh,percent);
     save([M.ui.groupdir,'connected_fibers.mat'],'fibsin','-v7.3');
-    save([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'.mat'],'fibsweighted','-v7.3');
+    save([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_',stripblanks(M.ui.connectomename),'.mat'],'fibsweighted','-v7.3');
 else
-    load([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent))]);
+    load([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_',stripblanks(M.ui.connectomename),'.mat']);
 end
 
 % visualize:
 
 
-if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat'],'file')
+if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted','_',stripblanks(M.ui.connectomename),'.mat'],'file')
     fibidx=unique(fibsweighted(:,4));
     fibcell=cell(length(fibidx),1);
     valcell=fibcell;
@@ -42,9 +42,9 @@ if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2s
         ea_dispercent(cnt/length(fibidx));
     end
     ea_dispercent(1,'end');
-    save([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat'],'fibcell','vals','-v7.3');
+    save([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted','_',stripblanks(M.ui.connectomename),'.mat'],'fibcell','vals','-v7.3');
 else
-    load([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted.mat']);
+    load([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted','_',stripblanks(M.ui.connectomename),'.mat']);
 end
 
 
@@ -113,3 +113,8 @@ nones=repmat({'none'},size(cvals,1),1);
 
 function str=pointtodash(str)
 str=strrep(str,'.','-');
+
+function str=stripblanks(str)
+str=strrep(str,'(','');
+str=strrep(str,')','');
+str=strrep(str,' ','');
