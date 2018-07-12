@@ -324,7 +324,13 @@ if isempty(M.S)
     M=rmfield(M,'S');
     M.S(1:length(folders))=tS;
 else
+    try
     M.S(end+1:end+length(folders))=tS;
+    catch
+        tS.volume=[0,0];
+        tS.sources=[1:4];
+            M.S(end+1:end+length(folders))=tS;
+    end
 end
 
 setappdata(handles.leadfigure,'M',M);

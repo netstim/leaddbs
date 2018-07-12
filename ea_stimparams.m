@@ -2767,7 +2767,9 @@ S=ea_activecontacts(S);
 try
     gS(actpt)=S;
 catch
-    keyboard
+    S.sources=1:4;
+    S.volume=[0,0];
+    gS(actpt)=S;
 end
 setappdata(handles.stimfig,'gS',gS);
 
@@ -2837,7 +2839,14 @@ if isempty(gS)
 end
 
 S = ea_activecontacts(S);
-gS(actpt) = S;
+
+try
+    gS(actpt)=S;
+catch
+    S.sources=1:4;
+    S.volume=[0,0];
+    gS(actpt)=S;
+end
 setappdata(handles.stimfig, 'gS', gS);
 
 gSv = getappdata(handles.stimfig, 'gSv');
