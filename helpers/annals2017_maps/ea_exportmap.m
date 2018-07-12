@@ -1,6 +1,5 @@
 function ea_exportmap(n,M,fis,regressor,output,mask,sk,corrtype)
 
-
 n.img(:)=M;
 n.fname=output;
 
@@ -25,18 +24,21 @@ else
     dos=0;
     dok=0;
 end
+
 if isnan(mask)
     mask=1:numel(n.img);
     if dok
         warning('If using k option should apply a mask');
     end
 end
+
 if dok
     nanix=n.img(mask);
     nanix=ixs(~isnan(nanix));
     n.img(nanix)=ea_normal(n.img(nanix));
     ea_write_nii(n);
 end
+
 if dos
     matlabbatch{1}.spm.spatial.smooth.data = {output};
     matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];

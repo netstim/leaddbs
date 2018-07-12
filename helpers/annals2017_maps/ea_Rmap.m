@@ -33,7 +33,7 @@ if nargin>6
 end
 
 R=corr(regressor,X,'type',corrtype,'rows','pairwise');
-ea_exportmap(n,R,varargin{1:6});
+ea_exportmap(n,R,varargin{1:5});
 
 if exist('Rperm','var') % permutation test
     Rpermnaned=[R;Rperm]; % for now, first entry is the unpermuted one.
@@ -51,5 +51,5 @@ if exist('Rperm','var') % permutation test
 
     [pth,fn,ext]=fileparts(varargin{3});
     varargin{3}=fullfile(pth,[fn,'_sig',ext]);
-    ea_exportmap(n,Rnaned,varargin{1:6});
+    ea_exportmap(n,Rnaned,varargin{1:5});
 end
