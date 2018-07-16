@@ -19,8 +19,11 @@ for pt=1:length(uipatdir)
             ea_pat2ply(uipatdir{pt},handles);
         case 'LS'
                         [~,ptname]=fileparts(uipatdir{pt});
-
-                ea_exportpat([],[],'ZIP',handles,target);
+                        try
+                            ea_exportpat([],[],'ZIP',handles,target);
+                        catch
+                            msgbox(['Export for pt: ',uipatdir{pt},' failed.']);
+                        end
             %ea_pat2ls(uipatdir{pt},handles);
         case 'ZIP'
             ea_pat2ply(uipatdir{pt},handles);
