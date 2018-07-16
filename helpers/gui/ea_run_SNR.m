@@ -1,4 +1,4 @@
-function ea_cleanlegacy(hobj,evt,handles)
+function ea_run_SNR(hobj,evt,handles)
 
 
 dirs=getappdata(handles.leadfigure,'uipatdir');
@@ -14,15 +14,14 @@ for pt=1:length(dirs)
         end
     end
 end
-
-keyboard
-
+save('SNR_metrics','allRes');
 
 
 function res=ea_run_SNR_pt(directory)
 
 options=ea_getptopts(directory);
 [~,presentfiles] = ea_assignpretra(options);
+presentfiles=stripstn(presentfiles);
 if ~strcmp(directory(end),filesep)
     directory=[directory,filesep];
 end
@@ -37,11 +36,11 @@ c3mask=ea_load_nii([directory,'c3',presentfiles{1}]);
 
 for fi=1:length(presentfiles)
     thisanat=ea_load_nii([directory,presentfiles{fi}]);
-        noise=thisanat.img.*(noisemask.img>0.5); noise=std(noise(:));
+        noise=thisanat.img.*(noisemask.img>0.5); noise=ea_nanstd(noise(:));
 
-    c1signal=thisanat.img.*(c1mask.img>0.5); c1snr=mean(c1signal(:))/noise;
-    c2signal=thisanat.img.*(c2mask.img>0.5); c2snr=mean(c2signal(:))/noise;
-    c3signal=thisanat.img.*(c3mask.img>0.5); c3snr=mean(c3signal(:))/noise;
+    c1signal=thisanat.img.*(c1mask.img>0.5); c1snr=ea_nanmean(c1signal(:))/noise;
+    c2signal=thisanat.img.*(c2mask.img>0.5); c2snr=ea_nanmean(c2signal(:))/noise;
+    c3signal=thisanat.img.*(c3mask.img>0.5); c3snr=ea_nanmean(c3signal(:))/noise;
 
     res.(ea_stripex(presentfiles{fi})).c1snr=c1snr;
     res.(ea_stripex(presentfiles{fi})).c2snr=c2snr;
