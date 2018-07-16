@@ -85,7 +85,7 @@ for f=1:length(fis)
 
     n=ea_load_nii(fis{f});
 
-    if dos || dok % cleanup temp dir
+    if dos % cleanup temp dir
        delete(fis{f});
     end
 
