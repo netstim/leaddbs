@@ -22,7 +22,7 @@ if (~dartel && exist([directory, 'c1', files{1}], 'file') || dartel && exist([di
 else
     disp('Segmentation...');
 
-    load([options.earoot,'ext_libs',filesep,'segment',filesep,'segjob12']);
+    load([ea_getearoot,'ext_libs',filesep,'segment',filesep,'segjob12']);
     tpminf = [ea_space,'TPM.nii'];
     for fi=1:length(files) % add channels for multispectral segmentation
         job.channel(fi).vols = {[directory, files{fi}, ',1']};
@@ -39,7 +39,11 @@ else
             job.tissue(tpm).native = [1 1];
         end
         if tpm >= 4
+            if force==2
+            job.tissue(tpm).native = [1 0];
+            else
             job.tissue(tpm).native = [0 0];
+            end
         end
     end
 

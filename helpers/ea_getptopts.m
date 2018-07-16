@@ -15,3 +15,4 @@ options.root=[options.root,filesep];
 
 options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);
+options.earoot=ea_getearoot;

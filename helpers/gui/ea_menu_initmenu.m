@@ -48,6 +48,9 @@ if isempty(menuprobe)
     uimenu(f,'Label','Fuse volumes','Callback',{@ea_waveletfusion,handles});
 
     uimenu(f,'Label','Clean folders from unnecessary/legacy files','Callback',{@ea_cleanlegacy,handles});
+
+    uimenu(f,'Label','Calculate SNR ratio for selected subjects','Callback',{@ea_run_SNR,handles});
+
     
     if ismember('dbs',cmd)
         dbs=uimenu(f,'Label','DBS');
