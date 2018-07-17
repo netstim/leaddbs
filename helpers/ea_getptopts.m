@@ -16,3 +16,9 @@ options.root=[options.root,filesep];
 options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);
 options.earoot=ea_getearoot;
+options=ea_detsides(options);
+if exist([directory,filesep,'ea_reconstruction.mat'],'file')
+    load([directory,filesep,'ea_reconstruction.mat']);
+    options.elmodel=reco.props(1).elmodel;
+end
+

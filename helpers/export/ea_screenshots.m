@@ -7,6 +7,8 @@ options=ea_getptopts(uipatdir);
 options.fiberthresh=1;
 options.d3.verbose='on';
 options.native=0;
+options=ea_detsides(options);
+
 [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
 options.leadprod='dbs';
 options.elmodel=elmodel;

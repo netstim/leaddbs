@@ -11,6 +11,8 @@ atlasset=atlasset{get(handles.atlassetpopup,'Value')};
 cfv(1)=ea_atlas2ply({atlasset},[uipatdir,filesep,'export',filesep,'ply',filesep,'anatomy.ply']);
 try % this is DBS specific.
     options=ea_detsides(ea_getptopts(uipatdir));
+
+    
     cnt=1;
     for side=options.sides
         cfv(1+cnt)=ea_electrode2ply([uipatdir,filesep],side,handles);

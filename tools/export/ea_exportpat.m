@@ -22,6 +22,7 @@ for pt=1:length(uipatdir)
                         try
                             ea_exportpat([],[],'ZIP',handles,target);
                         catch
+                            
                             msgbox(['Export for pt: ',uipatdir{pt},' failed.']);
                         end
             %ea_pat2ls(uipatdir{pt},handles);
