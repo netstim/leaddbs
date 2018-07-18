@@ -1,4 +1,4 @@
-function [fibsweighted,fibsin]=ea_heatfibertracts(cfile,roilist,vals,thresh,minpercent)
+function [fibsweighted,fibsin]=ea_heatfibertracts(cfile,roilist,patselection,vals,thresh,minpercent)
 % function extracts fibers from a connectome connected to ROIs in the
 % roilist and assigns them correlative values based on vals. Vals needs to be of
 % same length as roilist, assigning a value for each ROI.
@@ -26,9 +26,11 @@ allroilist=cat(2,roilist{:});
 %tree=KDTreeSearcher(fibers(:,1:3));
 % load in all ROI
 ea_dispercent(0,'Aggregating ROI');
+cnt=1;
 for roi=1:length(allroilist);
     if size(allroilist,2)==2 % left and right entered separately, combine.
         nii{roi,1}=ea_load_nii(allroilist{roi,1});
+        
         [xx,yy,zz]=ind2sub(size(nii{roi,1}.img),find(nii{roi,1}.img));
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,1}.mat*XYZvx;
@@ -39,6 +41,7 @@ for roi=1:length(allroilist);
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,2}.mat*XYZvx;
         XYZmm{roi}=[XYZmm{roi};XY(1:3,:)'];
+
     else
         nii{roi}=ea_load_nii(allroilist{roi});
         
@@ -50,13 +53,31 @@ for roi=1:length(allroilist);
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XYZmm{roi}=nii{roi}.mat*XYZvx;
         XYZmm{roi}=XYZmm{roi}(1:3,:)';
+        
+
     end
+
     
     if ~exist('AllXYZ','var')
         AllXYZ=XYZmm{roi};
     else
         AllXYZ=[AllXYZ;XYZmm{roi}];
     end
+    
+    
+    if ismember(roi,patselection)
+        XYZmmSel{cnt}=XYZmm{roi};
+        niiSel{cnt,:}=nii{roi,:};
+        
+        if ~exist('AllXYZSel','var')
+            AllXYZSel=XYZmmSel{cnt};
+        else
+            AllXYZSel=[AllXYZSel;XYZmm{cnt}];
+        end
+        
+        cnt=cnt+1;
+    end
+    
     ea_dispercent(roi/length(allroilist));
 end
 ea_dispercent(1,'end');
@@ -69,22 +90,26 @@ AllXYZ=unique(round(AllXYZ),'rows');
 in=D<(mean(nii{end}.voxsize)*2); % larger threshold here since seed vals have been rounded above. Also, this is just to reduce size of the connectome for speed improvements, so we can be more liberal here.
 
 fibsin=fibers(ismember(fibers(:,4),unique(fibers(in,4))),:);
-fibsval=[zeros(size(fibsin,1),length(allroilist))]; % 5th column will add up values, 6th will take note how many entries were summed.
+fibsval=[zeros(size(fibsin,1),length(patselection))]; % 5th column will add up values, 6th will take note how many entries were summed.
 if size(fibsin,2)>4
    fibsin(:,5:end)=[]; 
 end
 %for group=1:length(roilist)
 
+
+AllXYZ=AllXYZSel; % now that connected fibers were selected, replace with selected VTAs only to avoid confusion.
+XYZmm=XYZmmSel;
+nii=niiSel;
 % now color fibsin based on predictive value of improvement
 ea_dispt('');
 
 ea_dispercent(0,'Iterating ROI');
 
-for roi=1:length(allroilist);
+for roi=1:length(patselection);
     [~,D]=knnsearch(XYZmm{roi}(:,1:3),fibsin(:,1:3),'Distance','chebychev');
     in=D<mean(nii{end}.voxsize);
     fibsval(ismember(fibsin(:,4),unique(fibsin(in,4))),roi)=1;
-    ea_dispercent(roi/length(allroilist));
+    ea_dispercent(roi/length(patselection));
     
 end
 ea_dispercent(1,'end');
@@ -111,8 +136,7 @@ for group=1:length(roilist)
     fibsval(exclude,:)=[];
     fibsweighted=fibsin;
     fibsweighted((exclude(iaix)),:)=[];
-    %iaix(exclude(iaix))=[];
-    %fibidx(exclude)=[];
+
     [~,fibidx,iaix]=unique(fibsweighted(:,4));
 
     allvals=repmat(vals{1}',size(fibsval,1),1);
@@ -121,18 +145,7 @@ for group=1:length(roilist)
     nfibsimpval(logical(fibsval))=nan;
     [h,p,ci,stats]=ttest2(fibsimpval',nfibsimpval');
     fibsweighted=[fibsweighted,stats.tstat(iaix)'];
-    %    f=ea_mes([ones(size(fibsval)),zeros(size(nfibsval))]',[fibsval,nfibsval]','rbcorr','missVal','pairwise');
-%    A=[ones(size(fibsval)),zeros(size(nfibsval))]';
-%    B=[fibsval,nfibsval]';
-%   maskenoughin=sum(isnan(fibsval),2)<round(0.2*length(roilist{group}));  
-%    RR=zeros(size(A,2),1);
-%    for fib=1:size(A,2) 
-%    RR(fib)=corr(A(:,fib),B(:,fib),'type','spearman','rows','pairwise');
-%    end
-%    RR(~maskenoughin)=nan; % fibers driven only by less than 30% of entries.
-%     [h,p,ci,stats]=ttest2(posvals',negvals');
-%     %fibsin=[fibsin,f.rbcorr(iaix)'];
-%     fibsin=[fibsin,RR(iaix)];
+
 end
 
 

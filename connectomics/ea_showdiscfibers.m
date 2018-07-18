@@ -7,28 +7,40 @@ I=M.clinical.vars{M.ui.clinicallist}(M.ui.listselect);
 N=length(patlist);
 thresh=0.5; 
 tic
-reforce=0;
-if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_',stripblanks(M.ui.connectomename),'.mat'],'file')
-    for sub=1:length(patlist)
-        roilist{sub,1}=[patlist{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii'];
-        roilist{sub,2}=[patlist{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii'];
+
+% protocol selection to be able to check if same analysis has been run
+% before.
+opts.percent=percent;
+opts.patientselection=M.ui.listselect;
+opts.regressor=I;
+opts.connectome=M.ui.connectomename;
+opts.allpatients=M.patient.list;
+
+reforce=checkpresence(M,opts);
+if reforce
+    
+    for sub=1:length(M.patient.list) % all patients - for connected fibers selection
+        allroilist{sub,1}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii'];
+        allroilist{sub,2}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii'];
     end
+
+    
     if ~exist([M.ui.groupdir,'connected_fibers.mat'],'file')
         cfile=[ea_getconnectomebase('dMRI'),M.ui.connectomename,filesep,'data.mat'];
     else
         cfile=[M.ui.groupdir,'connected_fibers.mat'];
     end
-    [fibsweighted,fibsin]=ea_heatfibertracts(cfile,{roilist},{I},thresh,percent);
+    [fibsweighted,fibsin]=ea_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},thresh,percent);
     save([M.ui.groupdir,'connected_fibers.mat'],'fibsin','-v7.3');
-    save([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_',stripblanks(M.ui.connectomename),'.mat'],'fibsweighted','-v7.3');
+    save([M.ui.groupdir,'correlative_fibertracts.mat'],'fibsweighted','opts','-v7.3');
 else
-    load([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_',stripblanks(M.ui.connectomename),'.mat']);
+    load([M.ui.groupdir,'correlative_fibertracts.mat']);
 end
 
 % visualize:
 
 
-if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted','_',stripblanks(M.ui.connectomename),'.mat'],'file')
+if reforce
     fibidx=unique(fibsweighted(:,4));
     fibcell=cell(length(fibidx),1);
     valcell=fibcell;
@@ -42,9 +54,9 @@ if reforce || ~exist([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2s
         ea_dispercent(cnt/length(fibidx));
     end
     ea_dispercent(1,'end');
-    save([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted','_',stripblanks(M.ui.connectomename),'.mat'],'fibcell','vals','-v7.3');
+    save([M.ui.groupdir,'correlative_fibertracts_reformatted.mat'],'fibcell','vals','opts','-v7.3');
 else
-    load([M.ui.groupdir,'correlative_fibertracts_',pointtodash(num2str(percent)),'_reformatted','_',stripblanks(M.ui.connectomename),'.mat']);
+    load([M.ui.groupdir,'correlative_fibertracts_reformatted.mat']);
 end
 
 
@@ -110,6 +122,15 @@ calph=mat2cell(alphas,ones(size(cvals,1),1));
 
 nones=repmat({'none'},size(cvals,1),1);
 [h.EdgeColor]=nones{:};
+
+function reforce=checkpresence(M,opts)
+reforce=1;
+if exist([M.ui.groupdir,'correlative_fibertracts.mat'],'file')
+    d=load([M.ui.groupdir,'correlative_fibertracts.mat'],'opts');
+    if isequal(opts,d.opts)
+        reforce=0;
+    end
+end
 
 function str=pointtodash(str)
 str=strrep(str,'.','-');
