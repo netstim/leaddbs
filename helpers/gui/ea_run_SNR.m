@@ -39,21 +39,21 @@ se=strel('ball',50,50);
 
 
 noisemask.img=ea_minmax(imerode(noisemask.img,se));
-noisemask.img=noisemask.img==1;
+noisemask.img=noisemask.img>0.9;
 noisemask.fname=[directory,'noisemask.nii'];
 ea_write_nii(noisemask);
 
 for fi=1:length(presentfiles)
     thisanat=ea_load_nii([directory,presentfiles{fi}]);
-        noise=thisanat.img.*(noisemask.img); 
-       noise(isnan(noise(:)))=[];
-       noise((noise(:)==0))=[];
-
-       noise=ea_nanstd(noise(:));
-    c1signal=thisanat.img.*(c1mask.img>0.9); c1snr=ea_nanmean(c1signal(~(c1signal(:)==0)))/noise;
-    c2signal=thisanat.img.*(c2mask.img>0.9); c2snr=ea_nanmean(c2signal(~(c2signal(:)==0)))/noise;
-    c3signal=thisanat.img.*(c3mask.img>0.9); c3snr=ea_nanmean(c3signal(~(c3signal(:)==0)))/noise;
-
+    noise=thisanat.img.*(noisemask.img);
+    noise(isnan(noise(:)))=[];
+    noise((noise(:)==0))=[];
+    
+    noise=ea_nanstd(noise(:));
+    c1signal=thisanat.img.*(c1mask.img>0.5); c1snr=ea_nanmean(c1signal(~(c1signal(:)==0)))/noise;
+    c2signal=thisanat.img.*(c2mask.img>0.5); c2snr=ea_nanmean(c2signal(~(c2signal(:)==0)))/noise;
+    c3signal=thisanat.img.*(c3mask.img>0.5); c3snr=ea_nanmean(c3signal(~(c3signal(:)==0)))/noise;
+    
     res.(ea_stripex(presentfiles{fi})).c1snr=c1snr;
     res.(ea_stripex(presentfiles{fi})).c2snr=c2snr;
     res.(ea_stripex(presentfiles{fi})).c3snr=c3snr;
