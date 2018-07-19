@@ -37,6 +37,8 @@ idx=zeros(length(atlassurfs),1);
 for i = 1:length(varargin)
     idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_left']);
     idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_right']);
+    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_midline']);
+    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_mixed']);
 end
     set(colorbuttons(idx==0),'State','off')
     set(atlassurfs(idx==0),'Visible','off')

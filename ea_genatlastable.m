@@ -154,9 +154,9 @@ if checkrebuild(atlases,options,root,mifix)
                 colorc=colornames(1);
                 colorc=rgb(colorc);
                 if isfield(nii,'img') % volumetric atlas
-                    if options.prefs.hullsmooth
-                        nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
-                    end
+%                     if options.prefs.hullsmooth
+%                         nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
+%                     end
                     
                     [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); % find 3D-points that have correct value.
                     vv=nii.img(nii.img(:)>0);
