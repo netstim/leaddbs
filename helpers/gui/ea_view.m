@@ -16,3 +16,5 @@ else
     v.camtarget=camtarget;
     v.campos=campos;  
 end
+resultfig=gcf;
+            ea_zoomcenter(resultfig.CurrentAxes, v.camtarget);

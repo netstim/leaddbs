@@ -54,7 +54,7 @@ if options.d3.write
             zoom(3);
         end
     end
-
+    ea_view;
     % save scene as matlab figure
 %     try % if path is not defined, don't save.
 %         savefig(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig'],'compact');

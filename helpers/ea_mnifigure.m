@@ -14,6 +14,8 @@ options.d3.exportBB=0;
 resultfig=ea_elvis(options);
 colormap gray
 hold on
+            ea_zoomcenter(resultfig.CurrentAxes, [0,0,0], 3);
+
 
 
 function options=getoptslocal

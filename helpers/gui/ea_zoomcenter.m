@@ -52,5 +52,6 @@ elseif numel(axis(ax))/2 == 3   % 3-D plot
     zrange = center(3) + [-1, 1] * max(abs(ax.ZLim - center(3)));
     axis(ax, [xrange, yrange,zrange]);
 end
-
+if nargin>2
 zoom(factor);
+end

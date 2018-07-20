@@ -1,13 +1,9 @@
-function ea_setplanes(xx,yy,zz,options)
+function ea_setbackdrop(backdrop,options)
 
 H = findall(0,'type','figure');
 resultfig = H(~cellfun(@isempty,strfind({H(:).Name},{'Electrode-Scene'})));
 togglestates=getappdata(resultfig,'togglestates');
-setXYZ=[xx,yy,zz];
-togglestates.xyztoggles=~isnan(setXYZ);
-setXYZ(~togglestates.xyztoggles)=togglestates.xyzmm(~togglestates.xyztoggles);
-togglestates.xyzmm=setXYZ;
-togglestates.refreshview=1;
+togglestates.template=backdrop;
 if ~exist('options','var')
     options=struct;
 end

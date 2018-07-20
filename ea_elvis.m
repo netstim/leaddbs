@@ -527,7 +527,7 @@ if FileName
 % [~, cdata] = ea_myaa([4, 2]);
 % 
 % imwrite(cdata, [PathName,FileName], 'png');
-ea_screenshot([PathName,FileName]);
+ea_screenshot([PathName,FileName],'myaa');
 
 end
 
