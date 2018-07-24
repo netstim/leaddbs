@@ -16,7 +16,7 @@ opts.regressor=I;
 opts.connectome=M.ui.connectomename;
 opts.allpatients=M.patient.list;
 
-reforce=checkpresence(M,opts);
+[reforce,connectomechanged,reformat]=checkpresence(M,opts);
 if reforce
     
     for sub=1:length(M.patient.list) % all patients - for connected fibers selection
@@ -28,10 +28,14 @@ if reforce
     if ~exist([M.ui.groupdir,'connected_fibers.mat'],'file')
         cfile=[ea_getconnectomebase('dMRI'),M.ui.connectomename,filesep,'data.mat'];
     else
-        cfile=[M.ui.groupdir,'connected_fibers.mat'];
+        if connectomechanged
+            cfile=[ea_getconnectomebase('dMRI'),M.ui.connectomename,filesep,'data.mat'];
+        else
+            cfile=[M.ui.groupdir,'connected_fibers.mat'];
+        end
     end
     [fibsweighted,fibsin]=ea_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},thresh,percent);
-    save([M.ui.groupdir,'connected_fibers.mat'],'fibsin','-v7.3');
+    save([M.ui.groupdir,'connected_fibers.mat'],'fibsin','opts','-v7.3');
     save([M.ui.groupdir,'correlative_fibertracts.mat'],'fibsweighted','opts','-v7.3');
 else
     load([M.ui.groupdir,'correlative_fibertracts.mat']);
@@ -40,7 +44,7 @@ end
 % visualize:
 
 
-if reforce
+if reformat
     fibidx=unique(fibsweighted(:,4));
     fibcell=cell(length(fibidx),1);
     valcell=fibcell;
@@ -123,14 +127,29 @@ calph=mat2cell(alphas,ones(size(cvals,1),1));
 nones=repmat({'none'},size(cvals,1),1);
 [h.EdgeColor]=nones{:};
 
-function reforce=checkpresence(M,opts)
-reforce=1;
+function [reforce,connectomechanged,reformat]=checkpresence(M,opts)
+reforce=1; connectomechanged=1; reformat=1;
 if exist([M.ui.groupdir,'correlative_fibertracts.mat'],'file')
     d=load([M.ui.groupdir,'correlative_fibertracts.mat'],'opts');
     if isequal(opts,d.opts)
         reforce=0;
     end
 end
+if exist([M.ui.groupdir,'connected_fibers.mat'],'file') % check if base connectome changed.
+    d=load([M.ui.groupdir,'correlative_fibertracts.mat'],'opts');
+    if isequal(d.opts.connectome,opts.connectome)
+        connectomechanged=0;
+    end
+end
+if ~reforce
+    if exist([M.ui.groupdir,'correlative_fibertracts_reformatted.mat'],'file') % check if base connectome changed.
+        d=load([M.ui.groupdir,'correlative_fibertracts_reformatted.mat'],'opts');
+        if isequal(d.opts.connectome,opts.connectome)
+            reformat=0;
+        end
+    end
+end
+
 
 function str=pointtodash(str)
 str=strrep(str,'.','-');

@@ -110,14 +110,13 @@ for roi=1:length(patselection);
     in=D<mean(nii{end}.voxsize);
     fibsval(ismember(fibsin(:,4),unique(fibsin(in,4))),roi)=1;
     ea_dispercent(roi/length(patselection));
-    
 end
 ea_dispercent(1,'end');
 ea_dispt('Correlating fibers with values');
 cnt=1;
 for group=1:length(roilist)
-    thisgroupidx=cnt:(cnt+length(roilist{group}))-1;
-    cnt=cnt+length(roilist{group});
+    thisgroupidx=cnt:(cnt+length(patselection))-1;
+    cnt=cnt+length(patselection);
     %R=corr(fibsval',vals,'type','spearman');
     repvals=repmat(vals{group}',size(fibsval,1),1);
     try
