@@ -32,6 +32,8 @@ end
 fovimg=ea_load_nii(fovimg);
 distimg=fovimg;
 sigimg=fovimg;
+pimg=fovimg;
+
 for side=sides
     switch side
         case 1
@@ -46,7 +48,8 @@ for side=sides
     
     fovimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'.nii'];
     distimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'_distance.nii'];
-    sigimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'_p.nii'];
+    sigimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'_perm_p.nii'];
+    pimg.fname=[M.root,M.clinical.labels{regno},'_dist_heatmap',sidestr,'_p.nii'];
 
     
     [xx,yy,zz]=ind2sub(size(fovimg.img),1:numel(fovimg.img));
@@ -127,8 +130,41 @@ for side=sides
         
 %        Dall=1./(Dall);
         
-        realvals=corr(Dall,I,'rows','pairwise','type','Spearman');
+if isfield(opts,'cohs') && opts.cleanforcohorts
+    warning off
+    for i=1:chunk
+        Dall(:,i)=ea_resid([opts.cohs;opts.cohs],Dall(:,i));
+    end
+    warning on
+end
+    
+% if ~exist('bstochastic','var') % estimate average betas across sample space
+%     Dtest=pdist2(acs,XYZ(round(linspace(1,size(XYZ,1),chunk)),:));
+%     Dtest=-Dtest;
+%     b=zeros(size(opts.cohs,2)+1,1);
+%     warning off
+%     
+%     for i=1:chunk
+%         b=b+glmfit([opts.cohs;opts.cohs],Dtest(:,i));
+%     end
+%     warning on
+%     bstochastic=b/chunk;
+%     clear Dtest
+% end
+% 
+% for i=1:chunk
+%     thisD=Dall(:,i);
+%     ea_resid([opts.cohs;opts.cohs],Dall(:,i))
+%     Dall(:,i)=ea_addone([opts.cohs;opts.cohs])*bstochastic-Dall(:,i);
+%     Dall(:,i)=([opts.cohs;opts.cohs],Dall(:,i))
+% end
+
+
+
+
+        [realvals,realp]=corr(Dall,I,'rows','pairwise','type','Spearman');
         fovimg.img(vx:(vx+chunk-1))=realvals; % write to image
+        pimg.img(vx:(vx+chunk-1))=realp; % write to image
         if permute
                 permvals=corr(Dall,Iperms,'rows','pairwise','type','Spearman');
 
@@ -155,8 +191,10 @@ for side=sides
     
     fovimg.dt=[64,0];
     distimg.dt=[64,0];
+    pimg.dt=[64,0];
     ea_write_nii(fovimg);
     ea_write_nii(distimg);
+    ea_write_nii(pimg);
     if permute
         sigimg.dt=[64,0];
         ea_write_nii(sigimg);

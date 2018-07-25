@@ -82,7 +82,7 @@ posits=sort(posits,'descend');
 negits=sort(negits,'ascend');
 % posthresh=posits(round(length(posits)*0.05));
 % negthresh=negits(round(length(negits)*0.05));
-cutoff=500;
+cutoff=1500;
 if (length(posits) < cutoff) || (length(negits) < cutoff)
     cutoff=min([length(posits),length(negits)]);
 end
