@@ -92,7 +92,11 @@ for side=sides
     
     if electrodewise % duplicate entries..
         pts=[pts,pts+size(M.clinical.vars{regno},1)];
+        if bilateral
         M.clinical.vars{regno}=M.clinical.vars{regno}(:);
+        else
+           M.clinical.vars{regno}=[M.clinical.vars{regno};M.clinical.vars{regno}]; 
+        end
         M.patient.list=[M.patient.list;M.patient.list];
     end
     
@@ -101,8 +105,11 @@ for side=sides
     ea_dispercent(0,'Iterating voxels');
     dimen=length(XYZ);
     N=length(M.patient.list(pts));
+    try
     I=M.clinical.vars{regno}(pts,side);
-    
+    catch
+        keyboard
+    end
     permute=0;
     if permute
         permnum=1000;
