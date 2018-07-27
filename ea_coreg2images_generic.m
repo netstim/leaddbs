@@ -21,6 +21,8 @@ end
 
 tmpdir=ea_getleadtempdir;
 uid=ea_generate_guid;
+[movingbase,movingorig]=fileparts(moving);
+[fixedbase,fixedorig]=fileparts(fixed);
 copyfile(moving,[tmpdir,uid,'.nii']);
 moving=[tmpdir,uid,'.nii'];
 
@@ -44,6 +46,10 @@ switch options.coregmr.method
         commaoneotherfiles=prepforspm(copiedotherfiles);
 
         affinefile = ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat,interp);
+        movefile(fullfile(tmpdir,[ea_stripex(moving),'2',fixedorig,'_spm.mat']),...
+            fullfile(movingbase,[movingorig,'2',fixedorig,'_spm.mat']));
+        movefile(fullfile(tmpdir,[fixedorig,'2',ea_stripex(moving),'_spm.mat']),...
+            fullfile(movingbase,[fixedorig,'2',movingorig,'_spm.mat']));
         try % will fail if ofile is same string as r mfilen..
             movefile([tmpdir,'r',uid,'.nii'],ofile);
         end

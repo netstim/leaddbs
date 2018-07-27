@@ -61,17 +61,33 @@ end
 if ~exist([directory,'templates',filesep,'labeling',filesep,'r',b0rest,'w',options.lc.general.parcellation,'.nii'],'file')
     %% coreg atlas into b0-space:
     [~,reffn]=fileparts(ref_filename);
-    copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
-    copyfile([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],...
-        [directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii']);
+    %copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
+    %copyfile([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],...
+     %   [directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii']);
 
-    ea_coreg2images(options,[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized],...
-        [options.root,options.patientname,filesep,ref_filename],...
-        [options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized],...
-        {[directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii']},0,[],0);
+     redo=1; % no .mat file available, redo coreg
+     switch options.coregmr.method
+         
+         case 'SPM'
+             if exist([options.root,options.patientname,filesep,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(ref_filename),'_spm.mat'],'file')
+                 redo=0;
+                 load([options.root,options.patientname,filesep,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(ref_filename),'_spm.mat']);
+                 nii=ea_load_nii([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']);
+                 nii.mat=spmaffine;
+                 nii.fname=[directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii'];
+                 ea_write_nii(nii);
+                 ea_conformspaceto([options.root,options.patientname,filesep,ref_filename],nii.fname,0);
+             end
 
-
-    ea_gencheckregpair([directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation],...
+     end
+     if redo
+         ea_coreg2images_generic(options,[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...
+             [options.root,options.patientname,filesep,ref_filename],...
+             [options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized],...
+             {[directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii']},0,[],0);
+     end
+     
+     ea_gencheckregpair([directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation],...
         [options.root,options.patientname,filesep,reffn],...
         [options.root,options.patientname,filesep,'checkreg',filesep,options.lc.general.parcellation,'2',reffn,'.png']);
 
