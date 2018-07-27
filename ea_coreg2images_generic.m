@@ -35,7 +35,13 @@ end
 
 switch options.coregmr.method
     case 'SPM' % SPM
-        commaoneotherfiles=prepforspm(otherfiles);
+        for ofi=1:length(otherfiles)
+            ofiuid{ofi}=ea_generate_guid;
+            copyfile(otherfiles{ofi},[tmpdir,ofiuid{ofi},'.nii']);
+            copiedotherfiles{ofi}=[tmpdir,ofiuid{ofi},'.nii'];
+        end
+        
+        commaoneotherfiles=prepforspm(copiedotherfiles);
 
         affinefile = ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat,interp);
         try % will fail if ofile is same string as r mfilen..
@@ -43,7 +49,7 @@ switch options.coregmr.method
         end
         for ofi=1:length(otherfiles)
             [pth,fn,ext]=fileparts(otherfiles{ofi});
-            movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
+            movefile([tmpdir,'r',ofiuid{ofi},'.nii'],fullfile(pth,['r',fn,ext]));
         end
 
     case 'FSL' % FSL

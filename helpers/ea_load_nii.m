@@ -30,12 +30,13 @@ elseif regexp(fname, '\.nii.gz,\d+$', 'once') % 'image.nii.gz,1'
     wasgzip = 1;
     [pth, ~, ~, vol]  =  ea_niifileparts(fname);
     gunzip([pth, '.nii.gz']);
-    fname  =  [pth, '.nii', vol];
+    fname  =  fullfile(pth,['.nii', vol]);
 else
     wasgzip = 0;
 end
 
 % Read header and img
+
 nii = spm_vol(fname);
 img = spm_read_vols(nii);
 volnum = numel(nii);

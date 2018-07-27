@@ -169,7 +169,7 @@ end
 
 
 
-        [realvals,realp]=corr(Dall,I,'rows','pairwise','type','Spearman');
+        [realvals,realp]=corr(Dall,I,'rows','pairwise','type','Pearson');
         fovimg.img(vx:(vx+chunk-1))=realvals; % write to image
         pimg.img(vx:(vx+chunk-1))=realp; % write to image
         if permute
