@@ -83,6 +83,7 @@ switch options.coregmr.method
             moving,...
             ofile,writeoutmat,otherfiles);
 end
+ea_flushtemp;
 ea_conformspaceto(fixed, ofile); % fix qform/sform issues.
 
 
