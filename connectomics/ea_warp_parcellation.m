@@ -57,10 +57,10 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
             end
     end
 end
-
-if ~exist([directory,'templates',filesep,'labeling',filesep,'r',b0rest,'w',options.lc.general.parcellation,'.nii'],'file')
-    %% coreg atlas into b0-space:
     [~,reffn]=fileparts(ref_filename);
+
+if ~exist([directory,'templates',filesep,'labeling',filesep,reffn,'w',options.lc.general.parcellation,'.nii'],'file')
+    %% coreg atlas into b0-space:
     %copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
     %copyfile([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],...
      %   [directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii']);
@@ -74,9 +74,20 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'r',b0rest,'w',optio
                  load([options.root,options.patientname,filesep,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(ref_filename),'_spm.mat']);
                  nii=ea_load_nii([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']);
                  nii.mat=spmaffine;
-                 nii.fname=[directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii'];
+                 nii.fname=[directory,'templates',filesep,'labeling',filesep,reffn,'w',options.lc.general.parcellation,'.nii'];
                  ea_write_nii(nii);
-                 ea_conformspaceto([options.root,options.patientname,filesep,ref_filename],nii.fname,0);
+                 
+                 matlabbatch{1}.spm.spatial.coreg.write.ref = {[options.root,options.patientname,filesep,ref_filename,',1']};
+                 matlabbatch{1}.spm.spatial.coreg.write.source = {nii.fname};
+                 matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = 0;
+                 matlabbatch{1}.spm.spatial.coreg.write.roptions.wrap = [0 0 0];
+                 matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
+                 matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
+                 spm_jobman('run',{matlabbatch});
+                 clear matlabbatch
+                 [pth,fn,ext]=fileparts(nii.fname);
+                 movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
+                 delete(fullfile(pth,[fn(2:end),ext]))
              end
 
      end

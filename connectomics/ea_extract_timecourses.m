@@ -9,7 +9,7 @@ vizz=0;
 %% create voxelmask
 disp('Extracting time courses...');
 [~,rrf]=fileparts(options.prefs.rest);
-Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'rsr',rrf,'w',options.lc.general.parcellation,'.nii,1']);
+Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'r',rrf,'w',options.lc.general.parcellation,'.nii']);
 Xatl=spm_read_vols(Vatl);
 
 nonzeros=find(Xatl(:));
@@ -138,9 +138,9 @@ disp('Calculating Global, WM and CSF-signals for signal regression...');
 
 [~,rf]=fileparts(options.prefs.rest);
 % regression steps
-c1=ea_load_nii([directory,'rr',rf,'c1',options.prefs.prenii_unnormalized]);
-c2=ea_load_nii([directory,'rr',rf,'c2',options.prefs.prenii_unnormalized]);
-c3=ea_load_nii([directory,'rr',rf,'c3',options.prefs.prenii_unnormalized]);
+c1=ea_load_nii([directory,'r',rf,'_c1',options.prefs.prenii_unnormalized]);
+c2=ea_load_nii([directory,'r',rf,'_c2',options.prefs.prenii_unnormalized]);
+c3=ea_load_nii([directory,'r',rf,'_c3',options.prefs.prenii_unnormalized]);
 
 globmap=logical((c1.img>0.5)+(c2.img)>0.5+(c3.img>0.5));
 ec2map=c2.img; ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
