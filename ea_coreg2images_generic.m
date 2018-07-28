@@ -51,10 +51,14 @@ switch options.coregmr.method
             commaoneotherfiles={};
         end
         affinefile = ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat,interp);
-        movefile(fullfile(tmpdir,[ea_stripex(moving),'2',fixedorig,'_spm.mat']),...
-            fullfile(movingbase,[movingorig,'2',fixedorig,'_spm.mat']));
-        movefile(fullfile(tmpdir,[fixedorig,'2',ea_stripex(moving),'_spm.mat']),...
-            fullfile(movingbase,[fixedorig,'2',movingorig,'_spm.mat']));
+        if exist(fullfile(tmpdir,[ea_stripex(moving),'2',fixedorig,'_spm.mat']),'file')
+            movefile(fullfile(tmpdir,[ea_stripex(moving),'2',fixedorig,'_spm.mat']),...
+                fullfile(movingbase,[movingorig,'2',fixedorig,'_spm.mat']));
+        end
+        if exist(fullfile(tmpdir,[fixedorig,'2',ea_stripex(moving),'_spm.mat']),'file')
+            movefile(fullfile(tmpdir,[fixedorig,'2',ea_stripex(moving),'_spm.mat']),...
+                fullfile(movingbase,[fixedorig,'2',movingorig,'_spm.mat']));
+        end
         try % will fail if ofile is same string as r mfilen..
             movefile([tmpdir,'r',uid,'.nii'],ofile);
         end
