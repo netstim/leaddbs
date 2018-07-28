@@ -45,9 +45,11 @@ switch options.coregmr.method
             copyfile(otherfiles{ofi},[tmpdir,ofiuid{ofi},'.nii']);
             copiedotherfiles{ofi}=[tmpdir,ofiuid{ofi},'.nii'];
         end
-        
-        commaoneotherfiles=prepforspm(copiedotherfiles);
-
+        if exist('copiedotherfiles','var')
+            commaoneotherfiles=prepforspm(copiedotherfiles);
+        else
+            commaoneotherfiles={};
+        end
         affinefile = ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat,interp);
         movefile(fullfile(tmpdir,[ea_stripex(moving),'2',fixedorig,'_spm.mat']),...
             fullfile(movingbase,[movingorig,'2',fixedorig,'_spm.mat']));
@@ -69,6 +71,7 @@ switch options.coregmr.method
         affinefile = ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles,msks);
+        
     case 'BRAINSFIT' % BRAINSFit
         affinefile = ea_brainsfit(fixed,...
             moving,...
