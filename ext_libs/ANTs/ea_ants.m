@@ -230,7 +230,7 @@ if ~isempty(otherfiles)
         
         [pth,fn,ext]=fileparts(otherfiles{ofi});
         
-        ea_ants_applytransforms(options,otherfiles(ofi),fullfile(pth,['r',fn,ext]),0,fixedimage,[outputbase, '0GenericAffine.mat']);
+        ea_ants_applytransforms(options,otherfiles(ofi),{fullfile(pth,['r',fn,ext])},0,fixedimage,[outputbase, '0GenericAffine.mat']);
     end
 end
 
