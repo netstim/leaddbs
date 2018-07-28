@@ -52,7 +52,7 @@ if ~exist([directory,'r',options.prefs.rest],'file');
     copyfile([tmpdir,'r',uid,'.nii'],[directory,'r',options.prefs.rest]);
     copyfile([tmpdir,'rp_',uid,'.txt'],[directory,'rp_',ea_stripex(options.prefs.rest),'.txt']);
 
-    ea_flushtemp; % delete temp dir.
+    %ea_flushtemp; % delete temp dir.
 end
 
 

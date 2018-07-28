@@ -19,17 +19,6 @@ if ~exist('msks','var') || isempty(msks)
     msks={};
 end
 
-tmpdir=ea_getleadtempdir;
-uid=ea_generate_guid;
-[movingbase,movingorig]=fileparts(moving);
-[fixedbase,fixedorig]=fileparts(fixed);
-copyfile(moving,[tmpdir,uid,'.nii']);
-moving=[tmpdir,uid,'.nii'];
-
-[directory,mfilen,ext]=fileparts(moving);
-directory=[directory,filesep];
-mfilen=[mfilen,ext];
-
 
 if ~exist('interp','var') || isempty(interp)
     interp=4;
@@ -37,6 +26,20 @@ end
 
 switch options.coregmr.method
     case 'SPM' % SPM
+        
+        % for SPM process everything in tmp dir.
+        tmpdir=ea_getleadtempdir;
+        uid=ea_generate_guid;
+        [movingbase,movingorig]=fileparts(moving);
+        [fixedbase,fixedorig]=fileparts(fixed);
+        copyfile(moving,[tmpdir,uid,'.nii']);
+        moving=[tmpdir,uid,'.nii'];
+        
+        [directory,mfilen,ext]=fileparts(moving);
+        directory=[directory,filesep];
+        mfilen=[mfilen,ext];
+        
+        
         for ofi=1:length(otherfiles)
             ofiuid{ofi}=ea_generate_guid;
             copyfile(otherfiles{ofi},[tmpdir,ofiuid{ofi},'.nii']);
@@ -89,7 +92,7 @@ switch options.coregmr.method
             moving,...
             ofile,writeoutmat,otherfiles);
 end
-ea_flushtemp;
+%ea_flushtemp;
 ea_conformspaceto(fixed, ofile); % fix qform/sform issues.
 
 
