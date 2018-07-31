@@ -52,11 +52,17 @@ C=nanmean(X);
 
 
 function C=ea_eig(X)
-X=X+min(X(:));
-X(isnan(X))=0;
-[C,~]=eigs(sparse(X));
-C=abs(C(:,1));
-C=C/sum(C);
+X=X-ea_nanmin(X(:));
+
+nnanix=~all(isnan(X));
+smallX=X(nnanix,nnanix);
+
+%X(isnan(X))=0;
+[smallC,~]=eigs(sparse(smallX));
+smallC=abs(smallC(:,1));
+C=nan(size(X,1),1);
+C(nnanix)=smallC;
+%C=C/sum(C);
 
 
 function C=ea_eff(X)
