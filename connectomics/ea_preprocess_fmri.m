@@ -19,7 +19,7 @@ ea_smooth_fmri(signallength,options); % slightly smooth fMRI data
 function ea_realign_fmri(signallength,options)
 %% realign fmri.
 directory=[options.root,options.patientname,filesep];
-if ~exist([directory,'r',options.prefs.rest],'file');
+if ~exist([directory,'r',options.prefs.rest],'file')
 
     tmpdir=ea_getleadtempdir;
     uid=ea_generate_guid;
@@ -49,17 +49,20 @@ if ~exist([directory,'r',options.prefs.rest],'file');
     clear matlabbatch;
     disp('Done.');
     
-    copyfile([tmpdir,'r',uid,'.nii'],[directory,'r',options.prefs.rest]);
-    copyfile([tmpdir,'rp_',uid,'.txt'],[directory,'rp_',ea_stripex(options.prefs.rest),'.txt']);
+    movefile([tmpdir,'r',uid,'.nii'],[directory,'r',options.prefs.rest]);
+    movefile([tmpdir,'mean',uid,'.nii'],[directory,'mean',options.prefs.rest]);
+    movefile([tmpdir,'rp_',uid,'.txt'],[directory,'rp_',ea_stripex(options.prefs.rest),'.txt']);
 
-    %ea_flushtemp; % delete temp dir.
+    ea_delete([tmpdir,uid,'.nii']);
 end
 
 
 function ea_coreg_pre2fmri(options)
 directory=[options.root,options.patientname,filesep];
 if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_',options.prefs.prenii_unnormalized],'file')
-    ea_coreg2images_generic(options,[directory,options.prefs.prenii_unnormalized],[directory,'r',options.prefs.rest],...
+    ea_coreg2images_generic(options,...
+        [directory,options.prefs.prenii_unnormalized],...
+        [directory,'r',options.prefs.rest],...
         [directory,'r',ea_stripex(options.prefs.rest),'_',options.prefs.prenii_unnormalized],...
         {[directory,'c1',options.prefs.prenii_unnormalized];...
         [directory,'c2',options.prefs.prenii_unnormalized];...
@@ -77,7 +80,6 @@ if ~exist([directory,'sr',options.prefs.rest],'file')
     for i = 1:signallength
         filetimepts{i}=[directory,'r',options.prefs.rest,',',num2str(i)];
     end
-
 
     matlabbatch{1}.spm.spatial.smooth.data = filetimepts;
     matlabbatch{1}.spm.spatial.smooth.fwhm = [6 6 6];

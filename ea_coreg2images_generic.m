@@ -12,9 +12,11 @@ end
 if ~exist('writeoutmat','var') || isempty(writeoutmat)
     writeoutmat = 0;
 end
+
 if ~exist('affinefile','var') || isempty(affinefile)
     affinefile = {};
 end
+
 if ~exist('msks','var') || isempty(msks)
     msks={};
 end
@@ -26,7 +28,6 @@ end
 
 switch options.coregmr.method
     case 'SPM' % SPM
-        
         % for SPM process everything in tmp dir.
         tmpdir=ea_getleadtempdir;
         uid=ea_generate_guid;
@@ -34,34 +35,39 @@ switch options.coregmr.method
         [fixedbase,fixedorig]=fileparts(fixed);
         copyfile(moving,[tmpdir,uid,'.nii']);
         moving=[tmpdir,uid,'.nii'];
-        
+
         [directory,mfilen,ext]=fileparts(moving);
         directory=[directory,filesep];
         mfilen=[mfilen,ext];
-        
-        
+
+
         for ofi=1:length(otherfiles)
             ofiuid{ofi}=ea_generate_guid;
             copyfile(otherfiles{ofi},[tmpdir,ofiuid{ofi},'.nii']);
             copiedotherfiles{ofi}=[tmpdir,ofiuid{ofi},'.nii'];
         end
+
         if exist('copiedotherfiles','var')
             commaoneotherfiles=prepforspm(copiedotherfiles);
         else
             commaoneotherfiles={};
         end
+
         affinefile = ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat,interp);
         if exist(fullfile(tmpdir,[ea_stripex(moving),'2',fixedorig,'_spm.mat']),'file')
             movefile(fullfile(tmpdir,[ea_stripex(moving),'2',fixedorig,'_spm.mat']),...
                 fullfile(movingbase,[movingorig,'2',fixedorig,'_spm.mat']));
         end
+
         if exist(fullfile(tmpdir,[fixedorig,'2',ea_stripex(moving),'_spm.mat']),'file')
             movefile(fullfile(tmpdir,[fixedorig,'2',ea_stripex(moving),'_spm.mat']),...
                 fullfile(movingbase,[fixedorig,'2',movingorig,'_spm.mat']));
         end
+
         try % will fail if ofile is same string as r mfilen..
             movefile([tmpdir,'r',uid,'.nii'],ofile);
         end
+
         for ofi=1:length(otherfiles)
             [pth,fn,ext]=fileparts(otherfiles{ofi});
             movefile([tmpdir,'r',ofiuid{ofi},'.nii'],fullfile(pth,['r',fn,ext]));
@@ -75,7 +81,7 @@ switch options.coregmr.method
         affinefile = ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles,msks);
-        
+
     case 'BRAINSFIT' % BRAINSFit
         affinefile = ea_brainsfit(fixed,...
             moving,...
@@ -99,21 +105,17 @@ switch options.coregmr.method
             moving,...
             ofile,writeoutmat,otherfiles);
 end
-%ea_flushtemp;
-ea_conformspaceto(fixed, ofile); % fix qform/sform issues.
+
+% ea_conformspaceto(fixed, ofile); % fix qform/sform issues.
 
 
 function otherfiles=prepforspm(otherfiles)
-
-
 if size(otherfiles,1)<size(otherfiles,2)
     otherfiles=otherfiles';
 end
 
 for fi=1:length(otherfiles)
-
     otherfiles{fi}=appendcommaone(otherfiles{fi});
-
 end
 
 
