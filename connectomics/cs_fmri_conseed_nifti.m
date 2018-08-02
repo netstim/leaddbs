@@ -6,7 +6,8 @@ options=ea_getptopts(directory,options);
 options=ea_assignpretra(options);
 [~,anat]=fileparts(options.prefs.prenii_unnormalized);
 
-if ~exist([directory,'sr',ref,ext],'file') || ~exist([directory,'rr',ref,'c1',anat,'.nii'],'file') % preproecessing needs to be performed
+if ~exist([directory,'sr',ref,ext],'file') ...
+    || ~exist([directory,'r',ref,'_c1',anat,'.nii'],'file') % preproecessing needs to be performed
     disp('No preprocessed fMRI-images found, processing...');
     options.prefs.rest=[ref,ext];
     ea_preprocess_fmri(options);
@@ -38,8 +39,8 @@ disp('Calculating C2 and CSF-signals for signal regression...');
 
 % regression steps
 [~,ref]=fileparts(restfilename);
-c2=ea_load_nii([directory,'rr',ref,'c2',options.prefs.prenii_unnormalized]);
-c3=ea_load_nii([directory,'rr',ref,'c3',options.prefs.prenii_unnormalized]);
+c2=ea_load_nii([directory,'r',ref,'_c2',options.prefs.prenii_unnormalized]);
+c3=ea_load_nii([directory,'r',ref,'_c3',options.prefs.prenii_unnormalized]);
 
 ec2map=c2.img(:); ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
 ec3map=c3.img(:); ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);

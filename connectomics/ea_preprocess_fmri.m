@@ -1,6 +1,5 @@
 function ea_preprocess_fmri(options)
 
-
 directory=[options.root,options.patientname,filesep];
 
 V=spm_vol([directory,options.prefs.rest]);
@@ -59,7 +58,7 @@ end
 
 function ea_coreg_pre2fmri(options)
 directory=[options.root,options.patientname,filesep];
-if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_',options.prefs.prenii_unnormalized],'file')
+if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_c1',options.prefs.prenii_unnormalized],'file')
     ea_coreg2images_generic(options,...
         [directory,options.prefs.prenii_unnormalized],...
         [directory,'r',options.prefs.rest],...

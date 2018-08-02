@@ -5,7 +5,8 @@ expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,optio
 [~,anat]=fileparts(options.prefs.prenii_unnormalized);
 [~,rf]=fileparts(options.prefs.rest);
 directory=[options.root,options.patientname,filesep];
-    if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_',options.prefs.prenii_unnormalized],'file') || ~exist([directory,'sr',options.prefs.rest],'file') % preproecessing needs to be performed
+    if ~exist([directory,'sr',options.prefs.rest],'file') ...
+        || ~exist([directory,'r',ea_stripex(options.prefs.rest),'_c1',options.prefs.prenii_unnormalized],'file') % preproecessing needs to be performed
         disp('No preprocessed fMRI-images found, processing...');
         ea_preprocess_fmri(options);
         disp('Done preprocessing fMRI data.');

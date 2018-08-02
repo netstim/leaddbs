@@ -73,18 +73,15 @@ end;
 
 
 %% Data corrections steps
-
-
 disp('Calculating C2 and CSF-signals for signal regression...');
 
 % regression steps
 [~,rf]=fileparts(options.prefs.rest);
-c2=ea_load_nii([directory,'rr',rf,'c2',options.prefs.prenii_unnormalized]);
-c3=ea_load_nii([directory,'rr',rf,'c3',options.prefs.prenii_unnormalized]);
+c2=ea_load_nii([directory,'r',rf,'_c2',options.prefs.prenii_unnormalized]);
+c3=ea_load_nii([directory,'r',rf,'_c3',options.prefs.prenii_unnormalized]);
 
 ec2map=c2.img; ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
 ec3map=c3.img; ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
-
 
 %% regress out WM- and CSF-Timecourses
 WMTimecourse=zeros(signallength,1);
@@ -97,14 +94,12 @@ end
 
 disp('Done. Regressing out nuisance variables...');
 
-
-    X(:,1)=ones(signallength,1);
-    X(:,2)=WMTimecourse;
-    X(:,3)=CSFTimecourse;
+X(:,1)=ones(signallength,1);
+X(:,2)=WMTimecourse;
+X(:,3)=CSFTimecourse;
 
 %% actual regression:
 for voxx=1:size(interpol_tc,1)
-
     beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
     if ~isnan(beta_hat)
     interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
