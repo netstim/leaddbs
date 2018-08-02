@@ -1,15 +1,16 @@
-function cs_fmri_conseed_nifti(restfilename,seedfile,options)
+function cs_fmri_conseed_nifti(restfile,seedfile,options)
 
-directory=[fileparts(restfilename),filesep];
-[pth,ref,ext]=fileparts(restfilename);
+directory=[fileparts(restfile),filesep];
 options=ea_getptopts(directory,options);
 options=ea_assignpretra(options);
-[~,anat]=fileparts(options.prefs.prenii_unnormalized);
 
-if ~exist([directory,'sr',ref,ext],'file') ...
-    || ~exist([directory,'r',ref,'_c1',anat,'.nii'],'file') % preproecessing needs to be performed
+[~,restfname]=fileparts(restfile);
+[~,anatfname]=fileparts(options.prefs.prenii_unnormalized);
+
+if ~exist([directory,'sr',restfname,'.nii'],'file') ...
+    || ~exist([directory,'r',restfname,'_c1',anatfname,'.nii'],'file') % preproecessing needs to be performed
     disp('No preprocessed fMRI-images found, processing...');
-    options.prefs.rest=[ref,ext];
+    options.prefs.rest=[restfname,'.nii'];
     ea_preprocess_fmri(options);
     disp('Done preprocessing fMRI data.');
 end
@@ -19,9 +20,9 @@ usesmooth=1;
 if usesmooth
     spfx='sr';
 else
-    spfx='';
+    spfx='r';
 end
-rest=ea_load_nii(fullfile(pth,[spfx,ref,ext]));
+rest=ea_load_nii([directory,spfx,restfname,'.nii']);
 signallength=size(rest.img,4);
 interpol_tc=nan(numel(rest.img(:,:,:,1)),size(rest.img,4));
 for tmpt = 1:signallength
@@ -38,9 +39,9 @@ load([directory,'TR.mat']);
 disp('Calculating C2 and CSF-signals for signal regression...');
 
 % regression steps
-[~,ref]=fileparts(restfilename);
-c2=ea_load_nii([directory,'r',ref,'_c2',options.prefs.prenii_unnormalized]);
-c3=ea_load_nii([directory,'r',ref,'_c3',options.prefs.prenii_unnormalized]);
+[~,restfname]=fileparts(restfilename);
+c2=ea_load_nii([directory,'r',restfname,'_c2',options.prefs.prenii_unnormalized]);
+c3=ea_load_nii([directory,'r',restfname,'_c3',options.prefs.prenii_unnormalized]);
 
 ec2map=c2.img(:); ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
 ec3map=c3.img(:); ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
@@ -72,8 +73,8 @@ disp('Done. Regressing out nuisance variables...');
 
 %% regress out movement parameters
 
-load([directory,'rp_',ref,'.txt']); % rigid body motion parameters.
-rp_rest=eval(['rp_',ref]);
+load([directory,'rp_',restfname,'.txt']); % rigid body motion parameters.
+rp_rest=eval(['rp_',restfname]);
 X(:,1)=ones(signallength,1);
 X(:,2)=WMTimecourse;
 X(:,3)=CSFTimecourse;

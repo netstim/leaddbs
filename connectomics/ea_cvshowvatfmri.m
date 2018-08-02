@@ -14,7 +14,7 @@ pX=round(pX);
 
 
 if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat'],'file');
-    ea_warp_vat(options.prefs.rest,'rest',options,handles);
+    ea_warp_vat('rest',options,handles);
     vat_tc=ea_extract_timecourses_vat(options,handles,usevat,dimensionality);
     save([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat'],'vat_tc');
 else
@@ -45,7 +45,7 @@ else
         end
     end
     cm=corrcoef(tc(tiframe:tiframe+tiwindow,:)); % actual correlation
-    
+
     if get(handles.timecircle,'Value')
         % make a step to next timeframe (prepare next iteration).
         if (tiframe+tiwindow+1)>timedim
@@ -80,7 +80,7 @@ end
     vatseedsurf{side}=ea_showseedpatch(resultfig,Vvat,Xvat,options);
 
 
-    
+
 %sX=ismember(round(pX),currentseed);
 set(0,'CurrentFigure',resultfig)
 set(handles.vatthreshis,'String',num2str(thresh));

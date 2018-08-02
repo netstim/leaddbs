@@ -5,7 +5,7 @@ function [DTI_CM, DTI_LEN] = ea_createCM_dti(options)
 % Andreas Horn
 
 useendpointsonly=0;
-ea_warp_parcellation(options.prefs.b0,'b0',options);
+ea_warp_parcellation(options.prefs.b0,options);
 
 minlen=options.prefs.lc.struc.minlen;
 directory=[options.root,options.patientname,filesep];

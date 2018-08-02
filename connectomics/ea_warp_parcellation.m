@@ -1,4 +1,4 @@
-function ea_warp_parcellation(ref_filename,b0rest,options)
+function ea_warp_parcellation(reference,options)
 directory=[options.root,options.patientname,filesep];
 
 if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],'file')
@@ -33,8 +33,6 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
         otherwise
             switch spm('ver')
                 case 'SPM8'
-
-
                     matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
                     matlabbatch{1}.spm.util.defs.ofname = '';
                     matlabbatch{1}.spm.util.defs.fnames = {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii,1']};
@@ -42,9 +40,7 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
                     matlabbatch{1}.spm.util.defs.interp = 0;
                     spm_jobman('run',{matlabbatch});
                     clear matlabbatch
-
                 case 'SPM12'
-
                     matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
                     matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']};
                     matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[options.root,options.patientname,filesep,'templates',filesep,'labeling',filesep]};
@@ -53,58 +49,60 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.gener
                     matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
                     spm_jobman('run',{matlabbatch});
                     clear matlabbatch
-
             end
     end
 end
-    [~,reffn]=fileparts(ref_filename);
 
-if ~exist([directory,'templates',filesep,'labeling',filesep,reffn,'w',options.lc.general.parcellation,'.nii'],'file')
+[~,refname]=fileparts(reference);
+[~,anatfname]=fileparts(options.prefs.prenii_unnormalized);
+
+if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation,'.nii'],'file')
     %% coreg atlas into b0-space:
-    %copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
-    %copyfile([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],...
-     %   [directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii']);
+    % copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
+    % copyfile([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],...
+    % [directory,'templates',filesep,'labeling',filesep,'r',reffn,'w',options.lc.general.parcellation,'.nii']);
 
-     redo=1; % no .mat file available, redo coreg
-     switch options.coregmr.method
-         
-         case 'SPM'
-             if exist([options.root,options.patientname,filesep,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(ref_filename),'_spm.mat'],'file')
-                 redo=0;
-                 load([options.root,options.patientname,filesep,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(ref_filename),'_spm.mat']);
-                 nii=ea_load_nii([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']);
-                 nii.mat=spmaffine;
-                 nii.fname=[directory,'templates',filesep,'labeling',filesep,reffn,'w',options.lc.general.parcellation,'.nii'];
-                 ea_write_nii(nii);
-                 
-                 matlabbatch{1}.spm.spatial.coreg.write.ref = {[options.root,options.patientname,filesep,ref_filename,',1']};
-                 matlabbatch{1}.spm.spatial.coreg.write.source = {nii.fname};
-                 matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = 0;
-                 matlabbatch{1}.spm.spatial.coreg.write.roptions.wrap = [0 0 0];
-                 matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
-                 matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
-                 spm_jobman('run',{matlabbatch});
-                 clear matlabbatch
-                 [pth,fn,ext]=fileparts(nii.fname);
-                 movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
-                 delete(fullfile(pth,[fn(2:end),ext]))
-             end
+    redo=1; % no .mat file available, redo coreg
+    switch options.coregmr.method
+        case 'SPM'
+            if exist([options.root,options.patientname,filesep,anatfname,'2',refname,'_spm.mat'],'file')
+                redo=0;
+                load([options.root,options.patientname,filesep,anatfname,'2',refname,'_spm.mat']);
+                nii=ea_load_nii([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']);
+                nii.mat=spmaffine;
+                nii.fname=[directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation,'.nii'];
+                ea_write_nii(nii);
 
-     end
-     if redo
+                matlabbatch{1}.spm.spatial.coreg.write.ref = {[options.root,options.patientname,filesep,reference,',1']};
+                matlabbatch{1}.spm.spatial.coreg.write.source = {nii.fname};
+                matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = 0;
+                matlabbatch{1}.spm.spatial.coreg.write.roptions.wrap = [0 0 0];
+                matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
+                matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
+                spm_jobman('run',{matlabbatch});
+                clear matlabbatch
+                [pth,fn,ext]=fileparts(nii.fname);
+                movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
+                delete(fullfile(pth,[fn(2:end),ext]))
+            end
+    end
+
+	if redo
          ea_coreg2images_generic(options,[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...
-             [options.root,options.patientname,filesep,ref_filename],...
+             [options.root,options.patientname,filesep,reference],...
              [options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized],...
              {[directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},0,[],0);
-     end
-     try
-         movefile([directory,'templates',filesep,'labeling',filesep,'rw',options.lc.general.parcellation,'.nii'],...
-             [directory,'templates',filesep,'labeling',filesep,reffn,'w',options.lc.general.parcellation,'.nii']);
-     end
-     ea_gencheckregpair([directory,'templates',filesep,'labeling',filesep,reffn,'w',options.lc.general.parcellation],...
-        [options.root,options.patientname,filesep,reffn],...
-        [options.root,options.patientname,filesep,'checkreg',filesep,options.lc.general.parcellation,'2',reffn,'.png']);
+    end
+
+    try
+    	movefile([directory,'templates',filesep,'labeling',filesep,'rw',options.lc.general.parcellation,'.nii'],...
+            [directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation,'.nii']);
+    end
+
+	ea_gencheckregpair([directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation],...
+        [options.root,options.patientname,filesep,refname],...
+        [options.root,options.patientname,filesep,'checkreg',filesep,options.lc.general.parcellation,'2',refname,'.png']);
 
     ea_delete([options.root,options.patientname,filesep,'c',options.prefs.prenii_unnormalized]);
-    ea_delete([options.root,options.patientname,filesep,'r',reffn,'c',options.prefs.prenii_unnormalized]);
+    ea_delete([options.root,options.patientname,filesep,'r',refname,'c',options.prefs.prenii_unnormalized]);
 end
