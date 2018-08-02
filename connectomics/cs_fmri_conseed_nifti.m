@@ -39,7 +39,7 @@ load([directory,'TR.mat']);
 disp('Calculating C2 and CSF-signals for signal regression...');
 
 % regression steps
-[~,restfname]=fileparts(restfilename);
+
 c2=ea_load_nii([directory,'r',restfname,'_c2',options.prefs.prenii_unnormalized]);
 c3=ea_load_nii([directory,'r',restfname,'_c3',options.prefs.prenii_unnormalized]);
 
@@ -169,7 +169,6 @@ for s=1:length(seedfile)
 
     seed{s}.img(:)=R;
     [pth,sf]=fileparts(seed{s}.fname);
-    [~,restfname]=fileparts(restfilename);
     outputfolder = options.lcm.func.connectome;
 
     seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii']);
@@ -195,47 +194,48 @@ for s=1:length(seedfile)
              fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']));
 
     % warp back to MNI:
-    % STILL NEED TO WRITE THIS:
-    V = ea_load_nii([directory,restfname,'.nii,1']);
-    V.fname=[directory,restfname,'_first_TR.nii'];
-    ea_write_nii(V);
+   
     options.coregmr.method='SPM'; % hard code for now
-    %copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_native.nii']),...
-    %         fullfile(pth,outputfolder,[sf,'_AvgR.nii']));
+
     copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']),...
              fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
-    %copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii']),
-    %         fullfile(pth,outputfolder,[sf,'_AvgR_unsmoothed.nii']));
-    %copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']),
-    %         fullfile(pth,outputfolder,[sf,'_AvgR_Fz_unsmoothed.nii']));
 
-    %ea_coreg2images(options,[directory,restfname,'_first_TR.nii'],...
-    %                [directory,options.prefs.prenii_unnormalized],...
-    %                [directory,restfname,'_first_TR.nii'],...
-    %                {fullfile(pth,outputfolder,[sf,'_AvgR.nii']),...
-    %                 fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']),...
-    %                 fullfile(pth,outputfolder,[sf,'_AvgR_unsmoothed.nii']),...
-    %                 fullfile(pth,outputfolder,[sf,'_AvgR_Fz_unsmoothed.nii'])});
-    ea_coreg2images(options,[directory,restfname,'_first_TR.nii'],...
-                    [directory,options.prefs.prenii_unnormalized],...
-                    [directory,restfname,'_first_TR.nii'],...
-                    {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])});
-    delete([directory,restfname,'_first_TR.nii']);
-    delete([directory,'raw_',restfname,'_first_TR.nii']);
+         if strcmp(options.coregmr.method,'SPM') && exist([directory,'r',restfname,'2',ea_stripex(options.prefs.prenii_unnormalized),'_spm.mat'],'file')
+             load([directory,'r',restfname,'2',ea_stripex(options.prefs.prenii_unnormalized),'_spm.mat']);
+             nii=ea_load_nii(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
+             nii.mat=spmaffine;
+             ea_write_nii(nii);
+             
+             matlabbatch{1}.spm.spatial.coreg.write.ref = {[directory,options.prefs.prenii_unnormalized,',1']};
+             matlabbatch{1}.spm.spatial.coreg.write.source = {nii.fname};
+             matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = 0;
+             matlabbatch{1}.spm.spatial.coreg.write.roptions.wrap = [0 0 0];
+             matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
+             matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
+             spm_jobman('run',{matlabbatch});
+             clear matlabbatch
+             [pth,fn,ext]=fileparts(nii.fname);
+             movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
+         else
+             % STILL NEED TO WRITE THIS:
+             V = ea_load_nii([directory,restfname,'.nii,1']);
+             V.fname=[directory,restfname,'_first_TR.nii'];
+             ea_write_nii(V);
+             ea_coreg2images(options,[directory,restfname,'_first_TR.nii'],...
+                 [directory,options.prefs.prenii_unnormalized],...
+                 [directory,restfname,'_first_TR.nii'],...
+                 {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])});
+             delete([directory,restfname,'_first_TR.nii']);
+             delete([directory,'raw_',restfname,'_first_TR.nii']);
+             
+         end
 
-    % ea_apply_normalization_tofile(options,{fullfile(pth,outputfolder,[sf,'_AvgR.nii']),...
-    %     fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']),...
-    %     fullfile(pth,outputfolder,[sf,'_AvgR_unsmoothed.nii']),...
-    %     fullfile(pth,outputfolder,[sf,'_AvgR_Fz_unsmoothed.nii'])},...
-    %     {fullfile(pth,outputfolder,[sf,'_AvgR.nii']),...
-    %     fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']),...
-    %     fullfile(pth,outputfolder,[sf,'_AvgR_unsmoothed.nii']),...
-    %     fullfile(pth,outputfolder,[sf,'_AvgR_Fz_unsmoothed.nii'])},...
-    %     directory,0);
+         
     ea_apply_normalization_tofile(options,...
-        {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
-        {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
-        directory,0);
+        {fullfile(pth,[sf,'_AvgR_Fz.nii'])},...
+        {fullfile(pth,[sf,'_AvgR_Fz.nii'])},...
+        directory,0,1,ea_niigz([options.prefs.lc.datadir,'spacedefinitions',filesep,'111.nii']));
+    
 end
 
 
