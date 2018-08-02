@@ -68,9 +68,6 @@ if doreslice
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
     spm_jobman('run',{matlabbatch});
-
-    % restore moving image
-    movefile(backup, moving);
 else
     matlabbatch{1}.spm.spatial.coreg.estimate.ref = {fixed};
     matlabbatch{1}.spm.spatial.coreg.estimate.source = {moving};
@@ -102,6 +99,9 @@ if writeoutmat
 else
     affinefile = {''};
 end
+
+% restore moving image
+movefile(backup, moving);
 
 %% add methods dump:
 cits={
