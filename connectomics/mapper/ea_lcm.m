@@ -199,19 +199,48 @@ anat_vat=ea_load_nii([vatdir,'wtmp_',sidec,'.nii']);
 voxc=[xx;yy;zz;1];
 mmc=anat_vat.mat*voxc;
 % coreg from anchor modality to rest file:
-copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized])
-ea_coreg2images(options,[directory,'c',options.prefs.prenii_unnormalized],...
-                        [directory,restfname,'.nii'],...
-                        [directory,'c',options.prefs.prenii_unnormalized],...
-                        {[vatdir,'wtmp_',sidec,'.nii']},1,[],1);
 
-matlabbatch{1}.spm.util.checkreg.data = {
-                                         [directory,'c',options.prefs.prenii_unnormalized]
-                                         [directory,restfname,'.nii']
-                                         };
-spm_jobman('run',{matlabbatch});
-clear matlabbatch
-delete([directory,'c',options.prefs.prenii_unnormalized]);
+redo=1; % no .mat file available, redo coreg
+     switch options.coregmr.method
+         
+         case 'SPM'
+             if exist([options.root,options.patientname,filesep,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(['r',restfname]),'_spm.mat'],'file')
+                 redo=0;
+                 load([options.root,options.patientname,filesep,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(['r',restfname]),'_spm.mat']);
+                 nii=ea_load_nii([vatdir,'wtmp_',sidec,'.nii']);
+                 nii.mat=spmaffine;
+                 ea_write_nii(nii);
+                 
+                 matlabbatch{1}.spm.spatial.coreg.write.ref = {[options.root,options.patientname,filesep,['r',restfname,'.nii'],',1']};
+                 matlabbatch{1}.spm.spatial.coreg.write.source = {nii.fname};
+                 matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = 0;
+                 matlabbatch{1}.spm.spatial.coreg.write.roptions.wrap = [0 0 0];
+                 matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
+                 matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
+                 spm_jobman('run',{matlabbatch});
+                 clear matlabbatch
+                 [pth,fn,ext]=fileparts(nii.fname);
+                 movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
+                 delete(fullfile(pth,[fn(2:end),ext]))
+             end
+
+     end
+
+     if redo
+         ea_coreg2images_generic(options,[directory,options.prefs.prenii_unnormalized],...
+             [directory,restfname,'.nii'],...
+             [directory,'c',options.prefs.prenii_unnormalized],...
+             {[vatdir,'wtmp_',sidec,'.nii']},1,[],1);
+         
+         movefile([vatdir,'rwtmp_',sidec,'.nii'],[vatdir,'wtmp_',sidec,'.nii']);
+     end
+% matlabbatch{1}.spm.util.checkreg.data = {
+%                                          [directory,options.prefs.prenii_unnormalized]
+%                                          [directory,restfname,'.nii']
+%                                          };
+% spm_jobman('run',{matlabbatch});
+% clear matlabbatch
+% delete([directory,'c',options.prefs.prenii_unnormalized]);
 movefile([vatdir,'wtmp_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
 rest_vat=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
 if ~any(rest_vat.img(:)) % image empty, at least set original peak to 1.
