@@ -6,11 +6,6 @@ function affinefile = ea_spm_coreg(options,moving,fixed,costfun,doreslice,otherf
 % only modify the header if 'doreslice' is FALSE (in-place "Estimate"). If
 % 'doreslice' is TRUE ("Estimate & Reslice"), the moving image will be left
 % untouched and a new coregistered image will be generated with 'r' prefix.
-%
-% However, 'otherfiles' will always be touched and in-place coregistered.
-% If you also want 'otherfiles' to be untouched, you can use another
-% function 'ea_spm_coreg_applytransform' afterwards rather than supply
-% 'otherfiles' here.
 
 if ~exist('costfun','var')
     costfun = 'nmi';
@@ -53,8 +48,17 @@ fixedmat = spm_get_space(fixed);
 
 if doreslice
     % backup moving image
-    backup = ea_niifileparts(moving);
-    copyfile(moving, backup);
+    movingbackup = ea_niifileparts(moving);
+    copyfile(moving, movingbackup);
+
+    % backup other files
+    otherfilesbackup = cell(size(otherfiles));
+    for i=1:length(otherfiles)
+        if ~isempty(otherfiles{i})
+            otherfilesbackup{i} = ea_niifileparts(otherfiles{i});
+            copyfile(otherfiles{i}, otherfilesbackup{i});
+        end
+    end
 
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {fixed};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {moving};
@@ -82,7 +86,9 @@ end
 [~, mov] = ea_niifileparts(moving);
 [~, fix] = ea_niifileparts(fixed);
 
-if writeoutmat
+if ~writeoutmat
+    affinefile = {};
+else
     % save transform: mov vox to fix mm
     spmaffine = spm_get_space(moving); % affine from mov vox to fix mm already stored in the mov header after coreg
     save([fileparts(ea_niifileparts(moving)), filesep, mov, '2', fix, '_spm.mat'], 'spmaffine', 'movingmat', 'fixedmat');
@@ -94,14 +100,21 @@ if writeoutmat
     fixedmat = tmp;
     save([fileparts(ea_niifileparts(moving)), filesep, fix, '2', mov, '_spm.mat'], 'spmaffine', 'movingmat', 'fixedmat');
 
-    affinefile = {[fileparts(ea_niifileparts(moving)), filesep, mov, '2', fix, '_spm.mat'], ...
+    affinefile = {[fileparts(ea_niifileparts(moving)), filesep, mov, '2', fix, '_spm.mat']
         [fileparts(ea_niifileparts(moving)), filesep, fix, '2', mov, '_spm.mat']};
-else
-    affinefile = {''};
 end
 
-% restore moving image
-movefile(backup, moving);
+if doreslice
+    % restore moving image
+    movefile(movingbackup, moving);
+
+    % restore other files
+    for i=1:length(otherfilesbackup)
+        if ~isempty(otherfilesbackup{i})
+            movefile(otherfilesbackup{i}, otherfiles{i});
+        end
+    end
+end
 
 %% add methods dump:
 cits={
