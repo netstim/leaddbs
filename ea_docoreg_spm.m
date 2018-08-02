@@ -1,12 +1,29 @@
-function affinefile = ea_docoreg_spm(options,moving,fixed,cfun,doreslice,otherfiles,writeoutmat,interp)
+function affinefile = ea_docoreg_spm(options,moving,fixed,costfun,doreslice,otherfiles,writeoutmat,interp)
 % Wrapper for SPM coregistration
-% note: if refine is set, will always reslice.
-if ~exist('cfun','var')
-    cfun = 'nmi';
+%
+% SPM modifies the header of the moving image when doing coregistration
+% (for both "Estimate" and "Estimate & Reslice"). This wrapper here will
+% only modify the header if 'doreslice' is FALSE (in-place "Estimate"). If
+% 'doreslice' is TRUE ("Estimate & Reslice"), the moving image will be left
+% untouched and a new coregistered image will be generated with 'r' prefix.
+%
+% However, 'otherfiles' will always be touched and in-place coregistered.
+% If you also want 'otherfiles' to be untouched, you can use another
+% function 'ea_spm_coreg_applytransform' afterwards rather than supply
+% 'otherfiles' here.
+
+if ~exist('costfun','var')
+    costfun = 'nmi';
+elseif isempty(costfun)
+    costfun = 'nmi';
 end
+
 if ~exist('doreslice','var')
     doreslice = 1;
+elseif isempty(doreslice)
+    doreslice = 1;
 end
+
 if ~exist('otherfiles','var')
     otherfiles = {''};
 elseif isempty(otherfiles)  % [] or {} or ''
@@ -14,19 +31,19 @@ elseif isempty(otherfiles)  % [] or {} or ''
 elseif ischar(otherfiles) % single file, make it to cell string
     otherfiles = {otherfiles};
 end
+
 if ~exist('interp','var')
+    interp=4;
+elseif isempty(interp)
     interp=4;
 end
 
 % Write out the transform from moving image vox to fixed image mm (also
 % from fixed image vox to moving image mm)
-if nargin < 6
+if ~exist('writeoutmat','var')
     writeoutmat = 0;
-    affinefile = {''};
-else
-    if ~writeoutmat
-        affinefile={''};
-    end
+elseif isempty(writeoutmat)
+    writeoutmat = 0;
 end
 
 % Read the original affine matrix from the moving image (the header will be
@@ -35,10 +52,14 @@ movingmat = spm_get_space(moving);
 fixedmat = spm_get_space(fixed);
 
 if doreslice
+    % backup moving image
+    backup = ea_niifileparts(moving);
+    copyfile(moving, backup);
+
     matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {fixed};
     matlabbatch{1}.spm.spatial.coreg.estwrite.source = {moving};
     matlabbatch{1}.spm.spatial.coreg.estwrite.other = otherfiles;
-    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = cfun;
+    matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = costfun;
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [8 4 2]; %[4 2];
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.fwhm = [7 7];
@@ -47,11 +68,14 @@ if doreslice
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.mask = 0;
     matlabbatch{1}.spm.spatial.coreg.estwrite.roptions.prefix = 'r';
     spm_jobman('run',{matlabbatch});
+
+    % restore moving image
+    movefile(backup, moving);
 else
     matlabbatch{1}.spm.spatial.coreg.estimate.ref = {fixed};
     matlabbatch{1}.spm.spatial.coreg.estimate.source = {moving};
     matlabbatch{1}.spm.spatial.coreg.estimate.other = otherfiles;
-    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = cfun;
+    matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = costfun;
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [12 10 8 6 4 2];
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
@@ -75,6 +99,8 @@ if writeoutmat
 
     affinefile = {[fileparts(ea_niifileparts(moving)), filesep, mov, '2', fix, '_spm.mat'], ...
         [fileparts(ea_niifileparts(moving)), filesep, fix, '2', mov, '_spm.mat']};
+else
+    affinefile = {''};
 end
 
 %% add methods dump:
@@ -84,5 +110,3 @@ cits={
 
 ea_methods(options,[mov,' was linearly co-registered to ',fix,' using ',spm('ver'),' (Friston 2011; http://www.fil.ion.ucl.ac.uk/spm/software/)'],...
     cits);
-
-
