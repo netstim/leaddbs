@@ -49,7 +49,7 @@ function [XYZ_dest_mm, XYZ_dest_vx] = ea_map_coords(varargin)
 %     1*N transformation as mat file from spm_coreg(dest, src)
 %     transformmethod: 'COREG'
 %
-%     '*.mat' file from SPM coreg.estwrite (vox to mm affine), check ea_docoreg_spm
+%     '*.mat' file from SPM coreg.estwrite (vox to mm affine), check ea_spm_coreg
 %     transformmethod: 'SPM'
 %
 %     '*.mat' file from ANTs (Linear) (mm to mm affine), check ea_ants
@@ -190,7 +190,7 @@ if ~isempty(transform)
                 transform = transform.(varname{1});
                 XYZ_dest_mm = spm_matrix(transform(:)')\spm_get_space(src)*XYZ_src_vx;
 
-            case {'SPM'} % Registration done by SPM (ea_docoreg_spm)
+            case {'SPM'} % Registration done by SPM (ea_spm_coreg)
                 % fuzzy match, transform can be specified as XX2XX_spm.mat
                 % or simply XX2XX.mat
                 if ~strcmp(transform(end-7:end), '_spm.mat')
@@ -445,7 +445,7 @@ if ~isempty(transform)
             sn = load(transform, 'VF');
             XYZ_dest_vx = sn.VF.mat \ XYZ_dest_mm;
 
-        elseif ~isempty(regexp(transform, '_spm\.mat$', 'once')) % transform is from ea_docoreg_spm
+        elseif ~isempty(regexp(transform, '_spm\.mat$', 'once')) % transform is from ea_spm_coreg
             affine = load(transform, 'fixed');
             XYZ_dest_vx = affine.fixed \ XYZ_dest_mm;
         end

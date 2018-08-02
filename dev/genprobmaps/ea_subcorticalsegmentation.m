@@ -176,7 +176,7 @@ for m=1:length(mults)
     copyfile([directory,mults{m}],[directory,'raw_',mults{m}]);
     switch options.coregmr.method
         case 'SPM' % SPM
-            ea_docoreg_spm(options,[directory,mults{m},',1'],[directory,options.prefs.prenii_unnormalized,',1'],'nmi',1)
+            ea_spm_coreg(options,[directory,mults{m},',1'],[directory,options.prefs.prenii_unnormalized,',1'],'nmi',1)
             try
                 movefile([directory,'r',mults{m}], [directory,mults{m}])
             end
@@ -189,12 +189,12 @@ for m=1:length(mults)
                 [directory,mults{m}],...
                 [directory,mults{m}],0);
         case 'Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
-            ea_docoreg_spm(options,[directory,mults{m},',1'],[directory,options.prefs.prenii_unnormalized,',1'],'nmi',0)
+            ea_spm_coreg(options,[directory,mults{m},',1'],[directory,options.prefs.prenii_unnormalized,',1'],'nmi',0)
             ea_ants([directory,options.prefs.prenii_unnormalized],...
                 [directory,mults{m}],...
                 [directory,mults{m}],0);
         case 'Hybrid SPM & ' % Hybrid SPM -> Brainsfit
-            ea_docoreg_spm([directory,mults{m},',1'],[directory,options.prefs.prenii_unnormalized,',1'],'nmi',0)
+            ea_spm_coreg([directory,mults{m},',1'],[directory,options.prefs.prenii_unnormalized,',1'],'nmi',0)
             ea_brainsfit([directory,options.prefs.prenii_unnormalized],...
                 [directory,mults{m}],...
                 [directory,mults{m}],0);

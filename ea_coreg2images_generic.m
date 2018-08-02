@@ -53,7 +53,7 @@ switch options.coregmr.method
             commaoneotherfiles={};
         end
 
-        affinefile = ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat,interp);
+        affinefile = ea_spm_coreg(options,appendcommaone(moving),appendcommaone(fixed),'nmi',1,commaoneotherfiles,writeoutmat,interp);
         if exist(fullfile(tmpdir,[ea_stripex(moving),'2',fixedorig,'_spm.mat']),'file')
             movefile(fullfile(tmpdir,[ea_stripex(moving),'2',fixedorig,'_spm.mat']),...
                 fullfile(movingbase,[movingorig,'2',fixedorig,'_spm.mat']));
@@ -88,19 +88,19 @@ switch options.coregmr.method
             ofile,writeoutmat,otherfiles);
     case 'Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
         commaoneotherfiles=prepforspm(otherfiles);
-        ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat)
+        ea_spm_coreg(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat)
         affinefile = ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Hybrid SPM & FSL' % Hybrid SPM -> FSL
         commaoneotherfiles=prepforspm(otherfiles);
-        ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat)
+        ea_spm_coreg(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat)
         affinefile = ea_flirt(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
         commaoneotherfiles=prepforspm(otherfiles);
-        ea_docoreg_spm(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat)
+        ea_spm_coreg(options,appendcommaone(moving),appendcommaone(fixed),'nmi',0,commaoneotherfiles,writeoutmat)
         affinefile = ea_brainsfit(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);

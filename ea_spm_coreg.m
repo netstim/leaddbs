@@ -1,4 +1,4 @@
-function affinefile = ea_docoreg_spm(options,moving,fixed,costfun,doreslice,otherfiles,writeoutmat,interp)
+function affinefile = ea_spm_coreg(options,moving,fixed,costfun,doreslice,otherfiles,writeoutmat,interp)
 % Wrapper for SPM coregistration
 %
 % SPM modifies the header of the moving image when doing coregistration
