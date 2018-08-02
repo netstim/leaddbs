@@ -22,7 +22,7 @@ template_in = ea_niigz([ea_space,sd.templates{1}]);
 %% read .trk file
 [~,fn,ext]=fileparts(trk_in);
 if strcmp(ext,'.gz')
-    uuid=ea_generate_guid;
+    uuid=ea_generate_uuid;
     td=[ea_getleadtempdir,uuid];
     mkdir(td);
     gunzip(trk_in,td);
@@ -72,30 +72,30 @@ else
     end
 end
 switch answ
-    
+
     case 'DSI Studio / QSDR'
         % http://dsi-studio.labsolver.org/Manual/Reconstruction#TOC-Q-Space-Diffeomorphic-Reconstruction-QSDR-
         fibers(1,:)=78.0-fibers(1,:);
         fibers(2,:)=76.0-fibers(2,:);
         fibers(3,:)=-50.0+fibers(3,:);
-        
+
     otherwise
-        
+
         switch answ
             case 'specified_image'
                 nii=ea_load_nii(type); % load in image supplied to function.
             case 'Normative Connectome / 2009b space'
-                
+
                 nii=ea_load_nii(template_in);
-                
+
             case 'Select .nii file'
                 [fname,pathname]=uigetfile({'.nii','.nii.gz'},'Choose Nifti file for space definition');
                 nii=ea_load_nii(fullfile(pathname,fname));
         end
-        
+
         tfib=[fibers(1:3,:);ones(1,size(fibers,2))];
-        
-        
+
+
         tmat=header.vox_to_ras;
         if isempty(find(tmat ~= 0))
             % method Andreas (DSIStudio .trk)

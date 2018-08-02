@@ -8,7 +8,7 @@ else
     SLICER = [basedir, 'slicer.', computer('arch')];
 end
 
-uid=ea_generate_guid;
+uuid=ea_generate_uuid;
 
 mov=ea_load_untouch_nii([moving,'.nii']);
 mov.img(isnan(mov.img))=0;
@@ -19,8 +19,8 @@ Lbound=SIX(round(length(SIX)*95/100));
 mov.img(mov.img<Lbound)=Lbound;
 
 %mov.img(mov.img(:)~=0)=ea_contrast(mov.img(mov.img(:)~=0),2,0);
-ea_save_untouch_nii(mov,[tempdir,'lead_temp',uid,'.nii'])
-cmd=[SLICER,' ',ea_path_helper([tempdir,'lead_temp',uid,'.nii']),' ',ea_path_helper(fixed),' -e 0.05 -i ',num2str(Lbound),' ',num2str(Ubound),' -a ',ea_path_helper(outfn)];
+ea_save_untouch_nii(mov,[tempdir,'lead_temp',uuid,'.nii'])
+cmd=[SLICER,' ',ea_path_helper([tempdir,'lead_temp',uuid,'.nii']),' ',ea_path_helper(fixed),' -e 0.05 -i ',num2str(Lbound),' ',num2str(Ubound),' -a ',ea_path_helper(outfn)];
 basedir=fileparts(outfn);
 if ~exist(basedir,'dir')
     mkdir(basedir);
@@ -33,4 +33,4 @@ else
     system(cmd);
 end
 
-ea_delete([tempdir,'lead_temp',uid,'.nii']);
+ea_delete([tempdir,'lead_temp',uuid,'.nii']);

@@ -56,12 +56,12 @@ if ~ischar(incoords)
         incoords = incoords';
     end
     % Write temporary coords file
-    guid=ea_generate_guid;
+    uuid=ea_generate_uuid;
     directory = [fileparts(ea_niifileparts(src)), filesep];
-    fid=fopen([directory,'tmpin_',guid,'.csv'],'w');
+    fid=fopen([directory,'tmpin_',uuid,'.csv'],'w');
     fprintf(fid,'%f %f %f\n', incoords'); % transpose needed for 'fprintf': matrix column to file row.
     fclose(fid);
-    incoords = [directory,'tmpin_',guid,'.csv'];
+    incoords = [directory,'tmpin_',uuid,'.csv'];
 end
 
 cmd = [cmd, ' ', ea_path_helper(incoords)];

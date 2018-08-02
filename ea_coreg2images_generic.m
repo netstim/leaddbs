@@ -30,11 +30,11 @@ switch options.coregmr.method
     case 'SPM' % SPM
         % for SPM process everything in tmp dir.
         tmpdir=ea_getleadtempdir;
-        uid=ea_generate_guid;
+        uuid=ea_generate_uuid;
         [movingbase,movingorig]=fileparts(moving);
         [fixedbase,fixedorig]=fileparts(fixed);
-        copyfile(moving,[tmpdir,uid,'.nii']);
-        moving=[tmpdir,uid,'.nii'];
+        copyfile(moving,[tmpdir,uuid,'.nii']);
+        moving=[tmpdir,uuid,'.nii'];
 
         [directory,mfilen,ext]=fileparts(moving);
         directory=[directory,filesep];
@@ -42,7 +42,7 @@ switch options.coregmr.method
 
 
         for ofi=1:length(otherfiles)
-            ofiuid{ofi}=ea_generate_guid;
+            ofiuid{ofi}=ea_generate_uuid;
             copyfile(otherfiles{ofi},[tmpdir,ofiuid{ofi},'.nii']);
             copiedotherfiles{ofi}=[tmpdir,ofiuid{ofi},'.nii'];
         end
@@ -65,7 +65,7 @@ switch options.coregmr.method
         end
 
         try % will fail if ofile is same string as r mfilen..
-            movefile([tmpdir,'r',uid,'.nii'],ofile);
+            movefile([tmpdir,'r',uuid,'.nii'],ofile);
         end
 
         for ofi=1:length(otherfiles)

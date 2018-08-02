@@ -22,14 +22,14 @@ directory=[options.root,options.patientname,filesep];
 if ~exist([directory,'r',options.prefs.rest],'file')
 
     tmpdir=ea_getleadtempdir;
-    uid=ea_generate_guid;
-    copyfile([directory,options.prefs.rest],[tmpdir,uid,'.nii']);
-    
-    
+    uuid=ea_generate_uuid;
+    copyfile([directory,options.prefs.rest],[tmpdir,uuid,'.nii']);
+
+
     disp('Realignment of rs-fMRI data...');
     filetimepts=cell(signallength,1);
     for i = 1:signallength
-        filetimepts{i}=[tmpdir,uid,'.nii',',',num2str(i)];
+        filetimepts{i}=[tmpdir,uuid,'.nii',',',num2str(i)];
     end
 
     matlabbatch{1}.spm.spatial.realign.estwrite.data = {filetimepts};
@@ -48,12 +48,12 @@ if ~exist([directory,'r',options.prefs.rest],'file')
     spm_jobman('run',{matlabbatch});
     clear matlabbatch;
     disp('Done.');
-    
-    movefile([tmpdir,'r',uid,'.nii'],[directory,'r',options.prefs.rest]);
-    movefile([tmpdir,'mean',uid,'.nii'],[directory,'mean',options.prefs.rest]);
-    movefile([tmpdir,'rp_',uid,'.txt'],[directory,'rp_',ea_stripex(options.prefs.rest),'.txt']);
 
-    ea_delete([tmpdir,uid,'.nii']);
+    movefile([tmpdir,'r',uuid,'.nii'],[directory,'r',options.prefs.rest]);
+    movefile([tmpdir,'mean',uuid,'.nii'],[directory,'mean',options.prefs.rest]);
+    movefile([tmpdir,'rp_',uuid,'.txt'],[directory,'rp_',ea_stripex(options.prefs.rest),'.txt']);
+
+    ea_delete([tmpdir,uuid,'.nii']);
 end
 
 

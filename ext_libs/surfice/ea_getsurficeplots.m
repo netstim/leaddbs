@@ -3,10 +3,10 @@ function [im]=ea_getsurficeplots(niftiname,threshs)
 [pth,fn,ext]=fileparts(niftiname);
 if ~exist(fullfile(pth,[fn,'_l_lat.png']),'file') || ~exist(fullfile(pth,[fn,'_l_med.png']),'file')
     tempdir=ea_getleadtempdir;
-    uid=ea_generate_guid;
-    tniftiname=[tempdir,uid,'.nii'];
+    uuid=ea_generate_uuid;
+    tniftiname=[tempdir,uuid,'.nii'];
     copyfile(niftiname,tniftiname);
-    
+
     [tpth,tfn,ext]=fileparts(tniftiname);
     ea_surficeoverlay_lr((tniftiname),threshs,2);
     pause(0.5);

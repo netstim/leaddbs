@@ -64,16 +64,16 @@ else
     applyTransformsToPoints = [basedir, 'antsApplyTransformsToPoints.', computer('arch')];
 end
 
-    guid=ea_generate_guid;
+    uuid=ea_generate_uuid;
 
 cmd = [applyTransformsToPoints, ...
     ' --dimensionality 3' ...   % dimensionality
     ' --precision 1' ...    % double precision
-    ' --input ', ea_path_helper([directory,'tmpin_',guid,'.csv']) ...  % input csv file with x,y,z,t (at least) as the column header
-    ' --output ', ea_path_helper([directory,'tmpout_',guid,'.csv']) ...    % warped output csv file
+    ' --input ', ea_path_helper([directory,'tmpin_',uuid,'.csv']) ...  % input csv file with x,y,z,t (at least) as the column header
+    ' --output ', ea_path_helper([directory,'tmpout_',uuid,'.csv']) ...    % warped output csv file
     tstring];
 
-ea_writecsv([directory,'tmpin_',guid,'.csv'],input);
+ea_writecsv([directory,'tmpin_',uuid,'.csv'],input);
 
 if ~ispc
     system(['bash -c "', cmd, '"']);
@@ -81,9 +81,9 @@ else
     system(cmd);
 end
 
-output=ea_readcsv([directory,'tmpout_',guid,'.csv']);
-delete([directory,'tmpout_',guid,'.csv']);
-delete([directory,'tmpin_',guid,'.csv']);
+output=ea_readcsv([directory,'tmpout_',uuid,'.csv']);
+delete([directory,'tmpout_',uuid,'.csv']);
+delete([directory,'tmpin_',uuid,'.csv']);
 
 
 function coord=ea_readcsv(pth)

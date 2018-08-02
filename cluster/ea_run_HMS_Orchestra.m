@@ -4,7 +4,7 @@ function ea_run_HMS_Orchestra(options)
 % to be adapted to suit your needs. Then, you can "Export code" using
 % Lead-DBS and simply change the command ea_run to ea_run_cluster.
 
-jobFile = [options.root, options.patientname, filesep, 'job_', ea_generate_guid];
+jobFile = [options.root, options.patientname, filesep, 'job_', ea_generate_uuid];
 options.spmdir = spm('dir');
 save(jobFile, 'options');
 

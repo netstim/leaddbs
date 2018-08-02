@@ -34,7 +34,7 @@ end
 try
     % file name starting with '.' is not a valid function/script name, so
     % copy it to a temp file and then run it.
-    tempPrefs = ['ea_prefs_', strrep(ea_generate_guid, '-', '_')];
+    tempPrefs = ['ea_prefs_', strrep(ea_generate_uuid, '-', '_')];
     copyfile([home, '.ea_prefs.m'], [ea_getearoot, tempPrefs, '.m'])
     uprefs = feval(tempPrefs, patientname);
     delete([ea_getearoot, tempPrefs, '.m']);

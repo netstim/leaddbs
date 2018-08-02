@@ -35,8 +35,8 @@ if size(fis,2)==2 % left and right separate
         lnii=ea_load_nii(origfis{f,2});
         cnii=rnii;
         cnii.img=ea_nanmean(cat(4,rnii.img,lnii.img),4);
-        guid=ea_generate_guid;
-        cnii.fname=[tmpd,guid,'.nii'];
+        uuid=ea_generate_uuid;
+        cnii.fname=[tmpd,uuid,'.nii'];
         ea_write_nii(cnii);
         fis{f}=cnii.fname;
     end
@@ -44,7 +44,7 @@ end
 
 for f=1:length(fis)
     if dok || dos
-        guid=ea_generate_guid;
+        uuid=ea_generate_uuid;
         [pth,fn,ext]=fileparts(fis{f});
         if strcmp(ext,'.gz')
             addgz='.gz';
@@ -52,12 +52,12 @@ for f=1:length(fis)
             addgz='';
         end
 
-        copyfile(fis{f},[tmpd,guid,'.nii',addgz]);
+        copyfile(fis{f},[tmpd,uuid,'.nii',addgz]);
         if ~isempty(addgz)
-            gunzip([tmpd,guid,'.nii',addgz]);
+            gunzip([tmpd,uuid,'.nii',addgz]);
         end
 
-        nii=ea_load_nii([tmpd,guid,'.nii']);
+        nii=ea_load_nii([tmpd,uuid,'.nii']);
         if isnan(mask)
             mask=1:numel(nii.img);
             warning('If using k option should apply a mask');
@@ -71,15 +71,15 @@ for f=1:length(fis)
         ea_write_nii(nii);
 
         if dos
-            matlabbatch{1}.spm.spatial.smooth.data = {[tmpd,guid,'.nii,1']};
+            matlabbatch{1}.spm.spatial.smooth.data = {[tmpd,uuid,'.nii,1']};
             matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
             matlabbatch{1}.spm.spatial.smooth.dtype = 0;
             matlabbatch{1}.spm.spatial.smooth.im = 0;
             matlabbatch{1}.spm.spatial.smooth.prefix = 's';
             spm_jobman('run',{matlabbatch});
             clear matlabbatch
-            delete([tmpd,guid,'.nii']);
-            fis{f}=[tmpd,'s',guid,'.nii'];
+            delete([tmpd,uuid,'.nii']);
+            fis{f}=[tmpd,'s',uuid,'.nii'];
         end
     end
 
