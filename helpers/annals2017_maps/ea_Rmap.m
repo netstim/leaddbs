@@ -1,4 +1,4 @@
-function [R,Rperm,Rnaned,Rpermnaned]=ea_Rmap(varargin)
+function [R,Rperm,Rnaned,Rpermnaned,h]=ea_Rmap(varargin)
 % creates a correlation nifti file given a set of images and a
 % regressor ("R map" in Horn 2017 AoN)
 
@@ -10,7 +10,7 @@ pthresh=0.05;
 itercount=1000;
 regressor=varargin{2};
 output=varargin{3};
-
+h=nan;
 if nargin<6
     corrtype='Spearman';
 else
@@ -22,7 +22,7 @@ X=X';
 nnanix=~isnan(nansum(X,1)).*(abs(nansum(X,1)))>0;
 
 if nargin>6
-    if strcmp(varargin{7},'permute')
+    if ismember(varargin{7},{'permute','permuteplot'})
         Rperm=nan(1000,size(X,2));
         regressorperm=repmat(regressor,1,itercount);
         for i=1:itercount
@@ -52,4 +52,27 @@ if exist('Rperm','var') % permutation test
     [pth,fn,ext]=fileparts(varargin{3});
     varargin{3}=fullfile(pth,[fn,'_sig',ext]);
     ea_exportmap(n,Rnaned,varargin{1:5});
+    
+    if strcmp(varargin{7},'permuteplot')
+        ea_dispercent(0,'Iterating patients');
+        for pt=1:length(varargin{1})
+            Xthispt=X(pt,:)';
+            Ihat(pt)=corr(Xthispt(varargin{4}),R(varargin{4})','rows','pairwise','type',corrtype); % real predictions
+            Ihat_Rperm(pt,:)=corr(Xthispt(varargin{4}),...
+                Rperm(:,varargin{4})','rows','pairwise','type',corrtype); % permuted predictions
+            ea_dispercent(pt/length(varargin{1}));
+        end
+        ea_dispercent(1,'end');
+        
+        [R]=corr(Ihat',regressor); % Predictive R of unpermuted values
+        
+        [Rperm]=corr(Ihat_Rperm,regressor); % Predictive R of permuted values
+        
+        Rperm=sort(Rperm,'descend'); % build distribution
+        RlargerRperm=R>Rperm;
+        p_predict_perm=sum(~RlargerRperm)./size(Rperm,1); % calculate final permutation based p value
+        disp(['Permutation based p for overall prediction = ',num2str(p_predict_perm),'.']);
+        
+        h=ea_corrplot(regressor,Ihat',{'Empirical vs. Predicted','Empirical','Predicted'},corrtype,p_predict_perm);
+    end
 end
