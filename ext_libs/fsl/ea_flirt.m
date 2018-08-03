@@ -118,7 +118,7 @@ if ~writeoutmat
     ea_delete([volumedir, invxfm, num2str(runs+1), '.mat'])
     affinefile = {};
 else
-    affinefile = {[volumedir, xfm, num2str(runs+1), '.mat'], ...
+    affinefile = {[volumedir, xfm, num2str(runs+1), '.mat']
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
 
@@ -128,7 +128,7 @@ fprintf('\nFSL FLIRT done.\n');
 cits={
     'M. Jenkinson and S.M. Smith. A global optimisation method for robust affine registration of brain images. Medical Image Analysis, 5(2):143-156, 2001.'
     'M. Jenkinson, P.R. Bannister, J.M. Brady, and S.M. Smith. Improved optimisation for the robust and accurate linear registration and motion correction of brain images. NeuroImage, 17(2):825-841, 2002.'
-    };
+};
 
 ea_methods(volumedir,[mov,' was linearly co-registered to ',fix,' using FLIRT as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],...
     cits);

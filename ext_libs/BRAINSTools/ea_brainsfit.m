@@ -1,17 +1,17 @@
 function affinefile = ea_brainsfit(varargin)
 % Wrapper for BRAINSFit
 
-fixedVolume=varargin{1};
-movingVolume=varargin{2};
-outputVolume=varargin{3};
+fixedVolume = varargin{1};
+movingVolume = varargin{2};
+outputVolume = varargin{3};
 
-if nargin>=4
-    writematout=varargin{4};
+if nargin >= 4
+    writematout = varargin{4};
 else
-    writematout=1;
+    writematout = 1;
 end
 
-if nargin>=5
+if nargin >= 5
     if isempty(varargin{5}) % [] or {} or ''
         otherfiles = {};
     elseif ischar(varargin{5}) % single file, make it to cell string
@@ -41,7 +41,8 @@ fixparams = [' --fixedVolume ' , ea_path_helper(fixedVolume), ...
              ' --samplingPercentage 0.005' ...
              ' --removeIntensityOutliers 0.005' ...
              ' --interpolationMode Linear' ...
-             ' --outputTransform ', ea_path_helper([volumedir, xfm, '.h5'])];
+             ' --outputTransform ', ea_path_helper([volumedir, xfm, '.h5']), ...
+             ' --writeOutputTransformInFloat'];
 
 % first attempt...
 paramset{1} = [fixparams, ...
@@ -105,18 +106,23 @@ end
 
 if ~writematout
     delete([volumedir, xfm, '.h5']);
+    delete([volumedir, xfm, '_Inverse.h5']);
     affinefile = {};
 else
-    affinefile = {[volumedir, xfm, '.h5']};
+    % TODO: convert the hdf5 transformation to MAT file
+    invxfm = [fix, '2', mov, '_brainsfit'];
+    movefile([volumedir, xfm, '_Inverse.h5'], [volumedir, invxfm, '.h5']);
+
+    affinefile = {[volumedir, xfm, '.h5']
+                  [volumedir, invxfm, '.h5']};
 end
 
 fprintf('\nBRAINSFit LINEAR registration done.\n');
 
-
+%% add methods dump:
 cits={
     'Johnson, H., Harris, G., & Williams, K. (2007). BRAINSFit: mutual information rigid registrations of whole-brain 3D images, using the insight toolkit. Insight J.'
-    };
+};
 
 ea_methods(volumedir,[mov,' was linearly co-registered to ',fix,' using BRAINSFit software (Johnson 2007; https://www.nitrc.org/projects/multimodereg/)'],...
     cits);
-
