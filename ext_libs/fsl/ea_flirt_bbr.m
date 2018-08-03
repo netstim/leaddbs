@@ -6,12 +6,18 @@ movingimage = varargin{2};
 outputimage = varargin{3};
 
 if nargin >= 4
-    if isempty(varargin{4}) % [] or {} or ''
+    writematout = varargin{4};
+else
+    writematout = 1;
+end
+
+if nargin >= 5
+    if isempty(varargin{5}) % [] or {} or ''
         otherfiles = {};
-    elseif ischar(varargin{4}) % single file, make it to cell string
-        otherfiles = varargin(4);
+    elseif ischar(varargin{5}) % single file, make it to cell string
+        otherfiles = varargin(5);
     else % cell string
-        otherfiles = varargin{4};
+        otherfiles = varargin{5};
     end
 else
     otherfiles = {};
@@ -128,7 +134,23 @@ if ~isempty(otherfiles)
     end
 end
 
-affinefile = {[volumedir, xfm, '.mat'], ...
-              [volumedir, invxfm, '.mat']};
+if ~writematout
+    delete([volumedir, xfm, '.mat']);
+    delete([volumedir, invxfm, '.mat']);
+    affinefile = {};
+else
+    affinefile = {[volumedir, xfm, '.mat']
+                  [volumedir, invxfm, '.mat']};
+end
 
 fprintf('\nFSL FLIRT BBR done.\n');
+
+%% add methods dump:
+cits={
+    'M. Jenkinson and S.M. Smith. A global optimisation method for robust affine registration of brain images. Medical Image Analysis, 5(2):143-156, 2001.'
+    'M. Jenkinson, P.R. Bannister, J.M. Brady, and S.M. Smith. Improved optimisation for the robust and accurate linear registration and motion correction of brain images. NeuroImage, 17(2):825-841, 2002.'
+    'D.N. Greve and B. Fischl, Accurate and robust brain image alignment using boundary-based registration, NeuroImage, 48(1):63-72, 2009.'
+};
+
+ea_methods(volumedir,[mov,' was linearly co-registered to ',fix,' using FLIRT BBR as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],...
+    cits);
