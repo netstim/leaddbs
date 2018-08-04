@@ -224,8 +224,7 @@ if ~isempty(otherfiles)
         options.root=[options.root,filesep];
         options.prefs=ea_prefs(options.patientname);
 
-        [pth,fn,ext]=fileparts(otherfiles{ofi});
-        ea_ants_applytransforms(options,otherfiles(ofi),{fullfile(pth,['r',fn,ext])},0,fixedimage,[outputbase, '0GenericAffine.mat'],interp);
+        ea_ants_applytransforms(options,otherfiles(ofi),otherfiles{ofi},0,fixedimage,[outputbase, '0GenericAffine.mat']);
     end
 end
 
