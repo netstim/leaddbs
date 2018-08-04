@@ -12,25 +12,20 @@ function nii = ea_load_nii(fname)
 %     'PATH/TO/image'
 %     'PATH/TO/image,1'
 
-% need to consider the case like: spm_vol('image.nii,1')
-[~,~,ext]=fileparts(fname);
-if strcmp(ext,'.mat')
-    nii=load(fname);
+% input file is MAT file
+if strcmp(fname(end-3:end),'.mat')
+    nii = load(fname);
     return
 end
 
-
+% need to consider the case like: spm_vol('image.nii,1')
 fname = [ea_niigz(fname), fname(strfind(fname, ','):end)];
 
-if regexp(fname, '\.nii.gz$', 'once') % 'image.nii.gz'
+ % 'image.nii.gz' or 'image.nii.gz,1'
+if regexp(fname, '\.nii.gz(,\d+)?$', 'once')
     wasgzip = 1;
-    gunzip(fname);
-    fname = fname(1:end-3);
-elseif regexp(fname, '\.nii.gz,\d+$', 'once') % 'image.nii.gz,1'
-    wasgzip = 1;
-    [pth, ~, ~, vol]  =  ea_niifileparts(fname);
-    gunzip([pth, '.nii.gz']);
-    fname  =  fullfile(pth,['.nii', vol]);
+    gunzip(regexprep(fname, ',\d+$', ''));
+    fname = regexprep(fname, '\.gz(,\d+)?$', '$1');
 else
     wasgzip = 0;
 end
@@ -46,5 +41,5 @@ nii.voxsize = ea_detvoxsize(nii.mat); % set voxsize
 nii.volnum = volnum; % set number of volumes
 
 if wasgzip
-    delete(fname); % since gunzip makes a copy of the zipped file.
+    delete(regexprep(fname, ',\d+$', '')); % since gunzip makes a copy of the zipped file.
 end

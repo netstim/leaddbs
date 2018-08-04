@@ -1,6 +1,6 @@
 function [trimpath, basename, ext, vol] = ea_niifileparts(niifile)
-% Return the nii file path and name without '.nii' or '.nii.gz' ext.
-% Useful for FSL cli.
+% Return nifti file path and name without .nii/.nii.gz extension.
+% Useful for FSL tools.
 % For example, input '/PATH/TO/image.nii.gz,1' will return 
 % ['/PATH/TO/image', 'image', 'nii.gz', ',1']
 
