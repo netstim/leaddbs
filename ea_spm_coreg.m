@@ -49,7 +49,7 @@ fixedmat = spm_get_space(fixed);
 if doreslice
     % backup moving image
     movingbackup = ea_niifileparts(moving);
-    copyfile(moving, movingbackup);
+    copyfile(strrep(moving,',1',''), movingbackup);
 
     % backup other files
     otherfilesbackup = cell(size(otherfiles));
@@ -123,3 +123,5 @@ cits={
 
 ea_methods(options,[mov,' was linearly co-registered to ',fix,' using ',spm('ver'),' (Friston 2011; http://www.fil.ion.ucl.ac.uk/spm/software/)'],...
     cits);
+
+
