@@ -49,14 +49,14 @@ fixedmat = spm_get_space(fixed);
 if doreslice
     % backup moving image
     movingbackup = ea_niifileparts(moving);
-    copyfile(strrep(moving,',1',''), movingbackup);
+    copyfile(regexprep(moving, ',\d+$', ''), movingbackup);
 
     % backup other files
     otherfilesbackup = cell(size(otherfiles));
     for i=1:length(otherfiles)
         if ~isempty(otherfiles{i})
             otherfilesbackup{i} = ea_niifileparts(otherfiles{i});
-            copyfile(otherfiles{i}, otherfilesbackup{i});
+            copyfile(regexprep(otherfiles{i}, ',\d+$', ''), otherfilesbackup{i});
         end
     end
 
@@ -106,12 +106,12 @@ end
 
 if doreslice
     % restore moving image
-    movefile(movingbackup, moving);
+    movefile(movingbackup, regexprep(moving, ',\d+$', ''));
 
     % restore other files
     for i=1:length(otherfilesbackup)
         if ~isempty(otherfilesbackup{i})
-            movefile(otherfilesbackup{i}, otherfiles{i});
+            movefile(otherfilesbackup{i}, regexprep(otherfiles{i}, ',\d+$', ''));
         end
     end
 end
