@@ -59,6 +59,10 @@ end
 function ea_coreg_pre2fmri(options)
 directory=[options.root,options.patientname,filesep];
 if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_c1',options.prefs.prenii_unnormalized],'file') || options.overwriteapproved
+    for i=1:3
+        copyfile([directory,'c',num2str(i),options.prefs.prenii_unnormalized], [directory,'kc',num2str(i),options.prefs.prenii_unnormalized]);
+    end
+
     ea_coreg2images_generic(options,...
         [directory,options.prefs.prenii_unnormalized],...
         [directory,'r',options.prefs.rest],...
@@ -66,8 +70,10 @@ if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_c1',options.prefs.pren
         {[directory,'c1',options.prefs.prenii_unnormalized];...
         [directory,'c2',options.prefs.prenii_unnormalized];...
         [directory,'c3',options.prefs.prenii_unnormalized]},1,[],1);
+
     for t=1:3
         movefile([directory,'rc',num2str(t),options.prefs.prenii_unnormalized],[directory,'r',ea_stripex(options.prefs.rest),'_c',num2str(t),options.prefs.prenii_unnormalized]);
+        movefile([directory,'kc',num2str(t),options.prefs.prenii_unnormalized],[directory,'c',num2str(t),options.prefs.prenii_unnormalized]);
     end
 end
 
