@@ -188,7 +188,7 @@ set(handles.importpanel,'visible','off');
 set(handles.runsavebutn,'String','Save and close');
 set(handles.runsavebutn,'Position',[218,8,154,41]);
 set(handles.exportcode,'visible','off');
-
+set(handles.overwriteapproved,'visible','off');
 set(handles.openpatientdir,'visible','off');
 moveup=215;
 

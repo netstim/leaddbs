@@ -18,7 +18,7 @@ ea_smooth_fmri(signallength,options); % slightly smooth fMRI data
 function ea_realign_fmri(signallength,options)
 %% realign fmri.
 directory=[options.root,options.patientname,filesep];
-if ~exist([directory,'r',options.prefs.rest],'file')
+if ~exist([directory,'r',options.prefs.rest],'file') || options.overwriteapproved
 
     tmpdir=ea_getleadtempdir;
     uuid=ea_generate_uuid;
@@ -58,7 +58,7 @@ end
 
 function ea_coreg_pre2fmri(options)
 directory=[options.root,options.patientname,filesep];
-if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_c1',options.prefs.prenii_unnormalized],'file')
+if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_c1',options.prefs.prenii_unnormalized],'file') || options.overwriteapproved
     ea_coreg2images_generic(options,...
         [directory,options.prefs.prenii_unnormalized],...
         [directory,'r',options.prefs.rest],...
@@ -74,7 +74,7 @@ end
 
 function ea_smooth_fmri(signallength,options)
 directory=[options.root,options.patientname,filesep];
-if ~exist([directory,'sr',options.prefs.rest],'file')
+if ~exist([directory,'sr',options.prefs.rest],'file') || options.overwriteapproved
     filetimepts=cell(signallength,1);
     for i = 1:signallength
         filetimepts{i}=[directory,'r',options.prefs.rest,',',num2str(i)];
