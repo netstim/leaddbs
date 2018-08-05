@@ -38,7 +38,7 @@ end
 % Append volume number
 output = cell(numel(niifpath), 1);
 for i=1:numel(output)
-    output{i} = [niifpath{i}, ',', num2str(volnum(i))];
+    output{i} = regexprep(niifpath{i}, '\.nii$', ['.nii,', num2str(volnum(i))]);
 end
 
 % Return char as necessary
