@@ -60,9 +60,9 @@ if doreslice
         end
     end
 
-    matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {fixed};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.source = {moving};
-    matlabbatch{1}.spm.spatial.coreg.estwrite.other = otherfiles;
+    matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {ea_appendVolNum(fixed)};
+    matlabbatch{1}.spm.spatial.coreg.estwrite.source = {ea_appendVolNum(moving)};
+    matlabbatch{1}.spm.spatial.coreg.estwrite.other = ea_appendVolNum(otherfiles);
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.cost_fun = costfun;
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.sep = [8 4 2]; %[4 2];
     matlabbatch{1}.spm.spatial.coreg.estwrite.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
