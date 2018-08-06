@@ -11,6 +11,7 @@ if ~exist([directory,'sr',restfname,'.nii'],'file') ...
     || ~exist([directory,'r',restfname,'_c1',anatfname,'.nii'],'file') % preproecessing needs to be performed
     disp('No preprocessed fMRI-images found, processing...');
     options.prefs.rest=[restfname,'.nii'];
+    options.overwriteapproved = 0;
     ea_preprocess_fmri(options);
     disp('Done preprocessing fMRI data.');
 end
