@@ -4,6 +4,9 @@ if strcmp(options.lcm.func.connectome,'No functional connectome found.')
     return
 end
 
+
+
+
 disp('Running functional connectivity...');
 
 if iscell(options.lcm.seeds)

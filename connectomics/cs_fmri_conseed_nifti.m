@@ -170,7 +170,9 @@ for s=1:length(seedfile)
     seed{s}.img(:)=R;
     [pth,sf]=fileparts(seed{s}.fname);
     outputfolder = options.lcm.func.connectome;
-
+    if strfind(sf,'rest')
+        sf(strfind(sf,'rest')-1:end)=[];
+    end
     seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii']);
 
     if ~exist(fullfile(pth,outputfolder),'dir')
@@ -197,7 +199,7 @@ for s=1:length(seedfile)
    
     options.coregmr.method='SPM'; % hard code for now
 
-    copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']),...
+    copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']),...
              fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
 
          if strcmp(options.coregmr.method,'SPM') && exist([directory,'r',restfname,'2',ea_stripex(options.prefs.prenii_unnormalized),'_spm.mat'],'file')
@@ -234,8 +236,20 @@ for s=1:length(seedfile)
     ea_apply_normalization_tofile(options,...
         {fullfile(pth,[sf,'_AvgR_Fz.nii'])},...
         {fullfile(pth,[sf,'_AvgR_Fz.nii'])},...
-        directory,0,1,ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'111.nii']));
+        directory,0,1,ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii']));
     
+    nii=ea_load_nii(fullfile(pth,[sf,'_AvgR_Fz.nii']));
+    nii.img(nii.img==0)=nan;
+    nii.dt(2)=1;
+    ea_write_nii(nii);
+    matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pth,[sf,'_AvgR_Fz.nii'])};
+    matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];
+    matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+    matlabbatch{1}.spm.spatial.smooth.im = 1;
+    matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+    spm_jobman('run',{matlabbatch}); clear matlabbatch
+    movefile(fullfile(pth,[sf,'_AvgR_Fz.nii']),fullfile(pth,[sf,'_AvgR_Fz_unsmoothed.nii']));
+    movefile(fullfile(pth,['s',sf,'_AvgR_Fz.nii']),fullfile(pth,[sf,'_AvgR_Fz.nii']));
 end
 
 

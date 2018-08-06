@@ -32,7 +32,32 @@ if options.lcm.func.do
         end
     end
 
-    ea_lcm_func(options);
+    
+    
+    
+    % check if patient specific connectome used:
+    patientspecific=0;
+    try
+        if strcmp(options.lcm.func.connectome(1:16),'Patient-specific')
+            patientspecific=1;
+        end
+    end
+    
+    
+    
+    if ~patientspecific
+        ea_lcm_func(options);
+    else % need to supply each patient on its own since each uses different connectome.
+        allseeds=options.lcm.seeds;
+        allvatdirs=options.uivatdirs;
+        for seed=1:length(allseeds)
+            options.lcm.seeds=allseeds(seed);
+            options.uivatdirs=allvatdirs(seed);
+            ea_lcm_func(options);
+        end        
+        options.lcm.seeds=allseeds;
+        options.uivatdirs=allvatdirs;
+    end
 end
 
 % convert VTA seeds also if neither func or struc conn is chosen.
@@ -114,6 +139,7 @@ for suffix=dowhich
             % prepare for fMRI
             %if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file');
             seeds=cell(0);
+            nativeprefix='';
             for pt=1:length(options.uivatdirs)
                 vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
 
@@ -141,6 +167,7 @@ for suffix=dowhich
                         if ~strcmp(cname,'No functional connectome found.')
                             if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
                                 ea_warp_vat2rest(cname,vatdir,sidec,options);
+                                nativeprefix=['_',cname(25:end)];
                             else
                                 d=load([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat']);
                                 d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
@@ -163,7 +190,7 @@ for suffix=dowhich
                 for n=2:length(nii)
                     Cnii.img=Cnii.img+nii(n).img;
                 end
-                Cnii.fname=[vatdir,'vat_seed_compound_fMRI',addstr,'.nii'];
+                Cnii.fname=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 ea_write_nii(Cnii);
                 delete([vatdir,'tmp_*']);
 
@@ -171,7 +198,7 @@ for suffix=dowhich
                 disp('Done.');
                 %end
                 if keepthisone
-                    seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,'.nii'];
+                    seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 end
             end
     end
@@ -246,7 +273,7 @@ rest_vat=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
 if ~any(rest_vat.img(:)) % image empty, at least set original peak to 1.
     warning('Image empty (potentially due to poor resolution and interpolation), trying to set peak manually');
     [~,pn]=fileparts(options.prefs.prenii_unnormalized);
-    load([directory,'c',pn,'2',restfname,'_spm.mat']);
+    load([directory,pn,'2r',restfname,'_spm.mat']);
     mmc_inrest=spmaffine*voxc;
     voxc_inrest=round(fixedmat\mmc_inrest);
     try
