@@ -1,6 +1,6 @@
-function ea_ants_applytransforms(varargin)
-% Wrapper for antsApplyTransforms in terms of reapplying normalizations to
-% pre- and postop imaging.
+function ea_ants_apply_transforms(varargin)
+% Wrapper for antsApplyTransforms used for reapplying coregistration
+% (linear registration) and normalization (non-linear registration)
 
 ea_libs_helper;
 
@@ -60,7 +60,7 @@ if nargin == 1
         case 1 % MR
             fis = {ea_niigz([directory,options.prefs.prenii_unnormalized])};
             ofis = {ea_niigz([directory,options.prefs.gprenii])};
-           
+
 
             if isfield(options.prefs,'tranii_unnormalized')
                 fis = [fis,{ea_niigz([directory,options.prefs.tranii_unnormalized])}];

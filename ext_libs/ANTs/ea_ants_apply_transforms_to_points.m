@@ -1,5 +1,6 @@
-function output=ea_ants_applytransforms_to_points(varargin)
-% Wrapper for antsApplyTransformsToPoints
+function output = ea_ants_apply_transforms_to_points(varargin)
+% Wrapper for antsApplyTransformsToPoints used for both linear
+% transformation and non-linear transformation
 
 directory=fullfile(varargin{1},filesep);
 input=varargin{2};

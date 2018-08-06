@@ -1,4 +1,4 @@
-function ea_fsl_flirt_applytransform(varargin)
+function ea_fsl_apply_coregistration(varargin)
 % Wrapper to apply FSL flirt affine transformation
 
 fixedimage = varargin{1};

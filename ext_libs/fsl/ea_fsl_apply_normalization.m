@@ -1,6 +1,6 @@
-function ea_fsl_applytransforms(varargin)
-% Wrapper for FSL applywarp in terms of reapplying normalizations to
-% pre- and postop imaging.
+function ea_fsl_apply_normalization(varargin)
+% Wrapper for FSL applywarp used for reapplying normalization (non-linear
+% registration)
 
 options = varargin{1};
 
@@ -147,4 +147,3 @@ for fi = 1:length(fis)
         system(cmd);
     end
 end
-

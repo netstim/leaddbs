@@ -108,7 +108,7 @@ end
 
 if ~isempty(otherfiles)
     for fi = 1:numel(otherfiles)
-        ea_fsl_flirt_applytransform(fixedimage, otherfiles{fi}, otherfiles{fi}, ...
+        ea_fsl_apply_coregistration(fixedimage, otherfiles{fi}, otherfiles{fi}, ...
                                     [volumedir, xfm, num2str(runs+1), '.mat']);
     end
 end

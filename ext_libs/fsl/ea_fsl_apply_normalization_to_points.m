@@ -1,6 +1,6 @@
-function outcoords = ea_fsl_applytransforms_to_points(varargin)
+function outcoords = ea_fsl_apply_normalization_to_points(varargin)
 % Non-linear point mapping between anat and mni using FSL(img2imgcoord)
-% For linear normalization, please use ea_img2imgcoord directly
+% For linear transformation, please use ea_fsl_img2imgcoord directly
 % mm to mm
 
 directory=fullfile(varargin{1},filesep);
@@ -36,4 +36,4 @@ else
     end
 end
 
-outcoords = ea_img2imgcoord(incoords, src, dest, transform, 'n');
+outcoords = ea_fsl_img2imgcoord(incoords, src, dest, transform, 'n');

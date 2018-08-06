@@ -1,4 +1,4 @@
-function ea_spm_coreg_applytransform(varargin)
+function ea_spm_apply_coregistration(varargin)
 % Wrapper to apply SPM coregistration transformation
 
 fixedimage = varargin{1};
@@ -41,4 +41,4 @@ matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
 matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = '';
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
- 
+

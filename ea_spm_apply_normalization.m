@@ -1,4 +1,4 @@
-function ea_spm_applytransforms(options,usesuit)
+function ea_spm_apply_normalization(options,usesuit)
 
 if ~exist('usesuit','var')
     usesuit=0;
@@ -16,13 +16,13 @@ switch options.modality
         gfis{2}=options.prefs.gtranii;
         gfis{3}=options.prefs.gcornii;
         gfis{4}=options.prefs.gsagnii;
-        
+
     case 2 % CT
         postops{1}=options.prefs.prenii_unnormalized;
         postops{2}=options.prefs.ctnii_coregistered;
         gfis{1}=options.prefs.gprenii;
         gfis{2}=options.prefs.gctnii;
-       
+
 end
 [postops,gfis]=ea_appendgrid(options,postops,gfis,0);
 
@@ -34,7 +34,7 @@ end
 for pos=1:length(gfis)
     if exist([directory,postops{pos}],'file')
         nii=ea_load_nii([directory,postops{pos}]);
-        
+
         gaussdim=abs(nii.voxsize);
         %gaussdim=abs(gaussdim(1:3)).*2;
         if mean(gaussdim>1)
@@ -110,7 +110,7 @@ for i=1:length(S.resample)
         O(i).pinfo=[1./254*max(Data(:));0;O(i).pinfo(3)];
     end
     spm_write_vol(O(i),Data);
-    
+
     movefile([directory,postops{i}],[directory,'orig_',postops{i}]);
     movefile([directory,'atemp_',postops{i}],[directory,postops{i}]);
 end

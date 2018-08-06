@@ -16,18 +16,18 @@ switch whichnormmethod
 
     case ea_getantsnormfuns
 
-        ea_ants_applytransforms(options);
+        ea_ants_apply_transforms(options);
 
     case ea_getfslnormfuns
 
-        ea_fsl_applytransforms(options);
+        ea_fsl_apply_normalization(options);
 
     case 'ea_normalize_suit'
-        
-        ea_spm_applytransforms(options,'suit');
+
+        ea_spm_apply_normalization(options,'suit');
 
     otherwise % all SPM functions
-        ea_spm_applytransforms(options);
+        ea_spm_apply_normalization(options);
 end
 
 

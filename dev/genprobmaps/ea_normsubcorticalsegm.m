@@ -26,9 +26,9 @@ for side=1:length(options.sides)
 
         switch whichnormmethod
             case ea_getantsnormfuns
-                ea_ants_applytransforms(options,{[natatldir,sidec,filesep,srcs{src},'.nii']},{[mniatldir,sidec,filesep,srcs{src},'.nii']},0,[ea_space,'bb.nii']);
+                ea_ants_apply_transforms(options,{[natatldir,sidec,filesep,srcs{src},'.nii']},{[mniatldir,sidec,filesep,srcs{src},'.nii']},0,[ea_space,'bb.nii']);
             case ea_getfslnormfuns
-                ea_fsl_applytransforms(options,{[natatldir,sidec,filesep,srcs{src},'.nii']},{[mniatldir,sidec,filesep,srcs{src},'.nii']},0,[ea_space,'bb.nii']);
+                ea_fsl_apply_normalization(options,{[natatldir,sidec,filesep,srcs{src},'.nii']},{[mniatldir,sidec,filesep,srcs{src},'.nii']},0,[ea_space,'bb.nii']);
             otherwise
                 matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
                 matlabbatch{1}.spm.util.defs.out{1}.push.fnames = {[natatldir,sidec,filesep,srcs{src},'.nii']};

@@ -89,7 +89,7 @@ for peer=1:length(peerfolders)
     end
 
 
-    %ea_ants_applytransforms(poptions,froms,tos,1,[peerdirec,poptions.prefs.prenii_unnormalized]);
+    %ea_ants_apply_transforms(poptions,froms,tos,1,[peerdirec,poptions.prefs.prenii_unnormalized]);
 
 
     %% step 2, generate warps from MNI via peers to the selected patient brain
@@ -171,7 +171,7 @@ for peer=1:length(peerfolders)
         % check the other way:
         [~,presentinboth]=ismember(peerpresentfiles,subpresentfiles);
         presentfiles=peerpresentfiles(logical(presentinboth));
-    
+
     end
 
 
@@ -179,7 +179,7 @@ for peer=1:length(peerfolders)
 
     if ~exist(sub_tos{end},'file') % assume the work has been done already
         transformfile=[subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz'];
-        ea_ants_applytransforms(poptions,froms,sub_tos,0,[subdirec,presentfiles{1}],transformfile);
+        ea_ants_apply_transforms(poptions,froms,sub_tos,0,[subdirec,presentfiles{1}],transformfile);
     end
     % gather all files for majority voting
     warpednuclei{peer}=sub_tos;
@@ -213,17 +213,17 @@ if ~exist([subdirec,'anat_atlas.nii.gz'],'file')
         % makes the result more conservative)
         % X(X>0)=1;
         X=mean(X,4);
-        
+
         X=X/max(X(:));
         % X(X<0.25)=0; %defines sensitivitiy of majority voting
         % X(X>0)=1;
         % save atlas
         [pth,atlasname]=fileparts(warpednuclei{peer}{atlas});
-        
+
         if length(atlasname)>3 && strcmp('.nii',atlasname(end-3:end))
             atlasname=atlasname(1:end-4);
         end
-        
+
         [~,base]=fileparts(pth);
         nii.fname=[subdirec,'atlases',filesep,'native',filesep,atlastouse,filesep,base,filesep,atlasname,'.nii'];
         nii.img=X;
@@ -232,19 +232,19 @@ if ~exist([subdirec,'anat_atlas.nii.gz'],'file')
         else
             AllX=AllX+X;
         end
-        
+
         clear X
         ea_write_nii(nii);
         ea_crop_nii(nii.fname);
         gzip(nii.fname);
         delete(nii.fname);
     end
-    
-    
+
+
     % -> Now segmentation is done. Add normalization.
-    
+
     %% step 5: Normalize using multimodal DISTAL warp
-    
+
     % write out anat_distal
     nii.fname=[subdirec,'anat_atlas.nii'];
     AllX(AllX>1)=1;

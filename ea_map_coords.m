@@ -243,7 +243,7 @@ if ~isempty(transform)
 
                 % apply transform, need transpose becuase ANTs prefer N*3
                 % like row vector
-                XYZ_dest_mm = ea_ants_applytransforms_to_points(directory, XYZ_src_mm(1:3,:)', useinverse, transform)';
+                XYZ_dest_mm = ea_ants_apply_transforms_to_points(directory, XYZ_src_mm(1:3,:)', useinverse, transform)';
 
                 % LPS to RAS, restore to RAS coords
                 XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
@@ -274,7 +274,7 @@ if ~isempty(transform)
 
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
-                XYZ_dest_mm = ea_img2imgcoord(XYZ_src_mm(1:3,:)', src, dest, transform, 'l')';
+                XYZ_dest_mm = ea_fsl_img2imgcoord(XYZ_src_mm(1:3,:)', src, dest, transform, 'l')';
 
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
@@ -330,7 +330,7 @@ if ~isempty(transform)
 
                 % apply transform, need transpose becuase ANTs prefer N*3
                 % like row vector
-                XYZ_dest_mm=ea_ants_applytransforms_to_points(directory,XYZ_src_mm(1:3,:)',useinverse)';
+                XYZ_dest_mm=ea_ants_apply_transforms_to_points(directory,XYZ_src_mm(1:3,:)',useinverse)';
 
                 % LPS to RAS, restore to RAS coords
                 XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
@@ -355,7 +355,7 @@ if ~isempty(transform)
 
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
-                XYZ_dest_mm = ea_fsl_applytransforms_to_points(directory,XYZ_src_mm(1:3,:)',inversemap)';
+                XYZ_dest_mm = ea_fsl_apply_normalization_to_points(directory,XYZ_src_mm(1:3,:)',inversemap)';
 
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
@@ -407,7 +407,7 @@ if ~isempty(transform)
 
                 % apply transform, need transpose becuase ANTs prefer N*3
                 % like row vector
-                XYZ_dest_mm=ea_ants_applytransforms_to_points(directory, XYZ_src_mm(1:3,:)', useinverse, transform)';
+                XYZ_dest_mm=ea_ants_apply_transforms_to_points(directory, XYZ_src_mm(1:3,:)', useinverse, transform)';
 
                 % LPS to RAS, restore to RAS coords
                 XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
@@ -423,7 +423,7 @@ if ~isempty(transform)
 
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
-                XYZ_dest_mm = ea_img2imgcoord(XYZ_src_mm(1:3,:)', src, dest, transform, 'n')';
+                XYZ_dest_mm = ea_fsl_img2imgcoord(XYZ_src_mm(1:3,:)', src, dest, transform, 'n')';
 
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];

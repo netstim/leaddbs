@@ -1,4 +1,4 @@
-function outcoords = ea_img2imgcoord(varargin)
+function outcoords = ea_fsl_img2imgcoord(varargin)
 % Wrapper for FSL img2imgcoord
 % Input coords should have N*3 size
 

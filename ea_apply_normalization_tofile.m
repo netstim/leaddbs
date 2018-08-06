@@ -16,7 +16,7 @@ end
 switch ea_whichnormmethod(directory)
     case ea_getantsnormfuns % ANTs part here
 
-        ea_ants_applytransforms(options,from,to,useinverse,refim,'',interp);
+        ea_ants_apply_transforms(options,from,to,useinverse,refim,'',interp);
 
     case ea_getfslnormfuns % FSL part here
         if useinverse
@@ -52,7 +52,7 @@ switch ea_whichnormmethod(directory)
                 end
             end
         end
-        ea_fsl_applytransforms(options,from,to,useinverse,refim,'',interp);
+        ea_fsl_apply_normalization(options,from,to,useinverse,refim,'',interp);
 
     otherwise % SPM part here
         for fi=1:length(from) % assume from and to have same length (must have for this to work)
