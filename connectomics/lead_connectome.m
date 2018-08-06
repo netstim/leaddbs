@@ -190,26 +190,44 @@ set(handles.runsavebutn,'Position',[218,8,154,41]);
 set(handles.exportcode,'visible','off');
 set(handles.overwriteapproved,'visible','off');
 set(handles.openpatientdir,'visible','off');
-moveup=215;
+
+headermovedown = 238;
+panelmovedown = 22;
 
 pos=get(handles.logoaxes,'Position');
-pos(2)=pos(2)-moveup;
+pos(2)=pos(2)-headermovedown;
 set(handles.logoaxes,'Position',pos);
 
 pos=get(handles.titletext,'Position');
-pos(2)=pos(2)-moveup;
+pos(2)=pos(2)-headermovedown;
 set(handles.titletext,'Position',pos);
 
 pos=get(handles.versiontxt,'Position');
-pos(2)=pos(2)-moveup;
+pos(2)=pos(2)-headermovedown;
 set(handles.versiontxt,'Position',pos);
 
 pos=get(handles.nclinuse,'Position');
-pos(2)=pos(2)-moveup;
+pos(2)=pos(2)-headermovedown;
 set(handles.nclinuse,'Position',pos);
 
+pos=get(handles.genpanel,'Position');
+pos(2)=pos(2)-panelmovedown;
+set(handles.genpanel,'Position',pos);
+
+pos=get(handles.strucpanel,'Position');
+pos(2)=pos(2)-panelmovedown;
+set(handles.strucpanel,'Position',pos);
+
+pos=get(handles.funcpanel,'Position');
+pos(2)=pos(2)-panelmovedown;
+set(handles.funcpanel,'Position',pos);
+
+pos=get(handles.graphpanel,'Position');
+pos(2)=pos(2)-panelmovedown;
+set(handles.graphpanel,'Position',pos);
+
 pos=get(handles.leadfigure,'Position');
-pos(4)=pos(4)-moveup;
+pos(4)=pos(4)-headermovedown;
 set(handles.leadfigure,'Position',pos);
 
 
