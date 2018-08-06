@@ -23,20 +23,20 @@ else
     end
 end
 
-% Use inverse transformation or not
-if nargin >= 5
-    inverse = varargin{5};
-else
-    inverse = 0;
-end
-
 % Available interpolation method:
 % NearestNeighbor, Linear, ResampleInPlace, BSpline
 % WindowedSinc, Hamming, Cosine, Welch, Lanczos, Blackman
-if nargin >= 6
-    interp = varargin{6};
+if nargin >= 5
+    interp = varargin{5};
 else
     interp = 'BSpline';
+end
+
+% Use inverse transformation or not
+if nargin >= 6
+    inverse = varargin{6};
+else
+    inverse = 0;
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
