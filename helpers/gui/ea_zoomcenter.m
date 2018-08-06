@@ -32,26 +32,12 @@ else    % no axis specified, use gca
     end
 end
 
-if numel(center) ~= 2 && numel(center) ~= 3
-    error('Please specify the zoom center in either 2-D or 3-D coordinate!')
-end
 
-if numel(axis(ax))/2 == 2   % 2-D plot
-    if numel(center) ~= 2
-        error('Please specify the zoom center in 2-D coordinate for 2-D plot!');
-    end
-    xrange = center(1) + [-1, 1] * max(abs(ax.XLim - center(1)));
-    yrange = center(2) + [-1, 1] * max(abs(ax.YLim - center(2)));
-    axis(ax, [xrange, yrange]);
-elseif numel(axis(ax))/2 == 3   % 3-D plot
-    if numel(center) ~= 3
-        error('Please specify the zoom center in 3-D coordinate for 3-D plot.');
-    end
     xrange = center(1) + [-1, 1] * max(abs(ax.XLim - center(1)));
     yrange = center(2) + [-1, 1] * max(abs(ax.YLim - center(2)));
     zrange = center(3) + [-1, 1] * max(abs(ax.ZLim - center(3)));
     axis(ax, [xrange, yrange,zrange]);
-end
+
 if nargin>2
 zoom(factor);
 end

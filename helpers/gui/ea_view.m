@@ -8,7 +8,13 @@ if nargin
     camproj(v.camproj);
     camtarget(v.camtarget);
     campos(v.campos); 
+    if nargin>1
+        resultfig=varargin{2};
+    else
+        resultfig=gcf;
+    end
 else
+    resultfig=gcf;
     [v.az,v.el]=view;
     v.camva=camva;
     v.camup=camup;
@@ -16,5 +22,8 @@ else
     v.camtarget=camtarget;
     v.campos=campos;  
 end
-resultfig=gcf;
+
+    set(0,'CurrentFigure',resultfig)
+    allAxes = findall(resultfig,'type','axes');
+    set(resultfig,'CurrentAxes',allAxes(1));
             ea_zoomcenter(resultfig.CurrentAxes, v.camtarget);

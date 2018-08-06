@@ -9,7 +9,6 @@ atlasset=atlasset{get(handles.atlassetpopup,'Value')};
 
 
 cfv(1)=ea_atlas2ply({atlasset},[uipatdir,filesep,'export',filesep,'ply',filesep,'anatomy.ply']);
-try % this is DBS specific.
     options=ea_detsides(ea_getptopts(uipatdir));
 
     
@@ -25,6 +24,6 @@ try % this is DBS specific.
     plywrite([uipatdir,filesep,'export',filesep,'ply',filesep,'combined_scene.ply'],cfv.faces,cfv.vertices,cfv.facevertexcdata,repmat(100,size(cfv.facevertexcdata,1),1));
     %write_ply(cfv.vertices',cfv.faces',[uipatdir,filesep,'export',filesep,'ply',filesep,'combined_scene.ply']);
     %ea_patch2ply([uipatdir,filesep,'export',filesep,'ply',filesep,'combined_scene.ply'],cfv.vertices',cfv.faces',cfv.facevertexcdata');
-end
+
 
 

@@ -10,6 +10,7 @@ options=ea_resolve_elspec(options);
 options.root=[options.root,filesep];
 options.leadprod='dbs';
 options.sidecolor=1;
+options.prefs=ea_prefs;
 
 
 [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
