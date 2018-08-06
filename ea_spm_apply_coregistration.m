@@ -33,12 +33,14 @@ nii.fname = outputimage;
 ea_write_nii(nii);
 
 % reslice
-matlabbatch{1}.spm.spatial.coreg.write.ref = {fixedimage};
-matlabbatch{1}.spm.spatial.coreg.write.source = {outputimage};
+matlabbatch{1}.spm.spatial.coreg.write.ref = {ea_appendVolNum(fixedimage)};
+matlabbatch{1}.spm.spatial.coreg.write.source = {ea_appendVolNum(outputimage)};
 matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = interp;
 matlabbatch{1}.spm.spatial.coreg.write.roptions.wrap = [0 0 0];
 matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
-matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = '';
+matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
+[pth, fname, ext] = fileparts(outputimage);
+movefile(fullfile(pth, ['r', fname, ext]), outputimage);
