@@ -33,7 +33,7 @@ switch cmd
     case 'seed'
 
         for s=1:length(sfile)
-            map=ea_load_nii([cbase,'spacedefinitions',filesep,space]);
+            map=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]);
             cfile=[dfold,'dMRI',filesep,cname];
 
             if exist([cfile,filesep,'data.mat'],'file') % regular mat file
