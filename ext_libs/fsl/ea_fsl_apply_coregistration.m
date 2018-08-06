@@ -23,6 +23,14 @@ else
     end
 end
 
+% Available interpolation method:
+% trilinear, nearestneighbour, sinc, spline
+if nargin >= 5
+    interp = varargin{5};
+else
+    interp = 'spline'; % spline interpolition by default
+end
+
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     FLIRT = ea_path_helper([basedir, 'flirt.exe']);
@@ -36,7 +44,7 @@ cmd = [FLIRT, ...
        ' -out ', ea_path_helper(outputimage), ...
        ' -init ', ea_path_helper(affine), ...
        ' -applyxfm', ...
-       ' -interp spline', ...
+       ' -interp ', interp, ...
        ' -v'];
 
 setenv('FSLOUTPUTTYPE','NIFTI');
