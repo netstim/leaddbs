@@ -71,28 +71,31 @@ end
 
 function postops=ea_cropsuit(postops,directory)
 
-[~,anatbase]=fileparts(postops{1});
 % build up S for Suit:
 for p=1:length(postops)
     S.resample{p}=[directory,postops{p},',1'];
 end
+
+[~,anatbase]=fileparts(postops{1});
+
 % load affine:
 load([directory,'Affine_',anatbase,'_seg1.mat']);
 
 % load flowfield:
 Vff=spm_vol([directory,'u_a_',anatbase,'_seg1.nii,1']);
+
 % Generate grid in the space of the template
 [X,Y,Z]=ndgrid(1:Vff.dim(1),1:Vff.dim(2),1:Vff.dim(3));
 num_slice=Vff.dim(3);
 
 for i=1:length(S.resample)
-    [image_dir,image_name,image_ext,image_num]=spm_fileparts(S.resample{i});
+    [image_dir,image_name,image_ext]=spm_fileparts(S.resample{i});
     V(i)=spm_vol(S.resample{i});
-    [Xm,Ym,Zm]=spmj_affine_transform(X,Y,Z,inv(Affine*V(i).mat)*Vff.mat);
+    [Xm,Ym,Zm]=spmj_affine_transform(X,Y,Z,Affine*V(i).mat\Vff.mat);
     for z=1:num_slice
         Data(:,:,z)=spm_sample_vol(V(i),Xm(:,:,z),Ym(:,:,z),Zm(:,:,z),3);
-    end;
-    %    Data=Data.*MaskData; % Mask the image
+    end
+    % Data=Data.*MaskData; % Mask the image
     O(i)=V(i);
     O(i).dim=Vff.dim;
     O(i).mat=Vff.mat;
@@ -101,20 +104,19 @@ for i=1:length(S.resample)
         finalname{i}=fullfile(image_dir,['t', image_name image_ext]);
     else
         finalname{i}=S.outname{i};
-    end;
+    end
     O(i).fname=J.images{i}{1};
     if (O(i).dt(1)==2)
         O(i).pinfo=[1./254*max(Data(:));0;O(i).pinfo(3)];
-    end;
+    end
     spm_write_vol(O(i),Data);
-    
     
     movefile([directory,postops{i}],[directory,'orig_',postops{i}]);
     movefile([directory,'atemp_',postops{i}],[directory,postops{i}]);
-    
-end;
+end
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function resize_img(imnames, Voxdim, BB, ismask)
 %  resize_img -- resample images to have specified voxel dims and BBox
 % resize_img(imnames, voxdim, bb, ismask)
@@ -260,3 +262,14 @@ tc = V.mat(1:3,1:4)*c;
 mn = min(tc,[],2)';
 mx = max(tc,[],2)';
 bb = [mn; mx];
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [y1,y2,y3] = spmj_affine_transform(x1,x2,x3,M)
+% function [y1,y2,y3] = affine_transform(x1,x2,x3,M)
+% -----------------------------------------------------------------
+% Affine Transform for input stuff in any format (N-dim strcutures)
+% -----------------------------------------------------------------
+y1 = M(1,1)*x1 + M(1,2)*x2 + M(1,3)*x3 + M(1,4);
+y2 = M(2,1)*x1 + M(2,2)*x2 + M(2,3)*x3 + M(2,4);
+y3 = M(3,1)*x1 + M(3,2)*x2 + M(3,3)*x3 + M(3,4);
