@@ -79,6 +79,7 @@ else
     error(['Coords mapping failed:\n', cmdout]);
 end
 
-if ~isempty(strfind(incoords, 'tmpin'))
+% Delete tmp file
+if exist(uuid, 'var')
     delete(incoords);
 end

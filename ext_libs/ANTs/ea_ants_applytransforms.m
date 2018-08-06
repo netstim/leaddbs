@@ -93,7 +93,7 @@ if nargin == 1
             end
     end
 
-            [fis,ofis] = ea_appendgrid(options,fis,ofis,1);
+    [fis,ofis] = ea_appendgrid(options,fis,ofis,1);
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];

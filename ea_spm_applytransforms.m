@@ -29,6 +29,7 @@ end
 if usesuit
     postops=ea_cropsuit(postops,directory);
 end
+
 % export glfiles (a bit more coarse resolution, full brain bounding box).
 for pos=1:length(gfis)
     if exist([directory,postops{pos}],'file')
@@ -54,7 +55,6 @@ for pos=1:length(gfis)
         try movefile([directory,'swr',postops{pos}],[directory,gfis{pos}]); end
     end
 end
-
 
 ea_delete([directory,'rgrid.nii']);
 switch options.modality
