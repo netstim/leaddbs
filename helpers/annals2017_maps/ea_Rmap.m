@@ -57,9 +57,9 @@ if exist('Rperm','var') % permutation test
         ea_dispercent(0,'Iterating patients');
         for pt=1:length(varargin{1})
             Xthispt=X(pt,:)';
-            Ihat(pt)=corr(Xthispt(varargin{4}),R(varargin{4})','rows','pairwise','type',corrtype); % real predictions
-            Ihat_Rperm(pt,:)=corr(Xthispt(varargin{4}),...
-                Rperm(:,varargin{4})','rows','pairwise','type',corrtype); % permuted predictions
+            Ihat(pt)=atanh(corr(Xthispt(varargin{4}),R(varargin{4})','rows','pairwise','type',corrtype)); % real predictions
+            Ihat_Rperm(pt,:)=atanh(corr(Xthispt(varargin{4}),...
+                Rperm(:,varargin{4})','rows','pairwise','type',corrtype)); % permuted predictions
             ea_dispercent(pt/length(varargin{1}));
         end
         ea_dispercent(1,'end');
