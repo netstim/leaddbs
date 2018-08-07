@@ -5,13 +5,13 @@ function [DTI_CM, DTI_LEN] = ea_createCM_dti(options)
 % Andreas Horn
 
 useendpointsonly=0;
-ea_warp_parcellation(options.prefs.b0,options);
+ea_warp_parcellation(options.prefs.b0, options);
 
 minlen=options.prefs.lc.struc.minlen;
 directory=[options.root,options.patientname,filesep];
 
 %% get node definition of current parcellation scheme
-Vatl=ea_load_nii([directory,'templates',filesep,'labeling',filesep,'rb0w',options.lc.general.parcellation,'.nii,1']);
+Vatl=ea_load_nii([directory,'templates',filesep,'labeling',filesep,'b0w',options.lc.general.parcellation,'.nii,1']);
 
 %% get fiber definition
 disp('Loading FTR-File.');
