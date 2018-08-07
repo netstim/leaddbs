@@ -1,5 +1,9 @@
-function ea_surficeoverlay_lr(heatmap,threshs,sides,colorbar)
+function ea_surficeoverlay_lr(heatmap,threshs,sides,colorbar,smoothed)
 % heatmap can contain wildcards
+
+if ~exist('smoothed','var')
+    smoothed=1;
+end
 
 if ~exist('threshs','var')
     autothresh=1;
@@ -46,7 +50,7 @@ if ~autothresh
     end
 end
 
- sidest={'r','l'};
+ sidest={'r','l','cb'};
 
 
 
@@ -55,17 +59,29 @@ if autothresh
 threshs=ea_sfc_getautothresh(fis);
 end
 for side=sides
+        
+    if side <3
+        if smoothed
+            mesh = [ea_space,'surf_',sidest{side},'_smoothed.mz3'];
+        else
+            mesh = [ea_space,'surf_',sidest{side},'.stl'];
+        end
+    else
+        mesh = [ea_space,'mni152_2009.mz3'];
+        
+    end
 
-    mesh = [ea_space,'surf_',sidest{side},'.stl'];
     if ~exist(mesh,'file')
         ea_gensurfice_temps;
     end
     script=['BEGIN;',...
         ' RESETDEFAULTS;'];
     for fi=1:length(fis)
-            [pth,fn]=fileparts(fis{fi});
-    expfn_medial{fi}=fullfile(pth,[fn,'_',sidest{side},'_med.png']);
-    expfn_lateral{fi}=fullfile(pth,[fn,'_',sidest{side},'_lat.png']);
+        [pth,fn]=fileparts(fis{fi});
+        expfn_medial{fi}=fullfile(pth,[fn,'_',sidest{side},'_med.png']);
+        expfn_lateral{fi}=fullfile(pth,[fn,'_',sidest{side},'_lat.png']);
+        expfn_cb{fi}=fullfile(pth,[fn,'_',sidest{side},'.png']);
+        
         script=[script,...
             ' MESHLOAD(''',mesh,''');',...
             ' OVERLAYLOAD(''',ea_path_helper(fis{fi}),''');',...
@@ -77,6 +93,7 @@ for side=sides
                 ' OVERLAYCOLORNAME(2, ''Blue-Green'');',...
                 ' OVERLAYMINMAX(2,',num2str(threshs(fi,3)),',',num2str(threshs(fi,4)),');'];
         end
+        if side<3
         script=[script,...
             ' COLORBARVISIBLE(',colorbar,');',...
             ' AZIMUTHELEVATION(',num2str(90+(180*side-1)),', 0);',...
@@ -84,6 +101,13 @@ for side=sides
             ' AZIMUTHELEVATION(',num2str(270+(180*side-1)),', 0);',...
             ' SAVEBMP(''',ea_path_helper(expfn_lateral{fi}),''');',...
             ' OVERLAYCLOSEALL;'];
+        else
+            script=[script,...
+                ' COLORBARVISIBLE(',colorbar,');',...
+                ' AZIMUTHELEVATION(0, -45);',...
+                ' SAVEBMP(''',ea_path_helper(expfn_cb{fi}),''');',...
+                ' OVERLAYCLOSEALL;'];
+        end
     end
     script=[script,...
         ' QUIT',...
@@ -94,6 +118,7 @@ for side=sides
     pause(0.5);
     % crop files
     for fi=1:length(fis)
+        try
         [im,~,transp]=imread(expfn_medial{fi});
         [im,transp]=crop_img(im,transp);
         imwrite(im,expfn_medial{fi},'Alpha',transp);
@@ -101,6 +126,11 @@ for side=sides
         [im,~,transp]=imread(expfn_lateral{fi});
         [im,transp]=crop_img(im,transp);
         imwrite(im,expfn_lateral{fi},'Alpha',transp);
+        catch
+            [im,~,transp]=imread(expfn_cb{fi});
+            [im,transp]=crop_img(im,transp);
+            imwrite(im,expfn_cb{fi},'Alpha',transp);
+        end
     end
 end
 
