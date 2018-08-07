@@ -44,11 +44,11 @@ elseif regexp(varargin{4}, '^[a-zA-Z]+$')
         error(['Specified transformation not found! Please run ' ...
                'coregistration first before applying the transformation!']);
     else
-        transform = transform{end};
         if numel(transform) > 1
             warning(['Multiple transformations of the same type found! ' ...
-                     'Will use the last one:\n%s'], transform);
+                     'Will use the last one:\n%s'], transform{end});
         end
+        transform = transform{end};
     end
 else
     transform = varargin{4};
