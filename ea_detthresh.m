@@ -22,7 +22,6 @@ if isfield(atlases,'threshold')
                 thresh=sso(1);
             end
         case 'relative_intensity'
-            
             thresh=max(img(:))*(1-atlases.threshold.value);
         case 'relative_intensity_vector'
             thresh=max(img(:))*(1-atlases.threshold.value(atlas));
@@ -33,10 +32,7 @@ if isfield(atlases,'threshold')
         otherwise
             warning(['Threshold type not recognized: ',atlases.threshold.type,'. Overwriting with default.']);
             thresh=max(img(:))*0.5;
-            
     end
-    
 else
-    
     thresh=max(img(:))*0.5;
 end

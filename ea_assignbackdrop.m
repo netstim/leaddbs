@@ -11,7 +11,8 @@ if ~exist('native','var')
         native = 0;   % default
     end
 end
-            BDlist=getbdlist;
+
+BDlist=getbdlist;
 
 if strcmp(bdstring, 'list')
     % determine whether we are in No patient mode (could be called from
@@ -50,9 +51,6 @@ if strcmp(bdstring, 'list')
     if ~haspostop && ~haspreop
         nopatientmode=1;
     end
-
-
-    
     
     if nopatientmode
         varargout{1}=[ea_standardspacelist];
@@ -87,7 +85,6 @@ if strcmp(bdstring, 'list')
     varargout{1}=[varargout{1},...
                 {'Choose...'}];
     
-
 elseif regexp(bdstring, ['^', subpat,' Pre-OP \(.*\)$'])    % pattern: "Patient Pre-OP (*)"
     whichpreop=lower(regexp(bdstring, ['(?<=^', subpat,' Pre-OP \()(.*)(?=\))'],'match','once'));
     options=ea_tempswitchoptstopre(options, native, whichpreop);
@@ -181,6 +178,7 @@ for t=1:length(spacedef.templates)
 	standardlist{t}=[spacedef.name,' ',upper(spacedef.templates{t}),' (',spacedef.citation{1},')'];
 end
 
+
 function BDlist=getbdlist
 BDlist=[{[]},{[]}]; % empty.
 if exist([ea_space,'backdrops',filesep,'backdrops.txt'],'file')    
@@ -188,6 +186,7 @@ if exist([ea_space,'backdrops',filesep,'backdrops.txt'],'file')
     BDlist=textscan(fid,'%s %s');
     BDlist{2}=ea_sub2space(BDlist{2});
 end
+
 
 function options=ea_tempswitchoptstopre(options, native, whichpreop)
 % this generates a very temporary fake options struct that points to preop

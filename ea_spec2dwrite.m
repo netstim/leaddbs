@@ -74,7 +74,6 @@ if get(handles.tdbackdrop,'Value')>length(backdrops)
     set(handles.tdbackdrop,'Value',1);
 end
 
-
 try
     d2=options.prefs.machine.d2;
     ea_options2tdhandles(handles,d2);
