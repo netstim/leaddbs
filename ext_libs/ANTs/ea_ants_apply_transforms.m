@@ -52,8 +52,10 @@ else
     end
 end
 
-directory = [options.root,options.patientname,filesep];
-warpsuffix = ea_conv_antswarps(directory);
+if ~isempty(options) && ~isempty(fieldnames(options))
+    directory = [options.root,options.patientname,filesep];
+    warpsuffix = ea_conv_antswarps(directory);
+end
 
 if nargin == 1
     switch options.modality
@@ -109,9 +111,6 @@ for fi = 1:length(fis)
         continue
     end
 
-    % generate gl*.nii files
-    [~,glprebase] = fileparts(options.prefs.gprenii);
-
 	cmd = [applyTransforms, ...
            ' --verbose 1' ...
            ' --dimensionality 3 --float 1' ...
@@ -124,6 +123,7 @@ for fi = 1:length(fis)
         end
 
         if isempty(transformfile)
+            [~,glprebase] = fileparts(options.prefs.gprenii);
             cmd = [cmd, ...
                    ' --reference-image ',ea_path_helper(refim),...
                    ' --transform [',ea_path_helper([directory,glprebase,'InverseComposite',warpsuffix]),',0]'];
@@ -139,6 +139,7 @@ for fi = 1:length(fis)
         end
 
         if isempty(transformfile)
+            [~,glprebase] = fileparts(options.prefs.gprenii);
             cmd = [cmd, ...
                    ' --reference-image ',ea_path_helper(refim),...
                    ' --transform [',ea_path_helper([directory,glprebase,'Composite',warpsuffix]),',0]'];

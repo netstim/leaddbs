@@ -39,7 +39,10 @@ else
     interp='trilinear';
 end
 
-directory = [options.root,options.patientname,filesep];
+if ~isempty(options) && ~isempty(fieldnames(options))
+    directory = [options.root,options.patientname,filesep];
+end
+
 if nargin == 1
     switch options.modality
         case 1 % MR
@@ -87,8 +90,6 @@ else
     APPLYWARP = [basedir, 'applywarp.', computer('arch')];
 end
 
-[~,warpprefix] = fileparts(options.prefs.gprenii); % Prefix of the FNIRT warp field file
-
 for fi = 1:length(fis)
     if ~exist(fis{fi}, 'file')   % skip if unnormalized file doesn't exist
         fprintf('%s not found. Skip normalization...\n',fis{fi});
@@ -106,6 +107,7 @@ for fi = 1:length(fis)
         end
 
         if isempty(transformfile)
+            [~,warpprefix] = fileparts(options.prefs.gprenii);
             cmd = [cmd, ...
                    ' --ref=', ea_path_helper(refim),...
                    ' --warp=',ea_path_helper([directory,warpprefix,'InverseWarpField.nii'])];
@@ -121,6 +123,7 @@ for fi = 1:length(fis)
         end
 
         if isempty(transformfile)
+            [~,warpprefix] = fileparts(options.prefs.gprenii);
             cmd = [cmd, ...
                    ' --ref=', ea_path_helper(refim),...
                    ' --warp=', ea_path_helper([directory,warpprefix,'WarpField.nii'])];
