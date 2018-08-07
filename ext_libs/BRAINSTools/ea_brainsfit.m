@@ -6,9 +6,9 @@ movingVolume = varargin{2};
 outputVolume = varargin{3};
 
 if nargin >= 4
-    writematout = varargin{4};
+    writeoutmat = varargin{4};
 else
-    writematout = 1;
+    writeoutmat = 1;
 end
 
 if nargin >= 5
@@ -99,14 +99,13 @@ end
 
 if ~isempty(otherfiles)
     for fi = 1:numel(otherfiles)
-        ea_brainsresample(fixedVolume, otherfiles{fi}, otherfiles{fi}, ...
-                                    [volumedir, xfm, '.h5']);
+        ea_brainsresample(fixedVolume, otherfiles{fi}, otherfiles{fi}, [volumedir, xfm, '.h5']);
     end
 end
 
-if ~writematout
-    delete([volumedir, xfm, '.h5']);
-    delete([volumedir, xfm, '_Inverse.h5']);
+if ~writeoutmat
+    ea_delete([volumedir, xfm, '.h5']);
+    ea_delete([volumedir, xfm, '_Inverse.h5']);
     affinefile = {};
 else
     % TODO: convert the hdf5 transformation to MAT file

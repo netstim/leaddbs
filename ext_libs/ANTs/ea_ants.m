@@ -6,9 +6,9 @@ movingimage = varargin{2};
 outputimage = varargin{3};
 
 if nargin >= 4
-    writematout = varargin{4};
+    writeoutmat = varargin{4};
 else
-    writematout = 1;
+    writeoutmat = 1;
 end
 
 if nargin >= 5
@@ -202,7 +202,7 @@ antscmd = [ANTS, ' --verbose 1' ...
     ' --winsorize-image-intensities [0.005,0.995]', ...
     rigidstage, affinestage,mask1stage,mask2stage];
 
-if writematout % inverse only needed if matrix is written out.
+if writeoutmat % inverse only needed if matrix is written out.
     invaffinecmd = [antsApplyTransforms, ' --verbose 1' ...
         ' --dimensionality 3 --float 1' ...
         ' --reference-image ', ea_path_helper(movingimage), ...
@@ -212,10 +212,14 @@ end
 
 if ~ispc
     system(['bash -c "', antscmd, '"']);
-    system(['bash -c "', invaffinecmd, '"']);
+    if writeoutmat
+        system(['bash -c "', invaffinecmd, '"']);
+    end
 else
     system(antscmd);
-    system(invaffinecmd);
+    if writeoutmat
+        system(invaffinecmd);
+    end
 end
 
 if ~isempty(otherfiles)
@@ -228,9 +232,9 @@ if ~isempty(otherfiles)
     end
 end
 
-if ~writematout
-    delete([outputbase, '0GenericAffine.mat']);
-    delete([outputbase, 'Inverse0GenericAffine.mat']);
+if ~writeoutmat
+    ea_delete([outputbase, '0GenericAffine.mat']);
+    ea_delete([outputbase, 'Inverse0GenericAffine.mat']);
     affinefile = {};
 else
     movefile([outputbase, '0GenericAffine.mat'], [volumedir, xfm, num2str(runs+1), '.mat']);

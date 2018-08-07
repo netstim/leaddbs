@@ -6,9 +6,9 @@ movingimage = varargin{2};
 outputimage = varargin{3};
 
 if nargin >= 4
-    writematout = varargin{4};
+    writeoutmat = varargin{4};
 else
-    writematout = 1;
+    writeoutmat = 1;
 end
 
 if nargin >= 5
@@ -94,9 +94,11 @@ flirtbbrcmd = [FLIRT, ...
 % Output inverse xfm for possible further use
 % FSL won't handle the inversion internally when applying the transformation
 invxfm = [fixname, '2', movname, '_flirtbbr'];
-convertxfmcmd = [COVERT_XFM, ...
-              ' -omat ', ea_path_helper(volumedir), invxfm, '.mat', ...
-              ' -inverse ', ea_path_helper(volumedir), xfm, '.mat'];
+if writeoutmat
+    convertxfmcmd = [COVERT_XFM, ...
+                  ' -omat ', ea_path_helper(volumedir), invxfm, '.mat', ...
+                  ' -inverse ', ea_path_helper(volumedir), xfm, '.mat'];
+end
 
 setenv('FSLOUTPUTTYPE','NIFTI');
 if ~ispc
@@ -110,7 +112,9 @@ if ~ispc
 
     fprintf('\n\nRunning FSL FLIRT BBR: %s\n\n', movingimage);
     system(['bash -c "', flirtbbrcmd, '"']);
-    system(['bash -c "', convertxfmcmd, '"']);
+    if writeoutmat
+        system(['bash -c "', convertxfmcmd, '"']);
+    end
 else
     fprintf('\n\nRunning FSL FAST Segmentation: %s\n\n', fixedimage);
     system(fastcmd);
@@ -122,7 +126,9 @@ else
 
     fprintf('\n\nRunning FSL FLIRT BBR: %s\n\n', movingimage);
     system(flirtbbrcmd);
-    system(convertxfmcmd);
+    if writeoutmat
+        system(convertxfmcmd);
+    end
 end
 
 % Apply the tranformation to other files
@@ -134,9 +140,9 @@ if ~isempty(otherfiles)
     end
 end
 
-if ~writematout
-    delete([volumedir, xfm, '.mat']);
-    delete([volumedir, invxfm, '.mat']);
+if ~writeoutmat
+    ea_delete([volumedir, xfm, '.mat']);
+    ea_delete([volumedir, invxfm, '.mat']);
     affinefile = {};
 else
     affinefile = {[volumedir, xfm, '.mat']
