@@ -20,16 +20,11 @@ function ea_realign_fmri(signallength,options)
 directory=[options.root,options.patientname,filesep];
 if ~exist([directory,'r',options.prefs.rest],'file') || options.overwriteapproved
 
-    tmpdir=ea_getleadtempdir;
-    uuid=ea_generate_uuid;
-    copyfile([directory,options.prefs.rest],[tmpdir,uuid,'.nii']);
-
+    restbackup = ea_niifileparts([directory,options.prefs.rest]);
+    copyfile([directory,options.prefs.rest], restbackup);
 
     disp('Realignment of rs-fMRI data...');
-    filetimepts=cell(signallength,1);
-    for i = 1:signallength
-        filetimepts{i}=[tmpdir,uuid,'.nii',',',num2str(i)];
-    end
+    filetimepts = ea_appendVolNum([directory,options.prefs.rest], 1:signallength);
 
     matlabbatch{1}.spm.spatial.realign.estwrite.data = {filetimepts};
     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.quality = 1;
@@ -48,32 +43,30 @@ if ~exist([directory,'r',options.prefs.rest],'file') || options.overwriteapprove
     clear matlabbatch;
     disp('Done.');
 
-    movefile([tmpdir,'r',uuid,'.nii'],[directory,'r',options.prefs.rest]);
-    movefile([tmpdir,'mean',uuid,'.nii'],[directory,'mean',options.prefs.rest]);
-    movefile([tmpdir,'rp_',uuid,'.txt'],[directory,'rp_',ea_stripex(options.prefs.rest),'.txt']);
-
-    ea_delete([tmpdir,uuid,'.nii']);
+    movefile(restbackup, [directory, options.prefs.rest]);
 end
 
 
 function ea_coreg_pre2fmri(options)
 directory=[options.root,options.patientname,filesep];
 if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_c1',options.prefs.prenii_unnormalized],'file') || options.overwriteapproved
-    for i=1:3
-        copyfile([directory,'c',num2str(i),options.prefs.prenii_unnormalized], [directory,'kc',num2str(i),options.prefs.prenii_unnormalized]);
-    end
+    % Disable Hybrid coregistration
+    coregmethod = options.coregmr.method;
+    options.coregmr.method = strrep(coregmethod, 'Hybrid SPM & ', '');
 
-    ea_coreg2images_generic(options,...
+    % Coregistration
+    transform = ea_coreg2images_generic(options,...
         [directory,options.prefs.prenii_unnormalized],...
-        [directory,'r',options.prefs.rest],...
+        [directory,'mean',options.prefs.rest],...
         [directory,'r',ea_stripex(options.prefs.rest),'_',options.prefs.prenii_unnormalized],...
-        {[directory,'c1',options.prefs.prenii_unnormalized];...
-        [directory,'c2',options.prefs.prenii_unnormalized];...
-        [directory,'c3',options.prefs.prenii_unnormalized]},1,[],1);
+        [],1,[],1);
 
-    for t=1:3
-        movefile([directory,'rc',num2str(t),options.prefs.prenii_unnormalized],[directory,'r',ea_stripex(options.prefs.rest),'_c',num2str(t),options.prefs.prenii_unnormalized]);
-        movefile([directory,'kc',num2str(t),options.prefs.prenii_unnormalized],[directory,'c',num2str(t),options.prefs.prenii_unnormalized]);
+    % segmented anat images registered to mean rest image
+    for i=1:3
+        ea_apply_coregistration([directory,'mean',options.prefs.rest], ...
+            [directory,'c',num2str(i),options.prefs.prenii_unnormalized], ...
+            [directory,'r',ea_stripex(options.prefs.rest),'_c',num2str(i),options.prefs.prenii_unnormalized], ...
+            transform{1}, 'linear');
     end
 end
 
@@ -81,10 +74,7 @@ end
 function ea_smooth_fmri(signallength,options)
 directory=[options.root,options.patientname,filesep];
 if ~exist([directory,'sr',options.prefs.rest],'file') || options.overwriteapproved
-    filetimepts=cell(signallength,1);
-    for i = 1:signallength
-        filetimepts{i}=[directory,'r',options.prefs.rest,',',num2str(i)];
-    end
+    filetimepts = ea_appendVolNum([directory,'r',options.prefs.rest], 1:signallength);
 
     matlabbatch{1}.spm.spatial.smooth.data = filetimepts;
     matlabbatch{1}.spm.spatial.smooth.fwhm = [6 6 6];
