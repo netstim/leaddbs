@@ -68,6 +68,8 @@ if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_c1',options.prefs.pren
             [directory,'r',ea_stripex(options.prefs.rest),'_c',num2str(i),options.prefs.prenii_unnormalized], ...
             transform{1}, 'linear');
     end
+
+    cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
 end
 
 
