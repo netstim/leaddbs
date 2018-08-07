@@ -11,6 +11,12 @@ useinverse = 0;
 if nargin > 1 % manual application
     fis = varargin{2};
     ofis = varargin{3};
+    if ischar(fis)
+        fis = {fis};
+    end
+    if ischar(ofis)
+        ofis = {ofis};
+    end
     useinverse = varargin{4};
 end
 
