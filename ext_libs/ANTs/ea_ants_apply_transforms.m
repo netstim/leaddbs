@@ -32,6 +32,9 @@ else
     transformfile = ''; % use defaults
 end
 
+% Linear, NearestNeighbor, MultiLabel, Gaussian, BSpline
+% CosineWindowedSinc, WelchWindowedSinc, HammingWindowedSinc, LanczosWindowedSinc
+% GenericLabel (Recommanded for label image)
 if nargin >= 7
     interp = varargin{7};
     if ~ischar(interp)
@@ -48,9 +51,6 @@ if nargin >= 7
         end
     end
 else
-    % Linear, NearestNeighbor, MultiLabel, Gaussian, BSpline
-    % CosineWindowedSinc, WelchWindowedSinc, HammingWindowedSinc, LanczosWindowedSinc
-    % GenericLabel (Recommanded for label image)
     if useinverse
         interp = 'GenericLabel';
     else

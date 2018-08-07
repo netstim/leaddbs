@@ -19,10 +19,15 @@ else
     end
 end
 
+% 0: Nearest neighbour
+% 1: Trilinear
+% 2: 2nd Degree B-Spline
+% 3: 3nd Degree B-Spline
+% 4: 4nd Degree B-Spline
 if nargin >= 5
     interp = varargin{5};
 else
-    interp = 1; % Linear interpolition by default
+    interp = 1;
 end
 
 % set header affine matrix
