@@ -914,14 +914,16 @@ normalized_fibers_mm=[]; % combined connectome
 allidx=[];
 ea_dispercent(0,'Concatenating connectome');
 maxfibno=0;
+howmanyfibs=inputdlg('How many fibers to sample from each subject?','Sample fibers',1,{'20000'});
+howmanyfibs=str2double(howmanyfibs);
 for sub=1:length(M.patient.list)
     ea_dispercent(sub/length(M.patient.list));
 
     [nfibs,idx]=ea_loadfibertracts([M.patient.list{sub},filesep,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized]);
     try
-    idx=idx(round(linspace(1,length(idx),20000))); % only use a random 20k fibers of each subject.    
+        idx=idx(round(linspace(1,length(idx),howmanyfibs))); % only use a random 20k fibers of each subject.
     catch
-    idx=idx(1:20000); % only use first 20k fibers of each subject.
+        ea_warning(['Not enough fibers in connectome. Requested ',num2str(howmanyfibs),', available are ',num2str(length(idx),'. Taking all fibers for this subject.']);
     end
     sumidx=sum(idx);
     nfibs=nfibs(1:sumidx,:);
