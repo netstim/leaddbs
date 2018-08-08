@@ -9,7 +9,9 @@ file = [fpath, ext];
 backup = [fileparts(fpath), filesep, 'raw_', fname, ext];
 
 if ~exist(backup, 'file')
+    fprintf('\nBacking up %s to raw_%s ...\n\n', [fname, ext], [fname, ext]);
     copyfile(file, backup);
 else
+    fprintf('\nRetoring %s from raw_%s ...\n\n', [fname, ext], [fname, ext]);
     copyfile(backup, file);
 end
