@@ -2,7 +2,6 @@ function ea_lcm(options)
 
 % the order may be crucial since VAT-seeds are resliced in fMRI
 if options.lcm.struc.do
-
     % main wrapper for lead connectome mapper runs
     if strcmp(options.lcm.seeddef,'vats')
         originalseeds=options.lcm.seeds;
@@ -19,8 +18,8 @@ if options.lcm.struc.do
 
     ea_lcm_struc(options);
 end
-if options.lcm.func.do
 
+if options.lcm.func.do
     if strcmp(options.lcm.seeddef,'vats')
         if exist('originalseeds','var')
             options.lcm.seeds=originalseeds;
@@ -36,9 +35,6 @@ if options.lcm.func.do
         options.lcm.seeds=ea_resolveparcseeds(options,'fMRI');
     end
 
-    
-    
-    
     % check if patient specific connectome used:
     patientspecific=0;
     try
@@ -46,9 +42,7 @@ if options.lcm.func.do
             patientspecific=1;
         end
     end
-    
-    
-    
+
     if ~patientspecific
         ea_lcm_func(options);
     else % need to supply each patient on its own since each uses different connectome.
@@ -58,7 +52,7 @@ if options.lcm.func.do
             options.lcm.seeds=allseeds(seed);
             options.uivatdirs=allvatdirs(seed);
             ea_lcm_func(options);
-        end        
+        end
         options.lcm.seeds=allseeds;
         options.uivatdirs=allvatdirs;
     end
@@ -94,7 +88,7 @@ switch modality
             0,[],fullfile(tmp,[uuid,'.nii']),0);
         seeds={fullfile(tmp,[uuid,'.nii'])};
     case 'dMRI'
-       seeds=options.lcm.seeds; % leave as is. 
+       seeds=options.lcm.seeds; % leave as is.
 end
 % % load in txt
 % fid=fopen(fullfile(fileparts(options.lcm.seeds{1}),[ea_stripex(ea_stripex(options.lcm.seeds{1})),'.txt']),'r');
@@ -248,71 +242,65 @@ end
 
 directory=[fileparts(fileparts(fileparts(vatdir))),filesep];
 options=ea_getptopts(directory,options);
-options.coregmr.method='SPM'; % hard code for now.
+
 % warp VTA to native subject space (anchor modality):
-ea_apply_normalization_tofile(options,{[vatdir,'tmp_',sidec,'.nii']},{[vatdir,'wtmp_',sidec,'.nii']},directory,1,1);
+ea_apply_normalization_tofile(options,{[vatdir,'tmp_',sidec,'.nii']},{[vatdir,'tmp_',sidec,'.nii']},directory,1,1);
+
 % get peak coordinate for if empty image results when downsampling to
-% resting state file:
-anat_vat=ea_load_nii([vatdir,'wtmp_',sidec,'.nii']);
-[~,ix]=max(anat_vat.img(:));
-[xx,yy,zz]=ind2sub(size(anat_vat.img),ix);
-voxc=[xx;yy;zz;1];
-mmc=anat_vat.mat*voxc;
-% coreg from anchor modality to rest file:
+% resting state file
+anat_vat = ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
+[~,ix] = max(anat_vat.img(:));
+[xx,yy,zz] = ind2sub(size(anat_vat.img),ix);
+vox_anat = [xx;yy;zz;1];
 
-redo=1; % no .mat file available, redo coreg
-     switch options.coregmr.method
-         
-         case 'SPM'
-             if exist([options.root,options.patientname,filesep,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(['r',restfname]),'_spm.mat'],'file')
-                 redo=0;
-                 load([options.root,options.patientname,filesep,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(['r',restfname]),'_spm.mat']);
-                 nii=ea_load_nii([vatdir,'wtmp_',sidec,'.nii']);
-                 nii.mat=spmaffine;
-                 ea_write_nii(nii);
-                 
-                 matlabbatch{1}.spm.spatial.coreg.write.ref = {[options.root,options.patientname,filesep,['r',restfname,'.nii'],',1']};
-                 matlabbatch{1}.spm.spatial.coreg.write.source = {nii.fname};
-                 matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = 0;
-                 matlabbatch{1}.spm.spatial.coreg.write.roptions.wrap = [0 0 0];
-                 matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
-                 matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
-                 spm_jobman('run',{matlabbatch});
-                 clear matlabbatch
-                 [pth,fn,ext]=fileparts(nii.fname);
-                 movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
-                 delete(fullfile(pth,[fn(2:end),ext]))
-             end
+% prepare coregistration from anchor modality to rest file
+refname = ['r',restfname];
+[~,anatfname] = fileparts(options.prefs.prenii_unnormalized);
 
-     end
+% The real reference image is 'meanrest.nii' rather than 'rrest.nii'
+reference = ['mean', options.prefs.rest];
 
-     if redo
-         ea_coreg2images_generic(options,[directory,options.prefs.prenii_unnormalized],...
-             [directory,restfname,'.nii'],...
-             [directory,'c',options.prefs.prenii_unnormalized],...
-             {[vatdir,'wtmp_',sidec,'.nii']},1,[],1);
-         
-         movefile([vatdir,'rwtmp_',sidec,'.nii'],[vatdir,'wtmp_',sidec,'.nii']);
-     end
-% matlabbatch{1}.spm.util.checkreg.data = {
-%                                          [directory,options.prefs.prenii_unnormalized]
-%                                          [directory,restfname,'.nii']
-%                                          };
-% spm_jobman('run',{matlabbatch});
-% clear matlabbatch
-% delete([directory,'c',options.prefs.prenii_unnormalized]);
-movefile([vatdir,'wtmp_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
+% Disable Hybrid coregistration
+load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
+coregmethod = strrep(coregmr_method_applied{end}, 'Hybrid SPM & ', '');
+options.coregmr.method = coregmethod;
+
+% Check if the transformation already exists
+xfm = [anatfname, '2', refname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+transform = ea_regexpdir(directory, xfm, 0);
+
+if numel(transform) == 0
+    warning('Transformation not found! Running coregistration now!');
+    transform = ea_coreg2images_generic(options,[directory,options.prefs.prenii_unnormalized],...
+        [directory,reference],...
+        [directory,refname,'_',options.prefs.prenii_unnormalized],...
+        [],1,[],1);
+    transform = transform{1}; % Forward transformation
+else
+    if numel(transform) > 1
+        warning(['Multiple transformations of the same type found! ' ...
+                 'Will use the last one:\n%s'], transform{end});
+    end
+    transform = transform{end};
+end
+
+% Apply transformation
+ea_apply_coregistration([directory,reference], ...
+    [vatdir,'tmp_',sidec,'.nii'], ...
+    [vatdir,'tmp_',sidec,'.nii'], ...
+    transform, 'linear');
+
 rest_vat=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
 if ~any(rest_vat.img(:)) % image empty, at least set original peak to 1.
     warning('Image empty (potentially due to poor resolution and interpolation), trying to set peak manually');
-    [~,pn]=fileparts(options.prefs.prenii_unnormalized);
-    load([directory,pn,'2r',restfname,'_spm.mat']);
-    mmc_inrest=spmaffine*voxc;
-    voxc_inrest=round(fixedmat\mmc_inrest);
+    [~, vox_rest] = ea_map_coords(vox_anat, ...
+        [directory, options.prefs.prenii_unnormalized], ...
+        transform, reference, upper(coregmethod));
+    vox_rest=round(vox_rest);
     try
-        rest_vat.img(voxc_inrest(1),voxc_inrest(2),voxc_inrest(3))=1;
+        rest_vat.img(vox_rest(1),vox_rest(2),vox_rest(3))=1;
         ea_write_nii(rest_vat);
     catch
-        msgbox(['Attempted to manually set peak voxel true (',rest_vat.fname,') but it seems to reside out of bounds.']);
+        msgbox(['Attempted to manually set peak voxel to ''',rest_vat.fname,''', but it seems to reside out of bounds.']);
     end
 end
