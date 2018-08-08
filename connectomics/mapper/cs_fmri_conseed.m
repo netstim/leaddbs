@@ -119,6 +119,15 @@ for s=1:size(sfile,1)
 
         sweights(abs(sweights)<0.0001)=0;
         sweights=double(sweights);
+        
+        try
+            options=evalin('caller','options');
+        end
+        if exist('options','var')
+            if strcmp(options.lcm.seeddef,'parcellation')
+                sweights=round(sweights);
+            end
+        end
         % assure sum of sweights is 1
         %sweights(logical(sweights))=sweights(logical(sweights))/abs(sum(sweights(logical(sweights))));
         sweightmx=repmat(sweights,1,1);
