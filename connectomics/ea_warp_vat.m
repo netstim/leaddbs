@@ -7,21 +7,26 @@ stim=stims{get(handles.vatseed,'Value')};
 % check which vat-files are present:
 vatfnames={[directory,'stimulations',filesep,stim,filesep,'','vat_right.nii']
     [directory,'stimulations',filesep,stim,filesep,'','vat_left.nii']};
+
 cnt=1;
 donorm=0;
 docoreg=0;
+
 for vatfname=1:2
     if exist(vatfnames{vatfname},'file')
         vatspresent{cnt}=vatfnames{vatfname};
         [pth,fn,ext]=fileparts(vatfnames{vatfname});
         wvatspresent{cnt}=[pth,filesep,'w',fn,ext];
+
         if ~exist(wvatspresent{cnt},'file')
             donorm=1;
         end
+
         rwvatspresent{cnt}=[pth,filesep,'r',b0rest,'w',fn,ext];
         if ~exist(rwvatspresent{cnt},'file')
             docoreg=1;
         end
+
         cnt=cnt+1;
     end
 end
@@ -35,7 +40,6 @@ end
 
 if donorm
     %% warp vat into pre_tra-space:
-
     whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
     switch whichnormmethod
         case ea_getantsnormfuns
