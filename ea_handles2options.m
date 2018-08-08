@@ -243,6 +243,9 @@ try
         case 'Manually choose seeds'
             options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
             options.lcm.seeddef='manual';
+        case 'Manually choose parcellation'
+            options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
+            options.lcm.seeddef='parcellation';
         otherwise
             stimname=sdp(11:end);
             options.lcm.seeds=stimname;

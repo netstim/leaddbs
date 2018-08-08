@@ -82,7 +82,7 @@ if isfield(handles,'seeddefpopup')
     % find out whether mapper or predict were calling
     if strncmp(handles.leadfigure.Name, 'Lead Connectome Mapper', 22)
         remstims = ea_prependvat(remstims);
-        set(handles.seeddefpopup, 'String', [{'Manually choose seeds'},remstims]);
+        set(handles.seeddefpopup, 'String', [{'Manually choose seeds','Manually choose parcellation'},remstims]);
     else
         set(handles.seeddefpopup, 'String', remstims);
     end

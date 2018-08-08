@@ -1,7 +1,7 @@
 function ea_lcm_func(options)
 
 if strcmp(options.lcm.func.connectome,'No functional connectome found.')
-    return
+   return
 end
 
 

@@ -13,6 +13,8 @@ if options.lcm.struc.do
                 mkdir(options.lcm.odir);
             end
         end
+    elseif strcmp(options.lcm.seeddef,'parcellation')
+   %     keyboard
     end
 
     ea_lcm_struc(options);
@@ -30,6 +32,8 @@ if options.lcm.func.do
                 mkdir(options.lcm.odir);
             end
         end
+    elseif strcmp(options.lcm.seeddef,'parcellation')
+        options.lcm.seeds=ea_resolveparcseeds(options,'fMRI');
     end
 
     
@@ -67,6 +71,35 @@ if (~options.lcm.func.do) && (~options.lcm.struc.do)
         ea_resolvevatseeds(options,'fMRI');
     end
 end
+
+
+function seeds=ea_resolveparcseeds(options,modality)
+switch modality
+    case 'fMRI'
+        tmp=ea_getleadtempdir;
+        uuid=ea_generate_uuid;
+        [~,~,ext]=ea_niifileparts(options.lcm.seeds{1});
+        copyfile(options.lcm.seeds{1},fullfile(tmp,[uuid,ext]));
+        if strcmp(ext,'.nii.gz')
+            gunzip(fullfile(tmp,[uuid,ext]));
+            delete(fullfile(tmp,[uuid,ext]));
+        end
+        [pth,fn,ext]=ea_niifileparts(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222']));
+        copyfile(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222']),[tmp,'222',ext]);
+        if strcmp(ext,'.nii.gz')
+            gunzip([tmp,'222',ext]);
+            delete([tmp,'222',ext]);
+        end
+        ea_conformspaceto([tmp,'222','.nii'],ea_niigz(fullfile(tmp,uuid)),...
+            0,[],fullfile(tmp,[uuid,'.nii']),0);
+        seeds={fullfile(tmp,[uuid,'.nii'])};
+    case 'dMRI'
+       seeds=options.lcm.seeds; % leave as is. 
+end
+% % load in txt
+% fid=fopen(fullfile(fileparts(options.lcm.seeds{1}),[ea_stripex(ea_stripex(options.lcm.seeds{1})),'.txt']),'r');
+% A=textscan(fid,'%f %s\n');
+% idx=A{1};
 
 
 function seeds=ea_resolvevatseeds(options,modality)

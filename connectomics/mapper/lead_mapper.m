@@ -205,9 +205,13 @@ try % finally use last patient parent dir if set.
     load([earoot,'ea_recentpatients.mat']);
     p=fileparts(fullrpts{1});
 end
-
-%[seeds,path]=uigetfile({'*.nii','NIfTI';'*.txt','Text';'*.nii.gz','NIfTI'},'Please choose seed definition(s)...','MultiSelect','on');
-[seeds,path]=uigetfile({'*'},'Please choose seed definition(s)...','MultiSelect','on');
+seeddef=get(handles.seeddefpopup,'String');
+switch seeddef{get(handles.seeddefpopup,'Value')}
+    case 'Manually choose seeds'
+        [seeds,path]=uigetfile({'*'},'Please choose seed definition(s)...','MultiSelect','on');
+    case 'Manually choose parcellation'
+        [seeds,path]=uigetfile({'*'},'Please choose parcellation...',ea_space([],'labeling'),'MultiSelect','off');
+end
 
 if iscell(seeds)
     set(hObject,'String',['Multiple (',num2str(length(seeds)),')']);
@@ -217,8 +221,10 @@ else
 end
 
 for s=1:length(seeds)
-   seeds{s}=fullfile(path,seeds{s});
+    seeds{s}=fullfile(path,seeds{s});
 end
+%[seeds,path]=uigetfile({'*.nii','NIfTI';'*.txt','Text';'*.nii.gz','NIfTI'},'Please choose seed definition(s)...','MultiSelect','on');
+
 
 setappdata(hObject,'seeds',seeds);
 
@@ -418,7 +424,7 @@ str=get(hObject,'String');
 if iscell(str)
     str=str{get(hObject,'Value')};
 end
-if strcmp(str,'Manually choose seeds')
+if ismember(str,{'Manually choose seeds','Manually choose parcellation'})
    set(handles.seedbutton,'enable','on');
 else
    set(handles.seedbutton,'enable','off');

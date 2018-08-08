@@ -129,6 +129,26 @@ for s=1:size(sfile,1)
 end
 
 numseed=s;
+try 
+    options=evalin('caller','options');
+end
+if exist('options','var')
+    if strcmp(options.lcm.seeddef,'parcellation') % expand seeds to define
+        if ismember(cmd,{'seed','pseed','pmap'})
+            ea_error('Command not supported for parcellation as input.');
+        end
+        [ixx]=unique(round(sweights)); ixx(ixx==0)=[];
+        numseed=length(ixx);
+        for parcseed=ixx'
+            sweightidx{parcseed+1,1}=sweightidx{1,1}(sweightidxmx{1,1}==parcseed);
+            sweightidxmx{parcseed+1,1}=ones(size(sweightidx{parcseed+1,1},1),1);
+        end
+        sweightidx(1)=[]; % original parcellation which has now been expanded to single seeds
+        sweightidxmx(1)=[]; % original parcellation which has now been expanded to single seeds
+        sfile=repmat(sfile,size(sweightidx,1),1);
+    end
+end
+
 disp([num2str(numseed),' seeds, command = ',cmd,'.']);
 
 
