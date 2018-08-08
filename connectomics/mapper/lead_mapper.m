@@ -213,20 +213,20 @@ switch seeddef{get(handles.seeddefpopup,'Value')}
         [seeds,path]=uigetfile({'*'},'Please choose parcellation...',ea_space([],'labeling'),'MultiSelect','off');
 end
 
-if iscell(seeds)
-    set(hObject,'String',['Multiple (',num2str(length(seeds)),')']);
-else
-    set(hObject,'String',[seeds]);
-    seeds={seeds};
+if ischar(path) % path is 0 if the user clicks Cancel or close the window
+    if iscell(seeds)
+        set(hObject,'String',['Multiple (',num2str(length(seeds)),')']);
+    elseif ischar(seeds)
+        set(hObject,'String',seeds);
+        seeds={seeds};
+    end
+
+    for s=1:length(seeds)
+        seeds{s}=fullfile(path,seeds{s});
+    end
+
+    setappdata(hObject,'seeds',seeds);
 end
-
-for s=1:length(seeds)
-    seeds{s}=fullfile(path,seeds{s});
-end
-%[seeds,path]=uigetfile({'*.nii','NIfTI';'*.txt','Text';'*.nii.gz','NIfTI'},'Please choose seed definition(s)...','MultiSelect','on');
-
-
-setappdata(hObject,'seeds',seeds);
 
 
 % --- Executes on button press in run_button.
@@ -337,8 +337,10 @@ else
     seedbase='';
 end
 odir=uigetdir(seedbase,'Choose output location');
-setappdata(hObject,'odir',[odir,filesep]);
-set(hObject,'String',odir);
+if ischar(odir)
+    setappdata(hObject,'odir',[odir,filesep]);
+    set(hObject,'String',odir);
+end
 
 
 % --- Executes on selection change in strucexportspace.
@@ -370,9 +372,11 @@ function omaskbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-omask=uigetfile({'*.nii';'*.nii.gz'},'Choose output location');
-setappdata(hObject,'omask',[omask]);
-set(hObject,'String',omask);
+[omask, path] = uigetfile({'*.nii';'*.nii.gz'},'Choose output location');
+if ischar(path)
+    setappdata(hObject,'omask',omask);
+    set(hObject,'String',omask);
+end
 
 
 % --- Executes on button press in patdir_choosebox.
@@ -424,11 +428,15 @@ str=get(hObject,'String');
 if iscell(str)
     str=str{get(hObject,'Value')};
 end
-if ismember(str,{'Manually choose seeds','Manually choose parcellation'})
+if strcmp(str, 'Manually choose seeds')
    set(handles.seedbutton,'enable','on');
+   set(handles.seedbutton,'String','Choose seeds...');
+elseif strcmp(str, 'Manually choose parcellation')
+   set(handles.seedbutton,'enable','on');
+   set(handles.seedbutton,'String','Choose parcellation...');
 else
    set(handles.seedbutton,'enable','off');
-   set(handles.seedbutton,'String','Choose seeds...');
+   set(handles.seedbutton,'String','Choose seeds/parcellation...');
 end
 
 % --- Executes during object creation, after setting all properties.
