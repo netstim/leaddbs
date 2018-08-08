@@ -918,7 +918,11 @@ for sub=1:length(M.patient.list)
     ea_dispercent(sub/length(M.patient.list));
 
     [nfibs,idx]=ea_loadfibertracts([M.patient.list{sub},filesep,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized]);
+    try
+    idx=idx(round(linspace(1,length(idx),20000))); % only use a random 20k fibers of each subject.    
+    catch
     idx=idx(1:20000); % only use first 20k fibers of each subject.
+    end
     sumidx=sum(idx);
     nfibs=nfibs(1:sumidx,:);
     nfibs(:,4)=nfibs(:,4)+maxfibno; % add offset
