@@ -27,11 +27,8 @@ if isfield(spacedef,'tpm')
         case 'custom_rebuild'
             tpmfile=[ea_space,'TPM.nii'];
             rebuildtpm=1;
-            if exist([ea_space,'raw_TPM.nii'],'file')
-                copyfile([ea_space,'raw_TPM.nii'],[ea_space,'TPM.nii']);
-            else
-                copyfile([ea_space,'TPM.nii'],[ea_space,'raw_TPM.nii']);
-            end
+
+            ea_backuprestore([ea_space,'TPM.nii']);
     end
 end
 

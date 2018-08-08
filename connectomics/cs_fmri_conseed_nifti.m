@@ -197,7 +197,7 @@ for s=1:length(seedfile)
              fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']));
 
     % warp back to MNI:
-   
+
     options.coregmr.method='SPM'; % hard code for now
 
     copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']),...
@@ -208,7 +208,7 @@ for s=1:length(seedfile)
              nii=ea_load_nii(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
              nii.mat=spmaffine;
              ea_write_nii(nii);
-             
+
              matlabbatch{1}.spm.spatial.coreg.write.ref = {[directory,options.prefs.prenii_unnormalized,',1']};
              matlabbatch{1}.spm.spatial.coreg.write.source = {nii.fname};
              matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = 0;
@@ -224,21 +224,22 @@ for s=1:length(seedfile)
              V = ea_load_nii([directory,restfname,'.nii,1']);
              V.fname=[directory,restfname,'_first_TR.nii'];
              ea_write_nii(V);
+             ea_backuprestore([directory,restfname,'_first_TR.nii']);
              ea_coreg2images(options,[directory,restfname,'_first_TR.nii'],...
                  [directory,options.prefs.prenii_unnormalized],...
                  [directory,restfname,'_first_TR.nii'],...
                  {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])});
              delete([directory,restfname,'_first_TR.nii']);
              delete([directory,'raw_',restfname,'_first_TR.nii']);
-             
+
          end
 
-         
+
     ea_apply_normalization_tofile(options,...
         {fullfile(pth,[sf,'_AvgR_Fz.nii'])},...
         {fullfile(pth,[sf,'_AvgR_Fz.nii'])},...
         directory,0,1,ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii']));
-    
+
     nii=ea_load_nii(fullfile(pth,[sf,'_AvgR_Fz.nii']));
     nii.img(nii.img==0)=nan;
     nii.dt(2)=1;

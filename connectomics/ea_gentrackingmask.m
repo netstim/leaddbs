@@ -7,15 +7,16 @@ ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
 copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
 copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]);
 ea_conformspaceto([directory,'c',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]); % make sure cc2 and anat are exactly in same space (even across software packages)
+ea_backuprestore([directory,'c',options.prefs.prenii_unnormalized]);
 affinefile = ea_coreg2images(options, ...
     [directory,'c',options.prefs.prenii_unnormalized], ... % moving
     [directory,options.prefs.b0], ... % fix
-    [directory,'c',options.prefs.prenii_unnormalized], ... % out 
+    [directory,'c',options.prefs.prenii_unnormalized], ... % out
     {[directory,'cc2',options.prefs.prenii_unnormalized]}, ... % other
     1); % writeout transform
 
-% Rename saved transform for further use: canat2b0*.mat to anat2b0*.mat, 
-% and b02canat2b0*.mat to b02anat*.mat 
+% Rename saved transform for further use: canat2b0*.mat to anat2b0*.mat,
+% and b02canat2b0*.mat to b02anat*.mat
 [~, anat] = ea_niifileparts(options.prefs.prenii_unnormalized);
 if ~isempty(affinefile)
     for i = 1:numel(affinefile)

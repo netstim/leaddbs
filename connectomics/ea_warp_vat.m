@@ -71,6 +71,7 @@ if docoreg
         copyfile(wvatspresent{vat},rwvatspresent{vat});
     end
 
+    ea_backuprestore([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
     ea_coreg2images(options,[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],reference,[options.root,options.patientname,filesep,'r',options.prefs.prenii_unnormalized],rwvatspresent,0);
     movefile([options.root,options.patientname,filesep,'raw_',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]); % reset original anat
     delete([options.root,options.patientname,filesep,'r',b0rest,options.prefs.prenii_unnormalized]);

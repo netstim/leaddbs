@@ -395,12 +395,14 @@ switch ea_stripex(currvol)
     case ea_stripex(options.prefs.fa2anat) % FA
         options.coregmr.method=get(handles.coregmrpopup,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
+        ea_backuprestore([directory,options.prefs.fa]);
         ea_coreg2images(options,[directory,options.prefs.fa],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
         ea_dumpspecificmethod(handles,options.coregmr.method)
 
     otherwise % MR
         options.coregmr.method=get(handles.coregmrpopup,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
+        ea_backuprestore([directory,presentfiles{activevolume}]);
         ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
         ea_dumpspecificmethod(handles,options.coregmr.method)
 end

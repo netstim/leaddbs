@@ -123,5 +123,3 @@ cits={
 
 ea_methods(options,[mov,' was linearly co-registered to ',fix,' using ',spm('ver'),' (Friston 2011; http://www.fil.ion.ucl.ac.uk/spm/software/)'],...
     cits);
-
-

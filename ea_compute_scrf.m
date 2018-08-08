@@ -39,6 +39,7 @@ if ~exist('msks','var')
     msks={};
 end
 
+ea_backuprestore([directory,'scrf',filesep,'movim.nii']);
 ea_coreg2images(options,[directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,options.prefs.prenii_unnormalized],...
     [directory,'scrf',filesep,'scrfmovim.nii'],otherfiles,1,msks);
 

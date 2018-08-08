@@ -15,31 +15,19 @@ doreslice=1;
 % from original files in any case.
 try
     if  ~ea_coreglocked(options,[directory,options.prefs.tranii_unnormalized]) % file has already been locked and approved by used
-        if exist([directory,'raw_',options.prefs.tranii_unnormalized],'file')
-            copyfile([directory,'raw_',options.prefs.tranii_unnormalized],[directory,options.prefs.tranii_unnormalized]);
-        else
-            copyfile([directory,options.prefs.tranii_unnormalized],[directory,'raw_',options.prefs.tranii_unnormalized]);
-        end
+        ea_backuprestore([directory,'raw_',options.prefs.tranii_unnormalized]);
     end
 end
 
 try
     if  ~ea_coreglocked(options,[directory,options.prefs.cornii_unnormalized]) % file has already been locked and approved by used
-        if exist([directory,'raw_',options.prefs.cornii_unnormalized],'file')
-            copyfile([directory,'raw_',options.prefs.cornii_unnormalized],[directory,options.prefs.cornii_unnormalized]);
-        else
-            copyfile([directory,options.prefs.cornii_unnormalized],[directory,'raw_',options.prefs.cornii_unnormalized]);
-        end
+        ea_backuprestore([directory,'raw_',options.prefs.cornii_unnormalized]);
     end
 end
 
 try
     if  ~ea_coreglocked(options,[directory,options.prefs.sagnii_unnormalized]) % file has already been locked and approved by used
-        if exist([directory,'raw_',options.prefs.sagnii_unnormalized],'file')
-            copyfile([directory,'raw_',options.prefs.sagnii_unnormalized],[directory,options.prefs.sagnii_unnormalized]);
-        else
-            copyfile([directory,options.prefs.sagnii_unnormalized],[directory,'raw_',options.prefs.sagnii_unnormalized]);
-        end
+        ea_backuprestore([directory,'raw_',options.prefs.sagnii_unnormalized]);
     end
 end
 

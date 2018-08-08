@@ -13,6 +13,7 @@ directory=[options.root,options.patientname,filesep];
 
 for coregfi=2:length(presentfiles)
     if ~ea_coreglocked(options,presentfiles{coregfi}) % file has already been locked and approved by used
+        ea_backuprestore([directory,presentfiles{coregfi}]);
         ea_coreg2images(options,[directory,presentfiles{coregfi}],[directory,presentfiles{1}],[directory,presentfiles{coregfi}]);
 
         % reslice images if needed
