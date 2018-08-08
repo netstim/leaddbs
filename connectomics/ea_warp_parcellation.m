@@ -67,7 +67,7 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w',options.
     options.coregmr.method = coregmethod;
 
     % Check if the corresponding transform already exists
-    xfm = [anatfname, '2', refname, '_', coregmethod, '\d*\.(mat|h5)$'];
+    xfm = [anatfname, '2', refname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
     transform = ea_regexpdir(directory, xfm, 0);
 
     if numel(transform) == 0
