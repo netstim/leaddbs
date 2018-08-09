@@ -11,6 +11,7 @@ itercount=1000;
 regressor=varargin{2};
 output=varargin{3};
 h=nan;
+
 if nargin<6
     corrtype='Spearman';
 else

@@ -1,4 +1,4 @@
-function [h,R,p]=ea_correlplot(X,Y,labels,corrtype,pperm)
+function [h,R,p]=ea_corrplot(X,Y,labels,corrtype,pperm)
 
 if ~exist('labels','var')
     labels={'','X','Y'};
