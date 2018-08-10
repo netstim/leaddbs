@@ -261,8 +261,13 @@ refname = ['r',restfname];
 reference = ['mean', options.prefs.rest];
 
 % Disable Hybrid coregistration
-load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
-coregmethod = strrep(coregmr_method_applied{end}, 'Hybrid SPM & ', '');
+try
+    load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
+    coregmethod = strrep(coregmr_method_applied{end}, 'Hybrid SPM & ', '');
+catch
+    coregmethod = 'SPM'; % fallback to SPM coregistration
+end
+
 options.coregmr.method = coregmethod;
 
 % Check if the transformation already exists
