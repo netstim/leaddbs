@@ -20,19 +20,17 @@ end
 mat(1:3,4)=m_Offset;
 mat=inv(mat);
 
-
-
- % convert RAS to LPS (ITK uses LPS)
+% convert RAS to LPS (ITK uses LPS)
 mat=mat.*...
     [1  1 -1 -1
-    1   1 -1 -1
-    -1 -1 1 1
-    1   1 1 1];
+     1  1 -1 -1
+    -1 -1  1  1
+     1  1  1  1];
 
-    %% original code in itkMatrixOffsetTransformBase > ComputeOffset
+% original code in itkMatrixOffsetTransformBase > ComputeOffset
 % {
 %   const MatrixType & matrix = this->GetMatrix();
-%   
+%
 %   OffsetType offset;
 %   for(unsigned int i=0; i<NOutputDimensions; i++)
 %     {
@@ -42,6 +40,6 @@ mat=mat.*...
 %       offset[i] -= matrix[i][j] * m_Center[j];
 %       }
 %     }
-% 
+%
 %   m_Offset = offset;
 % }

@@ -1,7 +1,17 @@
 function ea_warp_parcellation(reference,options)
 directory=[options.root,options.patientname,filesep];
 
-if ~exist([directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],'file')
+% Regenerate the template or not
+if isfield(options, 'overwriteapproved') && options.overwriteapproved == 1
+    overwrite = 1;
+else
+    overwrite = 0;
+end
+
+if ~exist([directory,'templates',filesep,'labeling',filesep, ...
+           'w',options.lc.general.parcellation,'.nii'],'file') ...
+	|| overwrite
+
     %% warp atlas into pre_tra-space:
     if ~exist([directory,'templates'],'dir')
         mkdir([directory,'templates']);
@@ -61,7 +71,10 @@ if strcmp(reference, ['r', options.prefs.rest])
     reference = ['mean', options.prefs.rest];
 end
 
-if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation,'.nii'],'file')
+if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
+           options.lc.general.parcellation,'.nii'],'file') ...
+	|| overwrite
+
     % Disable Hybrid coregistration
     coregmethod = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
     options.coregmr.method = coregmethod;
@@ -70,8 +83,11 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w',options.
     xfm = [anatfname, '2', refname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
     transform = ea_regexpdir(directory, xfm, 0);
 
-    if numel(transform) == 0
-        warning('Transformation not found! Running coregistration now!');
+    if numel(transform) == 0 || overwrite
+        if numel(transform) == 0
+            warning('Transformation not found! Running coregistration now!');
+        end
+
         transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
             [directory,reference],...
             [directory,refname,'_',options.prefs.prenii_unnormalized],...
