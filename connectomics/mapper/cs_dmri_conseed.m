@@ -122,13 +122,14 @@ switch cmd
 
                 allfibcs = fibers(ismember(fibers(:,4),cfibers), 1:3);
                 allfibcs = round(map.mat\[allfibcs, ones(size(allfibcs,1),1)]');
-                allfibcs(:, logical(sum(allfibcs<1,1))) = [];
+                todel = logical(sum(allfibcs<1,1));
+                allfibcs(:, todel) = [];
                 topaint = sub2ind(mapsz, allfibcs(1,:), allfibcs(2,:), allfibcs(3,:));
 
                 fibInd = fibers(ismember(fibers(:,4),cfibers), 4)';
-                fibInd(logical(sum(allfibcs<1,1))) = [];
-
+                fibInd(todel) = [];
                 topaint = splitapply(@(x) {unique(x)}, topaint, findgroups(fibInd));
+
                 fibInd = repelem(unique(fibInd,'stable'), cellfun(@length, topaint));
                 topaint = cell2mat(topaint);
 
