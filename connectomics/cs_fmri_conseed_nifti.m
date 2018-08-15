@@ -23,6 +23,7 @@ if usesmooth
 else
     spfx='r';
 end
+
 rest=ea_load_nii([directory,spfx,restfname,'.nii']);
 signallength=size(rest.img,4);
 interpol_tc=nan(numel(rest.img(:,:,:,1)),size(rest.img,4));
@@ -34,19 +35,17 @@ end
 %alltc=spm_read_vols(spm_vol(restfilename));
 
 load([directory,'TR.mat']);
-%% Data corrections steps
 
+%% Data corrections steps
 
 disp('Calculating C2 and CSF-signals for signal regression...');
 
 % regression steps
-
 c2=ea_load_nii([directory,'r',restfname,'_c2',options.prefs.prenii_unnormalized]);
 c3=ea_load_nii([directory,'r',restfname,'_c3',options.prefs.prenii_unnormalized]);
 
 ec2map=c2.img(:); ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
 ec3map=c3.img(:); ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
-
 
 %% regress out WM- and CSF-Timecourses
 WMTimecourse=zeros(signallength,1);
@@ -97,12 +96,9 @@ for voxx=1:size(interpol_tc,1)
 
 end
 
-
 %% begin rest bandpass
-
 lp_HighCutoff=0.08;
 hp_LowCutoff=0.009;
-
 
 disp('Done. Bandpass-filtering...');
 sampleFreq 	 = 1/TR;
@@ -130,8 +126,7 @@ idxCutoff2	=paddedLength+2 -idxCutoff;				%Center Index =(paddedLength/2 +1)
 maskHighPass(:,1:idxCutoff-1)=0;	%Low eliminate
 maskHighPass(:,idxCutoff2+1:paddedLength)=0;	%Low eliminate
 
-
-% 	%20070513	remove trend --> FFT --> filter --> inverse FFT --> retrend
+% 20070513 remove trend --> FFT --> filter --> inverse FFT --> retrend
 % YAN Chao-Gan, 100401. remove the mean --> FFT --> filter --> inverse FFT --> add mean back
 fftw('dwisdom');
 
@@ -145,7 +140,6 @@ interpol_tc =fft(interpol_tc, [], 2);
 %Apply the filter Low Pass
 interpol_tc(~maskLowPass)=0;
 
-
 %Apply the filter High Pass
 interpol_tc(~maskHighPass)=0;
 
@@ -158,7 +152,6 @@ interpol_tc=interpol_tc+repmat(theMean,[1, sampleLength]);
 
 %% end  bandpass
 disp('Done.');
-
 
 %% export ROI map:
 for s=1:length(seedfile)
@@ -203,37 +196,35 @@ for s=1:length(seedfile)
     copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']),...
              fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
 
-         if strcmp(options.coregmr.method,'SPM') && exist([directory,'r',restfname,'2',ea_stripex(options.prefs.prenii_unnormalized),'_spm.mat'],'file')
-             load([directory,'r',restfname,'2',ea_stripex(options.prefs.prenii_unnormalized),'_spm.mat']);
-             nii=ea_load_nii(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
-             nii.mat=spmaffine;
-             ea_write_nii(nii);
+    if strcmp(options.coregmr.method,'SPM') && exist([directory,'r',restfname,'2',anatfname,'_spm.mat'],'file')
+        load([directory,'r',restfname,'2',anatfname,'_spm.mat']);
+        nii=ea_load_nii(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
+        nii.mat=spmaffine;
+        ea_write_nii(nii);
 
-             matlabbatch{1}.spm.spatial.coreg.write.ref = {[directory,options.prefs.prenii_unnormalized,',1']};
-             matlabbatch{1}.spm.spatial.coreg.write.source = {nii.fname};
-             matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = 0;
-             matlabbatch{1}.spm.spatial.coreg.write.roptions.wrap = [0 0 0];
-             matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
-             matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
-             spm_jobman('run',{matlabbatch});
-             clear matlabbatch
-             [pth,fn,ext]=fileparts(nii.fname);
-             movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
-         else
-             % STILL NEED TO WRITE THIS:
-             V = ea_load_nii([directory,restfname,'.nii,1']);
-             V.fname=[directory,restfname,'_first_TR.nii'];
-             ea_write_nii(V);
-             ea_backuprestore([directory,restfname,'_first_TR.nii']);
-             ea_coreg2images(options,[directory,restfname,'_first_TR.nii'],...
-                 [directory,options.prefs.prenii_unnormalized],...
-                 [directory,restfname,'_first_TR.nii'],...
-                 {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])});
-             delete([directory,restfname,'_first_TR.nii']);
-             delete([directory,'raw_',restfname,'_first_TR.nii']);
-
-         end
-
+        matlabbatch{1}.spm.spatial.coreg.write.ref = {[directory,options.prefs.prenii_unnormalized,',1']};
+        matlabbatch{1}.spm.spatial.coreg.write.source = {nii.fname};
+        matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = 0;
+        matlabbatch{1}.spm.spatial.coreg.write.roptions.wrap = [0 0 0];
+        matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
+        matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
+        spm_jobman('run',{matlabbatch});
+        clear matlabbatch
+        [pth,fn,ext]=fileparts(nii.fname);
+        movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
+    else
+        % STILL NEED TO WRITE THIS:
+        V = ea_load_nii([directory,restfname,'.nii,1']);
+        V.fname=[directory,restfname,'_first_TR.nii'];
+        ea_write_nii(V);
+        ea_backuprestore([directory,restfname,'_first_TR.nii']);
+        ea_coreg2images(options,[directory,restfname,'_first_TR.nii'],...
+         [directory,options.prefs.prenii_unnormalized],...
+         [directory,restfname,'_first_TR.nii'],...
+         {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])});
+        delete([directory,restfname,'_first_TR.nii']);
+        delete([directory,'raw_',restfname,'_first_TR.nii']);
+    end
 
     ea_apply_normalization_tofile(options,...
         {fullfile(pth,[sf,'_AvgR_Fz.nii'])},...
@@ -253,13 +244,6 @@ for s=1:length(seedfile)
     movefile(fullfile(pth,[sf,'_AvgR_Fz.nii']),fullfile(pth,[sf,'_AvgR_Fz_unsmoothed.nii']));
     movefile(fullfile(pth,['s',sf,'_AvgR_Fz.nii']),fullfile(pth,[sf,'_AvgR_Fz.nii']));
 end
-
-
-function sl=ea_detsiglength(fname)
-
-V=spm_vol(fname);
-sl=length(V);
-
 
 
 function Result = rest_nextpow2_one35(n)
@@ -346,6 +330,3 @@ Result =NaN;    % Should not reach, except when n=1
 % 768
 % 960
 % 1024
-
-function preparecombinedvat(directory,stim)
-% merge niftifiles i.e. with imcalc here.

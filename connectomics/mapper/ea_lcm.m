@@ -260,9 +260,10 @@ refname = ['r',restfname];
 % The real reference image is 'meanrest.nii' rather than 'rrest.nii'
 reference = ['mean', options.prefs.rest];
 
-% Disable Hybrid coregistration
+% Check coregistration method
 try
     load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
+    % Disable Hybrid coregistration
     coregmethod = strrep(coregmr_method_applied{end}, 'Hybrid SPM & ', '');
 catch
     coregmethod = 'SPM'; % fallback to SPM coregistration
