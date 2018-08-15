@@ -191,41 +191,46 @@ for s=1:length(seedfile)
 
     % warp back to MNI:
 
-    options.coregmr.method='SPM'; % hard code for now
-
     copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']),...
              fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
 
-    if strcmp(options.coregmr.method,'SPM') && exist([directory,'r',restfname,'2',anatfname,'_spm.mat'],'file')
-        load([directory,'r',restfname,'2',anatfname,'_spm.mat']);
-        nii=ea_load_nii(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
-        nii.mat=spmaffine;
-        ea_write_nii(nii);
-
-        matlabbatch{1}.spm.spatial.coreg.write.ref = {[directory,options.prefs.prenii_unnormalized,',1']};
-        matlabbatch{1}.spm.spatial.coreg.write.source = {nii.fname};
-        matlabbatch{1}.spm.spatial.coreg.write.roptions.interp = 0;
-        matlabbatch{1}.spm.spatial.coreg.write.roptions.wrap = [0 0 0];
-        matlabbatch{1}.spm.spatial.coreg.write.roptions.mask = 0;
-        matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
-        spm_jobman('run',{matlabbatch});
-        clear matlabbatch
-        [pth,fn,ext]=fileparts(nii.fname);
-        movefile(fullfile(pth,['r',fn,ext]),fullfile(pth,[fn,ext]));
-    else
-        % STILL NEED TO WRITE THIS:
-        V = ea_load_nii([directory,restfname,'.nii,1']);
-        V.fname=[directory,restfname,'_first_TR.nii'];
-        ea_write_nii(V);
-        ea_backuprestore([directory,restfname,'_first_TR.nii']);
-        ea_coreg2images(options,[directory,restfname,'_first_TR.nii'],...
-         [directory,options.prefs.prenii_unnormalized],...
-         [directory,restfname,'_first_TR.nii'],...
-         {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])});
-        delete([directory,restfname,'_first_TR.nii']);
-        delete([directory,'raw_',restfname,'_first_TR.nii']);
+    % Check coregistration method
+    try
+        load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
+        % Disable Hybrid coregistration
+        coregmethod = strrep(coregmr_method_applied{end}, 'Hybrid SPM & ', '');
+    catch
+        coregmethod = 'SPM'; % fallback to SPM coregistration
     end
 
+    options.coregmr.method = coregmethod;
+
+    % Check if the transformation already exists
+    xfm = ['r', restfname, '2', anatfname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+    transform = ea_regexpdir(directory, xfm, 0);
+
+    if numel(transform) == 0
+        warning('Transformation not found! Running coregistration now!');
+        transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
+            [directory,'mean', options.prefs.rest],...
+            [directory,'r', restfname,'_',options.prefs.prenii_unnormalized],...
+            [],1,[],1);
+        transform = transform{2}; % Inverse transformation
+    else
+        if numel(transform) > 1
+            warning(['Multiple transformations of the same type found! ' ...
+                     'Will use the last one:\n%s'], transform{end});
+        end
+        transform = transform{end};
+    end
+
+    % Apply coregistration
+    ea_apply_coregistration([directory,options.prefs.prenii_unnormalized], ...
+        fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']), ...
+        fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']), ...
+        transform, 'linear');
+
+    % Apply normalization
     ea_apply_normalization_tofile(options,...
         {fullfile(pth,[sf,'_AvgR_Fz.nii'])},...
         {fullfile(pth,[sf,'_AvgR_Fz.nii'])},...
