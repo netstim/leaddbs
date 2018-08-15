@@ -322,7 +322,8 @@ if ~isempty(transform)
                 end
 
                 % vox to mm, ANTs takes mm coords as input
-                XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
+                V=ea_open_vol(src); % .gz support, dont use spm_get_space here.
+                XYZ_src_mm = V.mat*XYZ_src_vx;
 
                 % RAS to LPS, ANTs (ITK) use LPS coords
                 XYZ_src_mm(1,:)=-XYZ_src_mm(1,:);

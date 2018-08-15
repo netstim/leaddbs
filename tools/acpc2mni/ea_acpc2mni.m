@@ -64,7 +64,7 @@ for pt=1:length(uidir)
     [options.root,options.patientname]=fileparts(uidir{pt});
     options.root=[options.root,filesep];
     options.prefs=ea_prefs(options.patientname);
-    options=ea_assignpretra(options);
+    options=ea_assignpretra(options,1);
 
     switch automan
         case 'auto' % auto AC/PC detection
