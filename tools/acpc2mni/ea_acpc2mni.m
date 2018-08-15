@@ -90,7 +90,12 @@ for pt=1:length(uidir)
                 acpc_fiducials=fid(pt); % save for later use
                 save([directory,'ACPC_autodetect.mat'],'-struct','acpc_fiducials'); clear acpc_fiducials
             else
-                fid(pt)=load([directory,'ACPC_autodetect.mat']);
+                
+                tmp=load([directory,'ACPC_autodetect.mat']);
+                fid(pt).AC=tmp.AC;
+                fid(pt).PC=tmp.PC;
+                fid(pt).MSP=tmp.MSP;
+                
             end
             
         case {'manual'} % manual AC/PC definition, assume F.fcsv file inside pt folder
