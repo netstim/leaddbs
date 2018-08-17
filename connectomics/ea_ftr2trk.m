@@ -70,14 +70,15 @@ disp('Constructing data...');
 tracks=struct('nPoints',nan,'matrix',nan);
 offset=1;
 for track_number=1:length(idx)
-   tracks(1,track_number).nPoints=idx(track_number);
-   tracks(1,track_number).matrix=fibs(offset:offset+idx(track_number)-1,1:3);
-   offset=offset+idx(track_number);
+    tracks(1,track_number).nPoints=idx(track_number);
+    tracks(1,track_number).matrix=fibs(offset:offset+idx(track_number)-1,1:3);
+    offset=offset+idx(track_number);
 end
 
 if strcmp(voxmm,'mm') % have to retranspose to vox
+    disp('mm to vox conversion...');
     for i=1:length(tracks)
-       tracks(i).matrix=[tracks(i).matrix,ones(size(tracks(i).matrix,1),1)]';
+        tracks(i).matrix=[tracks(i).matrix,ones(size(tracks(i).matrix,1),1)]';
         tracks(i).matrix=specs.affine\tracks(i).matrix;
         tracks(i).matrix=tracks(i).matrix(1:3,:)';
     end
@@ -92,6 +93,7 @@ for i = 1:length(tracks)
 end
 
 %% write .trk file
+disp('Writing trk file...');
 if ischar(ftrfilename)
     ea_trk_write(header,tracks,[directory,ftrfilename,'.trk']);
 else
