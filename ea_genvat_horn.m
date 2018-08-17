@@ -448,6 +448,7 @@ ea_savestimulation(S,options);
 %spm_write_vol(Vvat,flipdim(eg,3));
 
 Vvate.img=eeg; %permute(eeg,[2,1,3]);
+Vvate.dt=[16,0];
 ea_write_nii(Vvate);
 
 Vvatne.img=neeg; %permute(neeg,[2,1,3]);

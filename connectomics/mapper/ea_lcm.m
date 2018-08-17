@@ -239,6 +239,7 @@ if strncmp(cname, 'Patient-specific fMRI - ', 24)
 else
     restfname = cname;
 end
+options.prefs.rest=[restfname,'.nii']; % make sure the proper rest_* is used
 
 directory=[fileparts(fileparts(fileparts(vatdir))),filesep];
 options=ea_getptopts(directory,options);
@@ -257,8 +258,8 @@ vox_anat = [xx;yy;zz;1];
 refname = ['r',restfname];
 [~,anatfname] = fileparts(options.prefs.prenii_unnormalized);
 
-% The real reference image is 'meanrest.nii' rather than 'rrest.nii'
-reference = ['mean', options.prefs.rest];
+% The real reference image is 'meanrrest_*.nii' rather than 'rrest_*.nii'
+reference = ['meanr', restfname,'.nii'];
 
 % Check coregistration method
 try

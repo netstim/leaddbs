@@ -30,6 +30,8 @@ if isempty(varargin) || isempty(varargin{1}) || strcmpi(varargin{1},'on') || ...
     varargin{2}='left';
 end
 
+resultfig=resultfig(1); % take the first if there are more.
+
 atlassurfs = getappdata(resultfig,'atlassurfs');
 colorbuttons = getappdata(resultfig,'colorbuttons');
 set(0,'CurrentFigure',resultfig)
