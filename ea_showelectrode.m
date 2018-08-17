@@ -54,7 +54,7 @@ for side=options.sides
         ap=[trajectory{side}(1,1),trajectory{side}(1,2),trajectory{side}(1,3)];
         lp=lp+(lp-ap);
         
-       ellabel=text(lp(1),lp(2),lp(3),ea_sub2space(elstruct.name),'Color',[1,1,1]);
+        ellabel=text(lp(1),lp(2),lp(3),ea_sub2space(elstruct.name),'Color',[1,1,1]);
         
         % draw trajectory
         cnt=1;
@@ -131,7 +131,28 @@ for side=options.sides
             end
             cnt=cnt+1;
         end
-        
+        %% arrows for directional leads
+        switch options.elmodel
+            case 'Boston Scientific Vercise Directed'
+                markerposition = 10.25;
+                dothearrows = 1;
+            case 'St. Jude Directed 6172 (short)'
+                markerposition = 9;
+                dothearrows = 1;
+            case 'St. Jude Directed 6173 (long)'
+                markerposition = 12;
+                dothearrows = 1;
+            otherwise
+                dothearrows = 0;
+        end
+        if dothearrows
+            unitvector = (elstruct.markers(side).tail - elstruct.markers(side).head) / norm(elstruct.markers(side).tail - elstruct.markers(side).head);
+            stretchfactor = norm(elstruct.markers(side).tail - elstruct.markers(side).head) / 6;
+            stxmarker = elstruct.markers(side).head + (stretchfactor * markerposition * unitvector);
+            arrowtip = stxmarker + 10 * (elstruct.markers(side).y - elstruct.markers(side).head);
+            elrender(cnt) = mArrow3(stxmarker,arrowtip,'color',[.7 .7 .7],'tipWidth',0.5);
+            cnt = cnt+1;
+        end
     else % simply draw pointcloud
         shifthalfup=0;
         % check if isomatrix needs to be expanded from single vector by using stimparams:
