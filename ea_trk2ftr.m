@@ -50,9 +50,7 @@ for a=1:fibercount
     start = stop+1;
 end
 ea_dispercent(1,'end');
-fibers=double(fibers);
-
-fibers = fibers';
+fibers=single(fibers);
 
 %% transform fibers to template origin
 %nii=ea_load_nii('/PA/Neuro/_projects/lead/lead_dbs/templates/space/MNI_ICBM_2009b_NLIN_ASYM/atlases/Macroscale Human Connectome Atlas (Yeh 2018)/FMRIB58_FA_1mm.nii.gz')

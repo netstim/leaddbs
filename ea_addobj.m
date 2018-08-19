@@ -23,16 +23,16 @@ switch type
             end
             addfibertract([pana,fina],resultfig,addht,fina,[],0,options);
         end
-        
+
     case 'roi' % atlas
-        
+
         % open dialog
         [fina,pana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-        
-        
-        
+
+
+
         if iscell(fina) % multiple files
-            
+
             for fi=1:length(fina)
                 addroi([pana,fina{fi}],resultfig,addht,fina{fi},options);
             end
@@ -42,14 +42,14 @@ switch type
             end
             addroi([pana,fina],resultfig,addht,fina,options);
         end
-        
-        
+
+
     case 'tractmap'
         [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
         [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
         addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,tfina,rfina,options)
-        
-        
+
+
 end
 
 axis fill
@@ -91,9 +91,9 @@ for ftract=1:fibno
     idcnt=idcnt+idx(ftract);
     ftdists=d(thisfibentries);
     [mindist,mindistix]=min(ftdists);
-    
+
     smallftdists=ftdists<2;
-    
+
     if any(smallftdists)
         minidentifier=thisfibentries(smallftdists);
         weights=weights(ix(minidentifier));
@@ -169,14 +169,14 @@ fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
 fv.vertices=[fv.vertices;fvc.vertices];
 
 if ischar(options.prefs.hullsimplify)
-    
+
     % get to 700 faces
     simplify=700/length(fv.faces);
     fv=reducepatch(fv,simplify);
-    
+
 else
     if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-        
+
         fv=reducepatch(fv,options.prefs.hullsimplify);
     elseif options.prefs.hullsimplify>1
         simplify=options.prefs.hullsimplify/length(fv.faces);
@@ -221,6 +221,7 @@ if ischar(addobj) % filename is given ? load fibertracts.
         fileOut = [addobj(1:end-3) 'mat'];
         disp(['Converting .trk to ftr.'])
         [thisset,fibidx] = ea_trk2ftr(addobj);
+        thisset = thisset';
     else
         error('File is neither a .mat nor .trk!')
     end
@@ -242,7 +243,7 @@ if ~isempty(connect) % select fibers based on connecting roi info (i.e. delete a
     thisset=thisset(selectedfibs); % choose selected fibers.
 end
 
-%% OLD visualization part: 
+%% OLD visualization part:
 % fibmax=length(thisset);
 % keyboard
 % for fib=1:fibmax
@@ -326,7 +327,7 @@ switch type
                 AL.GUI.FTS(length(AL.FTS)).ROI(roi)=0;
             end
             AL.FTSDATA{end+1}=data;
-            
+
         end
     case 'roi'
         AL.ROI{end+1}=obj;
@@ -349,9 +350,9 @@ if ~isempty(AL.FTS) % only build fibertracking menu if there is at least one fib
         AL.MENU.FTMENU(ft) = uimenu(AL.MENU.MAINMENU,'Label',AL.FTSNAMES{ft});
         for roi=1:length(AL.ROI)
             AL.MENU.ROIMENU(ft,roi)=uimenu(AL.MENU.FTMENU(ft),'Label',AL.ROINAMES{roi},'Callback',{@dotracking,ft,roi,resultfig,addht,options});
-            
+
             set(AL.MENU.ROIMENU(ft,roi),'Checked',binary2onoff(AL.GUI.FTS(ft).ROI(roi))) % set checks on menu.
-            
+
         end
     end
 end
@@ -427,13 +428,13 @@ if nargin==2
     if strcmp(varargin{2},'end')
         fprintf('\n')
         fprintf('\n')
-        
+
         fprintf('\n')
-        
+
     else
         fprintf(1,[varargin{2},':     ']);
-        
-        
+
+
     end
 else
     fprintf(1,[repmat('\b',1,(length(num2str(percent))+1)),'%d','%%'],percent);
@@ -557,14 +558,14 @@ switch p
     case 2
         % really simple for 2-d
         nrmls = (xyz(tess(:,1),:) - xyz(tess(:,2),:)) * [0 1;-1 0];
-        
+
         % Any degenerate edges?
         del = sqrt(sum(nrmls.^2,2));
         degenflag = (del<(max(del)*10*eps));
         if sum(degenflag)>0
             warning('inhull:degeneracy',[num2str(sum(degenflag)), ...
                 ' degenerate edges identified in the convex hull'])
-            
+
             % we need to delete those degenerate normal vectors
             nrmls(degenflag,:) = [];
             nt = size(nrmls,1);
@@ -596,7 +597,7 @@ switch p
         if sum(degenflag)>0
             warning('inhull:degeneracy',[num2str(sum(degenflag)), ...
                 ' degenerate simplexes identified in the convex hull'])
-            
+
             % we need to delete those degenerate normal vectors
             nrmls(degenflag,:) = [];
             nt = size(nrmls,1);

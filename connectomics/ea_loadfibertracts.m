@@ -35,7 +35,6 @@ if nargout>2
 end
 
 
-
 function ea_convertfibs2newformat(fibinfo,cfile)
 
 display('Converting fibers...');
