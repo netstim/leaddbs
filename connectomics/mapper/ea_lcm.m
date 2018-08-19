@@ -259,7 +259,7 @@ refname = ['r',restfname];
 [~,anatfname] = fileparts(options.prefs.prenii_unnormalized);
 
 % The real reference image is 'meanrrest_*.nii' rather than 'rrest_*.nii'
-reference = ['meanr', restfname,'.nii'];
+reference = ['mean', restfname,'.nii'];
 
 % Check coregistration method
 try
