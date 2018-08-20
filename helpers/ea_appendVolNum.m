@@ -26,6 +26,10 @@ if ischar(niifpath)
     end
 end
 
+if strcmp(volnum, 'all') && numel(niifpath)==1
+    volnum = 1:numel(spm_vol(niifpath{1})); % volnum = 1:end
+end
+
 % Check the sizes of 'fname' and 'volnum'
 if numel(niifpath) == 1
     niifpath = repmat(niifpath, numel(volnum), 1);
