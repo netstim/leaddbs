@@ -132,7 +132,7 @@ for side=options.sides
             cnt=cnt+1;
         end
         %% arrows for directional leads
-        if isfield(options.d3,'showdirarrows') && options.d3.showdirarrows
+        if isfield(options.prefs.d3,'showdirarrows') && options.prefs.d3.showdirarrows
             switch options.elmodel
                 case 'Boston Scientific Vercise Directed'
                     markerposition = 10.25;
