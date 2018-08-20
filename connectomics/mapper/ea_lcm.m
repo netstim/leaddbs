@@ -239,6 +239,7 @@ if strncmp(cname, 'Patient-specific fMRI - ', 24)
 else
     restfname = cname;
 end
+
 options.prefs.rest=[restfname,'.nii']; % make sure the proper rest_* is used
 
 directory=[fileparts(fileparts(fileparts(vatdir))),filesep];
@@ -255,11 +256,11 @@ anat_vat = ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
 vox_anat = [xx;yy;zz;1];
 
 % prepare coregistration from anchor modality to rest file
-refname = ['r',restfname];
+refname = ['r', restfname];
 [~,anatfname] = fileparts(options.prefs.prenii_unnormalized);
 
-% The real reference image is 'meanrrest_*.nii' rather than 'rrest_*.nii'
-reference = ['mean', restfname,'.nii'];
+% The real reference image is 'meanrest_*.nii' rather than 'rrest_*.nii'
+reference = ['mean', restfname, '.nii'];
 
 % Re-calculate mean re-aligned image if not found
 if ~exist([directory, reference], 'file')
@@ -307,7 +308,7 @@ if ~any(rest_vat.img(:)) % image empty, at least set original peak to 1.
     warning('Image empty (potentially due to poor resolution and interpolation), trying to set peak manually');
     [~, vox_rest] = ea_map_coords(vox_anat, ...
         [directory, options.prefs.prenii_unnormalized], ...
-        transform, reference, upper(coregmethod));
+        transform, [directory,reference], upper(coregmethod));
     vox_rest=round(vox_rest);
     try
         rest_vat.img(vox_rest(1),vox_rest(2),vox_rest(3))=1;

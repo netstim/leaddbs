@@ -66,7 +66,7 @@ end
 [~,refname]=fileparts(reference);
 [~,anatfname]=fileparts(options.prefs.prenii_unnormalized);
 
-% For fMRI, the real reference image is 'meanrest.nii' rather than 'rrest.nii'
+% For fMRI, the real reference image is 'meanrest_*.nii' rather than 'rrest_*.nii'
 if strcmp(reference, ['r', options.prefs.rest])
     reference = ['mean', options.prefs.rest];
     % Re-calculate mean re-aligned image if not found
