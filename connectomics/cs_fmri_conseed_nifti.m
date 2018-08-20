@@ -209,11 +209,16 @@ for s=1:length(seedfile)
     xfm = ['r', restfname, '2', anatfname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
     transform = ea_regexpdir(directory, xfm, 0);
 
+    % Re-calculate mean re-aligned image if not found
+    if ~exist([directory, 'mean', options.prefs.rest], 'file')
+        ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
+    end
+
     if numel(transform) == 0
         warning('Transformation not found! Running coregistration now!');
         transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
-            [directory,'mean', options.prefs.rest],...
-            [directory,'r', restfname,'_',options.prefs.prenii_unnormalized],...
+            [directory, 'mean', options.prefs.rest],...
+            [directory, 'r', restfname, '_', options.prefs.prenii_unnormalized],...
             [],1,[],1);
         transform = transform{2}; % Inverse transformation
     else

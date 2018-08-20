@@ -54,6 +54,11 @@ if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_c1',options.prefs.pren
     coregmethod = options.coregmr.method;
     options.coregmr.method = strrep(coregmethod, 'Hybrid SPM & ', '');
 
+    % Re-calculate mean re-aligned image if not found
+    if ~exist([directory, 'mean', options.prefs.rest], 'file')
+        ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
+    end
+
     % Coregistration
     transform = ea_coreg2images(options,...
         [directory,options.prefs.prenii_unnormalized],...
@@ -69,6 +74,7 @@ if ~exist([directory,'r',ea_stripex(options.prefs.rest),'_c1',options.prefs.pren
             transform{1}, 'linear');
     end
 
+    % Fix transformation names, replace 'mean' by 'r'
     cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
 end
 

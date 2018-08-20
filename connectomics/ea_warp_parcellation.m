@@ -69,6 +69,10 @@ end
 % For fMRI, the real reference image is 'meanrest.nii' rather than 'rrest.nii'
 if strcmp(reference, ['r', options.prefs.rest])
     reference = ['mean', options.prefs.rest];
+    % Re-calculate mean re-aligned image if not found
+    if ~exist([directory, reference], 'file')
+        ea_meanimage([directory, 'r', options.prefs.rest], reference);
+    end
 end
 
 if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...

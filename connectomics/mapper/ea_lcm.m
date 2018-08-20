@@ -261,6 +261,11 @@ refname = ['r',restfname];
 % The real reference image is 'meanrrest_*.nii' rather than 'rrest_*.nii'
 reference = ['mean', restfname,'.nii'];
 
+% Re-calculate mean re-aligned image if not found
+if ~exist([directory, reference], 'file')
+    ea_meanimage([directory, 'r', options.prefs.rest], reference);
+end
+
 % Check coregistration method
 try
     load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
