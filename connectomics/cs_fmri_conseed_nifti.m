@@ -159,12 +159,10 @@ for s=1:length(seedfile)
     seed{s}.img(seed{s}.img==0)=nan;
     seed_tc{s}=interpol_tc.*repmat(seed{s}.img(:),1,signallength);
     seed_tc{s}=ea_nanmean(seed_tc{s},1);
-    
+
     if ~isfield(options,'csfMRInowriteout')
-        
-        
         R=corr(seed_tc{s}',interpol_tc','rows','pairwise');
-        
+
         seed{s}.img(:)=R;
         [pth,sf]=fileparts(seed{s}.fname);
         outputfolder = options.lcm.func.connectome;
@@ -172,7 +170,7 @@ for s=1:length(seedfile)
             sf(strfind(sf,'rest')-1:end)=[];
         end
         seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii']);
-        
+
         if ~exist(fullfile(pth,outputfolder),'dir')
             mkdir(fullfile(pth,outputfolder))
         end
@@ -180,7 +178,7 @@ for s=1:length(seedfile)
         seed{s}.img(:)=atanh(seed{s}.img(:));
         seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']);
         ea_write_nii(seed{s});
-        
+
         matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii'])
             fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii'])};
         matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];
@@ -189,15 +187,15 @@ for s=1:length(seedfile)
         matlabbatch{1}.spm.spatial.smooth.prefix = 's';
         spm_jobman('run',{matlabbatch}); clear matlabbatch
         movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_native_unsmoothed.nii']),...
-            fullfile(pth,outputfolder,[sf,'_AvgR_native.nii']));
+                 fullfile(pth,outputfolder,[sf,'_AvgR_native.nii']));
         movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_Fz_native_unsmoothed.nii']),...
-            fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']));
-        
+                 fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']));
+
         % warp back to MNI:
-        
+
         copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']),...
-            fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
-        
+                 fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
+
         % Check coregistration method
         try
             load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
@@ -206,40 +204,45 @@ for s=1:length(seedfile)
         catch
             coregmethod = 'SPM'; % fallback to SPM coregistration
         end
-        
+
         options.coregmr.method = coregmethod;
-        
+
         % Check if the transformation already exists
         xfm = ['r', restfname, '2', anatfname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
         transform = ea_regexpdir(directory, xfm, 0);
-        
+
+        % Re-calculate mean re-aligned image if not found
+        if ~exist([directory, 'mean', options.prefs.rest], 'file')
+            ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
+        end
+
         if numel(transform) == 0
             warning('Transformation not found! Running coregistration now!');
             transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
-                [directory,'mean', options.prefs.rest],...
-                [directory,'r', restfname,'_',options.prefs.prenii_unnormalized],...
+                [directory, 'mean', options.prefs.rest],...
+                [directory, 'r', restfname, '_', options.prefs.prenii_unnormalized],...
                 [],1,[],1);
             transform = transform{2}; % Inverse transformation
         else
             if numel(transform) > 1
                 warning(['Multiple transformations of the same type found! ' ...
-                    'Will use the last one:\n%s'], transform{end});
+                         'Will use the last one:\n%s'], transform{end});
             end
             transform = transform{end};
         end
-        
+
         % Apply coregistration
         ea_apply_coregistration([directory,options.prefs.prenii_unnormalized], ...
             fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']), ...
             fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']), ...
             transform, 'linear');
-        
+
         % Apply normalization
         ea_apply_normalization_tofile(options,...
             {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
             {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
             directory,0,1,ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii']));
-        
+
         nii=ea_load_nii(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
         nii.img(nii.img==0)=nan;
         nii.dt(2)=1;
@@ -253,101 +256,6 @@ for s=1:length(seedfile)
         movefile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']),fullfile(pth,outputfolder,[sf,'_AvgR_Fz_unsmoothed.nii']));
         movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_Fz.nii']),fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
     end
-    R=corr(seed_tc{s}',interpol_tc','rows','pairwise');
-
-    seed{s}.img(:)=R;
-    [pth,sf]=fileparts(seed{s}.fname);
-    outputfolder = options.lcm.func.connectome;
-    if strfind(sf,'rest')
-        sf(strfind(sf,'rest')-1:end)=[];
-    end
-    seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii']);
-
-    if ~exist(fullfile(pth,outputfolder),'dir')
-        mkdir(fullfile(pth,outputfolder))
-    end
-    ea_write_nii(seed{s});
-    seed{s}.img(:)=atanh(seed{s}.img(:));
-    seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']);
-    ea_write_nii(seed{s});
-
-    matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii'])
-        fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii'])};
-    matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];
-    matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-    matlabbatch{1}.spm.spatial.smooth.im = 0;
-    matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-    spm_jobman('run',{matlabbatch}); clear matlabbatch
-    movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_native_unsmoothed.nii']),...
-             fullfile(pth,outputfolder,[sf,'_AvgR_native.nii']));
-    movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_Fz_native_unsmoothed.nii']),...
-             fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']));
-
-    % warp back to MNI:
-
-    copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']),...
-             fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
-
-    % Check coregistration method
-    try
-        load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
-        % Disable Hybrid coregistration
-        coregmethod = strrep(coregmr_method_applied{end}, 'Hybrid SPM & ', '');
-    catch
-        coregmethod = 'SPM'; % fallback to SPM coregistration
-    end
-
-    options.coregmr.method = coregmethod;
-
-    % Check if the transformation already exists
-    xfm = ['r', restfname, '2', anatfname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
-    transform = ea_regexpdir(directory, xfm, 0);
-
-    % Re-calculate mean re-aligned image if not found
-    if ~exist([directory, 'mean', options.prefs.rest], 'file')
-        ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
-    end
-
-    if numel(transform) == 0
-        warning('Transformation not found! Running coregistration now!');
-        transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
-            [directory, 'mean', options.prefs.rest],...
-            [directory, 'r', restfname, '_', options.prefs.prenii_unnormalized],...
-            [],1,[],1);
-        transform = transform{2}; % Inverse transformation
-    else
-        if numel(transform) > 1
-            warning(['Multiple transformations of the same type found! ' ...
-                     'Will use the last one:\n%s'], transform{end});
-        end
-        transform = transform{end};
-    end
-
-    % Apply coregistration
-    ea_apply_coregistration([directory,options.prefs.prenii_unnormalized], ...
-        fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']), ...
-        fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']), ...
-        transform, 'linear');
-
-    % Apply normalization
-    ea_apply_normalization_tofile(options,...
-        {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
-        {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
-        directory,0,1,ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii']));
-
-    nii=ea_load_nii(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
-    nii.img(nii.img==0)=nan;
-    nii.dt(2)=1;
-    ea_write_nii(nii);
-    matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])};
-    matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];
-    matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-    matlabbatch{1}.spm.spatial.smooth.im = 1;
-    matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-    spm_jobman('run',{matlabbatch}); clear matlabbatch
-    movefile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']),fullfile(pth,outputfolder,[sf,'_AvgR_Fz_unsmoothed.nii']));
-    movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_Fz.nii']),fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
-
 end
 
 
