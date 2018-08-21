@@ -923,7 +923,7 @@ for sub=1:length(M.patient.list)
     try
         idx=idx(round(linspace(1,length(idx),howmanyfibs))); % only use a random 20k fibers of each subject.
     catch
-        ea_warning(['Not enough fibers in connectome. Requested ',num2str(howmanyfibs),', available are ',num2str(length(idx),'. Taking all fibers for this subject.']);
+        ea_warning(['Not enough fibers in connectome. Requested ',num2str(howmanyfibs),', available are ',num2str(length(idx)),'. Taking all fibers for this subject.']);
     end
     sumidx=sum(idx);
     nfibs=nfibs(1:sumidx,:);
