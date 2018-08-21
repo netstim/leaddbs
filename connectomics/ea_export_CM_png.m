@@ -10,7 +10,9 @@ if nargin==4
 else
     imagesc(X);
 end
+try
 caxis([ea_nanmin(X(:))/2,ea_nanmax(X(:))/2]);
+end
 aID = fopen([ea_space(options,'labeling'),options.lc.general.parcellation,'.txt']);
 atlas_lgnd=textscan(aID,'%d %s');
 if length(atlas_lgnd{2})<20
