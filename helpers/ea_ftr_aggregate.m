@@ -18,6 +18,7 @@ idx = [];
 offset = 0;
 
 for i=1:length(ftrFiles)
+    fprintf('Aggregating fibers from %d/%d FTR files...\n', i, length(ftrFiles));
     if nargin < 3 % Simple aggregate
         ftr = load(ftrFiles{i});
     else % Sample and aggregate
