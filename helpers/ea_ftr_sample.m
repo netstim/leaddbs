@@ -30,7 +30,12 @@ ftr = load(ftrFile);
 
 switch lower(type)
     case 'number'
-        index = round(linspace(1, numel(ftr.idx), sel));
+        if sel < numel(ftr.idx)
+            index = round(linspace(1, numel(ftr.idx), sel));
+        else
+            warning('Sample number larger than fiber number (%d)! Select all fibers.', numel(ftr.idx));
+            index = 1:numel(ftr.idx);
+        end
     case 'interval'
         index = 1:sel:numel(ftr.idx);
     case 'index'
