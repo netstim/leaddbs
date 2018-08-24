@@ -48,6 +48,8 @@ if isfield(options.dicomimp,'method')
         case 2 % dicm2nii
             ea_dicm2nii(indir, outdir);
             ea_delete([outdir, 'dcmHeaders.mat'])
+        case 3 % SPM
+            ea_spm_dicom_import(indir, outdir);
     end
 else % use default set in prefs
     switch lower(options.prefs.dicom.tool)
@@ -56,6 +58,8 @@ else % use default set in prefs
         case 'dicm2nii'
             ea_dicm2nii(indir, outdir);
             ea_delete([outdir, 'dcmHeaders.mat'])
+        case 'spm' % SPM
+            ea_spm_dicom_import(indir, outdir);
     end
 end
 
