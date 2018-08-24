@@ -813,6 +813,8 @@ if ~no_save
     fprintf('Converting %g series (%s) into %g-D %s: subject %s\n', ...
             nRun, vendor, 4-rst3D, ext, subjStr);
 end
+
+fnames = ea_latin2ascii(fnames);
 for i = 1:nRun
     nFile = numel(h{i});
     h{i}{1}.NiftiName = fnames{i}; % for convenience of error info
