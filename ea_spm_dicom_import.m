@@ -9,6 +9,7 @@ if nargin < 2
     outdir = fileparts(dicomdir);
 end
 
+% Find all files under DICOM folder
 dcm = ea_regexpdir(dicomdir, ['[^\', filesep, ']$'], 1);
 
 matlabbatch{1}.spm.util.import.dicom.data = dcm;
@@ -22,6 +23,7 @@ matlabbatch{1}.spm.util.import.dicom.convopts.icedims = 0;
 spm_jobman('run',{matlabbatch});
 clear matlabbatch
 
+% % Retrieve series of DCMs to be converted
 % dcm = ea_searchdcm(dicomdir);
 
 % for i=1:length(dcm)
