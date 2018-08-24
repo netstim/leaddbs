@@ -18,7 +18,7 @@ options.prefs.patientdir = options.patientname;
 options = ea_resolve_elspec(options);
 directory = [options.root,options.patientname,filesep];
 
-if strcmp(options.leadprod, 'dbs') || strcmp(options.leadprod, 'connectome)')
+if strcmp(options.leadprod, 'dbs') || strcmp(options.leadprod, 'connectome')
     if options.dicomimp.do || options.assignnii % do DICOM-Import.
         if options.dicomimp.do
             if strcmp(options.patientname, 'No Patient Selected')
