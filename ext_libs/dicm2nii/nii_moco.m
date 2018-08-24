@@ -33,6 +33,7 @@ function varargout = nii_moco(nii, out, ref)
 % is a struct with following fields:
 %  ref: reference NIfTI name, or struct if no corrected img is saved.
 %  R: rigid xform matrix to correct the motion to ref volume, 4 by 4 by nVol
+%  mss: sum of squared diff between vol and ref img
 %  trans: translation in mm, nVol by 3
 %  rot: rotation in radian, nVol by 3
 %  FD: frame-wise displacement in mm, nVol by 1
@@ -65,8 +66,8 @@ d = nii.hdr.dim(2:7); d(d<1 | d>32768 | mod(d,1)) = 1;
 nVol = prod(d(4:end));
 if nVol<2, error('Not multi-volume NIfTI: %s', nii.hdr.file_name); end
 d = d(1:3);
-nii_xform_mat = nii_viewer('func_handle', 'nii_xform_mat');
-Rm = nii_xform_mat(nii.hdr, 1); % moving img R
+Rm = nii_viewer('LocalFunc', 'nii_xform_mat', nii.hdr, 1); % moving img R
+
 sz = nii.hdr.pixdim(2:4);
 if all(abs(diff(sz)/sz(1)))<0.05 && sz(1)>2 && sz(1)<4 % 6~12mm
     sz = 3; % iso-voxel, 2~4mm res, simple fast smooth
@@ -77,9 +78,9 @@ end
 % Deal with ref vol options
 if nargin<3 || isempty(ref) % pick a good vol as ref: similar to next vol
     n = min(10, nVol);
-    mss = diff(nii.img(:,:,:,1:n), 1, 4);
-    mss = double(mss) .^ 2;
-    mss = reshape(mss, [prod(d) n-1]);
+    mss = double(nii.img(:,:,:,1:n));
+    mss = diff(mss, 1, 4) .^ 2;
+    mss = reshape(mss, [], n-1);
     mss = sum(mss);
     [~, p.ref] = min(mss);
     p.ref = p.ref + 1; % later one less affected by spin history?
@@ -98,7 +99,7 @@ else % ref NIfTI file or struct
     end
     p.ref = ref; % simply pass the ref input
 end
-R0 = nii_xform_mat(refV.hdr, 1);
+R0 = nii_viewer('LocalFunc', 'nii_xform_mat', refV.hdr, 1);
 
 % resample ref vol to isovoxel (often lower-res)
 res = 4; % use 4 mm grid for alignment
@@ -185,7 +186,7 @@ if doXform
     I = ones([d 4], 'single');
     [I(:,:,:,1), I(:,:,:,2), I(:,:,:,3)] = ndgrid(0:d(1)-1, 0:d(2)-1, 0:d(3)-1);
     I = permute(I, [4 1 2 3]);
-    I = reshape(I, [4 prod(d)]); % ijk in 4 by nVox for original dim
+    I = reshape(I, 4, []); % ijk in 4 by nVox for original dim
     I = Rm * I; % xyz now
 end
 

@@ -60,6 +60,7 @@ function varargout = nii_xform(src, target, rst, intrp, missVal)
 % 160923 allow target to be nii struct or hdr; Take care of logical src img.
 % 161002 target can also be {tempFile warpFile}.
 % 170119 resolution can be singular.
+% 180219 treat formcode 3 and 4 the same.
 
 if nargin<2 || nargin>5, help('nii_xform'); error('Wrong number of input.'); end
 if nargin<3, rst = []; end
@@ -133,17 +134,18 @@ end
 if ~iscell(target) 
     s = hdr.sform_code;
     q = hdr.sform_code;
-    if s>0 && any(s == [nii.hdr.sform_code nii.hdr.qform_code])
+    sq = [nii.hdr.sform_code nii.hdr.qform_code];
+    if s>0 && (any(s == sq) || (s>2 && (any(sq==3) || any(sq==4))))
         R0 = [hdr.srow_x; hdr.srow_y; hdr.srow_z; 0 0 0 1];
         frm = s;
-    elseif any(q == [nii.hdr.sform_code nii.hdr.qform_code])
+    elseif any(q == sq) || (q>2 && (any(sq==3) || any(sq==4)))
         R0 = quat2R(hdr);
         frm = q;
     else
         error('No matching transformation between source and template.');
     end
 
-    if nii.hdr.sform_code == frm
+    if sq(1) == frm || (sq(1)>2 && frm>2) || sq(2)<1
         R = [nii.hdr.srow_x; nii.hdr.srow_y; nii.hdr.srow_z; 0 0 0 1];
     else
         R = quat2R(nii.hdr);

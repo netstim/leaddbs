@@ -4,6 +4,8 @@ function java_dnd(jObj, dropFcn)
 % 170421 Xiangrui Li adapted from dndcontrol class by Maarten van der Seijs:
 % https://www.mathworks.com/matlabcentral/fileexchange/53511
 
+% Required: MLDropTarget.class under the same folder
+
 if ~exist('MLDropTarget', 'class')
     pth = fileparts(mfilename('fullpath'));
     javaclasspath(pth); % dynamic for this session
@@ -20,9 +22,9 @@ if ~exist('MLDropTarget', 'class')
 end
 
 dropTarget = handle(javaObjectEDT('MLDropTarget'), 'CallbackProperties');
-set(dropTarget, 'DragEnterCallback', @DragEnterCallback);
-set(dropTarget, 'DragExitCallback', @DragExitCallback);
-set(dropTarget, 'DropCallback', {@DropCallback, dropFcn});
+set(dropTarget, 'DragEnterCallback', @DragEnterCallback, ...
+                'DragExitCallback', @DragExitCallback, ...
+                'DropCallback', {@DropCallback, dropFcn});
 jObj.setDropTarget(dropTarget);
 %%
 
@@ -30,10 +32,13 @@ function DropCallback(jSource, jEvent, dropFcn)
 setComplete = onCleanup(@()jEvent.dropComplete(true));
 % DropAction: Neither ctrl nor shift Dn, PC/MAC 2, Linux 1
 % All OS: ctrlDn 1, shiftDn 2, both Dn 1073741824 (2^30)
-% This fails to report CtrlDn if user releases shift between DragEnter and Drop.
-evt.ControlDown = jEvent.getDropAction()==1073741824; % ACTION_LINK 1<<30
-% evt.Location = [jEvent.getLocation.x jEvent.getLocation.y]; % top-left [0 0]
-java.awt.Robot().keyRelease(16); % shift up
+if ispc || ismac
+    evt.ControlDown = jEvent.getDropAction() ~= 2;
+else % fails to report CtrlDn if user releases shift between DragEnter and Drop
+    evt.ControlDown = bitget(jEvent.getDropAction,31)>0; % ACTION_LINK 1<<30
+    java.awt.Robot().keyRelease(16); % shift up
+end
+evt.Location = [jEvent.getLocation.x jEvent.getLocation.y]; % top-left [0 0]
 if jSource.getDropType() == 1 % String dropped
     evt.DropType = 'string';
     evt.Data = char(jSource.getTransferData());
@@ -54,10 +59,10 @@ end
 
 function DragEnterCallback(~, jEvent)
 try jEvent.acceptDrag(1); catch, return; end % ACTION_COPY
-java.awt.Robot().keyPress(16); % shift down
+if ~ispc && ~ismac, java.awt.Robot().keyPress(16); end % shift down
 %%
 
 function DragExitCallback(~, jEvent)
-java.awt.Robot().keyRelease(16); % shift up
+if ~ispc && ~ismac, java.awt.Robot().keyRelease(16); end % shift up
 try jEvent.rejectDrag(1); catch, end % ACTION_COPY
 %%

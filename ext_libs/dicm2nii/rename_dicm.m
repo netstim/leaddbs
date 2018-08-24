@@ -44,6 +44,7 @@ function rename_dicm(files, fmt)
 % 1402?? Add Manufacturer to flds (bug caused by dicm_hdr update)
 % 140506 Use SeriesDescription to replace ProtocolName non-Siemens
 % 151001 Avoid cd so it works if m file is at pwd but path not set
+% 171211 Make AcquisitionNumer and Manufacturer not mandidate.
 
 if nargin<1 || isempty(files)
     folder = uigetdir(pwd, 'Select a folder containing DICOM files');
@@ -78,6 +79,7 @@ end
 flds = {'InstanceNumber' 'AcquisitionNumber' 'SeriesNumber' 'EchoNumber' 'ProtocolName' ...
         'SeriesDescription' 'PatientName' 'PatientID' 'Manufacturer'};
 dict = dicm_dict('', flds);
+tryGetField = dicm2nii('', 'tryGetField', 'func_handle');
 
 nFile = numel(files);
 if nFile<1, return; end
@@ -92,12 +94,13 @@ for i = 1:nFile
     str = sprintf('%g/%g', i, nFile);
     fprintf('%s', str);
     s = dicm_hdr([folder files{i}], dict);
+    vendor = tryGetField(s, 'Manufacturer', '');
     try % skip if no these fields
         sN = s.SeriesNumber;
-        aN = s.AcquisitionNumber;
+        aN = tryGetField(s, 'AcquisitionNumber', 1);
         iN = s.InstanceNumber;
         if fmt ~= 2
-            if strncmp(s.Manufacturer, 'SIEMENS', 7)
+            if strncmp(vendor, 'SIEMENS', 7)
                 pName = strtrim(s.ProtocolName);
             else
                 pName = strtrim(s.SeriesDescription);
@@ -106,9 +109,8 @@ for i = 1:nFile
             pName = regexprep(pName, '_{2,}', '_');
         end
         if fmt==2 || fmt==4
-            if isfield(s, 'PatientName'), sName = s.PatientName;
-            else, sName = s.PatientID;
-            end
+            sName = tryGetField(s, 'PatientName');
+            if isempty(sName), sName = tryGetField(s, 'PatientID'); end
             sName(~isstrprop(sName, 'alphanum')) = '_';
             sName = regexprep(sName, '_{2,}', '_');
         end
@@ -116,9 +118,9 @@ for i = 1:nFile
         continue;
     end
     
-    if strncmpi(s.Manufacturer, 'Philips', 7) % SeriesNumber is useless
+    if strncmpi(vendor, 'Philips', 7) % SeriesNumber is useless
         sN = aN;
-    elseif strncmpi(s.Manufacturer, 'SIEMENS', 7) && isfield(s, 'EchoNumber') && s.EchoNumber>1
+    elseif strncmpi(vendor, 'SIEMENS', 7) && tryGetField(s, 'EchoNumber', 1)>1
         aN = s.EchoNumber; % fieldmap phase image
     end
     
