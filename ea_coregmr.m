@@ -15,19 +15,19 @@ doreslice=1;
 % from original files in any case.
 try
     if  ~ea_coreglocked(options,[directory,options.prefs.tranii_unnormalized]) % file has already been locked and approved by used
-        ea_backuprestore([directory,'raw_',options.prefs.tranii_unnormalized]);
+        ea_backuprestore([directory,options.prefs.tranii_unnormalized]);
     end
 end
 
 try
     if  ~ea_coreglocked(options,[directory,options.prefs.cornii_unnormalized]) % file has already been locked and approved by used
-        ea_backuprestore([directory,'raw_',options.prefs.cornii_unnormalized]);
+        ea_backuprestore([directory,options.prefs.cornii_unnormalized]);
     end
 end
 
 try
     if  ~ea_coreglocked(options,[directory,options.prefs.sagnii_unnormalized]) % file has already been locked and approved by used
-        ea_backuprestore([directory,'raw_',options.prefs.sagnii_unnormalized]);
+        ea_backuprestore([directory,options.prefs.sagnii_unnormalized]);
     end
 end
 
