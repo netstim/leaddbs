@@ -50,7 +50,7 @@ if isfield(options.dicomimp,'method')
             ea_delete([outdir, 'dcmHeaders.mat'])
     end
 else % use default set in prefs
-    switch(options.prefs.dicom.tool)
+    switch lower(options.prefs.dicom.tool)
         case 'dcm2niix'
             ea_dcm2niix(indir, outdir);
         case 'dicm2nii'
@@ -65,7 +65,7 @@ if options.prefs.dicom.dicomfiles
 end
 
 % remove uncropped and untilted versions
-fclean = ea_regexpdir(outdir, '(_Crop_1|_Tilt_1)\.nii$', 0);
+fclean = ea_regexpdir(outdir, '(_Crop_1|_Tilt_1|_Tilt)\.nii$', 0);
 fclean = unique(regexprep(fclean, '(_Crop_1|_Tilt_1)', ''));
 
 for f=1:length(fclean)

@@ -6,13 +6,14 @@ function [fibsweighted,fibsin]=ea_heatfibertracts(cfile,roilist,patselection,val
 
 disp('ROI fiber analysis');
 
-[fibers]=load(cfile);
+fibers=load(cfile);
 fn=fieldnames(fibers);
 try
     fibers=fibers.fibers;
 catch
     fibers=fibers.(fn{1});
 end
+
 if ~iscell(roilist)
     roilist={roilist};
     vals={vals};
@@ -27,24 +28,23 @@ allroilist=cat(2,roilist{:});
 % load in all ROI
 ea_dispercent(0,'Aggregating ROI');
 cnt=1;
-for roi=1:length(allroilist);
+for roi=1:length(allroilist)
     if size(allroilist,2)==2 % left and right entered separately, combine.
         nii{roi,1}=ea_load_nii(allroilist{roi,1});
-        
+
         [xx,yy,zz]=ind2sub(size(nii{roi,1}.img),find(nii{roi,1}.img));
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,1}.mat*XYZvx;
         XYZmm{roi}=XY(1:3,:)';
-        
+
         nii{roi,2}=ea_load_nii(allroilist{roi,2});
         [xx,yy,zz]=ind2sub(size(nii{roi,2}.img),find(nii{roi,2}.img));
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,2}.mat*XYZvx;
         XYZmm{roi}=[XYZmm{roi};XY(1:3,:)'];
-
     else
         nii{roi}=ea_load_nii(allroilist{roi});
-        
+
         if exist('thresh','var')
             nii{roi}.img=double(nii{roi}.img>thresh);
         end
@@ -53,31 +53,26 @@ for roi=1:length(allroilist);
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XYZmm{roi}=nii{roi}.mat*XYZvx;
         XYZmm{roi}=XYZmm{roi}(1:3,:)';
-        
-
     end
 
-    
     if ~exist('AllXYZ','var')
         AllXYZ=XYZmm{roi};
     else
         AllXYZ=[AllXYZ;XYZmm{roi}];
     end
-    
-    
+
     if ismember(roi,patselection)
         XYZmmSel{cnt}=XYZmm{roi};
         niiSel{cnt,:}=nii{roi,:};
-        
+
         if ~exist('AllXYZSel','var')
             AllXYZSel=XYZmmSel{cnt};
         else
             AllXYZSel=[AllXYZSel;XYZmm{cnt}];
         end
-        
         cnt=cnt+1;
     end
-    
+
     ea_dispercent(roi/length(allroilist));
 end
 ea_dispercent(1,'end');
@@ -92,10 +87,8 @@ in=D<(mean(nii{end}.voxsize)*2); % larger threshold here since seed vals have be
 fibsin=fibers(ismember(fibers(:,4),unique(fibers(in,4))),:);
 fibsval=[zeros(size(fibsin,1),length(patselection))]; % 5th column will add up values, 6th will take note how many entries were summed.
 if size(fibsin,2)>4
-   fibsin(:,5:end)=[]; 
+   fibsin(:,5:end)=[];
 end
-%for group=1:length(roilist)
-
 
 AllXYZ=AllXYZSel; % now that connected fibers were selected, replace with selected VTAs only to avoid confusion.
 XYZmm=XYZmmSel;
@@ -105,7 +98,7 @@ ea_dispt('');
 
 ea_dispercent(0,'Iterating ROI');
 
-for roi=1:length(patselection);
+for roi=1:length(patselection)
     [~,D]=knnsearch(XYZmm{roi}(:,1:3),fibsin(:,1:3),'Distance','chebychev');
     in=D<mean(nii{end}.voxsize);
     fibsval(ismember(fibsin(:,4),unique(fibsin(in,4))),roi)=1;
@@ -125,10 +118,10 @@ for group=1:length(roilist)
     catch
         keyboard
     end
-    
+
     [~,fibidx,iaix]=unique(fibsin(:,4));
     fibsval=fibsval(fibidx,:); nfibsval=nfibsval(fibidx,:);
-    
+
     sumfibsval=sum(fibsval,2);
     exclude=sumfibsval<size(fibsval,2)*minpercent; % discard fibers with less than 20% connections.
     exclude=logical(exclude+(sumfibsval>size(fibsval,2)*(1-minpercent))); % discard fibers with more than 80% connections.
@@ -144,11 +137,4 @@ for group=1:length(roilist)
     nfibsimpval(logical(fibsval))=nan;
     [h,p,ci,stats]=ttest2(fibsimpval',nfibsimpval');
     fibsweighted=[fibsweighted,stats.tstat(iaix)'];
-
 end
-
-
-
-
-
-
