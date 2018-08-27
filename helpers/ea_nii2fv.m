@@ -1,10 +1,13 @@
-function fv=ea_nii2fv(nii)
+function fv=ea_nii2fv(nii,thresh)
 
+if ~exist('thresh','var')
+thresh=(mean(nii.img(nii.img~=0))/3);
+end
 
 options.prefs=ea_prefs;
 nii.img(isnan(nii.img))=0;
 
-[xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); %(mean(nii.img(nii.img~=0))/3))); % find 3D-points that have correct value.
+[xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>thresh)); %(mean(nii.img(nii.img~=0))/3))); % find 3D-points that have correct value.
 
 if ~isempty(xx)
     XYZ=[xx,yy,zz]; % concatenate points to one matrix.
