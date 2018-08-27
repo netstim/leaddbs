@@ -45,6 +45,12 @@ for argno = 1:2:nargin-2
             else
                 warning('mArrow3:tipWidth','tipWidth must be a real number');
             end
+        case 'tipLength'
+            if isreal(varargin{argno+1})
+                tipLength = varargin{argno+1};
+            else
+                warning('mArrow3:tipLength','tipLength must be a real number');
+            end
         otherwise
             propertyNames = {propertyNames{:},varargin{argno}};
             propertyValues = {propertyValues{:},varargin{argno+1}};
@@ -64,7 +70,9 @@ if ~exist('tipWidth','var')
     tipWidth = 3*stemWidth;
 end
 tipAngle = 22.5/180*pi;
-tipLength = tipWidth/tan(tipAngle/2);
+if ~exist('tipLength','var')
+    tipLength = tipWidth/tan(tipAngle/2);
+end
 ppsc = 50;  % (points per small circle)
 ppbc = 250; % (points per big circle)
 
