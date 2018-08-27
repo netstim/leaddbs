@@ -19,13 +19,20 @@ if nargin < 3
     mode = 'all'; % Feed all DCMs to SPM batch job
 end
 
+% Create temporary folder
+tempFolder = fullfile(outdir, 'NIFTI_SPM');
+if exist(tempFolder, 'dir')
+    rmdir(tempFolder, 's');
+end
+mkdir(tempFolder);
+
 if strcmp(mode, 'all')
     % Find all files under DICOM folder
     dcm = ea_regexpdir(dicomdir, ['[^\', filesep, ']$'], 1);
 
     matlabbatch{1}.spm.util.import.dicom.data = dcm;
-    matlabbatch{1}.spm.util.import.dicom.root = 'flat';
-    matlabbatch{1}.spm.util.import.dicom.outdir = {outdir};
+    matlabbatch{1}.spm.util.import.dicom.root = 'series';
+    matlabbatch{1}.spm.util.import.dicom.outdir = {tempFolder};
     matlabbatch{1}.spm.util.import.dicom.protfilter = '.*';
     matlabbatch{1}.spm.util.import.dicom.convopts.format = 'nii';
     matlabbatch{1}.spm.util.import.dicom.convopts.meta = 0;
@@ -39,8 +46,8 @@ elseif strcmp(mode, 'serial')
 
     for i=1:length(dcm)
         matlabbatch{1}.spm.util.import.dicom.data = dcm{i};
-        matlabbatch{1}.spm.util.import.dicom.root = 'flat';
-        matlabbatch{1}.spm.util.import.dicom.outdir = {outdir};
+        matlabbatch{1}.spm.util.import.dicom.root = 'series';
+        matlabbatch{1}.spm.util.import.dicom.outdir = {tempFolder};
         matlabbatch{1}.spm.util.import.dicom.protfilter = '.*';
         matlabbatch{1}.spm.util.import.dicom.convopts.format = 'nii';
         matlabbatch{1}.spm.util.import.dicom.convopts.meta = 0;
@@ -50,3 +57,21 @@ elseif strcmp(mode, 'serial')
         clear matlabbatch
     end
 end
+
+% Find all procotol folders
+niiSubFolders = ea_regexpdir(tempFolder, ['\', filesep, '$'], 1);
+
+% Iterate through procotol folder, move NIfTI files to outdir
+for i=1:numel(niiSubFolders)
+    niiFiles = ea_regexpdir(niiSubFolders{i}, '\.nii$', 0);
+    [~, protocol] = fileparts(fileparts(niiSubFolders{i}));
+    if numel(niiFiles) == 1
+        movefile(niiFiles{1}, fullfile(outdir, [protocol, '.nii']));
+    elseif numel(niiFiles) > 1
+        for f=1:numel(niiFiles)
+            movefile(niiFiles{f}, fullfile(outdir, [protocol, '_', num2str(f, '%02d'), '.nii']));
+        end
+    end
+end
+
+rmdir(tempFolder, 's');
