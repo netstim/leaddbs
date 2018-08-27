@@ -1,12 +1,20 @@
-function ea_pat2ply(uipatdir,handles)
+function ea_pat2ply(uipatdir,handles,target)
 
 
 
 
     
-atlasset=get(handles.atlassetpopup,'String');
-atlasset=atlasset{get(handles.atlassetpopup,'Value')};
 
+if exist('target','var')
+    
+    viewsets=load([ea_getearoot,'helpers',filesep,'export',filesep,'ea_exportviews']);
+    atlasset=viewsets.(target).atlas;
+    
+else
+    atlasset=get(handles.atlassetpopup,'String');
+    atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+      
+end
 
 cfv(1)=ea_atlas2ply({atlasset},[uipatdir,filesep,'export',filesep,'ply',filesep,'anatomy.ply']);
     options=ea_detsides(ea_getptopts(uipatdir));
