@@ -1,5 +1,8 @@
-function cfv=ea_atlas2ply(atlasnames,ofn)
+function cfv=ea_atlas2ply(atlasnames,ofn,target)
 
+if ~exist('target','var')
+    target=[];
+end
 if ~iscell(atlasnames)
     ea_error('Please specify atlas(es) in a cellstring');
 end
@@ -7,18 +10,25 @@ cnt=1;
 earoot=ea_getearoot;
 
 for atl=1:length(atlasnames)
-
+    load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
+    showwhat=atlases.presets(1).show;
+    if ~isempty(target)
+        viewsets=load([ea_getearoot,'helpers',filesep,'export',filesep,'ea_exportviews']);
+        views=viewsets.(target).views;
+        showwhat=resolveviews(views(1).structures,atlases);
+    end
     load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
     for side=1:2
-    for mesh=atlases.presets(1).show
-        cfv(cnt).vertices=atlases.fv{mesh,side}.vertices;
-        cfv(cnt).faces=atlases.fv{mesh,side}.faces;
-        cfv(cnt).facevertexcdata=repmat(atlases.colors(mesh),1,size(cfv(cnt).vertices,1));
-        if isempty(cfv(cnt).facevertexcdata) % fiber atlas
-            cfv(cnt).facevertexcdata=repmat(atlases.colors(mesh),size(cfv(cnt).vertices,1),1);
+        
+        for mesh=showwhat
+            cfv(cnt).vertices=atlases.fv{mesh,side}.vertices;
+            cfv(cnt).faces=atlases.fv{mesh,side}.faces;
+            cfv(cnt).facevertexcdata=repmat(atlases.colors(mesh),1,size(cfv(cnt).vertices,1));
+            if isempty(cfv(cnt).facevertexcdata) % fiber atlas
+                cfv(cnt).facevertexcdata=repmat(atlases.colors(mesh),size(cfv(cnt).vertices,1),1);
+            end
+            cnt=cnt+1;
         end
-        cnt=cnt+1;
-    end
     end
 end
 
@@ -55,3 +65,10 @@ if ~exist(pth,'dir')
     mkdir(pth);
 end
 plywrite(ofn,cfv.faces,cfv.vertices,cfv.facevertexcdata)
+
+
+
+function showwhat=resolveviews(structures,atlases)
+atlasnames=ea_stripex(atlases.names);
+showwhat=find(ismember(atlasnames,structures));
+

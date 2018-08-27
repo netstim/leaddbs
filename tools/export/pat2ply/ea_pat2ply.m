@@ -11,12 +11,13 @@ if exist('target','var')
     atlasset=viewsets.(target).atlas;
     
 else
+    target=[];
     atlasset=get(handles.atlassetpopup,'String');
     atlasset=atlasset{get(handles.atlassetpopup,'Value')};
     
 end
 
-cfv(1)=ea_atlas2ply({atlasset},[uipatdir,filesep,'export',filesep,'ply',filesep,'anatomy.ply']);
+cfv(1)=ea_atlas2ply({atlasset},[uipatdir,filesep,'export',filesep,'ply',filesep,'anatomy.ply'],target);
 options=ea_detsides(ea_getptopts(uipatdir));
 
 
