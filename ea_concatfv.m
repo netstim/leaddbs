@@ -42,12 +42,11 @@ if ~usecork
     for f=1:length(fv)
         fsize=size(fv(f).faces,1);
         vsize=size(fv(f).vertices,1);
-        
         afv.faces(foffset:foffset+fsize-1,:)=...
-            fv(f).faces+voffset-1;
+            fv(f).faces(:,1:3)+voffset-1;
         afv.vertices(voffset:voffset+vsize-1,:)=...
             fv(f).vertices;
-        
+    
         foffset=foffset+fsize;
         voffset=voffset+vsize;
         

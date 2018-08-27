@@ -152,6 +152,7 @@ for side=options.sides
                 stxmarker = elstruct.markers(side).head + (stretchfactor * markerposition * unitvector);
                 arrowtip = stxmarker + 10 * (elstruct.markers(side).y - elstruct.markers(side).head);
                 elrender(cnt) = mArrow3(stxmarker,arrowtip,'color',[.1 .1 .1],'tipWidth',0.5);
+                specsurf(elrender(cnt),[.1 .1 .1],1);
                 cnt = cnt+1;
             end
         end
