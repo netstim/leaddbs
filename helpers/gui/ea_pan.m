@@ -6,4 +6,6 @@ if strcmp(cmd,'on')
     ea_distogzoomout;
     ea_distogrotate;
     ea_distogslide;
+else
+    ea_view; % reset bars to center.
 end
