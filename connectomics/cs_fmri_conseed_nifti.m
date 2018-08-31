@@ -222,6 +222,9 @@ for s=1:length(seedfile)
                 [directory, 'mean', options.prefs.rest],...
                 [directory, 'r', restfname, '_', options.prefs.prenii_unnormalized],...
                 [],1,[],1);
+            % Fix transformation names, replace 'mean' by 'r'
+            cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
+            transform = strrep(transform, 'mean', 'r');
             transform = transform{2}; % Inverse transformation
         else
             if numel(transform) > 1

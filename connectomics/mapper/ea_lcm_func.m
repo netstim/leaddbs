@@ -4,9 +4,6 @@ if strcmp(options.lcm.func.connectome,'No functional connectome found.')
    return
 end
 
-
-
-
 disp('Running functional connectivity...');
 
 if iscell(options.lcm.seeds)
@@ -44,7 +41,7 @@ for run=1:chunk:length(sfile)
         [options.root,options.patientname]=fileparts(options.root);
         options.root=[options.root,filesep];
         restfname = options.lcm.func.connectome(25:end);
-        cs_fmri_conseed_nifti([options.uivatdirs{1},filesep,restfname,'.nii'],tsfile,options)
+        cs_fmri_conseed_nifti([options.uivatdirs{1},filesep,restfname,'.nii'],tsfile,options);
     else
         cs_fmri_conseed(ea_getconnectomebase,options.lcm.func.connectome,...
             tsfile,...

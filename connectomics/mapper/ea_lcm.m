@@ -288,6 +288,9 @@ if numel(transform) == 0
         [directory,reference],...
         [directory,refname,'_',options.prefs.prenii_unnormalized],...
         [],1,[],1);
+    % Fix transformation names, replace 'mean' by 'r'
+    cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
+    transform = strrep(transform, 'mean', 'r');
     transform = transform{1}; % Forward transformation
 else
     if numel(transform) > 1
