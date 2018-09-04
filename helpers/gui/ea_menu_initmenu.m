@@ -50,6 +50,7 @@ if isempty(menuprobe)
     uimenu(f,'Label','Clean folders from unnecessary/legacy files','Callback',{@ea_cleanlegacy,handles});
 
     uimenu(f,'Label','Calculate SNR ratio for selected subjects','Callback',{@ea_run_SNR,handles});
+    uimenu(f,'Label','Deface basefiles for selected subjects','Callback',{@ea_run_deface,handles});
 
     
     if ismember('dbs',cmd)
