@@ -76,6 +76,14 @@ if exist('reco','var')
         manually_corrected=reco.props(1).manually_corrected;
         elmodel=reco.props(1).elmodel;
     end
+    if isempty(elmodel)
+        for side=1:length(reco.props)
+            elmodel=reco.props(side).elmodel;
+            if ~isempty(elmodel)
+                break
+            end
+        end
+    end
 
 else % legacy format
 

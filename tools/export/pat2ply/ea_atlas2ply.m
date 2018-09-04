@@ -14,7 +14,7 @@ for atl=1:length(atlasnames)
     showwhat=atlases.presets(1).show;
     if ~isempty(target)
         viewsets=load([ea_getearoot,'helpers',filesep,'export',filesep,'ea_exportviews']);
-        views=viewsets.(target).views;
+        views=viewsets.(target).plyview;
         showwhat=resolveviews(views(1).structures,atlases);
     end
     load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
