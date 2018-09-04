@@ -9,7 +9,7 @@ end
 if strcmp(directory(end),filesep) % strip trailing filesep
     directory=directory(1:end-1);
 end
-
+options.modality=ea_getmodality(directory);
 [options.root,options.patientname]=fileparts(directory);
 options.root=[options.root,filesep];
 

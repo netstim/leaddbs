@@ -109,15 +109,7 @@ if ~strcmp(options.patientname,'No Patient Selected')
 
     % NEED FURTHER TUNE: auto detection of MRCT modality for the patient
     try
-        modality = ea_checkctmrpresent(directory);
-        modality = find(modality);
-        if isempty(modality)    % no postop image present
-            options.modality = 1;    % set to MR to work it around
-        elseif length(modality) == 2    % both MR and CT image present
-            options.modality = options.prefs.preferMRCT;  % set the modality according to 'prefs.preferMRCT'
-        else    % only one modality present
-            options.modality = modality;
-        end
+        modality = ea_getmodality(directory);
     end
 
     if options.modality == 2 % CT support
