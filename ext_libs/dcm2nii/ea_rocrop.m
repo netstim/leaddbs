@@ -25,7 +25,7 @@ while tempfsize < 10
     cnt = cnt+1;
     if cnt>10
         failed = 1;
-        warning('Giving up. Please check input files, manually.');
+        warning('Giving up. Please check the input file, manually.');
         break
     end
 end
