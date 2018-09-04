@@ -49,7 +49,7 @@ try
           try set(handles.(['side',num2str(el)]),'Value',0); end
        end
        for el=1:length(reco.native.coords_mm)
-          if ~isempty(reco.native.coords_mm(el))
+          if ~isempty(reco.native.markers(el).head)
              try set(handles.(['side',num2str(el)]),'Value',1); end
           end
        end
