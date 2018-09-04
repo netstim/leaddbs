@@ -1,4 +1,4 @@
-function p = ea_compare_Rmaps(rmap1,rmap2,n1,n2,alpha)
+function ea_compare_Rmaps(rmap1,rmap2,n1,n2,alpha)
 if ~exist('alpha','var')
     alpha=0.05;
 end
@@ -11,18 +11,18 @@ z = (t_r1-t_r2)./sqrt(1./(n1-3)+1./(n2-3));
 p = (1-normcdf(abs(z),0,1))*2;
 
 
-imr1.img(p<alpha)=nan;
-imr2.img(p<alpha)=nan;
+imr1.img(p>alpha)=nan;
+imr2.img(p>alpha)=nan;
 
 [pth,r1fname,ext]=fileparts(rmap1);
 [pth,r2fname,ext]=fileparts(rmap2);
 
-R1largerR2=r1;
-R1largerR2.img(r1.img<r2.img)=nan;
+R1largerR2=imr1;
+R1largerR2.img(imr1.img<imr2.img)=nan;
 R1largerR2.img(isnan(R1largerR2.img))=0;
 
-R1smallerR2=r1;
-R1smallerR2.img(r1.img>r2.img)=nan;
+R1smallerR2=imr1;
+R1smallerR2.img(imr1.img>imr2.img)=nan;
 R1smallerR2.img(isnan(R1smallerR2.img))=0;
 
 R1sigR2=R1largerR2;
@@ -31,18 +31,17 @@ R1sigR2.fname=fullfile(pth,[r1fname,'_sig_',r2fname,ext]);
 
 
 
-R2largerR1=r2;
-R2largerR1.img(r2.img<r1.img)=nan;
+R2largerR1=imr2;
+R2largerR1.img(imr2.img<imr1.img)=nan;
 R2largerR1.img(isnan(R2largerR1.img))=0;
 
-R2smallerR1=r2;
-R2smallerR1.img(r2.img>r1.img)=nan;
+R2smallerR1=imr2;
+R2smallerR1.img(imr2.img>imr1.img)=nan;
 R2smallerR1.img(isnan(R2smallerR1.img))=0;
 
 R2sigR1=R2largerR1;
 R2sigR1.img=R2sigR1.img+R2smallerR1.img;
 R2sigR1.fname=fullfile(pth,[r2fname,'_sig_',r1fname,ext]);
-
 
 ea_write_nii(R1sigR2);
 ea_write_nii(R2sigR1);
