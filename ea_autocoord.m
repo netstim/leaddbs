@@ -320,7 +320,9 @@ if ~options.overwriteapproved && exist([options.root,options.patientname,filesep
             end
         end
     end
-    poptions.sides(todel)=[]; % do not re-reconstruct the ones already approved.
+    [~,ix]=ismember(todel,poptions.sides);
+    poptions.sides(ix)=[]; % do not re-reconstruct the ones already approved.
+
 end
 
 
