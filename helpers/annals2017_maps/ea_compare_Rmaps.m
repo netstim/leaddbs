@@ -19,24 +19,33 @@ imr2.img(p<alpha)=nan;
 
 R1largerR2=r1;
 R1largerR2.img(r1.img<r2.img)=nan;
-R1largerR2.fname=fullfile(pth,[r1fname,'_larger_',r2fname,ext]);
+R1largerR2.img(isnan(R1largerR2.img))=0;
 
 R1smallerR2=r1;
 R1smallerR2.img(r1.img>r2.img)=nan;
-R1smallerR2.fname=fullfile(pth,[r1fname,'_smaller_',r2fname,ext]);
+R1smallerR2.img(isnan(R1smallerR2.img))=0;
+
+R1sigR2=R1largerR2;
+R1sigR2.img=R1sigR2.img+R1smallerR2.img;
+R1sigR2.fname=fullfile(pth,[r1fname,'_sig_',r2fname,ext]);
+
+
 
 R2largerR1=r2;
 R2largerR1.img(r2.img<r1.img)=nan;
-R2largerR1.fname=fullfile(pth,[r2fname,'_larger_',r1fname,ext]);
+R2largerR1.img(isnan(R2largerR1.img))=0;
 
 R2smallerR1=r2;
 R2smallerR1.img(r2.img>r1.img)=nan;
-R2smallerR1.fname=fullfile(pth,[r2fname,'_smaller_',r1fname,ext]);
+R2smallerR1.img(isnan(R2smallerR1.img))=0;
 
-ea_write_nii(R1largerR2);
-ea_write_nii(R1smallerR2);
-ea_write_nii(R2largerR1);
-ea_write_nii(R2smallerR1);
+R2sigR1=R2largerR1;
+R2sigR1.img=R2sigR1.img+R2smallerR1.img;
+R2sigR1.fname=fullfile(pth,[r2fname,'_sig_',r1fname,ext]);
+
+
+ea_write_nii(R1sigR2);
+ea_write_nii(R2sigR1);
 
 
 
