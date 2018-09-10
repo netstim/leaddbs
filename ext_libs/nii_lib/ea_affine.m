@@ -184,8 +184,6 @@ mask_Z(3,3) = 0;
 %  First, we traverse along Z axis of transformed volume voxel by voxel
 if verbose
     ea_dispercent(0,'Reslicing volumes');
-else
-    fprintf('Reslicing volumes...\n');
 end
 
 for z = 1:new_dim(3)
@@ -241,8 +239,6 @@ end		% for z
 
 if verbose
     ea_dispercent(1,'end');
-else
-    fprintf('\n');
 end
 
 if ndims(old_img) == 2

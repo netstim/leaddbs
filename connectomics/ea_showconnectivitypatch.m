@@ -35,7 +35,8 @@ if showregs
             fv=reducepatch(fv,simplify);
         end
     end
-    fv=ea_smoothpatch(fv,[],20); 
+   fv=ea_smoothpatch(fv,[],20); 
+
     set(0,'CurrentFigure',resultfig)
     matsurf=patch(fv,'facealpha',0.7,'EdgeColor','none','facelighting','phong','FaceColor','interp');
     

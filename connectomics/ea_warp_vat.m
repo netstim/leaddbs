@@ -1,6 +1,10 @@
 function ea_warp_vat(b0rest,options,handles)
 directory=[options.root,options.patientname,filesep];
 
+if strcmp(b0rest,'rest'); % processing rest files
+    b0rest=ea_stripex(options.prefs.rest);
+    
+end
 stims=get(handles.vatseed,'String');
 stim=stims{get(handles.vatseed,'Value')};
 
@@ -22,7 +26,7 @@ for vatfname=1:2
             donorm=1;
         end
 
-        rwvatspresent{cnt}=[pth,filesep,'r',b0rest,'w',fn,ext];
+        rwvatspresent{cnt}=[pth,filesep,'r',b0rest,'w',fn,'.nii'];
         if ~exist(rwvatspresent{cnt},'file')
             docoreg=1;
         end
@@ -34,8 +38,8 @@ end
 reference=get(handles.vatmodality,'String');
 reference=reference{get(handles.vatmodality,'Value')};
 
-if strcmp(reference,'Patient-specific fMRI time courses')
-    reference=ea_niigz([directory,options.prefs.rest]);
+if strfind(reference,'_tc')
+    reference=[ea_niigz([directory,'r',options.prefs.rest])];
 end
 
 if donorm
@@ -75,8 +79,6 @@ if docoreg
         copyfile(wvatspresent{vat},rwvatspresent{vat});
     end
 
-    ea_backuprestore([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
-    ea_coreg2images(options,[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],reference,[options.root,options.patientname,filesep,'r',options.prefs.prenii_unnormalized],rwvatspresent,0);
-    movefile([options.root,options.patientname,filesep,'raw_',options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]); % reset original anat
-    delete([options.root,options.patientname,filesep,'r',b0rest,options.prefs.prenii_unnormalized]);
-end
+    ea_coreg2images(options,[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],reference,[options.root,options.patientname,filesep,'r',options.prefs.prenii_unnormalized],rwvatspresent,0,[],1);
+    delete([options.root,options.patientname,filesep,'r',options.prefs.prenii_unnormalized]);
+   end

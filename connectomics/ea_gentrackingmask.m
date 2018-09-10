@@ -6,7 +6,7 @@ ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
 %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
 copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
 copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]);
-ea_conformspaceto([directory,'c',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]); % make sure cc2 and anat are exactly in same space (even across software packages)
+ea_conformspaceto([directory,'c',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],1,[],[],0); % make sure cc2 and anat are exactly in same space (even across software packages)
 ea_backuprestore([directory,'c',options.prefs.prenii_unnormalized]);
 affinefile = ea_coreg2images(options, ...
     [directory,'c',options.prefs.prenii_unnormalized], ... % moving
@@ -29,7 +29,7 @@ delete([directory,'c',options.prefs.prenii_unnormalized]);
 
 tr=ea_load_nii([options.root,options.patientname,filesep,'trackingmask.nii']);
 if threshold
-    tr.img=tr.img>0.5;
+    tr.img=tr.img>0.1;
     tr.fname=[options.root,options.patientname,filesep,'ttrackingmask.nii'];
     ea_write_nii(tr);
 end

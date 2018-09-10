@@ -12,6 +12,6 @@ if ~exist(backup, 'file')
     fprintf('\nBacking up %s to raw_%s ...\n\n', [fname, ext], [fname, ext]);
     copyfile(file, backup);
 else
-    fprintf('\nRetoring %s from raw_%s ...\n\n', [fname, ext], [fname, ext]);
+    fprintf('\nRestoring %s from raw_%s ...\n\n', [fname, ext], [fname, ext]);
     copyfile(backup, file);
 end

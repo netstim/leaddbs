@@ -32,14 +32,14 @@ end
 
 TR=options.lc.func.prefs.TR;
 directory=[options.root,options.patientname,filesep];
-restfilename=options.prefs.pprest;
+restfilename=options.prefs.rest;
 signallength=ea_detsiglength([directory,restfilename]);
 stringnum=cell(signallength,1);
 
 for i=1:signallength
     stringnum{i}=num2str(i);
 end
-single_s_files=cellfun(@(x) [directory,restfilename,',',x],stringnum,'Uniformoutput',false);
+single_s_files=cellfun(@(x) [directory,'r',restfilename,',',x],stringnum,'Uniformoutput',false);
 single_s_files=single_s_files';
 
 
@@ -50,12 +50,12 @@ for i=1:signallength
     interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1);
 end
 
-aID = fopen([ea_space(options,'labeling'),options.lc.general.parcellation,'.txt']);
-atlas_lgnd=textscan(aID,'%d %s');
+% aID = fopen([ea_space(options,'labeling'),options.lc.general.parcellation,'.txt']);
+% atlas_lgnd=textscan(aID,'%d %s');
 
 
 %% Extract timecourses of complete volume for signal regression..
-rfile=[directory,restfilename];
+rfile=[directory,'r',restfilename];
 alltc=spm_read_vols(spm_vol(rfile));
 
 interpol_tc=interpol_tc';
@@ -113,6 +113,7 @@ clear X
 %% regress out movement parameters
 
 load([directory,'rp_',rf,'.txt']); % rigid body motion parameters.
+rp_rest=eval(['rp_',rf]);
 X(:,1)=ones(signallength,1);
 X(:,2)=rp_rest(1:signallength,1);
 X(:,3)=rp_rest(1:signallength,2);

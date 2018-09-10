@@ -118,6 +118,8 @@ if ~options.savefibers.load
     selectedfibs = cell(1, length(seed));
     for side=1:length(seed)
         in=ea_intriangulation(seed_fv{side}.vertices,seed_fv{side}.faces,fibers);
+%         [in,D]=knnsearch(seed_fv{side}.vertices,fibers);
+%         in=D<2;
         selectedfibs{side}=unique(idxv(in));
         dispercent(cnt/length(sides));
         cnt=cnt+1;

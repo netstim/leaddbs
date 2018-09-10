@@ -13,7 +13,8 @@ modality = find(modality);
 if isempty(modality)    % no postop image present
     modality = 1;    % set to MR to work it around
 elseif length(modality) == 2    % both MR and CT image present
-    modality = options.prefs.preferMRCT;  % set the modality according to 'prefs.preferMRCT'
+    prefs=ea_prefs;
+    modality = prefs.preferMRCT;  % set the modality according to 'prefs.preferMRCT'
 end
 
 if exist('options','var') % originally, options were supplied

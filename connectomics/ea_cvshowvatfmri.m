@@ -1,4 +1,4 @@
-function ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options)
+function ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,mod,options)
 %mV=pV; % duplicate labeling handle
 %mX=pX; % duplicate labeling data
 stims=get(handles.vatseed,'String');
@@ -11,18 +11,19 @@ if ~dimensionality
 end
 
 pX=round(pX);
+options.prefs.rest=[strrep(mod,'_tc',''),'.nii'];
 
-if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat'],'file');
+if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_',mod,'.mat'],'file');
     ea_warp_vat('rest',options,handles);
     vat_tc=ea_extract_timecourses_vat(options,handles,usevat,dimensionality);
-    save([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat'],'vat_tc');
+    save([directory,'stimulations',filesep,stim,filesep,'vat_',mod,'.mat'],'vat_tc');
 else
-    load([directory,'stimulations',filesep,stim,filesep,'vat_timeseries.mat']);
+    load([directory,'stimulations',filesep,stim,filesep,'vat_',mod,'.mat']);
 end
 
 mms=get(handles.matmodality,'String');
 parcs=get(handles.labelpopup,'String');
-tc=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,'rest_tc']);
+tc=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,ea_stripex(options.prefs.rest),'_tc']);
 fn=fieldnames(tc);
 tc=eval(['tc.',fn{1},';']);
 tc=[vat_tc,tc];

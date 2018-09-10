@@ -1322,7 +1322,7 @@ for pt=selection
                     ea_error('Group statistics for fMRI are not yet supported. Sorry, check back later!');
                     pV=spm_vol([ea_space(options,'labeling'),selectedparc,'.nii']);
                     pX=spm_read_vols(pV);
-                    ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
+                    ea_cvshowvatfmri(resultfig,pX,directory,filesare,handles,pV,selectedparc,mod,options);
                 otherwise
                     ea_cvshowvatdmri(resultfig,directory,{mod,'gs'},selectedparc,options);
             end
