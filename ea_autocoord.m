@@ -68,7 +68,7 @@ if isfield(options,'predict')
 end
 
 % only 3D-rendering viewer can be opened if no patient is selected.
-if ~strcmp(options.patientname,'No Patient Selected')
+if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patientname)
     % move files for compatibility
     try ea_compat_patfolder(options); end
 
