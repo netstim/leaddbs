@@ -69,7 +69,7 @@ for x=1:nDim1
     oneslice =detrend(oneslice) +repmat(mean(oneslice), [size(oneslice,1), 1]);
     oneslice =reshape(oneslice', 1,nDim2,nDim3, nDim4);
     alltc(x, :, :, :) =(oneslice);
-end;
+end
 
 
 %% Data corrections steps

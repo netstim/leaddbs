@@ -7,10 +7,11 @@ options=ea_assignpretra(options);
 [~,restfname]=fileparts(restfile);
 [~,anatfname]=fileparts(options.prefs.prenii_unnormalized);
 
+options.prefs.rest=[restfname,'.nii'];
+
 if ~exist([directory,'sr',restfname,'.nii'],'file') ...
     || ~exist([directory,'r',restfname,'_c1',anatfname,'.nii'],'file') % preproecessing needs to be performed
     disp('No preprocessed fMRI-images found, processing...');
-    options.prefs.rest=[restfname,'.nii'];
     options.overwriteapproved = 0;
     ea_preprocess_fmri(options);
     disp('Done preprocessing fMRI data.');
@@ -212,14 +213,14 @@ for s=1:length(seedfile)
         transform = ea_regexpdir(directory, xfm, 0);
 
         % Re-calculate mean re-aligned image if not found
-        if ~exist([directory, 'mean', options.prefs.rest], 'file')
-            ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
+        if ~exist([directory, 'mean', restfname, '.nii'], 'file')
+            ea_meanimage([directory, 'r', restfname, '.nii'], ['mean', restfname, '.nii']);
         end
 
         if numel(transform) == 0
             warning('Transformation not found! Running coregistration now!');
             transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
-                [directory, 'mean', options.prefs.rest],...
+                [directory, 'mean', restfname, '.nii'],...
                 [directory, 'r', restfname, '_', options.prefs.prenii_unnormalized],...
                 [],1,[],1);
             % Fix transformation names, replace 'mean' by 'r'
