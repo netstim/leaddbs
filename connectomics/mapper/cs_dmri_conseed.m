@@ -34,34 +34,33 @@ switch cmd
 
         for s=1:length(sfile)
             map=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]);
-            cfile=[dfold,'dMRI',filesep,cname];
 
-            if exist([cfile,filesep,'data.mat'],'file') % regular mat file
-                if ~exist('fibers','var')
-                    [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile,filesep,'data.mat']);
-                    if ~exist('fibers','var')
-                        ea_error('Structural connectome file supplied in wrong format.');
-                    end
-                end
-
-                redotree=0;
-                ctype='mat';
-            elseif exist([cfile,filesep,'data.fib.gz'],'file') % regular .fib.gz file
-                ftr=track_seed_gqi([cfile,filesep,'data.fib.gz'],sfile{s});
-                fibers=ftr.fibers;
-                redotree=0;
-                ctype='fibgz';
-            elseif exist(cfile,'file') % patient specific fibertracts
-                [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile]);
-                redotree=1;
-                ctype='mat';
-            else
-                [~,fn]=fileparts(cfile);
-                if strcmp('wFTR',fn) % patient specific fibertracts
+            if strcmp(dfold, 'Patient-specific fiber tracts')
+                if strcmp(cname, options.prefs.FTR_normalized) % patient specific fibertracts
                     cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
                     [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile]);
                     redotree=1;
                     ctype='mat';
+                else % connectome type not supported
+                    ea_error(['Connectome file (',options.prefs.FTR_normalized,') vanished or not supported!']);
+                end
+            else
+                cfile=[dfold,'dMRI',filesep,cname];
+                if exist([cfile,filesep,'data.mat'],'file') % regular mat file
+                    if ~exist('fibers','var')
+                        [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile,filesep,'data.mat']);
+                        if ~exist('fibers','var')
+                            ea_error('Structural connectome file supplied in wrong format.');
+                        end
+                    end
+
+                    redotree=0;
+                    ctype='mat';
+                elseif exist([cfile,filesep,'data.fib.gz'],'file') % regular .fib.gz file
+                    ftr=track_seed_gqi([cfile,filesep,'data.fib.gz'],sfile{s});
+                    fibers=ftr.fibers;
+                    redotree=0;
+                    ctype='fibgz';
                 else % connectome type not supported
                     ea_error('Connectome file vanished or not supported!');
                 end
@@ -161,31 +160,36 @@ switch cmd
     case {'matrix', 'pmatrix'}
 
         for s=1:length(sfile)
-            cfile=[dfold,'dMRI',filesep,cname];
 
-            if exist([cfile,filesep,'data.mat'],'file') % regular mat file
-                if ~exist('fibers','var')
-                    [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile,filesep,'data.mat']);
-                    if ~exist('fibers','var')
-                        ea_error('Structural connectome file supplied in wrong format.');
-                    end
+            if strcmp(dfold, 'Patient-specific fiber tracts')
+                if strcmp(cname, options.prefs.FTR_normalized) % patient specific fibertracts
+                    cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
+                    [fibers,fidx,voxmm,mat]=ea_loadfibertracts(cfile);
+                    redotree=1;
+                    ctype='mat';
+                else % connectome type not supported
+                    ea_error(['Connectome file (',options.prefs.FTR_normalized,') vanished or not supported!']);
                 end
+            else
+                cfile=[dfold,'dMRI',filesep,cname];
 
-                redotree=0;
-                ctype='mat';
-            elseif exist([cfile,filesep,'data.fib.gz'],'file') % regular .fib.gz file
-
-                ftr=track_seed_gqi([cfile,filesep,'data.fib.gz'],sfile{s});
-                fibers=ftr.fibers;
-                redotree=1;
-                ctype='fibgz';
-           elseif exist(cfile,'file') % patient specific fibertracts
-                [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile]);
-                redotree=1;
-                ctype='mat';
-
-            else % connectome type not supported
-                ea_error('Connectome file vanished or not supported!');
+                if exist([cfile,filesep,'data.mat'],'file') % regular mat file
+                    if ~exist('fibers','var')
+                        [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile,filesep,'data.mat']);
+                        if ~exist('fibers','var')
+                            ea_error('Structural connectome file supplied in wrong format.');
+                        end
+                    end
+                    redotree=0;
+                    ctype='mat';
+                elseif exist([cfile,filesep,'data.fib.gz'],'file') % regular .fib.gz file
+                    ftr=track_seed_gqi([cfile,filesep,'data.fib.gz'],sfile{s});
+                    fibers=ftr.fibers;
+                    redotree=1;
+                    ctype='fibgz';
+                else % connectome type not supported
+                    ea_error('Connectome file vanished or not supported!');
+                end
             end
 
             Vseed{s}=ea_load_nii(sfile{s});

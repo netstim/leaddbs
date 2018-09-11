@@ -6,13 +6,10 @@ end
 disp('Running structural connectivity...');
 
 if strcmp(options.lcm.struc.connectome,'Patient-specific fiber tracts')
-    base=[options.root,options.patientname,filesep,'connectomes',filesep];
+    base='Patient-specific fiber tracts';
+    options.lcm.struc.connectome=options.prefs.FTR_normalized;
 else
     base=ea_getconnectomebase();
-end
-
-if strcmp(options.lcm.struc.connectome,'Patient-specific fiber tracts')
-    options.lcm.struc.connectome=options.prefs.FTR_normalized;
 end
 
 cs_dmri_conseed(base,options.lcm.struc.connectome,...
