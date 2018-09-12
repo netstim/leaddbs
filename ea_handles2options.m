@@ -161,6 +161,8 @@ end
 
 try
     options.scrf.mask=get(handles.scrfmask,'Value');
+catch
+    options.scrf.mask=2;
 end
 
 try

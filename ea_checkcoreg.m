@@ -75,11 +75,42 @@ if exist([directory,options.prefs.gprenii],'file') && ~ea_coreglocked(options,op
     presentfiles=[presentfiles;{[directory,options.prefs.gprenii]}];
 end
 
+
+
+
+% add coregchecks for b0 and rest:
+% get files with rs-fMRI data
+restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_searchstring]);
+
+% get number of files with rs-fMRI data
+options.prefs.n_rest = numel(restfiles);
+
+
+for irest = 1:options.prefs.n_rest
+    % set filenames for this iteration
+    if exist([directory,'r',ea_stripex(restfiles(irest).name),'_',anchor],'file')
+        if ~ea_coreglocked(options,['r',ea_stripex(restfiles(irest).name),'_',anchor])
+            presentfiles=[presentfiles;{['r',ea_stripex(restfiles(irest).name),'_',anchor]}];
+            b0restanchor{length(presentfiles)} = ['mean',restfiles(irest).name];
+        end
+    end
+end
+% add b0:
+if exist([directory,ea_stripex(options.prefs.b0),'_',anchor],'file')
+    if ~ea_coreglocked(options,[directory,ea_stripex(options.prefs.b0),'_',anchor])
+        presentfiles=[presentfiles;{[directory,ea_stripex(options.prefs.b0),'_',anchor]}];
+        b0restanchor{length(presentfiles)} = [options.prefs.b0];
+    end
+end
+
+
 if exist([directory,'scrf',filesep,'scrf_instore_converted.mat'],'file')
     if ~ea_coreglocked(options,'brainshift')
         presentfiles=[presentfiles; {'brainshift'}];
     end
 end
+
+
 
 if isempty(presentfiles)
     evalin('base','checkregempty=1;');
@@ -89,9 +120,12 @@ else
     evalin('base','checkregempty=0;');
 end
 
+
+
 %set(handles.previous,'visible','off'); set(handles.next,'visible','off');
 setappdata(handles.leadfigure,'presentfiles',presentfiles)
 setappdata(handles.leadfigure,'anchor',anchor)
+setappdata(handles.leadfigure,'b0restanchor',b0restanchor)
 setappdata(handles.leadfigure,'activevolume',1);
 setappdata(handles.leadfigure,'options',options);
 
@@ -155,6 +189,7 @@ options=getappdata(handles.leadfigure,'options');
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
+b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
 
 if activevolume==length(presentfiles)
     set(handles.disapprovebutn,'String','Disapprove & Close');
@@ -200,46 +235,46 @@ switch ea_stripex(currvol)
         set(handles.coregresultstxt,'String','Coregistration results');
         set(handles.leadfigure,'Name',[options.patientname, ': Check Coregistration']);
 
-        switch currvol
-            case ['tp_',options.prefs.ctnii_coregistered] % CT
-                ea_init_coregctpopup(handles,options,'coregmrpopup');
-                if ~exist([directory,'ea_coregctmethod_applied.mat'],'file')
-                    method='';
-                else
-                    method=load([directory,'ea_coregctmethod_applied.mat']);
-                    if iscell(method.coregct_method_applied)
-                        method=method.coregct_method_applied{end};
+            switch currvol
+                case ['tp_',options.prefs.ctnii_coregistered] % CT
+                    ea_init_coregctpopup(handles,options,'coregmrpopup');
+                    if ~exist([directory,'ea_coregctmethod_applied.mat'],'file')
+                        method='';
                     else
-                        method=method.coregct_method_applied;
-                    end
-                end
-            otherwise % MR
-                ea_init_coregmrpopup(handles,1);
-                if ~exist([directory,'ea_coregmrmethod_applied.mat'],'file')
-                    method='';
-                else
-                    method=load([directory,'ea_coregmrmethod_applied.mat']);
-                    if isfield(method,ea_stripex(currvol)) % specific method used for this modality
-                        method=method.(ea_stripex(currvol));
-                    else
-                        if isfield(method,'coregmr_method_applied')
-                            if iscell(method.coregmr_method_applied)
-                                method=method.coregmr_method_applied{end};
-                            else
-                                method=method.coregmr_method_applied;
-                            end
+                        method=load([directory,'ea_coregctmethod_applied.mat']);
+                        if iscell(method.coregct_method_applied)
+                            method=method.coregct_method_applied{end};
                         else
-                            method='';
+                            method=method.coregct_method_applied;
                         end
                     end
-                end
-        end
+                otherwise % MR
+                    ea_init_coregmrpopup(handles,1);
+                    if ~exist([directory,'ea_coregmrmethod_applied.mat'],'file')
+                        method='';
+                    else
+                        method=load([directory,'ea_coregmrmethod_applied.mat']);
+                        if isfield(method,ea_stripex(currvol)) % specific method used for this modality
+                            method=method.(ea_stripex(currvol));
+                        else
+                            if isfield(method,'coregmr_method_applied')
+                                if iscell(method.coregmr_method_applied)
+                                    method=method.coregmr_method_applied{end};
+                                else
+                                    method=method.coregmr_method_applied;
+                                end
+                            else
+                                method='';
+                            end
+                        end
+                    end
+            end
+        
         set(handles.normsettings,'Visible','off');
         set(handles.recomputebutn,'String','(Re-) compute coregistration using...');
         set(handles.coregmrpopup,'TooltipString','Choose a coregistration method');
 end
 
-set(handles.anchormod,'String',ea_stripex(anchor));
 if ~exist([directory,'ea_coreg_approved.mat'],'file') % init
     for vol=1:length(presentfiles)
         approved.(ea_stripex(presentfiles{vol}))=0;
@@ -251,7 +286,15 @@ end
 setappdata(handles.leadfigure,'method',method);
 
 % show result:
-checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(anchor),'_',method,'.png'];
+if ~isempty(b0restanchor{activevolume}) % rest or b0 registration    
+    checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(b0restanchor{activevolume}),'_',method,'.png'];
+    set(handles.anchormod,'String',ea_stripex(b0restanchor{activevolume}));
+
+else % normal anatomical 2 anatomical registration
+    checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(anchor),'_',method,'.png'];
+    set(handles.anchormod,'String',ea_stripex(anchor));
+
+end
 set(handles.imgfn,'Visible','on');
 set(handles.imgfn,'String',checkfig);
 set(handles.imgfn,'TooltipString',checkfig);
@@ -260,7 +303,11 @@ switch ea_stripex(currvol)
         options=ea_assignpretra(options);
         anchorpath=[ea_space,options.primarytemplate];
     otherwise
-        anchorpath=[directory,ea_stripex(anchor)];
+        if ~isempty(b0restanchor{activevolume}) % rest or b0 registration
+            anchorpath=[directory,ea_stripex(b0restanchor{activevolume})];
+        else
+            anchorpath=[directory,ea_stripex(anchor)];
+        end
 end
 
 if ~exist(checkfig,'file')
