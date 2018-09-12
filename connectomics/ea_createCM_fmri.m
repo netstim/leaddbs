@@ -11,7 +11,8 @@ if ~ea_coreglocked(options,['r',restfname,'_',anatfname]) % preproecessing needs
     disp('Done preprocessing fMRI data.');
 end
 
-if ~ea_coreglocked(options,['r',restfname,'_',anatfname])
+if ~ea_coreglocked(options,['r',restfname,'_',anatfname]) || ~exist([expfolder,options.prefs.rest,'_tc.mat'],'file');
+
     disp('No timecourses found, processing...');
     gmtc=ea_extract_timecourses(options);
 else

@@ -25,7 +25,7 @@ disp('Preparing images to show Coregistration...');
         clear matlabbatch jobs;
     end
     moving=ea_load_nii(movingfile);
-    fixed=ea_load_nii([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized]);
+    fixed=ea_load_nii([options.fixed]);
 
     moving.img(:)=ea_nanzscore(moving.img(:)); %     ct.img(:)=ea_nanzscore(ct.img(:),'robust');
     moving.img=(moving.img+2.5)/5; % set max/min to -/+ 2.5 standard deviations

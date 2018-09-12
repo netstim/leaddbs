@@ -76,7 +76,8 @@ if options.lc.func.compute_CM
         options.prefs.gmtc=strcat(name,'_tc.mat'); % extracted timecourses of resting state fMRI data
 
         % create connectivity matrix for each rs-fMRI file
-        if ~ea_coreglocked(options,['r',ea_stripex(options.prefs.rest),'_',ea_stripex(presentfiles{1})])
+        if ~ea_coreglocked(options,['r',ea_stripex(options.prefs.rest),'_',ea_stripex(presentfiles{1})]) || ...
+                ~exist([expfolder,options.prefs.rest,'_fMRI_CM.mat'],'file');
             disp(['Creating connectivity matrix for rs-fMRI file #',num2str(irest),': ',options.prefs.rest]);
             [fMRI_CM, gmtc]=ea_createCM_fmri(options);
             cm=ea_export_CM_png(fMRI_CM,['fMRI Connectivity matrix for ',name],options);
