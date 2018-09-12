@@ -65,7 +65,7 @@ if options.lc.func.compute_CM
     if ~exist(expfolder,'dir')
         mkdir(expfolder);
     end
-
+[~, presentfiles] = ea_assignpretra(options);
     % set filenames for each rs-fMRI file
     for irest = 1:options.prefs.n_rest
         % set filenames for this iteration
@@ -76,7 +76,7 @@ if options.lc.func.compute_CM
         options.prefs.gmtc=strcat(name,'_tc.mat'); % extracted timecourses of resting state fMRI data
 
         % create connectivity matrix for each rs-fMRI file
-        if ~exist([expfolder,name,'_fMRI_CM.mat'],'file') || options.overwriteapproved
+        if ~ea_coreglocked(options,['r',ea_stripex(options.prefs.rest),'_',ea_stripex(presentfiles{1})])
             disp(['Creating connectivity matrix for rs-fMRI file #',num2str(irest),': ',options.prefs.rest]);
             [fMRI_CM, gmtc]=ea_createCM_fmri(options);
             cm=ea_export_CM_png(fMRI_CM,['fMRI Connectivity matrix for ',name],options);

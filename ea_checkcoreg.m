@@ -461,10 +461,10 @@ switch ea_stripex(currvol)
             % cleanup /templates/labelings (these need to be recalculated):
             delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
             parcdirs=dir([directory,'connectomics',filesep]);
-%             % cleanup /connectomics results (these need to be recalculated):
-%             for pd=1:length(parcdirs)
-%             delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*']);
-%             end            
+            %             % cleanup /connectomics results (these need to be recalculated):
+            for pd=1:length(parcdirs)
+                delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*']);
+            end
             
         else
             ea_backuprestore([directory,presentfiles{activevolume}]);
