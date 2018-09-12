@@ -453,10 +453,10 @@ switch ea_stripex(currvol)
         if ~isempty(b0restanchor{activevolume})
             ea_coreg2images(options,[directory,anchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
                         thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
-            movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(anchor),'_',lower(options.coregmr.method),'.mat'],...
-                [directory,thisrest,'2',ea_stripex(anchor),'_',lower(options.coregmr.method),'.mat']);
-            movefile([directory,ea_stripex(anchor),'2',ea_stripex(b0restanchor{activevolume}),'_',lower(options.coregmr.method),'.mat'],...
-                [directory,ea_stripex(anchor),'2',thisrest,'_',lower(options.coregmr.method),'.mat']);
+            movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)],...
+                [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
+            movefile([directory,ea_stripex(anchor),'2',ea_stripex(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
+                [directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
             
             % cleanup /templates/labelings (these need to be recalculated):
             delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
@@ -491,6 +491,19 @@ ea_chirp(options);
 ea_busyaction('off',handles.leadfigure,'coreg');
 set(handles.leadfigure, 'Name', title);
 
+
+function ext=ea_matext(method)
+
+switch upper(method)
+    case 'SPM'
+        ext='spm.mat';
+    case 'FSL'
+        ext='flirt1.mat';
+    case 'ANTS'
+        ext='ants1.mat';
+    case 'BRAINSFIT'
+        ext='brainsfit.h5';
+end
 
 function ea_dumpspecificmethod(handles,method)
 options=getappdata(handles.leadfigure,'options');

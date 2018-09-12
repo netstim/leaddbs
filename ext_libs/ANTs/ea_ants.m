@@ -238,11 +238,9 @@ if ~writeoutmat
     affinefile = {};
 else
     movefile([outputbase, '0GenericAffine.mat'], [volumedir, xfm, num2str(runs+1), '.mat']);
-    copyfile([volumedir, xfm, num2str(runs+1), '.mat'], [volumedir, xfm, '.mat']);
 
     invxfm = [fix, '2', mov, '_ants'];
     movefile([outputbase, 'Inverse0GenericAffine.mat'], [volumedir, invxfm, num2str(runs+1), '.mat']);
-    copyfile([volumedir, invxfm, num2str(runs+1), '.mat'],[volumedir, invxfm, '.mat']);
     affinefile = {[volumedir, xfm, num2str(runs+1), '.mat']
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
