@@ -683,6 +683,7 @@ options=getappdata(handles.leadfigure,'options');
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
+b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
 currvol=presentfiles{activevolume};
 
 approved=load([directory,'ea_coreg_approved.mat']);
@@ -708,6 +709,17 @@ switch ea_stripex(currvol)
             m=rmfield(m,ea_stripex(currvol));
         end
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
+end
+if ~isempty(b0restanchor{activevolume})
+                        thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
+
+            % cleanup /templates/labelings (these need to be recalculated):
+            delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
+            parcdirs=dir([directory,'connectomics',filesep]);
+            %             % cleanup /connectomics results (these need to be recalculated):
+            for pd=1:length(parcdirs)
+                delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*']);
+            end
 end
 
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
