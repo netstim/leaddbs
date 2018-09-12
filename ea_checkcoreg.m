@@ -479,7 +479,7 @@ switch ea_stripex(currvol)
                 [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
             movefile([directory,ea_stripex(useasanchor),'2',ea_stripex(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
                 [directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
-            ea_cleandownstream(options,directory);
+            ea_cleandownstream(options,directory,thisrest);
         else
             ea_backuprestore([directory,presentfiles{activevolume}]);
             ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
@@ -513,18 +513,18 @@ function ea_cleandownstream(options,directory,thisrest)
             parcdirs=dir([directory,'connectomics',filesep]);
             %             % cleanup /connectomics results (these need to be recalculated):
             for pd=1:length(parcdirs)
-                delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*']);
+                ea_delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*']);
             end
             stimdirs=dir([directory,'stimulations',filesep]);
             %             % cleanup /connectomics results (these need to be recalculated):
             for pd=1:length(stimdirs)
                 connfolders=dir([directory,'stimulations',filesep,stimdirs(pd).name]);
                 for connfolder=1:length(connfolders)
-                    if connfolders(connfolder).isdir && strfind(connfolders(connfolder).name,thisrest(2:end))
+                    if connfolders(connfolder).isdir && ~isempty(strfind(connfolders(connfolder).name,thisrest(2:end)))
                         rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
                     end
                 end
-                delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
+                ea_delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
             end
 
 
