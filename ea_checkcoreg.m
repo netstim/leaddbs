@@ -467,13 +467,13 @@ switch ea_stripex(currvol)
         if ~isempty(b0restanchor{activevolume})
             thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
             
-            delete([directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
-            delete([directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
+            ea_delete([directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
+            ea_delete([directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
             
             substitute=get(handles.substitute,'Value');
             [~,pf]=ea_assignpretra(options);
             useasanchor=pf{substitute};
-            
+  
             ea_coreg2images(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
             movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(useasanchor),'_',ea_matext(options.coregmr.method)],...
                 [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
