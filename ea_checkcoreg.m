@@ -98,7 +98,7 @@ end
 % add b0:
 if exist([directory,ea_stripex(options.prefs.b0),'_',anchor],'file')
     if ~ea_coreglocked(options,[directory,ea_stripex(options.prefs.b0),'_',anchor])
-        presentfiles=[presentfiles;{[directory,ea_stripex(options.prefs.b0),'_',anchor]}];
+        presentfiles=[presentfiles;{[ea_stripex(options.prefs.b0),'_',anchor]}];
         b0restanchor{length(presentfiles)} = [options.prefs.b0];
     end
 end
@@ -412,9 +412,10 @@ options=getappdata(handles.leadfigure,'options');
 options.overwriteapproved=1;
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 anchor=getappdata(handles.leadfigure,'anchor');
+b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
+
 activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
-
 currvol=presentfiles{activevolume};
 
 switch ea_stripex(currvol)
@@ -449,8 +450,26 @@ switch ea_stripex(currvol)
     otherwise % MR
         options.coregmr.method=get(handles.coregmrpopup,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
-        ea_backuprestore([directory,presentfiles{activevolume}]);
-        ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
+        if ~isempty(b0restanchor{activevolume})
+            ea_coreg2images(options,[directory,anchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
+                        thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
+            movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(anchor),'_',lower(options.coregmr.method),'.mat'],...
+                [directory,thisrest,'2',ea_stripex(anchor),'_',lower(options.coregmr.method),'.mat']);
+            movefile([directory,ea_stripex(anchor),'2',ea_stripex(b0restanchor{activevolume}),'_',lower(options.coregmr.method),'.mat'],...
+                [directory,ea_stripex(anchor),'2',thisrest,'_',lower(options.coregmr.method),'.mat']);
+            
+            % cleanup /templates/labelings (these need to be recalculated):
+            delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
+            parcdirs=dir([directory,'connectomics',filesep]);
+%             % cleanup /connectomics results (these need to be recalculated):
+%             for pd=1:length(parcdirs)
+%             delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*']);
+%             end            
+            
+        else
+            ea_backuprestore([directory,presentfiles{activevolume}]);
+            ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
+        end
         ea_dumpspecificmethod(handles,options.coregmr.method)
 end
 
