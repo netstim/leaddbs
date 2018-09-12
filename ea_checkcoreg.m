@@ -85,7 +85,7 @@ restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_sea
 % get number of files with rs-fMRI data
 options.prefs.n_rest = numel(restfiles);
 
-
+b0restanchor=[];
 for irest = 1:options.prefs.n_rest
     % set filenames for this iteration
     if exist([directory,'r',ea_stripex(restfiles(irest).name),'_',anchor],'file')
@@ -314,7 +314,9 @@ switch ea_stripex(currvol)
 end
 
 if ~exist(checkfig,'file')
+    
     ea_gencheckregpair([directory,ea_stripex(currvol)],anchorpath,checkfig);
+
     if ~exist(checkfig,'file')
         checkfig=fullfile(ea_getearoot,'helpers','gui','coreg_msg.png');
         set(handles.imgfn,'String','');
