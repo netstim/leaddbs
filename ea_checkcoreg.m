@@ -479,15 +479,7 @@ switch ea_stripex(currvol)
                 [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
             movefile([directory,ea_stripex(useasanchor),'2',ea_stripex(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
                 [directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
-            
-            % cleanup /templates/labelings (these need to be recalculated):
-            delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
-            parcdirs=dir([directory,'connectomics',filesep]);
-            %             % cleanup /connectomics results (these need to be recalculated):
-            for pd=1:length(parcdirs)
-                delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*']);
-            end
-            
+            ea_cleandownstream(options,directory);
         else
             ea_backuprestore([directory,presentfiles{activevolume}]);
             ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
@@ -512,6 +504,28 @@ title = get(handles.leadfigure, 'Name');    % Fix title
 ea_chirp(options);
 ea_busyaction('off',handles.leadfigure,'coreg');
 set(handles.leadfigure, 'Name', title);
+
+function ea_cleandownstream(options,directory,thisrest)
+
+
+            % cleanup /templates/labelings (these need to be recalculated):
+            delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
+            parcdirs=dir([directory,'connectomics',filesep]);
+            %             % cleanup /connectomics results (these need to be recalculated):
+            for pd=1:length(parcdirs)
+                delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*']);
+            end
+            stimdirs=dir([directory,'stimulations',filesep]);
+            %             % cleanup /connectomics results (these need to be recalculated):
+            for pd=1:length(stimdirs)
+                connfolders=dir([directory,'stimulations',filesep,stimdirs(pd).name]);
+                for connfolder=1:length(connfolders)
+                    if connfolders(connfolder).isdir && strfind(connfolders(connfolder).name,thisrest(2:end))
+                        rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
+                    end
+                end
+                delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
+            end
 
 
 function ext=ea_matext(method)
@@ -676,6 +690,8 @@ function openviewer_Callback(hObject, eventdata, handles)
 options=getappdata(handles.leadfigure,'options');
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
 activevolume=getappdata(handles.leadfigure,'activevolume');
+b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
+
 currvol=presentfiles{activevolume};
 switch ea_stripex(currvol)
     case ea_stripex(options.prefs.gprenii)
@@ -687,8 +703,13 @@ switch ea_stripex(currvol)
         directory=getappdata(handles.leadfigure,'directory');
 
         options.moving=[directory,presentfiles{activevolume}];
-        options.fixed=[directory,anchor];
-        options.tag=[presentfiles{activevolume},' & ',anchor];
+        if ~isempty(b0restanchor{activevolume})
+            options.fixed=[directory,b0restanchor{activevolume}];
+            options.tag=[presentfiles{activevolume},' & ',b0restanchor{activevolume}];
+        else
+            options.fixed=[directory,anchor];
+            options.tag=[presentfiles{activevolume},' & ',anchor]; 
+        end
 
         ea_show_coregistration(options);
 
@@ -746,15 +767,10 @@ switch ea_stripex(currvol)
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 end
 if ~isempty(b0restanchor{activevolume})
-                        thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
-
-            % cleanup /templates/labelings (these need to be recalculated):
-            delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
-            parcdirs=dir([directory,'connectomics',filesep]);
-            %             % cleanup /connectomics results (these need to be recalculated):
-            for pd=1:length(parcdirs)
-                delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*']);
-            end
+    thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
+    
+    ea_cleandownstream(options,directory,thisrest)
+    
 end
 
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
