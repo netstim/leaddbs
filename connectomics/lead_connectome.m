@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 06-Mar-2018 09:52:32
+% Last Modified by GUIDE v2.5 12-Sep-2018 14:39:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -190,6 +190,8 @@ set(handles.runsavebutn,'Position',[218,8,154,41]);
 set(handles.exportcode,'visible','off');
 set(handles.overwriteapproved,'visible','off');
 set(handles.openpatientdir,'visible','off');
+set(handles.previouspatient,'visible','off');
+set(handles.nextpatient,'visible','off');
 
 headermovedown = 238;
 panelmovedown = 22;
@@ -751,4 +753,112 @@ function dcm2niiselect_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in previouspatient.
+function previouspatient_Callback(hObject, eventdata, handles)
+% hObject    handle to previouspatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Select previous patient in same root folder
+uipatdir=getappdata(handles.leadfigure,'uipatdir');
+if length(uipatdir)>1
+   %ea_error('Selecting the previous patient in folder only works if a single patient was selected.');
+elseif isempty(uipatdir)
+    load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
+    if iscell(fullrpts)
+        fullrpts=fullrpts(1);
+    end
+
+    if strcmp('No recent patients found',fullrpts)
+        return
+    end
+
+    ea_load_pts(handles,fullrpts);
+    return
+end
+
+[pth,fn]=fileparts(uipatdir{1});
+
+opts=dir(pth);
+pts={opts.name};
+pts=pts((cell2mat({opts.isdir})));
+todel=[];
+for pt=1:length(pts)
+   if strcmp(pts{pt}(1),'.')
+       todel=[todel,pt];
+   end
+end
+pts(todel)=[];
+[~,ix]=ismember(fn,pts);
+if ix>1
+    nuix=ix-1;
+else
+    nuix=ix;
+end
+
+ea_load_pts(handles,{[pth,filesep,pts{nuix}]});
+if isfield(handles,'atlassetpopup') % not present in connectome mapper
+    options.prefs=ea_prefs;
+    atlasset=get(handles.atlassetpopup,'String');
+    atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+
+    ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
+end
+
+% --- Executes on button press in nextpatient.
+function nextpatient_Callback(hObject, eventdata, handles)
+% hObject    handle to nextpatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Select next patient in same root folder
+uipatdir=getappdata(handles.leadfigure,'uipatdir');
+if length(uipatdir)>1 % still works
+    %  ea_error('Selecting the next patient in folder only works if a single patient was selected.');
+elseif isempty(uipatdir)
+    % load recent patient then.
+
+    load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
+    if iscell(fullrpts)
+        fullrpts=fullrpts(1);
+    end
+
+    if strcmp('No recent patients found',fullrpts)
+        return
+    end
+
+    ea_load_pts(handles,fullrpts);
+    return
+    %   ea_error('Selecting the next patient in folder only works if a patient was selected before.');
+end
+
+[pth,fn]=fileparts(uipatdir{1});
+
+opts=dir(pth);
+pts={opts.name};
+pts=pts((cell2mat({opts.isdir})));
+todel=[];
+for pt=1:length(pts)
+   if strcmp(pts{pt}(1),'.')
+       todel=[todel,pt];
+   end
+end
+pts(todel)=[];
+[~,ix]=ismember(fn,pts);
+
+if length(pts)>ix
+    nuix=ix+1;
+else
+    nuix=ix;
+end
+ea_load_pts(handles,{[pth,filesep,pts{nuix}]});
+if isfield(handles,'atlassetpopup') % not present in connectome mapper
+    options.prefs=ea_prefs;
+    atlasset=get(handles.atlassetpopup,'String');
+    atlasset=atlasset{get(handles.atlassetpopup,'Value')};
+
+    ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
 end
