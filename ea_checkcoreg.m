@@ -22,7 +22,7 @@ function varargout = ea_checkcoreg(varargin)
 
 % Edit the above text to modify the response to help ea_checkcoreg
 
-% Last Modified by GUIDE v2.5 22-Feb-2018 13:07:48
+% Last Modified by GUIDE v2.5 12-Sep-2018 15:42:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -286,11 +286,14 @@ end
 setappdata(handles.leadfigure,'method',method);
 
 % show result:
-if ~isempty(b0restanchor{activevolume}) % rest or b0 registration    
-    checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(b0restanchor{activevolume}),'_',method,'.png'];
+if ~isempty(b0restanchor{activevolume}) % rest or b0 registration   
+    set(handles.substitute,'Visible','on');
+    set(handles.substitute,'String',ea_getsubstitutes(options));
+    checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(b0restanchor{activevolume}),'mean','r'),'_',method,'.png'];
     set(handles.anchormod,'String',ea_stripex(b0restanchor{activevolume}));
 
 else % normal anatomical 2 anatomical registration
+    set(handles.substitute,'Visible','off');
     checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(anchor),'_',method,'.png'];
     set(handles.anchormod,'String',ea_stripex(anchor));
 
@@ -331,6 +334,17 @@ axis equal
 % textfields:
 set(handles.depvolume,'String',[ea_stripex(currvol),'.nii']);
 
+
+function [pretras]=ea_getsubstitutes(options)
+
+[~,presentfiles]=ea_assignpretra(options);
+for fi=1:length(presentfiles)
+    if fi==1
+        pretras{fi}=['Use ',presentfiles{fi}, ' (default)'];
+    else
+        pretras{fi}=['Substitute moving file with ',presentfiles{fi}];
+    end
+end
 
 function presentfiles=ea_getall_coregcheck(options)
 directory=[options.root,options.patientname,filesep];
@@ -454,11 +468,16 @@ switch ea_stripex(currvol)
             thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
             
             delete([directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
-            delete([directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]),
-            ea_coreg2images(options,[directory,anchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
-            movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)],...
+            delete([directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
+            
+            substitute=get(handles.substitute,'Value');
+            [~,pf]=ea_assignpretra(options);
+            useasanchor=pf{substitute};
+            
+            ea_coreg2images(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
+            movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(useasanchor),'_',ea_matext(options.coregmr.method)],...
                 [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
-            movefile([directory,ea_stripex(anchor),'2',ea_stripex(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
+            movefile([directory,ea_stripex(useasanchor),'2',ea_stripex(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
                 [directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
             
             % cleanup /templates/labelings (these need to be recalculated):
@@ -805,8 +824,13 @@ switch ea_stripex(currvol)
     case ea_stripex(['tp_',options.prefs.ctnii_coregistered]) % make sure tp matches rpostop_ct.
         ea_tonemapct_file(options,'native');
 end
-checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(anchor),'_',method,'.png'];
-ea_delete([directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(anchor),'_',method,'.png']);
+b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
+if ~isempty(b0restanchor{activevolume})
+   anchor=b0restanchor{activevolume}; 
+end
+
+checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(anchor),'mean','r'),'_',method,'.png'];
+ea_delete(checkfig);
 ea_gencheckregpair([directory,ea_stripex(currvol)],anchorpath,checkfig);
 ea_mrcview(handles); % refresh
 title = get(handles.leadfigure, 'Name');    % Fix title
@@ -831,3 +855,26 @@ function openpatientdir_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_opendir(getappdata(handles.leadfigure,'directory'));
+
+
+% --- Executes on selection change in substitute.
+function substitute_Callback(hObject, eventdata, handles)
+% hObject    handle to substitute (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns substitute contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from substitute
+
+
+% --- Executes during object creation, after setting all properties.
+function substitute_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to substitute (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
