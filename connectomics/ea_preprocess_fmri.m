@@ -77,7 +77,6 @@ end
 cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
 
 
-
 function ea_smooth_fmri(signallength,options)
 directory=[options.root,options.patientname,filesep];
 filetimepts = ea_appendVolNum([directory,'r',options.prefs.rest], 1:signallength);

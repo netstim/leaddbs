@@ -4,14 +4,13 @@ expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,optio
 % check if rest_preprocessing has been performed:
 [~,restfname]=fileparts(options.prefs.rest);
 [~,anatfname]=fileparts(options.prefs.prenii_unnormalized);
-directory=[options.root,options.patientname,filesep];
 if ~ea_coreglocked(options,['r',restfname,'_',anatfname]) % preproecessing needs to be performed
     disp('No preprocessed fMRI-images found, processing...');
     ea_preprocess_fmri(options);
     disp('Done preprocessing fMRI data.');
 end
 
-if ~ea_coreglocked(options,['r',restfname,'_',anatfname]) || ~exist([expfolder,options.prefs.rest,'_tc.mat'],'file');
+if ~ea_coreglocked(options,['r',restfname,'_',anatfname]) || ~exist([expfolder,options.prefs.rest,'_tc.mat'],'file')
 
     disp('No timecourses found, processing...');
     gmtc=ea_extract_timecourses(options);
