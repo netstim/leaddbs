@@ -37,7 +37,7 @@ end
 
 if donorm
     %% warp vat into pre_tra-space:
-    whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
+    whichnormmethod=ea_whichnormmethod([directory]);
     switch whichnormmethod
         case ea_getantsnormfuns
 
@@ -54,7 +54,7 @@ if donorm
                 1,'','','nn');
         otherwise
 
-            matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']};
+            matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
             matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = vatspresent;
             matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {[directory,'stimulations',filesep,stim,filesep,filesep]};
             matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 0;
@@ -73,6 +73,11 @@ if docoreg
     end
 
     reference = [directory,'mean',options.prefs.rest];
-    ea_coreg2images(options,[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],reference,[options.root,options.patientname,filesep,'r',options.prefs.prenii_unnormalized],rwvatspresent,0,[],1);
-    delete([options.root,options.patientname,filesep,'r',options.prefs.prenii_unnormalized]);
+    ea_coreg2images(options, ...
+    	[directory,options.prefs.prenii_unnormalized], ...
+        reference, ...
+        [directory,'r',options.prefs.prenii_unnormalized], ...
+        rwvatspresent,0,[],1);
+    delete([directory,'r',options.prefs.prenii_unnormalized]);
+    ea_delete(wvatspresent);
 end
