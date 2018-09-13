@@ -82,9 +82,9 @@ for nd=length(ndir):-1:1
     try
         [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
         if ismember(spm('ver'),spmvers)
-        fdc{cnt}=thisndc;
-        ftmethod{cnt}=methodf;
-        cnt=cnt+1;
+            fdc{cnt}=thisndc;
+            ftmethod{cnt}=methodf;
+            cnt=cnt+1;
         end
     end
 end
