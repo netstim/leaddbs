@@ -3,7 +3,7 @@ function ea_anatpreprocess(fpth)
 % Currently includes: reorientation & cropping and bias field correction
 
 % Cropping and reorientation
-%ea_rocrop(fpth);
+ea_rocrop(fpth);
 
 % Bias field correction
 ea_bias_field_correction(fpth);

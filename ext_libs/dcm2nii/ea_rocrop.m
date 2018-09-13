@@ -35,3 +35,6 @@ if ~failed
 else
     delete([pth, filesep, 'temp.nii']);
 end
+
+% ea_methods(options, 'NIfTI images were reoriented and cropped using dcm2nii '...
+% -    '(see https://github.com/neurolabusc/MRIcron/tree/master/dcm2nii).');
