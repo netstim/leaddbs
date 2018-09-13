@@ -36,7 +36,7 @@ end
 if exist('directory','var')
     % check if pat-specific fibertracts are present:
     if exist([directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],'file')
-        modlist{cnt}='Patient-specific fiber tracts';
+        modlist{cnt}='Patient''s fiber tracts';
         sf(cnt)=1;
         cnt=cnt+1;
     end
@@ -44,7 +44,7 @@ if exist('directory','var')
     % fMRI - parcellations:
     % check if rest_tc are present:
     if exist([directory,'connectomics',filesep,selectedparc,filesep,'rest_tc.mat'],'file')
-        modlist{cnt}='Patient-specific fMRI time courses';
+        modlist{cnt}='Patient''s fMRI time courses';
         sf(cnt)=2;
         cnt=cnt+1;
     end
@@ -53,7 +53,7 @@ if exist('directory','var')
     ffis=dir([directory, options.prefs.rest_searchstring]);
     for ff=1:length(ffis)
         [~, restfname] = fileparts(ffis(ff).name);
-        modlist{cnt} = ['Patient-specific fMRI - ', restfname];
+        modlist{cnt} = ['Patient''s fMRI - ', restfname];
         sf(cnt)=2;
         cnt=cnt+1;
     end

@@ -126,7 +126,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         for pt=1:length(elstruct)
             % show electrodes..
             %try
-                
+
                 popts=options;
                 if strcmp(options.leadprod,'group')
                     try
@@ -136,17 +136,17 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     catch
                         directory=[options.root,options.patientname,filesep];
                     end
-                    
+
                     popts=ea_detsides(popts);
-                    
+
                 else
                     directory=[options.root,options.patientname,filesep];
                 end
-                
+
                 itersides=popts.sides;
 
                 for side=itersides
-                    
+
 
                     try
                         pobj=ea_load_trajectory(directory,side);
@@ -154,8 +154,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                         pobj.showPlanning=strcmp(options.leadprod,'or');
                     end
 
-      
-                    
+
+
                     pobj.options=popts;
                     pobj.elstruct=elstruct(pt);
                     pobj.showMacro=1;
@@ -363,7 +363,7 @@ if isfield(options.d3,'expdf')
         return
     end
 end
-%% End of patient-specific part.
+%% End of patient's part.
 
 % Initialize a draggable lightbulb
 hold on
@@ -527,7 +527,7 @@ set(gcf,'color','none');
 if FileName
 % set(gcf, 'Color', [1,1,1]);
 % [~, cdata] = ea_myaa([4, 2]);
-% 
+%
 % imwrite(cdata, [PathName,FileName], 'png');
 ea_screenshot([PathName,FileName],'myaa');
 

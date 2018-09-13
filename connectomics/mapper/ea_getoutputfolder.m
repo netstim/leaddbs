@@ -1,6 +1,6 @@
 function outputfolder = ea_getoutputfolder(sfile,con)
 if strcmp(con, 'wFTR.mat')
-    con = 'Patient-specific fiber tracts';
+    con = 'Patient''s fiber tracts';
 else
     con = strrep(con, '>', '_');
 end

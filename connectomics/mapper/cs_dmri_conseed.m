@@ -35,7 +35,7 @@ switch cmd
         for s=1:length(sfile)
             map=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]);
 
-            if strcmp(dfold, 'Patient-specific fiber tracts')
+            if strcmp(dfold, 'Patient''s fiber tracts')
                 if strcmp(cname, options.prefs.FTR_normalized) % patient specific fibertracts
                     cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
                     [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile]);
@@ -161,7 +161,7 @@ switch cmd
 
         for s=1:length(sfile)
 
-            if strcmp(dfold, 'Patient-specific fiber tracts')
+            if strcmp(dfold, 'Patient''s fiber tracts')
                 if strcmp(cname, options.prefs.FTR_normalized) % patient specific fibertracts
                     cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
                     [fibers,fidx,voxmm,mat]=ea_loadfibertracts(cfile);

@@ -38,7 +38,7 @@ if options.lcm.func.do
     % check if patient specific connectome used:
     patientspecific=0;
     try
-        if strcmp(options.lcm.func.connectome(1:16),'Patient-specific')
+        if strncmp(options.lcm.func.connectome, 'Patient''s', length('Patient''s'))
             patientspecific=1;
         end
     end
@@ -234,7 +234,7 @@ end
 
 function ea_warp_vat2rest(cname,vatdir,sidec,options)
 
-if strncmp(cname, 'Patient-specific fMRI - ', 24)
+if strncmp(cname, 'Patient''s  fMRI - ', length('Patient''s  fMRI - '))
     restfname = cname(25:end);
 else
     restfname = cname;

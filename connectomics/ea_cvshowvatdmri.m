@@ -22,7 +22,7 @@ if isstruct(vatmodality)
     fibersfile=vatmodality;
 else
     switch vatmodality
-        case 'Patient-specific fiber tracts'
+        case 'Patient''s fiber tracts'
             fibersfile=[directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized];
         otherwise
             fibersfile=[ea_getconnectomebase('dmri'),vatmodality,filesep,'data.mat'];

@@ -99,7 +99,7 @@ else
 end
 
 if warn
-    ea_warning('Please note that this prediction module is not validated for use with the selected connectome (or patient-specific data). You may proceed but the results may not be meaningful.');
+    ea_warning('Please note that this prediction module is not validated for use with the selected connectome (or patient''s data). You may proceed but the results may not be meaningful.');
 end
 
 X=X(:,logical(feats));

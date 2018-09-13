@@ -72,8 +72,8 @@ options.earoot=ea_getearoot;
 try
     directory=[M.patient.list{1},filesep];
     modlist=ea_genmodlist(directory,thisparc,options);
-    if ~ismember('Patient-specific fiber tracts' ,modlist)
-        modlist{end+1}='Patient-specific fiber tracts';
+    if ~ismember('Patient''s fiber tracts' ,modlist)
+        modlist{end+1}='Patient''s fiber tracts';
     end
     modlist{end+1}='Do not calculate connectivity stats';
     set(handles.fiberspopup,'String',modlist);
@@ -166,7 +166,7 @@ for g=1:length(gms)
           cnt=cnt+2;
         end
     end
-    
+
 end
 
 gms=[gms,toappend];

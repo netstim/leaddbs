@@ -5,8 +5,8 @@ if strcmp(options.lcm.struc.connectome,'No structural connectome found.')
 end
 disp('Running structural connectivity...');
 
-if strcmp(options.lcm.struc.connectome,'Patient-specific fiber tracts')
-    base='Patient-specific fiber tracts';
+if strcmp(options.lcm.struc.connectome,'Patient''s fiber tracts')
+    base='Patient''s fiber tracts';
     options.lcm.struc.connectome=options.prefs.FTR_normalized;
 else
     base=ea_getconnectomebase();

@@ -175,7 +175,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         ea_ptspecific_atl(options);
     end
 
-    if options.atl.normalize % normalize patient-specific atlas-set.
+    if options.atl.normalize % normalize patient's atlas-set.
         ea_norm_ptspecific_atl(options)
     end
 
