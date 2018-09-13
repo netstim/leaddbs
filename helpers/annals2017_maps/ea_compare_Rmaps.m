@@ -14,8 +14,8 @@ p = (1-normcdf(abs(z),0,1))*2;
 imr1.img(p>alpha)=nan;
 imr2.img(p>alpha)=nan;
 
-[pth,r1fname,ext]=fileparts(rmap1);
-[pth,r2fname,ext]=fileparts(rmap2);
+[pth1,r1fname]=fileparts(rmap1);
+[pth2,r2fname]=fileparts(rmap2);
 
 R1largerR2=imr1;
 R1largerR2.img(imr1.img<imr2.img)=nan;
@@ -27,7 +27,7 @@ R1smallerR2.img(isnan(R1smallerR2.img))=0;
 
 R1sigR2=R1largerR2;
 R1sigR2.img=R1sigR2.img+R1smallerR2.img;
-R1sigR2.fname=fullfile(pth,[r1fname,'_sig_',r2fname,ext]);
+R1sigR2.fname=fullfile(pth1,[r1fname,'_sig_',r2fname,'.nii']);
 
 
 
@@ -41,7 +41,7 @@ R2smallerR1.img(isnan(R2smallerR1.img))=0;
 
 R2sigR1=R2largerR1;
 R2sigR1.img=R2sigR1.img+R2smallerR1.img;
-R2sigR1.fname=fullfile(pth,[r2fname,'_sig_',r1fname,ext]);
+R2sigR1.fname=fullfile(pth2,[r2fname,'_sig_',r1fname,'.nii']);
 
 ea_write_nii(R1sigR2);
 ea_write_nii(R2sigR1);

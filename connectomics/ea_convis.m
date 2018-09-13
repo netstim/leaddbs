@@ -552,7 +552,7 @@ end
 if get(handles.vatmodality,'Value')>length(modlist) % probably user has changed parcellation..
     set(handles.vatmodality,'Value',1);
 end
-if get(handles.vatseed,'Value')>length(get(handles.vatseed,'String'));
+if get(handles.vatseed,'Value')>length(get(handles.vatseed,'String'))
     set(handles.vatseed,'Value',1);
 end
 
