@@ -98,9 +98,12 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         % Reslice(interpolate) preoperative anatomical image if needed
         try ea_resliceanat(options); end
 
+        % acpcdetect
+        % try ea_acpcdetect([directory,presentfiles{1}]); end
+
         try ea_precoreg([directory,presentfiles{1}],options.primarytemplate,options); end
 
-        % try ea_acpcdetect([directory,presentfiles{1}]); end
+
 
         try
             fs = fopen([directory,'.pp'],'w');

@@ -123,22 +123,18 @@ X(:,6)=rp_rest(1:signallength,5);
 X(:,7)=rp_rest(1:signallength,6);
 
 for voxx=1:size(interpol_tc,1)
-
     beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
     if ~isnan(beta_hat)
     interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
     else
         warning('Regression of Motion parameters could not be performed.');
     end
-
 end
 
 
 %% begin rest bandpass
-
 lp_HighCutoff=0.08;
 hp_LowCutoff=0.009;
-
 
 disp('Done. Bandpass-filtering...');
 sampleFreq 	 = 1/TR;
@@ -169,8 +165,7 @@ maskHighPass(:,idxCutoff2+1:paddedLength)=0;	%Low eliminate
 
 % 	%20070513	remove trend --> FFT --> filter --> inverse FFT --> retrend
 % YAN Chao-Gan, 100401. remove the mean --> FFT --> filter --> inverse FFT --> add mean back
-    fftw('dwisdom');
-
+fftw('dwisdom');
 
 theMean=mean(interpol_tc,2);
 interpol_tc=interpol_tc-repmat(theMean,[1, sampleLength]);
@@ -181,7 +176,6 @@ interpol_tc =fft(interpol_tc, [], 2);
 
 %Apply the filter Low Pass
 interpol_tc(~maskLowPass)=0;
-
 
 %Apply the filter High Pass
 interpol_tc(~maskHighPass)=0;
@@ -196,7 +190,6 @@ interpol_tc=interpol_tc+repmat(theMean,[1, sampleLength]);
 %% end  bandpass
 disp('Done.');
 
-
 %% average gmtc over ROI
 
 gmtc=nan(size(interpol_tc,2),dimensionality);
@@ -206,12 +199,10 @@ for c=1:dimensionality
 end
 
 
-
 function sl=ea_detsiglength(fname)
 
 V=spm_vol(fname);
 sl=length(V);
-
 
 
 function Result = rest_nextpow2_one35(n)
