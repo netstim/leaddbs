@@ -11,7 +11,9 @@ if ~dimensionality
 end
 
 pX=round(pX);
-options.prefs.rest = [strrep(mod, 'Patient''s fMRI - ', ''), '.nii'];
+
+mod = strrep(mod, 'Patient''s fMRI - ', '');
+options.prefs.rest = [mod, '.nii'];
 
 if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_',mod,'.mat'],'file')
     ea_warp_vat('rest', options, handles);
@@ -21,7 +23,6 @@ else
     load([directory,'stimulations',filesep,stim,filesep,'vat_',mod,'.mat']);
 end
 
-mms=get(handles.matmodality,'String');
 parcs=get(handles.labelpopup,'String');
 tc=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,ea_stripex(options.prefs.rest),'_tc']);
 fn=fieldnames(tc);
