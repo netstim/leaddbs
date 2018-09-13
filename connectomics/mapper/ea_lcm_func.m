@@ -35,12 +35,12 @@ for run=1:chunk:length(sfile)
         end
     end
 
-    if strncmp(options.lcm.func.connectome, 'Patient''s  fMRI - ', length('Patient''s  fMRI - '))
+    if strncmp(options.lcm.func.connectome, 'Patient''s fMRI - ', length('Patient''s fMRI - '))
         % native space nifti file
         options.root=[options.uivatdirs{1}];
         [options.root,options.patientname]=fileparts(options.root);
         options.root=[options.root,filesep];
-        restfname = options.lcm.func.connectome(25:end);
+        restfname = options.lcm.func.connectome(length('Patient''s fMRI - ')+1:end);
         cs_fmri_conseed_nifti([options.uivatdirs{1},filesep,restfname,'.nii'],tsfile,options);
     else
         cs_fmri_conseed(ea_getconnectomebase,options.lcm.func.connectome,...

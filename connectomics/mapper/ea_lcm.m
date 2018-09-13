@@ -234,8 +234,8 @@ end
 
 function ea_warp_vat2rest(cname,vatdir,sidec,options)
 
-if strncmp(cname, 'Patient''s  fMRI - ', length('Patient''s  fMRI - '))
-    restfname = cname(25:end);
+if strncmp(cname, 'Patient''s fMRI - ', length('Patient''s fMRI - '))
+    restfname = cname(length('Patient''s fMRI - ')+1:end);
 else
     restfname = cname;
 end
