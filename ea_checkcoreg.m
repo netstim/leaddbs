@@ -269,7 +269,7 @@ switch ea_stripex(currvol)
                         end
                     end
             end
-        
+
         set(handles.normsettings,'Visible','off');
         set(handles.recomputebutn,'String','(Re-) compute coregistration using...');
         set(handles.coregmrpopup,'TooltipString','Choose a coregistration method');
@@ -286,7 +286,7 @@ end
 setappdata(handles.leadfigure,'method',method);
 
 % show result:
-if ~isempty(b0restanchor{activevolume}) % rest or b0 registration   
+if ~isempty(b0restanchor) && ~isempty(b0restanchor{activevolume}) % rest or b0 registration
     set(handles.substitute,'Visible','on');
     set(handles.substitute,'String',ea_getsubstitutes(options));
     checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(b0restanchor{activevolume}),'mean','r'),'_',method,'.png'];
@@ -306,7 +306,7 @@ switch ea_stripex(currvol)
         options=ea_assignpretra(options);
         anchorpath=[ea_space,options.primarytemplate];
     otherwise
-        if ~isempty(b0restanchor{activevolume}) % rest or b0 registration
+        if ~isempty(b0restanchor) && ~isempty(b0restanchor{activevolume}) % rest or b0 registration
             anchorpath=[directory,ea_stripex(b0restanchor{activevolume})];
         else
             anchorpath=[directory,ea_stripex(anchor)];
@@ -314,7 +314,7 @@ switch ea_stripex(currvol)
 end
 
 if ~exist(checkfig,'file')
-    
+
     ea_gencheckregpair([directory,ea_stripex(currvol)],anchorpath,checkfig);
 
     if ~exist(checkfig,'file')
@@ -468,14 +468,14 @@ switch ea_stripex(currvol)
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
         if ~isempty(b0restanchor{activevolume})
             thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
-            
+
             ea_delete([directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
             ea_delete([directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
-            
+
             substitute=get(handles.substitute,'Value');
             [~,pf]=ea_assignpretra(options);
             useasanchor=pf{substitute};
-  
+
             ea_coreg2images(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
             movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(useasanchor),'_',ea_matext(options.coregmr.method)],...
                 [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
@@ -710,7 +710,7 @@ switch ea_stripex(currvol)
             options.tag=[presentfiles{activevolume},' & ',b0restanchor{activevolume}];
         else
             options.fixed=[directory,anchor];
-            options.tag=[presentfiles{activevolume},' & ',anchor]; 
+            options.tag=[presentfiles{activevolume},' & ',anchor];
         end
 
         ea_show_coregistration(options);
@@ -770,9 +770,9 @@ switch ea_stripex(currvol)
 end
 if ~isempty(b0restanchor{activevolume})
     thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
-    
+
     ea_cleandownstream(options,directory,thisrest)
-    
+
 end
 
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
@@ -844,7 +844,7 @@ switch ea_stripex(currvol)
 end
 b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
 if ~isempty(b0restanchor{activevolume})
-   anchor=b0restanchor{activevolume}; 
+   anchor=b0restanchor{activevolume};
 end
 
 checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(anchor),'mean','r'),'_',method,'.png'];

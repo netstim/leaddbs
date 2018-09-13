@@ -103,8 +103,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
         try ea_precoreg([directory,presentfiles{1}],options.primarytemplate,options); end
 
-
-
         try
             fs = fopen([directory,'.pp'],'w');
             fprintf(fs,'%s','anat preprocess done');
