@@ -38,7 +38,7 @@ if options.lcm.func.do
     % check if patient specific connectome used:
     patientspecific=0;
     try
-        if strncmp(options.lcm.func.connectome, 'Patient''s', length('Patient''s'))
+        if regexp(options.lcm.func.connectome, '^Patient''s', 'once')
             patientspecific=1;
         end
     end

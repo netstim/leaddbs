@@ -35,7 +35,7 @@ for run=1:chunk:length(sfile)
         end
     end
 
-    if strncmp(options.lcm.func.connectome, 'Patient''s fMRI - ', length('Patient''s fMRI - '))
+    if regexp(options.lcm.func.connectome, '^Patient''s fMRI - ', 'once')
         % native space nifti file
         options.root=[options.uivatdirs{1}];
         [options.root,options.patientname]=fileparts(options.root);
