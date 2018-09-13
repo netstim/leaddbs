@@ -80,16 +80,3 @@ if exist('options','var')
         end
     end
 end
-
-
-if vat
-   resdir=dir([directory,options.prefs.rest_searchstring]);
-
-   for rd=1:length(resdir)
-       [~,fn,ext]=fileparts(resdir(rd).name);
-       modlist{cnt}=[fn,'_tc'];
-        sf(cnt)=2;
-       cnt=cnt+1;
-   end
-
-end

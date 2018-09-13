@@ -71,6 +71,15 @@ setappdata(resultfig,'convis',handles.convis);
 
 refreshcv(handles);
 
+% Initialize the coordinate boxes.
+pV=getappdata(handles.convis,'pV');
+pX=getappdata(handles.convis,'pX');
+[xmm,ymm,zmm]=getcoordinates(pV,pX,get(handles.matseed,'Value'));
+set(handles.xmm,'String',num2str(xmm,'%.2f'));
+set(handles.ymm,'String',num2str(ymm,'%.2f'));
+set(handles.zmm,'String',num2str(zmm,'%.2f'));
+set(handles.matseed,'ForegroundColor',[0,0,0]);
+
 % dev
 if options.prefs.env.dev
     set(handles.savefibers,'Visible','on')
@@ -118,13 +127,16 @@ vomc=get(handles.voxmodality,'String');
 if isempty(mmc)
    cv_disabletime(handles);
 else
-    if isempty(strfind(mmc{get(handles.matmodality,'Value')},'_tc')) && ...
-            isempty(strfind(vmc{get(handles.vatmodality,'Value')},'_tc')) && ...
-            isempty(strfind(vomc{get(handles.voxmodality,'Value')},'_tc')) % no timeseries selected.
+    mmc = mmc{get(handles.matmodality,'Value')};
+    vmc = vmc{get(handles.vatmodality,'Value')};
+    vomc = vomc{get(handles.voxmodality,'Value')};
+    if isempty(regexp(mmc, '^Patient''s fMRI - ', 'once')) && ...
+       isempty(regexp(vmc, '^Patient''s fMRI - ', 'once')) && ...
+       isempty(regexp(vomc, '_fMRI$', 'once')) % no timeseries selected.
 
-        cv_disabletime(handles);
+       cv_disabletime(handles);
     else
-        cv_enabletime(handles);
+       cv_enabletime(handles);
     end
 end
 if apply % update elvis
@@ -148,11 +160,11 @@ if apply % update elvis
         ea_deletePL(resultfig,'PL','vat');
     end
 
-    if get(handles.vizgraph,'Value'); % show voxel-level results
+    if get(handles.vizgraph,'Value') % show voxel-level results
         ea_cvshowvoxresults(resultfig,directory,filesare,handles,pV,selectedparc,options);
     end
 
-    if get(handles.vizmat,'Value'); % show seed-based-connectivity results
+    if get(handles.vizmat,'Value') % show seed-based-connectivity results
         ea_cvshowseedbasedresults(resultfig,directory,pV,pX,selectedparc,handles,options);
     else
         ea_deletePL(resultfig,'PL','mat');
@@ -171,7 +183,7 @@ end
 set(convis,'name','Connectome Results');
 
 
-function     ea_deleteML(resultfig,handles,options)
+function ea_deleteML(resultfig,handles,options)
 
 ML=getappdata(resultfig,'ML');
 if isempty(ML)
@@ -182,6 +194,7 @@ try delete(ML.pnodes); end
 try delete(ML.hn); end
 try delete(ML.nnodes); end
 % delete matrix level stuff here.
+
 
 function ea_cvshowmatresults(resultfig,directory,selectedparc,handles,options)
 
@@ -226,7 +239,7 @@ mo_d=mo_ds{get(handles.voxmodality,'Value')};
 gV=spm_vol([directory,'connectomics',filesep,selectedparc,filesep,'graph',filesep,filesare{get(handles.voxmetric,'Value')},mo_d,'.nii']);
 gX=spm_read_vols(gV);
 thresh=get(handles.voxthresh,'String');
-if strcmp(thresh,'auto');
+if strcmp(thresh,'auto')
     thresh=nanmean(gX(:))+1*nanstd(gX(:));
 else
     thresh=str2double(thresh);
@@ -244,7 +257,7 @@ function ea_cvshowseedbasedresults(resultfig,directory,pV,pX,selectedparc,handle
 % determine if CM/TC or fiberset is selected
 matmodality=get(handles.matmodality,'String');
 matmodality=matmodality{get(handles.matmodality,'Value')};
-if ~isempty(strfind(matmodality,'_CM')) || ~isempty(strfind(matmodality,'_tc'))
+if regexp(matmodality, '^Patient''s fMRI - ')
     ea_deletePL(resultfig,'PL','mat');
     ea_cvshowmatresultsCMTC(resultfig,directory,pV,pX,handles,options);
 else % use fiberset
@@ -284,14 +297,17 @@ end
 
 function ea_cvshowmatresultsCMTC(resultfig,directory,pV,pX,handles,options)
 
-pX=round(pX);
-mms=get(handles.matmodality,'String');
-parcs=get(handles.labelpopup,'String');
-CM=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,mms{get(handles.matmodality,'Value')}]);
+pX = round(pX);
+mods = get(handles.matmodality,'String');
+mod = mods{get(handles.matmodality,'Value')};
+rest_CM = [strrep(mod, 'Patient''s fMRI - ', ''), '_fMRI_CM'];
+parcs = get(handles.labelpopup,'String');
+parc = parcs{get(handles.labelpopup,'Value')};
+CM=load([directory,'connectomics',filesep,parc,filesep,rest_CM]);
 fn=fieldnames(CM);
 CM=eval(['CM.',fn{1},';']);
 
-if ~isempty(strfind(mms{get(handles.matmodality,'Value')},'_tc'))
+if get(handles.timecircle, 'Value')
     % timecourses selected: need to create a CM first. In this case, the variable CM is
     % not a connectivity matrix but time-courses!
 
@@ -303,7 +319,8 @@ if ~isempty(strfind(mms{get(handles.matmodality,'Value')},'_tc'))
         % use whole CM
         CM=corrcoef(CM);
     else
-        tiframe=str2double(tiframe);         tiwindow=str2double(tiwindow);
+        tiframe=str2double(tiframe);
+        tiwindow=str2double(tiwindow);
         % check if selected time window is possible:
         if (tiframe+tiwindow)>timedim || tiframe<1 % end is reached
             set(handles.timeframe,'String','1'); tiframe=1; % reset timeframe to 1
@@ -327,7 +344,7 @@ end
 currentseed=get(handles.matseed,'Value');
 seedcon=CM(currentseed,:);
 thresh=get(handles.matthresh,'String');
-if strcmp(thresh,'auto');
+if strcmp(thresh,'auto')
     thresh=nanmean(seedcon)+1*nanstd(seedcon);
 else
     thresh=str2double(thresh);
@@ -478,7 +495,7 @@ if exist([pdirectory,'graph'],'file')
 
     if ~isempty(labelsare)
         set(handles.voxmetric,'String',labelsare);
-        if get(handles.voxmetric,'Value')>length(get(handles.voxmetric,'String'));
+        if get(handles.voxmetric,'Value')>length(get(handles.voxmetric,'String'))
             set(handles.voxmetric,'Value',length(get(handles.voxmetric,'String')));
         end
         cv_enablevoxs(handles);
@@ -503,7 +520,7 @@ if exist('filesare','var')
         cnt=cnt+1;
     end
     set(handles.voxmodality,'String',mods);
-    if get(handles.voxmodality,'Value')>length(get(handles.voxmodality,'String'));
+    if get(handles.voxmodality,'Value')>length(get(handles.voxmodality,'String'))
         set(handles.voxmodality,'Value',length(get(handles.voxmodality,'String')));
     end
 end
@@ -511,7 +528,7 @@ end
 
 function ea_initvatlevel(handles,directory,selectedparc,options)
 
-modlist=ea_genmodlist(directory,selectedparc,options,'vat');
+modlist=ea_genmodlist(directory,selectedparc,options);
 
 %% VATs:
 vdirs=dir([directory,'stimulations']);

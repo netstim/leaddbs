@@ -1,15 +1,16 @@
-function ea_warp_vat(b0rest,options,handles)
+function ea_warp_vat(b0rest, options, handles)
 directory=[options.root,options.patientname,filesep];
 
 if strcmp(b0rest,'rest') % processing rest files
     b0rest=ea_stripex(options.prefs.rest);
 end
+
 stims=get(handles.vatseed,'String');
 stim=stims{get(handles.vatseed,'Value')};
 
 % check which vat-files are present:
 vatfnames={[directory,'stimulations',filesep,stim,filesep,'','vat_right.nii']
-    [directory,'stimulations',filesep,stim,filesep,'','vat_left.nii']};
+           [directory,'stimulations',filesep,stim,filesep,'','vat_left.nii']};
 
 cnt=1;
 donorm=0;
@@ -32,13 +33,6 @@ for vatfname=1:2
 
         cnt=cnt+1;
     end
-end
-
-reference=get(handles.vatmodality,'String');
-reference=reference{get(handles.vatmodality,'Value')};
-
-if strfind(reference,'_tc')
-    reference=[ea_niigz([directory,'r',options.prefs.rest])];
 end
 
 if donorm
@@ -78,6 +72,7 @@ if docoreg
         copyfile(wvatspresent{vat},rwvatspresent{vat});
     end
 
+    reference = [directory,'mean',options.prefs.rest];
     ea_coreg2images(options,[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],reference,[options.root,options.patientname,filesep,'r',options.prefs.prenii_unnormalized],rwvatspresent,0,[],1);
     delete([options.root,options.patientname,filesep,'r',options.prefs.prenii_unnormalized]);
 end

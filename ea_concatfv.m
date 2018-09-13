@@ -37,8 +37,9 @@ if ~usecork
     foffset=1;
     voffset=1;
     fcoffset=1;
+    fprintf('\n\n');
     ea_dispercent(0,'Concatenating patch');
-    
+
     for f=1:length(fv)
         fsize=size(fv(f).faces,1);
         vsize=size(fv(f).vertices,1);
@@ -46,32 +47,32 @@ if ~usecork
             fv(f).faces(:,1:3)+voffset-1;
         afv.vertices(voffset:voffset+vsize-1,:)=...
             fv(f).vertices;
-    
+
         foffset=foffset+fsize;
         voffset=voffset+vsize;
-        
+
         if isfield(fv(f),'facevertexcdata')
             if size(fv(f).facevertexcdata,1)<size(fv(f).facevertexcdata,2)
                 fv(f).facevertexcdata=fv(f).facevertexcdata';
             end
-            
+
             if ~isfield(afv,'facevertexcdata')
                 afv.facevertexcdata=zeros(sum(facecollen),3);
             end
             fcsize=size(fv(f).facevertexcdata,1);
-            
+
 
             afv.facevertexcdata(fcoffset:fcoffset+fcsize-1,:)=...
                 fv(f).facevertexcdata;
-   
+
             fcoffset=fcoffset+fcsize;
         end
         ea_dispercent(f/length(fv));
     end
-    ea_dispercent(1,'end');    
+    ea_dispercent(1,'end');
 else
-    
-    
+
+
     for f=1:length(fv)
         if f==1
             afv=fv(1);
@@ -79,7 +80,7 @@ else
             [afv.vertices,afv.faces]=surfboolean(fv(f).vertices,fv(f).faces,'xor',afv.vertices,afv.faces);
         end
     end
-    
-    
-    
+
+
+
 end

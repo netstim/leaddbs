@@ -11,10 +11,10 @@ if ~dimensionality
 end
 
 pX=round(pX);
-options.prefs.rest=[strrep(mod,'_tc',''),'.nii'];
+options.prefs.rest = [strrep(mod, 'Patient''s fMRI - ', ''), '.nii'];
 
-if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_',mod,'.mat'],'file');
-    ea_warp_vat('rest',options,handles);
+if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_',mod,'.mat'],'file')
+    ea_warp_vat('rest', options, handles);
     vat_tc=ea_extract_timecourses_vat(options,handles,usevat,dimensionality);
     save([directory,'stimulations',filesep,stim,filesep,'vat_',mod,'.mat'],'vat_tc');
 else
