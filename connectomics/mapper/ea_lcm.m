@@ -194,7 +194,7 @@ for suffix=dowhich
                         if ~strcmp(cname,'No functional connectome found.')
                             if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
                                 ea_warp_vat2rest(cname,vatdir,sidec,options);
-                                nativeprefix=['_',cname(25:end)];
+                                nativeprefix=['_',cname(length('Patient''s fMRI - ')+1:end)];
                             else
                                 d=load([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat']);
                                 d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
