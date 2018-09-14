@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 12-Sep-2018 14:39:38
+% Last Modified by GUIDE v2.5 14-Sep-2018 10:06:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -862,3 +862,21 @@ if isfield(handles,'atlassetpopup') % not present in connectome mapper
 
     ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
 end
+
+
+% --- Executes on button press in checkregfmri.
+function checkregfmri_Callback(hObject, eventdata, handles)
+% hObject    handle to checkregfmri (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkregfmri
+
+
+% --- Executes on button press in checkregdmri.
+function checkregdmri_Callback(hObject, eventdata, handles)
+% hObject    handle to checkregdmri (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkregdmri

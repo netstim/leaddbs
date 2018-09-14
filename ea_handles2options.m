@@ -40,6 +40,18 @@ catch
     options.normalize.check=0;
 end
 
+try % also open up checkreg in case of dMRI check registrations
+    if get(handles.checkregdmri,'Value')
+        options.normalize.check=1;
+    end
+end
+
+try % also open up checkreg in case of dMRI check registrations
+    if get(handles.checkregfmri,'Value')
+        options.normalize.check=1;
+    end
+end
+
 try % not working when calling from lead_anatomy
     options.coregmr.check=(get(handles.coregmrcheck,'Value') == get(handles.coregmrcheck,'Max'));
 catch
