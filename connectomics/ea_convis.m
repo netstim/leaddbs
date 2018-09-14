@@ -449,7 +449,7 @@ end
 
 set(handles.matmodality,'String',modlist);
 
-if get(handles.matmodality,'Value')>length(get(handles.matmodality,'String'));
+if get(handles.matmodality,'Value')>length(get(handles.matmodality,'String'))
     set(handles.matmodality,'Value',length(get(handles.matmodality,'String')));
 end
 
