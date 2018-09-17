@@ -83,7 +83,13 @@ fprintf('\nNormalizing fibers...\n');
 fprintf('\nMapping from b0 to anat...\n');
 [~, mov] = fileparts(options.prefs.b0);
 [~, fix] = fileparts(options.prefs.prenii_unnormalized);
-if isempty(dir([directory, mov, '2', fix, '_*.mat']))
+coregmethod = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
+options.coregmr.method = coregmethod;
+xfm = [mov, '2', fix, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+transform = ea_regexpdir(directory, xfm, 0);
+
+if numel(transform) == 0
+    warning('Specified transformation not found! Running coregistration now!');
     ea_backuprestore(refb0);
     ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
     ea_delete([options.root,options.patientname,filesep,'tmp.nii']);
