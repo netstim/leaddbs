@@ -33,7 +33,7 @@ end
 
 if nargin>3
     transform=varargin{4};
-    tstring=[' --transform [',transform, ',',num2str(useinverse),']']; % [transformFileName,useInverse]
+    tstring=[' --transform [', ea_path_helper(transform), ',',num2str(useinverse),']']; % [transformFileName,useInverse]
 else
     if useinverse
         if exist([directory,glprebase,'Composite.h5'],'file')
@@ -62,7 +62,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     applyTransformsToPoints = ea_path_helper([basedir, 'antsApplyTransformsToPoints.exe']);
 else
-    applyTransformsToPoints = [basedir, 'antsApplyTransformsToPoints.', computer('arch')];
+    applyTransformsToPoints = ea_path_helper([basedir, 'antsApplyTransformsToPoints.', computer('arch')]);
 end
 
     uuid=ea_generate_uuid;
