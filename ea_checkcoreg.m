@@ -75,9 +75,6 @@ if exist([directory,options.prefs.gprenii],'file') && ~ea_coreglocked(options,op
     presentfiles=[presentfiles;{[directory,options.prefs.gprenii]}];
 end
 
-
-
-
 % add coregchecks for b0 and rest:
 % get files with rs-fMRI data
 restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_searchstring]);
@@ -85,7 +82,7 @@ restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_sea
 % get number of files with rs-fMRI data
 options.prefs.n_rest = numel(restfiles);
 
-b0restanchor=[];
+b0restanchor=cell(length(presentfiles), 1);
 for irest = 1:options.prefs.n_rest
     % set filenames for this iteration
     if exist([directory,'r',ea_stripex(restfiles(irest).name),'_',anchor],'file')
@@ -95,6 +92,7 @@ for irest = 1:options.prefs.n_rest
         end
     end
 end
+
 % add b0:
 if exist([directory,ea_stripex(options.prefs.b0),'_',anchor],'file')
     if ~ea_coreglocked(options,[directory,ea_stripex(options.prefs.b0),'_',anchor])
@@ -102,7 +100,6 @@ if exist([directory,ea_stripex(options.prefs.b0),'_',anchor],'file')
         b0restanchor{length(presentfiles)} = [options.prefs.b0];
     end
 end
-
 
 if exist([directory,'scrf',filesep,'scrf_instore_converted.mat'],'file')
     if ~ea_coreglocked(options,'brainshift')
