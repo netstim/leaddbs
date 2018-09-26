@@ -112,7 +112,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     % NEED FURTHER TUNE: auto detection of MRCT modality for the patient
     try
-        modality = ea_getmodality(directory);
+        options.modality = ea_getmodality(directory);
     end
 
     if options.modality == 2 % CT support
@@ -258,8 +258,18 @@ end
                     try
                         [coords_mm,trajectory,markers]=ea_runpacer(poptions);
                         options.native=1;
-                    catch % revert to TRAC/CORE
-                        disp('PaCER failed - reverting to TRAC/CORE algorithm...');
+                    catch e % revert to TRAC/CORE
+                        warning('PaCER failed with the following error:');
+                        disp(['Identifier: ' e.identifier]);
+                        disp(['Message: ' e.message]);
+                        disp(['In: ' e.stack(1).file]);
+                        disp(['Method: ' e.stack(1).name]);
+                        disp(['Line: ' num2str(e.stack(1).line)]); 
+                        disp('Please check your input data carefully.');
+                        disp('If the error persists, please consider a bug report at <a href="https://github.com/adhusch/PaCER/issues">https://github.com/adhusch/PaCER/issues</a>.');
+                        
+                        warning('Reverting to TRAC/CORE Algorithm.');
+
                         [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
                         options.native=0;
                     end
