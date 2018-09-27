@@ -82,7 +82,7 @@ restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_sea
 % get number of files with rs-fMRI data
 options.prefs.n_rest = numel(restfiles);
 
-b0restanchor=cell(length(presentfiles), 1);
+b0restanchor=cell(length(presentfiles),1);
 for irest = 1:options.prefs.n_rest
     % set filenames for this iteration
     if exist([directory,'r',ea_stripex(restfiles(irest).name),'_',anchor],'file')
@@ -490,7 +490,12 @@ end
 anchorpath=getappdata(handles.leadfigure,'anchorpath');
 
 method=getappdata(handles.leadfigure,'method');
-checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(anchor),'_',method,'.png'];
+
+if ~isempty(b0restanchor{activevolume})
+   anchor=b0restanchor{activevolume};
+end
+
+checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(anchor),'mean','r'),'_',method,'.png'];
 
 ea_gencheckregpair([directory,ea_stripex(currvol)],anchorpath,checkfig);
 % now disapprove again since this new computation hasn't been approved yet.
