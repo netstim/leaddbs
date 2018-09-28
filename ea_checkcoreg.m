@@ -473,6 +473,26 @@ switch ea_stripex(currvol)
             [~,pf]=ea_assignpretra(options);
             useasanchor=pf{substitute};
 
+            
+            
+            if ~exist([directory,b0restanchor{activevolume}],'file')
+                V=ea_open_vol(ea_niigz([directory,thisrest]));
+                matlabbatch{1}.spm.util.cat.vols = {
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,1'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,2'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,3'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,4'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,5'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,6'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,7'
+                    };
+                matlabbatch{1}.spm.util.cat.name = '4D.nii';
+                matlabbatch{1}.spm.util.cat.dtype = 0;
+                
+                
+            end
+            % in following line correct that useasanchor is the *moving*
+            % image (since we're going from anchor to rest/b0.
             ea_coreg2images(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
             movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(useasanchor),'_',ea_matext(options.coregmr.method)],...
                 [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
@@ -512,32 +532,39 @@ set(handles.leadfigure, 'Name', title);
 function ea_cleandownstream(options,directory,thisrest)
 
 
-            % cleanup /templates/labelings (these need to be recalculated):
-            
-            % do not use ea_delete here since it doesn't support
-            % wildcards!
-            delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
-            parcdirs=dir([directory,'connectomics',filesep]);
-            %             % cleanup /connectomics results (these need to be recalculated):
-            for pd=1:length(parcdirs)
-                % do not use ea_delete here since it doesn't support
-                % wildcards!
-                delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*.*']);
-            end
-            stimdirs=dir([directory,'stimulations',filesep]);
-            %             % cleanup /connectomics results (these need to be recalculated):
-            for pd=1:length(stimdirs)
-                connfolders=dir([directory,'stimulations',filesep,stimdirs(pd).name]);
-                for connfolder=1:length(connfolders)
-                    if connfolders(connfolder).isdir && ~isempty(strfind(connfolders(connfolder).name,thisrest(2:end)))
-                        rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
-                    end
+% cleanup /templates/labelings (these need to be recalculated):
+
+% do not use ea_delete here since it doesn't support
+% wildcards!
+delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
+parcdirs=dir([directory,'connectomics',filesep]);
+%             % cleanup /connectomics results (these need to be recalculated):
+for pd=1:length(parcdirs)
+    % do not use ea_delete here since it doesn't support
+    % wildcards!
+    if ~strcmp(parcdirs(pd).name(1),'.')
+        delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*.*']);
+    end
+end
+stimdirs=dir([directory,'stimulations',filesep]);
+%             % cleanup /connectomics results (these need to be recalculated):
+for pd=1:length(stimdirs)
+    if ~strcmp(stimdirs(pd).name(1),'.')
+        connfolders=dir([directory,'stimulations',filesep,stimdirs(pd).name]);
+        for connfolder=1:length(connfolders)
+            if ~strcmp(connfolders(connfolder).name(1),'.')
+                
+                if connfolders(connfolder).isdir && ~isempty(strfind(connfolders(connfolder).name,thisrest(2:end)))
+                    rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
                 end
+                
                 % do not use ea_delete here since it doesn't support
                 % wildcards!
                 delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
             end
-
+        end
+    end
+end
 
 function ext=ea_matext(method)
 
