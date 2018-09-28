@@ -513,11 +513,16 @@ function ea_cleandownstream(options,directory,thisrest)
 
 
             % cleanup /templates/labelings (these need to be recalculated):
+            
+            % do not use ea_delete here since it doesn't support
+            % wildcards!
             delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
             parcdirs=dir([directory,'connectomics',filesep]);
             %             % cleanup /connectomics results (these need to be recalculated):
             for pd=1:length(parcdirs)
-                ea_delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*']);
+                % do not use ea_delete here since it doesn't support
+                % wildcards!
+                delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*.*']);
             end
             stimdirs=dir([directory,'stimulations',filesep]);
             %             % cleanup /connectomics results (these need to be recalculated):
@@ -528,7 +533,9 @@ function ea_cleandownstream(options,directory,thisrest)
                         rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
                     end
                 end
-                ea_delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
+                % do not use ea_delete here since it doesn't support
+                % wildcards!
+                delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
             end
 
 
