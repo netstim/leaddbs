@@ -38,19 +38,25 @@ else
     if useinverse
         if exist([directory,glprebase,'Composite.h5'],'file')
             tstring=[' -t [',ea_path_helper([directory,glprebase,istr,'Composite.h5']),',0]'];
-        else
+        elseif exist([directory,glprebase,'1',istr,'Warp.nii.gz'], 'file') && ...
+               exist([directory,glprebase,'0GenericAffine.mat'], 'file')
             tstring=[' -t [',ea_path_helper([directory,glprebase,'0GenericAffine.mat']),',',num2str(useinverse),']',...
                 ' -t [',ea_path_helper([directory,glprebase,'1',istr,'Warp.nii.gz']),',0]',...
                 ];
+        else
+            error('Transformation file not found! Please rerun normalization.');
         end
 
     else
         if exist([directory,glprebase,'Composite.h5'],'file')
             tstring=[' -t [',ea_path_helper([directory,glprebase,istr,'Composite.h5']),',0]'];
-        else
+        elseif exist([directory,glprebase,'1',istr,'Warp.nii.gz'], 'file') && ...
+               exist([directory,glprebase,'0GenericAffine.mat'], 'file')
             tstring=[' -t [',ea_path_helper([directory,glprebase,'1',istr,'Warp.nii.gz']),',0]',...
                 ' -t [',ea_path_helper([directory,glprebase,'0GenericAffine.mat']),',',num2str(useinverse),']'...
                 ];
+        else
+            error('Transformation file not found! Please rerun normalization.');
         end
     end
 end
@@ -65,7 +71,7 @@ else
     applyTransformsToPoints = ea_path_helper([basedir, 'antsApplyTransformsToPoints.', computer('arch')]);
 end
 
-    uuid=ea_generate_uuid;
+uuid=ea_generate_uuid;
 
 cmd = [applyTransformsToPoints, ...
     ' --dimensionality 3' ...   % dimensionality
