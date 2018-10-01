@@ -40,12 +40,12 @@ ea_getui(handles); % update ui from patient
 ea_storeui(handles); % save in pt folder
 ea_addrecentpatient(handles,uipatdir,[patsub],patsub);
 
-
 % check if reconstruction is present and assign side-toggles accordingly:
 try
     if exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
        load([uipatdir{1},filesep,'ea_reconstruction.mat']);
-       for el=1:10
+       elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
+       for el=1:elnum
           try set(handles.(['side',num2str(el)]),'Value',0); end
        end
        for el=1:length(reco.native.coords_mm)
@@ -60,6 +60,7 @@ try
        end
     end
 end
+
 % add VATs to seeds for connectome mapper or predict case
 if isfield(handles,'seeddefpopup')
     for pt=1:length(uipatdir)

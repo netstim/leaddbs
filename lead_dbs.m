@@ -1750,7 +1750,8 @@ ea_checktargetentry(handles);
 
 function ea_checktargetentry(handles)
 higherelchosen=0;
-for el=3:10
+elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
+for el=3:elnum
     if get(handles.(['side',num2str(el)]),'Value')
         higherelchosen=1;
     end
