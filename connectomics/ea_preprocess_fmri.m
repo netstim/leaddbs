@@ -25,24 +25,31 @@ if ~exist([directory,'r',options.prefs.rest],'file')
     
     disp('Realignment of rs-fMRI data...');
     filetimepts = ea_appendVolNum([directory,options.prefs.rest], 1:signallength);
-    
-    matlabbatch{1}.spm.spatial.realign.estwrite.data = {filetimepts};
-    matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.quality = 1;
-    matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.sep = 4;
-    matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.fwhm = 5;
-    matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.rtm = 0;
-    matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.interp = 2;
-    matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.wrap = [0 0 0];
-    matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.weight = {''};
-    matlabbatch{1}.spm.spatial.realign.estwrite.roptions.which = [2 1];
-    matlabbatch{1}.spm.spatial.realign.estwrite.roptions.interp = 4;
-    matlabbatch{1}.spm.spatial.realign.estwrite.roptions.wrap = [0 0 0];
-    matlabbatch{1}.spm.spatial.realign.estwrite.roptions.mask = 1;
-    matlabbatch{1}.spm.spatial.realign.estwrite.roptions.prefix = 'r';
+    matlabbatch{1}.spm.spatial.realign.estimate.data = {filetimepts};
+    matlabbatch{1}.spm.spatial.realign.estimate.eoptions.quality = 1;
+    matlabbatch{1}.spm.spatial.realign.estimate.eoptions.sep = 4;
+    matlabbatch{1}.spm.spatial.realign.estimate.eoptions.fwhm = 5;
+    matlabbatch{1}.spm.spatial.realign.estimate.eoptions.rtm = 1;
+    matlabbatch{1}.spm.spatial.realign.estimate.eoptions.interp = 2;
+    matlabbatch{1}.spm.spatial.realign.estimate.eoptions.wrap = [0 0 0];
+    matlabbatch{1}.spm.spatial.realign.estimate.eoptions.weight = ''; 
+%     matlabbatch{1}.spm.spatial.realign.estwrite.data = {filetimepts};
+%     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.quality = 1;
+%     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.sep = 4;
+%     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.fwhm = 5;
+%     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.rtm = 0;
+%     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.interp = 2;
+%     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.wrap = [0 0 0];
+%     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.weight = {''};
+%     matlabbatch{1}.spm.spatial.realign.estwrite.roptions.which = [2 1];
+%     matlabbatch{1}.spm.spatial.realign.estwrite.roptions.interp = 4;
+%     matlabbatch{1}.spm.spatial.realign.estwrite.roptions.wrap = [0 0 0];
+%     matlabbatch{1}.spm.spatial.realign.estwrite.roptions.mask = 1;
+%     matlabbatch{1}.spm.spatial.realign.estwrite.roptions.prefix = 'r';
     spm_jobman('run',{matlabbatch});
     clear matlabbatch;
     disp('Done.');
-    
+    ea_reslice_nii([directory, options.prefs.rest], [directory, 'r',options.prefs.rest], [1,1,1], 0, 0, 1, [], [],0)
     movefile(restbackup, [directory, options.prefs.rest]);
 end
 
