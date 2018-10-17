@@ -22,7 +22,7 @@ function varargout = ea_checkcoreg(varargin)
 
 % Edit the above text to modify the response to help ea_checkcoreg
 
-% Last Modified by GUIDE v2.5 12-Sep-2018 15:42:21
+% Last Modified by GUIDE v2.5 17-Oct-2018 15:54:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -107,8 +107,6 @@ if exist([directory,'scrf',filesep,'scrf_instore_converted.mat'],'file')
     end
 end
 
-
-
 if isempty(presentfiles)
     evalin('base','checkregempty=1;');
     close(handles.leadfigure)
@@ -116,8 +114,6 @@ if isempty(presentfiles)
 else
     evalin('base','checkregempty=0;');
 end
-
-
 
 %set(handles.previous,'visible','off'); set(handles.next,'visible','off');
 setappdata(handles.leadfigure,'presentfiles',presentfiles)
@@ -170,11 +166,13 @@ warning('on');
 
 ea_mrcview(handles);
 
-% Choose default command line output for ea_checkcoreg
-handles.output = hObject;
+if isvalid(hObject)
+    % Choose default command line output for ea_checkcoreg
+    handles.output = hObject;
 
-% Update handles structure
-guidata(hObject, handles);
+    % Update handles structure
+    guidata(hObject, handles);
+end
 
 % UIWAIT makes ea_checkcoreg wait for user response (see UIRESUME)
 
@@ -473,8 +471,8 @@ switch ea_stripex(currvol)
             [~,pf]=ea_assignpretra(options);
             useasanchor=pf{substitute};
 
-            
-            
+
+
             if ~exist([directory,b0restanchor{activevolume}],'file')
                 V=ea_open_vol(ea_niigz([directory,thisrest]));
                 matlabbatch{1}.spm.util.cat.vols = {
@@ -488,8 +486,8 @@ switch ea_stripex(currvol)
                     };
                 matlabbatch{1}.spm.util.cat.name = '4D.nii';
                 matlabbatch{1}.spm.util.cat.dtype = 0;
-                
-                
+
+
             end
             % in following line correct that useasanchor is the *moving*
             % image (since we're going from anchor to rest/b0.
@@ -553,11 +551,11 @@ for pd=1:length(stimdirs)
         connfolders=dir([directory,'stimulations',filesep,stimdirs(pd).name]);
         for connfolder=1:length(connfolders)
             if ~strcmp(connfolders(connfolder).name(1),'.')
-                
+
                 if connfolders(connfolder).isdir && ~isempty(strfind(connfolders(connfolder).name,thisrest(2:end)))
                     rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
                 end
-                
+
                 % do not use ea_delete here since it doesn't support
                 % wildcards!
                 delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
