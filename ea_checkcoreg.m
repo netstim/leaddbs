@@ -835,17 +835,16 @@ function back_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'coreg');
 
-options=getappdata(handles.leadfigure,'options');
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
-activevolume=getappdata(handles.leadfigure,'activevolume');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 
 if activevolume==1
+    ea_busyaction('off',handles.leadfigure,'coreg');
     return
 else
     activevolume=activevolume-1;
+    setappdata(handles.leadfigure,'activevolume',activevolume);
 end
-setappdata(handles.leadfigure,'activevolume',activevolume);
+
 ea_mrcview(handles);
 title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
