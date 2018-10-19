@@ -19,11 +19,7 @@ for pt=1:length(uipatdir)
                 ea_pat2stl(uipatdir{pt},handles);
             case 'PLY'
                 ea_pat2ply(uipatdir{pt},handles);
-            case 'LS'
-                [~,ptname]=fileparts(uipatdir{pt});
-                ea_exportpat([],[],'ZIP',handles,target);
-                
-                %ea_pat2ls(uipatdir{pt},handles);
+            
             case 'ZIP'
                 ea_pat2ply(uipatdir{pt},handles,target);
                 ea_screenshots(uipatdir{pt},handles,target);
@@ -33,6 +29,14 @@ for pt=1:length(uipatdir)
                     [uipatdir{pt},filesep,'export',filesep,'ply',filesep,'combined_electrodes.ply'],...
                     [uipatdir{pt},filesep,'export',filesep,'views']},...
                     [uipatdir{pt},filesep,'export',filesep]);
+            case 'LS'
+                ea_exportpat([],[],'ZIP',handles,target);
+                response=ea_upload_export(uipatdir{pt});
+                if strcmp(response.StatusCode,'OK')
+                    disp('*** Upload successful.');
+                else
+                    warndlg('Upload failed.','Upload error.');
+                end
         end
     catch
         
