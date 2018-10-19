@@ -46,6 +46,10 @@ end
 % check if matrix has negative entries
 isbipolar=any(tCM(:)<0);
 
+ntCM=tCM; ntCM(isnan(ntCM))=0;
+isdirected=~isequal(ntCM',ntCM);
+clear ntCM
+
 % normalize matrix entries:
 ntCM=tCM;
 ntCM(~isnan(tCM))=ea_normal(ntCM(~isnan(tCM)));
@@ -68,7 +72,11 @@ end
 if get(handles.wmatedges,'Value')
     % draw edges:
     stemfactor=0.5;
+    if isdirected
     tipfactor=0.7;
+    else
+       tipfactor=0; 
+    end
 
     pcnt=1;
     ncnt=1;

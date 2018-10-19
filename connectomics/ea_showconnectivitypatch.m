@@ -56,7 +56,7 @@ if showregs
     nc(nc~=0)=nc(nc~=0)-min(nc(nc~=0));
     nc(nc~=0)=(nc(nc~=0)/max(nc(nc~=0)))*64;
     nc(nnz)=0;
-
+    nc(:)=ea_robustmean(round(nc)); % this will render them homogeneous.
 
     try
         jetlist=parula;
