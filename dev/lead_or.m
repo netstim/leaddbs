@@ -781,14 +781,6 @@ function normcheck_Callback(hObject, eventdata, handles)
 ea_storeui(handles);
 
 
-
-
-
-
-
-
-
-
 % --- Executes on button press in cmappushbutton.
 function cmappushbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to cmappushbutton (see GCBO)

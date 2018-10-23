@@ -47,9 +47,6 @@ ea_write_nii(R1sigR2);
 ea_write_nii(R2sigR1);
 
 
-
-
-
 % This function compare if two correlation coefficients are significantly
 % different.
 % The correlation coefficients were tansfered to z scores using fisher's r

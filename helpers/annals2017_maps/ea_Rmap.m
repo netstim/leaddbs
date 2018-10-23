@@ -53,7 +53,7 @@ if exist('Rperm','var') % permutation test
     [pth,fn,ext]=fileparts(varargin{3});
     varargin{3}=fullfile(pth,[fn,'_sig',ext]);
     ea_exportmap(n,Rnaned,varargin{1:5});
-    
+
     if strcmp(varargin{7},'permuteplot')
         ea_dispercent(0,'Iterating patients');
         for pt=1:length(varargin{1})
@@ -64,16 +64,16 @@ if exist('Rperm','var') % permutation test
             ea_dispercent(pt/length(varargin{1}));
         end
         ea_dispercent(1,'end');
-        
+
         [R]=corr(Ihat',regressor); % Predictive R of unpermuted values
-        
+
         [Rperm]=corr(Ihat_Rperm,regressor); % Predictive R of permuted values
-        
+
         Rperm=sort(Rperm,'descend'); % build distribution
         RlargerRperm=R>Rperm;
         p_predict_perm=sum(~RlargerRperm)./size(Rperm,1); % calculate final permutation based p value
         disp(['Permutation based p for overall prediction = ',num2str(p_predict_perm),'.']);
-        
+
         h=ea_corrplot(regressor,Ihat',{'Empirical vs. Predicted','Empirical','Predicted'},corrtype,p_predict_perm);
     end
 end

@@ -379,7 +379,7 @@ for pdir=1:length(pdirs)
 end
 
 set(handles.labelpopup,'String',parcs);
-if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'));
+if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'))
     set(handles.labelpopup,'Value',length(get(handles.labelpopup,'String')));
 end
 
