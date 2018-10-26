@@ -148,7 +148,7 @@ function ea_runslicer(options, task)
             return;
     end
 
-    script_path = [lead_path, 'slicer.py'];
+    script_path = [patient_path, filesep, 'slicer.py'];
     scene_path = [patient_path, filesep, slicer_mrml];
     if (nfiles < 1)
         warning('Need at least one volume image to load into slicer');
@@ -171,8 +171,8 @@ function ea_runslicer(options, task)
     end
     fclose(fid);
 
-    fid = fopen(script_path,'w'); % write temp python script to load volumes
-    fprintf(fid, ['slicer.util.loadScene("', strrep(scene_path, '\', '\\'), '")\r\n']);
+    fid = fopen(script_path, 'w'); % write temp python script to load volumes
+    fprintf(fid, ['slicer.util.loadScene("', strrep(scene_path, '\', '/'), '")\r\n']);
     fclose(fid);
     disp('Loading up 3D Slicer...');
     if (task > 0)
@@ -181,6 +181,7 @@ function ea_runslicer(options, task)
     else
         system(['"', SLICER, '" --no-splash --python-script "', script_path, '"']);
     end
+    ea_delete(script_path);
 end
 
 function WriteReconstructionFiducialFile(options, patient_path)
