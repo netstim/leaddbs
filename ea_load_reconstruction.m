@@ -14,8 +14,6 @@ function  [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=
 
 options=varargin{1};
 
-
-
 directory=[options.root,options.patientname,filesep];
 try
     % Load Reconstruction
@@ -41,7 +39,7 @@ if exist('reco','var')
     else
         space_type = 'mni';
     end
-    
+
 
     markers = reco.(space_type).markers;
     if ~isfield(markers,'x')
@@ -52,23 +50,25 @@ if exist('reco','var')
             markers(side).y=markers(side).head+orth(:,2)'; % corresponding points in reality
         end
     end
-   
-    
+
     if isfield(reco.(space_type),'coords_mm')
         coords_mm = reco.(space_type).coords_mm;
     else
         [coords_mm]=ea_resolvecoords(markers,options,0);
     end
+
     if isfield(reco.(space_type),'trajectory')
         trajectory = reco.(space_type).trajectory;
     else
         [~,trajectory,markers]=ea_resolvecoords(markers,options,0);
     end
+
     try
         coords_acpc=reco.acpc.coords_mm;
     catch
         coords_acpc=nan;
     end
+
     try
         manually_corrected=reco.props(options.elside).manually_corrected;
         elmodel=reco.props(options.elside).elmodel;
@@ -76,6 +76,7 @@ if exist('reco','var')
         manually_corrected=reco.props(1).manually_corrected;
         elmodel=reco.props(1).elmodel;
     end
+
     if isempty(elmodel)
         for side=1:length(reco.props)
             elmodel=reco.props(side).elmodel;

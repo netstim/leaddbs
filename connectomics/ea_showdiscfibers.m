@@ -1,6 +1,5 @@
 function ea_showdiscfibers(M,percent,resultfig)
 
-
 patlist=M.patient.list(M.ui.listselect);
 I=M.clinical.vars{M.ui.clinicallist}(M.ui.listselect);
 
@@ -18,7 +17,6 @@ opts.allpatients=M.patient.list;
 
 [reforce,connectomechanged,reformat]=checkpresence(M,opts);
 if reforce
-    
     for sub=1:length(M.patient.list) % all patients - for connected fibers selection
         allroilist{sub,1}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii'];
         allroilist{sub,2}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii'];
@@ -42,8 +40,6 @@ else
 end
 
 % visualize:
-
-
 if reformat
     fibidx=unique(fibsweighted(:,4));
     fibcell=cell(length(fibidx),1);
@@ -51,7 +47,7 @@ if reformat
     vals=zeros(length(fibidx),1);
     cnt=1;
     ea_dispercent(0,'reformatting fibers');
-    for fib=fibidx';
+    for fib=fibidx'
         fibcell{cnt}=fibsweighted(fibsweighted(:,4)==fib,1:3);
         vals(cnt)=mean(fibsweighted(fibsweighted(:,4)==fib,5));
         cnt=cnt+1;
@@ -62,8 +58,6 @@ if reformat
 else
     load([M.ui.groupdir,'correlative_fibertracts_reformatted.mat']);
 end
-
-
 
 set(0,'CurrentFigure',resultfig);
 
@@ -127,6 +121,7 @@ calph=mat2cell(alphas,ones(size(cvals,1),1));
 nones=repmat({'none'},size(cvals,1),1);
 [h.EdgeColor]=nones{:};
 
+
 function [reforce,connectomechanged,reformat]=checkpresence(M,opts)
 reforce=1; connectomechanged=1; reformat=1;
 if exist([M.ui.groupdir,'correlative_fibertracts.mat'],'file')
@@ -135,12 +130,14 @@ if exist([M.ui.groupdir,'correlative_fibertracts.mat'],'file')
         reforce=0;
     end
 end
+
 if exist([M.ui.groupdir,'connected_fibers.mat'],'file') % check if base connectome changed.
     d=load([M.ui.groupdir,'correlative_fibertracts.mat'],'opts');
     if isequal(d.opts.connectome,opts.connectome)
         connectomechanged=0;
     end
 end
+
 if ~reforce
     if exist([M.ui.groupdir,'correlative_fibertracts_reformatted.mat'],'file') % check if base connectome changed.
         d=load([M.ui.groupdir,'correlative_fibertracts_reformatted.mat'],'opts');
