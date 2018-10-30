@@ -147,25 +147,24 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
                 for side=itersides
 
-
                     try
                         pobj=ea_load_trajectory(directory,side);
                         pobj.hasPlanning=1;
                         pobj.showPlanning=strcmp(options.leadprod,'or');
                     end
 
-
-
                     pobj.options=popts;
                     pobj.elstruct=elstruct(pt);
                     pobj.showMacro=1;
                     pobj.side=side;
+
                     set(0,'CurrentFigure',resultfig);
                     if exist('el_render','var')
                         el_render(end+1)=ea_trajectory(pobj);
                     else
                         el_render(1)=ea_trajectory(pobj);
                     end
+
                     if ~exist('ellabel','var')
                         ellabel=el_render(end).ellabel;
                     else
@@ -225,10 +224,22 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         % pressed, all electrodes are made visible/invisible).
         drawnow
 
+        if strcmp(options.leadprod,'group')
+            groupIDs = unique([elstruct.group]);
+            for g=1:numel(groupIDs)
+                el_renderID = [[elstruct.group] == groupIDs(g); [elstruct.group] == groupIDs(g)];
+                el_renderID = el_renderID(:);
+                eleGroupToggle = uitoggletool(ht, 'CData', ea_get_icn('electrode_group'),...
+                        'TooltipString', ['Electrode Group ', num2str(groupIDs(g))],...
+                        'OnCallback', {@eleGroupVisible,el_render(el_renderID)},...
+                        'OffCallback', {@eleGroupInvisible,el_render(el_renderID)}, 'State','on');
+            end
+        end
+
         try
             set(ellabel,'Visible','off');
             ellabeltog = uitoggletool(ht, 'CData', ea_get_icn('labels'),...
-                'TooltipString', 'Electrode labels',...
+                'TooltipString', 'Electrode Labels',...
                 'OnCallback', {@objvisible,ellabel},...
                 'OffCallback', {@objinvisible,ellabel}, 'State','off');
         end
@@ -288,13 +299,14 @@ slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
     'TooltipString','Slice Control Figure',...
     'ClickedCallback',{@opensliceviewer,resultfig,options});
 
-    % Initialize MER-Button
+% Initialize MER-Button
 
-    if ~strcmp(options.leadprod, 'group')
-        merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
-            'TooltipString','MER Control Figure',...
-            'ClickedCallback',{@ea_openmerviewer,resultfig,options});
-    end
+if ~strcmp(options.leadprod, 'group')
+    merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
+        'TooltipString','MER Control Figure',...
+        'ClickedCallback',{@ea_openmerviewer,resultfig,options});
+end
+
 % Initialize Convis-Button
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
     'TooltipString','Connectivity Visualization',...
@@ -398,12 +410,10 @@ dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth'),...
     'TooltipString','Save Scene with depth of field',...
     'ClickedCallback',{@ea_export_depth_of_field,resultfig});
 
-
 % Initialize Video-Export button
 
 videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video'),...
     'TooltipString','Save video','ClickedCallback',{@export_video,options});
-
 
 % Init hard_electrode_view button
 if isfield(options,'modality') && options.modality==2
@@ -461,6 +471,7 @@ awin=ea_anatomycontrol(resultfig,options);
 set(awin,'visible',options.d3.verbose);
 setappdata(resultfig,'awin',awin);
 
+
 function openconnectomeviewer(hobj,ev,resultfig,options)
 conwin=ea_convis(gcf,options);
 setappdata(resultfig,'conwin',conwin);
@@ -472,7 +483,6 @@ setappdata(resultfig,'stimwin',stimwin);
 %try WinOnTop(stimwin,true); end
 
 
-
 function opencortexviewer(hobj,ev,resultfig,options)
 cortex=ea_showcortex(resultfig,options);
 setappdata(resultfig,'cortex',cortex);
@@ -480,7 +490,6 @@ setappdata(resultfig,'cortex',cortex);
 awin=ea_anatomycontrol(resultfig,options);
 setappdata(resultfig,'awin',awin);
 try WinOnTop(awin,true); end
-
 
 
 function closesattelites(src,evnt)
@@ -550,18 +559,24 @@ end
 ea_screenshot([options.root,options.patientname,filesep,'export',filesep,'views',filesep,'view_u',sprintf('%03.0f',next),'.png'],'ld');
 
 
+function eleGroupVisible(hobj,ev,eleGroup)
+for i=1:numel(eleGroup)
+    eleGroup(i).toggleH.State='on';
+end
 
+
+function eleGroupInvisible(hobj,ev,eleGroup)
+for i=1:numel(eleGroup)
+    eleGroup(i).toggleH.State='off';
+end
 
 
 function objvisible(hobj,ev,atls)
 set(atls, 'Visible', 'on');
 
 
-
 function objinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
-
-
 
 
 function ctxelvisible(hobj,ev,atls,pt,side,onoff,options)
@@ -578,7 +593,7 @@ if(getappdata(gcf,'altpressed'))
         end
     end
 else
-set(atls(pt).el_render{side}, 'Visible', onoff);
+    set(atls(pt).el_render{side}, 'Visible', onoff);
 end
 
 
