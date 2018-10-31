@@ -187,6 +187,24 @@ switch event.DropType
 end
 
 if strcmp(target, 'groupDir')
+    % Save data for previous selected group folder
+    if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
+        ea_busyaction('on',handles.leadfigure,'group');
+        disp('Saving data...');
+        % save M
+        ea_refresh_lg(handles);
+        M=getappdata(handles.leadfigure,'M');
+        disp('Saving data to disk...');
+        try
+            save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+        catch
+            warning('Data could not be saved.');
+            keyboard
+        end
+        disp('Done.');
+        ea_busyaction('off',handles.leadfigure,'group');
+    end
+
     if length(folders) > 1
         ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', 'Error', dbstack);
     end
@@ -1342,10 +1360,8 @@ for pt=selection
         setappdata(gcf,'M',M);
 
         save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M','-v7.3');
-        try      movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']); end
+        try	movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']); end
         %rmdir([M.ui.groupdir,'tmp'],'s');
-
-
     end
 end
 %% processing done here.
@@ -1468,6 +1484,24 @@ function groupdir_choosebox_Callback(hObject, eventdata, handles)
 % hObject    handle to groupdir_choosebox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Save data for previous selected group folder
+if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
+    ea_busyaction('on',handles.leadfigure,'group');
+    disp('Saving data...');
+    % save M
+    ea_refresh_lg(handles);
+    M=getappdata(handles.leadfigure,'M');
+    disp('Saving data to disk...');
+    try
+        save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+    catch
+        warning('Data could not be saved.');
+        keyboard
+    end
+    disp('Done.');
+    ea_busyaction('off',handles.leadfigure,'group');
+end
 
 % groupdir=ea_uigetdir(ea_startpath,'Choose Group Directory');
 groupdir = uigetdir;
