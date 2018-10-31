@@ -11,7 +11,11 @@ if strcmp(directory(end),filesep) % strip trailing filesep
 end
 options.modality=ea_getmodality(directory);
 [options.root,options.patientname]=fileparts(directory);
-options.root=[options.root,filesep];
+if isempty(options.root)
+    options.root=[pwd,filesep];
+else
+    options.root=[options.root,filesep];
+end
 
 options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);
