@@ -231,9 +231,15 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 el_renderID = el_renderID(:);
                 eleGroupToggle = uitoggletool(ht, 'CData', ea_get_icn('electrode_group'),...
                         'TooltipString', ['Electrode Group ', num2str(groupIDs(g))],...
+                        'Tag', ['Group: ', num2str(groupIDs(g))],...
                         'OnCallback', {@eleGroupVisible,el_render(el_renderID)},...
                         'OffCallback', {@eleGroupInvisible,el_render(el_renderID)}, 'State','on');
             end
+
+            % Move the group toggle forward
+            isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: ', 'once')), allchild(ht));
+            eleToggleInd = numel(groupIDs)+1:find(~isEleToggle,1)-1;
+            ht.Children=ht.Children([eleToggleInd, 1:numel(groupIDs), find(~isEleToggle,1):end]);
         end
 
         try
@@ -272,7 +278,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     cnt=cnt+2;
                 end
         end
-        eladd=uipushtool(ht,'CData',ea_get_icn('addelectrode'),'TooltipString','Add Trajectory...','ClickedCallback',@ea_add_trajectory);
+
+        eladdTract = uipushtool(ht,'CData',ea_get_icn('addelectrode'),'TooltipString','Add Trajectory...','ClickedCallback',@ea_add_trajectory);
 %        setappdata(resultfig,'eltog',eltog);
 
         clear cnt
