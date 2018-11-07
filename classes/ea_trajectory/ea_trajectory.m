@@ -263,7 +263,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     end
 
     % Add tag
-    if strcmp(obj.options.leadprod, 'group')
+    if strcmp(obj.options.leadprod, 'group') && isfield(obj.elstruct,'group')
         Tag = ['Group: ', num2str(obj.elstruct.group), ...
                ', Patient: ', ptname, ...
                ', Side: ', elToggleLabel];
