@@ -279,14 +279,13 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 end
         end
 
-        eladdTract = uipushtool(ht,'CData',ea_get_icn('addelectrode'),'TooltipString','Add Trajectory...','ClickedCallback',@ea_add_trajectory);
-%        setappdata(resultfig,'eltog',eltog);
-
         clear cnt
 
         % Initialize Stimulation-Button
         if ~strcmp(options.leadprod, 'group')
-            stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation'),...
+            eladdTraj = uipushtool(ht,'CData',ea_get_icn('addelectrode'),...
+                'TooltipString','Add Trajectory...','ClickedCallback',@ea_add_trajectory);
+            stimbutton = uipushtool(ht,'CData',ea_get_icn('stimulation'),...
                 'TooltipString','Stimulation Control Figure',...
                 'ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
         end
