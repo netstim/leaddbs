@@ -199,7 +199,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                 traj(:,dim)=linspace(ent(dim),tgt(dim),10);
             end
             delete(obj.patchPlanning);
-            obj.patchPlanning=ea_plot3t(traj(:,1),traj(:,2),traj(:,3),obj.radius,obj.color,12,1);
+            [obj.patchPlanning, fv] = ea_plot3t(traj(:,1),traj(:,2),traj(:,3),obj.radius,obj.color,12,1);
         end
 
         if obj.showMicro
