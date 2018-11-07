@@ -30,8 +30,6 @@ if cfg.mapmethod
     end
 end
 
-
-
 if isempty(uidir)
     ea_error('Please choose and normalize patients first.');
 end
@@ -41,7 +39,11 @@ end
 for pt=1:length(uidir)
     
  %   ea_dispercent(pt/length(uidir));
-    directory=[uidir{pt},filesep];
+    if ~strcmp(uidir{pt}(end), filesep)
+        directory = [uidir{pt},filesep];
+    else
+        directory = uidir{pt};
+    end
     if nargin>5 % determine whether to use manually or automatically defined AC/PC
         automan=varargin{6};
     else
