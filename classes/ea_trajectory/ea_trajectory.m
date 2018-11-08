@@ -251,30 +251,40 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     end
 
     % add toggle button:
-    [~,ptname]=fileparts(fileparts(obj.options.root));
+    [~, ptname] = fileparts(fileparts(obj.options.root));
 
+    % Side label
     switch obj.side
         case 1
-            elToggleLabel = 'Right';
+            elToggleSideLabel = 'Right';
         case 2
-            elToggleLabel = 'Left';
+            elToggleSideLabel = 'Left';
         otherwise
-            elToggleLabel = num2str(obj.side);
+            elToggleSideLabel = num2str(obj.side);
+    end
+
+    % Tooltip and icon
+    if strcmp(obj.relateMicro, 'macro')
+        elToggleTooltip = [ptname,' (',elToggleSideLabel,')'];
+        elToogleIcon = ea_get_icn('electrode');
+    else
+        elToggleTooltip = [ptname,' (planning)'];
+        elToogleIcon = ea_get_icn('electrode_planning');
     end
 
     % Add tag
     if strcmp(obj.options.leadprod, 'group') && isfield(obj.elstruct,'group')
-        Tag = ['Group: ', num2str(obj.elstruct.group), ...
-               ', Patient: ', ptname, ...
-               ', Side: ', elToggleLabel];
+        elToggleTag = ['Group: ', num2str(obj.elstruct.group), ...
+               ', Patient: ', ptname, ', Side: ', elToggleSideLabel];
+    elseif strcmp(obj.relateMicro, 'macro')
+        elToggleTag = ['Patient: ', ptname, ', Side: ', elToggleSideLabel];
     else
-        Tag = ['Patient: ', ptname, ...
-               ', Side: ', elToggleLabel];
+        elToggleTag = ['Patient: ', ptname, ', Planning'];
     end
 
     set(obj.toggleH, {'Parent','CData','TooltipString','Tag','OnCallback','OffCallback','State'},...
         {obj.htH, ...
-        ea_get_icn('electrode'), [ptname,' (',elToggleLabel,')'], Tag,...
+        elToogleIcon, elToggleTooltip, elToggleTag,...
         {@ea_trajvisible,'on',obj}, {@ea_trajvisible,'off',obj}, ...
         ea_bool2onoff(any([obj.showPlanning,obj.showMacro,obj.showMicro]))});
 end
