@@ -1,6 +1,5 @@
 function ea_segment_electrode(~,~,options,resultfig,onoff)
 
-
 directory=[options.root,options.patientname,filesep];
 if options.native
     switch options.modality
@@ -10,7 +9,7 @@ if options.native
             elnii=options.prefs.ctnii_coregistered;
     end
     elssubf='native';
-else    
+else
     switch options.modality
         case 1
             elnii=options.prefs.ltranii;
@@ -31,49 +30,44 @@ switch onoff
     case 'on'
         % check if has been visualized before
         elseg=getappdata(resultfig,'elseg');
-        if ~isempty(elseg) && 0
+        if ~isempty(elseg) % && 0
             elseg.Visible='on';
         else
-            
-            
             % check if segmentation exists
             nii=ea_load_nii([directory,elnii]);
-            
-            if options.modality==1; % not yet implemented for MR.
+
+            if options.modality==1 % not yet implemented for MR.
                 nii.img=-nii.img;
             end
-            
-            
+
             fv=isosurface(permute(nii.img,[2,1,3]),tval);
             fvc=isocaps(permute(nii.img,[2,1,3]),tval);
             fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
             fv.vertices=[fv.vertices;fvc.vertices];
-            
-            
-            %fv=isosurface(nii.img,2500); % only CT support for now
-            %figure, patch('faces',fv.faces,'vertices',fv.vertices,'Edgecolor','none')
+
+            % fv=isosurface(nii.img,2500); % only CT support for now
+            % figure, patch('faces',fv.faces,'vertices',fv.vertices,'Edgecolor','none')
             fv.vertices=[fv.vertices,ones(size(fv.vertices,1),1)];
-            
             fv.vertices=fv.vertices*nii.mat';
-            
+
             %check and apply brainshift correction:
             if exist([directory,'scrf',filesep,'scrf_converted.mat'],'file') && options.native
                 d=load([directory,'scrf',filesep,'scrf_converted.mat']);
                 bsmat=d.mat;
                 fv.vertices=fv.vertices*bsmat';
             end
-            
+
             fv.vertices=fv.vertices(:,1:3);
-            %             % save fv
-            %             if ~exist([directory,'electrode_auto_segment',filesep,elssubf,filesep],'dir')
-            %                 mkdir([directory,'electrode_auto_segment',filesep,elssubf,filesep]);
-            %             end
-            
+            % % save fv
+            % if ~exist([directory,'electrode_auto_segment',filesep,elssubf,filesep],'dir')
+            %     mkdir([directory,'electrode_auto_segment',filesep,elssubf,filesep]);
+            % end
+
             fv=refinepatch(fv);
             fv=ea_smoothpatch(fv,0,10);
-            
+
             elseg=patch('faces',fv.faces,'vertices',fv.vertices,'Edgecolor','none','FaceColor','interp','FaceVertexCData',repmat([0.9,0.9,0.8],size(fv.vertices,1),1));
-            
+
             setappdata(resultfig,'elseg',elseg);
         end
     case 'off'
@@ -189,7 +183,7 @@ end
 
 % Loop through all neighbor arrays and sort them (Rotation same as faces)
 for i=1:size(V,1)
-    
+
     Pneighf=Ne{i};
     if(isempty(Pneighf))
         Pneig=[];
@@ -209,7 +203,7 @@ for i=1:size(V,1)
         Pneig=[];
         Pneig(1)=Pneighf(start);
         Pneig(2)=Pneighf(start+1);
-        
+
         % Add the neighbours with respect to original rotation
         for j=2+double(found):(length(Pneighf)/2)
             found = false;
@@ -262,7 +256,7 @@ Pn=zeros(length(Ne),3); Pnop=zeros(length(Ne),3);
 for i=1:size(V,1)
     P=V(i,:);
     Pneig=Ne{i};
-    
+
     % Find the opposite vertex of each neigbourh vertex.
     % incase of odd number of neigbourhs interpolate the opposite neigbourh
     if(mod(length(Pneig),2)==0)
@@ -278,41 +272,41 @@ for i=1:size(V,1)
             Pn(k,:) = V(Pneig(k),:); Pnop(k,:) = (V(Pneig(neg1),:)+V(Pneig(neg2),:))/2;
         end
     end
-    
+
     for j=1:length(Pneig);
         % Calculate length edges of face
         Ec=sqrt(sum((Pn(j,:)-P).^2))+1e-14;
         Eb=sqrt(sum((Pnop(j,:)-P).^2))+1e-14;
         Ea=sqrt(sum((Pn(j,:)-Pnop(j,:)).^2))+1e-14;
-        
+
         % Calculate face surface area
         s = ((Ea+Eb+Ec)/2);
         h = (2/Ea)*sqrt(s*(s-Ea)*(s-Eb)*(s-Ec))+1e-14;
         x = (Ea^2-Eb^2+Ec^2)/(2*Ea);
-        
+
         % 2D triangle coordinates
         % corx(1)=0;    cory(1)=0;
         % corx(2)=x;    cory(2)=h;
         % corx(3)=Ea;   cory(3)=0;
         % corx(4)=0;    cory(4)=0;
-        
+
         % Calculate tangent of 2D triangle
         Np=[-h x]; Np=Np/(sqrt(sum(Np.^2))+1e-14);
         Ns=[h Ea-x]; Ns=Ns/(sqrt(sum(Ns.^2))+1e-14);
         Nb=Np+Ns;
         Tb=[Nb(2) -Nb(1)];
-        
+
         % Back to 3D coordinates
         Pm=(Pn(j,:)*x+Pnop(j,:)*(Ea-x))/Ea;
         X3=(Pn(j,:)-Pnop(j,:))/Ea;
         Y3=(P-Pm)/h;
-        
+
         % 2D tangent to 3D tangent
         Tb3D=(X3*Tb(1)+Y3*Tb(2));  Tb3D=Tb3D/(sqrt(sum(Tb3D.^2))+1e-14);
-        
+
         % Edge Velocity
         Vv=0.5*(Ec+0.5*Ea);
-        
+
         ETV_num=ETV_num+1;
         ETV_index(ETV_num,:)=[i Pneig(j)];
         ET_table(ETV_num,:)= Tb3D;
@@ -364,20 +358,20 @@ for i=1:length(V)
         % Get the tangent and velocity of the edge Pneig -> P
         index=Ne{Pneig(j)}; vals=ETV_index_vall{Pneig(j)}; select2=vals(index==i);
         Vb=EV_table(select2); Eb=ET_table(select2,:);
-        
+
         % The four points describing the spline
         P0=V(i,:);
         P3=V(Pneig(j),:);
         P1=P0+Ea*Va/3;
         P2=P3+Eb*Vb/3;
-        
+
         % Spline used to calculated the xyz coordinate of the middle of each edge;
         c = 3*(P1 - P0);
         b = 3*(P2 - P1) - c;
         a = P3 - P0 - c - b;
-        
+
         halfwayp = a*0.125 + b*0.250 + c*0.500 + P0;
-        
+
         % Save the edge middle point
         if(sum(HT_index{i}==Pneig(j))==0)
             Vindex=Vindex+1;
@@ -399,14 +393,14 @@ for i=0:length(F)-1,
     vert1=F(i+1,1);
     vert2=F(i+1,2);
     vert3=F(i+1,3);
-    
+
     index=HT_index{vert1}; vals=HT_values{vert1};
     verta= vals(index==vert2);
     index=HT_index{vert2}; vals=HT_values{vert2};
     vertb= vals(index==vert3);
     index=HT_index{vert3}; vals=HT_values{vert3};
     vertc= vals(index==vert1);
-    
+
     Fnew(i*4+1,:)=[vert1 verta vertc];
     Fnew(i*4+2,:)=[verta vert2 vertb];
     Fnew(i*4+3,:)=[vertc vertb vert3];

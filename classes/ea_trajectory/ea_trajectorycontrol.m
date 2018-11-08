@@ -153,7 +153,6 @@ else
 end
 set(handles.electrode_model_popup,'enable',onoff);
 
-
 %% micro/MER
 set(handles.showMicro,'Value',obj.showMicro);
 set(handles.relateMicro,'String',{'Base location on Macroelectrode','Base location on Microelectrode'});
@@ -184,9 +183,10 @@ function showPlanning_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of showPlanning
-obj=getappdata(handles.trajectorycontrol,'obj');
-obj.showPlanning=get(handles.showPlanning,'Value');
-obj.togglestates(1)=get(handles.showPlanning,'Value');
+obj = getappdata(handles.trajectorycontrol,'obj');
+obj.showPlanning = get(handles.showPlanning,'Value');
+obj.togglestates(1) = get(handles.showPlanning,'Value');
+obj.toggleH.State = get(handles.showPlanning,'Value');
 ea_synctrajectoryhandles(handles,obj);
 
 function targetX_Callback(hObject, eventdata, handles)
