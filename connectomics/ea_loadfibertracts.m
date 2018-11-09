@@ -2,6 +2,7 @@ function [fibers,idx,voxmm,mat]=ea_loadfibertracts(cfile,type)
 if ~exist('type','var')
     type=nan;
 end
+
 if ~strcmp(cfile(end-3:end),'.mat')
     [fibers,idx]=ea_trk2ftr(cfile,type);
     [cpa,cfn]=fileparts(cfile);
