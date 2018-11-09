@@ -22,7 +22,7 @@ if ischar(sel)
     end
 else % 'sel' is a threshold
     selInd = vals > sel;
-    suffix = ['_', num2str(sel)];
+    suffix = ['_th', num2str(sel)];
 end
 
 fibcell = fibcell(selInd);
