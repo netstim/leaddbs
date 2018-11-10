@@ -18,7 +18,7 @@ if isstruct(varargin{1})
     options=varargin{1};
     
     directory=[options.root,options.patientname,filesep];
-    options=ea_getptopts(directory,options);
+
 else
     directory=varargin{1};
     if ~strcmp(directory(end),filesep)
@@ -98,7 +98,9 @@ if exist('reco','var')
     end
 
 else % legacy format
-
+    if ~isfield(options,'elspec')
+        options=ea_getptopts(directory,options);
+    end
     if ~exist('markers','var') % backward compatibility to old recon format
         for side=1:options.sides
             markers(side).head=coords_mm{side}(1,:);
