@@ -225,6 +225,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         drawnow
 
         if strcmp(options.leadprod,'group')
+            try
             groupIDs = unique([elstruct.group]);
             for g=1:numel(groupIDs)
                 el_renderID = [[elstruct.group] == groupIDs(g); [elstruct.group] == groupIDs(g)];
@@ -240,6 +241,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: ', 'once')), allchild(ht));
             eleToggleInd = numel(groupIDs)+1:find(~isEleToggle,1)-1;
             ht.Children=ht.Children([eleToggleInd, 1:numel(groupIDs), find(~isEleToggle,1):end]);
+            end
         end
 
         try
