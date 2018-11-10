@@ -12,9 +12,20 @@ function  [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=
 % Please do not use uipatdirs to determine patient directory, this will
 % confuse calls with multiple patients selected.
 
-options=varargin{1};
+coords_acpc=nan; % make sure the output is there.
+if isstruct(varargin{1})
 
-directory=[options.root,options.patientname,filesep];
+    options=varargin{1};
+    
+    directory=[options.root,options.patientname,filesep];
+    options=ea_getptopts(directory,options);
+else
+    directory=varargin{1};
+    if ~strcmp(directory(end),filesep)
+        directory=[directory,filesep];
+    end
+    options=ea_getptopts(directory);    
+end
 try
     % Load Reconstruction
     load([directory,'ea_reconstruction.mat']);

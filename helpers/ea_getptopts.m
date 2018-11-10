@@ -20,9 +20,19 @@ end
 options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);
 options.earoot=ea_getearoot;
-options=ea_detsides(options);
+try
+    options=ea_detsides(options);
+catch
+    options.sides=1:2;
+end
 if exist([directory,filesep,'ea_reconstruction.mat'],'file')
     load([directory,filesep,'ea_reconstruction.mat']);
-    options.elmodel=reco.props(1).elmodel;
+    try
+        options.elmodel=reco.props(1).elmodel;
+    catch
+        options.elmodel='Medtronic 3389';
+    end
+    options=ea_resolve_elspec(options);
 end
+options.native=0;
 
