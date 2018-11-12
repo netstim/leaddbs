@@ -45,7 +45,7 @@ if nargin < 1
     sh = findobj('flat', 'type', 'patch');
 else
     objs = get(ax, 'Children');
-    sh = findobj(objs, 'flat', 'type', 'patch');
+    sh = findobj(objs, 'flat', 'type', 'patch', 'visible', 'on');
 end
 
 if isempty(sh)
@@ -64,12 +64,11 @@ faces = cell(1, N);
 facevertexcdata = cell(1, N);
 renderer = cell(1, N);
 for i=1:N
-    disp(['     Preprocessing patch No.', num2str(i) ] );
+    fprintf(['\nPreprocessing patch No.', num2str(i), '\n'] );
     h = sh(i, 1);
     
     [v, f, fvx, r] = single_patch_preprocessor(h);
-    disp('Face Vertex Size of patch:')
-    size(fvx)
+    disp(['Face Vertex Size of patch: ', num2str(size(fvx))]);
     vertices{1, i} = v;
     faces{1, i} = f;
     facevertexcdata{1, i} = fvx;
