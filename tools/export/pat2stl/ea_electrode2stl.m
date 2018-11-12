@@ -1,11 +1,21 @@
 function fv=ea_electrode2stl(directory,side,handles)
 
 options=ea_handles2options(handles);
+if exist([directory,'ea_reconstruction.mat'],'file')
+    load([directory,'ea_reconstruction.mat']);
+    options.elmodel=reco.props(1).elmodel;
+    if isempty(options.elmodel)
+        try
+            options.elmodel=reco.props(2).elmodel;
+        end
+    end
+end
 options=ea_resolve_elspec(options);
 [options.root,options.patientname]=fileparts(directory);
 options.root=[options.root,filesep];
-
-
+options.leadprod='dbs';
+options.sidecolor=1;
+options.prefs=ea_prefs;
 
 [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 
@@ -16,23 +26,28 @@ elstruct(1).name=options.patientname;
 elstruct(1).markers=markers;
 resultfig=figure('visible','off');
 
-[el_render(1).el_render,el_label(:,1)]=ea_showelectrode(resultfig,elstruct(1),1,options);
-elrend=el_render.el_render;
+pobj.options=options;
+pobj.elstruct=elstruct(1);
+pobj.showMacro=1;
+pobj.side=side;
+set(0,'CurrentFigure',resultfig);
+el_render(1)=ea_trajectory(pobj);
 
-    switch side
-        case 1
-            sidec='right_';
-        case 2
-            sidec='left_';
-    end
-    for f=1:length(elrend{side})
-        fv(f).vertices=get(elrend{side}(f),'Vertices');
-        fv(f).faces=get(elrend{side}(f),'Faces');
-        fv(f).facevertexcdata=get(elrend{side}(f),'FaceVertexCData');
-    end
-    fv=ea_concatfv(fv);
-    fv=ea_mapcolvert2face(fv);
-    ea_stlwrite([directory,'export',filesep,'stl',filesep,sidec,'electrode.stl'],fv,'FACECOLOR',fv.facevertexcdata);
+elrend=el_render.elpatch;
 
+switch side
+    case 1
+        sidec='right_';
+    case 2
+        sidec='left_';
+end
 
+for f=1:length(elrend)
+    fv(f).vertices=get(elrend(f),'Vertices');
+    fv(f).faces=get(elrend(f),'Faces');
+    fv(f).facevertexcdata=get(elrend(f),'FaceVertexCData');
+end
 
+fv=ea_concatfv(fv);
+fv=ea_mapcolvert2face(fv);
+ea_stlwrite([directory,'export',filesep,'stl',filesep,sidec,'electrode.stl'],fv,'FACECOLOR',fv.facevertexcdata);
