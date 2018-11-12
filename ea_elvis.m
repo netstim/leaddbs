@@ -95,7 +95,6 @@ axis fill
 
 % colormap('gray')
 
-
 %% Patient specific part (skipped if no patient is selected or no reco available):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
     if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') || nargin>1
@@ -130,71 +129,65 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         for pt=1:length(elstruct)
             % show electrodes..
-            %try
-
-                popts=options;
-                if strcmp(options.leadprod,'group')
-                    try
-                        directory=[options.patient_list{elstruct(pt).pt},filesep];
-                        [popts.root,popts.patientname]=fileparts(directory);
-                        popts.root=[popts.root,filesep];
-                    catch
-                        directory=[options.root,options.patientname,filesep];
-                    end
-
-                    popts=ea_detsides(popts);
-
-                else
+            popts=options;
+            if strcmp(options.leadprod,'group')
+                try
+                    directory=[options.patient_list{elstruct(pt).pt},filesep];
+                    [popts.root,popts.patientname]=fileparts(directory);
+                    popts.root=[popts.root,filesep];
+                catch
                     directory=[options.root,options.patientname,filesep];
                 end
 
-                itersides=popts.sides;
+                popts=ea_detsides(popts);
 
-                for side=itersides
+            else
+                directory=[options.root,options.patientname,filesep];
+            end
 
+            itersides=popts.sides;
+
+            for side=itersides
+                try
+                    pobj=ea_load_trajectory(directory,side);
+                    pobj.hasPlanning=1;
+                    pobj.showPlanning=strcmp(options.leadprod,'or');
+                end
+
+                pobj.options=popts;
+                pobj.elstruct=elstruct(pt);
+                pobj.showMacro=1;
+                pobj.side=side;
+
+                set(0,'CurrentFigure',resultfig);
+                if exist('el_render','var')
+                    el_render(end+1)=ea_trajectory(pobj);
+                else
+                    el_render(1)=ea_trajectory(pobj);
+                end
+
+                if ~exist('ellabel','var')
+                    ellabel=el_render(end).ellabel;
+                else
                     try
-                        pobj=ea_load_trajectory(directory,side);
-                        pobj.hasPlanning=1;
-                        pobj.showPlanning=strcmp(options.leadprod,'or');
-                    end
-
-                    pobj.options=popts;
-                    pobj.elstruct=elstruct(pt);
-                    pobj.showMacro=1;
-                    pobj.side=side;
-
-                    set(0,'CurrentFigure',resultfig);
-                    if exist('el_render','var')
-                        el_render(end+1)=ea_trajectory(pobj);
-                    else
-                        el_render(1)=ea_trajectory(pobj);
-                    end
-
-                    if ~exist('ellabel','var')
-                        ellabel=el_render(end).ellabel;
-                    else
-                        try
-                        ellabel(end+1)=el_render(end).ellabel;
-                        end
+                    ellabel(end+1)=el_render(end).ellabel;
                     end
                 end
-                %[el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
-%             catch
-%                 ea_error(['Couldn''t visualize electrode from patient ',num2str(pt),'.']);
-%             end
+            end
+
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
                % this part for brainbrowser support.
                vizstruct=struct('faces',[],'vertices',[],'colors',[]);
 
                cnt=1;
                 for side=1:length(options.sides)
-                    extract=1:length(el_render(pt).el_render{side});
+                    extract=1:length(el_render(side).elpatch);
                     for ex=extract
-                        tp=el_render(pt).el_render{side}(ex);
+                        tp=el_render(side).elpatch(ex);
 
                         try % works only in ML 2015
-                            tr=triangulation(get(el_render(pt).el_render{side}(ex),'Faces'),...
-                                get(el_render(pt).el_render{side}(ex),'Vertices'));
+                            tr=triangulation(get(el_render(side).elpatch(ex),'Faces'),...
+                                get(el_render(side).elpatch(ex),'Vertices'));
                             vizstruct(cnt).normals = vertexNormal(tr);
                         catch % workaround for older versions..
                             vizstruct(cnt).normals=get(tp,'VertexNormals')*-1;
@@ -202,7 +195,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
                         vizstruct(cnt).faces=get(tp,'Faces');
                         vizstruct(cnt).vertices=get(tp,'Vertices');
-                        scolor=get(el_render(pt).el_render{side}(ex),'FaceVertexCData');
+                        scolor=get(el_render(side).elpatch(ex),'FaceVertexCData');
                         vizstruct(cnt).colors=scolor;
                         %vizstruct(cnt).colors=repmat([squeeze(scolor(1,1,:))',0.7],length(vizstruct(cnt).faces),1);
                         vizstruct(cnt).name='';
@@ -345,7 +338,7 @@ if options.d3.writeatlases
 
     if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
         try % see if electrode has been defined.
-        cnt=length(vizstruct);
+            cnt=length(vizstruct);
         catch
             cnt=0;
         end
@@ -353,7 +346,6 @@ if options.d3.writeatlases
         try
             for side=1:length(options.sides)
                 for atl=1:length(atlases.fv)
-
                     if isfield(atlases.fv{atl,side},'faces')
                         vizstruct(cnt+1).faces=atlases.fv{atl,side}.faces;
                         vizstruct(cnt+1).vertices=atlases.fv{atl,side}.vertices;
