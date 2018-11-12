@@ -70,6 +70,7 @@ else
 end
 rm_aux_files(filename)
 
+
 function [] = rm_aux_files(fname)
 fname = clear_file_extension(fname, '.tex');
 

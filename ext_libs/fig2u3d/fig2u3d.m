@@ -240,9 +240,10 @@ idtf2u3d(fname)
 rm_idtf(fname, delete_idtf)
 
 part_renderers = [surf_renderers, patch_renderers];
-view2vws(ax, fname, part_renderers, fix_daspect)
+view2vws(ax, fname, part_renderers, fix_daspect);
 
 save_png_substitute(ax, fname, saveimg, imgtype, varargin{:} )
+
 
 function rm_idtf(fname, yesno)
 if yesno == 0
@@ -251,9 +252,12 @@ end
 
 % fname extensions ok ?
 fname = check_file_extension(fname, '.idtf');
-fname  = fullfile(cd, fname);
+if isempty(fileparts(fname))
+    fname  = fullfile(cd, fname);
+end
 
-system(['rm ', fname] )
+delete(fname)
+
 
 function plot_axes(ax, addaxes)
 if addaxes == 0
@@ -272,10 +276,11 @@ if dim == 3
 end
 
 held = takehold(ax);
-    quivermd(ax, x0, vx, 'k')
-    quivermd(ax, x0, vy, 'k')
-    quivermd(ax, x0, vz, 'k')
+quivermd(ax, x0, vx, 'k')
+quivermd(ax, x0, vy, 'k')
+quivermd(ax, x0, vz, 'k')
 restorehold(ax, held)
+
 
 function [] = save_png_substitute(ax, fname, saveimg, imgtype, varargin)
 % save image substitute ?
@@ -305,14 +310,16 @@ else
     print(fighandle, imgtype, varargin{:}, fname)
 end
 
+
 function [a] = axis_rescale(a, dar)
 if isempty(a)
-   return
+    return
 end
 
 a = cellfun(@(x) cell_divider(x, dar), a, 'UniformOutput', false);
 
+
 function [x] = cell_divider(x, dar)
 x = [x(1, :)/dar(1);
      x(2, :)/dar(2);
-     x(3, :)/dar(3) ];
+     x(3, :)/dar(3)];

@@ -45,7 +45,7 @@ if strcmp(media9_or_movie15, 'movie15')
     fig2u3d(ax, fname)
     set(ax, 'Projection', curproj)
 else
-    fig2u3d(ax, fname)
+    fig2u3d(ax, fname);
 end
 
 u3d_in_latex(fname, media9_or_movie15)
@@ -73,7 +73,7 @@ else
 end
 
 fid = fopen(texfile, 'w');
-    fprintf(fid, content, fname);
+fprintf(fid, content, fname);
 fclose(fid);
 
 function [str] = latex_content

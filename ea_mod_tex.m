@@ -64,10 +64,7 @@ for side=1:2
             fprintf(fID,'%s\n','	\end{figure}');
         end
     end
-    
 end
 
-
 fprintf(fID,'%s\n','\end{document}');
-
 fclose(fID);
