@@ -8,7 +8,6 @@ end
 disp('Exporting Results...');
 for pt=1:length(uipatdir)
     try
-        
         if ~exist([uipatdir{pt}, filesep, 'export', filesep, lower(exptype)],'dir')
             mkdir([uipatdir{pt}, filesep, 'export', filesep, lower(exptype)]);
         end
@@ -19,7 +18,6 @@ for pt=1:length(uipatdir)
                 ea_pat2stl(uipatdir{pt},handles);
             case 'PLY'
                 ea_pat2ply(uipatdir{pt},handles);
-            
             case 'ZIP'
                 ea_pat2ply(uipatdir{pt},handles,target);
                 ea_screenshots(uipatdir{pt},handles,target);
@@ -39,7 +37,6 @@ for pt=1:length(uipatdir)
                 end
         end
     catch
-        
         msgbox(['Export for pt: ',uipatdir{pt},' failed.']);
     end
 end

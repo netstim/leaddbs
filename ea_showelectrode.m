@@ -10,12 +10,10 @@ trajectory=elstruct.trajectory;
 
 
 if ~isfield(elstruct,'elmodel') % usually, elspec is defined by the GUI. In case of group analyses, for each patient, a different electrode model can be selected for rendering.
-    
     elspec=options.elspec;
 else % if elspec is defined for each electrode, overwrite options-struct settings here.
     o=ea_resolve_elspec(elstruct);
     elspec=o.elspec; clear o
-    
 end
 
 if ~isfield(elstruct,'activecontacts')
@@ -31,7 +29,6 @@ try
     jetlist=evalin('base','custom_cmap');
 end
 %   jetlist=jet;
-
 
 for side=options.sides
     trajvector=mean(diff(trajectory{side}));
@@ -250,7 +247,6 @@ for side=options.sides
                         elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
                         pcnt=pcnt+1;
                     else
-                        
                         elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
                             mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
                             mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
