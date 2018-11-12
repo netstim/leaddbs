@@ -14,6 +14,11 @@ function resultfig=ea_elvis(varargin)
 
 % Initialize inputs
 options=varargin{1};
+
+if ~isfield(options, 'leadprod')
+    options.leadprod = '';
+end
+
 if nargin>2
     stimparams=varargin{3};
 else
