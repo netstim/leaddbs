@@ -56,11 +56,11 @@ if ~usecork
                 fv(f).facevertexcdata=fv(f).facevertexcdata';
             end
 
-            if ~isfield(afv,'facevertexcdata')
-                afv.facevertexcdata=zeros(sum(facecollen),3);
-            end
             fcsize=size(fv(f).facevertexcdata,1);
-
+            fcdim=size(fv(f).facevertexcdata,2);
+            if ~isfield(afv,'facevertexcdata')
+                afv.facevertexcdata=zeros(sum(facecollen),fcdim);
+            end
 
             afv.facevertexcdata(fcoffset:fcoffset+fcsize-1,:)=...
                 fv(f).facevertexcdata;
@@ -71,8 +71,6 @@ if ~usecork
     end
     ea_dispercent(1,'end');
 else
-
-
     for f=1:length(fv)
         if f==1
             afv=fv(1);
@@ -80,7 +78,4 @@ else
             [afv.vertices,afv.faces]=surfboolean(fv(f).vertices,fv(f).faces,'xor',afv.vertices,afv.faces);
         end
     end
-
-
-
 end
