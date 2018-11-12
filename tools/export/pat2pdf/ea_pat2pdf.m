@@ -4,9 +4,10 @@ options=ea_handles2options(handles);
 
 [options.root,options.patientname]=fileparts(uipatdir);
 options.root=[options.root,filesep];
-options.d3.expdf=1;
 options=ea_resolve_elspec(options);
 options.prefs=ea_prefs(options.patientname);
+options.d2 = ea_tdhandles2options([], options.d2);
+options.d3.expdf=1;
 options.d3.verbose='off';
 
 if ~ea_checkslicespresent(options)
@@ -14,8 +15,6 @@ if ~ea_checkslicespresent(options)
 end
 
 ea_elvis(options);
-
-
 
 
 function present=ea_checkslicespresent(options)
