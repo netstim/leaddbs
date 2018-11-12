@@ -5,10 +5,14 @@ atlasset=atlasset{get(handles.atlassetpopup,'Value')};
 
 cfv(1)=ea_atlas2stl({atlasset},[uipatdir,filesep,'export',filesep,'stl',filesep,'anatomy.stl']);
 
-cfv(2)=ea_electrode2stl([uipatdir,filesep],1,handles);
-cfv(3)=ea_electrode2stl([uipatdir,filesep],2,handles);
+options=ea_detsides(ea_getptopts(uipatdir));
+cnt=1;
+for side=options.sides
+    cfv(1+cnt)=ea_electrode2stl([uipatdir,filesep],side,handles);
+    cnt=cnt+1;
+end
 
-ecfv = ea_concatfv(cfv(2:3));
+ecfv = ea_concatfv(cfv(2:end));
 ea_stlwrite([uipatdir,filesep,'export',filesep,'stl',filesep,'combined_electrodes.stl'],ecfv,'FACECOLOR',ecfv.facevertexcdata);
 
 scfv=ea_concatfv(cfv);
