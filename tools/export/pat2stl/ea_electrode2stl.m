@@ -40,6 +40,8 @@ switch side
         sidec='right_';
     case 2
         sidec='left_';
+    otherwise
+        sidec = num2str(side);
 end
 
 for f=1:length(elrend)
