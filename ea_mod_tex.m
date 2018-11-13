@@ -21,14 +21,24 @@ fprintf(fID,'%s\n','\usepackage{xunicode,xltxtra}');
 fprintf(fID,'%s\n','\usepackage[dvipdfmx]{media9}');
 fprintf(fID,'%s\n','\usepackage{graphicx}');
 fprintf(fID,'%s\n','\usepackage{float}');
+fprintf(fID,'%s\n\n','\usepackage{hyperref}');
+
+fprintf(fID,'%s\n','\hypersetup{');
+fprintf(fID,'%s\n','    colorlinks,');
+fprintf(fID,'%s\n','    citecolor=black,');
+fprintf(fID,'%s\n','    filecolor=black,');
+fprintf(fID,'%s\n','    linkcolor=black,');
+fprintf(fID,'%s\n','    urlcolor=black');
+fprintf(fID,'%s\n\n','}');
 
 fprintf(fID,'%s\n',['\title{Lead-DBS Electrode localization}\author{',patientname,'}']);
 
 fprintf(fID,'%s\n','\begin{document}');
-fprintf(fID,'%s\n','	\pagenumbering{gobble}');
+fprintf(fID,'%s\n\n','	\pagenumbering{gobble}');
 fprintf(fID,'%s\n','	\maketitle');
-fprintf(fID,'%s\n','	\newpage');
-fprintf(fID,'%s\n','	');
+fprintf(fID,'%s\n\n','	\newpage');
+fprintf(fID,'%s\n','	\tableofcontents');
+fprintf(fID,'%s\n\n','	\newpage');
 fprintf(fID,'%s\n','	\pagenumbering{arabic}');
 fprintf(fID,'%s\n','');
 fprintf(fID,'%s\n','	\section{3D view}');
