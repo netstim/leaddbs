@@ -45,8 +45,13 @@ if nargin < 1
     sh = findobj('flat', 'type', 'patch');
 else
     objs = get(ax, 'Children');
-    sh = findobj(objs, 'flat', 'type', 'patch', 'visible', 'on');
+    sh = findobj(objs, 'flat', 'type', 'patch');
 end
+
+% Remove dummpy patch
+isDummyPatch = arrayfun(@(p) isequal(p.Faces, [1 2 3]) && ...
+                             isequal(p.Vertices, [0 1;1 1;0 0]), sh);
+sh = sh(~isDummyPatch);
 
 if isempty(sh)
     disp('No patch objects found.');

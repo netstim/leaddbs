@@ -76,6 +76,7 @@ fid = fopen(texfile, 'w');
 fprintf(fid, content, fname);
 fclose(fid);
 
+
 function [str] = latex_content
 % media9 or movie15 = string,
 % packages needed by xelatex = string

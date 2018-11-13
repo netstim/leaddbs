@@ -143,6 +143,7 @@ s = sprintf(str);
 disp('Exported axes view in .vws file for LaTeX media9 package is:')
 disp(s)
 
+
 function [part_strs] = add_part_renderers(part_renderers)
 n = size(part_renderers, 2);
 part_strs = cell(1, n);
@@ -155,6 +156,7 @@ for i=1:n
     s = sprintf(s, partname, part_rendermode);
     part_strs{1, i} = s;
 end
+
 
 function [str] = part_str
 str = verbatim;
