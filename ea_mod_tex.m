@@ -16,7 +16,6 @@ fID=fopen([fname,'.tex'],'w');
 % document header:
 
 fprintf(fID,'%s\n','\documentclass{article}');
-fprintf(fID,'%s\n','\usepackage[utf8]{inputenc}');
 fprintf(fID,'%s\n','\usepackage[no-math]{fontspec}');
 fprintf(fID,'%s\n','\usepackage{xunicode,xltxtra}');
 fprintf(fID,'%s\n','\usepackage[dvipdfmx]{media9}');
@@ -40,7 +39,7 @@ fprintf(fID,'%s\n','	');
 
 for side=1:2
     % begin right hemisphere
-    
+
     switch side
         case 1
             cntnms=options.elspec.contactnames(1:options.elspec.numel);
@@ -49,7 +48,7 @@ for side=1:2
             cntnms=options.elspec.contactnames(1+options.elspec.numel:2*options.elspec.numel);
             pf='Left';
     end
-    
+
     fprintf(fID,'%s\n',['	\subsection{',pf,' hemisphere}']);
     for cnt=1:options.elspec.numel
         fprintf(fID,'%s\n',['	\subsubsection{',cntnms{cnt},'}']);
