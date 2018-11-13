@@ -1,12 +1,17 @@
 function ea_mod_tex(fname,options)
 
-delete([fname,'.aux']);
-delete([fname,'.tex']);
+if exist([fname,'.aux'], 'file')
+    delete([fname,'.aux']);
+end
+
+if exist([fname,'.tex'], 'file')
+    delete([fname,'.tex']);
+end
+
 fID=fopen([fname,'.tex'],'w');
 
 [pth,fn,ext]=fileparts(fname);
 [~,patientname]=fileparts(pth);
-
 
 % document header:
 
