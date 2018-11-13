@@ -16,6 +16,10 @@ end
 
 ea_elvis(options);
 
+fname = [uipatdir, filesep, 'Lead-DBS_Electrode_Localization'];
+movefile([fname, '.u3d'], [uipatdir, filesep, 'export', filesep, 'pdf']);
+movefile([fname, '.pdf'], [uipatdir, filesep, 'export', filesep, 'pdf']);
+
 
 function present=ea_checkslicespresent(options)
 present=1;

@@ -80,6 +80,7 @@ for i=1:N
     renderer{1, i} = r;
 end
 
+
 function [vertices, faces, facevertexcdata, renderer] = single_patch_preprocessor(h)
 %% shading -> renderer in adobe reader
 edgecolor = get(h, 'EdgeColor');
@@ -147,6 +148,7 @@ ax = get(h, 'Parent');
 % end
 
 facevertexcdata = scaled_ind2rgb(facevertexcdata, ax);
+
 
 function [realcolor] = scaled_ind2rgb(cdata, ax)
 cdata = double(cdata);
