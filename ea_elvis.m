@@ -127,6 +127,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             clear coords_mm trajectory
         end
 
+        elSide = cell(1, length(elstruct));
         for pt=1:length(elstruct)
             % show electrodes..
             popts=options;
@@ -140,14 +141,13 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 end
 
                 popts=ea_detsides(popts);
-
             else
                 directory=[options.root,options.patientname,filesep];
             end
 
-            itersides=popts.sides;
+            elSide{pt}=popts.sides;
 
-            for side=itersides
+            for side=elSide{pt}
                 try
                     pobj=ea_load_trajectory(directory,side);
                     pobj.hasPlanning=1;
@@ -170,7 +170,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     ellabel=el_render(end).ellabel;
                 else
                     try
-                    ellabel(end+1)=el_render(end).ellabel;
+                        ellabel(end+1)=el_render(end).ellabel;
                     end
                 end
             end
@@ -204,15 +204,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 end
             end
 
-           % show microelectrode recording data
-           if exist('merstruct','var')
+            % show microelectrode recording data
+            if exist('merstruct','var')
                try
                    [mer(pt).render,merlabel(:,pt)]=ea_showmer(resultfig,merstruct(pt),pt,options);
                catch
                    ea_error(['Couldn''''t visualize electrode from patient ',num2str(pt),'.']);
                end
-           end
-
+            end
         end
 
         setappdata(resultfig,'elstruct',elstruct);
@@ -223,23 +222,22 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         drawnow
 
         if strcmp(options.leadprod,'group')
-            try
-            groupIDs = unique([elstruct.group]);
-            for g=1:numel(groupIDs)
-                el_renderID = [[elstruct.group] == groupIDs(g); [elstruct.group] == groupIDs(g)];
-                el_renderID = el_renderID(:);
+            elstructGroupID = [elstruct.group];
+            sideNum = cellfun(@numel, elSide);
+            elrenderGroupID = repelem(elstructGroupID, sideNum);
+            for g = unique(elstructGroupID)
+                el_renderID = elrenderGroupID == g;
                 eleGroupToggle = uitoggletool(ht, 'CData', ea_get_icn('electrode_group'),...
-                        'TooltipString', ['Electrode Group ', num2str(groupIDs(g))],...
-                        'Tag', ['Group: ', num2str(groupIDs(g))],...
+                        'TooltipString', ['Electrode Group ', num2str(g)],...
+                        'Tag', ['Group: ', num2str(g)],...
                         'OnCallback', {@eleGroupVisible,el_render(el_renderID)},...
                         'OffCallback', {@eleGroupInvisible,el_render(el_renderID)}, 'State','on');
             end
 
             % Move the group toggle forward
             isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: ', 'once')), allchild(ht));
-            eleToggleInd = numel(groupIDs)+1:find(~isEleToggle,1)-1;
-            ht.Children=ht.Children([eleToggleInd, 1:numel(groupIDs), find(~isEleToggle,1):end]);
-            end
+            eleToggleInd = numel(unique(elstructGroupID))+1:find(~isEleToggle,1)-1;
+            ht.Children=ht.Children([eleToggleInd, 1:numel(unique(elstructGroupID)), find(~isEleToggle,1):end]);
         end
 
         try
@@ -374,7 +372,6 @@ end
 
 if isfield(options.d3,'expdf')
     if options.d3.expdf
-        %cd([options.root,options.patientname]);
         fig2pdf3d(gca,[options.root,options.patientname,filesep,'Lead-DBS_Electrode_Localization'],options);
         close(resultfig);
         return
