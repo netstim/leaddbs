@@ -89,6 +89,7 @@ for side=options.sides
             electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
             electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.insulation(ins));
+            elrender(cnt).Tag = ['Insulation', num2str(cnt), '_Side', num2str(side)];
             
             if isfield(options,'sidecolor')
                 switch side
@@ -116,6 +117,7 @@ for side=options.sides
             electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.contacts(con));
+            elrender(cnt).Tag = ['Contact', num2str(con), '_Side', num2str(side)];
             eltype(cnt)=1;
             if ~isempty(options.colorMacroContacts)
                 specsurf(elrender(cnt),options.colorMacroContacts(con,:),1);
