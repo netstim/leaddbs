@@ -1,4 +1,4 @@
-function [] = fig2pdf3d(ax, filename,options,media9_or_movie15, pdforxelatex)
+function [] = fig2pdf3d(ax, filename, options, media9_or_movie15, pdforxelatex)
 %FIG2PDF3D  Convert axes to PDF with embedded interactive 3D image.
 %
 % usage

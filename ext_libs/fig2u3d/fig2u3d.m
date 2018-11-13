@@ -192,7 +192,7 @@ fix_daspect = 1; % when axes are unequal, change aspect ratio of exported
 
 %% convert graphics objects to meshes, line_sets and point_sets
 [surf_vertices, surf_faces, surf_facevertexcdata, surf_renderers] = u3d_pre_surface(ax);
-[patch_vertices, patch_faces, patch_facevertexcdata, patch_renderers] = u3d_pre_patch(ax);
+[patch_vertices, patch_faces, patch_facevertexcdata, patch_renderers, patch_tags] = u3d_pre_patch(ax);
 [line_vertices, line_edges, line_colors,...
                 line_points, line_point_colors] = u3d_pre_line(ax);
 [quiver_vertices, quiver_edges, quiver_colors] = u3d_pre_quivergroup(ax);
@@ -230,17 +230,19 @@ if fix_daspect == 1
 end
 
 %% export
-
+mesh_tag = patch_tags;
 fig2idtf(fname,...
           mesh_vertices, mesh_faces, mesh_colors,...
           line_vertices, line_edges, line_colors,...
-          pointset_points, pointset_colors)
+          pointset_points, pointset_colors,...
+          mesh_tag);
 
 idtf2u3d(fname)
 rm_idtf(fname, delete_idtf)
 
 part_renderers = [surf_renderers, patch_renderers];
-view2vws(ax, fname, part_renderers, fix_daspect);
+part_tags = patch_tags;
+view2vws(ax, fname, part_renderers, fix_daspect, part_tags);
 
 save_png_substitute(ax, fname, saveimg, imgtype, varargin{:} )
 
