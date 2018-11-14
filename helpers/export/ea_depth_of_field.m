@@ -48,7 +48,6 @@ set(fighandle,'Visible','on');
 im=im./((mask*count)+1);
 
 
-
 function [out1,out2,out3,out4,out5] = imtrim(im,location)
 %IMTRIM auto-crop an image like Photoshop's Edit>Trim feature, as of yet only
 %grayscale imagse are supported

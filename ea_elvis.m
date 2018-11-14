@@ -533,19 +533,17 @@ function export_hd(hobj,ev)
 set(gca, 'Color', 'none');
 set(gcf,'color','none');
 
-
 [FileName,PathName] = uiputfile('LEAD_Scene.png','Save file name');
 if FileName
-% set(gcf, 'Color', [1,1,1]);
-% [~, cdata] = ea_myaa([4, 2]);
-%
-% imwrite(cdata, [PathName,FileName], 'png');
-ea_screenshot([PathName,FileName],'myaa');
-
+    % set(gcf, 'Color', [1,1,1]);
+    % [~, cdata] = ea_myaa([4, 2]);
+    %
+    % imwrite(cdata, [PathName,FileName], 'png');
+    ea_screenshot([PathName,FileName],'myaa');
 end
 
-function dump_screenshot(hobj,ev,resultfig,options)
 
+function dump_screenshot(hobj,ev,resultfig,options)
 
 set(0,'CurrentFigure',resultfig);
 if ~exist([options.root,options.patientname,filesep,'export',filesep,'views'],'dir')

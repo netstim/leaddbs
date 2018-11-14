@@ -1,7 +1,5 @@
 function ea_screenshots(uipatdir,handles,target)
-
-
-
+% Wrapper of ea_screenshot used for exporting ZIP
 
 options=ea_getptopts(uipatdir);
 options.fiberthresh=1;
@@ -43,10 +41,3 @@ for view=1:length(views)
 % end
 end
 close(resultfig);
-
-
-
-
-
-
-
