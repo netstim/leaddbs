@@ -32,7 +32,7 @@ if ~options.savefibers.load
     %% load fibers (either from file or from figure and store in figure for next time).
     % get app data
     disp('Loading fiberset...');
-    if ~changedstates(1) % fibers file already loaded
+    if ~changedstates(1) && ~isempty(getappdata(resultfig,'fibers')) % fibers file already loaded
         fibers=getappdata(resultfig,'fibers');
             idxv=fibers(:,4);
         fibers=fibers(:,1:3);
