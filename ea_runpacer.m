@@ -9,7 +9,15 @@ if strcmp(options.prefs.reco.mancoruse,'postop')
         ctnii=options.prefs.rawctnii_unnormalized;
     end
 end
-elecmodels=PaCER([options.root,options.patientname,filesep,ctnii],'finalDegree',1,'electrodeType',ea_mod2pacermod(options.elmodel));
+niiCTSPM = NiftiModSPM([options.root,options.patientname,filesep,ctnii]); % load nifti using SPM instead of PaCER default Nifti Toolbox
+elecmodels=PaCER(niiCTSPM,'finalDegree',1,'electrodeType',ea_mod2pacermod(options.elmodel));
+disp('======== PaCER reconstruction finished. Converting PaCER reconstructions to LeadDBS. ========')
+
+if(length(elecmodels) ~= length(options.sides))
+   error(['PaCER returned a different number of electrodes than expected by LeadDBS! ' ...
+       'In most cases this indicates an error in PaCER preprocessing (brain mask estimation) ' ...
+       'due to untypical CT data. Please provide a brain mask to PaCER in this case using the mask parameter.']);
+end
 
 for side=options.sides
     coords_mm{side}=[tmat*[elecmodels{side}.getContactPositions3D,ones(size(elecmodels{side}.getContactPositions3D,1),1)]']';

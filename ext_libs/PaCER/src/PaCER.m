@@ -34,7 +34,7 @@ end
 %% Checks
 if(~isa(niiCT, 'NiftiMod'))
     disp('First parameter is not a nifti object. Intrepretating as filename and tring to load a nifti file with that name from disk...');
-    niiCT = NiftiModSPM(niiCT);
+    niiCT = NiftiMod(niiCT);
 end
 
 if(max(niiCT.voxsize) > 1)
