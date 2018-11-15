@@ -357,7 +357,8 @@ end
 
 function sides=ea_assignsides(handles)
 cnt=1;
-for el=1:10
+elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
+for el=1:elnum
     if get(handles.(['side',num2str(el)]),'Value')
         sides(cnt)=el;
         cnt=cnt+1;

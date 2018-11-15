@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 29-Mar-2018 13:06:04
+% Last Modified by GUIDE v2.5 01-Oct-2018 10:34:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1748,9 +1748,61 @@ function side10_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of side10
 ea_checktargetentry(handles);
 
+
+% --- Executes on button press in side11.
+function side11_Callback(hObject, eventdata, handles)
+% hObject    handle to side11 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side11
+ea_checktargetentry(handles);
+
+
+% --- Executes on button press in side12.
+function side12_Callback(hObject, eventdata, handles)
+% hObject    handle to side12 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side12
+ea_checktargetentry(handles);
+
+
+% --- Executes on button press in side13.
+function side13_Callback(hObject, eventdata, handles)
+% hObject    handle to side13 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side13
+ea_checktargetentry(handles);
+
+
+% --- Executes on button press in side14.
+function side14_Callback(hObject, eventdata, handles)
+% hObject    handle to side14 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side14
+ea_checktargetentry(handles);
+
+
+% --- Executes on button press in side15.
+function side15_Callback(hObject, eventdata, handles)
+% hObject    handle to side15 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of side15
+ea_checktargetentry(handles);
+
+
 function ea_checktargetentry(handles)
 higherelchosen=0;
-for el=3:10
+elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
+for el=3:elnum
     if get(handles.(['side',num2str(el)]),'Value')
         higherelchosen=1;
     end

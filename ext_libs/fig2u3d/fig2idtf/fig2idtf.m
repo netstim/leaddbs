@@ -1,7 +1,8 @@
 function [] = fig2idtf(filename,...
                         surface_vertices, faces, face_vertex_data,...
                         line_vertices, line_edges, line_colors,...
-                        pointset_points, pointset_colors)
+                        pointset_points, pointset_colors,...
+                        mesh_tag)
 %FIG2IDTF   Save figure in IDTF format.
 %
 % usage
@@ -57,7 +58,7 @@ n_lines = size(line_vertices, 2);
 n_pointsets = size(pointset_points, 2);
 
 %% nodes
-nodes = idtf_model_nodes(n_meshes, n_lines, n_pointsets);
+nodes = idtf_model_nodes(n_meshes, n_lines, n_pointsets, mesh_tag);
 
 %% resources
 mesh_resources = populate_mesh_resource_str(faces, surface_vertices, face_vertex_data);
@@ -75,7 +76,7 @@ resources = sprintf(resource_list, total_resource_number,...
 
 %% final
 file_info = file_info_str;
-[shaders, materials, modifiers] = shaders_materials_modifiers(surface_vertices, faces, face_vertex_data);
+[shaders, materials, modifiers] = shaders_materials_modifiers(surface_vertices, faces, face_vertex_data, mesh_tag);
 
 str = [file_info, nodes, resources, shaders, materials, modifiers];
 

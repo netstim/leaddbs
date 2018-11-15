@@ -169,7 +169,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 cdat=atlases.colormap(round(cdat),:);
             end
 
-
             % add color jitter
             cdat=cdat+(randn(size(cdat,1),3)*rndfactor);
 
@@ -215,7 +214,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
             [~,thislabel]=fileparts(atlases.names{atlas});
 %             try % use try here because filename might be shorter than .nii
-% 
+%
 %                 if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
                     [~,thislabel]=fileparts(thislabel);
 %                 end
@@ -288,13 +287,13 @@ for nativemni=nm % switch between native and mni space atlases.
             end
 
             % set Tags
-try
-            set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
-            set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',sidestr{side}])
-            set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlas,side))
-catch
-    keyboard
-end
+            try
+                set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
+                set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',sidestr{side}])
+                set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlas,side))
+            catch
+                keyboard
+            end
             atlascnt=atlascnt+1;
 
             set(gcf,'Renderer','OpenGL')
@@ -305,7 +304,6 @@ end
             if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
                 drawnow
             end
-
         end
     end
 
@@ -356,10 +354,8 @@ end
             end
         else
             save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
-
         end
     end
-
 end
 
 

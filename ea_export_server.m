@@ -4,13 +4,12 @@ disp('Exporting data to LEAD Server...');
 %keyboard
 if ~isfield(options.prefs.ls,'dir')
     % configure server output directory for the first time.
-
     serverdir=uigetdir([],'Please choose output directory for LEAD-server.');
-
     if ~serverdir % user pressed cancel.
         return
     end
     serverdir=[serverdir,filesep]; % append /
+
     % store directory in ea_prefs
     fid = fopen([ea_getearoot,'ea_prefs.m'],'a');
     fwrite(fid,['prefs.ls.dir=','''',serverdir,'''',';']);
@@ -28,43 +27,41 @@ if ~isfield(options.prefs.ls,'dir')
         disp('LEAD-Server seems to have been established successfully.');
         disp('Navigate to http://localhost:5000/ in your browser to see results.');
     end
-
 end
 
-if ~exist(options.prefs.ls.dir,'file');
-
+if ~exist(options.prefs.ls.dir,'file')
     mkdir(options.prefs.ls.dir);
-
 end
-if ~exist([options.prefs.ls.dir,'data'],'file');
+
+if ~exist([options.prefs.ls.dir,'data'],'file')
     mkdir([options.prefs.ls.dir,'data']);
 end
-if ~exist([options.prefs.ls.dir,'data',filesep,options.patientname],'file');
 
+if ~exist([options.prefs.ls.dir,'data',filesep,options.patientname],'file')
     mkdir([options.prefs.ls.dir,'data',filesep,options.patientname]);
 end
+
 % export model
 bbstruct=getappdata(gcf,'bbstruct');
 if ~isempty(bbstruct)
     ea_savejson('',bbstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'bb_scene.json'],'ArrayToStruct',0);
     % export html
     copyfile([options.earoot,'ls',filesep,'index.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'index.html']);
-
 else
     warning('JSON-file not set ? set electrode rendering to standard electrodes display and re-run LEAD for export in webserver.');
     return
 end
+
 % export html
 copyfile([options.earoot,'ls',filesep,'index.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'index.html']);
 fid = fopen([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'index.html'], 'a');
-    fwrite(fid,'</body> ');
-    fwrite(fid,'</html>');
+fwrite(fid,'</body> ');
+fwrite(fid,'</html>');
 
 % export ftracking and vat results if present
 PL=getappdata(gcf,'PL');
 stimparams=getappdata(gcf,'stimparams');
 if ~isempty(PL)
-
     stimparamsstr{1}='Stimulation parameters:';
     stimparamsstr{2}='Right Hemisphere:';
     stimparamsstr{3}=['Voltage: ',num2str(stimparams(1).U),'.'];
@@ -79,9 +76,10 @@ if ~isempty(PL)
     clear c
     mkdir([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr])
     save([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'stimparams.mat'],'stimparams','stimparamsstr');
-    vatstruct=ea_viz2brainbrowser(PL.vatfv);
 
+    vatstruct=ea_viz2brainbrowser(PL.vatfv);
     ea_savejson('',vatstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_vat.json'],'ArrayToStruct',0);
+
     % export html
     copyfile([options.earoot,'ls',filesep,'index_vat.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
     fid = fopen([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html'], 'a');
@@ -92,51 +90,29 @@ if ~isempty(PL)
     fwrite(fid,'</span>');
     for s=2:length(stimparamsstr)
         fwrite(fid,['<br>',stimparamsstr{s}]);
-
     end
+
     fwrite(fid,'</span></p></div>');
-
-
     fwrite(fid,'</body> ');
-
     fwrite(fid,'</html>');
 
-
-
-
-
-
     try
-
         fibstruct=ea_viz2brainbrowser(PL.bbfibfv,'line');
         %fibstruct=rmfield(fibstruct,'normals');
-
         ea_savejson('',fibstruct,'FileName',[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'bb_fibs.json'],'ArrayToStruct',0);
+
         % export html
         copyfile([options.earoot,'ls',filesep,'index_fibs.html'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html']);
         fid = fopen([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,nowstr,filesep,'index.html'], 'a');
         fwrite(fid,'<div><p>');
         for s=1:length(stimparamsstr)
             fwrite(fid,['<br>',stimparamsstr{s}]);
-
         end
         fwrite(fid,'</div></p>');
-
-
         fwrite(fid,'</body> ');
-
         fwrite(fid,'</html>');
-
     end
-
-
-
-
-
 end
-
-
-
 
 mkdir([options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'slices']);
 orients={'axial','coronal','saggital'};
@@ -146,11 +122,8 @@ for con=0:15
         if exist([options.root,options.patientname,filesep,'K',num2str(con),'_',orients{or},'.png'],'file')
             copyfile([options.root,options.patientname,filesep,'K',num2str(con),'_',orients{or},'.png'],[options.prefs.ls.dir,'data',filesep,options.patientname,filesep,'slices',filesep,'K',num2str(con),'_',orients{or},'.png']);
             oricon(or,con+1)=1;
-
-
         end
     end
-
 end
 
 % export slices html:
@@ -176,21 +149,17 @@ if any(oricon(:))
     fwrite(fid,['<p style="text-align:left"><h2>Slice cut views for ',options.patientname,'</h2>']);
     fwrite(fid,['<p style="text-align:left">Contacts K0-K7 refer to the right hemisphere, K8-K15 to the left hemisphere.']);
     fwrite(fid,['</p>']);
+
     allorients=[1:3];
-
     for or=allorients(logical(sum(oricon,2)))
-
-
         fwrite(fid,['<p style="text-align:left"><h2>',orients{or},' views</h2></p>']);
-
         allcontacts=[0:15];
-
         for con=allcontacts(logical(oricon(or,:))')
             fwrite(fid,['<p style="text-align:left"><h3>K ',num2str(con),':</h3></p>']);
             fwrite(fid,['<p style="text-align:left"><a href="K',num2str(con),'_',orients{or},'.png"><img src="K',num2str(con),'_',orients{or},'.png" alt="L',num2str(con),'_',orients{or},'" width="800"></a></p>']);
         end
-
     end
+
     fwrite(fid,'</body>');
     fwrite(fid,'</html>');
     fclose(fid);
@@ -205,7 +174,6 @@ ea_export_ls_index(options.prefs.ls.dir,options);
 function initializeserver(serverdir,options)
 
 % initialize server inside that folder...
-
 copyfile([options.earoot,'ls',filesep,'ls_bb_extract.zip'],[serverdir,'ls_bb_extract.zip']);
 % extract zipfile
 unzip([serverdir,'ls_bb_extract.zip'],serverdir);

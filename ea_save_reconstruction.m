@@ -8,16 +8,28 @@ if options.native
     reco.native.coords_mm=coords_mm;
     reco.native.trajectory=trajectory;
     reco.native.markers=markers;
+    checkxy = 1;
+    if checkxy % checks for problems with the length of markers x and y - could be removed at some point
+       for numleads = 1:length(reco.native.markers)
+        x =  reco.native.markers(numleads).x - reco.native.markers(numleads).head;
+        y =  reco.native.markers(numleads).y - reco.native.markers(numleads).head;
+        x = (x./norm(x)) .* (options.elspec.lead_diameter/2);
+        y = (y./norm(y)) .* (options.elspec.lead_diameter/2);
+        reco.native.markers(numleads).x = reco.native.markers(numleads).head + x;
+        reco.native.markers(numleads).y = reco.native.markers(numleads).head + y;
+        clear x y
+       end        
+    end
     save([options.root,options.patientname,filesep,'ea_reconstruction'],'reco');
     if isfield(options,'hybridsave')
         ea_dispt('Warping fiducials to template space');
 
         ea_reconstruction2mni(options);
-        if options.prefs.reco.saveACPC
-            ea_dispt('Mapping fiducials to AC/PC space');
-            ea_reconstruction2acpc(options);
-            ea_dispt('');
-        end
+%         if options.prefs.reco.saveACPC
+%             ea_dispt('Mapping fiducials to AC/PC space');
+%             ea_reconstruction2acpc(options);
+%             ea_dispt('');
+%         end
         load([options.root,options.patientname,filesep,'ea_reconstruction']);
         [reco,corrected]=ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
 

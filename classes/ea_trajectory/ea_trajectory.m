@@ -172,7 +172,7 @@ classdef ea_trajectory < handle
             addlistener(obj, 'colorMacroContacts', 'PostSet', @ea_trajectory.changeevent);
 
             if (exist('pobj','var') && isfield(pobj,'openedit') && pobj.openedit) || ~exist('pobj','var')
-                ea_trajectorycontrol(obj)
+                obj.controlH = ea_trajectorycontrol(obj);
             end
         end
     end
@@ -192,14 +192,14 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     set(0,'CurrentFigure',obj.plotFigureH);
     if ismember(evtnm,{'all','target','reco','planRelative','hasPlanning','showMicro','relateMicro'}) % need to redraw planning fiducials:
         % planning fiducial
-        if obj.hasPlanning
+        if obj.showPlanning
             coords=ea_convertfiducials(obj,[obj.target.target;obj.target.entry]);
             tgt=coords(1,:); ent=coords(2,:);
             for dim=1:3
                 traj(:,dim)=linspace(ent(dim),tgt(dim),10);
             end
             delete(obj.patchPlanning);
-            obj.patchPlanning=ea_plot3t(traj(:,1),traj(:,2),traj(:,3),obj.radius,obj.color,12,1);
+            [obj.patchPlanning, fv] = ea_plot3t(traj(:,1),traj(:,2),traj(:,3),obj.radius,obj.color,12,1);
         end
 
         if obj.showMicro
@@ -251,19 +251,40 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     end
 
     % add toggle button:
-    [~,ptname]=fileparts(fileparts(obj.options.root));
+    [~, ptname] = fileparts(fileparts(obj.options.root));
 
+    % Side label
     switch obj.side
         case 1
-            elToggleLabel = 'Right';
+            elToggleSideLabel = 'Right';
         case 2
-            elToggleLabel = 'Left';
+            elToggleSideLabel = 'Left';
         otherwise
-            elToggleLabel = num2str(obj.side);
+            elToggleSideLabel = num2str(obj.side);
     end
 
-    set(obj.toggleH, {'Parent','CData','TooltipString','OnCallback','OffCallback','State'},...
-        {obj.htH,ea_get_icn('electrode'), [ptname,' (',elToggleLabel,')'], ...
+    % Tooltip and icon
+    if strcmp(obj.relateMicro, 'macro')
+        elToggleTooltip = [ptname,' (',elToggleSideLabel,')'];
+        elToogleIcon = ea_get_icn('electrode');
+    else
+        elToggleTooltip = [ptname,' (planning)'];
+        elToogleIcon = ea_get_icn('electrode_planning');
+    end
+
+    % Add tag
+    if strcmp(obj.options.leadprod, 'group') && isfield(obj.elstruct,'group')
+        elToggleTag = ['Group: ', num2str(obj.elstruct.group), ...
+               ', Patient: ', ptname, ', Side: ', elToggleSideLabel];
+    elseif strcmp(obj.relateMicro, 'macro')
+        elToggleTag = ['Patient: ', ptname, ', Side: ', elToggleSideLabel];
+    else
+        elToggleTag = ['Patient: ', ptname, ', Planning'];
+    end
+
+    set(obj.toggleH, {'Parent','CData','TooltipString','Tag','OnCallback','OffCallback','State'},...
+        {obj.htH, ...
+        elToogleIcon, elToggleTooltip, elToggleTag,...
         {@ea_trajvisible,'on',obj}, {@ea_trajvisible,'off',obj}, ...
         ea_bool2onoff(any([obj.showPlanning,obj.showMacro,obj.showMicro]))});
 end
@@ -350,7 +371,7 @@ function ea_editfiducial(Hobj, evt, obj)
 end
 
 
-function ea_trajvisible(~, ~, onoff, obj)
+function ea_trajvisible(~, evt, onoff, obj)
     if getappdata(obj.plotFigureH,'altpressed') % hide all
         el_render=getappdata(obj.plotFigureH,'el_render');
 
@@ -360,18 +381,45 @@ function ea_trajvisible(~, ~, onoff, obj)
             el_render(el).showMicro=ea_bool2onoff('off');
         end
     else
-        if ishandle(obj.controlH) % control figure exists
-            chandles=getappdata(obj.controlH,'chandles');
-            obj.showPlanning=get(chandles.showPlanning,'Value');
-            obj.showMacro=get(chandles.showMacro,'Value');
-        else
+        if ~isempty(obj.controlH) ...
+           && ~strcmp(evt.Source.Type, 'uitoggletool') % From control figure
+            chandles = getappdata(obj.controlH,'chandles');
+            obj.showPlanning = get(chandles.showPlanning,'Value');
+            obj.showMacro = get(chandles.showMacro,'Value');
+        else % From toogle button
             switch onoff
                 case 'off'
-                    obj.showPlanning=0;
-                    obj.showMacro=0;
-                    obj.showMicro=0;
+                    if strfind(evt.Source.Tag, 'Planning')
+                        obj.showPlanning=0;
+                    else
+                        obj.showMacro=0;
+                        obj.showMicro=0;
+                    end
+
+                    if ~isempty(obj.controlH)
+                        chandles = getappdata(obj.controlH,'chandles');
+                        if strfind(evt.Source.Tag, 'Planning')
+                            set(chandles.showPlanning, 'Value', 0);
+                        else
+                            set(chandles.showMacro, 'Value', 0);
+                            set(chandles.showMicro, 'Value', 0);
+                        end
+                    end
                 case 'on'
-                    obj.showMacro=1;
+                    if strfind(evt.Source.Tag, 'Planning')
+                        obj.showPlanning=1;
+                    else
+                        obj.showMacro=1;
+                    end
+
+                    if ~isempty(obj.controlH)
+                        chandles = getappdata(obj.controlH,'chandles');
+                        if strfind(evt.Source.Tag, 'Planning')
+                            set(chandles.showPlanning, 'Value', 1);
+                        else
+                            set(chandles.showMacro, 'Value', 1);
+                        end
+                    end
             end
         end
     end

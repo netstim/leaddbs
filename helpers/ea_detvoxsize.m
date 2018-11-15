@@ -9,4 +9,9 @@ vox = [1,1,1;
        1,2,1;
        1,1,2];
 mm = ea_vox2mm(vox, mat);
-vsize = diag(ea_pdist2(mm(1:3,:),mm(4:6,:)))';
+try
+    vsize = diag(ea_pdist2(mm(1:3,:),mm(4:6,:)))';
+catch % auto load lead path.
+    lead path
+    vsize = diag(ea_pdist2(mm(1:3,:),mm(4:6,:)))';
+end

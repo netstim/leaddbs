@@ -7,7 +7,7 @@ if nargin
     camup(v.camup);
     camproj(v.camproj);
     camtarget(v.camtarget);
-    campos(v.campos); 
+    campos(v.campos);
     if nargin>1
         resultfig=varargin{2};
     else
@@ -20,10 +20,10 @@ else
     v.camup=camup;
     v.camproj=camproj;
     v.camtarget=camtarget;
-    v.campos=campos;  
+    v.campos=campos;
 end
 
-    set(0,'CurrentFigure',resultfig)
-    allAxes = findall(resultfig,'type','axes');
-    set(resultfig,'CurrentAxes',allAxes(1));
-            ea_zoomcenter(resultfig.CurrentAxes, v.camtarget);
+set(0,'CurrentFigure',resultfig)
+allAxes = findall(resultfig,'type','axes');
+set(resultfig,'CurrentAxes',allAxes(1));
+ea_zoomcenter(resultfig.CurrentAxes, v.camtarget);

@@ -1,4 +1,4 @@
-function [] = fig2pdf3d(ax, filename,options,media9_or_movie15, pdforxelatex)
+function [] = fig2pdf3d(ax, filename, options, media9_or_movie15, pdforxelatex)
 %FIG2PDF3D  Convert axes to PDF with embedded interactive 3D image.
 %
 % usage
@@ -70,19 +70,13 @@ else
 end
 rm_aux_files(filename)
 
+
 function [] = rm_aux_files(fname)
 fname = clear_file_extension(fname, '.tex');
 
 try delete([fname, '.png'] ); end
 try delete([fname, '.tex'] ); end
 try delete([fname, '_small.tex'] ); end
-%delete([fname, '.u3d'] );
-try delete([fname, '.idtf'] ); end
 try delete([fname, '.vws'] ); end
 try delete([fname, '.aux'] ); end
 try delete([fname, '.log'] ); end
-
-[pth,fn]=fileparts(fname);
-pth=[pth,filesep];
-try movefile([pth,fn,'.u3d'],[pth,'export',filesep,'pdf',filesep,fn,'.u3d']); end
-movefile([pth,fn,'.pdf'],[pth,'export',filesep,'pdf',filesep,fn,'.pdf']);

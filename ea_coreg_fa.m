@@ -5,7 +5,7 @@ directory=[options.root,options.patientname,filesep];
 if ~exist([directory,options.prefs.fa2anat],'file')
     if ~exist([directory,options.prefs.fa],'file')
         if ~exist([directory,options.prefs.dti],'file')
-            disp('No dMRI data has been found. Proceeding without FA');
+            fprintf('\n\nNo dMRI data has been found. Proceeding without FA\n\n');
         else
             ea_isolate_fa(options);
         end

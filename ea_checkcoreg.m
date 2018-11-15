@@ -22,7 +22,7 @@ function varargout = ea_checkcoreg(varargin)
 
 % Edit the above text to modify the response to help ea_checkcoreg
 
-% Last Modified by GUIDE v2.5 12-Sep-2018 15:42:21
+% Last Modified by GUIDE v2.5 17-Oct-2018 15:54:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -82,7 +82,7 @@ restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_sea
 % get number of files with rs-fMRI data
 options.prefs.n_rest = numel(restfiles);
 
-b0restanchor=cell(length(presentfiles), 1);
+b0restanchor=cell(length(presentfiles),1);
 for irest = 1:options.prefs.n_rest
     % set filenames for this iteration
     if exist([directory,'r',ea_stripex(restfiles(irest).name),'_',anchor],'file')
@@ -107,8 +107,6 @@ if exist([directory,'scrf',filesep,'scrf_instore_converted.mat'],'file')
     end
 end
 
-
-
 if isempty(presentfiles)
     evalin('base','checkregempty=1;');
     close(handles.leadfigure)
@@ -116,8 +114,6 @@ if isempty(presentfiles)
 else
     evalin('base','checkregempty=0;');
 end
-
-
 
 %set(handles.previous,'visible','off'); set(handles.next,'visible','off');
 setappdata(handles.leadfigure,'presentfiles',presentfiles)
@@ -170,11 +166,13 @@ warning('on');
 
 ea_mrcview(handles);
 
-% Choose default command line output for ea_checkcoreg
-handles.output = hObject;
+if isvalid(hObject)
+    % Choose default command line output for ea_checkcoreg
+    handles.output = hObject;
 
-% Update handles structure
-guidata(hObject, handles);
+    % Update handles structure
+    guidata(hObject, handles);
+end
 
 % UIWAIT makes ea_checkcoreg wait for user response (see UIRESUME)
 
@@ -473,6 +471,26 @@ switch ea_stripex(currvol)
             [~,pf]=ea_assignpretra(options);
             useasanchor=pf{substitute};
 
+
+
+            if ~exist([directory,b0restanchor{activevolume}],'file')
+                V=ea_open_vol(ea_niigz([directory,thisrest]));
+                matlabbatch{1}.spm.util.cat.vols = {
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,1'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,2'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,3'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,4'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,5'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,6'
+                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,7'
+                    };
+                matlabbatch{1}.spm.util.cat.name = '4D.nii';
+                matlabbatch{1}.spm.util.cat.dtype = 0;
+
+
+            end
+            % in following line correct that useasanchor is the *moving*
+            % image (since we're going from anchor to rest/b0.
             ea_coreg2images(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
             movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(useasanchor),'_',ea_matext(options.coregmr.method)],...
                 [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
@@ -490,7 +508,12 @@ end
 anchorpath=getappdata(handles.leadfigure,'anchorpath');
 
 method=getappdata(handles.leadfigure,'method');
-checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(anchor),'_',method,'.png'];
+
+if ~isempty(b0restanchor{activevolume})
+   anchor=b0restanchor{activevolume};
+end
+
+checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(anchor),'mean','r'),'_',method,'.png'];
 
 ea_gencheckregpair([directory,ea_stripex(currvol)],anchorpath,checkfig);
 % now disapprove again since this new computation hasn't been approved yet.
@@ -507,25 +530,39 @@ set(handles.leadfigure, 'Name', title);
 function ea_cleandownstream(options,directory,thisrest)
 
 
-            % cleanup /templates/labelings (these need to be recalculated):
-            delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
-            parcdirs=dir([directory,'connectomics',filesep]);
-            %             % cleanup /connectomics results (these need to be recalculated):
-            for pd=1:length(parcdirs)
-                ea_delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*']);
-            end
-            stimdirs=dir([directory,'stimulations',filesep]);
-            %             % cleanup /connectomics results (these need to be recalculated):
-            for pd=1:length(stimdirs)
-                connfolders=dir([directory,'stimulations',filesep,stimdirs(pd).name]);
-                for connfolder=1:length(connfolders)
-                    if connfolders(connfolder).isdir && ~isempty(strfind(connfolders(connfolder).name,thisrest(2:end)))
-                        rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
-                    end
-                end
-                ea_delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
-            end
+% cleanup /templates/labelings (these need to be recalculated):
 
+% do not use ea_delete here since it doesn't support
+% wildcards!
+delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
+parcdirs=dir([directory,'connectomics',filesep]);
+%             % cleanup /connectomics results (these need to be recalculated):
+for pd=1:length(parcdirs)
+    % do not use ea_delete here since it doesn't support
+    % wildcards!
+    if ~strcmp(parcdirs(pd).name(1),'.')
+        delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*.*']);
+    end
+end
+stimdirs=dir([directory,'stimulations',filesep]);
+%             % cleanup /connectomics results (these need to be recalculated):
+for pd=1:length(stimdirs)
+    if ~strcmp(stimdirs(pd).name(1),'.')
+        connfolders=dir([directory,'stimulations',filesep,stimdirs(pd).name]);
+        for connfolder=1:length(connfolders)
+            if ~strcmp(connfolders(connfolder).name(1),'.')
+
+                if connfolders(connfolder).isdir && ~isempty(strfind(connfolders(connfolder).name,thisrest(2:end)))
+                    rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
+                end
+
+                % do not use ea_delete here since it doesn't support
+                % wildcards!
+                delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
+            end
+        end
+    end
+end
 
 function ext=ea_matext(method)
 
@@ -798,17 +835,16 @@ function back_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'coreg');
 
-options=getappdata(handles.leadfigure,'options');
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
-activevolume=getappdata(handles.leadfigure,'activevolume');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 
 if activevolume==1
+    ea_busyaction('off',handles.leadfigure,'coreg');
     return
 else
     activevolume=activevolume-1;
+    setappdata(handles.leadfigure,'activevolume',activevolume);
 end
-setappdata(handles.leadfigure,'activevolume',activevolume);
+
 ea_mrcview(handles);
 title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');

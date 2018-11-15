@@ -10,12 +10,10 @@ trajectory=elstruct.trajectory;
 
 
 if ~isfield(elstruct,'elmodel') % usually, elspec is defined by the GUI. In case of group analyses, for each patient, a different electrode model can be selected for rendering.
-    
     elspec=options.elspec;
 else % if elspec is defined for each electrode, overwrite options-struct settings here.
     o=ea_resolve_elspec(elstruct);
     elspec=o.elspec; clear o
-    
 end
 
 if ~isfield(elstruct,'activecontacts')
@@ -31,7 +29,6 @@ try
     jetlist=evalin('base','custom_cmap');
 end
 %   jetlist=jet;
-
 
 for side=options.sides
     trajvector=mean(diff(trajectory{side}));
@@ -92,6 +89,7 @@ for side=options.sides
             electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
             electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.insulation(ins));
+            elrender(cnt).Tag = ['Insulation', num2str(cnt), '_Side', num2str(side)];
             
             if isfield(options,'sidecolor')
                 switch side
@@ -119,6 +117,7 @@ for side=options.sides
             electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.contacts(con));
+            elrender(cnt).Tag = ['Contact', num2str(con), '_Side', num2str(side)];
             eltype(cnt)=1;
             if ~isempty(options.colorMacroContacts)
                 specsurf(elrender(cnt),options.colorMacroContacts(con,:),1);
@@ -250,7 +249,6 @@ for side=options.sides
                         elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
                         pcnt=pcnt+1;
                     else
-                        
                         elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
                             mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
                             mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...

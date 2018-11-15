@@ -69,7 +69,3 @@ if status ~= 0
     warning('idtf2u3d:conversion',...
           'IDTFConverter executable returned with error.')
 end
-
-function [fname] = full_fname_with_extension(fname, extension)
-fname = check_file_extension(fname, extension);
-fname  = fullfile(cd, fname);

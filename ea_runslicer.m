@@ -59,18 +59,17 @@ function ea_runslicer(options, task)
         end
     end
 
-    lead_path = options.earoot;
     slicer_mrml = 'none';
 
     if (isempty(options.uipatdirs))
         warning('No patient selected!');
         return;
     else
-        patient_path = options.uipatdirs{1};
+        patient_path = [options.root, options.patientname];
     end
 
     switch task
-        case -1 % launch slicer for lead reconstruction            
+        case -1 % launch slicer for lead reconstruction
             slicer_mrml = 'Slicer_Reconstruction.mrml';
             nfiles = 0;
             allfiles = {options.prefs.tranii_unnormalized
@@ -83,8 +82,8 @@ function ea_runslicer(options, task)
                     filepaths{nfiles} = [patient_path, filesep, allfiles{i}];
                 end
             end
-            WriteReconstructionFiducialFile(options, patient_path);
-            
+            WriteReconstructionFiducialFile(options);
+
         case 1 % show original volumes
             nfiles = 0;
             slicer_mrml = 'Slicer_original.mrml';
@@ -126,29 +125,24 @@ function ea_runslicer(options, task)
 
         case 3 % show data after normalization
             slicer_mrml = 'Slicer_normalized.mrml';
-            [nfiles, filepaths, filenames] = GetNormalizedFiles(options, lead_path, patient_path);
-            
+            [nfiles, filepaths, filenames] = GetNormalizedFiles(options);
+
         case 4 % show electrode localization
             if exist([patient_path,filesep,'ea_reconstruction.mat'],'file')
-                if (~isfield(options, 'root'))
-                    [filepath, name, ~] = fileparts(patient_path);
-                    options.root = [filepath,filesep];
-                    options.patientname = name;
-                end                
-                ea_exportfiducials(options, 'ElectrodeFiducials.fcsv');                
+                ea_exportfiducials(options, 'ElectrodeFiducials.fcsv');
             else
                 warning('Please run reconstruction first...');
                 return;
             end
             slicer_mrml = 'Slicer_electrodes.mrml';
-            [nfiles, filepaths, filenames] = GetNormalizedFiles(options, lead_path, patient_path);
+            [nfiles, filepaths, filenames] = GetNormalizedFiles(options);
 
         otherwise
             warning('Task ID not recognised');
             return;
     end
 
-    script_path = [lead_path, 'slicer.py'];
+    script_path = [patient_path, filesep, 'slicer.py'];
     scene_path = [patient_path, filesep, slicer_mrml];
     if (nfiles < 1)
         warning('Need at least one volume image to load into slicer');
@@ -171,8 +165,8 @@ function ea_runslicer(options, task)
     end
     fclose(fid);
 
-    fid = fopen(script_path,'w'); % write temp python script to load volumes
-    fprintf(fid, ['slicer.util.loadScene("', strrep(scene_path, '\', '\\'), '")\r\n']);
+    fid = fopen(script_path, 'w'); % write temp python script to load volumes
+    fprintf(fid, ['slicer.util.loadScene("', strrep(scene_path, '\', '/'), '")\r\n']);
     fclose(fid);
     disp('Loading up 3D Slicer...');
     if (task > 0)
@@ -181,30 +175,26 @@ function ea_runslicer(options, task)
     else
         system(['"', SLICER, '" --no-splash --python-script "', script_path, '"']);
     end
+    ea_delete(script_path);
 end
 
-function WriteReconstructionFiducialFile(options, patient_path)
-    if (~isfield(options, 'root'))
-        [filepath, name, ~] = fileparts(patient_path);
-        options.root = [filepath,filesep];
-        options.patientname = name;
-    end
+function WriteReconstructionFiducialFile(options)
     fiducial_path = [options.root, options.patientname, filesep, 'ElectrodeFiducials.fcsv'];
     header = ['# Markups fiducial file version = 4.7\r\n',...
               '# CoordinateSystem = 0\r\n',...
               '# columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID\r\n'];
     fid = fopen(fiducial_path, 'w');
     fprintf(fid, header);
-    
+
     counter = 0;
-    if exist([patient_path,filesep,'ea_reconstruction.mat'],'file')
+    if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
         options.native = 1;
         [~,~,markers] = ea_load_reconstruction(options);
         for side = options.sides
             h = markers(side).head;
             t = markers(side).tail;
             fprintf(fid, ['vtkMRMLMarkupsFiducialNode_',num2str(counter),',',num2str(h(1)),',',num2str(h(2)),',',num2str(h(3)),...
-                ',0,0,0,1,1,1,0,Head_',num2str(side),',,vtkMRMLScalarVolumeNode2\r\n']);        
+                ',0,0,0,1,1,1,0,Head_',num2str(side),',,vtkMRMLScalarVolumeNode2\r\n']);
             fprintf(fid, ['vtkMRMLMarkupsFiducialNode_',num2str(counter+1),',',num2str(t(1)),',',num2str(t(2)),',',num2str(t(3)),...
                 ',0,0,0,1,1,1,0,Tail_',num2str(side),',,vtkMRMLScalarVolumeNode2\r\n']);
             counter = counter + 2;
@@ -213,27 +203,27 @@ function WriteReconstructionFiducialFile(options, patient_path)
         h = 14; t = 9;
         for side = options.sides
             fprintf(fid, ['vtkMRMLMarkupsFiducialNode_',num2str(counter),',',num2str(h),',-11,-5',...
-                ',0,0,0,1,1,1,0,Head_',num2str(side),',,vtkMRMLScalarVolumeNode2\r\n']);        
+                ',0,0,0,1,1,1,0,Head_',num2str(side),',,vtkMRMLScalarVolumeNode2\r\n']);
             fprintf(fid, ['vtkMRMLMarkupsFiducialNode_',num2str(counter+1),',',num2str(t),',-15,-15',...
                 ',0,0,0,1,1,1,0,Tail_',num2str(side),',,vtkMRMLScalarVolumeNode2\r\n']);
             counter = counter + 2;
             if mod(side,2) == 0 % is even
                 h = h + 10;
                 t = t + 10;
-            end        
+            end
             % flip left/right after each iteration
             h = -h;
             t = -t;
         end
     end
-   
+
     fclose(fid);
 end
 
-function [nfiles, filepaths, filenames] = GetNormalizedFiles(options, lead_path, patient_path)
+function [nfiles, filepaths, filenames] = GetNormalizedFiles(options)
     nfiles = 0;
-    
-    allfiles = {        
+
+    allfiles = {
         't2.nii'
         options.prefs.gctnii
         'glanat_t2.nii'   % could not find pref for this in options.prefs.gctnii
@@ -247,14 +237,14 @@ function [nfiles, filepaths, filenames] = GetNormalizedFiles(options, lead_path,
         nfiles = nfiles + 1;
         filenames{nfiles} = allfiles{1};
          % is there a better way to get the MNI template?
-        filepaths{nfiles} = [lead_path, 'templates', filesep, 'space', filesep, 'MNI_ICBM_2009b_NLIN_ASYM', filesep, allfiles{1}];
+        filepaths{nfiles} = [options.earoot, 'templates', filesep, 'space', filesep, 'MNI_ICBM_2009b_NLIN_ASYM', filesep, allfiles{1}];
     end
 
     for i=2:length(allfiles)
-        if (exist([patient_path, filesep, allfiles{i}], 'file') == 2)
+        if (exist([options.root, options.patientname, filesep, allfiles{i}], 'file') == 2)
             nfiles = nfiles + 1;
         filenames{nfiles} = allfiles{i};
-            filepaths{nfiles} = [patient_path, filesep, allfiles{i}];
+            filepaths{nfiles} = [options.root, options.patientname, filesep, allfiles{i}];
         end
     end
 end

@@ -14,6 +14,11 @@ function resultfig=ea_elvis(varargin)
 
 % Initialize inputs
 options=varargin{1};
+
+if ~isfield(options, 'leadprod')
+    options.leadprod = '';
+end
+
 if nargin>2
     stimparams=varargin{3};
 else
@@ -90,7 +95,6 @@ axis fill
 
 % colormap('gray')
 
-
 %% Patient specific part (skipped if no patient is selected or no reco available):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
     if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') || nargin>1
@@ -123,74 +127,67 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             clear coords_mm trajectory
         end
 
+        elSide = cell(1, length(elstruct));
         for pt=1:length(elstruct)
             % show electrodes..
-            %try
-
-                popts=options;
-                if strcmp(options.leadprod,'group')
-                    try
-                        directory=[options.patient_list{elstruct(pt).pt},filesep];
-                        [popts.root,popts.patientname]=fileparts(directory);
-                        popts.root=[popts.root,filesep];
-                    catch
-                        directory=[options.root,options.patientname,filesep];
-                    end
-
-                    popts=ea_detsides(popts);
-
-                else
+            popts=options;
+            if strcmp(options.leadprod,'group')
+                try
+                    directory=[options.patient_list{elstruct(pt).pt},filesep];
+                    [popts.root,popts.patientname]=fileparts(directory);
+                    popts.root=[popts.root,filesep];
+                catch
                     directory=[options.root,options.patientname,filesep];
                 end
 
-                itersides=popts.sides;
+                popts=ea_detsides(popts);
+            else
+                directory=[options.root,options.patientname,filesep];
+            end
 
-                for side=itersides
+            elSide{pt}=popts.sides;
 
+            for side=elSide{pt}
+                try
+                    pobj=ea_load_trajectory(directory,side);
+                    pobj.hasPlanning=1;
+                    pobj.showPlanning=strcmp(options.leadprod,'or');
+                end
 
+                pobj.options=popts;
+                pobj.elstruct=elstruct(pt);
+                pobj.showMacro=1;
+                pobj.side=side;
+
+                set(0,'CurrentFigure',resultfig);
+                if exist('el_render','var')
+                    el_render(end+1)=ea_trajectory(pobj);
+                else
+                    el_render(1)=ea_trajectory(pobj);
+                end
+
+                if ~exist('ellabel','var')
+                    ellabel=el_render(end).ellabel;
+                else
                     try
-                        pobj=ea_load_trajectory(directory,side);
-                        pobj.hasPlanning=1;
-                        pobj.showPlanning=strcmp(options.leadprod,'or');
-                    end
-
-
-
-                    pobj.options=popts;
-                    pobj.elstruct=elstruct(pt);
-                    pobj.showMacro=1;
-                    pobj.side=side;
-                    set(0,'CurrentFigure',resultfig);
-                    if exist('el_render','var')
-                        el_render(end+1)=ea_trajectory(pobj);
-                    else
-                        el_render(1)=ea_trajectory(pobj);
-                    end
-                    if ~exist('ellabel','var')
-                        ellabel=el_render(end).ellabel;
-                    else
-                        try
                         ellabel(end+1)=el_render(end).ellabel;
-                        end
                     end
                 end
-                %[el_render(pt).el_render,el_label(:,pt)]=ea_showelectrode(resultfig,elstruct(pt),pt,options);
-%             catch
-%                 ea_error(['Couldn''t visualize electrode from patient ',num2str(pt),'.']);
-%             end
+            end
+
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
                % this part for brainbrowser support.
                vizstruct=struct('faces',[],'vertices',[],'colors',[]);
 
                cnt=1;
                 for side=1:length(options.sides)
-                    extract=1:length(el_render(pt).el_render{side});
+                    extract=1:length(el_render(side).elpatch);
                     for ex=extract
-                        tp=el_render(pt).el_render{side}(ex);
+                        tp=el_render(side).elpatch(ex);
 
                         try % works only in ML 2015
-                            tr=triangulation(get(el_render(pt).el_render{side}(ex),'Faces'),...
-                                get(el_render(pt).el_render{side}(ex),'Vertices'));
+                            tr=triangulation(get(el_render(side).elpatch(ex),'Faces'),...
+                                get(el_render(side).elpatch(ex),'Vertices'));
                             vizstruct(cnt).normals = vertexNormal(tr);
                         catch % workaround for older versions..
                             vizstruct(cnt).normals=get(tp,'VertexNormals')*-1;
@@ -198,7 +195,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
                         vizstruct(cnt).faces=get(tp,'Faces');
                         vizstruct(cnt).vertices=get(tp,'Vertices');
-                        scolor=get(el_render(pt).el_render{side}(ex),'FaceVertexCData');
+                        scolor=get(el_render(side).elpatch(ex),'FaceVertexCData');
                         vizstruct(cnt).colors=scolor;
                         %vizstruct(cnt).colors=repmat([squeeze(scolor(1,1,:))',0.7],length(vizstruct(cnt).faces),1);
                         vizstruct(cnt).name='';
@@ -207,15 +204,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 end
             end
 
-           % show microelectrode recording data
-           if exist('merstruct','var')
+            % show microelectrode recording data
+            if exist('merstruct','var')
                try
                    [mer(pt).render,merlabel(:,pt)]=ea_showmer(resultfig,merstruct(pt),pt,options);
                catch
                    ea_error(['Couldn''''t visualize electrode from patient ',num2str(pt),'.']);
                end
-           end
-
+            end
         end
 
         setappdata(resultfig,'elstruct',elstruct);
@@ -225,10 +221,29 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         % pressed, all electrodes are made visible/invisible).
         drawnow
 
+        if strcmp(options.leadprod,'group')
+            elstructGroupID = [elstruct.group];
+            sideNum = cellfun(@numel, elSide);
+            elrenderGroupID = repelem(elstructGroupID, sideNum);
+            for g = unique(elstructGroupID)
+                el_renderID = elrenderGroupID == g;
+                eleGroupToggle = uitoggletool(ht, 'CData', ea_get_icn('electrode_group'),...
+                        'TooltipString', ['Electrode Group ', num2str(g)],...
+                        'Tag', ['Group: ', num2str(g)],...
+                        'OnCallback', {@eleGroupVisible,el_render(el_renderID)},...
+                        'OffCallback', {@eleGroupInvisible,el_render(el_renderID)}, 'State','on');
+            end
+
+            % Move the group toggle forward
+            isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: ', 'once')), allchild(ht));
+            eleToggleInd = numel(unique(elstructGroupID))+1:find(~isEleToggle,1)-1;
+            ht.Children=ht.Children([eleToggleInd, 1:numel(unique(elstructGroupID)), find(~isEleToggle,1):end]);
+        end
+
         try
             set(ellabel,'Visible','off');
             ellabeltog = uitoggletool(ht, 'CData', ea_get_icn('labels'),...
-                'TooltipString', 'Electrode labels',...
+                'TooltipString', 'Electrode Labels',...
                 'OnCallback', {@objvisible,ellabel},...
                 'OffCallback', {@objinvisible,ellabel}, 'State','off');
         end
@@ -261,14 +276,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     cnt=cnt+2;
                 end
         end
-        eladd=uipushtool(ht,'CData',ea_get_icn('addelectrode'),'TooltipString','Add Trajectory...','ClickedCallback',@ea_add_trajectory);
-%        setappdata(resultfig,'eltog',eltog);
 
         clear cnt
 
         % Initialize Stimulation-Button
         if ~strcmp(options.leadprod, 'group')
-            stimbutton=uipushtool(ht,'CData',ea_get_icn('stimulation'),...
+            eladdTraj = uipushtool(ht,'CData',ea_get_icn('addelectrode'),...
+                'TooltipString','Add Trajectory...','ClickedCallback',@ea_add_trajectory);
+            stimbutton = uipushtool(ht,'CData',ea_get_icn('stimulation'),...
                 'TooltipString','Stimulation Control Figure',...
                 'ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
         end
@@ -288,13 +303,14 @@ slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
     'TooltipString','Slice Control Figure',...
     'ClickedCallback',{@opensliceviewer,resultfig,options});
 
-    % Initialize MER-Button
+% Initialize MER-Button
 
-    if ~strcmp(options.leadprod, 'group')
-        merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
-            'TooltipString','MER Control Figure',...
-            'ClickedCallback',{@ea_openmerviewer,resultfig,options});
-    end
+if ~strcmp(options.leadprod, 'group')
+    merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
+        'TooltipString','MER Control Figure',...
+        'ClickedCallback',{@ea_openmerviewer,resultfig,options});
+end
+
 % Initialize Convis-Button
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
     'TooltipString','Connectivity Visualization',...
@@ -320,7 +336,7 @@ if options.d3.writeatlases
 
     if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
         try % see if electrode has been defined.
-        cnt=length(vizstruct);
+            cnt=length(vizstruct);
         catch
             cnt=0;
         end
@@ -328,7 +344,6 @@ if options.d3.writeatlases
         try
             for side=1:length(options.sides)
                 for atl=1:length(atlases.fv)
-
                     if isfield(atlases.fv{atl,side},'faces')
                         vizstruct(cnt+1).faces=atlases.fv{atl,side}.faces;
                         vizstruct(cnt+1).vertices=atlases.fv{atl,side}.vertices;
@@ -357,7 +372,6 @@ end
 
 if isfield(options.d3,'expdf')
     if options.d3.expdf
-        %cd([options.root,options.patientname]);
         fig2pdf3d(gca,[options.root,options.patientname,filesep,'Lead-DBS_Electrode_Localization'],options);
         close(resultfig);
         return
@@ -398,12 +412,10 @@ dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth'),...
     'TooltipString','Save Scene with depth of field',...
     'ClickedCallback',{@ea_export_depth_of_field,resultfig});
 
-
 % Initialize Video-Export button
 
 videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video'),...
     'TooltipString','Save video','ClickedCallback',{@export_video,options});
-
 
 % Init hard_electrode_view button
 if isfield(options,'modality') && options.modality==2
@@ -461,6 +473,7 @@ awin=ea_anatomycontrol(resultfig,options);
 set(awin,'visible',options.d3.verbose);
 setappdata(resultfig,'awin',awin);
 
+
 function openconnectomeviewer(hobj,ev,resultfig,options)
 conwin=ea_convis(gcf,options);
 setappdata(resultfig,'conwin',conwin);
@@ -472,7 +485,6 @@ setappdata(resultfig,'stimwin',stimwin);
 %try WinOnTop(stimwin,true); end
 
 
-
 function opencortexviewer(hobj,ev,resultfig,options)
 cortex=ea_showcortex(resultfig,options);
 setappdata(resultfig,'cortex',cortex);
@@ -480,7 +492,6 @@ setappdata(resultfig,'cortex',cortex);
 awin=ea_anatomycontrol(resultfig,options);
 setappdata(resultfig,'awin',awin);
 try WinOnTop(awin,true); end
-
 
 
 function closesattelites(src,evnt)
@@ -522,19 +533,17 @@ function export_hd(hobj,ev)
 set(gca, 'Color', 'none');
 set(gcf,'color','none');
 
-
 [FileName,PathName] = uiputfile('LEAD_Scene.png','Save file name');
 if FileName
-% set(gcf, 'Color', [1,1,1]);
-% [~, cdata] = ea_myaa([4, 2]);
-%
-% imwrite(cdata, [PathName,FileName], 'png');
-ea_screenshot([PathName,FileName],'myaa');
-
+    % set(gcf, 'Color', [1,1,1]);
+    % [~, cdata] = ea_myaa([4, 2]);
+    %
+    % imwrite(cdata, [PathName,FileName], 'png');
+    ea_screenshot([PathName,FileName],'myaa');
 end
 
-function dump_screenshot(hobj,ev,resultfig,options)
 
+function dump_screenshot(hobj,ev,resultfig,options)
 
 set(0,'CurrentFigure',resultfig);
 if ~exist([options.root,options.patientname,filesep,'export',filesep,'views'],'dir')
@@ -550,18 +559,24 @@ end
 ea_screenshot([options.root,options.patientname,filesep,'export',filesep,'views',filesep,'view_u',sprintf('%03.0f',next),'.png'],'ld');
 
 
+function eleGroupVisible(hobj,ev,eleGroup)
+for i=1:numel(eleGroup)
+    eleGroup(i).toggleH.State='on';
+end
 
+
+function eleGroupInvisible(hobj,ev,eleGroup)
+for i=1:numel(eleGroup)
+    eleGroup(i).toggleH.State='off';
+end
 
 
 function objvisible(hobj,ev,atls)
 set(atls, 'Visible', 'on');
 
 
-
 function objinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
-
-
 
 
 function ctxelvisible(hobj,ev,atls,pt,side,onoff,options)
@@ -578,7 +593,7 @@ if(getappdata(gcf,'altpressed'))
         end
     end
 else
-set(atls(pt).el_render{side}, 'Visible', onoff);
+    set(atls(pt).el_render{side}, 'Visible', onoff);
 end
 
 

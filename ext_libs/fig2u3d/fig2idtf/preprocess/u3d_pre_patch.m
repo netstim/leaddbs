@@ -1,4 +1,4 @@
-function [vertices, faces, facevertexcdata, renderer] = u3d_pre_patch(ax)
+function [vertices, faces, facevertexcdata, renderer, tags] = u3d_pre_patch(ax)
 %U3D_PRE_PATCH    Preprocess surface output to u3d.
 %
 % usage 
@@ -48,6 +48,11 @@ else
     sh = findobj(objs, 'flat', 'type', 'patch');
 end
 
+% Remove dummpy patch
+isDummyPatch = arrayfun(@(p) isequal(p.Faces, [1 2 3]) && ...
+                             isequal(p.Vertices, [0 1;1 1;0 0]), sh);
+sh = sh(~isDummyPatch);
+
 if isempty(sh)
     disp('No patch objects found.');
     vertices            = [];
@@ -64,17 +69,19 @@ faces = cell(1, N);
 facevertexcdata = cell(1, N);
 renderer = cell(1, N);
 for i=1:N
-    disp(['     Preprocessing patch No.', num2str(i) ] );
+    fprintf(['\nPreprocessing patch No.', num2str(i), '\n'] );
     h = sh(i, 1);
     
     [v, f, fvx, r] = single_patch_preprocessor(h);
-    disp('Face Vertex Size of patch:')
-    size(fvx)
+    disp(['Face Vertex Size of patch: ', num2str(size(fvx))]);
     vertices{1, i} = v;
     faces{1, i} = f;
     facevertexcdata{1, i} = fvx;
     renderer{1, i} = r;
 end
+
+tags = {sh.Tag};
+
 
 function [vertices, faces, facevertexcdata, renderer] = single_patch_preprocessor(h)
 %% shading -> renderer in adobe reader
@@ -143,6 +150,7 @@ ax = get(h, 'Parent');
 % end
 
 facevertexcdata = scaled_ind2rgb(facevertexcdata, ax);
+
 
 function [realcolor] = scaled_ind2rgb(cdata, ax)
 cdata = double(cdata);

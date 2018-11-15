@@ -1,4 +1,4 @@
-function [] = view2vws(ax, filename, part_renderers, fix_daspect)
+function [] = view2vws(ax, filename, part_renderers, fix_daspect, part_tags)
 %VIE2VWS    Saves current view in a views file for LaTeX media9 package.
 %
 % See also FIG2U3D.
@@ -25,7 +25,7 @@ else
     filename = check_file_extension(filename, '.vws');
 end
 matrix_mode = 0; % matrix mode not implemented yet
-viewname = 'MATLABfig';
+viewname = '3D-Figure';
 
 % part renderers
 if nargin < 3
@@ -96,7 +96,7 @@ fileinfo = verbatim;
 %% Created by:   fig2u3d, MATLAB figure export tool by Ioannis Filippidis
 %% Help:         See LaTeX package media9 documentation by Alexander Grahn
 %% Description:  View settings file for u3d file to be included in pdf
-\n
+
 %}
 viewname = ['VIEW=', viewname, '\n'];
 closing = 'END\n';
@@ -125,7 +125,7 @@ str = [fileinfo, views];
 
 %% part renderers
 if ~isempty(part_renderers)
-    part_strs = add_part_renderers(part_renderers);
+    part_strs = add_part_renderers(part_renderers, part_tags);
 else
     part_strs = {''};
 end
@@ -143,23 +143,28 @@ s = sprintf(str);
 disp('Exported axes view in .vws file for LaTeX media9 package is:')
 disp(s)
 
-function [part_strs] = add_part_renderers(part_renderers)
+
+function [part_strs] = add_part_renderers(part_renderers, part_tags)
 n = size(part_renderers, 2);
 part_strs = cell(1, n);
 for i=1:n
     s = part_str;
     
-    partname = ['Mesh', num2str(i) ];
+    if isempty(part_tags{i})
+        partname = ['Mesh', num2str(i) ];
+    else
+        partname = part_tags{i};
+    end
     part_rendermode = part_renderers{1, i};
     
     s = sprintf(s, partname, part_rendermode);
     part_strs{1, i} = s;
 end
 
+
 function [str] = part_str
 str = verbatim;
 %{
-
     PART=%s
         RENDERMODE=%s
     END

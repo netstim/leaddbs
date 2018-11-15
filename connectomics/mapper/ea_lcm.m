@@ -13,7 +13,7 @@ if options.lcm.struc.do
             end
         end
     elseif strcmp(options.lcm.seeddef,'parcellation')
-   %     keyboard
+        options.lcm.seeds=ea_resolveparcseeds(options,'dMRI');
     end
 
     ea_lcm_struc(options);
@@ -85,11 +85,33 @@ switch modality
             delete([tmp,'222',ext]);
         end
         ea_conformspaceto([tmp,'222','.nii'],ea_niigz(fullfile(tmp,uuid)),...
-            0,[],fullfile(tmp,[uuid,'.nii']),0);
+            0,[],fullfile(tmp,[uuid,'.nii']),0);               
         seeds={fullfile(tmp,[uuid,'.nii'])};
     case 'dMRI'
-       seeds=options.lcm.seeds; % leave as is.
+        tmp=ea_getleadtempdir;
+        uuid=ea_generate_uuid;
+        [~,~,ext]=ea_niifileparts(options.lcm.seeds{1});
+        copyfile(options.lcm.seeds{1},fullfile(tmp,[uuid,ext]));
+        if strcmp(ext,'.nii.gz')
+            gunzip(fullfile(tmp,[uuid,ext]));
+            delete(fullfile(tmp,[uuid,ext]));
+        end
+        
+        parc=ea_load_nii(fullfile(tmp,[uuid,'.nii']));
+        parc.img=round(parc.img);
+        uidx=unique(parc.img(:));
+        uidx((uidx==0))=[];
+        for p=1:length(uidx)
+            pnii=parc;
+            pnii.dt=[2,0];
+            pnii.img=parc.img==uidx(p);
+            pnii.fname=fullfile(tmp,[uuid,sprintf('%05.0f',p),'.nii']);
+            ea_write_nii(pnii);
+            seeds{p}=pnii.fname;
+        end
 end
+
+
 % % load in txt
 % fid=fopen(fullfile(fileparts(options.lcm.seeds{1}),[ea_stripex(ea_stripex(options.lcm.seeds{1})),'.txt']),'r');
 % A=textscan(fid,'%f %s\n');

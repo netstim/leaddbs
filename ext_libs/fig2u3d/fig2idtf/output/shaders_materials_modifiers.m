@@ -1,4 +1,4 @@
-function [shaders, materials, modifiers] = shaders_materials_modifiers(v, f, c)
+function [shaders, materials, modifiers] = shaders_materials_modifiers(v, f, c, t)
 % File:      shaders_materials_modifiers.m
 % Author:    Ioannis Filippidis, jfilippidis@gmail.com
 % Date:      2012.06.24
@@ -55,7 +55,11 @@ for i=1:n_meshes
     %% modifier
     shader_list_id_and_name = [(0:(cur_n_shaders-1) ).', shidx].';
     str = sprintf(shader_list_str, shader_list_id_and_name);
-    modifiers{1, i} = sprintf(shading_modifiers_heading, i, cur_n_shaders, str);
+    if isempty(t{i})
+        modifiers{1, i} = sprintf(shading_modifiers_heading, ['Mesh', num2str(i)], cur_n_shaders, str);
+    else
+        modifiers{1, i} = sprintf(shading_modifiers_heading, t{i}, cur_n_shaders, str);
+    end
 end
 
 %% output
@@ -153,7 +157,7 @@ str = verbatim;
 %{
 
 MODIFIER "SHADING" {
-     MODIFIER_NAME "Mesh%d"
+     MODIFIER_NAME "%s"
      PARAMETERS {
           SHADER_LIST_COUNT %d
           SHADER_LIST_LIST {

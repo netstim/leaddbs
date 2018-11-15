@@ -15,8 +15,9 @@ function [fibers,idx] = ea_trk2ftr(trk_in,type)
 if ~exist('type','var')
     type=nan;
 end
-sd=ea_getspacedef;
+
 %% basis information
+sd=ea_getspacedef;
 template_in = ea_niigz([ea_space,sd.templates{1}]);
 
 %% read .trk file
@@ -32,12 +33,13 @@ if strcmp(ext,'.gz')
 else
     [header,tracks]=ea_trk_read(trk_in);
 end
+
 %% create variables needed
 ea_fibformat='1.0';
 fourindex=1;
 idx=[tracks(:).nPoints]';
 idx2 =cumsum(idx);
-fibers = NaN(sum(idx),4);
+fibers = NaN(4, sum(idx));
 
 start = 1;
 fibercount = numel(idx);
@@ -45,12 +47,11 @@ ea_dispercent(0,'Converting trk to fibers.');
 for a=1:fibercount
     ea_dispercent(a/fibercount);
     stop = idx2(a);
-    fibers(start:stop,1:3)=tracks(a).matrix;
-    fibers(start:stop,4)=a;
+    fibers(1:3, start:stop)=tracks(a).matrix';
+    fibers(4, start:stop)=a;
     start = stop+1;
 end
 ea_dispercent(1,'end');
-fibers=single(fibers);
 
 %% transform fibers to template origin
 %nii=ea_load_nii('/PA/Neuro/_projects/lead/lead_dbs/templates/space/MNI_ICBM_2009b_NLIN_ASYM/atlases/Macroscale Human Connectome Atlas (Yeh 2018)/FMRIB58_FA_1mm.nii.gz')
@@ -69,6 +70,7 @@ else
         end
     end
 end
+
 switch answ
 
     case 'DSI Studio / QSDR'
@@ -76,16 +78,12 @@ switch answ
         fibers(1,:)=78.0-fibers(1,:);
         fibers(2,:)=76.0-fibers(2,:);
         fibers(3,:)=-50.0+fibers(3,:);
-
     otherwise
-
         switch answ
             case 'specified_image'
                 nii=ea_load_nii(type); % load in image supplied to function.
             case 'Normative Connectome / 2009b space'
-
                 nii=ea_load_nii(template_in);
-
             case 'Select .nii file'
                 [fname,pathname]=uigetfile({'.nii','.nii.gz'},'Choose Nifti file for space definition');
                 nii=ea_load_nii(fullfile(pathname,fname));
@@ -93,9 +91,8 @@ switch answ
 
         tfib=[fibers(1:3,:);ones(1,size(fibers,2))];
 
-
         tmat=header.vox_to_ras;
-        if isempty(find(tmat ~= 0))
+        if isempty(find(tmat, 1))
             % method Andreas (DSIStudio .trk)
             tmat(1:3,4)=header.dim';
         else
@@ -109,5 +106,4 @@ switch answ
         fibers(1:3,:)=tfib(1:3,:);
 end
 
-
-%fibers = fibers + repmat([nii.mat(1,4) nii.mat(2,4) nii.mat(3,4) 0]',1,size(fibers,2));
+fibers=single(fibers');

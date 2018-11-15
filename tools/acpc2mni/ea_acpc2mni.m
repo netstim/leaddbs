@@ -30,8 +30,6 @@ if cfg.mapmethod
     end
 end
 
-
-
 if isempty(uidir)
     ea_error('Please choose and normalize patients first.');
 end
@@ -39,9 +37,14 @@ end
 %disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
 %ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
-    
+
  %   ea_dispercent(pt/length(uidir));
-    directory=[uidir{pt},filesep];
+    if ~strcmp(uidir{pt}(end), filesep)
+        directory = [uidir{pt},filesep];
+    else
+        directory = uidir{pt};
+    end
+
     if nargin>5 % determine whether to use manually or automatically defined AC/PC
         automan=varargin{6};
     else
@@ -70,34 +73,32 @@ for pt=1:length(uidir)
         case 'auto' % auto AC/PC detection
             if ~exist([directory,'ACPC_autodetect.mat'],'file')
                 % warp into patient space:
-                
+
                 %     try
                 [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
                 %     catch
                 %         ea_error(['Please check deformation field in ',directory,'.']);
                 %     end
-                
+
                 fpinsub_mm=fpinsub_mm';
-                
-                
+
                 try
                     fid(pt).AC=fpinsub_mm(1,:);
                 catch
                     keyboard
                 end
+
                 fid(pt).PC=fpinsub_mm(2,:);
                 fid(pt).MSP=fpinsub_mm(3,:);
                 acpc_fiducials=fid(pt); % save for later use
                 save([directory,'ACPC_autodetect.mat'],'-struct','acpc_fiducials'); clear acpc_fiducials
             else
-                
                 tmp=load([directory,'ACPC_autodetect.mat']);
                 fid(pt).AC=tmp.AC;
                 fid(pt).PC=tmp.PC;
                 fid(pt).MSP=tmp.MSP;
-                
             end
-            
+
         case {'manual'} % manual AC/PC definition, assume F.fcsv file inside pt folder
             copyfile([directory,'ACPC.fcsv'],[directory,'ACPC.dat'])
             Ct=readtable([directory,'ACPC.dat']);
@@ -180,7 +181,7 @@ for pt=1:length(uidir)
     end
 
     % re-warp into MNI:
-    
+
     if ~isfield(cfg,'native') || ~cfg.native % when working in native space, no need to warp acpc back to mni at all.
         switch automan
             case 'mnidirect'
@@ -196,9 +197,6 @@ for pt=1:length(uidir)
         end
     end
 
-
-    
-    
     if cfg.mapmethod==2
         anat.img(:)=0;
         anat.img(round(warpcoord_vox(1)),round(warpcoord_vox(2)),round(warpcoord_vox(3)))=1;
@@ -284,6 +282,7 @@ if length(acpc)~=3
         ea_error('Please enter 3 values separated by spaces or commas.');
     end
 end
+
 for dim=1:3
     o(dim,1)=str2double(acpc{dim});
 end

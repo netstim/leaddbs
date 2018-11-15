@@ -51,6 +51,6 @@ status = system(cmd);
 % run twice to correct references.
 status = system(cmd);
 
-if status ~= 0
-    warning('latex:compile', 'LaTeX compilation warning.')
-end
+% if status ~= 0
+%     warning('latex:compile', 'LaTeX compilation warning.')
+% end
