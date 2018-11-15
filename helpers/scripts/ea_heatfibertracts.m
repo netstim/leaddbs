@@ -3,7 +3,6 @@ function [fibsweighted,fibsin]=ea_heatfibertracts(cfile,roilist,patselection,val
 % roilist and assigns them correlative values based on vals. Vals needs to be of
 % same length as roilist, assigning a value for each ROI.
 
-
 disp('ROI fiber analysis');
 
 fibers=load(cfile);
@@ -110,21 +109,27 @@ cnt=1;
 for group=1:length(roilist)
     thisgroupidx=cnt:(cnt+length(patselection))-1;
     cnt=cnt+length(patselection);
-    %R=corr(fibsval',vals,'type','spearman');
     repvals=repmat(vals{group}',size(fibsval,1),1);
     try
-        nfibsval=fibsval(:,thisgroupidx); nfibsval(nfibsval==0)=nan; posvals=repvals.*nfibsval;
-        nfibsval=double(~fibsval(:,thisgroupidx)); nfibsval(nfibsval==0)=nan; negvals=repvals.*nfibsval;
+        nfibsval=fibsval(:,thisgroupidx);
+        nfibsval(~logical(nfibsval))=nan;
+        posvals=repvals.*nfibsval;
+        nfibsval=double(~fibsval(:,thisgroupidx));
+        nfibsval(~logical(nfibsval))=nan;
+        negvals=repvals.*nfibsval;
     catch
         keyboard
     end
 
     [~,fibidx,iaix]=unique(fibsin(:,4));
-    fibsval=fibsval(fibidx,:); nfibsval=nfibsval(fibidx,:);
+    fibsval=fibsval(fibidx,:);
+    nfibsval=nfibsval(fibidx,:);
 
     sumfibsval=sum(fibsval,2);
-    exclude=sumfibsval<size(fibsval,2)*minpercent; % discard fibers with less than 20% connections.
-    exclude=logical(exclude+(sumfibsval>size(fibsval,2)*(1-minpercent))); % discard fibers with more than 80% connections.
+    % discard fibers with less than MINPERCENT connections.
+    exclude=sumfibsval<size(fibsval,2)*minpercent;
+    % discard fibers with more than 1-MINPERCENT connections.
+    exclude=logical(exclude+(sumfibsval>size(fibsval,2)*(1-minpercent)));
     fibsval(exclude,:)=[];
     fibsweighted=fibsin;
     fibsweighted((exclude(iaix)),:)=[];
@@ -132,8 +137,9 @@ for group=1:length(roilist)
     [~,fibidx,iaix]=unique(fibsweighted(:,4));
 
     allvals=repmat(vals{1}',size(fibsval,1),1);
-    fibsimpval=allvals; nfibsimpval=allvals;
+    fibsimpval=allvals;
     fibsimpval(~logical(fibsval))=nan;
+    nfibsimpval=allvals;
     nfibsimpval(logical(fibsval))=nan;
     [h,p,ci,stats]=ttest2(fibsimpval',nfibsimpval');
     fibsweighted=[fibsweighted,stats.tstat(iaix)'];

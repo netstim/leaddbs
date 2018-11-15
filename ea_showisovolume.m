@@ -12,11 +12,8 @@ setappdata(resultfig,'isobar',isobar);
 end
 hold on
 
-%
-
-
 jetlist=othercolor('BuOr_12');
-       % jetlist=jet;
+% jetlist=jet;
 
 if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
     shifthalfup=1;
@@ -40,7 +37,6 @@ for side=1:length(options.sides)
                     Z{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,3),elstruct(sub).coords_mm{side}(cont+1,3)]);
                 end
                 V{side}(cnt)=options.d3.isomatrix{side}(sub,cont);
-
                 cnt=cnt+1;
             end
         end
@@ -51,7 +47,6 @@ for side=1:length(options.sides)
     %assignin('base','Y',Y);
     %assignin('base','Z',Z);
 
-
     bb(1,:)=[min(X{side}),max(X{side})];
     bb(2,:)=[min(Y{side}),max(Y{side})];
     bb(3,:)=[min(Z{side}),max(Z{side})];
@@ -61,11 +56,7 @@ for side=1:length(options.sides)
     F.ExtrapolationMethod='none';
     VI{side}=F(XI,YI,ZI);
 
-
-
     if options.d3.isovscloud==1 % show interpolated point mesh
-
-
         ipcnt=1;
         for xx=1:10:size(VI{side},1)
             for yy=1:10:size(VI{side},2)
@@ -87,7 +78,7 @@ for side=1:length(options.sides)
         Vol=VI{side};
         Vol(isnan(Vol))=0;
         fv{side}=isosurface(XI,YI,ZI,Vol,0); % could use thresh instead of 0
-try        fv{side}=ea_smoothpatch(fv{side},1,100); end
+        try fv{side}=ea_smoothpatch(fv{side},1,100); end
         C=VI{side};
         C(C<thresh)=nan;
         C=C-ea_nanmin(C(:));
@@ -107,10 +98,8 @@ try        fv{side}=ea_smoothpatch(fv{side},1,100); end
 
         jetlist=jet;
         ea_spec_atlas(isopatch(side,1),'isovolume',jet,1);
-
     end
-
-       %ea_exportisovolume(elstruct,options);
+    %ea_exportisovolume(elstruct,options);
     patchbutton(side)=uitoggletool(isobar,'CData',ea_get_icn('isovolume'),'TooltipString',options.d3.isomatrix_name,'OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
 
 end
@@ -119,6 +108,7 @@ end
 function isovisible(hobj,ev,atls)
 set(atls, 'Visible', 'on');
 %disp([atls,'visible clicked']);
+
 
 function isoinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
@@ -132,10 +122,10 @@ for c=1:length(cellinp)
     if nm>m; m=nm; end
 end
 
+
 function m=miniso(cellinp)
 m=inf;
 for c=1:length(cellinp)
     nm=min(cellinp{c}(:));
     if nm<m; m=nm; end
 end
-

@@ -1,4 +1,4 @@
-function ea_showdiscfibers(M,percent,resultfig)
+function ea_showdiscfibers(M,discfiberssetting,resultfig)
 
 patlist=M.patient.list(M.ui.listselect);
 I=M.clinical.vars{M.ui.clinicallist}(M.ui.listselect);
@@ -7,9 +7,14 @@ N=length(patlist);
 thresh=0.5; 
 tic
 
+% Get discriminative fiber setting
+connthreshold = discfiberssetting.connthreshold;
+predthreshold = discfiberssetting.predthreshold;
+showpositiveonly = discfiberssetting.showpositiveonly;
+
 % protocol selection to be able to check if same analysis has been run
 % before.
-opts.percent=percent;
+opts.percent=connthreshold;
 opts.patientselection=M.ui.listselect;
 opts.regressor=I;
 opts.connectome=M.ui.connectomename;
@@ -22,7 +27,6 @@ if reforce
         allroilist{sub,2}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii'];
     end
 
-    
     if ~exist([M.ui.groupdir,'connected_fibers.mat'],'file')
         cfile=[ea_getconnectomebase('dMRI'),M.ui.connectomename,filesep,'data.mat'];
     else
@@ -32,7 +36,7 @@ if reforce
             cfile=[M.ui.groupdir,'connected_fibers.mat'];
         end
     end
-    [fibsweighted,fibsin]=ea_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},thresh,percent);
+    [fibsweighted,fibsin]=ea_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},thresh,connthreshold);
     save([M.ui.groupdir,'connected_fibers.mat'],'fibsin','opts','-v7.3');
     save([M.ui.groupdir,'correlative_fibertracts.mat'],'fibsweighted','opts','-v7.3');
 else
@@ -67,7 +71,6 @@ rb=ea_redblue;
 cvals=vals;
 cvals(isnan(cvals))=0;
 cvals=cvals./max([abs(nanmin(cvals)),abs(nanmax(cvals))]);
-alphas=abs(cvals);
 
 % retain only 5% positive and 5% of negative predictive fibers:
 posits=cvals(cvals>0);
@@ -83,6 +86,9 @@ end
 posthresh=posits(cutoff);
 negthresh=negits(cutoff);
 disp(['Fiber colors: Positive (T = ',num2str(posthresh),' - ',num2str(max(posits)),'); Negative (T = ',num2str(negthresh),' - ',num2str(min(negits)),').']);
+
+% posthresh = 0.5;
+% negthresh = -0.5;
 
 remove=logical(logical(cvals<posthresh) .* logical(cvals>negthresh));
 cvals(remove)=[];
@@ -113,6 +119,7 @@ alphas=1./...
 alphas=alphas./nanmax(alphas);
 %alphas(alphas<0.5)=alphas(alphas<0.5).^2;
 %alphas=double(alphas>0.5);
+
 calph=mat2cell(alphas,ones(size(cvals,1),1));
 
 [h.FaceColor]=cv{:};
@@ -150,6 +157,7 @@ end
 
 function str=pointtodash(str)
 str=strrep(str,'.','-');
+
 
 function str=stripblanks(str)
 str=strrep(str,'(','');
