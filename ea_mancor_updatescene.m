@@ -96,8 +96,10 @@ for side=options.elside
     xvec = xvec ./ norm(xvec);
     yvec = -cross(xvec,normtrajvector);
     
-    markers(side).x = markers(side).head + xvec;
-    markers(side).y = markers(side).head + yvec;
+%     markers(side).x = markers(side).head + xvec;
+%     markers(side).y = markers(side).head + yvec;
+    markers(side).x = markers(side).head + (xvec * (options.elspec.lead_diameter/2));
+    markers(side).y = markers(side).head + (yvec * (options.elspec.lead_diameter/2));
 end
 
 xvec_unrot=cross(normtrajvector,[1,0,0]); % orthogonal vectors used for x-ray mode
