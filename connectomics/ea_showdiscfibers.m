@@ -8,8 +8,8 @@ thresh=0.5;
 tic
 
 % Get discriminative fiber setting
-connthreshold = discfiberssetting.connthreshold;
-predthreshold = discfiberssetting.predthreshold;
+connthreshold = discfiberssetting.connthreshold/100;
+predthreshold = discfiberssetting.predthreshold/100;
 showpositiveonly = discfiberssetting.showpositiveonly;
 
 % protocol selection to be able to check if same analysis has been run
