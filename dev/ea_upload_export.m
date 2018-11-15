@@ -1,6 +1,5 @@
-function response=ea_upload_export(directory)
+function response=ea_upload_export(directory,patientPseudonym,usercredentials)
 
-options=ea_getptopts(directory);
 import matlab.net.http.io.FileProvider
 import matlab.net.http.RequestMessage
 import matlab.net.http.HeaderField
@@ -13,17 +12,12 @@ import matlab.net.http.Credentials
 import matlab.net.http.HTTPOptions
 import matlab.net.http.MediaType
 
+options=ea_getptopts(directory);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input from user and LEAD-DBS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~exist([directory,filesep,'ea_pseudonym.mat'],'file')
-    patientPseudonym = inputdlg('Please enter patient synonym','Patient Synonym',1,{options.patientname});
-    save([directory,filesep,'ea_pseudonym.mat'],'patientPseudonym');
-else % if patient has already been exported, we already know the pseudonym.
-    p=load([directory,filesep,'ea_pseudonym.mat']);
-    patientPseudonym=p.patientPseudonym; clear p
-end
+
 filePath = [options.root,options.patientname,filesep,'export',filesep,'zip',filesep,options.patientname,'.zip'];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -42,9 +36,8 @@ response = tokenReq.send(options.prefs.tbase.authUrl)
 %}
 prefs=ea_prefs;
 
-answ = inputdlg({'Username','Password'},'Enter User Credentials',[1 35],{prefs.tbase.user,prefs.tbase.pw});
-user = answ{1}; % to be replaced by technical user
-pw = answ{2};
+user = usercredentials{1}; % to be replaced by technical user
+pw = usercredentials{2};
 
 
 % Obtain token

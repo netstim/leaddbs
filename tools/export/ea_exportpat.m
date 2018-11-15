@@ -28,6 +28,19 @@ for pt=1:length(uipatdir)
                     [uipatdir{pt},filesep,'export',filesep,'views']},...
                     [uipatdir{pt},filesep,'export',filesep]);
             case 'LS'
+                
+                if ~exist([uipatdir{pt},filesep,'ea_pseudonym.mat'],'file')
+                    [pth,ptname]=fileparts(uipatdir{pt});
+                    patientPseudonym = inputdlg('Please enter patient synonym','Patient Synonym',1,{ptname});
+                    save([uipatdir{pt},filesep,'ea_pseudonym.mat'],'patientPseudonym');
+                else % if patient has already been exported, we already know the pseudonym.
+                    p=load([uipatdir{pt},filesep,'ea_pseudonym.mat']);
+                    patientPseudonym=p.patientPseudonym; clear p
+                end
+                prefs=ea_prefs;
+                usercredentials = inputdlg({'Username','Password'},'Enter User Credentials',[1 35],{prefs.tbase.user,prefs.tbase.pw});
+
+                
                 ea_exportpat([],[],'ZIP',handles,target);
                 response=ea_upload_export(uipatdir{pt});
                 if strcmp(response.StatusCode,'OK')
@@ -37,6 +50,7 @@ for pt=1:length(uipatdir)
                 end
         end
     catch
+        keyboard
         msgbox(['Export for pt: ',uipatdir{pt},' failed.']);
     end
 end
