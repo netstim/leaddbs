@@ -58,7 +58,12 @@ if useinverse % from template space to [untouched] achor space
         options.earoot = ea_getearoot;
         options.prefs = ea_prefs(options.patientname);
         [options,presentfiles] = ea_assignpretra(options);
-        options.coregmr.method='SPM';
+        try
+            options.coregmr.method=get(handles.coregmrpopup,'String');
+            options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
+        catch
+            options.coregmr.method='SPM';
+        end
 
         if ischar(fis)
             fis = {fis};
@@ -117,7 +122,12 @@ else % from [untouched] achor space to template space
     options.earoot = ea_getearoot;
     options.prefs = ea_prefs(options.patientname);
     [options,presentfiles] = ea_assignpretra(options);
-    options.coregmr.method='SPM';
+    try
+        options.coregmr.method=get(handles.coregmrpopup,'String');
+        options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
+    catch
+        options.coregmr.method='SPM';
+    end
 
     if ischar(fis)
         fis = {fis};
