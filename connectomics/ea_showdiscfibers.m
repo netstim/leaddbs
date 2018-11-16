@@ -77,18 +77,16 @@ posits=cvals(cvals>0);
 negits=cvals(cvals<0);
 posits=sort(posits,'descend');
 negits=sort(negits,'ascend');
-% posthresh=posits(round(length(posits)*0.05));
-% negthresh=negits(round(length(negits)*0.05));
-cutoff=1500;
-if (length(posits) < cutoff) || (length(negits) < cutoff)
-    cutoff=min([length(posits),length(negits)]);
-end
-posthresh=posits(cutoff);
-negthresh=negits(cutoff);
-disp(['Fiber colors: Positive (T = ',num2str(posthresh),' - ',num2str(max(posits)),'); Negative (T = ',num2str(negthresh),' - ',num2str(min(negits)),').']);
+posthresh=posits(round(length(posits)*predthreshold));
 
-% posthresh = 0.5;
-% negthresh = -0.5;
+if showpositiveonly
+    negthresh = negits(1)-eps;
+    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' - ',num2str(max(posits)), ')']);
+else
+    negthresh=negits(round(length(negits)*predthreshold));
+    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' - ',num2str(max(posits)), ...
+          '); Negative (T = ',num2str(negthresh),' - ',num2str(min(negits)),').']);
+end
 
 remove=logical(logical(cvals<posthresh) .* logical(cvals>negthresh));
 cvals(remove)=[];
@@ -101,25 +99,14 @@ cvals=cvals*31.5;
 cvals=cvals+32.5;
 
 cvals=rb(round(cvals),:);
-% cvals=vals-min(vals);
-% cvals=cvals/max(vals);
-% cvals=cvals*63;
-% cvals=cvals+1;
-% cvals=rb(round(cvals),:);
 h=streamtube(fibcell,0.2);
 cv=mat2cell(cvals,ones(size(cvals,1),1));
 
 % transform alphas to a logistic curve to highlight more predictive and
 % suppress less predictive fibers:
-alphas=1./...
-    (1+...
-    exp((-10)*...
-    (alphas-0.5)));
+alphas=1./(1+exp((-10)*(alphas-0.5)));
 
 alphas=alphas./nanmax(alphas);
-%alphas(alphas<0.5)=alphas(alphas<0.5).^2;
-%alphas=double(alphas>0.5);
-
 calph=mat2cell(alphas,ones(size(cvals,1),1));
 
 [h.FaceColor]=cv{:};
