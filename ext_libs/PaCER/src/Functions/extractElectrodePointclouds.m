@@ -43,8 +43,7 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
         disp('Extracting convex hull brain mask...');
         [brainMask, ~] = extractBrainConvHull(niiCT);
     end
-    disp('done');
-    
+
     %% detect metal artifacts inside the brain (hopefully representing electrodes)
     disp(['Thresholding ' niiCT.filepath  ' for metal with METAL_THRESHOLD = ' num2str(METAL_THRESHOLD) '...']);
     maskedImg = niiCT.img;
@@ -88,9 +87,9 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
     disp(['Guessing that ' num2str(nElecs) ' of them are Electrodes...']);
     
     if(nElecs == 0)
-        if(METAL_THRESHOLD < 4096)
-            disp('Somehing is weird with your CT data...  Trying again with lower higher threshold. ')
-            [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT, 'brainMask', args.brainMask, 'metalThreshold', METAL_THRESHOLD  + 400, 'medtronicXMLPlan', args.medtronicXMLPlan);
+        if(METAL_THRESHOLD > 200)
+            disp('Somehing is weird with your CT data...  Trying again with lower threshold. ')
+            [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT, 'brainMask', args.brainMask, 'metalThreshold', METAL_THRESHOLD  * 0.8, 'medtronicXMLPlan', args.medtronicXMLPlan);
             return;
         else
             %% We tried hard but  didn't find an object that looks like an electrode in a reasonalbe HU range, notify the user and quit
