@@ -13,7 +13,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
         markerposition = 9;
         electrodespacing = 2;
-    elseif strcmp(options.elmodel,'St. Jude Directed 6173 (long)')        
+    elseif strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
         disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
         markerposition = 12;
         electrodespacing = 3;
@@ -363,7 +363,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
                             finalpeak(side) = peak(1);
                         end
                     end
-            end            
+            end
             %% take "better" peak (not validated) to determine which of the two peaks is the marker
             %% by comparing marker peaks to the 3 dirlevel peaks
             % for this extent intensity from 0:360 to -360:+720 to exclude failures
@@ -380,7 +380,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             %                 finalpeak(side) = peak(2);
             %             end
             %             clear diff1 diff2 peak1tmp peak2tmp peak1 peak2
-        elseif supervised            
+        elseif supervised
             h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
             txt1 = uicontrol('style','text','units','pixels','Background','w',...
                 'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
@@ -479,7 +479,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         clear temp
         
         %% final figure
-        fig(side).figure = figure('Name',['Lead ' sides{side}],'Position',[100 100 800 800],'Color','w');
+        fig(side).figure = figure('Name',['Lead ' sides{side}],'Position',[100 100 800 800],'Color','w','Toolbar','none');        
         
         if peakangle(side) > pi
             tempangle = peakangle(side) - 2 * pi;
@@ -487,26 +487,40 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             tempangle = peakangle(side);
         end
         fig(side).txt1 = uicontrol('style','text','units','pixels','Background','w',...
-            'position',[650,650,150,75],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Artifact angle:\n' num2str(rad2deg(tempangle)) ' deg\nPrimary roll angle:\n' num2str(rad2deg(roll)) ' deg']));
-        clear tempangle
+            'position',[650,650,180,75],'FontSize',12,'HorizontalAlignment','left',...
+            'string',sprintf(['Artifact Angle:\n' num2str(rad2deg(tempangle),'%.1f') ' deg\nMarker Angle:\n' num2str(rad2deg(roll),'%.1f') ' deg']));
+        
         fig(side).txt2 = uicontrol('style','text','units','pixels','Background','w',...
-            'position',[650,450,150,50],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Corrected roll angle:\n' num2str(rad2deg(roll1)) ' deg']));
-        
-        fig(side).chk1 = uicontrol('style','checkbox','units','pixels',...
-            'position',[650,425,150,25],'string','Accept','FontSize',12,'Background','w');
-        
-        fig(side).txt3 = uicontrol('style','text','units','pixels','Background','w',...
-            'position',[650,225,150,50],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Corrected roll angle:\n' num2str(rad2deg(roll2)) ' deg']));
+            'position',[650,450,180,50],'FontSize',12,'HorizontalAlignment','left',...
+            'string',sprintf(['Level 2 Angle:\n' num2str(rad2deg(roll2),'%.1f') ' deg']));
         
         fig(side).chk2 = uicontrol('style','checkbox','units','pixels',...
-            'position',[650,200,150,25],'string','Accept','FontSize',12,'Background','w');
+            'position',[650,425,180,25],'string','Accept','FontSize',12,'Background','w');
+        
+        fig(side).txt3 = uicontrol('style','text','units','pixels','Background','w',...
+            'position',[650,225,180,50],'FontSize',12,'HorizontalAlignment','left',...
+            'string',sprintf(['Level 1 Angle:\n' num2str(rad2deg(roll1),'%.1f') ' deg']));
+        
+        fig(side).chk1 = uicontrol('style','checkbox','units','pixels',...
+            'position',[650,200,180,25],'string','Accept','FontSize',12,'Background','w');        
         
         fig(side).txt4 = uicontrol('style','text','units','pixels','Background','w',...
-            'position',[60,60,720,50],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Use the checkboxes if you want to correct the primary roll angle by the orientation angles of the directional levels and choose whether you want to save, manually refine, or discard the results.']));
+            'position',[60,60,720,40],'FontSize',12,'HorizontalAlignment','left',...
+            'string',sprintf(['Use the checkboxes if the algorithm accurately detected the artifacts of the directional levels and if you want to use them to correct the marker angle. Then accept, manually refine, or discard the results.']));
+        
+        if rad2deg(abs(pitch)) > 40 || rad2deg(abs(yaw)) > 40
+            fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
+                'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
+                'string',sprintf(['WARNING: The polar angle of the lead is larger than 40 deg and results could be inaccurate.\nPlease inspect the results carefully and use manual refinement if necessary.']));
+        elseif rad2deg(abs(roll)) > 60
+            fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
+                'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
+                'string',sprintf(['WARNING: The orientation of the lead is far from ' defaultdirection '.\nPlease verify whether the correct marker orientation has been chosen.']));
+        else
+             fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','k',...
+                'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
+                'string',sprintf(['No warnings: The polar angle and lead orientation are within normal ranges.']));
+        end
         
         SaveButton = uicontrol('Style', 'pushbutton', 'String', 'Accept & Save',...
             'Position', [150 20 150 25],'FontSize',12,...
@@ -517,7 +531,6 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         DiscardButton = uicontrol('Style', 'pushbutton', 'String', 'Discard',...
             'Position', [500 20 150 25],'FontSize',12,...
             'Callback', @buttonPress);
-        
         %% marker
         ax1 = subplot(3,3,1);
         hold on
@@ -587,7 +600,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         
         ax6 = subplot(3,3,6);
         hold on
-        title(ax6,'Correction','FontWeight','normal')
+        title(ax6,'Similarity Index','FontWeight','normal')
         plot(ax6,rad2deg(rollangles),sumintensity1)
         scatter(ax6,rad2deg(rollangles(rollangles == roll)), sumintensity1(rollangles == roll),'g','filled');
         scatter(ax6,rad2deg(rollangles(rollangles == roll1)), sumintensity1(rollangles == roll1),'r');
@@ -628,7 +641,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         
         ax9 = subplot(3,3,9);
         hold on
-        title(ax9,'Correction','FontWeight','normal')
+        title(ax9,'Similarity Index','FontWeight','normal')
         plot(ax9,rad2deg(rollangles),sumintensity2)
         scatter(ax9,rad2deg(rollangles(rollangles == roll)), sumintensity2(rollangles == roll),'g','filled');
         scatter(ax9,rad2deg(rollangles(rollangles == roll2)), sumintensity2(rollangles == roll2),'r');
@@ -643,15 +656,44 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         set(ax6,'Xlim',[rad2deg(rollangles(1)) rad2deg(rollangles(end))]);
         set(ax6,'Ylim',[-1000 1000]);
         
-        set(ax1,'Position',[0.05 0.75 0.2 0.2])
-        set(ax2,'Position',[0.3 0.75 0.2 0.2])
-        set(ax4,'Position',[0.05 0.475 0.2 0.2])
-        set(ax5,'Position',[0.3 0.475 0.2 0.2])
-        set(ax6,'Position',[0.55 0.475 0.2 0.2])
-        set(ax7,'Position',[0.05 0.2 0.2 0.2])
-        set(ax8,'Position',[0.3 0.2 0.2 0.2])
-        set(ax9,'Position',[0.55 0.2 0.2 0.2])
+        set(ax1,'Position',[0.13 0.75 0.2 0.2])
+        set(ax2,'Position',[0.345 0.75 0.2 0.2])
+        set(ax7,'Position',[0.13 0.475 0.2 0.2])
+        set(ax8,'Position',[0.345 0.475 0.2 0.2])
+        set(ax9,'Position',[0.56 0.475 0.2 0.2])
+        set(ax4,'Position',[0.13 0.2 0.2 0.2])
+        set(ax5,'Position',[0.345 0.2 0.2 0.2])
+        set(ax6,'Position',[0.56 0.2 0.2 0.2])
+        %% graphics lead
+        ax_elec = axes('Position',[0 0.2 0.1 0.75]);
+        axis vis3d
+        hold on
+        for k = 1:length(electrode.insulation)
+            patch('Faces',electrode.insulation(k).faces,'Vertices',electrode.insulation(k).vertices,'Edgecolor','none','Facecolor',[electrode.lead_color electrode.lead_color electrode.lead_color]);
+        end
+        for k = 1:length(electrode.contacts)
+            patch('Faces',electrode.contacts(k).faces,'Vertices',electrode.contacts(k).vertices,'Edgecolor','none','Facecolor',[electrode.contact_color electrode.contact_color electrode.contact_color]);
+        end
         
+        view(180,0)
+        ylim([-1 1])
+        xlim([-1 1])
+        zlim([0 15])
+        axis off
+        axis equal
+        
+        camorbit(-rad2deg(tempangle),0)
+        tempvec = [0; 1; 0];
+        temp3x3 = ea_orient_rollpitchyaw(-tempangle,0,0);
+        tempvec = temp3x3 * tempvec;
+        text(tempvec(1),tempvec(2),markerposition + 0.75,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+        text(tempvec(1),tempvec(2),0.75 + electrodespacing,'1','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+        text(tempvec(1),tempvec(2),0.75 + (2*electrodespacing),'2','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+        clear tempangle
+        
+        set(ax_elec,'Position',[-0.16 0.21 0.43 0.73])
+        
+        %% get results
         if round(sumintensity1(rollangles == roll1)) <= -200
             checkbox1 = set(fig(side).chk1,'Value',1);
         end
