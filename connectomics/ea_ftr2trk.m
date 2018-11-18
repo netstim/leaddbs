@@ -42,19 +42,17 @@ if det(specs.affine) < 0
 end
 specs = ea_aff2hdr(specs.affine, specs);
 
-try
-    header.voxel_size=specs.voxel_size;
-catch
-    header.voxel_size=fs.vox;
-end
 header.dim=specs.dim;
+header.voxel_size=specs.voxel_size;
+header.vox_to_ras = specs.affine;
+header.image_orientation_patient=specs.image_orientation_patient;
 header.origin=[0 0 0]; % as doc says, trackvis will always use 0 0 0 as origin.
+
 header.n_scalars=0;
 header.scalar_name=char(repmat(' ',10,20));
 header.n_properties=0;
 header.property_name=char(repmat(' ',10,20));
 header.reserved=char(repmat(' ',444,1));
-header.image_orientation_patient=specs.image_orientation_patient;
 header.invert_x=0;
 header.invert_y=0;
 header.invert_z=0;
