@@ -651,7 +651,8 @@ switch options.modality
                 options=ea_assignpretra(options);
                 if strcmp(options.prefs.reco.mancoruse,'postop') && exist([options.root,options.patientname,filesep,stripext(options.prefs.rawctnii_unnormalized),'2',stripext(options.prefs.prenii_unnormalized),'_ants1.mat'],'file'); % use unresliced version and apply matrix in RAM
                     V=spm_vol([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized]);
-                    mat=ea_getantsrawct2preniimat(options);
+                    load([options.root,options.patientname,filesep,stripext(options.prefs.rawctnii_unnormalized),'2',stripext(options.prefs.prenii_unnormalized),'_ants1.mat'])
+                    mat=ea_antsmat2mat(AffineTransform_float_3_3,fixed);
                     V.mat=mat*V.mat;
                 else
                     V=spm_vol([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
