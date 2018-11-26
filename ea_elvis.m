@@ -153,7 +153,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     pobj.hasPlanning=1;
                     pobj.showPlanning=strcmp(options.leadprod,'or');
                 end
-
+                pobj.pt=pt;
                 pobj.options=popts;
                 pobj.elstruct=elstruct(pt);
                 pobj.showMacro=1;
