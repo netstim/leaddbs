@@ -16,7 +16,7 @@ for i=1:length(filepath)
     if ispc
         filepath{i} = ['"',filepath{i},'"'];
     else
-        filepath{i} = regexprep(filepath{i},'[''() &]', '\\$0');
+        filepath{i} = regexprep(filepath{i},'[[''() &]]', '\\$0');
     end
 end
 

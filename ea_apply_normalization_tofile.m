@@ -6,6 +6,9 @@ if ~strcmp(directory(end),filesep)
    directory=[directory,filesep];
 end
 
+[options.root,options.patientname]=fileparts(fileparts(directory));
+options.root=[options.root,filesep];
+
 if ~exist('interp','var')
     interp=4;
 end
