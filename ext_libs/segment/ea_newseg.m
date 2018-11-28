@@ -30,13 +30,9 @@ else
         job.channel(fi).biasfwhm = 60;
         job.channel(fi).write = [0 0];
     end
-    if isfield(options,'norm')
-        if isfield(options.norm,'highvar')
-            if options.norm.highvar
-                job.warp.reg=job.warp.reg/3;
-            end
-        end
-    end
+    
+    job.warp.reg=job.warp.reg*options.prefs.machine.normsettings.spmnewseg_scalereg;
+
     tpmHdr = ea_open_vol(tpminf);
     tpmnum = tpmHdr.volnum;
 
