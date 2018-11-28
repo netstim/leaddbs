@@ -22,7 +22,7 @@ function varargout = ea_normsettings_ants(varargin)
 
 % Edit the above text to modify the response to help ea_normsettings_ants
 
-% Last Modified by GUIDE v2.5 28-Apr-2018 17:30:59
+% Last Modified by GUIDE v2.5 28-Nov-2018 13:45:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -111,6 +111,8 @@ end
 set(handles.scrf,'Value',prefs.machine.normsettings.ants_scrf);
 set(handles.stagesep,'Value',prefs.machine.normsettings.ants_stagesep);
 
+set(handles.skullstripped,'Value',prefs.machine.normsettings.ants_skullstripped);
+
 % UIWAIT makes ea_normsettings_ants wait for user response (see UIRESUME)
 
 
@@ -172,7 +174,7 @@ normsettings.ants_strategy=normsettings.ants_strategy{get(handles.strategy,'Valu
 
 normsettings.ants_usefa=get(handles.includefa,'Value');
 
-
+normsettings.ants_skullstripped=get(handles.skullstripped,'Value');
 if get(handles.restrcores,'Value')
     normsettings.ants_numcores=get(handles.numcores,'String');
 else
@@ -292,3 +294,12 @@ function includefa_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of includefa
+
+
+% --- Executes on button press in skullstripped.
+function skullstripped_Callback(hObject, eventdata, handles)
+% hObject    handle to skullstripped (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of skullstripped
