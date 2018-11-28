@@ -152,6 +152,14 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
                 clear doit
                 % 3. finally perform normalization based on dominant or all preop MRIs
                 ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
+                
+                % cleanup already normalized versions:                
+                [options, presentfiles]=ea_assignpretra(options);
+                ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
+                for fi=2:length(presentfiles)
+                    ea_delete([options.root,options.patientname,filesep,'gl',presentfiles{fi}]);
+                end
+                
                 eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
 
                 if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
