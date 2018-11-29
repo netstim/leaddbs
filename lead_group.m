@@ -559,7 +559,7 @@ if options.expstatvat.do % export to nifti volume
     pobj.color=[0.9,0.2,0.3];
 
     pobj.openedit=1;
-hshid=ea_datahash(M.ui.listselect);
+    hshid=ea_datahash(M.ui.listselect);
     ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'models',filesep,'statvat_',M.clinical.labels{M.ui.clinicallist},'_mean_',hshid,'.nii'],pobj);
 end
 
