@@ -152,14 +152,13 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
                 clear doit
                 % 3. finally perform normalization based on dominant or all preop MRIs
                 ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
-                
-                % cleanup already normalized versions:                
-                [options, presentfiles]=ea_assignpretra(options);
+
+                % cleanup already normalized versions:
                 ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
                 for fi=2:length(presentfiles)
                     ea_delete([options.root,options.patientname,filesep,'gl',presentfiles{fi}]);
                 end
-                
+
                 eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
 
                 if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
@@ -273,10 +272,10 @@ end
                         disp(['Message: ' e.message]);
                         disp(['In: ' e.stack(1).file]);
                         disp(['Method: ' e.stack(1).name]);
-                        disp(['Line: ' num2str(e.stack(1).line)]); 
+                        disp(['Line: ' num2str(e.stack(1).line)]);
                         disp('Please check your input data carefully.');
                         disp('If the error persists, please consider a bug report at <a href="https://github.com/adhusch/PaCER/issues">https://github.com/adhusch/PaCER/issues</a>.');
-                        
+
                         warning('Reverting to TRAC/CORE Algorithm.');
 
                         [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
