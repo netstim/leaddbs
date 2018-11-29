@@ -316,10 +316,11 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         %% detect peaks and valleys
         [peak,markerfft] = ea_orient_intensitypeaksFFT(intensity,2);
         valley = ea_orient_intensitypeaksFFT(-intensity,2);
-        
+            
+        %% take solution which is closer to the default direction - change defaultdirection if you do not rountinely implant in anterior direction
+        defaultdirection = 'anterior';              % also use: 'posterior', 'medial', 'lateral'
         if ~supervised
             %% take solution which is closer to the default direction - change defaultdirection if you do not rountinely implant in anterior direction
-            defaultdirection = 'anterior'; % also use: 'posterior', 'medial', 'lateral'
             switch defaultdirection
                 case 'anterior'
                     %% take anterior peak
