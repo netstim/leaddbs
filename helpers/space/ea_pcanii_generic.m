@@ -23,7 +23,7 @@ idx=zeros(length(maskidx),N);
 % feature scale data &
 % generate joint pointlist
 for fi=1:length(fis)
-    allidx(:,fi)=zscore(imgs{fi}(fullidx));
+    allidx(:,fi)=zscore(imgs{fi}.img(fullidx));
     if fi>1 % need to retain first image for output.
         imgs{fi}=[]; % free ram
     end
