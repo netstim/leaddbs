@@ -36,11 +36,12 @@ if vizz && N==3
 end
 
 % train PCA only on brain part of the image:
-[wcoeff,~,~,~,exp]=pca(idx);
+samples=round(linspace(1,size(idx,1),100000));
+[wcoeff,~,~,~,exp]=pca(idx(samples,:));
 % orthogonalize PC coeffs:
-coefforth = inv(diag(std(idx)))*wcoeff;
+coefforth = inv(diag(std(idx(samples,:))))*wcoeff;
 % apply orthogonalized coefficients to full images:
-cscores = zscore(allidx)*coefforth;
+cscores = (allidx)*coefforth;
 disp([num2str(exp(1)),' % of variance explained by first PC.']);
 
 
