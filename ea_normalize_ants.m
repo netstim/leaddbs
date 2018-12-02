@@ -43,9 +43,12 @@ if usebrainmask
 else
     bprfx='';
 end
-
 spacedef=ea_getspacedef; % get definition of current space we are working in
 [~,anatpresent]=ea_assignpretra(options);
+
+
+
+
 if usefa && spacedef.hasfa % first put in FA since least important (if both an FA template and an fa2anat file is available)
 
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
@@ -81,6 +84,7 @@ for anatf=1:length(anatpresent)
     end
     cnt=cnt+1;
 end
+
 
 if includeatlas % append as last to make criterion converge on this one.
     to{cnt}=ea_niigz([ea_space(options),'atlas']);

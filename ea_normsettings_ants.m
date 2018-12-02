@@ -99,6 +99,7 @@ if ix % if has prior selection
 end
 
 set(handles.includefa,'Value',prefs.machine.normsettings.ants_usefa);
+set(handles.reinforcetargets,'Value',prefs.machine.normsettings.ants_reinforcetargets);
 
 if ischar(prefs.machine.normsettings.ants_numcores)
     set(handles.restrcores,'Value',1);
@@ -175,6 +176,10 @@ normsettings.ants_strategy=normsettings.ants_strategy{get(handles.strategy,'Valu
 normsettings.ants_usefa=get(handles.includefa,'Value');
 
 normsettings.ants_skullstripped=get(handles.skullstripped,'Value');
+
+normsettings.ants_reinforcetargets=get(handles.reinforcetargets,'Value');
+
+
 if get(handles.restrcores,'Value')
     normsettings.ants_numcores=get(handles.numcores,'String');
 else
@@ -193,7 +198,7 @@ function scrf_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of scrf
-
+set(handles.reinforcetargets,'enable',ea_bool2onoff(get(hObject,'Value')));
 
 % --- Executes on selection change in metric.
 function metric_Callback(hObject, eventdata, handles)

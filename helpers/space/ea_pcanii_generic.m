@@ -1,4 +1,4 @@
-function ea_pcanii_generic(fis,mask)
+function ea_pcanii_generic(fis,mask,ofname)
 vizz=0;
 
 
@@ -7,12 +7,19 @@ imgs=cell(N,1);
 % load data
 for fi=1:length(fis)
     imgs{fi}=ea_load_nii(fis{fi});
+    imgs{fi}.img(isnan(imgs{fi}.img))=0;
 end
 
 if exist('mask','var')
-    msk=ea_load_nii(mask);
-    maskidx=find(msk.img(:)>0);
-    fullidx=[1:length(imgs{1}.img(:))]';
+    if ~isempty(mask)
+        msk=ea_load_nii(mask);
+        maskidx=find(msk.img(:)>0);
+        fullidx=[1:length(imgs{1}.img(:))]';
+    else
+        maskidx=[1:length(imgs{1}.img(:))]';
+        fullidx=[1:length(imgs{1}.img(:))]';
+        
+    end
 else
     maskidx=[1:length(imgs{1}.img(:))]';
     fullidx=[1:length(imgs{1}.img(:))]';
@@ -60,6 +67,10 @@ imgs{1}.img=imgs{1}.img-min(imgs{1}.img(:));
 imgs{1}.img=imgs{1}.img/max(imgs{1}.img(:));
 imgs{1}.img=imgs{1}.img*(100); % 
 [pth,fname,ext]=fileparts(imgs{1}.fname);
-imgs{1}.fname=fullfile(pth,[fname,'_pca','.nii']);
+if exist('ofname','var')
+    imgs{1}.fname=ofname;
+else
+    imgs{1}.fname=fullfile(pth,[fname,'_pca','.nii']);
+end
 ea_write_nii(imgs{1});
 

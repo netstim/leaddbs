@@ -64,7 +64,8 @@ if slabsupport
             sums(mov)=nan;
         else
         mnii = ea_load_nii(movingimage{mov});
-        mnii.img = ~(mnii.img==0) + ~isnan(mnii.img);
+        mnii.img(abs(mnii.img)<0.0001)=nan;
+        mnii.img=~isnan(mnii.img);
         if ~exist('AllMX','var')
             AllMX = mnii.img;
         else
@@ -81,8 +82,6 @@ if slabsupport
     slabspresent = 0; % default no slabs present.
 
     if length(sums)>1 % multispectral warp
-        
-        
         
         slabs = sums(1:end-1) < (sums(end)*0.85);
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
@@ -112,6 +111,13 @@ else
     slabspresent = 0;
     impmasks = repmat({'nan'},length(movingimage),1);
 end
+
+if options.prefs.machine.normsettings.ants_reinforcetargets
+    if ~exist([options.root,options.patientname,filesep,'anat_pca.nii'],'file')
+        ea_pcanii_generic(slabmovingimage,[options.root,options.patientname,filesep,'tmp',filesep,'slabmask.nii'],[options.root,options.patientname,filesep,'anat_pca.nii']);
+    end
+end
+
 
 % Load preset parameter set
 apref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), options.prefs.machine.normsettings);
@@ -251,6 +257,17 @@ if  options.prefs.machine.normsettings.ants_scrf
     for fi = 1:length(fixedimage)
         synmaskstage = [synmaskstage,...
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+    end
+    
+    
+    strucs={'STN','GPi','GPe','RN'};
+    scnt=1;
+    if options.prefs.machine.normsettings.ants_reinforcetargets
+        for struc=1:length(strucs)
+            disp(['Reinforcing ',strucs{scnt},' based on PCA derived preop reconstruction']);
+            synmaskstage = [synmaskstage,...
+                ' --metric ',apref.metric,'[', ea_niigz([ea_space,strucs{struc}]), ',', ea_niigz([directory,'anat_pca']), ',',num2str(2),apref.metricsuffix,']'];
+        end
     end
 else
     synmaskstage = '';
