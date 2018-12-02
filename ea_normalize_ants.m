@@ -74,7 +74,11 @@ for anatf=1:length(anatpresent)
         ea_maskimg(options,[directory,anatpresent{anatf}],bprfx);
     end
     from{cnt}=[directory,bprfx,anatpresent{anatf}];
-    weights(cnt)=1.25;
+    if ismember(anatpresent{anatf}(6:end-4),{'STN','GPi','GPe','RN'})
+        weights(cnt)=2;
+    else
+        weights(cnt)=1.25;
+    end
     cnt=cnt+1;
 end
 

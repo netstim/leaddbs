@@ -22,7 +22,7 @@ function varargout = ea_normsettings_ants(varargin)
 
 % Edit the above text to modify the response to help ea_normsettings_ants
 
-% Last Modified by GUIDE v2.5 28-Nov-2018 13:45:55
+% Last Modified by GUIDE v2.5 02-Dec-2018 14:34:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -303,3 +303,12 @@ function skullstripped_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of skullstripped
+
+
+% --- Executes on button press in reinforcetargets.
+function reinforcetargets_Callback(hObject, eventdata, handles)
+% hObject    handle to reinforcetargets (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of reinforcetargets
