@@ -191,12 +191,8 @@ rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1
     ' --masks [',fixedmask,',NULL]'];
 
 for fi = 1:length(fixedimage)
-    try
         rigidstage = [rigidstage,...
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
-    catch
-        keyboard
-    end
 end
 
 affinestage = [' --transform Affine[0.15]'... % bit faster gradient step (see https://github.com/stnava/ANTs/wiki/Anatomy-of-an-antsRegistration-call)
@@ -264,13 +260,13 @@ if  options.prefs.machine.normsettings.ants_scrf
     end
     
     
-    strucs={'STN','GPi','GPe','RN'};
+    strucs={'atlas'}; %{'STN','GPi','GPe','RN'};
     scnt=1;
     if options.prefs.machine.normsettings.ants_reinforcetargets
         for struc=1:length(strucs)
             disp(['Reinforcing ',strucs{scnt},' based on PCA derived preop reconstruction']);
             synmaskstage = [synmaskstage,...
-                ' --metric ',apref.metric,'[', ea_niigz([ea_space,strucs{struc}]), ',', ea_niigz([directory,'anat_pca']), ',',num2str(2),apref.metricsuffix,']'];
+                ' --metric ',apref.metric,'[', ea_niigz([ea_space,strucs{struc}]), ',', ea_niigz([directory,'anat_pca']), ',',num2str(3),apref.metricsuffix,']'];
         end
     end
 else
