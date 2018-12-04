@@ -115,7 +115,7 @@ end
 if options.prefs.machine.normsettings.ants_reinforcetargets
     if ~exist([options.root,options.patientname,filesep,'anat_pca.nii'],'file')
         if slabspresent
-            ea_pcanii_generic(slabmovingimage,[options.root,options.patientname,filesep,'tmp',filesep,'slabmask.nii'],[options.root,options.patientname,filesep,'anat_pca.nii']);
+            ea_pcanii_generic(movingimage,[options.root,options.patientname,filesep,'tmp',filesep,'slabmask.nii'],[options.root,options.patientname,filesep,'anat_pca.nii']);
         else
             ea_pcanii_generic(movingimage,[],[options.root,options.patientname,filesep,'anat_pca.nii']); % should get a brainmask here somehow.
         end
