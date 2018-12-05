@@ -6,7 +6,7 @@ end
 if ~strcmp(cfile(end-3:end),'.mat')
     [fibers,idx]=ea_trk2ftr(cfile,type);
     [cpa,cfn]=fileparts(cfile);
-    ea_savefibertracts(fullfile(cpa,[cfn,'.mat']),fibers,idx,'vox');
+    ea_savefibertracts(fullfile(cpa,[cfn,'.mat']),fibers,idx,'mm');
     [pth,fn,~]=fileparts(cfile);
     cfile=fullfile(pth,[fn,'.mat']);
 end
@@ -21,7 +21,7 @@ idx=fibinfo.idx;
 if nargout>2
     try
         voxmm=fibinfo.voxmm;
-    catch 
+    catch
         if any(min(fibers)<0)
             voxmm='mm';
         else % assume voxel
@@ -38,7 +38,7 @@ end
 
 function ea_convertfibs2newformat(fibinfo,cfile)
 
-display('Converting fibers...');
+disp('Converting fibers...');
 
 fn=fieldnames(fibinfo);
 if isfield(fibinfo,'normalized_fibers_mm')
