@@ -1,4 +1,4 @@
-function [R_upd,p_upd,R,p,f]=ea_corrplot(varargin)
+function [R_upd,p_upd,R,p,f]=ea_corrplot_gen(varargin)
 % this simple function is a small wrapper for a corrplot figure.
 % [R_upd,p_upd,R,p,f]=ea_corrplot(X,description,labels,handles,color/groups,corrtype)
 
@@ -58,7 +58,7 @@ end
 %jetlist(groups,:);
 for area=1:length(R_upd)
     %% plot areas:
-    f=figure('color','w','name',description);
+    f=figure('color','w','name',description,'Position',[100 100 550 550]);
     jetlist=lines;
     g=gca;
     if exist('color','var')
@@ -91,6 +91,7 @@ end
     title([description,' (R=',sprintf('%.3f',R_upd(area)),', p=',sprintf('%.3f',p_upd(area)),').'],'FontSize',16,'FontName','Helvetica');
     xlabel(sub2space(labels{1}),'FontSize',16,'FontName','Helvetica');
     ylabel(labels{2},'FontSize',16,'FontName','Helvetica');
+    axis square
  %   spacing=mean([nanvar(X(:,1)),nanvar(X(:,area+1))]);
  %   xlim([nanmin(X(:,1))-spacing,nanmax(X(:,2))+spacing]);
  %   ylim([nanmin(X(:,area+1))-spacing,nanmax(X(:,area+1))+spacing]);
