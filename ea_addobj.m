@@ -214,12 +214,31 @@ function addfibertract(addobj,resultfig,addht,fina,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
     if strfind(addobj,'.mat')
         load(addobj);
-        thisset = fibers';
-        fibidx = idx;
-        clear fibers idx
+        if exist(fibsin, 'var')
+            fibers = fibsin;
+            clear fibsin
+        end
+        if exist(fibers, 'var')
+            if size(fibers,1) < size(fibers,2)
+                fibers = fibers';
+            end
+            if size(fibers,2) == 4
+                thisset = fibers(:,1:3);
+                [~,~,idx]=unique(fibers(:,4));
+                fibidx = accumarray(idx,1);
+            elseif size(fibers,2) == 3
+                thisset = fibers;
+                fibidx = idx;
+            else
+                error('Wrong input fiber tracts format!');
+            end
+            clear fibers idx
+        else
+            error('No fiber tracts found!');
+        end
     elseif strfind(addobj,'.trk')
         fileOut = [addobj(1:end-3) 'mat'];
-        disp(['Converting .trk to ftr.'])
+        disp('Converting .trk to ftr.')
         [thisset,fibidx] = ea_trk2ftr(addobj);
         thisset = thisset';
     else
@@ -270,7 +289,7 @@ end
 
 %% new visualization part
 c = ea_uisetcolor;
-if c == 0;
+if c == 0
     c=NaN;
 end
 addobjr=ea_showfiber(thisset,fibidx,c);
