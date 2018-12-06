@@ -7,7 +7,6 @@ ea_warp_parcellation(['r', options.prefs.rest], options);
 vizz=0;
 
 %% create voxelmask
-disp('Extracting time courses...');
 [~,rrf]=fileparts(options.prefs.rest);
 Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'r',rrf,'w',options.lc.general.parcellation,'.nii']);
 Xatl=spm_read_vols(Vatl);
@@ -41,10 +40,12 @@ save([directory,'TR.mat'],'TR');
 
 
 %% Extract timecourses of specified ROI
-
+ea_dispercent(0,'Extracting time courses');
 for i=1:signallength
-    interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1);
+    interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),-2);
+    ea_dispercent(i/signallength);
 end
+ea_dispercent(1,'end');
 interpol_tc=interpol_tc';
 
 disp('Done.');
@@ -150,9 +151,13 @@ CSFTimecourse=zeros(signallength,1);
 GlobTimecourse=zeros(signallength,1);
 for tmpt = 1:signallength
     OneTimePoint=alltc(:,:,:,tmpt);
+    try
     GlobTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(globmap(:))));
     WMTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec2map(:))));
     CSFTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec3map(:))));
+    catch
+        keyboard
+    end
 end
 
 if vizz
