@@ -40,3 +40,8 @@ matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
 
 spm_jobman('run', {matlabbatch});
 clear matlabbatch
+
+ea_reslice_nii([outdir,filesep,output],[outdir,filesep,'hd',output],[0.7,0.7,0.7],0,0,1,[],[],0);
+
+
+
