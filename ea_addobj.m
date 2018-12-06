@@ -214,11 +214,11 @@ function addfibertract(addobj,resultfig,addht,fina,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
     if strfind(addobj,'.mat')
         load(addobj);
-        if exist(fibsin, 'var')
+        if exist('fibsin', 'var')
             fibers = fibsin;
             clear fibsin
         end
-        if exist(fibers, 'var')
+        if exist('fibers', 'var')
             if size(fibers,1) < size(fibers,2)
                 fibers = fibers';
             end
