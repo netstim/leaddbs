@@ -282,11 +282,11 @@ refname = ['r', restfname];
 [~,anatfname] = fileparts(options.prefs.prenii_unnormalized);
 
 % The real reference image is 'meanrest_*.nii' rather than 'rrest_*.nii'
-reference = ['mean', restfname, '.nii'];
+reference = ['hdmean', restfname, '.nii'];
 
 % Re-calculate mean re-aligned image if not found
 if ~exist([directory, reference], 'file')
-    ea_meanimage([directory, 'r', options.prefs.rest], reference);
+    ea_meanimage([directory, 'r', restfname,'.nii'], reference);
 end
 
 % Check coregistration method

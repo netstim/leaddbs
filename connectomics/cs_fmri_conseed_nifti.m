@@ -25,12 +25,11 @@ else
     spfx='r';
 end
 
-rest=ea_load_nii([directory,spfx,restfname,'.nii']);
-signallength=size(rest.img,4);
-interpol_tc=nan(numel(rest.img(:,:,:,1)),size(rest.img,4));
-for tmpt = 1:signallength
+% get GM, CSF TC:
+lowres_tc=nan(numel(rest.img(:,:,:,1)),size(rest.img,4));
+for tmpt = 1:signallength % for GM-, WM-mask
     thisvol=rest.img(:,:,:,tmpt);
-    interpol_tc(:,tmpt)=thisvol(:);
+    lowres_tc(:,tmpt)=thisvol(:);
 end
 %% Extract timecourses of complete volume for signal regression..
 %alltc=spm_read_vols(spm_vol(restfilename));
@@ -52,118 +51,135 @@ ec3map=c3.img(:); ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
 WMTimecourse=zeros(signallength,1);
 CSFTimecourse=zeros(signallength,1);
 for tmpt = 1:signallength
-    OneTimePoint=interpol_tc(:,tmpt);
+    OneTimePoint=lowres_tc(:,tmpt);
     WMTimecourse(tmpt)=squeeze(nanmean(nanmean(nanmean(OneTimePoint(ec2map)))));
     CSFTimecourse(tmpt)=squeeze(nanmean(nanmean(nanmean(OneTimePoint(ec3map)))));
 end
 
-disp('Done. Regressing out nuisance variables...');
 
-% %% actual regression:
-% for voxx=1:size(interpol_tc,1)
-%
-%     beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
-%     if ~isnan(beta_hat)
-%     interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
-%     else
-%         warning('Regression of WM-/CSF-Signals could not be performed.');
-%     end
-% end
-%
-% clear X
-
-%% regress out movement parameters
-
-load([directory,'rp_',restfname,'.txt']); % rigid body motion parameters.
-rp_rest=eval(['rp_',restfname]);
-X(:,1)=ones(signallength,1);
-X(:,2)=WMTimecourse;
-X(:,3)=CSFTimecourse;
-X(:,4)=rp_rest(1:signallength,1);
-X(:,5)=rp_rest(1:signallength,2);
-X(:,6)=rp_rest(1:signallength,3);
-X(:,7)=rp_rest(1:signallength,4);
-X(:,8)=rp_rest(1:signallength,5);
-X(:,9)=rp_rest(1:signallength,6);
-
-for voxx=1:size(interpol_tc,1)
-
-    beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
-    if ~isnan(beta_hat)
-    interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
-    else
-        warning('Regression of Motion parameters could not be performed.');
-    end
-
-end
-
-%% begin rest bandpass
-lp_HighCutoff=0.08;
-hp_LowCutoff=0.009;
-
-disp('Done. Bandpass-filtering...');
-sampleFreq 	 = 1/TR;
-sampleLength = signallength;
-paddedLength = rest_nextpow2_one35(sampleLength); %2^nextpow2(sampleLength);
-
-voxelmask.locsvx=ones(size(interpol_tc,1),1);
-voxelmask.locsvx(:)=1;
-maskLowPass =	repmat(voxelmask.locsvx, [1, paddedLength]);
-maskHighPass=	maskLowPass;
-clear mask.locsvx;
-%% GENERATE LOW PASS WINDOW	20070514, reference: fourior_filter.c in AFNI
-%Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band.
-
-% Low pass, such as freq < 0.08 Hz
-idxCutoff	=round(lp_HighCutoff *paddedLength *TR + 1); % Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band. %idxCutoff	=round(ALowPass_HighCutoff *paddedLength *TR);
-idxCutoff2	=paddedLength+2 -idxCutoff;				%Center Index =(paddedLength/2 +1)
-maskLowPass(:,idxCutoff+1:idxCutoff2-1)=0; %High eliminate
-
-%%GENERATE HIGH PASS WINDOW
-
-% high pass, such as freq > 0.01 Hz
-idxCutoff	=round(hp_LowCutoff *paddedLength *TR + 1); % Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band. %idxCutoff	=round(AHighPass_LowCutoff *paddedLength *TR);
-idxCutoff2	=paddedLength+2 -idxCutoff;				%Center Index =(paddedLength/2 +1)
-maskHighPass(:,1:idxCutoff-1)=0;	%Low eliminate
-maskHighPass(:,idxCutoff2+1:paddedLength)=0;	%Low eliminate
-
-% 20070513 remove trend --> FFT --> filter --> inverse FFT --> retrend
-% YAN Chao-Gan, 100401. remove the mean --> FFT --> filter --> inverse FFT --> add mean back
-fftw('dwisdom');
-
-theMean=mean(interpol_tc,2);
-interpol_tc=interpol_tc-repmat(theMean,[1, sampleLength]);
-interpol_tc=cat(2,interpol_tc,zeros(size(interpol_tc,1),paddedLength-sampleLength));
-
-%FFT
-interpol_tc =fft(interpol_tc, [], 2);
-
-%Apply the filter Low Pass
-interpol_tc(~maskLowPass)=0;
-
-%Apply the filter High Pass
-interpol_tc(~maskHighPass)=0;
-
-%inverse FFT
-interpol_tc =ifft(interpol_tc, [], 2);
-interpol_tc =interpol_tc(:, 1:sampleLength);%remove the padded parts
-
-% Add the mean back after filter.
-interpol_tc=interpol_tc+repmat(theMean,[1, sampleLength]);
-
-%% end  bandpass
-disp('Done.');
-
-%% export ROI map:
+rest=ea_load_nii([directory,spfx,restfname,'.nii']);
+signallength=size(rest.img,4);
 for s=1:length(seedfile)
+    seed{s}=ea_load_nii([seedfile{s}]);
+    [xx,yy,zz]=ind2sub(size(seed{s}.img),1:numel(seed{s}.img));
+    stringnum=cell(signallength,1);
+    
+    for i=1:signallength
+        stringnum{i}=num2str(i);
+    end
+    single_s_files=cellfun(@(x) [directory,spfx,restfname,'.nii',',',x],stringnum,'Uniformoutput',false);
+    single_s_files=single_s_files';
+    V=spm_vol(single_s_files);
+    voxelmask.locsvx=[xx',yy',zz',ones(size(xx,2),1)]';
+    voxelmask.locsmm=[seed{s}.mat*voxelmask.locsvx]'; % get from voxels in parcellations to mm
+    voxelmask.locsvx=[V{1}.mat\voxelmask.locsmm']'; % get from mm to voxels in restfile
+    voxelmask.locsvx=voxelmask.locsvx(:,1:3);
+    voxelmask.locsmm=voxelmask.locsmm(:,1:3);
+    
+    ea_dispercent(0,'Extracting time courses');
+    for i=1:signallength
+        interpol_tc{s}(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1);
+        ea_dispercent(i/signallength);
+    end
+    ea_dispercent(1,'end');
+    
+    
+    
+    disp('Done. Regressing out nuisance variables...');
+    
+
+    
+    %% regress out movement parameters
+    
+    load([directory,'rp_',restfname,'.txt']); % rigid body motion parameters.
+    rp_rest=eval(['rp_',restfname]);
+    X(:,1)=ones(signallength,1);
+    X(:,2)=WMTimecourse;
+    X(:,3)=CSFTimecourse;
+    X(:,4)=rp_rest(1:signallength,1);
+    X(:,5)=rp_rest(1:signallength,2);
+    X(:,6)=rp_rest(1:signallength,3);
+    X(:,7)=rp_rest(1:signallength,4);
+    X(:,8)=rp_rest(1:signallength,5);
+    X(:,9)=rp_rest(1:signallength,6);
+    
+    for voxx=1:size(interpol_tc{s},1)
+        
+        beta_hat        = (X'*X)\X'*squeeze(interpol_tc{s}(voxx,:))';
+        if ~isnan(beta_hat)
+            interpol_tc{s}(voxx,:)=squeeze(interpol_tc{s}(voxx,:))'-X*beta_hat;
+        else
+            warning('Regression of Motion parameters could not be performed.');
+        end
+        
+    end
+    
+    %% begin rest bandpass
+    lp_HighCutoff=0.08;
+    hp_LowCutoff=0.009;
+    
+    disp('Done. Bandpass-filtering...');
+    sampleFreq 	 = 1/TR;
+    sampleLength = signallength;
+    paddedLength = rest_nextpow2_one35(sampleLength); %2^nextpow2(sampleLength);
+    
+    voxelmask.locsvx=ones(size(interpol_tc{s},1),1);
+    voxelmask.locsvx(:)=1;
+    maskLowPass =	repmat(voxelmask.locsvx, [1, paddedLength]);
+    maskHighPass=	maskLowPass;
+    clear mask.locsvx;
+    %% GENERATE LOW PASS WINDOW	20070514, reference: fourior_filter.c in AFNI
+    %Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band.
+    
+    % Low pass, such as freq < 0.08 Hz
+    idxCutoff	=round(lp_HighCutoff *paddedLength *TR + 1); % Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band. %idxCutoff	=round(ALowPass_HighCutoff *paddedLength *TR);
+    idxCutoff2	=paddedLength+2 -idxCutoff;				%Center Index =(paddedLength/2 +1)
+    maskLowPass(:,idxCutoff+1:idxCutoff2-1)=0; %High eliminate
+    
+    %%GENERATE HIGH PASS WINDOW
+    
+    % high pass, such as freq > 0.01 Hz
+    idxCutoff	=round(hp_LowCutoff *paddedLength *TR + 1); % Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band. %idxCutoff	=round(AHighPass_LowCutoff *paddedLength *TR);
+    idxCutoff2	=paddedLength+2 -idxCutoff;				%Center Index =(paddedLength/2 +1)
+    maskHighPass(:,1:idxCutoff-1)=0;	%Low eliminate
+    maskHighPass(:,idxCutoff2+1:paddedLength)=0;	%Low eliminate
+    
+    % 20070513 remove trend --> FFT --> filter --> inverse FFT --> retrend
+    % YAN Chao-Gan, 100401. remove the mean --> FFT --> filter --> inverse FFT --> add mean back
+    fftw('dwisdom');
+    
+    theMean=mean(interpol_tc{s},2);
+    interpol_tc{s}=interpol_tc{s}-repmat(theMean,[1, sampleLength]);
+    interpol_tc{s}=cat(2,interpol_tc{s},zeros(size(interpol_tc{s},1),paddedLength-sampleLength));
+    
+    %FFT
+    interpol_tc{s} =fft(interpol_tc{s}, [], 2);
+    
+    %Apply the filter Low Pass
+    interpol_tc{s}(~maskLowPass)=0;
+    
+    %Apply the filter High Pass
+    interpol_tc{s}(~maskHighPass)=0;
+    
+    %inverse FFT
+    interpol_tc{s} =ifft(interpol_tc{s}, [], 2);
+    interpol_tc{s} =interpol_tc{s}(:, 1:sampleLength);%remove the padded parts
+    
+    % Add the mean back after filter.
+    interpol_tc{s}=interpol_tc{s}+repmat(theMean,[1, sampleLength]);
+    
+    %% end  bandpass
+    disp('Done.');
+    
+    %% export ROI map:
     seed{s}=ea_load_nii(seedfile{s});
     seed{s}.img(seed{s}.img==0)=nan;
-    seed_tc{s}=interpol_tc.*repmat(seed{s}.img(:),1,signallength);
+    seed_tc{s}=interpol_tc{s}.*repmat(seed{s}.img(:),1,signallength);
     seed_tc{s}=ea_nanmean(seed_tc{s},1);
-
+    
     if ~isfield(options,'csfMRInowriteout')
-        R=corr(seed_tc{s}',interpol_tc','rows','pairwise');
-
+        R=corr(seed_tc{s}',interpol_tc{s}','rows','pairwise');
+        
         seed{s}.img(:)=R;
         [pth,sf]=fileparts(seed{s}.fname);
         outputfolder = options.lcm.func.connectome;
@@ -171,7 +187,7 @@ for s=1:length(seedfile)
             sf(strfind(sf,'rest')-1:end)=[];
         end
         seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii']);
-
+        
         if ~exist(fullfile(pth,outputfolder),'dir')
             mkdir(fullfile(pth,outputfolder))
         end
@@ -179,7 +195,7 @@ for s=1:length(seedfile)
         seed{s}.img(:)=atanh(seed{s}.img(:));
         seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']);
         ea_write_nii(seed{s});
-
+        
         matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii'])
             fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii'])};
         matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];
@@ -188,15 +204,15 @@ for s=1:length(seedfile)
         matlabbatch{1}.spm.spatial.smooth.prefix = 's';
         spm_jobman('run',{matlabbatch}); clear matlabbatch
         movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_native_unsmoothed.nii']),...
-                 fullfile(pth,outputfolder,[sf,'_AvgR_native.nii']));
+            fullfile(pth,outputfolder,[sf,'_AvgR_native.nii']));
         movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_Fz_native_unsmoothed.nii']),...
-                 fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']));
-
+            fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']));
+        
         % warp back to MNI:
-
+        
         copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']),...
-                 fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
-
+            fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
+        
         % Check coregistration method
         try
             load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
@@ -205,18 +221,18 @@ for s=1:length(seedfile)
         catch
             coregmethod = 'SPM'; % fallback to SPM coregistration
         end
-
+        
         options.coregmr.method = coregmethod;
-
+        
         % Check if the transformation already exists
         xfm = ['r', restfname, '2', anatfname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
         transform = ea_regexpdir(directory, xfm, 0);
-
+        
         % Re-calculate mean re-aligned image if not found
         if ~exist([directory, 'mean', restfname, '.nii'], 'file')
             ea_meanimage([directory, 'r', restfname, '.nii'], ['mean', restfname, '.nii']);
         end
-
+        
         if numel(transform) == 0
             warning('Transformation not found! Running coregistration now!');
             transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
@@ -230,23 +246,23 @@ for s=1:length(seedfile)
         else
             if numel(transform) > 1
                 warning(['Multiple transformations of the same type found! ' ...
-                         'Will use the last one:\n%s'], transform{end});
+                    'Will use the last one:\n%s'], transform{end});
             end
             transform = transform{end};
         end
-
+        
         % Apply coregistration
         ea_apply_coregistration([directory,options.prefs.prenii_unnormalized], ...
             fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']), ...
             fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']), ...
             transform, 'linear');
-
+        
         % Apply normalization
         ea_apply_normalization_tofile(options,...
             {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
             {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
             directory,0,1,ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii']));
-
+        
         nii=ea_load_nii(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
         nii.img(nii.img==0)=nan;
         nii.dt(2)=1;
