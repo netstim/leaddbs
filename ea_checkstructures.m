@@ -153,7 +153,7 @@ end
 options=getappdata(handles.checkstructures,'options');
 h.Parent.Label='DISTAL Minimal (Ewert 2017)';
 h.Label='STN';
-ea_setnewatlas(h,gf,options,handles)
+ea_setnewatlas(h,[],options,handles)
 
 function ea_preset_gpi(handles)
 set(handles.stn,'Value',0); set(handles.gpi,'Value',1);
@@ -175,7 +175,7 @@ options=getappdata(handles.checkstructures,'options');
 
 h.Parent.Label='DISTAL Minimal (Ewert 2017)';
 h.Label='GPi';
-ea_setnewatlas(h,gf,options,handles)
+ea_setnewatlas(h,[],options,handles)
 
 function ea_setnewbackdrop(handles,dontupdate)
 modality=get(handles.anat_select,'String');
