@@ -76,7 +76,6 @@ if strcmp(reference, ['r', options.prefs.rest])
     end
     
 end
-end
 
 if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
            options.lc.general.parcellation,'.nii'],'file') ...
