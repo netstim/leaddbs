@@ -1,4 +1,4 @@
-function ea_meanimage(input, output)
+function ea_meanimage(input, output, createhd)
 % Calculate mean of input volumes
 %
 % Output directory is the same as the first input volume.
@@ -40,8 +40,11 @@ matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
 
 spm_jobman('run', {matlabbatch});
 clear matlabbatch
-
-ea_reslice_nii([outdir,filesep,output],[outdir,filesep,'hd',output],[0.7,0.7,0.7],0,0,1,[],[],0);
+if exist('createhd','var')
+    if createhd
+        ea_reslice_nii([outdir,filesep,output],[outdir,filesep,output],[0.5,0.5,0.5],0,0,1,[],[],0);
+    end
+end
 
 
 

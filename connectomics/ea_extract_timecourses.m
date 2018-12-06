@@ -16,17 +16,6 @@ nonzeros=find(Xatl(:));
 vv=Xatl(nonzeros);
 
 [xx,yy,zz]=ind2sub(size(Xatl),nonzeros);
-
-voxelmask.locsvx=[xx,yy,zz,ones(size(xx,1),1)]';
-voxelmask.locsmm=[Vatl.mat*voxelmask.locsvx]';
-voxelmask.locsvx=voxelmask.locsvx(1:3,:)';
-voxelmask.locsmm=voxelmask.locsmm(:,1:3);
-voxelmask.vals=round(vv);
-
-%% set some initial parameters here:
-TR=options.lc.func.prefs.TR;
-save([directory,'TR.mat'],'TR');
-
 restfilename=options.prefs.pprest;
 signallength=ea_detsiglength([directory,restfilename]);
 stringnum=cell(signallength,1);
@@ -36,9 +25,23 @@ for i=1:signallength
 end
 single_s_files=cellfun(@(x) [directory,restfilename,',',x],stringnum,'Uniformoutput',false);
 single_s_files=single_s_files';
+V=spm_vol(single_s_files);
+voxelmask.locsvx=[xx,yy,zz,ones(size(xx,1),1)]';
+voxelmask.locsmm=[Vatl.mat*voxelmask.locsvx]'; % get from voxels in parcellations to mm
+voxelmask.locsvx=[V{1}.mat\voxelmask.locsmm']'; % get from mm to voxels in restfile
+voxelmask.locsvx=voxelmask.locsvx(:,1:3);
+voxelmask.locsmm=voxelmask.locsmm(:,1:3);
+voxelmask.vals=round(vv);
+
+%% set some initial parameters here:
+TR=options.lc.func.prefs.TR;
+save([directory,'TR.mat'],'TR');
+
+
+
 
 %% Extract timecourses of specified ROI
-V=spm_vol(single_s_files);
+
 for i=1:signallength
     interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1);
 end

@@ -80,7 +80,7 @@ if ~exist('preferredForm','var') || isempty(preferredForm)
 end
 
 if ~exist('usespm','var')
-    usespm=1;
+    usespm=0;
 end
 
 if usespm

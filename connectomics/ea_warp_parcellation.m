@@ -71,7 +71,7 @@ if strcmp(reference, ['r', options.prefs.rest])
     reference = ['hdmean', options.prefs.rest];
     % Re-calculate mean re-aligned image if not found
     if ~exist([directory, reference], 'file')
-        ea_meanimage([directory, 'r', options.prefs.rest], reference);
+        ea_meanimage([directory, 'r', options.prefs.rest], reference,1);
     end
 end
 
