@@ -10,7 +10,7 @@ options=ea_assignpretra(options);
 options.prefs.rest=[restfname,'.nii'];
 
 if ~exist([directory,'sr',restfname,'.nii'],'file') ...
-    || ~exist([directory,'r',restfname,'_c1',anatfname,'.nii'],'file') % preproecessing needs to be performed
+        || ~exist([directory,'r',restfname,'_c1',anatfname,'.nii'],'file') % preproecessing needs to be performed
     disp('No preprocessed fMRI-images found, processing...');
     options.overwriteapproved = 0;
     ea_preprocess_fmri(options);
@@ -26,10 +26,12 @@ else
 end
 
 % get GM, CSF TC:
-lowres_tc=nan(numel(rest.img(:,:,:,1)),size(rest.img,4));
+rest=ea_load_nii([directory,spfx,restfname,'.nii']);
+signallength=size(rest.img,4);
+interpol_tc=nan(numel(rest.img(:,:,:,1)),size(rest.img,4));
 for tmpt = 1:signallength % for GM-, WM-mask
     thisvol=rest.img(:,:,:,tmpt);
-    lowres_tc(:,tmpt)=thisvol(:);
+    interpol_tc(:,tmpt)=thisvol(:);
 end
 %% Extract timecourses of complete volume for signal regression..
 %alltc=spm_read_vols(spm_vol(restfilename));
@@ -51,13 +53,12 @@ ec3map=c3.img(:); ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
 WMTimecourse=zeros(signallength,1);
 CSFTimecourse=zeros(signallength,1);
 for tmpt = 1:signallength
-    OneTimePoint=lowres_tc(:,tmpt);
+    OneTimePoint=interpol_tc(:,tmpt);
     WMTimecourse(tmpt)=squeeze(nanmean(nanmean(nanmean(OneTimePoint(ec2map)))));
     CSFTimecourse(tmpt)=squeeze(nanmean(nanmean(nanmean(OneTimePoint(ec3map)))));
 end
 
 
-rest=ea_load_nii([directory,spfx,restfname,'.nii']);
 signallength=size(rest.img,4);
 for s=1:length(seedfile)
     seed{s}=ea_load_nii([seedfile{s}]);
@@ -70,117 +71,158 @@ for s=1:length(seedfile)
     single_s_files=cellfun(@(x) [directory,spfx,restfname,'.nii',',',x],stringnum,'Uniformoutput',false);
     single_s_files=single_s_files';
     V=spm_vol(single_s_files);
-    voxelmask.locsvx=[xx',yy',zz',ones(size(xx,2),1)]';
+    
+    nonzeros=find(seed{s}.img(:));
+    vv=seed{s}.img(nonzeros);
+    
+    [xx,yy,zz]=ind2sub(size(seed{s}.img),nonzeros);
+    
+    voxelmask.locsvx=[xx,yy,zz,ones(size(xx,1),1)]';
     voxelmask.locsmm=[seed{s}.mat*voxelmask.locsvx]'; % get from voxels in parcellations to mm
     voxelmask.locsvx=[V{1}.mat\voxelmask.locsmm']'; % get from mm to voxels in restfile
     voxelmask.locsvx=voxelmask.locsvx(:,1:3);
     voxelmask.locsmm=voxelmask.locsmm(:,1:3);
     
+    
+    
+    [allxx,allyy,allzz]=ind2sub(size(seed{s}.img),1:numel(seed{s}.img));
+    
+    allvoxelmask.locsvx=[allxx',allyy',allzz',ones(size(allxx,2),1)]';
+    allvoxelmask.locsmm=[seed{s}.mat*allvoxelmask.locsvx]'; % get from voxels in parcellations to mm
+    allvoxelmask.locsvx=[V{1}.mat\allvoxelmask.locsmm']'; % get from mm to voxels in restfile
+    allvoxelmask.locsvx=allvoxelmask.locsvx(:,1:3);
+    allvoxelmask.locsmm=allvoxelmask.locsmm(:,1:3);
+    
+    % interpvol=interpn(1:size(rest.img,1),1:size(rest.img,2),1:size(rest.img,3),1:size(rest.img,4),...
+    %     rest.img,...
+    %     voxelmask.locsvx(:,1),voxelmask.locsvx(:,2),voxelmask.locsvx(:,3),1:size(rest.img,4));
+    weights=vv./sum(vv);
     ea_dispercent(0,'Extracting time courses');
+    clear seed_tc_all
     for i=1:signallength
-        interpol_tc{s}(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1);
+        seed_tc_all(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1);
+        seed_tc{s}(i)=sum(seed_tc_all(i,:).*weights');
         ea_dispercent(i/signallength);
     end
     ea_dispercent(1,'end');
     
     
     
+    
     disp('Done. Regressing out nuisance variables...');
     
+end
+    interpol_tc=[cell2mat(seed_tc');interpol_tc];
 
+%% regress out movement parameters
+
+load([directory,'rp_',restfname,'.txt']); % rigid body motion parameters.
+rp_rest=eval(['rp_',restfname]);
+X(:,1)=ones(signallength,1);
+X(:,2)=WMTimecourse;
+X(:,3)=CSFTimecourse;
+X(:,4)=rp_rest(1:signallength,1);
+X(:,5)=rp_rest(1:signallength,2);
+X(:,6)=rp_rest(1:signallength,3);
+X(:,7)=rp_rest(1:signallength,4);
+X(:,8)=rp_rest(1:signallength,5);
+X(:,9)=rp_rest(1:signallength,6);
+
+for voxx=1:size(interpol_tc,1)
     
-    %% regress out movement parameters
-    
-    load([directory,'rp_',restfname,'.txt']); % rigid body motion parameters.
-    rp_rest=eval(['rp_',restfname]);
-    X(:,1)=ones(signallength,1);
-    X(:,2)=WMTimecourse;
-    X(:,3)=CSFTimecourse;
-    X(:,4)=rp_rest(1:signallength,1);
-    X(:,5)=rp_rest(1:signallength,2);
-    X(:,6)=rp_rest(1:signallength,3);
-    X(:,7)=rp_rest(1:signallength,4);
-    X(:,8)=rp_rest(1:signallength,5);
-    X(:,9)=rp_rest(1:signallength,6);
-    
-    for voxx=1:size(interpol_tc{s},1)
-        
-        beta_hat        = (X'*X)\X'*squeeze(interpol_tc{s}(voxx,:))';
-        if ~isnan(beta_hat)
-            interpol_tc{s}(voxx,:)=squeeze(interpol_tc{s}(voxx,:))'-X*beta_hat;
-        else
-            warning('Regression of Motion parameters could not be performed.');
-        end
-        
+    beta_hat        = (X'*X)\X'*squeeze(interpol_tc(voxx,:))';
+    if ~isnan(beta_hat)
+        interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X*beta_hat;
+    else
+        warning('Regression of Motion parameters could not be performed.');
     end
     
-    %% begin rest bandpass
-    lp_HighCutoff=0.08;
-    hp_LowCutoff=0.009;
-    
-    disp('Done. Bandpass-filtering...');
-    sampleFreq 	 = 1/TR;
-    sampleLength = signallength;
-    paddedLength = rest_nextpow2_one35(sampleLength); %2^nextpow2(sampleLength);
-    
-    voxelmask.locsvx=ones(size(interpol_tc{s},1),1);
-    voxelmask.locsvx(:)=1;
-    maskLowPass =	repmat(voxelmask.locsvx, [1, paddedLength]);
-    maskHighPass=	maskLowPass;
-    clear mask.locsvx;
-    %% GENERATE LOW PASS WINDOW	20070514, reference: fourior_filter.c in AFNI
-    %Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band.
-    
-    % Low pass, such as freq < 0.08 Hz
-    idxCutoff	=round(lp_HighCutoff *paddedLength *TR + 1); % Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band. %idxCutoff	=round(ALowPass_HighCutoff *paddedLength *TR);
-    idxCutoff2	=paddedLength+2 -idxCutoff;				%Center Index =(paddedLength/2 +1)
-    maskLowPass(:,idxCutoff+1:idxCutoff2-1)=0; %High eliminate
-    
-    %%GENERATE HIGH PASS WINDOW
-    
-    % high pass, such as freq > 0.01 Hz
-    idxCutoff	=round(hp_LowCutoff *paddedLength *TR + 1); % Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band. %idxCutoff	=round(AHighPass_LowCutoff *paddedLength *TR);
-    idxCutoff2	=paddedLength+2 -idxCutoff;				%Center Index =(paddedLength/2 +1)
-    maskHighPass(:,1:idxCutoff-1)=0;	%Low eliminate
-    maskHighPass(:,idxCutoff2+1:paddedLength)=0;	%Low eliminate
-    
-    % 20070513 remove trend --> FFT --> filter --> inverse FFT --> retrend
-    % YAN Chao-Gan, 100401. remove the mean --> FFT --> filter --> inverse FFT --> add mean back
-    fftw('dwisdom');
-    
-    theMean=mean(interpol_tc{s},2);
-    interpol_tc{s}=interpol_tc{s}-repmat(theMean,[1, sampleLength]);
-    interpol_tc{s}=cat(2,interpol_tc{s},zeros(size(interpol_tc{s},1),paddedLength-sampleLength));
-    
-    %FFT
-    interpol_tc{s} =fft(interpol_tc{s}, [], 2);
-    
-    %Apply the filter Low Pass
-    interpol_tc{s}(~maskLowPass)=0;
-    
-    %Apply the filter High Pass
-    interpol_tc{s}(~maskHighPass)=0;
-    
-    %inverse FFT
-    interpol_tc{s} =ifft(interpol_tc{s}, [], 2);
-    interpol_tc{s} =interpol_tc{s}(:, 1:sampleLength);%remove the padded parts
-    
-    % Add the mean back after filter.
-    interpol_tc{s}=interpol_tc{s}+repmat(theMean,[1, sampleLength]);
-    
-    %% end  bandpass
-    disp('Done.');
-    
+end
+
+%% begin rest bandpass
+lp_HighCutoff=0.08;
+hp_LowCutoff=0.009;
+
+disp('Done. Bandpass-filtering...');
+sampleFreq 	 = 1/TR;
+sampleLength = signallength;
+paddedLength = rest_nextpow2_one35(sampleLength); %2^nextpow2(sampleLength);
+
+voxelmask.locsvxi=ones(size(interpol_tc,1),1);
+voxelmask.locsvxi(:)=1;
+maskLowPass =	repmat(voxelmask.locsvxi, [1, paddedLength]);
+maskHighPass=	maskLowPass;
+clear mask.locsvx;
+%% GENERATE LOW PASS WINDOW	20070514, reference: fourior_filter.c in AFNI
+%Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band.
+
+% Low pass, such as freq < 0.08 Hz
+idxCutoff	=round(lp_HighCutoff *paddedLength *TR + 1); % Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band. %idxCutoff	=round(ALowPass_HighCutoff *paddedLength *TR);
+idxCutoff2	=paddedLength+2 -idxCutoff;				%Center Index =(paddedLength/2 +1)
+maskLowPass(:,idxCutoff+1:idxCutoff2-1)=0; %High eliminate
+
+%%GENERATE HIGH PASS WINDOW
+
+% high pass, such as freq > 0.01 Hz
+idxCutoff	=round(hp_LowCutoff *paddedLength *TR + 1); % Revised by YAN Chao-Gan, 100420. Fixed the bug in calculating the frequency band. %idxCutoff	=round(AHighPass_LowCutoff *paddedLength *TR);
+idxCutoff2	=paddedLength+2 -idxCutoff;				%Center Index =(paddedLength/2 +1)
+maskHighPass(:,1:idxCutoff-1)=0;	%Low eliminate
+maskHighPass(:,idxCutoff2+1:paddedLength)=0;	%Low eliminate
+
+% 20070513 remove trend --> FFT --> filter --> inverse FFT --> retrend
+% YAN Chao-Gan, 100401. remove the mean --> FFT --> filter --> inverse FFT --> add mean back
+fftw('dwisdom');
+
+theMean=mean(interpol_tc,2);
+interpol_tc=interpol_tc-repmat(theMean,[1, sampleLength]);
+interpol_tc=cat(2,interpol_tc,zeros(size(interpol_tc,1),paddedLength-sampleLength));
+
+%FFT
+interpol_tc =fft(interpol_tc, [], 2);
+
+%Apply the filter Low Pass
+interpol_tc(~maskLowPass)=0;
+
+%Apply the filter High Pass
+interpol_tc(~maskHighPass)=0;
+
+%inverse FFT
+interpol_tc =ifft(interpol_tc, [], 2);
+interpol_tc =interpol_tc(:, 1:sampleLength);%remove the padded parts
+
+% Add the mean back after filter.
+interpol_tc=interpol_tc+repmat(theMean,[1, sampleLength]);
+
+% cut seed_tc from voxel tc again:
+for s=1:length(seedfile)
+   seed_tc{s}=interpol_tc(s,:); 
+end
+interpol_tc(1:length(seedfile),:)=[];
+
+
+%% end  bandpass
+disp('Done.');
+for s=1:length(seedfile)
     %% export ROI map:
-    seed{s}=ea_load_nii(seedfile{s});
-    seed{s}.img(seed{s}.img==0)=nan;
-    seed_tc{s}=interpol_tc{s}.*repmat(seed{s}.img(:),1,signallength);
-    seed_tc{s}=ea_nanmean(seed_tc{s},1);
+    if s>1
+        if ~isequal(size(seed{s}),size(seed{s-1})) % this should not happen from within lead-dbs but potentially if people use the low-level function directly.
+            ea_error('Seed-files have different size. Please supply these files separately!');
+        end
+    end
+    %seed{s}.img(seed{s}.img==0)=nan;
+
     
     if ~isfield(options,'csfMRInowriteout')
-        R=corr(seed_tc{s}',interpol_tc{s}','rows','pairwise');
+        R=corr(seed_tc{s}',interpol_tc','rows','pairwise');
+        expvol=rest.img(:,:,:,1);
+        expvol(:)=R;
+%         interpvol=interp3(1:size(rest.img,1),1:size(rest.img,2),1:size(rest.img,3),...
+%             expvol,...
+%             voxelmask.locsvx(:,1),voxelmask.locsvx(:,2),voxelmask.locsvx(:,3));
+        interpvol=interp3(expvol,...
+            allvoxelmask.locsvx(:,2),allvoxelmask.locsvx(:,1),allvoxelmask.locsvx(:,3));
         
-        seed{s}.img(:)=R;
+        seed{s}.img(:)=interpvol;
         [pth,sf]=fileparts(seed{s}.fname);
         outputfolder = options.lcm.func.connectome;
         if strfind(sf,'rest')

@@ -41,7 +41,9 @@ for run=1:chunk:length(sfile)
         [options.root,options.patientname]=fileparts(options.root);
         options.root=[options.root,filesep];
         restfname = options.lcm.func.connectome(length('Patient''s fMRI - ')+1:end);
-        cs_fmri_conseed_nifti([options.uivatdirs{1},filesep,restfname,'.nii'],tsfile,options);
+        seed_tc=cs_fmri_conseed_nifti([options.uivatdirs{1},filesep,restfname,'.nii'],tsfile,options);
+        [pth,fname,ext]=fileparts(tsfile{1});
+        save(fullfile(pth,[fname,'.mat']),'seed_tc');
     else
         cs_fmri_conseed(ea_getconnectomebase,options.lcm.func.connectome,...
             tsfile,...
