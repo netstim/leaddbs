@@ -300,6 +300,21 @@ end
 
 options.coregmr.method = coregmethod;
 
+
+% for this pair of approved coregistations, find out which method to use -
+% irrespective of the current selection in coregmethod.
+
+coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
+fn=fieldnames(coregmethodsused);
+for field=1:length(fn)
+    if ~isempty(strfind(fn{field},refname))
+        disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
+        options.coregmr.method=coregmethodsused.(fn{field});
+        break
+    end
+end
+
+
 % Check if the transformation already exists
 xfm = [anatfname, '2', refname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
 transform = ea_regexpdir(directory, xfm, 0);
