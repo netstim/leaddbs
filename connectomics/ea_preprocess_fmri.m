@@ -120,9 +120,14 @@ else
     transform = transform{end};
 end
 
-
+ea_apply_coregistration([directory,'mean',options.prefs.rest], ...
+    [directory,options.prefs.prenii_unnormalized], ...
+    [directory,'r',ea_stripex(options.prefs.rest),options.prefs.prenii_unnormalized], ...
+    transform, 'linear');
 
 % segmented anat images registered to mean rest image
+
+
 for i=1:3
     ea_apply_coregistration([directory,'mean',options.prefs.rest], ...
         [directory,'c',num2str(i),options.prefs.prenii_unnormalized], ...
@@ -136,8 +141,9 @@ end
 
 function ea_smooth_fmri(signallength,options)
 directory=[options.root,options.patientname,filesep];
-filetimepts = ea_appendVolNum([directory,'r',options.prefs.rest], 1:signallength);
 
+filetimepts = ea_appendVolNum([directory,'r',options.prefs.rest], 1:signallength);
+if ~exist([directory,'sr',options.prefs.rest],'file')
 matlabbatch{1}.spm.spatial.smooth.data = filetimepts;
 matlabbatch{1}.spm.spatial.smooth.fwhm = [6 6 6];
 matlabbatch{1}.spm.spatial.smooth.dtype = 0;
@@ -146,4 +152,5 @@ matlabbatch{1}.spm.spatial.smooth.prefix = 's';
 jobs{1}=matlabbatch;
 spm_jobman('run',jobs);
 clear jobs matlabbatch
+end
 

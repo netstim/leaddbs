@@ -88,7 +88,7 @@ for irest = 1:options.prefs.n_rest
     if exist([directory,'r',ea_stripex(restfiles(irest).name),'_',anchor],'file')
         if ~ea_coreglocked(options,['r',ea_stripex(restfiles(irest).name),'_',anchor])
             presentfiles=[presentfiles;{['r',ea_stripex(restfiles(irest).name),'_',anchor]}];
-            b0restanchor{length(presentfiles)} = ['hdmean',restfiles(irest).name];
+            b0restanchor{length(presentfiles)} = ['mean',restfiles(irest).name];
         end
     end
 end
@@ -245,7 +245,7 @@ setappdata(handles.leadfigure,'method',method);
 if ~isempty(b0restanchor) && ~isempty(b0restanchor{activevolume}) % rest or b0 registration
     set(handles.substitute,'Visible','on');
     set(handles.substitute,'String',ea_getsubstitutes(options));
-    checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(b0restanchor{activevolume}),'hdmean','r'),'_',method,'.png'];
+    checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(b0restanchor{activevolume}),'mean','r'),'_',method,'.png'];
     set(handles.anchormod,'String',ea_stripex(b0restanchor{activevolume}));
 
 else % normal anatomical 2 anatomical registration
@@ -423,7 +423,7 @@ switch ea_stripex(currvol)
         options.coregmr.method=get(handles.coregmrpopup,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
         if ~isempty(b0restanchor{activevolume})
-            thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'hdmean','r');
+            thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
 
             ea_delete([directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
             ea_delete([directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
@@ -474,7 +474,7 @@ if ~isempty(b0restanchor{activevolume})
    anchor=b0restanchor{activevolume};
 end
 
-checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(anchor),'hdmean','r'),'_',method,'.png'];
+checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(anchor),'mean','r'),'_',method,'.png'];
 
 ea_gencheckregpair([directory,ea_stripex(currvol)],anchorpath,checkfig);
 % now disapprove again since this new computation hasn't been approved yet.
@@ -764,7 +764,7 @@ switch ea_stripex(currvol)
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 end
 if ~isempty(b0restanchor{activevolume})
-    thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'hdmean','r');
+    thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
 
     ea_cleandownstream(options,directory,thisrest)
 
@@ -841,7 +841,7 @@ if ~isempty(b0restanchor{activevolume})
    anchor=b0restanchor{activevolume};
 end
 
-checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(anchor),'hdmean','r'),'_',method,'.png'];
+checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(anchor),'mean','r'),'_',method,'.png'];
 ea_delete(checkfig);
 ea_gencheckregpair([directory,ea_stripex(currvol)],anchorpath,checkfig);
 ea_mrcview(handles); % refresh
