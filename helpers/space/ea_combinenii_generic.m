@@ -11,8 +11,18 @@ end
 [pth,fname,ext]=fileparts(fis{1});
 for fi=1:length(fis)
     if denoise
-        ea_denoise_mri(fis{fi},fullfile(pth,['tmp.nii']));
-        nii=ea_load_nii(fullfile(pth,['tmp.nii']));
+        uuid=ea_generate_uuid;
+        if ~exist(fullfile(pth,'tmp'),'dir')
+            mkdir(fullfile(pth,'tmp');
+        end
+        ea_delete(fullfile(pth,'tmp',['tmp',uuid,'.nii']));
+        ea_denoise_mri(fis{fi},fullfile(pth,'tmp',['tmp',uuid,'.nii']));
+        try
+            nii=ea_load_nii(fullfile(pth,'tmp',['tmp',uuid,'.nii']));
+            ea_delete(fullfile(pth,'tmp',['tmp',uuid,'.nii']));
+        catch
+            nii=ea_load_nii(fis{fi});
+        end
     else
         nii=ea_load_nii(fis{fi});
     end
