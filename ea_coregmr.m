@@ -34,8 +34,10 @@ end
 switch options.coregmr.method
     case 'SPM' % SPM
         ea_coregmr_spm(options,doreslice);
-    case 'FSL' % FSL
+    case 'FSL FLIRT' % FSL FLIRT
         ea_coregmr_flirt(options);
+    case 'FSL BBR' % FSL FLIRT
+        ea_coregmr_flirt_bbr(options);
     case 'ANTs' % ANTs
         ea_coregmr_ants(options,0);
     case 'BRAINSFIT' % BRAINSFit

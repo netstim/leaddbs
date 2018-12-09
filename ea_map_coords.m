@@ -252,7 +252,7 @@ if ~isempty(transform)
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
-            case {'FSL', 'FLIRT'} % Registration done by FSL (ea_flirt)
+            case {'FSL', 'FLIRT','FSL FLIRT','FSL BBR'} % Registration done by FSL (ea_flirt)
                 directory = fileparts(transform);
                 if isempty(directory)
                     directory = '.';
