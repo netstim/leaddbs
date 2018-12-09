@@ -43,7 +43,7 @@ if vizz && N==3
 end
 
 % train PCA only on brain part of the image:
-samples=round(linspace(1,size(idx,1),100000));
+samples=round(linspace(1,size(idx,1),300000));
 [wcoeff,~,~,~,exp]=pca(idx(samples,:));
 % orthogonalize PC coeffs:
 coefforth = inv(diag(std(idx(samples,:))))*wcoeff;

@@ -113,11 +113,22 @@ else
 end
 
 if options.prefs.machine.normsettings.ants_reinforcetargets
-    if ~exist([options.root,options.patientname,filesep,'anat_pca.nii'],'file')
+    if ~exist([options.root,options.patientname,filesep,'canat_combined.nii'],'file')
+        ea_bet(movingimage{end},1,[options.root,options.patientname,filesep,'tmp.nii']);
+        if ~exist([options.root,options.patientname,filesep,'tmp'],'dir')
+            mkdir([options.root,options.patientname,filesep,'tmp']);
+        end
+        movefile([options.root,options.patientname,filesep,'tmp_mask.nii'],[options.root,options.patientname,filesep,'tmp',filesep,'brainmask.nii']);       
+        ea_delete([options.root,options.patientname,filesep,'tmp.nii']);
         if slabspresent
-            ea_pcanii_generic(movingimage,[options.root,options.patientname,filesep,'tmp',filesep,'slabmask.nii'],[options.root,options.patientname,filesep,'anat_pca.nii']);
+            bmsk=ea_load_nii([options.root,options.patientname,filesep,'tmp',filesep,'brainmask.nii']);
+            smsk=ea_load_nii([options.root,options.patientname,filesep,'tmp',filesep,'slabmask.nii']);
+            smsk.img=smsk.img.*bmsk.img;
+            smsk.fname=[options.root,options.patientname,filesep,'tmp',filesep,'brainslabmask.nii'];
+            ea_write_nii(smsk);
+            ea_combinenii_generic(movingimage,[options.root,options.patientname,filesep,'tmp',filesep,'brainslabmask.nii'],[options.root,options.patientname,filesep,'canat_combined.nii']);
         else
-            ea_pcanii_generic(movingimage,[],[options.root,options.patientname,filesep,'anat_pca.nii']); % should get a brainmask here somehow.
+            ea_combinenii_generic(movingimage,[options.root,options.patientname,filesep,'tmp',filesep,'brainmask.nii'],[options.root,options.patientname,filesep,'canat_combined.nii']); % should get a brainmask here somehow.
         end
     end
 end
@@ -264,9 +275,9 @@ if  options.prefs.machine.normsettings.ants_scrf
     scnt=1;
     if options.prefs.machine.normsettings.ants_reinforcetargets
         for struc=1:length(strucs)
-            disp(['Reinforcing ',strucs{scnt},' based on PCA derived preop reconstruction']);
+            disp(['Reinforcing ',strucs{scnt},' based on combined derived preop reconstruction']);
             synmaskstage = [synmaskstage,...
-                ' --metric ',apref.metric,'[', ea_niigz([ea_space,strucs{struc}]), ',', ea_niigz([directory,'anat_pca']), ',',num2str(3),apref.metricsuffix,']'];
+                ' --metric ',apref.metric,'[', ea_niigz([ea_space,strucs{struc}]), ',', ea_niigz([directory,'canat_combined']), ',',num2str(3),apref.metricsuffix,']'];
         end
     end
 else
