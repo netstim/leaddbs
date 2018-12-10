@@ -13,7 +13,7 @@ for fi=1:length(fis)
     if denoise
         uuid=ea_generate_uuid;
         if ~exist(fullfile(pth,'tmp'),'dir')
-            mkdir(fullfile(pth,'tmp');
+            mkdir(fullfile(pth,'tmp'));
         end
         ea_delete(fullfile(pth,'tmp',['tmp',uuid,'.nii']));
         ea_denoise_mri(fis{fi},fullfile(pth,'tmp',['tmp',uuid,'.nii']));
