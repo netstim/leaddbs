@@ -10,7 +10,7 @@ vizz=0;
 [~,rrf]=fileparts(options.prefs.rest);
 Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'r',rrf,'w',options.lc.general.parcellation,'.nii']);
 Xatl=spm_read_vols(Vatl);
-
+Xatl(isnan(Xatl))=0;
 nonzeros=find(Xatl(:));
 vv=Xatl(nonzeros);
 
@@ -31,6 +31,17 @@ voxelmask.locsvx=[V{1}.mat\voxelmask.locsmm']'; % get from mm to voxels in restf
 voxelmask.locsvx=voxelmask.locsvx(:,1:3);
 voxelmask.locsmm=voxelmask.locsmm(:,1:3);
 voxelmask.vals=round(vv);
+todel=[];
+for entry=unique(voxelmask.vals)'
+    if sum(voxelmask.vals==entry)>10000 % normally sized ROI, can downsample for speed
+    thisdelete=find(voxelmask.vals==entry);
+    thisdelete=thisdelete(1:2:end);
+    todel=[todel;thisdelete];
+    end
+end
+voxelmask.locsmm(todel,:)=[];
+voxelmask.locsvx(todel,:)=[];
+voxelmask.vals(todel)=[];
 
 %% set some initial parameters here:
 TR=options.lc.func.prefs.TR;
