@@ -26,11 +26,7 @@ if isempty(prefix)
     prefix = 'tmp';
 end
 
-if nargin > 2 % exclude nans/zeros
-    nstring = varargin{3};
-else
-    nstring = 'nz';
-end
+
 
 if nargin > 3
     cleannan = varargin{4};
@@ -47,6 +43,16 @@ end
 
 % load nifti
 nii=ea_load_nii(filename);
+
+if nargin > 2 % exclude nans/zeros
+    nstring = varargin{3};
+else
+    if any(isnan(nii.img(:)))
+        nstring='nn';
+    else
+        nstring = 'nz';
+    end
+end
 
 switch nstring
     case 'nz'

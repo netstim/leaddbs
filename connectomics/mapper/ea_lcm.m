@@ -164,11 +164,13 @@ for suffix=dowhich
                         copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
                         ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],dinterp);
                         nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
+                        nii(cnt).img(isnan(nii(cnt).img))=0;
                         cnt=cnt+1;
                     end
                 end
 
                 Cnii=nii(1);
+                
                 for n=2:length(nii)
                     Cnii.img=Cnii.img+nii(n).img;
                 end
