@@ -1,7 +1,7 @@
 function ea_crop_nii(varargin)
 % This function crops bounding-box of niftis to non-zeros or non-nan values.
 % usage: ea_crop_nii(filename, [prefix (default: overwrite), threshstring -
-% can be 'nn' for non-Nan or 'nz' for non-zero (default), cleannan, interp]).
+% can be 'nn' for non-Nan or 'nz' for non-zero (default), interp, rim]).
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
@@ -22,20 +22,14 @@ else
     prefix = '';
 end
 
-if isempty(prefix)
-    prefix = 'tmp';
-end
+% if isempty(prefix)
+%     prefix = 'tmp';
+% end
 
 
 
 if nargin > 3
-    cleannan = varargin{4};
-else
-    cleannan = 0;
-end
-
-if nargin > 4
-    interp = varargin{5};
+    interp = varargin{4};
 else
     interp = 0;
 end
@@ -46,6 +40,13 @@ nii=ea_load_nii(filename);
 
 if nargin > 2 % exclude nans/zeros
     nstring = varargin{3};
+    if isempty(nstring)
+        if any(isnan(nii.img(:)))
+            nstring='nn';
+        else
+            nstring = 'nz';
+        end
+    end
 else
     if any(isnan(nii.img(:)))
         nstring='nn';
@@ -62,8 +63,11 @@ switch nstring
     otherwise
         [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img~=num2str(nstring)));
 end
-
-rim=round(2/mean(nii.voxsize)); % go to 3 mm, assuming isotropic image. No worries if not isotropic though, then rim will be a bit asymmetrical.
+if nargin>4
+    rim=varargin{5}; % go to 3 mm, assuming isotropic image. No worries if not isotropic though, then rim will be a bit asymmetrical.
+else    
+    rim=round(2/mean(nii.voxsize)); % go to 3 mm, assuming isotropic image. No worries if not isotropic though, then rim will be a bit asymmetrical.
+end
 bbim=[min(xx),max(xx)
     min(yy),max(yy)
     min(zz),max(zz)];
@@ -88,16 +92,18 @@ X((rim+1):end-rim,(rim+1):end-rim,(rim+1):end-rim)=nii.img(bbim(1,1):bbim(1,2),b
 nii.mat=nii.mat*tmat;
 nii.img=X;
 nii.dim=size(nii.img);
-delete(filename);
+
+[pth,fn,ext]=fileparts(nii.fname);
+nii.fname=fullfile(pth,[prefix,fn,ext]);
+if isempty(prefix) % make sure nifti is fully overwritten with new copy from RAM.
+    delete(filename);
+end
 ea_write_nii(nii);
 
 
 if wasgz
-    gzip(filename);
-    delete(filename);
-    if ~strcmp(prefix, 'tmp')  % delete unzipped file in non-overwrite mode
-        delete(filename);
-    end
+    gzip(nii.fname);
+    delete(nii.fname);
 end
 
 
