@@ -1,5 +1,7 @@
-function ea_spherical_roi(fname,mni,r)
-
+function ea_spherical_roi(fname,mni,r,crop)
+if ~exist('crop','var')
+    crop=1;
+end
 try % try with high res bb image if subcortical ROI
     Vol=ea_load_nii([ea_space,'bb.nii']);
     Vol.img(:)=nan;
@@ -30,7 +32,7 @@ catch % if not possible revert to whole brain t1
     
     Vol=ea_load_nii([ea_space,'t1.nii']);
     
-    Vol.img=nan;
+    Vol.img(:)=nan;
     voxmm = Vol.voxsize;
     for a=1:size(mni,1)
         X= mni(a,1); Y = mni(a,2); Z = mni(a,3);
@@ -55,5 +57,6 @@ catch % if not possible revert to whole brain t1
         ea_write_nii(Vol);
     end
 end
+if crop
 ea_crop_nii(fname)
-
+end
