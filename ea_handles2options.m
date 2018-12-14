@@ -270,15 +270,15 @@ try
     catch % called from predict module.
         options=rmfield(options,'lcm');
     end
-    if isempty(options.lcm.odir)
-        if ~strcmp(options.lcm.seeddef,'vats')
-            try
-            options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
-            end
-        else
-            options.lcm.odir='';
-        end
-    end
+%     if isempty(options.lcm.odir)
+%         if ~strcmp(options.lcm.seeddef,'vats')
+%             try
+%             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
+%             end
+%         else
+%             options.lcm.odir='';
+%         end
+%     end
     options.lcm.omask=getappdata(handles.omaskbutton,'omask');
     options.lcm.struc.do=get(handles.dostructural,'Value');
     options.lcm.func.do=get(handles.dofunctional,'Value');
