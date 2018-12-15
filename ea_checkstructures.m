@@ -126,6 +126,9 @@ for p=presentfiles'
    cellentr{end+1}=upper(p{1}(6:end-4));
 end
 set(handles.anat_select,'String',cellentr);
+modality=get(handles.anat_select,'String');
+modality=modality{get(handles.anat_select,'Value')};
+setappdata(handles.checkstructures,'modality',modality);
 ea_preset_stn(handles)
 
 
