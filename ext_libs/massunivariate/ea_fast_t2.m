@@ -60,32 +60,23 @@ if nargin<4,
    verblevel=2; 
 end
 
-[n_chanA, n_subsA]=size(dataA);
-[n_chanB, n_subsB]=size(dataB);
-if n_chanA~=n_chanB,
-    error('dataA and dataB have a different number of channels. They need to be the same.')
-end
+n_subsA=sum(~isnan(dataA),2);
+n_subsB=sum(~isnan(dataB),2);
 
-
+%df=n_subsA+n_subsB-2;
 df=n_subsA+n_subsB-2;
-if verblevel~=0,
-    fprintf('fast_t2: Number of channels: %d\n',n_chanA);
-    fprintf('fast_t2: Number of participants in Group A: %d\n',n_subsA);
-    fprintf('fast_t2: Number of participants in Group B: %d\n',n_subsB);
-    fprintf('t-score degrees of freedom: %d\n',df);
-end
 
-smA=sum(dataA,2);
-mnA=smA/n_subsA;
-ssA=sum(dataA.^2,2)-(smA.^2)/n_subsA;
+smA=ea_nansum(dataA,2);
+mnA=smA./n_subsA;
+ssA=ea_nansum(dataA.^2,2)-(smA.^2)./n_subsA;
 
-smB=sum(dataB,2);
-mnB=smB/n_subsB;
-ssB=sum(dataB.^2,2)-(smB.^2)/n_subsB;
+smB=ea_nansum(dataB,2);
+mnB=smB./n_subsB;
+ssB=ea_nansum(dataB.^2,2)-(smB.^2)./n_subsB;
 
-mult_fact=(n_subsA+n_subsB)/(n_subsA*n_subsB);
-pooled_var=(ssA+ssB)/df;
-stder=sqrt(pooled_var*mult_fact);
+mult_fact=(n_subsA+n_subsB)./(n_subsA.*n_subsB);
+pooled_var=(ssA+ssB)./df;
+stder=sqrt(pooled_var.*mult_fact);
 
 mn_dif=mnA-mnB;
 t_scores=mn_dif./stder;
