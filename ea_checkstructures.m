@@ -62,7 +62,7 @@ guidata(hObject, handles);
 
 
 
-
+set(handles.checkstructures,'Name','Check registration of specific structures.');
 
 
 
@@ -129,9 +129,18 @@ set(handles.anat_select,'String',cellentr);
 modality=get(handles.anat_select,'String');
 modality=modality{get(handles.anat_select,'Value')};
 setappdata(handles.checkstructures,'modality',modality);
-ea_preset_stn(handles)
-
-
+options.prefs=ea_prefs(options.patientname);
+switch(options.prefs.machine.checkreg.default)
+    case 'DISTAL Minimal (Ewert 2017)@STN'
+        ea_preset_stn(handles)
+    case 'DISTAL Minimal (Ewert 2017)@GPi'
+        ea_preset_gpi(handles)
+    otherwise
+        parts=ea_strsplit(options.prefs.machine.checkreg.default,'@');
+        h.Parent.Label=parts{1};
+        h.Label=parts{2};
+        ea_setnewatlas(h,[],options,handles);
+end
 
 % UIWAIT makes ea_checkstructures wait for user response (see UIRESUME)
 % uiwait(handles.checkstructures);
@@ -205,6 +214,9 @@ function ea_setnewatlas(h,gf,options,handles,dontupdate)
 if isempty(h)
     h=getappdata(handles.checkstructures,'h');
 end
+
+ea_setprefs('checkreg.default',[h.Parent.Label,'@',h.Label]);
+
 options.atlasset=h.Parent.Label;
 load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 [~,six]=ismember(h.Label,ea_rmext(atlases.names));
