@@ -107,7 +107,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             head_vx = inv(tmat_org) * head_mm;
             tail_vx = inv(tmat_org) * tail_mm;
             tmat_vx2mm = tmat_org;
-        elseif strcmp(CTname,[filesep,prefs.ctnii_coregistered])
+        elseif strcmp(CTname,[filesep,options.prefs.ctnii_coregistered])
             head_mm = head_native;
             tail_mm = tail_native;
             % transfrom rpostop_ct mm -> voxel
