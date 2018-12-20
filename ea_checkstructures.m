@@ -169,7 +169,7 @@ ea_setnewatlas(h,[],options,handles)
 
 function ea_preset_gpi(handles)
 set(handles.stn,'Value',0); set(handles.gpi,'Value',1);
-gpimods={'FGATIR','T1','PD','QSM'};
+gpimods={'FGATIR','IR','T1','PD','QSM'};
 mods=get(handles.anat_select,'String');
 [is,idx]=ismember(mods,gpimods);
 if any(is) % only change modality if theres a suitable one available.
