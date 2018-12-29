@@ -25,6 +25,7 @@ end
 
 if nargin >= 5
     options = varargin{5};
+    options.prefs=ea_prefs; % refresh prefs in case called from recompute window with different settings.
 else
     umachine = load([ea_gethome, '.ea_prefs.mat'], 'machine');
     options.prefs.machine.normsettings = umachine.machine.normsettings;

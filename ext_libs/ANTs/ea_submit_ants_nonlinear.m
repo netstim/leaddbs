@@ -53,9 +53,13 @@ fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
 fclose(fid);
 
 if ~ispc
-    system(['bash -c "', cmd, '"']);
+    status=system(['bash -c "', cmd, '"']);
 else
-    system(cmd);
+    status=system(cmd);
+end
+
+if status
+   ea_error('ANTs normalization failed - likely due to out of memory problems. Please try a different normalization strategy or reduce the number of threads in the ANTs settings dialogue.'); 
 end
 
 ea_conv_antswarps(props.directory);
