@@ -8,6 +8,34 @@ end
 
 
 function ea_antsnl_monostep(props)
+directory=fileparts(props.moving);
+directory=[directory,filesep];
+if exist([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)],'file') % prior ANTs transform found.
+    prefs=ea_prefs;
+    switch prefs.machine.normsettings.ants_usepreexisting
+        case 1 % ask
+            answ=questdlg('We found an old ANTs transform file. Do you wish to reuse the transform or discard the old one?','Old ANTs transform found.','Reuse','Discard','Discard');
+            switch lower(answ)
+                case 'reuse'
+                    initreg=[' --initial-moving-transform ',ea_path_helper([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])];
+                    props.rigidstage='';
+                    props.affinestage='';
+                case 'discard'
+                    ea_delete([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])
+                    initreg=[' --initial-moving-transform [', props.fixed, ',', props.moving, ',0]'];
+            end
+        case 2 % reuse
+            initreg=[' --initial-moving-transform ',ea_path_helper([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])];
+            props.rigidstage='';
+            props.affinestage='';
+        case 3 % overwrite
+            % clean old deformation field. this is important for cases where ANTs
+            % crashes and the user does not get an error back. Then, preexistant old transforms
+            % will be considered as new ones.
+            ea_delete([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])
+            initreg=[' --initial-moving-transform [', props.fixed, ',', props.moving, ',0]']; 
+    end
+end
 
 cmd = [props.ANTS, ' --verbose 1', ...
     ' --dimensionality 3', ...
@@ -17,6 +45,7 @@ cmd = [props.ANTS, ' --verbose 1', ...
     ' --float 1',...
     ' --winsorize-image-intensities [0.005,0.995]', ...
     ' --write-composite-transform 1', ...
+    initreg, ...
     props.rigidstage, props.affinestage, props.synstage, props.slabstage, props.synmaskstage];
 
 fid = fopen([props.directory,'ea_ants_command.txt'],'a');

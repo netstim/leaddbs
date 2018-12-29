@@ -194,8 +194,7 @@ else
 end
 
 
-rigidstage = [' --initial-moving-transform [', fixedimage{1}, ',', movingimage{1}, ',0]' ...
-    ' --transform Rigid[0.25]' ... % bit faster gradient step (see https://github.com/stnava/ANTs/wiki/Anatomy-of-an-antsRegistration-call)
+rigidstage = [' --transform Rigid[0.25]' ... % bit faster gradient step (see https://github.com/stnava/ANTs/wiki/Anatomy-of-an-antsRegistration-call)
     ' --convergence ', rigidconvergence, ...
     ' --shrink-factors ', rigidshrinkfactors, ...
     ' --smoothing-sigmas ', rigidsmoothingssigmas, ...
@@ -289,6 +288,8 @@ if options.prefs.machine.normsettings.ants_numcores
     setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',options.prefs.machine.normsettings.ants_numcores) % no num2str needed since stored as string.
 end
 
+props.moving = movingimage{1};
+props.fixed = fixedimage{1};
 props.outputbase = outputbase;
 props.ANTS = ANTS;
 props.outputimage = outputimage;
@@ -299,12 +300,12 @@ props.slabstage = slabstage;
 props.synmaskstage = synmaskstage;
 props.directory = directory;
 props.stagesep = options.prefs.machine.normsettings.ants_stagesep;
-if exist([fileparts(movingimage{1}),filesep,'glanatComposite.h5'],'file')
-    % clean old deformation field. this is important for cases where ANTs
-    % crashes and the user does not get an error back. Then, preexistant old transforms
-    % will be considered as new ones.
-    delete([fileparts(movingimage{1}),filesep,'glanatComposite.h5']);
-end
+% if exist([fileparts(movingimage{1}),filesep,'glanatComposite.h5'],'file')
+%     % clean old deformation field. this is important for cases where ANTs
+%     % crashes and the user does not get an error back. Then, preexistant old transforms
+%     % will be considered as new ones.
+%     delete([fileparts(movingimage{1}),filesep,'glanatComposite.h5']);
+% end
 ea_submit_ants_nonlinear(props);
 
 if exist('tmaskdir','var')
