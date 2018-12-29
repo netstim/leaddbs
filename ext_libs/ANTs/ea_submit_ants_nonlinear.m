@@ -10,6 +10,8 @@ end
 function ea_antsnl_monostep(props)
 directory=fileparts(props.moving);
 directory=[directory,filesep];
+initreg=[' --initial-moving-transform [', props.fixed, ',', props.moving, ',0]'];
+
 if exist([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)],'file') % prior ANTs transform found.
     prefs=ea_prefs;
     switch prefs.machine.normsettings.ants_usepreexisting
