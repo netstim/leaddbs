@@ -14,13 +14,13 @@ if exist([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransforme
     prefs=ea_prefs;
     switch prefs.machine.normsettings.ants_usepreexisting
         case 1 % ask
-            answ=questdlg('We found an old ANTs transform file. Do you wish to reuse the transform or discard the old one?','Old ANTs transform found.','Reuse','Discard','Discard');
+            answ=questdlg('We found existing ANTs transform files. Do you wish to build upon these transform (i.e. refine them) or discard them and start from scratch?','Old ANTs transform found.','Refine','Start from scratch','Start from scratch');
             switch lower(answ)
-                case 'reuse'
+                case 'refine'
                     initreg=[' --initial-moving-transform ',ea_path_helper([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])];
                     props.rigidstage='';
                     props.affinestage='';
-                case 'discard'
+                case 'start from scratch'
                     ea_delete([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])
                     initreg=[' --initial-moving-transform [', props.fixed, ',', props.moving, ',0]'];
             end
