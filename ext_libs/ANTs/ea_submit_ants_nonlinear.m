@@ -19,7 +19,11 @@ if exist([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransforme
             answ=questdlg('We found existing ANTs transform files. Do you wish to build upon these transform (i.e. refine them) or discard them and start from scratch?','Old ANTs transform found.','Refine','Start from scratch','Start from scratch');
             switch lower(answ)
                 case 'refine'
-                    initreg=[' --initial-moving-transform ',ea_path_helper([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])];
+                    
+
+                    
+                    initreg=[' --initial-moving-transform ',ea_path_helper([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)]), ...
+                        ' --initial-fixed-transform ',ea_path_helper([fileparts(props.moving),filesep,'glanatInverseComposite',ea_getantstransformext(directory)])];
                     props.rigidstage='';
                     props.affinestage='';
                 case 'start from scratch'
@@ -27,7 +31,10 @@ if exist([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransforme
                     initreg=[' --initial-moving-transform [', props.fixed, ',', props.moving, ',0]'];
             end
         case 2 % reuse
-            initreg=[' --initial-moving-transform ',ea_path_helper([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])];
+            
+
+            initreg=[' --initial-moving-transform ',ea_path_helper([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)]), ...
+              ' --initial-fixed-transform ',ea_path_helper([fileparts(props.moving),filesep,'glanatInverseComposite',ea_getantstransformext(directory)])];
             props.rigidstage='';
             props.affinestage='';
         case 3 % overwrite
