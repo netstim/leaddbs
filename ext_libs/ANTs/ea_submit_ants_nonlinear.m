@@ -23,6 +23,7 @@ if exist([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransforme
                     props.affinestage='';
                 case 'start from scratch'
                     ea_delete([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])
+                    ea_delete([fileparts(props.moving),filesep,'glanatInverseComposite',ea_getantstransformext(directory)])
                     refinewarp=0;
             end
         case 2 % reuse
@@ -34,6 +35,7 @@ if exist([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransforme
             % crashes and the user does not get an error back. Then, preexistant old transforms
             % will be considered as new ones.
             ea_delete([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])
+            ea_delete([fileparts(props.moving),filesep,'glanatInverseComposite',ea_getantstransformext(directory)])
             refinewarp=0;
     end
 end
