@@ -41,10 +41,10 @@ switch normsettings.ants_strategy
         % typically 0.5 mm resolution in Lead-DBS whereas usually input images are
         % resliced to 0.7 mm. Thus should consider not going down to shrink factor
         % of 1 at all.
-        apref.shrinkfactors.rigid='12x8x4x2'; % Rigid shrink factors
-        apref.shrinkfactors.affine='8x4x2x2'; % Affine shrink factors
-        apref.shrinkfactors.syn='8x4x4x2'; % SyN shrink factors
-        apref.shrinkfactors.scrf='4x4x2x2'; % SyN subcortical focus stage shrink factors
+        apref.shrinkfactors.rigid='12x8x4x1'; % Rigid shrink factors
+        apref.shrinkfactors.affine='8x4x2x1'; % Affine shrink factors
+        apref.shrinkfactors.syn='8x4x4x1'; % SyN shrink factors
+        apref.shrinkfactors.scrf='4x4x2x1'; % SyN subcortical focus stage shrink factors
 
         
 end
