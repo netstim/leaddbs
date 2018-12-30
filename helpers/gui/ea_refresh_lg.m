@@ -241,7 +241,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 poptions.native=0;
                 poptions.elmodel=M.elstruct(pt).elmodel;
                 poptions=ea_resolve_elspec(poptions);
-                ea_recode_coords(poptions);
+                [coords_mm,trajectory,markers]=ea_resolvecoords(markers,poptions,0);
 
                 M.elstruct(pt).coords_mm=coords_mm;
                 M.elstruct(pt).coords_acpc=coords_acpc;
