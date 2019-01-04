@@ -252,7 +252,11 @@ if checkrebuild(atlases,options,root,mifix)
                     fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
                     fv.vertices=[fv.vertices;fvc.vertices];
                     if options.prefs.hullsmooth
+                        try
                         fv=ea_smoothpatch(fv,[],ceil(options.prefs.hullsmooth/2));
+                        catch
+                            keyboard
+                        end
                     end
                     try % works > ML 2015:
                         tr=triangulation(fv.faces,fv.vertices);
@@ -368,12 +372,13 @@ else
 end
 
 if strcmp(fname(end-3:end),'.nii') % volumetric
-
+    warning('off');
     ea_crop_nii(fname);
-    
     nii=ea_load_nii(fname);
-    if ~all(abs(nii.voxsize)<=0.7)
-        ea_reslice_nii(fname,fname,[0.4,0.4,0.4],0,[],0);
+    warning('on');
+
+    if ~all(abs(nii.voxsize)<=0.8)
+        ea_reslice_nii(fname,fname,[0.4,0.4,0.4],0,0,0,[],[],1);
         nii=ea_load_nii(fname);
     end
     
