@@ -22,11 +22,12 @@ if ~exist('corrtype','var')
 end
 
 
-%Corner histogram
-g=gramm('x',y,'y',X); % data needs to be put in "reversed" for gramm.
-g.geom_point();
-g.stat_glm('distribution',distribution,'fullrange','false');
 mdl=fitglm(X,y,'distribution',distribution);
+
+yhat=predict(mdl,X);
+g=gramm('x',yhat,'y',y); % data needs to be put in "reversed" for gramm.
+g.geom_point();
+g.stat_glm('distribution',distribution,'fullrange','false','fullrange','false');
 
 
 
