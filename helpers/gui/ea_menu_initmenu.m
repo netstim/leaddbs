@@ -43,6 +43,9 @@ if isempty(menuprobe)
         uimenu(f,'Label','Convert ACPC/MNI coordinates (Horn 2017)','Callback',{@ea_acpcquery,handles.leadfigure});
     end
     
+    normf=uimenu(f,'Label','Normalization');
+    uimenu(normf,'Label','Add fiducial helper','Callback',{@ea_addfiducialhelper,handles},'Accelerator','F')
+    
     uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles},'Accelerator','R');
     
     uimenu(f,'Label','Fuse volumes','Callback',{@ea_waveletfusion,handles});

@@ -139,7 +139,7 @@ end
 % Load preset parameter set
 apref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), options.prefs.machine.normsettings);
 
-directory = fileparts(movingimage{1});
+directory = fileparts(movingimage{end});
 if isempty(directory)
     directory = ['.', filesep];
 else
