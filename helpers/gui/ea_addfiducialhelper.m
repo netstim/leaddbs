@@ -68,7 +68,7 @@ while 1
     fid(cnt).patient=patpos;
     cnt=cnt+1;
 end
-keyboard
+
 if ~exist('fid','var')
     disp('No fiducials defined');
     return
@@ -90,7 +90,7 @@ for f=1:length(fid)
 end
 
 % flatten ROI:
-keyboard
+
 fguid=ea_generate_uuid;
 matlabbatch{1}.spm.util.imcalc.input = tfis';
 matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
