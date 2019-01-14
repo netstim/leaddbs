@@ -162,7 +162,9 @@ for suffix=dowhich
 
                     if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                         copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
+                        warning('off');
                         ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],dinterp);
+                        warning('on');
                         nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                         nii(cnt).img(isnan(nii(cnt).img))=0;
                         cnt=cnt+1;
