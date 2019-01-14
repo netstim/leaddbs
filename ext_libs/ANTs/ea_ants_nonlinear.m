@@ -60,24 +60,24 @@ if slabsupport
     disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
     
     for mov = 1:length(movingimage)
-         [~,mvfn]=fileparts(movingimage{mov});
-        if ismember(mvfn,{'anat_STN','anat_GPi','anat_GPe','anat_RN'}) % exclude labelings from slabdetection
+        if ~(weights(mov)==3) % segmentations
+
+                mnii = ea_load_nii(movingimage{mov});
+                mnii.img(abs(mnii.img)<0.0001)=nan;
+                mnii.img=~isnan(mnii.img);
+                if ~exist('AllMX','var')
+                    AllMX = mnii.img;
+                else
+                    try
+                        AllMX = AllMX.*mnii.img;
+                    catch
+                        ea_error('Multispectral acquisitions are not co-registered & resliced to anchor-modality. Please run co-registration first!');
+                    end
+                end
+                sums(mov) = sum(mnii.img(:));
+                
+        else
             sums(mov)=nan;
-        else
-        mnii = ea_load_nii(movingimage{mov});
-        mnii.img(abs(mnii.img)<0.0001)=nan;
-        mnii.img=~isnan(mnii.img);
-        if ~exist('AllMX','var')
-            AllMX = mnii.img;
-        else
-            try
-            AllMX = AllMX.*mnii.img;
-            catch
-                ea_error('Multispectral acquisitions are not co-registered & resliced to anchor-modality. Please run co-registration first!');
-            end
-        end
-        sums(mov) = sum(mnii.img(:));
-        
         end
     end
     slabspresent = 0; % default no slabs present.
@@ -85,6 +85,7 @@ if slabsupport
     if length(sums)>1 % multispectral warp
         
         slabs = sums(1:end-1) < (sums(end)*0.85);
+
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
             slabmovingimage = ea_path_helper(movingimage(slabs)); % move slabs to new cell slabimage
             slabfixedimage = ea_path_helper(fixedimage(slabs));
@@ -289,8 +290,8 @@ if options.prefs.machine.normsettings.ants_numcores
     setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',options.prefs.machine.normsettings.ants_numcores) % no num2str needed since stored as string.
 end
 
-props.moving = movingimage{1};
-props.fixed = fixedimage{1};
+props.moving = movingimage{end};
+props.fixed = fixedimage{end};
 props.outputbase = outputbase;
 props.ANTS = ANTS;
 props.outputimage = outputimage;
