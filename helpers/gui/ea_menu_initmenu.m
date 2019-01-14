@@ -44,7 +44,7 @@ if isempty(menuprobe)
     end
     
     normf=uimenu(f,'Label','Normalization');
-    uimenu(normf,'Label','Add fiducial helper','Callback',{@ea_addfiducialhelper,handles},'Accelerator','F')
+    uimenu(normf,'Label','Add fiducial helper(s)...','Callback',{@ea_addfiducialhelper,handles},'Accelerator','F')
     
     uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles},'Accelerator','R');
     
