@@ -105,12 +105,11 @@ cv=mat2cell(cvals,ones(size(cvals,1),1));
 % transform alphas to a logistic curve to highlight more predictive and
 % suppress less predictive fibers:
 alphas=1./(1+exp((-10)*(alphas-0.5)));
-
 alphas=alphas./nanmax(alphas);
 calph=mat2cell(alphas,ones(size(cvals,1),1));
 
 [h.FaceColor]=cv{:};
-[h.FaceAlpha]=calph{:};
+% [h.FaceAlpha]=calph{:};
 
 nones=repmat({'none'},size(cvals,1),1);
 [h.EdgeColor]=nones{:};
