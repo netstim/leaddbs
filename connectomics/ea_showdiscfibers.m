@@ -65,14 +65,13 @@ end
 
 set(0,'CurrentFigure',resultfig);
 
-%ea_mnifigure;
 colormap gray
 rb=ea_redblue(64);
 cvals=vals;
 cvals(isnan(cvals))=0;
 cvals=cvals./max([abs(nanmin(cvals)),abs(nanmax(cvals))]);
 
-% retain only 5% positive and 5% of negative predictive fibers:
+% retain positive/negative predictive fibers according to 'predthreshold':
 posits=cvals(cvals>0);
 negits=cvals(cvals<0);
 posits=sort(posits,'descend');
