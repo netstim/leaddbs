@@ -67,7 +67,7 @@ set(0,'CurrentFigure',resultfig);
 
 %ea_mnifigure;
 colormap gray
-rb=ea_redblue(32);
+rb=ea_redblue(64);
 cvals=vals;
 cvals(isnan(cvals))=0;
 cvals=cvals./max([abs(nanmin(cvals)),abs(nanmax(cvals))]);
@@ -93,10 +93,16 @@ cvals(remove)=[];
 fibcell(remove)=[];
 cvals(cvals>0)=ea_minmax(cvals(cvals>0));
 cvals(cvals<0)=-ea_minmax(-cvals(cvals<0));
-alphas=abs(cvals);
+% alphas=abs(cvals);
 
-cvals=cvals*31.5;
-cvals=cvals+32.5;
+cvals=cvals*(size(rb,1)/2-0.5);
+cvals=cvals+(size(rb,1)/2+0.5);
+
+alphas = zeros(size(cvals,1),1);
+colorbarThreshold = 0.50; % Percentage of the red/blue color to be kept
+alphas(round(cvals)<=size(rb,1)/2*colorbarThreshold) = 1;
+alphas(round(cvals)>(size(rb,1)-size(rb,1)/2*colorbarThreshold)) = 1;
+calph=mat2cell(alphas,ones(size(cvals,1),1));
 
 cvals=rb(round(cvals),:);
 h=streamtube(fibcell,0.2);
@@ -104,12 +110,12 @@ cv=mat2cell(cvals,ones(size(cvals,1),1));
 
 % transform alphas to a logistic curve to highlight more predictive and
 % suppress less predictive fibers:
-alphas=1./(1+exp((-10)*(alphas-0.5)));
-alphas=alphas./nanmax(alphas);
-calph=mat2cell(alphas,ones(size(cvals,1),1));
+% alphas=1./(1+exp((-10)*(alphas-0.5)));
+% alphas=alphas./nanmax(alphas);
+% calph=mat2cell(alphas,ones(size(cvals,1),1));
 
 [h.FaceColor]=cv{:};
-% [h.FaceAlpha]=calph{:};
+[h.FaceAlpha]=calph{:};
 
 nones=repmat({'none'},size(cvals,1),1);
 [h.EdgeColor]=nones{:};
