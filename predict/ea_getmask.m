@@ -3,10 +3,10 @@ function mask=ea_getmask(varargin)
 % predict suite.
 if nargin
     switch varargin{1}
-        case {'grey','','standard','grey_2'}
+        case {'gray','grey','','standard','grey_2'}
             load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
             mask=modeldata.mask;
-        case {'grey_hd','hd','standard_hd','grey_1'}
+        case {'gray_hd','grey_hd','hd','standard_hd','grey_1','gray_1'}
             load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
             mask=modeldata.mask_hd;
         case {'brain','brain_2'}
@@ -24,6 +24,9 @@ if nargin
         case {'cortex_hd','cortex_1'}
             load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
             mask=modeldata.cortexmask_hd;
+        case {'cortexcb_hd','cortexcb_1'}
+            load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
+            mask=modeldata.cortexcbmask_hd;
         case {'cortex_5'}
             load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
             mask=modeldata.cortexmask_hd5;
