@@ -588,6 +588,9 @@ function discardfiducial_Callback(hObject, eventdata, handles)
 % hObject    handle to discardfiducial (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+set(handles.approvefiducial,'visible','off');
+set(handles.discardfiducial,'visible','off');
+options=getappdata(handles.checkstructures,'options');
 ea_updateviews(options,handles,1:3)
 
 
