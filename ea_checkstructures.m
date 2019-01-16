@@ -22,16 +22,16 @@ function varargout = ea_checkstructures(varargin)
 
 % Edit the above text to modify the response to help ea_checkstructures
 
-% Last Modified by GUIDE v2.5 01-Dec-2018 10:59:10
+% Last Modified by GUIDE v2.5 16-Jan-2019 15:49:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @ea_checkstructures_OpeningFcn, ...
-                   'gui_OutputFcn',  @ea_checkstructures_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @ea_checkstructures_OpeningFcn, ...
+    'gui_OutputFcn',  @ea_checkstructures_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -81,6 +81,7 @@ atlases = {atlases(cell2mat({atlases.isdir})).name};    % only keep folders
 atlases = atlases(cellfun(@(x) ~strcmp(x(1),'.'), atlases));  % also remove '.', '..' and '.*' folders from dir results
 atlmenu=cell(length(presentfiles),length(atlases));
 warning('off');
+set(handles.refinestatus,'String','Click on panels to add detail-corrections relative to the atlas of choice.');
 
 for atl=1:length(atlases)
     if ~exist([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'file')
@@ -123,7 +124,7 @@ drawnow
 % add preop acquisitions to popup
 cellentr=cell(0);
 for p=presentfiles'
-   cellentr{end+1}=upper(p{1}(6:end-4));
+    cellentr{end+1}=upper(p{1}(6:end-4));
 end
 set(handles.anat_select,'String',cellentr);
 modality=get(handles.anat_select,'String');
@@ -195,7 +196,7 @@ modality=modality{get(handles.anat_select,'Value')};
 setappdata(handles.checkstructures,'modality',modality);
 if ~exist('dontupdate','var')
     options=getappdata(handles.checkstructures,'options');
-        ea_updateviews(options,handles,1:3)
+    ea_updateviews(options,handles,1:3)
 end
 
 function ea_setnewhemisphere(handles,dontupdate)
@@ -253,7 +254,7 @@ setappdata(handles.checkstructures,'mzsag',mzsag);
 setappdata(handles.checkstructures,'vmz',vmz);
 setappdata(handles.checkstructures,'vmzsag',vmzsag);
 if ~exist('dontupdate','var')
-        ea_updateviews(options,handles,1:3)
+    ea_updateviews(options,handles,1:3)
 end
 
 function ea_updateviews(options,handles,cortrasag)
@@ -264,6 +265,7 @@ mz=getappdata(handles.checkstructures,'mz');
 mzsag=getappdata(handles.checkstructures,'mzsag');
 vmz=getappdata(handles.checkstructures,'vmz');
 vmzsag=getappdata(handles.checkstructures,'vmzsag');
+
 
 h=getappdata(handles.checkstructures,'h');
 views={'tra','cor','sag'};
@@ -285,14 +287,30 @@ for cts=cortrasag
     options.d2.showlegend=0;
     options.d2.showstructures={h.Label};
     modality=getappdata(handles.checkstructures,'modality');
-
+    
     [Vtra,Vcor,Vsag]=ea_assignbackdrop(['Patient Pre-OP (',modality,')'],options,'Patient');
     Vs={Vtra,Vcor,Vsag};
     options.sides=1;
     evalin('base','custom_cont=2;');
-    [hf,img]=ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'off',2);
+    [hf,img,bb]=ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'off',2);
+    bbs=getappdata(handles.checkstructures,'bbs');
+    if isempty(bbs)
+        clear bbs
+    end
+    bbs(cts).mm=bb;
+    bbs(cts).imgdim=size(img);
+    setappdata(handles.checkstructures,'bbs',bbs);
     axes(handles.(views{cts}));
-    imshow(img);
+    voxdepth=Vs{1}.mat\[options.d2.depth,1]';
+    voxz=voxdepth(ea_view2coord(cts));
+    him=image(img);
+    
+    hold on
+    set(handles.(views{cts}),'ButtonDownFcn', @(h,e) ea_freehanddraw(handles.(views{cts}),handles,[voxz,ea_view2coord(cts),cts],'Color',[1,1,0.6],'linewidth',2));
+    set(him, 'HitTest', 'off');
+    %    axis off % this somehow destroys UI functionality. Solve
+    %    later.
+    
 end
 
 function coord=ea_view2coord(view)
@@ -306,7 +324,7 @@ switch view
 end
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_checkstructures_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_checkstructures_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -464,3 +482,144 @@ function rh_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of rh
 set(handles.lh,'Value',0);
 ea_setnewhemisphere(handles);
+
+
+% --- Executes on button press in approvefiducial.
+function approvefiducial_Callback(hObject, eventdata, handles)
+% hObject    handle to approvefiducial (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+set(handles.approvefiducial,'visible','off');
+set(handles.discardfiducial,'visible','off');
+set(handles.refinestatus,'String','Great, correction added! Remember to re-run an ANTs-based normalization for changes to take effect.');
+ea_busyaction('on','normcheckstructures');
+linefiducial=getappdata(handles.checkstructures,'linefiducial');
+fiducialview=getappdata(handles.checkstructures,'fiducialview');
+bbs=getappdata(handles.checkstructures,'bbs'); % bounding boxes of views
+thisbb=bbs(fiducialview);
+%linefiducial(:,1)=thisbb.imgdim(1)-linefiducial(:,1);
+[planedim,onedim,secdim]=ea_getdims(fiducialview,1);
+
+linefiducial(:,secdim)=thisbb.imgdim(1)-linefiducial(:,secdim);
+expmm=zeros(size(linefiducial));
+expmm(:,planedim)=thisbb.mm{planedim}(1); % all entries should be equal.
+
+expmm(:,onedim)=linefiducial(:,onedim)./thisbb.imgdim(1)... % scale from 0 to 1
+    *abs(diff([thisbb.mm{onedim}(1),thisbb.mm{onedim}(end)]))... % scale from 0 to fov size in mm
+    +smallestentry([thisbb.mm{onedim}(1),thisbb.mm{onedim}(end)]); % shift to correct bb
+
+expmm(:,secdim)=linefiducial(:,secdim)./thisbb.imgdim(2)... % scale from 0 to 1
+    *diff([thisbb.mm{secdim}(1),thisbb.mm{secdim}(end)])... % scale from 0 to fov size in mm
+    +smallestentry([thisbb.mm{secdim}(1),thisbb.mm{secdim}(end)]); % shift to correct bb
+
+uuid=getappdata(handles.checkstructures,'fidguiid');
+if isempty(uuid)
+    uuid=ea_generate_uuid;
+    setappdata(handles.checkstructures,'fidguiid',uuid);
+end
+% export fiducial in template space:
+if 0 % could be done for debugging.
+    ea_mkdir([ea_space,'fiducials']);
+    nii=ea_load_nii([ea_space,'t1.nii']);
+    expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
+    expvx=round(expvx(1:3,:))';
+    nii.img(:)=0;
+    nii.img(sub2ind(size(nii.img),(expvx(:,1)),(expvx(:,2)),(expvx(:,3))))=1;
+    nii.fname=[uuid,'.nii'];
+    ea_write_nii(nii);
+end
+
+% map points to closest point on atlas:
+atlfv=getappdata(handles.checkstructures,'fv'); % get current atlas
+allatlcoords=[];
+for entry=1:length(atlfv)
+    try allatlcoords=[allatlcoords;atlfv{entry}.vertices]; end
+end
+[idx,d]=knnsearch(allatlcoords,expmm);
+atlmm=allatlcoords(idx(d<3.5),:); % ignore fiducials further away than 3.5 mm
+
+% export this mapping in template space:
+ea_mkdir([ea_space,'fiducials']);
+if ~exist([ea_space,'fiducials',filesep,uuid,'.nii'],'file')
+    nii=ea_load_nii([ea_space,'t1.nii']);
+    nii.fname=[ea_space,'fiducials',filesep,uuid,'.nii'];
+    nii.dt=[512,0]; % uint 16 bit
+    nii.img(:)=0;
+else
+    nii=ea_load_nii([ea_space,'fiducials',filesep,uuid,'.nii']);
+end
+atlvx=nii.mat\[atlmm,ones(size(atlmm,1),1)]';
+atlvx=round(atlvx(1:3,:))';
+nii.img(sub2ind(size(nii.img),(atlvx(:,1)),(atlvx(:,2)),(atlvx(:,3))))=2^16-1; % max val of uint 16 bit
+
+ea_write_nii(nii);
+
+
+% now project fids back to native space and export mapping there:
+expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
+options=getappdata(handles.checkstructures,'options');
+directory=[options.root,options.patientname,filesep];
+[~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
+
+ea_mkdir([directory,'fiducials']);
+if ~exist([directory,'fiducials',filesep,uuid,'.nii'],'file')
+    nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
+    nii.fname=[directory,'fiducials',filesep,uuid,'.nii'];
+    nii.dt=[512,0]; % uint 16 bit
+    nii.img(:)=0;
+else
+    nii=ea_load_nii([directory,'fiducials',filesep,uuid,'.nii']);
+end
+subcvx=round(subcvx(1:3,:))';
+nii.img(sub2ind(size(nii.img),(subcvx(:,1)),(subcvx(:,2)),(subcvx(:,3))))=2^16-1; % max val of uint 16 bit
+ea_write_nii(nii);
+
+ea_updateviews(options,handles,1:3)
+ea_busyaction('off','normcheckstructures');
+
+
+function v=smallestentry(ay)
+ay=sort(ay,'ascend');
+v=ay(1);
+
+% --- Executes on button press in discardfiducial.
+function discardfiducial_Callback(hObject, eventdata, handles)
+% hObject    handle to discardfiducial (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_updateviews(options,handles,1:3)
+
+
+% --- Executes when user attempts to close checkstructures.
+function checkstructures_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to checkstructures (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+uuid=getappdata(handles.checkstructures,'fidguiid');
+options=getappdata(handles.checkstructures,'options');
+delete(hObject);
+
+if ~isempty(uuid)
+    for pttemp=1:2
+        switch pttemp
+            case 1 % native
+                directory=[options.root,options.patientname,filesep];
+            case 2 % template
+                directory=ea_space;
+        end
+        [pathn,filen]=fileparts([directory,'fiducials',filesep,uuid,'.nii']);
+        filen=[filen,'.nii'];
+        matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pathn,filen)};
+        matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
+        matlabbatch{1}.spm.spatial.smooth.dtype = 512;
+        matlabbatch{1}.spm.spatial.smooth.im = 0;
+        matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+        spm_jobman('run',{matlabbatch});
+        movefile(fullfile(pathn,['s',filen]),fullfile(pathn,filen));
+        gzip(fullfile(pathn,filen));
+        delete(fullfile(pathn,filen));
+    end
+end

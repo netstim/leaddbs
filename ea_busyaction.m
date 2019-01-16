@@ -83,6 +83,11 @@ try
             case 'normcheck'
                 sz=get(fighandle,'Position');
                 pos=[sz(3)-50-2 sz(4)-50-2 50 50];
+            case 'normcheckstructures'
+                sz=get(fighandle,'Position');
+                pos=[sz(3)-50-2 sz(4)-50-2 50 50];
+                onfigtit='Check registration of specific structures (busy...)';
+                offfigtit='Check registration of specific structures';
         end
     end
 
