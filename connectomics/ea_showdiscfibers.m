@@ -67,7 +67,7 @@ set(0,'CurrentFigure',resultfig);
 
 %ea_mnifigure;
 colormap gray
-rb=ea_redblue;
+rb=ea_redblue(32);
 cvals=vals;
 cvals(isnan(cvals))=0;
 cvals=cvals./max([abs(nanmin(cvals)),abs(nanmax(cvals))]);
