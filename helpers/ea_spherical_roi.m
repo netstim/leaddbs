@@ -23,12 +23,27 @@ for a=1:size(mni,1)
     ze = XYZ(3)-round(2*r/voxmm(3)):XYZ(3)+round(2*r/voxmm(3));
     
     
+
     [xx yy zz] = meshgrid(1:length(xe),1:length(ye),1:length(ze));
     S = round(sqrt((xx-2*r/voxmm(1)).^2+(yy-2*r/voxmm(2)).^2+(zz-2*r/voxmm(3)).^2)<=r/voxmm(1));
-    xix=squeeze(xx(1,:,1)+round(XYZ(1)-2*r/voxmm(1)));
+    
+    xix=squeeze(xx(1,:,1)+round(XYZ(1)-2*r/voxmm(1)))';
     yiy=squeeze(yy(:,1,1)+round(XYZ(2)-2*r/voxmm(1)));
     ziz=squeeze(zz(1,1,:)+round(XYZ(3)-2*r/voxmm(1)));
+    
+    try
     Vol.img(xix,yiy,ziz)=S;
+    catch % negative indices.
+        for xxx=1:length(xix)
+            for yyy=1:length(yiy)
+                for zzz=1:length(ziz)
+                    try
+                   Vol.img(xix(xxx),yiy(yyy),ziz(zzz))=S(xxx,yyy,zzz); 
+                    end
+                end
+            end
+        end 
+    end
     Vol.img(Vol.img~=1)=0;
     Vol.dt =[16,0];
     Vol.fname=fname;
