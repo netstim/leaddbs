@@ -69,6 +69,8 @@ set(handles.checkstructures,'Name','Check registration of specific structures.')
 % add atlases contextmenu
 
 options=varargin{1};
+options.atlasset = 'DISTAL Minimal (Ewert 2017)'; % Force atlas to Distal for checkstructures (so it does not matter which atlas is set in the lead DBS window)
+
 setappdata(handles.checkstructures,'options',options);
 setappdata(handles.checkstructures,'hemisphere',2);
 setappdata(handles.checkstructures,'offset',[0.5,0.5,0.5]);
@@ -131,6 +133,8 @@ modality=get(handles.anat_select,'String');
 modality=modality{get(handles.anat_select,'Value')};
 setappdata(handles.checkstructures,'modality',modality);
 options.prefs=ea_prefs(options.patientname);
+setappdata(handles.checkstructures,'options',options);
+
 switch(options.prefs.machine.checkreg.default)
     case 'DISTAL Minimal (Ewert 2017)@STN'
         ea_preset_stn(handles)
@@ -253,6 +257,7 @@ setappdata(handles.checkstructures,'mz',mz);
 setappdata(handles.checkstructures,'mzsag',mzsag);
 setappdata(handles.checkstructures,'vmz',vmz);
 setappdata(handles.checkstructures,'vmzsag',vmzsag);
+setappdata(handles.checkstructures,'options',options);
 if ~exist('dontupdate','var')
     ea_updateviews(options,handles,1:3)
 end
@@ -292,7 +297,7 @@ for cts=cortrasag
     Vs={Vtra,Vcor,Vsag};
     options.sides=1;
     evalin('base','custom_cont=2;');
-    options.atlasset = 'DISTAL Minimal (Ewert 2017)'; % Force atlas to Distal for checkstructures (so it does not matter which atlas is set in the lead DBS window)
+
     [hf,img,bb]=ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'off',2);
     bbs=getappdata(handles.checkstructures,'bbs');
     if isempty(bbs)
