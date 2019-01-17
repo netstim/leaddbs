@@ -292,6 +292,7 @@ for cts=cortrasag
     Vs={Vtra,Vcor,Vsag};
     options.sides=1;
     evalin('base','custom_cont=2;');
+    options.atlasset = 'DISTAL Minimal (Ewert 2017)'; % Force atlas to Distal for checkstructures (so it does not matter which atlas is set in the lead DBS window)
     [hf,img,bb]=ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'off',2);
     bbs=getappdata(handles.checkstructures,'bbs');
     if isempty(bbs)
