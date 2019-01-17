@@ -65,13 +65,11 @@ end
 
 set(0,'CurrentFigure',resultfig);
 
-colormap gray
-rb=ea_redblue(64);
 cvals=vals;
 cvals(isnan(cvals))=0;
-cvals=cvals./max([abs(nanmin(cvals)),abs(nanmax(cvals))]);
+cvals=cvals./max(abs(cvals));
 
-% retain positive/negative predictive fibers according to 'predthreshold':
+% retain positive/negative predictive fibers according to 'predthreshold'
 posits=cvals(cvals>0);
 negits=cvals(cvals<0);
 posits=sort(posits,'descend');
@@ -80,11 +78,11 @@ posthresh=posits(round(length(posits)*predthreshold));
 
 if showpositiveonly
     negthresh = negits(1)-eps;
-    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' - ',num2str(max(posits)), ')']);
+    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(max(posits)), ')']);
 else
     negthresh=negits(round(length(negits)*predthreshold));
-    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' - ',num2str(max(posits)), ...
-          '); Negative (T = ',num2str(negthresh),' - ',num2str(min(negits)),').']);
+    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(max(posits)), ...
+          '); Negative (T = ',num2str(min(negits)),' ~ ',num2str(negthresh),').']);
 end
 
 remove=logical(logical(cvals<posthresh) .* logical(cvals>negthresh));
@@ -92,8 +90,9 @@ cvals(remove)=[];
 fibcell(remove)=[];
 cvals(cvals>0)=ea_minmax(cvals(cvals>0));
 cvals(cvals<0)=-ea_minmax(-cvals(cvals<0));
-% alphas=abs(cvals);
 
+colormap gray
+rb=ea_redblue(64);
 cvals=cvals*(size(rb,1)/2-0.5);
 cvals=cvals+(size(rb,1)/2+0.5);
 
@@ -106,12 +105,6 @@ calph=mat2cell(alphas,ones(size(cvals,1),1));
 cvals=rb(round(cvals),:);
 h=streamtube(fibcell,0.2);
 cv=mat2cell(cvals,ones(size(cvals,1),1));
-
-% transform alphas to a logistic curve to highlight more predictive and
-% suppress less predictive fibers:
-% alphas=1./(1+exp((-10)*(alphas-0.5)));
-% alphas=alphas./nanmax(alphas);
-% calph=mat2cell(alphas,ones(size(cvals,1),1));
 
 [h.FaceColor]=cv{:};
 [h.FaceAlpha]=calph{:};
