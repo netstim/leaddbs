@@ -37,11 +37,11 @@ while 1
     % choose in patient(s):
     
     for pt=1:length(uipatdir)
-        if ~exist('ptspace','var')
+      
             options=ea_getptopts([uipatdir{pt},filesep]);
             [~,presentfiles]=ea_assignpretra(options);
             ptspace{pt}=[uipatdir{pt},filesep,presentfiles{1}];
-        end
+        
         figure(Fgraph); clf;
         spm_orthviews('Reset');
         spm_orthviews('Image', ptspace{pt});
@@ -68,10 +68,14 @@ while 1
     fid(cnt).patient=patpos;
     cnt=cnt+1;
 end
-
+try close(Fgraph); end
+try close(Finter); end
+try close(TPpoint); end
 if ~exist('fid','var')
     disp('No fiducials defined');
     return
+else
+    disp('Fiducials defined. Smoothing & logging them to be used in next ANTs-based transform.');
 end
 for f=1:length(fid)
     % define in template:
@@ -100,7 +104,7 @@ matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
 matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
 matlabbatch{1}.spm.util.imcalc.options.mask = 0;
 matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
 spm_jobman('run',{matlabbatch});
 smoothgzip([ea_space,'fiducials'],[fguid,'.nii']);
 ea_delete(tfis);
@@ -113,7 +117,7 @@ for pt=1:length(uipatdir)
     matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
     matlabbatch{1}.spm.util.imcalc.options.mask = 0;
     matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-    matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
+    matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
     spm_jobman('run',{matlabbatch});
     smoothgzip([uipatdir{pt},filesep,'fiducials'],[fguid,'.nii']);
     ea_delete(pfis{pt});
@@ -123,7 +127,7 @@ end
 function smoothgzip(pathn,filen)
 matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pathn,filen)};
 matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];
-matlabbatch{1}.spm.spatial.smooth.dtype = 8;
+matlabbatch{1}.spm.spatial.smooth.dtype = 512;
 matlabbatch{1}.spm.spatial.smooth.im = 0;
 matlabbatch{1}.spm.spatial.smooth.prefix = 's';
 spm_jobman('run',{matlabbatch});
