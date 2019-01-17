@@ -493,7 +493,7 @@ function approvefiducial_Callback(hObject, eventdata, handles)
 set(handles.approvefiducial,'visible','off');
 set(handles.discardfiducial,'visible','off');
 set(handles.refinestatus,'String','Great, correction added! Remember to re-run an ANTs-based normalization for changes to take effect.');
-ea_busyaction('on','normcheckstructures');
+ea_busyaction('on',handles.checkstructures,'normcheckstructures');
 linefiducial=getappdata(handles.checkstructures,'linefiducial');
 fiducialview=getappdata(handles.checkstructures,'fiducialview');
 bbs=getappdata(handles.checkstructures,'bbs'); % bounding boxes of views
@@ -576,7 +576,7 @@ nii.img(sub2ind(size(nii.img),(subcvx(:,1)),(subcvx(:,2)),(subcvx(:,3))))=2^16-1
 ea_write_nii(nii);
 
 ea_updateviews(options,handles,1:3)
-ea_busyaction('off','normcheckstructures');
+ea_busyaction('off',handles.checkstructures,'normcheckstructures');
 
 
 function v=smallestentry(ay)
