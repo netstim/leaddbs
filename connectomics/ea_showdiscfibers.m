@@ -98,19 +98,19 @@ tvalsRescale(tvals<0)=-ea_minmax(-tvals(tvals<0));
 
 % Contruct colormap
 colormap gray
-rb=ea_redblue(1024);
-fibcolorInd=tvalsRescale*(size(rb,1)/2-0.5);
-fibcolorInd=fibcolorInd+(size(rb,1)/2+0.5);
+map=ea_redblue(1024);
+fibcolorInd=tvalsRescale*(size(map,1)/2-0.5);
+fibcolorInd=fibcolorInd+(size(map,1)/2+0.5);
 
 % Set alphas of fibers with light color to 0
-colorbarThreshold = 0.60; % Percentage of the red/blue color to be kept
-blueUpperBound=ceil(size(rb,1)/2*colorbarThreshold);
-redlowerBound=floor((size(rb,1)-size(rb,1)/2*colorbarThreshold));
+colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
+negUpperBound=ceil(size(map,1)/2*colorbarThreshold);
+poslowerBound=floor((size(map,1)-size(map,1)/2*colorbarThreshold));
 alphas=zeros(size(fibcolorInd,1),1);
 if ~showpositiveonly
-    alphas(round(fibcolorInd)<=blueUpperBound) = 1;
+    alphas(round(fibcolorInd)<=negUpperBound) = 1;
 end
-alphas(round(fibcolorInd)>=redlowerBound) = 1;
+alphas(round(fibcolorInd)>=poslowerBound) = 1;
 fibalpha=mat2cell(alphas,ones(size(fibcolorInd,1),1));
 
 % Plot fibers
@@ -119,7 +119,7 @@ nones=repmat({'none'},size(fibcolorInd));
 [h.EdgeColor]=nones{:};
 
 % Calulate fiber colors
-colors=rb(round(fibcolorInd),:);
+colors=map(round(fibcolorInd),:);
 fibcolor=mat2cell(colors,ones(size(fibcolorInd)));
 
 % Set fiber colors and alphas
@@ -130,14 +130,14 @@ fibcolor=mat2cell(colors,ones(size(fibcolorInd)));
 cbvals = tvals(logical(alphas));
 % cbvals=tvalsRescale(logical(alphas));
 if showpositiveonly
-    tick = [redlowerBound, length(rb)] - floor(length(rb)/2) ;
+    cbmap = map(ceil(length(map)/2+0.5):end,:);
+    tick = [poslowerBound, length(map)] - floor(length(map)/2) ;
     poscbvals = sort(cbvals(cbvals>0));
     ticklabel = [poscbvals(1), max(cbvals)];
     ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-    cbmap = rb(ceil(length(rb)/2+0.5):end,:);
 else
-    cbmap = rb;
-    tick = [1, blueUpperBound, redlowerBound, length(rb)];
+    cbmap = map;
+    tick = [1, negUpperBound, poslowerBound, length(map)];
     poscbvals = sort(cbvals(cbvals>0));
     negcbvals = sort(cbvals(cbvals<0));
     ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
