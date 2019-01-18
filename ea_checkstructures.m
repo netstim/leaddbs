@@ -100,9 +100,10 @@ for atl=1:length(atlases)
         save([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'-struct','a','-v7.3');
     end
     a.structures=ea_rmext(a.structures);
+    structmenu{atl,1}=uimenu('Parent',atlmenu{atl},'Label','ALL','Callback',{@ea_setnewatlas,options,handles});
     try
         for strct=1:length(a.structures)
-            structmenu{atl,strct}=uimenu('Parent',atlmenu{atl},'Label',a.structures{strct},'Callback',{@ea_setnewatlas,options,handles});
+            structmenu{atl,strct+1}=uimenu('Parent',atlmenu{atl},'Label',a.structures{strct},'Callback',{@ea_setnewatlas,options,handles});
         end
     catch
         keyboard
@@ -224,18 +225,37 @@ ea_setprefs('checkreg.default',[h.Parent.Label,'@',h.Label]);
 
 options.atlasset=h.Parent.Label;
 load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
-[~,six]=ismember(h.Label,ea_rmext(atlases.names));
-fv=atlases.fv(six,:);
-pixdim=atlases.pixdim(six,:);
-
-
-if length(fv)>1
-    xyz=[fv{1}.vertices;fv{2}.vertices];
-    pixdim=mean([pixdim{1};pixdim{2}]);
-else
-    xyz=fv{1}.vertices;
+if strcmp(h.Label,'ALL')
+    
+    fv=atlases.fv;
+    pixdim=atlases.pixdim;
+    xyz=[];
+    for i=1:numel(fv)
+        try % some are empty in case of midline/mixed structures
+       xyz=[xyz;fv{i}.vertices]; 
+        end
+    end
     pixdim=pixdim{1};
+    
+else
+    [~,six]=ismember(h.Label,ea_rmext(atlases.names));
+    fv=atlases.fv(six,:);
+    pixdim=atlases.pixdim(six,:);
+    if length(fv)>1
+            xyz=[];
+        for i=1:numel(fv)
+            try % some are empty in case of midline/mixed structures
+                xyz=[xyz;fv{i}.vertices];
+            end
+        end
+        pixdim=mean([pixdim{1};pixdim{2}]);
+    else
+        xyz=fv{1}.vertices;
+        pixdim=pixdim{1};
+    end
 end
+
+
 
 mz=mean(xyz);
 vmz=abs(max(xyz)-min(xyz));
@@ -290,7 +310,11 @@ for cts=cortrasag
         options.d2.depth=mzsag;
     end
     options.d2.showlegend=0;
+    if strcmp(h.Label,'ALL')
+       options.d2.showstructures=ea_rmext(atlases.names); 
+    else
     options.d2.showstructures={h.Label};
+    end
     modality=getappdata(handles.checkstructures,'modality');
     
     [Vtra,Vcor,Vsag]=ea_assignbackdrop(['Patient Pre-OP (',modality,')'],options,'Patient');
