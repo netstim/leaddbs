@@ -568,6 +568,7 @@ if get(handles.showdiscfibers,'Value') % show discriminative fibers
     M.ui.connectomename=M.ui.connectomename{get(handles.fiberspopup,'Value')};
     discfiberssetting = options.prefs.machine.lg.discfibers;
     ea_showdiscfibers(M,discfiberssetting,resultfig);
+    set(0, 'CurrentFigure', resultfig);
 end
 
 ea_busyaction('off',handles.leadfigure,'group');
