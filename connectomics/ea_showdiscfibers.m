@@ -143,8 +143,9 @@ else
     ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
     ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
 end
-figure;
+cbfig = figure('Name', 'Colorbar', 'NumberTitle', 'off');
 ea_plot_colorbar(cbmap, length(cbmap), 'v', '', tick, ticklabel);
+setappdata(resultfig, 'cbfig', cbfig);
 
 
 function [reforce,connectomechanged,reformat]=checkpresence(M,opts)
