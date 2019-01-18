@@ -26,7 +26,7 @@ function [lineobj,xs,ys] = ea_freehanddraw(ax,handles,drawvoxz,varargin)
 % 10/05/05: Now allows double-click closing of contour
 
 	
-	
+ea_csremovedrawings(handles);	
 %Get current figure and axis parameters
 oldvals = get(gcf);
 oldhold = ishold(gca);

@@ -628,7 +628,8 @@ subcvx=round(subcvx(1:3,:))';
 nii.img(sub2ind(size(nii.img),(subcvx(:,1)),(subcvx(:,2)),(subcvx(:,3))))=2^16-1; % max val of uint 16 bit
 ea_write_nii(nii);
 
-ea_updateviews(options,handles,1:3)
+ea_csremovedrawings(handles);
+%ea_updateviews(options,handles,1:3)
 ea_busyaction('off',handles.checkstructures,'normcheckstructures');
 
 
@@ -643,9 +644,7 @@ function discardfiducial_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.approvefiducial,'visible','off');
 set(handles.discardfiducial,'visible','off');
-options=getappdata(handles.checkstructures,'options');
-ea_updateviews(options,handles,1:3)
-
+ea_csremovedrawings(handles);
 
 % --- Executes when user attempts to close checkstructures.
 function checkstructures_CloseRequestFcn(hObject, eventdata, handles)
