@@ -1,4 +1,4 @@
-function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
+function [cuts,allcontour]=ea_add_overlay(boundboxmm,cuts,tracor,options)
 % This function overlays atlas data over 2d-slice views to be exported by
 % LEAD-DBS. The function is called from ea_writeplanes.m
 % __________________________________________________________________________________
@@ -190,6 +190,11 @@ for atlas=showidx
                                     %                                    plot(cscale(1,startPoint:ix(plots)),cscale(2,startPoint:ix(plots)),'color',options.d2.con_color,'LineWidth',0.5);
                                     startPoint=ix(plots)+1;
                                 end
+                            end
+                            if ~exist('allcontour','var')
+                                allcontour=cscale;
+                            else
+                                allcontour=[allcontour,cscale];
                             end
                         end
                     end

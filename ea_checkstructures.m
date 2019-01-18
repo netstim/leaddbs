@@ -297,8 +297,11 @@ for cts=cortrasag
     Vs={Vtra,Vcor,Vsag};
     options.sides=1;
     evalin('base','custom_cont=2;');
-
-    [hf,img,bb]=ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'off',2);
+    contour=getappdata(handles.checkstructures,'contour');
+    if isempty(contour)
+        clear contour
+    end
+    [hf,img,bb,contour{cts}]=ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'off',2);
     bbs=getappdata(handles.checkstructures,'bbs');
     if isempty(bbs)
         clear bbs
@@ -306,6 +309,7 @@ for cts=cortrasag
     bbs(cts).mm=bb;
     bbs(cts).imgdim=size(img);
     setappdata(handles.checkstructures,'bbs',bbs);
+    setappdata(handles.checkstructures,'contour',contour);
     axes(handles.(views{cts}));
     voxdepth=Vs{1}.mat\[options.d2.depth,1]';
     voxz=voxdepth(ea_view2coord(cts));
@@ -501,11 +505,13 @@ set(handles.discardfiducial,'visible','off');
 set(handles.refinestatus,'String','Great, correction added! Remember to re-run an ANTs-based normalization for changes to take effect.');
 ea_busyaction('on',handles.checkstructures,'normcheckstructures');
 linefiducial=getappdata(handles.checkstructures,'linefiducial');
+clinefiducial=getappdata(handles.checkstructures,'clinefiducial');
 fiducialview=getappdata(handles.checkstructures,'fiducialview');
 bbs=getappdata(handles.checkstructures,'bbs'); % bounding boxes of views
 thisbb=bbs(fiducialview);
 %linefiducial(:,1)=thisbb.imgdim(1)-linefiducial(:,1);
 [planedim,onedim,secdim]=ea_getdims(fiducialview,1);
+
 
 linefiducial(:,secdim)=thisbb.imgdim(1)-linefiducial(:,secdim);
 expmm=zeros(size(linefiducial));
@@ -519,13 +525,27 @@ expmm(:,secdim)=linefiducial(:,secdim)./thisbb.imgdim(2)... % scale from 0 to 1
     *diff([thisbb.mm{secdim}(1),thisbb.mm{secdim}(end)])... % scale from 0 to fov size in mm
     +smallestentry([thisbb.mm{secdim}(1),thisbb.mm{secdim}(end)]); % shift to correct bb
 
+
+clinefiducial(:,secdim)=thisbb.imgdim(1)-clinefiducial(:,secdim);
+cexpmm=zeros(size(clinefiducial));
+cexpmm(:,planedim)=thisbb.mm{planedim}(1); % all entries should be equal.
+
+cexpmm(:,onedim)=clinefiducial(:,onedim)./thisbb.imgdim(1)... % scale from 0 to 1
+    *abs(diff([thisbb.mm{onedim}(1),thisbb.mm{onedim}(end)]))... % scale from 0 to fov size in mm
+    +smallestentry([thisbb.mm{onedim}(1),thisbb.mm{onedim}(end)]); % shift to correct bb
+
+cexpmm(:,secdim)=clinefiducial(:,secdim)./thisbb.imgdim(2)... % scale from 0 to 1
+    *diff([thisbb.mm{secdim}(1),thisbb.mm{secdim}(end)])... % scale from 0 to fov size in mm
+    +smallestentry([thisbb.mm{secdim}(1),thisbb.mm{secdim}(end)]); % shift to correct bb
+
+
 uuid=getappdata(handles.checkstructures,'fidguiid');
 if isempty(uuid)
     uuid=ea_generate_uuid;
     setappdata(handles.checkstructures,'fidguiid',uuid);
 end
-% export fiducial in template space:
-if 0 % could be done for debugging.
+
+if 0 % export fiducial in template space - could be done for debugging.
     ea_mkdir([ea_space,'fiducials']);
     nii=ea_load_nii([ea_space,'t1.nii']);
     expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
@@ -535,15 +555,17 @@ if 0 % could be done for debugging.
     nii.fname=[uuid,'.nii'];
     ea_write_nii(nii);
 end
-
-% map points to closest point on atlas:
-atlfv=getappdata(handles.checkstructures,'fv'); % get current atlas
-allatlcoords=[];
-for entry=1:length(atlfv)
-    try allatlcoords=[allatlcoords;atlfv{entry}.vertices]; end
+map3d=0;
+if map3d % this could be used to map in 3D instead of 2D - then could be incongruent to visualization which is in 2D 
+    % map points to closest point on atlas:
+    atlfv=getappdata(handles.checkstructures,'fv'); % get current atlas
+    allatlcoords=[];
+    for entry=1:length(atlfv)
+        try allatlcoords=[allatlcoords;atlfv{entry}.vertices]; end
+    end
+    [idx,d]=knnsearch(allatlcoords,expmm);
+    cexpmm=allatlcoords(idx(d<3.5),:); % ignore fiducials further away than 3.5 mm
 end
-[idx,d]=knnsearch(allatlcoords,expmm);
-atlmm=allatlcoords(idx(d<3.5),:); % ignore fiducials further away than 3.5 mm
 
 % export this mapping in template space:
 ea_mkdir([ea_space,'fiducials']);
@@ -555,7 +577,7 @@ if ~exist([ea_space,'fiducials',filesep,uuid,'.nii'],'file')
 else
     nii=ea_load_nii([ea_space,'fiducials',filesep,uuid,'.nii']);
 end
-atlvx=nii.mat\[atlmm,ones(size(atlmm,1),1)]';
+atlvx=nii.mat\[cexpmm,ones(size(cexpmm,1),1)]';
 atlvx=round(atlvx(1:3,:))';
 nii.img(sub2ind(size(nii.img),(atlvx(:,1)),(atlvx(:,2)),(atlvx(:,3))))=2^16-1; % max val of uint 16 bit
 

@@ -1,4 +1,4 @@
-function [cuts,expslice,boundboxmm]=ea_writeplanes(varargin)
+function [cuts,expslice,boundboxmm,allcontour]=ea_writeplanes(varargin)
 
 % This function exports slice views of all electrode contacts reconstructed
 % priorly. Images are written as .png image files. Bot transversal and
@@ -188,7 +188,7 @@ for side=1:length(options.sides)
                     options.atlases = atlases;
                 end
                 if isfield(options, 'atlases') || ~strcmp(options.atlasset, 'Use none')
-                    cuts = ea_add_overlay(boundboxmm, cuts, tracor, options);
+                    [cuts,allcontour] = ea_add_overlay(boundboxmm, cuts, tracor, options);
                 end
             end
             set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});

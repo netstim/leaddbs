@@ -89,6 +89,8 @@ end
 %Reset hold value of the axis
 if ~oldhold, hold off; end 
 
+ea_setatlascline(handles);
+
 function wbmfcn(varargin)
 lineobj = getappdata(gcf,'lineobj');
 if strcmp(get(gcf,'selectiontype'),'normal');
