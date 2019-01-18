@@ -25,7 +25,7 @@ else
 end
 
 if length(dim) < 2
-	width = 5;
+	width = ceil(dim(1)/16);
 else
 	width = dim(2);
 end
@@ -45,17 +45,45 @@ switch lower(orientation)
         % Remove ticks we dont want.
         set(gca, 'xtick', []);
         set(gca,'YAxisLocation','right')
-        set(gca, 'ytick', tick);
-        set(gca, 'yticklabel', ticklabel);
+        if exist('tick', 'var')
+            set(gca, 'ytick', tick);
+            if exist('ticklabel', 'var')
+                if length(tick) == length(ticklabel)
+                    set(gca, 'yticklabel', ticklabel);
+                else
+                    error('tick and ticklabel should have the same length!');
+                end
+            else
+                error('Please also specify ticklabel!');
+            end
+        else
+            tick = get(gca, 'ytick');
+            set(gca, 'ytick', [0.5, tick]);
+            set(gca, 'yticklabel', [0, tick]);
+        end
 
     case {'h', 'horz', 'horizontal'}
         h = image(repmat(cat(3, map(:,1)', map(:,2)', map(:,3)'), width, 1));
 
         % Remove ticks we dont want.
-        set(gca, 'ytick', 0);
+        set(gca, 'ytick', []);
 
-        set(gca, 'xtick', tick);
-        set(gca, 'xticklabel', ticklabel);
+        if exist('tick', 'var')
+            set(gca, 'xtick', tick);
+            if exist('ticklabel', 'var')
+                if length(tick) == length(ticklabel)
+                    set(gca, 'xticklabel', ticklabel);
+                else
+                    error('tick and ticklabel should have the same length!');
+                end
+            else
+                error('Please also specify ticklabel!');
+            end
+        else
+            tick = get(gca, 'xtick');
+            set(gca, 'xtick', [0.5, tick]);
+            set(gca, 'xticklabel', [0, tick]);
+        end
 
     otherwise
         error('Unknown colorbar orientation!');
