@@ -566,6 +566,7 @@ ea_write_nii(nii);
 expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
 options=getappdata(handles.checkstructures,'options');
 directory=[options.root,options.patientname,filesep];
+options=ea_assignpretra(options);
 [~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
 
 ea_mkdir([directory,'fiducials']);

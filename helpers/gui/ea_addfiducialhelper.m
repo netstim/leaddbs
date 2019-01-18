@@ -94,7 +94,7 @@ for f=1:length(fid)
 end
 
 % flatten ROI:
-
+if length(tfis)>1
 fguid=ea_generate_uuid;
 matlabbatch{1}.spm.util.imcalc.input = tfis';
 matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
@@ -107,8 +107,14 @@ matlabbatch{1}.spm.util.imcalc.options.interp = 1;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
 spm_jobman('run',{matlabbatch});
 smoothgzip([ea_space,'fiducials'],[fguid,'.nii']);
+else
+    [pathn,filenn]=fileparts(tfis{1});
+    smoothgzip(pathn,[filenn,'.nii']);
+end
 ea_delete(tfis);
+
 for pt=1:length(uipatdir)
+    if length(pfis{pt})>1
     matlabbatch{1}.spm.util.imcalc.input = pfis{pt}';
     matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
     matlabbatch{1}.spm.util.imcalc.outdir = {[uipatdir{pt},filesep,'fiducials']};
@@ -120,6 +126,10 @@ for pt=1:length(uipatdir)
     matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
     spm_jobman('run',{matlabbatch});
     smoothgzip([uipatdir{pt},filesep,'fiducials'],[fguid,'.nii']);
+    else
+        [pathn,filenn]=fileparts(pfis{pt}{1});
+        smoothgzip(pathn,[filenn,'.nii']);
+    end
     ea_delete(pfis{pt});
 end
 
