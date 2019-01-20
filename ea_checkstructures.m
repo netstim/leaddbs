@@ -696,5 +696,7 @@ if ~isempty(uuid)
         gzip(fullfile(pathn,filen));
         delete(fullfile(pathn,filen));
     end
+    disp('Done.');
+else
+        delete(hObject);
 end
-disp('Done.');
