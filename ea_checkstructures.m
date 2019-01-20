@@ -232,7 +232,7 @@ if strcmp(h.Label,'ALL')
     xyz=[];
     for i=1:numel(fv)
         try % some are empty in case of midline/mixed structures
-       xyz=[xyz;fv{i}.vertices]; 
+            xyz=[xyz;fv{i}.vertices];
         end
     end
     pixdim=pixdim{1};
@@ -242,7 +242,7 @@ else
     fv=atlases.fv(six,:);
     pixdim=atlases.pixdim(six,:);
     if length(fv)>1
-            xyz=[];
+        xyz=[];
         for i=1:numel(fv)
             try % some are empty in case of midline/mixed structures
                 xyz=[xyz;fv{i}.vertices];
@@ -311,9 +311,9 @@ for cts=cortrasag
     end
     options.d2.showlegend=0;
     if strcmp(h.Label,'ALL')
-       options.d2.showstructures=ea_rmext(atlases.names); 
+        options.d2.showstructures=ea_rmext(atlases.names);
     else
-    options.d2.showstructures={h.Label};
+        options.d2.showstructures={h.Label};
     end
     modality=getappdata(handles.checkstructures,'modality');
     
@@ -580,7 +580,7 @@ if 0 % export fiducial in template space - could be done for debugging.
     ea_write_nii(nii);
 end
 map3d=0;
-if map3d % this could be used to map in 3D instead of 2D - then could be incongruent to visualization which is in 2D 
+if map3d % this could be used to map in 3D instead of 2D - then could be incongruent to visualization which is in 2D
     % map points to closest point on atlas:
     atlfv=getappdata(handles.checkstructures,'fv'); % get current atlas
     allatlcoords=[];
@@ -591,42 +591,14 @@ if map3d % this could be used to map in 3D instead of 2D - then could be incongr
     cexpmm=allatlcoords(idx(d<3.5),:); % ignore fiducials further away than 3.5 mm
 end
 
-% export this mapping in template space:
-ea_mkdir([ea_space,'fiducials']);
-if ~exist([ea_space,'fiducials',filesep,uuid,'.nii'],'file')
-    nii=ea_load_nii([ea_space,'t1.nii']);
-    nii.fname=[ea_space,'fiducials',filesep,uuid,'.nii'];
-    nii.dt=[512,0]; % uint 16 bit
-    nii.img(:)=0;
-else
-    nii=ea_load_nii([ea_space,'fiducials',filesep,uuid,'.nii']);
-end
-atlvx=nii.mat\[cexpmm,ones(size(cexpmm,1),1)]';
-atlvx=round(atlvx(1:3,:))';
-nii.img(sub2ind(size(nii.img),(atlvx(:,1)),(atlvx(:,2)),(atlvx(:,3))))=2^16-1; % max val of uint 16 bit
 
-ea_write_nii(nii);
-
-
-% now project fids back to native space and export mapping there:
-expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
-options=getappdata(handles.checkstructures,'options');
-directory=[options.root,options.patientname,filesep];
-options=ea_assignpretra(options);
-[~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
-
-ea_mkdir([directory,'fiducials']);
-if ~exist([directory,'fiducials',filesep,uuid,'.nii'],'file')
-    nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
-    nii.fname=[directory,'fiducials',filesep,uuid,'.nii'];
-    nii.dt=[512,0]; % uint 16 bit
-    nii.img(:)=0;
-else
-    nii=ea_load_nii([directory,'fiducials',filesep,uuid,'.nii']);
-end
-subcvx=round(subcvx(1:3,:))';
-nii.img(sub2ind(size(nii.img),(subcvx(:,1)),(subcvx(:,2)),(subcvx(:,3))))=2^16-1; % max val of uint 16 bit
-ea_write_nii(nii);
+% append corrections to list.
+allcexpmm=getappdata(handles.checkstructures,'allcexpmm');
+allexpmm=getappdata(handles.checkstructures,'allexpmm');
+allcexpmm=[allcexpmm;cexpmm];
+allexpmm=[allexpmm;expmm];
+setappdata(handles.checkstructures,'allcexpmm',allcexpmm);
+setappdata(handles.checkstructures,'allexpmm',allexpmm);
 
 ea_csremovedrawings(handles);
 %ea_updateviews(options,handles,1:3)
@@ -654,10 +626,57 @@ function checkstructures_CloseRequestFcn(hObject, eventdata, handles)
 
 % Hint: delete(hObject) closes the figure
 uuid=getappdata(handles.checkstructures,'fidguiid');
-options=getappdata(handles.checkstructures,'options');
-delete(hObject);
-
 if ~isempty(uuid)
+    disp('Adding corrections to fiducial markers...');
+    
+    options=getappdata(handles.checkstructures,'options');
+    cexpmm=getappdata(handles.checkstructures,'allcexpmm');
+    expmm=getappdata(handles.checkstructures,'allexpmm');
+    
+    delete(hObject);
+    
+    
+    
+    % export this mapping in template space:
+    ea_mkdir([ea_space,'fiducials']);
+    if ~exist([ea_space,'fiducials',filesep,uuid,'.nii'],'file')
+        nii=ea_load_nii([ea_space,'t1.nii']);
+        nii.fname=[ea_space,'fiducials',filesep,uuid,'.nii'];
+        nii.dt=[16,0];
+        nii.img(:)=0;
+    else
+        nii=ea_load_nii([ea_space,'fiducials',filesep,uuid,'.nii']);
+    end
+    atlvx=nii.mat\[cexpmm,ones(size(cexpmm,1),1)]';
+    atlvx=round(atlvx(1:3,:))';
+    
+    nii.img(sub2ind(size(nii.img),(atlvx(:,1)),(atlvx(:,2)),(atlvx(:,3))))=1;
+    
+    ea_write_nii(nii);
+    
+    
+    % now project fids back to native space and export mapping there:
+    expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
+    directory=[options.root,options.patientname,filesep];
+    options=ea_assignpretra(options);
+    [~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
+    
+    ea_mkdir([directory,'fiducials']);
+    if ~exist([directory,'fiducials',filesep,uuid,'.nii'],'file')
+        nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
+        nii.fname=[directory,'fiducials',filesep,uuid,'.nii'];
+        nii.dt=[16,0];
+        nii.img(:)=0;
+    else
+        nii=ea_load_nii([directory,'fiducials',filesep,uuid,'.nii']);
+    end
+    subcvx=round(subcvx(1:3,:))';
+    nii.img(sub2ind(size(nii.img),(subcvx(:,1)),(subcvx(:,2)),(subcvx(:,3))))=1;
+    ea_write_nii(nii);
+    
+    
+    
+    
     for pttemp=1:2
         switch pttemp
             case 1 % native
@@ -678,3 +697,4 @@ if ~isempty(uuid)
         delete(fullfile(pathn,filen));
     end
 end
+disp('Done.');

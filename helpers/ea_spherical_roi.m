@@ -2,7 +2,7 @@ function ea_spherical_roi(fname,mni,r,crop,template)
 if ~exist('crop','var')
     crop=1;
 end
-if ~exist('template','var')
+if exist('template','var')
     Vol=ea_load_nii(template);
     
     

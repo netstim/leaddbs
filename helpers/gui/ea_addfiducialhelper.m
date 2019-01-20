@@ -5,14 +5,14 @@ cnt=1;
 while 1
     try close(TPpoint); end
     uuid{cnt}=ea_generate_uuid;
-
+    
     % choose in template:
     spm('defaults', 'fmri');
     Fgraph = spm_figure('GetWin', 'Graphics');
     movegui(Fgraph,'northwest');
     Finter = spm('FnUIsetup','Select Fiducials', 0);
     movegui(Finter,'south');
-
+    
     figure(Fgraph); clf;
     
     spm_orthviews('Reset');
@@ -37,10 +37,10 @@ while 1
     % choose in patient(s):
     
     for pt=1:length(uipatdir)
-      
-            options=ea_getptopts([uipatdir{pt},filesep]);
-            [~,presentfiles]=ea_assignpretra(options);
-            ptspace{pt}=[uipatdir{pt},filesep,presentfiles{1}];
+        
+        options=ea_getptopts([uipatdir{pt},filesep]);
+        [~,presentfiles]=ea_assignpretra(options);
+        ptspace{pt}=[uipatdir{pt},filesep,presentfiles{1}];
         
         figure(Fgraph); clf;
         spm_orthviews('Reset');
@@ -63,7 +63,7 @@ while 1
     try close(Fgraph); end
     try close(Finter); end
     try close(TPpoint); end
-
+    
     fid(cnt).template=tppos;
     fid(cnt).patient=patpos;
     cnt=cnt+1;
@@ -95,18 +95,18 @@ end
 
 % flatten ROI:
 if length(tfis)>1
-fguid=ea_generate_uuid;
-matlabbatch{1}.spm.util.imcalc.input = tfis';
-matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
-matlabbatch{1}.spm.util.imcalc.outdir = {[ea_space,'fiducials']};
-matlabbatch{1}.spm.util.imcalc.expression = 'sum(X)';
-matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
-matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
-matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
-spm_jobman('run',{matlabbatch});
-smoothgzip([ea_space,'fiducials'],[fguid,'.nii']);
+    fguid=ea_generate_uuid;
+    matlabbatch{1}.spm.util.imcalc.input = tfis';
+    matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
+    matlabbatch{1}.spm.util.imcalc.outdir = {[ea_space,'fiducials']};
+    matlabbatch{1}.spm.util.imcalc.expression = 'mean(X)';
+    matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+    matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
+    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+    matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
+    spm_jobman('run',{matlabbatch});
+    smoothgzip([ea_space,'fiducials'],[fguid,'.nii']);
 else
     [pathn,filenn]=fileparts(tfis{1});
     smoothgzip(pathn,[filenn,'.nii']);
@@ -115,17 +115,17 @@ ea_delete(tfis);
 
 for pt=1:length(uipatdir)
     if length(pfis{pt})>1
-    matlabbatch{1}.spm.util.imcalc.input = pfis{pt}';
-    matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
-    matlabbatch{1}.spm.util.imcalc.outdir = {[uipatdir{pt},filesep,'fiducials']};
-    matlabbatch{1}.spm.util.imcalc.expression = 'sum(X)';
-    matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
-    matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
-    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-    matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
-    spm_jobman('run',{matlabbatch});
-    smoothgzip([uipatdir{pt},filesep,'fiducials'],[fguid,'.nii']);
+        matlabbatch{1}.spm.util.imcalc.input = pfis{pt}';
+        matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
+        matlabbatch{1}.spm.util.imcalc.outdir = {[uipatdir{pt},filesep,'fiducials']};
+        matlabbatch{1}.spm.util.imcalc.expression = 'mean(X)';
+        matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+        matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
+        matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+        matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+        matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
+        spm_jobman('run',{matlabbatch});
+        smoothgzip([uipatdir{pt},filesep,'fiducials'],[fguid,'.nii']);
     else
         [pathn,filenn]=fileparts(pfis{pt}{1});
         smoothgzip(pathn,[filenn,'.nii']);
