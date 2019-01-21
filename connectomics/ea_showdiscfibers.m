@@ -126,7 +126,7 @@ fibcolor=mat2cell(colors,ones(size(fibcolorInd)));
 [h.FaceColor]=fibcolor{:};
 [h.FaceAlpha]=fibalpha{:};
 
-% Create colorbar
+% Set colorbar tick positions and labels
 cbvals = tvals(logical(alphas));
 % cbvals=tvalsRescale(logical(alphas));
 if showpositiveonly
@@ -143,8 +143,10 @@ else
     ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
     ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
 end
-cbfig = figure('Name', 'Colorbar', 'NumberTitle', 'off');
-ea_plot_colorbar(cbmap, length(cbmap), 'v', '', tick, ticklabel);
+
+% Plot colorbar
+cbfig = ea_plot_colorbar(cbmap, [], 'v', '', tick, ticklabel);
+set(cbfig, 'NumberTitle', 'off');
 setappdata(resultfig, 'cbfig', cbfig);
 
 
