@@ -10,7 +10,7 @@ function h = ea_plot_colorbar(cmap, width, orientation, titletxt, tick, ticklabe
 %     label: tick labels
 %
 % Output:
-%     handle to the colorbar image
+%     handle to the colorbar image figure
 %
 % Examples:
 %     h = ea_plot_colorbar(colormap, 10, 'h', 'Cool');
@@ -30,9 +30,10 @@ if ~exist('titletxt', 'var')
     titletxt = '';
 end
 
+h = figure('Name', 'Colorbar');
 switch lower(orientation)
     case {'v', 'vert', 'vertical'}
-        h = image(repmat(cat(3, map(:,1), map(:,2), map(:,3)), 1, width));
+        image(repmat(cat(3, map(:,1), map(:,2), map(:,3)), 1, width));
 
         % Remove xticks
         set(gca, 'xtick', []);
