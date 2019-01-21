@@ -10,7 +10,7 @@ end
 function ea_antsnl_monostep(props)
 directory=props.directory;
 refinewarp=0;
-if exist([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)],'file') % prior ANTs transform found.
+if exist([props.outputbase,'Composite',ea_getantstransformext(directory)],'file') % prior ANTs transform found.
     prefs=ea_prefs;
     switch prefs.machine.normsettings.ants_usepreexisting
         case 1 % ask
@@ -21,8 +21,8 @@ if exist([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransforme
                     props.rigidstage='';
                     props.affinestage='';
                 case 'start from scratch'
-                    ea_delete([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])
-                    ea_delete([fileparts(props.moving),filesep,'glanatInverseComposite',ea_getantstransformext(directory)])
+                    ea_delete([props.outputbase,'Composite',ea_getantstransformext(directory)])
+                    ea_delete([props.outputbase,'InverseComposite',ea_getantstransformext(directory)])
                     refinewarp=0;
             end
         case 2 % reuse
@@ -33,15 +33,15 @@ if exist([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransforme
             % clean old deformation field. this is important for cases where ANTs
             % crashes and the user does not get an error back. Then, preexistant old transforms
             % will be considered as new ones.
-            ea_delete([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])
-            ea_delete([fileparts(props.moving),filesep,'glanatInverseComposite',ea_getantstransformext(directory)])
+            ea_delete([props.outputbase,'Composite',ea_getantstransformext(directory)])
+            ea_delete([props.outputbase,'InverseComposite',ea_getantstransformext(directory)])
             refinewarp=0;
     end
 end
 
 if refinewarp
      initreg=[' --write-composite-transform 0', ...
-                ' --initial-moving-transform ',ea_path_helper([fileparts(props.moving),filesep,'glanatComposite',ea_getantstransformext(directory)])];
+                ' --initial-moving-transform ',ea_path_helper([props.outputbase,'Composite',ea_getantstransformext(directory)])];
 else
     initreg=[' --write-composite-transform 1', ...
     ' --initial-moving-transform [', props.fixed, ',', props.moving, ',0]'];
