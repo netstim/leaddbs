@@ -24,8 +24,15 @@ function [lineobj,xs,ys] = ea_freehanddraw(ax,handles,drawvoxz,varargin)
 % 3/29/05
 % Modified:
 % 10/05/05: Now allows double-click closing of contour
+trafun=get(handles.tra,'ButtonDownFcn');
+set(handles.tra,'ButtonDownFcn', '');
+corfun=get(handles.cor,'ButtonDownFcn');
+set(handles.cor,'ButtonDownFcn', '');
+sagfun=get(handles.sag,'ButtonDownFcn');
+set(handles.sag,'ButtonDownFcn', '');
 
-	
+set(handles.discardfiducial,'Visible','off');
+set(handles.approvefiducial,'Visible','off');
 ea_csremovedrawings(handles);	
 %Get current figure and axis parameters
 oldvals = get(gcf);
@@ -90,6 +97,10 @@ end
 if ~oldhold, hold off; end 
 
 ea_setatlascline(handles);
+setappdata(handles.checkstructures,'bdfuns',{trafun,corfun,sagfun});
+% set(handles.tra,'ButtonDownFcn', trafun);
+% set(handles.cor,'ButtonDownFcn', corfun);
+% set(handles.sag,'ButtonDownFcn', sagfun);
 
 function wbmfcn(varargin)
 lineobj = getappdata(gcf,'lineobj');

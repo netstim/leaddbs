@@ -604,6 +604,12 @@ ea_csremovedrawings(handles);
 %ea_updateviews(options,handles,1:3)
 ea_busyaction('off',handles.checkstructures,'normcheckstructures');
 
+funs=getappdata(handles.checkstructures,'bdfuns');
+set(handles.tra,'ButtonDownFcn', funs{1});
+set(handles.cor,'ButtonDownFcn', funs{2});
+set(handles.sag,'ButtonDownFcn', funs{3});
+
+
 
 function v=smallestentry(ay)
 ay=sort(ay,'ascend');
