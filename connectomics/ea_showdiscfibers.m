@@ -64,10 +64,13 @@ end
 
 set(0,'CurrentFigure',resultfig);
 
-% tvals for thresholding
+% Normalize vals
+vals(isnan(vals))=0;
+vals=vals./max(abs(vals));
+
+% vals and fibcell to be trimmed for visualization
 tvals=vals;
-tvals(isnan(tvals))=0;
-tvals=tvals./max(abs(tvals));
+tfibcell=fibcell;
 
 % Calculate positive/negative threshold for positive/negative predictive
 % fibers according to 'predthreshold'
@@ -76,6 +79,13 @@ negits=tvals(tvals<0);
 posits=sort(posits,'descend');
 negits=sort(negits,'ascend');
 posthresh=posits(round(length(posits)*predthreshold));
+
+% Save the original values for reusing in slider
+setappdata(resultfig, 'vals', vals);
+setappdata(resultfig, 'fibcell', fibcell);
+setappdata(resultfig, 'posits', posits);
+setappdata(resultfig, 'negits', negits);
+setappdata(resultfig, 'showpositiveonly', showpositiveonly);
 
 if showpositiveonly
     negthresh = negits(1)-eps;
@@ -89,7 +99,7 @@ end
 % Remove tvals and fibers outside the thresholding range
 remove=logical(logical(tvals<posthresh) .* logical(tvals>negthresh));
 tvals(remove)=[];
-fibcell(remove)=[];
+tfibcell(remove)=[];
 
 % Rescale positive/negative tvals to [0 1]/[-1 0]
 tvalsRescale = tvals;
@@ -114,7 +124,7 @@ alphas(round(fibcolorInd)>=poslowerBound) = 1;
 fibalpha=mat2cell(alphas,ones(size(fibcolorInd,1),1));
 
 % Plot fibers
-h=streamtube(fibcell,0.2);
+h=streamtube(tfibcell,0.2);
 nones=repmat({'none'},size(fibcolorInd));
 [h.EdgeColor]=nones{:};
 
@@ -125,6 +135,8 @@ fibcolor=mat2cell(colors,ones(size(fibcolorInd)));
 % Set fiber colors and alphas
 [h.FaceColor]=fibcolor{:};
 [h.FaceAlpha]=fibalpha{:};
+
+setappdata(resultfig, 'discfibers', h);
 
 % Set colorbar tick positions and labels
 cbvals = tvals(logical(alphas));
