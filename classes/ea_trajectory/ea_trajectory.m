@@ -256,7 +256,11 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     end
 
     % add toggle button:
-    [~, ptname] = fileparts(fileparts(obj.options.root));
+    if isfield(obj.elstruct, 'name') && ~isempty(obj.elstruct.name)
+        ptname = obj.elstruct.name;
+    else
+        [~, ptname] = fileparts(fileparts(obj.options.root));
+    end
 
     % Side label
     switch obj.side
