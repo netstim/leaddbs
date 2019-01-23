@@ -390,6 +390,13 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
 currvol=presentfiles{activevolume};
 
+ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
+[options,anatspresent]=ea_assignpretra(options);
+for fi=2:length(anatspresent)
+    ea_delete([options.root,options.patientname,filesep,'gl',anatspresent{fi}]);
+end
+
+
 switch ea_stripex(currvol)
     case ea_stripex(options.prefs.gprenii)
         options.normalize.method=getappdata(handles.leadfigure,'normmethod');
