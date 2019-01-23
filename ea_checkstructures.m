@@ -623,6 +623,10 @@ function discardfiducial_Callback(hObject, eventdata, handles)
 set(handles.approvefiducial,'visible','off');
 set(handles.discardfiducial,'visible','off');
 ea_csremovedrawings(handles);
+funs=getappdata(handles.checkstructures,'bdfuns');
+set(handles.tra,'ButtonDownFcn', funs{1});
+set(handles.cor,'ButtonDownFcn', funs{2});
+set(handles.sag,'ButtonDownFcn', funs{3});
 
 % --- Executes when user attempts to close checkstructures.
 function checkstructures_CloseRequestFcn(hObject, eventdata, handles)
