@@ -52,6 +52,11 @@ try % also open up checkreg in case of dMRI check registrations
     end
 end
 
+options.normalize.refine=0;
+try
+    options.normalize.refine=get(handles.refinefit,'Value');
+end
+
 try % not working when calling from lead_anatomy
     options.coregmr.check=(get(handles.coregmrcheck,'Value') == get(handles.coregmrcheck,'Max'));
 catch

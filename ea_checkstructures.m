@@ -627,7 +627,10 @@ function checkstructures_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 uuid=getappdata(handles.checkstructures,'fidguiid');
 if ~isempty(uuid)
+    
+    
     disp('Adding corrections to fiducial markers...');
+    disp('Remember that changes only take effect if you rerun ANTs-based normalization!');
     
     options=getappdata(handles.checkstructures,'options');
     cexpmm=getappdata(handles.checkstructures,'allcexpmm');
@@ -697,6 +700,18 @@ if ~isempty(uuid)
         delete(fullfile(pathn,filen));
     end
     disp('Done.');
+    
+    % unapprove normalization since should be redone:
+    directory=[options.root,options.patientname,filesep];
+    approved=load([directory,'ea_coreg_approved.mat']);
+    approved.(ea_stripex(options.prefs.gprenii))=0;
+    save([directory,'ea_coreg_approved.mat'],'-struct','approved');
+    
+    if strcmp(computer('arch'),'maci64')
+        system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripex(options.prefs.gprenii),'.nii'])]);
+    end
+    
+    
 else
         delete(hObject);
 end

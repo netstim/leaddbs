@@ -209,6 +209,10 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             ea_subcorticalrefine(options);
         end
     end
+    
+    if options.normalize.refine
+       ea_checkstructures(options); 
+    end
 
 if options.ecog.extractsurface.do
    switch options.ecog.extractsurface.method

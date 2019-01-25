@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 01-Oct-2018 10:34:41
+% Last Modified by GUIDE v2.5 25-Jan-2019 09:22:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1902,3 +1902,12 @@ function surfacemethod_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in refinefit.
+function refinefit_Callback(hObject, eventdata, handles)
+% hObject    handle to refinefit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of refinefit
