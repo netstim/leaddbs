@@ -62,13 +62,13 @@ guidata(hObject, handles);
 
 
 
-set(handles.checkstructures,'Name','Check registration of specific structures.');
 
 
 
 % add atlases contextmenu
 
 options=varargin{1};
+set(handles.checkstructures,'Name',['Check registration of specific structures: ',options.patientname]);
 options.atlasset = 'DISTAL Minimal (Ewert 2017)'; % Force atlas to Distal for checkstructures (so it does not matter which atlas is set in the lead DBS window)
 
 setappdata(handles.checkstructures,'options',options);
