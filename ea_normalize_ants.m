@@ -234,7 +234,7 @@ anatfile=strrep(anatfile,'anat_','');
 anatfile=strrep(anatfile,'.nii','');
 
 for avtpl=1:length(spacedef.templates)
-    if ismember(anatfile,spacedef.norm_mapping{avtpl})
+    if contains(anatfile,spacedef.norm_mapping{avtpl}) % e.g. anat_t22 would still use t2 template
         template2use=spacedef.templates{avtpl};
         return
     end
