@@ -313,15 +313,22 @@ for side=1:length(options.sides)
                 elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
                 
                 if isstruct(elstruct) && ((elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts))
-                    wstr='w';
+                    wstr=[1,1,1];
+                    if isfield(elstruct,'group')
+                    wstr=elstruct(c).groupcolors(elstruct(c).group,:);
+                    
+                    end
+                    estr=wstr./2;
                     if options.d3.hlactivecontacts
                         if elstruct(c).activecontacts{side}(elcnt)
-                            wstr='r';
+                            %wstr='r';
+                            estr='r';
                         end
                     end
+                    
                     if options.d2.fid_overlay
                         
-                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4);
+                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'o','MarkerSize',10,'MarkerEdgeColor',estr,'MarkerFaceColor',wstr,'LineWidth',2);
                     end
                 end
             end
