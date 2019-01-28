@@ -532,6 +532,11 @@ try
     close(cbfig)
 end
 
+discfiberscontrol=getappdata(gcf,'discfiberscontrol');
+try
+    close(discfiberscontrol)
+end
+
 delete(gcf)
 
 

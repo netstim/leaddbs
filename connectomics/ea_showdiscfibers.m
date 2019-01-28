@@ -83,6 +83,7 @@ posthresh=posits(round(length(posits)*predthreshold));
 % Save the original values for reusing in slider
 setappdata(resultfig, 'vals', vals);
 setappdata(resultfig, 'fibcell', fibcell);
+setappdata(resultfig, 'predthreshold', predthreshold);
 setappdata(resultfig, 'posits', posits);
 setappdata(resultfig, 'negits', negits);
 setappdata(resultfig, 'showpositiveonly', showpositiveonly);
@@ -160,6 +161,10 @@ end
 cbfig = ea_plot_colorbar(cbmap, [], 'v', '', tick, ticklabel);
 set(cbfig, 'NumberTitle', 'off');
 setappdata(resultfig, 'cbfig', cbfig);
+
+% Discriminative fiber control
+discfiberscontrol = ea_discfiberscontrol(resultfig);
+setappdata(resultfig, 'discfiberscontrol', discfiberscontrol);
 
 
 function [reforce,connectomechanged,reformat]=checkpresence(M,opts)
