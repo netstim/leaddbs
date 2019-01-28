@@ -17,6 +17,7 @@ function h = ea_plot_colorbar(cmap, width, orientation, titletxt, tick, ticklabe
 %     ea_plot_colorbar(jet(128), [], 'v', '');
 
 h = figure('Name', 'Colorbar');
+h.Position(3:4) = [370, 440];
 
 map = colormap(gcf, cmap);
 
