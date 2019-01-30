@@ -75,10 +75,6 @@ switch discfibers.showfibersset
         set(handles.showboth, 'Value', 1);
         set(handles.pospredthreshold, 'Enable', 'on');
         set(handles.negpredthreshold, 'Enable', 'on');
-    otherwise
-        set(handles.showboth, 'Value', 1);
-        set(handles.pospredthreshold, 'Enable', 'on');
-        set(handles.negpredthreshold, 'Enable', 'on');
 end
 set(handles.pospredthreshold, 'String', num2str(discfibers.pospredthreshold));
 set(handles.negpredthreshold, 'String', num2str(discfibers.negpredthreshold));
