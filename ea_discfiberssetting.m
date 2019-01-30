@@ -22,7 +22,7 @@ function varargout = ea_discfiberssetting(varargin)
 
 % Edit the above text to modify the response to help ea_discfiberssetting
 
-% Last Modified by GUIDE v2.5 15-Nov-2018 14:29:15
+% Last Modified by GUIDE v2.5 30-Jan-2019 09:32:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,8 +62,26 @@ guidata(hObject, handles);
 prefs = ea_prefs('');
 discfibers = prefs.machine.lg.discfibers;
 set(handles.connthreshold, 'String', num2str(discfibers.connthreshold));
-set(handles.predthreshold, 'String', num2str(discfibers.predthreshold));
-set(handles.showpositiveonly, 'Value', discfibers.showpositiveonly);
+switch discfibers.showfibersset
+    case 'positive'
+        set(handles.showposonly, 'Value', 1);
+        set(handles.pospredthreshold, 'Enable', 'on');
+        set(handles.negpredthreshold, 'Enable', 'off');
+    case 'negative'
+        set(handles.shownegonly, 'Value', 1);
+        set(handles.pospredthreshold, 'Enable', 'off');
+        set(handles.negpredthreshold, 'Enable', 'on');
+    case 'both'
+        set(handles.showboth, 'Value', 1);
+        set(handles.pospredthreshold, 'Enable', 'on');
+        set(handles.negpredthreshold, 'Enable', 'on');
+    otherwise
+        set(handles.showboth, 'Value', 1);
+        set(handles.pospredthreshold, 'Enable', 'on');
+        set(handles.negpredthreshold, 'Enable', 'on');
+end
+set(handles.pospredthreshold, 'String', num2str(discfibers.pospredthreshold));
+set(handles.negpredthreshold, 'String', num2str(discfibers.negpredthreshold));
 
 % UIWAIT makes ea_discfiberssetting wait for user response (see UIRESUME)
 % uiwait(handles.discfiberssetting);
@@ -102,18 +120,18 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-function predthreshold_Callback(hObject, eventdata, handles)
-% hObject    handle to predthreshold (see GCBO)
+function pospredthreshold_Callback(hObject, eventdata, handles)
+% hObject    handle to pospredthreshold (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of predthreshold as text
-%        str2double(get(hObject,'String')) returns contents of predthreshold as a double
+% Hints: get(hObject,'String') returns contents of pospredthreshold as text
+%        str2double(get(hObject,'String')) returns contents of pospredthreshold as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function predthreshold_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to predthreshold (see GCBO)
+function pospredthreshold_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pospredthreshold (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -122,15 +140,6 @@ function predthreshold_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-% --- Executes on button press in showpositiveonly.
-function showpositiveonly_Callback(hObject, eventdata, handles)
-% hObject    handle to showpositiveonly (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showpositiveonly
 
 
 % --- Executes on button press in savesetting.
@@ -142,9 +151,73 @@ function savesetting_Callback(hObject, eventdata, handles)
 prefs=ea_prefs('');
 discfibers = prefs.machine.lg.discfibers;
 discfibers.connthreshold = str2double(get(handles.connthreshold,'String'));
-discfibers.predthreshold = str2double(get(handles.predthreshold,'String'));
-discfibers.showpositiveonly = get(handles.showpositiveonly, 'Value');
+switch get(get(handles.showfiberssetpanel, 'SelectedObject'), 'Tag')
+    case 'showposonly'
+        discfibers.showfibersset = 'positive';
+    case 'shownegonly'
+        discfibers.showfibersset = 'negative';
+    case 'showboth'
+        discfibers.showfibersset = 'both';
+end
+discfibers.pospredthreshold = str2double(get(handles.pospredthreshold,'String'));
+discfibers.negpredthreshold = str2double(get(handles.negpredthreshold,'String'));
 
 ea_setprefs('lg.discfibers', discfibers);
 
 delete(handles.discfiberssetting);
+
+
+% --- Executes on button press in showposonly.
+function showposonly_Callback(hObject, eventdata, handles)
+% hObject    handle to showposonly (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of showposonly
+set(handles.pospredthreshold, 'Enable', 'on');
+set(handles.negpredthreshold, 'Enable', 'off');
+
+
+% --- Executes on button press in shownegonly.
+function shownegonly_Callback(hObject, eventdata, handles)
+% hObject    handle to shownegonly (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of shownegonly
+set(handles.pospredthreshold, 'Enable', 'off');
+set(handles.negpredthreshold, 'Enable', 'on');
+
+
+% --- Executes on button press in showboth.
+function showboth_Callback(hObject, eventdata, handles)
+% hObject    handle to showboth (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of showboth
+set(handles.pospredthreshold, 'Enable', 'on');
+set(handles.negpredthreshold, 'Enable', 'on');
+
+
+
+function negpredthreshold_Callback(hObject, eventdata, handles)
+% hObject    handle to negpredthreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of negpredthreshold as text
+%        str2double(get(hObject,'String')) returns contents of negpredthreshold as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function negpredthreshold_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to negpredthreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

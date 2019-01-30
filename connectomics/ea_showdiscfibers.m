@@ -8,8 +8,9 @@ tic
 
 % Get discriminative fiber setting
 connthreshold = discfiberssetting.connthreshold/100;
-predthreshold = discfiberssetting.predthreshold/100;
-showpositiveonly = discfiberssetting.showpositiveonly;
+showfibersset = discfiberssetting.showfibersset;
+pospredthreshold = discfiberssetting.pospredthreshold/100;
+negpredthreshold = discfiberssetting.negpredthreshold/100;
 
 % protocol selection to be able to check if same analysis has been run
 % before.
@@ -78,23 +79,28 @@ posits=tvals(tvals>0);
 negits=tvals(tvals<0);
 posits=sort(posits,'descend');
 negits=sort(negits,'ascend');
-posthresh=posits(round(length(posits)*predthreshold));
+posthresh=posits(round(length(posits)*pospredthreshold));
+negthresh=negits(round(length(negits)*negpredthreshold));
 
 % Save the original values for reusing in slider
 setappdata(resultfig, 'vals', vals);
 setappdata(resultfig, 'fibcell', fibcell);
-setappdata(resultfig, 'predthreshold', predthreshold);
+setappdata(resultfig, 'showfibersset', showfibersset);
+setappdata(resultfig, 'pospredthreshold', pospredthreshold);
+setappdata(resultfig, 'negpredthreshold', negpredthreshold);
 setappdata(resultfig, 'posits', posits);
 setappdata(resultfig, 'negits', negits);
-setappdata(resultfig, 'showpositiveonly', showpositiveonly);
 
-if showpositiveonly
-    negthresh = negits(1)-eps;
-    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(max(posits)), ')']);
-else
-    negthresh=negits(round(length(negits)*predthreshold));
-    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(max(posits)), ...
-          '); Negative (T = ',num2str(min(negits)),' ~ ',num2str(negthresh),').']);
+switch showfibersset
+    case 'positive'
+        negthresh = negits(1)-eps;
+        disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ')']);
+    case 'negative'
+        posthresh = posits(1)+eps;
+        disp(['Fiber colors: Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh), ')']);
+    case 'both'
+        disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ...
+          '); Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh),').']);
 end
 
 % Remove tvals and fibers outside the thresholding range
@@ -118,9 +124,16 @@ colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
 negUpperBound=ceil(size(map,1)/2*colorbarThreshold);
 poslowerBound=floor((size(map,1)-size(map,1)/2*colorbarThreshold));
 alphas=zeros(size(fibcolorInd,1),1);
-if ~showpositiveonly
-    alphas(round(fibcolorInd)<=negUpperBound) = 1;
+switch showfibersset
+    case 'positive'
+        alphas(round(fibcolorInd)>=poslowerBound) = 1;
+    case 'negative'
+        alphas(round(fibcolorInd)<=negUpperBound) = 1;
+    case 'both'
+        alphas(round(fibcolorInd)>=poslowerBound) = 1;
+        alphas(round(fibcolorInd)<=negUpperBound) = 1;
 end
+
 alphas(round(fibcolorInd)>=poslowerBound) = 1;
 fibalpha=mat2cell(alphas,ones(size(fibcolorInd,1),1));
 
@@ -142,19 +155,26 @@ setappdata(resultfig, 'discfibers', h);
 % Set colorbar tick positions and labels
 cbvals = tvals(logical(alphas));
 % cbvals=tvalsRescale(logical(alphas));
-if showpositiveonly
-    cbmap = map(ceil(length(map)/2+0.5):end,:);
-    tick = [poslowerBound, length(map)] - floor(length(map)/2) ;
-    poscbvals = sort(cbvals(cbvals>0));
-    ticklabel = [poscbvals(1), max(cbvals)];
-    ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-else
-    cbmap = map;
-    tick = [1, negUpperBound, poslowerBound, length(map)];
-    poscbvals = sort(cbvals(cbvals>0));
-    negcbvals = sort(cbvals(cbvals<0));
-    ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
-    ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+switch showfibersset
+    case 'positive'
+        cbmap = map(ceil(length(map)/2+0.5):end,:);
+        tick = [poslowerBound, length(map)] - floor(length(map)/2) ;
+        poscbvals = sort(cbvals(cbvals>0));
+        ticklabel = [poscbvals(1), poscbvals(end)];
+        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+    case 'negative'
+        cbmap = map(1:floor(length(map)/2-0.5),:);
+        tick = [1, negUpperBound];
+        negcbvals = sort(cbvals(cbvals<0));
+        ticklabel = [negcbvals(1), negcbvals(end)];
+        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+    case 'both'
+        cbmap = map;
+        tick = [1, negUpperBound, poslowerBound, length(map)];
+        poscbvals = sort(cbvals(cbvals>0));
+        negcbvals = sort(cbvals(cbvals<0));
+        ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
+        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
 end
 
 % Plot colorbar
