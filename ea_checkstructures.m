@@ -127,7 +127,17 @@ drawnow
 % add preop acquisitions to popup
 cellentr=cell(0);
 for p=presentfiles'
-    cellentr{end+1}=upper(p{1}(6:end-4));
+    % cellentr{end+1}=upper(p{1}(6:end-4));
+    % TP: above line is problematic if user sets their own naming conventions
+    % in ea_prefs. At this stage, the truncation is used just to display in
+    % a drop-down list... but it gets saved to a handle and is later used
+    % to find a nii file resulting in a crash.
+    %
+    % Need to remove search string pre-fix and file extension. Below
+    % solution is still not a complete fix since I'm assuming the search
+    % string ends with *.nii
+    idx = strfind(options.prefs.prenii_searchstring, '*');
+    cellentr{end+1}=upper(p{1}(idx:end-4));
 end
 set(handles.anat_select,'String',cellentr);
 modality=get(handles.anat_select,'String');
