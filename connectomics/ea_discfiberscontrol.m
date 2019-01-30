@@ -101,20 +101,16 @@ setappdata(handles.discfiberscontrol, 'hjSlider', hjSlider);
 switch showfibersset
     case 'positive'
         set(handles.showposonly, 'Value', 1);
-        jSlider{1}.enable;
-        jSlider{2}.disable;
+        hjSlider{1}.setEnabled(1);
+        hjSlider{2}.setEnabled(0);
     case 'negative'
         set(handles.shownegonly, 'Value', 1);
-        jSlider{1}.disable;
-        jSlider{2}.enable;
+        hjSlider{1}.setEnabled(0);
+        hjSlider{2}.setEnabled(1);
     case 'both'
         set(handles.showboth, 'Value', 1);
-        jSlider{1}.enable;
-        jSlider{2}.enable;
-    otherwise
-        set(handles.showboth, 'Value', 1);
-        jSlider{1}.enable;
-        jSlider{2}.enable;
+        hjSlider{1}.setEnabled(1);
+        hjSlider{2}.setEnabled(1);
 end
 
 
@@ -135,16 +131,16 @@ hjSlider = getappdata(handles.discfiberscontrol, 'hjSlider');
 switch get(get(handles.showfiberssetpanel, 'SelectedObject'), 'Tag')
     case 'showposonly'
         showfibersset = 'positive';
-        hjSlider{1}.enable;
-        hjSlider{2}.disable;
+        hjSlider{1}.setEnabled(1);
+        hjSlider{2}.setEnabled(0);
     case 'shownegonly'
         showfibersset = 'negative';
-        hjSlider{1}.disable;
-        hjSlider{2}.enable;
+        hjSlider{1}.setEnabled(0);
+        hjSlider{2}.setEnabled(1);
     case 'showboth'
         showfibersset = 'both';
-        hjSlider{1}.enable;
-        hjSlider{2}.enable;
+        hjSlider{1}.setEnabled(1);
+        hjSlider{2}.setEnabled(1);
 end
 
 % predthreshold values remain the same as in the resultfig
