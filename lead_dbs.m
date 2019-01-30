@@ -1622,6 +1622,8 @@ function slicer_original_Callback(hObject, eventdata, handles)
 options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 options.leadprod = 'dbs';
+[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
+options.root=[options.root,filesep];
 ea_runslicer(options, 1);
 
 
@@ -1633,6 +1635,8 @@ function slicer_coregistered_Callback(hObject, eventdata, handles)
 options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 options.leadprod = 'dbs';
+[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
+options.root=[options.root,filesep];
 ea_runslicer(options, 2);
 
 
@@ -1644,6 +1648,8 @@ function slicer_normalized_Callback(hObject, eventdata, handles)
 options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 options.leadprod = 'dbs';
+[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
+options.root=[options.root,filesep];
 ea_runslicer(options, 3);
 
 
@@ -1655,6 +1661,8 @@ function slicer_contact_Callback(hObject, eventdata, handles)
 options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 options.leadprod = 'dbs';
+[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
+options.root=[options.root,filesep];
 ea_runslicer(options, 4);
 
 
