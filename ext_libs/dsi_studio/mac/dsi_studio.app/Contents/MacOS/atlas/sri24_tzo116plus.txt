@@ -1,421 +1,414 @@
-1	Precentral_L		255	128	255	255
-2	Precentral_R		177	18	255	255
-3	Frontal_Sup_L		45	255	47	255
-4	Frontal_Sup_R		106	209	255	255
-5	Frontal_Sup_Orb_L	122	255	158	255
-6	Frontal_Sup_Orb_R	255	87	186	255
-7	Frontal_Mid_L		183	150	54	255	
-8	Frontal_Mid_R		216	255	159	255
-9	Frontal_Mid_Orb_L	181	169	80	255
-10	Frontal_Mid_Orb_R	255	152	0	255
-11	Frontal_Inf_Oper_L	42	255	255	255
-12	Frontal_Inf_Oper_R	116	255	77	255
-13	Frontal_Inf_Tri_L	6	253	234	255
-14	Frontal_Inf_Tri_R	218	108	255	255
-15	Frontal_Inf_Orb_L	24	255	108	255	
-16	Frontal_Inf_Orb_R	59	255	91	255
-17	Rolandic_Oper_L		255	127	14	255
-18	Rolandic_Oper_R		255	196	142	255
-19	Supp_Motor_Area_L	191	80	135	255
-20	Supp_Motor_Area_R	252	83	71	255
-21	Olfactory_L		208	255	10	255
-22	Olfactory_R		243	124	220	255
-23	Frontal_Sup_Medial_L	55	255	107	255	
-24	Frontal_Sup_Medial_R	64	63	255	255
-25	Frontal_Med_Orb_L	23	255	232	255
-26	Frontal_Med_Orb_R	179	138	255	255
-27	Rectus_L		126	147	255	255
-28	Rectus_R		255	255	129	255
-29	Insula_L		185	94	190	255
-30	Insula_R		255	127	211	255
-31	Cingulum_Ant_L		255	92	138	255	
-32	Cingulum_Ant_R		255	132	255	255
-33	Cingulum_Mid_L		50	255	146	255
-34	Cingulum_Mid_R		245	79	139	255
-35	Cingulum_Post_L		255	16	74	255
-36	Cingulum_Post_R		255	72	190	255
-37	Hippocampus_L		142	178	255	255
-38	Hippocampus_R		100	255	83	255
-39	ParaHippocampal_L	221	248	124	255	
-40	ParaHippocampal_R	165	255	223	255
-41	Amygdala_L		252	186	133	255
-42	Amygdala_R		209	5	255	255
-43	Calcarine_L		142	127	255	255
-44	Calcarine_R		97	255	116	255
-45	Cuneus_L		94	133	212	255
-46	Cuneus_R		200	160	255	255
-47	Lingual_L		186	182	41	255	
-48	Lingual_R		255	141	165	255
-49	Occipital_Sup_L		255	255	148	255
-50	Occipital_Sup_R		188	96	255	255
-51	Occipital_Mid_L		40	64	255	255
-52	Occipital_Mid_R		192	152	66	255
-53	Occipital_Inf_L		255	163	123	255
-54	Occipital_Inf_R		255	100	255	255
-55	Fusiform_L		255	212	174	255	
-56	Fusiform_R		163	245	21	255
-57	Postcentral_L		255	173	175	255
-58	Postcentral_R		255	223	183	255
-59	Parietal_Sup_L		100	131	212	255
-60	Parietal_Sup_R		27	255	135	255
-61	Parietal_Inf_L		93	255	118	255
-62	Parietal_Inf_R		50	223	146	255
-63	SupraMarginal_L		48	192	255	255	
-64	SupraMarginal_R		255	106	116	255
-65	Angular_L		110	53	231	255
-66	Angular_R		193	52	255	255
-67	Precuneus_L		255	54	255	255
-68	Precuneus_R		185	33	255	255
-69	Paracentral_Lobule_L	74	74	255	255
-70	Paracentral_Lobule_R	192	20	199	255
-71	Caudate_L		133	145	255	255	
-72	Caudate_R		161	255	58	255
-73	Putamen_L		91	230	89	255
-74	Putamen_R		138	159	255	255
-75	Pallidum_L		6	226	255	255
-76	Pallidum_R		46	150	229	255
-77	Thalamus_L		107	255	255	255
-78	Thalamus_R		140	255	241	255
-79	Heschl_L		128	218	167	255	
-80	Heschl_R		33	109	255	255
-81	Temporal_Sup_L		103	96	255	255
-82	Temporal_Sup_R		76	255	50	255
-83	Temporal_Pole_Sup_L	132	151	255	255
-84	Temporal_Pole_Sup_R	111	77	255	255
-85	Temporal_Mid_L		138	255	146	255
-86	Temporal_Mid_R		53	94	255	255
-87	Temporal_Pole_Mid_L	217	163	255	255	
-88	Temporal_Pole_Mid_R	77	61	255	255
-89	Temporal_Inf_L		115	170	196	255
-90	Temporal_Inf_R		219	49	148	255
-91	Cerebelum_Crus1_L	255	201	117	255
-92	Cerebelum_Crus1_R	61	129	255	255
-93	Cerebelum_Crus2_L	168	105	234	255
-94	Cerebelum_Crus2_R	164	216	2	255
-95	Cerebelum_3_L		178	91	184	255	
-96	Cerebelum_3_R		14	255	228	255
-97	Cerebelum_4_5_L		132	49	247	255
-98	Cerebelum_4_5_R		146	129	255	255
-99	Cerebelum_6_L		255	27	135	255
-100	Cerebelum_6_R		222	255	50	255
-101	Cerebelum_7b_L		100	255	31	255
-102	Cerebelum_7b_R		255	100	214	255
-103	Cerebelum_8_L		255	255	150	255	
-104	Cerebelum_8_R		123	255	255	255
-105	Cerebelum_9_L		93	180	176	255
-106	Cerebelum_9_R		62	46	255	255
-107	Cerebelum_10_L		118	184	255	255
-108	Cerebelum_10_R		131	105	230	255
-109	Vermis_1_2		101	167	166	255
-110	Vermis_3		148	255	172	255
-111	Vermis_4_5		255	96	209	255	
-112	Vermis_6		200	85	224	255
-113	Vermis_7		78	255	147	255
-114	Vermis_8		122	193	94	255
-115	Vermis_9		255	170	68	255
-116	Vermis_10		106	227	83	255
-201     LateralVentricle_L_y48  138     0       0       255
-202     LateralVentricle_R_y48  0       138     0       255
-203     LateralVentricle_L_y49  139     0       0       255
-204     LateralVentricle_R_y49  0       139     0       255
-205     LateralVentricle_L_y50  140     0       0       255
-206     LateralVentricle_R_y50  0       140     0       255
-207     LateralVentricle_L_y51  141     0       0       255
-208     LateralVentricle_R_y51  0       141     0       255
-209     LateralVentricle_L_y52  142     0       0       255
-210     LateralVentricle_R_y52  0       142     0       255
-211     LateralVentricle_L_y53  143     0       0       255
-212     LateralVentricle_R_y53  0       143     0       255
-213     LateralVentricle_L_y54  144     0       0       255
-214     LateralVentricle_R_y54  0       144     0       255
-215     LateralVentricle_L_y55  145     0       0       255
-216     LateralVentricle_R_y55  0       145     0       255
-217     LateralVentricle_L_y56  146     0       0       255
-218     LateralVentricle_R_y56  0       146     0       255
-219     LateralVentricle_L_y57  147     0       0       255
-220     LateralVentricle_R_y57  0       147     0       255
-221     LateralVentricle_L_y58  148     0       0       255
-222     LateralVentricle_R_y58  0       148     0       255
-223     LateralVentricle_L_y59  149     0       0       255
-224     LateralVentricle_R_y59  0       149     0       255
-225     LateralVentricle_L_y60  150     0       0       255
-226     LateralVentricle_R_y60  0       150     0       255
-227     LateralVentricle_L_y61  151     0       0       255
-228     LateralVentricle_R_y61  0       151     0       255
-229     LateralVentricle_L_y62  152     0       0       255
-230     LateralVentricle_R_y62  0       152     0       255
-231     LateralVentricle_L_y63  153     0       0       255
-232     LateralVentricle_R_y63  0       153     0       255
-233     LateralVentricle_L_y64  154     0       0       255
-234     LateralVentricle_R_y64  0       154     0       255
-235     LateralVentricle_L_y65  155     0       0       255
-236     LateralVentricle_R_y65  0       155     0       255
-237     LateralVentricle_L_y66  156     0       0       255
-238     LateralVentricle_R_y66  0       156     0       255
-239     LateralVentricle_L_y67  157     0       0       255
-240     LateralVentricle_R_y67  0       157     0       255
-241     LateralVentricle_L_y68  158     0       0       255
-242     LateralVentricle_R_y68  0       158     0       255
-243     LateralVentricle_L_y69  159     0       0       255
-244     LateralVentricle_R_y69  0       159     0       255
-245     LateralVentricle_L_y70  160     0       0       255
-246     LateralVentricle_R_y70  0       160     0       255
-247     LateralVentricle_L_y71  161     0       0       255
-248     LateralVentricle_R_y71  0       161     0       255
-249     LateralVentricle_L_y72  162     0       0       255
-250     LateralVentricle_R_y72  0       162     0       255
-251     LateralVentricle_L_y73  163     0       0       255
-252     LateralVentricle_R_y73  0       163     0       255
-253     LateralVentricle_L_y74  164     0       0       255
-254     LateralVentricle_R_y74  0       164     0       255
-255     LateralVentricle_L_y75  165     0       0       255
-256     LateralVentricle_R_y75  0       165     0       255
-257     LateralVentricle_L_y76  166     0       0       255
-258     LateralVentricle_R_y76  0       166     0       255
-259     LateralVentricle_L_y77  167     0       0       255
-260     LateralVentricle_R_y77  0       167     0       255
-261     LateralVentricle_L_y78  168     0       0       255
-262     LateralVentricle_R_y78  0       168     0       255
-263     LateralVentricle_L_y79  169     0       0       255
-264     LateralVentricle_R_y79  0       169     0       255
-265     LateralVentricle_L_y80  170     0       0       255
-266     LateralVentricle_R_y80  0       170     0       255
-267     LateralVentricle_L_y81  171     0       0       255
-268     LateralVentricle_R_y81  0       171     0       255
-269     LateralVentricle_L_y82  172     0       0       255
-270     LateralVentricle_R_y82  0       172     0       255
-271     LateralVentricle_L_y83  173     0       0       255
-272     LateralVentricle_R_y83  0       173     0       255
-273     LateralVentricle_L_y84  174     0       0       255
-274     LateralVentricle_R_y84  0       174     0       255
-275     LateralVentricle_L_y85  175     0       0       255
-276     LateralVentricle_R_y85  0       175     0       255
-277     LateralVentricle_L_y86  176     0       0       255
-278     LateralVentricle_R_y86  0       176     0       255
-279     LateralVentricle_L_y87  177     0       0       255
-280     LateralVentricle_R_y87  0       177     0       255
-281     LateralVentricle_L_y88  178     0       0       255
-282     LateralVentricle_R_y88  0       178     0       255
-283     LateralVentricle_L_y89  179     0       0       255
-284     LateralVentricle_R_y89  0       179     0       255
-285     LateralVentricle_L_y90  180     0       0       255
-286     LateralVentricle_R_y90  0       180     0       255
-287     LateralVentricle_L_y91  181     0       0       255
-288     LateralVentricle_R_y91  0       181     0       255
-289     LateralVentricle_L_y92  182     0       0       255
-290     LateralVentricle_R_y92  0       182     0       255
-291     LateralVentricle_L_y93  183     0       0       255
-292     LateralVentricle_R_y93  0       183     0       255
-293     LateralVentricle_L_y94  184     0       0       255
-294     LateralVentricle_R_y94  0       184     0       255
-295     LateralVentricle_L_y95  185     0       0       255
-296     LateralVentricle_R_y95  0       185     0       255
-297     LateralVentricle_L_y96  186     0       0       255
-298     LateralVentricle_R_y96  0       186     0       255
-299     LateralVentricle_L_y97  187     0       0       255
-300     LateralVentricle_R_y97  0       187     0       255
-301     LateralVentricle_L_y98  188     0       0       255
-302     LateralVentricle_R_y98  0       188     0       255
-303     LateralVentricle_L_y99  189     0       0       255
-304     LateralVentricle_R_y99  0       189     0       255
-305     LateralVentricle_L_y100 190     0       0       255
-306     LateralVentricle_R_y100 0       190     0       255
-307     LateralVentricle_L_y101 191     0       0       255
-308     LateralVentricle_R_y101 0       191     0       255
-309     LateralVentricle_L_y102 192     0       0       255
-310     LateralVentricle_R_y102 0       192     0       255
-311     LateralVentricle_L_y103 193     0       0       255
-312     LateralVentricle_R_y103 0       193     0       255
-313     LateralVentricle_L_y104 194     0       0       255
-314     LateralVentricle_R_y104 0       194     0       255
-315     LateralVentricle_L_y105 195     0       0       255
-316     LateralVentricle_R_y105 0       195     0       255
-317     LateralVentricle_L_y106 196     0       0       255
-318     LateralVentricle_R_y106 0       196     0       255
-319     LateralVentricle_L_y107 197     0       0       255
-320     LateralVentricle_R_y107 0       197     0       255
-321     LateralVentricle_L_y108 198     0       0       255
-322     LateralVentricle_R_y108 0       198     0       255
-323     LateralVentricle_L_y109 199     0       0       255
-324     LateralVentricle_R_y109 0       199     0       255
-325     LateralVentricle_L_y110 200     0       0       255
-326     LateralVentricle_R_y110 0       200     0       255
-327     LateralVentricle_L_y111 201     0       0       255
-328     LateralVentricle_R_y111 0       201     0       255
-329     LateralVentricle_L_y112 202     0       0       255
-330     LateralVentricle_R_y112 0       202     0       255
-331     LateralVentricle_L_y113 203     0       0       255
-332     LateralVentricle_R_y113 0       203     0       255
-333     LateralVentricle_L_y114 204     0       0       255
-334     LateralVentricle_R_y114 0       204     0       255
-335     LateralVentricle_L_y115 205     0       0       255
-336     LateralVentricle_R_y115 0       205     0       255
-337     LateralVentricle_L_y116 206     0       0       255
-338     LateralVentricle_R_y116 0       206     0       255
-339     LateralVentricle_L_y117 207     0       0       255
-340     LateralVentricle_R_y117 0       207     0       255
-341     LateralVentricle_L_y118 208     0       0       255
-342     LateralVentricle_R_y118 0       208     0       255
-343     LateralVentricle_L_y119 209     0       0       255
-344     LateralVentricle_R_y119 0       209     0       255
-345     LateralVentricle_L_y120 210     0       0       255
-346     LateralVentricle_R_y120 0       210     0       255
-347     LateralVentricle_L_y121 211     0       0       255
-348     LateralVentricle_R_y121 0       211     0       255
-349     LateralVentricle_L_y122 212     0       0       255
-350     LateralVentricle_R_y122 0       212     0       255
-351     LateralVentricle_L_y123 213     0       0       255
-352     LateralVentricle_R_y123 0       213     0       255
-353     LateralVentricle_L_y124 214     0       0       255
-354     LateralVentricle_R_y124 0       214     0       255
-355     LateralVentricle_L_y125 215     0       0       255
-356     LateralVentricle_R_y125 0       215     0       255
-357     LateralVentricle_L_y126 216     0       0       255
-358     LateralVentricle_R_y126 0       216     0       255
-359     LateralVentricle_L_y127 217     0       0       255
-360     LateralVentricle_R_y127 0       217     0       255
-361     LateralVentricle_L_y128 218     0       0       255
-362     LateralVentricle_R_y128 0       218     0       255
-363     LateralVentricle_L_y129 219     0       0       255
-364     LateralVentricle_R_y129 0       219     0       255
-365     LateralVentricle_L_y130 220     0       0       255
-366     LateralVentricle_R_y130 0       220     0       255
-367     LateralVentricle_L_y131 221     0       0       255
-368     LateralVentricle_R_y131 0       221     0       255
-369     LateralVentricle_L_y132 222     0       0       255
-370     LateralVentricle_R_y132 0       222     0       255
-371     LateralVentricle_L_y133 223     0       0       255
-372     LateralVentricle_R_y133 0       223     0       255
-373     LateralVentricle_L_y134 224     0       0       255
-374     LateralVentricle_R_y134 0       224     0       255
-375     LateralVentricle_L_y135 225     0       0       255
-376     LateralVentricle_R_y135 0       225     0       255
-377     LateralVentricle_L_y136 226     0       0       255
-378     LateralVentricle_R_y136 0       226     0       255
-379     LateralVentricle_L_y137 227     0       0       255
-380     LateralVentricle_R_y137 0       227     0       255
-381     LateralVentricle_L_y138 228     0       0       255
-382     LateralVentricle_R_y138 0       228     0       255
-383     LateralVentricle_L_y139 229     0       0       255
-384     LateralVentricle_R_y139 0       229     0       255
-385     LateralVentricle_L_y140 230     0       0       255
-386     LateralVentricle_R_y140 0       230     0       255
-387     LateralVentricle_L_y141 231     0       0       255
-388     LateralVentricle_R_y141 0       231     0       255
-389     LateralVentricle_L_y142 232     0       0       255
-390     LateralVentricle_R_y142 0       232     0       255
-391     LateralVentricle_L_y143 233     0       0       255
-392     LateralVentricle_R_y143 0       233     0       255
-393     LateralVentricle_L_y144 234     0       0       255
-394     LateralVentricle_R_y144 0       234     0       255
-395     LateralVentricle_L_y145 235     0       0       255
-396     LateralVentricle_R_y145 0       235     0       255
-397     LateralVentricle_L_y146 236     0       0       255
-398     LateralVentricle_R_y146 0       236     0       255
-399     LateralVentricle_L_y147 237     0       0       255
-400     LateralVentricle_R_y147 0       237     0       255
-401     LateralVentricle_L_y148 238     0       0       255
-402     LateralVentricle_R_y148 0       238     0       255
-403     LateralVentricle_L_y149 239     0       0       255
-404     LateralVentricle_R_y149 0       239     0       255
-405     LateralVentricle_L_y150 240     0       0       255
-406     LateralVentricle_R_y150 0       240     0       255
-407     LateralVentricle_L_y151 241     0       0       255
-408     LateralVentricle_R_y151 0       241     0       255
-409     LateralVentricle_L_y152 242     0       0       255
-410     LateralVentricle_R_y152 0       242     0       255
-411     LateralVentricle_L_y153 243     0       0       255
-412     LateralVentricle_R_y153 0       243     0       255
-413     LateralVentricle_L_y145 244     0       0       255
-414     LateralVentricle_R_y154 0       244     0       255
-491     ThirdVentricle_L_y98    138     138     0       255
-492     ThirdVentricle_R_y98    0       138     138     255
-493     ThirdVentricle_L_y99    139     139     0       255
-494     ThirdVentricle_R_y99    0       139     139     255
-495     ThirdVentricle_L_y100   140     140     0       255
-496     ThirdVentricle_R_y100   0       140     140     255
-497     ThirdVentricle_L_y101   141     141     0       255
-498     ThirdVentricle_R_y101   0       141     141     255
-499     ThirdVentricle_L_y102   142     142     0       255
-500     ThirdVentricle_R_y102   0       142     142     255
-501     ThirdVentricle_L_y103   143     143     0       255
-502     ThirdVentricle_R_y103   0       143     143     255
-503     ThirdVentricle_L_y104   144     144     0       255
-504     ThirdVentricle_R_y104   0       144     144     255
-505     ThirdVentricle_L_y105   145     145     0       255
-506     ThirdVentricle_R_y105   0       145     145     255
-507     ThirdVentricle_L_y106   146     146     0       255
-508     ThirdVentricle_R_y106   0       146     146     255
-509     ThirdVentricle_L_y107   147     147     0       255
-510     ThirdVentricle_R_y107   0       147     147     255
-511     ThirdVentricle_L_y108   148     148     0       255
-512     ThirdVentricle_R_y108   0       148     148     255
-513     ThirdVentricle_L_y109   149     149     0       255
-514     ThirdVentricle_R_y109   0       149     149     255
-515     ThirdVentricle_L_y110   150     150     0       255
-516     ThirdVentricle_R_y110   0       150     150     255
-517     ThirdVentricle_L_y111   151     151     0       255
-518     ThirdVentricle_R_y111   0       151     151     255
-519     ThirdVentricle_L_y112   152     152     0       255
-520     ThirdVentricle_R_y112   0       152     152     255
-521     ThirdVentricle_L_y113   153     153     0       255
-522     ThirdVentricle_R_y113   0       153     153     255
-523     ThirdVentricle_L_y114   154     154     0       255
-524     ThirdVentricle_R_y114   0       154     154     255
-525     ThirdVentricle_L_y115   155     155     0       255
-526     ThirdVentricle_R_y115   0       155     155     255
-527     ThirdVentricle_L_y116   156     156     0       255
-528     ThirdVentricle_R_y116   0       156     156     255
-529     ThirdVentricle_L_y117   157     157     0       255
-530     ThirdVentricle_R_y117   0       157     157     255
-531     ThirdVentricle_L_y118   158     158     0       255
-532     ThirdVentricle_R_y118   0       158     158     255
-533     ThirdVentricle_L_y119   159     159     0       255
-534     ThirdVentricle_R_y119   0       159     159     255
-535     ThirdVentricle_L_y120   160     160     0       255
-536     ThirdVentricle_R_y120   0       160     160     255
-537     ThirdVentricle_L_y121   161     161     0       255
-538     ThirdVentricle_R_y121   0       161     161     255
-539     ThirdVentricle_L_y122   162     162     0       255
-540     ThirdVentricle_R_y122   0       162     162     255
-541     ThirdVentricle_L_y123   163     163     0       255
-542     ThirdVentricle_R_y123   0       163     163     255
-543     ThirdVentricle_L_y124   164     164     0       255
-544     ThirdVentricle_R_y124   0       164     164     255
-545     ThirdVentricle_L_y125   165     165     0       255
-546     ThirdVentricle_R_y125   0       165     165     255
-547     ThirdVentricle_L_y126   166     166     0       255
-548     ThirdVentricle_R_y126   0       166     166     255
-549     ThirdVentricle_L_y127   167     167     0       255
-550     ThirdVentricle_R_y127   0       167     167     255
-552     ThirdVentricle_R_y128   0       168     168     255
-553     ThirdVentricle_L_y129   168     168     0       255
-554     ThirdVentricle_R_y129   0       169     169     255
-555     ThirdVentricle_L_y130   169     169     0       255
-556     ThirdVentricle_R_y130   0       170     170     255
-581     CorpusCallosum_AP_0	255	124	0	255
-582     CorpusCallosum_AP_1	230	255	0	255
-583     CorpusCallosum_AP_2	74	255	0	255
-584     CorpusCallosum_AP_3	0	255	81	255
-585     CorpusCallosum_AP_4	0	255	237	255
-586     CorpusCallosum_AP_5	0	118	255	255
-587     CorpusCallosum_AP_6	38	0	255	255
-588     CorpusCallosum_AP_7	194	0	255	255
-589     CorpusCallosum_AP_8	255	0	160	255
-591     Pons_x127		255	255	255	255
-592     Pons_x126		250	250	250	255
-593     Pons_x125		245	245	245	255
-594     Pons_x124		240	240	240	255
-595     Pons_x123		235	235	235	255
-596     Pons_x122		230	230	230	255
-597     Pons_x121		225	225	225	255
-598     Pons_x120		220	220	220	255
-599     Pons_x119		215	215	215	255
-600     Pons_x118		210	210	210	255
-601     Pons_x117		205	205	205	255
-602     Pons_x116		200	200	200	255
-603     Pons_x115		195	195	195	255
-604     Pons_x114		190	190	190	255
-605     Pons_x113		185	185	185	255
-606     Pons_x112		180	180	180	255
-607     Pons_x111		175	175	175	255
+1 Precentral_L
+2 Precentral_R
+3 Frontal_Sup_L
+4 Frontal_Sup_R
+5 Frontal_Sup_Orb_L
+6 Frontal_Sup_Orb_R
+7 Frontal_Mid_L
+8 Frontal_Mid_R
+9 Frontal_Mid_Orb_L
+10 Frontal_Mid_Orb_R
+11 Frontal_Inf_Oper_L
+12 Frontal_Inf_Oper_R
+13 Frontal_Inf_Tri_L
+14 Frontal_Inf_Tri_R
+15 Frontal_Inf_Orb_L
+16 Frontal_Inf_Orb_R
+17 Rolandic_Oper_L
+18 Rolandic_Oper_R
+19 Supp_Motor_Area_L
+20 Supp_Motor_Area_R
+21 Olfactory_L
+22 Olfactory_R
+23 Frontal_Sup_Medial_L
+24 Frontal_Sup_Medial_R
+25 Frontal_Med_Orb_L
+26 Frontal_Med_Orb_R
+27 Rectus_L
+28 Rectus_R
+29 Insula_L
+30 Insula_R
+31 Cingulum_Ant_L
+32 Cingulum_Ant_R
+33 Cingulum_Mid_L
+34 Cingulum_Mid_R
+35 Cingulum_Post_L
+36 Cingulum_Post_R
+37 Hippocampus_L
+38 Hippocampus_R
+39 ParaHippocampal_L
+40 ParaHippocampal_R
+41 Amygdala_L
+42 Amygdala_R
+43 Calcarine_L
+44 Calcarine_R
+45 Cuneus_L
+46 Cuneus_R
+47 Lingual_L
+48 Lingual_R
+49 Occipital_Sup_L
+50 Occipital_Sup_R
+51 Occipital_Mid_L
+52 Occipital_Mid_R
+53 Occipital_Inf_L
+54 Occipital_Inf_R
+55 Fusiform_L
+56 Fusiform_R
+57 Postcentral_L
+58 Postcentral_R
+59 Parietal_Sup_L
+60 Parietal_Sup_R
+61 Parietal_Inf_L
+62 Parietal_Inf_R
+63 SupraMarginal_L
+64 SupraMarginal_R
+65 Angular_L
+66 Angular_R
+67 Precuneus_L
+68 Precuneus_R
+69 Paracentral_Lobule_L
+70 Paracentral_Lobule_R
+71 Caudate_L
+72 Caudate_R
+73 Putamen_L
+74 Putamen_R
+75 Pallidum_L
+76 Pallidum_R
+77 Thalamus_L
+78 Thalamus_R
+79 Heschl_L
+80 Heschl_R
+81 Temporal_Sup_L
+82 Temporal_Sup_R
+83 Temporal_Pole_Sup_L
+84 Temporal_Pole_Sup_R
+85 Temporal_Mid_L
+86 Temporal_Mid_R
+87 Temporal_Pole_Mid_L
+88 Temporal_Pole_Mid_R
+89 Temporal_Inf_L
+90 Temporal_Inf_R
+91 Cerebelum_Crus1_L
+92 Cerebelum_Crus1_R
+93 Cerebelum_Crus2_L
+94 Cerebelum_Crus2_R
+95 Cerebelum_3_L
+96 Cerebelum_3_R
+97 Cerebelum_4_5_L
+98 Cerebelum_4_5_R
+99 Cerebelum_6_L
+100 Cerebelum_6_R
+101 Cerebelum_7b_L
+102 Cerebelum_7b_R
+103 Cerebelum_8_L
+104 Cerebelum_8_R
+105 Cerebelum_9_L
+106 Cerebelum_9_R
+107 Cerebelum_10_L
+108 Cerebelum_10_R
+109 Vermis_1_2
+110 Vermis_3
+111 Vermis_4_5
+112 Vermis_6
+113 Vermis_7
+114 Vermis_8
+115 Vermis_9
+116 Vermis_10
+202 LateralVentricle_R_y48
+204 LateralVentricle_R_y49
+206 LateralVentricle_R_y50
+207 LateralVentricle_L_y51
+208 LateralVentricle_R_y51
+209 LateralVentricle_L_y52
+210 LateralVentricle_R_y52
+211 LateralVentricle_L_y53
+212 LateralVentricle_R_y53
+213 LateralVentricle_L_y54
+214 LateralVentricle_R_y54
+215 LateralVentricle_L_y55
+216 LateralVentricle_R_y55
+217 LateralVentricle_L_y56
+218 LateralVentricle_R_y56
+220 LateralVentricle_R_y57
+222 LateralVentricle_R_y58
+223 LateralVentricle_L_y59
+224 LateralVentricle_R_y59
+225 LateralVentricle_L_y60
+226 LateralVentricle_R_y60
+228 LateralVentricle_R_y61
+229 LateralVentricle_L_y62
+230 LateralVentricle_R_y62
+231 LateralVentricle_L_y63
+232 LateralVentricle_R_y63
+233 LateralVentricle_L_y64
+234 LateralVentricle_R_y64
+235 LateralVentricle_L_y65
+236 LateralVentricle_R_y65
+237 LateralVentricle_L_y66
+238 LateralVentricle_R_y66
+239 LateralVentricle_L_y67
+240 LateralVentricle_R_y67
+241 LateralVentricle_L_y68
+242 LateralVentricle_R_y68
+243 LateralVentricle_L_y69
+244 LateralVentricle_R_y69
+245 LateralVentricle_L_y70
+246 LateralVentricle_R_y70
+247 LateralVentricle_L_y71
+248 LateralVentricle_R_y71
+249 LateralVentricle_L_y72
+250 LateralVentricle_R_y72
+251 LateralVentricle_L_y73
+252 LateralVentricle_R_y73
+253 LateralVentricle_L_y74
+254 LateralVentricle_R_y74
+255 LateralVentricle_L_y75
+256 LateralVentricle_R_y75
+257 LateralVentricle_L_y76
+258 LateralVentricle_R_y76
+259 LateralVentricle_L_y77
+260 LateralVentricle_R_y77
+261 LateralVentricle_L_y78
+262 LateralVentricle_R_y78
+263 LateralVentricle_L_y79
+264 LateralVentricle_R_y79
+265 LateralVentricle_L_y80
+266 LateralVentricle_R_y80
+267 LateralVentricle_L_y81
+268 LateralVentricle_R_y81
+269 LateralVentricle_L_y82
+270 LateralVentricle_R_y82
+271 LateralVentricle_L_y83
+272 LateralVentricle_R_y83
+273 LateralVentricle_L_y84
+274 LateralVentricle_R_y84
+275 LateralVentricle_L_y85
+276 LateralVentricle_R_y85
+277 LateralVentricle_L_y86
+278 LateralVentricle_R_y86
+279 LateralVentricle_L_y87
+280 LateralVentricle_R_y87
+281 LateralVentricle_L_y88
+282 LateralVentricle_R_y88
+283 LateralVentricle_L_y89
+284 LateralVentricle_R_y89
+285 LateralVentricle_L_y90
+286 LateralVentricle_R_y90
+287 LateralVentricle_L_y91
+288 LateralVentricle_R_y91
+289 LateralVentricle_L_y92
+290 LateralVentricle_R_y92
+291 LateralVentricle_L_y93
+292 LateralVentricle_R_y93
+293 LateralVentricle_L_y94
+294 LateralVentricle_R_y94
+295 LateralVentricle_L_y95
+296 LateralVentricle_R_y95
+297 LateralVentricle_L_y96
+298 LateralVentricle_R_y96
+299 LateralVentricle_L_y97
+300 LateralVentricle_R_y97
+301 LateralVentricle_L_y98
+302 LateralVentricle_R_y98
+303 LateralVentricle_L_y99
+304 LateralVentricle_R_y99
+305 LateralVentricle_L_y100
+306 LateralVentricle_R_y100
+307 LateralVentricle_L_y101
+308 LateralVentricle_R_y101
+309 LateralVentricle_L_y102
+310 LateralVentricle_R_y102
+311 LateralVentricle_L_y103
+312 LateralVentricle_R_y103
+313 LateralVentricle_L_y104
+314 LateralVentricle_R_y104
+315 LateralVentricle_L_y105
+316 LateralVentricle_R_y105
+317 LateralVentricle_L_y106
+318 LateralVentricle_R_y106
+319 LateralVentricle_L_y107
+320 LateralVentricle_R_y107
+321 LateralVentricle_L_y108
+322 LateralVentricle_R_y108
+323 LateralVentricle_L_y109
+324 LateralVentricle_R_y109
+325 LateralVentricle_L_y110
+326 LateralVentricle_R_y110
+327 LateralVentricle_L_y111
+328 LateralVentricle_R_y111
+329 LateralVentricle_L_y112
+330 LateralVentricle_R_y112
+331 LateralVentricle_L_y113
+332 LateralVentricle_R_y113
+333 LateralVentricle_L_y114
+334 LateralVentricle_R_y114
+335 LateralVentricle_L_y115
+336 LateralVentricle_R_y115
+337 LateralVentricle_L_y116
+338 LateralVentricle_R_y116
+339 LateralVentricle_L_y117
+340 LateralVentricle_R_y117
+341 LateralVentricle_L_y118
+342 LateralVentricle_R_y118
+343 LateralVentricle_L_y119
+344 LateralVentricle_R_y119
+345 LateralVentricle_L_y120
+346 LateralVentricle_R_y120
+347 LateralVentricle_L_y121
+348 LateralVentricle_R_y121
+349 LateralVentricle_L_y122
+350 LateralVentricle_R_y122
+351 LateralVentricle_L_y123
+352 LateralVentricle_R_y123
+353 LateralVentricle_L_y124
+354 LateralVentricle_R_y124
+355 LateralVentricle_L_y125
+356 LateralVentricle_R_y125
+357 LateralVentricle_L_y126
+358 LateralVentricle_R_y126
+359 LateralVentricle_L_y127
+360 LateralVentricle_R_y127
+361 LateralVentricle_L_y128
+362 LateralVentricle_R_y128
+363 LateralVentricle_L_y129
+364 LateralVentricle_R_y129
+365 LateralVentricle_L_y130
+366 LateralVentricle_R_y130
+367 LateralVentricle_L_y131
+368 LateralVentricle_R_y131
+369 LateralVentricle_L_y132
+370 LateralVentricle_R_y132
+371 LateralVentricle_L_y133
+372 LateralVentricle_R_y133
+373 LateralVentricle_L_y134
+374 LateralVentricle_R_y134
+375 LateralVentricle_L_y135
+376 LateralVentricle_R_y135
+377 LateralVentricle_L_y136
+378 LateralVentricle_R_y136
+379 LateralVentricle_L_y137
+380 LateralVentricle_R_y137
+381 LateralVentricle_L_y138
+382 LateralVentricle_R_y138
+383 LateralVentricle_L_y139
+384 LateralVentricle_R_y139
+385 LateralVentricle_L_y140
+386 LateralVentricle_R_y140
+387 LateralVentricle_L_y141
+388 LateralVentricle_R_y141
+389 LateralVentricle_L_y142
+390 LateralVentricle_R_y142
+391 LateralVentricle_L_y143
+392 LateralVentricle_R_y143
+393 LateralVentricle_L_y144
+394 LateralVentricle_R_y144
+395 LateralVentricle_L_y145
+396 LateralVentricle_R_y145
+397 LateralVentricle_L_y146
+398 LateralVentricle_R_y146
+399 LateralVentricle_L_y147
+400 LateralVentricle_R_y147
+401 LateralVentricle_L_y148
+402 LateralVentricle_R_y148
+403 LateralVentricle_L_y149
+404 LateralVentricle_R_y149
+405 LateralVentricle_L_y150
+406 LateralVentricle_R_y150
+407 LateralVentricle_L_y151
+408 LateralVentricle_R_y151
+409 LateralVentricle_L_y152
+410 LateralVentricle_R_y152
+411 LateralVentricle_L_y153
+412 LateralVentricle_R_y153
+414 LateralVentricle_R_y154
+491 ThirdVentricle_L_y98
+492 ThirdVentricle_R_y98
+493 ThirdVentricle_L_y99
+494 ThirdVentricle_R_y99
+495 ThirdVentricle_L_y100
+496 ThirdVentricle_R_y100
+497 ThirdVentricle_L_y101
+498 ThirdVentricle_R_y101
+499 ThirdVentricle_L_y102
+500 ThirdVentricle_R_y102
+501 ThirdVentricle_L_y103
+502 ThirdVentricle_R_y103
+503 ThirdVentricle_L_y104
+504 ThirdVentricle_R_y104
+505 ThirdVentricle_L_y105
+506 ThirdVentricle_R_y105
+507 ThirdVentricle_L_y106
+508 ThirdVentricle_R_y106
+509 ThirdVentricle_L_y107
+510 ThirdVentricle_R_y107
+511 ThirdVentricle_L_y108
+512 ThirdVentricle_R_y108
+513 ThirdVentricle_L_y109
+514 ThirdVentricle_R_y109
+515 ThirdVentricle_L_y110
+516 ThirdVentricle_R_y110
+517 ThirdVentricle_L_y111
+518 ThirdVentricle_R_y111
+519 ThirdVentricle_L_y112
+520 ThirdVentricle_R_y112
+521 ThirdVentricle_L_y113
+522 ThirdVentricle_R_y113
+523 ThirdVentricle_L_y114
+524 ThirdVentricle_R_y114
+525 ThirdVentricle_L_y115
+526 ThirdVentricle_R_y115
+527 ThirdVentricle_L_y116
+528 ThirdVentricle_R_y116
+529 ThirdVentricle_L_y117
+530 ThirdVentricle_R_y117
+531 ThirdVentricle_L_y118
+532 ThirdVentricle_R_y118
+533 ThirdVentricle_L_y119
+534 ThirdVentricle_R_y119
+535 ThirdVentricle_L_y120
+536 ThirdVentricle_R_y120
+537 ThirdVentricle_L_y121
+538 ThirdVentricle_R_y121
+539 ThirdVentricle_L_y122
+540 ThirdVentricle_R_y122
+541 ThirdVentricle_L_y123
+542 ThirdVentricle_R_y123
+543 ThirdVentricle_L_y124
+544 ThirdVentricle_R_y124
+545 ThirdVentricle_L_y125
+546 ThirdVentricle_R_y125
+547 ThirdVentricle_L_y126
+548 ThirdVentricle_R_y126
+549 ThirdVentricle_L_y127
+550 ThirdVentricle_R_y127
+552 ThirdVentricle_R_y128
+553 ThirdVentricle_L_y129
+554 ThirdVentricle_R_y129
+555 ThirdVentricle_L_y130
+556 ThirdVentricle_R_y130
+581 CorpusCallosum_AP_0
+582 CorpusCallosum_AP_1
+583 CorpusCallosum_AP_2
+584 CorpusCallosum_AP_3
+585 CorpusCallosum_AP_4
+586 CorpusCallosum_AP_5
+587 CorpusCallosum_AP_6
+588 CorpusCallosum_AP_7
+589 CorpusCallosum_AP_8
+591 Pons_x127
+592 Pons_x126
+593 Pons_x125
+594 Pons_x124
+595 Pons_x123
+596 Pons_x122
+597 Pons_x121
+598 Pons_x120
+599 Pons_x119
+600 Pons_x118
+601 Pons_x117
+602 Pons_x116
+603 Pons_x115
+604 Pons_x114
+605 Pons_x113
+606 Pons_x112
+607 Pons_x111
