@@ -94,7 +94,7 @@ if ~strcmp(spacedef.tpm(1:6),'custom')
         nii.dt=[16,0];
         ea_write_nii(nii);
         if ~(prefs.normalize.spm.resolution==0.5) % reslice images
-            ea_reslice_nii(fina,fina,[prefs.normalize.spm.resolution prefs.normalize.spm.resolution prefs.normalize.spm.resolution],1,[],6);
+            ea_reslice_nii(fina,fina,ones(1,3)*prefs.normalize.spm.resolution,1,[],1);
         end
         % apply very light smooth on custom TPMs
         job{1}.spm.spatial.smooth.data = {fina};
