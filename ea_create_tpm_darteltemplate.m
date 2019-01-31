@@ -66,7 +66,7 @@ if rebuildtpm
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
 
-    delete([ea_space,spacedef.templates{1},'_seg8.mat']);
+    ea_delete([ea_space,spacedef.templates{1},'_seg8.mat']);
 else
     % split TPM
     matlabbatch{1}.spm.util.split.vol = {[ea_space,'TPM.nii,1']};
@@ -109,7 +109,7 @@ if ~strcmp(spacedef.tpm(1:6),'custom')
 
         nii=ea_load_nii(fina); % change datatype back to uint8
         nii.dt=[2,0];
-        delete(fina);
+        ea_delete(fina);
         ea_write_nii(nii);
 
         matlabbatch{1}.spm.util.cat.vols{c} = fina;
@@ -121,7 +121,7 @@ if ~strcmp(spacedef.tpm(1:6),'custom')
     matlabbatch{1}.spm.util.cat.dtype = 16;
     spm_jobman('run',{matlabbatch});
     clear matlabbatch
-    delete([ea_space,'TPM.mat']);
+    ea_delete([ea_space,'TPM.mat']);
 end
 
 % make sure TPM sums to 1 everywhere
@@ -130,8 +130,8 @@ nii.img=nii.img./repmat(sum(nii.img,4),1,1,1,6);
 ea_save_untouch_nii(nii,[ea_space,'TPM.nii']);
 
 wd=ea_space([],'dartel');
-%gunzip([wd,'dartelmni_6_hires.nii.gz']);
-%spm_file_split([wd,'dartelmni_6_hires.nii']);
+% gunzip([wd,'dartelmni_6_hires.nii.gz']);
+% spm_file_split([wd,'dartelmni_6_hires.nii']);
 gs=[0,2,3,5,6,8];
 expo=6:-1:1;
 spacedef=ea_getspacedef;
@@ -174,7 +174,7 @@ for s=1:6
     end
 
     for tpm=1:dpres
-    matlabbatch{1}.spm.util.cat.vols{tpm} = [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii'];
+        matlabbatch{1}.spm.util.cat.vols{tpm} = [wd,'s',num2str(gs(s)),'dartelmni_6_hires_',sprintf('%05d',tpm),'.nii'];
     end
     matlabbatch{1}.spm.util.cat.vols=matlabbatch{1}.spm.util.cat.vols';
     matlabbatch{1}.spm.util.cat.name = [wd,'dartelmni_',num2str(expo(s)),'.nii'];
@@ -186,16 +186,16 @@ for s=1:6
     disp('Cleaning up.');
 
     % cleanup
-    delete([wd,'s',num2str(gs(s)),'dartelmni_6_hires_00*.*']);
+    ea_delete([wd,'s',num2str(gs(s)),'dartelmni_6_hires_00*.*']);
 end
 
 % further cleanup
-delete([wd,'dartelmni_*.mat']);
+ea_delete([wd,'dartelmni_*.mat']);
 for c=1:tpmnum
-    delete([wd,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
+    ea_delete([wd,'dartelmni_6_hires_',sprintf('%05d',c),'.nii']);
 end
-%gzip([wd,'dartelmni_6_hires.nii']);
-%delete([wd,'dartelmni_6_hires.nii']);
+% gzip([wd,'dartelmni_6_hires.nii']);
+% ea_delete([wd,'dartelmni_6_hires.nii']);
 disp('Done.');
 
 ea_addshoot;
@@ -256,10 +256,10 @@ ea_addshoot;
 % nii.img=nii.img./repmat(sum(nii.img,4),1,1,1,6);
 % ea_save_untouch_nii(nii,[ea_space,'TPM.nii']);
 %
-% delete([ea_space,'*PM_0*.nii']);
-% delete([ea_space,'TPM.mat']);
+% ea_delete([ea_space,'*PM_0*.nii']);
+% ea_delete([ea_space,'TPM.mat']);
 % try
-% delete([ea_space,'catlas.nii']);
+%     ea_delete([ea_space,'catlas.nii']);
 % end
 
 % set marker that last gen TPM has been set.
