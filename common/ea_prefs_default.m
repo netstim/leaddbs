@@ -143,6 +143,7 @@ prefs.video.opts.Periodic=true;
 
 %% FEM-VAT settings:
 prefs.vat.gm='mask'; % set to 'atlas' to use current atlas single structures, 'mask' to use 'gm_mask.nii', set to 'tpm' to use c1 portion of tpm.
+prefs.vat.efieldmax=10000; % set upper limit for maximal values in efield.
 
 %% MER-Visualization:
 prefs.mer.rejwin = [1 60];
