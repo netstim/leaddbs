@@ -328,8 +328,8 @@ dimensionality=length(atlas_lgnd{1}); % how many ROI.
 
 gmtc=nan(size(interpol_tc,2),dimensionality);
 cnt=1;
-for c=vmaskentries
-    gmtc(:,cnt)=nanmean(interpol_tc(voxelmask.vals==c,:));
+for c=double(atlas_lgnd{1}')
+    gmtc(:,cnt)=nanmean(interpol_tc(voxelmask.vals==c,:),1);
     cnt=cnt+1;
 end
 

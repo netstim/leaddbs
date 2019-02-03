@@ -734,6 +734,13 @@ if ~isempty(uuid)
         system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripex(options.prefs.gprenii),'.nii'])]);
     end
     
+    %% add methods dump:
+    cits={
+        'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
+        'Horn, A., Li, N., Dembek, T. A., Kappel, A., Boulay, C., Ewert, S., et al. (2019). Lead-DBS v2: Towards a comprehensive pipeline for deep brain stimulation imaging. NeuroImage, 184, 293?316. http://doi.org/10.1016/j.neuroimage.2018.08.068'
+        };
+    ea_methods(options,['Fit to atlas structures was manually corrected using a custom-built tool implemented in Lead-DBS (www.lead-dbs.org; Horn & Kuehn 2015; Horn & Li et al. 2018).'],...
+        cits);
     
 else
         delete(hObject);
