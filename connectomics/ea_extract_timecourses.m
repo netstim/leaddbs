@@ -32,7 +32,8 @@ voxelmask.locsvx=voxelmask.locsvx(:,1:3);
 voxelmask.locsmm=voxelmask.locsmm(:,1:3);
 voxelmask.vals=round(vv);
 todel=[];
-for entry=unique(voxelmask.vals)'
+vmaskentries=unique(voxelmask.vals)';
+for entry=vmaskentries
     if sum(voxelmask.vals==entry)>10000 % normally sized ROI, can downsample for speed
     thisdelete=find(voxelmask.vals==entry);
     thisdelete=thisdelete(1:2:end);
@@ -326,8 +327,10 @@ atlas_lgnd=textscan(aID,'%d %s');
 dimensionality=length(atlas_lgnd{1}); % how many ROI.
 
 gmtc=nan(size(interpol_tc,2),dimensionality);
-for c=1:dimensionality
-    gmtc(:,c)=mean(interpol_tc(voxelmask.vals==c,:));
+cnt=1;
+for c=vmaskentries
+    gmtc(:,cnt)=nanmean(interpol_tc(voxelmask.vals==c,:));
+    cnt=cnt+1;
 end
 
 
