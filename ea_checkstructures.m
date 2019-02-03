@@ -335,6 +335,9 @@ for cts=cortrasag
     if isempty(contour)
         clear contour
     end
+    options.d2.con_overlay=1;
+    options.d2.lab_overlay=1;
+    options.d2.col_overlay=0;
     [hf,img,bb,contour{cts}]=ea_writeplanes(options,options.d2.depth,options.d2.tracor,Vs{options.d2.tracor},'off',2);
     bbs=getappdata(handles.checkstructures,'bbs');
     if isempty(bbs)

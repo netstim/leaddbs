@@ -4,7 +4,7 @@ function [cuts,allcontour]=ea_add_overlay(boundboxmm,cuts,tracor,options)
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
-
+allcontour=[];
 set(0,'CurrentFigure',cuts)
 try
     set(cuts,'GraphicsSmoothing','on')
