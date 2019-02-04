@@ -273,7 +273,18 @@ for source=S.sources
 
         ea_dispt('Calculating E-Field...');
         gradient{source} = ea_calc_gradient(vol,potential); % output in V/m.
-
+        %% stuff by Till to get high EF values for active electrodes
+        % this can be adjusted by assigning all tetrahedar belonging to the
+        % active electrode a new value:
+        % gradient{source}(elec_tet_ix,:) = new_value;
+        elec_tet_ix = sub2ind(size(mesh.pnt),vertcat(ix,ix,ix),vertcat(ones(length(ix),1),ones(length(ix),1).*2,ones(length(ix),1).*3));
+        elec_tet_ix = find(sum(ismember(mesh.tet,elec_tet_ix),2)==4);
+        
+%         gradient{source}(elec_tet_ix,:) = repmat(max(gradient{source}),[length(elec_tet_ix),1]); %assign maximum efield value        
+        tmp = sort(abs(gradient{source}),'descend');
+        gradient{source}(elec_tet_ix,:) = repmat(mean(tmp(1:ceil(length(tmp(:,1))*0.001),:)),[length(elec_tet_ix),1]); % choose mean of highest 0.1% as new efield value 
+        clear tmp
+        
     else % empty source..
         gradient{source}=zeros(size(vol.tet,1),3);
     end
@@ -284,7 +295,7 @@ gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient fr
 
 vol.pos=vol.pos*SIfx; % convert back to mm.
 
-midpts=mean(cat(3,vol.pos(vol.tet(:,1),:),vol.pos(vol.tet(:,2),:),vol.pos(vol.tet(:,3),:),vol.pos(vol.tet(:,4),:)),3);
+midpts=mean(cat(3,vol.pos(vol.tet(:,1),:),vol.pos(vol.tet(:,2),:),vol.pos(vol.tet(:,3),:),vol.pos(vol.tet(:,4),:)),3); % midpoints of each pyramid
 
 vatgrad=getappdata(resultfig,'vatgrad');
 if isempty(vatgrad)
