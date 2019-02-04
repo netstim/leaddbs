@@ -14,6 +14,6 @@ end
 disp('Coregistering postop CT to preop MRI...');
 ea_flirt([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...
           [options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],...
-          [options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
+          [options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],1);
 disp('Coregistration done.');
 
