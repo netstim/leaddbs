@@ -8,11 +8,13 @@ function color = ea_uisetcolor(varargin)
 % platforms, too). This warpper will set the color picker to the old
 % fashion for MATLAB R2016b and later versions on Linux. It can be used
 % until MATLAB fixes the bug in future release.
+%
+% Seems fixed on R2018b (9.5)
 
 ver = version;
 ver = str2double(ver(1:3));
 
-if ismac || ispc || ver < 9.1
+if ismac || ispc || ver < 9.1 %|| ver >= 9.5
     color = uisetcolor(varargin{:});
 else
     if ver == 9.1   % R2016b

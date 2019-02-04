@@ -122,47 +122,8 @@ setappdata(handles.leadfigure,'b0restanchor',b0restanchor)
 setappdata(handles.leadfigure,'activevolume',1);
 setappdata(handles.leadfigure,'options',options);
 
-% add atlases contextmenu
 set(handles.checkatl,'Visible','off');
-options=getappdata(handles.leadfigure,'options');
-[~,presentfiles]=ea_assignpretra(options);
 
-c = uicontextmenu(handles.leadfigure);
-handles.checkatl.UIContextMenu = c;
-atlases=dir(ea_space(options,'atlases'));
-atlases = {atlases(cell2mat({atlases.isdir})).name};    % only keep folders
-atlases = atlases(cellfun(@(x) ~strcmp(x(1),'.'), atlases));  % also remove '.', '..' and '.*' folders from dir results
-topmenu=cell(length(presentfiles),1);
-atlmenu=cell(length(presentfiles),length(atlases));
-warning('off');
-
-for p=1:length(presentfiles)
-    topmenu{p}=uimenu('Parent', c, 'Label', upper(regexp(presentfiles{p}, '(?<=anat_)(.*)(?=\.nii(\.gz)?)', 'match', 'once')));
-    for atl=1:length(atlases)
-        if ~exist([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'file')
-            continue
-        end
-        atlmenu{p,atl}=uimenu('Parent',topmenu{p},'Label',atlases{atl});
-        clear a
-
-        a=load([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'structures');
-        if isempty(fieldnames(a)) % old format
-            disp(['Re-indexing ',atlases{atl},'...']);
-            a=load([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat']);
-            a.structures=a.atlases.names;
-            save([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'-struct','a','-v7.3');
-        end
-        a.structures=ea_rmext(a.structures);
-        try
-            for strct=1:length(a.structures)
-                structmenu{p,atl,strct}=uimenu('Parent',atlmenu{p,atl},'Label',a.structures{strct},'Callback',{@ea_createatlascheck,options});
-            end
-        catch
-            keyboard
-        end
-    end
-end
-warning('on');
 
 ea_mrcview(handles);
 
@@ -429,6 +390,13 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
 currvol=presentfiles{activevolume};
 
+ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
+[options,anatspresent]=ea_assignpretra(options);
+for fi=2:length(anatspresent)
+    ea_delete([options.root,options.patientname,filesep,'gl',anatspresent{fi}]);
+end
+
+
 switch ea_stripex(currvol)
     case ea_stripex(options.prefs.gprenii)
         options.normalize.method=getappdata(handles.leadfigure,'normmethod');
@@ -569,8 +537,10 @@ function ext=ea_matext(method)
 switch upper(method)
     case 'SPM'
         ext='spm.mat';
-    case 'FSL'
+    case {'FSL FLIRT'}
         ext='flirt1.mat';
+    case 'FSL BBR'
+        ext='flirtbbr.mat';
     case 'ANTS'
         ext='ants1.mat';
     case 'BRAINSFIT'
@@ -894,10 +864,12 @@ function checkatl_Callback(hObject, eventdata, handles)
 % hObject    handle to checkatl (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-CurPos = get(0, 'PointerLocation');
-figPos = get(gcf,'Position');
-handles.checkatl.UIContextMenu.Position = CurPos - figPos(1:2);
-handles.checkatl.UIContextMenu.Visible='on';
+options=getappdata(handles.leadfigure,'options');
+presentfiles=getappdata(handles.leadfigure,'presentfiles');
+directory=getappdata(handles.leadfigure,'directory');
+
+ea_checkstructures(options);
+
 
 
 % --- Executes on button press in openpatientdir.

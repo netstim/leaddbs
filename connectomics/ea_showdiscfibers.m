@@ -3,14 +3,14 @@ function ea_showdiscfibers(M,discfiberssetting,resultfig)
 patlist=M.patient.list(M.ui.listselect);
 I=M.clinical.vars{M.ui.clinicallist}(M.ui.listselect);
 
-N=length(patlist);
-thresh=0.5; 
+thresh=0.5;
 tic
 
 % Get discriminative fiber setting
 connthreshold = discfiberssetting.connthreshold/100;
-predthreshold = discfiberssetting.predthreshold/100;
-showpositiveonly = discfiberssetting.showpositiveonly;
+showfibersset = discfiberssetting.showfibersset;
+pospredthreshold = discfiberssetting.pospredthreshold/100;
+negpredthreshold = discfiberssetting.negpredthreshold/100;
 
 % protocol selection to be able to check if same analysis has been run
 % before.
@@ -22,6 +22,7 @@ opts.allpatients=M.patient.list;
 
 [reforce,connectomechanged,reformat]=checkpresence(M,opts);
 if reforce
+    allroilist=cell(length(M.patient.list),2);
     for sub=1:length(M.patient.list) % all patients - for connected fibers selection
         allroilist{sub,1}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii'];
         allroilist{sub,2}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii'];
@@ -47,7 +48,6 @@ end
 if reformat
     fibidx=unique(fibsweighted(:,4));
     fibcell=cell(length(fibidx),1);
-    valcell=fibcell;
     vals=zeros(length(fibidx),1);
     cnt=1;
     ea_dispercent(0,'reformatting fibers');
@@ -65,55 +65,126 @@ end
 
 set(0,'CurrentFigure',resultfig);
 
-%ea_mnifigure;
-colormap gray
-rb=ea_redblue;
-cvals=vals;
-cvals(isnan(cvals))=0;
-cvals=cvals./max([abs(nanmin(cvals)),abs(nanmax(cvals))]);
+% Normalize vals
+vals(isnan(vals))=0;
+vals=vals./max(abs(vals));
 
-% retain only 5% positive and 5% of negative predictive fibers:
-posits=cvals(cvals>0);
-negits=cvals(cvals<0);
+% vals and fibcell to be trimmed for visualization
+tvals=vals;
+tfibcell=fibcell;
+
+% Calculate positive/negative threshold for positive/negative predictive
+% fibers according to 'predthreshold'
+posits=tvals(tvals>0);
+negits=tvals(tvals<0);
 posits=sort(posits,'descend');
 negits=sort(negits,'ascend');
-posthresh=posits(round(length(posits)*predthreshold));
+posthresh=posits(round(length(posits)*pospredthreshold));
+negthresh=negits(round(length(negits)*negpredthreshold));
 
-if showpositiveonly
-    negthresh = negits(1)-eps;
-    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' - ',num2str(max(posits)), ')']);
-else
-    negthresh=negits(round(length(negits)*predthreshold));
-    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' - ',num2str(max(posits)), ...
-          '); Negative (T = ',num2str(negthresh),' - ',num2str(min(negits)),').']);
+% Save the original values for reusing in slider
+setappdata(resultfig, 'vals', vals);
+setappdata(resultfig, 'fibcell', fibcell);
+setappdata(resultfig, 'showfibersset', showfibersset);
+setappdata(resultfig, 'pospredthreshold', pospredthreshold);
+setappdata(resultfig, 'negpredthreshold', negpredthreshold);
+setappdata(resultfig, 'posits', posits);
+setappdata(resultfig, 'negits', negits);
+
+switch showfibersset
+    case 'positive'
+        negthresh = negits(1)-eps;
+        disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ')']);
+    case 'negative'
+        posthresh = posits(1)+eps;
+        disp(['Fiber colors: Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh), ')']);
+    case 'both'
+        disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ...
+          '); Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh),').']);
 end
 
-remove=logical(logical(cvals<posthresh) .* logical(cvals>negthresh));
-cvals(remove)=[];
-fibcell(remove)=[];
-cvals(cvals>0)=ea_minmax(cvals(cvals>0));
-cvals(cvals<0)=-ea_minmax(-cvals(cvals<0));
-alphas=abs(cvals);
+% Remove tvals and fibers outside the thresholding range
+remove=logical(logical(tvals<posthresh) .* logical(tvals>negthresh));
+tvals(remove)=[];
+tfibcell(remove)=[];
 
-cvals=cvals*31.5;
-cvals=cvals+32.5;
+% Rescale positive/negative tvals to [0 1]/[-1 0]
+tvalsRescale = tvals;
+tvalsRescale(tvals>0)=ea_minmax(tvals(tvals>0));
+tvalsRescale(tvals<0)=-ea_minmax(-tvals(tvals<0));
 
-cvals=rb(round(cvals),:);
-h=streamtube(fibcell,0.2);
-cv=mat2cell(cvals,ones(size(cvals,1),1));
+% Contruct colormap
+colormap gray
+map=ea_redblue(1024);
+fibcolorInd=tvalsRescale*(size(map,1)/2-0.5);
+fibcolorInd=fibcolorInd+(size(map,1)/2+0.5);
 
-% transform alphas to a logistic curve to highlight more predictive and
-% suppress less predictive fibers:
-alphas=1./(1+exp((-10)*(alphas-0.5)));
+% Set alphas of fibers with light color to 0
+colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
+negUpperBound=ceil(size(map,1)/2*colorbarThreshold);
+poslowerBound=floor((size(map,1)-size(map,1)/2*colorbarThreshold));
+alphas=zeros(size(fibcolorInd,1),1);
+switch showfibersset
+    case 'positive'
+        alphas(round(fibcolorInd)>=poslowerBound) = 1;
+    case 'negative'
+        alphas(round(fibcolorInd)<=negUpperBound) = 1;
+    case 'both'
+        alphas(round(fibcolorInd)>=poslowerBound) = 1;
+        alphas(round(fibcolorInd)<=negUpperBound) = 1;
+end
 
-alphas=alphas./nanmax(alphas);
-calph=mat2cell(alphas,ones(size(cvals,1),1));
+alphas(round(fibcolorInd)>=poslowerBound) = 1;
+fibalpha=mat2cell(alphas,ones(size(fibcolorInd,1),1));
 
-[h.FaceColor]=cv{:};
-[h.FaceAlpha]=calph{:};
-
-nones=repmat({'none'},size(cvals,1),1);
+% Plot fibers
+h=streamtube(tfibcell,0.2);
+nones=repmat({'none'},size(fibcolorInd));
 [h.EdgeColor]=nones{:};
+
+% Calulate fiber colors
+colors=map(round(fibcolorInd),:);
+fibcolor=mat2cell(colors,ones(size(fibcolorInd)));
+
+% Set fiber colors and alphas
+[h.FaceColor]=fibcolor{:};
+[h.FaceAlpha]=fibalpha{:};
+
+setappdata(resultfig, 'discfibers', h);
+
+% Set colorbar tick positions and labels
+cbvals = tvals(logical(alphas));
+% cbvals=tvalsRescale(logical(alphas));
+switch showfibersset
+    case 'positive'
+        cbmap = map(ceil(length(map)/2+0.5):end,:);
+        tick = [poslowerBound, length(map)] - floor(length(map)/2) ;
+        poscbvals = sort(cbvals(cbvals>0));
+        ticklabel = [poscbvals(1), poscbvals(end)];
+        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+    case 'negative'
+        cbmap = map(1:floor(length(map)/2-0.5),:);
+        tick = [1, negUpperBound];
+        negcbvals = sort(cbvals(cbvals<0));
+        ticklabel = [negcbvals(1), negcbvals(end)];
+        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+    case 'both'
+        cbmap = map;
+        tick = [1, negUpperBound, poslowerBound, length(map)];
+        poscbvals = sort(cbvals(cbvals>0));
+        negcbvals = sort(cbvals(cbvals<0));
+        ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
+        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+end
+
+% Plot colorbar
+cbfig = ea_plot_colorbar(cbmap, [], 'v', '', tick, ticklabel);
+set(cbfig, 'NumberTitle', 'off');
+setappdata(resultfig, 'cbfig', cbfig);
+
+% Discriminative fiber control
+discfiberscontrol = ea_discfiberscontrol(resultfig);
+setappdata(resultfig, 'discfiberscontrol', discfiberscontrol);
 
 
 function [reforce,connectomechanged,reformat]=checkpresence(M,opts)

@@ -1,4 +1,4 @@
-function [cuts,expslice]=ea_writeplanes(varargin)
+function [cuts,expslice,boundboxmm,allcontour]=ea_writeplanes(varargin)
 
 % This function exports slice views of all electrode contacts reconstructed
 % priorly. Images are written as .png image files. Bot transversal and
@@ -80,7 +80,7 @@ else
     elstruct=[elstruct,1]';
     coordsmm=elstruct;
     elstruct=manualV.mat\elstruct;
-    planedim=getdims(manualtracor,1);
+    planedim=ea_getdims(manualtracor,1);
     %elstruct=elstruct(planedim);
 end
 %XYZ_src_vx = src.mat \ XYZ_mm;
@@ -125,7 +125,7 @@ for side=1:length(options.sides)
                     end
             end
             
-            [planedim,onedim, secdim , dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=getdims(tracor,side);
+            [planedim,onedim, secdim , dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=ea_getdims(tracor,side);
             
             %title(['Electrode ',num2str(el-1),', transversal view.']);
             
@@ -188,7 +188,7 @@ for side=1:length(options.sides)
                     options.atlases = atlases;
                 end
                 if isfield(options, 'atlases') || ~strcmp(options.atlasset, 'Use none')
-                    cuts = ea_add_overlay(boundboxmm, cuts, tracor, options);
+                    [cuts,allcontour] = ea_add_overlay(boundboxmm, cuts, tracor, options);
                 end
             end
             set(hi,'XData',boundboxmm{onedim},'YData',boundboxmm{secdim});
@@ -313,15 +313,22 @@ for side=1:length(options.sides)
                 elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
                 
                 if isstruct(elstruct) && ((elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts))
-                    wstr='w';
+                    wstr=[1,1,1];
+                    if isfield(elstruct,'group')
+                    wstr=elstruct(c).groupcolors(elstruct(c).group,:);
+                    
+                    end
+                    estr=wstr./2;
                     if options.d3.hlactivecontacts
                         if elstruct(c).activecontacts{side}(elcnt)
-                            wstr='r';
+                            %wstr='r';
+                            estr='r';
                         end
                     end
+                    
                     if options.d2.fid_overlay
                         
-                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'*','MarkerSize',15,'MarkerEdgeColor',wstr,'MarkerFaceColor',[0.9 0.9 0.9],'LineWidth',4);
+                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'o','MarkerSize',10,'MarkerEdgeColor',estr,'MarkerFaceColor',wstr,'LineWidth',2);
                     end
                 end
             end
@@ -677,64 +684,7 @@ str(str=='_')=' ';
 
 
 
-function [planedim,onedim, secdim, dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=getdims(tracor,side)
 
-switch tracor
-    
-    case 1 % transversal images
-        onedim=1;
-        secdim=2;
-        planedim=3;
-        dstring='tra';
-        lstring='z = ';
-        Ltxt='M';
-        Rtxt='L';
-        plusminusc='plus';
-        switch side
-            case 1
-                plusminusr='minus';
-                plusminusl='plus';
-            case 2
-                plusminusr='plus';
-                plusminusl='minus';
-        end
-    case 2 % coronal images
-        onedim=1;
-        secdim=3;
-        planedim=2;
-        dstring='cor';
-        lstring='y = ';
-        Ltxt='M';
-        Rtxt='L';
-        plusminusc='minus';
-        
-        switch side
-            case 1
-                plusminusr='minus';
-                plusminusl='plus';
-            case 2
-                plusminusr='plus';
-                plusminusl='minus';
-        end
-    case 3 % saggital images
-        onedim=2;
-        secdim=3;
-        planedim=1;
-        dstring='sag';
-        lstring='x = ';
-        Ltxt='P';
-        Rtxt='A';
-        plusminusc='minus';
-        switch side
-            case 1
-                plusminusr='plus';
-                plusminusl='minus';
-            case 2
-                plusminusr='plus';
-                plusminusl='minus';
-        end
-        
-end
 
 
 

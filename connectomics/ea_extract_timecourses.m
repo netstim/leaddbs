@@ -7,26 +7,14 @@ ea_warp_parcellation(['r', options.prefs.rest], options);
 vizz=0;
 
 %% create voxelmask
-disp('Extracting time courses...');
 [~,rrf]=fileparts(options.prefs.rest);
 Vatl=spm_vol([directory,'templates',filesep,'labeling',filesep,'r',rrf,'w',options.lc.general.parcellation,'.nii']);
 Xatl=spm_read_vols(Vatl);
-
+Xatl(isnan(Xatl))=0;
 nonzeros=find(Xatl(:));
 vv=Xatl(nonzeros);
 
 [xx,yy,zz]=ind2sub(size(Xatl),nonzeros);
-
-voxelmask.locsvx=[xx,yy,zz,ones(size(xx,1),1)]';
-voxelmask.locsmm=[Vatl.mat*voxelmask.locsvx]';
-voxelmask.locsvx=voxelmask.locsvx(1:3,:)';
-voxelmask.locsmm=voxelmask.locsmm(:,1:3);
-voxelmask.vals=round(vv);
-
-%% set some initial parameters here:
-TR=options.lc.func.prefs.TR;
-save([directory,'TR.mat'],'TR');
-
 restfilename=options.prefs.pprest;
 signallength=ea_detsiglength([directory,restfilename]);
 stringnum=cell(signallength,1);
@@ -36,12 +24,40 @@ for i=1:signallength
 end
 single_s_files=cellfun(@(x) [directory,restfilename,',',x],stringnum,'Uniformoutput',false);
 single_s_files=single_s_files';
+V=spm_vol(single_s_files);
+voxelmask.locsvx=[xx,yy,zz,ones(size(xx,1),1)]';
+voxelmask.locsmm=[Vatl.mat*voxelmask.locsvx]'; % get from voxels in parcellations to mm
+voxelmask.locsvx=[V{1}.mat\voxelmask.locsmm']'; % get from mm to voxels in restfile
+voxelmask.locsvx=voxelmask.locsvx(:,1:3);
+voxelmask.locsmm=voxelmask.locsmm(:,1:3);
+voxelmask.vals=round(vv);
+todel=[];
+vmaskentries=unique(voxelmask.vals)';
+for entry=vmaskentries
+    if sum(voxelmask.vals==entry)>10000 % normally sized ROI, can downsample for speed
+    thisdelete=find(voxelmask.vals==entry);
+    thisdelete=thisdelete(1:2:end);
+    todel=[todel;thisdelete];
+    end
+end
+voxelmask.locsmm(todel,:)=[];
+voxelmask.locsvx(todel,:)=[];
+voxelmask.vals(todel)=[];
+
+%% set some initial parameters here:
+TR=options.lc.func.prefs.TR;
+save([directory,'TR.mat'],'TR');
+
+
+
 
 %% Extract timecourses of specified ROI
-V=spm_vol(single_s_files);
+ea_dispercent(0,'Extracting time courses');
 for i=1:signallength
-    interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),1);
+    interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),-2);
+    ea_dispercent(i/signallength);
 end
+ea_dispercent(1,'end');
 interpol_tc=interpol_tc';
 
 disp('Done.');
@@ -147,9 +163,13 @@ CSFTimecourse=zeros(signallength,1);
 GlobTimecourse=zeros(signallength,1);
 for tmpt = 1:signallength
     OneTimePoint=alltc(:,:,:,tmpt);
+    try
     GlobTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(globmap(:))));
     WMTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec2map(:))));
     CSFTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec3map(:))));
+    catch
+        keyboard
+    end
 end
 
 if vizz
@@ -307,8 +327,10 @@ atlas_lgnd=textscan(aID,'%d %s');
 dimensionality=length(atlas_lgnd{1}); % how many ROI.
 
 gmtc=nan(size(interpol_tc,2),dimensionality);
-for c=1:dimensionality
-    gmtc(:,c)=mean(interpol_tc(voxelmask.vals==c,:));
+cnt=1;
+for c=double(atlas_lgnd{1}')
+    gmtc(:,cnt)=nanmean(interpol_tc(voxelmask.vals==c,:),1);
+    cnt=cnt+1;
 end
 
 
@@ -320,8 +342,9 @@ cits={
     'Horn, A., Ostwald, D., Reisert, M., & Blankenburg, F. (2014). The structural-functional connectome and the default mode network of the human brain. NeuroImage, 102 Pt 1, 142?151. http://doi.org/10.1016/j.neuroimage.2013.09.069'
     'Weissenbacher, A., Kasess, C., Gerstl, F., Lanzenberger, R., Moser, E., & Windischberger, C. (2009). Correlations and anticorrelations in resting-state functional connectivity MRI: a quantitative comparison of preprocessing strategies., 47(4), 1408?1416. http://doi.org/10.1016/j.neuroimage.2009.05.005'
     'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
+    'Horn, A., Li, N., Dembek, T. A., Kappel, A., Boulay, C., Ewert, S., et al. (2019). Lead-DBS v2: Towards a comprehensive pipeline for deep brain stimulation imaging. NeuroImage, 184, 293?316. http://doi.org/10.1016/j.neuroimage.2018.08.068'
     };
-ea_methods(options,['Resting-state fMRI data was preprocessed following the pipeline described in (Horn 2014) as implemented in Lead-DBS software (Horn 2015; www.lead-dbs.org). Pre-processing steps broadly follow the suggestions made in ',...
+ea_methods(options,['Resting-state fMRI data was preprocessed following the pipeline described in (Horn et al. 2014) as implemented in Lead-DBS software (Horn & K?hn 2015; Horn & Li et al. 2018; www.lead-dbs.org). Pre-processing steps broadly follow the suggestions made in ',...
     ' (Weissenbacher 2009). This involved realignment of data, regression of movement-parameters, a WM-, CSF- as well as global signal and band-pass filtering (',num2str(options.prefs.lc.func.bphighcutoff),'-',...
     num2str(options.prefs.lc.func.bplowcutoff),' Hz). No spatial smoothing was applied.'],...
     cits);

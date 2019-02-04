@@ -14,6 +14,7 @@ switch nativemni
             ct=ea_load_nii([directory,options.prefs.ctnii_coregistered]);
             ct.fname=[directory,'tp_',options.prefs.ctnii_coregistered];
             ct.img=ea_tonemap_ct(ct.img);
+            ct.dt=[16,0];
             ea_write_nii(ct);
         else
             fprintf('%s not present. Skipping tonemapping.\n', options.prefs.ctnii_coregistered);

@@ -221,45 +221,47 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
             try
                 [options.root,options.patientname]=fileparts(M.patient.list{pt});
                 options.root=[options.root,filesep];
-                [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
-
-                if M.ui.elmodelselect==1 % use patient specific elmodel
-                    if exist('elmodel','var')
-                        M.elstruct(pt).elmodel=elmodel;
+                if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+                    [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
+                    
+                    if M.ui.elmodelselect==1 % use patient specific elmodel
+                        if exist('elmodel','var')
+                            M.elstruct(pt).elmodel=elmodel;
+                        else
+                            M.elstruct(pt).elmodel='Medtronic 3389'; % use default for older reconstructions that did not store elmodel.
+                        end
                     else
-                        M.elstruct(pt).elmodel='Medtronic 3389'; % use default for older reconstructions that did not store elmodel.
+                        elmodels=get(handles.elmodelselect,'String');
+                        M.elstruct(pt).elmodel=elmodels{get(handles.elmodelselect,'Value')};
+                        
                     end
-                else
-                    elmodels=get(handles.elmodelselect,'String');
-                    M.elstruct(pt).elmodel=elmodels{get(handles.elmodelselect,'Value')};
-
-                end
-
-                % make sure coords_mm is congruent to coded electrode
-                % model:
-                poptions=options;
-                poptions.native=0;
-                poptions.elmodel=M.elstruct(pt).elmodel;
-                poptions=ea_resolve_elspec(poptions);
-                ea_recode_coords(poptions);
-
-                M.elstruct(pt).coords_mm=coords_mm;
-                M.elstruct(pt).coords_acpc=coords_acpc;
-                M.elstruct(pt).trajectory=trajectory;
-
-                M.elstruct(pt).name=[pats{pt}];
-                if ~exist('markers','var') % backward compatibility to old recon format
-
-                    for side=1:2
-                        markers(side).head=coords_mm{side}(1,:);
-                        markers(side).tail=coords_mm{side}(4,:);
-                        normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-                        orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-                        markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
-                        markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+                    
+                    % make sure coords_mm is congruent to coded electrode
+                    % model:
+                    poptions=options;
+                    poptions.native=0;
+                    poptions.elmodel=M.elstruct(pt).elmodel;
+                    poptions=ea_resolve_elspec(poptions);
+                    [coords_mm,trajectory,markers]=ea_resolvecoords(markers,poptions,0);
+                    
+                    M.elstruct(pt).coords_mm=coords_mm;
+                    M.elstruct(pt).coords_acpc=coords_acpc;
+                    M.elstruct(pt).trajectory=trajectory;
+                    
+                    M.elstruct(pt).name=[pats{pt}];
+                    if ~exist('markers','var') % backward compatibility to old recon format
+                        
+                        for side=1:2
+                            markers(side).head=coords_mm{side}(1,:);
+                            markers(side).tail=coords_mm{side}(4,:);
+                            normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
+                            orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
+                            markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
+                            markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+                        end
                     end
+                    M.elstruct(pt).markers=markers;
                 end
-                M.elstruct(pt).markers=markers;
             catch
                 if pt>1 % first patient has worked but some other patient seems not to have worked.
                     try

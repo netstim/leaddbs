@@ -34,7 +34,7 @@ if ~options.savefibers.load
     disp('Loading fiberset...');
     if ~changedstates(1) && ~isempty(getappdata(resultfig,'fibers')) % fibers file already loaded
         fibers=getappdata(resultfig,'fibers');
-        idxv=fibers(:,4);
+        idxv=getappdata(resultfig,'idxv');
         fibers=fibers(:,1:3);
         fibersidx=getappdata(resultfig,'fibersidx');
     else % load data
@@ -49,6 +49,7 @@ if ~options.savefibers.load
         fibers=fibers(:,1:3);
         setappdata(resultfig,'fibersidx',fibersidx);
         setappdata(resultfig,'fibers',fibers);
+        setappdata(resultfig,'idxv',idxv);
         %setappdata(resultfig,'fibersfile',fibersfile);
     end
     numtotalfibs=length(fibersidx);

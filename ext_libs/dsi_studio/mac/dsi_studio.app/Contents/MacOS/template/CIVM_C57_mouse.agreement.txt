@@ -1,0 +1,7 @@
+1. These data are made available as a service to the research community by Duke University through its Center for In Vivo Microscopy ("Duke CIVM"), located at DUMC-Center for InVivo Microscopy, Bryan Research Building, 311 Research Dr, Box 3302, Durham, NC 27710.
+
+2.The data are provided for research and educational uses. No rights are provided to User under any patent applications, trade secrets, copyrights, or other proprietary rights of Duke CIVM, except as necessary to use the data and images for such research and educational purposes. Neither this data nor the results of use of the data shall be used as the basis for any commercial product or service offered to third parties
+
+3. The user shall not transfer the data and images contained herein to any third party without express written permission from Duke CIVM. The User shall not rebroadcast or publicly display images or video without express written permission from Duke CIVM. This shall not be taken to prevent the User from including representative images and data in academic publications of User's research results.
+
+4. The User is encouraged to publish the results of his or her research. All publications based upon use of the data shall acknowledge the Duke University Center for In Vivo Microscopy and Calabrese et al Cerebral Cortex 25(11), pp 4628-4637, 2015.

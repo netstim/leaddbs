@@ -23,16 +23,10 @@ switch type
             end
             addfibertract([pana,fina],resultfig,addht,fina,[],0,options);
         end
-
     case 'roi' % atlas
-
         % open dialog
         [fina,pana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-
-
-
         if iscell(fina) % multiple files
-
             for fi=1:length(fina)
                 addroi([pana,fina{fi}],resultfig,addht,fina{fi},options);
             end
@@ -42,22 +36,17 @@ switch type
             end
             addroi([pana,fina],resultfig,addht,fina,options);
         end
-
-
     case 'tractmap'
         [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
         [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
         addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,tfina,rfina,options)
-
-
 end
 
 axis fill
 
 
-
-
 function addtractweighted(tract,weight,resultfig,addht,tfina,rfina,options)
+
 disp('Loading fibertracts...');
 [fibers,idx,voxmm,mat]=ea_loadfibertracts(tract);
 disp('Done.');
@@ -120,7 +109,6 @@ fv=ea_concatfv(fv);
 addobjr=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.3);
 
 % add toggle button:
-
 addbutn=uitoggletool(addht,'CData',ea_get_icn('fiber'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
 %storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
 drawnow
@@ -141,7 +129,7 @@ nii.img(isnan(nii.img))=0;
 %     ea_reslice_nii(addobj,addobj,[0.5,0.5,0.5],0,[],3);
 %     nii=ea_load_nii(addobj);
 % end
-%nii.img=round(nii.img);
+% nii.img=round(nii.img);
 
 [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); %(mean(nii.img(nii.img~=0))/3))); % find 3D-points that have correct value.
 
@@ -169,23 +157,17 @@ fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
 fv.vertices=[fv.vertices;fvc.vertices];
 
 if ischar(options.prefs.hullsimplify)
-
     % get to 700 faces
     simplify=700/length(fv.faces);
     fv=reducepatch(fv,simplify);
-
 else
     if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-
         fv=reducepatch(fv,options.prefs.hullsimplify);
     elseif options.prefs.hullsimplify>1
         simplify=options.prefs.hullsimplify/length(fv.faces);
         fv=reducepatch(fv,simplify);
     end
 end
-
-
-
 
 %?atlasc=59; %rand*64;
 jetlist=jet;
@@ -196,8 +178,6 @@ atlasc=double(rgb2ind(co,jetlist));
 
 cdat=abs(repmat(atlasc,length(fv.vertices),1) ... % C-Data for surface
     +randn(length(fv.vertices),1)*2)';
-
-
 
 % show atlas.
 set(0,'CurrentFigure',resultfig);
@@ -210,16 +190,36 @@ addbutn=uitoggletool(addht,'CData',ea_get_icn('atlas',c),'TooltipString',fina,'O
 storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
 drawnow
 
+
 function addfibertract(addobj,resultfig,addht,fina,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
     if strfind(addobj,'.mat')
         load(addobj);
-        thisset = fibers';
-        fibidx = idx;
-        clear fibers idx
+        if exist('fibsin', 'var')
+            fibers = fibsin;
+            clear fibsin
+        end
+        if exist('fibers', 'var')
+            if size(fibers,1) < size(fibers,2)
+                fibers = fibers';
+            end
+            if size(fibers,2) == 4
+                thisset = fibers(:,1:3);
+                [~,~,idx] = unique(fibers(:,4));
+                fibidx = accumarray(idx,1);
+            elseif size(fibers,2) == 3
+                thisset = fibers;
+                fibidx = idx;
+            else
+                error('Wrong input fiber tracts format!');
+            end
+            clear fibers idx
+        else
+            error('No fiber tracts found!');
+        end
     elseif strfind(addobj,'.trk')
         fileOut = [addobj(1:end-3) 'mat'];
-        disp(['Converting .trk to ftr.'])
+        disp('Converting .trk to ftr.')
         [thisset,fibidx] = ea_trk2ftr(addobj);
         thisset = thisset';
     else
@@ -234,8 +234,9 @@ fib_copy.fibs=thisset; % backup of whole original fiberset will be stored in fig
 fib_copy.idx=fibidx;
 
 if ~isempty(connect) % select fibers based on connecting roi info (i.e. delete all other fibers).
-    for roi=1:length(connect.rois) % check connectivities..
+    for roi=1:length(connect.rois) % check connectivities
         in=inhull(thisset,connect.xyz{roi})';
+        idxv = cell2mat(arrayfun(@(x, y) ones(x,1)*y, fibidx, (1:numel(fibidx))', 'Uni', 0));
         selectedfibs{roi}=unique(idxv(in));
     end
     selectedfibs=unique(cell2mat(selectedfibs(:)));
@@ -270,7 +271,7 @@ end
 
 %% new visualization part
 c = ea_uisetcolor;
-if c == 0;
+if c == 0
     c=NaN;
 end
 addobjr=ea_showfiber(thisset,fibidx,c);

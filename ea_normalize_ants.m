@@ -43,9 +43,12 @@ if usebrainmask
 else
     bprfx='';
 end
-
 spacedef=ea_getspacedef; % get definition of current space we are working in
 [~,anatpresent]=ea_assignpretra(options);
+
+
+
+
 if usefa && spacedef.hasfa % first put in FA since least important (if both an FA template and an fa2anat file is available)
 
     if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
@@ -55,7 +58,7 @@ if usefa && spacedef.hasfa % first put in FA since least important (if both an F
         weights(cnt)=0.5;
         cnt=cnt+1;
     elseif exist([directory,options.prefs.fa],'file') % recheck if now is present.
-            disp('Including FA information for white-matter normalization.');
+            disp('Including FA information for white-matter normalization (weight = 0.5).');
             ea_coreg2images(options,[directory,bprfx,options.prefs.fa],[directory,anatpresent{1}],[directory,bprfx,options.prefs.fa2anat],{},0,[],1);
             to{cnt}=[ea_space(options),'fa.nii'];
             from{cnt}=[directory,bprfx,options.prefs.fa2anat];
@@ -67,16 +70,52 @@ end
 anatpresent=flip(anatpresent); % reverse order since most important transform should be put in last.
 % The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
 for anatf=1:length(anatpresent)
-    disp(['Including ',anatpresent{anatf},' data for (grey-matter) normalization']);
+    disp(['Including ',anatpresent{anatf},' data for (grey-matter) normalization (weight = 1.25)']);
 
     to{cnt}=ea_niigz([ea_space(options),ea_det_to(anatpresent{anatf},spacedef)]);
     if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
         ea_maskimg(options,[directory,anatpresent{anatf}],bprfx);
     end
     from{cnt}=[directory,bprfx,anatpresent{anatf}];
-    weights(cnt)=1.25;
+
+        weights(cnt)=1.25;
+   
     cnt=cnt+1;
 end
+
+
+if exist([directory,'segmentations'],'dir')
+    segs=dir([directory,'segmentations']);
+    for seg=1:length(segs)
+        if ~strcmp(segs(seg).name(1),'.')
+            if strfind(segs(seg).name,'.nii')
+                if exist(ea_niigz([ea_space,'segmentations',filesep,segs(seg).name]),'file') % check if matching template exists
+                    disp(['Including segmentations/',segs(seg).name,' for segment based assistance (weight = 3).']);
+                    from=[{[directory,'segmentations',filesep,segs(seg).name]},from]; % append to front (since last one is convergence critical)
+                    to=[{ea_niigz([ea_space,'segmentations',filesep,segs(seg).name])},to];
+                    weights=[3,weights]; % set weight to 3 - DO NOT CHANGE THIS VALUE. IF VALUE IS CHANGED, SEGMENTATIONS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
+                end
+            end
+        end
+    end 
+end
+
+if exist([directory,'fiducials'],'dir')
+    segs=dir([directory,'fiducials']);
+    for seg=1:length(segs)
+        if ~strcmp(segs(seg).name(1),'.')
+            if strfind(segs(seg).name,'.nii')
+                if exist(ea_niigz([ea_space,'fiducials',filesep,segs(seg).name]),'file') % check if matching template exists
+                    disp(['Including fiducials/',segs(seg).name,' for fiducial based assistance (weight = 3).']);
+                    from=[{[directory,'fiducials',filesep,segs(seg).name]},from]; % append to front (since last one is convergence critical)
+                    to=[{ea_niigz([ea_space,'fiducials',filesep,segs(seg).name])},to];
+                    weights=[3,weights]; % set weight to 3 - DO NOT CHANGE THIS VALUE. IF VALUE IS CHANGED, FIDUCIALS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
+                end
+            end
+        end
+    end 
+end
+
 
 if includeatlas % append as last to make criterion converge on this one.
     to{cnt}=ea_niigz([ea_space(options),'atlas']);
@@ -195,7 +234,7 @@ anatfile=strrep(anatfile,'anat_','');
 anatfile=strrep(anatfile,'.nii','');
 
 for avtpl=1:length(spacedef.templates)
-    if ismember(anatfile,spacedef.norm_mapping{avtpl})
+    if contains(anatfile,spacedef.norm_mapping{avtpl}) % e.g. anat_t22 would still use t2 template
         template2use=spacedef.templates{avtpl};
         return
     end

@@ -385,6 +385,7 @@ end
 ea_dispt('Filling data with values from interpolant...');
 eeg = F(gv);
 eeg(isnan(eeg))=0;
+eeg(eeg>options.prefs.vat.efieldmax)=options.prefs.vat.efieldmax; % upperlimit files to 10000.
 
 %figure, plot3(F.Points(:,1),F.Points(:,2),F.Points(:,3),'r.')
 %hold on

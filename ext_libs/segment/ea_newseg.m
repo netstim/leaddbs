@@ -30,6 +30,9 @@ else
         job.channel(fi).biasfwhm = 60;
         job.channel(fi).write = [0 0];
     end
+    
+    job.warp.reg=job.warp.reg*options.prefs.machine.normsettings.spmnewseg_scalereg;
+
     tpmHdr = ea_open_vol(tpminf);
     tpmnum = tpmHdr.volnum;
 

@@ -8,6 +8,45 @@ end
 
 
 function ea_antsnl_monostep(props)
+directory=props.directory;
+refinewarp=0;
+if exist([props.outputbase,'Composite',ea_getantstransformext(directory)],'file') % prior ANTs transform found.
+    prefs=ea_prefs;
+    switch prefs.machine.normsettings.ants_usepreexisting
+        case 1 % ask
+            answ=questdlg('We found existing ANTs transform files. Do you wish to build upon these transform (i.e. refine them) or discard them and start from scratch?','Old ANTs transform found.','Refine','Start from scratch','Start from scratch');
+            switch lower(answ)
+                case 'refine'                    
+                    refinewarp=1;
+                    props.rigidstage='';
+                    props.affinestage='';
+                case 'start from scratch'
+                    ea_delete([props.outputbase,'Composite',ea_getantstransformext(directory)])
+                    ea_delete([props.outputbase,'InverseComposite',ea_getantstransformext(directory)])
+                    refinewarp=0;
+            end
+        case 2 % reuse
+            refinewarp=1;
+            props.rigidstage='';
+            props.affinestage='';
+        case 3 % overwrite
+            % clean old deformation field. this is important for cases where ANTs
+            % crashes and the user does not get an error back. Then, preexistant old transforms
+            % will be considered as new ones.
+            ea_delete([props.outputbase,'Composite',ea_getantstransformext(directory)])
+            ea_delete([props.outputbase,'InverseComposite',ea_getantstransformext(directory)])
+            refinewarp=0;
+    end
+end
+
+if refinewarp
+     initreg=[' --write-composite-transform 0', ...
+                ' --initial-moving-transform ',ea_path_helper([props.outputbase,'Composite',ea_getantstransformext(directory)])];
+else
+    initreg=[' --write-composite-transform 1', ...
+    ' --initial-moving-transform [', props.fixed, ',', props.moving, ',0]'];
+end
+
 
 cmd = [props.ANTS, ' --verbose 1', ...
     ' --dimensionality 3', ...
@@ -16,7 +55,7 @@ cmd = [props.ANTS, ' --verbose 1', ...
     ' --use-histogram-matching 0', ...
     ' --float 1',...
     ' --winsorize-image-intensities [0.005,0.995]', ...
-    ' --write-composite-transform 1', ...
+    initreg, ...
     props.rigidstage, props.affinestage, props.synstage, props.slabstage, props.synmaskstage];
 
 fid = fopen([props.directory,'ea_ants_command.txt'],'a');
@@ -24,12 +63,81 @@ fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
 fclose(fid);
 
 if ~ispc
-    system(['bash -c "', cmd, '"']);
+    status=system(['bash -c "', cmd, '"']);
 else
-    system(cmd);
+    status=system(cmd);
+end
+
+if status
+   ea_error('ANTs normalization failed - likely due to out of memory problems. Please try a different normalization strategy or reduce the number of threads in the ANTs settings dialogue.'); 
+end
+
+if refinewarp
+   ea_addrefinewarp(props.directory); 
 end
 
 ea_conv_antswarps(props.directory);
+
+
+
+function ea_addrefinewarp(directory)
+
+
+outputformat='.nii.gz';
+
+if ispc
+    sufx='.exe';
+else
+    sufx=computer('arch');
+end
+
+antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
+
+template=ea_niigz([ea_space,'t1']);
+[options.root,options.patientname]=fileparts(fileparts(directory)); % 'directory' is /a/b/c/
+options.root=[options.root,filesep];
+options.prefs=ea_prefs(options.patientname);
+options=ea_assignpretra(options);
+prenii=[directory,options.prefs.prenii_unnormalized];
+if exist([directory,'glanat2Warp.nii.gz'],'file') % happens in second iteration of normalization refine
+    cmd=[antsApply,' -r ',template,...
+        ' -t ',ea_path_helper([directory,'glanat2Warp.nii.gz']),...
+        ' -t ',ea_path_helper([directory,'glanatComposite',ea_getantstransformext(directory)]),...
+        ' -o [',ea_path_helper([directory,'glanatComposite',outputformat]),',1]'];
+    icmd=[antsApply,' -r ',ea_path_helper(prenii),...
+        ' -t ',ea_path_helper([directory,'glanatInverseComposite',ea_getantstransformext(directory)]),...
+        ' -t ',ea_path_helper([directory,'glanat2InverseWarp.nii.gz']),...
+        ' -o [',ea_path_helper([directory,'glanatInverseComposite',outputformat]),',1]'];
+elseif exist([directory,'glanat1Warp.nii.gz'],'file') % happens in third and upward iteration of normalization refine
+    cmd=[antsApply,' -r ',template,...
+        ' -t ',ea_path_helper([directory,'glanat1Warp.nii.gz']),...
+        ' -t ',ea_path_helper([directory,'glanatComposite',ea_getantstransformext(directory)]),...
+        ' -o [',ea_path_helper([directory,'glanatComposite',outputformat]),',1]'];
+    icmd=[antsApply,' -r ',ea_path_helper(prenii),...
+        ' -t ',ea_path_helper([directory,'glanatInverseComposite',ea_getantstransformext(directory)]),...
+        ' -t ',ea_path_helper([directory,'glanat1InverseWarp.nii.gz']),...
+        ' -o [',ea_path_helper([directory,'glanatInverseComposite',outputformat]),',1]'];
+end
+if exist('cmd','var')
+    if ~ispc
+        system(['bash -c "', cmd, '"']);
+        system(['bash -c "', icmd, '"']);
+    else
+        system(cmd);
+        system(icmd);
+    end
+end
+
+% delete all old-version warps
+ea_delete([directory,'glanat2InverseWarp.nii.gz']);
+ea_delete([directory,'glanat1InverseWarp.nii.gz']);
+ea_delete([directory,'glanat0Warp.nii.gz']);
+ea_delete([directory,'glanat1Warp.nii.gz']);
+ea_delete([directory,'glanat2Warp.nii.gz']);
+ea_delete([directory,'glanat0GenericAffine.mat']);
+ea_delete([directory,'glanatComposite.h5']);
+ea_delete([directory,'glanatInverseComposite.h5']);
+
 
 
 function ea_antsnl_multistep(props)

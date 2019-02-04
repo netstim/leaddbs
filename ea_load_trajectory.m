@@ -1,6 +1,6 @@
 function pobj=ea_load_trajectory(directory,side)
 
-    load([directory,'ea_trajectories.mat']);
+load([directory,'ea_trajectories.mat']);
 
 pobj.elmodel=trajectories(side).dbs.elmodel;
 %%%

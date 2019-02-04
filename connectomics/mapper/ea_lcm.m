@@ -162,13 +162,17 @@ for suffix=dowhich
 
                     if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                         copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
+                        warning('off');
                         ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],dinterp);
+                        warning('on');
                         nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
+                        nii(cnt).img(isnan(nii(cnt).img))=0;
                         cnt=cnt+1;
                     end
                 end
 
                 Cnii=nii(1);
+                
                 for n=2:length(nii)
                     Cnii.img=Cnii.img+nii(n).img;
                 end
@@ -282,11 +286,11 @@ refname = ['r', restfname];
 [~,anatfname] = fileparts(options.prefs.prenii_unnormalized);
 
 % The real reference image is 'meanrest_*.nii' rather than 'rrest_*.nii'
-reference = ['mean', restfname, '.nii'];
+reference = ['hdmean', restfname, '.nii'];
 
 % Re-calculate mean re-aligned image if not found
 if ~exist([directory, reference], 'file')
-    ea_meanimage([directory, 'r', options.prefs.rest], reference);
+    ea_meanimage([directory, 'r', restfname,'.nii'], reference);
 end
 
 % Check coregistration method
@@ -299,6 +303,21 @@ catch
 end
 
 options.coregmr.method = coregmethod;
+
+
+% for this pair of approved coregistations, find out which method to use -
+% irrespective of the current selection in coregmethod.
+
+coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
+fn=fieldnames(coregmethodsused);
+for field=1:length(fn)
+    if ~isempty(strfind(fn{field},refname))
+        disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
+        options.coregmr.method=coregmethodsused.(fn{field});
+        break
+    end
+end
+
 
 % Check if the transformation already exists
 xfm = [anatfname, '2', refname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];

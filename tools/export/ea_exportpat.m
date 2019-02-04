@@ -42,7 +42,7 @@ for pt=1:length(uipatdir)
 
                 
                 ea_exportpat([],[],'ZIP',handles,target);
-                response=ea_upload_export(uipatdir{pt});
+                response=ea_upload_export(uipatdir{pt},patientPseudonym,usercredentials);
                 if strcmp(response.StatusCode,'OK')
                     disp('*** Upload successful.');
                 else

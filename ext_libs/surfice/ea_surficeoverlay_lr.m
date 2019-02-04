@@ -2,7 +2,7 @@ function ea_surficeoverlay_lr(heatmap,threshs,sides,colorbar,smoothed)
 % heatmap can contain wildcards
 
 if ~exist('smoothed','var')
-    smoothed=1;
+    smoothed=0;
 end
 
 if ~exist('threshs','var')

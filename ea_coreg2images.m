@@ -51,8 +51,12 @@ switch options.coregmr.method
             movefile(spmoutput, [fpth, ext]);
         end
 
-    case 'FSL' % FSL
+    case 'FSL FLIRT' % FSL FLIRT
         affinefile = ea_flirt(fixed,...
+            moving,...
+            ofile,writeoutmat,otherfiles);
+    case 'FSL BBR' % FSL BBR
+        affinefile = ea_flirt_bbr(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'ANTs' % ANTs

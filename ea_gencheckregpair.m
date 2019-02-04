@@ -20,6 +20,8 @@ Lbound=SIX(round(length(SIX)*99.7/100));
 mov.img(mov.img<Lbound)=Lbound;
 
 %mov.img(mov.img(:)~=0)=ea_contrast(mov.img(mov.img(:)~=0),2,0);
+mov.filetype=16;
+mov.hdr.dime.scl_slope=1;
 ea_save_untouch_nii(mov,[tempdir,'lead_temp',uuid,'.nii'])
 cmd=[SLICER,' ',ea_path_helper([tempdir,'lead_temp',uuid,'.nii']),' ',ea_path_helper(fixed),' -e 0.05 -i ',num2str(Lbound),' ',num2str(Ubound),' -a ',ea_path_helper(outfn)];
 basedir=fileparts(outfn);

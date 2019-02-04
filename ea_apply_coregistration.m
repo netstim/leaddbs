@@ -61,7 +61,7 @@ end
 xfm = ['(?<=', '_', ')([a-z]+)(?=\d*\.(mat|h5)$)'];
 transformType = upper(regexp(transform, xfm, 'match', 'once'));
 
-if strcmp(transformType, 'FLIRT') % Fix FSL transformation name
+if ismember(transformType, {'FLIRT','FLIRTBBR'}) % Fix FSL transformation name - this will also be the extension for bbr.
     transformType = 'FSL';
 end
 

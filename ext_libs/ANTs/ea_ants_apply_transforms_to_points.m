@@ -18,9 +18,9 @@ options.prefs=ea_prefs(fileparts(directory));
 [~,lprebase]=fileparts(options.prefs.prenii);
 % use 'gl' affix for tranforms
 try
-    if exist([directory,lprebase,'Composite.h5'],'file')
-        movefile([directory,lprebase,'Composite.h5'],[directory,glprebase,'Composite.h5']);
-        movefile([directory,lprebase,'InverseComposite.h5'],[directory,glprebase,'InverseComposite.h5']);
+    if exist([directory,lprebase,'Composite',ea_getantstransformext(directory)],'file')
+        movefile([directory,lprebase,'Composite',ea_getantstransformext(directory)],[directory,glprebase,'Composite',ea_getantstransformext(directory)]);
+        movefile([directory,lprebase,'InverseComposite',ea_getantstransformext(directory)],[directory,glprebase,'InverseComposite',ea_getantstransformext(directory)]);
     end
 end
 try
@@ -36,10 +36,8 @@ if nargin>3
     tstring=[' --transform [', ea_path_helper(transform), ',',num2str(useinverse),']']; % [transformFileName,useInverse]
 else
     if useinverse
-        if exist([directory,glprebase,'Composite.h5'],'file')
-            tstring=[' -t [',ea_path_helper([directory,glprebase,istr,'Composite.h5']),',0]'];
-        elseif exist([directory,glprebase,'Composite.nii.gz'],'file')
-            tstring=[' -t [',ea_path_helper([directory,glprebase,istr,'Composite.nii.gz']),',0]'];
+        if exist([directory,glprebase,'Composite',ea_getantstransformext(directory)],'file')
+            tstring=[' -t [',ea_path_helper([directory,glprebase,istr,'Composite',ea_getantstransformext(directory)]),',0]'];
         elseif exist([directory,glprebase,'1',istr,'Warp.nii.gz'], 'file') && ...
                exist([directory,glprebase,'0GenericAffine.mat'], 'file')
             tstring=[' -t [',ea_path_helper([directory,glprebase,'0GenericAffine.mat']),',',num2str(useinverse),']',...
@@ -50,10 +48,8 @@ else
         end
         
     else
-        if exist([directory,glprebase,'Composite.h5'],'file')
-            tstring=[' -t [',ea_path_helper([directory,glprebase,istr,'Composite.h5']),',0]'];
-        elseif exist([directory,glprebase,'Composite.nii.gz'],'file')
-            tstring=[' -t [',ea_path_helper([directory,glprebase,istr,'Composite.nii.gz']),',0]'];
+        if exist([directory,glprebase,'Composite',ea_getantstransformext(directory)],'file')
+            tstring=[' -t [',ea_path_helper([directory,glprebase,istr,'Composite',ea_getantstransformext(directory)]),',0]'];
         elseif exist([directory,glprebase,'1',istr,'Warp.nii.gz'], 'file') && ...
                 exist([directory,glprebase,'0GenericAffine.mat'], 'file')
             tstring=[' -t [',ea_path_helper([directory,glprebase,'1',istr,'Warp.nii.gz']),',0]',...

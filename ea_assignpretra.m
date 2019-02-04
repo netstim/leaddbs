@@ -25,6 +25,11 @@ if isempty(presentfiles)
     return
 end
 
+ism=ismember(presentfiles,{'anat_STN.nii','anat_GPi.nii','anat_GPe.nii','anat_RN.nii'});
+addtoend=presentfiles(ism);
+presentfiles(ism)=[];
+presentfiles=[presentfiles;addtoend];
+
 % set prenii_unnormalized
 options.prefs.prenii_unnormalized = presentfiles{1};
 

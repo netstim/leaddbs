@@ -107,7 +107,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             head_vx = inv(tmat_org) * head_mm;
             tail_vx = inv(tmat_org) * tail_mm;
             tmat_vx2mm = tmat_org;
-        elseif strcmp(CTname,[filesep,prefs.ctnii_coregistered])
+        elseif strcmp(CTname,[filesep,options.prefs.ctnii_coregistered])
             head_mm = head_native;
             tail_mm = tail_native;
             % transfrom rpostop_ct mm -> voxel
@@ -316,10 +316,11 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         %% detect peaks and valleys
         [peak,markerfft] = ea_orient_intensitypeaksFFT(intensity,2);
         valley = ea_orient_intensitypeaksFFT(-intensity,2);
-        
+            
+        %% take solution which is closer to the default direction - change defaultdirection if you do not rountinely implant in anterior direction
+        defaultdirection = 'anterior';              % also use: 'posterior', 'medial', 'lateral'
         if ~supervised
             %% take solution which is closer to the default direction - change defaultdirection if you do not rountinely implant in anterior direction
-            defaultdirection = 'anterior'; % also use: 'posterior', 'medial', 'lateral'
             switch defaultdirection
                 case 'anterior'
                     %% take anterior peak
@@ -381,18 +382,30 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             %             end
             %             clear diff1 diff2 peak1tmp peak2tmp peak1 peak2
         elseif supervised
+            peak1tmp = rad2deg(angle(peak(1)));
+            peak2tmp = rad2deg(angle(peak(2)));
+            if peak1tmp > 180
+                peak1tmp = peak1tmp -360;
+            end
+            if peak2tmp > 180
+                peak2tmp = peak2tmp -360;
+            end
+            
             h = figure('Name',['Lead ' sides{side}],'Position',[100 100 600 800],'Color','w');
             txt1 = uicontrol('style','text','units','pixels','Background','w',...
-                'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
+                'position',[50,770,500,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
                 'string',sprintf(['Please select the marker direction:']));
-            Solution1Button = uicontrol('Style', 'pushbutton', 'String', 'Solution 1 (magenta)',...
-                'Position', [100 50 175 25],'FontSize',12,...
+            Solution1Button = uicontrol('Style', 'pushbutton', 'String', 'Solution 1',...
+                'Position', [100 80 175 25],'FontSize',12,...
                 'Callback', @buttonPress);
-            Solution2Button = uicontrol('Style', 'pushbutton', 'String', 'Solution 2 (cyan)',...
-                'Position', [350 50 175 25],'FontSize',12,...
+            Solution2Button = uicontrol('Style', 'pushbutton', 'String', 'Solution 2',...
+                'Position', [350 80 175 25],'FontSize',12,...
                 'Callback', @buttonPress);
+            
+            ax1 = axes('Position',[0.1 0.25 0.8 0.8]);
             hold on
-            ax1 = imagesc(artifact_marker');
+            imagesc(ax1,artifact_marker');
+            
             view(-180,-90)
             axis equal
             axis off
@@ -400,15 +413,22 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             caxis manual
             caxis(cscale)
             scatter(center_marker(1),center_marker(2),'o','g')
-            scatter(vector(peak(1),1), vector(peak(1),2),50,'m','filled');
-            scatter(vector(peak(2),1), vector(peak(2),2),50,'c','filled');
-            quiver(center_marker(1),center_marker(2),vector(peak(1),1)-center_marker(1) ,vector(peak(1),2)-center_marker(2),2,'LineWidth',1,'Color','m','MaxHeadSize',2)
-            quiver(center_marker(1),center_marker(2),vector(peak(2),1)-center_marker(1) ,vector(peak(2),2)-center_marker(2),2,'LineWidth',1,'Color','c','MaxHeadSize',2)
+            scatter(vector(peak(1),1), vector(peak(1),2),80,'g','filled');
+            scatter(vector(peak(2),1), vector(peak(2),2),80,'g','filled');
+            quiver(center_marker(1),center_marker(2),vector(peak(1),1)-center_marker(1) ,vector(peak(1),2)-center_marker(2),2,'LineWidth',2,'Color','g','MaxHeadSize',2)
+            quiver(center_marker(1),center_marker(2),vector(peak(2),1)-center_marker(1) ,vector(peak(2),2)-center_marker(2),2,'LineWidth',2,'Color','g','MaxHeadSize',2)
+
+            plot(vector(:,1),vector(:,2),'g','LineStyle',':','LineWidth',2)
+            for k = 1:length(valley)            
+                plot([center_marker(1) (center_marker(1) + 3 * (vector(valley(k),1)-center_marker(1)))],...
+                [center_marker(2) (center_marker(2) + 3 * (vector(valley(k),2)-center_marker(2)))],'r','LineStyle','--','LineWidth',2)
+            end            
+            text(vector(peak(1),1)-5 ,vector(peak(1),2),['Solution 1'],'FontSize', 18, 'Color','g','HorizontalAlignment','left','VerticalAlignment','middle')
+            text(vector(peak(2),1)+5 ,vector(peak(2),2),['Solution 2'],'FontSize', 18, 'Color','g', 'HorizontalAlignment','right','VerticalAlignment','middle')
             
             txt2 = uicontrol('style','text','units','pixels','Background','w',...
-                'position',[100,77,500,100],'FontSize',12,'HorizontalAlignment','left',...
-                'string',sprintf(['Two possible solutions have been identified:\nSolution 1 = ' num2str(rad2deg(angle(peak(1)))) ' deg (magenta) \nSolution 2 = ' num2str(rad2deg(angle(peak(2)))) ' deg (cyan)\nPlease select most likely direction.']));
-            
+                'position',[100,110,500,150],'FontSize',12,'HorizontalAlignment','left',...
+                'string',sprintf(['Two possible solutions have been identified:\n\nSolution 1 = ' num2str(peak1tmp) ' deg \nSolution 2 = ' num2str(peak2tmp) ' deg \n\nPlease select the most likely direction.']));
             uiwait
             
             if Solution1Button.UserData == 1
@@ -419,7 +439,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
                 Solution2Button.UserData = 0;
             end
             finalpeak(side) = peak(answer);
-            clear answer
+            clear answer peak1tmp peak2tmp
             close(h)
         end
         %% calculate lead yaw and pitch angles for correction at the end
@@ -784,8 +804,8 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' deg, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])
             %% methods dump:
             ea_methods(options,...
-                ['Rotation of directional DBS leads was determined using the algorithm published by Sitz et al. 2017 as implemented in Lead-DBS software.'],...
-                {'Sitz, A., Hoevels, M., Hellerbach, A., Gierich, A., Luyken, K., Dembek, T.A., Klehr, M., Wirths, J., Visser-Vandewalle, V., & Treuer, H. (2017). Determining the orientation angle of directional leads for deep brain stimulation using computed tomography and digital x-ray imaging: A phantom study. Medical Physics, 44(9):4463-4473. http://dx.doi.org/10.1002/mp.12424'});
+                ['Rotation of directional DBS leads was determined using the algorithm published by Hellerbach et al. 2018 as implemented in Lead-DBS software.'],...
+                {'A. Hellerbach, T.A. Dembek, M. Hoevels, J.A. Holz, A. Gierich, K. Luyken, M.T. Barbe, J. Wirths, V. Visser-Vandewalle, & H. Treuer (2018). DiODe: Directional Orientation Detection of Segmented Deep Brain Stimulation Leads: A Sequential Algorithm Based on CT Imaging. Stereotact. Funct. Neurosurg. 96. doi:10.1159/000494738.'});
         elseif retrystate == 0
             disp(['Changes to rotation not saved'])
             roll_out = [];

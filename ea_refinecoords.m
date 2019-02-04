@@ -37,6 +37,8 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
     if ~can_export
         disp('Set prefs.reco.exportfiducials in preference file to export fiducial markers as CSV file.');
     end
+    options.native = 1; % not sure if correct to do this
+    [coords_mm,trajectory,markers,elmodel,~]=ea_load_reconstruction(options);
     
     
     switch options.modality
@@ -47,9 +49,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
             V = spm_vol([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
     end
     
-    options.native = 1; % not sure if correct to do this
-    [coords_mm,trajectory,markers,elmodel,~]=ea_load_reconstruction(options);
-        
+
     for side = options.sides(1):options.sides(end)
         options.elside = side;
         meantrajectory = genhd_inside(trajectory{side});

@@ -6,6 +6,9 @@ if ~strcmp(directory(end),filesep)
    directory=[directory,filesep];
 end
 
+[options.root,options.patientname]=fileparts(fileparts(directory));
+options.root=[options.root,filesep];
+
 if ~exist('interp','var')
     interp=4;
 end
@@ -65,20 +68,31 @@ switch ea_whichnormmethod(directory)
             else
                 wasgz = 0;
             end
-
+            usepush=1;
             if useinverse
                 if isempty(refim)
                     refim = [directory,options.prefs.prenii_unnormalized];
                 end
-
-                matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
-                matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
-                matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
-                matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {fileparts(to{fi})};
-                matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {refim};
-                matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
-                matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [0 0 0];
-                matlabbatch{1}.spm.util.defs.out{1}.push.prefix = '';
+                if usepush
+                    matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
+                    matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
+                    matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
+                    matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {fileparts(to{fi})};
+                    matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {refim};
+                    matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
+                    matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [0.5 0.5 0.5];
+                    matlabbatch{1}.spm.util.defs.out{1}.push.prefix = '';
+                    
+                else
+ 
+                    matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 4;
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0.5 0.5 0.5];
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
+                end
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
             else
@@ -86,15 +100,25 @@ switch ea_whichnormmethod(directory)
                     spacedef=ea_getspacedef;
                     refim = [ea_space,spacedef.templates{1},'.nii'];
                 end
+                if usepush
+                    matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
+                    matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
+                    matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
+                    matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {fileparts(to{fi})};
+                    matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {refim};
+                    matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
+                    matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [0.5 0.5 0.5];
+                    matlabbatch{1}.spm.util.defs.out{1}.push.prefix = '';
+                else
+                    matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 4;
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0.5 0.5 0.5];
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
 
-                matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
-                matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
-                matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
-                matlabbatch{1}.spm.util.defs.out{1}.push.savedir.saveusr = {fileparts(to{fi})};
-                matlabbatch{1}.spm.util.defs.out{1}.push.fov.file = {refim};
-                matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
-                matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [0 0 0];
-                matlabbatch{1}.spm.util.defs.out{1}.push.prefix = '';
+                end
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
             end
@@ -110,7 +134,7 @@ switch ea_whichnormmethod(directory)
             end
 
             try % fails if to is a w prefixed file already
-                movefile(fullfile(pth,['w', fn, ext]),to{fi});
+                movefile(fullfile(pth,['sw', fn, ext]),to{fi});
             end
 
             if gzip_output

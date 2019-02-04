@@ -4,8 +4,9 @@ expfolder=[options.root,options.patientname,filesep,'connectomics',filesep,optio
 % check if rest_preprocessing has been performed:
 [~,restfname]=fileparts(options.prefs.rest);
 [~,anatfname]=fileparts(options.prefs.prenii_unnormalized);
-if 1%~ea_coreglocked(options,['r',restfname,'_',anatfname]) % preprocessing needs to be performed
-    disp('No preprocessed fMRI-images found, processing...');
+if ~ea_coreglocked(options,['r',restfname,'_',anatfname]) || ...
+        ~exist([options.root,options.patientname,filesep,'r',restfname,'_',anatfname,'.nii'],'file') % preprocessing needs to be performed
+    disp('No (approved) preprocessed fMRI-images found, processing...');
     ea_preprocess_fmri(options);
     disp('Done preprocessing fMRI data.');
 end

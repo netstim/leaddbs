@@ -1,9 +1,11 @@
 function ea_importspaceassets(~,~,fromspace,what,infname,outfname)
 
 
-if (strcmp(what,'custom') && isempty(infname))
-    [infi,inpth]=uigetfile('*.nii','Choose file to warp...');
-    infname=fullfile(inpth,infi);
+if strcmp(what,'custom')
+    if ~exist('infname','var')
+        [infi,inpth]=uigetfile('*.nii','Choose file to warp...');
+        infname=fullfile(inpth,infi);
+    end
 end
 
 ea_genwarp2space(fromspace);
@@ -51,7 +53,10 @@ end
 
 for p=1:length(parcellation)
    from{1}=[wlabeling,parcellation{p},'.nii'];
-   to{1}=[ea_space([],'labeling'),parcellation{p},' [imported from ',fromspace,']','.nii'];
+   to{1}=[ea_space([],'labeling'),parcellation{p},'.nii'];
+   if ~exist(ea_space([],'labeling'),'dir')
+       mkdir(ea_space([],'labeling'));
+   end
        if exist(to{1},'file')
           disp(['A whole-brain parcellation with the same name (',to{1},') already exists! Skipping!']);
           continue
@@ -60,8 +65,13 @@ for p=1:length(parcellation)
             options.prefs=ea_prefs('');
             ea_apply_normalization_tofile(options,from,to,directory,0,0);
        end
-    movefile([wlabeling,parcellation{p},'.txt'],[ea_space([],'labeling'),parcellation{p},' [imported from ',fromspace,']','.txt']);
 
+       movefile(to{1},[ea_space([],'labeling'),parcellation{p},' [imported from ',fromspace,']','.nii']);
+       try
+           movefile([wlabeling,parcellation{p},'.txt'],[ea_space([],'labeling'),parcellation{p},' [imported from ',fromspace,']','.txt']);
+       catch
+           warning([wlabeling,parcellation{p},'.txt', ' not present. Labeling folder in source space seems inconsistent. Moving on.']);
+       end
 
 end
 
@@ -161,7 +171,9 @@ for atlasset=1:length(asc)
     % finally rebuild index:
     % and move to atlases dir
     delete([atlroot,'atlas_index.mat']);
-
+if ~exist(ea_space([],'atlases'),'dir')
+    mkdir(ea_space([],'atlases'));
+end
     movefile(atlroot,[ea_space([],'atlases'),asc{atlasset},' [imported from ',fromspace,']']);
     options.atlasset=[asc{atlasset},' [imported from ',fromspace,']'];
     ea_genatlastable([],ea_space([],'atlases'),options);

@@ -32,6 +32,7 @@ classdef ea_trajectory < handle
         htH % handle for toggle toolbar on which toggleH is displayed
         togglestates % show/hide states of primitive toggle button
         toggledefault % which part to show by activating toggletool if none is shown
+        pt=1 % used for patient index count in lead group.
     end
 
     methods
@@ -99,6 +100,10 @@ classdef ea_trajectory < handle
                 obj.patchMacro=pobj.patchMacro;
             catch
                 obj.patchMacro=patch('Visible','off');
+            end
+            
+            try % patient index when calling from lead group.
+                obj.pt=pobj.pt;
             end
 
             try % patchMicro
@@ -234,7 +239,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             poptions.colorMacroContacts=obj.colorMacroContacts;
             el_render=getappdata(obj.plotFigureH,'el_render');
 
-            [obj.elpatch,obj.ellabel,obj.eltype]=ea_showelectrode(obj.plotFigureH,obj.elstruct,1,poptions);
+            [obj.elpatch,obj.ellabel,obj.eltype]=ea_showelectrode(obj.plotFigureH,obj.elstruct,obj.pt,poptions);
             if isempty(el_render)
                 clear el_render
             end
@@ -251,7 +256,11 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     end
 
     % add toggle button:
-    [~, ptname] = fileparts(fileparts(obj.options.root));
+    if isfield(obj.elstruct, 'name') && ~isempty(obj.elstruct.name)
+        ptname = obj.elstruct.name;
+    else
+        [~, ptname] = fileparts(fileparts(obj.options.root));
+    end
 
     % Side label
     switch obj.side

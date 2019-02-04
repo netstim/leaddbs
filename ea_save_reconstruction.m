@@ -25,11 +25,11 @@ if options.native
         ea_dispt('Warping fiducials to template space');
 
         ea_reconstruction2mni(options);
-%         if options.prefs.reco.saveACPC
-%             ea_dispt('Mapping fiducials to AC/PC space');
-%             ea_reconstruction2acpc(options);
-%             ea_dispt('');
-%         end
+        if options.prefs.reco.saveACPC
+            ea_dispt('Mapping fiducials to AC/PC space');
+            ea_reconstruction2acpc(options);
+            ea_dispt('');
+        end
         load([options.root,options.patientname,filesep,'ea_reconstruction']);
         [reco,corrected]=ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
 

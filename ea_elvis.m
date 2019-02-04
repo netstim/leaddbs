@@ -153,7 +153,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     pobj.hasPlanning=1;
                     pobj.showPlanning=strcmp(options.leadprod,'or');
                 end
-
+                pobj.pt=pt;
                 pobj.options=popts;
                 pobj.elstruct=elstruct(pt);
                 pobj.showMacro=1;
@@ -357,6 +357,8 @@ if options.d3.writeatlases
             end
         end
     end
+else
+    colormap(gray)
 end
 
 % Show isomatrix data
@@ -499,26 +501,42 @@ stimwin=getappdata(gcf,'stimwin');
 try
     close(stimwin)
 end
+
 awin=getappdata(gcf,'awin');
 try
     close(awin)
 end
+
 aswin=getappdata(gcf,'aswin');
 try
+
     close(aswin)
 end
 conwin=getappdata(gcf,'conwin');
 try
     close(conwin)
 end
+
 mercontrolfig = getappdata(gcf, 'mercontrolfig');
 try
     close(mercontrolfig)
 end
+
 trajcontrolfig=getappdata(gcf,'trajcontrolfig');
 try
     close(trajcontrolfig)
 end
+
+cbfig=getappdata(gcf,'cbfig');
+try
+    close(cbfig)
+end
+
+discfiberscontrol=getappdata(gcf,'discfiberscontrol');
+try
+    close(discfiberscontrol)
+end
+
 delete(gcf)
 
 

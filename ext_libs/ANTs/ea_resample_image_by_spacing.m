@@ -1,14 +1,14 @@
 function ea_resample_image_by_spacing(inputimage, spacing, dosmooth, addvox, nninterp, outputimage, dimension)
-% Resample image by spacing
+% Resample image by spacing, wrapper for ANTs ResampleImageBySpacing
 %
 %	spacing: output image spacing, 1*3 vector
-%   dosmooth: smoooth output image, default = 1
+%   dosmooth: smoooth output image, default = 0
 %   addvox: pad each dimension by addvox, default = 0
 %   nn-interp: use NearestNeighbor interpolation or not, default = 0 (Linear interpolation)
 %   dimension: image dimension, default=3
 
 if ~exist('dosmooth', 'var')
-    dosmooth = 1;
+    dosmooth = 0;
 end
 
 if ~exist('addvox', 'var')

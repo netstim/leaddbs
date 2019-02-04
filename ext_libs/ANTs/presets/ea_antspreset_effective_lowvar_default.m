@@ -30,7 +30,14 @@ switch normsettings.ants_strategy
 
         apref.shrinkfactors.syn='8x4x4x1'; % SyN shrink factors
         apref.shrinkfactors.scrf='4x4x2x1'; % SyN subcortical focus stage shrink factors
-        
+       
+        % Shrink Factors (please keep in mind these refer to fixed space which is
+        % typically 0.5 mm resolution in Lead-DBS whereas usually input images are
+        % resliced to 0.7 mm. Thus should consider not going down to shrink factor
+        % of 1 at all.
+        apref.shrinkfactors.rigid='12x8x4x1'; % Rigid shrink factors
+        apref.shrinkfactors.affine='12x8x4x1'; % Affine shrink factors
+
         
     case 'BSplineSyN'
         apref.antsmode='BSplineSyN';
@@ -45,18 +52,20 @@ switch normsettings.ants_strategy
         apref.shrinkfactors.syn='6x4x2x1'; % SyN shrink factors
         apref.shrinkfactors.scrf='6x4x2x1'; % SyN subcortical focus stage shrink factors
 
+        % Shrink Factors (please keep in mind these refer to fixed space which is
+        % typically 0.5 mm resolution in Lead-DBS whereas usually input images are
+        % resliced to 0.7 mm. Thus should consider not going down to shrink factor
+        % of 1 at all.
+        apref.shrinkfactors.rigid='12x8x4x1'; % Rigid shrink factors
+        apref.shrinkfactors.affine='12x8x4x1'; % Affine shrink factors
+
+        
 end
 
 % Convergence
 apref.convergence.rigid='[1000x500x250x0,1e-7,10]'; % Rigid convergence params
 apref.convergence.affine='[1000x500x250x0,1e-7,10]'; % Affine convergence params
 
-% Shrink Factors (please keep in mind these refer to fixed space which is
-% typically 0.5 mm resolution in Lead-DBS whereas usually input images are
-% resliced to 0.7 mm. Thus should consider not going down to shrink factor
-% of 1 at all.
-apref.shrinkfactors.rigid='12x8x4x1'; % Rigid shrink factors
-apref.shrinkfactors.affine='12x8x4x1'; % Affine shrink factors
 
 % Smoothing Sigmas
 apref.smoothingsigmas.rigid='5x4x3x1vox'; % Rigid Smoothing sigmas

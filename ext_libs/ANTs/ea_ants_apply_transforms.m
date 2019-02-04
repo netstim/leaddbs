@@ -60,7 +60,7 @@ end
 
 if ~isempty(options) && ~isempty(fieldnames(options))
     directory = [options.root,options.patientname,filesep];
-    warpsuffix = ea_conv_antswarps(directory);
+    warpsuffix = ea_getantstransformext(directory);
 end
 
 if nargin == 1

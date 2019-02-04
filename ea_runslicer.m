@@ -58,7 +58,7 @@ function ea_runslicer(options, task)
             return;
         end
     end
-
+    
     slicer_mrml = 'none';
 
     if (isempty(options.uipatdirs))
@@ -175,7 +175,11 @@ function ea_runslicer(options, task)
     else
         system(['"', SLICER, '" --no-splash --python-script "', script_path, '"']);
     end
-    ea_delete(script_path);
+    
+    % ea_delete(script_path);
+    % Please do not delete the above script. Slicer runs asynchronously in
+    % the background. A race condition will develop and the script will be
+    % deleted by Matlab before Slicer has a chance to read it!
 end
 
 function WriteReconstructionFiducialFile(options)
