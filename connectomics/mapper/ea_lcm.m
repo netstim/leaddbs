@@ -13,7 +13,7 @@ if options.lcm.struc.do
             end
         end
     elseif strcmp(options.lcm.seeddef,'parcellation')
-        options.lcm.seeds=ea_resolveparcseeds(options,'dMRI');
+        options=ea_resolveparcseeds(options,'dMRI');
     end
 
     ea_lcm_struc(options);
@@ -24,7 +24,7 @@ if options.lcm.func.do
         if exist('originalseeds','var')
             options.lcm.seeds=originalseeds;
         end
-        options.lcm.seeds=ea_resolvevatseeds(options,'fMRI');
+        options=ea_resolvevatseeds(options,'fMRI');
         if isempty(options.lcm.odir) && ~strcmp(options.lcm.seeddef,'vats')
             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep,options.lcm.func.connectome,filesep];
             if ~exist(options.lcm.odir,'dir')
@@ -67,7 +67,7 @@ if (~options.lcm.func.do) && (~options.lcm.struc.do)
 end
 
 
-function seeds=ea_resolveparcseeds(options,modality)
+function options=ea_resolveparcseeds(options,modality)
 switch modality
     case 'fMRI'
         tmp=ea_getleadtempdir;
@@ -86,10 +86,24 @@ switch modality
         end
         ea_conformspaceto([tmp,'222','.nii'],ea_niigz(fullfile(tmp,uuid)),...
             0,[],fullfile(tmp,[uuid,'.nii']),0);               
-        seeds={fullfile(tmp,[uuid,'.nii'])};
+        options.lcm.seeds={fullfile(tmp,[uuid,'.nii'])};
     case 'dMRI'
         tmp=ea_getleadtempdir;
         uuid=ea_generate_uuid;
+        
+        [pth,fn,ext]=fileparts(options.lcm.seeds{1});
+        switch ext
+            case {'.nii','.gz'}
+                parctxt=fullfile(pth,[ea_stripex(fn),'.txt']);
+            case '.txt'
+                options.lcm.seeds{1}=fullfile(pth,[fn,'.nii']);
+                parctxt=fullfile(pth,[fn,'.txt']);
+        end
+        options.lcm.odir=[pth,filesep];
+        fid=fopen(parctxt);
+        A=textscan(fid,'%f %s');
+        fclose(fid);
+        parcels=A{1};
         [~,~,ext]=ea_niifileparts(options.lcm.seeds{1});
         copyfile(options.lcm.seeds{1},fullfile(tmp,[uuid,ext]));
         if strcmp(ext,'.nii.gz')
@@ -99,15 +113,15 @@ switch modality
         
         parc=ea_load_nii(fullfile(tmp,[uuid,'.nii']));
         parc.img=round(parc.img);
-        uidx=unique(parc.img(:));
-        uidx((uidx==0))=[];
-        for p=1:length(uidx)
+        cnt=1;
+        for p=parcels'
             pnii=parc;
             pnii.dt=[2,0];
-            pnii.img=parc.img==uidx(p);
-            pnii.fname=fullfile(tmp,[uuid,sprintf('%05.0f',p),'.nii']);
+            pnii.img=parc.img==p;
+            pnii.fname=fullfile(tmp,[uuid,sprintf('%05.0f',cnt),'.nii']);
             ea_write_nii(pnii);
-            seeds{p}=pnii.fname;
+            options.lcm.seeds{cnt}=pnii.fname;
+            cnt=cnt+1;
         end
 end
 
