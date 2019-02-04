@@ -197,11 +197,13 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         end
     end
 
-    if options.normalize.check
+    if options.normalize.check %check box "Check Results" in "Volume Registrations" panel
         % export "control" niftis with wireframe of normal anatomy..
+        if ~exist([directory,'checkreg'],'file')
+            ea_gencoregcheckfigs(options); % generate checkreg figures if they not yet exist
+        end
         options.normcoreg='normalize';
         ea_checkcoreg(options);
-
         e=evalin('base', 'checkregempty');
         evalin('base',' clear checkregempty');
         if e && ~ea_coreglocked(options,'brainshift') ...

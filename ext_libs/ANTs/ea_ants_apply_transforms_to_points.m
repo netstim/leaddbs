@@ -46,12 +46,12 @@ else
         else
             error('Transformation file not found! Please rerun normalization.');
         end
-
+        
     else
         if exist([directory,glprebase,'Composite',ea_getantstransformext(directory)],'file')
             tstring=[' -t [',ea_path_helper([directory,glprebase,istr,'Composite',ea_getantstransformext(directory)]),',0]'];
         elseif exist([directory,glprebase,'1',istr,'Warp.nii.gz'], 'file') && ...
-               exist([directory,glprebase,'0GenericAffine.mat'], 'file')
+                exist([directory,glprebase,'0GenericAffine.mat'], 'file')
             tstring=[' -t [',ea_path_helper([directory,glprebase,'1',istr,'Warp.nii.gz']),',0]',...
                 ' -t [',ea_path_helper([directory,glprebase,'0GenericAffine.mat']),',',num2str(useinverse),']'...
                 ];
