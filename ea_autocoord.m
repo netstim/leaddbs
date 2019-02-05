@@ -281,11 +281,7 @@ end
                         disp(['Line: ' num2str(e.stack(1).line)]);
                         disp('Please check your input data carefully.');
                         disp('If the error persists, please consider a bug report at <a href="https://github.com/adhusch/PaCER/issues">https://github.com/adhusch/PaCER/issues</a>.');
-
-                        warning('Reverting to TRAC/CORE Algorithm.');
-
-                        [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
-                        options.native=0;
+                        ea_error('PaCER failed. Potentially try running the TRAC/CORE Algorithm or a fully manual pre-reconstruction.');
                     end
 
                 case 'Manual' % Manual
