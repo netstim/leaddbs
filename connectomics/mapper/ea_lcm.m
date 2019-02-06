@@ -87,6 +87,8 @@ switch modality
         ea_conformspaceto([tmp,'222','.nii'],ea_niigz(fullfile(tmp,uuid)),...
             0,[],fullfile(tmp,[uuid,'.nii']),0);               
         options.lcm.seeds={fullfile(tmp,[uuid,'.nii'])};
+        options.lcm.odir=ea_getoutputfolder(options.lcm.seeds,options.lcm.func.connectome);
+
     case 'dMRI'
         tmp=ea_getleadtempdir;
         uuid=ea_generate_uuid;
