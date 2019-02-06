@@ -66,17 +66,17 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     %% import transformation matrices for CT coregistration
     try
         load([folder 'ea_coregctmethod_applied.mat']);
-        
-        if strcmp(coregct_method_applied{1},'ea_coregctmri_ants') || strcmp(coregct_method_applied{1},'ea_coregctmri_ants_refine')
-            tmat_reg2org = ea_getantsrawct2preniimat(options);
-        elseif strcmp(coregct_method_applied{1},'ea_coregctmri_brainsfit')
-            reg2org.fixed = h5read([folder 'postop_ct2anat_t1_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformFixedParameters');
-            reg2org.AffineTransform_float_3_3 = h5read([folder 'postop_ct2anat_t1_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformParameters');
-            tmat_reg2org =ea_antsmat2mat(reg2org.AffineTransform_float_3_3,reg2org.fixed);
-        elseif strcmp(coregct_method_applied{1},'ea_coregctmri_fsl')
-%             tmat_reg2org = dlmread([folder 'anat_t12postop_ct_flirt1.mat']));
-            disp(['Warning: Temporary fix to use DiODe algorithm with FLIRT. rpostop_ct is used so results may be slightly less accurate.'])
-            ct = ct_reg;
+        switch coregct_method_applied{end}
+            case {'ea_coregctmri_ants','ea_coregctmri_ants_refine'}
+                tmat_reg2org = ea_getantsrawct2preniimat(options);
+            case 'ea_coregctmri_brainsfit'
+                reg2org.fixed = h5read([folder 'postop_ct2anat_t1_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformFixedParameters');
+                reg2org.AffineTransform_float_3_3 = h5read([folder 'postop_ct2anat_t1_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformParameters');
+                tmat_reg2org =ea_antsmat2mat(reg2org.AffineTransform_float_3_3,reg2org.fixed);
+            case 'ea_coregctmri_fsl'
+                %             tmat_reg2org = dlmread([folder 'anat_t12postop_ct_flirt1.mat']));
+                disp(['Warning: Temporary fix to use DiODe algorithm with FLIRT. rpostop_ct is used so results may be slightly less accurate.'])
+                ct = ct_reg;
         end
     catch
         reg2org = load([folder 'Postop_CT_2_T1.mat']);
