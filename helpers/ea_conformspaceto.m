@@ -4,6 +4,9 @@ function ea_conformspaceto(spacefn,toreslicefn,interp,mask,newfn,headermod,force
 if ~exist('headermod', 'var')
     headermod = 1;
 end
+if ~exist('force','var')
+    force=0;
+end
 
 sphdr = ea_open_vol(spacefn);
 tohdr = ea_open_vol(toreslicefn);
