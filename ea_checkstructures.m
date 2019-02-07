@@ -670,7 +670,7 @@ if ~isempty(uuid)
     ea_mkdir([directory,'fiducials',filesep,ea_getspace]);
     
     if ~exist([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'],'file')
-        nii=ea_load_nii([directory,'t1.nii']);
+        nii=ea_load_nii([ea_space,'t1.nii']);
         nii.fname=[directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'];
         nii.dt=[16,0];
         nii.img(:)=0;
