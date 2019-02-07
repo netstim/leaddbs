@@ -1,6 +1,13 @@
-function ea_applynormtofile_menu(~, ~, handles, useinverse, untouchedanchor, asoverlay, expdicom, fname)
+function ea_applynormtofile_menu(~, ~, handles, useinverse, untouchedanchor, asoverlay, expdicom, fname, templateresolution)
 if ~exist('untouchedanchor','var')
     untouchedanchor=0;
+end
+if ~exist('templateresolution','var')
+    templateresolution=0;
+end
+if templateresolution
+   res=inputdlg('Specify voxel resolution of template space to warp into.','Template resolution',1,{'0.5'});
+   templateresolution=str2double(res);
 end
 
 if untouchedanchor
@@ -23,7 +30,7 @@ else
     uipatdir=handles; % direct supply of cell string.
 end
 
-if ~exist('fname','var')
+if ~exist('fname','var') || isempty(fname)
     if useinverse
         defaultPath = ea_space;
     else
@@ -77,6 +84,9 @@ if useinverse % from template space to [untouched] achor space
             from{fi} = [path, fis{fi}];
         end
 
+        
+        
+        
         ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp);
 
         if untouchedanchor % map from anchor to untouched anchor
@@ -149,5 +159,25 @@ else % from [untouched] achor space to template space
         ea_delete([options.root, options.patientname, filesep, 'uraw_', presentfiles{1}]);
     end
 
-    ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp);
+    if templateresolution
+        ea_mkdir([ea_space,'resliced_templates']);
+        trstr=num2str(templateresolution);
+        trstr=strrep(trstr,'.','_');
+        if ~exist([ea_space,'resliced_templates',filesep,trstr,'.nii'],'file')
+            copyfile(ea_niigz([ea_space,options.primarytemplate]),[ea_space,'resliced_templates',filesep,trstr,'.nii']);
+            ea_reslice_nii([ea_space,'resliced_templates',filesep,trstr,'.nii'],[ea_space,'resliced_templates',filesep,trstr,'.nii'],repmat(templateresolution,1,3));
+            nii=ea_load_nii([ea_space,'resliced_templates',filesep,trstr,'.nii']);
+            nii.img(:)=0;
+            nii.dt=[4,0];
+            ea_write_nii(nii);
+            gzip(nii.fname);
+            delete(nii.fname);
+        end
+        refim=[ea_space,'resliced_templates',filesep,trstr,'.nii.gz'];
+    else
+        refim=ea_niigz([ea_space,options.primarytemplate]);
+    end
+        
+    
+    ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp, refim);
 end

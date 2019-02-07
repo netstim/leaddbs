@@ -101,12 +101,13 @@ if isempty(menuprobe)
 
     if ismember('applynorm',cmd)
         forwd=uimenu(f,'Label','Map file from anchor space to template...');
-                uimenu(forwd,'Label','Run...','Callback',{@ea_applynormtofile_menu,handles,0,0,0,0},'Accelerator','N');
-                uimenu(forwd,'Label','Export Code...','Callback',{@ea_gencode_applynormtofile_menu,handles,0,0,0,0});
-        
+        uimenu(forwd,'Label','Run...','Callback',{@ea_applynormtofile_menu,handles,0,0,0,0},'Accelerator','N');
+        uimenu(forwd,'Label','Export Code...','Callback',{@ea_gencode_applynormtofile_menu,handles,0,0,0,0});
+        uimenu(forwd,'Label','Resliced Template Space (Run...)','Callback',{@ea_applynormtofile_menu,handles,0,0,0,0,[],1});
+
         backwd=uimenu(f,'Label','Map file from template to anchor space...');
-                uimenu(backwd,'Label','Run...','Callback',{@ea_applynormtofile_menu,handles,1,0,0,0},'Accelerator','Y');
-                uimenu(backwd,'Label','Export Code...','Callback',{@ea_gencode_applynormtofile_menu,handles,1,0,0,0});
+        uimenu(backwd,'Label','Run...','Callback',{@ea_applynormtofile_menu,handles,1,0,0,0},'Accelerator','Y');
+        uimenu(backwd,'Label','Export Code...','Callback',{@ea_gencode_applynormtofile_menu,handles,1,0,0,0});
 
         uimenu(f,'Label','Map file from untouched anchor space to template...','Callback',{@ea_applynormtofile_menu,handles,0,1});
         uimenu(f,'Label','Map file from template to untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1});
