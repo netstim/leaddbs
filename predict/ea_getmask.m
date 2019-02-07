@@ -33,7 +33,7 @@ if nargin
         case {'brain_5'}
             load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
             mask=modeldata.brainmask_hd5;
-        case {'grey_5'}
+        case {'grey_5','gray_5'}
             load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
             mask=modeldata.mask_hd5;
     end
