@@ -101,14 +101,14 @@ if exist([directory,'segmentations'],'dir')
 end
 
 if exist([directory,'fiducials'],'dir')
-    segs=dir([directory,'fiducials']);
+    segs=dir([directory,'fiducials',filesep,'native']);
     for seg=1:length(segs)
         if ~strcmp(segs(seg).name(1),'.')
             if strfind(segs(seg).name,'.nii')
-                if exist(ea_niigz([ea_space,'fiducials',filesep,segs(seg).name]),'file') % check if matching template exists
+                if exist(ea_niigz([directory,'fiducials',filesep,ea_getspace,filesep,segs(seg).name]),'file') % check if matching template exists
                     disp(['Including fiducials/',segs(seg).name,' for fiducial based assistance (weight = 3).']);
-                    from=[{[directory,'fiducials',filesep,segs(seg).name]},from]; % append to front (since last one is convergence critical)
-                    to=[{ea_niigz([ea_space,'fiducials',filesep,segs(seg).name])},to];
+                    from=[{[directory,'fiducials',filesep,'native',filesep,segs(seg).name]},from]; % append to front (since last one is convergence critical)
+                    to=[{ea_niigz([directory,'fiducials',filesep,ea_getspace,filesep,segs(seg).name])},to];
                     weights=[3,weights]; % set weight to 3 - DO NOT CHANGE THIS VALUE. IF VALUE IS CHANGED, FIDUCIALS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
                 end
             end

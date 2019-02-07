@@ -101,6 +101,9 @@ if isfield(handles,'seeddefpopup')
 end
 
 
+ea_compat_pt(uipatdir);
+
+
 function remstims=ea_prependvat(remstims)
 for rs=1:length(remstims)
     remstims{rs}=['Use VATs: ',remstims{rs}];

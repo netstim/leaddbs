@@ -75,49 +75,31 @@ if ~exist('fid','var')
     disp('No fiducials defined');
     return
 else
-    disp('Fiducials defined. Smoothing & logging them to be used in next ANTs-based transform.');
+    disp('Fiducials defined. Logging & smoothing them to be used in next ANTs-based transform.');
 end
 for f=1:length(fid)
-    % define in template:
-    ea_mkdir([ea_space,'fiducials']);
-    ea_spherical_roi([ea_space,'fiducials',filesep,uuid{f},'.nii'],fid(f).template,10,0,[ea_space,'t1.nii']);
-    tfis{f}=[ea_space,'fiducials',filesep,uuid{f},'.nii'];
-    %smoothgzip([ea_space,'fiducials'],[uuid{f},'.nii']);
-    
-    % define in pt:
-    for pt=1:length(uipatdir)
-        ea_mkdir([uipatdir{pt},filesep,'fiducials']);
-        ea_spherical_roi([uipatdir{pt},filesep,'fiducials',filesep,uuid{f},'.nii'],fid(f).patient(pt,:),10,0,ptspace{pt});
-        pfis{pt}{f}=[uipatdir{pt},filesep,'fiducials',filesep,uuid{f},'.nii'];
+    for pt=1:length(uipatdir)        
+        % define in template:
+        ea_mkdir([uipatdir{pt},filesep,'fiducials',filesep,ea_getspace]);
+        ea_spherical_roi([uipatdir{pt},filesep,'fiducials',filesep,ea_getspace,filesep,uuid{f},'.nii'],fid(f).template,10,0,[ea_space,'t1.nii']);
+        tfis{pt}{f}=[uipatdir{pt},filesep,'fiducials',filesep,ea_getspace,filesep,uuid{f},'.nii'];
+        %smoothgzip([ea_space,'fiducials'],[uuid{f},'.nii']);
+        
+        % define in pt:
+        ea_mkdir([uipatdir{pt},filesep,'fiducials',filesep,'native']);
+        ea_spherical_roi([uipatdir{pt},filesep,'fiducials',filesep,'native',filesep,uuid{f},'.nii'],fid(f).patient(pt,:),10,0,ptspace{pt});
+        pfis{pt}{f}=[uipatdir{pt},filesep,'fiducials',filesep,'native',filesep,uuid{f},'.nii'];
         %smoothgzip([uipatdir{pt},filesep,'fiducials'],[uuid{f},'.nii']);
     end
 end
 
 % flatten ROI:
-if length(tfis)>1
-    fguid=ea_generate_uuid;
-    matlabbatch{1}.spm.util.imcalc.input = tfis';
-    matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
-    matlabbatch{1}.spm.util.imcalc.outdir = {[ea_space,'fiducials']};
-    matlabbatch{1}.spm.util.imcalc.expression = 'mean(X)';
-    matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
-    matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
-    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-    matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
-    spm_jobman('run',{matlabbatch});
-    smoothgzip([ea_space,'fiducials'],[fguid,'.nii']);
-else
-    [pathn,filenn]=fileparts(tfis{1});
-    smoothgzip(pathn,[filenn,'.nii']);
-end
-ea_delete(tfis);
-
 for pt=1:length(uipatdir)
-    if length(pfis{pt})>1
-        matlabbatch{1}.spm.util.imcalc.input = pfis{pt}';
+    if length(tfis{pt})>1
+        fguid=ea_generate_uuid;
+        matlabbatch{1}.spm.util.imcalc.input = tfis{pt}';
         matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
-        matlabbatch{1}.spm.util.imcalc.outdir = {[uipatdir{pt},filesep,'fiducials']};
+        matlabbatch{1}.spm.util.imcalc.outdir = {[uipatdir{pt},filesep,'fiducials',filesep,ea_getspace]};
         matlabbatch{1}.spm.util.imcalc.expression = 'mean(X)';
         matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
         matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
@@ -125,7 +107,25 @@ for pt=1:length(uipatdir)
         matlabbatch{1}.spm.util.imcalc.options.interp = 1;
         matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
         spm_jobman('run',{matlabbatch});
-        smoothgzip([uipatdir{pt},filesep,'fiducials'],[fguid,'.nii']);
+        smoothgzip([uipatdir{pt},filesep,'fiducials',filesep,ea_getspace],[fguid,'.nii']);
+    else
+        [pathn,filenn]=fileparts(tfis{pt}{1});
+        smoothgzip(pathn,[filenn,'.nii']);
+    end
+        ea_delete(tfis{pt});
+
+    if length(pfis{pt})>1
+        matlabbatch{1}.spm.util.imcalc.input = pfis{pt}';
+        matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
+        matlabbatch{1}.spm.util.imcalc.outdir = {[uipatdir{pt},filesep,'fiducials',filesep,'native']};
+        matlabbatch{1}.spm.util.imcalc.expression = 'mean(X)';
+        matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+        matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
+        matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+        matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+        matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
+        spm_jobman('run',{matlabbatch});
+        smoothgzip([uipatdir{pt},filesep,'fiducials',filesep,'native'],[fguid,'.nii']);
     else
         [pathn,filenn]=fileparts(pfis{pt}{1});
         smoothgzip(pathn,[filenn,'.nii']);

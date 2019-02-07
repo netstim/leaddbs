@@ -664,14 +664,18 @@ if ~isempty(uuid)
     
     
     % export this mapping in template space:
-    ea_mkdir([ea_space,'fiducials']);
-    if ~exist([ea_space,'fiducials',filesep,uuid,'.nii'],'file')
-        nii=ea_load_nii([ea_space,'t1.nii']);
-        nii.fname=[ea_space,'fiducials',filesep,uuid,'.nii'];
+    directory=[options.root,options.patientname,filesep];
+    ea_mkdir([directory,'fiducials']);
+    ea_mkdir([directory,'fiducials',filesep,'native']);
+    ea_mkdir([directory,'fiducials',filesep,ea_getspace]);
+    
+    if ~exist([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'],'file')
+        nii=ea_load_nii([directory,'t1.nii']);
+        nii.fname=[directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'];
         nii.dt=[16,0];
         nii.img(:)=0;
     else
-        nii=ea_load_nii([ea_space,'fiducials',filesep,uuid,'.nii']);
+        nii=ea_load_nii([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii']);
     end
     atlvx=nii.mat\[cexpmm,ones(size(cexpmm,1),1)]';
     atlvx=round(atlvx(1:3,:))';
@@ -683,18 +687,17 @@ if ~isempty(uuid)
     
     % now project fids back to native space and export mapping there:
     expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
-    directory=[options.root,options.patientname,filesep];
     options=ea_assignpretra(options);
     [~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
-    
-    ea_mkdir([directory,'fiducials']);
-    if ~exist([directory,'fiducials',filesep,uuid,'.nii'],'file')
+
+
+    if ~exist([directory,'fiducials',filesep,'native',filesep,uuid,'.nii'],'file')
         nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
-        nii.fname=[directory,'fiducials',filesep,uuid,'.nii'];
+        nii.fname=[directory,'fiducials',filesep,'native',filesep,uuid,'.nii'];
         nii.dt=[16,0];
         nii.img(:)=0;
     else
-        nii=ea_load_nii([directory,'fiducials',filesep,uuid,'.nii']);
+        nii=ea_load_nii([directory,'fiducials',filesep,'native',filesep,uuid,'.nii']);
     end
     subcvx=round(subcvx(1:3,:))';
     nii.img(sub2ind(size(nii.img),(subcvx(:,1)),(subcvx(:,2)),(subcvx(:,3))))=1;
@@ -706,11 +709,11 @@ if ~isempty(uuid)
     for pttemp=1:2
         switch pttemp
             case 1 % native
-                directory=[options.root,options.patientname,filesep];
+                subdir='native';
             case 2 % template
-                directory=ea_space;
+                subdir=ea_getspace;
         end
-        [pathn,filen]=fileparts([directory,'fiducials',filesep,uuid,'.nii']);
+        [pathn,filen]=fileparts([directory,'fiducials',filesep,subdir,filesep,uuid,'.nii']);
         filen=[filen,'.nii'];
         matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pathn,filen)};
         matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
