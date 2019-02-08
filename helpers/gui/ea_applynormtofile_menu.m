@@ -163,7 +163,7 @@ else % from [untouched] achor space to template space
         ea_mkdir([ea_space,'resliced_templates']);
         trstr=num2str(templateresolution);
         trstr=strrep(trstr,'.','_');
-        if ~exist([ea_space,'resliced_templates',filesep,trstr,'.nii'],'file')
+        if ~exist([ea_space,'resliced_templates',filesep,trstr,'.nii.gz'],'file')
             copyfile(ea_niigz([ea_space,options.primarytemplate]),[ea_space,'resliced_templates',filesep,trstr,'.nii']);
             ea_reslice_nii([ea_space,'resliced_templates',filesep,trstr,'.nii'],[ea_space,'resliced_templates',filesep,trstr,'.nii'],repmat(templateresolution,1,3));
             nii=ea_load_nii([ea_space,'resliced_templates',filesep,trstr,'.nii']);
