@@ -109,8 +109,7 @@ end
 
 %  system([' "' mcpath('tetgen') exesuff '" ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 if ~ispc
-    cmdsuffix='& sleep 1200; kill $!'; % kill process after 15 minutes.
-    
+    cmdsuffix='';
 else
     cmdsuffix='';
 end

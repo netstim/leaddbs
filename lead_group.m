@@ -1315,6 +1315,7 @@ for pt=selection
                  [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,Modcoords,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
                 catch
                     msgbox(['Error while creating VTA of ',M.patient.list{pt},'.']);
+                    volume=[];
                 end
             end
             stimparams(1,side).volume=volume;
