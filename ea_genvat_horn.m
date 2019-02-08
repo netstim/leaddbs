@@ -552,7 +552,7 @@ function changed=ea_headmodel_changed(options,side,elstruct)
 changed=1; % in doubt always reconstruct headmodel
 
 
-if isequal(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,elstruct,0))
+if isequaln(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,elstruct,0)) % important to use isequaln if not nans are treated as not equal...
     changed=0;
 end
 
@@ -574,9 +574,10 @@ end
 
 function protocol=ea_load_hmprotocol(options,side)
 % function that loads protocol
-protocol=struct; % default for errors or if not present
 try
     load([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat']);
+catch
+    protocol=struct; % default for errors or if not present
 end
 
 
