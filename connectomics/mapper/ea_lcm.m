@@ -24,7 +24,7 @@ if options.lcm.func.do
         if exist('originalseeds','var')
             options.lcm.seeds=originalseeds;
         end
-        options=ea_resolvevatseeds(options,'fMRI');
+        options.lcm.seeds=ea_resolvevatseeds(options,'fMRI');
         if isempty(options.lcm.odir) && ~strcmp(options.lcm.seeddef,'vats')
             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep,options.lcm.func.connectome,filesep];
             if ~exist(options.lcm.odir,'dir')
@@ -32,7 +32,7 @@ if options.lcm.func.do
             end
         end
     elseif strcmp(options.lcm.seeddef,'parcellation')
-        options.lcm.seeds=ea_resolveparcseeds(options,'fMRI');
+        options=ea_resolveparcseeds(options,'fMRI');
     end
 
     % check if patient specific connectome used:
