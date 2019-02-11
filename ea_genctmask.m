@@ -5,7 +5,7 @@ gunzip([directory,'brainmask.nii.gz']);
 ea_delete([directory,'brainmask.nii.gz']);
 
 
-ea_apply_normalization_tofile(options, [directory,'brainmask.nii'], [directory,'wbrainmask.nii'], directory, 1, 1);
+ea_apply_normalization_tofile(options, {[directory,'brainmask.nii']}, {[directory,'wbrainmask.nii']}, directory, 1, 0);
 ea_delete([directory,'brainmask.nii']);
 
 load([directory,'ea_coregctmethod_applied.mat']) % determine last used coregmethod
@@ -21,4 +21,4 @@ switch coregct_method_applied{end}
 end
 ea_apply_coregistration([directory,options.prefs.rawctnii_unnormalized], [directory,'wbrainmask.nii'], [directory,'ct_mask.nii'], ...
     [directory,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(options.prefs.rawctnii_unnormalized),suffix]);
-
+ea_delete([directory,'wbrainmask.nii']);

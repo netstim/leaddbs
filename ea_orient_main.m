@@ -64,19 +64,20 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     pixdim = ct.voxsize;
     
     %% import transformation matrices for CT coregistration
+    tmat_reg2org=eye(4); % default.
     try
+        if strcmp(options.prefs.reco.mancoruse,'postop')
         load([folder 'ea_coregctmethod_applied.mat']);
         switch coregct_method_applied{end}
-            case {'ea_coregctmri_ants','ea_coregctmri_ants_refine'}
-                tmat_reg2org = ea_getantsrawct2preniimat(options);
-            case 'ea_coregctmri_brainsfit'
-                reg2org.fixed = h5read([folder 'postop_ct2anat_t1_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformFixedParameters');
-                reg2org.AffineTransform_float_3_3 = h5read([folder 'postop_ct2anat_t1_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformParameters');
-                tmat_reg2org =ea_antsmat2mat(reg2org.AffineTransform_float_3_3,reg2org.fixed);
             case 'ea_coregctmri_fsl'
                 %             tmat_reg2org = dlmread([folder 'anat_t12postop_ct_flirt1.mat']));
                 disp(['Warning: Temporary fix to use DiODe algorithm with FLIRT. rpostop_ct is used so results may be slightly less accurate.'])
                 ct = ct_reg;
+            otherwise
+                tmat_reg2org = ea_getrawct2preniimat(options);
+        end
+        else
+            ct = ct_reg;
         end
     catch
         reg2org = load([folder 'Postop_CT_2_T1.mat']);

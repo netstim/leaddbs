@@ -2,10 +2,8 @@ function [coords_mm,trajectory,markers]=ea_runpacer(options)
 
 ctnii=options.prefs.ctnii_coregistered; tmat=eye(4);
 if strcmp(options.prefs.reco.mancoruse,'postop')
-    if exist([options.root,options.patientname,filesep,stripext(options.prefs.rawctnii_unnormalized),'2',stripext(options.prefs.prenii_unnormalized),'_ants1.mat'],'file') % use unresliced version and apply matrix in RAM
-        tmat=ea_getantsrawct2preniimat(options);
+        tmat=ea_getrawct2preniimat(options);
         ctnii=options.prefs.rawctnii_unnormalized;
-    end
 end
 niiCTSPM = NiftiModSPM([options.root,options.patientname,filesep,ctnii]); % load nifti using SPM instead of PaCER default Nifti Toolbox
 

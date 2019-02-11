@@ -37,7 +37,7 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
         brainMask = logical(niiCT.voxdim); % for Phantom etc. (process whole image)
     elseif(~isempty(args.brainMask))
         disp('Using brain mask provied by parameter "brainMask"...');
-        niiBrainMask = NiftiSeg(args.brainMask);
+        niiBrainMask = ea_load_nii(args.brainMask);
         brainMask = niiBrainMask.img;
     else
         disp('Extracting convex hull brain mask...');
