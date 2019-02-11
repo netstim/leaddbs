@@ -1,11 +1,7 @@
 function [coords_mm,trajectory,markers]=ea_runpacer(options)
 
-ctnii=options.prefs.ctnii_coregistered; tmat=eye(4);
-if strcmp(options.prefs.reco.mancoruse,'postop')
-        tmat=ea_getrawct2preniimat(options);
-        ctnii=options.prefs.rawctnii_unnormalized;
-end
-niiCTSPM = NiftiModSPM([options.root,options.patientname,filesep,ctnii]); % load nifti using SPM instead of PaCER default Nifti Toolbox
+[tmat,ctnii]=ea_getrawct2preniimat(options);
+niiCTSPM = NiftiModSPM(ctnii); % load nifti using SPM instead of PaCER default Nifti Toolbox
 
 if ~(exist([options.root options.patientname filesep 'ct_mask.nii'], 'file'))
     ea_genctmask(options);

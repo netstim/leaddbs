@@ -74,7 +74,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
                 disp(['Warning: Temporary fix to use DiODe algorithm with FLIRT. rpostop_ct is used so results may be slightly less accurate.'])
                 ct = ct_reg;
             otherwise
-                tmat_reg2org = ea_getrawct2preniimat(options);
+                [tmat_reg2org,ct] = ea_getrawct2preniimat(options);
         end
         else
             ct = ct_reg;
