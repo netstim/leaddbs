@@ -14,7 +14,7 @@ switch options.prefs.reco.mancoruse
         load([directory 'ea_coregctmethod_applied.mat']);
         switch coregct_method_applied{end}
             case {'ea_coregctmri_ants','ea_coregctmri_ants_refine'}
-                antsmts=dir([directory,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(options.prefs.rawctnii_unnormalized),'*','.mat']);
+                antsmts=dir([directory,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(options.prefs.rawctnii_unnormalized),'_ants*','.mat']);
                 t=load([directory,antsmts(end).name]);
                 % The affine field name in tfields{1} differs depending on the ants call, its often
                 % "AffineTransform_float_3_3", but alternativley "AffineTransform_double_3_3"
