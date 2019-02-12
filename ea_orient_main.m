@@ -26,14 +26,14 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     %%
     load(options.elspec.matfname)
     %% import CTs and choose which CT to use
-    if exist([folder options.prefs.ctnii_coregistered]) == 2
+    if exist([folder options.prefs.ctnii_coregistered],'file') == 2
         ct_reg = ea_load_nii([folder options.prefs.ctnii_coregistered]);
         tmat_reg = ct_reg.mat;
     else
         error(['No coregistered CT (',options.prefs.ctnii_coregistered,') found in folder: ' folder])
     end
     tol=0.0001; % tolerance of (rounding) difference in qform and sform matrices.
-    if exist([folder options.prefs.rawctnii_unnormalized]) == 2
+    if exist([folder options.prefs.rawctnii_unnormalized],'file') == 2
         ct_org = ea_load_nii([folder 'postop_ct.nii']);
         if sum(sum(abs(ct_org.mat-ct_org.private.mat0)))<tol
             tmat_org = ct_org.mat;
@@ -74,7 +74,8 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
                 disp(['Warning: Temporary fix to use DiODe algorithm with FLIRT. rpostop_ct is used so results may be slightly less accurate.'])
                 ct = ct_reg;
             otherwise
-                [tmat_reg2org,ct] = ea_getrawct2preniimat(options);
+                [tmat_reg2org,ctfname] = ea_getrawct2preniimat(options,1);
+                ct=ea_load_nii(ctfname);
         end
         else
             ct = ct_reg;
