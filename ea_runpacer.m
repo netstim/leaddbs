@@ -6,8 +6,12 @@ niiCTSPM = NiftiModSPM(ctnii); % load nifti using SPM instead of PaCER default N
 if ~(exist([options.root options.patientname filesep 'ct_mask.nii'], 'file'))
     ea_genctmask(options);
 end
-    brainMask = [options.root options.patientname filesep 'ct_mask.nii'];
-
+switch options.prefs.reco.mancoruse
+    case 'postop'
+        brainMask = [options.root options.patientname filesep 'ct_mask.nii'];
+    case 'rpostop'
+        brainMask = [options.root options.patientname filesep 'rct_mask.nii'];
+end
 
 elecmodels=PaCER(niiCTSPM,'finalDegree',1,'electrodeType',ea_mod2pacermod(options.elmodel), 'brainMask', brainMask, 'displayProfiles', true, 'displayMPR', true);
 disp('======== PaCER reconstruction finished. Converting PaCER reconstructions to LeadDBS. ========')
