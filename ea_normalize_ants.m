@@ -93,7 +93,7 @@ if exist([directory,'segmentations'],'dir')
                     disp(['Including segmentations/',segs(seg).name,' for segment based assistance (weight = 3).']);
                     from=[{[directory,'segmentations',filesep,segs(seg).name]},from]; % append to front (since last one is convergence critical)
                     to=[{ea_niigz([ea_space,'segmentations',filesep,segs(seg).name])},to];
-                    weights=[3,weights]; % set weight to 3 - DO NOT CHANGE THIS VALUE. IF VALUE IS CHANGED, SEGMENTATIONS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
+                    weights=[3,weights]; % set weight to 3 - DO NOT CHANGE THIS VALUE BELOW 3. IF VALUE IS CHANGED, SEGMENTATIONS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
                 end
             end
         end
@@ -106,10 +106,10 @@ if exist([directory,'fiducials'],'dir')
         if ~strcmp(segs(seg).name(1),'.')
             if strfind(segs(seg).name,'.nii')
                 if exist(ea_niigz([directory,'fiducials',filesep,ea_getspace,filesep,segs(seg).name]),'file') % check if matching template exists
-                    disp(['Including fiducials/',segs(seg).name,' for fiducial based assistance (weight = 3).']);
+                    disp(['Including fiducials/',segs(seg).name,' for fiducial based assistance (weight = 5).']);
                     from=[{[directory,'fiducials',filesep,'native',filesep,segs(seg).name]},from]; % append to front (since last one is convergence critical)
                     to=[{ea_niigz([directory,'fiducials',filesep,ea_getspace,filesep,segs(seg).name])},to];
-                    weights=[3,weights]; % set weight to 3 - DO NOT CHANGE THIS VALUE. IF VALUE IS CHANGED, FIDUCIALS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
+                    weights=[5,weights]; % set weight to 3 - DO NOT CHANGE THIS VALUE BELOW 3. IF VALUE IS CHANGED, FIDUCIALS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
                 end
             end
         end

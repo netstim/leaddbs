@@ -60,7 +60,7 @@ if slabsupport
     disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
     
     for mov = 1:length(movingimage)
-        if ~(weights(mov)==3) % segmentations
+        if ~(weights(mov)>2.9) % segmentations
 
                 mnii = ea_load_nii(movingimage{mov});
                 mnii.img(abs(mnii.img)<0.0001)=nan;
