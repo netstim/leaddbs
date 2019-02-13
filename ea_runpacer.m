@@ -13,7 +13,7 @@ switch options.prefs.reco.mancoruse
         brainMask = [options.root options.patientname filesep 'rct_mask.nii'];
 end
 
-elecmodels=PaCER(niiCTSPM,'finalDegree',1,'electrodeType',ea_mod2pacermod(options.elmodel), 'brainMask', brainMask, 'displayProfiles', true, 'displayMPR', true);
+elecmodels=PaCER(niiCTSPM,'finalDegree',1,'electrodeType',ea_mod2pacermod(options.elmodel), 'brainMask', brainMask);
 disp('======== PaCER reconstruction finished. Converting PaCER reconstructions to LeadDBS. ========')
 
 if(length(elecmodels) ~= length(options.sides))
