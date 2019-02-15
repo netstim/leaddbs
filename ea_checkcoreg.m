@@ -440,30 +440,19 @@ switch ea_stripex(currvol)
             useasanchor=pf{substitute};
 
 
-
-            if ~exist([directory,b0restanchor{activevolume}],'file')
-                V=ea_open_vol(ea_niigz([directory,thisrest]));
-                matlabbatch{1}.spm.util.cat.vols = {
-                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,1'
-                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,2'
-                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,3'
-                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,4'
-                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,5'
-                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,6'
-                    '/Volumes/Neuron/fMRI/sub_2/dti.nii,7'
-                    };
-                matlabbatch{1}.spm.util.cat.name = '4D.nii';
-                matlabbatch{1}.spm.util.cat.dtype = 0;
-
-
-            end
             % in following line correct that useasanchor is the *moving*
             % image (since we're going from anchor to rest/b0.
             ea_coreg2images(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
-            movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(useasanchor),'_',ea_matext(options.coregmr.method)],...
-                [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
-            movefile([directory,ea_stripex(useasanchor),'2',ea_stripex(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
-                [directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
+            if ~isequal([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(useasanchor),'_',ea_matext(options.coregmr.method)],...
+                    [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
+                movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(useasanchor),'_',ea_matext(options.coregmr.method)],...
+                    [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
+            end
+            if ~isequal([directory,ea_stripex(useasanchor),'2',ea_stripex(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
+                    [directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
+                movefile([directory,ea_stripex(useasanchor),'2',ea_stripex(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
+                    [directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
+            end
             ea_cleandownstream(options,directory,thisrest);
         else
             ea_backuprestore([directory,presentfiles{activevolume}]);

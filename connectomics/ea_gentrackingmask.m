@@ -33,3 +33,13 @@ if threshold
     tr.fname=[options.root,options.patientname,filesep,'ttrackingmask.nii'];
     ea_write_nii(tr);
 end
+
+% apply inverse to b0 to gen checkreg:
+coregmethod=options.coregmr.method;
+T=load([directory,'ea_coregmrmethod_applied.mat']);
+if isfield(T,['b0_',ea_stripex(options.prefs.prenii_unnormalized)])
+    coregmethod=T.(['b0_',ea_stripex(options.prefs.prenii_unnormalized)]);
+end
+ea_apply_coregistration([directory,options.prefs.b0],[directory,options.prefs.prenii_unnormalized],[directory,ea_stripex(options.prefs.b0),'_',options.prefs.prenii_unnormalized],coregmethod);
+
+
