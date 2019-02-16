@@ -19,29 +19,39 @@ opts.patientselection=M.ui.listselect;
 opts.regressor=I;
 opts.connectome=M.ui.connectomename;
 opts.allpatients=M.patient.list;
+opts.mirrorsides=M.ui.mirrorsides;
+if M.ui.mirrorsides
+    msuffix='_mirrored';
+else
+    msuffix='';
+end
 
 [reforce,connectomechanged,reformat]=checkpresence(M,opts);
 if reforce
     allroilist=cell(length(M.patient.list),2);
     for sub=1:length(M.patient.list) % all patients - for connected fibers selection
-        allroilist{sub,1}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii'];
-        allroilist{sub,2}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii'];
+        if ~M.ui.mirrorsides
+            allroilist{sub,1}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii'];
+            allroilist{sub,2}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii'];
+        else
+            allroilist(sub,:)=ea_genflippedjointnii([M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii'],[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii'],1);
+        end
     end
 
-    if ~exist([M.ui.groupdir,'connected_fibers.mat'],'file')
+    if ~exist([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'file')
         cfile=[ea_getconnectomebase('dMRI'),M.ui.connectomename,filesep,'data.mat'];
     else
         if connectomechanged
             cfile=[ea_getconnectomebase('dMRI'),M.ui.connectomename,filesep,'data.mat'];
         else
-            cfile=[M.ui.groupdir,'connected_fibers.mat'];
+            cfile=[M.ui.groupdir,'connected_fibers',msuffix,'.mat'];
         end
     end
     [fibsweighted,fibsin]=ea_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},thresh,connthreshold);
-    save([M.ui.groupdir,'connected_fibers.mat'],'fibsin','opts','-v7.3');
-    save([M.ui.groupdir,'correlative_fibertracts.mat'],'fibsweighted','opts','-v7.3');
+    save([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'fibsin','opts','-v7.3');
+    save([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'fibsweighted','opts','-v7.3');
 else
-    load([M.ui.groupdir,'correlative_fibertracts.mat']);
+    load([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat']);
 end
 
 % visualize:
@@ -187,25 +197,34 @@ discfiberscontrol = ea_discfiberscontrol(resultfig);
 setappdata(resultfig, 'discfiberscontrol', discfiberscontrol);
 
 
+
+
+
 function [reforce,connectomechanged,reformat]=checkpresence(M,opts)
 reforce=1; connectomechanged=1; reformat=1;
-if exist([M.ui.groupdir,'correlative_fibertracts.mat'],'file')
-    d=load([M.ui.groupdir,'correlative_fibertracts.mat'],'opts');
+if M.ui.mirrorsides
+    msuffix='_mirrored';
+else
+    msuffix='';
+end
+
+if exist([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'file')
+    d=load([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'opts');
     if isequal(opts,d.opts)
         reforce=0;
     end
 end
 
-if exist([M.ui.groupdir,'connected_fibers.mat'],'file') % check if base connectome changed.
-    d=load([M.ui.groupdir,'correlative_fibertracts.mat'],'opts');
+if exist([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'file') % check if base connectome changed.
+    d=load([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'opts');
     if isequal(d.opts.connectome,opts.connectome)
         connectomechanged=0;
     end
 end
 
 if ~reforce
-    if exist([M.ui.groupdir,'correlative_fibertracts_reformatted.mat'],'file') % check if base connectome changed.
-        d=load([M.ui.groupdir,'correlative_fibertracts_reformatted.mat'],'opts');
+    if exist([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,'.mat'],'file') % check if base connectome changed.
+        d=load([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,'.mat'],'opts');
         if isequal(d.opts.connectome,opts.connectome)
             reformat=0;
         end
