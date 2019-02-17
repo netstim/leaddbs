@@ -26,10 +26,42 @@ end
 
 load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 
+%poptions=options;
+%[poptions.root,poptions.patientname]=fileparts(options.patient_list{options.expstatvat.pt});
 if isequal(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,getappdata(resultfig,'elstruct'),S,0))
     options.writeoutstats=0;
 end
 %--------------------------------end changes---------------------------------
+
+
+% clean downstreamfiles if necessary
+if ~isequal(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,getappdata(resultfig,'elstruct'),S,0))
+    
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_right.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_right.nii'));    
+    
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_right.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_right.nii'));  
+    
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_gauss_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_gauss_right.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_gauss_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_gauss_right.nii'));
+    
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_dMRI.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_dMRI_l.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_dMRI_r.nii'));
+    
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_fMRI.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_fMRI_l.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_fMRI_r.nii'));
+    
+end
+
 
 
 %prepare statvat exports once if needed.
