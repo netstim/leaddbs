@@ -716,7 +716,7 @@ if ~isempty(uuid)
         [pathn,filen]=fileparts([directory,'fiducials',filesep,subdir,filesep,uuid,'.nii']);
         filen=[filen,'.nii'];
         matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pathn,filen)};
-        matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
+        matlabbatch{1}.spm.spatial.smooth.fwhm = [0.5 0.5 0.5];
         matlabbatch{1}.spm.spatial.smooth.dtype = 512;
         matlabbatch{1}.spm.spatial.smooth.im = 0;
         matlabbatch{1}.spm.spatial.smooth.prefix = 's';
