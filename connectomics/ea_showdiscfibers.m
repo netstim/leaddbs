@@ -88,9 +88,9 @@ if reformat
         ea_dispercent(cnt/length(fibidx));
     end
     ea_dispercent(1,'end');
-    save([M.ui.groupdir,'correlative_fibertracts_reformatted.mat'],'fibcell','vals','opts','-v7.3');
+    save([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,'.mat'],'fibcell','vals','opts','-v7.3');
 else
-    load([M.ui.groupdir,'correlative_fibertracts_reformatted.mat']);
+    load([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,'.mat']);
 end
 
 set(0,'CurrentFigure',resultfig);
