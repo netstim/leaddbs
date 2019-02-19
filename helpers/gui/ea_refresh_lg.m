@@ -146,7 +146,7 @@ try set(handles.highlightactivecontcheck,'Value',M.ui.hlactivecontcheck); end
 try set(handles.showisovolumecheck,'Value',M.ui.showisovolumecheck); end
 try set(handles.statvatcheck,'Value',M.ui.statvat); end
 try set(handles.colorpointcloudcheck,'Value',M.ui.colorpointcloudcheck); end
-try set(handles.mirrorsides,'Value',M.ui.lc.mirrorsides); end
+try set(handles.mirrorsides,'Value',M.ui.mirrorsides); end
 
 % update selectboxes:
 try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
