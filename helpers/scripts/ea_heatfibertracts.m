@@ -1,4 +1,4 @@
-function [fibsweighted,fibsin]=ea_heatfibertracts(cfile,roilist,patselection,vals,thresh,minpercent)
+function [fibsweighted,fibsin,fibsval,iaix]=ea_heatfibertracts(cfile,roilist,patselection,vals,thresh,minpercent)
 % function extracts fibers from a connectome connected to ROIs in the
 % roilist and assigns them correlative values based on vals. Vals needs to be of
 % same length as roilist, assigning a value for each ROI.

@@ -1370,6 +1370,8 @@ function fiberspopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from fiberspopup
 M=getappdata(gcf,'M');
 M.ui.fiberspopup=get(handles.fiberspopup,'Value');
+M.ui.connectomename=get(handles.fiberspopup,'String');
+M.ui.connectomename=M.ui.connectomename{M.ui.fiberspopup};
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 

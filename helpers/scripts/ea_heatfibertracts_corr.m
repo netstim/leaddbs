@@ -103,11 +103,13 @@ nii=niiSel;
 ea_dispt('');
 
 ea_dispercent(0,'Iterating ROI');
-
+fibunique=unique(fibsin(in,4));
 for roi=1:length(patselection)
     [IX,D]=knnsearch(XYZmm{roi}(:,1:3),fibsin(:,1:3),'Distance','chebychev');
     in=D<mean(nii{end}.voxsize);
-    fibsval(ismember(fibsin(:,4),unique(fibsin(in,4))),roi)=sum(valsmm{roi}(IX(in)));
+    for fib=fibunique'
+        fibsval(ismember(fibsin(:,4),fib),roi)=sum(valsmm{roi}(IX(logical(in.*(fibsin(:,4)==fib)))));
+    end
     ea_dispercent(roi/length(patselection));
 end
 ea_dispercent(1,'end');

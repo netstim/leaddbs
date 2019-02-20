@@ -3,7 +3,7 @@ function ea_showdiscfibers(M,discfiberssetting,resultfig)
 patlist=M.patient.list(M.ui.listselect);
 I=M.clinical.vars{M.ui.clinicallist}(M.ui.listselect);
 
-thresh=150;% should only apply for heatfibertracts_corr
+thresh=50;% should only apply for heatfibertracts_corr
 tic
 
 % Get discriminative fiber setting
