@@ -12,6 +12,7 @@ switch cmd
         success={'Redownload data files'
                  'Install development version of Lead'
                  '2009b Nonlinear Flip Transform'
+                 '7T Cardiac Gated FLASH MRI (Backdrop visualization)'
                  'Structural group connectome 20 subjects Gibbs-tracker (Horn 2013)'
                  'Structural group connectome 169 NKI subjects Gibbs-tracker (Horn 2016)'
                  'Structural group connectome 32 Adult Diffusion HCP subjects GQI (Horn 2017)'
@@ -21,6 +22,7 @@ switch cmd
         commands={'leaddata'
                   'hotfix'
                   'nlinflip'
+                  '7tcgflash'
                   'groupconnectome2013'
                   'groupconnectome2016'
                   'groupconnectome2017'
@@ -64,7 +66,29 @@ switch cmd
         else
             disp('2009b asym LR flip transform is installed.')
         end
+    case '7tcgflash'
+        checkf=[ea_space,'backdrops',filesep,'7t_Flash_Horn_2018.mat'];
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
+        if checkonly
+            success=~force;
+            return;
+        end
+        if force==-1
+            success=-1;
+            return;
+        end
 
+        if ~exist(checkf,'file') || force
+            ea_mkdir([ea_space,'backdrops']);
+            success=ea_downloadasset('7tcgflash',...
+                [ea_space,'backdrops',filesep,'7t_Flash_Horn_2018.zip'],...
+                '7tcgflash');
+            fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt'],'a');
+            fprintf(fid,'%s %s\n','7t_Flash_Horn_2018.mat','7T_Cardiac_Gated_Flash_MRI_(Horn_2019)');
+            fclose(fid);
+        else
+            disp('7T Cardiac Gated FLASH MRI (Backdrop visualization) is installed.')
+        end
     case 'bigbrain'
         checkf=[ea_space,'bigbrain_2015_100um_bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
