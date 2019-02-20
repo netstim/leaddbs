@@ -103,7 +103,7 @@ nii=niiSel;
 ea_dispt('');
 
 ea_dispercent(0,'Iterating ROI');
-fibunique=unique(fibsin(in,4));
+fibunique=unique(fibsin(:,4));
 for roi=1:length(patselection)
     [IX,D]=knnsearch(XYZmm{roi}(:,1:3),fibsin(:,1:3),'Distance','chebychev');
     in=D<mean(nii{end}.voxsize);
@@ -119,7 +119,7 @@ for group=1:length(roilist) % groups currently not implemented, should always be
     thisgroupidx=cnt:(cnt+length(patselection))-1;
     cnt=cnt+length(patselection);
 
-% reduce to one entry per fiber:
+    % reduce to one entry per fiber:
     [~,fibidx,iaix]=unique(fibsin(:,4));
     fibsval=fibsval(fibidx,:);
     repvals=repmat(vals{group}',size(fibsval,1),1);

@@ -152,9 +152,8 @@ try set(handles.mirrorsides,'Value',M.ui.mirrorsides); end
 try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
 try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
 
-
-    connectomenames=get(handles.fiberspopup,'String');
-    try    set(handles.fiberspopup,'Value',ismember(M.ui.connectomename,connectomenames));  end
+connectomenames=get(handles.fiberspopup,'String');
+try    set(handles.fiberspopup,'Value',ismember(M.ui.connectomename,connectomenames));  end
 
 if ~isfield(M.ui,'atlassetpopup')
     M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
@@ -227,7 +226,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 options.root=[options.root,filesep];
                 if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
                     [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
-                    
+
                     if M.ui.elmodelselect==1 % use patient specific elmodel
                         if exist('elmodel','var')
                             M.elstruct(pt).elmodel=elmodel;
@@ -237,9 +236,9 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                     else
                         elmodels=get(handles.elmodelselect,'String');
                         M.elstruct(pt).elmodel=elmodels{get(handles.elmodelselect,'Value')};
-                        
+
                     end
-                    
+
                     % make sure coords_mm is congruent to coded electrode
                     % model:
                     poptions=options;
@@ -247,14 +246,14 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                     poptions.elmodel=M.elstruct(pt).elmodel;
                     poptions=ea_resolve_elspec(poptions);
                     [coords_mm,trajectory,markers]=ea_resolvecoords(markers,poptions,0);
-                    
+
                     M.elstruct(pt).coords_mm=coords_mm;
                     M.elstruct(pt).coords_acpc=coords_acpc;
                     M.elstruct(pt).trajectory=trajectory;
-                    
+
                     M.elstruct(pt).name=[pats{pt}];
                     if ~exist('markers','var') % backward compatibility to old recon format
-                        
+
                         for side=1:2
                             markers(side).head=coords_mm{side}(1,:);
                             markers(side).tail=coords_mm{side}(4,:);
