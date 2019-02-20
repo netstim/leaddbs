@@ -11,7 +11,7 @@ connthreshold = discfiberssetting.connthreshold/100;
 showfibersset = discfiberssetting.showfibersset;
 pospredthreshold = discfiberssetting.pospredthreshold/100;
 negpredthreshold = discfiberssetting.negpredthreshold/100;
-statmetric=discfiberssetting.statmetric;
+statmetric = discfiberssetting.statmetric;
 
 % protocol selection to be able to check if same analysis has been run
 % before.
@@ -64,13 +64,15 @@ if reforce
     end
     switch statmetric
         case 1 % ttests
-            [fibsweighted,fibsin]=ea_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},thresh,connthreshold);
+            [fibsweighted,fibsin,fibsval,iaix]=ea_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},thresh,connthreshold);
         case 2 % spearmans R
-            [fibsweighted,fibsin]=ea_heatfibertracts_corr(cfile,{allroilist},M.ui.listselect,{I},thresh,connthreshold);
+            [fibsweighted,fibsin,fibsval,iaix]=ea_heatfibertracts_corr(cfile,{allroilist},M.ui.listselect,{I},thresh,connthreshold);
     end
     save([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'fibsin','opts','-v7.3');
+    save([M.ui.groupdir,'fibsval',msuffix,'.mat'],'fibsval','iaix','-v7.3');
     save([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'fibsweighted','opts','-v7.3');
 else
+    % load([M.ui.groupdir,'fibsval',msuffix,'.mat']);
     load([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat']);
 end
 
