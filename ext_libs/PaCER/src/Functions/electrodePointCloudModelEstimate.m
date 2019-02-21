@@ -12,24 +12,19 @@
 % mail@andreashusch.de
 
 function [r3polynomial, tPerMm, skeleton, totalLengthMm] = electrodePointCloudModelEstimate(elecPointCloudMm, varargin)
-%% Optional Arguments and Default Values
-argParser = inputParser();
-argParser.KeepUnmatched = true;
-argParser.addOptional('pixelValues', [], @(x)(~isscalar(x) && isnumeric(x))); 
-argParser.addOptional('reverseDir', 'auto', @(x)(ismember(x, {'auto', 'yes', 'no'}))); 
-
-argParser.parse(varargin{:});
-args = argParser.Results;
-
+revDir = false;
 INTERNAL_DEGREE = 8; % fixed, determined as sufficient by AIC analysis
 
-if(isempty(args.pixelValues))
+if(nargin < 2)
     USE_REF_IMAGE_WEIGHTING=false;
     warning('No Reference image for intensity weighting given! Accuracy is thus limited to voxel size!');
     pixelValues = [];
 else
     USE_REF_IMAGE_WEIGHTING=true;
     pixelValues = varargin{1};
+    if(nargin == 3)
+        revDir = varargin{2};
+    end
 end
 
 %% Axial centers based skeletonization
@@ -80,17 +75,6 @@ if(length(skeleton) < INTERNAL_DEGREE + 1)
     warning(['electrodePointCloudModelEstimate: less data points ' num2str(length(skeleton)) ...
         'than internal poly. degree (' num2str(INTERNAL_DEGREE) '). Lowering degree but take care']);
     INTERNAL_DEGREE = length(skeleton) - 1;
-end
-revDir = false;  
-if(strcmp(args.reverseDir, 'auto'))
-    if(zPlanes(1) > zPlanes(end))
-        warning('Check electrode proximal-distal direction. Guessing reverse is neeeded and reversing direction. Set "reverseDir" option to "no" to override');
-        revDir = true;
-    end
-elseif(strcmp(args.reverseDir, 'yes'))
-    revDir = true;
-else
-    revDir = false;  
 end
 if(revDir)
     [r3polynomial, tPerMm] = fitParamPolyToSkeleton(flipud(skeleton), INTERNAL_DEGREE); % note degree (8)

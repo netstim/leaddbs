@@ -1,0 +1,4 @@
+git+https://github.com/uni-lu/sphinx.git@develop#egg=sphinx
+sphinx_rtd_theme
+git+https://github.com/uni-lu/sphinx_julia_theme.git@develop#egg=sphinx_julia_theme
+git+https://github.com/syarra/Documenter.py@develop#egg=documenter

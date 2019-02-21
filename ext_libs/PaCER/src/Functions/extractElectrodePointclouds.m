@@ -7,8 +7,10 @@
 % mail@andreashusch.de, husch.andreas@chl.lu
 
 function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT, varargin)
+    disp(['Voxel size in elecsPointcloudStruct: ' num2str(niiCT.voxsize')]);
+
     % CONSTANTS
-    LAMBDA_1 = 30; % 
+    LAMBDA_1 = 25;  % elec latent space length [mm]
 
     %% Optional Arguments and Default Values
     argParser = inputParser();
@@ -17,7 +19,7 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
     argParser.addParameter('noMask', false); % for phantom studies where no brain is present in data
     argParser.addParameter('brainMask', ''); % for manually providing brain mask (binary segmentation image file path)
     argParser.addParameter('medtronicXMLPlan', '', @(x)(ischar(x)));
-    argParser.addParameter('metalThreshold', 1000, @(x)(isnumeric(x)));
+    argParser.addParameter('metalThreshold', 800, @(x)(isnumeric(x)));
     
     argParser.parse(varargin{:});
     args = argParser.Results;
@@ -37,13 +39,13 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
         brainMask = logical(niiCT.voxdim); % for Phantom etc. (process whole image)
     elseif(~isempty(args.brainMask))
         disp('Using brain mask provied by parameter "brainMask"...');
-        niiBrainMask = ea_load_nii(args.brainMask);
+        niiBrainMask = NiftiSeg(args.brainMask);
         brainMask = niiBrainMask.img;
     else
         disp('Extracting convex hull brain mask...');
         [brainMask, ~] = extractBrainConvHull(niiCT);
     end
-
+    
     %% detect metal artifacts inside the brain (hopefully representing electrodes)
     disp(['Thresholding ' niiCT.filepath  ' for metal with METAL_THRESHOLD = ' num2str(METAL_THRESHOLD) '...']);
     maskedImg = niiCT.img;
@@ -65,7 +67,8 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
     elecIdxs = [];
     minVoxelNumber =  (1.2 * (1.27/2))^2 * pi * 40 / prod(niiCT.voxsize); % assumin at least 40mm in brain and 20% partial voluming
     maxVoxelNumber =  (3 * (1.27/2))^2 * pi * 80 / prod(niiCT.voxsize);  % assumin 80mm in brain and 300% partial voluming 
-
+   % maxVoxelNumber = Inf; % FIXME
+    % DEBUG: figure, scatterMatrix3(ccProps(1).PixelList)
     largeComponents = areas(areas >= minVoxelNumber & areas <= maxVoxelNumber); % Voxels
     componentIdxs = idxs(areas >= minVoxelNumber & areas <= maxVoxelNumber);
     
@@ -87,9 +90,9 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
     disp(['Guessing that ' num2str(nElecs) ' of them are Electrodes...']);
     
     if(nElecs == 0)
-        if(METAL_THRESHOLD > 200)
-            disp('Somehing is weird with your CT data...  Trying again with lower threshold. ')
-            [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT, 'brainMask', args.brainMask, 'metalThreshold', METAL_THRESHOLD  * 0.8, 'medtronicXMLPlan', args.medtronicXMLPlan);
+        if(METAL_THRESHOLD < 3000)
+            disp('Something is weird with your CT data...  Trying again with higher metal threshold. ')
+            [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT, 'brainMask', args.brainMask, 'metalThreshold', METAL_THRESHOLD * 1.2, 'medtronicXMLPlan', args.medtronicXMLPlan);
             return;
         else
             %% We tried hard but  didn't find an object that looks like an electrode in a reasonalbe HU range, notify the user and quit
