@@ -4,7 +4,7 @@ copyfile([ea_space,'brainmask.nii.gz'],[directory,'brainmask.nii.gz']);
 gunzip([directory,'brainmask.nii.gz']);
 ea_delete([directory,'brainmask.nii.gz']);
 
-
+                             % options,           from,                 to,                          directory,useinverse,interp,refim)
 ea_apply_normalization_tofile(options, {[directory,'brainmask.nii']}, {[directory,'wbrainmask.nii']}, directory, 1, 0);
 ea_delete([directory,'brainmask.nii']);
 
@@ -20,5 +20,5 @@ switch coregct_method_applied{end}
         suffix=strrep(coregs(end).name,[ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(options.prefs.rawctnii_unnormalized)],'');
 end
 ea_apply_coregistration([directory,options.prefs.rawctnii_unnormalized], [directory,'wbrainmask.nii'], [directory,'ct_mask.nii'], ...
-    [directory,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(options.prefs.rawctnii_unnormalized),suffix]);
+    [directory,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(options.prefs.rawctnii_unnormalized),suffix],0); % nn interpolation
 movefile([directory,'wbrainmask.nii'],[directory,'rct_mask.nii']);
