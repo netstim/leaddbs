@@ -19,7 +19,7 @@ argParser.addOptional('displayMPR', false); % optional MPR plot of orthogonal ob
 argParser.addOptional('noMask', false); % for phantom studies where no brain is present in data
 argParser.addParameter('brainMask', ''); % for manually providing a brain mask (binary segmentation image file path)
 
-argParser.addOptional('reverseDir', 'auto'); % for special cases with I-S flip
+argParser.addOptional('reverseDir', false); % for special cases with I-S flip
 argParser.addOptional('contactDetectionMethod', 'contactAreaCenter', @(x)(ismember(x, {'peak', 'peakWaveCenter', 'contactAreaCenter'}))); % default contactAreaCenter, if peak, automatic fallback to contactAreaCenter for "bad quality data"
 argParser.addParameter('electrodeType', '', @(x)(ismember(x, {'', 'Medtronic 3387', 'Medtronic 3389', 'Boston Vercise Directional'}))); 
 
@@ -32,7 +32,7 @@ if(~isempty(args.electrodeType))
    args.contactDetectionMethod = 'contactAreaCenter'; 
 end
 %% Checks
-if(~isa(niiCT, 'NiftiMod') && ~isa(niiCT, 'NiftiModSPM'))
+if(~isa(niiCT, 'NiftiMod') && ~isa(niiCT, 'NiftiModSPM') )
     disp('First parameter is not a nifti object. Intrepretating as filename and tring to load a nifti file with that name from disk...');
     niiCT = NiftiMod(niiCT);
 end
@@ -41,7 +41,7 @@ if(max(niiCT.voxsize) > 1)
     warning('Slice thickness is greater than 1 mm! Independent contact detection is most likly not possible. Forcing contactAreaCenter based method.');
     args.contactDetectionMethod = 'contactAreaCenter';
 elseif(max(niiCT.voxsize) > 0.7)
-    warning('Slice thickness is greater than 0.7 mm! Independent contact detection might not work reliable in this case. However, for certain electrode types with large contacts spacings you might be lucky.');
+    warning('Slice thickness is greater than 0.7 mm! Independet contact detection might not work reliable in this case. However, for certain electrode types with large contacts spacings you might be lucky.');
 end
 
 %% Run Algorithm

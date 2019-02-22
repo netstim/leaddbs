@@ -1,7 +1,8 @@
 *.asv
 *.m~
 *.mex*
+atlas/
+pacer_sample_dataset/
+exampledata/
 .DS_Store
-!*.png
-!*.mat
-
+docs/build
