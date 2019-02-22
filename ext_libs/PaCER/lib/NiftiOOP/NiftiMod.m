@@ -85,8 +85,10 @@ classdef NiftiMod < id & configurable
         function [image, header] = load(this)
             if( ~this.isLoaded && ~strcmp(this.filepath,'')) % it is not already isLoaded and we were not called with empty string (by Matlab callingn our get functions without command after initiating!)
                 disp(['Loading ' this.filepath ' from disk...']);
-                % nifti = load_nii(this.filepath, [], [], [], [], [], 0.1, 'q'); % load with 0.1 tolerance, prefer the q-form over the sform!
-                nifti = load_untouch_nii(this.filepath); % load with 0.1 tolerance, prefer the q-form over the sform!
+                %nifti = load_nii(this.filepath, [], [], [], [], [], 0.1, 'q'); % load with 0.1 tolerance, prefer the q-form over the sform!
+                nifti = load_untouch_nii(this.filepath); % load untouched, i.e. keep orginial data orientation (dont apply any transform)
+                nifti = applyNiiIntensityScaling(nifti); %however, the voxel intesities should be scaled correctly now here (as they
+%would by load_nii otherewise)
                 
                 this.header  = nifti.hdr; % header should maybe kept all the time ..
                 

@@ -50,9 +50,8 @@ function [elecsPointcloudStruct, brainMask] = extractElectrodePointclouds(niiCT,
     disp(['Thresholding ' niiCT.filepath  ' for metal with METAL_THRESHOLD = ' num2str(METAL_THRESHOLD) '...']);
     maskedImg = niiCT.img;
 
-   %  [xx,yy,zz] = ndgrid(-10:10);
-    %structEle = sqrt(xx.^2 + yy.^2 + zz.^2) <= 2.5 / sqrt(max(niiCT.voxsize));
-    %brainMask = imerode(imerode(brainMask,structEle),structEle);
+    structEle = strel('sphere', ceil(3 / max(niiCT.voxsize)) ); % make sure brain mask contains no skull
+    brainMask = imerode(brainMask,structEle);
 
     maskedImg(~(brainMask)) = NaN;
     threImg = (maskedImg > METAL_THRESHOLD);

@@ -22,7 +22,15 @@
 % (c) 2017
 % mail@andreashusch.de, husch.andreas@chl.lu
 function transPoints = applyANTSTransformToPoints(points, antsTransformFileStrings)
-applyTransformsToPointsCmd = '/Applications/ANTSGit/bin/antsApplyTransformsToPoints'; % FIXME: Make multi-os compatabile and find bins automatically
+try
+[~, t] = system('echo $ANTSPATH');
+antspath = t(1:end-1); % remove line ending
+end
+if(~isempty(t))
+    applyTransformsToPointsCmd = [antspath 'antsApplyTransformsToPoints']; 
+else
+    applyTransformsToPointsCmd = 'antsApplyTransformsToPoints'; % FIXME: Make multi-os compatabile and find bins automatically
+end
 
 tempFile = [tempname() '.csv'];
 tempFileOut = [tempname() '.csv'];
