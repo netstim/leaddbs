@@ -1,7 +1,6 @@
 function [tmat,postopct] = ea_getrawct2preniimat(options,inverse)
-% Gets the ANTS transformation from options.prefs.rawctnii_unnormalized to options.prefs.prenii_unnormalized
-% and extracts the transformation matrix by calling_ea_antrsmat2mat. The
-% matrix is read regardless of
+% Gets the transformation from options.prefs.rawctnii_unnormalized to 
+% options.prefs.prenii_unnormalized and extracts the transformation matrix 
 %
 % Returns: transformation matrix in LPI- (= RAS+)
 %
@@ -13,9 +12,12 @@ if ~exist('inverse','var')
 end
 
 directory=[options.root,options.patientname,filesep];
+
 switch options.prefs.reco.mancoruse
     case 'postop'
         load([directory 'ea_coregctmethod_applied.mat']);
+        postopct=[directory,options.prefs.rawctnii_unnormalized];
+
         switch coregct_method_applied{end}
             case {'ea_coregctmri_ants','ea_coregctmri_ants_refine'}
                 if inverse
@@ -42,12 +44,13 @@ switch options.prefs.reco.mancoruse
                 end
                 tmat = ea_antsmat2mat(reg2org.AffineTransform_float_3_3,reg2org.fixed);
             case 'ea_coregctmri_fsl'
-                %             tmat_reg2org = dlmread([folder 'anat_t12postop_ct_flirt1.mat']));
-                disp(['Warning: Currently, FSL coregistration is not supported. Using registered CT.'])
-                tmat=eye(4);
-                postopct=[directory,options.prefs.ctnii_coregistered];
+                tmat_flirt = dlmread([directory 'anat_t12postop_ct_flirt1.mat']);
+                %TODO check if add + 1 is nessesary, check the inverse case
+                tmat = flirtmat2worldmatPaCER(tmat_flirt, [directory,options.prefs.prenii_unnormalized],[directory,options.prefs.rawctnii_unnormalized], false );
+                %disp(['Warning: Currently, FSL coregistration is not supported. Using registered CT.'])
+                %tmat=eye(4);
+                %postopct=[directory,options.prefs.ctnii_coregistered];
         end
-        postopct=[directory,options.prefs.rawctnii_unnormalized];
     case 'rpostop'
         tmat=eye(4);
         postopct=[directory,options.prefs.ctnii_coregistered];

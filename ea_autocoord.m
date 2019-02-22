@@ -273,7 +273,7 @@ end
                         [coords_mm,trajectory,markers]=ea_runpacer(poptions);
                         options.native=1;
                     catch e % revert to TRAC/CORE
-                        warning('PaCER failed with the following error:');
+                        warning('PaCER or the LeadDBS Wrapper for PaCER failed with the following error:');
                         disp(['Identifier: ' e.identifier]);
                         disp(['Message: ' e.message]);
                         disp(['In: ' e.stack(1).file]);

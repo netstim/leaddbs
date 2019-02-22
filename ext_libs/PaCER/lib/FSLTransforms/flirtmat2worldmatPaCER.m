@@ -24,12 +24,15 @@
 
 % Copyright 2009 Ged Ridgway <ged.ridgway gmail.com>
 
-function [worldmat spmvoxmat fslvoxmat] = flirtmat2worldmatPaCER(flirtmat, niiSrc, niiTrg)
+function [worldmat spmvoxmat fslvoxmat] = flirtmat2worldmatPaCER(flirtmat, niiSrc, niiTrg, addOne)
 if ischar(niiSrc)
     niiSrc = NiftiMod(niiSrc, 'isToBeCached', false); %HA: interpreating as filename, loading nii header 
 end
 if ischar(niiTrg)
     niiTrg = NiftiMod(niiTrg, 'isToBeCached', false); %HA: interpreating as filename, loading nii header  
+end
+if nargin < 4
+   addOne = 0; 
 end
 
 % src = inv(flirtmat) * trg
@@ -45,8 +48,10 @@ fslvoxmat = inv(srcscl) * inv(flirtmat) * trgscl;
 
 % AND, Flirt's voxels are zero-based, while SPM's are one-based...
 addone = eye(4);
-%addone(:, 4) = 1; We DON'T need that it PaCER (would induce off by one
+if(addOne)
+    addone(:, 4) = 1; %We DON'T need that it PaCER (would induce off by one
 %error)
+end
 spmvoxmat = addone * fslvoxmat * inv(addone);
 
 worldmat = niiSrc.transformationMatrix * spmvoxmat * inv(niiTrg.transformationMatrix);
