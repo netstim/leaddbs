@@ -74,3 +74,45 @@ else
     load([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat']);
 end
 
+
+function [reforce,connectomechanged,reformat]=checkpresence(M,opts)
+reforce=1; connectomechanged=1; reformat=1;
+if M.ui.mirrorsides
+    msuffix='_mirrored';
+else
+    msuffix='';
+end
+
+if exist([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'file')
+    d=load([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'opts');
+    if isequaln(opts,d.opts)
+        reforce=0;
+    end
+end
+
+if exist([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'file') % check if base connectome changed.
+    d=load([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'opts');
+    if isequaln(d.opts.connectome,opts.connectome)
+        connectomechanged=0;
+    end
+end
+
+if ~reforce
+    if exist([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,'.mat'],'file') % check if base connectome changed.
+        d=load([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,'.mat'],'opts');
+        if isequaln(d.opts.connectome,opts.connectome) && isequaln(d.opts.statmetric,opts.statmetric)
+            reformat=0;
+        end
+    end
+end
+
+
+function str=pointtodash(str)
+str=strrep(str,'.','-');
+
+
+function str=stripblanks(str)
+str=strrep(str,'(','');
+str=strrep(str,')','');
+str=strrep(str,' ','');
+
