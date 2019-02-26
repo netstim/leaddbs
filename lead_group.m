@@ -567,7 +567,8 @@ if get(handles.showdiscfibers,'Value') % show discriminative fibers
     M.ui.connectomename=get(handles.fiberspopup,'String');
     M.ui.connectomename=M.ui.connectomename{get(handles.fiberspopup,'Value')};
     discfiberssetting = options.prefs.machine.lg.discfibers;
-    ea_showdiscfibers(M,discfiberssetting,resultfig);
+    fibsweighted=ea_calcdiscfibers(M,discfiberssetting);
+    ea_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted);
     set(0, 'CurrentFigure', resultfig);
 end
 
