@@ -12,6 +12,16 @@ allpts=1:length(M.patient.list);
 I=M.clinical.vars{M.ui.clinicallist};
 ea_dispercent(0,'Predicting left-out patients');
 nfibsval=fibsval; nfibsval(nfibsval==0)=nan; % only used in spearmans correlations
+
+%nfibsval(nfibsval<50)=nan; % could be used to set a threshold on the E-Field method.
+if discfiberssetting.statmetric==1
+    % In t-test method, make sure fibers are at least connected to 0.2 percent of VTAs and not
+    % more than to 0.8 percent.
+    discthresh=0.2; % could be changed but should not exceed ~0.45
+    fibsval(sum(fibsval,2)<round(discthresh*size(fibsval,2)),:)=0;
+    fibsval(sum(fibsval,2)>round((1-discthresh)*size(fibsval,2)),:)=0;
+end
+
 for pt=allpts
     opts=allpts; opts(opts==pt)=[]; % generate variable of patients on which model will be built.
     switch discfiberssetting.statmetric

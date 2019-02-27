@@ -122,7 +122,7 @@ for group=1:length(roilist) % groups currently not implemented, should always be
     % reduce to one entry per fiber:
     [~,fibidx,iaix]=unique(fibsin(:,4));
     fibsval=fibsval(fibidx,:);
-    repvals=repmat(vals{group}',size(fibsval,1),1);
+    %repvals=repmat(vals{group}',size(fibsval,1),1);
 
     [R]=corr(vals{group},fibsval','rows','pairwise','type','Spearman');
   
