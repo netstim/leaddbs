@@ -25,6 +25,12 @@ if M.ui.mirrorsides
 else
     msuffix='';
 end
+switch statmetric
+    case 1 % ttests
+        savesuffix='_ttests';
+    case 2 % spearmans R
+        savesuffix='_spearmansrho';
+end
 
 [reforce,connectomechanged,reformat]=checkpresence(M,opts); % only static opts need to be equal.
 if reforce
@@ -61,16 +67,16 @@ if reforce
     switch statmetric
         case 1 % ttests
             [fibsweighted,fibsin,fibsval,iaix]=ea_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},thresh,connthreshold);
-            savesuffix='_ttests';
         case 2 % spearmans R
             [fibsweighted,fibsin,fibsval,iaix]=ea_heatfibertracts_corr(cfile,{allroilist},M.ui.listselect,{I},thresh,connthreshold);
-            savesuffix='_spearmansrho';
     end
     save([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'fibsin','opts','-v7.3');
     save([M.ui.groupdir,'correlative_fibertracts_fibsval',msuffix,savesuffix,'.mat'],'fibsval','iaix','-v7.3');
     save([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'fibsweighted','opts','-v7.3');
 else
-    % load([M.ui.groupdir,'fibsval',msuffix,'.mat']);
+
+    load([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'fibsin','opts');
+    load([M.ui.groupdir,'correlative_fibertracts_fibsval',msuffix,savesuffix,'.mat']);
     load([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat']);
 end
 

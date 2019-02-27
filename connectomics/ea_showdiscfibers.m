@@ -7,6 +7,7 @@ patlist=M.patient.list(M.ui.listselect);
 showfibersset = discfiberssetting.showfibersset;
 pospredthreshold = discfiberssetting.pospredthreshold/100;
 negpredthreshold = discfiberssetting.negpredthreshold/100;
+[reforce,connectomechanged,reformat]=checkpresence(M,opts); % only static opts need to be equal.
 
 % visualize:
 if reformat
