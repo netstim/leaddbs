@@ -72,25 +72,33 @@ if reforce
     end
     save([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'fibsin','opts','-v7.3');
     save([M.ui.groupdir,'correlative_fibertracts_fibsval',msuffix,savesuffix,'.mat'],'fibsval','iaix','-v7.3');
-    save([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'fibsweighted','opts','-v7.3');
+    save([M.ui.groupdir,'correlative_fibertracts',msuffix,savesuffix,'.mat'],'fibsweighted','opts','-v7.3');
 else
 
     load([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'fibsin','opts');
     load([M.ui.groupdir,'correlative_fibertracts_fibsval',msuffix,savesuffix,'.mat']);
-    load([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat']);
+    load([M.ui.groupdir,'correlative_fibertracts',msuffix,savesuffix,'.mat']);
 end
 
 
 function [reforce,connectomechanged,reformat]=checkpresence(M,opts)
 reforce=1; connectomechanged=1; reformat=1;
+
+switch opts.statmetric
+    case 1 % ttests
+        savesuffix='_ttests';
+    case 2 % spearmans R
+        savesuffix='_spearmansrho';
+end
+
 if M.ui.mirrorsides
     msuffix='_mirrored';
 else
     msuffix='';
 end
 
-if exist([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'file')
-    d=load([M.ui.groupdir,'correlative_fibertracts',msuffix,'.mat'],'opts');
+if exist([M.ui.groupdir,'correlative_fibertracts',msuffix,savesuffix,'.mat'],'file')
+    d=load([M.ui.groupdir,'correlative_fibertracts',msuffix,savesuffix,'.mat'],'opts');
     if isequaln(opts,d.opts)
         reforce=0;
     end
@@ -104,8 +112,8 @@ if exist([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'file') % check if ba
 end
 
 if ~reforce
-    if exist([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,'.mat'],'file') % check if base connectome changed.
-        d=load([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,'.mat'],'opts');
+    if exist([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,savesuffix,'.mat'],'file') % check if base connectome changed.
+        d=load([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,savesuffix,'.mat'],'opts');
         if isequaln(d.opts.connectome,opts.connectome) && isequaln(d.opts.statmetric,opts.statmetric)
             reformat=0;
         end
