@@ -5,7 +5,9 @@ end
 earoot=ea_getearoot;
 load([earoot,'common',filesep,'ea_recentpatients.mat']);
 for i=1:length(fullrpts)
-    [~,fullrpts{i}]=fileparts(fullrpts{i});
+    [path,foldername]=fileparts(fullrpts{i});
+    [~,superfoldername]=fileparts(path);
+    fullrpts{i} = [superfoldername filesep foldername];
 end
 try
     fullrpts=[{['Recent ',patsub,':']};fullrpts];
