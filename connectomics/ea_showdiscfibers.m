@@ -2,12 +2,28 @@ function ea_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted)
 
 
 
+I=M.clinical.vars{M.ui.clinicallist}(M.ui.listselect);
+
+% Get discriminative fiber setting
+statmetric = discfiberssetting.statmetric;
+
+% protocol selection to be able to check if same analysis has been run
+% before.
+%opts.percent=connthreshold; % need not protocol anymore, is now dynamic
+%option.
+opts.patientselection=M.ui.listselect;
+opts.regressor=I;
+opts.connectome=M.ui.connectomename;
+opts.allpatients=M.patient.list;
+opts.mirrorsides=M.ui.mirrorsides;
+opts.statmetric=statmetric;
+
 
 patlist=M.patient.list(M.ui.listselect);
 showfibersset = discfiberssetting.showfibersset;
 pospredthreshold = discfiberssetting.pospredthreshold/100;
 negpredthreshold = discfiberssetting.negpredthreshold/100;
-[reforce,connectomechanged,reformat]=checkpresence(M,opts); % only static opts need to be equal.
+[reforce,connectomechanged,reformat]=ea_discfibers_checkpresence(M,opts); % only static opts need to be equal.
 switch statmetric
     case 1 % ttests
         savesuffix='_ttests';
