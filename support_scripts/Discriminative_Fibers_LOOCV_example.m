@@ -11,28 +11,29 @@ discfiberssetting = prefs.machine.lg.discfibers;
 allpts=1:length(M.patient.list);
 I=M.clinical.vars{M.ui.clinicallist};
 ea_dispercent(0,'Predicting left-out patients');
+nfibsval=fibsval; nfibsval(nfibsval==0)=nan; % only used in spearmans correlations
 for pt=allpts
-    opts=allpts; opts(opts==pt)=[];
+    opts=allpts; opts(opts==pt)=[]; % generate variable of patients on which model will be built.
     switch discfiberssetting.statmetric
-        case 1 % ttests, vtas
-            thisptval=fibsval(:,pt);
-            optsval=fibsval(:,opts);
-            allvals=repmat(I',size(optsval,1),1);
-            fibsimpval=allvals;
-            fibsimpval(~logical(optsval))=nan;
-            nfibsimpval=allvals;
-            nfibsimpval(logical(optsval))=nan;
-            [~,~,~,Model]=ttest2(fibsimpval',nfibsimpval');
+        case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
+            thisptval=fibsval(:,pt); % this patients connections to each fibertract (1 = connected, 0 = unconnected)
+            optsval=fibsval(:,opts); % all other patients connections to each fibertract
+            allvals=repmat(I',size(optsval,1),1); % improvement values (taken from Lead group file or specified in line 12).
+            fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
+            fibsimpval(~logical(optsval))=nan; % Delete all unconnected values
+            nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
+            nfibsimpval(logical(optsval))=nan; % Delete all connected values
+            [~,~,~,Model]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
             Ihat(pt)=ea_nansum(Model.tstat'.*thisptval); % I hat is the estimate of improvements (not scaled to real improvements)
-        case 2 % spearmans correlations, efields
-            Model=corr(fibsval(:,opts)',I(opts),'rows','pairwise','type','Spearman');
+        case 2 % spearmans correlations, efields - see Li et al. 2019 TBP
+            Model=corr(nfibsval(:,opts)',I(opts),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
             Ihat(pt)=ea_nansum(Model.*nfibsval(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
     end
     ea_dispercent(pt/length(allpts));
 end
 ea_dispercent(1,'end');
 
-ea_corrplot(I,Ihat',{'Disc. Fiber prediction',I,Ihat},'permutation_spearman');
+ea_corrplot(I,Ihat',{'Disc. Fiber prediction LOOCV','Empirical','Predicted'},'permutation_spearman');
 
 
 
