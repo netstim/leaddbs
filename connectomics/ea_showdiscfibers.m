@@ -8,6 +8,12 @@ showfibersset = discfiberssetting.showfibersset;
 pospredthreshold = discfiberssetting.pospredthreshold/100;
 negpredthreshold = discfiberssetting.negpredthreshold/100;
 [reforce,connectomechanged,reformat]=checkpresence(M,opts); % only static opts need to be equal.
+switch statmetric
+    case 1 % ttests
+        savesuffix='_ttests';
+    case 2 % spearmans R
+        savesuffix='_spearmansrho';
+end
 
 % visualize:
 if reformat
@@ -23,9 +29,9 @@ if reformat
         ea_dispercent(cnt/length(fibidx));
     end
     ea_dispercent(1,'end');
-    save([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,'.mat'],'fibcell','vals','opts','-v7.3');
+    save([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,savesuffix,'.mat'],'fibcell','vals','opts','-v7.3');
 else
-    load([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,'.mat']);
+    load([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,savesuffix,'.mat']);
 end
 
 set(0,'CurrentFigure',resultfig);
