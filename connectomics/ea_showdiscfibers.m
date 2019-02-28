@@ -30,6 +30,11 @@ switch statmetric
     case 2 % spearmans R
         savesuffix='_spearmansrho';
 end
+if M.ui.mirrorsides
+    msuffix='_mirrored';
+else
+    msuffix='';
+end
 
 % visualize:
 if reformat
