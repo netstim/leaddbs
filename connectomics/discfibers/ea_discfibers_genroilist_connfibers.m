@@ -1,4 +1,4 @@
-function [fibsin,XYZmm,nii]=ea_discfibers_genroilist_connfibers(roilist,patselection)
+function [fibsin,XYZmm,nii]=ea_discfibers_genroilist_connfibers(fibers, roilist, patselection)
 
 
 allroilist=cat(2,roilist{:});

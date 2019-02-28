@@ -23,7 +23,7 @@ if ~exist('minpercent','var') % minimum of percentage fibers that need to be con
 end
 
 
-[fibsin,XYZmm,nii]=ea_discfibers_genroilist_connfibers(roilist,patselection);
+[fibsin,XYZmm,nii]=ea_discfibers_genroilist_connfibers(fibers, roilist, patselection);
 fibsval=zeros(size(fibsin,1),length(patselection)); % 5th column will add up values, 6th will take note how many entries were summed.
 
 
@@ -53,7 +53,7 @@ for group=1:length(roilist) % groups currently not implemented, should always be
     %repvals=repmat(vals{group}',size(fibsval,1),1);
 
     [R]=corr(vals{group},fibsval','rows','pairwise','type','Spearman');
-  
+
     fibsweighted=fibsin;
 
     fibsweighted=[fibsweighted,R(iaix)'];

@@ -23,7 +23,7 @@ if ~exist('minpercent','var') % minimum of percentage fibers that need to be con
 end
 
 
-[fibsin,XYZmm,nii]=ea_discfibers_genroilist_connfibers(roilist,patselection);
+[fibsin,XYZmm,nii]=ea_discfibers_genroilist_connfibers(fibers, roilist, patselection);
 fibsval=zeros(size(fibsin,1),length(patselection)); % 5th column will add up values, 6th will take note how many entries were summed.
 
 
