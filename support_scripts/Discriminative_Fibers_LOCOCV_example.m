@@ -4,7 +4,7 @@ prefs=ea_prefs;
 
 %% static part - usually no need to edit - can edit it by configuring lead group file correctly and closing it.
 discfiberssetting = prefs.machine.lg.discfibers;
-[fibsweighted,fibsin,fibsval,iaix]=ea_calcdiscfibers(M,discfiberssetting);
+[fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_calcdiscfibers(M,discfiberssetting);
 
 
 %% flexible part - how to set up prediction - example is leave one cohort out crossvalidation:

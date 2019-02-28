@@ -1,4 +1,4 @@
-function [fibsweighted,fibsin,fibsval,iaix]=ea_calcdiscfibers(M,discfiberssetting)
+function [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_calcdiscfibers(M,discfiberssetting)
 
 I=M.clinical.vars{M.ui.clinicallist}(M.ui.listselect);
 

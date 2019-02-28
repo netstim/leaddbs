@@ -1,4 +1,4 @@
-function ea_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted)
+function ea_discfibers_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted)
 
 
 
@@ -175,7 +175,7 @@ set(cbfig, 'NumberTitle', 'off');
 setappdata(resultfig, 'cbfig', cbfig);
 
 % Discriminative fiber control
-discfiberscontrol = ea_discfiberscontrol(resultfig);
+discfiberscontrol = ea_discfibers_control(resultfig);
 setappdata(resultfig, 'discfiberscontrol', discfiberscontrol);
 
 

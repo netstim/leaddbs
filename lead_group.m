@@ -567,8 +567,8 @@ end
 
 if get(handles.showdiscfibers,'Value') % show discriminative fibers
     discfiberssetting = options.prefs.machine.lg.discfibers;
-    fibsweighted=ea_calcdiscfibers(M,discfiberssetting);
-    ea_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted);
+    fibsweighted=ea_discfibers_calcdiscfibers(M,discfiberssetting);
+    ea_discfibers_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted);
     set(0, 'CurrentFigure', resultfig);
 end
 
