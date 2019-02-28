@@ -7,8 +7,6 @@ end
 % check if sides is specified correctly for visualization:
 options=ea_detsides(options);
 
-
-
 if options.d2.write || options.d3.write
    if strcmp(options.atlasset,'Segment patient anatomy')
       ea_subcorticalsegmentation(options);
