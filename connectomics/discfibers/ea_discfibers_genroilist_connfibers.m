@@ -1,31 +1,41 @@
-function [fibsin,XYZmm,nii]=ea_discfibers_genroilist_connfibers(fibers, roilist, patselection)
+function [fibsin, XYZmm, nii, valsmm]=ea_discfibers_genroilist_connfibers(fibers, roilist, patselection, thresh)
 
+if ~exist('thresh', 'var')
+    thresh = 0;
+end
 
 allroilist=cat(2,roilist{:});
 %tree=KDTreeSearcher(fibers(:,1:3));
 % load in all ROI
 ea_dispercent(0,'Aggregating ROI');
 cnt=1;
+XYZmm = cell(length(allroilist), 1);
+valsmm = cell(length(allroilist), 1);
+nii = cell(length(allroilist), 2);
 for roi=1:length(allroilist)
     if size(allroilist,2)==2 % left and right entered separately, combine.
         nii{roi,1}=ea_load_nii(allroilist{roi,1});
 
-        [xx,yy,zz]=ind2sub(size(nii{roi,1}.img),find(nii{roi,1}.img));
+        [xx,yy,zz]=ind2sub(size(nii{roi,1}.img),find(nii{roi,1}.img(:)>thresh));
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,1}.mat*XYZvx;
         XYZmm{roi}=XY(1:3,:)';
+        valsmm{roi}=nii{roi,1}.img((nii{roi,1}.img(:))>thresh);
 
         nii{roi,2}=ea_load_nii(allroilist{roi,2});
-        [xx,yy,zz]=ind2sub(size(nii{roi,2}.img),find(nii{roi,2}.img));
+        [xx,yy,zz]=ind2sub(size(nii{roi,2}.img),find(nii{roi,2}.img(:)>thresh));
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,2}.mat*XYZvx;
         XYZmm{roi}=[XYZmm{roi};XY(1:3,:)'];
+        valsmm{roi}=[valsmm{roi};nii{roi,2}.img((nii{roi,2}.img(:))>thresh)];
     else
-        nii{roi}=ea_load_nii(allroilist{roi});
+        %if exist('thresh','var')
+            keyboard % this is not maintained and currently not functioning.
+        %end
 
-        if exist('thresh','var')
-            nii{roi}.img=double(nii{roi}.img>thresh);
-        end
+        nii{roi}=ea_load_nii(allroilist{roi});
+        nii{roi}.img=double(nii{roi}.img>thresh);
+
         keyboard
         [xx,yy,zz]=ind2sub(size(nii{roi}.img),find(nii{roi}.img));
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
@@ -43,11 +53,12 @@ for roi=1:length(allroilist)
         XYZmmSel{cnt}=XYZmm{roi};
         niiSel{cnt,:}=nii{roi,:};
 
-        if ~exist('AllXYZSel','var')
-            AllXYZSel=XYZmmSel{cnt};
-        else
-            AllXYZSel=[AllXYZSel;XYZmm{cnt}];
-        end
+%         if ~exist('AllXYZSel','var')
+%             AllXYZSel=XYZmmSel{cnt};
+%         else
+%             AllXYZSel=[AllXYZSel;XYZmm{cnt}];
+%         end
+
         cnt=cnt+1;
     end
 
@@ -67,6 +78,6 @@ if size(fibsin,2)>4
    fibsin(:,5:end)=[];
 end
 
-AllXYZ=AllXYZSel; % now that connected fibers were selected, replace with selected VTAs only to avoid confusion.
+% AllXYZ=AllXYZSel; % now that connected fibers were selected, replace with selected VTAs only to avoid confusion.
 XYZmm=XYZmmSel;
 nii=niiSel;
