@@ -1,4 +1,4 @@
-function [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts_corr(cfile,roilist,patselection,vals,thresh,minpercent)
+function [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts_corr(cfile,roilist,patselection,vals,efieldthresh)
 % function extracts fibers from a connectome connected to ROIs in the
 % roilist and assigns them correlative values based on vals. Vals needs to be of
 % same length as roilist, assigning a value for each ROI.
@@ -18,14 +18,8 @@ if ~iscell(roilist)
     vals={vals};
 end
 
-if ~exist('minpercent','var') % minimum of percentage fibers that need to be connected to a VTA.
-    minpercent=0.2;
-end
-
-
-[fibsin,XYZmm,nii,valsmm]=ea_discfibers_genroilist_connfibers(fibers, roilist, patselection, thresh);
+[fibsin,XYZmm,nii,valsmm]=ea_discfibers_genroilist_connfibers(fibers, roilist, patselection, efieldthresh);
 fibsval=zeros(size(fibsin,1),length(patselection)); % 5th column will add up values, 6th will take note how many entries were summed.
-
 
 % now color fibsin based on predictive value of improvement
 ea_dispt('');
@@ -44,7 +38,7 @@ ea_dispercent(1,'end');
 ea_dispt('Correlating fibers with values');
 cnt=1;
 for group=1:length(roilist) % groups currently not implemented, should always be one within Lead-DBS
-    thisgroupidx=cnt:(cnt+length(patselection))-1;
+    % thisgroupidx=cnt:(cnt+length(patselection))-1;
     cnt=cnt+length(patselection);
 
     % reduce to one entry per fiber:

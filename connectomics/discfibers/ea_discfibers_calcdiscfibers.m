@@ -2,7 +2,7 @@ function [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_calcdiscfibers(M,discf
 
 I=M.clinical.vars{M.ui.clinicallist}(M.ui.listselect);
 
-thresh=50;% should only apply for heatfibertracts_corr
+efieldthresh=50; % hard coded for now, only apply for heatfibertracts_corr
 tic
 
 % Get discriminative fiber setting
@@ -64,9 +64,9 @@ if reforce
     end
     switch statmetric
         case 1 % ttests
-            [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},thresh,connthreshold);
+            [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},connthreshold);
         case 2 % spearmans R
-            [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts_corr(cfile,{allroilist},M.ui.listselect,{I},thresh,connthreshold);
+            [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts_corr(cfile,{allroilist},M.ui.listselect,{I},efieldthresh);
     end
     save([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'fibsin','opts','-v7.3');
     save([M.ui.groupdir,'correlative_fibertracts_fibsval',msuffix,savesuffix,'.mat'],'fibsval','iaix','-v7.3');

@@ -10,7 +10,7 @@ end
 allroilist=cat(2,roilist{:});
 %tree=KDTreeSearcher(fibers(:,1:3));
 % load in all ROI
-ea_dispercent(0,'Aggregating ROI');
+
 cnt=1;
 XYZmm = cell(length(allroilist), 1);
 nii = cell(length(allroilist), 2);
@@ -19,6 +19,7 @@ if strcmp(mode, 'binary')
 else
     valsmm = cell(length(allroilist), 1);
 end
+ea_dispercent(0,'Aggregating ROI');
 for roi=1:length(allroilist)
     if size(allroilist,2)==2 % left and right entered separately, combine.
         nii{roi,1}=ea_load_nii(allroilist{roi,1});

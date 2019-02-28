@@ -1,4 +1,4 @@
-function [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts(cfile,roilist,patselection,vals,thresh,minpercent)
+function [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts(cfile,roilist,patselection,vals,connthreshold)
 % function extracts fibers from a connectome connected to ROIs in the
 % roilist and assigns them correlative values based on vals. Vals needs to be of
 % same length as roilist, assigning a value for each ROI.
@@ -18,20 +18,17 @@ if ~iscell(roilist)
     vals={vals};
 end
 
-if ~exist('minpercent','var') % minimum of percentage fibers that need to be connected to a VTA.
-    minpercent=0.2;
+if ~exist('connthreshold','var') % minimum of percentage fibers that need to be connected to a VTA.
+    connthreshold=0.2;
 end
-
 
 [fibsin,XYZmm,nii]=ea_discfibers_genroilist_connfibers(fibers, roilist, patselection);
 fibsval=zeros(size(fibsin,1),length(patselection)); % 5th column will add up values, 6th will take note how many entries were summed.
-
 
 % now color fibsin based on predictive value of improvement
 ea_dispt('');
 
 ea_dispercent(0,'Iterating ROI');
-
 for roi=1:length(patselection)
     [~,D]=knnsearch(XYZmm{roi}(:,1:3),fibsin(:,1:3),'Distance','chebychev');
     in=D<mean(nii{end}.voxsize);
@@ -39,8 +36,9 @@ for roi=1:length(patselection)
     ea_dispercent(roi/length(patselection));
 end
 ea_dispercent(1,'end');
-ea_dispt('Correlating fibers with values');
+
 cnt=1;
+ea_dispt('Correlating fibers with values');
 for group=1:length(roilist)
     thisgroupidx=cnt:(cnt+length(patselection))-1;
     cnt=cnt+length(patselection);
@@ -61,10 +59,10 @@ for group=1:length(roilist)
     nfibsval=nfibsval(fibidx,:);
 
     sumfibsval=sum(fibsval,2);
-    % discard fibers with less than MINPERCENT connections.
-    exclude=sumfibsval<size(fibsval,2)*minpercent;
-    % discard fibers with more than 1-MINPERCENT connections.
-    exclude=logical(exclude+(sumfibsval>size(fibsval,2)*(1-minpercent)));
+    % discard fibers with less than connthreshold connections.
+    exclude=sumfibsval<size(fibsval,2)*connthreshold;
+    % discard fibers with more than 1-connthreshold connections.
+    exclude=logical(exclude+(sumfibsval>size(fibsval,2)*(1-connthreshold)));
     fibsval(exclude,:)=[];
     fibsweighted=fibsin;
     fibsweighted((exclude(iaix)),:)=[];
