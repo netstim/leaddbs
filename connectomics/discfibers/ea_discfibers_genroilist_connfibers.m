@@ -2,6 +2,9 @@ function [fibsin, XYZmm, nii, valsmm]=ea_discfibers_genroilist_connfibers(fibers
 
 if ~exist('thresh', 'var')
     thresh = 0;
+    mode = 'binary';
+else
+    mode = 'efield';
 end
 
 allroilist=cat(2,roilist{:});
@@ -10,8 +13,12 @@ allroilist=cat(2,roilist{:});
 ea_dispercent(0,'Aggregating ROI');
 cnt=1;
 XYZmm = cell(length(allroilist), 1);
-valsmm = cell(length(allroilist), 1);
 nii = cell(length(allroilist), 2);
+if strcmp(mode, 'binary')
+    valsmm = [];
+else
+    valsmm = cell(length(allroilist), 1);
+end
 for roi=1:length(allroilist)
     if size(allroilist,2)==2 % left and right entered separately, combine.
         nii{roi,1}=ea_load_nii(allroilist{roi,1});
@@ -20,16 +27,20 @@ for roi=1:length(allroilist)
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,1}.mat*XYZvx;
         XYZmm{roi}=XY(1:3,:)';
-        valsmm{roi}=nii{roi,1}.img((nii{roi,1}.img(:))>thresh);
+        if strcmp(mode, 'efield')
+            valsmm{roi}=nii{roi,1}.img((nii{roi,1}.img(:))>thresh);
+        end
 
         nii{roi,2}=ea_load_nii(allroilist{roi,2});
         [xx,yy,zz]=ind2sub(size(nii{roi,2}.img),find(nii{roi,2}.img(:)>thresh));
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,2}.mat*XYZvx;
         XYZmm{roi}=[XYZmm{roi};XY(1:3,:)'];
-        valsmm{roi}=[valsmm{roi};nii{roi,2}.img((nii{roi,2}.img(:))>thresh)];
+        if strcmp(mode, 'efield')
+            valsmm{roi}=[valsmm{roi};nii{roi,2}.img((nii{roi,2}.img(:))>thresh)];
+        end
     else
-        %if exist('thresh','var')
+        %if strcmp(mode, 'efield')
             keyboard % this is not maintained and currently not functioning.
         %end
 
