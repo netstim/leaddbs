@@ -2095,4 +2095,4 @@ function discfiberssettingpush_Callback(hObject, eventdata, handles)
 % hObject    handle to discfiberssettingpush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_discfiberssetting;
+ea_discfibers_setting;
