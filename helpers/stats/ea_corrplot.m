@@ -38,11 +38,25 @@ end
 
 if ~exist('group1','var')
     group1=[];
+else
+    if ~isstruct(group1)
+        group1s.idx=group1;
+        group1s.tag='color';
+        clear group1
+        group1=group1s;
+    end
 end
 
 
 if ~exist('group2','var')
     group2=[];
+else
+    if ~isstruct(group2)
+        group2s.idx=group2;
+        group2s.tag='color';
+        clear group2
+        group2=group2s;
+    end
 end
 
 switch corrtype
@@ -92,7 +106,7 @@ elseif ~isempty(group2) && isempty(group1)
     g.geom_point();
     g.draw();
     set(h,'Position',[100 100 650 550]);
-elseif ~isempty(group1) && ~isempty(group2)
+elseif isempty(group2) && ~isempty(group1)
     g.update('color',group1.idx);
     g.set_color_options();
     g.set_names('color',group1.tag,'x',labels{2},'y',labels{3});
