@@ -7,17 +7,17 @@ function [h,R,p]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm)
 % ---------------
 % X=randn(100,1);
 % Y=X.*randn(100,1);
-% 
+%
 % ea_corrplot(X,Y)
-% 
+%
 % group1cell={'Prague','Berlin','London','Moscow','Paris','Madrid'};
 % group1.idx=group1cell(ceil(rand(100,1)*5));
 % group1.tag='Cohort';
-% 
+%
 % group2cell={'Parkinson','Alzheimer'};
 % group2.idx=group2cell(ceil(rand(100,1)*2));
 % group2.tag='Disease';
-% 
+%
 % ea_corrplot(X,Y,{'Example Correlation','Age','Disease Duration'},'spearman',group1,group2)
 
 
@@ -61,9 +61,25 @@ end
 
 switch corrtype
     case {'permutation_spearman','permutation'}
-        [R,p]=ea_permcorr(X,Y,'spearman');
+        for tries=1:3
+            
+            try
+                [R,p]=ea_permcorr(X,Y,'spearman');
+            end
+            if exist('R','var')
+                break
+            end
+        end
     case 'permutation_pearson'
-        [R,p]=ea_permcorr(X,Y,'pearson');
+        for tries=1:3
+            
+            try
+                [R,p]=ea_permcorr(X,Y,'pearson');
+            end
+            if exist('R','var')
+                break
+            end
+        end
     otherwise
         [R,p]=corr(X,Y,'rows','pairwise','type',corrtype);
 end
