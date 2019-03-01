@@ -1,4 +1,4 @@
-function [h,pv,Rsquared,F,mdl]=ea_glmplot(X,y,labels,distribution)
+function [h,pv,Rsquared,F,mdl]=ea_glmplot(X,y,labels,distribution,group1,group2)
 
 if ~(size(y,2)==1)
     ea_warning('Assuming X and y were switched. Switching variables.');
@@ -21,12 +21,38 @@ if ~exist('corrtype','var')
     distribution='normal';
 end
 
+if ~exist('group1','var')
+    group1=[];
+else
+    if ~isstruct(group1)
+        group1s.idx=group1;
+        group1s.tag='color';
+        clear group1
+        group1=group1s;
+    end
+end
+
+
+if ~exist('group2','var')
+    group2=[];
+else
+    if ~isstruct(group2)
+        group2s.idx=group2;
+        group2s.tag='color';
+        clear group2
+        group2=group2s;
+    end
+end
 
 mdl=fitglm(X,y,'distribution',distribution);
 
 yhat=predict(mdl,X);
 g=gramm('x',yhat,'y',y); % data needs to be put in "reversed" for gramm.
-g.geom_point();
+if isempty(group1) && isempty(group2)
+    g.geom_point();
+else
+    g.set_color_options('chroma',0,'lightness',30);
+end
 g.stat_glm('distribution',distribution,'fullrange','false','fullrange','false');
 
 
@@ -42,3 +68,29 @@ g.set_text_options('base_size',22);
 g.no_legend();
 h=figure('Position',[100 100 550 550]);
 g.draw();
+if ~isempty(group2) && ~isempty(group1)
+    g.update('marker',group2.idx,'color',group1.idx);
+    g.set_color_options();
+    g.set_names('marker',group2.tag,'color',group1.tag,'x',labels{2},'y',labels{3});
+    g.geom_point();
+    g.draw();
+    set(h,'Position',[100 100 650 550]);
+elseif ~isempty(group2) && isempty(group1)
+    g.update('marker',group2.idx);
+    g.set_color_options();
+    g.set_names('marker',group2.tag,'x',labels{2},'y',labels{3});
+    g.geom_point();
+    g.draw();
+    set(h,'Position',[100 100 650 550]);
+elseif isempty(group2) && ~isempty(group1)
+    g.update('color',group1.idx);
+    g.set_color_options();
+    g.set_names('color',group1.tag,'x',labels{2},'y',labels{3});
+    g.geom_point();
+    g.draw();
+    set(h,'Position',[100 100 650 550]);
+end
+
+set([g.results.geom_point_handle],'MarkerSize',7);
+set([g.results.geom_point_handle],'MarkerEdgeColor','w');
+
