@@ -77,21 +77,21 @@ g.draw();
 if ~isempty(group2) && ~isempty(group1)
     g.update('marker',group2.idx,'color',group1.idx);
     g.set_color_options();
-    g.set_names('marker',group2.tag,'color',group1.tag);
+    g.set_names('marker',group2.tag,'color',group1.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
     set(h,'Position',[100 100 650 550]);
 elseif ~isempty(group2) && isempty(group1)
     g.update('marker',group2.idx);
     g.set_color_options();
-    g.set_names('marker',group2.tag);
+    g.set_names('marker',group2.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
     set(h,'Position',[100 100 650 550]);
 elseif ~isempty(group1) && ~isempty(group2)
     g.update('color',group1.idx);
     g.set_color_options();
-    g.set_names('color',group1.tag);
+    g.set_names('color',group1.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
     set(h,'Position',[100 100 650 550]);
