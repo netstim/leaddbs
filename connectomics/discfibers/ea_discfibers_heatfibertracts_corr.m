@@ -25,12 +25,13 @@ fibsval=zeros(size(fibsin,1),length(patselection)); % 5th column will add up val
 ea_dispt('');
 
 ea_dispercent(0,'Iterating ROI');
-fibunique=unique(fibsin(:,4));
+fibunique=unique(fibsin(:,4))';
 for roi=1:length(patselection)
     [IX,D]=knnsearch(XYZmm{roi}(:,1:3),fibsin(:,1:3),'Distance','chebychev');
     in=D<mean(nii{end}.voxsize);
-    for fib=fibunique'
-        fibsval(fibsin(:,4)==fib,roi)=sum(valsmm{roi}(IX(and(in,(fibsin(:,4)==fib)))));
+    for fib=fibunique
+        fibsel=fibsin(:,4)==fib;
+        fibsval(fibsel,roi)=sum(valsmm{roi}(IX(and(in,fibsel))));
     end
     ea_dispercent(roi/length(patselection));
 end
