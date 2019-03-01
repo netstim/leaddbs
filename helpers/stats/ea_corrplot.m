@@ -1,4 +1,8 @@
 function [h,R,p]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm)
+% Wrapper for gramm to produce a simple correlation plot. Group1 denotes
+% colors, Group2 Markers.
+% (c) Andreas Horn 2019 Charite Berlin
+
 % Example usage:
 % ---------------
 % X=randn(100,1);
