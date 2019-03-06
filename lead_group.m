@@ -411,13 +411,11 @@ options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),fil
 
 options.expstatvat.do=M.ui.statvat;
 options.native=0;
-
 try
     options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 catch
     warning('Localizations seem not properly defined.');
 end
-
 options.elmodel=M.elstruct(1).elmodel;
  options=ea_resolve_elspec(options);
 options.prefs=ea_prefs(options.patientname);
@@ -566,9 +564,10 @@ if options.expstatvat.do % export to nifti volume
 end
 
 if get(handles.showdiscfibers,'Value') % show discriminative fibers
+    M.ui.connectomename=get(handles.fiberspopup,'String');
+    M.ui.connectomename=M.ui.connectomename{get(handles.fiberspopup,'Value')};
     discfiberssetting = options.prefs.machine.lg.discfibers;
-    fibsweighted=ea_discfibers_calcdiscfibers(M,discfiberssetting);
-    ea_discfibers_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted);
+    ea_showdiscfibers(M,discfiberssetting,resultfig);
     set(0, 'CurrentFigure', resultfig);
 end
 
@@ -1371,6 +1370,8 @@ function fiberspopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from fiberspopup
 M=getappdata(gcf,'M');
 M.ui.fiberspopup=get(handles.fiberspopup,'Value');
+M.ui.connectomename=get(handles.fiberspopup,'String');
+M.ui.connectomename=M.ui.connectomename{M.ui.fiberspopup};
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
@@ -2095,4 +2096,4 @@ function discfiberssettingpush_Callback(hObject, eventdata, handles)
 % hObject    handle to discfiberssettingpush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_discfibers_setting;
+ea_discfiberssetting;
