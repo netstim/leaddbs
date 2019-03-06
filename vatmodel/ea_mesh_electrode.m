@@ -4,7 +4,7 @@ function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electr
 ea_dispt('Generating tetraedrical mesh...');
 %meshel=electrode.meshel;
 vizz=0;
-stlexport=1;
+stlexport=0;
 if vizz
     figure
     for f=1:length(fv)
