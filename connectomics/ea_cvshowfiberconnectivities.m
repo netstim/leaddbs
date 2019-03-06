@@ -118,7 +118,7 @@ if ~options.savefibers.load
     cnt=1;
     selectedfibs = cell(1, length(seed));
     for side=1:length(seed)
-        in=inpolyhedron(seed_fv{side}, fibers); % massive speed up compared to ea_intriangulation (approx. factor 10?)
+        in=inpolyhedron(seed_fv{side}, fibers, 'flipnormals', true); % massive speed up compared to ea_intriangulation (approx. factor 10?)
 %         [in,D]=knnsearch(seed_fv{side}.vertices,fibers);
 %         in=D<2;
         selectedfibs{side}=unique(idxv(in));
