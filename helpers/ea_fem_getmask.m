@@ -4,9 +4,9 @@ function fv=ea_fem_getmask(options)
 try
     switch options.native
         case 0 % template space
-            nii=ea_load_nii([ea_space(options,'atlases'),options.atlasset,filesep,'gm_mask.nii.gz']);
+            nii=ea_load_nii(ea_niigz([ea_space(options,'atlases'),options.atlasset,filesep,'gm_mask.nii.gz']));
         case 1 % native space
-            nii=ea_load_nii([options.root,options.patientname,filesep,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz']);
+            nii=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz']));
     end
 catch
     ea_error('The selected atlas set seems incompatible with this approach.');
@@ -14,7 +14,9 @@ end
 
 [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); %(mean(nii.img(nii.img~=0))/3))); % find 3D-points that have correct value.
 if isempty(xx)
-    ea_error('The selected atlas set seems incompatible with this approach.');
+fv.vertices=[]; % no gray matter.
+fv.faces=[];
+return
 end
 XYZ=[xx,yy,zz]; % concatenate points to one matrix.
 XYZ=nii.mat*[XYZ,ones(length(xx),1)]'; % map to mm-space

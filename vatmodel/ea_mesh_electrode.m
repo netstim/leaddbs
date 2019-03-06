@@ -123,6 +123,10 @@ fobj=[];
 ncount=length(fv);     % the number of nuclei meshes inside fv()
 ISO2MESH_SURFBOOLEAN='cork';   % now intersect the electrode to the nucleus
 
+if ncount==1 && isempty(fv(1).vertices) % no gray matter
+    graymatterpresent=0;
+else
+    graymatterpresent=1;
 for i=1:ncount
     no=fv(i).vertices;
     fo=fv(i).faces;
@@ -148,13 +152,16 @@ if vizz
     patch('Vertices',nobj,'Faces',fobj,'FaceColor','none');
     patch('Vertices',node,'Faces',face(:,1:3),'FaceColor','blue');
 end
-
+end
 
 %% merge the electrode mesh with the nucleus mesh
 
-
-[nboth,fboth]=surfboolean(node,face(:,1:3),'resolve',nobj,fobj);
-
+if graymatterpresent
+    [nboth,fboth]=surfboolean(node,face(:,1:3),'resolve',nobj,fobj);
+else
+    nboth=node;
+    fboth=face;
+end
 
 clear ISO2MESH_SURFBOOLEAN;
 
@@ -374,31 +381,32 @@ for reg=1:length(centroids)
     
     % if not: if grey matter, then white matter
     if ~tpmuse
-        
-        for gm=1:length(fv)
-     
-            in=double(ea_intriangulation(fv(gm).vertices,fv(gm).faces,tetrcents));
-            if vizz
-                set(h,'name',num2str(mean(in)));
-                hold off
-                plot3(fv(gm).vertices(:,1),fv(gm).vertices(:,2),fv(gm).vertices(:,3),'r*');
-                hold on
-                plot3(tetrcents(:,1),tetrcents(:,2),tetrcents(:,3),'g.');
-                drawnow
-            end
-            
-            if (mean(in)>0.7)
-                tissuelabels(reg)=1; % set grey matter
-                disp(['Region ',num2str(reg),' captured by grey matter.']);
+        if graymatterpresent
+            for gm=1:length(fv)
+                
+                in=double(ea_intriangulation(fv(gm).vertices,fv(gm).faces,tetrcents));
                 if vizz
-                                    figure('name',['GM Region ',num2str(reg)]);
-                                    hold on
-                                    patch('vertices',fv(gm).vertices,'faces',fv(gm).faces,'FaceColor','none','EdgeColor','b');
-                                    patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
-                                    plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
-                                    axis equal
+                    set(h,'name',num2str(mean(in)));
+                    hold off
+                    plot3(fv(gm).vertices(:,1),fv(gm).vertices(:,2),fv(gm).vertices(:,3),'r*');
+                    hold on
+                    plot3(tetrcents(:,1),tetrcents(:,2),tetrcents(:,3),'g.');
+                    drawnow
                 end
-                break
+                
+                if (mean(in)>0.7)
+                    tissuelabels(reg)=1; % set grey matter
+                    disp(['Region ',num2str(reg),' captured by grey matter.']);
+                    if vizz
+                        figure('name',['GM Region ',num2str(reg)]);
+                        hold on
+                        patch('vertices',fv(gm).vertices,'faces',fv(gm).faces,'FaceColor','none','EdgeColor','b');
+                        patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
+                        plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
+                        axis equal
+                    end
+                    break
+                end
             end
         end
     else
