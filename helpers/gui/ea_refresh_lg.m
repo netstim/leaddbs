@@ -168,7 +168,9 @@ if ~(ischar(fiberspopup) && strcmp(fiberspopup, 'Fibers'))
     else
         try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
     end
+    try
     M.ui.connectomename = fiberspopup{M.ui.fiberspopup};
+    end
 end
 
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
