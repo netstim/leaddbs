@@ -1,26 +1,26 @@
-function varargout = ea_discfiberscontrol(varargin)
-% EA_DISCFIBERSCONTROL MATLAB code for ea_discfiberscontrol.fig
-%      EA_DISCFIBERSCONTROL, by itself, creates a new EA_DISCFIBERSCONTROL or raises the existing
+function varargout = ea_discfibers_control(varargin)
+% EA_DISCFIBERS_CONTROL MATLAB code for ea_discfibers_control.fig
+%      EA_DISCFIBERS_CONTROL, by itself, creates a new EA_DISCFIBERS_CONTROL or raises the existing
 %      singleton*.
 %
-%      H = EA_DISCFIBERSCONTROL returns the handle to a new EA_DISCFIBERSCONTROL or the handle to
+%      H = EA_DISCFIBERS_CONTROL returns the handle to a new EA_DISCFIBERS_CONTROL or the handle to
 %      the existing singleton*.
 %
-%      EA_DISCFIBERSCONTROL('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in EA_DISCFIBERSCONTROL.M with the given input arguments.
+%      EA_DISCFIBERS_CONTROL('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in EA_DISCFIBERS_CONTROL.M with the given input arguments.
 %
-%      EA_DISCFIBERSCONTROL('Property','Value',...) creates a new EA_DISCFIBERSCONTROL or raises the
+%      EA_DISCFIBERS_CONTROL('Property','Value',...) creates a new EA_DISCFIBERS_CONTROL or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before ea_discfiberscontrol_OpeningFcn gets called.  An
+%      applied to the GUI before ea_discfibers_control_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to ea_discfiberscontrol_OpeningFcn via varargin.
+%      stop.  All inputs are passed to ea_discfibers_control_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help ea_discfiberscontrol
+% Edit the above text to modify the response to help ea_discfibers_control
 
 % Last Modified by GUIDE v2.5 30-Jan-2019 11:26:57
 
@@ -28,8 +28,8 @@ function varargout = ea_discfiberscontrol(varargin)
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @ea_discfiberscontrol_OpeningFcn, ...
-                   'gui_OutputFcn',  @ea_discfiberscontrol_OutputFcn, ...
+                   'gui_OpeningFcn', @ea_discfibers_control_OpeningFcn, ...
+                   'gui_OutputFcn',  @ea_discfibers_control_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,21 +44,21 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before ea_discfiberscontrol is made visible.
-function ea_discfiberscontrol_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before ea_discfibers_control is made visible.
+function ea_discfibers_control_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to ea_discfiberscontrol (see VARARGIN)
+% varargin   command line arguments to ea_discfibers_control (see VARARGIN)
 
-% Choose default command line output for ea_discfiberscontrol
+% Choose default command line output for ea_discfibers_control
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes ea_discfiberscontrol wait for user response (see UIRESUME)
+% UIWAIT makes ea_discfibers_control wait for user response (see UIRESUME)
 % uiwait(handles.discfiberscontrol);
 
 resultfig = varargin{1};
@@ -115,7 +115,7 @@ end
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_discfiberscontrol_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_discfibers_control_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -168,7 +168,7 @@ slider = hObject;
 
 if slider.Enabled
     sliderThresholdChangeTxt(hObject, eventdata, handles);
-    
+
     % showfibersset setting from the control figure
     switch get(get(handles.showfiberssetpanel, 'SelectedObject'), 'Tag')
         case 'showposonly'

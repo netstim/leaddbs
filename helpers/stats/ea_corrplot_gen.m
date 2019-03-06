@@ -52,8 +52,11 @@ end
 
 
 %labels=M.stats(1).ea_stats.atlases.names(lidx);
-
-
+edgecolor='w';
+if size(groups,2)>1
+    edgecolor=jetlist(groups(:,2),:);
+    groups=groups(:,1);
+end
 
 %jetlist(groups,:);
 for area=1:length(R_upd)
@@ -62,10 +65,10 @@ for area=1:length(R_upd)
     jetlist=lines;
     g=gca;
     if exist('color','var')
-        scatter(g,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',color);
+        scatter(g,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor',edgecolor,'MarkerFaceColor',color);
     else
         try
-        scatter(g,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor','w','MarkerFaceColor',jetlist(groups,:));
+        scatter(g,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor',edgecolors,'MarkerFaceColor',jetlist(groups,:));
         catch
         scatter(g,X(:,1),X(:,area+1),[],jetlist(groups,:),'filled');
             

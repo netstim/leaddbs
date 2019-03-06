@@ -69,7 +69,7 @@ if options.expstatvat.do % export statvat nifti images.
     tV=spm_vol([ea_space(options),'bb.nii']);
     tnii=spm_read_vols(tV);
     tnii(:)=0;
-    generate mesh of hires MNI
+    %generate mesh of hires MNI
     [x,y,z]=ind2sub(size(tnii),1:numel(tnii));
     templatecoords=[x;y;z;ones(1,length(x))]; clear x y z
     templatecoords=tV.mat*templatecoords;

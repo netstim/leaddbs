@@ -152,9 +152,6 @@ try set(handles.mirrorsides,'Value',M.ui.mirrorsides); end
 try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
 try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
 
-connectomenames=get(handles.fiberspopup,'String');
-try    set(handles.fiberspopup,'Value',ismember(M.ui.connectomename,connectomenames));  end
-
 if ~isfield(M.ui,'atlassetpopup')
     M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
 end
@@ -171,6 +168,7 @@ if ~(ischar(fiberspopup) && strcmp(fiberspopup, 'Fibers'))
     else
         try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
     end
+    M.ui.connectomename = fiberspopup{M.ui.fiberspopup};
 end
 
 try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
