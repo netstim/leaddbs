@@ -565,14 +565,15 @@ if options.expstatvat.do % export to nifti volume
 
     pobj.openedit=1;
     hshid=ea_datahash(M.ui.listselect);
-    ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'models',filesep,'statvat_',M.clinical.labels{M.ui.clinicallist},'_mean_',hshid,'.nii'],pobj);
+    ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'models',filesep,'statvat_',M.clinical.labels{M.ui.clinicallist},'_T_nthresh_',hshid,'.nii'],pobj);
 end
 
 if get(handles.showdiscfibers,'Value') % show discriminative fibers
     M.ui.connectomename=get(handles.fiberspopup,'String');
     M.ui.connectomename=M.ui.connectomename{get(handles.fiberspopup,'Value')};
     discfiberssetting = options.prefs.machine.lg.discfibers;
-    ea_showdiscfibers(M,discfiberssetting,resultfig);
+    fibsweighted=ea_discfibers_calcdiscfibers(M,discfiberssetting);
+    ea_discfibers_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted);
     set(0, 'CurrentFigure', resultfig);
 end
 

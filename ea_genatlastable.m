@@ -35,8 +35,8 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     lhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.tr*']);
     lhmats=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.mat']);
     lhatlases=[lhatlases;lhtrks;lhmats];
-
-
+    
+    
     for i=1:length(lhatlases)
         lhcell{i}=lhatlases(i).name;
     end
@@ -45,7 +45,7 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     rhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.tr*']);
     rhmats=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.mat']);
     rhatlases=[rhatlases;rhtrks;rhmats];
-
+    
     for i=1:length(rhatlases)
         rhcell{i}=rhatlases(i).name;
     end
@@ -54,21 +54,21 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     mixedtrks=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.tr*']);
     mixedmats=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.mat']);
     mixedatlases=[mixedatlases;mixedtrks;mixedmats];
-
+    
     for i=1:length(mixedatlases)
         mixedcell{i}=mixedatlases(i).name;
     end
     delete([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*_temp.ni*']);
-
+    
     midlineatlases=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.ni*']);
     midlinetrks=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.tr*']);
     midlinemats=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.mat']);
     midlineatlases=[midlineatlases;midlinetrks;midlinemats];
-
+    
     for i=1:length(midlineatlases)
         midlinecell{i}=midlineatlases(i).name;
     end
-
+    
     % concatenate lh and rh
     todeletelh=[];
     todeleterh=[];
@@ -79,11 +79,11 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
             todeleterh=[todeleterh,loc];
         end
     end
-
+    
     bothcell=lhcell(todeletelh);
     lhcell(todeletelh)=[];
     rhcell(todeleterh)=[];
-
+    
     allcell=[rhcell,lhcell,bothcell,mixedcell,midlinecell];
     typecell=[ones(1,length(rhcell)),2*ones(1,length(lhcell)),3*ones(1,length(bothcell)),4*ones(1,length(mixedcell)),5*ones(1,length(midlinecell))];
     atlases.names=allcell;
@@ -95,14 +95,14 @@ end
 
 mcr='';
 if ~isfield(atlases,'tissuetypes');
-   atlases.tissuetypes=ones(1,length(atlases.names)); 
+    atlases.tissuetypes=ones(1,length(atlases.names));
 end
 if checkrebuild(atlases,options,root,mifix)
-
+    
     %% build iXYZ tables:
-
+    
     maxcolor=64; % change to 45 to avoid red / 64 to use all colors
-
+    
     nm=1:2; % native and mni
     try
         nmind=[options.atl.can,options.atl.ptnative]; % which shall be performed?
@@ -110,7 +110,7 @@ if checkrebuild(atlases,options,root,mifix)
         nmind=[1 0];
     end
     nm=nm(logical(nmind)); % select which shall be performed.
-
+    
     for nativemni=nm % switch between native and mni space atlases.
         switch nativemni
             case 1
@@ -118,9 +118,9 @@ if checkrebuild(atlases,options,root,mifix)
             case 2
                 root=[options.root,options.patientname,filesep,'atlases'];
         end
-
+        
         atlascnt=1;
-
+        
         % iterate through atlases, visualize them and write out stats.
         disp('Building atlas table...');
         for atlas=1:length(atlases.names)
@@ -135,11 +135,11 @@ if checkrebuild(atlases,options,root,mifix)
                     rnii=load_nii_crop([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
                 case 4 % mixed atlas (one file with both sides information).
                     nii=load_nii_crop([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}]);
-
+                    
                 case 5 % midline atlas (one file with both sides information.
                     nii=load_nii_crop([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}]);
             end
-
+            
             for side=detsides(atlases.types(atlas));
                 if atlases.types(atlas)==3 % both-sides atlas composed of 2 files.
                     if side==1
@@ -148,21 +148,21 @@ if checkrebuild(atlases,options,root,mifix)
                         nii=lnii;
                     end
                 end
-
+                
                 colornames='bgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywkbgcmywk'; % red is reserved for the VAT.
-
+                
                 colorc=colornames(1);
                 colorc=rgb(colorc);
                 if isfield(nii,'img') % volumetric atlas
-%                     if options.prefs.hullsmooth
-%                         nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
-%                     end
+                    %                     if options.prefs.hullsmooth
+                    %                         nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
+                    %                     end
                     
                     [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); % find 3D-points that have correct value.
                     vv=nii.img(nii.img(:)>0);
-
+                    
                     if ~isempty(xx)
-
+                        
                         XYZ.vx=[xx,yy,zz]; % concatenate points to one matrix.
                         XYZ.val=vv;
                         XYZ.mm=map_coords_proxy(XYZ.vx,nii); % map to mm-space
@@ -173,10 +173,10 @@ if checkrebuild(atlases,options,root,mifix)
                         XYZ.mm=[];
                         XYZ.dims=nii.voxsize;
                     end
-
+                    
                     %surface(xx(1:10)',yy(1:10)',zz(1:10)',ones(10,1)');
                     %             hold on
-
+                    
                     if atlases.types(atlas)==4 && side==2 % restore from backup
                         nii=bnii;
                         XYZ.mm=bXYZ.mm;
@@ -195,7 +195,7 @@ if checkrebuild(atlases,options,root,mifix)
                     for dim=1:3
                         gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));
                     end
-
+                    
                     if atlases.types(atlas)==4 % mixed atlas, divide
                         if side==1
                             bnii=nii;
@@ -212,7 +212,7 @@ if checkrebuild(atlases,options,root,mifix)
                             end
                             XYZ.val=XYZ.val(XYZ.mm(:,1)>0,:,:);
                             XYZ.mm=XYZ.mm(XYZ.mm(:,1)>0,:,:);
-
+                            
                             nii.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
                         elseif side==2
                             if ~any(gv{1}<0)
@@ -224,22 +224,22 @@ if checkrebuild(atlases,options,root,mifix)
                             XYZ.vx=XYZ.vx(XYZ.mm(:,1)<0,:,:);
                             XYZ.val=XYZ.val(XYZ.mm(:,1)<0,:,:);
                             XYZ.mm=XYZ.mm(XYZ.mm(:,1)<0,:,:);
-
+                            
                             nii.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
                         end
                     end
-
-
+                    
+                    
                     [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
                     
-%                     Xvx=linspace(1,length(gv{1}),3*length(gv{1}));
-%                     Yvx=linspace(1,length(gv{2}),3*length(gv{2}));
-%                     Zvx=linspace(1,length(gv{3}),3*length(gv{3}));
-%                     [Xq,Yq,Zq]=meshgrid(interp1(gv{1},Xvx),...
-%                         interp1(gv{2},Yvx),...
-%                         interp1(gv{3},Zvx));
-
-  
+                    %                     Xvx=linspace(1,length(gv{1}),3*length(gv{1}));
+                    %                     Yvx=linspace(1,length(gv{2}),3*length(gv{2}));
+                    %                     Zvx=linspace(1,length(gv{3}),3*length(gv{3}));
+                    %                     [Xq,Yq,Zq]=meshgrid(interp1(gv{1},Xvx),...
+                    %                         interp1(gv{2},Yvx),...
+                    %                         interp1(gv{3},Zvx));
+                    
+                    
                     thresh=ea_detthresh(atlases,atlas,nii.img);
                     ea_addnii2lf(atlases,atlas,thresh,options,root,mifix)
                     try
@@ -253,7 +253,7 @@ if checkrebuild(atlases,options,root,mifix)
                     fv.vertices=[fv.vertices;fvc.vertices];
                     if options.prefs.hullsmooth
                         try
-                        fv=ea_smoothpatch(fv,[],ceil(options.prefs.hullsmooth/2));
+                            fv=ea_smoothpatch(fv,[],ceil(options.prefs.hullsmooth/2));
                         catch
                             keyboard
                         end
@@ -262,25 +262,25 @@ if checkrebuild(atlases,options,root,mifix)
                         tr=triangulation(fv.faces,fv.vertices);
                         normals{atlas,side} = vertexNormal(tr);
                     catch % workaround for older versions:
-
+                        
                         % temporally plot atlas to get vertex normals..
                         tmp=figure('visible','off');
                         tp=patch(fv,'VertexNormalsMode','manual');
                         set(tp,'VertexNormalsMode','manual')
                         normals{atlas,side}=get(tp,'VertexNormals')*-1;
                         delete(tmp);
-
+                        
                     end
-
+                    
                     % set cdata
-
+                    
                     try % check if explicit color info for this atlas is available.
                         cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1));
                     catch
                         cdat=abs(repmat(atlas*(maxcolor/length(atlases.names)),length(fv.vertices),1));
                         atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
                     end
-
+                    
                     ifv{atlas,side}=fv; % later stored
                     icdat{atlas,side}=cdat; % later stored
                     try
@@ -293,16 +293,16 @@ if checkrebuild(atlases,options,root,mifix)
                     icolorc{atlas,side}=colorc; % later stored
                     pixdim=ipixdim{atlas,side};
                     atlascnt=atlascnt+1;
-
+                    
                 elseif isfield(nii,'fibers') % fibertract
                     % concat fibers to one patch object
                     addobjr=ea_showfiber(nii.fibers,nii.idx,colorc);
-
+                    
                     
                     fv.vertices=addobjr.Vertices;
                     fv.faces=addobjr.Faces;
                     delete(addobjr);
-                
+                    
                     nii.mm=nii.fibers;
                     nii=rmfield(nii,'fibers');
                     iXYZ{atlas,side}=nii;
@@ -316,47 +316,48 @@ if checkrebuild(atlases,options,root,mifix)
                     catch
                         atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
                     end
-                
+                    
                 end
             end
         end
-
-
+        
+        
         %ea_dispercent(1,'end');
-
+        
         % finish gm_mask file for leadfield computation.
         try % fibertract only atlases dont have a gm_mask
             V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             X=spm_read_vols(V);
-
+            
             X(X<1.5)=0;
             X(X>1.5)=1;
-
-            V.dt=[2,0];
+            
+            V.dt=[16,0];
             delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             spm_write_vol(V,X);
-
-            clear X V
             ea_crop_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            
+            clear X V
             gzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+            
         end
-
+        
         % save table information that has been generated from nii files (on first run with this atlas set).
-
+        
         atlases.fv=ifv;
         atlases.cdat=icdat;
         atlases.XYZ=iXYZ;
         atlases.pixdim=ipixdim;
         atlases.colorc=icolorc;
-
+        
         atlases.normals=normals;
-
+        
         atlases.rebuild=0; % always reset rebuild flag.
         save([root,filesep,mifix,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
         
     end
-
+    
 end
 
 
@@ -376,7 +377,7 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
     ea_crop_nii(fname);
     nii=ea_load_nii(fname);
     warning('on');
-
+    
     if ~all(abs(nii.voxsize)<=0.8)
         ea_reslice_nii(fname,fname,[0.4,0.4,0.4],0,0,0,[],[],1);
         nii=ea_load_nii(fname);
@@ -385,7 +386,7 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
     if wasgzip
         delete(fname); % since gunzip makes a copy of the zipped file.
     end
-
+    
 elseif strcmp(fname(end-3:end),'.trk') || strcmp(fname(end-3:end),'.mat') % tracts in mat format % tracts in trk format
     [fibers,idx]=ea_loadfibertracts(fname,1);
     nii.fibers=fibers;
@@ -415,7 +416,7 @@ switch opt
         sides=1:2;
     case 5
         sides=1; % midline
-
+        
 end
 
 
@@ -475,7 +476,7 @@ end
 
 for atl=1:length(atlnames)
     atlname=atlnames{atl};
-
+    
     if strcmp(atlname(end-2:end),'.gz')
         wasgzip=1;
         gunzip(atlname);
@@ -484,19 +485,21 @@ for atl=1:length(atlnames)
     else
         wasgzip=0;
     end
-
+    
     if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file') % first atlas, generate empty hdtemplate in atlas dir...
         if (~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz'],'file'))
             if ~options.native
                 load([ea_space,'ea_space_def.mat'])
                 copyfile([ea_space,spacedef.templates{1},'.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
                 ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],...
-                    [0.3,0.3,0.3]);
+                    [0.3,0.3,0.3],0,0,1,[],[],1);
             else
                 copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             end
             V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             X=spm_read_vols(V);
+            V.dt=[16,0];
+            V.pinfo=[1;0;352];
             X(:)=0;
             spm_write_vol(V,X);
             clear V X
@@ -505,27 +508,29 @@ for atl=1:length(atlnames)
             delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz']);
         end
     end
-
-
-    % add atlas file to hdtemplate in atlas dir
-    matlabbatch{1}.spm.util.imcalc.input = {
-        [root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii,1'];
-        [atlname,',1']
-        };
-    matlabbatch{1}.spm.util.imcalc.output = 'gm_mask.nii';
-    matlabbatch{1}.spm.util.imcalc.outdir = {[root,filesep,mifix,options.atlasset,filesep]};
-    matlabbatch{1}.spm.util.imcalc.expression = ['i1+(i2>',num2str(thresh),')'];
-    matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
-    matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-    matlabbatch{1}.spm.util.imcalc.options.mask = 0;
-    matlabbatch{1}.spm.util.imcalc.options.interp = 1;
-    matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
-    if atlases.tissuetypes(atlas)==1
-    spm_jobman('run',{matlabbatch});
-    end
-    clear matlabbatch
     
-
+    
+    % add atlas file to hdtemplate in atlas dir
+        
+        matlabbatch{1}.spm.util.imcalc.input = {
+            [root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii,1'];
+            [atlname,',1']
+            };
+        matlabbatch{1}.spm.util.imcalc.output = 'gm_mask.nii';
+        matlabbatch{1}.spm.util.imcalc.outdir = {[root,filesep,mifix,options.atlasset,filesep]};
+        matlabbatch{1}.spm.util.imcalc.expression = ['i1+(i2>',num2str(thresh),')'];
+        matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+        matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
+        matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+        matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+        matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
+        if atlases.tissuetypes(atlas)==1
+            spm_jobman('run',{matlabbatch});
+        end
+        clear matlabbatch
+    
+    
+    
     if wasgzip
         gzip(atlname); % since gunzip makes a copy of the zipped file.
         delete(atlname);

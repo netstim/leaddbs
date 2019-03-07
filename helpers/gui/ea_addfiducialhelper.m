@@ -2,6 +2,8 @@ function ea_addfiducialhelper(~,~,handles)
 
 uipatdir=getappdata(handles.leadfigure,'uipatdir');
 cnt=1;
+        spacedef=ea_getspacedef;
+
 while 1
     try close(TPpoint); end
     uuid{cnt}=ea_generate_uuid;
@@ -16,7 +18,7 @@ while 1
     figure(Fgraph); clf;
     
     spm_orthviews('Reset');
-    spm_orthviews('Image', [ea_space,'t1.nii']);
+    spm_orthviews('Image', [ea_space,spacedef.templates{1},'.nii']);
     colormap('gray');
     cameratoolbar('resetcamera')
     cameratoolbar('close')
@@ -81,7 +83,7 @@ for f=1:length(fid)
     for pt=1:length(uipatdir)        
         % define in template:
         ea_mkdir([uipatdir{pt},filesep,'fiducials',filesep,ea_getspace]);
-        ea_spherical_roi([uipatdir{pt},filesep,'fiducials',filesep,ea_getspace,filesep,uuid{f},'.nii'],fid(f).template,10,0,[ea_space,'t1.nii']);
+        ea_spherical_roi([uipatdir{pt},filesep,'fiducials',filesep,ea_getspace,filesep,uuid{f},'.nii'],fid(f).template,10,0,[ea_space,spacedef.templates{1},'.nii']);
         tfis{pt}{f}=[uipatdir{pt},filesep,'fiducials',filesep,ea_getspace,filesep,uuid{f},'.nii'];
         %smoothgzip([ea_space,'fiducials'],[uuid{f},'.nii']);
         
