@@ -72,7 +72,7 @@ linefiducial(2,secdim)=ys2;
 linefiducial(3,:)=inf; % coding to not confuse with freehandfiducial.
 
 % draw arrow
-arrhandles{1}=ea_plot_arrow(linefiducial(1,1),linefiducial(1,2),linefiducial(2,1),linefiducial(2,2),'linewidth',2,'headwidth',0.25,'headheight',0.33,'color',[0.5 0.5 0.5],'facecolor',[0.5 0.5 0.5],'edgecolor',[0.5,0.5,0.5]);
+arrhandles{1}=ea_plot_arrow(xs,ys,xs2,ys2,'linewidth',2,'headwidth',0.25,'headheight',0.33,'color',[0.5 0.5 0.5],'facecolor',[0.5 0.5 0.5],'edgecolor',[0.5,0.5,0.5]);
 
 setappdata(handles.checkstructures,'arrhandles',arrhandles);
 
