@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 15-Nov-2018 15:46:47
+% Last Modified by GUIDE v2.5 05-Mar-2019 08:57:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,6 +51,9 @@ function lead_group_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead_group (see VARARGIN)
+
+% add recent groups...
+ea_initrecentpatients(handles, 'groups');
 
 % Choose default command line output for lead_group
 handles.output = hObject;
@@ -562,13 +565,14 @@ if options.expstatvat.do % export to nifti volume
 
     pobj.openedit=1;
     hshid=ea_datahash(M.ui.listselect);
-    ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'models',filesep,'statvat_',M.clinical.labels{M.ui.clinicallist},'_T_nthresh_',hshid,'.nii'],pobj);
+    ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'models',filesep,'statvat_',M.clinical.labels{M.ui.clinicallist},'_mean_',hshid,'.nii'],pobj);
 end
 
 if get(handles.showdiscfibers,'Value') % show discriminative fibers
+    M.ui.connectomename=get(handles.fiberspopup,'String');
+    M.ui.connectomename=M.ui.connectomename{get(handles.fiberspopup,'Value')};
     discfiberssetting = options.prefs.machine.lg.discfibers;
-    fibsweighted=ea_discfibers_calcdiscfibers(M,discfiberssetting);
-    ea_discfibers_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted);
+    ea_showdiscfibers(M,discfiberssetting,resultfig);
     set(0, 'CurrentFigure', resultfig);
 end
 
@@ -1371,6 +1375,8 @@ function fiberspopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from fiberspopup
 M=getappdata(gcf,'M');
 M.ui.fiberspopup=get(handles.fiberspopup,'Value');
+M.ui.connectomename=get(handles.fiberspopup,'String');
+M.ui.connectomename=M.ui.connectomename{M.ui.fiberspopup};
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
@@ -1501,31 +1507,10 @@ groupdir = uigetdir;
 if ~groupdir % user pressed cancel
     return
 end
-
-ea_busyaction('on',handles.leadfigure,'group');
-
 groupdir = [groupdir, filesep];
-M = ea_initializeM;
-M.ui.groupdir = groupdir;
 
-set(handles.groupdir_choosebox, 'String', groupdir);
-set(handles.groupdir_choosebox, 'TooltipString', groupdir);
+ea_load_group(handles,groupdir);
 
-try % if file already exists, load it (and overwrite M).
-    load([groupdir, 'LEAD_groupanalysis.mat']);
-catch % if not, store it saving M.
-    save([groupdir, 'LEAD_groupanalysis.mat'], 'M', '-v7.3');
-end
-
-setappdata(handles.leadfigure, 'M', M);
-try
-    setappdata(handles.leadfigure, 'S', M.S);
-    setappdata(handles.leadfigure, 'vatmodel', M.S(1).model);
-end
-
-ea_busyaction('off', handles.leadfigure, 'group');
-
-ea_refresh_lg(handles);
 
 
 % --- Executes on button press in opensubgui.
@@ -2096,3 +2081,30 @@ function discfiberssettingpush_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_discfibers_setting;
+
+
+% --- Executes on selection change in recentpts.
+function recentpts_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+ea_busyaction('on',handles.leadfigure,'group');
+ea_rcpatientscallback(handles,'groups');
+ea_busyaction('off',handles.leadfigure,'group');
+
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpts
+
+
+% --- Executes during object creation, after setting all properties.
+function recentpts_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
