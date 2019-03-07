@@ -218,16 +218,19 @@ for side=1:length(options.sides)
 
                     if stimparams(side).volume(vat)>0 % stimulation on in this VAT,
                         clear thisatl
-
-
-                        if isempty(atlases.XYZ{atlas,side}) % for midline or combined atlases, only the right side atlas is used.
+                        
+                        try % for midline or combined atlases, only the right side atlas is used.
+                            if isempty(atlases.XYZ{atlas,side}) % for midline or combined atlases, only the right side atlas is used.
+                                thisatl=atlases.XYZ{atlas,1}.mm;
+                                tpd=atlases.pixdim{atlas,1};
+                            else
+                                thisatl=atlases.XYZ{atlas,side}.mm;
+                                tpd=atlases.pixdim{atlas,side};
+                            end
+                        catch
                             thisatl=atlases.XYZ{atlas,1}.mm;
                             tpd=atlases.pixdim{atlas,1};
-                        else
-                            thisatl=atlases.XYZ{atlas,side}.mm;
-                            tpd=atlases.pixdim{atlas,side};
                         end
-
                         %% this search strategy commented out for now ? would fail in case of a very large atlas structure with VAT in center of it touching no border.
 %                         % roughly check if this nucleus could be close to
 %                         % VTA centroid:
