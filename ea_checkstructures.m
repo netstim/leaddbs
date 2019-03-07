@@ -353,12 +353,24 @@ for cts=cortrasag
     him=image(img);
     
     hold on
-    set(handles.(views{cts}),'ButtonDownFcn', @(h,e) ea_freehanddraw(handles.(views{cts}),handles,[voxz,ea_view2coord(cts),cts],'Color',[1,1,0.6],'linewidth',2));
+    set(handles.(views{cts}),'ButtonDownFcn', @(h,e) ea_getmouse(handles.(views{cts}),handles,[voxz,ea_view2coord(cts),cts],'Color',[1,1,0.6],'linewidth',2));
     set(him, 'HitTest', 'off');
     %    axis off % this somehow destroys UI functionality. Solve
     %    later.
     
 end
+
+
+function ea_getmouse(varargin)
+
+hit=evalin('caller','e');
+switch hit.Button
+    case 1 % left click
+        ea_refinestructs_freehanddraw(varargin{:});
+    case 3 % right click
+        ea_refinestructs_twopoints(varargin{:});
+end
+
 
 function coord=ea_view2coord(view)
 switch view
@@ -546,6 +558,17 @@ clinefiducial=getappdata(handles.checkstructures,'clinefiducial');
 fiducialview=getappdata(handles.checkstructures,'fiducialview');
 bbs=getappdata(handles.checkstructures,'bbs'); % bounding boxes of views
 thisbb=bbs(fiducialview);
+
+if size(linefiducial,1)==3 && all(isinf(linefiducial(3,:))) % this is a two-point correction fiducial
+    twopoint=1;
+    clinefiducial=linefiducial(2,:);
+    linefiducial=linefiducial(1,:);
+else
+    twopoint=0;
+end
+
+
+
 %linefiducial(:,1)=thisbb.imgdim(1)-linefiducial(:,1);
 [planedim,onedim,secdim]=ea_getdims(fiducialview,1);
 
@@ -580,6 +603,8 @@ uuid=getappdata(handles.checkstructures,'fidguiid');
 if isempty(uuid)
     uuid=ea_generate_uuid;
     setappdata(handles.checkstructures,'fidguiid',uuid);
+    tp_uuid=ea_generate_uuid;
+    setappdata(handles.checkstructures,'tp_fidguiid',tp_uuid);
 end
 
 if 0 % export fiducial in template space - could be done for debugging.
@@ -604,15 +629,23 @@ if map3d % this could be used to map in 3D instead of 2D - then could be incongr
     cexpmm=allatlcoords(idx(d<3.5),:); % ignore fiducials further away than 3.5 mm
 end
 
-
-% append corrections to list.
-allcexpmm=getappdata(handles.checkstructures,'allcexpmm');
-allexpmm=getappdata(handles.checkstructures,'allexpmm');
-allcexpmm=[allcexpmm;cexpmm];
-allexpmm=[allexpmm;expmm];
-setappdata(handles.checkstructures,'allcexpmm',allcexpmm);
-setappdata(handles.checkstructures,'allexpmm',allexpmm);
-
+if twopoint % fiducials based on right-click two point info
+    % append corrections to list.
+    tp_allcexpmm=getappdata(handles.checkstructures,'tp_allcexpmm');
+    tp_allexpmm=getappdata(handles.checkstructures,'tp_allexpmm');
+    tp_allcexpmm=[tp_allcexpmm;cexpmm];
+    tp_allexpmm=[tp_allexpmm;expmm];
+    setappdata(handles.checkstructures,'tp_allcexpmm',tp_allcexpmm);
+    setappdata(handles.checkstructures,'tp_allexpmm',tp_allexpmm);
+else % fiducials based on left-click free hand drawings
+    % append corrections to list.
+    allcexpmm=getappdata(handles.checkstructures,'allcexpmm');
+    allexpmm=getappdata(handles.checkstructures,'allexpmm');
+    allcexpmm=[allcexpmm;cexpmm];
+    allexpmm=[allexpmm;expmm];
+    setappdata(handles.checkstructures,'allcexpmm',allcexpmm);
+    setappdata(handles.checkstructures,'allexpmm',allexpmm);
+end
 ea_csremovedrawings(handles);
 %ea_updateviews(options,handles,1:3)
 ea_busyaction('off',handles.checkstructures,'normcheckstructures');
@@ -648,7 +681,7 @@ function checkstructures_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
-uuid=getappdata(handles.checkstructures,'fidguiid');
+uuid=getappdata(handles.checkstructures,'fidguiid'); % uuid only used for freehandfiducials (not for twopoint fiducials)
 if ~isempty(uuid)
     
     
@@ -659,71 +692,129 @@ if ~isempty(uuid)
     cexpmm=getappdata(handles.checkstructures,'allcexpmm');
     expmm=getappdata(handles.checkstructures,'allexpmm');
     
+    
+    tp_cexpmm=getappdata(handles.checkstructures,'tp_allcexpmm');
+    tp_expmm=getappdata(handles.checkstructures,'tp_allexpmm');
     delete(hObject);
-    
-    
-    
-    % export this mapping in template space:
     directory=[options.root,options.patientname,filesep];
     ea_mkdir([directory,'fiducials']);
     ea_mkdir([directory,'fiducials',filesep,'native']);
     ea_mkdir([directory,'fiducials',filesep,ea_getspace]);
     
-    if ~exist([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'],'file')
-        nii=ea_load_nii([ea_space,'t1.nii']);
-        nii.fname=[directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'];
-        nii.dt=[16,0];
-        nii.img(:)=0;
-    else
-        nii=ea_load_nii([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii']);
-    end
-    atlvx=nii.mat\[cexpmm,ones(size(cexpmm,1),1)]';
-    atlvx=round(atlvx(1:3,:))';
-    
-    nii.img(sub2ind(size(nii.img),(atlvx(:,1)),(atlvx(:,2)),(atlvx(:,3))))=1;
-    
-    ea_write_nii(nii);
-    
-    
-    % now project fids back to native space and export mapping there:
-    expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
-    options=ea_assignpretra(options);
-    [~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
-
-
-    if ~exist([directory,'fiducials',filesep,'native',filesep,uuid,'.nii'],'file')
-        nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
-        nii.fname=[directory,'fiducials',filesep,'native',filesep,uuid,'.nii'];
-        nii.dt=[16,0];
-        nii.img(:)=0;
-    else
-        nii=ea_load_nii([directory,'fiducials',filesep,'native',filesep,uuid,'.nii']);
-    end
-    subcvx=round(subcvx(1:3,:))';
-    nii.img(sub2ind(size(nii.img),(subcvx(:,1)),(subcvx(:,2)),(subcvx(:,3))))=1;
-    ea_write_nii(nii);
-    
-    
-    
-    
-    for pttemp=1:2
-        switch pttemp
-            case 1 % native
-                subdir='native';
-            case 2 % template
-                subdir=ea_getspace;
+    if ~isempty(cexpmm)
+        % export this mapping in template space:
+        
+        
+        if ~exist([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'],'file')
+            nii=ea_load_nii([ea_space,'t1.nii']);
+            nii.fname=[directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'];
+            nii.dt=[16,0];
+            nii.img(:)=0;
+        else
+            nii=ea_load_nii([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii']);
         end
-        [pathn,filen]=fileparts([directory,'fiducials',filesep,subdir,filesep,uuid,'.nii']);
-        filen=[filen,'.nii'];
-        matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pathn,filen)};
-        matlabbatch{1}.spm.spatial.smooth.fwhm = [0.5 0.5 0.5];
-        matlabbatch{1}.spm.spatial.smooth.dtype = 512;
-        matlabbatch{1}.spm.spatial.smooth.im = 0;
-        matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-        spm_jobman('run',{matlabbatch});
-        movefile(fullfile(pathn,['s',filen]),fullfile(pathn,filen));
-        gzip(fullfile(pathn,filen));
-        delete(fullfile(pathn,filen));
+        atlvx=nii.mat\[cexpmm,ones(size(cexpmm,1),1)]';
+        atlvx=round(atlvx(1:3,:))';
+        
+        nii.img(sub2ind(size(nii.img),(atlvx(:,1)),(atlvx(:,2)),(atlvx(:,3))))=1;
+        
+        ea_write_nii(nii);
+        
+        
+        % now project fids back to native space and export mapping there:
+        expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
+        options=ea_assignpretra(options);
+        [~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
+        
+        
+        if ~exist([directory,'fiducials',filesep,'native',filesep,uuid,'.nii'],'file')
+            nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
+            nii.fname=[directory,'fiducials',filesep,'native',filesep,uuid,'.nii'];
+            nii.dt=[16,0];
+            nii.img(:)=0;
+        else
+            nii=ea_load_nii([directory,'fiducials',filesep,'native',filesep,uuid,'.nii']);
+        end
+        subcvx=round(subcvx(1:3,:))';
+        nii.img(sub2ind(size(nii.img),(subcvx(:,1)),(subcvx(:,2)),(subcvx(:,3))))=1;
+        ea_write_nii(nii);
+        
+        
+        
+        
+        for pttemp=1:2
+            switch pttemp
+                case 1 % native
+                    subdir='native';
+                case 2 % template
+                    subdir=ea_getspace;
+            end
+            [pathn,filen]=fileparts([directory,'fiducials',filesep,subdir,filesep,uuid,'.nii']);
+            filen=[filen,'.nii'];
+            matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pathn,filen)};
+            matlabbatch{1}.spm.spatial.smooth.fwhm = [0.5 0.5 0.5];
+            matlabbatch{1}.spm.spatial.smooth.dtype = 512;
+            matlabbatch{1}.spm.spatial.smooth.im = 0;
+            matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+            spm_jobman('run',{matlabbatch});
+            movefile(fullfile(pathn,['s',filen]),fullfile(pathn,filen));
+            gzip(fullfile(pathn,filen));
+            delete(fullfile(pathn,filen));
+        end
+    end
+    if ~isempty(tp_cexpmm)
+        spacedef=ea_getspacedef;
+        for pointpair=1:size(tp_cexpmm,1)
+            % define in template:
+            tps_uuid{pointpair}=ea_generate_uuid;
+            
+            ea_spherical_roi([directory,'fiducials',filesep,ea_getspace,filesep,tps_uuid{pointpair},'.nii'],tp_cexpmm(pointpair,:),2,0,[ea_space,spacedef.templates{1},'.nii']);
+            tfis{pointpair}=[directory,'fiducials',filesep,ea_getspace,filesep,tps_uuid{pointpair},'.nii'];
+            
+            % define in pt:
+            ea_spherical_roi([directory,'fiducials',filesep,'native',filesep,tps_uuid{pointpair},'.nii'],tp_expmm(pointpair,:),2,0,[directory,options.prefs.prenii_unnormalized]);
+            pfis{pointpair}=[directory,'fiducials',filesep,'native',filesep,tps_uuid{pointpair},'.nii'];
+        end
+        
+        
+        if length(tfis)>1
+            fguid=ea_generate_uuid;
+            matlabbatch{1}.spm.util.imcalc.input = tfis';
+            matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
+            matlabbatch{1}.spm.util.imcalc.outdir = {[directory,'fiducials',filesep,ea_getspace]};
+            matlabbatch{1}.spm.util.imcalc.expression = 'mean(X)';
+            matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+            matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
+            matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+            matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+            matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
+            spm_jobman('run',{matlabbatch});
+            smoothgzip([directory,'fiducials',filesep,ea_getspace],[fguid,'.nii']);
+        else
+            [pathn,filenn]=fileparts(tfis{1});
+            smoothgzip(pathn,[filenn,'.nii']);
+        end
+        ea_delete(tfis);
+        
+        if length(pfis)>1
+            matlabbatch{1}.spm.util.imcalc.input = pfis';
+            matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
+            matlabbatch{1}.spm.util.imcalc.outdir = {[directory,'fiducials',filesep,'native']};
+            matlabbatch{1}.spm.util.imcalc.expression = 'mean(X)';
+            matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
+            matlabbatch{1}.spm.util.imcalc.options.dmtx = 1;
+            matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+            matlabbatch{1}.spm.util.imcalc.options.interp = 1;
+            matlabbatch{1}.spm.util.imcalc.options.dtype = 512;
+            spm_jobman('run',{matlabbatch});
+            smoothgzip([directory,'fiducials',filesep,'native'],[fguid,'.nii']);
+        else
+            [pathn,filenn]=fileparts(pfis{1});
+            smoothgzip(pathn,[filenn,'.nii']);
+        end
+        ea_delete(pfis);
+        
+        
     end
     disp('Done.');
     
@@ -746,5 +837,17 @@ if ~isempty(uuid)
         cits);
     
 else
-        delete(hObject);
+    delete(hObject);
 end
+
+
+function smoothgzip(pathn,filen)
+matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pathn,filen)};
+matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
+matlabbatch{1}.spm.spatial.smooth.dtype = 512;
+matlabbatch{1}.spm.spatial.smooth.im = 0;
+matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+spm_jobman('run',{matlabbatch});
+movefile(fullfile(pathn,['s',filen]),fullfile(pathn,filen));
+gzip(fullfile(pathn,filen));
+delete(fullfile(pathn,filen));
