@@ -118,10 +118,19 @@ if ~options.savefibers.load
     cnt=1;
     selectedfibs = cell(1, length(seed));
     for side=1:length(seed)
-        in=inpolyhedron(seed_fv{side}, fibers, 'flipnormals', true); % massive speed up compared to ea_intriangulation (approx. factor 10?)
-%         [in,D]=knnsearch(seed_fv{side}.vertices,fibers);
-%         in=D<2;
-        selectedfibs{side}=unique(idxv(in));
+        % adhusch: pre-filtering fibers outside "euclidian hull" around seed for further speed-up
+        [~,D] = knnsearch(mean(seed_fv{side}.vertices),fibers); 
+        maxD = max(pdist2(mean(seed_fv{side}.vertices),seed_fv{side}.vertices));
+        prefiltIdx = (D <= maxD); % has length all fibers
+       
+        % adhusch: filter fiberes with respect to the real seed shape
+        filtPrefiltIdx = inpolyhedron(seed_fv{side}, fibers(prefiltIdx,:), 'flipnormals', true); % massive speed up compared to ea_intriangulation (approx. factor 10?)
+      
+        % filtPrefiltIdx has only length of prefiltered fibre subset!
+        filtIdx = prefiltIdx;
+        filtIdx(prefiltIdx) = filtPrefiltIdx; % filter of all fibers
+        
+        selectedfibs{side}=unique(idxv(filtIdx)); % mapping individual points back to fibers
         dispercent(cnt/length(sides));
         cnt=cnt+1;
     end
