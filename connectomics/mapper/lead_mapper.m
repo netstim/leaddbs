@@ -64,7 +64,7 @@ set(handles.leadfigure,'name','Lead-Connectome Mapper','color','w');
 %setappdata(handles.leadfigure,'uipatdir',{homedir(1:end-1)});
 
 % add recent patients...
-ea_initrecentpatients(handles);
+ea_initrecentpatients(handles, 'patients');
 
 ea_processguiargs(handles,varargin)
 
