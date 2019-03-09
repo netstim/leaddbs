@@ -89,7 +89,7 @@ for nativemni=nm % switch between native and mni space atlases.
     else
         ht=uitoolbar(resultfig);
     end
-    atlcntbutton=uipushtool(ht,'CData',ea_get_icn('atlases'),'TooltipString','Atlas Control Figure','ClickedCallback',{@ea_openatlascontrol,atlases,resultfig,options});
+    atlcntbutton=uipushtool(ht,'CData',ea_get_icn('atlases'),'Tag','Atlas Control','TooltipString','Atlas Control Figure','ClickedCallback',{@ea_openatlascontrol,atlases,resultfig,options});
 
     % prepare stats fields
     if options.writeoutstats
@@ -219,11 +219,11 @@ for nativemni=nm % switch between native and mni space atlases.
                     [~,thislabel]=fileparts(thislabel);
 %                 end
 %             end
-                atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
+                atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
 
                 if ~exist('labelbutton','var')
-                    labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'TooltipString','Labels');
-                    labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'TooltipString','Label Color');
+                    labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
+                    labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
                 end
             % make fv compatible for stats
 
@@ -424,9 +424,16 @@ end
 
 
 function atlabelsvisible(hobj,ev,obj,onoff)
-for el=1:numel(obj)
-    try
-        set(obj(el),'Visible',onoff);
+if isempty(hobj)
+    arrayfun(@(label) set(label,'Visible',onoff), obj);
+else
+    toggleTag = arrayfun(@(t) t.Tag, hobj.Parent.Children(1:end-3), 'Uni', 0);
+    toggleState = arrayfun(@(t) t.State, hobj.Parent.Children(1:end-3), 'Uni', 0);
+
+    if strcmp(onoff, 'on')
+        arrayfun(@(label) set(label,'Visible',toggleState{strcmp(label.Tag, toggleTag)}), obj);
+    else
+        arrayfun(@(label) set(label,'Visible',onoff), obj);
     end
 end
 
