@@ -59,7 +59,7 @@ set(0,'CurrentFigure',resultfig);
 
 % Normalize vals
 vals(isnan(vals))=0;
-vals=vals./max(abs(vals));
+% vals=vals./max(abs(vals));
 
 % vals and fibcell to be trimmed for visualization
 tvals=vals;
@@ -177,12 +177,6 @@ setappdata(resultfig, 'cbfig', cbfig);
 % Discriminative fiber control
 discfiberscontrol = ea_discfibers_control(resultfig);
 setappdata(resultfig, 'discfiberscontrol', discfiberscontrol);
-
-
-
-
-
-
 
 
 function str=pointtodash(str)
