@@ -751,6 +751,8 @@ if ~isempty(uuid)
             end
             [pathn,filen]=fileparts([directory,'fiducials',filesep,subdir,filesep,uuid,'.nii']);
             filen=[filen,'.nii'];
+                        clear matlabbatch
+
             matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pathn,filen)};
             matlabbatch{1}.spm.spatial.smooth.fwhm = [0.5 0.5 0.5];
             matlabbatch{1}.spm.spatial.smooth.dtype = 512;
@@ -779,6 +781,7 @@ if ~isempty(uuid)
         
         if length(tfis)>1
             fguid=ea_generate_uuid;
+            clear matlabbatch
             matlabbatch{1}.spm.util.imcalc.input = tfis';
             matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
             matlabbatch{1}.spm.util.imcalc.outdir = {[directory,'fiducials',filesep,ea_getspace]};
@@ -797,6 +800,7 @@ if ~isempty(uuid)
         ea_delete(tfis);
         
         if length(pfis)>1
+                        clear matlabbatch
             matlabbatch{1}.spm.util.imcalc.input = pfis';
             matlabbatch{1}.spm.util.imcalc.output = [fguid,'.nii'];
             matlabbatch{1}.spm.util.imcalc.outdir = {[directory,'fiducials',filesep,'native']};
