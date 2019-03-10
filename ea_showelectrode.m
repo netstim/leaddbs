@@ -31,9 +31,9 @@ end
 %   jetlist=jet;
 
 for side=options.sides
-    trajvector=mean(diff(trajectory{side}));
-    
-    trajvector=trajvector/norm(trajvector);
+%     trajvector=mean(diff(trajectory{side}));
+%     
+%     trajvector=trajvector/norm(trajvector);
     try
         startpoint=trajectory{side}(1,:)-(2*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
     catch
