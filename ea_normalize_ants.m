@@ -228,21 +228,37 @@ if ~exist([pth,filesep,prefix,fn,ext],'file')
 end
 
 
-function template2use=ea_det_to(anatfile,spacedef)
+function templatetouse=ea_det_to(anatfile,spacedef)
 
 anatfile=strrep(anatfile,'anat_','');
-anatfile=strrep(anatfile,'.nii','');
+anatfile=ea_stripex(anatfile);
 
 for avtpl=1:length(spacedef.templates)
-    if contains(anatfile,spacedef.norm_mapping{avtpl}) % e.g. anat_t22 would still use t2 template
-        template2use=spacedef.templates{avtpl};
-        return
+    thistemp=spacedef.templates{avtpl};
+    clear normmaptouse
+    for normmap=1:size(spacedef.norm_mapping,1)
+        thistocell=spacedef.norm_mapping{normmap,2};
+        thisfromcell=spacedef.norm_mapping{normmap,1};
+        if ~iscell(thistocell)
+            thistocell={thistocell};
+        end
+        if ~iscell(thisfromcell)
+            thisfromcell={thisfromcell};
+        end
+        if ismember(thistemp,thistocell)
+            for fromfiles=1:length(thisfromcell)
+                if contains(anatfile,thisfromcell{fromfiles})
+                    templatetouse=thistemp;
+                    return
+                end
+            end
+        end
     end
 end
 
 % template still hasn't been assigned, use misfit template if not empty:
 if ~isempty(spacedef.misfit_template)
-    template2use=spacedef.misfit_template;
+    templatetouse=spacedef.misfit_template;
 else
-    template2use='';
+    templatetouse=spacedef.templates{1}; % just use first one.
 end
