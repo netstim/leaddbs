@@ -7,7 +7,7 @@ function [savedir]=ea_getfsstatesavedir(directory,vsname,fibersfile,seedfile,tar
 if size(seedfile,2)==2
     sides='both';
 else
-    [~,sides,~]=fileparts(seedfile);
+    [~,sides,~]=fileparts(seedfile{1});
     sides=sides(length(mode)+2:end);
 end
 
