@@ -15,7 +15,13 @@ directory=[options.root,options.patientname,filesep];
 
 switch options.prefs.reco.mancoruse
     case 'postop'
+        try
         load([directory 'ea_coregctmethod_applied.mat']);
+        catch
+            tmat=eye(4);
+            postopct=[directory,options.prefs.ctnii_coregistered];
+            return
+        end
         postopct=[directory,options.prefs.rawctnii_unnormalized];
 
         switch coregct_method_applied{end}
