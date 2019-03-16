@@ -267,11 +267,11 @@ for suffix=dowhich
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
                 end
+                if keepthisone
+                    seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii']; 
+                end
             end
-            if keepthisone
-                seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
-                
-            end
+
     end
 end
 
