@@ -137,7 +137,12 @@ end
 
 for side=1:length(options.sides)
     % if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
-
+    switch side
+        case 1
+            sidec='right';
+        case 2
+            sidec='left';
+    end
     for vat=1:length(VAT{side}.VAT)
 
 
@@ -231,23 +236,25 @@ for side=1:length(options.sides)
                             thisatl=atlases.XYZ{atlas,1}.mm;
                             tpd=atlases.pixdim{atlas,1};
                         end
-                        %% this search strategy commented out for now ? would fail in case of a very large atlas structure with VAT in center of it touching no border.
-%                         % roughly check if this nucleus could be close to
-%                         % VTA centroid:
-%                         [~,D]=knnsearch(Vcent,thisatl);
-%                         if any(D<(1.5*maedler12_eq3(max(S.amplitude{side}),1000))) % VAT is close to nucleus, should check volume of intersection.
-%
+                        %% this search strategy commented out for now - would fail in case of a very large atlas structure with VAT in center of it touching no border.
+
                             tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
 
 
                             ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(vatfv.vertices,vatfv.faces,thisatl))*tpv;
-
-                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
-%                         else % all points too far from VTA center - simply set vi to zero.
-%                             ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
-%                             ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
-%
-%                         end
+                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);                            
+                            
+                            % now also add efield overlap:
+                            
+                            Vefield=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,...
+                                S.label,filesep,'vat_efield_',sidec]));
+                            atlasvoxels=Vefield.mat\[thisatl,ones(length(thisatl),1)]';
+                            ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=...
+                                mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1));
+                            ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
+                                mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1))./...
+                            sum(Vefield.img(:));
+                            
                     else % no voltage on this vat, simply set vi to zero.
                         ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
                         ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
