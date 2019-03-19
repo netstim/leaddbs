@@ -96,7 +96,7 @@ options.prefs=ea_prefs('');
 ea_addnormmethods(handles,options,'normmethod');
 
 % add recent patients...
-ea_initrecentpatients(handles,'subjects');
+ea_initrecentpatients(handles, 'patients');
 
 % update UI:
 try
@@ -618,7 +618,7 @@ function recentpts_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
 ea_busyaction('on',handles.leadfigure,'connectome');
-ea_rcpatientscallback(handles);
+ea_rcpatientscallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'connectome');
 
 

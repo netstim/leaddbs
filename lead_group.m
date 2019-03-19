@@ -608,7 +608,7 @@ if size(stats.corrcl,2)==1 % one value per patient
         [h,R,p]=ea_corrplot(stats.corrcl,stats.vicorr.nboth,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
         description='Volume Impacts, both hemispheres';
         [h,R,p]=ea_corrplot(stats.corrcl,stats.vicorr.both,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
-        
+
         odir=get(handles.groupdir_choosebox,'String');
         [~,fn]=fileparts(stats.vc_labels{1+1});
         if strcmp(fn(end-3:end),'.nii')
@@ -1008,7 +1008,7 @@ switch get(handles.VTAvsEfield,'value')
     case 1 % VTA
         vtavsefield='vat';
     case 2 % Efield
-        vtavsefield='efield'; 
+        vtavsefield='efield';
 end
 
 
@@ -2101,7 +2101,7 @@ function recentpts_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 ea_busyaction('on',handles.leadfigure,'group');
-ea_rcpatientscallback(handles,'groups');
+ea_rcpatientscallback(handles, 'groups');
 ea_busyaction('off',handles.leadfigure,'group');
 
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
