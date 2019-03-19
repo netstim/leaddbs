@@ -53,7 +53,7 @@ function lead_anatomy_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to lead_anatomy (see VARARGIN)
 
 % add recent patients...
-ea_initrecentpatients(handles, 'subjects');
+ea_initrecentpatients(handles, 'patients');
 earoot=ea_getearoot;
 if ~isdeployed
     addpath(genpath(earoot));
@@ -254,7 +254,7 @@ function recentpts_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
-ea_rcpatientscallback(handles);
+ea_rcpatientscallback(handles, 'patients');
 options.prefs=ea_prefs('');
 [options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
 options.root=[options.root,filesep];

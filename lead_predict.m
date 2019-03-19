@@ -64,7 +64,7 @@ set(handles.leadfigure,'name','Lead Predict','color','w');
 %setappdata(handles.leadfigure,'uipatdir',{homedir(1:end-1)});
 
 % add recent patients...
-ea_initrecentpatients(handles);
+ea_initrecentpatients(handles, 'patients');
 
 ea_processguiargs(handles,varargin)
 
@@ -425,7 +425,7 @@ function recentpts_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
 ea_busyaction('on',handles.leadfigure,'predict');
-ea_rcpatientscallback(handles);
+ea_rcpatientscallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'predict');
 
 

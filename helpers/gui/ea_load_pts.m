@@ -100,7 +100,6 @@ if isfield(handles,'seeddefpopup')
     end
 end
 
-
 ea_compat_pt(uipatdir);
 
 

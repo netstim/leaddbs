@@ -398,7 +398,7 @@ function recentpts_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
 ea_busyaction('on',handles.leadfigure,'mapper');
-ea_rcpatientscallback(handles);
+ea_rcpatientscallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'mapper');
 
 
