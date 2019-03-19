@@ -206,11 +206,12 @@ for suffix=dowhich
             end
         case 'fMRI'
             % prepare for fMRI
-            if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file');
-                seeds=cell(0);
-                nativeprefix='';
-                for pt=1:length(options.uivatdirs)
-                    vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
+            seeds=cell(0);
+            nativeprefix='';
+            for pt=1:length(options.uivatdirs)
+                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
+
+                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file')
                     
                     cnt=1;
                     for side=1:2
@@ -267,9 +268,10 @@ for suffix=dowhich
                     disp('Done.');
                 end
                 if keepthisone
-                    seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
+                    seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii']; 
                 end
             end
+
     end
 end
 

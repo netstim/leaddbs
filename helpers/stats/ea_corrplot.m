@@ -41,7 +41,7 @@ if ~exist('group1','var')
 else
     if ~isstruct(group1)
         group1s.idx=group1;
-        group1s.tag='color';
+        group1s.tag='group';
         clear group1
         group1=group1s;
     end
@@ -53,7 +53,7 @@ if ~exist('group2','var')
 else
     if ~isstruct(group2)
         group2s.idx=group2;
-        group2s.tag='color';
+        group2s.tag='type';
         clear group2
         group2=group2s;
     end

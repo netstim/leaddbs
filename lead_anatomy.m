@@ -53,7 +53,7 @@ function lead_anatomy_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to lead_anatomy (see VARARGIN)
 
 % add recent patients...
-ea_initrecentpatients(handles);
+ea_initrecentpatients(handles, 'subjects');
 earoot=ea_getearoot;
 if ~isdeployed
     addpath(genpath(earoot));
