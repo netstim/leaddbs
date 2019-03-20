@@ -58,11 +58,11 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     HEADER = ea_path_helper([basedir, 'PrintHeader.exe']);
     ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
-    antsApplyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
+    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
 else
     HEADER = [basedir, 'PrintHeader.', computer('arch')];
     ANTS = [basedir, 'antsRegistration.', computer('arch')];
-    antsApplyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
+    applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end
 
 if ~ispc
@@ -203,7 +203,7 @@ antscmd = [ANTS, ' --verbose 1' ...
     rigidstage, affinestage,mask1stage,mask2stage];
 
 if writeoutmat % inverse only needed if matrix is written out.
-    invaffinecmd = [antsApplyTransforms, ' --verbose 1' ...
+    invaffinecmd = [applyTransforms, ' --verbose 1' ...
         ' --dimensionality 3 --float 1' ...
         ' --reference-image ', ea_path_helper(movingimage), ...
         ' --transform [', ea_path_helper([outputbase, '0GenericAffine.mat']),',1]' ...

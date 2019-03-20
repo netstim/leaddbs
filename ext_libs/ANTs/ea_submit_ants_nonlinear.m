@@ -16,7 +16,7 @@ if exist([props.outputbase,'Composite',ea_getantstransformext(directory)],'file'
         case 1 % ask
             answ=questdlg('We found existing ANTs transform files. Do you wish to build upon these transform (i.e. refine them) or discard them and start from scratch?','Old ANTs transform found.','Refine','Start from scratch','Start from scratch');
             switch lower(answ)
-                case 'refine'                    
+                case 'refine'
                     refinewarp=1;
                     props.rigidstage='';
                     props.affinestage='';
@@ -69,11 +69,11 @@ else
 end
 
 if status
-   ea_error('ANTs normalization failed - likely due to out of memory problems. Please try a different normalization strategy or reduce the number of threads in the ANTs settings dialogue.'); 
+   ea_error('ANTs normalization failed - likely due to out of memory problems. Please try a different normalization strategy or reduce the number of threads in the ANTs settings dialogue.');
 end
 
 if refinewarp
-   ea_addrefinewarp(props.directory); 
+   ea_addrefinewarp(props.directory);
 end
 
 ea_conv_antswarps(props.directory);
@@ -85,13 +85,12 @@ function ea_addrefinewarp(directory)
 
 outputformat='.nii.gz';
 
+basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
-    sufx='.exe';
+    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
 else
-    sufx=computer('arch');
+    applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end
-
-antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
 
 template=ea_niigz([ea_space,'t1']);
 [options.root,options.patientname]=fileparts(fileparts(directory)); % 'directory' is /a/b/c/
@@ -100,20 +99,20 @@ options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);
 prenii=[directory,options.prefs.prenii_unnormalized];
 if exist([directory,'glanat2Warp.nii.gz'],'file') % happens in second iteration of normalization refine
-    cmd=[antsApply,' -r ',template,...
+    cmd=[applyTransforms,' -r ',template,...
         ' -t ',ea_path_helper([directory,'glanat2Warp.nii.gz']),...
         ' -t ',ea_path_helper([directory,'glanatComposite',ea_getantstransformext(directory)]),...
         ' -o [',ea_path_helper([directory,'glanatComposite',outputformat]),',1]'];
-    icmd=[antsApply,' -r ',ea_path_helper(prenii),...
+    icmd=[applyTransforms,' -r ',ea_path_helper(prenii),...
         ' -t ',ea_path_helper([directory,'glanatInverseComposite',ea_getantstransformext(directory)]),...
         ' -t ',ea_path_helper([directory,'glanat2InverseWarp.nii.gz']),...
         ' -o [',ea_path_helper([directory,'glanatInverseComposite',outputformat]),',1]'];
 elseif exist([directory,'glanat1Warp.nii.gz'],'file') % happens in third and upward iteration of normalization refine
-    cmd=[antsApply,' -r ',template,...
+    cmd=[applyTransforms,' -r ',template,...
         ' -t ',ea_path_helper([directory,'glanat1Warp.nii.gz']),...
         ' -t ',ea_path_helper([directory,'glanatComposite',ea_getantstransformext(directory)]),...
         ' -o [',ea_path_helper([directory,'glanatComposite',outputformat]),',1]'];
-    icmd=[antsApply,' -r ',ea_path_helper(prenii),...
+    icmd=[applyTransforms,' -r ',ea_path_helper(prenii),...
         ' -t ',ea_path_helper([directory,'glanatInverseComposite',ea_getantstransformext(directory)]),...
         ' -t ',ea_path_helper([directory,'glanat1InverseWarp.nii.gz']),...
         ' -o [',ea_path_helper([directory,'glanatInverseComposite',outputformat]),',1]'];
@@ -137,7 +136,6 @@ ea_delete([directory,'glanat2Warp.nii.gz']);
 ea_delete([directory,'glanat0GenericAffine.mat']);
 ea_delete([directory,'glanatComposite.h5']);
 ea_delete([directory,'glanatInverseComposite.h5']);
-
 
 
 function ea_antsnl_multistep(props)
@@ -189,7 +187,6 @@ else
     system(cmd);
 end
 
-
 stack = [' --initial-moving-transform ',ea_path_helper(props.outputbase),'Diff1Warp.nii.gz', ...
     ' --initial-moving-transform ',ea_path_helper(props.outputbase),'Diff0GenericAffine.mat'];
 tstack = {[' --transform ',ea_path_helper(props.outputbase),'Diff1Warp.nii.gz'],...
@@ -229,7 +226,6 @@ if ~isempty(props.slabstage)
         [' --transform ',ea_path_helper(props.outputbase),'DiffSlab2InverseWarp.nii.gz']};
 end
 
-
 % SyNSubcorticalRefineStage:
 if ~isempty(props.synmaskstage)
     cmd = [props.ANTS, ' --verbose 1', ...
@@ -263,12 +259,13 @@ if ~isempty(props.synmaskstage)
 end
 
 %% combine all warps to a single one:
+basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
-    sufx = '.exe';
+    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
 else
-    sufx = computer('arch');
+    applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end
-antsApply = [ea_getearoot,'ext_libs',filesep,'ANTS',filesep,'antsApplyTransforms.',sufx];
+
 template = [ea_space,'t1.nii'];
 outputformat = '.nii.gz';
 
@@ -282,12 +279,12 @@ options = ea_getptopts(props.directory);
 prenii = [props.directory,options.prefs.prenii_unnormalized];
 
 % apply command:
-cmd = [antsApply,' -r ',template,...
-    tstring, ...
-    ' -o [',ea_path_helper([props.directory,'glanatComposite',outputformat]),',1]'];
-icmd = [antsApply,' -r ',ea_path_helper(prenii),...
-    tstring, ...
-    ' -o [',ea_path_helper([props.directory,'glanatInverseComposite',outputformat]),',1]'];
+cmd = [applyTransforms,' -r ',template,...
+       tstring, ...
+       ' -o [',ea_path_helper([props.directory,'glanatComposite',outputformat]),',1]'];
+icmd = [applyTransforms,' -r ',ea_path_helper(prenii),...
+        tstring, ...
+        ' -o [',ea_path_helper([props.directory,'glanatInverseComposite',outputformat]),',1]'];
 
 if exist('cmd','var')
     if ~ispc
