@@ -31,15 +31,15 @@ if nargin < 4
     else % Only one transformation found
         transform = transform{1};
     end
-elseif regexp(varargin{4}, '^[a-zA-Z]+$')
+elseif regexp(varargin{4}, '^[a-zA-Z]+( +[a-zA-Z]+)*$')
     transformType = lower(varargin{4});
-    if strcmp(transformType, 'fsl') % Fix FSL transformation name
-        transformType = 'flirt';
+    if regexp(transformType, '^fsl') % Determine FSL transformation name
+        transformType = regexp(transformType, '(?<=^fsl )(.+)$', 'match', 'once');
     end
-    
+
     xfm = [mov, '2', fix, '_', transformType, '\d*\.(mat|h5)$'];
     transform = ea_regexpdir(volumedir, xfm, 0);
-    
+
     if numel(transform) == 0
         error(['Specified transformation not found! Please run ' ...
                'coregistration first before applying the transformation!']);
@@ -58,7 +58,7 @@ else
     end
 end
 
-xfm = ['(?<=', '_', ')([a-z]+)(?=\d*\.(mat|h5)$)'];
+xfm = '(?<=_)([a-z]+)(?=\d*\.(mat|h5)$)';
 transformType = upper(regexp(transform, xfm, 'match', 'once'));
 
 if ismember(transformType, {'FLIRT','FLIRTBBR'}) % Fix FSL transformation name - this will also be the extension for bbr.
