@@ -88,6 +88,7 @@ switch lower(orientation)
 end
 
 % Set up the axis
+set(gca, 'Color', 'none');
 title(titletxt)
 axis equal
 axis tight
