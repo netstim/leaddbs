@@ -526,7 +526,7 @@ function ext=ea_matext(method)
 switch upper(method)
     case 'SPM'
         ext='spm.mat';
-    case {'FSL FLIRT'}
+    case 'FSL FLIRT'
         ext='flirt1.mat';
     case 'FSL BBR'
         ext='flirtbbr.mat';
