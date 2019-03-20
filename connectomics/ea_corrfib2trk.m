@@ -40,8 +40,13 @@ fourindex = 1;
 voxmm = 'mm';
 
 % Save FTR for trk conversion
-save(fullfile(fileparts(reformatted_corrfibs), ['corrFTR', suffix, '.mat']), ...
+if isempty(fileparts(reformatted_corrfibs))
+    outputDir = '.';
+else
+    outputDir = fileparts(reformatted_corrfibs);
+end
+save(fullfile(outputDir, ['corrFTR', suffix, '.mat']), ...
      'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', '-v7.3');
 
 % FTR to TRK conversion
-ea_ftr2trk(['corrFTR', suffix], fileparts(reformatted_corrfibs));
+ea_ftr2trk(['corrFTR', suffix], outputDir);
