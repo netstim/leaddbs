@@ -60,7 +60,7 @@ switch lower(orientation)
         end
 
     case {'h', 'horz', 'horizontal'}
-        h = image(repmat(cat(3, map(:,1)', map(:,2)', map(:,3)'), width, 1));
+        image(repmat(cat(3, map(:,1)', map(:,2)', map(:,3)'), width, 1));
 
         % Remove yticks
         set(gca, 'ytick', []);
