@@ -272,6 +272,7 @@ else
     applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end
 
+cmd = applyTransforms;
 refim=[ea_space(options),options.primarytemplate,'.nii'];
 % add transforms:
 for t=1:length(transforms)
@@ -280,12 +281,10 @@ for t=1:length(transforms)
     tr=[' -r ',refim,...
         ' -t [',ea_path_helper([pth1,filesep,fn1,ext1]),',0]',...
         ' -t [',ea_path_helper([pth2,filesep,fn2,ext2]),',0]'];
-    cmd=[cmd,tr];
+    cmd = [cmd,tr];
 end
 
 % add output:
-cmd=[applyTransforms,' -o [compositeDisplacementField.h5,1]'];
+cmd=[cmd, ' -o [compositeDisplacementField.h5,1]'];
 
 system(cmd)
-
-
