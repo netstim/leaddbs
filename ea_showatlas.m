@@ -208,7 +208,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 end
             end
             if ~(atlases.types(atlas)>5)
-            atlassurfs(atlascnt,1)=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
+                atlassurfs(atlascnt,1)=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
             end
             % export label and labelbutton
 
