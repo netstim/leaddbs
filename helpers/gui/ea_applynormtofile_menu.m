@@ -84,9 +84,6 @@ if useinverse % from template space to [untouched] achor space
             from{fi} = [path, fis{fi}];
         end
 
-        
-        
-        
         ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp);
 
         if untouchedanchor % map from anchor to untouched anchor
@@ -102,7 +99,7 @@ if useinverse % from template space to [untouched] achor space
                 fused=untouchedanchorImage;
                 fused.img(:)=zscore(fused.img(:));
                 fused.img=fused.img+overlay.img;
-                fused.img=ea_minmax(fused.img);
+                fused.img=ea_rescale(fused.img);
                 fused.img=fused.img*255;
                 fused.dt=[2,0];
                 [natpath,natfn,natext]=fileparts(untouchedanchorImage.fname);
@@ -177,7 +174,6 @@ else % from [untouched] achor space to template space
     else
         refim=ea_niigz([ea_space,options.primarytemplate]);
     end
-        
-    
+
     ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp, refim);
 end

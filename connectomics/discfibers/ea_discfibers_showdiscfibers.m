@@ -102,8 +102,8 @@ tfibcell(remove)=[];
 
 % Rescale positive/negative tvals to [0 1]/[-1 0]
 tvalsRescale = tvals;
-tvalsRescale(tvals>0)=ea_minmax(tvals(tvals>0));
-tvalsRescale(tvals<0)=-ea_minmax(-tvals(tvals<0));
+tvalsRescale(tvals>0)=ea_rescale(tvals(tvals>0), [0 1]);
+tvalsRescale(tvals<0)=ea_rescale(tvals(tvals<0), [-1 0]);
 
 % Contruct colormap
 colormap gray
@@ -170,7 +170,7 @@ switch showfibersset
 end
 
 % Plot colorbar
-cbfig = ea_plot_colorbar(cbmap, [], 'v', '', tick, ticklabel);
+cbfig = ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel);
 set(cbfig, 'NumberTitle', 'off');
 setappdata(resultfig, 'cbfig', cbfig);
 

@@ -232,8 +232,8 @@ tfibcell(remove)=[];
 
 % Rescale positive/negative tvals to [0 1]/[-1 0]
 tvalsRescale = tvals;
-tvalsRescale(tvals>0)=ea_minmax(tvals(tvals>0));
-tvalsRescale(tvals<0)=-ea_minmax(-tvals(tvals<0));
+tvalsRescale(tvals>0)=ea_rescale(tvals(tvals>0), [0 1]);
+tvalsRescale(tvals<0)=ea_rescale(tvals(tvals<0), [-1 0]);
 
 % Contruct colormap
 colormap gray

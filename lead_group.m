@@ -422,7 +422,7 @@ catch
 end
 
 options.elmodel=M.elstruct(1).elmodel;
- options=ea_resolve_elspec(options);
+options=ea_resolve_elspec(options);
 options.prefs=ea_prefs(options.patientname);
 options.d3.verbose='on';
 
