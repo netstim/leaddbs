@@ -43,9 +43,11 @@ for pt=allpts
     ea_dispercent(pt/length(allpts));
 end
 ea_dispercent(1,'end');
+loginx=zeros(size(Ihat)); loginx(allpts)=1;
+Ihat(~loginx)=nan; % make sure info of not included patients are not used
 
-ea_corrplot(I,Ihat',{'Disc. Fiber prediction LOOCV','Empirical','Predicted'},'permutation_spearman');
-
+h=ea_corrplot(I,Ihat',{'Disc. Fiber prediction LOOCV','Empirical','Predicted'},'permutation_spearman');
+saveas(h,'my_result.png');
 
 
 
