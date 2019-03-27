@@ -52,7 +52,6 @@ function ea_acpcquery_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_acpcquery (see VARARGIN)
 
-
 earoot=ea_getearoot;
 im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
 image(im);
@@ -72,6 +71,7 @@ guidata(hObject, handles);
 setappdata(hObject,'leadfigure',varargin{3});
 set(hObject,'name','ACPC/MNI-space conversions');
 
+
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_acpcquery_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -80,7 +80,6 @@ function varargout = ea_acpcquery_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-
 
 
 function xmm_Callback(hObject, eventdata, handles)
@@ -105,7 +104,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function ymm_Callback(hObject, eventdata, handles)
 % hObject    handle to ymm (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -126,7 +124,6 @@ function ymm_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function zmm_Callback(hObject, eventdata, handles)
@@ -230,6 +227,7 @@ function ac_Callback(hObject, eventdata, handles)
 set(handles.mc,'Value',~get(handles.ac,'Value'));
 set(handles.pc,'Value',~get(handles.ac,'Value'));
 
+
 % --- Executes on button press in mc.
 function mc_Callback(hObject, eventdata, handles)
 % hObject    handle to mc (see GCBO)
@@ -239,6 +237,7 @@ function mc_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of mc
 set(handles.ac,'Value',~get(handles.mc,'Value'));
 set(handles.pc,'Value',~get(handles.mc,'Value'));
+
 
 % --- Executes on button press in pc.
 function pc_Callback(hObject, eventdata, handles)
@@ -263,6 +262,7 @@ guidata(hObject, handles);
 % Use UIRESUME instead of delete because the OutputFcn needs
 % to get the updated handles structure.
 uiresume(handles.acpcfig);
+
 
 % --- Executes on button press in acpc2mnibutn.
 function acpc2mnibutn_Callback(hObject, eventdata, handles)
@@ -296,12 +296,8 @@ cfg.mapmethod=get(handles.methodm,'Value')-1;
 
 handles.output = cfg;
 
-
 % Update handles structure
 guidata(hObject, handles);
-
-% Use UIRESUME instead of delete because the OutputFcn needs
-% to get the updated handles structure.
 
 switch get(handles.cohortpopup,'Value')
     case 1 % use Lead-DBS specified patients
@@ -316,7 +312,6 @@ end
 
 leaddir=[ea_getearoot];
 tempfile=[ea_space,'t2.nii'];
-
 
 for pt=1:length(fid)
     mnipoints(pt,:)=fid(pt).WarpedPointMNI;
@@ -362,7 +357,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function xmni_Callback(hObject, eventdata, handles)
 % hObject    handle to xmni (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -385,7 +379,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function ymni_Callback(hObject, eventdata, handles)
 % hObject    handle to ymni (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -406,7 +399,6 @@ function ymni_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function zmni_Callback(hObject, eventdata, handles)
@@ -437,7 +429,6 @@ function mni2acpcbutn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
 ea_busyaction('on',handles.acpcfig,'acpc');
 
 cfg.xmm=str2double(get(handles.xmni,'String'));
@@ -452,11 +443,6 @@ elseif get(handles.pc,'Value')
     cfg.acmcpc=3;
 end
 
-
-
-% Use UIRESUME instead of delete because the OutputFcn needs
-% to get the updated handles structure.
-
 switch get(handles.cohortpopup,'Value')
     case 1 % use Lead-DBS specified patients
         leadfigure=getappdata(handles.acpcfig,'leadfigure');
@@ -467,7 +453,6 @@ switch get(handles.cohortpopup,'Value')
         IDs=ea_getIXI_IDs(npts,meanage);
         fid=ea_mni2acpc(cfg,IDs);
 end
-
 
 for pt=1:length(fid)
     acpcpoints(pt,:)=fid(pt).WarpedPointACPC;
@@ -539,7 +524,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function meanageinput_Callback(hObject, eventdata, handles)
 % hObject    handle to meanageinput (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -560,7 +544,6 @@ function meanageinput_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function npatientsinput_Callback(hObject, eventdata, handles)

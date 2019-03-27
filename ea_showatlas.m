@@ -8,8 +8,6 @@ function [atlases,colorbuttons,atlassurfs,atlaslabels] = ea_showatlas(varargin)
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-maxcolor=64; % change to 45 to avoid red / 64 to use all colors
-
 resultfig=varargin{1};
 if nargin==2
     options=varargin{2};
@@ -19,15 +17,13 @@ if nargin>2
     options=varargin{3};
 end
 
-nm=[1:2]; % native and mni
+nm=1:2; % native and mni
 try
     nmind=[options.atl.can,options.atl.ptnative]; % which shall be performed?
 catch
     nmind=[1 0];
 end
 nm=nm(logical(nmind)); % select which shall be performed.
-
-mcr=ea_checkmacaque(options);
 
 for nativemni=nm % switch between native and mni space atlases.
 
@@ -64,10 +60,8 @@ for nativemni=nm % switch between native and mni space atlases.
     if isfield(atlases,'colormap')
         try
             jetlist=eval(atlases.colormap);
-
         catch
             jetlist=atlases.colormap;
-
         end
         %colormap(atlases.colormap);
     else
@@ -93,7 +87,6 @@ for nativemni=nm % switch between native and mni space atlases.
 
     % prepare stats fields
     if options.writeoutstats
-
         for el=1:length(elstruct)
             for side=1:length(elstruct(el).coords_mm)
                 ea_stats.conmat{el,side}=nan(size(elstruct(el).coords_mm{side},1),length(atlases.names));
@@ -109,23 +102,9 @@ for nativemni=nm % switch between native and mni space atlases.
 
     % iterate through atlases, visualize them and write out stats.
     for atlas=1:length(atlases.names)
-
         [~,sidestr]=detsides(atlases.types(atlas));
         for side=detsides(atlases.types(atlas))
-
-            %             if ischar(atlases.pixdim{atlas,side}) % we are dealing with fibers
-            %
-            %                 %[~,alnm]=fileparts(atlases.names{atlas});
-            %                 %                     atlassurfs(atlascnt,fib)=surface([thisfib(:,1);thisfib(:,1)+randn(len,1)*0.1],...
-            %                 %                         [thisfib(:,2);thisfib(:,2)+randn(len,1)*0.1],...
-            %                 %                         [thisfib(:,3);thisfib(:,3)+randn(len,1)*0.1],...
-            %                 %                         [thisfib(:,4);thisfib(:,4)+randn(len,1)*0.1],'facecol','no','edgecol','interp','linew',5);
-            %
-            %
-            %             else
-
             fv=atlases.fv{atlas,side};
-
 
             if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
                 % get to 700 faces
@@ -133,10 +112,8 @@ for nativemni=nm % switch between native and mni space atlases.
                 if simplify < 1 % skip volumes with fewer than 700 faces
                     fv=reducepatch(fv,simplify);
                 end
-
             else
                 if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-
                     fv=reducepatch(fv,options.prefs.hullsimplify);
                 elseif options.prefs.hullsimplify>1
                     simplify=options.prefs.hullsimplify/length(fv.faces);
@@ -185,7 +162,6 @@ for nativemni=nm % switch between native and mni space atlases.
                     centroid=mean(XYZ.mm(:,1:3),1);
                 end
             else
-
                 try
                     centroid=XYZ.mm(:,1:3);
                 catch
@@ -213,18 +189,17 @@ for nativemni=nm % switch between native and mni space atlases.
             % export label and labelbutton
 
             [~,thislabel]=fileparts(atlases.names{atlas});
-%             try % use try here because filename might be shorter than .nii
-%
-%                 if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
+            % try % use try here because filename might be shorter than .nii
+            %     if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
                     [~,thislabel]=fileparts(thislabel);
-%                 end
-%             end
-                atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
+            %     end
+            % end
+            atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
 
-                if ~exist('labelbutton','var')
-                    labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
-                    labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
-                end
+            if ~exist('labelbutton','var')
+                labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
+                labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
+            end
             % make fv compatible for stats
 
             caxis([1 64]);
@@ -235,11 +210,11 @@ for nativemni=nm % switch between native and mni space atlases.
             catch
                 ea_error('Atlas color not found.');
             end
+
             if ~(atlases.types(atlas)>5)
-
                 colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
+            end
 
-                end
             % gather contact statistics
             if options.writeoutstats
                 try
@@ -249,8 +224,8 @@ for nativemni=nm % switch between native and mni space atlases.
                     else % fibertract
                         atsearch=KDTreeSearcher(XYZ.mm(:,1:3));
                     end
-                    for el=1:length(elstruct)
 
+                    for el=1:length(elstruct)
                         [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
                         %s_ix=sideix(side,size(elstruct(el).coords_mm{side},1));
 
@@ -273,7 +248,6 @@ for nativemni=nm % switch between native and mni space atlases.
 
             %normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
             if ~(atlases.types(atlas)>5)
-
                 ea_spec_atlas(atlassurfs(atlascnt,1),atlases.names{atlas},atlases.colormap,setinterpol);
             else
                 pobj.plotFigureH=resultfig;
@@ -322,21 +296,23 @@ for nativemni=nm % switch between native and mni space atlases.
     setappdata(resultfig,'atlht',ht);
     setappdata(resultfig,'labelbutton',labelbutton);
     setappdata(resultfig,'atlaslabels',atlaslabels);
-    %     % save table information that has been generated from nii files (on first run with this atlas set).
-    %     try
-    %         atlases.fv=ifv;
-    %         atlases.cdat=icdat;
-    %         atlases.XYZ=iXYZ;
-    %         atlases.pixdim=ipixdim;
-    %         atlases.colorc=icolorc;
-    %         atlases.normals=normals;
-    %     end
+
+    % save table information that has been generated from nii files (on first run with this atlas set).
+    % try
+    %     atlases.fv=ifv;
+    %     atlases.cdat=icdat;
+    %     atlases.XYZ=iXYZ;
+    %     atlases.pixdim=ipixdim;
+    %     atlases.colorc=icolorc;
+    %     atlases.normals=normals;
+    % end
 
     try
         setappdata(gcf,'atlases',atlases);
-        %        setappdata(gcf,'iXYZ',atlases.XYZ);
-        %        setappdata(gcf,'ipixdim',atlases.pixdim);
+        % setappdata(gcf,'iXYZ',atlases.XYZ);
+        % setappdata(gcf,'ipixdim',atlases.pixdim);
     end
+
     try
         atlases.rebuild=0; % always reset rebuild flag.
         save([adir,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
@@ -366,14 +342,6 @@ co = ea_uisetcolor;
 set(robject,'Color',co);
 
 
-
-
-function C=rgb(C) % returns rgb values for the colors.
-
-C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);
-
-
-
 function atlasvisible(hobj,ev,resultfig,atlscnt,onoff)
 if ~exist('onoff','var')
     onoff=hobj.State;
@@ -382,19 +350,16 @@ end
 atls=getappdata(resultfig,'atlassurfs');
 
 if(getappdata(resultfig,'altpressed'))
-
     cbutn=getappdata(resultfig,'colorbuttons');
     set(cbutn,'State',onoff);
     for el=1:length(atls)
         for side=1:2
-
             for atlshorz=1:size(atls,2)
                 try
                     set(atls(atlscnt,atlshorz), 'Visible', onoff);
                 end
             end
         end
-
     end
 else
     for atlshorz=1:size(atls,2)
@@ -403,8 +368,6 @@ else
         end
     end
 end
-
-
 
 % check if new atlas select window is open:
 figHandles = findobj('Type','figure');
@@ -460,20 +423,6 @@ switch opt
         sides=1:2;
         sidestr={'right','left'};
 end
-
-
-
-function coords=map_coords_proxy(XYZ,V)
-
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';
-
-
-% function six=sideix(side,howmany)
-% howmany=howmany/2;
-% six=side*howmany-(howmany-1):side*howmany;
 
 
 function in = inhull(testpts,xyz,tess,tol)
@@ -673,11 +622,12 @@ blocks = max(1,floor(n/(memblock/nt)));
 aNr = repmat(aN,1,length(1:blocks:n));
 for i = 1:blocks
     j = i:blocks:n;
-    if size(aNr,2) ~= length(j),
+    if size(aNr,2) ~= length(j)
         aNr = repmat(aN,1,length(j));
     end
     in(j) = all((nrmls*testpts(j,:)' - aNr) >= -tol,1)';
 end
+
 
 function sidec=getsidec(side)
 switch side
