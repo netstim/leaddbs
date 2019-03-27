@@ -104,179 +104,308 @@ for nativemni=nm % switch between native and mni space atlases.
     for atlas=1:length(atlases.names)
         [~,sidestr]=detsides(atlases.types(atlas));
         for side=detsides(atlases.types(atlas))
-            fv=atlases.fv{atlas,side};
+            if isnumeric(atlases.pixdim{atlas,side}) || strcmp(atlases.pixdim{atlas,side}, 'fibers')
+                fv=atlases.fv{atlas,side};
 
-            if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
-                % get to 700 faces
-                simplify=700/length(fv.faces);
-                if simplify < 1 % skip volumes with fewer than 700 faces
-                    fv=reducepatch(fv,simplify);
-                end
-            else
-                if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-                    fv=reducepatch(fv,options.prefs.hullsimplify);
-                elseif options.prefs.hullsimplify>1
-                    simplify=options.prefs.hullsimplify/length(fv.faces);
-                    fv=reducepatch(fv,simplify);
-                end
-            end
-
-            rndfactor=1;
-            try
-                switch atlases.names{atlas,side}(end-2:end)
-                    case 'nii'
-                        rndfactor=2;
-                    case {'trk','mat'}
-                        rndfactor=0.2;
-                end
-            end
-
-            try
-                if ~options.prefs.d3.colorjitter
-                    rndfactor=0;
-                end
-            end
-
-            cdat=repmat(atlases.colors(atlas),length(fv.vertices),1); % C-Data for surface
-
-            if size(cdat,2)==1
-                if any(round(cdat)==0) % rounding error for large atlases.
-                    cdat(round(cdat)==0)=1;
-                end
-                cdat=atlases.colormap(round(cdat),:);
-            end
-
-            % add color jitter
-            cdat=cdat+(randn(size(cdat,1),3)*rndfactor);
-
-            XYZ=atlases.XYZ{atlas,side};
-            pixdim=atlases.pixdim{atlas,side};
-            colorc=nan;
-
-            % show atlas label
-
-            if size(XYZ.mm,1)>1 % exception for single-coordinate atlases...
-                try
-                    [~,centroid]=kmeans(XYZ.mm(:,1:3),1);
-                catch
-                    centroid=mean(XYZ.mm(:,1:3),1);
-                end
-            else
-                try
-                    centroid=XYZ.mm(:,1:3);
-                catch
-                    centroid=[0,0,0];
-                    warning('No centroid found.')
-                end
-            end
-            try
-                centroid=centroid(1,:);
-            catch % empty file..
-                break
-            end
-
-            set(0,'CurrentFigure',resultfig);
-
-            visible='on';
-            if isfield(atlases,'presets')
-                if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
-                    visible='off';
-                end
-            end
-            if ~(atlases.types(atlas)>5)
-                atlassurfs(atlascnt,1)=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
-            end
-            % export label and labelbutton
-
-            [~,thislabel]=fileparts(atlases.names{atlas});
-            % try % use try here because filename might be shorter than .nii
-            %     if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
-                    [~,thislabel]=fileparts(thislabel);
-            %     end
-            % end
-            atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
-
-            if ~exist('labelbutton','var')
-                labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
-                labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
-            end
-            % make fv compatible for stats
-
-            caxis([1 64]);
-
-            % prepare colorbutton icon
-            try
-                atlasc=squeeze(jetlist(ceil(atlases.colors(atlas)),:));  % color for toggle button icon
-            catch
-                ea_error('Atlas color not found.');
-            end
-
-            if ~(atlases.types(atlas)>5)
-                colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
-            end
-
-            % gather contact statistics
-            if options.writeoutstats
-                try
-                    if isfield(atlases.XYZ{atlas,side},'val') % volumetric atlas
-                        thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
-                        atsearch=KDTreeSearcher(XYZ.mm(XYZ.val>thresh,:));
-                    else % fibertract
-                        atsearch=KDTreeSearcher(XYZ.mm(:,1:3));
+                if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
+                    % get to 700 faces
+                    simplify=700/length(fv.faces);
+                    if simplify < 1 % skip volumes with fewer than 700 faces
+                        fv=reducepatch(fv,simplify);
                     end
+                else
+                    if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
+                        fv=reducepatch(fv,options.prefs.hullsimplify);
+                    elseif options.prefs.hullsimplify>1
+                        simplify=options.prefs.hullsimplify/length(fv.faces);
+                        fv=reducepatch(fv,simplify);
+                    end
+                end
 
-                    for el=1:length(elstruct)
-                        [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
-                        %s_ix=sideix(side,size(elstruct(el).coords_mm{side},1));
+                rndfactor=1;
+                try
+                    switch atlases.names{atlas,side}(end-2:end)
+                        case 'nii'
+                            rndfactor=2;
+                        case {'trk','mat'}
+                            rndfactor=0.2;
+                    end
+                end
 
-                        ea_stats.conmat{el,side}(:,atlas)=D;
-                        Dh=D;
+                try
+                    if ~options.prefs.d3.colorjitter
+                        rndfactor=0;
+                    end
+                end
 
-                        try
-                            in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
-                            Dh(in)=0;
+                cdat=repmat(atlases.colors(atlas),length(fv.vertices),1); % C-Data for surface
+
+                if size(cdat,2)==1
+                    if any(round(cdat)==0) % rounding error for large atlases.
+                        cdat(round(cdat)==0)=1;
+                    end
+                    cdat=atlases.colormap(round(cdat),:);
+                end
+
+                % add color jitter
+                cdat=cdat+(randn(size(cdat,1),3)*rndfactor);
+
+                XYZ=atlases.XYZ{atlas,side};
+                pixdim=atlases.pixdim{atlas,side};
+                colorc=nan;
+
+                % show atlas label
+
+                if size(XYZ.mm,1)>1 % exception for single-coordinate atlases...
+                    try
+                        [~,centroid]=kmeans(XYZ.mm(:,1:3),1);
+                    catch
+                        centroid=mean(XYZ.mm(:,1:3),1);
+                    end
+                else
+                    try
+                        centroid=XYZ.mm(:,1:3);
+                    catch
+                        centroid=[0,0,0];
+                        warning('No centroid found.')
+                    end
+                end
+                try
+                    centroid=centroid(1,:);
+                catch % empty file..
+                    break
+                end
+
+                set(0,'CurrentFigure',resultfig);
+
+                visible='on';
+                if isfield(atlases,'presets')
+                    if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
+                        visible='off';
+                    end
+                end
+                if ~(atlases.types(atlas)>5)
+                    atlassurfs(atlascnt,1)=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
+                end
+                % export label and labelbutton
+
+                [~,thislabel]=fileparts(atlases.names{atlas});
+                % try % use try here because filename might be shorter than .nii
+                %     if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
+                        [~,thislabel]=fileparts(thislabel);
+                %     end
+                % end
+                atlaslabels(atlas,side)=text(centroid(1),centroid(2),centroid(3),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
+
+                if ~exist('labelbutton','var')
+                    labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
+                    labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
+                end
+                % make fv compatible for stats
+
+                caxis([1 64]);
+
+                % prepare colorbutton icon
+                try
+                    atlasc=squeeze(jetlist(ceil(atlases.colors(atlas)),:));  % color for toggle button icon
+                catch
+                    ea_error('Atlas color not found.');
+                end
+
+                if ~(atlases.types(atlas)>5)
+                    colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
+                end
+
+                % gather contact statistics
+                if options.writeoutstats
+                    try
+                        if isfield(atlases.XYZ{atlas,side},'val') % volumetric atlas
+                            thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
+                            atsearch=KDTreeSearcher(XYZ.mm(XYZ.val>thresh,:));
+                        else % fibertract
+                            atsearch=KDTreeSearcher(XYZ.mm(:,1:3));
                         end
-                        ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
 
-                        D(D<mean(pixdim))=0; % using mean here but assuming isotropic atlases in general..
-                        ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
+                        for el=1:length(elstruct)
+                            [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
+                            %s_ix=sideix(side,size(elstruct(el).coords_mm{side},1));
+
+                            ea_stats.conmat{el,side}(:,atlas)=D;
+                            Dh=D;
+
+                            try
+                                in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
+                                Dh(in)=0;
+                            end
+                            ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
+
+                            D(D<mean(pixdim))=0; % using mean here but assuming isotropic atlases in general..
+                            ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
+                        end
+                    catch
+                        warning('Statistics for tract atlas parts are not implemented yet.');
                     end
-                catch
-                    warning('Statistics for tract atlas parts are not implemented yet.');
                 end
-            end
 
-            %normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
-            if ~(atlases.types(atlas)>5)
-                ea_spec_atlas(atlassurfs(atlascnt,1),atlases.names{atlas},atlases.colormap,setinterpol);
-            else
-                pobj.plotFigureH=resultfig;
-                pobj.color=atlasc;
-                pobj.threshold=0.55;
-                pobj.openedit=1;
-                pobj.htH=ht;
-                obj=ea_roi([ea_space([],'atlases'),options.atlasset,filesep,getsidec(side),filesep,atlases.names{atlas}],pobj);
-                atlassurfs(atlascnt,1)=obj.patchH;
-                colorbuttons(atlascnt)=obj.toggleH;
-            end
+                %normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
+                if ~(atlases.types(atlas)>5)
+                    ea_spec_atlas(atlassurfs(atlascnt,1),atlases.names{atlas},atlases.colormap,setinterpol);
+                else
+                    pobj.plotFigureH=resultfig;
+                    pobj.color=atlasc;
+                    pobj.threshold=0.55;
+                    pobj.openedit=1;
+                    pobj.htH=ht;
+                    obj=ea_roi([ea_space([],'atlases'),options.atlasset,filesep,getsidec(side),filesep,atlases.names{atlas}],pobj);
+                    atlassurfs(atlascnt,1)=obj.patchH;
+                    colorbuttons(atlascnt)=obj.toggleH;
+                end
 
-            % set Tags
-            try
-                set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
-                set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',sidestr{side}])
-                set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlas,side))
-            catch
-                keyboard
-            end
-            atlascnt=atlascnt+1;
+                % set Tags
+                try
+                    set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
+                    set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',sidestr{side}])
+                    set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlas,side))
+                catch
+                    keyboard
+                end
+                atlascnt=atlascnt+1;
 
-            set(gcf,'Renderer','OpenGL')
-            axis off
-            % set(gcf,'color','w');
-            axis equal
+                set(gcf,'Renderer','OpenGL')
+                axis off
+                % set(gcf,'color','w');
+                axis equal
 
-            if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
-                drawnow
+                if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
+                    drawnow
+                end
+            elseif strcmp(atlases.pixdim{atlas,side}, 'discfibers')
+                load([ea_space([],'atlases'),options.atlasset,filesep,getsidec(side,sidestr),filesep,atlases.names{atlas}]);
+
+                showfibersset = discfiberssetting.showfibersset;
+                pospredthreshold = discfiberssetting.pospredthreshold/100;
+                negpredthreshold = discfiberssetting.negpredthreshold/100;
+
+                % Normalize vals
+                vals(isnan(vals))=0;
+                % vals=vals./max(abs(vals));
+
+                % vals and fibcell to be trimmed for visualization
+                tvals=vals;
+                tfibcell=fibcell;
+
+                % Calculate positive/negative threshold for positive/negative predictive
+                % fibers according to 'predthreshold'
+                posits=tvals(tvals>0);
+                negits=tvals(tvals<0);
+                posits=sort(posits,'descend');
+                negits=sort(negits,'ascend');
+                posthresh=posits(round(length(posits)*pospredthreshold));
+                negthresh=negits(round(length(negits)*negpredthreshold));
+
+                % Save the original values for reusing in slider
+                setappdata(resultfig, 'vals', vals);
+                setappdata(resultfig, 'fibcell', fibcell);
+                setappdata(resultfig, 'showfibersset', showfibersset);
+                setappdata(resultfig, 'pospredthreshold', pospredthreshold);
+                setappdata(resultfig, 'negpredthreshold', negpredthreshold);
+                setappdata(resultfig, 'posits', posits);
+                setappdata(resultfig, 'negits', negits);
+
+                switch showfibersset
+                    case 'positive'
+                        negthresh = negits(1)-eps;
+                        disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ')']);
+                    case 'negative'
+                        posthresh = posits(1)+eps;
+                        disp(['Fiber colors: Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh), ')']);
+                    case 'both'
+                        disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ...
+                          '); Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh),').']);
+                end
+
+                % Remove tvals and fibers outside the thresholding range
+                remove=logical(logical(tvals<posthresh) .* logical(tvals>negthresh));
+                tvals(remove)=[];
+                tfibcell(remove)=[];
+
+                % Rescale positive/negative tvals to [0 1]/[-1 0]
+                tvalsRescale = tvals;
+                tvalsRescale(tvals>0)=ea_rescale(tvals(tvals>0), [0 1]);
+                tvalsRescale(tvals<0)=ea_rescale(tvals(tvals<0), [-1 0]);
+
+                % Contruct colormap
+                colormap gray
+                map=ea_redblue(1024);
+                fibcolorInd=tvalsRescale*(size(map,1)/2-0.5);
+                fibcolorInd=fibcolorInd+(size(map,1)/2+0.5);
+
+                % Set alphas of fibers with light color to 0
+                colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
+                negUpperBound=ceil(size(map,1)/2*colorbarThreshold);
+                poslowerBound=floor((size(map,1)-size(map,1)/2*colorbarThreshold));
+                alphas=zeros(size(fibcolorInd,1),1);
+                switch showfibersset
+                    case 'positive'
+                        alphas(round(fibcolorInd)>=poslowerBound) = 1;
+                    case 'negative'
+                        alphas(round(fibcolorInd)<=negUpperBound) = 1;
+                    case 'both'
+                        alphas(round(fibcolorInd)>=poslowerBound) = 1;
+                        alphas(round(fibcolorInd)<=negUpperBound) = 1;
+                end
+
+                alphas(round(fibcolorInd)>=poslowerBound) = 1;
+                fibalpha=mat2cell(alphas,ones(size(fibcolorInd,1),1));
+
+                % Plot fibers
+                h=streamtube(tfibcell,0.2);
+                nones=repmat({'none'},size(fibcolorInd));
+                [h.EdgeColor]=nones{:};
+
+                % Calulate fiber colors
+                colors=map(round(fibcolorInd),:);
+                fibcolor=mat2cell(colors,ones(size(fibcolorInd)));
+
+                % Set fiber colors and alphas
+                [h.FaceColor]=fibcolor{:};
+                [h.FaceAlpha]=fibalpha{:};
+
+                setappdata(resultfig, 'discfibers', h);
+
+                % Set colorbar tick positions and labels
+                cbvals = tvals(logical(alphas));
+                % cbvals=tvalsRescale(logical(alphas));
+                switch showfibersset
+                    case 'positive'
+                        cbmap = map(ceil(length(map)/2+0.5):end,:);
+                        tick = [poslowerBound, length(map)] - floor(length(map)/2) ;
+                        poscbvals = sort(cbvals(cbvals>0));
+                        ticklabel = [poscbvals(1), poscbvals(end)];
+                        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+                    case 'negative'
+                        cbmap = map(1:floor(length(map)/2-0.5),:);
+                        tick = [1, negUpperBound];
+                        negcbvals = sort(cbvals(cbvals<0));
+                        ticklabel = [negcbvals(1), negcbvals(end)];
+                        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+                    case 'both'
+                        cbmap = map;
+                        tick = [1, negUpperBound, poslowerBound, length(map)];
+                        poscbvals = sort(cbvals(cbvals>0));
+                        negcbvals = sort(cbvals(cbvals<0));
+                        ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
+                        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+                end
+
+                % Plot colorbar
+                cbfig = ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel);
+                set(cbfig, 'NumberTitle', 'off');
+                setappdata(resultfig, 'cbfig', cbfig);
+
+                % Discriminative fiber control
+                discfiberscontrol = ea_discfibers_control(resultfig);
+                setappdata(resultfig, 'discfiberscontrol', discfiberscontrol);
             end
         end
     end
@@ -401,9 +530,9 @@ else
 end
 
 
-function [sides,sidestr]=detsides(opt)
+function [sides,sidestr]=detsides(type)
 
-switch opt
+switch type
     case 1 % right hemispheric atlas
         sides=1;
         sidestr={'right'};
@@ -422,6 +551,19 @@ switch opt
     case 6 % probabilistic
         sides=1:2;
         sidestr={'right','left'};
+end
+
+
+function sidec=getsidec(side, sidestr)
+switch side
+    case 1
+        if ~exist('sidestr', 'var')
+            sidec='rh';
+        elseif strcmp(sidestr{side}, 'midline')
+            sidec='midline';
+        end
+    case 2
+        sidec='lh';
 end
 
 
@@ -626,13 +768,4 @@ for i = 1:blocks
         aNr = repmat(aN,1,length(j));
     end
     in(j) = all((nrmls*testpts(j,:)' - aNr) >= -tol,1)';
-end
-
-
-function sidec=getsidec(side)
-switch side
-    case 1
-        sidec='rh';
-    case 2
-        sidec='lh';
 end
