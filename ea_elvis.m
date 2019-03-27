@@ -330,7 +330,7 @@ corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
 if options.d3.writeatlases
     atlases = ea_showatlas(resultfig,elstruct,options);
 
-    if ~strcmp(options.d3.verbose,'off')
+    if ~strcmp(options.d3.verbose,'off') && ~atlases.discfibersonly
         ea_openatlascontrol([],[],atlases,resultfig,options);
     end
 

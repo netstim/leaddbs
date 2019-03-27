@@ -46,6 +46,13 @@ for nativemni=nm % switch between native and mni space atlases.
         atlases=ea_genatlastable(atlases,ea_space(options,'atlases'),options,mifix);
     end
 
+    isdiscfibers = cellfun(@(x) ischar(x) && strcmp(x, 'discfibers'), atlases.pixdim);
+    if all(sum(isdiscfibers,2))
+        atlases.discfibersonly = 1;
+    else
+        atlases.discfibersonly = 0;
+    end
+
     if options.writeoutstats
         try
             load([options.root,options.patientname,filesep,'ea_stats']);
@@ -77,13 +84,15 @@ for nativemni=nm % switch between native and mni space atlases.
 
     setinterpol=1;
 
-    ht=getappdata(resultfig,'atlht');
-    if ~isempty(ht) % sweep nonempty atlases toolbar
-        delete(ht.Children(:));
-    else
-        ht=uitoolbar(resultfig);
+    if ~atlases.discfibersonly
+        ht=getappdata(resultfig,'atlht');
+        if ~isempty(ht) % sweep nonempty atlases toolbar
+            delete(ht.Children(:));
+        else
+            ht=uitoolbar(resultfig);
+        end
+        atlcntbutton=uipushtool(ht,'CData',ea_get_icn('atlases'),'Tag','Atlas Control','TooltipString','Atlas Control Figure','ClickedCallback',{@ea_openatlascontrol,atlases,resultfig,options});
     end
-    atlcntbutton=uipushtool(ht,'CData',ea_get_icn('atlases'),'Tag','Atlas Control','TooltipString','Atlas Control Figure','ClickedCallback',{@ea_openatlascontrol,atlases,resultfig,options});
 
     % prepare stats fields
     if options.writeoutstats
@@ -411,20 +420,22 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     % configure label button to work properly and hide labels as default.
-    atlabelsvisible([],[],atlaslabels(:),'off');
-    if ~isfield(atlases,'presets')
-        set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(:),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(:),'off'},'State','off');
-    else
-        presetShow = atlases.presets(atlases.defaultset).show;
-        set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(presetShow),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(presetShow),'off'},'State','off');
-    end
-    set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
+    if ~atlases.discfibersonly % Doesn't exist for pure discfibers atlas
+        atlabelsvisible([],[],atlaslabels(:),'off');
+        if ~isfield(atlases,'presets')
+            set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(:),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(:),'off'},'State','off');
+        else
+            presetShow = atlases.presets(atlases.defaultset).show;
+            set(labelbutton,'OnCallback',{@atlabelsvisible,atlaslabels(presetShow),'on'},'OffCallback',{@atlabelsvisible,atlaslabels(presetShow),'off'},'State','off');
+        end
+        set(labelcolorbutton,'ClickedCallback',{@setlabelcolor,atlaslabels});
 
-    setappdata(resultfig,'atlassurfs',atlassurfs);
-    setappdata(resultfig,'colorbuttons',colorbuttons);
-    setappdata(resultfig,'atlht',ht);
-    setappdata(resultfig,'labelbutton',labelbutton);
-    setappdata(resultfig,'atlaslabels',atlaslabels);
+        setappdata(resultfig,'atlassurfs',atlassurfs);
+        setappdata(resultfig,'colorbuttons',colorbuttons);
+        setappdata(resultfig,'atlht',ht);
+        setappdata(resultfig,'labelbutton',labelbutton);
+        setappdata(resultfig,'atlaslabels',atlaslabels);
+    end
 
     % save table information that has been generated from nii files (on first run with this atlas set).
     % try
