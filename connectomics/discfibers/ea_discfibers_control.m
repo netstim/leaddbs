@@ -300,7 +300,7 @@ switch showfibersset
 end
 
 % Plot colorbar
-cbfig = ea_plot_colorbar(cbmap, [], 'v', '', tick, ticklabel);
+cbfig = ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel);
 set(cbfig, 'NumberTitle', 'off');
 setappdata(resultfig, 'cbfig', cbfig);
 

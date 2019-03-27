@@ -1,7 +1,5 @@
 function ea_discfibers_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted)
 
-
-
 I=M.clinical.vars{M.ui.clinicallist}(M.ui.listselect);
 
 % Get discriminative fiber setting
@@ -18,11 +16,11 @@ opts.allpatients=M.patient.list;
 opts.mirrorsides=M.ui.mirrorsides;
 opts.statmetric=statmetric;
 
-
 patlist=M.patient.list(M.ui.listselect);
 showfibersset = discfiberssetting.showfibersset;
 pospredthreshold = discfiberssetting.pospredthreshold/100;
 negpredthreshold = discfiberssetting.negpredthreshold/100;
+
 [reforce,connectomechanged,reformat]=ea_discfibers_checkpresence(M,opts); % only static opts need to be equal.
 switch statmetric
     case 1 % ttests
