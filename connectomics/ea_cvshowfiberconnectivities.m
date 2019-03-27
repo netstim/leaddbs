@@ -417,6 +417,13 @@ for side=1:length(options.sides)
 
             clear thisfib
         end
+        if strcmp(options.prefs.d3.fiberstyle,'tube')		
+             fv=ea_concatfv(fv);		
+             set(0,'CurrentFigure',resultfig);		
+             PL.fib_plots.fibs(side,1)=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.2);		
+             set(PL.fib_plots.fibs(side,1),'FaceVertexCData', get(PL.fib_plots.fibs(side,1),'FaceVertexCData'));		
+             PL.fib_plots.fibs(:,2:end)=[];		
+         end
 
         dispercent(100,'end');
 

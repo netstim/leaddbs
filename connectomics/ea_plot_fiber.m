@@ -9,7 +9,8 @@ switch options.prefs.d3.fiberstyle
         streamFaceColors(:,:,2) = repmat(thisfib(5,:)',1, numpol+1);
         streamFaceColors(:,:,3) = repmat(thisfib(6,:)',1, numpol+1);
         set(h, 'FaceColor', 'interp', 'CData', streamFaceColors, 'CDataMapping', 'direct', 'EdgeColor', 'none', 'FaceAlpha', 0.2);
-        fv = nan;       
+        fv = surf2patch(h);
+        delete(h);
     case 'line'
         h=surface([thisfib(1,:);thisfib(1,:)],...
             [thisfib(2,:);thisfib(2,:)],...
