@@ -450,9 +450,9 @@ for nativemni=nm % switch between native and mni space atlases.
     % end
 
     try
-        setappdata(gcf,'atlases',atlases);
-        % setappdata(gcf,'iXYZ',atlases.XYZ);
-        % setappdata(gcf,'ipixdim',atlases.pixdim);
+        setappdata(resultfig,'atlases',atlases);
+        % setappdata(resultfig,'iXYZ',atlases.XYZ);
+        % setappdata(resultfig,'ipixdim',atlases.pixdim);
     end
 
     try
