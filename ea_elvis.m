@@ -382,6 +382,7 @@ end
 %% End of patient's part.
 
 % Initialize a draggable lightbulb
+set(0,'CurrentFigure',resultfig);
 hold on
 ea_show_light(resultfig,1);
 % set(lightbulb, 'Visible', 'off');
