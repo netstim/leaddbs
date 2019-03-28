@@ -503,9 +503,9 @@ switch side
 end
 vatgrad = vatgrad(side);
 save(vatfvname,'vatfv','vatgrad','vatvolume');
-%% new vta.nii save, filled and eroded/dilated by 5 voxels.
+%% new vta.nii save, filled and eroded/dilated by 3 voxels.
 Vvat.img=imfill(Vvat.img,'holes');
-SE = strel('sphere',5);
+SE = strel('sphere',3);
 Vvat.img = imerode(Vvat.img,SE);
 Vvat.img = imdilate(Vvat.img,SE);
 ea_write_nii(Vvat);
