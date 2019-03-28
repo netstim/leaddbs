@@ -407,13 +407,15 @@ for nativemni=nm % switch between native and mni space atlases.
                         ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
                 end
 
+                figTitle = [strrep(atlases.names{atlas}, '.mat', ''), ' discfibers'];
                 % Plot colorbar
                 cbfig = ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel);
-                set(cbfig, 'NumberTitle', 'off');
+                set(cbfig, 'NumberTitle', 'off', 'Name', ['Colorbar: ', figTitle]);
                 setappdata(resultfig, 'cbfig', cbfig);
 
                 % Discriminative fiber control
                 discfiberscontrol = ea_discfibers_control(resultfig);
+                set(discfiberscontrol, 'NumberTitle', 'off', 'Name', ['Control: ', figTitle]);
                 setappdata(resultfig, 'discfiberscontrol', discfiberscontrol);
             end
         end
