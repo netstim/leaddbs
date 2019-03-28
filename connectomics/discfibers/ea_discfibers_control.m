@@ -76,7 +76,7 @@ set(handles.showfiberssetpanel, 'SelectionChangedFcn', {@showfiberssetChanged, h
 %% threshold slider:
 jSlider{1} = javax.swing.JSlider(0,100);
 posthreshLabelPos = get(handles.posthresholdLabel, 'Position');
-javacomponent(jSlider{1},[posthreshLabelPos(1)-6,posthreshLabelPos(2)-45,300,45]);
+javacomponent(jSlider{1},[posthreshLabelPos(1)-6,posthreshLabelPos(2)-45,320,45]);
 set(jSlider{1}, 'Name', 'posthresholdSlider', 'Value', pospredthreshold,...
     'Background', java.awt.Color(1,1,1),...
     'MajorTickSpacing', 0.1, 'PaintLabels',true);
@@ -87,7 +87,7 @@ set(hjSlider{1}, 'StateChangedCallback', {@sliderThresholdChangeTxt, handles});
 
 jSlider{2} = javax.swing.JSlider(0,100);
 negthreshLabelPos = get(handles.negthresholdLabel, 'Position');
-javacomponent(jSlider{2},[negthreshLabelPos(1)-6,negthreshLabelPos(2)-45,300,45]);
+javacomponent(jSlider{2},[negthreshLabelPos(1)-6,negthreshLabelPos(2)-45,320,45]);
 set(jSlider{2}, 'Name', 'negthresholdSlider', 'Value', negpredthreshold,...
     'Background', java.awt.Color(1,1,1),...
     'MajorTickSpacing', 0.1, 'PaintLabels',true);
@@ -128,7 +128,7 @@ varargout{1} = handles.output;
 function showfiberssetChanged(hObject, eventdata, handles, resultfig)
 % Update showfibersset setting
 hjSlider = getappdata(handles.discfiberscontrol, 'hjSlider');
-switch get(get(handles.showfiberssetpanel, 'SelectedObject'), 'Tag')
+switch eventdata.NewValue.Tag
     case 'showposonly'
         showfibersset = 'positive';
         hjSlider{1}.setEnabled(1);
@@ -141,6 +141,19 @@ switch get(get(handles.showfiberssetpanel, 'SelectedObject'), 'Tag')
         showfibersset = 'both';
         hjSlider{1}.setEnabled(1);
         hjSlider{2}.setEnabled(1);
+    case 'shownone'
+        showfibersset = 'none';
+        set(handles.shownone, 'Value', 1);
+        hjSlider{1}.setEnabled(0);
+        hjSlider{2}.setEnabled(0);
+        setappdata(resultfig, 'showfiberssetOldValue', eventdata.OldValue.Tag);
+end
+
+if strcmp(eventdata.OldValue.Tag, 'shownone')
+    setappdata(resultfig, 'discfiberwashidden', 1);
+    setappdata(resultfig, 'showfiberssetNewValue', eventdata.NewValue.Tag);
+else
+    setappdata(resultfig, 'discfiberwashidden', 0);
 end
 
 % predthreshold values remain the same as in the resultfig
@@ -196,115 +209,128 @@ end
 
 
 function updateDiscFibers(resultfig, showfibersset, pospredthreshold, negpredthreshold)
-% Delete previous discfibers and colorbar
-delete(getappdata(resultfig, 'discfibers'));
-delete(getappdata(resultfig, 'cbfig'));
 
-% Set current figure to update discfibers
-set(0, 'CurrentFigure', resultfig);
+% Hidden/Unhidden fibers
+discfibers = getappdata(resultfig, 'discfibers');
+cbfig = getappdata(resultfig, 'cbfig');
+if strcmp(showfibersset, 'none')
+    arrayfun(@(f) set(f, 'Visible', 'off'), discfibers);
+    set(cbfig, 'Visible', 'off');
+elseif getappdata(resultfig, 'discfiberwashidden') && ...
+       strcmp(getappdata(resultfig, 'showfiberssetNewValue'), getappdata(resultfig, 'showfiberssetOldValue'))
+    arrayfun(@(f) set(f, 'Visible', 'on'), discfibers);
+    set(cbfig, 'Visible', 'on');
+else
+    % Delete previous discfibers and colorbar
+    delete(getappdata(resultfig, 'discfibers'));
+    delete(getappdata(resultfig, 'cbfig'));
 
-% vals and fibcell to be trimmed for visualization
-tvals = getappdata(resultfig, 'vals');
-tfibcell = getappdata(resultfig, 'fibcell');
+    % Set current figure to update discfibers
+    set(0, 'CurrentFigure', resultfig);
 
-% Determine threshold
-posits = getappdata(resultfig, 'posits');
-negits = getappdata(resultfig, 'negits');
-posthresh=posits(round(length(posits)*pospredthreshold));
-negthresh=negits(round(length(negits)*negpredthreshold));
+    % vals and fibcell to be trimmed for visualization
+    tvals = getappdata(resultfig, 'vals');
+    tfibcell = getappdata(resultfig, 'fibcell');
 
-switch showfibersset
-    case 'positive'
-        negthresh = negits(1)-eps;
-        disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ')']);
-    case 'negative'
-        posthresh = posits(1)+eps;
-        disp(['Fiber colors: Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh), ')']);
-    case 'both'
-        disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ...
-          '); Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh),').']);
+    % Determine threshold
+    posits = getappdata(resultfig, 'posits');
+    negits = getappdata(resultfig, 'negits');
+    posthresh=posits(round(length(posits)*pospredthreshold));
+    negthresh=negits(round(length(negits)*negpredthreshold));
+
+    switch showfibersset
+        case 'positive'
+            negthresh = negits(1)-eps;
+            disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ')']);
+        case 'negative'
+            posthresh = posits(1)+eps;
+            disp(['Fiber colors: Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh), ')']);
+        case 'both'
+            disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ...
+              '); Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh),').']);
+    end
+
+    % Remove tvals and fibers outside the thresholding range
+    remove=logical(logical(tvals<posthresh) .* logical(tvals>negthresh));
+    tvals(remove)=[];
+    tfibcell(remove)=[];
+
+    % Rescale positive/negative tvals to [0 1]/[-1 0]
+    tvalsRescale = tvals;
+    tvalsRescale(tvals>0)=ea_rescale(tvals(tvals>0), [0 1]);
+    tvalsRescale(tvals<0)=ea_rescale(tvals(tvals<0), [-1 0]);
+
+    % Contruct colormap
+    colormap gray
+    map=ea_redblue(1024);
+    fibcolorInd=tvalsRescale*(size(map,1)/2-0.5);
+    fibcolorInd=fibcolorInd+(size(map,1)/2+0.5);
+
+    % Set alphas of fibers with light color to 0
+    colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
+    negUpperBound=ceil(size(map,1)/2*colorbarThreshold);
+    poslowerBound=floor((size(map,1)-size(map,1)/2*colorbarThreshold));
+    alphas=zeros(size(fibcolorInd,1),1);
+    switch showfibersset
+        case 'positive'
+            alphas(round(fibcolorInd)>=poslowerBound) = 1;
+        case 'negative'
+            alphas(round(fibcolorInd)<=negUpperBound) = 1;
+        case 'both'
+            alphas(round(fibcolorInd)>=poslowerBound) = 1;
+            alphas(round(fibcolorInd)<=negUpperBound) = 1;
+    end
+
+    alphas(round(fibcolorInd)>=poslowerBound) = 1;
+    fibalpha=mat2cell(alphas,ones(size(fibcolorInd,1),1));
+
+    % Plot fibers
+    h=streamtube(tfibcell,0.2);
+    nones=repmat({'none'},size(fibcolorInd));
+    [h.EdgeColor]=nones{:};
+
+    % Calulate fiber colors
+    colors=map(round(fibcolorInd),:);
+    fibcolor=mat2cell(colors,ones(size(fibcolorInd)));
+
+    % Set fiber colors and alphas
+    [h.FaceColor]=fibcolor{:};
+    [h.FaceAlpha]=fibalpha{:};
+
+    setappdata(resultfig, 'discfibers', h);
+
+    % Set colorbar tick positions and labels
+    cbvals = tvals(logical(alphas));
+    % cbvals=tvalsRescale(logical(alphas));
+    switch showfibersset
+        case 'positive'
+            cbmap = map(ceil(length(map)/2+0.5):end,:);
+            tick = [poslowerBound, length(map)] - floor(length(map)/2) ;
+            poscbvals = sort(cbvals(cbvals>0));
+            ticklabel = [poscbvals(1), poscbvals(end)];
+            ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+        case 'negative'
+            cbmap = map(1:floor(length(map)/2-0.5),:);
+            tick = [1, negUpperBound];
+            negcbvals = sort(cbvals(cbvals<0));
+            ticklabel = [negcbvals(1), negcbvals(end)];
+            ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+        case 'both'
+            cbmap = map;
+            tick = [1, negUpperBound, poslowerBound, length(map)];
+            poscbvals = sort(cbvals(cbvals>0));
+            negcbvals = sort(cbvals(cbvals<0));
+            ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
+            ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+    end
+
+    % Plot colorbar
+    cbfig = ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel);
+    set(cbfig, 'NumberTitle', 'off');
+    setappdata(resultfig, 'cbfig', cbfig);
+
+    % Update appdata in resultfig
+    setappdata(resultfig, 'showfibersset', showfibersset);
+    setappdata(resultfig, 'pospredthreshold', pospredthreshold);
+    setappdata(resultfig, 'negpredthreshold', negpredthreshold);
 end
-
-% Remove tvals and fibers outside the thresholding range
-remove=logical(logical(tvals<posthresh) .* logical(tvals>negthresh));
-tvals(remove)=[];
-tfibcell(remove)=[];
-
-% Rescale positive/negative tvals to [0 1]/[-1 0]
-tvalsRescale = tvals;
-tvalsRescale(tvals>0)=ea_rescale(tvals(tvals>0), [0 1]);
-tvalsRescale(tvals<0)=ea_rescale(tvals(tvals<0), [-1 0]);
-
-% Contruct colormap
-colormap gray
-map=ea_redblue(1024);
-fibcolorInd=tvalsRescale*(size(map,1)/2-0.5);
-fibcolorInd=fibcolorInd+(size(map,1)/2+0.5);
-
-% Set alphas of fibers with light color to 0
-colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
-negUpperBound=ceil(size(map,1)/2*colorbarThreshold);
-poslowerBound=floor((size(map,1)-size(map,1)/2*colorbarThreshold));
-alphas=zeros(size(fibcolorInd,1),1);
-switch showfibersset
-    case 'positive'
-        alphas(round(fibcolorInd)>=poslowerBound) = 1;
-    case 'negative'
-        alphas(round(fibcolorInd)<=negUpperBound) = 1;
-    case 'both'
-        alphas(round(fibcolorInd)>=poslowerBound) = 1;
-        alphas(round(fibcolorInd)<=negUpperBound) = 1;
-end
-
-alphas(round(fibcolorInd)>=poslowerBound) = 1;
-fibalpha=mat2cell(alphas,ones(size(fibcolorInd,1),1));
-
-% Plot fibers
-h=streamtube(tfibcell,0.2);
-nones=repmat({'none'},size(fibcolorInd));
-[h.EdgeColor]=nones{:};
-
-% Calulate fiber colors
-colors=map(round(fibcolorInd),:);
-fibcolor=mat2cell(colors,ones(size(fibcolorInd)));
-
-% Set fiber colors and alphas
-[h.FaceColor]=fibcolor{:};
-[h.FaceAlpha]=fibalpha{:};
-
-setappdata(resultfig, 'discfibers', h);
-
-% Set colorbar tick positions and labels
-cbvals = tvals(logical(alphas));
-% cbvals=tvalsRescale(logical(alphas));
-switch showfibersset
-    case 'positive'
-        cbmap = map(ceil(length(map)/2+0.5):end,:);
-        tick = [poslowerBound, length(map)] - floor(length(map)/2) ;
-        poscbvals = sort(cbvals(cbvals>0));
-        ticklabel = [poscbvals(1), poscbvals(end)];
-        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-    case 'negative'
-        cbmap = map(1:floor(length(map)/2-0.5),:);
-        tick = [1, negUpperBound];
-        negcbvals = sort(cbvals(cbvals<0));
-        ticklabel = [negcbvals(1), negcbvals(end)];
-        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-    case 'both'
-        cbmap = map;
-        tick = [1, negUpperBound, poslowerBound, length(map)];
-        poscbvals = sort(cbvals(cbvals>0));
-        negcbvals = sort(cbvals(cbvals<0));
-        ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
-        ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-end
-
-% Plot colorbar
-cbfig = ea_plot_colorbar(cbmap, [], 'v', '', tick, ticklabel);
-set(cbfig, 'NumberTitle', 'off');
-setappdata(resultfig, 'cbfig', cbfig);
-
-% Update appdata in resultfig
-setappdata(resultfig, 'showfibersset', showfibersset);
-setappdata(resultfig, 'pospredthreshold', pospredthreshold);
-setappdata(resultfig, 'negpredthreshold', negpredthreshold);

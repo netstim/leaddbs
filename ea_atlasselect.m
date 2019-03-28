@@ -119,7 +119,8 @@ end
 try
     if ~isfield(atlases,'subgroups')
         atlases.subgroups(1).label='Structures';
-        atlases.subgroups(1).entries=1:length(atlases.names);
+        isdiscfibers = cellfun(@(x) ischar(x) && strcmp(x, 'discfibers'), atlases.pixdim);
+        atlases.subgroups(1).entries=find(~sum(isdiscfibers,2)');
     end
 catch
     keyboard
@@ -179,7 +180,7 @@ for subgroup=1:length(atlases.subgroups)
         if (atlases.types(atlases.subgroups(subgroup).entries(node))==3) || (atlases.types(atlases.subgroups(subgroup).entries(node))==4) || (atlases.types(atlases.subgroups(subgroup).entries(node))==6) % need lh and rh entries
             [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
             try
-            checked=onoff2bool(togglebuttons(thistb).State);
+                checked=onoff2bool(togglebuttons(thistb).State);
             catch
                 keyboard
             end

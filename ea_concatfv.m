@@ -25,7 +25,6 @@ if reduce
     ea_dispercent(1,'end');
 end
 
-
 if ~usecork
     vertlen=cellfun(@length,{fv.vertices});
     facelen=cellfun(@length,{fv.faces});
@@ -37,9 +36,8 @@ if ~usecork
     foffset=1;
     voffset=1;
     fcoffset=1;
-    fprintf('\n\n');
-    ea_dispercent(0,'Concatenating patch');
 
+    ea_dispercent(0,'Concatenating patch');
     for f=1:length(fv)
         fsize=size(fv(f).faces,1);
         vsize=size(fv(f).vertices,1);
