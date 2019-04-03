@@ -25,14 +25,14 @@ function [results, resultTable] = runTestSuite(testNames)
 % Author:
 %    - Thomas Pfau Jan 2018.
 
-global PACERDIR
+global LEADDBSDIR
 
 if ~exist('testNames','var')
     testNames = '.*';
 end
 
 % go to the test directory.
-testDir = [PACERDIR filesep 'test'];
+testDir = [LEADDBSDIR filesep 'test'];
 currentDir = cd(testDir);
 
 % get all names of test files
