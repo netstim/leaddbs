@@ -125,6 +125,14 @@ switch showfibersset
 end
 
 alphas(round(fibcolorInd)>=poslowerBound) = 1;
+
+% only show right side
+% for i=1:length(tfibcell)
+%     if any(tfibcell{i}(:,1)<0)
+%         alphas(i) = 0;
+%     end
+% end
+
 fibalpha=mat2cell(alphas,ones(size(fibcolorInd,1),1));
 
 % Plot fibers
@@ -175,6 +183,7 @@ setappdata(resultfig, 'cbfig', cbfig);
 % Discriminative fiber control
 discfiberscontrol = ea_discfibers_control(resultfig);
 setappdata(resultfig, 'discfiberscontrol', discfiberscontrol);
+set(0,'CurrentFigure',resultfig)
 
 
 function str=pointtodash(str)
