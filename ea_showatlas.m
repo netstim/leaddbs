@@ -417,6 +417,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 discfiberscontrol = ea_discfibers_control(resultfig);
                 set(discfiberscontrol, 'NumberTitle', 'off', 'Name', ['Control: ', figTitle]);
                 setappdata(resultfig, 'discfiberscontrol', discfiberscontrol);
+                set(0,'CurrentFigure',resultfig)
             end
         end
     end

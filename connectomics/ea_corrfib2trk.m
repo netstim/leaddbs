@@ -1,7 +1,7 @@
-function ea_corrfib2trk(reformatted_corrfibs, sel)
+function ea_corrfib2trk(reformatted_corrfibs, sel, outputName)
 % Convert correlative fibertracts to trk file
 
-if nargin < 2
+if nargin < 2 || isempty(sel)
     sel = 'both';
 end
 
@@ -25,6 +25,12 @@ else % 'sel' is a threshold
     suffix = ['_th', num2str(sel)];
 end
 
+if nargin < 3
+    outputName = ['corrFTR', suffix];
+else
+    outputName = strrep(outputName, '.mat', '');
+end
+
 fibcell = fibcell(selInd);
 
 % Construct fibers for trk conversion
@@ -45,8 +51,8 @@ if isempty(fileparts(reformatted_corrfibs))
 else
     outputDir = fileparts(reformatted_corrfibs);
 end
-save(fullfile(outputDir, ['corrFTR', suffix, '.mat']), ...
+save(fullfile(outputDir, outputName), ...
      'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', '-v7.3');
 
 % FTR to TRK conversion
-ea_ftr2trk(['corrFTR', suffix], outputDir);
+ea_ftr2trk(outputName, outputDir);

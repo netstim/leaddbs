@@ -5,8 +5,7 @@ varargout{2}=0;
 try
     if isfield(varargin{1},'macaquemodus') % options have been entered
         options=varargin{1};
-        
-        
+
         varargout{1}='';
         if options.macaquemodus
             varargout{1}=['toolbox',filesep,'macaque',filesep];
@@ -20,14 +19,10 @@ try
         else
             varargout{1}='';
         end
-        
-        
     end
-    
-    
+
     if nargin>1
         if exist([ea_getearoot,'toolbox',filesep,'macaque'],'file')
-            
             varargout{2}=1;
         else
             varargout{2}=0;
