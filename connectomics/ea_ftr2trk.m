@@ -25,7 +25,7 @@ if ~exist('specs','var')
     specs.affine=dnii.mat;
     header.pad2='RAS ';
 else
-    header.pad2=[aff2axcodes(specs.affine), ' '];
+    header.pad2=[ea_aff2axcodes(specs.affine), ' '];
 end
 
 if strcmp(voxmm,'vox')
@@ -342,7 +342,7 @@ if version == 2
 end
 
 if set_order
-    trk_hdr.voxel_order = aff2axcodes(affine);
+    trk_hdr.voxel_order = ea_aff2axcodes(affine);
 end
 
 % affine to go from DICOM LPS to MNI RAS space
