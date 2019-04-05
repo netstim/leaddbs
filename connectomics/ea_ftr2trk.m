@@ -14,16 +14,20 @@ else % direct ftr import
     ftrfilename{1}=[];
 end
 
+%% set header
+[header, ~]=ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
+
 if ~exist('specs','var')
     dnii=ea_load_nii([ea_space,'t1.nii']);
     specs.origin=[0,0,0];
     specs.dim=size(dnii.img);
     specs.vox=dnii.voxsize;
     specs.affine=dnii.mat;
+    header.pad2='RAS ';
+else
+    header.pad2=[aff2axcodes(specs.affine), ' '];
 end
 
-%% set header
-[header, ~]=ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
 if strcmp(voxmm,'vox')
     if ~isempty(mat)
         if isempty(specs.affine)
