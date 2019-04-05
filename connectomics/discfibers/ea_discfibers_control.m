@@ -216,7 +216,7 @@ cbfig = getappdata(resultfig, 'cbfig');
 if strcmp(showfibersset, 'none')
     arrayfun(@(f) set(f, 'Visible', 'off'), discfibers);
     set(cbfig, 'Visible', 'off');
-elseif getappdata(resultfig, 'discfiberwashidden') && ...
+elseif ~isempty(getappdata(resultfig, 'discfiberwashidden')) && ...
        strcmp(getappdata(resultfig, 'showfiberssetNewValue'), getappdata(resultfig, 'showfiberssetOldValue'))
     arrayfun(@(f) set(f, 'Visible', 'on'), discfibers);
     set(cbfig, 'Visible', 'on');
