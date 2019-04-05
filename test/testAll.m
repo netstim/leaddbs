@@ -1,10 +1,5 @@
 % load the different environment variables
-global refDataPath
-global inputDataPath
-global PACERDIR
-
-refDataPath = [getenv('PACER_DATA_PATH') filesep 'ref'];
-inputDataPath = [getenv('PACER_DATA_PATH') filesep 'input'];
+global LEADDBSDIR
 
 % request explicitly from the user to launch test suite locally
 if isempty(strfind(getenv('HOME'), 'jenkins'))
@@ -29,15 +24,15 @@ end
 origDir = pwd;
 
 % if the location of pacer is not yet known
-if isempty(which('SETUP_PACER.m'))
+if isempty(which('lead.m'))
    % move back to the root of the repository
    cd([fileparts(which('testAll.m')) filesep '..'])
 
    % assign the path
-   PACERDIR = pwd;
+   LEADDBSDIR = pwd;
 else
-   PACERDIR = fileparts(which('SETUP_PACER.m'));
-   cd(PACERDIR);
+   LEADDBSDIR = fileparts(which('lead.m'));
+   cd(LEADDBSDIR);
 end
 
 % include the root folder and all subfolders.
@@ -53,10 +48,10 @@ if launchTestSuite
         COVERAGE = false;
     end
 
-    SETUP_PACER
+    lead
 
     % change to the test folder
-    currentDir = cd([PACERDIR filesep 'test']);
+    currentDir = cd([LEADDBSDIR filesep 'test']);
     testDirContent = getFilesInDir('type', 'all');  % Get all currently present files in the folder.
     testDirPath = pwd;
     cd(currentDir);
