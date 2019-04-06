@@ -397,6 +397,13 @@ elseif strcmp(fname(end-3:end),'.mat')
         structure.idx=idx;
     elseif ~isempty(fieldnames(load(fname, 'vals'))) % discriminative fibers
         structure.isdiscfibers = 1;
+        % Set default discfiberssetting if not found in the mat.
+        if isempty(fieldnames(load(fname, 'discfiberssetting')))
+            discfiberssetting.showfibersset = 'positive';
+            discfiberssetting.pospredthreshold = 5;
+            discfiberssetting.negpredthreshold = 5;
+            save(fname, 'discfiberssetting', '-append');
+        end
     end
     if wasgzip
         delete(fname); % since gunzip makes a copy of the zipped file.

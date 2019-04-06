@@ -215,11 +215,15 @@ discfibers = getappdata(resultfig, 'discfibers');
 cbfig = getappdata(resultfig, 'cbfig');
 if strcmp(showfibersset, 'none')
     arrayfun(@(f) set(f, 'Visible', 'off'), discfibers);
-    set(cbfig, 'Visible', 'off');
+    if isvalid(cbfig)
+        set(cbfig, 'Visible', 'off');
+    end
 elseif ~isempty(getappdata(resultfig, 'discfiberwashidden')) && ...
        strcmp(getappdata(resultfig, 'showfiberssetNewValue'), getappdata(resultfig, 'showfiberssetOldValue'))
     arrayfun(@(f) set(f, 'Visible', 'on'), discfibers);
-    set(cbfig, 'Visible', 'on');
+    if isvalid(cbfig)
+        set(cbfig, 'Visible', 'on');
+    end
 else
     % Delete previous discfibers and colorbar
     delete(getappdata(resultfig, 'discfibers'));
