@@ -1,8 +1,11 @@
 function [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_calcdiscfibers(M,discfiberssetting)
 
 I=M.clinical.vars{M.ui.clinicallist}(M.ui.listselect);
-
-efieldthresh=150; % hard coded for now, only apply for heatfibertracts_corr
+try
+    efieldthresh=discfiberssetting.efieldthresh;
+catch
+    efieldtresh=150;
+end
 tic
 
 % Get discriminative fiber setting

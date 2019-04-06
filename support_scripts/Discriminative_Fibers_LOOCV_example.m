@@ -1,5 +1,6 @@
 load('/path/to/your/LEAD_groupanalysis.mat'); % this creates variable M
 M.ui.connectomename='HCP_MGH_30fold_groupconnectome (Horn 2017)'; % ... which can be modified afterwards
+M.ui.listselect=1:length(M.patient.list); % usually helpful to create the model for all patients but then use only the ones defined in the script to run the analyses.
 prefs=ea_prefs;
 
 %% static part - usually no need to edit - can edit it by configuring lead group file correctly and closing it.
@@ -28,7 +29,7 @@ for pt=allpts
         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
             thisptval=fibsval(:,pt); % this patients connections to each fibertract (1 = connected, 0 = unconnected)
             optsval=fibsval(:,opts); % all other patients connections to each fibertract
-            allvals=repmat(I',size(optsval,1),1); % improvement values (taken from Lead group file or specified in line 12).
+            allvals=repmat(I(opts)',size(optsval,1),1); % improvement values (taken from Lead group file or specified in line 12).
             fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
             fibsimpval(~logical(optsval))=nan; % Delete all unconnected values
             nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
@@ -42,9 +43,11 @@ for pt=allpts
     ea_dispercent(pt/length(allpts));
 end
 ea_dispercent(1,'end');
+loginx=zeros(size(Ihat)); loginx(allpts)=1;
+Ihat(~loginx)=nan; % make sure info of not included patients are not used
 
-ea_corrplot(I,Ihat',{'Disc. Fiber prediction LOOCV','Empirical','Predicted'},'permutation_spearman');
-
+h=ea_corrplot(I,Ihat',{'Disc. Fiber prediction LOOCV','Empirical','Predicted'},'permutation_spearman');
+saveas(h,'my_result.png');
 
 
 

@@ -28,7 +28,7 @@ end
 usefa=1;
 usebrainmask=0;
 
-ea_checkcoregallmri(options,usebrainmask)
+%ea_checkcoregallmri(options,usebrainmask)
 
 directory=[options.root,options.patientname,filesep];
 cnt=1;
