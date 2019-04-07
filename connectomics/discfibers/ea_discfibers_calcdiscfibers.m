@@ -4,7 +4,7 @@ I=M.clinical.vars{M.ui.clinicallist}(M.ui.listselect);
 try
     efieldthresh=discfiberssetting.efieldthresh;
 catch
-    efieldtresh=150;
+    efieldthresh=150;
 end
 tic
 

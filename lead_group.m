@@ -1762,28 +1762,37 @@ function detachbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 choice = questdlg('Would you really like to detach the group data from the single-patient data? This means that changes to single-patient reconstructions will not be updated into the group analysis anymore. This should only be done once all patients have been finally localized and an analysis needs to be fixed (e.g. after publication or when working in collaborations). Please be aware that this step cannot be undone!', ...
     'Detach Group data from single patient data...', ...
-    'No, abort.','Yes, sure!','No, abort.');
+    'No, abort.','Yes, sure!','Yes and copy localizations/VTAs please.','No, abort.');
 % Handle response
 switch choice
     case 'No, abort.'
         return
-    case 'Yes, sure!'
-
+    case {'Yes, sure!','Yes and copy localizations/VTAs please.'}
+        
         M=getappdata(gcf,'M');
-
+        ea_dispercent(0,'Detaching group file');
         for pt=1:length(M.patient.list)
-
             slashes=strfind(M.patient.list{pt},'/');
             if isempty(slashes)
                 slashes=strfind(M.patient.list{pt},'\');
             end
             ptname=M.patient.list{pt}(max(slashes)+1:end);
-
+            if strcmp('Yes and copy localizations/VTAs please.',choice)
+                odir=[M.ui.groupdir,ptname,filesep];
+                ea_mkdir([odir,'stimulations']);
+                copyfile([M.patient.list{pt},filesep,'ea_reconstruction.mat'],[odir,'ea_reconstruction.mat']);
+                copyfile([M.patient.list{pt},filesep,'stimulations',filesep,'gs_',M.guid],[odir,'stimulations',filesep,'gs_',M.guid]);
+            end
+            
+            
+            
             M.patient.list{pt}=ptname;
-
+            
+            ea_dispercent(pt/length(M.patient.list));
         end
+        ea_dispercent(1,'end');
         M.ui.detached=1;
-
+        
 end
 
 setappdata(gcf,'M',M);
