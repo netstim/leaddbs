@@ -433,9 +433,11 @@ end
 %     'ClickedCallback',{@ea_export_server,options});
 
 % add default view buttons
-uipushtool(ht, 'TooltipString', 'Save current view as default',...
+uipushtool(ht, 'CData',ea_get_icn('defaultviewsave'),...
+    'TooltipString', 'Save current view as default',...
     'ClickedCallback',@save_defaultview_callback);
-uipushtool(ht, 'TooltipString', 'Display default view',...
+uipushtool(ht, 'CData',ea_get_icn('defaultviewset'),...
+    'TooltipString', 'Display default view',...
     'ClickedCallback',@set_defaultview_callback);
 
 
@@ -559,7 +561,7 @@ function set_defaultview_callback(source,eventdata)
 prefs = ea_prefs;
 v = prefs.machine.v;
 togglestates = prefs.machine.togglestates;
-% ea_defaultview_transition(v,togglestates);
+%ea_defaultview_transition(v,togglestates);
 ea_defaultview(v,togglestates);
 
 function export_video(hobj,ev,options)
