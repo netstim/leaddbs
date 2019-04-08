@@ -432,6 +432,14 @@ end
 %     'TooltipString','Export to Server',...
 %     'ClickedCallback',{@ea_export_server,options});
 
+% add default view buttons
+uipushtool(ht, 'TooltipString', 'Save current view as default',...
+    'ClickedCallback',@save_defaultview_callback);
+uipushtool(ht, 'TooltipString', 'Display default view',...
+    'ClickedCallback',@set_defaultview_callback);
+
+
+
 hold off
 
 set(0,'CurrentFigure',resultfig);
@@ -539,6 +547,19 @@ end
 
 delete(gcf)
 
+
+% default view buttons callback
+
+function save_defaultview_callback(source,eventdata)
+% call ea_defaultview so current view is saved
+ea_defaultview()
+
+function set_defaultview_callback(source,eventdata)
+% get stored default view preferences and call ea_defaultview
+prefs = ea_prefs;
+v = prefs.machine.v;
+togglestates = prefs.machine.togglestates;
+ea_defaultview(v,togglestates)
 
 function export_video(hobj,ev,options)
 
