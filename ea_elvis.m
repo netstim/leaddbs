@@ -559,7 +559,8 @@ function set_defaultview_callback(source,eventdata)
 prefs = ea_prefs;
 v = prefs.machine.v;
 togglestates = prefs.machine.togglestates;
-ea_defaultview(v,togglestates)
+% ea_defaultview_transition(v,togglestates);
+ea_defaultview(v,togglestates);
 
 function export_video(hobj,ev,options)
 
