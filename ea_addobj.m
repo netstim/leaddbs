@@ -122,6 +122,10 @@ function addroi(addobj,resultfig,addht,fina,options)
 % set cdata
 c = ea_uisetcolor;
 
+if numel(c)==1 && c==0
+    return;
+end
+
 % load nifti
 nii=ea_load_nii(addobj);
 nii.img(isnan(nii.img))=0;
