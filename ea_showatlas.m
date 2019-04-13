@@ -312,14 +312,16 @@ for nativemni=nm % switch between native and mni space atlases.
                 posthresh=posits(round(length(posits)*pospredthreshold));
                 negthresh=negits(round(length(negits)*negpredthreshold));
 
+                discfiberID = strrep(atlases.names{atlas}, '.mat', '');
+
                 % Save the original values for reusing in slider
-                setappdata(resultfig, 'vals', vals);
-                setappdata(resultfig, 'fibcell', fibcell);
-                setappdata(resultfig, 'showfibersset', showfibersset);
-                setappdata(resultfig, 'pospredthreshold', pospredthreshold);
-                setappdata(resultfig, 'negpredthreshold', negpredthreshold);
-                setappdata(resultfig, 'posits', posits);
-                setappdata(resultfig, 'negits', negits);
+                setappdata(resultfig, ['vals',discfiberID], vals);
+                setappdata(resultfig, ['fibcell',discfiberID], fibcell);
+                setappdata(resultfig, ['showfibersset',discfiberID], showfibersset);
+                setappdata(resultfig, ['pospredthreshold',discfiberID], pospredthreshold);
+                setappdata(resultfig, ['negpredthreshold',discfiberID], negpredthreshold);
+                setappdata(resultfig, ['posits',discfiberID], posits);
+                setappdata(resultfig, ['negits',discfiberID], negits);
 
                 switch showfibersset
                     case 'positive'
@@ -380,8 +382,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 [h.FaceColor]=fibcolor{:};
                 [h.FaceAlpha]=fibalpha{:};
 
-                setappdata(resultfig, 'discfibers', h);
-
                 % Set colorbar tick positions and labels
                 cbvals = tvals(logical(alphas));
                 % cbvals=tvalsRescale(logical(alphas));
@@ -407,16 +407,23 @@ for nativemni=nm % switch between native and mni space atlases.
                         ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
                 end
 
-                figTitle = [strrep(atlases.names{atlas}, '.mat', ''), ' discfibers'];
+                figTitle = [discfiberID, ' discfibers'];
+                discfibersname = ['discfibers', discfiberID];
+                cbfigname = ['cbfig', discfiberID];
+                discfiberscontrolname = ['discfiberscontrol', discfiberID];
+
                 % Plot colorbar
                 cbfig = ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel);
                 set(cbfig, 'NumberTitle', 'off', 'Name', ['Colorbar: ', figTitle]);
-                setappdata(resultfig, 'cbfig', cbfig);
 
                 % Discriminative fiber control
-                discfiberscontrol = ea_discfibers_control(resultfig);
+                discfiberscontrol = ea_discfibers_control(resultfig, discfiberID);
                 set(discfiberscontrol, 'NumberTitle', 'off', 'Name', ['Control: ', figTitle]);
-                setappdata(resultfig, 'discfiberscontrol', discfiberscontrol);
+                setappdata(discfiberscontrol, 'discfiberID', discfiberID);
+
+                setappdata(resultfig, discfibersname, h);
+                setappdata(resultfig, cbfigname, cbfig);
+                setappdata(resultfig, discfiberscontrolname, discfiberscontrol);
                 set(0,'CurrentFigure',resultfig)
             end
         end
