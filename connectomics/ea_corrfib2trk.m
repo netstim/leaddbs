@@ -55,4 +55,4 @@ save(fullfile(outputDir, outputName), ...
      'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', '-v7.3');
 
 % FTR to TRK conversion
-ea_ftr2trk(outputName, outputDir);
+ea_ftr2trk(fullfile(outputDir, outputName));

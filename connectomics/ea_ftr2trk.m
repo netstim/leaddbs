@@ -1,29 +1,37 @@
-function ea_ftr2trk(ftrfilename,directory,specs)
+function ea_ftr2trk(ftrfile, specs)
 % export FTR matrix to TrackVis trk format
+%
+% specs can also be the path of the nifti file which defines the space.
 
-if directory(end) ~= filesep
-    directory = [directory, filesep];
+[directory, ftrname, ext] = fileparts(ftrfile);
+if isempty(directory)
+    directory = '.';
+end
+if isempty(ext)
+    ftrfile = [ftrfile, '.mat'];
 end
 
-if ischar(ftrfilename)
-    disp('Loading FTR-File...');
-    [fibs,idx,voxmm,mat]=ea_loadfibertracts([directory,ftrfilename,'.mat']);
-else % direct ftr import
-    ea_error('Direct FTR import not supported at present.');
-    fibs=ftrfilename{1};
-    ftrfilename{1}=[];
-end
+disp('Loading FTR-File...');
+[fibs,idx,voxmm,mat]=ea_loadfibertracts(ftrfile);
 
 %% set header
 [header, ~]=ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
 
-if ~exist('specs','var')
-    dnii=ea_load_nii([ea_space,'t1.nii']);
+if ~exist('specs','var') % Use MNI T1 as reference space by default.
+    nii=ea_load_nii([ea_space,'t1.nii']);
     specs.origin=[0,0,0];
-    specs.dim=size(dnii.img);
-    specs.vox=dnii.voxsize;
-    specs.affine=dnii.mat;
+    specs.dim=size(nii.img);
+    specs.vox=nii.voxsize;
+    specs.affine=nii.mat;
     header.pad2=['RAS', char(0)];
+elseif ischar(specs) && exist(specs, 'file') % Use the specified nifti as reference space.
+    nii=ea_load_nii(specs);
+    specs=struct;
+    specs.origin=[0,0,0];
+    specs.dim=size(nii.img);
+    specs.vox=nii.voxsize;
+    specs.affine=nii.mat;
+    header.pad2=[ea_aff2axcodes(specs.affine), char(0)];
 else
     header.pad2=[ea_aff2axcodes(specs.affine), char(0)];
 end
@@ -96,11 +104,7 @@ end
 
 %% write .trk file
 disp('Writing trk file...');
-if ischar(ftrfilename)
-    ea_trk_write(header,tracks,[directory,ftrfilename,'.trk']);
-else
-    ea_trk_write(header,tracks,[directory,ftrfilename{2},'.trk']);
-end
+ea_trk_write(header,tracks,[directory,filesep,ftrname,'.trk']);
 
 disp('Conversion finished.');
 
