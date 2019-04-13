@@ -34,7 +34,7 @@ end
 
 resultfig=figure('name', [options.patientname,': Electrode-Scene'],...
     'color', 'k', 'numbertitle', 'off',...
-    'CloseRequestFcn', @closesattelites, 'visible', options.d3.verbose,...
+    'CloseRequestFcn', @closesatellites, 'visible', options.d3.verbose,...
     'KeyPressFcn', @ea_keypress, 'KeyReleaseFcn', @ea_keyrelease);
 setappdata(resultfig,'options',options);
 set(resultfig,'toolbar','none');
@@ -497,47 +497,9 @@ setappdata(resultfig,'awin',awin);
 try WinOnTop(awin,true); end
 
 
-function closesattelites(src,evnt)
-stimwin=getappdata(gcf,'stimwin');
-try
-    close(stimwin)
-end
-
-awin=getappdata(gcf,'awin');
-try
-    close(awin)
-end
-
-aswin=getappdata(gcf,'aswin');
-try
-
-    close(aswin)
-end
-conwin=getappdata(gcf,'conwin');
-try
-    close(conwin)
-end
-
-mercontrolfig = getappdata(gcf, 'mercontrolfig');
-try
-    close(mercontrolfig)
-end
-
-trajcontrolfig=getappdata(gcf,'trajcontrolfig');
-try
-    close(trajcontrolfig)
-end
-
-cbfig=getappdata(gcf,'cbfig');
-try
-    close(cbfig)
-end
-
-discfiberscontrol=getappdata(gcf,'discfiberscontrol');
-try
-    close(discfiberscontrol)
-end
-
+function closesatellites(src,evnt)
+% Close all valid satellite windows
+structfun(@(f) isa(f, 'matlab.ui.Figure') && isvalid(f) && close(f), getappdata(gcf));
 delete(gcf)
 
 
