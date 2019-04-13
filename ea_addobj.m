@@ -122,6 +122,10 @@ function addroi(addobj,resultfig,addht,fina,options)
 % set cdata
 c = ea_uisetcolor;
 
+if numel(c)==1 && c==0
+    return;
+end
+
 % load nifti
 nii=ea_load_nii(addobj);
 nii.img(isnan(nii.img))=0;
@@ -166,6 +170,20 @@ else
     elseif options.prefs.hullsimplify>1
         simplify=options.prefs.hullsimplify/length(fv.faces);
         fv=reducepatch(fv,simplify);
+    end
+end
+
+try
+    fv=ea_smoothpatch(fv,1,35);
+catch
+    try
+        cd([ea_getearoot,'ext_libs',filesep,'smoothpatch']);
+        mex ea_smoothpatch_curvature_double.c -v
+        mex ea_smoothpatch_inversedistance_double.c -v
+        mex ea_vertex_neighbours_double.c -v
+        fv=ea_smoothpatch(fv);
+    catch
+        warndlg('Patch could not be smoothed. Please supply a compatible Matlab compiler to smooth VTAs.');
     end
 end
 
@@ -358,8 +376,6 @@ if ~isempty(AL.FTS) % only build fibertracking menu if there is at least one fib
     end
 end
 
-
-
 axis fill
 % store in figure.
 
@@ -398,17 +414,13 @@ if bin
 end
 
 
-
-
-
-
-
 function coords=map_coords_proxy(XYZ,V)
 
 XYZ=[XYZ';ones(1,size(XYZ,1))];
 
 coords=V.mat*XYZ;
 coords=coords(1:3,:)';
+
 
 function indcol=detcolor(mat) % determine color based on traversing direction.
 

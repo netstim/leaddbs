@@ -89,17 +89,8 @@ parametersFT.textdisplay=true;
 fibers=ea_FT(FA,VectorF,Xmask,parametersFT);
 save([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized],'fibers');
 
-
 %% export .trk copy for trackvis visualization
-dnii=ea_load_nii([directory,options.prefs.b0]);
-niisize=size(dnii.img); % get dimensions of reference template.
-specs.origin=[0,0,0];
-specs.dim=niisize;
-specs.vox=dnii.voxsize;
-specs.affine=dnii.mat;
-
-[~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
-ea_ftr2trk(ftrfname,directory,specs); % export normalized ftr to .trk
+ea_b0ftr2trk([directory,options.prefs.FTR_unnormalized],[directory,options.prefs.b0]); % export unnormalized ftr to .trk
 disp('Done.');
 
 %% add methods dump:
@@ -108,5 +99,3 @@ cits={
     };
 ea_methods(options,['A whole-brain fiber-set was estimated based using a freely-available deterministic diffusion tensor imaging approach as implemented by Dirk Jan-Kroon (https://www.mathworks.com/matlabcentral/fileexchange/21130-dti-and-fiber-tracking).',...
     ' This was done within a white-matter mask that was estimated on the anatomical scan using the Unified Segmentation approach (Ashburner 2005) as implemented in ',spm('ver'),' and linearly co-registered to the b0-weighted series.'],cits);
-
-

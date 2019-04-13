@@ -139,19 +139,9 @@ mesoGT_tool('start');
 movefile([directory,dfn,'_FTR.mat'],[directory,options.prefs.FTR_unnormalized]);
 delete(findobj('tag','fiberGT_main'))
 
-
 %% export .trk copy for trackvis visualization
-dnii=nifti([directory,options.prefs.b0]);
-niisize=size(dnii.dat); % get dimensions of reference template.
-specs.origin=[0,0,0];
-specs.dim=niisize;
-specs.affine=dnii.mat;
-
-[~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
-ea_ftr2trk(ftrfname,directory,specs); % export unnormalized ftr to .trk
+ea_b0ftr2trk([directory,options.prefs.FTR_unnormalized],[directory,options.prefs.b0]); % export unnormalized ftr to .trk
 disp('Done.');
-
-
 
 %% add methods dump:
 cits={'Konopleva, L., Ilyasov, K. A., Skibbe, H., Kiselev, V. G., Kellner, E., Dhital, B., & Reisert, M. (2018). Modelfree global tractography. NeuroImage. http://doi.org/10.1016/j.neuroimage.2018.03.058'
