@@ -62,9 +62,10 @@ guidata(hObject, handles);
 % uiwait(handles.discfiberscontrol);
 
 resultfig = varargin{1};
-showfibersset = getappdata(resultfig, 'showfibersset');
-pospredthreshold = round(getappdata(resultfig, 'pospredthreshold')*100);
-negpredthreshold = round(getappdata(resultfig, 'negpredthreshold')*100);
+discfiberID = varargin{2};
+showfibersset = getappdata(resultfig, ['showfibersset',discfiberID]);
+pospredthreshold = round(getappdata(resultfig, ['pospredthreshold',discfiberID])*100);
+negpredthreshold = round(getappdata(resultfig, ['negpredthreshold',discfiberID])*100);
 
 % Set current figure to draw slider
 set(0, 'CurrentFigure', handles.discfiberscontrol);
@@ -126,6 +127,7 @@ varargout{1} = handles.output;
 
 
 function showfiberssetChanged(hObject, eventdata, handles, resultfig)
+discfiberID = getappdata(handles.discfiberscontrol, 'discfiberID');
 % Update showfibersset setting
 hjSlider = getappdata(handles.discfiberscontrol, 'hjSlider');
 switch eventdata.NewValue.Tag
@@ -146,21 +148,21 @@ switch eventdata.NewValue.Tag
         set(handles.shownone, 'Value', 1);
         hjSlider{1}.setEnabled(0);
         hjSlider{2}.setEnabled(0);
-        setappdata(resultfig, 'showfiberssetOldValue', eventdata.OldValue.Tag);
+        setappdata(resultfig, ['showfiberssetOldValue',discfiberID], eventdata.OldValue.Tag);
 end
 
 if strcmp(eventdata.OldValue.Tag, 'shownone')
-    setappdata(resultfig, 'discfiberwashidden', 1);
-    setappdata(resultfig, 'showfiberssetNewValue', eventdata.NewValue.Tag);
+    setappdata(resultfig, ['discfiberwashidden',discfiberID], 1);
+    setappdata(resultfig, ['showfiberssetNewValue',discfiberID], eventdata.NewValue.Tag);
 else
-    setappdata(resultfig, 'discfiberwashidden', 0);
+    setappdata(resultfig, ['discfiberwashidden',discfiberID], 0);
 end
 
 % predthreshold values remain the same as in the resultfig
-pospredthreshold = getappdata(resultfig, 'pospredthreshold');
-negpredthreshold = getappdata(resultfig, 'negpredthreshold');
+pospredthreshold = getappdata(resultfig, ['pospredthreshold',discfiberID]);
+negpredthreshold = getappdata(resultfig, ['negpredthreshold',discfiberID]);
 
-updateDiscFibers(resultfig, showfibersset, pospredthreshold, negpredthreshold)
+updateDiscFibers(resultfig, discfiberID, showfibersset, pospredthreshold, negpredthreshold)
 
 
 function sliderThresholdChangeTxt(hObject, eventdata, handles)
@@ -178,6 +180,7 @@ end
 
 function sliderThresholdChange(hObject, eventdata, handles, resultfig)
 slider = hObject;
+discfiberID = getappdata(handles.discfiberscontrol, 'discfiberID');
 
 if slider.Enabled
     sliderThresholdChangeTxt(hObject, eventdata, handles);
@@ -196,49 +199,55 @@ if slider.Enabled
         case 'posthresholdSlider'
             % negpredthreshold value remains the same as in the resultfig
             pospredthreshold = slider.Value/100;
-            negpredthreshold = getappdata(resultfig, 'negpredthreshold');
+            negpredthreshold = getappdata(resultfig, ['negpredthreshold',discfiberID]);
         case 'negthresholdSlider'
             % pospredthreshold value remains the same as in the resultfig
-            pospredthreshold = getappdata(resultfig, 'pospredthreshold');
+            pospredthreshold = getappdata(resultfig, ['pospredthreshold',discfiberID]);
             negpredthreshold = slider.Value/100;
     end
 
-    updateDiscFibers(resultfig, showfibersset, pospredthreshold, negpredthreshold);
+    updateDiscFibers(resultfig, discfiberID, showfibersset, pospredthreshold, negpredthreshold);
     set(0, 'CurrentFigure', handles.discfiberscontrol);
 end
 
 
-function updateDiscFibers(resultfig, showfibersset, pospredthreshold, negpredthreshold)
+function updateDiscFibers(resultfig, discfiberID, showfibersset, pospredthreshold, negpredthreshold)
+
+discfibersname = ['discfibers', discfiberID];
+cbfigname = ['cbfig', discfiberID];
+discfiberscontrolname = ['discfiberscontrol', discfiberID];
 
 % Hidden/Unhidden fibers
-discfibers = getappdata(resultfig, 'discfibers');
-cbfig = getappdata(resultfig, 'cbfig');
+discfibers = getappdata(resultfig, discfibersname);
+cbfig = getappdata(resultfig, cbfigname);
+cbfigTitle = cbfig.Name;
+
 if strcmp(showfibersset, 'none')
     arrayfun(@(f) set(f, 'Visible', 'off'), discfibers);
     if isvalid(cbfig)
         set(cbfig, 'Visible', 'off');
     end
-elseif ~isempty(getappdata(resultfig, 'discfiberwashidden')) && ...
-       strcmp(getappdata(resultfig, 'showfiberssetNewValue'), getappdata(resultfig, 'showfiberssetOldValue'))
+elseif ~isempty(getappdata(resultfig, ['discfiberwashidden',discfiberID])) && ...
+       strcmp(getappdata(resultfig, ['showfiberssetNewValue',discfiberID]), getappdata(resultfig, ['showfiberssetOldValue',discfiberID]))
     arrayfun(@(f) set(f, 'Visible', 'on'), discfibers);
     if isvalid(cbfig)
         set(cbfig, 'Visible', 'on');
     end
 else
     % Delete previous discfibers and colorbar
-    delete(getappdata(resultfig, 'discfibers'));
-    delete(getappdata(resultfig, 'cbfig'));
+    delete(getappdata(resultfig, discfibersname));
+    delete(getappdata(resultfig, cbfigname));
 
     % Set current figure to update discfibers
     set(0, 'CurrentFigure', resultfig);
 
     % vals and fibcell to be trimmed for visualization
-    tvals = getappdata(resultfig, 'vals');
-    tfibcell = getappdata(resultfig, 'fibcell');
+    tvals = getappdata(resultfig, ['vals',discfiberID]);
+    tfibcell = getappdata(resultfig, ['fibcell',discfiberID]);
 
     % Determine threshold
-    posits = getappdata(resultfig, 'posits');
-    negits = getappdata(resultfig, 'negits');
+    posits = getappdata(resultfig, ['posits',discfiberID]);
+    negits = getappdata(resultfig, ['negits',discfiberID]);
     posthresh=posits(round(length(posits)*pospredthreshold));
     negthresh=negits(round(length(negits)*negpredthreshold));
 
@@ -301,8 +310,6 @@ else
     [h.FaceColor]=fibcolor{:};
     [h.FaceAlpha]=fibalpha{:};
 
-    setappdata(resultfig, 'discfibers', h);
-
     % Set colorbar tick positions and labels
     cbvals = tvals(logical(alphas));
     % cbvals=tvalsRescale(logical(alphas));
@@ -330,11 +337,12 @@ else
 
     % Plot colorbar
     cbfig = ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel);
-    set(cbfig, 'NumberTitle', 'off');
-    setappdata(resultfig, 'cbfig', cbfig);
+    set(cbfig, 'NumberTitle', 'off', 'Name', cbfigTitle);
 
     % Update appdata in resultfig
-    setappdata(resultfig, 'showfibersset', showfibersset);
-    setappdata(resultfig, 'pospredthreshold', pospredthreshold);
-    setappdata(resultfig, 'negpredthreshold', negpredthreshold);
+    setappdata(resultfig, discfibersname, h);
+    setappdata(resultfig, cbfigname, cbfig);
+    setappdata(resultfig, ['showfibersset',discfiberID], showfibersset);
+    setappdata(resultfig, ['pospredthreshold',discfiberID], pospredthreshold);
+    setappdata(resultfig, ['negpredthreshold',discfiberID], negpredthreshold);
 end
