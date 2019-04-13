@@ -78,20 +78,19 @@ clear fibinfo
 fibers=fibers';
 b0=spm_vol([options.root,options.patientname,filesep,options.prefs.b0]);
 
-% default is a x- and y-flip as per communication with fang-cheng yeh
-% 07-13-2016
-
+% Default orientation in dsi_studio and trackvis is LPS, flip the
+% coordinate when needed.
 if b0.mat(1)>0
     % flip x
-    fibers(:,1)=(b0.dim(1))-fibers(:,1);
+    fibers(:,1)=b0.dim(1)-fibers(:,1);
 end
 if b0.mat(6)>0
     %flip y
-    fibers(:,2)=(b0.dim(2))-fibers(:,2);
+    fibers(:,2)=b0.dim(2)-fibers(:,2);
 end
 if b0.mat(11)<0
     %flip z
-    fibers(:,3)=(b0.dim(3))-fibers(:,3);
+    fibers(:,3)=b0.dim(3)-fibers(:,3);
 end
 
 if vizz
@@ -125,6 +124,9 @@ ftr.voxmm='vox';
 disp('Saving fibers...');
 save([options.root,options.patientname,filesep,ftrbase,'.mat'],'-struct','ftr','-v7.3');
 disp('Done.');
+
+fprintf('\nGenerating trk in b0 space...\n');
+ea_b0ftr2trk([options.root,options.patientname,filesep,ftrbase,'.mat'], [options.root,options.patientname,filesep,options.prefs.b0])
 
 
 function ea_prepare_fib_gqi(dsistudio,btable,mean_diffusion_distance_ratio,options)
