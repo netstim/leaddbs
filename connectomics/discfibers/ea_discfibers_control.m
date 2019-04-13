@@ -220,7 +220,6 @@ discfiberscontrolname = ['discfiberscontrol', discfiberID];
 % Hidden/Unhidden fibers
 discfibers = getappdata(resultfig, discfibersname);
 cbfig = getappdata(resultfig, cbfigname);
-cbfigTitle = cbfig.Name;
 
 if strcmp(showfibersset, 'none')
     arrayfun(@(f) set(f, 'Visible', 'off'), discfibers);
@@ -336,8 +335,13 @@ else
     end
 
     % Plot colorbar
+    if isempty(discfiberID)
+        figTitle = 'discfibers';
+    else
+        figTitle = [discfiberID, ' discfibers'];
+    end
     cbfig = ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel);
-    set(cbfig, 'NumberTitle', 'off', 'Name', cbfigTitle);
+    set(cbfig, 'NumberTitle', 'off', 'Name', ['Colorbar: ', figTitle]);
 
     % Update appdata in resultfig
     setappdata(resultfig, discfibersname, h);
