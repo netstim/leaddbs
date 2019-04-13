@@ -1,8 +1,16 @@
-function ea_b0ftr2trk(FTRfile, b0image)
+function ea_b0ftr2trk(ftrfile, b0image)
 % Convert FTR in b0 space to TRK
 %
 % Handle the orientation problem, thus the orientation of the TRK will be
 % the same as the b0 image.
+
+[directory, ftrname, ext] = fileparts(ftrfile);
+if isempty(directory)
+    directory = '.';
+end
+if isempty(ext)
+    ftrfile = [ftrfile, '.mat'];
+end
 
 b0 = ea_load_nii(b0image);
 niisize = size(b0.img);
@@ -14,11 +22,11 @@ disp('Checking orientation...');
 orient = ea_aff2axcodes(specs.affine);
 disp(['b0 orientation: ', orient]);
 
-ftr = load(FTRfile);
+ftr = load(ftrfile);
 if ~isfield(ftr, 'voxmm')
     disp('Fixing voxmm field...');
     voxmm = 'vox';
-    save(FTRfile, 'voxmm', '-append');
+    save(ftrfile, 'voxmm', '-append');
     ftr.voxmm = 'vox';
 end
 
@@ -39,13 +47,8 @@ if ~strcmp(orient(3), 'S')
     ftr.fibers(:,3) = b0.dim(3)-ftr.fibers(:,3);
 end
 
-[path, name] = fileparts(FTRfile);
-if isempty(path)
-    path = '.';
-end
+save(fullfile(directory,['b0', ftrname, '.mat']), '-struct', 'ftr', '-v7.3');
+ea_ftr2trk(fullfile(directory,['b0',ftrname,'.mat']), specs);
 
-save(fullfile(path, ['b0', name, '.mat']), '-struct', 'ftr', '-v7.3');
-ea_ftr2trk(['b0', name], path, specs);
-
-ea_delete(fullfile(path, ['b0', name, '.mat']));
-movefile(fullfile(path, ['b0', name, '.trk']), fullfile(path, [name, '.trk']))
+ea_delete(fullfile(directory,['b0',ftrname,'.mat']));
+movefile(fullfile(directory,['b0',ftrname,'.trk']), fullfile(directory,[ftrname,'.trk']))
