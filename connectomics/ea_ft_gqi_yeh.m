@@ -58,13 +58,13 @@ else
 end
 
 
-cmd=[dsistudio,' --action=trk --source=',ea_path_helper([options.root,options.patientname,filesep,ftrbase,'.fib.gz']),...
+trkcmd=[dsistudio,' --action=trk --source=',ea_path_helper([options.root,options.patientname,filesep,ftrbase,'.fib.gz']),...
     ' --method=0',...
     ' --seed=',ea_path_helper([options.root,options.patientname,filesep,'ttrackingmask.nii']),...
     ' --fiber_count=200000',...
     ' --output=',ea_path_helper([options.root,options.patientname,filesep,ftrbase,'.mat'])];
 
-err=ea_submitcmd(cmd);
+err=ea_submitcmd(trkcmd);
 if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end
@@ -121,6 +121,7 @@ ftr.fourindex=1;
 ftr.ea_fibformat='1.0';
 ftr.fibers=fibers;
 ftr.idx=idx;
+ftr.voxmm='vox';
 disp('Saving fibers...');
 save([options.root,options.patientname,filesep,ftrbase,'.mat'],'-struct','ftr','-v7.3');
 disp('Done.');
@@ -166,7 +167,7 @@ if length(di)>1
 end
 movefile([options.root,options.patientname,filesep,di(1).name],[options.root,options.patientname,filesep,ftrbase,'.fib.gz']);
 
-if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file');
+if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file')
     disp('Reconstruction from command line failed. Reattempting inside Matlab.');
 
     % do it the matlab way
@@ -174,7 +175,6 @@ if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file');
     save([options.root,options.patientname,filesep,ftrbase,'.fib'],'-struct','res','-v4');
     gzip([options.root,options.patientname,filesep,ftrbase,'.fib']);
     ea_delete([options.root,options.patientname,filesep,ftrbase,'.fib']);
-
 end
 
 
