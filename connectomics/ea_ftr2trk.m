@@ -23,9 +23,9 @@ if ~exist('specs','var')
     specs.dim=size(dnii.img);
     specs.vox=dnii.voxsize;
     specs.affine=dnii.mat;
-    header.pad2='RAS ';
+    header.pad2=['RAS', char(0)];
 else
-    header.pad2=[ea_aff2axcodes(specs.affine), ' '];
+    header.pad2=[ea_aff2axcodes(specs.affine), char(0)];
 end
 
 if strcmp(voxmm,'vox')
